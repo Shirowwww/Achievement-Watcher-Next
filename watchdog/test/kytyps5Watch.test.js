@@ -20,9 +20,9 @@ process.env.AW_USER_DATA = path.join(temp, 'userData');
 process.env.ProgramData = path.join(temp, 'ProgramData');
 
 const kytyWatch = require(path.join(__dirname, '..', 'console', 'kytyps5Watch.js'));
-const { TITLE_ID, makeGame, makeEmulator, writeUnlocks } = require(path.join(__dirname, '..', '..', 'test', 'helpers', 'kytyps5.js'));
+const { TITLE_ID, makeGame, makeEmulator, writeUnlocks, settingsText } = require(path.join(__dirname, '..', '..', 'test', 'helpers', 'kytyps5.js'));
 
-const { discover, watchedFolders, iconPathOf, handleChange, titleFor, titleIdsOnDisk, seedBaseline } = kytyWatch._internal;
+const { discover, watchedFolders, iconPathOf, handleChange, titleFor, titleIdsOnDisk, seedBaseline, catchUp } = kytyWatch._internal;
 
 test.after(() => {
   if (realUserData === undefined) delete process.env.AW_USER_DATA;
@@ -153,4 +153,82 @@ test('only local icon files are handed to the toast', () => {
   assert.equal(iconPathOf({ icon: 'file:///C:/cache/kytyps5/A/1.png' }), path.normalize('C:/cache/kytyps5/A/1.png'));
   assert.equal(iconPathOf({ icon: 'https://example.invalid/1.png' }), '');
   assert.equal(iconPathOf({}), '');
+});
+
+test("another user's unlock is not announced, and a switch of user replays nothing", async () => {
+  const titleId = 'PPSA04000';
+  const root = path.join(temp, 'users');
+  makeGame(path.join(root, 'Games'), { titleId });
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: { 1000: { 1: 1700000000 } }, titleId, globalUser: 1000 });
+  const [title] = require(path.join(__dirname, '..', '..', 'app', 'parser', 'kytyps5.js')).discover(emulator);
+  const known = new Set([titleId]);
+  const ctx = context();
+  seedBaseline(title);
+
+  writeUnlocks(emulator, titleId, { 1001: { 0: 1700000500 } });
+  await handleChange(title, path.join(emulator, '_Trophies', titleId, 'trophies_1001_0.json'), ctx, known);
+  assert.equal(ctx.sent.length, 0, 'the other user earned it, not the one playing');
+
+  writeUnlocks(emulator, titleId, { 1000: { 1: 1700000000, 2: 1700000600 } });
+  await handleChange(title, unlockFile(emulator, titleId), ctx, known);
+  assert.deepEqual(ctx.sent.map((payload) => payload.achievementDisplayName), ['Secret Room']);
+
+  fs.writeFileSync(path.join(emulator, 'Kyty.ini'), settingsText({ gameDirs: [path.join(root, 'Games')], globalUser: 1001 }));
+  await handleChange(title, unlockFile(emulator, titleId), ctx, known);
+  assert.equal(ctx.sent.length, 1, "the new user's older trophies are recorded, not announced");
+});
+
+test("the unlock that reveals a switch of user is still announced, not the new user's older ones", async () => {
+  const titleId = 'PPSA04001';
+  const root = path.join(temp, 'switch-on-unlock');
+  makeGame(path.join(root, 'Games'), { titleId });
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: { 1000: { 1: 1700000000 } }, titleId, globalUser: 1000 });
+  const [title] = require(path.join(__dirname, '..', '..', 'app', 'parser', 'kytyps5.js')).discover(emulator);
+  seedBaseline(title);
+
+  // Kyty.ini is not watched: the switch and the new user's first unlock arrive as one change.
+  fs.writeFileSync(path.join(emulator, 'Kyty.ini'), settingsText({ gameDirs: [path.join(root, 'Games')], globalUser: 1001 }));
+  writeUnlocks(emulator, titleId, { 1001: { 1: 1700000500, 2: Math.floor(Date.now() / 1000) } });
+  const ctx = context();
+  await handleChange(title, path.join(emulator, '_Trophies', titleId, 'trophies_1001_0.json'), ctx, new Set([titleId]));
+  assert.deepEqual(ctx.sent.map((payload) => payload.achievementDisplayName), ['Secret Room']);
+});
+
+async function waitFor(condition, ms = 8000) {
+  const end = Date.now() + ms;
+  while (Date.now() < end && !condition()) await new Promise((resolve) => setTimeout(resolve, 50));
+}
+
+test('a game listed before its first unlock is announced when _Trophies is created later', async () => {
+  const titleId = 'PPSA05000';
+  const root = path.join(temp, 'late-trophies');
+  makeGame(path.join(root, 'Games'), { titleId });
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: null, titleId });
+  fs.mkdirSync(path.join(process.env.AW_USER_DATA, 'cfg'), { recursive: true });
+  fs.writeFileSync(path.join(process.env.AW_USER_DATA, 'cfg', 'userdir.db'), JSON.stringify([{ path: emulator, enabled: true }]));
+
+  const ctx = context();
+  await kytyWatch.start(ctx);
+  try {
+    writeUnlocks(emulator, titleId, { 1000: { 1: 1700000000 } });
+    await waitFor(() => ctx.sent.length > 0);
+    assert.deepEqual(ctx.sent.map((payload) => payload.achievementDisplayName), ['First Steps']);
+  } finally {
+    kytyWatch.stop();
+    fs.rmSync(path.join(process.env.AW_USER_DATA, 'cfg', 'userdir.db'), { force: true });
+  }
+});
+
+test('an unlock file already present when the watcher takes over is caught up', async () => {
+  const titleId = 'PPSA05001';
+  const root = path.join(temp, 'catch-up');
+  makeGame(path.join(root, 'Games'), { titleId });
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: null, titleId });
+  const target = { root: emulator, titles: [] };
+  writeUnlocks(emulator, titleId, { 1000: { 1: 1700000000 } });
+
+  const ctx = context();
+  catchUp(target, ctx, new Set());
+  await waitFor(() => ctx.sent.length > 0);
+  assert.deepEqual(ctx.sent.map((payload) => payload.achievementDisplayName), ['First Steps']);
 });

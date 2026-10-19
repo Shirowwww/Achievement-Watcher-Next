@@ -128,7 +128,9 @@ settings the emulator reads rather than assuming the default:
   folder inside it. The games are looked up in the game folders of the KytyPS5 launcher
   (`Kyty.ini`) and beside the emulator, unpacked or as a `.zar` archive the launcher runs as it is.
   The trophy list lives in the game itself; a game deleted after AW Next has seen it stays listed,
-  as not installed, from the copy of its list and art kept then.
+  as not installed, from the copy of its list and art kept then. A game of the launcher is listed
+  before its first trophy, and only the active user counts: the one set for the game in the
+  launcher, else the emulator's global user. With no user setting, every user's trophies are added.
 
 So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
 directly, with no emulator executable anywhere near it.

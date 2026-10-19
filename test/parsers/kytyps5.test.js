@@ -41,6 +41,11 @@ test('Kyty.ini string lists are read the way QSettings writes them', () => {
   const ini = '[GameConfigurations]\ngame_dirs=C:/Wrong\n\n[Launcher]\r\ngame_dir=C:/Old\r\ngame_dirs=C:/New, D:/Other\r\n';
   assert.deepEqual(gameDirsFromSettings(ini), ['C:/New', 'D:/Other'], 'only the Launcher section counts, and the list wins over the old key');
   assert.deepEqual(gameDirsFromSettings('[Launcher]\ngame_dir=C:/Old\n'), ['C:/Old'], 'an older launcher kept a single folder');
+  assert.deepEqual(gameDirsFromSettings('[Launcher]\n  game_dirs \t= \t C:/Spaced\n; game_dirs=C:/Comment\n'), ['C:/Spaced']);
+
+  const started = Date.now();
+  assert.deepEqual(gameDirsFromSettings(`x${' '.repeat(60000)}y\n[Launcher]\ngame_dirs=C:/After\n`), ['C:/After']);
+  assert.ok(Date.now() - started < 1000, `a 60 KB line without '=' took ${Date.now() - started} ms`);
 });
 
 test('a trophy package is split into its files, and a broken one is refused', () => {
@@ -219,4 +224,82 @@ test('a game whose package is unreadable is refused, not published empty', async
   const gameDir = makeGame(path.join(root, 'Games'));
   fs.writeFileSync(path.join(gameDir, 'sce_sys', 'trophy2', 'trophy00.ucp'), 'garbage');
   await assert.rejects(() => kyty.getGameData({ titleId: TITLE_ID, gameDir }, 'english'));
+});
+
+function userScene(name, options) {
+  const root = path.join(temp, name);
+  const gameDir = makeGame(path.join(root, 'Games'));
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: { 1000: { 1: 1700000000 }, 1001: { 2: 1700000100 } }, ...options });
+  return { gameDir, emulator, ids: () => kyty.getAchievements(kyty.scan(emulator)[0].data).map((entry) => entry.id).sort() };
+}
+
+test('only the global user counts when the launcher names one', () => {
+  assert.deepEqual(userScene('user-global', { globalUser: 1001 }).ids(), ['2']);
+  assert.deepEqual(userScene('user-global-other', { globalUser: 1000 }).ids(), ['1']);
+  assert.deepEqual(userScene('user-none', {}).ids(), ['1', '2'], 'no user setting at all keeps every user');
+  assert.deepEqual(userScene('user-unknown', { globalUser: 4242 }).ids(), [], 'a user without a file has earned nothing');
+});
+
+test('a game setting of the launcher wins over the global user', () => {
+  const root = path.join(temp, 'user-game');
+  const gameDir = makeGame(path.join(root, 'Games'));
+  const emulator = makeEmulator(root, {
+    gameDirs: [path.join(root, 'Games')],
+    unlocks: { 1000: { 1: 1700000000 }, 1001: { 2: 1700000100 } },
+    globalUser: 1001,
+    gameUsers: [{ path: gameDir, user: 1000 }],
+  });
+  const [game] = kyty.scan(emulator);
+  assert.equal(kyty.activeUserId(game.data), '1000');
+  assert.deepEqual(kyty.getAchievements(game.data).map((entry) => entry.id), ['1']);
+});
+
+test('an unreadable user setting keeps the last good one, and the first read without one keeps every user', () => {
+  const scene = userScene('user-malformed', { globalUser: 1001 });
+  assert.deepEqual(scene.ids(), ['2']);
+  fs.writeFileSync(path.join(scene.emulator, 'Kyty.ini'), '[GlobalConfiguration]\nuser_id=oops\n[Launcher]\ngame_dirs=\n');
+  assert.deepEqual(scene.ids(), ['2'], 'the last valid setting stands in');
+  fs.rmSync(path.join(scene.emulator, 'Kyty.ini'));
+  assert.deepEqual(scene.ids(), ['2'], 'a missing file too');
+
+  const fresh = userScene('user-malformed-fresh', {});
+  fs.writeFileSync(path.join(fresh.emulator, 'Kyty.ini'), '[GlobalConfiguration]\nuser_id=oops\n');
+  assert.deepEqual(fresh.ids(), ['1', '2'], 'nothing valid was ever read: nothing is hidden');
+});
+
+test('a game the launcher knows is listed before its first unlock', async () => {
+  const titleId = 'PPSA00500';
+  const root = path.join(temp, 'before-trophy');
+  makeGame(path.join(root, 'Games'), { titleId });
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: null, titleId });
+  assert.equal(fs.existsSync(path.join(emulator, '_Trophies')), false);
+
+  const [game] = kyty.scan(emulator);
+  assert.equal(game.appid, titleId);
+  assert.equal(game.data.installed, true);
+  assert.deepEqual(kyty.getAchievements(game.data), [], 'nothing earned yet');
+  assert.equal((await kyty.getGameData(game.data, 'english')).achievement.total, 3, 'the schema and icons come from the game');
+
+  writeUnlocks(emulator, titleId, { 1000: { 1: 1700000000 } });
+  assert.deepEqual(kyty.getAchievements(kyty.scan(emulator)[0].data).map((entry) => entry.id), ['1'], 'the same record once _Trophies exists');
+});
+
+test('games named only by a launcher game setting, or kept as a .zar, are listed before their first unlock', () => {
+  const root = path.join(temp, 'before-trophy-settings');
+  const gameDir = makeGame(path.join(root, 'elsewhere'), { titleId: 'PPSA00501' });
+  const archive = path.join(root, 'zars', 'PPSA00407.zar');
+  fs.mkdirSync(path.dirname(archive), { recursive: true });
+  fs.copyFileSync(path.join(__dirname, '..', 'fixtures', 'kytyps5-game.zar'), archive);
+  const emulator = makeEmulator(root, { unlocks: null, gameUsers: [{ path: gameDir, user: 1000 }, { path: archive, user: 1000 }] });
+
+  assert.deepEqual(kyty.scan(emulator).map((game) => game.appid).sort(), ['PPSA00407', 'PPSA00501']);
+});
+
+test('a binary that never writes trophies is not an emulator folder before its first unlock', () => {
+  const root = path.join(temp, 'other-fork');
+  fs.mkdirSync(root, { recursive: true });
+  fs.writeFileSync(path.join(root, 'kyty_emulator.exe'), 'MZ no trophy support');
+  assert.equal(kyty.emulatorRoot(root), '');
+  fs.writeFileSync(path.join(root, 'kyty_emulator.exe'), 'MZ with _Trophies inside');
+  assert.equal(kyty.emulatorRoot(root), root);
 });

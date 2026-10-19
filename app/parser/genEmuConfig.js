@@ -339,10 +339,14 @@ function findGeneratedSteamSettings(...baseDirs) {
   return null;
 }
 
+// Only this game's folder, <appid> or the older <name>-<appid>: the tool keeps every earlier game's
+// folder beside it, so any other match would merge the wrong game's achievements.
 function findGeneratedSteamSettingsForAppid(appid, ...baseDirs) {
-  const id = String(appid || '');
+  const id = String(parseInt(appid, 10));
+  const olderLayout = new RegExp(`(^|\\D)${id}$`);
   const hits = baseDirs.filter(Boolean).flatMap((baseDir) => collectGeneratedSteamSettings(baseDir));
-  return hits.find((ss) => path.basename(path.dirname(ss)) === id) || hits.find((ss) => path.basename(path.dirname(ss)).includes(id)) || hits[0] || null;
+  const folder = (ss) => path.basename(path.dirname(ss));
+  return hits.find((ss) => folder(ss) === id) || hits.find((ss) => olderLayout.test(folder(ss))) || null;
 }
 
 // The switches the tool actually accepts. An invented switch isn't ignored: it prints an error and
@@ -358,7 +362,7 @@ function toolArgsFor(id, login) {
 // unless login is given; onPrompt forwards interactive prompts (Steam Guard 2FA). Two separate
 // timeouts: idleTimeout catches a run that said nothing at all, timeout caps one that is slow but
 // working (hundreds of icons retried across CDNs) - a single cap would misfire on one or the other.
-async function generate({ tool, appid, login = null, onPrompt, timeout = 900000, idleTimeout = 90000, log = noopLog } = {}) {
+async function generateOnce({ tool, appid, login = null, onPrompt, timeout = 900000, idleTimeout = 90000, log = noopLog } = {}) {
   if (!tool || !tool.exe) throw new Error('generate_emu_config is not available');
   const id = parseInt(appid, 10);
   if (!Number.isInteger(id) || id <= 0) throw new Error('generate: a valid numeric appid is required');
@@ -518,6 +522,20 @@ async function generate({ tool, appid, login = null, onPrompt, timeout = 900000,
   return { steamSettings, workDir, output };
 }
 
+// Two runs for one game share <tool>/_OUTPUT/<appid>, and each wipes it on start, so a second run
+// (a repair while the scan generates the same game) waits for the first instead of erasing its result.
+const runsByGame = new Map();
+function generate(options = {}) {
+  const key = String(parseInt(options.appid, 10));
+  const queued = (runsByGame.get(key) || Promise.resolve()).then(() => generateOnce(options));
+  const settled = queued.then(() => {}, () => {});
+  runsByGame.set(key, settled);
+  settled.then(() => {
+    if (runsByGame.get(key) === settled) runsByGame.delete(key);
+  });
+  return queued;
+}
+
 function readJsonSafe(file) {
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -592,4 +610,4 @@ function mergeIntoGame(srcSteamSettings, destSteamSettings, { overwrite = false 
 }
 
 module.exports = { ensureGenerateEmuConfig, hasSavedSignIn, generate, mergeIntoGame, findGeneratedSteamSettings, pruneGeneratedOutputs };
-module.exports._internal = { resolveToolExe, isInsideDir, findExe, TOOL_NAME };
+module.exports._internal = { resolveToolExe, isInsideDir, findExe, findGeneratedSteamSettingsForAppid, TOOL_NAME };

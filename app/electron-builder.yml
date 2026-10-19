@@ -36,6 +36,7 @@ asarUnpack:
   - util/steamSchemaFetch.js
   - util/localIcons.js
   - util/imageSize.js
+  - util/imageSniff.js
   - parser/achievementTranslations.js
   - parser/steamAppInfo.js
   - parser/ff7.js

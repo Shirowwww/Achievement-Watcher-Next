@@ -148,7 +148,7 @@ function readArchive(fd) {
 
 /*
   Runs use(archive) on the archive at `file` and returns its result, or null when the file is not a
-  readable ZArchive. A damaged archive costs only itself.
+  readable ZArchive or changed while read. A damaged archive costs only itself.
 */
 function withArchive(file, use) {
   let fd;
@@ -158,8 +158,12 @@ function withArchive(file, use) {
     return null;
   }
   try {
+    const before = fs.fstatSync(fd);
     const archive = readArchive(fd);
-    return archive ? use(archive) : null;
+    const result = archive ? use(archive) : null;
+    const after = fs.fstatSync(fd);
+    // An archive rewritten while it was read gives a torn answer; the caller reads it again later.
+    return before.size === after.size && before.mtimeMs === after.mtimeMs ? result : null;
   } catch {
     return null;
   } finally {

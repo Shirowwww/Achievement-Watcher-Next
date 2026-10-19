@@ -40,6 +40,7 @@ const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
 const uplayCatalogue = require(path.join(appPath, 'parser/uplayCatalogue.js'));
 const emuIni = require(path.join(appPath, 'util/emuIni.js'));
 const steamAssets = require(path.join(appPath, 'util/steamAssets.js'));
+const { isImageBuffer, usableCachedImage } = require(path.join(appPath, 'util/imageSniff.js'));
 const { userDataDir } = require(path.join(appPath, 'util/userDataPath.js'));
 const { mergeTranslatedAchievements } = require('./achievementTranslations.js');
 const steamSchemaFetch = require(path.join(appPath, 'util/steamSchemaFetch.js'));
@@ -2268,12 +2269,12 @@ module.exports.fetchIcon = async (url, appID) => {
     const cache = path.join(userDataDir(), `steam_cache/icon/${appID}`);
     let filename = iconCacheFilename(url);
     filePath = path.join(cache, filename);
-    if (fs.existsSync(filePath)) return filePath;
+    if (usableCachedImage(filePath)) return filePath;
     let exts = ['.jpg', '.png'];
     if (!url.endsWith('.jpg') && !url.endsWith('.png'))
       for (let ext of exts) {
         filePath = path.join(cache, filename + ext);
-        if (fs.existsSync(filePath)) return filePath;
+        if (usableCachedImage(filePath)) return filePath;
       }
     //legacy url are full urls, check if they are still valid
     validUrl = await resolveWorkingIconUrl(appID, url);
@@ -2282,14 +2283,17 @@ module.exports.fetchIcon = async (url, appID) => {
 
     filePath = path.join(cache, filename);
 
-    if (fs.existsSync(filePath)) {
+    if (usableCachedImage(filePath)) {
       return filePath;
     } else {
       // Only name the file when its URL carries a query: left to itself the downloader derives the
       // same basename Steam has always been cached under, and renaming those would re-fetch every
       // icon already on disk.
       const named = validUrl.includes('?') ? { filename } : {};
-      return (await request.download(validUrl, cache, { validateFileSize: false, ...named })).path;
+      const saved = (await request.download(validUrl, cache, { validateFileSize: false, ...named })).path;
+      if (usableCachedImage(saved)) return saved;
+      debug.log(`[${appID}] ${validUrl} did not download as a picture - not cached`);
+      return validUrl;
     }
   } catch (err) {
     if (err.code === 'ESIZEMISMATCH') {
@@ -2297,6 +2301,7 @@ module.exports.fetchIcon = async (url, appID) => {
         const res = await fetch(validUrl);
         if (!res.ok) return validUrl;
         const buffer = Buffer.from(await res.arrayBuffer());
+        if (!isImageBuffer(buffer)) return validUrl;
         fs.writeFileSync(filePath, buffer);
         return filePath;
       } catch (e) {

@@ -24,6 +24,9 @@ const BASE_EXOPHASE_URL = 'https://www.exophase.com/game/';
 const DEFAULT_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36';
 const STATIC_TIMEOUT_MS = 15000;
 const BROWSER_WAIT_MS = 30000;
+// Every slug and URL variant behind a Cloudflare block costs a 30s browser navigation; past this
+// budget the lookup stops trying new pages instead of holding a scan or a click for minutes.
+const LOOKUP_DEADLINE_MS = 90000;
 
 // PS3/PS4 pages live under /trophies/ without a platform suffix requirement; everything else is
 // slug-<platform>/achievements/. Upstream mapped xenia/rpcs3; shadps4 is ours (validated live).
@@ -301,6 +304,20 @@ function extractAchievementsFromHtml(html, baseUrl) {
   return items;
 }
 
+/*
+  A -psn page holds whichever list Exophase filed there, PS4 or PS5 ("hades-psn" is the PS5 list,
+  "ghost-of-tsushima-psn" the PS4 one), and the two versions of a game rarely share rates. The page
+  title ends "<Game> Trophies - PS4 - Exophase.com"; a title in another shape is not held against it.
+*/
+function pageListsPlatform(html, platform) {
+  if (!TROPHY_PLATFORMS.has(platform)) return true;
+  const title = String(html || '').match(/<title[^>]*>([^<]*)<\/title>/i);
+  const parts = title ? title[1].split(/\s+-\s+/) : [];
+  if (parts.length < 3 || !/^exophase\.com$/i.test(parts[parts.length - 1].trim())) return true;
+  const platforms = parts[parts.length - 2].toUpperCase().split(/[\s,+/&]+/);
+  return platforms.includes(platform.toUpperCase());
+}
+
 function extractGameTitleFromHtml(html) {
   const root = htmlParser.parse(String(html || ''));
   const h = root.querySelector('h1') || root.querySelector('h2');
@@ -461,11 +478,20 @@ async function fetchExophaseAchievementsMultiLang(options = {}) {
     let baseItems = [];
     let baseHtml = '';
     let firstErr = null;
+    const deadline = Number(options.deadline) || Date.now() + LOOKUP_DEADLINE_MS;
     outer: for (const slug of slugCandidates) {
       for (const candidateBase of buildBaseUrlCandidates(slug, platform)) {
+        if (Date.now() >= deadline) {
+          firstErr = firstErr || new Error('Exophase lookup ran out of time');
+          break outer;
+        }
         const testUrl = ensureLangUrl(candidateBase, langMap.english);
         try {
           const { html } = await loadPage(testUrl);
+          if (!pageListsPlatform(html, platform)) {
+            debug.log(`exophase: ${testUrl} is another platform's list - skipped`);
+            continue;
+          }
           const items = extractAchievementsFromHtml(html, testUrl);
           if (items.length) {
             baseUrl = candidateBase;
@@ -687,13 +713,17 @@ async function fetchExophaseRarity({ gameName = '', platform = 'rpcs3', achievem
   const slugCandidates = buildExophaseRaritySlugCandidates(gameName, platform);
   let exo = null;
   let firstErr = null;
+  // One budget for every slug: each call would otherwise start its own.
+  const deadline = Date.now() + LOOKUP_DEADLINE_MS;
   for (const slug of slugCandidates) {
+    if (Date.now() >= deadline) break;
     try {
       const result = await fetchExophaseAchievementsMultiLang({
         slug,
         platform: platformKey,
         langKeys: ['english'],
         langMap: EXOPHASE_LANG_MAP,
+        deadline,
       });
       if (result && result.items && result.items.length) {
         exo = result;
@@ -714,6 +744,7 @@ module.exports.mapExophasePlatform = mapExophasePlatform;
 module.exports.buildExophaseSlug = buildExophaseSlug;
 module.exports.buildExophaseSlugVariants = buildExophaseSlugVariants;
 module.exports.extractAchievementsFromHtml = extractAchievementsFromHtml;
+module.exports.pageListsPlatform = pageListsPlatform;
 module.exports.fetchExophaseAchievementsMultiLang = fetchExophaseAchievementsMultiLang;
 module.exports.downloadExophaseIcon = downloadExophaseIcon;
 module.exports.normalizeExophaseRarityPct = normalizeExophaseRarityPct;

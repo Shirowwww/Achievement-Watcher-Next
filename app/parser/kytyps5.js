@@ -6,14 +6,15 @@
   unlockedAt: { id: tick } }, ticks being microseconds since 0001-01-01). The trophy list itself is
   read from the game: <game>\sce_sys\trophy2\trophy<NN>.ucp, a big-endian file container holding
   tropconf.json (grades, hidden flags), tropmeta_<locale>.json (texts) and trop<NNNN>.png icons.
-  The game folders are the ones the launcher scans, listed in Kyty.ini ([Launcher] game_dirs).
+  The game folders are the ones the launcher scans, listed in Kyty.ini ([Launcher] game_dirs), and the
+  user whose trophies count is the one set for the game there, else [GlobalConfiguration] user_id.
 
   Dependency-free and synchronous on purpose: the Watchdog loads this file through sharedAppModule.
 */
 
 const fs = require('fs');
 const path = require('path');
-const { hostPath, hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { hostPath, hostsFor, pathKey } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { withArchive } = require(path.join(__dirname, '..', 'util', 'zarchive.js'));
 
 const SOURCE = 'KytyPS5 Emulator';
@@ -37,8 +38,11 @@ const UCP_MAX_ENTRIES = 4096;
 const MAX_PACKAGE_BYTES = 1024 * 1024 * 1024;
 const MAX_UNLOCKS_BYTES = 1024 * 1024;
 const MAX_JSON_BYTES = 4 * 1024 * 1024;
+// Kyty.ini is a few KB; anything far larger is not the launcher's and is not read.
+const MAX_SETTINGS_BYTES = 256 * 1024;
 const RTC_TICK_UNIX_EPOCH = 62135596800000000n;
 const RTC_TICK_MAX = 315537897599999999n;
+const MAX_USER_ID = 0x7fffffff;
 const GRADES = ['P', 'G', 'S', 'B'];
 
 // Game discovery walks folders the user configured in the launcher; both bounds keep it cheap.
@@ -113,6 +117,44 @@ function readJsonFile(file, maxBytes) {
   }
 }
 
+const EXE_SCAN_BLOCK = 1024 * 1024;
+const exeEvidence = new Map();
+
+/*
+  Before the first unlock there is no _Trophies folder, so the binary says whether this build keeps
+  trophies at all: other forks never write them. One scan per version of the file.
+*/
+function isTrophyEmulator(exe) {
+  let stat;
+  try {
+    stat = fs.statSync(exe);
+    if (!stat.isFile()) return false;
+  } catch {
+    return false;
+  }
+  const key = `${exe}|${stat.size}|${stat.mtimeMs}`;
+  if (exeEvidence.has(key)) return exeEvidence.get(key);
+  const marker = Buffer.from(TROPHY_DIR);
+  let found = false;
+  let fd;
+  try {
+    fd = fs.openSync(exe, 'r');
+    const block = Buffer.alloc(EXE_SCAN_BLOCK);
+    let tail = Buffer.alloc(0);
+    for (let read = fs.readSync(fd, block, 0, block.length, null); read > 0 && !found; read = fs.readSync(fd, block, 0, block.length, null)) {
+      const chunk = Buffer.concat([tail, block.subarray(0, read)]);
+      found = chunk.includes(marker);
+      tail = chunk.subarray(Math.max(0, chunk.length - marker.length));
+    }
+  } catch {
+    return false;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+  exeEvidence.set(key, found);
+  return found;
+}
+
 /*
   The emulator folder for one watched folder: the folder holding _Trophies. People add whichever
   level they were looking at, the emulator folder, _Trophies itself or one game's folder inside it,
@@ -120,7 +162,7 @@ function readJsonFile(file, maxBytes) {
 */
 function emulatorRoot(dir) {
   const base = path.resolve(String(dir || ''));
-  if (isDirectory(path.join(base, TROPHY_DIR))) return base;
+  if (isDirectory(path.join(base, TROPHY_DIR)) || isTrophyEmulator(path.join(base, EMULATOR_BINARY))) return base;
   if (path.basename(base).toLowerCase() === TROPHY_DIR.toLowerCase()) return path.dirname(base);
   const parent = path.dirname(base);
   if (path.basename(parent).toLowerCase() === TROPHY_DIR.toLowerCase() && TITLE_ID.test(path.basename(base))) return path.dirname(parent);
@@ -168,22 +210,31 @@ function parseSettingsList(raw) {
   return items.filter(Boolean);
 }
 
-// [Launcher] game_dirs (game_dir in older launchers) from the text of Kyty.ini.
-function gameDirsFromSettings(text) {
+// Every "section/key" of Kyty.ini as a lower-cased map; array items read like "GameConfigurations/1\game_path".
+function settingsValues(text) {
+  const values = new Map();
   let section = '';
-  const values = {};
-  for (const line of String(text || '').split(/\r?\n/)) {
+  for (const line of String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/)) {
     const header = line.match(/^\s*\[([^\]]*)\]\s*$/);
     if (header) {
       section = header[1].trim().toLowerCase();
       continue;
     }
-    const entry = line.match(/^\s*(game_dirs?)[ \t]*=[ \t]*(.*)$/i);
-    if (section === 'launcher' && entry) values[entry[1].toLowerCase()] = entry[2];
+    // Split at the first '=' by index: a regex with a lazy key rescans a long line quadratically.
+    const eq = line.indexOf('=');
+    const key = eq > 0 ? line.slice(0, eq).trim() : '';
+    if (key && !/^[;#]/.test(key)) values.set(`${section}/${key.toLowerCase()}`, line.slice(eq + 1).replace(/^[ \t]+/, ''));
   }
-  const dirs = parseSettingsList(values.game_dirs);
-  return dirs.length > 0 ? dirs : parseSettingsList(values.game_dir);
+  return values;
 }
+
+// [Launcher] game_dirs (game_dir in older launchers) from the text of Kyty.ini.
+function gameDirsFromValues(values) {
+  const dirs = parseSettingsList(values.get('launcher/game_dirs'));
+  return dirs.length > 0 ? dirs : parseSettingsList(values.get('launcher/game_dir'));
+}
+
+const gameDirsFromSettings = (text) => gameDirsFromValues(settingsValues(text));
 
 // A portable launcher keeps Kyty.ini beside itself, an installed one under ProgramData of its host.
 function settingsFiles(root) {
@@ -195,19 +246,110 @@ function settingsFiles(root) {
   return files;
 }
 
-function configuredGameDirs(root) {
+function readSettingsText(root) {
   for (const file of settingsFiles(root)) {
-    let text;
     try {
-      text = fs.readFileSync(file, 'utf8');
+      if (fs.statSync(file).size > MAX_SETTINGS_BYTES) continue;
+      return fs.readFileSync(file, 'utf8');
     } catch {
-      continue;
+      /* the next place */
     }
-    // A launcher run by Wine writes C:/... paths, which only its prefix can turn into local ones.
-    const host = hostsFor(root)[0];
-    return gameDirsFromSettings(text).map((dir) => path.resolve(root, (WINDOWS_ABSOLUTE.test(dir) && host && host.localPath(dir)) || dir));
   }
-  return [];
+  return null;
+}
+
+// A launcher run by Wine writes C:/... paths, which only its prefix can turn into local ones.
+function resolveConfigured(root, dir) {
+  const host = hostsFor(root)[0];
+  return path.resolve(root, (WINDOWS_ABSOLUTE.test(dir) && host && host.localPath(dir)) || dir);
+}
+
+// The per-game launcher settings, { index -> { path, user } }; game_path wins over basedir.
+function gameConfigurations(values) {
+  const entries = new Map();
+  for (const [key, value] of values) {
+    const match = key.match(/^gameconfigurations[\\/](\d{1,5})[\\/](game_path|basedir|user_id)$/);
+    if (!match) continue;
+    const entry = entries.get(match[1]) || {};
+    if (match[2] === 'user_id') entry.user = value;
+    else if (match[2] === 'game_path' || !entry.path) entry.path = value;
+    entries.set(match[1], entry);
+  }
+  return entries;
+}
+
+function configuredPath(root, raw) {
+  const dir = raw && parseSettingsList(raw)[0];
+  return dir ? resolveConfigured(root, dir) : '';
+}
+
+// Where the launcher looks for games: its game folders, then the games it holds a setting for.
+function configuredGameDirs(root) {
+  const text = readSettingsText(root);
+  if (text === null) return [];
+  const values = settingsValues(text);
+  const dirs = gameDirsFromValues(values).map((dir) => resolveConfigured(root, dir));
+  for (const entry of gameConfigurations(values).values()) {
+    const dir = configuredPath(root, entry.path);
+    if (dir) dirs.push(dir);
+  }
+  return dirs;
+}
+
+function validUserId(value) {
+  const text = String(value == null ? '' : value).trim();
+  return /^\d{1,10}$/.test(text) && Number(text) <= MAX_USER_ID ? String(Number(text)) : '';
+}
+
+/*
+  { userId, games } from the text of Kyty.ini: the global user and the one set per game folder, or
+  null when a user id is there but unreadable (a file caught half written). A launcher that never
+  saved a user gives an empty answer, which is information of its own: none.
+*/
+function userSettingsFromText(root, text) {
+  const values = settingsValues(text);
+  let userId = '';
+  if (values.has('globalconfiguration/user_id')) {
+    userId = validUserId(values.get('globalconfiguration/user_id'));
+    if (!userId) return null;
+  }
+  const games = new Map();
+  for (const entry of gameConfigurations(values).values()) {
+    if (entry.user === undefined) continue;
+    const user = validUserId(entry.user);
+    if (!user) return null;
+    const dir = configuredPath(root, entry.path);
+    if (dir) games.set(pathKey(dir), user);
+  }
+  return { userId, games };
+}
+
+const lastUserSettings = new Map();
+
+// The last settings that read cleanly stand in while the file is missing or unreadable.
+function userSettings(root) {
+  const key = pathKey(root);
+  const text = readSettingsText(root);
+  const parsed = text === null ? null : userSettingsFromText(root, text);
+  if (parsed) {
+    lastUserSettings.set(key, parsed);
+    return parsed;
+  }
+  if (text !== null) debug.warn(`[kytyps5] ${SETTINGS_FILE} of '${root}' has an unreadable user id - the last good setting stays`);
+  return lastUserSettings.get(key) || null;
+}
+
+/*
+  The user whose trophies count for a game: the one set for its folder in the launcher, otherwise
+  the emulator's global user. '' when the settings name none, and then every user counts.
+*/
+function activeUserId(info) {
+  const root = String((info && info.root) || '');
+  if (!root) return '';
+  const settings = userSettings(root);
+  if (!settings) return '';
+  const own = info.gameDir ? settings.games.get(pathKey(info.gameDir)) : '';
+  return own || settings.userId;
 }
 
 function readParam(gameDir) {
@@ -229,19 +371,30 @@ function titleIdOf(param) {
 // An archive is opened again only once it changes: every scan walks the game folders.
 const archiveParams = new Map();
 
+function statKey(file) {
+  try {
+    const stat = fs.statSync(file);
+    return `${file}|${stat.size}|${stat.mtimeMs}`;
+  } catch {
+    return '';
+  }
+}
+
 // The param.json of a .zar game dump whose root holds eboot.bin, or null.
 function archiveParam(file) {
-  let stat;
-  try {
-    stat = fs.statSync(file);
-  } catch {
-    return null;
-  }
-  const key = `${file}|${stat.size}|${stat.mtimeMs}`;
-  if (!archiveParams.has(key)) {
-    archiveParams.set(key, withArchive(file, (archive) => (archive.isFile('eboot.bin') ? parseJson(archive.read(path.join('sce_sys', 'param.json'), MAX_JSON_BYTES)) : null)));
-  }
-  return archiveParams.get(key);
+  const key = statKey(file);
+  if (!key) return null;
+  if (archiveParams.has(key)) return archiveParams.get(key);
+  const param = withArchive(file, (archive) => (archive.isFile('eboot.bin') ? parseJson(archive.read(path.join('sce_sys', 'param.json'), MAX_JSON_BYTES)) : null));
+  // An archive touched while it was read is read again next scan, never remembered as it was.
+  if (statKey(file) === key) archiveParams.set(key, param);
+  return param;
+}
+
+function addArchiveGame(games, file) {
+  const param = archiveParam(file);
+  const titleId = titleIdOf(param);
+  if (titleId && !games.has(titleId)) games.set(titleId, { gameDir: file, param, archive: true });
 }
 
 // The launcher's own walk: a folder holding eboot.bin, or a .zar holding one, is a game and is not searched further.
@@ -259,14 +412,15 @@ function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH) {
       if (titleId && !games.has(titleId)) games.set(titleId, { gameDir: dir, param });
       continue;
     }
+    // A game setting can name the archive itself.
+    if (ARCHIVE_FILE.test(dir) && isFile(dir)) {
+      addArchiveGame(games, dir);
+      continue;
+    }
     if (depth >= maxDepth) continue;
     for (const entry of readDirectory(dir)) {
       if (entry.isDirectory() && !entry.name.startsWith('$')) pending.push({ dir: path.join(dir, entry.name), depth: depth + 1 });
-      if (!entry.isFile() || !ARCHIVE_FILE.test(entry.name)) continue;
-      const file = path.join(dir, entry.name);
-      const param = archiveParam(file);
-      const titleId = titleIdOf(param);
-      if (titleId && !games.has(titleId)) games.set(titleId, { gameDir: file, param, archive: true });
+      if (entry.isFile() && ARCHIVE_FILE.test(entry.name)) addArchiveGame(games, path.join(dir, entry.name));
     }
   }
   return games;
@@ -359,38 +513,41 @@ function saveArchiveList(titleId, file) {
   return saved;
 }
 
+// One listed title, read from its game when the game is found, else from the copy kept of it.
+function titleRecord(record, game) {
+  const { titleId } = record;
+  // An archived game is read from the copy taken out of it.
+  const archived = !!(game && game.archive) && saveArchiveList(titleId, game.gameDir);
+  if (game && !game.archive && trophyPackages(game.gameDir).length > 0) {
+    saveList(titleId, game.gameDir);
+    return { ...record, gameDir: game.gameDir, listDir: game.gameDir, installed: true };
+  }
+  if (trophyPackages(savedListDir(titleId)).length > 0) {
+    return { ...record, gameDir: archived ? game.gameDir : '', listDir: savedListDir(titleId), installed: archived };
+  }
+  debug.log(`[kytyps5] ${titleId}: no game with a trophy package in the launcher's game folders`);
+  return null;
+}
+
 /*
   Every title of one emulator folder whose trophy list can be read: from its game when the game is
-  found, otherwise from the copy kept the last time it was. A title never seen with its game is left
-  out: its unlock file alone names no trophy, and a list of bare numbers would be worse than nothing.
+  found, otherwise from the copy kept the last time it was. A game the launcher knows is listed
+  before its first unlock, when _Trophies does not exist yet. A title with unlocks but never seen
+  with its game is left out: its unlock file alone names no trophy, and bare numbers are worse.
 */
 function discover(dir) {
   const root = emulatorRoot(dir);
   if (!root) return [];
-  const titles = titleFolders(root);
-  if (titles.length === 0) return [];
   const games = findGames(configuredGameDirs(root));
   // Games unpacked beside the emulator, for a launcher that was never given a game folder.
-  if (titles.some((title) => !games.has(title.titleId))) {
-    for (const [titleId, game] of findGames([root], NEARBY_GAME_DEPTH)) if (!games.has(titleId)) games.set(titleId, game);
-  }
-  const found = [];
-  for (const title of titles) {
-    const game = games.get(title.titleId);
+  for (const [titleId, game] of findGames([root], NEARBY_GAME_DEPTH)) if (!games.has(titleId)) games.set(titleId, game);
+  const records = new Map();
+  for (const title of titleFolders(root)) records.set(title.titleId, { titleId: title.titleId, root, path: title.dir });
+  for (const titleId of games.keys()) {
     // The same shape as a library record's data, so either can be handed to the readers below.
-    const record = { titleId: title.titleId, root, path: title.dir };
-    // An archived game is read from the copy taken out of it.
-    const archived = !!(game && game.archive) && saveArchiveList(title.titleId, game.gameDir);
-    if (game && !game.archive && trophyPackages(game.gameDir).length > 0) {
-      saveList(title.titleId, game.gameDir);
-      found.push({ ...record, gameDir: game.gameDir, listDir: game.gameDir, installed: true });
-    } else if (trophyPackages(savedListDir(title.titleId)).length > 0) {
-      found.push({ ...record, gameDir: archived ? game.gameDir : '', listDir: savedListDir(title.titleId), installed: archived });
-    } else {
-      debug.log(`[kytyps5] ${title.titleId}: no game with a trophy package in the launcher's game folders`);
-    }
+    if (!records.has(titleId) && TITLE_ID.test(titleId)) records.set(titleId, { titleId, root, path: path.join(root, TROPHY_DIR, titleId) });
   }
-  return found;
+  return [...records.values()].map((record) => titleRecord(record, games.get(record.titleId))).filter(Boolean);
 }
 
 function scan(dir) {
@@ -619,7 +776,10 @@ function tickToUnixSeconds(value) {
 function unlockFiles(trophyDir) {
   return readDirectory(trophyDir)
     .filter((entry) => entry.isFile() && UNLOCKS_FILE.test(entry.name))
-    .map((entry) => ({ file: path.join(trophyDir, entry.name), label: parseInt(entry.name.match(UNLOCKS_FILE)[2], 10) }));
+    .map((entry) => {
+      const match = entry.name.match(UNLOCKS_FILE);
+      return { file: path.join(trophyDir, entry.name), user: String(Number(match[1])), label: parseInt(match[2], 10) };
+    });
 }
 
 // { id -> unix seconds } for one unlock file, or null when it is not one the emulator wrote.
@@ -635,13 +795,15 @@ function parseUnlocks(json) {
 }
 
 /*
-  Unlock state, merged across every user the emulator saved for: one library entry shows what has
-  been earned on this machine, like the other emulators do.
+  Unlock state of the active user (the one the launcher runs the game as). When the settings name
+  none, every user's file is merged instead, so a launcher we cannot read never hides a game.
 */
 function getAchievements(data) {
   const info = data && typeof data === 'object' ? data : {};
   const merged = new Map();
-  for (const { file, label } of unlockFiles(String(info.path || ''))) {
+  const active = activeUserId(info);
+  for (const { file, label, user } of unlockFiles(String(info.path || ''))) {
+    if (active && user !== active) continue;
     const unlocked = parseUnlocks(readJsonFile(file, MAX_UNLOCKS_BYTES));
     if (!unlocked) {
       debug.log(`[kytyps5] '${file}' is not a trophy unlock file - left unread`);
@@ -666,4 +828,5 @@ module.exports.scan = scan;
 module.exports.getGameData = getGameData;
 module.exports.getAchievements = getAchievements;
 module.exports.iconDirFor = iconDirFor;
-module.exports._internal = { parseSettingsList, gameDirsFromSettings, readUcp, readPackage, tickToUnixSeconds, parseUnlocks, findGames, trophyKey };
+module.exports.activeUserId = activeUserId;
+module.exports._internal = { parseSettingsList, gameDirsFromSettings, settingsValues, userSettingsFromText, readUcp, readPackage, tickToUnixSeconds, parseUnlocks, findGames, trophyKey };

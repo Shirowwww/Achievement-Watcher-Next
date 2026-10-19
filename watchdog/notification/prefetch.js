@@ -4,6 +4,8 @@ const path = require('path');
 const urlParser = require('url');
 const fs = require('fs');
 const request = require('../util/lazyRequire.js').lazyRequire('request-zero');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { isImageBuffer, usableCachedImage } = require(sharedAppModulePath('util/imageSniff.js'));
 
 
 const cdnProviders = [
@@ -51,12 +53,12 @@ module.exports = async (url, appID) => {
     const cache = path.join(require('../util/userData.js').userDataDir(), `steam_cache/icon/${appID}`);
     let filename = path.parse(url).base;
     filePath = path.join(cache, filename);
-    if (fs.existsSync(filePath)) return filePath;
+    if (usableCachedImage(filePath)) return filePath;
     let exts = ['.jpg', '.png'];
     if (!url.endsWith('.jpg') && !url.endsWith('.png'))
       for (let ext of exts) {
         filePath = path.join(cache, filename + ext);
-        if (fs.existsSync(filePath)) return filePath;
+        if (usableCachedImage(filePath)) return filePath;
       }
     //legacy url are full urls, check if they are still valid
     let isValid = false;
@@ -86,10 +88,11 @@ module.exports = async (url, appID) => {
 
     filePath = path.join(cache, filename);
 
-    if (fs.existsSync(filePath)) {
+    if (usableCachedImage(filePath)) {
       return filePath;
     } else {
-      return (await request.download(validUrl, cache, { validateFileSize: false })).path;
+      const saved = (await request.download(validUrl, cache, { validateFileSize: false })).path;
+      return usableCachedImage(saved) ? saved : validUrl;
     }
   } catch (err) {
     if (err.code === 'ESIZEMISMATCH') {
@@ -97,6 +100,7 @@ module.exports = async (url, appID) => {
         const res = await fetch(validUrl);
         if (!res.ok) return validUrl;
         const buffer = Buffer.from(await res.arrayBuffer());
+        if (!isImageBuffer(buffer)) return validUrl;
         fs.writeFileSync(filePath, buffer);
         return filePath;
       } catch (e) {

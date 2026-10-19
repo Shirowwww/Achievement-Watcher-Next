@@ -100,13 +100,20 @@ function writeUnlocks(emulatorDir, titleId, unlocks, label = 0) {
   }
 }
 
-function makeEmulator(root, { gameDirs = [], unlocks = { 1000: { 1: 1700000000 } }, titleId = TITLE_ID } = {}) {
-  const emulatorDir = path.join(root, 'KytyPS5');
-  writeFile(path.join(emulatorDir, 'kyty_emulator.exe'), 'MZ');
+// QSettings keeps an array as "size" plus "<n>\key" lines; globalUser is [GlobalConfiguration] user_id.
+function settingsText({ gameDirs = [], globalUser = null, gameUsers = [] }) {
   const list = gameDirs.map((dir) => dir.replace(/\\/g, '/')).join(', ');
-  writeFile(path.join(emulatorDir, 'Kyty.ini'), `[GameConfigurations]\nsize=0\n\n[Launcher]\ngame_dirs=${list}\ngrid_view=false\n`);
+  const configs = gameUsers.map((game, i) => `${i + 1}\\game_path=${game.path.replace(/\\/g, '/')}\n${i + 1}\\user_id=${game.user}\n`).join('');
+  const global = globalUser === null ? '' : `[GlobalConfiguration]\nuser_id=${globalUser}\n\n`;
+  return `${global}[GameConfigurations]\nsize=${gameUsers.length}\n${configs}\n[Launcher]\ngame_dirs=${list}\ngrid_view=false\n`;
+}
+
+function makeEmulator(root, { gameDirs = [], unlocks = { 1000: { 1: 1700000000 } }, titleId = TITLE_ID, globalUser = null, gameUsers = [] } = {}) {
+  const emulatorDir = path.join(root, 'KytyPS5');
+  writeFile(path.join(emulatorDir, 'kyty_emulator.exe'), 'MZ_Trophies');
+  writeFile(path.join(emulatorDir, 'Kyty.ini'), settingsText({ gameDirs, globalUser, gameUsers }));
   if (unlocks) writeUnlocks(emulatorDir, titleId, unlocks);
   return emulatorDir;
 }
 
-module.exports = { TITLE_ID, TROPHIES, PNG, buildUcp, samplePackage, unixToTick, makeGame, makeEmulator, writeUnlocks };
+module.exports = { TITLE_ID, TROPHIES, PNG, buildUcp, samplePackage, unixToTick, makeGame, makeEmulator, writeUnlocks, settingsText };

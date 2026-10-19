@@ -64,3 +64,19 @@ test('anything but an intact archive is no archive', () => {
     fs.rmSync(temp, { recursive: true, force: true });
   }
 });
+
+test('an archive that changes while it is read gives no answer', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-zar-change-'));
+  try {
+    const copy = path.join(dir, 'changing.zar');
+    fs.copyFileSync(FIXTURE, copy);
+    assert.equal(withArchive(copy, () => 'read'), 'read');
+    const torn = withArchive(copy, () => {
+      fs.appendFileSync(copy, 'x');
+      return 'read';
+    });
+    assert.equal(torn, null, 'the result of a torn read is dropped, to be read again later');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
