@@ -82,34 +82,44 @@ function sessionKeyFor(encryptedKey, masterKey) {
   return Buffer.concat([decipher.update(encryptedKey), decipher.final()]);
 }
 
-// Normal compression: blocks of [next block size][SHA-1][chunks of u16 size + data], ending on size 0.
-function deblock(data, firstBlockSize) {
+/*
+  Normal compression: blocks of [next block size][SHA-1 of the next block][chunks of u16 size + data,
+  ending on size 0]. The first block's size and hash come from the file format header, so every
+  block is checked before a byte of it reaches the LZX decoder; a wrong key fails here at once.
+*/
+function deblock(data, firstBlockSize, firstBlockHash) {
   const parts = [];
   let at = 0;
   let blockSize = firstBlockSize;
+  let expected = firstBlockHash;
   let total = 0;
   while (blockSize) {
     // A block smaller than its own header would re-read overlapping bytes: quadratic on a crafted file.
     if (blockSize < 26) throw new Error(`XEX: implausible compressed block size ${blockSize}`);
-    need(data, at, 24, 'compressed block');
-    const next = at + blockSize;
-    const nextSize = data.readUInt32BE(at);
-    let p = at + 24;
-    for (;;) {
-      need(data, p, 2, 'compressed chunk');
-      const chunk = data.readUInt16BE(p);
-      p += 2;
-      if (!chunk) break;
-      need(data, p, chunk, 'compressed chunk');
-      total += chunk;
-      if (total > MAX_IMAGE_BYTES) throw new Error('XEX: compressed stream larger than any image');
-      parts.push(data.subarray(p, p + chunk));
-      p += chunk;
-    }
-    at = next;
-    blockSize = nextSize;
+    need(data, at, blockSize, 'compressed block');
+    const block = data.subarray(at, at + blockSize);
+    if (!crypto.createHash('sha1').update(block).digest().equals(expected)) throw new Error(`XEX: compressed block at ${at} fails its SHA-1 check`);
+    total = readChunks(block, parts, total);
+    at += blockSize;
+    blockSize = block.readUInt32BE(0);
+    expected = block.subarray(4, 24);
   }
   return Buffer.concat(parts);
+}
+
+function readChunks(block, parts, total) {
+  let p = 24;
+  for (;;) {
+    need(block, p, 2, 'compressed chunk');
+    const chunk = block.readUInt16BE(p);
+    p += 2;
+    if (!chunk) return total;
+    need(block, p, chunk, 'compressed chunk');
+    total += chunk;
+    if (total > MAX_IMAGE_BYTES) throw new Error('XEX: compressed stream larger than any image');
+    parts.push(block.subarray(p, p + chunk));
+    p += chunk;
+  }
 }
 
 function unpackImage(xex, headers, sessionKey) {
@@ -144,10 +154,12 @@ function unpackImage(xex, headers, sessionKey) {
     return image;
   }
   if (compression === 2) {
-    need(xex, formatAt + 8, 8, 'compression info');
+    if (infoSize < 36) throw new Error('XEX: truncated LZX compression info');
+    need(xex, formatAt + 8, 28, 'compression info');
     const windowSize = xex.readUInt32BE(formatAt + 8);
     const firstBlockSize = xex.readUInt32BE(formatAt + 12);
-    return decompress(deblock(data, firstBlockSize), imageSize, windowSize);
+    const firstBlockHash = xex.subarray(formatAt + 16, formatAt + 36);
+    return decompress(deblock(data, firstBlockSize, firstBlockHash), imageSize, windowSize);
   }
   throw new Error(`XEX: compression type ${compression} is not supported`);
 }
@@ -196,5 +208,98 @@ function readSpa(file) {
   return null;
 }
 
-module.exports = { readSpa, readTitleId };
+const ISOLATED_TIMEOUT_MS = 30000;
+// JS heap only: the Buffers holding the file and the image are capped by the size checks above.
+const ISOLATED_HEAP_MB = 128;
+// The worker is unpacked from the asar: neither a thread nor a forked process can start inside it.
+const WORKER_FILE = path.join(__dirname, 'xexWorker.js').replace(`${path.sep}app.asar${path.sep}`, `${path.sep}app.asar.unpacked${path.sep}`);
+
+function settleOnce(resolve, reject, kill, timeoutMs) {
+  let done = false;
+  const timer = setTimeout(() => finish(new Error(`XEX: extraction timed out after ${timeoutMs} ms`)), timeoutMs);
+  function finish(err, value) {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    Promise.resolve(kill()).catch(() => {}).then(() => (err ? reject(err) : resolve(value)));
+  }
+  return finish;
+}
+
+// `answered`: the file itself was read and refused, unlike a timeout or a worker that never ran.
+function answer(message, finish) {
+  if (!message || !message.ok) finish(Object.assign(new Error(String((message && message.error) || 'XEX: the extraction worker failed')), { answered: true }));
+  else finish(null, message.none ? null : { titleId: message.titleId, spa: Buffer.from(message.spa) });
+}
+
+function inThread(file, { workerFile, timeoutMs }) {
+  const { Worker } = require('worker_threads');
+  return new Promise((resolve, reject) => {
+    let worker;
+    try {
+      worker = new Worker(workerFile, {
+        workerData: { file },
+        resourceLimits: { maxOldGenerationSizeMb: ISOLATED_HEAP_MB, maxYoungGenerationSizeMb: 16, stackSizeMb: 4 },
+      });
+    } catch (err) {
+      // Electron's renderer cannot start a Node worker thread: the caller falls back to a process.
+      reject(Object.assign(err, { code: 'XEX_NO_THREADS' }));
+      return;
+    }
+    const finish = settleOnce(resolve, reject, () => worker.terminate(), timeoutMs);
+    worker.once('message', (message) => answer(message, finish));
+    worker.once('error', (err) => finish(err));
+    worker.once('exit', (code) => finish(new Error(`XEX: the extraction worker exited (${code})`)));
+  });
+}
+
+// The app's own executable run as Node, the way the Watchdog is started.
+function inProcess(file, { workerFile, timeoutMs }) {
+  const { fork } = require('child_process');
+  return new Promise((resolve, reject) => {
+    let child;
+    try {
+      child = fork(workerFile, [], {
+        execPath: process.execPath,
+        execArgv: [`--max-old-space-size=${ISOLATED_HEAP_MB}`],
+        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
+        serialization: 'advanced',
+        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
+        windowsHide: true,
+      });
+    } catch (err) {
+      reject(err);
+      return;
+    }
+    const finish = settleOnce(resolve, reject, () => child.exitCode === null && child.kill(), timeoutMs);
+    child.once('message', (message) => answer(message, finish));
+    child.once('error', (err) => finish(err));
+    child.once('exit', (code) => finish(new Error(`XEX: the extraction process exited (${code})`)));
+    child.send({ file });
+  });
+}
+
+async function isolate(file, options) {
+  if (options.mode === 'process') return inProcess(file, options);
+  try {
+    return await inThread(file, options);
+  } catch (err) {
+    if (err && err.code === 'XEX_NO_THREADS' && options.mode !== 'thread') return inProcess(file, options);
+    throw err;
+  }
+}
+
+let isolatedQueue = Promise.resolve();
+
+/*
+  readSpa away from the caller: a crafted or damaged executable can cost a lot of CPU and memory,
+  and the app must stay responsive. One extraction at a time, killed after `timeoutMs`.
+*/
+function readSpaIsolated(file, { mode = 'auto', timeoutMs = ISOLATED_TIMEOUT_MS, workerFile = WORKER_FILE } = {}) {
+  const run = isolatedQueue.then(() => isolate(path.resolve(String(file)), { mode, timeoutMs, workerFile }));
+  isolatedQueue = run.catch(() => {});
+  return run;
+}
+
+module.exports = { readSpa, readSpaIsolated, readTitleId };
 module.exports._internal = { optionalHeaders, unpackImage, sessionKeyFor, KEYS };

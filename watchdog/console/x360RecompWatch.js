@@ -22,6 +22,7 @@ const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 
 const x360 = require(sharedAppModulePath('parser/x360Recomp.js'));
+const { pathKey } = require(sharedAppModulePath('util/winHosts.js'));
 
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // Same schema and icon caches as the app, so whatever either side fetched serves both.
@@ -44,16 +45,12 @@ function watchedFolders(configFile = userDirFile) {
   }
 }
 
-// The user's folders first, then Documents, one target per title.
+// The user's folders first, then Documents, one target per title; a known port still waiting for
+// its list gives way to that title's list found elsewhere.
 function discover(configFile = userDirFile, documentsRoots = undefined) {
-  const targets = [];
-  const seen = new Set();
+  let targets = [];
   const add = (records) => {
-    for (const record of records) {
-      if (seen.has(record.appid)) continue;
-      seen.add(record.appid);
-      targets.push(record);
-    }
+    targets = x360.mergeRecords(targets, records).records;
   };
   for (const dir of watchedFolders(configFile)) {
     try {
@@ -70,13 +67,64 @@ function discover(configFile = userDirFile, documentsRoots = undefined) {
   return targets;
 }
 
-// The folder a target's list lives in, and whether a changed file there is that list.
-function watchSpec(record) {
-  const data = record.data;
-  if (data.format === 'tsv') return { dir: data.dir, matches: (name) => /\.tsv$/i.test(name) };
-  const wanted = path.basename(data.file).toLowerCase();
-  return { dir: path.dirname(data.file), matches: (name) => name.toLowerCase() === wanted };
+// The list files of a target: one, or one per re:Blue profile.
+function listFiles(data) {
+  if (Array.isArray(data.profileFiles) && data.profileFiles.length) return data.profileFiles;
+  return data.file ? [data.file] : [];
 }
+
+// Each folder a target's lists live in, and whether a changed file there is one of them.
+function listSpecs(record) {
+  const data = record.data;
+  if (data.format === 'tsv') return data.dir ? [{ dir: data.dir, matches: (name) => /\.tsv$/i.test(name) }] : [];
+  const byDir = new Map();
+  for (const file of listFiles(data)) {
+    const dir = path.dirname(file);
+    if (!byDir.has(dir)) byDir.set(dir, new Set());
+    byDir.get(dir).add(path.basename(file).toLowerCase());
+  }
+  return [...byDir].map(([dir, names]) => ({ dir, matches: (name) => names.has(name.toLowerCase()) }));
+}
+
+const watchSpec = (record) => listSpecs(record)[0];
+
+function isDirectory(dir) {
+  try {
+    return fs.statSync(dir).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+// The nearest folder that exists on the way to `dir`, never above `stop`; '' when there is none.
+function nearestExisting(dir, stop) {
+  const stopKey = stop ? pathKey(path.resolve(stop)) : '';
+  let current = path.resolve(dir);
+  for (;;) {
+    if (isDirectory(current)) return current;
+    const parent = path.dirname(current);
+    const parentKey = pathKey(parent);
+    if (!stopKey || pathKey(current) === stopKey || parent === current || (parentKey !== stopKey && !parentKey.startsWith(stopKey + path.sep))) return '';
+    current = parent;
+  }
+}
+
+/*
+  What to watch for a target. A list folder that exists is watched for its files. One that does
+  not exist yet (a known port before its first unlock) is waited for from its nearest existing
+  parent, bounded by the port's own root (`pendingRoot`), never recursively.
+*/
+function watchSpecs(record) {
+  return listSpecs(record).map((spec) => {
+    if (isDirectory(spec.dir)) return spec;
+    const parent = nearestExisting(spec.dir, record.data.pendingRoot);
+    return parent ? { dir: parent, waitingFor: spec.dir } : null;
+  }).filter(Boolean);
+}
+
+const watchKey = (specs) => specs.map((spec) => `${spec.waitingFor ? 'wait' : 'list'}:${pathKey(spec.dir)}`).join('|') || 'none';
+
+const listExists = (data) => (data.format === 'tsv' ? isDirectory(data.dir || '') : listFiles(data).some((file) => fs.existsSync(file)));
 
 const baseline = createBaselineCache({ prefix: 'x360recomp', tag: 'x360recomp', debug });
 const cacheLoad = (key) => baseline.load(key);
@@ -99,9 +147,11 @@ async function handleChange(record, changedFile, ctx) {
     // ReXGlue deletes the list before renaming its replacement in: read in between, it looks empty,
     // and that baseline would replay every unlock as new on the next write. Still gone a moment
     // later, it was removed on purpose (a reset): the baseline starts over, so re-earned ones toast.
-    if (record.data.file && !fs.existsSync(record.data.file)) {
+    // With several profiles, the one whose list went is the one reset; the others still count.
+    const listFile = changedFile && record.data.format !== 'tsv' ? changedFile : record.data.file;
+    if (listFile && !fs.existsSync(listFile)) {
       await new Promise((resolve) => setTimeout(resolve, LIST_GONE_MS));
-      if (!fs.existsSync(record.data.file)) cacheSave(record.appid, []);
+      if (!fs.existsSync(listFile)) cacheSave(record.appid, x360.getAchievements(record.data).map((entry) => entry.id));
       return;
     }
 
@@ -192,12 +242,14 @@ const FALLBACK_REDISCOVER_MS = 10 * 60 * 1000;
 const DOCUMENTS_CHECK_MS = 2 * 60 * 1000;
 let documentsTimer = null;
 const NEW_LIST_SETTLE_MS = 3000;
-const LIST_PATH_RE = /[\\/]achievements(?:[\\/]|$)|[\\/]savedata[\\/]achievements\.json$/i;
+// Also Unleashed's save\ACH-DATA, and reNut's renut.cfg, whose arrival names the save folder.
+const LIST_PATH_RE = /[\\/]achievements(?:[\\/]|$)|[\\/]savedata[\\/]achievements\.json$|[\\/]save[\\/]ach-data$|[\\/]renut\.cfg$/i;
 // Longer than the runtime's delete-then-rename, short enough to follow a reset.
 const LIST_GONE_MS = 1500;
 const RECENT_UNLOCK_S = 15 * 60;
 let rediscoverTimer = null;
-const watched = new Set();
+// appid -> { key, waiting, watchers }: what is watched for it, and whether its list is still awaited.
+const watched = new Map();
 
 function seedBaseline(record, { keepRecent = false, now = Math.floor(Date.now() / 1000) } = {}) {
   if (cacheLoad(record.appid)) return;
@@ -220,23 +272,70 @@ function longPath(dir) {
   }
 }
 
-function attach(record, ctx) {
-  const spec = watchSpec(record);
+function scheduleRediscover(ctx) {
+  // A game writes its list in bursts: wait for it to settle, then look once.
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => rediscover(ctx), NEW_LIST_SETTLE_MS);
+  settleTimer.unref();
+}
+
+function onEvent(spec, record, ctx, evt, name) {
+  const changed = path.basename(name || '').toLowerCase();
+  if (spec.waitingFor) {
+    // Only the next folder on the way to the list matters; discovery then looks again.
+    const next = path.relative(spec.dir, spec.waitingFor).split(/[\\/]/)[0].toLowerCase();
+    if (changed === next) scheduleRediscover(ctx);
+    return;
+  }
+  if ((evt !== 'update' && evt !== 'remove') || !spec.matches(changed)) return;
+  changes.run(record.appid, () => handleChange(record, name, ctx));
+}
+
+function openWatch(spec, record, ctx) {
   try {
-    const watcher = watch(longPath(spec.dir), { recursive: false }, (evt, name) => {
-      if ((evt !== 'update' && evt !== 'remove') || !spec.matches(path.basename(name || ''))) return;
-      changes.run(record.appid, () => handleChange(record, name, ctx));
-    });
+    const watcher = watch(longPath(spec.dir), { recursive: false }, (evt, name) => onEvent(spec, record, ctx, evt, name));
     guardWatcher(watcher, `'${spec.dir}'`, debug);
     watchers.push(watcher);
-    watched.add(record.appid);
-    debug.log(`[x360recomp] watching achievements for ${record.appid} in '${spec.dir}'`);
+    if (spec.waitingFor) debug.log(`[x360recomp] ${record.appid}: unlock source pending, waiting for '${spec.waitingFor}' from '${spec.dir}'`);
+    else debug.log(`[x360recomp] watching achievements for ${record.appid} in '${spec.dir}'`);
+    return watcher;
   } catch (err) {
     debug.warn(`[x360recomp] failed to watch ${spec.dir}: ${err}`);
+    return null;
   }
 }
 
-async function rediscover(ctx, found = discover) {
+function attach(record, ctx) {
+  const specs = watchSpecs(record);
+  const entry = { key: watchKey(specs), waiting: !specs.length || specs.some((spec) => spec.waitingFor), watchers: [] };
+  watched.set(record.appid, entry);
+  if (!specs.length) debug.log(`[x360recomp] ${record.appid}: unlock source pending, nothing to watch until discovery finds where`);
+  for (const spec of specs) {
+    const watcher = openWatch(spec, record, ctx);
+    if (watcher) entry.watchers.push(watcher);
+  }
+}
+
+function detach(appid) {
+  const entry = watched.get(appid);
+  if (!entry) return;
+  for (const watcher of entry.watchers) {
+    try {
+      watcher.close();
+    } catch {
+      /* already closed */
+    }
+  }
+  watchers = watchers.filter((watcher) => !entry.watchers.includes(watcher));
+  watched.delete(appid);
+}
+
+/*
+  A full pass re-attaches a title whose watched folders changed (a list that appeared, a new
+  re:Blue profile); a partial one (Documents only) replaces only a title still waiting for its
+  list, so two sources of one title never take turns.
+*/
+async function rediscover(ctx, found = discover, { full = found === discover } = {}) {
   let targets;
   try {
     targets = found();
@@ -248,9 +347,12 @@ async function rediscover(ctx, found = discover) {
   for (const record of targets) {
     // A stop() during the await below would otherwise leave this loop attaching orphan watchers.
     if (generation !== lifecycle) return;
-    if (watched.has(record.appid)) continue;
-    seedBaseline(record, { keepRecent: true });
+    const current = watched.get(record.appid);
+    if (current && (current.key === watchKey(watchSpecs(record)) || (!full && !current.waiting))) continue;
+    detach(record.appid);
     attach(record, ctx);
+    if (!listExists(record.data)) continue;
+    seedBaseline(record, { keepRecent: true });
     await handleChange(record, '', ctx);
   }
 }
@@ -274,7 +376,8 @@ module.exports.start = async (ctx) => {
   }
 
   for (const record of targets) {
-    seedBaseline(record);
+    // A list that does not exist yet has no back-catalogue: its baseline starts when it appears.
+    if (listExists(record.data)) seedBaseline(record);
     attach(record, ctx);
   }
   watchForNewLists(ctx);
@@ -298,12 +401,7 @@ function watchForNewLists(ctx, configFile = userDirFile) {
   });
   for (const dir of roots) {
     try {
-      const watcher = watch(longPath(dir), { recursive: true, filter: (name) => LIST_PATH_RE.test(String(name || '')) }, () => {
-        // A game writes its list in bursts: wait for it to settle, then look once.
-        clearTimeout(settleTimer);
-        settleTimer = setTimeout(() => rediscover(ctx), NEW_LIST_SETTLE_MS);
-        settleTimer.unref();
-      });
+      const watcher = watch(longPath(dir), { recursive: true, filter: (name) => LIST_PATH_RE.test(String(name || '')) }, () => scheduleRediscover(ctx));
       guardWatcher(watcher, `'${dir}'`, debug);
       watchers.push(watcher);
     } catch (err) {
@@ -332,4 +430,4 @@ module.exports.stop = () => {
   watched.clear();
 };
 
-module.exports._internal = { discover, watchSpec, watchedFolders, iconPathOf, handleChange, seedBaseline, rediscover, LIST_PATH_RE };
+module.exports._internal = { discover, watchSpec, watchSpecs, watchedFolders, iconPathOf, handleChange, seedBaseline, rediscover, watched, LIST_PATH_RE };

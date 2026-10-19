@@ -13,7 +13,7 @@ const test = require('node:test');
 
 const { parseHive, readValue, listSubkeys, listValueNames } = require('../../app/util/wineRegistry.js');
 const { discoverPrefixes } = require('../../app/util/winePrefixes.js');
-const { listHosts, winToUnix, pathKey, hostsFor, hostFor } = require('../../app/util/winHosts.js');
+const { listHosts, winToUnix, pathKey, hostsFor, hostFor, allowedFromConfig } = require('../../app/util/winHosts.js');
 
 // Real symlinks and POSIX paths: these describe Linux and do not run on Windows.
 const LINUX_ONLY = { skip: process.platform === 'win32' && 'Linux-only' };
@@ -242,6 +242,16 @@ test('Windows-style variables set on purpose name a host listed before the other
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }
+});
+
+test('a folder named by a game file may be a network share only on the server the game is on', () => {
+  assert.equal(allowedFromConfig('C:\\Games\\Saves', 'D:\\Ports\\Game'), true);
+  assert.equal(allowedFromConfig('\\\\attacker.invalid\\share\\x', 'D:\\Ports\\Game'), false);
+  assert.equal(allowedFromConfig('//attacker.invalid/share', 'D:\\Ports\\Game'), false);
+  assert.equal(allowedFromConfig('\\\\?\\UNC\\attacker.invalid\\share', 'D:\\Ports\\Game'), false);
+  assert.equal(allowedFromConfig('\\\\NAS\\games\\saves', '\\\\nas\\games\\Port'), true, 'a game kept on a NAS keeps its saves there');
+  assert.equal(allowedFromConfig('\\\\other\\share', '\\\\nas\\games\\Port'), false);
+  assert.equal(allowedFromConfig('\\\\?\\C:\\Long\\Path', 'D:\\Ports\\Game'), true, 'a long local path is local');
 });
 
 test('path keys fold case only where the filesystem does', () => {

@@ -20,6 +20,8 @@ const path = require('path');
 const { fillMissingIcons, nodeFetch, marketplaceArtUrl, downloadImage } = require(path.join(__dirname, '..', 'util', 'xboxLiveIcons.js'));
 const xex = require(path.join(__dirname, 'xex.js'));
 const spaReader = require(path.join(__dirname, 'xllnSpa.js'));
+const ports = require(path.join(__dirname, 'x360Ports.js'));
+const launcher = require(path.join(__dirname, 'x360Launcher.js'));
 
 const SOURCE = 'Xbox 360 Recomp';
 const TYPE = 'x360recomp';
@@ -129,6 +131,34 @@ function parseToml(text) {
     for (const id of legacy[1].split(',').map((v) => Number(v.trim())).filter((v) => v > 0)) {
       if (!unlocked.has(id)) unlocked.set(id, 0);
     }
+  }
+  return unlocked;
+}
+
+/*
+  Unleashed Recompiled's ACH-DATA: a 16-byte header ("ACH ", version, a byte-wise XOR of the
+  records), then 50 packed records of a u16 id and a signed 64-bit time_t, zero ids after the last.
+  Anything else, a half-written file included, throws rather than read as fewer unlocks.
+*/
+const UNLEASHED_RECORDS = 50;
+const UNLEASHED_SIZE = 16 + UNLEASHED_RECORDS * 16;
+function parseUnleashed(buffer) {
+  if (buffer.length !== UNLEASHED_SIZE) throw new Error(`ACH-DATA has the wrong size (${buffer.length} bytes, not ${UNLEASHED_SIZE})`);
+  if (buffer.toString('latin1', 0, 4) !== 'ACH ' || buffer.readUInt32LE(4) > 1) throw new Error('ACH-DATA has an unknown header');
+  let checksum = 0;
+  for (let at = 16; at < buffer.length; at += 1) checksum ^= buffer[at];
+  if (checksum !== buffer.readUInt32LE(8)) throw new Error('ACH-DATA fails its checksum');
+  const unlocked = new Map();
+  let ended = false;
+  for (let at = 16; at < buffer.length; at += 16) {
+    const id = buffer.readUInt16LE(at);
+    if (!id) {
+      ended = true;
+      continue;
+    }
+    if (ended || unlocked.has(id)) throw new Error(`ACH-DATA has a misplaced or repeated record for ${id}`);
+    const seconds = buffer.readBigInt64LE(at + 2);
+    unlocked.set(id, seconds > BigInt(MIN_UNIX_S) && seconds < BigInt(MAX_UNIX_S) ? Number(seconds) : 0);
   }
   return unlocked;
 }
@@ -259,6 +289,21 @@ function mainExe(gameDir) {
 }
 
 /*
+  A known port's install (x360Ports.js), found by its executable before any unlock list exists.
+  Hollow is told by its folder and GearGame layout, and named as discovery will name its JSON list.
+*/
+function portTargetsIn(dir, entries, depth, folder, root) {
+  const exeNames = entries.filter((entry) => entry.isFile() && ports.isPortExe(entry.name) && ports.isProgram(path.join(dir, entry.name))).map((entry) => entry.name);
+  if (exeNames.length) return [{ format: 'port', dir, gameDir: dir, exeNames, folder: path.basename(dir) }];
+  const hollowExe = ports.isHollowInstall(dir);
+  if (!hollowExe) return [];
+  const gearGame = ports.childPath(dir, 'GearGame', true);
+  const listRoot = gameRootOf(gearGame, root);
+  const listFolder = listRoot ? path.basename(listRoot) : depth === 0 ? path.basename(gearGame) : folder;
+  return [{ format: 'port', hollow: true, dir, gameDir: dir, exe: hollowExe, gearGame, folder: listFolder }];
+}
+
+/*
   Every recompiled game below a folder the user pointed at, which can be a whole library, hence the
   bounds. `folder` names the game: the only title the JSON shape has, and a fallback for the others.
 */
@@ -269,7 +314,9 @@ function discover(root) {
   while (queue.length && visited < MAX_DIRECTORIES) {
     const { dir, depth, folder } = queue.shift();
     visited += 1;
-    for (const entry of readDirectory(dir)) {
+    const entries = readDirectory(dir);
+    found.push(...portTargetsIn(dir, entries, depth, folder, root));
+    for (const entry of entries) {
       if (entry.isFile() && entry.name.toLowerCase() === 'default.xex') found.push({ format: 'xex', file: path.join(dir, entry.name) });
       if (!entry.isDirectory()) continue;
       const lower = entry.name.toLowerCase();
@@ -338,10 +385,65 @@ function rememberXex(found) {
   }
 }
 
-// One record per title: the same game found twice (a copy, a Documents folder) is one library entry.
+function placeTarget(target, xexByTitle) {
+  if (!target.xex && target.titleId && xexByTitle.has(target.titleId)) target.xex = xexByTitle.get(target.titleId);
+  if (!target.xex) delete target.xex;
+  // A list under Documents learns its install from the default.xex seen in a watched folder.
+  const knownXex = target.xex || (target.titleId && readXexIndex()[target.titleId]);
+  if (!target.gameDir && knownXex && fs.existsSync(knownXex)) {
+    const xexDir = path.dirname(knownXex);
+    target.gameDir = gameRootOf(xexDir, path.dirname(path.dirname(xexDir)), 2);
+  }
+  if (target.gameDir && !target.exe) target.exe = mainExe(target.gameDir);
+  else if (!target.gameDir) delete target.gameDir;
+  return target;
+}
+
+let portFolders = null;
+// Tests hand in their own Documents and APPDATA; the app and the Watchdog ask the hosts.
+module.exports.setPortFolders = (folders) => {
+  portFolders = folders || null;
+};
+
+function portContext(install) {
+  const custom = portFolders;
+  const host = custom ? null : require(path.join(__dirname, '..', 'util', 'winHosts.js')).hostsFor(install, require(path.join(__dirname, '..', 'util', 'appHosts.js')).appHosts())[0];
+  const toLocal = custom ? (p) => p : (p) => (host ? host.localPath(p) : p);
+  return {
+    readTitleId: xex.readTitleId,
+    toLocal,
+    documentsFor: custom ? custom.documentsFor : (dir) => require(path.join(__dirname, '..', 'util', 'appHosts.js')).documentsFor(dir),
+    appDataFor: custom ? custom.appDataFor : () => (host && host.env.APPDATA) || '',
+    declaredUserRoot: (dir, exes) => launcher.declaredUserRoot(dir, exes, { env: custom ? custom.env || {} : (host && host.env) || {}, toLocal }),
+    log: (message) => debug.log(`[x360recomp] ${message}`),
+  };
+}
+
+function portTarget(target) {
+  const resolved = target.hollow ? ports.hollowTarget(target.dir, target.gearGame) : ports.resolvePort(target.dir, target.exeNames, portContext(target.dir));
+  if (!resolved) return null;
+  if (resolved.skip) {
+    debug.warn(`[x360recomp] '${target.dir}' is not listed: ${resolved.skip}`);
+    return null;
+  }
+  return { ...resolved, gameDir: target.dir, exe: resolved.exe || target.exe, folder: target.folder };
+}
+
+function logPort(record) {
+  const data = record.data;
+  if (!data.pending) debug.log(`[x360recomp] ${data.port} (${record.appid}) installed at '${data.gameDir}', unlock list at '${data.path}'`);
+  else if (data.path) debug.log(`[x360recomp] ${data.port} (${record.appid}) installed at '${data.gameDir}': unlock source pending, expected at '${data.path}'`);
+  else debug.log(`[x360recomp] ${data.port} (${record.appid}) installed at '${data.gameDir}': unlock source pending until its path setup has run`);
+}
+
+/*
+  One record per title: the same game found twice (a copy, a Documents folder) is one library entry.
+  A known port's own list outranks a generic find of the same title; while that list does not exist
+  yet, a list found elsewhere stands and the port only fills the gap.
+*/
 function scan(dir) {
   const games = [];
-  const seen = new Set();
+  const seen = new Map();
   const targets = discover(dir);
   const xexByTitle = new Map();
   for (const target of targets.filter((t) => t.format === 'xex')) {
@@ -350,23 +452,52 @@ function scan(dir) {
   }
   if (xexByTitle.size) rememberXex(xexByTitle);
   for (const target of targets) {
-    if (target.format === 'xex') continue;
-    if (target.titleId && xexByTitle.has(target.titleId)) target.xex = xexByTitle.get(target.titleId);
-    // A list under Documents learns its install from the default.xex seen in a watched folder.
-    const knownXex = target.xex || (target.titleId && readXexIndex()[target.titleId]);
-    if (!target.gameDir && knownXex && fs.existsSync(knownXex)) {
-      const xexDir = path.dirname(knownXex);
-      target.gameDir = gameRootOf(xexDir, path.dirname(path.dirname(xexDir)), 2);
-    }
-    if (target.gameDir) target.exe = mainExe(target.gameDir);
-    else delete target.gameDir;
-    const record = toRecord(target);
+    if (target.format === 'xex' || target.format === 'port') continue;
+    const record = toRecord(placeTarget(target, xexByTitle));
     if (seen.has(record.appid)) continue;
-    seen.add(record.appid);
+    seen.set(record.appid, games.length);
     debug.log(`[x360recomp] ${target.format} unlock list for ${record.appid} at '${record.data.path}'`);
     games.push(record);
   }
+  for (const target of targets.filter((t) => t.format === 'port')) {
+    const resolved = portTarget(target);
+    if (!resolved) continue;
+    const record = toRecord(placeTarget(resolved, xexByTitle));
+    const at = seen.get(record.appid);
+    if (at !== undefined && record.data.pending) continue;
+    if (at === undefined) seen.set(record.appid, games.length);
+    games[at === undefined ? games.length : at] = record;
+    logPort(record);
+  }
   return games;
+}
+
+/*
+  `found` merged into `records` by source and appid: new titles are added, and a port entry still
+  waiting for its list gives way to that title's list found elsewhere, keeping what it knew about
+  the install. { records, changed } with `changed` the number of entries added or replaced.
+*/
+function mergeRecords(records, found) {
+  const merged = [...records];
+  const index = new Map(merged.map((record, i) => [`${record.source}:${record.appid}`, i]));
+  let changed = 0;
+  for (const record of found) {
+    const key = `${record.source}:${record.appid}`;
+    const at = index.get(key);
+    if (at === undefined) {
+      index.set(key, merged.length);
+      merged.push(record);
+      changed += 1;
+      continue;
+    }
+    const waiting = merged[at].data || {};
+    if (!waiting.pending || !record.data || record.data.pending) continue;
+    const data = { ...record.data };
+    for (const field of ['gameDir', 'exe', 'xex']) if (!data[field] && waiting[field]) data[field] = waiting[field];
+    merged[at] = { ...record, data };
+    changed += 1;
+  }
+  return { records: merged, changed };
 }
 
 // The shell folder and the profile one of every host (see util/appHosts.js).
@@ -398,24 +529,47 @@ function scanDocuments(roots = documentsRoots()) {
   return games;
 }
 
+// Several profiles' unlocks as one: earned anywhere, at the earliest known time.
+function mergeUnlocked(lists) {
+  const unlocked = new Map();
+  for (const list of lists) {
+    for (const [id, time] of list) {
+      const previous = unlocked.get(id);
+      if (previous === undefined || previous === 0 || (time > 0 && time < previous)) unlocked.set(id, time);
+    }
+  }
+  return unlocked;
+}
+
+function tomlUnlocks(info) {
+  // re:Blue keeps one list per profile; a game played under two profiles is still one entry.
+  const files = Array.isArray(info.profileFiles) && info.profileFiles.length ? info.profileFiles : [info.file];
+  const present = files.filter((file) => file && fs.existsSync(file));
+  return mergeUnlocked(present.map((file) => parseToml(readSmallFile(file).toString('utf8'))));
+}
+
+function tsvUnlocks(dir) {
+  // One file per profile; a game played under two profiles is still one entry.
+  const lists = [];
+  for (const entry of readDirectory(dir)) {
+    if (!entry.isFile() || !/\.tsv$/i.test(entry.name)) continue;
+    const parsed = parseTsv(readSmallFile(path.join(dir, entry.name)).toString('utf8'));
+    if (parsed) lists.push(parsed.unlocked);
+  }
+  return mergeUnlocked(lists);
+}
+
 // Unlocked achievements only, as { id, achieved, earned_time } like the other console sources.
 function getAchievements(data) {
   const info = data && typeof data === 'object' ? data : {};
   let unlocked = new Map();
   if (info.format === 'toml') {
-    if (!fs.existsSync(info.file)) return [];
-    unlocked = parseToml(readSmallFile(info.file).toString('utf8'));
+    unlocked = tomlUnlocks(info);
   } else if (info.format === 'tsv') {
-    // One file per profile; a game played under two profiles is still one entry.
-    for (const entry of readDirectory(info.dir)) {
-      if (!entry.isFile() || !/\.tsv$/i.test(entry.name)) continue;
-      const parsed = parseTsv(readSmallFile(path.join(info.dir, entry.name)).toString('utf8'));
-      if (!parsed) continue;
-      for (const [id, time] of parsed.unlocked) {
-        const previous = unlocked.get(id);
-        if (previous === undefined || previous === 0 || (time > 0 && time < previous)) unlocked.set(id, time);
-      }
-    }
+    unlocked = tsvUnlocks(info.dir);
+  } else if (info.format === 'unleashed') {
+    if (!info.file || !fs.existsSync(info.file)) return [];
+    unlocked = parseUnleashed(readSmallFile(info.file));
   } else if (info.format === 'json') {
     if (!fs.existsSync(info.file)) return [];
     for (const entry of parseJson(readSmallFile(info.file))) if (entry.unlocked) unlocked.set(entry.id, 0);
@@ -520,9 +674,13 @@ async function withIcons(titleId, list, fetchImpl, { trusted = false } = {}) {
 
 /*
   The SPA of a title, parsed, or null. Extracted once from the default.xex and kept: decrypting and
-  unpacking a whole executable on every scan would be wasted work for data that never changes.
+  unpacking a whole executable on every scan would be wasted work for data that never changes. The
+  extraction runs isolated and time-limited, so a crafted executable cannot hang the caller.
 */
-function loadSpa(titleId, xexPath) {
+const ISOLATION_ATTEMPTS = 2;
+const isolationFailures = new Map();
+
+async function loadSpa(titleId, xexPath) {
   let spa = null;
   try {
     spa = fs.readFileSync(spaCacheFile(titleId));
@@ -548,7 +706,7 @@ function loadSpa(titleId, xexPath) {
       }
     };
     try {
-      const read = xex.readSpa(candidate);
+      const read = await xex.readSpaIsolated(candidate);
       if (!read || read.titleId !== titleId) {
         rememberMiss();
         return null;
@@ -557,7 +715,11 @@ function loadSpa(titleId, xexPath) {
       writeAtomic(spaCacheFile(titleId), spa);
     } catch (err) {
       debug.warn(`[x360recomp] cannot read the achievement list inside '${candidate}': ${err}`);
-      rememberMiss();
+      // A timeout or a worker that could not start (an antivirus, a busy machine) is tried once
+      // more; a file that fails twice would hold the one extraction queue on every scan.
+      const failures = (isolationFailures.get(stamp) || 0) + 1;
+      isolationFailures.set(stamp, failures);
+      if ((err && err.answered) || failures >= ISOLATION_ATTEMPTS) rememberMiss();
       return null;
     }
   }
@@ -812,10 +974,18 @@ async function jsonGameData(info, lang, fetchImpl) {
 
 async function getGameData(data, lang = 'english', { fetchImpl = nodeFetch } = {}) {
   const info = data && typeof data === 'object' ? data : {};
+  if (info.format === 'json' && info.knownTitleId && !fs.existsSync(info.file)) {
+    // A known port before its list exists: the title's own list, under the id the list will keep.
+    const known = await titleGameData({ ...info, titleId: info.knownTitleId }, lang, fetchImpl);
+    return { ...known, appid: appidOf(info) };
+  }
   if (info.format === 'json') return jsonGameData(info, lang, fetchImpl);
+  return titleGameData(info, lang, fetchImpl);
+}
 
+async function titleGameData(info, lang, fetchImpl) {
   const titleId = String(info.titleId || '').toUpperCase();
-  const spa = loadSpa(titleId, info.xex);
+  const spa = await loadSpa(titleId, info.xex);
   if (spa && spa.achievements.length > 0) {
     const list = listFromSpa(titleId, spa, lang);
     // The executable only knows the base game: DLC achievements (12 of Dante's Inferno's 54) come
@@ -875,6 +1045,7 @@ module.exports.SOURCE = SOURCE;
 module.exports.TYPE = TYPE;
 module.exports.scan = scan;
 module.exports.scanDocuments = scanDocuments;
+module.exports.mergeRecords = mergeRecords;
 module.exports.documentsRoots = documentsRoots;
 module.exports.discover = discover;
 module.exports.getAchievements = getAchievements;
@@ -882,6 +1053,7 @@ module.exports.getGameData = getGameData;
 module.exports.parseToml = parseToml;
 module.exports.parseTsv = parseTsv;
 module.exports.parseJson = parseJson;
+module.exports.parseUnleashed = parseUnleashed;
 module.exports.clearJsonBuffer = clearJsonBuffer;
 module.exports.filetimeToUnixSeconds = filetimeToUnixSeconds;
 module.exports.iconDirFor = iconDirFor;

@@ -277,4 +277,20 @@ function hostFor(p, found = () => false, hosts = listHosts()) {
   return candidates.find(found) || candidates[0] || null;
 }
 
-module.exports = { listHosts, pathKey, hostPath, hostPaths, hostsFor, hostFor, firstExisting, winToUnix, SHELL_FOLDERS_KEY };
+// The server of a network path (\\server\share, //server/share, \\?\UNC\server\share), else ''.
+function networkHostOf(p) {
+  const match = /^[\\/]{2}(?:[?.][\\/](?:UNC[\\/])?)?([^\\/]+)/i.exec(String(p || ''));
+  return match && !/^[a-z]:$/i.test(match[1]) ? match[1].toLowerCase() : '';
+}
+
+/*
+  Whether a folder named by a file inside a game folder (a launcher script, a port's settings) may be
+  read: a network share only on the server that game folder is on, since merely opening
+  \\server\... sends the Windows login to that server.
+*/
+function allowedFromConfig(candidate, origin) {
+  const host = networkHostOf(candidate);
+  return !host || host === networkHostOf(origin);
+}
+
+module.exports = { listHosts, pathKey, hostPath, hostPaths, hostsFor, hostFor, firstExisting, winToUnix, allowedFromConfig, SHELL_FOLDERS_KEY };

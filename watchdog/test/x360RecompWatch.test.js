@@ -143,8 +143,81 @@ test('only a path that can be an unlock list wakes discovery up', () => {
     'C:\\Jeux\\LEGO\\content\\achievements\\5752084B.toml',
     'C:\\Users\\x\\Documents\\eot\\Achievements\\415608B2\\a.tsv',
     'C:\\G\\GearGame\\SaveData\\Achievements.json',
+    'C:\\Jeux\\Unleashed\\save\\ACH-DATA',
+    'C:\\Jeux\\reNut\\renut.cfg',
   ];
-  const misses = ['C:\\Jeux\\Game\\saves\\slot1.sav', 'C:\\Jeux\\myachievementsmod\\x.txt', 'C:\\Jeux\\Game\\achievements.log'];
+  const misses = ['C:\\Jeux\\Game\\saves\\slot1.sav', 'C:\\Jeux\\myachievementsmod\\x.txt', 'C:\\Jeux\\Game\\achievements.log', 'C:\\Jeux\\Game\\save\\ACH-DATA.bak'];
   for (const name of hits) assert.ok(LIST_PATH_RE.test(name), name);
   for (const name of misses) assert.ok(!LIST_PATH_RE.test(name), name);
+});
+
+// A schema, its icons and its art already cached, so nothing reaches the network.
+function cacheTitle(titleId, ids) {
+  write(
+    path.join(process.env.AW_USER_DATA, 'steam_cache', 'x360recomp', `${titleId}.json`),
+    JSON.stringify({
+      fetchedAt: Date.now(),
+      name: `Game ${titleId}`,
+      achievements: ids.map((id) => ({ achievement_id: id, gamerscore: 10, localizations: [{ locale: { identifier: 'en_US' }, name: `Name ${id}`, description: 'd' }] })),
+    })
+  );
+  write(path.join(process.env.AW_USER_DATA, 'steam_cache', 'x360recomp', `title-${titleId}.json`), JSON.stringify({ name: `Game ${titleId}`, marketName: '' }));
+  for (const id of ids) write(path.join(process.env.AW_USER_DATA, 'icon_cache', 'x360recomp', titleId, `${id}.png`), 'png');
+  cacheArt(titleId);
+}
+
+const ctxFor = (sent) => ({
+  options: { achievement: { lang: 'english' }, notification: { notify: true }, notification_transport: {}, notification_toast: {} },
+  notify: async (event) => sent.push(event),
+});
+
+test('a known port waits for its list from the nearest folder that exists, then toasts its first unlock', async () => {
+  const docs = path.join(temp, 'PendingDocuments');
+  fs.mkdirSync(docs, { recursive: true });
+  const file = path.join(docs, 'pend_game', 'achievements', '33333333.toml');
+  cacheTitle('33333333', [1, 2]);
+  const waiting = { appid: 'x360-33333333', data: { type: 'x360recomp', format: 'toml', titleId: '33333333', file, folder: 'pend_game', pending: true, pendingRoot: docs } };
+  const sent = [];
+  try {
+    await watcher._internal.rediscover(ctxFor(sent), () => [waiting], { full: true });
+    const [spec] = watcher._internal.watchSpecs(waiting);
+    assert.equal(spec.dir, docs, 'the folder that exists, not the missing one');
+    assert.equal(spec.waitingFor, path.dirname(file));
+    assert.equal(watcher._internal.watched.get('x360-33333333').waiting, true);
+    assert.equal(sent.length, 0);
+
+    const filetime = (unix) => String((BigInt(unix) + 11644473600n) * 10000000n);
+    write(file, `[unlocked.1]\nfiletime = ${filetime(1600000000)}\n\n[unlocked.2]\nfiletime = ${filetime(Math.floor(Date.now() / 1000) - 30)}\n`);
+    // Even the Documents-only pass replaces a title still waiting for its list.
+    await watcher._internal.rediscover(ctxFor(sent), () => [{ ...waiting, data: { ...waiting.data, pending: false } }]);
+    assert.deepEqual(sent.map((event) => event.achievementDisplayName), ['Name 2'], 'the first unlock toasts, an imported old one does not');
+    assert.equal(watcher._internal.watched.get('x360-33333333').waiting, false);
+  } finally {
+    watcher.stop();
+  }
+});
+
+test("re:Blue's profiles are watched together, and resetting one keeps the others' unlocks", async () => {
+  const titleId = '4D5307DF';
+  const profiles = path.join(temp, 'reBlue', 'profiles');
+  const mine = write(path.join(profiles, 'default', 'achievements', `${titleId}.toml`), toml([1]));
+  const alice = write(path.join(profiles, 'alice', 'achievements', `${titleId}.toml`), toml([2]));
+  cacheTitle(titleId, [1, 2, 3]);
+  const record = { appid: `x360-${titleId}`, data: { type: 'x360recomp', format: 'toml', titleId, file: mine, profileFiles: [mine, alice], folder: 'reBlue' } };
+  assert.deepEqual(
+    watcher._internal.watchSpecs(record).map((spec) => spec.dir),
+    [path.dirname(mine), path.dirname(alice)]
+  );
+  const sent = [];
+  const ctx = ctxFor(sent);
+  await handleChange(record, '', ctx);
+  fs.writeFileSync(alice, toml([2, 3]));
+  await handleChange(record, alice, ctx);
+  assert.deepEqual(sent.map((event) => event.achievementDisplayName), ['Name 3']);
+
+  fs.rmSync(mine);
+  await handleChange(record, mine, ctx);
+  fs.writeFileSync(mine, toml([1]));
+  await handleChange(record, mine, ctx);
+  assert.deepEqual(sent.map((event) => event.achievementDisplayName), ['Name 3', 'Name 1'], 'only the reset profile starts over');
 });

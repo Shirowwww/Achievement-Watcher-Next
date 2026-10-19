@@ -187,3 +187,43 @@ test('anything that is not a XEX2 is refused without a crash', (t) => {
   const truncated = tempFile(t, buildXex().subarray(0, 0x300));
   assert.throws(() => xex.readSpa(truncated));
 });
+
+// Every byte of the image as a literal: enough to drive the real decoder through a chained stream.
+const lzxOf = (image) => encodeVerbatim([...image], image.length).stream;
+
+test('an LZX executable unpacks through its chained, SHA-1 checked blocks', (t) => {
+  const read = xex.readSpa(tempFile(t, buildXex({ lzx: lzxOf, lzxOptions: { pieces: 3 } })));
+  assert.equal(read.titleId, '415608B2');
+  assert.ok(read.spa.equals(SPA));
+  const devkit = xex.readSpa(tempFile(t, buildXex({ lzx: lzxOf, masterKey: Buffer.alloc(16) })));
+  assert.ok(devkit.spa.equals(SPA), 'the wrong key fails on the first hash, the other one is tried');
+});
+
+test('a compressed block altered after hashing is refused before any decompression', (t) => {
+  const tamper = (blocks) => {
+    blocks[1][30] ^= 0xff;
+  };
+  const file = tempFile(t, buildXex({ lzx: lzxOf, encrypted: false, lzxOptions: { tamper } }));
+  assert.throws(() => xex.readSpa(file), /SHA-1/);
+});
+
+test('the isolated reader returns the same SPA and turns a malformed file into an error', async (t) => {
+  const good = await xex.readSpaIsolated(tempFile(t, buildXex({ lzx: lzxOf })));
+  assert.equal(good.titleId, '415608B2');
+  assert.ok(Buffer.from(good.spa).equals(SPA));
+  await assert.rejects(xex.readSpaIsolated(tempFile(t, Buffer.from('XEX2 but nothing else'))), (err) => /XEX/.test(err.message) && err.answered === true);
+  const viaProcess = await xex.readSpaIsolated(tempFile(t, buildXex()), { mode: 'process' });
+  assert.ok(Buffer.from(viaProcess.spa).equals(SPA));
+});
+
+const HANG = path.join(__dirname, '..', 'helpers', 'xexHangWorker.js');
+
+for (const mode of ['thread', 'process']) {
+  test(`an extraction that runs past its delay is killed and reported (${mode})`, async (t) => {
+    const started = Date.now();
+    await assert.rejects(xex.readSpaIsolated(tempFile(t, buildXex()), { mode, timeoutMs: 300, workerFile: HANG }), (err) => /timed out/.test(err.message) && !err.answered);
+    assert.ok(Date.now() - started < 10000);
+    // The next extraction is not stuck behind the killed one.
+    assert.ok(Buffer.from((await xex.readSpaIsolated(tempFile(t, buildXex()), { mode })).spa).equals(SPA));
+  });
+}

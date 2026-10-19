@@ -2316,11 +2316,11 @@ async function discoverInScope(source, steamAccFilter, scope) {
   //ReXGlue recompilations write Documents\<game>\achievements\<titleid>.toml unless the game moves it.
   if (!scope && source.xenia) {
     try {
-      const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
-      const extra = x360Recomp.scanDocuments().filter((g) => !have.has(`${g.source}:${g.appid}`));
-      if (extra.length > 0) {
-        data = data.concat(extra);
-        debug.log(`-> Xbox 360 recompilation (Documents) data added (${extra.length})`);
+      // A known port still waiting for its list gives way to the list found here.
+      const merged = x360Recomp.mergeRecords(data, x360Recomp.scanDocuments());
+      if (merged.changed > 0) {
+        data = merged.records;
+        debug.log(`-> Xbox 360 recompilation (Documents) data added (${merged.changed})`);
       }
     } catch (err) {
       debug.log(err);

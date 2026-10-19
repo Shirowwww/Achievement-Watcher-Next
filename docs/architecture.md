@@ -186,8 +186,10 @@ Current integrations include Steam (legit client and emulator saves), Goldberg/G
 | `app/parser/launcherLibraries.js` | Library roots read from launcher configuration already on disk (Epic manifests, GOG/Ubisoft registry, `.GamingRoot`) |
 | `app/parser/rpcs3Layout.js` | RPCS3 configuration root and `vfs.yml` `dev_hdd0` resolution |
 | `app/parser/xlln.js` | XLiveLessNess installs: discovery, per-profile unlock records and the schema read from the game's own executable (`xllnSpa.js` parses its SPAFILE resource) |
-| `app/parser/x360Recomp.js` | Recompiled Xbox 360 games: the ReXGlue `.toml`, `.tsv` and `SaveData\Achievements.json` unlock lists; schema from the game's `default.xex`, dbox.tools as a fallback |
-| `app/parser/xex.js` | Xbox 360 executables: title id, AES and basic/LZX unpacking (`app/util/lzx.js`), and the SPA resource inside |
+| `app/parser/x360Recomp.js` | Recompiled Xbox 360 games: the ReXGlue `.toml`, `.tsv`, `SaveData\Achievements.json` and Unleashed `ACH-DATA` unlock lists; schema from the game's `default.xex`, dbox.tools as a fallback |
+| `app/parser/x360Ports.js` | Known recompilation ports by executable: title id, save layout and folder, so a game is listed (unlock source pending) before its first unlock; `renut.cfg` |
+| `app/parser/x360Launcher.js` | A literal `--user_data_root` in a `.bat`/`.cmd`/`.ps1` launcher beside a port, read without running it |
+| `app/parser/xex.js` | Xbox 360 executables: title id, AES and basic/LZX unpacking (`app/util/lzx.js`) with each compressed block's SHA-1 checked, and the SPA resource inside, extracted in a time-limited worker (`xexWorker.js`: a thread, or a child process from the renderer) |
 | `app/parser/ff7.js` | FINAL FANTASY VII (2013): the 8-byte `achievement.dat` bitfield, paired with Steam api-names |
 | `app/parser/retroAchievements.js` | RetroAchievements Web API: account, library import and the `steam_cache/retroachievements` cache, shared with `watchdog/console/retroAchievementsWatch.js`, which polls recent unlocks every 8 s while a known emulator runs and every 5 min otherwise |
 | `app/electron/init.js` | Main lifecycle, updater, browser helpers and overlay window |

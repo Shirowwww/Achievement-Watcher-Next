@@ -51,6 +51,10 @@ asarUnpack:
   - parser/runeUplay.js
   - parser/x360Recomp.js
   - parser/xex.js
+  # Started as a worker thread or a forked process by xex.js, which cannot load it from the asar.
+  - parser/xexWorker.js
+  - parser/x360Ports.js
+  - parser/x360Launcher.js
   - util/lzx.js
   - util/xboxLiveIcons.js
   - parser/retroAchievements.js

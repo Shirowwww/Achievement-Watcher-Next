@@ -237,6 +237,39 @@ test('the game executable is the schema: its languages, its secret flag and its 
   assert.equal(host.calls.images.length, 0, 'image ids 7/8 prove ids are not image ids, so the DLC gets no guessed picture');
 });
 
+test('an extraction that could not run is tried again, one that read the file is not', async (t) => {
+  const xex = require('../../app/parser/xex.js');
+  const realRead = xex.readSpaIsolated;
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => {
+    x360.setDataRoot('');
+    xex.readSpaIsolated = realRead;
+  });
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'assets', 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = x360.scan(path.join(root, 'Games'));
+  const missing = path.join(root, 'data', 'steam_cache', 'x360recomp', '415608B2.spa.missing');
+  const host = fakeFetch([dboxEntry(1), dboxEntry(2)]);
+
+  xex.readSpaIsolated = async () => {
+    throw new Error('XEX: extraction timed out after 30000 ms');
+  };
+  await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(fs.existsSync(missing), false, 'a timeout or a process that never started says nothing about the file');
+  await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(fs.existsSync(missing), true, 'a second one does: the file is not read again on every scan');
+
+  fs.rmSync(missing);
+  xex.readSpaIsolated = async () => {
+    throw Object.assign(new Error('XEX: not an executable'), { answered: true });
+  };
+  await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(fs.existsSync(missing), true, 'a file read to the end without a list is not read again');
+});
+
 test('a list under Documents finds its executable through the watched folders, and keeps it once read', async (t) => {
   const root = tempDir(t);
   x360.setDataRoot(path.join(root, 'data'));
