@@ -1,212 +1,218 @@
 <div align="center">
 
-# 🏆 Achievement Watcher Next
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/img/readme-logo-dark.png">
+  <img src="docs/assets/img/readme-logo-light.png" width="96" alt="">
+</picture>
 
-<p><strong>A unified achievement tracker for Windows and Linux.</strong></p>
+# Achievement Watcher Next
 
-AW Next brings achievements, rarity and playtime from launchers, local saves and supported emulators
-into one library, with live desktop notifications and an in-game overlay.
+**An achievement tracker for Windows and Linux.**
 
-[![Latest release](https://img.shields.io/github/v/release/Shirowwww/Achievement-Watcher-Next?display_name=tag&sort=semver&style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/Shirowwww/Achievement-Watcher-Next/total?style=flat-square)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)
+AW Next reads achievements, rarity and playtime from Steam, GOG, Epic, Ubisoft, EA, Xbox, local
+saves and console emulators, shows them in one library, and pops up each unlock while you play.
+
+[![Latest release](https://img.shields.io/github/v/release/Shirowwww/Achievement-Watcher-Next?display_name=tag&sort=semver&style=flat-square&color=f5b301)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/Shirowwww/Achievement-Watcher-Next/total?style=flat-square&color=2ea043)](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows&style=flat-square)
 ![Linux](https://img.shields.io/badge/Linux-AppImage%20beta-FCC624?logo=linux&logoColor=black&style=flat-square)
-[![License](https://img.shields.io/badge/license-LGPL--3.0-green?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/license-LGPL--3.0-blue?style=flat-square)](LICENSE)
 
-**[Visit the website](https://shirowwww.github.io/Achievement-Watcher-Next/)** ·
-**[Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest)** ·
-[Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) ·
-[Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
-[Presets](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) ·
-[Themes](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/) ·
-[cs.rin Forum thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187)
+### [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) &nbsp;·&nbsp; [Website](https://shirowwww.github.io/Achievement-Watcher-Next/) &nbsp;·&nbsp; [Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html)
 
 <img src="docs/screenshot/aw-next-banner.gif" width="100%" alt="Achievement Watcher Next in 36 seconds: the unlock popup in ten presets, the in-game list, video clips, nine sources in one library, thirteen themes, Game Health, trophy grades, and much more">
 
-**[Watch it with sound](https://shirowwww.github.io/Achievement-Watcher-Next/#tour)**
+<sub>[The same tour with sound](https://shirowwww.github.io/Achievement-Watcher-Next/#tour) · [Presets](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) · [Themes](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/) · [cs.rin thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187)</sub>
 
 </div>
 
----
+## What it does
 
-## Highlights
+<table>
+<tr>
+<td width="50%" valign="top">
 
-- **Unified library.** Steam, GOG, Epic, Ubisoft, EA and Xbox, Steam-compatible saves and console
-  emulators in a single list,
-  with search, filters, rarity tiers, progress achievements, covers and your own collections. A trophy
-  showcase on the profile splits every unlock by rarity, platinum included, and trophy mode grades
-  every achievement gold, silver or bronze.
-- **Windows and Linux (beta).** The Linux build is native and never runs through Wine. It follows the games
-  you run through Steam and Proton, Wine, Lutris, Heroic and Bottles, and native Linux games, with the
-  same overlay, popups and playtime. Steam Deck support is new - see the
-  [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html).
-- **Automatic notification delivery.** With **Automatic** selected, each unlock arrives through the
-  in-game popup when it can be seen, and as a Windows notification (a desktop notification on Linux)
-  when it cannot - never both.
-- **Preset Designer and sharing.** Ten bundled presets, a no-code designer that previews the real
-  popup, one-file `.awpreset` sharing, a converter for your own Steam Achievement Notifier `.san`
-  themes and a [community gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/).
-- **In-game overlay.** The running game's full achievement list on `Ctrl+Shift+K`, with search,
-  filters and rarity badges - drivable entirely from a gamepad.
-- **Unlocks on stream.** A ready-made OBS Browser source draws the same popup, with the same preset
-  and artwork, and paints nothing at all between unlocks - see
-  [Show unlocks on stream](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html#show-unlocks-on-stream-obs).
-- **Screenshots and video clips of each unlock.** A picture of the screen, HDR included, and
-  optionally an MP4 with the unlock in the middle, recorded by the graphics card only while a game
-  runs - see [Video clips](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html#video-clips).
-- **Game Health.** Each game has a health panel that says whether it is tracked, why not, and offers
-  only the repairs that genuinely apply.
-- **Guided repairs.** Read-only diagnosis, `steam_settings` repair, matched GBE Fork runtime install,
-  architecture-safe automatic Uplay R1 and R2 repair, transactional backups and restore.
-- **Flexible interface.** Simple and Advanced modes, full controller navigation, 28 bundled
-  interface languages, and thirteen built-in palettes - every one of them editable per layer, savable
-  as your own and shareable as a portable `.awtheme` with its own
-  [gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/).
-- **Local-first.** No Steam Web API key, no required account, its own data directory, and caches that
-  keep the library working offline, with one-file profile backup for a reinstall or a new PC. The few secrets it does keep - an emulator Steam password, the
-  Steam, Epic and Xbox sign-in tokens, the RetroAchievements Web API key - are encrypted with a key generated for your install and held by
-  Windows (or your desktop keyring on Linux), readable by your account alone.
+**📚 One library**<br>
+Every source in the same list, with rarity, progress achievements, covers and your own
+collections. Trophy mode grades each achievement gold, silver or bronze.
+
+</td>
+<td width="50%" valign="top">
+
+**🔔 Unlock popups**<br>
+In Automatic mode, an unlock shows in game when it can be seen there, and as a desktop
+notification otherwise. OBS can draw the same popup on your stream.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🎨 Presets and themes**<br>
+Ten popup presets and a designer that previews the real popup. Thirteen interface themes. Both
+can be shared as one file, and Steam Achievement Notifier `.san` themes convert.
+
+</td>
+<td valign="top">
+
+**🎮 In-game overlay**<br>
+`Ctrl+Shift+K` opens the running game's achievement list, with search and filters. It works with
+a gamepad too.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**📸 Screenshots and clips**<br>
+A screenshot of each unlock (HDR works), and if you want, a short MP4 recorded by the graphics
+card around the unlock.
+
+</td>
+<td valign="top">
+
+**🩺 Game Health**<br>
+Tells you whether a game is tracked and why not, and offers the repairs that apply to it. Every
+repair backs up first.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🐧 Linux** <sup>beta</sup><br>
+A native build that does not run through Wine. It follows games from Steam and Proton, Wine,
+Lutris, Heroic and Bottles, and runs on the Steam Deck.
+
+</td>
+<td valign="top">
+
+**🔒 Local first**<br>
+No account to create and no Steam Web API key. The library works offline, and the sign-in
+tokens it keeps are encrypted by Windows or your desktop keyring.
+
+</td>
+</tr>
+</table>
 
 <div align="center">
 <table>
 <tr>
-<td align="center"><img src="docs/screenshot/onboarding.png" width="290" alt="First-run guide"><br><sub>Guided first-run setup</sub></td>
-<td align="center"><img src="docs/screenshot/notification-preset.png" width="290" alt="Preset Designer"><br><sub>Design the popup, previewed live</sub></td>
-<td align="center"><img src="docs/screenshot/game-health.png" width="290" alt="Game Health panel"><br><sub>Per-game health and guided repairs</sub></td>
+<td align="center"><img src="docs/screenshot/home.png" height="230" alt="The library"><br><sub>Library</sub></td>
+<td align="center"><img src="docs/screenshot/game-health.png" height="230" alt="Game Health panel"><br><sub>Game Health</sub></td>
+</tr>
+<tr>
+<td align="center" colspan="2"><img src="docs/screenshot/notification-popup.png" width="330" alt="Unlock popup"> <img src="docs/screenshot/notification-popup-trophy.png" width="330" alt="Unlock popup for a rare achievement"><br><sub>Unlock popups, common and rare</sub></td>
 </tr>
 </table>
+
+<sub>28 interface languages · Simple and Advanced modes · full controller navigation · one-file profile backup ·
+[how it compares to AW 2.x and Achievements](https://shirowwww.github.io/Achievement-Watcher-Next/comparison.html)</sub>
 </div>
-
-→ [How AW Next compares to Achievement Watcher 2.x and Achievements](https://shirowwww.github.io/Achievement-Watcher-Next/comparison.html)
-
----
 
 ## Install
 
 | | Windows 10 and 11 | Linux (x64, beta) |
 |---|---|---|
-| **Download** | `Achievement.Watcher.Setup.<version>.exe` (installer) or `Achievement.Watcher.Portable.<version>.zip` from the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) | `Achievement.Watcher.<version>.AppImage` from the same release |
-| **Start** | Run the installer, or extract the ZIP and open the app | `chmod +x` the file, then run it. It needs FUSE 2: `libfuse2t64` on Ubuntu 24.04 |
+| **Get** | `Achievement.Watcher.Setup.<version>.exe` or `Achievement.Watcher.Portable.<version>.zip` from the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) | `Achievement.Watcher.<version>.AppImage`, same release |
+| **Run** | Run the installer, or extract the ZIP | `chmod +x`, then run. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04) |
 | **Data** | `%APPDATA%\Achievement Watcher Next` | `~/.config/Achievement Watcher Next` |
-| **Updates** | Built in, and downloads only what changed | Built in, from the same releases |
-| **Guide** | [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) | [Linux and the Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) |
+| **Guide** | [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) | [Linux and Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) |
 
-Then, on either system:
-
-1. Start AW Next and follow the first-run guide.
-2. Run **Settings → Folders → Smart Find**, and add any custom game or save location.
-3. Leave AW Next in the tray for live notifications and playtime tracking.
-
-Settings, watched folders, caches, playtime, logs and user presets live in the data folder shown
-above. Upgrading keeps them, and the first launch after an upgrade imports an older Achievement
-Watcher folder without modifying it. The portable build tells you when a new release is out;
-extracting it over the old folder keeps your `data`.
-
-The Linux guide covers Steam, Proton, Lutris, Heroic and Bottles, the overlay shortcut and the Steam
-Deck. The [getting started guide](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html)
-covers the full first run, discovery and updates.
-
----
+Then follow the first-run guide, run **Settings → Folders → Smart Find**, and leave AW Next in the
+tray. Updates are built in and download only what changed. Upgrading keeps your data, and an older
+Achievement Watcher folder is imported without being modified.
 
 ## Supported sources
 
-| Source | Support |
+Steam, Steam-compatible saves, GOG Galaxy, Epic Games, Ubisoft Connect, EA Desktop, Xbox PC, console
+emulators, RetroAchievements and a few more.
+
+<details>
+<summary><b>What is read from each source</b></summary>
+<br>
+
+| Source | What is read |
 |---|---|
-| **Steam** | Local appcache state, read live and with a private profile too, public-profile data, achievement lists (including DLC/update tags) and cached product metadata; an optional account connection covers unlocks earned on your other PCs, and the games you own or share through Steam Family even if they were never installed here |
-| **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, LumaPlay, SmartSteamEmu, CreamAPI, Nemirtingas and compatible layouts |
-| **GOG Galaxy** | Native local Galaxy databases, compatible legacy saves and UniverseLAN, with a one-click fix that installs the matching UniverseLAN build |
-| **Epic Games** | Local installations, and after an optional account connection, the games the account owns with their official achievement state |
-| **Ubisoft Connect** | Native local data, legacy Uplay formats and compatible Uplay R1 and R2 setups |
-| **EA Desktop** | Achievement events from the local EA Desktop log, for games outside EA's managed folders |
-| **Console emulators** | RPCS3, ShadPS4, KytyPS5 and Xenia, each watched live |
-| **Xbox PC** | Local Game Pass / Microsoft Store installs, plus the games the account owns and their Xbox Network state |
-| **Xbox 360 recompilations** | Native PC recompilations such as ReXGlue ports, from the game folder or Documents, watched live |
-| **RetroAchievements** | After an optional account connection (username and Web API key), the emulator games you played with their unlocks and rarity; new unlocks are announced live, whatever the emulator |
-| **Games for Windows LIVE** | XLiveLessNess profiles, with the achievement list, its texts and its icons read from the game's own executable |
-| **Mod patches** | Dead Space 2 MarkerPatch and Alice: Madness Returns MadnessPatch, built from the mod's own texts and images |
+| **Steam** | Local state (private profiles too), achievement sets and DLC tags; optionally your other PCs and Steam Family games |
+| **Steam-compatible saves** | Goldberg, GBE Fork, GreenLuma, LumaPlay, SmartSteamEmu, CreamAPI, Nemirtingas and similar |
+| **GOG Galaxy** | Galaxy databases, legacy saves and UniverseLAN, with a one-click fix |
+| **Epic Games** | Local installs, and owned games with their official state after an optional sign-in |
+| **Ubisoft Connect** | Native data, legacy Uplay formats, Uplay R1 and R2 |
+| **EA Desktop** | Achievement events from the local EA Desktop log |
+| **Xbox PC** | Game Pass and Store installs, plus owned games and their Xbox Network state |
+| **Console emulators** | RPCS3, ShadPS4, KytyPS5, Xenia, and Xbox 360 recompilations such as ReXGlue |
+| **RetroAchievements** | Your emulator games, unlocks and rarity, announced live whatever the emulator |
+| **More** | Games for Windows LIVE (XLiveLessNess), Dead Space 2 MarkerPatch, Alice: Madness Returns MadnessPatch |
 
-Sources are controlled individually, and no Steam Web API key is used: achievement lists come from
-public endpoints and are cached locally.
+</details>
 
-→ [Compatible sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) · [Goldberg / GBE setup](https://shirowwww.github.io/Achievement-Watcher-Next/emulator-setup.html) ·
+Each source can be switched off on its own. More in [Compatible sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
+[Goldberg / GBE setup](https://shirowwww.github.io/Achievement-Watcher-Next/emulator-setup.html) ·
 [Uplay R2 setup](https://shirowwww.github.io/Achievement-Watcher-Next/uplay-r2.html)
 
 > [!WARNING]
-> Reading achievements is read-only. The emulator repair tools do modify game files - always after a
-> confirmation and always with a backup. Use them only with games you own.
-
----
+> Reading achievements never changes anything. The emulator repair tools do modify game files,
+> always after a confirmation and with a backup. Use them only with games you own.
 
 ## Documentation
 
-Start at the **[documentation site](https://shirowwww.github.io/Achievement-Watcher-Next/README.html)**, which explains what each guide covers.
+<table align="center">
+<tr><th>Start</th><th>Use</th><th>Fix a problem</th><th>Contribute</th></tr>
+<tr valign="top">
+<td><a href="https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html">Getting started</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/sources.html">Sources</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html">Notifications</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/presets.html">Presets</a></td>
+<td><a href="https://shirowwww.github.io/Achievement-Watcher-Next/overlay.html">Overlay</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/controller.html">Controller</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/game-health.html">Game Health</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/advanced.html">Advanced tools</a></td>
+<td><a href="https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html">Troubleshooting</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/faq.html">FAQ</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/linux.html">Linux and Steam Deck</a><br><a href="https://github.com/Shirowwww/Achievement-Watcher-Next/issues">Issues</a></td>
+<td><a href="CONTRIBUTING.md">Contributing</a><br><a href="BUILD.md">Build guide</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/architecture.html">Architecture</a><br><a href="https://shirowwww.github.io/Achievement-Watcher-Next/RELEASE_WORKFLOW.html">Release workflow</a></td>
+</tr>
+</table>
 
-- **Start:** [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) ·
-  [Sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html) ·
-  [Notifications](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html) ·
-  [Presets](https://shirowwww.github.io/Achievement-Watcher-Next/presets.html)
-- **Use:** [Overlay](https://shirowwww.github.io/Achievement-Watcher-Next/overlay.html) ·
-  [Controller](https://shirowwww.github.io/Achievement-Watcher-Next/controller.html) ·
-  [Game Health](https://shirowwww.github.io/Achievement-Watcher-Next/game-health.html) ·
-  [Community galleries](https://shirowwww.github.io/Achievement-Watcher-Next/community-galleries.html) ·
-  [Advanced tools](https://shirowwww.github.io/Achievement-Watcher-Next/advanced.html)
-- **Fix a problem:**
-  [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html) ·
-  [FAQ](https://shirowwww.github.io/Achievement-Watcher-Next/faq.html) ·
-  [Linux and Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) ·
-  [Issue tracker](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
-- **Contribute:** [Contributing](CONTRIBUTING.md) · [Build guide](BUILD.md) ·
-  [Architecture](https://shirowwww.github.io/Achievement-Watcher-Next/architecture.html) ·
-  [Release workflow](https://shirowwww.github.io/Achievement-Watcher-Next/RELEASE_WORKFLOW.html)
-
-## Build from source
-
-Requires Windows and Node.js `22.22.2+` or `24.15+`. The app and the background Watchdog are separate
-npm projects; `npm run build` writes the installer, portable ZIP and updater files to `app\dist`. The
-Linux AppImage is built on Linux with `npm run build:linux`. See [BUILD.md](BUILD.md) for setup,
-packaging details and known constraints.
+**Build from source:** Windows and Node.js `22.22.2+` or `24.15+`. `npm run build` in `app` writes the
+installer, portable ZIP and updater files to `app\dist`; the AppImage is built on Linux with
+`npm run build:linux`. Details in [BUILD.md](BUILD.md).
 
 ## Security and support
 
-Found a problem or have an idea? [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues),
-or post in the [cs.rin forum thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187) where releases are
-announced and discussed. For a vulnerability, use the private process in the
-[security policy](SECURITY.md) rather than a public issue.
+Ideas and bugs go to the [issue tracker](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
+or the [cs.rin thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187), where releases are
+announced. Report a vulnerability privately through the [security policy](SECURITY.md).
 
-Download builds only from the
-[official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases); `latest.yml`
-carries the installer's SHA-512 digest. Any release can also be looked up on VirusTotal by its own
-SHA-256, so you can check a download without trusting this page
-([3.12.1](https://www.virustotal.com/gui/file/72315a76f29f976c534b5807dd2df14ebb3925da4c0716b26d4b6e47c240f463)); a few heuristic
-detections there are the emulator false positive described below. Installers use the project's self-signed `CN=Shirow`
-certificate, which you do not need to install or trust - SmartScreen or antivirus warnings remain
-possible because it is not issued by a publicly trusted authority. The updater installs only an
-update signed by that exact certificate, pinned by thumbprint, so a look-alike `CN=Shirow`
-installer is refused. The project contains no game files and does not bypass online ownership
-checks.
+Download only from the [official releases](https://github.com/Shirowwww/Achievement-Watcher-Next/releases).
+Each release can be checked on VirusTotal by its SHA-256
+([3.12.1](https://www.virustotal.com/gui/file/72315a76f29f976c534b5807dd2df14ebb3925da4c0716b26d4b6e47c240f463)),
+and the updater installs only an update signed by the project's pinned `CN=Shirow` certificate.
+The project contains no game files and does not bypass online ownership checks.
 
-### On Windows, your antivirus may flag the emulator files
+<details>
+<summary><b>My antivirus flags the emulator files</b></summary>
+<br>
 
 It is a false positive. The Steam emulator (GBE Fork) and the Ubisoft loaders stand in for a game's
-Steam or Ubisoft library, which is exactly the behaviour detection engines look for: they are judged
-on what they do, not on anything they contain. Both are third-party and open source, and the bundled
-ones are checked against known SHA-256 digests before any repair may use them.
+Steam or Ubisoft library, and that is the behaviour detection engines look for. Both are
+third-party and open source, and the bundled ones are checked against known SHA-256 digests before
+any repair may use them. SmartScreen may also warn, because the self-signed certificate is not
+issued by a public authority; you do not need to install or trust it.
 
-None is written unless you ask - a repair you run, the Emulators tab, or automatic repair, which is
+None is written unless you ask: a repair you run, the Emulators tab, or automatic repair, which is
 off by default and warns you first. Allow the file your antivirus named, or exclude
-`%APPDATA%\Achievement Watcher Next\cache`; never switch protection off.
+`%APPDATA%\Achievement Watcher Next\cache`; never switch protection off. Details in
+[Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html#antivirus-or-smartscreen-warning)
 
-→ [Troubleshooting → Antivirus](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html#antivirus-or-smartscreen-warning)
+</details>
 
-For a bug report, include the app version, Windows version (or Linux distribution and desktop),
-affected source and the relevant files from `%APPDATA%\Achievement Watcher Next\logs`
-(`~/.config/Achievement Watcher Next/logs` on Linux). The issue tracker cannot provide games, credentials
-or piracy support.
+<details>
+<summary><b>What to include in a bug report</b></summary>
+<br>
+
+The app version, your Windows version (or Linux distribution and desktop), the affected source, and
+the relevant files from `%APPDATA%\Achievement Watcher Next\logs` (`~/.config/Achievement Watcher Next/logs`
+on Linux). The issue tracker cannot provide games, credentials or piracy support.
+
+</details>
 
 ## Support the project
 
-AW Next is free and stays free. If you would like to support it further, you can buy me a coffee on
-Ko-fi:
+AW Next is free and stays free. If you would like to help, you can buy me a coffee:
 
 [![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/shirowww)
 
@@ -214,12 +220,9 @@ Ko-fi:
 
 Created by [Xan105](https://github.com/xan105/Achievement-Watcher), continued by
 [darktakayanagi](https://github.com/darktakayanagi/Achievement-Watcher), and maintained here by
-Shirowwww and project contributors. Redistributions of this fork must retain the project attribution
-in [NOTICE](NOTICE).
+Shirowwww and project contributors. Parts are derived from
+[Achievements](https://github.com/PSerban93/Achievements) by JokerVerse (PSerban93), MIT License,
+copyright (c) 2025 JokerVerse. Redistributions must keep the attribution in [NOTICE](NOTICE).
 
-Parts of this project are derived from [Achievements](https://github.com/PSerban93/Achievements) by
-JokerVerse (PSerban93), used under the MIT License, copyright (c) 2025 JokerVerse. See
-[NOTICE](NOTICE).
-
-Licensed under [LGPL-3.0](LICENSE). This project is not affiliated with Valve, Sony, Microsoft, GOG,
-Epic Games, Electronic Arts or Ubisoft.
+Licensed under [LGPL-3.0](LICENSE). Not affiliated with Valve, Sony, Microsoft, GOG, Epic Games,
+Electronic Arts or Ubisoft.
