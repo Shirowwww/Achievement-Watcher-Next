@@ -300,6 +300,29 @@ module.exports.scanLegit = async (listingType = 0, steamAccFilter = '0') => {
 };
 
 /*
+  The Steam reader for one game this client keeps stats for, whoever installed it. scanLegit() only
+  lists what Steam installed, so a crack that leaves its achievements to the Steam client (OnlineFix's
+  Friend's Pass) is read through this instead.
+*/
+module.exports.steamStatsRecord = async (appid, { readSteamPath = () => getSteamPath(), readUsers = () => getSteamUsersList() } = {}) => {
+  let steamPath;
+  try {
+    steamPath = await readSteamPath();
+  } catch {
+    return null;
+  }
+  const cachePath = path.join(steamPath, 'appcache/stats');
+  const bins = require('./steamOfficial.js').listUserBins(cachePath, appid);
+  if (bins.length === 0) return null;
+  const users = (await readUsers()) || [];
+  for (const bin of bins) {
+    const user = users.find((u) => String(u.user) === bin.accountId);
+    if (user) return { appid: String(appid), source: `Steam (${user.name})`, data: { type: 'steamAPI', userID: user, cachePath, installed: true } };
+  }
+  return null;
+};
+
+/*
   The games the connected Steam account owns, whether or not this PC has ever heard of them.
 
   scanLegit() can only see what the local client touched - a stats file, an install manifest, a

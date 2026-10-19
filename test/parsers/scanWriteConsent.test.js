@@ -31,7 +31,9 @@ test('runtime GSE config writes are gated on the automatic-repair setting', () =
 });
 
 test('DLC ownership and identity each need their own opt-in', () => {
-  const block = SRC.slice(SRC.indexOf('const runtimeConfigAllowed'), SRC.indexOf('const hasSteamAchievementSchema'));
+  const gated = SRC.slice(SRC.indexOf('const runtimeConfigAllowed'), SRC.indexOf('const hasSteamAchievementSchema'));
+  assert.match(gated, /else if \(runtimeConfigAllowed\) \{\s*await writeRuntimeConfigs\(/, 'the scan writes only behind the gate');
+  const block = SRC.slice(SRC.indexOf('async function writeRuntimeConfigs'), SRC.indexOf('function holdsClaimedInstall'));
   assert.match(block, /option\.emulator\.manageDlc === true/, 'writeDlcConfig must be behind manageDlc');
   assert.match(block, /option\.emulator\.stampIdentity === true/, 'writeUserConfig must be behind stampIdentity');
 

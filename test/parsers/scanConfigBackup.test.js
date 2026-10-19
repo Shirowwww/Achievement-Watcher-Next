@@ -49,7 +49,7 @@ test('a write that changes nothing leaves no backup behind', () => {
 
 test('the scan passes one backup folder to every runtime config write', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
-  const block = src.slice(src.indexOf('const runtimeConfigAllowed'), src.indexOf('const hasSteamAchievementSchema'));
+  const block = src.slice(src.indexOf('async function writeRuntimeConfigs'), src.indexOf('function holdsClaimedInstall'));
   for (const writer of ['writeDlcConfig', 'writeMainConfig', 'writeUserConfig']) {
     const call = block.slice(block.indexOf(`goldberg.${writer}(`), block.indexOf(`goldberg.${writer}(`) + 400);
     assert.match(call, /backupDir/, `${writer} must receive the backup folder`);

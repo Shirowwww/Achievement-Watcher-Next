@@ -1599,18 +1599,67 @@ function unconfiguredDisplayName(folderName, exeName, productName) {
 // Is this folder a collection root rather than a game folder - does it merely CONTAIN other games'
 // installs (e.g. "The Jackbox Party Pack Collection")? Also requires no exe of its own, since a real
 // game folder can still legitimately contain a claimed sub-install.
-function isGameCollectionDir(dir) {
+/*
+  Whether a steam_settings folder is one an emulator will open: it exists, or a GBE dll sits where it
+  would. Creating it beside Valve's own dll (MW4's launcher folder) changed nothing for the game and
+  made the next scan take that folder for the install, hiding the real one.
+*/
+function emulatorReadsSettings(steamSettings) {
+  if (fs.existsSync(steamSettings)) return true;
+  const dir = path.dirname(steamSettings);
+  return crackLoaderDetect.STEAM_API_DLLS.some((name) => crackLoaderDetect.isEmulatorDll(path.join(dir, name)));
+}
+
+// The runtime GSE configs (see runtimeConfigAllowed): DLC ownership and identity each behind their own
+// switch, configs.main.ini with automatic repair itself.
+async function writeRuntimeConfigs({ appid, steamSettings, option, exePresent }) {
+  // Originals a write below would change, kept before the repair further down backs up its own.
+  const backupDir = goldberg.backupDirFor(steamSettings);
+  try {
+    if (option.emulator.manageDlc === true) {
+      const appConfigFile = path.join(steamSettings, 'configs.app.ini');
+      let needsDlcConfig = true;
+      try {
+        const current = fs.readFileSync(appConfigFile, 'utf8');
+        needsDlcConfig = goldberg.dlcConfigMode(current) === 'none';
+      } catch {}
+      if (needsDlcConfig) {
+        let dlcs = [];
+        try { dlcs = await steam.getDLCList(appid); } catch {}
+        if (exePresent()) {
+          const dlc = goldberg.writeDlcConfig({ steamSettings, dlcs, unlockAll: true, backupDir });
+          debug.log(`[${appid}] created configs.app.ini (unlock_all=1, ${dlc.count} DLC(s))`);
+        }
+      }
+    }
+    // configs.main.ini is not a DLC or identity decision: its keys are what makes a modern
+    // Steamworks title report achievement progress at all, so it follows automatic repair itself.
+    if (exePresent()) {
+      const main = goldberg.writeMainConfig({ steamSettings, backupDir });
+      if (main && main.changed) debug.log(`[${appid}] updated configs.main.ini (new_app_ticket=1, gc_token=1)`);
+    }
+    // The identity follows its own switch; a save folder chosen in Settings applies on its own.
+    const identity = goldberg.userIdentity(option, schemaLanguage.get(appid) || (option.achievement && option.achievement.lang));
+    if ((option.emulator.stampIdentity === true || identity.localSavePath) && exePresent()) {
+      const user = goldberg.writeUserConfig({ steamSettings, ...identity, backupDir });
+      if (user && user.changed) debug.log(`[${appid}] updated configs.user.ini (${user.accountName || 'default'}, ${user.language || 'default'})`);
+    }
+  } catch (err) {
+    debug.log(`[${appid}] runtime GSE config generation failed => ${err}`);
+  }
+}
+
+function holdsClaimedInstall(dir, claimedDirs = _claimedDirs) {
   if (!dir) return false;
   const prefix = path.resolve(dir).toLowerCase() + path.sep;
-  let holdsAnotherGame = false;
-  for (const claimed of _claimedDirs) {
-    if (path.resolve(claimed).toLowerCase().startsWith(prefix)) {
-      holdsAnotherGame = true;
-      break;
-    }
+  for (const claimed of claimedDirs) {
+    if (path.resolve(claimed).toLowerCase().startsWith(prefix)) return true;
   }
-  if (!holdsAnotherGame) return false;
-  return !exeDetect.shallowGameExe(dir);
+  return false;
+}
+
+function isGameCollectionDir(dir) {
+  return holdsClaimedInstall(dir) && !exeDetect.shallowGameExe(dir);
 }
 
 async function resolveGameDirByName(gameName) {
@@ -1767,6 +1816,26 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
           }
         }
         continue;
+      }
+
+      // A steam_settings folder a repack left beside OnlineFix made this a GBE game reading an empty
+      // GSE folder, while the Friend's Pass sends every unlock and counter to the Steam client.
+      if (g.gameDir && crackLoaderDetect.leavesStatsToSteam(crackLoaderDetect.detectWorkingCrackLoader(g.gameDir))) {
+        const steamRecord = await steam.steamStatsRecord(appid);
+        if (steamRecord) {
+          const existing = byAppid.get(appid);
+          if (!existing || existing.data?.type !== 'steamAPI') {
+            const record = existing || steamRecord;
+            record.source = steamRecord.source;
+            record.data = { ...steamRecord.data, gameDir: g.gameDir, exe: detectedExe && detectedExe.full };
+            if (!existing) {
+              byAppid.set(appid, record);
+              additions.push(record);
+            }
+            debug.log(`[goldberg-scan] ${appid} is served by OnlineFix through Steam; reading the Steam client's stats`);
+          }
+          continue;
+        }
       }
 
       const emulatorType = g.emulator === 'goldberg' ? 'goldberg' : 'gbe';
@@ -1942,6 +2011,9 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     if (isKnownNonGameToolInstall(dir)) return;
     if (launcherDetect.isOfficialLauncherInstall(dir)) return; // legit launcher game - never "Unconfigured"
     if (isLinkedSubtree(dir)) return; // this folder already hosts a real-appid game (avoid duplicate)
+    // A launcher above an install the appid scan already found (MW4's cod.exe over its GBE sp26
+    // folder) is that same game, not a second one to name-match.
+    if (holdsClaimedInstall(dir)) return;
     const exe = exeDetect.detect(dir, path.basename(dir), {});
     if (!exe) return;
     // Repacks often rename the folder ("Game123", "0xDEADBEEF"); the exe's own version resource is a
@@ -3457,6 +3529,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     const runtimeConfigAllowed = !!(
       appid.data &&
       appid.data.steamSettings &&
+      emulatorReadsSettings(appid.data.steamSettings) &&
       !foreignCrackLoader &&
       /^[0-9]+$/.test(String(appid.appid)) &&
       realGameExePresent() &&
@@ -3466,41 +3539,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     if (runtimeConfigAllowed && !(await announceAutomaticEmulatorFix())) {
       debug.log(`[${appid.appid}] runtime GSE config generation stopped: automatic repair was switched off or not announced yet`);
     } else if (runtimeConfigAllowed) {
-      const steamSettings = appid.data.steamSettings;
-      // Originals a write below would change, kept before the repair further down backs up its own.
-      const backupDir = goldberg.backupDirFor(steamSettings);
-      try {
-        if (option.emulator.manageDlc === true) {
-          const appConfigFile = path.join(steamSettings, 'configs.app.ini');
-          let needsDlcConfig = true;
-          try {
-            const current = fs.readFileSync(appConfigFile, 'utf8');
-            needsDlcConfig = goldberg.dlcConfigMode(current) === 'none';
-          } catch {}
-          if (needsDlcConfig) {
-            let dlcs = [];
-            try { dlcs = await steam.getDLCList(appid.appid); } catch {}
-            if (realGameExePresent()) {
-              const dlc = goldberg.writeDlcConfig({ steamSettings, dlcs, unlockAll: true, backupDir });
-              debug.log(`[${appid.appid}] created configs.app.ini (unlock_all=1, ${dlc.count} DLC(s))`);
-            }
-          }
-        }
-        // configs.main.ini is not a DLC or identity decision: its keys are what makes a modern
-        // Steamworks title report achievement progress at all, so it follows automatic repair itself.
-        if (realGameExePresent()) {
-          const main = goldberg.writeMainConfig({ steamSettings, backupDir });
-          if (main && main.changed) debug.log(`[${appid.appid}] updated configs.main.ini (new_app_ticket=1, gc_token=1)`);
-        }
-        // The identity follows its own switch; a save folder chosen in Settings applies on its own.
-        const identity = goldberg.userIdentity(option, schemaLanguage.get(appid.appid) || (option.achievement && option.achievement.lang));
-        if ((option.emulator.stampIdentity === true || identity.localSavePath) && realGameExePresent()) {
-          const user = goldberg.writeUserConfig({ steamSettings, ...identity, backupDir });
-          if (user && user.changed) debug.log(`[${appid.appid}] updated configs.user.ini (${user.accountName || 'default'}, ${user.language || 'default'})`);
-        }
-      } catch (err) {
-        debug.log(`[${appid.appid}] runtime GSE config generation failed => ${err}`);
-      }
+      await writeRuntimeConfigs({ appid: appid.appid, steamSettings: appid.data.steamSettings, option, exePresent: realGameExePresent });
     }
 
     const hasSteamAchievementSchema = !!(game.achievement && Array.isArray(game.achievement.list) && game.achievement.list.length > 0);
@@ -3839,6 +3878,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                 debug.log(
                   `[${bgAppid}] automatic emulator fix complete (GBE Fork ${setup.tag || 'cached'}${runtimeFixReason ? `, ${runtimeFixReason}` : ''})`
                 );
+                // The scan's own pass skipped these while no emulator was there to read them.
+                for (const dir of fixedSteamSettingsDirs) {
+                  if (dir) await writeRuntimeConfigs({ appid: bgAppid, steamSettings: dir, option, exePresent: () => !!(bgExe && bgExe.full && fs.existsSync(bgExe.full)) });
+                }
               }
             } catch (err) {
               debug.log(`[${bgAppid}] automatic emulator fix failed => ${err}`);
@@ -4647,6 +4690,9 @@ module.exports._internal = {
   normalizeSaveEntry,
   withoutUnearnedArchived,
   removeInertGoldbergSettings,
+  emulatorReadsSettings,
+  holdsClaimedInstall,
+  writeRuntimeConfigs,
   declaredEmulatorAppid,
   promoteUplayRecord,
   buildProvisionalGame,

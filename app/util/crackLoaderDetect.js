@@ -242,4 +242,21 @@ function hasWorkingCrackLoader(gameDir) {
   return !!detectWorkingCrackLoader(gameDir);
 }
 
-module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, disableLoaderMarkers, isEmulatorDll, proxyLoadedRuntime, EMULATOR_DLL_MARKER };
+/*
+  OnlineFix's Friend's Pass runs the game on real Steam: with `UserStats=false` under [Interfaces] it
+  leaves achievements and stats to the Steam client, which writes them to its own appcache, and its
+  OnlineFix\<appid> folder stays empty.
+*/
+function leavesStatsToSteam(loader) {
+  if (!loader || loader.name !== 'OnlineFix' || !loader.dir) return false;
+  let text;
+  try {
+    text = fs.readFileSync(path.join(loader.dir, 'OnlineFix.ini'), 'utf8');
+  } catch {
+    return false;
+  }
+  const section = text.match(/^\s*\[Interfaces\][^\S\r\n]*\r?\n([\s\S]*?)(?=^\s*\[|(?![\s\S]))/im);
+  return !!section && /^\s*UserStats\s*=\s*(false|0)\s*$/im.test(section[1]);
+}
+
+module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, disableLoaderMarkers, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
