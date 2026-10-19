@@ -480,6 +480,25 @@ function updateDownloadSize(info) {
   return ((info && info.files) || []).reduce((largest, file) => Math.max(largest, Number(file && file.size) || 0), 0);
 }
 
+/*
+  Dev only (tools/aw-probe.ps1 Offer): a dev run never checks for updates, so this walks the real
+  offer path - notification, tray dot, update window - with the two latest real release notes, as if
+  the user had skipped them. Accepting it fails at the download: there is nothing to download.
+*/
+async function offerFakeUpdate(version) {
+  if (app.isPackaged) return;
+  let releaseNotes = null;
+  try {
+    const response = await fetch(`${links.releases}.atom`);
+    if (!response.ok) throw new Error(`releases feed HTTP ${response.status}`);
+    releaseNotes = require('../util/releaseFeed.js').releaseNotesFromFeed(await response.text(), 2);
+  } catch (err) {
+    debug.log(`[updater] fake offer without notes: ${err.message || err}`);
+  }
+  debug.log(`[updater] dev: offering a fake ${version}`);
+  getUpdater().emit('update-available', { version, releaseNotes, files: [] });
+}
+
 function clearUpdateDownloadProgress() {
   updateProgressLogged = -1;
   updateDownloadCancellation = null;
@@ -7673,6 +7692,10 @@ try {
       // focus, which the global shortcut cannot do while a native Wayland window holds it.
       if (args['toggle-overlay']) {
         notifyMonitorOverlayHotkey();
+        return;
+      }
+      if (args['fake-update'] && !app.isPackaged) {
+        offerFakeUpdate(String(args['fake-update'])).catch((err) => debug.log(`[updater] fake offer failed: ${err.message || err}`));
         return;
       }
       if ((args['wintype'] || 'main') === 'main') createMainWindow();

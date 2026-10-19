@@ -108,7 +108,7 @@ install folder.
 
 ### Driving the running app
 
-The main window, the in-game overlay and the notification windows are all BrowserWindows inside the one tray-daemon process, so there is no separate process or debug port to attach to. `tools/aw-probe.ps1` drives a running dev build from the command line:
+The main window, the in-game overlay and the notification windows are all BrowserWindows inside the one tray-daemon process. `tools/aw-probe.ps1` drives a running dev build from the command line, and `tools/aw-page.js` drives its pages through the Chromium debug port that `Start` opens (9333, `-DebugPort 0` for none). An installed copy holds the same single-instance lock, so `Start` refuses to run while one is up: quit it from its tray icon first.
 
 ```powershell
 .\tools\aw-probe.ps1 Start                                     # launch and wait for the main window
@@ -133,6 +133,32 @@ To navigate the interface itself, `Click` and `Scroll` take coordinates relative
 Take a screenshot after every step rather than chaining clicks blindly: several panels re-layout as settings change (the Notifications tab grows overlay-only sections when the transport is set to the in-game overlay), so a coordinate read a moment ago can land somewhere else entirely. Native context menus are not part of the Electron window, so capture them with `-Screen`.
 
 `Send` works because the single-instance lock forwards argv to the running instance - the same channel the Watchdog uses. Window enumeration, not the log files, is the reliable answer to "is the overlay on screen?": the main process logs an incoming overlay *request* before deciding what to do with it.
+
+The pages themselves are best driven through `tools/aw-page.js`: a capture comes from the renderer, so it is exact and works on a covered or hidden window, and clicks and typing aim at a CSS selector instead of a pixel. `--page` matches a window's title or URL.
+
+```powershell
+node tools/aw-page.js list                                          # every page and its URL
+node tools/aw-page.js shot  --page app.html --out main.png
+node tools/aw-page.js shot  --page app.html --selector "#settings" --out settings.png
+node tools/aw-page.js click --page app.html --selector ".config-button"
+node tools/aw-page.js type  --page app.html --selector "input[type=search]" --text "Halo"
+node tools/aw-page.js eval  --page update.html --js "document.title"
+node tools/aw-page.js wait  --page app.html --selector ".game-tile" --timeout 20
+```
+
+The notification area and Windows toasts are outside the app's windows:
+
+```powershell
+.\tools\aw-probe.ps1 Tray                     # left-click AW's icon, in the taskbar or the hidden-icons flyout
+.\tools\aw-probe.ps1 Tray -RightClick         # open its menu, capture it, close it
+.\tools\aw-probe.ps1 Tray -HoverOnly          # capture its tooltip
+.\tools\aw-probe.ps1 Toast                    # capture the corner Windows shows toasts in
+.\tools\aw-probe.ps1 Offer -Version 3.12.2    # dev only: a fake update through the real offer path
+```
+
+`Offer` makes the running dev app offer an update that does not exist (`--fake-update`, ignored by a packaged build), with the notes of the two latest real releases, so the notification, the tray dot and the update window can be checked without publishing anything. Accepting it fails at the download. Toasts that stay on screen (the update one does) stack over the hidden-icons flyout: close them before `Tray`. Without `-Out`, captures go to `..\preuves\<Subject>\` when that workspace folder exists (`-Subject`, default `gui-probe`; `aw-page.js` takes `--subject`), else to the current folder.
+
+Never send a key without `-FocusMatch` from a tool that runs inside another app: it reaches whatever window is in front.
 
 Dev and the installed app share `%APPDATA%\Achievement Watcher Next`. Back up `cfg\options.ini` before a test that changes settings, and restore it afterwards.
 

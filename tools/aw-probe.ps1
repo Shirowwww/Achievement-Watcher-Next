@@ -23,7 +23,7 @@
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true, Position = 0)]
-  [ValidateSet('Start', 'Stop', 'Windows', 'Shot', 'Send', 'Key', 'Wait', 'Logs', 'Click', 'Scroll', 'Hover')]
+  [ValidateSet('Start', 'Stop', 'Windows', 'Shot', 'Send', 'Key', 'Wait', 'Logs', 'Click', 'Scroll', 'Hover', 'Tray', 'Toast', 'Offer')]
   [string]$Command,
 
   [string]$Arguments,
@@ -40,7 +40,15 @@ param(
   [int]$Y = 0,
   [switch]$RightClick,
   # Positive scrolls up; negative scrolls down.
-  [int]$Notches = -3
+  [int]$Notches = -3,
+  # Chromium debug port opened by Start, for tools/aw-page.js; 0 starts without one.
+  [int]$DebugPort = 9333,
+  # Captures without -Out go to ..\preuves\<Subject>\ when that workspace folder exists.
+  [string]$Subject = 'gui-probe',
+  # Tray: hover for the tooltip instead of clicking.
+  [switch]$HoverOnly,
+  # Offer: the version the fake update offers.
+  [string]$Version = '99.0.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -108,6 +116,7 @@ public class AwProbe {
     mouse_event(0x0010, 0, 0, 0, UIntPtr.Zero);   // RIGHTUP
   }
   [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
+  [DllImport("user32.dll")] public static extern uint GetDpiForSystem();
 
   // Return the virtual desktop bounds for multi-monitor captures.
   public static int[] VirtualScreen() {
@@ -164,6 +173,63 @@ function Format-Windows($list) {
   $list | ForEach-Object { "  pid={0,-6} {1,4}x{2,-4} @{3},{4}  '{5}'" -f $_.Pid, $_.Width, $_.Height, $_.X, $_.Y, $_.Title }
 }
 
+function Get-DefaultOut([string]$name) {
+  $preuves = Join-Path (Split-Path -Parent $RepoRoot) 'preuves'
+  $dir = if (Test-Path $preuves) { Join-Path $preuves $Subject } else { (Get-Location).Path }
+  New-Item -ItemType Directory -Force $dir | Out-Null
+  Join-Path $dir ('{0}-{1:yyyyMMdd-HHmmss}.png' -f $name, (Get-Date))
+}
+
+function Get-ScreenRegion([int]$x, [int]$y, [int]$w, [int]$h) {
+  Add-Type -AssemblyName System.Drawing
+  $bmp = New-Object System.Drawing.Bitmap $w, $h
+  $g = [System.Drawing.Graphics]::FromImage($bmp)
+  $g.CopyFromScreen($x, $y, 0, 0, (New-Object System.Drawing.Size $w, $h))
+  $g.Dispose()
+  return $bmp
+}
+
+function Save-ScreenRegion([int]$x, [int]$y, [int]$w, [int]$h, [string]$path) {
+  $bmp = Get-ScreenRegion $x $y $w $h
+  $bmp.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+  $bmp.Dispose()
+  Write-Host "saved $path"
+}
+
+# Share of sampled pixels that differ between two captures of the same area.
+function Get-ChangedShare($a, $b) {
+  $diff = 0; $total = 0
+  for ($y = 0; $y -lt $a.Height; $y += 8) {
+    for ($x = 0; $x -lt $a.Width; $x += 8) { $total++; if ($a.GetPixel($x, $y) -ne $b.GetPixel($x, $y)) { $diff++ } }
+  }
+  return $diff / [Math]::Max(1, $total)
+}
+
+# AW's notification-area button, from the taskbar or the hidden-icons flyout, which is opened when
+# the icon is not pinned. Buttons are named after the icon's tooltip; UIA rects are physical pixels.
+function Find-TrayIcon([string]$pattern) {
+  Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
+  $root = [Windows.Automation.AutomationElement]::RootElement
+  $byClass = { param($name) $root.FindFirst('Children', (New-Object Windows.Automation.PropertyCondition([Windows.Automation.AutomationElement]::ClassNameProperty, $name))) }
+  $buttons = { param($parent) if ($parent) { @($parent.FindAll('Descendants', (New-Object Windows.Automation.PropertyCondition([Windows.Automation.AutomationElement]::ControlTypeProperty, [Windows.Automation.ControlType]::Button)))) } }
+  $all = & $buttons (& $byClass 'Shell_TrayWnd')
+  $hit = @($all | Where-Object { $_.Current.AutomationId -eq 'NotifyItemIcon' -and $_.Current.Name -like "*$pattern*" })
+  if (-not $hit) {
+    $flyout = & $byClass 'TopLevelWindowForOverflowXamlIsland'
+    if (-not $flyout) {
+      # The chevron is the left-most system button of the notification area.
+      $chevron = $all | Where-Object { $_.Current.AutomationId -eq 'SystemTrayIcon' } | Sort-Object { $_.Current.BoundingRectangle.X } | Select-Object -First 1
+      $r = $chevron.Current.BoundingRectangle
+      [AwProbe]::ClickAt([int]($r.X + $r.Width / 2), [int]($r.Y + $r.Height / 2))
+      Start-Sleep -Milliseconds 700
+      $flyout = & $byClass 'TopLevelWindowForOverflowXamlIsland'
+    }
+    $hit = @(& $buttons $flyout | Where-Object { $_.Current.Name -like "*$pattern*" })
+  }
+  if ($hit.Count -gt 1) { Write-Host "note: $($hit.Count) icons match '$pattern' (an installed copy shares the name); using the first: '$($hit[0].Current.Name)'" }
+  return $hit | Select-Object -First 1
+}
+
 # Virtual-key codes for the combos this project actually uses.
 $VK = @{
   'CTRL' = 0x11; 'CONTROL' = 0x11; 'SHIFT' = 0x10; 'ALT' = 0x12
@@ -214,13 +280,21 @@ switch ($Command) {
       Write-Host 'FAIL: this checkout is already running; Stop it first to get a clean state.'
       exit 1
     }
+    # An installed copy holds the same single-instance lock: the dev launch would only hand its argv
+    # to it and exit, and nothing of this checkout would ever show.
+    if (Get-Process -Name 'Achievement Watcher' -ErrorAction SilentlyContinue) {
+      Write-Host 'FAIL: the installed AW Next is running and owns the single-instance lock; quit it from its tray icon first.'
+      exit 1
+    }
     # Remove the flag that disables Electron's GUI.
     Remove-Item Env:\ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
     # Launch Electron directly so the shell is not kept alive. -WindowStyle Hidden must NOT be used
     # here: Windows applies that hint to the child's own first top-level window, so the app's main
     # window comes up with isVisible()=false and never recovers (BrowserWindow.show() later does not
     # override it). electron.exe has no console window to hide, so the flag only breaks the launch.
-    Start-Process -FilePath $Electron -ArgumentList '.' -WorkingDirectory $AppDir
+    $argv = @('.')
+    if ($DebugPort -gt 0) { $argv += "--remote-debugging-port=$DebugPort" }
+    Start-Process -FilePath $Electron -ArgumentList $argv -WorkingDirectory $AppDir
 
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
@@ -315,7 +389,7 @@ switch ($Command) {
   }
 
   'Shot' {
-    if (-not $Out) { $Out = Join-Path (Get-Location) ('aw-shot-{0:yyyyMMdd-HHmmss}.png' -f (Get-Date)) }
+    if (-not $Out) { $Out = Get-DefaultOut 'shot' }
     Add-Type -AssemblyName System.Drawing
     if ($Screen) {
       $vs = [AwProbe]::VirtualScreen()
@@ -340,6 +414,72 @@ switch ($Command) {
     $bmp.Save($Out, [System.Drawing.Imaging.ImageFormat]::Png)
     $bmp.Dispose()
     Write-Host "saved $Out ($((Get-Item $Out).Length) bytes)"
+  }
+
+  'Tray' {
+    # Clicks AW's tray icon (-RightClick for its menu, -HoverOnly for its tooltip); the menu or the
+    # tooltip is captured together with the icon.
+    $pattern = if ($Match) { $Match } else { 'Achievement Watcher' }
+    $icon = Find-TrayIcon $pattern
+    if (-not $icon) { Write-Host "FAIL: no tray icon matching '$pattern'"; exit 1 }
+    $r = $icon.Current.BoundingRectangle
+    $cx = [int]($r.X + $r.Width / 2); $cy = [int]($r.Y + $r.Height / 2)
+    if (-not ($HoverOnly -or $RightClick)) { [AwProbe]::ClickAt($cx, $cy); Write-Host "clicked '$($icon.Current.Name)' at $cx,$cy"; exit 0 }
+
+    # The menu or tooltip opens beside the icon, in a shell surface no window lookup sees, so the
+    # area around the icon is what is captured, and comparing it is how the menu is known to be up.
+    $s = [AwProbe]::GetDpiForSystem() / 96
+    $vs = [AwProbe]::VirtualScreen()
+    $left = [int][Math]::Max($vs[0], $cx - 420 * $s); $right = [int][Math]::Min($vs[0] + $vs[2], $cx + 420 * $s)
+    $top = [int][Math]::Max($vs[1], $cy - 340 * $s); $bottom = [int][Math]::Min($vs[1] + $vs[3], $r.Y + $r.Height + 8)
+    $before = Get-ScreenRegion $left $top ($right - $left) ($bottom - $top)
+    if ($HoverOnly) {
+      # The shell waits for the pointer to settle, then fades the tooltip in.
+      [void][AwProbe]::SetCursorPos($cx - 2, $cy); Start-Sleep -Milliseconds 150
+      [void][AwProbe]::SetCursorPos($cx, $cy); Start-Sleep -Milliseconds 2500
+    } else {
+      # Explorer hands the click to the app only once the process that sent it has exited, so a
+      # throwaway process sends it. A second right-click would close the menu again.
+      $click = "Add-Type -Name M -Namespace W -MemberDefinition '[DllImport(""user32.dll"")] public static extern bool SetCursorPos(int x,int y); [DllImport(""user32.dll"")] public static extern void mouse_event(int f,int x,int y,int d,int e); [DllImport(""user32.dll"")] public static extern IntPtr SetProcessDpiAwarenessContext(IntPtr c);'; [void][W.M]::SetProcessDpiAwarenessContext([IntPtr](-4)); [void][W.M]::SetCursorPos($cx,$cy); Start-Sleep -Milliseconds 120; [W.M]::mouse_event(8,0,0,0,0); [W.M]::mouse_event(16,0,0,0,0)"
+      Start-Process powershell.exe -WindowStyle Hidden -Wait -ArgumentList '-NoProfile', '-EncodedCommand', ([Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($click)))
+    }
+    $deadline = (Get-Date).AddSeconds(5)
+    do {
+      Start-Sleep -Milliseconds 250
+      $after = Get-ScreenRegion $left $top ($right - $left) ($bottom - $top)
+      $changed = (Get-ChangedShare $before $after) -gt 0.02
+      if (-not $changed) { $after.Dispose() }
+    } while (-not $changed -and (Get-Date) -lt $deadline)
+    if ($changed) { $after.Dispose(); Start-Sleep -Milliseconds 300; $after = Get-ScreenRegion $left $top ($right - $left) ($bottom - $top) }
+    $before.Dispose()
+    if (-not $Out) { $Out = Get-DefaultOut $(if ($HoverOnly) { 'tray-tooltip' } else { 'tray-menu' }) }
+    $after.Save($Out, [System.Drawing.Imaging.ImageFormat]::Png); $after.Dispose()
+    Write-Host "$(if ($HoverOnly) { 'hovered' } else { 'right-clicked' }) '$($icon.Current.Name)'; $(if ($changed) { 'it opened' } else { 'NOTHING opened' }); saved $Out"
+    # A menu holds the keyboard while it is open, so Escape closes it. Sent only when something did
+    # open: otherwise it would land in whatever window is in front, which may be the one driving this.
+    if ($RightClick -and $changed) { [AwProbe]::keybd_event(0x1B, 0, 0, [UIntPtr]::Zero); [AwProbe]::keybd_event(0x1B, 0, 2, [UIntPtr]::Zero) }
+    if (-not $changed) { exit 1 }
+  }
+
+  'Toast' {
+    # Windows draws toasts outside anything UIA or EnumWindows can see, so this captures the corner
+    # they appear in: the bottom-right of the primary work area. Run it right after the action that
+    # should notify; another app's toast can sit in the same place.
+    Add-Type -AssemblyName System.Windows.Forms
+    $area = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+    $scale = [AwProbe]::GetDpiForSystem() / 96
+    $w = [int](420 * $scale); $h = [int](460 * $scale)
+    if (-not $Out) { $Out = Get-DefaultOut 'toast' }
+    Save-ScreenRegion ($area.Right - $w) ($area.Bottom - $h) $w $h $Out
+  }
+
+  'Offer' {
+    # Dev builds only: the running app offers a fake update through the real code path.
+    Remove-Item Env:\ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
+    Push-Location $AppDir
+    # The forwarding process prints Chromium cache warnings while it hands its argv over and exits.
+    try { & $Electron '.' "--fake-update=$Version" 2>&1 | Out-Null } finally { Pop-Location }
+    Write-Host "offered a fake $Version (notification, tray dot, update window)"
   }
 
   'Logs' {
