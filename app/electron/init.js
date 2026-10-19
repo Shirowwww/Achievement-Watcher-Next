@@ -1944,7 +1944,7 @@ async function startEngines() {
   syncSteamAppcacheWatch();
 }
 
-// Moves the open library as Steam records an unlock (see util/steamAppcacheWatch.js). Follows the
+// Moves the open library as Steam records an unlock or a counter (see util/steamAppcacheWatch.js). Follows the
 // Steam source setting, so turning that off stops the watcher too.
 let steamAppcacheWatcher = null;
 let steamAppcacheWatchStarting = false;
@@ -1969,6 +1969,7 @@ async function syncSteamAppcacheWatch() {
       baseline: scanCacheBaseline(userData),
       isWanted: () => !!(MainWin && !MainWin.isDestroyed()),
       onUnlock: ({ appid, name, time }) => forwardUnlockToLibrary({ appid, steamappid: appid, name, time }),
+      onProgress: ({ appid, name, current, max }) => forwardProgressToLibrary({ appid, steamappid: appid, name, current, max }),
     });
     if (steamAppcacheWatcher) debug.log(`[steam] following unlocks in ${statsDir}`);
   } catch (err) {

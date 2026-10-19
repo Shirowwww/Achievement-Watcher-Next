@@ -77,3 +77,11 @@ test('a progress counter takes the same three hops, ahead of the popup-only gate
   assert.match(handler, /target\.achievement\.CurProgress = Number\(ach_data\.CurProgress\)/);
   assert.match(handler, /setTimeout\(\(\) => updateGamePage\(target\.game\.appid\), LIVE_PROGRESS_REDRAW_MS\)/);
 });
+
+// A game Steam itself runs (LN3 through OnlineFix's Friend's Pass) never passes the Watchdog: its
+// counters move in Steam's stats bin, which only the main process follows.
+test("Steam's own stats bin forwards counters as well as unlocks", () => {
+  const watch = sliceFunction(init, 'async function syncSteamAppcacheWatch() {');
+  assert.match(watch, /onUnlock: .*forwardUnlockToLibrary\(/);
+  assert.match(watch, /onProgress: \(\{ appid, name, current, max \}\) => forwardProgressToLibrary\(\{ appid, steamappid: appid, name, current, max \}\)/);
+});
