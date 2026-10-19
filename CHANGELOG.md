@@ -23,9 +23,44 @@ renamed in 3.9.0 and the history is kept under one file.
   for Persona 5 Royal in Japanese. Games without a translated title keep their English one, and a
   name you set yourself always wins. A game from another store shows Steam's title only when AW
   knows its Steam release.
+- **Unlocked frame rate for video clips.** Settings > Notification > Video clip now offers
+  **Unlocked (screen rate)** next to 30 and 60 FPS. The clip is recorded at the refresh rate of the
+  monitor showing the game, 120, 144 or 240 Hz included, and follows it when it changes.
+- **PC ports of PS4 games.** Bloodborne, the Uncharted collection (one entry per game), God of War
+  III Remastered, MediEvil and other ports run by the same runner are a new source, PS4 Recomp, in
+  Settings > Sources. Add the port's folder under Folders: the trophy list, grades and icons come
+  from the original game dump the port points to, and each trophy the port logs pops a
+  notification.
+- **Link's Awakening DX HD.** The PC port of The Legend of Zelda: Link's Awakening DX HD (the
+  "Updated" LADXHD build) is a new source, PC Port. Add the folder that holds the game under
+  Folders: its 110 achievements show with their icons, in your language when the game has it, and
+  each unlock pops a notification. The game keeps no dates, so an achievement is dated the moment
+  AW sees it.
 
 ### Improved
 
+- **Video clips without a hardware encoder.** A graphics card with no hardware H.264 encoder no
+  longer ends clips: Windows' software encoder takes over, on the processor, at 1080p and 30 FPS at
+  most. The hardware encoder is still used first.
+- **Video clips keep recording when an encoder refuses a frame rate.** The recorder steps down to
+  60, then 30 FPS instead of stopping, and the log names the rate it settled on.
+- **A stuck clip recorder is restarted.** If the recorder stops reporting for 15 seconds it is
+  killed and started again, with a wait that doubles each time. A graphics card that cannot record
+  at all is not retried until the settings change.
+- **Recompiled Xbox 360 games show up before their first achievement.** Sixteen known ports
+  (Sonic Unleashed, Blue Dragon re:Blue, Banjo-Kazooie: Nuts & Bolts reNut, Fable II and others)
+  are listed as soon as they are installed, and the first unlock is announced when the game writes
+  its list. Sonic Unleashed's own save is read, every re:Blue profile counts, and a launcher script
+  that moves the save folder is followed. Reading a game executable is checked block by block and
+  runs apart from the app, so a damaged file can no longer slow it down.
+- **KytyPS5 counts the user you play as.** The trophies shown and announced are those of the user
+  the launcher runs the game as (its per-game setting, else the global one), not every user
+  merged. A game the launcher knows is listed before its first trophy.
+- **Screenshot souvenirs hold the whole popup.** The screenshot taken with an achievement now waits
+  until the popup has finished appearing, instead of a fixed 800 ms that caught some presets (Xbox
+  Series, Hexagon) before their text was drawn, or caught the previous popup.
+- **Sort the overlay by name.** The Achievement column of the overlay list sorts like the others:
+  A to Z, Z to A, then back to the game's order.
 - **Steam achievement sets.** Achievements now carry the set Steam puts them in (a DLC, a season,
   a TF2 class), straight from Steam instead of SteamHunters. An achievement the developer archived
   no longer counts towards 100% unless you earned it, as on Steam: Team Fortress 2's four Replay
@@ -65,6 +100,18 @@ renamed in 3.9.0 and the history is kept under one file.
   saves elsewhere (`local_save_path` or `local_save.txt`) is now watched there, so its unlocks
   show as they happen instead of at the next library refresh. The folder is watched even before
   the game first writes to it.
+- **A video clip that fails halfway.** When writing stops early, for instance on a full disk, the
+  part already written is kept if it plays; otherwise nothing is left under the clip's name. A clip
+  that was written in full but could not be renamed stays beside its final name as `.part`
+  instead of being deleted.
+- **PS4 and PS5 rarity.** A PS4 game no longer takes its Exophase rarity from the PS5 list of the
+  same game (Hades), and a lookup that cannot find the list gives up after 90 seconds.
+- **Broken icons stuck in the cache.** A web page answered in place of an icon (a captive portal,
+  a CDN error) or a half-downloaded file is no longer kept as the icon, and one an earlier version
+  kept is downloaded again.
+- **Advanced steam_settings of the wrong game.** When generate_emu_config left nothing for a game,
+  the data of the last game it generated could be merged into it. Two runs for the same game (a
+  repair while the scan generates it) no longer erase each other's result either.
 - **Steam schemas when the main Steam endpoint is unavailable.** Steam replaced its community
   achievements page in October 2026, and the fallback that read it found nothing for any game. AW
   reads the new page, which gives the full schema in your language, hidden descriptions included,
