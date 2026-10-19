@@ -4,14 +4,12 @@ const { test } = require('node:test');
 const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium.js');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const localeDir = path.join(appDir, 'locale', 'lang');
 const localeOverrides = fs.readFileSync(path.join(appDir, 'locale', 'override.css'), 'utf8');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
 
 /*
   The width below which the Uplay package row stops being a two-column row.
@@ -29,16 +27,6 @@ const STACKS_BELOW = (() => {
   assert.ok(owner, 'no width query reshapes the Uplay package row any more - has its layout changed?');
   return Number(owner[1]);
 })();
-
-function browserPath() {
-  return [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ].find((candidate) => candidate && fs.existsSync(candidate));
-}
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -112,16 +100,12 @@ test('locale overrides never constrain the Settings modal width', () => {
 });
 
 test('settings keeps its two-column rows readable in every bundled locale', { concurrency: 1, timeout: 180000 }, async (t) => {
-  const executablePath = browserPath();
-  if (!executablePath) {
-    t.skip('no Chromium-family browser installed');
+  const { browser, userDataDir, failures } = await launchBrowser();
+  if (!browser) {
+    t.skip(skipReason(failures));
     return;
   }
-
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-settings-responsive-'));
-  let browser;
   try {
-    browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu'] });
     const page = await browser.newPage();
     const locales = fs.readdirSync(localeDir).filter((file) => file.endsWith('.json')).sort();
     assert.equal(locales.length, BUNDLED_LOCALE_COUNT);
@@ -198,7 +182,6 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
       }
     }
   } finally {
-    await browser?.close().catch(() => {});
-    await removeBrowserProfile(userDataDir);
+    await closeBrowser(browser, userDataDir);
   }
 });

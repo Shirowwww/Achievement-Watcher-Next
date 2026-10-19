@@ -2,24 +2,11 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium.js');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
-
-function browserPath() {
-  return [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ].find((candidate) => candidate && fs.existsSync(candidate));
-}
 
 // <user-avatar> only gets its box from the shadow DOM the component builds at runtime, and this
 // page is loaded without the app scripts, so the header is measured with a stand-in of that size.
@@ -40,16 +27,12 @@ const AVATAR_STUB = `user-avatar {
   actually resized to and asserts the three groups never intersect.
 */
 test('the home header never lets the library controls run into the profile', { concurrency: 1, timeout: 120000 }, async (t) => {
-  const executablePath = browserPath();
-  if (!executablePath) {
-    t.skip('no Chromium-family browser installed');
+  const { browser, userDataDir, failures } = await launchBrowser();
+  if (!browser) {
+    t.skip(skipReason(failures));
     return;
   }
-
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-home-header-'));
-  let browser;
   try {
-    browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu'] });
     const page = await browser.newPage();
     await page.goto(pathToFileURL(path.join(appDir, 'view', 'app.html')).href, { waitUntil: 'domcontentloaded' });
     await page.addStyleTag({ content: AVATAR_STUB });
@@ -93,7 +76,6 @@ test('the home header never lets the library controls run into the profile', { c
     }));
     assert.ok(narrow.searchTop >= narrow.profileBottom - 0.5, 'the controls should sit below the profile on a narrow window');
   } finally {
-    if (browser) await browser.close();
-    await removeBrowserProfile(userDataDir);
+    await closeBrowser(browser, userDataDir);
   }
 });
