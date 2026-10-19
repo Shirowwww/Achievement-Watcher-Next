@@ -8,6 +8,11 @@ SDR sRGB, when HDR is active, and as the plain `R8G8B8A8` frame otherwise. It re
 `screenshot-desktop`, whose Windows path compiled a C# screen grabber with `csc.exe` into `%TEMP%`
 and ran it, which antivirus behaviour engines report as a screen-capture tool.
 
+Windows 10 cannot turn off the yellow border Windows Graphics Capture draws around a captured
+screen. Where Windows has no switch for it, the helper takes the shot with DXGI Desktop Duplication
+instead, which draws nothing; frames that only moved the pointer are skipped, since their texture
+is still black. Both paths feed the same tone mapping.
+
 Whether HDR is on is read from the display path of the primary monitor with
 `DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting
 the SDR color space while the desktop composes in HDR, and the older `..._ADVANCED_COLOR_INFO`
@@ -83,7 +88,8 @@ which must find nothing.
 
 `--status` prints `hdr-active` or `sdr`. `--force <output.png>` is available for development-time
 capture testing on an SDR desktop, and `--sdr <output.png>` takes the plain 8-bit capture even on
-an HDR desktop. End users do not need Rust or the Windows SDK.
+an HDR desktop. `--duplication <output.png>` takes the Windows 10 path on any Windows. End users do
+not need Rust or the Windows SDK.
 
 The helper depends on the MIT-licensed `windows-capture` crate. Its license is shipped beside the
 executable, together with the license for the HDR capture implementation.

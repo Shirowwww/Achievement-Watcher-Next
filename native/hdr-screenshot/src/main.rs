@@ -11,8 +11,9 @@ use png::{BitDepth, ColorType, DeflateCompression, Encoder, SrgbRenderingIntent}
 use windows::Win32::Devices::Display::DISPLAYCONFIG_PATH_INFO;
 use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, HMONITOR, MONITORINFOEXW};
 use windows_capture::capture::{Context, GraphicsCaptureApiHandler};
+use windows_capture::dxgi_duplication_api::{DxgiDuplicationApi, DxgiDuplicationFormat, Error as DuplicationError};
 use windows_capture::frame::Frame;
-use windows_capture::graphics_capture_api::InternalCaptureControl;
+use windows_capture::graphics_capture_api::{GraphicsCaptureApi, InternalCaptureControl};
 use windows_capture::monitor::Monitor;
 use windows_capture::settings::{
     ColorFormat, CursorCaptureSettings, DirtyRegionSettings, DrawBorderSettings,
@@ -99,13 +100,11 @@ impl GraphicsCaptureApiHandler for SnapshotCapture {
             .canvas
             .lock()
             .map_err(|_| "Screenshot canvas lock was poisoned")?;
-        if self.flags.mode == CaptureMode::Sdr {
-            copy_rgba8_frame(raw, width, height, &mut canvas)?;
-        } else {
-            let white_scale = self.flags.white_scale;
-            let scene_peak = estimate_scene_peak(raw, width, height, white_scale);
-            tone_map_frame(raw, width, height, scene_peak, white_scale, &mut canvas)?;
-        }
+        let layout = match self.flags.mode {
+            CaptureMode::Hdr => PixelLayout::Rgba16F,
+            CaptureMode::Sdr => PixelLayout::Rgba8,
+        };
+        fill_canvas(raw, width, height, layout, self.flags.white_scale, &mut canvas)?;
 
         self.complete = true;
         capture_control.stop();
@@ -303,8 +302,33 @@ fn tone_map_frame(
     Ok(())
 }
 
+#[derive(Clone, Copy)]
+enum PixelLayout {
+    Rgba8,
+    Bgra8,
+    Rgba16F,
+}
+
+fn fill_canvas(
+    raw: &[u8],
+    width: u32,
+    height: u32,
+    layout: PixelLayout,
+    white_scale: f32,
+    canvas: &mut Canvas,
+) -> Result<(), AnyError> {
+    match layout {
+        PixelLayout::Rgba8 => copy_8bit_frame(raw, width, height, false, canvas),
+        PixelLayout::Bgra8 => copy_8bit_frame(raw, width, height, true, canvas),
+        PixelLayout::Rgba16F => {
+            let scene_peak = estimate_scene_peak(raw, width, height, white_scale);
+            tone_map_frame(raw, width, height, scene_peak, white_scale, canvas)
+        }
+    }
+}
+
 // An SDR frame is already what the screen shows: keep red, green and blue, drop the alpha.
-fn copy_rgba8_frame(raw: &[u8], width: u32, height: u32, canvas: &mut Canvas) -> Result<(), AnyError> {
+fn copy_8bit_frame(raw: &[u8], width: u32, height: u32, bgr: bool, canvas: &mut Canvas) -> Result<(), AnyError> {
     let expected = usize::try_from(width)?
         .checked_mul(usize::try_from(height)?)
         .and_then(|pixels| pixels.checked_mul(4))
@@ -320,6 +344,9 @@ fn copy_rgba8_frame(raw: &[u8], width: u32, height: u32, canvas: &mut Canvas) ->
             let source = ((y * width + x) * 4) as usize;
             let destination = ((y * canvas.width + x) * 3) as usize;
             canvas.rgb[destination..destination + 3].copy_from_slice(&raw[source..source + 3]);
+            if bgr {
+                canvas.rgb.swap(destination, destination + 2);
+            }
         }
     }
     Ok(())
@@ -352,11 +379,54 @@ fn write_png(output: &Path, canvas: &Canvas) -> Result<(), AnyError> {
     Ok(())
 }
 
-fn capture(output: &Path, primary: Monitor, mode: CaptureMode, white_scale: f32) -> Result<(), AnyError> {
-    let canvas = Arc::new(Mutex::new(Canvas::new(
-        primary.width()?,
-        primary.height()?,
-    )?));
+// Windows Graphics Capture draws a yellow border around the screen on Windows 10, where it cannot be
+// turned off; Desktop Duplication draws nothing, so it takes the shot wherever the border would show.
+fn capture(output: &Path, primary: Monitor, mode: CaptureMode, white_scale: f32, duplication: bool) -> Result<(), AnyError> {
+    let canvas = Canvas::new(primary.width()?, primary.height()?)?;
+    let canvas = if !duplication && GraphicsCaptureApi::is_border_settings_supported().unwrap_or(false) {
+        capture_graphics(canvas, primary, mode, white_scale)?
+    } else {
+        capture_duplication(canvas, primary, mode, white_scale)?
+    };
+    write_png(output, &canvas)
+}
+
+// The first frames can come before the desktop has presented anything, hence a few tries.
+const DUPLICATION_TIMEOUT_MS: u32 = 250;
+const DUPLICATION_ATTEMPTS: u32 = 12;
+
+fn capture_duplication(mut canvas: Canvas, primary: Monitor, mode: CaptureMode, white_scale: f32) -> Result<Canvas, AnyError> {
+    let wanted = match mode {
+        CaptureMode::Hdr => DxgiDuplicationFormat::Rgba16F,
+        CaptureMode::Sdr => DxgiDuplicationFormat::Rgba8,
+    };
+    let mut duplication = DxgiDuplicationApi::new_options(primary, &[wanted])?;
+    for attempt in 1..=DUPLICATION_ATTEMPTS {
+        let mut frame = match duplication.acquire_next_frame(DUPLICATION_TIMEOUT_MS) {
+            Ok(frame) => frame,
+            Err(DuplicationError::Timeout) if attempt < DUPLICATION_ATTEMPTS => continue,
+            Err(error) => return Err(error.into()),
+        };
+        // A frame that only moved the pointer carries no desktop image yet: its texture is black.
+        if frame.frame_info().LastPresentTime == 0 {
+            continue;
+        }
+        let (width, height) = (frame.width(), frame.height());
+        let layout = match frame.format() {
+            DxgiDuplicationFormat::Rgba16F => PixelLayout::Rgba16F,
+            DxgiDuplicationFormat::Rgba8 => PixelLayout::Rgba8,
+            DxgiDuplicationFormat::Bgra8 => PixelLayout::Bgra8,
+        };
+        let buffer = frame.buffer()?;
+        let mut unpadded = Vec::new();
+        fill_canvas(buffer.as_nopadding_buffer(&mut unpadded), width, height, layout, white_scale, &mut canvas)?;
+        return Ok(canvas);
+    }
+    Err("Desktop Duplication returned no frame".into())
+}
+
+fn capture_graphics(canvas: Canvas, primary: Monitor, mode: CaptureMode, white_scale: f32) -> Result<Canvas, AnyError> {
+    let canvas = Arc::new(Mutex::new(canvas));
     let settings = Settings::new(
         primary,
         CursorCaptureSettings::WithoutCursor,
@@ -376,17 +446,18 @@ fn capture(output: &Path, primary: Monitor, mode: CaptureMode, white_scale: f32)
     );
     SnapshotCapture::start(settings)?;
 
-    let canvas = canvas
-        .lock()
+    let canvas = Arc::try_unwrap(canvas)
+        .map_err(|_| "The screenshot canvas is still shared")?
+        .into_inner()
         .map_err(|_| "Screenshot canvas lock was poisoned")?;
-    write_png(output, &canvas)
+    Ok(canvas)
 }
 
 fn run() -> Result<(), AnyError> {
     let mut args = std::env::args_os().skip(1);
     let first = args
         .next()
-        .ok_or("Usage: aw-next-hdr-screenshot.exe [--status | --force | --sdr] <output.png>")?;
+        .ok_or("Usage: aw-next-hdr-screenshot.exe [--status | --force | --sdr | --duplication] <output.png>")?;
     let primary = Monitor::primary()?;
 
     if first == "--status" {
@@ -402,7 +473,8 @@ fn run() -> Result<(), AnyError> {
     }
 
     // --force tone-maps even an SDR desktop, --sdr copies even an HDR one; by default the
-    // display's own mode decides.
+    // display's own mode decides. --duplication takes the Windows 10 path on any Windows.
+    let duplication = first == "--duplication";
     let forced = if first == "--force" {
         Some(CaptureMode::Hdr)
     } else if first == "--sdr" {
@@ -410,7 +482,7 @@ fn run() -> Result<(), AnyError> {
     } else {
         None
     };
-    let output = if forced.is_some() {
+    let output = if forced.is_some() || duplication {
         args.next()
             .map(PathBuf::from)
             .ok_or("an output path is required")?
@@ -424,7 +496,7 @@ fn run() -> Result<(), AnyError> {
         None if path_hdr_enabled(&path)? => CaptureMode::Hdr,
         None => CaptureMode::Sdr,
     };
-    capture(&output, primary, mode, path_sdr_white_scale(&path))
+    capture(&output, primary, mode, path_sdr_white_scale(&path), duplication)
 }
 
 fn main() {
@@ -466,9 +538,17 @@ mod tests {
     fn an_sdr_frame_is_copied_without_its_alpha() {
         let raw = [10, 20, 30, 255, 40, 50, 60, 0, 70, 80, 90, 128, 100, 110, 120, 255];
         let mut canvas = Canvas::new(2, 2).unwrap();
-        copy_rgba8_frame(&raw, 2, 2, &mut canvas).unwrap();
+        copy_8bit_frame(&raw, 2, 2, false, &mut canvas).unwrap();
         assert_eq!(canvas.rgb, vec![10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120]);
-        assert!(copy_rgba8_frame(&raw[..8], 2, 2, &mut canvas).is_err(), "a short buffer is refused");
+        assert!(copy_8bit_frame(&raw[..8], 2, 2, false, &mut canvas).is_err(), "a short buffer is refused");
+    }
+
+    #[test]
+    fn a_bgra_frame_from_desktop_duplication_comes_out_in_rgb_order() {
+        let raw = [30, 20, 10, 255, 60, 50, 40, 255];
+        let mut canvas = Canvas::new(2, 1).unwrap();
+        copy_8bit_frame(&raw, 2, 1, true, &mut canvas).unwrap();
+        assert_eq!(canvas.rgb, vec![10, 20, 30, 40, 50, 60]);
     }
 
     #[test]
