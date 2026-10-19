@@ -52,7 +52,7 @@
     "node-7z": "^3.0.0",
     "node-html-parser": "^9.0.4",
     "node-unrar-js": "^2.0.2",
-    "puppeteer-core": "^25.13.0",
+    "puppeteer-core": "^25.14.0",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
     "registry-js": "^1.16.1",
