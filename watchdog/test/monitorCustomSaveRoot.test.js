@@ -40,3 +40,13 @@ test('GBE GseSavePath set for the session is watched with the GSE Saves shape', 
   assert.ok(entry, 'the GseSavePath folder must be watched');
   assert.equal(entry.options.recursive, true);
 });
+
+// A repack's own local_save_path (cfg/saveRedirects.json, written by the library scan) is followed
+// live too: before, only the library refresh read it and no unlock there was ever notified.
+test('a per-game redirected save folder is watched with the GSE Saves shape', async () => {
+  const redirected = path.resolve(path.sep, 'Games', 'Call of Duty', 'saves');
+  const entry = find(await monitor.getFolders([], {}, [redirected]), redirected);
+  assert.ok(entry, 'the redirected folder must be watched');
+  assert.equal(entry.options.recursive, true);
+  assert.ok(entry.options.file.some((name) => name.toLowerCase() === 'achievements.json'));
+});

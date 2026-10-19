@@ -76,6 +76,8 @@ asarUnpack:
   - util/watchdogPipe.js
   - util/playtimeFile.js
   - util/replaceFile.js
+  # The save folders a GBE install redirects to, written by the library scan.
+  - util/saveRedirects.js
 
 publish:
   provider: github

@@ -52,6 +52,20 @@ test('a relative local_save_path resolves against the dll folder, with or withou
   }
 });
 
+// The Watchdog has to arm the folder before the game's first unlock creates it.
+test('the configured save root is known before the game has written it', () => {
+  const gameDir = tempGame('localsave-root');
+  try {
+    const steamSettings = path.join(gameDir, 'steam_settings');
+    writeUserIni(steamSettings, '.\\saves');
+    assert.equal(goldberg.configuredSaveRoot(steamSettings), path.join(gameDir, 'saves'));
+    writeUserIni(steamSettings, 'path/relative/to/dll');
+    assert.equal(goldberg.configuredSaveRoot(steamSettings), '');
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
 test('a build that writes straight into the configured folder is found too', () => {
   const gameDir = tempGame('localsave-flat');
   try {

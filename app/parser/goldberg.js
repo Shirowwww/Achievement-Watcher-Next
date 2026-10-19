@@ -656,20 +656,26 @@ function readConfiguredSavePath(steamSettings, env = process.env) {
   return value;
 }
 
+// The absolute folder a redirected setup saves under, whether or not the game has written it yet, or
+// ''. GBE resolves a relative path against its dll's folder, which is steam_settings' parent.
+function configuredSaveRoot(steamSettings) {
+  let configured = readConfiguredSavePath(steamSettings);
+  if (!configured) return '';
+  // A repack written for Windows spells a relative folder with backslashes, literal characters elsewhere.
+  if (process.platform !== 'win32') configured = configured.replace(/\\/g, '/');
+  try {
+    return path.isAbsolute(configured) ? path.resolve(configured) : path.resolve(path.dirname(steamSettings), configured);
+  } catch {
+    return '';
+  }
+}
+
 // The folder a redirected setup actually keeps this game's unlock state in, or null. A relative path
 // resolves against steam_settings' parent. Both the appid-subfolder shape and the bare folder are
 // probed; the one with an achievements.json wins, else the first existing folder.
 function resolveLocalSaveDir({ steamSettings, appid } = {}) {
-  let configured = readConfiguredSavePath(steamSettings);
-  if (!configured) return null;
-  // A repack written for Windows spells a relative folder with backslashes, literal characters elsewhere.
-  if (process.platform !== 'win32') configured = configured.replace(/\\/g, '/');
-  let root;
-  try {
-    root = path.isAbsolute(configured) ? path.resolve(configured) : path.resolve(path.dirname(steamSettings), configured);
-  } catch {
-    return null;
-  }
+  const root = configuredSaveRoot(steamSettings);
+  if (!root) return null;
   const candidates = appid != null && String(appid) ? [path.join(root, String(appid)), root] : [root];
   for (const dir of candidates) {
     try {
@@ -1945,6 +1951,7 @@ module.exports = {
   saveFolderFor,
   originalSteamApiDll,
   readConfiguredSavePath,
+  configuredSaveRoot,
   resolveLocalSaveDir,
   buildRuntimeAchievementsState,
   seedRuntimeSave,

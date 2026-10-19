@@ -101,6 +101,7 @@ const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, ex
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
+const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
 const { configuredExecutable } = require('./util/exeList.js');
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
@@ -211,6 +212,7 @@ const NEW_ROOT_POLL_MS = 5 * 1000;
 const cfg_file = {
   option: path.join(userDataDir(), 'cfg', 'options.ini'),
   userDir: path.join(userDataDir(), 'cfg', 'userdir.db'),
+  saveRedirects: saveRedirects.redirectsFile(userDataDir()),
 };
 
 /*
@@ -789,6 +791,13 @@ process.on('message', (msg) => {
     return;
   }
   if (msg.reloadPlaytimeIndex === true) {
+    // Sent at the end of every library scan, which is also what rewrites the redirected save folders.
+    const redirectsStamp = fileStamp(cfg_file.saveRedirects);
+    if ((redirectsStamp || app.redirectsStamp) && !sameStamp(app.redirectsStamp, redirectsStamp)) {
+      debug.log('redirected save folders changed -> reloading watchers');
+      app.scheduleOptionsReload();
+      return;
+    }
     if (playtimeMonitorEmitter && typeof playtimeMonitorEmitter.reloadGameIndex === 'function') {
       playtimeMonitorEmitter.reloadGameIndex().catch((err) => {
         debug.warn(`[Playtime] gameIndex reload failed => ${err}`);
@@ -847,6 +856,7 @@ var app = {
   starting: false,
   restartPending: false,
   optionsReloadTimer: null,
+  redirectsStamp: null,
   // Settings autosave on every keystroke, so one gesture can rewrite options.ini repeatedly; a
   // restart per write would leave a gap where an unlock lands unwatched, so bursts coalesce.
   scheduleOptionsReload: function () {
@@ -945,7 +955,10 @@ var app = {
       const missingRoots = [];
       const steamClientRoot = steamClientStats.steamClientRoot(self.options);
       if (steamClientRoot) debug.log(`[steam] Steam client notifications on, following "${steamClientRoot.dir}"`);
-      for (let folder of [...(await monitor.getFolders(cfg_file.userDir, self.options)), ...(steamClientRoot ? [steamClientRoot] : [])]) {
+      self.redirectsStamp = fileStamp(cfg_file.saveRedirects);
+      const redirectedSaves = saveRedirects.roots(cfg_file.saveRedirects);
+      const saveFolders = await monitor.getFolders(cfg_file.userDir, self.options, redirectedSaves);
+      for (let folder of [...saveFolders, ...(steamClientRoot ? [steamClientRoot] : [])]) {
         try {
           if (fs.existsSync(folder.dir)) {
             self.watch(i, folder.dir, folder.options);

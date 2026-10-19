@@ -62,6 +62,7 @@ const crackFix = require(path.join(appPath, 'crackFix.js'));
 const genEmuConfig = require(path.join(appPath, 'genEmuConfig.js'));
 const gameIndex = require(path.join(appPath, 'gameIndex.js'));
 const { userDataDir } = require(path.join(appPath, '..', 'util', 'userDataPath.js'));
+const saveRedirects = require(path.join(appPath, '..', 'util', 'saveRedirects.js'));
 const { resolveAchievementDataPath } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
@@ -1655,6 +1656,20 @@ function isEmuSaveRecord(record) {
   return /[\\/]?(gse saves|goldberg steamemu saves)[\\/]/i.test(String(data.path));
 }
 
+// The Watchdog never reads steam_settings, so the redirected save folders it must watch come from here.
+function recordSaveRedirects(found) {
+  const redirectsBySettings = new Map();
+  for (const g of found) {
+    const steamSettings = g.steamSettings || (g.gameDir ? path.join(g.gameDir, 'steam_settings') : null);
+    if (steamSettings && fs.existsSync(steamSettings)) redirectsBySettings.set(steamSettings, goldberg.configuredSaveRoot(steamSettings));
+  }
+  try {
+    if (saveRedirects.update(saveRedirects.redirectsFile(userDataDir()), redirectsBySettings)) debug.log('[goldberg-scan] redirected save folders updated for the Watchdog');
+  } catch (err) {
+    debug.log(`[goldberg-scan] could not record redirected save folders => ${err}`);
+  }
+}
+
 // Find installed Goldberg/GBE games and flag known entries that need schema repair.
 async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
   const additions = [];
@@ -1666,6 +1681,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
     const found = goldberg.findCompatibleGames(roots, {
       onSkip: (gameDir, steamAppid) => debug.log(`[goldberg-scan] skipped Steam library install (appid ${steamAppid}): ${gameDir}`),
     });
+    recordSaveRedirects(found);
     for (const g of found) {
       if (g.gameDir && isKnownNonGameToolInstall(g.gameDir)) {
         if (g.appid) {

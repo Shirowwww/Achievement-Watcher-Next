@@ -228,7 +228,7 @@ function documentsFor(dirPath, hosts, docsByHost) {
   return docsByHost.get(winHosts.hostsFor(dirPath, hosts)[0]) || null;
 }
 
-module.exports.getFolders = async (userDir_file, options = {}) => {
+module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves = []) => {
   let configuredDirs = [];
   try {
     const parsed = JSON.parse(await fs.readFile(userDir_file, 'utf8'));
@@ -244,7 +244,8 @@ module.exports.getFolders = async (userDir_file, options = {}) => {
 
   // The GBE save folder chosen in Settings (issue #123) has the GSE Saves shape: one folder per appid,
   // and so has GBE's GseSavePath when the session sets it for every game.
-  const customSaves = [(options && options.emulator && options.emulator.savePath) || '', process.env.GseSavePath || ''];
+  // A per-game local_save_path keeps the same shape under its own folder (cfg/saveRedirects.json).
+  const customSaves = [(options && options.emulator && options.emulator.savePath) || '', process.env.GseSavePath || '', ...redirectedSaves];
   for (const dir of new Set(customSaves.map((value) => String(value).trim()))) {
     if (dir && path.isAbsolute(dir)) steamEmu.push({ dir, options: { ...GSE_SAVES_OPTIONS } });
   }
