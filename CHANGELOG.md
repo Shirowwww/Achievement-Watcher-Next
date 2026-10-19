@@ -15,6 +15,9 @@ renamed in 3.9.0 and the history is kept under one file.
   the tile, the game screen, in search and sorting, in notifications and in screenshot and clip
   folder names. It survives rescans and profile restores; leave the field empty, or pick Restore the
   original name, to undo it. Cover lookups and game matching keep using the original name.
+- **Edit a game's playtime.** Right-click a game, then Achievements & playtime > Edit playtime, and
+  type the total in hours (12.5) or hours and minutes (12h30). Handy for playtime carried over from
+  another tracker. New sessions add to it as usual.
 - **Game titles in your language** (Settings > General, on by default). Steam games show under the
   title Steam gives them in your achievement language, when Steam has one, such as ペルソナ５ ザ・ロイヤル
   for Persona 5 Royal in Japanese. Games without a translated title keep their English one, and a
@@ -38,6 +41,30 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Screenshots on Windows 10.** Every screenshot souvenir failed there with "Toggling the capture
+  border is not supported": AW asked Windows to hide the capture border, which only Windows 11 can
+  do. Windows 10 now takes the shot another way, which draws no border at all.
+- **A random game tracked next to games launched through Steam.** Starting a game from a Steam
+  shortcut (Playnite's, for one) also starts the Steam overlay, and AW could file that overlay under
+  another game it found in the Steam folder, then count playtime for both. Steam's own programs are
+  no longer taken for games.
+- **Live counters for games run through Steam.** A progress achievement of a game Steam itself
+  runs, such as an Online-Fix release played through the Friend's Pass (Little Nightmares III's
+  toyboxes), now moves its counter and the progress bar in the library as you play, as unlocks
+  already did. Until now only the refresh button caught up.
+- **Online-Fix games read from Steam.** An Online-Fix release that leaves achievements to Steam
+  (the Friend's Pass) is now read from Steam's own stats, even when Steam did not install it. A
+  release that also carried a stray emulator folder was taken for an emulator game reading an
+  empty save folder, so its unlocks never showed.
+- **A game listed twice beside its own hub.** A release that keeps the untouched Steam hub above
+  the emulator build that actually runs (Call of Duty: Modern Warfare 4's `cod.exe`, with the
+  cracked campaign in `sp26`) showed as two games. It is one game now, and AW no longer writes an
+  emulator config next to a dll no emulator reads, which used to hide the real install at the next
+  scan.
+- **Live unlocks from a game's own save folder.** A GBE or Goldberg setup whose config sends its
+  saves elsewhere (`local_save_path` or `local_save.txt`) is now watched there, so its unlocks
+  show as they happen instead of at the next library refresh. The folder is watched even before
+  the game first writes to it.
 - **Steam schemas when the main Steam endpoint is unavailable.** Steam replaced its community
   achievements page in October 2026, and the fallback that read it found nothing for any game. AW
   reads the new page, which gives the full schema in your language, hidden descriptions included,
