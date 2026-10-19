@@ -3,11 +3,11 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const Module = require('node:module');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-exelist-'));
+const userData = makeTempDir('aw-exelist-');
 fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
 
 const originalLoad = Module._load;
@@ -26,7 +26,7 @@ function writeBytes(file, size = 128) {
 }
 
 function tmpGame(name) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `aw-list-${name}-`));
+  return makeTempDir(`aw-list-${name}-`);
 }
 
 test('reconcile pre-fills confident installs and creates empty entries for ambiguous ones', async () => {

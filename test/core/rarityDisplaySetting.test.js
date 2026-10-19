@@ -3,14 +3,14 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const settings = require('../../app/settings.js');
 const libraryRefresh = require('../../app/util/libraryRefresh.js');
 
 function loadWith(achievementLines) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rarity-setting-'));
+  const userData = makeTempDir('aw-rarity-setting-');
   fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
   fs.writeFileSync(path.join(userData, 'cfg', 'options.ini'), `[achievement]\nlang=english\n${achievementLines}\n`, 'utf8');
   settings.setUserDataPath(userData);

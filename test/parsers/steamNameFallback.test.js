@@ -11,8 +11,8 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const test = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 // Answers for the main-process IPC, swapped per test.
 let steamData = {};
@@ -40,7 +40,7 @@ const steam = require('../../app/parser/steam.js');
 
 // One user-data root for the file: the app-list map is built once per process, so every appid this
 // suite needs has to be in the dump written here.
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-name-'));
+const userData = makeTempDir('aw-steam-name-');
 fs.mkdirSync(path.join(userData, 'steam_cache', 'schema'), { recursive: true });
 fs.writeFileSync(
   path.join(userData, 'steam_cache', 'schema', 'appList.json'),

@@ -16,9 +16,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const unrealLayout = require(path.join(__dirname, '..', '..', 'app', 'util', 'unrealLayout.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', '..', 'app', 'util', 'crackLoaderDetect.js'));
@@ -55,7 +55,7 @@ function settings(dir, { appid = '2149010', achievements = SCHEMA.achievement.li
   whichever runtime the release shipped, and the identity files beside it rather than at the root.
 */
 function build({ runtime = 'gbe', appidFile = true, loaderIni = '', library = false } = {}) {
-  const root = path.join(fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ue-scene-'))), 'Little Nightmares - Enhanced Edition');
+  const root = path.join(fs.realpathSync(makeTempDir('aw-ue-scene-')), 'Little Nightmares - Enhanced Edition');
   const steamworks = path.join(root, 'Engine', 'Binaries', 'ThirdParty', 'Steamworks', 'Steamv151', 'Win64');
   write(path.join(steamworks, 'steam_api64.dll'), runtime === 'gbe' ? GBE_DLL : RUNE_DLL);
   if (appidFile) write(path.join(steamworks, 'steam_appid.txt'), '2149010');

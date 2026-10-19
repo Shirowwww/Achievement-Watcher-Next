@@ -8,8 +8,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const { evaluateUpdateSignature } = require('../../app/util/updateSignature.js');
 const snapshot = require('../../app/util/librarySnapshot.js');
@@ -50,7 +50,7 @@ test('the stored library is keyed to the Steam account it was scanned for', () =
   const second = { ...base, steam: { main: '76561198000000002' } };
   assert.notEqual(snapshot.configKey(first), snapshot.configKey(second));
 
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-snapshot-account-'));
+  const userData = makeTempDir('aw-snapshot-account-');
   const game = {
     appid: '10',
     name: 'Game',
@@ -63,7 +63,7 @@ test('the stored library is keyed to the Steam account it was scanned for', () =
 });
 
 test('a folder holding a whole library is never a removal target', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uninstall-'));
+  const root = makeTempDir('aw-uninstall-');
   const make = (...segments) => {
     const dir = path.join(root, ...segments);
     fs.mkdirSync(dir, { recursive: true });

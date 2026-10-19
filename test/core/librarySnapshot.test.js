@@ -3,8 +3,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const snapshot = require('../../app/util/librarySnapshot.js');
 
@@ -18,7 +18,7 @@ function game(appid, name = `Game ${appid}`) {
 }
 
 test('the last complete library is available before discovery and preserves achievement state', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-'));
+  const userData = makeTempDir('aw-library-snapshot-');
   const config = {
     achievement: { lang: 'english', showHidden: false, mergeDuplicate: true, hideZero: false },
     achievement_source: { steamEmu: true },
@@ -29,7 +29,7 @@ test('the last complete library is available before discovery and preserves achi
 });
 
 test('a snapshot from a different library configuration is not painted', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-config-'));
+  const userData = makeTempDir('aw-library-snapshot-config-');
   const first = { achievement: { lang: 'english', hideZero: false }, achievement_source: { steamEmu: true } };
   const changed = { achievement: { lang: 'french', hideZero: false }, achievement_source: { steamEmu: true } };
 
@@ -38,7 +38,7 @@ test('a snapshot from a different library configuration is not painted', () => {
 });
 
 test('partial and corrupt snapshots fail closed', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-corrupt-'));
+  const userData = makeTempDir('aw-library-snapshot-corrupt-');
   const config = { achievement: { lang: 'english' }, achievement_source: {} };
   const file = snapshot.snapshotFile(userData);
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -74,7 +74,7 @@ test('a failed fresh enrichment keeps complete known achievement state and artwo
 });
 
 test('what a library may be reused for is stored beside it, and survives the round trip', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-reuse-'));
+  const userData = makeTempDir('aw-library-snapshot-reuse-');
   const config = { achievement: { lang: 'english' }, achievement_source: { steamEmu: true } };
   const fingerprint = { dirs: [['C:/games', 12]], files: [['C:/games/480/achievements.json', 34]] };
 
@@ -89,7 +89,7 @@ test('what a library may be reused for is stored beside it, and survives the rou
 });
 
 test('a library saved without reuse metadata still paints but carries nothing to reuse', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-bare-'));
+  const userData = makeTempDir('aw-library-snapshot-bare-');
   const config = { achievement: { lang: 'english' }, achievement_source: {} };
 
   snapshot.write(userData, config, [game(10)]);
@@ -101,7 +101,7 @@ test('a library saved without reuse metadata still paints but carries nothing to
 });
 
 test('a library written by an older format is ignored entirely', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-library-snapshot-format-'));
+  const userData = makeTempDir('aw-library-snapshot-format-');
   const config = { achievement: { lang: 'english' }, achievement_source: {} };
   const file = snapshot.snapshotFile(userData);
   fs.mkdirSync(path.dirname(file), { recursive: true });

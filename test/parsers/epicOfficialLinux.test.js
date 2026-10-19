@@ -7,14 +7,14 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const epicOfficial = require('../../app/parser/epicOfficial.js');
 
 function heroicHome() {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-epic-heroic-'));
+  const home = makeTempDir('aw-epic-heroic-');
   const config = path.join(home, '.config');
   const legendary = path.join(config, 'heroic', 'legendaryConfig', 'legendary');
   const installPath = path.join(home, 'Games', 'Heroic', 'RocketLeague');

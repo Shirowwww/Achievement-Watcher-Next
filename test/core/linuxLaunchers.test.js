@@ -8,16 +8,12 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const { DatabaseSync } = require('node:sqlite');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const linuxLaunchers = require('../../app/util/linuxLaunchers.js');
-
-function tmp(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
-}
 
 function write(file, content) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -25,7 +21,7 @@ function write(file, content) {
 }
 
 function context() {
-  const home = tmp('aw-launchers-');
+  const home = makeTempDir('aw-launchers-');
   return { home, env: { XDG_CONFIG_HOME: path.join(home, '.config'), XDG_DATA_HOME: path.join(home, '.local', 'share') } };
 }
 

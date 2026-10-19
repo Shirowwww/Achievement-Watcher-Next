@@ -14,6 +14,7 @@ const http = require('node:http');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 const obsSource = require('../notification/obsSource.js');
 const presetLocator = require('../util/presetLocator.js');
@@ -21,7 +22,7 @@ const presetLocator = require('../util/presetLocator.js');
 const BUNDLED_PRESETS = path.join(__dirname, '..', '..', 'app', 'presets', 'Default Presets');
 
 function makeWorkspace() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-obs-'));
+  const dir = makeTempDir('aw-obs-');
   const presets = path.join(dir, 'presets');
   const sample = path.join(presets, 'Sample');
   fs.mkdirSync(sample, { recursive: true });

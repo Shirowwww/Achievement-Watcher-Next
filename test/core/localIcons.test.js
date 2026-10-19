@@ -12,16 +12,16 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const localIcons = require(path.join(__dirname, '..', '..', 'app', 'util', 'localIcons.js'));
 
 const PNG = Buffer.from('89504e470d0a1a0a', 'hex');
 
 function makeGame({ imageDir = 'achievement_images', achievementsJson = null, files = [] } = {}) {
-  const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-localicons-'));
+  const gameDir = makeTempDir('aw-localicons-');
   const steamSettings = path.join(gameDir, 'steam_settings');
   const images = path.join(steamSettings, imageDir);
   fs.mkdirSync(images, { recursive: true });
@@ -123,7 +123,7 @@ test('both known folder names are read, and a game with neither indexes nothing'
   const withImages = makeGame({ imageDir: 'images', files: ['x.png'] });
   assert.equal(localIcons.readIndex({ gameDir: withImages.gameDir }).byToken.size, 1);
 
-  const bare = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-localicons-bare-'));
+  const bare = makeTempDir('aw-localicons-bare-');
   localIcons.clearCache();
   const empty = localIcons.readIndex({ gameDir: bare });
   assert.equal(empty.byToken.size, 0);
@@ -147,7 +147,7 @@ test('a new image folder is picked up rather than served from a stale index', ()
 });
 
 test('only plausible logo names are offered as the game folder icon, never every image', () => {
-  const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-localicons-logo-'));
+  const gameDir = makeTempDir('aw-localicons-logo-');
   for (const name of ['icon.png', 'screenshot01.png', 'logo.jpg', 'texture_diffuse.png', 'notes.txt']) {
     fs.writeFileSync(path.join(gameDir, name), PNG);
   }

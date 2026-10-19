@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const manualUnlock = require('../../app/parser/manualUnlock.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 function makeGame(list) {
   return {
@@ -59,7 +60,7 @@ test('clear manual unlock only removes the override, keeping real save unlocks',
 });
 
 test('sidecar persists across mark and read', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-manual-'));
+  const dir = makeTempDir('aw-manual-');
   const file = path.join(dir, 'cfg/manual-unlocks.json');
   const map = {};
   const { map: next } = manualUnlock.update(map, '456', 'gog', 'x', 'mark-unlocked', 333);

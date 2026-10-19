@@ -6,6 +6,7 @@ const Module = require('node:module');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
@@ -44,7 +45,7 @@ test('what the automatic pass writes comes from the health diagnosis', () => {
 });
 
 test('automatic emulator fix skips a folder that has no game executable', async () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-guard-user-'));
+  const userData = makeTempDir('aw-guard-user-');
   const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-guard-game-'));
   fs.mkdirSync(path.join(userData, 'logs'), { recursive: true });
   achievements.initDebug({ isDev: false, userDataPath: userData });

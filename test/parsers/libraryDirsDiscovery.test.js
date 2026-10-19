@@ -11,6 +11,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const libraryDirs = require('../../app/parser/libraryDirs.js');
 const saveRoots = require('../../app/parser/saveRoots.js');
@@ -27,7 +28,7 @@ function withStubs(stubs, fn) {
 }
 
 test('both detection routes reach Smart Find, each tagged with what found it', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-libdirs-merge-'));
+  const tmp = makeTempDir('aw-libdirs-merge-');
   const named = path.join(tmp, 'Jeux');
   const launcher = path.join(tmp, 'Epic Games');
   fs.mkdirSync(named, { recursive: true });

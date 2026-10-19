@@ -9,11 +9,11 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const http = require('node:http');
 const https = require('node:https');
 const dns = require('node:dns');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const steam = require('../../app/parser/steam.js');
 
@@ -128,7 +128,7 @@ async function offline(run) {
 }
 
 test('an offline periodic self-repair keeps every cached achievement and still stamps the attempt', async () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-reconcile-'));
+  const temp = makeTempDir('aw-schema-reconcile-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 
@@ -150,7 +150,7 @@ test('an offline periodic self-repair keeps every cached achievement and still s
 });
 
 test('forceRecheck bypasses the 3-day cooldown even right after a previous check', async () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-force-'));
+  const temp = makeTempDir('aw-schema-force-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 
@@ -173,7 +173,7 @@ test('forceRecheck bypasses the 3-day cooldown even right after a previous check
 });
 
 test('forceRecheck also bypasses fastStart, so "Check now" works on the first scan of a session', async () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-force-fast-'));
+  const temp = makeTempDir('aw-schema-force-fast-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 
@@ -195,7 +195,7 @@ test('forceRecheck also bypasses fastStart, so "Check now" works on the first sc
 // A user hand-curating steam_cache can opt out of the whole periodic self-repair pass (Settings >
 // Advanced > "Automatic achievement data updates").
 test('disableAutoRefresh skips the periodic self-repair entirely', async () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-disabled-'));
+  const temp = makeTempDir('aw-schema-disabled-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 
@@ -216,7 +216,7 @@ test('disableAutoRefresh skips the periodic self-repair entirely', async () => {
 });
 
 test('forceRecheck still works even when disableAutoRefresh is on', async () => {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-schema-disabled-force-'));
+  const temp = makeTempDir('aw-schema-disabled-force-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 

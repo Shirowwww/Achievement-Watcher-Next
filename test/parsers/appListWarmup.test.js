@@ -12,8 +12,8 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const test = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const steamDataCalls = [];
 
@@ -37,7 +37,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 const steam = require('../../app/parser/steam.js');
 
 // No appList.json: exactly the state a real install is in now that the endpoint is gone.
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-applist-warmup-'));
+const userData = makeTempDir('aw-applist-warmup-');
 fs.mkdirSync(path.join(userData, 'steam_cache'), { recursive: true });
 // A completed search, so the name below resolves from disk and never touches the network.
 fs.writeFileSync(

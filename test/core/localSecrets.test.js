@@ -14,8 +14,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const aes = require('../../app/util/aes.js');
 const watchdogAes = require('../../watchdog/util/aes.js');
@@ -40,7 +39,7 @@ function fakeSafeStorage(available = true) {
 }
 
 test('the installation key is generated once and read back', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-'));
+  const userData = makeTempDir('aw-secret-');
   const store = fakeSafeStorage();
 
   const first = appSecret.ensureSecret(userData, store);
@@ -53,7 +52,7 @@ test('the installation key is generated once and read back', () => {
 });
 
 test('a key file that will not open is kept, never replaced by a new key', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-keep-'));
+  const userData = makeTempDir('aw-secret-keep-');
   const first = appSecret.ensureSecret(userData, fakeSafeStorage());
   const onDisk = fs.readFileSync(appSecret.secretFile(userData));
   const failingRead = { ...fakeSafeStorage(), decryptString: () => { throw new Error('DPAPI refused'); } };
@@ -64,7 +63,7 @@ test('a key file that will not open is kept, never replaced by a new key', () =>
 });
 
 test('no safeStorage means no key, so callers stay on the format they can read back', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-none-'));
+  const userData = makeTempDir('aw-secret-none-');
   assert.equal(appSecret.ensureSecret(userData, fakeSafeStorage(false)), '');
   assert.equal(appSecret.ensureSecret(userData, null), '');
   assert.equal(fs.existsSync(appSecret.secretFile(userData)), false);

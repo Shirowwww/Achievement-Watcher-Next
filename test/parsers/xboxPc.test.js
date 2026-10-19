@@ -6,6 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const xboxPc = require('../../app/parser/xboxPc.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 test('normalizeTitleId handles decimal and hex forms', () => {
   assert.equal(xboxPc.normalizeTitleId('2476'), '2476');
@@ -35,7 +36,7 @@ test('extractXboxDirectAuthResult tolerates a trailing slash on the callback pat
 });
 
 test('parseMicrosoftGameConfig reads title id, name, executable and package family', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xboxcfg-'));
+  const dir = makeTempDir('aw-xboxcfg-');
   const file = path.join(dir, 'MicrosoftGame.config');
   fs.writeFileSync(
     file,
@@ -183,7 +184,7 @@ test('Xbox import snapshots retain known unlocks while incorporating fresh state
 });
 
 test('getGameData merges cached schema with unlock state', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xboxcache-'));
+  const dir = makeTempDir('aw-xboxcache-');
   xboxPc.setUserDataPath(dir);
   const titleId = '2476';
   const cacheRoot = path.join(dir, 'steam_cache', 'xbox', titleId);

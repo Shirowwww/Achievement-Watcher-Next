@@ -10,13 +10,13 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 // Before anything reads it: the Watchdog resolves its config from this, and a test must not load,
 // let alone rewrite, the real profile's options.ini.
-process.env.AW_USER_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-broadcast-'));
+process.env.AW_USER_DATA = makeTempDir('aw-broadcast-');
 fs.mkdirSync(path.join(process.env.AW_USER_DATA, 'cfg'), { recursive: true });
 
 const websocket = require('../websocket.js');

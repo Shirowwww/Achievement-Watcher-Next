@@ -3,12 +3,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { configuredExecutable } = require('../util/exeList.js');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 test('the configured launch executable is read per appid and follows the file', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-exelist-'));
+  const dir = makeTempDir('aw-exelist-');
   const file = path.join(dir, 'exeList.db');
   assert.equal(configuredExecutable('2751000', { file }), '', 'no file yet');
 

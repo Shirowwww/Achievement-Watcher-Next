@@ -5,12 +5,12 @@ const test = require('node:test');
 const { mainProcessSource } = require('../helpers/mainProcessSource.js');
 const assert = require('node:assert/strict');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const sounds = require('../../app/util/notificationSounds.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 function makeDir(files) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-sounds-'));
+  const dir = makeTempDir('aw-sounds-');
   for (const f of files) fs.writeFileSync(path.join(dir, f), 'x');
   return dir;
 }

@@ -3,15 +3,15 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const steamAccount = require('../../app/parser/steamAccount.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 function jsonResponse(body) {
   return { ok: true, status: 200, json: async () => body };
 }
 
-const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-lib-'));
+const cacheDir = makeTempDir('aw-steam-lib-');
 
 function fakeFetch(routes) {
   return async (url) => {

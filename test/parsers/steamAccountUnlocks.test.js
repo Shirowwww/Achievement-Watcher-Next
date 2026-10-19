@@ -13,10 +13,10 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const Module = require('node:module');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request) {
@@ -72,7 +72,7 @@ let profileNumber = 0;
 const freshAccount = () => ({ ...ACCOUNT, steamid: String(76561197971376739n + BigInt(++profileNumber)) });
 
 function scratch() {
-  const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'aw-acct-unlocks-')));
+  const root = fs.realpathSync(makeTempDir('aw-acct-unlocks-'));
   fs.mkdirSync(path.join(root, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: root });
   steam.setUserDataPath(root);

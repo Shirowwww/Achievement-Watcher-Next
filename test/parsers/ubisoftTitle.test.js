@@ -3,10 +3,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ubi-title-'));
+const tmp = makeTempDir('aw-ubi-title-');
 process.env.APPDATA = tmp;
 fs.mkdirSync(path.join(tmp, 'Achievement Watcher Next', 'logs'), { recursive: true });
 process.on('exit', () => {

@@ -3,8 +3,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
 
@@ -15,7 +15,7 @@ const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gold
 */
 
 function newInstall() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-repair-progress-'));
+  const root = makeTempDir('aw-repair-progress-');
   const steamSettings = path.join(root, 'steam_settings');
   fs.mkdirSync(steamSettings, { recursive: true });
   return steamSettings;

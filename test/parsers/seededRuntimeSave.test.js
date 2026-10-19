@@ -16,9 +16,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
 const runtimeSaveSeed = require(path.join(__dirname, '..', '..', 'app', 'util', 'runtimeSaveSeed.js'));
@@ -36,7 +36,7 @@ const SCHEMA = {
 };
 
 function tmpdir(prefix) {
-  return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), prefix)));
+  return fs.realpathSync(makeTempDir(prefix));
 }
 
 // One GSE Saves root, seeded the way a repair seeds it.

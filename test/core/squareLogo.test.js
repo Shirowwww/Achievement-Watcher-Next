@@ -3,12 +3,12 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const { squareCrop, isSquareRatio, squareIconFile, makeSquareLogo, SQUARE_SIDE } = require('../../app/util/squareLogo.js');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-square-logo-'));
+const tmp = makeTempDir('aw-square-logo-');
 
 // A PNG header is all the module reads before deciding what to do with a file.
 function pngHeader(width, height) {

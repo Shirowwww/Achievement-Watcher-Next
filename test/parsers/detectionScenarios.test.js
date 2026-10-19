@@ -6,6 +6,7 @@ const Module = require('node:module');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
@@ -25,7 +26,7 @@ function writeBytes(file, size = 1024) {
 }
 
 async function detectIn({ build, persistSmartFind = false } = {}) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-scen-user-'));
+  const userData = makeTempDir('aw-scen-user-');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-scen-root-'));
   const envRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-scen-env-'));
   const oldEnv = {};

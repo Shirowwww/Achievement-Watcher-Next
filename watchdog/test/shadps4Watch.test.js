@@ -4,9 +4,9 @@
 // Verifies the dependency-free ShadPS4 TROP*.XML reader (schema + unlock state) used for live toasts.
 const assert = require('assert');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const shadps4Watch = require('../console/shadps4Watch.js');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 let passed = 0;
 function test(name, fn) {
@@ -29,7 +29,7 @@ const XML = `<?xml version="1.0" encoding="UTF-8"?>
 </trophyconf>`;
 
 function makeTarget() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-shadwatch-'));
+  const root = makeTempDir('aw-shadwatch-');
   const xmlDir = path.join(root, 'Xml');
   const iconsDir = path.join(root, 'Icons');
   fs.mkdirSync(xmlDir, { recursive: true });

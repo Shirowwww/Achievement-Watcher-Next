@@ -6,10 +6,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xenia-icons-'));
+const userData = makeTempDir('aw-xenia-icons-');
 process.env.AW_USER_DATA = userData;
 const xenia = require('../../app/parser/xenia.js');
 
@@ -84,7 +84,7 @@ test('the image id is written in hex, the way the host names its files', () => {
 });
 
 test('locked achievements get their picture from the host, unlocked ones keep the embedded one', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xenia-gpd-'));
+  const dir = makeTempDir('aw-xenia-gpd-');
   const host = stubHost({
     'http://image.xboxlive.com/global/t.41560855/ach/0/1c': 200,
   });
@@ -108,7 +108,7 @@ test('locked achievements get their picture from the host, unlocked ones keep th
 
 test('a network failure leaves the row without a picture and is retried on the next scan', async () => {
   fs.rmSync(path.join(userData, 'icon_cache'), { recursive: true, force: true });
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xenia-gpd-'));
+  const dir = makeTempDir('aw-xenia-gpd-');
   const offline = async () => {
     throw new Error('getaddrinfo ENOTFOUND');
   };

@@ -3,12 +3,12 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const steamAuth = require('../../app/util/steamAuth.js');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-auth-'));
+const tmp = makeTempDir('aw-steam-auth-');
 
 // Synthetic JWT: header and signature are never verified, only the payload is read.
 function fakeJwt(payload) {

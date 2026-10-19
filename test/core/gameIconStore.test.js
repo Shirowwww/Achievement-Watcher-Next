@@ -9,17 +9,17 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { fileURLToPath, pathToFileURL } = require('node:url');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const appUtil = path.join(__dirname, '..', '..', 'app', 'util');
 const gameIconStore = require(path.join(appUtil, 'gameIconStore.js'));
 const coverStore = require(path.join(appUtil, 'coverStore.js'));
 
 const PNG = Buffer.from('89504e470d0a1a0a', 'hex');
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gameicon-'));
+const root = makeTempDir('aw-gameicon-');
 gameIconStore.setStoreFile(path.join(root, 'cfg', 'gameIcons.db'));
 
 function sourceImage(name, bytes = PNG) {

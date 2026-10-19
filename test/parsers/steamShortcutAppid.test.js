@@ -10,16 +10,16 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
 const steamLibrary = require(path.join(__dirname, '..', '..', 'app', 'parser', 'steamLibrary.js'));
 const awManagedConfig = require(path.join(__dirname, '..', '..', 'app', 'util', 'awManagedConfig.js'));
 const gameHealth = require(path.join(__dirname, '..', '..', 'app', 'util', 'gameHealth.js'));
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-shortcut-appid-'));
+const tmp = makeTempDir('aw-shortcut-appid-');
 const SCHEMA = { achievement: { total: 1, list: [{ name: 'FIRST', displayName: 'First', description: 'First one', hidden: 0 }] } };
 
 // Steam's binary KeyValues, as shortcuts.vdf stores them.

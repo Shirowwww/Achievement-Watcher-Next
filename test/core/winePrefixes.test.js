@@ -7,9 +7,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const { discoverPrefixes } = require('../../app/util/winePrefixes.js');
 
@@ -27,7 +27,7 @@ function write(file, text) {
 }
 
 test('a Lutris that keeps its game configs in its data folder still names its prefixes', LINUX_ONLY, () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-lutris-data-'));
+  const home = makeTempDir('aw-lutris-data-');
   const prefix = makePrefix(path.join(home, 'Games', 'gog-galaxy'));
   write(path.join(home, '.local', 'share', 'lutris', 'games', 'gog-galaxy-1.yml'), `game:\n  exe: x.exe\n  prefix: ${prefix}\n`);
 
@@ -36,7 +36,7 @@ test('a Lutris that keeps its game configs in its data folder still names its pr
 });
 
 test('Bottles in a custom folder and a bottle moved elsewhere are both found', LINUX_ONLY, () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-bottles-custom-'));
+  const home = makeTempDir('aw-bottles-custom-');
   const base = path.join(home, '.local', 'share', 'bottles');
   const custom = path.join(home, 'BottlesLibrary');
   const inCustom = makePrefix(path.join(custom, 'Launchers'));

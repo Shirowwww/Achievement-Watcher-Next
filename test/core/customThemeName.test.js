@@ -12,16 +12,16 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
 const themeLayers = require(path.join(appRoot, 'util', 'themeLayers.js'));
 const themePackage = require(path.join(appRoot, 'util', 'themePackage.js'));
 
 function userData() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'aw-theme-name-'));
+  return makeTempDir('aw-theme-name-');
 }
 
 /*

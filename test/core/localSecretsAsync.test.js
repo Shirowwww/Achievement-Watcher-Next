@@ -10,8 +10,8 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const appSecret = require('../../app/util/appSecret.js');
 
@@ -41,7 +41,7 @@ function fakeAsyncSafeStorage({ available = true, reEncrypt = false } = {}) {
 }
 
 test('the key is made once, read back, and sealed again when a stronger provider is available', async () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-async-'));
+  const userData = makeTempDir('aw-secret-async-');
   const store = fakeAsyncSafeStorage();
   const first = await appSecret.ensureSecretAsync(userData, store);
   assert.match(first, /^[0-9a-f]{64}$/);
@@ -54,7 +54,7 @@ test('the key is made once, read back, and sealed again when a stronger provider
 });
 
 test('no asynchronous encryption, or a key file that will not open, means no key and the file kept', async () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-async-none-'));
+  const userData = makeTempDir('aw-secret-async-none-');
   assert.equal(await appSecret.ensureSecretAsync(userData, fakeAsyncSafeStorage({ available: false })), '');
   assert.equal(fs.existsSync(appSecret.secretFile(userData)), false);
 
@@ -65,7 +65,7 @@ test('no asynchronous encryption, or a key file that will not open, means no key
 });
 
 test('a key sealed under the fixed "v10" password counts as obfuscated only', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-secret-prefix-'));
+  const userData = makeTempDir('aw-secret-prefix-');
   assert.equal(appSecret.isObfuscatedOnly(userData), true, 'no key at all protects nothing either');
   fs.mkdirSync(path.dirname(appSecret.secretFile(userData)), { recursive: true });
   fs.writeFileSync(appSecret.secretFile(userData), Buffer.from('v10sealed'));

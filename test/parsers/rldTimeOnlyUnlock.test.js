@@ -8,9 +8,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const Module = require('node:module');
-const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 // achievements.js pulls in the Electron renderer bridge on require; stub it out so the parser can be
 // exercised under plain Node (same pattern as discoveryLookup.test.js).
@@ -25,7 +25,7 @@ const steam = require('../../app/parser/steam.js');
 const { normalizeSaveEntry } = require('../../app/parser/achievements.js')._internal;
 
 function writeIni(lines) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rld-'));
+  const dir = makeTempDir('aw-rld-');
   fs.writeFileSync(path.join(dir, 'achievements.ini'), lines.join('\r\n'));
   return dir;
 }

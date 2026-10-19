@@ -14,9 +14,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const exeIcon = require(path.join(__dirname, '..', '..', 'app', 'util', 'exeIcon.js'));
 
@@ -40,7 +40,7 @@ test('the largest entry of the group is the one returned', { skip: process.platf
 });
 
 test('a file that is not a PE, or has no icon, answers null rather than a placeholder', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-exeicon-'));
+  const dir = makeTempDir('aw-exeicon-');
   const text = path.join(dir, 'notreally.exe');
   fs.writeFileSync(text, 'MZ but nothing else at all');
   assert.equal(exeIcon.extractIcon(text), null);
@@ -55,7 +55,7 @@ test('a file that is not a PE, or has no icon, answers null rather than a placeh
 });
 
 test('a directory is not mistaken for an executable', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-exeicon-dir-'));
+  const dir = makeTempDir('aw-exeicon-dir-');
   assert.equal(exeIcon.extractIcon(dir), null);
 });
 

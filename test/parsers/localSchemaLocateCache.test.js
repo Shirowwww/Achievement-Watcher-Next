@@ -10,8 +10,8 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const steam = require('../../app/parser/steam.js');
 
@@ -20,7 +20,7 @@ const SCHEMA = [{ name: 'ACH_WIN', displayName: 'Winner', description: 'Win', hi
 const NOISE = ['Managed', 'Resources', 'Logs', 'Mono', 'Shaders', 'Audio'];
 
 function makeInstall({ withSchema = true, deep = false } = {}) {
-  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'aw-locate-')), 'Big Walk');
+  const dir = path.join(makeTempDir('aw-locate-'), 'Big Walk');
   // Unity layout: the emulator dll and its schema dump live under <Game>_Data/Plugins/<arch>.
   const settings = deep
     ? path.join(dir, 'Big Walk_Data', 'Plugins', 'x86_64', 'steam_settings')

@@ -3,8 +3,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const epicOfficial = require('../../app/parser/epicOfficial.js');
 
@@ -33,7 +33,7 @@ function withStubbedFetch(handler, run) {
 }
 
 function sandboxRoot() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-epic-empty-'));
+  const dir = makeTempDir('aw-epic-empty-');
   epicOfficial.setUserDataPath(dir);
   return dir;
 }

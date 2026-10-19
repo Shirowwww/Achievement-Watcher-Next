@@ -6,13 +6,13 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const steam = require('../../app/parser/steam.js');
 
 function gameDirWith(achievementsJson) {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-schema-'));
+  const tmp = makeTempDir('aw-gbe-schema-');
   const settings = path.join(tmp, 'game', 'steam_settings');
   fs.mkdirSync(settings, { recursive: true });
   fs.writeFileSync(path.join(settings, 'achievements.json'), JSON.stringify(achievementsJson));
@@ -67,7 +67,7 @@ test('ignores a Goldberg SAVE file (object, not array) and returns []', () => {
 });
 
 test('returns [] when neither TENOKE nor achievements.json exists', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-empty-'));
+  const tmp = makeTempDir('aw-gbe-empty-');
   fs.mkdirSync(path.join(tmp, 'game'), { recursive: true });
   assert.deepEqual(steam.getLocalAchievementSchema(path.join(tmp, 'game'), '3751950', 'english'), []);
 });

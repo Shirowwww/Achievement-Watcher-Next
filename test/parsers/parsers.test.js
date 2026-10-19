@@ -5,8 +5,8 @@
 // against synthetic fixtures - the highest-risk part, exercised headless.
 const assert = require('assert');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const shadps4 = require('../../app/parser/shadps4.js');
 const xenia = require('../../app/parser/xenia.js');
@@ -24,7 +24,7 @@ async function test(name, fn) {
   }
 }
 
-const mkTmp = (name) => fs.mkdtempSync(path.join(os.tmpdir(), `aw-${name}-`));
+const mkTmp = (name) => makeTempDir(`aw-${name}-`);
 
 function makeShadPs4Game() {
   const root = mkTmp('shadps4');

@@ -9,11 +9,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const Module = require('node:module');
+const { makeTempDir } = require('../helpers/tempDir');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-patched-discovery-'));
+const tmp = makeTempDir('aw-patched-discovery-');
 const library = path.join(tmp, 'Games');
 const steamClient = path.join(tmp, 'Steam');
 const steamLibrary = path.join(tmp, 'SteamLibrary');

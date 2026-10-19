@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const saveRoots = require('../../app/parser/saveRoots.js');
 const userDir = require('../../app/parser/userDir.js');
@@ -26,7 +27,7 @@ function withEnv(values, fn) {
 }
 
 test('default Steam emulator roots include concrete save folders copied from the reference app', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-save-roots-'));
+  const tmp = makeTempDir('aw-save-roots-');
   const appdata = path.join(tmp, 'AppData');
   const localappdata = path.join(tmp, 'LocalAppData');
   const publicDir = path.join(tmp, 'Public');
@@ -55,7 +56,7 @@ test('default Steam emulator roots include concrete save folders copied from the
 });
 
 test('userDir.check accepts Goldberg SocialClub roots, game folders and profile folders', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-socialclub-check-'));
+  const tmp = makeTempDir('aw-socialclub-check-');
   const root = path.join(tmp, 'Goldberg SocialClub Emu Saves');
   const gameDir = path.join(root, 'GTA V');
   const profileDir = path.join(gameDir, '0F74F4C4');
@@ -69,7 +70,7 @@ test('userDir.check accepts Goldberg SocialClub roots, game folders and profile 
 });
 
 test('userDir.check accepts real appid save roots and rejects SteamID64-only roots', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-userdir-check-'));
+  const tmp = makeTempDir('aw-userdir-check-');
   const valid = path.join(tmp, 'valid');
   const invalid = path.join(tmp, 'invalid');
   fs.mkdirSync(path.join(valid, '123456'), { recursive: true });
@@ -80,7 +81,7 @@ test('userDir.check accepts real appid save roots and rejects SteamID64-only roo
 });
 
 test('Public Documents Steam parent expands to concrete RUNE/CODEX save roots', async () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rune-parent-'));
+  const tmp = makeTempDir('aw-rune-parent-');
   const steamParent = path.join(tmp, 'Public', 'Documents', 'Steam');
   const runeRoot = path.join(steamParent, 'RUNE');
   fs.mkdirSync(path.join(runeRoot, '2531310'), { recursive: true });

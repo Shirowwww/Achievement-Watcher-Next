@@ -4,14 +4,14 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const { desktopEntryIcon, parseDesktopEntry } = require('../../app/util/desktopEntryIcon.js');
 
 function layout() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-desktop-'));
+  const root = makeTempDir('aw-desktop-');
   const home = path.join(root, 'home');
   const data = path.join(home, '.local', 'share');
   const game = path.join(home, 'Games', 'AW Test Game');

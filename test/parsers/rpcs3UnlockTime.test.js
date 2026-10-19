@@ -6,9 +6,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const Module = require('node:module');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 // achievements.js pulls in the Electron renderer bridge on require (same stub as rldTimeOnlyUnlock.test.js).
 const originalLoad = Module._load;
@@ -51,7 +51,7 @@ function buildUserData(trophies) {
 }
 
 test('an RPCS3 unlock carries its real time, a locked trophy none', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3-time-'));
+  const dir = makeTempDir('aw-rpcs3-time-');
   fs.writeFileSync(path.join(dir, 'TROPUSR.DAT'), buildUserData([{ id: 0, time: 0 }, { id: 1, time: 1757980800 }]));
 
   const list = await rpcs3.getAchievements(dir);

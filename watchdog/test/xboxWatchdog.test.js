@@ -2,10 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
 const xboxPc = require('../xboxPc.js');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 test('normalize helpers accept decimal and hex ids', () => {
   assert.equal(xboxPc.normalizeTitleId('2476'), '2476');
@@ -35,7 +33,7 @@ test('diffSnapshots reports only new unlocks and change flags', () => {
 });
 
 test('auth file round-trips through the shared AES cipher', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xauth-'));
+  const dir = makeTempDir('aw-xauth-');
   const auth = { xuid: '123', uhs: 'u', xstsToken: 't', clientId: 'c', refreshToken: 'r' };
   const original = process.env['APPDATA'];
   process.env['APPDATA'] = dir;
@@ -51,7 +49,7 @@ test('auth file round-trips through the shared AES cipher', () => {
 });
 
 test('state cache read/write round-trips', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xstate-'));
+  const dir = makeTempDir('aw-xstate-');
   const original = process.env['APPDATA'];
   process.env['APPDATA'] = dir;
   try {

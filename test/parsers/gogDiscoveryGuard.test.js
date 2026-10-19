@@ -3,12 +3,12 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 // gogWatch resolves the Galaxy catalog and Applications root from the environment at require time,
 // so both are pointed at an empty sandbox BEFORE loading the module to model "GOG not installed".
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gog-guard-'));
+const tmp = makeTempDir('aw-gog-guard-');
 process.env.APPDATA = tmp;
 process.env.ProgramData = path.join(tmp, 'ProgramData');
 process.env.LOCALAPPDATA = path.join(tmp, 'Local');

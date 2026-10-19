@@ -3,8 +3,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 // init.js is the Electron main entry (it requires 'electron' on load), so the cache policy is
 // asserted on its source and then exercised through a faithful model, as watchdogReload.test.js does.
@@ -21,7 +21,7 @@ test('a SteamDB launch-metadata miss is remembered, not retried every scan', () 
 });
 
 test('the cache honours a long TTL for hits and a short one for misses', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steamdb-cache-'));
+  const dir = makeTempDir('aw-steamdb-cache-');
   const TTL = 30 * 24 * 60 * 60 * 1000;
   const NEGATIVE_TTL = 6 * 60 * 60 * 1000;
 

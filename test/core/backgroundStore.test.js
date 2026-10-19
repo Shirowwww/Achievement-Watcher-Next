@@ -7,17 +7,17 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const { test } = require('node:test');
 const { pathToFileURL } = require('node:url');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
 const backgroundStore = require(path.join(appRoot, 'util', 'backgroundStore.js'));
 const coverStore = require(path.join(appRoot, 'util', 'coverStore.js'));
 
 const PNG = Buffer.from('89504e470d0a1a0a', 'hex');
-const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-background-'));
+const root = makeTempDir('aw-background-');
 backgroundStore.setStoreFile(path.join(root, 'cfg', 'backgrounds.db'));
 
 test('the background store has its own cfg file', () => {

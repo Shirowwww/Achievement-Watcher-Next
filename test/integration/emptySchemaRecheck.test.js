@@ -8,11 +8,11 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const http = require('node:http');
 const https = require('node:https');
 const dns = require('node:dns');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const steam = require('../../app/parser/steam.js');
 
@@ -76,7 +76,7 @@ test('a re-check that cannot run hands back the cached entry instead of dropping
   // The one branch that reaches a verdict with no network: the appid is in the negative cache, so
   // getGameData returns without fetching. Before the fix it returned undefined here - which is the
   // game vanishing from the list - even though a perfectly usable record was on disk.
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-empty-schema-'));
+  const temp = makeTempDir('aw-empty-schema-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 
@@ -97,7 +97,7 @@ test('an offline re-check keeps the game, even though the lookups throw', async 
     lookups do not return empty, they THROW, and the throw escaped the guard above - so every
     re-checked game was dropped at once. A real library went from 19 games to 8.
   */
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-empty-offline-'));
+  const temp = makeTempDir('aw-empty-offline-');
   fs.mkdirSync(path.join(temp, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: temp });
 

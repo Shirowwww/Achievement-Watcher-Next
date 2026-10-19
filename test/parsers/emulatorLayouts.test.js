@@ -9,9 +9,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const shadps4 = require('../../app/parser/shadps4.js');
 const xenia = require('../../app/parser/xenia.js');
@@ -19,7 +19,7 @@ const userDir = require('../../app/parser/userDir.js');
 const saveRoots = require('../../app/parser/saveRoots.js');
 
 function tmpdir(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  return makeTempDir(prefix);
 }
 
 test('shadPS4 climbs out of its own trophy tree, from whichever level was added', () => {

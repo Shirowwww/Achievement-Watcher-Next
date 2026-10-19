@@ -10,11 +10,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const Module = require('node:module');
+const { makeTempDir } = require('../helpers/tempDir');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-patched-'));
+const tmp = makeTempDir('aw-patched-');
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request) {

@@ -7,15 +7,15 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const layout = require('../../app/parser/rpcs3Layout.js');
 const rpcs3 = require('../../app/parser/rpcs3.js');
 
 function tmpdir(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  return makeTempDir(prefix);
 }
 
 function makeTrophies(devHdd0, user, games) {

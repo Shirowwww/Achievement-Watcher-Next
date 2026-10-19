@@ -15,8 +15,8 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const test = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 let steamData = {};
 
@@ -41,7 +41,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 
 const steam = require('../../app/parser/steam.js');
 
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-steam-throttle-'));
+const userData = makeTempDir('aw-steam-throttle-');
 fs.mkdirSync(path.join(userData, 'steam_cache', 'schema'), { recursive: true });
 fs.writeFileSync(
   path.join(userData, 'steam_cache', 'schema', 'appList.json'),

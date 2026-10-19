@@ -2,11 +2,9 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const watcher = require('../console/retroAchievementsWatch.js');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 const ra = require(sharedAppModulePath('parser/retroAchievements.js'));
 const { findEmulator, handleGame, seen } = watcher._internal;
@@ -48,7 +46,7 @@ function context() {
 }
 
 function freshUserData() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ra-watch-'));
+  const dir = makeTempDir('aw-ra-watch-');
   ra.setUserDataPath(dir);
   seen.clear();
   return dir;

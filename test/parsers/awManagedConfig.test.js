@@ -14,11 +14,12 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const awManagedConfig = require('../../app/util/awManagedConfig.js');
 
 function folder(files) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-managed-'));
+  const dir = makeTempDir('aw-managed-');
   for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), body);
   return dir;
 }
@@ -128,13 +129,13 @@ test('an unreadable or absent folder is not an error', () => {
 
 test('a backup records whether the folder was already AW-managed', () => {
   const goldberg = require('../../app/parser/goldberg.js');
-  const game = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-managed-game-'));
+  const game = makeTempDir('aw-managed-game-');
   fs.writeFileSync(path.join(game, 'steam_api64.dll'), 'x');
   const settings = path.join(game, 'steam_settings');
   fs.mkdirSync(settings);
   fs.writeFileSync(path.join(settings, 'achievements.json'), '[]');
 
-  const dest = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-managed-dest-'));
+  const dest = makeTempDir('aw-managed-dest-');
   const clean = goldberg.backupSetup({ gameDir: game, destinationRoot: dest });
   assert.equal(clean.pristine, true);
   assert.equal(clean.manifest.pristine, true);

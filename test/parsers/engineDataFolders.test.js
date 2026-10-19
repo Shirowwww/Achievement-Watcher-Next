@@ -7,16 +7,16 @@
 
 const assert = require('assert');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 
 function tmpGame(name) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `aw-${name}-`));
+  return makeTempDir(`aw-${name}-`);
 }
 
 function writeBytes(file, size) {

@@ -6,6 +6,7 @@ const Module = require('node:module');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 /*
   getSteamPath() reads the real Windows registry and only resolves once it finds a folder that
@@ -15,7 +16,7 @@ const test = require('node:test');
   makes that resolve the same way on a CI runner as on a developer's own machine. On Linux the
   client is found under HOME instead, so HOME points at a fake one there.
 */
-const fakeHome = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-fake-steam-'));
+const fakeHome = makeTempDir('aw-fake-steam-');
 const fakeSteamDir = path.join(fakeHome, '.local', 'share', 'Steam');
 fs.mkdirSync(fakeSteamDir, { recursive: true });
 fs.writeFileSync(path.join(fakeSteamDir, 'steam.exe'), '');
@@ -76,7 +77,7 @@ function withLocalCatalogue(names) {
   dead endpoint: one wasted round trip per game on every scan. The endpoint is no longer called.
 */
 test('the retired app-list endpoint is never called', async () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-applist-'));
+  const userData = makeTempDir('aw-applist-');
   fs.mkdirSync(path.join(userData, 'logs'), { recursive: true });
   steam.initDebug({ isDev: false, userDataPath: userData });
 

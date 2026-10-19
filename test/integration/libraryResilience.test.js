@@ -9,8 +9,8 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const test = require('node:test');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const originalLoad = Module._load;
 Module._load = function patchedLoad(request, parent, isMain) {
@@ -27,7 +27,7 @@ const { buildProvisionalGame, remapBareObjectiveKeys, resolveLocalGameName } = a
 const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
 
 function tempDir(label) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `aw-${label}-`));
+  return makeTempDir(`aw-${label}-`);
 }
 
 // issue #33 - a failed lookup must not delete the game

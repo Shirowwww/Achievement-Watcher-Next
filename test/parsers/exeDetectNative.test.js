@@ -4,9 +4,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
 
@@ -14,7 +14,7 @@ const linuxOnly = { skip: process.platform !== 'linux' && 'Linux-only' };
 const ELF_HEADER = Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1, 0]);
 
 function gameDir(name) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `aw-native-${name}-`));
+  return makeTempDir(`aw-native-${name}-`);
 }
 
 function writeElf(file, size = 64, mode = 0o755) {

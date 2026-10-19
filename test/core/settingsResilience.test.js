@@ -10,13 +10,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const settings = require('../../app/settings.js');
 
 function withConfig(contents) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-settings-'));
+  const userData = makeTempDir('aw-settings-');
   fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
   fs.writeFileSync(path.join(userData, 'cfg', 'options.ini'), contents, 'utf8');
   settings.setUserDataPath(userData);
@@ -76,7 +76,7 @@ test('every section a load can touch survives being absent', () => {
 });
 
 test('a first run with no settings file writes defaults and backs nothing up', () => {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-settings-firstrun-'));
+  const userData = makeTempDir('aw-settings-firstrun-');
   settings.setUserDataPath(userData);
 
   const options = settings.load();

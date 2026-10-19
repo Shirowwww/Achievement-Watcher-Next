@@ -11,13 +11,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const settings = require('../../app/settings.js');
 
 function withConfig(contents) {
-  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-settings-owned-'));
+  const userData = makeTempDir('aw-settings-owned-');
   fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
   fs.writeFileSync(path.join(userData, 'cfg', 'options.ini'), contents, 'utf8');
   settings.setUserDataPath(userData);

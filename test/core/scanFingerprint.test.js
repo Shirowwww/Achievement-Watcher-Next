@@ -3,13 +3,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const scanFingerprint = require('../../app/util/scanFingerprint.js');
 
 function workspace(name) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), `aw-scan-fingerprint-${name}-`));
+  return makeTempDir(`aw-scan-fingerprint-${name}-`);
 }
 
 // The file mtimes this test compares are only worth anything if a rewrite moves them, and a fast

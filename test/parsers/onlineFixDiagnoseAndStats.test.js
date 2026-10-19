@@ -12,15 +12,15 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const goldberg = require('../../app/parser/goldberg.js');
 const statProgress = require('../../app/parser/statProgress.js');
 const gameHealth = require('../../app/util/gameHealth.js');
 
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-onlinefix-'));
+const tmp = makeTempDir('aw-onlinefix-');
 const folder = (name) => {
   const dir = path.join(tmp, name);
   fs.mkdirSync(dir, { recursive: true });

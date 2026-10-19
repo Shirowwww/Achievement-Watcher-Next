@@ -3,9 +3,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const Module = require('node:module');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 /*
   The first scan after a launch used to cost roughly 26 seconds where every later scan in the same
@@ -40,7 +40,7 @@ function launch(userData) {
 }
 
 function makeUserData(prefix) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  const dir = makeTempDir(prefix);
   fs.mkdirSync(path.join(dir, 'logs'), { recursive: true });
   return dir;
 }
@@ -52,7 +52,7 @@ function flushed() {
 
 test('a schema location is walked once and remembered across a relaunch', async () => {
   const userData = makeUserData('aw-locate-');
-  const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-install-'));
+  const gameDir = makeTempDir('aw-install-');
   // The file sits deep enough that only the walk finds it, never the shallow probe.
   const deep = path.join(gameDir, 'data', 'nested', 'more');
   fs.mkdirSync(deep, { recursive: true });
@@ -87,7 +87,7 @@ test('a schema location is walked once and remembered across a relaunch', async 
 
 test('an install with no schema is remembered as a miss, so the walk is not repeated every launch', async () => {
   const userData = makeUserData('aw-locate-miss-');
-  const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-empty-install-'));
+  const gameDir = makeTempDir('aw-empty-install-');
   fs.mkdirSync(path.join(gameDir, 'bin', 'x64'), { recursive: true });
 
   const first = launch(userData);

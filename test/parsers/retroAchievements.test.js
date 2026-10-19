@@ -3,14 +3,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const ra = require('../../app/parser/retroAchievements.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const KEY = 'AbCdEf0123456789AbCdEf0123456789';
 
 function tempUserData() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-retroach-'));
+  const dir = makeTempDir('aw-retroach-');
   ra.setUserDataPath(dir);
   return dir;
 }

@@ -6,10 +6,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const retroArch = require('../../app/parser/retroArchLibrary.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 // A portable RetroArch install with a history and one scanned playlist, the shape RetroArch writes.
 function fakeInstall({ playlistSetting = ':\\playlists' } = {}) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-retroarch-'));
+  const root = makeTempDir('aw-retroarch-');
   const roms = path.join(root, 'roms');
   fs.mkdirSync(roms);
   for (const name of ['Super Mario Bros. (World).zip', 'Sonic The Hedgehog (USA, Europe).md', 'Sonic The Hedgehog (Europe).sms']) fs.writeFileSync(path.join(roms, name), 'rom');
@@ -62,14 +63,14 @@ test('an archive member resolves to the archive on disk', () => {
 });
 
 test('an absolute playlist folder in retroarch.cfg is honoured', () => {
-  const elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-retroarch-pl-'));
+  const elsewhere = makeTempDir('aw-retroarch-pl-');
   const { root } = fakeInstall({ playlistSetting: elsewhere });
   assert.equal(retroArch.playlistDirectory(root), elsewhere);
   assert.equal(retroArch.readEntries([root]).length, 0);
 });
 
 test('the Linux default playlist folder "~/..." resolves under the home folder', () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-retroarch-home-'));
+  const home = makeTempDir('aw-retroarch-home-');
   const { root } = fakeInstall({ playlistSetting: '~/.config/retroarch/playlists' });
   assert.equal(retroArch.playlistDirectory(root, home), path.join(home, '.config', 'retroarch', 'playlists'));
 });

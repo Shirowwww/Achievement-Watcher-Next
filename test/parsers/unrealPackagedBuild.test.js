@@ -14,9 +14,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const unrealLayout = require(path.join(__dirname, '..', '..', 'app', 'util', 'unrealLayout.js'));
 const exeDetect = require(path.join(__dirname, '..', '..', 'app', 'parser', 'exeDetect.js'));
@@ -28,7 +28,7 @@ const { planAchievementDataRepair } = require(path.join(__dirname, '..', '..', '
 const SCHEMA = { achievement: { total: 1, list: [{ name: 'FIRST', displayName: 'First', description: 'First one', hidden: 0 }] } };
 
 function tmpdir(prefix) {
-  return fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), prefix)));
+  return fs.realpathSync(makeTempDir(prefix));
 }
 
 function write(file, content) {

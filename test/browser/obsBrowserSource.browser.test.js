@@ -14,10 +14,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const http = require('node:http');
-const os = require('node:os');
 const path = require('node:path');
 const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium.js');
 const { serveOnOpenPort } = require('../helpers/openPort.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const watchdogDir = path.join(__dirname, '..', '..', 'watchdog');
 const obsSource = require(path.join(watchdogDir, 'notification', 'obsSource.js'));
@@ -33,7 +33,7 @@ const ONE_PIXEL_PNG = Buffer.from(
 );
 
 function makeWorkspace() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-obs-browser-'));
+  const dir = makeTempDir('aw-obs-browser-');
   const artwork = path.join(dir, 'trophy.png');
   fs.writeFileSync(artwork, ONE_PIXEL_PNG);
   const optionsFile = path.join(dir, 'options.ini');

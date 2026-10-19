@@ -3,10 +3,10 @@
 // Standalone test runner. Run with: node --test test/core/coverStore.test.js
 const assert = require('assert');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const { fileURLToPath, pathToFileURL } = require('url');
 const coverStore = require('../../app/util/coverStore.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 let passed = 0;
 function test(name, fn) {
@@ -20,7 +20,7 @@ function test(name, fn) {
   }
 }
 
-const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-cover-'));
+const tmpRoot = makeTempDir('aw-cover-');
 const tmpFile = path.join(tmpRoot, 'cfg', 'covers.db');
 coverStore.setStoreFile(tmpFile);
 

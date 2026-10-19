@@ -9,9 +9,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../helpers/tempDir');
 
 const launcherLibraries = require('../../app/parser/launcherLibraries.js');
 
@@ -20,7 +20,7 @@ const launcherLibraries = require('../../app/parser/launcherLibraries.js');
 const WINDOWS_PATHS = process.platform !== 'win32' && 'Windows-only';
 
 function tmpdir(prefix) {
-  return fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  return makeTempDir(prefix);
 }
 
 // A host as util/winHosts.js describes one: its folders, its registry, its path translation.

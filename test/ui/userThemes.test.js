@@ -3,12 +3,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
 const userThemes = require('../../app/util/userThemes.js');
+const { makeTempDir } = require('../helpers/tempDir');
 
 test('lists only .css themes from the user themes folder, sorted', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-themes-'));
+  const dir = makeTempDir('aw-themes-');
   fs.mkdirSync(path.join(dir, 'themes'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'themes', 'zelda.css'), 'body{}');
   fs.writeFileSync(path.join(dir, 'themes', 'aero.css'), 'body{}');
@@ -27,6 +27,6 @@ test('value encoding round-trips and built-ins stay null', () => {
 });
 
 test('missing folder returns an empty list and empty css', () => {
-  assert.deepEqual(userThemes.listUserThemes(fs.mkdtempSync(path.join(os.tmpdir(), 'aw-empty-'))), []);
+  assert.deepEqual(userThemes.listUserThemes(makeTempDir('aw-empty-')), []);
   assert.equal(userThemes.readThemeFile('C:/definitely/missing.css'), '');
 });

@@ -2,9 +2,9 @@
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const { makeTempDir } = require('../../test/helpers/tempDir');
 
 const { discover } = require('../console/xeniaWatch.js')._internal;
 
@@ -22,7 +22,7 @@ function config(root, dirs) {
 }
 
 test('both Xenia layouts are watched, dashboard GPDs are not', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xenia-watch-'));
+  const root = makeTempDir('aw-xenia-watch-');
   const profile = path.join('content', 'E0300000DEADBEEF', 'FFFE07D1', '00010000', 'E0300000DEADBEEF');
   tree(root, [
     path.join(profile, 'FFFE07D1.gpd'),
@@ -35,7 +35,7 @@ test('both Xenia layouts are watched, dashboard GPDs are not', () => {
 });
 
 test('the profile folder holding the .gpd files can be the saved folder', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xenia-watch-'));
+  const root = makeTempDir('aw-xenia-watch-');
   const profile = path.join(root, 'E0300000DEADBEEF');
   tree(root, [path.join('E0300000DEADBEEF', 'FFFE07D1.gpd'), path.join('E0300000DEADBEEF', '4D5307E6.gpd')]);
 
