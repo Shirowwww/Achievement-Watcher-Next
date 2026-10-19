@@ -37,8 +37,18 @@ function fakeSpawner() {
 const game = { name: 'Some Game', pids: new Set([4242]) };
 const enabled = { clip: true, clipSeconds: 20, clipFps: '60', clipQuality: 'high', hdr: 'auto' };
 
-function deps(spawner) {
-  return { platform: 'win32', run: spawner.run, helper: 'aw-next-clip.exe' };
+// Records what would be settled, so no test touches a real clip folder.
+function stubParts() {
+  const calls = { settled: [], swept: [] };
+  return {
+    calls,
+    settlePart: async (file) => calls.settled.push(file),
+    settleLeftovers: async (dir) => calls.swept.push(dir),
+  };
+}
+
+function deps(spawner, clipPart = stubParts()) {
+  return { platform: 'win32', run: spawner.run, helper: 'aw-next-clip.exe', clipPart };
 }
 
 test.afterEach(() => clip.stop());
@@ -314,6 +324,78 @@ test('the screen rate is passed to the recorder as a word', () => {
   clip.sync({ ...enabled, clipFps: 'unlocked' }, game, deps(spawner));
   const args = spawner.children[0].args;
   assert.equal(args[args.indexOf('--fps') + 1], 'unlocked');
+});
+
+test('a recorder that dies while writing a clip has that file settled, not the one it finished', async () => {
+  const spawner = fakeSpawner();
+  const parts = stubParts();
+  clip.sync(enabled, game, deps(spawner, parts));
+  const child = spawner.children[0];
+  await say(child, 'writing C:\\Clips\\Game\\a.mp4');
+  await say(child, 'saved C:\\Clips\\Game\\a.mp4');
+  await say(child, 'writing C:\\Clips\\Game\\b.mp4');
+  child.emit('exit', null);
+  assert.deepEqual(parts.calls.settled, ['C:\\Clips\\Game\\b.mp4.part']);
+});
+
+test('quitting waits for the clip being written, unless its writing hung', async (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  let killed = 0;
+  const watch = (child) => {
+    child.kill = () => {
+      killed += 1;
+    };
+    return child;
+  };
+
+  clip.sync(enabled, game, d);
+  const first = watch(spawner.children[0]);
+  await say(first, 'writing C:\\Clips\\Game\\a.mp4');
+  clip.stop();
+  advance(45000);
+  assert.equal(killed, 0, 'past the quit timeout, the clip is still being written');
+  await say(first, 'saved C:\\Clips\\Game\\a.mp4');
+  advance(1000);
+  assert.equal(killed, 1, 'killed once the clip is safe');
+
+  clip.sync(enabled, game, d);
+  const second = watch(spawner.children[1]);
+  await say(second, 'writing C:\\Clips\\Game\\b.mp4');
+  clip.stop();
+  advance(58000);
+  assert.equal(killed, 1);
+  advance(2000);
+  assert.equal(killed, 2, 'a write that hangs for a minute does not hold the recorder forever');
+});
+
+test('a silent recorder is not killed in the middle of a clip', async (t) => {
+  const spawner = fakeSpawner();
+  const { deps: d, advance } = clockedDeps(t, spawner);
+  clip.sync(enabled, game, d);
+  const child = spawner.children[0];
+  let killed = 0;
+  child.kill = () => {
+    killed += 1;
+    child.emit('exit', null);
+  };
+  await say(child, 'ready encoder="x" codec=h264 fps=60');
+  await say(child, 'writing C:\\Clips\\Game\\a.mp4');
+  advance(55000);
+  assert.equal(killed, 0);
+  advance(10000);
+  assert.equal(killed, 1);
+});
+
+test('a Windows recorder settles what earlier ones left in the clip folder it records into; a Linux one does not', () => {
+  const spawner = fakeSpawner();
+  const parts = stubParts();
+  clip.sync({ ...enabled, clipDir: ' D:\\Clips ' }, game, deps(spawner, parts));
+  clip.stop();
+  clip.sync(enabled, game, deps(spawner, parts));
+  clip.stop();
+  clip.sync(enabled, game, { ...linuxDeps(spawner), clipPart: parts });
+  assert.deepEqual(parts.calls.swept, ['D:\\Clips', clip.defaultDir()]);
 });
 
 test('a GPU without a hardware encoder is not retried until the settings change', async () => {

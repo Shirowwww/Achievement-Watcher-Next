@@ -322,7 +322,9 @@ at a constant bitrate and a quiet scene comes out smaller.
   bitrate for Unlocked, so it is a ceiling on a 60 Hz screen.
 - **If the recorder stops answering.** AW Next restarts it after a wait that doubles each time, and
   gives up on a game after five failed restarts. A clip whose writing fails halfway is kept when
-  what was written plays; otherwise nothing is left under the clip's name.
+  what was written plays; otherwise nothing is left under the clip's name. The recorder is never
+  stopped while it writes a clip, and a clip left half written by a PC that went down is cleaned up
+  the next time a game is recorded.
 - **HDR.** With Windows HDR on, the clip is tone-mapped with the same curve as HDR screenshots, so it
   looks right on any screen. **HDR screenshots** set to **Off** applies to clips too.
 - **Sound.** **Game only** records the game and leaves voice chat and music out. When the game's

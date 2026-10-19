@@ -14,6 +14,7 @@ const debug = require('../util/log.js');
 const { normalize, recorderArgs } = require('./clipProfile.js');
 const { souvenirPath } = require('./souvenir.js');
 const gsrClip = require('./gsrClip.js');
+const clipPart = require('./clipPart.js');
 
 const HELPER_NAME = 'aw-next-clip.exe';
 const MAX_RESTARTS = 5;
@@ -22,6 +23,9 @@ const RESTART_DELAY_MS = 5000;
 const RESTART_DELAY_MAX_MS = 60000;
 // Long enough for the after-unlock half of the longest clip to be recorded and written.
 const QUIT_TIMEOUT_MS = 30000;
+// A clip being written is not cut short by a kill, unless its writing has hung this long.
+const WRITE_GRACE_MS = 60000;
+const KILL_RETRY_MS = 1000;
 // The recorder prints a stats line every few seconds while its capture loop turns. The first one
 // may come late: a fresh executable is scanned by the antivirus before it runs.
 const STALL_MS = 15000;
@@ -60,6 +64,20 @@ function clockOf(recorder) {
   return (recorder.deps && recorder.deps.now) || Date.now;
 }
 
+// Killing the recorder now would leave the clip it is writing unreadable, unless that write hung.
+function writingClip(recorder) {
+  return !!recorder.writing && clockOf(recorder)() - recorder.writing.since < WRITE_GRACE_MS;
+}
+
+function clipParts(recorder) {
+  return (recorder.deps && recorder.deps.clipPart) || clipPart;
+}
+
+function clipFolder(dir) {
+  const folder = dir ? String(dir).trim() : '';
+  return folder || defaultDir();
+}
+
 // Only the capture loop prints `ready` and `stats` (a log line can come from any thread), so only
 // they prove it is turning.
 function handleLine(line, recorder) {
@@ -69,13 +87,16 @@ function handleLine(line, recorder) {
     recorder.lastSign = now;
     recorder.signs += 1;
   }
+  // Each write ends with exactly one of saved, saved-partial or error write-failed.
+  if (kind === 'saved' || kind === 'saved-partial' || line.startsWith('error write-failed')) recorder.writing = null;
   if (kind === 'stats') {
     recorder.lastStats = line;
     if (now - recorder.statsLoggedAt >= STATS_LOG_MS) {
       recorder.statsLoggedAt = now;
       debug.log(`[clip] ${line}`);
     }
-  } else if (kind === 'saved') debug.log(`[clip] saved ${line.slice(6)}`);
+  } else if (kind === 'writing') recorder.writing = { file: line.slice('writing '.length), since: now };
+  else if (kind === 'saved') debug.log(`[clip] saved ${line.slice(6)}`);
   else if (kind === 'saved-partial') debug.warn(`[clip] clip cut short, kept what plays: ${line.slice(14)}`);
   else if (kind === 'merged') debug.log(`[clip] unlock joined the clip ${line.slice(7)}`);
   else if (kind === 'fallback') debug.warn(`[clip] ${line}`);
@@ -139,7 +160,7 @@ function superviseRecorder(recorder, child) {
   recorder.watcher = setInterval(() => {
     if (recorder.child !== child || recorder.stopping) return;
     const silent = now() - recorder.lastSign;
-    if (silent > (recorder.signs === 0 ? STARTUP_GRACE_MS : STALL_MS)) {
+    if (silent > (recorder.signs === 0 ? STARTUP_GRACE_MS : STALL_MS) && !writingClip(recorder)) {
       debug.warn(`[clip] recorder silent for ${Math.round(silent / 1000)} s, killing it`);
       recorder.hung = true;
       try {
@@ -158,6 +179,11 @@ function onExit(recorder, child, code) {
   if (recorder.child !== child) return;
   recorder.child = null;
   clearInterval(recorder.watcher);
+  // Gone in the middle of a write: nothing will finish that file, so it is settled now.
+  if (recorder.writing) {
+    void clipParts(recorder).settlePart(`${recorder.writing.file}${clipPart.PART}`);
+    recorder.writing = null;
+  }
   const hung = recorder.hung;
   recorder.hung = false;
   if (recorder.lastStats) debug.log(`[clip] last report: ${recorder.lastStats}`);
@@ -222,12 +248,17 @@ function stop() {
   try {
     child.stdin.end('quit\n');
   } catch {}
-  const killer = setTimeout(() => {
-    try {
-      child.kill();
-    } catch {}
-  }, QUIT_TIMEOUT_MS);
-  if (typeof killer.unref === 'function') killer.unref();
+  let killer;
+  const killUnlessWriting = (delay) => {
+    killer = setTimeout(() => {
+      if (writingClip(recorder)) return killUnlessWriting(KILL_RETRY_MS);
+      try {
+        child.kill();
+      } catch {}
+    }, delay);
+    if (typeof killer.unref === 'function') killer.unref();
+  };
+  killUnlessWriting(QUIT_TIMEOUT_MS);
   child.once('exit', () => clearTimeout(killer));
 }
 
@@ -280,6 +311,8 @@ function sync(souvenir, game, deps = {}) {
   } else {
     launch(state.recorder);
   }
+  // A recorder killed with the PC or the Watchdog could not settle its last clip itself.
+  if (plan.engine === 'aw-next-clip') void clipParts(state.recorder).settleLeftovers(clipFolder(souvenir.clipDir));
   return state.recorder;
 }
 
@@ -288,8 +321,7 @@ function trigger({ game, achievement, dir } = {}) {
   const recorder = state.recorder;
   if (!recorder || (recorder.engine !== 'software' && !recorder.child)) return null;
   try {
-    const folder = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
-    const file = souvenirPath({ game, achievement, dir: folder }, recorder.ext);
+    const file = souvenirPath({ game, achievement, dir: clipFolder(dir) }, recorder.ext);
     if (recorder.engine === 'software') return sendToApp({ action: 'trigger', file }, recorder.deps.send) ? file : null;
     if (recorder.engine === 'gpu-screen-recorder') return recorder.replay.save(file);
     recorder.child.stdin.write(`clip 0 ${file}\n`);

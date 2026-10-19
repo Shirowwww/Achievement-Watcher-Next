@@ -137,7 +137,7 @@ The Watchdog talks to it over stdin and stdout, one line per message:
 |---|---|
 | in | `clip <age-ms> <path>`: an unlock shown `<age-ms>` ago, its clip to be written to `<path>` |
 | in | `quit`, or stdin closing: finish the pending clips, then exit |
-| out | `ready ...`, `saved <path>`, `saved-partial <frames>/<total> <path>`, `merged <path>`, `fallback fps ...`, `fallback encoder ...`, `error <code> <detail>`, `log <text>`, `stats ...` |
+| out | `ready ...`, `writing <path>`, `saved <path>`, `saved-partial <frames>/<total> <path>`, `merged <path>`, `fallback fps ...`, `fallback encoder ...`, `error <code> <detail>`, `log <text>`, `stats ...` |
 
 `stats` is also the heartbeat: it is printed every five seconds while the capture loop turns and
 not at all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the first one) before
@@ -148,6 +148,14 @@ A clip is written under `<path>.part` and renamed. If writing fails midway, the 
 that what was written plays, checked by reading its first picture, and kept under the final name
 with a `saved-partial` line when it holds at least a second of video; otherwise it is deleted.
 A finished file that cannot be renamed is left as `<path>.part`, since it is the only copy.
+
+`writing <path>` comes before each write, which ends with `saved`, `saved-partial` or
+`error write-failed`. In between, the Watchdog does not kill the recorder, neither when it goes
+silent nor when it takes longer than 30 s to quit, unless the write has lasted a minute. A recorder
+that dies anyway leaves a `.part` that `watchdog/notification/clipPart.js` settles: renamed when its
+`moov` box is complete, since only the rename failed; deleted otherwise, since the index is written
+last and no player opens a file without it. Each new recorder also settles the `.part` files older
+than two minutes in the clip folder, left by a PC that went down mid-write.
 
 `--selftest <out.mp4> [seconds]` records the desktop for that long and writes it, without the
 Watchdog. `--hdr force` runs the tone-mapping pass even on an SDR desktop. `--encoder software`

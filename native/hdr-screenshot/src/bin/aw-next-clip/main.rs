@@ -193,14 +193,18 @@ fn save(job: &ring::Job, shared: &Shared) {
     let video_type = shared.video_type.lock().unwrap().clone();
     let audio_type = shared.audio_type.lock().unwrap().clone();
     match (clip, video_type) {
-        (Some(clip), Some(video_type)) if !clip.video.is_empty() => match mux::write(&job.path, &clip, &video_type, audio_type.as_deref(), frame) {
-            Ok(mux::Outcome::Complete) => emit(&format!("saved {}", job.path)),
-            Ok(mux::Outcome::Partial { frames, of, cause }) => {
-                log(&format!("clip writing stopped early: {cause}"));
-                emit(&format!("saved-partial {frames}/{of} {}", job.path));
+        (Some(clip), Some(video_type)) if !clip.video.is_empty() => {
+            // The Watchdog holds off killing the recorder until one of the three lines below.
+            emit(&format!("writing {}", job.path));
+            match mux::write(&job.path, &clip, &video_type, audio_type.as_deref(), frame) {
+                Ok(mux::Outcome::Complete) => emit(&format!("saved {}", job.path)),
+                Ok(mux::Outcome::Partial { frames, of, cause }) => {
+                    log(&format!("clip writing stopped early: {cause}"));
+                    emit(&format!("saved-partial {frames}/{of} {}", job.path));
+                }
+                Err(detail) => emit(&format!("error write-failed {detail}")),
             }
-            Err(detail) => emit(&format!("error write-failed {detail}")),
-        },
+        }
         _ => emit("error nothing-recorded the capture had no frames for this unlock"),
     }
 }

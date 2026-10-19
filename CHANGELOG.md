@@ -103,7 +103,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A video clip that fails halfway.** When writing stops early, for instance on a full disk, the
   part already written is kept if it plays; otherwise nothing is left under the clip's name. A clip
   that was written in full but could not be renamed stays beside its final name as `.part`
-  instead of being deleted.
+  instead of being deleted, and gets its name the next time a game is recorded.
+- **Half-written clips left behind.** The recorder is no longer stopped in the middle of writing a
+  clip. When it dies there anyway (the PC shut down, AW was killed), the unreadable `.part` file is
+  deleted, right away or the next time a game is recorded.
 - **PS4 and PS5 rarity.** A PS4 game no longer takes its Exophase rarity from the PS5 list of the
   same game (Hades), and a lookup that cannot find the list gives up after 90 seconds.
 - **Broken icons stuck in the cache.** A web page answered in place of an icon (a captive portal,
