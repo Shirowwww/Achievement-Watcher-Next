@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
+const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { trophyGradeOf } = require('../util/trophyGrade.js');
@@ -197,15 +198,6 @@ function nearestExisting(dir) {
     if (isDirectory(current)) return current;
   }
   return '';
-}
-
-// libuv aborts on a watched 8.3 path (RUNNER~1) whose events arrive under the long name.
-function longPath(dir) {
-  try {
-    return fs.realpathSync.native(dir);
-  } catch {
-    return dir;
-  }
 }
 
 function closeWatcher(watcher) {

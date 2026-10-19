@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
+const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { guardWatcher } = require('../util/watchGuard.js');
@@ -259,16 +260,6 @@ function seedBaseline(record, { keepRecent = false, now = Math.floor(Date.now() 
     cacheSave(record.appid, old.map((entry) => entry.id));
   } catch (err) {
     debug.warn(`[x360recomp] baseline seed failed for ${record.appid}: ${err}`);
-  }
-}
-
-// libuv aborts the process when a watched Windows path is in 8.3 form (RUNNER~1) and an event
-// arrives under the long name, so watch the long form.
-function longPath(dir) {
-  try {
-    return fs.realpathSync.native(dir);
-  } catch {
-    return dir;
   }
 }
 

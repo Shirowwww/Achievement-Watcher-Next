@@ -10,6 +10,7 @@ const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
+const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { guardWatcher } = require('../util/watchGuard.js');
@@ -181,7 +182,7 @@ function seedBaseline(file) {
 function watchFile(game, ctx) {
   const dir = path.dirname(game.progressFile);
   const name = path.basename(game.progressFile).toLowerCase();
-  const watcher = watch(dir, { recursive: false }, (evt, changed) => {
+  const watcher = watch(longPath(dir), { recursive: false }, (evt, changed) => {
     if (path.basename(String(changed || '')).toLowerCase() !== name) return;
     changes.run(pcports.APPID, () => handleChange(game, game.progressFile, ctx, evt === 'remove'));
   });
@@ -217,8 +218,8 @@ function attach(game, ctx) {
   }
   if (!target.watchDir) return;
   try {
-    const watcher = watch(target.watchDir, { recursive: false }, (evt, name) => {
-      if (path.basename(String(name || '')).toLowerCase() !== String(target.nextExpected).toLowerCase()) return;
+    const advance = () => {
+      if (!watchers.includes(watcher) || !fs.existsSync(path.join(target.watchDir, target.nextExpected))) return;
       try {
         watcher.close();
       } catch {
@@ -226,7 +227,12 @@ function attach(game, ctx) {
       }
       watchers = watchers.filter((entry) => entry !== watcher);
       attach(game, ctx);
+    };
+    const watcher = watch(longPath(target.watchDir), { recursive: false }, (evt, name) => {
+      if (path.basename(String(name || '')).toLowerCase() === String(target.nextExpected).toLowerCase()) advance();
     });
+    // node-watch listens from 'ready' on, a tick later on Linux: what appeared before sends no event.
+    watcher.on('ready', advance);
     watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
     debug.log(`[pcports] '${game.progressFile}' does not exist yet - waiting under '${target.watchDir}'`);
   } catch (err) {

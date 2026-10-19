@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
 const watch = require('../util/nodeWatch.js');
+const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
 const { trophyGradeOf } = require('../util/trophyGrade.js');
@@ -218,7 +219,7 @@ function titleFor(target, file) {
 
 function attachTrophies(target, ctx, knownAtStart) {
   const trophies = path.join(target.root, kyty.TROPHY_DIR);
-  const watcher = watch(trophies, { recursive: true }, (evt, name) => {
+  const watcher = watch(longPath(trophies), { recursive: true }, (evt, name) => {
     if (!kyty.UNLOCKS_FILE.test(path.basename(name || ''))) return;
     const title = titleFor(target, name);
     // A removed file is a reset: the baseline follows it down, so re-earning a trophy announces it.
@@ -226,6 +227,7 @@ function attachTrophies(target, ctx, knownAtStart) {
   });
   watchers.push(guardWatcher(watcher, `'${trophies}'`, debug));
   debug.log(`[kytyps5] watching trophies under '${trophies}'`);
+  return watcher;
 }
 
 // What the emulator wrote between creating _Trophies and the watcher starting has no event to come.
@@ -262,17 +264,20 @@ function attach(target, ctx, knownAtStart) {
       attachTrophies(target, ctx, knownAtStart);
       return;
     }
-    const pending = watch(target.root, { recursive: false }, () => {
-      if (!fs.existsSync(path.join(target.root, kyty.TROPHY_DIR))) return;
+    const takeOver = () => {
+      if (!watchers.includes(pending) || !fs.existsSync(path.join(target.root, kyty.TROPHY_DIR))) return;
       try {
         pending.close();
       } catch {
         /* already closed */
       }
       watchers = watchers.filter((entry) => entry !== pending);
-      attachTrophies(target, ctx, knownAtStart);
+      attachTrophies(target, ctx, knownAtStart).on('ready', () => catchUp(target, ctx, knownAtStart));
       catchUp(target, ctx, knownAtStart);
-    });
+    };
+    const pending = watch(longPath(target.root), { recursive: false }, takeOver);
+    // node-watch listens from 'ready' on, a tick later on Linux: what appeared before sends no event.
+    pending.on('ready', takeOver);
     watchers.push(guardWatcher(pending, `'${target.root}'`, debug));
     debug.log(`[kytyps5] no trophies yet - waiting for one in '${target.root}'`);
   } catch (err) {
