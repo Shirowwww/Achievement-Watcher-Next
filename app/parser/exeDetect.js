@@ -68,7 +68,8 @@ const KNOWN_NON_GAME_EXE = new Set([
   // virtualization / system services
   'docker desktop.exe', 'docker.exe', 'wsl.exe', 'vmware.exe', 'virtualbox.exe', 'vboxmanage.exe',
   // storefront/launcher clients
-  'steam.exe', 'steamwebhelper.exe', 'epicgameslauncher.exe', 'goggalaxy.exe', 'ubisoftconnect.exe',
+  'steam.exe', 'steamwebhelper.exe', 'gameoverlayui.exe', 'gameoverlayui64.exe', 'steamerrorreporter.exe',
+  'steamerrorreporter64.exe', 'epicgameslauncher.exe', 'goggalaxy.exe', 'ubisoftconnect.exe',
   'origin.exe', 'eaapp.exe', 'battle.net.exe', 'riot client.exe', 'riotclient.exe',
   // Source engine SDK/dev tools bundled in every Source-based game's bin\ folder; often bigger than
   // the real launcher exe, so raw size scoring alone can pick one over the game (e.g. gmod.exe).

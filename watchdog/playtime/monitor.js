@@ -245,6 +245,14 @@ async function loadWatchdogOptions() {
   }
 }
 
+// Steam starts its overlay beside every game it launches, from a folder left unmuted when Steam is
+// not on C:, so an appid lookup there could file the overlay under any game.
+const steamClientProcessNames = new Set(['steam', 'steamwebhelper', 'steamservice', 'gameoverlayui', 'gameoverlayui64', 'steamerrorreporter', 'steamerrorreporter64']);
+
+function isSteamClientProcess(name) {
+  return steamClientProcessNames.has(String(name || '').toLowerCase().replace(/\.exe$/, ''));
+}
+
 function isWallpaperEngineProcess(process, filepath) {
   const proc = String(process || '').toLowerCase();
   const file = String(filepath || '').toLowerCase();
@@ -500,7 +508,7 @@ async function init() {
 
   processMonitor.on('creation', async ([process, pid, filepath]) => {
     const games = getTrackableGameMatches(gameIndexByBinary, process);
-    if (isWallpaperEngineProcess(process, filepath)) return;
+    if (isWallpaperEngineProcess(process, filepath) || isSteamClientProcess(process)) return;
     if (filter.mute.file.some((bin) => bin.toLowerCase() === process.toLowerCase())) return;
 
     // A spawned interpreter never matches by binary name; a known game's install folder is a
@@ -740,6 +748,7 @@ module.exports = {
   // Exported for the test suite: pure helpers behind the interpreter-child and legacy-catalogue
   // matching in the creation handler above.
   isInterpreterProcess,
+  isSteamClientProcess,
   findGameForInterpreterChild,
   candidateConfigDirs,
   relatedToFolder,
