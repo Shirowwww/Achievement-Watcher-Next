@@ -147,6 +147,36 @@ test('only a manual check opens the update window; the hourly one announces it',
   assert.match(init, /offerPortableUpdate\(offer, manual\)/, 'the portable offer follows the same rule');
 });
 
+/*
+  The announcement is a single notification. Missed during a game or under Do Not Disturb, the offer
+  used to wait in silence until the user happened to open the window, so it comes back.
+*/
+test('an unanswered offer is announced again after a game or a few hours, never during a game', () => {
+  const remind = (o) => gate.shouldRemindUpdateOffer({ now: T0, announcedAt: T0 - HOUR, ...o });
+  assert.equal(remind({}), false, 'an hour after the announcement is too soon');
+  assert.equal(remind({ announcedAt: T0 - gate.INTERVALS.remind }), true);
+  assert.equal(remind({ gameEndedAt: T0 - 60 * 1000 }), true, 'a game that ended after the announcement brings it back');
+  assert.equal(remind({ gameEndedAt: T0 - 2 * HOUR }), false, 'a game that ended before it does not');
+  assert.equal(remind({ announcedAt: T0 - gate.INTERVALS.remind, gameRunning: true }), false, 'never under a running game');
+});
+
+test('the pending offer is reminded, stays on screen and is listed in the tray', () => {
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  const schedule = init.slice(init.indexOf('function scheduleUpdateCheck('), init.indexOf('function logStartupDiagnostics('));
+  assert.match(schedule, /if \(updatePromptOpen\) \{\s*remindPendingUpdateOffer\(\);/);
+  const announce = init.slice(init.indexOf('function announceUpdateOffer('), init.indexOf('function openReleasePage('));
+  assert.match(announce, /timeoutType: 'never'/);
+  const activity = init.slice(init.indexOf('function setGameActivity('), init.indexOf('const minimist'));
+  assert.match(activity, /lastGameEndedAt = Date\.now\(\)/);
+  const menu = init.slice(init.indexOf('function rebuildTrayMenu('), init.indexOf('function createTray('));
+  assert.match(menu, /currentUpdateStatus\.phase === 'available'/);
+  assert.match(menu, /tray\.setImage\(offered \? TRAY_ICON_UPDATE : TRAY_ICON\)/, 'the icon wears a dot while an offer waits');
+  assert.match(menu, /label: updateAvailableLabel\(offered\), enabled: false/, 'the menu line stays discreet');
+  assert.match(init, /const openFromTray = \(\) => \(trayMenuOffer \? openUpdateWindow\(\) : createMainWindow\(\)\)/);
+  assert.ok(fs.existsSync(path.join(appRoot, 'resources', 'icon', 'icon_tray_update.ico')), 'the badged icon ships');
+  assert.match(init.slice(init.indexOf('function publishUpdateStatus('), init.indexOf('function setUpdateStatus(')), /rebuildTrayMenu\(\)/);
+});
+
 test('the monitor is the only source of game activity, and losing it never wedges the updater', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   const watchdog = fs.readFileSync(path.join(appRoot, '..', 'watchdog', 'watchdog.js'), 'utf8');

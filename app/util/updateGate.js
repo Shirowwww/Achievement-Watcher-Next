@@ -20,12 +20,19 @@ const INTERVALS = {
   retry: 30 * 60 * 1000, // slower retry after a failed check
   inGame: 10 * 60 * 1000, // a game is running: look again later, do not interrupt
   afterGame: 45 * 1000, // a session just ended: offer whatever was held back
+  remind: 4 * 60 * 60 * 1000, // an unanswered offer is announced again
 };
 
 function nextCheckDelayMs({ gameRunning = false, failed = false } = {}) {
   if (gameRunning) return INTERVALS.inGame;
   if (failed) return INTERVALS.retry;
   return INTERVALS.recheck;
+}
+
+// A missed announcement (a game, Do Not Disturb) comes back once the game ends, else every few hours.
+function shouldRemindUpdateOffer({ now = Date.now(), announcedAt = 0, gameEndedAt = 0, gameRunning = false } = {}) {
+  if (gameRunning) return false;
+  return gameEndedAt > announcedAt || now - announcedAt >= INTERVALS.remind;
 }
 
 function coerce(version) {
@@ -115,6 +122,7 @@ module.exports = {
   POSTPONE_MS,
   INTERVALS,
   nextCheckDelayMs,
+  shouldRemindUpdateOffer,
   covers,
   isNotAnUpgrade,
   isVersionSkipped,

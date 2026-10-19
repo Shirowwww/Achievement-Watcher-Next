@@ -35,6 +35,13 @@ renamed in 3.9.0 and the history is kept under one file.
   no longer counts towards 100% unless you earned it, as on Steam: Team Fortress 2's four Replay
   achievements no longer keep its 100% and its platinum notification out of reach. Games already in
   the library pick this up at their next automatic data check.
+- **A missed update notification comes back.** The notification that announces a new version now
+  stays on screen until it is closed. Left unanswered, it shows again when a game ends and every
+  few hours, never during a game. Until you answer it, the tray icon wears a small blue dot and a
+  click on it opens the update.
+- **Every release you skipped, in the update window.** Several versions behind, the window lists
+  the notes of each release you missed, newest first, each under its version number, straight from
+  the GitHub release descriptions.
 
 ### Fixed
 

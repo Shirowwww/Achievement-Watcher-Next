@@ -259,6 +259,21 @@ h2 {
   margin-top: 0;
 }
 
+/* One per release the user skipped: the line between two releases' notes. */
+#notes-body h3.version {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--surface);
+  color: var(--accent-text);
+  font-size: 13px;
+}
+
+#notes-body h3.version:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 #notes-body p {
   margin: 0 0 6px;
   color: var(--text-muted);

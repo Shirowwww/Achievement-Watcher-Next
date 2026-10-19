@@ -26,8 +26,9 @@
   }
 
   function noteNode(block) {
-    const tag = block.kind === 'heading' ? 'h3' : block.kind === 'item' ? 'li' : 'p';
+    const tag = block.kind === 'heading' || block.kind === 'version' ? 'h3' : block.kind === 'item' ? 'li' : 'p';
     const node = document.createElement(tag);
+    if (block.kind === 'version') node.className = 'version';
     node.textContent = block.text;
     return node;
   }

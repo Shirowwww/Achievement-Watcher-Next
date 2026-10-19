@@ -59,6 +59,13 @@ const fill = ({ width, height }) => Math.round((100 * Math.min(width, height)) /
 
 const source = path.join(__dirname, 'icon_tray.png');
 const target = path.join(__dirname, '..', 'resources', 'icon', 'icon_tray.ico');
+// The same icon with the "update available" dot, swapped in by the tray while an offer waits.
+const badgedTarget = path.join(__dirname, '..', 'resources', 'icon', 'icon_tray_update.ico');
+// The app's --accent, so the dot reads as AW's own signal rather than an error.
+const BADGE_COLOR = '#4aa3ff';
+// Dot diameter and the clear ring cut around it, as shares of the frame.
+const BADGE_SIZE = 0.34;
+const BADGE_RING = 0.07;
 
 // The white line art as a bitmap, with the feathered edge and the shading already resolved away.
 async function inkMask(input) {
@@ -265,6 +272,24 @@ async function crispResize(master, size) {
     .toBuffer();
 }
 
+/*
+  A dot in the top-right corner, with a transparent ring cut out of the cup around it: without the
+  gap the dot merges into the white glyph at 16px and reads as a bump on the cup.
+*/
+async function withBadge(frame, size) {
+  const radius = (size * BADGE_SIZE) / 2;
+  const centre = size - radius;
+  const circle = (r, fillColor) =>
+    Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><circle cx="${centre}" cy="${radius}" r="${r}" fill="${fillColor}"/></svg>`);
+  return sharp(frame)
+    .composite([
+      { input: circle(radius + size * BADGE_RING, '#000'), blend: 'dest-out' },
+      { input: circle(radius, BADGE_COLOR), blend: 'over' },
+    ])
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+}
+
 function packIco(frames) {
   const header = Buffer.alloc(6);
   header.writeUInt16LE(0, 0);
@@ -307,6 +332,9 @@ async function main() {
   }
 
   fs.writeFileSync(target, packIco(frames));
+  const badged = [];
+  for (const { size, data } of frames) badged.push({ size, data: await withBadge(data, size) });
+  fs.writeFileSync(badgedTarget, packIco(badged));
   const big = await sharp(whole).metadata();
   const small = await sharp(cupOnly).metadata();
   console.log(

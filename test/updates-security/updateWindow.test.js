@@ -7,6 +7,7 @@
 */
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 
@@ -70,6 +71,23 @@ test('release notes in Markdown and in the fullChangelog list form are read too'
   ]);
   assert.deepEqual(releaseNoteBlocks([{ version: '3.12.0', note: '<li>One</li>' }, { version: '3.11.9', note: null }]), [{ kind: 'item', text: 'One' }]);
   assert.deepEqual(releaseNoteBlocks(undefined), []);
+});
+
+// Someone several releases behind reads every release they missed, each under its own version.
+test('the notes of every skipped release are shown, newest first, each under its version', () => {
+  const missed = [
+    { version: '3.12.2', note: '<h1>Achievement Watcher Next 3.12.2</h1><ul><li>B</li></ul>' },
+    { version: '3.12.1', note: '<h2>Fixed</h2><ul><li>A</li></ul><h2>Install</h2><table><tr><td>Setup.exe</td></tr></table>' },
+  ];
+  assert.deepEqual(releaseNoteBlocks(missed), [
+    { kind: 'version', text: '3.12.2' },
+    { kind: 'item', text: 'B' },
+    { kind: 'version', text: '3.12.1' },
+    { kind: 'heading', text: 'Fixed' },
+    { kind: 'item', text: 'A' },
+  ]);
+  const init = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'electron', 'init.js'), 'utf8');
+  assert.match(init, /autoUpdater\.fullChangelog = true/, 'electron-updater only lists the skipped releases when asked to');
 });
 
 test('the download table and the footer of links stay on the release page', () => {

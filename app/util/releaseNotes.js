@@ -14,7 +14,7 @@ const BLOCK_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div', 'li'
 const SKIPPED_TAGS = new Set(['script', 'style', 'template', 'noscript', 'table']);
 // Everything after the first rule is the release page's footer of links.
 const END_TAG = 'hr';
-const MAX_BLOCKS = 60;
+const MAX_BLOCKS = 200;
 const MAX_TEXT = 600;
 
 const NAMED_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', hellip: '…', rarr: '→', mdash: '-', ndash: '-' };
@@ -36,10 +36,6 @@ function kindOf(tag) {
   return 'text';
 }
 
-function notesSource(notes) {
-  if (Array.isArray(notes)) return notes.map((entry) => (entry && typeof entry.note === 'string' ? entry.note : '')).join('\n');
-  return typeof notes === 'string' ? notes : '';
-}
 
 // A body without any tag is Markdown: "#" lines are headings and "-"/"*" lines are list items.
 function markdownBlocks(source) {
@@ -94,13 +90,30 @@ function htmlBlocks(source) {
   return blocks;
 }
 
-/** @returns {{ kind: 'heading' | 'item' | 'text', text: string }[]} */
-function releaseNoteBlocks(notes) {
-  const source = notesSource(notes);
-  const blocks = /<[a-zA-Z!/]/.test(source) ? htmlBlocks(source) : markdownBlocks(source);
+function bodyBlocks(source) {
+  const text = typeof source === 'string' ? source : '';
+  const blocks = /<[a-zA-Z!/]/.test(text) ? htmlBlocks(text) : markdownBlocks(text);
   // A body opening on "Achievement Watcher Next 3.12.0" repeats the window's own title.
   if (blocks[0] && blocks[0].kind === 'heading' && /\d+\.\d+/.test(blocks[0].text)) blocks.shift();
-  return blocks.slice(0, MAX_BLOCKS).map((block) => ({
+  // A closing "Install" heading whose download table was dropped would head nothing.
+  while (blocks.length && blocks[blocks.length - 1].kind === 'heading') blocks.pop();
+  return blocks;
+}
+
+/*
+  fullChangelog hands over one entry per release the user is behind, newest first. Several releases
+  each get a version line; a single one needs none, the window's title already names it.
+*/
+function allBlocks(notes) {
+  if (!Array.isArray(notes)) return bodyBlocks(notes);
+  const releases = notes.map((entry) => ({ version: String((entry && entry.version) || ''), blocks: bodyBlocks(entry && entry.note) })).filter((release) => release.blocks.length);
+  if (releases.length === 1) return releases[0].blocks;
+  return releases.flatMap((release) => [{ kind: 'version', text: release.version }, ...release.blocks]);
+}
+
+/** @returns {{ kind: 'version' | 'heading' | 'item' | 'text', text: string }[]} */
+function releaseNoteBlocks(notes) {
+  return allBlocks(notes).slice(0, MAX_BLOCKS).map((block) => ({
     kind: block.kind,
     text: block.text.length > MAX_TEXT ? `${block.text.slice(0, MAX_TEXT - 1)}…` : block.text,
   }));

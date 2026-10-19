@@ -117,6 +117,8 @@ function getUpdater() {
     // Updates require an explicit download and install confirmation.
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
+    // The notes of every release between the installed version and the offered one, not just the last.
+    autoUpdater.fullChangelog = true;
     /*
       Differential downloads stay ON: they fetch only the blocks that changed between the installed
       installer and the new one (electron-builder publishes the .blockmap for that), instead of the
@@ -160,6 +162,8 @@ const INSTALL_HANDOVER_MS = 1200;
 // Number of games currently reported by the monitor.
 let gamesRunning = 0;
 const isGameRunning = () => gamesRunning > 0;
+let lastGameEndedAt = 0;
+let updateOfferAnnouncedAt = 0;
 // A completed update waiting for the current game to end.
 let promptDownloadedUpdate = null;
 let pendingInstallPrompt = null;
@@ -251,7 +255,12 @@ function trayTooltipFor(state) {
   if (state.phase === 'installing') {
     return `Achievement Watcher Next - ${t('update-installing-short', 'Installing update…', 'Installation de la mise à jour…')}`;
   }
+  if (state.phase === 'available') return `Achievement Watcher Next - ${updateAvailableLabel(state.version)}`;
   return 'Achievement Watcher Next';
+}
+
+function updateAvailableLabel(version) {
+  return `${t('update-available', 'Update Available', 'Mise à jour disponible')} (${version})`;
 }
 
 /* Only the main window listens (title bar + Settings live there); overlay/notification windows are
@@ -264,6 +273,7 @@ function publishUpdateStatus() {
     try {
       tray.setToolTip(trayTooltipFor(currentUpdateStatus));
     } catch {}
+    rebuildTrayMenu();
   }
   if (!MainWin || MainWin.isDestroyed()) return;
   try {
@@ -399,13 +409,25 @@ function announceUpdateOffer(version) {
       { version }
     ),
     icon,
+    // Left on screen until dismissed: a toast that slides away after a few seconds is easy to miss.
+    timeoutType: 'never',
   };
+  updateOfferAnnouncedAt = Date.now();
   desktopNotifier()
     .notify(notice, openUpdateWindow)
     .then((shown) => {
       if (!shown) debug.log(`[updater] no desktop notification for ${version}: the title-bar chip still offers it`);
     })
     .catch((err) => debug.log(`[updater] update notification failed: ${err.message || err}`));
+}
+
+// Only an offer still waiting for its answer, with its window closed, is announced again.
+function remindPendingUpdateOffer() {
+  if (!pendingUpdateAnswer || !updateOffer || (updateWindow && updateWindow.isOpen())) return;
+  const due = updateGate.shouldRemindUpdateOffer({ announcedAt: updateOfferAnnouncedAt, gameEndedAt: lastGameEndedAt, gameRunning: isGameRunning() });
+  if (!due) return;
+  debug.log(`[updater] version ${updateOffer.version} still unanswered; announcing it again`);
+  announceUpdateOffer(updateOffer.version);
 }
 
 function openReleasePage(version) {
@@ -648,6 +670,7 @@ function scheduleUpdateCheck(delayMs) {
     updateCheckTimer = null;
     if (!app.isPackaged) return;
     if (updatePromptOpen) {
+      remindPendingUpdateOffer();
       // Keep checking after an open prompt closes.
       scheduleUpdateCheck(UPDATE_RECHECK_MS);
       return;
@@ -792,6 +815,7 @@ function setGameActivity(count) {
   bgAutoFixHeldTicks = 0;
   if (!MainWin) setTimeout(() => runBackgroundAutoFix('after-game'), 20 * 1000);
   if (!app.isPackaged) return;
+  lastGameEndedAt = Date.now();
 
   // Reopen a completed download prompt after the game ends.
   if (pendingInstallPrompt && typeof promptDownloadedUpdate === 'function') {
@@ -7142,6 +7166,42 @@ async function warnIfNoKeyring(protectedKey) {
   }
 }
 
+const TRAY_ICON = path.join(__dirname, '../resources/icon/icon_tray.ico');
+const TRAY_ICON_UPDATE = path.join(__dirname, '../resources/icon/icon_tray_update.ico');
+
+/*
+  While an offer waits the icon wears a dot, a click on it opens the offer, and the menu repeats it
+  as a greyed line: a native menu has no colour or opacity, and disabled is its only discreet style.
+*/
+let trayMenuOffer = null;
+function rebuildTrayMenu() {
+  if (!tray) return;
+  const offered = currentUpdateStatus.phase === 'available' ? currentUpdateStatus.version : '';
+  if (offered === trayMenuOffer) return; // the status is published on every download percent
+  trayMenuOffer = offered;
+  if (process.platform === 'win32' && fs.existsSync(TRAY_ICON) && fs.existsSync(TRAY_ICON_UPDATE)) {
+    tray.setImage(offered ? TRAY_ICON_UPDATE : TRAY_ICON);
+  }
+  const updateItems = offered ? [{ label: updateAvailableLabel(offered), enabled: false }, { type: 'separator' }] : [];
+  const contextMenu = Menu.buildFromTemplate([
+    ...updateItems,
+    { label: t('open-achievement-watcher', 'Open AW Next', 'Ouvrir AW Next'), click: () => createMainWindow() },
+    {
+      label: t('restart-background-monitor', 'Restart background monitor', 'Redémarrer le moniteur en arrière-plan'),
+      click: () => restartWatchdog(),
+    },
+    { type: 'separator' },
+    {
+      label: t('quit', 'Quit', 'Quitter'),
+      click: () => {
+        app.isQuiting = true;
+        app.quit();
+      },
+    },
+  ]);
+  tray.setContextMenu(contextMenu);
+}
+
 function createTray() {
   if (tray) return tray;
   try {
@@ -7158,9 +7218,8 @@ function createTray() {
 
       The app icon stays the fallback so an install without the dedicated file still shows something.
     */
-    const trayIconPath = path.join(__dirname, '../resources/icon/icon_tray.ico');
-    const hasTrayIcon = fs.existsSync(trayIconPath);
-    const iconPath = hasTrayIcon ? trayIconPath : path.join(__dirname, '../resources/icon/icon.ico');
+    const hasTrayIcon = fs.existsSync(TRAY_ICON);
+    const iconPath = hasTrayIcon ? TRAY_ICON :path.join(__dirname, '../resources/icon/icon.ico');
 
     let image = null;
     if (!hasTrayIcon) {
@@ -7179,27 +7238,11 @@ function createTray() {
     if (process.platform === 'win32') tray = new Tray(image && !image.isEmpty() ? image : iconPath);
     else tray = new Tray(linuxTrayImage());
     tray.setToolTip('Achievement Watcher Next');
-    const rebuildMenu = () => {
-      const contextMenu = Menu.buildFromTemplate([
-        { label: t('open-achievement-watcher', 'Open AW Next', 'Ouvrir AW Next'), click: () => createMainWindow() },
-        {
-          label: t('restart-background-monitor', 'Restart background monitor', 'Redémarrer le moniteur en arrière-plan'),
-          click: () => restartWatchdog(),
-        },
-        { type: 'separator' },
-        {
-          label: t('quit', 'Quit', 'Quitter'),
-          click: () => {
-            app.isQuiting = true;
-            app.quit();
-          },
-        },
-      ]);
-      tray.setContextMenu(contextMenu);
-    };
-    rebuildMenu();
-    tray.on('click', () => createMainWindow());
-    tray.on('double-click', () => createMainWindow());
+    trayMenuOffer = null;
+    rebuildTrayMenu();
+    const openFromTray = () => (trayMenuOffer ? openUpdateWindow() : createMainWindow());
+    tray.on('click', openFromTray);
+    tray.on('double-click', openFromTray);
     debug.log('[tray] created');
     if (process.platform === 'linux') {
       const trayHost = require('../util/linuxTrayHost.js');
