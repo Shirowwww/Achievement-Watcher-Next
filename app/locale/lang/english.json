@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5 emulator"
       },
+      "ps4recomp": {
+        "description": "PC ports of PlayStation 4 games (Bloodborne, Uncharted, God of War III, MediEvil): add the port's folder in Folders"
+      },
       "xenia": {
         "description": "Xbox 360 emulator"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2, through the MarkerPatch mod"
+      },
+      "pcports": {
+        "description": "PC ports with their own achievements: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns, through the MadnessPatch mod"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox achievements",
     "xbox360-recomp-achievements": "Xbox 360 achievements - PC recompilation",
     "xbox360-recomp-badge": "Xbox 360 game recompiled to run natively on PC. Its achievements are read from the game itself.",
+    "ps4-recomp-badge": "PlayStation 4 game ported to run natively on PC. Its trophies are read from the original game and the port's own logs.",
     "epic-games-achievements": "Epic Games achievements",
     "gog-achievements": "GOG achievements",
     "social-club-achievements": "Social Club achievements",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Something to check in Game health (game settings button)",
     "health-dot-problem": "Achievements are not tracked - see Game health (game settings button)",
     "retroachievements-badge": "Achievements from your RetroAchievements account",
+    "pc-port-achievements": "PC port achievements",
     "gh-check-install": "Game files",
     "gh-check-executable": "Executable",
     "gh-check-identity": "Game identity",

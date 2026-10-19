@@ -18,6 +18,7 @@ const ACTION = {
 };
 
 const X360_RECOMP_SOURCE = 'xbox 360 recomp';
+const PS4_RECOMP_SOURCE = 'ps4 recomp';
 
 /*
   Emulator save files; mirrors the list watchdog/monitor.js watches (files.achievement plus the
@@ -70,6 +71,8 @@ function resetActionFor(fileName, source = '') {
     if (name === 'achievements.json') return ACTION.CLEAR_X360_JSON;
     return null;
   }
+  // A PS4 port's user folder also holds the game's own saves; its unlock logs are not reset from here.
+  if (String(source || '').trim().toLowerCase() === PS4_RECOMP_SOURCE) return null;
   if (SAVE_FILES.has(name)) return ACTION.DELETE;
   // KytyPS5 keeps one unlock list per user and trophy set, apart from the list in the game's package.
   if (/^trophies_\d+_\d+\.json$/.test(name)) return ACTION.DELETE;

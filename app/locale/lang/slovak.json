@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Emulátor PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "PC porty hier pre PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): pridaj priečinok portu v sekcii Priečinky"
+      },
       "xenia": {
         "description": "Emulátor Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 cez mod MarkerPatch"
+      },
+      "pcports": {
+        "description": "PC porty s vlastnými úspechmi: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns cez mod MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Úspechy Xbox",
     "xbox360-recomp-achievements": "Úspechy Xbox 360 - rekompilácia pre PC",
     "xbox360-recomp-badge": "Hra Xbox 360 rekompilovaná na natívny beh na PC. Jej úspechy sa načítavajú priamo z hry.",
+    "ps4-recomp-badge": "Hra PlayStation 4 portovaná na natívny beh na PC. Jej trofeje sa načítavajú z pôvodnej hry a z vlastných logov portu.",
     "epic-games-achievements": "Úspechy Epic Games",
     "gog-achievements": "Úspechy GOG",
     "social-club-achievements": "Úspechy Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Niečo na kontrolu v Stave hry (tlačidlo nastavení hry)",
     "health-dot-problem": "Úspechy sa nesledujú - pozri Stav hry (tlačidlo nastavení hry)",
     "retroachievements-badge": "Úspechy z tvojho účtu RetroAchievements",
+    "pc-port-achievements": "Úspechy portov pre PC",
     "gh-check-install": "Súbory hry",
     "gh-check-executable": "Spustiteľný súbor",
     "gh-check-identity": "Identita hry",

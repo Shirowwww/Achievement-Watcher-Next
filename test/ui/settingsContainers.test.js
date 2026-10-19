@@ -74,8 +74,8 @@ const MOVED_GENERAL = {
 };
 const MOVED_SOURCE = {
   'options-source-stores': ['option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial'],
-  'options-source-emulators': ['option_gog', 'option_epic', 'option_xlln', 'option_markerpatch', 'option_madnesspatch'],
-  'options-source-consoles': ['option_shadps4', 'option_kytyps5', 'option_xenia', 'option_retroAchievements'],
+  'options-source-emulators': ['option_gog', 'option_epic', 'option_xlln', 'option_markerpatch', 'option_madnesspatch', 'option_pcports'],
+  'options-source-consoles': ['option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_xenia', 'option_retroAchievements'],
 };
 
 test('moved rows live in the section the test expects', () => {

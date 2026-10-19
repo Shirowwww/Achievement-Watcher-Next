@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5 emulátor"
       },
+      "ps4recomp": {
+        "description": "PlayStation 4-es játékok PC-s portjai (Bloodborne, Uncharted, God of War III, MediEvil): add hozzá a port mappáját a Mappák részben"
+      },
       "xenia": {
         "description": "Xbox 360 emulátor"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 a MarkerPatch mod segítségével"
+      },
+      "pcports": {
+        "description": "Saját teljesítményekkel rendelkező PC-s portok: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns a MadnessPatch mod segítségével"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox-teljesítmények",
     "xbox360-recomp-achievements": "Xbox 360-teljesítmények - PC-újrafordítás",
     "xbox360-recomp-badge": "Xbox 360-as játék, amelyet natív PC-s futtatásra fordítottak újra. A teljesítményei közvetlenül magából a játékból olvashatók.",
+    "ps4-recomp-badge": "PlayStation 4-es játék, amelyet natív PC-s futtatásra portoltak. A trófeái az eredeti játékból és a port saját naplóiból olvashatók.",
     "epic-games-achievements": "Epic Games teljesítmények",
     "gog-achievements": "GOG teljesítmények",
     "social-club-achievements": "Social Club teljesítmények",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Ellenőrizni való a Játék állapotában (játékbeállítások gomb)",
     "health-dot-problem": "A teljesítmények nincsenek követve - lásd Játék állapota (játékbeállítások gomb)",
     "retroachievements-badge": "Teljesítmények a RetroAchievements-fiókodból",
+    "pc-port-achievements": "PC-s portok teljesítményei",
     "gh-check-install": "Játékfájlok",
     "gh-check-executable": "Futtatható fájl",
     "gh-check-identity": "Játékazonosító",

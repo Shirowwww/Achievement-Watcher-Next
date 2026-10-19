@@ -571,10 +571,12 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'rpcs3', fallback: true },
     { key: 'shadps4', fallback: true },
     { key: 'kytyps5', fallback: true },
+    { key: 'ps4recomp', fallback: true },
     { key: 'xenia', fallback: true },
     { key: 'xlln', fallback: true },
     { key: 'markerpatch', fallback: true },
     { key: 'madnesspatch', fallback: true },
+    { key: 'pcports', fallback: true },
     { key: 'retroAchievements', fallback: true },
     { key: 'importCache', fallback: true },
   ];

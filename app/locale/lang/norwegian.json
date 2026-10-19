@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Emulator for PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "PC-porter av PlayStation 4-spill (Bloodborne, Uncharted, God of War III, MediEvil): legg til portens mappe under Mapper"
+      },
       "xenia": {
         "description": "Emulator for Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 via MarkerPatch-modden"
+      },
+      "pcports": {
+        "description": "PC-porter med egne prestasjoner: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modden"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox-prestasjoner",
     "xbox360-recomp-achievements": "Xbox 360-prestasjoner - omkompilering til PC",
     "xbox360-recomp-badge": "Xbox 360-spill omkompilert for å kjøre nativt på PC. Prestasjonene leses direkte fra selve spillet.",
+    "ps4-recomp-badge": "PlayStation 4-spill portet for å kjøre nativt på PC. Troféene leses fra det originale spillet og portens egne logger.",
     "epic-games-achievements": "Epic Games-prestasjoner",
     "gog-achievements": "GOG-prestasjoner",
     "social-club-achievements": "Social Club-prestasjoner",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Noe å sjekke i Spilltilstand (knappen for spillinnstillinger)",
     "health-dot-problem": "Prestasjoner spores ikke - se Spilltilstand (knappen for spillinnstillinger)",
     "retroachievements-badge": "Prestasjoner fra RetroAchievements-kontoen din",
+    "pc-port-achievements": "Prestasjoner fra PC-porter",
     "gh-check-install": "Spillfiler",
     "gh-check-executable": "Programfil",
     "gh-check-identity": "Spillidentitet",

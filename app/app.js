@@ -769,6 +769,7 @@ const PROFILE_STATS_PLATFORMS = {
   playstation: { label: 'PlayStation', img: 'RPCS3 Emulator' },
   xbox: { label: 'Xbox', img: 'Xenia Emulator' },
   retroachievements: { label: 'RetroAchievements', img: 'RetroAchievements' },
+  pcport: { label: 'PC Port', img: 'PC Port' },
 };
 
 function profileStatsGroupOf(game) {
@@ -2002,8 +2003,10 @@ const EMU_LOCAL_ICON_SOURCES = new Set([
   'Xenia Emulator',
   'XLiveLessNess',
   'Xbox 360 Recomp',
+  'PS4 Recomp',
   'MarkerPatch',
   'MadnessPatch',
+  'PC Port',
 ]);
 
 async function downloadLibraryCover(url, cacheAppid) {
@@ -2238,13 +2241,14 @@ function isLegitSteamLibraryGame(game) {
 // An unrecognised label falls silently through to the Steam badge, so every `source:` literal in
 // app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
-  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator)$/,
+  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator|ps4 recomp)$/,
   xbox: /^(?:xenia emulator|xlivelessness|xbox 360 recomp|xbox pc)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
   socialclub: /^goldberg socialclub$/,
   ea: /^ea$/,
   retroachievements: /^retroachievements$/,
+  pcport: /^pc port$/,
 };
 
 // Labels that legitimately end on the Steam badge: Steam via emulator/crack, plus placeholders.
@@ -2344,6 +2348,8 @@ function sourcePresentationFor(game) {
       return { img: getSourceImg('ubisoft'), label: t('ubisoft-connect-achievements', 'Ubisoft Connect achievements', 'Succès Ubisoft Connect'), kind };
     case 'ea':
       return { img: getSourceImg('ea'), label: t('ea-app-achievements', 'EA app achievements', 'Succès EA app'), kind };
+    case 'pcport':
+      return { img: getSourceImg('PC Port'), label: t('pc-port-achievements', 'PC port achievements', 'Succès du portage PC'), kind };
     case 'retroachievements':
       // A brand name, the same in every language.
       return { img: getSourceImg('RetroAchievements'), label: 'RetroAchievements', kind };
@@ -2670,6 +2676,16 @@ function ownershipBadgeFor(game) {
         'xbox360-recomp-badge',
         'Xbox 360 game recompiled to run natively on PC. Its achievements are read from the game itself.',
         'Jeu Xbox 360 recompilé pour tourner nativement sur PC. Ses succès sont lus depuis le jeu lui-même.'
+      ),
+    };
+  }
+  if (!label && game && game.source === 'PS4 Recomp') {
+    return {
+      state: 'recomp',
+      label: t(
+        'ps4-recomp-badge',
+        "PlayStation 4 game ported to run natively on PC. Its trophies are read from the original game and the port's own logs.",
+        "Jeu PlayStation 4 porté pour tourner nativement sur PC. Ses trophées sont lus depuis le jeu d'origine et les journaux du portage."
       ),
     };
   }
@@ -6135,7 +6151,7 @@ var app = {
                   })
                 );
                 addPcgw('PCGamingWiki');
-              } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower.includes('xenia')) {
+              } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower === 'ps4 recomp' || sourceLower.includes('xenia')) {
                 addPcgw('PCGamingWiki');
               } else if (sourceLower.includes('uplay') || sourceLower === 'lumaplay' || sourceLower.includes('ubisoft')) {
                 linkMenu.append(

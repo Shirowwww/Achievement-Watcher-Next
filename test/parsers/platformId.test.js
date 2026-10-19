@@ -12,6 +12,11 @@ const { sanitizeAppIdForPlatform, officialAppId, rawAppId, normalizeType } = req
   assert.equal(sanitizeAppIdForPlatform('CUSA03173', 'shadps4'), 'CUSA03173');
   assert.equal(sanitizeAppIdForPlatform('PPSA01325', 'kytyps5'), 'PPSA01325');
   assert.equal(sanitizeAppIdForPlatform('../PPSA01325', 'kytyps5'), '', 'a title id never carries a path');
+  assert.equal(sanitizeAppIdForPlatform('pcports-ladxhd', 'pcports'), 'pcports-ladxhd');
+  assert.equal(sanitizeAppIdForPlatform('ladxhd', 'pcports'), '', 'a PC port id is always namespaced');
+  assert.equal(sanitizeAppIdForPlatform('ps4recomp-NPWR07999_00', 'ps4recomp'), 'ps4recomp-NPWR07999_00');
+  assert.equal(sanitizeAppIdForPlatform('NPWR07999_00', 'ps4recomp'), '', 'a PS4 port id is always namespaced');
+  assert.equal(sanitizeAppIdForPlatform('ps4recomp-../x', 'ps4recomp'), '', 'and never carries a path');
   assert.equal(sanitizeAppIdForPlatform('NPWR12345_00', 'rpcs3'), 'NPWR12345_00');
   assert.equal(sanitizeAppIdForPlatform('0x4D5307E6', 'xenia'), '4D5307E6'); // 0x stripped
   // rejects malformed ids

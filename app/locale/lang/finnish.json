@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5 -emulaattori"
       },
+      "ps4recomp": {
+        "description": "PlayStation 4 -pelien PC-portit (Bloodborne, Uncharted, God of War III, MediEvil): lisää portin kansio kohdassa Kansiot"
+      },
       "xenia": {
         "description": "Xbox 360 -emulaattori"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 MarkerPatch-modin kautta"
+      },
+      "pcports": {
+        "description": "PC-portit, joilla on omat saavutukset: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns MadnessPatch-modin kautta"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox-saavutukset",
     "xbox360-recomp-achievements": "Xbox 360 -saavutukset - PC-uudelleenkäännös",
     "xbox360-recomp-badge": "Xbox 360 -peli, joka on käännetty uudelleen toimimaan natiivisti PC:llä. Sen saavutukset luetaan suoraan itse pelistä.",
+    "ps4-recomp-badge": "PlayStation 4 -peli, joka on portattu toimimaan natiivisti PC:llä. Sen pokaalit luetaan alkuperäisestä pelistä ja portin omista lokeista.",
     "epic-games-achievements": "Epic Games -saavutukset",
     "gog-achievements": "GOG-saavutukset",
     "social-club-achievements": "Social Club -saavutukset",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Tarkistettavaa kohdassa Pelin kunto (pelin asetuspainike)",
     "health-dot-problem": "Saavutuksia ei seurata - katso Pelin kunto (pelin asetuspainike)",
     "retroachievements-badge": "Saavutukset RetroAchievements-tililtäsi",
+    "pc-port-achievements": "PC-porttien saavutukset",
     "gh-check-install": "Pelitiedostot",
     "gh-check-executable": "Ohjelmatiedosto",
     "gh-check-identity": "Pelin tunnistetiedot",

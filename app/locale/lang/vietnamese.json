@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Trình giả lập PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "Bản port PC của các game PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): thêm thư mục của bản port trong Thư mục"
+      },
       "xenia": {
         "description": "Trình giả lập Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 thông qua mod MarkerPatch"
+      },
+      "pcports": {
+        "description": "Bản port PC có thành tựu riêng: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns thông qua mod MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Thành tựu Xbox",
     "xbox360-recomp-achievements": "Thành tựu Xbox 360 - biên dịch lại cho PC",
     "xbox360-recomp-badge": "Trò chơi Xbox 360 được biên dịch lại để chạy gốc trên PC. Thành tựu của trò chơi được đọc trực tiếp từ chính trò chơi.",
+    "ps4-recomp-badge": "Trò chơi PlayStation 4 được port để chạy gốc trên PC. Cúp của trò chơi được đọc từ trò chơi gốc và nhật ký riêng của bản port.",
     "epic-games-achievements": "Thành tựu Epic Games",
     "gog-achievements": "Thành tựu GOG",
     "social-club-achievements": "Thành tựu Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Có điều cần xem trong Tình trạng trò chơi (nút cài đặt trò chơi)",
     "health-dot-problem": "Thành tựu không được theo dõi - xem Tình trạng trò chơi (nút cài đặt trò chơi)",
     "retroachievements-badge": "Thành tựu từ tài khoản RetroAchievements của bạn",
+    "pc-port-achievements": "Thành tựu bản port PC",
     "gh-check-install": "Tệp trò chơi",
     "gh-check-executable": "Tệp thực thi",
     "gh-check-identity": "Danh tính trò chơi",

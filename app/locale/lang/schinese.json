@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5 模拟器"
       },
+      "ps4recomp": {
+        "description": "PlayStation 4 游戏的 PC 移植版（Bloodborne、Uncharted、God of War III、MediEvil）：请在“文件夹”中添加移植版所在的文件夹"
+      },
       "xenia": {
         "description": "Xbox 360 模拟器"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "通过 MarkerPatch 模组运行的 Dead Space 2"
+      },
+      "pcports": {
+        "description": "带有自有成就的 PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "通过 MadnessPatch 模组运行的 Alice: Madness Returns"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox 成就",
     "xbox360-recomp-achievements": "Xbox 360 成就 - PC 重新编译版",
     "xbox360-recomp-badge": "该 Xbox 360 游戏已重新编译，可在 PC 上原生运行。其成就直接从游戏本体读取。",
+    "ps4-recomp-badge": "该 PlayStation 4 游戏已移植，可在 PC 上原生运行。其奖杯从原版游戏和移植版自身的日志中读取。",
     "epic-games-achievements": "Epic Games 成就",
     "gog-achievements": "GOG 成就",
     "social-club-achievements": "Social Club 成就",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "游戏状态中有需要检查的项目（游戏设置按钮）",
     "health-dot-problem": "成就未被跟踪 - 请查看游戏状态（游戏设置按钮）",
     "retroachievements-badge": "来自你的 RetroAchievements 账户的成就",
+    "pc-port-achievements": "PC 移植版成就",
     "gh-check-install": "游戏文件",
     "gh-check-executable": "可执行文件",
     "gh-check-identity": "游戏标识",

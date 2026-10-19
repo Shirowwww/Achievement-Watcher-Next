@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Емулятор PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "ПК-порти ігор PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): додайте папку порту у вкладці Папки"
+      },
       "xenia": {
         "description": "Емулятор Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 через мод MarkerPatch"
+      },
+      "pcports": {
+        "description": "ПК-порти з власними досягненнями: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns через мод MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Досягнення Xbox",
     "xbox360-recomp-achievements": "Досягнення Xbox 360 - рекомпіляція для PC",
     "xbox360-recomp-badge": "Гра Xbox 360, перекомпільована для нативного запуску на PC. Її досягнення зчитуються безпосередньо з самої гри.",
+    "ps4-recomp-badge": "Гра PlayStation 4, портована для нативного запуску на PC. Її трофеї зчитуються з оригінальної гри та власних журналів порту.",
     "epic-games-achievements": "Досягнення Epic Games",
     "gog-achievements": "Досягнення GOG",
     "social-club-achievements": "Досягнення Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Є що перевірити в розділі Стан гри (кнопка налаштувань гри)",
     "health-dot-problem": "Досягнення не відстежуються - дивись Стан гри (кнопка налаштувань гри)",
     "retroachievements-badge": "Досягнення з вашого облікового запису RetroAchievements",
+    "pc-port-achievements": "Досягнення ПК-портів",
     "gh-check-install": "Файли гри",
     "gh-check-executable": "Файл запуску",
     "gh-check-identity": "Ідентифікація гри",

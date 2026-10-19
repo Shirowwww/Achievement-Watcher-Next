@@ -83,7 +83,9 @@ const xeniaWatch = require('./console/xeniaWatch.js');
 const xllnWatch = require('./console/xllnWatch.js');
 const markerpatchWatch = require('./console/markerpatchWatch.js');
 const madnesspatchWatch = require('./console/madnesspatchWatch.js');
+const pcportsWatch = require('./console/pcportsWatch.js');
 const x360RecompWatch = require('./console/x360RecompWatch.js');
+const ps4RecompWatch = require('./console/ps4RecompWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
@@ -179,7 +181,9 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
     xlln     Games for Windows LIVE profile state, through XLiveLessNess
     markerpatch   Dead Space 2's settings.txt bitflag, through MarkerPatch
     madnesspatch  Alice: Madness Returns' per-profile Achievements.txt bitflag, through MadnessPatch
+    pcports  PC ports with their own unlock file (Link's Awakening DX HD)
     x360recomp  Xbox 360 games recompiled for PC, their own unlock lists
+    ps4recomp  PC ports of PS4 games, the trophies.log and last_run.log in each port's user folder
     gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
     ubisoft  Ubisoft Connect's spool files, protobuf unlock records appended on the spot
     rune-uplay  RUNE's Ubisoft emulator, one achievements.cfg per user and product under Documents
@@ -194,7 +198,9 @@ const CONSOLE_WATCHERS = [
   { name: 'xlln', watcher: xllnWatch },
   { name: 'markerpatch', watcher: markerpatchWatch },
   { name: 'madnesspatch', watcher: madnesspatchWatch },
+  { name: 'pcports', watcher: pcportsWatch },
   { name: 'x360recomp', watcher: x360RecompWatch },
+  { name: 'ps4recomp', watcher: ps4RecompWatch },
   { name: 'gog', watcher: gogWatch },
   { name: 'ubisoft', watcher: ubisoftWatch },
   { name: 'rune-uplay', watcher: runeUplayWatch },

@@ -154,6 +154,8 @@ function platformFromSource(source) {
   if (s.includes('rpcs3')) return 'rpcs3';
   if (s.includes('shadps4')) return 'shadps4';
   if (s.includes('kytyps5')) return 'kytyps5';
+  // PC ports of PS4 games are the PS4 titles Exophase lists, under the PS4 emulator's platform.
+  if (s === 'ps4 recomp') return 'shadps4';
   // Recompiled Xbox 360 games are the same titles Exophase lists under the emulator's platform.
   if (s.includes('xenia') || s === 'xbox 360 recomp') return 'xenia';
   return '';

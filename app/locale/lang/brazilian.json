@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Emulador de PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "Ports para PC de jogos de PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): adicione a pasta do port em Pastas"
+      },
       "xenia": {
         "description": "Emulador de Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2, via mod MarkerPatch"
+      },
+      "pcports": {
+        "description": "Ports para PC com conquistas próprias: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns, via mod MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Conquistas Xbox",
     "xbox360-recomp-achievements": "Conquistas Xbox 360 - recompilação para PC",
     "xbox360-recomp-badge": "Jogo Xbox 360 recompilado para rodar nativamente no PC. Suas conquistas são lidas diretamente do próprio jogo.",
+    "ps4-recomp-badge": "Jogo de PlayStation 4 portado para rodar nativamente no PC. Seus troféus são lidos do jogo original e dos registros do próprio port.",
     "epic-games-achievements": "Conquistas da Epic Games",
     "gog-achievements": "Conquistas GOG",
     "social-club-achievements": "Conquistas do Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Algo a verificar no Estado do jogo (botão de configurações do jogo)",
     "health-dot-problem": "Conquistas sem acompanhamento - veja Estado do jogo (botão de configurações do jogo)",
     "retroachievements-badge": "Conquistas da sua conta RetroAchievements",
+    "pc-port-achievements": "Conquistas de ports para PC",
     "gh-check-install": "Arquivos do jogo",
     "gh-check-executable": "Executável",
     "gh-check-identity": "Identidade do jogo",

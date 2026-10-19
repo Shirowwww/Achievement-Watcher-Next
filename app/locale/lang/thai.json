@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "โปรแกรมจำลอง PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "พอร์ตเกม PlayStation 4 บน PC (Bloodborne, Uncharted, God of War III, MediEvil): เพิ่มโฟลเดอร์ของพอร์ตในแท็บโฟลเดอร์"
+      },
       "xenia": {
         "description": "โปรแกรมจำลอง Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 ผ่านม็อด MarkerPatch"
+      },
+      "pcports": {
+        "description": "พอร์ต PC ที่มีความสำเร็จของตัวเอง: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns ผ่านม็อด MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "ความสำเร็จ Xbox",
     "xbox360-recomp-achievements": "ความสำเร็จ Xbox 360 - คอมไพล์ใหม่สำหรับ PC",
     "xbox360-recomp-badge": "เกม Xbox 360 ที่ถูกคอมไพล์ใหม่ให้ทำงานแบบเนทีฟบน PC ความสำเร็จของเกมจะถูกอ่านโดยตรงจากตัวเกมเอง",
+    "ps4-recomp-badge": "เกม PlayStation 4 ที่ถูกพอร์ตให้ทำงานแบบเนทีฟบน PC ถ้วยรางวัลจะถูกอ่านจากเกมต้นฉบับและบันทึกของพอร์ตเอง",
     "epic-games-achievements": "ความสำเร็จ Epic Games",
     "gog-achievements": "ความสำเร็จ GOG",
     "social-club-achievements": "ความสำเร็จ Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "มีสิ่งที่ต้องตรวจสอบในสถานะเกม (ปุ่มตั้งค่าเกม)",
     "health-dot-problem": "ความสำเร็จไม่ได้ถูกติดตาม - ดูสถานะเกม (ปุ่มตั้งค่าเกม)",
     "retroachievements-badge": "ความสำเร็จจากบัญชี RetroAchievements ของคุณ",
+    "pc-port-achievements": "ความสำเร็จของพอร์ต PC",
     "gh-check-install": "ไฟล์เกม",
     "gh-check-executable": "ไฟล์เกม",
     "gh-check-identity": "ข้อมูลระบุเกม",

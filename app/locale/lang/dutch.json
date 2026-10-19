@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5-emulator"
       },
+      "ps4recomp": {
+        "description": "Pc-ports van PlayStation 4-games (Bloodborne, Uncharted, God of War III, MediEvil): voeg de map van de port toe bij Mappen"
+      },
       "xenia": {
         "description": "Xbox 360-emulator"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 via de MarkerPatch-mod"
+      },
+      "pcports": {
+        "description": "Pc-ports met eigen prestaties: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via de MadnessPatch-mod"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox-prestaties",
     "xbox360-recomp-achievements": "Xbox 360-prestaties - hercompilatie voor PC",
     "xbox360-recomp-badge": "Xbox 360-spel dat opnieuw is gecompileerd om native op PC te draaien. De prestaties worden rechtstreeks uit het spel zelf uitgelezen.",
+    "ps4-recomp-badge": "PlayStation 4-spel dat is geport om native op PC te draaien. De trofeeën worden uitgelezen uit het oorspronkelijke spel en de eigen logbestanden van de port.",
     "epic-games-achievements": "Epic Games-prestaties",
     "gog-achievements": "GOG-prestaties",
     "social-club-achievements": "Social Club-prestaties",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Iets om te controleren in Gamestatus (knop met game-instellingen)",
     "health-dot-problem": "Prestaties worden niet gevolgd - zie Gamestatus (knop met game-instellingen)",
     "retroachievements-badge": "Prestaties van je RetroAchievements-account",
+    "pc-port-achievements": "Prestaties van pc-ports",
     "gh-check-install": "Gamebestanden",
     "gh-check-executable": "Uitvoerbaar bestand",
     "gh-check-identity": "Identiteit van de game",

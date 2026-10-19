@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5 에뮬레이터"
       },
+      "ps4recomp": {
+        "description": "PlayStation 4 게임의 PC 포트 (Bloodborne, Uncharted, God of War III, MediEvil): 포트 폴더를 폴더 탭에서 추가하세요"
+      },
       "xenia": {
         "description": "Xbox 360 에뮬레이터"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "MarkerPatch 모드를 통한 Dead Space 2"
+      },
+      "pcports": {
+        "description": "자체 도전 과제를 가진 PC 포트: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "MadnessPatch 모드를 통한 Alice: Madness Returns"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox 도전 과제",
     "xbox360-recomp-achievements": "Xbox 360 도전 과제 - PC 재컴파일",
     "xbox360-recomp-badge": "PC에서 네이티브로 실행되도록 재컴파일된 Xbox 360 게임입니다. 도전 과제는 게임 자체에서 직접 읽어옵니다.",
+    "ps4-recomp-badge": "PC에서 네이티브로 실행되도록 포팅된 PlayStation 4 게임입니다. 트로피는 원본 게임과 포트 자체의 로그에서 읽어옵니다.",
     "epic-games-achievements": "Epic Games 도전 과제",
     "gog-achievements": "GOG 도전 과제",
     "social-club-achievements": "Social Club 도전 과제",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "게임 상태에서 확인할 항목이 있습니다 (게임 설정 버튼)",
     "health-dot-problem": "도전 과제가 추적되지 않습니다 - 게임 상태를 확인하세요 (게임 설정 버튼)",
     "retroachievements-badge": "RetroAchievements 계정의 도전 과제",
+    "pc-port-achievements": "PC 포트 도전 과제",
     "gh-check-install": "게임 파일",
     "gh-check-executable": "실행 파일",
     "gh-check-identity": "게임 식별",

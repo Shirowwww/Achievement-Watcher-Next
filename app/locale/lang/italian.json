@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Emulatore PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "Port per PC di giochi PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): aggiungi la cartella del port in Cartelle"
+      },
       "xenia": {
         "description": "Emulatore Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 tramite la mod MarkerPatch"
+      },
+      "pcports": {
+        "description": "Port per PC con obiettivi propri: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns tramite la mod MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Obiettivi Xbox",
     "xbox360-recomp-achievements": "Obiettivi Xbox 360 - ricompilazione per PC",
     "xbox360-recomp-badge": "Gioco Xbox 360 ricompilato per funzionare in modo nativo su PC. I suoi obiettivi vengono letti direttamente dal gioco stesso.",
+    "ps4-recomp-badge": "Gioco PlayStation 4 portato per funzionare in modo nativo su PC. I suoi trofei vengono letti dal gioco originale e dai log del port stesso.",
     "epic-games-achievements": "Obiettivi Epic Games",
     "gog-achievements": "Obiettivi GOG",
     "social-club-achievements": "Obiettivi Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Qualcosa da controllare in Stato dei giochi (pulsante impostazioni del gioco)",
     "health-dot-problem": "Obiettivi non monitorati - vedi Stato dei giochi (pulsante impostazioni del gioco)",
     "retroachievements-badge": "Obiettivi del tuo account RetroAchievements",
+    "pc-port-achievements": "Obiettivi dei port per PC",
     "gh-check-install": "File del gioco",
     "gh-check-executable": "Eseguibile",
     "gh-check-identity": "Identità del gioco",

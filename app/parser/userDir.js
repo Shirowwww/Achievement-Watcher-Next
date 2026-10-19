@@ -448,7 +448,7 @@ module.exports.findEntries = async () => {
   }
 
   // Achievement mods and recompiled games: the walk only finds candidates, their readers decide.
-  const ownLayoutSearch = ['**/MarkerPatch.ini', '**/MadnessPatch.ini', '**/SaveData/Achievements.json', '**/achievements/*.toml'];
+  const ownLayoutSearch = ['**/MarkerPatch.ini', '**/MadnessPatch.ini', '**/SaveData/Achievements.json', '**/achievements/*.toml', '**/LADXHD.exe', '**/Link?s Awakening DX HD.exe'];
   for (const root of libraryRoots) {
     const found = await glob(ownLayoutSearch, { cwd: root, deep: 4, onlyFiles: true, absolute: true, suppressErrors: true, caseSensitiveMatch: false });
     for (const filepath of found) {
@@ -503,11 +503,19 @@ function ownLayoutGames(dir) {
     if (found) games.push({ code: 'madnesspatch', gameRoot: madnessGameRoot(found.root), dataPath: found.root });
   });
   ask(() => {
+    const found = require('./pcports.js').detect(dir);
+    if (found) games.push({ code: 'pcports', gameRoot: found.root, dataPath: found.root });
+  });
+  ask(() => {
     for (const target of require('./x360Recomp.js').discover(dir)) {
       // A bare default.xex is a disc dump, not an unlock list.
       if (target.format === 'xex') continue;
       games.push({ code: 'recompilation', gameRoot: target.gameDir || '', dataPath: target.file || target.dir });
     }
+  });
+  ask(() => {
+    // A PC port of a PS4 game: its install folder, the unlock logs being in its user folder.
+    for (const install of require('./ps4Recomp.js').findInstallations(dir)) games.push({ code: 'recompilation', gameRoot: install.root, dataPath: install.root });
   });
   return games;
 }

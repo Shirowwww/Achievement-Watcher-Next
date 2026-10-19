@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Émulateur PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "Portages PC de jeux PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil) : ajoute le dossier du portage dans Dossiers"
+      },
       "xenia": {
         "description": "Émulateur Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2, via le mod MarkerPatch"
+      },
+      "pcports": {
+        "description": "Portages PC avec leurs propres succès : Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns, via le mod MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Succès Xbox",
     "xbox360-recomp-achievements": "Succès Xbox 360 - recompilation PC",
     "xbox360-recomp-badge": "Jeu Xbox 360 recompilé pour tourner nativement sur PC. Ses succès sont lus depuis le jeu lui-même.",
+    "ps4-recomp-badge": "Jeu PlayStation 4 porté pour tourner nativement sur PC. Ses succès sont lus depuis le jeu d’origine et les journaux propres au portage.",
     "epic-games-achievements": "Succès Epic Games",
     "gog-achievements": "Succès GOG",
     "social-club-achievements": "Succès Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "À vérifier dans l’état du jeu (bouton réglages du jeu)",
     "health-dot-problem": "Succès non suivis - voir l’état du jeu (bouton réglages du jeu)",
     "retroachievements-badge": "Succès de ton compte RetroAchievements",
+    "pc-port-achievements": "Succès des portages PC",
     "gh-check-install": "Fichiers du jeu",
     "gh-check-executable": "Exécutable",
     "gh-check-identity": "Identité du jeu",

@@ -29,7 +29,9 @@ const ff7 = require(path.join(appPath, 'ff7.js'));
 const xlln = require(path.join(appPath, 'xlln.js'));
 const markerpatch = require(path.join(appPath, 'markerpatch.js'));
 const madnesspatch = require(path.join(appPath, 'madnesspatch.js'));
+const pcports = require(path.join(appPath, 'pcports.js'));
 const x360Recomp = require(path.join(appPath, 'x360Recomp.js'));
+const ps4Recomp = require(path.join(appPath, 'ps4Recomp.js'));
 const libraryDirs = require(path.join(appPath, 'libraryDirs.js'));
 const saveRoots = require(path.join(appPath, 'saveRoots.js'));
 const launcherDetect = require(path.join(appPath, 'launcherDetect.js'));
@@ -132,7 +134,9 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   kytyps5.initDebug({ isDev, userDataPath });
   markerpatch.initDebug({ isDev, userDataPath });
   madnesspatch.initDebug({ isDev, userDataPath });
+  pcports.initDebug({ isDev, userDataPath });
   x360Recomp.initDebug({ isDev, userDataPath });
+  ps4Recomp.initDebug({ isDev, userDataPath });
   blacklist.initDebug({ isDev, userDataPath });
   debug = new (require('../util/logger'))({
     console: isDev || false,
@@ -2225,6 +2229,10 @@ async function discoverInScope(source, steamAccFilter, scope) {
           scanned = madnesspatch.scan(dir.path);
           if (scanned.length > 0) debug.log('-> MadnessPatch data added');
         }
+        if (scanned.length === 0 && source.pcports) {
+          scanned = pcports.scan(dir.path);
+          if (scanned.length > 0) debug.log('-> PC Port data added');
+        }
         if (scanned.length > 0) {
           data = data.concat(scanned);
           debug.log('-> emulator data added');
@@ -2267,6 +2275,18 @@ async function discoverInScope(source, steamAccFilter, scope) {
           }
         } catch (err) {
           debug.log(`[userdir] ${dir.path} could not be scanned for recompiled games: ${err && err.message ? err.message : err}`);
+        }
+      }
+      // PC ports of PS4 games can sit in a library folder too, so they add to the scans above.
+      if (source.ps4recomp) {
+        try {
+          const ported = ps4Recomp.scan(dir.path).filter((g) => !data.some((known) => known.appid === g.appid));
+          if (ported.length > 0) {
+            data = data.concat(ported);
+            debug.log('-> PS4 Recomp data added');
+          }
+        } catch (err) {
+          debug.log(`[userdir] ${dir.path} could not be scanned for PS4 ports: ${err && err.message ? err.message : err}`);
         }
       }
     }
@@ -2350,6 +2370,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
   // executable with no achievements.
   for (const g of data) {
     if (g.data && g.data.type === 'x360recomp' && g.data.gameDir) _claimedDirs.add(path.resolve(g.data.gameDir).toLowerCase());
+    if (g.data && g.data.type === 'ps4recomp') {
+      for (const dir of [g.data.installRoot, g.data.dumpDir]) if (dir) _claimedDirs.add(path.resolve(dir).toLowerCase());
+    }
   }
 
   mark('x360recomp');
@@ -2998,10 +3021,14 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return markerpatch.getAchievements(appid.data);
   } else if (dataType === 'madnesspatch') {
     return madnesspatch.getAchievements(appid.data);
+  } else if (dataType === 'pcports') {
+    return pcports.getAchievements(appid.data);
   } else if (dataType === 'xenia') {
     return await xenia.getAchievements(appid.data.path);
   } else if (dataType === 'x360recomp') {
     return x360Recomp.getAchievements(appid.data);
+  } else if (dataType === 'ps4recomp') {
+    return ps4Recomp.getAchievements(appid.data);
   } else if (dataType === 'socialclub') {
     return await socialclub.getAchievements(appid);
   } else if (dataType === 'lumaplay') {
@@ -3184,10 +3211,14 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await markerpatch.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'madnesspatch') {
       game = await madnesspatch.getGameData(appid.data, option.achievement.lang);
+    } else if (appid.data.type === 'pcports') {
+      game = await pcports.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'xenia') {
       game = await xenia.getGameData(appid.data.path);
     } else if (appid.data.type === 'x360recomp') {
       game = await x360Recomp.getGameData(appid.data, option.achievement.lang);
+    } else if (appid.data.type === 'ps4recomp') {
+      game = await ps4Recomp.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'socialclub') {
       game = await socialclub.getGameData(appid, option.achievement.lang, option);
     } else if (appid.data.type === 'uplay' || appid.data.type === 'lumaplay') {
@@ -3302,7 +3333,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'x360recomp', 'manual', 'unconfigured'].includes(appid.data.type);
+    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured'].includes(appid.data.type);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*

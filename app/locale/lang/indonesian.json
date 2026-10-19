@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "Emulator PlayStation 5"
       },
+      "ps4recomp": {
+        "description": "Port PC dari game PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): tambahkan folder port di Folder"
+      },
       "xenia": {
         "description": "Emulator Xbox 360"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 melalui mod MarkerPatch"
+      },
+      "pcports": {
+        "description": "Port PC dengan pencapaian sendiri: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns melalui mod MadnessPatch"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Pencapaian Xbox",
     "xbox360-recomp-achievements": "Pencapaian Xbox 360 - rekompilasi PC",
     "xbox360-recomp-badge": "Game Xbox 360 yang dikompilasi ulang agar berjalan secara native di PC. Pencapaiannya dibaca langsung dari game itu sendiri.",
+    "ps4-recomp-badge": "Game PlayStation 4 yang di-port agar berjalan secara native di PC. Trofinya dibaca dari game aslinya dan log milik port itu sendiri.",
     "epic-games-achievements": "Pencapaian Epic Games",
     "gog-achievements": "Pencapaian GOG",
     "social-club-achievements": "Pencapaian Social Club",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Ada yang perlu diperiksa di Kesehatan game (tombol pengaturan game)",
     "health-dot-problem": "Pencapaian tidak dilacak - lihat Kesehatan game (tombol pengaturan game)",
     "retroachievements-badge": "Pencapaian dari akun RetroAchievements kamu",
+    "pc-port-achievements": "Pencapaian port PC",
     "gh-check-install": "File game",
     "gh-check-executable": "File eksekusi",
     "gh-check-identity": "Identitas game",

@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation 5 エミュレーター"
       },
+      "ps4recomp": {
+        "description": "PlayStation 4 ゲームの PC 移植版 (Bloodborne、Uncharted、God of War III、MediEvil)：移植版のフォルダーを「フォルダー」で追加します"
+      },
       "xenia": {
         "description": "Xbox 360 エミュレーター"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "MarkerPatch MOD 経由の Dead Space 2"
+      },
+      "pcports": {
+        "description": "独自の実績を持つ PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "MadnessPatch MOD 経由の Alice: Madness Returns"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox の実績",
     "xbox360-recomp-achievements": "Xbox 360 の実績 - PC向け再コンパイル",
     "xbox360-recomp-badge": "Xbox 360 のゲームを、PC上でネイティブに動作するよう再コンパイルしたものです。実績はゲーム本体から直接読み取られます。",
+    "ps4-recomp-badge": "PlayStation 4 のゲームを、PC上でネイティブに動作するよう移植したものです。トロフィーは元のゲームと、移植版独自のログから読み取られます。",
     "epic-games-achievements": "Epic Games の実績",
     "gog-achievements": "GOG の実績",
     "social-club-achievements": "Social Club の実績",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "ゲームの状態に確認事項があります（ゲーム設定ボタン）",
     "health-dot-problem": "実績が追跡されていません - ゲームの状態を確認してください（ゲーム設定ボタン）",
     "retroachievements-badge": "RetroAchievements アカウントの実績",
+    "pc-port-achievements": "PC 移植版の実績",
     "gh-check-install": "ゲームファイル",
     "gh-check-executable": "実行ファイル",
     "gh-check-identity": "ゲームの識別",

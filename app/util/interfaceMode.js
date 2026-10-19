@@ -55,6 +55,7 @@ const OPTIONAL_SOURCES = {
   xlln: ['XLiveLessNess'],
   markerpatch: ['MarkerPatch'],
   madnesspatch: ['MadnessPatch'],
+  pcports: ['PC Port'],
   importCache: ['Achievement Watcher : Watchdog'],
 };
 

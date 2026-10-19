@@ -42,6 +42,11 @@ function sanitizeAppIdForPlatform(value, type) {
       return /^CUSA[0-9]+$/i.test(raw) || /^NP[A-Z0-9_]+$/i.test(raw) ? raw : '';
     case 'kytyps5':
       return /^[A-Z0-9_-]{1,32}$/i.test(raw) ? raw : '';
+    case 'pcports':
+      return /^pcports-[a-z0-9]{1,32}$/.test(raw) ? raw : '';
+    case 'ps4recomp':
+      // Always namespaced by the parser, so it never meets a Steam appid or a ShadPS4 NPWR id.
+      return /^ps4recomp-[A-Z0-9_-]{1,40}$/i.test(raw) ? raw : '';
     case 'xenia':
       return /^(?:0x)?[0-9a-f]+$/i.test(raw) ? raw.replace(/^0x/i, '') : '';
     case 'steam':

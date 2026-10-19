@@ -1079,6 +1079,9 @@
       "kytyps5": {
         "description": "PlayStation-5-Emulator"
       },
+      "ps4recomp": {
+        "description": "PC-Portierungen von PlayStation-4-Spielen (Bloodborne, Uncharted, God of War III, MediEvil): Füge den Ordner der Portierung unter Ordner hinzu"
+      },
       "xenia": {
         "description": "Xbox-360-Emulator"
       },
@@ -1090,6 +1093,9 @@
       },
       "markerpatch": {
         "description": "Dead Space 2 über die MarkerPatch-Mod"
+      },
+      "pcports": {
+        "description": "PC-Portierungen mit eigenen Erfolgen: Link's Awakening DX HD (LADXHD Updated)"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns über die MadnessPatch-Mod"
@@ -1533,6 +1539,7 @@
     "xbox-achievements": "Xbox-Erfolge",
     "xbox360-recomp-achievements": "Xbox 360-Erfolge - PC-Rekompilierung",
     "xbox360-recomp-badge": "Xbox 360-Spiel, das für die native Ausführung auf dem PC rekompiliert wurde. Seine Erfolge werden direkt aus dem Spiel selbst ausgelesen.",
+    "ps4-recomp-badge": "PlayStation-4-Spiel, das für die native Ausführung auf dem PC portiert wurde. Seine Trophäen werden aus dem Originalspiel und den eigenen Logs der Portierung ausgelesen.",
     "epic-games-achievements": "Epic-Games-Erfolge",
     "gog-achievements": "GOG-Erfolge",
     "social-club-achievements": "Social-Club-Erfolge",
@@ -2128,6 +2135,7 @@
     "health-dot-check": "Etwas zu prüfen im Spielzustand (Schaltfläche für Spieleinstellungen)",
     "health-dot-problem": "Erfolge werden nicht verfolgt - siehe Spielzustand (Schaltfläche für Spieleinstellungen)",
     "retroachievements-badge": "Erfolge aus deinem RetroAchievements-Konto",
+    "pc-port-achievements": "Erfolge von PC-Portierungen",
     "gh-check-install": "Spieldateien",
     "gh-check-executable": "Programmdatei",
     "gh-check-identity": "Spielzuordnung",

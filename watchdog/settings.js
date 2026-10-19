@@ -234,6 +234,11 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    if (typeof options.achievement_source.ps4recomp !== 'boolean') {
+      options.achievement_source.ps4recomp = true;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
       fixFile = true;
@@ -256,6 +261,11 @@ module.exports.load = async (cfg_file) => {
 
     if (typeof options.achievement_source.madnesspatch !== 'boolean') {
       options.achievement_source.madnesspatch = true;
+      fixFile = true;
+    }
+
+    if (typeof options.achievement_source.pcports !== 'boolean') {
+      options.achievement_source.pcports = true;
       fixFile = true;
     }
 
@@ -586,11 +596,13 @@ module.exports.load = async (cfg_file) => {
         rpcs3: true,
         shadps4: true,
         kytyps5: true,
+        ps4recomp: true,
         xenia: true,
         xlln: true,
         retroAchievements: true,
         markerpatch: true,
         madnesspatch: true,
+        pcports: true,
         lumaPlay: true,
         gog: true,
         gogOfficial: true,

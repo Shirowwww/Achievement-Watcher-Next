@@ -1797,7 +1797,7 @@ async function resolveSteamData(request) {
 }
 
 // Sources whose artwork and rarity come from local emulator data.
-const OVERLAY_EMULATOR_RARITY_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'KytyPS5 Emulator', 'Xenia Emulator']);
+const OVERLAY_EMULATOR_RARITY_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'KytyPS5 Emulator', 'PS4 Recomp', 'Xenia Emulator']);
 
   // Apply cached rarity so the overlay can render immediately without network access.
 function attachOverlayRarity(game) {
@@ -2432,6 +2432,7 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
     case 'RPCS3 Emulator':
     case 'ShadPS4 Emulator':
     case 'KytyPS5 Emulator':
+    case 'PS4 Recomp':
       event.returnValue = path.join(userData, 'Source', 'playstation.svg');
       break;
     case 'Xenia Emulator':
@@ -2439,6 +2440,9 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
       break;
     case 'RetroAchievements':
       event.returnValue = path.join(userData, 'Source', 'retroachievements.svg');
+      break;
+    case 'PC Port':
+      event.returnValue = path.join(userData, 'Source', 'pcport.svg');
       break;
     case 'Unconfigured':
       // Use a generic icon for entries without a Steam appid.

@@ -367,6 +367,10 @@ module.exports.load = () => {
       options.achievement_source.kytyps5 = true;
     }
 
+    if (typeof options.achievement_source.ps4recomp !== 'boolean') {
+      options.achievement_source.ps4recomp = true;
+    }
+
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
     }
@@ -385,6 +389,10 @@ module.exports.load = () => {
 
     if (typeof options.achievement_source.madnesspatch !== 'boolean') {
       options.achievement_source.madnesspatch = true;
+    }
+
+    if (typeof options.achievement_source.pcports !== 'boolean') {
+      options.achievement_source.pcports = true;
     }
 
     if (typeof options.achievement_source.lumaPlay !== 'boolean') {
@@ -690,11 +698,13 @@ module.exports.load = () => {
         rpcs3: true,
         shadps4: true,
         kytyps5: true,
+        ps4recomp: true,
         xenia: true,
         xlln: true,
         retroAchievements: true,
         markerpatch: true,
         madnesspatch: true,
+        pcports: true,
         lumaPlay: true,
         gog: true,
         gogOfficial: true,
