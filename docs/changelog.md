@@ -104,7 +104,22 @@ renamed in 3.9.0 and the history is kept under one file.
   the emulator build that actually runs (Call of Duty: Modern Warfare 4's `cod.exe`, with the
   cracked campaign in `sp26`) showed as two games. It is one game now, and AW no longer writes an
   emulator config next to a dll no emulator reads, which used to hide the real install at the next
-  scan.
+  scan. It also shows under its own name and cover: the achievements live under the shared
+  "Call of Duty" appid, but the game's exe names it and Steam confirms its store page.
+- **Exe names that were never read.** The name stored in an exe's version information was missed
+  whenever an earlier field ended off a four-byte boundary, which is common (Little Nightmares III,
+  Modern Warfare 4). Installs named from their exe now get that name.
+- **No restore point on every scan.** The automatic fix copied a game's whole emulator setup aside
+  before checking whether it would write anything, so a game it then left alone, because it was
+  already set up, gained a new backup at each library refresh. The copy is now taken only when
+  something is about to be written.
+- **Placeholder save in the wrong folder.** A setup whose config redirects its saves still got AW's
+  locked placeholder under `%APPDATA%\GSE Saves`, where its emulator never writes, and was read from
+  there until its first save. Both now follow the redirect, and a placeholder left behind earlier is
+  removed as long as nothing but AW ever wrote to it.
+- **No warning for a save folder that is simply not created yet.** Game Health turned a game orange
+  when its config redirected saves into a folder the game had not written yet. The folder is
+  already watched, so this is now a note; a path that cannot exist still warns.
 - **Live unlocks from a game's own save folder.** A GBE or Goldberg setup whose config sends its
   saves elsewhere (`local_save_path` or `local_save.txt`) is now watched there, so its unlocks
   show as they happen instead of at the next library refresh. The folder is watched even before

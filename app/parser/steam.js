@@ -1367,6 +1367,25 @@ async function resolvePortrait({ appid, name, portrait, invoke, steamdbWaitMs = 
 module.exports.resolvePortrait = resolvePortrait;
 
 /*
+  Name, type and art of a store page, for a game sold as a DLC of the hub appid it plays under (see
+  util/editionTitle.js). The art comes back as absolute urls: a relative asset name would be resolved
+  against the hub's appid and show the hub's picture again.
+*/
+module.exports.getStorePageInfo = async (appid, lang) => {
+  const langObj = steamLanguages.find((language) => language.api === lang) || steamLanguages.find((language) => language.api === 'english');
+  const info = await ipcInvoke('get-steam-data', { appid: Number(appid), type: 'common', lang: langObj });
+  if (!info || typeof info.name !== 'string' || !info.name.trim()) return null;
+  const url = (value) => (value ? steamAssets.buildSteamAssetUrls(appid, [value])[0] || '' : '');
+  return {
+    name: info.name.trim(),
+    productType: String(info.productType || '').trim().toLowerCase(),
+    header: url(info.header),
+    portrait: url(info.portrait),
+    background: /^https?:\/\//i.test(info.background || '') ? info.background : '',
+  };
+};
+
+/*
   Does a fetched achievement list belong to this entry? Steam's product type answers that - but only
   when Steam actually answered. A rate-limited or unreachable product-info/store call leaves the type
   UNKNOWN, and reading unknown as "not a game" threw away a schema the keyless chain had already
@@ -2232,10 +2251,14 @@ module.exports.resolveWorkingIconUrl = resolveWorkingIconUrl;
   game onto a single cache file that each download overwrote in turn, and the game screen showed 306
   empty squares. A query means the basename is not the identity, so the query is folded in.
 */
-function iconCacheFilename(rawUrl) {
+function iconCacheFilename(rawUrl, appID) {
   const raw = String(rawUrl || '');
   const mark = raw.indexOf('?');
-  const base = path.parse(mark >= 0 ? raw.slice(0, mark) : raw).base;
+  const parsed = path.parse(mark >= 0 ? raw.slice(0, mark) : raw).base;
+  // The folder is the library entry's appid; art of another app (a game sold under a hub appid, a
+  // borrowed Steam cover) shares file names like header.jpg with the entry's own, so it carries its app.
+  const owner = (raw.match(/\/apps\/(\d+)\//) || [])[1];
+  const base = owner && appID != null && String(appID) !== owner ? `${owner}-${parsed}` : parsed;
   if (mark < 0) return base;
   const digest = require('crypto').createHash('sha1').update(raw).digest('hex').slice(0, 16);
   return `${base || 'icon'}-${digest}`;
@@ -2267,7 +2290,7 @@ module.exports.fetchIcon = async (url, appID) => {
   let filePath;
   try {
     const cache = path.join(userDataDir(), `steam_cache/icon/${appID}`);
-    let filename = iconCacheFilename(url);
+    let filename = iconCacheFilename(url, appID);
     filePath = path.join(cache, filename);
     if (usableCachedImage(filePath)) return filePath;
     let exts = ['.jpg', '.png'];
@@ -2279,17 +2302,16 @@ module.exports.fetchIcon = async (url, appID) => {
     //legacy url are full urls, check if they are still valid
     validUrl = await resolveWorkingIconUrl(appID, url);
 
-    filename = iconCacheFilename(validUrl);
+    filename = iconCacheFilename(validUrl, appID);
 
     filePath = path.join(cache, filename);
 
     if (usableCachedImage(filePath)) {
       return filePath;
     } else {
-      // Only name the file when its URL carries a query: left to itself the downloader derives the
-      // same basename Steam has always been cached under, and renaming those would re-fetch every
-      // icon already on disk.
-      const named = validUrl.includes('?') ? { filename } : {};
+      // Only name the file when iconCacheFilename changed it (a query, another app's art): left to
+      // itself the downloader derives the same basename Steam has always been cached under.
+      const named = filename !== path.posix.basename(validUrl) ? { filename } : {};
       const saved = (await request.download(validUrl, cache, { validateFileSize: false, ...named })).path;
       if (usableCachedImage(saved)) return saved;
       debug.log(`[${appID}] ${validUrl} did not download as a picture - not cached`);

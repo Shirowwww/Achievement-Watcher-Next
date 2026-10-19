@@ -80,3 +80,17 @@ test('an icon URL whose identity is in the query gets a cache file of its own', 
     'abc123.jpg'
   );
 });
+
+/*
+  The cache is one folder per library appid. Modern Warfare 4 is listed under the Call of Duty hub's
+  appid but shows its own store page's art: both are called header.jpg, so the hub's file, already on
+  disk, answered for Modern Warfare 4's and the card kept the hub's cover.
+*/
+test("another app's artwork does not take the cache file of the library entry's own", () => {
+  const own = steam.iconCacheFilename('https://cdn.akamai.steamstatic.com/steam/apps/1938090/header.jpg', '1938090');
+  const other = steam.iconCacheFilename('https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/4435490/0c49/header.jpg', '1938090');
+
+  assert.equal(own, 'header.jpg', "the entry's own art keeps the name it has always had");
+  assert.notEqual(other, own);
+  assert.equal(other, '4435490-header.jpg');
+});

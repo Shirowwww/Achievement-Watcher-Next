@@ -159,6 +159,27 @@ test('a redirect AW cannot resolve stays a warning', () => {
   }
 });
 
+// Modern Warfare 4's setup redirects to steam_settings\local_saves, which the game only creates on
+// its first save: until then the folder is missing but the scan already watches it.
+test('a redirect into an existing folder, not created yet, is info', () => {
+  const gameDir = tempGame('diagnose-localsave-pending');
+  try {
+    const steamSettings = path.join(gameDir, 'steam_settings');
+    writeUserIni(steamSettings, '.\\steam_settings\\local_saves');
+    fs.writeFileSync(path.join(gameDir, 'steam_api64.dll'), 'emu');
+    fs.writeFileSync(path.join(steamSettings, 'steam_appid.txt'), '480');
+    fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify([{ name: 'A', description: 'first' }]));
+
+    const report = goldberg.diagnose({ gameDir, appid: '480', schema: { achievement: { list: [{ name: 'A' }] } }, savesRoots: [] });
+    assert.equal(report.localSaveDir, null);
+    const issue = report.issues.find((i) => i.code === 'CUSTOM_SAVE_PATH');
+    assert.equal(issue.level, 'info');
+    assert.equal(issue.data.path, path.join(steamSettings, 'local_saves'));
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
+});
+
 // GBE can rename its %APPDATA% save root outright ([user::saves] saves_folder_name=...) instead of
 // redirecting it: the folder replaces "GSE Saves" while the <appid>/achievements.json shape stays.
 test('a renamed GBE save root (saves_folder_name) is resolved under %APPDATA%', () => {

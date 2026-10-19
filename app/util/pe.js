@@ -228,7 +228,8 @@ function readExeProductName(exePath) {
             return;
           }
         }
-        blockPos += wLength;
+        // Siblings start on a DWORD boundary that wLength does not count.
+        blockPos = (blockPos + wLength + 3) & ~3;
       }
     };
     scanBlocks(childPos, dataEnd);

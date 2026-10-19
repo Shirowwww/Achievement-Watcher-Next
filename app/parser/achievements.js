@@ -57,6 +57,7 @@ const emulatorFixEligibility = require(path.join(appPath, '..', 'util', 'emulato
 const gameHealthRepair = require(path.join(appPath, '..', 'util', 'gameHealthRepair.js'));
 const autoFixPlan = require(path.join(appPath, '..', 'util', 'autoFixPlan.js'));
 const gbeBackup = require(path.join(appPath, '..', 'util', 'gbeBackup.js'));
+const editionTitle = require(path.join(appPath, '..', 'util', 'editionTitle.js'));
 const { computeFolderContentVersion } = require(path.join(appPath, '..', 'util', 'contentVersion.js'));
 const steamless = require(path.join(appPath, 'steamless.js'));
 const apiCheckBypass = require(path.join(appPath, 'apiCheckBypass.js'));
@@ -235,6 +236,30 @@ function normalizeGameName(name, appid) {
   }
   if (typeof name === 'number') return String(name);
   return String(appid);
+}
+
+/*
+  The game an exe under a hub appid really is (util/editionTitle.js): its title and store art, once
+  Steam confirms a DLC page of that exact name. The appid, and with it the achievements and every
+  cache, stays the hub's.
+*/
+async function adoptHubEdition(game, appid, lang) {
+  const exe = appid.data && appid.data.exe;
+  if (!exe || typeof game.name !== 'string') return;
+  const candidate = editionTitle.editionCandidate(game.name, pe.readExeProductName(exe));
+  if (!candidate) return;
+  try {
+    const sid = String((await steam.findAppidByName(candidate)) || '');
+    if (!sid || sid === String(appid.appid)) return;
+    const page = await steam.getStorePageInfo(sid, lang);
+    if (!page || page.productType !== 'dlc' || editionTitle.normalize(page.name) !== editionTitle.normalize(candidate)) return;
+    game.name = page.name;
+    game.editionAppid = sid;
+    game.img = { ...game.img, header: page.header || game.img.header, portrait: page.portrait || game.img.portrait, background: page.background || game.img.background };
+    debug.log(`[${appid.appid}] ${path.basename(exe)} is ${page.name} (Steam ${sid}), shown under its own title and art`);
+  } catch (err) {
+    debug.log(`[${appid.appid}] edition lookup failed: ${err.message || err}`);
+  }
 }
 
 // Everything the machine already knows about this appid's title, without touching the network. The
@@ -1320,7 +1345,7 @@ async function repairHealthFindings({ appid, gameDir, diagnosis, schema, option,
 }
 
 module.exports.autoApplyEmulatorFix = autoApplyEmulatorFix;
-async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, option, detectedEmu = null, detectedExe = null, skipAdvanced = false, schema = null, requireGameExecutable = false, onlyIfUnconfigured = false } = {}) {
+async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, option, detectedEmu = null, detectedExe = null, skipAdvanced = false, schema = null, requireGameExecutable = false, onlyIfUnconfigured = false, beforeWrite = null } = {}) {
   if (!gameDir || !_userDataPath) throw new Error('game folder/user data path unavailable');
   if (onlyIfUnconfigured) {
     const eligibility = emulatorFixEligibility.inspect({ gameDir });
@@ -1338,6 +1363,9 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     debug.log(`[${appid}] automatic emulator fix skipped - no game executable found in ${gameDir}`);
     return { skipped: true, reason: 'no-game-executable', tag: '', steamSettingsDirs: [], emulator: detectedEmu };
   }
+  // The restore point, now that something is going to be written: taken before the checks above, a
+  // game they turn away got a fresh copy of its whole setup on every scan.
+  if (beforeWrite) beforeWrite();
   // Apply a confident CrakFiles fix first; it is opt-in, backed up, and idempotent.
   const pspc = isPspcGame(gameDir);
   if (pspc) debug.log(`[${appid}] PlayStation-PSPC game detected - applying Goldberg/GBE anyway, plus trying a community crack; note PSN trophies never reach the Steam API, so live tracking needs a RUNE release`);
@@ -1715,7 +1743,15 @@ function recordSaveRedirects(found) {
   const redirectsBySettings = new Map();
   for (const g of found) {
     const steamSettings = g.steamSettings || (g.gameDir ? path.join(g.gameDir, 'steam_settings') : null);
-    if (steamSettings && fs.existsSync(steamSettings)) redirectsBySettings.set(steamSettings, goldberg.configuredSaveRoot(steamSettings));
+    if (!steamSettings || !fs.existsSync(steamSettings)) continue;
+    redirectsBySettings.set(steamSettings, goldberg.configuredSaveRoot(steamSettings));
+    try {
+      for (const file of goldberg.forgetMisplacedSeeds({ appid: g.appid, steamSettings })) {
+        debug.log(`[${g.appid}] removed AW's untouched placeholder save from ${file} - this setup saves in its redirected folder`);
+      }
+    } catch (err) {
+      debug.log(`[${g.appid}] could not check for a misplaced placeholder save => ${err}`);
+    }
   }
   try {
     if (saveRedirects.update(saveRedirects.redirectsFile(userDataDir()), redirectsBySettings)) debug.log('[goldberg-scan] redirected save folders updated for the Watchdog');
@@ -1851,7 +1887,8 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
       let savePath = goldbergSaveFolder(emulatorType, appid, g.gameDir);
       let saveSource = null;
       try {
-        const redirected = goldberg.resolveLocalSaveDir({ steamSettings, appid });
+        // Also before the first save: the folder GSE Saves would name instead is one the game never writes.
+        const redirected = goldberg.redirectedSaveDir({ steamSettings, appid });
         if (redirected) {
           savePath = redirected;
           debug.log(`[goldberg-scan] ${appid} reads its saves from the configured local_save_path: ${redirected}`);
@@ -3327,6 +3364,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         // from the local app_product_info.json dump before hitting the network.
         steamSettings: (appid.data && appid.data.steamSettings) || null,
       });
+      if (game) await adoptHubEdition(game, appid, option.achievement.lang);
     }
     if (!game) return;
 
@@ -3402,8 +3440,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // re-browse to a path the app already found during discover().
     // Prefer the folder found by the Goldberg scan; fall back to a name-based folder match so
     // non-Goldberg installs (GOG/standalone, bare cracks) also get an install dir.
-    let resolvedGameDir = appid.data && appid.data.gameDir ? appid.data.gameDir : null;
-    // A RetroAchievements game is a ROM played in an emulator: a PC folder matching its title is
+    let resolvedGameDir = appid.data && appid.data.gameDir ? appid.data.gameDir : null;    // A RetroAchievements game is a ROM played in an emulator: a PC folder matching its title is
     // some other game.
     if (!resolvedGameDir && game.name && dataType !== 'retroAchievements') resolvedGameDir = await resolveGameDirByName(game.name);
     if (resolvedGameDir) game.gameDir = resolvedGameDir;
@@ -3878,7 +3915,6 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             }
           } else if (canAutoApply) {
             try {
-              backupBeforeWrite();
               const setup = await autoApplyEmulatorFix({
                 gameDir: bgGameDir,
                 gameName: bgGameName,
@@ -3890,6 +3926,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                 schema: bgSchema,
                 requireGameExecutable: true,
                 onlyIfUnconfigured: true,
+                beforeWrite: backupBeforeWrite,
               });
               fixedSteamSettingsDirs = setup.steamSettingsDirs || [];
               fixApplied = !setup.skipped;

@@ -175,3 +175,65 @@ test('the technical dump carries the flag, so a pasted report can be read from t
   const report = deriveHealth(emulatedGame({ exists: true, seeded: true, type: 'gbe', earned: 0, total: 46 }));
   assert.equal(report.technical.goldberg.save.seeded, true);
 });
+
+/*
+  Modern Warfare 4's setup sends its saves to steam_settings/local_saves; gbe_fork keeps them under
+  <that folder>/<appid>, exactly as under GSE Saves. The placeholder was still written to
+  %APPDATA%/GSE Saves, where the emulator never looks.
+*/
+function redirectedGame(prefix) {
+  const gameDir = tmpdir(prefix);
+  const steamSettings = path.join(gameDir, 'steam_settings');
+  fs.mkdirSync(steamSettings, { recursive: true });
+  fs.writeFileSync(path.join(steamSettings, 'configs.user.ini'), '[user::saves]\nlocal_save_path=./steam_settings/local_saves\n');
+  return { gameDir, steamSettings, file: path.join(steamSettings, 'local_saves', APPID, 'achievements.json') };
+}
+
+function withAppData(dir, fn) {
+  const previous = process.env.APPDATA;
+  process.env.APPDATA = dir;
+  try {
+    return fn();
+  } finally {
+    if (previous === undefined) delete process.env.APPDATA;
+    else process.env.APPDATA = previous;
+  }
+}
+
+test('a setup that redirects its saves is seeded where it saves, not under GSE Saves', () => {
+  const game = redirectedGame('aw-seed-redirect-');
+  const appdata = tmpdir('aw-seed-appdata-');
+
+  const summary = withAppData(appdata, () => goldberg.seedRuntimeSave({ appid: APPID, schema: SCHEMA, steamSettings: game.steamSettings, types: ['gbe'] }));
+
+  assert.deepEqual(summary.created.map((entry) => entry.file), [game.file]);
+  assert.equal(runtimeSaveSeed.isUntouchedSeed(game.file), true);
+  assert.equal(fs.existsSync(path.join(appdata, 'GSE Saves', APPID)), false, 'nothing lands where the emulator never reads');
+});
+
+test('a redirected setup not played yet is read where its emulator will save', () => {
+  const game = redirectedGame('aw-seed-pending-');
+  assert.equal(goldberg.redirectedSaveDir({ steamSettings: game.steamSettings, appid: APPID }), path.dirname(game.file));
+
+  const unredirected = path.join(tmpdir('aw-seed-pending-plain-'), 'steam_settings');
+  fs.mkdirSync(unredirected);
+  assert.equal(goldberg.redirectedSaveDir({ steamSettings: unredirected, appid: APPID }), null);
+});
+
+test('a placeholder left under GSE Saves before the redirect was honoured is taken back, a real save is not', () => {
+  const game = redirectedGame('aw-seed-misplaced-');
+  const stray = seededRoot('aw-seed-stray-');
+  assert.equal(goldberg.forgetMisplacedSeeds({ appid: APPID, steamSettings: game.steamSettings, savesRoots: stray.savesRoots }).length, 1);
+  assert.equal(fs.existsSync(path.join(stray.root, APPID)), false, 'the folder AW created goes with it');
+
+  const played = seededRoot('aw-seed-played-');
+  emulatorWrites(played.file);
+  assert.equal(goldberg.forgetMisplacedSeeds({ appid: APPID, steamSettings: game.steamSettings, savesRoots: played.savesRoots }).length, 0);
+  assert.equal(fs.existsSync(played.file), true, 'a save the emulator wrote is never removed');
+
+  const plain = seededRoot('aw-seed-plain-');
+  const unredirected = path.join(tmpdir('aw-seed-noredirect-'), 'steam_settings');
+  fs.mkdirSync(unredirected);
+  assert.equal(goldberg.forgetMisplacedSeeds({ appid: APPID, steamSettings: unredirected, savesRoots: plain.savesRoots }).length, 0);
+  assert.equal(fs.existsSync(plain.file), true, 'without a redirect GSE Saves is the right place');
+});

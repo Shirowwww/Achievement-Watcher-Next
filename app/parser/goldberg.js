@@ -761,7 +761,27 @@ function buildRuntimeAchievementsState({ schema, steamSettings } = {}) {
   return state;
 }
 
-function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = writableSavesRoots(steamSettings, appid), types = ['gbe'] } = {}) {
+// The save folder of a redirected setup, found on disk, else the one its emulator will create there
+// (<redirect>/<appid>) once the game first saves. Null when the setup is not redirected.
+function redirectedSaveDir({ steamSettings, appid } = {}) {
+  const found = resolveLocalSaveDir({ steamSettings, appid });
+  if (found) return found;
+  const root = configuredSaveRoot(steamSettings);
+  return root && appid != null && String(appid) ? path.join(root, String(appid)) : null;
+}
+
+/*
+  Where the emulator of this setup keeps its saves: a configured redirect (local_save_path,
+  local_save.txt, GseSavePath) replaces the standard roots for every emulator type, which keep the
+  same <appid> folder below it (gbe_fork's Local_Storage: save_directory + appid).
+*/
+function setupSavesRoots(steamSettings, appid, types) {
+  const redirected = configuredSaveRoot(steamSettings);
+  if (!redirected) return writableSavesRoots(steamSettings, appid);
+  return [...new Set(types.length > 0 ? types : ['gbe'])].map((type) => ({ type, root: redirected }));
+}
+
+function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = null, types = ['gbe'] } = {}) {
   const summary = { appid: appid != null ? String(appid) : null, entries: 0, roots: [], created: [], skipped: [] };
   if (summary.appid == null) return summary;
 
@@ -770,7 +790,8 @@ function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = writableSa
   if (summary.entries === 0) return summary;
 
   const wantedTypes = new Set((Array.isArray(types) ? types : [types]).filter(Boolean));
-  for (const rootInfo of savesRoots || []) {
+  const roots = savesRoots || setupSavesRoots(steamSettings, summary.appid, [...wantedTypes]);
+  for (const rootInfo of roots) {
     if (!rootInfo || !rootInfo.root) continue;
     const type = rootInfo.type || 'gbe';
     if (wantedTypes.size > 0 && !wantedTypes.has(type)) continue;
@@ -793,6 +814,32 @@ function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = writableSa
     summary.created.push({ type, file });
   }
   return summary;
+}
+
+/*
+  The placeholders an earlier seed left in the standard roots of a setup that saves elsewhere. Only a
+  file still byte for byte what AW wrote goes, with the folders it created when they are left empty:
+  anything the emulator touched is a save. Returns the files removed.
+*/
+function forgetMisplacedSeeds({ appid, steamSettings, savesRoots = writableSavesRoots(steamSettings, appid) } = {}) {
+  const removed = [];
+  if (appid == null || !configuredSaveRoot(steamSettings)) return removed;
+  for (const { root } of savesRoots || []) {
+    const folder = path.join(root, String(appid));
+    const file = path.join(folder, 'achievements.json');
+    if (!runtimeSaveSeed.isUntouchedSeed(file)) continue;
+    fs.rmSync(file, { force: true });
+    runtimeSaveSeed.clear(file);
+    for (const dir of [path.join(folder, 'stats'), folder]) {
+      try {
+        fs.rmdirSync(dir);
+      } catch {
+        /* not empty or already gone: what is left there is not ours to remove */
+      }
+    }
+    removed.push(file);
+  }
+  return removed;
 }
 
 /*
@@ -1075,6 +1122,8 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     }
     const savePathMatch = userConfig.match(/^[ \t]*local_save_path[ \t]*=[ \t]*(\S.*?)[ \t]*$/im);
     if (savePathMatch && savePathMatch[1] && savePathMatch[1].trim()) {
+      const configuredRoot = configuredSaveRoot(steamSettings);
+      const pendingSaveRoot = configuredRoot && fs.existsSync(path.dirname(configuredRoot)) ? configuredRoot : '';
       // A redirected save folder is only a problem when AW cannot find it. resolveLocalSaveDir
       // resolves the configured path and report.save reads from it, so a working redirect is
       // reported as info, not as the unfixable warning it would otherwise be.
@@ -1088,6 +1137,12 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
           `configs.user.ini still carries GBE's example local_save_path=${savePathMatch[1].trim()} - saves land in a folder named after it instead of GSE Saves.`,
           { configured: savePathMatch[1].trim() }
         );
+      } else if (pendingSaveRoot) {
+        // Not played since the redirect was set: the scan records the folder for the Watchdog all
+        // the same (recordSaveRedirects), so the first save the game writes there is read.
+        add('info', 'CUSTOM_SAVE_PATH', `Saves are redirected by configs.user.ini to ${pendingSaveRoot}, not created yet - AW reads them there once the game writes them.`, {
+          path: pendingSaveRoot,
+        });
       } else {
         add(
           'warning',
@@ -1863,7 +1918,10 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     }
     if (exeDetect.shallowGameExe(dir)) {
       const nestedAppid = findNestedAppid(dir, path.basename(dir));
-      if (nestedAppid) {
+      // A subfolder with an exe of its own that is not engine internals is a game in its own right
+      // (MW4's sp26 under the Call of Duty hub's cod.exe): the walk reaches it, the parent is not it.
+      const nestedIsGame = nestedAppid && !isEngineInternals(nestedAppid.dir) && !!exeDetect.shallowGameExe(nestedAppid.dir);
+      if (nestedAppid && !nestedIsGame) {
         const emu = detectEmulator(dir);
         if (emu.dll.length > 0) return { gameDir: dir, appid: nestedAppid.appid, appidFile: nestedAppid.file };
       }
@@ -1955,6 +2013,8 @@ module.exports = {
   resolveLocalSaveDir,
   buildRuntimeAchievementsState,
   seedRuntimeSave,
+  forgetMisplacedSeeds,
+  redirectedSaveDir,
   findCompatibleGames,
   readLocalSchema,
   findGameExe,

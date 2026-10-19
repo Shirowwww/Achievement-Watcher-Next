@@ -31,8 +31,33 @@ test('automatic repair paths stay gated on a real game executable', () => {
 test('the automatic pass takes a restore point before it writes, on either branch', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
   assert.match(src, /gbeBackup\.createBackup\(/, 'the automatic pass must take a backup of its own');
-  const calls = src.match(/backupBeforeWrite\(\);/g) || [];
-  assert.equal(calls.length, 2, 'both the data repair and the full setup must back up first');
+  assert.equal((src.match(/backupBeforeWrite\(\);/g) || []).length, 1, 'the data repair backs up first');
+  assert.match(src, /beforeWrite: backupBeforeWrite,/, 'the full setup backs up once its own checks let it write');
+});
+
+// MW4 got a full copy of its setup on every scan: the backup came before the check that then found
+// the folder already set up and wrote nothing.
+test('a folder the automatic fix turns away gets no restore point', async () => {
+  const userData = makeTempDir('aw-guard-user-');
+  const gameDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-guard-game-'));
+  fs.mkdirSync(path.join(userData, 'logs'), { recursive: true });
+  fs.mkdirSync(path.join(gameDir, 'steam_settings'));
+  achievements.initDebug({ isDev: false, userDataPath: userData });
+  let backups = 0;
+  try {
+    const option = { emulator: { autoApplyNewGames: true }, achievement: {}, general: {} };
+    const common = { gameName: 'Test Game', appid: '12345', option, requireGameExecutable: true, beforeWrite: () => backups++ };
+    const existing = await achievements.autoApplyEmulatorFix({ ...common, gameDir, steamSettings: path.join(gameDir, 'steam_settings'), onlyIfUnconfigured: true });
+    assert.equal(existing.reason, 'existing-fix');
+
+    fs.rmSync(path.join(gameDir, 'steam_settings'), { recursive: true });
+    const noExe = await achievements.autoApplyEmulatorFix({ ...common, gameDir, steamSettings: path.join(gameDir, 'steam_settings') });
+    assert.equal(noExe.reason, 'no-game-executable');
+
+    assert.equal(backups, 0);
+  } finally {
+    fs.rmSync(gameDir, { recursive: true, force: true });
+  }
 });
 
 test('what the automatic pass writes comes from the health diagnosis', () => {

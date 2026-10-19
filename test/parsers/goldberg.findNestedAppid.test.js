@@ -109,3 +109,21 @@ test('a legit game whose TITLE contains a tool word (e.g. "Engine") still resolv
   const ids = goldberg.findCompatibleGames([root]).map((g) => String(g.appid));
   assert.ok(ids.includes('424242'), 'a normal nested appid under non-tool folders must still resolve');
 });
+
+test('a game folder below a hub with its own exe is the install, not the hub (Call of Duty MW4)', (t) => {
+  const root = mkRoot();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  const hub = path.join(root, 'Call of Duty - Modern Warfare 4');
+  write(path.join(hub, 'cod.exe'), 'x'.repeat(5000));
+  write(path.join(hub, 'steam_api64.dll'), 'Valve runtime');
+  const campaign = path.join(hub, 'sp26');
+  write(path.join(campaign, 'sp26-cod.exe'), 'x'.repeat(5000));
+  write(path.join(campaign, 'steam_api64.dll'), 'reads steam_settings');
+  // Written by AW so the game finds its appid outside Steam; it used to anchor the install on the hub.
+  write(path.join(campaign, 'steam_appid.txt'), '1938090');
+  write(path.join(campaign, 'steam_settings', 'steam_appid.txt'), '1938090');
+
+  const found = goldberg.findCompatibleGames([root]);
+  assert.deepStrictEqual(found.map((g) => [String(g.appid), g.gameDir]), [['1938090', campaign]]);
+});
