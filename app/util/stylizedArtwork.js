@@ -21,7 +21,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const STYLIZED_ROOT = ['steam_cache', 'stylized'];
+// v2: blurred only, the page draws the tint; the new name keeps tinted v1 files from being read.
+const STYLIZED_ROOT = ['steam_cache', 'stylized-v2'];
+const OLD_STYLIZED_ROOT = ['steam_cache', 'stylized'];
 const XBOX_CACHE_ROOT = ['steam_cache', 'xbox'];
 const ICON_CACHE_ROOT = ['steam_cache', 'icon'];
 const PURGE_MARKER = ['cfg', 'purged-tinted-covers.json'];
@@ -110,4 +112,20 @@ function purgeTintedXboxCovers(userDataPath, { force = false } = {}) {
   return { purged, titles: removed, skipped: false };
 }
 
-module.exports = { stylizedBackgroundPath, existingStylizedBackground, stylizedFileName, purgeTintedXboxCovers };
+// The tinted backgrounds of the first layout are never read again; nothing else lives in that folder.
+function removeOldStylized(userDataPath) {
+  if (!userDataPath) return;
+  try {
+    fs.rmSync(path.join(userDataPath, ...OLD_STYLIZED_ROOT), { recursive: true, force: true });
+  } catch {
+    /* a locked file stays until the next start; it costs disk space, never a wrong picture */
+  }
+}
+
+module.exports = {
+  stylizedBackgroundPath,
+  existingStylizedBackground,
+  stylizedFileName,
+  purgeTintedXboxCovers,
+  removeOldStylized,
+};

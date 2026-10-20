@@ -40,7 +40,7 @@ test('the achievement page paints a chosen background before the game artwork', 
   const app = fs.readFileSync(path.join(appRoot, 'app.js'), 'utf8');
   assert.match(app, /const customBackground = backgroundOverrideFor\(game\.appid\)/);
   const page = app.slice(app.indexOf('const customBackground = backgroundOverrideFor(game.appid)'));
-  assert.match(page.slice(0, 600), /if \(customBackground \|\| game\.img\.background\)/);
+  assert.match(page.slice(0, 1200), /const background = customBackground\n\s*\? Promise\.resolve\(customBackground\)/);
 });
 
 test('the cover menu offers to choose and reset the background', () => {

@@ -14,15 +14,17 @@ const appDir = path.join(__dirname, '..', '..', 'app');
 const appJs = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
 const gameJs = fs.readFileSync(path.join(appDir, 'ui', 'game.js'), 'utf8');
 
-test('a late artwork fetch checks it is still the open game before painting body', () => {
+test('a late artwork fetch checks it is still the open game before painting the backdrop', () => {
   const start = appJs.indexOf("ipcRenderer.invoke('fetch-icon', game.img.background");
   assert.ok(start !== -1, 'the background fetch must still be here');
-  const block = appJs.slice(start, appJs.indexOf('});', appJs.indexOf('$(\'body\').fadeIn().css(\'background\', cssUrl(localPath))', start)));
+  const paintAt = appJs.indexOf('paintBackdrop(cssUrl(localPath))', start);
+  assert.ok(paintAt !== -1, 'the fetched picture must still be painted here');
+  const block = appJs.slice(start, appJs.indexOf('});', paintAt));
 
   const guard = block.indexOf("attr('data-appid')");
-  const paint = block.indexOf("$('body')");
+  const paint = block.indexOf('paintBackdrop(');
   assert.ok(guard !== -1, 'the callback must compare the open appid');
-  assert.ok(guard < paint, 'the check must run before body is repainted');
+  assert.ok(guard < paint, 'the check must run before the backdrop is painted');
   assert.match(block.slice(guard, paint), /return;/, 'a stale reply must bail out, not fall through');
 });
 
@@ -38,21 +40,39 @@ test('leaving a game clears the open-game marker immediately', () => {
 });
 
 /*
-  Issue #61: the dark veil exists for raw key art (a launcher's own image, a community hero). It used
-  to be applied to any game whose platform was uplay, so a Uplay R2 game showing Steam's page
-  background - already darkened by Steam - was veiled twice and its screen came out black. The veil
-  follows the artwork now, and each source says which kind it produced.
+  Issue #61 came from darkening twice: a tint baked into the stylized file, then a veil on top, and
+  the screen came out black. Now nothing is darkened before the page: the stylizer only blurs, and
+  every picture, whatever its source, is painted under the one veil app.css defines.
 */
-test('the background veil follows the artwork, not the platform', () => {
-  const veil = appJs.indexOf('A veil over the artwork');
-  assert.ok(veil !== -1, 'the veil must still be here');
-  const opened = [...appJs.slice(0, veil).matchAll(/if \(([^\n]*)\) \{\n\s*\/\*\n/g)];
-  const condition = opened.at(-1);
-  assert.ok(condition, 'the veil must still be behind one readable condition');
-  // Raw art only (a source's key art or the user's own pick): a background the stylizer already
-  // darkened is never veiled a second time.
-  assert.equal(condition[1], '(customBackground || game.img?.overlay === true) && !stylized');
-  assert.doesNotMatch(condition[1], /system/, 'the platform must not decide whether art is veiled');
+test('every game page picture is painted under the same single veil', () => {
+  const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(css, /--game-backdrop-veil:/, 'app.css must define the veil');
+
+  const paints = [...appJs.matchAll(/paintBackdrop\(/g)];
+  assert.equal(paints.length, 2, 'the default picture and the fetched one must both go through paintBackdrop');
+  assert.match(appJs, /const paintBackdrop = \(url\) => \$\('body'\)\.fadeIn\(\)\.attr\('style', `--game-backdrop-image: \$\{url\}`\);/);
+  assert.match(css, /background: var\(--game-backdrop-veil\), var\(--game-backdrop-image\)/, 'the layer must draw the veil over the picture');
+  assert.doesNotMatch(appJs, /rgba\(0, 0, 0, 0\.74\)/, 'no second, source-specific veil');
+
+  const init = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
+  const stylize = init.slice(init.indexOf("ipcMain.on('stylize-background-for-appid'"));
+  assert.doesNotMatch(stylize.slice(0, stylize.indexOf('writeFileSync')), /fill-opacity|composite\(/, 'the stylizer must not tint the picture');
+});
+
+// Steam's page background is dark by design: its library hero goes first, the page one is the fallback.
+test('a Steam game page shows the library hero, falling back to the page background', () => {
+  assert.match(appJs, /return ipcRenderer\.invoke\('fetch-icon', 'library_hero\.jpg', appid\)\.catch\(\(\) => null\);/, 'a failed hero download falls through to the page background');
+  assert.match(appJs, /: isSteamPageBackground\(game\.img\.background\)\n\s*\? steamHeroBackground\(game\)\.then\(\(hero\) => hero \|\| pageBackground\(\)\)/);
+  // A picture the user chose still wins over both.
+  assert.match(appJs, /const background = customBackground\n\s*\? Promise\.resolve\(customBackground\)\n/);
+});
+
+// A Ubisoft title has no page background at all: its cover is painted instead of the generic picture.
+test('a game without a page background falls back to its cover art', () => {
+  assert.match(appJs, /const coverArt = \(\) => fetchArt\(game\.img\.header\)\.then\(\(art\) => art \|\| fetchArt\(game\.img\.portrait\)\);/);
+  assert.match(appJs, /: !game\.img\.background\n\s*\? coverArt\(\)/);
+  assert.match(appJs, /: pageBackground\(\)\.then\(\(art\) => art \|\| coverArt\(\)\);/, 'a failed fetch falls back too');
+  assert.match(appJs, /if \(!localPath \|\| String\(/, 'nothing found keeps the generic picture');
 });
 
 test('every source that hands over raw artwork marks it for the veil', () => {

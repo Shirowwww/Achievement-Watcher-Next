@@ -1722,6 +1722,21 @@ function backgroundOverrideFor(appid) {
   return null;
 }
 
+/*
+  Steam's page background is dark and blue-tinted by design, so under the page veil the game was
+  barely there. Its library hero is the key art Steam's own library shows. The page background
+  stays the fallback for a game without one: newer appids keep it only under a hashed path.
+*/
+function isSteamPageBackground(url) {
+  return /page_bg_generated|storepagebackground/i.test(String(url || ''));
+}
+async function steamHeroBackground(game) {
+  const appid = String(game.steamappid || game.appid);
+  if (!/^\d+$/.test(appid)) return null;
+  // A failed download is "no hero": the page background is then the fallback.
+  return ipcRenderer.invoke('fetch-icon', 'library_hero.jpg', appid).catch(() => null);
+}
+
 function applyCoverBackground(appid, value) {
   const el = $(`#game-header-${appid}`);
   if (!value || value === 'none') {
@@ -6736,49 +6751,33 @@ var app = {
 
     if (self.data('time') > 0) $('#unlock > .header .sort-ach .sort.time').addClass('show');
 
+    // Every game page picture, whatever its source, goes under the one veil app.css defines:
+    // darkening it anywhere else as well is how pages came out black (issue #61).
+    const paintBackdrop = (url) => $('body').fadeIn().attr('style', `--game-backdrop-image: ${url}`);
     $('#home').fadeOut(function () {
-      $('body').fadeIn().css('background', `url('../resources/img/ach_background.jpg')`);
+      paintBackdrop(`url('../resources/img/ach_background.jpg')`);
       const customBackground = backgroundOverrideFor(game.appid);
-      if (customBackground || game.img.background) {
-        /*
-          A background the stylizer already blurred and tinted lives in its own folder now. It used
-          to be written over the cover cache entry for the same URL, which is how every Xbox tile
-          ended up painted with its own page background (see util/stylizedArtwork.js). Asked for
-          here first, so the page keeps the look it had; with none built yet the plain picture is
-          painted exactly as it was before that pass finished.
-        */
-        const stylized = customBackground ? null : stylizedArtwork.existingStylizedBackground(getUserDataPath(), game.appid, game.img.background);
-        const background = customBackground
-          ? Promise.resolve(customBackground)
-          : stylized
-          ? Promise.resolve(stylized)
-          : ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid);
-        background.then((localPath) => {
-          // This fetch can outlive the page that asked for it: going back before it resolved used to
-          // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
-          if (String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
-          /*
-            The veil belongs to raw artwork (a launcher's key art, a community hero), which the
-            source marks with img.overlay. It used to follow the platform instead, so a Uplay R2 game
-            drawing Steam's already-darkened page background got veiled a second time and the screen
-            came out black (issue #61).
-          */
-          // A stylized background is already darkened; veiling it as well turned the page black.
-          // A picture the user chose is raw art too, so it gets the same veil.
-          if ((customBackground || game.img?.overlay === true) && !stylized) {
-            /*
-              A veil over the artwork, not a sheet in front of it: the theme colours are opaque, so
-              the picture was replaced by a flat blue rectangle instead of being toned down. Plain
-              translucent black darkens it the way the pre-blurred backgrounds of the other sources
-              are darkened, and keeps the game visible underneath.
-            */
-            const gradient = 'linear-gradient(to bottom right, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.58) 100%)';
-            $('body').fadeIn().attr('style', `background: ${gradient}, ${cssUrl(localPath)}`);
-          } else {
-            $('body').fadeIn().css('background', cssUrl(localPath));
-          }
-        });
-      }
+      const fetchArt = (url) => (url ? ipcRenderer.invoke('fetch-icon', url, game.steamappid || game.appid) : Promise.resolve(null));
+      // A source with no page background (a Ubisoft title, a fetch that failed) still has its cover:
+      // the banner first, the portrait after, rather than the generic picture.
+      const coverArt = () => fetchArt(game.img.header).then((art) => art || fetchArt(game.img.portrait));
+      // The pre-blurred picture first (its own folder, see util/stylizedArtwork.js); the plain
+      // one covers the time before it is built.
+      const stylized = customBackground ? null : stylizedArtwork.existingStylizedBackground(getUserDataPath(), game.appid, game.img.background);
+      const pageBackground = () => (stylized ? Promise.resolve(stylized) : ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid));
+      const background = customBackground
+        ? Promise.resolve(customBackground)
+        : !game.img.background
+        ? coverArt()
+        : isSteamPageBackground(game.img.background)
+        ? steamHeroBackground(game).then((hero) => hero || pageBackground())
+        : pageBackground().then((art) => art || coverArt());
+      background.then((localPath) => {
+        // This fetch can outlive the page that asked for it: going back before it resolved used to
+        // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
+        if (!localPath || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
+        paintBackdrop(cssUrl(localPath));
+      });
 
       // Mark which game the detail view is currently showing, so a live unlock toast only
       // refreshes this page when it belongs to the game on screen (see updateGamePage).

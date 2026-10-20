@@ -82,6 +82,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Every release you skipped, in the update window.** Several versions behind, the window lists
   the notes of each release you missed, newest first, each under its version number, straight from
   the GitHub release descriptions.
+- **Game pages show the game's own art.** A Steam game's page now uses the key art from Steam's
+  library instead of the dark blue store background, which stays the fallback. Every page picture
+  sits under the same veil, so none comes out black, and a game with no background shows its cover.
 
 ### Fixed
 

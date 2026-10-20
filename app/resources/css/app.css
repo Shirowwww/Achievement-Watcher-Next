@@ -109,6 +109,13 @@
   /* Label colour for anything filled with the accent: black or white, whichever reads better on the
      theme's own accent. Light text on a pale accent was under 2:1 in most built-in themes. */
   --on-accent: oklch(from var(--accent) clamp(0, (0.62 - l) * 1000, 1) 0 0);
+  /* The one veil over a game page's picture, whatever its source: the game stays recognisable, the
+     title and the stat chips drawn straight on it stay readable. */
+  --game-backdrop-veil: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-base) 62%, transparent) 0%,
+    color-mix(in srgb, var(--bg-base) 80%, transparent) 100%
+  );
 }
 
 /* App themes (Settings > General). Every theme but 'light' is a dark variant: the stylesheet's
@@ -441,6 +448,18 @@ body::after {
   z-index: 1;
   pointer-events: none;
   border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+}
+
+/* A game page's picture (app.js sets --game-backdrop-image), on a fixed layer of its own: blurred
+   once and never repainted on scroll. Overflowing the window hides the blur's soft edges. */
+body[style*='--game-backdrop-image']::before {
+  content: '';
+  position: fixed;
+  inset: -24px;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--game-backdrop-veil), var(--game-backdrop-image) center / cover no-repeat;
+  filter: blur(6px);
 }
 
 main {

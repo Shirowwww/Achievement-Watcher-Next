@@ -74,6 +74,7 @@ if (!isPortableBuild) {
 // Runs on every start: folders migrated before this existed still hold a restore-point index
 // pointing at their old location. Idempotent, a repointed entry is skipped next time.
 retargetBackupIndex(app.getPath('userData'));
+stylizedArtwork.removeOldStylized(app.getPath('userData'));
 // One-time: drop the Xbox covers an older build overwrote with a tinted page background. They are
 // downloaded artwork, so the next scan fetches them again by itself. Runs before the logger exists,
 // and records what it removed in its own marker file instead.
@@ -2383,24 +2384,9 @@ ipcMain.on('stylize-background-for-appid', async (event, arg) => {
     // Undici exposes arrayBuffer(), not node-fetch's buffer().
     const buffer = Buffer.from(await res.arrayBuffer());
 
-    const metadata = await sharp(buffer).metadata();
-    const { width, height } = metadata;
-
-    const processedBuffer = await sharp(buffer)
-      .blur(5)
-      .modulate({ saturation: 0.5 })
-      .composite([
-        {
-          input: Buffer.from(
-            `<svg width="${width}" height="${height}">
-              <rect width="100%" height="100%" fill="#3b65a7" fill-opacity="0.8"/>
-              <rect width="100%" height="100%" fill="#000000" fill-opacity="0.4"/>
-             </svg>`
-          ),
-          blend: 'over',
-        },
-      ])
-      .toBuffer();
+    // Blur and calm only. The darkening is the page's own veil (--game-backdrop-veil in app.css),
+    // the same for every source, so no tint is baked into the file.
+    const processedBuffer = await sharp(buffer).blur(8).modulate({ saturation: 0.8 }).toBuffer();
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, processedBuffer);
   } catch (err) {
