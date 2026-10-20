@@ -373,6 +373,17 @@ test('robots and the sitemap expose every public page', () => {
   assert.ok(!urls.some((url) => url.endsWith('preset-gallery.html') || url.endsWith('theme-gallery.html')));
 });
 
+test('the IndexNow key file proves the key and the submission covers every public page', () => {
+  const indexnow = require(path.join(root, 'tools', 'site', 'indexnow.js'));
+  const body = indexnow.payload();
+  assert.equal(body.host, 'shirowwww.github.io');
+  assert.equal(body.keyLocation, `${discovery.BASE}${body.key}.txt`);
+  assert.deepEqual(
+    body.urlList,
+    discovery.publicPages().map((page) => discovery.BASE + page),
+  );
+});
+
 test('release notes are available as a valid RSS feed from every page', () => {
   const parser = new XMLParser({ ignoreAttributes: false });
   const rss = parser.parse(fs.readFileSync(discovery.FEED, 'utf8')).rss;
