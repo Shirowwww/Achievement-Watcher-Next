@@ -100,6 +100,7 @@ test('urgent unlocks are marked only when enabled, render correctly, and never a
     return notification.scenario;
   };
   const unlock = { appid: 480, achievementName: 'A', achievementDisplayName: 'X', achievementDescription: 'y' };
+  toastTransport._setUrgentSupported(true);
 
   toastTransport.setUrgentUnlocks(false);
   assert.strictEqual(build(unlock), undefined, 'off by default, no scenario is emitted');
@@ -119,6 +120,48 @@ test('urgent unlocks are marked only when enabled, render correctly, and never a
   // powertoast validates the scenario against its own list; an unknown one is silently dropped,
   // which would make this setting a no-op without anything failing.
   toastTransport.setUrgentUnlocks(false);
+});
+
+// Windows 10 and Windows Server 2022 predate the urgent scenario (build 22546).
+test('the urgent scenario is used only on Windows builds that know it', () => {
+  assert.equal(toastTransport.urgentScenarioSupported('win32', '10.0.19045'), false);
+  assert.equal(toastTransport.urgentScenarioSupported('win32', '10.0.20348'), false);
+  assert.equal(toastTransport.urgentScenarioSupported('win32', '10.0.22631'), true);
+  assert.equal(toastTransport.urgentScenarioSupported('linux', '6.8.0'), true);
+});
+
+// Over a game with fullscreen optimizations Windows draws a reminder or an urgent toast and holds
+// back any other. A reminder needs a button and stays until dismissed, so it is hidden on time.
+test('a toast that must break through a fullscreen game is a reminder Windows will draw', async () => {
+  const unlock = { appid: 480, achievementName: 'A', achievementDisplayName: 'X', achievementDescription: 'y' };
+  const { notification } = buildToastNotification(unlock, toastOptions({ breakthrough: true, durationSeconds: 7 }));
+  assert.equal(notification.scenario, 'reminder');
+  assert.equal(notification.hideAfterMs, 7000);
+
+  const { toXmlString } = await import('powertoast');
+  const xml = toXmlString(notification);
+  assert.match(xml, /scenario="reminder"/);
+  assert.match(xml, /<action content="" arguments="dismiss" activationType="system"/);
+
+  const ordinary = buildToastNotification(unlock, toastOptions()).notification;
+  assert.equal(ordinary.scenario, undefined);
+  assert.equal(ordinary.hideAfterMs, undefined);
+});
+
+test('an allowed urgent toast wins over the reminder, and playtime breaks through as a reminder', () => {
+  const unlock = { appid: 480, achievementName: 'A', achievementDisplayName: 'X', achievementDescription: 'y' };
+  const scenario = (message) => buildToastNotification(message, toastOptions({ breakthrough: true })).notification.scenario;
+  toastTransport._setUrgentSupported(true);
+  toastTransport.setUrgentUnlocks(true);
+  assert.equal(scenario(unlock), 'urgent');
+  assert.equal(scenario({ ...unlock, notificationType: 'playtime' }), 'reminder');
+
+  // Windows 10: the setting cannot apply, the reminder still gets the toast on screen.
+  toastTransport._setUrgentSupported(false);
+  assert.equal(scenario(unlock), 'reminder');
+  assert.equal(buildToastNotification(unlock, toastOptions()).notification.scenario, undefined);
+  toastTransport.setUrgentUnlocks(false);
+  toastTransport._setUrgentSupported(toastTransport.urgentScenarioSupported());
 });
 
 test('winrt=false is forwarded as disableWinRT on the payload', () => {

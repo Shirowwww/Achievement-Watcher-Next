@@ -97,8 +97,9 @@ transport that last delivered and why. Then work through
 
 ### The overlay popup does not show in one particular game
 That game is very likely in exclusive fullscreen, where an always-on-top popup is not drawn at all.
-On **Automatic** this is handled for you: that unlock arrives as a Windows notification instead. See
-[how Automatic decides](notifications.md#how-automatic-decides).
+On **Automatic** this is handled for you: that unlock arrives as a Windows notification shown over the
+game. A game that holds the screen in legacy exclusive mode lets nothing through; switch it to
+borderless. See [how Automatic decides](notifications.md#how-automatic-decides).
 
 ### Notifications are hidden while I play
 That is Windows' Do Not Disturb. Turn on **Priority notifications** and approve Windows' one-time

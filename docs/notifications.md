@@ -44,7 +44,8 @@ Each notification is routed once, from what AW Next can actually observe at that
 | Situation | What happens |
 |---|---|
 | Nothing covering the screen | In-game overlay. |
-| The game holds **exclusive fullscreen** (Direct3D) | Windows notification - an always-on-top popup is not drawn over an exclusive fullscreen game, so it would play invisibly. Borderless and windowed games keep the overlay. |
+| The game is in **fullscreen** (Direct3D, with Windows' fullscreen optimizations, which most games get) | Windows notification, shown over the game without taking its focus. The popup is not drawn there and Windows holds an ordinary notification back, so AW Next sends one that Windows does show: a priority notification when those are on, otherwise a reminder that AW Next closes after the usual notification time. Borderless and windowed games keep the overlay. |
+| The game holds the screen in **legacy exclusive mode** (older games, many OpenGL games, or fullscreen optimizations turned off) | Nothing from another app is drawn on that screen. The notification goes to Notification Center, and its sound and the controller rumble still play. Borderless mode in the game brings it back on screen. |
 | The app reports it cannot display the popup (no usable preset, renderer unavailable) | That notification is sent as a Windows notification instead. |
 | The overlay fails to display | Automatic stays on Windows notifications for ten minutes, then tries the overlay again. |
 | The overlay was asked but never reported back | No second notification is sent - a duplicate is worse than a delayed switch - and the next unlock uses a Windows notification. |
@@ -78,8 +79,8 @@ settings.
 
 This is deliberately off by default. It applies to achievement and completion unlocks only, never to
 progress or playtime updates. The underlying Windows toast uses the `urgent` scenario, supported on
-Windows 10 version 2004 and later, and remains subject to Windows' notification permission and system
-policy. See [Microsoft's app-notification documentation](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/app-notifications/app-notifications-content).
+Windows 11 (build 22546) and later, and remains subject to Windows' notification permission and system
+policy. Windows 10 does not know it, so the setting does nothing there. See [Microsoft's app-notification documentation](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/app-notifications/app-notifications-content).
 
 ## Games Steam runs
 
@@ -132,6 +133,10 @@ popup's text, which holds that popup back about half a second. The custom
 position can be moved with
 **Reposition** and is stored for later sessions; it is used exactly as you left it, and a position
 saved on a monitor that is no longer connected is brought back into view.
+
+With several screens, on Windows, the popup appears on the screen of the game you are playing (the
+window in front), not on the one under the mouse. A custom position keeps its place relative to that
+screen. Windows notifications always show on the main screen; Windows decides that.
 
 The scale setting resizes the whole popup without changing the preset's layout: every preset is drawn
 exactly as it is at 100%, only larger or smaller. **Reposition** shows the popup at the selected

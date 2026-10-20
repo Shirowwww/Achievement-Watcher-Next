@@ -36,6 +36,20 @@ function nativeReader() {
 
 let readRawState = null;
 
+/*
+  QUNS_RUNNING_D3D_FULL_SCREEN covers two cases that behave differently. Under fullscreen
+  optimizations (the default for DXGI and D3D9 games since Windows 10 1803) DWM still composes the
+  screen and a priority toast shows over the game; in legacy exclusive mode the game owns the
+  display and nothing from another process is drawn on it. gdi32 tells them apart without admin.
+*/
+function nativeOwnershipReader() {
+  const koffi = require('koffi');
+  const check = koffi.load('gdi32.dll').func('uint8 __stdcall D3DKMTCheckExclusiveOwnership()');
+  return () => check() !== 0;
+}
+
+let readExclusiveOwnership = null;
+
 // Share the answer briefly across a batch of notifications.
 const STATE_TTL_MS = 1000;
 let cached = { at: 0, state: null, valid: false };
@@ -93,20 +107,36 @@ async function arePopupsSuppressed() {
   return POPUP_SUPPRESSED_STATES.includes(await queryUserNotificationState());
 }
 
-// Only exclusive full-screen D3D hides an always-on-top window (it owns the swap chain); a
-// borderless/windowed game still shows the overlay, so this deliberately skips FULLSCREEN_STATES.
-// Returns null (not false) when the state can't be read, so callers don't treat "unknown" as "fine".
-// Linux has no exclusive full screen: the compositor draws AW's notification windows over the game.
-async function isOverlayLikelyHidden() {
-  if (process.platform !== 'win32') return false;
+const FULLSCREEN_KIND = {
+  NONE: 'none',
+  // Fullscreen optimizations: composed by DWM, so a priority toast is drawn over the game.
+  OPTIMIZED: 'optimized',
+  // Legacy exclusive mode: nothing from another process reaches that display.
+  EXCLUSIVE: 'exclusive',
+  // A D3D fullscreen game whose kind could not be read.
+  D3D: 'd3d',
+};
+
+// null when the shell state is unreadable, so callers keep "unknown" apart from "no game". Linux has
+// no exclusive fullscreen: the compositor draws AW's windows over the game.
+async function fullscreenKind() {
+  if (process.platform !== 'win32') return FULLSCREEN_KIND.NONE;
   const state = await queryUserNotificationState();
   if (!state) return null;
-  return state === 'QUNS_RUNNING_D3D_FULL_SCREEN';
+  if (state !== 'QUNS_RUNNING_D3D_FULL_SCREEN') return FULLSCREEN_KIND.NONE;
+  try {
+    if (!readExclusiveOwnership) readExclusiveOwnership = nativeOwnershipReader();
+    return readExclusiveOwnership() ? FULLSCREEN_KIND.EXCLUSIVE : FULLSCREEN_KIND.OPTIMIZED;
+  } catch (err) {
+    reportFailure(`exclusive ownership: ${err.message || err}`);
+    return FULLSCREEN_KIND.D3D;
+  }
 }
 
-// Tests swap the native call for a scripted one.
-function _setReader(reader) {
+// Tests swap the native calls for scripted ones.
+function _setReader(reader, ownershipReader = null) {
   readRawState = reader;
+  readExclusiveOwnership = ownershipReader;
 }
 
 // Tests drive this through several states in a row; the 1s cache would otherwise leak between them.
@@ -119,8 +149,9 @@ function _resetCache() {
 module.exports = {
   isFullscreenAppRunning,
   arePopupsSuppressed,
-  isOverlayLikelyHidden,
+  fullscreenKind,
   queryUserNotificationState,
+  FULLSCREEN_KIND,
   FULLSCREEN_STATES,
   POPUP_SUPPRESSED_STATES,
   QUERY_USER_NOTIFICATION_STATE,

@@ -99,6 +99,10 @@ class FakeNotification extends EventEmitter {
   show() {
     setImmediate(() => (FakeNotification.fail ? this.emit('failed', {}, FakeNotification.fail) : this.emit('show', {})));
   }
+  close() {
+    this.closed = true;
+    this.emit('close', {});
+  }
 }
 
 function resetFake() {
@@ -123,4 +127,35 @@ test('the app reports why Windows did not show the toast', async () => {
   resetFake();
   FakeNotification.throwOnCreate = true;
   await assert.rejects(notifier.showToastXml('<toast/>'), /invalid toast XML/, 'init.js turns the rejection into a failed report');
+});
+
+// A reminder toast is what Windows draws over a fullscreen game, and it stays until dismissed: the
+// Watchdog asks for it to be hidden after the usual toast time, and only the app can do that.
+test('a reminder goes to the app with the time after which it is hidden', async () => {
+  const app = fakeApp(() => ({ ok: true }));
+  const reminder = unlockToast({ scenario: 'reminder', button: [{ text: '', activation: { type: 'system', launch: 'dismiss' } }], hideAfterMs: 6000 });
+  await powertoast(reminder, appRoute(app.send));
+  assert.equal(app.sent[0].windowsToast.hideAfterMs, 6000);
+  assert.match(app.sent[0].windowsToast.xml, /scenario="reminder"/);
+  assert.doesNotMatch(app.sent[0].windowsToast.xml, /hideAfterMs/);
+});
+
+test('shown any other way, a reminder is an ordinary toast that cannot get stuck on screen', () => {
+  const plain = powertoast.withoutReminder(unlockToast({ scenario: 'reminder', button: [{ text: 'OK' }] }));
+  assert.equal(plain.scenario, undefined);
+  assert.equal(plain.button, undefined);
+  assert.equal(powertoast.withoutReminder(unlockToast()).scenario, 'urgent');
+});
+
+test('the app hides a toast once its time is up', async () => {
+  resetFake();
+  const notifier = createDesktopNotifier({ Notification: FakeNotification, platform: 'win32' });
+  assert.deepEqual(await notifier.showToastXml('<toast scenario="reminder"/>', { hideAfterMs: 20 }), { ok: true });
+  assert.equal(FakeNotification.created[0].closed, undefined);
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  assert.equal(FakeNotification.created[0].closed, true);
+
+  await notifier.showToastXml('<toast/>');
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  assert.equal(FakeNotification.created[1].closed, undefined, 'an ordinary toast is left to Windows');
 });

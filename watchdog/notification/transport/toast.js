@@ -1,5 +1,6 @@
 'use strict';
 
+const os = require('os');
 const toast = require('../../util/powertoast');
 const soundPlayer = require('../../util/soundPlayer.js');
 const { mediaPlayerVolume } = require('../../util/notificationVolume.js');
@@ -7,15 +8,37 @@ const notifyStrings = require('../../util/notifyStrings.js');
 
 const TOAST_QUEUE_SOUND_DELAY_MS = 5000;
 
+// Windows 11 build 22546 introduced the urgent scenario; Windows 10 does not know it.
+const URGENT_MIN_BUILD = 22546;
+// How long a reminder stays when the registry cannot say how long Windows keeps a toast.
+const DEFAULT_TOAST_SECONDS = 5;
+
+function urgentScenarioSupported(platform = process.platform, release = os.release()) {
+  if (platform !== 'win32') return true;
+  const build = Number(String(release).split('.')[2]);
+  return Number.isFinite(build) && build >= URGENT_MIN_BUILD;
+}
+
 // Stored once because every toast uses the same urgency setting.
 let urgentUnlocks = false;
+let urgentSupported = urgentScenarioSupported();
 function setUrgentUnlocks(enabled) {
   urgentUnlocks = enabled === true;
 }
 
 // Urgent applies only to unlocks and is opt-in.
 function isUrgent(message) {
-  return urgentUnlocks && message.notificationType !== 'playtime' && message.notificationType !== 'progress';
+  return urgentUnlocks && urgentSupported && message.notificationType !== 'playtime' && message.notificationType !== 'progress';
+}
+
+/*
+  A fullscreen game makes Windows hold ordinary toasts back. Urgent and reminder toasts are still
+  drawn over a game running with fullscreen optimizations, without taking its focus. A reminder
+  needs a button and stays until dismissed, so the app hides it after the usual toast time.
+*/
+function scenarioFor(message, breakthrough) {
+  if (isUrgent(message)) return 'urgent';
+  return breakthrough ? 'reminder' : undefined;
 }
 
 function normalizeProgress(progress) {
@@ -85,7 +108,13 @@ function buildToastNotification(message, options) {
 
   notification.uniqueID = message.achievementName ? `${message.appid}:${message.achievementName}` : `${message.appid}`;
 
-  if (isUrgent(message)) notification.scenario = 'urgent';
+  const scenario = scenarioFor(message, options.toast.breakthrough === true);
+  if (scenario) notification.scenario = scenario;
+  if (scenario === 'reminder') {
+    // Windows labels the system dismiss button in the user's language.
+    notification.button = [{ text: '', activation: { type: 'system', launch: 'dismiss' } }];
+    notification.hideAfterMs = Math.round((Number(options.toast.durationSeconds) || DEFAULT_TOAST_SECONDS) * 1000);
+  }
 
   // Protocol activation lets the main process open the selected game.
   const activation = buildActivation(message);
@@ -129,7 +158,7 @@ module.exports = async (message, options) => {
 
   if (soundFile) {
     const queueDelay = Math.max(0, Number(message.delay) || 0) * TOAST_QUEUE_SOUND_DELAY_MS;
-    // PowerShell caps toast volume at 100%.
+    // Toast sounds play at 100% at most.
     const volume = mediaPlayerVolume(options.toast.volume);
     soundPlayer.play(soundFile, { delayMs: queueDelay, volume }).catch((e) => {
       const debug = require('../../util/log.js');
@@ -142,3 +171,8 @@ module.exports.buildToastNotification = buildToastNotification;
 module.exports.buildActivation = buildActivation;
 module.exports.setUrgentUnlocks = setUrgentUnlocks;
 module.exports.isUrgent = isUrgent;
+module.exports.urgentScenarioSupported = urgentScenarioSupported;
+// Tests pin the Windows build, which on a CI runner predates the urgent scenario.
+module.exports._setUrgentSupported = (supported) => {
+  urgentSupported = supported === true;
+};

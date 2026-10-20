@@ -121,6 +121,15 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Screenshots on Windows 10.** Every screenshot souvenir failed there with "Toggling the capture
   border is not supported": AW asked Windows to hide the capture border, which only Windows 11 can
   do. Windows 10 now takes the shot another way, which draws no border at all.
+- **Notifications over fullscreen games.** On Automatic, an unlock in a fullscreen game now shows as
+  a Windows notification drawn over the game, with your sound, without taking the game's focus, and
+  it closes after the usual time. A game in legacy exclusive mode still lets nothing through: the
+  notification waits in Notification Center, and borderless mode in the game brings it back.
+- **Popups on the game's screen.** With several screens, a popup appears on the screen of the game
+  you are playing instead of the one under the mouse. A custom position keeps its place there.
+- **No PowerShell behind notifications.** A Windows notification with your own sound, and the square
+  game picture of the playtime notification, no longer start PowerShell, which some antivirus
+  programs block. The app plays the sound itself, as it does for popups.
 - **A random game tracked next to games launched through Steam.** Starting a game from a Steam
   shortcut (Playnite's, for one) also starts the Steam overlay, and AW could file that overlay under
   another game it found in the Steam folder, then count playtime for both. Steam's own programs are

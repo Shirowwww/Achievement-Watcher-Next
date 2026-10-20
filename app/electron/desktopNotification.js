@@ -115,7 +115,8 @@ function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {
       AppUserModelID. The XML carries everything: artwork, progress, scenario, and the protocol
       launch that opens the game, which Windows runs itself. Resolves whether Windows took it.
     */
-    async showToastXml(toastXml) {
+    // `hideAfterMs` closes a toast that would otherwise stay on screen (a reminder over a game).
+    async showToastXml(toastXml, { hideAfterMs = 0 } = {}) {
       if (!(await usable())) return { ok: false, reason: 'notifications are not supported here' };
       return new Promise((resolve) => {
         const notification = new Notification({ toastXml: String(toastXml || '') });
@@ -126,7 +127,10 @@ function createDesktopNotifier({ Notification, onClick = () => {}, log = () => {
         if (typeof expiry.unref === 'function') expiry.unref();
         notification.on('close', release);
         notification.on('click', release);
-        notification.on('show', () => resolve({ ok: true }));
+        notification.on('show', () => {
+          if (hideAfterMs > 0) setTimeout(() => notification.close(), hideAfterMs);
+          resolve({ ok: true });
+        });
         notification.on('failed', (_event, error) => {
           release();
           resolve({ ok: false, reason: String(error || 'failed') });

@@ -39,7 +39,15 @@ const ECHO_SOUNDS = {
   NO_SOUND: '__none__',
 };
 
-function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, sounds = null, gameSound = '', suppressed = false, urgent = false, showToast = null } = {}) {
+// `fullscreen`: false (no game), true (a game with fullscreen optimizations), null (unreadable), or
+// a FULLSCREEN_KIND string. `gameDisplay` is the centre of the game's display, given with several.
+function fullscreenKindOf(fullscreen) {
+  if (fullscreen === true) return 'optimized';
+  if (fullscreen === false) return 'none';
+  return fullscreen;
+}
+
+function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, gameDisplay = null, sounds = null, gameSound = '', suppressed = false, urgent = false, showToast = null } = {}) {
   const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [], shots: [] };
 
   const stubs = {
@@ -62,8 +70,10 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     '../websocket.js': { broadcast: (payload) => calls.broadcasts.push(payload), isDeckyListening: () => false },
     '../queryUserNotificationState.js': {
       arePopupsSuppressed: async () => suppressed,
-      isOverlayLikelyHidden: async () => fullscreen,
+      fullscreenKind: async () => fullscreenKindOf(fullscreen),
+      FULLSCREEN_KIND: require('../queryUserNotificationState.js').FULLSCREEN_KIND,
     },
+    '../util/gameDisplay.js': { gameDisplayCenter: () => gameDisplay },
     './transportPolicy.js': policy,
     '../util/transportMemory.js': transportMemory,
     // The real registry, with a wait short enough that the "no answer at all" case does not make the
@@ -177,6 +187,40 @@ test('Automatic uses a Windows notification while the game holds exclusive fulls
   await notify(unlock(), options('auto'));
   assert.equal(calls.overlays.length, 0);
   assert.equal(calls.toasts.length, 1);
+});
+
+test('a toast over a fullscreen-optimized game breaks through and counts as seen', async () => {
+  const { notify, calls } = loadToaster({ fullscreen: true, suppressed: true });
+  await notify(unlock(), options('auto'));
+  assert.equal(calls.toasts.length, 1);
+  assert.equal(calls.toasts[0][1].toast.breakthrough, true);
+  assert.equal(transportMemory.entryForGame('480').outcome, 'delivered');
+});
+
+// The popup used to open on the display under the cursor, which is not always the game's.
+test('with several displays the popup is sent to the game display', async () => {
+  const several = loadToaster({ gameDisplay: { x: -540, y: 960 } });
+  await several.notify(unlock(), options('overlay'));
+  assert.ok(several.calls.overlays[0].includes('--gameDisplayAt=-540,960'));
+
+  const single = loadToaster({ gameDisplay: null });
+  await single.notify(unlock(), options('overlay'));
+  assert.equal(single.calls.overlays[0].some((arg) => String(arg).startsWith('--gameDisplayAt=')), false);
+});
+
+test('legacy exclusive mode records even a priority toast as kept back', async () => {
+  const { notify, calls } = loadToaster({ fullscreen: 'exclusive', suppressed: true, urgent: true });
+  await notify(unlock(), options('auto'));
+  assert.equal(calls.overlays.length, 0);
+  assert.equal(calls.toasts[0][1].toast.breakthrough, false);
+  assert.equal(transportMemory.entryForGame('480').outcome, 'suppressed');
+});
+
+// A reminder stays until dismissed and only the app can hide it, so without the app it is not used.
+test('a toast breaks through only when the app is there to hide it', async () => {
+  const { notify, calls } = loadToaster({ overlayHost: 'spawn', fullscreen: true });
+  await notify(unlock(), options('toast'));
+  assert.equal(calls.toasts[0][1].toast.breakthrough, false);
 });
 
 test('Windows notification mode never reaches the overlay, fullscreen or not', async () => {

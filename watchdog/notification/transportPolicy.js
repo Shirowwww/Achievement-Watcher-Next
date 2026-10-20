@@ -27,6 +27,10 @@ const REASON = {
   STEAM_TOAST: 'steam-toast',
 };
 
+// Game states (queryUserNotificationState FULLSCREEN_KIND) where Windows holds back an ordinary
+// toast but still draws a reminder or urgent one over the game.
+const BREAKTHROUGH_KINDS = ['optimized', 'd3d'];
+
 let overlayFailedAt = 0;
 
 function normalizeMode(mode) {
@@ -48,13 +52,20 @@ function isOverlayCoolingDown(now = Date.now()) {
 }
 
 // `websocket` is the user's broadcast setting, independent of the display transport - external
-// clients keep receiving unlocks whichever popup the user sees. Returns { overlay, toast, websocket,
-// fallbackToToast, reason }; `fallbackToToast` authorizes ONE toast, and only when the overlay
-// reports a definite failure, so a fallback can never race the primary transport into a duplicate.
+// clients keep receiving unlocks whichever popup the user sees. `fallbackToToast` authorizes ONE
+// toast, and only when the overlay reports a definite failure, so a fallback can never race the
+// primary transport into a duplicate. `breakthrough` asks for a toast Windows shows over a game.
 function planDelivery({ mode, websocket = false, signals = {}, now = Date.now() } = {}) {
   const chosen = normalizeMode(mode);
   const broadcast = websocket === true || chosen !== 'toast';
-  const plan = { overlay: false, toast: false, websocket: broadcast, fallbackToToast: false, reason: REASON.OVERLAY };
+  const plan = {
+    overlay: false,
+    toast: false,
+    websocket: broadcast,
+    fallbackToToast: false,
+    breakthrough: BREAKTHROUGH_KINDS.includes(signals.fullscreen),
+    reason: REASON.OVERLAY,
+  };
 
   // Steam's Game Mode displays no system notification at all. The Decky plugin's Steam toast is
   // always drawn there; otherwise the overlay is the only popup there is.
@@ -77,6 +88,8 @@ function planDelivery({ mode, websocket = false, signals = {}, now = Date.now() 
   // is defined by acting on observed outcomes - so it uses the transport it can account for.
   if (signals.overlayHost !== 'ipc') return { ...plan, toast: true, reason: REASON.OVERLAY_UNAVAILABLE };
   if (isOverlayCoolingDown(now)) return { ...plan, toast: true, reason: REASON.OVERLAY_FAILING };
+  // A fullscreen game hides the popup. Its toast breaks through under fullscreen optimizations; in
+  // legacy exclusive mode nothing does, and it lands in Notification Center with its sound.
   if (signals.overlayHidden === true) return { ...plan, toast: true, reason: REASON.FULLSCREEN_HIDDEN };
   // Only with no live answer does what happened last time in this game count for anything.
   if (signals.overlayHidden == null && signals.remembered === 'toast') {

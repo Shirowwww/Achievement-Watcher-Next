@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const state = require(path.join(__dirname, '..', 'queryUserNotificationState.js'));
 
-function loadStateModuleWithFakeQuery(now, query, platform = 'win32') {
+function loadStateModuleWithFakeQuery(now, query, platform = 'win32', ownership = null) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'queryUserNotificationState.js'), 'utf8');
   const module = { exports: {} };
   const loadModule = new Function('require', 'module', 'exports', 'process', 'Date', source);
@@ -17,9 +17,31 @@ function loadStateModuleWithFakeQuery(now, query, platform = 'win32') {
     throw new Error(`Unexpected module request: ${request}`);
   }, module, module.exports, { platform }, { now });
 
-  module.exports._setReader(query);
+  module.exports._setReader(query, ownership);
   return module.exports;
 }
+
+// QUNS_RUNNING_D3D_FULL_SCREEN is answered both for a game composed by DWM (fullscreen
+// optimizations, where a reminder toast shows) and for one that owns its display (where nothing
+// does); gdi32's exclusive-ownership check is what tells them apart.
+test('the kind of fullscreen separates optimized from legacy exclusive mode', async () => {
+  const kind = (query, ownership) => loadStateModuleWithFakeQuery(() => 0, query, 'win32', ownership).fullscreenKind();
+  assert.equal(await kind(() => 3, () => true), 'exclusive');
+  assert.equal(await kind(() => 3, () => false), 'optimized');
+  assert.equal(await kind(() => 3, () => {
+    throw new Error('no gdi32');
+  }), 'd3d');
+  assert.equal(await kind(() => 2, () => true), 'none', 'a borderless game is not a fullscreen one');
+  assert.equal(await kind(() => 5, () => true), 'none');
+  assert.equal(await kind(() => {
+    throw new Error('shell32 failed');
+  }, () => true), null, 'an unreadable state stays unknown');
+});
+
+test('off Windows there is never a fullscreen game to work around', async () => {
+  const linux = loadStateModuleWithFakeQuery(() => 0, () => 3, 'linux', () => true);
+  assert.equal(await linux.fullscreenKind(), 'none');
+});
 
 // The query used to start PowerShell and compile a C# import with csc.exe on every notification,
 // which antivirus behaviour engines flag. It is a direct native call now, and must stay one.
@@ -92,7 +114,7 @@ test('on Linux nothing is queried and the overlay is not predicted hidden', asyn
     return 3;
   }, 'linux');
   assert.strictEqual(await linux.queryUserNotificationState(), null);
-  assert.strictEqual(await linux.isOverlayLikelyHidden(), false);
+  assert.strictEqual(await linux.fullscreenKind(), 'none');
   assert.strictEqual(await linux.arePopupsSuppressed(), false);
   assert.strictEqual(queries, 0);
 });

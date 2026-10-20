@@ -49,7 +49,17 @@ function canAppShowToast(options, { send, connected, appAumid }) {
   return typeof send === 'function' && connected === true && Boolean(appAumid) && options.aumid === appAumid;
 }
 
-function showThroughApp(xml, send, timeoutMs) {
+// A reminder stays on screen until dismissed, and only the app can hide it on time. Shown any other
+// way it becomes an ordinary toast again.
+function withoutReminder(options) {
+  if (options.scenario !== 'reminder') return options;
+  const plain = { ...options };
+  delete plain.scenario;
+  delete plain.button;
+  return plain;
+}
+
+function showThroughApp(xml, send, timeoutMs, hideAfterMs = 0) {
   appToastSequence += 1;
   const id = `${process.pid}-${appToastSequence}`;
   return new Promise((resolve, reject) => {
@@ -64,7 +74,7 @@ function showThroughApp(xml, send, timeoutMs) {
       else reject(new Error(`Windows did not show the toast: ${result.reason || 'no reason given'}`));
     });
     try {
-      send({ windowsToast: { id, xml } });
+      send({ windowsToast: hideAfterMs > 0 ? { id, xml, hideAfterMs } : { id, xml } });
     } catch (err) {
       reportAppToast({ id, ok: false, reason: err.message || String(err) });
     }
@@ -95,10 +105,12 @@ async function toast(
   // powertoast reads `disableWinRT` from the show() options, not from the constructor options.
   // Splitting it here is what actually makes the "use PowerShell" fallback controllable; callers
   // that set `disableWinRT` on the payload were silently ignored before.
-  const { disableWinRT, ...toastOptions } = normalizeToastOptions(options);
+  const { disableWinRT, hideAfterMs, ...toastOptions } = normalizeToastOptions(options);
   const { Toast, toXmlString } = await load();
-  if (canAppShowToast(toastOptions, { send, connected, appAumid })) return showThroughApp(toXmlString(toastOptions), send, timeoutMs);
-  return new Toast(toastOptions).show({ disableWinRT: !!disableWinRT });
+  if (canAppShowToast(toastOptions, { send, connected, appAumid })) {
+    return showThroughApp(toXmlString(toastOptions), send, timeoutMs, Number(hideAfterMs) || 0);
+  }
+  return new Toast(withoutReminder(toastOptions)).show({ disableWinRT: !!disableWinRT });
 }
 
 toast.isWinRTAvailable = async () => process.platform === 'win32' && Boolean((await load()).isWinRTAvailable);
@@ -108,3 +120,4 @@ module.exports.normalizeToastOptions = normalizeToastOptions;
 module.exports.desktopNotificationPayload = desktopNotificationPayload;
 module.exports.canAppShowToast = canAppShowToast;
 module.exports.reportAppToast = reportAppToast;
+module.exports.withoutReminder = withoutReminder;

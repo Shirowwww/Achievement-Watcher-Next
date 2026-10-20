@@ -2705,6 +2705,7 @@ function handleMonitorMessage(msg) {
     else if (msg && msg.achievementProgress) forwardProgressToLibrary(msg.achievementProgress);
     else if (msg && msg.desktopNotification) desktopNotifier().show(msg.desktopNotification);
     else if (msg && msg.windowsToast) showMonitorToast(msg.windowsToast);
+    else if (msg && msg.playSound) toastSoundPlayer().play(msg.playSound);
     else if (msg && (msg.souvenirCapture || msg.clipRecorder) && process.platform === 'linux') linuxSouvenirs().handle(msg);
   } catch (err) {
     debug.log(`[monitor] message handling failed: ${err.message || err}`);
@@ -2741,13 +2742,21 @@ function desktopNotifier() {
   return cachedDesktopNotifier;
 }
 
+let cachedToastSoundPlayer = null;
+function toastSoundPlayer() {
+  if (!cachedToastSoundPlayer) {
+    cachedToastSoundPlayer = require('./soundPlayer.js').createSoundPlayer({ BrowserWindow, log: (message) => debug.log(message) });
+  }
+  return cachedToastSoundPlayer;
+}
+
 // The Watchdog's Windows toasts are posted from here, under the app's AppUserModelID, so that no
 // toast starts PowerShell (watchdog/util/powertoast.js); the Watchdog waits for this answer.
 async function showMonitorToast(request) {
   const id = String((request && request.id) || '');
   if (!id) return;
   const result = await desktopNotifier()
-    .showToastXml(request.xml)
+    .showToastXml(request.xml, { hideAfterMs: Number(request.hideAfterMs) || 0 })
     .catch((err) => ({ ok: false, reason: err.message || String(err) }));
   if (!result.ok) debug.log(`[notify] Windows did not show the toast: ${result.reason}`);
   if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return;
@@ -5520,6 +5529,7 @@ function openGameFromLaunchArgs(args) {
 const { DEFAULT_PRESET, presetPriority, resolveAvailablePresetName } = require(path.join(__dirname, '../util/notificationPreset.js'));
 const gamePreset = require(path.join(__dirname, '../util/gamePreset.js'));
 const notificationPlacement = require(path.join(__dirname, '../util/notificationPlacement.js'));
+const notificationDisplay = require(path.join(__dirname, '../util/notificationDisplay.js'));
 gamePreset.setUserDataPath(userData);
 
 ipcMain.handle('game-preset:get', (event, appid) => gamePreset.getSettings(appid));
@@ -5625,6 +5635,25 @@ function notificationPlacementArea(customAnchor = null) {
   } catch {}
   const primary = electronScreen.getPrimaryDisplay();
   return primary.bounds || primary.workArea;
+}
+
+// The game's display (`--gameDisplayAt`, sent with several displays): the popup shows where the game
+// is, and a custom position keeps its place relative to the screen when the game is on another one.
+function notificationAreaOnGameDisplay(gameDisplayAt, customAnchor) {
+  const point = notificationDisplay.parsePoint(gameDisplayAt);
+  if (!point) return null;
+  try {
+    const electronScreen = require('electron').screen;
+    // The Watchdog reads physical pixels; windows are placed in DIP.
+    const game = electronScreen.getDisplayNearestPoint(electronScreen.screenToDipPoint(point));
+    if (!customAnchor) return { workArea: game.bounds, customAnchor };
+    const own = electronScreen.getDisplayNearestPoint({ x: Math.round(customAnchor.x), y: Math.round(customAnchor.y) });
+    const anchor = own.id === game.id ? customAnchor : notificationDisplay.moveAnchor(customAnchor, own.bounds, game.bounds);
+    return { workArea: game.bounds, customAnchor: anchor };
+  } catch (err) {
+    debug.log('[overlay-notif] could not read the game display: ' + (err.message || err));
+    return null;
+  }
 }
 
 function notificationDisplayScale(area) {
@@ -5861,7 +5890,9 @@ function createNotificationWindow(data = {}) {
     const savedGameAnchor = gamePositionAppid ? gamePreset.getSettings(gamePositionAppid).customPosition : null;
     customAnchor = requestedAnchor || savedGameAnchor || notificationPlacement.savedAnchor(readOverlayBounds(), data.customAnchor);
   }
-  const workArea = notificationPlacementArea(customAnchor);
+  const onGame = notificationAreaOnGameDisplay(data.gameDisplayAt, customAnchor);
+  if (onGame) customAnchor = onGame.customAnchor;
+  const workArea = onGame ? onGame.workArea : notificationPlacementArea(customAnchor);
   // Scale the host window in both directions, then cap the effective scale to the current work
   // area. This keeps small themes tightly anchored and large themes visible instead of clipping.
   const geometry = notificationBounds.fitNotificationScale({
@@ -6635,6 +6666,7 @@ async function enqueueNotificationFromArgs(args) {
     scale: placement.scale,
     customPosition: placement.customPosition,
     customAnchor: placement.anchor,
+    gameDisplayAt: args.gameDisplayAt != null ? String(args.gameDisplayAt) : '',
     volume: Number.isFinite(Number(ov.notificationVolume)) ? Number(ov.notificationVolume) : 100,
     durationMs: durSec > 0 ? durSec * 1000 : undefined,
     // Playtime notifications pass the game name in both fields. Keeping the dedicated game-name

@@ -1,40 +1,25 @@
 'use strict';
 
 const { execFile } = require('child_process');
-const { resolvePowerShell } = require('./powershell.js');
-const { safeEnv } = require('./safeEnv.js');
 
 function clampVolume(volume) {
   const n = Number(volume);
   return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
 }
 
-function playWindows(filePath, volume, done) {
-  const script = [
-    '$ErrorActionPreference = "Stop";',
-    'Add-Type -AssemblyName PresentationCore;',
-    '$player = New-Object System.Windows.Media.MediaPlayer;',
-    '$player.Open([Uri]::new($env:AW_SOUND_FILE));',
-    '$player.Volume = [Math]::Max(0, [Math]::Min(1, [double]$env:AW_SOUND_VOLUME));',
-    '$player.Play();',
-    'Start-Sleep -Milliseconds 250;',
-    'while (-not $player.NaturalDuration.HasTimeSpan) { Start-Sleep -Milliseconds 50; }',
-    'Start-Sleep -Milliseconds ([Math]::Max(250, [int]$player.NaturalDuration.TimeSpan.TotalMilliseconds));',
-    '$player.Close();',
-  ].join(' ');
-
-  execFile(
-    resolvePowerShell(),
-    ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script],
-    {
-      windowsHide: true,
-      env: safeEnv({
-        AW_SOUND_FILE: filePath,
-        AW_SOUND_VOLUME: String(volume),
-      }),
-    },
-    done
-  );
+// On Windows the app plays the file, as it plays the popup's: a Watchdog starting PowerShell to do
+// it is what antivirus engines block.
+function playThroughApp(filePath, volume, done, { send = process.send && process.send.bind(process), connected = process.connected } = {}) {
+  if (typeof send !== 'function' || connected !== true) {
+    done(new Error('no app to play the sound'));
+    return;
+  }
+  try {
+    send({ playSound: { file: filePath, volume } });
+    done();
+  } catch (err) {
+    done(err);
+  }
 }
 
 // PipeWire's player first, then PulseAudio's (also served by pipewire-pulse): one of the two is on
@@ -60,7 +45,7 @@ function play(filePath, { delayMs = 0, volume = 0.5 } = {}) {
   return new Promise((resolve, reject) => {
     const done = (err) => (err ? reject(err) : resolve());
     const run = () => {
-      if (process.platform === 'win32') playWindows(filePath, volume, done);
+      if (process.platform === 'win32') playThroughApp(filePath, clampVolume(volume), done);
       else playLinux(filePath, clampVolume(volume), done);
     };
 
@@ -70,4 +55,4 @@ function play(filePath, { delayMs = 0, volume = 0.5 } = {}) {
   });
 }
 
-module.exports = { play, LINUX_PLAYERS };
+module.exports = { play, playThroughApp, LINUX_PLAYERS };

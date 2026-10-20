@@ -35,6 +35,35 @@ test('Automatic switches to Windows notifications in exclusive fullscreen', () =
   );
 });
 
+/*
+  Measured on Windows 11 with a D3D11 test game: under fullscreen optimizations Windows holds an
+  ordinary toast back but draws a reminder or urgent one over the game. In legacy exclusive mode
+  nothing from another process reaches the game's display.
+*/
+test('a fullscreen-optimized game gets a toast that breaks through', () => {
+  for (const fullscreen of ['optimized', 'd3d']) {
+    const result = plan('auto', healthy({ overlayHidden: true, fullscreen }));
+    assert.equal(result.toast, true, fullscreen);
+    assert.equal(result.breakthrough, true, fullscreen);
+    assert.equal(result.reason, policy.REASON.FULLSCREEN_HIDDEN, fullscreen);
+  }
+});
+
+test('legacy exclusive mode keeps an ordinary toast, which no scenario would get through', () => {
+  const result = plan('auto', healthy({ overlayHidden: true, fullscreen: 'exclusive' }));
+  assert.equal(result.toast, true);
+  assert.equal(result.overlay, false);
+  assert.equal(result.breakthrough, false);
+});
+
+test('the toast modes break through a fullscreen game too, and nothing else does', () => {
+  assert.equal(plan('toast', healthy({ fullscreen: 'optimized' })).breakthrough, true);
+  assert.equal(plan('both', healthy({ fullscreen: 'd3d' })).breakthrough, true);
+  for (const fullscreen of ['none', 'exclusive', null, undefined]) {
+    assert.equal(plan('toast', healthy({ fullscreen })).breakthrough, false, String(fullscreen));
+  }
+});
+
 // Without the IPC channel the app cannot report what became of a popup. Automatic is defined by
 // acting on observed outcomes, so it uses the transport whose result this process can account for.
 test('Automatic will not use an overlay whose outcome cannot be observed', () => {

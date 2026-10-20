@@ -9,13 +9,16 @@ const { makeSquareIcon } = require('../util/squareIcon.js');
 const notificationSound = require('../util/notificationSound.js');
 const gameSound = require('../util/gameSound.js');
 const { broadcast, isDeckyListening } = require('../websocket.js');
-const { arePopupsSuppressed, isOverlayLikelyHidden } = require('../queryUserNotificationState.js');
+const { arePopupsSuppressed, fullscreenKind, FULLSCREEN_KIND } = require('../queryUserNotificationState.js');
+const { gameDisplayCenter } = require('../util/gameDisplay.js');
 const transportPolicy = require('./transportPolicy.js');
 const transportMemory = require('../util/transportMemory.js');
 const overlayAck = require('./overlayAck.js');
 
 // Long enough for a Windows toast to slide in before the screenshot is taken.
 const SOUVENIR_TOAST_DELAY_MS = 800;
+// Windows' own default for how long a toast stays on screen.
+const DEFAULT_TOAST_SECONDS = 5;
 
 const debug = require('../util/log.js');
 
@@ -38,19 +41,37 @@ function resolveOverlayHost() {
   return typeof process.send === 'function' && process.connected ? 'ipc' : 'spawn';
 }
 
-// Only Automatic pays for the live signals: the forced modes do not act on them.
+/*
+  Only the modes that can send a toast read the game state: it decides whether that toast must break
+  through a fullscreen game, which takes the app to hide it again (powertoast.js), hence the IPC
+  channel. The rest of the live signals are Automatic's alone.
+*/
 async function collectSignals(mode, appid) {
   const signals = {
     overlayHost: resolveOverlayHost(),
     overlayHidden: null,
+    fullscreen: null,
     remembered: null,
     toastHidden: process.env.AW_GAMESCOPE === '1',
     deckyListening: isDeckyListening(),
   };
-  if (signals.toastHidden || mode !== 'auto' || signals.overlayHost !== 'ipc') return signals;
-  signals.overlayHidden = await isOverlayLikelyHidden().catch(() => null);
+  if (signals.toastHidden || mode === 'overlay' || signals.overlayHost !== 'ipc') return signals;
+  signals.fullscreen = await fullscreenKind().catch(() => null);
+  if (mode !== 'auto') return signals;
+  signals.overlayHidden = signals.fullscreen == null ? null : signals.fullscreen !== FULLSCREEN_KIND.NONE;
   signals.remembered = transportMemory.forGame(appid);
   return signals;
+}
+
+// How long Windows keeps a toast on screen (Accessibility > Dismiss notifications after).
+async function toastDurationSeconds() {
+  if (process.platform !== 'win32') return DEFAULT_TOAST_SECONDS;
+  try {
+    const regedit = await loadRegedit();
+    return +regedit.regQueryIntegerValue('HKCU', 'Control Panel/Accessibility', 'MessageDuration') || DEFAULT_TOAST_SECONDS;
+  } catch {
+    return DEFAULT_TOAST_SECONDS;
+  }
 }
 
 function normalizeProgress(progress) {
@@ -184,6 +205,8 @@ module.exports = async (message, option = {}) => {
         imageIntegration: option.toast.imageIntegration || '0',
         group: option.toast.group || false,
         attribution: option.toast.attribution || null,
+        breakthrough: plan.breakthrough,
+        durationSeconds: plan.breakthrough ? await toastDurationSeconds() : DEFAULT_TOAST_SECONDS,
       },
       prefetch: option.prefetch != null ? option.prefetch : true,
       rumble: option.rumble != null ? option.rumble : true,
@@ -261,6 +284,9 @@ module.exports = async (message, option = {}) => {
           if (/^(?:platinum|gold|silver|bronze)$/.test(String(message.trophyGrade || ''))) overlayArgs.push(`--trophyGrade=${message.trophyGrade}`);
           // Some notifications (e.g. playtime) must never play the overlay sound.
           if (message.silent) overlayArgs.push('--silent=1');
+          // With several displays the popup goes to the game's, not to the one under the cursor.
+          const gameDisplay = gameDisplayCenter();
+          if (gameDisplay) overlayArgs.push(`--gameDisplayAt=${gameDisplay.x},${gameDisplay.y}`);
           // Ask for reports only when they can come back (the app renders it over IPC), and only when
           // something uses them: a toast fallback, or a souvenir timed on the popup. The fallback
           // below acts on overlayAckId alone, so a souvenir id never authorizes a second notification.
@@ -371,7 +397,7 @@ module.exports = async (message, option = {}) => {
       }
 
       if (deliverToast) {
-        debug.log('Toast notification');
+        debug.log(`Toast notification - ${plan.reason}${plan.breakthrough ? ', over a fullscreen game' : ''}`);
         try {
           await toast(message, options);
         } catch (err) {
@@ -401,11 +427,13 @@ module.exports = async (message, option = {}) => {
 
         // Windows quietly files a toast in the notification centre while a game or Do Not Disturb is
         // on screen. From the user's side that is a lost notification (#126), so it is recorded as
-        // one, unless the overlay showed it too or it was a priority toast Do Not Disturb lets through.
+        // one, unless the overlay showed it too or it was a priority or reminder toast Windows draws
+        // anyway. A game in legacy exclusive mode lets none of them through.
+        const shownAnyway = (toast.isUrgent(message) || plan.breakthrough) && signals.fullscreen !== FULLSCREEN_KIND.EXCLUSIVE;
         const suppressed =
           outcome === 'delivered' &&
           !plan.overlay &&
-          !toast.isUrgent(message) &&
+          !shownAnyway &&
           (await arePopupsSuppressed().catch((err) => {
             debug.warn(`Could not read the user notification state: ${err.message || err}`);
             return false;
@@ -433,15 +461,7 @@ module.exports = async (message, option = {}) => {
         const xinput = process.platform === 'win32' ? await loadXinput() : require('../util/evdevRumble.js');
         if (xinput) {
           if (!deliverToast) message.delay = 0;
-          // How long Windows keeps a toast on screen; other systems have no such setting, and
-          // loading the registry there throws before the rumble is ever scheduled.
-          let duration = 5;
-          if (process.platform === 'win32') {
-            const regedit = await loadRegedit();
-            try {
-              duration = +regedit.regQueryIntegerValue('HKCU', 'Control Panel/Accessibility', 'MessageDuration') || 5;
-            } catch {}
-          }
+          const duration = await toastDurationSeconds();
           setTimeout(function () {
             debug.log('XInput Rumble');
             xinput.rumble({ forceStateWhileRumble: true }).catch((err) => {
