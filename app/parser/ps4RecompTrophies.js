@@ -267,6 +267,27 @@ function parseTrophyXml(text) {
   return { title: childText(xml, 'title-name'), npcommid: childText(xml, 'npcommid'), trophies };
 }
 
+/*
+  The trophies.tsv a port's runtime writes itself: "#key<TAB>value" header lines (#title), then one
+  "id<TAB>grade<TAB>hidden<TAB>name<TAB>detail" line per trophy. Same shape as parseTrophyXml.
+*/
+function parseTrophyTsv(text) {
+  const trophies = [];
+  const seen = new Set();
+  let title = '';
+  for (const line of String(text || '').split(/\r?\n/)) {
+    const fields = line.split('\t');
+    if (fields[0] === '#title') title = (fields[1] || '').trim();
+    if (fields.length < 4 || !/^\d{1,4}$/.test(fields[0]) || trophies.length >= MAX_TROPHIES) continue;
+    const id = String(Number(fields[0]));
+    const grade = fields[1].trim().toUpperCase();
+    if (!GRADES.has(grade) || seen.has(id)) continue;
+    seen.add(id);
+    trophies.push({ id, grade, hidden: /^(?:1|yes|true)$/i.test(fields[2].trim()), name: fields[3].trim(), detail: (fields[4] || '').trim() });
+  }
+  return trophies.length > 0 ? { title, npcommid: '', trophies } : null;
+}
+
 // The language a TROP document is written in: '' for the set's default (TROP.XML), else AW's name.
 function languageOfDocument(name) {
   const match = DOCUMENT_RE.exec(String(name || ''));
@@ -353,6 +374,7 @@ module.exports = {
   readSfo,
   isTrophyPng,
   parseTrophyXml,
+  parseTrophyTsv,
   languageOfDocument,
   readContainer,
   readExportFolder,

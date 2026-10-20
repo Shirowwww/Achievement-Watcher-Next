@@ -135,6 +135,26 @@ test('a port with no user folder yet is followed until its first trophies.log li
   }
 });
 
+test('a port writing its own trophy list is announced from unlocked.txt', async () => {
+  const root = path.join(temp, 'tsv', 'CTR');
+  const list = fixture.makeTrophyList(path.join(root, 'user'), { unlocked: '21 1792472145\r\n' });
+  writeDb([root]);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fs.appendFileSync(path.join(list, 'unlocked.txt'), '43 1792472177\r\n');
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'a new unlocked.txt line is announced');
+    assert.equal(ctx.sent.length, 1, 'the unlock present at start is not replayed');
+    assert.equal(ctx.sent[0].achievementDisplayName, 'Get off me!');
+    assert.equal(ctx.sent[0].gameDisplayName, 'Crash Team Racing Nitro-Fueled');
+    assert.equal(ctx.sent[0].trophyGrade, 'bronze');
+    assert.equal(ctx.sent[0].time, 1792472177);
+  } finally {
+    watcher.stop();
+  }
+});
+
 test('the source switch turns the watcher off', async () => {
   const root = makeBloodborne('off');
   writeDb([root]);

@@ -216,7 +216,31 @@ function settingsFile(appData, folder, settings) {
   return write(path.join(appData, folder, 'settings.json'), JSON.stringify(settings));
 }
 
+/*
+  The trophy list a port writes itself, as Crash Team Racing Nitro-Fueled does:
+  <user>/trophies/<title id>/trophies.tsv (id, grade, hidden, name, detail) and unlocked.txt
+  ("<id> <unix time>" lines, CRLF in the real file).
+*/
+const TSV_TITLE_ID = 'CUSA13795';
+const TSV_TROPHIES = [
+  ['0', 'P', '0', 'Woah!', 'Earn every other trophy.'],
+  ['1', 'B', '0', 'Off to a Good Start', 'Win your first Adventure race.'],
+  ['2', 'B', '0', 'Crazier than the Ripper', 'Beat Ripper Roo in Adventure.'],
+  ['21', 'B', '1', 'Burning Rubber!', 'Perform 500 Drift Boosts in total.'],
+  ['43', 'B', '0', 'Get off me!', 'Escape a TNT crate.'],
+];
+
+function makeTrophyList(userDir, { titleId = TSV_TITLE_ID, unlocked } = {}) {
+  const titleDir = path.join(userDir, 'trophies', titleId);
+  const rows = TSV_TROPHIES.map((row) => row.join('\t'));
+  write(path.join(titleDir, 'trophies.tsv'), ['#source\tbuiltin', '#lang\t1', '#title\tCrash Team Racing Nitro-Fueled', ...rows, ''].join('\n'));
+  if (unlocked !== undefined) write(path.join(titleDir, 'unlocked.txt'), unlocked);
+  return titleDir;
+}
+
 module.exports = {
+  TSV_TITLE_ID,
+  makeTrophyList,
   TEST_KEY,
   NPCOMMID,
   TITLE_ID,

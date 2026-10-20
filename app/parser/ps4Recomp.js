@@ -3,6 +3,7 @@
 /*
   PC ports of PS4 games built on the run.py runner. The launcher's settings.json names the original
   game dump (game_dir), whose trophy list is read, and the user folder holding the unlock logs.
+  Other ports write the list themselves, in <user>/trophies/<title id>/trophies.tsv beside unlocked.txt.
   Scripts are only ever read for literal values, never run. Synchronous and dependency-free: the
   Watchdog loads this file through sharedAppModule.
 */
@@ -19,7 +20,11 @@ const TYPE = 'ps4recomp';
 const RUNNER = 'run.py';
 const TROPHIES_LOG = 'trophies.log';
 const LAST_RUN_LOG = 'last_run.log';
-const LOG_FILES = [TROPHIES_LOG, LAST_RUN_LOG];
+const UNLOCKED_LIST = 'unlocked.txt';
+const TROPHY_LIST = 'trophies.tsv';
+const RUNNER_LOGS = [TROPHIES_LOG, LAST_RUN_LOG];
+const LOG_FILES = [...RUNNER_LOGS, UNLOCKED_LIST];
+const TITLE_ID = /^[A-Z]{4}\d{5}$/;
 
 const MAX_SCRIPT_BYTES = 512 * 1024;
 const MAX_LAUNCHER_SOURCE_BYTES = 256 * 1024;
@@ -30,6 +35,7 @@ const MAX_DUMP_DEPTH = 2;
 const MAX_DUMP_DIRECTORIES = 128;
 const SKIP_DIRECTORIES = /^(?:bin|out|_internal|launcher|user|node_modules|\.git|sce_sys|\$recycle\.bin|windows)$/i;
 const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
+const LIST_PORT = { port: 'tsv', launcher: '', settings: '', env: '', marker: '' };
 
 // `env` is the prefix of the runner's <PREFIX>_GAME_DIR / _DATA_DIR / _USER_DIR variables.
 const PORTS = [
@@ -240,7 +246,7 @@ function resolveDirs(root, port, settings, script) {
   const bases = { PORT: root, data: dataDir, DATA: dataDir };
   const gameDir = pick('GAME_DIR', 'game_dir', bases);
   const explicitUser = pick('USER_DIR', 'user_dir', bases);
-  const logsInData = port.port === 'generic' && LOG_FILES.some((name) => isRegularFile(path.join(dataDir, name)));
+  const logsInData = port.port === 'generic' && RUNNER_LOGS.some((name) => isRegularFile(path.join(dataDir, name)));
   return { gameDir, dataDir, userDir: explicitUser || (logsInData ? dataDir : path.join(dataDir, 'user')) };
 }
 
@@ -263,6 +269,20 @@ function findDump(root) {
   return found.length === 1 ? found[0] : '';
 }
 
+// <title id> folders holding a trophies.tsv, whether `dir` is the game, its user or trophies folder, or one title.
+function titleFolders(dir) {
+  const isTitleFolder = (folder) => TITLE_ID.test(path.basename(folder)) && isRegularFile(path.join(folder, TROPHY_LIST));
+  if (isTitleFolder(dir)) return [dir];
+  for (const parent of [path.join(dir, 'user', 'trophies'), path.join(dir, 'trophies'), dir]) {
+    const found = readDirectory(parent)
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(parent, entry.name))
+      .filter(isTitleFolder);
+    if (found.length > 0) return found;
+  }
+  return [];
+}
+
 /*
   The port installs at or below a folder the user added. A port is a game of its own, never a
   library: nothing below one is searched.
@@ -273,7 +293,7 @@ function findInstallations(dir) {
   let visited = 0;
   while (queue.length && visited++ < MAX_INSTALL_DIRECTORIES) {
     const current = queue.shift();
-    const port = identifyPort(current.dir);
+    const port = identifyPort(current.dir) || (titleFolders(current.dir).length > 0 ? LIST_PORT : null);
     if (port) {
       installs.push({ root: current.dir, port });
       continue;
@@ -320,10 +340,14 @@ function appidOf(identity) {
   return `ps4recomp-${identity}`;
 }
 
+function launcherExe(root, port) {
+  return port.launcher && hasFileNamed(root, port.launcher) ? path.join(root, port.launcher) : '';
+}
+
 function gameTargets(install, dirs, identity, sets) {
   const { root, port } = install;
   const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: dirs.userDir };
-  const exe = port.launcher && hasFileNamed(root, port.launcher) ? path.join(root, port.launcher) : '';
+  const exe = launcherExe(root, port);
   if (port.games) {
     return port.games
       .filter((entry) => sets.has(entry.slot))
@@ -341,17 +365,45 @@ function gameTargets(install, dirs, identity, sets) {
   const npcommid = identity.bindings.get(slot) || '';
   const id = npcommid || identity.titleId;
   if (!id) return [];
-  return [{ appid: appidOf(id), ...base, game: '', title: identity.title, slot, npcommid, exe, logs: LOG_FILES.slice() }];
+  return [{ appid: appidOf(id), ...base, game: '', title: identity.title, slot, npcommid, exe, logs: RUNNER_LOGS.slice() }];
 }
 
-// Every game of every port at or below `dir` whose trophy list can be read from its original dump.
+function readTrophyList(file) {
+  return formats.parseTrophyTsv(readText(file, formats.MAX_SMALL_BYTES));
+}
+
+// One game per trophies.tsv the port wrote: its title folder is the user folder watched.
+function listTargets(install, dirs) {
+  const { root, port } = install;
+  const folders = titleFolders(port === LIST_PORT ? root : dirs.userDir);
+  const exe = launcherExe(root, port);
+  return folders.flatMap((folder) => {
+    const file = path.join(folder, TROPHY_LIST);
+    const list = readTrophyList(file);
+    if (!list) return [];
+    const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: folder };
+    return [{ appid: appidOf(path.basename(folder)), ...base, game: '', title: list.title, slot: 0, npcommid: '', exe, logs: [UNLOCKED_LIST], trophyList: file }];
+  });
+}
+
+function installDirs(install) {
+  if (install.port === LIST_PORT) return { gameDir: '', dataDir: install.root, userDir: '' };
+  const script = readText(path.join(install.root, RUNNER), MAX_SCRIPT_BYTES);
+  const dirs = resolveDirs(install.root, install.port, launcherSettings(install.root, install.port).values, script);
+  return dirs.gameDir ? dirs : { ...dirs, gameDir: findDump(install.root) };
+}
+
+// Every game of every port at or below `dir` whose trophy list can be read: its own, else its original dump's.
 function discover(dir) {
   const games = [];
   for (const install of findInstallations(dir)) {
     try {
-      const script = readText(path.join(install.root, RUNNER), MAX_SCRIPT_BYTES);
-      const dirs = resolveDirs(install.root, install.port, launcherSettings(install.root, install.port).values, script);
-      if (!dirs.gameDir) dirs.gameDir = findDump(install.root);
+      const dirs = installDirs(install);
+      const listed = listTargets(install, dirs);
+      if (listed.length > 0) {
+        games.push(...listed);
+        continue;
+      }
       const sets = trophySets(dirs.gameDir, install.root);
       if (sets.size === 0) {
         debug.log(`[ps4recomp] '${install.root}': no trophy data, the launcher must point at the original game`);
@@ -375,7 +427,7 @@ function scan(dir) {
 
 // The logs a record reads: the collection's only carries its game in last_run.log.
 function logNames(info) {
-  const wanted = Array.isArray(info.logs) ? info.logs : info.game ? [LAST_RUN_LOG] : LOG_FILES;
+  const wanted = Array.isArray(info.logs) ? info.logs : info.game ? [LAST_RUN_LOG] : RUNNER_LOGS;
   return wanted.filter((name) => LOG_FILES.includes(name));
 }
 
@@ -445,8 +497,12 @@ function containerOf(files, info, key) {
   return container && container.documents.size > 0 ? container : null;
 }
 
-// The trophy list of a record's set: a decrypted export when there is one, else the dump's .trp.
+// The trophy list of a record's set: the port's own trophies.tsv, a decrypted export, else the dump's .trp.
 function loadTrophySet(info) {
+  if (info.trophyList) {
+    const list = readTrophyList(String(info.trophyList));
+    return list ? { documents: new Map([['', list]]), icons: new Map(), icon0: null } : null;
+  }
   const set = trophySets(info.dumpDir, info.installRoot).get(Number(info.slot));
   if (!set) return null;
   const key = formats.readKeyFile(path.join(String(info.installRoot || ''), 'trophy.key')) || formats.RETAIL_TROPHY_KEY;

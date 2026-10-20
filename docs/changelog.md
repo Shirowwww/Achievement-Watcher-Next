@@ -37,7 +37,8 @@ renamed in 3.9.0 and the history is kept under one file.
   III Remastered, MediEvil and other ports run by the same runner are a new source, PS4 Recomp, in
   Settings > Sources. Add the port's folder under Folders: the trophy list, grades and icons come
   from the original game dump the port points to, and each trophy the port logs pops a
-  notification.
+  notification. Ports that keep their own trophy list in their user folder, such as Crash Team
+  Racing Nitro-Fueled, need no dump: add the game's folder and its trophies show up.
 - **Link's Awakening DX HD.** The PC port of The Legend of Zelda: Link's Awakening DX HD (the
   "Updated" LADXHD build) is a new source, PC Port. Add the folder that holds the game under
   Folders: its 110 achievements show with their icons, in your language when the game has it, and

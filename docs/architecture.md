@@ -169,7 +169,7 @@ A source with its own identity (a store, a console emulator) is a parser of its 
 `app/parser/achievements.js` and a watcher of its own in `watchdog/console/` or `watchdog.js`;
 the existing ones (`xlln.js`, `rpcs3.js`, `shadps4.js` and their watchers) are the models.
 
-Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, RetroAchievements, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, KytyPS5, Xenia, Xbox 360 recompilations, PC ports of PS4 games (PS4 Recomp: the dump's trophy set, the port's `trophies.log` and `last_run.log`), XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and a newer official/local parser.
+Current integrations include Steam (legit client and emulator saves), Goldberg/GBE-compatible saves, Goldberg SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, RetroAchievements, GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, KytyPS5, Xenia, Xbox 360 recompilations, PC ports of PS4 games (PS4 Recomp: the dump's trophy set, the port's `trophies.log` and `last_run.log`, or its own `trophies.tsv` and `unlocked.txt`), XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and a newer official/local parser.
 
 ## Important components
 

@@ -183,6 +183,53 @@ test('the Uncharted collection gets one entry per game, unlocks split by the gam
   assert.equal(logs.gameFromText('Switching to big3-ps4_Shipping.elf'), 'u3');
 });
 
+test('a port that writes its own trophy list is read from its user folder, no dump needed', async () => {
+  const root = dir('tsv', 'CTR');
+  fixture.write(path.join(root, 'CTR.exe'), 'MZ');
+  const list = fixture.makeTrophyList(path.join(root, 'user'), { unlocked: '21 1792472145\r\n43 1792472177\r\n2 1792472243\r\n' });
+
+  const [record] = ps4Recomp.scan(dir('tsv'));
+  assert.equal(record.appid, `ps4recomp-${fixture.TSV_TITLE_ID}`);
+  assert.equal(record.data.userDir, list, 'the title folder is the one watched');
+  assert.deepEqual(record.data.logs, ['unlocked.txt']);
+  assert.equal(record.data.installRoot, root);
+
+  const game = await ps4Recomp.getGameData(record.data);
+  assert.equal(game.name, 'Crash Team Racing Nitro-Fueled');
+  assert.equal(game.system, 'playstation');
+  assert.equal(game.achievement.total, 5);
+  const byId = new Map(game.achievement.list.map((trophy) => [trophy.name, trophy]));
+  assert.equal(byId.get('0').type, 'P');
+  assert.equal(byId.get('43').displayName, 'Get off me!');
+  assert.equal(byId.get('43').description, 'Escape a TNT crate.');
+  assert.equal(byId.get('21').hidden, 1);
+  assert.equal(byId.get('1').hidden, 0);
+
+  const unlocked = ps4Recomp.getAchievements(record.data);
+  assert.deepEqual(unlocked.map((u) => [u.id, u.earned_time]), [['21', 1792472145], ['43', 1792472177], ['2', 1792472243]], 'CRLF lines are read');
+});
+
+test('a trophy list is found from the user or trophies folder itself, and before any unlock', () => {
+  const user = dir('tsvdirs', 'Game', 'user');
+  const list = fixture.makeTrophyList(user);
+  for (const added of [user, path.join(user, 'trophies'), list]) {
+    const records = ps4Recomp.scan(added);
+    assert.equal(records.length, 1, added);
+    assert.equal(records[0].data.userDir, list);
+  }
+  assert.deepEqual(ps4Recomp.getAchievements(ps4Recomp.scan(list)[0].data), [], 'no unlocked.txt yet is nothing unlocked');
+  fixture.makeTrophyList(dir('tsvdirs', 'Other', 'user'), { titleId: 'NOTATITLE' });
+  assert.deepEqual(ps4Recomp.scan(dir('tsvdirs', 'Other')), [], 'a folder not named like a title id is ignored');
+});
+
+test('a run.py port whose runtime writes a trophy list needs no dump', () => {
+  const root = fixture.makePort(dir('tsvport', 'Port'), 'generic', { script: "run(['--app0', game])\n" });
+  fixture.write(path.join(root, 'settings.json'), JSON.stringify({ user_dir: 'profile' }));
+  const list = fixture.makeTrophyList(path.join(root, 'profile'));
+  const records = ps4Recomp.scan(root);
+  assert.deepEqual(records.map((r) => [r.appid, r.data.userDir]), [[`ps4recomp-${fixture.TSV_TITLE_ID}`, list]]);
+});
+
 test('Settings > Folders accepts a port folder, and a folder inside it as the port itself', async () => {
   const userDir = require(path.join(__dirname, '..', '..', 'app', 'parser', 'userDir.js'));
   const root = fixture.makePort(dir('folders', 'MediEvil Port'), 'medievil');

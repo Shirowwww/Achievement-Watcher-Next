@@ -161,7 +161,8 @@ function parseLastRunLog(lines) {
   return unlocks;
 }
 
-const PARSERS = { 'trophies.log': parseTrophiesLog, 'last_run.log': parseLastRunLog };
+// unlocked.txt, beside a trophies.tsv, has the lines of trophies.log.
+const PARSERS = { 'trophies.log': parseTrophiesLog, 'last_run.log': parseLastRunLog, 'unlocked.txt': parseTrophiesLog };
 
 function parseLog(name, lines) {
   const parser = PARSERS[String(name).toLowerCase()];
