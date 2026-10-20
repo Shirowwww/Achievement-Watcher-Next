@@ -103,6 +103,7 @@ const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, ex
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
+const { rareCutoff } = require('./util/rareCutoff.js');
 const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
 const { configuredExecutable } = require('./util/exeList.js');
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
@@ -301,7 +302,7 @@ function startXboxPolling(game) {
             achievementName: id,
             achievementDisplayName: (ach && ach.displayName) || id,
             achievementDescription: (ach && ach.description) || '',
-            rarityPercent: rounded !== null && rounded >= 0 && rounded <= 15 ? rounded : null,
+            rarityPercent: rounded !== null && rounded >= 0 && rounded <= rareCutoff(app.options) ? rounded : null,
             icon: (ach && ach.icon) || '',
             gameIcon: (schema && schema.img && schema.img.portrait) || '',
             image: (schema && schema.img && schema.img.header) || '',
@@ -1379,11 +1380,12 @@ var app = {
                         debug.error(`Action failed: ${err}`);
                       }
 
-                      // Use the same one-decimal rounding and <=15% cutoff as the achievement menu,
+                      // Use the same one-decimal rounding and rare cutoff as the achievement menu,
                       // then forward the percentage so overlay presets can apply the matching tier.
                       const rarePct = rarityMap.get(ach.name);
                       const rounded = Math.round(rarePct * 10) / 10;
-                      const isRare = Number.isFinite(rounded) && rounded >= 0 && rounded <= 15;
+                      const knownRate = Number.isFinite(rounded) && rounded >= 0;
+                      const isRare = knownRate && rounded <= rareCutoff(self.options);
                       const rarityLabel = notifyStrings.interpolate(
                         notifyStrings.forLang(self.options.achievement.lang).rare,
                         { percent: rounded }

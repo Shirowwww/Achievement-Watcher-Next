@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Trofeo de plata por debajo de",
           "description": "En el modo trofeos, los logros por debajo de este porcentaje obtienen plata; el resto, o los que no tienen porcentaje conocido, obtienen bronce."
+        },
+        "thresholds": {
+          "name": "Umbrales de rareza",
+          "description": "Predeterminado mantiene 5 %, 10 % y 15 % para los niveles raros, y 20 % y 50 % para el modo trofeos. Personalizado permite cambiarlos.",
+          "default": "Predeterminado",
+          "custom": "Personalizado"
+        },
+        "rareGoldMax": {
+          "name": "Oro hasta",
+          "description": "En los niveles raros, los logros desbloqueados por este porcentaje de jugadores o menos obtienen oro."
+        },
+        "rareSilverMax": {
+          "name": "Plata hasta",
+          "description": "En los niveles raros, los logros hasta este porcentaje obtienen plata. Debe quedar entre los límites de oro y raro; de lo contrario, los tres vuelven a sus valores predeterminados."
+        },
+        "rareMax": {
+          "name": "Raro hasta",
+          "description": "Hasta este porcentaje un logro es raro: obtiene bronce, la notificación rara y su sonido. Por encima, nada lo marca."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Dónde aparece el popup overlay en el juego en la pantalla",
         "overlayScale": "Tamaño",
         "overlayScaleDesc": "Tamaño del popup overlay en el juego",
+        "overlayOpacity": "Opacidad",
+        "overlayOpacityDesc": "Cuán transparente es el popup en el juego. 100 % es totalmente opaco.",
         "overlayProgressPosition": "Posición del progreso",
         "overlayProgressPositionDesc": "Dónde aparecen los popups de progreso (los +1 de progreso).",
         "overlayProgressScale": "Tamaño del progreso",

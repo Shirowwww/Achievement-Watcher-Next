@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "은 트로피 기준(미만)",
           "description": "트로피 모드에서 이 비율 미만인 도전 과제는 은을 받고, 나머지나 달성률을 모르는 것은 동을 받습니다."
+        },
+        "thresholds": {
+          "name": "희귀도 기준",
+          "description": "기본값은 희귀 단계에 5%, 10%, 15%를, 트로피 모드에 20%, 50%를 유지합니다. 사용자 지정으로 변경할 수 있습니다.",
+          "default": "기본값",
+          "custom": "사용자 지정"
+        },
+        "rareGoldMax": {
+          "name": "금 상한",
+          "description": "희귀 단계에서 이 비율 이하의 플레이어가 달성한 도전 과제는 금을 받습니다."
+        },
+        "rareSilverMax": {
+          "name": "은 상한",
+          "description": "희귀 단계에서 이 비율까지의 도전 과제는 은을 받습니다. 금 상한과 희귀 상한 사이로 유지해야 하며, 그렇지 않으면 세 값 모두 기본값으로 돌아갑니다."
+        },
+        "rareMax": {
+          "name": "희귀 상한",
+          "description": "이 비율까지는 희귀한 도전 과제로 간주되어 동, 희귀 알림과 그 소리를 받습니다. 그 위로는 아무 표시도 없습니다."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "게임 내 오버레이 팝업이 화면의 어디에 나타날지",
         "overlayScale": "크기",
         "overlayScaleDesc": "게임 내 오버레이 팝업의 크기",
+        "overlayOpacity": "불투명도",
+        "overlayOpacityDesc": "게임 내 팝업이 얼마나 비치는지 정합니다. 100%는 완전히 불투명합니다.",
         "overlayProgressPosition": "진행도 위치",
         "overlayProgressPositionDesc": "진행도 팝업(진행도 +1 단계)이 나타나는 위치입니다.",
         "overlayProgressScale": "진행도 크기",

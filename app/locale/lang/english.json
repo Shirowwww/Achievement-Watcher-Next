@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Silver trophy below",
           "description": "In trophy mode, achievements under this rate earn silver; the rest, or those with no known rate, earn bronze."
+        },
+        "thresholds": {
+          "name": "Rarity thresholds",
+          "description": "Default keeps 5%, 10% and 15% for rare tiers, and 20% and 50% for trophy mode. Custom lets you change them.",
+          "default": "Default",
+          "custom": "Custom"
+        },
+        "rareGoldMax": {
+          "name": "Gold up to",
+          "description": "In rare tiers, achievements unlocked by this share of players or fewer earn gold."
+        },
+        "rareSilverMax": {
+          "name": "Silver up to",
+          "description": "In rare tiers, achievements up to this rate earn silver. Keep it between the gold and rare limits, or all three return to their defaults."
+        },
+        "rareMax": {
+          "name": "Rare up to",
+          "description": "Up to this rate an achievement is rare: it gets bronze, the rare notification and its sound. Above it, nothing marks it."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Where the in-game overlay popup appears on screen",
         "overlayScale": "Scale",
         "overlayScaleDesc": "Size of the in-game overlay popup",
+        "overlayOpacity": "Opacity",
+        "overlayOpacityDesc": "How see-through the in-game popup is. 100% is fully opaque.",
         "overlayProgressPosition": "Progress position",
         "overlayProgressPositionDesc": "Where progress popups appear (the +1 progress steps).",
         "overlayProgressScale": "Progress scale",

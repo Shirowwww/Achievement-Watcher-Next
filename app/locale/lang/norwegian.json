@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Sølvtrofé under",
           "description": "I trofémodus får prestasjoner under denne andelen sølv; resten, eller de uten kjent andel, får bronse."
+        },
+        "thresholds": {
+          "name": "Grenser for sjeldenhet",
+          "description": "Standard beholder 5 %, 10 % og 15 % for sjeldne nivåer og 20 % og 50 % for trofémodus. Egendefinert lar deg endre dem.",
+          "default": "Standard",
+          "custom": "Egendefinert"
+        },
+        "rareGoldMax": {
+          "name": "Gull opptil",
+          "description": "I sjeldne nivåer får prestasjoner som denne andelen spillere eller færre har låst opp, gull."
+        },
+        "rareSilverMax": {
+          "name": "Sølv opptil",
+          "description": "I sjeldne nivåer får prestasjoner opptil denne andelen sølv. Hold den mellom gull- og sjeldenhetsgrensen, ellers går alle tre tilbake til standardverdiene."
+        },
+        "rareMax": {
+          "name": "Sjelden opptil",
+          "description": "Opptil denne andelen er en prestasjon sjelden: den får bronse, det sjeldne varselet og lyden. Over den markerer ingenting den."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Hvor popup-vinduet i spilloverlayet vises på skjermen",
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på popup-vinduet i spilloverlayet",
+        "overlayOpacity": "Ugjennomsiktighet",
+        "overlayOpacityDesc": "Hvor gjennomsiktig popup-vinduet i spillet er. 100 % er helt ugjennomsiktig.",
         "overlayProgressPosition": "Plassering av fremgang",
         "overlayProgressPositionDesc": "Hvor popup-vinduene for fremgang vises (fremgangstrinnene på +1).",
         "overlayProgressScale": "Størrelse på fremgang",

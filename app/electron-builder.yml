@@ -74,6 +74,7 @@ asarUnpack:
   # Wine prefixes and the native XDG host (Linux save roots), the presence pipe name, and the
   # registry-free playtime store with the atomic writer it uses.
   - util/winHosts.js
+  - util/rarityTiers.js
   - util/winePrefixes.js
   - util/wineRegistry.js
   # The XDG and Flatpak folders of the Linux emulator builds (RPCS3, shadPS4), and where an RPCS3

@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "银奖杯低于",
           "description": "在奖杯模式下，低于此比例的成就获得银奖杯；其余或比例未知的成就获得铜奖杯。"
+        },
+        "thresholds": {
+          "name": "稀有度阈值",
+          "description": "默认值保留稀有等级的 5%、10%、15%，以及奖杯模式的 20%、50%。自定义可修改它们。",
+          "default": "默认",
+          "custom": "自定义"
+        },
+        "rareGoldMax": {
+          "name": "金级上限",
+          "description": "在稀有等级中，解锁玩家比例不高于此值的成就获得金。"
+        },
+        "rareSilverMax": {
+          "name": "银级上限",
+          "description": "在稀有等级中，不高于此比例的成就获得银。请保持在金级与稀有上限之间，否则三者都会恢复默认值。"
+        },
+        "rareMax": {
+          "name": "稀有上限",
+          "description": "不超过此比例的成就属于稀有：获得铜、稀有通知及其音效。高于此比例则没有任何标记。"
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "游戏内叠加层弹窗在屏幕上的显示位置",
         "overlayScale": "大小",
         "overlayScaleDesc": "游戏内叠加层弹窗的大小",
+        "overlayOpacity": "不透明度",
+        "overlayOpacityDesc": "游戏内弹窗的透明程度。100% 为完全不透明。",
         "overlayProgressPosition": "进度位置",
         "overlayProgressPositionDesc": "进度弹窗（进度的 +1 步骤）出现的位置。",
         "overlayProgressScale": "进度大小",

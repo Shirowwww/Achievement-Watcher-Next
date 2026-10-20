@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Hopeapokaali alle",
           "description": "Pokaalitilassa tämän osuuden alle jäävät saavutukset saavat hopean; muut tai ne, joiden osuutta ei tunneta, saavat pronssin."
+        },
+        "thresholds": {
+          "name": "Harvinaisuusrajat",
+          "description": "Oletus säilyttää 5 %, 10 % ja 15 % harvinaisille tasoille sekä 20 % ja 50 % pokaalitilalle. Mukautettu antaa muuttaa ne.",
+          "default": "Oletus",
+          "custom": "Mukautettu"
+        },
+        "rareGoldMax": {
+          "name": "Kulta enintään",
+          "description": "Harvinaisilla tasoilla kullan saavat saavutukset, jotka tämä osuus pelaajista tai harvempi on avannut."
+        },
+        "rareSilverMax": {
+          "name": "Hopea enintään",
+          "description": "Harvinaisilla tasoilla tähän osuuteen asti olevat saavutukset saavat hopean. Pidä se kulta- ja harvinaisuusrajan välissä, muuten kaikki kolme palaavat oletusarvoihin."
+        },
+        "rareMax": {
+          "name": "Harvinainen enintään",
+          "description": "Tähän osuuteen asti saavutus on harvinainen: se saa pronssin, harvinaisen ilmoituksen ja sen äänen. Sen yläpuolella mikään ei merkitse sitä."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Missä kohtaa näyttöä pelinsisäinen ponnahdusilmoitus näkyy",
         "overlayScale": "Koko",
         "overlayScaleDesc": "Pelinsisäisen ponnahdusilmoituksen koko",
+        "overlayOpacity": "Läpinäkymättömyys",
+        "overlayOpacityDesc": "Kuinka läpinäkyvä pelinsisäinen ponnahdusilmoitus on. 100 % on täysin läpinäkymätön.",
         "overlayProgressPosition": "Edistymisen sijainti",
         "overlayProgressPositionDesc": "Missä edistymisen ponnahdusilmoitukset näkyvät (edistymisen +1-askeleet).",
         "overlayProgressScale": "Edistymisen koko",

@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Srebrne trofeum poniżej",
           "description": "W trybie trofeów osiągnięcia poniżej tego odsetka otrzymują srebro; pozostałe, lub bez znanego odsetka, otrzymują brąz."
+        },
+        "thresholds": {
+          "name": "Progi rzadkości",
+          "description": "Domyślne zachowuje 5%, 10% i 15% dla poziomów rzadkości oraz 20% i 50% dla trybu trofeów. Niestandardowe pozwala je zmienić.",
+          "default": "Domyślne",
+          "custom": "Niestandardowe"
+        },
+        "rareGoldMax": {
+          "name": "Złoto do",
+          "description": "Na poziomach rzadkości osiągnięcia odblokowane przez taki odsetek graczy lub mniejszy otrzymują złoto."
+        },
+        "rareSilverMax": {
+          "name": "Srebro do",
+          "description": "Na poziomach rzadkości osiągnięcia do tego odsetka otrzymują srebro. Wartość musi leżeć między progiem złota a progiem rzadkości, inaczej wszystkie trzy wracają do domyślnych."
+        },
+        "rareMax": {
+          "name": "Rzadkie do",
+          "description": "Do tego odsetka osiągnięcie jest rzadkie: otrzymuje brąz, powiadomienie o rzadkim osiągnięciu i jego dźwięk. Powyżej nic go nie oznacza."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Gdzie na ekranie pojawia się wyskakująca nakładka",
         "overlayScale": "Rozmiar",
         "overlayScaleDesc": "Rozmiar wyskakującej nakładki",
+        "overlayOpacity": "Nieprzezroczystość",
+        "overlayOpacityDesc": "Jak bardzo przezroczyste jest wyskakujące okno w grze. 100% oznacza pełną nieprzezroczystość.",
         "overlayProgressPosition": "Pozycja postępu",
         "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie (kroki postępu +1).",
         "overlayProgressScale": "Rozmiar postępu",

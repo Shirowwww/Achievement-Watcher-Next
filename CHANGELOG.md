@@ -23,6 +23,12 @@ renamed in 3.9.0 and the history is kept under one file.
   for Persona 5 Royal in Japanese. Games without a translated title keep their English one, and a
   name you set yourself always wins. A game from another store shows Steam's title only when AW
   knows its Steam release.
+- **Adjustable rarity thresholds.** Settings > General > Rarity thresholds stays on Default (5%,
+  10% and 15% for rare tiers, 20% and 50% for trophy mode) until you pick Custom, which unfolds the
+  limits of the mode in use. In rare tiers the last one also decides which unlocks get the rare
+  notification and its sound.
+- **Popup opacity.** Settings > Notification > Opacity makes the in-game popup see-through, from
+  30% to fully opaque.
 - **Unlocked frame rate for video clips.** Settings > Notification > Video clip now offers
   **Unlocked (screen rate)** next to 30 and 60 FPS. The clip is recorded at the refresh rate of the
   monitor showing the game, 120, 144 or 240 Hz included, and follows it when it changes.

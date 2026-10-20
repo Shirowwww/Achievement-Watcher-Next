@@ -189,6 +189,8 @@ module.exports.load = () => {
     {
       const scl = Number(options.overlay.notificationScale);
       options.overlay.notificationScale = Number.isFinite(scl) && scl > 0 ? scl : 1;
+      const opacity = Number(options.overlay.notificationOpacity);
+      options.overlay.notificationOpacity = Number.isInteger(opacity) && opacity >= 30 && opacity <= 100 ? opacity : 100;
     }
     // Counter progress popups: '' follows the unlock placement. These are new keys on purpose: the
     // progressPosition deleted below belonged to the removed per-type windows and used other values.
@@ -317,6 +319,7 @@ module.exports.load = () => {
       });
       options.achievement.trophyGoldBelow = bounds.goldBelow;
       options.achievement.trophySilverBelow = bounds.silverBelow;
+      Object.assign(options.achievement, rarityTiers.normalizeRareBounds(options.achievement));
     }
     if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
       options.achievement.goldbergDownloadIcons = false;
@@ -652,6 +655,7 @@ module.exports.load = () => {
         notificationPresetShadps4: '',
         notificationPosition: 'center-bottom',
         notificationScale: 1,
+        notificationOpacity: 100, // percent, 30-100
         notificationProgressPosition: '',
         notificationProgressScale: '',
         notificationSound: '',
@@ -684,6 +688,9 @@ module.exports.load = () => {
         rarityMode: 'rare',
         trophyGoldBelow: 20,
         trophySilverBelow: 50,
+        rareGoldMax: 5,
+        rareSilverMax: 10,
+        rareMax: 15,
         showPlayButton: true,
         goldbergDownloadIcons: false,
         disableAutoRefresh: false, // opt-in: skip the periodic steam_cache self-repair, for a hand-curated cache

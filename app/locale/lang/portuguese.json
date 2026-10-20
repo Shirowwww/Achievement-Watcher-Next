@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Troféu de prata abaixo de",
           "description": "No modo troféus, as conquistas abaixo desta taxa recebem prata; as restantes, ou sem taxa conhecida, recebem bronze."
+        },
+        "thresholds": {
+          "name": "Limiares de raridade",
+          "description": "Por predefinição, mantêm-se 5%, 10% e 15% para os níveis raros, e 20% e 50% para o modo troféus. Personalizado permite alterá-los.",
+          "default": "Predefinido",
+          "custom": "Personalizado"
+        },
+        "rareGoldMax": {
+          "name": "Ouro até",
+          "description": "Nos níveis raros, as conquistas desbloqueadas por esta percentagem de jogadores ou menos recebem ouro."
+        },
+        "rareSilverMax": {
+          "name": "Prata até",
+          "description": "Nos níveis raros, as conquistas até esta taxa recebem prata. O valor deve ficar entre os limites de ouro e raro, caso contrário os três regressam aos valores predefinidos."
+        },
+        "rareMax": {
+          "name": "Raro até",
+          "description": "Até esta taxa, uma conquista é rara: recebe bronze, a notificação rara e o respetivo som. Acima dela, nada a assinala."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Onde o popup overlay no jogo aparece no ecrã",
         "overlayScale": "Tamanho",
         "overlayScaleDesc": "Tamanho do popup overlay no jogo",
+        "overlayOpacity": "Opacidade",
+        "overlayOpacityDesc": "O grau de transparência do popup no jogo. 100% é totalmente opaco.",
         "overlayProgressPosition": "Posição do progresso",
         "overlayProgressPositionDesc": "Onde aparecem os popups de progresso (os +1 de progresso).",
         "overlayProgressScale": "Tamanho do progresso",

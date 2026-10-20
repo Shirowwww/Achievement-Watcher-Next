@@ -2013,6 +2013,25 @@
                       <div class="help"></div>
                     </li>
 
+                    <li class="hasHelper expand">
+                      <div class="left"><i class="fas fa-adjust"></i> <span id="lbl-overlayOpacity"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_overlayOpacity">
+                          <option value="30">30%</option>
+                          <option value="40">40%</option>
+                          <option value="50">50%</option>
+                          <option value="60">60%</option>
+                          <option value="70">70%</option>
+                          <option value="80">80%</option>
+                          <option value="90">90%</option>
+                          <option value="100" selected>100%</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
                     <!-- Counter progress popups ("+1") can sit apart from unlocks; '' follows them. -->
                     <li class="hasHelper" data-advanced="1">
                       <div class="left">
@@ -3265,7 +3284,87 @@
                     <div class="help" id="rarity-mode-settings-help">Rare tiers mark only the rarest achievements. Trophy mode grades every achievement gold, silver or bronze by its unlock rate.</div>
                   </li>
 
+                  <!-- Not saved: "Default" resets the rows below, "Custom" unfolds the active mode's rows. -->
                   <li class="hasHelper" data-advanced="1">
+                    <div class="left"><i class="fas fa-sliders-h"></i> <span id="rarity-thresholds-settings-label">Rarity thresholds</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="rarityThresholdsChoice">
+                        <option value="default" selected>Default</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="rarity-thresholds-settings-help">Default keeps 5%, 10% and 15% for rare tiers, and 20% and 50% for trophy mode. Custom lets you change them.</div>
+                  </li>
+
+                  <li class="hasHelper" data-advanced="1" data-rarity-rows="rare">
+                    <div class="left"><i class="fas fa-medal"></i> <span id="rare-gold-settings-label">Gold up to</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rareGoldMax">
+                        <option value="1">1%</option>
+                        <option value="2">2%</option>
+                        <option value="3">3%</option>
+                        <option value="5" selected>5%</option>
+                        <option value="7">7%</option>
+                        <option value="10">10%</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="rare-gold-settings-help">In rare tiers, achievements unlocked by this share of players or fewer earn gold.</div>
+                  </li>
+
+                  <li class="hasHelper" data-advanced="1" data-rarity-rows="rare">
+                    <div class="left"><i class="fas fa-medal"></i> <span id="rare-silver-settings-label">Silver up to</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rareSilverMax">
+                        <option value="5">5%</option>
+                        <option value="8">8%</option>
+                        <option value="10" selected>10%</option>
+                        <option value="12">12%</option>
+                        <option value="15">15%</option>
+                        <option value="20">20%</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="rare-silver-settings-help">In rare tiers, achievements up to this rate earn silver. Keep it between the gold and rare limits, or all three return to their defaults.</div>
+                  </li>
+
+                  <li class="hasHelper" data-advanced="1" data-rarity-rows="rare">
+                    <div class="left"><i class="fas fa-gem"></i> <span id="rare-max-settings-label">Rare up to</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rareMax">
+                        <option value="10">10%</option>
+                        <option value="15" selected>15%</option>
+                        <option value="20">20%</option>
+                        <option value="25">25%</option>
+                        <option value="30">30%</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="rare-max-settings-help">Up to this rate an achievement is rare: it gets bronze, the rare notification and its sound. Above it, nothing marks it.</div>
+                  </li>
+
+                  <li class="hasHelper" data-advanced="1" data-rarity-rows="trophy">
                     <div class="left"><i class="fas fa-medal"></i> <span id="trophy-gold-settings-label">Gold trophy below</span></div>
                     <div class="right">
                       <div class="previous">
@@ -3286,7 +3385,7 @@
                     <div class="help" id="trophy-gold-settings-help">In trophy mode, achievements unlocked by fewer players than this earn gold.</div>
                   </li>
 
-                  <li class="hasHelper" data-advanced="1">
+                  <li class="hasHelper" data-advanced="1" data-rarity-rows="trophy">
                     <div class="left"><i class="fas fa-medal"></i> <span id="trophy-silver-settings-label">Silver trophy below</span></div>
                     <div class="right">
                       <div class="previous">

@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Ezüsttrófea ez alatt",
           "description": "Trófea módban az ennél az aránynál alacsonyabb eredmények ezüstöt kapnak; a többi, vagy az ismeretlen arányú, bronzot kap."
+        },
+        "thresholds": {
+          "name": "Ritkasági küszöbök",
+          "description": "Az alapértelmezés 5%, 10% és 15% értéket tart a ritka szintekhez, és 20% és 50% értéket a trófea módhoz. Az egyéni lehetővé teszi a módosításukat.",
+          "default": "Alapértelmezett",
+          "custom": "Egyéni"
+        },
+        "rareGoldMax": {
+          "name": "Arany eddig",
+          "description": "Ritka szinteken azok az eredmények kapnak aranyat, amelyeket a játékosok ennyi vagy ennél kisebb hányada oldott fel."
+        },
+        "rareSilverMax": {
+          "name": "Ezüst eddig",
+          "description": "Ritka szinteken az eddig az arányig terjedő eredmények ezüstöt kapnak. Az értéknek az arany és a ritka határ között kell lennie, különben mindhárom visszaáll az alapértelmezettre."
+        },
+        "rareMax": {
+          "name": "Ritka eddig",
+          "description": "Eddig az arányig egy eredmény ritka: bronzot, a ritka értesítést és annak hangját kapja. Efelett semmi sem jelöli."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Hol jelenik meg a felugró overlay a képernyőn",
         "overlayScale": "Méret",
         "overlayScaleDesc": "A felugró overlay mérete",
+        "overlayOpacity": "Átlátszatlanság",
+        "overlayOpacityDesc": "Mennyire átlátszó a játékon belüli felugró ablak. A 100% teljesen átlátszatlan.",
         "overlayProgressPosition": "Haladás pozíciója",
         "overlayProgressPositionDesc": "Hol jelennek meg a haladási felugró ablakok (a haladás +1 lépései).",
         "overlayProgressScale": "Haladás mérete",

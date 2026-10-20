@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Trofeo argento sotto",
           "description": "In modalità trofei, gli obiettivi sotto questa percentuale ottengono l’argento; gli altri, o quelli senza percentuale nota, il bronzo."
+        },
+        "thresholds": {
+          "name": "Soglie di rarità",
+          "description": "Predefinito mantiene 5%, 10% e 15% per i livelli rari e 20% e 50% per la modalità trofei. Personalizzato permette di cambiarle.",
+          "default": "Predefinito",
+          "custom": "Personalizzato"
+        },
+        "rareGoldMax": {
+          "name": "Oro fino a",
+          "description": "Nei livelli rari, gli obiettivi sbloccati da questa percentuale di giocatori o meno ottengono l’oro."
+        },
+        "rareSilverMax": {
+          "name": "Argento fino a",
+          "description": "Nei livelli rari, gli obiettivi fino a questa percentuale ottengono l’argento. Il valore deve restare tra i limiti di oro e raro, altrimenti tutti e tre tornano ai valori predefiniti."
+        },
+        "rareMax": {
+          "name": "Raro fino a",
+          "description": "Fino a questa percentuale un obiettivo è raro: ottiene il bronzo, la notifica rara e il suo suono. Oltre, nulla lo contrassegna."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Dove appare il popup overlay di gioco sullo schermo",
         "overlayScale": "Dimensione",
         "overlayScaleDesc": "Dimensione del popup overlay di gioco",
+        "overlayOpacity": "Opacità",
+        "overlayOpacityDesc": "Quanto è trasparente il popup di gioco. 100% è completamente opaco.",
         "overlayProgressPosition": "Posizione avanzamento",
         "overlayProgressPositionDesc": "Dove compaiono i popup di avanzamento (i passi di avanzamento +1).",
         "overlayProgressScale": "Dimensione avanzamento",

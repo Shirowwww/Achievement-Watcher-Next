@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Stříbrná trofej pod",
           "description": "V režimu trofejí získají stříbro úspěchy pod tímto podílem; ostatní, nebo ty bez známého podílu, získají bronz."
+        },
+        "thresholds": {
+          "name": "Hranice vzácnosti",
+          "description": "Výchozí ponechá 5 %, 10 % a 15 % pro vzácné úrovně a 20 % a 50 % pro režim trofejí. Vlastní umožňuje je změnit.",
+          "default": "Výchozí",
+          "custom": "Vlastní"
+        },
+        "rareGoldMax": {
+          "name": "Zlato do",
+          "description": "Ve vzácných úrovních získají zlato úspěchy odemknuté tímto podílem hráčů nebo menším."
+        },
+        "rareSilverMax": {
+          "name": "Stříbro do",
+          "description": "Ve vzácných úrovních získají stříbro úspěchy do tohoto podílu. Hodnota musí být mezi hranicemi zlata a vzácnosti, jinak se všechny tři vrátí na výchozí hodnoty."
+        },
+        "rareMax": {
+          "name": "Vzácné do",
+          "description": "Do tohoto podílu je úspěch vzácný: získá bronz, vzácné oznámení a jeho zvuk. Nad ním ho nic neoznačí."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Kde se na obrazovce zobrazí vyskakovací overlay",
         "overlayScale": "Velikost",
         "overlayScaleDesc": "Velikost vyskakovacího overlaye",
+        "overlayOpacity": "Neprůhlednost",
+        "overlayOpacityDesc": "Jak průhledné je vyskakovací okno ve hře. 100 % je zcela neprůhledné.",
         "overlayProgressPosition": "Pozice postupu",
         "overlayProgressPositionDesc": "Kde se zobrazují vyskakovací okna postupu (kroky postupu +1).",
         "overlayProgressScale": "Velikost postupu",

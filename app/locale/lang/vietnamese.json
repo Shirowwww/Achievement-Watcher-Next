@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Cúp bạc dưới",
           "description": "Ở chế độ cúp, thành tựu dưới tỷ lệ này nhận bạc; phần còn lại, hoặc chưa biết tỷ lệ, nhận đồng."
+        },
+        "thresholds": {
+          "name": "Ngưỡng độ hiếm",
+          "description": "Mặc định giữ 5%, 10% và 15% cho cấp hiếm, 20% và 50% cho chế độ cúp. Tùy chỉnh cho phép thay đổi các mức này.",
+          "default": "Mặc định",
+          "custom": "Tùy chỉnh"
+        },
+        "rareGoldMax": {
+          "name": "Vàng đến",
+          "description": "Ở cấp hiếm, thành tựu được tỷ lệ người chơi này hoặc ít hơn mở khóa sẽ nhận vàng."
+        },
+        "rareSilverMax": {
+          "name": "Bạc đến",
+          "description": "Ở cấp hiếm, thành tựu đến tỷ lệ này nhận bạc. Giá trị phải nằm giữa ngưỡng vàng và ngưỡng hiếm, nếu không cả ba sẽ về mặc định."
+        },
+        "rareMax": {
+          "name": "Hiếm đến",
+          "description": "Đến tỷ lệ này, một thành tựu là hiếm: nhận đồng, thông báo hiếm và âm thanh của nó. Trên mức này, không gì đánh dấu nó."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Nơi khung thông báo lớp phủ trong trò chơi xuất hiện trên màn hình",
         "overlayScale": "Cỡ",
         "overlayScaleDesc": "Kích thước của khung thông báo lớp phủ trong trò chơi",
+        "overlayOpacity": "Độ đục",
+        "overlayOpacityDesc": "Khung thông báo trong trò chơi trong suốt đến mức nào. 100% là hoàn toàn đục.",
         "overlayProgressPosition": "Vị trí tiến độ",
         "overlayProgressPositionDesc": "Nơi các khung thông báo tiến độ (các bước +1 của tiến độ) xuất hiện.",
         "overlayProgressScale": "Cỡ tiến độ",

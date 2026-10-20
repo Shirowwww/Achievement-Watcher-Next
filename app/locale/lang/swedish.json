@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Silvertrofé under",
           "description": "I trofeläge får prestationer under denna andel silver; resten, eller de utan känd andel, får brons."
+        },
+        "thresholds": {
+          "name": "Gränser för sällsynthet",
+          "description": "Standard behåller 5 %, 10 % och 15 % för sällsynta nivåer och 20 % och 50 % för trofeläget. Anpassad låter dig ändra dem.",
+          "default": "Standard",
+          "custom": "Anpassad"
+        },
+        "rareGoldMax": {
+          "name": "Guld upp till",
+          "description": "I sällsynta nivåer får prestationer som denna andel spelare eller färre har låst upp guld."
+        },
+        "rareSilverMax": {
+          "name": "Silver upp till",
+          "description": "I sällsynta nivåer får prestationer upp till denna andel silver. Håll den mellan guld- och sällsynthetsgränsen, annars återgår alla tre till standardvärdena."
+        },
+        "rareMax": {
+          "name": "Sällsynt upp till",
+          "description": "Upp till denna andel är en prestation sällsynt: den får brons, den sällsynta aviseringen och dess ljud. Över den markerar inget den."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Var på skärmen popupen i overlayen visas",
         "overlayScale": "Storlek",
         "overlayScaleDesc": "Storlek på popupen i overlayen",
+        "overlayOpacity": "Opacitet",
+        "overlayOpacityDesc": "Hur genomskinlig popupen i spelet är. 100 % är helt ogenomskinlig.",
         "overlayProgressPosition": "Position för framsteg",
         "overlayProgressPositionDesc": "Var popuperna för framsteg visas (framstegens +1-steg).",
         "overlayProgressScale": "Storlek på framsteg",

@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "銀トロフィーの基準（未満）",
           "description": "トロフィーモードでは、この割合未満の実績が銀になり、それ以外や解除率が不明なものは銅になります。"
+        },
+        "thresholds": {
+          "name": "レア度のしきい値",
+          "description": "「既定」ではレア段階を5%、10%、15%、トロフィーモードを20%、50%のままにします。「カスタム」で変更できます。",
+          "default": "既定",
+          "custom": "カスタム"
+        },
+        "rareGoldMax": {
+          "name": "金の上限",
+          "description": "レア段階では、この割合以下のプレイヤーしか解除していない実績が金になります。"
+        },
+        "rareSilverMax": {
+          "name": "銀の上限",
+          "description": "レア段階では、この割合までの実績が銀になります。金とレアの上限の間に収めてください。そうしないと3つとも既定値に戻ります。"
+        },
+        "rareMax": {
+          "name": "レアの上限",
+          "description": "この割合までの実績はレアになり、銅、レア通知とその効果音が付きます。これを超えると何も付きません。"
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "ゲーム内オーバーレイのポップアップが画面上のどこに表示されるか",
         "overlayScale": "サイズ",
         "overlayScaleDesc": "ゲーム内オーバーレイのポップアップのサイズ",
+        "overlayOpacity": "不透明度",
+        "overlayOpacityDesc": "ゲーム内ポップアップの透け具合です。100%で完全に不透明になります。",
         "overlayProgressPosition": "進捗の位置",
         "overlayProgressPositionDesc": "進捗ポップアップ（進捗の+1ステップ）を表示する場所です。",
         "overlayProgressScale": "進捗のサイズ",

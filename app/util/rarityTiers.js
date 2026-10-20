@@ -13,7 +13,9 @@
   const MODES = Object.freeze([MODE_RARE, MODE_TROPHY]);
 
   // Rare mode: only the rarest achievements get a tier, up to this unlock rate (inclusive).
-  const RARE_MAX = Object.freeze({ gold: 5, silver: 10, bronze: 15 });
+  const RARE_DEFAULTS = Object.freeze({ rareGoldMax: 5, rareSilverMax: 10, rareMax: 15 });
+  const RARE_LIMITS = Object.freeze({ goldMin: 1, goldMax: 20, silverMin: 2, silverMax: 30, rareMin: 3, rareMax: 50 });
+  const RARE_MAX = Object.freeze({ gold: RARE_DEFAULTS.rareGoldMax, silver: RARE_DEFAULTS.rareSilverMax, bronze: RARE_DEFAULTS.rareMax });
 
   // Trophy mode: every achievement is graded; a rate strictly below the bound earns the grade.
   const TROPHY_DEFAULTS = Object.freeze({ goldBelow: 20, silverBelow: 50 });
@@ -36,19 +38,46 @@
     return valid ? { goldBelow: gold, silverBelow: silver } : { ...TROPHY_DEFAULTS };
   }
 
+  // The rare bounds travel as a triple, like the trophy pair: one bad or crossed value resets all three.
+  function normalizeRareBounds(input) {
+    const source = input || {};
+    const gold = Number(source.rareGoldMax);
+    const silver = Number(source.rareSilverMax);
+    const rare = Number(source.rareMax);
+    const L = RARE_LIMITS;
+    const valid =
+      [gold, silver, rare].every(Number.isFinite) &&
+      gold >= L.goldMin && gold <= L.goldMax && silver >= L.silverMin && silver <= L.silverMax &&
+      rare >= L.rareMin && rare <= L.rareMax && gold < silver && silver < rare;
+    return valid ? { rareGoldMax: gold, rareSilverMax: silver, rareMax: rare } : { ...RARE_DEFAULTS };
+  }
+
+  // Both modes' bounds from an [achievement] config section, in the shape tierFor takes.
+  function gradingFrom(cfg) {
+    const source = cfg || {};
+    return {
+      mode: normalizeMode(source.rarityMode),
+      thresholds: {
+        ...normalizeThresholds({ goldBelow: source.trophyGoldBelow, silverBelow: source.trophySilverBelow }),
+        ...normalizeRareBounds(source),
+      },
+    };
+  }
+
   function toPercent(value) {
     if (value === null || value === undefined || value === '') return null;
     const raw = Number(value);
     return Number.isFinite(raw) ? raw : null;
   }
 
-  function rareTier(percent) {
+  function rareTier(percent, bounds) {
     const raw = toPercent(percent);
     if (raw === null) return null;
     const p = Math.round(raw * 10) / 10;
-    if (p < 0 || p > RARE_MAX.bronze) return null;
-    if (p <= RARE_MAX.gold) return 'gold';
-    if (p <= RARE_MAX.silver) return 'silver';
+    const { rareGoldMax, rareSilverMax, rareMax } = normalizeRareBounds(bounds);
+    if (p < 0 || p > rareMax) return null;
+    if (p <= rareGoldMax) return 'gold';
+    if (p <= rareSilverMax) return 'silver';
     return 'bronze';
   }
 
@@ -63,7 +92,7 @@
 
   // 'gold' | 'silver' | 'bronze', or null when the rare mode gives the achievement no tier.
   function tierFor(percent, mode, thresholds) {
-    return normalizeMode(mode) === MODE_TROPHY ? trophyTier(percent, thresholds) : rareTier(percent);
+    return normalizeMode(mode) === MODE_TROPHY ? trophyTier(percent, thresholds) : rareTier(percent, thresholds);
   }
 
   // A PlayStation trophy's own grade, from its letter (P/G/S/B) or its name; '' for anything else.
@@ -90,10 +119,14 @@
     MODE_TROPHY,
     MODES,
     RARE_MAX,
+    RARE_DEFAULTS,
+    RARE_LIMITS,
     TROPHY_DEFAULTS,
     TROPHY_LIMITS,
     normalizeMode,
     normalizeThresholds,
+    normalizeRareBounds,
+    gradingFrom,
     tierFor,
     trophyGrade,
     notificationTier,

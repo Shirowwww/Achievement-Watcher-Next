@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Piala perak di bawah",
           "description": "Dalam mode piala, pencapaian di bawah angka ini mendapat perak; sisanya, atau yang tidak diketahui angkanya, mendapat perunggu."
+        },
+        "thresholds": {
+          "name": "Ambang kelangkaan",
+          "description": "Bawaan mempertahankan 5%, 10%, dan 15% untuk tingkat langka, serta 20% dan 50% untuk mode piala. Kustom memungkinkan perubahannya.",
+          "default": "Bawaan",
+          "custom": "Kustom"
+        },
+        "rareGoldMax": {
+          "name": "Emas hingga",
+          "description": "Pada tingkat langka, pencapaian yang dibuka oleh persentase pemain ini atau kurang mendapat emas."
+        },
+        "rareSilverMax": {
+          "name": "Perak hingga",
+          "description": "Pada tingkat langka, pencapaian hingga angka ini mendapat perak. Nilainya harus berada di antara batas emas dan langka, atau ketiganya kembali ke nilai bawaan."
+        },
+        "rareMax": {
+          "name": "Langka hingga",
+          "description": "Hingga angka ini, pencapaian dianggap langka: mendapat perunggu, notifikasi langka, dan suaranya. Di atasnya, tidak ada yang menandainya."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Tempat pop-up overlay dalam game muncul di layar",
         "overlayScale": "Skala",
         "overlayScaleDesc": "Ukuran pop-up overlay dalam game",
+        "overlayOpacity": "Opasitas",
+        "overlayOpacityDesc": "Seberapa tembus pandang pop-up dalam game. 100% berarti sepenuhnya buram.",
         "overlayProgressPosition": "Posisi progres",
         "overlayProgressPositionDesc": "Tempat pop-up progres muncul (langkah progres +1).",
         "overlayProgressScale": "Skala progres",

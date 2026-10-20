@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Zilveren trofee onder",
           "description": "In de trofeeënmodus krijgen prestaties onder dit percentage zilver; de rest, of die zonder bekend percentage, krijgt brons."
+        },
+        "thresholds": {
+          "name": "Zeldzaamheidsdrempels",
+          "description": "Standaard behoudt 5%, 10% en 15% voor zeldzame niveaus en 20% en 50% voor de trofeeënmodus. Aangepast laat je ze wijzigen.",
+          "default": "Standaard",
+          "custom": "Aangepast"
+        },
+        "rareGoldMax": {
+          "name": "Goud tot",
+          "description": "In zeldzame niveaus krijgen prestaties die door dit percentage spelers of minder zijn ontgrendeld goud."
+        },
+        "rareSilverMax": {
+          "name": "Zilver tot",
+          "description": "In zeldzame niveaus krijgen prestaties tot dit percentage zilver. Houd het tussen de goud- en zeldzaamheidsgrens, anders keren alle drie terug naar hun standaardwaarden."
+        },
+        "rareMax": {
+          "name": "Zeldzaam tot",
+          "description": "Tot dit percentage is een prestatie zeldzaam: ze krijgt brons, de zeldzame melding en het bijbehorende geluid. Daarboven markeert niets haar."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Waar de pop-up van de in-game overlay op het scherm verschijnt",
         "overlayScale": "Schaal",
         "overlayScaleDesc": "Grootte van de pop-up van de in-game overlay",
+        "overlayOpacity": "Dekking",
+        "overlayOpacityDesc": "Hoe doorzichtig de pop-up in de game is. 100% is volledig ondoorzichtig.",
         "overlayProgressPosition": "Positie van voortgang",
         "overlayProgressPositionDesc": "Waar de voortgangspop-ups verschijnen (de +1-stappen van de voortgang).",
         "overlayProgressScale": "Schaal van voortgang",

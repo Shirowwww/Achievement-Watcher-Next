@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Silber-Trophäe unter",
           "description": "Im Trophäenmodus erhalten Erfolge unter dieser Quote Silber; alle anderen oder solche ohne bekannte Quote erhalten Bronze."
+        },
+        "thresholds": {
+          "name": "Seltenheitsschwellen",
+          "description": "Standard behält 5 %, 10 % und 15 % für Seltenheitsstufen sowie 20 % und 50 % für den Trophäenmodus bei. Benutzerdefiniert erlaubt es, sie zu ändern.",
+          "default": "Standard",
+          "custom": "Benutzerdefiniert"
+        },
+        "rareGoldMax": {
+          "name": "Gold bis",
+          "description": "In den Seltenheitsstufen erhalten Erfolge, die von diesem Anteil der Spieler oder weniger freigeschaltet wurden, Gold."
+        },
+        "rareSilverMax": {
+          "name": "Silber bis",
+          "description": "In den Seltenheitsstufen erhalten Erfolge bis zu dieser Quote Silber. Der Wert muss zwischen der Gold- und der Seltenheitsgrenze liegen, sonst kehren alle drei zu ihren Standardwerten zurück."
+        },
+        "rareMax": {
+          "name": "Selten bis",
+          "description": "Bis zu dieser Quote gilt ein Erfolg als selten: Er erhält Bronze, die Benachrichtigung für Seltenes und deren Ton. Darüber markiert ihn nichts."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Wo das In-Game-Overlay-Popup auf dem Bildschirm erscheint",
         "overlayScale": "Größe",
         "overlayScaleDesc": "Größe des In-Game-Overlay-Popups",
+        "overlayOpacity": "Deckkraft",
+        "overlayOpacityDesc": "Wie durchsichtig das Popup im Spiel ist. 100 % ist vollständig deckend.",
         "overlayProgressPosition": "Fortschrittsposition",
         "overlayProgressPositionDesc": "Wo die Fortschritts-Popups erscheinen (die +1-Schritte beim Fortschritt).",
         "overlayProgressScale": "Fortschrittsgröße",

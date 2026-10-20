@@ -862,11 +862,7 @@ const presetLayer = require(path.join(__dirname, '../util/presetLayer.js'));
 
 // The "Rarity display" setting as the tier functions take it.
 function currentRarityGrading() {
-  const cfg = (configJS && configJS.achievement) || {};
-  return {
-    mode: rarityTiers.normalizeMode(cfg.rarityMode),
-    thresholds: rarityTiers.normalizeThresholds({ goldBelow: cfg.trophyGoldBelow, silverBelow: cfg.trophySilverBelow }),
-  };
+  return rarityTiers.gradingFrom(configJS && configJS.achievement);
 }
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
@@ -6013,6 +6009,13 @@ function createNotificationWindow(data = {}) {
     // design size, filling the window exactly (a self-scaling preset would shrink dense layouts twice).
     // Chromium remembers a zoom level per file, which overrules `zoomFactor`, so reassert it here too.
     notif.webContents.setZoomFactor(scale);
+    // Page CSS rather than setOpacity(), which is a no-op on Linux; the reposition witness stays opaque.
+    const opacity = Math.min(100, Math.max(30, Number(data.opacity) || 100));
+    if (opacity < 100 && !reposition) {
+      notif.webContents
+        .insertCSS(`html { opacity: ${opacity / 100} !important; }`)
+        .catch((err) => debug.log(`[overlay-notif] opacity css failed: ${err.message || err}`));
+    }
     notif.webContents.send('show-notification', notificationPagePayload(data));
     notif.showInactive();
     // Windows grows a transparent window by a few pixels when it is created or shown past a screen
@@ -6668,6 +6671,7 @@ async function enqueueNotificationFromArgs(args) {
     customAnchor: placement.anchor,
     gameDisplayAt: args.gameDisplayAt != null ? String(args.gameDisplayAt) : '',
     volume: Number.isFinite(Number(ov.notificationVolume)) ? Number(ov.notificationVolume) : 100,
+    opacity: Number(ov.notificationOpacity) || 100,
     durationMs: durSec > 0 ? durSec * 1000 : undefined,
     // Playtime notifications pass the game name in both fields. Keeping the dedicated game-name
     // fallback prevents a lost/empty displayName argument from becoming "Achievement Unlocked".

@@ -20,6 +20,7 @@ const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 
 const ra = require(sharedAppModulePath('parser/retroAchievements.js'));
+const { rareCutoff } = require('../util/rareCutoff.js');
 ra.setUserDataPath(userDataDir());
 ra.setCipher(aes);
 
@@ -84,12 +85,12 @@ function findEmulator(processes, probe = hasIntegrationDll) {
   return integrated ? integrated.process : '';
 }
 
-function rarityOf(schema, achievementId) {
+function rarityOf(schema, achievementId, options) {
   const entry = schema && schema.achievement.list.find((achievement) => String(achievement.name) === String(achievementId));
   const percent = entry && entry.rarityPct != null ? Number(entry.rarityPct) : NaN;
   if (!Number.isFinite(percent)) return null;
   const rounded = Math.round(percent * 10) / 10;
-  return rounded >= 0 && rounded <= 15 ? rounded : null;
+  return rounded >= 0 && rounded <= rareCutoff(options) ? rounded : null;
 }
 
 async function announce(ctx, unlock, schema, delay) {
@@ -102,7 +103,7 @@ async function announce(ctx, unlock, schema, delay) {
       achievementName: unlock.achievementId,
       achievementDisplayName: unlock.title,
       achievementDescription: unlock.description,
-      rarityPercent: rarityOf(schema, unlock.achievementId),
+      rarityPercent: rarityOf(schema, unlock.achievementId, options),
       icon: unlock.icon || undefined,
       gameIcon: (schema && schema.img && schema.img.icon) || unlock.gameIcon || '',
       image: (schema && schema.img && schema.img.header) || '',

@@ -23,6 +23,7 @@ const { t } = require(path.join(appPath, 'locale/t.js'));
 // test/integration/rendererScope.test.js).
 const settingsLibraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const settingsSteamId64 = require(path.join(appPath, 'util/steamId64.js'));
+const settingsRarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
 const { renamedSound, tierSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
@@ -518,10 +519,31 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         );
     }
 
-    // The trophy thresholds only mean something in trophy mode.
+    // The threshold rows stay folded on "Default"; "Custom" unfolds only the active mode's rows.
     function updateRarityUi() {
-      const trophy = $('#option_rarityMode').val() === 'trophy';
-      $('#option_trophyGoldBelow, #option_trophySilverBelow').closest('li').toggleClass('is-inactive', !trophy).attr('aria-disabled', String(!trophy));
+      const mode = settingsRarityTiers.normalizeMode($('#option_rarityMode').val());
+      const custom = $('#rarityThresholdsChoice').val() === 'custom';
+      $('#settings li[data-rarity-rows]').each(function () {
+        $(this).toggle(custom && $(this).attr('data-rarity-rows') === mode);
+      });
+    }
+
+    // The choice is not stored: a profile whose values all equal the defaults reads as "Default".
+    const RARITY_DEFAULTS = { ...settingsRarityTiers.TROPHY_DEFAULTS, ...settingsRarityTiers.RARE_DEFAULTS };
+    const RARITY_SELECTS = { goldBelow: 'trophyGoldBelow', silverBelow: 'trophySilverBelow', rareGoldMax: 'rareGoldMax', rareSilverMax: 'rareSilverMax', rareMax: 'rareMax' };
+
+    function syncRarityThresholdsChoice() {
+      const current = settingsRarityTiers.gradingFrom(app.config.achievement).thresholds;
+      const custom = Object.keys(RARITY_DEFAULTS).some((key) => current[key] !== RARITY_DEFAULTS[key]);
+      $('#rarityThresholdsChoice').val(custom ? 'custom' : 'default');
+      updateRarityUi();
+    }
+
+    function onRarityThresholdsChoice() {
+      if ($('#rarityThresholdsChoice').val() === 'default') {
+        for (const [key, option] of Object.entries(RARITY_SELECTS)) $(`#option_${option}`).val(String(RARITY_DEFAULTS[key]));
+      }
+      updateRarityUi();
     }
 
     // Rows that only matter while another switch is on are dimmed, never hidden: the value stays and
@@ -796,7 +818,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         showSteamIdStatus();
       }
       updateEmulatorUi();
-      updateRarityUi();
+      syncRarityThresholdsChoice();
 
       $('#hotkey').text(app.config.overlay.hotkey);
 
@@ -824,6 +846,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_notifMode').val(app.config.notification_transport.mode || 'auto').change();
       $('#option_overlayPosition').val(cfgOverlay.notificationPosition || 'center-bottom').change();
       $('#option_overlayScale').val(String(cfgOverlay.notificationScale || 1)).change();
+      $('#option_overlayOpacity').val(String(cfgOverlay.notificationOpacity || 100)).change();
       $('#option_overlayProgressPosition').val(cfgOverlay.notificationProgressPosition || '').change();
       $('#option_overlayProgressScale').val(String(cfgOverlay.notificationProgressScale || '')).change();
       $('#option_overlayVolume').val(String(cfgOverlay.notificationVolume != null ? cfgOverlay.notificationVolume : 100)).change();
@@ -1413,7 +1436,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
               $(this)[0].id === 'option_disableHardwareAccel' ||
               $(this)[0].id === 'option_closeToTray' ||
               $(this)[0].id === 'option_uninstallContextMenu' ||
-              $(this)[0].id === 'option_theme'
+              $(this)[0].id === 'option_theme' ||
+              $(this)[0].id === 'rarityThresholdsChoice'
             )
               return;
             if ($(this)[0].id !== '' && $(this).val() !== '') {
@@ -2300,6 +2324,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
     $('#emulator-identity-saves-reset').on('click', () => $('#emulator-identity-saves').val('').trigger('change'));
     $('#option_rarityMode').on('change', updateRarityUi);
+    $('#rarityThresholdsChoice').on('change', onRarityThresholdsChoice);
     $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').on('change', async function (event) {
       const value = $(this).val();
       $('#option_autoApplyNewGames, #option_autoApplyNewGamesUplay').not(this).val(value);
@@ -6389,6 +6414,7 @@ function readNotificationSettings() {
   app.config.overlay.notificationPresetShadps4 = $('#option_overlayPresetShadps4').val() || '';
   app.config.overlay.notificationPosition = $('#option_overlayPosition').val() || 'center-bottom';
   app.config.overlay.notificationScale = parseFloat($('#option_overlayScale').val()) || 1;
+  app.config.overlay.notificationOpacity = parseInt($('#option_overlayOpacity').val(), 10) || 100;
   app.config.overlay.notificationProgressPosition = notificationPlacement.normalizeProgressPosition($('#option_overlayProgressPosition').val());
   app.config.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale($('#option_overlayProgressScale').val());
   // 'Random' lives in the sound list now, so one control writes both keys: the flag the

@@ -499,11 +499,7 @@ window.trophyLabels = trophyLabels;
 
 // The "Rarity display" setting, in the shape trophyStats and rarityTiers take.
 function rarityGrading() {
-  const cfg = (app.config && app.config.achievement) || {};
-  return {
-    mode: rarityTiers.normalizeMode(cfg.rarityMode),
-    thresholds: rarityTiers.normalizeThresholds({ goldBelow: cfg.trophyGoldBelow, silverBelow: cfg.trophySilverBelow }),
-  };
+  return rarityTiers.gradingFrom(app.config && app.config.achievement);
 }
 window.rarityGrading = rarityGrading;
 
@@ -599,8 +595,8 @@ function renderProfileStatsTrophies(installedOnly) {
     t('profile-trophies-above', 'above {percent}, or unknown', 'plus de {percent}, ou inconnu', { percent: formatPercentValue(percent) });
   const grading = rarityGrading();
   const trophyMode = grading.mode === rarityTiers.MODE_TROPHY;
-  const rare = rarityTiers.RARE_MAX;
-  const { goldBelow, silverBelow } = grading.thresholds;
+  const { goldBelow, silverBelow, rareGoldMax, rareSilverMax, rareMax } = grading.thresholds;
+  const rare = { gold: rareGoldMax, silver: rareSilverMax, bronze: rareMax };
   const goldText = trophyMode
     ? t('profile-trophies-under', 'under {percent}', 'moins de {percent}', { percent: formatPercentValue(goldBelow) })
     : t('profile-trophies-at-most', '{percent} or less', '{percent} ou moins', { percent: formatPercentValue(rare.gold) });

@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "銀獎盃低於",
           "description": "在獎盃模式下，低於此比例的成就獲得銀獎盃；其餘或比例未知的成就獲得銅獎盃。"
+        },
+        "thresholds": {
+          "name": "稀有度門檻",
+          "description": "預設值保留稀有等級的 5%、10%、15%，以及獎盃模式的 20%、50%。自訂可修改它們。",
+          "default": "預設",
+          "custom": "自訂"
+        },
+        "rareGoldMax": {
+          "name": "金級上限",
+          "description": "在稀有等級中，解鎖玩家比例不高於此值的成就獲得金。"
+        },
+        "rareSilverMax": {
+          "name": "銀級上限",
+          "description": "在稀有等級中，不高於此比例的成就獲得銀。請保持在金級與稀有上限之間，否則三者都會恢復預設值。"
+        },
+        "rareMax": {
+          "name": "稀有上限",
+          "description": "不超過此比例的成就屬於稀有：獲得銅、稀有通知及其音效。高於此比例則沒有任何標記。"
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "遊戲內嵌介面彈出通知在螢幕上出現的位置",
         "overlayScale": "縮放比例",
         "overlayScaleDesc": "遊戲內嵌介面彈出通知的大小",
+        "overlayOpacity": "不透明度",
+        "overlayOpacityDesc": "遊戲內彈出通知的透明程度。100% 為完全不透明。",
         "overlayProgressPosition": "進度位置",
         "overlayProgressPositionDesc": "進度彈出通知（進度的 +1 步驟）出現的位置。",
         "overlayProgressScale": "進度縮放比例",

@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Sølvtrofæ under",
           "description": "I trofætilstand får bedrifter under denne andel sølv; resten, eller dem uden kendt andel, får bronze."
+        },
+        "thresholds": {
+          "name": "Grænser for sjældenhed",
+          "description": "Standard beholder 5 %, 10 % og 15 % til sjældne niveauer og 20 % og 50 % til trofætilstand. Tilpasset lader dig ændre dem.",
+          "default": "Standard",
+          "custom": "Tilpasset"
+        },
+        "rareGoldMax": {
+          "name": "Guld op til",
+          "description": "I sjældne niveauer får bedrifter, som denne andel af spillerne eller færre har låst op, guld."
+        },
+        "rareSilverMax": {
+          "name": "Sølv op til",
+          "description": "I sjældne niveauer får bedrifter op til denne andel sølv. Hold den mellem guld- og sjældenhedsgrænsen, ellers vender alle tre tilbage til standardværdierne."
+        },
+        "rareMax": {
+          "name": "Sjælden op til",
+          "description": "Op til denne andel er en bedrift sjælden: den får bronze, den sjældne notifikation og dens lyd. Over den markerer intet den."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Hvor pop op-vinduet i overlayet vises på skærmen",
         "overlayScale": "Størrelse",
         "overlayScaleDesc": "Størrelsen på pop op-vinduet i overlayet",
+        "overlayOpacity": "Uigennemsigtighed",
+        "overlayOpacityDesc": "Hvor gennemsigtigt pop op-vinduet i spillet er. 100 % er helt uigennemsigtigt.",
         "overlayProgressPosition": "Placering af fremskridt",
         "overlayProgressPositionDesc": "Hvor pop op-vinduerne med fremskridt vises (fremskridtstrinene på +1).",
         "overlayProgressScale": "Størrelse på fremskridt",

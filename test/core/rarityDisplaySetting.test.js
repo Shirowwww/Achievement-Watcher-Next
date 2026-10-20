@@ -44,3 +44,25 @@ test('changing the rarity display never rescans the library', () => {
   const next = { ...base, achievement: { ...base.achievement, rarityMode: 'trophy', trophyGoldBelow: 30 } };
   assert.equal(libraryRefresh.needsRescan(libraryRefresh.signature({ config: base }), libraryRefresh.signature({ config: next })), false);
 });
+
+test('the rare bounds load as numbers and a crossed triple resets to 5 / 10 / 15', () => {
+  const defaults = loadWith('');
+  assert.deepEqual([defaults.rareGoldMax, defaults.rareSilverMax, defaults.rareMax], [5, 10, 15]);
+  const custom = loadWith('rareGoldMax=3\nrareSilverMax=12\nrareMax=25');
+  assert.deepEqual([custom.rareGoldMax, custom.rareSilverMax, custom.rareMax], [3, 12, 25]);
+  const crossed = loadWith('rareGoldMax=10\nrareSilverMax=5\nrareMax=25');
+  assert.deepEqual([crossed.rareGoldMax, crossed.rareSilverMax, crossed.rareMax], [5, 10, 15]);
+});
+
+test('the popup opacity is a percent from 30 to 100, anything else is fully opaque', () => {
+  const userData = makeTempDir('aw-opacity-setting-');
+  fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
+  const opacityOf = (line) => {
+    fs.writeFileSync(path.join(userData, 'cfg', 'options.ini'), `[overlay]\n${line}\n`, 'utf8');
+    settings.setUserDataPath(userData);
+    return settings.load().overlay.notificationOpacity;
+  };
+  assert.equal(opacityOf(''), 100);
+  assert.equal(opacityOf('notificationOpacity=60'), 60);
+  for (const bad of ['10', '150', 'abc', '55.5']) assert.equal(opacityOf(`notificationOpacity=${bad}`), 100, bad);
+});

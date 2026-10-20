@@ -109,3 +109,28 @@ test('no other module keeps its own rarity cut-offs', () => {
     assert.doesNotMatch(text, /percent\s*<=\s*5\b|p\s*<=\s*5\)|percent\s*>\s*15\b/, `${file} spells a rare cut-off`);
   }
 });
+
+test('rare tiers follow custom bounds, and a bad or crossed triple falls back to 5 / 10 / 15 together', () => {
+  const bounds = { rareGoldMax: 2, rareSilverMax: 8, rareMax: 25 };
+  assert.equal(tiers.tierFor(2, 'rare', bounds), 'gold');
+  assert.equal(tiers.tierFor(5, 'rare', bounds), 'silver');
+  assert.equal(tiers.tierFor(20, 'rare', bounds), 'bronze');
+  assert.equal(tiers.tierFor(25.1, 'rare', bounds), null);
+  assert.deepEqual(tiers.normalizeRareBounds({ rareGoldMax: '3', rareSilverMax: '12', rareMax: '20' }), { rareGoldMax: 3, rareSilverMax: 12, rareMax: 20 });
+  const defaults = { rareGoldMax: 5, rareSilverMax: 10, rareMax: 15 };
+  assert.deepEqual(tiers.normalizeRareBounds(), defaults);
+  assert.deepEqual(tiers.normalizeRareBounds({ rareGoldMax: 10, rareSilverMax: 5, rareMax: 15 }), defaults);
+  assert.deepEqual(tiers.normalizeRareBounds({ rareGoldMax: 5, rareSilverMax: 15, rareMax: 15 }), defaults);
+  assert.deepEqual(tiers.normalizeRareBounds({ rareGoldMax: 5, rareSilverMax: 10, rareMax: 99 }), defaults);
+  assert.deepEqual(tiers.normalizeRareBounds({ rareGoldMax: 'x', rareSilverMax: 10, rareMax: 15 }), defaults);
+});
+
+test('gradingFrom reads both modes from one config section, defaults included', () => {
+  assert.deepEqual(tiers.gradingFrom(undefined), {
+    mode: 'rare',
+    thresholds: { goldBelow: 20, silverBelow: 50, rareGoldMax: 5, rareSilverMax: 10, rareMax: 15 },
+  });
+  const grading = tiers.gradingFrom({ rarityMode: 'trophy', trophyGoldBelow: '10', trophySilverBelow: '40', rareMax: '30', rareGoldMax: '5', rareSilverMax: '10' });
+  assert.deepEqual(grading, { mode: 'trophy', thresholds: { goldBelow: 10, silverBelow: 40, rareGoldMax: 5, rareSilverMax: 10, rareMax: 30 } });
+  assert.equal(tiers.tierFor(20, 'rare', grading.thresholds), 'bronze');
+});

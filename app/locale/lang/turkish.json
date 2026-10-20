@@ -294,6 +294,24 @@
         "silverBelow": {
           "name": "Gümüş kupa eşiği",
           "description": "Kupa modunda, bu oranın altındaki başarımlar gümüş alır; diğerleri veya oranı bilinmeyenler bronz alır."
+        },
+        "thresholds": {
+          "name": "Nadirlik eşikleri",
+          "description": "Varsayılan, nadir seviyeler için %5, %10 ve %15'i, kupa modu için %20 ve %50'yi korur. Özel ise bunları değiştirmenizi sağlar.",
+          "default": "Varsayılan",
+          "custom": "Özel"
+        },
+        "rareGoldMax": {
+          "name": "Altın üst sınırı",
+          "description": "Nadir seviyelerde, oyuncuların bu oranı veya daha azı tarafından açılan başarımlar altın alır."
+        },
+        "rareSilverMax": {
+          "name": "Gümüş üst sınırı",
+          "description": "Nadir seviyelerde, bu orana kadar olan başarımlar gümüş alır. Değer altın ve nadir sınırları arasında kalmalıdır, aksi halde üçü de varsayılanlarına döner."
+        },
+        "rareMax": {
+          "name": "Nadir üst sınırı",
+          "description": "Bu orana kadar bir başarım nadirdir: bronz, nadir bildirimi ve sesini alır. Bunun üstünde hiçbir şey onu işaretlemez."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Oyun içi yer paylaşımı açılır penceresinin ekranda nerede görüneceği",
         "overlayScale": "Boyut",
         "overlayScaleDesc": "Oyun içi yer paylaşımı açılır penceresinin boyutu",
+        "overlayOpacity": "Opaklık",
+        "overlayOpacityDesc": "Oyun içi açılır pencerenin ne kadar şeffaf olduğu. %100 tamamen opaktır.",
         "overlayProgressPosition": "İlerleme konumu",
         "overlayProgressPositionDesc": "İlerleme açılır pencerelerinin göründüğü yer (ilerlemedeki +1 adımları).",
         "overlayProgressScale": "İlerleme boyutu",

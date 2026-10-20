@@ -69,7 +69,7 @@ test('every Sources select sits in a swept source list, directly under .right', 
 // Rows that moved out of #options-ui / #options-source into their own section. Each one must still be
 // written back under the same config key, and the sweep derives that key from the id alone.
 const MOVED_GENERAL = {
-  'options-ui-trophies': ['option_showTrophies', 'option_rarityMode', 'option_trophyGoldBelow', 'option_trophySilverBelow'],
+  'options-ui-trophies': ['option_showTrophies', 'option_rarityMode', 'option_rareGoldMax', 'option_rareSilverMax', 'option_rareMax', 'option_trophyGoldBelow', 'option_trophySilverBelow'],
   'options-ui-app': ['option_startWithWindows', 'option_closeToTray', 'option_uninstallContextMenu', 'option_disableHardwareAccel'],
 };
 const MOVED_SOURCE = {

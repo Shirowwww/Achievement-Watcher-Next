@@ -278,6 +278,24 @@
         "silverBelow": {
           "name": "Trophée argent sous",
           "description": "En mode trophées, les succès sous ce taux obtiennent l’argent ; les autres, ou ceux sans taux connu, obtiennent le bronze."
+        },
+        "thresholds": {
+          "name": "Seuils de rareté",
+          "description": "Par défaut : 5 %, 10 % et 15 % pour les paliers rares, 20 % et 50 % pour le mode trophées. Personnalisés permet de les changer.",
+          "default": "Par défaut",
+          "custom": "Personnalisés"
+        },
+        "rareGoldMax": {
+          "name": "Or jusqu’à",
+          "description": "En paliers rares, les succès débloqués par cette part de joueurs ou moins obtiennent l’or."
+        },
+        "rareSilverMax": {
+          "name": "Argent jusqu’à",
+          "description": "En paliers rares, les succès jusqu’à ce taux obtiennent l’argent. Gardez-le entre les limites or et rare, sinon les trois reviennent à leurs valeurs par défaut."
+        },
+        "rareMax": {
+          "name": "Rare jusqu’à",
+          "description": "Jusqu’à ce taux, un succès est rare : il obtient le bronze, la notification rare et son son. Au-delà, rien ne le marque."
         }
       },
       "playButton": {
@@ -614,6 +632,8 @@
         "overlayPositionDesc": "Position de la fenêtre overlay en jeu à l’écran",
         "overlayScale": "Échelle",
         "overlayScaleDesc": "Taille de la fenêtre overlay en jeu",
+        "overlayOpacity": "Opacité",
+        "overlayOpacityDesc": "Transparence de la popup en jeu. 100 % la rend totalement opaque.",
         "overlayProgressPosition": "Position de la progression",
         "overlayProgressPositionDesc": "Où s’affichent les fenêtres de progression (les +1 de progression).",
         "overlayProgressScale": "Échelle de la progression",

@@ -329,6 +329,14 @@ function translateUI(lang, locale, template) {
     $('#trophy-gold-settings-help').text(clear(rarity.goldBelow.description));
     $('#trophy-silver-settings-label').text(clear(rarity.silverBelow.name));
     $('#trophy-silver-settings-help').text(clear(rarity.silverBelow.description));
+    $('#rarity-thresholds-settings-label').text(clear(rarity.thresholds.name));
+    $('#rarity-thresholds-settings-help').text(clear(rarity.thresholds.description));
+    $("#rarityThresholdsChoice option[value='default']").text(clear(rarity.thresholds.default));
+    $("#rarityThresholdsChoice option[value='custom']").text(clear(rarity.thresholds.custom));
+    for (const [id, entry] of [['rare-gold', rarity.rareGoldMax], ['rare-silver', rarity.rareSilverMax], ['rare-max', rarity.rareMax]]) {
+      $(`#${id}-settings-label`).text(clear(entry.name));
+      $(`#${id}-settings-help`).text(clear(entry.description));
+    }
   }
   // Library tiles card (Appearance tab) - bound by stable id, so it shifts no nth-child binding.
   if (template.settings.general.library) {
@@ -673,6 +681,8 @@ function translateUI(lang, locale, template) {
   $('#lbl-overlayPosition').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPositionDesc));
   $('#lbl-overlaySound').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundDesc));
   $('#lbl-overlayScale').closest('li').find('.help').text(clear(template.settings.notification.option.overlayScaleDesc));
+  $('#lbl-overlayOpacity').text(clear(template.settings.notification.option.overlayOpacity));
+  $('#lbl-overlayOpacity').closest('li').find('.help').text(clear(template.settings.notification.option.overlayOpacityDesc));
   $('#lbl-overlayVolume').closest('li').find('.help').text(clear(template.settings.notification.option.overlayVolumeDesc));
   $('#lbl-overlayDuration').closest('li').find('.help').text(clear(template.settings.notification.option.overlayDurationDesc));
   $("#option_overlayDuration option[value='auto']").text(clear(template.settings.notification.option.overlayDurationAuto));
