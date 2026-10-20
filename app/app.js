@@ -1495,6 +1495,7 @@ function addSkeletonTiles(count) {
   skeletonTiles = [];
   skeletonExpected = null;
   skeletonRendered = 0;
+  $('#game-list').addClass('is-streaming');
   appendSkeletonTiles(count);
 }
 
@@ -1529,6 +1530,7 @@ function clearSkeletonTiles() {
   skeletonTiles = [];
   skeletonExpected = null;
   skeletonRendered = 0;
+  $('#game-list').removeClass('is-streaming');
   $('#game-list ul li:has(.game-box.skeleton)').remove();
 }
 

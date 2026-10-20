@@ -99,7 +99,7 @@
             <i class="fas fa-ghost"></i>
             <span class="empty-title"></span>
             <p class="empty-hint"></p>
-            <div id="empty-open-folders" class="btn" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span class="empty-action"></span></div>
+            <div id="empty-open-folders" class="btn primary" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span class="empty-action"></span></div>
           </div>
         </div>
         <div id="main-footer">
@@ -134,8 +134,8 @@
             </div>
             <div class="playtime"><i class="fas fa-stopwatch"></i> <span></span></div>
             <div class="lastplayed"><i class="fas fa-calendar-alt"></i> <span></span></div>
-            <div class="resetAchievements" id="btn-reset-achievements" role="button" tabindex="0"><i class="fas fa-undo"></i> <span></span></div>
-            <div class="backButton" id="btn-previous" role="button" tabindex="0"></div>
+            <div class="resetAchievements btn danger" id="btn-reset-achievements" role="button" tabindex="0"><i class="fas fa-undo"></i> <span></span></div>
+            <div class="backButton btn" id="btn-previous" role="button" tabindex="0"></div>
           </div>
 
           <div class="achievements">
@@ -2982,11 +2982,11 @@
                          keeps its id, so handlers and the locale pass are untouched. -->
                     <div class="right action-right pd-actions" id="pd-actions">
                       <div class="pd-actions-primary">
-                        <button type="button" id="btn-create-preset" class="inline-action-btn"><i class="fas fa-plus"></i> <span id="pd-lbl-create"></span></button>
+                        <button type="button" id="btn-create-preset" class="inline-action-btn primary"><i class="fas fa-plus"></i> <span id="pd-lbl-create"></span></button>
                         <button type="button" id="btn-preview-preset" class="inline-action-btn secondary"><i class="fas fa-desktop"></i> <span data-lang="previewOnScreen"></span></button>
                         <button type="button" id="btn-reset-preset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span data-lang="reset"></span></button>
                         <button type="button" id="btn-rename-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-i-cursor"></i> <span data-lang="renameLabel"></span></button>
-                        <button type="button" id="btn-delete-preset" class="inline-action-btn secondary" style="display: none"><i class="fas fa-trash"></i> <span data-lang="deleteLabel"></span></button>
+                        <button type="button" id="btn-delete-preset" class="inline-action-btn secondary danger" style="display: none"><i class="fas fa-trash"></i> <span data-lang="deleteLabel"></span></button>
                       </div>
                       <div class="pd-actions-files">
                         <div class="pd-file-pair">
@@ -3497,7 +3497,7 @@
                   An imported theme carries its own images and behaves exactly like a built-in one.
                 </p>
                 <div class="theme-library-actions">
-                  <button type="button" id="btn-import-theme" class="btn">
+                  <button type="button" id="btn-import-theme" class="btn primary">
                     <i class="fas fa-file-import"></i> <span>Import theme…</span>
                   </button>
                   <button type="button" id="btn-export-theme" class="btn secondary">
@@ -3525,7 +3525,7 @@
                   <label class="theme-name-label" id="theme-customizer-name-label" for="theme-customizer-name">Theme name</label>
                   <div class="theme-name-row">
                     <input type="text" id="theme-customizer-name" maxlength="48" autocomplete="off" spellcheck="false" required aria-describedby="theme-customizer-name-hint" />
-                    <button type="button" id="btn-save-theme" class="btn">
+                    <button type="button" id="btn-save-theme" class="btn primary">
                       <i class="fas fa-save"></i> <span>Save theme</span>
                     </button>
                   </div>
@@ -4495,7 +4495,7 @@
             <button type="button" id="theme-preview-cancel" class="btn secondary">
               <i class="fas fa-times"></i> <span>Cancel</span>
             </button>
-            <button type="button" id="theme-preview-apply" class="btn">
+            <button type="button" id="theme-preview-apply" class="btn primary">
               <i class="fas fa-check"></i> <span>Import and apply</span>
             </button>
           </div>

@@ -73,6 +73,7 @@
     accentCustom: 'Custom',
     controller: 'Controller',
     controllerOpen: 'Open',
+    controllerUi: 'Overlay control',
     controllerMove: 'Move/scroll',
   };
 

@@ -74,10 +74,10 @@ test('Uplay settings expose repair controls and the diagnostic log, and no emula
 test('Uplay-specific styling follows theme and semantic variables', () => {
   const block = cssSource.slice(cssSource.indexOf('#settings .uplay-r2-settings-body'));
   const rules = block.slice(0, block.indexOf('/* Emulator group headers'));
-  assert.match(rules, /var\(--set-/);
-  assert.match(rules, /var\(--success\)/);
-  assert.match(rules, /var\(--danger\)/);
-  assert.doesNotMatch(rules, /#[0-9a-f]{3,8}|rgba?\(|\bwhite\b|\bblack\b/i);
+  assert.doesNotMatch(rules, /#[0-9a-f]{3,8}|rgba?\(|\bwhite\b(?!-space)|\bblack\b/i);
+  // The status pill is a shared chip: its state colours come from the semantic tokens there.
+  assert.match(cssSource, /#settings \.uplay-r2-status\)\[data-state='ready'\] \{\s*--chip-state: var\(--success\);/);
+  assert.match(cssSource, /#settings \.uplay-r2-status\[data-state='error'\]\) \{\s*--chip-state: var\(--danger\);/);
 });
 
 test('the integrated package helper stays below its action buttons', () => {

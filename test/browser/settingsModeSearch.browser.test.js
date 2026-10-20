@@ -54,9 +54,9 @@ test('a search reaches rows inside sections that start folded', async (t) => {
   try {
     const page = await openPanel(browser);
     const sectionRules = require(path.join(appDir, 'util', 'settingsSections.js'));
-    const result = await page.evaluate((folded) => {
-      // The collapse is a class on the section card, found by the same key the panel uses.
-      const cardOf = (el) => (el.matches('.arrow-list, .emulator-group, .settings-card') ? el : el.closest('.arrow-list, .emulator-group, .settings-card'));
+    const result = await page.evaluate((folded, sectionSelector) => {
+      // The collapse is a class on the section card, found by the same key and selector the panel uses.
+      const cardOf = (el) => (el.matches(sectionSelector) ? el : el.closest(sectionSelector));
       folded
         .map((key) => document.getElementById(key))
         .filter(Boolean)
@@ -69,7 +69,7 @@ test('a search reaches rows inside sections that start folded', async (t) => {
       document.querySelector('#settings').classList.add('searching');
       window.searchRules.filterSections($, 'souvenirScreenshot');
       return { foldedBefore: !before, shownWhileSearching: shown(), souvenirFolded: souvenirCard.classList.contains('is-collapsed') };
-    }, sectionRules.DEFAULT_COLLAPSED);
+    }, sectionRules.DEFAULT_COLLAPSED, sectionRules.SECTION_SELECTOR);
     assert.equal(result.souvenirFolded, true, 'the souvenir section starts folded');
     assert.equal(result.foldedBefore, true, 'a row in a folded section is hidden');
     assert.equal(result.shownWhileSearching, true, 'the search sees through the fold without opening the section');

@@ -78,6 +78,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Game pages show the game's own art.** A Steam game's page now uses the key art from Steam's
   library instead of the dark blue store background, which stays the fallback. Every page picture
   sits under the same veil, so none comes out black, and a game with no background shows its cover.
+- **A refreshed interface.** Buttons, fields, chips and windows share one look across the library,
+  game pages, Settings, the overlay and the update window, set in Open Sans. Settings choices open
+  as drop-down lists and rarely used sections start folded. Muted text and warning colours read
+  better in every built-in theme, and loading shows placeholders shaped like real game tiles.
 
 ### Fixed
 

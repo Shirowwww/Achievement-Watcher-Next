@@ -38,8 +38,20 @@ const DEFAULT_COLLAPSED = [
   'adv-diag-title',
   'profile-backup-title',
   'gbe-dll-settings',
+  // Version 2: the long tabs open on their main block only.
+  'options-source-consoles',
+  'steam-connect',
+  'epic-connect',
+  'xbox-connect',
+  'retroachievements-connect',
+  'folder-rescan',
+  'blacklist-card',
+  'emulator-identity',
+  'options-emulator2',
+  'profile-band',
+  'library-tiles',
 ];
-const DEFAULTS_VERSION = 1;
+const DEFAULTS_VERSION = 2;
 
 /*
   The collapsed keys to apply, given what was stored. A profile with no stored state gets the

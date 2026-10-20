@@ -24,7 +24,6 @@
   --bg-glow: #26384c;
   --panel: #192a40;
   --surface: #263b55;
-  --surface-elevated: #2d4561;
   --sunken: #101d2d;
   --text: #e7edf6;
   --text-muted: #94a5ba;
@@ -32,11 +31,19 @@
   --accent-text: #8daaff;
   --on-accent: #0b1424;
   --focus: #b9cbff;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --duration-fast: 120ms;
-  --duration-normal: 220ms;
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --border: #3e5065;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+  --control-h: 36px;
+  --control-pad-x: 14px;
+  --control-bg: color-mix(in srgb, var(--surface) 86%, transparent);
+  --control-bg-hover: color-mix(in srgb, var(--surface) 80%, var(--text) 9%);
+  --control-border: color-mix(in srgb, var(--border) 50%, transparent);
+  --control-border-hover: color-mix(in srgb, var(--border) 85%, var(--text) 15%);
+  --dur-fast: 120ms;
+  --dur-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -104,7 +111,9 @@ button {
   font-size: 12px;
   cursor: default;
   -webkit-app-region: no-drag;
-  transition: background var(--duration-fast), color var(--duration-fast);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .caption-close:hover {
@@ -165,20 +174,21 @@ h1 {
   margin-top: 20px;
 }
 
+/* The library's progress bar: an 8px pill with the same accent gradient. */
 .track {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--sunken);
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--sunken) 85%, transparent);
   overflow: hidden;
 }
 
 .fill {
   height: 100%;
-  border-radius: 3px;
-  background: var(--accent);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 80%, black 8%), var(--accent));
   transform-origin: left center;
   transform: scaleX(0);
-  transition: transform var(--duration-normal) var(--ease-out);
+  transition: transform var(--dur-slow) var(--ease-out);
 }
 
 #progress.indeterminate .fill {
@@ -207,6 +217,7 @@ h1 {
 
 #progress-percent {
   color: var(--text);
+  font-weight: 700;
 }
 
 /* ---- release notes ------------------------------------------------------------------------- */
@@ -218,7 +229,7 @@ h1 {
   min-height: 0;
   margin: 20px 0 0;
   padding: 14px 16px 10px;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--panel) 90%, transparent);
 }
 
@@ -338,30 +349,41 @@ footer:empty {
   background: none;
 }
 
+/* The app's button model (app.css "Shared controls"), on this window's fixed palette. */
 .action {
-  height: 38px;
+  height: var(--control-h);
   min-width: 96px;
-  padding: 0 18px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  padding: 0 var(--control-pad-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
   cursor: pointer;
-  transition: background var(--duration-fast);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .action:hover {
-  background: var(--surface-elevated);
+  border-color: var(--control-border-hover);
+  background: var(--control-bg-hover);
+}
+
+.action:active {
+  transform: scale(0.97);
 }
 
 .action.primary {
   min-width: 132px;
+  border-color: transparent;
   background: var(--accent);
   color: var(--on-accent);
   font-weight: 700;
-  box-shadow: 0 6px 16px rgba(108, 145, 255, 0.22);
 }
 
 .action.primary:hover {
+  border-color: transparent;
   background: color-mix(in srgb, var(--accent) 90%, white);
 }
 
@@ -369,6 +391,7 @@ footer:empty {
   min-width: 0;
   margin-right: auto;
   padding: 0 8px;
+  border-color: transparent;
   background: none;
   color: var(--text-muted);
 }

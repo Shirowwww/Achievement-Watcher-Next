@@ -383,7 +383,7 @@ test('the refusal has words in every bundled locale', () => {
 */
 test('the preview is set in the application own typefaces', () => {
   const mock = fs.readFileSync(path.join(appDir, 'util', 'themeMock.js'), 'utf8');
-  for (const family of ['Raleway', 'Open-Sans', 'Open-Sans-Bold', 'Raleway-Bold']) {
+  for (const family of ['Open-Sans', 'Open-Sans-Bold']) {
     assert.ok(mock.includes(`'${family}'`), `the mock never asks for ${family}`);
   }
   assert.ok(mock.includes('font-src data:'), 'the document must allow the faces it carries');

@@ -8,28 +8,17 @@ const path = require('node:path');
 const test = require('node:test');
 
 const { BUILTIN_COLORS } = require(path.join(__dirname, '..', '..', 'app', 'util', 'themeLayers.js'));
+const { contrast } = require('../helpers/contrast');
 
 const SURFACES = ['bg', 'header', 'panel', 'card', 'settings'];
 
-function luminance(hex) {
-  const [red, green, blue] = [1, 3, 5].map((at) => {
-    const channel = parseInt(hex.slice(at, at + 2), 16) / 255;
-    return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-}
-
-function contrast(first, second) {
-  const [high, low] = [luminance(first), luminance(second)].sort((a, b) => b - a);
-  return (high + 0.05) / (low + 0.05);
-}
-
-test('muted text keeps at least 3:1 on every surface of every built-in theme', () => {
+// Muted text carries whole sentences, so it gets the body-text threshold.
+test('muted text keeps at least 4.5:1 on every surface of every built-in theme', () => {
   const weak = [];
   for (const [theme, colors] of Object.entries(BUILTIN_COLORS)) {
     for (const surface of SURFACES) {
       const ratio = contrast(colors.muted, colors[surface]);
-      if (ratio < 3) weak.push(`${theme} muted on ${surface}: ${ratio.toFixed(2)}`);
+      if (ratio < 4.5) weak.push(`${theme} muted on ${surface}: ${ratio.toFixed(2)}`);
     }
   }
   assert.deepEqual(weak, []);

@@ -117,34 +117,23 @@ const LAYOUT = `
 * { box-sizing: border-box; }
 html, body { height: 100%; margin: 0; }
 /*
-  The application's own typography, name for name with app.css: Raleway is what the app sets on the
-  whole window, and Open Sans is what the parts of it that carry real text - the title bar, the game
-  tiles, the achievement rows, the settings surface - are set in. The faces themselves are optional
-  (see util/themeFonts.js); the stack behind each one is what a document without them falls back to.
+  The application's own typography, name for name with app.css: Open Sans everywhere, its bold face
+  for names and headings. The faces themselves are optional (see util/themeFonts.js); the stack
+  behind each one is what a document without them falls back to.
 */
 body {
-  font-family: 'Raleway', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
   color: var(--text);
   overflow: hidden;
-}
-.mock-header,
-.mock-tools,
-#game-list .game-box .info,
-#achievement .achievement-list,
-#settings .box .row,
-#settings .box .foot {
-  font-family: 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
 }
 .mock-header .name,
 .mock-profile .who > strong,
 .mock-profile .pill b,
 #game-list .game-box .info .title,
 #achievement .achievement-list .ach-name,
-#settings .box .head {
-  font-family: 'Open-Sans-Bold', 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
-}
+#settings .box .head,
 .section-label {
-  font-family: 'Raleway-Bold', 'Raleway', 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Open-Sans-Bold', 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
 }
 .mock { display: grid; grid-template-rows: auto 1fr; height: 100%; }
 

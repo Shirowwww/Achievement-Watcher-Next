@@ -119,8 +119,8 @@ test('the sound row can delete an imported sound and only an imported one', () =
   const css = fs.readFileSync(path.join(root, 'resources', 'css', 'app.css'), 'utf8');
 
   assert.match(html, /id="btn-delete-sound"[^>]*hidden/, 'the delete button must start hidden');
-  // .inline-action-btn sets display, which beats the browser's own [hidden] rule.
-  assert.match(css, /\.inline-action-btn\[hidden\] \{\s*display: none;/, 'a hidden inline action button would still paint');
+  // The shared button model sets display, which beats the browser's own [hidden] rule.
+  assert.match(css, /:where\([^)]*\.inline-action-btn[^)]*\)\[hidden\] \{\s*display: none;/, 'a hidden inline action button would still paint');
 
   assert.match(
     settings,

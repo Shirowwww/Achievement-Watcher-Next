@@ -46,7 +46,7 @@ html[lang="ru"] .achievement .stats .community > i
 }
 html[lang="ru"] #achievement .achievements .achievement-list > .header
 {
-  font-family: "Raleway-bold";
+  font-family: var(--font-strong);
 }
 html[lang="ru"] #settingNav li {
   width: 130px;

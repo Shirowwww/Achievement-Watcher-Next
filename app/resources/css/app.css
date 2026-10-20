@@ -1,18 +1,4 @@
 @font-face {
-  font-family: 'Raleway';
-  src: url('../font/Raleway/Raleway-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Raleway-Bold';
-  src: url('../font/Raleway/Raleway-Bold.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-}
-
-@font-face {
   font-family: 'Open-Sans';
   font-style: normal;
   font-weight: 400;
@@ -50,16 +36,36 @@
   --surface-sunken: #101d2d;
   --success: #5fd49a;
   --warning: #e5b263;
-  --danger: #e07a5f;
+  --danger: #ef876c;
   /* Trophy grades, the per-game PlayStation trophy colours. */
   --trophy-platinum: #7fd3f7;
   --trophy-gold: #ffd700;
   --trophy-silver: #d3d8de;
   --trophy-bronze: #c7713f;
-  --trophy-common: #6a6f78;
+  /* Common is a quieter muted text, so it follows each theme and still reads at 3:1 on a card. */
+  --trophy-common: color-mix(in srgb, var(--text-muted) 78%, var(--surface));
+  --radius-xs: 4px;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 18px;
+  --radius-pill: 999px;
+  /* One family, two faces. Raleway is gone from the interface: its old-style figures made every
+     count and date in the app look uneven. */
+  --font-body: 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-strong: 'Open-Sans-Bold', 'Open-Sans', 'Segoe UI', system-ui, sans-serif;
+  /* Type scale: every font size in this file is one of these. */
+  --fs-3xs: 9px;
+  --fs-2xs: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-md: 13px;
+  --fs-base: 14px;
+  --fs-lg: 16px;
+  --fs-xl: 18px;
+  --fs-2xl: 20px;
+  --fs-3xl: 24px;
+  --fs-4xl: 32px;
+  --fs-5xl: 36px;
   --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.28);
   --shadow-dialog: 0 34px 90px rgba(0, 0, 0, 0.58);
 
@@ -109,6 +115,15 @@
   /* Label colour for anything filled with the accent: black or white, whichever reads better on the
      theme's own accent. Light text on a pale accent was under 2:1 in most built-in themes. */
   --on-accent: oklch(from var(--accent) clamp(0, (0.62 - l) * 1000, 1) 0 0);
+
+  /* Shared component tokens: controls, fields, dialogs, motion and the game page veil. */
+  --control-h: 36px;
+  --control-pad-x: 14px;
+  --toolbar-h: 34px;
+  --control-bg: color-mix(in srgb, var(--surface) 86%, transparent);
+  --control-bg-hover: color-mix(in srgb, var(--surface) 80%, var(--text) 9%);
+  --control-border: color-mix(in srgb, var(--border) 50%, transparent);
+  --control-border-hover: color-mix(in srgb, var(--border) 85%, var(--text) 15%);
   /* The one veil over a game page's picture, whatever its source: the game stays recognisable, the
      title and the stat chips drawn straight on it stay readable. */
   --game-backdrop-veil: linear-gradient(
@@ -116,6 +131,21 @@
     color-mix(in srgb, var(--bg-base) 62%, transparent) 0%,
     color-mix(in srgb, var(--bg-base) 80%, transparent) 100%
   );
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --field-bg: color-mix(in srgb, var(--surface-sunken) 70%, transparent);
+  --field-border: color-mix(in srgb, var(--border) 55%, transparent);
+  /* Settings, a game's panel, the theme preview, the prompts and the first-run guide all open as
+     this same surface. */
+  --dialog-radius: var(--radius-lg);
+  --dialog-bg: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
+  --dialog-border: 1px solid var(--set-hairline);
+  --dialog-shadow:
+    0 28px 70px rgba(0, 0, 0, calc(0.46 * var(--shadow-scale))),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 /* App themes (Settings > General). Every theme but 'light' is a dark variant: the stylesheet's
@@ -133,7 +163,6 @@
   --trophy-gold: #c99700;
   --trophy-silver: #7c8794;
   --trophy-bronze: #b35f2e;
-  --trophy-common: #b9bdc4;
   /* Shadows here are the same black as everywhere else, just far weaker: at full strength the
      dark-theme alphas turn every card into a grey halo on a near-white surface. Kept low, but not
      so low that cards lose their lift - depth is the only separation a white card on a pale panel
@@ -159,8 +188,8 @@
   --surface-elevated: #ffffff;
   /* Progress tracks and wells: has to sit clearly below the white card it is cut into. */
   --surface-sunken: #dbe2ec;
-  --success: #14804a;
-  --warning: #9a6700;
+  --success: #117e49;
+  --warning: #976400;
   --danger: #c4342f;
 }
 :root[data-theme='oled'] {
@@ -197,7 +226,7 @@
   --surface-sunken: #171923;
   --success: #50fa7b;
   --warning: #ffb86c;
-  --danger: #ff5555;
+  --danger: #ff7571;
 }
 :root[data-theme='graphite'] {
   --bg-base: #1d1f22;
@@ -215,7 +244,7 @@
   --surface-sunken: #101113;
   --success: #8ed49a;
   --warning: #d8a657;
-  --danger: #e0685a;
+  --danger: #e76e60;
 }
 /* Established community color schemes, ported with their canonical palettes. */
 :root[data-theme='nord'] {
@@ -227,14 +256,14 @@
   --set-surface: #2e3440;
   --border: #4c566a;
   --text: #eceff4;
-  --text-muted: #9099ab;
+  --text-muted: #a5aec0;
   --accent: #88c0d0;
   --accent-soft: rgba(136, 192, 208, 0.18);
   --surface-elevated: #434c5e;
   --surface-sunken: #262b35;
   --success: #a3be8c;
   --warning: #ebcb8b;
-  --danger: #bf616a;
+  --danger: #f59199;
 }
 :root[data-theme='gruvbox'] {
   --bg-base: #282828;
@@ -245,14 +274,14 @@
   --set-surface: #32302f;
   --border: #504945;
   --text: #ebdbb2;
-  --text-muted: #a89984;
+  --text-muted: #afa08b;
   --accent: #fe8019;
   --accent-soft: rgba(254, 128, 25, 0.18);
   --surface-elevated: #504945;
   --surface-sunken: #1d2021;
   --success: #b8bb26;
   --warning: #fabd2f;
-  --danger: #fb4934;
+  --danger: #ff7960;
 }
 :root[data-theme='tokyonight'] {
   --bg-base: #1a1b26;
@@ -335,14 +364,14 @@
   --set-surface: #293237;
   --border: #4a555b;
   --text: #d3c6aa;
-  --text-muted: #859289;
+  --text-muted: #9daba1;
   --accent: #a7c080;
   --accent-soft: rgba(167, 192, 128, 0.18);
   --surface-elevated: #3d494e;
   --surface-sunken: #171c20;
   --success: #a7c080;
   --warning: #dbbc7f;
-  --danger: #e67e80;
+  --danger: #f38a8b;
 }
 :root[data-theme='ocean'] {
   --bg-base: #0b1e26;
@@ -360,7 +389,7 @@
   --surface-sunken: #061116;
   --success: #7fbbb3;
   --warning: #e6b450;
-  --danger: #e67e80;
+  --danger: #f08788;
 }
 
 html,
@@ -390,6 +419,244 @@ p {
   ):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Shared controls. Every button in the app starts from this one model; a screen only adds its
+   layout (width, margin, grid placement). Specificity 0 through :where(), so that layout wins.
+   Settings and the game panel draw on their own surface layer, hence the scoped control colours. */
+#settings,
+#game-config,
+#theme-preview {
+  --control-bg: color-mix(in srgb, var(--set-surface) 86%, transparent);
+  --control-bg-hover: color-mix(in srgb, var(--set-surface) 80%, var(--text) 9%);
+}
+
+:where(
+    .btn,
+    .inline-action-btn,
+    .aw-prompt-button,
+    .onboarding-test-button,
+    #settings .box .footer .buttons div,
+    #game-config .box .footer .buttons div
+  ) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: var(--control-h);
+  padding: 0 var(--control-pad-x);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  /* A <button> does not inherit colour: the user agent paints its label black whatever the theme. */
+  color: var(--text);
+  background: var(--control-bg);
+  font: var(--fs-md) / 1.2 var(--font-body);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+:where(
+    .btn,
+    .inline-action-btn,
+    .aw-prompt-button,
+    .onboarding-test-button,
+    #settings .box .footer .buttons div,
+    #game-config .box .footer .buttons div
+  ):hover {
+  background: var(--control-bg-hover);
+  border-color: var(--control-border-hover);
+}
+:where(
+    .btn,
+    .inline-action-btn,
+    .aw-prompt-button,
+    .onboarding-test-button,
+    #settings .box .footer .buttons div,
+    #game-config .box .footer .buttons div
+  ):active {
+  transform: scale(0.97);
+}
+/* The one action a view is for: filled with the theme's accent. */
+:where(
+    .btn.primary,
+    .inline-action-btn.primary,
+    .aw-prompt-button.primary,
+    #btn-settings-save,
+    #btn-game-config-save
+  ) {
+  border-color: transparent;
+  color: var(--on-accent);
+  background: var(--accent);
+  font-family: var(--font-strong);
+}
+:where(
+    .btn.primary,
+    .inline-action-btn.primary,
+    .aw-prompt-button.primary,
+    #btn-settings-save,
+    #btn-game-config-save
+  ):hover {
+  border-color: transparent;
+  background: var(--accent-strong);
+}
+/* An action that cannot be undone: quiet until hovered, then it says so. */
+:where(.btn.danger, .inline-action-btn.danger) {
+  color: var(--danger);
+}
+:where(.btn.danger, .inline-action-btn.danger):hover {
+  border-color: color-mix(in srgb, var(--danger) 60%, transparent);
+  background: color-mix(in srgb, var(--danger) 16%, var(--control-bg));
+}
+:where(.btn, .inline-action-btn, .aw-prompt-button, .onboarding-test-button):is(:disabled, .disabled) {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+}
+/* `display: inline-flex` above beats the browser's own `[hidden] { display: none }`. */
+:where(.btn, .inline-action-btn, .aw-prompt-button, .onboarding-test-button)[hidden] {
+  display: none;
+}
+
+/* Shared text fields and selects. Same height and corners as a button, a sunken fill, and one focus
+   state: the accent border with a soft ring. A screen adds only room for an icon or its width. */
+#settings,
+#game-config,
+#theme-preview {
+  --field-bg: color-mix(in srgb, var(--set-surface-sunken) 70%, transparent);
+}
+:where(
+    .manual-game-fields input,
+    .manual-game-fields select,
+    .onboarding-step input,
+    .onboarding-step select,
+    #game-config .launch-args-row input,
+    .game-notification-field select,
+    #settings .blacklist-add-row input,
+    #achievement-search input[type='search'],
+    #settings .emulator-login input,
+    .aw-prompt-input,
+    #settings .help-search input,
+    #settings .pd-file input[type='text'],
+    #settings .pd-file select,
+    #settings .pd-search input
+  ) {
+  box-sizing: border-box;
+  min-height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  color: var(--text);
+  background: var(--field-bg);
+  font: var(--fs-md) / 1.3 var(--font-body);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+:where(
+    .manual-game-fields input,
+    .manual-game-fields select,
+    .onboarding-step input,
+    .onboarding-step select,
+    #game-config .launch-args-row input,
+    .game-notification-field select,
+    #settings .blacklist-add-row input,
+    #achievement-search input[type='search'],
+    #settings .emulator-login input,
+    .aw-prompt-input,
+    #settings .help-search input,
+    #settings .pd-file input[type='text'],
+    #settings .pd-file select,
+    #settings .pd-search input
+  ):hover {
+  border-color: var(--control-border-hover);
+}
+:where(
+    .manual-game-fields input,
+    .manual-game-fields select,
+    .onboarding-step input,
+    .onboarding-step select,
+    #game-config .launch-args-row input,
+    .game-notification-field select,
+    #settings .blacklist-add-row input,
+    #achievement-search input[type='search'],
+    #settings .emulator-login input,
+    .aw-prompt-input,
+    #settings .help-search input,
+    #settings .pd-file input[type='text'],
+    #settings .pd-file select,
+    #settings .pd-search input
+  ):focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Shared chips: read-only labels and counts. One shape in two sizes; the accent tint marks a count
+   or a date that belongs to what it sits beside. A screen only adds placement. */
+:where(
+    .gh-state,
+    #user-info .info .stats li,
+    #settings .help-chip,
+    #settings .uplay-r2-status,
+    #profile-stats .header > .profile-stats-scope,
+    #blacklist-manager li .appid,
+    #game-list.view-details .library-recent-unlock time,
+    #settings .help-match-count,
+    #settings .help-topic-count
+  ) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--control-border) 45%, transparent);
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--control-bg) 55%, transparent);
+  color: color-mix(in srgb, var(--text) 85%, var(--text-muted));
+  font: var(--fs-sm) / 1.3 var(--font-body);
+  white-space: nowrap;
+}
+
+:where(
+    #blacklist-manager li .appid,
+    #game-list.view-details .library-recent-unlock time,
+    #settings .help-match-count,
+    #settings .help-topic-count
+  ) {
+  padding: 1px 7px;
+  font-size: var(--fs-2xs);
+  font-variant-numeric: tabular-nums;
+}
+
+:where(#game-list.view-details .library-recent-unlock time, #settings .help-match-count) {
+  border-color: color-mix(in srgb, var(--accent) 22%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: color-mix(in srgb, var(--accent) 60%, var(--text));
+}
+
+/* A status chip takes its state's colour, so it is readable before its label is. */
+:where(.gh-state, #settings .uplay-r2-status)[data-state='ready'] {
+  --chip-state: var(--success);
+}
+:where(.gh-state)[data-state='attention'] {
+  --chip-state: var(--warning);
+}
+:where(.gh-state[data-state='not-tracking'], #settings .uplay-r2-status[data-state='error']) {
+  --chip-state: var(--danger);
+}
+:where(.gh-state, #settings .uplay-r2-status)[data-state] {
+  border-color: color-mix(in srgb, var(--chip-state, var(--control-border)) 36%, transparent);
+  background: color-mix(in srgb, var(--chip-state, var(--control-bg)) 12%, transparent);
+  color: var(--chip-state, var(--text-muted));
+  font-family: var(--font-strong);
 }
 
 /* Native Gamepad API navigation. The marker is only visible after an actual controller input, so
@@ -464,7 +731,7 @@ body[style*='--game-backdrop-image']::before {
 
 main {
   color: var(--text);
-  font-family: 'Raleway';
+  font-family: var(--font-body);
   width: 100%;
   height: calc(100% - 30px);
 }
@@ -584,8 +851,8 @@ body.is-resizing #game-list {
 }
 
 #user-info .info .name {
-  font-family: 'Raleway-Bold';
-  font-size: 30px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-4xl);
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -596,18 +863,16 @@ body.is-resizing #game-list {
   padding-top: 6px;
 }
 
+/* A list item: the generic `li` resets outrank the chip model, so the padding is restated here. The
+   trophy row below lines its first icon up with this 9px. */
 #user-info .info .stats li {
-  display: inline-block;
-  margin: 0 5px;
-}
-
-#user-info .info .stats li:first-child {
-  margin-left: 0;
+  margin: 0;
+  padding: 5px 9px;
 }
 
 #user-info .info .stats.is-updating .data {
   display: inline-block;
-  animation: profile-stat-refresh 0.2s cubic-bezier(0.22, 0.7, 0.25, 1);
+  animation: profile-stat-refresh 0.2s var(--ease-out);
 }
 
 @keyframes profile-stat-refresh {
@@ -632,7 +897,7 @@ body.is-resizing #game-list {
   padding: 2px;
   box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
   background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, calc(0.38 * var(--shadow-scale))), 0 1px 0 rgba(255, 255, 255, 0.04);
@@ -645,7 +910,7 @@ body.is-resizing #game-list {
 #user-info .info .completion-dist .fill {
   position: relative;
   height: 100%;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: linear-gradient(
     90deg,
     color-mix(in srgb, var(--accent) 78%, black 8%) 0%,
@@ -653,7 +918,7 @@ body.is-resizing #game-list {
     color-mix(in srgb, var(--accent) 82%, white 18%) 100%
   );
   box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 26%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  transition: width 0.45s cubic-bezier(0.22, 0.7, 0.25, 1);
+  transition: width 0.45s var(--ease-out);
 }
 
 #user-info .info .completion-dist .fill::after {
@@ -686,22 +951,15 @@ body.is-resizing #game-list {
   display: flex;
   align-items: center;
   width: 164px;
-  height: 32px;
+  height: var(--toolbar-h);
   box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
-  border-radius: 9px;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface) 66%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 20px rgba(0, 0, 0, calc(0.12 * var(--shadow-scale)));
-  backdrop-filter: blur(12px);
-  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.library-layout-control:hover,
 .library-layout-control:focus-within {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
-  box-shadow: 0 0 0 3px var(--accent-soft), 0 8px 20px rgba(0, 0, 0, calc(0.14 * var(--shadow-scale)));
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .library-layout-control > i:first-child {
@@ -713,7 +971,7 @@ body.is-resizing #game-list {
 .library-layout-control .dropdown-arrow {
   position: absolute;
   right: 9px;
-  font-size: 9px;
+  font-size: var(--fs-3xs);
   pointer-events: none;
 }
 
@@ -727,7 +985,7 @@ body.is-resizing #game-list {
   outline: 0;
   color: var(--text);
   background: transparent;
-  font: 11.5px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
   cursor: pointer;
 }
 
@@ -740,33 +998,14 @@ body.is-resizing #game-list {
   display: grid;
   place-items: center;
   box-sizing: border-box;
-  width: 30px;
-  height: 30px;
+  width: var(--toolbar-h);
+  height: var(--toolbar-h);
   padding: 0;
-  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-  border-radius: 8px;
+  border: 1px solid;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface) 54%, transparent);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--text) 7%, transparent);
-  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
-}
-
-.library-add-button:hover,
-.library-add-button:focus-visible {
-  outline: none;
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
-  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
-  transform: translateY(-1px);
-}
-
-#game-list .progressBar.unavailable .progress-value {
-  width: auto;
-  padding: 0 7px;
-  font-size: 9px;
-  letter-spacing: 0.01em;
 }
 
 /* Steam confirmed the game has no achievements and Settings leaves its bar out (issue #123). List and
@@ -825,7 +1064,7 @@ body.is-resizing #game-list {
   gap: 10px;
   padding: 18px 22px;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
-  font: 18px 'Raleway-Bold';
+  font: var(--fs-xl) var(--font-strong);
   background: color-mix(in srgb, var(--surface-sunken) 26%, transparent);
 }
 
@@ -834,7 +1073,7 @@ body.is-resizing #game-list {
   place-items: center;
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--accent-strong);
   background: var(--accent-soft);
 }
@@ -850,7 +1089,7 @@ body.is-resizing #game-list {
   display: grid;
   gap: 7px;
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 .manual-game-fields label:first-child,
@@ -861,23 +1100,7 @@ body.is-resizing #game-list {
 
 .manual-game-fields input,
 .manual-game-fields select {
-  box-sizing: border-box;
   width: 100%;
-  min-height: 38px;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  background: color-mix(in srgb, var(--surface-sunken) 78%, transparent);
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-}
-
-.manual-game-fields input:focus,
-.manual-game-fields select:focus {
-  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
-  background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 #manual-game-exe-path {
@@ -893,7 +1116,7 @@ body.is-resizing #game-list {
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   background: color-mix(in srgb, var(--surface-sunken) 34%, transparent);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 #manual-game-note i {
@@ -915,21 +1138,14 @@ body.is-resizing #game-list {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  font-size: 15px;
+  box-sizing: border-box;
+  width: var(--toolbar-h);
+  height: var(--toolbar-h);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-base);
   cursor: pointer;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 12%, transparent);
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
-}
-#sort-box .installed-filter:hover,
-#sort-box .collection-filter:hover {
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--border) 32%, transparent);
-  transform: translateY(-1px);
+  border: 1px solid;
 }
 #sort-box .installed-filter:active,
 #sort-box .collection-filter:active {
@@ -951,7 +1167,7 @@ body.is-resizing #game-list {
 #sort-box .collection-filter .collection-image {
   width: 20px;
   height: 20px;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   object-fit: cover;
 }
 
@@ -959,11 +1175,12 @@ body.is-resizing #game-list {
 #sort-box .sort-group {
   display: flex;
   align-items: center;
+  box-sizing: border-box;
+  height: var(--toolbar-h);
   gap: 2px;
   padding: 3px;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 12%, transparent);
+  border-radius: var(--radius-sm);
+  border: 1px solid;
 }
 #sort-box .sort {
   display: flex;
@@ -972,8 +1189,8 @@ body.is-resizing #game-list {
   height: 26px;
   min-width: 36px;
   padding: 0 8px;
-  border-radius: 6px;
-  font-size: 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-base);
   cursor: pointer;
   color: var(--text-muted);
   position: relative;
@@ -999,7 +1216,7 @@ body.is-resizing #game-list {
   width: 10px;
   margin: 0;
   opacity: 0;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   color: color-mix(in srgb, var(--text) 82%, transparent);
   transform: rotate(0deg);
   pointer-events: none;
@@ -1046,7 +1263,7 @@ body.is-resizing #game-list {
 .aw-collection-label {
   margin-bottom: 6px;
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -1062,7 +1279,7 @@ body.is-resizing #game-list {
   height: 32px;
   padding: 0;
   border: 2px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   cursor: pointer;
   background: color-mix(in srgb, var(--surface) 55%, transparent);
@@ -1094,7 +1311,9 @@ body.is-resizing #game-list {
   flex: 0 0 25px;
   overflow: hidden;
   position: relative;
-  transition: height 0.28s cubic-bezier(0.22, 0.7, 0.25, 1), flex-basis 0.28s cubic-bezier(0.22, 0.7, 0.25, 1);
+  transition:
+    height var(--dur-slow) var(--ease-out),
+    flex-basis var(--dur-slow) var(--ease-out);
 }
 
 #main-footer.done {
@@ -1129,7 +1348,7 @@ body.is-resizing #game-list {
   width: 91.85%;
   flex: 1;
   border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
@@ -1145,7 +1364,7 @@ body.is-resizing #game-list {
 }
 #game-list::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 28%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -1168,7 +1387,7 @@ body.is-resizing #game-list {
   left: 50%;
   transform: translate(-50%, -50%);
   padding: 10px 20px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 62%, var(--surface-sunken)) 0%, color-mix(in srgb, var(--surface) 34%, var(--surface-sunken)) 100%);
   border: 1px solid color-mix(in srgb, var(--border) 12%, transparent);
   box-shadow: 0 20px 44px rgba(0, 0, 0, calc(0.42 * var(--shadow-scale)));
@@ -1182,40 +1401,21 @@ body.is-resizing #game-list {
 }
 #game-list .isEmpty > i {
   display: block;
-  font-size: 34px;
+  font-size: var(--fs-5xl);
   margin-bottom: 12px;
   color: var(--text-muted);
 }
 #game-list .isEmpty .empty-title {
   display: block;
-  font-family: 'Raleway-Bold';
-  font-size: 18px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-xl);
   margin-bottom: 8px;
 }
 #game-list .isEmpty .empty-hint {
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.55;
   color: var(--text-muted);
   margin-bottom: 16px;
-}
-#game-list .isEmpty .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  background: color-mix(in srgb, var(--surface) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: 7px;
-  cursor: pointer;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.2 * var(--shadow-scale)));
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
-}
-#game-list .isEmpty .btn:hover {
-  background: color-mix(in srgb, var(--surface) 96%, transparent);
-  border-color: color-mix(in srgb, var(--border) 34%, transparent);
-}
-#game-list .isEmpty .btn:active {
-  transform: scale(0.96);
 }
 
 .loading {
@@ -1223,86 +1423,77 @@ body.is-resizing #game-list {
   align-items: center;
   justify-content: center;
   height: 25px; /* footer height */
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   padding: 0;
   box-sizing: border-box;
 }
 
 .loading .title {
-  font-family: 'Raleway-bold';
+  font-family: var(--font-strong);
   margin-bottom: 6px;
   text-align: center;
   height: 18px;
   display: none;          /* hide title in small footer */
   font-weight: bold;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   margin-bottom: 2px;
   text-align: center;
 }
 
+/* The library tiles' bar, at footer size: a pill track, the accent gradient, the label beside it.
+   Nothing ever leaves the track, so it needs no clipping and the label can sit outside it. */
 .loading .progressBar {
   position: relative;
-  width: 75%;       /* 50% of footer */
+  width: 75%;
   min-width: 250px;
-  height: 8px;
-  background: var(--bg-panel);
-  border-radius: 4px;
-  overflow: hidden;
+  height: 6px;
   margin: 0 auto;
   display: block;
   box-sizing: border-box;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface-sunken) 85%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
 }
 
 .loading .progressBar .meter {
-  width: 0%;        /* updated by JS */
+  width: 0%;
   height: 100%;
-  background: linear-gradient(to right, color-mix(in srgb, var(--accent) 75%, black 10%), var(--accent));
-  border-radius: inherit;
-  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   display: block;
   box-sizing: border-box;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 80%, black 8%), var(--accent));
+  transition: width var(--dur-slow) var(--ease-out);
 }
 
 /* Discovery and the Steam ownership call run before the first percentage exists. There is nothing
-   truthful to count during that phase, so the bar sweeps and names the phase instead. */
+   truthful to count during that phase, so a short segment glides from end to end and the label
+   names the phase. 257% is the rest of the track (72%) in the segment's own width (28%). */
 .loading .progressBar.indeterminate .meter {
-  width: 35%;
+  width: 28%;
   transition: none;
-  animation: loading-sweep 1.1s ease-in-out infinite;
+  animation: loading-glide 1.2s var(--ease-in-out) infinite alternate;
 }
 
-@keyframes loading-sweep {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(285%); }
+@keyframes loading-glide {
+  from { transform: translateX(0); }
+  to { transform: translateX(257%); }
 }
 
-/* No percentage exists yet, so the overlay names the phase instead of printing a meaningless 0%. */
+/* No percentage exists yet, so the label names the phase instead of printing a meaningless 0%. */
 .loading .progressBar.indeterminate:before {
   content: attr(data-label);
 }
 
-/* Percent text overlay */
 .loading .progressBar:before {
   content: attr(data-percent) '%';
   position: absolute;
   top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 10px;
-  color: var(--text);
-  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  z-index: 2;
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font: var(--fs-2xs) / 1 var(--font-strong);
+  white-space: nowrap;
   pointer-events: none;
-}
-
-/* Optional responsive tweaks */
-@media (max-width: 600px) {
-  .loading .progressBar {
-    height: 6px;
-  }
-  .loading .progressBar:before {
-    font-size: 9px;
-  }
 }
 
 #game-list > ul {
@@ -1318,10 +1509,10 @@ body.is-resizing #game-list {
 }
 
 #game-list .game-box {
-  font-family: 'Open-Sans';
+  font-family: var(--font-body);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 62%, var(--surface-sunken)) 0%, color-mix(in srgb, var(--surface) 34%, var(--surface-sunken)) 100%);
   width: 230px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   border: var(--library-card-border) solid color-mix(in srgb, var(--border) 10%, transparent);
   box-shadow: 0 14px 28px rgba(0, 0, 0, calc(0.22 * var(--shadow-scale))), 0 3px 8px rgba(0, 0, 0, calc(0.25 * var(--shadow-scale)));
@@ -1348,60 +1539,65 @@ body.is-resizing #game-list {
 #game-list .game-box.skeleton {
   pointer-events: none;
 }
+/* The blocks a real tile fills - cover, name, bar track, percentage - drawn where the real tile's
+   own rules put them, so nothing reflows when a game takes its placeholder's place. */
 #game-list .game-box.skeleton .header,
 #game-list .game-box.skeleton .info .title,
-#game-list .game-box.skeleton .info .progressBar .meter {
-  position: relative;
-  overflow: hidden;
+#game-list .game-box.skeleton .info .progressBar:before,
+#game-list .game-box.skeleton .info .progressBar:after {
   background: var(--surface-sunken) !important;
 }
-#game-list .game-box.skeleton .header::before,
-#game-list .game-box.skeleton .info .title::before,
-#game-list .game-box.skeleton .info .progressBar .meter::before {
+#game-list .game-box.skeleton .info .title {
+  flex: 0 0 auto;
+  width: 58%;
+  height: 10px;
+  border-radius: var(--radius-pill);
+}
+#game-list .game-box.skeleton .info .progressBar .meter {
+  display: none;
+}
+#game-list .game-box.skeleton .info .progressBar:after {
+  content: '';
+  position: absolute;
+  top: var(--bar-inset, 3px);
+  bottom: var(--bar-inset, 3px);
+  right: 0;
+  width: 26px;
+  border-radius: var(--radius-pill);
+}
+/* One sheen per tile, across every block at once: one compositor layer instead of three. The
+   offset delays (0 to -1s, set per tile) start the wave on the first tile and carry it along. */
+#game-list .game-box.skeleton:after {
   content: '';
   position: absolute;
   inset: 0;
+  z-index: 3;
+  background: linear-gradient(100deg, transparent 35%, color-mix(in srgb, var(--surface) 80%, transparent) 50%, transparent 65%);
   transform: translateX(-100%);
-  background: linear-gradient(
-    105deg,
-    transparent 25%,
-    color-mix(in srgb, var(--surface) 52%, transparent) 50%,
-    transparent 75%
-  );
-  animation: aw-skeleton-shimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  animation-delay: var(--skeleton-delay, 0s);
-}
-#game-list .game-box.skeleton .info {
-  min-height: 57px; /* match a real tile's info block so the grid does not reflow */
-}
-#game-list .game-box.skeleton .info .title {
-  width: 62%;
-  height: 11px;
-  margin: 0 0 9px;
-  border-radius: 4px;
-  padding: 0;
-}
-#game-list .game-box.skeleton .info .progressBar {
-  background: var(--surface-sunken);
-  border: 0;
-  padding: 0;
-}
-#game-list .game-box.skeleton .info .progressBar .meter {
-  width: 100%;
-  height: 5px;
-  border-radius: 3px;
-}
-#game-list .game-box.skeleton .info .progressBar:before,
-#game-list .game-box.skeleton .info .progressBar .meter:after {
-  content: none;
+  animation: aw-skeleton-sheen 1.8s var(--ease-in-out) infinite;
+  animation-delay: calc(-1.8s - var(--skeleton-delay, 0s));
 }
 
-@keyframes aw-skeleton-shimmer {
+@keyframes aw-skeleton-sheen {
   0% {
     transform: translateX(-100%);
   }
+  65%,
   100% {
     transform: translateX(100%);
+  }
+}
+
+/* While a scan streams games in, each one fades into its placeholder's place. Only then: the class
+   leaves with the last skeleton, so sorting or filtering later never replays it. */
+#game-list.is-streaming .game-box:not(.skeleton) {
+  animation: aw-tile-arrive var(--dur-base) var(--ease-out);
+}
+
+@keyframes aw-tile-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }
 
@@ -1499,27 +1695,27 @@ body.is-resizing #game-list {
 }
 #game-list .library-artwork-feedback > i {
   color: var(--text-muted);
-  font-size: 20px;
+  font-size: var(--fs-2xl);
 }
 #game-list .header.artwork-error .library-artwork-feedback > i {
   color: var(--danger);
 }
 #game-list .library-artwork-feedback-message {
   max-width: 190px;
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.3;
 }
 #game-list .library-artwork-retry {
   pointer-events: auto;
   border: 1px solid color-mix(in srgb, var(--accent) 46%, transparent);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   padding: 5px 10px;
   color: var(--text);
   background: color-mix(in srgb, var(--surface) 78%, transparent);
   cursor: pointer;
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   text-shadow: none;
 }
 #game-list .library-artwork-retry:hover,
@@ -1540,7 +1736,7 @@ body.is-resizing #game-list {
 #game-list.view-compact .library-artwork-feedback-message,
 #game-list.view-list .library-artwork-feedback-message {
   max-width: 100%;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   line-height: 1.15;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -1551,7 +1747,7 @@ body.is-resizing #game-list {
 #game-list.view-compact .library-artwork-retry,
 #game-list.view-list .library-artwork-retry {
   padding: 2px 8px;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   line-height: 1.15;
 }
 
@@ -1572,7 +1768,7 @@ body.is-resizing #game-list {
 }
 
 #game-list .game-box .info .title {
-  font-size: 13px;
+  font-size: var(--fs-md);
   padding: 0 30px 8px 0;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1589,7 +1785,7 @@ body.is-resizing #game-list {
     var(--surface-sunken) 100%
   );
   border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, calc(0.55 * var(--shadow-scale))), 0 1px 0 rgba(255, 255, 255, 0.04);
   overflow: hidden;
   padding: 0;
@@ -1622,8 +1818,8 @@ body.is-resizing #game-list {
 
 #game-list .game-box .info .progressBar:before {
   content: attr(data-percent) '%';
-  font-family: 'Raleway-bold';
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -1670,7 +1866,7 @@ body.is-resizing #game-list {
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1;
   cursor: help;
 }
@@ -1692,7 +1888,7 @@ body.is-resizing #game-list {
 }
 
 #game-list .game-box .info .source {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   padding: 6px 0 1px 0;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1711,11 +1907,11 @@ body.is-resizing #game-list {
   border-radius: 50%;
   color: var(--text);
   padding: 12px 16px;
-  font-size: 20px;
+  font-size: var(--fs-2xl);
   cursor: pointer;
   z-index: 2;
   opacity: 0;
-  transition: opacity 0.32s ease, transform 0.4s cubic-bezier(0.18, 0.72, 0.24, 1), background 0.2s ease;
+  transition: opacity 0.32s ease, transform 0.4s var(--ease-out), background 0.2s ease;
 }
 
 .game-box .achievement-button {
@@ -1729,7 +1925,7 @@ body.is-resizing #game-list {
   border-radius: 50%;
   color: var(--text);
   padding: 5px 5px;
-  font-size: 15px;
+  font-size: var(--fs-base);
   cursor: pointer;
   z-index: 3;
   opacity: 0.72;
@@ -1746,7 +1942,7 @@ body.is-resizing #game-list {
   border-radius: 50%;
   color: var(--text);
   padding: 5px 5px;
-  font-size: 15px;
+  font-size: var(--fs-base);
   cursor: pointer;
   z-index: 3;
   opacity: 0.72;
@@ -1777,7 +1973,7 @@ body.is-resizing #game-list {
 }
 #achievement::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 28%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -1803,27 +1999,9 @@ body.is-resizing #game-list {
   background-size: contain !important;
 }
 
-#achievement .wrapper > .header .trophy {
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  padding: 10px 20px;
-  border-radius: 8px;
-  display: inline-block;
-  height: 19px;
-  vertical-align: top;
-  margin-left: 10px;
-  display: none;
-}
-
+#achievement .wrapper > .header .trophy,
 #achievement .wrapper > .header .playtime,
 #achievement .wrapper > .header .lastplayed {
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  padding: 10px 20px;
-  border-radius: 8px;
-  display: inline-block;
-  height: 19px;
-  vertical-align: top;
   margin-left: 10px;
   display: none;
 }
@@ -1864,7 +2042,7 @@ body.is-resizing #game-list {
   color: var(--trophy-bronze);
 }
 .achievement .title i.fa-trophy {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   vertical-align: middle;
 }
 
@@ -1880,7 +2058,7 @@ body.is-resizing #game-list {
   width: 32px;
   height: 32px;
   margin: auto 0;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.32 * var(--shadow-scale)));
   /* The logo is also a control - right-click changes it - and the pointer is the only hint of
      that before the tooltip appears. */
@@ -1900,8 +2078,8 @@ body.is-resizing #game-list {
 
 #achievement .wrapper > .header .title > span {
   margin-left: 10px;
-  font-family: Open-sans-bold;
-  font-size: 36px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-5xl);
   text-shadow: rgba(0, 0, 0, 0.5) 4px 4px 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1910,75 +2088,51 @@ body.is-resizing #game-list {
   padding: 8px 0;
 }
 
+/* The header's read-only chips (count, trophies, playtime, last played) and its two buttons share one
+   height. The JS shows playtime and last played as inline-block, so these stay inline-block. */
+#achievement .wrapper > .header .stats,
+#achievement .wrapper > .header .trophy,
+#achievement .wrapper > .header .playtime,
+#achievement .wrapper > .header .lastplayed {
+  box-sizing: border-box;
+  height: var(--control-h);
+  padding: 0 16px;
+  border: 1px solid;
+  line-height: calc(var(--control-h) - 2px);
+  font-size: var(--fs-md);
+  vertical-align: middle;
+}
+
 #achievement .wrapper > .header .stats {
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  padding: 10px 20px;
-  border-radius: 8px;
   display: inline-block;
-  height: 19px;
-  vertical-align: top;
 }
 
 #achievement .wrapper > .header .stats .counter:after {
   content: attr(data-count) ' / ' attr(data-max) ' (' attr(data-percent) '%) ';
-  font-family: 'Open-sans';
-  padding-left: 10px;
+  font-family: var(--font-body);
+  padding-left: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Reset this game's achievements. An outlined button in the danger colour: it still reads as a real
-   action rather than another read-only chip, but no longer as the page's main one, since it wipes the
-   game's progress (behind a confirmation and a restorable backup). It stays in the header's normal
-   flow: the back button is absolutely positioned and its width follows its label in every language,
-   so anchoring a second button beside it would collide in some of them. */
+/* Reset wipes the game's progress (behind a confirmation and a restorable backup): the shared danger
+   button. It stays in the header's flow: the back button is absolutely positioned and its width
+   follows its label in every language, so anchoring a second button beside it would collide. */
 #achievement .wrapper > .header .resetAchievements {
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
-  background: transparent;
-  color: var(--danger);
-  padding: 10px 18px;
-  display: inline-block;
-  height: 19px;
-  vertical-align: top;
   margin-left: 10px;
-  cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
-}
-
-#achievement .wrapper > .header .resetAchievements:hover {
-  color: var(--text);
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 22%, transparent);
-}
-
-#achievement .wrapper > .header .resetAchievements:active {
-  transform: scale(0.97);
+  vertical-align: middle;
 }
 
 #achievement .wrapper > .header .backButton {
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-  display: inline-block;
-  cursor: pointer;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-  padding: 1px 18px;
-  font-size: 15px;
-  line-height: 30px;
   position: absolute;
   top: 25px;
   right: 0;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.22 * var(--shadow-scale)));
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
 
-#achievement .wrapper > .header .backButton:hover {
-  color: var(--text);
-  border-color: transparent;
-  background: linear-gradient(-60deg, color-mix(in srgb, var(--accent) 70%, black 12%) 5%, var(--accent) 95%);
-}
-#achievement .wrapper > .header .backButton:active {
-  transform: scale(0.97);
+#achievement .wrapper > .header .backButton::before {
+  content: '\f060';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: var(--fs-sm);
 }
 
 #achievement .achievements {
@@ -1994,8 +2148,8 @@ body.is-resizing #game-list {
 }
 
 #achievement .achievements .achievement-list > .header {
-  font-family: 'Open-sans-bold';
-  font-size: 20px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-2xl);
   border-bottom: 1px solid var(--border);
   padding: 0 48px 10px 0;
   display: block;
@@ -2041,7 +2195,7 @@ body.is-resizing #game-list {
   content: '(' attr(data-count) ')';
   display: inline-block;
   padding-left: 10px;
-  font-family: 'Open-sans';
+  font-family: var(--font-body);
 }
 
 #achievement .achievement-list ul > li {
@@ -2049,7 +2203,7 @@ body.is-resizing #game-list {
   background: color-mix(in srgb, var(--surface-sunken) 78%, transparent);
   padding: 12px 24px;
   box-sizing: border-box;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   border: 1px solid color-mix(in srgb, var(--border) 7%, transparent);
   box-shadow: 0 10px 24px rgba(0, 0, 0, calc(0.16 * var(--shadow-scale)));
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
@@ -2069,19 +2223,27 @@ body.is-resizing #game-list {
 #achievement .achievement-list ul > li.highlight {
   box-shadow: 0 0 8px 2px color-mix(in srgb, var(--accent) 62%, transparent);
   /* A toast click scrolls straight to this row, which can land mid-list among near-identical rows.
-     Pulse twice so the eye catches it on arrival, then settle into the steady glow above. */
-  animation: achievement-focus-flash 800ms ease-out 2;
+     Pulse twice so the eye catches it on arrival, then settle into the steady glow above. The inset
+     shadow washes the row itself in the accent: its background is a gradient, which no colour can
+     animate through. */
+  animation: achievement-focus-flash 900ms var(--ease-out) 2;
 }
 
 @keyframes achievement-focus-flash {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent);
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent),
+      inset 0 0 0 999px color-mix(in srgb, var(--accent) 20%, transparent);
   }
   40% {
-    box-shadow: 0 0 14px 5px color-mix(in srgb, var(--accent) 85%, transparent);
+    box-shadow:
+      0 0 14px 5px color-mix(in srgb, var(--accent) 85%, transparent),
+      inset 0 0 0 999px color-mix(in srgb, var(--accent) 12%, transparent);
   }
   100% {
-    box-shadow: 0 0 8px 2px color-mix(in srgb, var(--accent) 62%, transparent);
+    box-shadow:
+      0 0 8px 2px color-mix(in srgb, var(--accent) 62%, transparent),
+      inset 0 0 0 999px transparent;
   }
 }
 
@@ -2105,7 +2267,7 @@ body.is-resizing #game-list {
   top: -9px;
   padding: 3px;
   border: 1px solid color-mix(in srgb, var(--border) 16%, transparent);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
   backdrop-filter: blur(10px);
 }
@@ -2125,9 +2287,9 @@ body.is-resizing #game-list {
   position: relative;
   margin: 0;
   padding: 0 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: var(--fs-base);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease;
 }
@@ -2142,11 +2304,11 @@ body.is-resizing #game-list {
 }
 
 .achievement-list > .header .sort-ach .sort.percentage > i.fa-percent {
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .achievement-list > .header .sort-ach .sort.time > i.fa-clock {
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 .achievement-list > .header .sort-ach .sort.active {
@@ -2181,7 +2343,7 @@ body.is-resizing #game-list {
   box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.26 * var(--shadow-scale)));
   margin: auto 0;
   position: relative;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   transition: transform 0.21s ease-in-out;
 }
@@ -2289,8 +2451,8 @@ body.is-resizing #game-list {
 }
 
 .achievement .content .title {
-  font-family: 'Raleway-bold';
-  font-size: 17px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-lg);
   padding: 2px 0;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2299,8 +2461,8 @@ body.is-resizing #game-list {
 
 /* DLC/update tag from SteamHunters achievement groups (absent when the game has none). */
 .achievement .content .ach-category {
-  font-family: 'Raleway';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.2;
   color: var(--text-muted);
   padding: 1px 0 3px;
@@ -2310,8 +2472,8 @@ body.is-resizing #game-list {
 }
 
 .achievement .content .description {
-  font-family: 'Raleway';
-  font-size: 15px;
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
   line-height: 1.25;
   color: var(--text);
   padding: 2px 0;
@@ -2340,12 +2502,12 @@ body.is-resizing #game-list {
   );
   padding: 1px;
   margin-top: 8px;
-  font-family: 'Open-sans';
+  font-family: var(--font-body);
   width: min(52%, 560px);
   min-width: 320px;
   display: none;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid color-mix(in srgb, var(--border) 24%, transparent);
   box-sizing: border-box;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, calc(0.45 * var(--shadow-scale)));
@@ -2357,29 +2519,16 @@ body.is-resizing #game-list {
   height: 100%;
   position: relative;
   overflow: hidden;
-  transition: width 0.3s ease;
+  transition: width var(--dur-slow) var(--ease-out);
   border-radius: inherit;
-  background-image: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 70%, black 12%) 0%,
-    var(--accent) 55%,
-    color-mix(in srgb, var(--accent) 78%, white 10%) 100%
-  );
-  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.10);
-}
-
-.achievement .progressBar > .meter:after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
-  pointer-events: none;
+  /* The same fill as the library's bars. */
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--accent) 80%, black 8%), var(--accent));
 }
 
 .achievement .progressBar:before {
   content: attr(data-label);
-  font-size: 12px;
-  font-family: 'Open-sans-bold';
+  font-size: var(--fs-sm);
+  font-family: var(--font-strong);
   font-variant-numeric: tabular-nums;
   position: absolute;
   top: 50%;
@@ -2393,8 +2542,8 @@ body.is-resizing #game-list {
 
 .achievement .progressBar:after {
   content: attr(data-percent) '%';
-  font-size: 12px;
-  font-family: 'Open-sans-bold';
+  font-size: var(--fs-sm);
+  font-family: var(--font-strong);
   font-variant-numeric: tabular-nums;
   position: absolute;
   top: 50%;
@@ -2540,28 +2689,8 @@ body.is-resizing #game-list {
   min-width: 0;
 }
 #options-notify-test .btn {
-  padding: 6px 12px;
-  background: var(--surface);
-  border: solid var(--border) 1px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: inline-flex;
   width: 100%;
   box-sizing: border-box;
-  justify-content: center;
-  min-height: 40px;
-  font-size: 14px;
-  white-space: nowrap;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.15s ease, transform 0.1s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, calc(0.25 * var(--shadow-scale)));
-}
-#options-notify-test .btn:hover {
-  background: var(--bg-base);
-}
-#options-notify-test .btn:active {
-  transform: scale(0.94);
 }
 
 .achievement .stats .time span {
@@ -2599,7 +2728,7 @@ body.is-resizing #game-list {
 #achievement .achievement-list ul li > .notice {
   text-align: center;
   padding: 14px 10px;
-  font-size: 20px;
+  font-size: var(--fs-2xl);
 }
 
 #achievement .achievement-list ul li > .notice p {
@@ -2615,7 +2744,7 @@ body.is-resizing #game-list {
   max-width: 720px;
   margin: 0 auto;
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.35;
 }
 
@@ -2624,14 +2753,14 @@ body.is-resizing #game-list {
 }
 
 #achievement .achievement-list ul li > .notice.empty-achievement-notice p:first-child {
-  font-family: 'Raleway-bold';
+  font-family: var(--font-strong);
 }
 
 #achievement .achievement-list ul li > .notice.empty-achievement-notice p:last-child {
   max-width: 720px;
   margin: 0 auto;
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.35;
 }
 
@@ -2654,7 +2783,7 @@ body.is-resizing #game-list {
   margin-top: 6px;
   display: block;
   text-transform: uppercase;
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 #settings,
@@ -2709,16 +2838,16 @@ body.is-resizing #game-list {
 #settings .box,
 #game-config .box {
   width: min(940px, calc(100vw - 96px));
-  background: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
+  background: var(--dialog-bg);
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  border-radius: 12px;
+  border-radius: var(--dialog-radius);
   overflow: hidden;
-  border: 1px solid var(--set-hairline);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, calc(0.48 * var(--shadow-scale))), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  border: var(--dialog-border);
+  box-shadow: var(--dialog-shadow);
   display: none;
 }
 #game-config .box {
@@ -2733,8 +2862,8 @@ body.is-resizing #game-list {
   width: 100%;
   box-sizing: border-box;
   border-bottom: 1px solid var(--set-hairline-soft);
-  font-family: Raleway-bold;
-  font-size: 18px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-xl);
   color: var(--set-title);
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
   margin: 0 auto auto auto;
@@ -2763,7 +2892,7 @@ body.is-resizing #game-list {
   gap: 8px;
   padding: 6px 10px;
   min-width: 190px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--text) 6%, transparent);
   border: 1px solid var(--set-hairline);
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -2773,7 +2902,7 @@ body.is-resizing #game-list {
   background: color-mix(in srgb, var(--text) 9%, transparent);
 }
 #settings-search > i {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   flex: 0 0 auto;
 }
@@ -2785,8 +2914,8 @@ body.is-resizing #game-list {
   outline: 0;
   background: transparent;
   color: var(--text);
-  font-family: Raleway;
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   text-shadow: none;
 }
 #settings-search input::placeholder {
@@ -2807,7 +2936,7 @@ body.is-resizing #game-list {
   cursor: pointer;
   background: color-mix(in srgb, var(--text) 16%, transparent);
   color: var(--text);
-  font-size: 9px;
+  font-size: var(--fs-3xs);
   line-height: 1;
   display: none;
 }
@@ -2835,9 +2964,9 @@ body.is-resizing #game-list {
   flex: 0 0 auto;
   min-width: 18px;
   padding: 0 5px;
-  border-radius: 9px;
-  font-family: Raleway;
-  font-size: 11px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   font-weight: 700;
   line-height: 18px;
   text-align: center;
@@ -2868,10 +2997,10 @@ body.is-resizing #game-list {
   margin: 14px 2px 0;
   padding: 10px 12px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--set-panel);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.35;
 }
 #settings-search-advanced[hidden] {
@@ -2886,7 +3015,7 @@ body.is-resizing #game-list {
   gap: 6px;
   padding: 6px 10px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: var(--accent-soft);
   color: var(--text);
   font: inherit;
@@ -2909,12 +3038,12 @@ body.is-resizing #game-list {
   text-align: center;
 }
 #settings-search-empty i {
-  font-size: 28px;
+  font-size: var(--fs-4xl);
   opacity: 0.5;
 }
 #settings-search-empty p {
   margin: 0;
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 #settings.no-search-result #settings-search-empty {
   display: flex;
@@ -2944,7 +3073,7 @@ body.is-resizing #game-list {
   padding: 12px 16px;
   cursor: pointer;
   width: 160px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
@@ -2965,9 +3094,9 @@ body.is-resizing #game-list {
 
 #settingNav li.active {
   background: linear-gradient(90deg, var(--accent-soft), color-mix(in srgb, var(--accent) 4%, transparent));
-  font-family: 'Raleway-bold';
+  font-family: var(--font-strong);
   color: var(--set-title);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   box-shadow: 0 6px 16px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
   pointer-events: none !important;
 }
@@ -2991,7 +3120,7 @@ body.is-resizing #game-list {
   margin: 0;
   background: var(--set-content-bg);
   padding: 18px 24px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   display: none;
   overflow-y: auto;
   box-sizing: border-box;
@@ -3075,7 +3204,7 @@ body.is-resizing #game-list {
 #settings .box .content::-webkit-scrollbar-thumb,
 .onboarding-step::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -3105,7 +3234,7 @@ body.is-resizing #game-list {
 }
 
 #settings .box .notice {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.3;
   color: var(--text-muted);
   min-width: 0;
@@ -3141,8 +3270,8 @@ body.is-resizing #game-list {
   padding-top: 4px;
   opacity: 0.72;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 11.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
 }
 
 /* A label, its icon and its repository are one unbreakable unit: as loose flex items the line used
@@ -3185,18 +3314,18 @@ body.is-resizing #game-list {
   margin: 0 8px;
   padding: 2px 7px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 10.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-2xs);
   cursor: pointer;
   vertical-align: middle;
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
 .footer-update-btn i {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 
 .footer-update-btn:hover {
@@ -3207,7 +3336,7 @@ body.is-resizing #game-list {
 
 .footer-update-status {
   margin-left: 6px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   vertical-align: middle;
   transition: color 0.15s ease;
 }
@@ -3244,19 +3373,8 @@ body.is-resizing #game-list {
 
 #settings .box .footer .buttons div,
 #game-config .box .footer .buttons div {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 88px;
-  padding: 9px 16px;
-  border-radius: 8px;
-  background: var(--set-surface);
-  border: 1px solid var(--set-control-border);
+  min-width: 92px;
   margin: 0;
-  font-family: 'Open-Sans-Bold';
-  cursor: pointer;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
-  transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
 }
 
 /* Says what Save and Cancel mean on the tab in front of you. Empty (and gone) on a tab that simply
@@ -3269,7 +3387,7 @@ body.is-resizing #game-list {
   align-items: center;
   gap: 7px;
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.3;
 }
 #settings .settings-save-state[data-state=''] {
@@ -3284,7 +3402,7 @@ body.is-resizing #game-list {
 }
 #settings .settings-save-state[data-state='dirty'] i {
   color: var(--accent);
-  font-size: 8px;
+  font-size: var(--fs-3xs);
 }
 #settings .settings-save-state.is-flash i {
   animation: aw-saved-pulse 0.9s ease;
@@ -3299,36 +3417,12 @@ body.is-resizing #game-list {
   margin-left: 0;
 }
 
-/* Cancel = quiet secondary. The old alarming red read as "destructive" for an action that just
-   closes the panel; the affirmative Save below now carries the emphasis instead. */
-#settings .box .footer .buttons div#btn-settings-cancel,
-#game-config .box .footer .buttons div#btn-game-config-cancel {
-  background: var(--set-surface);
-}
-#settings .box .footer .buttons div#btn-settings-cancel:hover,
-#game-config .box .footer .buttons div#btn-game-config-cancel:hover {
-  background: color-mix(in srgb, var(--set-surface) 82%, white 10%);
-  border-color: var(--set-hairline);
-}
-/* Save/Ok = primary, tinted with the active theme's accent so the main action always stands out
-   (blue on Steam, purple on Dracula, green on Graphite …). */
-#settings .box .footer .buttons div#btn-settings-save,
-#game-config .box .footer .buttons div#btn-game-config-save {
-  color: var(--on-accent);
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 82%, white 4%), var(--accent));
-}
-#settings .box .footer .buttons div#btn-settings-save:hover,
-#game-config .box .footer .buttons div#btn-game-config-save:hover {
-  filter: brightness(1.08);
-}
-
 .arrow-list {
-  font-family: Open-sans;
+  font-family: var(--font-body);
 }
 
 .arrow-list li {
-  font-size: 16px;
+  font-size: var(--fs-lg);
   padding: 3px 10px;
   position: relative;
   display: flex;
@@ -3378,7 +3472,7 @@ body.is-resizing #game-list {
   z-index: 1;
   background-color: transparent;
   border-radius: 50%;
-  transition: all 0.2s ease-in;
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 .arrow-list li .right .previous:hover,
 .arrow-list li .right .next:hover {
@@ -3415,7 +3509,7 @@ body.is-resizing #game-list {
   box-sizing: border-box;
   text-align-last: center;
   line-height: 30px;
-  font-size: 14px;
+  font-size: var(--fs-base);
   text-overflow: ellipsis;
   grid-column: 2;
 }
@@ -3470,7 +3564,7 @@ body.is-resizing #game-list {
 .arrow-list li .right.controller-binding .controller-binding-plus {
   flex: 0 0 18px;
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 30px;
   text-align: center;
 }
@@ -3495,7 +3589,7 @@ body.is-resizing #game-list {
 .arrow-list li .right.volume-slider input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
   background: var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 .arrow-list li .right.volume-slider input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -3522,7 +3616,7 @@ body.is-resizing #game-list {
 /* A read-only value across the whole control column, such as the clip size estimate. */
 .arrow-list li .right .clip-estimate {
   grid-column: 1 / -1;
-  font-size: 13px;
+  font-size: var(--fs-md);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -3530,7 +3624,7 @@ body.is-resizing #game-list {
   flex: 0 0 auto;
   width: 42px;
   text-align: right;
-  font-size: 13px;
+  font-size: var(--fs-md);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
@@ -3574,7 +3668,7 @@ body.is-resizing #game-list {
   display: none;
 }
 .arrow-list li .help {
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.28;
   color: var(--text-muted);
 }
@@ -3582,7 +3676,7 @@ body.is-resizing #game-list {
 .arrow-list li .right select:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--accent) 85%, transparent);
   outline-offset: 1px;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
 }
 
 .arrow-list li .right .previous:active,
@@ -3629,50 +3723,18 @@ body.is-resizing #game-list {
   background: transparent;
 }
 
-.inline-action-btn,
 .icon-button {
-  font-family: 'Open-Sans';
-  border: 1px solid color-mix(in srgb, var(--border) 14%, transparent);
+  font-family: var(--font-body);
+  border: 1px solid var(--control-border);
   color: var(--text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 86%, transparent), color-mix(in srgb, var(--surface) 86%, transparent));
+  background: var(--control-bg);
   cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
-.inline-action-btn {
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 8px 13px;
-  border-radius: 8px;
-  line-height: 1;
-}
-
-/* `display: inline-flex` above beats the browser's own `[hidden] { display: none }`, so the delete
-   button would stay on screen for a bundled sound without this. */
-.inline-action-btn[hidden] {
-  display: none;
-}
-
-.inline-action-btn.secondary {
-  background: color-mix(in srgb, var(--surface) 58%, transparent);
-}
-
-.inline-action-btn.primary {
-  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, white 6%), color-mix(in srgb, var(--accent) 78%, black 12%));
-}
-
-.inline-action-btn:hover,
 .icon-button:hover {
-  filter: brightness(1.1);
-}
-
-.inline-action-btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-  filter: none;
+  background: var(--control-bg-hover);
+  border-color: var(--control-border-hover);
 }
 
 #onboarding {
@@ -3685,8 +3747,8 @@ body.is-resizing #game-list {
 #onboarding .overlay {
   position: absolute;
   inset: 0;
-  background: rgba(2, 7, 13, 0.78);
-  backdrop-filter: blur(8px) saturate(0.82);
+  background: var(--set-scrim);
+  backdrop-filter: blur(8px) saturate(0.78);
 }
 
 #onboarding.is-first-run .overlay {
@@ -3703,10 +3765,10 @@ body.is-resizing #game-list {
   max-height: calc(100vh - 78px);
   display: flex;
   flex-direction: column;
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-sunken) 94%, transparent);
-  box-shadow: 0 34px 90px rgba(0, 0, 0, calc(0.58 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  border: var(--dialog-border);
+  border-radius: var(--dialog-radius);
+  background: var(--dialog-bg);
+  box-shadow: var(--dialog-shadow);
   overflow: hidden;
 }
 
@@ -3730,8 +3792,8 @@ body.is-resizing #game-list {
 
 .onboarding-header .eyebrow {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -3739,8 +3801,8 @@ body.is-resizing #game-list {
 .onboarding-header h1 {
   margin: 3px 0 0;
   color: var(--text);
-  font-family: 'Raleway-Bold';
-  font-size: 24px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-3xl);
   letter-spacing: 0;
 }
 
@@ -3751,8 +3813,8 @@ body.is-resizing #game-list {
   gap: 6px;
   margin-left: auto;
   color: var(--text-muted);
-  font-family: 'Open-Sans-Bold';
-  font-size: 11px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
@@ -3761,7 +3823,7 @@ body.is-resizing #game-list {
   width: 100%;
   height: 4px;
   overflow: hidden;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--border) 14%, transparent);
 }
 
@@ -3780,7 +3842,7 @@ body.is-resizing #game-list {
   height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .onboarding-body {
@@ -3799,7 +3861,7 @@ body.is-resizing #game-list {
   gap: 5px;
   padding: 6px;
   border: 1px solid color-mix(in srgb, var(--border) 8%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface-sunken) 42%, transparent);
 }
 
@@ -3811,11 +3873,11 @@ body.is-resizing #game-list {
   gap: 10px;
   padding: 9px 11px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   background: transparent;
   text-align: left;
-  font-family: 'Open-Sans';
+  font-family: var(--font-body);
   cursor: pointer;
 }
 
@@ -3848,7 +3910,7 @@ body.is-resizing #game-list {
   color: color-mix(in srgb, var(--success) 15%, black);
   background: var(--success);
   font-family: Arial, sans-serif;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   font-weight: bold;
 }
 
@@ -3864,7 +3926,7 @@ body.is-resizing #game-list {
   min-height: 0;
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border) 11%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface-sunken) 62%, transparent);
 }
 
@@ -3894,23 +3956,23 @@ body.is-resizing #game-list {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .step-heading h2 {
   margin: 0;
-  font-family: 'Raleway-Bold';
-  font-size: 22px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-2xl);
   letter-spacing: 0;
 }
 
 .step-heading p {
   margin: 6px 0 0;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   line-height: 1.55;
 }
 
@@ -3928,25 +3990,25 @@ body.is-resizing #game-list {
   gap: 8px;
   padding: 14px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
 }
 
 .onboarding-cards i {
   color: var(--accent);
-  font-size: 22px;
+  font-size: var(--fs-2xl);
 }
 
 .onboarding-cards strong {
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
+  font-family: var(--font-strong);
 }
 
 .onboarding-cards span,
 .avatar-actions small {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.45;
 }
 
@@ -3967,26 +4029,26 @@ body.is-resizing #game-list {
   text-align: left;
   cursor: pointer;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
   transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
 }
 
 .onboarding-mode-card i {
   color: var(--accent);
-  font-size: 22px;
+  font-size: var(--fs-2xl);
 }
 
 .onboarding-mode-card strong {
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
-  font-size: 15px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-base);
 }
 
 .onboarding-mode-card span {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -4009,8 +4071,8 @@ body.is-resizing #game-list {
   display: block;
   margin-top: 10px;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -4022,14 +4084,14 @@ body.is-resizing #game-list {
 
 .onboarding-subhead strong {
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
-  font-size: 14px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-base);
 }
 
 .onboarding-subhead span {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -4038,7 +4100,7 @@ body.is-resizing #game-list {
   margin-bottom: 14px;
   padding: 12px 14px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
 }
 
@@ -4051,19 +4113,19 @@ body.is-resizing #game-list {
 }
 
 .onboarding-detect-head strong {
-  font-family: 'Open-Sans-Bold';
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
 }
 
 #onboard-detect-total {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 #onboard-detect-total.is-found {
   color: color-mix(in srgb, var(--success) 78%, white);
-  font-family: 'Open-Sans-Bold';
+  font-family: var(--font-strong);
 }
 
 #onboard-detect-list {
@@ -4081,8 +4143,8 @@ body.is-resizing #game-list {
   align-items: center;
   gap: 8px;
   min-height: 24px;
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 #onboard-detect-list li > i {
@@ -4111,8 +4173,8 @@ body.is-resizing #game-list {
 .onboarding-detect-note {
   margin: 10px 0 0;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -4122,7 +4184,7 @@ body.is-resizing #game-list {
   color: var(--accent);
   background: transparent;
   font: inherit;
-  font-family: 'Open-Sans-Bold';
+  font-family: var(--font-strong);
   cursor: pointer;
   text-decoration: underline;
 }
@@ -4136,7 +4198,7 @@ body.is-resizing #game-list {
 .onboarding-fine {
   margin-top: 16px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 30%, transparent);
 }
 
@@ -4144,9 +4206,9 @@ body.is-resizing #game-list {
   padding: 10px 14px;
   cursor: pointer;
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
-  font-size: 12px;
-  border-radius: 10px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
+  border-radius: var(--radius-sm);
 }
 
 .onboarding-fine > summary:focus-visible {
@@ -4182,10 +4244,10 @@ body.is-resizing #game-list {
   gap: 10px;
   padding: 5px 10px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 .onboarding-recap li > i {
@@ -4200,11 +4262,11 @@ body.is-resizing #game-list {
 .onboarding-recap button {
   padding: 3px 8px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   color: var(--accent);
   background: transparent;
-  font-family: 'Open-Sans-Bold';
-  font-size: 11px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-xs);
   cursor: pointer;
 }
 
@@ -4231,12 +4293,12 @@ body.is-resizing #game-list {
 
 .onboarding-features > div > i {
   grid-row: 1 / span 2;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   text-align: center;
 }
 
 .onboarding-features strong {
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 /* Simple hides Settings > Advanced, where the backup lives, so the tip would point at nothing. */
@@ -4255,11 +4317,11 @@ body.is-resizing #game-list {
   flex: 0 0 auto;
   padding: 6px 10px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   background: transparent;
-  font-family: 'Open-Sans-Bold';
-  font-size: 12px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
@@ -4299,7 +4361,7 @@ body.is-resizing #game-list {
 .onboarding-source-group {
   padding: 12px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
 }
 
@@ -4312,15 +4374,15 @@ body.is-resizing #game-list {
 }
 
 .onboarding-source-group-head strong {
-  font-family: 'Open-Sans-Bold';
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
 }
 
 .onboarding-source-group-head p {
   margin: 4px 0 0;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   line-height: 1.45;
 }
 
@@ -4336,7 +4398,7 @@ body.is-resizing #game-list {
   gap: 12px;
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 54%, transparent);
 }
 
@@ -4345,10 +4407,10 @@ body.is-resizing #game-list {
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
-  font-size: 18px;
+  font-size: var(--fs-xl);
 }
 
 .onboarding-account-logo .brand-icon {
@@ -4363,8 +4425,8 @@ body.is-resizing #game-list {
 }
 
 .onboarding-account-text strong {
-  font-family: 'Open-Sans-Bold';
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
 }
 
 .onboarding-account-row .onboarding-test-button {
@@ -4404,8 +4466,8 @@ body.is-resizing #game-list {
 
 .onboarding-account-status {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
 }
 
 .onboarding-account-status.success {
@@ -4429,7 +4491,7 @@ body.is-resizing #game-list {
   min-width: 0;
   padding: 9px 10px;
   border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 54%, transparent);
 }
 
@@ -4472,8 +4534,8 @@ body.is-resizing #game-list {
   align-content: start;
   gap: 7px;
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
-  font-size: 12px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
 }
 
 .onboarding-step label.full {
@@ -4482,31 +4544,10 @@ body.is-resizing #game-list {
 
 .onboard-field-hint {
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   font-weight: normal;
   line-height: 1.4;
-}
-
-.onboarding-step input,
-.onboarding-step select {
-  min-height: 38px;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-  border-radius: 9px;
-  color: var(--text);
-  background: color-mix(in srgb, var(--surface-sunken) 76%, transparent);
-  font-family: 'Open-Sans';
-}
-
-.onboarding-test-button {
-  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-  border-radius: 9px;
-  color: var(--text);
-  background: color-mix(in srgb, var(--surface-sunken) 66%, transparent);
-  font-family: 'Open-Sans-Bold';
-  cursor: pointer;
 }
 
 /* The test button sits beside the select, so this cell is as tall as its neighbours. The label
@@ -4537,19 +4578,11 @@ body.is-resizing #game-list {
   grid-column: 2;
   min-height: 38px;
   padding: 0 12px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .onboarding-test-button {
   width: fit-content;
-  min-height: 32px;
-  padding: 6px 10px;
-  font-size: 11px;
-}
-
-.onboarding-test-button:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: color-mix(in srgb, var(--surface) 64%, transparent);
 }
 
 .avatar-picker {
@@ -4587,11 +4620,11 @@ body.is-resizing #game-list {
   padding: 12px 14px;
   border: 1px solid var(--warning);
   border-left-width: 4px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: color-mix(in srgb, var(--warning) 78%, white);
   background: color-mix(in srgb, var(--warning) 12%, transparent);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   font-weight: 600;
   line-height: 1.45;
 }
@@ -4611,8 +4644,8 @@ body.is-resizing #game-list {
   min-height: 18px;
   margin-top: 10px;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 .onboarding-inline-status.success {
@@ -4638,8 +4671,8 @@ body.is-resizing #game-list {
 .onboarding-lists .list-title {
   margin-bottom: 7px;
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
-  font-size: 12px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
 }
 
 .onboarding-lists ul {
@@ -4648,7 +4681,7 @@ body.is-resizing #game-list {
   overflow-y: auto;
   padding: 5px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
 }
 
@@ -4658,10 +4691,10 @@ body.is-resizing #game-list {
   align-items: center;
   gap: 8px;
   padding: 4px 7px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 .onboarding-lists li.empty {
@@ -4685,9 +4718,9 @@ body.is-resizing #game-list {
   margin-left: 8px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--accent);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   line-height: 1.4;
   white-space: nowrap;
 }
@@ -4733,8 +4766,8 @@ body.is-resizing #game-list {
 #onboarding-status {
   min-height: 18px;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 #onboarding-status.success {
@@ -4788,7 +4821,7 @@ body.is-resizing #game-list {
 
 #settings .content .title,
 #game-config .content .title {
-  font-family: 'Raleway-bold';
+  font-family: var(--font-strong);
   border-bottom: 1px solid var(--set-hairline);
   padding-bottom: 8px;
   margin: 18px 0 14px;
@@ -4800,7 +4833,7 @@ body.is-resizing #game-list {
   margin-right: 2px;
 }
 #game-config .content .title {
-  font-family: 'Open-sans';
+  font-family: var(--font-body);
 }
 
 #game-config .content .title {
@@ -4871,27 +4904,12 @@ body.is-resizing #game-list {
   flex: 0 0 auto;
   white-space: nowrap;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
 }
 
 #game-config .launch-args-row input {
   flex: 1;
   min-width: 0;
-  height: 30px;
-  box-sizing: border-box;
-  padding: 4px 10px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 7px;
-  background: var(--set-control-bg);
-  color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12.5px;
-  outline: none;
-}
-
-#game-config .launch-args-row input:focus {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 #game-config .box .footer {
@@ -4921,8 +4939,8 @@ body.is-resizing #game-list {
   border-radius: 8px 8px 0 0;
   background: transparent;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
@@ -4942,7 +4960,7 @@ body.is-resizing #game-list {
   flex-direction: column;
   gap: 16px;
   padding: 4px;
-  font-family: 'Open-Sans';
+  font-family: var(--font-body);
 }
 
 .game-notification-fields {
@@ -4960,7 +4978,7 @@ body.is-resizing #game-list {
   flex-direction: column;
   gap: 8px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 .game-notification-field > span,
@@ -4986,7 +5004,7 @@ body.is-resizing #game-list {
   height: 20px;
   min-height: 20px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border-color: var(--set-control-border);
   color: var(--set-icon);
   background: var(--set-control-bg);
@@ -4999,19 +5017,6 @@ body.is-resizing #game-list {
 
 .game-notification-field select {
   width: 100%;
-  min-height: 38px;
-  padding: 7px 10px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 8px;
-  outline: none;
-  color: var(--text);
-  background: color-mix(in srgb, var(--set-surface-sunken) 72%, transparent);
-  font: 12.5px 'Open-Sans';
-}
-
-.game-notification-field select:focus {
-  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .game-notification-preview {
@@ -5022,7 +5027,7 @@ body.is-resizing #game-list {
 
 .game-notification-test-title {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 #game-notification-tests {
@@ -5033,26 +5038,6 @@ body.is-resizing #game-list {
 
 #game-notification-tests .btn {
   flex: 1 1 110px;
-  min-height: 38px;
-  padding: 7px 10px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 9px;
-  color: var(--text);
-  background: linear-gradient(180deg, var(--set-btn-top), var(--set-btn-bottom));
-  box-shadow: 0 8px 20px color-mix(in srgb, var(--set-surface-sunken) 58%, transparent);
-  font: 12px 'Open-Sans';
-  cursor: pointer;
-  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
-}
-
-#game-notification-tests .btn:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, var(--set-surface-elevated), var(--set-btn-top));
-}
-
-#game-notification-tests .btn i {
-  margin-right: 5px;
-  color: var(--accent);
 }
 
 #game-notification-tests .btn.is-running {
@@ -5064,8 +5049,8 @@ body.is-resizing #game-list {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  font-family: 'Open-Sans';
-  font-size: 12.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 .gh-summary {
@@ -5075,33 +5060,7 @@ body.is-resizing #game-list {
 }
 
 .gh-state {
-  display: inline-flex;
-  align-items: center;
   align-self: flex-start;
-  gap: 8px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--border) 22%, transparent);
-  background: color-mix(in srgb, var(--surface) 62%, transparent);
-  font-family: 'Open-Sans-Bold';
-  font-size: 12px;
-}
-
-/* One colour per state, so the chip is readable before the label is. */
-.gh-state[data-state='ready'] {
-  color: #6ee7a8;
-  border-color: color-mix(in srgb, #6ee7a8 34%, transparent);
-  background: color-mix(in srgb, #6ee7a8 12%, transparent);
-}
-.gh-state[data-state='attention'] {
-  color: #f5c569;
-  border-color: color-mix(in srgb, #f5c569 34%, transparent);
-  background: color-mix(in srgb, #f5c569 12%, transparent);
-}
-.gh-state[data-state='not-tracking'] {
-  color: #f08a8a;
-  border-color: color-mix(in srgb, #f08a8a 34%, transparent);
-  background: color-mix(in srgb, #f08a8a 12%, transparent);
 }
 
 .gh-explanation {
@@ -5126,7 +5085,7 @@ body.is-resizing #game-list {
   align-items: baseline;
   gap: 9px;
   padding: 5px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .gh-checks li:nth-child(odd) {
@@ -5137,17 +5096,17 @@ body.is-resizing #game-list {
   flex: 0 0 auto;
   width: 13px;
   text-align: center;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 .gh-checks li[data-level='ok'] > i {
-  color: #6ee7a8;
+  color: var(--success);
 }
 .gh-checks li[data-level='warn'] > i {
-  color: #f5c569;
+  color: var(--warning);
 }
 .gh-checks li[data-level='fail'] > i {
-  color: #f08a8a;
+  color: var(--danger);
 }
 .gh-checks li[data-level='info'] > i {
   color: var(--text-muted);
@@ -5190,7 +5149,7 @@ body.is-resizing #game-list {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
 }
 
 .gh-progress-label {
@@ -5209,7 +5168,7 @@ body.is-resizing #game-list {
 .gh-progress-track {
   position: relative;
   height: 6px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   overflow: hidden;
   background: rgba(127, 127, 127, 0.25);
 }
@@ -5217,7 +5176,7 @@ body.is-resizing #game-list {
 .gh-progress-fill {
   height: 100%;
   width: 0;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: var(--accent, #6ba8f5);
   transition: width 0.2s ease-out;
 }
@@ -5251,12 +5210,6 @@ body.is-resizing #game-list {
   display: none;
 }
 
-.gh-actions .inline-action-btn {
-  min-height: 32px;
-  padding: 6px 12px;
-  font-size: 12.5px;
-}
-
 /*
   Panel footer: "Technical details" on the left, the last achievement-list check on the right.
   align-items: baseline so the two sit on the same text line despite the summary's own padding,
@@ -5281,7 +5234,7 @@ body.is-resizing #game-list {
   border: 0;
   padding: 5px 2px;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   cursor: pointer;
   text-decoration: underline;
@@ -5314,14 +5267,14 @@ body.is-resizing #game-list {
 
 .gh-jump-flash {
   animation: gh-jump-flash 1.6s ease-in-out 1;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 @media (prefers-reduced-motion: reduce) {
   .gh-jump-flash {
     animation: none;
     outline: 2px solid var(--accent);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
   }
 }
 
@@ -5343,7 +5296,7 @@ body.is-resizing #game-list {
   content: '\f078'; /* chevron-down */
   font-family: 'Font Awesome 5 Free';
   font-weight: 900;
-  font-size: 9px;
+  font-size: var(--fs-3xs);
   opacity: 0.7;
 }
 
@@ -5365,12 +5318,12 @@ body.is-resizing #game-list {
   max-height: 260px;
   overflow: auto;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--set-hairline-soft);
   background: var(--set-control-bg);
   color: var(--text-muted);
   font-family: 'Consolas', 'Courier New', monospace;
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
@@ -5379,17 +5332,17 @@ body.is-resizing #game-list {
 
 #settings .content[data-view='folder'] .disclaimer {
   text-align: center;
-  font-family: 'Open-sans';
+  font-family: var(--font-body);
 }
 
 #dirlist {
   overflow-y: auto;
   overflow-x: hidden;
   max-height: 210px;
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 #libdirlist {
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 #game-config #dirlist {
   height: auto;
@@ -5407,7 +5360,7 @@ body.is-resizing #game-list {
 #defaultdir::-webkit-scrollbar-thumb,
 #dirlist::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 28%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -5422,7 +5375,7 @@ body.is-resizing #game-list {
 }
 
 #defaultdir {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   overflow-y: auto;
   overflow-x: hidden;
   height: 60px;
@@ -5505,7 +5458,9 @@ body.is-resizing #game-list {
   margin: auto 0;
   background-color: transparent;
   cursor: pointer;
-  transition: all 0.2s ease-in;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
   width: 34px;
   box-sizing: border-box;
   text-align: center;
@@ -5542,15 +5497,15 @@ body.is-resizing #game-list {
 
 #settings .folder-actions .info,
 #options-notify .info {
-  font-family: Open-sans;
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   text-align: center;
   color: var(--text-muted);
   width: 90%;
   margin: 0 auto 6px auto;
 }
 #options-notify .info {
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 #settings .folder-actions .info p {
@@ -5574,105 +5529,36 @@ body.is-resizing #game-list {
 #settings .content[data-view='advanced'] .btn,
 #settings .content[data-view='debug'] .btn,
 #settings .content[data-view='appearance'] .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 13px;
   margin: 4px 8px 4px 0;
-  /* A <button> does not inherit colour: the user agent gives it `buttontext`, which is pure black
-     whatever the theme says. Every label in Settings has to state the theme's colour itself. */
-  color: var(--text);
-  background: color-mix(in srgb, var(--set-surface) 88%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: 6px;
-  cursor: pointer;
-  text-align: center;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
-}
-
-#settings #blacklist-card .btn,
-#settings .content[data-view='advanced'] .btn,
-#settings .content[data-view='debug'] .btn {
-  margin: 4px 8px 4px 0;
-}
-
-#settings .content[data-view='advanced'] a.btn,
-#settings .content[data-view='debug'] a.btn {
-  text-decoration: none;
-}
-
-#settings .folder-actions .btn:hover,
-#settings #blacklist-card .btn:hover,
-#settings .content[data-view='advanced'] .btn:hover,
-#settings .content[data-view='debug'] .btn:hover,
-#settings .content[data-view='appearance'] .btn:hover {
-  background: color-mix(in srgb, var(--set-surface) 96%, transparent);
-  border-color: color-mix(in srgb, var(--border) 34%, transparent);
-}
-
-/* The one accented button in Settings: Import is what the card is for, so it reads as the action
-   and Export and Delete stay quiet beside it. */
-#settings .content[data-view='appearance'] .btn:not(.secondary) {
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
-  background: color-mix(in srgb, var(--set-surface) 84%, var(--accent) 10%);
-}
-
-#settings .content[data-view='appearance'] .btn:not(.secondary):hover {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
-  background: color-mix(in srgb, var(--set-surface) 74%, var(--accent) 16%);
-}
-
-#settings .content[data-view='appearance'] .btn i {
-  color: var(--accent);
-}
-
-#settings .content[data-view='appearance'] .btn:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-#settings .folder-actions .btn:active,
-#settings #blacklist-card .btn:active,
-#settings .content[data-view='advanced'] .btn:active,
-#settings .content[data-view='debug'] .btn:active {
-  transform: scale(0.9);
 }
 
 #settings .content[data-view='souvenir'] .btn {
-  padding: 3px 10px;
-  background: var(--set-surface);
-  border: solid var(--border) 1px;
-  cursor: pointer;
-  font-size: 14px;
-  text-align: center;
-  box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
-  display: inline-block;
   width: 88px;
   margin-left: 1px;
 }
 
 #notify_test ~ select {
   background: var(--text);
-  font-family: 'Open-sans';
+  font-family: var(--font-body);
   border-top: 2px solid var(--border);
   border-left: 2px solid var(--border);
   border-right: 2px solid color-mix(in srgb, var(--text) 35%, var(--border));
   border-bottom: 2px solid color-mix(in srgb, var(--text) 35%, var(--border));
-  font-size: 14px;
+  font-size: var(--fs-base);
   margin: 0 5px;
 }
 
 #settings .content[data-view='advanced'] .diag-list li p {
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 #blacklist_reset ~ div {
-  font-size: 14px;
+  font-size: var(--fs-base);
   margin: 4px 0 4px 2px;
 }
 
 .diag-line {
-  font-size: 14px;
+  font-size: var(--fs-base);
   margin: 4px 0 6px 2px;
   opacity: 0.85;
   word-break: break-word;
@@ -5695,7 +5581,7 @@ body.is-resizing #game-list {
   gap: 10px;
   padding: 5px 2px;
   border-bottom: 1px solid var(--set-divider);
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 #blacklist-manager li:last-child {
   border-bottom: 0;
@@ -5711,13 +5597,6 @@ body.is-resizing #game-list {
 }
 #blacklist-manager li .appid {
   flex: 0 0 auto;
-  color: var(--text-muted);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  padding: 1px 7px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 999px;
-  background: var(--set-control-bg);
 }
 
 #settings .blacklist-add-row {
@@ -5730,26 +5609,6 @@ body.is-resizing #game-list {
 #settings .blacklist-add-row input {
   flex: 1 1 auto;
   min-width: 0;
-  height: 30px;
-  padding: 4px 9px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 7px;
-  background: var(--set-control-bg);
-  color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12.5px;
-  outline: none;
-}
-
-#settings .blacklist-add-row input:focus {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
-}
-
-#settings .blacklist-add-row .inline-action-btn {
-  min-height: 30px;
-  padding: 4px 12px;
-  white-space: nowrap;
 }
 
 /* Achievement search (game detail view): filters unlocked/locked rows by title/description. */
@@ -5766,20 +5625,8 @@ body.is-resizing #game-list {
   pointer-events: none;
 }
 #achievement .achievements #achievement-search input[type='search'] {
-  outline: none;
-  box-sizing: border-box;
   width: 100%;
-  background: var(--bg-panel-translucent);
-  border: solid var(--border) 1px;
-  border-radius: 7px;
   padding: 8px 12px 8px 34px;
-  color: var(--text);
-  font-size: 13px;
-  font-family: 'Open-Sans';
-  transition: border-color 0.3s ease;
-}
-#achievement .achievements #achievement-search input[type='search']:focus {
-  border-color: var(--accent);
 }
 #achievement .achievement-list ul > li.search-hidden {
   display: none;
@@ -5802,8 +5649,9 @@ body.is-resizing #game-list {
 
 #search-bar .wrapper > i {
   position: absolute;
-  top: 7px;
+  top: 50%;
   left: 11px;
+  transform: translateY(-50%);
   z-index: 3;
   display: block;
   color: var(--text-muted);
@@ -5821,15 +5669,15 @@ body.is-resizing #game-list {
   box-sizing: content-box;
   background: var(--bg-panel);
   border: solid var(--border) 1px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   padding: 6px 10px;
-  transition: all 0.45s ease;
-  width: 15px;
-  height: 16px;
+  transition: width var(--dur-slow) var(--ease-out), padding var(--dur-slow) var(--ease-out), border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease;
+  width: calc(var(--toolbar-h) - 22px);
+  height: calc(var(--toolbar-h) - 14px);
   color: transparent;
   cursor: pointer;
-  font-size: 12px;
-  font-family: 'Open-Sans';
+  font-size: var(--fs-sm);
+  font-family: var(--font-body);
   text-transform: capitalize;
 }
 
@@ -5887,11 +5735,7 @@ body.is-resizing #game-list {
   white-space: nowrap;
 }
 #game-list.view-portrait ul > li .game-box .info .progressBar {
-  height: 4px;
   margin-top: 4px;
-}
-#game-list.view-portrait ul > li .game-box .info .progressBar:before {
-  font-size: 12px;
 }
 
 #game-list.view-portrait-compact {
@@ -5907,7 +5751,7 @@ body.is-resizing #game-list {
 
 #game-list.view-portrait-compact ul > li .game-box {
   width: var(--library-card-width);
-  border-radius: 11px;
+  border-radius: var(--radius-md);
 }
 
 #game-list.view-portrait-compact ul > li .game-box .header {
@@ -5923,7 +5767,7 @@ body.is-resizing #game-list {
 
 #game-list.view-portrait-compact ul > li .game-box .info .title {
   overflow: hidden;
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5935,20 +5779,20 @@ body.is-resizing #game-list {
 }
 
 #game-list.view-portrait-compact .progressBar .progress-value {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 
 #game-list.view-portrait-compact .play-button {
   width: 38px;
   height: 38px;
-  font-size: 15px;
+  font-size: var(--fs-base);
 }
 
 #game-list.view-portrait-compact .achievement-button,
 #game-list.view-portrait-compact .config-button {
   width: 27px;
   height: 27px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 #game-list.view-portrait .header.portrait-fallback,
@@ -5974,7 +5818,7 @@ body.is-resizing #game-list {
 }
 #game-list .game-box .loading-overlay .content {
   margin: auto;
-  font-size: 36px;
+  font-size: var(--fs-5xl);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -5983,7 +5827,7 @@ body.is-resizing #game-list {
   text-align: center;
 }
 #game-list .game-box .loading-overlay .content .status {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.3;
   color: var(--text);
   max-width: 160px;
@@ -6005,7 +5849,7 @@ body.is-resizing #game-list {
   margin-bottom: 16px;
   padding: 15px 17px;
   border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 17%, transparent), color-mix(in srgb, var(--set-surface-sunken) 44%, transparent));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
@@ -6016,28 +5860,28 @@ body.is-resizing #game-list {
   height: 44px;
   flex: 0 0 44px;
   border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-  border-radius: 11px;
+  border-radius: var(--radius-md);
   color: var(--accent-strong);
   background: color-mix(in srgb, var(--accent) 20%, transparent);
-  font-size: 20px;
+  font-size: var(--fs-2xl);
 }
 #settings .emulator-hero .title {
   margin: 0 0 4px;
   padding: 0;
   border: 0;
-  font-size: 15px;
+  font-size: var(--fs-base);
 }
 #settings .emulator-hero p {
   margin: 0;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.4;
 }
 #settings .emulator-group {
   overflow: hidden;
   margin-bottom: 14px;
   border: 1px solid var(--emu-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--emu-panel);
 }
 #settings .emulator-group-title {
@@ -6048,8 +5892,8 @@ body.is-resizing #game-list {
   border-bottom: 1px solid var(--set-divider);
   color: var(--text);
   background: color-mix(in srgb, var(--set-surface-sunken) 24%, transparent);
-  font-family: 'Raleway-bold';
-  font-size: 12px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
   letter-spacing: 0.045em;
   text-transform: uppercase;
 }
@@ -6104,7 +5948,7 @@ body.is-resizing #game-list {
   margin: 0 0 14px;
   padding: 14px 16px 16px;
   border: 1px solid var(--set-account-border);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: var(--set-account-bg);
 }
 #settings .emulator-login.is-visible {
@@ -6121,7 +5965,7 @@ body.is-resizing #game-list {
   margin: 0;
   padding: 0;
   border: 0;
-  font-size: 13px;
+  font-size: var(--fs-md);
 }
 #settings .emulator-warning {
   display: inline-flex;
@@ -6130,17 +5974,17 @@ body.is-resizing #game-list {
   flex-shrink: 0;
   padding: 4px 8px;
   border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: color-mix(in srgb, var(--warning) 82%, white 18%);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
-  font-size: 10.5px;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   text-transform: uppercase;
 }
 #settings .emulator-login p {
   margin: 0 0 11px;
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.42;
 }
 #settings .emulator-login-fields {
@@ -6152,7 +5996,7 @@ body.is-resizing #game-list {
   display: block;
   margin: 0 0 5px;
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 #settings .emulator-login label i {
   width: 16px;
@@ -6160,20 +6004,6 @@ body.is-resizing #game-list {
 }
 #settings .emulator-login input {
   width: 100%;
-  min-height: 36px;
-  box-sizing: border-box;
-  padding: 8px 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: 8px;
-  outline: 0;
-  background: var(--set-control-bg);
-  color: var(--text);
-  font-size: 12.5px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-#settings .emulator-login input:focus {
-  border-color: color-mix(in srgb, var(--accent) 62%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 11%, transparent);
 }
 
 /* Emulator identity card (issue #123). */
@@ -6185,7 +6015,7 @@ body.is-resizing #game-list {
   display: block;
   min-height: 15px;
   margin-top: 4px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 #settings .emulator-identity-status.is-ok {
   color: var(--success);
@@ -6239,33 +6069,17 @@ body.is-resizing #game-list {
   gap: 10px;
   min-width: 230px;
   min-height: 48px;
-  box-sizing: border-box;
   padding: 6px 11px 6px 7px;
-  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
-  border-radius: 10px;
-  color: var(--text);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 27%, transparent), color-mix(in srgb, var(--set-surface-sunken) 30%, transparent));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035), 0 5px 16px rgba(0, 0, 0, calc(0.12 * var(--shadow-scale)));
-  cursor: pointer;
-  user-select: none;
-  transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--control-bg));
+  text-align: left;
 }
 #settings .emulator-login-actions .btn:hover {
-  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--accent) 46%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 36%, transparent), color-mix(in srgb, var(--set-surface-sunken) 40%, transparent));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 20px rgba(0, 0, 0, calc(0.17 * var(--shadow-scale)));
-}
-#settings .emulator-login-actions .btn:active {
-  transform: scale(0.985);
-}
-#settings .emulator-login-actions .btn:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 82%, transparent);
-  outline-offset: 2px;
+  background: color-mix(in srgb, var(--accent) 22%, var(--control-bg));
 }
 #settings .emulator-login-actions .btn.disabled {
   opacity: 0.66;
-  transform: none;
   cursor: wait;
 }
 #settings .emulator-test-icon {
@@ -6274,7 +6088,7 @@ body.is-resizing #game-list {
   width: 34px;
   height: 34px;
   border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--accent);
   background: var(--accent-soft);
 }
@@ -6294,17 +6108,17 @@ body.is-resizing #game-list {
 }
 #settings .emulator-test-copy strong {
   color: var(--text);
-  font-family: 'Open-Sans-Bold';
-  font-size: 12.5px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
   white-space: nowrap;
 }
 #settings .emulator-test-copy small {
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 #settings .emulator-test-arrow {
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   transition: transform 0.15s ease, color 0.15s ease;
 }
 #settings .emulator-login-actions .btn:hover .emulator-test-arrow {
@@ -6318,10 +6132,10 @@ body.is-resizing #game-list {
   min-width: 0;
   padding: 7px 10px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
   background: color-mix(in srgb, var(--set-surface-sunken) 30%, transparent);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -6364,22 +6178,22 @@ body.is-resizing #game-list {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: color-mix(in srgb, var(--surface-sunken) 78%, transparent);
-  backdrop-filter: blur(5px);
-  animation: aw-prompt-fade 0.14s ease-out;
+  background: var(--set-scrim);
+  backdrop-filter: blur(8px) saturate(0.78);
+  animation: aw-prompt-fade var(--dur-fast) var(--ease-out);
 }
 .aw-prompt {
   width: min(430px, calc(100vw - 48px));
   box-sizing: border-box;
   padding: 20px;
-  border: 1px solid color-mix(in srgb, var(--border) 20%, transparent);
-  border-radius: 14px;
+  border: var(--dialog-border);
+  border-radius: var(--dialog-radius);
   color: var(--text);
-  background: linear-gradient(160deg, var(--surface-elevated), var(--surface-sunken));
-  box-shadow: 0 24px 70px rgba(0, 0, 0, calc(0.55 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.035);
-  animation: aw-prompt-in 0.16s ease-out;
+  background: var(--dialog-bg);
+  box-shadow: var(--dialog-shadow);
+  animation: aw-prompt-in var(--dur-base) var(--ease-out);
   /* Appended to <body>, which sets no font: without this the text and the field fell back to Times. */
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
 }
 .aw-prompt input {
   font-family: inherit;
@@ -6397,44 +6211,30 @@ body.is-resizing #game-list {
   height: 38px;
   flex: 0 0 38px;
   border: 1px solid color-mix(in srgb, var(--border) 25%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 .aw-prompt-title {
   margin: 1px 0 4px;
-  font-family: 'Raleway-bold';
-  font-size: 15px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-base);
 }
 .aw-prompt-description {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.42;
 }
 .aw-prompt-input {
   width: 100%;
-  min-height: 42px;
-  box-sizing: border-box;
-  padding: 9px 11px;
-  border: 1px solid color-mix(in srgb, var(--border) 23%, transparent);
-  border-radius: 9px;
-  outline: 0;
-  color: var(--text);
-  background: color-mix(in srgb, var(--bg-base) 58%, transparent);
-  font-size: 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .aw-prompt-input.code {
   text-align: center;
   font-family: Consolas, monospace;
-  font-size: 21px;
+  font-size: var(--fs-2xl);
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-}
-.aw-prompt-input:focus {
-  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 .aw-prompt-actions {
   display: flex;
@@ -6444,26 +6244,6 @@ body.is-resizing #game-list {
 }
 .aw-prompt-button {
   min-width: 92px;
-  min-height: 38px;
-  padding: 8px 14px;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  color: var(--text);
-  cursor: pointer;
-  font-family: 'Open-sans';
-  font-size: 12.5px;
-  transition: transform 0.1s ease, filter 0.15s ease, background 0.15s ease;
-}
-.aw-prompt-button:hover { filter: brightness(1.1); }
-.aw-prompt-button:active { transform: scale(0.97); }
-.aw-prompt-button.secondary {
-  border-color: color-mix(in srgb, var(--border) 14%, transparent);
-  background: color-mix(in srgb, var(--surface) 55%, transparent);
-}
-.aw-prompt-button.primary {
-  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
-  color: var(--text);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, white 6%), color-mix(in srgb, var(--accent) 78%, black 12%));
 }
 @keyframes aw-prompt-fade { from { opacity: 0; } }
 @keyframes aw-prompt-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
@@ -6488,7 +6268,7 @@ body.is-resizing #game-list {
   min-width: 34px;
   width: 34px;
   padding: 4px 0;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   line-height: 1;
 }
 .aw-cover-picker-status {
@@ -6497,8 +6277,8 @@ body.is-resizing #game-list {
   align-items: center;
   gap: 10px;
   color: var(--text-muted);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   padding: 22px 4px;
   text-align: center;
 }
@@ -6518,7 +6298,7 @@ body.is-resizing #game-list {
   background-size: cover;
   background-position: center;
   border: 1px solid color-mix(in srgb, var(--border) 24%, transparent);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   cursor: pointer;
   outline: 0;
@@ -6554,12 +6334,12 @@ body.is-resizing #game-list {
   bottom: 6px;
   padding: 2px 7px;
   border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 78%, transparent);
   backdrop-filter: blur(4px);
   color: var(--text);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -6579,7 +6359,7 @@ body.is-resizing #game-list {
 #wrap-dirlist .loading-overlay .wrap {
   text-align: center;
   margin-top: 25px;
-  font-size: 32px;
+  font-size: var(--fs-4xl);
 }
 
 /* Shared polish for the library, game details and every settings view. */
@@ -6614,20 +6394,6 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-}
-
-#user-info .info .stats li {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin: 0;
-  padding: 5px 9px;
-  color: color-mix(in srgb, var(--text) 88%, var(--text-muted));
-  background: color-mix(in srgb, var(--surface-sunken) 46%, transparent);
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  border-radius: 999px;
-  font-family: 'Open-Sans';
-  font-size: 12px;
 }
 
 #user-info .info .stats li i {
@@ -6677,7 +6443,7 @@ body {
 
 #game-list .game-box {
   width: var(--library-card-width);
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface) 82%, transparent);
   border-color: color-mix(in srgb, var(--border) 20%, transparent);
   box-shadow: 0 12px 28px rgba(3, 9, 17, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.045);
@@ -6770,8 +6536,8 @@ body {
   flex: 1 1 auto;
   min-width: 0;
   padding: 0;
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   font-weight: 400;
   line-height: 16px;
   letter-spacing: 0.005em;
@@ -6804,7 +6570,7 @@ body {
   width: 14px;
   height: 14px;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   cursor: help;
   opacity: 0.95;
   transition: opacity 0.12s ease, background 0.12s ease, transform 0.12s ease;
@@ -6844,58 +6610,96 @@ body {
   min-width: max-content;
 }
 
+/*
+  A thin track with the percentage beside it, not printed across it: the label sat on the boundary
+  between fill and track and changed contrast halfway through. The bar keeps its full width (the List
+  column depends on it); its right padding is the label's column, so the meter's percentage is
+  measured against the track alone.
+*/
 #game-list .game-box .info .progressBar {
+  --bar-row: 14px;
+  --bar-track: 8px;
+  --bar-label: 40px;
+  --bar-inset: calc((var(--bar-row) - var(--bar-track)) / 2);
+  position: relative;
   width: 100%;
-  height: 17px;
-  min-height: 17px;
-  flex: 0 0 17px;
+  height: var(--bar-row);
+  min-height: var(--bar-row);
+  flex: 0 0 var(--bar-row);
   box-sizing: border-box;
-  padding: 1px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-sunken) 82%, var(--bg-base)),
-    var(--surface-sunken)
-  );
-  border: 1px solid color-mix(in srgb, var(--border) 26%, transparent);
-  border-radius: 999px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, calc(0.45 * var(--shadow-scale)));
-  overflow: hidden;
+  padding: var(--bar-inset) var(--bar-label) var(--bar-inset) 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+
+#game-list .game-box .info .progressBar:before {
+  content: '';
+  display: block;
+  position: absolute;
+  z-index: 0;
+  inset: var(--bar-inset) var(--bar-label) var(--bar-inset) 0;
+  transform: none;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface-sunken) 85%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 18%, transparent);
 }
 
 #game-list .game-box .info .progressBar > .meter {
+  position: relative;
+  z-index: 1;
   min-width: 0;
+  height: 100%;
   box-sizing: border-box;
-  border-radius: 999px;
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 70%, black 12%) 0%,
-    var(--accent) 55%,
-    color-mix(in srgb, var(--accent) 78%, white 10%) 100%
-  );
-  box-shadow: 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 80%, black 8%), var(--accent));
+  box-shadow: none;
+  transition: width var(--dur-slow) var(--ease-out);
 }
 
-/* A real text node keeps the percentage crisp across both the light fill and dark track. */
-#game-list .game-box .info .progressBar:before {
+#game-list .game-box .info .progressBar > .meter:after {
   content: none;
 }
 
 #game-list .game-box .info .progressBar .progress-value {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: calc(var(--bar-label) - 6px);
   z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--text);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 11.75px;
-  font-weight: 700;
+  justify-content: flex-end;
+  color: color-mix(in srgb, var(--text) 82%, var(--text-muted));
+  font-family: var(--font-strong);
+  font-size: var(--fs-xs);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  white-space: nowrap;
   pointer-events: auto;
+}
+
+/* A game with no achievements has nothing to fill: its words take the whole row, no track. */
+#game-list .game-box .info .progressBar.unavailable {
+  padding: 0;
+}
+
+#game-list .game-box .info .progressBar.unavailable:before {
+  content: none;
+}
+
+#game-list .game-box .info .progressBar.unavailable .progress-value {
+  left: 0;
+  width: auto;
+  justify-content: flex-start;
+  padding: 0;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
 }
 
 .play-button {
@@ -6925,7 +6729,7 @@ body {
   display: grid;
   place-items: center;
   padding: 0;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   background: color-mix(in srgb, var(--surface-sunken) 62%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.13);
   opacity: 0.86;
@@ -6948,7 +6752,7 @@ body {
   opacity: 0;
   pointer-events: none;
   transform: scale(0.7);
-  transition: opacity 0.32s ease, transform 0.4s cubic-bezier(0.18, 0.72, 0.24, 1), background 0.2s ease;
+  transition: opacity 0.32s ease, transform 0.4s var(--ease-out), background 0.2s ease;
 }
 
 #game-list:not(.view-list) .game-box:hover .achievement-button,
@@ -6974,7 +6778,7 @@ body {
   display: none;
   min-width: 0;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 #game-list .library-details > span {
@@ -7022,7 +6826,7 @@ body {
 }
 
 #game-list.view-compact .game-box {
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
 }
 
 #game-list.view-compact .game-box .header {
@@ -7038,7 +6842,7 @@ body {
 }
 
 #game-list.view-compact .game-box .info .title {
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 #game-list.view-compact .game-box .info .progressBar {
@@ -7048,20 +6852,20 @@ body {
 }
 
 #game-list.view-compact .game-box .info .progressBar .progress-value {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 
 #game-list.view-compact .play-button {
   width: 40px;
   height: 40px;
-  font-size: 17px;
+  font-size: var(--fs-lg);
 }
 
 #game-list.view-compact .achievement-button,
 #game-list.view-compact .config-button {
   width: 28px;
   height: 28px;
-  font-size: 13px;
+  font-size: var(--fs-md);
 }
 
 #game-list.view-list,
@@ -7150,8 +6954,8 @@ body {
 }
 
 #game-list.view-list .game-box .info .title {
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 12.5px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
 }
 
 #game-list.view-list .game-box .info .info-head,
@@ -7214,8 +7018,8 @@ body {
 }
 
 #game-list.view-details .game-box .info .title {
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 17px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-lg);
   line-height: 20px;
   letter-spacing: -0.012em;
 }
@@ -7230,11 +7034,11 @@ body {
   display: grid;
   grid-template-columns: minmax(90px, 0.55fr) minmax(250px, 1.6fr) minmax(135px, 0.75fr) minmax(100px, 0.65fr);
   gap: 6px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   box-sizing: border-box;
   padding: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
 }
 
@@ -7245,7 +7049,7 @@ body {
   align-items: flex-end;
   padding: 17px 10px 7px;
   border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 42%, transparent);
 }
 
@@ -7257,8 +7061,8 @@ body {
   max-width: calc(100% - 38px);
   overflow: hidden;
   color: color-mix(in srgb, var(--text-muted) 72%, transparent);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 8.5px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-3xs);
   line-height: 11px;
   letter-spacing: 0.065em;
   text-overflow: ellipsis;
@@ -7271,11 +7075,11 @@ body {
   top: 7px;
   left: 10px;
   margin: 0;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 
 #game-list.view-details .library-achievement-summary span {
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
+  font-family: var(--font-strong);
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
@@ -7284,12 +7088,6 @@ body {
   flex: 0 0 auto;
   max-width: 45%;
   margin-left: auto;
-  padding: 2px 7px;
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
-  border-radius: 999px;
-  color: var(--text);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-  font-size: 10.5px;
 }
 
 #game-list.view-details .library-recent-name {
@@ -7302,7 +7100,7 @@ body {
 
 #game-list.view-details .library-playtime span {
   color: var(--text);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
+  font-family: var(--font-strong);
 }
 
 #game-list.view-list .game-box[data-progress='100'],
@@ -7330,8 +7128,8 @@ body {
   width: 27px;
   height: 27px;
   padding: 0;
-  border-radius: 7px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
   opacity: 0.62;
   transform: translateY(-50%);
   backdrop-filter: none;
@@ -7381,9 +7179,11 @@ body {
   }
 }
 
+/* The library toolbar: every control the same height, surface and hover, left group and right. */
 #sort-box .installed-filter,
 #sort-box .collection-filter,
 #sort-box .sort-group,
+#search-bar .library-layout-control,
 #search-bar .library-add-button,
 #search-bar input[type='search'] {
   background-color: color-mix(in srgb, var(--surface) 66%, transparent);
@@ -7392,13 +7192,29 @@ body {
   backdrop-filter: blur(12px);
 }
 
+/* The search field keeps its own transition: it also animates its width when it opens. */
+#sort-box .installed-filter,
+#sort-box .collection-filter,
+#search-bar .library-layout-control,
+#search-bar .library-add-button {
+  transition: color var(--dur-fast) ease, border-color var(--dur-fast) ease, background-color var(--dur-fast) ease,
+    transform var(--dur-fast) ease;
+}
+
+#sort-box .installed-filter:hover,
+#sort-box .collection-filter:hover,
+#search-bar .library-layout-control:hover,
+#search-bar .library-add-button:hover,
+#search-bar .library-add-button:focus-visible,
+#search-bar input[type='search']:hover {
+  outline: none;
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
 /* Game detail */
 #achievement {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--bg-base) 12%, transparent),
-    color-mix(in srgb, var(--bg-base) 50%, transparent)
-  );
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg-base) 24%, transparent));
 }
 
 #achievement .wrapper {
@@ -7421,7 +7237,7 @@ body {
 #achievement .wrapper > .header .lastplayed {
   background: color-mix(in srgb, var(--surface-sunken) 68%, transparent);
   border-color: color-mix(in srgb, var(--border) 14%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   box-shadow: 0 8px 24px rgba(0, 0, 0, calc(0.16 * var(--shadow-scale)));
   backdrop-filter: blur(10px);
 }
@@ -7432,7 +7248,7 @@ body {
 
 #achievement .achievements .achievement-list > .header {
   border-bottom-color: color-mix(in srgb, var(--border) 18%, transparent);
-  font-size: 18px;
+  font-size: var(--fs-xl);
   letter-spacing: -0.01em;
 }
 
@@ -7451,14 +7267,14 @@ body {
     color-mix(in srgb, var(--surface-sunken) 92%, transparent)
   );
   border-color: color-mix(in srgb, var(--border) 10%, transparent);
-  border-radius: 11px;
+  border-radius: var(--radius-md);
 }
 
 /* The unlock date and the global rate describe an achievement, they are not its content: a step
    smaller and muted, so the eye lands on the name first. Before, they were as large and as bright as
    the description. Rare tiers keep their own colour on the rate. */
 .achievement .stats {
-  font-size: 13.5px;
+  font-size: var(--fs-md);
   color: var(--text-muted);
 }
 
@@ -7489,10 +7305,6 @@ body {
     hand behaves exactly as it did.
   */
   width: min(max(1040px, 68vw), 1280px, calc(100vw - 64px));
-  border-radius: var(--radius-lg);
-  border-color: var(--set-hairline);
-  background: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, calc(0.46 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(20px) saturate(1.08);
 }
 
@@ -7519,7 +7331,7 @@ body {
 }
 
 #settings.is-opening > .box {
-  animation: settings-modal-panel-in 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: settings-modal-panel-in 0.18s var(--ease-out) both;
 }
 
 #game-config .box {
@@ -7535,7 +7347,7 @@ body {
   padding: 0 26px;
   background: var(--set-header-bg);
   border-bottom: 1px solid var(--set-hairline-soft);
-  font-size: 19px;
+  font-size: var(--fs-xl);
   letter-spacing: -0.015em;
 }
 
@@ -7587,7 +7399,7 @@ body {
 }
 #settingNav::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -7617,10 +7429,10 @@ body {
   gap: 11px;
   padding: 9px 13px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
   transition: color 0.14s ease, background 0.14s ease, border-color 0.14s ease;
 }
 
@@ -7662,8 +7474,8 @@ body {
   border: 0;
   border-radius: 0;
   color: color-mix(in srgb, var(--text-muted) 72%, transparent);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 9.5px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-3xs);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -7716,8 +7528,8 @@ body {
 
 .settings-mode-label {
   color: color-mix(in srgb, var(--text-muted) 78%, transparent);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 9.5px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-3xs);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -7729,7 +7541,7 @@ body {
   gap: 3px;
   padding: 3px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--text) 6%, transparent);
 }
 
@@ -7740,11 +7552,11 @@ body {
   padding: 5px 11px;
   cursor: pointer;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   text-shadow: none;
   transition: color 0.14s ease, background 0.14s ease, border-color 0.14s ease;
 }
@@ -7754,7 +7566,7 @@ body {
 }
 
 .settings-mode-switch button i {
-  font-size: 11px;
+  font-size: var(--fs-xs);
   /* The header colours every <i> with the accent; only the selected side should stand out. */
   color: inherit;
 }
@@ -7801,7 +7613,7 @@ body {
   padding: 0 2px 9px;
   border-bottom-color: var(--set-hairline);
   color: var(--set-title);
-  font-size: 14px;
+  font-size: var(--fs-base);
   letter-spacing: 0.035em;
   text-transform: uppercase;
 }
@@ -7818,7 +7630,7 @@ body {
 #settings .content[data-view='advanced'] > ul {
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 11px;
+  border-radius: var(--radius-md);
   background: var(--set-panel);
 }
 
@@ -7876,7 +7688,7 @@ body {
 
 #settings .arrow-list li .left {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 #settings .arrow-list li .left > i {
@@ -7885,7 +7697,7 @@ body {
 
 #settings .arrow-list li .help {
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 
 #settings .arrow-list li .right {
@@ -7893,7 +7705,7 @@ body {
   height: 32px;
   padding: 1px 3px;
   border: 1px solid var(--set-control-border);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -7918,9 +7730,53 @@ body {
    and reads as a blurry, low-DPI label next to the crisp row titles. */
 #settings .arrow-list li .right select {
   color: var(--text);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
   font-weight: 700;
+}
+
+/*
+  Value cells read as dropdowns: the value on the left, a chevron on the right, and the whole cell
+  opens the list (ui/selectMenu.js), so every choice is visible instead of stepped through blind.
+  The steppers stay in the DOM for the wheel and for the controller, which navigates by focusing
+  them, so they come back while a controller drives the window.
+*/
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch) {
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0;
+  cursor: pointer;
+}
+
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch) > :is(.previous, .next) {
+  display: none;
+}
+
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch) > select {
+  grid-column: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0 32px 0 12px;
+  text-align-last: left;
+}
+
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch)::after {
+  content: '\f078';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font: 900 var(--fs-2xs) 'Font Awesome 5 Free';
+  pointer-events: none;
+  transition: color var(--dur-fast) ease;
+}
+
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch):hover {
+  border-color: color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch):hover::after {
+  color: var(--text);
 }
 
 /* On/off rows (ui/settingsSwitch.js): the select and its arrows stay for the handlers, out of sight. */
@@ -7945,12 +7801,12 @@ body {
   height: 100%;
   padding: 0 6px 0 12px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   font: inherit;
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
   font-weight: 700;
   cursor: pointer;
 }
@@ -7976,10 +7832,12 @@ body {
   flex: 0 0 auto;
   width: 38px;
   height: 22px;
-  border-radius: 11px;
+  border-radius: var(--radius-pill);
   background: var(--surface-sunken);
   box-shadow: inset 0 0 0 1px var(--border);
-  transition: background 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
 }
 
 #settings .setting-switch-thumb {
@@ -7990,7 +7848,10 @@ body {
   height: 16px;
   border-radius: 50%;
   background: var(--text-muted);
-  transition: transform 0.15s ease, background 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, calc(0.3 * var(--shadow-scale)));
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
 
 #settings .is-on .setting-switch {
@@ -8032,8 +7893,8 @@ body {
   text-overflow: ellipsis;
   text-align: center;
   color: var(--text);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
   font-weight: 700;
 }
 
@@ -8046,9 +7907,9 @@ body {
   height: 28px;
   padding: 0;
   margin: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
@@ -8139,7 +8000,7 @@ body {
   min-height: 26px;
   padding: 4px 8px;
   margin-left: 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   vertical-align: middle;
 }
 
@@ -8151,7 +8012,7 @@ body {
   width: 100%;
   padding: 5px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
 }
 
@@ -8166,7 +8027,7 @@ body {
   min-height: 30px;
   align-items: center;
   padding: 2px 7px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
 }
 
 #dirlist > li:hover,
@@ -8225,29 +8086,6 @@ body {
   text-align: center;
 }
 
-#options-notify-test .btn,
-#settings .folder-actions .btn,
-#settings #blacklist-card .btn,
-#settings .content[data-view='advanced'] .btn,
-#settings .content[data-view='debug'] .btn {
-  min-height: 38px;
-  box-sizing: border-box;
-  border-radius: 9px;
-  border-color: var(--set-control-border);
-  background: linear-gradient(180deg, var(--set-btn-top), var(--set-btn-bottom));
-  box-shadow: 0 8px 20px rgba(0, 0, 0, calc(0.16 * var(--shadow-scale)));
-  transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
-}
-
-#options-notify-test .btn:hover,
-#settings .folder-actions .btn:hover,
-#settings #blacklist-card .btn:hover,
-#settings .content[data-view='advanced'] .btn:hover,
-#settings .content[data-view='debug'] .btn:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--set-btn-top) 88%, white 8%), color-mix(in srgb, var(--set-btn-bottom) 88%, white 6%));
-}
-
 #settings .content[data-view='advanced'] > ul.diag-list {
   padding: 12px 16px 16px;
 }
@@ -8261,7 +8099,7 @@ body {
   padding: 2px 5px;
   color: color-mix(in srgb, var(--accent) 55%, var(--text));
   background: color-mix(in srgb, var(--set-surface-sunken) 60%, black);
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   user-select: text;
 }
 
@@ -8284,7 +8122,7 @@ body {
 #settings .diag-list p {
   margin: 0;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.45;
 }
 
@@ -8307,7 +8145,7 @@ body {
 #settings .help-intro {
   margin: 0;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -8328,16 +8166,7 @@ body {
 
 #settings .help-search input {
   width: 100%;
-  height: 38px;
-  box-sizing: border-box;
   padding: 0 38px 0 35px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 9px;
-  outline: none;
-  background: var(--set-control-bg);
-  color: var(--text);
-  font: 12.5px 'Open-Sans';
-  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
 #settings .help-search input::placeholder {
@@ -8346,11 +8175,6 @@ body {
 
 #settings .help-search input::-webkit-search-cancel-button {
   display: none;
-}
-
-#settings .help-search input:focus {
-  border-color: color-mix(in srgb, var(--accent) 70%, var(--set-control-border));
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 #settings .help-search-clear {
@@ -8362,7 +8186,7 @@ body {
   padding: 0;
   place-items: center;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   outline: none;
   background: transparent;
   color: var(--set-icon);
@@ -8384,7 +8208,7 @@ body {
   margin-top: 16px;
   padding: 11px 12px 12px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 42%, transparent);
 }
 
@@ -8394,7 +8218,7 @@ body {
   gap: 8px;
   margin: 0 0 10px;
   color: var(--text);
-  font: 700 11.5px 'Open-Sans';
+  font: 700 var(--fs-xs) var(--font-body);
   letter-spacing: 0.035em;
   text-transform: uppercase;
 }
@@ -8421,10 +8245,10 @@ body {
   gap: 7px;
   padding: 6px 11px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   background: var(--set-panel);
-  font: 600 11.5px 'Open-Sans';
+  font: 600 var(--fs-xs) var(--font-body);
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -8452,14 +8276,7 @@ body {
 
 #settings .help-match-count {
   min-width: 25px;
-  box-sizing: border-box;
   margin-left: auto;
-  padding: 2px 7px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 13%, var(--set-control-bg));
-  color: color-mix(in srgb, var(--accent) 65%, var(--text));
-  font-size: 10.5px;
-  text-align: center;
 }
 
 #settings .help-match-count:empty {
@@ -8470,9 +8287,9 @@ body {
   margin: 0;
   padding: 28px 16px;
   border: 1px dashed var(--set-control-border);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   text-align: center;
 }
 
@@ -8493,7 +8310,7 @@ body {
 #settings .help-group-title {
   margin: 0 0 6px;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -8508,7 +8325,7 @@ body {
 #settings .help-panel {
   min-width: 0;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--set-panel);
   overflow: hidden;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018);
@@ -8530,8 +8347,8 @@ body {
   gap: 9px;
   padding: 11px 13px;
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 13.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   font-weight: 700;
   cursor: pointer;
   list-style: none;
@@ -8546,7 +8363,7 @@ body {
   content: '▾';
   margin-left: 0;
   color: var(--set-icon);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   transition: transform 160ms ease;
 }
 
@@ -8571,14 +8388,6 @@ body {
 #settings .help-topic-count {
   min-width: 22px;
   margin-left: auto;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--set-control-bg) 72%, transparent);
-  color: var(--text-muted);
-  font-size: 10.5px;
-  font-weight: 600;
-  line-height: 1.35;
-  text-align: center;
 }
 
 #settings .help-panel[open] summary {
@@ -8597,7 +8406,7 @@ body {
   margin: 0 0 9px;
   padding-left: 20px;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.55;
 }
 
@@ -8608,7 +8417,7 @@ body {
   top: 0;
   color: var(--accent);
   opacity: 0.65;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 #settings .help-panel li:last-child {
@@ -8624,24 +8433,15 @@ body {
 }
 
 #settings .help-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
   max-width: 100%;
-  box-sizing: border-box;
-  padding: 5px 10px;
-  border: 1px solid var(--set-hairline);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--set-panel) 86%, var(--set-surface-sunken));
-  color: var(--text);
-  font-size: 11.5px;
-  line-height: 1.25;
+  justify-content: flex-start;
+  white-space: normal;
 }
 
 #settings .help-chip i {
   flex: 0 0 auto;
   color: var(--set-icon);
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 #settings .help-chip b {
@@ -8668,11 +8468,11 @@ body {
   padding: 1px 6px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--set-control-border));
   border-bottom-width: 2px;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--set-control-bg) 78%, var(--accent) 10%);
   color: color-mix(in srgb, var(--text) 88%, var(--accent) 12%);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   font-weight: 700;
   line-height: 1.45;
   white-space: nowrap;
@@ -8691,11 +8491,6 @@ body {
 }
 
 #game-config .launch-args-row input {
-  min-height: 38px;
-  border-color: var(--set-control-border);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
-  color: var(--text);
 }
 
 #settings .box .footer,
@@ -8708,43 +8503,17 @@ body {
   background: var(--set-footer-bg);
 }
 
-#settings .box .footer .buttons div,
-#game-config .box .footer .buttons div {
-  min-width: 92px;
-  min-height: 38px;
-  box-sizing: border-box;
-  border: 1px solid var(--set-control-border);
-  border-radius: 9px;
-  box-shadow: none;
-  transition: transform 0.12s ease, filter 0.15s ease, background 0.15s ease;
-}
-
-#settings .box .footer .buttons div:active,
-#game-config .box .footer .buttons div:active {
-  transform: scale(0.97);
-}
-
-#settings .box .footer .buttons div#btn-settings-save,
-#game-config .box .footer .buttons div#btn-game-config-save {
-  color: var(--on-accent);
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, white 6%), var(--accent));
-}
-#settings .box .footer .buttons div#btn-settings-cancel:hover,
-#game-config .box .footer .buttons div#btn-game-config-cancel:hover {
-  background: color-mix(in srgb, var(--set-surface) 82%, white 10%);
-  border-color: var(--set-hairline);
-}
-#settings .box .footer .buttons div#btn-settings-save:hover,
-#game-config .box .footer .buttons div#btn-game-config-save:hover {
-  filter: brightness(1.08);
-}
 /* Save only carries the accent while there is something to save: on the autosaved Notification tab,
    or before any change, it sits back beside Close instead of calling for a click that does nothing. */
 #settings .box .footer .settings-save-state:not([data-state='dirty']) + .buttons div#btn-settings-save {
   color: var(--text);
-  border-color: var(--set-control-border);
-  background: var(--set-surface);
+  border-color: var(--control-border);
+  background: var(--control-bg);
+  font-family: var(--font-body);
+}
+#settings .box .footer .settings-save-state:not([data-state='dirty']) + .buttons div#btn-settings-save:hover {
+  border-color: var(--control-border-hover);
+  background: var(--control-bg-hover);
 }
 
 /* Settings visual system: one model for every tab. */
@@ -8756,8 +8525,8 @@ body {
 #settings li,
 #settings .disclaimer,
 #settings .diag-line {
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
 }
 
 #settings .box .content {
@@ -8778,12 +8547,14 @@ body {
   border-bottom: 1px solid var(--set-divider);
   background: transparent;
   color: var(--set-title);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 11.5px;
+  /* A heading, not a caption: bold at the rows' own size. Small letter-spaced capitals made each
+     section header weaker than the rows it introduces, so a tab read as one undivided list. */
+  font-family: var(--font-strong);
+  font-size: var(--fs-base);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1.3;
+  text-transform: none;
 }
 
 /* Hero/inline headings are not card headers - no bleed, no rule. */
@@ -8875,7 +8646,7 @@ body {
   min-width: 0;
   margin-left: auto;
   color: var(--set-icon);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   transition: transform 0.18s ease, color 0.18s ease;
 }
 
@@ -8921,7 +8692,7 @@ body {
 }
 
 #settings .settings-section.is-opening:not(.is-collapsed) > *:not(.settings-section-header) {
-  animation: settings-section-reveal 0.18s ease both;
+  animation: settings-section-reveal 0.18s var(--ease-out) both;
 }
 
 /* A search looks through every section, so a match is never buried in a folded card. The chevrons
@@ -8940,7 +8711,7 @@ body {
   padding: 0 14px 6px;
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--set-panel);
   box-shadow: none;
 }
@@ -8986,7 +8757,7 @@ body {
   margin: 8px 0 10px;
   padding: 10px 12px;
   border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--set-hairline-soft));
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
@@ -9003,13 +8774,13 @@ body {
 
 #settings .source-official-summary strong {
   color: var(--set-title);
-  font-size: 13px;
+  font-size: var(--fs-md);
 }
 
 #settings .source-official-summary p {
   margin-top: 2px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.4;
 }
 
@@ -9020,7 +8791,7 @@ body {
 #settings .source-list .source-official-badge {
   margin-left: 2px;
   color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 
 /* The list inside a section is no longer its own card - the section is. `.emulator-list` also
@@ -9045,7 +8816,7 @@ body {
 #settings .help-panel {
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 34%, transparent);
   box-shadow: none;
 }
@@ -9074,7 +8845,7 @@ body {
 }
 #settings #blacklist-info {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.3;
 }
 #settings .actions-row .btn {
@@ -9088,7 +8859,7 @@ body {
 #settings .folder-rescan-help {
   margin: 8px 0 0;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.35;
 }
 
@@ -9100,12 +8871,9 @@ body {
   margin-top: 8px;
 }
 
-#settings .folder-rescan-toolbar .inline-action-btn {
-  min-height: 29px;
-  padding: 5px 9px;
+#settings .folder-rescan-toolbar .inline-action-btn:not(:hover) {
   border-color: transparent;
   background: transparent;
-  box-shadow: none;
 }
 
 #settings .folder-rescan-actions #folder-rescan-run {
@@ -9132,7 +8900,7 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 28%, transparent);
   scrollbar-color: color-mix(in srgb, var(--set-icon) 62%, transparent) transparent;
   scrollbar-width: thin;
@@ -9149,7 +8917,7 @@ body {
 
 #settings #folder-rescan-list::-webkit-scrollbar-thumb {
   min-height: 34px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--set-icon) 52%, transparent);
 }
 
@@ -9204,7 +8972,7 @@ body {
   min-width: 0;
   overflow: hidden;
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -9271,7 +9039,7 @@ body {
 #settings #libdirlist > li .path,
 #settings .help-panel summary {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--fs-base);
   font-weight: 400;
   line-height: 1.25;
 }
@@ -9298,14 +9066,14 @@ body {
 #settings .emulator-hero p,
 #settings .emulator-login p {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.3;
 }
 
 /* Help panels: brighter, airier reading than the generic muted list text. */
 #settings .help-panel li {
   color: color-mix(in srgb, var(--text-muted) 80%, var(--text) 20%);
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
   line-height: 1.55;
 }
 
@@ -9315,7 +9083,7 @@ body {
   height: 32px;
   padding: 1px 3px;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
@@ -9329,8 +9097,8 @@ body {
   width: 166px;
   height: 28px;
   color: var(--text);
-  font-family: 'Open-Sans-Bold', 'Open-Sans', sans-serif;
-  font-size: 12.5px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
   font-weight: 700;
 }
 
@@ -9347,52 +9115,6 @@ body {
   background: var(--accent-soft);
 }
 
-#settings .inline-action-btn,
-#settings #options-notify-test .btn,
-#settings .folder-actions .btn,
-#settings #blacklist-card .btn,
-#settings .content[data-view='advanced'] .btn,
-#settings .content[data-view='debug'] .btn,
-#settings .emulator-login-actions .btn {
-  min-height: 32px;
-  box-sizing: border-box;
-  padding: 6px 12px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 8px;
-  background: linear-gradient(180deg, var(--set-btn-top), var(--set-btn-bottom));
-  box-shadow: none;
-  color: var(--text);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 12.5px;
-  font-weight: 700;
-}
-
-#settings .inline-action-btn:hover,
-#settings #options-notify-test .btn:hover,
-#settings .folder-actions .btn:hover,
-#settings #blacklist-card .btn:hover,
-#settings .content[data-view='advanced'] .btn:hover,
-#settings .content[data-view='debug'] .btn:hover,
-#settings .emulator-login-actions .btn:hover {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--set-btn-top) 88%, white 8%), color-mix(in srgb, var(--set-btn-bottom) 88%, white 6%));
-  border-color: var(--set-hairline);
-  transform: none;
-}
-
-/* The neutral button fill above is more specific than `.inline-action-btn.primary`, so the one
-   accented action in a card (e.g. "Rescan selected folders") was rendering identically to the
-   plain buttons beside it. Restate it here so a primary action reads as one. */
-#settings .inline-action-btn.primary {
-  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, white 6%), color-mix(in srgb, var(--accent) 78%, black 12%));
-  color: color-mix(in srgb, var(--bg-base) 88%, black);
-}
-
-#settings .inline-action-btn.primary:hover {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 92%, white 10%), color-mix(in srgb, var(--accent) 84%, black 8%));
-}
-
 #settings .emulator-settings {
   padding-top: 22px;
 }
@@ -9405,7 +9127,7 @@ body {
      at the card's own top edge, with its own 9px of padding doing the spacing. */
   padding-top: 0;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: var(--set-panel);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
 }
@@ -9435,10 +9157,10 @@ body {
   height: 36px;
   flex: 0 0 36px;
   border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   color: var(--accent);
   background: var(--accent-soft);
-  font-size: 16px;
+  font-size: var(--fs-lg);
 }
 
 #settings .emulator-hero .title {
@@ -9500,37 +9222,13 @@ body {
 
 #settings .uplay-r2-package-copy > span:first-child {
   color: var(--text);
-  font-family: 'Open-Sans-Bold', sans-serif;
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
   line-height: 1.3;
 }
 
 #settings .uplay-r2-status {
-  display: inline-flex;
-  align-items: center;
   flex: 0 0 auto;
-  gap: 7px;
-  min-height: 27px;
-  padding: 0 10px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 999px;
-  color: var(--text-muted);
-  background: var(--set-surface-sunken);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 11.5px;
-  font-weight: 700;
-}
-
-#settings .uplay-r2-status[data-state='ready'] {
-  border-color: color-mix(in srgb, var(--success) 38%, var(--set-hairline-soft));
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 10%, var(--set-surface-sunken));
-}
-
-#settings .uplay-r2-status[data-state='error'] {
-  border-color: color-mix(in srgb, var(--danger) 38%, var(--set-hairline-soft));
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 10%, var(--set-surface-sunken));
 }
 
 #settings .emulator-settings .emulator-list li .right.uplay-r2-package-controls {
@@ -9548,9 +9246,7 @@ body {
 
 #settings .uplay-r2-package-controls .inline-action-btn {
   width: 100%;
-  min-height: 38px;
-  padding: 7px 10px;
-  line-height: 1.25;
+  white-space: normal;
 }
 
 #settings .uplay-r2-package-controls #verify-uplay-r2-package {
@@ -9624,10 +9320,10 @@ body {
   margin: 0;
   padding: 4px 9px;
   border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: color-mix(in srgb, var(--warning) 82%, white 18%);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -9647,7 +9343,7 @@ body {
 #settings #retroachievements-connect label {
   margin: 0 0 4px;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 /* The only account card that takes typed credentials, so it borrows the Steam login fields. */
 #settings #retroachievements-connect label {
@@ -9661,18 +9357,6 @@ body {
 }
 #settings .emulator-login-actions {
   margin-top: 10px;
-}
-
-#settings .emulator-login-fields input,
-#settings .pd-file input[type='text'] {
-  box-sizing: border-box;
-  min-height: 32px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
-  color: var(--text);
-  font-size: 13px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 /* Range + colour pickers were rendering with Chromium's native blue, ignoring the theme
@@ -9691,7 +9375,7 @@ body {
 }
 #settings input[type='range']::-webkit-slider-runnable-track {
   height: 4px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--set-control-border);
 }
 #settings input[type='range']::-webkit-slider-thumb {
@@ -9713,7 +9397,7 @@ body {
   height: 28px;
   padding: 2px;
   border: 1px solid var(--set-control-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   cursor: pointer;
 }
@@ -9722,15 +9406,8 @@ body {
 }
 #settings input[type='color']::-webkit-color-swatch {
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
-#settings .emulator-login-fields input:focus,
-#settings .pd-file input[type='text']:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
-
 /* The folder-view disclaimer reuses the same flat section-header look as
    #settings .content .title (icon + label, hairline underline) instead of a boxed callout. */
 #settings .content[data-view='folder'] .disclaimer {
@@ -9743,12 +9420,14 @@ body {
   border-bottom: 1px solid var(--set-divider);
   background: transparent;
   color: var(--set-title);
-  font-family: 'Open-Sans', sans-serif;
-  font-size: 11.5px;
+  /* A heading, not a caption: bold at the rows' own size. Small letter-spaced capitals made each
+     section header weaker than the rows it introduces, so a tab read as one undivided list. */
+  font-family: var(--font-strong);
+  font-size: var(--fs-base);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  line-height: 1.3;
+  text-transform: none;
 }
 
 #settings .folder-actions {
@@ -9809,7 +9488,7 @@ body {
   grid-column: 2;
   grid-row: 2;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 400;
 }
 
@@ -9943,7 +9622,7 @@ body {
   height: 32px;
   box-sizing: border-box;
   padding: 6px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -10005,8 +9684,8 @@ body {
 #settings .pd-start-title {
   min-width: 0;
   color: var(--text);
-  font-family: 'Raleway-bold';
-  font-size: 13px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
   letter-spacing: 0.2px;
   text-transform: uppercase;
 }
@@ -10018,8 +9697,8 @@ body {
   min-width: 0;
   margin: 0;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.5;
 }
 
@@ -10052,11 +9731,11 @@ body {
   gap: 6px;
   padding: 4px 10px 4px 5px;
   border: 1px solid var(--set-control-border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   line-height: 1.3;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
@@ -10111,15 +9790,7 @@ body {
 #settings .pd-file input[type='text'],
 #settings .pd-file select {
   width: 100%;
-  box-sizing: border-box;
-  min-height: 32px;
   padding-left: 14px;
-  border: 1px solid var(--set-control-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
-  color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 13px;
 }
 
 /* Preview beside the controls, folding to one column when the window is too narrow for both. */
@@ -10210,7 +9881,7 @@ body {
   display: inline-flex;
   overflow: hidden;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
 }
 
@@ -10220,8 +9891,8 @@ body {
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
@@ -10239,17 +9910,17 @@ body {
   min-height: 28px;
   padding: 0 8px;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 #settings #pd-play {
   width: auto;
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 /* Only Screen view is drawn at a display resolution, so the picker is not offered in Card view. */
@@ -10279,7 +9950,7 @@ body {
   box-sizing: border-box;
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background-color: #1a1c22;
   background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
     linear-gradient(-45deg, rgba(255, 255, 255, 0.035) 25%, transparent 25%),
@@ -10314,7 +9985,7 @@ body {
 
 #settings .pd-backdrops button {
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 #settings .pd-screen {
@@ -10342,7 +10013,7 @@ body {
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(160deg, #2a3350 0%, #131722 60%, #0c0e14 100%);
 }
 
@@ -10427,7 +10098,7 @@ body {
 #settings .pd-compare-label {
   flex: 0 0 auto;
   color: var(--text-muted);
-  font-size: 10.5px;
+  font-size: var(--fs-2xs);
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -10483,7 +10154,7 @@ body {
 #settings .pd-anchors button {
   padding: 0;
   border: 1px solid var(--set-control-border);
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
   cursor: pointer;
 }
@@ -10511,11 +10182,11 @@ body {
   min-height: 26px;
   padding: 0 6px;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 11.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
 }
 
 /* Controls */
@@ -10561,19 +10232,13 @@ body {
   position: absolute;
   left: 10px;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   pointer-events: none;
 }
 
 #settings .pd-search input {
   width: 100%;
   padding: 7px 10px 7px 28px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: 8px;
-  background: var(--set-surface-sunken);
-  color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12px;
 }
 
 #settings .pd-history {
@@ -10590,7 +10255,7 @@ body {
   height: 30px;
   padding: 0;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--set-surface-sunken);
   color: var(--text);
   cursor: pointer;
@@ -10609,7 +10274,7 @@ body {
 #settings .pd-no-match {
   margin: 4px 0 0;
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 /* Filtering hides, it never moves: the locale binds these controls by id and by position. */
@@ -10621,7 +10286,7 @@ body {
 #settings .pd-group {
   overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 55%, transparent);
 }
 
@@ -10634,8 +10299,8 @@ body {
   border: 0;
   background: transparent;
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
   font-weight: 700;
   text-align: left;
   cursor: pointer;
@@ -10647,7 +10312,7 @@ body {
 
 #settings .pd-group-head .fa-chevron-down {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   transition: transform 0.15s ease;
 }
 
@@ -10706,11 +10371,11 @@ body {
   min-height: 28px;
   padding: 0 6px;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 /* A property whose value is a file: the menu of what is available, with the button that brings a
@@ -10738,7 +10403,7 @@ body {
   min-width: 30px;
   padding: 0 8px;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
   color: var(--text-muted);
   cursor: pointer;
@@ -10782,7 +10447,7 @@ body {
 /* Live readout for each slider. */
 #settings .pd-value {
   color: var(--text);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
@@ -10794,8 +10459,8 @@ body {
   border: 0;
   background: transparent;
   color: var(--text-muted);
-  font-family: 'Open-Sans';
-  font-size: 11.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   cursor: pointer;
 }
 
@@ -10834,40 +10499,16 @@ body {
 /* An action row normally holds one button and stretches it; these hold several, side by side. */
 #settings #options-notify-designer .pd-actions .inline-action-btn {
   width: auto;
-  min-height: 34px;
-  padding: 0 14px;
-  gap: 8px;
-  white-space: nowrap;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
 }
 
-/* Saving is the action the whole tab leads to, so it is the one that looks like a button rather than
-   a row of equals. */
-#settings #options-notify-designer .pd-actions #btn-create-preset {
-  border-color: transparent;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 700;
-}
-
-#settings #options-notify-designer .pd-actions #btn-create-preset:hover {
-  background: color-mix(in srgb, var(--accent) 82%, white);
+/* Three weights in this row: Create is filled, the file actions are outlined, the SAN import is bare. */
+#settings #options-notify-designer .pd-actions .inline-action-btn.secondary {
+  background: transparent;
 }
 
 #settings #options-notify-designer .pd-actions .inline-action-btn.secondary:hover {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 14%, transparent);
-}
-
-#settings #options-notify-designer .pd-actions .inline-action-btn:active {
-  transform: translateY(1px);
-}
-
-/* Deleting is not undoable, so it says so on hover instead of looking like its neighbours. */
-#settings #options-notify-designer .pd-actions #btn-delete-preset:hover {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 16%, transparent);
-  color: var(--danger);
 }
 
 /*
@@ -10932,10 +10573,7 @@ body {
 
 #settings #options-notify-designer .pd-file-pair .inline-action-btn {
   width: 100%;
-  justify-content: center;
-  padding: 0 10px;
   white-space: normal;
-  text-align: center;
 }
 
 /*
@@ -11006,7 +10644,7 @@ body {
 #btn-hotkey-preview:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 /* These sit edge to edge inside a box that clips overflow, so an outer ring would be cut off. */
@@ -11032,6 +10670,21 @@ body {
     animation: aw-settings-scroll-veil linear both !important;
     animation-timeline: scroll(nearest block) !important;
     animation-range: 0 24px !important;
+  }
+
+  /* A waiting bar frozen in place says the app has hung. It breathes instead: opacity, no travel. */
+  .loading .progressBar.indeterminate .meter {
+    width: 100%;
+    animation: loading-breathe 1.6s ease-in-out infinite alternate !important;
+  }
+}
+
+@keyframes loading-breathe {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.85;
   }
 }
 
@@ -11084,12 +10737,12 @@ body {
 }
 
 .onboarding-folder-actions .inline-action-btn span {
-  font-size: 13px;
+  font-size: var(--fs-md);
 }
 
 .onboarding-folder-actions .inline-action-btn small {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 400;
 }
 
@@ -11098,7 +10751,7 @@ body {
 .onboarding-step label,
 .onboard-field-hint,
 #onboarding-status {
-  font-family: 'Open-Sans', sans-serif;
+  font-family: var(--font-body);
 }
 
 /* Keep every view usable at the application's minimum window size. */
@@ -11119,7 +10772,7 @@ body {
   #settingNav li {
     min-height: 40px;
     padding: 8px 10px;
-    font-size: 13px;
+    font-size: var(--fs-md);
   }
 
   #settings .box .content {
@@ -11246,7 +10899,7 @@ body {
 
 #theme-customizer-desc {
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   margin: 0 0 10px;
 }
@@ -11264,7 +10917,7 @@ body {
 
 #theme-customizer .theme-name-label {
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
 }
 
 #theme-customizer .theme-name-label::after {
@@ -11285,8 +10938,8 @@ body {
   flex: 0 0 auto;
   min-height: 32px;
   padding: 4px 14px;
-  border-radius: 7px;
-  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
   border-color: transparent;
   background: var(--accent);
   color: var(--on-accent);
@@ -11312,7 +10965,7 @@ body {
 #theme-customizer .theme-save-status {
   margin: 6px 0 0;
   min-height: 15px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -11321,7 +10974,7 @@ body {
 }
 
 #theme-customizer .theme-save-status.error {
-  color: #ff7b72;
+  color: var(--danger);
 }
 
 #theme-customizer .theme-save-status:empty {
@@ -11336,11 +10989,11 @@ body {
   min-height: 32px;
   padding: 0 12px;
   border: 1px solid var(--set-control-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   color: var(--text);
-  font-family: 'Open-Sans';
-  font-size: 12.5px;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
 }
 
 #theme-customizer #theme-customizer-name.is-missing {
@@ -11349,7 +11002,7 @@ body {
 
 #theme-customizer .theme-name-hint {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1.35;
 }
 
@@ -11379,7 +11032,7 @@ body {
   min-height: 46px;
   padding: 7px 10px;
   border: 1px solid var(--set-hairline-soft);
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
 }
 
@@ -11396,7 +11049,7 @@ body {
   width: 58px;
   height: 38px;
   border: 1px solid var(--set-hairline);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   position: relative;
   overflow: hidden;
@@ -11451,7 +11104,7 @@ body {
 
 #theme-customizer .theme-layer-name {
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--fs-md);
   line-height: 1.25;
   /*
     The name may take a second line, and wraps between words. Not `anywhere`: that makes the column's
@@ -11477,7 +11130,7 @@ body {
   flex: 1 1 100%;
   margin: 3px 0 0 var(--theme-hint-indent, 94px);
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1.35;
 }
 
@@ -11534,7 +11187,7 @@ body {
 #theme-customizer .theme-layer-alpha-value {
   min-width: 29px;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
@@ -11544,7 +11197,7 @@ body {
   height: 28px;
   padding: 0;
   border: 1px solid var(--set-control-border);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -11564,15 +11217,15 @@ body {
 #theme-customizer .theme-layer-image {
   min-height: 26px;
   padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
 }
 
 #theme-customizer .theme-layer-clear-image {
   width: 24px;
   height: 24px;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
@@ -11601,17 +11254,17 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 
 #theme-customizer .theme-layer-fit {
   height: 28px;
   padding: 0 6px;
   border: 1px solid var(--set-control-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 #theme-customizer .theme-layer-fit:disabled {
@@ -11624,7 +11277,7 @@ body {
   gap: 5px;
   margin-left: 2px;
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -11683,10 +11336,10 @@ body {
   height: 26px;
   padding: 0 6px;
   border: 1px solid var(--set-control-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--set-control-bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 
 #theme-customizer .theme-layer-effect-group {
@@ -11694,7 +11347,7 @@ body {
   align-items: center;
   gap: 6px;
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   white-space: nowrap;
 }
 
@@ -11703,7 +11356,7 @@ body {
   height: 24px;
   padding: 0;
   border: 1px solid var(--set-control-border);
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: transparent;
   cursor: pointer;
 }
@@ -11716,7 +11369,7 @@ body {
 #theme-customizer .theme-layer-effect-value {
   min-width: 34px;
   color: var(--text);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   text-align: right;
 }
 
@@ -11729,8 +11382,8 @@ body {
 #theme-customizer .theme-customizer-actions .btn {
   min-height: 30px;
   padding: 4px 14px;
-  border-radius: 7px;
-  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
 }
 
 @media (max-width: 900px) {
@@ -11762,7 +11415,7 @@ body {
    rather than as a card and a stranger. */
 #theme-library-desc {
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   margin: 0 0 10px;
 }
@@ -11777,13 +11430,13 @@ body {
 #theme-library .theme-library-actions .btn {
   min-height: 30px;
   padding: 4px 14px;
-  border-radius: 7px;
-  font-size: 12.5px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
 }
 
 #theme-library .theme-library-status {
   margin: 10px 0 0;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   min-height: 16px;
 }
@@ -11793,7 +11446,7 @@ body {
 }
 
 #theme-library .theme-library-status.error {
-  color: #ff7b72;
+  color: var(--danger);
 }
 
 #theme-preview {
@@ -11808,6 +11461,7 @@ body {
   inset: 0;
   z-index: 9;
   background: var(--set-scrim);
+  backdrop-filter: blur(8px) saturate(0.78);
 }
 
 /*
@@ -11826,11 +11480,11 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  border-radius: 12px;
+  border-radius: var(--dialog-radius);
   overflow: hidden;
-  border: 1px solid var(--set-hairline);
-  background: linear-gradient(180deg, var(--set-modal-top) 0%, var(--set-modal-bottom) 100%);
-  box-shadow: 0 28px 70px rgba(0, 0, 0, calc(0.48 * var(--shadow-scale)));
+  border: var(--dialog-border);
+  background: var(--dialog-bg);
+  box-shadow: var(--dialog-shadow);
 }
 
 #theme-preview .box .header,
@@ -11874,7 +11528,7 @@ body {
   width: min(100%, calc(var(--theme-preview-maxh, 46vh) * var(--theme-preview-ratio, 1.6)));
   margin: 0 auto;
   aspect-ratio: var(--theme-preview-w, 960) / var(--theme-preview-h, 600);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--surface-sunken, rgba(0, 0, 0, 0.2));
@@ -11898,7 +11552,7 @@ body {
   grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
   gap: 4px 14px;
   margin: 0;
-  font-size: 12.5px;
+  font-size: var(--fs-sm);
 }
 
 #theme-preview .theme-preview-meta dt {
@@ -11915,7 +11569,7 @@ body {
   gap: 4px;
   padding: 3px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   vertical-align: middle;
 }
 
@@ -11930,7 +11584,7 @@ body {
 
 #theme-preview .theme-preview-note {
   margin: 0;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -11940,44 +11594,6 @@ body {
   gap: 8px;
   padding: 12px 16px;
   border-top: 1px solid var(--set-hairline);
-}
-
-/* The modal is a sibling of #settings, not a child, so the Settings button rules do not reach it. */
-#theme-preview .theme-preview-actions .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 6px 16px;
-  border: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
-  border-radius: 7px;
-  font-size: 12.5px;
-  color: var(--text);
-  background: color-mix(in srgb, var(--set-surface) 84%, var(--accent) 10%);
-  cursor: pointer;
-}
-
-#theme-preview .theme-preview-actions .btn.secondary {
-  border-color: color-mix(in srgb, var(--border) 40%, transparent);
-  background: color-mix(in srgb, var(--set-surface) 88%, transparent);
-}
-
-#theme-preview .theme-preview-actions .btn:hover {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
-  background: color-mix(in srgb, var(--set-surface) 74%, var(--accent) 16%);
-}
-
-#theme-preview .theme-preview-actions .btn.secondary:hover {
-  border-color: color-mix(in srgb, var(--border) 60%, transparent);
-  background: color-mix(in srgb, var(--set-surface) 96%, transparent);
-}
-
-#theme-preview .theme-preview-actions .btn i {
-  color: var(--accent);
-}
-
-#theme-preview .theme-preview-actions .btn.secondary i {
-  color: var(--text-muted);
 }
 
 @media (max-width: 640px) {
@@ -12061,10 +11677,10 @@ body {
   height: 28px;
   padding: 0;
   border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--accent-strong);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
 }
@@ -12125,10 +11741,10 @@ body {
   flex: none;
   padding: 3px 10px;
   border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   color: var(--accent-strong);
   background: var(--accent-soft);
-  font: 11px 'Open-Sans-Bold';
+  font: var(--fs-xs) var(--font-strong);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
@@ -12166,7 +11782,7 @@ body {
 }
 
 .profile-stats-all::-webkit-scrollbar-thumb {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--text-muted) 35%, transparent);
 }
 
@@ -12179,7 +11795,7 @@ body {
 
 .profile-stats-all-head h3 {
   margin: 0;
-  font: 13px 'Raleway-Bold';
+  font: var(--fs-md) var(--font-strong);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -12187,7 +11803,7 @@ body {
 
 .profile-stats-all-head small {
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 #profile-stats-all-list {
@@ -12229,9 +11845,9 @@ body {
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 9px;
+  border-radius: var(--radius-sm);
   color: var(--trophy);
-  font-size: 18px;
+  font-size: var(--fs-xl);
   background: color-mix(in srgb, var(--trophy) 12%, transparent);
   box-shadow: 0 6px 14px rgba(0, 0, 0, calc(0.24 * var(--shadow-scale)));
 }
@@ -12262,7 +11878,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 13.5px 'Open-Sans-Bold';
+  font: var(--fs-md) var(--font-strong);
 }
 
 #profile-stats-all-list .all-main small {
@@ -12271,7 +11887,7 @@ body {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 #profile-stats-all-list .all-side {
@@ -12284,12 +11900,12 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: 12px 'Open-Sans-Bold';
+  font: var(--fs-sm) var(--font-strong);
 }
 
 #profile-stats-all-list .all-rate {
   color: var(--trophy);
-  font: 12px 'Open-Sans-Bold';
+  font: var(--fs-sm) var(--font-strong);
   font-variant-numeric: tabular-nums;
 }
 
@@ -12304,23 +11920,12 @@ body {
 
 #profile-stats-all-list .all-side small {
   color: var(--text-muted);
-  font: 11px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 
 #profile-stats .header > .profile-stats-scope {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 24%, transparent);
-  border-radius: 999px;
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
-  font: 12px 'Open-Sans';
-}
-
-#profile-stats .header > .profile-stats-scope {
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
@@ -12367,7 +11972,7 @@ body {
 .profile-stats-body::-webkit-scrollbar-thumb,
 .profile-stats-table-wrap::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
@@ -12424,12 +12029,12 @@ body {
   position: relative;
   grid-area: 1 / 1;
   color: var(--text-muted);
-  font: 13px 'Open-Sans';
+  font: var(--fs-md) var(--font-body);
 }
 
 .profile-stats-ring-value b {
   color: var(--text);
-  font: 32px 'Raleway-Bold';
+  font: var(--fs-4xl) var(--font-strong);
 }
 
 .profile-stats-hero-copy {
@@ -12440,18 +12045,18 @@ body {
 }
 
 .profile-stats-hero-copy > b {
-  font: 17px 'Raleway-Bold';
+  font: var(--fs-lg) var(--font-strong);
 }
 
 .profile-stats-hero-copy > span {
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 .profile-stats-split {
   display: flex;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
   background: color-mix(in srgb, var(--border) 26%, transparent);
 }
@@ -12481,7 +12086,7 @@ body {
   flex-wrap: wrap;
   gap: 6px 16px;
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 .profile-stats-legend li {
@@ -12493,12 +12098,12 @@ body {
 .profile-stats-legend i {
   width: 9px;
   height: 9px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
 }
 
 .profile-stats-legend b {
   color: var(--text);
-  font-family: 'Raleway-Bold';
+  font-family: var(--font-strong);
 }
 
 /* auto-fit rather than a fixed column count with media queries: the main window has minWidth 900,
@@ -12536,8 +12141,8 @@ body {
   place-items: center;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
-  font-size: 15px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-base);
   color: var(--text-muted);
   background: color-mix(in srgb, var(--border) 16%, transparent);
 }
@@ -12548,7 +12153,7 @@ body {
 }
 
 .profile-stats-tile b {
-  font: 20px 'Raleway-Bold';
+  font: var(--fs-2xl) var(--font-strong);
   color: var(--text);
   min-width: 0;
 }
@@ -12556,7 +12161,7 @@ body {
 .profile-stats-tile span {
   grid-column: 2;
   color: var(--text-muted);
-  font: 11px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
 }
 
 /* A duration reads as "12 days, 4 hours" and cannot be set at the counter type size without wrapping
@@ -12568,7 +12173,7 @@ body {
 
 #profile-stats-playtime-value,
 #profile-stats-playtime-average-value {
-  font-size: 15px;
+  font-size: var(--fs-base);
   line-height: 1.35;
   padding-top: 4px;
 }
@@ -12576,7 +12181,7 @@ body {
 .profile-stats-platforms h3,
 .profile-stats-trophies h3 {
   margin: 0 0 10px;
-  font: 13px 'Raleway-Bold';
+  font: var(--fs-md) var(--font-strong);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -12609,12 +12214,12 @@ body {
   gap: 2px 20px;
   margin: 8px 0 0;
   padding: 0 10px;
-  font: 12px 'Open-Sans-Bold';
+  font: var(--fs-sm) var(--font-strong);
   border: 0;
   background: none;
   color: var(--text);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 #user-info .info .profile-trophies[hidden] {
@@ -12630,7 +12235,7 @@ body {
 }
 
 #user-info .info .profile-trophies i {
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--trophy);
   text-shadow: rgba(0, 0, 0, calc(0.5 * var(--shadow-scale))) 2px 2px 3px;
 }
@@ -12691,7 +12296,7 @@ body {
 #home.profile-compact #user-info .info .name {
   flex: 0 0 auto;
   max-width: 240px;
-  font-size: 19px;
+  font-size: var(--fs-xl);
   letter-spacing: -0.01em;
 }
 
@@ -12708,7 +12313,7 @@ body {
 
 #home.profile-compact #user-info .info .stats li {
   padding: 3px 8px;
-  font-size: 11.5px;
+  font-size: var(--fs-xs);
   white-space: nowrap;
 }
 
@@ -12733,7 +12338,7 @@ body {
 
 .profile-stats-trophies-head small {
   color: var(--text-muted);
-  font: 11px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
 }
 
 .profile-stats-trophy-tiers {
@@ -12767,27 +12372,27 @@ body {
   align-items: center;
   justify-content: space-between;
   color: var(--text-muted);
-  font: 11px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
 }
 
 .profile-stats-trophy > span i {
   color: var(--trophy);
-  font-size: 14px;
+  font-size: var(--fs-base);
 }
 
 .profile-stats-trophy b {
-  font: 20px 'Raleway-Bold';
+  font: var(--fs-2xl) var(--font-strong);
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
 
 .profile-stats-trophy small {
   color: var(--text-muted);
-  font: 11px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
 }
 
 .profile-stats-trophy small.note {
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   opacity: 0.75;
 }
 
@@ -12801,7 +12406,7 @@ body {
   display: flex;
   gap: 3px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
   background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
 }
@@ -12820,7 +12425,7 @@ body {
   padding: 0;
   list-style: none;
   color: var(--text-muted);
-  font: 11px 'Open-Sans';
+  font: var(--fs-xs) var(--font-body);
 }
 
 .profile-stats-trophy-legend li {
@@ -12832,7 +12437,7 @@ body {
 .profile-stats-trophy-legend li i {
   width: 8px;
   height: 8px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: var(--trophy);
 }
 
@@ -12856,7 +12461,7 @@ body {
 .profile-stats-trophy-card h4 {
   margin: 0;
   color: var(--text-muted);
-  font: 11px 'Open-Sans-Bold';
+  font: var(--fs-xs) var(--font-strong);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -12882,7 +12487,7 @@ body {
 }
 
 .profile-stats-trophy-list::-webkit-scrollbar-thumb {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--text-muted) 35%, transparent);
 }
 
@@ -12901,7 +12506,7 @@ body {
   height: var(--trophy-row);
   border-radius: var(--radius-sm);
   color: var(--trophy);
-  font-size: 16px;
+  font-size: var(--fs-lg);
   background: color-mix(in srgb, var(--trophy) 12%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--trophy) 45%, transparent);
 }
@@ -12925,13 +12530,13 @@ body {
 }
 
 .profile-stats-trophy-list b {
-  font: 13px 'Open-Sans-Bold';
+  font: var(--fs-md) var(--font-strong);
 }
 
 .profile-stats-trophy-list small {
   margin-top: 1px;
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 
@@ -12970,13 +12575,13 @@ body {
   gap: 8px;
   padding: 18px 8px;
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
   text-align: center;
 }
 
 .profile-stats-trophy-list li.is-empty::before {
   content: '\f091';
-  font: 900 22px 'Font Awesome 5 Free';
+  font: 900 var(--fs-2xl) 'Font Awesome 5 Free';
   color: color-mix(in srgb, var(--text-muted) 55%, transparent);
 }
 
@@ -13000,7 +12605,7 @@ body {
 .profile-stats-table {
   width: 100%;
   border-collapse: collapse;
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 .profile-stats-table th,
@@ -13050,7 +12655,7 @@ body {
   position: relative;
   width: 54px;
   height: 6px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   overflow: hidden;
   background: color-mix(in srgb, var(--border) 26%, transparent);
 }
@@ -13064,7 +12669,7 @@ body {
 .profile-stats-empty {
   margin: 10px 0 0;
   color: var(--text-muted);
-  font: 12px 'Open-Sans';
+  font: var(--fs-sm) var(--font-body);
 }
 
 /* Height, not width, is where this panel actually runs out of room: the window can be as short as
@@ -13086,7 +12691,7 @@ body {
   }
 
   .profile-stats-ring-value b {
-    font-size: 22px;
+    font-size: var(--fs-2xl);
   }
 }
 
@@ -13118,7 +12723,7 @@ body {
      the values underneath showed straight through the list. */
   background: var(--set-surface-elevated, var(--surface-elevated));
   /* The panel hangs off <body>, which sets no font: the rows would take the engine default serif. */
-  font-family: 'Open-Sans', sans-serif;
+  font-family: var(--font-body);
   /* Not --shadow-dialog: that one is tuned for a full-window sheet and sits under a small menu as a
      grey smudge on the light theme. Same alphas as the cards, dialled down with --shadow-scale. */
   box-shadow: 0 16px 36px rgba(0, 0, 0, calc(0.34 * var(--shadow-scale))), 0 2px 8px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
@@ -13148,7 +12753,7 @@ body {
   padding: 6px 10px;
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--fs-base);
   line-height: 1.25;
   cursor: pointer;
   /* A value is one row: a long theme name is cut with an ellipsis rather than reflowing the list. */
@@ -13165,7 +12770,7 @@ body {
 /* The tick holds its place on every row, so picking a value does not shift the labels. */
 .select-menu-tick {
   flex: 0 0 auto;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   color: var(--accent);
   visibility: hidden;
 }
@@ -13199,7 +12804,7 @@ body {
 .select-menu-group {
   padding: 8px 10px 4px;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -13213,7 +12818,7 @@ body {
 }
 .select-menu::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }

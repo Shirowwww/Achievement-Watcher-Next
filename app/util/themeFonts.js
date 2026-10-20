@@ -10,7 +10,7 @@
   gallery server, where the only thing outside its own folder that may load is a `data:` URL. So the
   faces travel inside the document, the way the theme's own images do.
 
-  Read once and cached: the four faces are ~360 KB of file, and building the base64 for every render
+  Read once and cached: building the base64 for every render
   would be paid per preview. A missing or unreadable font file is not an error - the mock falls back
   to the stack `themeMock.js` declares, which is what a checkout without the fonts (the gallery
   service takes only the shared readers) gets today.
@@ -23,11 +23,9 @@ const path = require('path');
 const FACES = [
   { family: 'Open-Sans', weight: '400', file: ['Open_Sans', 'opensans-regular-webfont.woff2'], format: 'woff2' },
   { family: 'Open-Sans-Bold', weight: '700', file: ['Open_Sans', 'opensans-bold-webfont.woff2'], format: 'woff2' },
-  { family: 'Raleway', weight: '400', file: ['Raleway', 'Raleway-Regular.ttf'], format: 'truetype' },
-  { family: 'Raleway-Bold', weight: '700', file: ['Raleway', 'Raleway-Bold.ttf'], format: 'truetype' },
 ];
 
-const MIME = { woff2: 'font/woff2', truetype: 'font/ttf' };
+const MIME = { woff2: 'font/woff2' };
 
 function fontDir() {
   return path.join(__dirname, '..', 'resources', 'font');
