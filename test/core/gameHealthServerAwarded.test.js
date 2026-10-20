@@ -65,6 +65,17 @@ test('OnlineFix is not told it records nothing', () => {
   assert.notEqual(report.reason, 'server-awarded', 'it signs into a real account, so the unlocks reach Xbox');
 });
 
+test('OnlineFix over The Crew Motorfest is told it records nothing', () => {
+  const report = gameHealth.deriveHealth(signalsFor({
+    appid: 2698940,
+    name: 'The Crew Motorfest',
+    crackLoader: { name: 'OnlineFix', replaceable: false },
+    achievements: { total: 50, unlocked: 0 },
+  }));
+  assert.equal(report.reason, 'server-awarded', 'its Ubisoft build signs into online-fix\'s server, not Ubisoft\'s');
+  assert.equal(emulatorRow(report).params.servedBy, 'OnlineFix');
+});
+
 test('an unlisted game keeps the ordinary crack sentences', () => {
   const report = gameHealth.deriveHealth(signalsFor({ appid: 2149010, playtime: { total: 7200, lastPlayed: 1792140000 } }));
   assert.equal(report.reason, 'crack-records-nothing');

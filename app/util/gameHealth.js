@@ -280,16 +280,20 @@ function readsOnlyForeignGoldbergSaves(signals) {
   Games whose unlocks are granted by the publisher's servers and never through the Steam API, so no
   offline emulator can record one. Verified appids only: a forced unlock through the crack has to
   work while a real one in game reaches nothing. Halo: Campaign Evolved goes through PlayFab and Xbox
-  Live (verified 2026-10-16 under RUNE).
+  Live (verified 2026-10-16 under RUNE). The Crew Motorfest is awarded by Ubisoft's servers; online-fix
+  routes it to its own server, which records none (verified 2026-10-20, issue #136).
+  Each appid lists the loaders that do sign into the publisher, so the unlocks reach it.
 */
-const SERVER_AWARDED_APPIDS = new Set(['2806050']);
-// Signs into a real account, so the unlocks do reach the publisher.
-const ONLINE_LOADERS = new Set(['OnlineFix']);
+const SERVER_AWARDED_APPIDS = new Map([
+  ['2806050', new Set(['OnlineFix'])],
+  ['2698940', new Set()],
+]);
 
 function serverAwardedOffline(signals) {
-  if (!SERVER_AWARDED_APPIDS.has(String(signals.appid))) return null;
+  const reachesPublisher = SERVER_AWARDED_APPIDS.get(String(signals.appid));
+  if (!reachesPublisher) return null;
   const loader = signals.crackLoader && signals.crackLoader.name;
-  if (loader && !ONLINE_LOADERS.has(loader)) return loader;
+  if (loader && !reachesPublisher.has(loader)) return loader;
   return !loader && signals.emulated ? 'Goldberg' : null;
 }
 

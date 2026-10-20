@@ -2523,6 +2523,27 @@ async function addEmulatorCacheExclusion() {
   return !!(result && result.ok);
 }
 
+// Every achievement fix replaces part of an online-fix setup, and the game then plays offline only.
+// Asked before anything is written, so nobody trades their multiplayer for achievements unknowingly.
+function confirmOnlineFixReplace(gameDir) {
+  if (!gameDir || !crackLoaderDetect.servesOnlinePlay(gameDir)) return true;
+  const choice = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'warning',
+    title: t('onlinefix-replace-title', 'This game uses an online-fix crack', 'Ce jeu utilise un crack online-fix'),
+    message: t('onlinefix-replace-message', 'Applying the fix may break online play.', 'Appliquer le fix peut casser le jeu en ligne.'),
+    detail: t(
+      'onlinefix-replace-detail',
+      'online-fix lets this game play online through its own servers. The achievement fix replaces part of that setup, so multiplayer may stop working. The current files are backed up first.',
+      'online-fix fait tourner ce jeu en ligne via ses propres serveurs. Le fix de succès remplace une partie de cette configuration, le multijoueur peut donc ne plus marcher. Les fichiers actuels sont sauvegardés au préalable.'
+    ),
+    buttons: [t('cancel', 'Cancel', 'Annuler'), t('onlinefix-replace-button', 'Apply anyway', 'Appliquer quand même')],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  return choice === 1;
+}
+
 function isEmulatorPackageBlocked(err) {
   const code = err && err.code;
   // Two packages, one cause: the Goldberg emulator AW Next downloads, and the Uplay loaders it ships
@@ -5282,7 +5303,8 @@ var app = {
                     try {
                       // Re-applying overwrites a setup that is already there, so it asks first and
                       // names what was found. The write path below backs everything up either way.
-                      if (gbeExistingFix) {
+                      // An online-fix setup gets its own warning below instead, about online play.
+                      if (gbeExistingFix && gbeExistingFix.name !== 'OnlineFix') {
                         const proceed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                           type: 'warning',
                           title: t('reapply-gbe-title', 'Re-apply the emulator fix?', 'Ré-appliquer le fix émulateur ?'),
@@ -5310,6 +5332,7 @@ var app = {
                         if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return;
                         gameDir = picked.filePaths[0];
                       }
+                      if (!confirmOnlineFixReplace(gameDir)) return;
 
                       // 1a - Create a portable restore point before any write step, so the pre-fix
                       // steam_settings + steam_api(64).dll state can be undone from "Restore latest GBE/Goldberg backup".
@@ -5801,6 +5824,7 @@ var app = {
                         if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return;
                         gameDir = picked.filePaths[0];
                       }
+                      if (!confirmOnlineFixReplace(gameDir)) return;
 
                       await applyUplayR2Repair({ game, gameDir, appid, box: self, interactive: true, showResult: true });
                     } catch (err) {
@@ -8290,7 +8314,9 @@ var app = {
         const button = $(this);
         const result = $('#uplay-r2-settings-result');
         const targets = gameList.filter(
-          (game) => game && game.gameDir && fs.existsSync(game.gameDir) && uplayR2.isUplayR2Game(game, game.appid)
+          // A batch never takes online play away: online-fix games are fixed one by one, after a warning.
+          (game) =>
+            game && game.gameDir && fs.existsSync(game.gameDir) && uplayR2.isUplayR2Game(game, game.appid) && !crackLoaderDetect.servesOnlinePlay(game.gameDir)
         );
         if (targets.length === 0) {
           result.text(uplaySettingsText('noGames', 'No detected Uplay R1/R2 game has a known installation folder.'));
@@ -8368,6 +8394,8 @@ var app = {
         // never touch plain legit Steam installs.
         const targets = gameList.filter((g) => {
           if (!g || !g.gameDir || !fs.existsSync(g.gameDir)) return false;
+          // As in the Uplay batch: an online-fix game is only ever fixed on its own, after a warning.
+          if (crackLoaderDetect.servesOnlinePlay(g.gameDir)) return false;
           const isUplay = uplayR2.isUplayR2Game(g, g.appid);
           const isSteamEmulator =
             /^\d+$/.test(String(g.appid)) &&

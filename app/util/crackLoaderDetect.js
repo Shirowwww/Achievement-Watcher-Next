@@ -35,7 +35,12 @@ function isEmulatorDll(file) {
   game itself, SmartSteamEmu injects from a loader - where replacing steam_api leaves half a setup.
 */
 const KNOWN_CRACK_LOADERS = [
-  { name: 'OnlineFix', markers: ['onlinefix64.dll', 'onlinefix32.dll', 'onlinefix.dll', 'onlinefix.ini'], replaceable: false },
+  /*
+    online-fix keeps every original it replaces under a .ofme extension. Its Ubisoft builds (The Crew
+    Motorfest: upc_r2_loader64.ofme) carry no OnlineFix.ini at all, so without the suffix the folder
+    read as an unconfigured GBE install over Valve's untouched steam_api dll. Names only, never content.
+  */
+  { name: 'OnlineFix', markers: ['onlinefix64.dll', 'onlinefix32.dll', 'onlinefix.dll', 'onlinefix.ini'], suffixes: ['.ofme'], replaceable: false },
   /*
     Checked before the scene and legacy families: ColdClientLoader.ini names the loader that
     actually launches the game, while a stray SteamConfig.ini or steam_emu.ini is often a leftover
@@ -107,7 +112,8 @@ function loaderForEntries(entries, dir) {
   const emulatorDllHere = STEAM_API_DLLS.some((name) => present.has(name) && isEmulatorDll(path.join(dir, name)));
   for (const loader of KNOWN_CRACK_LOADERS) {
     if (loader.replaceable && emulatorDllHere) continue;
-    const found = loader.markers.filter((marker) => present.has(marker));
+    const suffixed = (loader.suffixes || []).flatMap((suffix) => [...present].filter((name) => name.endsWith(suffix)));
+    const found = [...loader.markers.filter((marker) => present.has(marker)), ...suffixed];
     if (found.length > 0) return { name: loader.name, replaceable: loader.replaceable === true, dir, markers: found };
   }
   return null;
@@ -259,4 +265,10 @@ function leavesStatsToSteam(loader) {
   return !!section && /^\s*UserStats\s*=\s*(false|0)\s*$/im.test(section[1]);
 }
 
-module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, disableLoaderMarkers, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+// OnlineFix plays online through its own servers: any runtime put in its place plays offline only.
+function servesOnlinePlay(gameDir) {
+  const loader = detectWorkingCrackLoader(gameDir);
+  return !!loader && loader.name === 'OnlineFix';
+}
+
+module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

@@ -1516,6 +1516,9 @@ async function runGameHealthAction(appid, action, button) {
               'The other crack’s configuration files are renamed to .bak in the same folders. Nothing is deleted, and the achievement data still has to be written afterwards.',
               'Les fichiers de configuration de l’autre crack sont renommés en .bak dans les mêmes dossiers. Rien n’est supprimé, et les données de succès restent à écrire ensuite.'
             )
+          : '') +
+        (crackLoaderDetect.servesOnlinePlay(game.gameDir)
+          ? '\n\n' + t('onlinefix-replace-message', 'Applying the fix may break online play.', 'Appliquer le fix peut casser le jeu en ligne.')
           : ''),
       buttons: [
         t('cancel', 'Cancel', 'Annuler'),

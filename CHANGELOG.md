@@ -196,6 +196,11 @@ renamed in 3.9.0 and the history is kept under one file.
   is ever recorded, on the PC or on an account. Its Game Health panel now says so from the first
   launch instead of suggesting another emulator, and points to cs.rin.ru or online-fix.me for an
   online method. Only games verified this way are listed.
+- **online-fix's Ubisoft builds are recognised.** The Crew Motorfest from online-fix.me was read as
+  an unconfigured GBE install. Any folder holding online-fix's `.ofme` backups is now treated as
+  online-fix, and applying an achievement fix there first warns that online play may stop working.
+  The Crew Motorfest joins the games no crack can record: Ubisoft's servers award its achievements,
+  and online-fix's server records none.
 
 ## 3.12.1 - 2026-10-16
 

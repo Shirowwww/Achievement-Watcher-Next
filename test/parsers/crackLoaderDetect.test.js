@@ -215,6 +215,37 @@ for (const [name, marker] of [
   ok(fix && fix.kind === 'loader' && fix.name === 'ColdClient' && fix.path === loaderDir, 'findExistingFix reports the ColdClient folder');
 }
 
+// online-fix's Ubisoft builds (The Crew Motorfest) keep Valve's steam_api64.dll untouched, ship their
+// own upc_r2 loader and keep Ubisoft's original as a .ofme file, with no OnlineFix.ini at all.
+{
+  const dir = tmp('aw-crackloader-ofme-ubisoft-');
+  for (const name of ['TheCrewMotorfest.exe', 'steam_api64.dll', 'upc_r2_loader64.dll', 'upc_r2_loader64.ofme', 'version.dll']) {
+    fs.writeFileSync(path.join(dir, name), 'stub');
+  }
+  const hit = crackLoaderDetect.detectWorkingCrackLoader(dir);
+  ok(hit && hit.name === 'OnlineFix' && hit.replaceable === false, 'an online-fix Ubisoft build is recognised as OnlineFix and never replaceable');
+  eq(crackLoaderDetect.servesOnlinePlay(dir), true, 'an online-fix Ubisoft build serves online play');
+  eq(crackLoaderDetect.leavesStatsToSteam(hit), false, 'without OnlineFix.ini it does not hand its stats to the Steam client');
+}
+
+{
+  // Any original online-fix set aside counts, whatever the game or the file it replaced.
+  const dir = tmp('aw-crackloader-ofme-any-');
+  fs.writeFileSync(path.join(dir, 'Game.exe'), 'stub');
+  fs.writeFileSync(path.join(dir, 'steam_api64.OFME'), 'stub');
+  ok((crackLoaderDetect.detectWorkingCrackLoader(dir) || {}).name === 'OnlineFix', 'any .ofme file marks an online-fix folder, case-insensitively');
+}
+
+{
+  const dir = tmp('aw-crackloader-online-play-');
+  fs.writeFileSync(path.join(dir, 'OnlineFix64.dll'), 'stub');
+  eq(crackLoaderDetect.servesOnlinePlay(dir), true, 'a Steam online-fix build serves online play');
+  const scene = tmp('aw-crackloader-offline-play-');
+  fs.writeFileSync(path.join(scene, 'steam_emu.ini'), '[Settings]\n');
+  eq(crackLoaderDetect.servesOnlinePlay(scene), false, 'a scene crack does not');
+  eq(crackLoaderDetect.servesOnlinePlay(null), false, 'no folder serves nothing');
+}
+
 for (const d of tmpDirs) {
   try {
     fs.rmSync(d, { recursive: true, force: true });
