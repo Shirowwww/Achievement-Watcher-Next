@@ -183,6 +183,35 @@ test('every built-in theme has an app.css token block', () => {
   }
 });
 
+test('a custom theme with dark text on pale cards takes the light tone of the built-in light theme', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../../app/resources/css/app.css'), 'utf8');
+  const start = css.indexOf(":root[data-theme='light'] {");
+  const lightBlock = css.slice(start, css.indexOf('\n}', start));
+  const paper = themeLayers.defaultCustomTheme();
+  const paperColors = {
+    bg: '#efe9df',
+    header: '#f9f5ee',
+    panel: '#f5f0e7',
+    card: '#ffffff',
+    settings: '#ffffff',
+    text: '#1e2733',
+    muted: '#6a7382',
+    border: '#d5cec1',
+    accent: '#c0392b',
+  };
+  for (const [id, color] of Object.entries(paperColors)) paper[id].color = color;
+  const paperCss = themeLayers.buildCustomAppCss(paper);
+  const darkCss = themeLayers.buildCustomAppCss(themeLayers.defaultCustomTheme());
+
+  assert.ok(Object.keys(themeLayers.LIGHT_TONE).length > 10);
+  for (const [token, value] of Object.entries(themeLayers.LIGHT_TONE)) {
+    const declaration = `${token}: ${value};`;
+    assert.ok(lightBlock.includes(declaration), `${declaration} is not in app.css's light block`);
+    assert.ok(paperCss.includes(declaration), `a pale custom theme lacks ${declaration}`);
+    assert.ok(!darkCss.includes(declaration), `a dark custom theme took ${declaration}`);
+  }
+});
+
 test('custom themes persist to userData and round-trip', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-theme-layers-'));
   try {

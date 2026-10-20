@@ -82,6 +82,15 @@ renamed in 3.9.0 and the history is kept under one file.
   game pages, Settings, the overlay and the update window, set in Open Sans. Settings choices open
   as drop-down lists and rarely used sections start folded. Muted text and warning colours read
   better in every built-in theme, and loading shows placeholders shaped like real game tiles.
+- **Refreshed themes.** The Light theme is now white and light grey with a graphite accent, and
+  no longer turns windows, game titles or rarity lines grey or blurry. OLED Black and Graphite are
+  neutral grey (OLED with a silver accent), Catppuccin, Rosé Pine and Synthwave '84 take their
+  signature mauve, rose and neon pink, and the coloured halo in the window corner is softer.
+  Picking a theme in Settings now fades in briefly, unless your system asks for reduced motion.
+- **A simpler custom theme editor.** The four colours that make a theme (window, cards, text,
+  accent) come first and the others fold under Fine-tuning. Click a swatch to change its colour.
+  A custom theme with dark text on pale cards now gets the Light theme's softer shadows and
+  readable status colours. Existing custom and community themes keep working as they are.
 
 ### Fixed
 

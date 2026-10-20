@@ -26,26 +26,26 @@ const BUILTIN_COLORS = {
   },
   // The only light-base built-in; kept in step with the :root[data-theme='light'] block in app.css.
   light: {
-    bg: '#e6ebf3',
-    header: '#f6f9fc',
-    panel: '#eef2f8',
+    bg: '#f3f3f4',
+    header: '#ffffff',
+    panel: '#f8f8f9',
     card: '#ffffff',
     settings: '#ffffff',
-    text: '#16202e',
-    muted: '#5b6b80',
-    border: '#c5cfdd',
-    accent: '#3a63b5',
+    text: '#18181b',
+    muted: '#62626a',
+    border: '#dedee2',
+    accent: '#27272a',
   },
   oled: {
     bg: '#000000',
-    header: '#101014',
-    panel: '#060608',
-    card: '#141419',
-    settings: '#0a0a0f',
-    text: '#e8ecf2',
-    muted: '#9aa3b2',
-    border: '#2c2c34',
-    accent: '#4da3ff',
+    header: '#0f0f0f',
+    panel: '#060606',
+    card: '#141414',
+    settings: '#0a0a0a',
+    text: '#ededed',
+    muted: '#a3a3a3',
+    border: '#2b2b2b',
+    accent: '#d4d4d8',
   },
   dracula: {
     bg: '#282a36',
@@ -59,14 +59,14 @@ const BUILTIN_COLORS = {
     accent: '#bd93f9',
   },
   graphite: {
-    bg: '#1d1f22',
-    header: '#2a2d31',
-    panel: '#17181b',
-    card: '#292c30',
-    settings: '#202327',
-    text: '#e3e6ea',
-    muted: '#a4aab2',
-    border: '#45494f',
+    bg: '#1e1e1e',
+    header: '#2b2b2b',
+    panel: '#181818',
+    card: '#2a2a2a',
+    settings: '#212121',
+    text: '#e5e5e5',
+    muted: '#a8a8a8',
+    border: '#454545',
     accent: '#6fbf73',
   },
   // Established community color schemes, ported with their canonical palettes.
@@ -113,7 +113,7 @@ const BUILTIN_COLORS = {
     text: '#cdd6f4',
     muted: '#a6adc8',
     border: '#45475a',
-    accent: '#89b4fa',
+    accent: '#cba6f7',
   },
   rosepine: {
     bg: '#191724',
@@ -124,7 +124,7 @@ const BUILTIN_COLORS = {
     text: '#e0def4',
     muted: '#908caa',
     border: '#403d52',
-    accent: '#c4a7e7',
+    accent: '#ebbcba',
   },
   synthwave: {
     bg: '#241b2f',
@@ -135,7 +135,7 @@ const BUILTIN_COLORS = {
     text: '#f4efff',
     muted: '#b7a8d9',
     border: '#52407a',
-    accent: '#36f9f6',
+    accent: '#ff7edb',
   },
   everforest: {
     bg: '#232a2e',
@@ -376,6 +376,53 @@ function hexToRgbTriplet(value) {
   return hexToRgbTriplet(DEFAULT_ACCENT_COLOR);
 }
 
+// WCAG relative luminance of a color's opaque half.
+function relativeLuminance(value) {
+  const [r, g, b] = hexToRgbTriplet(value)
+    .split(',')
+    .map((n) => {
+      const c = Number(n.trim()) / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+// The tone half of app.css's light block, without its palette. A custom theme with dark text on
+// pale cards needs it too: otherwise its dialogs mix paper with black, its titles carry a dark
+// smear and the state hues, written for a dark base, fall under 2:1. Pinned to app.css by a test.
+const LIGHT_TONE = {
+  '--shadow-scale': '0.5',
+  '--text-shadow-scale': '0',
+  '--accent-strong': 'color-mix(in srgb, var(--accent) 82%, var(--text))',
+  '--trophy-platinum': '#1a7fb0',
+  '--trophy-gold': '#9c7400',
+  '--trophy-silver': '#767b84',
+  '--trophy-bronze': '#a0552a',
+  '--success': '#15803d',
+  '--warning': '#9a5b00',
+  '--danger': '#b91c1c',
+  '--rarity-text': '#8a5c00',
+  '--rarity-gold-text': '#876500',
+  '--rarity-silver-text': '#5f636b',
+  '--rarity-bronze-text': '#94491c',
+  '--bg-halo': 'transparent',
+  '--set-surface-sunken': 'color-mix(in srgb, var(--bg-base) 75%, var(--set-surface))',
+  '--set-header-bg': 'color-mix(in srgb, var(--bg-base) 40%, var(--set-surface))',
+  '--set-title': 'var(--text)',
+  '--set-well': 'color-mix(in srgb, var(--bg-base) 90%, var(--text))',
+  '--set-scrim-texture': 'none',
+  '--game-backdrop-veil':
+    'linear-gradient(180deg, color-mix(in srgb, var(--bg-base) 88%, transparent) 0%, color-mix(in srgb, var(--bg-base) 94%, transparent) 100%)',
+};
+
+function lightToneLines(clean) {
+  if (relativeLuminance(clean.text.color) >= relativeLuminance(clean.card.color)) return [];
+  // The built-in light theme sets this one as a fixed color; here it follows the cards.
+  const lines = ['  --surface-sunken: color-mix(in srgb, var(--surface) 88%, var(--text));'];
+  for (const [token, value] of Object.entries(LIGHT_TONE)) lines.push(`  ${token}: ${value};`);
+  return lines;
+}
+
 function imageUrl(filePath) {
   if (!filePath) return 'none';
   try {
@@ -521,6 +568,7 @@ function buildCustomAppCss(theme) {
     `  --accent-soft: rgba(${accentRgb}, 0.16);`,
     `  --aw-settings-color: ${settings};`,
     layerVars(clean, 'aw-'),
+    ...lightToneLines(clean),
     '}',
     '',
     'body {',
@@ -823,6 +871,7 @@ module.exports = {
   IMAGE_LAYER_IDS,
   FITS,
   BUILTIN_COLORS,
+  LIGHT_TONE,
   colorAlpha,
   colorWithAlpha,
   colorWithoutAlpha,

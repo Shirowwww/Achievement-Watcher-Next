@@ -66,8 +66,8 @@
   --fs-3xl: 24px;
   --fs-4xl: 32px;
   --fs-5xl: 36px;
-  --shadow-card: 0 14px 34px rgba(0, 0, 0, 0.28);
-  --shadow-dialog: 0 34px 90px rgba(0, 0, 0, 0.58);
+  --shadow-card: 0 14px 34px rgba(0, 0, 0, calc(0.28 * var(--shadow-scale)));
+  --shadow-dialog: 0 34px 90px rgba(0, 0, 0, calc(0.58 * var(--shadow-scale)));
 
   /* The profile avatar lives in a shadow root (components/userAvatar/template.js), which only these
      inherited custom properties can reach. Its rim and backdrop were fixed values, so a transparent
@@ -146,6 +146,19 @@
   --dialog-shadow:
     0 28px 70px rgba(0, 0, 0, calc(0.46 * var(--shadow-scale))),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  /* A black text shadow lifts a title off a dark surface; on a pale one it is a grey smear. */
+  --text-shadow-scale: 1;
+  /* The deepest control well: the preset designer's chips, segmented buttons and fields. */
+  --set-well: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  /* A 2px dither of dark dots that textures the modal backdrop; only a dark scrim hides them. */
+  --set-scrim-texture: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QTIyNjIyMjQwQ0Q0MTFFNEJGNTZGOTlGQTRBMTA4OTMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QTIyNjIyMjUwQ0Q0MTFFNEJGNTZGOTlGQTRBMTA4OTMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBMjI2MjIyMjBDRDQxMUU0QkY1NkY5OUZBNEExMDg5MyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBMjI2MjIyMzBDRDQxMUU0QkY1NkY5OUZBNEExMDg5MyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjmaiJMAAAAXSURBVHjaYmZgYNgMxN+YQQQQMwAEGAAYlwKmmj71rQAAAABJRU5ErkJggg==');
+  /* A rare achievement's rarity line: pale metals, written for a dark row. */
+  --rarity-text: #ffc04ec7;
+  --rarity-gold-text: #ffd24ed0;
+  --rarity-silver-text: #9fb2cc;
+  --rarity-bronze-text: #e0915ac7;
+  /* The accent-tinted halo in the window's top-left corner. */
+  --bg-halo: color-mix(in srgb, var(--accent) 15%, transparent);
 }
 
 /* App themes (Settings > General). Every theme but 'light' is a dark variant: the stylesheet's
@@ -153,58 +166,72 @@
    shift backgrounds/accents. Each theme also carries the three semantic hues (--success / --warning
    / --danger) in its own palette, driving the account cards, caution badges and diagnostic lines. */
 
-/* The one light-base theme. Text and surfaces are inverted; the faint rgba(255,255,255,…) depth
-   tints elsewhere in this file simply stop reading against a pale surface instead of inverting,
-   which costs a little shading but never legibility - every foreground colour is token-driven.
-   The semantic hues are darkened so they still pass contrast on a near-white background. */
+/* The one light-base theme: white and neutral grey, with a graphite accent instead of a colour.
+   The faint rgba(255,255,255,…) depth tints elsewhere in this file simply stop reading against a
+   pale surface, which costs a little shading but never legibility - every foreground colour is
+   token-driven. The semantic hues are darkened so they still pass contrast on white. */
 :root[data-theme='light'] {
   /* The pale trophy metals vanish on a white card. */
-  --trophy-platinum: #1f93c9;
-  --trophy-gold: #c99700;
-  --trophy-silver: #7c8794;
-  --trophy-bronze: #b35f2e;
+  --trophy-platinum: #1a7fb0;
+  --trophy-gold: #9c7400;
+  --trophy-silver: #767b84;
+  --trophy-bronze: #a0552a;
   /* Shadows here are the same black as everywhere else, just far weaker: at full strength the
-     dark-theme alphas turn every card into a grey halo on a near-white surface. Kept low, but not
-     so low that cards lose their lift - depth is the only separation a white card on a pale panel
-     gets, now that the white-alpha highlights the dark themes rely on no longer register. */
+     dark-theme alphas turn every card into a grey halo on white. Kept low, but not so low that
+     cards lose their lift. Text shadows go entirely: on a pale surface they only blur the title. */
   --shadow-scale: 0.5;
-  /* These four were all within a few percent of white, so the window, the library panel and the
-     cards inside it read as one flat sheet with tiles floating on nothing. They are spread into
-     real steps instead - base darkest, panel between, cards white - so the hierarchy comes from
+  --text-shadow-scale: 0;
+  /* Real steps between the window, the library panel and the cards, so the hierarchy comes from
      the surfaces themselves rather than from borders that barely register at this lightness. */
-  --bg-base: #e6ebf3;
-  --bg-glow: #f6f9fc; /* a tint, not a pure-white block across the whole header */
-  --bg-panel: #eef2f8;
-  --bg-panel-translucent: #eef2f8d6;
+  --bg-base: #f3f3f4;
+  --bg-glow: #ffffff;
+  --bg-panel: #f8f8f9;
+  --bg-panel-translucent: #f8f8f9d6;
   --surface: #ffffff;
   --set-surface: #ffffff;
-  --border: #c5cfdd;
-  --text: #16202e;
-  --text-muted: #5b6b80;
-  /* A muted slate blue rather than a saturated one: the bright accent the dark themes carry is
-     glaring against white, and this still clears 4.5:1 on --bg-base for use as link/label text. */
-  --accent: #3a63b5;
-  --accent-soft: rgba(58, 99, 181, 0.14);
+  --border: #dedee2;
+  --text: #18181b;
+  --text-muted: #62626a;
+  /* Graphite: any hue tints every selection, switch and bar across a white window. Its strong
+     variant darkens instead of lightening, since it is mostly used as text. */
+  --accent: #27272a;
+  --accent-soft: rgba(39, 39, 42, 0.08);
+  --accent-strong: color-mix(in srgb, var(--accent) 82%, var(--text));
   --surface-elevated: #ffffff;
-  /* Progress tracks and wells: has to sit clearly below the white card it is cut into. */
-  --surface-sunken: #dbe2ec;
-  --success: #117e49;
-  --warning: #976400;
-  --danger: #c4342f;
+  /* Progress tracks and wells: has to sit clearly below the card it is cut into. */
+  --surface-sunken: #e9e9ec;
+  --success: #15803d;
+  --warning: #9a5b00;
+  --danger: #b91c1c;
+  --rarity-text: #8a5c00;
+  --rarity-gold-text: #876500;
+  --rarity-silver-text: #5f636b;
+  --rarity-bronze-text: #94491c;
+  /* An accent halo on white reads as a smudge in the corner. */
+  --bg-halo: transparent;
+  /* Dialog chrome steps toward the window colour, not black, which would turn white a muddy grey;
+     the backdrop's dark dither would show as dots. */
+  --set-surface-sunken: color-mix(in srgb, var(--bg-base) 75%, var(--set-surface));
+  --set-header-bg: color-mix(in srgb, var(--bg-base) 40%, var(--set-surface));
+  --set-title: var(--text);
+  --set-well: color-mix(in srgb, var(--bg-base) 90%, var(--text));
+  --set-scrim-texture: none;
+  /* Most game art is dark, and a thin veil over it leaves a grey band under the title on white. */
+  --game-backdrop-veil: linear-gradient(180deg, color-mix(in srgb, var(--bg-base) 88%, transparent) 0%, color-mix(in srgb, var(--bg-base) 94%, transparent) 100%);
 }
 :root[data-theme='oled'] {
   --bg-base: #000000;
-  --bg-glow: #101014;
-  --bg-panel: #060608;
-  --bg-panel-translucent: #060608b5;
-  --surface: #141419;
-  --set-surface: #0a0a0f;
-  --border: #2c2c34;
-  --text: #e8ecf2;
-  --text-muted: #9aa3b2;
-  --accent: #4da3ff;
-  --accent-soft: rgba(77, 163, 255, 0.18);
-  --surface-elevated: #101015;
+  --bg-glow: #0f0f0f;
+  --bg-panel: #060606;
+  --bg-panel-translucent: #060606b5;
+  --surface: #141414;
+  --set-surface: #0a0a0a;
+  --border: #2b2b2b;
+  --text: #ededed;
+  --text-muted: #a3a3a3;
+  --accent: #d4d4d8;
+  --accent-soft: rgba(212, 212, 216, 0.16);
+  --surface-elevated: #111111;
   --surface-sunken: #000000;
   --success: #3ddc97;
   --warning: #f0b429;
@@ -229,19 +256,19 @@
   --danger: #ff7571;
 }
 :root[data-theme='graphite'] {
-  --bg-base: #1d1f22;
-  --bg-glow: #2a2d31;
-  --bg-panel: #17181b;
-  --bg-panel-translucent: #17181bb5;
-  --surface: #292c30;
-  --set-surface: #202327;
-  --border: #45494f;
-  --text: #e3e6ea;
-  --text-muted: #a4aab2;
+  --bg-base: #1e1e1e;
+  --bg-glow: #2b2b2b;
+  --bg-panel: #181818;
+  --bg-panel-translucent: #181818b5;
+  --surface: #2a2a2a;
+  --set-surface: #212121;
+  --border: #454545;
+  --text: #e5e5e5;
+  --text-muted: #a8a8a8;
   --accent: #6fbf73;
   --accent-soft: rgba(111, 191, 115, 0.18);
-  --surface-elevated: #212327;
-  --surface-sunken: #101113;
+  --surface-elevated: #232323;
+  --surface-sunken: #111111;
   --success: #8ed49a;
   --warning: #d8a657;
   --danger: #e76e60;
@@ -311,8 +338,8 @@
   --border: #45475a;
   --text: #cdd6f4;
   --text-muted: #a6adc8;
-  --accent: #89b4fa;
-  --accent-soft: rgba(137, 180, 250, 0.18);
+  --accent: #cba6f7;
+  --accent-soft: rgba(203, 166, 247, 0.18);
   --surface-elevated: #3a3d52;
   --surface-sunken: #131320;
   --success: #a6e3a1;
@@ -329,8 +356,8 @@
   --border: #403d52;
   --text: #e0def4;
   --text-muted: #908caa;
-  --accent: #c4a7e7;
-  --accent-soft: rgba(196, 167, 231, 0.18);
+  --accent: #ebbcba;
+  --accent-soft: rgba(235, 188, 186, 0.18);
   --surface-elevated: #2d2a44;
   --surface-sunken: #100e18;
   --success: #9ccfd8;
@@ -347,11 +374,11 @@
   --border: #52407a;
   --text: #f4efff;
   --text-muted: #b7a8d9;
-  --accent: #36f9f6;
-  --accent-soft: rgba(54, 249, 246, 0.18);
+  --accent: #ff7edb;
+  --accent-soft: rgba(255, 126, 219, 0.18);
   --surface-elevated: #433365;
   --surface-sunken: #150e1f;
-  --success: #92e4eb;
+  --success: #72f1b8;
   --warning: #fede5d;
   --danger: #f97e72;
 }
@@ -1828,7 +1855,7 @@ body.is-resizing #game-list {
   color: var(--text);
   z-index: 2;
   letter-spacing: 0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, calc(0.85 * var(--text-shadow-scale)));
 }
 
 /* The three states of the Game Health panel, in the same colours its own chip uses: ready, worth a
@@ -2023,7 +2050,7 @@ body.is-resizing #game-list {
   margin: 0 5px;
 }
 .trophy li i {
-  text-shadow: rgba(0, 0, 0, 0.5) 4px 4px 3px;
+  text-shadow: rgba(0, 0, 0, calc(0.5 * var(--text-shadow-scale))) 4px 4px 3px;
 }
 .trophy li.platinum i,
 .achievement .title i.fa-trophy[data-type='P'] {
@@ -2080,7 +2107,7 @@ body.is-resizing #game-list {
   margin-left: 10px;
   font-family: var(--font-strong);
   font-size: var(--fs-5xl);
-  text-shadow: rgba(0, 0, 0, 0.5) 4px 4px 3px;
+  text-shadow: rgba(0, 0, 0, calc(0.5 * var(--text-shadow-scale))) 4px 4px 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -2178,7 +2205,7 @@ body.is-resizing #game-list {
 }
 
 #achievement .achievements .achievement-list > .header .toggle:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: color-mix(in srgb, var(--text) 18%, transparent);
 }
 
 #lock > .header .title > i {
@@ -2537,7 +2564,7 @@ body.is-resizing #game-list {
   display: block;
   color: var(--text);
   z-index: 1;
-  text-shadow: rgba(0, 0, 0, 0.6) 0 1px 2px;
+  text-shadow: rgba(0, 0, 0, calc(0.6 * var(--text-shadow-scale))) 0 1px 2px;
 }
 
 .achievement .progressBar:after {
@@ -2552,7 +2579,7 @@ body.is-resizing #game-list {
   display: block;
   color: var(--text);
   z-index: 1;
-  text-shadow: rgba(0, 0, 0, 0.6) 0 1px 2px;
+  text-shadow: rgba(0, 0, 0, calc(0.6 * var(--text-shadow-scale))) 0 1px 2px;
 }
 
 .achievement .progressBar:not([data-max='0']) {
@@ -2579,7 +2606,7 @@ body.is-resizing #game-list {
 }
 
 .achievement.rare .stats .community {
-  color: #ffc04ec7;
+  color: var(--rarity-text);
 }
 
 /* Rarity tiers - layered on top of the .rare glow base.
@@ -2604,7 +2631,7 @@ body.is-resizing #game-list {
 }
 
 .achievement.rare.rarity-gold .stats .community {
-  color: #ffd24ed0;
+  color: var(--rarity-gold-text);
 }
 
 .achievement.rare.rarity-silver .box {
@@ -2628,8 +2655,8 @@ body.is-resizing #game-list {
 
 .achievement.rare.rarity-silver .stats .community {
   /* Steel silver-blue: clearly distinct from the default white text (a near-white tint read as plain white). */
-  color: #9fb2cc;
-  text-shadow: 0 0 6px rgba(159, 178, 204, 0.35);
+  color: var(--rarity-silver-text);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--rarity-silver-text) calc(35% * var(--text-shadow-scale)), transparent);
 }
 
 .achievement.rare.rarity-bronze .box {
@@ -2652,7 +2679,7 @@ body.is-resizing #game-list {
 }
 
 .achievement.rare.rarity-bronze .stats .community {
-  color: #e0915ac7;
+  color: var(--rarity-bronze-text);
 }
 
 /* Trophy mode: every row with a known rate wears its grade next to the percentage. Only gold keeps
@@ -2832,7 +2859,7 @@ body.is-resizing #game-list {
   z-index: 9;
   top: 0;
   left: 0;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QTIyNjIyMjQwQ0Q0MTFFNEJGNTZGOTlGQTRBMTA4OTMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QTIyNjIyMjUwQ0Q0MTFFNEJGNTZGOTlGQTRBMTA4OTMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBMjI2MjIyMjBDRDQxMUU0QkY1NkY5OUZBNEExMDg5MyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBMjI2MjIyMzBDRDQxMUU0QkY1NkY5OUZBNEExMDg5MyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PjmaiJMAAAAXSURBVHjaYmZgYNgMxN+YQQQQMwAEGAAYlwKmmj71rQAAAABJRU5ErkJggg==');
+  background-image: var(--set-scrim-texture);
 }
 
 #settings .box,
@@ -2865,7 +2892,7 @@ body.is-resizing #game-list {
   font-family: var(--font-strong);
   font-size: var(--fs-xl);
   color: var(--set-title);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, calc(0.65 * var(--text-shadow-scale)));
   margin: 0 auto auto auto;
 }
 #settings .box .header i,
@@ -3346,7 +3373,7 @@ body.is-resizing #game-list {
 }
 
 .footer-update-status.update-ok {
-  color: color-mix(in srgb, var(--success) 90%, white 10%);
+  color: color-mix(in srgb, var(--success) 90%, var(--text) 10%);
 }
 
 .footer-update-status.update-error {
@@ -3476,7 +3503,7 @@ body.is-resizing #game-list {
 }
 .arrow-list li .right .previous:hover,
 .arrow-list li .right .next:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: color-mix(in srgb, var(--text) 18%, transparent);
 }
 .arrow-list li .right .previous {
   grid-column: 1;
@@ -3706,7 +3733,7 @@ body.is-resizing #game-list {
 
 #btn-hotkey-edit:hover,
 #btn-hotkey-preview:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 .arrow-list li .right.action-right {
@@ -4124,7 +4151,7 @@ body.is-resizing #game-list {
 }
 
 #onboard-detect-total.is-found {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
   font-family: var(--font-strong);
 }
 
@@ -4153,7 +4180,7 @@ body.is-resizing #game-list {
 }
 
 #onboard-detect-list li.is-found > i {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
 }
 
 #onboard-detect-list li > span:last-child {
@@ -4251,12 +4278,12 @@ body.is-resizing #game-list {
 }
 
 .onboarding-recap li > i {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
   text-align: center;
 }
 
 .onboarding-recap li.is-warning > i {
-  color: color-mix(in srgb, var(--danger) 60%, white);
+  color: color-mix(in srgb, var(--danger) 60%, var(--text));
 }
 
 .onboarding-recap button {
@@ -4471,11 +4498,11 @@ body.is-resizing #game-list {
 }
 
 .onboarding-account-status.success {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
 }
 
 .onboarding-account-status.error {
-  color: color-mix(in srgb, var(--danger) 72%, white);
+  color: color-mix(in srgb, var(--danger) 72%, var(--text));
 }
 
 .onboarding-source-list {
@@ -4621,7 +4648,7 @@ body.is-resizing #game-list {
   border: 1px solid var(--warning);
   border-left-width: 4px;
   border-radius: var(--radius-sm);
-  color: color-mix(in srgb, var(--warning) 78%, white);
+  color: color-mix(in srgb, var(--warning) 78%, var(--text));
   background: color-mix(in srgb, var(--warning) 12%, transparent);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
@@ -4649,11 +4676,11 @@ body.is-resizing #game-list {
 }
 
 .onboarding-inline-status.success {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
 }
 
 .onboarding-inline-status.error {
-  color: color-mix(in srgb, var(--danger) 72%, white);
+  color: color-mix(in srgb, var(--danger) 72%, var(--text));
 }
 
 .onboarding-folder-actions .inline-action-btn:disabled {
@@ -4771,11 +4798,11 @@ body.is-resizing #game-list {
 }
 
 #onboarding-status.success {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
 }
 
 #onboarding-status.error {
-  color: color-mix(in srgb, var(--danger) 72%, white);
+  color: color-mix(in srgb, var(--danger) 72%, var(--text));
 }
 
 .onboarding-actions {
@@ -5932,7 +5959,7 @@ body.is-resizing #game-list {
   background: color-mix(in srgb, var(--success) 12%, transparent);
 }
 #settings .emulator-list li.is-on .right select {
-  color: color-mix(in srgb, var(--success) 76%, white);
+  color: color-mix(in srgb, var(--success) 76%, var(--text));
 }
 #settings .emulator-list li.is-off .right select {
   color: var(--text-muted);
@@ -5975,7 +6002,7 @@ body.is-resizing #game-list {
   padding: 4px 8px;
   border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
   border-radius: var(--radius-pill);
-  color: color-mix(in srgb, var(--warning) 82%, white 18%);
+  color: color-mix(in srgb, var(--warning) 82%, var(--text) 18%);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
   font-size: var(--fs-2xs);
   font-weight: 700;
@@ -6143,12 +6170,12 @@ body.is-resizing #game-list {
   display: none;
 }
 #settings #emulator-login-test-status.success {
-  color: color-mix(in srgb, var(--success) 78%, white);
+  color: color-mix(in srgb, var(--success) 78%, var(--text));
   border-color: color-mix(in srgb, var(--success) 22%, transparent);
   background: color-mix(in srgb, var(--success) 11%, transparent);
 }
 #settings #emulator-login-test-status.error {
-  color: color-mix(in srgb, var(--danger) 72%, white);
+  color: color-mix(in srgb, var(--danger) 72%, var(--text));
   border-color: color-mix(in srgb, var(--danger) 22%, transparent);
   background: color-mix(in srgb, var(--danger) 11%, transparent);
 }
@@ -6367,7 +6394,7 @@ body.is-resizing #game-list {
 body {
   border-color: color-mix(in srgb, var(--text-muted) 18%, transparent);
   background:
-    radial-gradient(80% 95% at 18% 0%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 72%),
+    radial-gradient(80% 95% at 18% 0%, var(--bg-halo), transparent 72%),
     linear-gradient(145deg, color-mix(in srgb, var(--bg-panel) 70%, var(--bg-base)) 0%, var(--bg-base));
 }
 
@@ -6420,7 +6447,7 @@ body {
   border-color: color-mix(in srgb, var(--border) 15%, transparent);
   border-radius: var(--radius-lg);
   border-bottom-color: color-mix(in srgb, var(--border) 7%, transparent);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 26px rgba(3, 9, 17, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 26px rgba(3, 9, 17, calc(0.1 * var(--shadow-scale)));
   backdrop-filter: blur(14px) saturate(1.06);
 }
 
@@ -6446,7 +6473,7 @@ body {
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--surface) 82%, transparent);
   border-color: color-mix(in srgb, var(--border) 20%, transparent);
-  box-shadow: 0 12px 28px rgba(3, 9, 17, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  box-shadow: 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.045);
   backdrop-filter: blur(10px) saturate(1.04);
 }
 
@@ -6577,7 +6604,7 @@ body {
 }
 
 #game-list .game-box .info .source-icon:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
   opacity: 1;
   transform: translateY(-1px);
 }
@@ -6594,7 +6621,7 @@ body {
   margin: 0;
   cursor: help;
   border: 2px solid color-mix(in srgb, var(--surface-sunken) 78%, transparent);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent);
   transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
 }
 
@@ -6602,7 +6629,7 @@ body {
 #achievement .wrapper > .header .title .health-badge:hover {
   transform: translateY(-1px);
   filter: brightness(1.08);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14), 0 0 7px rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 14%, transparent), 0 0 7px color-mix(in srgb, var(--text) 12%, transparent);
 }
 
 #game-list .game-box .info .title > span {
@@ -7106,7 +7133,7 @@ body {
 #game-list.view-list .game-box[data-progress='100'],
 #game-list.view-details .game-box[data-progress='100'] {
   border-color: color-mix(in srgb, var(--success) 42%, transparent);
-  box-shadow: 0 12px 28px rgba(3, 9, 17, 0.28), 0 0 0 1px color-mix(in srgb, var(--success) 10%, transparent);
+  box-shadow: 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))), 0 0 0 1px color-mix(in srgb, var(--success) 10%, transparent);
 }
 
 #game-list.view-list .play-button,
@@ -8098,7 +8125,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings .content[data-view='advanced'] .diag-list code {
   padding: 2px 5px;
   color: color-mix(in srgb, var(--accent) 55%, var(--text));
-  background: color-mix(in srgb, var(--set-surface-sunken) 60%, black);
+  background: var(--set-well);
   border-radius: var(--radius-xs);
   user-select: text;
 }
@@ -9321,7 +9348,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 4px 9px;
   border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
   border-radius: var(--radius-pill);
-  color: color-mix(in srgb, var(--warning) 82%, white 18%);
+  color: color-mix(in srgb, var(--warning) 82%, var(--text) 18%);
   background: color-mix(in srgb, var(--warning) 16%, transparent);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -9732,7 +9759,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 4px 10px 4px 5px;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
@@ -9882,7 +9909,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   overflow: hidden;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
 }
 
 #settings .pd-seg button {
@@ -9911,7 +9938,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0 8px;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
@@ -10155,7 +10182,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-xs);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
   cursor: pointer;
 }
 
@@ -10183,7 +10210,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0 6px;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-xs);
@@ -10372,7 +10399,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0 6px;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
@@ -10404,7 +10431,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0 8px;
   border: 1px solid var(--set-control-border);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--set-surface-sunken) 62%, black);
+  background: var(--set-well);
   color: var(--text-muted);
   cursor: pointer;
 }
@@ -11154,7 +11181,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 /* Only the filename may shrink inside the controls: the picker/buttons/selects keep
    their size, and a long image name is truncated with an ellipsis based on the space
    left by the (localized) label - so the row never wraps or overflows. */
-#theme-customizer .theme-layer-color,
 #theme-customizer .theme-layer-image,
 #theme-customizer .theme-layer-clear-image,
 #theme-customizer .theme-layer-fit,
@@ -11192,26 +11218,75 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   text-align: right;
 }
 
-#theme-customizer .theme-layer-color {
-  width: 32px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid var(--set-control-border);
-  border-radius: var(--radius-sm);
-  background: transparent;
+/* The swatch is the picker: the colour input lies over it, invisible, above the ::after layer. */
+#theme-customizer .theme-layer-preview {
   cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 }
 
-#theme-customizer .theme-layer-color:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 12%, transparent);
+#theme-customizer .theme-layer-preview:hover:not(:has(.theme-layer-color:disabled)) {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 16%, transparent);
 }
-#theme-customizer .theme-layer-color:disabled {
-  opacity: 0.4;
-  filter: grayscale(1);
-  cursor: not-allowed;
-  border-color: color-mix(in srgb, var(--set-control-border) 55%, transparent);
+
+#theme-customizer .theme-layer-preview:has(.theme-layer-color:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#theme-customizer .theme-layer-preview:has(.theme-layer-color:disabled) {
+  cursor: default;
+}
+
+#theme-customizer .theme-layer-preview .theme-layer-color {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+/* The layers most themes never touch, folded under the four that make a theme. */
+#theme-customizer .theme-customizer-more {
+  display: grid;
+  gap: 8px;
+}
+
+#theme-customizer .theme-customizer-more > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 2px;
+  color: var(--text-muted);
+  font-family: var(--font-strong);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  list-style: none;
+}
+
+#theme-customizer .theme-customizer-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+#theme-customizer .theme-customizer-more > summary::before {
+  content: '\f054';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: var(--fs-2xs);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+#theme-customizer .theme-customizer-more[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+#theme-customizer .theme-customizer-more > summary:hover {
+  color: var(--text);
 }
 
 #theme-customizer .theme-layer-image {
@@ -12852,4 +12927,11 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 html:not([data-platform='win32']) [data-windows-only],
 html:not([data-platform='linux']) [data-linux-only] {
   display: none !important;
+}
+
+/* A hand-picked theme crossfades (settings.js fadeTheme); the old page is a snapshot, so this costs
+   one composite for its length and nothing once it ends. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-base);
 }

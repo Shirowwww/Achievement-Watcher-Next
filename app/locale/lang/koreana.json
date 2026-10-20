@@ -1989,6 +1989,7 @@
     "theme-layer-border-hint": "패널과 컨트롤 주위의 선",
     "theme-layer-accent": "강조색",
     "theme-layer-accent-hint": "버튼, 강조 표시, 진행도",
+    "theme-layers-more": "세부 조정",
     "theme-fit-cover": "채우기",
     "theme-fit-contain": "맞추기",
     "theme-fit-repeat": "반복",

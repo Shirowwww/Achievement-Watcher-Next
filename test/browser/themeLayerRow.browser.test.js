@@ -29,7 +29,7 @@ const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'
 function row(name, hint) {
   return `
     <div class="theme-layer-row" data-layer="test">
-      <div class="theme-layer-preview"></div>
+      <label class="theme-layer-preview"><input type="color" class="theme-layer-color" /></label>
       <div class="theme-layer-label">
         <i class="fas fa-desktop"></i>
         <div class="theme-layer-label-text">
@@ -37,7 +37,6 @@ function row(name, hint) {
         </div>
       </div>
       <div class="theme-layer-controls">
-        <input type="color" class="theme-layer-color" />
         <label class="theme-layer-alpha-group">
           <input type="range" class="theme-layer-alpha" min="0" max="100" value="100" />
           <span class="theme-layer-alpha-value">100%</span>

@@ -288,6 +288,14 @@ function applyThemeValue(value) {
     .catch(() => userThemes.applyCss(''));
 }
 
+// A theme picked by hand crossfades instead of snapping. The fade waits for the injected CSS, so a
+// custom theme lands in one step; reduced motion and a hidden window switch at once.
+function fadeTheme(apply) {
+  const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || document.hidden;
+  if (still || typeof document.startViewTransition !== 'function') return apply();
+  return document.startViewTransition(apply).updateCallbackDone;
+}
+
 // Eighteen built-ins is too many to choose from cold, so the picker opens on a short contrasting
 // set and keeps the rest behind "More themes…", appended to the same <select> on expand.
 const PRIMARY_THEMES = [
@@ -2371,6 +2379,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       blur: t('theme-effect-blur', 'Blur', 'Flou'),
     };
     const CUSTOM_IMAGE_LAYERS = themeLayers.IMAGE_LAYER_IDS;
+    // The four colours that make a theme come first; the other layers wait in a folded group.
+    const CUSTOM_MAIN_LAYERS = ['bg', 'card', 'text', 'accent'];
     function gradientAngleFromDom(row) {
       const n = Number(row.find('.theme-layer-gradient-angle').val());
       return Number.isFinite(n) ? n : 180;
@@ -2428,8 +2438,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function renderCustomThemeLayers(theme) {
       customThemeDraft = theme;
       const container = $('#theme-customizer-layers');
+      // A re-render (reset, image picked) must not fold the group the user just opened.
+      const moreOpen = container.find('.theme-customizer-more').prop('open') === true;
       container.empty();
-      for (const meta of CUSTOM_LAYER_META) {
+      const more = $('<details>').addClass('theme-customizer-more').prop('open', moreOpen);
+      more.append($('<summary>').text(t('theme-layers-more', 'Fine-tuning', 'Réglages fins')));
+      const ordered = [
+        ...CUSTOM_MAIN_LAYERS.map((id) => CUSTOM_LAYER_META.find((meta) => meta.id === id)),
+        ...CUSTOM_LAYER_META.filter((meta) => !CUSTOM_MAIN_LAYERS.includes(meta.id)),
+      ];
+      for (const meta of ordered) {
         const layer = (theme && theme[meta.id]) || {};
         const effect = layer.effect || {};
         const row = $('<div>').addClass('theme-layer-row').attr('data-layer', meta.id);
@@ -2451,7 +2469,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             : gradStyle
             ? `--swatch-image:${gradStyle};`
             : '--swatch-image:none;');
-        const preview = $('<div>').addClass('theme-layer-preview').attr('style', previewStyle);
+        // The swatch is the colour picker: the input covers it, invisible, so one click opens it.
+        // The picker only understands #rrggbb: feeding it the stored #rrggbbaa makes Chromium reject
+        // the value and fall back to black, which is how a translucent layer would lose its colour.
+        const preview = $('<label>').addClass('theme-layer-preview').attr('style', previewStyle);
+        preview.append(
+          $('<input>')
+            .attr({ type: 'color', 'aria-label': meta.label })
+            .addClass('theme-layer-color')
+            .val(themeLayers.colorWithoutAlpha(layer.color || DEFAULT_THEME_COLOR))
+        );
         // Remember the resolved preview image (source or blur copy) so the live gradient
         // refresh can rebuild the swatch exactly like the real renderer does.
         row.data('previewImage', previewImage);
@@ -2463,11 +2490,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const hint = $('<div>').addClass('theme-layer-hint').text(meta.hint || '');
         const controls = $('<div>').addClass('theme-layer-controls');
         const layerAlpha = themeLayers.colorAlpha(layer.color);
-        // The picker only understands #rrggbb: feeding it the stored #rrggbbaa makes Chromium reject
-        // the value and fall back to black, which is how a translucent layer would lose its colour.
-        controls.append(
-          $('<input>').attr('type', 'color').addClass('theme-layer-color').val(themeLayers.colorWithoutAlpha(layer.color || DEFAULT_THEME_COLOR))
-        );
         const alphaGroup = $('<label>')
           .addClass('theme-layer-alpha-group')
           .attr('title', t('theme-layer-opacity', 'Opacity', 'Opacité'));
@@ -2593,9 +2615,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // color picker; removing the image brings the color picker back.
         if (CUSTOM_IMAGE_LAYERS.includes(meta.id)) {
           const hasImage = !!layer.image;
-          // An image replaces the color visually, so the picker hides; an enabled gradient just
-          // disables it in place, to avoid shifting the row controls.
-          row.find('.theme-layer-color').toggle(!hasImage).prop('disabled', grad.enabled === true);
+          // An image or an enabled gradient replaces the color, so the swatch stops opening the picker.
+          row.find('.theme-layer-color').prop('disabled', hasImage || grad.enabled === true);
           row.find('.theme-layer-alpha-group').toggle(!hasImage);
           row.find('.theme-layer-alpha').prop('disabled', grad.enabled === true);
           // A gradient never applies while an image is set (it would paint over it), so its toggle
@@ -2605,8 +2626,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           row.find('.theme-layer-image').show();
           row.find('.theme-layer-filename, .theme-layer-clear-image, .theme-layer-fit').toggle(hasImage);
         }
-        container.append(row);
+        (CUSTOM_MAIN_LAYERS.includes(meta.id) ? container : more).append(row);
       }
+      container.append(more);
     }
 
     // Sanitized with exactly the rules themeLayers.js applies on disk, so the field's text after a
@@ -3273,7 +3295,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         return;
       }
       themeSelection = value;
-      applyThemeValue(value);
+      fadeTheme(() => applyThemeValue(value));
       // Every theme is editable except a user stylesheet, which has no color model to edit.
       if (userThemes.parseValue(value)) closeThemeEditor();
       else openThemeEditor(value);
