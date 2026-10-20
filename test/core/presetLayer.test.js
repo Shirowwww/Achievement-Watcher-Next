@@ -118,7 +118,8 @@ test('a saved layer resolves to its bundled base, and to nothing for a base that
 test('the main process lists, reads and writes layers only through the layer helpers', () => {
   const main = mainProcessSource();
   assert.match(main, /presetLayer\.readLayerFolder\(usersPresetsDir\(\), bundledPresetRoots\(\)\[0\], name\)/);
-  assert.match(main, /notif\.webContents\.once\('dom-ready'/);
+  assert.match(main, /function dressPresetWindow\(win, layer\)[\s\S]*?win\.webContents\.once\('dom-ready'/);
+  assert.match(main, /dressPresetWindow\(notif, layer\)/);
   assert.match(main, /insertCSS\(css\)/);
   assert.match(main, /executeJavaScript\(presetLayer\.LAYER_LOGO_SCRIPT\)/);
   assert.match(main, /ipcMain\.handle\('create-layered-preset'/);

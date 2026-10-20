@@ -124,7 +124,12 @@ here. See [Share a preset](presets.md#share-a-preset).
 
 Choose a corner, edge or centered position from the Notification settings. Positions are measured
 against the whole screen, so a bottom anchor sits on the bottom edge rather than above the taskbar,
-matching the layout shown in the preset builder. The custom position can be moved with
+matching the layout shown in the preset builder. The card itself touches the chosen edges, whatever
+room for shadow or glow its preset leaves around it: AW measures each preset once per position, in
+the background after its first popup, so that first popup still shows where it used to. A preset
+whose card follows the length of its text (Indiana, PS5 Steam, Slim) is also measured with each
+popup's text, which holds that popup back about half a second. The custom
+position can be moved with
 **Reposition** and is stored for later sessions; it is used exactly as you left it, and a position
 saved on a monitor that is no longer connected is brought back into view.
 

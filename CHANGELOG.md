@@ -94,6 +94,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Popups touch the edge they are anchored to.** A popup set to a corner or an edge stopped short
+  of it, by up to 70 pixels for Steam Original and more for Xbox Series, because most presets leave
+  room for a shadow or a glow around their card. AW now measures that room once for every preset,
+  community ones included, in the background after its first popup, and from then on places the
+  card itself on the edge, in all eight positions and at any scale.
 - **Screenshots on Windows 10.** Every screenshot souvenir failed there with "Toggling the capture
   border is not supported": AW asked Windows to hide the capture border, which only Windows 11 can
   do. Windows 10 now takes the shot another way, which draws no border at all.

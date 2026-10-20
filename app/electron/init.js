@@ -871,6 +871,7 @@ function currentRarityGrading() {
 const { resolveOverlayRequest } = require(path.join(__dirname, '../util/overlayRequest.js'));
 const { normalizeWindowArgs } = require(path.join(__dirname, '../util/windowArgs.js'));
 const notificationBounds = require(path.join(__dirname, '../util/notificationBounds.js'));
+const notificationInsets = require(path.join(__dirname, '../util/notificationInsets.js'));
 const { insertSegoeFallback } = require(path.join(__dirname, '../util/segoeFallback.js'));
 
 // Resolve main-process strings from the selected locale, with English/French fallback.
@@ -5626,6 +5627,14 @@ function notificationPlacementArea(customAnchor = null) {
   return primary.bounds || primary.workArea;
 }
 
+function notificationDisplayScale(area) {
+  try {
+    return require('electron').screen.getDisplayMatching(area).scaleFactor || 1;
+  } catch {
+    return 1;
+  }
+}
+
 // Place the window inside the target display's usable area. The shared helper clamps both edges,
 // including a manually repositioned popup, instead of only protecting the left/top edges.
 function computeNotificationBounds(position, width, height, workArea, customAnchor = null) {
@@ -5739,6 +5748,96 @@ function watchPresetWindow(win) {
   win.on('closed', () => presetWebContentsIds.delete(id));
 }
 
+// What every preset page gets before its payload: the request filter, the Segoe fallback and, for a
+// layered preset, its CSS and logo. Shared by live popups and the insets measurement.
+function dressPresetWindow(win, layer) {
+  watchPresetWindow(win);
+  win.webContents.once('dom-ready', () => {
+    if (!win.isDestroyed()) insertSegoeFallback(win.webContents, { log: debug.log });
+  });
+  if (!layer) return;
+  // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
+  // for did-finish-load, i.e. for the page's pictures and fonts too).
+  win.webContents.once('dom-ready', () => {
+    if (win.isDestroyed()) return;
+    const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name) });
+    if (css) win.webContents.insertCSS(css).catch((err) => debug.log(`[overlay-notif] layer css failed: ${err.message || err}`));
+    if (presetLayer.layerHasLogo(layer)) {
+      win.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch((err) => debug.log(`[overlay-notif] layer logo failed: ${err.message || err}`));
+    }
+  });
+}
+
+const presetInsets = require('./presetInsets.js').createPresetInsets({
+  cacheFile: path.join(userData, 'cfg', 'presetInsets.json'),
+  preloadPath: path.join(__dirname, '../notificationPreload.js'),
+  imagePath: path.join(__dirname, '../resources/img/avatar.png'),
+  dimensions: getPresetDimensions,
+  prepare: dressPresetWindow,
+  log: debug.log,
+});
+
+// A preset whose card follows its text is rendered with this popup's own text before it is placed;
+// every other popup goes straight through.
+function withTextInsets(data) {
+  const position = data.position || 'center-bottom';
+  if (data.reposition === true || position === 'custom') return Promise.resolve(data);
+  const resolved = resolveNotificationPreset([String(data.preset || DEFAULT_PRESET), DEFAULT_PRESET]);
+  const layer = notificationPresetLayers.get(resolved.name) || null;
+  const profile = resolved.folder ? presetInsets.get(resolved.folder, layer, position) : null;
+  if (!profile || !profile.variable) return Promise.resolve(data);
+  return presetInsets
+    .measureText(resolved.folder, layer, notificationPagePayload(data), profile)
+    .then((textInsets) => ({ ...data, textInsets }));
+}
+
+// What the preset page receives with 'show-notification', also used to measure a preset whose card
+// follows its text.
+function notificationPagePayload(data) {
+  // Localized fallback labels for presets that render a placeholder when the payload has no
+  // display name/description (e.g. the defensive `'Achievement Unlocked'` text in the themes).
+  const notifStrings = loadNotificationStrings();
+  const notificationTier = describeNotificationTier(data);
+  return {
+    displayName: data.displayName != null ? data.displayName : notifStrings.achievementUnlocked || 'Achievement Unlocked',
+    description: data.description != null ? data.description : '',
+    // The game the unlock came from. `displayName` carries the ACHIEVEMENT title, so without this
+    // a popup could never say where it happened; presets that do not ask for it simply ignore it.
+    gameName: data.gameName != null ? String(data.gameName) : '',
+    rarityPercent: data.rarityPercent,
+    // The tier the preset paints ('gold' | 'silver' | 'bronze' | 'platinum' | ''), decided here so a
+    // preset never carries cut-offs of its own; `rarityGrade` is its localized name.
+    rarityTier: notificationTier.tier,
+    rarityMode: notificationTier.mode,
+    rarityGrade: notificationTier.label,
+    notificationType: data.notificationType || '',
+    // Reference-project presets key on these: `isPlatinum` (Xbox Series Platinum diamond) and
+    // `headerPath` (Game Cover background). Keep them as aliases of our own fields.
+    // A platinum trophy is painted like a completion: it is the PlayStation's own 100%.
+    isPlatinum: String(data.notificationType || '').toLowerCase() === 'platinum' || notificationTier.tier === 'platinum',
+    iconPath: data.iconPath || data.icon || '',
+    gameIconPath: data.gameIconPath || data.gameIcon || '',
+    imagePath: data.imagePath || data.image || '',
+    headerPath: data.imagePath || data.image || '',
+    progress: data.progress || null,
+    progressCurrent: data.progress && data.progress.current,
+    progressMax: data.progress && data.progress.max,
+    progressPercent: data.progress && data.progress.percent,
+    position: data.position,
+    // Neutral by contract: the host's page zoom already renders the preset at the chosen size, and
+    // a preset that scales itself on top of it would shrink or enlarge the artwork twice.
+    scale: 1,
+    // Forwarded so presets that support it can match their animation to the user's duration.
+    durationMs: Number.isFinite(Number(data.durationMs)) ? Number(data.durationMs) : undefined,
+    fallback: {
+      achievementUnlocked: notifStrings.achievementUnlocked || 'Achievement Unlocked',
+      achievement: notifStrings.achievement || 'Achievement',
+      unknownOperation: notifStrings.unknownOperation || 'Unknown operation',
+      unknownReward: notifStrings.unknownReward || 'Unknown reward',
+    },
+  };
+}
+
 function createNotificationWindow(data = {}) {
   const resolvedPreset = resolveNotificationPreset([String(data.preset || DEFAULT_PRESET), DEFAULT_PRESET]);
   const presetFolder = resolvedPreset.folder;
@@ -5772,14 +5871,24 @@ function createNotificationWindow(data = {}) {
     workArea,
     margin: 0,
   });
-  const { x, y, width: w, height: h } = computeNotificationBounds(
-    position,
-    geometry.width,
-    geometry.height,
-    workArea,
-    customAnchor
-  );
+  const placed = computeNotificationBounds(position, geometry.width, geometry.height, workArea, customAnchor);
   const scale = geometry.scale;
+  const reposition = data.reposition === true;
+  // The window hangs past the anchored edge by the preset's transparent room, so the card touches it.
+  // A preset not measured yet is placed as before while it is measured once, in the background.
+  const edgeAnchored = !reposition && position !== 'custom';
+  const profile = edgeAnchored ? presetInsets.get(presetFolder, layer, position) : null;
+  if (edgeAnchored && !profile) presetInsets.measureLater(presetFolder, layer, position);
+  const room = profile ? data.textInsets || profile.insets : null;
+  const { dx, dy } = notificationInsets.edgeShift(position, room, scale);
+  const { width: w, height: h } = placed;
+  let x = placed.x + dx;
+  let y = placed.y + dy;
+  if (room) {
+    const scaleFactor = notificationDisplayScale(workArea);
+    x = notificationInsets.snapToDevicePixel(x, scaleFactor);
+    y = notificationInsets.snapToDevicePixel(y, scaleFactor);
+  }
 
   debug.log(
     '[overlay-notif] preset=' +
@@ -5795,10 +5904,10 @@ function createNotificationWindow(data = {}) {
       '% size=' +
       w +
       'x' +
-      h
+      h +
+      (dx || dy ? ` edge-shift=${dx},${dy}` : '')
   );
 
-  const reposition = data.reposition === true;
   const notif = new BrowserWindow({
     width: w,
     height: h,
@@ -5853,7 +5962,7 @@ function createNotificationWindow(data = {}) {
       }
     });
   }
-  watchPresetWindow(notif);
+  dressPresetWindow(notif, layer);
   // Real notifications are click-through; the reposition witness stays interactive so it can be dragged.
   if (reposition) {
     // Be explicit instead of relying on BrowserWindow's default: this window may be created after
@@ -5863,27 +5972,7 @@ function createNotificationWindow(data = {}) {
   } else {
     notif.setIgnoreMouseEvents(true, { forward: true });
   }
-  notif.webContents.once('dom-ready', () => {
-    if (!notif.isDestroyed()) insertSegoeFallback(notif.webContents, { log: debug.log });
-  });
-  if (layer) {
-    // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
-    // for did-finish-load, i.e. for the page's pictures and fonts too).
-    notif.webContents.once('dom-ready', () => {
-      if (notif.isDestroyed()) return;
-      const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name) });
-      if (css) notif.webContents.insertCSS(css).catch((err) => debug.log(`[overlay-notif] layer css failed: ${err.message || err}`));
-      if (presetLayer.layerHasLogo(layer)) {
-        notif.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch((err) => debug.log(`[overlay-notif] layer logo failed: ${err.message || err}`));
-      }
-    });
-  }
   notif.loadFile(presetHtml);
-
-  // Localized fallback labels for presets that render a placeholder when the payload has no
-  // display name/description (e.g. the defensive `'Achievement Unlocked'` text in the themes).
-  const notifStrings = loadNotificationStrings();
-  const notificationTier = describeNotificationTier(data);
 
   // Match the proven overlayWindow pattern: show inactively once content is loaded
   // (no reliance on 'ready-to-show', which the working in-game overlay also avoids).
@@ -5893,45 +5982,11 @@ function createNotificationWindow(data = {}) {
     // design size, filling the window exactly (a self-scaling preset would shrink dense layouts twice).
     // Chromium remembers a zoom level per file, which overrules `zoomFactor`, so reassert it here too.
     notif.webContents.setZoomFactor(scale);
-    notif.webContents.send('show-notification', {
-      displayName: data.displayName != null ? data.displayName : notifStrings.achievementUnlocked || 'Achievement Unlocked',
-      description: data.description != null ? data.description : '',
-      // The game the unlock came from. `displayName` carries the ACHIEVEMENT title, so without this
-      // a popup could never say where it happened; presets that do not ask for it simply ignore it.
-      gameName: data.gameName != null ? String(data.gameName) : '',
-      rarityPercent: data.rarityPercent,
-      // The tier the preset paints ('gold' | 'silver' | 'bronze' | 'platinum' | ''), decided here so a
-      // preset never carries cut-offs of its own; `rarityGrade` is its localized name.
-      rarityTier: notificationTier.tier,
-      rarityMode: notificationTier.mode,
-      rarityGrade: notificationTier.label,
-      notificationType: data.notificationType || '',
-      // Reference-project presets key on these: `isPlatinum` (Xbox Series Platinum diamond) and
-      // `headerPath` (Game Cover background). Keep them as aliases of our own fields.
-      // A platinum trophy is painted like a completion: it is the PlayStation's own 100%.
-      isPlatinum: String(data.notificationType || '').toLowerCase() === 'platinum' || notificationTier.tier === 'platinum',
-      iconPath: data.iconPath || data.icon || '',
-      gameIconPath: data.gameIconPath || data.gameIcon || '',
-      imagePath: data.imagePath || data.image || '',
-      headerPath: data.imagePath || data.image || '',
-      progress: data.progress || null,
-      progressCurrent: data.progress && data.progress.current,
-      progressMax: data.progress && data.progress.max,
-      progressPercent: data.progress && data.progress.percent,
-      position: data.position,
-      // Neutral by contract: the page zoom above already renders the preset at the chosen size, and
-      // a preset that scales itself on top of it would shrink or enlarge the artwork twice.
-      scale: 1,
-      // Forwarded so presets that support it can match their animation to the user's duration.
-      durationMs: Number.isFinite(Number(data.durationMs)) ? Number(data.durationMs) : undefined,
-      fallback: {
-        achievementUnlocked: notifStrings.achievementUnlocked || 'Achievement Unlocked',
-        achievement: notifStrings.achievement || 'Achievement',
-        unknownOperation: notifStrings.unknownOperation || 'Unknown operation',
-        unknownReward: notifStrings.unknownReward || 'Unknown reward',
-      },
-    });
+    notif.webContents.send('show-notification', notificationPagePayload(data));
     notif.showInactive();
+    // Windows grows a transparent window by a few pixels when it is created or shown past a screen
+    // edge; reassert the exact box so the measured card stays on the edge.
+    if (!lockedCustomBounds) notif.setBounds({ x, y, width: w, height: h }, false);
     // Optional notification sound: volume is 0-200%, use a WebAudio gain node above 100% (Audio.volume
     // caps at 1.0), falling back to clamped Audio.volume if WebAudio is unavailable.
     if (data.soundPath) {
@@ -6069,6 +6124,7 @@ function enqueueNotification(data) {
   // other. The popups are shown one at a time anyway, so the wait costs nothing on screen.
   squareLogoChain = squareLogoChain
     .then(() => withSquareGameLogo(payload).catch(() => payload))
+    .then((resolved) => withTextInsets(resolved).catch(() => resolved))
     .then(
       (resolved) => enqueueResolvedNotification(resolved),
       () => enqueueResolvedNotification(payload)

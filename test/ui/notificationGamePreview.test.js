@@ -19,9 +19,9 @@ const appSource = rendererSource();
 
 // The exact fields createNotificationWindow() forwards to the notification page.
 function windowFields() {
-  const send = init.slice(init.indexOf("notif.webContents.send('show-notification', {"));
-  const body = send.slice(0, send.indexOf('\n    });'));
-  return new Set([...body.matchAll(/^\s{6}([A-Za-z][\w]*):/gm)].map((m) => m[1]));
+  const fn = init.slice(init.indexOf('function notificationPagePayload('));
+  const body = fn.slice(fn.indexOf('  return {'), fn.indexOf('\n  };'));
+  return new Set([...body.matchAll(/^\s{4}([A-Za-z][\w]*):/gm)].map((m) => m[1]));
 }
 
 // The payload the renderer builds for a preview.
