@@ -1,0 +1,63 @@
+name: Publish
+
+# What follows a release without anyone running a command: the winget manifest is updated, and once
+# GitHub Pages has rebuilt docs/ from main the IndexNow engines are told to recrawl the site.
+
+on:
+  release:
+    types: [released]
+  page_build:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  winget:
+    name: Update the winget package
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
+    runs-on: windows-latest
+    timeout-minutes: 15
+    # A classic token with the public_repo scope: the PR is opened from the Shirowwww fork of
+    # microsoft/winget-pkgs. Without the secret the step is skipped rather than failed.
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - uses: vedantmgoyal9/winget-releaser@b7370d4d152efdce803a26cc6ca9eee58cb2ad54 # v2
+        if: env.WINGET_TOKEN != ''
+        with:
+          identifier: Shirow.AchievementWatcherNext
+          installers-regex: '^Achievement\.Watcher\.Setup\.[0-9.]+\.exe$'
+          release-tag: ${{ github.event.release.tag_name || github.ref_name }}
+          fork-user: Shirowwww
+          token: ${{ secrets.WINGET_TOKEN }}
+
+  indexnow:
+    name: Tell IndexNow the site changed
+    if: (github.event_name == 'page_build' && github.event.build.status == 'built') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+
+      # The engines fetch the key file to check the request, so wait until Pages serves it.
+      - name: Wait for the key file to be live
+        run: |
+          key="$(ls docs | grep -E '^[0-9a-f]{32}\.txt$')"
+          for attempt in $(seq 1 30); do
+            if curl -fsS "https://shirowwww.github.io/Achievement-Watcher-Next/$key" | grep -qx "${key%.txt}"; then
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "The key file is still not served after 10 minutes." >&2
+          exit 1
+
+      - name: Submit the pages
+        run: node tools/site/indexnow.js

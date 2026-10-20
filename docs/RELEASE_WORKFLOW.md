@@ -236,6 +236,11 @@ git commit -m "docs: publish <version> on the site"
    The file is read from the site's own origin rather than from the GitHub API, so a visitor never
    spends an unauthenticated rate limit to see a version number. Missing or stale, the pages fall
    back to their own wording; they never show a wrong version.
+6. Nothing to run for the rest: `.github/workflows/publish.yml` opens the winget update PR for
+   `Shirow.AchievementWatcherNext` when the release is published (it needs the `WINGET_TOKEN`
+   secret, a classic token with the `public_repo` scope, and skips without it), and asks the
+   IndexNow engines to recrawl the site after each Pages build of `main`. Both can be rerun from
+   the Actions tab.
 
 ## Identifiers that must not change
 
