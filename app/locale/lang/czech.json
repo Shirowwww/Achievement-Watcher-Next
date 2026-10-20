@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Kde hledat soubory úspěchů :",
       "default": "Automaticky kontrolované složky",
+      "defaultInfo": "AW Next tyto složky emulátorů už sleduje sám. Nemusíte tu nic přidávat ani měnit.",
       "custom": "Vaše složky",
       "addInfo": [
         "Vyberte složku, ve které hra nebo emulátor ukládá soubory úspěchů.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostika",
+        "desc": "Vaše verze a také složky s logy a daty, které přiložíte při nahlášení problému.",
         "logsFolder": "Otevřít složku logů",
         "dataFolder": "Otevřít složku dat",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Zkontrolovat knihovnu her",
         "goldbergDesc": "Prohledá složku knihovny her na instalace Goldberg / GBE Fork a označí ty, kterým chybí schéma steam_settings/achievements.json. Pro opravu jedné použijte kontextovou nabídku hry (Diagnostikovat / Opravit).",
         "scanFolder": "Prohledat složku…",
         "exportLogs": "Exportovat protokoly (.zip)",

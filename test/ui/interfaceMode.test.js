@@ -375,12 +375,11 @@ test('Simple keeps folder management but not the raw built-in scan paths', () =>
   for (const id of ['addCustomDir', 'addLibraryDir', 'smartFind', 'wrap-dirlist', 'libdirlist']) {
     assert.ok(!document.querySelector(`#${id}`).closest(`[${interfaceMode.ADVANCED_ATTRIBUTE}]`), `#${id} is how a user adds their own games`);
   }
-  // The "select the folder holding ALI213.ini / valve.ini / …" detail is its own paragraph now.
+  // Only the plain sentence is shown, in both modes; the list of emulator .ini file names is gone.
   assert.ok(!document.querySelector('#folder-add-info').closest(`[${interfaceMode.ADVANCED_ATTRIBUTE}]`), 'the plain sentence stays');
-  assert.ok(document.querySelector('#folder-add-info-detail').hasAttribute(interfaceMode.ADVANCED_ATTRIBUTE), 'the .ini list does not');
+  assert.equal(document.querySelector('#folder-add-info-detail'), null, 'the .ini list is not shown any more');
   const loader = fs.readFileSync(path.join(appDir, 'locale', 'loader.js'), 'utf8');
   assert.match(loader, /#folder-add-info'\)\.text\(clear\(addInfo\[0\]\)\)/, 'line one goes to the plain paragraph');
-  assert.match(loader, /#folder-add-info-detail'\)\.html\(clear\(addInfo\.slice\(1\)/, 'the rest goes to the gated one');
 });
 
 test('advanced-only rows inside kept tabs are marked, and only ever inside kept tabs', () => {

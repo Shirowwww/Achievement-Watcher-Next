@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "도전 과제 파일을 찾을 위치:",
       "default": "자동으로 확인하는 폴더",
+      "defaultInfo": "AW Next는 이 에뮬레이터 폴더를 이미 알아서 감시하고 있습니다. 여기서 추가하거나 바꿀 것은 없습니다.",
       "custom": "내 폴더",
       "addInfo": [
         "게임이나 에뮬레이터가 도전 과제 파일을 보관하는 폴더를 고르세요.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "진단",
+        "desc": "내 버전과, 문제를 신고할 때 공유할 로그 폴더 및 데이터 폴더입니다.",
         "logsFolder": "로그 폴더 열기",
         "dataFolder": "데이터 폴더 열기",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "게임 라이브러리 확인",
         "goldbergDesc": "게임 라이브러리 폴더에서 Goldberg / GBE Fork 설치를 찾아 steam_settings/achievements.json 목록이 없는 것을 표시합니다. 하나만 고치려면 게임의 오른쪽 클릭 메뉴에서 진단 또는 복구를 사용하세요.",
         "scanFolder": "폴더 검사…",
         "exportLogs": "로그 내보내기(.zip)",

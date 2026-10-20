@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Kde hľadať súbory úspechov :",
       "default": "Automaticky kontrolované priečinky",
+      "defaultInfo": "AW Next tieto priečinky emulátorov už sleduje sám. Nemusíte tu nič pridávať ani meniť.",
       "custom": "Vaše priečinky",
       "addInfo": [
         "Vyberte priečinok, do ktorého hra alebo emulátor ukladá súbory úspechov.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostika",
+        "desc": "Vaša verzia a tiež priečinky s logmi a dátami, ktoré priložíte pri nahlásení problému.",
         "logsFolder": "Otvoriť priečinok logov",
         "dataFolder": "Otvoriť priečinok dát",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Skontrolovať knižnicu hier",
         "goldbergDesc": "Prehľadá priečinok knižnice hier na inštalácie Goldberg / GBE Fork a označí tie, ktorým chýba schéma steam_settings/achievements.json. Na opravu jednej použite kontextovú ponuku hry (Diagnostikovať / Opraviť).",
         "scanFolder": "Prehľadať priečinok…",
         "exportLogs": "Exportovať protokoly (.zip)",

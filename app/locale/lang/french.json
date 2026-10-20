@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Où chercher les données des succès:",
       "default": "Dossiers vérifiés automatiquement",
+      "defaultInfo": "AW Next surveille déjà ces dossiers d’émulateurs tout seul. Rien à ajouter ni à régler ici.",
       "custom": "Tes dossiers",
       "addInfo": [
         "Choisis le dossier où un jeu ou un émulateur garde ses fichiers de succès.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostics",
+        "desc": "Ta version, et les journaux ou le dossier de données à joindre quand tu signales un problème.",
         "logsFolder": "Ouvrir le dossier des logs",
         "dataFolder": "Ouvrir le dossier des données",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Vérifier une bibliothèque de jeux",
         "goldbergDesc": "Scanne un dossier de bibliothèque de jeux pour les installs Goldberg / GBE Fork et signale ceux à qui manque leur schéma steam_settings/achievements.json. Utilise le menu clic-droit d’un jeu (Diagnostiquer / Réparer) pour en corriger un.",
         "scanFolder": "Scanner un dossier…",
         "exportLogs": "Exporter les journaux (.zip)",

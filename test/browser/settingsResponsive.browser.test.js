@@ -11,23 +11,6 @@ const appDir = path.join(__dirname, '..', '..', 'app');
 const localeDir = path.join(appDir, 'locale', 'lang');
 const localeOverrides = fs.readFileSync(path.join(appDir, 'locale', 'override.css'), 'utf8');
 
-/*
-  The width below which the Uplay package row stops being a two-column row.
-
-  Its "control" is a pair of buttons rather than one 212px picker, so under a threshold the stylesheet
-  deliberately gives it the whole width: label, then the buttons across the row, then the description.
-  Read out of the stylesheet rather than repeated here, so moving the threshold moves this test with
-  it instead of turning the row's designed narrow form into a failure.
-*/
-const STACKS_BELOW = (() => {
-  const css = fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8');
-  // The @media block that reshapes the row, and the width it opens on.
-  const blocks = [...css.matchAll(/@media \(max-width: (\d+)px\) \{([\s\S]*?)\n\}/g)];
-  const owner = blocks.find(([, , body]) => body.includes('.uplay-r2-package-row'));
-  assert.ok(owner, 'no width query reshapes the Uplay package row any more - has its layout changed?');
-  return Number(owner[1]);
-})();
-
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 }
@@ -85,7 +68,7 @@ function layoutHarness(locale) {
         <div id="settings-search"><i class="fas fa-search"></i><input placeholder="${escapeHtml(settings.search.placeholder)}"></div>
       </div>
       <div class="container"><nav id="settingNav"><ul>${nav}</ul></nav>
-        <section class="content active" data-view="general"><div class="arrow-list"><div class="title">${escapeHtml(settings.general.sectionTitle)}</div><ul>${rows}</ul></div><ul id="options-uplay" class="arrow-list emulator-list">${uplayRow}</ul></section>
+        <section class="content active" data-view="general"><div class="arrow-list"><div class="title">${escapeHtml(settings.general.sectionTitle)}</div><ul>${rows}</ul></div><ul class="arrow-list emulator-list uplay-r2-settings-body">${uplayRow}</ul></section>
       </div>
     </div></section>
   </body></html>`;
@@ -138,11 +121,12 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
                 overflow: row.scrollWidth > row.clientWidth + 1,
                 controlBesideLabel: control.top <= label.bottom + 1,
                 helpBelowRow: help.top >= Math.max(label.bottom, control.bottom) - 1,
-                // A row whose control is a pair of buttons rather than one 212px picker has a
-                // deliberate stacked form below the threshold; see STACKS_BELOW.
+                // The package rows hold a row of buttons rather than one 212px picker, so they
+                // read top to bottom at every width: status, description, then the buttons.
                 stacksByDesign: row.classList.contains('uplay-r2-package-row'),
-                controlFillsRow: Math.abs(control.width - label.width) <= 2,
-                controlBelowLabel: control.top >= label.bottom - 1,
+                helpBelowLabel: help.top >= label.bottom - 1,
+                controlBelowHelp: control.top >= help.bottom - 1,
+                controlFromLeft: control.left <= help.left + 1,
               };
             }),
           };
@@ -164,19 +148,19 @@ test('settings keeps its two-column rows readable in every bundled locale', { co
         for (const [index, row] of layout.rows.entries()) {
           const where = `${width}x${height} ${file}: row ${index + 1}`;
           assert.equal(row.overflow, false, `${where} overflows horizontally`);
-          assert.equal(row.helpBelowRow, true, `${where} overlaps its description`);
 
-          if (row.stacksByDesign && width <= STACKS_BELOW) {
+          if (row.stacksByDesign) {
             /*
-              The designed narrow form, not a row that failed to fit: label, then the controls across
-              the full width, then the description. Asserted rather than skipped, so this row is still
-              checked - just against the shape it is supposed to have at this width.
+              The designed form, not a row that failed to fit: asserted rather than skipped, so this
+              row is still checked - against the shape it is supposed to have.
             */
-            assert.equal(row.controlBelowLabel, true, `${where} should stack its controls under the label below ${STACKS_BELOW}px`);
-            assert.equal(row.controlFillsRow, true, `${where} stacks but does not take the width that buys it`);
+            assert.equal(row.helpBelowLabel, true, `${where} puts its description above its status`);
+            assert.equal(row.controlBelowHelp, true, `${where} overlaps its description with its buttons`);
+            assert.equal(row.controlFromLeft, true, `${where} pushes its buttons away from the text they follow`);
             continue;
           }
 
+          assert.equal(row.helpBelowRow, true, `${where} overlaps its description`);
           assert.equal(row.controlBesideLabel, true, `${where} drops its control below the label`);
         }
       }

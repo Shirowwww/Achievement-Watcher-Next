@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Hol keresse a teljesítményfájlokat :",
       "default": "Automatikusan ellenőrzött mappák",
+      "defaultInfo": "Az AW Next ezeket az emulátormappákat már magától figyeli. Itt nincs mit hozzáadni vagy módosítani.",
       "custom": "A saját mappáid",
       "addInfo": [
         "Válaszd ki a mappát, ahol egy játék vagy egy emulátor a teljesítményfájljait tartja.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnosztika",
+        "desc": "A verziód, valamint a naplómappa és az adatmappa, amelyet megoszthatsz, ha hibát jelentesz.",
         "logsFolder": "Naplómappa megnyitása",
         "dataFolder": "Adatmappa megnyitása",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Játékkönyvtár ellenőrzése",
         "goldbergDesc": "Átvizsgál egy játékkönyvtár-mappát Goldberg / GBE Fork telepítések után, és megjelöli azokat, amelyekből hiányzik a steam_settings/achievements.json séma. Egy javításához használd a játék jobb gombos menüjét (Diagnosztizálás / Javítás).",
         "scanFolder": "Mappa átvizsgálása…",
         "exportLogs": "Naplók exportálása (.zip)",

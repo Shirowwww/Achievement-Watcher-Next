@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Gdzie szukać plików osiągnięć :",
       "default": "Foldery sprawdzane automatycznie",
+      "defaultInfo": "AW Next sam już monitoruje te foldery emulatorów. Nie trzeba tu niczego dodawać ani zmieniać.",
       "custom": "Twoje foldery",
       "addInfo": [
         "Wybierz folder, w którym gra lub emulator trzyma pliki osiągnięć.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostyka",
+        "desc": "Twoja wersja oraz folder logów i folder danych, które możesz udostępnić, zgłaszając problem.",
         "logsFolder": "Otwórz folder logów",
         "dataFolder": "Otwórz folder danych",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Sprawdź bibliotekę gier",
         "goldbergDesc": "Skanuje folder biblioteki gier w poszukiwaniu instalacji Goldberg / GBE Fork i oznacza te, którym brakuje schematu steam_settings/achievements.json. Użyj menu prawego przycisku gry (Diagnozuj / Napraw), aby naprawić jedną.",
         "scanFolder": "Skanuj folder…",
         "exportLogs": "Eksportuj dzienniki (.zip)",

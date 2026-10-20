@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "実績ファイルを探す場所：",
       "default": "自動で確認されるフォルダー",
+      "defaultInfo": "AW Next はこれらのエミュレーターのフォルダーをすでに自動で監視しています。ここで追加や変更をする必要はありません。",
       "custom": "自分のフォルダー",
       "addInfo": [
         "ゲームまたはエミュレーターが実績ファイルを保存しているフォルダーを選んでください。",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "診断",
+        "desc": "お使いのバージョンと、問題を報告するときに共有するログフォルダーとデータフォルダーです。",
         "logsFolder": "ログフォルダーを開く",
         "dataFolder": "データフォルダーを開く",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "ゲームライブラリを確認",
         "goldbergDesc": "ゲームライブラリフォルダーをスキャンして Goldberg / GBE Fork のインストールを探し、steam_settings/achievements.json スキーマが欠落しているものを示します。1 つを修正するには、ゲームの右クリックメニュー（診断 / 修復）を使用してください。",
         "scanFolder": "フォルダーをスキャン…",
         "exportLogs": "ログをエクスポート (.zip)",

@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Her skal der ledes efter præstationsfiler:",
       "default": "Mapper, der tjekkes automatisk",
+      "defaultInfo": "AW Next overvåger allerede disse emulatormapper af sig selv. Du behøver ikke tilføje eller ændre noget her.",
       "custom": "Dine mapper",
       "addInfo": [
         "Vælg den mappe, hvor et spil eller en emulator gemmer sine præstationsfiler.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostik",
+        "desc": "Din version samt logmappen og datamappen, som du kan dele, når du melder et problem.",
         "logsFolder": "Åbn logmappen",
         "dataFolder": "Åbn datamappen",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Tjek et spilbibliotek",
         "goldbergDesc": "Scan en spilbiblioteksmappe for Goldberg / GBE Fork-installationer, og markér dem, der mangler deres steam_settings/achievements.json-skema. Brug et spils højrekliksmenu (Diagnosticer / Reparer) for at reparere ét af dem.",
         "scanFolder": "Scan en mappe…",
         "exportLogs": "Eksportér logfiler (.zip)",

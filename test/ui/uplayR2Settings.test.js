@@ -80,10 +80,16 @@ test('Uplay-specific styling follows theme and semantic variables', () => {
   assert.match(cssSource, /#settings \.uplay-r2-status\[data-state='error'\]\) \{\s*--chip-state: var\(--danger\);/);
 });
 
-test('the integrated package helper stays below its action buttons', () => {
-  const block = cssSource.slice(cssSource.indexOf('#settings .uplay-r2-package-row'));
-  assert.match(block, /\.uplay-r2-package-row > \.right[\s\S]*grid-row: 1/);
-  assert.match(block, /\.uplay-r2-package-row \.help[\s\S]*grid-row: 2/);
+test('the integrated package reads status, then explanation, then buttons', () => {
+  const block = cssSource.slice(cssSource.indexOf('#settings .uplay-r2-package-row {'));
+  const rule = (selector) => {
+    const start = block.indexOf(`${selector} {`);
+    assert.ok(start >= 0, `${selector} has no rule`);
+    return block.slice(start, block.indexOf('}', start));
+  };
+  assert.match(rule('#settings .uplay-r2-package-row'), /grid-template-columns: minmax\(0, 1fr\)/);
+  assert.match(rule('#settings .uplay-r2-package-row .help'), /grid-row: 2/);
+  assert.match(rule('#settings .uplay-r2-package-row > .right'), /grid-row: 3/);
 });
 
 test('opening the emulator tab automatically verifies the integrated package', () => {

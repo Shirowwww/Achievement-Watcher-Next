@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Dove cercare i file degli obiettivi :",
       "default": "Cartelle controllate automaticamente",
+      "defaultInfo": "AW Next controlla già da solo queste cartelle degli emulatori. Qui non c’è niente da aggiungere o modificare.",
       "custom": "Le tue cartelle",
       "addInfo": [
         "Scegli la cartella in cui un gioco o un emulatore tiene i file degli obiettivi.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostica",
+        "desc": "La tua versione, più la cartella dei log e quella dei dati da condividere quando segnali un problema.",
         "logsFolder": "Apri la cartella dei log",
         "dataFolder": "Apri la cartella dei dati",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Controlla una libreria di giochi",
         "goldbergDesc": "Analizza una cartella libreria di giochi alla ricerca di installazioni Goldberg / GBE Fork e segnala quelle a cui manca lo schema steam_settings/achievements.json. Usa il menu clic destro di un gioco (Diagnostica / Ripara) per correggerne una.",
         "scanFolder": "Analizza una cartella…",
         "exportLogs": "Esporta i registri (.zip)",

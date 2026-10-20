@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Tempat mencari file pencapaian:",
       "default": "Folder yang diperiksa otomatis",
+      "defaultInfo": "AW Next sudah memantau folder emulator ini dengan sendirinya. Tidak ada yang perlu ditambahkan atau diubah di sini.",
       "custom": "Folder Anda",
       "addInfo": [
         "Pilih folder tempat sebuah game atau emulator menyimpan file pencapaiannya.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostik",
+        "desc": "Versi Anda, ditambah folder log dan folder data untuk dibagikan saat Anda melaporkan masalah.",
         "logsFolder": "Buka folder log",
         "dataFolder": "Buka folder data",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Periksa perpustakaan game",
         "goldbergDesc": "Pindai folder perpustakaan game untuk pemasangan Goldberg / GBE Fork dan tandai yang tidak memiliki skema steam_settings/achievements.json. Pakai menu klik kanan sebuah game (Diagnosis / Perbaiki) untuk memperbaiki satu game.",
         "scanFolder": "Pindai sebuah folder…",
         "exportLogs": "Ekspor log (.zip)",

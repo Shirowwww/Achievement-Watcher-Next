@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "在何处查找成就文件：",
       "default": "自动检查的文件夹",
+      "defaultInfo": "AW Next 已经会自动监视这些模拟器文件夹，无需在此添加或更改任何内容。",
       "custom": "你的文件夹",
       "addInfo": [
         "选择游戏或模拟器存放成就文件的文件夹。",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "诊断",
+        "desc": "你的版本，以及报告问题时可以一并提供的日志文件夹和数据文件夹。",
         "logsFolder": "打开日志文件夹",
         "dataFolder": "打开数据文件夹",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "检查游戏库",
         "goldbergDesc": "扫描游戏库文件夹中的 Goldberg / GBE Fork 安装，并标记缺少 steam_settings/achievements.json 架构的项目。使用游戏的右键菜单（诊断 / 修复）来修复其中一项。",
         "scanFolder": "扫描文件夹…",
         "exportLogs": "导出日志 (.zip)",

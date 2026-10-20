@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Başarım dosyalarının nerede aranacağı :",
       "default": "Otomatik denetlenen klasörler",
+      "defaultInfo": "AW Next bu emülatör klasörlerini zaten kendi kendine izliyor. Burada eklenecek ya da değiştirilecek bir şey yok.",
       "custom": "Kendi klasörlerin",
       "addInfo": [
         "Bir oyunun ya da emülatörün başarım dosyalarını tuttuğu klasörü seç.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Tanılama",
+        "desc": "Sürümün, bir sorunu bildirirken paylaşabileceğin günlük klasörü ve veri klasörü.",
         "logsFolder": "Günlük klasörünü aç",
         "dataFolder": "Veri klasörünü aç",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Bir oyun kütüphanesini denetle",
         "goldbergDesc": "Bir oyun kütüphanesi klasörünü Goldberg / GBE Fork kurulumları için tarar ve steam_settings/achievements.json şeması eksik olanları işaretler. Birini düzeltmek için bir oyunun sağ tık menüsünü (Tanıla / Onar) kullan.",
         "scanFolder": "Bir klasör tara…",
         "exportLogs": "Günlükleri dışa aktar (.zip)",

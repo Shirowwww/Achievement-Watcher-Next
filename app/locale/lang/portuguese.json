@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Onde procurar os ficheiros de proezas :",
       "default": "Pastas verificadas automaticamente",
+      "defaultInfo": "O AW Next já vigia estas pastas de emuladores por conta própria. Não há nada para adicionar ou alterar aqui.",
       "custom": "As tuas pastas",
       "addInfo": [
         "Escolhe a pasta onde um jogo ou emulador guarda os ficheiros de proezas.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnóstico",
+        "desc": "A tua versão, mais a pasta de logs e a de dados para partilhares quando comunicas um problema.",
         "logsFolder": "Abrir a pasta de logs",
         "dataFolder": "Abrir a pasta de dados",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Verificar uma biblioteca de jogos",
         "goldbergDesc": "Analisa uma pasta de biblioteca de jogos à procura de instalações Goldberg / GBE Fork e assinala as que não têm o esquema steam_settings/achievements.json. Use o menu de clique direito de um jogo (Diagnosticar / Reparar) para corrigir uma.",
         "scanFolder": "Analisar uma pasta…",
         "exportLogs": "Exportar registos (.zip)",

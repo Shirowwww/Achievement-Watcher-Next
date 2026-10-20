@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Wo nach Erfolgsdateien gesucht wird :",
       "default": "Automatisch geprüfte Ordner",
+      "defaultInfo": "AW Next überwacht diese Emulator-Ordner bereits von selbst. Hier musst du nichts hinzufügen oder ändern.",
       "custom": "Deine Ordner",
       "addInfo": [
         "Wähle den Ordner, in dem ein Spiel oder ein Emulator seine Erfolgsdateien ablegt.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnose",
+        "desc": "Deine Version sowie der Log-Ordner und der Datenordner, die du beim Melden eines Problems teilen kannst.",
         "logsFolder": "Log-Ordner öffnen",
         "dataFolder": "Datenordner öffnen",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Spielbibliothek prüfen",
         "goldbergDesc": "Durchsucht einen Spielbibliotheks-Ordner nach Goldberg-/GBE-Fork-Installationen und markiert jene, denen das steam_settings/achievements.json-Schema fehlt. Über das Rechtsklick-Menü eines Spiels (Diagnose / Reparieren) lässt sich eines beheben.",
         "scanFolder": "Ordner durchsuchen…",
         "exportLogs": "Protokolle exportieren (.zip)",

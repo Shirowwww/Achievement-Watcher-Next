@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Where to look for achievement files:",
       "default": "Folders checked automatically",
+      "defaultInfo": "AW Next already watches these emulator folders on its own. Nothing to add or change here.",
       "custom": "Your folders",
       "addInfo": [
         "Choose the folder where a game or an emulator keeps its achievement files.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostics",
+        "desc": "Your version, plus the logs and data folder to share when you report a problem.",
         "logsFolder": "Open logs folder",
         "dataFolder": "Open data folder",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Check a game library",
         "goldbergDesc": "Scan a game-library folder for Goldberg / GBE Fork installs and flag the ones missing their steam_settings/achievements.json schema. Use a game’s right-click menu (Diagnose / Repair) to fix one.",
         "scanFolder": "Scan a folder…",
         "exportLogs": "Export logs (.zip)",

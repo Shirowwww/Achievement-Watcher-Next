@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "要到哪裡尋找成就檔案：",
       "default": "自動檢查的資料夾",
+      "defaultInfo": "AW Next 已經會自動監看這些模擬器資料夾，不需要在此新增或變更任何內容。",
       "custom": "你的資料夾",
       "addInfo": [
         "請選擇遊戲或模擬器存放成就檔案的資料夾。",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "診斷",
+        "desc": "你的版本，以及回報問題時可以一併提供的記錄檔資料夾和資料資料夾。",
         "logsFolder": "開啟記錄檔資料夾",
         "dataFolder": "開啟資料夾",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "檢查遊戲收藏庫",
         "goldbergDesc": "掃描遊戲收藏庫資料夾，找出 Goldberg / GBE Fork 的安裝，並標記缺少 steam_settings/achievements.json 結構的項目。要修復單一遊戲，請使用它的右鍵選單（診斷／修復）。",
         "scanFolder": "掃描資料夾…",
         "exportLogs": "匯出記錄檔（.zip）",

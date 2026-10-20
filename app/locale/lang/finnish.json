@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Mistä saavutustiedostoja etsitään:",
       "default": "Automaattisesti tarkistettavat kansiot",
+      "defaultInfo": "AW Next seuraa näitä emulaattorikansioita jo itse. Tähän ei tarvitse lisätä tai muuttaa mitään.",
       "custom": "Omat kansiosi",
       "addInfo": [
         "Valitse kansio, johon peli tai emulaattori tallentaa saavutustiedostonsa.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Vianmääritys",
+        "desc": "Versiosi sekä lokikansio ja tietokansio, jotka voit jakaa ilmoittaessasi ongelmasta.",
         "logsFolder": "Avaa lokikansio",
         "dataFolder": "Avaa tietokansio",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Tarkista pelikirjasto",
         "goldbergDesc": "Etsi pelikirjastokansiosta Goldberg- ja GBE Fork -asennukset ja merkitse ne, joilta puuttuu steam_settings/achievements.json-luettelo. Korjaa yksittäinen peli sen hiiren kakkospainikkeen valikosta (Vianmääritys / Korjaus).",
         "scanFolder": "Etsi kansiosta…",
         "exportLogs": "Vie lokit (.zip)",

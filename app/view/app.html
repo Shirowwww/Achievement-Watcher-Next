@@ -519,6 +519,25 @@
                 </ul>
               </div>
 
+              <!-- A GBE Fork tool, so it sits with the GBE Fork settings. Bound by id. -->
+              <div class="arrow-list diag-list">
+                <div class="title"><i class="fas fa-search"></i> <span id="adv-goldberg-title">Goldberg / GBE Fork</span></div>
+                <ul>
+                  <li>
+                    <p id="adv-goldberg-desc">
+                      Scan a game-library folder for Goldberg / GBE Fork installs and flag the ones missing their
+                      steam_settings/achievements.json schema. Use a game's right-click menu (Diagnose / Repair) to fix one.
+                    </p>
+                  </li>
+                  <li class="actions-row">
+                    <div id="scan-gbe" class="btn" role="button" tabindex="0"><i class="fas fa-search"></i> <span>Scan a folder…</span></div>
+                  </li>
+                  <li>
+                    <div id="scan-gbe-result" class="diag-line"></div>
+                  </li>
+                </ul>
+              </div>
+
             </section>
 
             <section class="content emulator-settings" data-view="uplay">
@@ -804,28 +823,10 @@
               </div>
 
               <div class="arrow-list diag-list">
-                <div class="title"><i class="fas fa-puzzle-piece"></i> <span id="adv-goldberg-title">Goldberg / GBE Fork</span></div>
-                <ul>
-                  <li>
-                    <p id="adv-goldberg-desc">
-                      Scan a game-library folder for Goldberg / GBE Fork installs and flag the ones missing their
-                      steam_settings/achievements.json schema. Use a game's right-click menu (Diagnose / Repair) to fix one.
-                    </p>
-                  </li>
-                  <li class="actions-row">
-                    <div id="scan-gbe" class="btn" role="button" tabindex="0"><i class="fas fa-search"></i> <span>Scan a folder…</span></div>
-                  </li>
-                  <li>
-                    <div id="scan-gbe-result" class="diag-line"></div>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="arrow-list diag-list">
                 <div class="title"><i class="fas fa-heartbeat"></i> <span id="adv-diag-title">Diagnostics</span></div>
                 <ul>
                   <li>
-                    <div id="diag-versions" class="diag-line"></div>
+                    <p id="adv-diag-desc"></p>
                   </li>
                   <li class="actions-row">
                     <div id="open-logs" class="btn" role="button" tabindex="0"><i class="fas fa-folder-open"></i> <span>Open logs folder</span></div>
@@ -835,6 +836,24 @@
                   </li>
                   <li>
                     <div id="export-logs-result" class="diag-line"></div>
+                  </li>
+                  <li class="diag-about">
+                    <div id="diag-versions" class="diag-line"></div>
+                  </li>
+                  <!-- Each credit is one nowrap group so it can only wrap between the two entries,
+                       not between the GitHub icon and the repository it belongs to. -->
+                  <li class="advanced-lineage diag-about" id="advanced-lineage">
+                    <span class="lineage-entry">
+                      <a id="lineage-fork-label">Fork</a>
+                      <i class="fab fa-github"></i>
+                      <a data-aw-link="upstream.fork" target="_blank">darktakayanagi/achievement-watcher</a>
+                    </span>
+                    <span class="notice-sep">·</span>
+                    <span class="lineage-entry">
+                      <a id="lineage-original-label">Original v1.6.8</a>
+                      <i class="fab fa-github"></i>
+                      <a data-aw-link="upstream.original" target="_blank">xan105/achievement-watcher</a>
+                    </span>
                   </li>
                 </ul>
               </div>
@@ -855,28 +874,6 @@
                   </li>
                   <li>
                     <div id="profile-backup-result" class="diag-line"></div>
-                  </li>
-                </ul>
-              </div>
-
-              <!-- Upstream lineage: kept with the technical credits, not every Settings tab. Bound
-                   by id (no .title, so it is not collapsible) - see bindSettings() in loader.js. -->
-              <div class="arrow-list">
-                <ul>
-                  <!-- Each credit is one nowrap group so it can only wrap between the two entries,
-                       not between the GitHub icon and the repository it belongs to. -->
-                  <li class="advanced-lineage" id="advanced-lineage">
-                    <span class="lineage-entry">
-                      <a id="lineage-fork-label">Fork</a>
-                      <i class="fab fa-github"></i>
-                      <a data-aw-link="upstream.fork" target="_blank">darktakayanagi/achievement-watcher</a>
-                    </span>
-                    <span class="notice-sep">·</span>
-                    <span class="lineage-entry">
-                      <a id="lineage-original-label">Original v1.6.8</a>
-                      <i class="fab fa-github"></i>
-                      <a data-aw-link="upstream.original" target="_blank">xan105/achievement-watcher</a>
-                    </span>
                   </li>
                 </ul>
               </div>
@@ -1499,8 +1496,92 @@
             <section class="content" data-view="folder">
               <div class="disclaimer"><i class="fas fa-info-circle"></i> <span></span></div>
 
+              <div class="arrow-list">
+                <div class="title"><i class="fas fa-user-edit"></i> <span id="folder-custom-title"></span></div>
+
+                <div class="controls folder-actions">
+                  <div class="info">
+                    <p id="folder-add-info"></p>
+                  </div>
+                  <ul>
+                    <li>
+                      <div id="addCustomDir" class="btn" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span></span></div>
+                    </li>
+                    <li>
+                      <div id="smartFind" class="btn" role="button" tabindex="0"><i class="fas fa-search-plus fa-flip-horizontal"></i> <span id="smartFind-label">Smart Find</span><small id="smartFind-help">finds saves/configs + libraries</small></div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div id="folder-action-result" class="diag-line"></div>
+
+                <div id="wrap-dirlist">
+                  <ul id="dirlist"></ul>
+                  <div class="loading-overlay">
+                    <div class="wrap"><i class="fas fa-spinner fa-spin"></i></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="arrow-list">
+                <div class="title"><i class="fas fa-folder-open"></i> <span id="folder-library-title"></span></div>
+
+                <div class="controls folder-actions">
+                  <div class="info">
+                    <p id="folder-library-info"></p>
+                  </div>
+                  <ul>
+                    <li>
+                      <div id="addLibraryDir" class="btn" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span></span></div>
+                    </li>
+                    <li data-advanced="1">
+                      <div id="generate-configs" class="btn" role="button" tabindex="0"><i class="fas fa-magic"></i> <span id="generate-configs-label">Generate configs</span><small id="generate-configs-help">full scan + auto-fix if enabled</small></div>
+                    </li>
+                  </ul>
+                </div>
+
+                <ul id="libdirlist"></ul>
+                <div id="generate-configs-result" class="diag-line"></div>
+              </div>
+
+              <div class="folder-rescan-card settings-card" id="folder-rescan">
+                <div class="title"><i class="fas fa-sync-alt"></i> <span id="folder-rescan-title"></span></div>
+                <p id="folder-rescan-help" class="folder-rescan-help"></p>
+                <div class="folder-rescan-toolbar">
+                  <button type="button" class="inline-action-btn secondary" id="folder-rescan-select-all"><i class="fas fa-check"></i> <span></span></button>
+                  <button type="button" class="inline-action-btn secondary" id="folder-rescan-select-none"><i class="fas fa-times"></i> <span></span></button>
+                </div>
+                <ul id="folder-rescan-list"></ul>
+                <div class="folder-rescan-actions">
+                  <button type="button" class="inline-action-btn primary" id="folder-rescan-run" disabled><i class="fas fa-redo"></i> <span></span></button>
+                </div>
+                <div id="folder-rescan-result" class="diag-line" aria-live="polite"></div>
+              </div>
+              <!-- Hidden games. Here rather than in Advanced: "Remove from list" is on every game's menu in
+                   both modes, so the only way to undo it cannot sit behind a mode Simple never shows. -->
+              <div class="arrow-list" id="blacklist-card">
+                <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
+                <ul>
+                  <li class="blacklist-manager-row">
+                    <ul id="blacklist-manager"></ul>
+                    <div id="blacklist-empty" class="diag-line"></div>
+                  </li>
+                  <li class="blacklist-add-row">
+                    <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
+                    <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
+                  </li>
+                  <li class="actions-row">
+                    <div id="blacklist_reset" class="btn" role="button" tabindex="0"><i class="fas fa-file-medical-alt"></i> <span></span></div>
+                    <div id="blacklist-info" class="help"></div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Read-only: the emulator folders AW Next always watches. Last, folded, and
+                   saying so, since there is nothing to do with it. -->
               <div class="arrow-list" data-advanced="1">
-              <div class="title"><i class="fas fa-folder"></i> <span></span></div>
+              <div class="title"><i class="fas fa-folder"></i> <span id="folder-default-title"></span></div>
+              <p id="folder-default-info" class="folder-default-info"></p>
               <ul id="defaultdir">
                 <li>
                   <div class="path"><span class="constant">%PUBLIC%</span>\Documents\OnlineFix</div>
@@ -1634,91 +1715,6 @@
                   </div>
                 </li>
               </ul>
-              </div>
-
-              <div class="arrow-list">
-                <div class="title"><i class="fas fa-user-edit"></i> <span></span></div>
-
-                <div class="controls folder-actions">
-                  <div class="info">
-                    <!-- Split in two: the plain sentence is what Simple mode shows, the list of
-                         emulator .ini files it goes on to name is only useful once you already know
-                         which emulator you are pointing at. The loader fills them separately. -->
-                    <p id="folder-add-info"></p>
-                    <p id="folder-add-info-detail" data-advanced="1"></p>
-                  </div>
-                  <ul>
-                    <li>
-                      <div id="addCustomDir" class="btn" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span></span></div>
-                    </li>
-                    <li>
-                      <div id="smartFind" class="btn" role="button" tabindex="0"><i class="fas fa-search-plus fa-flip-horizontal"></i> <span id="smartFind-label">Smart Find</span><small id="smartFind-help">finds saves/configs + libraries</small></div>
-                    </li>
-                  </ul>
-                </div>
-
-                <div id="folder-action-result" class="diag-line"></div>
-
-                <div id="wrap-dirlist">
-                  <ul id="dirlist"></ul>
-                  <div class="loading-overlay">
-                    <div class="wrap"><i class="fas fa-spinner fa-spin"></i></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="arrow-list">
-                <div class="title"><i class="fas fa-folder-open"></i> <span></span></div>
-
-                <div class="controls folder-actions">
-                  <div class="info">
-                    <p id="folder-library-info"></p>
-                  </div>
-                  <ul>
-                    <li>
-                      <div id="addLibraryDir" class="btn" role="button" tabindex="0"><i class="fas fa-folder-plus"></i> <span></span></div>
-                    </li>
-                    <li data-advanced="1">
-                      <div id="generate-configs" class="btn" role="button" tabindex="0"><i class="fas fa-magic"></i> <span id="generate-configs-label">Generate configs</span><small id="generate-configs-help">full scan + auto-fix if enabled</small></div>
-                    </li>
-                  </ul>
-                </div>
-
-                <ul id="libdirlist"></ul>
-                <div id="generate-configs-result" class="diag-line"></div>
-              </div>
-
-              <div class="folder-rescan-card settings-card" id="folder-rescan">
-                <div class="title"><i class="fas fa-sync-alt"></i> <span id="folder-rescan-title"></span></div>
-                <p id="folder-rescan-help" class="folder-rescan-help"></p>
-                <div class="folder-rescan-toolbar">
-                  <button type="button" class="inline-action-btn secondary" id="folder-rescan-select-all"><i class="fas fa-check"></i> <span></span></button>
-                  <button type="button" class="inline-action-btn secondary" id="folder-rescan-select-none"><i class="fas fa-times"></i> <span></span></button>
-                </div>
-                <ul id="folder-rescan-list"></ul>
-                <div class="folder-rescan-actions">
-                  <button type="button" class="inline-action-btn primary" id="folder-rescan-run" disabled><i class="fas fa-redo"></i> <span></span></button>
-                </div>
-                <div id="folder-rescan-result" class="diag-line" aria-live="polite"></div>
-              </div>
-              <!-- Hidden games. Here rather than in Advanced: "Remove from list" is on every game's menu in
-                   both modes, so the only way to undo it cannot sit behind a mode Simple never shows. -->
-              <div class="arrow-list" id="blacklist-card">
-                <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
-                <ul>
-                  <li class="blacklist-manager-row">
-                    <ul id="blacklist-manager"></ul>
-                    <div id="blacklist-empty" class="diag-line"></div>
-                  </li>
-                  <li class="blacklist-add-row">
-                    <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
-                    <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
-                  </li>
-                  <li class="actions-row">
-                    <div id="blacklist_reset" class="btn" role="button" tabindex="0"><i class="fas fa-file-medical-alt"></i> <span></span></div>
-                    <div id="blacklist-info" class="help"></div>
-                  </li>
-                </ul>
               </div>
             </section>
 

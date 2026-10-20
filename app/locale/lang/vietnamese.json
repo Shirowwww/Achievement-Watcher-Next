@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Nơi cần tìm tệp thành tựu:",
       "default": "Thư mục được kiểm tra tự động",
+      "defaultInfo": "AW Next đã tự theo dõi các thư mục trình giả lập này rồi. Không cần thêm hay thay đổi gì ở đây.",
       "custom": "Thư mục của bạn",
       "addInfo": [
         "Chọn thư mục nơi một trò chơi hoặc một trình giả lập lưu tệp thành tựu của nó.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Chẩn đoán",
+        "desc": "Phiên bản của bạn, cùng thư mục nhật ký và thư mục dữ liệu để gửi kèm khi bạn báo cáo sự cố.",
         "logsFolder": "Mở thư mục nhật ký",
         "dataFolder": "Mở thư mục dữ liệu",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Kiểm tra một thư viện trò chơi",
         "goldbergDesc": "Quét một thư mục thư viện trò chơi để tìm các bản cài Goldberg / GBE Fork và đánh dấu những bản thiếu tệp steam_settings/achievements.json. Dùng menu chuột phải của một trò chơi (Chẩn đoán / Sửa) để sửa từng bản.",
         "scanFolder": "Quét một thư mục…",
         "exportLogs": "Xuất nhật ký (.zip)",

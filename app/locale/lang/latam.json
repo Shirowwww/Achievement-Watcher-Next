@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Dónde buscar los archivos de logros :",
       "default": "Carpetas revisadas automáticamente",
+      "defaultInfo": "AW Next ya vigila estas carpetas de emuladores por su cuenta. Aquí no hay nada que agregar ni cambiar.",
       "custom": "Tus carpetas",
       "addInfo": [
         "Elegí la carpeta donde un juego o un emulador guarda sus archivos de logros.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnóstico",
+        "desc": "Tu versión, más la carpeta de logs y la de datos para compartir cuando reportes un problema.",
         "logsFolder": "Abrir la carpeta de logs",
         "dataFolder": "Abrir la carpeta de datos",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Revisar una biblioteca de juegos",
         "goldbergDesc": "Analiza una carpeta de biblioteca de juegos en busca de instalaciones Goldberg / GBE Fork y marca las que carecen de su esquema steam_settings/achievements.json. Usa el menú de clic derecho de un juego (Diagnosticar / Reparar) para arreglar una.",
         "scanFolder": "Analizar una carpeta…",
         "exportLogs": "Exportar registros (.zip)",

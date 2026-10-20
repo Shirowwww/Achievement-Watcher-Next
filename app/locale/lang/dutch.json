@@ -1007,6 +1007,7 @@
     "folder": {
       "headline": "Waar er naar prestatiebestanden wordt gezocht:",
       "default": "Mappen die automatisch worden gecontroleerd",
+      "defaultInfo": "AW Next houdt deze emulatormappen al zelf in de gaten. Hier hoef je niets toe te voegen of te wijzigen.",
       "custom": "Jouw mappen",
       "addInfo": [
         "Kies de map waarin een game of een emulator zijn prestatiebestanden bewaart.",
@@ -1255,9 +1256,11 @@
       },
       "diag": {
         "title": "Diagnostiek",
+        "desc": "Je versie, plus de logboekmap en de gegevensmap om te delen wanneer je een probleem meldt.",
         "logsFolder": "Logboekmap openen",
         "dataFolder": "Gegevensmap openen",
         "goldbergTitle": "Goldberg / GBE Fork",
+        "scanTitle": "Een gamebibliotheek controleren",
         "goldbergDesc": "Scan een gamebibliotheekmap op installaties van Goldberg / GBE Fork en markeer de installaties waarvan het schema steam_settings/achievements.json ontbreekt. Gebruik het rechtsklikmenu van een game (Diagnose / Repareren) om er een te herstellen.",
         "scanFolder": "Een map scannen…",
         "exportLogs": "Logboeken exporteren (.zip)",

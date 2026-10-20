@@ -811,20 +811,21 @@ function translateUI(lang, locale, template) {
   }
   $('#option_overlaySound').attr('data-lang-none', clear(template.settings.notification.option.soundNone));
   selector = $("#settings .box .content[data-view='folder']");
-  selector.find('.disclaimer span').text(clear(template.settings.folder.headline));
-  selector.find('.title:eq(0) span').text(clear(template.settings.folder.default));
-  selector.find('.title:eq(1) span').text(clear(template.settings.folder.custom));
+  // An intro sentence now rather than a heading, so the heading's trailing colon goes.
+  selector.find('.disclaimer span').text(clear(template.settings.folder.headline).replace(/\s*:\s*$/, ''));
+  $('#folder-default-title').text(clear(template.settings.folder.default));
+  $('#folder-default-info').text(clear(template.settings.folder.defaultInfo || ''));
+  $('#folder-custom-title').text(clear(template.settings.folder.custom));
   $('#addCustomDir span').text(clear(template.settings.folder.add));
   if (template.settings.folder.smartFind) $('#smartFind-label').text(clear(template.settings.folder.smartFind));
   if (template.settings.folder.smartFindHelp) $('#smartFind-help').text(clear(template.settings.folder.smartFindHelp));
-  // First line explains the folder in both modes; the rest names identifying .ini files and is
-  // hidden in Simple mode.
+  // Only the first line is shown: the rest listed emulator .ini file names, which Smart Find and
+  // the library scan already locate on their own.
   {
     const addInfo = template.settings.folder.addInfo || [];
     $('#folder-add-info').text(clear(addInfo[0]));
-    $('#folder-add-info-detail').html(clear(addInfo.slice(1).join('\n')).replace(/\n/g, '<br>'));
   }
-  selector.find('.title:eq(2) span').text(clear(template.settings.folder.library));
+  $('#folder-library-title').text(clear(template.settings.folder.library));
   $('#addLibraryDir span').text(clear(template.settings.folder.addLibrary));
   if (template.settings.folder.generateConfigs) $('#generate-configs-label').text(clear(template.settings.folder.generateConfigs));
   if (template.settings.folder.generateConfigsHelp) $('#generate-configs-help').text(clear(template.settings.folder.generateConfigsHelp));
@@ -948,6 +949,7 @@ function translateUI(lang, locale, template) {
   if (template.settings.advanced.diag) {
     const d = template.settings.advanced.diag;
     $('#adv-diag-title').text(clear(d.title));
+    $('#adv-diag-desc').text(clear(d.desc || ''));
     $('#open-logs span').text(clear(d.logsFolder));
     $('#export-logs span').text(clear(d.exportLogs));
     $('#open-userdata span').text(clear(d.dataFolder));
@@ -955,7 +957,7 @@ function translateUI(lang, locale, template) {
     $('#profile-backup-desc').text(clear(d.profileBackupDesc));
     $('#profile-export span').text(clear(d.profileExport));
     $('#profile-restore span').text(clear(d.profileRestore));
-    $('#adv-goldberg-title').text(clear(d.goldbergTitle));
+    $('#adv-goldberg-title').text(clear(d.scanTitle || d.goldbergTitle));
     $('#adv-goldberg-desc').text(clear(d.goldbergDesc));
     $('#scan-gbe span').text(clear(d.scanFolder));
   }

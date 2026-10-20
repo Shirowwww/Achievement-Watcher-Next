@@ -1468,17 +1468,20 @@ body.is-resizing #game-list {
 
 /* The library tiles' bar, at footer size: a pill track, the accent gradient, the label beside it.
    Nothing ever leaves the track, so it needs no clipping and the label can sit outside it. */
+/* The calc keeps 130px free on each side, so the label beside the track always has room for the
+   longest translation of "Scanning…" at the app's narrowest window instead of running off. */
 .loading .progressBar {
   position: relative;
-  width: 75%;
+  width: min(75%, calc(100% - 260px));
   min-width: 250px;
-  height: 6px;
+  height: 7px;
   margin: 0 auto;
   display: block;
   box-sizing: border-box;
   border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--surface-sunken) 85%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
+  /* A flat fill, no inset ring: the ring blended into the track and made the empty part look
+     thinner than the filled one. */
+  background: color-mix(in srgb, var(--border) 34%, transparent);
 }
 
 .loading .progressBar .meter {
@@ -1516,8 +1519,11 @@ body.is-resizing #game-list {
   top: 50%;
   left: calc(100% + 10px);
   transform: translateY(-50%);
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-muted);
-  font: var(--fs-2xs) / 1 var(--font-strong);
+  font: var(--fs-xs) / 1.2 var(--font-strong);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -3285,19 +3291,30 @@ body.is-resizing #game-list {
   margin: 0 4px;
 }
 
-/* Upstream credits, at the very bottom of the Advanced tab. Deliberately quiet: it is a credit
-   line, not a setting, so it sits below the diagnostics rather than competing with them. */
+/* Upstream credits, closing the Diagnostics card under the version line. Deliberately quiet: a
+   credit, not a setting. One entry per line, so the two never read as one run-on sentence. */
 #advanced-lineage {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  /* Row gap stays tight so a wrapped second entry reads as a continuation, not a new paragraph. */
-  gap: 2px 8px;
-  padding-top: 4px;
-  opacity: 0.72;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
   color: var(--text-muted);
   font-family: var(--font-body);
-  font-size: var(--fs-xs);
+  font-size: var(--fs-sm);
+}
+
+/* The card's row rule centres flex rows; the credits read from the left like the version line. */
+#settings .diag-list #advanced-lineage {
+  align-items: flex-start;
+  border-top: 0;
+}
+
+#advanced-lineage .notice-sep {
+  display: none;
+}
+
+#advanced-lineage .fa-github {
+  opacity: 0.8;
 }
 
 /* A label, its icon and its repository are one unbreakable unit: as loose flex items the line used
@@ -3311,6 +3328,35 @@ body.is-resizing #game-list {
 
 #advanced-lineage a {
   color: inherit;
+  text-decoration: none;
+}
+
+/* The version line and the credits are facts about the app, set off from the buttons above. */
+#settings .diag-list li.diag-about {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  border-bottom: 0;
+}
+
+/* A report line with nothing to report must not leave a blank strip in its card. */
+#settings .diag-list li:has(> .diag-line:empty) {
+  display: none;
+}
+
+#settings .diag-list li.actions-row + li + li.diag-about {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--set-hairline-soft);
+}
+
+#settings #diag-versions {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+#settings #adv-diag-desc {
+  color: var(--text-muted);
 }
 
 #advanced-lineage a[href]:hover {
@@ -5551,6 +5597,7 @@ body.is-resizing #game-list {
    also the website's class and the notification designer's; the views named here are the ones whose
    markup uses it. */
 #settings .folder-actions .btn,
+#settings .content[data-view='emulator'] .diag-list .btn,
 #settings #blacklist-card .btn,
 #settings .content[data-view='advanced'] .btn,
 #settings .content[data-view='debug'] .btn,
@@ -8873,13 +8920,35 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   gap: 6px;
 }
 
-/* Blacklist reset: the hint belongs under its button, not beside it. */
+/*
+  The hidden-games card stays as short as its content: slim entries with a small restore button,
+  and the hint and the reset share one closing line. A single hidden game used to take a 270px card.
+*/
+#settings #blacklist-card > ul > li {
+  min-height: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+#settings #blacklist-manager li {
+  padding: 3px 2px;
+}
+#settings #blacklist-empty:empty {
+  display: none;
+}
+#settings #blacklist-manager li .inline-action-btn {
+  min-height: 28px;
+  height: 28px;
+  padding: 0 9px;
+}
 #settings .actions-row:has(#blacklist-info) {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px 16px;
 }
 #settings #blacklist-info {
+  flex: 1 1 260px;
+  margin: 0;
   color: var(--text-muted);
   font-size: var(--fs-sm);
   line-height: 1.3;
@@ -9060,12 +9129,40 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   border-bottom: 0;
 }
 
+/*
+  One hover language for the whole panel: every row and list entry takes the same faint accent
+  wash, every button the same accent-tinted border, and both fade in over the same short time
+  instead of some snapping and some fading. The global reduced-motion rule turns the fade off.
+*/
+#settings .arrow-list > ul > li,
+#settings .emulator-list > li,
+#settings #defaultdir > li,
+#settings #dirlist > li,
+#settings #libdirlist > li,
+#settings #blacklist-manager > li,
+#settings #folder-rescan-list > li,
+#settings .settings-section-header {
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
 #settings .arrow-list > ul > li:hover,
 #settings .emulator-list > li:hover,
 #settings #defaultdir > li:hover,
 #settings #dirlist > li:hover,
-#settings #libdirlist > li:hover {
+#settings #libdirlist > li:hover,
+#settings #blacklist-manager > li:hover,
+#settings #folder-rescan-list > li:hover {
   background: var(--set-row-hover);
+}
+
+/* The hidden-games card is a list and a form, not setting rows: only its game entries light up. */
+#settings #blacklist-card > ul > li:hover {
+  background: transparent;
+}
+
+#settings :where(.btn, .inline-action-btn):not(.primary, .danger, :disabled, .disabled):hover {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--control-border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--control-bg));
 }
 
 #settings .arrow-list li .left,
@@ -9210,9 +9307,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0;
 }
 
+/* The same gap as every other card: the emulator tabs used to step 18px, 12px, then 18px. */
 #settings .emulator-group {
   overflow: hidden;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 #settings .uplay-r2-settings-body {
@@ -9235,79 +9333,83 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   max-width: none;
 }
 
+/*
+  The package cards (Ubisoft repair package, GBE Fork DLL) read top to bottom at every width: the
+  status, the sentence that explains it, then the buttons on one left-aligned line. The card header
+  already names the package, so the row's own label is kept for screen readers only. Side by side,
+  three long button labels folded onto two lines each and the status floated beside them.
+*/
 #settings .uplay-r2-package-row {
-  grid-template-columns: minmax(250px, 0.85fr) minmax(330px, 1.15fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  padding-top: 14px;
+  row-gap: 8px;
+  padding-top: 12px;
   padding-bottom: 14px;
 }
 
 #settings .uplay-r2-package-row .left {
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
-  padding-top: 4px;
 }
 
 #settings .uplay-r2-package-copy {
   display: flex;
   min-width: 0;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 7px;
+  align-items: center;
 }
 
 #settings .uplay-r2-package-copy > span:first-child {
-  color: var(--text);
-  font-family: var(--font-strong);
-  font-size: var(--fs-md);
-  line-height: 1.3;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 #settings .uplay-r2-status {
   flex: 0 0 auto;
 }
 
+#settings .uplay-r2-package-row .help {
+  grid-column: 1;
+  grid-row: 2;
+  margin-left: 30px;
+  padding-right: 8px;
+}
+
+#settings .uplay-r2-package-row > .right {
+  grid-column: 1;
+  grid-row: 3;
+}
+
 #settings .emulator-settings .emulator-list li .right.uplay-r2-package-controls {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: stretch;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
   width: auto;
   min-width: 0;
   height: auto;
   gap: 8px;
+  margin: 6px 0 0 30px;
   padding: 0;
   border: 0;
   background: transparent;
 }
 
 #settings .uplay-r2-package-controls .inline-action-btn {
-  width: 100%;
-  white-space: normal;
+  width: auto;
+  white-space: nowrap;
 }
 
-#settings .uplay-r2-package-controls #verify-uplay-r2-package {
-  grid-column: 1 / -1;
-}
-
-/* The package actions occupy the first grid row. The generic helper-row rule spans controls
-   across two rows, which makes the full-width package help overlap the lower action buttons. */
-#settings .uplay-r2-package-row > .right {
-  grid-row: 1;
-}
-
-#settings .uplay-r2-result-row:has(#uplay-r2-settings-result:empty) {
+/* An empty report line must not leave a blank strip at the foot of the card. */
+#settings .uplay-r2-result-row:has(.diag-line:empty) {
   display: none;
 }
 
 #settings #uplay-r2-settings-result {
   width: 100%;
-}
-
-#settings .uplay-r2-package-row .help {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  margin-left: 30px;
-  padding-right: 8px;
 }
 
 /* Emulator group headers use the shared card header (see the section model above) -
@@ -9444,26 +9546,35 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   border: 0;
   border-radius: var(--radius-xs);
 }
-/* The folder-view disclaimer reuses the same flat section-header look as
-   #settings .content .title (icon + label, hairline underline) instead of a boxed callout. */
+/* The folder tab's one-line introduction. Every section is a card now, so a bold underlined
+   heading above them (hanging 14px past their edge) read as a card that had lost its frame. */
 #settings .content[data-view='folder'] .disclaimer {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 0 -14px 4px;
-  padding: 9px 14px;
+  margin: 0 0 2px;
+  padding: 2px 2px 0;
   border: 0;
-  border-bottom: 1px solid var(--set-divider);
   background: transparent;
-  color: var(--set-title);
-  /* A heading, not a caption: bold at the rows' own size. Small letter-spaced capitals made each
-     section header weaker than the rows it introduces, so a tab read as one undivided list. */
-  font-family: var(--font-strong);
+  color: var(--text-muted);
+  font-family: var(--font-body);
   font-size: var(--fs-base);
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0;
-  line-height: 1.3;
+  line-height: 1.4;
   text-transform: none;
+}
+
+#settings .content[data-view='folder'] .disclaimer > i {
+  color: var(--set-icon);
+}
+
+#settings .folder-default-info {
+  margin: 10px 0 8px;
+  padding: 0 2px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
 }
 
 #settings .folder-actions {
@@ -9480,11 +9591,15 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   flex-wrap: wrap;
   gap: 10px;
   margin: 0;
+  /* Flush with the sentence above and the folder list below. */
+  padding: 0;
 }
 
 #settings .folder-actions li {
   width: auto;
+  min-height: 0;
   margin: 0;
+  padding: 0;
 }
 
 /* Folder actions use the shared "rich button" shape (icon column + title over sub-label),
@@ -10580,10 +10695,13 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   still should not, because then the file actions would sit level with the primary one and read
   as its equals. One arrangement at every size is also one arrangement to get right.
 */
+/* Two lines: the Import/Export pair, then the two SAN imports side by side under it. */
 #settings .pd-actions-files {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(2, max-content) minmax(0, 1fr);
+  justify-items: start;
+  align-items: center;
+  gap: 6px 8px;
   /*
     A full-width basis is what puts it on its own line, so nothing may clamp it here: a max-width
     on a flex item is applied to the hypothetical size the browser breaks lines by, so capping the
@@ -10601,38 +10719,40 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
    a longer label in another language grows both of them and wraps inside them, never past them. */
 #settings .pd-file-pair {
   display: grid;
+  grid-column: 1 / -1;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  /* Two buttons, not two banners: the row is full width, what sits in it is not. */
-  max-width: 420px;
+  max-width: 100%;
 }
 
 #settings #options-notify-designer .pd-file-pair .inline-action-btn {
   width: 100%;
-  white-space: normal;
+  white-space: nowrap;
 }
 
 /*
   The SAN converter. It reads somebody else's format, which almost nobody needs and nobody needs
-  twice, so it sits under the pair as a quieter row: no filled surface, and the border only appears
-  when it is pointed at.
+  twice, so its two buttons are quieter: no filled surface, and the border only appears when it is
+  pointed at. They start on the pair's left edge; centred under it, they read as stray text.
 */
 #settings #options-notify-designer .pd-actions .pd-quiet-btn {
-  width: 100%;
-  max-width: 420px;
-  justify-content: center;
-  min-height: 28px;
-  padding: 0 10px;
+  width: auto;
+  max-width: 100%;
+  padding: 0 12px;
   border-color: transparent;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.85em;
-  white-space: normal;
-  text-align: center;
+  font-size: 0.92em;
+  white-space: nowrap;
 }
 
 #settings #options-notify-designer .pd-actions .pd-quiet-btn i {
   color: inherit;
+}
+
+/* The bare button's padding would otherwise indent its icon past the edge of the pair above. */
+#settings #options-notify-designer .pd-actions #btn-import-san {
+  margin-left: -12px;
 }
 
 #settings #options-notify-designer .pd-actions .pd-quiet-btn:hover {
@@ -11707,30 +11827,21 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
    actually engages, matching the other #settings narrow-width rules below. */
 @media (max-width: 1050px) {
   #settings .uplay-r2-settings-body > li.hasHelper,
-  #settings #options-uplay > li.hasHelper,
-  #settings .uplay-r2-package-row {
+  #settings #options-uplay > li.hasHelper {
     grid-template-columns: 1fr;
   }
 
-  #settings .uplay-r2-settings-body > li.hasHelper .right,
+  #settings .uplay-r2-settings-body > li.hasHelper:not(.uplay-r2-package-row) .right,
   #settings #options-uplay > li.hasHelper .right {
     grid-column: 1;
     grid-row: 2;
     width: 100%;
   }
 
-  #settings .emulator-settings .emulator-list li .right.uplay-r2-package-controls {
-    width: 100%;
-  }
-
-  #settings .uplay-r2-settings-body > li.hasHelper .help,
+  #settings .uplay-r2-settings-body > li.hasHelper:not(.uplay-r2-package-row) .help,
   #settings #options-uplay > li.hasHelper .help {
     grid-column: 1;
     grid-row: 3;
-  }
-
-  #settings .uplay-r2-package-controls {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
