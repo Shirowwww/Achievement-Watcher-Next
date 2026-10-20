@@ -37,7 +37,7 @@ test('the game configuration takes focus on open and gives it back on close', ()
   const { rendererSource } = require('../helpers/rendererSource');
   const source = rendererSource();
   assert.match(source, /gameConfigFocusReturn = document\.activeElement;\s*\$\('#game-config-tabs button\.active'\)\[0\]\?\.focus\(/);
-  assert.match(source, /fadeOut\(\(\) => \{\s*\$\('#game-config'\)\.hide\(\);[\s\S]*?gameConfigFocusReturn\.focus\(/);
+  assert.match(source, /fadeOut\((?:\d+, )?\(\) => \{\s*\$\('#game-config'\)\.hide\(\);[\s\S]*?gameConfigFocusReturn\.focus\(/);
 });
 
 test('a search field keeps Escape only while it has text to clear', () => {

@@ -55,7 +55,8 @@ test('the platform table can scroll on its own so the panel never scrolls sidewa
 test('the completion dial is driven by one custom property, not by inline geometry', () => {
   const ring = document.querySelector('#profile-stats-ring');
   assert.match(ring.getAttribute('style') || '', /--value:\s*0/);
-  assert.match(css, /\.profile-stats-ring::before \{[^}]*conic-gradient\(var\(--accent\) calc\(var\(--value\) \* 1%\)/);
+  // --value is read through a registered copy so the fill can animate; it is still the only input.
+  assert.match(css, /\.profile-stats-ring::before \{[^}]*--profile-ring-fill: var\(--value\);[^}]*conic-gradient\(var\(--accent\) calc\(var\(--profile-ring-fill\) \* 1%\)/);
   // Masked, not covered by an opaque disc: the panel's own background is translucent.
   assert.match(css, /\.profile-stats-ring::before \{[^}]*\n\s*mask: radial-gradient\(farthest-side/);
   assert.match(appJs, /\$\('#profile-stats-ring'\)\.css\('--value', overall\)/);

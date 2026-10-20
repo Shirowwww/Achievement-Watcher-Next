@@ -89,8 +89,9 @@ renamed in 3.9.0 and the history is kept under one file.
   game pages, Settings, the overlay and the update window, set in Open Sans. Settings choices open
   as drop-down lists and rarely used sections start folded. Muted text and warning colours read
   better in every built-in theme, and loading shows placeholders shaped like real game tiles.
-- **Refreshed themes.** The Light theme is now white and light grey with a graphite accent, and
-  no longer turns windows, game titles or rarity lines grey or blurry. OLED Black and Graphite are
+- **Refreshed themes.** The Light theme is now white and light grey with soft dark text and a
+  graphite accent with a hint of plum, and no longer turns windows, game titles or rarity lines
+  grey or blurry. OLED Black and Graphite are
   neutral grey (OLED with a silver accent), Catppuccin, Rosé Pine and Synthwave '84 take their
   signature mauve, rose and neon pink, and the coloured halo in the window corner is softer.
   Picking a theme in Settings now fades in briefly, unless your system asks for reduced motion.
@@ -98,6 +99,16 @@ renamed in 3.9.0 and the history is kept under one file.
   accent) come first and the others fold under Fine-tuning. Click a swatch to change its colour.
   A custom theme with dark text on pale cards now gets the Light theme's softer shadows and
   readable status colours. Existing custom and community themes keep working as they are.
+- **A livelier stats panel.** The library stats open on a ring that fills up to your overall
+  completion, the key numbers sit in tiles of different sizes, and trophy counts show as medals.
+  The completion bar under your profile now looks like the other progress bars, and the stats
+  button comes before the fold button.
+- **Light motion.** Game tiles slide into place when the window is resized or the library view
+  changes, game pages open and close faster, and the stats panel, game settings and input cards
+  fade in. Nothing moves when your system asks for reduced motion.
+- **Clearer game settings.** Renaming a game, editing its playtime or changing its appid opens a
+  card titled after the menu entry, with its icon. The game settings panel has underlined tabs and its
+  top edge no longer jumps when you switch between them.
 
 ### Fixed
 

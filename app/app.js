@@ -226,15 +226,75 @@ ipcRenderer.on('artwork-caches-cleared', () => {
 let profileStatsAnimationTimer = null;
 
 // A resize snaps the grid straight to its new column count; a per-card reposition animation was
-// tried and cost too much for 200+ tiles. Dipping the panel's opacity while resizing reads better.
+// tried and cost too much for 200+ tiles. Dipping the panel's opacity while resizing reads better,
+// and once it settles on another column count only the tiles in view fall into place, in a wave.
 let resizeSettleTimer = null;
+let reflowCleanupTimer = null;
+// The count before a resize cannot be read from inside it (the resize event comes after the new
+// layout), so it is remembered when the last one settled, or at the first click or focus.
+let libraryColumns = 0;
+const REFLOW_STEP_MS = 30;
+const REFLOW_MAX_STEPS = 10;
+// The CSS animation's 340 ms, plus a margin.
+const REFLOW_ANIMATION_MS = 400;
+
+// 0 while a game page hides the library: a grid that is not rendered has no tracks to count.
+function libraryGridColumns() {
+  const grid = document.querySelector('#game-list ul');
+  return grid && grid.offsetParent ? getComputedStyle(grid).gridTemplateColumns.split(' ').length : 0;
+}
+
+const rememberLibraryColumns = () => {
+  if (!libraryColumns) libraryColumns = libraryGridColumns();
+};
+window.addEventListener('pointerdown', rememberLibraryColumns, { passive: true, capture: true });
+window.addEventListener('focus', rememberLibraryColumns);
+
+// force: the tiles changed shape (another view) even where the column count did not.
+function playLibraryReflow(force = false) {
+  const list = document.getElementById('game-list');
+  const columns = libraryGridColumns();
+  if (!list || !columns) return;
+  const changed = libraryColumns > 0 && columns !== libraryColumns;
+  libraryColumns = columns;
+  if (!(changed || force) || document.hidden) return;
+  const view = list.getBoundingClientRect();
+  const tiles = [];
+  for (const tile of list.querySelectorAll('ul > li')) {
+    const box = tile.getBoundingClientRect();
+    if (box.top > view.bottom) break;
+    if (box.bottom > view.top && box.width > 0) tiles.push([tile, box]);
+  }
+  if (!tiles.length) return;
+  const [, firstBox] = tiles[0];
+  list.classList.remove('is-reflowing');
+  for (const [tile, box] of tiles) {
+    const step = Math.round((box.top - firstBox.top) / firstBox.height) + Math.round((box.left - firstBox.left) / firstBox.width);
+    tile.style.setProperty('--reflow-step', Math.min(step, REFLOW_MAX_STEPS));
+    tile.setAttribute('data-reflow', '');
+  }
+  void list.offsetWidth;
+  list.classList.add('is-reflowing');
+  clearTimeout(reflowCleanupTimer);
+  reflowCleanupTimer = setTimeout(() => {
+    list.classList.remove('is-reflowing');
+    for (const [tile] of tiles) {
+      tile.removeAttribute('data-reflow');
+      tile.style.removeProperty('--reflow-step');
+    }
+  }, REFLOW_ANIMATION_MS + REFLOW_STEP_MS * REFLOW_MAX_STEPS);
+}
+
 window.addEventListener(
   'resize',
   () => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     document.body.classList.add('is-resizing');
     clearTimeout(resizeSettleTimer);
-    resizeSettleTimer = setTimeout(() => document.body.classList.remove('is-resizing'), 160);
+    resizeSettleTimer = setTimeout(() => {
+      document.body.classList.remove('is-resizing');
+      playLibraryReflow();
+    }, 160);
   },
   { passive: true }
 );
@@ -848,7 +908,7 @@ function renderProfileStatsPanel() {
   $('#profile-stats-untouched-value').text(formatCount(stats.games.notStarted));
   $('#profile-stats-unlocked-value').text(formatCount(stats.achievements.unlocked));
   $('#profile-stats-locked-value').text(formatCount(stats.achievements.locked));
-  $('#profile-stats-tracked-value').text(formatCount(stats.library.tracked));
+  $('#profile-stats-tracked-value, #profile-stats-split-count').text(formatCount(stats.library.tracked));
   $('#profile-stats-average-value').text(formatPercentValue(stats.completion.average));
   $('#profile-stats-playtime-average-value, #profile-stats-playtime-value').text(localeText('loading'));
   setTimeout(() => fillProfileStatsPlaytime(games), 0);
@@ -895,7 +955,7 @@ function applyProfileStatsLabels() {
   $('#profile-stats-untouched-label').text(t('profile-stats-not-started', 'Not started', 'Non commencés'));
   $('#profile-stats-unlocked-label, #profile-stats-col-unlocked').text(localeText('unlocked'));
   $('#profile-stats-locked-label').text(localeText('locked'));
-  $('#profile-stats-tracked-label').text(t('profile-stats-tracked', 'Games with achievements', 'Jeux avec succès'));
+  $('#profile-stats-tracked-label, #profile-stats-split-label').text(t('profile-stats-tracked', 'Games with achievements', 'Jeux avec succès'));
   $('#profile-stats-average-label').text(t('profile-stats-average', 'Average per game', 'Moyenne par jeu'));
   $('#profile-stats-playtime-average-label').text(t('profile-stats-playtime-average', 'Average playtime', 'Temps de jeu moyen'));
   $('#profile-stats-playtime-label').text(t('profile-stats-playtime', 'Tracked playtime', 'Temps de jeu suivi'));
@@ -1185,6 +1245,7 @@ function applyLibraryView(nextValue, previousValue = app.config.achievement.libr
   app.config.achievement.libraryLayout = nextMode;
   app.config.achievement.thumbnailPortrait = libraryLayout.isPortrait(nextMode);
   if (libraryLayout.isPortrait(previousMode) !== libraryLayout.isPortrait(nextMode)) refreshLibraryCovers(nextMode);
+  if (previousMode !== nextMode) playLibraryReflow(true);
   return nextMode;
 }
 
@@ -1384,7 +1445,9 @@ async function editPlaytime(appid, name) {
       'Temps de jeu total pour « {name} », en heures (12,5) ou en heures et minutes (12h30).',
       { name }
     ),
-    playtimeInput.formatPlaytimeInput(current)
+    playtimeInput.formatPlaytimeInput(current),
+    'text',
+    { title: t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…'), icon: 'fa-stopwatch' }
   );
   if (typed === null) return;
   const seconds = playtimeInput.parsePlaytime(typed);
@@ -1941,7 +2004,8 @@ async function applyCoverWithFallback(game, headerEl, imgName, orientation = 'la
 
 // Styled in-app text prompt (Electron disables window.prompt). Resolves to the trimmed value or null.
 // allowEmpty: an empty Confirm resolves '' instead of null, for a field where empty means "clear".
-function promptText(message, defaultValue = '', type = 'text', { allowEmpty = false, maxLength = 0 } = {}) {
+// title and icon name the action (the menu item's own label), so the card does not read "Input required".
+function promptText(message, defaultValue = '', type = 'text', { allowEmpty = false, maxLength = 0, title: promptTitle = '', icon: promptIcon = '' } = {}) {
   return new Promise((resolve) => {
     const isSteamGuard = /(steam.*(?:2fa|guard)|(?:2fa|guard).*code|two.?factor)/i.test(message);
     const overlay = document.createElement('div');
@@ -1954,11 +2018,11 @@ function promptText(message, defaultValue = '', type = 'text', { allowEmpty = fa
     heading.className = 'aw-prompt-heading';
     const icon = document.createElement('span');
     icon.className = 'aw-prompt-icon';
-    icon.innerHTML = `<i class="fas ${isSteamGuard ? 'fa-shield-alt' : 'fa-keyboard'}"></i>`;
+    icon.innerHTML = `<i class="fas ${isSteamGuard ? 'fa-shield-alt' : promptIcon || 'fa-keyboard'}"></i>`;
     const copy = document.createElement('div');
     const title = document.createElement('div');
     title.className = 'aw-prompt-title';
-    title.textContent = isSteamGuard ? 'Steam Guard' : t('input-required', 'Input required', 'Saisie requise');
+    title.textContent = isSteamGuard ? 'Steam Guard' : promptTitle.replace(/\s*(?:…|\.\.\.)$/, '') || t('input-required', 'Input required', 'Saisie requise');
     const label = document.createElement('div');
     label.className = 'aw-prompt-description';
     label.textContent = isSteamGuard
@@ -1994,8 +2058,13 @@ function promptText(message, defaultValue = '', type = 'text', { allowEmpty = fa
     document.body.append(overlay);
     input.focus();
     input.select();
+    // The card leaves the way it came, briefly; the answer is given at once, not after the fade.
+    let answered = false;
     const done = (val) => {
-      overlay.remove();
+      if (answered) return;
+      answered = true;
+      overlay.classList.add('is-closing');
+      setTimeout(() => overlay.remove(), 140);
       resolve(val);
     };
     cancel.onclick = () => done(null);
@@ -4561,7 +4630,12 @@ var app = {
                     ),
                     gameTitleOf(ctxGame),
                     'text',
-                    { allowEmpty: true, maxLength: gameTitle.MAX_TITLE_LENGTH }
+                    {
+                      allowEmpty: true,
+                      maxLength: gameTitle.MAX_TITLE_LENGTH,
+                      title: t('rename-game', 'Rename…', 'Renommer…'),
+                      icon: 'fa-pen',
+                    }
                   );
                   if (typed !== null) renameGame(ctxGame, typed);
                 },
@@ -4627,7 +4701,9 @@ var app = {
                       'Appid Steam à utiliser pour « {name} » ({folder}). Ceci remplace la détection par nom d’AW Next - utile quand un autre jeu porte le même nom que ce dossier.',
                       { name: ctxGame.name || '', folder: ctxGame.gameDir }
                     ),
-                    String(currentAppidOverride || writableAppid || '')
+                    String(currentAppidOverride || writableAppid || ''),
+                    'text',
+                    { title: t('appid-override', 'Set AppID manually…', 'Définir l’AppID manuellement…'), icon: 'fa-hashtag' }
                   );
                   if (!typed) return;
                   if (!/^[0-9]+$/.test(typed)) {
@@ -6593,7 +6669,9 @@ var app = {
                 async click() {
                   const alt = await promptText(
                     t('steam-appid-to-pull-cover-art-from', 'Steam AppID to pull cover art from:', 'AppID Steam à utiliser pour la jaquette :'),
-                    /^[0-9]+$/.test(catalogAppid) ? catalogAppid : ''
+                    /^[0-9]+$/.test(catalogAppid) ? catalogAppid : '',
+                    'text',
+                    { title: t('use-another-steam-appid', 'Use another Steam AppID…', 'Utiliser un autre AppID Steam…'), icon: 'fa-image' }
                   );
                   if (!alt || !/^[0-9]+$/.test(alt)) return;
                   const alternate = {
@@ -6756,7 +6834,7 @@ var app = {
     // Every game page picture, whatever its source, goes under the one veil app.css defines:
     // darkening it anywhere else as well is how pages came out black (issue #61).
     const paintBackdrop = (url) => $('body').fadeIn().attr('style', `--game-backdrop-image: ${url}`);
-    $('#home').fadeOut(function () {
+    $('#home').fadeOut(180, function () {
       paintBackdrop(`url('../resources/img/ach_background.jpg')`);
       const customBackground = backgroundOverrideFor(game.appid);
       const fetchArt = (url) => (url ? ipcRenderer.invoke('fetch-icon', url, game.steamappid || game.appid) : Promise.resolve(null));
@@ -7111,7 +7189,7 @@ var app = {
         }
       }
 
-      $('#achievement').fadeIn(600, function () {
+      $('#achievement').fadeIn(260, function () {
         // Focus is requested per open (setAchievementFocus), not read from app.args on every render:
         // launch args never change, so the old check re-fired every time and threw on an empty `.offset()`, stranding the clicked tile.
         const focusName = takeAchievementFocus(game.appid);
@@ -7611,8 +7689,14 @@ var app = {
   },
   onConfigButtonClick: async function (self) {
     let appid = self.closest('.game-box').data('appid');
-    $('#game-config').show();
-    $('#game-config .box').fadeIn();
+    // A short CSS entrance, as Settings has, instead of jQuery's 400 ms opacity tween.
+    // A close still fading would hide the panel from its callback, so it is finished first.
+    $('#game-config .box').stop(true, true);
+    const gameConfig = $('#game-config');
+    gameConfig.removeClass('is-opening').show();
+    $('#game-config .box').show();
+    void gameConfig[0].offsetWidth;
+    gameConfig.addClass('is-opening');
     $('#game-config .header').attr('title', appid);
     // The panel covers several tabs now, so it is titled after the game rather than after one of them.
     const named = gameList.find((g) => g.appid == appid);
@@ -7649,7 +7733,9 @@ var app = {
   },
   onGameConfigCancelClick: async function (self) {
     self.css('pointer-events', 'none');
-    $('#game-config .box').fadeOut(() => {
+    // The entrance animation holds the panel's opacity while its class stays, so it goes first.
+    $('#game-config').removeClass('is-opening');
+    $('#game-config .box').fadeOut(140, () => {
       $('#game-config').hide();
       self.css('pointer-events', 'initial');
       if (gameConfigFocusReturn && gameConfigFocusReturn.isConnected) gameConfigFocusReturn.focus({ preventScroll: true });

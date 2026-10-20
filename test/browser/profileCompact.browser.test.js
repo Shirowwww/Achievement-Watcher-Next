@@ -54,7 +54,7 @@ async function measure(width, compact) {
       statsButton: rect('#profile-stats-open').width,
       toggle: rect('#profile-compact-toggle').width,
       rowMiddles: ['#user-info .stats li', '#profile-compact-toggle', '#profile-stats-open'].map(middle),
-      toggleBeforeButton: rect('#profile-compact-toggle').right <= rect('#profile-stats-open').left,
+      buttonBeforeToggle: rect('#profile-stats-open').right <= rect('#profile-compact-toggle').left,
     };
   }, compact);
   await page.close();
@@ -81,12 +81,12 @@ test('a narrow window keeps the two rows but halves the band', async (t) => {
   assert.equal(compact.nameClipped, false, 'the user name is not cut');
 });
 
-test('the fold control stays on the stats row, left of the stats button, while the band has room', async (t) => {
+test('the fold control stays on the stats row, right of the stats button, while the band has room', async (t) => {
   if (!shared || !shared.browser) return t.skip(skipReason(shared ? shared.failures : []));
   for (const width of [800, 1440]) {
     const full = await measure(width, false);
     const spread = Math.max(...full.rowMiddles) - Math.min(...full.rowMiddles);
     assert.ok(spread <= 2, `${width}px: pills, fold control and stats button share a row (${full.rowMiddles.join(', ')})`);
-    assert.equal(full.toggleBeforeButton, true, `${width}px: the fold control comes first`);
+    assert.equal(full.buttonBeforeToggle, true, `${width}px: the stats button comes first`);
   }
 });

@@ -31,10 +31,10 @@ const BUILTIN_COLORS = {
     panel: '#f8f8f9',
     card: '#ffffff',
     settings: '#ffffff',
-    text: '#18181b',
-    muted: '#62626a',
+    text: '#2b2b31',
+    muted: '#686870',
     border: '#dedee2',
-    accent: '#27272a',
+    accent: '#5e5a6d',
   },
   oled: {
     bg: '#000000',

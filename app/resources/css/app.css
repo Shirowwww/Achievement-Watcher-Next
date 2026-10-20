@@ -190,12 +190,14 @@
   --surface: #ffffff;
   --set-surface: #ffffff;
   --border: #dedee2;
-  --text: #18181b;
-  --text-muted: #62626a;
-  /* Graphite: any hue tints every selection, switch and bar across a white window. Its strong
-     variant darkens instead of lightening, since it is mostly used as text. */
-  --accent: #27272a;
-  --accent-soft: rgba(39, 39, 42, 0.08);
+  /* Off black: pure black text and a near-black accent read as harsh on white. */
+  --text: #2b2b31;
+  --text-muted: #686870;
+  /* A soft graphite with a trace of plum: a real hue would tint every selection, switch and bar
+     across a white window. Its strong variant darkens instead of lightening, since it is mostly
+     used as text. */
+  --accent: #5e5a6d;
+  --accent-soft: rgba(94, 90, 109, 0.1);
   --accent-strong: color-mix(in srgb, var(--accent) 82%, var(--text));
   --surface-elevated: #ffffff;
   /* Progress tracks and wells: has to sit clearly below the card it is cut into. */
@@ -804,6 +806,31 @@ body.is-resizing #game-list {
   opacity: 0.55;
 }
 
+/* Settled on another column count: the tiles in view (app.js playLibraryReflow) drop into their
+   new places in a diagonal wave, top-left first. */
+#game-list.is-reflowing ul > li[data-reflow] {
+  animation: aw-tile-reflow 0.34s var(--ease-out) backwards;
+  animation-delay: calc(var(--reflow-step, 0) * 30ms);
+}
+
+@keyframes aw-tile-reflow {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+}
+
+/* A game page rises into place while it fades in (app.js), rather than only appearing. */
+@keyframes aw-view-rise {
+  from {
+    transform: translateY(10px);
+  }
+}
+
+#achievement .wrapper {
+  animation: aw-view-rise 0.36s var(--ease-out) backwards;
+}
+
 /* Too narrow for three groups side by side: the controls drop to their own row under the
    profile rather than being squeezed into it. */
 @media (max-width: 1280px) {
@@ -913,51 +940,23 @@ body.is-resizing #game-list {
   }
 }
 
-/* Average achievement completion - a single clean fill bar that mirrors the "average %" stat
-   shown just above it (simple and self-explanatory, vs. the old 3-tier stacked spread). */
+/* Average achievement completion - a single fill bar that mirrors the "average %" stat shown just
+   above it, drawn like the bars of the stats panel: a flat track and an accent fill. */
 #user-info .info .completion-dist {
-  position: relative;
   width: 320px;
   max-width: 100%;
-  height: 12px;
-  margin: 11px 0 0;
-  padding: 2px;
-  box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
+  height: 8px;
+  margin: 12px 0 0;
   border-radius: var(--radius-pill);
   overflow: hidden;
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, calc(0.38 * var(--shadow-scale))), 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-
-#user-info .info .completion-dist::after {
-  content: none;
+  background: color-mix(in srgb, var(--border) 26%, transparent);
 }
 
 #user-info .info .completion-dist .fill {
-  position: relative;
   height: 100%;
   border-radius: var(--radius-pill);
-  background: linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--accent) 78%, black 8%) 0%,
-    var(--accent) 62%,
-    color-mix(in srgb, var(--accent) 82%, white 18%) 100%
-  );
-  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 26%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: var(--accent);
   transition: width 0.45s var(--ease-out);
-}
-
-#user-info .info .completion-dist .fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 70%);
-}
-
-#user-info .info .completion-dist .fill[style*='width: 0%']::after {
-  display: none;
 }
 
 #sort-box {
@@ -6245,7 +6244,7 @@ body.is-resizing #game-list {
 .aw-prompt-title {
   margin: 1px 0 4px;
   font-family: var(--font-strong);
-  font-size: var(--fs-base);
+  font-size: var(--fs-lg);
 }
 .aw-prompt-description {
   color: var(--text-muted);
@@ -6274,6 +6273,16 @@ body.is-resizing #game-list {
 }
 @keyframes aw-prompt-fade { from { opacity: 0; } }
 @keyframes aw-prompt-in { from { opacity: 0; transform: translateY(8px) scale(0.98); } }
+@keyframes aw-prompt-fade-out { to { opacity: 0; } }
+@keyframes aw-prompt-out { to { opacity: 0; transform: translateY(4px) scale(0.985); } }
+/* Answered: the card is already done with, so it lets clicks through while it fades. */
+.aw-prompt-overlay.is-closing {
+  pointer-events: none;
+  animation: aw-prompt-fade-out 0.14s ease-in both;
+}
+.aw-prompt-overlay.is-closing .aw-prompt {
+  animation: aw-prompt-out 0.14s ease-in both;
+}
 @media (max-width: 1050px) {
   #settings .emulator-settings .emulator-list li .right {
     width: 204px;
@@ -12065,14 +12074,15 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 24px;
-  padding: 20px 22px;
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-  border-radius: var(--radius-md);
-  /* A faint glow behind the dial: the one number the panel is about reads first. */
+  gap: 32px;
+  padding: 26px 30px;
+  border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  border-radius: 18px;
+  /* The theme's halo from the dial's corner (none on Light): the one number the panel is about. */
   background:
-    radial-gradient(circle at 70px 50%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 220px),
-    color-mix(in srgb, var(--surface-sunken) 34%, transparent);
+    radial-gradient(90% 140% at 0% 0%, var(--bg-halo), transparent 60%),
+    color-mix(in srgb, var(--surface-elevated) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 14px 32px rgba(0, 0, 0, calc(0.24 * var(--shadow-scale)));
 }
 
 /* A conic gradient rather than an SVG arc: one custom property drives the whole dial, so updating it
@@ -12084,20 +12094,37 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 124px;
-  height: 124px;
+  width: 150px;
+  height: 150px;
+  filter: drop-shadow(0 0 12px var(--bg-halo));
+}
+
+/* The dial fills from empty each time the panel opens, and follows the scope toggle afterwards.
+   Registered so the number interpolates; the fill mode lets the transition take over once done. */
+@property --profile-ring-fill {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes profile-ring-fill {
+  from {
+    --profile-ring-fill: 0;
+  }
 }
 
 .profile-stats-ring::before {
+  --profile-ring-fill: var(--value);
   content: '';
   position: absolute;
   inset: 0;
   border-radius: 50%;
   background:
-    conic-gradient(var(--accent) calc(var(--value) * 1%), color-mix(in srgb, var(--border) 60%, transparent) 0);
-  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 13px), #000 calc(100% - 12px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 13px), #000 calc(100% - 12px));
-  transition: background 0.35s ease;
+    conic-gradient(var(--accent) calc(var(--profile-ring-fill) * 1%), color-mix(in srgb, var(--border) 45%, transparent) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
+  transition: --profile-ring-fill 0.45s var(--ease-out);
+  animation: profile-ring-fill 0.8s var(--ease-out) 0.08s backwards;
 }
 
 .profile-stats-ring-value {
@@ -12109,7 +12136,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 .profile-stats-ring-value b {
   color: var(--text);
-  font: var(--fs-4xl) var(--font-strong);
+  font: 48px var(--font-strong);
+  letter-spacing: -0.03em;
 }
 
 .profile-stats-hero-copy {
@@ -12120,7 +12148,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 .profile-stats-hero-copy > b {
-  font: var(--fs-lg) var(--font-strong);
+  font: var(--fs-2xl) var(--font-strong);
 }
 
 .profile-stats-hero-copy > span {
@@ -12130,7 +12158,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 .profile-stats-split {
   display: flex;
-  height: 8px;
+  height: 10px;
   border-radius: var(--radius-pill);
   overflow: hidden;
   background: color-mix(in srgb, var(--border) 26%, transparent);
@@ -12181,76 +12209,98 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   font-family: var(--font-strong);
 }
 
-/* auto-fit rather than a fixed column count with media queries: the main window has minWidth 900,
-   so a viewport query narrow enough to matter here can never fire, and the panel is what actually
-   changes width. The track floor is what decides: three columns in the panel at its full 760px, two
-   if it is ever narrower, without a breakpoint to keep in sync. */
+/* Tiles of different sizes say what matters: the unlock count leads, two rows tall, and the tracked
+   playtime runs the full width under the rest. Four columns hold down to the 900px window minimum. */
 .profile-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
-/* Icon on the left spanning both lines, value over caption on the right. */
+/* The value first, then a small icon beside its caption; every caption sits on the tile's bottom edge. */
 .profile-stats-tile {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  column-gap: 12px;
-  row-gap: 2px;
-  align-items: center;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.profile-stats-tile:hover {
-  border-color: color-mix(in srgb, var(--border) 36%, transparent);
-  background: color-mix(in srgb, var(--surface-sunken) 42%, transparent);
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: end;
+  column-gap: 7px;
+  row-gap: 4px;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--border) 16%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-elevated) 45%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .profile-stats-tile > i {
-  grid-row: 1 / span 2;
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-base);
-  color: var(--text-muted);
-  background: color-mix(in srgb, var(--border) 16%, transparent);
-}
-
-.profile-stats-tile.is-accent > i {
+  grid-row: 2;
+  grid-column: 1;
+  font-size: var(--fs-xs);
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .profile-stats-tile b {
-  font: var(--fs-2xl) var(--font-strong);
-  color: var(--text);
+  grid-row: 1;
+  grid-column: 1 / -1;
   min-width: 0;
+  color: var(--text);
+  font: 28px var(--font-strong);
+  letter-spacing: -0.02em;
 }
 
 .profile-stats-tile span {
+  grid-row: 2;
   grid-column: 2;
   color: var(--text-muted);
-  font: var(--fs-xs) var(--font-body);
+  font: var(--fs-sm) var(--font-body);
 }
 
-/* A duration reads as "12 days, 4 hours" and cannot be set at the counter type size without wrapping
-   onto a second line, which would push its own caption out of line with the tiles beside it. The
-   tile also aligns its caption to the bottom of the row so the two never disagree. */
-.profile-stats-tile {
-  align-content: start;
+.profile-stats-tile.is-lead {
+  grid-column: span 2;
+  grid-row: span 2;
+  padding: 22px 24px;
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  background:
+    linear-gradient(150deg, var(--accent-soft), transparent),
+    linear-gradient(150deg, var(--bg-halo), transparent 70%),
+    color-mix(in srgb, var(--surface-elevated) 45%, transparent);
 }
 
-#profile-stats-playtime-value,
+.profile-stats-tile.is-lead b {
+  font-size: 64px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.profile-stats-tile.is-lead > i,
+.profile-stats-tile.is-lead span {
+  font-size: var(--fs-md);
+}
+
+.profile-stats-tile.is-lead span {
+  color: var(--text);
+}
+
+.profile-stats-tile.is-wide {
+  grid-column: 1 / -1;
+  border-color: color-mix(in srgb, var(--trophy-gold) 22%, transparent);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--trophy-gold) 14%, transparent), transparent 65%),
+    color-mix(in srgb, var(--surface-elevated) 45%, transparent);
+}
+
+.profile-stats-tile.is-wide > i {
+  color: var(--trophy-gold);
+}
+
+/* A duration reads as "12 days, 4 hours": at the counter size it would wrap in a quarter-width tile. */
 #profile-stats-playtime-average-value {
-  font-size: var(--fs-base);
-  line-height: 1.35;
-  padding-top: 4px;
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+}
+
+#profile-stats-playtime-value {
+  font-size: var(--fs-2xl);
+  line-height: 1.3;
 }
 
 .profile-stats-platforms h3,
@@ -12293,8 +12343,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   border: 0;
   background: none;
   color: var(--text);
-  cursor: pointer;
   border-radius: var(--radius-sm);
+  /* Only the counts answer the pointer: the gaps between them neither lift nor click. */
+  pointer-events: none;
 }
 
 #user-info .info .profile-trophies[hidden] {
@@ -12306,6 +12357,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   align-items: center;
   gap: 5px;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  pointer-events: auto;
   transition: transform 0.15s ease;
 }
 
@@ -12315,7 +12368,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   text-shadow: rgba(0, 0, 0, calc(0.5 * var(--shadow-scale))) 2px 2px 3px;
 }
 
-#user-info .info .profile-trophies:hover > span {
+#user-info .info .profile-trophies > span:hover {
   transform: translateY(-1px);
 }
 
@@ -12422,41 +12475,49 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   gap: 10px;
 }
 
+/* Each grade as a medal on a shelf: its trophy above the name, lit from the top in its own colour. */
 .profile-stats-trophy {
   position: relative;
   display: grid;
-  gap: 3px;
+  justify-items: center;
+  gap: 4px;
   align-content: start;
-  padding: 12px 14px;
+  padding: 18px 12px 14px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+  text-align: center;
+  border: 1px solid color-mix(in srgb, var(--trophy) 24%, transparent);
+  border-radius: 16px;
+  background:
+    radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--trophy) 20%, transparent), transparent 72%),
+    color-mix(in srgb, var(--surface-elevated) 35%, transparent);
 }
 
 .profile-stats-trophy::before {
   content: '';
   position: absolute;
-  inset: 0 0 auto 0;
+  inset: 0 24% auto;
   height: 2px;
-  background: linear-gradient(90deg, var(--trophy), transparent);
+  border-radius: 0 0 2px 2px;
+  background: var(--trophy);
 }
 
 .profile-stats-trophy > span {
   display: flex;
+  flex-direction: column-reverse;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   color: var(--text-muted);
   font: var(--fs-xs) var(--font-body);
 }
 
 .profile-stats-trophy > span i {
   color: var(--trophy);
-  font-size: var(--fs-base);
+  font-size: 28px;
+  filter: drop-shadow(0 2px 8px color-mix(in srgb, var(--trophy) 45%, transparent));
 }
 
 .profile-stats-trophy b {
-  font: var(--fs-2xl) var(--font-strong);
+  font: 30px var(--font-strong);
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
@@ -12480,7 +12541,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 .profile-stats-trophy-bar {
   display: flex;
   gap: 3px;
-  height: 8px;
+  height: 10px;
   border-radius: var(--radius-pill);
   overflow: hidden;
   background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
@@ -12527,10 +12588,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   display: grid;
   gap: 10px;
   align-content: start;
-  padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--border) 18%, transparent);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 28%, transparent);
+  padding: 14px 16px;
+  border: 1px solid color-mix(in srgb, var(--border) 14%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-elevated) 40%, transparent);
 }
 
 .profile-stats-trophy-card h4 {
@@ -12713,10 +12774,14 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   gap: 8px;
 }
 
+/* Source badges are drawn for covers, so some are white: a dark chip keeps them on a white table. */
 .profile-stats-table .platform-cell img {
   width: 16px;
   height: 16px;
+  padding: 3px;
+  border-radius: 5px;
   object-fit: contain;
+  background: #26262b;
 }
 
 .profile-stats-table .completion-cell {
@@ -12934,4 +12999,213 @@ html:not([data-platform='linux']) [data-linux-only] {
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: var(--dur-base);
+}
+
+/* Game settings panel. The top edge stays where it is while the tabs change height, so a switch
+   grows or shrinks the panel downward instead of moving both edges at once. */
+#game-config .box {
+  top: max(24px, calc(50% - 320px));
+  transform: translateX(-50%);
+}
+
+@keyframes game-config-panel-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.985);
+  }
+}
+
+#game-config.is-opening > .overlay {
+  animation: settings-modal-scrim-in 0.16s ease-out both;
+}
+
+#game-config.is-opening > .box {
+  animation: game-config-panel-in 0.2s var(--ease-out) both;
+}
+
+#game-config .box .container {
+  gap: 0;
+  padding: 4px 20px 18px;
+}
+
+#game-config .game-config-tabs {
+  gap: 2px;
+  padding: 0 2px;
+  border-bottom: 1px solid var(--set-hairline-soft);
+}
+
+#game-config .game-config-tabs button {
+  position: relative;
+  padding: 10px 12px 11px;
+  border: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+#game-config .game-config-tabs button:hover {
+  color: var(--text);
+  background: var(--set-row-hover);
+}
+
+#game-config .game-config-tabs button.active {
+  color: var(--text);
+  background: transparent;
+}
+
+#game-config .game-config-tabs button i {
+  color: inherit;
+  opacity: 0.75;
+}
+
+#game-config .game-config-tabs button.active i {
+  color: var(--accent);
+  opacity: 1;
+}
+
+/* The underline grows out from the middle of the tab that was picked. */
+#game-config .game-config-tabs button::after {
+  content: '';
+  position: absolute;
+  inset: auto 10px -1px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+  transform: scaleX(0);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+#game-config .game-config-tabs button.active::after {
+  transform: scaleX(1);
+}
+
+#game-config .game-config-tabs button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  outline-offset: -2px;
+}
+
+/* The tab's content sits on the panel itself rather than in a second box inside it. */
+#game-config .box .content {
+  padding: 16px 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+#game-config .box .content.active {
+  animation: settings-view-reveal 0.16s var(--ease-out) both;
+}
+
+#game-config .content[data-view='exe-config'].active {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#game-config .content .title {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* The executable reads as a field, the same height and frame as the arguments box under it. */
+#game-config #dirlist {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+#game-config #dirlist > li {
+  min-height: var(--control-h);
+  padding: 0 4px 0 12px;
+  border: 1px solid var(--field-border);
+  border-radius: var(--radius-sm);
+  background: var(--field-bg);
+}
+
+#game-config #dirlist > li:hover {
+  background: var(--field-bg);
+}
+
+#game-config #dirlist > li .path {
+  justify-content: flex-start;
+  font-size: var(--fs-sm);
+}
+
+#game-config #dirlist > li .controls ul > li {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+
+#game-config #dirlist > li .controls ul > li:hover {
+  color: var(--text);
+  background: var(--set-row-hover);
+}
+
+#game-config #dirlist > li .controls ul > li.unlink:hover {
+  color: var(--danger);
+}
+
+#game-config .launch-args-row {
+  padding: 0;
+}
+
+/* Stats panel. The bar under the totals splits games, so it carries its own count and sits apart
+   from the achievement line above it. */
+.profile-stats-split-caption {
+  margin-top: 8px;
+}
+
+.profile-stats-split-caption b {
+  color: var(--text);
+  font-family: var(--font-strong);
+}
+
+@keyframes profile-bar-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+.profile-stats-split,
+.profile-stats-trophy-bar {
+  animation: profile-bar-reveal 0.7s var(--ease-out) 0.15s backwards;
+}
+
+@keyframes profile-stats-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* The figures arrive one after another, a few hundredths apart, so the eye reads them in order. */
+.profile-stats-grid > *,
+.profile-stats-trophy-tiers > * {
+  animation: profile-stats-rise 0.32s var(--ease-out) backwards;
+  animation-delay: calc(60ms + (sibling-index() - 1) * 35ms);
+}
+
+.profile-stats-trophy-tiers > * {
+  animation-delay: calc(180ms + (sibling-index() - 1) * 35ms);
+}
+
+/* Small dialogs (manual game, stats) came in with no transition at all. */
+.simple-modal > .overlay {
+  animation: aw-prompt-fade var(--dur-fast) var(--ease-out);
+}
+
+.simple-modal > .box {
+  animation: aw-prompt-in var(--dur-base) var(--ease-out);
+}
+
+/* The full unlock list slides in over the summary it replaces, like a tab of its own. */
+#profile-stats-all:not([hidden]) {
+  animation: settings-view-reveal 0.16s var(--ease-out) both;
 }
