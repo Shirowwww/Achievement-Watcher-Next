@@ -117,9 +117,19 @@ ipcMain.handle('export-preset', async (event, request) => {
       nothing about the machine or the Windows account is stamped into a package the user shares.
     */
     let meta = {};
+    let previous = {};
     try {
-      const previous = JSON.parse(fs.readFileSync(path.join(presetDir, presetPackage.PRESET_PACKAGE_FILE), 'utf8'));
-      meta = { author: previous.author, description: previous.description, version: previous.version, tags: previous.tags };
+      previous = JSON.parse(fs.readFileSync(path.join(presetDir, presetPackage.PRESET_PACKAGE_FILE), 'utf8')) || {};
+      // Origin and an imported SAN theme's per-state sounds survive a re-share, like the credit.
+      meta = {
+        author: previous.author,
+        description: previous.description,
+        version: previous.version,
+        tags: previous.tags,
+        origin: previous.origin,
+        sanSounds: previous.sanSounds,
+        sanThresholds: previous.sanThresholds,
+      };
     } catch {}
     if (!meta.author && options && typeof options.author === 'string') meta.author = options.author;
 
@@ -129,9 +139,17 @@ ipcMain.handle('export-preset', async (event, request) => {
       user imported it: a bundled sound is already on every install, so naming it in the manifest is
       enough and avoids redistributing it.
     */
-    const soundName = String((options && options.sound) || (getConfig()?.overlay?.notificationSound) || '');
+    const ownSound = options ? options.sound : previous.sound;
+    const soundName = String(ownSound || (getConfig()?.overlay?.notificationSound) || '');
     const userSound = soundName ? path.join(userSoundsDir(), soundName) : '';
     const sound = soundName ? { name: soundName, file: fs.existsSync(userSound) ? userSound : '' } : null;
+    const extraSounds = [];
+    for (const entry of Object.values(previous.sanSounds || {})) {
+      for (const name of (entry && Array.isArray(entry.files) ? entry.files : []).filter((file) => typeof file === 'string')) {
+        const file = path.join(userSoundsDir(), path.basename(name));
+        if (fs.existsSync(file)) extraSounds.push({ name: path.basename(name), file });
+      }
+    }
 
     const out = presetPackage.exportPreset({
       presetDir,
@@ -140,6 +158,7 @@ ipcMain.handle('export-preset', async (event, request) => {
       options,
       meta,
       sound,
+      extraSounds,
       appVersion: app.getVersion(),
     });
     debug.log(`[preset-package] export ${safe}: ` + (out.ok ? out.file : out.error));
@@ -194,10 +213,30 @@ ipcMain.handle('import-preset', async (event, opts = {}) => {
 });
 
 /*
-  Importing a Steam Achievement Notifier theme: a one-way conversion into an ordinary generated
-  preset (format/mapping/safety rules in util/sanImport.js). This side only drives the dialog and
-  names the folders; nothing about SAN is consulted again once the preset exists.
+  Importing Steam Achievement Notifier themes (format and safety rules in util/sanImport.js): the
+  theme is kept whole and drawn by util/sanEngine as SAN draws it. This side drives the dialogs and
+  names the folders; SAN itself is never needed once the preset exists.
 */
+function bundledPresetNames() {
+  return bundledPresetRoots().flatMap((root) => {
+    try {
+      return fs.readdirSync(root).filter((name) => fs.existsSync(path.join(root, name, 'index.html')));
+    } catch {
+      return [];
+    }
+  });
+}
+
+// The whole report goes to the log: a user asking later why a theme differs may have clicked past it.
+function logSanImport(source, out) {
+  const report = out.report || {};
+  const assets = (report.assets || []).map((entry) => `${entry.name || '?'}=${entry.code}`).join(', ') || 'none';
+  debug.log(
+    `[san-import] ${source} -> ${out.name} (SAN ${report.sanVersion || '?'}, cards ${(report.layouts || []).join('/') || '?'}, ` +
+      `states ${(report.types || []).join('/')}); kept ${report.kept || 0}; unknown ${(report.unknown || []).join(', ') || 'none'}; assets ${assets}`
+  );
+}
+
 ipcMain.handle('import-san-theme', async (event, opts = {}) => {
   try {
     let file = typeof opts.file === 'string' ? opts.file : '';
@@ -216,35 +255,51 @@ ipcMain.handle('import-san-theme', async (event, opts = {}) => {
       file,
       presetsDir: usersPresetsDir(),
       soundsDir: userSoundsDir(),
-      imagesDir: userPresetImagesDir(),
       appVersion: app.getVersion(),
       duplicate: ['rename', 'replace'].includes(opts.duplicate) ? opts.duplicate : 'fail',
       reservedNames: [PREVIEW_PRESET_NAME],
-      takenNames: bundledPresetRoots().flatMap((root) => {
-        try {
-          return fs.readdirSync(root).filter((name) => fs.existsSync(path.join(root, name, 'index.html')));
-        } catch {
-          return [];
-        }
-      }),
+      takenNames: bundledPresetNames(),
     });
-    if (out.ok) invalidateNotificationPresetFolders();
-    /*
-      The whole report, not just the outcome. A user asking why their theme looks different has one
-      dialog they may have clicked past; this is the only place the detail survives.
-    */
     if (out.ok) {
-      const list = (entries, label) => (entries || []).map((entry) => `${entry[label] || '?'}=${entry.code}`).join(', ') || 'none';
-      debug.log(
-        `[san-import] ${path.basename(file)} -> ${out.name} (SAN ${out.report.sanVersion || '?'}, preset ${out.report.sanPreset || '?'}); ` +
-          `mapped ${(out.report.mapped || []).length}; skipped ${list(out.report.skipped, 'key')}; assets ${list(out.report.assets, 'name')}`
-      );
+      invalidateNotificationPresetFolders();
+      logSanImport(path.basename(file), out);
     } else {
       debug.log('[san-import] ' + path.basename(file) + ': ' + out.error);
     }
     return { ...out, file };
   } catch (err) {
     debug.log('[san-import] failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+/*
+  SAN's own settings on this computer: the four themes in use become one preset, every other saved
+  theme its own. A re-import refreshes what an earlier one made and leaves every other preset alone.
+*/
+ipcMain.handle('import-san-setup', async () => {
+  try {
+    const configFile = sanImport.findSanConfig({ home: app.getPath('home') });
+    if (!configFile) return { ok: false, error: 'san-not-found' };
+    const out = sanImport.installSanSetup({
+      configFile,
+      presetsDir: usersPresetsDir(),
+      soundsDir: userSoundsDir(),
+      appVersion: app.getVersion(),
+      reservedNames: [PREVIEW_PRESET_NAME],
+      takenNames: bundledPresetNames(),
+    });
+    if (out.installed && out.installed.length) invalidateNotificationPresetFolders();
+    for (const one of out.installed || []) logSanImport('SAN settings', one);
+    for (const miss of out.failed || []) debug.log(`[san-import] SAN settings: "${miss.name}" ${miss.error}`);
+    return {
+      ok: out.ok,
+      error: out.error,
+      installed: (out.installed || []).map((one) => ({ name: one.name, report: one.report })),
+      failed: out.failed || [],
+    };
+  } catch (err) {
+    debug.log('[san-import] settings import failed: ' + (err.message || err));
     return { ok: false, error: String(err.message || err) };
   }
 });

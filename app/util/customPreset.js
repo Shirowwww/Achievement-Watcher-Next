@@ -131,6 +131,7 @@ const PRESET_ENGINE = [
   '    var s = Math.max(0.01, parseFloat(scale || 1) || 1);',
   "    root.style.setProperty('--scale', String(s));",
   '    applyState(data);',
+  "    root.classList.toggle('is-hidden', data.hidden === true);",
   '    applyArtwork(data);',
   '    applyMeta(data);',
   '    applyProgress(data);',
@@ -177,6 +178,10 @@ const PRESET_MARKUP = [
   '<p class="title"></p><span class="detail"></span>',
   '<div class="progress_line" hidden><span class="progress_track"><span class="progress_meter"></span></span><span class="progress_label"></span></div></div></div>',
 ].join('');
+
+// A plain padlock, used as a mask so it takes the colour of the text it sits in.
+const HIDDEN_LOCK_MASK =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3h1.5A1.5 1.5 0 0 1 20 11.5v9A1.5 1.5 0 0 1 18.5 22h-13A1.5 1.5 0 0 1 4 20.5v-9A1.5 1.5 0 0 1 5.5 10H7zm2 0h6V7a3 3 0 0 0-6 0v3z'/%3E%3C/svg%3E";
 
 /*
   Slack around the card inside its host window, sized from the meta box below - anything painted
@@ -560,6 +565,10 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     '.ach .game[hidden] { display: none; }',
     `.ach .rarity { display: ${values.showRarity ? 'block' : 'none'}; flex: 0 0 auto; padding: 1px 6px; border-radius: 999px; background: color-mix(in srgb, var(--accent) 22%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, transparent); color: var(--accent); font-weight: 700; }`,
     '.ach .rarity[hidden] { display: none; }',
+    // The padlock a hidden achievement's title wears, drawn in the title's own colour.
+    values.hiddenLock
+      ? `.ach.is-hidden .title::before { content: ""; display: inline-block; width: 0.8em; height: 0.8em; margin-right: 0.3em; vertical-align: -0.06em; background: currentColor; mask: url("${HIDDEN_LOCK_MASK}") center / contain no-repeat; }`
+      : '',
     '@keyframes aw_in { from { transform: translate(calc(-50% + var(--in-dx)), calc(-50% + var(--in-dy))) scale(calc(var(--scale, 1) * var(--in-scale))); opacity: 0; } to { transform: translate(-50%, -50%) scale(var(--scale, 1)); opacity: var(--opacity); } }',
     '@keyframes aw_hold { from, to { transform: translate(-50%, -50%) scale(var(--scale, 1)); opacity: var(--opacity); } }',
     '@keyframes aw_out { from { transform: translate(-50%, -50%) scale(var(--scale, 1)); opacity: var(--opacity); } to { transform: translate(calc(-50% + var(--out-dx)), calc(-50% + var(--out-dy))) scale(calc(var(--scale, 1) * var(--out-scale))); opacity: 0; } }',

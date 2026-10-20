@@ -30,6 +30,12 @@ renamed in 3.9.0 and the history is kept under one file.
   for Persona 5 Royal in Japanese. Games without a translated title keep their English one, and a
   name you set yourself always wins. A game from another store shows Steam's title only when AW
   knows its Steam release.
+- **Adjustable rarity thresholds.** Settings > General > Rarity thresholds stays on Default (5%,
+  10% and 15% for rare tiers, 20% and 50% for trophy mode) until you pick Custom, which unfolds the
+  limits of the mode in use. In rare tiers the last one also decides which unlocks get the rare
+  notification and its sound.
+- **Popup opacity.** Settings > Notification > Opacity makes the in-game popup see-through, from
+  30% to fully opaque.
 - **Unlocked frame rate for video clips.** Settings > Notification > Video clip now offers
   **Unlocked (screen rate)** next to 30 and 60 FPS. The clip is recorded at the refresh rate of the
   monitor showing the game, 120, 144 or 240 Hz included, and follows it when it changes.
@@ -44,6 +50,15 @@ renamed in 3.9.0 and the history is kept under one file.
   Folders: its 110 achievements show with their icons, in your language when the game has it, and
   each unlock pops a notification. The game keeps no dates, so an achievement is dated the moment
   AW sees it.
+- **Steam Achievement Notifier themes look as they did in SAN.** An imported theme is no longer
+  converted into a designer preset: AW draws it with SAN's own eleven card layouts, shared by SAN's
+  author, with every setting, picture, font and sound the theme carries, including one sound per state. It
+  follows your rarity settings like any other preset and exports as an `.awpreset` with its sounds.
+- **Import from SAN on this PC** (Settings > Notification presets). Reads SAN's own settings: the
+  four themes in use become one preset that switches between them as SAN does, and every other
+  saved theme becomes a preset of its own. Running it again refreshes them instead of adding copies.
+- **Padlock on hidden achievements.** Designed presets can show a padlock before the title of a
+  hidden achievement (Rare & completion > Advanced, off by default).
 
 ### Improved
 
@@ -113,6 +128,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Two achievements unlocked a moment apart both pop.** A save written less than 600 ms after any
+  other watched file, from any game, was skipped until it changed again, so the second of two quick
+  unlocks could arrive late or not at all. Each save is now read once per change, one read at a
+  time, and changes made during a read are read right after it.
+- **Trophy mode grades every achievement.** It only ever saw unlock rates up to 15%, so with its
+  default bounds nothing was silver and everything above 15% was bronze.
+- **A popup that cannot draw no longer holds the next ones.** One that fails to load, loses its
+  renderer or stops responding is closed at once instead of after 20 seconds.
 - **Popups touch the edge they are anchored to.** A popup set to a corner or an edge stopped short
   of it, by up to 70 pixels for Steam Original and more for Xbox Series, because most presets leave
   room for a shadow or a glow around their card. AW now measures that room once for every preset,

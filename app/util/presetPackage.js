@@ -122,6 +122,34 @@ function cleanOrigin(value) {
   return origin;
 }
 
+/*
+  What each state of an imported Steam Achievement Notifier theme plays (util/sanImport.js): per
+  state, one file or a folder's worth to pick from. Optional; bare sound names only, like `sound`.
+*/
+const SAN_STATES = ['main', 'semi', 'rare', 'plat'];
+function cleanSanSounds(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const out = {};
+  for (const state of SAN_STATES) {
+    const entry = value[state];
+    if (!entry || typeof entry !== 'object') continue;
+    const files = (Array.isArray(entry.files) ? entry.files : [])
+      .map((name) => cleanText(name, 120))
+      .filter((name) => name && safePackagePath(name) === name && !name.includes('/') && SOUND_EXT_RE.test(name))
+      .slice(0, 24);
+    out[state] = { mode: entry.mode === 'folder' ? 'folder' : 'file', files };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function cleanSanThresholds(value) {
+  if (!value || typeof value !== 'object') return undefined;
+  const rarity = Number(value.rarity);
+  const semirarity = Number(value.semirarity);
+  if (!Number.isFinite(rarity) || !Number.isFinite(semirarity)) return undefined;
+  return { rarity: Math.min(100, Math.max(0, rarity)), semirarity: Math.min(100, Math.max(0, semirarity)) };
+}
+
 function cleanTags(value) {
   if (!Array.isArray(value)) return [];
   const out = [];
@@ -182,7 +210,7 @@ function validateManifest(raw, { appVersion = '' } = {}) {
 
   return {
     ok: true,
-    manifest: {
+    manifest: withSanFields(raw, {
       format: PRESET_PACKAGE_FORMAT,
       formatVersion,
       name,
@@ -199,8 +227,17 @@ function validateManifest(raw, { appVersion = '' } = {}) {
       options: manifestOptions(raw.options, sound),
       sound,
       origin: cleanOrigin(raw.origin),
-    },
+    }),
   };
+}
+
+// The SAN fields, added only when a manifest carries them so every other manifest keeps its shape.
+function withSanFields(source, manifest) {
+  const sanSounds = cleanSanSounds(source && source.sanSounds);
+  const sanThresholds = cleanSanThresholds(source && source.sanThresholds);
+  if (sanSounds) manifest.sanSounds = sanSounds;
+  if (sanThresholds) manifest.sanThresholds = sanThresholds;
+  return manifest;
 }
 
 // Every shippable file in a preset folder, as relative forward-slash paths. Throws on an asset the
@@ -241,7 +278,7 @@ function collectPresetFiles(presetDir) {
   travels with the preset; naming a sound without a file records what it was designed with, which is
   what a bundled sound needs (the recipient already has it).
 */
-function exportPreset({ presetDir, name, destination, options = null, meta = {}, sound = null, appVersion = '' }) {
+function exportPreset({ presetDir, name, destination, options = null, meta = {}, sound = null, extraSounds = [], appVersion = '' }) {
   const presetName = sanitizePresetName(name);
   if (!presetName) return fail('invalid-name');
   if (!presetDir || !fs.existsSync(path.join(presetDir, PRESET_ENTRY))) return fail('preset-not-found');
@@ -258,7 +295,7 @@ function exportPreset({ presetDir, name, destination, options = null, meta = {},
     return fail('invalid-sound');
   }
 
-  const manifest = {
+  const manifest = withSanFields(meta, {
     format: PRESET_PACKAGE_FORMAT,
     formatVersion: PRESET_PACKAGE_FORMAT_VERSION,
     name: presetName,
@@ -276,7 +313,7 @@ function exportPreset({ presetDir, name, destination, options = null, meta = {},
     options: options ? customPresetNumbers(options) : null,
     sound: soundName,
     origin: cleanOrigin(meta.origin),
-  };
+  });
 
   const check = validateManifest(manifest, { appVersion });
   if (!check.ok) return check;
@@ -291,6 +328,16 @@ function exportPreset({ presetDir, name, destination, options = null, meta = {},
       const size = fs.statSync(sound.file).size;
       if (size > LIMITS.fileBytes) return fail('asset-too-large');
       zip.addFile(`${SOUNDS_DIR}/${soundName}`, fs.readFileSync(sound.file));
+    }
+    // The other sounds a preset plays (an imported SAN theme's per-state files), each once.
+    const packed = new Set(soundName ? [soundName.toLowerCase()] : []);
+    for (const extra of Array.isArray(extraSounds) ? extraSounds : []) {
+      const extraName = extra && extra.name ? cleanText(extra.name, 120) : '';
+      if (!extraName || !extra.file || packed.has(extraName.toLowerCase())) continue;
+      if (extraName.includes('/') || extraName.includes('\\') || !SOUND_EXT_RE.test(extraName)) return fail('invalid-sound');
+      if (fs.statSync(extra.file).size > LIMITS.fileBytes) return fail('asset-too-large');
+      zip.addFile(`${SOUNDS_DIR}/${extraName}`, fs.readFileSync(extra.file));
+      packed.add(extraName.toLowerCase());
     }
     fs.mkdirSync(path.dirname(destination), { recursive: true });
     zip.writeZip(destination);
@@ -495,6 +542,10 @@ function installPackage({ file, presetsDir, soundsDir, appVersion = '', duplicat
 
     // The marker that makes this preset manageable, and what a re-export reads its metadata from.
     const stamped = { ...manifest, name, sound: installedSound(manifest.sound) };
+    if (manifest.sanSounds) {
+      stamped.sanSounds = {};
+      for (const [state, entry] of Object.entries(manifest.sanSounds)) stamped.sanSounds[state] = { ...entry, files: entry.files.map(installedSound) };
+    }
     fs.writeFileSync(path.join(stagedPreset, PRESET_PACKAGE_FILE), JSON.stringify(stamped, null, 2), 'utf8');
 
     if (manifest.options) {

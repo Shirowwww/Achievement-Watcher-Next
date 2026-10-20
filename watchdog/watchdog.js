@@ -58,6 +58,7 @@ const settings = require('./settings.js');
 const monitor = require('./monitor.js');
 const parseWithRetry = require('./util/parseWithRetry.js');
 const waitForFileStable = require('./util/waitForFileStable.js');
+const { createChangeCoalescer } = require('./util/changeCoalescer.js');
 const { catchUpFiles, unlockedSince } = require('./util/rootCatchUp.js');
 const { fileStamp, sameStamp } = require('./util/fileStamp.js');
 const uplayR2 = require('./util/uplayR2.js');
@@ -618,6 +619,16 @@ function reportProgressToApp(game, name, current, max) {
   }
 }
 
+/*
+  The unlock rates of a game, fetched once per session. Started when the game launches, so the first
+  unlock of a session does not wait on the network before it can pop; an unlock arriving first just
+  joins the same request.
+*/
+function loadRarityMap(game, appID) {
+  if (!game.__rarityLoad) game.__rarityLoad = rarity.getRarityMap(appID, { source: game.source }).catch(() => new Map());
+  return game.__rarityLoad;
+}
+
 // Asks the app to resolve this game's square logo now that it's running. The monitor never fetches
 // artwork itself; doing this at launch gets the answer on disk before a toast needs it.
 function requestArtworkPrefetch(game) {
@@ -858,7 +869,6 @@ var app = {
   cache: [],
   options: {},
   watcher: [],
-  tick: 0,
   toastID: toastIdentity.DEFAULT_TOAST_AUMID,
   starting: false,
   restartPending: false,
@@ -1094,11 +1104,12 @@ var app = {
       }
     }
 
-    const onChange = async function (evt, name, catchUp = false) {
+    // `seenAt` is when the change was reported, which a read at the end of a burst comes after.
+    const onChange = async function (evt, name, catchUp = false, seenAt = Date.now()) {
       try {
         if (evt !== 'update') return;
 
-        const currentTime = Date.now();
+        const currentTime = seenAt;
         const fileLastModified = fs.statSync(name).mtimeMs || 0;
         if (catchUp ? fileLastModified < catchUpSince : currentTime - fileLastModified > 1000) return;
 
@@ -1120,11 +1131,6 @@ var app = {
         }
 
         debug.log('achievement file change detected');
-
-        if (!catchUp) {
-          if (moment().diff(moment(self.tick)) <= self.options.notification_advanced.tick) throw 'Spamming protection is enabled > SKIPPING';
-          self.tick = moment().valueOf();
-        }
 
         // A file written straight into the root (a single-game root) has no appid folder to be new.
         const inRootItself = path.relative(dir, filePath.dir) === '';
@@ -1259,9 +1265,7 @@ var app = {
 
             // Global unlock % per achievement, used to flag a toast as "rare" (15% of players or fewer).
             // Fetched at most once per game per session and shares the renderer's sidecar cache.
-            if (!game.__rarityMap) {
-              game.__rarityMap = await rarity.getRarityMap(appID, { source: game.source }).catch(() => new Map());
-            }
+            if (!game.__rarityMap) game.__rarityMap = await loadRarityMap(game, appID);
             const rarityMap = game.__rarityMap;
 
             // Boot-seed / anti-avalanche: the first time a game is observed there is no persisted
@@ -1401,6 +1405,10 @@ var app = {
                           achievementDisplayName: ach.displayName,
                           achievementDescription: ach.description,
                           rarityPercent: isRare ? rounded : null,
+                          // The rate whatever its tier, and whether the schema hides the achievement:
+                          // an imported SAN theme picks its state and draws its padlock from them.
+                          unlockRate: knownRate ? rounded : null,
+                          hidden: String(ach.hidden) === '1' || ach.hidden === true,
                           icon: notificationAchievementIcon(game, ach, true),
                           gameIcon: notificationGameIcon(game),
                           image: steamHeaderImage(game.steamappid || game.appid),
@@ -1578,7 +1586,16 @@ var app = {
       }
     };
 
-    self.watcher[i] = watch(dir, { recursive: options.recursive, filter: options.filter }, (evt, name) => onChange(evt, name));
+    /*
+      One read of a save at a time, and the writes that land during a read folded into one more read
+      of the final state, so two quick unlocks, or one next to another game's write, are both seen.
+    */
+    const saveReads = createChangeCoalescer();
+    self.watcher[i] = watch(dir, { recursive: options.recursive, filter: options.filter }, (evt, name) => {
+      if (evt !== 'update') return;
+      const seenAt = Date.now();
+      saveReads.run(String(name).toLowerCase(), () => onChange(evt, name, false, seenAt));
+    });
     self.watcher[i].on('error', (err) => debug.error(`[watch:${dir}] ${err}`));
 
     if (catchUpSince) {
@@ -1714,6 +1731,7 @@ var app = {
             runningGames.push(game);
             if (String(game.source || '') === 'Xbox PC') startXboxPolling(game);
             requestArtworkPrefetch(game);
+            loadRarityMap(game, String(game.appid));
           }
           forwardGameActivity();
           syncClipRecorder();

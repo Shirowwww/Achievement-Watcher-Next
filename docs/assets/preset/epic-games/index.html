@@ -120,6 +120,7 @@ window.addEventListener('DOMContentLoaded', function () {
     var s = Math.max(0.01, parseFloat(scale || 1) || 1);
     root.style.setProperty('--scale', String(s));
     applyState(data);
+    root.classList.toggle('is-hidden', data.hidden === true);
     applyArtwork(data);
     applyMeta(data);
     applyProgress(data);

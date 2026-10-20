@@ -1,0 +1,15 @@
+/*
+  The typefaces SAN's base cards are drawn in, all under the SIL Open Font License except Roboto
+  (Apache 2.0): see fonts/LICENSES.md. Converted to WOFF2 unchanged, never subset.
+*/
+@font-face { font-family: "Titillium Web"; src: url("fonts/TitilliumWeb-SemiBold.woff2") format("woff2"); }
+@font-face { font-family: "Titillium Web Regular"; src: url("fonts/TitilliumWeb-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Roboto"; src: url("fonts/Roboto-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Mandali"; src: url("fonts/Mandali-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Source Sans Pro Light"; src: url("fonts/SourceSansPro-Light.woff2") format("woff2"); }
+@font-face { font-family: "Source Sans Pro ExtraLight"; src: url("fonts/SourceSansPro-ExtraLight.woff2") format("woff2"); }
+@font-face { font-family: "Noto Sans"; src: url("fonts/NotoSans-Light.woff2") format("woff2"); }
+@font-face { font-family: "Noto Sans Light"; src: url("fonts/NotoSans-Light.woff2") format("woff2"); }
+@font-face { font-family: "Noto Sans Medium"; src: url("fonts/NotoSans-Medium.woff2") format("woff2"); }
+@font-face { font-family: "Noto Sans ExtraLight"; src: url("fonts/NotoSans-ExtraLight.woff2") format("woff2"); }
+@font-face { font-family: "Open Sans"; src: url("fonts/OpenSans-Medium.woff2") format("woff2"); }

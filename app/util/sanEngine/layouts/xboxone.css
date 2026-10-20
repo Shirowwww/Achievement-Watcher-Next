@@ -1,0 +1,362 @@
+/* Steam Achievement Notifier's "xboxone" card (notify/presets/xboxone/styles.css), see app/util/sanEngine/SOURCES.md. */
+:root {
+    --s: url("data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8IS0tIENyZWF0ZWQgd2l0aCBJbmtzY2FwZSAoaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvKSAtLT4NCg0KPHN2Zw0KICAgd2lkdGg9IjY0bW0iDQogICBoZWlnaHQ9IjY0bW0iDQogICB2aWV3Qm94PSIwIDAgNjQgNjQiDQogICB2ZXJzaW9uPSIxLjEiDQogICBpZD0ic3ZnMSINCiAgIGlua3NjYXBlOnZlcnNpb249IjEuMyAoMGUxNTBlZDZjNCwgMjAyMy0wNy0yMSkiDQogICBzb2RpcG9kaTpkb2NuYW1lPSJzLnN2ZyINCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIg0KICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIg0KICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIg0KICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+DQogIDxzb2RpcG9kaTpuYW1lZHZpZXcNCiAgICAgaWQ9Im5hbWVkdmlldzEiDQogICAgIHBhZ2Vjb2xvcj0iIzUwNTA1MCINCiAgICAgYm9yZGVyY29sb3I9IiNlZWVlZWUiDQogICAgIGJvcmRlcm9wYWNpdHk9IjEiDQogICAgIGlua3NjYXBlOnNob3dwYWdlc2hhZG93PSIwIg0KICAgICBpbmtzY2FwZTpwYWdlb3BhY2l0eT0iMCINCiAgICAgaW5rc2NhcGU6cGFnZWNoZWNrZXJib2FyZD0iMCINCiAgICAgaW5rc2NhcGU6ZGVza2NvbG9yPSIjZDFkMWQxIg0KICAgICBpbmtzY2FwZTpkb2N1bWVudC11bml0cz0ibW0iDQogICAgIGlua3NjYXBlOnpvb209IjEuMzM4MDYxMiINCiAgICAgaW5rc2NhcGU6Y3g9IjkwLjgwMzAyMiINCiAgICAgaW5rc2NhcGU6Y3k9IjE0MS42MjI4MiINCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxOTIwIg0KICAgICBpbmtzY2FwZTp3aW5kb3ctaGVpZ2h0PSI5ODYiDQogICAgIGlua3NjYXBlOndpbmRvdy14PSIyMTQ5Ig0KICAgICBpbmtzY2FwZTp3aW5kb3cteT0iODMwIg0KICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIg0KICAgICBpbmtzY2FwZTpjdXJyZW50LWxheWVyPSJsYXllcjEiDQogICAgIHNob3dncmlkPSJmYWxzZSIgLz4NCiAgPGRlZnMNCiAgICAgaWQ9ImRlZnMxIj4NCiAgICA8cmVjdA0KICAgICAgIHg9IjUzLjA2MTg0OSINCiAgICAgICB5PSI1Mi42ODgxNzQiDQogICAgICAgd2lkdGg9IjE0MC4xMjgxMiINCiAgICAgICBoZWlnaHQ9IjEyNS45Mjg0NyINCiAgICAgICBpZD0icmVjdDEiIC8+DQogIDwvZGVmcz4NCiAgPGcNCiAgICAgaW5rc2NhcGU6bGFiZWw9IkxheWVyIDEiDQogICAgIGlua3NjYXBlOmdyb3VwbW9kZT0ibGF5ZXIiDQogICAgIGlkPSJsYXllcjEiPg0KICAgIDxwYXRoDQogICAgICAgaWQ9InBhdGgxIg0KICAgICAgIHN0eWxlPSJmaWxsOiNmZmZmZmY7c3Ryb2tlLXdpZHRoOjAuMDI1OTQ1OSINCiAgICAgICBkPSJNIDMyLjAwMDExNCAwIEEgMzIgMzIgMCAwIDAgMCAzMi4wMDAxMTQgQSAzMiAzMiAwIDAgMCAzMi4wMDAxMTQgNjQuMDAwMjI4IEEgMzIgMzIgMCAwIDAgNjQuMDAwMjI4IDMyLjAwMDExNCBBIDMyIDMyIDAgMCAwIDMyLjAwMDExNCAwIHogTSAzMy41Mjg3MDMgMTYuMDM0MTYzIEMgMzUuMTM2NDEyIDE2LjAzNDE2MyAzNi41NTc1MTggMTYuMTM0NDczIDM3Ljc5MjAwOCAxNi4zMzU0MzcgQyAzOS4wNDA4NTQgMTYuNTIyMDQ2IDQwLjE4OTM5NSAxNi44MTY2NiA0MS4yMzcyNzYgMTcuMjE4NTg3IEwgNDEuMjM3Mjc2IDIzLjY1NjQzNyBDIDQwLjcyMDUxMyAyMy4yOTc1NzQgNDAuMTUzMzMzIDIyLjk4MTk0NCAzOS41MzYwODggMjIuNzA5MjA4IEMgMzguOTMzMTk3IDIyLjQzNjQ3MiAzOC4zMDg3NzIgMjIuMjEzODAzIDM3LjY2MjgxNyAyMi4wNDE1NDkgQyAzNy4wMTY4NjMgMjEuODU0OTQgMzYuMzcwOTA2IDIxLjcxODM5OSAzNS43MjQ5NTEgMjEuNjMyMjcxIEMgMzUuMDkzMzUxIDIxLjU0NjE0NCAzNC40OTA0NTggMjEuNTAzMDggMzMuOTE2Mjc2IDIxLjUwMzA4IEMgMzMuMTI2Nzc2IDIxLjUwMzA4IDMyLjQwODg3NCAyMS41ODIzNzUgMzEuNzYyOTE5IDIxLjc0MDI3NSBDIDMxLjExNjk2NSAyMS44ODM4MiAzMC41NzE4MzQgMjIuMDkxNzkgMzAuMTI2ODQzIDIyLjM2NDUyNiBDIDI5LjY4MTg1MiAyMi42MzcyNjMgMjkuMzM3MzQyIDIyLjk2NzU5MSAyOS4wOTMzMTUgMjMuMzU1MTY0IEMgMjguODQ5Mjg3IDIzLjcyODM4MiAyOC43MjY5MjkgMjQuMTUxNjcgMjguNzI2OTI5IDI0LjYyNTM3IEMgMjguNzI2OTI5IDI1LjE0MjEzNCAyOC44NjM0NyAyNS42MDg0ODYgMjkuMTM2MjA2IDI2LjAyNDc2OCBDIDI5LjQwODk0MiAyNi40MjY2OTUgMjkuNzk2NTE3IDI2LjgxNDI3IDMwLjI5ODkyNiAyNy4xODc0ODggQyAzMC44MDEzMzUgMjcuNTQ2MzUxIDMxLjQxMTU3OCAyNy45MDU1NjEgMzIuMTI5MzA1IDI4LjI2NDQyNSBDIDMyLjg0NzAzMiAyOC42MDg5MzQgMzMuNjU3ODk1IDI4Ljk2NzYyNyAzNC41NjIyMzEgMjkuMzQwODQ1IEMgMzUuNzk2NzIyIDI5Ljg1NzYwOCAzNi45MDIxOTkgMzAuNDEwMDg4IDM3Ljg3ODMwOCAzMC45OTg2MjUgQyAzOC44Njg3NzIgMzEuNTcyODA2IDM5LjcxNTM0OSAzMi4yMjYxMTMgNDAuNDE4NzIyIDMyLjk1ODE5NSBDIDQxLjEyMjA5NCAzMy42OTAyNzcgNDEuNjYwMzkyIDM0LjUzMDAyMSA0Mi4wMzM2MSAzNS40Nzc0MjEgQyA0Mi40MDY4MjggMzYuNDEwNDY2IDQyLjU5Mzc4MyAzNy41MDEyNDQgNDIuNTkzNzgzIDM4Ljc1MDA5IEMgNDIuNTkzNzgzIDQwLjQ3MjYzNSA0Mi4yNjM0NTQgNDEuOTIyNjIyIDQxLjYwMzE0NSA0My4wOTk2OTUgQyA0MC45NTcxOTEgNDQuMjYyNDEzIDQwLjA3NDM4MyA0NS4yMDk4MTcgMzguOTU0NzI4IDQ1Ljk0MTg5OSBDIDM3LjgzNTA3NCA0Ni42NTk2MjYgMzYuNTI4OTc3IDQ3LjE3NjM5MiAzNS4wMzYxMDQgNDcuNDkyMTkyIEMgMzMuNTU3NTg2IDQ3LjgwNzk5MiAzMS45OTI1OSA0Ny45NjYwNjQgMzAuMzQxODE3IDQ3Ljk2NjA2NCBDIDI4LjY0Nzk4MSA0Ny45NjYwNjQgMjcuMDMzMDg4IDQ3LjgyMjE3NCAyNS40OTcxNTIgNDcuNTM1MDgzIEMgMjMuOTc1NTcgNDcuMjQ3OTkyIDIyLjY1NTI5MSA0Ni44MTczNTQgMjEuNTM1NjM2IDQ2LjI0MzE3MiBMIDIxLjUzNTYzNiAzOS4zNTMxNTMgQyAyMi43ODQ0ODIgNDAuNDAxMDM1IDI0LjE0MDk5MiA0MS4xOTAzNjYgMjUuNjA1MTU1IDQxLjcyMTQ4NCBDIDI3LjA2OTMxOSA0Mi4yMzgyNDggMjguNTQ3NjcxIDQyLjQ5NjYzMSAzMC4wNDA1NDQgNDIuNDk2NjMxIEMgMzAuOTE2MTcxIDQyLjQ5NjYzMSAzMS42NzcxMzcgNDIuNDE3ODUzIDMyLjMyMzA5MiA0Mi4yNTk5NTMgQyAzMi45ODM0MDEgNDIuMTAyMDUzIDMzLjUyODUzMSA0MS44ODY3MzQgMzMuOTU5MTY3IDQxLjYxMzk5NyBDIDM0LjQwNDE1OCA0MS4zMjY5MDcgMzQuNzM0NDg3IDQwLjk5NjU3OCAzNC45NDk4MDUgNDAuNjIzMzYgQyAzNS4xNjUxMjMgNDAuMjM1Nzg4IDM1LjI3Mjc4MiAzOS44MTk4NDggMzUuMjcyNzgyIDM5LjM3NDg1OCBDIDM1LjI3Mjc4MiAzOC43NzE5NjcgMzUuMTAwNTI3IDM4LjIzMzY2OSAzNC43NTYwMTggMzcuNzU5OTY5IEMgMzQuNDExNTA5IDM3LjI4NjI2OSAzMy45Mzc4MDcgMzYuODQ4MjgxIDMzLjMzNDkxNiAzNi40NDYzNTQgQyAzMi43NDYzOCAzNi4wNDQ0MjcgMzIuMDQzMTc2IDM1LjY1Njg1MyAzMS4yMjQ5NjcgMzUuMjgzNjM0IEMgMzAuNDA2NzU5IDM0LjkxMDQxNiAyOS41MjM5NSAzNC41MzAxOTEgMjguNTc2NTUgMzQuMTQyNjE5IEMgMjYuMTY0OTg3IDMzLjEzNzgwMSAyNC4zNjMxMzkgMzEuOTEwNDgyIDIzLjE3MTcxMiAzMC40NjA2NzMgQyAyMS45OTQ2NCAyOS4wMTA4NjQgMjEuNDA2NDQ1IDI3LjI1OTQzIDIxLjQwNjQ0NSAyNS4yMDY3MyBDIDIxLjQwNjQ0NSAyMy41OTkwMjEgMjEuNzI5NDI0IDIyLjIyMDk3OSAyMi4zNzUzNzggMjEuMDcyNjE2IEMgMjMuMDIxMzMzIDE5LjkwOTg5OCAyMy44OTY3OTIgMTguOTU1MTQ0IDI1LjAwMjA5MSAxOC4yMDg3MDggQyAyNi4xMjE3NDYgMTcuNDYyMjcxIDI3LjQxMzY2MSAxNi45MTcxNDEgMjguODc3ODI0IDE2LjU3MjYzMiBDIDMwLjM0MTk4NyAxNi4yMTM3NjggMzEuODkyMjg1IDE2LjAzNDE2MyAzMy41Mjg3MDMgMTYuMDM0MTYzIHogIiAvPg0KICA8L2c+DQo8L3N2Zz4NCg==");
+}
+
+.wrapper#achcont {
+    --start: 16.6%;
+    --finish: shrink calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 11.5)) cubic-bezier(0.75,0,1,1) forwards;
+    position: relative;
+    width: var(--start);
+    height: var(--notifyheight);
+    place-self: center;
+    opacity: var(--opacity);
+    animation:
+        expand var(--transition) calc(var(--transition) * 7) cubic-bezier(0,0.5,1,1) forwards,
+        var(--finish);
+}
+
+body[fastanim] .wrapper#achcont,
+body[fastanim] .wrapper#ssdisplay::before {
+    --finish: fadeout calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 2)) forwards;
+}
+
+body[bgonly] .wrapper#achcont {
+    opacity: 1;
+}
+
+@keyframes expand {
+    to { width: var(--notifywidth); }
+}
+
+@keyframes shrink {
+    to { width: var(--start); }
+}
+
+.wrapper#bg {
+    --finish: scaledown calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 7)) cubic-bezier(0.75, 0, 1, 1) forwards;
+    --elemopacity: 1;
+    width: 100%;
+    opacity: 0;
+    overflow: hidden;
+    animation:
+        fadein var(--transition) calc(var(--transition) * 5) cubic-bezier(0, 0.5, 1, 1) forwards,
+        var(--finish);
+}
+
+body[fastanim] .wrapper#bg {
+    --finish: none;
+}
+
+body[bgonly] .wrapper#bg {
+    --elemopacity: var(--opacity);
+}
+
+#overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -150% -50%;
+    transform: skew(-30deg,0deg);
+    width: 30cqw;
+    height: calc(var(--notifyheight) * 2);
+    place-self: center;
+    background-color: white;
+    opacity: 0;
+    filter: blur(3rem);
+    z-index: 10;
+    animation:
+        overlay calc(var(--transition) * 10) calc(var(--displaytime) / 7 + (var(--transition) * 2.5)) linear,
+        overlay calc(var(--transition) * 10) calc(var(--displaytime) / 2 + calc(var(--transition)) * 2.5) linear forwards;
+}
+
+@keyframes overlay {
+    50% {
+        translate: 0 -50%;
+        opacity: 0.25;
+    }
+    
+    to {
+        translate: 100% -50%;
+        opacity: 0;
+    }
+}
+
+.wrapper#achiconwrapper {
+    isolation: isolate;
+}
+
+body:not([fastanim]) .wrapper#achiconwrapper,
+#iconborder {
+    animation: scaledown calc(var(--transition) * 2) calc(var(--displaytime) - calc(var(--transition) * 8)) cubic-bezier(1, 0, 1, 1) forwards;
+}
+
+.wrapper#achiconwrapper > * {
+    grid-column-start: 1;
+    grid-row-start: 1;
+}
+
+#iconbg {
+    --finish: scaledown calc(var(--transition) * 2) calc(var(--displaytime) - calc(var(--transition) * 8)) cubic-bezier(1, 0, 1, 1) forwards;
+    width: var(--notifyheight);
+    height: var(--notifyheight);
+    scale: 0;
+    border-radius: var(--roundness);
+    background-color: var(--secondarycolor);
+    grid-column-start: 1;
+    animation:
+        scaleup var(--transition) ease-in-out forwards,
+        var(--finish);
+}
+
+body[fastanim] #iconbg {
+    --finish: none;
+}
+
+body[bgonly] #iconbg {
+    opacity: var(--opacity);
+}
+
+@keyframes scaleup {
+    to { scale: 1; }
+}
+
+#achicon,
+#iconborder {
+    --finish: fadeout var(--transition) calc(var(--displaytime) - (var(--transition) * 10.5)) forwards;
+    --elemopacity: 1;
+    opacity: 0;
+    animation:
+        fadein var(--transition) calc(var(--transition) * 5) forwards,
+        var(--finish);
+}
+
+#achicon {
+    z-index: 1;
+}
+
+body[fastanim] #achicon,
+body[fastanim] #iconborder {
+    --finish: none;
+}
+
+#logo {
+    --elemopacity: 1;
+    width: 100%;
+    height: 100%;
+    scale: 0;
+    background: var(--logo) center / contain no-repeat;
+    place-self: center;
+    z-index: 0;
+    animation:
+        popin var(--transition) ease-in-out forwards,
+        fadeout var(--transition) calc(var(--transition) * 5) forwards,
+        fadein var(--transition) calc(var(--displaytime) - (var(--transition) * 10)) forwards,
+        scaledown calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 9)) cubic-bezier(1, 0, 1, 1) forwards;
+    transform: scale(var(--logoscale));
+}
+
+@keyframes popin {
+    50% { scale: 1; }
+    to { scale: 0.8; }
+}
+
+@keyframes scaledown {
+    to { scale: 0; }
+}
+
+.wrapper#achcontent {
+    --finish: removecolumngap calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 11.5)) forwards;
+    column-gap: 0;
+    animation:
+        addcolumngap 1ms calc(var(--transition) * 5) forwards,
+        var(--finish);
+}
+
+body[fastanim] .wrapper#achcontent {
+    --finish: none;
+}
+
+@keyframes addcolumngap {
+    to { column-gap: calc(10px * var(--scale)); }
+}
+
+@keyframes removecolumngap {
+    to { column-gap: 0; }
+}
+
+.wrapper#achcontent > span {
+    font-family: "customfont", "Noto Sans", "Roboto";
+    opacity: 0;
+    line-height: calc(1.35rem * var(--fontsize));
+}
+
+.wrapper#achcontent:has(#unlockmsg):has(#decoration) > span {
+    grid-column: 2 / span 2;
+}
+
+#unlockmsg {
+    grid-row-start: 1;
+}
+
+#achcontent > #title {
+    position: relative;
+    grid-row-start: 2;
+    -webkit-line-clamp: 1;
+}
+
+#title:empty::before,
+#title:empty::after {
+    display: none;
+}
+
+body:not([ss]) .wrapper#achcontent:has(#unlockmsg):has(#decoration) #title::before,
+body[ss] .wrapper#achcontent:has(#title):has(#decoration) #desc::before {
+    --ssize: 30%;
+    content: attr(gs) attr(unit) " - ";
+    padding-left: calc(1.25rem * var(--fontsize));
+    background: var(--s) left / var(--ssize) no-repeat;
+}
+
+body:not([ss]) .wrapper#achcontent:has(#unlockmsg):has(#decoration) #title[unit="%"]::before,
+body[ss] .wrapper#achcontent:has(#title):has(#decoration) #desc[unit="%"]::before {
+    --ssize: 20%;
+}
+
+#unlockmsg,
+#title {
+    --finish: slideup calc(var(--transition) * 2) calc(var(--displaytime) / 2 - calc(var(--transition)) * 2) cubic-bezier(0.5, 0, 1, 1) forwards;
+    --elemopacity: 1;
+    --translate: -100cqh;
+    animation:
+        fadein calc(var(--transition) * 2) calc((var(--transition) * 8.5)) forwards,
+        var(--finish);
+}
+
+body[fastanim] #unlockmsg,
+body[fastanim] #title {
+    --finish: slideup calc(var(--transition) * 2) calc(var(--displaytime) / 2) cubic-bezier(0.5, 0, 1, 1) forwards;
+}
+
+@keyframes fadein {
+    to { opacity: var(--elemopacity); }
+}
+
+@keyframes fadeout {
+    to { opacity: 0; }
+}
+
+@keyframes slideup {
+    to { translate: 0 var(--translate); }
+}
+
+.wrapper#achcontent > #desc {
+    --start: slideup calc(var(--transition) * 2) calc(var(--displaytime) / 2 - calc(var(--transition)) * 2) cubic-bezier(0.5, 0, 1, 1) forwards;
+    --finish: fadeout calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 12.5)) forwards;
+    --translate: 0;
+    align-self: center;
+    grid-row: 1 / span 2;
+    translate: 0 100cqh;
+    opacity: 1;
+    animation:
+        var(--start),
+        var(--finish);
+}
+
+body[fastanim] .wrapper#achcontent > #desc {
+    --start: slideup calc(var(--transition) * 2) calc(var(--displaytime) / 2) cubic-bezier(0.5, 0, 1, 1) forwards;
+    --finish: fadeout calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 2)) forwards;
+}
+
+body[ss] #unlockmsg {
+    display: none;
+}
+
+body[ss] .wrapper#bg,
+body[ss] #iconbg {
+    scale: 1;
+    opacity: 1;
+}
+
+body[ss] #logo {
+    display: none;
+}
+
+body[ss] #achicon {
+    opacity: 1;
+}
+
+body[ss] .wrapper#achcontent {
+    column-gap: calc(10px * var(--scale));
+}
+
+body[ss] .wrapper#achcontent > #title {
+    grid-row: 1 / span 1;
+}
+
+body[ss] .wrapper#achcontent > #desc {
+    translate: 0 0;
+    grid-row: 2 / span 1;
+}
+
+.wrapper#ssdisplay::before {
+    --finish: ssslideout calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 13.5)) forwards;
+    animation:
+        ssslidein calc(var(--transition) * 2) calc((var(--transition) * 8.5)) forwards,
+        var(--finish);
+}
+
+body:not([ss])[ssdisplay] .wrapper#achcont {
+    --ssbrin: ssbrin calc(var(--transition) * 2) calc((var(--transition) * 7)) forwards;
+    --ssbrout: ssbrout calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 12.25)) forwards;
+    animation:
+        expand var(--transition) calc(var(--transition) * 6) cubic-bezier(0,0.5,1,1) forwards,
+        var(--ssbrin),
+        var(--ssbrout),
+        var(--finish);
+}
+
+body:not([ss])[ssdisplay] .wrapper#bg {
+    animation:
+        fadein var(--transition) calc(var(--transition) * 6) cubic-bezier(0, 0.5, 1, 1) forwards,
+        var(--ssbrin),
+        var(--ssbrout),
+        var(--finish);
+}
+
+body:not([ss])[ssdisplay][fastanim] .wrapper#achcont,
+body:not([ss])[ssdisplay][fastanim] .wrapper#bg {
+    --ssbrout: none;
+}
+
+/* !!! Removes `border-radius` from the corner of `#iconbg` - not currently required */
+
+/* body[topleft] #iconbg,
+body[topcenter] #iconbg,
+body[topright] #iconbg {
+    --iconbgbr: var(--roundness) var(--roundness) var(--roundness) 0;
+}
+
+body[bottomleft] #iconbg,
+body[bottomcenter] #iconbg,
+body[bottomright] #iconbg {
+    --iconbgbr: 0 var(--roundness) var(--roundness) var(--roundness);
+}
+
+body:not([ss])[ssdisplay] #iconbg {
+    --iconbgbrin: iconbgbrin calc(var(--transition) * 2) calc((var(--transition) * 7)) forwards;
+    --iconbgbrout: iconbgbrout calc(var(--transition) * 2) calc(var(--displaytime) - (var(--transition) * 12.25)) forwards;
+    animation:
+        scaleup var(--transition) ease-in-out forwards,
+        var(--iconbgbrin),
+        var(--iconbgbrout),
+        var(--finish);
+}
+
+@keyframes iconbgbrin {
+    to { border-radius: var(--iconbgbr); }
+}
+
+@keyframes iconbgbrout {
+    to { border-radius: var(--iconroundness); }
+} */

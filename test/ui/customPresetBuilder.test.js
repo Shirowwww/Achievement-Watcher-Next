@@ -65,6 +65,7 @@ const FULL = {
   progressHeight: 14,
   rareSilver: '#aaaaaa',
   rareBronze: '#884400',
+  hiddenLock: true,
   showGameName: true,
   descriptionLines: 3,
   textShadow: 45,
@@ -429,7 +430,8 @@ test('presetSound reads what a preset asks for, and never becomes a reason for s
 
 test('the notification path prefers the preset sound and keeps random sound on top', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
-  assert.match(init, /const presetOwnSound = customPreset\.presetSound\(presetFolder\);/, 'the preset folder is never asked for its sound');
+  // An imported SAN theme answers first, with the sound of the state it paints.
+  assert.match(init, /const presetOwnSound = sanSound != null \? sanSound : customPreset\.presetSound\(presetFolder\);/, 'the preset folder is never asked for its sound');
   assert.match(init, /resolveNotificationSound\(presetOwnSound \|\| ov\.notificationSound\)/, 'the preset sound does not win over the app setting');
   // "Random sound" is an explicit choice for every popup and still overrides both.
   assert.match(init, /randomSound\s*\n?\s*\?\s*notificationSounds\.pickRandomSound/);
@@ -483,4 +485,13 @@ test('init.js resolves generated presets from userData and reads the bundled lib
   // ...and the notification lookup still finds both the generated and the bundled presets.
   assert.match(init, /const roots = \[usersPresetsDir\(\), \.\.\.bundledPresetRoots\(\)/);
   assert.match(init, /refreshNotificationPresetFolders\(\)\.keys\(\)/, 'the preset menu is built from the same generated and bundled index');
+});
+
+test('a hidden achievement wears a padlock only when the design asks for one', () => {
+  const on = buildCustomPresetCss({ hiddenLock: true });
+  assert.match(on, /\.ach\.is-hidden \.title::before \{[^}]*mask: url\("data:image\/svg\+xml,/);
+  assert.match(on, /background: currentColor;/, 'the padlock takes the colour of the title it sits in');
+  assert.doesNotMatch(buildCustomPresetCss({}), /is-hidden/, 'off by default, so an existing design does not change');
+  // The engine marks the card from the payload, for the stylesheet to act on.
+  assert.match(buildCustomPresetHtml({}), /root\.classList\.toggle\('is-hidden', data\.hidden === true\);/);
 });

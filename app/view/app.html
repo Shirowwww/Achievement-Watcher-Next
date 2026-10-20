@@ -8,7 +8,7 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-ErENpYNmGjbcgrlvKKO2YSCg4lTm9+LN7b2NVrGmP6w='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-YVRrnFwbV4EXVN1oNAdMWFSGI0HLgUXBUiA8/iQxTLo='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -2972,6 +2972,13 @@
                                 <span data-lang="field.rareBronze"></span>
                                 <input type="color" id="pd-rareBronze" value="#cd7f32" />
                               </label>
+                              <label class="pd-field" data-key="hiddenLock">
+                                <span data-lang="field.hiddenLock"></span>
+                                <select autocomplete="off" id="pd-hiddenLock">
+                                  <option value="true" data-lang="value.on"></option>
+                                  <option value="false" data-lang="value.off"></option>
+                                </select>
+                              </label>
                             </div>
                           </div>
                         </section>
@@ -3009,6 +3016,7 @@
                           <button type="button" id="btn-export-preset" class="inline-action-btn secondary"><i class="fas fa-file-export"></i> <span data-lang="exportLabel"></span></button>
                         </div>
                         <button type="button" id="btn-import-san" class="inline-action-btn pd-quiet-btn"><i class="fas fa-download"></i> <span data-lang="importSan"></span></button>
+                        <button type="button" id="btn-import-san-setup" class="inline-action-btn pd-quiet-btn"><i class="fas fa-desktop"></i> <span data-lang="importSanSetup"></span></button>
                       </div>
                       <span id="pd-status"></span>
                     </div>

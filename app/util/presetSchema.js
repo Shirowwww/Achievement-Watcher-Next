@@ -269,6 +269,8 @@ const PRESET_PROPERTIES = [
   { key: 'progressHeight', type: 'number', def: 8, min: 3, max: 20, step: 1, group: 'state', advanced: true, css: '--progress-height', unit: 'px' },
   { key: 'rareSilver', type: 'color', def: '#9fb2cc', group: 'state', advanced: true, css: '--rare-silver' },
   { key: 'rareBronze', type: 'color', def: '#cd7f32', group: 'state', advanced: true, css: '--rare-bronze' },
+  // A padlock before the title of a hidden achievement. Off by default, like the rarity chip.
+  { key: 'hiddenLock', type: 'toggle', def: false, group: 'state', advanced: true },
 
   // sound
   // '' means "whatever the Notifications tab is set to"; a filename makes the sound part of the

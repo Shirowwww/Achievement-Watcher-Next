@@ -859,6 +859,7 @@ const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js')
 const overlayLocale = require(path.join(__dirname, '../util/overlayLocale.js'));
 const rarityTiers = require(path.join(__dirname, '../util/rarityTiers.js'));
 const presetLayer = require(path.join(__dirname, '../util/presetLayer.js'));
+const sanEngine = lazyRequire(path.join(__dirname, '../util/sanEngine/index.js'));
 
 // The "Rarity display" setting as the tier functions take it.
 function currentRarityGrading() {
@@ -5561,7 +5562,16 @@ function refreshNotificationPresetFolders() {
       for (const name of fs.readdirSync(root)) {
         if (folders.has(name)) continue;
         const folder = path.join(root, name);
-        if (fs.existsSync(path.join(folder, 'index.html'))) folders.set(name, folder);
+        if (!fs.existsSync(path.join(folder, 'index.html'))) continue;
+        folders.set(name, folder);
+        // An imported SAN theme is regenerated from its own data when this build's engine is newer.
+        if (root === usersPresetsDir()) {
+          try {
+            if (sanEngine.refreshPreset(folder)) debug.log(`[san-preset] ${name} rebuilt for engine ${sanEngine.ENGINE_VERSION}`);
+          } catch (err) {
+            debug.log(`[san-preset] ${name} could not be rebuilt: ${err.message || err}`);
+          }
+        }
       }
     } catch {}
   }
@@ -5723,7 +5733,9 @@ function describeNotificationTier(data) {
   const grading = currentRarityGrading();
   const grade = rarityTiers.trophyGrade(data.trophyGrade);
   const tier = rarityTiers.notificationTier({
-    percent: data.rarityPercent,
+    // The full rate: `rarityPercent` is only sent up to the rare cut-off, which left trophy mode
+    // unable to grade anything above it (no silver at all with its default bounds).
+    percent: data.unlockRate != null ? data.unlockRate : data.rarityPercent,
     type: data.notificationType,
     mode: grading.mode,
     thresholds: grading.thresholds,
@@ -5830,6 +5842,9 @@ function notificationPagePayload(data) {
     // a popup could never say where it happened; presets that do not ask for it simply ignore it.
     gameName: data.gameName != null ? String(data.gameName) : '',
     rarityPercent: data.rarityPercent,
+    // The unlock rate even above the rare cut-off, and the schema's hidden flag (imported SAN themes).
+    unlockRate: data.unlockRate != null ? data.unlockRate : data.rarityPercent,
+    hidden: data.hidden === true,
     // The tier the preset paints ('gold' | 'silver' | 'bronze' | 'platinum' | ''), decided here so a
     // preset never carries cut-offs of its own; `rarityGrade` is its localized name.
     rarityTier: notificationTier.tier,
@@ -5859,6 +5874,7 @@ function notificationPagePayload(data) {
       achievement: notifStrings.achievement || 'Achievement',
       unknownOperation: notifStrings.unknownOperation || 'Unknown operation',
       unknownReward: notifStrings.unknownReward || 'Unknown reward',
+      congratulations: notifStrings.congratulations || 'Congratulations!',
     },
   };
 }
@@ -6120,6 +6136,17 @@ function createNotificationWindow(data = {}) {
     if (!notif.isDestroyed()) notif.close();
   }, closeAfter);
   notif.on('closed', () => clearTimeout(safety));
+
+  // A popup that cannot draw would hold the queue until the catch-all for nothing: close it now.
+  const giveUp = (why) => {
+    debug.log(`[overlay-notif] closing a popup that ${why}`);
+    if (!notif.isDestroyed()) notif.close();
+  };
+  notif.webContents.on('did-fail-load', (event, code, description, url, isMainFrame) => {
+    if (isMainFrame) giveUp(`failed to load (${description || code})`);
+  });
+  notif.webContents.once('render-process-gone', (event, details) => giveUp(`lost its renderer (${(details && details.reason) || '?'})`));
+  notif.once('unresponsive', () => giveUp('stopped responding'));
 
   return notif;
 }
@@ -6621,7 +6648,11 @@ async function enqueueNotificationFromArgs(args) {
     per-emulator or platinum preset able to bring its own fanfare. '' means the preset has no opinion.
     Random sound still overrides everything - it is an explicit "surprise me" for every popup.
   */
-  const presetOwnSound = customPreset.presetSound(presetFolder);
+  // An imported SAN theme names a sound per state (or a folder to draw from); null when it is not one.
+  const unlockRate = args.unlockRate != null ? args.unlockRate : args.rarityPercent;
+  const sanTier = describeNotificationTier({ notificationType, unlockRate, rarityPercent: args.rarityPercent, trophyGrade: args.trophyGrade });
+  const sanSound = sanEngine.presetSound(presetFolder, { notificationType, rarityTier: sanTier.tier, rarityMode: sanTier.mode, unlockRate });
+  const presetOwnSound = sanSound != null ? sanSound : customPreset.presetSound(presetFolder);
   const globalSound = () =>
     randomSound
       ? notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) ||
@@ -6680,6 +6711,8 @@ async function enqueueNotificationFromArgs(args) {
     gameName: args.gameDisplayName != null ? String(args.gameDisplayName) : '',
     description: args.description != null ? String(args.description) : '',
     rarityPercent: Number.isFinite(Number(args.rarityPercent)) ? Number(args.rarityPercent) : null,
+    unlockRate: args.unlockRate != null && Number.isFinite(Number(args.unlockRate)) ? Number(args.unlockRate) : null,
+    hidden: String(args.achievementHidden) === '1',
     trophyGrade: rarityTiers.trophyGrade(args.trophyGrade),
     notificationType,
     iconPath: primaryIconPath,

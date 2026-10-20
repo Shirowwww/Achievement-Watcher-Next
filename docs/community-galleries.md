@@ -172,12 +172,13 @@ belong to the people who made them, who have not licensed them for redistributio
 repository itself carries no licence at all. Copying either into this gallery would be republishing
 other people's work without permission.
 
-What AW Next does instead is read yours. **Settings -> Notification presets -> Import SAN theme** converts a
-`.san` file, or the `usertheme.json` of a theme already unpacked, into an ordinary AW Next preset:
-editable in the designer, exportable as an `.awpreset` like any other. What converts and what does
-not is in [Presets](presets.md#import-a-theme-from-steam-achievement-notifier).
+What AW Next does instead is read yours. **Settings -> Notification presets -> Import SAN theme** reads a
+`.san` file, or the `usertheme.json` of a theme already unpacked, and **Import from SAN on this PC**
+reads SAN's own settings. Either way the theme becomes an AW Next preset that draws it as SAN does
+and exports as an `.awpreset` like any other. What comes across is in
+[Presets](presets.md#import-a-theme-from-steam-achievement-notifier).
 
-Converted one of yours? Export it and submit that. It is then your preset, credited to you.
+Imported one of yours? Export it and submit that. It is then your preset, credited to you.
 
 - [Steam Achievement Notifier](https://github.com/SteamAchievementNotifier/SteamAchievementNotifier)
 

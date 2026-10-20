@@ -1,0 +1,608 @@
+/*
+  Steam Achievement Notifier's notification page stylesheets (notify/base.css, notify/baseanim.css and
+  the parts of dist/app/global.css the page uses), see SOURCES.md. AW Next's changes are at the end.
+*/
+:root {
+    --darkgrey: #101010;
+    --mediumgrey: #2b2b2b;
+    --transition: 0.2s;
+}
+
+body[noanim] {
+    --transition: 0s;
+}
+
+html,
+body {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    font-family: "Titillium Web","Roboto";
+    background-color: transparent;
+    color: white;
+    overflow: hidden;
+    color-scheme: dark;
+}
+
+.wrapper {
+    display: grid;
+}
+
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    user-select: none;
+}
+
+:root {
+    --notifywidth: 300px;
+    --notifyheight: 50px;
+    --displaytime: 10s;
+    --scale: 1;
+    --primarycolor: #203e7a;
+    --secondarycolor: #0c2a66;
+    --tertiarycolor: #ffffff;
+    --fontcolor: #ffffff;
+    --gradientangle: 90deg;
+    --bgimg: "";
+    --gameart: "";
+    --gameicon: "";
+    --bgimgbrightness: 100%;
+    --brightness: 100%;
+    --roundness: 0px;
+    --fontsize: 1;
+    --opacity: 1;
+    --iconroundness: 0px;
+    --fontoutline: none;
+    --fontshadow: none;
+    --logo: "";
+    --decoration: "";
+    --base64: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAcZklEQVR4nJ2bd7hdVZn/P+/a59bcm9wkN6RACCkQQg0QBKWoo1QVFUFHQRBGsYwKWFCRwYLdUUEHRUccRUVRwcIAAgFk1ICUACpECM00SLk3/bZz9vr+/njfnXOSkWee57ee5zznnL3XXmu9vW4k0fLZW1Jv/K6+p0k6MX6bpFr83l1SEb+7JB0mad+YU809OH6fLWm5pI9IuqDlOWvZ2ySNk/S6XdZoPd8ESR3x+1xJEyV9SNIZkroljd9lfmeskSR9UqoXrfdXDa2yxM5jOfBSoB3YCowDnge6gH0BAUXMXQtMi9/DwGZgLjAhrgkYo6QNeByYGp+DkDoAGmjHxmVDSPQAY4AEltEu51M7MBr7NoA+4BLg14AB21smF0AZ5/hVVr4camV1c/v27TalmFKkeLB13AScDKQArAb8CvhkIGIU6IwDTIrfAOuBfqC3Za0BCtqBDbFeBpLMJuAL79jbUsaM8YJ1+MSUZK1na4cdBPs4sBQ4D3gH0BafCkCLs9aBDwMXJ0ubqoXqjbFUtLfX2ouxMgU2K6oSGPtv4I3xvxbfbwe+HYvX45nHgQPj/lZgANinZb1Ncip2x//JwDYTkyqwdyCABpI6DTYCFJJlI7ecayawFakd+CvOKe8F/hT7bW4BfiKwDTgKWBHzccTmoq1oa+9sayvrRQfJD8ksyLXmXjQEvwReHxt1xILfBu4LTLfFvQ24qGRgFXABsFusM2ZYGy4+Bhzmh9WkvK00siwwbvWyZr6uNgKUmWS50ZQRF68hzE4HVgIXAm8NYmz1ZQDoAQaBGcA7geta1qiZaJfRoCG10aYEvNRgHaTZSF1NijCKuBU4O4DtBP4IPBOIGcF1xRrgyHjsceBpYBGiom4PcA6uS5zyZnuUbSoaOSeAsl5arbTCsHZlDfsUmaWaAyVNR3pOUjdwfKxzGPAELoqjsVe3xKhQD3B5zvntFTxCbUKdgjJnldRM4HJ5OnAJZX5eMIdWGTa2SboRuAI4OAB+I/AjYP94fhQYAubjOuPnwL9iTIlVtsezfwJ6Bc8hzUi1WmdOlYgXpJq1ydTdSPUxIKXU1H+CQ4GVZnZkIP5E4Cq/xZaY1ga0y3Iy7BGh96WUxgL4dkFXzgKpUaS0g7MS8EXgCIr0OcOeA/ZBqg6PmW2QdBmuHF8elw8GHgT2DsAfBA6Je8tweZ0X/zfFYVcCnea6r68wutpT0tjQmJk1ipzyeEO9bXSUpYuJALKoGfa8XF++LBDeCzyB2I6LIcBEoeFEuhJ4q2FrA742RI+JDsNGUypa9QoJZ6N/AY7CuKXMPCuzPcl5TgsSnpFzyhWIM4Enga8Av8fZewHO/i/DFeETwAdw3VECS3DzmIDJGCjRLZW56Cj6rEhdgglSpcXLBDkDGNpHRt2MvYAzgBcHwrswJuOY2huoG3aN3JQvEeoTmiwYj9GL2eaUrM7OY1LFZ09Lei3waJH4LWJAKc1AuaIqBncBF2NcCrwGN0XLcVn8OK6MDsRZ8UvAqVS6QfTi4mNynZAQk7KkZKlbokiWegzbBGDZ2qCoTNpCc476IrBXcNSzQLuc28Yb2hrIGTD4ArC7wQLD2oFJhq2zJqcAagOmA5ubZsis0qwPmvEI0kpZ6pN0QgvGbgB+CPwEcQjwOmAKbgWOBB4BjgbuwTXx++K5ibgSvctgNnCQmWYAGbM+g7bwAYYBklk7IEnTMSbLHaBX4tz1F6eHnjYoBd1gxwCnAe/BFeSFYA1gmrnyHW6BoQ9sHO7I9e/qCG1WmT8EfMfM/mrSdsxqavoEAJcBv8G4BVQC78eBOh1n+Tac1S8A3oCz4H1x+BJn4d2E7ZkSNUN1ZEliL8M2ggpMFfUPM6zHsKNxbf8YsB4xiGw50GWujN+JO2/9QaQnndBswE0kcl+hH1eiwhXpmQk4OZMrRwUr0jbg04ivY/Y7kwYNjQDfyGVui2nvBB4AuxE3jV/FzdN5uGM1H7gx5h6Li8q2AL4AukDzyNYlaE+J8WbWj/L2nNWRMyMAZjYlOOc83NP8s2AU426MBOwHXAS8GXfY1uO+yEPANoy/+xHUYc6pGdcXFwKzwL20gUS6TOjI+mhZeXBbMT4DvBezuxA1pPtSkZZQ5knAVklvAjaC7gK+C3wGZ8PD42A13FyeD0xB+gNN37zDsN0xeg3rAw6RGJedbXtSSqOSDgbegvv7gwFYYW6WG7jHeSnwqaDqZtyDvQY3y8sCln6w/YEDcI58DW46zwb6a8C9kp4ys/PbOopTs/JXkqW1wHDO+dqUUhtmP8G9rqsp0mqU9zBLA5JOM7NNuNL7BC4G74mNH8LFZRlwGmZXATfjymoysL9Z0S/RY2YHGIxIZilZu1Ofs2ia1uW4O/0AZstxOf8Qro+W4AruSeD7OMv/JZ47Gjgh7lcxyTyc/c8F7kzBautF/iTw82TpOtBZiK6U0ojQf4JOD2pOAL0FS0uR5pnZFikvAj4sdBboRFz+/wk4JTa8CXhbUOmOONhkYG+JftzfX4C0HqMhaQMwHmwh7jxNxK3LNuCngYjPAU/hQdrf4t5XAlH3xB6X4mZ6Os6NAv45uOPQnHUrMMYu8TMRY39W0kMR4yOJrHyCpIakz2flt0t6Pue8QBLK+QOSlJVnSTo25t0h6cWS3iofSVn7q2Vk5Xdk5RMl/UXS6cqea8jSkZIej+vLJa2RdFCc5YOSrpLUJ+nWWOozkubE/d0k3R3Xb4p7V0laKuk1yjvyCUiCSBak1os555qyXi5pUNIfVGpyXD9MUinpGuV8jqRGzvmYQND7AqgDpPwhSfdKukbS6yUNSHpDrL+lBQUfzVknS9oq6SRljZPULunTkjZIejImfkDNxMpvJc2OtSXpy/LEB5LeGNeelfRtST+VdJ0jLe/ZqDd2glNSW5XNWSjp5MBqc0LWVEm3Sapn5dOCOnNig3uyU35LhQQpf1PSw1naLw76kKTLglJ3x7p3NBGgLynnt0p6XtLxUjZ5BuqPgfyGpCWS2iQdKOl/JB0n6dJ4/nNqZo6uimt3SPpezL0l57yobJTduwA+Tp6tOmcHJiSdFdT5lqSZcS04QsfJKf+E1JgvaQ9J10p5ac75fEmbs/IbY/4vJT0Y1x+U9Hs5OzckTVPWu1oQ8Ovs1P2dpJdLuUNZiyQ91jLnuDjwUknvkvT5uH5O7LevpPWBxB9KWixppaSrcy73y2Wj3YlZt1xquqR3S7o9zvbZneQ/KDcoaXHO+QApvygrdwV1x0n6kaSsnC9T1tGS/iMWukzKN+acL87SeXKW/rWkK+TsvzwOfb78viTV5WLyXUk3SJovzzNeKmko5vxG0gJJ3wwKfy2unxZnfq+kjZLul/QzOccty8oXlmW5mwPemCLpsOy6YFjS9ljvnyQtMEkGLck599U/FmblXqEDgSHB7QkbBQ7CkyIdoE8hRiJJ8SfcZh8PXBuW4B7cJzgCzyM8i7vL58ee6+KzGndm5gK3405L5d8vAhbieYZj8BTXWtz32A/4Q8zfA/hRlr6bzJZDngB2MtgrcE+2Pfa+GngA9yu2m6Sj8EBms8RKM4YCERcB67J0mxk9YPugXBfp98kYElxkHqDchwdKr8Ptb6KZTzw4Nj0FD2LGAz8Os/YS3D2ehCc1/wV4V5g4gB8Af8aDqm1xxqvCrH055jyIO15/Q7oE5Ycx68LSK8Is9sb56oG0a4E749lRYMwknYYHM7WY9DRoPdIWsH3xUPduwYCZzQFehvQMcLuMKYZ9H3cs7orD3BJrWSDiUOcW+uPaTXGgU/BAZQbwedyHvyXmrQauxyPNofgsBo6L5xq4W9sO/FTSt4DNZrwJ7KM4dz0R+9wXa90bRKi43YBkkl4aLGS4n3wM8BjoBrDH8VD0csSdGX3D3F1dYIYkJROrMQ7C7MuBrAaeG5iEs9ps3A2txiDuik4LQOcCH4z9/z2eXxyImRCUegJ3gA4PALbiHuaTkh41YzLY2cBmwWbzLNQNoHvBnqYZDY7DQ+oy9h4yqUq7qdfMZgXW98FdxoUBwO+CO6YDNwstCWzONZiJuMMPaudgfIJmhDkUh5+GJ0qr8Hsl7hmOx2sF38I55Qg8uBrC6xNjgYBKrCYEMN8B6oiDMeYHsm8X+jnwkGGDeHa5jnudM2LOMPC8pOfMPDlikqp8/U5DUpeZzQbNEswxWAT21gDOgIeEPgZWmkdryyX9weBwzF4UAFT5xdW4cq2KJltwKk0LIG/GOa/AXdt9AzlFzNuEp7cfiWuvwPOXAH+X9D6M+wXjDYbBkkmdmEnQAG0wrModVqMAuk3uDbVn1AWpJqktASbWUdho6xOCbqQDzXgD2Ek4ay+PxWbhGeKfIxoYr8O5qMraduG6YTDmTwgKDQPP4SF0FbTEdhiwCuk7mE3GuWS9xFKMCeaEusOwZzzez2PIhiQ2pcKGY5WaoENGd/Lz92DWEUTfZJKsQUlBAaXaKegxbE9QD2IaZp2CbaAtSCvNbA3YtjjhQeaAg+cDD8NlrLpWjYyz8EB8T4zrrQC3jur6IPAN3LTOAf1QsAIxgOleZHWMAUGPSTVQ3Uh9QvMd4bbNjAFgA9imUgyTyUVBPc6Ec4CjSlmGoYwhw5Kg3WCqxDwz5uAs2+UMolWGPQv0gJaDrRX0gmYDMww7DheDyUH5rbjy6fsHAP8jZIHH908Du4EuBg1LNs2M3SXtZs597WDjZcwzMRfnrjVCdyOtMJEDKKVEDawA68QVYtqhBB0FmNkOhZOcyCRB3ZwdCweYWcBMUOQDbT7OziNBvacF/eYsOz0+U2nqgBcaCiT9HbgZZ/X5wJ2ISTLeZrBO4kEzDg5iHIjriw24c7MskDaM6MIYT1MZD+BZo8qvaFRKULsc4v939CH6Zcw0T2V1A/2gfvfK2C+QsGtBthplHIw48E249j4Br+9twz3UYdA6wTjDJoG6wDaQtUHGRrB1ZhqUbAC0FaOOTJgy2alM1F1ruMeVcGelE3cYVuLsPicOPYwnINbgCm1tYLNOs+oL0MAYDTtcZ0fJyvpxRTeN/1sEhnFKzgVeDVwJzAA9IGyZuUjdh1gDWo9ZuQOfyXZgNudsUV0yymw5JUCWHPgdRDZJvTRNGwGMcCW0G+6y9sbB+3F2noj73uOCQlvjM5N/rNSgmZd/ofvgFmM1nk6biOuQJTTd1204Ox8BTEBcj/EAjuwupIbMNinnYYMSMwyEWT1aDkSTWAJypQMqBBQ4V/Tj2ryPZk1wW8tBu+LTGwiZGb9HcPf2KZziR+F6YDTWau0deKExhovCk/H9RCBkAl4bWPQCzwlYLGmxmdVwjh4DHkdkGZ3mXKtYawzYapJeRzOr2h8TqthgI85ybbiimRD3R3BqPRff42j655UMzwJeixdMajTFpbUX4f9CxHrcEnwTp3wvroRnI+2J2bG407QNF5mAQ/eDPRAxy1LBOoMsKGWq54YaViQVZraTFYhR4BQfh1P34ACg6gdYj+uCwQC4O4DfF085L8KLFVWpvRFz2/nf8v9CSGkEUGtxxNfwqvOPcY7YUE0UmmwwAWxY5PleRLHKk5yLu/VLgV8gHgSWITaS3BcwSbU4XC2AmRjAgst1W2B/e1BgPs7Sa4A9cXncKwCfGRTqwpWZcLZro9nXMxSHWxv7tce1iTjLD8caJZ5DWB3IaOAi9Tc8G7wGzy+sAepIA1jTc825LJKl3TDbG+fCRXiwNjfOdQvwY5M0KSgxFt+tcUEfrokXxiGewm1sHx4kTcO9v1kB5FSacl6JymBcH8YtTCUSjwd1qgpy5SVOaiHAcMx7Bg/INgKvwkPi7+NdLLMEI4YmIArMfhR7/qPRhgdGR+JFkkP/kQj0xSZn44roycD6JpxaC/Dkx/Fx7cZY+IAWRFSNUwOxXhmAdOIh9+9irf1pOkcrceS3utEZzyoNxaG/gVNuBi6aDWAp4s/AvhivkfSYmT0qsdyMVS+AiGrs8AQLPCdwFG7eHsIpPYhTaw88PfV+nD3BU0vPArvHc90xrwN3Wv6IZ3lqcWiAk+L7IlxBzgvgJtAsqv4V57iOloPeGvvMDqRcCPwCrzWeF+e8GrhHaLp51Hqq0KeFHk2yLYLNZva/ol6T1ElTS1cTKrM4C08/HU3V3+OppsU4+1ZmqQ23IADXIW7DOBt3U+/B84Vn4tRfDHwNb7vrxSl/LE0TfA3OKa/GKTweF4H7gIdxsbo05rwUuB9XvtUadwE3KmuOJTsTWJrFEpPGkRgfXTAbqTxeNfPqbfKixARJcyW9UtKv1BzXSTpAXpS4MrKxyyWta5lzhsryAEn3xP0bJH1KzUqN5OnsV0laIU9jX9tyL0eG9yOxdtlyb3lkgU+W9BJJX4rrN6jZUXqipGuV9UnlPF05d0p5r6x86MhQrtXrjW5J+wQce0nqTEGFNlwmZ+Ba/mLc/h4JfBqXt3Nwjb8YV3wP49p+CrAYMRdpCSn9DFd6i0E3B4sfG9y1Dq/X9eEO01BQokrEbg6O2hNPftwA3Bb35gEfJfoLgP8KDpsRa18C/BZ4C8YDMt6C2SnKNmrYUEcXJ9VH8ghuRh9Vzhvx/IBqknokvVyez98ub0k7N7CFsvaRdJekp+QlqVtaaPZBn1N2y8tZz0n6ppQvkRdYKi5qyCs5PZL+Ldb4sKTvS1odc34lz90PynuKr5HXGn+vnccFkt4kaV5Q/iNxfa2kw9WsbB2urDcpaz9JiySd1Ript6ulFpLwVNQq3Lb+XOggoT2B7+Fa/OsYP8Xt7R3BDScCayUdgfEVsqZj6c/AIOILwCRk3wkKvRY3sVuCQgXuYFWu6sM045DHcWenCosNeDfeEVoS3R64DpkYZzkVT8/PwK3VfbiJnIRxP8Z1NGsPo0VHbSPoRVRD0jJ5yWlyK2aUdZC8TPYnSf8VsraiSakcdcQ8P66NSHqtvIJzWFbuiWclaVRe4+uR1/i+KK//fUzSq+VlLUl6JDjvQUnXZO8cf0JZb5by0THnWjUrR++R65MLWs7+trg3JOmEVphyVqGsA+QVpFdLKpB2LhfnnHdT1uVyRfaLYMOb5OKxISuf20RSfmlstiJK2v8hr9CSc75oZ67Vu+O5k+T1vR9JOkTSMfIyuOSK7lXyyu5iSSco6yJJK5TzVLnIKJBUEeMj8jL+JyVNjT2mystfkvR15V2Kvv4ZL6m96vQkow7gDDP7E8Z+eGalN9iuHViG9ArDvgdA1gLMfgcMC44CvQTP5PxMOb/EzN4bLL4Cr+DcWzEdbu4GgjVHcH+iUoIdeKprmmAv0B3ALzG7HTfJ1+PdKu+IeV/AleyP8UaMg3E3+z24s3YIxvPAMco7td9vAcaSiwEHJ+zveIHiB3ggNBm3qQtAd0n5aMweUVZC+RCS3YoXImaBXmPYPIkrJE2xZO/EA5Z23A/4M659O3CnZ2sA2xnfA3GoWTQ9x5p54DWGtCTmvh/vQ1qA+yNX4H7EV/GutK/HGq+M9W7Ha5QnAzdbsutp+jOAe17vMuN6vNjwW+DNkm4S+oljVleCfc4sjQl1mrEIs0/jimyuoX0MW4j0KYNsxpsj8TAjKHso7t1txxVXd/weCYRspNnv2x/c8Rhubt+N2RbEUuDfgMtBM1E+DM9WzcfNJUHxq4Db5Gufgpv3Op5Q2R13mlbgJbZUIWAi6KvAi4AjkM7AWGbYy73vx653Lsm9wEGYfSrCzSlIM8DOh/w1zNYKHQM2N4CciovRduAncciqFrCpZc4Wdk629OAt/LcB+wslEknoaeBqsCVYWi3pJGC+pC/QFK+zgMXm4e9f8YCnCqy24IXXhcB/4hZtUnJK2OnALZJOB5NhY6L8V8M87pb6IM0x7BQ87j8GTzldKPQ1SlsO9JnZq6M58XDcpHUFVz2nZo6hwGUUvNQ+igdcVbZmMmJPpEeFPmDYBcBmMgXoOzhnvcnM7gY9hVkPHmM8GmsehUeJgzgS59DMTRB77R3ccnuKQ5ybpauAPplWATcZRcOBp0fOmjOAU+XAPw98CfRtSv2FwhqIcxH3YMzG5fBWXIkujY3baXqcjeCOijpP4XbacArsAdZv2FLgvRIbLbEOGJR0PPDjnPMeki4wl3vwaPT+QOhRuC4rcEW5eyC/GnX8RYrjE/Au0PPJrN/Mno828xi5JrQ7RmHGiUJvMXeaPiH0U+W8XMlGJC1yV0aduBZ+DNcRG3FF5MlJB3xiUOQhmvK7hWYg1m3iITNehtgE3GZmh4E9jZhmxr3A7Smlj5ulMWWOwyNP5O381wSBFuBNFOOD6uPid+sYSHj//iR5fq/yyRFlApsOttHERMEVhj2Mh8X3mHS/JRsyycxYCNyN2dlBid/gJvEBXN4Rqspd/biW34izaWUJqqzxTBnPAm1CQ8DluOlDaCXY7pLOBV6PONISK4S+CrrDYLuk9+MxxGocIZcJ9eEm10WsZVR2cbXtnAlKRpoCNmbGkLBHzBsnFjkm9T9eYEwjWJqXpfvk6bCqF/ju+FwJINFusgI/SCMA3gZ6Jii/NuY/AhwEmi90D9hu8lD6IaQ5ZmkFsK95w/S5oENy1iTDrgYbAL3PzEaEPocrwWXAGwz7QiC+St9PJtzvxM7v2lXXepE1gPUZbTdjGHI/2AmI72XvD9qEaAN6vCTNGbhZ+2ZQfzouLpgjpRdZl9AqXOGN4O8HVJnkB3DfwffxdpupBpvk1eE3qsyFsu4Em4lxM2aPp8R4yO3Am8H+HXSsYZskXRLc59kizyZV5fgqTVfs+uIkQIeksm55I5ATJrK6IF1W0vgKUjslQ5CE0Q3aiNmB5kGPBN+Sy9uOdJT87Y8OjF5kT+FvhlUJGIvvDXho3Wswx7B1mIuFmT0FLITUZcm2YcyWaCPrfsEQpHFAKTEX7GZynmpmm8mciSviR3H5/4FcmQvXE507EFCWDQPVRDaZDbWRXCRGx0yJi1WWH065aGAoFd5dIWkKWJt5e4qAVSbWmOuBqi8YE6WgJphgxhq16Jp4LuM6qEq1hwVSHTFByn8D7rfEXqAk8YCZDiHZVss2lFVuw9deBXoVKd0YvLxe0pnA66X8Q2CTwc/kZhBg+w4EFEUtKVMbbQwPp1Z90NF+HtjXrV5sR3Rg3nggaTzuwEzEEyRPI07Fy3PDwWoIkhKZ8P8lbUZqeX0F5C9IrY9PxRUAg4J5ZqkOLMF4G7JeM7aADWWpE7E95UKoHAGNA7sbd7/fEdzzjOAos/R2kb8HPGzwC6EDAKsio1SWZUejsXMvbfbmxaoNdkLOXkorc2k5l3tkaaqUf5KVL5V0jRrZJM2SNKW5Ti5KZctlnl3mfHyZ8+71+lhbyz41eUqrU95YOSxpXUNloawi5/zimDdZ0tslzYyW2kLeVouy2qWcYk6hrCRpQFmzm1GuFkoaLHN+mbwZ/M6sfED1ykxbSqleFC2vlIluvIny94J2xFaLqmqyNNksbUOaKXkzBeg3FCa88LC+SV8j5QzJ6ma2WaZ2rGzsIgJCqgdHbQV6lfNEjNLMtkekOoArtIn4y1AlbpG6XFdYDTSIv6KTgTkYDyOq9w8eBo5LZq+X+A1wq2GfqcpSVV1vh0RgzDezx4HC/OWmvOMe1AWjZvYew64B2sB+hfv3a9hpSKSEoIzmhqGCnXSvr+vrP4F7c88VVkyN+8+lZsZ5Ox4tVsWMZ8Equ96Iov823NHaDJyB8dnR3KhE6sGcdSVods66Cfju/wOmRRHuQ3ee4gAAAABJRU5ErkJggg==");
+    --iconscale: 1;
+    --iconshadowcolor: #ffb84e99;
+    --iconshadow: drop-shadow(0 0 0.25rem var(--iconshadowcolor)) drop-shadow(0 0 0.5rem var(--iconshadowcolor));
+    --iconanimcolor: #ffb84e;
+    --iconbefore: radial-gradient(circle,var(--iconanimcolor),transparent);
+    --iconafter: repeating-conic-gradient(var(--iconanimcolor),transparent);
+    --logoscale: 1;
+    --decorationscale: 1;
+    --anim: 1s;
+    --bodyopacity: 0;
+    --glow: none;
+    --glowsize: 0.75rem;
+    --glowcolor: #8a2be2;
+    --glowanim: none;
+    --glowspeed: 5;
+    --blur: 0px;
+    --mask: none;
+    --badgepos: "end";
+    --badgecolor: #203e7a;
+    --badgefontcolor: #ffffff;
+    --badgesize: 1rem;
+    --badgeroundness: 5px;
+    --unlockmsgfontcolor: #ffffff;
+    --titlefontcolor: #ffffff;
+    --descfontcolor: #ffffff;
+    --ssimg: none;
+    font-size: clamp(0.05rem,0.05rem + 3vmax,12.5rem);
+    line-height: 1;
+}
+
+html,
+body {
+    display: grid;
+    align-content: center;
+    background-color: transparent;
+    place-content: center;
+}
+
+body {
+    opacity: var(--bodyopacity);
+    transition: opacity var(--transition);
+    width: 100vw;
+    height: 100vh;
+    mask: var(--mask);
+    animation: animend calc(var(--displaytime) + 100ms) forwards;
+}
+
+@keyframes animend {
+    to { cursor: none; }
+}
+
+.wrapper#outerwrapper {
+    --filter: var(--glow);
+    position: relative;
+    width: var(--notifywidth);
+    height: var(--notifyheight);
+    place-self: center;
+    filter: var(--filter);
+    animation: var(--glowanim);
+}
+
+@keyframes pulse {
+    from { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent); }
+    50% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    to { filter: drop-shadow(0 0 calc(var(--glowsize) * 2) transparent) drop-shadow(0 0 calc(var(--glowsize) * 2) transparent); }
+}
+
+@keyframes double {
+    from { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent); }
+    10% { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) var(--glowcolor)) drop-shadow(0 0 calc(var(--glowsize) / 2) var(--glowcolor)); }
+    25% { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent); }
+    40% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    to { filter: drop-shadow(0 0 calc(var(--glowsize) * 2) transparent) drop-shadow(0 0 calc(var(--glowsize) * 2) transparent); }
+}
+
+@keyframes focus {
+    from { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) blur(1.5rem) brightness(250%); }
+    10% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    90% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    to { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) blur(1.5rem) brightness(250%); }
+}
+
+@keyframes orbit {
+    from { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent); }
+    5% { filter: drop-shadow(0 -0.05rem var(--glowsize) var(--glowcolor)) drop-shadow(0 -0.25rem var(--glowsize) var(--glowcolor)); }
+    10% { filter: drop-shadow(0.05rem -0.05rem var(--glowsize) var(--glowcolor)) drop-shadow(0.25rem -0.25rem var(--glowsize) var(--glowcolor)); }
+    15% { filter: drop-shadow(0.05rem 0.05rem var(--glowsize) var(--glowcolor)) drop-shadow(0.25rem 0.25rem var(--glowsize) var(--glowcolor)); }
+    20% { filter: drop-shadow(-0.05rem 0.05rem var(--glowsize) var(--glowcolor)) drop-shadow(-0.25rem 0.25rem var(--glowsize) var(--glowcolor)); }
+    25% { filter: drop-shadow(-0.05rem -0.05rem var(--glowsize) var(--glowcolor)) drop-shadow(-0.25rem -0.25rem var(--glowsize) var(--glowcolor)); }
+    30% { filter: drop-shadow(0 -0.05rem var(--glowsize) var(--glowcolor)) drop-shadow(0 -0.25rem var(--glowsize) var(--glowcolor)); }
+    40% { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent); }
+    50% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    to { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent); }
+}
+
+@keyframes fluorescent {
+    from { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent) brightness(35%); }
+    19% { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) brightness(35%); }
+    20% { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) var(--glowcolor)) drop-shadow(0 0 calc(var(--glowsize) / 2) var(--glowcolor)) brightness(75%); }
+    21% { filter: drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) drop-shadow(0 0 calc(var(--glowsize) / 2) transparent) brightness(35%); }
+    24% { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent) brightness(35%); }
+    25% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)) brightness(90%); }
+    26% { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent) brightness(35%); }
+    34% { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent) brightness(35%); }
+    35% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    99% { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)); }
+    to { filter: drop-shadow(0 0 var(--glowsize) transparent) drop-shadow(0 0 var(--glowsize) transparent) brightness(35%); }
+}
+
+@keyframes rainbow {
+    from { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)) hue-rotate(0deg); }
+    to { filter: drop-shadow(0 0 var(--glowsize) var(--glowcolor)) drop-shadow(0 0 var(--glowsize) var(--glowcolor)) hue-rotate(360deg); }
+}
+
+body,
+.wrapper#achcont,
+.wrapper#bg {
+    /* Fixes blurriness in previews */
+    will-change: contents;
+    backface-visibility: hidden;
+}
+
+#achicon,
+#logo {
+    will-change: contents;
+    backface-visibility: hidden;
+}
+
+.wrapper#achcont {
+    position: absolute;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr;
+    align-self: center;
+    align-items: center;
+    align-content: center;
+    opacity: var(--opacity);
+    isolation: isolate;
+    border-radius: var(--roundness);
+    overflow: hidden;
+}
+
+body[bgonly] .wrapper#achcont {
+    opacity: 1;
+}
+
+.wrapper#bg {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row-start: 1;
+    border-radius: var(--roundness);
+    opacity: var(--opacity);
+    z-index: -1;
+    border: var(--outlinewidth) var(--outline) var(--outlinecolor);
+}
+
+.wrapper#achcont,
+.wrapper#bg {
+    width: 100%;
+    height: 100%;
+}
+
+body[solid] .wrapper#bg {
+    background-color: var(--primarycolor);
+}
+
+body[gradient] .wrapper#bg {
+    background-image: linear-gradient(var(--gradientangle), var(--primarycolor), var(--secondarycolor));
+}
+
+body[bgimg] .wrapper#bg {
+    filter: brightness(var(--bgimgbrightness));
+}
+
+body[gameart] .wrapper#bg {
+    filter: brightness(var(--brightness));
+}
+
+body[bgimg] .wrapper#bg,
+body[gameart] .wrapper#bg {
+    overflow: hidden;
+}
+
+body[bgimg] .wrapper#bg::after,
+body[gameart] .wrapper#bg::after {
+    content: "";
+    background: var(--bgimg) center / cover no-repeat;
+    filter: blur(var(--blur));
+}
+
+.wrapper#achcont > * {
+    grid-row-start: 1;
+}
+
+.wrapper#achiconwrapper {
+    position: relative;
+    place-self: center;
+    width: calc(var(--notifyheight) - (10px * var(--scale)));
+    height: calc(var(--notifyheight) - (10px * var(--scale)));
+    grid-column-start: 1;
+    margin-inline: calc(5px * var(--scale));
+    isolation: isolate;
+    transform: scale(var(--iconscale));
+}
+
+body[rare]:not([noiconanim]) .wrapper#achiconwrapper,
+body[plat]:not([noiconanim]) .wrapper#achiconwrapper {
+    filter: var(--iconshadow);
+}
+
+.wrapper#achiconwrapper::before,
+.wrapper#achiconwrapper::after {
+    content: "";
+    display: none;
+    width: 100%;
+    height: 100%;
+    mask-image: var(--base64);
+    mask-repeat: repeat;
+    mask-size: 100%;
+    -webkit-mask-image: var(--base64);
+    -webkit-mask-repeat: repeat;
+    -webkit-mask-size: 100%;
+}
+
+body[rare]:not([noiconanim]) .wrapper#achiconwrapper::before,
+body[plat]:not([noiconanim]) .wrapper#achiconwrapper::before {
+    background-image: var(--iconbefore);
+    overflow: hidden;
+    z-index: -1;
+    animation: steamrotate calc(var(--anim) * 18) linear infinite reverse;
+}
+
+body[rare]:not([noiconanim]) .wrapper#achiconwrapper::after,
+body[plat]:not([noiconanim]) .wrapper#achiconwrapper::after {
+    animation: steamrotate calc(var(--anim) * 6) linear infinite;
+    mix-blend-mode: overlay;
+    background: var(--iconafter);
+    overflow: hidden;
+    z-index: -1;
+    filter: blur(1rem);
+}
+
+@keyframes steamrotate {
+    to { transform: rotate(1turn) }
+}
+
+#iconborder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    transform: translate(calc(var(--iconborderx) * 1px),calc(var(--iconbordery) * 1px));
+    background: var(--iconborder) center / contain no-repeat;
+    display: block;
+    width: 100%;
+    height: 100%;
+    scale: var(--iconborderscale);
+    z-index: var(--iconborderpos);
+}
+
+#achicon {
+    width: 85%;
+    /* height: 85%; */
+    border-radius: var(--iconroundness);
+}
+
+body[rare]:not([noiconanim]) .wrapper#achiconwrapper::before,
+body[plat]:not([noiconanim]) .wrapper#achiconwrapper::before,
+body[rare]:not([noiconanim]) .wrapper#achiconwrapper::after,
+body[plat]:not([noiconanim]) .wrapper#achiconwrapper::after,
+#achicon {
+    display: grid;
+    place-self: center;
+    grid-column-start: 1;
+    grid-row-start: 1;
+}
+
+body[nodecoration] .wrapper#achcont > .wrapper#achcontent::before {
+    display: none !important;
+}
+
+body[nodecoration] .wrapper#achcontent > span {
+    grid-column: 1 / -1;
+}
+
+#achcontent {
+    grid-template-columns: 0fr 1fr 0fr;
+    column-gap: calc(10px * var(--scale));
+    align-items: center;
+    font-size: calc(1rem * var(--fontsize));
+    color: var(--fontcolor);
+    /* text-shadow: var(--fontoutline); */
+    -webkit-text-stroke: var(--fontoutline);
+    paint-order: stroke fill;
+    filter: var(--fontshadow);
+    grid-column-start: 2;
+}
+
+#achcontent > span,
+#header > span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    grid-column-start: 2;
+    line-height: calc(1.2rem * var(--fontsize));
+    word-break: break-word;
+    -webkit-box-align: center;
+    margin-block: calc(((var(--textvspace) * 1px) - 1.5px) * var(--scale));
+    /* padding-inline: calc(var(--scale) * 2px); */
+}
+
+body[nodecorationshadow] #achcontent {
+    filter: none;
+}
+
+body[nodecorationshadow] #achcontent > span {
+    filter: var(--fontshadow);
+}
+
+/* `padding-block` ensures text does not get cut off when custom per-element font-sizes are used */
+#achcontent > #unlockmsg {
+    font-size: calc(1rem * var(--unlockmsgfontsize));
+    color: var(--unlockmsgfontcolor);
+    padding-block: calc(0.2rem * var(--unlockmsgfontsize));
+}
+
+#achcontent > #title {
+    font-size: calc(1rem * var(--titlefontsize));
+    color: var(--titlefontcolor);
+    padding-block: calc(0.2rem * var(--titlefontsize));
+}
+
+#achcontent > #desc {
+    font-size: calc(1rem * var(--descfontsize));
+    color: var(--descfontcolor);
+    padding-block: calc(0.2rem * var(--descfontsize));
+}
+
+#hiddenicon {
+    display: inline-block;
+    width: calc(0.85rem * var(--fontsize));
+    height: calc(0.85rem * var(--fontsize));
+    background: var(--hiddenicon) center / contain no-repeat;
+    margin-right: calc(0.25rem * var(--fontsize));
+    vertical-align: calc(-0.5px * var(--fontsize));
+}
+
+#badge {
+    position: absolute;
+    inset-inline: var(--badgeposx);
+    inset-block: var(--badgeposy);
+    translate: 0 -50%;
+    display: grid;
+    text-align: center;
+    justify-self: center;
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+    background-color: var(--badgecolor);
+    color: var(--badgefontcolor);
+    font-size: var(--badgesize);
+    border-radius: var(--badgeroundness);
+    padding: calc(var(--badgesize) / 4) calc(var(--badgesize) / 3);
+    filter: drop-shadow(0 0 0.15rem var(--mediumgrey));
+    z-index: 100;
+}
+
+#badge:not([badgeimg]) {
+    height: calc(var(--badgesize) * 1.5);
+}
+
+#badge[badgeimg] {
+    width: calc(var(--badgesize) * 1.5);
+    height: calc(var(--badgesize) * 1.5);
+    background: var(--badgeimg) center / contain no-repeat;
+    background-color: transparent;
+}
+
+.wrapper#ssdisplay {
+    --y: 100%;
+    --calc: 1;
+    display: none;
+    width: var(--notifywidth);
+    height: calc(var(--notifyheight) * 3.5);
+    background-color: transparent;
+    opacity: var(--opacity);
+    overflow: hidden;
+}
+
+body:not([ss])[ssdisplay] .wrapper#ssdisplay {
+    display: grid;
+}
+
+body[bottomleft] .wrapper#ssdisplay,
+body[bottomleft] .wrapper#ssdisplay::before,
+body[bottomcenter] .wrapper#ssdisplay,
+body[bottomcenter] .wrapper#ssdisplay::before,
+body[bottomright] .wrapper#ssdisplay,
+body[bottomright] .wrapper#ssdisplay::before {
+    border-radius: var(--roundness) var(--roundness) 0 0;
+}
+
+body[topleft] .wrapper#ssdisplay,
+body[topleft] .wrapper#ssdisplay::before,
+body[topcenter] .wrapper#ssdisplay,
+body[topcenter] .wrapper#ssdisplay::before,
+body[topright] .wrapper#ssdisplay,
+body[topright] .wrapper#ssdisplay::before {
+    border-radius: 0 0 var(--roundness) var(--roundness);
+}
+
+body[bottomleft] .wrapper#ssdisplay,
+body[bottomcenter] .wrapper#ssdisplay,
+body[bottomright] .wrapper#ssdisplay {
+    grid-row-start: 1;
+}
+
+body[topleft] .wrapper#ssdisplay,
+body[topcenter] .wrapper#ssdisplay,
+body[topright] .wrapper#ssdisplay {
+    --y: -150%;
+    --calc: -1;
+    grid-row-start: 2;
+}
+
+.wrapper#ssdisplay::before {
+    content: "";
+    place-self: center;
+    width: 100%;
+    height: 100%;
+    background: var(--ssimg) center / cover no-repeat;
+    translate: 0 var(--y);
+}
+
+body:not([ss])[ssdisplay][bottomleft] .wrapper#achcont,
+body:not([ss])[ssdisplay][bottomleft] .wrapper#bg,
+body:not([ss])[ssdisplay][bottomcenter] .wrapper#achcont,
+body:not([ss])[ssdisplay][bottomcenter] .wrapper#bg,
+body:not([ss])[ssdisplay][bottomright] .wrapper#achcont,
+body:not([ss])[ssdisplay][bottomright] .wrapper#bg {
+    --ssbr: 0 0 var(--roundness) var(--roundness);
+}
+
+body:not([ss])[ssdisplay][topleft] .wrapper#achcont,
+body:not([ss])[ssdisplay][topleft] .wrapper#bg,
+body:not([ss])[ssdisplay][topcenter] .wrapper#achcont,
+body:not([ss])[ssdisplay][topcenter] .wrapper#bg,
+body:not([ss])[ssdisplay][topright] .wrapper#achcont,
+body:not([ss])[ssdisplay][topright] .wrapper#bg {
+    --ssbr: var(--roundness) var(--roundness) 0 0;
+}
+
+body[notify1line] .wrapper#achcontent span#unlockmsg,
+body[notify1line] .wrapper#header span#unlockmsg,
+body[notify1line] .wrapper#achcontent span#title,
+body[notify1line] .wrapper#achcontent span#desc {
+    -webkit-line-clamp: 1;
+    /*
+        `padding-block: calc(0.2rem)...` appears to work correctly when clamped to 2 lines, but not 1.
+        When Settings > Notifications > Limit Text to 1 Line is enabled, removing the `padding-block`
+        and replacing with `line-height: 1.5` appears to give the same spacing without displaying
+        overflowing high/low characters below - e.g.qtypdfghjklb etc.
+    */
+    line-height: 1.5;
+    padding-block: 0;
+}
+
+@keyframes ssslidein {
+    to { translate: 0 0; }
+}
+
+@keyframes ssslideout {    
+    to { translate: 0 var(--y); }
+}
+
+@keyframes ssbrin {
+    to { border-radius: var(--ssbr); }
+}
+
+@keyframes ssbrout {
+    to { border-radius: var(--roundness); }
+}
+
+:root:has(body[ss]) {
+    --anim: 0s;
+}
+
+body[paused] .wrapper#outerwrapper,
+body[paused] .wrapper#achcont,
+body[paused] .wrapper#achcont div,
+body[paused] .wrapper#achcont div::before,
+body[paused] .wrapper#achcont div::after,
+body[paused] .wrapper#achcont div > *,
+body[paused] #achicon,
+body[paused] #logo,
+body[paused] .wrapper#ssdisplay,
+body[paused] .wrapper#ssdisplay::before,
+body[ss] .wrapper#achcont,
+body[ss] .wrapper#achcont div,
+body[ss] .wrapper#achcont div::before,
+body[ss] .wrapper#achcont div::after,
+body[ss] .wrapper#achcont div > *,
+body[ss] #achicon,
+body[ss] #logo {
+    animation-play-state: paused !important;
+}
+
+body[ss] .wrapper#achcont > .wrapper#achcontent {
+    opacity: 1 !important;
+}
+
+body[ss] .wrapper#achcont {
+    animation-play-state: paused !important;
+    width: 100% !important;
+    scale: 1 !important;
+}
+
+body[ss] .wrapper#bg {
+    border-radius: var(--roundness);
+}
+
+body[ss] .wrapper#logo {
+    display: none;
+}
+
+body[ss] .wrapper#achiconwrapper,
+body[ss] .wrapper#achcontent > #title,
+body[ss] .wrapper#achcontent > #desc {
+    opacity: 1;
+}
+
+/* ---- AW Next ----------------------------------------------------------------------------------- */
+
+/*
+  SAN sizes each popup window to its card. AW Next sizes one window for every state of a theme, so
+  the card is drawn in a body of its own size and the text scale follows the card, not the window.
+*/
+:root {
+    font-size: clamp(0.05rem, 0.05rem + max(var(--notifywidth), var(--notifyheight)) * 0.03, 12.5rem);
+}
+
+body {
+    width: var(--notifywidth);
+    height: var(--notifyheight);
+    container-type: size;
+}

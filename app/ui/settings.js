@@ -4839,6 +4839,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           description: t('test-rare-desc', 'Rare · {percent}% of players', 'Rare · {percent} % des joueurs', { percent: 1.4 }),
           notificationType: 'achievement',
           rarityPercent: 1.4,
+          // Shown as a hidden one too, so the padlock option has somewhere to be seen.
+          hidden: true,
         });
       }
       if (previewState === 'completion') {
@@ -6182,73 +6184,60 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
-    // An import is never refused over a property AW Next cannot draw: it converts what maps and
-    // reports the rest. Keys are printed as SAN spells them so the user can find them there.
+    // The theme is kept whole and drawn by SAN's own card layouts, so the report is only about what
+    // could not come along: files the theme names but does not carry, and keys this version ignores.
     function sanReportDetail(report) {
       if (!report) return '';
-      const lines = [];
-      lines.push(t('import-san-carried', '{count} settings carried over.', '{count} reglages repris.', { count: (report.mapped || []).length }));
-
-      const byCode = new Map();
-      for (const entry of report.skipped || []) {
-        if (!byCode.has(entry.code)) byCode.set(entry.code, []);
-        byCode.get(entry.code).push(entry.key);
+      const lines = [t('import-san-carried', '{count} settings carried over.', '{count} réglages repris.', { count: report.kept || 0 })];
+      const cards = (report.layouts || []).join(', ');
+      if (cards) {
+        lines.push(
+          t(
+            'import-san-drawn',
+            'Drawn with SAN’s own "{cards}" layout, so it looks and moves as it did in SAN.',
+            'Dessiné avec la disposition « {cards} » de SAN : il a le même aspect et le même mouvement que dans SAN.',
+            { cards }
+          )
+        );
       }
-      const missing = (report.assets || []).filter((entry) => entry.code === 'asset-missing').map((entry) => entry.name || '?');
-      const refused = (report.assets || []).filter((entry) => entry.code === 'asset-rejected').map((entry) => entry.name);
+      const sounds = (report.assets || []).filter((entry) => entry.kind === 'sound' && entry.code === 'installed').length;
+      if (sounds) lines.push(t('import-san-sounds', '{count} sound(s) added to your sounds.', '{count} son(s) ajouté(s) à tes sons.', { count: sounds }));
 
-      const sections = [
-        ['unsupported', t('import-san-unsupported', 'Not drawn by an AW Next popup: {keys}', 'Non dessine par une popup AW Next : {keys}')],
-        ['app-setting', t('import-san-app-setting', 'A setting of the app rather than part of a preset: {keys}', 'Un reglage de l’application, pas du preset : {keys}')],
-        ['unknown', t('import-san-unknown', 'Not recognised by this version: {keys}', 'Non reconnu par cette version : {keys}')],
+      const missing = [
+        ...(report.missing || []).map((entry) => entry.name || '?'),
+        ...(report.assets || []).filter((entry) => entry.code === 'asset-missing').map((entry) => entry.name || '?'),
       ];
+      const refused = (report.assets || []).filter((entry) => entry.code === 'asset-rejected').map((entry) => entry.name);
       const skipped = [];
-      for (const [code, template] of sections) {
-        const keys = byCode.get(code);
-        if (keys && keys.length) skipped.push('  ' + template.replace('{keys}', keys.join(', ')));
-      }
-      if (missing.length) {
-        skipped.push('  ' + t('import-san-asset-missing', 'Missing from the theme file: {names}', 'Absent du fichier de theme : {names}').replace('{names}', missing.join(', ')));
-      }
+      if (missing.length) skipped.push('  ' + t('import-san-asset-missing', 'Missing from the theme file: {names}', 'Absent du fichier de thème : {names}', { names: missing.join(', ') }));
       if (refused.length) {
-        skipped.push('  ' + t('import-san-asset-rejected', 'Refused as an unsupported file: {names}', 'Refuse car le fichier n’est pas pris en charge : {names}').replace('{names}', refused.join(', ')));
+        skipped.push('  ' + t('import-san-asset-rejected', 'Refused as an unsupported file: {names}', 'Refusé car le fichier n’est pas pris en charge : {names}', { names: refused.join(', ') }));
+      }
+      if ((report.unknown || []).length) {
+        skipped.push('  ' + t('import-san-kept-unknown', 'Kept, but not drawn by this version: {keys}', 'Gardé, mais pas dessiné par cette version : {keys}', { keys: report.unknown.join(', ') }));
       }
       if (skipped.length) {
         lines.push('');
         lines.push(t('import-san-skipped', 'Not carried over:', 'Non repris :'));
         lines.push(...skipped);
       }
-
-      if ((report.notes || []).includes('base-layout') && report.sanPreset) {
-        lines.push('');
-        lines.push(
-          t(
-            'import-san-base-layout',
-            'The theme was built on SAN\u2019s "{name}" card. AW Next draws its own, so the layout is not the one you had; the colours, motion and effects are.',
-            'Le thème était bâti sur la carte « {name} » de SAN. AW Next dessine la sienne : la disposition n’est donc pas celle que vous aviez, les couleurs, le mouvement et les effets si.',
-            { name: report.sanPreset }
-          )
-        );
-      }
-      if ((report.notes || []).includes('states-merged')) {
-        lines.push('');
-        lines.push(
-          t(
-            'import-san-states-merged',
-            'SAN keeps a separate theme for rare and 100% unlocks. AW Next paints both states from this one preset, so check its Rare & completion colours.',
-            'SAN garde un theme distinct pour les succes rares et le 100 %. AW Next peint ces deux etats avec ce seul preset : verifiez ses couleurs Rare et completion.'
-          )
-        );
-      }
       lines.push('');
       lines.push(
         t(
-          'import-san-installed',
-          'It is now an ordinary preset: open it under "Edit a preset" to change anything.',
-          'C’est desormais un preset ordinaire : ouvrez-le sous « Modifier un preset » pour tout ajuster.'
+          'import-san-ready',
+          'Pick it in the preset list. It exports as an .awpreset like any other preset, with its sounds.',
+          'Choisis-le dans la liste des presets. Il s’exporte en .awpreset comme les autres, avec ses sons.'
         )
       );
       return lines.join('\n');
+    }
+
+    // A SAN preset has no designer options behind it, so it is selected for use instead of opened.
+    async function showImportedSanPreset(name) {
+      await refreshOverlayPresetMenu(name);
+      await refreshGeneratedPresetList(name);
+      await loadPresetIntoBuilder(name);
+      setPresetStatus(`${$('#pd-status').attr('data-imported') || ''} ${name}`.trim(), 'ok');
     }
 
     $('#btn-import-san').click(async function () {
@@ -6287,21 +6276,65 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
 
         if (res && res.ok) {
-          await refreshOverlayPresetMenu(res.name);
-          await refreshGeneratedPresetList(res.name);
-          await loadPresetIntoBuilder(res.name);
-          setPresetStatus(`${$('#pd-status').attr('data-imported') || ''} ${res.name}`.trim(), 'ok');
+          await showImportedSanPreset(res.name);
           remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
             type: 'info',
-            title: t('import-san-report-title', 'Theme imported', 'Theme importe'),
+            title: t('import-san-report-title', 'Theme imported', 'Thème importé'),
             message: res.name,
             detail: sanReportDetail(res.report),
             noLink: true,
           });
         } else if (!res || !res.canceled) {
           const error = String((res && res.error) || '');
-          const invalid = t('import-san-invalid', 'This file is not a Steam Achievement Notifier theme.', 'Ce fichier n’est pas un theme Steam Achievement Notifier.');
+          const invalid = t('import-san-invalid', 'This file is not a Steam Achievement Notifier theme.', 'Ce fichier n’est pas un thème Steam Achievement Notifier.');
           setPresetStatus(error ? `${invalid} (${error})` : invalid, 'error');
+        }
+      } catch (err) {
+        debug.log(err);
+        setPresetStatus((($('#pd-status').attr('data-fail') || '') + ': ' + err).trim(), 'error');
+      }
+      self.css('pointer-events', 'initial');
+    });
+
+    // SAN's own settings on this PC: no file to pick, and a second run refreshes the same presets.
+    $('#btn-import-san-setup').click(async function () {
+      const self = $(this);
+      self.css('pointer-events', 'none');
+      try {
+        const res = await ipcRenderer.invoke('import-san-setup');
+        const installed = (res && res.installed) || [];
+        if (installed.length) {
+          await showImportedSanPreset(installed[0].name);
+          const lines = [
+            t(
+              'import-san-setup-active',
+              'Your SAN themes in use (regular, semi-rare, rare and 100%) are in "{name}", which switches between them as SAN does.',
+              'Tes thèmes SAN en service (normal, semi-rare, rare et 100 %) sont dans « {name} », qui passe de l’un à l’autre comme SAN.',
+              { name: installed[0].name }
+            ),
+          ];
+          if (installed.length > 1) {
+            lines.push(
+              t('import-san-setup-saved', 'Your other saved themes became presets too: {names}', 'Tes autres thèmes enregistrés sont aussi devenus des presets : {names}', {
+                names: installed.slice(1).map((one) => one.name).join(', '),
+              })
+            );
+          }
+          if (res.failed && res.failed.length) {
+            lines.push(t('import-san-setup-failed', 'Not imported: {names}', 'Non importés : {names}', { names: res.failed.map((one) => `${one.name || '?'} (${one.error})`).join(', ') }));
+          }
+          lines.push('', sanReportDetail(installed[0].report));
+          remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+            type: 'info',
+            title: t('import-san-report-title', 'Theme imported', 'Thème importé'),
+            message: installed[0].name,
+            detail: lines.join('\n'),
+            noLink: true,
+          });
+        } else if (res && res.error === 'san-not-found') {
+          setPresetStatus(t('import-san-not-found', 'Steam Achievement Notifier was not found on this PC.', 'Steam Achievement Notifier est introuvable sur ce PC.'), 'error');
+        } else {
+          setPresetStatus((($('#pd-status').attr('data-fail') || '') + (res && res.error ? ': ' + res.error : '')).trim(), 'error');
         }
       } catch (err) {
         debug.log(err);

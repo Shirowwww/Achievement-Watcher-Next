@@ -1,9 +1,8 @@
 'use strict';
 
-// The two halves of the SAN import that are not in util/sanImport.js: the button that starts one,
-// and the report that tells the user what it did (conversion itself is covered by
-// test/core/sanImport.test.js). What matters here: the adapter cannot grow an outcome the UI has no
-// words for, the import writes only into the user's own preset storage, and the button ships labelled.
+// The parts of the SAN import outside util/sanImport.js: the two buttons that start one, the report
+// that tells the user what it did, the export that must carry every sound, and the notification
+// path that plays each state's own sound (the import itself is test/core/sanImport.test.js).
 
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -13,37 +12,57 @@ const test = require('node:test');
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
 const { parse } = require(path.join(appRoot, 'node_modules', 'node-html-parser'));
-const sanImport = require(path.join(appRoot, 'util', 'sanImport.js'));
 
 const read = (...parts) => fs.readFileSync(path.join(appRoot, ...parts), 'utf8');
 const document = parse(read('view', 'app.html'));
 const settings = read('ui', 'settings.js');
-// The main process is init.js plus the other electron/*.js files that register handlers.
 const { mainProcessSource } = require('../helpers/mainProcessSource.js');
 const main = mainProcessSource();
 const localeDir = path.join(appRoot, 'locale', 'lang');
 const localeFiles = fs.readdirSync(localeDir).filter((file) => file.endsWith('.json'));
 
-test('the import sits with the other preset actions and is fully labelled', () => {
-  const button = document.querySelector('#pd-actions #btn-import-san');
-  assert.ok(button, 'no SAN import button in the preset designer actions');
-  assert.equal(button.querySelector('span').getAttribute('data-lang'), 'importSan');
+const block = (source, pattern, what) => {
+  const match = pattern.exec(source);
+  assert.ok(match, `${what} is gone`);
+  return match[0];
+};
 
+test('both imports sit with the other preset actions and are labelled in every language', () => {
+  const buttons = { '#btn-import-san': 'importSan', '#btn-import-san-setup': 'importSanSetup' };
   assert.equal(localeFiles.length, BUNDLED_LOCALE_COUNT);
-  for (const file of localeFiles) {
-    const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
-    assert.ok(String(locale.settings.notification.option.designer.importSan || '').trim(), `${file}: the button has no label`);
+  for (const [selector, key] of Object.entries(buttons)) {
+    const button = document.querySelector(`#pd-actions ${selector}`);
+    assert.ok(button, `${selector} is not in the preset designer actions`);
+    assert.equal(button.querySelector('span').getAttribute('data-lang'), key);
+    for (const file of localeFiles) {
+      const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
+      assert.ok(String(locale.settings.notification.option.designer[key] || '').trim(), `${file}: ${selector} has no label`);
+    }
   }
 });
 
-test('the button converts a theme, it does not teach the app to read SAN files', () => {
-  // The whole feature is one call into the adapter. Nothing else in the app may learn the format.
+test('the buttons hand the work to the main process and select what it installed', () => {
   assert.match(settings, /invoke\('import-san-theme', \{\}\)/);
+  assert.match(settings, /invoke\('import-san-setup'\)/);
   assert.match(main, /ipcMain\.handle\('import-san-theme'/);
-  assert.match(main, /sanImport\.installSanTheme\(\{/);
+  assert.match(main, /ipcMain\.handle\('import-san-setup'/);
 
-  const sources = ['app.js', path.join('ui', 'settings.js'), path.join('watchdog', 'toaster.js')];
-  for (const relative of sources) {
+  const select = block(settings, /async function showImportedSanPreset\(name\) \{[\s\S]*?\n    \}/, 'the shared selection step');
+  assert.match(select, /await refreshOverlayPresetMenu\(name\)/);
+  assert.match(select, /await refreshGeneratedPresetList\(name\)/);
+
+  const single = block(settings, /\$\('#btn-import-san'\)\.click\([\s\S]*?\n    \}\);/, 'the .san import handler');
+  assert.match(single, /await showImportedSanPreset\(res\.name\)/);
+  // A name clash asks, exactly as an .awpreset import does, and changes nothing until it is answered.
+  assert.match(single, /res\.error === 'duplicate'/);
+  assert.match(single, /duplicate: choice === 1 \? 'replace' : 'rename'/);
+
+  const setup = block(settings, /\$\('#btn-import-san-setup'\)\.click\([\s\S]*?\n    \}\);/, 'the settings import handler');
+  assert.match(setup, /await showImportedSanPreset\(installed\[0\]\.name\)/);
+  assert.match(setup, /res\.error === 'san-not-found'/);
+
+  // Nothing outside the importer learns the format.
+  for (const relative of ['app.js', path.join('ui', 'settings.js')]) {
     let source = '';
     try {
       source = fs.readFileSync(path.join(appRoot, relative), 'utf8');
@@ -52,44 +71,56 @@ test('the button converts a theme, it does not teach the app to read SAN files',
     }
     assert.doesNotMatch(source, /usertheme\.json/, `${relative} reads the SAN format directly`);
   }
-
-  // ...and once imported it is a preset like any other: the same menus rebuild, the same editor opens.
-  const handler = /\$\('#btn-import-san'\)\.click\([\s\S]*?\n    \}\);/.exec(settings);
-  assert.ok(handler, 'the SAN import handler is gone');
-  assert.match(handler[0], /await refreshOverlayPresetMenu\(res\.name\)/);
-  assert.match(handler[0], /await refreshGeneratedPresetList\(res\.name\)/);
-  assert.match(handler[0], /await loadPresetIntoBuilder\(res\.name\)/);
-  // A name clash asks, exactly as an .awpreset import does, and changes nothing until it is answered.
-  assert.match(handler[0], /res\.error === 'duplicate'/);
-  assert.match(handler[0], /duplicate: choice === 1 \? 'replace' : 'rename'/);
 });
 
 test('an import can only ever write into the user own folders', () => {
-  const call = /sanImport\.installSanTheme\(\{[\s\S]*?\}\);/.exec(main);
-  assert.ok(call, 'the install call is gone');
-  assert.match(call[0], /presetsDir: usersPresetsDir\(\)/);
-  assert.match(call[0], /soundsDir: userSoundsDir\(\)/);
-  assert.match(call[0], /imagesDir: userPresetImagesDir\(\)/);
-  // The designer's scratch preset is not a name a theme may take over.
-  assert.match(call[0], /reservedNames: \[PREVIEW_PRESET_NAME\]/);
-  // A bundled preset of the same name is a clash, or the import would quietly hide it.
-  assert.match(call[0], /takenNames: bundledPresetRoots\(\)/);
-  assert.match(main, /function userPresetImagesDir\(\) \{\s*\n\s*return path\.join\(userData, 'presets', 'images'\);/);
+  for (const call of [/sanImport\.installSanTheme\(\{[\s\S]*?\}\);/, /sanImport\.installSanSetup\(\{[\s\S]*?\}\);/]) {
+    const source = block(main, call, String(call));
+    assert.match(source, /presetsDir: usersPresetsDir\(\)/);
+    assert.match(source, /soundsDir: userSoundsDir\(\)/);
+    assert.match(source, /reservedNames: \[PREVIEW_PRESET_NAME\]/);
+    // A bundled preset of the same name is a clash, or the import would quietly hide it.
+    assert.match(source, /takenNames: bundledPresetNames\(\)/);
+  }
 });
 
-test('every outcome the adapter can report has words in the UI', () => {
-  const detail = /function sanReportDetail\(report\)[\s\S]*?\n    \}/.exec(settings);
-  assert.ok(detail, 'the report is not rendered anywhere');
-
-  // Every disposition a key can be given, and every way an asset can fail, is printed. A code with
-  // no sentence would silently drop part of "what was not carried over" from the report.
-  const reported = new Set(sanImport.SAN_KEYS.map((entry) => entry.code).filter((code) => code !== 'mapped' && code !== 'internal'));
-  reported.add('unknown');
-  for (const code of reported) assert.ok(detail[0].includes(`'${code}'`), `the report never mentions ${code}`);
-  for (const code of ['asset-missing', 'asset-rejected']) assert.ok(detail[0].includes(`'${code}'`), `the report never mentions ${code}`);
-  // Every structural difference the adapter can point out is stated outright, not left implicit.
-  for (const note of sanImport.SAN_NOTES) assert.ok(detail[0].includes(`'${note}'`), `the report never mentions the note ${note}`);
+test('every outcome the importer reports has words in the dialog', () => {
+  const detail = block(settings, /function sanReportDetail\(report\)[\s\S]*?\n    \}/, 'the report');
+  for (const field of ['report.kept', 'report.layouts', 'report.missing', 'report.unknown', 'report.assets']) {
+    assert.ok(detail.includes(field), `the report never reads ${field}`);
+  }
+  for (const code of ['asset-missing', 'asset-rejected', 'installed']) assert.ok(detail.includes(`'${code}'`), `the report never mentions ${code}`);
   assert.match(settings, /detail: sanReportDetail\(res\.report\)/);
+});
+
+test('the whole report reaches the log, not just the outcome', () => {
+  const log = block(main, /function logSanImport\(source, out\) \{[\s\S]*?\n\}/, 'the import log');
+  for (const field of ['report.sanVersion', 'report.layouts', 'report.types', 'report.kept', 'report.unknown', 'report.assets']) {
+    assert.ok(log.includes(field), `the log never prints ${field}`);
+  }
+  const single = block(main, /ipcMain\.handle\('import-san-theme'[\s\S]*?\n\}\);/, 'the .san handler');
+  assert.match(single, /logSanImport\(/);
+  const setup = block(main, /ipcMain\.handle\('import-san-setup'[\s\S]*?\n\}\);/, 'the settings handler');
+  assert.match(setup, /logSanImport\(/);
+});
+
+test('exporting a SAN preset carries its origin, its cut-offs and every state sound', () => {
+  const exporter = block(main, /ipcMain\.handle\('export-preset'[\s\S]*?\n\}\);/, 'the export handler');
+  for (const field of ['origin: previous.origin', 'sanSounds: previous.sanSounds', 'sanThresholds: previous.sanThresholds']) {
+    assert.ok(exporter.includes(field), `the export drops ${field}`);
+  }
+  assert.match(exporter, /extraSounds,/);
+  // A preset with no designer options keeps its own sound rather than taking the global one.
+  assert.match(exporter, /options \? options\.sound : previous\.sound/);
+});
+
+test('a notification from a SAN preset plays the sound of its own state', () => {
+  const init = read('electron', 'init.js');
+  assert.match(init, /sanEngine\.presetSound\(presetFolder, \{/);
+  // The unlock rate reaches the popup page, which picks the state the same way.
+  assert.match(init, /unlockRate: data\.unlockRate != null \? data\.unlockRate : data\.rarityPercent/);
+  // Installed SAN presets follow the engine they were built with.
+  assert.match(init, /sanEngine\.refreshPreset\(/);
 });
 
 test('a preset can carry its own background picture, from a folder the app owns', () => {
@@ -122,15 +153,6 @@ test('a preset can carry its own background picture, from a folder the app owns'
     assert.ok(String(value.noImage || '').trim(), `${file}: the picture menu has no empty entry`);
     assert.ok(String(value.image || '').trim(), `${file}: the background mode has no label`);
   }
-});
-
-test('the whole report reaches the log, not just the outcome', () => {
-  // The dialog is the only place a user sees what was lost, and it is one click from being gone.
-  const handler = /ipcMain\.handle\('import-san-theme'[\s\S]*?\n\}\);/.exec(main);
-  assert.ok(handler, 'the SAN import handler is gone');
-  assert.match(handler[0], /out\.report\.sanVersion/);
-  assert.match(handler[0], /out\.report\.skipped/);
-  assert.match(handler[0], /out\.report\.assets/);
 });
 
 test('the preview resolves a preset picture rather than showing a broken one', () => {

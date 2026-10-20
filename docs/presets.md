@@ -127,7 +127,7 @@ group. In **Simple** interface mode the Advanced halves are not shown at all.
 | **Border & corners** | Corner radius, which edge carries the accent bar (or a full outline, or none) and its thickness; under Advanced, a border of your own colour. |
 | **Shadow & glow** | How deep the drop shadow is, how much the popup glows in its accent colour, and whether that glow **pulses** or **breathes** while the popup is on screen. |
 | **Motion & timing** | Which edge the popup enters from and leaves to (or fade, or zoom), how long it stays on screen, and - under Advanced - how far it travels, entry and exit speed, the entry curve (smooth, linear, back, gentle, snap or elastic) and an **exit curve** of its own, which defaults to the one every preset always left on. |
-| **Rare & completion** | The colour and glow for a rare unlock and for 100% completion, a **state tint** that washes the whole card in that colour rather than only its accents, whether the progress bar shows, whether a **rarity badge** prints the unlock rate, and - under Advanced - the progress bar thickness and the silver and bronze tiers. |
+| **Rare & completion** | The colour and glow for a rare unlock and for 100% completion, a **state tint** that washes the whole card in that colour rather than only its accents, whether the progress bar shows, whether a **rarity badge** prints the unlock rate, and - under Advanced - the progress bar thickness, the silver and bronze tiers, and a **padlock** before the title of a hidden achievement. |
 | **Sound** | A sound this preset plays instead of the one in the Notifications tab. Leave it on **App setting** for no opinion. |
 
 | Action | What it does |
@@ -188,60 +188,49 @@ What it covers, and what it does not:
 
 ## Import a theme from Steam Achievement Notifier
 
-If you used **Steam Achievement Notifier**, the themes you made there do not have to be rebuilt by
-hand. **Import SAN theme**, in the **Notification presets** tab, reads a `.san` file and turns it into an AW Next
-preset.
+If you used **Steam Achievement Notifier**, your themes come across whole. AW Next draws an imported
+theme with SAN's own card layouts, shared by SAN's author, so it looks and moves exactly the way it
+did in SAN. Two buttons in the **Notification presets** tab do it:
 
-It is a conversion, not a compatibility mode. What lands on disk is an ordinary generated preset:
-it opens in **Edit a preset**, every control shows the value it was converted to, and it exports as
-an `.awpreset` like anything else. AW Next never reads the SAN file again.
-
-Both shapes work: the `.san` file SAN exports, and the `usertheme.json` inside a theme SAN has
-already unpacked (in `%APPDATA%\steamachievementnotifier\userthemes\...`), in which case the
-pictures and sounds beside it come across too.
+- **Import SAN theme** reads one `.san` file, or the `usertheme.json` inside a theme SAN has already
+  unpacked, with the pictures and sounds beside it.
+- **Import from SAN on this PC** reads SAN's own settings when SAN is installed here. The four themes
+  in use (regular, semi-rare, rare and 100%) become one preset, `SAN - <theme name>`, that switches
+  between them the way SAN does, and every other theme you saved becomes a preset of its own. Running
+  it again refreshes those presets instead of adding copies, and never touches one of your own presets
+  that happens to share a name.
 
 ### What comes across
 
-Colours and the gradient, corner rounding, opacity, font size and the description size beside it,
-text colour and a separate title colour, the outline, the glow with its colour and its animation,
-the rare/uncommon/scarce colours, the text shadow and text outline, the icon size, its rounding, its
-border and its glow, the display time, the direction the popup travels, the game name and the rarity
-figure, the background picture, and the sound. A font the theme named is matched to the closest of
-the five families AW Next uses.
+Everything the theme holds: every setting, its pictures (background, mask, logos and decorations,
+icon border, percentage badges, hidden-achievement icon), its font, and its sounds, one per state or a
+folder SAN picks from at random. The preset carries all of it, so SAN is not needed afterwards, and it
+exports as an `.awpreset` with its sounds like any other preset.
 
-A theme set to play a **random sound from a folder** brings that folder's audio into your sound list
-too. Choosing at random is a setting of the Notifications tab rather than something a preset decides,
-so the preset itself keeps no opinion, but the sounds are there to point it at.
+Its controls are SAN's, not the designer's sliders, so you pick it in the preset list rather than
+open it in **Edit a preset**. To change one, change it in SAN and import it again.
 
-### What does not, and why
+Which state a notification gets follows **your rarity settings in AW Next**, as for every other
+preset. A 100% completion is SAN's 100% card. In rare mode, gold and silver are its rare card and
+bronze its semi-rare one; in trophy mode, gold, silver and bronze are rare, semi-rare and regular. A
+rare or 100% sound chosen in AW Next still wins over the theme's own, and the position and size of
+the popup are the ones set in the **Notification** tab.
 
-An import is never refused over something AW Next cannot draw. It converts what maps and then tells
-you, by name, what it left behind:
-
-| | |
-| --- | --- |
-| **Not drawn by an AW Next popup** | SAN's own logos, decorations, masks, hidden-achievement icons, percentage badges, icon-border artwork and the second set of options for its screenshot overlay. AW Next's popup is a card, not a composition of layers. |
-| **A setting of the app, not of a preset** | Notification scale, position and volume. They exist here, in the **Notification** tab, and they stay where you set them rather than being changed by an import. |
-| **Not recognised** | Anything a newer SAN added that this version has not been taught. It is listed rather than dropped in silence. |
-
-The list stays about features rather than identifiers: a property you never turned on is not listed,
-and a feature is named once even when the theme sets six keys for it. Everything the report says is
-also written to the app log, so it survives the dialog.
-
-One difference is worth knowing before you look at the result. **SAN keeps four separate themes** -
-main, semi-rare, rare and 100% - and a `.san` file carries only one of them. **AW Next paints all
-four states from a single preset**, so the imported preset brings its own rare and completion
-colours (from SAN's rarity glow colours where the theme set them). Check them under **Rare &
-completion**.
+The report after an import lists what could not come along: a file the theme names but did not
+carry, a picture or font refused (see below), and settings from a newer SAN that this version keeps
+but does not draw yet. Everything it says is also written to the app log.
 
 ### What is checked before anything is installed
 
 The same rules as an `.awpreset`, and for the same reason: a theme file comes from somebody else's
 machine. Nothing inside one is ever run, required or evaluated - only its `usertheme.json` is read.
 Every path is checked against the package it came in, so a theme cannot point outside itself; the
-absolute paths SAN writes are read as filenames only, never opened. Only pictures and audio are
-taken out, by file type and under a size limit, and anything else is refused and listed in the
-report. An import that fails at any point leaves every preset you already have untouched.
+absolute paths SAN writes are read as filenames only, never opened. Only pictures, fonts and audio are
+taken out, by file type and under a size limit; an SVG that could run a script and a font file that is
+not a font are refused. Every setting is checked for its type and range before it is kept, so a
+colour can only be a colour. SAN's settings on this PC are your own file, so the pictures, fonts and
+sounds they name are read from where SAN keeps them, under the same rules. An import that fails at
+any point leaves every preset you already have untouched.
 
 ## Share a preset
 

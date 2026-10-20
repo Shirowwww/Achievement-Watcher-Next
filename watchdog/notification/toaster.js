@@ -280,6 +280,11 @@ module.exports = async (message, option = {}) => {
           if (message.rarityPercent != null && message.rarityPercent !== '' && Number.isFinite(Number(message.rarityPercent))) {
             overlayArgs.push(`--rarityPercent=${Number(message.rarityPercent)}`);
           }
+          if (message.unlockRate != null && message.unlockRate !== '' && Number.isFinite(Number(message.unlockRate))) {
+            overlayArgs.push(`--unlockRate=${Number(message.unlockRate)}`);
+          }
+          // Not `--hidden`: the app already reads that as "start without a window".
+          if (message.hidden === true) overlayArgs.push('--achievementHidden=1');
           // A PlayStation trophy's own grade, which the popup paints instead of a tier from a rate.
           if (/^(?:platinum|gold|silver|bronze)$/.test(String(message.trophyGrade || ''))) overlayArgs.push(`--trophyGrade=${message.trophyGrade}`);
           // Some notifications (e.g. playtime) must never play the overlay sound.
