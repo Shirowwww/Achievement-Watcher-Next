@@ -23,6 +23,9 @@ test('sourcePlatform recognizes emulator source labels', () => {
   // A recompiled Xbox 360 game follows the preset chosen for the Xbox 360.
   assert.equal(sourcePlatform('Xbox 360 Recomp'), 'xenia');
   assert.equal(sourcePlatform('Xenia Emulator'), 'xenia');
+  // Likewise a recompiled PS4 game follows shadPS4, and Kyty has its own PlayStation 5 line.
+  assert.equal(sourcePlatform('PS4 Recomp'), 'shadps4');
+  assert.equal(sourcePlatform('KytyPS5 Emulator'), 'kytyps5');
   assert.equal(sourcePlatform('GBE Fork'), null);
   assert.equal(sourcePlatform(''), null);
 });

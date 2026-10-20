@@ -36,6 +36,7 @@ const ECHO_SOUNDS = {
   pickRandomSound: () => 'random.wav',
   resolveSoundFile: (name) => (name ? `resolved:${name}` : ''),
   tierSound: () => '',
+  emulatorSound: require(path.join(__dirname, '..', 'util', 'notificationSound.js')).emulatorSound,
   NO_SOUND: '__none__',
 };
 
@@ -65,7 +66,14 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     },
     './prefetch.js': async (url) => url,
     '../util/squareIcon.js': { makeSquareIcon: async () => '' },
-    '../util/notificationSound.js': sounds || { pickRandomSound: () => '', resolveSoundFile: () => '', tierSound: () => '', NO_SOUND: '__none__' },
+    '../util/notificationSound.js': sounds || {
+      pickRandomSound: () => '',
+      resolveSoundFile: () => '',
+      tierSound: () => '',
+      emulatorSound: () => '',
+      NO_SOUND: '__none__',
+    },
+    '../util/presetLocator.js': { sourcePlatform: require('../util/presetLocator.js').sourcePlatform },
     '../util/gameSound.js': { SOUND_NONE: '__none__', SOUND_RANDOM: '__random__', soundFor: () => gameSound },
     '../websocket.js': { broadcast: (payload) => calls.broadcasts.push(payload), isDeckyListening: () => false },
     '../queryUserNotificationState.js': {
@@ -321,6 +329,25 @@ test('a silent notification stays silent whatever the game panel chose', async (
   const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS, gameSound: 'Xbox Classic.wav' });
   await notify(unlock({ notificationType: 'playtime', silent: true }), options('toast'));
   assert.equal(calls.toasts[0][1].toast.soundFile, '');
+});
+
+// An emulator's own sound replaces the global one for its games, below a game's own choice.
+test('a Windows notification for an emulator game plays that emulator sound', async () => {
+  const overlay = { notificationSound: 'Global.wav', notificationSoundRpcs3: 'PS3.wav', notificationSoundXenia: '__none__' };
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS });
+  await notify(unlock({ source: 'RPCS3' }), options('toast', { overlay }));
+  await notify(unlock({ source: 'Xenia' }), options('toast', { overlay }));
+  await notify(unlock({ source: 'Steam' }), options('toast', { overlay }));
+  assert.deepEqual(
+    calls.toasts.map(([, option]) => option.toast.soundFile),
+    ['resolved:PS3.wav', '', 'resolved:Global.wav']
+  );
+});
+
+test('a game sound still wins over its emulator sound', async () => {
+  const { notify, calls } = loadToaster({ sounds: ECHO_SOUNDS, gameSound: 'Xbox Classic.wav' });
+  await notify(unlock({ source: 'RPCS3' }), options('toast', { overlay: { notificationSoundRpcs3: 'PS3.wav' } }));
+  assert.equal(calls.toasts[0][1].toast.soundFile, 'resolved:Xbox Classic.wav');
 });
 
 // The progress sound belongs to the kind of popup, so it wins over a game's own unlock sound.

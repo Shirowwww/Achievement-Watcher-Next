@@ -97,11 +97,12 @@ function goldbergSaveWeight(dir) {
 }
 module.exports.goldbergSaveWeight = goldbergSaveWeight;
 
-module.exports.scan = async (additionalSearch = []) => {
-  let search = saveRoots.defaultSteamScanRoots(additionalSearch);
+module.exports.scan = async (additionalSearch = []) => scanAppidRoots(saveRoots.defaultSteamScanRoots(additionalSearch));
 
+// The appid-named save folders under the given roots, labelled by the emulator each root belongs to.
+async function scanAppidRoots(roots) {
   // Escaped, since a root can hold glob characters: a Wine prefix named "Game (2020)", say.
-  search = search.map((dir) => {
+  const search = roots.map((dir) => {
     return glob.convertPathToPattern(dir) + '/([0-9]+)';
   });
 
@@ -117,7 +118,7 @@ module.exports.scan = async (additionalSearch = []) => {
 
     const dirKey = String(dir).replace(/\\/g, '/');
     const dirKeyLower = dirKey.toLowerCase();
-    if (dirKeyLower.includes('codex')) {
+    if (dirKeyLower.includes('codex') || dirKeyLower.includes('/steam/cpy/')) {
       game.source = 'Codex';
     } else if (dirKeyLower.includes('rune')) {
       game.source = 'Rune';
@@ -188,7 +189,8 @@ module.exports.scan = async (additionalSearch = []) => {
     data.push(game);
   }
   return data;
-};
+}
+module.exports.scanAppidRoots = scanAppidRoots;
 
 // Widen the legit-Steam list from "played" to "owned or installed", without letting the noise in.
 // `userID` is carried over from stats entries since the achievement reader is keyed by it.

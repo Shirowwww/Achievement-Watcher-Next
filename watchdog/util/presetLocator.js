@@ -33,9 +33,10 @@ try {
     DEFAULT_PRESET: 'AW Next',
     resolveAvailablePresetName: (names, isAvailable) =>
       (Array.isArray(names) ? names : []).find((name) => isAvailable(name)) || 'AW Next',
+    sourcePlatform: () => null,
   };
 }
-const { DEFAULT_PRESET, resolveAvailablePresetName } = presetRules;
+const { DEFAULT_PRESET, resolveAvailablePresetName, sourcePlatform } = presetRules;
 
 /*
   The bundled preset library on disk. Resolved here rather than through sharedAppModulePath(), which
@@ -126,4 +127,4 @@ function resolvePreset(name, roots) {
   return { name: resolved, folder: folders.get(resolved) || '' };
 }
 
-module.exports = { DEFAULT_PRESET, presetRoots, listPresetFolders, resolvePreset, invalidate };
+module.exports = { DEFAULT_PRESET, presetRoots, listPresetFolders, resolvePreset, invalidate, sourcePlatform };

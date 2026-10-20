@@ -35,9 +35,11 @@ test('default Steam emulator roots include concrete save folders copied from the
   const uplayRoot = path.join(appdata, 'Goldberg UplayEmu Saves');
   const socialClubRoot = path.join(appdata, 'Goldberg SocialClub Emu Saves');
   const lsxRoot = path.join(localappdata, 'anadius', 'LSX emu', 'achievement_watcher');
+  const cpyRoot = path.join(publicDir, 'Documents', 'Steam', 'CPY');
   fs.mkdirSync(uplayRoot, { recursive: true });
   fs.mkdirSync(socialClubRoot, { recursive: true });
   fs.mkdirSync(lsxRoot, { recursive: true });
+  fs.mkdirSync(cpyRoot, { recursive: true });
 
   await withEnv(
     {
@@ -51,6 +53,7 @@ test('default Steam emulator roots include concrete save folders copied from the
       assert.ok(roots.includes(uplayRoot));
       assert.ok(roots.includes(socialClubRoot));
       assert.ok(roots.includes(lsxRoot));
+      assert.ok(roots.includes(cpyRoot), "CPY keeps CODEX's tree under its own name");
     }
   );
 });

@@ -8,6 +8,7 @@ const fetch = require('./prefetch.js');
 const { makeSquareIcon } = require('../util/squareIcon.js');
 const notificationSound = require('../util/notificationSound.js');
 const gameSound = require('../util/gameSound.js');
+const { sourcePlatform } = require('../util/presetLocator.js');
 const { broadcast, isDeckyListening } = require('../websocket.js');
 const { arePopupsSuppressed, fullscreenKind, FULLSCREEN_KIND } = require('../queryUserNotificationState.js');
 const { gameDisplayCenter } = require('../util/gameDisplay.js');
@@ -147,7 +148,7 @@ function applyGameTitle(message, option) {
 
 /*
   Same order as the overlay popup in the app (enqueueNotificationFromArgs): a silent event never
-  rings, then the sound picked in the game's own panel, then a rare/100% sound, then the global one.
+  rings, then the game's own panel, a rare/100% sound, the emulator's sound, then the global one.
   The progress sound is the exception: it is about the kind of popup, so it wins over a game's own
   unlock sound. Playtime cards are the silent ones.
 */
@@ -166,6 +167,9 @@ function chooseToastSound(message, overlay) {
   if (tierWins && tierSound) return notificationSound.resolveSoundFile(tierSound) || globalSound();
   if (ownSound === gameSound.SOUND_RANDOM) return notificationSound.pickRandomSound() || globalSound();
   if (ownSound) return notificationSound.resolveSoundFile(ownSound) || globalSound();
+  const emulatorSound = notificationSound.emulatorSound(overlay, sourcePlatform(message.source));
+  if (emulatorSound === notificationSound.NO_SOUND) return '';
+  if (emulatorSound) return notificationSound.resolveSoundFile(emulatorSound) || globalSound();
   if (overlay.randomSound === true) return notificationSound.pickRandomSound() || globalSound();
   return globalSound();
 }

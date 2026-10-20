@@ -69,4 +69,29 @@ function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}
   return rare ? String(ov.notificationSoundRare || '') : '';
 }
 
-module.exports = { SOUND_EXTENSIONS, SOUND_EXT_RE, RENAMED_SOUNDS, NO_SOUND, renamedSound, listSoundFiles, pickRandomSound, tierSound };
+// The sound picked for one emulator (notificationPreset.sourcePlatform), standing in for the main
+// unlock sound. '' means "same as the main one", NO_SOUND means silent.
+const EMULATOR_SOUND_KEYS = {
+  xenia: 'notificationSoundXenia',
+  rpcs3: 'notificationSoundRpcs3',
+  shadps4: 'notificationSoundShadps4',
+  kytyps5: 'notificationSoundKytyps5',
+};
+
+function emulatorSound(overlay, platform) {
+  const key = EMULATOR_SOUND_KEYS[String(platform || '')];
+  return key ? String((overlay || {})[key] || '') : '';
+}
+
+module.exports = {
+  SOUND_EXTENSIONS,
+  SOUND_EXT_RE,
+  RENAMED_SOUNDS,
+  NO_SOUND,
+  EMULATOR_SOUND_KEYS,
+  renamedSound,
+  listSoundFiles,
+  pickRandomSound,
+  tierSound,
+  emulatorSound,
+};

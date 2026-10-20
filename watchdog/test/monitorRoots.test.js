@@ -31,6 +31,10 @@ test('built-in watch roots include the RLD! and CreamAPI emulator saves', async 
     'AppData CreamAPI root must be watched',
   );
   assert.equal(has(path.join(process.env.APPDATA, '.1911')), true, 'AppData .1911 (RAZOR1911) root must be watched');
+  const cpy = folders.find((entry) => String(entry.dir || '').toLowerCase() === path.join(process.env.Public, 'Documents', 'Steam', 'CPY').toLowerCase());
+  const codex = folders.find((entry) => String(entry.dir || '').toLowerCase() === path.join(process.env.Public, 'Documents', 'Steam', 'CODEX').toLowerCase());
+  assert.ok(cpy, 'Public Documents Steam CPY root must be watched');
+  assert.deepEqual(cpy.options, codex.options, "CPY is read like CODEX, whose tree it keeps");
   // These two used to carry a literal '*/*/' suffix that never exists on disk, so they were
   // silently dropped by the existsSync gate and Nemirtingas saves were never watched.
   assert.equal(has(path.join(process.env.APPDATA, 'NemirtingasEpicEmu')), true, 'Nemirtingas Epic root must be watched without a glob');

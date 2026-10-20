@@ -2208,6 +2208,79 @@ async function resolveUplayR2Mapping(u) {
   return { ...mapping, uplay_id: learnedUplayId || (mapping && mapping.uplay_id) || '', matchedName: automatic.matchedName };
 }
 
+const scanError = (err) => (err && err.message ? err.message : err);
+
+// The readers a watched folder is tried with, in order: the first that recognises it claims it.
+async function claimFolder(dir, source) {
+  let scanned = [];
+  if (source.rpcs3) scanned = await rpcs3.scan(dir);
+  if (scanned.length === 0 && source.shadps4) scanned = await shadps4.scan(dir);
+  if (scanned.length === 0 && source.kytyps5) scanned = kytyps5.scan(dir);
+  if (scanned.length === 0 && source.xenia) scanned = await xenia.scan(dir);
+  // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these are
+  // game folders, so they are resolved before the appid-named save scan below.
+  if (scanned.length === 0 && source.xlln) scanned = xlln.scan(dir);
+  if (scanned.length === 0 && source.markerpatch) scanned = markerpatch.scan(dir);
+  if (scanned.length === 0 && source.madnesspatch) scanned = madnesspatch.scan(dir);
+  if (scanned.length === 0 && source.pcports) scanned = pcports.scan(dir);
+  if (scanned.length > 0) {
+    debug.log(`-> emulator data added (${scanned[0].source || scanned[0].data?.type || 'unknown'})`);
+    return { games: scanned, appidRoot: false };
+  }
+  if (source.socialClub && socialclub.isSocialClubPath(dir)) {
+    // Goldberg SocialClub Emu Saves: game folders are named after the game, not a numeric AppID.
+    return { games: await socialclub.scan(dir), appidRoot: false };
+  }
+  if (!source.steamEmu) return { games: [], appidRoot: false };
+  // FINAL FANTASY VII (2013) first: it is a game folder, not an appid-named save folder, so the
+  // generic emulator scan can never recognise it.
+  const ff7Games = ff7.scan(dir);
+  if (ff7Games.length > 0) return { games: ff7Games, appidRoot: false };
+  const emulated = await userDir.scan(dir);
+  if (emulated.length > 0) return { games: emulated, appidRoot: false };
+  debug.log('-> will be scanned for appid folder(s)');
+  return { games: [], appidRoot: true };
+}
+
+/*
+  What one watched folder holds for the library, with the same readers in the same order. A folder
+  no reader claims is an appid-named save root (GSE Saves and its kind), read with the default roots.
+*/
+async function scanWatchedFolder(dir, source) {
+  let claimed = { games: [], appidRoot: false };
+  try {
+    claimed = await claimFolder(dir, source);
+  } catch (err) {
+    debug.log(`[userdir] ${dir} could not be scanned: ${scanError(err)}`);
+  }
+  const games = claimed.games.slice();
+  // Recompiled games sit among ordinary ones in a library folder, so they add to the scans above;
+  // a PS4 port another reader already listed is left to it.
+  if (source.xenia) {
+    try {
+      games.push(...x360Recomp.scan(dir));
+    } catch (err) {
+      debug.log(`[userdir] ${dir} could not be scanned for recompiled games: ${scanError(err)}`);
+    }
+  }
+  if (source.ps4recomp) {
+    try {
+      games.push(...ps4Recomp.scan(dir).filter((g) => !games.some((known) => known.appid === g.appid)));
+    } catch (err) {
+      debug.log(`[userdir] ${dir} could not be scanned for PS4 ports: ${scanError(err)}`);
+    }
+  }
+  return { games, appidRoot: claimed.appidRoot };
+}
+
+// The games the library will find in one folder, appid-named save folders included: the guide's count.
+async function previewWatchedFolder(dir, source) {
+  const { games, appidRoot } = await scanWatchedFolder(dir, source);
+  if (!appidRoot) return games;
+  return games.concat(await steam.scanAppidRoots(saveRoots.expandKnownSteamSourceRoots(dir)));
+}
+module.exports.previewWatchedFolder = previewWatchedFolder;
+
 async function discover(source, steamAccFilter, scope = null) {
   // One pass reads the same folders from several walkers; serve each directory listing once.
   return dirCache.withScope(() => discoverInScope(source, steamAccFilter, scope));
@@ -2237,96 +2310,12 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
         // Scanned once with the default root below, so one folder is never listed twice.
         if (source.lumaPlay && runeUplay.resolveAchievementsRoot(dir.path)) runeUplayFolders.push(dir.path);
-
-        let scanned = [];
-        if (source.rpcs3) scanned = await rpcs3.scan(dir.path);
-        if (scanned.length > 0) debug.log('-> RPCS3 data added');
-        if (scanned.length === 0 && source.shadps4) {
-          scanned = await shadps4.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> ShadPS4 data added');
-        }
-        if (scanned.length === 0 && source.kytyps5) {
-          scanned = kytyps5.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> KytyPS5 data added');
-        }
-        if (scanned.length === 0 && source.xenia) {
-          scanned = await xenia.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> Xenia data added');
-        }
-        if (scanned.length === 0 && source.xlln) {
-          // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these
-          // are game folders, so they are resolved before the appid-named save scan below.
-          scanned = xlln.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> XLiveLessNess data added');
-        }
-        if (scanned.length === 0 && source.markerpatch) {
-          scanned = markerpatch.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> MarkerPatch data added');
-        }
-        if (scanned.length === 0 && source.madnesspatch) {
-          scanned = madnesspatch.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> MadnessPatch data added');
-        }
-        if (scanned.length === 0 && source.pcports) {
-          scanned = pcports.scan(dir.path);
-          if (scanned.length > 0) debug.log('-> PC Port data added');
-        }
-        if (scanned.length > 0) {
-          data = data.concat(scanned);
-          debug.log('-> emulator data added');
-        } else if (source.socialClub && socialclub.isSocialClubPath(dir.path)) {
-          // Goldberg SocialClub Emu Saves: game folders are named after the game, not a numeric AppID.
-          scanned = await socialclub.scan(dir.path);
-          if (scanned.length > 0) {
-            data = data.concat(scanned);
-            debug.log('-> Goldberg SocialClub data added');
-          }
-        } else if (source.steamEmu) {
-          // FINAL FANTASY VII (2013) first: it is a game folder, not an appid-named save folder, so
-          // the generic emulator scan can never recognise it.
-          scanned = ff7.scan(dir.path);
-          if (scanned.length > 0) {
-            data = data.concat(scanned);
-            debug.log('-> FINAL FANTASY VII (2013) data added');
-          } else {
-            scanned = await userDir.scan(dir.path);
-            if (scanned.length > 0) {
-              data = data.concat(scanned);
-              debug.log('-> Steam emu data added');
-            } else {
-              additionalSearch.push(dir.path);
-              debug.log('-> will be scanned for appid folder(s)');
-            }
-          }
-        }
       } catch (err) {
-        debug.log(`[userdir] ${dir.path} could not be scanned: ${err && err.message ? err.message : err}`);
+        debug.log(`[userdir] ${dir.path} could not be checked for LumaPlay: ${scanError(err)}`);
       }
-      // Recompiled Xbox 360 games sit among ordinary ones in a library folder, so this adds to the
-      // scans above instead of standing in for them.
-      if (source.xenia) {
-        try {
-          const recompiled = x360Recomp.scan(dir.path);
-          if (recompiled.length > 0) {
-            data = data.concat(recompiled);
-            debug.log('-> Xbox 360 recompilation data added');
-          }
-        } catch (err) {
-          debug.log(`[userdir] ${dir.path} could not be scanned for recompiled games: ${err && err.message ? err.message : err}`);
-        }
-      }
-      // PC ports of PS4 games can sit in a library folder too, so they add to the scans above.
-      if (source.ps4recomp) {
-        try {
-          const ported = ps4Recomp.scan(dir.path).filter((g) => !data.some((known) => known.appid === g.appid));
-          if (ported.length > 0) {
-            data = data.concat(ported);
-            debug.log('-> PS4 Recomp data added');
-          }
-        } catch (err) {
-          debug.log(`[userdir] ${dir.path} could not be scanned for PS4 ports: ${err && err.message ? err.message : err}`);
-        }
-      }
+      const { games, appidRoot } = await scanWatchedFolder(dir.path, source);
+      if (appidRoot) additionalSearch.push(dir.path);
+      data = data.concat(games.filter((g) => g.data?.type !== 'ps4recomp' || !data.some((known) => known.appid === g.appid)));
     }
   } catch (err) {
     debug.log(err);

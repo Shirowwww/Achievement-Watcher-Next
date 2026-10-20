@@ -87,14 +87,31 @@ test('the rare and 100% sounds default to the unlock sound and survive a save', 
   assert.equal(reloaded.overlay.notificationSoundProgress, '__none__');
 });
 
-test('the tier sound rows sit in the overlay list, advanced only, and both delivery paths use the rule', () => {
+test('the tier sound rows sit in the Sounds card, advanced only, and both delivery paths use the rule', () => {
   const html = read('app', 'view', 'app.html');
-  const overlayList = html.match(/<ul id="options-notify-overlay">([\s\S]*?)<\/ul>/)[1];
+  const overlayList = html.match(/<ul id="options-notify-sounds">([\s\S]*?)<\/ul>/)[1];
   for (const id of ['option_overlaySoundRare', 'option_overlaySoundPlatinum', 'option_overlaySoundProgress']) {
     const row = overlayList.match(new RegExp(`<li[^>]*>(?:(?!<li)[\\s\\S])*?id="${id}"`));
-    assert.ok(row, `${id} lives in the overlay list`);
+    assert.ok(row, `${id} lives in the Sounds card`);
     assert.match(row[0], /data-advanced="1"/, `${id} is an Advanced row`);
   }
   assert.match(read('app', 'electron', 'init.js'), /notificationSounds\.tierSound\(ov, \{ notificationType, rarityPercent: args\.rarityPercent \}\)/);
   assert.match(read('watchdog', 'notification', 'toaster.js'), /notificationSound\.tierSound\(overlay,/);
+});
+
+test('each emulator can have its own sound, read the same way by the overlay and the toast', () => {
+  const ov = { notificationSoundXenia: 'X360.wav', notificationSoundRpcs3: '__none__' };
+  for (const sounds of [appSounds, watchdogSounds]) {
+    assert.equal(sounds.emulatorSound(ov, 'xenia'), 'X360.wav');
+    assert.equal(sounds.emulatorSound(ov, 'rpcs3'), '__none__');
+    assert.equal(sounds.emulatorSound(ov, 'shadps4'), '', 'unset follows the main sound');
+    assert.equal(sounds.emulatorSound(ov, null), '', 'a game outside an emulator has none');
+  }
+  const html = read('app', 'view', 'app.html');
+  const card = html.match(/<ul id="options-notify-emulators">([\s\S]*?)<\/ul>/)[1];
+  for (const emu of ['Xenia', 'Rpcs3', 'Shadps4', 'Kytyps5']) {
+    const line = new RegExp(`<li class="emu-notify-row">(?:(?!</li>)[\\s\\S])*option_overlayPreset${emu}(?:(?!</li>)[\\s\\S])*option_overlaySound${emu}`);
+    assert.match(card, line, `${emu}: its preset and its sound share one line`);
+  }
+  assert.match(read('app', 'electron', 'init.js'), /notificationSounds\.emulatorSound\(ov, sourcePlatform\(args\.source\)\)/);
 });

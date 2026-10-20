@@ -171,8 +171,16 @@ module.exports.load = async (cfg_file) => {
       options.overlay.notificationSound = '';
       fixFile = true;
     }
-    // Rare, 100% and progress sounds ('' follows the unlock sound); read only, the app owns these keys.
-    for (const key of ['notificationSoundRare', 'notificationSoundPlatinum', 'notificationSoundProgress']) {
+    // Rare, 100%, progress and per-emulator sounds ('' follows the unlock sound); read only, the app owns these keys.
+    for (const key of [
+      'notificationSoundRare',
+      'notificationSoundPlatinum',
+      'notificationSoundProgress',
+      'notificationSoundXenia',
+      'notificationSoundRpcs3',
+      'notificationSoundShadps4',
+      'notificationSoundKytyps5',
+    ]) {
       if (typeof options.overlay[key] !== 'string') options.overlay[key] = '';
     }
     if (typeof options.overlay.randomSound !== 'boolean') {

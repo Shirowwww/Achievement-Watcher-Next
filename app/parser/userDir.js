@@ -379,6 +379,31 @@ module.exports.find = async () => {
   return (await module.exports.findEntries()).map((entry) => entry.path);
 };
 
+// The files an achievement mod or a recompiled game is recognised by, at most four levels down.
+const OWN_LAYOUT_FILES = [/(^|\/)MarkerPatch\.ini$/i, /(^|\/)MadnessPatch\.ini$/i, /(^|\/)SaveData\/Achievements\.json$/i, /(^|\/)achievements\/[^/]+\.toml$/i, /(^|\/)LADXHD\.exe$/i, /(^|\/)Link.s Awakening DX HD\.exe$/i];
+const OWN_LAYOUT_GLOBS = ['**/MarkerPatch.ini', '**/MadnessPatch.ini', '**/SaveData/Achievements.json', '**/achievements/*.toml', '**/LADXHD.exe', '**/Link?s Awakening DX HD.exe'];
+// Emulator binaries and in-folder configs are looked for three levels down at most.
+const NAMED_FILE_DEPTH = 3;
+
+/*
+  One walk of a game library answers the three searches Smart Find makes there, each kept to the
+  depth and spelling rules it had as a walk of its own: a library was read three times before.
+*/
+async function walkLibrary(root) {
+  const patterns = [...EMULATOR_BINARIES, ...IN_FOLDER_EMULATOR_CONFIGS].map((name) => `**/${name}`).concat(OWN_LAYOUT_GLOBS);
+  const found = await glob(patterns, { cwd: root, deep: 4, onlyFiles: true, suppressErrors: true, caseSensitiveMatch: false });
+  const walk = { emulator: [], inFolder: [], ownLayout: [] };
+  for (const relative of found) {
+    const name = path.posix.basename(relative);
+    const shallow = relative.split('/').length <= NAMED_FILE_DEPTH;
+    const absolute = path.resolve(root, relative);
+    if (shallow && EMULATOR_BINARIES.includes(name)) walk.emulator.push(absolute);
+    if (shallow && IN_FOLDER_EMULATOR_CONFIGS.includes(name)) walk.inFolder.push(absolute);
+    if (OWN_LAYOUT_FILES.some((pattern) => pattern.test(relative))) walk.ownLayout.push(absolute);
+  }
+  return walk;
+}
+
 module.exports.findEntries = async () => {
   const result = [];
   const addDetected = (dir, detector) => {
@@ -405,58 +430,53 @@ module.exports.findEntries = async () => {
   consoleDirs.push(...xdgAppDirs('rpcs3'), ...xdgAppDirs('shadps4'), ...xdgAppDirs('xenia'));
   // Xenia without portable.txt keeps its profiles and content under Documents\Xenia.
   consoleDirs.push(...documentsFolders().map((docs) => path.join(docs, 'Xenia')));
-  for (const dir of [...consoleDirs, process.env.RPCS3_CONFIG_DIR]) {
+  const isDirectory = (dir) => {
     try {
-      if (dir && fs.statSync(dir).isDirectory()) addDetected(dir, 'Known emulator data location');
-    } catch {}
+      return !!dir && fs.statSync(dir).isDirectory();
+    } catch {
+      return false;
+    }
+  };
+  for (const dir of [...consoleDirs, process.env.RPCS3_CONFIG_DIR]) {
+    if (isDirectory(dir)) addDetected(dir, 'Known emulator data location');
   }
 
   // Where a portable emulator binary is looked for. Never a whole-drive walk: the installed-programs
   // registry, dedicated emulator folders (D:\Emulators, ...), then the detected game libraries.
   for (const dir of emulatorRootsFromRegistry()) {
-    try {
-      if (fs.statSync(dir).isDirectory()) addDetected(dir, 'Installed emulator (registry)');
-    } catch {}
+    if (isDirectory(dir)) addDetected(dir, 'Installed emulator (registry)');
   }
 
-  const search = EMULATOR_BINARIES.map((name) => `**/${name}`);
   const libraryRoots = await saveRoots.discoverLibraryRoots();
-  const searchRoots = [
-    ...(await saveRoots.discoverEmulatorRoots()).map((root) => ({ root, detector: 'Supported emulator in detected folder' })),
-    ...libraryRoots.map((root) => ({ root, detector: 'Supported emulator in detected library' })),
-  ];
-  for (const { root, detector } of searchRoots) {
-    for (const filepath of await glob(search, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
-      // fast-glob returns posix separators even on Windows; resolve so this matches the native-path
-      // folders already claimed elsewhere (gameDir, linked exes) instead of shadowing them.
-      addDetected(path.resolve(path.parse(filepath).dir), detector);
-    }
+  for (const root of await saveRoots.discoverEmulatorRoots()) {
+    const found = await glob(EMULATOR_BINARIES.map((name) => `**/${name}`), { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true });
+    // fast-glob returns posix separators even on Windows; resolve so this matches the native-path
+    // folders already claimed elsewhere (gameDir, linked exes) instead of shadowing them.
+    for (const filepath of found) addDetected(path.resolve(path.parse(filepath).dir), 'Supported emulator in detected folder');
+  }
+  const walks = [];
+  for (const root of libraryRoots) walks.push(await walkLibrary(root));
+  for (const walk of walks) {
+    for (const filepath of walk.emulator) addDetected(path.resolve(path.parse(filepath).dir), 'Supported emulator in detected library');
   }
 
-  // A game whose emulator writes its unlocks beside it. Same bounded walk as above, over the game
-  // libraries only: the config has to name an AppID, or the folder is not a game this can follow.
-  const inFolderSearch = IN_FOLDER_EMULATOR_CONFIGS.map((name) => `**/${name}`);
-  for (const root of libraryRoots) {
-    for (const filepath of await glob(inFolderSearch, { cwd: root, deep: 3, onlyFiles: true, absolute: true, suppressErrors: true })) {
-      try {
-        if (!/^\s*App(?:ID|Id)\s*=\s*[0-9]+\s*$/im.test(fs.readFileSync(filepath, 'utf8'))) continue;
-      } catch {
-        continue; // unreadable config names nothing
-      }
-      addDetected(path.resolve(path.parse(filepath).dir), 'Emulator saving inside the game folder');
+  // A game whose emulator writes its unlocks beside it: the config has to name an AppID, or the
+  // folder is not a game this can follow.
+  for (const filepath of walks.flatMap((walk) => walk.inFolder)) {
+    try {
+      if (!/^\s*App(?:ID|Id)\s*=\s*[0-9]+\s*$/im.test(fs.readFileSync(filepath, 'utf8'))) continue;
+    } catch {
+      continue; // unreadable config names nothing
     }
+    addDetected(path.resolve(path.parse(filepath).dir), 'Emulator saving inside the game folder');
   }
 
   // Achievement mods and recompiled games: the walk only finds candidates, their readers decide.
-  const ownLayoutSearch = ['**/MarkerPatch.ini', '**/MadnessPatch.ini', '**/SaveData/Achievements.json', '**/achievements/*.toml', '**/LADXHD.exe', '**/Link?s Awakening DX HD.exe'];
-  for (const root of libraryRoots) {
-    const found = await glob(ownLayoutSearch, { cwd: root, deep: 4, onlyFiles: true, absolute: true, suppressErrors: true, caseSensitiveMatch: false });
-    for (const filepath of found) {
-      const folder = path.resolve(path.dirname(filepath));
-      const candidate = /^(savedata|achievements)$/i.test(path.basename(folder)) ? path.dirname(folder) : folder;
-      const game = ownLayoutGames(candidate)[0];
-      if (game) addDetected(game.gameRoot || candidate, 'Achievement mod or recompiled game');
-    }
+  for (const filepath of walks.flatMap((walk) => walk.ownLayout)) {
+    const folder = path.resolve(path.dirname(filepath));
+    const candidate = /^(savedata|achievements)$/i.test(path.basename(folder)) ? path.dirname(folder) : folder;
+    const game = ownLayoutGames(candidate)[0];
+    if (game) addDetected(game.gameRoot || candidate, 'Achievement mod or recompiled game');
   }
   // A patched Steam copy: Steam's own record says where it is.
   for (const reader of [require('./markerpatch.js'), require('./madnesspatch.js')]) {
@@ -625,9 +645,11 @@ module.exports.diagnose = async (dirpath) => {
   }
 
   // A folder inside one of those games (GearGame, SaveData, Binaries\Win32): the game's own folder is
-  // the one to keep, a level or two up. Only a game around the pick counts, never a library.
+  // the one to keep, a level or two up. Only a game around the pick counts, never a library. A known
+  // save root is never inside a game, and its parent is a whole AppData folder: 5 s for no answer.
+  const knownRoot = saveRoots.defaultSteamEmuSaveRoots().some((root) => pathKey(root) === pathKey(dirpath));
   let parent = path.dirname(path.resolve(dirpath));
-  for (let level = 0; level < 2 && path.dirname(parent) !== parent; level += 1, parent = path.dirname(parent)) {
+  for (let level = 0; !knownRoot && level < 2 && path.dirname(parent) !== parent; level += 1, parent = path.dirname(parent)) {
     const owner = ownLayoutGames(parent).find((game) => isWithin(dirpath, game.gameRoot) || isWithin(game.dataPath, dirpath));
     if (owner) {
       const canonicalPath = owner.gameRoot || parent;

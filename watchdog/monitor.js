@@ -88,6 +88,11 @@ function builtinRoots(host) {
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
     },
     {
+      // CPY releases run CODEX's emulator and keep its tree under their own name.
+      dir: at('PUBLIC', 'Documents/Steam/CPY'),
+      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
+    },
+    {
       dir: at('PUBLIC', 'Documents/Steam/RLD!'),
       options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[2], files.achievement[4], files.achievement[6]] },
     },

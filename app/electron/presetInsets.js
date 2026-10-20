@@ -22,6 +22,8 @@ const VARIABLE_PX = 2;
 // Out of the way of the popup that asked for the measurement, which is still entering.
 const MEASURE_DELAY_MS = 8000;
 const LOAD_TIMEOUT_MS = 8000;
+// Every bundled preset has settled by then (see PROFILE_END_MS).
+const SNAPSHOT_FALLBACK_MS = 2800;
 const SIDES = ['left', 'top', 'right', 'bottom'];
 
 // A short and a long text: the smaller room of the two never pushes a card off the screen.
@@ -107,8 +109,8 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
   // Some presets read `position` and move their card inside the window: one profile per position.
   const keyOf = (folder, layer, position) => `${folder}|${(layer && layer.dir) || ''}|${position || ''}`;
 
-  // Renders `payload` offscreen and returns the painted room (CSS pixels, or null) at each of `times`.
-  async function renderSamples(folder, layer, payload, times) {
+  // Renders `payload` offscreen and returns read(image, ratio) for a capture taken at each of `times`.
+  async function renderOffscreen(folder, layer, payload, times, read) {
     const { width, height } = dimensions(folder);
     const win = new BrowserWindow({
       width,
@@ -135,18 +137,26 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
       for (const at of times) {
         await wait(Math.max(0, at - (Date.now() - sentAt)));
         if (win.isDestroyed()) break;
-        // The first offscreen frame of a cold process may not be ready (UnknownVizError): no room then.
+        // The first offscreen frame of a cold process may not be ready (UnknownVizError): nothing then.
         const image = await win.webContents.capturePage().catch(() => null);
         const size = image && !image.isEmpty() ? image.getSize() : null;
-        const room = size && paintedInsets(image.toBitmap(), size.width, size.height);
-        // Offscreen captures follow the display scale; the room is kept in CSS pixels.
-        const ratio = size ? size.width / width || 1 : 1;
-        samples.push({ at, room: room ? Object.fromEntries(SIDES.map((side) => [side, Math.floor(room[side] / ratio)])) : null });
+        // Offscreen captures follow the display scale.
+        samples.push({ at, value: size ? read(image, size.width / width || 1) : null });
       }
       return samples;
     } finally {
       if (!win.isDestroyed()) win.destroy();
     }
+  }
+
+  // The painted room (CSS pixels, or null) at each of `times`.
+  async function renderSamples(folder, layer, payload, times) {
+    const samples = await renderOffscreen(folder, layer, payload, times, (image, ratio) => {
+      const { width, height } = image.getSize();
+      const room = paintedInsets(image.toBitmap(), width, height);
+      return room ? Object.fromEntries(SIDES.map((side) => [side, Math.floor(room[side] / ratio)])) : null;
+    });
+    return samples.map(({ at, value }) => ({ at, room: value }));
   }
 
   async function takeProfile(folder, layer, position) {
@@ -198,6 +208,21 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
         return [];
       });
       return mergeInsets(samples.map((sample) => sample.room)) || profile.insets;
+    },
+    /*
+      A picture of the preset once it has settled (PNG data URL, or null), for a preset the designer
+      cannot rebuild from its controls (an imported SAN theme). Waits as long as the stored profile
+      says the card takes to settle, else as long as the slowest bundled preset.
+    */
+    async snapshot(folder, layer, payload) {
+      const profile = this.get(folder, layer, payload.position || 'center-bottom');
+      const at = profile ? profile.settleMs + 150 : SNAPSHOT_FALLBACK_MS;
+      const samples = await renderOffscreen(folder, layer, payload, [at], (image) => image.toDataURL()).catch((err) => {
+        log(`[overlay-notif] preset snapshot failed for ${path.basename(folder)}: ${err.message || err}`);
+        return [];
+      });
+      const sample = samples[0];
+      return sample && sample.value ? { image: sample.value, ...dimensions(folder) } : null;
     },
   };
 }

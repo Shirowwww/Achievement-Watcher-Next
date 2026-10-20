@@ -5523,7 +5523,7 @@ function openGameFromLaunchArgs(args) {
 
 // Overlay notification (optional transport): spawns a frameless click-through window rendering a
 // preset via window.api. Resolves presets from the bundled library, falling back to the default.
-const { DEFAULT_PRESET, presetPriority, resolveAvailablePresetName } = require(path.join(__dirname, '../util/notificationPreset.js'));
+const { DEFAULT_PRESET, presetPriority, resolveAvailablePresetName, sourcePlatform } = require(path.join(__dirname, '../util/notificationPreset.js'));
 const gamePreset = require(path.join(__dirname, '../util/gamePreset.js'));
 const notificationPlacement = require(path.join(__dirname, '../util/notificationPlacement.js'));
 const notificationDisplay = require(path.join(__dirname, '../util/notificationDisplay.js'));
@@ -5827,6 +5827,15 @@ function withTextInsets(data) {
     .measureText(resolved.folder, layer, notificationPagePayload(data), profile)
     .then((textInsets) => ({ ...data, textInsets }));
 }
+
+// The designer's picture of a preset it cannot rebuild from its controls (an imported SAN theme or
+// .awpreset), rendered offscreen with the designer's sample text and artwork.
+ipcMain.handle('preset-snapshot', async (event, { preset, payload } = {}) => {
+  const resolved = resolveNotificationPreset([String(preset || '')]);
+  if (!resolved.folder || resolved.name !== String(preset || '')) return null;
+  const layer = notificationPresetLayers.get(resolved.name) || null;
+  return presetInsets.snapshot(resolved.folder, layer, notificationPagePayload(payload || {}));
+});
 
 // What the preset page receives with 'show-notification', also used to measure a preset whose card
 // follows its text.
@@ -6577,7 +6586,7 @@ async function enqueueNotificationFromArgs(args) {
 
   const progress = normalizeNotificationProgress(args);
   const notificationType = String(args.notificationType || (progress ? 'progress' : '') || '').toLowerCase();
-  // Per-emulator preset overrides ('' = main preset): the source lets Xenia/RPCS3/ShadPS4
+  // Per-emulator preset overrides ('' = main preset): the source lets Xenia/RPCS3/ShadPS4/Kyty
   // notifications use their own preset. Rare and 100% are states the chosen preset paints itself.
   const candidates = presetPriority({
     presets: {
@@ -6587,6 +6596,7 @@ async function enqueueNotificationFromArgs(args) {
       xenia: ov.notificationPresetXenia || '',
       rpcs3: ov.notificationPresetRpcs3 || '',
       shadps4: ov.notificationPresetShadps4 || '',
+      kytyps5: ov.notificationPresetKytyps5 || '',
     },
     source: args.source || '',
   });
@@ -6646,18 +6656,24 @@ async function enqueueNotificationFromArgs(args) {
     A preset may name its own sound, which then wins over the one picked in the Notifications tab:
     that is what lets a shared package sound the way its author designed it, and what makes a
     per-emulator or platinum preset able to bring its own fanfare. '' means the preset has no opinion.
-    Random sound still overrides everything - it is an explicit "surprise me" for every popup.
+    Random sound overrides a preset's sound; only a sound picked for the game's emulator comes first.
   */
   // An imported SAN theme names a sound per state (or a folder to draw from); null when it is not one.
   const unlockRate = args.unlockRate != null ? args.unlockRate : args.rarityPercent;
   const sanTier = describeNotificationTier({ notificationType, unlockRate, rarityPercent: args.rarityPercent, trophyGrade: args.trophyGrade });
   const sanSound = sanEngine.presetSound(presetFolder, { notificationType, rarityTier: sanTier.tier, rarityMode: sanTier.mode, unlockRate });
   const presetOwnSound = sanSound != null ? sanSound : customPreset.presetSound(presetFolder);
+  // A sound picked for this game's emulator replaces the main one, ahead of random and preset sounds.
+  const emulatorSound = notificationSounds.emulatorSound(ov, sourcePlatform(args.source));
   const globalSound = () =>
-    randomSound
-      ? notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) ||
-        resolveNotificationSound(ov.notificationSound)
-      : resolveNotificationSound(presetOwnSound || ov.notificationSound);
+    emulatorSound
+      ? emulatorSound === notificationSounds.NO_SOUND
+        ? ''
+        : resolveNotificationSound(emulatorSound) || resolveNotificationSound(ov.notificationSound)
+      : randomSound
+        ? notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) ||
+          resolveNotificationSound(ov.notificationSound)
+        : resolveNotificationSound(presetOwnSound || ov.notificationSound);
   // A rare unlock or a 100% completion can have its own sound; a game's own choice still wins. The
   // progress sound is about the kind of popup, so it wins over a game's own unlock sound.
   const tierSound = notificationSounds.tierSound(ov, { notificationType, rarityPercent: args.rarityPercent });

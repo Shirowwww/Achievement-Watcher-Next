@@ -181,6 +181,9 @@ module.exports.load = () => {
     if (typeof options.overlay.notificationPresetShadps4 !== 'string') {
       options.overlay.notificationPresetShadps4 = '';
     }
+    if (typeof options.overlay.notificationPresetKytyps5 !== 'string') {
+      options.overlay.notificationPresetKytyps5 = '';
+    }
     if (typeof options.overlay.notificationPosition !== 'string') {
       options.overlay.notificationPosition = 'center-bottom';
     }
@@ -201,8 +204,16 @@ module.exports.load = () => {
     if (typeof options.overlay.notificationSound !== 'string') {
       options.overlay.notificationSound = '';
     }
-    // Rare, 100% and progress sounds: '' follows the unlock sound.
-    for (const key of ['notificationSoundRare', 'notificationSoundPlatinum', 'notificationSoundProgress']) {
+    // Rare, 100% and progress sounds: '' follows the unlock sound. Per-emulator sounds: '' follows the main one.
+    for (const key of [
+      'notificationSoundRare',
+      'notificationSoundPlatinum',
+      'notificationSoundProgress',
+      'notificationSoundXenia',
+      'notificationSoundRpcs3',
+      'notificationSoundShadps4',
+      'notificationSoundKytyps5',
+    ]) {
       if (typeof options.overlay[key] !== 'string') options.overlay[key] = '';
     }
     // Randomize the overlay notification sound from the merged bundled+user sound list.
@@ -653,6 +664,7 @@ module.exports.load = () => {
         notificationPresetXenia: '',
         notificationPresetRpcs3: '',
         notificationPresetShadps4: '',
+        notificationPresetKytyps5: '',
         notificationPosition: 'center-bottom',
         notificationScale: 1,
         notificationOpacity: 100, // percent, 30-100
@@ -662,6 +674,10 @@ module.exports.load = () => {
         notificationSoundRare: '',
         notificationSoundPlatinum: '',
         notificationSoundProgress: '',
+        notificationSoundXenia: '',
+        notificationSoundRpcs3: '',
+        notificationSoundShadps4: '',
+        notificationSoundKytyps5: '',
         randomSound: false,
         notificationVolume: 100,
         notificationDuration: 'auto',

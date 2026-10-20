@@ -61,6 +61,8 @@ function addHostRoots(roots, host, { expandProgramDataSteam }) {
     envPath('PUBLIC', 'Documents', 'OnlineFix'),
     envPath('PUBLIC', 'Documents', 'Steam', 'RUNE'),
     envPath('PUBLIC', 'Documents', 'Steam', 'CODEX'),
+    // CPY releases run CODEX's emulator and keep its tree under their own name.
+    envPath('PUBLIC', 'Documents', 'Steam', 'CPY'),
     envPath('PUBLIC', 'Documents', 'Steam', 'RLD!'),
     envPath('PUBLIC', 'Documents', 'EMPRESS'),
     envPath('APPDATA', 'Goldberg SteamEmu Saves'),

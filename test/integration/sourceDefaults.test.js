@@ -63,11 +63,15 @@ test('every live watcher honours its own source toggle', () => {
 // A source that is switched off must cost nothing: not a slower scan, not a stale entry, nothing.
 test('every source is asked for only when it is switched on', () => {
   const parser = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
-  const from = parser.indexOf('async function discoverInScope(');
-  assert.ok(from > 0, 'the discovery pass must be findable');
-  // Bounded by whatever is declared next, so the slice cannot silently reach past the function.
-  const end = parser.indexOf(String.fromCharCode(10) + 'async function ', from + 1);
-  const discovery = parser.slice(from, end > from ? end : undefined);
+  // The discovery pass, and the per-folder reader it shares with the first-start guide.
+  const body = (declaration) => {
+    const from = parser.indexOf(`async function ${declaration}(`);
+    assert.ok(from > 0, `${declaration} must be findable`);
+    // Bounded by whatever is declared next, so the slice cannot silently reach past the function.
+    const end = parser.indexOf(String.fromCharCode(10) + 'async function ', from + 1);
+    return parser.slice(from, end > from ? end : undefined);
+  };
+  const discovery = ['discoverInScope', 'claimFolder', 'scanWatchedFolder'].map(body).join('\n');
   for (const key of Object.keys(defaults(appSettings))) {
     // The three-state sources read as a level, the rest as a switch; either way the block that
     // scans them sits behind its own setting.

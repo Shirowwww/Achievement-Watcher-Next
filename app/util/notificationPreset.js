@@ -67,10 +67,11 @@ function legacyPresetAlias(name) {
 }
 
 const EMULATOR_PLATFORM_BY_SOURCE = {
-  // The recompilations are Xbox 360 games too: they follow the preset chosen for that console.
+  // A recompiled game follows the preset chosen for its console.
   xenia: ['xenia', 'xenia emulator', 'xbox 360 recomp'],
   rpcs3: ['rpcs3', 'rpcs3 emulator'],
-  shadps4: ['shadps4', 'shadps4 emulator'],
+  shadps4: ['shadps4', 'shadps4 emulator', 'ps4 recomp'],
+  kytyps5: ['kyty', 'kytyps5', 'kytyps5 emulator'],
 };
 
 function sourcePlatform(source) {

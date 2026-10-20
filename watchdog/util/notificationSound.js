@@ -100,4 +100,17 @@ function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}
   return rare ? String(ov.notificationSoundRare || '') : '';
 }
 
-module.exports = { bundledSoundsDir, userSoundsDir, resolveSoundFile, listSoundFiles, pickRandomSound, NO_SOUND, tierSound };
+// Mirrors emulatorSound() in app/util/notificationSounds.js: '' for "same as the main sound".
+const EMULATOR_SOUND_KEYS = {
+  xenia: 'notificationSoundXenia',
+  rpcs3: 'notificationSoundRpcs3',
+  shadps4: 'notificationSoundShadps4',
+  kytyps5: 'notificationSoundKytyps5',
+};
+
+function emulatorSound(overlay, platform) {
+  const key = EMULATOR_SOUND_KEYS[String(platform || '')];
+  return key ? String((overlay || {})[key] || '') : '';
+}
+
+module.exports = { bundledSoundsDir, userSoundsDir, resolveSoundFile, listSoundFiles, pickRandomSound, NO_SOUND, tierSound, emulatorSound };
