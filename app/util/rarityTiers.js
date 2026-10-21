@@ -137,19 +137,6 @@
     return Object.values(TROPHY_GRADES).includes(key) ? key : '';
   }
 
-  // PlayStation's own four rarity names, by the share of players who earned the trophy.
-  const PSN_RARITY_BELOW = Object.freeze([
-    ['ultraRare', 5],
-    ['veryRare', 10],
-    ['rare', 20],
-  ]);
-  function psnRarity(percent) {
-    const raw = toPercent(percent);
-    if (raw === null || raw < 0) return '';
-    const band = PSN_RARITY_BELOW.find(([, below]) => raw < below);
-    return band ? band[0] : 'common';
-  }
-
   /*
     The fields a notification preset reads: the tier class to paint and the platinum flag. A trophy
     carries its colour itself, so its grade wins over any tier worked out from an unlock rate.
@@ -178,7 +165,6 @@
     gradingFrom,
     tierFor,
     trophyGrade,
-    psnRarity,
     notificationTier,
   };
 });

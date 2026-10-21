@@ -64,6 +64,8 @@ function gameNameFor(uplayId) {
 async function notifyUnlocks(identity, fresh, snapshot, ctx) {
   const schema = ubisoftWatch._internal.loadSchema(identity.uplayId, ctx.options.achievement.lang) || { texts: new Map(), iconFor: () => undefined };
   const gameName = gameNameFor(identity.uplayId);
+  // The cfg may list only the touched achievements, so the total is the archive's text list.
+  const completion = { unlocked: earnedIds(snapshot).filter((id) => schema.texts.has(id)).length, total: schema.texts.size };
   let delay = 0;
   for (const id of fresh) {
     const text = schema.texts.get(id) || {};
@@ -79,6 +81,7 @@ async function notifyUnlocks(identity, fresh, snapshot, ctx) {
         icon: schema.iconFor(id),
         time: snapshot[id].earned_time || moment().unix(),
         delay,
+        completion,
       },
       {
         notify: ctx.options.notification.notify,

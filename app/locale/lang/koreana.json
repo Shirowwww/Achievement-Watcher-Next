@@ -1189,7 +1189,8 @@
         "특이한 위치에 저장된 게임은 설정 > 폴더에서 해당 폴더를 추가하세요. 저장 파일, AppID 폴더, 에뮬레이터 설정이 바로 들어 있는 폴더나 게임이 많은 라이브러리 폴더를 고르면 됩니다.",
         "RetroAchievements: 소스를 켜고 사용자 이름과 Web API 키를 입력한 뒤 라이브러리 가져오기를 누르세요. 달성 내역은 계정에서 가져오므로 에뮬레이터에서 RetroAchievements를 켜 두세요.",
         "간단 모드에서는 거의 쓰지 않는 소스 몇 줄이 사용하지 않는 동안 숨겨집니다. 필요해지면 바로 다시 나타나며, 고급에서는 항상 모두 보입니다.",
-        "PlayStation 트로피에는 등급, 보유한 플레이어의 비율, PlayStation 공식 희귀도 단계가 표시됩니다. 달성률은 Exophase에서 가져오며, 설정 > 소스에서 PlayStation 계정을 연결하면 해당 계정의 게임에 대해 Sony 공식 수치를 받을 수 있습니다."
+        "PlayStation 트로피에는 등급과 보유한 플레이어의 비율이 표시됩니다. 달성률은 Exophase에서 가져오며, 설정 > 소스에서 PlayStation 계정을 연결하면 해당 계정의 게임에 대해 Sony 공식 수치를 받을 수 있습니다.",
+        "PlayStation 계정을 연결하면 라이브러리 가져오기가 PlayStation 게임과 트로피를 3일마다 갱신하며 가져오고, 아래 입력란에서는 보유하지 않은 게임을 추가할 수 있습니다. PlayStation으로도 출시된 다른 스토어의 게임은 실제 플래티넘을 표시하고, 트로피 모드에서는 실제 등급과 DLC 그룹도 표시합니다."
       ],
       "notifications": [
         "자동이 기본값입니다. 게임이 표시할 수 있으면 게임 내 팝업, 표시할 수 없으면 Windows 알림이 뜨며, 둘 다 뜨는 일은 없습니다.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "컬렉션",
     "collectionsCopy": "게임의 오른쪽 클릭 메뉴에서 게임을 나만의 컬렉션으로 묶을 수 있습니다.",
     "trophyTitle": "트로피 모드",
-    "trophyCopy": "도전 과제를 희귀도에 따라 금, 은, 동으로 등급을 매깁니다. 설정에서 켤 수 있습니다.",
+    "trophyCopy": "도전 과제를 희귀도에 따라, 또는 게임이 PlayStation으로도 출시되었다면 실제 PlayStation 트로피에 따라 금, 은, 동으로 등급을 매깁니다. 설정에서 켤 수 있습니다.",
     "clipsTitle": "비디오 클립",
     "clipsCopy": "도전 과제를 달성할 때마다 그 전후의 짧은 클립을 보관합니다. 설정의 알림에서 켤 수 있습니다.",
     "statsTitle": "라이브러리 통계",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "실행 횟수와 플레이 시간은 추적되지만 도전 과제는 없습니다.",
     "collection-create": "만들기",
     "collection-create-note": "만든 뒤에는 게임을 마우스 오른쪽 버튼으로 클릭 > 컬렉션에서 추가하세요.",
-    "psn-ultra-rare": "초희귀",
-    "psn-very-rare": "매우 희귀",
-    "psn-rare": "희귀",
-    "psn-common": "일반",
     "psn-title": "PlayStation 계정",
-    "psn-desc": "선택 사항입니다. PlayStation 게임과 트로피를 가져오고, PSN 계정의 게임에 대해 PlayStation 공식 트로피 달성률을 표시합니다. 세션 토큰은 암호화되어 이 PC에 저장됩니다.",
+    "psn-desc": "선택 사항입니다. PlayStation 게임과 트로피를 가져오고, PSN 계정의 게임에 대해 PlayStation 공식 트로피 달성률을 표시합니다. PlayStation으로도 출시된 다른 스토어의 게임은 실제 플래티넘을 표시하고, 트로피 모드에서는 실제 트로피도 표시합니다. 세션 토큰은 암호화되어 이 PC에 저장됩니다.",
     "psn-btn-hint": "Sony 로그인 창을 엽니다",
     "psn-import-btn-hint": "PSN에서 게임과 트로피를 가져옵니다",
     "psn-connect": "PlayStation 계정 연결",

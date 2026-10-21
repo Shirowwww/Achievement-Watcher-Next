@@ -1189,7 +1189,8 @@
         "Epätavalliseen paikkaan tallennettu peli: lisää sen kansio kohdassa Asetukset > Kansiot. Valitse kansio, jossa ovat suoraan tallennukset, AppID-kansiot tai emulaattorin asetukset, tai kirjastokansio, jossa on monta peliä.",
         "RetroAchievements: ota lähde käyttöön, anna käyttäjänimesi ja Web API -avaimesi ja paina sitten Tuo kirjasto. Avaukset tulevat tililtäsi, joten pidä RetroAchievements päällä emulaattorissa.",
         "Yksinkertaisessa tilassa muutama harvoin käytetty lähderivi pysyy piilossa, kun niitä ei käytetä. Ne palaavat heti, kun niillä on merkitystä, ja Laaja näyttää aina kaikki.",
-        "PlayStation-pokaalit näyttävät luokkansa, niitä omistavien pelaajien osuuden ja PlayStationin oman harvinaisuusluokan. Osuudet tulevat Exophasesta; yhdistä PlayStation-tili kohdassa Asetukset > Lähteet, niin saat Sonyn omat luvut kyseisen tilin peleille."
+        "PlayStation-pokaalit näyttävät luokkansa ja niitä omistavien pelaajien osuuden. Osuudet tulevat Exophasesta; yhdistä PlayStation-tili kohdassa Asetukset > Lähteet, niin saat Sonyn omat luvut kyseisen tilin peleille.",
+        "Kun PlayStation-tili on yhdistetty, Tuo kirjasto tuo PlayStation-pelisi ja -pokaalisi ja päivittää ne kolmen päivän välein, ja sen alla oleva kenttä lisää pelin, jota et omista. Toisesta kaupasta peräisin oleva peli, joka on julkaistu myös PlayStationille, näyttää oikean platinansa ja pokaalitilassa oikeat luokkansa ja DLC-ryhmänsä."
       ],
       "notifications": [
         "Automaattinen on oletus: pelinsisäinen ponnahdusikkuna, kun peli osaa näyttää sen, muuten Windows-ilmoitus, ei koskaan molempia.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Kokoelmat",
     "collectionsCopy": "Ryhmittele pelejä omiin kokoelmiisi pelin hiiren kakkospainikkeen valikosta.",
     "trophyTitle": "Pokaalitila",
-    "trophyCopy": "Arvioi saavutukset kullalla, hopealla tai pronssilla harvinaisuuden mukaan. Ota käyttöön Asetuksissa.",
+    "trophyCopy": "Arvioi saavutukset kullalla, hopealla tai pronssilla harvinaisuuden mukaan tai oikean PlayStation-pokaalin mukaan, kun peli on julkaistu myös siellä. Ota käyttöön Asetuksissa.",
     "clipsTitle": "Videoklippi",
     "clipsCopy": "Tallenna lyhyt klippi jokaisen avautumisen ympäriltä. Ota käyttöön Asetuksissa kohdassa Ilmoitukset.",
     "statsTitle": "Kirjaston tilastot",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Käynnistykset ja peliaika seurataan, ilman saavutuksia.",
     "collection-create": "Luo",
     "collection-create-note": "Kun kokoelma on luotu, lisää peli siihen napsauttamalla peliä hiiren kakkospainikkeella > Kokoelmat.",
-    "psn-ultra-rare": "Ultraharvinainen",
-    "psn-very-rare": "Erittäin harvinainen",
-    "psn-rare": "Harvinainen",
-    "psn-common": "Yleinen",
     "psn-title": "PlayStation-tili",
-    "psn-desc": "Valinnainen. Tuo PlayStation-pelisi ja -pokaalisi sekä näyttää PlayStationin omat pokaaliosuudet PSN-tilisi peleille. Istuntotunnuksesi tallennetaan salattuna tälle koneelle.",
+    "psn-desc": "Valinnainen. Tuo PlayStation-pelisi ja -pokaalisi sekä näyttää PlayStationin omat pokaaliosuudet PSN-tilisi peleille. Toisesta kaupasta peräisin oleva peli, joka on julkaistu myös PlayStationille, näyttää oikean platinansa ja pokaalitilassa oikeat pokaalinsa. Istuntotunnuksesi tallennetaan salattuna tälle koneelle.",
     "psn-btn-hint": "avaa Sonyn kirjautumisikkunan",
     "psn-import-btn-hint": "hakee pelisi ja pokaalisi PSN:stä",
     "psn-connect": "Yhdistä PlayStation-tili",

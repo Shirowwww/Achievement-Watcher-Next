@@ -190,6 +190,16 @@ two bounds can be moved. The app tells a preset its tier in `rarityTier` (with `
 localized `rarityGrade`); a preset that predates the field falls back to the percentage and so keeps
 the rare tiers.
 
+With a PlayStation account connected, a game that also came out on PlayStation uses its real list
+instead, wherever its achievements come from: each achievement takes the grade and DLC group of the
+trophy with the same name or description. The real platinum shows in every rarity mode, trophy mode
+or not: on the game page, in the stats and in the 100% popup, with its name, description and icon,
+in the same style. Sources AW watches live (Xenia, recompiled ports, GOG Galaxy, Ubisoft Connect, Xbox
+PC) get the same 100% popup, or pop the achievement tied to the platinum as the platinum when the
+game has one. PlayStation emulators keep their own trophies. AW finds the list by the game's original name, so renaming a game changes
+nothing. A game played on PlayStation counts its platinum once that trophy is earned, even with DLC
+trophies left.
+
 <div align="center">
 <picture><source srcset="assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/trophy-profile.png" width="440" height="148" alt="The profile header with platinum, gold, silver, bronze and common trophy counts" loading="lazy" decoding="async"></picture><br>
 <sub>The profile counts every unlock by grade, with platinum for finished games</sub>

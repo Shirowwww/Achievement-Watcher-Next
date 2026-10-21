@@ -1189,7 +1189,8 @@
         "A game saved somewhere unusual: add its folder in Settings > Folders. Choose the folder that directly holds the saves, the AppID folders or the emulator configuration, or a library folder that holds many games.",
         "RetroAchievements: switch the source on, enter your username and Web API key, then press Import library. Unlocks come from your account, so keep RetroAchievements on in the emulator.",
         "In Simple mode a few rarely used source rows stay hidden while they are unused. They come back as soon as they matter, and Advanced always lists them all.",
-        "PlayStation trophies show their grade, the share of players who have them and PlayStation's own rarity tier. The rates come from Exophase; connect a PlayStation account in Settings > Sources to get Sony's own figures for the games on that account."
+        "PlayStation trophies show their grade and the share of players who have them. The rates come from Exophase; connect a PlayStation account in Settings > Sources to get Sony's own figures for the games on that account.",
+        "With a PlayStation account connected, Import library brings your PlayStation games and trophies, refreshed every three days, and the field under it adds a game you do not own. A game from another store that also came out on PlayStation shows its real platinum, and in trophy mode its real grades and DLC groups."
       ],
       "notifications": [
         "Automatic is the default: the in-game popup when the game can show it, a Windows notification when it cannot, never both.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Collections",
     "collectionsCopy": "Group games into your own collections from a game's right-click menu.",
     "trophyTitle": "Trophy mode",
-    "trophyCopy": "Grade achievements gold, silver or bronze by rarity. Turn it on in Settings.",
+    "trophyCopy": "Grade achievements gold, silver or bronze by rarity, or by their real PlayStation trophy when the game also came out there. Turn it on in Settings.",
     "clipsTitle": "Video clips",
     "clipsCopy": "Keep a short clip around each unlock. Turn it on in Settings under Notifications.",
     "statsTitle": "Library stats",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Launches and playtime are tracked, without achievements.",
     "collection-create": "Create",
     "collection-create-note": "Once it is created, right-click a game > Collections to add it.",
-    "psn-ultra-rare": "Ultra rare",
-    "psn-very-rare": "Very rare",
-    "psn-rare": "Rare",
-    "psn-common": "Common",
     "psn-title": "PlayStation account",
-    "psn-desc": "Optional. Imports your PlayStation games and trophies, and shows PlayStation's own trophy rates for the games on your PSN account. Your session token is stored encrypted on this PC.",
+    "psn-desc": "Optional. Imports your PlayStation games and trophies, and shows PlayStation's own trophy rates for the games on your PSN account. A game from another store that also came out on PlayStation shows its real platinum, and in trophy mode its real trophies. Your session token is stored encrypted on this PC.",
     "psn-btn-hint": "opens the Sony sign-in window",
     "psn-import-btn-hint": "fetch your games and trophies from PSN",
     "psn-connect": "Connect PlayStation account",

@@ -125,6 +125,7 @@ async function handleChange(profile, file, ctx) {
       if (!schema) return;
       const byId = new Map((schema?.achievement?.list || []).map((entry) => [String(entry.name), entry]));
       const gameName = schema?.name || 'Alice: Madness Returns';
+      const completion = { unlocked: unlocked.filter((id) => byId.has(id)).length, total: byId.size };
 
       let delay = 0;
       for (const id of fresh) {
@@ -146,6 +147,7 @@ async function handleChange(profile, file, ctx) {
             icon: icon || undefined,
             time: moment().unix(),
             delay,
+            completion,
           },
           {
             notify: ctx.options.notification.notify,

@@ -76,6 +76,7 @@ const options = {
     assert.strictEqual(sent[0].appid, 'uplay-4242');
     assert.strictEqual(sent[0].source, 'RUNE Uplay');
     assert.strictEqual(sent[0].time, 1700000000);
+    assert.deepStrictEqual(sent[0].completion, { unlocked: 0, total: 0 }, 'no archive here: the total is unknown, so no 100%');
 
     // Only the new one is announced on the next write.
     fs.writeFileSync(file, cfg({ 1: 1700000000, 2: 1700000100 }));

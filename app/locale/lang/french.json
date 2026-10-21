@@ -1189,7 +1189,8 @@
         "Un jeu sauvegardé à un endroit inhabituel : ajoute son dossier dans Paramètres > Dossiers. Choisis le dossier qui contient directement les sauvegardes, les dossiers d’AppID ou la configuration de l’émulateur, ou un dossier de bibliothèque qui contient beaucoup de jeux.",
         "RetroAchievements : active la source, saisis ton nom d’utilisateur et ta clé Web API, puis appuie sur Importer la bibliothèque. Les succès viennent de ton compte, laisse donc RetroAchievements activé dans l’émulateur.",
         "En mode Simple, quelques lignes de sources rarement utilisées restent masquées tant qu’elles ne servent pas. Elles reviennent dès qu’elles comptent, et le mode Avancé les affiche toutes.",
-        "Les trophées PlayStation affichent leur grade, la part de joueurs qui les ont et la rareté PlayStation. Les pourcentages viennent d’Exophase ; connecte un compte PlayStation dans Paramètres > Sources pour avoir ceux de Sony sur les jeux de ce compte."
+        "Les trophées PlayStation affichent leur grade et la part de joueurs qui les ont. Les pourcentages viennent d’Exophase ; connecte un compte PlayStation dans Paramètres > Sources pour avoir ceux de Sony pour les jeux de ce compte.",
+        "Avec un compte PlayStation connecté, Importer la bibliothèque ajoute tes jeux et trophées PlayStation, mis à jour tous les trois jours, et le champ en dessous ajoute un jeu que tu ne possèdes pas. Un jeu d’une autre boutique sorti aussi sur PlayStation affiche son vrai platine, et en mode trophées ses vrais grades et groupes de DLC."
       ],
       "notifications": [
         "Automatique est le mode par défaut : le popup en jeu quand le jeu peut l’afficher, une notification Windows sinon, jamais les deux.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Collections",
     "collectionsCopy": "Regroupe des jeux dans tes propres collections depuis le menu clic droit d’un jeu.",
     "trophyTitle": "Mode trophées",
-    "trophyCopy": "Classe les succès en or, argent ou bronze selon leur rareté. Active-le dans Paramètres.",
+    "trophyCopy": "Classe les succès en or, argent ou bronze selon leur rareté, ou selon leur vrai trophée PlayStation quand le jeu y est aussi sorti. Active-le dans Paramètres.",
     "clipsTitle": "Clips vidéo",
     "clipsCopy": "Garde un court clip autour de chaque déblocage. Active-le dans Paramètres, sous Notifications.",
     "statsTitle": "Statistiques",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Lancements et temps de jeu suivis, sans succès.",
     "collection-create": "Créer",
     "collection-create-note": "Une fois créée, fais un clic droit sur un jeu > Collections pour l’y ajouter.",
-    "psn-ultra-rare": "Ultra rare",
-    "psn-very-rare": "Très rare",
-    "psn-rare": "Rare",
-    "psn-common": "Commun",
     "psn-title": "Compte PlayStation",
-    "psn-desc": "Optionnel. Importe tes jeux et trophées PlayStation, et affiche les pourcentages officiels PlayStation pour les jeux de ton compte PSN. Ton jeton est stocké chiffré sur ce PC.",
+    "psn-desc": "Optionnel. Importe tes jeux et trophées PlayStation, et affiche les pourcentages officiels PlayStation pour les jeux de ton compte PSN. Un jeu d’une autre boutique sorti aussi sur PlayStation affiche son vrai platine, et en mode trophées ses vrais trophées. Ton jeton est stocké chiffré sur ce PC.",
     "psn-btn-hint": "ouvre la fenêtre de connexion Sony",
     "psn-import-btn-hint": "récupère tes jeux et trophées depuis le PSN",
     "psn-connect": "Connecter le compte PlayStation",

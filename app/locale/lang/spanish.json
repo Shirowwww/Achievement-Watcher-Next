@@ -1189,7 +1189,8 @@
         "Un juego guardado en un sitio poco habitual: añade su carpeta en Ajustes > Carpetas. Elige la carpeta que contiene directamente los guardados, las carpetas AppID o la configuración del emulador, o una carpeta de biblioteca con muchos juegos.",
         "RetroAchievements: activa la fuente, introduce tu nombre de usuario y tu clave Web API, y pulsa Importar biblioteca. Los desbloqueos vienen de tu cuenta, así que deja RetroAchievements activado en el emulador.",
         "En modo Simple, algunas filas de fuentes poco usadas quedan ocultas mientras no se usan. Vuelven en cuanto importan, y Avanzado las muestra siempre todas.",
-        "Los trofeos de PlayStation muestran su grado, el porcentaje de jugadores que los tienen y el nivel de rareza propio de PlayStation. Las tasas vienen de Exophase; conecta una cuenta de PlayStation en Ajustes > Fuente para obtener las cifras de Sony de los juegos de esa cuenta."
+        "Los trofeos de PlayStation muestran su grado y el porcentaje de jugadores que los tienen. Las tasas vienen de Exophase; conecta una cuenta de PlayStation en Ajustes > Fuente para obtener las cifras de Sony de los juegos de esa cuenta.",
+        "Con una cuenta de PlayStation conectada, Importar biblioteca trae tus juegos y trofeos de PlayStation, actualizados cada tres días, y el campo de debajo añade un juego que no tienes. Un juego de otra tienda que también salió en PlayStation muestra su platino real y, en el modo trofeos, sus grados reales y grupos de DLC."
       ],
       "notifications": [
         "Automático es el modo predeterminado: la ventana emergente dentro del juego cuando el juego puede mostrarla y una notificación de Windows cuando no, nunca las dos.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Colecciones",
     "collectionsCopy": "Agrupa juegos en tus propias colecciones desde el menú de clic derecho de un juego.",
     "trophyTitle": "Modo trofeos",
-    "trophyCopy": "Clasifica los logros en oro, plata o bronce según su rareza. Actívalo en Ajustes.",
+    "trophyCopy": "Clasifica los logros en oro, plata o bronce según su rareza, o según su trofeo real de PlayStation cuando el juego también salió allí. Actívalo en Ajustes.",
     "clipsTitle": "Videoclips",
     "clipsCopy": "Guarda un clip corto alrededor de cada desbloqueo. Actívalo en Ajustes, en Notificaciones.",
     "statsTitle": "Estadísticas de la biblioteca",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Se registran los inicios y el tiempo de juego, sin logros.",
     "collection-create": "Crear",
     "collection-create-note": "Una vez creada, haz clic derecho en un juego > Colecciones para añadirlo.",
-    "psn-ultra-rare": "Ultra raro",
-    "psn-very-rare": "Muy raro",
-    "psn-rare": "Raro",
-    "psn-common": "Común",
     "psn-title": "Cuenta de PlayStation",
-    "psn-desc": "Opcional. Importa tus juegos y trofeos de PlayStation, y muestra las tasas oficiales de trofeos de PlayStation para los juegos de tu cuenta de PSN. Tu token de sesión se guarda cifrado en este PC.",
+    "psn-desc": "Opcional. Importa tus juegos y trofeos de PlayStation, y muestra las tasas oficiales de trofeos de PlayStation para los juegos de tu cuenta de PSN. Un juego de otra tienda que también salió en PlayStation muestra su platino real y, en el modo trofeos, sus trofeos reales. Tu token de sesión se guarda cifrado en este PC.",
     "psn-btn-hint": "abre la ventana de inicio de sesión de Sony",
     "psn-import-btn-hint": "obtiene tus juegos y trofeos de PSN",
     "psn-connect": "Conectar cuenta de PlayStation",

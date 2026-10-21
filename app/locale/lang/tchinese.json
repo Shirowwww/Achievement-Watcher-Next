@@ -1189,7 +1189,8 @@
         "遊戲存放在不常見的位置：在 設定 > 資料夾 中新增它的資料夾。請選擇直接包含存檔、AppID 資料夾或模擬器設定的資料夾，或包含許多遊戲的收藏庫資料夾。",
         "RetroAchievements：開啟該來源，輸入你的使用者名稱和 Web API 金鑰，然後按「匯入遊戲庫」。解鎖紀錄來自你的帳號，所以請在模擬器中保持 RetroAchievements 開啟。",
         "在「簡易」模式下，一些很少使用的來源列在未被使用時會保持隱藏。一旦需要它們就會重新出現，而「進階」模式一律列出全部。",
-        "PlayStation 獎盃會顯示它的等級、擁有該獎盃的玩家比例，以及 PlayStation 自己的稀有度等級。取得率來自 Exophase；在 設定 > 來源 中連結 PlayStation 帳號，即可取得該帳號上遊戲的 Sony 官方數據。"
+        "PlayStation 獎盃會顯示它的等級以及擁有該獎盃的玩家比例。取得率來自 Exophase；在 設定 > 來源 中連結 PlayStation 帳號，即可取得該帳號上遊戲的 Sony 官方數據。",
+        "連結 PlayStation 帳號後，「匯入遊戲庫」會匯入你的 PlayStation 遊戲和獎盃，每三天重新整理一次，其下的欄位可新增你未擁有的遊戲。其他商店中同樣登上 PlayStation 的遊戲會顯示其真實的白金，在獎盃模式下還會顯示其真實的等級和 DLC 群組。"
       ],
       "notifications": [
         "預設為「自動」：遊戲能顯示時使用遊戲內彈出通知，無法顯示時改用 Windows 通知，絕不會兩者同時出現。",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "收藏集",
     "collectionsCopy": "透過遊戲的右鍵選單，把遊戲歸入你自己的收藏集。",
     "trophyTitle": "獎盃模式",
-    "trophyCopy": "依稀有度把成就評為金、銀或銅。可在設定中開啟。",
+    "trophyCopy": "依稀有度把成就評為金、銀或銅，若遊戲也登上了 PlayStation，則依其真實的 PlayStation 獎盃評級。可在設定中開啟。",
     "clipsTitle": "影片剪輯",
     "clipsCopy": "在每次解鎖前後保留一小段剪輯。可在設定的通知中開啟。",
     "statsTitle": "收藏庫統計",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "會記錄啟動次數和遊玩時數，但沒有成就。",
     "collection-create": "建立",
     "collection-create-note": "建立後，在遊戲上按右鍵 > 收藏集即可加入。",
-    "psn-ultra-rare": "極稀有",
-    "psn-very-rare": "非常稀有",
-    "psn-rare": "稀有",
-    "psn-common": "常見",
     "psn-title": "PlayStation 帳號",
-    "psn-desc": "選用。匯入你的 PlayStation 遊戲和獎盃，並為你 PSN 帳號中的遊戲顯示 PlayStation 官方的獎盃取得率。你的工作階段權杖會加密儲存在這台電腦上。",
+    "psn-desc": "選用。匯入你的 PlayStation 遊戲和獎盃，並為你 PSN 帳號中的遊戲顯示 PlayStation 官方的獎盃取得率。其他商店中同樣登上 PlayStation 的遊戲會顯示其真實的白金，在獎盃模式下還會顯示其真實的獎盃。你的工作階段權杖會加密儲存在這台電腦上。",
     "psn-btn-hint": "開啟 Sony 登入視窗",
     "psn-import-btn-hint": "從 PSN 取得你的遊戲和獎盃",
     "psn-connect": "連結 PlayStation 帳號",

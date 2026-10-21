@@ -34,7 +34,8 @@ saves and console emulators, shows them in one library, and pops up each unlock 
 
 **📚 One library**<br>
 Every source in the same list, with rarity, progress achievements, covers and your own
-collections. Trophy mode grades each achievement gold, silver or bronze.
+collections. Trophy mode grades each achievement gold, silver or bronze, and a game that also
+came out on PlayStation takes its real trophies and platinum.
 
 </td>
 <td width="50%" valign="top">

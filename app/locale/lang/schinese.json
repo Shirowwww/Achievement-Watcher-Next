@@ -1189,7 +1189,8 @@
         "游戏存放在不常见的位置：在 设置 > 文件夹 中添加它的文件夹。请选择直接包含存档、AppID 文件夹或模拟器配置的文件夹，或包含许多游戏的游戏库文件夹。",
         "RetroAchievements：打开该来源，输入你的用户名和 Web API 密钥，然后按“导入游戏库”。解锁记录来自你的账号，所以请在模拟器中保持 RetroAchievements 开启。",
         "在“简易”模式下，一些很少使用的来源行在未被使用时会保持隐藏。一旦需要它们就会重新出现，而“高级”模式始终列出全部。",
-        "PlayStation 奖杯会显示其等级、拥有该奖杯的玩家比例以及 PlayStation 自己的稀有度等级。获得率来自 Exophase；在 设置 > 来源 中连接 PlayStation 账号，即可获得该账号上游戏的 Sony 官方数据。"
+        "PlayStation 奖杯会显示其等级以及拥有该奖杯的玩家比例。获得率来自 Exophase；在 设置 > 来源 中连接 PlayStation 账号，即可获得该账号上游戏的 Sony 官方数据。",
+        "连接 PlayStation 账号后，“导入游戏库”会导入你的 PlayStation 游戏和奖杯，每三天刷新一次，其下的输入框可添加你未拥有的游戏。其他商店中同样登陆 PlayStation 的游戏会显示其真实的白金，在奖杯模式下还会显示其真实的等级和 DLC 分组。"
       ],
       "notifications": [
         "默认是“自动”：游戏能显示时使用游戏内弹窗，不能显示时改用 Windows 通知，绝不会两者同时出现。",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "收藏集",
     "collectionsCopy": "通过游戏的右键菜单，把游戏归入你自己的收藏集。",
     "trophyTitle": "奖杯模式",
-    "trophyCopy": "按稀有度把成就评为金、银或铜。可在设置中开启。",
+    "trophyCopy": "按稀有度把成就评为金、银或铜，若游戏也登陆了 PlayStation，则按其真实的 PlayStation 奖杯评级。可在设置中开启。",
     "clipsTitle": "视频剪辑",
     "clipsCopy": "在每次解锁前后保留一小段剪辑。可在设置的通知中开启。",
     "statsTitle": "库统计",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "会记录启动次数和游戏时间，但没有成就。",
     "collection-create": "创建",
     "collection-create-note": "创建后，右键点击游戏 > 收藏集即可添加。",
-    "psn-ultra-rare": "极其罕见",
-    "psn-very-rare": "非常罕见",
-    "psn-rare": "罕见",
-    "psn-common": "常见",
     "psn-title": "PlayStation 账号",
-    "psn-desc": "可选。导入你的 PlayStation 游戏和奖杯，并为你 PSN 账号中的游戏显示 PlayStation 官方的奖杯获得率。你的会话令牌在此电脑上加密保存。",
+    "psn-desc": "可选。导入你的 PlayStation 游戏和奖杯，并为你 PSN 账号中的游戏显示 PlayStation 官方的奖杯获得率。其他商店中同样登陆 PlayStation 的游戏会显示其真实的白金，在奖杯模式下还会显示其真实的奖杯。你的会话令牌在此电脑上加密保存。",
     "psn-btn-hint": "打开 Sony 登录窗口",
     "psn-import-btn-hint": "从 PSN 获取你的游戏和奖杯",
     "psn-connect": "连接 PlayStation 账号",

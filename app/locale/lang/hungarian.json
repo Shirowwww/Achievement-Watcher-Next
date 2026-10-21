@@ -1189,7 +1189,8 @@
         "Szokatlan helyen mentett játék: adja hozzá a mappáját a Beállítások > Mappák alatt. Válassza azt a mappát, amely közvetlenül tartalmazza a mentéseket, az AppID-mappákat vagy az emulátor konfigurációját, vagy egy sok játékot tartalmazó könyvtármappát.",
         "RetroAchievements: kapcsolja be a forrást, adja meg a felhasználónevét és a Web API-kulcsát, majd nyomja meg a „Könyvtár importálása” gombot. A feloldások a fiókjából jönnek, ezért hagyja bekapcsolva a RetroAchievementst az emulátorban.",
         "Egyszerű módban néhány ritkán használt forrássor rejtve marad, amíg nem használja őket. Amint számítanak, visszatérnek, a Speciális mód pedig mindig mindet megmutatja.",
-        "A PlayStation-trófeák megmutatják a fokozatukat, a birtokló játékosok arányát és a PlayStation saját ritkasági szintjét. Az arányok az Exophase-ből származnak; csatlakoztasson PlayStation-fiókot a Beállítások > Forrás alatt, hogy a fiók játékaihoz a Sony saját adatait kapja."
+        "A PlayStation-trófeák megmutatják a fokozatukat és a birtokló játékosok arányát. Az arányok az Exophase-ből származnak; csatlakoztasson PlayStation-fiókot a Beállítások > Forrás alatt, hogy a fiók játékaihoz a Sony saját adatait kapja.",
+        "Csatlakoztatott PlayStation-fiók esetén a „Könyvtár importálása” gomb behozza a PlayStation-játékokat és -trófeákat, háromnaponta frissítve, az alatta lévő mező pedig hozzáad egy játékot, amely nincs meg Önnek. A más áruházból származó, PlayStationön is megjelent játék a valódi platináját, trófea módban pedig a valódi fokozatait és DLC-csoportjait mutatja."
       ],
       "notifications": [
         "Az „Automatikus” az alapértelmezett: a játékon belüli felugró ablak, ha a játék meg tudja jeleníteni, egy Windows-értesítés, ha nem, soha nem mindkettő.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Gyűjtemények",
     "collectionsCopy": "Csoportosítsd a játékokat saját gyűjteményekbe egy játék jobb gombos menüjéből.",
     "trophyTitle": "Trófea mód",
-    "trophyCopy": "Minősítsd a teljesítményeket arannyal, ezüsttel vagy bronzzal a ritkaságuk szerint. Kapcsold be a Beállításokban.",
+    "trophyCopy": "Minősítsd a teljesítményeket arannyal, ezüsttel vagy bronzzal a ritkaságuk szerint, vagy a valódi PlayStation-trófeájuk szerint, ha a játék ott is megjelent. Kapcsold be a Beállításokban.",
     "clipsTitle": "Videóklipek",
     "clipsCopy": "Őrizz meg egy rövid klipet minden feloldás körül. Kapcsold be a Beállításokban, az Értesítések alatt.",
     "statsTitle": "Könyvtár statisztikái",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Az indítások és a játékidő követve van, teljesítmények nélkül.",
     "collection-create": "Létrehozás",
     "collection-create-note": "A létrehozás után a játék hozzáadásához kattintson rá jobb gombbal > Gyűjtemények.",
-    "psn-ultra-rare": "Ultra ritka",
-    "psn-very-rare": "Nagyon ritka",
-    "psn-rare": "Ritka",
-    "psn-common": "Gyakori",
     "psn-title": "PlayStation-fiók",
-    "psn-desc": "Opcionális. Importálja a PlayStation-játékokat és -trófeákat, és megjeleníti a PlayStation saját trófeaarányait a PSN-fiókjában lévő játékokhoz. A munkamenet-tokent titkosítva tároljuk ezen a számítógépen.",
+    "psn-desc": "Opcionális. Importálja a PlayStation-játékokat és -trófeákat, és megjeleníti a PlayStation saját trófeaarányait a PSN-fiókjában lévő játékokhoz. A más áruházból származó, PlayStationön is megjelent játék a valódi platináját, trófea módban pedig a valódi trófeáit mutatja. A munkamenet-tokent titkosítva tároljuk ezen a számítógépen.",
     "psn-btn-hint": "megnyitja a Sony bejelentkezési ablakát",
     "psn-import-btn-hint": "lekéri a játékokat és a trófeákat a PSN-ről",
     "psn-connect": "PlayStation-fiók csatlakoztatása",

@@ -1189,7 +1189,8 @@
         "Hra uložená na neobvyklém místě: přidejte její složku v Nastavení > Složky. Zvolte složku, která přímo obsahuje uložené pozice, složky AppID nebo konfiguraci emulátoru, případně složku knihovny s mnoha hrami.",
         "RetroAchievements: zapněte zdroj, zadejte uživatelské jméno a klíč Web API a stiskněte Importovat knihovnu. Odemčení pocházejí z vašeho účtu, takže nechte RetroAchievements v emulátoru zapnuté.",
         "V režimu Jednoduché zůstane několik zřídka používaných řádků zdrojů skrytých, dokud se nepoužívají. Vrátí se, jakmile na nich bude záležet, a Pokročilé je ukazuje vždy všechny.",
-        "Trofeje PlayStation ukazují svůj stupeň, podíl hráčů, kteří je mají, a vlastní úroveň vzácnosti PlayStationu. Míry pocházejí z Exophase; připojte účet PlayStation v Nastavení > Zdroj, abyste u her na tomto účtu získali vlastní čísla Sony."
+        "Trofeje PlayStation ukazují svůj stupeň a podíl hráčů, kteří je mají. Míry pocházejí z Exophase; připojte účet PlayStation v Nastavení > Zdroj, abyste u her na tomto účtu získali vlastní čísla Sony.",
+        "S připojeným účtem PlayStation Importovat knihovnu přinese vaše hry a trofeje PlayStation, aktualizované každé tři dny, a pole pod ním přidá hru, kterou nevlastníte. Hra z jiného obchodu, která vyšla i na PlayStationu, zobrazuje svou skutečnou platinu a v režimu trofejí své skutečné stupně a skupiny DLC."
       ],
       "notifications": [
         "Automaticky je výchozí: vyskakovací okno ve hře, když ho hra umí zobrazit, jinak oznámení Windows, nikdy obojí.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Kolekce",
     "collectionsCopy": "Seskupujte hry do vlastních kolekcí z nabídky po kliknutí pravým tlačítkem na hru.",
     "trophyTitle": "Režim trofejí",
-    "trophyCopy": "Hodnoťte úspěchy zlatou, stříbrnou nebo bronzovou podle vzácnosti. Zapnete to v Nastavení.",
+    "trophyCopy": "Hodnoťte úspěchy zlatou, stříbrnou nebo bronzovou podle vzácnosti, nebo podle skutečné trofeje PlayStation, pokud hra vyšla i tam. Zapnete to v Nastavení.",
     "clipsTitle": "Videoklipy",
     "clipsCopy": "Uložte si krátký klip kolem každého odemknutí. Zapnete to v Nastavení v části Oznámení.",
     "statsTitle": "Statistiky knihovny",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Spuštění a doba hraní se sledují, bez úspěchů.",
     "collection-create": "Vytvořit",
     "collection-create-note": "Po vytvoření přidáte hru kliknutím pravým tlačítkem > Kolekce.",
-    "psn-ultra-rare": "Ultra vzácná",
-    "psn-very-rare": "Velmi vzácná",
-    "psn-rare": "Vzácná",
-    "psn-common": "Běžná",
     "psn-title": "Účet PlayStation",
-    "psn-desc": "Volitelné. Importuje vaše hry a trofeje PlayStation a zobrazuje vlastní míry trofejí od PlayStationu u her na vašem účtu PSN. Token vaší relace je na tomto PC uložen zašifrovaně.",
+    "psn-desc": "Volitelné. Importuje vaše hry a trofeje PlayStation a zobrazuje vlastní míry trofejí od PlayStationu u her na vašem účtu PSN. Hra z jiného obchodu, která vyšla i na PlayStationu, zobrazuje svou skutečnou platinu a v režimu trofejí své skutečné trofeje. Token vaší relace je na tomto PC uložen zašifrovaně.",
     "psn-btn-hint": "otevře přihlašovací okno Sony",
     "psn-import-btn-hint": "načte vaše hry a trofeje z PSN",
     "psn-connect": "Připojit účet PlayStation",

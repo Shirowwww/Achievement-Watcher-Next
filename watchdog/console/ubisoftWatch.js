@@ -361,6 +361,8 @@ async function handleChange(target, ctx) {
         if (prev.has(record.id)) continue;
         if (!schema) schema = loadSchema(target.appid, ctx.options.achievement.lang) || { texts: new Map(), iconFor: () => undefined };
         const text = schema.texts.get(record.id) || {};
+        // The spool holds earned records only, so the total comes from the archive's text list.
+        const completion = { unlocked: records.filter((r) => schema.texts.has(r.id)).length, total: schema.texts.size };
         debug.log(`[ubisoft] Unlocked: ${target.name} - ${text.displayName || record.id}`);
         await ctx.notify(
           {
@@ -373,6 +375,7 @@ async function handleChange(target, ctx) {
             icon: schema.iconFor(record.id),
             time: record.time || moment().unix(),
             delay,
+            completion,
           },
           {
             notify: ctx.options.notification.notify,

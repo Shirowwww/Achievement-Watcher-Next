@@ -1189,7 +1189,8 @@
         "Et spil gemt et usædvanligt sted: tilføj dets mappe under Indstillinger > Mapper. Vælg den mappe, der direkte indeholder gemte spil, AppID-mapperne eller emulatorkonfigurationen, eller en biblioteksmappe med mange spil.",
         "RetroAchievements: slå kilden til, indtast dit brugernavn og din Web API-nøgle, og tryk så på Importér bibliotek. Oplåsningerne kommer fra din konto, så lad RetroAchievements være slået til i emulatoren.",
         "I Enkel tilstand forbliver nogle sjældent brugte kilderækker skjult, mens de er ubrugte. De kommer tilbage, så snart de får betydning, og Avanceret viser altid alle.",
-        "PlayStation-trofæer viser deres grad, andelen af spillere, der har dem, og PlayStations egen sjældenhedsklasse. Andelene kommer fra Exophase; forbind en PlayStation-konto under Indstillinger > Kilder for at få Sonys egne tal for spillene på den konto."
+        "PlayStation-trofæer viser deres grad og andelen af spillere, der har dem. Andelene kommer fra Exophase; forbind en PlayStation-konto under Indstillinger > Kilder for at få Sonys egne tal for spillene på den konto.",
+        "Med en forbundet PlayStation-konto henter Importér bibliotek dine PlayStation-spil og -trofæer, opdateret hver tredje dag, og feltet under tilføjer et spil, du ikke ejer. Et spil fra en anden butik, som også er udkommet til PlayStation, viser sin rigtige platin og i trofætilstand sine rigtige grader og DLC-grupper."
       ],
       "notifications": [
         "Automatisk er standard: pop-up'en i spillet, når spillet kan vise den, ellers en Windows-notifikation, aldrig begge dele.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Samlinger",
     "collectionsCopy": "Gruppér spil i dine egne samlinger fra et spils højrekliksmenu.",
     "trophyTitle": "Trofætilstand",
-    "trophyCopy": "Giv præstationer guld, sølv eller bronze efter sjældenhed. Slå det til i Indstillinger.",
+    "trophyCopy": "Giv præstationer guld, sølv eller bronze efter sjældenhed, eller efter deres rigtige PlayStation-trofæ, når spillet også er udkommet dér. Slå det til i Indstillinger.",
     "clipsTitle": "Videoklip",
     "clipsCopy": "Gem et kort klip omkring hver oplåsning. Slå det til i Indstillinger under Notifikationer.",
     "statsTitle": "Biblioteksstatistik",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Starter og spilletid spores, uden præstationer.",
     "collection-create": "Opret",
     "collection-create-note": "Når den er oprettet, kan du højreklikke på et spil > Samlinger for at tilføje det.",
-    "psn-ultra-rare": "Ultrasjælden",
-    "psn-very-rare": "Meget sjælden",
-    "psn-rare": "Sjælden",
-    "psn-common": "Almindelig",
     "psn-title": "PlayStation-konto",
-    "psn-desc": "Valgfrit. Importerer dine PlayStation-spil og -trofæer og viser PlayStations egne trofæandele for spillene på din PSN-konto. Dit sessionstoken gemmes krypteret på denne pc.",
+    "psn-desc": "Valgfrit. Importerer dine PlayStation-spil og -trofæer og viser PlayStations egne trofæandele for spillene på din PSN-konto. Et spil fra en anden butik, som også er udkommet til PlayStation, viser sin rigtige platin og i trofætilstand sine rigtige trofæer. Dit sessionstoken gemmes krypteret på denne pc.",
     "psn-btn-hint": "åbner Sonys loginvindue",
     "psn-import-btn-hint": "henter dine spil og trofæer fra PSN",
     "psn-connect": "Forbind PlayStation-konto",

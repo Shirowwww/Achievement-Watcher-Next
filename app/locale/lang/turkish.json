@@ -1189,7 +1189,8 @@
         "Alışılmadık bir yere kaydedilen oyun: klasörünü Ayarlar > Klasörler içine ekleyin. Kayıtları, AppID klasörlerini veya emülatör yapılandırmasını doğrudan içeren klasörü ya da çok sayıda oyun içeren bir kütüphane klasörünü seçin.",
         "RetroAchievements: kaynağı açın, kullanıcı adınızı ve Web API anahtarınızı girin, sonra Kitaplığı içe aktar’a basın. Kilit açmalar hesabınızdan gelir, bu yüzden emülatörde RetroAchievements’ı açık tutun.",
         "Basit modda, nadiren kullanılan bazı kaynak satırları kullanılmadıkları sürece gizli kalır. Önem kazandıkları anda geri gelirler ve Gelişmiş hepsini her zaman listeler.",
-        "PlayStation kupaları derecesini, onlara sahip oyuncuların oranını ve PlayStation’ın kendi nadirlik kademesini gösterir. Oranlar Exophase’ten gelir; o hesaptaki oyunlar için Sony’nin kendi rakamlarını almak üzere Ayarlar > Kaynak içinde bir PlayStation hesabı bağlayın."
+        "PlayStation kupaları derecesini ve onlara sahip oyuncuların oranını gösterir. Oranlar Exophase’ten gelir; o hesaptaki oyunlar için Sony’nin kendi rakamlarını almak üzere Ayarlar > Kaynak içinde bir PlayStation hesabı bağlayın.",
+        "Bir PlayStation hesabı bağlıyken Kitaplığı içe aktar, PlayStation oyunlarınızı ve kupalarınızı getirir ve üç günde bir yeniler; altındaki alan ise sahip olmadığınız bir oyunu ekler. PlayStation’da da çıkmış başka bir mağazadaki oyun gerçek platinini, kupa modunda ise gerçek derecelerini ve DLC gruplarını gösterir."
       ],
       "notifications": [
         "Otomatik varsayılandır: oyun gösterebiliyorsa oyun içi açılır pencere, gösteremiyorsa Windows bildirimi kullanılır, ikisi birden asla gösterilmez.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Koleksiyonlar",
     "collectionsCopy": "Oyunları, bir oyunun sağ tık menüsünden kendi koleksiyonlarınızda gruplayın.",
     "trophyTitle": "Kupa modu",
-    "trophyCopy": "Başarımları nadirliğine göre altın, gümüş veya bronz olarak derecelendirin. Ayarlar'dan açın.",
+    "trophyCopy": "Başarımları nadirliğine göre ya da oyun PlayStation’da da çıktıysa gerçek PlayStation kupasına göre altın, gümüş veya bronz olarak derecelendirin. Ayarlar’dan açın.",
     "clipsTitle": "Video klipler",
     "clipsCopy": "Her kilit açılışının çevresinde kısa bir klip saklayın. Ayarlar'da Bildirimler altından açın.",
     "statsTitle": "Kütüphane istatistikleri",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Başlatmalar ve oynama süresi takip edilir, başarımlar olmadan.",
     "collection-create": "Oluştur",
     "collection-create-note": "Oluşturduktan sonra, eklemek için bir oyuna sağ tıklayın > Koleksiyonlar.",
-    "psn-ultra-rare": "Ultra nadir",
-    "psn-very-rare": "Çok nadir",
-    "psn-rare": "Nadir",
-    "psn-common": "Yaygın",
     "psn-title": "PlayStation hesabı",
-    "psn-desc": "İsteğe bağlı. PlayStation oyunlarınızı ve kupalarınızı içe aktarır, PSN hesabınızdaki oyunlar için PlayStation’ın kendi kupa oranlarını gösterir. Oturum belirteciniz bu bilgisayarda şifrelenmiş olarak saklanır.",
+    "psn-desc": "İsteğe bağlı. PlayStation oyunlarınızı ve kupalarınızı içe aktarır, PSN hesabınızdaki oyunlar için PlayStation’ın kendi kupa oranlarını gösterir. PlayStation’da da çıkmış başka bir mağazadaki oyun gerçek platinini, kupa modunda ise gerçek kupalarını gösterir. Oturum belirteciniz bu bilgisayarda şifrelenmiş olarak saklanır.",
     "psn-btn-hint": "Sony oturum açma penceresini açar",
     "psn-import-btn-hint": "oyunlarınızı ve kupalarınızı PSN’den getirir",
     "psn-connect": "PlayStation hesabını bağla",

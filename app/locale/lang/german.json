@@ -1189,7 +1189,8 @@
         "Ein Spiel liegt an einem ungewöhnlichen Ort? Füge seinen Ordner unter Einstellungen > Ordner hinzu. Wähle den Ordner, der direkt die Spielstände, die AppID-Ordner oder die Emulator-Konfiguration enthält, oder einen Bibliotheksordner mit vielen Spielen.",
         "RetroAchievements: Schalte die Quelle ein, gib deinen Benutzernamen und Web-API-Schlüssel ein und drücke dann Bibliothek importieren. Die Freischaltungen kommen von deinem Konto, lass also RetroAchievements im Emulator eingeschaltet.",
         "Im Modus Einfach bleiben einige selten genutzte Quellenzeilen ausgeblendet, solange sie ungenutzt sind. Sie kehren zurück, sobald sie relevant werden, und Erweitert zeigt immer alle.",
-        "PlayStation-Trophäen zeigen ihren Grad, den Anteil der Spieler, die sie haben, und die eigene Seltenheitsstufe von PlayStation. Die Quoten stammen von Exophase; verbinde unter Einstellungen > Quelle ein PlayStation-Konto, um Sonys eigene Zahlen für die Spiele dieses Kontos zu erhalten."
+        "PlayStation-Trophäen zeigen ihren Grad und den Anteil der Spieler, die sie haben. Die Quoten stammen von Exophase; verbinde unter Einstellungen > Quelle ein PlayStation-Konto, um Sonys eigene Zahlen für die Spiele dieses Kontos zu erhalten.",
+        "Mit verbundenem PlayStation-Konto holt Bibliothek importieren deine PlayStation-Spiele und -Trophäen, alle drei Tage aktualisiert, und das Feld darunter fügt ein Spiel hinzu, das du nicht besitzt. Ein Spiel aus einem anderen Shop, das auch für PlayStation erschienen ist, zeigt sein echtes Platin und im Trophäenmodus seine echten Grade und DLC-Gruppen."
       ],
       "notifications": [
         "Automatisch ist die Voreinstellung: das Pop-up im Spiel, wenn das Spiel es zeigen kann, sonst eine Windows-Benachrichtigung, nie beides.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Sammlungen",
     "collectionsCopy": "Gruppiere Spiele in deinen eigenen Sammlungen über das Rechtsklickmenü eines Spiels.",
     "trophyTitle": "Trophäenmodus",
-    "trophyCopy": "Bewerte Erfolge je nach Seltenheit mit Gold, Silber oder Bronze. Aktiviere das in den Einstellungen.",
+    "trophyCopy": "Bewerte Erfolge je nach Seltenheit mit Gold, Silber oder Bronze, oder nach ihrer echten PlayStation-Trophäe, wenn das Spiel auch dort erschienen ist. Aktiviere das in den Einstellungen.",
     "clipsTitle": "Videoclips",
     "clipsCopy": "Behalte einen kurzen Clip rund um jede Freischaltung. Aktiviere das in den Einstellungen unter Benachrichtigungen.",
     "statsTitle": "Bibliotheksstatistik",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Starts und Spielzeit werden erfasst, ohne Erfolge.",
     "collection-create": "Erstellen",
     "collection-create-note": "Nach dem Erstellen fügst du ein Spiel per Rechtsklick > Sammlungen hinzu.",
-    "psn-ultra-rare": "Ultra selten",
-    "psn-very-rare": "Sehr selten",
-    "psn-rare": "Selten",
-    "psn-common": "Häufig",
     "psn-title": "PlayStation-Konto",
-    "psn-desc": "Optional. Importiert deine PlayStation-Spiele und -Trophäen und zeigt die eigenen Trophäenquoten von PlayStation für die Spiele deines PSN-Kontos. Dein Sitzungstoken wird verschlüsselt auf diesem PC gespeichert.",
+    "psn-desc": "Optional. Importiert deine PlayStation-Spiele und -Trophäen und zeigt die eigenen Trophäenquoten von PlayStation für die Spiele deines PSN-Kontos. Ein Spiel aus einem anderen Shop, das auch für PlayStation erschienen ist, zeigt sein echtes Platin und im Trophäenmodus seine echten Trophäen. Dein Sitzungstoken wird verschlüsselt auf diesem PC gespeichert.",
     "psn-btn-hint": "öffnet das Anmeldefenster von Sony",
     "psn-import-btn-hint": "holt deine Spiele und Trophäen von PSN",
     "psn-connect": "PlayStation-Konto verbinden",

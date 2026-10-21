@@ -70,11 +70,18 @@ async function refreshPsnInBackground() {
 
 /*
   Ties the library's games from every other source to their PlayStation trophy list, one game after
-  the other, in the trophy mode only. A game already looked at is skipped until its link ages out.
+  the other, whatever the rarity mode: the real platinum shows in all of them. A game already looked at
+  is skipped until its link ages out.
 */
 const MAX_LINKED_GAMES = 5000;
-// A store lookup costs up to a dozen requests: a library pass asks for this many games at most.
+/*
+  A store lookup costs up to a dozen requests on the user's own account: a pass asks for 10 games at
+  most and a day for 30, and a rate limit from Sony stops the store lookups for six hours.
+*/
 const STORE_LOOKUPS_PER_PASS = 10;
+const STORE_LOOKUPS_PER_DAY = 30;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const RATE_LIMIT_PAUSE_MS = 6 * 60 * 60 * 1000;
 const MAX_LINKED_ACHIEVEMENTS = 2000;
 let psnLinking = null;
 
@@ -92,6 +99,12 @@ function cleanLinkGame(game) {
   return appid && name && achievements.length ? { appid, name, achievements } : null;
 }
 
+// The store lookups spent in the current day, and until when Sony asked to slow down.
+function storeQuota(saved, now) {
+  const sameDay = saved && now - Number(saved.since) < DAY_MS;
+  return { since: sameDay ? Number(saved.since) : now, used: sameDay ? Number(saved.used) || 0 : 0, pausedUntil: Number(saved && saved.pausedUntil) || 0 };
+}
+
 function englishAchievements(lib, appid) {
   if (!/^\d+$/.test(appid)) return null;
   const schema = lib.readJson(path.join(userData, 'steam_cache', 'schema', 'english', `${appid}.json`));
@@ -100,8 +113,6 @@ function englishAchievements(lib, appid) {
 }
 
 async function linkPsnGames(games) {
-  const rarityTiers = require(path.join(__dirname, '../util/rarityTiers.js'));
-  if (rarityTiers.normalizeMode(getConfig()?.achievement?.rarityMode) !== rarityTiers.MODE_TROPHY) return;
   if (!(await psnAuth().status({ userDataDir: userData })).connected) return;
   await psnCatalog().refreshInBackground(psnCatalogOptions());
   const lib = require(path.join(__dirname, '../parser/psnLibrary.js'));
@@ -109,10 +120,20 @@ async function linkPsnGames(games) {
   const ctx = await lib.createContext(psnCatalogOptions());
   const englishCtx = String(ctx.locale).startsWith('en') ? null : await lib.createContext({ ...psnCatalogOptions(), locale: 'en-US' });
   let linked = 0;
-  const budget = { store: STORE_LOOKUPS_PER_PASS };
-  for (const game of games) {
-    if (links.isFresh(game.appid, ctx.locale)) continue;
-    if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(lib, game.appid), budget })) linked += 1;
+  const quotaFile = path.join(lib.cacheRoot(), 'store-lookups.json');
+  const quota = storeQuota(lib.readJson(quotaFile), Date.now());
+  const allowed = Date.now() < quota.pausedUntil ? 0 : Math.max(0, Math.min(STORE_LOOKUPS_PER_PASS, STORE_LOOKUPS_PER_DAY - quota.used));
+  const budget = { store: allowed };
+  try {
+    for (const game of games) {
+      if (links.isFresh(game.appid, ctx.locale)) continue;
+      if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(lib, game.appid), budget })) linked += 1;
+    }
+  } catch (err) {
+    if (err && err.code === 'psn-rate-limited') quota.pausedUntil = Date.now() + RATE_LIMIT_PAUSE_MS;
+    throw err;
+  } finally {
+    lib.writeJson(quotaFile, { ...quota, used: quota.used + allowed - budget.store });
   }
   debug.log(`[psn] trophy links: ${linked} new game(s) tied to their PlayStation list`);
   const win = getMainWindow();

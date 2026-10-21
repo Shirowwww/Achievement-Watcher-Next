@@ -89,6 +89,8 @@ test('what the file already holds is the baseline, and a new true is announced a
   assert.equal(ctx.sent[0].achievementName, 'achievement7');
   assert.equal(ctx.sent[0].achievementDisplayName, 'English name 7');
   assert.equal(ctx.sent[0].source, 'PC Port');
+  assert.equal(ctx.sent[0].completion.unlocked, 3, 'the two known ones and the new one');
+  assert.ok(ctx.sent[0].completion.total >= 3);
   assert.equal(ctx.sent[0].appid, 'pcports-ladxhd');
   assert.ok(ctx.sent[0].icon && fs.existsSync(ctx.sent[0].icon), 'the icon is a local file');
   const seen = pcports.getAchievements(game).find((entry) => entry.id === 'achievement7');

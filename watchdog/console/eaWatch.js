@@ -249,6 +249,7 @@ async function handleChange(changedFile, ctx) {
       const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
       const prev = new Set(isFirstObservation ? [] : cache.unlocked.map(String));
       const unlockedNow = new Set(Array.from(snapshot.keys()).map(String));
+      const completion = { unlocked: entry.achievements.filter((a) => unlockedNow.has(String(a.id))).length, total: entry.achievements.length };
 
       if (!isFirstObservation) {
         for (const achId of unlockedNow) {
@@ -267,6 +268,7 @@ async function handleChange(changedFile, ctx) {
               icon: achievement.imageId ? `${EA_ICON_BASE}/${normalizeImageId(achievement.imageId)}-208.png` : undefined,
               time: normalizeEpochSeconds(snapshot.get(achId)) || moment().unix(),
               delay,
+              completion,
             },
             {
               notify: ctx.options.notification.notify,

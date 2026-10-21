@@ -108,6 +108,7 @@ async function handleChange(ctx) {
         if (!schema) return;
         const byId = new Map((schema?.achievement?.list || []).map((entry) => [String(entry.name), entry]));
         const gameName = schema?.name || 'Dead Space 2';
+        const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
 
         let delay = 0;
         for (const entry of fresh) {
@@ -129,6 +130,7 @@ async function handleChange(ctx) {
               icon: icon || undefined,
               time: entry.earned_time || moment().unix(),
               delay,
+              completion,
             },
             {
               notify: ctx.options.notification.notify,

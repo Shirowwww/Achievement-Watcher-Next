@@ -1189,7 +1189,8 @@
         "Một trò chơi lưu ở nơi bất thường: hãy thêm thư mục của nó trong Cài đặt > Thư mục. Chọn thư mục chứa trực tiếp các bản lưu, các thư mục AppID hoặc cấu hình trình giả lập, hoặc một thư mục thư viện chứa nhiều trò chơi.",
         "RetroAchievements: bật nguồn, nhập tên người dùng và khóa Web API, rồi bấm Nhập thư viện. Lượt mở khóa đến từ tài khoản của bạn, nên hãy để RetroAchievements luôn bật trong trình giả lập.",
         "Ở chế độ Đơn giản, một vài dòng nguồn hiếm khi dùng sẽ được ẩn khi chưa được dùng. Chúng trở lại ngay khi cần, và Nâng cao luôn liệt kê tất cả.",
-        "Cúp PlayStation hiển thị hạng của chúng, tỷ lệ người chơi đã có và mức độ hiếm riêng của PlayStation. Tỷ lệ lấy từ Exophase; hãy kết nối tài khoản PlayStation trong Cài đặt > Nguồn để có số liệu riêng của Sony cho các trò chơi trong tài khoản đó."
+        "Cúp PlayStation hiển thị hạng của chúng và tỷ lệ người chơi đã có. Tỷ lệ lấy từ Exophase; hãy kết nối tài khoản PlayStation trong Cài đặt > Nguồn để có số liệu riêng của Sony cho các trò chơi trong tài khoản đó.",
+        "Khi đã kết nối tài khoản PlayStation, Nhập thư viện sẽ đưa vào các trò chơi và cúp PlayStation của bạn, làm mới ba ngày một lần, còn ô bên dưới thêm một trò chơi bạn không sở hữu. Trò chơi từ cửa hàng khác cũng phát hành trên PlayStation sẽ hiển thị bạch kim thật, và ở chế độ cúp là hạng và nhóm DLC thật."
       ],
       "notifications": [
         "Tự động là mặc định: cửa sổ bật lên trong trò chơi khi trò chơi hiển thị được, và thông báo Windows khi không, không bao giờ cả hai.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Bộ sưu tập",
     "collectionsCopy": "Nhóm các trò chơi vào bộ sưu tập của riêng bạn từ menu chuột phải của một trò chơi.",
     "trophyTitle": "Chế độ cúp",
-    "trophyCopy": "Xếp hạng thành tựu vàng, bạc hoặc đồng theo độ hiếm. Bật trong Cài đặt.",
+    "trophyCopy": "Xếp hạng thành tựu vàng, bạc hoặc đồng theo độ hiếm, hoặc theo cúp PlayStation thật khi trò chơi cũng phát hành ở đó. Bật trong Cài đặt.",
     "clipsTitle": "Đoạn video",
     "clipsCopy": "Giữ một đoạn ngắn quanh mỗi lần mở khóa. Bật trong Cài đặt, mục Thông báo.",
     "statsTitle": "Thống kê thư viện",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Số lần khởi chạy và thời gian chơi được theo dõi, không có thành tựu.",
     "collection-create": "Tạo",
     "collection-create-note": "Sau khi tạo xong, nhấp chuột phải vào một trò chơi > Bộ sưu tập để thêm nó vào.",
-    "psn-ultra-rare": "Cực hiếm",
-    "psn-very-rare": "Rất hiếm",
-    "psn-rare": "Hiếm",
-    "psn-common": "Phổ biến",
     "psn-title": "Tài khoản PlayStation",
-    "psn-desc": "Tùy chọn. Nhập các trò chơi và cúp PlayStation của bạn, đồng thời hiển thị tỷ lệ cúp của chính PlayStation cho các trò chơi trong tài khoản PSN của bạn. Mã phiên của bạn được lưu mã hóa trên máy tính này.",
+    "psn-desc": "Tùy chọn. Nhập các trò chơi và cúp PlayStation của bạn, đồng thời hiển thị tỷ lệ cúp của chính PlayStation cho các trò chơi trong tài khoản PSN của bạn. Trò chơi từ cửa hàng khác cũng phát hành trên PlayStation sẽ hiển thị bạch kim thật, và ở chế độ cúp là các cúp thật. Mã phiên của bạn được lưu mã hóa trên máy tính này.",
     "psn-btn-hint": "mở cửa sổ đăng nhập của Sony",
     "psn-import-btn-hint": "lấy trò chơi và cúp của bạn từ PSN",
     "psn-connect": "Kết nối tài khoản PlayStation",

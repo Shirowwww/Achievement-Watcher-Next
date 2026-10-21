@@ -157,10 +157,3 @@ test('a moved threshold pushes its neighbours instead of crossing them', () => {
   const pushed = tiers.pushBounds('rare', { rareGoldMax: 19, rareSilverMax: 3, rareMax: 3 }, 'rareGoldMax');
   assert.deepEqual(tiers.normalizeRareBounds(pushed), pushed);
 });
-
-test('a trophy rate falls in one of the four PlayStation rarity bands', () => {
-  const bands = [0.4, 4.99, 5, 7.1, 9.99, 10, 19.9, 20, 92.38].map(tiers.psnRarity);
-  assert.deepEqual(bands, ['ultraRare', 'ultraRare', 'veryRare', 'veryRare', 'veryRare', 'rare', 'rare', 'common', 'common']);
-  assert.equal(tiers.psnRarity(null), '');
-  assert.equal(tiers.psnRarity('n/a'), '');
-});

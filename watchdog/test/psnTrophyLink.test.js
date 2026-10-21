@@ -32,11 +32,25 @@ test('an unlock takes the grade of its PlayStation trophy in the trophy mode onl
   assert.equal(psnTrophyLink.readLink('../cfg'), null);
 });
 
-test('the 100% popup becomes the real platinum when the game has one', () => {
+test('the 100% popup becomes the real platinum when the game has one, in every rarity mode', () => {
   const link = psnTrophyLink.readLink('1029690');
-  assert.deepEqual(psnTrophyLink.linkedPlatinum(trophyMode, link), { name: 'Tireur', description: 'Tout', icon: 'https://img/0.png' });
-  assert.equal(psnTrophyLink.linkedPlatinum(rareMode, link), null);
-  assert.equal(psnTrophyLink.linkedPlatinum(trophyMode, null), null);
+  assert.deepEqual(psnTrophyLink.linkedPlatinum(link), { name: 'Tireur', description: 'Tout', icon: 'https://img/0.png' });
+  assert.equal(psnTrophyLink.linkedPlatinum({ ...link, platinum: null }), null);
+  assert.equal(psnTrophyLink.linkedPlatinum(null), null);
+});
+
+test('a live watcher unlock takes the grade and platinum popup of the linked trophy', () => {
+  fs.writeFileSync(
+    path.join(dir, '4D5307E6.json'),
+    JSON.stringify({ listId: 'NPWR00001_00', trophies: { 1: { type: 'S' }, 9: { type: 'P' } }, platinum: { name: 'Roi', description: 'Tout' } })
+  );
+  const unlock = (name) => ({ source: 'Xenia Emulator', appid: '4D5307E6', achievementName: name });
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, unlock('1')), { trophyGrade: 'silver', ...unlock('1') });
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(rareMode, unlock('1')), unlock('1'), 'grades stay with the trophy mode');
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(rareMode, unlock('9')), { notificationType: 'platinum', ...unlock('9') });
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, { ...unlock('9'), trophyGrade: 'gold' }).trophyGrade, 'gold', 'the watcher own grade wins');
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, unlock('404')), unlock('404'));
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, { ...unlock('1'), appid: 'none' }), { ...unlock('1'), appid: 'none' });
 });
 
 test('an emulator platinum trophy uses the platinum popup unless it is turned off', () => {

@@ -497,14 +497,6 @@ function trophyLabels() {
 
 window.trophyLabels = trophyLabels;
 
-// PlayStation's own rarity names, keyed as rarityTiers.psnRarity returns them.
-window.psnRarityLabels = () => ({
-  ultraRare: t('psn-ultra-rare', 'Ultra rare', 'Ultra rare'),
-  veryRare: t('psn-very-rare', 'Very rare', 'Très rare'),
-  rare: t('psn-rare', 'Rare', 'Rare'),
-  common: t('psn-common', 'Common', 'Commun'),
-});
-
 // The "Rarity display" setting, in the shape trophyStats and rarityTiers take.
 function rarityGrading() {
   return rarityTiers.gradingFrom(app.config && app.config.achievement);
@@ -512,12 +504,13 @@ function rarityGrading() {
 window.rarityGrading = rarityGrading;
 
 /*
-  A game from any other source that also came out on PlayStation: in the trophy mode, its
-  achievements take the real grades and DLC groups of the PlayStation list (parser/psnTrophyLink.js).
+  A game from any other source that also came out on PlayStation shows the real platinum of its
+  PlayStation list in every mode; in the trophy mode its achievements also take the real grades and
+  DLC groups (parser/psnTrophyLink.js).
 */
 const psnTrophyLinks = new Map();
 function psnLinkOf(game) {
-  if (!game || game.system === 'playstation' || rarityGrading().mode !== rarityTiers.MODE_TROPHY) return null;
+  if (!game || game.system === 'playstation') return null;
   const appid = String(game.appid);
   if (!psnTrophyLinks.has(appid)) {
     const psnLibrary = require(path.join(appPath, 'parser/psnLibrary.js'));
@@ -529,7 +522,8 @@ function psnLinkOf(game) {
 
 function linkedTrophyOf(game, achievement) {
   const link = psnLinkOf(game);
-  return (link && achievement && link.trophies[achievement.name]) || null;
+  const trophy = (link && achievement && link.trophies[achievement.name]) || null;
+  return trophy && (trophy.type === 'P' || rarityGrading().mode === rarityTiers.MODE_TROPHY) ? trophy : null;
 }
 
 const linkedTrophyType = (game, achievement) => linkedTrophyOf(game, achievement)?.type;
@@ -557,7 +551,7 @@ function psnPlatinumRow(game) {
       )}</span> <span>${escapeHtml(intlFormat.formatRelativeTime(earnedAt, uiLang()))}</span></div>`
     : '';
   const html = `<li>
-      <div class="achievement psn-platinum${achieved ? ' rare rarity-gold' : ''}" data-index="-1" data-achieved="${achieved ? 1 : 0}">
+      <div class="achievement psn-platinum${achieved ? ' rare rarity-platinum' : ''}" data-index="-1" data-achieved="${achieved ? 1 : 0}">
         <div class="box"><div class="glow mask contain"><div class="glow mask ray"><div class="glow fx"></div></div></div>
           <div class="icon" style="background: ${cssUrl(icon)};"></div></div>
         <div class="content">
@@ -571,7 +565,7 @@ function psnPlatinumRow(game) {
 }
 
 function requestPsnTrophyLinks(list) {
-  if (rarityGrading().mode !== rarityTiers.MODE_TROPHY || !Array.isArray(list)) return;
+  if (!Array.isArray(list)) return;
   const games = list
     .filter((game) => game && game.system !== 'playstation' && game.achievement && Array.isArray(game.achievement.list) && game.achievement.list.length > 0)
     .map((game) => ({

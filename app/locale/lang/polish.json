@@ -1189,7 +1189,8 @@
         "Gra zapisana w nietypowym miejscu: dodaj jej folder w Ustawienia > Foldery. Wybierz folder bezpośrednio zawierający zapisy, foldery AppID lub konfigurację emulatora albo folder biblioteki z wieloma grami.",
         "RetroAchievements: włącz źródło, wpisz nazwę użytkownika i klucz Web API, a następnie naciśnij Importuj bibliotekę. Odblokowania pochodzą z Twojego konta, więc zostaw RetroAchievements włączone w emulatorze.",
         "W trybie Prosty kilka rzadko używanych wierszy źródeł jest ukrytych, dopóki nie są używane. Wracają, gdy tylko mają znaczenie, a tryb Zaawansowany zawsze pokazuje wszystkie.",
-        "Trofea PlayStation pokazują swój stopień, odsetek graczy, którzy je mają, i własny poziom rzadkości PlayStation. Wskaźniki pochodzą z Exophase; połącz konto PlayStation w Ustawienia > Źródło, aby uzyskać dane Sony dla gier z tego konta."
+        "Trofea PlayStation pokazują swój stopień i odsetek graczy, którzy je mają. Wskaźniki pochodzą z Exophase; połącz konto PlayStation w Ustawienia > Źródło, aby uzyskać dane Sony dla gier z tego konta.",
+        "Po połączeniu konta PlayStation Importuj bibliotekę wczytuje Twoje gry i trofea PlayStation, odświeżane co trzy dni, a pole pod nim dodaje grę, której nie posiadasz. Gra z innego sklepu, która ukazała się też na PlayStation, pokazuje swoją prawdziwą platynę, a w trybie trofeów prawdziwe stopnie i grupy DLC."
       ],
       "notifications": [
         "Tryb Automatycznie jest domyślny: wyskakujące okienko w grze, gdy gra może je pokazać, powiadomienie systemu Windows, gdy nie może, nigdy oba naraz.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Kolekcje",
     "collectionsCopy": "Grupuj gry we własnych kolekcjach z menu prawego przycisku myszy danej gry.",
     "trophyTitle": "Tryb trofeów",
-    "trophyCopy": "Oceniaj osiągnięcia złotem, srebrem lub brązem według rzadkości. Włączysz to w Ustawieniach.",
+    "trophyCopy": "Oceniaj osiągnięcia złotem, srebrem lub brązem według rzadkości albo według prawdziwego trofeum PlayStation, gdy gra ukazała się też tam. Włączysz to w Ustawieniach.",
     "clipsTitle": "Klipy wideo",
     "clipsCopy": "Zachowuj krótki klip wokół każdego odblokowania. Włączysz to w Ustawieniach, w sekcji Powiadomienia.",
     "statsTitle": "Statystyki biblioteki",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Uruchomienia i czas gry są śledzone, bez osiągnięć.",
     "collection-create": "Utwórz",
     "collection-create-note": "Po utworzeniu kliknij grę prawym przyciskiem > Kolekcje, aby ją dodać.",
-    "psn-ultra-rare": "Ultra rzadkie",
-    "psn-very-rare": "Bardzo rzadkie",
-    "psn-rare": "Rzadkie",
-    "psn-common": "Pospolite",
     "psn-title": "Konto PlayStation",
-    "psn-desc": "Opcjonalne. Importuje Twoje gry i trofea PlayStation oraz pokazuje własne wskaźniki trofeów PlayStation dla gier z Twojego konta PSN. Token sesji jest przechowywany w zaszyfrowanej formie na tym komputerze.",
+    "psn-desc": "Opcjonalne. Importuje Twoje gry i trofea PlayStation oraz pokazuje własne wskaźniki trofeów PlayStation dla gier z Twojego konta PSN. Gra z innego sklepu, która ukazała się też na PlayStation, pokazuje swoją prawdziwą platynę, a w trybie trofeów prawdziwe trofea. Token sesji jest przechowywany w zaszyfrowanej formie na tym komputerze.",
     "psn-btn-hint": "otwiera okno logowania Sony",
     "psn-import-btn-hint": "pobiera Twoje gry i trofea z PSN",
     "psn-connect": "Połącz konto PlayStation",

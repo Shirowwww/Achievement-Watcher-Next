@@ -1189,7 +1189,8 @@
         "Un gioco salvato in un posto insolito: aggiungi la sua cartella in Impostazioni > Cartelle. Scegli la cartella che contiene direttamente i salvataggi, le cartelle AppID o la configurazione dell’emulatore, oppure una cartella di libreria con molti giochi.",
         "RetroAchievements: attiva la sorgente, inserisci il tuo nome utente e la chiave Web API, poi premi Importa libreria. Gli sblocchi arrivano dal tuo account, quindi lascia RetroAchievements attivo nell’emulatore.",
         "In modalità Semplice alcune righe di sorgenti poco usate restano nascoste finché non servono. Tornano appena contano, e Avanzata le mostra sempre tutte.",
-        "I trofei PlayStation mostrano il loro grado, la percentuale di giocatori che li possiedono e il livello di rarità di PlayStation. Le percentuali arrivano da Exophase; collega un account PlayStation in Impostazioni > Sorgente per ottenere i dati di Sony per i giochi di quell’account."
+        "I trofei PlayStation mostrano il loro grado e la percentuale di giocatori che li possiedono. Le percentuali arrivano da Exophase; collega un account PlayStation in Impostazioni > Sorgente per ottenere i dati di Sony per i giochi di quell’account.",
+        "Con un account PlayStation collegato, Importa libreria porta i tuoi giochi e trofei PlayStation, aggiornati ogni tre giorni, e il campo sotto aggiunge un gioco che non possiedi. Un gioco di un altro store uscito anche su PlayStation mostra il suo vero platino e, nella modalità trofei, i suoi veri gradi e gruppi di DLC."
       ],
       "notifications": [
         "Automatico è l’impostazione predefinita: il popup nel gioco quando il gioco può mostrarlo, una notifica di Windows quando non può, mai entrambi.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Raccolte",
     "collectionsCopy": "Raggruppa i giochi in raccolte tue dal menu del clic destro di un gioco.",
     "trophyTitle": "Modalità trofei",
-    "trophyCopy": "Assegna agli obiettivi oro, argento o bronzo in base alla rarità. Attivala in Impostazioni.",
+    "trophyCopy": "Assegna agli obiettivi oro, argento o bronzo in base alla rarità, o in base al loro vero trofeo PlayStation quando il gioco è uscito anche lì. Attivala in Impostazioni.",
     "clipsTitle": "Clip video",
     "clipsCopy": "Conserva una breve clip attorno a ogni sblocco. Attivala in Impostazioni, sotto Notifiche.",
     "statsTitle": "Statistiche della libreria",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Avvii e tempo di gioco monitorati, senza obiettivi.",
     "collection-create": "Crea",
     "collection-create-note": "Una volta creata, fai clic con il pulsante destro su un gioco > Raccolte per aggiungerlo.",
-    "psn-ultra-rare": "Ultra raro",
-    "psn-very-rare": "Molto raro",
-    "psn-rare": "Raro",
-    "psn-common": "Comune",
     "psn-title": "Account PlayStation",
-    "psn-desc": "Facoltativo. Importa i tuoi giochi e trofei PlayStation e mostra le percentuali ufficiali dei trofei di PlayStation per i giochi del tuo account PSN. Il token della tua sessione viene salvato in forma cifrata su questo PC.",
+    "psn-desc": "Facoltativo. Importa i tuoi giochi e trofei PlayStation e mostra le percentuali ufficiali dei trofei di PlayStation per i giochi del tuo account PSN. Un gioco di un altro store uscito anche su PlayStation mostra il suo vero platino e, nella modalità trofei, i suoi veri trofei. Il token della tua sessione viene salvato in forma cifrata su questo PC.",
     "psn-btn-hint": "apre la finestra di accesso di Sony",
     "psn-import-btn-hint": "recupera i tuoi giochi e trofei da PSN",
     "psn-connect": "Collega account PlayStation",

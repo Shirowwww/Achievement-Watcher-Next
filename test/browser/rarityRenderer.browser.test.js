@@ -191,12 +191,11 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
 
     /*
       A PlayStation trophy keeps its own grade, whatever its rate says and in either mode, and its
-      figure reads like the console's: grade, share of players, PlayStation rarity name.
+      figure reads grade and share of players only, and an earned platinum wears the platinum frame.
     */
     const native = await page.evaluate(() => {
       window.rarityGrading = () => ({ mode: 'rare' });
       window.trophyLabels = () => ({ platinum: 'Platine', gold: 'Or', silver: 'Argent', bronze: 'Bronze' });
-      window.psnRarityLabels = () => ({ ultraRare: 'Ultra rare', veryRare: 'Très rare', rare: 'Rare', common: 'Commun' });
       const row = (name, type) => {
         const el = $('#achievement li .achievement').filter(function () {
           return this.getAttribute('data-name') === name;
@@ -205,7 +204,7 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
         return el.first();
       };
       const bronze = row('bronze', 'B');
-      const platinum = row('quote"name', 'P');
+      const platinum = row('quote"name', 'P').attr('data-achieved', '1');
       window.applyRarity([
         { name: 'bronze', percent: 2 },
         { name: 'quote"name', percent: 7.1 },
@@ -218,10 +217,10 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
       });
       return { bronze: read(bronze), platinum: read(platinum) };
     });
-    assert.deepEqual(native.bronze, { classes: 'achievement ps-trophy', trophy: 'bronze', grade: null, text: 'Bronze · 2 % · Ultra rare' }, 'a 2% bronze trophy is bronze, not a gold rarity');
-    assert.deepEqual(native.platinum, { classes: 'achievement ps-trophy rare rarity-gold', trophy: 'platinum', grade: null, text: 'Platine · 7,1 % · Très rare' });
+    assert.deepEqual(native.bronze, { classes: 'achievement ps-trophy', trophy: 'bronze', grade: null, text: 'Bronze · 2 %' }, 'a 2% bronze trophy is bronze, not a gold rarity');
+    assert.deepEqual(native.platinum, { classes: 'achievement ps-trophy rare rarity-platinum', trophy: 'platinum', grade: null, text: 'Platine · 7,1 %' });
 
-    // A Steam game graded by its PlayStation list keeps the store's rate, so Sony's rarity word goes.
+    // A Steam game graded by its PlayStation list reads the same way.
     const linked = await page.evaluate(() => {
       $('#achievement .wrapper > .header').attr('data-system', 'steam');
       window.applyRarity([{ name: 'bronze', percent: 2 }]);

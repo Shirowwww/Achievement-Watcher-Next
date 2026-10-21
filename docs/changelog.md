@@ -51,13 +51,27 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Sony's own trophy rates.** Connect your PlayStation account in Settings > Sources (you sign in
   on Sony's page; AW keeps only an encrypted token) and the games on that account show Sony's rate
   for each trophy. Other games keep Exophase's.
-- **PlayStation tiers on trophies**, as in "Platinum · 7.1% · Very rare", with the same figure next
-  to the title and on the right.
+- **Grade and rate on PlayStation trophies**, as in "Platinum · 7.1%". An earned platinum wears a
+  platinum frame instead of the gold one.
+- **The 100% popup for live-watched games.** Xenia, recompiled ports, GOG Galaxy, Ubisoft Connect,
+  Xbox PC and the other sources AW follows live now pop the platinum when a game reaches 100%, as
+  save-file games always did.
+- **Your PlayStation library.** Once the account is connected, Settings > Sources imports your
+  PlayStation games and trophies, and refreshes them every three days in the background. A game you
+  do not own can be added by name from Sony's catalog, and removed the same way.
+- **Real PlayStation trophies on every game.** A game from Steam, Ubisoft, GOG or any other source
+  that also came out on PlayStation shows the real platinum of its PlayStation list, under its own
+  name and icon, on the game page, in the stats and in the 100% popup. In trophy mode its
+  achievements also take the real grades and DLC groups. Store lookups stay few: ten games at a
+  time, thirty a day.
 - **A sound per emulator.** Settings > Notification > Emulators picks a sound as well as a preset
   for Xenia, RPCS3, ShadPS4 and KytyPS5 games. Recompiled PC ports follow their console.
 
 ### Improved
 
+- **A PlayStation game has its platinum once the platinum trophy is earned**, DLC trophies left or
+  not, as on the console. It used to wait for 100%.
+- **The current PlayStation logo** replaces the old colored one.
 - **Video clips that keep going.** Without a hardware H.264 encoder, Windows' software encoder takes
   over (1080p, 30 FPS at most). An encoder that refuses a frame rate steps down to 60, then 30 FPS,
   and a recorder silent for 15 seconds is restarted, waiting longer each time. A card that cannot

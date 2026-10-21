@@ -2290,8 +2290,8 @@ body.is-resizing #game-list {
 }
 
 #achievement .wrapper > .header[data-system='playstation'] .title .icon:not(.has-game-icon) {
-  background: url(../img/playstation.png) no-repeat, var(--surface) !important;
-  background-size: contain !important;
+  background: url(../img/playstation.svg) no-repeat center, var(--surface) !important;
+  background-size: 70% !important;
 }
 
 #achievement .wrapper > .header .trophy,
@@ -2907,6 +2907,27 @@ body.is-resizing #game-list {
 
 .achievement.rare.rarity-gold .stats .community {
   color: var(--rarity-gold-text);
+}
+
+/* An earned platinum trophy wears its own frame, in the theme's platinum colour. */
+.achievement.rare.rarity-platinum .box {
+  border-color: color-mix(in srgb, var(--trophy-platinum) 92%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--trophy-platinum) 90%, transparent), 0 0 14px 4px color-mix(in srgb, var(--trophy-platinum) 60%, transparent),
+    0 0 30px 6px color-mix(in srgb, var(--trophy-platinum) 26%, transparent);
+}
+
+.achievement.rare.rarity-platinum .box .fx {
+  background: repeating-conic-gradient(
+    color-mix(in srgb, var(--trophy-platinum) 22%, transparent) 0%,
+    transparent 6%,
+    color-mix(in srgb, var(--trophy-platinum) 22%, transparent) 10%,
+    var(--trophy-platinum) 26%,
+    color-mix(in srgb, var(--trophy-platinum) 22%, transparent) 35%,
+    var(--trophy-platinum) 40%,
+    color-mix(in srgb, var(--trophy-platinum) 22%, transparent) 60%,
+    var(--trophy-platinum) 82%,
+    color-mix(in srgb, var(--trophy-platinum) 22%, transparent) 100%
+  );
 }
 
 .achievement.rare.rarity-silver .box {

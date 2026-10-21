@@ -146,7 +146,8 @@ leaves the room to the library; **Settings → Appearance → Profile** holds th
 <sub>The overview: completion, counts, average per game and playtime</sub>
 </div>
 
-**Trophies** counts platinum for each finished game and grades every other unlocked achievement by
+**Trophies** counts platinum for each finished game (a PlayStation game once its platinum trophy is
+earned) and grades every other unlocked achievement by
 its rarity, with the thresholds listed under the bar (they follow the rarity setting in
 [Notifications](notifications.md#trophy-mode)). **Platinum games** lists the games you finished and when,
 **Rarest achievements** the hardest ones you hold, and **All achievements** opens the complete list.

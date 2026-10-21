@@ -94,7 +94,7 @@ function toastOptions(ctx) {
 }
 
 // False when the schema could not be read: the baseline then stays, and the unlocks are retried.
-async function announce(game, fresh, ctx) {
+async function announce(game, fresh, ctx, earned = fresh) {
   let schema = null;
   try {
     schema = await pcports.getGameData({ root: game.root }, ctx.options.achievement.lang);
@@ -104,6 +104,7 @@ async function announce(game, fresh, ctx) {
   }
   const byId = new Map(schema.achievement.list.map((entry) => [String(entry.name), entry]));
   const now = moment().unix();
+  const completion = { unlocked: earned.filter((id) => byId.has(String(id))).length, total: byId.size };
   pcports.recordObservedTimes(fresh, now);
   let delay = 0;
   for (const id of fresh) {
@@ -122,6 +123,7 @@ async function announce(game, fresh, ctx) {
         icon: icon || undefined,
         time: now,
         delay,
+        completion,
       },
       toastOptions(ctx)
     );
@@ -154,7 +156,7 @@ async function handleChange(game, file, ctx, removed = false) {
     // An empty baseline, the start or a reset, then a full file at once: a save copied back in.
     const copiedIn = previous.size === 0 && unlocked.length > NEW_FILE_NOTIFY_MAX;
     const fresh = copiedIn ? [] : unlocked.filter((id) => !previous.has(id));
-    if (fresh.length > 0 && !(await announce(game, fresh, ctx))) return;
+    if (fresh.length > 0 && !(await announce(game, fresh, ctx, unlocked))) return;
     cacheSave(unlocked);
   } catch (err) {
     debug.warn(`[pcports] handleChange failed: ${err}`);

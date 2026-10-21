@@ -75,13 +75,12 @@ function formatRarityPercent(percent, lang) {
   like the console's ("Platinum · 7.1% · Very rare") and only gold and platinum keep the halo. A game
   from another store keeps its own rate, so Sony's rarity words would not describe it: grade and rate only.
 */
-function paintPlayStationTrophy(elem, figure, grade, percent, text, tiers) {
+// The grade is the trophy's only rarity, with no tier band beside it; an earned platinum or gold wears that frame.
+function paintPlayStationTrophy(elem, figure, grade, text) {
   const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
-  const bands = typeof window.psnRarityLabels === 'function' ? window.psnRarityLabels() : {};
-  const onConsole = $('#achievement .wrapper > .header').attr('data-system') === 'playstation';
-  figure.text([grades[grade] || grade, text, onConsole ? bands[tiers.psnRarity(percent)] : ''].filter(Boolean).join(' · '));
+  figure.text(`${grades[grade] || grade} · ${text}`);
   elem.addClass('ps-trophy').attr('data-trophy', grade);
-  if (grade === 'platinum' || grade === 'gold') elem.addClass('rare rarity-gold');
+  if (grade === 'gold' || (grade === 'platinum' && elem.attr('data-achieved') === '1')) elem.addClass(`rare rarity-${grade}`);
 }
 
 // Paint the global unlock % (rarity) onto the rendered achievement rows. `entries` is the normalized
@@ -111,12 +110,12 @@ function applyRarity(entries) {
     const figure = elem.find('.stats .community span.data');
     const text = formatRarityPercent(percent, lang);
     figure.attr('data-percent', percent).text(text);
-    elem.removeClass('rare trophy-grade ps-trophy rarity-gold rarity-silver rarity-bronze').removeAttr('data-trophy');
+    elem.removeClass('rare trophy-grade ps-trophy rarity-platinum rarity-gold rarity-silver rarity-bronze').removeAttr('data-trophy');
     figure.removeAttr('data-grade');
 
     const native = tiers.trophyGrade(elem.find('[data-type]').first().attr('data-type'));
     if (native) {
-      paintPlayStationTrophy(elem, figure, native, percent, text, tiers);
+      paintPlayStationTrophy(elem, figure, native, text);
       continue;
     }
     const tier = tiers.tierFor(percent, grading.mode, grading.thresholds);

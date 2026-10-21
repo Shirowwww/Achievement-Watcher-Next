@@ -23,6 +23,8 @@ const CATALOG_LOCALE = 'en-US';
 const CATALOG_VERSION = 2;
 // Title ids asked about in one store lookup.
 const TITLE_IDS_PER_ASK = 5;
+// Between two players asked about one game: the lookups run on the user's own account.
+const STORE_PAUSE_MS = 1000;
 
 const accountsFile = () => path.join(lib.cacheRoot(), 'public-accounts.json');
 const catalogFile = () => path.join(lib.cacheRoot(), 'catalog.json');
@@ -162,7 +164,6 @@ async function storeTitleIds(ctx, name) {
   return ((concept && concept.titleIds) || []).filter((id) => /^[A-Z]{4}\d{5}_00$/.test(String(id)));
 }
 
-
 /*
   A game's trophy lists through the store: its title ids, then the first player who owns one of them,
   the signed-in account first. Each one asked costs a request, so only a few are.
@@ -172,7 +173,8 @@ async function listsFromStore(appCtx, name) {
   const titleIds = (await storeTitleIds(ctx, name)).slice(0, TITLE_IDS_PER_ASK);
   if (!titleIds.length) return [];
   const owners = ['me', ...(await publicAccounts(ctx)), ...(await publicPlayers(ctx))];
-  for (const owner of owners) {
+  for (const [index, owner] of owners.entries()) {
+    if (index > 0) await new Promise((resolve) => setTimeout(resolve, STORE_PAUSE_MS));
     const answer = await lib.psnRequest(ctx, `${lib.API_ROOT}/trophy/v1/users/${owner}/titles/trophyTitles?npTitleIds=${titleIds.join(',')}`).catch(unlessAccessError(null));
     const rows = ((answer && answer.titles) || []).flatMap((title) => title.trophyTitles || []).filter((row) => row && lib.normalizeListId(row.npCommunicationId));
     if (rows.length) return rows.map((row) => toEntry(row));

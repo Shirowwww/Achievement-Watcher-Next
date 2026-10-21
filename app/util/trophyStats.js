@@ -3,7 +3,8 @@
 /*
   The profile's trophy showcase.
 
-  Platinum is a game at 100%, not an achievement. Every unlocked achievement is graded by its
+  Platinum is a game at 100%, or the earned platinum trophy of a game that has one (platinumEarnedAt),
+  not an achievement. Every unlocked achievement is graded by its
   global unlock rate with the tiers the rarity badges and notifications use (rarityTiers.js). By
   default that is gold up to 5%, silver up to 10%, bronze up to 15%, and anything more common, or
   with no known rate, is common. In trophy mode every unlock is graded.
@@ -15,11 +16,11 @@
 
 const rarityTiers = require('./rarityTiers.js');
 
-// RPCS3 trophy sets carry their own grade. The platinum trophy itself is a single achievement, so it
-// ranks with the gold ones; the game it completes is what the platinum counter counts.
 // How many of the rarest unlocks the stats panel lists.
 const RAREST_COUNT = 10;
 
+// PlayStation trophies carry their own grade. The platinum trophy itself is a single achievement, so
+// it ranks with the gold ones; the game it completes is what the platinum counter counts.
 const NATIVE_GRADES = { P: 'gold', G: 'gold', S: 'silver', B: 'bronze' };
 
 function isInstalled(game) {

@@ -213,6 +213,7 @@ async function handleChange(target, ctx) {
             icon: a.icon,
             time: a.time || moment().unix(),
             delay,
+            completion: { unlocked: achievedNow.length, total: list.length },
           },
           {
             notify: ctx.options.notification.notify,

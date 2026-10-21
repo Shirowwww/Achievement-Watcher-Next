@@ -101,6 +101,7 @@ const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
 const psnTrophyLink = require('./util/psnTrophyLink.js');
+const { withCompletionPopup } = require('./util/completionPopup.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
@@ -261,6 +262,7 @@ let overlayOpened = false;
 let playtimeMonitorEmitter = null;
 let playtimeIndexReloadQueued = false;
 let xboxPollState = null;
+const xboxNotify = withCompletionPopup(notify, () => app.options);
 const XBOX_POLL_INTERVAL_MS = 30000;
 
 function startXboxPolling(game) {
@@ -296,9 +298,11 @@ function startXboxPolling(game) {
         const ach = schemaList.find((a) => a && String(a.name) === id);
         const rarityPercent = ach && ach.rarityPct != null ? Number(ach.rarityPct) : null;
         const rounded = Number.isFinite(rarityPercent) ? Math.round(rarityPercent * 10) / 10 : null;
-        await notify(
-          {
+        const rows = Object.values(state.snapshot || {});
+        await xboxNotify(
+          psnTrophyLink.withLinkedTrophy(app.options, {
             source: 'Xbox PC',
+            completion: { unlocked: rows.filter((row) => row && row.earned).length, total: rows.length },
             appid: titleId,
             gameDisplayName: game.name || titleId,
             achievementName: id,
@@ -309,7 +313,7 @@ function startXboxPolling(game) {
             gameIcon: (schema && schema.img && schema.img.portrait) || '',
             image: (schema && schema.img && schema.img.header) || '',
             time: Math.floor(Date.now() / 1000),
-          },
+          }),
           {
             notify: app.options.notification.notify,
             lang: app.options.achievement.lang,
@@ -1000,7 +1004,9 @@ var app = {
         same try/catch is how a fix ends up in only one of them. A watcher that cannot start is a
         degraded monitor, not a dead one, so its failure is recorded and the rest still run.
       */
-      const watcherNotify = withSouvenir(notify, () => self.options);
+      const souvenirNotify = withSouvenir(notify, () => self.options);
+      const completionNotify = withCompletionPopup(souvenirNotify, () => self.options);
+      const watcherNotify = (payload, opts) => completionNotify(psnTrophyLink.withLinkedTrophy(self.options, payload), opts);
       for (const entry of CONSOLE_WATCHERS) {
         try {
           await entry.watcher.start({
@@ -1545,7 +1551,7 @@ var app = {
               const wdStrings = notifyStrings.forLang(self.options.achievement.lang);
               const platinumLabel = wdStrings.platinumTitle;
               // The game's own PlayStation platinum, when it has one, in the same popup.
-              const realPlatinum = psnTrophyLink.linkedPlatinum(self.options, psnLink);
+              const realPlatinum = psnTrophyLink.linkedPlatinum(psnLink);
               await notify(
                 {
                   source: game.source,

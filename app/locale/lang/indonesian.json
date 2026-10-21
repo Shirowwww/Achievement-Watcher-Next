@@ -1189,7 +1189,8 @@
         "Game yang disimpan di lokasi tidak biasa: tambahkan foldernya di Pengaturan > Folder. Pilih folder yang langsung berisi save, folder AppID, atau konfigurasi emulator, atau folder pustaka yang berisi banyak game.",
         "RetroAchievements: aktifkan sumbernya, masukkan nama pengguna dan kunci Web API Anda, lalu tekan Impor pustaka. Pencapaian berasal dari akun Anda, jadi biarkan RetroAchievements tetap aktif di emulator.",
         "Dalam mode Sederhana, beberapa baris sumber yang jarang dipakai tetap tersembunyi selama tidak digunakan. Baris itu muncul kembali begitu diperlukan, dan Lanjutan selalu menampilkan semuanya.",
-        "Piala PlayStation menampilkan tingkatnya, persentase pemain yang memilikinya, dan tingkat kelangkaan resmi dari PlayStation. Persentase berasal dari Exophase; hubungkan akun PlayStation di Pengaturan > Sumber untuk mendapatkan angka resmi dari Sony untuk game di akun tersebut."
+        "Piala PlayStation menampilkan tingkatnya dan persentase pemain yang memilikinya. Persentase berasal dari Exophase; hubungkan akun PlayStation di Pengaturan > Sumber untuk mendapatkan angka resmi dari Sony untuk game di akun tersebut.",
+        "Dengan akun PlayStation terhubung, Impor pustaka membawa game dan piala PlayStation Anda, diperbarui setiap tiga hari, dan kolom di bawahnya menambahkan game yang tidak Anda miliki. Game dari toko lain yang juga rilis di PlayStation menampilkan platinum aslinya, dan dalam mode piala menampilkan tingkat serta grup DLC aslinya."
       ],
       "notifications": [
         "Otomatis adalah bawaan: popup dalam game saat game bisa menampilkannya, notifikasi Windows saat tidak bisa, tidak pernah keduanya.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Koleksi",
     "collectionsCopy": "Kelompokkan game ke dalam koleksi Anda sendiri dari menu klik kanan sebuah game.",
     "trophyTitle": "Mode piala",
-    "trophyCopy": "Beri pencapaian peringkat emas, perak, atau perunggu berdasarkan kelangkaannya. Aktifkan di Pengaturan.",
+    "trophyCopy": "Beri pencapaian peringkat emas, perak, atau perunggu berdasarkan kelangkaannya, atau berdasarkan piala PlayStation aslinya jika game tersebut juga rilis di sana. Aktifkan di Pengaturan.",
     "clipsTitle": "Klip video",
     "clipsCopy": "Simpan klip singkat di sekitar setiap pembukaan. Aktifkan di Pengaturan, di bagian Notifikasi.",
     "statsTitle": "Statistik perpustakaan",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Peluncuran dan waktu bermain dilacak, tanpa pencapaian.",
     "collection-create": "Buat",
     "collection-create-note": "Setelah dibuat, klik kanan sebuah game > Koleksi untuk menambahkannya.",
-    "psn-ultra-rare": "Ultra langka",
-    "psn-very-rare": "Sangat langka",
-    "psn-rare": "Langka",
-    "psn-common": "Umum",
     "psn-title": "Akun PlayStation",
-    "psn-desc": "Opsional. Mengimpor game dan piala PlayStation Anda, dan menampilkan persentase piala resmi dari PlayStation untuk game di akun PSN Anda. Token sesi Anda disimpan dalam bentuk terenkripsi di PC ini.",
+    "psn-desc": "Opsional. Mengimpor game dan piala PlayStation Anda, dan menampilkan persentase piala resmi dari PlayStation untuk game di akun PSN Anda. Game dari toko lain yang juga rilis di PlayStation menampilkan platinum aslinya, dan dalam mode piala menampilkan piala aslinya. Token sesi Anda disimpan dalam bentuk terenkripsi di PC ini.",
     "psn-btn-hint": "membuka jendela masuk Sony",
     "psn-import-btn-hint": "mengambil game dan piala Anda dari PSN",
     "psn-connect": "Hubungkan akun PlayStation",

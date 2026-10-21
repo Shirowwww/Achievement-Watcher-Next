@@ -126,6 +126,7 @@ async function handleChange(game, stateFile, ctx) {
         }
         const byId = new Map((schema && schema.achievement && schema.achievement.list ? schema.achievement.list : []).map((entry) => [String(entry.name), entry]));
         const gameName = (schema && schema.name) || game.name || game.titleId;
+        const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
 
         let delay = 0;
         for (const entry of fresh) {
@@ -148,6 +149,7 @@ async function handleChange(game, stateFile, ctx) {
               icon: icon || undefined,
               time: entry.earned_time || moment().unix(),
               delay,
+              completion,
             },
             {
               notify: ctx.options.notification.notify,

@@ -1189,7 +1189,8 @@
         "Et spill lagret et uvanlig sted: legg til mappen under Innstillinger > Mapper. Velg mappen som direkte inneholder lagringsfilene, AppID-mappene eller emulatoroppsettet, eller en bibliotekmappe som inneholder mange spill.",
         "RetroAchievements: slå på kilden, skriv inn brukernavn og Web API-nøkkel, og trykk så Importer bibliotek. Opplåsingene kommer fra kontoen din, så la RetroAchievements stå på i emulatoren.",
         "I Enkel modus er noen sjelden brukte kilderader skjult så lenge de ikke brukes. De kommer tilbake så snart de har noe å si, og Avansert viser alltid alle.",
-        "PlayStation-troféer viser graden sin, andelen spillere som har dem og PlayStations egen sjeldenhetsklasse. Andelene kommer fra Exophase; koble til en PlayStation-konto under Innstillinger > Kilder for å få Sonys egne tall for spillene på den kontoen."
+        "PlayStation-troféer viser graden sin og andelen spillere som har dem. Andelene kommer fra Exophase; koble til en PlayStation-konto under Innstillinger > Kilder for å få Sonys egne tall for spillene på den kontoen.",
+        "Med en tilkoblet PlayStation-konto henter Importer bibliotek PlayStation-spillene og -troféene dine, oppdatert hver tredje dag, og feltet under legger til et spill du ikke eier. Et spill fra en annen butikk som også er utgitt til PlayStation, viser sin ekte platina og i trofémodus sine ekte grader og DLC-grupper."
       ],
       "notifications": [
         "Automatisk er standard: sprettoppvarselet i spillet når spillet kan vise det, et Windows-varsel når det ikke kan, aldri begge.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Samlinger",
     "collectionsCopy": "Grupper spill i dine egne samlinger fra høyreklikkmenyen til et spill.",
     "trophyTitle": "Trofémodus",
-    "trophyCopy": "Gi prestasjoner gull, sølv eller bronse etter hvor sjeldne de er. Slå det på i Innstillinger.",
+    "trophyCopy": "Gi prestasjoner gull, sølv eller bronse etter hvor sjeldne de er, eller etter det ekte PlayStation-troféet når spillet også er utgitt der. Slå det på i Innstillinger.",
     "clipsTitle": "Videoklipp",
     "clipsCopy": "Behold et kort klipp rundt hver opplåsing. Slå det på i Innstillinger under Varsler.",
     "statsTitle": "Biblioteksstatistikk",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Starter og spilletid spores, uten prestasjoner.",
     "collection-create": "Opprett",
     "collection-create-note": "Når den er opprettet, høyreklikker du på et spill > Samlinger for å legge det til.",
-    "psn-ultra-rare": "Ultrasjelden",
-    "psn-very-rare": "Veldig sjelden",
-    "psn-rare": "Sjelden",
-    "psn-common": "Vanlig",
     "psn-title": "PlayStation-konto",
-    "psn-desc": "Valgfritt. Importerer PlayStation-spillene og -troféene dine og viser PlayStations egne troféandeler for spillene på PSN-kontoen din. Økttokenet ditt lagres kryptert på denne PC-en.",
+    "psn-desc": "Valgfritt. Importerer PlayStation-spillene og -troféene dine og viser PlayStations egne troféandeler for spillene på PSN-kontoen din. Et spill fra en annen butikk som også er utgitt til PlayStation, viser sin ekte platina og i trofémodus sine ekte troféer. Økttokenet ditt lagres kryptert på denne PC-en.",
     "psn-btn-hint": "åpner Sonys innloggingsvindu",
     "psn-import-btn-hint": "henter spillene og troféene dine fra PSN",
     "psn-connect": "Koble til PlayStation-konto",

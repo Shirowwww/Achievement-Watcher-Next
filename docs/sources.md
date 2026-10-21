@@ -42,7 +42,7 @@ needs; it requires the account connection below.
 
 ### Connected accounts
 
-Steam, Epic and Xbox PC can each optionally be connected from Settings, to read what the local files
+Steam, Epic, Xbox PC and PlayStation can each optionally be connected from Settings, to read what the local files
 do not carry. Every token is encrypted before it is stored on this PC, and everything else works
 without any account at all.
 
@@ -51,6 +51,7 @@ without any account at all.
 | **Steam** | Two switches, both off by default and shown while the Steam source is set to **Owned**: **add the games you own** and **add the games shared with you through Steam Family**, so a private profile - or one that has never installed most of its library here - still lists the right games. Either one makes the first scan after enabling it noticeably longer, since every added game resolves its achievements and artwork once. A game with nothing to read locally is then read from your Steam profile, which needs its game details set to public; the answer is cached for six hours, so a second launch the same day does not ask again. **Hide games no longer in your Steam library** removes the leftovers; a game installed on this PC or shared through Steam Family is never hidden. Sign-in happens on Valve's own page. |
 | **Epic Games** | Which achievements you have already unlocked, and with **Owned** the whole library the account holds - each game with its full achievement list, unlock state and rarity. A few owned games have achievements Epic's own store data never lists (Shadow of the Tomb Raider, Civilization VI); those are still listed, sourced from Nemirtingas' games-infos-datas, but without unlock state - Epic does not share it, even signed in. Names, descriptions and rarity of an installed game work without connecting an account. |
 | **Xbox PC** | Your Xbox PC library: unlock state and rarity from Xbox Network, cached locally afterwards. With **Owned** it also brings games the account has only played elsewhere. |
+| **PlayStation** | Your PlayStation games and trophies, with Sony's own rate for each trophy, refreshed every three days in the background. A game you do not own can be added by name from Sony's catalog, and removed the same way. A game from any other source that also came out on PlayStation shows the real platinum of its list, and in trophy mode its real grades and DLC groups (see [Notifications](notifications.md#trophy-mode)). Sign-in happens on Sony's own page. |
 
 A tile carries a small badge for what the connection established - bought on that store, shared
 through Steam Family, or no longer in your library - so the library says where a game came from

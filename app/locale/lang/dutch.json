@@ -1189,7 +1189,8 @@
         "Een game die op een ongewone plek staat: voeg de map toe bij Instellingen > Mappen. Kies de map die rechtstreeks de saves, de AppID-mappen of de emulatorconfiguratie bevat, of een bibliotheekmap met veel games.",
         "RetroAchievements: schakel de bron in, vul je gebruikersnaam en Web API-sleutel in en druk op Bibliotheek importeren. Ontgrendelingen komen van je account, dus laat RetroAchievements in de emulator aan staan.",
         "In de modus Eenvoudig blijven een paar zelden gebruikte bronrijen verborgen zolang ze ongebruikt zijn. Ze komen terug zodra ze ertoe doen, en Geavanceerd toont ze altijd allemaal.",
-        "PlayStation-trofeeën tonen hun graad, het aandeel spelers dat ze heeft en de eigen zeldzaamheidsklasse van PlayStation. De percentages komen van Exophase; koppel een PlayStation-account bij Instellingen > Bronnen om de eigen cijfers van Sony te krijgen voor de games op dat account."
+        "PlayStation-trofeeën tonen hun graad en het aandeel spelers dat ze heeft. De percentages komen van Exophase; koppel een PlayStation-account bij Instellingen > Bronnen om de eigen cijfers van Sony te krijgen voor de games op dat account.",
+        "Met een gekoppeld PlayStation-account haalt Bibliotheek importeren je PlayStation-games en -trofeeën binnen, elke drie dagen vernieuwd, en het veld eronder voegt een game toe die je niet bezit. Een game uit een andere winkel die ook voor PlayStation is uitgekomen, toont zijn echte platina en in de trofeeënmodus zijn echte graden en DLC-groepen."
       ],
       "notifications": [
         "Automatisch is de standaard: de pop-up in de game als de game die kan tonen, een Windows-melding als dat niet kan, nooit allebei.",
@@ -1395,7 +1396,7 @@
     "collectionsTitle": "Collecties",
     "collectionsCopy": "Groepeer games in je eigen collecties via het rechtermuisknopmenu van een game.",
     "trophyTitle": "Trofeeënmodus",
-    "trophyCopy": "Geef prestaties goud, zilver of brons naar zeldzaamheid. Schakel het in via Instellingen.",
+    "trophyCopy": "Geef prestaties goud, zilver of brons naar zeldzaamheid, of naar hun echte PlayStation-trofee als de game daar ook is uitgekomen. Schakel het in via Instellingen.",
     "clipsTitle": "Videoclips",
     "clipsCopy": "Bewaar een korte clip rond elke ontgrendeling. Schakel het in via Instellingen onder Meldingen.",
     "statsTitle": "Bibliotheekstatistieken",
@@ -1657,12 +1658,8 @@
     "manual-game-note": "Starts en speeltijd worden bijgehouden, zonder prestaties.",
     "collection-create": "Maken",
     "collection-create-note": "Is de collectie gemaakt, klik dan met de rechtermuisknop op een game > Collecties om er een game aan toe te voegen.",
-    "psn-ultra-rare": "Ultrazeldzaam",
-    "psn-very-rare": "Zeer zeldzaam",
-    "psn-rare": "Zeldzaam",
-    "psn-common": "Gewoon",
     "psn-title": "PlayStation-account",
-    "psn-desc": "Optioneel. Importeert je PlayStation-games en -trofeeën en toont de eigen trofeepercentages van PlayStation voor de games op je PSN-account. Je sessietoken wordt versleuteld op deze pc opgeslagen.",
+    "psn-desc": "Optioneel. Importeert je PlayStation-games en -trofeeën en toont de eigen trofeepercentages van PlayStation voor de games op je PSN-account. Een game uit een andere winkel die ook voor PlayStation is uitgekomen, toont zijn echte platina en in de trofeeënmodus zijn echte trofeeën. Je sessietoken wordt versleuteld op deze pc opgeslagen.",
     "psn-btn-hint": "opent het inlogvenster van Sony",
     "psn-import-btn-hint": "haalt je games en trofeeën op van PSN",
     "psn-connect": "PlayStation-account koppelen",

@@ -89,6 +89,7 @@ test('a first sight is silent, a new unlock toasts, the runtime rewrite is ignor
   assert.equal(sent[0].achievementDisplayName, 'Name 2');
   assert.equal(sent[0].gameDisplayName, 'LEGO Dimensions');
   assert.equal(sent[0].source, 'Xbox 360 Recomp');
+  assert.deepEqual(sent[0].completion, { unlocked: 2, total: 2 }, 'both of the list are earned');
 
   // The runtime's own delete-then-rename: the list is back before the watcher looks again.
   fs.rmSync(file);
