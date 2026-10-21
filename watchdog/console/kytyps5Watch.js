@@ -15,7 +15,7 @@ const watch = require('../util/nodeWatch.js');
 const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { trophyGradeOf } = require('../util/trophyGrade.js');
+const { trophyGradeOf, platinumFields } = require('../util/trophyGrade.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
@@ -145,6 +145,7 @@ async function announce(title, fresh, ctx) {
         gameIcon: gameIcon || undefined,
         image: image || undefined,
         trophyGrade: trophyGradeOf(described.type),
+        ...platinumFields(described.type, ctx.options),
         time: entry.earned_time || moment().unix(),
         delay,
       },

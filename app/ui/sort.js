@@ -187,6 +187,9 @@ function applyAchievementSort(root, mode, direction) {
   const factor = direction === 'asc' ? 1 : -1;
 
   li.detach().sort(function (a, b) {
+    // A game's PlayStation platinum has no rate of its own: it heads its list whatever the order.
+    const pinned = (row) => (row.querySelector('.achievement.psn-platinum') ? 1 : 0);
+    if (pinned(a) !== pinned(b)) return pinned(b) - pinned(a);
     if (mode === 'percent') {
       // The displayed text is localized ("84,5 %"), so the raw value is read from the attribute.
       const rarityValue = (row) => {

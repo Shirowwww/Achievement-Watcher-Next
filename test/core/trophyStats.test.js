@@ -101,3 +101,21 @@ test('the full list is every unlock of the started games, rarest first, unknown 
   );
   assert.deepEqual(list.map((entry) => entry.tier), ['gold', 'silver', 'common', 'common']);
 });
+
+test('a game tied to its PlayStation list counts the real grade of each trophy', () => {
+  const typeOf = (game, achievement) => (game.appid === 1 ? { a: 'B', c: 'G' }[achievement.name] : undefined);
+  const tiers = (options) => Object.fromEntries(listUnlockedByRarity(games, { isStarted: launched, rarityOf, mode: 'trophy', ...options }).map((entry) => [entry.achievement.name, entry.tier]));
+  assert.deepEqual(tiers({}), { a: 'gold', b: 'gold', c: 'bronze', x: 'bronze' });
+  assert.deepEqual(tiers({ trophyTypeOf: typeOf }), { a: 'bronze', b: 'gold', c: 'gold', x: 'bronze' });
+  const stats = calculateTrophyStats(games, { isStarted: launched, rarityOf, trophyTypeOf: () => 'S', mode: 'trophy' });
+  assert.equal(stats.silver, 4);
+});
+
+test('a game with its own platinum trophy has it once that trophy is earned, DLC left or not', () => {
+  const godOfWar = { appid: 'psn-1', system: 'playstation', achievement: { unlocked: 3, total: 5, list: [ach('p', true, { type: 'P', UnlockTime: 1700000500 }), ach('g', true, { type: 'G' }), ach('b', true, { type: 'B' }), ach('dlc1', false, { type: 'B' }), ach('dlc2', false, { type: 'S' })] } };
+  const unfinished = { appid: 'psn-2', system: 'playstation', achievement: { unlocked: 1, total: 2, list: [ach('p', false, { type: 'P' }), ach('b', true, { type: 'B' })] } };
+  const pcGame = { appid: 3, achievement: { unlocked: 2, total: 2, list: [ach('a', true), ach('b', true)] } };
+  const stats = calculateTrophyStats([godOfWar, unfinished, pcGame], { isStarted: () => true });
+  assert.equal(stats.platinum, 2);
+  assert.deepEqual(stats.platinumGames.map(({ game, completedAt }) => [game.appid, completedAt]), [['psn-1', 1700000500], [3, 1700000000]]);
+});

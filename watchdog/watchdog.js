@@ -100,6 +100,7 @@ const { resolvePowerShell } = require('./util/powershell.js');
 const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js');
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
+const psnTrophyLink = require('./util/psnTrophyLink.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
@@ -1294,6 +1295,7 @@ var app = {
             const platinumPrevUnlocked = requiredUnlockedCount(cache, schemaIndex);
             let platinumNewUnlock = false;
             let platinumIcon = null;
+            const psnLink = psnTrophyLink.readLink(game.appid);
 
             let j = 0;
             // Shown once the scan is done: a shared stat moves several achievements at once.
@@ -1412,6 +1414,7 @@ var app = {
                           icon: notificationAchievementIcon(game, ach, true),
                           gameIcon: notificationGameIcon(game),
                           image: steamHeaderImage(game.steamappid || game.appid),
+                          trophyGrade: psnTrophyLink.linkedGrade(self.options, psnLink, ach.name),
                           time: achievements[i].UnlockTime,
                           delay: j,
                         },
@@ -1541,16 +1544,17 @@ var app = {
               debug.log(`Platinum (100%): ${game.name}`);
               const wdStrings = notifyStrings.forLang(self.options.achievement.lang);
               const platinumLabel = wdStrings.platinumTitle;
-              const platinumDesc = wdStrings.platinumDesc;
+              // The game's own PlayStation platinum, when it has one, in the same popup.
+              const realPlatinum = psnTrophyLink.linkedPlatinum(self.options, psnLink);
               await notify(
                 {
                   source: game.source,
                   appid: game.appid,
                   notificationType: 'platinum',
                   gameDisplayName: game.name,
-                  achievementDisplayName: game.name,
-                  achievementDescription: platinumDesc,
-                  icon: platinumIcon || undefined,
+                  achievementDisplayName: realPlatinum ? realPlatinum.name : game.name,
+                  achievementDescription: realPlatinum ? realPlatinum.description : wdStrings.platinumDesc,
+                  icon: (realPlatinum && realPlatinum.icon) || platinumIcon || undefined,
                   gameIcon: notificationGameIcon(game),
                   image: steamHeaderImage(game.steamappid || game.appid),
                   time: moment().unix(),

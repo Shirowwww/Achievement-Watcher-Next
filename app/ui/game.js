@@ -72,12 +72,14 @@ function formatRarityPercent(percent, lang) {
 
 /*
   A PlayStation trophy is graded by the game itself, so its rate never regrades it: the figure reads
-  like the console's ("Platinum · 7.1% · Very rare") and only gold and platinum keep the halo.
+  like the console's ("Platinum · 7.1% · Very rare") and only gold and platinum keep the halo. A game
+  from another store keeps its own rate, so Sony's rarity words would not describe it: grade and rate only.
 */
 function paintPlayStationTrophy(elem, figure, grade, percent, text, tiers) {
   const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
   const bands = typeof window.psnRarityLabels === 'function' ? window.psnRarityLabels() : {};
-  figure.text([grades[grade] || grade, text, bands[tiers.psnRarity(percent)]].filter(Boolean).join(' · '));
+  const onConsole = $('#achievement .wrapper > .header').attr('data-system') === 'playstation';
+  figure.text([grades[grade] || grade, text, onConsole ? bands[tiers.psnRarity(percent)] : ''].filter(Boolean).join(' · '));
   elem.addClass('ps-trophy').attr('data-trophy', grade);
   if (grade === 'platinum' || grade === 'gold') elem.addClass('rare rarity-gold');
 }

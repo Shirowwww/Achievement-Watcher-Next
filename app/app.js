@@ -136,7 +136,7 @@ const apiCheckBypass = require(path.join(appPath, 'parser/apiCheckBypass.js'));
 const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.join(appPath, 'util/libraryStats.js'));
 const rarityCache = require(path.join(appPath, 'util/rarity.js'));
 const { resolveGameRarityContext } = rarityCache;
-const { calculateTrophyStats, listUnlockedByRarity } = require(path.join(appPath, 'util/trophyStats.js'));
+const { calculateTrophyStats, listUnlockedByRarity, platinumEarnedAt } = require(path.join(appPath, 'util/trophyStats.js'));
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
@@ -511,8 +511,87 @@ function rarityGrading() {
 }
 window.rarityGrading = rarityGrading;
 
+/*
+  A game from any other source that also came out on PlayStation: in the trophy mode, its
+  achievements take the real grades and DLC groups of the PlayStation list (parser/psnTrophyLink.js).
+*/
+const psnTrophyLinks = new Map();
+function psnLinkOf(game) {
+  if (!game || game.system === 'playstation' || rarityGrading().mode !== rarityTiers.MODE_TROPHY) return null;
+  const appid = String(game.appid);
+  if (!psnTrophyLinks.has(appid)) {
+    const psnLibrary = require(path.join(appPath, 'parser/psnLibrary.js'));
+    psnLibrary.setUserDataPath(getUserDataPath());
+    psnTrophyLinks.set(appid, require(path.join(appPath, 'parser/psnTrophyLink.js')).readLink(appid));
+  }
+  return psnTrophyLinks.get(appid);
+}
+
+function linkedTrophyOf(game, achievement) {
+  const link = psnLinkOf(game);
+  return (link && achievement && link.trophies[achievement.name]) || null;
+}
+
+const linkedTrophyType = (game, achievement) => linkedTrophyOf(game, achievement)?.type;
+
+const linkedPlatinumOf = (game) => {
+  const platinum = psnLinkOf(game)?.platinum;
+  return platinum && platinum.name ? platinum : null;
+};
+
+/*
+  A linked game's real platinum, first of the list it belongs in: earned with the last achievement,
+  the way the console awards it. It is no achievement of the game, so the row carries no name for the
+  handlers; a game whose own achievement is tied to the platinum already shows it in its list.
+*/
+function psnPlatinumRow(game) {
+  const platinum = linkedPlatinumOf(game);
+  const list = game.achievement.list;
+  if (!platinum || list.some((achievement) => linkedTrophyType(game, achievement) === 'P')) return null;
+  const achieved = list.length > 0 && list.every((achievement) => achievement.Achieved);
+  const earnedAt = achieved ? Math.max(...list.map((achievement) => Number(achievement.UnlockTime) || 0)) : 0;
+  const icon = platinum.icon || pathToFileURL(path.join(appPath, 'resources/img/achievement.svg')).href;
+  const time = earnedAt
+    ? `<div class="time" data-time="${earnedAt}"><i class="fas fa-clock"></i> <span>${escapeHtml(
+        intlFormat.formatDateTime(earnedAt, uiLang(), { dateStyle: 'short', timeStyle: 'short' })
+      )}</span> <span>${escapeHtml(intlFormat.formatRelativeTime(earnedAt, uiLang()))}</span></div>`
+    : '';
+  const html = `<li>
+      <div class="achievement psn-platinum${achieved ? ' rare rarity-gold' : ''}" data-index="-1" data-achieved="${achieved ? 1 : 0}">
+        <div class="box"><div class="glow mask contain"><div class="glow mask ray"><div class="glow fx"></div></div></div>
+          <div class="icon" style="background: ${cssUrl(icon)};"></div></div>
+        <div class="content">
+          <div class="title"><i class="fas fa-trophy" data-type="P"></i> ${escapeHtml(platinum.name)}</div>
+          <div class="ach-category">${escapeHtml(t('trophy-platinum', 'Platinum', 'Platine'))}</div>
+          <div class="description">${escapeHtml(platinum.description || '')}</div>
+        </div>
+        <div class="stats">${time}</div>
+      </div></li>`;
+  return { html, achieved };
+}
+
+function requestPsnTrophyLinks(list) {
+  if (rarityGrading().mode !== rarityTiers.MODE_TROPHY || !Array.isArray(list)) return;
+  const games = list
+    .filter((game) => game && game.system !== 'playstation' && game.achievement && Array.isArray(game.achievement.list) && game.achievement.list.length > 0)
+    .map((game) => ({
+      appid: String(game.appid),
+      name: game.name,
+      achievements: game.achievement.list.map(({ name, displayName, description }) => ({ name, displayName, description })),
+    }));
+  if (games.length) ipcRenderer.invoke('psn:link-games', games).catch((err) => debug.log(`[psn] trophy links not started: ${err.message || err}`));
+}
+
+ipcRenderer.on('psn:links-changed', () => psnTrophyLinks.clear());
+
 function trophyStatsFor(installedOnly) {
-  return calculateTrophyStats(libraryScopeGames(), { installedOnly, isStarted: hasBeenLaunched, rarityOf: trophyRarityOf, ...rarityGrading() });
+  return calculateTrophyStats(libraryScopeGames(), {
+    installedOnly,
+    isStarted: hasBeenLaunched,
+    rarityOf: trophyRarityOf,
+    trophyTypeOf: linkedTrophyType,
+    ...rarityGrading(),
+  });
 }
 
 function renderProfileTrophies(installedOnly) {
@@ -578,7 +657,7 @@ function renderProfileStatsTrophies(installedOnly) {
     tile.find('b').text(formatCount(stats[tier]));
     section.find(`.profile-stats-trophy-bar .trophy-${tier}`).css('flex-grow', stats[tier]);
   }
-  section.find('.profile-stats-trophy.trophy-platinum small').text(t('profile-trophies-platinum-desc', 'games at 100%', 'jeux à 100 %'));
+  section.find('.profile-stats-trophy.trophy-platinum small').text(t('profile-trophies-platinum-desc', 'games with their platinum', 'jeux platinés'));
   section.find('.profile-stats-trophy.trophy-gold small').text(shareText(stats.gold));
   section.find('.profile-stats-trophy.trophy-silver small').text(shareText(stats.silver));
   section.find('.profile-stats-trophy.trophy-bronze small').text(shareText(stats.bronze));
@@ -614,18 +693,11 @@ function renderProfileStatsTrophies(installedOnly) {
   legend.find('.trophy-common span').text(`${labels.common}: ${above(rare.bronze)}`);
   // Trophy mode grades everything, so nothing is left to be common.
   commonTile.toggle(!trophyMode);
+  // Four tiles then share the whole row instead of leaving the fifth column empty.
+  commonTile.parent().toggleClass('without-common', trophyMode);
   legend.find('.trophy-common').toggle(!trophyMode);
 
-  $('#profile-stats-platinum-games-label').text(t('profile-trophies-platinum-games', 'Platinum games', 'Jeux platine'));
-  $('#profile-stats-platinum-games').html(
-    stats.platinumGames.length > 0
-      ? stats.platinumGames
-          .map(({ game, completedAt }) =>
-            trophyRow('platinum', gameTitleOf(game), intlFormat.formatDate(completedAt, uiLang()), { appid: game.appid })
-          )
-          .join('')
-      : `<li class="is-empty">${escapeHtml(t('profile-trophies-no-platinum', 'No platinum yet.', 'Aucun platine pour le moment.'))}</li>`
-  );
+  renderPlatinumGames(stats.platinumGames);
 
   $('#profile-stats-rarest-label').text(t('profile-trophies-rarest-list', 'Rarest achievements', 'Succès les plus rares'));
   $('#profile-stats-all-open').text(t('profile-trophies-all', 'All achievements', 'Tous les succès')).prop('hidden', stats.rarest.length === 0);
@@ -648,6 +720,25 @@ function renderProfileStatsTrophies(installedOnly) {
   paintRarestIcons(stats.rarest);
   // A redraw (the installed-only filter flipping) starts both lists from their first row again.
   $('#profile-stats-platinum-games, #profile-stats-rarest').scrollTop(0);
+}
+
+// Each finished game under the name of its real platinum when it has one, its own title otherwise.
+function renderPlatinumGames(platinumGames) {
+  $('#profile-stats-platinum-games-label').text(t('profile-trophies-platinum-games', 'Platinum games', 'Jeux platine'));
+  $('#profile-stats-platinum-games').html(
+    platinumGames.length > 0
+      ? platinumGames
+          .map(({ game, completedAt }) => {
+            const date = intlFormat.formatDate(completedAt, uiLang());
+            const real = linkedPlatinumOf(game) || nativePlatinumOf(game);
+            return real
+              ? trophyRow('platinum', real.name, `${gameTitleOf(game)} · ${date}`, { appid: game.appid })
+              : trophyRow('platinum', gameTitleOf(game), date, { appid: game.appid });
+          })
+          .join('')
+      : `<li class="is-empty">${escapeHtml(t('profile-trophies-no-platinum', 'No platinum yet.', 'Aucun platine pour le moment.'))}</li>`
+  );
+  paintPlatinumIcons(platinumGames);
 }
 
 /*
@@ -692,6 +783,33 @@ function paintRarestIcons(entries) {
   entries.forEach(({ game, achievement }, index) => {
     const box = rows.eq(index).find('.row-icon')[0];
     if (box) paintAchievementIcon(box, game, achievement, () => token === rarestIconToken).catch(() => {});
+  });
+}
+
+// A PlayStation game's own platinum trophy, the achievement the console grades P.
+function nativePlatinumOf(game) {
+  if (!game || game.system !== 'playstation' || !game.achievement) return null;
+  const trophy = (game.achievement.list || []).find((achievement) => achievement && achievement.type === 'P' && achievement.displayName);
+  return trophy ? { name: trophy.displayName, achievement: trophy } : null;
+}
+
+let platinumIconToken = 0;
+function paintPlatinumIcons(entries) {
+  const token = ++platinumIconToken;
+  const rows = $('#profile-stats-platinum-games').children();
+  entries.forEach(({ game }, index) => {
+    const box = rows.eq(index).find('.row-icon')[0];
+    if (!box) return;
+    const native = nativePlatinumOf(game);
+    if (native) {
+      paintAchievementIcon(box, game, native.achievement, () => token === platinumIconToken).catch(() => {});
+      return;
+    }
+    const url = linkedPlatinumOf(game)?.icon;
+    if (!url) return;
+    imageDecodes(url).then((ok) => {
+      if (ok && token === platinumIconToken) $(box).addClass('has-icon').css('background-image', cssUrl(url));
+    });
   });
 }
 
@@ -758,6 +876,7 @@ function renderAllAchievements() {
     installedOnly,
     isStarted: hasBeenLaunched,
     rarityOf: trophyRarityOf,
+    trophyTypeOf: linkedTrophyType,
     ...rarityGrading(),
   });
 
@@ -2376,7 +2495,7 @@ function isLegitSteamLibraryGame(game) {
 // An unrecognised label falls silently through to the Steam badge, so every `source:` literal in
 // app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
-  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator|ps4 recomp)$/,
+  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator|ps4 recomp|playstation network)$/,
   xbox: /^(?:xenia emulator|xlivelessness|xbox 360 recomp|xbox pc)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
@@ -2767,10 +2886,11 @@ achievements.onAutomaticEmulatorFixStarting(async () => {
   return keepOn;
 });
 
-// A RetroAchievements game is a ROM played in an emulator: there is no PC executable to launch or
-// pick, and no Steam emulator to set up, so the tile offers neither.
+// A RetroAchievements game is a ROM played in an emulator, a PlayStation Network one a console game:
+// there is no PC executable to launch or pick, and no Steam emulator to set up, so the tile offers neither.
+const ACCOUNT_ONLY_SOURCES = new Set(['RetroAchievements', 'PlayStation Network']);
 function isLaunchable(game) {
-  return String((game && game.source) || '') !== 'RetroAchievements';
+  return !ACCOUNT_ONLY_SOURCES.has(String((game && game.source) || ''));
 }
 
 const healthStateByAppid = new Map();
@@ -2862,6 +2982,12 @@ function statusBadgeFor(game) {
       state: 'account',
       label: t('retroachievements-badge', 'Achievements from your RetroAchievements account', 'Succès de ton compte RetroAchievements'),
     };
+  }
+  if (String((game && game.source) || '') === 'PlayStation Network') {
+    const label = game.psnAdded
+      ? t('psn-badge-added', 'PlayStation list added from the catalog: not on your account', 'Liste PlayStation ajoutée depuis le catalogue : pas sur ton compte')
+      : t('psn-badge', 'Trophies from your PlayStation account', 'Trophées de ton compte PlayStation');
+    return { kind: 'info', state: 'account', label };
   }
   // No dot at all for a game that is not installed or has no achievements.
   const dot = healthDotFor(game);
@@ -3795,9 +3921,9 @@ var app = {
             const achievementSummaryText = hasAchievements
               ? `${formatCount(game.achievement.unlocked)} / ${formatCount(game.achievement.total)}`
               : progressLabel;
-            // In trophy mode a finished game wears the platinum colour on its trophy icon.
+            // In trophy mode a game with its platinum wears the platinum colour on its trophy icon.
             const platinumAttr =
-              hasAchievements && Number(game.achievement.unlocked) >= Number(game.achievement.total) && rarityGrading().mode === rarityTiers.MODE_TROPHY
+              hasAchievements && rarityGrading().mode === rarityTiers.MODE_TROPHY && platinumEarnedAt(game, linkedTrophyType) !== null
                 ? ' data-platinum="true"'
                 : '';
             // Accessible names for the three icon-only controls on a tile.
@@ -4055,6 +4181,7 @@ var app = {
           }
         }
         if (isDev) debug.log(`[perf] fresh library scan finished in ${(performance.now() - scanStartedAt).toFixed(1)}ms`);
+        requestPsnTrophyLinks(list);
         loadingElem.elem.hide();
         $('#main-footer').addClass('done');
         setLibraryBusyCursor(false);
@@ -7059,6 +7186,9 @@ var app = {
         // sits in data-desc and is revealed in place on click, instead of a separate bottom "reveal all" section.
         const isHiddenMasked = achievement.hidden == 1 && !app.config.achievement.showHidden && !achievement.Achieved;
         const realDesc = achievement.description || '...';
+        const linked = linkedTrophyOf(game, achievement);
+        const trophyType = achievement.type || (linked && linked.type);
+        const category = achievement.category || (linked && linked.group);
         const descHtml = isHiddenMasked
           ? `<div class="description masked-desc" role="button" tabindex="0" data-desc="${escapeHtml(realDesc)}">${escapeHtml(hiddenDescLabel)}</div>`
           : `<div class="description">${escapeHtml(realDesc)}</div>`;
@@ -7079,13 +7209,13 @@ var app = {
                             </div>
                             <div class="content">
                                 <div class="title">${
-                                  game.system === 'playstation'
-                                    ? `<i class="fas fa-trophy" data-type="${escapeHtml(achievement.type)}"></i> ${escapeHtml(achievement.displayName)}`
+                                  game.system === 'playstation' || trophyType
+                                    ? `<i class="fas fa-trophy" data-type="${escapeHtml(trophyType)}"></i> ${escapeHtml(achievement.displayName)}`
                                     : `${escapeHtml(achievement.displayName)}`
                                 }</div>
                                 ${
-                                  achievement.category
-                                    ? `<div class="ach-category">${escapeHtml(achievement.category)}</div>`
+                                  category
+                                    ? `<div class="ach-category">${escapeHtml(category)}</div>`
                                     : ''
                                 }
                                 ${descHtml}
@@ -7116,6 +7246,8 @@ var app = {
         i += 1;
       }
 
+      const platinumRow = psnPlatinumRow(game);
+      if (platinumRow) (platinumRow.achieved ? unlockRows : lockRows).unshift(platinumRow.html);
       if (unlockRows.length) unlock.append(unlockRows.join(''));
       if (lockRows.length) lock.append(lockRows.join(''));
 

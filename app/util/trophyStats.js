@@ -48,17 +48,36 @@ function startedGames(games, { installedOnly = false, isStarted = defaultIsStart
   });
 }
 
-function tierFor(achievement, percent, grading) {
-  const native = NATIVE_GRADES[String((achievement && achievement.type) || '').toUpperCase()];
+// A PlayStation trophy's own letter, or the one of the PlayStation release a game is tied to.
+function nativeTypeOf(game, achievement, trophyTypeOf) {
+  const own = achievement && achievement.type;
+  return String(own || (typeof trophyTypeOf === 'function' ? trophyTypeOf(game, achievement) : '') || '').toUpperCase();
+}
+
+/*
+  When a game earned its platinum, or null. A game with a platinum trophy of its own has it once that
+  trophy is earned, DLC trophies left or not, as on the console; any other game at 100%.
+*/
+function platinumEarnedAt(game, trophyTypeOf = null) {
+  const list = Array.isArray(game?.achievement?.list) ? game.achievement.list : [];
+  const trophy = list.find((achievement) => nativeTypeOf(game, achievement, trophyTypeOf) === 'P');
+  if (trophy) return isAchieved(trophy) ? Number(trophy.UnlockTime) || 0 : null;
+  if (unlockedCount(game) < (Number(game.achievement.total) || 0)) return null;
+  return list.reduce((latest, a) => (isAchieved(a) ? Math.max(latest, Number(a.UnlockTime) || 0) : latest), 0);
+}
+
+function tierFor(type, percent, grading) {
+  const native = NATIVE_GRADES[type];
   if (native) return native;
   return rarityTiers.tierFor(percent, grading.mode, grading.thresholds) || 'common';
 }
 
 /*
   `rarityOf(game)` returns a Map of achievement name to global unlock %, or null when the game has
-  no known rates. It is injected because the rates live in the renderer's on-disk cache.
+  no known rates. It is injected because the rates live in the renderer's on-disk cache, as is `trophyTypeOf(game,
+  achievement)`, the P/G/S/B letter of the PlayStation trophy an achievement is tied to.
 */
-function calculateTrophyStats(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, mode, thresholds } = {}) {
+function calculateTrophyStats(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, trophyTypeOf = null, mode, thresholds } = {}) {
   const grading = { mode, thresholds };
   const counted = startedGames(games, { installedOnly, isStarted });
   const stats = {
@@ -75,9 +94,8 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
 
   for (const game of counted) {
     const list = Array.isArray(game.achievement.list) ? game.achievement.list : [];
-    const total = Number(game.achievement.total) || 0;
-    if (unlockedCount(game) >= total) {
-      const completedAt = list.reduce((latest, a) => (isAchieved(a) ? Math.max(latest, Number(a.UnlockTime) || 0) : latest), 0);
+    const completedAt = platinumEarnedAt(game, trophyTypeOf);
+    if (completedAt !== null) {
       stats.platinum += 1;
       stats.platinumGames.push({ game, completedAt });
     }
@@ -87,9 +105,10 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
       if (!isAchieved(achievement)) continue;
       const raw = rates ? rates.get(String(achievement.name)) : undefined;
       const percent = raw === undefined || raw === null || !Number.isFinite(Number(raw)) ? null : Number(raw);
-      const tier = tierFor(achievement, percent, grading);
+      const type = nativeTypeOf(game, achievement, trophyTypeOf);
+      const tier = tierFor(type, percent, grading);
       stats[tier] += 1;
-      if (percent === null && !NATIVE_GRADES[String(achievement.type || '').toUpperCase()]) stats.unranked += 1;
+      if (percent === null && !NATIVE_GRADES[type]) stats.unranked += 1;
       // Kept sorted and capped as it goes: a large library has tens of thousands of unlocks.
       if (percent !== null && (stats.rarest.length < RAREST_COUNT || percent < stats.rarest[stats.rarest.length - 1].percent)) {
         const entry = { game, achievement, percent, tier };
@@ -110,7 +129,7 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
   Built only when that list opens: sorting every unlock has no place in the header refresh.
   Achievements with no known rate go last, most recent unlock first.
 */
-function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, mode, thresholds } = {}) {
+function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, trophyTypeOf = null, mode, thresholds } = {}) {
   const grading = { mode, thresholds };
   const out = [];
   for (const game of startedGames(games, { installedOnly, isStarted })) {
@@ -120,7 +139,7 @@ function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaul
       if (!isAchieved(achievement)) continue;
       const raw = rates ? rates.get(String(achievement.name)) : undefined;
       const percent = raw === undefined || raw === null || !Number.isFinite(Number(raw)) ? null : Number(raw);
-      out.push({ game, achievement, percent, tier: tierFor(achievement, percent, grading), unlockedAt: Number(achievement.UnlockTime) || 0 });
+      out.push({ game, achievement, percent, tier: tierFor(nativeTypeOf(game, achievement, trophyTypeOf), percent, grading), unlockedAt: Number(achievement.UnlockTime) || 0 });
     }
   }
   return out.sort((a, b) => {
@@ -132,4 +151,4 @@ function listUnlockedByRarity(games, { installedOnly = false, isStarted = defaul
   });
 }
 
-module.exports = { calculateTrophyStats, listUnlockedByRarity, startedGames, defaultIsStarted, RAREST_COUNT };
+module.exports = { calculateTrophyStats, listUnlockedByRarity, platinumEarnedAt, startedGames, defaultIsStarted, RAREST_COUNT };

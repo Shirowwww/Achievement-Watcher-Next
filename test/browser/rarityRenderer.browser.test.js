@@ -75,6 +75,7 @@ function buildHarness() {
   const tiersScript = fs.readFileSync(path.join(appDir, 'util', 'rarityTiers.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <section id="achievement">
+      <div class="wrapper"><div class="header" data-system="playstation"></div></div>
       <div class="achievement-list">
         <div class="header"><div class="sort-ach"><span class="sort percentage"></span></div></div>
         <ul>
@@ -219,6 +220,14 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
     });
     assert.deepEqual(native.bronze, { classes: 'achievement ps-trophy', trophy: 'bronze', grade: null, text: 'Bronze · 2 % · Ultra rare' }, 'a 2% bronze trophy is bronze, not a gold rarity');
     assert.deepEqual(native.platinum, { classes: 'achievement ps-trophy rare rarity-gold', trophy: 'platinum', grade: null, text: 'Platine · 7,1 % · Très rare' });
+
+    // A Steam game graded by its PlayStation list keeps the store's rate, so Sony's rarity word goes.
+    const linked = await page.evaluate(() => {
+      $('#achievement .wrapper > .header').attr('data-system', 'steam');
+      window.applyRarity([{ name: 'bronze', percent: 2 }]);
+      return $('#achievement li .achievement[data-name="bronze"] span.data').text().replace(/\s+/g, ' ');
+    });
+    assert.equal(linked, 'Bronze · 2 %');
 
     // Once the lookup is over, a row nobody has a rate for hides its "--" instead of showing it.
     const shown = await page.evaluate(() => {

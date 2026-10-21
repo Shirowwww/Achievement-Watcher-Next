@@ -1427,8 +1427,8 @@ body.is-resizing #game-list {
   align-items: center;
   justify-content: center;
   height: 26px;
-  min-width: 36px;
-  padding: 0 8px;
+  min-width: 44px;
+  padding: 0 16px 0 8px;
   border-radius: var(--radius-sm);
   font-size: var(--fs-base);
   cursor: pointer;
@@ -2576,12 +2576,13 @@ body.is-resizing #game-list {
   align-items: center;
   justify-content: center;
   gap: 0;
-  min-width: 44px;
+  min-width: 52px;
   height: 28px;
   box-sizing: border-box;
   position: relative;
   margin: 0;
-  padding: 0 8px;
+  /* Room on the right for the direction arrow, so it never touches the icon. */
+  padding: 0 18px 0 10px;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   font-size: var(--fs-base);
@@ -2734,8 +2735,14 @@ body.is-resizing #game-list {
 }
 
 #achievement .wrapper > .header[data-system='playstation'] ~ .achievements #lock .achievement .icon,
-#achievement .wrapper > .header[data-system='uplay'] ~ .achievements #lock .achievement .icon {
+#achievement .wrapper > .header[data-system='uplay'] ~ .achievements #lock .achievement .icon,
+#lock .achievement.psn-platinum .icon {
   filter: grayscale(100);
+}
+
+/* Sony's platinum artwork is a full square: shown whole, like a trophy on the console. */
+.achievement.psn-platinum .icon {
+  background-size: cover !important;
 }
 
 .achievement .content {
@@ -2868,7 +2875,9 @@ body.is-resizing #game-list {
   padding: 5px 0;
   margin: 2px 0;
   width: 210px;
-  text-align: left;
+  /* Date and rate end on the same right edge, however long the rate line is. */
+  text-align: right;
+  margin-left: auto;
 }
 
 .achievement.rare .stats .community {
@@ -3508,17 +3517,20 @@ body.is-resizing #game-list {
 */
 
 #settings .box .content::-webkit-scrollbar,
+#settings .psn-add-results::-webkit-scrollbar,
 .onboarding-step::-webkit-scrollbar,
 .gh-technical-dump::-webkit-scrollbar {
   width: 11px;
 }
 #settings .box .content::-webkit-scrollbar-track,
+#settings .psn-add-results::-webkit-scrollbar-track,
 .onboarding-step::-webkit-scrollbar-track,
 .gh-technical-dump::-webkit-scrollbar-track {
   background: transparent;
   margin-block: 9px;
 }
 #settings .box .content::-webkit-scrollbar-thumb,
+#settings .psn-add-results::-webkit-scrollbar-thumb,
 .onboarding-step::-webkit-scrollbar-thumb,
 .gh-technical-dump::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
@@ -3527,12 +3539,14 @@ body.is-resizing #game-list {
   background-clip: padding-box;
 }
 #settings .box .content::-webkit-scrollbar-thumb:hover,
+#settings .psn-add-results::-webkit-scrollbar-thumb:hover,
 .onboarding-step::-webkit-scrollbar-thumb:hover,
 .gh-technical-dump::-webkit-scrollbar-thumb:hover {
   background: var(--border);
   background-clip: padding-box;
 }
 #settings .box .content::-webkit-scrollbar-corner,
+#settings .psn-add-results::-webkit-scrollbar-corner,
 .onboarding-step::-webkit-scrollbar-corner,
 .gh-technical-dump::-webkit-scrollbar-corner {
   background: transparent;
@@ -6604,8 +6618,161 @@ body.is-resizing #game-list {
   color: var(--text);
   transform: translateX(2px);
 }
+/* Leaving an account is the quiet action beside connecting: neutral at rest, the danger tone on hover. */
+#settings .emulator-login-actions .btn.is-disconnect {
+  grid-template-columns: 34px minmax(0, 1fr);
+  min-width: 170px;
+  border-color: var(--set-hairline-soft);
+  background: var(--control-bg);
+}
+#settings .emulator-login-actions .btn.is-disconnect .emulator-test-icon {
+  border-color: var(--set-hairline-soft);
+  color: var(--text-muted);
+  background: transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+#settings .emulator-login-actions .btn.is-disconnect:hover {
+  border-color: color-mix(in srgb, var(--danger) 38%, transparent);
+  background: color-mix(in srgb, var(--danger) 9%, var(--control-bg));
+}
+#settings .emulator-login-actions .btn.is-disconnect:hover .emulator-test-icon {
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+  color: var(--danger);
+}
+#settings .emulator-login-actions .btn.is-disconnect:hover strong {
+  color: color-mix(in srgb, var(--danger) 70%, var(--text));
+}
+/* The account cards' status line: a check, a warning or a pulse in front, so the state reads at a glance. */
+#settings .emulator-login-actions > [id$='-connect-status'] {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+#settings .emulator-login-actions > [id$='-connect-status'].success,
+#settings .emulator-login-actions > [id$='-connect-status'].error {
+  font-family: var(--font-strong);
+}
+#settings .emulator-login-actions > [id$='-connect-status'].success {
+  color: color-mix(in srgb, var(--success) 82%, var(--text));
+}
+#settings .emulator-login-actions > [id$='-connect-status'].error {
+  color: color-mix(in srgb, var(--danger) 78%, var(--text));
+}
+#settings .emulator-login-actions > [id$='-connect-status'].success::before,
+#settings .emulator-login-actions > [id$='-connect-status'].error::before {
+  margin-right: 7px;
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+}
+#settings .emulator-login-actions > [id$='-connect-status'].success::before {
+  content: '\f058';
+}
+#settings .emulator-login-actions > [id$='-connect-status'].error::before {
+  content: '\f06a';
+}
+#settings .emulator-login-actions > [id$='-connect-status'].running::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
+  vertical-align: middle;
+  animation: emulator-status-pulse 1s ease-in-out infinite alternate;
+}
 @keyframes emulator-test-spin {
   to { transform: rotate(360deg); }
+}
+/* PlayStation card: add a list from outside the account, found by name in the trophy catalog. */
+#settings .psn-add {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--set-divider);
+}
+#settings .psn-add > label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--set-title);
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
+}
+#settings .psn-add-field {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid var(--set-control-border);
+  border-radius: var(--radius-sm);
+  background: var(--set-control-bg);
+  color: var(--text-muted);
+}
+#settings .psn-add-field:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+#settings .psn-add-field input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-base);
+}
+#settings .psn-add-status {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+#settings .psn-add-status:empty {
+  display: none;
+}
+#settings .psn-add-status.error {
+  color: color-mix(in srgb, var(--danger) 78%, var(--text));
+}
+#settings .psn-add-results {
+  display: grid;
+  gap: 4px;
+  max-height: 300px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+#settings .psn-add-results li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+#settings .psn-add-results li:hover {
+  background: var(--set-row-hover);
+}
+#settings .psn-add-results img {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  object-fit: cover;
+  background: var(--set-surface-sunken);
+}
+#settings .psn-add-name {
+  overflow: hidden;
+  color: var(--text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#settings .psn-add-platform {
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--set-control-bg);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+}
+#settings .psn-add-results .inline-action-btn {
+  min-width: 92px;
 }
 #settings #emulator-login-test-status {
   min-width: 0;
@@ -13077,7 +13244,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   display: flex;
   flex-wrap: wrap;
   gap: 2px 20px;
-  margin: 8px 0 0;
+  margin: 11px 0 0;
   padding: 0 10px;
   font: var(--fs-sm) var(--font-strong);
   border: 0;
@@ -13218,6 +13385,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
+}
+
+.profile-stats-trophy-tiers.without-common {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 /* Each grade as a medal on a shelf: its trophy above the name, lit from the top in its own colour. */
@@ -13469,6 +13640,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 @media (max-width: 720px) {
   .profile-stats-trophy-tiers {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-stats-trophy-tiers.without-common {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .profile-stats-trophy-more {

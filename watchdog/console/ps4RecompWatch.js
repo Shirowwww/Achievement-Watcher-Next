@@ -13,7 +13,7 @@ const watch = require('../util/nodeWatch.js');
 const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { trophyGradeOf } = require('../util/trophyGrade.js');
+const { trophyGradeOf, platinumFields } = require('../util/trophyGrade.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
@@ -134,7 +134,7 @@ async function announce(record, fresh, ctx) {
       continue;
     }
     debug.log(`[ps4recomp] Unlocked: ${schema.name} - ${described.displayName}`);
-    await ctx.notify(payloadFor(record, schema, described, time, delay), toastOptions(ctx));
+    await ctx.notify({ ...payloadFor(record, schema, described, time, delay), ...platinumFields(described.type, ctx.options) }, toastOptions(ctx));
     delay += 1;
   }
   return true;

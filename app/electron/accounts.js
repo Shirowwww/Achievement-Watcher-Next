@@ -32,7 +32,103 @@ function parentWindow() {
 // the bindings above through their closure, so they always see what init.js holds now.
 function register(context) {
   ({ userData, debug, t, appSecret, getConfig, getMainWindow } = context);
+  schedulePsnRefresh();
 }
+
+/*
+  The PlayStation library and the trophy catalog follow the account on their own, on the same three
+  days as the app's other remote data: a check costs one request when nothing moved, and only what
+  changed is fetched again. Both start well after launch and never hold up the window.
+*/
+const PSN_FIRST_CHECK_MS = 3 * 60 * 1000;
+const PSN_CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
+const PSN_LIBRARY_EVERY_MS = 3 * 24 * 60 * 60 * 1000;
+
+function schedulePsnRefresh() {
+  const tick = () => refreshPsnInBackground().catch((err) => debug.log(`[psn] background refresh failed: ${errorCode(err)}`));
+  setTimeout(() => {
+    tick();
+    setInterval(tick, PSN_CHECK_EVERY_MS).unref();
+  }, PSN_FIRST_CHECK_MS).unref();
+}
+
+async function refreshPsnInBackground() {
+  if (getConfig()?.achievement_source?.psnLibrary === false) return;
+  if (!(await psnAuth().status({ userDataDir: userData })).connected) return;
+  const lib = require(path.join(__dirname, '../parser/psnLibrary.js'));
+  lib.setUserDataPath(userData);
+  const stampFile = path.join(lib.cacheRoot(), 'background.json');
+  const stamp = lib.readJson(stampFile) || {};
+  if (!psnImport && Date.now() - Number(stamp.libraryAt || 0) > PSN_LIBRARY_EVERY_MS) {
+    const result = await runPsnImport(null);
+    lib.writeJson(stampFile, { ...stamp, libraryAt: Date.now() });
+    const win = getMainWindow();
+    if (result.created + result.updated > 0 && win && !win.isDestroyed()) win.webContents.send('psn:library-changed');
+  }
+  await psnCatalog().refreshInBackground(psnCatalogOptions());
+}
+
+/*
+  Ties the library's games from every other source to their PlayStation trophy list, one game after
+  the other, in the trophy mode only. A game already looked at is skipped until its link ages out.
+*/
+const MAX_LINKED_GAMES = 5000;
+// A store lookup costs up to a dozen requests: a library pass asks for this many games at most.
+const STORE_LOOKUPS_PER_PASS = 10;
+const MAX_LINKED_ACHIEVEMENTS = 2000;
+let psnLinking = null;
+
+const cleanAchievement = (entry) => ({
+  name: String((entry && entry.name) || '').slice(0, 200),
+  displayName: String((entry && entry.displayName) || '').slice(0, 300),
+  description: String((entry && entry.description) || '').slice(0, 1000),
+});
+
+function cleanLinkGame(game) {
+  const appid = String((game && game.appid) || '').slice(0, 100);
+  const name = String((game && game.name) || '').slice(0, 300);
+  const list = Array.isArray(game && game.achievements) ? game.achievements.slice(0, MAX_LINKED_ACHIEVEMENTS) : [];
+  const achievements = list.map(cleanAchievement).filter((entry) => entry.name);
+  return appid && name && achievements.length ? { appid, name, achievements } : null;
+}
+
+function englishAchievements(lib, appid) {
+  if (!/^\d+$/.test(appid)) return null;
+  const schema = lib.readJson(path.join(userData, 'steam_cache', 'schema', 'english', `${appid}.json`));
+  const list = schema && schema.achievement && schema.achievement.list;
+  return Array.isArray(list) ? list.map(cleanAchievement) : null;
+}
+
+async function linkPsnGames(games) {
+  const rarityTiers = require(path.join(__dirname, '../util/rarityTiers.js'));
+  if (rarityTiers.normalizeMode(getConfig()?.achievement?.rarityMode) !== rarityTiers.MODE_TROPHY) return;
+  if (!(await psnAuth().status({ userDataDir: userData })).connected) return;
+  await psnCatalog().refreshInBackground(psnCatalogOptions());
+  const lib = require(path.join(__dirname, '../parser/psnLibrary.js'));
+  const links = require(path.join(__dirname, '../parser/psnTrophyLink.js'));
+  const ctx = await lib.createContext(psnCatalogOptions());
+  const englishCtx = String(ctx.locale).startsWith('en') ? null : await lib.createContext({ ...psnCatalogOptions(), locale: 'en-US' });
+  let linked = 0;
+  const budget = { store: STORE_LOOKUPS_PER_PASS };
+  for (const game of games) {
+    if (links.isFresh(game.appid, ctx.locale)) continue;
+    if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(lib, game.appid), budget })) linked += 1;
+  }
+  debug.log(`[psn] trophy links: ${linked} new game(s) tied to their PlayStation list`);
+  const win = getMainWindow();
+  if (linked > 0 && win && !win.isDestroyed()) win.webContents.send('psn:links-changed');
+}
+
+ipcMain.handle('psn:link-games', (_event, games) => {
+  if (psnLinking || !Array.isArray(games)) return { ok: true, started: false };
+  const cleaned = games.slice(0, MAX_LINKED_GAMES).map(cleanLinkGame).filter(Boolean);
+  psnLinking = linkPsnGames(cleaned)
+    .catch((err) => debug.log(`[psn] trophy links stopped: ${errorCode(err)}`))
+    .finally(() => {
+      psnLinking = null;
+    });
+  return { ok: true, started: true };
+});
 
 module.exports = { register };
 
@@ -587,9 +683,80 @@ ipcMain.handle('psn:logout', async () => {
   }
 });
 
+function psnCatalog() {
+  require(path.join(__dirname, '../parser/psnLibrary.js')).setUserDataPath(userData);
+  return require(path.join(__dirname, '../parser/psnCatalog.js'));
+}
+const psnCatalogOptions = () => ({ lang: getConfig()?.achievement?.lang || 'english', authOptions: { userDataDir: userData } });
+
 ipcMain.handle('psn:trophy-rates', async (_event, request = {}) => {
+  const list = { npCommId: String(request.npCommId || ''), service: String(request.service || '') };
   try {
-    return await psnAuth().trophyRates({ npCommId: String(request.npCommId || ''), service: String(request.service || '') }, { userDataDir: userData });
+    const own = await psnAuth().trophyRates(list, { userDataDir: userData });
+    // A list the account never played still has Sony's rates, through a public player who did.
+    if (own.ok || own.error !== 'psn-not-on-account') return own;
+    return await psnCatalog().publicRates(list, psnCatalogOptions());
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:catalog-search', async (_event, query) => {
+  try {
+    return { ok: true, ...(await psnCatalog().search(String(query || '').slice(0, 100), psnCatalogOptions())) };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:added-games', () => {
+  try {
+    return { ok: true, results: psnCatalog().addedGames() };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:remove-game', (_event, listId) => {
+  try {
+    return { ok: true, game: psnCatalog().removeGame(String(listId || '')) };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:add-game', async (_event, listId) => {
+  try {
+    return { ok: true, game: await psnCatalog().addGame(String(listId || ''), psnCatalogOptions()) };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+let psnImport = null;
+// A second click, or the background check, while an import runs joins it rather than doubling every request.
+function runPsnImport(sender, force = false) {
+  if (!psnImport) {
+    const psnLibrary = require(path.join(__dirname, '../parser/psnLibrary.js'));
+    psnLibrary.setUserDataPath(userData);
+    psnImport = psnLibrary
+      .importLibrary({
+        force,
+        ...psnCatalogOptions(),
+        onProgress: (p) => {
+          if (sender && !sender.isDestroyed()) sender.send('psn:import-progress', p);
+        },
+      })
+      .finally(() => {
+        psnImport = null;
+      });
+  }
+  return psnImport;
+}
+
+ipcMain.handle('psn:import', async (event, opts = {}) => {
+  try {
+    return { ok: true, result: await runPsnImport(event.sender, opts.force === true) };
   } catch (err) {
     return { ok: false, error: errorCode(err) };
   }
@@ -620,7 +787,10 @@ ipcMain.handle('psn:login', async () => {
       const npsso = psnAuth().npssoFromCookies(await loginSession.cookies.get({ name: 'npsso' }).catch(() => []));
       if (!npsso) return;
       trading = true;
-      const result = await psnAuth().signIn(npsso, { userDataDir: userData });
+      // A rejection here would leave the sign-in window open for good.
+      const result = await psnAuth()
+        .signIn(npsso, { userDataDir: userData })
+        .catch((err) => ({ ok: false, error: errorCode(err) }));
       debug.log(result.ok ? '[psn] account connected' : `[psn] sign-in failed: ${result.error}`);
       finish(result);
     };

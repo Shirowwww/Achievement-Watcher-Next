@@ -11,7 +11,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { trophyGradeOf } = require('../util/trophyGrade.js');
+const { trophyGradeOf, platinumFields } = require('../util/trophyGrade.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
@@ -228,6 +228,7 @@ async function handleChange(target, ctx) {
             achievementDescription: t.description,
             icon: fs.existsSync(t.icon) ? t.icon : undefined,
             trophyGrade: trophyGradeOf(t.type),
+            ...platinumFields(t.type, ctx.options),
             time: t.time || moment().unix(),
             delay,
           },

@@ -8,4 +8,10 @@ function trophyGradeOf(type) {
   return TROPHY_GRADES[type] || undefined;
 }
 
-module.exports = { trophyGradeOf };
+// A real platinum trophy takes the platinum popup the app shows at 100%, unless that one is turned off.
+function platinumFields(type, options) {
+  const wanted = !(options && options.notification && options.notification.platinum === false);
+  return type === 'P' && wanted ? { notificationType: 'platinum' } : {};
+}
+
+module.exports = { trophyGradeOf, platinumFields };
