@@ -1541,12 +1541,12 @@ function libraryRelativeTime(timestamp) {
   )}"><span class="library-scroll-content">${escapeHtml(relative)}</span></time>`;
 }
 
-function startLibraryTextScroll(container) {
-  if (!container || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-  const text = container.querySelector(':scope > .library-scroll-content');
-  if (!text) return;
+// Returns whether the text overflowed and now scrolls. Game Health passes its own text element.
+function startLibraryTextScroll(container, text = container?.querySelector(':scope > .library-scroll-content')) {
+  if (!container || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return false;
+  if (!text) return false;
   const overflow = Math.max(0, Math.ceil(text.scrollWidth - container.clientWidth));
-  if (overflow <= 2) return;
+  if (overflow <= 2) return false;
 
   container._scrollAnimation?.cancel();
   container._scrollAnimation = text.animate(
@@ -1563,6 +1563,7 @@ function startLibraryTextScroll(container) {
       easing: 'ease-in-out',
     }
   );
+  return true;
 }
 
 function stopLibraryTextScroll(container) {
@@ -3665,7 +3666,7 @@ async function pickGameExecutable(appid) {
     title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
     buttonLabel: t('select', 'Select', 'Sélectionner'),
     defaultPath: cfg.exe && fs.existsSync(cfg.exe) ? cfg.exe : startDir,
-    filters: [{ name: 'Executables', extensions: ['exe', 'bat'] }],
+    filters: [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat'] }],
     properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
   });
   const filePath = (dialog.filePaths || []).find((entry) => entry && entry.length > 0) || '';
@@ -7741,10 +7742,10 @@ var app = {
         filters:
           process.platform === 'linux'
             ? [
-                { name: 'All files', extensions: ['*'] },
-                { name: 'Windows programs', extensions: ['exe', 'bat'] },
+                { name: t('dialog-filter-all-files', 'All files', 'Tous les fichiers'), extensions: ['*'] },
+                { name: t('dialog-filter-windows-programs', 'Windows programs', 'Programmes Windows'), extensions: ['exe', 'bat'] },
               ]
-            : [{ name: 'Executables', extensions: ['exe', 'bat'] }],
+            : [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat'] }],
         properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
       });
 
@@ -8062,6 +8063,21 @@ var app = {
       }
     });
 
+    // A value too long for its card scrolls while the card is hovered, like the library tiles. At
+    // rest it keeps its ellipsis, which an animated inline-block could not show.
+    $('#game-health')
+      .on('mouseenter', '.gh-checks li', function () {
+        const value = this.querySelector('.gh-check-value');
+        if (!value) return;
+        value.classList.add('is-scrolling');
+        if (!startLibraryTextScroll(value, value.querySelector(':scope > .gh-check-text'))) value.classList.remove('is-scrolling');
+      })
+      .on('mouseleave', '.gh-checks li', function () {
+        const value = this.querySelector('.gh-check-value');
+        stopLibraryTextScroll(value);
+        value?.classList.remove('is-scrolling');
+      });
+
     // The copied report goes into issues: masked like the log export (#127), shown in full here.
     $('#game-health').on('click', '.gh-copy', function () {
       const icon = $(this).find('i');
@@ -8138,20 +8154,10 @@ var app = {
         })
         .catch(() => userThemes.applyCss(''));
 
-      // Game executable configuration modal: localize the static strings that the
-      // i18n loader does not bind (title, launch arguments, placeholder, actions).
+      // Game configuration panel: its labels are (re)applied every time it opens, in
+      // onConfigButtonClick - this startup pass only covers it being inspected before its first open.
       try {
         $('#game-config-title').text(t('game-config-title', 'Executable configuration', "Configuration de l'exécutable"));
-        $('#launch-args-label').html(
-          `<i class="fas fa-terminal"></i> ${t('launch-args-label', 'Launch arguments:', 'Arguments de lancement :')}`
-        );
-        $('#game-config .constant').attr(
-          'data-placeholder',
-          t('game-config-placeholder', '…Click EDIT to choose the executable…', '…Cliquez sur MODIFIER pour choisir l’exécutable…')
-        );
-        $('#game-config .unlink').attr('title', t('game-config-unlink', 'Unlink executable', "Dissocier l'exécutable"));
-        // The tab labels are (re)applied every time the panel opens, in onConfigButtonClick - this
-        // startup pass only covers the case where it is inspected before its first open.
         applyGameConfigTabLabels();
       } catch (err) {
         debug.log(`game-config i18n failed: ${err}`);
@@ -8241,7 +8247,7 @@ var app = {
       $('#manual-game-pick-exe').on('click', async () => {
         const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
           title: pickExeLabel,
-          filters: [{ name: 'Executables', extensions: ['exe', 'bat', 'cmd'] }],
+          filters: [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat', 'cmd'] }],
           properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
         });
         if (!dialog.filePaths || !dialog.filePaths[0]) return;

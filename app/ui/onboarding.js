@@ -8,6 +8,7 @@ const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const onboardingInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const onboardingFolderDiagnosis = require(path.join(appPath, 'util/folderDiagnosis.js')).describeFolderDiagnosis;
 const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
+const onboardingLocale = require(path.join(appPath, 'locale/loader.js'));
 const onboardingPlatformText = require(path.join(appPath, 'locale/platformText.js')).withPlatformText;
 const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'));
 
@@ -490,7 +491,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
 
   function setAccountStatus(key, message, kind) {
     $(`#onboard-${key}-status`)
-      .removeClass('success error')
+      .removeClass('success error is-connected-as')
       .addClass(kind || '')
       .text(message || '');
   }
@@ -511,7 +512,13 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     // "Not connected", which it used to every second refresh.
     if (state.connected && state.needsReconnect && labels.needsReconnect) setAccountStatus(key, labels.needsReconnect, 'error');
     else if (state.connected) {
-      if (!$(`#onboard-${key}-status`).hasClass('success')) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
+      // Only a success of another kind is kept: the "Connected" line itself is rewritten, so it
+      // follows a language change made in this guide.
+      const status = $(`#onboard-${key}-status`);
+      if (!status.hasClass('success') || status.hasClass('is-connected-as')) {
+        setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
+        status.addClass('is-connected-as');
+      }
     } else if (!$(`#onboard-${key}-status`).hasClass('error')) setAccountStatus(key, labels.notConnected);
   }
 
@@ -1374,12 +1381,21 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
       const selected = $(this).val() || 'default';
       document.documentElement.dataset.theme = selected === 'custom' || /^user:/i.test(selected) ? 'default' : selected;
     });
-    $('#onboard-language').on('change', function () {
+    $('#onboard-language').on('change', async function () {
       if (!app.config.achievement) app.config.achievement = {};
-      app.config.achievement.lang = $(this).val() || 'english';
-      languageChosenThisSession = uiLanguages.has(app.config.achievement.lang);
+      const lang = $(this).val() || 'english';
+      app.config.achievement.lang = lang;
+      languageChosenThisSession = uiLanguages.has(lang);
+      // The account cards and every t() label read the app locale, not this guide's own strings:
+      // left on the old one, they stayed in the previous language beside the newly chosen one.
+      try {
+        await onboardingLocale.load(lang);
+      } catch (err) {
+        debug.log(`onboarding: app locale '${lang}' failed (${err})`);
+      }
+      if (app.config.achievement.lang !== lang) return;
       applyText();
-      populateLanguageSelect(app.config.achievement.lang);
+      populateLanguageSelect(lang);
     });
     $('#onboarding-skip').on('click', skip);
     $('#onboarding select[id^="onboard-src-"]').on('change', () => {

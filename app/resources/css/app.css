@@ -13,6 +13,10 @@
     url(../font/Open_Sans/opensans-bold-webfont.woff) format('woff');
 }
 
+/* Text cut short with an ellipsis uses `overflow-x: clip`, never `overflow: hidden`. normalize.css
+   sets a 1.15 line height, tighter than Open Sans' own glyphs, so a box clipping both axes shaved
+   the bottom of g, j, p, y and the accents above capitals in every language. */
+
 /* Design tokens - single source of truth for the Steam-inspired dark palette. Values are the exact
    hex literals previously hardcoded throughout this stylesheet (zero visual change); centralizing
    them removes palette drift and makes future theming/accent tweaks a one-line edit. */
@@ -950,7 +954,8 @@ body.is-resizing #game-list {
   font-size: var(--fs-4xl);
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   max-width: 600px;
 }
 
@@ -1237,7 +1242,8 @@ body.is-resizing #game-list {
 }
 
 .manual-exe-action {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   font-family: var(--font-strong);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1248,7 +1254,8 @@ body.is-resizing #game-list {
 }
 
 #manual-game-exe-path {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   color: var(--text-muted);
   font-size: var(--fs-sm);
   text-overflow: ellipsis;
@@ -1577,7 +1584,8 @@ body.is-resizing #game-list {
   background-position: center;
 }
 .aw-collection-preview-name {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   font-size: var(--fs-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2070,7 +2078,8 @@ body.is-resizing #game-list {
   padding: 0 30px 8px 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   color: var(--text);
 }
 
@@ -2190,7 +2199,8 @@ body.is-resizing #game-list {
   padding: 6px 0 1px 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-align: center;
 }
 
@@ -2381,7 +2391,8 @@ body.is-resizing #game-list {
   text-shadow: rgba(0, 0, 0, calc(0.5 * var(--text-shadow-scale))) 4px 4px 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   max-width: 800px;
   padding: 8px 0;
 }
@@ -2761,7 +2772,8 @@ body.is-resizing #game-list {
   padding: 2px 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 /* DLC/update tag from SteamHunters achievement groups (absent when the game has none). */
@@ -2773,7 +2785,8 @@ body.is-resizing #game-list {
   padding: 1px 0 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
 }
 
 .achievement .content .description {
@@ -3612,7 +3625,8 @@ body.is-resizing #game-list {
 }
 #settings .box .notice p {
   white-space: nowrap;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
 }
 @container (max-width: 960px) {
@@ -5196,7 +5210,7 @@ body.is-resizing #game-list {
 
 .onboarding-lists li span {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5660,9 +5674,18 @@ body.is-resizing #game-list {
   flex: 1 1 auto;
   min-width: 0;
   color: var(--text);
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.gh-checks .gh-check-value.is-scrolling {
+  text-overflow: clip;
+}
+
+.gh-checks .gh-check-value.is-scrolling .gh-check-text {
+  display: inline-block;
+  min-width: max-content;
 }
 
 .gh-actions {
@@ -5693,7 +5716,8 @@ body.is-resizing #game-list {
 
 .gh-progress-label {
   color: var(--text);
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -5959,7 +5983,8 @@ body.is-resizing #game-list {
   transition: 1s ease-out;
   max-width: 350px;
   text-overflow: ellipsis;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   direction: rtl;
 }
 #game-config .constant:empty::before {
@@ -6129,7 +6154,7 @@ body.is-resizing #game-list {
 #blacklist-manager li .name {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text);
@@ -6280,7 +6305,8 @@ body.is-resizing #game-list {
   max-width: var(--library-card-width);
 }
 #game-list.view-portrait ul > li .game-box .info .title {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -6316,7 +6342,8 @@ body.is-resizing #game-list {
 }
 
 #game-list.view-portrait-compact ul > li .game-box .info .title {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   font-size: var(--fs-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6816,7 +6843,8 @@ body.is-resizing #game-list {
   background: var(--set-surface-sunken);
 }
 #settings .psn-add-name {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   color: var(--text);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -7511,7 +7539,7 @@ body {
 
 #game-list .library-scroll-text {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -7775,7 +7803,8 @@ body {
   top: 6px;
   left: 29px;
   max-width: calc(100% - 38px);
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   color: color-mix(in srgb, var(--text-muted) 72%, transparent);
   font-family: var(--font-strong);
   font-size: var(--fs-3xs);
@@ -8570,7 +8599,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 #settings .setting-switch-state {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   white-space: nowrap;
   text-overflow: ellipsis;
   /* The "A" of "Activé" inks a pixel left of its box: give the clip that pixel without moving the text. */
@@ -8639,7 +8669,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 #settings #hotkey {
   padding-left: 10px;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: center;
@@ -8739,7 +8770,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #clip-dir-display {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
   text-align: left;
@@ -9812,7 +9843,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 #settings .folder-rescan-location span {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   color: var(--text);
   font-size: var(--fs-sm);
   text-overflow: ellipsis;
@@ -10454,7 +10485,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   width: 100%;
   max-width: none;
   color: var(--text);
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
   direction: ltr;
@@ -12311,7 +12343,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   flex: 0 1 auto;
   min-width: 0;
   max-width: 150px;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text-muted);
@@ -12923,7 +12955,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 #profile-stats-all-list .all-main b {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
   font: var(--fs-md) var(--font-strong);
@@ -12945,7 +12978,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 #profile-stats-all-list .all-game {
   max-width: 100%;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
   font: var(--fs-sm) var(--font-strong);
@@ -13633,7 +13667,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 .profile-stats-trophy-list b,
 .profile-stats-trophy-list small {
   display: block;
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -13917,7 +13952,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 .select-menu-label {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
 }
 

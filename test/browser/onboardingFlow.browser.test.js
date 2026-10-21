@@ -52,6 +52,7 @@ function installWorld(world) {
     return { all: () => languages, has: (api) => languages.some((entry) => entry.api === api) };
   })();
   modules['APP/locale/t.js'] = { t: (key, english) => english };
+  modules['APP/locale/loader.js'] = { load: async (lang) => calls.push(['locale', lang]) };
   modules['APP/locale/platformText.js'] = { withPlatformText: ({ platform, ...text }) => text };
   modules['APP/util/folderDiagnosis.js'] = { describeFolderDiagnosis: () => '' };
   modules['APP/util/avatarStore.js'] = { setAvatar() {}, clearAvatar() {} };
@@ -172,6 +173,8 @@ test('a first run needs a language and an interface before it moves on, and Back
     assert.match((await state(page)).status, /language/i);
 
     await page.select('#onboard-language', 'english');
+    // The app locale follows at once, or the account cards would keep the previous language.
+    await page.waitForFunction(() => window.__calls.some((call) => call[0] === 'locale' && call[1] === 'english'), { timeout: 5000 });
     await page.click('#onboarding-next');
     assert.equal((await state(page)).step, '0', 'a language alone is not enough');
     assert.match((await state(page)).status, /Simple or Advanced/);

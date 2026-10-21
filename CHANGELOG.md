@@ -65,6 +65,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Clipped letters.** Text cut short with "…" no longer shaves the bottom of g, j, p and y or the
+  accents above capitals, in every language. Long values in Game Health scroll on hover.
+- **Language changes reach everything.** Picking a language in the first-start guide now switches
+  its account buttons and statuses too, and the Executable tab follows a language change.
 - **Notifications.** Two quick unlocks both pop, a popup that cannot draw no longer holds the next
   ones, popups show on the game's screen and touch the edge they are anchored to, and on Automatic
   an unlock in a fullscreen game shows over it without taking its focus. Toast sounds no longer start

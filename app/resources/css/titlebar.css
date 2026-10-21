@@ -169,7 +169,7 @@ ul#window-controls {
   font-size: 13px;
   opacity: 0.88;
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -184,7 +184,7 @@ ul#window-controls {
   padding-left: 9px;
   color: var(--text-muted);
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
 }
 
@@ -237,7 +237,7 @@ ul#window-controls {
 
 #update-status .update-text {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
 }
 

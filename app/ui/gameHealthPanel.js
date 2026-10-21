@@ -24,6 +24,12 @@ function applyGameConfigTabLabels() {
   $('#game-config-tab-health').text(t('game-config-tab-health', 'Health', 'État'));
   $('#game-config-tab-exe').text(t('game-config-tab-exe', 'Executable', 'Exécutable'));
   $('#game-config-tab-notification').text(localeText('settings.sideMenu.notification'));
+  // The Executable tab: set here rather than once at startup, so a language change reaches it too.
+  $('#launch-args-label').html(`<i class="fas fa-terminal"></i> ${escapeHtml(t('launch-args-label', 'Launch arguments:', 'Arguments de lancement :'))}`);
+  $('#game-config .constant').attr('data-placeholder', t('game-config-placeholder', 'No executable chosen yet', 'Aucun exécutable choisi'));
+  const pickLabel = t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu");
+  $('#game-config .edit').attr({ title: pickLabel, 'aria-label': pickLabel });
+  $('#game-config .unlink').attr('title', t('game-config-unlink', 'Unlink executable', "Dissocier l'exécutable"));
   $('#game-notification-preset-label').text(localeText('dialogs.game-notification-preset-title'));
   $('#game-notification-use-global').text(localeText('dialogs.game-notification-use-global'));
   $('#game-notification-position-label').text(localeText('settings.notification.option.overlayPosition'));
@@ -885,7 +891,7 @@ function paintGameHealth(report) {
       return `<li data-level="${escapeHtml(entry.level)}" data-check="${escapeHtml(entry.id)}">
         <i class="fas ${GAME_HEALTH_ICON[entry.level] || GAME_HEALTH_ICON.info}"></i>
         <span class="gh-check-label">${escapeHtml(gameHealthCheckLabel(entry.id, simple))}</span>
-        <span class="gh-check-value" title="${escapeHtml(value)}">${escapeHtml(value)}</span>
+        <span class="gh-check-value" title="${escapeHtml(value)}"><span class="gh-check-text">${escapeHtml(value)}</span></span>
       </li>`;
     })
     .join('');
