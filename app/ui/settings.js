@@ -2204,7 +2204,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         badge.toggle(!!s.connected);
         importBtn.toggle(!!s.connected);
         disconnectBtn.toggle(!!s.connected);
-        fields.toggle(!s.connected);
+        // Not toggle(): its inline display:block would undo the two-column grid of the fields.
+        fields.css('display', s.connected ? 'none' : '');
         connectBtn.toggle(!s.connected);
         // Disconnected, the line keeps whatever it last said ("disconnected", an error).
         if (s.connected) setStatus(accountConnectedAs(s.username), 'success');

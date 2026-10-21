@@ -63,7 +63,7 @@ the tools button beside the preset setting. Everything is set with ordinary cont
 CSS, no JSON and no file to edit.
 
 <div align="center">
-<picture><source srcset="assets/shot/notification-preset-panel-800.webp 800w, assets/shot/notification-preset-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notification-preset-panel.png" width="720" height="529" alt="The Preset Designer"></picture><br>
+<picture><source srcset="assets/shot/notification-preset-panel-800.webp 800w, assets/shot/notification-preset-panel.webp 939w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notification-preset-panel.png" width="720" height="530" alt="The Preset Designer"></picture><br>
 <sub>Start from a complete design, then shape it under a live preview of the real popup, which stays on screen while the controls scroll</sub>
 </div>
 
@@ -169,7 +169,7 @@ preview shows the bundled preset with your layer on top, and **Show on screen** 
 real popup.
 
 <div align="center">
-<picture><source srcset="assets/shot/preset-customize-panel-800.webp 800w, assets/shot/preset-customize-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/preset-customize-panel.png" width="720" height="529" alt="Customizing the AW Next preset with a font file and a logo, previewed live" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/preset-customize-panel-800.webp 800w, assets/shot/preset-customize-panel.webp 939w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/preset-customize-panel.png" width="720" height="530" alt="Customizing the AW Next preset with a font file and a logo, previewed live" loading="lazy" decoding="async"></picture><br>
 <sub>AW Next with a font file of its own and a logo in the top-right corner: only ticked sections change</sub>
 </div>
 

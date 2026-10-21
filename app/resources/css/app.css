@@ -694,9 +694,9 @@ p {
 /* Native Gamepad API navigation. The marker is only visible after an actual controller input, so
    mouse and keyboard users keep the existing visual treatment. */
 html[data-controller-active='true'] .controller-focus {
-  outline: 3px solid var(--accent) !important;
-  outline-offset: 3px;
-  box-shadow: 0 0 0 6px var(--accent-soft), 0 0 18px var(--accent) !important;
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 8px color-mix(in srgb, var(--accent) 45%, transparent) !important;
   position: relative;
   z-index: 20;
 }
@@ -3543,20 +3543,23 @@ body.is-resizing #game-list {
 #settings .box .content::-webkit-scrollbar,
 #settings .psn-add-results::-webkit-scrollbar,
 .onboarding-step::-webkit-scrollbar,
-.gh-technical-dump::-webkit-scrollbar {
+.gh-technical-dump::-webkit-scrollbar,
+#game-config .box .container::-webkit-scrollbar {
   width: 11px;
 }
 #settings .box .content::-webkit-scrollbar-track,
 #settings .psn-add-results::-webkit-scrollbar-track,
 .onboarding-step::-webkit-scrollbar-track,
-.gh-technical-dump::-webkit-scrollbar-track {
+.gh-technical-dump::-webkit-scrollbar-track,
+#game-config .box .container::-webkit-scrollbar-track {
   background: transparent;
   margin-block: 9px;
 }
 #settings .box .content::-webkit-scrollbar-thumb,
 #settings .psn-add-results::-webkit-scrollbar-thumb,
 .onboarding-step::-webkit-scrollbar-thumb,
-.gh-technical-dump::-webkit-scrollbar-thumb {
+.gh-technical-dump::-webkit-scrollbar-thumb,
+#game-config .box .container::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
   border-radius: var(--radius-sm);
   border: 3px solid transparent;
@@ -3565,14 +3568,16 @@ body.is-resizing #game-list {
 #settings .box .content::-webkit-scrollbar-thumb:hover,
 #settings .psn-add-results::-webkit-scrollbar-thumb:hover,
 .onboarding-step::-webkit-scrollbar-thumb:hover,
-.gh-technical-dump::-webkit-scrollbar-thumb:hover {
+.gh-technical-dump::-webkit-scrollbar-thumb:hover,
+#game-config .box .container::-webkit-scrollbar-thumb:hover {
   background: var(--border);
   background-clip: padding-box;
 }
 #settings .box .content::-webkit-scrollbar-corner,
 #settings .psn-add-results::-webkit-scrollbar-corner,
 .onboarding-step::-webkit-scrollbar-corner,
-.gh-technical-dump::-webkit-scrollbar-corner {
+.gh-technical-dump::-webkit-scrollbar-corner,
+#game-config .box .container::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -5527,11 +5532,21 @@ body.is-resizing #game-list {
   width: 20px;
   height: 20px;
   min-height: 20px;
+  /* Centred over the select's chevron (11px wide, 12px from its edge) rather than flush right. */
+  margin-right: 7.5px;
+  display: grid;
+  place-items: center;
   padding: 0;
   border-radius: var(--radius-sm);
   border-color: var(--set-control-border);
   color: var(--set-icon);
   background: var(--set-control-bg);
+}
+/* A 12px glyph leaves 4px each side: whole pixels at 100% and 125%, so it is not drawn half off. */
+#game-notification-reposition i {
+  display: block;
+  font-size: 12px;
+  line-height: 1;
 }
 
 #game-notification-reposition:focus-visible {
@@ -7190,7 +7205,7 @@ body {
 
 #game-list .game-box .header.glow:not(.artwork-error):not(.artwork-missing):after {
   content: '';
-  opacity: 0.15;
+  opacity: 0.08;
   cursor: pointer;
   width: 220%;
   height: var(--gloss-height);
@@ -14061,18 +14076,263 @@ html:not([data-platform='linux']) [data-linux-only] {
   animation-duration: var(--dur-base);
 }
 
-/* Game settings panel. The top edge stays where it is while the tabs change height, so a switch
-   grows or shrinks the panel downward instead of moving both edges at once. */
+/* Game settings panel: centred like Settings, whatever the tab's height. Its pane scrolls when the
+   window is short, so the title band and the footer always stay on screen. */
 #game-config .box {
-  top: max(24px, calc(50% - 320px));
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(720px, calc(100vw - 48px));
+  /* ui/gameHealthPanel.js followGameConfigHeight() sets the height; this eases it. */
+  transition: height 0.28s var(--ease-out);
 }
 
 @keyframes game-config-panel-in {
   from {
     opacity: 0;
-    transform: translate(-50%, 8px) scale(0.985);
+    transform: translate(-50%, calc(-50% + 8px)) scale(0.985);
   }
+}
+
+/* The title band is the game's own artwork, with its name and Game Health state on it. */
+#game-config .box .header {
+  position: relative;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  align-content: flex-end;
+  gap: 8px 14px;
+  min-height: 116px;
+  padding: 18px 28px 16px;
+  border-bottom: 0;
+  background: var(--set-header-bg);
+  overflow: hidden;
+}
+#game-config .box .header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gc-cover, none) center 30% / cover no-repeat;
+  opacity: 0.9;
+}
+#game-config .box .header::after {
+  content: '';
+  position: absolute;
+  /* One pixel past the edge, opaque there: the band sits at a fractional offset, and a 94% veil
+     let the artwork's last row show through. */
+  inset: 0 0 -1px;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--set-header-bg) 92%, transparent) 86%, var(--set-header-bg) 100%);
+}
+#game-config .box .header > * {
+  position: relative;
+  z-index: 1;
+}
+#game-config .box .header > i {
+  display: none;
+}
+#game-config-title {
+  font-size: 1.75rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* The state chip lives on the band, beside the name; the copy in the Health body is hidden. */
+#game-health .gh-state {
+  display: none;
+}
+#game-config .box .header #game-config-state i {
+  color: inherit;
+}
+#game-config-state {
+  margin: 0;
+  padding: 6px 14px;
+  font-size: var(--fs-md);
+  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--chip-state, var(--control-bg)) 22%, rgba(8, 14, 24, 0.62));
+}
+#game-config:not([data-gc-view='health']) #game-config-state {
+  display: none;
+}
+
+/* One 28px inset for the band, the body and the footer, so every edge lines up. The body's own
+   2px inset (further down) is why its padding is 26. */
+#game-config .box .container {
+  gap: 0;
+  padding: 14px 26px 18px;
+  max-height: max(220px, calc(100vh - 330px));
+  overflow-y: auto;
+}
+/* Shrinking, the active view clipped its own overflow and left the container nothing to scroll. */
+#game-config .box .container > * {
+  flex-shrink: 0;
+}
+#game-config .box .footer {
+  padding-inline: 28px;
+}
+/* The container already pads the panel; the notification view's own inset left it 4px off the tabs. */
+#game-config .game-notifications {
+  padding-inline: 0;
+}
+
+/* Tabs as one segmented control. */
+#game-config .game-config-tabs {
+  align-self: flex-start;
+  gap: 2px;
+  margin: 0 2px 4px;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, #000 22%, transparent);
+}
+#game-config .game-config-tabs button {
+  padding: 7px 14px;
+  border-radius: 9px;
+  color: var(--text-muted);
+}
+#game-config .game-config-tabs button::after {
+  display: none;
+}
+#game-config .game-config-tabs button.active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* Game Health body: the explanation, then the checks as cards that reflow with the width. */
+#game-config .gh-summary {
+  gap: 0;
+}
+#game-config .gh-explanation {
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+  line-height: 1.55;
+}
+#game-config .gh-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+  max-height: none;
+  margin-top: 10px;
+  overflow: visible;
+}
+#game-config .gh-checks li,
+#game-config .gh-checks li:nth-child(odd) {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 1px;
+  align-items: center;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 48%, transparent);
+  box-shadow: inset 0 0 0 1px var(--set-hairline-soft);
+}
+#game-config .gh-checks li > i {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: var(--fs-xs);
+  background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+}
+#game-config .gh-checks li[data-level='ok'] > i {
+  background: color-mix(in srgb, var(--success) 13%, transparent);
+}
+#game-config .gh-checks li[data-level='warn'] > i {
+  background: color-mix(in srgb, var(--warning) 14%, transparent);
+}
+#game-config .gh-checks li[data-level='fail'] > i {
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+#game-config .gh-checks .gh-check-label {
+  font-size: var(--fs-sm);
+}
+#game-config .gh-checks .gh-check-value {
+  font-family: var(--font-strong);
+}
+
+/* The actions are the app's ordinary buttons, like the footer's. The fix the explanation names
+   leads with an accent icon rather than an accent fill. */
+#game-config .gh-actions {
+  margin-top: 6px;
+}
+#game-config .gh-actions .inline-action-btn.primary {
+  border-color: var(--control-border);
+  color: var(--text);
+  background: var(--control-bg);
+}
+#game-config .gh-actions .inline-action-btn.primary:hover {
+  border-color: var(--control-border-hover);
+  background: var(--control-bg-hover);
+}
+#game-config .gh-actions .inline-action-btn::before {
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  color: var(--accent);
+}
+#game-config .gh-actions .inline-action-btn.primary::before {
+  content: '\f0ad';
+}
+#game-config .gh-actions .inline-action-btn[data-gh-action='test-notification']::before {
+  content: '\f0f3';
+}
+
+/* Motion: the artwork settles as the panel opens, the checks arrive one after another, and the
+   state chip pops when its verdict changes. All cut by the global reduced-motion rule. */
+@keyframes gc-cover-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+}
+@keyframes gh-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes gh-chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+#game-config.is-opening .box .header::before {
+  animation: gc-cover-in 0.6s var(--ease-out) both;
+}
+#game-config .gh-checks li {
+  animation: gh-card-in 0.32s var(--ease-out) both;
+}
+#game-config .gh-checks li:nth-child(2) {
+  animation-delay: 30ms;
+}
+#game-config .gh-checks li:nth-child(3) {
+  animation-delay: 60ms;
+}
+#game-config .gh-checks li:nth-child(4) {
+  animation-delay: 90ms;
+}
+#game-config .gh-checks li:nth-child(5) {
+  animation-delay: 120ms;
+}
+#game-config .gh-checks li:nth-child(6) {
+  animation-delay: 150ms;
+}
+#game-config .gh-checks li:nth-child(n + 7) {
+  animation-delay: 180ms;
+}
+#game-config .gh-actions .inline-action-btn {
+  animation: gh-card-in 0.32s var(--ease-out) 0.2s both;
+}
+#game-config-state.is-fresh {
+  animation: gh-chip-in 0.28s var(--ease-out) both;
+}
+#game-config .game-config-tabs button {
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 #game-config.is-opening > .overlay {
@@ -14083,22 +14343,9 @@ html:not([data-platform='linux']) [data-linux-only] {
   animation: game-config-panel-in 0.2s var(--ease-out) both;
 }
 
-#game-config .box .container {
-  gap: 0;
-  padding: 4px 20px 18px;
-}
-
-#game-config .game-config-tabs {
-  gap: 2px;
-  padding: 0 2px;
-  border-bottom: 1px solid var(--set-hairline-soft);
-}
-
 #game-config .game-config-tabs button {
   position: relative;
-  padding: 10px 12px 11px;
   border: 0;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   transition:
     color var(--dur-fast) var(--ease-out),
     background-color var(--dur-fast) var(--ease-out);
@@ -14107,11 +14354,6 @@ html:not([data-platform='linux']) [data-linux-only] {
 #game-config .game-config-tabs button:hover {
   color: var(--text);
   background: var(--set-row-hover);
-}
-
-#game-config .game-config-tabs button.active {
-  color: var(--text);
-  background: transparent;
 }
 
 #game-config .game-config-tabs button i {

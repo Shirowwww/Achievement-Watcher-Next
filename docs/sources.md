@@ -5,7 +5,7 @@ Steam-compatible save file, or a console emulator's trophy file. Every source is
 individually in **Settings → Sources**.
 
 <div align="center">
-<picture><source srcset="assets/shot/sources-panel-800.webp 800w, assets/shot/sources-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/sources-panel.png" width="720" height="529" alt="Settings - Game sources"></picture><br>
+<picture><source srcset="assets/shot/sources-panel-800.webp 800w, assets/shot/sources-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/sources-panel.png" width="720" height="529" alt="Settings - Game sources"></picture><br>
 <sub>Each source is a separate switch; the shield marks the official desktop libraries</sub>
 </div>
 
@@ -69,7 +69,7 @@ scene releases writing a compatible layout. A game whose files are in a custom l
 under **Settings → Folders**.
 
 <div align="center">
-<picture><source srcset="assets/shot/folders-panel-800.webp 800w, assets/shot/folders-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/folders-panel.png" width="720" height="529" alt="Settings - Folders" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/folders-panel-800.webp 800w, assets/shot/folders-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/folders-panel.png" width="720" height="529" alt="Settings - Folders" loading="lazy" decoding="async"></picture><br>
 <sub>The folders AW Next checks on its own, and the ones you add - per-game saves or whole libraries</sub>
 </div>
 
@@ -144,7 +144,7 @@ username and the **Web API key** shown on retroachievements.org/settings. The ke
 before it is stored on this PC.
 
 <div align="center">
-<picture><source srcset="assets/shot/retroachievements-panel-800.webp 800w, assets/shot/retroachievements-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/retroachievements-panel.png" width="720" height="529" alt="Settings, Sources: the RetroAchievements switch above the account cards" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/retroachievements-panel-800.webp 800w, assets/shot/retroachievements-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/retroachievements-panel.png" width="720" height="529" alt="Settings, Sources: the RetroAchievements switch above the account cards" loading="lazy" decoding="async"></picture><br>
 <sub>The RetroAchievements switch, with the Epic and Steam account cards under it</sub>
 </div>
 

@@ -66,6 +66,9 @@ renamed in 3.9.0 and the history is kept under one file.
   accounts and seventeen help topics on today's app.
 - **Tidier Settings and game settings**, clearer drop-down lists, auto search that finds more in one
   pass, the overlay sorted by name, and the current PlayStation logo.
+- **A redesigned Game Health panel** with clearer tabs, a smooth resize between them, and a panel
+  that scrolls in a small window. Console emulator games are no longer asked for a Windows
+  executable or game files, and Xbox 360 games from XLLN show their real cover.
 
 ### Fixed
 

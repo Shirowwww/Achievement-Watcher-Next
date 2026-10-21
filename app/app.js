@@ -7899,6 +7899,9 @@ var app = {
     // The panel covers several tabs now, so it is titled after the game rather than after one of them.
     const named = gameList.find((g) => g.appid == appid);
     $('#game-config-title').text(named?.name || t('game-config-title', 'Executable configuration', "Configuration de l'exécutable"));
+    // The title band wears the same artwork as the tile that opened the panel.
+    const tileCover = self.closest('.game-box').find('.header.glow').css('background-image');
+    gameConfig[0].style.setProperty('--gc-cover', tileCover || 'none');
     applyGameConfigTabLabels();
     // Health opens first: it answers "is this game ready" without the user knowing which tab to
     // look in. The executable configuration is one click away and still loads below either way.

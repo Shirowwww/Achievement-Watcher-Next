@@ -3392,7 +3392,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
     const benefitsFromFullFallback =
-      ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured'].includes(appid.data.type) ||
+      ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'xlln', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured'].includes(appid.data.type) ||
       (appid.data.type === 'psnLibrary' && game.img.headerStandIn);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {

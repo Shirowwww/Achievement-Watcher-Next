@@ -31,7 +31,7 @@ reveal that one description. Search ignores descriptions that are still masked.
 
 <div align="center">
 <picture><source srcset="assets/shot/overlay-hidden-800.webp 800w, assets/shot/overlay-hidden.webp 1162w" sizes="(max-width: 700px) 100vw, 560px"><img src="screenshot/overlay-hidden.png" width="560" height="482" alt="The overlay list twice: hidden descriptions masked, then one revealed" loading="lazy" decoding="async"></picture><br>
-<sub>Before and after a click on "Ohhhhhh! That hurt!": only that description is revealed</sub>
+<sub>Before and after a click on "We've all been there before...": only that description is revealed</sub>
 </div>
 
 ## Search and filters

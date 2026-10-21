@@ -381,7 +381,8 @@ async function getGameData(data, lang = 'english') {
     name: spa.titleName(parsed, lang) || String(info.titleId || ''),
     appid: toAppid(info.titleId),
     system: 'xbox',
-    img: { header: list.find((entry) => entry.icon)?.icon },
+    // An achievement picture only stands in for the header until SteamGridDB's art replaces it.
+    img: { header: list.find((entry) => entry.icon)?.icon, headerStandIn: true },
     achievement: { total: list.length, list },
   };
 }

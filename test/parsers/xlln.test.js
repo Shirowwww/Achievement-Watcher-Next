@@ -120,6 +120,9 @@ process.env.LOCALAPPDATA = path.join(temp, 'LocalAppData');
     assert.ok(first.icon.startsWith('file:///'), 'the embedded icon is extracted to the cache');
     assert.ok(fs.existsSync(path.join(temp, 'icons', SAMPLE_TITLE_ID_HEX, '100.png')), 'and written where the app and the Watchdog share it');
 
+    assert.strictEqual(game.img.header, first.icon);
+    assert.strictEqual(game.img.headerStandIn, true, 'an achievement icon is only a stand-in until real library art arrives');
+
     assert.strictEqual(secret.hidden, 1, 'the secret achievement keeps its flag');
     assert.strictEqual(secret.icon, '', 'an achievement whose icon the game does not ship simply has none');
 

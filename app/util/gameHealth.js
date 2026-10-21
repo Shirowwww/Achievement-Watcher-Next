@@ -163,6 +163,12 @@ function readableWithoutInstall(signals) {
   return num(signals.achievements && signals.achievements.unlocked) > 0;
 }
 
+// A console emulator's watcher reads the emulator's own trophy folder: the game has no Windows
+// executable, and where its image sits says nothing about whether unlocks are seen.
+function followedByEmulatorWatcher(signals) {
+  return signals.processTracking === false && !signals.officialPlatform;
+}
+
 function installCheck(signals) {
   const { gameDir, gameDirExists, installed } = signals;
   const readable = readableWithoutInstall(signals);
@@ -174,6 +180,7 @@ function installCheck(signals) {
   // An official library reads unlocks from the account, so an uninstalled game there loses
   // nothing but play time: a fact to show, not a fault to fix.
   if (signals.officialPlatform) return check('install', LEVEL.INFO, { params: { notInstalled: true }, actions: [ACTION.CHOOSE_EXE] });
+  if (followedByEmulatorWatcher(signals)) return null;
   if (installed || readable) return check('install', LEVEL.WARN, { actions: [ACTION.CHOOSE_EXE] });
   return check('install', LEVEL.FAIL, { blocking: true, actions: [ACTION.CHOOSE_EXE] });
 }
@@ -184,7 +191,7 @@ function executableCheck(signals) {
   if (exe && !exeExists) return check('executable', LEVEL.FAIL, { params: { path: exe }, actions: [ACTION.CHOOSE_EXE] });
   // No executable is only worth reporting once AW Next knows where to look for one. An official
   // library launches its own games, and a RetroAchievements one is a ROM with no executable at all.
-  if (!gameDir || signals.officialPlatform) return null;
+  if (!gameDir || signals.officialPlatform || followedByEmulatorWatcher(signals)) return null;
   return check('executable', LEVEL.WARN, { actions: [ACTION.CHOOSE_EXE] });
 }
 

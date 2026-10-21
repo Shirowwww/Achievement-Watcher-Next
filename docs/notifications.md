@@ -7,7 +7,7 @@ On Linux, the notification is the desktop's own (GNOME or KDE), and the overlay 
 Do Not Disturb and the Priority notifications switch are covered in [Supported desktops](linux.md#supported-desktops).
 
 <div align="center">
-<picture><source srcset="assets/shot/notifications-panel-800.webp 800w, assets/shot/notifications-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notifications-panel.png" width="720" height="529" alt="Settings - Notification"></picture><br>
+<picture><source srcset="assets/shot/notifications-panel-800.webp 800w, assets/shot/notifications-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/notifications-panel.png" width="720" height="529" alt="Settings - Notification"></picture><br>
 <sub>One delivery mode, one preset - Automatic handles the rest</sub>
 </div>
 
@@ -23,7 +23,7 @@ Do Not Disturb and the Priority notifications switch are covered in [Supported d
 The main library window may stay closed in every mode: the background tracker handles delivery.
 
 <div align="center">
-<picture><source srcset="assets/shot/notification-popup.webp 598w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup.png" width="440" height="125" alt="An unlock popup" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/notification-popup.webp 594w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup.png" width="440" height="126" alt="An unlock popup" loading="lazy" decoding="async"></picture><br>
 <sub>The overlay popup, drawn by the selected preset with the game's own artwork</sub>
 </div>
 
@@ -211,7 +211,7 @@ trophies left.
 </div>
 
 <div align="center">
-<picture><source srcset="assets/shot/notification-popup-trophy.webp 598w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup-trophy.png" width="440" height="125" alt="An unlock popup drawn in the gold style" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/notification-popup-trophy.webp 594w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup-trophy.png" width="440" height="126" alt="An unlock popup drawn in the gold style" loading="lazy" decoding="async"></picture><br>
 <sub>A gold unlock in the AW Next preset</sub>
 </div>
 
@@ -321,7 +321,7 @@ clip instead of writing near-identical copies.
 | Sound | Game only, or the whole PC | Game only |
 
 <div align="center">
-<picture><source srcset="assets/shot/video-clip-panel-800.webp 800w, assets/shot/video-clip-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/video-clip-panel.png" width="720" height="529" alt="Settings, Notification: the Video clip section with its on/off switch" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/video-clip-panel-800.webp 800w, assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/video-clip-panel.png" width="720" height="529" alt="Settings, Notification: the Video clip section with its on/off switch" loading="lazy" decoding="async"></picture><br>
 <sub>The Video clip section sits at the bottom of the Notification tab and is off until you turn it on</sub>
 </div>
 

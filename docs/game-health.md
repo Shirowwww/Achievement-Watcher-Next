@@ -11,7 +11,7 @@ position, sound and scale - see
 [Per-game behavior](notifications.md#per-game-behavior).
 
 <div align="center">
-<picture><source srcset="assets/shot/game-health-800.webp 800w, assets/shot/game-health.webp 874w" sizes="(max-width: 700px) 100vw, 620px"><img src="screenshot/game-health.png" width="620" height="512" alt="Game Health panel showing a Needs attention state, its checks and the repairs that apply"></picture><br>
+<picture><source srcset="assets/shot/game-health-800.webp 800w, assets/shot/game-health.webp 903w" sizes="(max-width: 700px) 100vw, 620px"><img src="screenshot/game-health.png" width="620" height="557" alt="Game Health panel showing a Needs attention state, its checks and the repairs that apply"></picture><br>
 <sub>One state, the reason for it, the checks behind it, and the repairs that apply</sub>
 </div>
 

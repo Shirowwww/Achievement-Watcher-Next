@@ -22,7 +22,7 @@ are in `~/.config/Achievement Watcher Next/logs`.
 ## Open logs and local data
 
 <div align="center">
-<picture><source srcset="assets/shot/diagnostics-panel-800.webp 800w, assets/shot/diagnostics-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/diagnostics-panel.png" width="720" height="529" alt="Settings - Advanced, diagnostics"></picture><br>
+<picture><source srcset="assets/shot/diagnostics-panel-800.webp 800w, assets/shot/diagnostics-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/diagnostics-panel.png" width="720" height="529" alt="Settings - Advanced, diagnostics"></picture><br>
 <sub>App/runtime versions and quick access to logs, data and update checks</sub>
 </div>
 

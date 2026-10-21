@@ -15,7 +15,7 @@ Practical guides for setup, daily use and maintenance.
 
 [Home](index.html) · [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) · [Preset gallery](gallery/) · [Theme gallery](gallery/themes/) · [Changelog](changelog.md) · [Security](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) · [Report an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
 
-<picture><source srcset="assets/shot/home-800.webp 800w, assets/shot/home.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/home.png" width="800" height="493" alt="The AW Next library"></picture>
+<picture><source srcset="assets/shot/home-800.webp 800w, assets/shot/home.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/home.png" width="800" height="492" alt="The AW Next library"></picture>
 
 </div>
 

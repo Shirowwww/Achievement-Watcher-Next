@@ -22,7 +22,7 @@ The Linux steps and the desktop details are in [Linux and the Steam Deck](linux.
 ## First launch
 
 <div align="center">
-<picture><source srcset="assets/shot/onboarding-dialog-800.webp 800w, assets/shot/onboarding-dialog.webp 1250w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/onboarding-dialog.png" width="720" height="475" alt="First-run guide, choosing the language and the Simple or Advanced interface"></picture><br>
+<picture><source srcset="assets/shot/onboarding-dialog-800.webp 800w, assets/shot/onboarding-dialog.webp 1280w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/onboarding-dialog.png" width="720" height="475" alt="First-run guide, choosing the language and the Simple or Advanced interface"></picture><br>
 <sub>Six steps: basics, profile, games, sources, look and alerts, and a final recap</sub>
 </div>
 
@@ -47,7 +47,7 @@ The first-run guide asks for the main choices needed to populate the library:
   mode, video clips and the in-game overlay.
 
 <div align="center">
-<picture><source srcset="assets/shot/onboarding-ready-dialog-800.webp 800w, assets/shot/onboarding-ready-dialog.webp 1250w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/onboarding-ready-dialog.png" width="720" height="475" alt="The last step of the first-run guide, with the recap and the Good to know cards" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/onboarding-ready-dialog-800.webp 800w, assets/shot/onboarding-ready-dialog.webp 1280w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/onboarding-ready-dialog.png" width="720" height="475" alt="The last step of the first-run guide, with the recap and the Good to know cards" loading="lazy" decoding="async"></picture><br>
 <sub>The last step: each choice with its Change button, then one card per feature worth knowing about</sub>
 </div>
 
@@ -61,7 +61,7 @@ The interface comes in two sizes. Pick one in the first-run guide, and change it
 from the **Interface** control at the top of **Settings**.
 
 <div align="center">
-<picture><source srcset="assets/shot/settings-panel-800.webp 800w, assets/shot/settings-panel.webp 960w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/settings-panel.png" width="720" height="529" alt="AW Next settings" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/settings-panel-800.webp 800w, assets/shot/settings-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/settings-panel.png" width="720" height="529" alt="AW Next settings" loading="lazy" decoding="async"></picture><br>
 <sub>The Interface control sits beside the panel title; the search field filters every tab at once</sub>
 </div>
 
@@ -91,7 +91,7 @@ playtime and last session. The choice is saved, and every view keeps the same ca
 context menu.
 
 <div align="center">
-<picture><source srcset="assets/shot/library-views-800.webp 800w, assets/shot/library-views.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/library-views.png" width="800" height="493" alt="The Details library view with latest achievement, last session and playtime" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/library-views-800.webp 800w, assets/shot/library-views.webp 1280w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/library-views.png" width="800" height="492" alt="The Details library view with latest achievement, last session and playtime" loading="lazy" decoding="async"></picture><br>
 <sub>The Details view: latest achievement, last session and playtime for every game at a glance</sub>
 </div>
 
@@ -127,7 +127,7 @@ the button's menu opens the editor, which is also where a collection is deleted;
 the library.
 
 <div align="center">
-<picture><source srcset="assets/shot/collection-editor.webp 552w" sizes="(max-width: 700px) 100vw, 360px"><img src="screenshot/collection-editor.png" width="360" height="307" alt="The collection editor, with name, colour, icon and image" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/collection-editor.webp 550w" sizes="(max-width: 700px) 100vw, 360px"><img src="screenshot/collection-editor.png" width="360" height="337" alt="The collection editor, with name, colour, icon and image" loading="lazy" decoding="async"></picture><br>
 <sub>The collection editor</sub>
 </div>
 
@@ -142,7 +142,7 @@ The arrow beside that button folds the profile header into one row of avatar, na
 leaves the room to the library; **Settings → Appearance → Profile** holds the same choice.
 
 <div align="center">
-<picture><source srcset="assets/shot/stats-overview-800.webp 800w, assets/shot/stats-overview.webp 1250w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-overview.png" width="800" height="520" alt="The Library stats panel: overall completion, unlocked and locked counts, average per game and playtime" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/stats-overview-800.webp 800w, assets/shot/stats-overview.webp 1228w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-overview.png" width="800" height="514" alt="The Library stats panel: overall completion, unlocked and locked counts, average per game and playtime" loading="lazy" decoding="async"></picture><br>
 <sub>The overview: completion, counts, average per game and playtime</sub>
 </div>
 
@@ -153,7 +153,7 @@ its rarity, with the thresholds listed under the bar (they follow the rarity set
 **Rarest achievements** the hardest ones you hold, and **All achievements** opens the complete list.
 
 <div align="center">
-<picture><source srcset="assets/shot/stats-trophies-800.webp 800w, assets/shot/stats-trophies.webp 1250w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-trophies.png" width="800" height="520" alt="The trophy counts, the platinum games, the rarest achievements and the per-platform table" loading="lazy" decoding="async"></picture><br>
+<picture><source srcset="assets/shot/stats-trophies-800.webp 800w, assets/shot/stats-trophies.webp 1228w" sizes="(max-width: 700px) 100vw, 800px"><img src="screenshot/stats-trophies.png" width="800" height="514" alt="The trophy counts, the platinum games, the rarest achievements and the per-platform table" loading="lazy" decoding="async"></picture><br>
 <sub>Trophies, platinum games, rarest unlocks and the totals per platform</sub>
 </div>
 

@@ -188,6 +188,20 @@ test('a game with no gameIndex entry is only flagged when the process monitor is
   assert.equal(checkFor(pc, 'tracking').level, LEVEL.WARN, 'a PC game still gets the row');
 });
 
+test('a console emulator game is never asked for a Windows executable or its game files', () => {
+  const consoleGame = { system: 'playstation', source: 'ShadPS4 Emulator', emulated: false, goldberg: null, processTracking: false, tracking: { indexed: false, binary: '' } };
+  const kyty = deriveHealth(healthyGame({ ...consoleGame, exe: '', exeExists: false }));
+  assert.equal(checkFor(kyty, 'executable'), undefined, 'the emulator runs, the game has no exe of its own');
+  assert.equal(kyty.state, STATE.READY);
+
+  const noFolder = deriveHealth(healthyGame({ ...consoleGame, gameDir: '', gameDirExists: false, installed: false, exe: '', exeExists: false }));
+  assert.equal(checkFor(noFolder, 'install'), undefined, 'the trophy folder is read whatever the game image is');
+  assert.equal(noFolder.state, STATE.READY);
+
+  const pc = deriveHealth(healthyGame({ exe: '', exeExists: false }));
+  assert.equal(checkFor(pc, 'executable').level, LEVEL.WARN, 'a PC game still gets the row');
+});
+
 test('a non-Goldberg emulator is never asked for a steam_settings folder', () => {
   // A CODEX/OnlineFix/SmartSteamEmu game keeps its unlocks elsewhere. The caller proves whether
   // Goldberg is in play; without that proof there must be no emulator verdict at all.

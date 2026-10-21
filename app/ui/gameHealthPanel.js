@@ -147,7 +147,27 @@ async function loadGameNotificationSettings(appid) {
   }
 }
 
+/*
+  The panel is centred, so a change of height would jump both edges at once. Its height follows its
+  content through a CSS transition instead: a tab switch, a report arriving, Technical details
+  unfolding. The parts are sized by their own content, never by the box, so this cannot loop.
+*/
+let gameConfigHeightObserver = null;
+function followGameConfigHeight() {
+  const box = document.querySelector('#game-config .box');
+  if (gameConfigHeightObserver || !box || typeof ResizeObserver === 'undefined') return;
+  const parts = [...box.children];
+  gameConfigHeightObserver = new ResizeObserver(() => {
+    const natural = parts.reduce((sum, el) => sum + el.offsetHeight, 0);
+    if (!natural) return;
+    const borders = getComputedStyle(box).boxSizing === 'border-box' ? box.offsetHeight - box.clientHeight : 0;
+    box.style.height = `${natural + borders}px`;
+  });
+  parts.forEach((el) => gameConfigHeightObserver.observe(el));
+}
+
 function setGameConfigView(view) {
+  followGameConfigHeight();
   $('#game-config-tabs button').each(function () {
     const active = $(this).attr('data-gc-view') === view;
     $(this).toggleClass('active', active).attr('aria-selected', String(active));
@@ -155,6 +175,7 @@ function setGameConfigView(view) {
   $('#game-config .content').each(function () {
     $(this).toggleClass('active', $(this).attr('data-view') === view);
   });
+  $('#game-config').attr('data-gc-view', view);
   // Save belongs to the executable form. The other views either report state or auto-save.
   const editing = view === 'exe-config';
   $('#btn-game-config-save').toggle(editing);
@@ -885,6 +906,21 @@ function paintGameHealth(report) {
   root.find('.gh-copy').html(`<i class="fas fa-copy"></i> ${escapeHtml(t('gh-copy', 'Copy', 'Copier'))}`);
   root.find('.gh-technical-dump').text(JSON.stringify(report.technical, null, 2));
   paintGameHealthVerified(root, report);
+  mirrorGameHealthState();
+}
+
+// The state chip is also worn on the panel's title band, where it is seen whatever is scrolled.
+function mirrorGameHealthState() {
+  const chip = $('#game-health .gh-state');
+  const mirror = $('#game-config-state');
+  const changed = mirror.attr('data-state') !== chip.attr('data-state');
+  mirror.attr('data-state', chip.attr('data-state')).html(chip.html());
+  // Replays the chip's entrance only when the verdict itself changed.
+  if (changed) {
+    mirror.removeClass('is-fresh');
+    void mirror[0].offsetWidth;
+    mirror.addClass('is-fresh');
+  }
 }
 
 /*
@@ -971,6 +1007,7 @@ function showGameHealthChecking() {
   root.find('.gh-explanation').text('');
   root.find('.gh-checks').empty();
   root.find('.gh-actions').empty();
+  mirrorGameHealthState();
 }
 
 /*
