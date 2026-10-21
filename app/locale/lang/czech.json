@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importovat mezipaměť oznámení",
-        "description": "Importovat mezipaměť Watchdogu jako další zdroj úspěchů"
+        "name": "Zapamatovat viděné úspěchy",
+        "description": "Ponechá hry bez uložené pozice, s úspěchy, které AW zaznamenal"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

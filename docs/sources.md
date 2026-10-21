@@ -178,7 +178,7 @@ Use `cheevos_visibility_mastery` the same way for the mastery pop-up.
 | **Dead Space 2 MarkerPatch, Alice: Madness Returns MadnessPatch** | A Steam copy with the mod installed is found on its own. Any other copy: add the game folder under **Settings → Folders** (a folder inside it, such as `Binaries\Win32`, is taken as the game folder), or let **Smart find** look through your game libraries. The achievement list is built from the mod's own texts and images, and the unlocks it saves are notified live. Each has its own source switch, and nothing is read while the mod's `AchievementSupport` is turned off. |
 | **PC ports** | *The Legend of Zelda: Link's Awakening DX HD* (LADXHD Updated). Add the game folder under **Settings → Folders**. The 110 achievements, their texts in the game's languages and their pictures come from the install itself. Unlocks are read from `%LOCALAPPDATA%\Zelda_LA\achievements` (beside the game when it has a `portable.txt`); the file holds no dates, so an unlock is dated when it was seen. |
 | **FINAL FANTASY VII (2013)** | That re-release predates Steamworks achievements and keeps its 36 unlocks in an 8-byte bitfield beside its saves, found in Documents without adding the folder by hand. |
-| **Import notification cache** | Reads the background tracker's own cache as an extra source of past unlocks. |
+| **Remember seen unlocks** | Keeps a game listed after its save is gone, with the unlocks the background tracker saw. |
 | **Manually added games** | A game added from a title and executable, with an optional platform and Steam AppID - see [Advanced tools](advanced.md#add-a-game-manually). |
 
 ## Steam metadata, without an API key

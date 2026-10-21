@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importera aviseringscachen",
-        "description": "Importera cachen från Watchdog som ytterligare en prestationskälla"
+        "name": "Kom ihåg sedda prestationer",
+        "description": "Behåller spel utan sparfil, med de prestationer AW sett"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

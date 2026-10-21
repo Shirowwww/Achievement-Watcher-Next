@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Nhập bộ nhớ đệm thông báo",
-        "description": "Nhập bộ nhớ đệm của Watchdog như một nguồn thành tựu khác"
+        "name": "Ghi nhớ thành tựu đã thấy",
+        "description": "Giữ các game đã mất bản lưu, kèm thành tựu AW đã thấy"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

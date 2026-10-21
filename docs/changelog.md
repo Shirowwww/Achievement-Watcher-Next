@@ -18,182 +18,85 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
-- **Rename a game.** Right-click a game, then Game settings > Rename. The name shows everywhere,
-  from the tile to notifications and souvenir folders, and survives rescans and restores. Leave it
-  empty to undo it; covers and game matching keep the original name.
-- **Edit a game's playtime.** Right-click a game, then Achievements & playtime > Edit playtime, in
-  hours (12.5) or hours and minutes (12h30). New sessions add to it.
-- **Game titles in your language** (Settings > General, on by default). Steam games take the title
-  Steam gives them in your achievement language, such as ペルソナ５ ザ・ロイヤル in Japanese. A name you
-  set yourself always wins.
-- **Adjustable rarity thresholds.** Settings > General > Rarity thresholds stays on Default (5, 10
-  and 15% for rare tiers, 20 and 50% for trophy mode) until you pick Custom. In rare tiers the last
-  limit also decides which unlocks get the rare notification.
-- **Popup opacity** (Settings > Notification > Opacity), from 30% to fully opaque.
-- **Unlocked frame rate for video clips.** Video clip offers Unlocked (screen rate) next to 30 and
-  60 FPS: the clip follows the refresh rate of the game's monitor, 240 Hz included.
-- **PC ports of PS4 games.** Bloodborne, the Uncharted collection, God of War III Remastered,
-  MediEvil and other ports of the same runner are a new source, PS4 Recomp. Add the port's folder
-  under Folders: trophies, grades and icons come from the game dump it points to, and each trophy
-  pops a notification. Ports with their own list, such as Crash Team Racing Nitro-Fueled, need no
-  dump.
-- **Link's Awakening DX HD.** The "Updated" LADXHD build is a new source, PC Port: its 110
-  achievements show with their icons, in your language, and each unlock pops a notification. The
-  game keeps no dates, so an unlock is dated when AW sees it.
-- **SAN themes look as they did in SAN.** AW draws an imported theme with SAN's own eleven card
-  layouts, shared by SAN's author, with all its settings, pictures, fonts and sounds, one sound per
-  state included. It follows your rarity settings and exports as an `.awpreset`.
-- **Import from SAN on this PC** (Settings > Notification presets). The four themes SAN uses become
-  one preset that switches like SAN does, every other saved theme becomes its own preset, and a
-  second run refreshes them instead of adding copies.
-- **Padlock on hidden achievements** for designed presets (Rare & completion > Advanced, off by
-  default).
-- **Sony's own trophy rates.** Connect your PlayStation account in Settings > Sources (you sign in
-  on Sony's page; AW keeps only an encrypted token) and the games on that account show Sony's rate
-  for each trophy. Other games keep Exophase's.
-- **Grade and rate on PlayStation trophies**, as in "Platinum · 7.1%". An earned platinum wears a
-  platinum frame instead of the gold one.
-- **The 100% popup for live-watched games.** Xenia, recompiled ports, GOG Galaxy, Ubisoft Connect,
-  Xbox PC and the other sources AW follows live now pop the platinum when a game reaches 100%, as
-  save-file games always did.
-- **Your PlayStation library.** Once the account is connected, Settings > Sources imports your
-  PlayStation games and trophies, and refreshes them every three days in the background. A game you
-  do not own can be added by name from Sony's catalog, and removed the same way.
-- **Real PlayStation trophies on every game.** A game from Steam, Ubisoft, GOG or any other source
-  that also came out on PlayStation shows the real platinum of its PlayStation list, under its own
-  name and icon, on the game page, in the stats and in the 100% popup. In trophy mode its
-  achievements also take the real grades and DLC groups. Store lookups stay few: ten games at a
-  time, thirty a day.
-- **A sound per emulator.** Settings > Notification > Emulators picks a sound as well as a preset
-  for Xenia, RPCS3, ShadPS4 and KytyPS5 games. Recompiled PC ports follow their console.
-- **A Discord server** for questions, ideas, presets and release news. Help links to it next to the
-  forum thread, and so do the README, the website and the FAQ.
+- **PlayStation trophies.** Connect your PlayStation account in Settings > Sources (you sign in on
+  Sony's page; AW keeps only an encrypted token). Your PlayStation games and trophies are imported
+  and refreshed every three days, with Sony's own rate on each trophy; a game you do not own can be
+  added from Sony's catalog. A game from Steam, Ubisoft, GOG or any other source that also came out
+  on PlayStation shows the real platinum of its list, with its name and icon, and in trophy mode its
+  real grades and DLC groups. Trophies read as "Platinum · 7.1%", and an earned platinum wears a
+  platinum frame.
+- **The 100% popup for every source.** Xenia, recompiled ports, GOG Galaxy, Ubisoft Connect, Xbox PC
+  and the other sources AW follows live now pop the platinum at 100%, as save-file games always did.
+- **New sources.** PC ports of PS4 games (Bloodborne, the Uncharted collection, God of War III
+  Remastered and other ports of the same runner) read their trophies from the game dump they point
+  to. The "Updated" Link's Awakening DX HD build shows its 110 achievements, in your language.
+- **Your games, your way.** Rename a game or edit its playtime from its right-click menu, and Steam
+  games can take their title in your achievement language (Settings > General). A name you set
+  survives rescans and restores; covers and matching keep the original.
+- **SAN themes as they looked in SAN.** Imported themes keep SAN's eleven card layouts, pictures,
+  fonts and sounds, and Settings > Notification presets imports every theme saved on this PC in one
+  go. They export as `.awpreset`.
+- **More notification settings.** A sound per emulator next to its preset, popup opacity from 30%,
+  adjustable rarity thresholds, and a padlock on hidden achievements for designed presets.
+- **Unlocked frame rate for video clips**: the clip follows the refresh rate of the game's monitor,
+  240 Hz included.
+- **A Discord server** for questions, ideas, presets and release news, linked from Help, the README,
+  the website and the FAQ.
 
 ### Improved
 
+- **A refreshed interface.** One look across the app in Open Sans, reworked Light, OLED Black,
+  Graphite and community themes, a simpler custom theme editor, a livelier stats panel, light motion
+  that respects reduced motion, and the game's own art behind its page.
+- **Update notices you cannot miss.** The notice stays until closed and comes back after a game,
+  never during one, the tray icon wears a blue dot, and the update window lists every release you
+  skipped.
+- **Steam achievement sets.** Achievements carry Steam's own set (a DLC, a season, a TF2 class), and
+  an archived achievement no longer blocks 100% unless earned.
 - **A PlayStation game has its platinum once the platinum trophy is earned**, DLC trophies left or
-  not, as on the console. It used to wait for 100%.
-- **The current PlayStation logo** replaces the old colored one.
-- **Video clips that keep going.** Without a hardware H.264 encoder, Windows' software encoder takes
-  over (1080p, 30 FPS at most). An encoder that refuses a frame rate steps down to 60, then 30 FPS,
-  and a recorder silent for 15 seconds is restarted, waiting longer each time. A card that cannot
-  record at all is left alone until the settings change.
-- **Recompiled Xbox 360 games show up before their first achievement.** Sixteen known ports (Sonic
-  Unleashed, Blue Dragon re:Blue, Banjo-Kazooie: Nuts & Bolts reNut, Fable II and others) are listed
-  once installed. Sonic Unleashed's own save is read, every re:Blue profile counts, re:Blue's eight
-  extra achievements are listed, and a damaged executable can no longer slow the app down.
-- **KytyPS5 counts the user you play as**, not every user merged, and a game the launcher knows is
-  listed before its first trophy.
-- **Screenshot souvenirs hold the whole popup.** The shot waits until the popup has finished
-  appearing, instead of a fixed 800 ms that missed the text of some presets.
-- **Sort the overlay by name**: A to Z, Z to A, then the game's order.
-- **Steam achievement sets.** Achievements carry Steam's own set (a DLC, a season, a TF2 class). An
-  archived achievement no longer counts towards 100% unless earned, so Team Fortress 2's Replay
-  achievements no longer block its platinum. Games already in the library update at their next data
-  check.
-- **Update notices you cannot miss.** The new-version notification stays until closed and comes back
-  after a game or every few hours, never during one; until then the tray icon wears a blue dot.
-  Several versions behind, the update window lists each release you skipped, newest first.
-- **Game pages show the game's own art**: Steam's library key art under a veil, so none comes out
-  black, or the cover when there is no background.
-- **A refreshed interface.** Buttons, fields, chips and windows share one look across the app, set
-  in Open Sans. Settings choices open as drop-down lists, rare sections start folded, muted text and
-  warnings read better, and loading shows placeholders shaped like game tiles.
-- **Refreshed themes.** Light is white and light grey with soft dark text and a plum-tinted graphite
-  accent, with no more grey or blurry text. OLED Black and Graphite are neutral grey, Catppuccin,
-  Rosé Pine and Synthwave '84 take their signature colours, the corner halo is softer, and a new
-  theme fades in unless your system asks for reduced motion.
-- **A simpler custom theme editor.** The four main colours come first, the rest folds under
-  Fine-tuning, and a click on a swatch changes it. A dark-on-pale custom theme gets the Light theme's
-  shadows and status colours; existing themes keep working.
-- **A livelier stats panel**: a completion ring, tiles of different sizes and trophy medals. The
-  completion bar under your profile matches the other bars.
-- **Light motion.** Tiles slide into place, game pages open and close faster and panels fade in,
-  unless your system asks for reduced motion.
-- **Clearer game settings.** Rename, playtime and appid open a titled card, and the panel's
-  underlined tabs no longer jump.
-- **A new first-start guide.** Larger, adaptive and themed, with RetroAchievements and PlayStation
-  among the accounts, Simple mode folding the advanced choices, and six tips to close the tour.
-- **Help rewritten**: seventeen topics on today's app, from collections and clips to per-emulator
-  presets, Simple mode and OBS.
-- **Auto search finds more in one pass**, CPY saves included, and counts the games it will really
-  add.
-- **Tidier Settings.** Lighter drop-down lists that close when clicked again, More themes inside the
-  list, the Steam login under the Steam / GBE Fork card, OBS last, rarity thresholds that push each
-  other, and new collection and manual add forms.
-- **Cleaner text.** Open Sans no longer clips a "q" at small sizes, nor the first letter of a switch
-  label.
+  not, as on the console.
+- **Recompiled Xbox 360 games show up before their first achievement**: sixteen known ports, Sonic
+  Unleashed's own save and every re:Blue profile. KytyPS5 counts the user you play as and lists a
+  game before its first trophy.
+- **Video clips that keep going.** Windows' software encoder takes over without a hardware one, the
+  frame rate steps down when an encoder refuses it, and a silent recorder is restarted.
+- **Screenshot souvenirs hold the whole popup**: the shot waits until the popup has finished
+  appearing.
+- **A new first-start guide and Help rewritten**, with RetroAchievements and PlayStation among the
+  accounts and seventeen help topics on today's app.
+- **Tidier Settings and game settings**, clearer drop-down lists, auto search that finds more in one
+  pass, the overlay sorted by name, and the current PlayStation logo.
 
 ### Fixed
 
-- **Exophase rarity for PlayStation games** matches again, also for a list read in another
-  language. A PS4 game no longer takes the PS5 list of the same game (Hades), and a lookup gives up
-  after 90 seconds.
-- **The preset designer shows an imported SAN theme** right after the import.
-- **Emulator saves in the first-start guide** no longer read "None found" when games are there.
-- **Two quick unlocks both pop.** A save written less than 600 ms after another watched file was
-  skipped. Each save is now read once per change, one read at a time.
+- **Notifications.** Two quick unlocks both pop, a popup that cannot draw no longer holds the next
+  ones, popups show on the game's screen and touch the edge they are anchored to, and on Automatic
+  an unlock in a fullscreen game shows over it without taking its focus. Toast sounds no longer start
+  PowerShell, which some antivirus programs block.
 - **Trophy mode grades every achievement.** It only saw rates up to 15%, so nothing was silver.
-- **A popup that cannot draw no longer holds the next ones**: it closes at once instead of after 20
-  seconds.
-- **Popups touch the edge they are anchored to.** Most presets leave room for a shadow, which kept
-  the card up to 70 pixels short. AW measures that room once per preset, community ones included,
-  and puts the card itself on the edge, in all eight positions and at any scale.
-- **Screenshots on Windows 10** no longer fail with "Toggling the capture border is not supported".
-- **Notifications over fullscreen games.** On Automatic, an unlock in a fullscreen game shows as a
-  Windows notification over the game, with your sound and without taking its focus. Legacy
-  exclusive mode still lets nothing through; borderless mode does.
-- **Popups on the game's screen**, not the one under the mouse, with a custom position kept there.
-- **No PowerShell behind notifications.** Your own toast sound and the playtime picture no longer
-  start PowerShell, which some antivirus programs block.
-- **No stray game beside games launched through Steam.** Steam's overlay, started by a shortcut such
-  as Playnite's, is no longer filed under another game with playtime of its own.
-- **Live counters for games run through Steam.** A progress achievement of an Online-Fix release
-  played through the Friend's Pass (Little Nightmares III's toyboxes) now moves as you play.
-- **Online-Fix games read from Steam**, even when Steam did not install them or a stray emulator
-  folder sits beside them.
-- **One game, not two, beside its own hub.** A release that keeps the untouched Steam hub above the
-  build that runs (Call of Duty: Modern Warfare 4's `cod.exe` and `sp26`) is one game, under its own
-  name and cover, and no longer gets an emulator config next to a dll nothing reads.
-- **Exe names that were never read** when a version field ended off a four-byte boundary (Little
-  Nightmares III, Modern Warfare 4).
-- **No restore point on every scan.** The automatic fix backs up a setup only when it is about to
-  write.
-- **Saves redirected by a GBE or Goldberg config** (`local_save_path`, `local_save.txt`) are watched
-  where they land, even before the first save. AW's placeholder follows the redirect, an old one is
-  removed when only AW wrote to it, and a folder not created yet is a Game Health note, not a
-  warning.
-- **Half-written clips.** A clip cut short keeps the part that plays, a finished clip that could not
-  be renamed waits as `.part` until the next recording, and an unreadable leftover is deleted. The
-  recorder is no longer stopped mid-write.
-- **Recompiled Xbox 360 game screens** are darkened like the others, so the text stays readable.
-- **Covers of GOG, shadPS4 and Xenia games.** GOG shows its store artwork instead of a bare logo,
-  and a source without artwork falls back to SteamGridDB instead of an icon.
-- **The profile band on a narrower window** keeps the fold button beside the stats button and uses
-  the width it has.
-- **Broken icons stuck in the cache.** A web page or a half-downloaded file is no longer kept as an
-  icon, and one kept earlier is downloaded again.
-- **Advanced steam_settings of the wrong game.** An empty generate_emu_config run no longer takes the
-  previous game's data, and two runs for one game no longer erase each other.
-- **Steam schemas when the main endpoint is down.** AW reads Steam's new community page (October
-  2026), which gives the full schema in your language, hidden descriptions included, in one request,
-  and no longer opens a hidden browser.
-- **Progress of games never played on this PC** comes from Steam's achievements service instead of
-  the old XML profile, which showed everything locked behind private game details and failed for
-  games like Team Fortress 2. A private profile is now reported, and the Steam account settings say
-  the details must be public.
-- **ColdClient in a folder of its own** (Achievement Enabler's `_ColdClient`, or any
-  `ColdClientLoader.ini` beside `steamclient.dll`) is recognised again: no false Game Health
-  warning, and no GBE setup written beside Valve's dll.
+- **Rarity and progress data.** Exophase matches PlayStation games again, a PS4 game no longer takes
+  the PS5 list, Steam schemas come from Steam's new community page when the main endpoint is down,
+  and progress of games never played here comes from Steam's achievements service.
+- **Game detection.** Online-Fix games are read from Steam, a release that keeps the Steam hub above
+  the build that runs is one game, Steam's overlay no longer counts as a game, exe names are read
+  again, and ColdClient in its own folder is recognised.
+- **Saves redirected by a GBE or Goldberg config** are watched where they land, and the automatic fix
+  makes a restore point only when it is about to write.
+- **Half-written clips** keep the part that plays, and the recorder is no longer stopped mid-write.
+- **Covers, icons and screens.** GOG shows its store artwork, broken icons stuck in the cache are
+  downloaded again, and recompiled Xbox 360 screens are darkened like the others.
+- **The Batman, Hexagon and Pantheon popups carry their own fonts**, so their title no longer jumps
+  when a font arrives late and they keep their look offline.
+- **Smaller fixes.** Screenshots on Windows 10, the profile band on a narrow window, an imported SAN
+  theme in the preset designer, emulator saves in the first-start guide, advanced steam_settings of
+  the wrong game, and Open Sans clipping a "q".
 
 ### Compatibility
 
-- **Game Health names the games no offline emulator can record.** Microsoft's servers award Halo:
-  Campaign Evolved's achievements, so a scene crack records nothing; its panel says so from the
-  first launch and points to cs.rin.ru or online-fix.me. Only verified games are listed.
-- **online-fix's Ubisoft builds are recognised.** A folder holding online-fix's `.ofme` backups is
-  treated as online-fix, and an achievement fix there warns that online play may stop. The Crew
-  Motorfest joins the games no crack can record: Ubisoft's servers award its achievements.
+- **Game Health names the games no offline emulator can record.** Halo: Campaign Evolved and The
+  Crew Motorfest have their achievements awarded by the publisher's servers, so a crack records
+  nothing; their panel says so from the first launch. online-fix's Ubisoft builds are recognised, and
+  an achievement fix there warns that online play may stop.
 
 ## 3.12.1 - 2026-10-16
 

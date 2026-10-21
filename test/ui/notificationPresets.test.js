@@ -41,6 +41,24 @@ test('bundled notification presets contain their assets and valid inline scripts
   }
 });
 
+// A font fetched from the web arrives after the card has settled, so the text jumps on screen and a
+// souvenir can catch it in the fallback face; offline it never arrives at all.
+test('every bundled preset carries its fonts instead of fetching them', () => {
+  const presetsRoot = path.join(appRoot, 'presets');
+  for (const group of fs.readdirSync(presetsRoot)) {
+    for (const name of fs.readdirSync(path.join(presetsRoot, group))) {
+      const root = path.join(presetsRoot, group, name);
+      for (const file of fs.readdirSync(root).filter((entry) => /\.(?:html|css)$/i.test(entry))) {
+        const text = fs.readFileSync(path.join(root, file), 'utf8');
+        assert.doesNotMatch(text, /fonts\.(?:googleapis|gstatic)\.com|@import\s+url\(\s*['"]?https?:/i, `${group}/${name}/${file} loads a web font`);
+        for (const [, source] of text.matchAll(/url\(\s*['"]?((?!data:|https?:)[^'")]+\.(?:woff2?|ttf|otf))/gi)) {
+          assert.ok(fs.existsSync(path.join(root, source)), `${group}/${name}/${file} points at a missing font: ${source}`);
+        }
+      }
+    }
+  }
+});
+
 // The default library renders through ONE engine: every preset under "Default Presets" carries
 // PRESET_ENGINE verbatim, so a preset differs from its neighbours only in its stylesheet - the
 // previous library had seventeen near-copies of the same script, and the drift between them is why

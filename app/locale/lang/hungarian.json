@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Értesítési gyorsítótár importálása",
-        "description": "A Watchdog gyorsítótárának importálása újabb teljesítményforrásként"
+        "name": "Látott teljesítmények megjegyzése",
+        "description": "Megtartja a játékokat, ha a mentés eltűnt, az AW által látott teljesítményekkel"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

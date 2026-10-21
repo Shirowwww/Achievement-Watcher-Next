@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importer varselbufferen",
-        "description": "Bruk bufferen til Watchdog som en ekstra prestasjonskilde"
+        "name": "Husk sette prestasjoner",
+        "description": "Beholder spill uten lagring, med prestasjonene AW så"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

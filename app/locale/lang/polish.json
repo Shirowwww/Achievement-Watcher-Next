@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importuj pamięć podręczną powiadomień",
-        "description": "Importuj pamięć podręczną Watchdoga jako kolejne źródło osiągnięć"
+        "name": "Zapamiętuj widziane osiągnięcia",
+        "description": "Zachowuje gry bez zapisu wraz z osiągnięciami, które widział AW"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

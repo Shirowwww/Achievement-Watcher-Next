@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importer le cache de notification",
-        "description": "Importer le cache de Watchdog comme une autre source de succès"
+        "name": "Mémoire des succès vus",
+        "description": "Garde les jeux dont la sauvegarde a disparu, avec les succès vus"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

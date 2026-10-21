@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importa cache notifiche",
-        "description": "Importa la cache di Watchdog come ulteriore sorgente di obiettivi"
+        "name": "Ricorda obiettivi visti",
+        "description": "Mantiene i giochi senza salvataggio, con gli obiettivi visti da AW"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

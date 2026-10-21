@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Meldingscache importeren",
-        "description": "Importeer de cache van Watchdog als extra bron van prestaties"
+        "name": "Geziene prestaties onthouden",
+        "description": "Bewaart games zonder save, met de prestaties die AW zag"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

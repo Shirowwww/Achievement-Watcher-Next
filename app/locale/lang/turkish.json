@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Bildirim önbelleğini içe aktar",
-        "description": "Watchdog’un önbelleğini başka bir başarım kaynağı olarak içe aktar"
+        "name": "Görülen başarımları hatırla",
+        "description": "Kaydı silinen oyunları, AW’nin gördüğü başarımlarla birlikte tutar"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

@@ -1079,8 +1079,8 @@
         }
       },
       "importCache": {
-        "name": "Import notification cache",
-        "description": "Import Watchdog’s cache as another source of achievement"
+        "name": "Remember seen unlocks",
+        "description": "Keeps games whose save is gone, with the unlocks AW saw"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

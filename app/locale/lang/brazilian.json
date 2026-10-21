@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importar cache de notificações",
-        "description": "Importar a cache do Watchdog como outra fonte de conquistas"
+        "name": "Lembrar conquistas vistas",
+        "description": "Mantém jogos sem o save, com as conquistas que o AW viu"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

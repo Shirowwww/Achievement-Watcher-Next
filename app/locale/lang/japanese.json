@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "通知キャッシュをインポート",
-        "description": "Watchdog のキャッシュを別の実績ソースとしてインポートします"
+        "name": "確認した実績を記憶",
+        "description": "セーブが消えたゲームも、AW が確認した実績と共に残します"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

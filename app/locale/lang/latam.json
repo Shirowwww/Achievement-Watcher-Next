@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importar caché de notificaciones",
-        "description": "Importa la caché de Watchdog como otra fuente de logros"
+        "name": "Recordar logros vistos",
+        "description": "Conserva juegos cuya partida guardada ya no existe, con los logros que AW vio"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

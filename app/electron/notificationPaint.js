@@ -88,13 +88,16 @@ function settleProbe(limitMs) {
       return local < 0 && -local < IMMINENT_MS;
     });
 
+  // A web font still on its way swaps in later and moves every line of text it reaches.
+  const fontsLoading = () => document.fonts && document.fonts.status === 'loading';
+
   return new Promise((resolve) => {
     const started = performance.now();
     let previous = null;
     let stable = 0;
     const check = () => {
       const current = snapshot();
-      stable = current !== null && current === previous && !imminent() ? stable + 1 : 0;
+      stable = current !== null && current === previous && !imminent() && !fontsLoading() ? stable + 1 : 0;
       previous = current;
       if (stable >= STABLE_CHECKS) return resolve('settled');
       if (performance.now() - started >= limitMs) return resolve('limit');

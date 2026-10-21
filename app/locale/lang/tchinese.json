@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "匯入通知快取",
-        "description": "把 Watchdog 的快取當成另一個成就來源匯入"
+        "name": "記住已見的成就",
+        "description": "保留存檔已遺失的遊戲，以及 AW 見過的成就"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

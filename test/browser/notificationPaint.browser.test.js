@@ -133,6 +133,42 @@ test('a card still sliding in is not reported as settled', { timeout: 60000 }, a
   }
 });
 
+test('a web font still on its way holds the answer until it has swapped in', { timeout: 60000 }, async (t) => {
+  if (!shared.browser) {
+    t.skip(skipReason(shared.failures));
+    return;
+  }
+  const FONT_DELAY_MS = 1200;
+  const FONT_URL = 'https://fonts.test/slow.woff2';
+  const FACE = '700 18px Slow';
+  const font =fs.readFileSync(path.join(appDir, 'presets', 'Users Presets', 'Batman', 'fonts', 'Rajdhani-latin-700.woff2'));
+  const page = await shared.browser.newPage();
+  try {
+    await page.setRequestInterception(true);
+    page.on('request', (request) => {
+      if (request.url() === FONT_URL) {
+        setTimeout(() => request.respond({ status: 200, contentType: 'font/woff2', headers: { 'Access-Control-Allow-Origin': '*' }, body: font }), FONT_DELAY_MS);
+      } else request.continue();
+    });
+    await page.setContent(
+      `<style>
+        @font-face { font-family: Slow; font-weight: 700; font-display: swap; src: url(${FONT_URL}) format('woff2'); }
+        body { text-align: center; width: 400px; }
+        span { font: ${FACE}, 'Segoe UI', sans-serif; }
+      </style>
+      <span>${TITLE}</span>`,
+      { waitUntil: 'domcontentloaded' }
+    );
+    const started = Date.now();
+    const state = await page.evaluate(probeSource(5000));
+    assert.equal(state, 'settled');
+    assert.ok(Date.now() - started >= FONT_DELAY_MS - 100, 'answered with the fallback face still showing');
+    assert.equal(await page.evaluate((face) => document.fonts.check(face), FACE), true);
+  } finally {
+    await page.close();
+  }
+});
+
 test('a page that never shows text gives up at its limit', { timeout: 30000 }, async (t) => {
   if (!shared.browser) {
     t.skip(skipReason(shared.failures));

@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "알림 캐시 가져오기",
-        "description": "Watchdog의 캐시를 또 하나의 도전 과제 소스로 가져옵니다"
+        "name": "확인한 도전 과제 기억",
+        "description": "저장 파일이 사라진 게임을 AW가 확인한 도전 과제와 함께 유지합니다"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

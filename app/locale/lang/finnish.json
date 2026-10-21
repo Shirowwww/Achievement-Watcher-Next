@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Tuo ilmoitusvälimuisti",
-        "description": "Tuo Watchdogin välimuisti toisena saavutusten lähteenä"
+        "name": "Muista nähdyt saavutukset",
+        "description": "Säilyttää pelit, joiden tallennus on poissa, AW:n näkemine saavutuksineen"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Importér notifikationscache",
-        "description": "Importér Watchdogs cache som endnu en præstationskilde"
+        "name": "Husk sete præstationer",
+        "description": "Beholder spil, hvis gemte data er væk, med de præstationer AW så"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

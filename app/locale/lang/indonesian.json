@@ -1079,8 +1079,8 @@
       }
       },
       "importCache": {
-        "name": "Impor cache notifikasi",
-        "description": "Impor cache Watchdog sebagai sumber pencapaian tambahan"
+        "name": "Ingat pencapaian yang terlihat",
+        "description": "Simpan game yang save-nya hilang, beserta pencapaian yang dilihat AW"
       },
       "socialClub": {
         "name": "Goldberg SocialClub",

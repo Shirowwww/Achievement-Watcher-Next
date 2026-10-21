@@ -570,6 +570,7 @@ p {
     #settings .blacklist-add-row input,
     #achievement-search input[type='search'],
     #settings .emulator-login input,
+    #settings #retroachievements-connect input,
     .aw-prompt-input,
     #settings .help-search input,
     #settings .pd-file input[type='text'],
@@ -599,6 +600,7 @@ p {
     #settings .blacklist-add-row input,
     #achievement-search input[type='search'],
     #settings .emulator-login input,
+    #settings #retroachievements-connect input,
     .aw-prompt-input,
     #settings .help-search input,
     #settings .pd-file input[type='text'],
@@ -617,6 +619,7 @@ p {
     #settings .blacklist-add-row input,
     #achievement-search input[type='search'],
     #settings .emulator-login input,
+    #settings #retroachievements-connect input,
     .aw-prompt-input,
     #settings .help-search input,
     #settings .pd-file input[type='text'],
@@ -3593,6 +3596,24 @@ body.is-resizing #game-list {
   line-height: 1.3;
   color: var(--text-muted);
   min-width: 0;
+}
+
+/* One line, always: beside a three-line save note in French it used to fold "Shirowwww" under the
+   version. A narrow footer showing that note drops the product name first (the window title already
+   carries it), and only then cuts the line short. Hidden rather than removed: the loader indexes
+   this row's spans. */
+#settings .box .footer {
+  container-type: inline-size;
+}
+#settings .box .notice p {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@container (max-width: 960px) {
+  #settings .box .notice:has(~ .settings-save-state:not([data-state=''])) .notice-brand {
+    display: none;
+  }
 }
 
 /* About block: the product name is the only emphasised part, and it gets real breathing room before
