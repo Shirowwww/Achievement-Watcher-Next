@@ -297,6 +297,24 @@ async function readXml(filePath) {
 
 const asArray = (v) => (Array.isArray(v) ? v : v ? [v] : []);
 
+// US English, UK English, then the set's default file, which is English for most releases.
+const ENGLISH_FILES = ['trop_01.xml', 'trop_18.xml', 'trop.xml'];
+
+/*
+  Exophase lists trophies in English, so a list read in another language carries the English text
+  beside it, by trophy id. Empty when the list already is the English one or no English file exists.
+*/
+async function englishTrophies(xmlDir, files, baseFile) {
+  const englishFile = ENGLISH_FILES.map((name) => files.find((f) => f.toLowerCase() === name)).find(Boolean);
+  if (!englishFile || englishFile === baseFile) return new Map();
+  try {
+    const english = await readXml(path.join(xmlDir, englishFile));
+    return new Map(asArray(english.trophy).map((trophy) => [String((trophy['$'] || {}).id), { name: trophy.name || '', detail: trophy.detail || '' }]));
+  } catch {
+    return new Map();
+  }
+}
+
 module.exports.getGameData = async (dir, lang) => {
   const xmlDir = path.join(dir, 'Xml');
   const iconsDir = path.join(dir, 'Icons');
@@ -313,6 +331,7 @@ module.exports.getGameData = async (dir, lang) => {
 
   const schema = await readXml(path.join(xmlDir, baseFile));
   const trophies = asArray(schema.trophy);
+  const english = await englishTrophies(xmlDir, files, baseFile);
   // .../game_data/<CUSA>/TrophyFiles/<set> before 0.19, .../trophy/<NPWR> since.
   const gameId = path.basename(path.dirname(dir)).toLowerCase() === 'trophyfiles' ? path.basename(path.dirname(path.dirname(dir))) : path.basename(dir);
 
@@ -321,12 +340,15 @@ module.exports.getGameData = async (dir, lang) => {
     const id = parseInt(attr.id, 10);
     const pad = String(Number.isFinite(id) ? id : attr.id).padStart(3, '0');
     const icon = 'file:///' + path.join(iconsDir, `TROP${pad}.PNG`).replace(/\\/g, '/');
+    const reference = english.get(String(attr.id)) || {};
     return {
       name: Number.isFinite(id) ? id : attr.id,
       hidden: String(attr.hidden).toLowerCase() === 'yes' ? 1 : 0,
       type: ttype(attr.ttype),
       displayName: trophy.name || '',
       description: trophy.detail || '',
+      rarityName: reference.name || undefined,
+      rarityDescription: reference.detail || undefined,
       icon,
       icongray: icon,
     };
@@ -340,6 +362,8 @@ module.exports.getGameData = async (dir, lang) => {
     name: schema['title-name'] || gameId,
     appid: gameId,
     system: 'playstation',
+    // The trophy list's id, which Sony's trophy API knows the game by.
+    npCommId: /^NPWR\d{5}_\d{2}$/.test(String(schema.npcommid || '')) ? schema.npcommid : undefined,
     img: { header, headerStandIn: true },
     achievement: {
       total: list.length,

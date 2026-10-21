@@ -275,6 +275,63 @@ test('a recompiled Xbox 360 game asks Exophase in English, under each title it m
   }
 });
 
+test('emulator rates are filed as Exophase, and one filed under the old Steam label is asked again', async () => {
+  const exophase = require('../../app/parser/exophase.js');
+  const real = exophase.fetchExophaseRarity;
+  // What the matcher used to leave for a translated list: three trophies, labelled as Steam's.
+  rarity.writeRarityCache('CUSA03173', [{ name: '0', percent: 36.11 }], 'steam');
+  let asked = 0;
+  exophase.fetchExophaseRarity = async ({ achievements }) => {
+    asked += 1;
+    return achievements.map((a) => ({ name: String(a.name), percent: 50 }));
+  };
+  try {
+    const achievements = [
+      { name: 0, type: 'P', displayName: 'Bloodborne' },
+      { name: 1, type: 'G', displayName: 'Aube de Yharnam' },
+    ];
+    const entries = await rarity.getRarityEntries('CUSA03173', 'shadps4', { gameName: 'Bloodborne', achievements });
+    assert.equal(entries.length, 2);
+    assert.equal(rarity.readRarityCache('CUSA03173').source, rarity.RARITY_SOURCES.exophase);
+    await rarity.getRarityEntries('CUSA03173', 'shadps4', { gameName: 'Bloodborne', achievements });
+    assert.equal(asked, 1, 'a fresh Exophase answer is reused');
+  } finally {
+    exophase.fetchExophaseRarity = real;
+  }
+});
+
+test("a list on the PlayStation account takes Sony's own rates, and one that is not falls back to Exophase", async () => {
+  const exophase = require('../../app/parser/exophase.js');
+  const real = exophase.fetchExophaseRarity;
+  exophase.fetchExophaseRarity = async ({ achievements }) => achievements.map((a) => ({ name: String(a.name), percent: 50 }));
+  const achievements = [
+    { name: 0, type: 'P', displayName: 'Bloodborne' },
+    { name: 1, type: 'G', displayName: 'Aube de Yharnam' },
+  ];
+  const asked = [];
+  const officialTrophyRates = async (request) => {
+    asked.push(request);
+    return request.npCommId === 'NPWR05818_00'
+      ? { ok: true, entries: [{ name: '0', percent: 36.1 }, { name: '1', percent: 45.1 }, { name: '99', percent: 1 }] }
+      : { ok: false, error: 'psn-not-on-account' };
+  };
+  try {
+    const onAccount = await rarity.getRarityEntries('CUSA-psn-1', 'shadps4', { gameName: 'Bloodborne', achievements, npCommId: 'NPWR05818_00', officialTrophyRates, forceRefresh: true });
+    assert.deepEqual(onAccount, [
+      { name: '0', percent: 36.1 },
+      { name: '1', percent: 45.1 },
+    ], 'a rate for a trophy the game does not list is dropped');
+    assert.equal(rarity.readRarityCache('CUSA-psn-1').source, rarity.RARITY_SOURCES.psn);
+    assert.deepEqual(asked[0], { npCommId: 'NPWR05818_00', service: 'trophy' });
+
+    const elsewhere = await rarity.getRarityEntries('PPSA-psn-2', 'kytyps5', { gameName: 'Astro Bot', achievements, npCommId: 'NPWR40000_00', officialTrophyRates, forceRefresh: true });
+    assert.equal(elsewhere[0].percent, 50, 'Exophase answers for a list the account does not have');
+    assert.equal(asked[1].service, 'trophy2', 'a PS5 list is asked under the PS5 service');
+  } finally {
+    exophase.fetchExophaseRarity = real;
+  }
+});
+
 test('when no title names a page, Exophase search finds it, and the page that knows the most achievements wins', async () => {
   const exophase = require('../../app/parser/exophase.js');
   const real = { byName: exophase.fetchExophaseRarity, search: exophase.searchExophaseTitles, bySlug: exophase.fetchExophaseRarityBySlug };

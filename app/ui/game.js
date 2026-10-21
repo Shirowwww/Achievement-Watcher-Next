@@ -70,23 +70,32 @@ function formatRarityPercent(percent, lang) {
   return rarityPercentFormat.formatPercent(percent, lang, { maximumFractionDigits: 1 }) || String(percent);
 }
 
-// The colour a console trophy carries itself; platinum ranks with gold, as in the profile counts.
-const NATIVE_TROPHY_TIERS = { P: 'gold', G: 'gold', S: 'silver', B: 'bronze' };
+/*
+  A PlayStation trophy is graded by the game itself, so its rate never regrades it: the figure reads
+  like the console's ("Platinum · 7.1% · Very rare") and only gold and platinum keep the halo.
+*/
+function paintPlayStationTrophy(elem, figure, grade, percent, text, tiers) {
+  const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
+  const bands = typeof window.psnRarityLabels === 'function' ? window.psnRarityLabels() : {};
+  figure.text([grades[grade] || grade, text, bands[tiers.psnRarity(percent)]].filter(Boolean).join(' · '));
+  elem.addClass('ps-trophy').attr('data-trophy', grade);
+  if (grade === 'platinum' || grade === 'gold') elem.addClass('rare rarity-gold');
+}
 
 // Paint the global unlock % (rarity) onto the rendered achievement rows. `entries` is the normalized
 // [{name, percent}] shape produced by util/rarity.js, identical for Steam/Epic/GOG.
 function applyRarity(entries) {
   if (!Array.isArray(entries) || entries.length === 0) return;
-  let rarityTier = null;
+  let tiers = null;
   try {
     const remote = require('@electron/remote');
     const path = require('path');
-    rarityTier = require(path.join(remote.app.getAppPath(), 'util/rarityTiers.js')).tierFor;
+    tiers = require(path.join(remote.app.getAppPath(), 'util/rarityTiers.js'));
   } catch {
     return; // rarity is a non-essential enrichment
   }
   const grading = typeof window.rarityGrading === 'function' ? window.rarityGrading() : { mode: 'rare' };
-  const trophyMode = grading.mode === 'trophy';
+  const graded = grading.mode === 'trophy';
   const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
   const rowsByName = indexAchievementRows($);
   const lang = String((window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) || 'english');
@@ -98,14 +107,17 @@ function applyRarity(entries) {
     // Shown with the language's own decimal separator and percent placement; sorting reads the raw
     // number from the attribute, because parseFloat cannot read "84,5".
     const figure = elem.find('.stats .community span.data');
-    figure.attr('data-percent', percent).text(formatRarityPercent(percent, lang));
-
-    // A PlayStation trophy is graded by the game itself; its unlock rate only fills in the figure.
-    const native = NATIVE_TROPHY_TIERS[String(elem.find('[data-type]').first().attr('data-type') || '').toUpperCase()];
-    const graded = trophyMode || !!native;
-    const tier = native || rarityTier(percent, grading.mode, grading.thresholds);
-    elem.removeClass('rare trophy-grade rarity-gold rarity-silver rarity-bronze');
+    const text = formatRarityPercent(percent, lang);
+    figure.attr('data-percent', percent).text(text);
+    elem.removeClass('rare trophy-grade ps-trophy rarity-gold rarity-silver rarity-bronze').removeAttr('data-trophy');
     figure.removeAttr('data-grade');
+
+    const native = tiers.trophyGrade(elem.find('[data-type]').first().attr('data-type'));
+    if (native) {
+      paintPlayStationTrophy(elem, figure, native, percent, text, tiers);
+      continue;
+    }
+    const tier = tiers.tierFor(percent, grading.mode, grading.thresholds);
     if (!tier) continue;
     if (!graded || tier === 'gold') elem.addClass('rare');
     elem.addClass('rarity-' + tier);
@@ -159,7 +171,14 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
   const pending =
     source === 'steam-bridge' && context && context.steamAppId
       ? rarity.getSteamBridgeRarity(appid, context.steamAppId, context.names || achievements.map((a) => a && a.name), {})
-      : rarity.getRarityEntries(appid, source, { gameName, gameNames: context && context.gameNames, achievements });
+      : rarity.getRarityEntries(appid, source, {
+          gameName,
+          gameNames: context && context.gameNames,
+          achievements,
+          npCommId: context && context.npCommId,
+          // The main process holds the PlayStation token; it answers "not connected" when there is none.
+          officialTrophyRates: (list) => require('electron').ipcRenderer.invoke('psn:trophy-rates', list),
+        });
   pending
     .then((entries) => {
       if (request !== rarityRequest) return;
@@ -272,17 +291,21 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       // the library. Everything else that reads it means "the game currently on screen" too.
       $('#achievement .wrapper > .header').removeAttr('data-appid').removeAttr('data-source');
 
+      // Leaving sinks the page and fades the game's picture with it (app.css), so the library comes
+      // back without the backdrop snapping away or an empty frame between the two views.
+      $('body').addClass('is-leaving-game');
       $('#achievement')
+        .addClass('is-leaving')
         .fadeOut(200, function () {
-          setTimeout(() => {
-            $('body').removeAttr('style');
-            $('.achievement-list > .header .sort-ach .sort').removeClass('show active');
-            $('#home').fadeIn(260, function () {
-              self.css('pointer-events', 'initial');
-            });
-          }, 60);
-        })
-        .scrollTop(0);
+          $(this).removeClass('is-leaving').scrollTop(0);
+          $('body').removeAttr('style').removeClass('is-leaving-game');
+          $('.achievement-list > .header .sort-ach .sort').removeClass('show active');
+          $('#home').addClass('is-returning');
+          $('#home').fadeIn(240, function () {
+            $(this).removeClass('is-returning');
+            self.css('pointer-events', 'initial');
+          });
+        });
     });
 
     /*

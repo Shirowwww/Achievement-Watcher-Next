@@ -138,6 +138,19 @@ function makeGpdBuffer() {
     assert.strictEqual(byId[1].type, 'G');
     assert.strictEqual(byId[2].hidden, 1);
     assert.ok(byId[0].icon.endsWith('Icons/TROP000.PNG'));
+    assert.strictEqual(byId[0].rarityName, undefined, 'an English list needs no English beside it');
+  });
+
+  await test('shadps4.getGameData carries the English text beside a translated list', async () => {
+    const { trophyDir } = makeShadPs4Game();
+    fs.writeFileSync(
+      path.join(trophyDir, 'Xml', 'TROP_02.XML'),
+      `<trophyconf><title-name>Mon jeu PS4</title-name><trophy id="0" hidden="no" ttype="P"><name>Platine</name><detail>Tout obtenir</detail></trophy><trophy id="1" hidden="no" ttype="G"><name>Or un</name><detail>Faire de l'or</detail></trophy></trophyconf>`,
+      'utf8'
+    );
+    const game = await shadps4.getGameData(trophyDir, 'french');
+    const [platinum] = game.achievement.list;
+    assert.deepStrictEqual([platinum.displayName, platinum.rarityName, platinum.rarityDescription], ['Platine', 'Platinum', 'Get all']);
   });
 
   await test('shadps4.getAchievements reads unlockstate + timestamp from the XML', async () => {

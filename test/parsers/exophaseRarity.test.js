@@ -90,3 +90,70 @@ test('slug candidates cover ps3/psn and ps4 suffixes', () => {
   assert.ok(xenia.includes('halo-3'));
   assert.ok(!xenia.includes('halo-3-ps3'));
 });
+
+// The shape of a real trophy page (bloodborne-ps4): the rate sits on the card itself and the grade
+// is the trophy icon's class.
+const trophyCard = (title, description, average, grade) => `
+  <li class="col-12 locked t0 award secret" data-award-id="1" data-average="${average}">
+    <div class="award-left"><img class="award-image trophy-image" src="/a.png" /></div>
+    <div class="award-details snippet">
+      <div class="award-title"><a href="#">${title}</a></div>
+      <div class="award-description"><p>${description}</p></div>
+    </div>
+    <div class="award-points text-center"><i class="exo-icon icon-collection-trophies exo-icon-trophy-${grade}"></i></div>
+    <div class="award-average text-center"><span class="tippy" data-tippy-content="Uncommon (114.00 EXP)">${average}% (114.00)</span></div>
+  </li>`;
+
+test('a trophy card gives its own rate and its grade', () => {
+  const html = `<ul>${trophyCard('Bloodborne', 'All trophies acquired. Hats off!', '36.11', 'platinum')}${trophyCard('Cainhurst', 'Visit Cainhurst.', '62.60', 'silver')}</ul>`;
+  const items = exophase.extractAchievementsFromHtml(html, 'https://www.exophase.com/game/bloodborne-ps4/trophies/');
+  assert.deepEqual(
+    items.map((item) => [item.title, item.rarityPct, item.grade]),
+    [
+      ['Bloodborne', 36.11, 'P'],
+      ['Cainhurst', 62.6, 'S'],
+    ]
+  );
+});
+
+test('a card without a rate has none, whatever numbers its text holds', () => {
+  const html = `<ul><li class="award"><div class="award-detail"><div class="award-title">Hunter</div><div class="award-description"><p>Defeat 3 bosses in 12 minutes</p></div></div></li></ul>`;
+  const [item] = exophase.extractAchievementsFromHtml(html, 'https://www.exophase.com/game/x/');
+  assert.equal(item.rarityPct, null);
+  assert.equal(item.raritySource, '');
+});
+
+// Bloodborne in French: only the trophies whose name is the same in both languages match by name.
+const frenchSet = [
+  { name: 0, type: 'P', displayName: 'Bloodborne', description: 'Tous les trophées obtenus.' },
+  { name: 1, type: 'G', displayName: 'Aube de Yharnam', description: 'Vous avez survécu à la chasse.' },
+  { name: 2, type: 'S', displayName: 'Cainhurst', description: 'Vous avez visité Cainhurst.' },
+  { name: 3, type: 'B', displayName: 'Père Gascoigne', description: 'Vous avez vaincu le père Gascoigne.' },
+];
+const englishPage = [
+  { index: 1, grade: 'P', titles: { english: 'Bloodborne' }, descriptions: { english: 'All trophies acquired. Hats off!' }, rarityPct: 36.11 },
+  { index: 2, grade: 'G', titles: { english: 'Yharnam Sunrise' }, descriptions: { english: 'You lived through the hunt.' }, rarityPct: 45.12 },
+  { index: 3, grade: 'S', titles: { english: 'Cainhurst' }, descriptions: { english: 'Visited Cainhurst.' }, rarityPct: 62.6 },
+  { index: 4, grade: 'B', titles: { english: 'Father Gascoigne' }, descriptions: { english: 'Defeated Father Gascoigne.' }, rarityPct: 92.38 },
+];
+
+test('a trophy list in the same order with the same grades is matched trophy by trophy', () => {
+  assert.deepEqual(exophase.matchExophaseRarityToAchievements(frenchSet, englishPage), [
+    { name: '0', percent: 36.11 },
+    { name: '1', percent: 45.12 },
+    { name: '2', percent: 62.6 },
+    { name: '3', percent: 92.38 },
+  ]);
+});
+
+test('the order is not trusted when a grade differs, a trophy is missing or a name points elsewhere', () => {
+  const byName = [
+    { name: '0', percent: 36.11 },
+    { name: '2', percent: 62.6 },
+  ];
+  const regraded = englishPage.map((item, at) => (at === 3 ? { ...item, grade: 'S' } : item));
+  assert.deepEqual(exophase.matchExophaseRarityToAchievements(frenchSet, regraded), byName, 'one grade apart');
+  assert.deepEqual(exophase.matchExophaseRarityToAchievements(frenchSet, englishPage.slice(0, 3)), byName, 'one award short');
+  const swapped = [englishPage[0], englishPage[2], englishPage[1], englishPage[3]].map((item, at) => ({ ...item, grade: englishPage[at].grade }));
+  assert.deepEqual(exophase.matchExophaseRarityToAchievements(frenchSet, swapped), byName, 'Cainhurst is the second award by name, the third by order');
+});

@@ -590,6 +590,7 @@ async function getGameData(data, lang = 'english') {
     name: cleanTitle(local.title) || cleanTitle(base.title) || info.title || info.npcommid || String(info.appid || ''),
     appid: String(info.appid || ''),
     system: 'playstation',
+    npCommId: info.npcommid || undefined,
     img,
     rarityTitles: [...new Set([cleanTitle(english.title), info.title].filter(Boolean))],
     achievement: { total: list.length, list },

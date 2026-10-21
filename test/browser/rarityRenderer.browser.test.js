@@ -188,17 +188,37 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
     assert.deepEqual(trophy.silver, { classes: 'achievement rarity-silver trophy-grade', grade: 'Argent' });
     assert.deepEqual(trophy.bronze, { classes: 'achievement rarity-bronze trophy-grade', grade: 'Bronze' });
 
-    // A PlayStation trophy keeps its own grade, whatever its rate says, in the rare mode too.
+    /*
+      A PlayStation trophy keeps its own grade, whatever its rate says and in either mode, and its
+      figure reads like the console's: grade, share of players, PlayStation rarity name.
+    */
     const native = await page.evaluate(() => {
       window.rarityGrading = () => ({ mode: 'rare' });
-      const row = $('#achievement li .achievement').filter(function () {
-        return this.getAttribute('data-name') === 'bronze';
+      window.trophyLabels = () => ({ platinum: 'Platine', gold: 'Or', silver: 'Argent', bronze: 'Bronze' });
+      window.psnRarityLabels = () => ({ ultraRare: 'Ultra rare', veryRare: 'Très rare', rare: 'Rare', common: 'Commun' });
+      const row = (name, type) => {
+        const el = $('#achievement li .achievement').filter(function () {
+          return this.getAttribute('data-name') === name;
+        });
+        el.find('.stats').append(`<i data-type="${type}"></i>`);
+        return el.first();
+      };
+      const bronze = row('bronze', 'B');
+      const platinum = row('quote"name', 'P');
+      window.applyRarity([
+        { name: 'bronze', percent: 2 },
+        { name: 'quote"name', percent: 7.1 },
+      ]);
+      const read = (el) => ({
+        classes: el[0].className,
+        trophy: el.attr('data-trophy'),
+        grade: el.find('span.data').attr('data-grade') || null,
+        text: el.find('span.data').text().replace(/\s+/g, ' '),
       });
-      row.find('.stats').append('<i data-type="B"></i>');
-      window.applyRarity([{ name: 'bronze', percent: 2 }]);
-      return { classes: row[0].className, grade: row.find('span.data').attr('data-grade') };
+      return { bronze: read(bronze), platinum: read(platinum) };
     });
-    assert.deepEqual(native, { classes: 'achievement rarity-bronze trophy-grade', grade: 'Bronze' }, 'a 2% bronze trophy is bronze, not a gold rarity');
+    assert.deepEqual(native.bronze, { classes: 'achievement ps-trophy', trophy: 'bronze', grade: null, text: 'Bronze · 2 % · Ultra rare' }, 'a 2% bronze trophy is bronze, not a gold rarity');
+    assert.deepEqual(native.platinum, { classes: 'achievement ps-trophy rare rarity-gold', trophy: 'platinum', grade: null, text: 'Platine · 7,1 % · Très rare' });
 
     // Once the lookup is over, a row nobody has a rate for hides its "--" instead of showing it.
     const shown = await page.evaluate(() => {

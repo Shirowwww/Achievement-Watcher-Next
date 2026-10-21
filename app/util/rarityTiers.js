@@ -52,6 +52,40 @@
     return valid ? { rareGoldMax: gold, rareSilverMax: silver, rareMax: rare } : { ...RARE_DEFAULTS };
   }
 
+  // Each mode's config keys, lowest bound first, with the limits normalize* enforce on them.
+  const BOUND_KEYS = Object.freeze({
+    rare: [
+      ['rareGoldMax', RARE_LIMITS.goldMin, RARE_LIMITS.goldMax],
+      ['rareSilverMax', RARE_LIMITS.silverMin, RARE_LIMITS.silverMax],
+      ['rareMax', RARE_LIMITS.rareMin, RARE_LIMITS.rareMax],
+    ],
+    trophy: [
+      ['trophyGoldBelow', TROPHY_LIMITS.goldMin, TROPHY_LIMITS.goldMax],
+      ['trophySilverBelow', TROPHY_LIMITS.silverMin, TROPHY_LIMITS.silverMax],
+    ],
+  });
+
+  /*
+    The bounds after one of them moved: the moved one keeps its value as far as the others leave
+    room for it, and the others are pushed to stay strictly in order, one percent apart at least.
+    Everything stays inside its limits, so the result always survives normalize*.
+  */
+  function pushBounds(mode, values, changed) {
+    const keys = BOUND_KEYS[normalizeMode(mode)];
+    const at = Math.max(0, keys.findIndex(([key]) => key === changed));
+    const out = {};
+    keys.forEach(([key, min]) => {
+      out[key] = Math.round(Number(values && values[key]));
+      if (!Number.isFinite(out[key])) out[key] = min;
+    });
+    const lowest = Math.max(...keys.slice(0, at + 1).map(([, min], i) => min + (at - i)));
+    const highest = Math.min(...keys.slice(at).map(([, , max], i) => max - i));
+    out[keys[at][0]] = Math.min(Math.max(out[keys[at][0]], lowest), highest);
+    for (let i = at + 1; i < keys.length; i++) out[keys[i][0]] = Math.min(Math.max(out[keys[i][0]], out[keys[i - 1][0]] + 1), keys[i][2]);
+    for (let i = at - 1; i >= 0; i--) out[keys[i][0]] = Math.max(Math.min(out[keys[i][0]], out[keys[i + 1][0]] - 1), keys[i][1]);
+    return out;
+  }
+
   // Both modes' bounds from an [achievement] config section, in the shape tierFor takes.
   function gradingFrom(cfg) {
     const source = cfg || {};
@@ -103,6 +137,19 @@
     return Object.values(TROPHY_GRADES).includes(key) ? key : '';
   }
 
+  // PlayStation's own four rarity names, by the share of players who earned the trophy.
+  const PSN_RARITY_BELOW = Object.freeze([
+    ['ultraRare', 5],
+    ['veryRare', 10],
+    ['rare', 20],
+  ]);
+  function psnRarity(percent) {
+    const raw = toPercent(percent);
+    if (raw === null || raw < 0) return '';
+    const band = PSN_RARITY_BELOW.find(([, below]) => raw < below);
+    return band ? band[0] : 'common';
+  }
+
   /*
     The fields a notification preset reads: the tier class to paint and the platinum flag. A trophy
     carries its colour itself, so its grade wins over any tier worked out from an unlock rate.
@@ -126,9 +173,12 @@
     normalizeMode,
     normalizeThresholds,
     normalizeRareBounds,
+    BOUND_KEYS,
+    pushBounds,
     gradingFrom,
     tierFor,
     trophyGrade,
+    psnRarity,
     notificationTier,
   };
 });

@@ -228,7 +228,9 @@ function elementLooksLikeRarityNode(el) {
 }
 
 function extractRarityPctFromCard(card) {
-  // 1) The ".award-average.text-center > span" summary row.
+  // 1) The card's own data-average, then the ".award-average.text-center > span" summary row.
+  const own = normalizeExophaseRarityPct(card.getAttribute && card.getAttribute('data-average'));
+  if (own !== null) return own;
   const average = card.querySelector('.award-average.text-center > span');
   if (average) {
     const pct = normalizeExophaseRarityPct(cleanText(average.text));
@@ -250,13 +252,17 @@ function extractRarityPctFromCard(card) {
       if (pct !== null) return pct;
     }
   }
-  // 3) Fallback: remaining card text after removing the title/description.
-  const titleEl = card.querySelector('[class*=award-title]');
-  const descEl = card.querySelector('[class*=award-description]');
-  let rest = cleanText(card.text);
-  if (titleEl) rest = rest.replace(cleanText(titleEl.text), '');
-  if (descEl) rest = rest.replace(cleanText(descEl.text), '');
-  return normalizeExophaseRarityPct(rest);
+  // No rate on the card means none: the first number left in its text could be a count or a date.
+  return null;
+}
+
+const TROPHY_GRADES = { platinum: 'P', gold: 'G', silver: 'S', bronze: 'B' };
+
+// The grade a trophy card shows through its icon class ("exo-icon-trophy-gold"); '' off trophy pages.
+function extractTrophyGradeFromCard(card) {
+  const icon = card.querySelector('[class*=exo-icon-trophy-]');
+  const match = String((icon && icon.getAttribute('class')) || '').match(/exo-icon-trophy-(platinum|gold|silver|bronze)\b/);
+  return match ? TROPHY_GRADES[match[1]] : '';
 }
 
 // The award list markup (one <li> per achievement):
@@ -296,6 +302,7 @@ function extractAchievementsFromHtml(html, baseUrl) {
       title,
       description,
       icon_url: iconUrl,
+      grade: extractTrophyGradeFromCard(card),
       rarityPct,
       raritySource: rarityPct !== null ? EXOPHASE_RARITY_SOURCE : '',
     });
@@ -510,6 +517,7 @@ async function fetchExophaseAchievementsMultiLang(options = {}) {
 
     const achievements = baseItems.map((it) => ({
       index: it.index,
+      grade: it.grade || '',
       titles: { english: it.title },
       descriptions: { english: it.description },
       icon_url: it.icon_url || '',
@@ -614,15 +622,15 @@ function buildExophaseRaritySlugCandidates(title, platform) {
 // A description shorter than this ("Win a race") is too generic to identify an achievement alone.
 const MIN_DESCRIPTION_MATCH_WORDS = 4;
 
-// Match fetched Exophase awards (titled items with rarityPct) against the game's achievement list
-// and return [{ name, percent }] keyed by the schema's own achievement ids.
-function matchExophaseRarityToAchievements(achievements, items) {
-  const keyMap = new Map();
-  const keyDupes = new Set();
-  const titleMap = new Map();
-  const titleDupes = new Set();
-  const descriptionMap = new Map();
-  const descriptionDupes = new Set();
+function indexExophaseAwards(items) {
+  const index = {
+    keyMap: new Map(),
+    keyDupes: new Set(),
+    titleMap: new Map(),
+    titleDupes: new Set(),
+    descriptionMap: new Map(),
+    descriptionDupes: new Set(),
+  };
   const register = (map, dupes, key, item) => {
     if (!key) return;
     if (map.has(key) && map.get(key) !== item) dupes.add(key);
@@ -632,11 +640,18 @@ function matchExophaseRarityToAchievements(achievements, items) {
     const titles = item?.titles || {};
     const descriptions = item?.descriptions || {};
     for (const langKey of Object.keys(titles)) {
-      register(keyMap, keyDupes, buildExophaseMatchKey(titles[langKey], descriptions[langKey] || ''), item);
-      register(titleMap, titleDupes, normalizeExophaseMatchText(titles[langKey]), item);
-      register(descriptionMap, descriptionDupes, normalizeExophaseMatchText(descriptions[langKey]), item);
+      register(index.keyMap, index.keyDupes, buildExophaseMatchKey(titles[langKey], descriptions[langKey] || ''), item);
+      register(index.titleMap, index.titleDupes, normalizeExophaseMatchText(titles[langKey]), item);
+      register(index.descriptionMap, index.descriptionDupes, normalizeExophaseMatchText(descriptions[langKey]), item);
     }
   }
+  return index;
+}
+
+// Match fetched Exophase awards (titled items with rarityPct) against the game's achievement list
+// and return [{ name, percent }] keyed by the schema's own achievement ids.
+function matchExophaseRarityToAchievements(achievements, items) {
+  const { keyMap, keyDupes, titleMap, titleDupes, descriptionMap, descriptionDupes } = indexExophaseAwards(items);
 
   const list = Array.isArray(achievements) ? achievements : [];
   const descriptionCount = new Map();
@@ -645,7 +660,7 @@ function matchExophaseRarityToAchievements(achievements, items) {
     if (key) descriptionCount.set(key, (descriptionCount.get(key) || 0) + 1);
   }
 
-  const out = [];
+  const byName = new Map();
   for (const ach of list) {
     if (!ach || ach.name == null) continue;
     const title = getSchemaLocalizedTextForRarity(ach.displayName);
@@ -669,11 +684,41 @@ function matchExophaseRarityToAchievements(achievements, items) {
         match = descriptionMap.get(descriptionKey) || null;
       }
     }
-    const percent = normalizeExophaseRarityPct(match?.rarityPct);
-    if (!match || percent === null) continue;
-    out.push({ name: String(ach.name), percent });
+    if (match) byName.set(String(ach.name), match);
+  }
+
+  const byOrder = matchByTrophyOrder(list, items);
+  const agrees = byOrder && [...byName].every(([name, item]) => byOrder.get(name) === item);
+  const matches = agrees ? byOrder : byName;
+  const out = [];
+  for (const ach of list) {
+    if (!ach || ach.name == null) continue;
+    const percent = normalizeExophaseRarityPct(matches.get(String(ach.name))?.rarityPct);
+    if (percent !== null) out.push({ name: String(ach.name), percent });
   }
   return out;
+}
+
+const trophyGradeOf = (type) => {
+  const grade = String(type || '').trim().toUpperCase();
+  return Object.values(TROPHY_GRADES).includes(grade) ? grade : '';
+};
+
+/*
+  A trophy set is filed on Exophase in the console's own order, so trophy n is the n-th award on the
+  page whatever language either side is in. That holds only when both lists have the same length and
+  every grade agrees down the whole list; one difference means they are not the same set in order.
+*/
+function matchByTrophyOrder(achievements, items) {
+  const list = achievements.filter((ach) => ach && /^\d+$/.test(String(ach.name ?? '')));
+  const awards = Array.isArray(items) ? items : [];
+  if (list.length === 0 || list.length !== achievements.length || list.length !== awards.length) return null;
+  const ordered = [...list].sort((a, b) => Number(a.name) - Number(b.name));
+  const sameGrades = ordered.every((ach, at) => {
+    const grade = trophyGradeOf(ach.type);
+    return grade !== '' && grade === awards[at]?.grade;
+  });
+  return sameGrades ? new Map(ordered.map((ach, at) => [String(ach.name), awards[at]])) : null;
 }
 
 // High-level emulator rarity fetch: tries every slug candidate, then matches awards to the schema.

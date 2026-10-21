@@ -134,3 +134,33 @@ test('gradingFrom reads both modes from one config section, defaults included', 
   assert.deepEqual(grading, { mode: 'trophy', thresholds: { goldBelow: 10, silverBelow: 40, rareGoldMax: 5, rareSilverMax: 10, rareMax: 30 } });
   assert.equal(tiers.tierFor(20, 'rare', grading.thresholds), 'bronze');
 });
+
+/*
+  The custom thresholds are sliders that cannot cross: moving one pushes its neighbours so the
+  bounds stay strictly ordered (gold 10% puts silver at 11% at least), and nothing leaves its limits.
+*/
+test('a moved threshold pushes its neighbours instead of crossing them', () => {
+  const rare = { rareGoldMax: 5, rareSilverMax: 10, rareMax: 15 };
+  assert.deepEqual(tiers.pushBounds('rare', { ...rare, rareGoldMax: 10 }, 'rareGoldMax'), { rareGoldMax: 10, rareSilverMax: 11, rareMax: 15 });
+  assert.deepEqual(tiers.pushBounds('rare', { ...rare, rareGoldMax: 15 }, 'rareGoldMax'), { rareGoldMax: 15, rareSilverMax: 16, rareMax: 17 });
+  assert.deepEqual(tiers.pushBounds('rare', { ...rare, rareMax: 4 }, 'rareMax'), { rareGoldMax: 2, rareSilverMax: 3, rareMax: 4 });
+  // A value its neighbours cannot make room for stops where they run out of room.
+  assert.deepEqual(tiers.pushBounds('rare', { ...rare, rareMax: 1 }, 'rareMax'), { rareGoldMax: 1, rareSilverMax: 2, rareMax: 3 });
+  assert.deepEqual(tiers.pushBounds('rare', { ...rare, rareGoldMax: 99 }, 'rareGoldMax'), { rareGoldMax: 20, rareSilverMax: 21, rareMax: 22 });
+  // Untouched when nothing crosses.
+  assert.deepEqual(tiers.pushBounds('rare', { ...rare, rareSilverMax: 12 }, 'rareSilverMax'), { rareGoldMax: 5, rareSilverMax: 12, rareMax: 15 });
+
+  const trophy = { trophyGoldBelow: 20, trophySilverBelow: 50 };
+  assert.deepEqual(tiers.pushBounds('trophy', { ...trophy, trophyGoldBelow: 40 }, 'trophyGoldBelow'), { trophyGoldBelow: 40, trophySilverBelow: 50 });
+  assert.deepEqual(tiers.pushBounds('trophy', { ...trophy, trophySilverBelow: 10 }, 'trophySilverBelow'), { trophyGoldBelow: 9, trophySilverBelow: 10 });
+  // Every result is one the loader accepts as it is.
+  const pushed = tiers.pushBounds('rare', { rareGoldMax: 19, rareSilverMax: 3, rareMax: 3 }, 'rareGoldMax');
+  assert.deepEqual(tiers.normalizeRareBounds(pushed), pushed);
+});
+
+test('a trophy rate falls in one of the four PlayStation rarity bands', () => {
+  const bands = [0.4, 4.99, 5, 7.1, 9.99, 10, 19.9, 20, 92.38].map(tiers.psnRarity);
+  assert.deepEqual(bands, ['ultraRare', 'ultraRare', 'veryRare', 'veryRare', 'veryRare', 'rare', 'rare', 'common', 'common']);
+  assert.equal(tiers.psnRarity(null), '');
+  assert.equal(tiers.psnRarity('n/a'), '');
+});

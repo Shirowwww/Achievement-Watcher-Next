@@ -17,6 +17,7 @@ const RARITY_SOURCES = Object.freeze({
   epic: 'epic-public-achievement-percentages',
   gog: 'gog-gameplay-achievement-percentages',
   exophase: 'exophase',
+  psn: 'psn-official-trophy-rates',
 });
 
 // Sources whose native id is NOT a Steam AppID and whose rarity sidecar is seeded locally
@@ -214,6 +215,26 @@ async function fetchExophaseByTitles(platform, options) {
 
 const searchKey = (title) => String(title || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
+// The trophy service each console's lists live under in Sony's trophy API.
+const PSN_SERVICES = { rpcs3: 'trophy', shadps4: 'trophy', kytyps5: 'trophy2' };
+
+/*
+  Sony's own rates, when a PlayStation account is connected and the list is on it; [] otherwise, so
+  the caller goes on to Exophase. `officialTrophyRates` is the caller's way to ask the main process,
+  which holds the token; a rate for a trophy the game does not list is dropped.
+*/
+async function officialTrophyRates(source, options) {
+  const service = PSN_SERVICES[platformFromSource(source)];
+  if (!service || !options.npCommId || typeof options.officialTrophyRates !== 'function') return [];
+  try {
+    const answer = await options.officialTrophyRates({ npCommId: options.npCommId, service });
+    const names = new Set((Array.isArray(options.achievements) ? options.achievements : []).map((a) => String(a && a.name)));
+    return answer && answer.ok && Array.isArray(answer.entries) ? answer.entries.filter((entry) => names.has(entry.name)) : [];
+  } catch {
+    return [];
+  }
+}
+
 function fetchForSource(appid, source, options) {
   const platform = platformFromSource(source);
   if (platform) {
@@ -334,6 +355,7 @@ function resolveGameRarityContext(game, options = {}) {
 }
 
 function sourceTag(source) {
+  if (platformFromSource(source)) return RARITY_SOURCES.exophase;
   return RARITY_SOURCES[source] || RARITY_SOURCES.steam;
 }
 
@@ -386,13 +408,17 @@ function writeRarityCache(appid, entries, source) {
 async function getRarityEntries(appid, source = 'steam', options = {}) {
   const ttlMs = Number.isFinite(options.ttlMs) ? options.ttlMs : DEFAULT_TTL_MS;
   const cached = readRarityCache(appid);
-  const fresh = cached && Date.now() - cached.updatedAt < ttlMs && cached.entries.length > 0;
+  // Emulator rates once went out labelled as Steam's, from the name-only matcher that missed most
+  // of a translated list: those are asked again rather than kept for the TTL.
+  const mislabelled = cached && platformFromSource(source) && cached.source === RARITY_SOURCES.steam;
+  const fresh = cached && !mislabelled && Date.now() - cached.updatedAt < ttlMs && cached.entries.length > 0;
   if (fresh && !options.forceRefresh) return cached.entries;
 
   try {
-    const entries = await fetchForSource(appid, source, options);
+    const official = await officialTrophyRates(source, options);
+    const entries = official.length > 0 ? official : await fetchForSource(appid, source, options);
     if (entries.length > 0) {
-      writeRarityCache(appid, entries, source);
+      writeRarityCache(appid, entries, official.length > 0 ? 'psn' : source);
       return entries;
     }
   } catch {

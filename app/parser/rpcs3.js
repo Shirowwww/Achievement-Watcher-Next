@@ -76,6 +76,7 @@ module.exports.getGameData = async (dir) => {
   let result = {
     name: schema['title-name'],
     appid: schema.npcommid,
+    npCommId: schema.npcommid,
     system: 'playstation',
     // A PS3 trophy folder ships ICON0.PNG and nothing else; the library falls back to its own
     // artwork chain for the background and the portrait.

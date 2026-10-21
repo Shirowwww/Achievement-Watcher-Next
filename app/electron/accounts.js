@@ -559,6 +559,105 @@ ipcMain.handle('retroachievements:import', async (event, opts = {}) => {
   }
 });
 
+/*
+  PlayStation Network, for the official trophy rates. Sony's sign-in runs in a session kept in
+  memory only (no "persist:" partition), so the NPSSO cookie it sets never reaches the disk; it is
+  traded for tokens as soon as it appears and the session is wiped. The tokens stay in this process.
+*/
+const psnAuth = () => require(path.join(app.getAppPath(), 'util/psnAuth.js'));
+const PSN_LOGIN_PARTITION = 'psn-login';
+const PSN_POLL_MS = 1000;
+// A fresh object per window: the sign-in window and any popup Sony opens share one session.
+const psnWebPreferences = () => ({ nodeIntegration: false, contextIsolation: true, sandbox: true, partition: PSN_LOGIN_PARTITION });
+
+ipcMain.handle('psn:status', async () => {
+  try {
+    return await psnAuth().status({ userDataDir: userData });
+  } catch (err) {
+    return { connected: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:logout', async () => {
+  try {
+    await psnAuth().clear({ userDataDir: userData });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:trophy-rates', async (_event, request = {}) => {
+  try {
+    return await psnAuth().trophyRates({ npCommId: String(request.npCommId || ''), service: String(request.service || '') }, { userDataDir: userData });
+  } catch (err) {
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+let psnLoginWindow = null;
+ipcMain.handle('psn:login', async () => {
+  if (psnLoginWindow && !psnLoginWindow.isDestroyed()) {
+    psnLoginWindow.focus();
+    return { ok: false, error: 'login-already-open' };
+  }
+  const loginSession = session.fromPartition(PSN_LOGIN_PARTITION);
+  return new Promise((resolve) => {
+    let settled = false;
+    let trading = false;
+    let pollTimer = null;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      clearInterval(pollTimer);
+      if (psnLoginWindow && !psnLoginWindow.isDestroyed()) psnLoginWindow.destroy();
+      psnLoginWindow = null;
+      loginSession.clearStorageData().catch(() => {});
+      resolve(result);
+    };
+    const tryCapture = async () => {
+      if (settled || trading) return;
+      const npsso = psnAuth().npssoFromCookies(await loginSession.cookies.get({ name: 'npsso' }).catch(() => []));
+      if (!npsso) return;
+      trading = true;
+      const result = await psnAuth().signIn(npsso, { userDataDir: userData });
+      debug.log(result.ok ? '[psn] account connected' : `[psn] sign-in failed: ${result.error}`);
+      finish(result);
+    };
+
+    psnLoginWindow = new BrowserWindow({
+      width: 560,
+      height: 780,
+      title: t('connect-playstation-account', 'Connect PlayStation account', 'Connecter le compte PlayStation'),
+      parent: parentWindow(),
+      autoHideMenuBar: true,
+      show: false,
+      webPreferences: psnWebPreferences(),
+    });
+    psnLoginWindow.once('ready-to-show', () => {
+      if (psnLoginWindow && !psnLoginWindow.isDestroyed()) {
+        psnLoginWindow.show();
+        psnLoginWindow.focus();
+      }
+    });
+    // Sony's sign-in opens in the same window; a popup it asks for stays in the same session.
+    psnLoginWindow.webContents.setWindowOpenHandler(() => ({
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        parent: psnLoginWindow,
+        autoHideMenuBar: true,
+        webPreferences: psnWebPreferences(),
+      },
+    }));
+    psnLoginWindow.webContents.on('did-navigate', tryCapture);
+    psnLoginWindow.webContents.on('did-navigate-in-page', tryCapture);
+    // The sign-in can finish in a request that moves no page, so the cookie jar is also looked at.
+    pollTimer = setInterval(tryCapture, PSN_POLL_MS);
+    psnLoginWindow.on('closed', () => finish({ ok: false, error: 'window-closed' }));
+    psnLoginWindow.loadURL(psnAuth().SIGN_IN_URL).catch((err) => finish({ ok: false, error: errorCode(err) }));
+  });
+});
+
 ipcMain.handle('xbox-pc:import', async (event, opts = {}) => {
   try {
     const xboxPc = require(path.join(__dirname, '../parser/xboxPc.js'));
