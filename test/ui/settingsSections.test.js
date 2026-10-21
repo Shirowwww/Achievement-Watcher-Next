@@ -147,6 +147,12 @@ test('a profile that stored its own state keeps it and gains the new defaults on
   assert.equal(second.changed, false);
 });
 
+test('a profile stored at version 2 gains only the popup cards, not the sections it reopened', () => {
+  const result = sectionRules.resolveCollapsed(['help-quick-list'], 2);
+  assert.deepEqual([...result.keys].sort(), ['help-quick-list', 'options-notify-emulators', 'options-notify-obs', 'options-notify-progress']);
+  assert.equal(result.changed, true);
+});
+
 test('sections other screens jump to are never folded by default', () => {
   // app.js scrolls to #force-achievement-recheck and opens the Folders tab on an empty library.
   const keyByCard = new Map(allSections().map((entry) => [entry.card, keyOf(entry)]));

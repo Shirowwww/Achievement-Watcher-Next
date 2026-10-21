@@ -176,7 +176,7 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     await clickRow(page, target);
 
     const opened = await page.evaluate(() => {
-      const panel = document.querySelector('.select-menu');
+      const panel = document.querySelector('.select-menu:not(.is-closing)');
       if (!panel) return null;
       const rows = [...panel.querySelectorAll('.select-menu-option')];
       const box = panel.getBoundingClientRect();
@@ -209,7 +209,7 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     const picked = await page.evaluate(() => ({
       value: document.querySelector('#option_autoApplyMode').value,
       changes: window.changes,
-      closed: !document.querySelector('.select-menu'),
+      closed: !document.querySelector('.select-menu:not(.is-closing)'),
       focused: document.activeElement.id,
     }));
     assert.equal(picked.value, 'runtime', 'the native select must hold the picked value');
@@ -220,13 +220,13 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     // Keyboard: the keys that used to open the native popup open this one instead.
     await page.evaluate(() => document.querySelector('#option_autoApplyMode').focus());
     await page.keyboard.press('ArrowDown');
-    assert.equal(await page.evaluate(() => !!document.querySelector('.select-menu')), true, 'ArrowDown must open the panel');
+    assert.equal(await page.evaluate(() => !!document.querySelector('.select-menu:not(.is-closing)')), true, 'ArrowDown must open the panel');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('Enter');
     const byKeyboard = await page.evaluate(() => ({
       value: document.querySelector('#option_autoApplyMode').value,
       changes: window.changes,
-      closed: !document.querySelector('.select-menu'),
+      closed: !document.querySelector('.select-menu:not(.is-closing)'),
     }));
     assert.equal(byKeyboard.value, 'repair', 'the highlighted row is what Enter commits');
     assert.deepEqual(byKeyboard.changes, ['runtime', 'repair']);
@@ -239,7 +239,7 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     const afterEscape = await page.evaluate(() => ({
       value: document.querySelector('#option_autoApplyMode').value,
       changes: window.changes,
-      closed: !document.querySelector('.select-menu'),
+      closed: !document.querySelector('.select-menu:not(.is-closing)'),
     }));
     assert.equal(afterEscape.value, 'repair', 'Escape must leave the value alone');
     assert.deepEqual(afterEscape.changes, ['runtime', 'repair'], 'Escape fires no change');
@@ -249,7 +249,45 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     // running off the window.
     await clickRow(page, target);
     await page.mouse.click(5, 5);
-    assert.equal(await page.evaluate(() => !!document.querySelector('.select-menu')), false, 'a click outside closes the panel');
+    assert.equal(await page.evaluate(() => !!document.querySelector('.select-menu:not(.is-closing)')), false, 'a click outside closes the panel');
+
+    // A second click on the trigger of a settings row closes the list for good: the click that
+    // follows the press used to land on the row's cell and open it again straight away.
+    await clickRow(page, target);
+    assert.equal(await page.evaluate(() => !!document.querySelector('.select-menu:not(.is-closing)')), true, 'a click on the trigger opens the panel');
+    await clickRow(page, target);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    assert.equal(await page.evaluate(() => !!document.querySelector('.select-menu:not(.is-closing)')), false, 'a second click on the trigger closes the panel');
+
+    // Options marked data-more fold behind one row that opens them in place, the list staying open.
+    const folded = await page.evaluate(async () => {
+      const select = document.createElement('select');
+      select.style.cssText = 'position: fixed; top: 20px; left: 20px; width: 200px;';
+      document.body.appendChild(select);
+      select.innerHTML = '<option value="a">A</option><option value="b">B</option><option value="x" data-more>X</option><option value="y" data-more>Y</option><option value="c">C</option>';
+      select.dataset.moreLabel = 'More themes';
+      select.value = 'a';
+      window.awSelectMenu.open(select);
+      const panel = document.querySelector('.select-menu:not(.is-closing)');
+      // What shows of the folded rows is the height of the box that clips them.
+      const shown = () => panel.querySelector('.select-menu-extra').getBoundingClientRect().height;
+      const before = { x: shown(), more: panel.querySelector('.select-menu-more').textContent };
+      panel.querySelector('.select-menu-more').click();
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const after = { x: shown(), open: panel.isConnected && !panel.classList.contains('is-closing'), value: select.value };
+      window.awSelectMenu.close();
+      select.value = 'y';
+      window.awSelectMenu.open(select);
+      const selectedOpen = !document.querySelector('.select-menu:not(.is-closing) .select-menu-more');
+      window.awSelectMenu.close();
+      return { before, after, selectedOpen };
+    });
+    assert.equal(folded.before.x, 0, 'a data-more row starts folded');
+    assert.equal(folded.before.more, 'More themes', 'the fold row takes the select’s data-more-label');
+    assert.ok(folded.after.x > 0, 'the fold row opens the rows in place');
+    assert.equal(folded.after.open, true, 'unfolding keeps the list open');
+    assert.equal(folded.after.value, 'a', 'unfolding is not a pick');
+    assert.equal(folded.selectedOpen, true, 'a selected folded option opens the list unfolded');
 
     const longList = await page.evaluate((id) => {
       const select = document.getElementById(id);
@@ -266,7 +304,7 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
       }
       select.scrollIntoView({ block: 'center' });
       window.awSelectMenu.open(select);
-      const panel = document.querySelector('.select-menu');
+      const panel = document.querySelector('.select-menu:not(.is-closing)');
       const box = panel.getBoundingClientRect();
       const result = {
         options: select.options.length,
@@ -295,7 +333,7 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     await clickRow(page, `#${stagedLongList}`);
     await new Promise((resolve) => setTimeout(resolve, 300));
     const openedAtEnd = await page.evaluate(() => {
-      const panel = document.querySelector('.select-menu');
+      const panel = document.querySelector('.select-menu:not(.is-closing)');
       return panel && { scrollTop: panel.scrollTop, font: getComputedStyle(panel.querySelector('.select-menu-label')).fontFamily };
     });
     assert.ok(openedAtEnd, 'a long list opened on its last value must stay open');
@@ -305,14 +343,14 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     assert.match(openedAtEnd.font, /Open-Sans/, 'the panel must use the interface font, not the engine default');
 
     const panelBox = await page.evaluate(() => {
-      const box = document.querySelector('.select-menu').getBoundingClientRect();
+      const box = document.querySelector('.select-menu:not(.is-closing)').getBoundingClientRect();
       return { x: box.left + box.width / 2, y: box.top + box.height / 2 };
     });
     await page.mouse.move(panelBox.x, panelBox.y);
     await page.mouse.wheel({ deltaY: -240 });
     await new Promise((resolve) => setTimeout(resolve, 300));
     const afterWheel = await page.evaluate(() => {
-      const panel = document.querySelector('.select-menu');
+      const panel = document.querySelector('.select-menu:not(.is-closing)');
       return panel && { scrollTop: panel.scrollTop };
     });
     assert.ok(afterWheel, 'the wheel scrolls the list instead of closing it');

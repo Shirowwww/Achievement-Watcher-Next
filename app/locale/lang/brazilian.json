@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Visualização da biblioteca",
-        "description": "Escolha o layout dos cartões. Paisagem mantém o visual atual; Grade compacta, Lista e Detalhes priorizam densidade ou mais informações de atividade.",
+        "description": "Escolha o layout dos cartões. Paisagem mostra arte larga; paisagem compacta e retrato, Lista e Detalhes trocam o tamanho da arte por densidade ou por mais atividade.",
         "value": {
           "portrait": "Retrato",
           "landscape": "Paisagem",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Prata até",
-          "description": "Nos níveis raros, as conquistas até esta taxa recebem prata. Mantenha-a entre os limites de ouro e raro, ou os três voltam aos valores padrão."
+          "description": "Nas faixas de raridade, as conquistas até esta taxa recebem prata. Ela fica sempre acima do ouro e abaixo do limite de raridade: mover um controle deslizante empurra os outros."
         },
         "rareMax": {
           "name": "Raro até",
@@ -557,8 +557,13 @@
         "transport": "Integrações",
         "chromium": "Notificação Chromium",
         "watchdog": "Watchdog",
-        "test": "Teste",
-        "overlay": "Pop-up"
+        "test": "Testes",
+        "overlay": "Pop-up",
+        "overlayDisplay": "Exibição",
+        "overlayProgress": "Progresso",
+        "overlaySounds": "Sons",
+        "overlayEmulators": "Emuladores",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Algumas funcionalidades só estão disponíveis no Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Predefinição (ShadPS4)",
         "overlayPresetShadps4Desc": "Predefinição usada para notificações de ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Igual à principal",
+        "overlayEmulatorsDesc": "Jogos executados em um emulador podem ter a própria predefinição e o próprio som; os ports recompilados para PC seguem o console deles. “Igual à principal” mantém as configurações acima.",
         "overlayPosition": "Posição",
         "overlayPositionDesc": "Onde o popup overlay no jogo aparece na tela",
         "overlayScale": "Tamanho",
@@ -755,6 +761,9 @@
           "importedOnly": "Predefinição importada - exporte ou exclua aqui; não é editável pelos controles.",
           "importSan": "Importar tema SAN",
           "importSanSetup": "Importar do SAN neste PC",
+          "importMenuFile": "Arquivo de predefinição…",
+          "importMenuSan": "Tema SAN…",
+          "importMenuSanSetup": "Do SAN neste PC",
           "layer": {
             "none": "Sem personalização",
             "title": "Personalizar uma predefinição incluída"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Ajuda",
       "title": "Ajuda e dicas",
-      "intro": "Tudo o que você precisa saber - detecção, notificações, controle, overlay, temas e solução de problemas.",
+      "intro": "Tudo o que vale saber: encontrar seus jogos, notificações, emuladores, o overlay, o controle, temas e o que fazer quando algo dá errado.",
       "setupTitle": "Sua configuração atual",
       "topicsTitle": "Explorar por tópico",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Primeiros passos",
       "quick": [
-        "Adicione as pastas de salvamento/configuração em Configurações > Pastas e ative a fonte correspondente em Configurações > Fontes.",
-        "O Watchdog é executado em segundo plano - ele precisa estar ativo para as notificações em tempo real e o tempo de jogo.",
-        "Tudo (configurações, caches, logs e temas personalizados) fica em %APPDATA%\\Achievement Watcher Next.",
-        "Cada seção das configurações recolhe sob o seu cabeçalho - a seta aponta para baixo quando está aberta e para o lado quando está fechada. Suas escolhas são lembradas."
+        "Deixe a Busca inteligente procurar seus jogos em Configurações > Pastas ou adicione você mesmo uma pasta, depois ative a fonte correspondente em Configurações > Fonte.",
+        "O Watchdog roda em segundo plano. Ele precisa estar ativo para as notificações ao vivo e o tempo de jogo.",
+        "Tudo (configurações, caches, logs, temas personalizados) fica em %APPDATA%\\Achievement Watcher Next.",
+        "O controle Interface no topo das Configurações alterna entre Simples (as abas do dia a dia) e Avançado (acrescenta Steam / GBE Fork, Ubisoft / Uplay R1/R2, Avançado e opções mais profundas). Simples só oculta controles, nada é desativado.",
+        "Fechar a janela principal mantém o AW Next na bandeja do sistema, onde o acompanhamento continua. Para sair, use o menu da bandeja. Iniciar com o sistema e Minimizar para a bandeja do sistema ficam em Configurações > Geral.",
+        "O campo de busca no topo das Configurações encontra uma opção em qualquer aba. O Guia da primeira execução em Configurações > Geral reabre a configuração inicial."
       ],
-      "notifications": [
-        "Automático é o padrão: o aviso dentro do jogo quando o jogo consegue exibi-lo e uma notificação do Windows quando não, nunca os dois.",
-        "Em Configurações > Notificação ficam o preset, o som, o volume, a posição e a escala; os botões de teste disparam um aviso real.",
-        "Clique com o botão direito em um jogo > Notificação para dar a esse jogo o próprio preset, posição, som ou escala.",
-        "A captura ao desbloquear guarda uma imagem do momento em Imagens\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Estado do jogo",
-      "gameHealth": [
-        "Abra o botão de ferramentas de um jogo (canto superior direito do card) para ver se está Pronto, Requer atenção ou Sem acompanhamento.",
-        "A frase abaixo do estado explica a causa em palavras simples; as verificações abaixo mostram qual parte está com problema.",
-        "Os botões de reparo só aparecem quando o AW Next realmente pode consertar o jogo - cada um diz o que vai mudar e onde os arquivos anteriores ficam.",
-        "Detalhes técnicos traz os caminhos, contagens e códigos do emulador exatos; copie para um relatório de bug."
-      ],
-      "troubleshootTitle": "Solução de problemas",
-      "troubleshoot": [
-        "Se um jogo estiver faltando: adicione pastas, verifique novamente e confira o seletor da fonte e a lista negra.",
-        "Se as notificações não aparecerem: verifique o Assistente de foco do Windows e execute o aplicativo com os mesmos privilégios dos jogos.",
-        "Avançado > Diagnóstico abre os logs e as pastas de dados; anexe-os ao relatar um problema.",
-        "Os logs são acrescentados, então uma falha sobrevive à próxima inicialização. Cada execução começa com um marcador de sessão e um bloco [diag] (versões, caminhos, telas) - cole-o no relatório."
+      "libraryTitle": "Biblioteca e coleções",
+      "library": [
+        "Coleções: clique com o botão direito em um jogo > Coleções, marque uma ou escolha Nova coleção…. O botão de coleções ao lado de Mostrar apenas os jogos instalados passa a filtrar a biblioteca, e os números do perfil acompanham.",
+        "Editar coleção… no menu desse botão altera o nome, a cor, o ícone ou a imagem, e exclui a coleção. Os jogos continuam na sua biblioteca.",
+        "O botão redondo ao lado da taxa de conclusão abre as Estatísticas da biblioteca: conclusão, quantidade de conquistas desbloqueadas e bloqueadas, tempo de jogo, troféus, jogos com platina, conquistas mais raras e uma linha por plataforma.",
+        "Um seletor entre o campo de busca e o botão + alterna entre seis visualizações da biblioteca. Configurações > Aparência > Cartões da biblioteca define o tamanho dos cartões, o espaçamento e o que cada um mostra.",
+        "O botão + adiciona um jogo que nenhuma fonte encontra: um título e um executável, com plataforma e AppID da Steam opcionais. As execuções e o tempo de jogo são registrados, sem conquistas.",
+        "Clique com o botão direito em um jogo > Configurações do jogo > Renomear… altera o nome exibido. Conquistas e tempo de jogo > Editar tempo de jogo… corrige o total (12.5 ou 12h30)."
       ],
       "sourcesTitle": "Launchers e fontes",
       "sources": [
-        "O modo de perfil da Steam lista jogos instalados ou adquiridos, mas os desbloqueios ainda vêm dos arquivos de salvamento locais.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay e EA Desktop podem ser ativados separadamente em Fontes.",
-        "Os jogos adquiridos na Steam só contam como instalados quando o registro da Steam confirma."
+        "Steam, Epic Games e Xbox PC oferecem cada um Nenhum, Instalados ou Na biblioteca em Configurações > Fonte. Na biblioteca lista a biblioteca inteira de uma conta conectada, instalada ou não.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC e EA Desktop têm cada um o seu próprio botão em Configurações > Fonte. O EA Desktop só cobre jogos fora das pastas gerenciadas pela EA.",
+        "Os jogos da Steam que você possui só contam como instalados quando o registro da Steam confirma.",
+        "As conquistas da Steam são lidas das estatísticas que a Steam guarda neste PC, então um perfil privado funciona. Conectar uma conta é opcional: ela acrescenta jogos jogados em outro PC e jogos do Steam Family.",
+        "Um jogo salvo em um lugar incomum: adicione a pasta dele em Configurações > Pastas. Escolha a pasta que contém diretamente os salvamentos, as pastas de AppID ou a configuração do emulador, ou uma pasta de biblioteca com muitos jogos.",
+        "RetroAchievements: ative a fonte, informe seu nome de usuário e sua chave da Web API, depois pressione Importar biblioteca. As conquistas vêm da sua conta, então mantenha o RetroAchievements ativado no emulador.",
+        "No modo Simples, algumas linhas de fontes pouco usadas ficam ocultas enquanto não são usadas. Elas voltam assim que passam a importar, e Avançado sempre lista todas.",
+        "Os troféus da PlayStation mostram o grau, a parcela de jogadores que os têm e o nível de raridade da própria PlayStation. As taxas vêm da Exophase; conecte uma conta PlayStation em Configurações > Fonte para obter os números da própria Sony para os jogos dessa conta."
+      ],
+      "notifications": [
+        "Automático é o padrão: o pop-up no jogo quando o jogo consegue exibi-lo, uma notificação do Windows quando não consegue, nunca os dois.",
+        "Configurações > Notificação reúne Tipo de notificação (Automático, Notificação do Windows, Overlay no jogo ou Ambos), a predefinição, o som, o volume, a posição, a escala e a opacidade. Os botões de Teste disparam um pop-up de verdade.",
+        "Abra o botão de ferramentas de um jogo (no canto superior direito do cartão) e vá até as configurações de notificação dele para dar a esse jogo sua própria predefinição, posição, som ou escala.",
+        "Captura ao desbloquear guarda uma imagem do momento em Imagens\\Achievement Watcher Next.",
+        "Som de conquista rara, Som de 100% de conclusão e Som do progresso (modo Avançado) dão a esses pop-ups um som próprio. Aleatório escolhe um som diferente a cada vez, e você pode importar seus próprios arquivos.",
+        "Ouro, prata e bronze marcam as conquistas raras. Configurações > Geral > Exibição de raridade muda para o Modo troféus, que classifica cada conquista e mostra a platina nos jogos concluídos.",
+        "Para contadores, Marcos de progresso mostra um pop-up só em passos de 10, 25 ou 50%. Clique com o botão direito em um jogo > Silenciar notificações de progresso silencia um jogo sem mexer nas conquistas dele.",
+        "Mais dois botões em Configurações > Notificação: Notificações prioritárias deixa as conquistas passarem pelo Não perturbe (Windows 11), e Jogos do cliente Steam acrescenta o pop-up do AW Next para os jogos que a própria Steam executa."
+      ],
+      "gameHealthTitle": "Estado do jogo",
+      "gameHealth": [
+        "Clique no botão de ferramentas de um jogo (no canto superior direito do cartão), ou clique nele com o botão direito, para abrir o Estado do jogo. Ele diz se o jogo está Pronto, Requer atenção ou Sem acompanhamento.",
+        "A frase abaixo do estado explica a causa em palavras simples. As verificações abaixo mostram qual parte está com problema: arquivos do jogo, executável, dados de conquistas, configuração do emulador, acompanhamento ao vivo ou notificações.",
+        "Os botões de reparo só aparecem quando o AW Next realmente consegue corrigir aquele jogo, como Localizar o jogo, Reescrever os dados de conquistas, Restaurar o arquivo do emulador ou Monitorar este jogo. Cada um diz o que vai mudar, guarda um backup e pergunta antes.",
+        "Enviar uma notificação de teste dispara um pop-up com o nome e a arte do próprio jogo, entregue do jeito que seria de verdade.",
+        "Detalhes técnicos traz os caminhos, as contagens e os códigos do emulador exatos: pressione Copiar e cole em um relatório de bug. O ponto colorido de um cartão pode ser ocultado em Configurações > Aparência > Cartões da biblioteca."
+      ],
+      "troubleshootTitle": "Solução de problemas",
+      "troubleshoot": [
+        "Se um jogo estiver faltando: confira a fonte dele em Configurações > Fonte, execute a Busca inteligente ou Gerar configurações em Configurações > Pastas, adicione a pasta dele manualmente se precisar e tente desativar Mostrar apenas os jogos instalados.",
+        "Se as notificações não aparecerem: leia a linha Notificações no Estado do jogo, depois verifique o Não perturbe / Assistente de foco do Windows. Notificações prioritárias em Configurações > Notificação podem deixar as conquistas passarem.",
+        "Configurações > Avançado > Diagnóstico abre as pastas de logs e de dados, e Exportar logs (.zip) reúne os logs com seu nome de usuário e suas chaves ocultados. Anexe-o ao relatar um problema.",
+        "Os logs são acrescentados, então uma falha sobrevive à próxima inicialização. Cada execução começa com um marcador de sessão e um bloco [diag] (versões, caminhos, telas): cole-o em uma issue.",
+        "Um jogo parado em 0%? Isso é normal até a primeira conquista ser gravada. Se o AW Next associou a versão errada da Steam, clique com o botão direito no jogo > Definir o AppID manualmente….",
+        "O tempo de jogo não é contado? Abra o botão de ferramentas do jogo > Executável e escolha o programa que fica aberto enquanto você joga, não um launcher.",
+        "Novas conquistas de uma atualização do jogo aparecem em até 3 dias, ou na hora com Configurações > Avançado > Reverificar listas de conquistas.",
+        "Uma atualização do app falha sempre no mesmo arquivo? Configurações > Avançado > Limpar caches remove apenas arquivos que podem ser baixados de novo, nunca suas configurações ou salvamentos."
       ],
       "steamTitle": "Emuladores Steam",
       "steam": [
-        "Os salvamentos GBE/Goldberg geralmente ficam em %APPDATA%\\GSE Saves ou %APPDATA%\\Goldberg SteamEmu Saves.",
-        "Os salvamentos CODEX/RUNE costumam ficar em Public Documents\\Steam\\CODEX ou Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 e Hoodlum são detectados pelas respectivas pastas de configuração/salvamento.",
-        "A correção do emulador no menu de contexto pode adicionar arquivos do GBE Fork, esquemas de conquistas e dados de DLC.",
-        "O modo Simples é rápido; Avançado executa generate_emu_config para obter dados mais completos da Steam e pode levar vários minutos."
+        "Os salvamentos do GBE / Goldberg costumam ficar em %APPDATA%\\GSE Saves ou %APPDATA%\\Goldberg SteamEmu Saves.",
+        "Os salvamentos do CODEX / RUNE costumam ficar em Public Documents\\Steam\\CODEX ou Public Documents\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI e os emuladores Nemirtingas são lidos das próprias pastas de configuração ou de salvamento. Se um jogo não for encontrado, adicione a pasta dele em Configurações > Pastas.",
+        "Clique com o botão direito em um jogo > Emulador e ferramentas > Aplicar correção de emulador… instala o GBE Fork, monta o steam_settings (lista de conquistas e ícones) e grava o steam_appid.txt quando ele não existe. Todo arquivo substituído tem backup antes.",
+        "Em Configurações > Steam / GBE Fork, Dados de steam_settings em Simples usa a busca anônima do próprio AW Next e é rápido. Avançado executa o generate_emu_config para dados mais profundos da Steam e pode levar minutos.",
+        "Nada é gravado em uma pasta de jogo por conta própria: Corrigir automaticamente os jogos recém-detectados, Gerenciar propriedade das DLCs e Gravar nome da conta e idioma vêm todos desativados.",
+        "Diagnosticar emulador, no mesmo menu, só lê e informa. Fazer backup do GBE/Goldberg e Restaurar o último backup do GBE/Goldberg deixam um jogo como estava."
       ],
       "emulatorTitle": "Emuladores de console",
       "emulators": [
-        "Os troféus do RPCS3 são lidos em dev_hdd0\\home\\...\\trophy, perto da instalação do RPCS3.",
-        "Os troféus do shadPS4 são lidos nas pastas game_data/trophy dos dados do aplicativo; dados restantes não comprovam que ele esteja instalado.",
-        "O progresso do Xenia é lido em arquivos de perfil do Xbox, como .gpd."
+        "Os troféus do RPCS3 são lidos em dev_hdd0\\home\\...\\trophy, perto da instalação do RPCS3. Um disco virtual movido é acompanhado.",
+        "Os troféus do shadPS4 são lidos da pasta game_data dele (os arquivos XML TROP). Você pode adicionar o emulador, a pasta de usuário dele ou a própria game_data.",
+        "O progresso do Xenia é lido dos arquivos de perfil do Xbox (.gpd) e segue as pastas de armazenamento definidas na configuração dele.",
+        "Os troféus do KytyPS5 são lidos da pasta _Trophies dele, para o usuário com o qual o launcher executa o jogo.",
+        "Jogos de Xbox 360 recompilados para PC e ports de PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil e outros) são fontes próprias em Configurações > Fonte. Se algum não aparecer, adicione a pasta dele em Configurações > Pastas.",
+        "Cada console pode ter a própria predefinição de pop-up e o próprio som em Configurações > Notificação > Emuladores (modo Avançado). Os jogos de Xbox 360 recompilados seguem a escolha do Xenia, os ports de PS4 seguem a do shadPS4, e Igual à principal mantém as configurações principais."
       ],
       "controllerTitle": "Controle (gamepad)",
       "controller": [
-        "Primeiro ative Configurações > Controle; depois, Back + Start + LB abre o overlay no jogo.",
-        "LB + X ativa ou desativa a navegação dentro do overlay.",
-        "Modo de navegação: direcional/analógico esquerdo movem o foco, A confirma, B cancela, X pesquisa e Y abre as opções.",
-        "Segure LB + RB para mover o overlay com o analógico esquerdo e rolar com o direito.",
-        "Funciona com controles Xbox, PlayStation (DualShock 4 / DualSense) e Switch Pro."
+        "Em Configurações > Controle, ative Controlar o overlay no jogo com um controle (desativado por padrão); então Back + Start + LB abre o overlay no jogo.",
+        "Controlar o app com o controle (ativado por padrão) comanda o próprio AW Next: o direcional ou o analógico esquerdo movem o foco, A abre um jogo, B volta, X pesquisa, Y ou Start abre as Configurações, LB / RB trocam as abas das configurações.",
+        "Na biblioteca, RT inicia o jogo selecionado e LT abre o Estado do jogo dele.",
+        "No overlay, LB + X alterna a navegação: o direcional ou o analógico esquerdo movem o foco, A confirma, B cancela, X pesquisa, Y abre as opções.",
+        "Segure LB + RB para mover o overlay com o analógico esquerdo e rolar com o analógico direito.",
+        "Se o jogo ainda reagir aos seus botões, ative Focar o overlay ao abrir ou Enviar Esc para o jogo ao abrir com o controle (ambos desativados por padrão).",
+        "Funciona com controles Xbox, PlayStation (DualShock 4 / DualSense) e Switch Pro. Layout do controle define os nomes de botões exibidos, e cada atalho aceita de um a três botões.",
+        "O controle não é detectado? Confira primeiro no Windows (joy.cpl), verifique se a opção certa está ativada e depois tente XInput em Backend do controle."
       ],
       "overlayTitle": "Overlay no jogo",
       "overlay": [
-        "Abra-o com o atalho do overlay (Ctrl+Shift+K por padrão) ou com Back + Start + LB no controle.",
-        "Ordene por uma coluna de cada vez: Raridade, Data ou Status (crescente / decrescente / sem ordem).",
-        "Pressione / para focar a pesquisa e Esc para limpá-la ou fechar o painel de opções.",
-        "O painel da engrenagem altera o destaque, a densidade, o zoom, a opacidade e as linhas visíveis; “Usar tema do aplicativo” acompanha o tema ativo.",
-        "Cada conquista com uma taxa conhecida mostra sua raridade: cinza para comuns e ouro/prata/bronze para raras."
+        "Abra-o com o atalho do overlay (Ctrl+Shift+K por padrão) ou com Back + Start + LB no controle enquanto um jogo compatível está em execução. O atalho é definido em Configurações > Geral.",
+        "Ele lista as conquistas do jogo em execução: nome, descrição, bloqueada ou desbloqueada, data de desbloqueio e progresso. Arraste-o pelo cabeçalho.",
+        "Uma conquista oculta continua oculta até você clicar nela (ou pressionar A no controle), então nada é revelado sem querer.",
+        "Os filtros Todas, Desbloqueadas, Bloqueadas e Em andamento filtram a lista. Clique em Conquista, Raridade, Data ou Status para ordenar: crescente, decrescente e depois de volta ao normal. Uma coluna por vez.",
+        "Pressione / para focar a busca, Esc para limpá-la ou fechar o painel de opções.",
+        "O painel da engrenagem altera destaque, densidade, tamanho do ícone, zoom, opacidade e linhas visíveis. Usar o tema do aplicativo segue o tema ativo, e Restaurar padrões desfaz tudo.",
+        "Toda conquista com taxa conhecida mostra a raridade: cinza para comum, ouro/prata/bronze para rara."
       ],
       "streamTitle": "Overlay para stream (OBS)",
       "stream": [
-        "Configurações > Notificação > Fonte de navegador do OBS > Copiar link; depois adicione uma Fonte de navegador no OBS e cole-o como URL.",
-        "Defina a largura e a altura da fonte com o tamanho informado em http://127.0.0.1:8082/obs/_config: a caixa da predefinição na sua escala.",
-        "Adicione ?test=1 à URL enquanto posiciona a fonte. Ela mostra um desbloqueio de exemplo a cada dez segundos; remova-o quando terminar.",
-        "A fonte mostra o mesmo popup do overlay no jogo, e fica vazia entre desbloqueios, então não consome nada enquanto você transmite.",
-        "Ela lê o feed de notificação local, então deixe o Websocket @localhost:8082 ativado em Configurações > Notificação > Transporte."
+        "Configurações > Notificação > Fonte de navegador do OBS (modo Avançado): Pré-visualizar confere no seu navegador e Copiar link copia o endereço. No OBS, adicione uma fonte Navegador e cole-o como URL.",
+        "Qualquer largura e altura funcionam, o cartão se ajusta para preencher a caixa. Uma fonte maior fica mais nítida: dê a ela cerca do dobro do tamanho da própria predefinição (http://127.0.0.1:8082/obs/_config informa) e posicione-a pela metade do tamanho.",
+        "Acrescente ?test=1 à URL enquanto posiciona a fonte. Ela mostra uma conquista de exemplo a cada dez segundos; remova-o quando terminar.",
+        "A fonte desenha o mesmo pop-up do jogo e fica vazia entre as conquistas, então não custa nada enquanto você transmite.",
+        "Mais opções depois do endereço: ?scale=2 fixa o zoom, ?duration=8000 define quanto tempo cada cartão fica, ?sound=1 toca o som pela fonte, /obs/preset/Xbox/ usa uma predefinição qualquer que seja a do desktop.",
+        "Ela lê o feed local de notificações, então deixe Websocket @localhost:8082 ativado em Configurações > Notificação > Integrações. Só funciona neste PC, e apenas uma cópia do AW Next pode servi-lo."
+      ],
+      "souvenirsTitle": "Capturas de tela e videoclipes",
+      "souvenirs": [
+        "Configurações > Notificação > Captura ao desbloquear salva uma imagem logo depois do pop-up, com a notificação incluída, em uma subpasta por jogo. Abrir pasta leva você até lá.",
+        "Capturas HDR (Automático) corrige as cores quando o HDR do Windows está ativado. As recordações capturam o monitor principal, então jogue nele.",
+        "Videoclipe ao desbloquear (desativado até você ativar, mais abaixo em Configurações > Notificação) mantém os últimos segundos de jogo na memória e salva um MP4 em torno de cada conquista. Nada é gravado até uma conquista ser desbloqueada.",
+        "Duração do clipe (10 a 30 segundos), Formato (H.264, HEVC ou AV1), Resolução, Taxa de quadros, Qualidade e Som (Só o jogo ou PC inteiro) podem ser alterados. O H.264 toca em qualquer lugar.",
+        "O próprio codificador da placa de vídeo faz o trabalho, usando bem menos de 1% do processador. Sem um codificador H.264 por hardware, o codificador por software do Windows assume, em no máximo 1080p e 30 FPS. Um jogo muito antigo em tela cheia exclusiva pode gravar quadros pretos."
       ],
       "shortcutsTitle": "Atalhos de teclado",
       "shortcuts": [
-        "Ctrl+Shift+K (padrão): mostra ou oculta o overlay no jogo - configurável em Configurações > Geral.",
-        "Ctrl+Alt+Shift+Setas move o overlay; Ctrl+Alt+Shift+1-5 encaixa-o em uma posição predefinida.",
-        "Ctrl+Alt+Shift+C ativa ou desativa a passagem de cliques; Ctrl+F foca a pesquisa das Configurações."
+        "Ctrl+Shift+K (padrão): mostra ou oculta o overlay no jogo. Altere em Configurações > Geral.",
+        "Ctrl+Alt+Shift+setas movem o overlay; Ctrl+Alt+Shift+1-5 o encaixam em uma posição predefinida; Ctrl+Alt+Shift+C alterna o clique através.",
+        "No overlay, / foca a busca e Esc a limpa. No designer de predefinições, Ctrl+Z e Ctrl+Y desfazem e refazem.",
+        "Ctrl+F foca a busca das Configurações e Esc a limpa. F5 atualiza a biblioteca."
       ],
       "themesTitle": "Temas personalizados",
       "themes": [
-        "Personalizado começa com Steam Blue; cada camada (fundo, cabeçalho, painéis, cartões, configurações, texto, bordas e destaque) pode ser editada.",
-        "As imagens das camadas ficam sob um véu colorido com um leve desfoque fosco; os efeitos são configurados por camada.",
-        "Coloque um tema CSS em <userData>\\themes para ele aparecer no menu de temas.",
-        "O criador de predefinições pode pré-visualizar um design como uma notificação real antes de salvar, reabrir uma predefinição salva para alterá-la e excluir as que você não mantiver.",
-        "Exporte o tema que você usa como um único arquivo .awtheme, ou importe um que alguém enviou: ele é mostrado antes de instalar e depois se comporta como um tema nativo."
+        "Configurações > Aparência tem temas incluídos e todos podem ser editados: janela, barra superior, painéis, cartões, configurações, texto, bordas e destaque aceitam cada um uma cor, um gradiente ou uma imagem.",
+        "Salvar tema transforma sua edição em um tema próprio: mantenha o nome para substituí-lo, digite outro para fazer uma cópia. Redefinir tudo recoloca o tema com que você começou.",
+        "Coloque um tema CSS em <userData>\\themes e ele aparece na lista de temas.",
+        "Exportar tema… grava um arquivo .awtheme (um tema incluído precisa ser salvo antes com seu próprio nome). Importar tema… mostra uma prévia antes de instalar, e Excluir tema remove um tema importado.",
+        "Os temas feitos pela comunidade estão na galeria de temas no site do projeto, e enviar o seu exige só um arquivo."
+      ],
+      "presetsTitle": "Predefinições de pop-up",
+      "presets": [
+        "Uma predefinição é o visual do pop-up no jogo, escolhida em Configurações > Notificação > Predefinição. Ela não tem efeito quando o Tipo de notificação é Notificação do Windows.",
+        "Configurações > Presets de notificação é um designer feito de controles comuns: escolha um ponto de partida ou pressione Me surpreenda, veja a prévia ao vivo (Cartão, Comparar, Tela) e depois Criar predefinição. Nada é salvo antes disso.",
+        "Personalizar uma predefinição incluída altera só algumas coisas (fundo, cor do texto, destaque, borda, brilho, fonte, logotipo) e continua acompanhando a predefinição incluída se ela melhorar.",
+        "Editar uma predefinição reabre uma que você criou. Exportar e Importar movem uma predefinição como um arquivo .awpreset, com as imagens, as fontes e o som.",
+        "Importar > Tema SAN… lê um tema do Steam Achievement Notifier (um arquivo .san), e Importar > Do SAN neste PC traz os temas que o SAN já usa. Eles mantêm o visual e os sons do SAN."
       ],
       "tipsTitle": "Dicas e truques",
       "tips": [
-        "Clique com o botão direito no cartão de um jogo para ações rápidas: correção do emulador, conquistas, página da Steam, instalação do GBE Fork e desinstalação.",
-        "Clique com o botão direito em um jogo e escolha silenciar o progresso para interromper esses avisos sem desativar os desbloqueios.",
-        "A correção do emulador (Simples rápida / Avançada completa) instala o GBE Fork, o esquema de conquistas e os dados de DLC.",
-        "O tempo de jogo é registrado enquanto o jogo está em execução; as notificações de progresso e tempo podem ser ativadas em Notificações.",
-        "Novas conquistas adicionadas por uma atualização do jogo aparecem automaticamente em até 3 dias ou imediatamente em Configurações > Avançado > Verificar novamente as listas de conquistas."
+        "Clique com o botão direito em um cartão de jogo para iniciá-lo, escolher o executável, abrir pastas e links, usar as ferramentas de emulador ou desinstalá-lo quando esse menu estiver ativado.",
+        "Marcar como desbloqueado manualmente (clique com o botão direito em uma conquista) registra uma conquista que nenhuma fonte consegue ver.",
+        "Redefinir as conquistas… joga um jogo de novo do zero e faz backup de todos os arquivos antes. Funciona para jogos emulados, não para Steam, Epic ou Xbox, cujas conquistas ficam na sua conta.",
+        "O tempo de jogo é registrado enquanto o jogo roda; Monitoramento do tempo de jogo em Configurações > Notificação ativa as notificações de início e fim.",
+        "Esquecer este jogo… apaga tudo o que o AW Next guarda sobre um jogo (os salvamentos têm backup antes). Remover da lista só o oculta.",
+        "Configurações do jogo > Idioma das conquistas mostra as conquistas e as notificações de um jogo em outro idioma que não o do resto.",
+        "Configurações > Avançado > Backup do perfil: Exportar perfil… salva suas configurações, predefinições, temas, capas e tempo de jogo em um arquivo .awbackup para uma reinstalação ou um PC novo. Os logins não são salvos."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Classifique as conquistas em ouro, prata ou bronze pela raridade. Ative em Configurações.",
     "clipsTitle": "Videoclipes",
     "clipsCopy": "Guarde um clipe curto ao redor de cada desbloqueio. Ative em Configurações, em Notificações.",
-    "backupTitle": "Backup do perfil",
-    "backupCopy": "Salve suas configurações e escolhas da biblioteca em um único arquivo e restaure-as após uma reinstalação.",
+    "statsTitle": "Estatísticas da biblioteca",
+    "statsCopy": "Abaixo do seu perfil, “Ver o detalhamento completo” mostra sua conclusão, o tempo de jogo e o progresso por plataforma.",
+    "healthTitle": "Estado do jogo",
+    "healthCopy": "Um ponto colorido em um jogo indica se as conquistas dele estão sendo acompanhadas. O botão de configurações dele explica o que há de errado.",
     "profileTitle": "Perfil",
     "profileCopy": "Escolha o nome mostrado no cabeçalho e, opcionalmente, defina um avatar local.",
     "username": "Nome de exibição",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "saves + bibliotecas",
     "addSaveHint": "um emulador/fonte",
     "addLibraryHint": "muitos jogos instalados",
+    "addFolder": "Está faltando algo? Adicione uma pasta",
     "saveList": "Pastas de saves/configuração",
     "libraryList": "Pastas da biblioteca",
     "emptyList": "Nada foi adicionado nesta sessão.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Você pode reabrir este guia a qualquer momento em Configurações > Geral.",
     "sourcesTitle": "De onde vêm suas conquistas",
     "sourcesCopy": "Todas as fontes instaladas neste PC são lidas automaticamente, então o padrão já serve. Entre abaixo somente se quiser mais.",
+    "sourcesCopySimple": "As plataformas e os emuladores deste PC já são lidos. Conecte uma conta só se quiser o que ela acrescenta.",
     "sourcesMore": "Ajustar fontes ({count} ativadas)",
     "accountsTitle": "Contas (opcional)",
-    "accountsCopy": "Conecte-se para ler desbloqueios de um perfil Steam privado, adicionar os jogos da sua Família Steam, importar sua biblioteca do Xbox PC e mostrar seu progresso no Epic. Você pode pular esta etapa e conectar depois em Configurações > Fonte.",
+    "accountsCopy": "Entre para ler as conquistas de um perfil Steam privado, adicionar seus jogos do Steam Family, importar sua biblioteca do Xbox PC, mostrar seu progresso na Epic, obter as taxas de troféus da própria PlayStation e importar seus jogos do RetroAchievements. Você pode pular isso e conectar depois em Configurações > Fonte.",
+    "raKeyPage": "Onde fica minha chave da Web API?",
     "sourcesEmulators": "Emuladores",
     "sourcesEmulatorsCopy": "Cada um só é lido quando está instalado, então mantê-los ativados não custa nada.",
     "source": "Exibir jogos Steam",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Nome do jogo",
     "manual-game-appid-optional": "AppID Steam (opcional)",
     "manual-game-platform-other": "Outro",
+    "manual-game-note": "Inicializações e tempo de jogo são acompanhados, sem conquistas.",
+    "collection-create": "Criar",
+    "collection-create-note": "Depois de criada, clique com o botão direito em um jogo > Coleções para adicioná-lo.",
+    "psn-ultra-rare": "Ultra raro",
+    "psn-very-rare": "Muito raro",
+    "psn-rare": "Raro",
+    "psn-common": "Comum",
+    "psn-title": "Conta PlayStation",
+    "psn-desc": "Opcional. Mostra as taxas de troféus da própria PlayStation para os jogos que já estão na sua conta PSN; os demais mantêm os números da Exophase. O token da sua sessão é armazenado criptografado neste PC.",
+    "psn-btn-hint": "abre a janela de login da Sony",
+    "psn-connect": "Conectar conta PlayStation",
+    "psn-connecting": "Abrindo a janela de login da Sony…",
+    "psn-connected": "Conta PlayStation conectada.",
+    "psn-disconnected": "Conta PlayStation desconectada.",
+    "psn-failed": "Falha no login da PlayStation",
+    "connect-playstation-account": "Conectar conta PlayStation",
     "manual-source": "Manual",
     "no-config-eligible-games": "Nenhum jogo Steam não configurado e sem uma correção existente foi encontrado.",
     "no-config-eligible-games-configured": "{count} instalação(ões) compatível(eis) com a Steam encontradas - todas já têm configuração. Para regerá-las, use Avançado > Reparar todos os jogos.",

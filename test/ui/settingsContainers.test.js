@@ -50,7 +50,8 @@ test('the save handler sweeps the General and Sources containers through the sha
 
 test('every General select sits in a swept container, directly under .right', () => {
   const rows = selectsOf('general');
-  assert.ok(rows.length >= 14, `expected the General selects, saw ${rows.length}`);
+  // Five rows left the count when the rarity thresholds became sliders.
+  assert.ok(rows.length >= 12, `expected the General selects, saw ${rows.length}`);
   for (const row of rows) {
     assert.ok(containers.GENERAL.some((id) => row.containers.includes(id)), `${row.id} is outside every General container, so Save would not read it`);
     assert.ok(row.inRight, `${row.id} must be a direct child of .right`);
@@ -69,7 +70,8 @@ test('every Sources select sits in a swept source list, directly under .right', 
 // Rows that moved out of #options-ui / #options-source into their own section. Each one must still be
 // written back under the same config key, and the sweep derives that key from the id alone.
 const MOVED_GENERAL = {
-  'options-ui-trophies': ['option_showTrophies', 'option_rarityMode', 'option_rareGoldMax', 'option_rareSilverMax', 'option_rareMax', 'option_trophyGoldBelow', 'option_trophySilverBelow'],
+  // The five rarity thresholds are sliders since the selects' fixed steps were replaced: see below.
+  'options-ui-trophies': ['option_showTrophies', 'option_rarityMode'],
   'options-ui-app': ['option_startWithWindows', 'option_closeToTray', 'option_uninstallContextMenu', 'option_disableHardwareAccel'],
 };
 const MOVED_SOURCE = {
@@ -86,6 +88,13 @@ test('moved rows live in the section the test expects', () => {
       .map((select) => select.getAttribute('id'));
     assert.deepEqual(found, ids, `${container} holds a different set of rows`);
   }
+});
+
+test('the rarity threshold sliders are read back explicitly, under their config keys', () => {
+  const ids = ['option_rareGoldMax', 'option_rareSilverMax', 'option_rareMax', 'option_trophyGoldBelow', 'option_trophySilverBelow'];
+  const found = root.querySelector('#options-ui-trophies').querySelectorAll('input[type="range"]').map((input) => input.getAttribute('id'));
+  assert.deepEqual(found, ids, 'one slider per threshold, in the Trophies section');
+  assert.match(settingsJs, /Object\.assign\(app\.config\.achievement, readRaritySliders\(\)\)/, 'the save handler reads the sliders, the select sweep cannot');
 });
 
 test('General selects the sweep skips are saved explicitly by id', () => {

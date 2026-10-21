@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Kütüphane görünümü",
-        "description": "Kart düzenini seçin. Yatay mevcut görünümü korur; Kompakt ızgara, Liste ve Ayrıntılar yoğunluğu veya etkinlik bilgisini öne çıkarır.",
+        "description": "Kart düzenini seçin. Yatay geniş görsel gösterir; kompakt yatay ve dikey, Liste ve Ayrıntılar görsel boyutunu daha sıkı yerleşim veya daha zengin etkinlik karşılığında feda eder.",
         "value": {
           "portrait": "Dikey",
           "landscape": "Yatay",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Gümüş üst sınırı",
-          "description": "Nadir seviyelerde, bu orana kadar olan başarımlar gümüş alır. Değer altın ve nadir sınırları arasında kalmalıdır, aksi halde üçü de varsayılanlarına döner."
+          "description": "Nadir kademelerde, bu orana kadar olan başarımlar gümüş kazanır. Her zaman altının üstünde ve nadir sınırının altında kalır: bir kaydırıcıyı oynatmak diğerlerini iter."
         },
         "rareMax": {
           "name": "Nadir üst sınırı",
@@ -557,8 +557,13 @@
         "transport": "Entegrasyonlar",
         "chromium": "Chromium bildirimi",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Açılır pencere"
+        "test": "Testler",
+        "overlay": "Açılır pencere",
+        "overlayDisplay": "Görünüm",
+        "overlayProgress": "İlerleme",
+        "overlaySounds": "Sesler",
+        "overlayEmulators": "Emülatörler",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Bazı özellikler yalnızca Windows 10’da kullanılabilir",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Hazır ayar (ShadPS4)",
         "overlayPresetShadps4Desc": "ShadPS4 (PlayStation 4) bildirimleri için kullanılan hazır ayar",
         "presetSameAsMain": "Ana ayarla aynı",
+        "overlayEmulatorsDesc": "Bir emülatörde çalışan oyunların kendi ön ayarı ve kendi sesi olabilir; yeniden derlenmiş PC portları konsollarını izler. “Ana ayarla aynı” yukarıdaki ayarları korur.",
         "overlayPosition": "Konum",
         "overlayPositionDesc": "Oyun içi yer paylaşımı açılır penceresinin ekranda nerede görüneceği",
         "overlayScale": "Boyut",
@@ -755,6 +761,9 @@
           "importedOnly": "İçe aktarılan ön ayar - burada dışa aktarılabilir veya silinebilir; kaydırıcılarla düzenlenemez.",
           "importSan": "SAN temasını içe aktar",
           "importSanSetup": "Bu PC’de SAN’dan içe aktar",
+          "importMenuFile": "Ön ayar dosyası…",
+          "importMenuSan": "SAN teması…",
+          "importMenuSanSetup": "Bu PC’deki SAN’dan",
           "layer": {
             "none": "Özelleştirme yok",
             "title": "Birlikte gelen bir ön ayarı özelleştir"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Yardım",
       "title": "Yardım ve ipuçları",
-      "intro": "Bilmeniz gereken her şey - algılama, bildirimler, kumanda, overlay, temalar ve sorun giderme.",
+      "intro": "Bilmeye değer her şey: oyunlarınızı bulma, bildirimler, emülatörler, overlay, kumanda, temalar ve bir şey ters gittiğinde yapılacaklar.",
       "setupTitle": "Geçerli ayarlarınız",
       "topicsTitle": "Konuya göre göz at",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "İlk adımlar",
       "quick": [
-        "Ayarlar > Klasörler bölümüne kayıt/yapılandırma klasörlerini ekleyin, ardından Ayarlar > Kaynaklar bölümünde eşleşen kaynağı etkinleştirin.",
-        "Watchdog arka planda çalışır; canlı bildirimler ve oyun süresi için çalışıyor olması gerekir.",
-        "Her şey (ayarlar, önbellekler, günlükler ve özel temalar) %APPDATA%\\Achievement Watcher Next konumunda bulunur.",
-        "Her ayar bölümü kendi başlığı altında katlanır - açıkken ok aşağıyı, kapalıyken yana bakar. Seçimleriniz hatırlanır."
+        "Akıllı Bul’un oyunlarınızı Ayarlar > Klasörler içinde aramasına izin verin ya da kendiniz bir klasör ekleyin, ardından Ayarlar > Kaynak içinde ilgili kaynağı açın.",
+        "Watchdog arka planda çalışır. Canlı bildirimler ve oynama süresi için çalışıyor olması gerekir.",
+        "Her şey (ayarlar, önbellekler, günlükler, özel temalar) %APPDATA%\\Achievement Watcher Next içinde bulunur.",
+        "Ayarlar’ın üstündeki Arayüz denetimi Basit (günlük sekmeler) ile Gelişmiş (Steam / GBE Fork, Ubisoft / Uplay R1/R2, Gelişmiş ve daha derin seçenekleri ekler) arasında geçiş yapar. Basit yalnızca denetimleri gizler, hiçbir şey kapatılmaz.",
+        "Ana pencereyi kapatmak AW Next’i sistem tepsisinde tutar ve takip sürer. Çıkmak için tepsi menüsünü kullanın. Başlangıçta çalıştır ve Sistem tepsisine küçült, Ayarlar > Genel içindedir.",
+        "Ayarlar’ın üstündeki arama alanı her sekmedeki bir seçeneği bulur. Ayarlar > Genel içindeki İlk çalıştırma kılavuzu kurulumu yeniden açar."
       ],
-      "notifications": [
-        "Otomatik varsayılandır: oyun gösterebiliyorsa oyun içi bildirim, gösteremiyorsa Windows bildirimi kullanılır, ikisi birden asla gönderilmez.",
-        "Ayarlar > Bildirim bölümünde hazır ayar, ses, ses düzeyi, konum ve ölçek bulunur; test düğmeleri gerçek bir bildirim gösterir.",
-        "Bir oyuna sağ tıklayıp Bildirim seçeneğiyle yalnızca o oyuna kendi hazır ayarını, konumunu, sesini veya ölçeğini verebilirsiniz.",
-        "Kilit açıldığında ekran görüntüsü, o anın resmini Resimler\\Achievement Watcher Next klasörüne kaydeder."
-      ],
-      "gameHealthTitle": "Oyun durumu",
-      "gameHealth": [
-        "Bir oyunun araçlar düğmesini aç (kartın sağ üstünde) ve Hazır mı, Kontrol gerekli mi, yoksa Takip edilmiyor mu gör.",
-        "Durumun altındaki cümle nedeni sade bir dille anlatır; altındaki denetimler hangi kısmın hatalı olduğunu gösterir.",
-        "Onarım düğmeleri yalnızca AW Next oyunu gerçekten düzeltebiliyorsa çıkar - her biri neyi değiştireceğini ve önceki dosyaların nerede kalacağını söyler.",
-        "Teknik ayrıntılar tam yolları, sayıları ve emülatör kodlarını içerir; hata bildirimine kopyala."
-      ],
-      "troubleshootTitle": "Sorun giderme",
-      "troubleshoot": [
-        "Bir oyun eksikse: klasörleri ekleyin, yeniden tarayın, ardından kaynak anahtarını ve kara listeyi kontrol edin.",
-        "Bildirimler görünmüyorsa: Windows Odaklanma Yardımı’nı kontrol edin ve uygulamayı oyunlarınızla aynı haklarla çalıştırın.",
-        "Gelişmiş > Tanılama, günlük ve veri klasörlerini açar; sorun bildirirken bunları ekleyin.",
-        "Günlükler eklenerek yazılır, bu yüzden bir çökme sonraki açılışa kalır. Her çalıştırma bir oturum işareti ve [diag] bloğuyla başlar (sürümler, yollar, ekranlar) - bunu bildirime yapıştırın."
+      "libraryTitle": "Kütüphane ve koleksiyonlar",
+      "library": [
+        "Koleksiyonlar: bir oyuna sağ tıklayın > Koleksiyonlar, birini işaretleyin ya da Yeni koleksiyon… seçin. Yalnızca yüklü oyunları göster’in yanındaki koleksiyon düğmesi bundan sonra kütüphaneyi filtreler ve profildeki sayılar buna uyar.",
+        "O düğmenin menüsündeki Koleksiyonu düzenle… adı, rengi, simgeyi veya resmi değiştirir ve koleksiyonu siler. Oyunlar kütüphanenizde kalır.",
+        "Tamamlama oranının yanındaki yuvarlak düğme Kütüphane istatistikleri’ni açar: tamamlama, açılan ve kilitli sayıları, oynama süresi, kupalar, platin oyunlar, en nadir başarımlar ve platform başına bir satır.",
+        "Arama alanı ile + düğmesi arasındaki seçici altı kütüphane görünümü arasında geçiş yapar. Ayarlar > Görünüm > Kütüphane kutucukları kutucuk boyutunu, aralığı ve her kutucuğun neyi gösterdiğini belirler.",
+        "+ düğmesi hiçbir kaynağın bulamadığı bir oyun ekler: bir başlık ve bir çalıştırılabilir dosya, isteğe bağlı platform ve Steam AppID ile. Başlatmalar ve oynama süresi takip edilir, başarımlar olmadan.",
+        "Bir oyuna sağ tıklayın > Oyun ayarları > Yeniden adlandır… ile gösterilen adı değiştirin. Başarımlar ve oynama süresi > Oynama süresini düzenle… toplamı düzeltir (12.5 veya 12h30)."
       ],
       "sourcesTitle": "Başlatıcılar ve kaynaklar",
       "sources": [
-        "Steam profil modu kurulu veya sahip olunan oyunları listeler, ancak kilit açma bilgileri yine yerel kayıt dosyalarından gelir.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay ve EA Desktop, Kaynaklar bölümünde ayrı ayrı etkinleştirilebilir.",
-        "Sahip olunan Steam oyunları yalnızca Steam kayıt defteri doğruladığında kurulu sayılır."
+        "Steam, Epic Games ve Xbox PC’nin her biri Ayarlar > Kaynak içinde Yok, Yüklü veya Sahip olunan seçeneklerini sunar. Sahip olunan, bağlı bir hesabın tüm kütüphanesini yüklü olsun olmasın listeler.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC ve EA Desktop’ın her birinin Ayarlar > Kaynak içinde kendi anahtarı vardır. EA Desktop yalnızca EA’nın yönettiği klasörlerin dışındaki oyunları kapsar.",
+        "Sahip olunan Steam oyunları yalnızca Steam’in kayıt defteri doğruladığında yüklü sayılır.",
+        "Steam kilit açmaları, Steam’in bu bilgisayarda tuttuğu istatistiklerden okunur, bu yüzden gizli bir profil de çalışır. Hesap bağlamak isteğe bağlıdır: başka bir bilgisayarda oynanan oyunları ve Steam Family oyunlarını ekler.",
+        "Alışılmadık bir yere kaydedilen oyun: klasörünü Ayarlar > Klasörler içine ekleyin. Kayıtları, AppID klasörlerini veya emülatör yapılandırmasını doğrudan içeren klasörü ya da çok sayıda oyun içeren bir kütüphane klasörünü seçin.",
+        "RetroAchievements: kaynağı açın, kullanıcı adınızı ve Web API anahtarınızı girin, sonra Kitaplığı içe aktar’a basın. Kilit açmalar hesabınızdan gelir, bu yüzden emülatörde RetroAchievements’ı açık tutun.",
+        "Basit modda, nadiren kullanılan bazı kaynak satırları kullanılmadıkları sürece gizli kalır. Önem kazandıkları anda geri gelirler ve Gelişmiş hepsini her zaman listeler.",
+        "PlayStation kupaları derecesini, onlara sahip oyuncuların oranını ve PlayStation’ın kendi nadirlik kademesini gösterir. Oranlar Exophase’ten gelir; o hesaptaki oyunlar için Sony’nin kendi rakamlarını almak üzere Ayarlar > Kaynak içinde bir PlayStation hesabı bağlayın."
+      ],
+      "notifications": [
+        "Otomatik varsayılandır: oyun gösterebiliyorsa oyun içi açılır pencere, gösteremiyorsa Windows bildirimi kullanılır, ikisi birden asla gösterilmez.",
+        "Ayarlar > Bildirim içinde Bildirim türü (Otomatik, Windows bildirimi, Oyun içi yer paylaşımı veya Her ikisi), ön ayar, ses, ses düzeyi, konum, boyut ve opaklık bulunur. Test düğmeleri gerçek bir açılır pencere gösterir.",
+        "Bir oyunun araçlar düğmesini (kutucuğun sağ üstü) açın ve o tek oyuna kendi ön ayarını, konumunu, sesini veya boyutunu vermek için bildirim ayarlarına gidin.",
+        "Açılışta ekran görüntüsü o anın resmini Resimler\\Achievement Watcher Next içinde saklar.",
+        "Nadir başarım sesi, %100 tamamlama sesi ve İlerleme sesi (Gelişmiş modu) bu açılır pencerelere kendi seslerini verir. Rastgele ses her seferinde farklı bir ses seçer, kendi dosyalarınızı da içe aktarabilirsiniz.",
+        "Altın, gümüş ve bronz nadir kilit açmaları işaretler. Ayarlar > Genel > Nadirlik gösterimi, her başarımı derecelendiren ve bitmiş oyunlarda platini gösteren Kupa modu’na geçer.",
+        "Sayaçlar için İlerleme kilometre taşları yalnızca %10, %25 veya %50 adımlarında bir açılır pencere gösterir. Bir oyuna sağ tıklayın > İlerleme bildirimlerini sustur ile bir oyunu, kilit açmalarına dokunmadan susturun.",
+        "Ayarlar > Bildirim içinde iki anahtar daha var: Öncelikli bildirimler kilit açmaların Rahatsız Etmeyin’i (Windows 11) aşmasını sağlar, Steam istemcisi oyunları ise Steam’in kendi çalıştırdığı oyunlar için AW Next’in açılır penceresini ekler."
+      ],
+      "gameHealthTitle": "Oyun durumu",
+      "gameHealth": [
+        "Oyun durumu’nu açmak için bir oyunun araçlar düğmesine (kutucuğun sağ üstü) tıklayın ya da oyuna sağ tıklayın. Oyunun Hazır, Kontrol gerekli veya Takip edilmiyor olduğunu söyler.",
+        "Durumun altındaki cümle nedeni sade sözlerle açıklar. Aşağıdaki kontroller hangi parçanın sorunlu olduğunu gösterir: oyun dosyaları, çalıştırılabilir dosya, başarım verileri, emülatör kurulumu, canlı takip veya bildirimler.",
+        "Onarım düğmeleri yalnızca AW Next o oyunu gerçekten düzeltebildiğinde görünür; örneğin Oyunu bul, Başarım verilerini yeniden yaz, Emülatör dosyasını geri yükle veya Bu oyunu izle. Her biri neyi değiştireceğini söyler, yedek tutar ve önce sorar.",
+        "Test bildirimi gönder, o oyunun kendi adı ve görseliyle, gerçekte nasıl gelecekse öyle iletilen bir açılır pencere gösterir.",
+        "Teknik ayrıntılar kesin yolları, sayıları ve emülatör kodlarını içerir: Kopyala’ya basın ve bir hata raporuna yapıştırın. Kutucuktaki renkli nokta Ayarlar > Görünüm > Kütüphane kutucukları içinde gizlenebilir."
+      ],
+      "troubleshootTitle": "Sorun giderme",
+      "troubleshoot": [
+        "Bir oyun eksikse: kaynağını Ayarlar > Kaynak içinde kontrol edin, Ayarlar > Klasörler içinde Akıllı Bul’u veya Yapılandırmaları oluştur’u çalıştırın, gerekirse klasörünü elle ekleyin ve Yalnızca yüklü oyunları göster’i kapatmayı deneyin.",
+        "Bildirimler görünmüyorsa: oyunun Oyun durumu içindeki Bildirimler satırını okuyun, sonra Windows’taki Rahatsız Etmeyin / Odak Yardımı’nı kontrol edin. Ayarlar > Bildirim içindeki Öncelikli bildirimler kilit açmaları geçirebilir.",
+        "Ayarlar > Gelişmiş > Tanılama günlük ve veri klasörlerini açar, Günlükleri dışa aktar (.zip) ise günlükleri kullanıcı adınız ve anahtarlarınız maskelenmiş olarak paketler. Sorun bildirirken ekleyin.",
+        "Günlüklere ekleme yapılır, bu yüzden bir çökme sonraki açılışta da durur. Her çalıştırma bir oturum işareti ve bir [diag] bloğuyla (sürümler, yollar, ekranlar) başlar: bunu bir sorun bildirimine yapıştırın.",
+        "Bir oyun %0’da mı takıldı? İlk kilit açma yazılana kadar bu normaldir. AW Next yanlış Steam sürümüyle eşleştirdiyse oyuna sağ tıklayın > AppID’yi elle ayarla….",
+        "Oynama süresi sayılmıyor mu? Oyunun araçlar düğmesi > Çalıştırılabilir bölümünü açın ve oynarken açık kalan programı seçin, bir başlatıcıyı değil.",
+        "Bir oyun güncellemesinden gelen yeni başarımlar 3 gün içinde ya da Ayarlar > Gelişmiş > Başarım listelerini yeniden kontrol et ile hemen görünür.",
+        "Bir uygulama güncellemesi hep aynı dosyada mı başarısız oluyor? Ayarlar > Gelişmiş > Önbellekleri temizle yalnızca yeniden indirilebilir dosyaları siler, ayarlarınıza veya kayıtlarınıza asla dokunmaz."
       ],
       "steamTitle": "Steam emülatörleri",
       "steam": [
         "GBE / Goldberg kayıtları genellikle %APPDATA%\\GSE Saves veya %APPDATA%\\Goldberg SteamEmu Saves altındadır.",
-        "CODEX / RUNE kayıtları çoğunlukla Public Documents\\Steam\\CODEX veya Public Documents\\Steam\\RUNE altındadır.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 ve Hoodlum kendi yapılandırma/kayıt klasörlerinden algılanır.",
-        "Sağ tıklama emülatör düzeltmesi GBE Fork dosyalarını, başarım şemalarını ve DLC verilerini ekleyebilir.",
-        "Basit mod hızlıdır; Gelişmiş mod daha ayrıntılı Steam verileri için generate_emu_config çalıştırır ve birkaç dakika sürebilir."
+        "CODEX / RUNE kayıtları çoğunlukla Genel Belgeler\\Steam\\CODEX veya Genel Belgeler\\Steam\\RUNE altında bulunur.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI ve Nemirtingas emülatörleri kendi yapılandırma veya kayıt klasörlerinden okunur. Bir oyun bulunamazsa klasörünü Ayarlar > Klasörler içine ekleyin.",
+        "Bir oyuna sağ tıklayın > Emülatör ve araçlar > Emülatör düzeltmesini uygula… GBE Fork’u kurar, steam_settings’i (başarım listesi ve simgeler) oluşturur ve eksikse steam_appid.txt dosyasını yazar. Değiştirilen her dosya önce yedeklenir.",
+        "Ayarlar > Steam / GBE Fork içinde steam_settings verisi Basit olarak ayarlandığında AW Next’in kendi anonim getirme yöntemi kullanılır ve hızlıdır. Gelişmiş, daha derin Steam verisi için generate_emu_config çalıştırır ve dakikalar sürebilir.",
+        "Hiçbir şey kendiliğinden bir oyun klasörüne yazılmaz: Yeni algılanan oyunları otomatik düzelt, DLC sahipliğini yönet ve Hesap adını ve dili yaz varsayılan olarak kapalıdır.",
+        "Aynı menüdeki Emülatörü tanıla yalnızca okur ve bildirir. GBE/Goldberg kurulumunu yedekle ve En son GBE/Goldberg yedeğini geri yükle bir oyunu eski haline getirir."
       ],
       "emulatorTitle": "Konsol emülatörleri",
       "emulators": [
-        "RPCS3 kupaları, RPCS3 kurulumunun yakınındaki dev_hdd0\\home\\...\\trophy konumundan okunur.",
-        "shadPS4 kupaları uygulama verilerindeki game_data/trophy klasörlerinden okunur; artık veriler oyunun kurulu olduğunu kanıtlamaz.",
-        "Xenia ilerlemesi .gpd gibi Xbox profil dosyalarından okunur."
+        "RPCS3 kupaları RPCS3 kurulumunun yanındaki dev_hdd0\\home\\...\\trophy konumundan okunur. Taşınmış bir sanal disk de izlenir.",
+        "shadPS4 kupaları game_data klasöründen (TROP XML dosyaları) okunur. Emülatörü, kullanıcı klasörünü veya game_data’nın kendisini ekleyebilirsiniz.",
+        "Xenia ilerlemesi Xbox profil dosyalarından (.gpd) okunur ve yapılandırmasında ayarlanan depolama klasörlerini izler.",
+        "KytyPS5 kupaları _Trophies klasöründen, başlatıcının oyunu çalıştırdığı kullanıcı için okunur.",
+        "PC için yeniden derlenmiş Xbox 360 oyunları ve PS4 portları (Bloodborne, Uncharted, God of War III Remastered, MediEvil ve diğerleri) Ayarlar > Kaynak içinde ayrı kaynaklardır. Biri görünmüyorsa klasörünü Ayarlar > Klasörler içine ekleyin.",
+        "Her konsolun Ayarlar > Bildirim > Emülatörler (Gelişmiş modu) içinde kendi açılır pencere ön ayarı ve sesi olabilir. Yeniden derlenmiş Xbox 360 oyunları Xenia’nın seçimini, PS4 portları shadPS4’ün seçimini izler ve Ana ayarla aynı ana ayarları korur."
       ],
       "controllerTitle": "Kumanda (gamepad)",
       "controller": [
-        "Önce Ayarlar > Kontrolcü seçeneğini etkinleştirin; ardından Back + Start + LB oyun içi katmanı açar.",
-        "LB + X, katman içi gezinmeyi açıp kapatır.",
-        "Gezinme modu: D-pad/sol çubuk odağı taşır, A onaylar, B iptal eder, X arar, Y seçenekleri açar.",
-        "Katmanı sol çubukla taşımak ve sağ çubukla kaydırmak için LB + RB tuşlarını basılı tutun.",
-        "Xbox, PlayStation (DualShock 4 / DualSense) ve Switch Pro kontrolcüleriyle çalışır."
+        "Ayarlar > Oyun Kumandası içinde Oyun içi yer paylaşımını bir kumandayla kontrol et’i açın (varsayılan olarak kapalı), ardından Back + Start + LB oyunda overlay’i açar.",
+        "Uygulamayı kumandayla kontrol et (varsayılan olarak açık) AW Next’in kendisini yönetir: yön tuşu veya sol çubuk odağı taşır, A bir oyunu açar, B geri döner, X arar, Y veya Start Ayarlar’ı açar, LB / RB ayar sekmelerini değiştirir.",
+        "Kütüphanede RT seçili oyunu başlatır, LT ise Oyun durumu’nu açar.",
+        "Overlay içinde LB + X gezinmeyi açar ve kapatır: yön tuşu veya sol çubuk odağı taşır, A onaylar, B iptal eder, X arar, Y seçenekleri açar.",
+        "Overlay’i sol çubukla taşımak ve sağ çubukla kaydırmak için LB + RB tuşlarını basılı tutun.",
+        "Oyun hâlâ düğmelerinize tepki veriyorsa Overlay açılırken odakla veya Kumandayla açarken oyuna Esc gönder seçeneğini açın (ikisi de varsayılan olarak kapalı).",
+        "Xbox, PlayStation (DualShock 4 / DualSense) ve Switch Pro kumandalarıyla çalışır. Kumanda düzeni gösterilen düğme adlarını belirler ve her kısayol bir ila üç düğme alır.",
+        "Kumanda algılanmıyor mu? Önce Windows’ta (joy.cpl) kontrol edin, doğru anahtarın açık olduğundan emin olun, sonra Kumanda arka ucu içinde XInput’u deneyin."
       ],
       "overlayTitle": "Oyun içi overlay",
       "overlay": [
-        "Katman kısayoluyla (varsayılan Ctrl+Shift+K) veya kontrolcüde Back + Start + LB ile açın.",
-        "Aynı anda tek sütuna göre sıralayın: Nadirlik, Tarih veya Durum (artan / azalan / yok).",
+        "Desteklenen bir oyun çalışırken overlay kısayoluyla (varsayılan Ctrl+Shift+K) ya da bir kumandada Back + Start + LB ile açın. Kısayol Ayarlar > Genel içinde ayarlanır.",
+        "Çalışan oyunun başarımlarını listeler: ad, açıklama, kilitli veya açık, açılma tarihi ve ilerleme. Başlığından sürükleyin.",
+        "Gizli bir başarım, ona tıklayana (ya da kumandada A’ya basana) kadar gizli kalır, böylece hiçbir şey ifşa edilmez.",
+        "Tümü, Açılanlar, Kilitliler ve Devam eden etiketleri listeyi filtreler. Sıralamak için Başarım, Nadirlik, Tarih veya Durum’a tıklayın: artan, azalan, sonra normale dönüş. Aynı anda tek sütun.",
         "Aramaya odaklanmak için / tuşuna, temizlemek veya seçenekler panelini kapatmak için Esc tuşuna basın.",
-        "Dişli paneli vurgu rengini, yoğunluğu, yakınlaştırmayı, saydamlığı ve görünür satırları değiştirir; 'Uygulama temasını kullan' etkin temayı izler.",
-        "Oranı bilinen her başarımın nadirliği gösterilir: yaygın olanlar gri, nadir olanlar altın/gümüş/bronz."
+        "Dişli paneli vurguyu, yoğunluğu, simge boyutunu, yakınlaştırmayı, opaklığı ve görünür satırları değiştirir. Uygulama temasını kullan etkin temayı izler, Sıfırla ise hepsini geri alır.",
+        "Oranı bilinen her başarım nadirliğini gösterir: yaygın için gri, nadir için altın/gümüş/bronz."
       ],
       "streamTitle": "Stream overlay’i (OBS)",
       "stream": [
-        "Ayarlar > Bildirim > OBS tarayıcı kaynağı > Bağlantıyı kopyala, ardından OBS'de bir tarayıcı kaynağı ekleyip URL olarak yapıştır.",
-        "Kaynağın genişliğini ve yüksekliğini http://127.0.0.1:8082/obs/_config adresinin bildirdiği boyuta ayarla: ön ayarın kendi kutusunun senin boyutundaki hali.",
-        "Kaynağı yerleştirirken URL'ye ?test=1 ekle. Her on saniyede bir örnek açılma gösterir; işin bitince kaldır.",
-        "Kaynak, oyun içi overlay ile aynı açılır pencereyi gösterir ve açılmalar arasında boş kalır, bu yüzden yayın yaparken hiçbir şeye mal olmaz.",
-        "Yerel bildirim akışını okur, bu yüzden Ayarlar > Bildirim > Taşıma altında Websocket @localhost:8082 seçeneğini açık bırak."
+        "Ayarlar > Bildirim > OBS tarayıcı kaynağı (Gelişmiş modu): Önizleme tarayıcınızda kontrol eder, Bağlantıyı kopyala adresi kopyalar. OBS’de bir Tarayıcı kaynağı ekleyin ve URL olarak yapıştırın.",
+        "Her genişlik ve yükseklik işe yarar, kart kutuyu dolduracak şekilde ölçeklenir. Daha büyük bir kaynak daha keskindir: ona ön ayarın kendi boyutunun yaklaşık iki katını verin (http://127.0.0.1:8082/obs/_config bunu bildirir) ve yarı boyutta yerleştirin.",
+        "Kaynağı yerleştirirken URL’ye ?test=1 ekleyin. On saniyede bir örnek bir kilit açma gösterir; işiniz bitince kaldırın.",
+        "Kaynak oyun içindekiyle aynı açılır pencereyi çizer ve kilit açmalar arasında boş kalır, bu yüzden yayın yaparken hiçbir şeye mal olmaz.",
+        "Adresten sonra daha fazla seçenek: ?scale=2 yakınlaştırmayı sabitler, ?duration=8000 her kartın ne kadar kalacağını belirler, ?sound=1 sesi kaynak üzerinden çalar, /obs/preset/Xbox/ masaüstü ne kullanırsa kullansın tek bir ön ayarı kullanır.",
+        "Yerel bildirim akışını okur, bu yüzden Ayarlar > Bildirim > Entegrasyonlar içinde Websocket @localhost:8082’yi açık bırakın. Yalnızca bu bilgisayarda çalışır ve onu yalnızca AW Next’in tek bir kopyası sunabilir."
+      ],
+      "souvenirsTitle": "Ekran görüntüleri ve video klipler",
+      "souvenirs": [
+        "Ayarlar > Bildirim > Açılışta ekran görüntüsü, açılır pencereden hemen sonra bildirim dahil bir resmi oyun başına bir alt klasöre kaydeder. Klasörü aç sizi oraya götürür.",
+        "HDR ekran görüntüleri (Otomatik), Windows HDR açıkken renkleri düzeltir. Hatıralar ana monitörü yakalar, bu yüzden onda oynayın.",
+        "Kilit açılınca video klip (siz açana kadar kapalı, Ayarlar > Bildirim içinde daha aşağıda) oyunun son saniyelerini bellekte tutar ve her kilit açmanın çevresinde bir MP4 kaydeder. Bir başarım açılana kadar hiçbir şey yazılmaz.",
+        "Klip uzunluğu (10 ila 30 saniye), Biçim (H.264, HEVC veya AV1), Çözünürlük, Kare hızı, Kalite ve Ses (Yalnızca oyun veya Tüm bilgisayar) değiştirilebilir. H.264 her yerde oynar.",
+        "İşi ekran kartının kendi kodlayıcısı yapar, işlemcinin %1’inin çok altında bir kullanımla. Donanım H.264 kodlayıcısı yoksa en çok 1080p ve 30 FPS ile Windows’un yazılım kodlayıcısı devralır. Özel tam ekrandaki çok eski bir oyun siyah kareler kaydedebilir."
       ],
       "shortcutsTitle": "Klavye kısayolları",
       "shortcuts": [
-        "Ctrl+Shift+K (varsayılan): oyun içi katmanı açıp kapatır; Ayarlar > Genel bölümünden değiştirilebilir.",
-        "Ctrl+Alt+Shift+Ok tuşları katmanı taşır; Ctrl+Alt+Shift+1-5 onu ön ayarlı bir konuma yaslar.",
-        "Ctrl+Alt+Shift+C tıklama geçişini açıp kapatır; Ctrl+F Ayarlar aramasına odaklanır."
+        "Ctrl+Shift+K (varsayılan): oyun içi overlay’i açar ve kapatır. Ayarlar > Genel içinde değiştirin.",
+        "Ctrl+Alt+Shift+ok tuşları overlay’i taşır; Ctrl+Alt+Shift+1-5 onu hazır bir konuma oturtur; Ctrl+Alt+Shift+C tıklamanın içinden geçmeyi açar ve kapatır.",
+        "Overlay içinde / aramaya odaklanır ve Esc onu temizler. Ön ayar tasarımcısında Ctrl+Z ve Ctrl+Y geri alır ve yineler.",
+        "Ctrl+F Ayarlar aramasına odaklanır ve Esc onu temizler. F5 kütüphaneyi yeniler."
       ],
       "themesTitle": "Özel temalar",
       "themes": [
-        "Özel tema Steam Blue ile başlar; her katman (arka plan, başlık, paneller, kartlar, ayarlar, metin, kenarlıklar, vurgu) düzenlenebilir.",
-        "Katman görselleri, hafif buzlu bulanıklığa sahip renkli bir perdenin altında yer alır; efektler katman başına ayarlanır.",
-        "Bir CSS temasını <userData>\\themes içine bıraktığınızda tema açılır listesinde görünür.",
-        "Ön ayar oluşturucu, kaydetmeden önce tasarımı gerçek bir bildirim olarak gösterebilir, kayıtlı bir ön ayarı düzenlemek için yeniden açabilir ve tutmadıklarınızı silebilir.",
-        "Kullandığın temayı tek bir .awtheme dosyası olarak dışa aktar ya da birinin gönderdiğini içe aktar: yüklenmeden önce gösterilir, sonra yerleşik bir tema gibi davranır."
+        "Ayarlar > Görünüm yerleşik temalar içerir ve her biri düzenlenebilir: pencere, üst çubuk, paneller, kartlar, ayarlar, metin, kenarlıklar ve vurgunun her biri bir renk, bir gradyan veya bir resim alır.",
+        "Temayı kaydet düzenlemenizi kendi temanıza dönüştürür: değiştirmek için adı koruyun, kopya için başka bir ad yazın. Tümünü sıfırla başladığınız temayı geri getirir.",
+        "Bir CSS temasını <userData>\\themes içine bırakın, tema açılır listesinde görünür.",
+        "Temayı dışa aktar… tek bir .awtheme dosyası yazar (yerleşik bir tema önce kendi adınızla kaydedilmelidir). Tema içe aktar… yüklemeden önce önizleme gösterir, Temayı sil ise içe aktarılmış bir temayı kaldırır.",
+        "Topluluğun yaptığı temalar proje sitesindeki tema galerisindedir ve kendi temanızı göndermek tek bir dosya gerektirir."
+      ],
+      "presetsTitle": "Açılır bildirim ön ayarları",
+      "presets": [
+        "Ön ayar, oyun içi açılır pencerenin görünümüdür ve Ayarlar > Bildirim > Ön ayar içinde seçilir. Bildirim türü Windows bildirimi olduğunda hiçbir etkisi yoktur.",
+        "Ayarlar > Bildirim ön ayarları sıradan denetimlerden oluşan bir tasarımcıdır: bir başlangıç noktası seçin ya da Beni şaşırt’a basın, canlı önizlemeyi (Kart, Karşılaştır, Ekran) izleyin, sonra Ön ayar oluştur’a basın. Ondan önce hiçbir şey kaydedilmez.",
+        "Birlikte gelen bir ön ayarı özelleştir yalnızca birkaç şeyi değiştirir (arka plan, metin rengi, vurgu, kenarlık, parıltı, yazı tipi, logo) ve iyileşirse birlikte gelen ön ayarı izlemeye devam eder.",
+        "Ön ayarı düzenle tasarladığınız bir ön ayarı yeniden açar. Dışa aktar ve İçe aktar bir ön ayarı resimleri, yazı tipleri ve sesiyle birlikte tek bir .awpreset dosyası olarak taşır.",
+        "İçe aktar > SAN teması… bir Steam Achievement Notifier temasını (.san dosyası) okur, İçe aktar > Bu PC’deki SAN’dan ise SAN’ın zaten kullandığı temaları getirir. SAN görünümlerini ve seslerini korurlar."
       ],
       "tipsTitle": "İpuçları ve püf noktaları",
       "tips": [
-        "Hızlı işlemler için bir oyun kutucuğuna sağ tıklayın: emülatör düzeltmesi, başarımlar, Steam sayfası, GBE Fork kurulumu, kaldırma.",
-        "Kilit açmaları devre dışı bırakmadan ilerleme açılır pencerelerini durdurmak için oyuna sağ tıklayıp ilerlemeyi sessize al seçeneğini seçin.",
-        "Emülatör düzeltmesi (Basit hızlı / Gelişmiş eksiksiz), GBE Fork’u, başarım şemasını ve DLC verilerini kurar.",
-        "Oyun çalışırken oynama süresi izlenir; ilerleme ve oynama süresi bildirimleri Bildirimler bölümünde etkinleştirilebilir.",
-        "Bir oyun güncellemesinin eklediği yeni başarımlar 3 gün içinde otomatik olarak görünür veya Ayarlar > Gelişmiş > Başarım listelerini yeniden denetle yoluyla hemen kontrol edilebilir."
+        "Oyunu başlatmak, çalıştırılabilir dosyasını seçmek, klasörleri ve bağlantıları açmak, emülatör araçlarını kullanmak veya o menü açıksa kaldırmak için bir oyun kutucuğuna sağ tıklayın.",
+        "Manuel açılmış olarak işaretle (bir başarıma sağ tıklayın) hiçbir kaynağın göremediği bir kilit açmayı kaydeder.",
+        "Başarımları sıfırla… bir oyunu sıfırdan yeniden oynatır ve önce her dosyayı yedekler. Emüle edilen oyunlar için çalışır; kilit açmaları hesabınızda duran Steam, Epic veya Xbox için çalışmaz.",
+        "Oynama süresi oyun çalışırken takip edilir; Ayarlar > Bildirim içindeki Oynama süresi takibi başlangıç ve bitiş bildirimlerini açar.",
+        "Bu oyunu unut… AW Next’in bir oyun hakkında tuttuğu her şeyi siler (kayıtlar önce yedeklenir). Listeden kaldır yalnızca gizler.",
+        "Oyun ayarları > Başarım dili bir oyunun başarımlarını ve bildirimlerini diğerlerinden farklı bir dilde gösterir.",
+        "Ayarlar > Gelişmiş > Profil yedeği: Profili dışa aktar… ayarlarınızı, ön ayarlarınızı, temalarınızı, kapaklarınızı ve oynama sürenizi yeniden kurulum veya yeni bir bilgisayar için tek bir .awbackup dosyasında saklar. Oturum açma bilgileri kaydedilmez."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Başarımları nadirliğine göre altın, gümüş veya bronz olarak derecelendirin. Ayarlar'dan açın.",
     "clipsTitle": "Video klipler",
     "clipsCopy": "Her kilit açılışının çevresinde kısa bir klip saklayın. Ayarlar'da Bildirimler altından açın.",
-    "backupTitle": "Profil yedeği",
-    "backupCopy": "Ayarlarınızı ve kütüphane seçimlerinizi tek bir dosyaya kaydedin ve yeniden kurulumdan sonra geri yükleyin.",
+    "statsTitle": "Kütüphane istatistikleri",
+    "statsCopy": "Profilinizin altında “Ayrıntılı dökümü görüntüle” tamamlama oranınızı, oynama sürenizi ve platform başına ilerlemenizi gösterir.",
+    "healthTitle": "Oyun durumu",
+    "healthCopy": "Bir oyunun üzerindeki renkli nokta, başarımlarının takip edilip edilmediğini söyler. Ayarlar düğmesi neyin yanlış olduğunu açıklar.",
     "profileTitle": "Profil",
     "profileCopy": "Başlıkta gösterilen adı seçin ve isteğe bağlı olarak yerel bir avatar ayarlayın.",
     "username": "Ekran adı",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "kayıtlar + kütüphaneler",
     "addSaveHint": "bir emülatör/kaynak",
     "addLibraryHint": "çok sayıda kurulu oyun",
+    "addFolder": "Bir şey mi eksik? Klasör ekleyin",
     "saveList": "Kayıt/yapılandırma klasörleri",
     "libraryList": "Kütüphane klasörleri",
     "emptyList": "Bu oturuma hiçbir şey eklenmedi.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Bu kılavuzu istediğiniz zaman Ayarlar > Genel bölümünden yeniden açabilirsiniz.",
     "sourcesTitle": "Başarımlarınız nereden geliyor",
     "sourcesCopy": "Bu bilgisayarda yüklü her kaynak otomatik olarak okunur, bu yüzden varsayılanlar yeterlidir. Daha fazlasını istiyorsanız aşağıdan oturum açın.",
+    "sourcesCopySimple": "Bu bilgisayardaki başlatıcılar ve emülatörler zaten okunuyor. Hesap bağlamayı yalnızca onun eklediklerini istiyorsanız yapın.",
     "sourcesMore": "Kaynakları ayarla ({count} etkin)",
     "accountsTitle": "Hesaplar (isteğe bağlı)",
-    "accountsCopy": "Gizli bir Steam profilinden açılışları okumak, Steam Ailesi oyunlarınızı eklemek, Xbox PC kitaplığınızı içe aktarmak ve Epic ilerlemenizi göstermek için oturum açın. Bu adımı atlayıp Ayarlar > Kaynak bölümünden daha sonra bağlanabilirsiniz.",
+    "accountsCopy": "Gizli bir Steam profilindeki kilit açmaları okumak, Steam Family oyunlarınızı eklemek, Xbox PC kütüphanenizi içe aktarmak, Epic ilerlemenizi göstermek, PlayStation’ın kendi kupa oranlarını almak ve RetroAchievements oyunlarınızı içe aktarmak için oturum açın. Bunu atlayıp daha sonra Ayarlar > Kaynak bölümünden bağlayabilirsiniz.",
+    "raKeyPage": "Web API anahtarım nerede?",
     "sourcesEmulators": "Emülatörler",
     "sourcesEmulatorsCopy": "Her biri yalnızca yüklüyse okunur, bu yüzden açık bırakmanın hiçbir maliyeti yoktur.",
     "source": "Steam oyunlarını göster",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Oyun adı",
     "manual-game-appid-optional": "Steam AppID (isteğe bağlı)",
     "manual-game-platform-other": "Diğer",
+    "manual-game-note": "Başlatmalar ve oynama süresi takip edilir, başarımlar olmadan.",
+    "collection-create": "Oluştur",
+    "collection-create-note": "Oluşturduktan sonra, eklemek için bir oyuna sağ tıklayın > Koleksiyonlar.",
+    "psn-ultra-rare": "Ultra nadir",
+    "psn-very-rare": "Çok nadir",
+    "psn-rare": "Nadir",
+    "psn-common": "Yaygın",
+    "psn-title": "PlayStation hesabı",
+    "psn-desc": "İsteğe bağlı. PSN hesabınızda zaten bulunan oyunlar için PlayStation’ın kendi kupa oranlarını gösterir; diğerleri Exophase verilerini korur. Oturum belirteciniz bu bilgisayarda şifrelenmiş olarak saklanır.",
+    "psn-btn-hint": "Sony oturum açma penceresini açar",
+    "psn-connect": "PlayStation hesabını bağla",
+    "psn-connecting": "Sony oturum açma penceresi açılıyor…",
+    "psn-connected": "PlayStation hesabı bağlandı.",
+    "psn-disconnected": "PlayStation hesabının bağlantısı kesildi.",
+    "psn-failed": "PlayStation oturum açma başarısız oldu",
+    "connect-playstation-account": "PlayStation hesabını bağla",
     "manual-source": "Elle",
     "no-config-eligible-games": "Mevcut bir düzeltmesi olmayan yapılandırılmamış Steam oyunu bulunamadı.",
     "no-config-eligible-games-configured": "{count} Steam uyumlu kurulum bulundu - hepsinin zaten bir kurulumu var. Bunları yeniden oluşturmak için Gelişmiş > Tüm oyunları onar seçeneğini kullanın.",

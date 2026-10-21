@@ -12,17 +12,15 @@ const OVERLAY_ONLY = [
   'option_overlayPresetXenia',
   'option_overlayPresetRpcs3',
   'option_overlayPresetShadps4',
+  'option_overlayPresetKytyps5',
   'option_overlayPosition',
   'option_overlayScale',
   'option_overlayProgressPosition',
   'option_overlayProgressScale',
   'option_overlayDuration',
-  'option_overlaySound',
-  'option_overlaySoundRare',
-  'option_overlaySoundPlatinum',
-  'option_overlaySoundProgress',
-  'option_overlayVolume',
 ];
+// The sound rows are not overlay-only: watchdog/notification/toaster.js plays the same sounds, at
+// the same volume, with a Windows notification.
 
 const CONTROLLER_BINDINGS = [
   'option_controllerToggle1',

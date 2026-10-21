@@ -147,7 +147,7 @@
       },
       "thumbnail": {
         "name": "Affichage de la bibliothèque",
-        "description": "Choisis la disposition des cartes. Paysage conserve l’apparence actuelle ; les modes paysage et portrait compacts, Liste et Détails privilégient la densité ou les informations d’activité.",
+        "description": "Choisis la disposition des cartes. Paysage affiche de larges illustrations ; les modes paysage et portrait compacts, Liste et Détails privilégient la densité ou les informations d’activité.",
         "value": {
           "portrait": "Portrait",
           "landscape": "Paysage",
@@ -291,7 +291,7 @@
         },
         "rareSilverMax": {
           "name": "Argent jusqu’à",
-          "description": "En paliers rares, les succès jusqu’à ce taux obtiennent l’argent. Gardez-le entre les limites or et rare, sinon les trois reviennent à leurs valeurs par défaut."
+          "description": "En paliers rares, les succès jusqu’à ce taux obtiennent l’argent. Il reste toujours au-dessus de l’or et sous la limite rare : bouger un curseur pousse les autres."
         },
         "rareMax": {
           "name": "Rare jusqu’à",
@@ -557,8 +557,13 @@
         "transport": "Intégrations",
         "chromium": "Notification Chromium",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Popup"
+        "test": "Tests",
+        "overlay": "Popup",
+        "overlayDisplay": "Affichage",
+        "overlayProgress": "Progression",
+        "overlaySounds": "Sons",
+        "overlayEmulators": "Émulateurs",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Certaines fonctionnalités ne sont disponibles que sous Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Préréglage (ShadPS4)",
         "overlayPresetShadps4Desc": "Préréglage utilisé pour les notifications ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Comme le principal",
+        "overlayEmulatorsDesc": "Les jeux lancés dans un émulateur peuvent avoir leur propre préréglage et leur propre son ; les portages recompilés suivent leur console. « Comme le principal » garde les réglages ci-dessus.",
         "overlayPosition": "Position",
         "overlayPositionDesc": "Position de la fenêtre overlay en jeu à l’écran",
         "overlayScale": "Échelle",
@@ -755,6 +761,9 @@
           "importedOnly": "Preset importé - exportable ou supprimable ici ; non modifiable avec les curseurs.",
           "importSan": "Importer un thème SAN",
           "importSanSetup": "Importer depuis SAN sur ce PC",
+          "importMenuFile": "Fichier de preset…",
+          "importMenuSan": "Thème SAN…",
+          "importMenuSanSetup": "Depuis SAN sur ce PC",
           "layer": {
             "none": "Aucune personnalisation",
             "title": "Personnaliser un preset fourni"
@@ -1131,11 +1140,11 @@
     "help": {
       "nav": "Aide",
       "title": "Aide et astuces",
-      "intro": "L’essentiel sur la détection, les notifications, la manette, l’overlay, les thèmes et le dépannage.",
+      "intro": "L’essentiel pour trouver tes jeux, régler les notifications, les émulateurs, l’overlay, la manette, les thèmes, et savoir quoi faire quand quelque chose ne va pas.",
       "setupTitle": "Ta configuration actuelle",
       "topicsTitle": "Parcourir les sujets",
       "groups": {
-        "start": "Premiers pas",
+        "start": "Pour commencer",
         "problems": "Quelque chose ne va pas",
         "emulators": "Jeux émulés",
         "personalize": "Personnalisation"
@@ -1143,7 +1152,7 @@
       "searchPlaceholder": "Rechercher dans l’aide…",
       "noResults": "Aucun sujet d’aide ne correspond à ta recherche.",
       "links": {
-        "title": "Plus d'aide en ligne",
+        "title": "Plus d’aide en ligne",
         "documentation": "Documentation",
         "faq": "FAQ",
         "issues": "Signaler un problème",
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Premiers pas",
       "quick": [
-        "Ajoute tes dossiers de sauvegarde et de configuration dans Paramètres > Dossiers, puis active la source correspondante dans Paramètres > Sources.",
+        "Laisse Recherche auto chercher tes jeux dans Paramètres > Dossiers, ou ajoute un dossier toi-même, puis active la source correspondante dans Paramètres > Sources.",
         "Le Watchdog fonctionne en arrière-plan : il doit rester actif pour les notifications en direct et le suivi du temps de jeu.",
         "Tes réglages, caches, journaux et thèmes personnalisés se trouvent dans %APPDATA%\\Achievement Watcher Next.",
-        "Chaque section des réglages se replie depuis son en-tête : le chevron pointe vers le bas quand elle est ouverte, sur le côté quand elle est fermée. Tes choix sont mémorisés."
+        "Le sélecteur Interface en haut des Paramètres bascule entre Simple (les onglets du quotidien) et Avancé (ajoute Steam / GBE Fork, Ubisoft / Uplay R1/R2, Avancé et des options plus poussées). Simple masque seulement des commandes, rien n’est désactivé.",
+        "Fermer la fenêtre principale garde AW Next dans la zone de notification, où le suivi continue. Pour quitter, utilise le menu de l’icône. Lancer au démarrage et Réduire dans la zone de notification sont dans Paramètres > Général.",
+        "Le champ de recherche en haut des Paramètres retrouve une option dans tous les onglets. Le Guide de première utilisation, dans Paramètres > Général, rouvre la configuration."
       ],
-      "notifications": [
-        "Automatique est le mode par défaut : le popup en jeu quand le jeu peut l’afficher, une notification Windows sinon, jamais les deux.",
-        "Paramètres > Notification regroupe le preset, le son, le volume, la position et l’échelle ; les boutons de test déclenchent un vrai popup.",
-        "Clic droit sur un jeu > Notification donne à ce jeu son propre preset, sa position, son son ou son échelle.",
-        "La capture au déblocage garde une image du moment dans Images\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "État des jeux",
-      "gameHealth": [
-        "Ouvre le bouton outils d’un jeu (en haut à droite de sa vignette) pour voir s’il est Prêt, À vérifier ou Non suivi.",
-        "La phrase sous l’état explique la cause en clair ; les vérifications en dessous montrent quelle partie est en cause.",
-        "Les boutons de réparation n’apparaissent que si AW Next peut réellement corriger le jeu - chacun annonce ce qu’il modifie et où les fichiers précédents sont conservés.",
-        "Détails techniques contient les chemins, comptes et codes d’émulateur exacts ; à copier dans un rapport de bug."
-      ],
-      "troubleshootTitle": "Dépannage",
-      "troubleshoot": [
-        "Si un jeu manque : ajoute les dossiers, relance un scan, puis vérifie l’interrupteur de source et la liste noire.",
-        "Si les notifications n’apparaissent pas : vérifie Ne pas déranger / Assistant de concentration dans Windows et lance l’app avec les mêmes droits que tes jeux.",
-        "Avancé > Diagnostics ouvre les logs et les dossiers de données ; joins-les quand tu signales un problème.",
-        "Les journaux sont conservés d’un lancement à l’autre. Chaque exécution commence par un marqueur de session et un bloc [diag] (versions, chemins, écrans) à joindre au ticket."
+      "libraryTitle": "Bibliothèque et collections",
+      "library": [
+        "Collections : clic droit sur un jeu > Collections, coche-en une ou choisis Nouvelle collection…. Le bouton des collections, à côté de Afficher uniquement les jeux installés, filtre ensuite la bibliothèque et les chiffres du profil suivent.",
+        "Modifier la collection… dans le menu de ce bouton change le nom, la couleur, l’icône ou l’image, et supprime la collection. Les jeux restent dans ta bibliothèque.",
+        "Le bouton rond à côté du taux de complétion ouvre les Statistiques de la bibliothèque : complétion, succès débloqués et verrouillés, temps de jeu, trophées, jeux platine, succès les plus rares et une ligne par plateforme.",
+        "Un sélecteur entre le champ de recherche et le bouton + change la vue de la bibliothèque (six au choix). Paramètres > Apparence > Tuiles de la bibliothèque règle la taille, l’espacement et ce que montre chaque tuile.",
+        "Le bouton + ajoute un jeu qu’aucune source ne trouve : un titre et un exécutable, avec une plateforme et un AppID Steam en option. Les lancements et le temps de jeu sont suivis, sans succès.",
+        "Clic droit sur un jeu > Réglages du jeu > Renommer… change le nom affiché. Succès et temps de jeu > Modifier le temps de jeu… corrige son total (12.5 ou 12h30)."
       ],
       "sourcesTitle": "Lanceurs et sources",
       "sources": [
-        "Le mode profil Steam liste les jeux installés ou possédés, mais les déblocages viennent toujours des fichiers de sauvegarde locaux.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay et EA Desktop peuvent être activés séparément dans Sources.",
-        "Les jeux Steam possédés ne comptent comme installés que si le registre Steam le confirme."
+        "Steam, Epic Games et Xbox PC proposent chacun Aucun, Installés ou Possédés dans Paramètres > Sources. Possédés liste toute la bibliothèque d’un compte connecté, installée ou non.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC et EA Desktop ont chacun leur interrupteur dans Paramètres > Sources. EA Desktop ne couvre que les jeux situés hors des dossiers gérés par EA.",
+        "Les jeux Steam possédés ne comptent comme installés que si le registre Steam le confirme.",
+        "Les succès Steam sont lus dans les statistiques que Steam garde sur ce PC : un profil privé fonctionne donc. Connecter un compte est facultatif et ajoute les jeux joués sur un autre PC et ceux du partage familial Steam.",
+        "Un jeu sauvegardé à un endroit inhabituel : ajoute son dossier dans Paramètres > Dossiers. Choisis le dossier qui contient directement les sauvegardes, les dossiers d’AppID ou la configuration de l’émulateur, ou un dossier de bibliothèque qui contient beaucoup de jeux.",
+        "RetroAchievements : active la source, saisis ton nom d’utilisateur et ta clé Web API, puis appuie sur Importer la bibliothèque. Les succès viennent de ton compte, laisse donc RetroAchievements activé dans l’émulateur.",
+        "En mode Simple, quelques lignes de sources rarement utilisées restent masquées tant qu’elles ne servent pas. Elles reviennent dès qu’elles comptent, et le mode Avancé les affiche toutes.",
+        "Les trophées PlayStation affichent leur grade, la part de joueurs qui les ont et la rareté PlayStation. Les pourcentages viennent d’Exophase ; connecte un compte PlayStation dans Paramètres > Sources pour avoir ceux de Sony sur les jeux de ce compte."
+      ],
+      "notifications": [
+        "Automatique est le mode par défaut : le popup en jeu quand le jeu peut l’afficher, une notification Windows sinon, jamais les deux.",
+        "Paramètres > Notification regroupe le Type de notification (Automatique, Notification Windows, Overlay en jeu ou Les deux), le préréglage, le son, le volume, la position, l’échelle et l’opacité. Les boutons de la section Tests déclenchent un vrai popup.",
+        "Ouvre le bouton outils d’un jeu (en haut à droite de sa vignette) puis ses réglages de notification pour lui donner son propre préréglage, sa position, son son ou son échelle.",
+        "La capture au déblocage garde une image du moment dans Images\\Achievement Watcher Next.",
+        "Son du succès rare, Son de complétion à 100 % et Son des progressions (mode Avancé) donnent à ces popups un son bien à eux. Son aléatoire en choisit un différent à chaque fois, et tu peux importer tes propres fichiers.",
+        "Or, argent et bronze signalent les succès rares. Paramètres > Général > Affichage de la rareté passe en Mode trophées, qui note chaque succès et affiche le platine sur les jeux terminés.",
+        "Pour les compteurs, Étapes de progression n’affiche un popup que par paliers de 10, 25 ou 50 %. Clic droit sur un jeu > Couper les notifications de progression le fait taire sans toucher à ses déblocages.",
+        "Deux autres interrupteurs dans Paramètres > Notification : Notifications prioritaires laisse passer les déblocages malgré Ne pas déranger (Windows 11), et Jeux du client Steam ajoute le popup d’AW Next pour les jeux que Steam lance lui-même."
+      ],
+      "gameHealthTitle": "État des jeux",
+      "gameHealth": [
+        "Clique sur le bouton outils d’un jeu (en haut à droite de sa vignette), ou fais un clic droit, pour ouvrir l’état du jeu. Il indique s’il est Prêt, À vérifier ou Non suivi.",
+        "La phrase sous l’état explique la cause en clair. Les vérifications en dessous montrent quelle partie est en cause : fichiers du jeu, exécutable, données de succès, émulateur, suivi en direct ou notifications.",
+        "Les boutons de réparation n’apparaissent que si AW Next peut vraiment corriger le jeu, comme Localiser le jeu, Réécrire les données de succès, Restaurer le fichier d’émulateur ou Surveiller ce jeu. Chacun annonce ce qu’il modifie, garde une sauvegarde et demande confirmation.",
+        "Envoyer une notification de test affiche un popup avec le nom et l’image de ce jeu, livré comme il le serait pour de vrai.",
+        "Détails techniques contient les chemins, comptes et codes d’émulateur exacts : appuie sur Copier et colle-le dans un rapport de bug. Le point coloré d’une tuile peut être masqué dans Paramètres > Apparence > Tuiles de la bibliothèque."
+      ],
+      "troubleshootTitle": "Dépannage",
+      "troubleshoot": [
+        "Si un jeu manque : vérifie sa source dans Paramètres > Sources, lance Recherche auto ou Générer les configs dans Paramètres > Dossiers, ajoute son dossier à la main si besoin, et essaie de désactiver Afficher uniquement les jeux installés.",
+        "Si les notifications n’apparaissent pas : lis la ligne Notifications dans l’état du jeu, puis vérifie Ne pas déranger / Assistant de concentration dans Windows. Notifications prioritaires, dans Paramètres > Notification, peut laisser passer les déblocages.",
+        "Paramètres > Avancé > Diagnostics ouvre les dossiers des journaux et des données, et Exporter les journaux (.zip) les regroupe en masquant ton nom d’utilisateur et tes clés. Joins-le quand tu signales un problème.",
+        "Les journaux sont conservés d’un lancement à l’autre. Chaque exécution commence par un marqueur de session et un bloc [diag] (versions, chemins, écrans) : colle-le dans le ticket.",
+        "Un jeu bloqué à 0 % ? C’est normal tant que son premier déblocage n’est pas écrit. Si AW Next a associé la mauvaise version Steam, clic droit sur le jeu > Définir l’AppID manuellement….",
+        "Le temps de jeu n’est pas compté ? Ouvre le bouton outils du jeu > Exécutable et choisis le programme qui reste ouvert pendant que tu joues, pas un lanceur.",
+        "Les nouveaux succès ajoutés par une mise à jour du jeu apparaissent sous 3 jours, ou tout de suite avec Paramètres > Avancé > Revérifier les listes de succès.",
+        "Une mise à jour de l’app échoue toujours sur le même fichier ? Paramètres > Avancé > Vider les caches ne supprime que des fichiers qui se re-téléchargent, jamais tes réglages ni tes sauvegardes."
       ],
       "steamTitle": "Émulateurs Steam",
       "steam": [
         "Les sauvegardes GBE / Goldberg se trouvent en général dans %APPDATA%\\GSE Saves ou %APPDATA%\\Goldberg SteamEmu Saves.",
         "Les sauvegardes style CODEX / RUNE vivent souvent dans Public Documents\\Steam\\CODEX ou Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 et Hoodlum sont détectés via leurs dossiers de config/sauvegarde.",
-        "Le fix émulateur du clic droit peut ajouter GBE Fork, le schéma de succès et les données DLC.",
-        "Le mode Simple est rapide ; Avancé lance generate_emu_config pour des données Steam plus complètes et peut prendre plusieurs minutes."
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI et les émulateurs Nemirtingas sont lus dans leurs propres dossiers de config ou de sauvegarde. Si un jeu n’est pas trouvé, ajoute son dossier dans Paramètres > Dossiers.",
+        "Clic droit sur un jeu > Émulateur et outils > Appliquer le fix émulateur… installe GBE Fork, construit steam_settings (liste des succès et icônes) et écrit steam_appid.txt s’il manque. Chaque fichier remplacé est sauvegardé avant.",
+        "Dans Paramètres > Steam / GBE Fork, Données steam_settings sur Simple utilise la récupération anonyme d’AW Next et reste rapide. Avancé lance generate_emu_config pour des données Steam plus complètes et peut prendre plusieurs minutes.",
+        "Rien n’est écrit tout seul dans un dossier de jeu : Corriger automatiquement les nouveaux jeux détectés, Gérer la propriété des DLC et Écrire le nom de compte et la langue sont désactivés par défaut.",
+        "Diagnostiquer l’émulateur, dans le même menu, lit et rapporte seulement. Sauvegarder GBE/Goldberg et Restaurer la dernière sauvegarde GBE/Goldberg remettent un jeu comme il était."
       ],
       "emulatorTitle": "Émulateurs de console",
       "emulators": [
-        "Les trophées RPCS3 sont lus depuis dev_hdd0\\home\\...\\trophy près de l’installation RPCS3.",
-        "Les trophées shadPS4 sont lus depuis ses dossiers game_data/trophy ; des données résiduelles ne prouvent pas l’installation.",
-        "La progression Xenia est lue depuis les fichiers de profil Xbox comme .gpd."
+        "Les trophées RPCS3 sont lus depuis dev_hdd0\\home\\...\\trophy près de l’installation RPCS3. Un disque virtuel déplacé est suivi.",
+        "Les trophées shadPS4 sont lus depuis son dossier game_data (les fichiers XML TROP). Tu peux ajouter l’émulateur, son dossier user ou game_data lui-même.",
+        "La progression Xenia est lue depuis les fichiers de profil Xbox (.gpd) et suit les dossiers de stockage définis dans sa config.",
+        "Les trophées de KytyPS5 sont lus depuis son dossier _Trophies, pour l’utilisateur avec lequel le lanceur démarre le jeu.",
+        "Les jeux Xbox 360 recompilés pour PC et les portages de jeux PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil et d’autres) sont des sources à part dans Paramètres > Sources. Si l’un d’eux n’apparaît pas, ajoute son dossier dans Paramètres > Dossiers.",
+        "Chaque console peut avoir son propre préréglage de popup et son propre son dans Paramètres > Notification > Émulateurs (mode Avancé). Les jeux Xbox 360 recompilés suivent le choix de Xenia, les portages PS4 celui de shadPS4, et Comme le principal garde les réglages principaux."
       ],
       "controllerTitle": "Manette",
       "controller": [
-        "Active d’abord Paramètres > Manette, puis Select + Start + LB ouvre l’overlay en jeu.",
-        "LB + X active/désactive la navigation dans l’overlay.",
-        "Mode navigation : croix/stick gauche déplacent le focus, A valide, B annule, X recherche, Y ouvre les options.",
+        "Dans Paramètres > Manette, active Contrôler l’overlay en jeu à la manette (désactivé par défaut), puis Select + Start + LB ouvre l’overlay en jeu.",
+        "Contrôler l’app à la manette (activé par défaut) pilote AW Next lui-même : croix ou stick gauche déplacent le focus, A ouvre un jeu, B revient en arrière, X cherche, Y ou Start ouvre les Paramètres, LB / RB changent d’onglet.",
+        "Dans la bibliothèque, RT lance le jeu sélectionné et LT ouvre son état du jeu.",
+        "Dans l’overlay, LB + X active la navigation : croix ou stick gauche déplacent le focus, A valide, B annule, X cherche, Y ouvre les options.",
         "Maintiens LB + RB pour déplacer l’overlay avec le stick gauche et défiler avec le stick droit.",
-        "Compatible Xbox, PlayStation (DualShock 4 / DualSense) et Switch Pro."
+        "Si le jeu réagit encore à tes boutons, active Donner le focus à l’overlay à l’ouverture ou Envoyer Échap au jeu à l’ouverture par manette (tous deux désactivés par défaut).",
+        "Compatible Xbox, PlayStation (DualShock 4 / DualSense) et Switch Pro. Type de manette choisit les noms de boutons affichés, et chaque raccourci prend de un à trois boutons.",
+        "Manette non détectée ? Vérifie-la d’abord dans Windows (joy.cpl), assure-toi que le bon interrupteur est activé, puis essaie XInput dans Backend de la manette."
       ],
       "overlayTitle": "Overlay en jeu",
       "overlay": [
-        "Ouvre-le avec le raccourci overlay (Ctrl+Shift+K par défaut) ou Select + Start + LB à la manette.",
-        "Trie par une seule colonne à la fois : Rareté, Date ou Statut (croissant / décroissant / aucun).",
+        "Ouvre-le avec le raccourci overlay (Ctrl+Shift+K par défaut) ou Select + Start + LB à la manette, pendant qu’un jeu pris en charge tourne. Le raccourci se règle dans Paramètres > Général.",
+        "Il liste les succès du jeu en cours : nom, description, verrouillé ou débloqué, date de déblocage et progression. Déplace-le en le saisissant par son en-tête.",
+        "Un succès caché le reste tant que tu ne cliques pas dessus (ou n’appuies pas sur A à la manette), rien n’est donc gâché.",
+        "Les pastilles Tous, Débloqués, Verrouillés et En cours filtrent la liste. Clique sur Succès, Rareté, Date ou Statut pour trier : croissant, décroissant, puis retour à l’ordre normal. Une seule colonne à la fois.",
         "Appuie sur / pour chercher, Échap pour effacer ou fermer le panneau d’options.",
-        "Le panneau engrenage change l’accent, la densité, le zoom, l’opacité et les éléments affichés ; « Utiliser le thème de l’app » suit le thème actif.",
+        "Le panneau engrenage change l’accent, la densité, la taille des icônes, le zoom, l’opacité et les éléments affichés. Utiliser le thème de l’application suit le thème actif, et Réinitialiser annule tout.",
         "Chaque succès avec un taux connu affiche sa rareté : gris pour les communs, or/argent/bronze pour les rares."
       ],
       "streamTitle": "Overlay de stream (OBS)",
       "stream": [
-        "Paramètres > Notification > Source navigateur OBS > Copier le lien, puis ajoute une source navigateur dans OBS et colle-la comme URL.",
-        "Règle la largeur et la hauteur de la source sur la taille indiquée par http://127.0.0.1:8082/obs/_config : la taille propre du préréglage selon ton échelle.",
+        "Paramètres > Notification > Source navigateur OBS (mode Avancé) : Aperçu la teste dans ton navigateur et Copier le lien copie l’adresse. Dans OBS, ajoute une source Navigateur et colle l’adresse comme URL.",
+        "Toutes les largeurs et hauteurs conviennent, la carte s’adapte à la zone. Plus la source est grande, plus l’image est nette : donne-lui environ le double de la taille propre du préréglage (http://127.0.0.1:8082/obs/_config l’indique) et place-la à moitié de sa taille.",
         "Ajoute ?test=1 à l’URL pendant que tu places la source. Elle affiche un déblocage d’exemple toutes les dix secondes ; retire-le une fois terminé.",
-        "La source affiche la même fenêtre de notification que celle en jeu, et reste vide entre les déblocages, elle ne coûte donc rien pendant le stream.",
-        "Elle lit le flux de notification local, laisse donc Websocket @localhost:8082 activé dans Paramètres > Notification > Transport."
+        "La source affiche la même fenêtre de notification que celle en jeu, et reste vide entre les déblocages : elle ne coûte donc rien pendant le stream.",
+        "Autres options après l’adresse : ?scale=2 fixe le zoom, ?duration=8000 règle la durée de chaque carte, ?sound=1 joue le son par la source, /obs/preset/Xbox/ impose un préréglage quel que soit celui du bureau.",
+        "Elle lit le flux de notification local, laisse donc Websocket @localhost:8082 activé dans Paramètres > Notification > Intégrations. Elle ne fonctionne que sur ce PC, et une seule copie d’AW Next peut la servir."
+      ],
+      "souvenirsTitle": "Captures et clips vidéo",
+      "souvenirs": [
+        "Paramètres > Notification > Capture au déblocage enregistre une image un instant après le popup, notification comprise, dans un sous-dossier par jeu. Ouvrir le dossier t’y emmène.",
+        "Captures HDR (Automatique) corrige les couleurs quand le HDR de Windows est actif. Les souvenirs capturent l’écran principal, joue donc dessus.",
+        "Clip vidéo au déblocage (désactivé tant que tu ne l’actives pas, plus bas dans Paramètres > Notification) garde en mémoire les dernières secondes de jeu et enregistre un MP4 autour de chaque déblocage. Rien n’est écrit tant qu’un succès n’est pas débloqué.",
+        "Durée du clip (10 à 30 secondes), Format (H.264, HEVC ou AV1), Résolution, Images par seconde, Qualité et Son (Jeu seulement ou Tout le PC) se règlent tous. Le H.264 se lit partout.",
+        "L’encodeur de la carte graphique fait le travail, avec bien moins de 1 % du processeur. Sans encodeur H.264 matériel, l’encodeur logiciel de Windows prend le relais en 1080p et 30 images par seconde au plus. Un très vieux jeu en plein écran exclusif peut donner des images noires."
       ],
       "shortcutsTitle": "Raccourcis clavier",
       "shortcuts": [
-        "Ctrl+Shift+K (défaut) : bascule l’overlay en jeu - configurable dans Paramètres > Général.",
-        "Ctrl+Alt+Shift+Flèches déplacent l’overlay ; Ctrl+Alt+Shift+1-5 l’aimantent à une position prédéfinie.",
-        "Ctrl+Alt+Shift+C active ou désactive les clics traversants ; Ctrl+F place le curseur dans la recherche des réglages."
+        "Ctrl+Shift+K (défaut) : bascule l’overlay en jeu. À changer dans Paramètres > Général.",
+        "Ctrl+Alt+Shift+Flèches déplacent l’overlay ; Ctrl+Alt+Shift+1-5 l’aimantent à une position prédéfinie ; Ctrl+Alt+Shift+C active ou désactive les clics traversants.",
+        "Dans l’overlay, / place le curseur dans la recherche et Échap l’efface. Dans le concepteur de preset, Ctrl+Z et Ctrl+Y annulent et rétablissent.",
+        "Ctrl+F place le curseur dans la recherche des Paramètres et Échap l’efface. F5 actualise la bibliothèque."
       ],
-      "themesTitle": "Thèmes custom",
+      "themesTitle": "Thèmes personnalisés",
       "themes": [
-        "Le thème personnalisé part de Steam Blue ; chaque couche (fond, en-tête, panneaux, cartes, réglages, texte, bordures, accent) est modifiable.",
-        "Les images de couche passent sous un voile coloré avec un léger flou dépoli ; les effets sont par couche.",
+        "Paramètres > Apparence propose des thèmes intégrés, tous modifiables : fenêtre, barre du haut, panneaux, cartes, réglages, texte, bordures et accent prennent chacun une couleur, un dégradé ou une image.",
+        "Enregistrer le thème transforme ta modification en thème à toi : garde le nom pour le remplacer, saisis-en un autre pour en faire une copie. Tout réinitialiser remet le thème de départ.",
         "Dépose un thème CSS dans <userData>\\themes et il apparaît dans la liste des thèmes.",
-        "Le créateur de preset affiche un aperçu réel avant l’enregistrement, puis permet de modifier ou supprimer tes presets.",
-        "Exporte le thème que tu utilises dans un seul fichier .awtheme, ou importe celui qu'on t'a envoyé : il est prévisualisé avant l'installation puis se comporte comme un thème intégré."
+        "Exporter le thème… écrit un seul fichier .awtheme (un thème intégré doit d’abord être enregistré sous ton propre nom). Importer un thème… l’affiche en aperçu avant l’installation, et Supprimer le thème retire un thème importé.",
+        "Les thèmes de la communauté sont dans la galerie de thèmes du site du projet, et envoyer le tien tient en un fichier."
+      ],
+      "presetsTitle": "Préréglages de popup",
+      "presets": [
+        "Un préréglage est l’apparence du popup en jeu, choisi dans Paramètres > Notification > Préréglage. Il n’a aucun effet quand le Type de notification est Notification Windows.",
+        "Paramètres > Presets de notification est un concepteur fait de commandes simples : choisis un point de départ ou appuie sur Surprends-moi, regarde l’aperçu en direct (Carte, Comparer, Écran), puis Créer le preset. Rien n’est enregistré avant.",
+        "Personnaliser un preset fourni ne change que quelques éléments (fond, couleur du texte, accent, bordure, halo, police, logo) et continue de suivre le preset fourni s’il est amélioré.",
+        "Modifier un preset rouvre un preset que tu as conçu. Exporter et Importer déplacent un preset dans un seul fichier .awpreset, avec ses images, ses polices et son son.",
+        "Importer > Thème SAN… lit un thème Steam Achievement Notifier (un fichier .san), et Importer > Depuis SAN sur ce PC reprend les thèmes que SAN utilise déjà. Ils gardent leur apparence et leurs sons SAN."
       ],
       "tipsTitle": "Astuces",
       "tips": [
         "Le clic droit sur un jeu regroupe son lancement, le choix de l’exécutable, les dossiers, les liens, les outils d’émulation et la désinstallation si ce menu est activé.",
-        "Clic droit sur un jeu puis « couper la progression » pour arrêter les popups de progression sans désactiver les succès.",
-        "Le fix émulateur (Simple rapide / Avancé complet) installe GBE Fork, le schéma de succès et les données DLC.",
-        "Le temps de jeu est suivi pendant que le jeu tourne ; les notifications de progression/temps de jeu s’activent dans Notifications.",
-        "Les nouveaux succès ajoutés par une mise à jour du jeu apparaissent automatiquement sous 3 jours, ou immédiatement via Réglages > Avancé > Revérifier les listes de succès."
+        "Marquer comme débloqué manuellement (clic droit sur un succès) enregistre un déblocage qu’aucune source ne voit.",
+        "Réinitialiser les succès… permet de rejouer un jeu depuis zéro et sauvegarde chaque fichier avant. Cela marche pour les jeux émulés, pas pour Steam, Epic ou Xbox, dont les déblocages sont sur ton compte.",
+        "Le temps de jeu est suivi pendant que le jeu tourne ; Temps de jeu dans Paramètres > Notification active les notifications de début et de fin.",
+        "Oublier ce jeu… efface tout ce qu’AW Next garde sur un jeu (les sauvegardes sont copiées avant). Retirer de la liste ne fait que le masquer.",
+        "Réglages du jeu > Langue des succès affiche les succès et les notifications d’un seul jeu dans une autre langue que le reste.",
+        "Paramètres > Avancé > Sauvegarde du profil : Exporter le profil… enregistre tes réglages, presets, thèmes, jaquettes et temps de jeu dans un fichier .awbackup, pour une réinstallation ou un nouveau PC. Les connexions ne sont pas sauvegardées."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Classe les succès en or, argent ou bronze selon leur rareté. Active-le dans Paramètres.",
     "clipsTitle": "Clips vidéo",
     "clipsCopy": "Garde un court clip autour de chaque déblocage. Active-le dans Paramètres, sous Notifications.",
-    "backupTitle": "Sauvegarde du profil",
-    "backupCopy": "Enregistre tes paramètres et tes choix de bibliothèque dans un seul fichier, puis restaure-les après une réinstallation.",
+    "statsTitle": "Statistiques",
+    "statsCopy": "Sous ton profil, « Voir le détail » montre ta complétion, ton temps de jeu et ta progression par plateforme.",
+    "healthTitle": "État du jeu",
+    "healthCopy": "Un point de couleur sur un jeu dit si ses succès sont bien suivis. Son bouton de réglages explique ce qui ne va pas.",
     "profileTitle": "Profil",
     "profileCopy": "Choisis le nom affiché dans l’en-tête et, si tu veux, un avatar local.",
     "username": "Nom d’affichage",
@@ -1343,7 +1409,7 @@
     "foldersTitle": "Tes jeux",
     "foldersCopy": "AW Next cherche les jeux sur ce PC et affiche ce qu’il trouve. Ajoute un dossier seulement s’il manque quelque chose.",
     "detectTitle": "Trouvé sur ce PC",
-    "detectInstalled": "{count} installés",
+    "detectInstalled": "Installés : {count}",
     "detectNone": "Aucun trouvé",
     "detectOff": "désactivé",
     "detectEmulators": "Sauvegardes d’émulateurs",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "saves + bibliothèques",
     "addSaveHint": "un émulateur/source",
     "addLibraryHint": "plusieurs jeux installés",
+    "addFolder": "Il manque un jeu ? Ajouter un dossier",
     "saveList": "Sauvegardes / configs",
     "libraryList": "Bibliothèques de jeux",
     "emptyList": "Rien n’a été ajouté à cette session.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Tu peux rouvrir ce guide à tout moment depuis Paramètres > Général.",
     "sourcesTitle": "D’où viennent tes succès",
     "sourcesCopy": "Chaque source installée sur ce PC est lue automatiquement, donc les réglages par défaut conviennent. Connecte-toi ci-dessous seulement si tu en veux plus.",
+    "sourcesCopySimple": "Les lanceurs et émulateurs de ce PC sont déjà lus. Connecte un compte seulement si tu veux ce qu’il apporte.",
     "sourcesMore": "Affiner les sources ({count} activées)",
     "accountsTitle": "Comptes (facultatif)",
-    "accountsCopy": "Connecte-toi pour lire les succès débloqués sur un profil Steam privé, ajouter les jeux de ta famille Steam, importer ta bibliothèque Xbox PC et afficher ta progression Epic. Tu peux passer cette étape et te connecter plus tard dans Paramètres > Sources.",
+    "accountsCopy": "Connecte-toi pour lire les succès débloqués sur un profil Steam privé, ajouter les jeux de ta famille Steam, importer ta bibliothèque Xbox PC, afficher ta progression Epic, obtenir les vrais pourcentages des trophées PlayStation et importer tes jeux RetroAchievements. Tu peux passer cette étape et te connecter plus tard dans Paramètres > Sources.",
+    "raKeyPage": "Où trouver ma clé Web API ?",
     "sourcesEmulators": "Émulateurs",
     "sourcesEmulatorsCopy": "Chacun n’est lu que s’il est installé, donc les laisser activés ne coûte rien.",
     "source": "Afficher les jeux Steam",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Nom du jeu",
     "manual-game-appid-optional": "AppID Steam (facultatif)",
     "manual-game-platform-other": "Autre",
+    "manual-game-note": "Lancements et temps de jeu suivis, sans succès.",
+    "collection-create": "Créer",
+    "collection-create-note": "Une fois créée, fais un clic droit sur un jeu > Collections pour l’y ajouter.",
+    "psn-ultra-rare": "Ultra rare",
+    "psn-very-rare": "Très rare",
+    "psn-rare": "Rare",
+    "psn-common": "Commun",
+    "psn-title": "Compte PlayStation",
+    "psn-desc": "Optionnel. Affiche les pourcentages officiels PlayStation pour les jeux déjà présents sur ton compte PSN ; les autres gardent ceux d’Exophase. Ton jeton est stocké chiffré sur ce PC.",
+    "psn-btn-hint": "ouvre la fenêtre de connexion Sony",
+    "psn-connect": "Connecter le compte PlayStation",
+    "psn-connecting": "Ouverture de la fenêtre de connexion Sony…",
+    "psn-connected": "Compte PlayStation connecté.",
+    "psn-disconnected": "Compte PlayStation déconnecté.",
+    "psn-failed": "Échec de la connexion PlayStation",
+    "connect-playstation-account": "Connecter le compte PlayStation",
     "manual-source": "Manuel",
     "no-config-eligible-games": "Aucun jeu Steam sans fix existant ne nécessite de configuration.",
     "no-config-eligible-games-configured": "{count} installation(s) compatible(s) Steam détectée(s) - toutes ont déjà une configuration. Pour les régénérer, utilise Avancé > Réparer tous les jeux.",

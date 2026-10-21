@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Widok biblioteki",
-        "description": "Wybierz układ kart. Pozioma zachowuje obecny wygląd; Kompaktowa siatka, Lista i Szczegóły zwiększają gęstość lub pokazują więcej informacji o aktywności.",
+        "description": "Wybierz układ karty. Poziomy pokazuje szeroką grafikę; kompaktowy poziomy i pionowy, Lista i Szczegóły zamieniają rozmiar grafiki na gęstość lub bogatszą aktywność.",
         "value": {
           "portrait": "Pionowa",
           "landscape": "Pozioma",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Srebro do",
-          "description": "Na poziomach rzadkości osiągnięcia do tego odsetka otrzymują srebro. Wartość musi leżeć między progiem złota a progiem rzadkości, inaczej wszystkie trzy wracają do domyślnych."
+          "description": "W rzadkich poziomach osiągnięcia do tego wskaźnika dostają srebro. Zawsze pozostaje powyżej złota i poniżej progu rzadkich: przesunięcie jednego suwaka przesuwa pozostałe."
         },
         "rareMax": {
           "name": "Rzadkie do",
@@ -557,8 +557,13 @@
         "transport": "Integracje",
         "chromium": "Powiadomienie Chromium",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Okno powiadomienia"
+        "test": "Testy",
+        "overlay": "Okno powiadomienia",
+        "overlayDisplay": "Wyświetlanie",
+        "overlayProgress": "Postęp",
+        "overlaySounds": "Dźwięki",
+        "overlayEmulators": "Emulatory",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Niektóre funkcje są dostępne tylko w systemie Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Ustawienie (ShadPS4)",
         "overlayPresetShadps4Desc": "Ustawienie używane dla powiadomień ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Taki sam jak główny",
+        "overlayEmulatorsDesc": "Gry uruchamiane w emulatorze mogą mieć własne ustawienie i własny dźwięk; zrekompilowane porty na PC podążają za swoją konsolą. „Taki sam jak główny” zachowuje ustawienia powyżej.",
         "overlayPosition": "Pozycja",
         "overlayPositionDesc": "Gdzie na ekranie pojawia się wyskakująca nakładka",
         "overlayScale": "Rozmiar",
@@ -755,6 +761,9 @@
           "importedOnly": "Zaimportowane ustawienie - możesz je tu wyeksportować lub usunąć; suwaki go nie zmienią.",
           "importSan": "Importuj motyw SAN",
           "importSanSetup": "Importuj z SAN na tym PC",
+          "importMenuFile": "Plik ustawienia…",
+          "importMenuSan": "Motyw SAN…",
+          "importMenuSanSetup": "Z SAN na tym PC",
           "layer": {
             "none": "Bez dostosowywania",
             "title": "Dostosuj dołączone ustawienie"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Pomoc",
       "title": "Pomoc i porady",
-      "intro": "Wszystko, co warto wiedzieć - wykrywanie, powiadomienia, kontroler, nakładka, motywy i rozwiązywanie problemów.",
+      "intro": "Wszystko, co warto wiedzieć: wyszukiwanie gier, powiadomienia, emulatory, nakładka, kontroler, motywy i co robić, gdy coś nie działa.",
       "setupTitle": "Twoja bieżąca konfiguracja",
       "topicsTitle": "Przeglądaj według tematu",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Pierwsze kroki",
       "quick": [
-        "Dodaj foldery zapisów/konfiguracji w Ustawienia > Foldery, a następnie włącz odpowiednie źródło w Ustawienia > Źródła.",
-        "Watchdog działa w tle - musi być uruchomiony, aby działały powiadomienia na żywo i pomiar czasu gry.",
+        "Pozwól, by Inteligentne wyszukiwanie znalazło Twoje gry w Ustawienia > Foldery albo dodaj folder samodzielnie, a potem włącz odpowiednie źródło w Ustawienia > Źródło.",
+        "Watchdog działa w tle. Musi być uruchomiony, aby działały powiadomienia na żywo i liczenie czasu gry.",
         "Wszystko (ustawienia, pamięci podręczne, dzienniki i motywy użytkownika) znajduje się w %APPDATA%\\Achievement Watcher Next.",
-        "Każdą sekcję ustawień można zwinąć pod jej nagłówkiem - strzałka w dół oznacza otwartą, w bok zamkniętą. Twoje wybory są zapamiętywane."
+        "Przełącznik Interfejs u góry Ustawień przełącza między trybem Prosty (codzienne karty) a Zaawansowany (dodaje Steam / GBE Fork, Ubisoft / Uplay R1/R2, Zaawansowane i głębsze opcje). Tryb Prosty tylko ukrywa kontrolki, nic nie jest wyłączane.",
+        "Zamknięcie głównego okna zostawia AW Next w zasobniku systemowym, gdzie śledzenie trwa dalej. Aby zakończyć, użyj menu zasobnika. Uruchamiaj przy starcie i Zminimalizuj do zasobnika systemowego są w Ustawienia > Ogólne.",
+        "Pole wyszukiwania u góry Ustawień znajduje opcję na każdej karcie. Przewodnik pierwszego uruchomienia w Ustawienia > Ogólne ponownie otwiera konfigurację."
       ],
-      "notifications": [
-        "Automatyczny to tryb domyślny: powiadomienie w grze, gdy gra może je pokazać, i powiadomienie Windows, gdy nie może, nigdy oba naraz.",
-        "W Ustawienia > Powiadomienia znajdziesz preset, dźwięk, głośność, pozycję i skalę; przyciski testu pokazują prawdziwe powiadomienie.",
-        "Kliknij grę prawym przyciskiem > Powiadomienia, aby nadać tej jednej grze własny preset, pozycję, dźwięk lub skalę.",
-        "Zrzut ekranu przy odblokowaniu zapisuje obraz tej chwili w Obrazy\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Stan gry",
-      "gameHealth": [
-        "Otwórz przycisk narzędzi gry (prawy górny róg kafelka), aby zobaczyć, czy jest Gotowa, Wymaga uwagi czy Nieśledzona.",
-        "Zdanie pod stanem wyjaśnia przyczynę prostymi słowami; kontrole poniżej wskazują, która część zawodzi.",
-        "Przyciski naprawy pojawiają się tylko wtedy, gdy AW Next naprawdę może naprawić grę - każdy mówi, co zmieni i gdzie zostaną poprzednie pliki.",
-        "Szczegóły techniczne zawierają dokładne ścieżki, liczby i kody emulatora; skopiuj je do zgłoszenia błędu."
-      ],
-      "troubleshootTitle": "Rozwiązywanie problemów",
-      "troubleshoot": [
-        "Jeśli brakuje gry: dodaj foldery, przeskanuj ponownie, a następnie sprawdź przełącznik źródła i listę zablokowanych.",
-        "Jeśli powiadomienia się nie pojawiają: sprawdź Asystenta skupienia systemu Windows i uruchom aplikację z takimi samymi uprawnieniami jak gry.",
-        "Zaawansowane > Diagnostyka otwiera dzienniki i foldery danych; dołącz je podczas zgłaszania problemu.",
-        "Dzienniki są dopisywane, więc awaria przetrwa kolejne uruchomienie. Każdy start zaczyna się znacznikiem sesji i blokiem [diag] (wersje, ścieżki, ekrany) - wklej go do zgłoszenia."
+      "libraryTitle": "Biblioteka i kolekcje",
+      "library": [
+        "Kolekcje: kliknij grę prawym przyciskiem > Kolekcje, zaznacz kolekcję lub wybierz Nowa kolekcja…. Przycisk kolekcji obok Pokaż tylko zainstalowane gry filtruje wtedy bibliotekę, a liczby w profilu podążają za nim.",
+        "Edytuj kolekcję… w menu tego przycisku zmienia nazwę, kolor, ikonę lub obraz oraz usuwa kolekcję. Gry zostają w bibliotece.",
+        "Okrągły przycisk obok wskaźnika ukończenia otwiera Statystyki biblioteki: ukończenie, liczby odblokowanych i zablokowanych, czas gry, trofea, gry z platyną, najrzadsze osiągnięcia i jeden wiersz na platformę.",
+        "Selektor między polem wyszukiwania a przyciskiem + przełącza sześć widoków biblioteki. Ustawienia > Wygląd > Kafelki biblioteki określa rozmiar kafelków, odstępy i to, co pokazuje każdy kafelek.",
+        "Przycisk + dodaje grę, której nie widzi żadne źródło: tytuł i plik wykonywalny, z opcjonalną platformą i Steam AppID. Uruchomienia i czas gry są śledzone, bez osiągnięć.",
+        "Kliknij grę prawym przyciskiem > Ustawienia gry > Zmień nazwę… aby zmienić wyświetlaną nazwę. Osiągnięcia i czas gry > Edytuj czas gry… poprawia łączny czas (12.5 lub 12h30)."
       ],
       "sourcesTitle": "Launchery i źródła",
       "sources": [
-        "Tryb profilu Steam wyświetla zainstalowane lub posiadane gry, ale odblokowania nadal pochodzą z lokalnych plików zapisów.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay i EA Desktop można włączać oddzielnie w sekcji Źródła.",
-        "Posiadane gry Steam są uznawane za zainstalowane tylko wtedy, gdy potwierdza to rejestr Steam."
+        "Steam, Epic Games i Xbox PC mają w Ustawienia > Źródło opcje Brak, Zainstalowane lub Posiadane. Posiadane wyświetla całą bibliotekę połączonego konta, zainstalowaną lub nie.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC i EA Desktop mają własne przełączniki w Ustawienia > Źródło. EA Desktop obejmuje tylko gry spoza folderów zarządzanych przez EA.",
+        "Posiadane gry Steam są uznawane za zainstalowane tylko wtedy, gdy potwierdza to rejestr Steam.",
+        "Odblokowania Steam są odczytywane ze statystyk, które Steam trzyma na tym komputerze, więc prywatny profil działa. Połączenie konta jest opcjonalne: dodaje gry ogrywane na innym komputerze i gry z Steam Family.",
+        "Gra zapisana w nietypowym miejscu: dodaj jej folder w Ustawienia > Foldery. Wybierz folder bezpośrednio zawierający zapisy, foldery AppID lub konfigurację emulatora albo folder biblioteki z wieloma grami.",
+        "RetroAchievements: włącz źródło, wpisz nazwę użytkownika i klucz Web API, a następnie naciśnij Importuj bibliotekę. Odblokowania pochodzą z Twojego konta, więc zostaw RetroAchievements włączone w emulatorze.",
+        "W trybie Prosty kilka rzadko używanych wierszy źródeł jest ukrytych, dopóki nie są używane. Wracają, gdy tylko mają znaczenie, a tryb Zaawansowany zawsze pokazuje wszystkie.",
+        "Trofea PlayStation pokazują swój stopień, odsetek graczy, którzy je mają, i własny poziom rzadkości PlayStation. Wskaźniki pochodzą z Exophase; połącz konto PlayStation w Ustawienia > Źródło, aby uzyskać dane Sony dla gier z tego konta."
+      ],
+      "notifications": [
+        "Tryb Automatycznie jest domyślny: wyskakujące okienko w grze, gdy gra może je pokazać, powiadomienie systemu Windows, gdy nie może, nigdy oba naraz.",
+        "Ustawienia > Powiadomienia zawierają Typ powiadomienia (Automatycznie, Powiadomienie systemu Windows, Nakładka w grze lub Oba), ustawienie, dźwięk, głośność, pozycję, rozmiar i nieprzezroczystość. Przyciski testowe wyzwalają prawdziwe powiadomienie.",
+        "Otwórz przycisk narzędzi gry (prawy górny róg kafelka) i przejdź do jej ustawień powiadomień, aby nadać tej jednej grze własne ustawienie, pozycję, dźwięk lub rozmiar.",
+        "Zrzut przy odblokowaniu zachowuje obraz tej chwili w Obrazy\\Achievement Watcher Next.",
+        "Dźwięk rzadkiego osiągnięcia, Dźwięk ukończenia na 100% i Dźwięk postępu (tryb Zaawansowany) dają tym powiadomieniom własny dźwięk. Losowy dźwięk wybiera za każdym razem inny, a możesz też zaimportować własne pliki.",
+        "Złoto, srebro i brąz oznaczają rzadkie odblokowania. Ustawienia > Ogólne > Wyświetlanie rzadkości przełącza na Tryb trofeów, który ocenia każde osiągnięcie i pokazuje platynę przy ukończonych grach.",
+        "Dla liczników Kamienie milowe postępu pokazują powiadomienie tylko co 10, 25 lub 50%. Kliknij grę prawym przyciskiem > Wycisz powiadomienia o postępie, aby wyciszyć jedną grę bez ruszania jej odblokowań.",
+        "Jeszcze dwa przełączniki w Ustawienia > Powiadomienia: Powiadomienia priorytetowe przepuszczają odblokowania mimo trybu Nie przeszkadzać (Windows 11), a Gry klienta Steam dodają powiadomienie AW Next dla gier uruchamianych przez sam Steam."
+      ],
+      "gameHealthTitle": "Stan gry",
+      "gameHealth": [
+        "Kliknij przycisk narzędzi gry (prawy górny róg kafelka) albo kliknij ją prawym przyciskiem, aby otworzyć Stan gry. Pokazuje, czy gra jest Gotowe, Wymaga uwagi czy Nieśledzone.",
+        "Zdanie pod stanem wyjaśnia przyczynę prostymi słowami. Poniższe kontrole pokazują, która część zawodzi: pliki gry, plik wykonywalny, dane osiągnięć, konfiguracja emulatora, śledzenie na żywo lub powiadomienia.",
+        "Przyciski naprawy pojawiają się tylko wtedy, gdy AW Next naprawdę może naprawić daną grę, np. Znajdź grę, Zapisz dane osiągnięć ponownie, Przywróć plik emulatora lub Obserwuj tę grę. Każdy mówi, co zmieni, tworzy kopię zapasową i najpierw pyta.",
+        "Wyślij powiadomienie testowe wyświetla powiadomienie z nazwą i grafiką tej gry, dostarczone tak, jak naprawdę by przyszło.",
+        "Szczegóły techniczne zawierają dokładne ścieżki, liczby i kody emulatora: naciśnij Kopiuj i wklej to do zgłoszenia błędu. Kolorową kropkę na kafelku można ukryć w Ustawienia > Wygląd > Kafelki biblioteki."
+      ],
+      "troubleshootTitle": "Rozwiązywanie problemów",
+      "troubleshoot": [
+        "Jeśli brakuje gry: sprawdź jej źródło w Ustawienia > Źródło, uruchom Inteligentne wyszukiwanie lub Generuj konfiguracje w Ustawienia > Foldery, w razie potrzeby dodaj jej folder ręcznie i spróbuj wyłączyć Pokaż tylko zainstalowane gry.",
+        "Jeśli powiadomienia się nie pojawiają: sprawdź wiersz Powiadomienia w Stanie gry danej gry, a potem tryb Nie przeszkadzać / Asystent skupienia w Windows. Powiadomienia priorytetowe w Ustawienia > Powiadomienia mogą przepuścić odblokowania.",
+        "Ustawienia > Zaawansowane > Diagnostyka otwiera foldery dzienników i danych, a Eksportuj dzienniki (.zip) pakuje dzienniki z zamaskowaną nazwą użytkownika i kluczami. Dołącz ten plik, zgłaszając problem.",
+        "Dzienniki są dopisywane, więc awaria przetrwa do kolejnego uruchomienia. Każde uruchomienie zaczyna się znacznikiem sesji i blokiem [diag] (wersje, ścieżki, ekrany): wklej go do zgłoszenia.",
+        "Gra utknęła na 0%? To normalne, dopóki nie zostanie zapisane pierwsze odblokowanie. Jeśli AW Next dopasował złe wydanie Steam, kliknij grę prawym przyciskiem > Ustaw AppID ręcznie….",
+        "Czas gry nie jest liczony? Otwórz przycisk narzędzi gry > Plik gry i wybierz program, który pozostaje otwarty podczas grania, a nie launcher.",
+        "Nowe osiągnięcia z aktualizacji gry pojawiają się w ciągu 3 dni albo od razu po użyciu Ustawienia > Zaawansowane > Ponownie sprawdź listy osiągnięć.",
+        "Aktualizacja aplikacji ciągle nie udaje się na tym samym pliku? Ustawienia > Zaawansowane > Wyczyść pamięci podręczne usuwa tylko pliki, które można pobrać ponownie, nigdy ustawień ani zapisów."
       ],
       "steamTitle": "Emulatory Steam",
       "steam": [
-        "Zapisy GBE/Goldberg zwykle znajdują się w %APPDATA%\\GSE Saves lub %APPDATA%\\Goldberg SteamEmu Saves.",
-        "Zapisy CODEX/RUNE często znajdują się w Public Documents\\Steam\\CODEX lub Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 i Hoodlum są wykrywane na podstawie folderów konfiguracji/zapisów.",
-        "Naprawa emulatora z menu kontekstowego może dodać pliki GBE Fork, schematy osiągnięć i dane DLC.",
-        "Tryb Prosty jest szybki; Zaawansowany uruchamia generate_emu_config w celu pobrania dokładniejszych danych Steam i może potrwać kilka minut."
+        "Zapisy GBE / Goldberg zwykle znajdują się w %APPDATA%\\GSE Saves lub %APPDATA%\\Goldberg SteamEmu Saves.",
+        "Zapisy CODEX / RUNE często znajdują się w Dokumenty publiczne\\Steam\\CODEX lub Dokumenty publiczne\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI i emulatory Nemirtingas są odczytywane z własnych folderów konfiguracji lub zapisów. Jeśli gra nie zostanie znaleziona, dodaj jej folder w Ustawienia > Foldery.",
+        "Kliknij grę prawym przyciskiem > Emulator i narzędzia > Zastosuj poprawkę emulatora… aby zainstalować GBE Fork, zbudować steam_settings (lista osiągnięć i ikony) i zapisać steam_appid.txt, gdy go brakuje. Każdy zastąpiony plik jest najpierw kopiowany.",
+        "W Ustawienia > Steam / GBE Fork dane steam_settings ustawione na Prosty używają własnego anonimowego pobierania AW Next i są szybkie. Zaawansowany uruchamia generate_emu_config dla głębszych danych Steam i może zająć kilka minut.",
+        "Nic nie jest zapisywane w folderze gry samoczynnie: Automatycznie naprawiaj nowo wykryte gry, Zarządzaj własnością DLC i Zapisuj nazwę konta i język są domyślnie wyłączone.",
+        "Diagnozuj emulator w tym samym menu tylko odczytuje i raportuje. Utwórz kopię zapasową GBE/Goldberg i Przywróć ostatnią kopię zapasową GBE/Goldberg przywracają grę do poprzedniego stanu."
       ],
       "emulatorTitle": "Emulatory konsol",
       "emulators": [
-        "Trofea RPCS3 są odczytywane z dev_hdd0\\home\\...\\trophy obok instalacji RPCS3.",
-        "Trofea shadPS4 są odczytywane z folderów game_data/trophy w danych aplikacji; pozostałe dane nie są dowodem instalacji.",
-        "Postęp w Xenii jest odczytywany z plików profilu Xbox, takich jak .gpd."
+        "Trofea RPCS3 są odczytywane z dev_hdd0\\home\\...\\trophy obok instalacji RPCS3. Przeniesiony dysk wirtualny jest uwzględniany.",
+        "Trofea shadPS4 są odczytywane z jego folderu game_data (pliki TROP XML). Możesz dodać emulator, jego folder użytkownika lub sam game_data.",
+        "Postęp w Xenia jest odczytywany z plików profilu Xbox (.gpd) i podąża za folderami zapisu ustawionymi w jego konfiguracji.",
+        "Trofea KytyPS5 są odczytywane z jego folderu _Trophies, dla użytkownika, jako którego launcher uruchamia grę.",
+        "Gry Xbox 360 zrekompilowane na PC i porty z PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil i inne) są osobnymi źródłami w Ustawienia > Źródło. Jeśli któraś się nie pojawia, dodaj jej folder w Ustawienia > Foldery.",
+        "Każda konsola może mieć własne ustawienie powiadomienia i dźwięk w Ustawienia > Powiadomienia > Emulatory (tryb Zaawansowany). Zrekompilowane gry Xbox 360 podążają za wyborem Xenia, porty PS4 za wyborem shadPS4, a Taki sam jak główny zachowuje ustawienia główne."
       ],
       "controllerTitle": "Kontroler (gamepad)",
       "controller": [
-        "Najpierw włącz Ustawienia > Kontroler; następnie Back + Start + LB otworzy nakładkę w grze.",
-        "LB + X włącza lub wyłącza nawigację w nakładce.",
-        "Tryb nawigacji: krzyżak/lewy drążek przenoszą fokus, A zatwierdza, B anuluje, X wyszukuje, a Y otwiera opcje.",
-        "Przytrzymaj LB + RB, aby przesuwać nakładkę lewym drążkiem i przewijać prawym.",
-        "Działa z kontrolerami Xbox, PlayStation (DualShock 4 / DualSense) i Switch Pro."
+        "W Ustawienia > Kontroler włącz Sterowanie nakładką w grze za pomocą kontrolera (domyślnie wyłączone), wtedy Back + Start + LB otwiera nakładkę w grze.",
+        "Steruj aplikacją kontrolerem (domyślnie włączone) steruje samym AW Next: krzyżak lub lewa gałka przesuwają fokus, A otwiera grę, B cofa, X wyszukuje, Y lub Start otwiera Ustawienia, LB / RB przełączają karty ustawień.",
+        "W bibliotece RT uruchamia wybraną grę, a LT otwiera jej Stan gry.",
+        "W nakładce LB + X włącza lub wyłącza nawigację: krzyżak lub lewa gałka przesuwają fokus, A potwierdza, B anuluje, X wyszukuje, Y otwiera opcje.",
+        "Przytrzymaj LB + RB, aby przesuwać nakładkę lewą gałką i przewijać prawą gałką.",
+        "Jeśli gra nadal reaguje na przyciski, włącz Skup na nakładce po otwarciu lub Wyślij Esc do gry przy otwieraniu kontrolerem (oba domyślnie wyłączone).",
+        "Działa z kontrolerami Xbox, PlayStation (DualShock 4 / DualSense) i Switch Pro. Układ kontrolera ustawia pokazywane nazwy przycisków, a każdy skrót przyjmuje od jednego do trzech przycisków.",
+        "Pad nie jest wykrywany? Najpierw sprawdź go w Windows (joy.cpl), upewnij się, że włączony jest właściwy przełącznik, a potem spróbuj XInput w Backend kontrolera."
       ],
       "overlayTitle": "Nakładka w grze",
       "overlay": [
-        "Otwórz ją skrótem nakładki (domyślnie Ctrl+Shift+K) albo kombinacją Back + Start + LB na kontrolerze.",
-        "Sortuj według jednej kolumny naraz: Rzadkość, Data lub Stan (rosnąco / malejąco / bez sortowania).",
-        "Naciśnij /, aby przejść do wyszukiwania, a Esc, aby je wyczyścić lub zamknąć panel opcji.",
-        "Panel koła zębatego zmienia kolor akcentu, gęstość, powiększenie, krycie i widoczne wiersze; „Użyj motywu aplikacji” stosuje aktywny motyw.",
-        "Każde osiągnięcie o znanym współczynniku pokazuje rzadkość: szary dla pospolitych, złoty/srebrny/brązowy dla rzadkich."
+        "Otwórz ją skrótem nakładki (domyślnie Ctrl+Shift+K) albo Back + Start + LB na kontrolerze, gdy działa obsługiwana gra. Skrót ustawia się w Ustawienia > Ogólne.",
+        "Wyświetla osiągnięcia uruchomionej gry: nazwę, opis, stan zablokowane lub odblokowane, datę odblokowania i postęp. Przeciągnij ją za nagłówek.",
+        "Ukryte osiągnięcie pozostaje ukryte, dopóki go nie klikniesz (albo nie naciśniesz A na kontrolerze), więc nic nie zostaje zdradzone.",
+        "Przyciski Wszystkie, Odblokowane, Zablokowane i W trakcie filtrują listę. Kliknij Osiągnięcie, Rzadkość, Data lub Stan, aby sortować: rosnąco, malejąco, potem z powrotem do normy. Tylko jedna kolumna naraz.",
+        "Naciśnij /, aby przejść do wyszukiwania, Esc, aby je wyczyścić lub zamknąć panel opcji.",
+        "Panel z kołem zębatym zmienia akcent, gęstość, rozmiar ikon, powiększenie, przezroczystość i widoczne wiersze. Użyj motywu aplikacji podąża za aktywnym motywem, a Przywróć domyślne cofa wszystko.",
+        "Każde osiągnięcie ze znanym wskaźnikiem pokazuje swoją rzadkość: szary dla pospolitych, złoty/srebrny/brązowy dla rzadkich."
       ],
       "streamTitle": "Nakładka na stream (OBS)",
       "stream": [
-        "Ustawienia > Powiadomienia > Źródło przeglądarki OBS > Kopiuj odnośnik, następnie dodaj Źródło przeglądarki w OBS i wklej je jako URL.",
-        "Ustaw szerokość i wysokość źródła na rozmiar podany przez http://127.0.0.1:8082/obs/_config: własny rozmiar wybranego ustawienia przy twoim rozmiarze (skali).",
-        "Dodaj ?test=1 do adresu URL, gdy ustawiasz źródło. Co dziesięć sekund pokazuje przykładowe odblokowanie; usuń ten parametr, gdy skończysz.",
-        "Źródło pokazuje to samo okienko co nakładka w grze, i pozostaje puste między odblokowaniami, więc nic nie kosztuje podczas streamu.",
-        "Odczytuje lokalny strumień powiadomień, więc zostaw włączony Websocket @localhost:8082 w Ustawienia > Powiadomienia > Transport."
+        "Ustawienia > Powiadomienia > Źródło przeglądarki OBS (tryb Zaawansowany): Podgląd sprawdza je w przeglądarce, a Kopiuj odnośnik kopiuje adres. W OBS dodaj źródło Przeglądarka i wklej adres jako URL.",
+        "Dowolna szerokość i wysokość działają, karta skaluje się do wypełnienia pola. Większe źródło jest ostrzejsze: nadaj mu mniej więcej dwukrotność rozmiaru ustawienia (podaje go http://127.0.0.1:8082/obs/_config) i umieść je w połowie rozmiaru.",
+        "Dodaj ?test=1 do adresu URL podczas ustawiania źródła. Pokazuje przykładowe odblokowanie co dziesięć sekund; usuń to, gdy skończysz.",
+        "Źródło rysuje to samo powiadomienie co w grze i pozostaje puste między odblokowaniami, więc nic nie kosztuje podczas transmisji.",
+        "Więcej opcji po adresie: ?scale=2 ustala powiększenie, ?duration=8000 ustawia czas wyświetlania każdej karty, ?sound=1 odtwarza dźwięk przez źródło, /obs/preset/Xbox/ używa jednego ustawienia niezależnie od tego, czego używa pulpit.",
+        "Odczytuje lokalny kanał powiadomień, więc zostaw włączone Websocket @localhost:8082 w Ustawienia > Powiadomienia > Integracje. Działa tylko na tym komputerze i tylko jedna kopia AW Next może go obsługiwać."
+      ],
+      "souvenirsTitle": "Zrzuty ekranu i klipy wideo",
+      "souvenirs": [
+        "Ustawienia > Powiadomienia > Zrzut przy odblokowaniu zapisuje obraz chwilę po wyświetleniu powiadomienia, razem z nim, w osobnym podfolderze dla każdej gry. Otwórz folder przenosi Cię tam.",
+        "Zrzuty ekranu HDR (Automatycznie) poprawiają kolory, gdy HDR w Windows jest włączony. Pamiątki obejmują monitor główny, więc graj na nim.",
+        "Klip wideo po odblokowaniu (wyłączony, dopóki go nie włączysz, niżej w Ustawienia > Powiadomienia) trzyma ostatnie sekundy gry w pamięci i zapisuje MP4 wokół każdego odblokowania. Nic nie jest zapisywane, dopóki nie odblokuje się osiągnięcie.",
+        "Długość klipu (10 do 30 sekund), Format (H.264, HEVC lub AV1), Rozdzielczość, Liczba klatek, Jakość i Dźwięk (Tylko gra lub Cały komputer) można zmieniać. H.264 odtwarza się wszędzie.",
+        "Pracę wykonuje koder karty graficznej, zużywając znacznie poniżej 1% procesora. Bez sprzętowego kodera H.264 przejmuje programowy koder Windows, najwyżej w 1080p i 30 FPS. Bardzo stara gra w wyłącznym trybie pełnoekranowym może nagrywać czarne klatki."
       ],
       "shortcutsTitle": "Skróty klawiszowe",
       "shortcuts": [
-        "Ctrl+Shift+K (domyślnie): pokazuje lub ukrywa nakładkę w grze - do zmiany w Ustawienia > Ogólne.",
-        "Ctrl+Alt+Shift+Strzałki przesuwają nakładkę; Ctrl+Alt+Shift+1-5 przyciąga ją do wybranej pozycji.",
-        "Ctrl+Alt+Shift+C przełącza przenikanie kliknięć; Ctrl+F przenosi fokus do wyszukiwania w Ustawieniach."
+        "Ctrl+Shift+K (domyślnie): włącza lub wyłącza nakładkę w grze. Zmień go w Ustawienia > Ogólne.",
+        "Ctrl+Alt+Shift+strzałki przesuwają nakładkę; Ctrl+Alt+Shift+1-5 przyciąga ją do ustalonej pozycji; Ctrl+Alt+Shift+C włącza lub wyłącza przeklikiwanie.",
+        "W nakładce / przechodzi do wyszukiwania, a Esc je czyści. W projektancie ustawień Ctrl+Z i Ctrl+Y cofają i ponawiają.",
+        "Ctrl+F przechodzi do wyszukiwania w Ustawieniach, a Esc je czyści. F5 odświeża bibliotekę."
       ],
       "themesTitle": "Motywy niestandardowe",
       "themes": [
-        "Motyw własny zaczyna od Steam Blue; każdą warstwę (tło, nagłówek, panele, karty, ustawienia, tekst, obramowania i akcent) można edytować.",
-        "Obrazy warstw znajdują się pod kolorową zasłoną z lekkim matowym rozmyciem; efekty ustawia się osobno dla każdej warstwy.",
-        "Umieść motyw CSS w <userData>\\themes, a pojawi się na liście motywów.",
-        "Kreator ustawień może pokazać projekt jako prawdziwe powiadomienie przed zapisaniem, otworzyć zapisane ustawienie do zmiany i usunąć te, których nie zatrzymasz.",
-        "Wyeksportuj używany motyw jako jeden plik .awtheme albo zaimportuj ten, który ktoś Ci przysłał: jest pokazywany przed instalacją, a potem działa jak wbudowany."
+        "Ustawienia > Wygląd zawiera wbudowane motywy i każdy można edytować: okno, górny pasek, panele, karty, ustawienia, tekst, obramowania i akcent przyjmują kolor, gradient lub obraz.",
+        "Zapisz motyw zamienia Twoje zmiany we własny motyw: zachowaj nazwę, aby go zastąpić, wpisz inną, aby zrobić kopię. Resetuj wszystko przywraca motyw, od którego zaczęto.",
+        "Wrzuć motyw CSS do <userData>\\themes, a pojawi się na liście motywów.",
+        "Eksportuj motyw… zapisuje jeden plik .awtheme (motyw wbudowany trzeba najpierw zapisać pod własną nazwą). Importuj motyw… pokazuje podgląd przed instalacją, a Usuń motyw usuwa zaimportowany.",
+        "Motywy stworzone przez społeczność są w galerii motywów na stronie projektu, a wysłanie własnego wymaga jednego pliku."
+      ],
+      "presetsTitle": "Ustawienia wyskakujących powiadomień",
+      "presets": [
+        "Ustawienie to wygląd wyskakującego powiadomienia w grze, wybierany w Ustawienia > Powiadomienia > Ustawienie. Nie ma efektu, gdy Typ powiadomienia to Powiadomienie systemu Windows.",
+        "Ustawienia > Presety powiadomień to projektant złożony ze zwykłych kontrolek: wybierz punkt wyjścia lub naciśnij Zaskocz mnie, obserwuj podgląd na żywo (Karta, Porównaj, Ekran), a potem Utwórz ustawienie. Nic nie jest zapisywane wcześniej.",
+        "Dostosuj dołączone ustawienie zmienia tylko kilka rzeczy (tło, kolor tekstu, akcent, obramowanie, poświatę, czcionkę, logo) i dalej podąża za dołączonym ustawieniem, jeśli to się poprawi.",
+        "Edytuj ustawienie ponownie otwiera ustawienie, które zaprojektowałeś. Eksportuj i Importuj przenoszą ustawienie jako jeden plik .awpreset, razem z obrazami, czcionkami i dźwiękiem.",
+        "Importuj > Motyw SAN… wczytuje motyw Steam Achievement Notifier (plik .san), a Importuj > Z SAN na tym PC przenosi motywy, których SAN już używa. Zachowują wygląd i dźwięki SAN."
       ],
       "tipsTitle": "Porady i sztuczki",
       "tips": [
-        "Kliknij kafelek gry prawym przyciskiem, aby użyć szybkich akcji: naprawa emulatora, osiągnięcia, strona Steam, instalacja GBE Fork i odinstalowanie.",
-        "Kliknij grę prawym przyciskiem i wybierz wyciszenie postępu, aby zatrzymać wyskakujące powiadomienia bez wyłączania odblokowań.",
-        "Naprawa emulatora (Prosta szybka / Zaawansowana pełna) instaluje GBE Fork, schemat osiągnięć i dane DLC.",
-        "Czas gry jest mierzony podczas działania gry; powiadomienia o postępie i czasie można włączyć w Powiadomieniach.",
-        "Nowe osiągnięcia dodane przez aktualizację gry pojawią się automatycznie w ciągu 3 dni albo od razu po wybraniu Ustawienia > Zaawansowane > Sprawdź ponownie listy osiągnięć."
+        "Kliknij kafelek gry prawym przyciskiem, aby ją uruchomić, wybrać plik wykonywalny, otworzyć foldery i odnośniki, użyć narzędzi emulatora lub odinstalować ją, gdy to menu jest włączone.",
+        "Oznacz jako odblokowane ręcznie (prawy przycisk na osiągnięciu) zapisuje odblokowanie, którego żadne źródło nie widzi.",
+        "Zresetuj osiągnięcia… pozwala przejść grę od zera i najpierw kopiuje każdy plik. Działa dla gier emulowanych, nie dla Steam, Epic ani Xbox, których odblokowania są na Twoim koncie.",
+        "Czas gry jest śledzony, gdy gra działa; Śledzenie czasu gry w Ustawienia > Powiadomienia włącza powiadomienia o starcie i zakończeniu.",
+        "Zapomnij tę grę… usuwa wszystko, co AW Next przechowuje o grze (zapisy są najpierw kopiowane). Usuń z listy tylko ją ukrywa.",
+        "Ustawienia gry > Język osiągnięć pokazuje osiągnięcia i powiadomienia jednej gry w innym języku niż reszta.",
+        "Ustawienia > Zaawansowane > Kopia zapasowa profilu: Eksportuj profil… zapisuje ustawienia, presety, motywy, okładki i czas gry w jednym pliku .awbackup, na potrzeby reinstalacji lub nowego komputera. Logowania nie są zapisywane."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Oceniaj osiągnięcia złotem, srebrem lub brązem według rzadkości. Włączysz to w Ustawieniach.",
     "clipsTitle": "Klipy wideo",
     "clipsCopy": "Zachowuj krótki klip wokół każdego odblokowania. Włączysz to w Ustawieniach, w sekcji Powiadomienia.",
-    "backupTitle": "Kopia zapasowa profilu",
-    "backupCopy": "Zapisz swoje ustawienia i wybory biblioteki w jednym pliku i przywróć je po ponownej instalacji.",
+    "statsTitle": "Statystyki biblioteki",
+    "statsCopy": "Pod profilem przycisk „Zobacz szczegółowe zestawienie” pokazuje ukończenie, czas gry i postęp dla każdej platformy.",
+    "healthTitle": "Stan gry",
+    "healthCopy": "Kolorowa kropka przy grze mówi, czy jej osiągnięcia są śledzone. Przycisk ustawień gry wyjaśnia, co jest nie tak.",
     "profileTitle": "Profil",
     "profileCopy": "Wybierz nazwę wyświetlaną w nagłówku i opcjonalnie ustaw lokalnego awatara.",
     "username": "Nazwa wyświetlana",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "zapisy + biblioteki",
     "addSaveHint": "jeden emulator/źródło",
     "addLibraryHint": "wiele zainstalowanych gier",
+    "addFolder": "Czegoś brakuje? Dodaj folder",
     "saveList": "Foldery zapisów/konfiguracji",
     "libraryList": "Foldery biblioteczne",
     "emptyList": "Nie dodano nic w tej sesji.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Możesz ponownie otworzyć ten przewodnik w dowolnym momencie w Ustawienia > Ogólne.",
     "sourcesTitle": "Skąd pochodzą twoje osiągnięcia",
     "sourcesCopy": "Każde źródło zainstalowane na tym komputerze jest odczytywane automatycznie, więc ustawienia domyślne wystarczą. Zaloguj się poniżej tylko wtedy, gdy chcesz więcej.",
+    "sourcesCopySimple": "Launchery i emulatory na tym komputerze są już odczytywane. Połącz konto tylko wtedy, gdy chcesz to, co dodaje.",
     "sourcesMore": "Dostosuj źródła (włączone: {count})",
     "accountsTitle": "Konta (opcjonalnie)",
-    "accountsCopy": "Zaloguj się, aby odczytywać odblokowania z prywatnego profilu Steam, dodać gry z Twojej Rodziny Steam, zaimportować swoją bibliotekę Xbox PC i pokazać swój postęp w Epic. Możesz pominąć ten krok i połączyć się później w Ustawienia > Źródło.",
+    "accountsCopy": "Zaloguj się, aby odczytywać odblokowania z prywatnego profilu Steam, dodać gry z Steam Family, zaimportować bibliotekę Xbox PC, pokazać postęp w Epic, uzyskać własne wskaźniki trofeów PlayStation i zaimportować gry z RetroAchievements. Możesz to pominąć i połączyć konta później w Ustawienia > Źródło.",
+    "raKeyPage": "Gdzie jest mój klucz Web API?",
     "sourcesEmulators": "Emulatory",
     "sourcesEmulatorsCopy": "Każdy jest odczytywany tylko wtedy, gdy jest zainstalowany, więc pozostawienie go włączonym nic nie kosztuje.",
     "source": "Wyświetl gry Steam",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Nazwa gry",
     "manual-game-appid-optional": "Steam AppID (opcjonalnie)",
     "manual-game-platform-other": "Inna",
+    "manual-game-note": "Uruchomienia i czas gry są śledzone, bez osiągnięć.",
+    "collection-create": "Utwórz",
+    "collection-create-note": "Po utworzeniu kliknij grę prawym przyciskiem > Kolekcje, aby ją dodać.",
+    "psn-ultra-rare": "Ultra rzadkie",
+    "psn-very-rare": "Bardzo rzadkie",
+    "psn-rare": "Rzadkie",
+    "psn-common": "Pospolite",
+    "psn-title": "Konto PlayStation",
+    "psn-desc": "Opcjonalne. Pokazuje własne wskaźniki trofeów PlayStation dla gier, które są już na Twoim koncie PSN; pozostałe zachowują dane z Exophase. Token sesji jest przechowywany w zaszyfrowanej formie na tym komputerze.",
+    "psn-btn-hint": "otwiera okno logowania Sony",
+    "psn-connect": "Połącz konto PlayStation",
+    "psn-connecting": "Otwieranie okna logowania Sony…",
+    "psn-connected": "Konto PlayStation zostało połączone.",
+    "psn-disconnected": "Konto PlayStation zostało odłączone.",
+    "psn-failed": "Logowanie do PlayStation nie powiodło się",
+    "connect-playstation-account": "Połącz konto PlayStation",
     "manual-source": "Ręcznie",
     "no-config-eligible-games": "Nie znaleziono nieskonfigurowanej gry Steam bez istniejącej poprawki.",
     "no-config-eligible-games-configured": "Znaleziono instalacji zgodnych ze Steam: {count} - wszystkie mają już konfigurację. Aby je odbudować, użyj Zaawansowane > Napraw wszystkie gry.",

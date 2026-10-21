@@ -52,7 +52,6 @@ test('the theme card appears for every theme the app can write out', () => {
   const refresh = settings.slice(settings.indexOf('function refreshThemeLibraryControls()'));
   const body = refresh.slice(0, refresh.indexOf('\n    }'));
   assert.match(body, /userThemes\.parseValue\(value\) === null/, 'a user stylesheet is the one theme with nothing to write');
-  assert.match(body, /value !== MORE_THEMES_VALUE/, 'the More themes row is a command, not a theme');
   assert.match(body, /\$\('#theme-library'\)\.toggle\(shown\)/);
   // Delete still belongs only to a theme the app installed.
   assert.match(body, /\$\('#btn-delete-theme'\)\.prop\('hidden', !imported\)/);

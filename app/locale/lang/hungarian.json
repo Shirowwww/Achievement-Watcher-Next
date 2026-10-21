@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Könyvtárnézet",
-        "description": "Válassz kártyaelrendezést. A Fekvő megtartja a jelenlegi megjelenést; a Kompakt rács, Lista és Részletek sűrűbb vagy információgazdagabb nézetet ad.",
+        "description": "Válassza ki a kártyák elrendezését. A Fekvő széles grafikát mutat; a kompakt fekvő és az álló, a Lista és a Részletek a grafika méretét sűrűségre vagy gazdagabb aktivitásra cserélik.",
         "value": {
           "portrait": "Álló",
           "landscape": "Fekvő",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Ezüst eddig",
-          "description": "Ritka szinteken az eddig az arányig terjedő eredmények ezüstöt kapnak. Az értéknek az arany és a ritka határ között kell lennie, különben mindhárom visszaáll az alapértelmezettre."
+          "description": "A ritkasági szinteknél az ennél az aránynál ritkább teljesítmények ezüstöt kapnak. Mindig az arany fölött és a ritkasági határ alatt marad: egy csúszka mozgatása a többit is eltolja."
         },
         "rareMax": {
           "name": "Ritka eddig",
@@ -557,8 +557,13 @@
         "transport": "Integrációk",
         "chromium": "Chromium értesítés",
         "watchdog": "Watchdog",
-        "test": "Teszt",
-        "overlay": "Felugró ablak"
+        "test": "Tesztek",
+        "overlay": "Felugró ablak",
+        "overlayDisplay": "Megjelenítés",
+        "overlayProgress": "Folyamat",
+        "overlaySounds": "Hangok",
+        "overlayEmulators": "Emulátorok",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Egyes funkciók csak Windows 10-en érhetők el",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Előbeállítás (ShadPS4)",
         "overlayPresetShadps4Desc": "Előbeállítás a ShadPS4 (PlayStation 4) értesítésekhez",
         "presetSameAsMain": "Ugyanaz, mint a fő",
+        "overlayEmulatorsDesc": "Az emulátorban futó játékoknak lehet saját előbeállításuk és saját hangjuk; az újrafordított PC-s portok a konzoljukat követik. Az „Ugyanaz, mint a fő” megtartja a fenti beállításokat.",
         "overlayPosition": "Pozíció",
         "overlayPositionDesc": "Hol jelenik meg a felugró overlay a képernyőn",
         "overlayScale": "Méret",
@@ -755,6 +761,9 @@
           "importedOnly": "Importált előbeállítás - itt exportálható vagy törölhető; a csúszkákkal nem szerkeszthető.",
           "importSan": "SAN téma importálása",
           "importSanSetup": "Importálás a SAN-ból erről a gépről",
+          "importMenuFile": "Előbeállítás-fájl…",
+          "importMenuSan": "SAN-téma…",
+          "importMenuSanSetup": "A SAN-ból erről a gépről",
           "layer": {
             "none": "Nincs testreszabás",
             "title": "Mellékelt előbeállítás testreszabása"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Súgó",
       "title": "Súgó és tippek",
-      "intro": "Minden hasznos tudnivaló - észlelés, értesítések, kontroller, overlay, témák és hibaelhárítás.",
+      "intro": "Minden hasznos tudnivaló: a játékok megtalálása, értesítések, emulátorok, az overlay, a kontroller, témák, és mit tegyen, ha valami nem működik.",
       "setupTitle": "Jelenlegi beállításaid",
       "topicsTitle": "Böngészés témakör szerint",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Első lépések",
       "quick": [
-        "Adja hozzá a mentési/konfigurációs mappákat a Beállítások > Mappák résznél, majd engedélyezze a megfelelő forrást a Beállítások > Források résznél.",
-        "A Watchdog a háttérben fut - az élő értesítésekhez és a játékidő méréséhez futnia kell.",
-        "Minden (beállítások, gyorsítótárak, naplók és egyéni témák) a %APPDATA%\\Achievement Watcher Next mappában található.",
-        "Minden beállítási szakasz összecsukható a saját fejlécével - a nyíl lefelé mutat, ha nyitva van, oldalra, ha zárva. A választásai megmaradnak."
+        "Hagyja, hogy az Okos keresés megkeresse a játékait a Beállítások > Mappák alatt, vagy adjon hozzá saját maga egy mappát, majd kapcsolja be a megfelelő forrást a Beállítások > Forrás alatt.",
+        "A Watchdog a háttérben fut. Futnia kell az élő értesítésekhez és a játékidő méréséhez.",
+        "Minden (beállítások, gyorsítótárak, naplók, egyéni témák) a %APPDATA%\\Achievement Watcher Next mappában van.",
+        "A Beállítások tetején lévő Felület választó váltogat az Egyszerű (a mindennapi lapok) és a Speciális mód között (hozzáadja a Steam / GBE Fork, Ubisoft / Uplay R1/R2, Speciális lapokat és a mélyebb beállításokat). Az Egyszerű csak elrejti a vezérlőket, semmi nincs kikapcsolva.",
+        "A főablak bezárásakor az AW Next a tálcán marad, ahol a követés folytatódik. A kilépéshez használja a tálca menüjét. Az „Indítás a rendszerrel” és a „Kicsinyítés a tálcára” a Beállítások > Általános alatt található.",
+        "A Beállítások tetején lévő keresőmező minden lapon megtalál egy beállítást. Az „Első indítási útmutató” a Beállítások > Általános alatt újra megnyitja a beállítást."
       ],
-      "notifications": [
-        "Az Automatikus az alapértelmezés: a játékon belüli buborék, ha a játék meg tudja jeleníteni, és Windows-értesítés, ha nem, soha nem mindkettő.",
-        "A Beállítások > Értesítés részben található az előbeállítás, a hang, a hangerő, a pozíció és a méret; a tesztgombok valódi buborékot mutatnak.",
-        "Kattintson jobb gombbal egy játékra > Értesítés, és adjon éppen ennek a játéknak saját előbeállítást, pozíciót, hangot vagy méretet.",
-        "A feloldáskor készített képernyőkép a pillanat képét a Képek\\Achievement Watcher Next mappába menti."
-      ],
-      "gameHealthTitle": "Játék állapota",
-      "gameHealth": [
-        "Nyisd meg a játék eszközök gombját (a csempe jobb felső sarkában), és látod, hogy Kész, Ellenőrzendő vagy Nem követett.",
-        "Az állapot alatti mondat érthetően megmondja az okot; az alatta lévő ellenőrzések mutatják, melyik rész hibás.",
-        "Javítógombok csak akkor jelennek meg, ha az AW Next tényleg meg tudja javítani a játékot - mindegyik megmondja, mit módosít és hol maradnak a korábbi fájlok.",
-        "A Technikai részletek a pontos útvonalakat, számokat és emulátorkódokat tartalmazza; másold be egy hibajelentésbe."
-      ],
-      "troubleshootTitle": "Hibaelhárítás",
-      "troubleshoot": [
-        "Ha egy játék hiányzik: adja hozzá a mappákat, vizsgálja át újra, majd ellenőrizze a forrás kapcsolóját és a tiltólistát.",
-        "Ha nem jelennek meg értesítések: ellenőrizze a Windows Fókuszsegédet, és az alkalmazást a játékokkal azonos jogosultsággal futtassa.",
-        "Speciális > Diagnosztika megnyitja a napló- és adatmappákat; hibajelentéskor csatolja ezeket.",
-        "A naplók hozzáfűződnek, így egy összeomlás túléli a következő indítást. Minden futás munkamenet-jelöléssel és egy [diag] blokkal indul (verziók, útvonalak, kijelzők) - illessze be a hibajegybe."
+      "libraryTitle": "Könyvtár és gyűjtemények",
+      "library": [
+        "Gyűjtemények: kattintson egy játékra jobb gombbal > Gyűjtemények, jelöljön be egyet, vagy válassza az „Új gyűjtemény…” lehetőséget. A „Csak a telepített játékok megjelenítése” melletti gyűjtemény gomb ezután szűri a könyvtárat, és a profil számai követik.",
+        "A gomb menüjében a „Gyűjtemény szerkesztése…” megváltoztatja a nevet, a színt, az ikont vagy a képet, és törli a gyűjteményt. A játékok a könyvtárában maradnak.",
+        "A teljesítési arány melletti kerek gomb megnyitja a Könyvtár statisztikáit: teljesítés, a feloldott és zárolt teljesítmények száma, játékidő, trófeák, platinás játékok, a legritkább teljesítmények és egy sor platformonként.",
+        "A keresőmező és a + gomb közötti választó hat könyvtárnézet között vált. A Beállítások > Megjelenés > Könyvtár csempéi határozza meg a csempék méretét, a térközt és azt, hogy mit mutat egy csempe.",
+        "A + gomb olyan játékot ad hozzá, amelyet egyetlen forrás sem talál: egy címet és egy futtatható fájlt, opcionális platformmal és Steam AppID-vel. Az indításokat és a játékidőt követi, teljesítmények nélkül.",
+        "Kattintson jobb gombbal egy játékra > Játék beállításai > Átnevezés…, hogy megváltoztassa a megjelenített nevet. A „Teljesítmények és játékidő > Játékidő szerkesztése…” kijavítja az összesített időt (12.5 vagy 12h30)."
       ],
       "sourcesTitle": "Indítók és források",
       "sources": [
-        "A Steam-profilmód felsorolja a telepített vagy birtokolt játékokat, de a feloldások továbbra is a helyi mentési fájlokból származnak.",
-        "A GOG, Epic, Ubisoft Connect/LumaPlay és EA Desktop külön-külön engedélyezhető a Források résznél.",
-        "A birtokolt Steam-játékok csak akkor számítanak telepítettnek, ha ezt a Steam rendszerleíró bejegyzése megerősíti."
+        "A Steam, az Epic Games és az Xbox PC mind a „Nincs”, „Telepített” vagy „Birtokolt” lehetőséget kínálja a Beállítások > Forrás alatt. A „Birtokolt” felsorolja egy csatlakoztatott fiók teljes könyvtárát, telepítve vagy sem.",
+        "A GOG Galaxynek, az Epicnek, az Ubisoft Connectnek, az Xbox PC-nek és az EA Desktopnak saját kapcsolója van a Beállítások > Forrás alatt. Az EA Desktop csak az EA által kezelt mappákon kívüli játékokat fedi le.",
+        "A birtokolt Steam-játékok csak akkor számítanak telepítettnek, ha a Steam rendszerleíró adatbázisa megerősíti.",
+        "A Steam-feloldásokat a Steam által ezen a számítógépen tárolt statisztikákból olvassa be, így privát profil esetén is működik. A fiók csatlakoztatása opcionális: hozzáadja a másik számítógépen játszott és a Steam Family játékokat.",
+        "Szokatlan helyen mentett játék: adja hozzá a mappáját a Beállítások > Mappák alatt. Válassza azt a mappát, amely közvetlenül tartalmazza a mentéseket, az AppID-mappákat vagy az emulátor konfigurációját, vagy egy sok játékot tartalmazó könyvtármappát.",
+        "RetroAchievements: kapcsolja be a forrást, adja meg a felhasználónevét és a Web API-kulcsát, majd nyomja meg a „Könyvtár importálása” gombot. A feloldások a fiókjából jönnek, ezért hagyja bekapcsolva a RetroAchievementst az emulátorban.",
+        "Egyszerű módban néhány ritkán használt forrássor rejtve marad, amíg nem használja őket. Amint számítanak, visszatérnek, a Speciális mód pedig mindig mindet megmutatja.",
+        "A PlayStation-trófeák megmutatják a fokozatukat, a birtokló játékosok arányát és a PlayStation saját ritkasági szintjét. Az arányok az Exophase-ből származnak; csatlakoztasson PlayStation-fiókot a Beállítások > Forrás alatt, hogy a fiók játékaihoz a Sony saját adatait kapja."
+      ],
+      "notifications": [
+        "Az „Automatikus” az alapértelmezett: a játékon belüli felugró ablak, ha a játék meg tudja jeleníteni, egy Windows-értesítés, ha nem, soha nem mindkettő.",
+        "A Beállítások > Értesítés tartalmazza az „Értesítés típusa” (Automatikus, Windows-értesítés, Játékon belüli overlay vagy Mindkettő), az előbeállítás, a hang, a hangerő, a pozíció, a méretezés és az átlátszatlanság beállítását. A teszt gombok valódi felugró ablakot indítanak.",
+        "Nyissa meg egy játék eszközök gombját (a csempe jobb felső sarkában), és lépjen a játék értesítési beállításaihoz, hogy csak annak a játéknak adjon saját előbeállítást, pozíciót, hangot vagy méretezést.",
+        "A „Képernyőkép feloldáskor” a pillanatról készült képet a Képek\\Achievement Watcher Next mappában tartja meg.",
+        "A „Ritka teljesítmény hangja”, a „100%-os teljesítés hangja” és a „Haladás hangja” (Speciális mód) saját hangot ad ezeknek a felugró ablakoknak. A „Véletlen hang” minden alkalommal másikat választ, és saját fájlokat is importálhat.",
+        "Az arany, az ezüst és a bronz a ritka feloldásokat jelöli. A Beállítások > Általános > Ritkaság megjelenítése átvált a „Trófea mód”-ra, amely minden teljesítményt osztályoz, és platinát mutat a befejezett játékoknál.",
+        "Számlálóknál a „Haladási mérföldkövek” csak 10, 25 vagy 50%-os lépéseknél mutat felugró ablakot. Jobb gombbal kattintva egy játékra > Folyamatértesítések némítása egy játékot elnémít anélkül, hogy a feloldásait érintené.",
+        "Még két kapcsoló a Beállítások > Értesítés alatt: a „Kiemelt értesítések” átengedi a feloldásokat a Ne zavarjanak módon (Windows 11), az „A Steam kliens játékai” pedig hozzáadja az AW Next felugró ablakát azokhoz a játékokhoz, amelyeket maga a Steam indít."
+      ],
+      "gameHealthTitle": "Játék állapota",
+      "gameHealth": [
+        "Kattintson egy játék eszközök gombjára (a csempe jobb felső sarkában), vagy kattintson rá jobb gombbal a Játék állapota megnyitásához. Megmondja, hogy a játék Kész, Figyelmet igényel vagy Nem követett.",
+        "Az állapot alatti mondat közérthetően elmagyarázza az okot. Az alatta lévő ellenőrzések megmutatják, melyik rész a hibás: játékfájlok, futtatható fájl, teljesítményadatok, emulátor beállítása, élő követés vagy értesítések.",
+        "A javítógombok csak akkor jelennek meg, ha az AW Next valóban meg tudja javítani az adott játékot, például „Játék megkeresése”, „Teljesítményadatok újraírása”, „Emulátorfájl helyreállítása” vagy „Játék figyelése”. Mindegyik megmondja, mit fog módosítani, készít egy mentést, és előbb rákérdez.",
+        "A „Tesztértesítés küldése” felugró ablakot indít az adott játék saját nevével és grafikájával, úgy kézbesítve, ahogy valójában történne.",
+        "A „Technikai részletek” a pontos elérési utakat, számokat és emulátorkódokat tartalmazza: nyomja meg a Másolás gombot, és illessze be egy hibajelentésbe. A csempén lévő színes pont elrejthető a Beállítások > Megjelenés > Könyvtár csempéi alatt."
+      ],
+      "troubleshootTitle": "Hibaelhárítás",
+      "troubleshoot": [
+        "Ha egy játék hiányzik: ellenőrizze a forrását a Beállítások > Forrás alatt, futtassa az „Okos keresés” vagy a „Konfigurációk generálása” műveletet a Beállítások > Mappák alatt, szükség esetén adja hozzá kézzel a mappáját, és próbálja meg kikapcsolni a „Csak a telepített játékok megjelenítése” beállítást.",
+        "Ha az értesítések nem jelennek meg: olvassa el az Értesítések sort a játék Játék állapota nézetében, majd ellenőrizze a Windows Ne zavarjanak / Fókuszsegéd beállítását. A „Kiemelt értesítések” a Beállítások > Értesítés alatt átengedhetik a feloldásokat.",
+        "A Beállítások > Speciális > Diagnosztika megnyitja a naplók és az adatok mappáját, a „Naplók exportálása” (.zip) pedig összecsomagolja a naplókat a felhasználóneve és a kulcsai elrejtésével. Csatolja, amikor hibát jelent.",
+        "A naplók bővülnek, így egy összeomlás túléli a következő indítást. Minden futás egy munkamenet-jelölővel és egy [diag] blokkal (verziók, elérési utak, kijelzők) kezdődik: illessze be egy issue-ba.",
+        "Egy játék 0%-on ragadt? Ez normális, amíg az első feloldás nincs kiírva. Ha az AW Next rossz Steam-kiadást párosított, kattintson a játékra jobb gombbal > AppID kézi megadása….",
+        "Nem számít a játékidő? Nyissa meg a játék eszközök gombját > Futtatható fájl, és válassza ki azt a programot, amely játék közben nyitva marad, ne az indítót.",
+        "A játékfrissítés új teljesítményei 3 napon belül megjelennek, vagy azonnal a Beállítások > Speciális > Trófealisták újraellenőrzése segítségével.",
+        "Az alkalmazásfrissítés mindig ugyanazon a fájlon hibázik? A Beállítások > Speciális > Gyorsítótárak ürítése csak újra letölthető fájlokat töröl, soha a beállításait vagy a mentéseit."
       ],
       "steamTitle": "Steam emulátorok",
       "steam": [
-        "A GBE/Goldberg mentések általában a %APPDATA%\\GSE Saves vagy a %APPDATA%\\Goldberg SteamEmu Saves alatt találhatók.",
-        "A CODEX/RUNE mentések gyakran a Public Documents\\Steam\\CODEX vagy a Public Documents\\Steam\\RUNE alatt találhatók.",
-        "A TENOKE, UniverseLAN, SmartSteamEmu, ALI213 és Hoodlum a konfigurációs/mentési mappáik alapján észlelhető.",
-        "A jobb gombos emulátorjavítás GBE Fork-fájlokat, teljesítménysémákat és DLC-adatokat adhat hozzá.",
-        "Az Egyszerű mód gyors; a Speciális a generate_emu_config futtatásával részletesebb Steam-adatokat gyűjt, ami több percig is tarthat."
+        "A GBE / Goldberg mentések általában a %APPDATA%\\GSE Saves vagy a %APPDATA%\\Goldberg SteamEmu Saves mappában vannak.",
+        "A CODEX / RUNE mentések gyakran a Public Documents\\Steam\\CODEX vagy a Public Documents\\Steam\\RUNE mappában találhatók.",
+        "A TENOKE, a UniverseLAN, a SmartSteamEmu, az ALI213, a Hoodlum, a CreamAPI és a Nemirtingas emulátorokat a saját konfigurációs vagy mentési mappáikból olvassa be. Ha egy játék nem található, adja hozzá a mappáját a Beállítások > Mappák alatt.",
+        "Jobb gombbal kattintva egy játékra > Emulátor és eszközök > Emulátorjavítás alkalmazása… telepíti a GBE Forkot, felépíti a steam_settings mappát (teljesítménylista és ikonok), és kiírja a steam_appid.txt fájlt, ha hiányzik. Minden lecserélt fájlról előbb mentés készül.",
+        "A Beállítások > Steam / GBE Fork alatt a „steam_settings adatok” Egyszerű értéken az AW Next saját névtelen lekérését használja, és gyors. A Speciális a generate_emu_config eszközt futtatja mélyebb Steam-adatokért, és percekig tarthat.",
+        "Magától semmi nem íródik a játékmappába: az „Újonnan észlelt játékok automatikus javítása”, a „DLC-tulajdonlás kezelése” és a „Fióknév és nyelv írása” alapértelmezetten mind ki van kapcsolva.",
+        "Az „Emulátor diagnosztizálása” ugyanabban a menüben csak olvas és jelent. A „GBE/Goldberg beállítás mentése” és a „Legutóbbi GBE/Goldberg mentés visszaállítása” visszaállítja a játékot az eredeti állapotába."
       ],
       "emulatorTitle": "Konzolemulátorok",
       "emulators": [
-        "Az RPCS3 trófeái az RPCS3 telepítése melletti dev_hdd0\\home\\...\\trophy mappából olvashatók.",
-        "A shadPS4 trófeái az alkalmazásadatok game_data/trophy mappáiból olvashatók; a megmaradt adatok nem bizonyítják a telepítést.",
-        "A Xenia előrehaladása Xbox-profilfájlokból, például .gpd fájlokból olvasható."
+        "Az RPCS3 trófeáit az RPCS3 telepítése közelében lévő dev_hdd0\\home\\...\\trophy helyről olvassa be. Az áthelyezett virtuális lemezt követi.",
+        "A shadPS4 trófeáit a game_data mappájából olvassa be (a TROP XML-fájlok). Hozzáadhatja az emulátort, a felhasználói mappáját vagy magát a game_data mappát.",
+        "A Xenia haladását az Xbox-profilfájlokból (.gpd) olvassa be, és követi a konfigurációjában megadott tárolási mappákat.",
+        "A KytyPS5 trófeáit a _Trophies mappájából olvassa be, arra a felhasználóra, akiként az indító a játékot futtatja.",
+        "A PC-re újrafordított Xbox 360-játékok és a PS4-portok (Bloodborne, Uncharted, God of War III Remastered, MediEvil és mások) saját forrásként szerepelnek a Beállítások > Forrás alatt. Ha valamelyik nem jelenik meg, adja hozzá a mappáját a Beállítások > Mappák alatt.",
+        "Minden konzolnak lehet saját felugróablak-előbeállítása és hangja a Beállítások > Értesítés > Emulátorok alatt (Speciális mód). Az újrafordított Xbox 360-játékok a Xenia választását követik, a PS4-portok a shadPS4-ét, az „Ugyanaz, mint a fő” pedig megtartja a fő beállításokat."
       ],
       "controllerTitle": "Kontroller (gamepad)",
       "controller": [
-        "Először engedélyezze a Beállítások > Vezérlő lehetőséget; ezután a Back + Start + LB megnyitja a játékon belüli átfedést.",
-        "Az LB + X be- vagy kikapcsolja az overlayen belüli navigációt.",
-        "Navigációs mód: a D-pad/bal kar mozgatja a fókuszt, A megerősít, B megszakít, X keres, Y pedig megnyitja a beállításokat.",
-        "Tartsa lenyomva az LB + RB gombokat az overlay bal karral történő mozgatásához és a jobb karral történő görgetéshez.",
-        "Xbox, PlayStation (DualShock 4 / DualSense) és Switch Pro kontrollerekkel működik."
+        "Kapcsolja be a Beállítások > Kontroller alatt a „a játékon belüli overlay vezérlése kontrollerrel” beállítást (alapértelmezetten ki van kapcsolva), ekkor a Back + Start + LB megnyitja az overlayt játékban.",
+        "Az „Alkalmazás vezérlése kontrollerrel” (alapértelmezetten be van kapcsolva) magát az AW Nextet vezérli: a D-pad vagy a bal kar mozgatja a fókuszt, A megnyit egy játékot, B visszalép, X keres, Y vagy Start megnyitja a Beállításokat, LB / RB váltja a beállítások lapjait.",
+        "Könyvtárnézetben az RT elindítja a kiválasztott játékot, az LT pedig megnyitja a Játék állapota nézetét.",
+        "Az overlayben az LB + X kapcsolja a navigációt: a D-pad vagy a bal kar mozgatja a fókuszt, A megerősít, B megszakít, X keres, Y megnyitja a beállításokat.",
+        "Tartsa lenyomva az LB + RB gombokat, hogy a bal karral mozgassa az overlayt, a jobb karral pedig görgessen.",
+        "Ha a játék továbbra is reagál a gombjaira, kapcsolja be az „Overlay fókuszálása megnyitáskor” vagy az „Esc küldése a játéknak kontrolleres nyitáskor” beállítást (mindkettő alapértelmezetten ki van kapcsolva).",
+        "Xbox, PlayStation (DualShock 4 / DualSense) és Switch Pro kontrollerekkel működik. Egy gyorsbillentyű egy-három gombból áll, a megjelenített gombneveket pedig a „Kontroller-elrendezés” állítja be.",
+        "Nem érzékeli a kontrollert? Ellenőrizze először a Windowsban (joy.cpl), győződjön meg arról, hogy a megfelelő kapcsoló be van kapcsolva, majd próbálja ki az XInputot a „Kontroller backend” alatt."
       ],
       "overlayTitle": "Játék közbeni overlay",
       "overlay": [
-        "Nyissa meg az átfedés gyorsbillentyűjével (alapértelmezés szerint Ctrl+Shift+K), vagy a vezérlő Back + Start + LB kombinációjával.",
-        "Egyszerre egy oszlop szerint rendezzen: Ritkaság, Dátum vagy Állapot (növekvő / csökkenő / nincs).",
-        "A / megnyomásával a keresésre léphet, az Esc törli azt vagy bezárja a beállításpanelt.",
-        "A fogaskerékpanel módosítja a kiemelőszínt, a sűrűséget, a nagyítást, az átlátszatlanságot és a látható sorokat; az „Alkalmazás témájának használata” az aktív témát követi.",
-        "Minden ismert arányú teljesítmény megjeleníti a ritkaságát: szürke a gyakori, arany/ezüst/bronz a ritka."
+        "Nyissa meg az overlay gyorsbillentyűjével (alapértelmezés szerint Ctrl+Shift+K) vagy kontrolleren a Back + Start + LB kombinációval, amíg egy támogatott játék fut. Gyorsbillentyűt a Beállítások > Általános alatt állíthat be.",
+        "Felsorolja a futó játék teljesítményeit: név, leírás, zárolt vagy feloldott, feloldás dátuma és haladás. Húzza a fejlécénél fogva.",
+        "Egy rejtett teljesítmény rejtve marad, amíg rá nem kattint (vagy kontrolleren meg nem nyomja az A gombot), így semmi sem lesz lelőve.",
+        "Szűrni a Mind, Feloldva, Zárva és Folyamatban gombokkal lehet. Kattintson a Teljesítmény, Ritkaság, Dátum vagy Állapot feliratra a rendezéshez: növekvő, csökkenő, majd vissza az alaphelyzetre. Egyszerre csak egy oszlop.",
+        "Nyomja meg a / gombot a keresés fókuszálásához, az Esc gombot pedig a törléséhez vagy a beállítások panel bezárásához.",
+        "Fogaskerékpanel: a hangsúly, a sűrűség, az ikonméret, a nagyítás, az átlátszóság és a látható sorok módosítható. Az „Alkalmazás téma használata” az aktív témát követi, az „Alaphelyzet” pedig mindent visszavon.",
+        "Minden ismert aránnyal rendelkező teljesítmény mutatja a ritkaságát: szürke a gyakorinak, arany/ezüst/bronz a ritkának."
       ],
       "streamTitle": "Közvetítési overlay (OBS)",
       "stream": [
-        "Beállítások > Értesítés > OBS böngészőforrás > Hivatkozás másolása, majd adj hozzá egy böngészőforrást az OBS-ben, és illeszd be URL-ként.",
-        "Állítsd a forrás szélességét és magasságát a http://127.0.0.1:8082/obs/_config által mutatott méretre: az előbeállítás saját dobozmérete a te méretezésed szerint.",
-        "Add hozzá a ?test=1 paramétert az URL-hez, amíg elhelyezed a forrást. Tíz másodpercenként egy minta feloldást jelenít meg; távolítsd el, ha végeztél.",
-        "A forrás ugyanazt a felugró ablakot jeleníti meg, mint a játékon belüli overlay, és üres marad a feloldások között, így semmibe nem kerül közvetítés közben.",
-        "A helyi értesítési adatfolyamot olvassa, ezért hagyd bekapcsolva a Websocket @localhost:8082 lehetőséget itt: Beállítások > Értesítés > Átvitel."
+        "Beállítások > Értesítés > OBS böngészőforrás (Speciális mód): az „Előnézet” a böngészőjében ellenőrzi, a „Hivatkozás másolása” pedig kimásolja a címet. Az OBS-ben adjon hozzá egy Böngésző forrást, és illessze be URL-ként.",
+        "Bármilyen szélesség és magasság működik, a kártya méretezéssel kitölti a keretet. Egy nagyobb forrás élesebb: adjon neki nagyjából az előbeállítás saját méretének kétszeresét (a http://127.0.0.1:8082/obs/_config megadja), és fél méretben helyezze el.",
+        "Adja hozzá a ?test=1 paramétert az URL-hez, amíg elhelyezi a forrást. Tíz másodpercenként egy minta feloldást mutat; ha végzett, vegye ki.",
+        "A forrás ugyanazt a felugró ablakot rajzolja, mint a játékon belüli, és a feloldások között üres marad, így semmibe sem kerül, amíg streamel.",
+        "További lehetőségek a cím után: a ?scale=2 rögzíti a nagyítást, a ?duration=8000 megadja, meddig marad egy kártya, a ?sound=1 a forráson át játssza le a hangot, a /obs/preset/Xbox/ egyetlen előbeállítást használ, bármit használ is az asztal.",
+        "A helyi értesítési csatornát olvassa, ezért hagyja bekapcsolva a Websocket @localhost:8082 beállítást a Beállítások > Értesítés > Integrációk alatt. Csak ezen a számítógépen működik, és az AW Next csak egy példánya szolgálhatja ki."
+      ],
+      "souvenirsTitle": "Képernyőképek és videóklipek",
+      "souvenirs": [
+        "A Beállítások > Értesítés > Képernyőkép feloldáskor a felugró ablak után egy pillanattal elment egy képet, az értesítéssel együtt, játékonként egy almappába. A „Mappa megnyitása” odavisz.",
+        "A „HDR-képernyőképek” (Automatikus) kijavítja a színeket, ha a Windows HDR be van kapcsolva. Az emlékek az elsődleges monitort rögzítik, ezért azon játsszon.",
+        "A „Videóklip feloldáskor” (ki van kapcsolva, amíg be nem kapcsolja, lejjebb a Beállítások > Értesítés alatt) a memóriában tartja a játék utolsó másodperceit, és minden feloldás körül elment egy MP4-et. Semmi sem íródik ki, amíg egy teljesítmény fel nem oldódik.",
+        "A „Klip hossza” (10-30 másodperc), a „Formátum” (H.264, HEVC vagy AV1), a „Felbontás”, a „Képkockasebesség”, a „Minőség” és a „Hang” (Csak a játék vagy Az egész PC) mind módosítható. A H.264 mindenhol lejátszható.",
+        "A munkát a videokártya saját kódolója végzi, a processzor jóval 1%-a alatti terhelésével. Hardveres H.264-kódoló nélkül a Windows szoftveres kódolója veszi át, legfeljebb 1080p és 30 FPS mellett. Egy nagyon régi játék kizárólagos teljes képernyőn fekete képkockákat rögzíthet."
       ],
       "shortcutsTitle": "Billentyűparancsok",
       "shortcuts": [
-        "Ctrl+Shift+K (alapértelmezett): a játékon belüli overlay be- vagy kikapcsolása - a Beállítások > Általános résznél módosítható.",
-        "A Ctrl+Alt+Shift+Nyílbillentyűk mozgatják az overlayt; a Ctrl+Alt+Shift+1-5 előre beállított helyre illeszti.",
-        "A Ctrl+Alt+Shift+C kapcsolja az átkattintást; a Ctrl+F a Beállítások keresőjére lép."
+        "Ctrl+Shift+K (alapértelmezett): a játékon belüli overlay be- vagy kikapcsolása. Módosítható a Beállítások > Általános alatt.",
+        "A Ctrl+Alt+Shift+nyilak mozgatják az overlayt; a Ctrl+Alt+Shift+1-5 egy előre beállított pozícióba illeszti; a Ctrl+Alt+Shift+C a kattintás-átengedést kapcsolja.",
+        "Az overlayben a / a keresésre fókuszál, az Esc törli. Az előbeállítás-tervezőben a Ctrl+Z és a Ctrl+Y visszavon és újra végrehajt.",
+        "A Ctrl+F a Beállítások keresésére fókuszál, az Esc törli. Az F5 frissíti a könyvtárat."
       ],
       "themesTitle": "Egyedi témák",
       "themes": [
-        "Az Egyéni téma Steam Blue alapról indul; minden réteg (háttér, fejléc, panelek, kártyák, beállítások, szöveg, szegélyek, kiemelés) szerkeszthető.",
-        "A rétegképek színes fátyol alatt, enyhe matt elmosással jelennek meg; az effektek rétegenként állíthatók.",
-        "Helyezzen egy CSS-témát a <userData>\\themes mappába, és az megjelenik a témalistában.",
-        "Az előbeállítás-készítő mentés előtt valódi felugró ablakként mutatja a kinézetet, újra megnyit egy mentett előbeállítást módosításra, és törli azokat, amelyeket nem tart meg.",
-        "Exportáld a használt témát egyetlen .awtheme fájlba, vagy importáld azt, amit valaki küldött: telepítés előtt megmutatja magát, utána pedig úgy viselkedik, mint egy beépített téma."
+        "A Beállítások > Megjelenés beépített témákat kínál, és mindegyik szerkeszthető: az ablak, a felső sáv, a panelek, a kártyák, a beállítások, a szöveg, a keretek és a kiemelés mind kaphat színt, színátmenetet vagy képet.",
+        "A „Téma mentése” a szerkesztését saját témává alakítja: tartsa meg a nevet a lecseréléséhez, írjon be másikat másolathoz. A „Mindent visszaállít” visszaadja azt a témát, amelyből kiindult.",
+        "Tegyen egy CSS-témát a <userData>\\themes mappába, és megjelenik a témaválasztóban.",
+        "A „Téma exportálása…” egyetlen .awtheme fájlt ír (egy beépített témát előbb a saját neve alatt kell menteni). A „Téma importálása…” telepítés előtt előnézetet mutat, a „Téma törlése” pedig eltávolít egy importált témát.",
+        "A közösség által készített témák a projekt weboldalán lévő témagalériában találhatók, a sajátja beküldéséhez pedig elég egyetlen fájl."
+      ],
+      "presetsTitle": "Felugró ablak előbeállításai",
+      "presets": [
+        "Az előbeállítás a játékon belüli felugró ablak megjelenése, amelyet a Beállítások > Értesítés > Előbeállítás alatt választhat. Nincs hatása, ha az Értesítés típusa Windows-értesítés.",
+        "A Beállítások > Értesítési előbeállítások egy hétköznapi vezérlőkből épített tervező: válasszon kiindulópontot, vagy nyomja meg a „Lepj meg” gombot, nézze az élő előnézetet (Kártya, Összevetés, Képernyő), majd válassza az „Előbeállítás létrehozása” lehetőséget. Addig semmi sem mentődik.",
+        "A „Mellékelt előbeállítás testreszabása” csak néhány dolgot módosít (háttér, szövegszín, kiemelés, keret, ragyogás, betűtípus, logó), és tovább követi a mellékelt előbeállítást, ha az javul.",
+        "Az „Előbeállítás szerkesztése” újra megnyit egy általa tervezettet. Az „Exportálás” és az „Importálás” egyetlen .awpreset fájlként mozgat egy előbeállítást a képeivel, betűtípusaival és hangjával.",
+        "Az „Importálás > SAN-téma…” beolvas egy Steam Achievement Notifier-témát (.san fájl), az „Importálás > A SAN-ból erről a gépről” pedig behozza azokat a témákat, amelyeket a SAN már használ. Megtartják a SAN-os megjelenésüket és hangjaikat."
       ],
       "tipsTitle": "Tippek és trükkök",
       "tips": [
-        "Kattintson jobb gombbal egy játék csempéjére a gyors műveletekhez: emulátorjavítás, teljesítmények, Steam-oldal, GBE Fork telepítése és eltávolítás.",
-        "Kattintson jobb gombbal egy játékra, és válassza az előrehaladás némítását, hogy leállítsa az előrehaladási értesítéseket a feloldások letiltása nélkül.",
-        "Az emulátorjavítás (Egyszerű gyors / Speciális teljes) telepíti a GBE Forkot, a teljesítménysémát és a DLC-adatokat.",
-        "A játékidő mérése a játék futása közben történik; az előrehaladási és játékidő-értesítések az Értesítések résznél kapcsolhatók be.",
-        "A játékfrissítéssel érkező új teljesítmények 3 napon belül automatikusan megjelennek, vagy azonnal ellenőrizhetők a Beállítások > Speciális > Teljesítménylisták újbóli ellenőrzése menüpontban."
+        "Kattintson jobb gombbal egy játékcsempére az indításhoz, a futtatható fájl kiválasztásához, mappák és hivatkozások megnyitásához, emulátoreszközök használatához, vagy az eltávolításhoz, ha ez a menü engedélyezve van.",
+        "A „Megjelölés kézzel feloldottként” (jobb gombbal egy teljesítményre) rögzít egy olyan feloldást, amelyet egyetlen forrás sem lát.",
+        "A „Teljesítmények visszaállítása…” lehetővé teszi, hogy egy játékot nulláról újra végigjátsszon, és előbb minden fájlról mentést készít. Emulált játékoknál működik, Steamnél, Epicnél és Xboxnál nem, mert azok feloldásai a fiókján vannak.",
+        "A játékidőt a játék futása közben követi; a „Játékidő követése” a Beállítások > Értesítés alatt bekapcsolja az indítási és befejezési értesítéseket.",
+        "A „A játék elfelejtése…” töröl mindent, amit az AW Next egy játékról tárol (a mentésekről előbb mentés készül). Az „Eltávolítás a listából” csak elrejti.",
+        "A „Játék beállításai > Teljesítmények nyelve” egy játék teljesítményeit és értesítéseit a többitől eltérő nyelven mutatja.",
+        "Beállítások > Speciális > Profilmentés: a „Profil exportálása…” a beállításait, előbeállításait, témáit, borítóit és játékidejét egyetlen .awbackup fájlba menti újratelepítéshez vagy új számítógéphez. A bejelentkezések nem kerülnek mentésre."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Minősítsd a teljesítményeket arannyal, ezüsttel vagy bronzzal a ritkaságuk szerint. Kapcsold be a Beállításokban.",
     "clipsTitle": "Videóklipek",
     "clipsCopy": "Őrizz meg egy rövid klipet minden feloldás körül. Kapcsold be a Beállításokban, az Értesítések alatt.",
-    "backupTitle": "Profilmentés",
-    "backupCopy": "Mentsd a beállításaidat és a könyvtárválasztásaidat egyetlen fájlba, és állítsd vissza őket újratelepítés után.",
+    "statsTitle": "Könyvtár statisztikái",
+    "statsCopy": "A profilja alatt a „Részletes kimutatás megtekintése” megmutatja a teljesítését, a játékidejét és a haladását platformonként.",
+    "healthTitle": "Játék állapota",
+    "healthCopy": "A játékon lévő színes pont jelzi, hogy a teljesítményeit követi-e a program. A játék beállítások gombja elmagyarázza, mi a gond.",
     "profileTitle": "Profil",
     "profileCopy": "Válassza ki a fejlécben látható nevet, és opcionálisan állítson be egy helyi avatart.",
     "username": "Megjelenítési név",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "mentések + könyvtárak",
     "addSaveHint": "egy emulátor/forrás",
     "addLibraryHint": "sok telepített játék",
+    "addFolder": "Hiányzik valami? Adjon hozzá egy mappát",
     "saveList": "Mentés/beállítás mappák",
     "libraryList": "Könyvtári mappák",
     "emptyList": "Semmi sem lett hozzáadva ehhez a munkamenethez.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Ezt az útmutatót bármikor újra megnyithatod a Beállítások > Általános alatt.",
     "sourcesTitle": "Honnan származnak a teljesítményeid",
     "sourcesCopy": "A számítógépre telepített összes forrás automatikusan beolvasásra kerül, így az alapbeállítások megfelelnek. Csak akkor jelentkezz be lent, ha többet szeretnél.",
+    "sourcesCopySimple": "A számítógépen lévő indítókat és emulátorokat a program már beolvassa. Csak akkor csatlakoztasson fiókot, ha kell az, amit hozzáad.",
     "sourcesMore": "Források finomhangolása ({count} bekapcsolva)",
     "accountsTitle": "Fiókok (opcionális)",
-    "accountsCopy": "Jelentkezz be, hogy feloldásokat olvashass be egy privát Steam-profilról, hozzáadhasd a Steam Family játékaidat, importálhasd az Xbox PC könyvtáradat, és megjeleníthesd az Epic-előrehaladásodat. Ezt kihagyhatod, és később is csatlakozhatsz a Beállítások > Forrás alatt.",
+    "accountsCopy": "Jelentkezzen be, hogy beolvassa a feloldásokat egy privát Steam-profilból, hozzáadja a Steam Family játékait, importálja az Xbox PC-könyvtárát, megjelenítse az Epic-haladását, megkapja a PlayStation saját trófeaarányait, és importálja a RetroAchievements játékait. Ezt átugorhatja, és később is csatlakozhat a Beállítások > Forrás alatt.",
+    "raKeyPage": "Hol találom a Web API-kulcsomat?",
     "sourcesEmulators": "Emulátorok",
     "sourcesEmulatorsCopy": "Mindegyiket csak akkor olvassuk, ha telepítve van, így a bekapcsolva hagyásuk semmibe nem kerül.",
     "source": "Steam játékok megjelenítése",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Játék neve",
     "manual-game-appid-optional": "Steam AppID (opcionális)",
     "manual-game-platform-other": "Egyéb",
+    "manual-game-note": "Az indítások és a játékidő követve van, teljesítmények nélkül.",
+    "collection-create": "Létrehozás",
+    "collection-create-note": "A létrehozás után a játék hozzáadásához kattintson rá jobb gombbal > Gyűjtemények.",
+    "psn-ultra-rare": "Ultra ritka",
+    "psn-very-rare": "Nagyon ritka",
+    "psn-rare": "Ritka",
+    "psn-common": "Gyakori",
+    "psn-title": "PlayStation-fiók",
+    "psn-desc": "Opcionális. A PlayStation saját trófeaarányait mutatja a PSN-fiókjában már szereplő játékokhoz; a többi játék az Exophase adatait tartja meg. A munkamenet-tokent titkosítva tároljuk ezen a számítógépen.",
+    "psn-btn-hint": "megnyitja a Sony bejelentkezési ablakát",
+    "psn-connect": "PlayStation-fiók csatlakoztatása",
+    "psn-connecting": "A Sony bejelentkezési ablakának megnyitása…",
+    "psn-connected": "A PlayStation-fiók csatlakoztatva.",
+    "psn-disconnected": "A PlayStation-fiók leválasztva.",
+    "psn-failed": "A PlayStation-bejelentkezés sikertelen",
+    "connect-playstation-account": "PlayStation-fiók csatlakoztatása",
     "manual-source": "Kézi",
     "no-config-eligible-games": "Nem található olyan konfigurálatlan Steam-játék, amelyhez még nincs javítás.",
     "no-config-eligible-games-configured": "{count} Steam-kompatibilis telepítés található - mindegyiknek van már beállítása. Újraépítésükhöz használd a Haladó > Minden játék javítása lehetőséget.",

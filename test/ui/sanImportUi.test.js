@@ -28,7 +28,7 @@ const block = (source, pattern, what) => {
 };
 
 test('both imports sit with the other preset actions and are labelled in every language', () => {
-  const buttons = { '#btn-import-san': 'importSan', '#btn-import-san-setup': 'importSanSetup' };
+  const buttons = { '#btn-import-san': 'importMenuSan', '#btn-import-san-setup': 'importMenuSanSetup' };
   assert.equal(localeFiles.length, BUNDLED_LOCALE_COUNT);
   for (const [selector, key] of Object.entries(buttons)) {
     const button = document.querySelector(`#pd-actions ${selector}`);

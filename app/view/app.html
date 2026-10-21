@@ -54,7 +54,7 @@
                 <ul>
                   <li><i class="fas fa-trophy"></i> <span class="data">0</span> <span></span></li>
                   <li><i class="fas fa-gamepad"></i> <span class="data">0</span> <span></span></li>
-                  <li id="profile-completion-average"><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span> <i class="far fa-question-circle profile-stat-hint" aria-hidden="true"></i></li>
+                  <li id="profile-completion-average"><i class="fas fa-cookie-bite"></i> <span class="data">0</span>% <span></span></li>
                 </ul>
                 <!-- Icon only, named by its tooltip: a worded pill here would be a different
                      length in each of the 28 locales and squeeze the profile band. -->
@@ -330,6 +330,35 @@
                 </ul>
               </div>
 
+              <!-- Revealed by "Data source" = Steam login, so it sits right under that card. -->
+              <div id="emulator-login" class="emulator-login">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fas fa-key"></i> <span id="emulator-login-title">Steam login</span></div>
+                </div>
+                <p id="emulator-login-desc">Used only when "Data source" is set to Steam login. The password is stored encrypted on this PC and sent only to Steam by generate_emu_config. Steam Guard 2FA is prompted when needed. Leave empty to be asked each time.</p>
+                <div class="emulator-login-fields">
+                  <div>
+                    <label for="emulator-login-user"><i class="fas fa-user"></i> <span id="emulator-login-user-label">Steam username</span></label>
+                    <input type="text" id="emulator-login-user" autocomplete="off" spellcheck="false" placeholder="Steam account name" />
+                  </div>
+                  <div>
+                    <label for="emulator-login-pass"><i class="fas fa-lock"></i> <span id="emulator-login-pass-label">Steam password</span></label>
+                    <input type="password" id="emulator-login-pass" autocomplete="off" spellcheck="false" />
+                  </div>
+                </div>
+                <div class="emulator-login-actions">
+                  <button type="button" id="emulator-login-test" class="btn">
+                    <span class="emulator-test-icon"><i class="fas fa-shield-alt"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="emulator-login-test-label">Test Steam login</strong>
+                      <small id="emulator-login-test-hint">Steam / Steam Guard</small>
+                    </span>
+                    <i class="fas fa-chevron-right emulator-test-arrow"></i>
+                  </button>
+                  <span id="emulator-login-test-status" aria-live="polite"></span>
+                </div>
+              </div>
+
               <!-- GBE Fork identity (issue #123): what a fix or a repair writes into each game's
                    configs.user.ini. Always shown, so it borrows the login card's look with is-visible.
                    Bound by id in app/locale/loader.js. -->
@@ -373,33 +402,6 @@
                     <button type="button" id="emulator-identity-saves-reset" class="inline-action-btn secondary"><i class="fas fa-undo"></i> <span>Default</span></button>
                   </div>
                   <p id="emulator-identity-saves-help">Games fixed or repaired from now on keep their saves here, one folder per game, and AW Next watches it for live notifications.</p>
-                </div>
-              </div>
-              <div id="emulator-login" class="emulator-login">
-                <div class="emulator-login-heading">
-                  <div class="title"><i class="fas fa-key"></i> <span id="emulator-login-title">Steam login</span></div>
-                </div>
-                <p id="emulator-login-desc">Used only when "Data source" is set to Steam login. The password is stored encrypted on this PC and sent only to Steam by generate_emu_config. Steam Guard 2FA is prompted when needed. Leave empty to be asked each time.</p>
-                <div class="emulator-login-fields">
-                  <div>
-                    <label for="emulator-login-user"><i class="fas fa-user"></i> <span id="emulator-login-user-label">Steam username</span></label>
-                    <input type="text" id="emulator-login-user" autocomplete="off" spellcheck="false" placeholder="Steam account name" />
-                  </div>
-                  <div>
-                    <label for="emulator-login-pass"><i class="fas fa-lock"></i> <span id="emulator-login-pass-label">Steam password</span></label>
-                    <input type="password" id="emulator-login-pass" autocomplete="off" spellcheck="false" />
-                  </div>
-                </div>
-                <div class="emulator-login-actions">
-                  <button type="button" id="emulator-login-test" class="btn">
-                    <span class="emulator-test-icon"><i class="fas fa-shield-alt"></i></span>
-                    <span class="emulator-test-copy">
-                      <strong id="emulator-login-test-label">Test Steam login</strong>
-                      <small id="emulator-login-test-hint">Steam / Steam Guard</small>
-                    </span>
-                    <i class="fas fa-chevron-right emulator-test-arrow"></i>
-                  </button>
-                  <span id="emulator-login-test-status" aria-live="polite"></span>
                 </div>
               </div>
 
@@ -676,6 +678,10 @@
                         <ul id="help-quick-list"></ul>
                       </details>
                       <details class="help-panel">
+                        <summary><i class="fas fa-layer-group"></i> <span id="help-library-title">Your library</span></summary>
+                        <ul id="help-library-list"></ul>
+                      </details>
+                      <details class="help-panel">
                         <summary><i class="fas fa-store"></i> <span id="help-sources-title">Launchers &amp; sources</span></summary>
                         <ul id="help-sources-list"></ul>
                       </details>
@@ -727,6 +733,10 @@
                         <ul id="help-stream-list"></ul>
                       </details>
                       <details class="help-panel">
+                        <summary><i class="fas fa-camera"></i> <span id="help-souvenirs-title">Screenshots &amp; clips</span></summary>
+                        <ul id="help-souvenirs-list"></ul>
+                      </details>
+                      <details class="help-panel">
                         <summary><i class="fas fa-gamepad"></i> <span id="help-controller-title">Controller (gamepad)</span></summary>
                         <ul id="help-controller-list"></ul>
                       </details>
@@ -737,6 +747,10 @@
                       <details class="help-panel">
                         <summary><i class="fas fa-palette"></i> <span id="help-themes-title">Custom themes</span></summary>
                         <ul id="help-themes-list"></ul>
+                      </details>
+                      <details class="help-panel">
+                        <summary><i class="fas fa-window-maximize"></i> <span id="help-presets-title">Notification presets</span></summary>
+                        <ul id="help-presets-list"></ul>
                       </details>
                       <details class="help-panel">
                         <summary><i class="fas fa-lightbulb"></i> <span id="help-tips-title">Tips &amp; tricks</span></summary>
@@ -1491,6 +1505,32 @@
                   <span id="retroachievements-connect-status" aria-live="polite"></span>
                 </div>
               </div>
+
+              <!-- PlayStation account: official trophy rates for the lists already on the account. -->
+              <div id="psn-connect" class="settings-card">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fab fa-playstation"></i> <span id="psn-connect-title">PlayStation account</span></div>
+                  <span class="emulator-warning is-success" id="psn-connect-badge" style="display:none"><i class="fas fa-check-circle"></i> <span id="psn-connect-badge-label">Connected</span></span>
+                </div>
+                <p id="psn-connect-desc">
+                  Optional. Shows PlayStation's own trophy rates for the games already on your PSN account; the others keep the
+                  Exophase figures. Your session token is stored encrypted on this PC.
+                </p>
+                <div class="emulator-login-actions">
+                  <button type="button" id="psn-connect-btn" class="btn">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-in-alt"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="psn-connect-btn-label">Connect PlayStation account</strong>
+                      <small id="psn-connect-btn-hint">opens the Sony sign-in window</small>
+                    </span>
+                    <i class="fas fa-chevron-right emulator-test-arrow"></i>
+                  </button>
+                  <button type="button" id="psn-disconnect-btn" class="btn secondary" style="display:none">
+                    <span class="emulator-test-copy"><strong id="psn-disconnect-btn-label">Disconnect</strong></span>
+                  </button>
+                  <span id="psn-connect-status" aria-live="polite"></span>
+                </div>
+              </div>
             </section>
 
             <section class="content" data-view="folder">
@@ -1902,7 +1942,7 @@
                   </ul>
                 </div>
 
-                <div class="arrow-list">
+                <div class="arrow-list notify-card">
                   <div class="title"><span id="overlay-notify-title"></span></div>
                   <ul id="options-notify-overlay">
                     <li class="hasHelper">
@@ -1932,42 +1972,6 @@
                       </div>
                       <div class="help"></div>
                     </li>
-
-                    <li class="hasHelper" data-advanced="1">
-                      <div class="left"><i class="fas fa-microchip"></i> <span id="lbl-overlayPresetXenia"></span></div>
-                      <div class="right">
-                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
-                        <select autocomplete="off" class="dropdown" id="option_overlayPresetXenia"></select>
-                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
-                      </div>
-                      <div class="help"></div>
-                    </li>
-
-                    <li class="hasHelper" data-advanced="1">
-                      <div class="left"><i class="fab fa-playstation"></i> <span id="lbl-overlayPresetRpcs3"></span></div>
-                      <div class="right">
-                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
-                        <select autocomplete="off" class="dropdown" id="option_overlayPresetRpcs3"></select>
-                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
-                      </div>
-                      <div class="help"></div>
-                    </li>
-
-                    <li class="hasHelper" data-advanced="1">
-                      <div class="left"><i class="fas fa-play"></i> <span id="lbl-overlayPresetShadps4"></span></div>
-                      <div class="right">
-                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
-                        <select autocomplete="off" class="dropdown" id="option_overlayPresetShadps4"></select>
-                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
-                      </div>
-                      <div class="help"></div>
-                    </li>
-
-
-
-
-
-
 
                     <li class="hasHelper">
                       <div class="left">
@@ -2028,8 +2032,31 @@
                       <div class="help"></div>
                     </li>
 
-                    <!-- Counter progress popups ("+1") can sit apart from unlocks; '' follows them. -->
-                    <li class="hasHelper" data-advanced="1">
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-clock"></i> <span id="lbl-overlayDuration"></span></div>
+                      <div class="right">
+                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                        <select autocomplete="off" class="dropdown" id="option_overlayDuration">
+                          <option value="auto" selected></option>
+                          <option value="2">2s</option>
+                          <option value="3">3s</option>
+                          <option value="4">4s</option>
+                          <option value="5">5s</option>
+                          <option value="7">7s</option>
+                          <option value="10">10s</option>
+                        </select>
+                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Counter progress popups ("+1") can sit apart from unlocks; '' follows them. -->
+                <div class="arrow-list notify-card" data-advanced="1">
+                  <div class="title"><span id="overlay-progress-title"></span></div>
+                  <ul id="options-notify-progress">
+                    <li class="hasHelper">
                       <div class="left">
                         <i class="fas fa-tachometer-alt"></i> <span id="lbl-overlayProgressPosition"></span>
                         <button type="button" id="btn-overlay-progress-reposition" class="inline-action-btn" title="Reposition popup"><i class="fas fa-crosshairs"></i></button>
@@ -2053,7 +2080,7 @@
                       <div class="help"></div>
                     </li>
 
-                    <li class="hasHelper expand" data-advanced="1">
+                    <li class="hasHelper expand">
                       <div class="left"><i class="fas fa-compress"></i> <span id="lbl-overlayProgressScale"></span></div>
                       <div class="right">
                         <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -2070,25 +2097,12 @@
                       </div>
                       <div class="help"></div>
                     </li>
+                  </ul>
+                </div>
 
-                    <li class="hasHelper">
-                      <div class="left"><i class="fas fa-clock"></i> <span id="lbl-overlayDuration"></span></div>
-                      <div class="right">
-                        <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
-                        <select autocomplete="off" class="dropdown" id="option_overlayDuration">
-                          <option value="auto" selected></option>
-                          <option value="2">2s</option>
-                          <option value="3">3s</option>
-                          <option value="4">4s</option>
-                          <option value="5">5s</option>
-                          <option value="7">7s</option>
-                          <option value="10">10s</option>
-                        </select>
-                        <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
-                      </div>
-                      <div class="help"></div>
-                    </li>
-
+                <div class="arrow-list notify-card">
+                  <div class="title"><span id="overlay-sounds-title"></span></div>
+                  <ul id="options-notify-sounds">
                     <li class="hasHelper">
                       <div class="left">
                         <i class="fas fa-volume-up"></i> <span id="lbl-overlaySound"></span>
@@ -2141,23 +2155,99 @@
                       </div>
                       <div class="help"></div>
                     </li>
+                  </ul>
+                </div>
 
-                    <!-- The OBS browser source: the same popup, drawn on a stream. It lives with
-                         the popup's own settings rather than under Transport, which Simple mode
-                         hides entirely. Bound by id, like the rest of this list. -->
-                    <li class="hasHelper" id="obs-source-row" data-advanced="1">
-                      <div class="left"><i class="fas fa-video"></i> <span id="lbl-obsSource"></span></div>
-                      <div class="right action-right obs-source-actions">
-                        <button type="button" id="btn-copy-obs-url" class="inline-action-btn">
-                          <i class="fas fa-copy" aria-hidden="true"></i> <span id="lbl-obsSourceCopy"></span>
-                        </button>
-                        <!-- An ordinary link, so the main window's will-navigate handler opens it in
-                             the real browser; settings.js fills the address from OBS_SOURCE_URL. -->
-                        <a id="btn-preview-obs-url" class="inline-action-btn" target="_blank">
-                          <i class="fas fa-eye" aria-hidden="true"></i> <span id="lbl-obsSourcePreview"></span>
-                        </a>
+                <!-- One line per emulator: its own preset and its own sound, '' = same as the main one. -->
+                <div class="arrow-list notify-card" data-advanced="1">
+                  <div class="title"><span id="overlay-emulators-title"></span></div>
+                  <ul id="options-notify-emulators">
+                    <li class="emu-notify-head">
+                      <p id="overlay-emulators-desc" class="emu-notify-desc"></p>
+                      <div class="emu-picks" aria-hidden="true">
+                        <span id="lbl-emuPresetColumn" class="emu-pick-caption"></span>
+                        <span id="lbl-emuSoundColumn" class="emu-pick-caption"></span>
                       </div>
-                      <div class="help" id="obs-source-help"></div>
+                    </li>
+
+                    <li class="emu-notify-row">
+                      <div class="left"><i class="fas fa-microchip"></i> <span id="lbl-overlayPresetXenia">Xenia (Xbox 360)</span></div>
+                      <div class="emu-picks">
+                        <div class="emu-pick emu-pick-preset">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown" id="option_overlayPresetXenia"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                        <div class="emu-pick emu-pick-sound">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown emulator-sound" id="option_overlaySoundXenia"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="emu-notify-row">
+                      <div class="left"><i class="fab fa-playstation"></i> <span id="lbl-overlayPresetRpcs3">RPCS3 (PlayStation 3)</span></div>
+                      <div class="emu-picks">
+                        <div class="emu-pick emu-pick-preset">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown" id="option_overlayPresetRpcs3"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                        <div class="emu-pick emu-pick-sound">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown emulator-sound" id="option_overlaySoundRpcs3"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="emu-notify-row">
+                      <div class="left"><i class="fab fa-playstation"></i> <span id="lbl-overlayPresetShadps4">shadPS4 (PlayStation 4)</span></div>
+                      <div class="emu-picks">
+                        <div class="emu-pick emu-pick-preset">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown" id="option_overlayPresetShadps4"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                        <div class="emu-pick emu-pick-sound">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown emulator-sound" id="option_overlaySoundShadps4"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+
+                    <li class="emu-notify-row">
+                      <div class="left"><i class="fab fa-playstation"></i> <span id="lbl-overlayPresetKytyps5">Kyty (PlayStation 5)</span></div>
+                      <div class="emu-picks">
+                        <div class="emu-pick emu-pick-preset">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown" id="option_overlayPresetKytyps5"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                        <div class="emu-pick emu-pick-sound">
+                          <div class="right">
+                            <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                            <select autocomplete="off" class="dropdown emulator-sound" id="option_overlaySoundKytyps5"></select>
+                            <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                          </div>
+                        </div>
+                      </div>
                     </li>
                   </ul>
                 </div>
@@ -2347,6 +2437,28 @@
                         <button type="button" id="btn-clip-open" class="inline-action-btn secondary"><i class="fas fa-folder-open"></i> <span id="clip-open-label"></span></button>
                       </div>
                       <div class="help" id="clip-dir-help"></div>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="arrow-list notify-card" data-advanced="1">
+                  <div class="title"><span id="overlay-obs-title"></span></div>
+                  <ul id="options-notify-obs">
+                    <!-- The OBS browser source: the same popup, drawn on a stream. Its own card
+                         rather than under Transport, which Simple mode hides entirely. -->
+                    <li class="hasHelper" id="obs-source-row">
+                      <div class="left"><i class="fas fa-video"></i> <span id="lbl-obsSource"></span></div>
+                      <div class="right action-right obs-source-actions">
+                        <button type="button" id="btn-copy-obs-url" class="inline-action-btn">
+                          <i class="fas fa-copy" aria-hidden="true"></i> <span id="lbl-obsSourceCopy"></span>
+                        </button>
+                        <!-- An ordinary link, so the main window's will-navigate handler opens it in
+                             the real browser; settings.js fills the address from OBS_SOURCE_URL. -->
+                        <a id="btn-preview-obs-url" class="inline-action-btn" target="_blank">
+                          <i class="fas fa-eye" aria-hidden="true"></i> <span id="lbl-obsSourcePreview"></span>
+                        </a>
+                      </div>
+                      <div class="help" id="obs-source-help"></div>
                     </li>
                   </ul>
                 </div>
@@ -2999,9 +3111,9 @@
                       </div>
                     </div>
 
-                    <!-- Two groups: design actions on the left, file actions on the right (Import
-                         and Export paired, SAN converter below as the rarer path). Every button
-                         keeps its id, so handlers and the locale pass are untouched. -->
+                    <!-- Two groups: design actions, then file actions (Import and Export paired).
+                         Import opens a menu of the three sources; each entry keeps its id, so
+                         handlers and the locale pass are untouched. -->
                     <div class="right action-right pd-actions" id="pd-actions">
                       <div class="pd-actions-primary">
                         <button type="button" id="btn-create-preset" class="inline-action-btn primary"><i class="fas fa-plus"></i> <span id="pd-lbl-create"></span></button>
@@ -3012,11 +3124,18 @@
                       </div>
                       <div class="pd-actions-files">
                         <div class="pd-file-pair">
-                          <button type="button" id="btn-import-preset" class="inline-action-btn secondary"><i class="fas fa-file-import"></i> <span data-lang="importLabel"></span></button>
+                          <div class="pd-import" id="pd-import">
+                            <button type="button" id="btn-import-menu" class="inline-action-btn secondary" aria-haspopup="menu" aria-expanded="false" aria-controls="pd-import-list">
+                              <i class="fas fa-file-import"></i> <span data-lang="importLabel"></span> <i class="fas fa-chevron-down pd-import-caret" aria-hidden="true"></i>
+                            </button>
+                            <div class="pd-import-list" id="pd-import-list" role="menu">
+                              <button type="button" role="menuitem" id="btn-import-preset" class="pd-import-item" tabindex="-1"><i class="fas fa-file-archive"></i> <span data-lang="importMenuFile"></span></button>
+                              <button type="button" role="menuitem" id="btn-import-san" class="pd-import-item" tabindex="-1"><i class="fas fa-download"></i> <span data-lang="importMenuSan"></span></button>
+                              <button type="button" role="menuitem" id="btn-import-san-setup" class="pd-import-item" tabindex="-1"><i class="fas fa-desktop"></i> <span data-lang="importMenuSanSetup"></span></button>
+                            </div>
+                          </div>
                           <button type="button" id="btn-export-preset" class="inline-action-btn secondary"><i class="fas fa-file-export"></i> <span data-lang="exportLabel"></span></button>
                         </div>
-                        <button type="button" id="btn-import-san" class="inline-action-btn pd-quiet-btn"><i class="fas fa-download"></i> <span data-lang="importSan"></span></button>
-                        <button type="button" id="btn-import-san-setup" class="inline-action-btn pd-quiet-btn"><i class="fas fa-desktop"></i> <span data-lang="importSanSetup"></span></button>
                       </div>
                       <span id="pd-status"></span>
                     </div>
@@ -3308,103 +3427,45 @@
 
                   <li class="hasHelper" data-advanced="1" data-rarity-rows="rare">
                     <div class="left"><i class="fas fa-medal"></i> <span id="rare-gold-settings-label">Gold up to</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_rareGoldMax">
-                        <option value="1">1%</option>
-                        <option value="2">2%</option>
-                        <option value="3">3%</option>
-                        <option value="5" selected>5%</option>
-                        <option value="7">7%</option>
-                        <option value="10">10%</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
+                    <div class="right volume-slider rarity-slider">
+                      <input type="range" id="option_rareGoldMax" min="1" max="20" step="1" value="5" />
+                      <span class="volume-value" data-rarity-value="rareGoldMax">5%</span>
                     </div>
                     <div class="help" id="rare-gold-settings-help">In rare tiers, achievements unlocked by this share of players or fewer earn gold.</div>
                   </li>
 
                   <li class="hasHelper" data-advanced="1" data-rarity-rows="rare">
                     <div class="left"><i class="fas fa-medal"></i> <span id="rare-silver-settings-label">Silver up to</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_rareSilverMax">
-                        <option value="5">5%</option>
-                        <option value="8">8%</option>
-                        <option value="10" selected>10%</option>
-                        <option value="12">12%</option>
-                        <option value="15">15%</option>
-                        <option value="20">20%</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
+                    <div class="right volume-slider rarity-slider">
+                      <input type="range" id="option_rareSilverMax" min="2" max="30" step="1" value="10" />
+                      <span class="volume-value" data-rarity-value="rareSilverMax">10%</span>
                     </div>
                     <div class="help" id="rare-silver-settings-help">In rare tiers, achievements up to this rate earn silver. Keep it between the gold and rare limits, or all three return to their defaults.</div>
                   </li>
 
                   <li class="hasHelper" data-advanced="1" data-rarity-rows="rare">
                     <div class="left"><i class="fas fa-gem"></i> <span id="rare-max-settings-label">Rare up to</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_rareMax">
-                        <option value="10">10%</option>
-                        <option value="15" selected>15%</option>
-                        <option value="20">20%</option>
-                        <option value="25">25%</option>
-                        <option value="30">30%</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
+                    <div class="right volume-slider rarity-slider">
+                      <input type="range" id="option_rareMax" min="3" max="50" step="1" value="15" />
+                      <span class="volume-value" data-rarity-value="rareMax">15%</span>
                     </div>
                     <div class="help" id="rare-max-settings-help">Up to this rate an achievement is rare: it gets bronze, the rare notification and its sound. Above it, nothing marks it.</div>
                   </li>
 
                   <li class="hasHelper" data-advanced="1" data-rarity-rows="trophy">
                     <div class="left"><i class="fas fa-medal"></i> <span id="trophy-gold-settings-label">Gold trophy below</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_trophyGoldBelow">
-                        <option value="5">5%</option>
-                        <option value="10">10%</option>
-                        <option value="15">15%</option>
-                        <option value="20" selected>20%</option>
-                        <option value="25">25%</option>
-                        <option value="30">30%</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
+                    <div class="right volume-slider rarity-slider">
+                      <input type="range" id="option_trophyGoldBelow" min="1" max="40" step="1" value="20" />
+                      <span class="volume-value" data-rarity-value="trophyGoldBelow">20%</span>
                     </div>
                     <div class="help" id="trophy-gold-settings-help">In trophy mode, achievements unlocked by fewer players than this earn gold.</div>
                   </li>
 
                   <li class="hasHelper" data-advanced="1" data-rarity-rows="trophy">
                     <div class="left"><i class="fas fa-medal"></i> <span id="trophy-silver-settings-label">Silver trophy below</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_trophySilverBelow">
-                        <option value="40">40%</option>
-                        <option value="50" selected>50%</option>
-                        <option value="60">60%</option>
-                        <option value="70">70%</option>
-                        <option value="80">80%</option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
+                    <div class="right volume-slider rarity-slider">
+                      <input type="range" id="option_trophySilverBelow" min="10" max="90" step="1" value="50" />
+                      <span class="volume-value" data-rarity-value="trophySilverBelow">50%</span>
                     </div>
                     <div class="help" id="trophy-silver-settings-help">In trophy mode, achievements below this rate earn silver; the rest, or those with no known rate, earn bronze.</div>
                   </li>
@@ -3600,13 +3661,13 @@
                   An imported theme carries its own images and behaves exactly like a built-in one.
                 </p>
                 <div class="theme-library-actions">
-                  <button type="button" id="btn-import-theme" class="btn primary">
+                  <button type="button" id="btn-import-theme" class="inline-action-btn secondary">
                     <i class="fas fa-file-import"></i> <span>Import theme…</span>
                   </button>
-                  <button type="button" id="btn-export-theme" class="btn secondary">
+                  <button type="button" id="btn-export-theme" class="inline-action-btn secondary">
                     <i class="fas fa-file-export"></i> <span>Export theme…</span>
                   </button>
-                  <button type="button" id="btn-delete-theme" class="btn secondary" hidden>
+                  <button type="button" id="btn-delete-theme" class="inline-action-btn secondary" hidden>
                     <i class="fas fa-trash"></i> <span>Delete theme</span>
                   </button>
                 </div>
@@ -3934,14 +3995,25 @@
         <div class="overlay"></div>
         <form class="box" role="dialog" aria-modal="true" aria-labelledby="manual-game-title">
           <div class="header"><i class="fas fa-gamepad"></i> <span id="manual-game-title">Add game manually</span></div>
+          <!-- The executable comes first: picking it fills in the name, so the form reads in the order
+               it is filled. The picker is one wide control that shows the chosen file in place. -->
           <div class="manual-game-fields">
-            <label><span id="manual-game-name-label">Game name</span><input id="manual-game-name" type="text" required maxlength="160" autocomplete="off" /></label>
-            <label class="manual-exe-field"><span id="manual-game-exe-label">Executable</span><button type="button" id="manual-game-pick-exe" class="inline-action-btn"><i class="fas fa-folder-open"></i> <span></span></button><small id="manual-game-exe-path"></small></label>
+            <div class="manual-exe-field">
+              <span id="manual-game-exe-label" class="sr-only">Executable</span>
+              <button type="button" id="manual-game-pick-exe" class="manual-exe-picker" aria-labelledby="manual-game-exe-label" aria-describedby="manual-game-exe-path">
+                <i class="fas fa-file-import manual-exe-icon" aria-hidden="true"></i>
+                <span class="manual-exe-text"><span class="manual-exe-action"></span><small id="manual-game-exe-path"></small></span>
+                <i class="fas fa-folder-open manual-exe-caret" aria-hidden="true"></i>
+              </button>
+            </div>
+            <label class="manual-name-field"><span id="manual-game-name-label">Game name</span><input id="manual-game-name" type="text" required maxlength="160" autocomplete="off" /></label>
             <label><span id="manual-game-platform-label">Platform</span><select id="manual-game-platform"><option value="PC">PC</option><option value="Steam">Steam</option><option value="Xbox">Xbox</option><option value="PlayStation">PlayStation</option><option value="Nintendo Switch">Nintendo Switch</option><option value="Other" id="manual-game-platform-other">Other</option></select></label>
-            <label><span id="manual-game-appid-label">Steam AppID (optional)</span><input id="manual-game-appid" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" /></label>
-            <p id="manual-game-note"><i class="fas fa-info-circle"></i> No achievements</p>
+            <label><span id="manual-game-appid-label">Steam AppID (optional)</span><input id="manual-game-appid" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="1245620" /></label>
           </div>
-          <div class="footer"><button type="button" id="manual-game-cancel" class="inline-action-btn secondary"></button><button type="submit" id="manual-game-save" class="inline-action-btn primary"></button></div>
+          <div class="footer">
+            <p id="manual-game-note"><i class="fas fa-info-circle"></i> No achievements</p>
+            <button type="button" id="manual-game-cancel" class="inline-action-btn secondary"></button><button type="submit" id="manual-game-save" class="inline-action-btn primary"></button>
+          </div>
         </form>
       </section>
 
@@ -4173,10 +4245,13 @@
                   <ul id="onboard-detect-list"></ul>
                   <p class="onboarding-detect-note" id="onboard-detect-note" hidden></p>
                 </div>
+                <!-- Simple keeps the search alone: the two manual pickers and their lists wait behind
+                     the link below (`is-folders-open`), since detection already found what it could. -->
                 <div class="onboarding-folder-actions">
-                  <button type="button" id="onboard-smart-find" class="inline-action-btn primary"><i class="fas fa-search-plus"></i> <span>Smart find folders</span><small id="onboard-smart-find-hint">saves + libraries</small></button>
-                  <button type="button" id="onboard-add-save-dir" class="inline-action-btn"><i class="fas fa-folder-plus"></i> <span>Save/config folder</span><small id="onboard-add-save-dir-hint">one emulator/source</small></button>
-                  <button type="button" id="onboard-add-library-dir" class="inline-action-btn"><i class="fas fa-folder-open"></i> <span>Game library folder</span><small id="onboard-add-library-dir-hint">many installed games</small></button>
+                  <button type="button" id="onboard-smart-find" class="inline-action-btn is-recommended"><i class="fas fa-search-plus"></i> <span>Smart find folders</span><small id="onboard-smart-find-hint">saves + libraries</small></button>
+                  <button type="button" id="onboard-add-save-dir" class="inline-action-btn onboarding-folder-manual"><i class="fas fa-folder-plus"></i> <span>Save/config folder</span><small id="onboard-add-save-dir-hint">one emulator/source</small></button>
+                  <button type="button" id="onboard-add-library-dir" class="inline-action-btn onboarding-folder-manual"><i class="fas fa-folder-open"></i> <span>Game library folder</span><small id="onboard-add-library-dir-hint">many installed games</small></button>
+                  <button type="button" id="onboard-add-folder-more" class="onboarding-link"><i class="fas fa-plus" aria-hidden="true"></i> <span>Something missing? Add a folder</span></button>
                 </div>
                 <div id="onboarding-folder-status" class="onboarding-inline-status"></div>
                 <div class="onboarding-lists">
@@ -4232,6 +4307,36 @@
                         <span id="onboard-epic-status" class="onboarding-account-status" aria-live="polite"></span>
                       </span>
                       <button type="button" id="onboard-epic-connect" class="onboarding-test-button"><span></span></button>
+                    </div>
+                    <div class="onboarding-account-row" data-account="psn">
+                      <span class="onboarding-account-logo"><i class="fab fa-playstation" aria-hidden="true"></i></span>
+                      <span class="onboarding-account-text">
+                        <strong>PlayStation</strong>
+                        <span id="onboard-psn-status" class="onboarding-account-status" aria-live="polite"></span>
+                      </span>
+                      <button type="button" id="onboard-psn-connect" class="onboarding-test-button"><span></span></button>
+                    </div>
+                    <!-- No sign-in window here: RetroAchievements reads a username and the Web API key
+                         from the account's own settings page, checked by the main process like Settings. -->
+                    <div class="onboarding-account-row" data-account="ra">
+                      <span class="onboarding-account-logo"><i class="fas fa-gamepad" aria-hidden="true"></i></span>
+                      <span class="onboarding-account-text">
+                        <strong>RetroAchievements</strong>
+                        <span id="onboard-ra-status" class="onboarding-account-status" aria-live="polite"></span>
+                      </span>
+                      <button type="button" id="onboard-ra-connect" class="onboarding-test-button" aria-expanded="false" aria-controls="onboard-ra-form"><span></span></button>
+                      <form class="onboarding-account-form" id="onboard-ra-form" hidden>
+                        <label>
+                          <span id="onboard-ra-user-label">Username</span>
+                          <input type="text" id="onboard-ra-user" autocomplete="off" spellcheck="false" />
+                        </label>
+                        <label>
+                          <span id="onboard-ra-key-label">Web API key</span>
+                          <input type="password" id="onboard-ra-key" autocomplete="off" spellcheck="false" />
+                        </label>
+                        <button type="submit" id="onboard-ra-submit" class="inline-action-btn primary"><span>Connect</span></button>
+                        <button type="button" id="onboard-ra-key-page" class="onboarding-link"><i class="fas fa-external-link-alt" aria-hidden="true"></i> <span>Where is my Web API key?</span></button>
+                      </form>
                     </div>
                   </div>
                 </div>
@@ -4559,10 +4664,15 @@
                     <strong id="onboard-feat-clips-title">Video clips</strong>
                     <span id="onboard-feat-clips-copy"></span>
                   </div>
-                  <div id="onboard-feat-backup" data-advanced>
-                    <i class="fas fa-file-export" aria-hidden="true"></i>
-                    <strong id="onboard-feat-backup-title">Profile backup</strong>
-                    <span id="onboard-feat-backup-copy"></span>
+                  <div>
+                    <i class="fas fa-chart-pie" aria-hidden="true"></i>
+                    <strong id="onboard-feat-stats-title">Library stats</strong>
+                    <span id="onboard-feat-stats-copy"></span>
+                  </div>
+                  <div>
+                    <i class="fas fa-heartbeat" aria-hidden="true"></i>
+                    <strong id="onboard-feat-health-title">Game health</strong>
+                    <span id="onboard-feat-health-copy"></span>
                   </div>
                 </div>
                 <small class="onboard-field-hint" id="onboard-summary-reopen">You can reopen this guide at any time from Settings &gt; General.</small>

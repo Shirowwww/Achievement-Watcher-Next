@@ -86,6 +86,8 @@ function installWorld(world) {
     save: async (entries) => calls.push(['userDir.save', JSON.parse(JSON.stringify(entries))]),
   };
   window.libraryDirs = { getEntries: async () => [], findEntries: async () => [], save: async (entries) => calls.push(['libraryDirs.save', entries]) };
+  // The guide counts a folder with the library's own readers.
+  window.achievements = { previewWatchedFolder: async (dir) => world.folderGames[dir] || [] };
   window.settings = {
     setUserDataPath() {},
     save: async (config) => calls.push(['settings.save', JSON.parse(JSON.stringify(config))]),
@@ -297,13 +299,41 @@ test('the last step lists the choices and each Change returns to its step', asyn
     assert.match(rows[0], /Francais · Simple/);
     assert.match(rows[2], /\d+/, 'the row carries the count of enabled sources');
     assert.equal(await page.$eval('#onboarding.is-simple', () => true), true);
-    assert.equal(await page.$eval('#onboard-feat-backup', (el) => getComputedStyle(el).display), 'none', 'Simple hides the Advanced-only backup tip');
+    const tips = await page.$$eval('.onboarding-features > div', (cards) => cards.filter((card) => getComputedStyle(card).display !== 'none').length);
+    assert.equal(tips, 6, 'every tip exists in both modes, so Simple keeps all six');
 
     await page.evaluate(() => $('#onboard-recap li:nth-child(3) button').trigger('click'));
     assert.equal((await state(page)).step, '3');
     await page.evaluate(() => $('.onboarding-steps button[data-step="5"]').trigger('click'));
     await page.evaluate(() => $('#onboard-recap li:nth-child(1) button').trigger('click'));
     assert.equal((await state(page)).step, '0');
+  });
+});
+
+test('Simple keeps the search, the accounts and the look, each fold one link away', async (t) => {
+  await withGuide(t, async (page) => {
+    // Rendered at all: a control inside a hidden label keeps its own display value.
+    const shown = (selector) => page.$eval(selector, (el) => el.getClientRects().length > 0);
+    await answerBasics(page, { language: 'english', mode: 'simple' });
+    await page.click('#onboarding-next');
+    await page.click('#onboarding-next');
+    assert.equal(await shown('#onboard-smart-find'), true);
+    assert.equal(await shown('#onboard-add-save-dir'), false, 'the manual pickers wait behind the link');
+    assert.equal(await shown('.onboarding-lists'), false);
+    await page.click('#onboard-add-folder-more');
+    assert.equal(await shown('#onboard-add-save-dir'), true);
+    assert.equal(await shown('.onboarding-lists'), true);
+    assert.equal(await shown('#onboard-add-folder-more'), false);
+
+    await page.click('#onboarding-next');
+    assert.equal(await shown('#onboard-sources-details'), false, 'Simple shows the accounts alone');
+    assert.equal(await shown('[data-account="psn"]'), true);
+    assert.equal(await shown('[data-account="ra"]'), true);
+
+    await page.click('#onboarding-next');
+    assert.equal(await shown('#onboard-more-details'), false);
+    assert.equal(await shown('#onboard-notification-mode'), false);
+    assert.equal(await shown('#onboard-notification-test'), true, 'the test stays: it is an action, not an option');
   });
 });
 

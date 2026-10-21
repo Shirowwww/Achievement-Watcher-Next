@@ -53,9 +53,9 @@ test('every bundled locale supplies the help interface labels', () => {
   }
 });
 
-test('all 14 Help topics are populated, rendered and localized', () => {
+test('all 17 Help topics are populated, rendered and localized', () => {
   const helpModule = require('../../app/ui/help.js');
-  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 14);
+  assert.strictEqual(Object.keys(helpModule.HELP_LISTS).length, 17);
   for (const [id, key] of Object.entries(helpModule.HELP_LISTS)) {
     assert.match(html, new RegExp(`id="${id}"`), `${key}: missing DOM list`);
     for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
@@ -116,7 +116,8 @@ test('Help facts stay aligned with the current implementation', () => {
 
   assert.match(english.settings.help.controller.join(' '), /Back \+ Start \+ LB[\s\S]*LB \+ X[\s\S]*LB \+ RB/);
   assert.match(english.settings.help.shortcuts.join(' '), /Ctrl\+Alt\+Shift\+Arrows[\s\S]*Ctrl\+Alt\+Shift\+1-5[\s\S]*Ctrl\+Alt\+Shift\+C/);
-  assert.match(english.settings.help.tips.join(' '), /within 3 days/);
+  // The recheck delay is a troubleshooting answer ("my new achievements are missing"), not a tip.
+  assert.match(english.settings.help.troubleshoot.join(' '), /within 3 days/);
   assert.match(english.settings.help.themes.join(' '), /<userData>\\themes/);
   const emulatorHelp = helpModule.withEmulatorRepairHelp(english.settings);
   assert.ok(!emulatorHelp.steam.includes(english.settings.emulator.uplay.packageHelp));

@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Bibliotekvisning",
-        "description": "Velg kortoppsettet. Liggende beholder dagens utseende; kompakt liggende og stående, Liste og Detaljer bytter bildestørrelse mot tettere visning eller mer aktivitet.",
+        "description": "Velg kortoppsettet. Liggende viser bred grafikk; kompakt liggende og stående, Liste og Detaljer bytter grafikkstørrelse mot tettere visning eller rikere aktivitet.",
         "value": {
           "portrait": "Stående",
           "landscape": "Liggende",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Sølv opptil",
-          "description": "I sjeldne nivåer får prestasjoner opptil denne andelen sølv. Hold den mellom gull- og sjeldenhetsgrensen, ellers går alle tre tilbake til standardverdiene."
+          "description": "I sjeldne nivåer får prestasjoner opptil denne andelen sølv. Den holder seg alltid over gull og under sjeldenhetsgrensen: å flytte én glider skyver de andre."
         },
         "rareMax": {
           "name": "Sjelden opptil",
@@ -557,8 +557,13 @@
         "transport": "Integrasjoner",
         "chromium": "Chromium-varsel",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Popup"
+        "test": "Tester",
+        "overlay": "Popup",
+        "overlayDisplay": "Visning",
+        "overlayProgress": "Fremgang",
+        "overlaySounds": "Lyder",
+        "overlayEmulators": "Emulatorer",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Enkelte funksjoner finnes bare i Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Preset (ShadPS4)",
         "overlayPresetShadps4Desc": "Preset som brukes for varsler fra ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Samme som hovedvalget",
+        "overlayEmulatorsDesc": "Spill som kjører i en emulator kan ha sin egen preset og sin egen lyd; rekompilerte PC-porter følger konsollen sin. «Samme som hovedvalget» beholder innstillingene ovenfor.",
         "overlayPosition": "Plassering",
         "overlayPositionDesc": "Hvor popup-vinduet i spilloverlayet vises på skjermen",
         "overlayScale": "Størrelse",
@@ -755,6 +761,9 @@
           "importedOnly": "Importert preset - du kan eksportere eller slette det her, men ikke redigere det med glidebryterne.",
           "importSan": "Importer SAN-tema",
           "importSanSetup": "Importer fra SAN på denne PC-en",
+          "importMenuFile": "Presetfil…",
+          "importMenuSan": "SAN-tema…",
+          "importMenuSanSetup": "Fra SAN på denne PC-en",
           "layer": {
             "none": "Tilpasser ikke",
             "title": "Tilpass en medfølgende preset"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Hjelp",
       "title": "Hjelp og tips",
-      "intro": "Alt som er verdt å vite om gjenkjenning, varsler, kontroller, overlay, temaer og feilsøking.",
+      "intro": "Alt som er verdt å vite: å finne spillene dine, varsler, emulatorer, overlayet, kontrolleren, temaer og hva du gjør når noe er galt.",
       "setupTitle": "Oppsettet ditt nå",
       "topicsTitle": "Bla etter emne",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Første steg",
       "quick": [
-        "Legg til mapper med lagringsfiler og oppsett under Innstillinger > Mapper, og slå så på kilden som passer under Innstillinger > Kilder.",
-        "Watchdog kjører i bakgrunnen - den må kjøre for at du skal få varsler i sanntid og spilletid.",
+        "La Smart søk lete etter spillene dine under Innstillinger > Mapper, eller legg til en mappe selv, og slå så på den tilsvarende kilden under Innstillinger > Kilder.",
+        "Watchdog kjører i bakgrunnen. Den må kjøre for at du skal få varsler i sanntid og spilletid.",
         "Alt (innstillinger, buffere, logger, egne temaer) ligger i %APPDATA%\\Achievement Watcher Next.",
-        "Hver del av innstillingene kan felles sammen under sin egen overskrift - pilen peker ned når den er åpen og til siden når den er lukket. Valgene dine huskes."
+        "Grensesnitt-valget øverst i Innstillinger bytter mellom Enkelt (hverdagsfanene) og Avansert (legger til Steam / GBE Fork, Ubisoft / Uplay R1/R2, Avansert og dypere valg). Enkelt skjuler bare kontroller, ingenting slås av.",
+        "Når du lukker hovedvinduet, blir AW Next værende i systemkurven, der sporingen fortsetter. Bruk menyen i systemkurven for å avslutte. Start ved oppstart og Lukk til systemkurven finner du under Innstillinger > Generelt.",
+        "Søkefeltet øverst i Innstillinger finner et valg i hver fane. Veiviser for førstegangsoppsett under Innstillinger > Generelt åpner oppsettet på nytt."
       ],
-      "notifications": [
-        "Automatisk er standard: sprettoppvarselet i spillet når spillet kan vise det, og et Windows-varsel når det ikke kan, aldri begge.",
-        "Under Innstillinger > Varsler finner du forhåndsinnstilling, lyd, volum, plassering og størrelse; testknappene viser et ekte varsel.",
-        "Høyreklikk på et spill > Varsler for å gi akkurat det spillet egen forhåndsinnstilling, plassering, lyd eller størrelse.",
-        "Skjermbilde ved opplåsing lagrer et bilde av øyeblikket i Bilder\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Spilltilstand",
-      "gameHealth": [
-        "Åpne verktøyknappen til et spill (øverst til høyre på ruten) for å se om det er Klar, Trenger oppmerksomhet eller Ikke sporet.",
-        "Setningen under tilstanden forklarer årsaken i klartekst, og sjekkene under den viser hvilken del som svikter.",
-        "Reparasjonsknapper dukker bare opp når AW Next faktisk kan fikse spillet - hver av dem sier hva den endrer og hvor de gamle filene tas vare på.",
-        "Tekniske detaljer inneholder nøyaktige stier, antall og emulatorkoder; kopier dem inn i en feilrapport."
-      ],
-      "troubleshootTitle": "Feilsøking",
-      "troubleshoot": [
-        "Mangler et spill: legg til mapper, søk på nytt, og sjekk deretter kildebryteren og svartelisten.",
-        "Kommer ingen varsler: sjekk Ikke forstyrr og fokushjelp i Windows, og kjør appen med samme rettigheter som spillene dine.",
-        "Avansert > Diagnostikk åpner logger og datamapper; legg dem ved når du melder fra om en feil.",
-        "Loggene bygges videre på, så en krasj overlever neste oppstart. Hver kjøring starter med en øktmarkør og en [diag]-blokk (versjoner, stier, skjermer) - lim den inn i saken din."
+      "libraryTitle": "Bibliotek og samlinger",
+      "library": [
+        "Samlinger: høyreklikk på et spill > Samlinger, huk av en samling eller velg Ny samling…. Samlingsknappen ved siden av Vis bare installerte spill filtrerer da biblioteket, og profiltallene følger med.",
+        "Rediger samling… i menyen til den knappen endrer navn, farge, ikon eller bilde, og sletter samlingen. Spillene blir værende i biblioteket.",
+        "Den runde knappen ved siden av fullføringsraten åpner Biblioteksstatistikk: fullføring, antall opplåste og låste, spilletid, troféer, platinaspill, de sjeldneste prestasjonene og én rad per plattform.",
+        "En velger mellom søkefeltet og +-knappen bytter mellom seks bibliotekvisninger. Innstillinger > Utseende > Bibliotekruter styrer rutestørrelse, mellomrom og hva hver rute viser.",
+        "+-knappen legger til et spill ingen kilde finner: en tittel og en programfil, med valgfri plattform og Steam AppID. Starter og spilletid spores, uten prestasjoner.",
+        "Høyreklikk på et spill > Spillinnstillinger > Gi nytt navn… endrer navnet som vises for det. Prestasjoner og spilletid > Rediger spilletid… retter totalen (12.5 eller 12h30)."
       ],
       "sourcesTitle": "Klienter og kilder",
       "sources": [
-        "Steam-profilmodus viser installerte eller eide spill, men opplåsingene kommer fortsatt fra lokale lagringsfiler.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay og EA Desktop kan slås på hver for seg under Kilder.",
-        "Eide Steam-spill regnes som installerte bare når Steam-registeret bekrefter det."
+        "Steam, Epic Games og Xbox PC har hver Ingen, Installerte eller Eide under Innstillinger > Kilder. Eide viser hele biblioteket til en tilkoblet konto, installert eller ikke.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC og EA Desktop har hver sin bryter under Innstillinger > Kilder. EA Desktop dekker bare spill utenfor EAs administrerte mapper.",
+        "Eide Steam-spill regnes som installerte bare når Steam-registeret bekrefter det.",
+        "Steam-opplåsinger leses fra statistikken Steam lagrer på denne PC-en, så en privat profil fungerer. Å koble til en konto er valgfritt: det legger til spill spilt på en annen PC og Steam Family-spill.",
+        "Et spill lagret et uvanlig sted: legg til mappen under Innstillinger > Mapper. Velg mappen som direkte inneholder lagringsfilene, AppID-mappene eller emulatoroppsettet, eller en bibliotekmappe som inneholder mange spill.",
+        "RetroAchievements: slå på kilden, skriv inn brukernavn og Web API-nøkkel, og trykk så Importer bibliotek. Opplåsingene kommer fra kontoen din, så la RetroAchievements stå på i emulatoren.",
+        "I Enkel modus er noen sjelden brukte kilderader skjult så lenge de ikke brukes. De kommer tilbake så snart de har noe å si, og Avansert viser alltid alle.",
+        "PlayStation-troféer viser graden sin, andelen spillere som har dem og PlayStations egen sjeldenhetsklasse. Andelene kommer fra Exophase; koble til en PlayStation-konto under Innstillinger > Kilder for å få Sonys egne tall for spillene på den kontoen."
+      ],
+      "notifications": [
+        "Automatisk er standard: sprettoppvarselet i spillet når spillet kan vise det, et Windows-varsel når det ikke kan, aldri begge.",
+        "Innstillinger > Varsler har Varseltype (Automatisk, Windows-varsel, Overlay i spill eller Begge), preset, lyd, volum, plassering, størrelse og ugjennomsiktighet. Testknappene viser et ekte varsel.",
+        "Åpne verktøyknappen til et spill (øverst til høyre på ruten) og gå til varselinnstillingene for å gi akkurat det spillet egen preset, plassering, lyd eller størrelse.",
+        "Skjermbilde ved opplåsing lagrer et bilde av øyeblikket i Bilder\\Achievement Watcher Next.",
+        "Lyd for sjelden prestasjon, Lyd for 100 % fullføring og Lyd for fremgang (Avansert modus) gir de varslene sin egen lyd. Tilfeldig velger en ny lyd hver gang, og du kan importere egne filer.",
+        "Gull, sølv og bronse markerer sjeldne opplåsinger. Innstillinger > Generelt > Visning av sjeldenhet bytter til Trofémodus, som graderer hver prestasjon og viser platina på ferdige spill.",
+        "For tellere viser Fremgangsmilepæler et varsel bare ved 10, 25 eller 50 % steg. Høyreklikk på et spill > Slå av fremgangsvarsler demper ett spill uten å røre opplåsingene.",
+        "To brytere til under Innstillinger > Varsler: Prioriterte varsler lar opplåsinger slippe gjennom Ikke forstyrr (Windows 11), og Spill i Steam-klienten legger til AW Nexts varsel for spill Steam selv kjører."
+      ],
+      "gameHealthTitle": "Spilltilstand",
+      "gameHealth": [
+        "Klikk på verktøyknappen til et spill (øverst til høyre på ruten), eller høyreklikk på det, for å åpne Spilltilstand. Den sier om spillet er Klar, Trenger oppmerksomhet eller Ikke sporet.",
+        "Setningen under tilstanden forklarer årsaken i klartekst. Sjekkene under viser hvilken del som svikter: spillfiler, programfil, prestasjonsdata, emulatoroppsett, sporing i sanntid eller varsler.",
+        "Reparasjonsknapper dukker bare opp når AW Next faktisk kan fikse spillet, for eksempel Finn spillet, Skriv prestasjonsdataene på nytt, Legg emulatorfilen tilbake eller Følg med på dette spillet. Hver av dem sier hva den endrer, tar sikkerhetskopi og spør først.",
+        "Send et testvarsel viser et varsel med spillets eget navn og bilde, levert slik det ville blitt levert på ekte.",
+        "Tekniske detaljer inneholder nøyaktige stier, antall og emulatorkoder: trykk Kopier og lim det inn i en feilrapport. Den fargede prikken på en rute kan skjules under Innstillinger > Utseende > Bibliotekruter."
+      ],
+      "troubleshootTitle": "Feilsøking",
+      "troubleshoot": [
+        "Mangler et spill: sjekk kilden under Innstillinger > Kilder, kjør Smart søk eller Lag oppsett under Innstillinger > Mapper, legg til mappen for hånd om nødvendig, og prøv å slå av Vis bare installerte spill.",
+        "Kommer ingen varsler: les Varsler-raden i spillets Spilltilstand, og sjekk så Ikke forstyrr / fokushjelp i Windows. Prioriterte varsler under Innstillinger > Varsler kan slippe opplåsinger gjennom.",
+        "Innstillinger > Avansert > Diagnostikk åpner logg- og datamappene, og Eksporter logger (.zip) pakker loggene med brukernavn og nøkler maskert. Legg den ved når du melder fra om en feil.",
+        "Loggene bygges videre på, så en krasj overlever neste oppstart. Hver kjøring starter med en øktmarkør og en [diag]-blokk (versjoner, stier, skjermer): lim den inn i en sak.",
+        "Står et spill fast på 0 %? Det er normalt til den første opplåsingen er skrevet. Hvis AW Next fant feil Steam-utgivelse, høyreklikk på spillet > Angi AppID manuelt….",
+        "Telles ikke spilletiden? Åpne spillets verktøyknapp > Programfil og velg programmet som forblir åpent mens du spiller, ikke en launcher.",
+        "Nye prestasjoner fra en spilloppdatering dukker opp innen 3 dager, eller med én gang med Innstillinger > Avansert > Sjekk prestasjonslistene på nytt.",
+        "Feiler en appoppdatering stadig på samme fil? Innstillinger > Avansert > Tøm buffere fjerner bare filer som kan lastes ned igjen, aldri innstillingene eller lagringsfilene dine."
       ],
       "steamTitle": "Steam-emulatorer",
       "steam": [
         "Lagringsfiler fra GBE / Goldberg ligger som regel under %APPDATA%\\GSE Saves eller %APPDATA%\\Goldberg SteamEmu Saves.",
         "Lagringsfiler fra CODEX / RUNE ligger ofte under Fellesdokumenter\\Steam\\CODEX eller Fellesdokumenter\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 og Hoodlum gjenkjennes ut fra mappene med oppsett og lagringsfiler.",
-        "Emulatorfiksen i høyreklikkmenyen kan legge inn GBE Fork-filer, prestasjonsskjemaer og DLC-data.",
-        "Enkel modus er rask; Avansert kjører generate_emu_config for dypere Steam-data og kan ta flere minutter."
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI og Nemirtingas-emulatorene leses fra sine egne oppsetts- eller lagringsmapper. Hvis et spill ikke blir funnet, legg til mappen under Innstillinger > Mapper.",
+        "Høyreklikk på et spill > Emulator og verktøy > Bruk emulatorfiks… installerer GBE Fork, bygger steam_settings (prestasjonsliste og ikoner) og skriver steam_appid.txt når den mangler. Hver erstattede fil sikkerhetskopieres først.",
+        "Under Innstillinger > Steam / GBE Fork bruker steam_settings-data satt til Enkel AW Nexts egen anonyme henting og er rask. Avansert kjører generate_emu_config for dypere Steam-data og kan ta flere minutter.",
+        "Ingenting skrives i en spillmappe av seg selv: Fiks nyoppdagede spill automatisk, Administrer DLC-eierskap og Skriv kontonavn og språk er alle av som standard.",
+        "Diagnostiser emulator i samme meny leser og rapporterer bare. Sikkerhetskopier GBE/Goldberg-oppsettet og Gjenopprett siste GBE/Goldberg-sikkerhetskopi setter et spill tilbake slik det var."
       ],
       "emulatorTitle": "Konsollemulatorer",
       "emulators": [
-        "Troféer fra RPCS3 leses fra dev_hdd0\\home\\...\\trophy nær RPCS3-installasjonen.",
-        "Troféer fra shadPS4 leses fra mappene game_data/trophy i appdataene; rester av data er ikke bevis på at spillet er installert.",
-        "Fremgang i Xenia leses fra Xbox-profilfiler som .gpd."
+        "Troféer fra RPCS3 leses fra dev_hdd0\\home\\...\\trophy nær RPCS3-installasjonen. En flyttet virtuell disk følges.",
+        "Troféer fra shadPS4 leses fra game_data-mappen (TROP XML-filene). Du kan legge til emulatoren, brukermappen eller selve game_data.",
+        "Fremgang i Xenia leses fra Xbox-profilfilene (.gpd) og følger lagringsmappene som er satt i oppsettet.",
+        "Troféer fra KytyPS5 leses fra _Trophies-mappen, for brukeren launcheren kjører spillet som.",
+        "Xbox 360-spill rekompilert for PC og PS4-porter (Bloodborne, Uncharted, God of War III Remastered, MediEvil og andre) er egne kilder under Innstillinger > Kilder. Hvis et ikke dukker opp, legg til mappen under Innstillinger > Mapper.",
+        "Hver konsoll kan ha sin egen popup-preset og lyd under Innstillinger > Varsler > Emulatorer (Avansert modus). Rekompilerte Xbox 360-spill følger Xenias valg, PS4-porter følger shadPS4s, og Samme som hovedvalget beholder hovedinnstillingene."
       ],
       "controllerTitle": "Kontroller (spillkontroller)",
       "controller": [
-        "Slå på Innstillinger > Kontroller først, og deretter åpner Back + Start + LB overlayet i spill.",
-        "LB + X slår navigering i overlayet av og på.",
-        "I navigeringsmodus: styrekors og venstre stikke flytter fokus, A bekrefter, B avbryter, X søker og Y åpner valgene.",
+        "Slå på Styr overlayet i spill med en kontroller (av som standard) under Innstillinger > Kontroller, så åpner Back + Start + LB overlayet i spill.",
+        "Styr appen med en kontroller (på som standard) styrer selve AW Next: styrekors eller venstre stikke flytter fokus, A åpner et spill, B går tilbake, X søker, Y eller Start åpner Innstillinger, LB / RB bytter innstillingsfaner.",
+        "I biblioteket starter RT det valgte spillet og LT åpner Spilltilstand.",
+        "I overlayet slår LB + X navigering av og på: styrekors eller venstre stikke flytter fokus, A bekrefter, B avbryter, X søker, Y åpner valgene.",
         "Hold inne LB + RB for å flytte overlayet med venstre stikke og rulle med høyre stikke.",
-        "Fungerer med kontrollere fra Xbox, PlayStation (DualShock 4 / DualSense) og Switch Pro."
+        "Hvis spillet fortsatt reagerer på knappene dine, slå på Gi overlayet fokus når det åpnes eller Send Escape til spillet når du åpner med kontroller (begge av som standard).",
+        "Fungerer med kontrollere fra Xbox, PlayStation (DualShock 4 / DualSense) og Switch Pro. Knappeoppsett styrer knappenavnene som vises, og hver snarvei tar én til tre knapper.",
+        "Registreres ikke kontrolleren? Sjekk den først i Windows (joy.cpl), sørg for at riktig bryter er på, og prøv så XInput i Kontrollerbackend."
       ],
       "overlayTitle": "Overlay i spill",
       "overlay": [
-        "Åpne det med hurtigtasten for overlayet (Ctrl+Shift+K som standard) eller Back + Start + LB på en kontroller.",
-        "Sorter etter én kolonne av gangen: Sjeldenhet, Dato eller Status (stigende / synkende / ingen).",
-        "Trykk / for å hoppe til søket, og Esc for å tømme det eller lukke valgpanelet.",
-        "Tannhjulpanelet endrer aksent, tetthet, zoom, gjennomsiktighet og antall synlige rader; «Bruk apptema» følger det aktive temaet.",
-        "Hver prestasjon med kjent opplåsingsandel viser sjeldenheten sin: grått for vanlig, gull/sølv/bronse for sjelden."
+        "Åpne det med hurtigtasten for overlayet (Ctrl+Shift+K som standard) eller Back + Start + LB på en kontroller mens et støttet spill kjører. Hurtigtasten settes under Innstillinger > Generelt.",
+        "Det viser prestasjonene til spillet som kjører: navn, beskrivelse, låst eller opplåst, opplåsingsdato og fremgang. Dra det i toppen.",
+        "En skjult prestasjon forblir skjult til du klikker på den (eller trykker A på en kontroller), så ingenting blir avslørt.",
+        "Pillene Alle, Låst opp, Låst og Underveis filtrerer listen. Klikk på Prestasjon, Sjeldenhet, Dato eller Status for å sortere: stigende, synkende, så tilbake til normalt. Én kolonne om gangen.",
+        "Trykk / for å hoppe til søket, Esc for å tømme det eller lukke valgpanelet.",
+        "Tannhjulpanelet endrer aksent, tetthet, ikonstørrelse, zoom, gjennomsiktighet og synlige rader. Bruk apptema følger det aktive temaet, og Tilbakestill til standard angrer alt.",
+        "Hver prestasjon med kjent andel viser sjeldenheten sin: grått for vanlig, gull/sølv/bronse for sjelden."
       ],
       "streamTitle": "Streamoverlay (OBS)",
       "stream": [
-        "Innstillinger > Varsler > OBS-nettleserkilde > Kopier lenke, legg deretter til en nettleserkilde i OBS og lim den inn som URL.",
-        "Sett kildens bredde og høyde til størrelsen som http://127.0.0.1:8082/obs/_config oppgir: presetets egen boksstørrelse ved din skalering.",
+        "Innstillinger > Varsler > OBS-nettleserkilde (Avansert modus): Forhåndsvis sjekker den i nettleseren din og Kopier lenke kopierer adressen. Legg til en nettleserkilde i OBS og lim den inn som URL.",
+        "Hvilken som helst bredde og høyde fungerer, kortet skaleres til å fylle boksen. En større kilde er skarpere: gi den omtrent dobbelt så stor størrelse som presetets egen (http://127.0.0.1:8082/obs/_config oppgir den) og plasser den i halv størrelse.",
         "Legg til ?test=1 i URL-en mens du plasserer kilden. Den viser en eksempel-opplåsing hvert tiende sekund; fjern den når du er ferdig.",
-        "Kilden viser det samme popup-vinduet som spilloverlayet, og forblir tom mellom opplåsinger, så den koster ingenting mens du streamer.",
-        "Den leser den lokale varselstrømmen, så la Websocket @localhost:8082 stå på under Innstillinger > Varsler > Leveringsmåte."
+        "Kilden viser det samme popup-vinduet som det i spillet, og forblir tom mellom opplåsinger, så den koster ingenting mens du streamer.",
+        "Flere valg etter adressen: ?scale=2 låser zoomen, ?duration=8000 setter hvor lenge hvert kort blir stående, ?sound=1 spiller lyden gjennom kilden, /obs/preset/Xbox/ bruker ett preset uansett hva skrivebordet bruker.",
+        "Den leser den lokale varselstrømmen, så la Websocket @localhost:8082 stå på under Innstillinger > Varsler > Integrasjoner. Den fungerer bare på denne PC-en, og bare én kopi av AW Next kan tilby den."
+      ],
+      "souvenirsTitle": "Skjermbilder og videoklipp",
+      "souvenirs": [
+        "Innstillinger > Varsler > Skjermbilde ved opplåsing lagrer et bilde et øyeblikk etter popup-vinduet, med varselet, i én undermappe per spill. Åpne mappen tar deg dit.",
+        "HDR-skjermbilder (Automatisk) korrigerer fargene når Windows HDR er på. Minnene fanger hovedskjermen, så spill på den.",
+        "Videoklipp ved opplåsing (av til du slår det på, lenger ned i Innstillinger > Varsler) holder de siste sekundene av spillingen i minnet og lagrer en MP4 rundt hver opplåsing. Ingenting skrives før en prestasjon låses opp.",
+        "Klippets lengde (10 til 30 sekunder), Format (H.264, HEVC eller AV1), Oppløsning, Bildefrekvens, Kvalitet og Lyd (Bare spillet eller Hele pc-en) kan alle endres. H.264 spilles av overalt.",
+        "Grafikkortets egen koder gjør jobben, med godt under 1 % av prosessoren. Uten en maskinvare-H.264-koder tar Windows’ programvarekoder over, på maks 1080p og 30 FPS. Et veldig gammelt spill i eksklusiv fullskjerm kan ta opp svarte bilder."
       ],
       "shortcutsTitle": "Hurtigtaster",
       "shortcuts": [
-        "Ctrl+Shift+K (standard): slår overlayet i spill av og på - kan endres under Innstillinger > Generelt.",
-        "Ctrl+Alt+Shift+piltaster flytter overlayet; Ctrl+Alt+Shift+1-5 setter det i en fast plassering.",
-        "Ctrl+Alt+Shift+C slår gjennomklikking av og på; Ctrl+F hopper til søket i Innstillinger."
+        "Ctrl+Shift+K (standard): slår overlayet i spill av og på. Endre det under Innstillinger > Generelt.",
+        "Ctrl+Alt+Shift+piltaster flytter overlayet; Ctrl+Alt+Shift+1-5 setter det i en fast plassering; Ctrl+Alt+Shift+C slår gjennomklikking av og på.",
+        "I overlayet hopper / til søket og Esc tømmer det. I presetbyggeren angrer og gjør Ctrl+Z og Ctrl+Y om.",
+        "Ctrl+F hopper til søket i Innstillinger og Esc tømmer det. F5 oppdaterer biblioteket."
       ],
       "themesTitle": "Egendefinerte temaer",
       "themes": [
-        "Egendefinert starter som Steam Blue; hvert lag (bakgrunn, topplinje, paneler, kort, innstillinger, tekst, kantlinjer, aksent) kan endres.",
-        "Bilder i et lag ligger under et farget slør med en lett matt uskarphet; effektene settes per lag.",
+        "Innstillinger > Utseende har innebygde temaer, og alle kan redigeres: vindu, topplinje, paneler, kort, innstillinger, tekst, kantlinjer og aksent tar hver en farge, en gradient eller et bilde.",
+        "Lagre tema gjør redigeringen din til et eget tema: behold navnet for å erstatte det, skriv et annet for en kopi. Nullstill alt setter tilbake temaet du startet fra.",
         "Slipp et CSS-tema i <userData>\\themes, så dukker det opp i temalisten.",
-        "Presetbyggeren kan vise en utforming som et ekte popup-vindu før du lagrer den, åpne et lagret preset igjen for å endre det, og slette dem du ikke vil beholde.",
-        "Eksporter temaet du bruker som én .awtheme-fil, eller importer et noen har sendt deg: det vises før det installeres og oppfører seg deretter som et innebygd tema."
+        "Eksporter temaet… skriver én .awtheme-fil (et innebygd må først lagres under ditt eget navn). Importer et tema… viser en forhåndsvisning før det installeres, og Slett temaet fjerner et importert.",
+        "Temaer laget av fellesskapet ligger i temagalleriet på prosjektets nettsted, og å sende inn ditt tar én fil."
+      ],
+      "presetsTitle": "Popup-presets",
+      "presets": [
+        "Et preset er utseendet til popup-vinduet i spillet, valgt under Innstillinger > Varsler > Preset. Det har ingen effekt når Varseltype er Windows-varsel.",
+        "Innstillinger > Varselpresets er en designer bygget av vanlige kontroller: velg et utgangspunkt eller trykk Overrask meg, se på den direkte forhåndsvisningen (Kort, Sammenlign, Skjerm), og trykk så Lag preset. Ingenting lagres før det.",
+        "Tilpass en medfølgende preset endrer bare noen få ting (bakgrunn, tekstfarge, aksent, kantlinje, glød, skrift, logo) og følger fortsatt det medfølgende presetet hvis det blir forbedret.",
+        "Rediger et preset åpner et du har designet igjen. Eksporter og Importer flytter et preset som én .awpreset-fil, med bilder, skrifter og lyd.",
+        "Importer > SAN-tema… leser et Steam Achievement Notifier-tema (en .san-fil), og Importer > Fra SAN på denne PC-en henter inn temaene SAN allerede bruker. De beholder SAN-utseendet og -lydene sine."
       ],
       "tipsTitle": "Tips og triks",
       "tips": [
         "Høyreklikk på en spillrute for å starte spillet, velge programfilen, åpne mapper og lenker, bruke emulatorverktøy eller avinstallere det når den menyen er slått på.",
-        "Høyreklikk på et spill og velg å slå av fremgangsvarsler for å stoppe fremgangsvarsler uten å miste opplåsingene.",
-        "Emulatorfiksen (Enkel og rask / Avansert og komplett) installerer GBE Fork, prestasjonsskjemaet og DLC-data.",
-        "Spilletid spores mens spillet kjører; varsler om fremgang og spilletid kan slås på under Varsler.",
-        "Nye prestasjoner fra en spilloppdatering dukker opp automatisk innen 3 dager, eller med én gang fra Innstillinger > Avansert > Sjekk prestasjonslistene på nytt."
+        "Merk som manuelt låst opp (høyreklikk på en prestasjon) registrerer en opplåsing ingen kilde kan se.",
+        "Nullstill prestasjoner… spiller et spill på nytt fra null og sikkerhetskopierer hver fil først. Det fungerer for emulerte spill, ikke for Steam, Epic eller Xbox, hvis opplåsinger ligger på kontoen din.",
+        "Spilletid spores mens spillet kjører; Sporing av spilletid under Innstillinger > Varsler slår på start- og sluttvarslene.",
+        "Glem dette spillet… fjerner alt AW Next har om et spill (lagringsfiler sikkerhetskopieres først). Fjern fra listen skjuler det bare.",
+        "Spillinnstillinger > Språk for prestasjoner viser prestasjonene og varslene for ett spill på et annet språk enn resten.",
+        "Innstillinger > Avansert > Profilsikkerhetskopi: Eksporter profil… lagrer innstillingene, presets, temaer, omslag og spilletid i én .awbackup-fil for en ominstallering eller en ny PC. Innlogginger lagres ikke."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Gi prestasjoner gull, sølv eller bronse etter hvor sjeldne de er. Slå det på i Innstillinger.",
     "clipsTitle": "Videoklipp",
     "clipsCopy": "Behold et kort klipp rundt hver opplåsing. Slå det på i Innstillinger under Varsler.",
-    "backupTitle": "Profilsikkerhetskopi",
-    "backupCopy": "Lagre innstillingene og bibliotekvalgene dine i én fil, og gjenopprett dem etter en ominstallering.",
+    "statsTitle": "Biblioteksstatistikk",
+    "statsCopy": "Under profilen din viser «Se den detaljerte oversikten» fullføring, spilletid og fremgang per plattform.",
+    "healthTitle": "Spilltilstand",
+    "healthCopy": "En farget prikk på et spill forteller om prestasjonene blir sporet. Innstillingsknappen forklarer hva som er galt.",
     "profileTitle": "Profil",
     "profileCopy": "Velg navnet som vises i topplinjen, og sett eventuelt et lokalt profilbilde.",
     "username": "Visningsnavn",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "lagringsfiler + bibliotek",
     "addSaveHint": "én emulator eller kilde",
     "addLibraryHint": "mange installerte spill",
+    "addFolder": "Mangler noe? Legg til en mappe",
     "saveList": "Mapper for lagring/oppsett",
     "libraryList": "Spillbibliotek",
     "emptyList": "Ingenting lagt til i denne økten.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Du kan når som helst åpne denne guiden igjen fra Innstillinger > Generelt.",
     "sourcesTitle": "Hvor prestasjonene dine kommer fra",
     "sourcesCopy": "Alle kilder som er installert på denne PC-en, leses automatisk, så standardvalgene fungerer fint. Logg inn nedenfor bare hvis du vil ha mer.",
+    "sourcesCopySimple": "Plattformene og emulatorene på denne PC-en leses allerede. Koble til en konto bare hvis du vil ha det den legger til.",
     "sourcesMore": "Finjuster kilder ({count} aktivert)",
     "accountsTitle": "Kontoer (valgfritt)",
-    "accountsCopy": "Logg inn for å lese opplåsinger fra en privat Steam-profil, legge til spillene dine fra Steam Family, importere Xbox PC-biblioteket ditt og vise Epic-fremgangen din. Du kan hoppe over dette og koble til senere under Innstillinger > Kilder.",
+    "accountsCopy": "Logg inn for å lese opplåsinger fra en privat Steam-profil, legge til spillene dine fra Steam Family, importere Xbox PC-biblioteket ditt, vise Epic-fremgangen din, få PlayStations egne troféandeler og importere RetroAchievements-spillene dine. Du kan hoppe over dette og koble til senere under Innstillinger > Kilder.",
+    "raKeyPage": "Hvor finner jeg Web API-nøkkelen min?",
     "sourcesEmulators": "Emulatorer",
     "sourcesEmulatorsCopy": "Hver av dem leses bare når den er installert, så det koster ingenting å la dem stå på.",
     "source": "Vis Steam-spill",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Spillnavn",
     "manual-game-appid-optional": "Steam-AppID (valgfritt)",
     "manual-game-platform-other": "Annet",
+    "manual-game-note": "Starter og spilletid spores, uten prestasjoner.",
+    "collection-create": "Opprett",
+    "collection-create-note": "Når den er opprettet, høyreklikker du på et spill > Samlinger for å legge det til.",
+    "psn-ultra-rare": "Ultrasjelden",
+    "psn-very-rare": "Veldig sjelden",
+    "psn-rare": "Sjelden",
+    "psn-common": "Vanlig",
+    "psn-title": "PlayStation-konto",
+    "psn-desc": "Valgfritt. Viser PlayStations egne troféandeler for spillene som allerede ligger på PSN-kontoen din; de andre beholder tallene fra Exophase. Økttokenet ditt lagres kryptert på denne PC-en.",
+    "psn-btn-hint": "åpner Sonys innloggingsvindu",
+    "psn-connect": "Koble til PlayStation-konto",
+    "psn-connecting": "Åpner Sonys innloggingsvindu…",
+    "psn-connected": "PlayStation-kontoen er koblet til.",
+    "psn-disconnected": "PlayStation-kontoen er koblet fra.",
+    "psn-failed": "PlayStation-innlogging mislyktes",
+    "connect-playstation-account": "Koble til PlayStation-konto",
     "manual-source": "Manuell",
     "no-config-eligible-games": "Fant ingen Steam-spill uten oppsett som ikke allerede har en fiks.",
     "no-config-eligible-games-configured": "Fant {count} Steam-kompatible installasjoner - alle har allerede et oppsett. Bruk Avansert > Fiks alle spill for å bygge dem opp på nytt.",

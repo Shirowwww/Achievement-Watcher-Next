@@ -14,7 +14,10 @@
   const PANEL_CLASS = 'select-menu';
   const MAX_PANEL_HEIGHT = 320;
   const VIEWPORT_MARGIN = 8;
-  const GAP = 6;
+  const GAP = 4;
+  const PANEL_CLOSE_MS = 110;
+  // Matches the unfold transition in app.css; the panel is refitted once the rows are in.
+  const UNFOLD_MS = 200;
   // Keystrokes typed within this window search the list as one string, like a native listbox.
   const TYPE_AHEAD_RESET_MS = 900;
 
@@ -42,6 +45,8 @@
       value: option.value,
       disabled: option.disabled || (option.parentElement && option.parentElement.tagName === 'OPTGROUP' && option.parentElement.disabled),
       group: option.parentElement && option.parentElement.tagName === 'OPTGROUP' ? option.parentElement.label : '',
+      more: option.hasAttribute('data-more'),
+      folded: false,
     }));
   }
 
@@ -49,7 +54,10 @@
     if (!current) return;
     const { select, panel } = current;
     current = null;
-    panel.remove();
+    // Fades out before it goes; a timer rather than transitionend, which a hidden window may never send.
+    panel.classList.remove('is-open');
+    panel.classList.add('is-closing');
+    setTimeout(() => panel.remove(), PANEL_CLOSE_MS);
     select.removeAttribute('aria-expanded');
     if (refocus) select.focus({ preventScroll: true });
   }
@@ -67,18 +75,39 @@
     select.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
+  /*
+    Opens the folded rows in place: "More themes…" used to need a close and a reopen. Reached by a
+    click on the "more" row, or by the keyboard or type-ahead landing on a folded row.
+  */
+  function unfold() {
+    if (!current || !current.fold) return;
+    const { panel, select, fold } = current;
+    current.fold = null;
+    current.items.forEach((item) => {
+      item.folded = false;
+    });
+    fold.more.classList.add('is-gone');
+    fold.extra.classList.add('is-open');
+    setTimeout(() => {
+      if (current && current.panel === panel) place(panel, select);
+    }, UNFOLD_MS);
+  }
+
   function highlight(index, { scroll = true } = {}) {
     if (!current) return;
     const { panel, items } = current;
     if (index < 0 || index >= items.length) return;
+    if (items[index].folded) unfold();
     current.active = index;
-    const rows = panel.querySelectorAll('.select-menu-option');
-    rows.forEach((row, i) => {
-      row.classList.toggle('is-active', i === index);
-      if (i === index) row.setAttribute('aria-current', 'true');
-      else row.removeAttribute('aria-current');
+    let row = null;
+    panel.querySelectorAll('.select-menu-option').forEach((candidate) => {
+      const on = Number(candidate.dataset.index) === index;
+      candidate.classList.toggle('is-active', on);
+      if (on) {
+        candidate.setAttribute('aria-current', 'true');
+        row = candidate;
+      } else candidate.removeAttribute('aria-current');
     });
-    const row = rows[index];
     if (row && scroll) row.scrollIntoView({ block: 'nearest' });
   }
 
@@ -120,8 +149,15 @@
     return true;
   }
 
+  // The box the list hangs from: the select, or the control that wraps it when the select is only
+  // the text part of a wider pill (the library view picker carries its icon beside the select).
+  function triggerRect(select) {
+    const wrapper = select.closest('[data-select-anchor], .library-layout-control');
+    return (wrapper || select).getBoundingClientRect();
+  }
+
   function place(panel, select) {
-    const rect = select.getBoundingClientRect();
+    const rect = triggerRect(select);
     // Sized by its content, with the trigger width only as a floor: settings rows are too narrow
     // to hold the longer labels.
     panel.style.minWidth = `${Math.round(Math.min(rect.width, window.innerWidth - VIEWPORT_MARGIN * 2))}px`;
@@ -137,13 +173,35 @@
     panel.classList.toggle('is-above', dropUp);
 
     const height = Math.min(panel.scrollHeight, maxHeight);
-    // Centred on the trigger, because the value it replaces is centred in the row too; clamped so a
-    // row near either edge of the window still gets a list that fits.
-    const centred = rect.left + rect.width / 2 - width / 2;
-    const left = Math.min(Math.max(centred, VIEWPORT_MARGIN), Math.max(VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN));
-    const top = dropUp ? Math.max(VIEWPORT_MARGIN, rect.top - GAP - height) : Math.min(rect.bottom + GAP, window.innerHeight - height - VIEWPORT_MARGIN);
+    // Centred on the trigger, so a list as wide as it sits exactly under it and a wider one overhangs
+    // both sides evenly. Clamped so a row near either edge of the window still gets a list that fits.
+    const maxLeft = Math.max(VIEWPORT_MARGIN, window.innerWidth - width - VIEWPORT_MARGIN);
+    const left = Math.min(Math.max(rect.left + rect.width / 2 - width / 2, VIEWPORT_MARGIN), maxLeft);
     panel.style.left = `${Math.round(left)}px`;
-    panel.style.top = `${Math.round(Math.max(VIEWPORT_MARGIN, top))}px`;
+    // A list above its trigger hangs from its bottom edge, so rows unfolding inside it grow upwards
+    // instead of sliding over the trigger.
+    if (dropUp) {
+      panel.style.top = 'auto';
+      panel.style.bottom = `${Math.round(window.innerHeight - rect.top + GAP)}px`;
+    } else {
+      const top = Math.min(rect.bottom + GAP, window.innerHeight - height - VIEWPORT_MARGIN);
+      panel.style.bottom = 'auto';
+      panel.style.top = `${Math.round(Math.max(VIEWPORT_MARGIN, top))}px`;
+    }
+  }
+
+  // The row standing in for the folded ones, labelled by the select's data-more-label.
+  function moreRow(select) {
+    const row = document.createElement('div');
+    row.className = 'select-menu-more';
+    row.setAttribute('aria-hidden', 'true');
+    const text = document.createElement('span');
+    text.className = 'select-menu-label';
+    text.textContent = select.dataset.moreLabel || 'More…';
+    const chevron = document.createElement('i');
+    chevron.className = 'fas fa-chevron-down';
+    row.append(text, chevron);
+    return row;
   }
 
   function open(select) {
@@ -161,6 +219,10 @@
     const label = select.getAttribute('aria-label') || select.id;
     if (label) panel.setAttribute('aria-label', label);
 
+    // Options marked data-more start folded behind one row, unless the current value is one of them:
+    // folding must never hide what is selected. They are expected to be consecutive.
+    const folds = items.some((item) => item.more) && !items.some((item) => item.more && item.index === select.selectedIndex);
+    let fold = null;
     let lastGroup = '';
     for (const item of items) {
       if (item.group && item.group !== lastGroup) {
@@ -193,11 +255,21 @@
       tick.setAttribute('aria-hidden', 'true');
       row.appendChild(tick);
 
-      panel.appendChild(row);
+      if (folds && item.more) {
+        if (!fold) {
+          fold = { more: moreRow(select), extra: document.createElement('div'), inner: document.createElement('div') };
+          fold.extra.className = 'select-menu-extra';
+          fold.inner.className = 'select-menu-extra-inner';
+          fold.extra.appendChild(fold.inner);
+          panel.append(fold.more, fold.extra);
+        }
+        item.folded = true;
+        fold.inner.appendChild(row);
+      } else panel.appendChild(row);
     }
 
     document.body.appendChild(panel);
-    current = { select, panel, items, active: Math.max(0, select.selectedIndex) };
+    current = { select, panel, items, fold, active: Math.max(0, select.selectedIndex) };
     select.setAttribute('aria-expanded', 'true');
     select.setAttribute('aria-haspopup', 'listbox');
     place(panel, select);
@@ -210,6 +282,7 @@
 
     panel.addEventListener('mousedown', (event) => event.preventDefault()); // keep focus on the select
     panel.addEventListener('click', (event) => {
+      if (event.target.closest('.select-menu-more')) return unfold();
       const row = event.target.closest('.select-menu-option');
       if (!row) return;
       commit(Number(row.dataset.index));
@@ -220,10 +293,14 @@
     });
   }
 
+  // The select whose list the last press closed: the click that ends that press must not open it again.
+  let closedByPress = null;
+
   // Intercepting at mousedown is what stops Chromium from drawing its own popup.
   document.addEventListener(
     'mousedown',
     (event) => {
+      closedByPress = current ? current.select : null;
       const select = event.target instanceof Element ? event.target.closest('select') : null;
       if (!select) {
         if (current && !event.target.closest(`.${PANEL_CLASS}`)) close();
@@ -240,10 +317,13 @@
   // A row whose select has pointer-events disabled (the arrow rows did, before this) still reports
   // the click on the cell around it, so the cell opens the list too.
   document.addEventListener('click', (event) => {
+    const justClosed = closedByPress;
+    closedByPress = null;
     if (current) return;
     const cell = event.target instanceof Element ? event.target.closest('.arrow-list li .right') : null;
     if (!cell || event.target.closest('.previous, .next, input, button, label')) return;
     const select = cell.querySelector('select');
+    if (select === justClosed) return;
     if (eligible(select)) open(select);
   });
 

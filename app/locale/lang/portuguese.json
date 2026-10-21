@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Vista da biblioteca",
-        "description": "Escolhe o esquema dos cartões. Horizontal mantém o aspeto atual; Grelha compacta, Lista e Detalhes privilegiam a densidade ou mais informações de atividade.",
+        "description": "Escolha a disposição do cartão. Horizontal mostra arte larga; horizontal compacto e vertical, Lista e Detalhes trocam o tamanho da arte por densidade ou atividade mais rica.",
         "value": {
           "portrait": "Vertical",
           "landscape": "Horizontal",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Prata até",
-          "description": "Nos níveis raros, as conquistas até esta taxa recebem prata. O valor deve ficar entre os limites de ouro e raro, caso contrário os três regressam aos valores predefinidos."
+          "description": "Nos níveis raros, as proezas até esta taxa recebem prata. Fica sempre acima do ouro e abaixo do limite de raro: mover um cursor empurra os outros."
         },
         "rareMax": {
           "name": "Raro até",
@@ -557,8 +557,13 @@
         "transport": "Integrações",
         "chromium": "Notificação Chromium",
         "watchdog": "Watchdog",
-        "test": "Teste",
-        "overlay": "Pop-up"
+        "test": "Testes",
+        "overlay": "Pop-up",
+        "overlayDisplay": "Apresentação",
+        "overlayProgress": "Progresso",
+        "overlaySounds": "Sons",
+        "overlayEmulators": "Emuladores",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Algumas funcionalidades só estão disponíveis no Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Predefinição (ShadPS4)",
         "overlayPresetShadps4Desc": "Predefinição usada para notificações de ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Igual à principal",
+        "overlayEmulatorsDesc": "Os jogos executados num emulador podem ter a sua própria predefinição e o seu próprio som; as versões recompiladas para PC seguem a consola delas. «Igual à principal» mantém as definições acima.",
         "overlayPosition": "Posição",
         "overlayPositionDesc": "Onde o popup overlay no jogo aparece no ecrã",
         "overlayScale": "Tamanho",
@@ -755,6 +761,9 @@
           "importedOnly": "Predefinição importada - exporte ou elimine aqui; não é editável pelos controlos.",
           "importSan": "Importar tema SAN",
           "importSanSetup": "Importar do SAN neste PC",
+          "importMenuFile": "Ficheiro de predefinição…",
+          "importMenuSan": "Tema SAN…",
+          "importMenuSanSetup": "Do SAN neste PC",
           "layer": {
             "none": "Sem personalização",
             "title": "Personalizar uma predefinição incluída"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Ajuda",
       "title": "Ajuda e dicas",
-      "intro": "Tudo o que precisa de saber - deteção, notificações, comando, overlay, temas e resolução de problemas.",
+      "intro": "Tudo o que vale a pena saber: encontrar os seus jogos, notificações, emuladores, o overlay, o comando, temas e o que fazer quando algo corre mal.",
       "setupTitle": "A sua configuração atual",
       "topicsTitle": "Explorar por tópico",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Primeiros passos",
       "quick": [
-        "Adicione as pastas de gravação/configuração em Definições > Pastas e ative a fonte correspondente em Definições > Fontes.",
-        "O Watchdog é executado em segundo plano - tem de estar ativo para as notificações em direto e o tempo de jogo.",
+        "Deixe a Pesquisa inteligente procurar os seus jogos em Definições > Pastas, ou adicione uma pasta você mesmo, e depois ative a fonte correspondente em Definições > Fonte.",
+        "O Watchdog corre em segundo plano. Tem de estar a correr para haver notificações em direto e tempo de jogo.",
         "Tudo (definições, caches, registos e temas personalizados) fica em %APPDATA%\\Achievement Watcher Next.",
-        "Cada secção das definições recolhe sob o seu cabeçalho - a seta aponta para baixo quando está aberta e para o lado quando está fechada. As suas escolhas são memorizadas."
+        "O controlo Interface, no topo das Definições, alterna entre Simples (os separadores do dia a dia) e Avançado (acrescenta Steam / GBE Fork, Ubisoft / Uplay R1/R2, Avançado e opções mais profundas). Simples só esconde controlos, nada é desligado.",
+        "Fechar a janela principal mantém o AW Next na bandeja do sistema, onde o acompanhamento continua. Para sair, use o menu da bandeja. Iniciar com o sistema e Minimizar para a bandeja do sistema estão em Definições > Geral.",
+        "O campo de pesquisa no topo das Definições encontra uma opção em todos os separadores. O Guia do primeiro arranque, em Definições > Geral, reabre a configuração."
       ],
-      "notifications": [
-        "Automático é a predefinição: o aviso dentro do jogo quando o jogo o consegue mostrar e uma notificação do Windows quando não, nunca os dois.",
-        "Em Definições > Notificação estão o preset, o som, o volume, a posição e a escala; os botões de teste disparam um aviso real.",
-        "Clique com o botão direito num jogo > Notificação para dar a esse jogo o próprio preset, posição, som ou escala.",
-        "A captura ao desbloquear guarda uma imagem do momento em Imagens\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Estado do jogo",
-      "gameHealth": [
-        "Abre o botão de ferramentas de um jogo (canto superior direito do cartão) para veres se está Pronto, Requer atenção ou Sem acompanhamento.",
-        "A frase por baixo do estado explica a causa em palavras simples; as verificações abaixo mostram qual a parte em falha.",
-        "Os botões de reparação só aparecem quando o AW Next consegue mesmo corrigir o jogo - cada um diz o que vai alterar e onde ficam os ficheiros anteriores.",
-        "Detalhes técnicos contém os caminhos, contagens e códigos do emulador exatos; copia para um relatório de erro."
-      ],
-      "troubleshootTitle": "Resolução de problemas",
-      "troubleshoot": [
-        "Se faltar um jogo: adicione pastas, volte a analisar e verifique o seletor da fonte e a lista negra.",
-        "Se as notificações não aparecerem: verifique o Assistente de concentração do Windows e execute a aplicação com os mesmos privilégios dos jogos.",
-        "Avançado > Diagnóstico abre os registos e as pastas de dados; anexe-os ao comunicar um problema.",
-        "Os registos são acrescentados, por isso uma falha sobrevive ao arranque seguinte. Cada execução começa com um marcador de sessão e um bloco [diag] (versões, caminhos, ecrãs) - cole-o no relatório."
+      "libraryTitle": "Biblioteca e coleções",
+      "library": [
+        "Coleções: clique com o botão direito num jogo > Coleções, assinale uma ou escolha Nova coleção…. O botão de coleções junto a Mostrar apenas os jogos instalados filtra então a biblioteca, e os números do perfil acompanham.",
+        "Editar coleção… no menu desse botão altera o nome, a cor, o ícone ou a imagem, e elimina a coleção. Os jogos ficam na biblioteca.",
+        "O botão redondo junto à taxa de conclusão abre as Estatísticas da biblioteca: conclusão, contagens de desbloqueadas e bloqueadas, tempo de jogo, troféus, jogos com platina, as proezas mais raras e uma linha por plataforma.",
+        "Um seletor entre o campo de pesquisa e o botão + alterna entre seis vistas da biblioteca. Definições > Aparência > Cartões da biblioteca define o tamanho dos cartões, o espaçamento e o que cada um mostra.",
+        "O botão + adiciona um jogo que nenhuma fonte encontra: um título e um executável, com plataforma e Steam AppID opcionais. Os arranques e o tempo de jogo são registados, sem proezas.",
+        "Clique com o botão direito num jogo > Definições do jogo > Mudar o nome… para alterar o nome mostrado. Proezas e tempo de jogo > Editar tempo de jogo… corrige o total (12.5 ou 12h30)."
       ],
       "sourcesTitle": "Launchers e fontes",
       "sources": [
-        "O modo de perfil Steam lista jogos instalados ou adquiridos, mas os desbloqueios continuam a vir de ficheiros de gravação locais.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay e EA Desktop podem ser ativados separadamente em Fontes.",
-        "Os jogos Steam adquiridos só contam como instalados quando o registo do Steam o confirma."
+        "Steam, Epic Games e Xbox PC oferecem cada um Nenhum, Instalados ou Na biblioteca em Definições > Fonte. Na biblioteca lista toda a biblioteca de uma conta ligada, instalada ou não.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC e EA Desktop têm cada um o seu interruptor em Definições > Fonte. O EA Desktop só abrange jogos fora das pastas geridas pela EA.",
+        "Os jogos Steam adquiridos só contam como instalados quando o registo do Steam o confirma.",
+        "Os desbloqueios do Steam são lidos das estatísticas que o Steam guarda neste PC, por isso um perfil privado funciona. Ligar uma conta é opcional: acrescenta jogos jogados noutro PC e jogos do Steam Family.",
+        "Um jogo guardado num sítio invulgar: adicione a pasta dele em Definições > Pastas. Escolha a pasta que contém diretamente as gravações, as pastas AppID ou a configuração do emulador, ou uma pasta de biblioteca com muitos jogos.",
+        "RetroAchievements: ative a fonte, introduza o nome de utilizador e a chave Web API e prima Importar biblioteca. Os desbloqueios vêm da sua conta, por isso mantenha o RetroAchievements ativo no emulador.",
+        "No modo Simples, algumas linhas de fontes raramente usadas ficam escondidas enquanto não são usadas. Voltam assim que passam a contar, e o modo Avançado lista-as sempre todas.",
+        "Os troféus PlayStation mostram o seu grau, a percentagem de jogadores que os têm e o nível de raridade da própria PlayStation. As taxas vêm do Exophase; ligue uma conta PlayStation em Definições > Fonte para obter os valores da Sony para os jogos dessa conta."
+      ],
+      "notifications": [
+        "Automático é a predefinição: o aviso dentro do jogo quando o jogo o consegue mostrar e uma notificação do Windows quando não, nunca os dois.",
+        "Definições > Notificação contém o Tipo de notificação (Automático, Notificação do Windows, Overlay no jogo ou Ambos), a predefinição, o som, o volume, a posição, o tamanho e a opacidade. Os botões de teste disparam um aviso real.",
+        "Abra o botão de ferramentas de um jogo (canto superior direito do cartão) e vá às respetivas definições de notificação para dar a esse jogo a sua própria predefinição, posição, som ou tamanho.",
+        "A captura ao desbloquear guarda uma imagem do momento em Imagens\\Achievement Watcher Next.",
+        "Som de conquista rara, Som de conclusão a 100% e Som do progresso (modo Avançado) dão a esses avisos um som próprio. Som aleatório escolhe um som diferente de cada vez, e pode importar os seus próprios ficheiros.",
+        "Ouro, prata e bronze assinalam desbloqueios raros. Definições > Geral > Apresentação da raridade passa para o Modo troféus, que classifica todas as proezas e mostra a platina nos jogos concluídos.",
+        "Nos contadores, os Marcos de progresso mostram um aviso só em passos de 10, 25 ou 50%. Clique com o botão direito num jogo > Silenciar notificações de progresso para silenciar um jogo sem mexer nos desbloqueios.",
+        "Mais dois interruptores em Definições > Notificação: as Notificações prioritárias deixam passar os desbloqueios no modo Não incomodar (Windows 11), e os Jogos do cliente Steam acrescentam o aviso do AW Next para jogos que o próprio Steam executa."
+      ],
+      "gameHealthTitle": "Estado do jogo",
+      "gameHealth": [
+        "Clique no botão de ferramentas de um jogo (canto superior direito do cartão), ou clique nele com o botão direito, para abrir o Estado do jogo. Diz se o jogo está Pronto, Requer atenção ou Sem acompanhamento.",
+        "A frase por baixo do estado explica a causa em linguagem simples. As verificações abaixo mostram que parte falha: ficheiros do jogo, executável, dados de proezas, configuração do emulador, acompanhamento em direto ou notificações.",
+        "Os botões de reparação só aparecem quando o AW Next pode mesmo corrigir esse jogo, como Localizar o jogo, Reescrever os dados de proezas, Restaurar o ficheiro do emulador ou Monitorizar este jogo. Cada um diz o que vai alterar, guarda uma cópia de segurança e pergunta primeiro.",
+        "Enviar uma notificação de teste dispara um aviso com o nome e a arte desse jogo, entregue como seria na realidade.",
+        "Detalhes técnicos contém os caminhos exatos, as contagens e os códigos do emulador: prima Copiar e cole num relatório de erro. O ponto colorido num cartão pode ser escondido em Definições > Aparência > Cartões da biblioteca."
+      ],
+      "troubleshootTitle": "Resolução de problemas",
+      "troubleshoot": [
+        "Se faltar um jogo: verifique a fonte dele em Definições > Fonte, execute a Pesquisa inteligente ou Gerar configurações em Definições > Pastas, adicione a pasta à mão se for preciso e experimente desligar Mostrar apenas os jogos instalados.",
+        "Se as notificações não aparecerem: leia a linha Notificações no Estado do jogo, e depois verifique o Não incomodar / Assistente de concentração do Windows. As Notificações prioritárias em Definições > Notificação podem deixar passar os desbloqueios.",
+        "Definições > Avançado > Diagnóstico abre as pastas de registos e de dados, e Exportar registos (.zip) agrupa os registos com o seu nome de utilizador e chaves ocultados. Anexe-o ao reportar um problema.",
+        "Os registos são acrescentados, por isso uma falha sobrevive ao arranque seguinte. Cada execução começa com um marcador de sessão e um bloco [diag] (versões, caminhos, ecrãs): cole-o num relatório.",
+        "Um jogo preso nos 0%? É normal até o primeiro desbloqueio ser escrito. Se o AW Next associou a edição errada do Steam, clique com o botão direito no jogo > Definir o AppID manualmente….",
+        "O tempo de jogo não é contado? Abra o botão de ferramentas do jogo > Executável e escolha o programa que fica aberto enquanto joga, não um lançador.",
+        "As novas proezas de uma atualização do jogo aparecem em 3 dias, ou de imediato com Definições > Avançado > Reverificar listas de proezas.",
+        "Uma atualização da app falha sempre no mesmo ficheiro? Definições > Avançado > Limpar caches só remove ficheiros que podem ser descarregados de novo, nunca as suas definições nem gravações."
       ],
       "steamTitle": "Emuladores Steam",
       "steam": [
-        "As gravações GBE/Goldberg encontram-se normalmente em %APPDATA%\\GSE Saves ou %APPDATA%\\Goldberg SteamEmu Saves.",
-        "As gravações CODEX/RUNE encontram-se frequentemente em Public Documents\\Steam\\CODEX ou Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 e Hoodlum são detetados através das respetivas pastas de configuração/gravação.",
-        "A correção do emulador no menu de contexto pode adicionar ficheiros GBE Fork, esquemas de proezas e dados de DLC.",
-        "O modo Simples é rápido; Avançado executa generate_emu_config para obter dados Steam mais completos e pode demorar vários minutos."
+        "As gravações GBE / Goldberg encontram-se normalmente em %APPDATA%\\GSE Saves ou %APPDATA%\\Goldberg SteamEmu Saves.",
+        "As gravações CODEX / RUNE encontram-se frequentemente em Documentos Públicos\\Steam\\CODEX ou Documentos Públicos\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI e os emuladores Nemirtingas são lidos a partir das suas próprias pastas de configuração ou de gravações. Se um jogo não for encontrado, adicione a pasta dele em Definições > Pastas.",
+        "Clique com o botão direito num jogo > Emulador e ferramentas > Aplicar correção de emulador… para instalar o GBE Fork, criar o steam_settings (lista de proezas e ícones) e escrever o steam_appid.txt quando falta. Cada ficheiro substituído é copiado primeiro.",
+        "Em Definições > Steam / GBE Fork, os dados de steam_settings definidos como Simples usam a obtenção anónima do próprio AW Next e são rápidos. Avançado executa o generate_emu_config para dados Steam mais profundos e pode demorar minutos.",
+        "Nada é escrito numa pasta de jogo por iniciativa própria: Corrigir automaticamente os jogos recém-detetados, Gerir a propriedade das DLC e Escrever nome de conta e idioma estão todos desligados por predefinição.",
+        "Diagnosticar emulador, no mesmo menu, só lê e reporta. Fazer cópia de segurança do GBE/Goldberg e Restaurar a última cópia de segurança do GBE/Goldberg repõem um jogo como estava."
       ],
       "emulatorTitle": "Emuladores de consola",
       "emulators": [
-        "Os troféus do RPCS3 são lidos em dev_hdd0\\home\\...\\trophy, junto à instalação do RPCS3.",
-        "Os troféus do shadPS4 são lidos nas pastas game_data/trophy dos dados da aplicação; dados residuais não comprovam uma instalação.",
-        "O progresso do Xenia é lido em ficheiros de perfil Xbox, como .gpd."
+        "Os troféus do RPCS3 são lidos em dev_hdd0\\home\\...\\trophy junto da instalação do RPCS3. Um disco virtual movido é acompanhado.",
+        "Os troféus do shadPS4 são lidos na pasta game_data (os ficheiros TROP XML). Pode adicionar o emulador, a pasta de utilizador dele ou a própria game_data.",
+        "O progresso do Xenia é lido dos ficheiros de perfil Xbox (.gpd) e segue as pastas de armazenamento definidas na configuração dele.",
+        "Os troféus do KytyPS5 são lidos na pasta _Trophies, para o utilizador com que o lançador executa o jogo.",
+        "Os jogos Xbox 360 recompilados para PC e as versões PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil e outros) são fontes próprias em Definições > Fonte. Se algum não aparecer, adicione a pasta dele em Definições > Pastas.",
+        "Cada consola pode ter a sua própria predefinição de pop-up e som em Definições > Notificação > Emuladores (modo Avançado). Os jogos Xbox 360 recompilados seguem a escolha do Xenia, as versões PS4 seguem a do shadPS4, e Igual à principal mantém as definições principais."
       ],
       "controllerTitle": "Comando (gamepad)",
       "controller": [
-        "Primeiro ative Definições > Comando; depois, Back + Start + LB abre a sobreposição no jogo.",
-        "LB + X ativa ou desativa a navegação no overlay.",
-        "Modo de navegação: o direcional/manípulo esquerdo move o foco, A confirma, B cancela, X pesquisa e Y abre as opções.",
-        "Mantenha LB + RB premidos para mover o overlay com o manípulo esquerdo e deslocar com o direito.",
-        "Funciona com comandos Xbox, PlayStation (DualShock 4 / DualSense) e Switch Pro."
+        "Em Definições > Comando, ative Controlar o overlay no jogo com um comando (desligado por predefinição), e então Back + Start + LB abre o overlay no jogo.",
+        "Controlar a app com o comando (ligado por predefinição) controla o próprio AW Next: o direcional ou o manípulo esquerdo movem o foco, A abre um jogo, B volta atrás, X pesquisa, Y ou Start abre as Definições, LB / RB alternam os separadores das definições.",
+        "Na biblioteca, RT inicia o jogo selecionado e LT abre o respetivo Estado do jogo.",
+        "No overlay, LB + X liga ou desliga a navegação: o direcional ou o manípulo esquerdo movem o foco, A confirma, B cancela, X pesquisa, Y abre as opções.",
+        "Mantenha LB + RB premidos para mover o overlay com o manípulo esquerdo e deslocar com o manípulo direito.",
+        "Se o jogo ainda reagir aos botões, ative Focar a sobreposição ao abrir ou Enviar Esc para o jogo ao abrir com o comando (ambos desligados por predefinição).",
+        "Funciona com comandos Xbox, PlayStation (DualShock 4 / DualSense) e Switch Pro. Disposição do comando define os nomes dos botões mostrados, e cada atalho aceita de um a três botões.",
+        "O comando não é detetado? Verifique-o primeiro no Windows (joy.cpl), confirme que o interruptor certo está ligado e depois experimente XInput em Backend do comando."
       ],
       "overlayTitle": "Overlay no jogo",
       "overlay": [
-        "Abra-a com o atalho da sobreposição (Ctrl+Shift+K por predefinição) ou com Back + Start + LB no comando.",
-        "Ordene por uma coluna de cada vez: Raridade, Data ou Estado (ascendente / descendente / sem ordenação).",
-        "Prima / para focar a pesquisa e Esc para a limpar ou fechar o painel de opções.",
-        "O painel da engrenagem altera o destaque, a densidade, o zoom, a opacidade e as linhas visíveis; «Usar tema da aplicação» segue o tema ativo.",
-        "Cada proeza com uma taxa conhecida mostra a raridade: cinzento para comuns e ouro/prata/bronze para raras."
+        "Abra-o com o atalho do overlay (Ctrl+Shift+K por predefinição) ou com Back + Start + LB num comando enquanto um jogo suportado corre. O atalho define-se em Definições > Geral.",
+        "Lista as proezas do jogo em execução: nome, descrição, bloqueada ou desbloqueada, data de desbloqueio e progresso. Arraste-o pelo cabeçalho.",
+        "Uma proeza escondida permanece escondida até clicar nela (ou premir A num comando), por isso nada é revelado.",
+        "Os botões Todas, Desbloqueadas, Bloqueadas e Em curso filtram a lista. Clique em Proeza, Raridade, Data ou Estado para ordenar: ascendente, descendente e depois de volta ao normal. Uma coluna de cada vez.",
+        "Prima / para focar a pesquisa, Esc para a limpar ou fechar o painel de opções.",
+        "O painel da roda dentada altera o destaque, a densidade, o tamanho dos ícones, o zoom, a opacidade e as linhas visíveis. Usar o tema da aplicação segue o tema ativo, e Repor predefinições anula tudo.",
+        "Cada proeza com taxa conhecida mostra a sua raridade: cinzento para comum, ouro/prata/bronze para rara."
       ],
       "streamTitle": "Overlay de transmissão (OBS)",
       "stream": [
-        "Definições > Notificação > Fonte de navegador do OBS > Copiar ligação; depois adiciona uma Fonte de navegador no OBS e cola-o como URL.",
-        "Define a largura e a altura da fonte com o tamanho indicado em http://127.0.0.1:8082/obs/_config: a caixa própria da predefinição à tua escala.",
-        "Adiciona ?test=1 ao URL enquanto posicionas a fonte. Mostra um desbloqueio de exemplo a cada dez segundos; remove-o quando terminares.",
-        "A fonte mostra o mesmo popup do overlay no jogo, e fica vazia entre desbloqueios, por isso não consome nada enquanto transmites.",
-        "Lê o feed de notificação local, por isso deixa o Websocket @localhost:8082 ativado em Definições > Notificação > Transporte."
+        "Definições > Notificação > Fonte de navegador do OBS (modo Avançado): Pré-visualizar verifica-a no navegador e Copiar ligação copia o endereço. No OBS, adicione uma fonte Navegador e cole-o como URL.",
+        "Qualquer largura e altura servem, o cartão ajusta-se para preencher a caixa. Uma fonte maior fica mais nítida: dê-lhe cerca do dobro do tamanho da própria predefinição (http://127.0.0.1:8082/obs/_config indica-o) e coloque-a a metade do tamanho.",
+        "Acrescente ?test=1 ao URL enquanto posiciona a fonte. Mostra um desbloqueio de exemplo a cada dez segundos; remova-o quando terminar.",
+        "A fonte desenha o mesmo pop-up que o do jogo e fica vazia entre desbloqueios, por isso não custa nada enquanto transmite.",
+        "Mais opções a seguir ao endereço: ?scale=2 fixa o zoom, ?duration=8000 define quanto tempo cada cartão fica, ?sound=1 reproduz o som pela fonte, /obs/preset/Xbox/ usa uma predefinição qualquer que seja a do ambiente de trabalho.",
+        "Lê o feed de notificações local, por isso deixe o Websocket @localhost:8082 ligado em Definições > Notificação > Integrações. Só funciona neste PC, e só uma cópia do AW Next o pode servir."
+      ],
+      "souvenirsTitle": "Capturas de ecrã e videoclipes",
+      "souvenirs": [
+        "Definições > Notificação > Captura ao desbloquear guarda uma imagem um instante depois do pop-up, com a notificação incluída, numa subpasta por jogo. Abrir pasta leva-o até lá.",
+        "Capturas HDR (Automático) corrige as cores quando o HDR do Windows está ligado. As recordações capturam o monitor principal, por isso jogue nele.",
+        "Videoclipe ao desbloquear (desligado até o ativar, mais abaixo em Definições > Notificação) guarda em memória os últimos segundos de jogo e grava um MP4 em torno de cada desbloqueio. Nada é escrito até uma proeza ser desbloqueada.",
+        "Duração do clipe (10 a 30 segundos), Formato (H.264, HEVC ou AV1), Resolução, Taxa de fotogramas, Qualidade e Som (Só o jogo ou Todo o PC) podem ser alterados. O H.264 reproduz-se em todo o lado.",
+        "O codificador da própria placa gráfica faz o trabalho, com bastante menos de 1% do processador. Sem um codificador H.264 por hardware, o codificador por software do Windows assume, com 1080p e 30 FPS no máximo. Um jogo muito antigo em ecrã inteiro exclusivo pode gravar fotogramas pretos."
       ],
       "shortcutsTitle": "Atalhos de teclado",
       "shortcuts": [
-        "Ctrl+Shift+K (predefinição): mostra ou oculta o overlay no jogo - configurável em Definições > Geral.",
-        "Ctrl+Alt+Shift+Setas move o overlay; Ctrl+Alt+Shift+1-5 encaixa-o numa posição predefinida.",
-        "Ctrl+Alt+Shift+C ativa ou desativa a passagem de cliques; Ctrl+F foca a pesquisa das Definições."
+        "Ctrl+Shift+K (predefinição): liga ou desliga o overlay no jogo. Altere-o em Definições > Geral.",
+        "Ctrl+Alt+Shift+setas movem o overlay; Ctrl+Alt+Shift+1-5 fixa-o numa posição predefinida; Ctrl+Alt+Shift+C liga ou desliga o clique através.",
+        "No overlay, / foca a pesquisa e Esc limpa-a. No editor de predefinições, Ctrl+Z e Ctrl+Y anulam e refazem.",
+        "Ctrl+F foca a pesquisa das Definições e Esc limpa-a. F5 atualiza a biblioteca."
       ],
       "themesTitle": "Temas personalizados",
       "themes": [
-        "Personalizado começa com Steam Blue; todas as camadas (fundo, cabeçalho, painéis, cartões, definições, texto, contornos e destaque) são editáveis.",
-        "As imagens das camadas ficam sob um véu colorido com um ligeiro desfoque fosco; os efeitos são configurados por camada.",
-        "Coloque um tema CSS em <userData>\\themes para que apareça na lista de temas.",
-        "O criador de predefinições pode pré-visualizar um design como uma notificação real antes de guardar, reabrir uma predefinição guardada para a alterar e eliminar as que não mantiver.",
-        "Exporta o tema que usas num único ficheiro .awtheme, ou importa um que te tenham enviado: é pré-visualizado antes de instalar e depois comporta-se como um tema integrado."
+        "Definições > Aparência tem temas incluídos e todos podem ser editados: janela, barra superior, painéis, cartões, definições, texto, contornos e destaque aceitam cada um uma cor, um gradiente ou uma imagem.",
+        "Guardar tema transforma a sua edição num tema próprio: mantenha o nome para o substituir, escreva outro para uma cópia. Repor tudo volta a pôr o tema de que partiu.",
+        "Largue um tema CSS em <userData>\\themes e ele aparece na lista de temas.",
+        "Exportar tema… escreve um ficheiro .awtheme (um tema incluído tem de ser guardado primeiro com um nome seu). Importar tema… mostra uma pré-visualização antes de instalar, e Eliminar tema remove um importado.",
+        "Os temas feitos pela comunidade estão na galeria de temas do site do projeto, e enviar o seu dá apenas um ficheiro."
+      ],
+      "presetsTitle": "Predefinições de pop-ups",
+      "presets": [
+        "Uma predefinição é o aspeto do pop-up no jogo, escolhida em Definições > Notificação > Predefinição. Não tem efeito quando o Tipo de notificação é Notificação do Windows.",
+        "Definições > Presets de notificação é um editor feito de controlos normais: escolha um ponto de partida ou prima Surpreende-me, veja a pré-visualização em direto (Cartão, Comparar, Ecrã) e depois Criar predefinição. Nada é guardado antes disso.",
+        "Personalizar uma predefinição incluída altera só algumas coisas (fundo, cor do texto, destaque, contorno, brilho, tipo de letra, logótipo) e continua a seguir a predefinição incluída se esta melhorar.",
+        "Editar uma predefinição reabre uma que desenhou. Exportar e Importar movem uma predefinição como um ficheiro .awpreset, com as imagens, os tipos de letra e o som.",
+        "Importar > Tema SAN… lê um tema do Steam Achievement Notifier (um ficheiro .san), e Importar > Do SAN neste PC traz os temas que o SAN já usa. Mantêm o aspeto e os sons do SAN."
       ],
       "tipsTitle": "Dicas e truques",
       "tips": [
-        "Clique com o botão direito num cartão de jogo para ações rápidas: correção do emulador, proezas, página Steam, instalação do GBE Fork e desinstalação.",
-        "Clique com o botão direito num jogo e escolha silenciar o progresso para parar esses avisos sem desativar os desbloqueios.",
-        "A correção do emulador (Simples rápida / Avançada completa) instala o GBE Fork, o esquema de proezas e os dados de DLC.",
-        "O tempo de jogo é registado enquanto o jogo está em execução; as notificações de progresso e tempo podem ser ativadas em Notificações.",
-        "As novas proezas adicionadas por uma atualização do jogo aparecem automaticamente no prazo de 3 dias ou de imediato em Definições > Avançado > Voltar a verificar as listas de proezas."
+        "Clique com o botão direito num cartão de jogo para o iniciar, escolher o executável, abrir pastas e ligações, usar as ferramentas do emulador ou desinstalá-lo quando esse menu está ativado.",
+        "Marcar como desbloqueado manualmente (botão direito numa proeza) regista um desbloqueio que nenhuma fonte consegue ver.",
+        "Repor as proezas… permite jogar de novo a partir do zero e copia primeiro todos os ficheiros. Funciona em jogos emulados, não em Steam, Epic ou Xbox, cujos desbloqueios estão na sua conta.",
+        "O tempo de jogo é registado enquanto o jogo corre; Monitorização do tempo de jogo em Definições > Notificação liga as notificações de início e fim.",
+        "Esquecer este jogo… apaga tudo o que o AW Next guarda sobre um jogo (as gravações são copiadas primeiro). Remover da lista apenas o esconde.",
+        "Definições do jogo > Idioma das proezas mostra as proezas e as notificações de um jogo noutro idioma que não o do resto.",
+        "Definições > Avançado > Cópia de segurança do perfil: Exportar perfil… guarda as suas definições, predefinições, temas, capas e tempo de jogo num ficheiro .awbackup, para uma reinstalação ou um PC novo. As sessões iniciadas não são guardadas."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Classifique as proezas em ouro, prata ou bronze consoante a raridade. Ative em Definições.",
     "clipsTitle": "Videoclipes",
     "clipsCopy": "Guarde um clipe curto à volta de cada desbloqueio. Ative em Definições, em Notificações.",
-    "backupTitle": "Cópia de segurança do perfil",
-    "backupCopy": "Guarde as suas definições e escolhas da biblioteca num único ficheiro e restaure-as após uma reinstalação.",
+    "statsTitle": "Estatísticas da biblioteca",
+    "statsCopy": "Por baixo do seu perfil, «Ver o detalhe completo» mostra a conclusão, o tempo de jogo e o progresso por plataforma.",
+    "healthTitle": "Estado do jogo",
+    "healthCopy": "Um ponto colorido num jogo indica se as suas proezas estão a ser acompanhadas. O botão de definições do jogo explica o que está mal.",
     "profileTitle": "Perfil",
     "profileCopy": "Escolha o nome mostrado no cabeçalho e, opcionalmente, defina um avatar local.",
     "username": "Nome de exibição",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "gravações + bibliotecas",
     "addSaveHint": "um emulador/fonte",
     "addLibraryHint": "muitos jogos instalados",
+    "addFolder": "Falta alguma coisa? Adicione uma pasta",
     "saveList": "Pastas de saves/configuração",
     "libraryList": "Pastas da biblioteca",
     "emptyList": "Nada foi adicionado nesta sessão.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Pode reabrir este guia a qualquer momento em Definições > Geral.",
     "sourcesTitle": "De onde vêm as suas proezas",
     "sourcesCopy": "Todas as fontes instaladas neste PC são lidas automaticamente, por isso as predefinições bastam. Inicie sessão abaixo apenas se quiser mais.",
+    "sourcesCopySimple": "Os lançadores e os emuladores deste PC já são lidos. Ligue uma conta só se quiser o que ela acrescenta.",
     "sourcesMore": "Ajustar fontes ({count} ativas)",
     "accountsTitle": "Contas (opcional)",
-    "accountsCopy": "Inicie sessão para ler desbloqueios de um perfil Steam privado, adicionar os jogos da sua Família Steam, importar a sua biblioteca Xbox PC e mostrar o seu progresso no Epic. Pode saltar este passo e ligar-se mais tarde em Definições > Fonte.",
+    "accountsCopy": "Inicie sessão para ler desbloqueios de um perfil Steam privado, juntar os seus jogos do Steam Family, importar a sua biblioteca Xbox PC, mostrar o seu progresso na Epic, obter as taxas de troféus da própria PlayStation e importar os seus jogos do RetroAchievements. Pode ignorar isto e ligar mais tarde em Definições > Fonte.",
+    "raKeyPage": "Onde está a minha chave Web API?",
     "sourcesEmulators": "Emuladores",
     "sourcesEmulatorsCopy": "Cada um só é lido quando está instalado, por isso mantê-los ativados não custa nada.",
     "source": "Exibir jogos Steam",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Nome do jogo",
     "manual-game-appid-optional": "AppID Steam (opcional)",
     "manual-game-platform-other": "Outra",
+    "manual-game-note": "Os arranques e o tempo de jogo são registados, sem proezas.",
+    "collection-create": "Criar",
+    "collection-create-note": "Depois de criada, clique com o botão direito num jogo > Coleções para o adicionar.",
+    "psn-ultra-rare": "Ultra raro",
+    "psn-very-rare": "Muito raro",
+    "psn-rare": "Raro",
+    "psn-common": "Comum",
+    "psn-title": "Conta PlayStation",
+    "psn-desc": "Opcional. Mostra as taxas de troféus da própria PlayStation para os jogos que já estão na sua conta PSN; os restantes mantêm os valores do Exophase. O token de sessão é guardado encriptado neste PC.",
+    "psn-btn-hint": "abre a janela de início de sessão da Sony",
+    "psn-connect": "Ligar conta PlayStation",
+    "psn-connecting": "A abrir a janela de início de sessão da Sony…",
+    "psn-connected": "Conta PlayStation ligada.",
+    "psn-disconnected": "Conta PlayStation desligada.",
+    "psn-failed": "Falha no início de sessão da PlayStation",
+    "connect-playstation-account": "Ligar conta PlayStation",
     "manual-source": "Manual",
     "no-config-eligible-games": "Não foi encontrado nenhum jogo Steam por configurar sem uma correção existente.",
     "no-config-eligible-games-configured": "{count} instalação(ões) compatível(eis) com a Steam encontradas - todas já têm uma configuração. Para as regerar, usa Avançado > Reparar todos os jogos.",

@@ -72,12 +72,12 @@ test('the keys stripped from the old per-type windows never feed the new setting
   assert.equal(config.notification.progressStep, 0, 'an unknown step falls back to every step');
 });
 
-test('the progress rows are bound by id in the overlay list and saved by the auto-save', () => {
+test('the progress rows are bound by id in the Progress card and saved by the auto-save', () => {
   const html = read('app', 'view', 'app.html');
-  const overlayList = html.match(/<ul id="options-notify-overlay">([\s\S]*?)<\/ul>/)[1];
+  const overlayList = html.match(/<ul id="options-notify-progress">([\s\S]*?)<\/ul>/)[1];
   for (const id of ['option_overlayProgressPosition', 'option_overlayProgressScale']) {
     const select = overlayList.match(new RegExp(`<select[^>]*id="${id}"[^>]*>([\\s\\S]*?)</select>`));
-    assert.ok(select, `${id} lives in the overlay list`);
+    assert.ok(select, `${id} lives in the Progress card`);
     assert.match(select[1], /^\s*<option value="" selected>/, `${id} starts on "same as unlocks"`);
   }
   assert.match(overlayList, /id="btn-overlay-progress-reposition"/);

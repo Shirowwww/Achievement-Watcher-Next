@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Kirjastonäkymä",
-        "description": "Valitse korttien asettelu. Vaakakuva säilyttää nykyisen ulkoasun; tiivis vaaka- ja pystykuva, Luettelo ja Tiedot vaihtavat kuvituksen koon tiiviyteen tai runsaampiin tietoihin.",
+        "description": "Valitse korttien asettelu. Vaakakuva näyttää leveää kuvitusta; kompakti vaakakuva ja pystykuva, Luettelo ja Tiedot vaihtavat kuvituksen koon tiiviyteen tai runsaampaan toimintaan.",
         "value": {
           "portrait": "Pystykuva",
           "landscape": "Vaakakuva",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Hopea enintään",
-          "description": "Harvinaisilla tasoilla tähän osuuteen asti olevat saavutukset saavat hopean. Pidä se kulta- ja harvinaisuusrajan välissä, muuten kaikki kolme palaavat oletusarvoihin."
+          "description": "Harvinaisuusluokissa saavutukset tähän osuuteen asti saavat hopeaa. Se pysyy aina kullan yläpuolella ja harvinaisuusrajan alapuolella: yhden liukusäätimen siirtäminen työntää muita."
         },
         "rareMax": {
           "name": "Harvinainen enintään",
@@ -557,8 +557,13 @@
         "transport": "Integraatiot",
         "chromium": "Chromium-ilmoitus",
         "watchdog": "Watchdog",
-        "test": "Testi",
-        "overlay": "Ponnahdusikkuna"
+        "test": "Testit",
+        "overlay": "Ponnahdusikkuna",
+        "overlayDisplay": "Näyttö",
+        "overlayProgress": "Edistyminen",
+        "overlaySounds": "Äänet",
+        "overlayEmulators": "Emulaattorit",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Osa ominaisuuksista on käytettävissä vain Windows 10:ssä",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Esiasetus (ShadPS4)",
         "overlayPresetShadps4Desc": "ShadPS4:n (PlayStation 4) ilmoituksissa käytettävä esiasetus",
         "presetSameAsMain": "Sama kuin päävalinta",
+        "overlayEmulatorsDesc": "Emulaattorissa ajettavilla peleillä voi olla oma esiasetus ja oma ääni; uudelleenkäännetyt PC-portit seuraavat konsoliaan. “Sama kuin päävalinta” säilyttää yllä olevat asetukset.",
         "overlayPosition": "Sijainti",
         "overlayPositionDesc": "Missä kohtaa näyttöä pelinsisäinen ponnahdusilmoitus näkyy",
         "overlayScale": "Koko",
@@ -755,6 +761,9 @@
           "importedOnly": "Tuotu esiasetus - voit viedä tai poistaa sen täältä, mutta sitä ei voi muokata liukusäätimillä.",
           "importSan": "Tuo SAN-teema",
           "importSanSetup": "Tuo SANista tältä koneelta",
+          "importMenuFile": "Esiasetustiedosto…",
+          "importMenuSan": "SAN-teema…",
+          "importMenuSanSetup": "SANista tältä koneelta",
           "layer": {
             "none": "Ei mukautusta",
             "title": "Mukauta mukana tuleva esiasetus"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Ohje",
       "title": "Ohjeet ja vinkit",
-      "intro": "Kaikki oleellinen tunnistuksesta, ilmoituksista, ohjaimesta, peittokuvasta, teemoista ja vianetsinnästä.",
+      "intro": "Kaikki hyödyllinen tieto: pelien löytäminen, ilmoitukset, emulaattorit, peittokuva, ohjain, teemat ja mitä tehdä, kun jokin on pielessä.",
       "setupTitle": "Nykyiset asetuksesi",
       "topicsTitle": "Selaa aiheittain",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Ensiaskeleet",
       "quick": [
-        "Lisää tallennus- ja asetuskansiot kohdassa Asetukset > Kansiot ja ota sitten vastaava lähde käyttöön kohdassa Asetukset > Lähteet.",
-        "Watchdog toimii taustalla - sen on oltava käynnissä, jotta ilmoitukset ja peliajan seuranta toimivat.",
-        "Kaikki (asetukset, välimuistit, lokit ja omat teemat) sijaitsee kansiossa %APPDATA%\\Achievement Watcher Next.",
-        "Jokainen asetusosio taittuu kokoon oman otsikkonsa alle - nuoli osoittaa alas, kun osio on auki, ja sivulle, kun se on kiinni. Valintasi muistetaan."
+        "Anna Älykkään haun etsiä pelisi kohdassa Asetukset > Kansiot tai lisää kansio itse, ja ota sitten vastaava lähde käyttöön kohdassa Asetukset > Lähteet.",
+        "Watchdog toimii taustalla. Sen täytyy olla käynnissä, jotta reaaliaikaiset ilmoitukset ja peliaika toimivat.",
+        "Kaikki (asetukset, välimuistit, lokit, omat teemat) sijaitsee kansiossa %APPDATA%\\Achievement Watcher Next.",
+        "Asetusten yläreunan Käyttöliittymä-valinta vaihtaa tilojen Yksinkertainen (arkipäivän välilehdet) ja Laaja (lisää Steam / GBE Fork, Ubisoft / Uplay R1/R2, Lisäasetukset ja syvemmät valinnat) välillä. Yksinkertainen vain piilottaa säätimiä, mitään ei kytketä pois.",
+        "Kun suljet pääikkunan, AW Next jää ilmaisinalueelle, missä seuranta jatkuu. Lopeta sovellus ilmaisinalueen valikosta. Käynnistä Windowsin mukana ja Sulje ilmaisinalueelle löytyvät kohdasta Asetukset > Yleiset.",
+        "Asetusten yläreunan hakukenttä löytää valinnan miltä tahansa välilehdeltä. Käyttöönotto-opas kohdassa Asetukset > Yleiset avaa käyttöönoton uudelleen."
       ],
-      "notifications": [
-        "Automaattinen on oletus: pelin sisäinen ponnahdus, kun peli voi näyttää sen, ja Windows-ilmoitus, kun ei voi, ei koskaan molempia.",
-        "Asetukset > Ilmoitukset sisältää esiasetuksen, äänen, äänenvoimakkuuden, sijainnin ja koon; testipainikkeet näyttävät aidon ponnahduksen.",
-        "Napsauta peliä hiiren kakkospainikkeella > Ilmoitukset ja anna juuri tälle pelille oma esiasetus, sijainti, ääni tai koko.",
-        "Kuvakaappaus avauksen yhteydessä tallentaa hetken kuvan kansioon Kuvat\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Pelin kunto",
-      "gameHealth": [
-        "Avaa pelin työkalupainike (ruudun oikeasta yläkulmasta), niin näet, onko tila Valmis, Vaatii huomiota vai Ei seurannassa.",
-        "Tilan alla oleva lause kertoo syyn selkokielellä, ja sen alla olevat tarkistukset näyttävät, mikä osa on vialla.",
-        "Korjauspainikkeet näkyvät vain, kun AW Next pystyy oikeasti korjaamaan kyseisen pelin - jokainen kertoo, mitä se muuttaa ja minne aiemmat tiedostot säilytetään.",
-        "Tekniset tiedot sisältää tarkat polut, lukumäärät ja emulaattorikoodit; kopioi ne vikailmoitukseen."
-      ],
-      "troubleshootTitle": "Vianetsintä",
-      "troubleshoot": [
-        "Jos peli puuttuu: lisää kansiot, tee uusi haku ja tarkista sitten lähteen valinta ja estoluettelo.",
-        "Jos ilmoitukset eivät näy: tarkista Windowsin Älä häiritse -tila ja käynnistä sovellus samoilla oikeuksilla kuin pelisi.",
-        "Lisäasetukset > Vianmääritys avaa loki- ja tietokansiot; liitä ne mukaan ongelmailmoitukseen.",
-        "Lokitiedot lisätään aiempien perään, joten kaatuminen säilyy seuraavaan käynnistykseen. Jokainen ajo alkaa istuntomerkinnällä ja [diag]-lohkolla (versiot, polut, näytöt) - liitä se ongelmailmoitukseen."
+      "libraryTitle": "Kirjasto ja kokoelmat",
+      "library": [
+        "Kokoelmat: napsauta peliä hiiren kakkospainikkeella > Kokoelmat, rastita jokin tai valitse Uusi kokoelma…. Kokoelmapainike Näytä vain asennetut pelit -valinnan vieressä suodattaa sitten kirjaston, ja profiilin luvut seuraavat mukana.",
+        "Muokkaa kokoelmaa… painikkeen valikossa muuttaa nimen, värin, kuvakkeen tai kuvan ja poistaa kokoelman. Pelit jäävät kirjastoosi.",
+        "Pyöreä painike suoritusprosentin vieressä avaa Kirjaston tilastot: suorituksen, avattujen ja lukittujen saavutusten määrät, peliajan, pokaalit, platinapelit, harvinaisimmat saavutukset ja yhden rivin alustaa kohden.",
+        "Hakukentän ja +-painikkeen välissä oleva valitsin vaihtaa kuuden kirjastonäkymän välillä. Asetukset > Ulkoasu > Kirjaston ruudut määrittää ruutujen koon, välit ja sen, mitä kukin ruutu näyttää.",
+        "+-painike lisää pelin, jota mikään lähde ei löydä: nimen ja ohjelmatiedoston sekä valinnaisesti alustan ja Steam AppID:n. Käynnistykset ja peliaika seurataan, saavutuksia ei.",
+        "Napsauta peliä hiiren kakkospainikkeella > Pelin asetukset > Nimeä uudelleen… muuttaaksesi näytettävää nimeä. Saavutukset ja peliaika > Muokkaa peliaikaa… korjaa kokonaisajan (12.5 tai 12h30)."
       ],
       "sourcesTitle": "Käynnistimet ja lähteet",
       "sources": [
-        "Steam-profiilitila listaa asennetut tai omistetut pelit, mutta avaukset luetaan silti paikallisista tallennustiedostoista.",
-        "GOG, Epic, Ubisoft Connect / LumaPlay ja EA Desktop voidaan ottaa käyttöön erikseen Lähteet-kohdassa.",
-        "Omistetut Steam-pelit lasketaan asennetuiksi vain, kun Steamin rekisteritiedot vahvistavat sen."
+        "Steam, Epic Games ja Xbox PC tarjoavat kukin vaihtoehdot Ei mitään, Asennetut tai Omistetut kohdassa Asetukset > Lähteet. Omistetut listaa yhdistetyn tilin koko kirjaston, asennettu tai ei.",
+        "GOG Galaxylla, Epicillä, Ubisoft Connectilla, Xbox PC:llä ja EA Desktopilla on kullakin oma kytkimensä kohdassa Asetukset > Lähteet. EA Desktop kattaa vain pelit EA:n hallinnoimien kansioiden ulkopuolelta.",
+        "Omistetut Steam-pelit lasketaan asennetuiksi vain, kun Steamin rekisteri vahvistaa sen.",
+        "Steam-avaukset luetaan tilastoista, joita Steam säilyttää tällä koneella, joten yksityinen profiili toimii. Tilin yhdistäminen on valinnaista: se lisää toisella koneella pelatut pelit ja Steam Family -pelit.",
+        "Epätavalliseen paikkaan tallennettu peli: lisää sen kansio kohdassa Asetukset > Kansiot. Valitse kansio, jossa ovat suoraan tallennukset, AppID-kansiot tai emulaattorin asetukset, tai kirjastokansio, jossa on monta peliä.",
+        "RetroAchievements: ota lähde käyttöön, anna käyttäjänimesi ja Web API -avaimesi ja paina sitten Tuo kirjasto. Avaukset tulevat tililtäsi, joten pidä RetroAchievements päällä emulaattorissa.",
+        "Yksinkertaisessa tilassa muutama harvoin käytetty lähderivi pysyy piilossa, kun niitä ei käytetä. Ne palaavat heti, kun niillä on merkitystä, ja Laaja näyttää aina kaikki.",
+        "PlayStation-pokaalit näyttävät luokkansa, niitä omistavien pelaajien osuuden ja PlayStationin oman harvinaisuusluokan. Osuudet tulevat Exophasesta; yhdistä PlayStation-tili kohdassa Asetukset > Lähteet, niin saat Sonyn omat luvut kyseisen tilin peleille."
+      ],
+      "notifications": [
+        "Automaattinen on oletus: pelinsisäinen ponnahdusikkuna, kun peli osaa näyttää sen, muuten Windows-ilmoitus, ei koskaan molempia.",
+        "Asetukset > Ilmoitukset sisältää valinnat Ilmoituksen tyyppi (Automaattinen, Windows-ilmoitus, Pelinsisäinen peittokuva tai Molemmat), esiasetus, ääni, äänenvoimakkuus, sijainti, koko ja läpinäkymättömyys. Testipainikkeet laukaisevat oikean ponnahdusikkunan.",
+        "Avaa pelin työkalupainike (ruudun oikea yläkulma) ja siirry sen ilmoitusasetuksiin antaaksesi juuri sille pelille oman esiasetuksen, sijainnin, äänen tai koon.",
+        "Kuvakaappaus avattaessa tallentaa kuvan hetkestä kansioon Kuvat\\Achievement Watcher Next.",
+        "Harvinaisen saavutuksen ääni, 100 % suorituksen ääni ja Edistymisen ääni (Laaja tila) antavat näille ponnahdusikkunoille oman äänen. Satunnainen valitsee joka kerta eri äänen, ja voit tuoda omia tiedostoja.",
+        "Kulta, hopea ja pronssi merkitsevät harvinaisia avauksia. Asetukset > Yleiset > Harvinaisuuden näyttö vaihtaa Pokaalitilaan, joka arvioi jokaisen saavutuksen ja näyttää platinan valmiille peleille.",
+        "Laskureille Edistymisen virstanpylväät näyttää ponnahdusikkunan vain 10, 25 tai 50 % välein. Napsauta peliä hiiren kakkospainikkeella > Mykistä edistymisilmoitukset hiljentääksesi yhden pelin koskematta sen avauksiin.",
+        "Kaksi muuta kytkintä kohdassa Asetukset > Ilmoitukset: Ensisijaiset ilmoitukset päästää avaukset läpi Älä häiritse -tilasta (Windows 11), ja Steam-asiakkaan pelit lisää AW Nextin ponnahdusikkunan peleille, joita Steam itse käynnistää."
+      ],
+      "gameHealthTitle": "Pelin kunto",
+      "gameHealth": [
+        "Napsauta pelin työkalupainiketta (ruudun oikea yläkulma) tai napsauta peliä hiiren kakkospainikkeella avataksesi Pelin kunto -näkymän. Se kertoo, onko peli tilassa Valmis, Vaatii huomiota vai Ei seurannassa.",
+        "Tilan alla oleva lause selittää syyn selkeästi. Alla olevat tarkistukset näyttävät, mikä osa on vialla: pelitiedostot, ohjelmatiedosto, saavutustiedot, emulaattorin asennus, reaaliaikainen seuranta tai ilmoitukset.",
+        "Korjauspainikkeet näkyvät vain, kun AW Next voi todella korjata kyseisen pelin, esimerkiksi Paikanna peli, Kirjoita saavutustiedot uudelleen, Palauta emulaattorin tiedosto tai Seuraa tätä peliä. Jokainen kertoo, mitä se muuttaa, tallentaa varmuuskopion ja kysyy ensin.",
+        "Lähetä testi-ilmoitus laukaisee ponnahdusikkunan, jossa on kyseisen pelin oma nimi ja kuva, toimitettuna samalla tavalla kuin oikeasti.",
+        "Tekniset tiedot sisältää tarkat polut, määrät ja emulaattorikoodit: paina Kopioi ja liitä ne virheilmoitukseen. Ruudun värillisen pisteen voi piilottaa kohdassa Asetukset > Ulkoasu > Kirjaston ruudut."
+      ],
+      "troubleshootTitle": "Vianetsintä",
+      "troubleshoot": [
+        "Jos peli puuttuu: tarkista sen lähde kohdassa Asetukset > Lähteet, suorita Älykäs haku tai Luo asetustiedostot kohdassa Asetukset > Kansiot, lisää sen kansio tarvittaessa käsin ja kokeile kytkeä pois Näytä vain asennetut pelit.",
+        "Jos ilmoituksia ei näy: lue Ilmoitukset-rivi pelin Pelin kunto -näkymässä ja tarkista sitten Windowsin Älä häiritse / Tarkennusavustaja. Ensisijaiset ilmoitukset kohdassa Asetukset > Ilmoitukset voivat päästää avaukset läpi.",
+        "Asetukset > Lisäasetukset > Vianmääritys avaa lokien ja tietojen kansiot, ja Vie lokit (.zip) niputtaa lokit käyttäjänimesi ja avaimesi peitettyinä. Liitä se mukaan, kun ilmoitat ongelmasta.",
+        "Lokeihin lisätään, joten kaatuminen säilyy seuraavaan käynnistykseen. Jokainen ajo alkaa istuntomerkillä ja [diag]-lohkolla (versiot, polut, näytöt): liitä se issueen.",
+        "Peli jumissa 0 %:ssa? Se on normaalia, kunnes ensimmäinen avaus kirjoitetaan. Jos AW Next yhdisti väärän Steam-julkaisun, napsauta peliä hiiren kakkospainikkeella > Aseta AppID käsin….",
+        "Peliaikaa ei lasketa? Avaa pelin työkalupainike > Ohjelmatiedosto ja valitse ohjelma, joka pysyy auki pelatessasi, ei käynnistintä.",
+        "Pelipäivityksen uudet saavutukset ilmestyvät 3 päivän kuluessa tai heti kohdalla Asetukset > Lisäasetukset > Tarkista saavutusluettelot uudelleen.",
+        "Epäonnistuuko sovelluspäivitys aina samaan tiedostoon? Asetukset > Lisäasetukset > Tyhjennä välimuistit poistaa vain uudelleen ladattavat tiedostot, ei koskaan asetuksiasi tai tallennuksiasi."
       ],
       "steamTitle": "Steam-emulaattorit",
       "steam": [
-        "GBE- ja Goldberg-tallennukset ovat yleensä kansiossa %APPDATA%\\GSE Saves tai %APPDATA%\\Goldberg SteamEmu Saves.",
-        "CODEX- ja RUNE-tallennukset ovat usein kansiossa Public Documents\\Steam\\CODEX tai Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 ja Hoodlum tunnistetaan niiden asetus- ja tallennuskansioista.",
-        "Hiiren kakkospainikkeen emulaattorikorjaus voi lisätä GBE Fork -tiedostot, saavutusluettelot ja DLC-tiedot.",
-        "Yksinkertainen tila on nopea; Laaja suorittaa generate_emu_configin syvempien Steam-tietojen hakemiseksi ja voi kestää minuutteja."
+        "GBE- / Goldberg-tallennukset ovat yleensä kansiossa %APPDATA%\\GSE Saves tai %APPDATA%\\Goldberg SteamEmu Saves.",
+        "CODEX- / RUNE-tallennukset ovat usein kansiossa Public Documents\\Steam\\CODEX tai Public Documents\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI ja Nemirtingas-emulaattorit luetaan omista asetus- tai tallennuskansioistaan. Jos peliä ei löydy, lisää sen kansio kohdassa Asetukset > Kansiot.",
+        "Napsauta peliä hiiren kakkospainikkeella > Emulaattori ja työkalut > Ota emulaattorikorjaus käyttöön… asentaa GBE Forkin, rakentaa steam_settingsin (saavutusluettelo ja kuvakkeet) ja kirjoittaa steam_appid.txt-tiedoston, jos se puuttuu. Jokaisesta korvatusta tiedostosta otetaan ensin varmuuskopio.",
+        "Kohdassa Asetukset > Steam / GBE Fork steam_settings-tiedot-valinta Yksinkertainen käyttää AW Nextin omaa anonyymiä hakua ja on nopea. Laaja ajaa generate_emu_config-työkalun syvemmille Steam-tiedoille ja voi kestää minuutteja.",
+        "Pelikansioon ei kirjoiteta mitään itsestään: Korjaa uudet löydetyt pelit automaattisesti, Hallitse DLC:iden omistusta ja Kirjoita tilin nimi ja kieli ovat kaikki oletuksena pois päältä.",
+        "Tee emulaattorin vianmääritys samassa valikossa vain lukee ja raportoi. Varmuuskopioi GBE/Goldberg-asennus ja Palauta uusin GBE/Goldberg-varmuuskopio palauttavat pelin ennalleen."
       ],
       "emulatorTitle": "Konsoliemulaattorit",
       "emulators": [
-        "RPCS3-pokaalit luetaan kansiosta dev_hdd0\\home\\...\\trophy RPCS3-asennuksen läheltä.",
-        "shadPS4-pokaalit luetaan sen sovellustietojen game_data/trophy-kansioista; jäljelle jääneet tiedot eivät todista asennusta.",
-        "Xenian edistyminen luetaan Xbox-profiilitiedostoista, kuten .gpd-tiedostoista."
+        "RPCS3-pokaalit luetaan polusta dev_hdd0\\home\\...\\trophy RPCS3-asennuksen vierestä. Siirretty virtuaalilevy otetaan huomioon.",
+        "shadPS4-pokaalit luetaan sen game_data-kansiosta (TROP XML -tiedostot). Voit lisätä emulaattorin, sen käyttäjäkansion tai game_datan itse.",
+        "Xenian edistyminen luetaan Xbox-profiilitiedostoista (.gpd), ja se seuraa sen asetuksissa määritettyjä tallennuskansioita.",
+        "KytyPS5-pokaalit luetaan sen _Trophies-kansiosta sille käyttäjälle, jona käynnistin ajaa pelin.",
+        "PC:lle uudelleenkäännetyt Xbox 360 -pelit ja PS4-portit (Bloodborne, Uncharted, God of War III Remastered, MediEvil ja muut) ovat omia lähteitään kohdassa Asetukset > Lähteet. Jos jokin ei näy, lisää sen kansio kohdassa Asetukset > Kansiot.",
+        "Jokaisella konsolilla voi olla oma ponnahdusikkunan esiasetus ja ääni kohdassa Asetukset > Ilmoitukset > Emulaattorit (Laaja tila). Uudelleenkäännetyt Xbox 360 -pelit seuraavat Xenian valintaa, PS4-portit shadPS4:n valintaa, ja Sama kuin päävalinta säilyttää pääasetukset."
       ],
       "controllerTitle": "Ohjain (peliohjain)",
       "controller": [
-        "Ota ensin käyttöön Asetukset > Ohjain, minkä jälkeen Back + Start + LB avaa pelinsisäisen peittokuvan.",
-        "LB + X kytkee peittokuvan sisäisen liikkumisen.",
-        "Liikkumistila: ristiohjain ja vasen sauva siirtävät kohdistusta, A vahvistaa, B peruuttaa, X hakee ja Y avaa asetukset.",
-        "Pidä LB + RB pohjassa, niin voit siirtää peittokuvaa vasemmalla sauvalla ja vierittää oikealla sauvalla.",
-        "Toimii Xbox-, PlayStation- (DualShock 4 ja DualSense) sekä Switch Pro -ohjaimilla."
+        "Ota kohdassa Asetukset > Ohjain käyttöön Ohjaa pelinsisäistä peittokuvaa ohjaimella (oletuksena pois), jolloin Back + Start + LB avaa peittokuvan pelissä.",
+        "Ohjaa sovellusta ohjaimella (oletuksena päällä) ohjaa itse AW Nextiä: ristiohjain tai vasen sauva siirtää kohdistusta, A avaa pelin, B palaa takaisin, X hakee, Y tai Start avaa Asetukset, LB / RB vaihtavat asetusten välilehteä.",
+        "Kirjastossa RT käynnistää valitun pelin ja LT avaa sen Pelin kunto -näkymän.",
+        "Peittokuvassa LB + X vaihtaa navigoinnin päälle tai pois: ristiohjain tai vasen sauva siirtää kohdistusta, A vahvistaa, B peruu, X hakee, Y avaa asetukset.",
+        "Pidä LB + RB painettuna siirtääksesi peittokuvaa vasemmalla sauvalla ja vierittääksesi oikealla sauvalla.",
+        "Jos peli reagoi edelleen painikkeisiisi, ota käyttöön Kohdista peittokuvaan, kun se avautuu tai Lähetä pelille Escape avattaessa ohjaimella (molemmat oletuksena pois).",
+        "Toimii Xbox-, PlayStation- (DualShock 4 / DualSense) ja Switch Pro -ohjainten kanssa. Ohjaimen asettelu määrittää näytettävät painikkeiden nimet, ja jokaiseen pikanäppäimeen kuuluu yhdestä kolmeen painiketta.",
+        "Ohjainta ei tunnisteta? Tarkista se ensin Windowsissa (joy.cpl), varmista että oikea kytkin on päällä ja kokeile sitten XInputia kohdassa Ohjaimen taustajärjestelmä."
       ],
       "overlayTitle": "Pelinsisäinen peittokuva",
       "overlay": [
-        "Avaa se peittokuvan pikanäppäimellä (oletuksena Ctrl+Shift+K) tai ohjaimen näppäimillä Back + Start + LB.",
-        "Lajittele yhden sarakkeen mukaan kerrallaan: Harvinaisuus, Päivämäärä tai Tila (nouseva, laskeva tai ei lajittelua).",
-        "Paina / kohdistaaksesi hakuun ja Esc tyhjentääksesi sen tai sulkeaksesi asetuspaneelin.",
-        "Rataspaneelista voit muuttaa korostusväriä, tiiviyttä, zoomausta, peittävyyttä ja näkyvien rivien määrää; ”Käytä sovelluksen teemaa” seuraa käytössä olevaa teemaa.",
-        "Jokainen saavutus, jonka avausprosentti tiedetään, näyttää harvinaisuutensa: harmaa on yleinen, kulta, hopea ja pronssi ovat harvinaisia."
+        "Avaa se peittokuvan pikanäppäimellä (oletuksena Ctrl+Shift+K) tai ohjaimen näppäimillä Back + Start + LB, kun tuettu peli on käynnissä. Pikanäppäin määritetään kohdassa Asetukset > Yleiset.",
+        "Se listaa käynnissä olevan pelin saavutukset: nimen, kuvauksen, lukittu vai avattu, avauspäivän ja edistymisen. Vedä sitä otsikosta.",
+        "Piilotettu saavutus pysyy piilossa, kunnes napsautat sitä (tai painat ohjaimella A), joten mitään ei paljasteta etukäteen.",
+        "Suodattimet Kaikki, Avatut, Lukitut ja Kesken suodattavat listaa. Napsauta Saavutus, Harvinaisuus, Päivämäärä tai Tila järjestääksesi: nouseva, laskeva ja sitten takaisin normaaliksi. Yksi sarake kerrallaan.",
+        "Paina / siirtääksesi kohdistuksen hakuun ja Esc tyhjentääksesi sen tai sulkeaksesi asetuspaneelin.",
+        "Rataskuvakkeen paneeli muuttaa korostusta, tiiviyttä, kuvakkeen kokoa, zoomausta, läpinäkymättömyyttä ja näkyviä rivejä. Käytä sovelluksen teemaa seuraa aktiivista teemaa, ja Palauta oletukset kumoaa kaiken.",
+        "Jokainen saavutus, jonka osuus tunnetaan, näyttää harvinaisuutensa: harmaa yleiselle, kulta/hopea/pronssi harvinaiselle."
       ],
       "streamTitle": "Striimin peittokuva (OBS)",
       "stream": [
-        "Asetukset > Ilmoitukset > OBS-selainlähde > Kopioi linkki, lisää sitten selainlähde OBS:ään ja liitä se URL-osoitteeksi.",
-        "Aseta lähteen leveys ja korkeus kokoon, jonka http://127.0.0.1:8082/obs/_config ilmoittaa: esiasetuksen oma koko sinun mittakaavassasi.",
-        "Lisää ?test=1 osoitteen perään, kun sijoitat lähdettä. Se näyttää esimerkkiavauksen kymmenen sekunnin välein; poista se, kun olet valmis.",
-        "Lähde näyttää saman ponnahdusilmoituksen kuin pelin sisällä, ja pysyy tyhjänä avausten välillä, joten se ei kuormita mitään striimatessasi.",
-        "Se lukee paikallista ilmoitusvirtaa, joten jätä Websocket @localhost:8082 päälle kohdassa Asetukset > Ilmoitukset > Välitystapa."
+        "Asetukset > Ilmoitukset > OBS-selainlähde (Laaja tila): Esikatselu tarkistaa sen selaimessasi ja Kopioi linkki kopioi osoitteen. Lisää OBS:ssä Selain-lähde ja liitä osoite URL-kenttään.",
+        "Mikä tahansa leveys ja korkeus käy, kortti skaalautuu täyttämään ruudun. Isompi lähde on terävämpi: anna sille noin kaksinkertainen koko esiasetuksen omaan kokoon nähden (http://127.0.0.1:8082/obs/_config kertoo sen) ja aseta se puolikokoisena.",
+        "Lisää ?test=1 URL-osoitteeseen lähdettä sijoittaessasi. Se näyttää esimerkkiavauksen kymmenen sekunnin välein; poista se, kun olet valmis.",
+        "Lähde piirtää saman ponnahdusikkunan kuin pelinsisäinen ja pysyy tyhjänä avausten välillä, joten se ei maksa mitään lähettäessäsi.",
+        "Lisää valintoja osoitteen jälkeen: ?scale=2 lukitsee zoomauksen, ?duration=8000 määrää, kuinka kauan kukin kortti näkyy, ?sound=1 toistaa äänen lähteen kautta, /obs/preset/Xbox/ käyttää yhtä esiasetusta riippumatta siitä, mitä työpöytä käyttää.",
+        "Se lukee paikallista ilmoitussyötettä, joten pidä Websocket @localhost:8082 päällä kohdassa Asetukset > Ilmoitukset > Integraatiot. Se toimii vain tällä koneella, ja vain yksi AW Nextin kopio voi tarjota sitä."
+      ],
+      "souvenirsTitle": "Kuvakaappaukset ja videoklipit",
+      "souvenirs": [
+        "Asetukset > Ilmoitukset > Kuvakaappaus avattaessa tallentaa kuvan hetken ponnahdusikkunan jälkeen, ilmoitus mukana, yhteen alikansioon pelikohtaisesti. Avaa kansio vie sinut sinne.",
+        "HDR-kuvakaappaukset (Automaattinen) korjaa värit, kun Windowsin HDR on päällä. Muistot kaappaavat ensisijaisen näytön, joten pelaa sillä.",
+        "Videoklippi avattaessa (pois, kunnes otat sen käyttöön, alempana kohdassa Asetukset > Ilmoitukset) pitää pelin viimeiset sekunnit muistissa ja tallentaa MP4:n jokaisen avauksen ympäriltä. Mitään ei kirjoiteta, ennen kuin saavutus avataan.",
+        "Klipin pituus (10-30 sekuntia), Muoto (H.264, HEVC tai AV1), Tarkkuus, Kuvataajuus, Laatu ja Ääni (Vain peli tai Koko tietokone) ovat kaikki muutettavissa. H.264 toistuu kaikkialla.",
+        "Näytönohjaimen oma enkooderi tekee työn, ja prosessorista kuluu selvästi alle 1 %. Ilman laitteisto-H.264-enkooderia Windowsin ohjelmistoenkooderi ottaa vastuun enintään 1080p-tarkkuudella ja 30 FPS:llä. Hyvin vanha peli yksinomaisessa koko näytön tilassa voi tallentaa mustia kuvia."
       ],
       "shortcutsTitle": "Näppäinoikotiet",
       "shortcuts": [
-        "Ctrl+Shift+K (oletus): näyttää tai piilottaa pelinsisäisen peittokuvan - määritettävissä kohdassa Asetukset > Yleiset.",
-        "Ctrl+Alt+Shift+nuolinäppäimet siirtävät peittokuvaa; Ctrl+Alt+Shift+1-5 napsauttavat sen valmiiseen sijaintiin.",
-        "Ctrl+Alt+Shift+C kytkee läpiklikkauksen; Ctrl+F kohdistaa asetusten hakuun."
+        "Ctrl+Shift+K (oletus): näyttää tai piilottaa pelinsisäisen peittokuvan. Muuta kohdassa Asetukset > Yleiset.",
+        "Ctrl+Alt+Shift+nuolinäppäimet siirtävät peittokuvaa; Ctrl+Alt+Shift+1-5 kiinnittää sen esiasetettuun sijaintiin; Ctrl+Alt+Shift+C kytkee läpiklikkauksen päälle tai pois.",
+        "Peittokuvassa / siirtää kohdistuksen hakuun ja Esc tyhjentää sen. Esiasetusten suunnittelijassa Ctrl+Z ja Ctrl+Y kumoavat ja tekevät uudelleen.",
+        "Ctrl+F siirtää kohdistuksen asetusten hakuun ja Esc tyhjentää sen. F5 päivittää kirjaston."
       ],
       "themesTitle": "Mukautetut teemat",
       "themes": [
-        "Mukautettu alkaa Steam Blue -väreillä; jokainen taso (tausta, ylätunniste, paneelit, kortit, asetukset, teksti, reunukset ja korostus) on muokattavissa.",
-        "Tasojen kuvat ovat värillisen harson alla kevyesti sumennettuina; tehosteet ovat tasokohtaisia.",
+        "Asetukset > Ulkoasu sisältää sisäänrakennettuja teemoja, ja jokaista voi muokata: ikkuna, yläpalkki, paneelit, kortit, asetukset, teksti, reunat ja korostus voivat kukin saada värin, liukuvärin tai kuvan.",
+        "Tallenna teema muuttaa muokkauksesi omaksi teemaksesi: säilytä nimi korvataksesi sen, kirjoita toinen tehdäksesi kopion. Palauta kaikki palauttaa teeman, josta aloitit.",
         "Pudota CSS-teema kansioon <userData>\\themes, niin se ilmestyy teemavalikkoon.",
-        "Omien esiasetusten suunnittelija voi esikatsella ulkoasua aitona ponnahdusilmoituksena ennen tallennusta, avata tallennetun esiasetuksen uudelleen muokattavaksi ja poistaa ne, joita et halua säilyttää.",
-        "Vie käyttämäsi teema yhtenä .awtheme-tiedostona tai tuo teema, jonka joku lähetti: se näytetään ennen asennusta ja toimii sen jälkeen kuten sisäänrakennettu teema."
+        "Vie teema… kirjoittaa yhden .awtheme-tiedoston (sisäänrakennettu teema on ensin tallennettava omalla nimellä). Tuo teema… näyttää esikatselun ennen asennusta, ja Poista teema poistaa tuodun teeman.",
+        "Yhteisön tekemät teemat ovat projektin verkkosivuston teemagalleriassa, ja omasi lähettäminen vaatii vain yhden tiedoston."
+      ],
+      "presetsTitle": "Ponnahdusikkunoiden esiasetukset",
+      "presets": [
+        "Esiasetus on pelinsisäisen ponnahdusikkunan ulkoasu, joka valitaan kohdassa Asetukset > Ilmoitukset > Esiasetus. Sillä ei ole vaikutusta, kun Ilmoituksen tyyppi on Windows-ilmoitus.",
+        "Asetukset > Ilmoitusten esiasetukset on tavallisista säätimistä koottu suunnittelija: valitse lähtökohta tai paina Yllätä minut, katso reaaliaikaista esikatselua (Kortti, Vertaa, Näyttö) ja paina sitten Luo esiasetus. Mitään ei tallenneta ennen sitä.",
+        "Mukauta mukana tuleva esiasetus muuttaa vain muutamaa asiaa (tausta, tekstin väri, korostus, reunus, hehku, kirjasin, logo) ja seuraa edelleen mukana tulevaa esiasetusta, jos se paranee.",
+        "Muokkaa esiasetusta avaa suunnittelemasi esiasetuksen uudelleen. Vie ja Tuo siirtävät esiasetuksen yhtenä .awpreset-tiedostona kuvineen, kirjasimineen ja äänineen.",
+        "Tuo > SAN-teema… lukee Steam Achievement Notifier -teeman (.san-tiedosto), ja Tuo > SANista tältä koneelta tuo teemat, joita SAN jo käyttää. Ne säilyttävät SAN-ulkoasunsa ja -äänensä."
       ],
       "tipsTitle": "Vinkkejä ja niksejä",
       "tips": [
-        "Napsauta peliruutua hiiren kakkospainikkeella, niin voit käynnistää pelin, valita sen ohjelmatiedoston, avata kansioita ja linkkejä, käyttää emulaattorityökaluja tai poistaa asennuksen, kun kyseinen valikko on käytössä.",
-        "Napsauta peliä hiiren kakkospainikkeella ja valitse edistymisilmoitusten mykistys, niin edistymisponnahdukset loppuvat mutta avaukset ilmoitetaan yhä.",
-        "Emulaattorikorjaus (Yksinkertainen nopea / Laaja täydellinen) asentaa GBE Forkin, saavutusluettelon ja DLC-tiedot.",
-        "Peliaikaa seurataan pelin ollessa käynnissä; edistymis- ja peliaikailmoitukset voi ottaa käyttöön Ilmoitukset-kohdassa.",
-        "Pelin päivityksen mukanaan tuomat uudet saavutukset ilmestyvät automaattisesti kolmen päivän kuluessa tai heti kohdasta Asetukset > Lisäasetukset > Tarkista saavutusluettelot uudelleen."
+        "Napsauta pelin ruutua hiiren kakkospainikkeella käynnistääksesi sen, valitaksesi ohjelmatiedoston, avataksesi kansioita ja linkkejä, käyttääksesi emulaattorityökaluja tai poistaaksesi sen asennuksen, kun valikko on käytössä.",
+        "Merkitse avatuksi käsin (napsauta saavutusta hiiren kakkospainikkeella) tallentaa avauksen, jota mikään lähde ei näe.",
+        "Nollaa saavutukset… antaa pelata pelin uudelleen alusta ja ottaa ensin varmuuskopion jokaisesta tiedostosta. Se toimii emuloiduille peleille, ei Steamille, Epicille tai Xboxille, joiden avaukset ovat tililläsi.",
+        "Peliaika seurataan pelin ollessa käynnissä; Peliajan seuranta kohdassa Asetukset > Ilmoitukset ottaa käyttöön aloitus- ja lopetusilmoitukset.",
+        "Unohda tämä peli… tyhjentää kaiken, mitä AW Next säilyttää pelistä (tallennuksista otetaan ensin varmuuskopio). Poista luettelosta vain piilottaa sen.",
+        "Pelin asetukset > Saavutusten kieli näyttää yhden pelin saavutukset ja ilmoitukset eri kielellä kuin muut.",
+        "Asetukset > Lisäasetukset > Profiilin varmuuskopio: Vie profiili… tallentaa asetuksesi, esiasetuksesi, teemasi, kansikuvasi ja peliaikasi yhteen .awbackup-tiedostoon uudelleenasennusta tai uutta konetta varten. Kirjautumisia ei tallenneta."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Arvioi saavutukset kullalla, hopealla tai pronssilla harvinaisuuden mukaan. Ota käyttöön Asetuksissa.",
     "clipsTitle": "Videoklippi",
     "clipsCopy": "Tallenna lyhyt klippi jokaisen avautumisen ympäriltä. Ota käyttöön Asetuksissa kohdassa Ilmoitukset.",
-    "backupTitle": "Profiilin varmuuskopio",
-    "backupCopy": "Tallenna asetuksesi ja kirjastovalintasi yhteen tiedostoon ja palauta ne uudelleenasennuksen jälkeen.",
+    "statsTitle": "Kirjaston tilastot",
+    "statsCopy": "Profiilisi alla “Näytä tarkka erittely” näyttää suorituksesi, peliaikasi ja edistymisesi alustoittain.",
+    "healthTitle": "Pelin kunto",
+    "healthCopy": "Pelin värillinen piste kertoo, seurataanko sen saavutuksia. Pelin asetuspainike selittää, mikä on pielessä.",
     "profileTitle": "Profiili",
     "profileCopy": "Valitse ylätunnisteessa näkyvä nimi ja halutessasi paikallinen profiilikuva.",
     "username": "Näyttönimi",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "tallennukset + kirjastot",
     "addSaveHint": "yksi emulaattori tai lähde",
     "addLibraryHint": "monta asennettua peliä",
+    "addFolder": "Puuttuuko jotain? Lisää kansio",
     "saveList": "Tallennus- ja asetuskansiot",
     "libraryList": "Pelikirjastot",
     "emptyList": "Tässä istunnossa ei ole lisätty mitään.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Voit avata tämän oppaan uudelleen milloin tahansa kohdasta Asetukset > Yleiset.",
     "sourcesTitle": "Mistä saavutuksesi tulevat",
     "sourcesCopy": "Kaikki tälle tietokoneelle asennetut lähteet luetaan automaattisesti, joten oletukset riittävät. Kirjaudu sisään alla vain, jos haluat enemmän.",
+    "sourcesCopySimple": "Tämän koneen pelien käynnistimet ja emulaattorit luetaan jo. Yhdistä tili vain, jos haluat sen tuomat lisät.",
     "sourcesMore": "Hienosäädä lähteitä ({count} käytössä)",
     "accountsTitle": "Tilit (valinnainen)",
-    "accountsCopy": "Kirjaudu sisään nähdäksesi avaukset yksityiseltä Steam-profiililtasi, lisätäksesi Steam Family -pelisi, tuodaksesi Xbox PC -kirjastosi ja näyttääksesi Epic-edistymisesi. Voit ohittaa tämän ja yhdistää myöhemmin kohdassa Asetukset > Lähteet.",
+    "accountsCopy": "Kirjaudu sisään, jos haluat lukea avaukset yksityisestä Steam-profiilista, lisätä Steam Family -pelit, tuoda Xbox PC -kirjastosi, näyttää Epic-edistymisesi, saada PlayStationin omat pokaaliosuudet ja tuoda RetroAchievements-pelisi. Voit ohittaa tämän ja yhdistää myöhemmin kohdassa Asetukset > Lähteet.",
+    "raKeyPage": "Mistä löydän Web API -avaimeni?",
     "sourcesEmulators": "Emulaattorit",
     "sourcesEmulatorsCopy": "Kukin luetaan vain, jos se on asennettu, joten niiden pitäminen päällä ei maksa mitään.",
     "source": "Näytä Steam-pelit",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Pelin nimi",
     "manual-game-appid-optional": "Steam AppID (valinnainen)",
     "manual-game-platform-other": "Muu",
+    "manual-game-note": "Käynnistykset ja peliaika seurataan, ilman saavutuksia.",
+    "collection-create": "Luo",
+    "collection-create-note": "Kun kokoelma on luotu, lisää peli siihen napsauttamalla peliä hiiren kakkospainikkeella > Kokoelmat.",
+    "psn-ultra-rare": "Ultraharvinainen",
+    "psn-very-rare": "Erittäin harvinainen",
+    "psn-rare": "Harvinainen",
+    "psn-common": "Yleinen",
+    "psn-title": "PlayStation-tili",
+    "psn-desc": "Valinnainen. Näyttää PlayStationin omat pokaaliosuudet peleille, jotka ovat jo PSN-tililläsi; muut pelit säilyttävät Exophasen luvut. Istuntotunnuksesi tallennetaan salattuna tälle koneelle.",
+    "psn-btn-hint": "avaa Sonyn kirjautumisikkunan",
+    "psn-connect": "Yhdistä PlayStation-tili",
+    "psn-connecting": "Avataan Sonyn kirjautumisikkunaa…",
+    "psn-connected": "PlayStation-tili yhdistetty.",
+    "psn-disconnected": "PlayStation-tili irrotettu.",
+    "psn-failed": "PlayStation-kirjautuminen epäonnistui",
+    "connect-playstation-account": "Yhdistä PlayStation-tili",
     "manual-source": "Käsin lisätty",
     "no-config-eligible-games": "Yhtään määrittämätöntä Steam-peliä ilman valmista korjausta ei löytynyt.",
     "no-config-eligible-games-configured": "{count} Steam-yhteensopivaa asennusta löytyi - niissä kaikissa on jo asetukset. Rakenna ne uudelleen kohdasta Lisäasetukset > Korjaa kaikki pelit.",

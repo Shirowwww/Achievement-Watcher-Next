@@ -29,13 +29,16 @@ test('with the defaults nothing is dimmed except what a switched-off parent turn
 });
 
 test('the notification mode dims the rows of the transport it does not use', () => {
-  const overlayRows = ['option_overlayPreset', 'option_overlayPosition', 'option_overlaySound', 'option_overlayVolume'];
+  const overlayRows = ['option_overlayPreset', 'option_overlayPosition'];
   const toastRows = ['option_groupToast', 'option_urgent'];
+  // A Windows notification plays the chosen sounds at the chosen volume too (toaster.js).
+  const soundRows = ['option_overlaySound', 'option_overlaySoundRare', 'option_overlaySoundPlatinum', 'option_overlaySoundProgress', 'option_overlayVolume'];
   const base = { option_mergeDuplicate: 'true', option_notifyOnProgress: 'true', option_souvenirScreenshot: 'true', option_controllerEnabled: 'true' };
 
   const toast = deps.inactiveControls({ ...base, option_notifMode: 'toast' });
   overlayRows.forEach((id) => assert.ok(toast.has(id), `${id} is overlay-only`));
-  toastRows.forEach((id) => assert.ok(!toast.has(id)));
+  toastRows.forEach((id) => assert.ok(!toast.has(id), `${id} is live in toast mode`));
+  soundRows.forEach((id) => assert.ok(!toast.has(id), `${id} also serves Windows notifications`));
 
   const overlay = deps.inactiveControls({ ...base, option_notifMode: 'overlay' });
   toastRows.forEach((id) => assert.ok(overlay.has(id), `${id} is toast-only`));

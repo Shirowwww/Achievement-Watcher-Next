@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Zobrazení knihovny",
-        "description": "Vyberte rozložení karet. Na šířku zachová současný vzhled; Kompaktní mřížka, Seznam a Podrobnosti upřednostní hustotu nebo více informací o aktivitě.",
+        "description": "Vyberte rozložení karet. Na šířku ukazuje široké obrázky; kompaktní na šířku a na výšku, Seznam a Podrobnosti vyměňují velikost obrázku za hustotu nebo bohatší aktivitu.",
         "value": {
           "portrait": "Na výšku",
           "landscape": "Na šířku",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Stříbro do",
-          "description": "Ve vzácných úrovních získají stříbro úspěchy do tohoto podílu. Hodnota musí být mezi hranicemi zlata a vzácnosti, jinak se všechny tři vrátí na výchozí hodnoty."
+          "description": "U úrovní vzácnosti dostanou úspěchy do této míry stříbro. Vždy zůstane nad zlatem a pod hranicí vzácnosti: posun jednoho posuvníku posune i ostatní."
         },
         "rareMax": {
           "name": "Vzácné do",
@@ -557,8 +557,13 @@
         "transport": "Integrace",
         "chromium": "Oznámení Chromium",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Vyskakovací okno"
+        "test": "Testy",
+        "overlay": "Vyskakovací okno",
+        "overlayDisplay": "Zobrazení",
+        "overlayProgress": "Postup",
+        "overlaySounds": "Zvuky",
+        "overlayEmulators": "Emulátory",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Některé funkce jsou dostupné pouze ve Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Předvolba (ShadPS4)",
         "overlayPresetShadps4Desc": "Předvolba použitá pro oznámení ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Stejné jako hlavní",
+        "overlayEmulatorsDesc": "Hry spuštěné v emulátoru mohou mít vlastní předvolbu a vlastní zvuk; přeložené porty pro PC se řídí svou konzolí. „Stejné jako hlavní“ ponechá výše uvedená nastavení.",
         "overlayPosition": "Pozice",
         "overlayPositionDesc": "Kde se na obrazovce zobrazí vyskakovací overlay",
         "overlayScale": "Velikost",
@@ -755,6 +761,9 @@
           "importedOnly": "Importovaná předvolba - lze ji zde exportovat nebo smazat; posuvníky ji upravit nelze.",
           "importSan": "Importovat motiv SAN",
           "importSanSetup": "Importovat ze SAN na tomto PC",
+          "importMenuFile": "Soubor předvolby…",
+          "importMenuSan": "Motiv SAN…",
+          "importMenuSanSetup": "Ze SAN na tomto PC",
           "layer": {
             "none": "Bez úprav",
             "title": "Upravit přibalenou předvolbu"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Nápověda",
       "title": "Nápověda a tipy",
-      "intro": "Vše, co je užitečné vědět - detekce, oznámení, ovladač, overlay, motivy a řešení problémů.",
+      "intro": "Vše užitečné na jednom místě: hledání her, oznámení, emulátory, overlay, ovladač, motivy a co dělat, když něco nefunguje.",
       "setupTitle": "Vaše aktuální nastavení",
       "topicsTitle": "Procházet podle tématu",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "První kroky",
       "quick": [
-        "Přidejte složky s uloženými pozicemi/konfigurací v Nastavení > Složky a poté zapněte odpovídající zdroj v Nastavení > Zdroje.",
-        "Watchdog běží na pozadí - pro živá oznámení a měření herní doby musí být spuštěný.",
-        "Vše (nastavení, mezipaměti, protokoly a vlastní motivy) je uloženo v %APPDATA%\\Achievement Watcher Next.",
-        "Každou sekci nastavení lze sbalit pod její záhlaví - šipka dolů znamená otevřeno, do strany zavřeno. Vaše volby se pamatují."
+        "Nechte Chytré hledání najít vaše hry v Nastavení > Složky, nebo přidejte složku sami, a poté zapněte odpovídající zdroj v Nastavení > Zdroj.",
+        "Watchdog běží na pozadí. Musí běžet, aby fungovala živá oznámení a měření doby hraní.",
+        "Vše (nastavení, mezipaměti, protokoly, vlastní motivy) je uloženo v %APPDATA%\\Achievement Watcher Next.",
+        "Přepínač Rozhraní nahoře v Nastavení přepíná mezi režimem Jednoduché (záložky pro každodenní použití) a Pokročilé (přidá Steam / GBE Fork, Ubisoft / Uplay R1/R2, Pokročilé a hlubší možnosti). Jednoduché pouze skrývá ovládací prvky, nic se nevypíná.",
+        "Zavřením hlavního okna zůstane AW Next v oznamovací oblasti, kde sledování pokračuje. Ukončíte ho z nabídky v oznamovací oblasti. Spustit při startu a Minimalizovat do oznamovací oblasti najdete v Nastavení > Obecné.",
+        "Vyhledávací pole nahoře v Nastavení najde možnost v kterékoli záložce. Průvodce prvním spuštěním v Nastavení > Obecné znovu otevře úvodní nastavení."
       ],
-      "notifications": [
-        "Automatický režim je výchozí: oznámení ve hře, když ho hra dokáže zobrazit, a oznámení Windows, když ne, nikdy obojí.",
-        "V Nastavení > Oznámení najdete předvolbu vzhledu, zvuk, hlasitost, umístění a velikost; tlačítka testu ukážou skutečné oznámení.",
-        "Klikněte na hru pravým tlačítkem > Oznámení a dejte právě této hře vlastní předvolbu, umístění, zvuk nebo velikost.",
-        "Snímek obrazovky při odemčení uloží obrázek okamžiku do složky Obrázky\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Stav hry",
-      "gameHealth": [
-        "Otevřete u hry tlačítko nástrojů (vpravo nahoře na dlaždici) a uvidíte, zda je Připravená, Vyžaduje pozornost nebo Nesledovaná.",
-        "Věta pod stavem vysvětlí příčinu srozumitelně; kontroly níže ukážou, která část selhává.",
-        "Tlačítka oprav se objeví jen tehdy, když AW Next hru skutečně umí opravit - každé řekne, co změní a kde zůstanou předchozí soubory.",
-        "Technické podrobnosti obsahují přesné cesty, počty a kódy emulátoru; zkopíruj je do hlášení chyby."
-      ],
-      "troubleshootTitle": "Řešení problémů",
-      "troubleshoot": [
-        "Pokud hra chybí: přidejte složky, spusťte nové hledání a zkontrolujte přepínač zdroje i seznam blokovaných.",
-        "Pokud se oznámení nezobrazují: zkontrolujte Pomocníka pro lepší soustředění ve Windows a spusťte aplikaci se stejnými právy jako hry.",
-        "Pokročilé > Diagnostika otevře protokoly a datové složky; při hlášení problému je přiložte.",
-        "Protokoly se připojují, takže pád přežije další spuštění. Každý běh začíná značkou relace a blokem [diag] (verze, cesty, obrazovky) - vložte jej do hlášení."
+      "libraryTitle": "Knihovna a kolekce",
+      "library": [
+        "Kolekce: klikněte pravým tlačítkem na hru > Kolekce, zaškrtněte některou nebo zvolte Nová kolekce…. Tlačítko kolekcí vedle volby Zobrazit pouze nainstalované hry pak filtruje knihovnu a čísla v profilu se řídí jím.",
+        "Upravit kolekci… v nabídce tohoto tlačítka změní název, barvu, ikonu nebo obrázek a umožní kolekci smazat. Hry zůstanou ve vaší knihovně.",
+        "Kulaté tlačítko vedle míry dokončení otevře Statistiky knihovny: dokončení, počty odemčených a zamčených úspěchů, dobu hraní, trofeje, hry s platinou, nejvzácnější úspěchy a jeden řádek na platformu.",
+        "Volba mezi vyhledávacím polem a tlačítkem + přepíná mezi šesti zobrazeními knihovny. Nastavení > Vzhled > Dlaždice knihovny určuje velikost dlaždic, mezery a to, co každá dlaždice ukazuje.",
+        "Tlačítko + přidá hru, kterou žádný zdroj nenajde: název a spustitelný soubor, volitelně s platformou a Steam AppID. Spuštění a doba hraní se sledují, úspěchy ne.",
+        "Klikněte pravým tlačítkem na hru > Nastavení hry > Přejmenovat… a změníte zobrazený název. Úspěchy a doba hraní > Upravit dobu hraní… opraví celkový čas (12.5 nebo 12h30)."
       ],
       "sourcesTitle": "Spouštěče a zdroje",
       "sources": [
-        "Režim profilu Steam zobrazí nainstalované nebo vlastněné hry, odemčení však stále pocházejí z místních uložených souborů.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay a EA Desktop lze zapnout samostatně v části Zdroje.",
-        "Vlastněné hry na Steamu se považují za nainstalované jen tehdy, když to potvrdí registr Steamu."
+        "Steam, Epic Games a Xbox PC nabízejí v Nastavení > Zdroj vždy možnosti Žádné, Nainstalované nebo Vlastněné. Vlastněné vypíše celou knihovnu připojeného účtu, nainstalovanou i ne.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC a EA Desktop mají každý svůj vlastní přepínač v Nastavení > Zdroj. EA Desktop pokrývá jen hry mimo složky spravované EA.",
+        "Vlastněné hry ze Steamu se počítají jako nainstalované, jen když to potvrdí registr Steamu.",
+        "Odemčení ze Steamu se čtou ze statistik, které Steam ukládá na tomto PC, takže funguje i soukromý profil. Připojení účtu je volitelné: přidá hry hrané na jiném PC a hry ze Steam Family.",
+        "Hra uložená na neobvyklém místě: přidejte její složku v Nastavení > Složky. Zvolte složku, která přímo obsahuje uložené pozice, složky AppID nebo konfiguraci emulátoru, případně složku knihovny s mnoha hrami.",
+        "RetroAchievements: zapněte zdroj, zadejte uživatelské jméno a klíč Web API a stiskněte Importovat knihovnu. Odemčení pocházejí z vašeho účtu, takže nechte RetroAchievements v emulátoru zapnuté.",
+        "V režimu Jednoduché zůstane několik zřídka používaných řádků zdrojů skrytých, dokud se nepoužívají. Vrátí se, jakmile na nich bude záležet, a Pokročilé je ukazuje vždy všechny.",
+        "Trofeje PlayStation ukazují svůj stupeň, podíl hráčů, kteří je mají, a vlastní úroveň vzácnosti PlayStationu. Míry pocházejí z Exophase; připojte účet PlayStation v Nastavení > Zdroj, abyste u her na tomto účtu získali vlastní čísla Sony."
+      ],
+      "notifications": [
+        "Automaticky je výchozí: vyskakovací okno ve hře, když ho hra umí zobrazit, jinak oznámení Windows, nikdy obojí.",
+        "Nastavení > Oznámení obsahuje Typ oznámení (Automaticky, Oznámení Windows, Overlay ve hře nebo Obojí), předvolbu, zvuk, hlasitost, polohu, měřítko a neprůhlednost. Tlačítka Testy spustí skutečné vyskakovací okno.",
+        "Otevřete tlačítko nástrojů hry (vpravo nahoře na její dlaždici) a přejděte k jejímu nastavení oznámení, abyste této jedné hře dali vlastní předvolbu, polohu, zvuk nebo měřítko.",
+        "Snímek při odemčení uloží obrázek dané chvíle do Obrázky\\Achievement Watcher Next.",
+        "Zvuk vzácného úspěchu, Zvuk 100% dokončení a Zvuk postupu (režim Pokročilé) dávají těmto oknům vlastní zvuk. Náhodný zvuk vybere pokaždé jiný a můžete importovat vlastní soubory.",
+        "Zlato, stříbro a bronz označují vzácná odemčení. Nastavení > Obecné > Zobrazení vzácnosti přepne do režimu trofejí, který ohodnotí každý úspěch a u dokončených her ukáže platinu.",
+        "U počítadel ukazují Milníky postupu okno jen po krocích 10, 25 nebo 50 %. Kliknutí pravým tlačítkem na hru > Ztlumit oznámení o postupu ztlumí jednu hru, aniž by se dotklo jejích odemčení.",
+        "Dva další přepínače v Nastavení > Oznámení: Prioritní oznámení pustí odemčení skrz Nerušit (Windows 11) a Hry klienta Steam přidá okno AW Next u her, které spouští sám Steam."
+      ],
+      "gameHealthTitle": "Stav hry",
+      "gameHealth": [
+        "Kliknutím na tlačítko nástrojů hry (vpravo nahoře na její dlaždici) nebo pravým tlačítkem na ni otevřete Stav hry. Říká, zda je hra Připraveno, Vyžaduje pozornost, nebo Nesledováno.",
+        "Věta pod stavem vysvětluje příčinu běžnými slovy. Kontroly pod ní ukazují, která část má chybu: soubory hry, spustitelný soubor, data úspěchů, nastavení emulátoru, sledování v reálném čase nebo oznámení.",
+        "Tlačítka oprav se objeví jen tehdy, když AW Next danou hru opravdu umí opravit, například Najít hru, Přepsat data úspěchů, Obnovit soubor emulátoru nebo Sledovat tuto hru. Každé říká, co změní, uloží zálohu a nejprve se zeptá.",
+        "Odeslat zkušební oznámení spustí okno s názvem a obrázkem dané hry, doručené tak, jak by se doručilo doopravdy.",
+        "Technické podrobnosti obsahují přesné cesty, počty a kódy emulátoru: stiskněte Kopírovat a vložte je do hlášení chyby. Barevnou tečku na dlaždici lze skrýt v Nastavení > Vzhled > Dlaždice knihovny."
+      ],
+      "troubleshootTitle": "Řešení problémů",
+      "troubleshoot": [
+        "Pokud hra chybí: zkontrolujte její zdroj v Nastavení > Zdroj, spusťte Chytré hledání nebo Generovat konfigurace v Nastavení > Složky, v případě potřeby přidejte její složku ručně a zkuste vypnout Zobrazit pouze nainstalované hry.",
+        "Pokud se oznámení nezobrazují: přečtěte si řádek Oznámení ve Stavu hry a pak zkontrolujte Nerušit / Asistenta soustředění ve Windows. Prioritní oznámení v Nastavení > Oznámení mohou odemčení propustit.",
+        "Nastavení > Pokročilé > Diagnostika otevře složky s protokoly a daty a Exportovat protokoly (.zip) zabalí protokoly se zakrytým uživatelským jménem a klíči. Přiložte ho při hlášení problému.",
+        "Protokoly se připisují, takže pád přežije další spuštění. Každé spuštění začíná značkou relace a blokem [diag] (verze, cesty, displeje): vložte ho do issue.",
+        "Hra uvízla na 0 %? To je normální, dokud se nezapíše první odemčení. Pokud AW Next přiřadil špatné vydání ze Steamu, klikněte na hru pravým tlačítkem > Nastavit AppID ručně….",
+        "Doba hraní se nepočítá? Otevřete tlačítko nástrojů hry > Spustitelný soubor a vyberte program, který zůstává otevřený, když hrajete, ne spouštěč.",
+        "Nové úspěchy z aktualizace hry se objeví do 3 dnů, nebo hned pomocí Nastavení > Pokročilé > Znovu zkontrolovat seznamy úspěchů.",
+        "Aktualizace aplikace pořád selhává na stejném souboru? Nastavení > Pokročilé > Vymazat mezipaměti odstraní jen soubory, které lze znovu stáhnout, nikdy vaše nastavení ani uložené pozice."
       ],
       "steamTitle": "Steam emulátory",
       "steam": [
-        "Uložené pozice GBE/Goldberg bývají v %APPDATA%\\GSE Saves nebo %APPDATA%\\Goldberg SteamEmu Saves.",
-        "Uložené pozice CODEX/RUNE se často nacházejí v Public Documents\\Steam\\CODEX nebo Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 a Hoodlum se rozpoznávají podle svých konfiguračních/ukládacích složek.",
-        "Oprava emulátoru v místní nabídce může přidat soubory GBE Fork, schémata úspěchů a data DLC.",
-        "Jednoduchý režim je rychlý; Pokročilý spouští generate_emu_config pro podrobnější data Steamu a může trvat několik minut."
+        "Uložené pozice GBE / Goldberg bývají obvykle v %APPDATA%\\GSE Saves nebo %APPDATA%\\Goldberg SteamEmu Saves.",
+        "Uložené pozice CODEX / RUNE bývají často v Public Documents\\Steam\\CODEX nebo Public Documents\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI a emulátory Nemirtingas se čtou z vlastních konfiguračních nebo ukládacích složek. Pokud hra není nalezena, přidejte její složku v Nastavení > Složky.",
+        "Kliknutí pravým tlačítkem na hru > Emulátor a nástroje > Použít opravu emulátoru… nainstaluje GBE Fork, sestaví steam_settings (seznam úspěchů a ikony) a zapíše steam_appid.txt, když chybí. Každý nahrazený soubor se předtím zálohuje.",
+        "V Nastavení > Steam / GBE Fork používají Data steam_settings v režimu Jednoduché vlastní anonymní stahování AW Next a jsou rychlá. Pokročilé spouští generate_emu_config pro hlubší data ze Steamu a může trvat minuty.",
+        "Do složky hry se nic nezapisuje samo: Automaticky opravovat nově zjištěné hry, Spravovat vlastnictví DLC a Zapisovat jméno účtu a jazyk jsou ve výchozím stavu vypnuté.",
+        "Diagnostikovat emulátor ve stejné nabídce jen čte a hlásí. Zálohovat nastavení GBE/Goldberg a Obnovit poslední zálohu GBE/Goldberg vrátí hru do původního stavu."
       ],
       "emulatorTitle": "Emulátory konzolí",
       "emulators": [
-        "Trofeje RPCS3 se načítají z dev_hdd0\\home\\...\\trophy poblíž instalace RPCS3.",
-        "Trofeje shadPS4 se načítají ze složek game_data/trophy v datech aplikace; zbylá data nejsou důkazem instalace.",
-        "Postup v Xenii se načítá ze souborů profilu Xbox, například .gpd."
+        "Trofeje RPCS3 se čtou z dev_hdd0\\home\\...\\trophy poblíž instalace RPCS3. Přesunutý virtuální disk se sleduje.",
+        "Trofeje shadPS4 se čtou z jeho složky game_data (soubory XML TROP). Můžete přidat emulátor, jeho uživatelskou složku nebo přímo game_data.",
+        "Postup Xenie se čte ze souborů profilu Xbox (.gpd) a řídí se úložnými složkami nastavenými v její konfiguraci.",
+        "Trofeje KytyPS5 se čtou z jeho složky _Trophies pro uživatele, pod kterým spouštěč hru spouští.",
+        "Hry pro Xbox 360 přeložené pro PC a porty pro PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil a další) jsou samostatné zdroje v Nastavení > Zdroj. Pokud se některá neobjeví, přidejte její složku v Nastavení > Složky.",
+        "Každá konzole může mít vlastní předvolbu okna a zvuk v Nastavení > Oznámení > Emulátory (režim Pokročilé). Přeložené hry pro Xbox 360 se řídí volbou Xenie, porty pro PS4 volbou shadPS4 a Stejné jako hlavní ponechá hlavní nastavení."
       ],
       "controllerTitle": "Ovladač (gamepad)",
       "controller": [
-        "Nejprve povolte Nastavení > Ovladač; poté Back + Start + LB otevře herní překryvnou vrstvu.",
-        "LB + X zapíná nebo vypíná navigaci v překryvu.",
-        "Režim navigace: směrový kříž/levá páčka přesouvají výběr, A potvrzuje, B ruší, X hledá a Y otevírá možnosti.",
-        "Podržením LB + RB přesunete překryv levou páčkou a pravou páčkou v něm posouváte.",
-        "Funguje s ovladači Xbox, PlayStation (DualShock 4 / DualSense) a Switch Pro."
+        "V Nastavení > Ovladač zapněte Ovládat overlay ve hře ovladačem (ve výchozím stavu vypnuto), poté Back + Start + LB otevře overlay ve hře.",
+        "Ovládat aplikaci ovladačem (ve výchozím stavu zapnuto) ovládá samotný AW Next: D-pad nebo levá páčka posouvají fokus, A otevře hru, B vrací zpět, X vyhledává, Y nebo Start otevře Nastavení, LB / RB přepínají záložky nastavení.",
+        "V knihovně RT spustí vybranou hru a LT otevře její Stav hry.",
+        "V overlayi LB + X přepíná navigaci: D-pad nebo levá páčka posouvají fokus, A potvrzuje, B ruší, X vyhledává, Y otevře možnosti.",
+        "Podržte LB + RB, abyste overlay přesouvali levou páčkou a posouvali obsah pravou páčkou.",
+        "Pokud hra na vaše tlačítka stále reaguje, zapněte Zaostřit overlay při otevření nebo Poslat Esc do hry při otevření ovladačem (obojí je ve výchozím stavu vypnuté).",
+        "Funguje s ovladači Xbox, PlayStation (DualShock 4 / DualSense) a Switch Pro. Rozložení ovladače určuje zobrazené názvy tlačítek a každá zkratka přijímá jedno až tři tlačítka.",
+        "Ovladač není rozpoznán? Nejprve ho zkontrolujte ve Windows (joy.cpl), ověřte, že je zapnutý správný přepínač, a poté zkuste XInput v Backend ovladače."
       ],
       "overlayTitle": "Overlay ve hře",
       "overlay": [
-        "Otevřete ji klávesovou zkratkou překryvné vrstvy (ve výchozím nastavení Ctrl+Shift+K) nebo kombinací Back + Start + LB na ovladači.",
-        "Řaďte vždy podle jednoho sloupce: Vzácnost, Datum nebo Stav (vzestupně / sestupně / bez řazení).",
-        "Stisknutím / zaměříte hledání, klávesou Esc ho vymažete nebo zavřete panel možností.",
-        "Panel s ozubeným kolem mění zvýraznění, hustotu, přiblížení, průhlednost a viditelné řádky; „Použít motiv aplikace“ následuje aktivní motiv.",
-        "Každý úspěch se známou mírou ukazuje vzácnost: šedá pro běžné a zlatá/stříbrná/bronzová pro vzácné."
+        "Otevřete ho klávesovou zkratkou overlaye (ve výchozím nastavení Ctrl+Shift+K) nebo kombinací Back + Start + LB na ovladači, když běží podporovaná hra. Zkratku nastavíte v Nastavení > Obecné.",
+        "Vypisuje úspěchy běžící hry: název, popis, zamčeno nebo odemčeno, datum odemčení a postup. Přetáhnete ho za záhlaví.",
+        "Skrytý úspěch zůstane skrytý, dokud na něj nekliknete (nebo na ovladači nestisknete A), takže se nic neprozradí.",
+        "Filtry Vše, Odemčené, Zamčené a Probíhá filtrují seznam. Kliknutím na Úspěch, Vzácnost, Datum nebo Stav řadíte: vzestupně, sestupně a pak zpět do normálu. Vždy jen jeden sloupec.",
+        "Stiskem / se zaostří vyhledávání, Esc ho vymaže nebo zavře panel možností.",
+        "Panel s ozubeným kolem mění zvýraznění, hustotu, velikost ikon, přiblížení, neprůhlednost a viditelné řádky. Použít motiv aplikace se řídí aktivním motivem a Obnovit výchozí vrátí vše zpět.",
+        "Každý úspěch se známou mírou ukazuje vzácnost: šedá pro běžné, zlatá/stříbrná/bronzová pro vzácné."
       ],
       "streamTitle": "Overlay pro stream (OBS)",
       "stream": [
-        "Nastavení > Oznámení > Zdroj prohlížeče OBS > Kopírovat odkaz; poté přidejte zdroj prohlížeče v OBS a vložte ho jako URL.",
-        "Nastavte šířku a výšku zdroje na velikost, kterou uvádí http://127.0.0.1:8082/obs/_config: vlastní rozměry předvolby ve vašem měřítku.",
-        "Při umisťování zdroje přidejte do URL ?test=1. Zobrazí ukázkové odemčení každých deset sekund; po dokončení jej odeberte.",
-        "Zdroj zobrazuje stejné vyskakovací okno jako overlay ve hře a mezi odemčeními zůstává prázdný, takže při streamování nic nestojí.",
-        "Čte místní kanál oznámení, takže nechte zapnutý Websocket @localhost:8082 v Nastavení > Oznámení > Přenos."
+        "Nastavení > Oznámení > Zdroj prohlížeče OBS (režim Pokročilé): Náhled ho ověří ve vašem prohlížeči a Kopírovat odkaz zkopíruje adresu. V OBS přidejte zdroj Prohlížeč a vložte ji jako URL.",
+        "Funguje jakákoli šířka a výška, karta se přizpůsobí a vyplní rámeček. Větší zdroj je ostřejší: dejte mu zhruba dvojnásobek velikosti samotné předvolby (http://127.0.0.1:8082/obs/_config ji uvádí) a umístěte ho v poloviční velikosti.",
+        "Při umísťování zdroje přidejte k URL ?test=1. Každých deset sekund ukáže ukázkové odemčení; až budete hotovi, odstraňte to.",
+        "Zdroj vykresluje stejné okno jako ve hře a mezi odemčeními zůstává prázdný, takže při streamování nic nestojí.",
+        "Další možnosti za adresou: ?scale=2 pevně nastaví přiblížení, ?duration=8000 určí, jak dlouho karta zůstane, ?sound=1 přehraje zvuk přes zdroj, /obs/preset/Xbox/ použije jednu předvolbu bez ohledu na to, kterou používá plocha.",
+        "Čte místní kanál oznámení, takže nechte Websocket @localhost:8082 zapnutý v Nastavení > Oznámení > Integrace. Funguje jen na tomto PC a poskytovat ho může jen jedna kopie AW Next."
+      ],
+      "souvenirsTitle": "Snímky obrazovky a videoklipy",
+      "souvenirs": [
+        "Nastavení > Oznámení > Snímek při odemčení uloží chvíli po oznámení obrázek, včetně oznámení, do jedné podsložky pro každou hru. Otevřít složku vás tam zavede.",
+        "Snímky HDR (Automaticky) opravují barvy, když je zapnuté HDR ve Windows. Vzpomínky zachycují hlavní monitor, takže hrajte na něm.",
+        "Videoklip při odemčení (vypnuto, dokud ho nezapnete, níže v Nastavení > Oznámení) drží posledních pár sekund hry v paměti a kolem každého odemčení uloží MP4. Nic se nezapisuje, dokud se neodemkne úspěch.",
+        "Délku klipu (10 až 30 sekund), Formát (H.264, HEVC nebo AV1), Rozlišení, Snímkovou frekvenci, Kvalitu a Zvuk (Pouze hra nebo Celý PC) lze všechny změnit. H.264 se přehraje všude.",
+        "Práci odvádí vlastní kodér grafické karty a spotřebuje výrazně méně než 1 % procesoru. Bez hardwarového kodéru H.264 převezme práci softwarový kodér Windows nejvýše v 1080p a 30 FPS. Velmi stará hra v exkluzivním celoobrazovkovém režimu může nahrát černé snímky."
       ],
       "shortcutsTitle": "Klávesové zkratky",
       "shortcuts": [
-        "Ctrl+Shift+K (výchozí): zobrazí nebo skryje herní překryv - lze změnit v Nastavení > Obecné.",
-        "Ctrl+Alt+Shift+Šipky přesouvají překryv; Ctrl+Alt+Shift+1-5 ho přichytí na předvolenou pozici.",
-        "Ctrl+Alt+Shift+C přepíná propouštění kliknutí; Ctrl+F zaměří hledání v Nastavení."
+        "Ctrl+Shift+K (výchozí): zobrazí nebo skryje overlay ve hře. Změníte ho v Nastavení > Obecné.",
+        "Ctrl+Alt+Shift+šipky přesouvají overlay; Ctrl+Alt+Shift+1-5 ho přichytí na přednastavenou pozici; Ctrl+Alt+Shift+C přepíná prokliknutí skrz.",
+        "V overlayi / zaostří vyhledávání a Esc ho vymaže. V návrháři předvoleb vracejí Ctrl+Z a Ctrl+Y zpět a znovu.",
+        "Ctrl+F zaostří vyhledávání v Nastavení a Esc ho vymaže. F5 obnoví knihovnu."
       ],
       "themesTitle": "Vlastní motivy",
       "themes": [
-        "Vlastní motiv začíná jako Steam Blue; každou vrstvu (pozadí, záhlaví, panely, karty, nastavení, text, okraje a zvýraznění) lze upravit.",
-        "Obrázky vrstev leží pod barevným závojem s lehkým matným rozostřením; efekty se nastavují pro každou vrstvu.",
-        "Vložte motiv CSS do <userData>\\themes a objeví se v nabídce motivů.",
-        "Tvůrce předvoleb umí ukázat návrh jako skutečné oznámení ještě před uložením, znovu otevřít uloženou předvolbu k úpravě a smazat ty, které si nenecháte.",
-        "Exportuj používaný motiv jako jediný soubor .awtheme, nebo importuj ten, který ti někdo poslal: před instalací se zobrazí a poté se chová jako vestavěný."
+        "Nastavení > Vzhled obsahuje vestavěné motivy a každý lze upravit: okno, horní lišta, panely, karty, nastavení, text, okraje a akcent mohou mít barvu, přechod nebo obrázek.",
+        "Uložit motiv promění vaši úpravu ve vlastní motiv: ponechte název a přepíšete ho, napište jiný a vznikne kopie. Obnovit vše vrátí motiv, od kterého jste vyšli.",
+        "Vložte motiv CSS do <userData>\\themes a objeví se v rozbalovací nabídce motivů.",
+        "Exportovat motiv… zapíše jeden soubor .awtheme (vestavěný je třeba nejdřív uložit pod vlastním názvem). Importovat motiv… ho před instalací ukáže v náhledu a Smazat motiv odstraní importovaný.",
+        "Motivy vytvořené komunitou jsou v galerii motivů na webu projektu a odeslat ten svůj stačí jedním souborem."
+      ],
+      "presetsTitle": "Předvolby oznámení",
+      "presets": [
+        "Předvolba je vzhled okna ve hře, vybraný v Nastavení > Oznámení > Předvolba. Nemá žádný účinek, když je Typ oznámení Oznámení Windows.",
+        "Nastavení > Předvolby oznámení je návrhář složený z běžných ovládacích prvků: vyberte výchozí bod nebo stiskněte Překvap mě, sledujte živý náhled (Karta, Porovnat, Obrazovka) a pak Vytvořit předvolbu. Před tím se nic neukládá.",
+        "Upravit přibalenou předvolbu mění jen pár věcí (pozadí, barvu textu, akcent, okraj, záři, písmo, logo) a dál sleduje přibalenou předvolbu, pokud se vylepší.",
+        "Upravit předvolbu znovu otevře tu, kterou jste navrhli. Exportovat a Importovat přenášejí předvolbu jako jeden soubor .awpreset s obrázky, písmy a zvukem.",
+        "Importovat > Motiv SAN… načte motiv Steam Achievement Notifier (soubor .san) a Importovat > Ze SAN na tomto PC přinese motivy, které SAN už používá. Zachovají si vzhled a zvuky ze SAN."
       ],
       "tipsTitle": "Tipy a triky",
       "tips": [
-        "Klikněte pravým tlačítkem na dlaždici hry pro rychlé akce: oprava emulátoru, úspěchy, stránka Steamu, instalace GBE Fork a odinstalace.",
-        "Klikněte pravým tlačítkem na hru a zvolte ztlumení postupu, čímž zastavíte oznámení o postupu bez vypnutí odemčení.",
-        "Oprava emulátoru (Jednoduchá rychlá / Pokročilá úplná) nainstaluje GBE Fork, schéma úspěchů a data DLC.",
-        "Herní doba se měří, když hra běží; oznámení o postupu a herní době lze zapnout v Oznámeních.",
-        "Nové úspěchy přidané aktualizací hry se objeví automaticky do 3 dnů nebo ihned přes Nastavení > Pokročilé > Znovu zkontrolovat seznamy úspěchů."
+        "Kliknutím pravým tlačítkem na dlaždici hry ji spustíte, vyberete spustitelný soubor, otevřete složky a odkazy, použijete nástroje emulátoru nebo ji odinstalujete, když je tato nabídka povolená.",
+        "Označit jako ručně odemčené (pravé tlačítko na úspěchu) zaznamená odemčení, které žádný zdroj nevidí.",
+        "Resetovat úspěchy… umožní hrát hru znovu od nuly a nejprve zálohuje každý soubor. Funguje u emulovaných her, ne u Steamu, Epicu ani Xboxu, jejichž odemčení jsou uložená na vašem účtu.",
+        "Doba hraní se sleduje, dokud hra běží; Sledování doby hraní v Nastavení > Oznámení zapíná oznámení o začátku a konci.",
+        "Zapomenout tuto hru… vymaže vše, co AW Next o hře uchovává (uložené pozice se předtím zálohují). Odebrat ze seznamu ji jen skryje.",
+        "Nastavení hry > Jazyk úspěchů zobrazí úspěchy a oznámení jedné hry v jiném jazyce než u ostatních.",
+        "Nastavení > Pokročilé > Záloha profilu: Exportovat profil… uloží nastavení, předvolby, motivy, obaly a dobu hraní do jednoho souboru .awbackup pro přeinstalaci nebo nový PC. Přihlášení se neukládají."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Hodnoťte úspěchy zlatou, stříbrnou nebo bronzovou podle vzácnosti. Zapnete to v Nastavení.",
     "clipsTitle": "Videoklipy",
     "clipsCopy": "Uložte si krátký klip kolem každého odemknutí. Zapnete to v Nastavení v části Oznámení.",
-    "backupTitle": "Záloha profilu",
-    "backupCopy": "Uložte nastavení a volby knihovny do jednoho souboru a po přeinstalaci je obnovte.",
+    "statsTitle": "Statistiky knihovny",
+    "statsCopy": "Pod vaším profilem ukazuje „Zobrazit podrobný přehled“ dokončení, dobu hraní a postup podle platforem.",
+    "healthTitle": "Stav hry",
+    "healthCopy": "Barevná tečka u hry říká, zda se její úspěchy sledují. Tlačítko nastavení hry vysvětlí, co je špatně.",
     "profileTitle": "Profil",
     "profileCopy": "Vyberte jméno zobrazené v záhlaví a volitelně nastavte místního avatara.",
     "username": "Zobrazovaný název",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "saves + knihovny",
     "addSaveHint": "jeden emulátor/zdroj",
     "addLibraryHint": "mnoho nainstalovaných her",
+    "addFolder": "Něco chybí? Přidejte složku",
     "saveList": "Složky se savy/konfigurací",
     "libraryList": "Složky knihovny",
     "emptyList": "Do této relace nebylo nic přidáno.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Tohoto průvodce můžete kdykoli znovu otevřít v Nastavení > Obecné.",
     "sourcesTitle": "Odkud pocházejí vaše úspěchy",
     "sourcesCopy": "Každý zdroj nainstalovaný v tomto počítači se čte automaticky, takže výchozí nastavení stačí. Přihlaste se níže, jen pokud chcete víc.",
+    "sourcesCopySimple": "Spouštěče a emulátory na tomto PC se už čtou. Připojte účet jen tehdy, když chcete to, co přidá.",
     "sourcesMore": "Doladit zdroje (zapnuto: {count})",
     "accountsTitle": "Účty (volitelné)",
-    "accountsCopy": "Přihlaste se a získáte odemčení ze soukromého profilu Steam, přidáte hry ze svého Steam Family, importujete svou knihovnu Xbox PC a zobrazíte postup v Epic. Tento krok můžete přeskočit a připojit se později v Nastavení > Zdroj.",
+    "accountsCopy": "Přihlaste se, abyste mohli číst odemčení ze soukromého profilu Steam, přidat hry ze Steam Family, importovat knihovnu Xbox PC, zobrazit postup v Epicu, získat vlastní míry trofejí od PlayStationu a importovat hry z RetroAchievements. Můžete to přeskočit a připojit se později v Nastavení > Zdroj.",
+    "raKeyPage": "Kde najdu svůj klíč Web API?",
     "sourcesEmulators": "Emulátory",
     "sourcesEmulatorsCopy": "Každý se čte, jen když je nainstalovaný, takže jejich zapnutí nic nestojí.",
     "source": "Zobrazit hry na Steamu",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Název hry",
     "manual-game-appid-optional": "Steam AppID (volitelné)",
     "manual-game-platform-other": "Jiné",
+    "manual-game-note": "Spuštění a doba hraní se sledují, bez úspěchů.",
+    "collection-create": "Vytvořit",
+    "collection-create-note": "Po vytvoření přidáte hru kliknutím pravým tlačítkem > Kolekce.",
+    "psn-ultra-rare": "Ultra vzácná",
+    "psn-very-rare": "Velmi vzácná",
+    "psn-rare": "Vzácná",
+    "psn-common": "Běžná",
+    "psn-title": "Účet PlayStation",
+    "psn-desc": "Volitelné. Zobrazuje vlastní míry trofejí od PlayStationu u her, které už máte na účtu PSN; ostatní hry si ponechají údaje z Exophase. Token vaší relace je na tomto PC uložen zašifrovaně.",
+    "psn-btn-hint": "otevře přihlašovací okno Sony",
+    "psn-connect": "Připojit účet PlayStation",
+    "psn-connecting": "Otevírá se přihlašovací okno Sony…",
+    "psn-connected": "Účet PlayStation je připojen.",
+    "psn-disconnected": "Účet PlayStation byl odpojen.",
+    "psn-failed": "Přihlášení k PlayStationu se nezdařilo",
+    "connect-playstation-account": "Připojit účet PlayStation",
     "manual-source": "Ručně",
     "no-config-eligible-games": "Nebyla nalezena žádná nenakonfigurovaná hra Steam bez existující opravy.",
     "no-config-eligible-games-configured": "Nalezeno instalací kompatibilních se Steamem: {count} - všechny už konfiguraci mají. Pro jejich obnovu použijte Pokročilé > Opravit všechny hry.",

@@ -756,6 +756,19 @@ body[style*='--game-backdrop-image']::before {
   pointer-events: none;
   background: var(--game-backdrop-veil), var(--game-backdrop-image) center / cover no-repeat;
   filter: blur(6px);
+  animation: aw-backdrop-in 0.32s ease-out backwards;
+  transition: opacity 0.2s ease-in;
+}
+
+/* Fades in with the page, and out with it (ui/game.js sets the class before removing the picture). */
+@keyframes aw-backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+body.is-leaving-game::before {
+  opacity: 0;
 }
 
 main {
@@ -829,6 +842,31 @@ body.is-resizing #game-list {
 
 #achievement .wrapper {
   animation: aw-view-rise 0.36s var(--ease-out) backwards;
+}
+
+/* Leaving (ui/game.js): the page sinks a little while it fades, the way it rose in. */
+#achievement.is-leaving .wrapper {
+  transform: translateY(12px) scale(0.985);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* The library settles back into place instead of reappearing flat. */
+@keyframes aw-view-return {
+  from {
+    transform: scale(0.985);
+  }
+}
+
+#home.is-returning > #home-header,
+#home.is-returning > #game-list {
+  animation: aw-view-return 0.3s var(--ease-out) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #achievement.is-leaving .wrapper {
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Too narrow for three groups side by side: the controls drop to their own row under the
@@ -922,6 +960,15 @@ body.is-resizing #game-list {
 #user-info .info .stats li {
   margin: 0;
   padding: 5px 9px;
+  /* The chip gap belongs after the icon only: as a flex gap it also split "547" from its label and
+     "21" from its "%", which read as a doubled space. */
+  gap: 0;
+}
+#user-info .info .stats li > i:first-child {
+  margin-right: 6px;
+}
+#user-info .info .stats li > span:not(.data):not(:empty) {
+  margin-left: 0.3em;
 }
 
 #user-info .info .stats.is-updating .data {
@@ -1118,9 +1165,8 @@ body.is-resizing #game-list {
   font: var(--fs-sm) var(--font-body);
 }
 
-.manual-game-fields label:first-child,
-.manual-game-fields .manual-exe-field,
-#manual-game-note {
+.manual-game-fields .manual-name-field,
+.manual-game-fields .manual-exe-field {
   grid-column: 1 / -1;
 }
 
@@ -1129,25 +1175,117 @@ body.is-resizing #game-list {
   width: 100%;
 }
 
-#manual-game-exe-path {
+/* The executable picker: one wide control, dashed until a file is chosen, then the file itself. */
+.manual-exe-picker {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 45%, var(--field-border, var(--border)));
+  border-radius: var(--radius-md);
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  font: var(--fs-md) / 1.3 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.manual-exe-picker:hover,
+.manual-exe-picker:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.manual-exe-picker.has-file {
+  border-style: solid;
+  border-color: var(--field-border, var(--border));
+  background: var(--field-bg, transparent);
+}
+
+.manual-exe-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+/* Once a file is chosen the tile shows that program's own icon instead of the import glyph. */
+.manual-exe-icon.has-icon {
+  background: center / 28px no-repeat;
+}
+.manual-exe-icon.has-icon::before {
+  content: none;
+}
+
+.manual-exe-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.manual-exe-action {
   overflow: hidden;
+  font-family: var(--font-strong);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-#manual-game-note {
-  margin: 2px 0 0;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 24%, transparent);
-  border-radius: var(--radius-sm);
+.manual-exe-caret {
   color: var(--text-muted);
-  background: color-mix(in srgb, var(--surface-sunken) 34%, transparent);
+}
+
+#manual-game-exe-path {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#manual-game-exe-path:empty {
+  display: none;
+}
+
+/* A quiet line beside the buttons, not a callout of its own. */
+#manual-game-note {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
   font: var(--fs-sm) var(--font-body);
 }
 
 #manual-game-note i {
   margin-right: 6px;
-  color: var(--accent);
+  color: var(--text-muted);
+}
+
+#manual-game .footer {
+  align-items: center;
+}
+
+/* Native selects in forms read like the app's other dropdowns: a chevron, never the system arrow
+   (ui/selectMenu.js already opens the app's own list for them). */
+.manual-game-fields select,
+.onboarding-step select,
+.game-notification-field select {
+  appearance: none;
+  padding-right: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238b98ad' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 11px 8px;
+  cursor: pointer;
 }
 
 .simple-modal .footer {
@@ -1195,6 +1333,82 @@ body.is-resizing #game-list {
   height: 20px;
   border-radius: var(--radius-xs);
   object-fit: cover;
+}
+#sort-box .collection-filter[aria-expanded='true'] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* The collections menu (ui/collections.js): the dropdown panel's look, with a marker per row. */
+.collection-menu {
+  min-width: 240px;
+  max-width: 340px;
+  max-height: min(60vh, 460px);
+}
+.collection-menu .select-menu-option {
+  gap: 10px;
+}
+.collection-menu .select-menu-option:hover,
+.collection-menu .select-menu-option:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+.collection-menu-marker {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-xs);
+  color: var(--collection-color, var(--text-muted));
+  background: color-mix(in srgb, var(--collection-color, var(--text-muted)) 18%, transparent);
+  font-size: var(--fs-xs);
+  object-fit: cover;
+}
+.collection-menu-marker.is-all,
+.collection-menu-marker.is-new {
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--text-muted) 14%, transparent);
+}
+.collection-menu-count {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+/* Shown on the row under the pointer or the keyboard, so the list stays quiet at rest. */
+.collection-menu-edit {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  background: transparent;
+  font-size: var(--fs-2xs);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--dur-fast) ease,
+    background-color var(--dur-fast) ease;
+}
+.collection-menu-row:hover .collection-menu-edit,
+.collection-menu-row:focus-visible .collection-menu-edit {
+  opacity: 1;
+}
+.collection-menu-edit:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+}
+.collection-menu-separator {
+  height: 1px;
+  margin: 5px 6px;
+  background: var(--set-hairline-soft, var(--border));
 }
 
 /* Sort: a three-state segmented control - normal, reversed, then cleared. */
@@ -1330,6 +1544,55 @@ body.is-resizing #game-list {
 }
 .aw-collection-image-row [hidden] {
   display: none;
+}
+/* The name and, beside it, the filter button as it will look. */
+.aw-collection-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aw-collection-name-row .aw-prompt-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.aw-collection-preview {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 8px;
+  max-width: 45%;
+  height: 34px;
+  padding: 0 12px 0 5px;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--collection-color, var(--accent)) 35%, var(--border));
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+.aw-collection-preview .collection-menu-marker {
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+}
+.aw-collection-preview-name {
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aw-collection-note {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+.aw-collection-note i {
+  color: var(--accent);
 }
 
 #main-footer {
@@ -1479,9 +1742,9 @@ body.is-resizing #game-list {
   display: block;
   box-sizing: border-box;
   border-radius: var(--radius-pill);
-  /* A flat fill, no inset ring: the ring blended into the track and made the empty part look
-     thinner than the filled one. */
-  background: color-mix(in srgb, var(--border) 34%, transparent);
+  /* The profile bar's flat track, no inset ring: the ring blended into the track and made the
+     empty part look thinner than the filled one. */
+  background: color-mix(in srgb, var(--border) 26%, transparent);
 }
 
 .loading .progressBar .meter {
@@ -2527,12 +2790,10 @@ body.is-resizing #game-list {
 .achievement .progressBar {
   height: 18px;
   position: relative;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-sunken) 82%, var(--bg-base)),
-    var(--surface-sunken)
-  );
-  padding: 1px;
+  /* Flat and edge to edge like every other bar: with a border and a 1px gap the fill sat 4px
+     thinner than its track. */
+  background: color-mix(in srgb, var(--border) 26%, transparent);
+  padding: 0;
   margin-top: 8px;
   font-family: var(--font-body);
   width: min(52%, 560px);
@@ -2540,9 +2801,9 @@ body.is-resizing #game-list {
   display: none;
   overflow: hidden;
   border-radius: var(--radius-pill);
-  border: 1px solid color-mix(in srgb, var(--border) 24%, transparent);
+  border: 0;
   box-sizing: border-box;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, calc(0.45 * var(--shadow-scale)));
+  box-shadow: none;
 }
 
 .achievement .progressBar > .meter {
@@ -2702,6 +2963,28 @@ body.is-resizing #game-list {
 }
 
 .achievement.trophy-grade.rarity-bronze .stats .community {
+  color: var(--trophy-bronze);
+}
+
+/* A PlayStation trophy's figure already says everything ("Platinum · 7.1% · Very rare") and wears
+   the colour of its grade, the same as the cup beside its name. */
+.achievement.ps-trophy .stats .community .global-stat {
+  display: none;
+}
+
+.achievement.ps-trophy[data-trophy='platinum'] .stats .community {
+  color: var(--trophy-platinum);
+}
+
+.achievement.ps-trophy[data-trophy='gold'] .stats .community {
+  color: var(--trophy-gold);
+}
+
+.achievement.ps-trophy[data-trophy='silver'] .stats .community {
+  color: var(--trophy-silver);
+}
+
+.achievement.ps-trophy[data-trophy='bronze'] .stats .community {
   color: var(--trophy-bronze);
 }
 
@@ -3225,28 +3508,33 @@ body.is-resizing #game-list {
 */
 
 #settings .box .content::-webkit-scrollbar,
-.onboarding-step::-webkit-scrollbar {
+.onboarding-step::-webkit-scrollbar,
+.gh-technical-dump::-webkit-scrollbar {
   width: 11px;
 }
 #settings .box .content::-webkit-scrollbar-track,
-.onboarding-step::-webkit-scrollbar-track {
+.onboarding-step::-webkit-scrollbar-track,
+.gh-technical-dump::-webkit-scrollbar-track {
   background: transparent;
   margin-block: 9px;
 }
 #settings .box .content::-webkit-scrollbar-thumb,
-.onboarding-step::-webkit-scrollbar-thumb {
+.onboarding-step::-webkit-scrollbar-thumb,
+.gh-technical-dump::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
   border-radius: var(--radius-sm);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
 #settings .box .content::-webkit-scrollbar-thumb:hover,
-.onboarding-step::-webkit-scrollbar-thumb:hover {
+.onboarding-step::-webkit-scrollbar-thumb:hover,
+.gh-technical-dump::-webkit-scrollbar-thumb:hover {
   background: var(--border);
   background-clip: padding-box;
 }
 #settings .box .content::-webkit-scrollbar-corner,
-.onboarding-step::-webkit-scrollbar-corner {
+.onboarding-step::-webkit-scrollbar-corner,
+.gh-technical-dump::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -3816,11 +4104,13 @@ body.is-resizing #game-list {
   z-index: 30;
 }
 
+/* The guide is the Settings window's twin: same scrim, same header, container, pane and footer
+   tokens, so a theme recolours both alike. */
 #onboarding .overlay {
   position: absolute;
   inset: 0;
   background: var(--set-scrim);
-  backdrop-filter: blur(8px) saturate(0.78);
+  background-image: var(--set-scrim-texture);
 }
 
 #onboarding.is-first-run .overlay {
@@ -3832,9 +4122,8 @@ body.is-resizing #game-list {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(980px, calc(100vw - 48px));
-  height: min(640px, calc(100vh - 78px));
-  max-height: calc(100vh - 78px);
+  width: min(1100px, calc(100vw - 48px));
+  height: min(760px, calc(100vh - 78px));
   display: flex;
   flex-direction: column;
   border: var(--dialog-border);
@@ -3849,13 +4138,13 @@ body.is-resizing #game-list {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 16px 22px;
-  background: rgba(6, 13, 22, 0.34);
+  padding: 14px 24px;
 }
 
 .onboarding-header {
   justify-content: space-between;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
+  background: var(--set-header-bg);
+  border-bottom: 1px solid var(--set-hairline-soft);
 }
 
 .onboarding-brand {
@@ -3866,15 +4155,13 @@ body.is-resizing #game-list {
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
 
 .onboarding-header h1 {
-  margin: 3px 0 0;
-  color: var(--text);
+  margin: 2px 0 0;
+  color: var(--set-title);
   font-family: var(--font-strong);
-  font-size: var(--fs-3xl);
+  font-size: var(--fs-xl);
   letter-spacing: 0;
 }
 
@@ -3904,9 +4191,8 @@ body.is-resizing #game-list {
   width: 14.2857%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 82%, white 18%));
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
-  transition: width 0.2s ease;
+  background: var(--accent);
+  transition: width var(--dur-base) var(--ease-out);
 }
 
 .icon-button {
@@ -3917,54 +4203,65 @@ body.is-resizing #game-list {
   border-radius: var(--radius-sm);
 }
 
+/* Only the step pane scrolls: the body never does, so there is one scrollbar whatever the size. */
 .onboarding-body {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 205px minmax(0, 1fr);
-  gap: 20px;
-  padding: 20px 22px;
-  overflow: auto;
+  grid-template-columns: 206px minmax(0, 1fr);
+  gap: 18px;
+  padding: 18px 24px;
+  overflow: hidden;
+  background: var(--set-container-bg);
 }
 
 .onboarding-steps {
   display: grid;
   align-content: start;
-  gap: 5px;
-  padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--border) 8%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-sunken) 42%, transparent);
+  gap: 4px;
 }
 
 .onboarding-steps button {
   position: relative;
-  min-height: 42px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 11px;
-  border: 1px solid transparent;
+  padding: 11px 14px;
+  border: 0;
   border-radius: var(--radius-sm);
   color: var(--text-muted);
   background: transparent;
   text-align: left;
   font-family: var(--font-body);
+  font-size: var(--fs-md);
   cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .onboarding-steps button i {
   flex: 0 0 18px;
   width: 18px;
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-muted) 82%, transparent);
   text-align: center;
 }
 
-.onboarding-steps button.active {
+.onboarding-steps button:not(.active):hover {
   color: var(--text);
-  background: color-mix(in srgb, var(--accent) 24%, transparent);
-  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
-  box-shadow: inset 3px 0 0 var(--accent);
+  background: color-mix(in srgb, var(--text) 7%, transparent);
+}
+
+.onboarding-steps button.active {
+  color: var(--set-title);
+  background: linear-gradient(90deg, var(--accent-soft), color-mix(in srgb, var(--accent) 4%, transparent));
+  font-family: var(--font-strong);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
+}
+
+.onboarding-steps button.active i {
+  color: var(--accent);
 }
 
 /* A step whose label wraps to two lines must not squeeze the badge into an oval, so it neither
@@ -3997,16 +4294,16 @@ body.is-resizing #game-list {
 .onboarding-panel {
   min-height: 0;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--border) 11%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface-sunken) 62%, transparent);
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: var(--radius-sm);
+  background: var(--set-content-bg);
 }
 
 .onboarding-step {
   display: none;
   height: 100%;
   box-sizing: border-box;
-  padding: 24px;
+  padding: 22px 26px;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -4015,26 +4312,25 @@ body.is-resizing #game-list {
   display: block;
 }
 
+/* A plain heading, its icon inline like a Settings card title. */
 .step-heading {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 16px;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .step-heading > i {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
   flex: 0 0 auto;
-  border-radius: var(--radius-sm);
+  width: 22px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-size: var(--fs-xl);
+  text-align: center;
 }
 
 .step-heading h2 {
   margin: 0;
+  color: var(--set-title);
   font-family: var(--font-strong);
   font-size: var(--fs-2xl);
   letter-spacing: 0;
@@ -4063,7 +4359,7 @@ body.is-resizing #game-list {
   padding: 14px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+  background: var(--set-panel);
 }
 
 .onboarding-cards i {
@@ -4102,8 +4398,10 @@ body.is-resizing #game-list {
   cursor: pointer;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
-  transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+  background: var(--set-panel);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
 }
 
 .onboarding-mode-card i {
@@ -4126,13 +4424,12 @@ body.is-resizing #game-list {
 
 .onboarding-mode-card:hover {
   border-color: color-mix(in srgb, var(--accent) 32%, transparent);
-  background: color-mix(in srgb, var(--surface-sunken) 62%, transparent);
+  background: var(--set-row-hover);
 }
 
 .onboarding-mode-card.is-selected {
   border-color: color-mix(in srgb, var(--accent) 58%, transparent);
-  background: linear-gradient(180deg, var(--accent-soft), color-mix(in srgb, var(--accent) 5%, transparent));
-  box-shadow: 0 10px 22px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
+  background: var(--accent-soft);
 }
 
 .onboarding-mode-card.is-selected strong {
@@ -4173,7 +4470,7 @@ body.is-resizing #game-list {
   padding: 12px 14px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+  background: var(--set-panel);
 }
 
 .onboarding-detect-head {
@@ -4314,10 +4611,10 @@ body.is-resizing #game-list {
   grid-template-columns: 22px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 5px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+  background: var(--set-panel);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
 }
@@ -4351,16 +4648,18 @@ body.is-resizing #game-list {
   outline-offset: 1px;
 }
 
+/* Six tips, three by two: every one exists in both interface modes. */
 .onboarding-features {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .onboarding-features > div {
   grid-template-columns: 22px minmax(0, 1fr);
+  align-content: start;
   column-gap: 10px;
-  row-gap: 2px;
-  padding: 10px 12px;
+  row-gap: 3px;
+  padding: 12px 14px;
 }
 
 .onboarding-features > div > i {
@@ -4370,12 +4669,31 @@ body.is-resizing #game-list {
 }
 
 .onboarding-features strong {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
 }
 
-/* Simple hides Settings > Advanced, where the backup lives, so the tip would point at nothing. */
-#onboarding.is-simple .onboarding-features [data-advanced] {
+/* Simple mode: Games keeps the search, Sources the accounts, Look the theme and the preset. Each
+   folded part comes back on its own link (folders) or from the Steam-off note (sources). */
+#onboarding.is-simple:not(.is-folders-open) .onboarding-folder-manual,
+#onboarding.is-simple:not(.is-folders-open) .onboarding-lists,
+#onboarding.is-simple:not(.is-sources-open) #onboard-sources-details,
+#onboarding.is-simple #onboard-more-details,
+#onboarding.is-simple .onboarding-notification-field > label {
   display: none;
+}
+
+#onboarding:not(.is-simple) #onboard-add-folder-more,
+#onboarding.is-folders-open #onboard-add-folder-more {
+  display: none;
+}
+
+#onboarding.is-simple .onboarding-notification-field {
+  grid-template-columns: auto;
+}
+
+#onboarding.is-simple .onboarding-notification-field .onboarding-test-button {
+  grid-row: auto;
+  grid-column: 1;
 }
 
 .onboarding-footer-start {
@@ -4434,7 +4752,7 @@ body.is-resizing #game-list {
   padding: 12px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 44%, transparent);
+  background: var(--set-panel);
 }
 
 .onboarding-source-group + .onboarding-source-group {
@@ -4469,9 +4787,51 @@ body.is-resizing #game-list {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
+  border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 54%, transparent);
+  background: var(--set-control-bg);
+}
+
+/* RetroAchievements has no sign-in window: its two fields open under the row. */
+.onboarding-account-form {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--set-hairline-soft);
+}
+
+.onboarding-account-form[hidden] {
+  display: none;
+}
+
+.onboarding-account-form .onboarding-link {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.onboarding-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: var(--radius-xs);
+  color: var(--accent);
+  background: transparent;
+  font: var(--fs-sm) / 1.3 var(--font-strong);
+  cursor: pointer;
+}
+
+.onboarding-link:hover {
+  text-decoration: underline;
+}
+
+.onboarding-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .onboarding-account-logo {
@@ -4562,9 +4922,9 @@ body.is-resizing #game-list {
   gap: 5px 10px !important;
   min-width: 0;
   padding: 9px 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
+  border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 54%, transparent);
+  background: var(--set-control-bg);
 }
 
 .onboarding-source-name {
@@ -4747,14 +5107,14 @@ body.is-resizing #game-list {
   font-size: var(--fs-sm);
 }
 
+/* No scroller of its own: a long list grows and the step scrolls, one scrollbar for the pane. */
 .onboarding-lists ul {
-  min-height: 84px;
-  max-height: 150px;
-  overflow-y: auto;
+  min-height: 42px;
+  margin: 0;
   padding: 5px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 40%, transparent);
+  background: var(--set-control-bg);
 }
 
 .onboarding-lists li {
@@ -4832,7 +5192,8 @@ body.is-resizing #game-list {
 
 .onboarding-footer {
   justify-content: space-between;
-  border-top: 1px solid color-mix(in srgb, var(--border) 10%, transparent);
+  background: var(--set-footer-bg);
+  border-top: 1px solid var(--set-hairline-soft);
 }
 
 #onboarding-status {
@@ -4856,10 +5217,12 @@ body.is-resizing #game-list {
   gap: 9px;
 }
 
+/* Narrow window: the steps become a row of icons above the pane, which keeps the only scrollbar. */
 @media (max-width: 900px) {
   .onboarding-body {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
   }
 
   .onboarding-steps {
@@ -4868,18 +5231,51 @@ body.is-resizing #game-list {
 
   .onboarding-steps button {
     justify-content: center;
+    min-height: 38px;
+    padding: 8px;
   }
 
   .onboarding-steps button span {
     display: none;
   }
 
+  /* Pinned to its icon: pushed to the cell's edge it read as the next step's badge. */
+  .onboarding-steps button.is-complete:not(.active)::after {
+    position: absolute;
+    top: 3px;
+    left: calc(50% + 6px);
+    width: 14px;
+    height: 14px;
+    margin: 0;
+  }
+}
+
+/* The grids follow the pane's own width, which the nav column and the window both change. */
+.onboarding-step {
+  container-type: inline-size;
+}
+
+@container (max-width: 720px) {
+  .onboarding-features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 560px) {
   .onboarding-cards,
+  .onboarding-features,
   .onboarding-form-grid,
   .onboarding-lists,
   .onboarding-mode-choice,
+  .onboarding-folder-actions,
+  .onboarding-account-form,
+  .onboarding-source-list,
   #onboard-detect-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .onboarding-folder-actions .onboarding-link {
+    grid-column: auto;
   }
 }
 
@@ -5720,16 +6116,26 @@ body.is-resizing #game-list {
   position: relative;
 }
 
+/* Centred while the field is a square button; it slides to the start of the text once it opens. */
 #search-bar .wrapper > i {
   position: absolute;
   top: 50%;
-  left: 11px;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 3;
   display: block;
   color: var(--text-muted);
   opacity: 1;
   pointer-events: none;
+  transition:
+    left var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out),
+    color var(--dur-fast) ease;
+}
+
+#search-bar .wrapper:has(input[type='search']:focus, input[type='search'].has) > i {
+  left: 11px;
+  transform: translate(0, -50%);
 }
 
 #search-bar .wrapper:hover > i,
@@ -6527,10 +6933,12 @@ body {
 #game-list .game-box {
   width: var(--library-card-width);
   border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  /* No backdrop-filter here: a blur per tile is re-sampled for every tile on every scrolled frame,
+     and traced on a 84-tile library it cost about a third of the frames the compositor presents.
+     The panel behind already blurs the page, so a slightly more opaque fill reads the same. */
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
   border-color: color-mix(in srgb, var(--border) 20%, transparent);
   box-shadow: 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.045);
-  backdrop-filter: blur(10px) saturate(1.04);
 }
 
 #game-list .game-box .header {
@@ -6701,7 +7109,7 @@ body {
 */
 #game-list .game-box .info .progressBar {
   --bar-row: 14px;
-  --bar-track: 8px;
+  --bar-track: 7px;
   --bar-label: 40px;
   --bar-inset: calc((var(--bar-row) - var(--bar-track)) / 2);
   position: relative;
@@ -6726,8 +7134,9 @@ body {
   inset: var(--bar-inset) var(--bar-label) var(--bar-inset) 0;
   transform: none;
   border-radius: var(--radius-pill);
+  /* A flat track: an inset ring here made the empty part look thinner than the fill. Sunken rather
+     than the profile bar's tint, which vanishes on the lighter tile surface. */
   background: color-mix(in srgb, var(--surface-sunken) 85%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border) 18%, transparent);
 }
 
 #game-list .game-box .info .progressBar > .meter {
@@ -7417,6 +7826,23 @@ body {
   animation: settings-modal-panel-in 0.18s var(--ease-out) both;
 }
 
+/* Closing (Cancel or Save): the panel sinks back and fades while the blur lifts. */
+@keyframes settings-modal-panel-out {
+  to {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 14px)) scale(0.96);
+  }
+}
+
+#settings.is-closing > .overlay {
+  animation: settings-modal-scrim-in 0.22s ease-in reverse both;
+}
+
+#settings.is-closing > .box {
+  animation: settings-modal-panel-out 0.22s cubic-bezier(0.4, 0, 1, 1) both;
+  pointer-events: none;
+}
+
 #game-config .box {
   width: min(680px, calc(100vw - 48px));
 }
@@ -7736,7 +8162,8 @@ body {
 /* Overlay-only notification settings collapse smoothly when the transport is set to
    Windows toast: settings.js drives max-height from each row's real height to 0 (and
    back), so the animation matches whatever the localized labels/help make the row. */
-#settings #options-notify-overlay > li {
+#settings #options-notify-overlay > li,
+#settings .notify-card {
   overflow: hidden;
   transition:
     max-height 0.3s ease,
@@ -7748,7 +8175,8 @@ body {
     background 0.16s ease;
 }
 
-#settings #options-notify-overlay > li.overlay-setting-collapsed {
+#settings #options-notify-overlay > li.overlay-setting-collapsed,
+#settings .notify-card.overlay-setting-collapsed {
   max-height: 0 !important;
   min-height: 0 !important;
   opacity: 0;
@@ -7851,7 +8279,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   color: var(--text-muted);
   font: 900 var(--fs-2xs) 'Font Awesome 5 Free';
   pointer-events: none;
-  transition: color var(--dur-fast) ease;
+  transition:
+    color var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch):hover {
@@ -7860,6 +8290,17 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> .previous):not(.is-switch):hover::after {
   color: var(--text);
+}
+
+/* While its list is open the cell keeps the accent edge and the chevron turns over. */
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> select[aria-expanded='true']):not(.is-switch) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--set-control-bg));
+}
+
+html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> select[aria-expanded='true']):not(.is-switch)::after {
+  color: var(--accent);
+  transform: translateY(-50%) rotate(180deg);
 }
 
 /* On/off rows (ui/settingsSwitch.js): the select and its arrows stay for the handlers, out of sight. */
@@ -7908,6 +8349,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  /* The "A" of "Activé" inks a pixel left of its box: give the clip that pixel without moving the text. */
+  padding-inline: 2px;
+  margin-inline: -2px;
 }
 
 #settings .setting-switch-track {
@@ -8043,13 +8487,13 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   fall onto two lines in the 212px column every one-button row uses, which reads as two settings
   rather than one row with a copy and a check.
 */
-#settings #options-notify-overlay li .right.action-right.obs-source-actions {
+#settings #options-notify-obs li .right.action-right.obs-source-actions {
   width: auto;
   min-width: 260px;
   max-width: 300px;
   gap: 10px;
 }
-#settings #options-notify-overlay li .right.action-right.obs-source-actions .inline-action-btn {
+#settings #options-notify-obs li .right.action-right.obs-source-actions .inline-action-btn {
   flex: 1 1 0;
   width: auto;
   white-space: nowrap;
@@ -8077,14 +8521,86 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   text-align: left;
 }
 
-/* Compact, square-ish icon-only buttons that sit inline next to a setting's label. */
-#btn-overlay-reposition,
-#btn-import-sound {
-  min-height: 26px;
-  padding: 4px 8px;
-  margin-left: 8px;
-  border-radius: var(--radius-sm);
-  vertical-align: middle;
+/* Icon-only buttons next to a setting's label (designer, reposition, import, delete): one square
+   size everywhere, so a row with two of them reads like a row with one. */
+#settings .arrow-list li .left > .inline-action-btn {
+  flex: 0 0 auto;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin-left: 2px;
+  font-size: var(--fs-sm);
+}
+#settings .arrow-list li .left > .inline-action-btn + .inline-action-btn {
+  margin-left: -2px;
+}
+#settings .arrow-list li .left > .inline-action-btn > i {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+/*
+  Emulator card: one line per emulator, its preset and its sound side by side under two captions.
+  Each pick dims on its own (settingsDependencies), since the sound also serves Windows toasts.
+*/
+#settings #options-notify-emulators > li.emu-notify-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  row-gap: 10px;
+  min-height: 0;
+  padding-top: 10px;
+  padding-bottom: 4px;
+  border-bottom: 0;
+}
+#settings #options-notify-emulators > li.emu-notify-head:hover {
+  background: transparent;
+}
+#settings .emu-notify-desc {
+  flex: 1 0 100%;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.3;
+}
+#settings .emu-picks {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  margin-left: auto;
+}
+#settings .emu-pick,
+#settings .emu-pick-caption {
+  box-sizing: border-box;
+  width: 172px;
+}
+#settings .emu-pick-caption {
+  padding-left: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-strong);
+  font-size: var(--fs-xs);
+}
+#settings #options-notify-emulators > li.emu-notify-row {
+  align-items: center;
+}
+/* Same edges as the setting rows of the cards above it, which do not bleed. */
+#settings #options-notify-emulators > li {
+  margin: 0;
+}
+#settings .arrow-list li .emu-pick .right {
+  width: 100%;
+  margin: 0;
+}
+#settings .emu-pick.is-inactive {
+  opacity: 0.42;
+}
+#settings .emu-pick.is-inactive .right {
+  pointer-events: none;
 }
 
 #settings .content[data-view='folder'] .disclaimer,
@@ -8295,15 +8811,14 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   background: color-mix(in srgb, var(--set-surface-sunken) 42%, transparent);
 }
 
+/* Sentence case, like the Settings card titles: four tiers of small capitals read as noise. */
 #settings .help-block-title {
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0 0 10px;
-  color: var(--text);
-  font: 700 var(--fs-xs) var(--font-body);
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
+  color: var(--set-title);
+  font: var(--fs-md) var(--font-strong);
 }
 
 #settings .help-block-title > i {
@@ -8391,12 +8906,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 #settings .help-group-title {
-  margin: 0 0 6px;
+  margin: 4px 0 8px;
   color: var(--text-muted);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: var(--fs-sm) var(--font-strong);
 }
 
 #settings .help-grid {
@@ -8414,7 +8926,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.018);
 }
 
-#settings .help-panel[open] {
+#settings .help-panel[open],
+#settings .help-panel.is-wide {
   grid-column: 1 / -1;
 }
 
@@ -9145,6 +9658,17 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   transition: background-color var(--dur-fast) var(--ease-out);
 }
 
+/* The hover wash is a soft rounded plate, not a hard-cornered band across the card. */
+#settings .arrow-list > ul > li,
+#settings .emulator-list > li,
+#settings #defaultdir > li,
+#settings #dirlist > li,
+#settings #libdirlist > li,
+#settings #blacklist-manager > li,
+#settings #folder-rescan-list > li {
+  border-radius: var(--radius-sm);
+}
+
 #settings .arrow-list > ul > li:hover,
 #settings .emulator-list > li:hover,
 #settings #defaultdir > li:hover,
@@ -9231,7 +9755,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   height: 28px;
   color: var(--text);
   font-family: var(--font-strong);
-  font-size: var(--fs-sm);
+  /* The size of the switches' Enabled/Disabled, so both kinds of value cell read alike. */
+  font-size: var(--fs-md);
   font-weight: 700;
 }
 
@@ -10695,13 +11220,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   still should not, because then the file actions would sit level with the primary one and read
   as its equals. One arrangement at every size is also one arrangement to get right.
 */
-/* Two lines: the Import/Export pair, then the two SAN imports side by side under it. */
+/* One line: the Import/Export pair; the SAN imports are entries of the Import menu. */
 #settings .pd-actions-files {
-  display: grid;
-  grid-template-columns: repeat(2, max-content) minmax(0, 1fr);
-  justify-items: start;
+  display: flex;
   align-items: center;
-  gap: 6px 8px;
   /*
     A full-width basis is what puts it on its own line, so nothing may clamp it here: a max-width
     on a flex item is applied to the hypothetical size the browser breaks lines by, so capping the
@@ -10719,10 +11241,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
    a longer label in another language grows both of them and wraps inside them, never past them. */
 #settings .pd-file-pair {
   display: grid;
-  grid-column: 1 / -1;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
-  max-width: 100%;
+  width: min(100%, 420px);
 }
 
 #settings #options-notify-designer .pd-file-pair .inline-action-btn {
@@ -10731,34 +11252,116 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 /*
-  The SAN converter. It reads somebody else's format, which almost nobody needs and nobody needs
-  twice, so its two buttons are quieter: no filled surface, and the border only appears when it is
-  pointed at. They start on the pair's left edge; centred under it, they read as stray text.
+  The Import menu: the three sources a preset can come from, in a panel drawn like the dropdown
+  lists (ui/selectMenu.js). It opens upward: this row closes the card, whose list clips anything
+  hanging below it. Shown by a class (settings.js), so leaving can animate too.
 */
-#settings #options-notify-designer .pd-actions .pd-quiet-btn {
-  width: auto;
-  max-width: 100%;
-  padding: 0 12px;
-  border-color: transparent;
-  background: transparent;
+#settings .pd-import {
+  position: relative;
+  min-width: 0;
+}
+
+#settings .pd-import-caret {
   color: var(--text-muted);
-  font-size: 0.92em;
-  white-space: nowrap;
+  font-size: var(--fs-2xs);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 
-#settings #options-notify-designer .pd-actions .pd-quiet-btn i {
-  color: inherit;
+#settings .pd-import.is-open .pd-import-caret {
+  color: var(--accent);
+  transform: rotate(180deg);
 }
 
-/* The bare button's padding would otherwise indent its icon past the edge of the pair above. */
-#settings #options-notify-designer .pd-actions #btn-import-san {
-  margin-left: -12px;
+#settings .pd-import.is-open > .inline-action-btn {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--control-bg));
 }
 
-#settings #options-notify-designer .pd-actions .pd-quiet-btn:hover {
-  border-color: color-mix(in srgb, var(--border) 60%, transparent);
-  background: color-mix(in srgb, var(--set-surface) 70%, transparent);
+#settings .pd-import-list {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-sizing: border-box;
+  min-width: 100%;
+  width: max-content;
+  max-width: 340px;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--set-hairline, var(--border)) 85%, var(--accent) 15%);
+  border-radius: var(--radius-md);
+  background: var(--set-surface-elevated, var(--surface-elevated));
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, calc(0.36 * var(--shadow-scale))),
+    0 3px 10px rgba(0, 0, 0, calc(0.2 * var(--shadow-scale)));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px) scale(0.97);
+  transform-origin: bottom left;
+  transition:
+    opacity 140ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    visibility 0s linear 180ms;
+}
+
+#settings .pd-import.is-open .pd-import-list {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+  transition:
+    opacity 140ms var(--ease-out),
+    transform 180ms var(--ease-out),
+    visibility 0s;
+}
+
+#settings .pd-import.is-closing .pd-import-list {
+  transition:
+    opacity 100ms ease-in,
+    transform 100ms ease-in,
+    visibility 0s linear 100ms;
+}
+
+#settings .pd-import-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
   color: var(--text);
+  font: var(--fs-md) / 1.25 var(--font-body);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+#settings .pd-import-item > i {
+  width: 16px;
+  color: var(--set-icon);
+  text-align: center;
+}
+
+#settings .pd-import-item:hover,
+#settings .pd-import-item:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #settings .pd-import-list,
+  #settings .pd-import.is-open .pd-import-list,
+  #settings .pd-import.is-closing .pd-import-list {
+    transition: none;
+  }
 }
 
 /* Its own line, always: as a flex sibling of the buttons a long message used to shorten the group
@@ -10872,34 +11475,64 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   }
 }
 
+/* The Settings > Folders "rich button": icon column, title over a sub-label. The search is the
+   suggested one, so it carries the accent as an outline and a tint, never as a solid fill that
+   would leave its sub-label unreadable. */
 .onboarding-folder-actions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
   gap: 10px;
 }
 
 .onboarding-folder-actions .inline-action-btn {
-  min-height: 64px;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 14px;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: center;
+  justify-content: stretch;
+  gap: 2px 10px;
+  padding: 9px 14px;
   text-align: left;
   line-height: 1.2;
+  white-space: normal;
 }
 
-.onboarding-folder-actions .inline-action-btn i {
-  margin-bottom: 3px;
+.onboarding-folder-actions .inline-action-btn > i {
+  grid-row: 1 / span 2;
+  justify-self: center;
+  color: var(--set-icon);
 }
 
-.onboarding-folder-actions .inline-action-btn span {
+.onboarding-folder-actions .inline-action-btn > span {
+  font-family: var(--font-strong);
   font-size: var(--fs-md);
 }
 
-.onboarding-folder-actions .inline-action-btn small {
+.onboarding-folder-actions .inline-action-btn > small {
   color: var(--text-muted);
   font-size: var(--fs-xs);
   font-weight: 400;
+}
+
+.onboarding-folder-actions .inline-action-btn.is-recommended {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: var(--accent-soft);
+}
+
+.onboarding-folder-actions .inline-action-btn.is-recommended:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.onboarding-folder-actions .inline-action-btn.is-recommended > i {
+  color: var(--accent);
+}
+
+.onboarding-folder-actions .onboarding-link {
+  grid-column: span 2;
+  justify-self: start;
+  margin-left: 6px;
 }
 
 .onboarding-lists .list-title,
@@ -11631,18 +12264,14 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   margin-top: 12px;
 }
 
-#theme-library .theme-library-actions .btn {
-  min-height: 30px;
-  padding: 4px 14px;
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-sm);
-}
-
+/* No reserved line: an empty status left a blank band under the buttons. */
 #theme-library .theme-library-status {
   margin: 10px 0 0;
   font-size: var(--fs-sm);
   color: var(--text-muted);
-  min-height: 16px;
+}
+#theme-library .theme-library-status:empty {
+  display: none;
 }
 
 #theme-library .theme-library-status.ok {
@@ -12488,14 +13117,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   outline-offset: 3px;
 }
 
-#user-info .info .profile-stat-hint {
-  margin-left: 2px;
-  font-size: 0.85em;
-  color: var(--text-muted);
-  opacity: 0.75;
-  cursor: help;
-}
-
 #user-info .info .stats #profile-completion-average {
   cursor: help;
 }
@@ -12515,6 +13136,19 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #home.profile-compact #user-info {
   min-height: 0;
   padding: 6px 12px;
+}
+
+/* Folding or unfolding the band: its content settles into the new layout instead of snapping. */
+#user-info.is-refolding > user-avatar,
+#user-info.is-refolding .info {
+  animation: profile-refold 0.28s var(--ease-out);
+}
+
+@keyframes profile-refold {
+  from {
+    opacity: 0.3;
+    transform: translateY(-5px);
+  }
 }
 
 /* The avatar draws itself through :host; a rule on the element outranks it. */
@@ -12966,29 +13600,35 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   overflow-y: auto;
   overscroll-behavior: contain;
   box-sizing: border-box;
-  padding: 6px;
-  border: 1px solid var(--set-hairline, var(--border));
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, var(--set-hairline, var(--border)) 85%, var(--accent) 15%);
   border-radius: var(--radius-md);
   /* Fully opaque on purpose: the settings modal's own surface tokens are mixed down to 93% alpha,
      which is fine for a sheet that covers the window and wrong for a menu floating over a row -
      the values underneath showed straight through the list. */
-  background: var(--set-surface-elevated, var(--surface-elevated));
+  background:
+    linear-gradient(var(--set-surface-elevated, var(--surface-elevated)), var(--set-surface-elevated, var(--surface-elevated))),
+    var(--bg-base);
   /* The panel hangs off <body>, which sets no font: the rows would take the engine default serif. */
   font-family: var(--font-body);
   /* Not --shadow-dialog: that one is tuned for a full-window sheet and sits under a small menu as a
      grey smudge on the light theme. Same alphas as the cards, dialled down with --shadow-scale. */
-  box-shadow: 0 16px 36px rgba(0, 0, 0, calc(0.34 * var(--shadow-scale))), 0 2px 8px rgba(0, 0, 0, calc(0.18 * var(--shadow-scale)));
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, calc(0.36 * var(--shadow-scale))),
+    0 3px 10px rgba(0, 0, 0, calc(0.2 * var(--shadow-scale))),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   /* The trigger keeps the focus, so the panel itself must never look focusable. */
   outline: none;
   opacity: 0;
-  transform: translateY(-4px) scale(0.985);
-  transform-origin: top center;
-  transition: opacity 120ms ease, transform 120ms ease;
+  /* A short slide, no scale: scaling blurs the text for the length of the animation. */
+  transform: translateY(-4px);
+  transition:
+    opacity 120ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
 
 .select-menu.is-above {
-  transform: translateY(4px) scale(0.985);
-  transform-origin: bottom center;
+  transform: translateY(4px);
 }
 
 .select-menu.is-open {
@@ -12996,19 +13636,50 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   transform: none;
 }
 
+/* Leaving is quicker than arriving, and nothing in it can be clicked any more. */
+.select-menu.is-closing {
+  pointer-events: none;
+  transition:
+    opacity 90ms ease-in,
+    transform 90ms ease-in;
+}
+
 .select-menu-option {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 32px;
-  padding: 6px 10px;
+  /* border-box: the panel hangs off <body>, outside the reset, and min-height plus padding made 44px rows. */
+  box-sizing: border-box;
+  min-height: 30px;
+  padding: 5px 10px 5px 14px;
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: var(--fs-base);
+  font-size: var(--fs-md);
   line-height: 1.25;
   cursor: pointer;
   /* A value is one row: a long theme name is cut with an ellipsis rather than reflowing the list. */
   white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+/* The current value is marked by a thin accent bar and a tick, not a filled block. */
+.select-menu-option::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  opacity: 0;
+  transform: translateY(-50%) scaleY(0.4);
+  transition:
+    opacity var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .select-menu-label {
@@ -13023,27 +13694,33 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   flex: 0 0 auto;
   font-size: var(--fs-xs);
   color: var(--accent);
-  visibility: hidden;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity var(--dur-fast) ease,
+    transform var(--dur-fast) var(--ease-out);
 }
 
 .select-menu-option.is-selected {
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--set-title, var(--text));
   font-weight: 600;
 }
 
+.select-menu-option.is-selected::before,
 .select-menu-option.is-selected .select-menu-tick {
-  visibility: visible;
+  opacity: 1;
+}
+.select-menu-option.is-selected::before {
+  transform: translateY(-50%);
+}
+.select-menu-option.is-selected .select-menu-tick {
+  transform: none;
 }
 
-/* Hover and keyboard land on the same highlight: the list is driven by either, and two different
-   "current row" styles in one list is one too many. */
+/* Hover and keyboard land on the same neutral highlight: the list is driven by either, and an
+   accent wash on every hovered row competed with the bar that marks the current value. */
 .select-menu-option.is-active:not(.is-disabled) {
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-.select-menu-option.is-selected.is-active {
-  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
 .select-menu-option.is-disabled {
@@ -13052,34 +13729,89 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   opacity: 0.6;
 }
 
-.select-menu-group {
-  padding: 8px 10px 4px;
-  color: var(--text-muted);
-  font-size: var(--fs-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+/* Rows folded behind "More…" (options carrying data-more): they open in place, the list growing by
+   their height, instead of the menu closing and coming back longer. */
+.select-menu-more {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  height: 30px;
+  padding: 0 10px 0 14px;
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    height 200ms var(--ease-out),
+    opacity 140ms ease,
+    background-color var(--dur-fast) var(--ease-out);
+}
+.select-menu-more:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+}
+.select-menu-more > i {
+  font-size: var(--fs-2xs);
+}
+.select-menu-more.is-gone {
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.select-menu-extra {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms var(--ease-out);
+}
+.select-menu-extra.is-open {
+  grid-template-rows: 1fr;
+}
+.select-menu-extra-inner {
+  min-height: 0;
+  overflow: hidden;
 }
 
+.select-menu-group {
+  padding: 10px 10px 4px;
+  color: var(--text-muted);
+  font-family: var(--font-strong);
+  font-size: var(--fs-xs);
+}
+
+.select-menu-group:not(:first-child) {
+  margin-top: 4px;
+  border-top: 1px solid var(--set-hairline-soft, var(--border));
+}
+
+/* A thumb that can be seen at rest: the old one blended into the panel until it was hovered. No
+   reserved gutter: a list short enough to need no bar keeps its full width. */
 .select-menu::-webkit-scrollbar {
-  width: 11px;
+  width: 8px;
 }
 .select-menu::-webkit-scrollbar-track {
   background: transparent;
-  margin-block: 6px;
+  margin-block: 8px;
 }
 .select-menu::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--border) 70%, transparent);
-  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+  border-radius: var(--radius-pill);
   border: 3px solid transparent;
   background-clip: padding-box;
 }
 .select-menu::-webkit-scrollbar-thumb:hover {
-  background: var(--border);
+  background: color-mix(in srgb, var(--accent) 70%, var(--text-muted));
   background-clip: padding-box;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .select-menu {
+  .select-menu,
+  .select-menu.is-closing,
+  .select-menu-option,
+  .select-menu-option::before,
+  .select-menu-more,
+  .select-menu-extra,
+  .select-menu-tick {
     transition: none;
   }
 }

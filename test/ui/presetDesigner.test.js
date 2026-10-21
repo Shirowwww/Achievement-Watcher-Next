@@ -459,13 +459,15 @@ test('choosing a preset stays with the notification settings, with a way through
     notification settings. The designer is a workshop rather than a setting, so the row that picks a
     preset carries a button into it instead of the two being merged.
   */
-  const overlay = document.querySelector("#settings .container > section.content[data-view='notification'] #options-notify-overlay");
-  const chosen = overlay.querySelectorAll('select[id^="option_overlayPreset"]').map((node) => node.getAttribute('id'));
+  const tab = document.querySelector("#settings .container > section.content[data-view='notification']");
+  const overlay = tab.querySelector('#options-notify-overlay');
+  const chosen = tab.querySelectorAll('select[id^="option_overlayPreset"]').map((node) => node.getAttribute('id'));
   assert.deepEqual(chosen, [
     'option_overlayPreset',
     'option_overlayPresetXenia',
     'option_overlayPresetRpcs3',
     'option_overlayPresetShadps4',
+    'option_overlayPresetKytyps5',
   ]);
   // …so they keep saving through the binding that has always covered that tab.
   assert.match(settings, /section\.content\[data-view='notification'\]"\)\.on\('change', 'select, #option_overlayVolume', autosaveNotifications\)/);

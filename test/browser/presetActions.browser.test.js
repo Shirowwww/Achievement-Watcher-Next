@@ -47,7 +47,9 @@ const LABELS = {
   deleteLabel: ['Löschen', 'Delete'],
   importLabel: ['Importieren', 'Import'],
   exportLabel: ['Exportieren', 'Export'],
-  importSan: ['SAN-Design importieren', 'Import SAN theme'],
+  importMenuFile: ['Preset-Datei…', 'Preset file…'],
+  importMenuSan: ['SAN-Design…', 'SAN theme…'],
+  importMenuSanSetup: ['Aus SAN auf diesem PC', 'From SAN on this PC'],
 };
 
 const CHIPS = ['Slate', 'Midnight', 'Aurora', 'Paper', 'Neon', 'Terminal', 'Amber'];
@@ -115,9 +117,8 @@ async function measure(browser, language, viewport) {
         return { top: style.borderTopWidth, left: style.borderLeftWidth };
       })(),
       pair: box('.pd-file-pair'),
-      import: box('#btn-import-preset'),
+      import: box('#btn-import-menu'),
       export: box('#btn-export-preset'),
-      san: box('#btn-import-san'),
       create: box('#btn-create-preset'),
       overflows: document.documentElement.scrollWidth > innerWidth + 1,
     };
@@ -172,10 +173,11 @@ test('Import and Export are one pair of equal halves', async (t) => {
 });
 
 /*
-  The SAN converter reads someone else's format: kept available but quieter, no filled surface
-  and smaller text than the buttons above it.
+  The three sources (a preset file, a SAN theme, SAN on this PC) are entries of one Import menu:
+  hidden at rest, opening above the button since this row closes the card. Import and Export are
+  drawn alike, and the action the whole tab leads to is the only filled one.
 */
-test('the SAN import is a secondary action under the pair', async (t) => {
+test('Import opens one menu of the three sources, above the button', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) return t.skip(skipReason(failures));
   t.after(() => closeBrowser(browser, userDataDir));
@@ -183,35 +185,41 @@ test('the SAN import is a secondary action under the pair', async (t) => {
   const tab = await browser.newPage();
   await tab.setViewport(WIDE);
   await tab.setContent(page('de'), { waitUntil: 'domcontentloaded' });
-  const weights = await tab.evaluate(() => {
-    const read = (selector) => {
-      const node = document.querySelector(selector);
-      const style = getComputedStyle(node);
-      const rect = node.getBoundingClientRect();
-      return {
-        top: rect.top,
-        bottom: rect.bottom,
-        left: rect.left,
-        right: rect.right,
-        fontSize: parseFloat(style.fontSize),
-        background: style.backgroundColor,
-        border: style.borderTopColor,
+  const read = () =>
+    tab.evaluate(() => {
+      const look = (selector) => {
+        const node = document.querySelector(selector);
+        const style = getComputedStyle(node);
+        const rect = node.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom, width: rect.width, visibility: style.visibility, background: style.backgroundColor, border: style.borderTopColor };
       };
-    };
-    return { san: read('#btn-import-san'), imp: read('#btn-import-preset'), create: read('#btn-create-preset') };
-  });
+      return {
+        list: look('#pd-import-list'),
+        items: ['#btn-import-preset', '#btn-import-san', '#btn-import-san-setup'].map(look),
+        imp: look('#btn-import-menu'),
+        exp: look('#btn-export-preset'),
+        create: look('#btn-create-preset'),
+      };
+    });
+  const rest = await read();
+  await tab.evaluate(() => document.querySelector('#pd-import').classList.add('is-open'));
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  const open = await read();
   await tab.close();
 
   const invisible = (color) => /rgba\(0, 0, 0, 0\)|^transparent$|\/ 0\)/.test(color);
 
-  assert.ok(weights.san.top >= weights.imp.bottom, 'the SAN import must sit under the pair, not beside it');
-  assert.ok(weights.san.fontSize < weights.imp.fontSize, 'it must be quieter than the buttons above it');
-  // Three weights, in order: the SAN import is not drawn as a control at rest, Import is outlined,
-  // and the action the whole tab leads to is the only filled one.
-  assert.ok(invisible(weights.san.border), `the SAN import must not be outlined at rest (${weights.san.border})`);
-  assert.ok(!invisible(weights.imp.border), `while Import still is (${weights.imp.border})`);
-  assert.ok(!invisible(weights.create.background), `and the primary action is filled (${weights.create.background})`);
-  assert.ok(invisible(weights.imp.background), 'Import is outlined rather than filled, so only one button is');
+  assert.equal(rest.list.visibility, 'hidden', 'the menu shows before Import is clicked');
+  assert.equal(open.list.visibility, 'visible');
+  assert.ok(open.list.bottom <= open.imp.top, 'the menu must open above the button');
+  for (const item of open.items) {
+    assert.ok(Math.abs(item.width - open.items[0].width) <= 1, 'the entries are not one column');
+  }
+  assert.equal(rest.imp.border, rest.exp.border, 'Import and Export are not drawn alike');
+  assert.equal(rest.imp.background, rest.exp.background, 'Import and Export are not drawn alike');
+  assert.notEqual(open.imp.border, open.exp.border, 'an open Import should show it is open');
+  assert.ok(!invisible(rest.create.background), `the primary action is filled (${rest.create.background})`);
+  assert.ok(invisible(rest.imp.background), 'Import is outlined rather than filled, so only one button is');
 });
 
 /*

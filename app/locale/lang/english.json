@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Library view",
-        "description": "Choose the card layout. Landscape keeps the current look; compact landscape and portrait, List, and Details trade artwork size for density or richer activity.",
+        "description": "Choose the card layout. Landscape shows wide artwork; compact landscape and portrait, List, and Details trade artwork size for density or richer activity.",
         "value": {
           "portrait": "Portrait",
           "landscape": "Landscape",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Silver up to",
-          "description": "In rare tiers, achievements up to this rate earn silver. Keep it between the gold and rare limits, or all three return to their defaults."
+          "description": "In rare tiers, achievements up to this rate earn silver. It always stays above gold and below the rare limit: moving one slider pushes the others."
         },
         "rareMax": {
           "name": "Rare up to",
@@ -557,8 +557,13 @@
         "transport": "Integrations",
         "chromium": "Chromium notification",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Popup"
+        "test": "Tests",
+        "overlay":"Popup",
+        "overlayDisplay": "Display",
+        "overlayProgress": "Progress",
+        "overlaySounds": "Sounds",
+        "overlayEmulators": "Emulators",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Some features are only available in Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Preset (ShadPS4)",
         "overlayPresetShadps4Desc": "Preset used for ShadPS4 (PlayStation 4) notifications",
         "presetSameAsMain": "Same as main",
+        "overlayEmulatorsDesc": "Games run in an emulator can have their own preset and their own sound; recompiled PC ports follow their console. “Same as main” keeps the settings above.",
         "overlayPosition": "Position",
         "overlayPositionDesc": "Where the in-game overlay popup appears on screen",
         "overlayScale": "Scale",
@@ -753,6 +759,9 @@
           "importLabel": "Import",
           "importSan": "Import SAN theme",
           "importSanSetup": "Import from SAN on this PC",
+          "importMenuFile": "Preset file…",
+          "importMenuSan": "SAN theme…",
+          "importMenuSanSetup": "From SAN on this PC",
           "imported": "Imported & selected:",
           "importedOnly": "Imported preset - export or delete it here; it is not editable with the sliders.",
           "layer": {
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Help",
       "title": "Help & tips",
-      "intro": "Everything useful to know - detection, notifications, controller, overlay, themes and troubleshooting.",
+      "intro": "Everything useful to know: finding your games, notifications, emulators, the overlay, the controller, themes and what to do when something is wrong.",
       "setupTitle": "Your current setup",
       "topicsTitle": "Browse by topic",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "First steps",
       "quick": [
-        "Add save/config folders in Settings > Folders, then enable the matching source in Settings > Sources.",
-        "The Watchdog runs in the background - it must be running for live notifications and playtime.",
+        "Let Smart Find look for your games in Settings > Folders, or add a folder yourself, then enable the matching source in Settings > Sources.",
+        "The Watchdog runs in the background. It must be running for live notifications and playtime.",
         "Everything (settings, caches, logs, custom themes) lives in %APPDATA%\\Achievement Watcher Next.",
-        "Every settings section folds away under its own header - the chevron points down when open, sideways when closed. Your choices are remembered."
+        "The Interface control at the top of Settings switches between Simple (the everyday tabs) and Advanced (adds Steam / GBE Fork, Ubisoft / Uplay R1/R2, Advanced and deeper options). Simple only hides controls, nothing is turned off.",
+        "Closing the main window keeps AW Next in the system tray, where tracking goes on. To quit, use the tray menu. Launch at startup and Close to System Tray are in Settings > General.",
+        "The search field at the top of Settings finds an option in every tab. The First-run guide in Settings > General reopens the setup."
       ],
-      "notifications": [
-        "Automatic is the default: the in-game popup when the game can show it, a Windows notification when it cannot, never both.",
-        "Settings > Notification holds the preset, sound, volume, position and scale, and its test buttons fire a real popup.",
-        "Right-click a game > Notification gives that one game its own preset, position, sound or scale.",
-        "Screenshot on unlock keeps a picture of the moment in Pictures\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Game health",
-      "gameHealth": [
-        "Open a game’s tools button (top right of its tile) to see whether it is Ready, Needs attention, or Not tracking.",
-        "The sentence under the state explains the cause in plain words; the checks below it show which part is at fault.",
-        "Repair buttons only appear when AW Next can genuinely fix that game - each one says what it will change and where the previous files are kept.",
-        "Technical details holds the exact paths, counts and emulator codes; copy it into a bug report."
-      ],
-      "troubleshootTitle": "Troubleshooting",
-      "troubleshoot": [
-        "If a game is missing: add folders, rescan, then check the source toggle and blacklist.",
-        "If notifications don’t appear: check Windows Do not disturb / Focus Assist and run the app with the same rights as your games.",
-        "Advanced > Diagnostics opens logs and data folders; attach them when reporting an issue.",
-        "Logs are appended, so a crash survives the next launch. Each run starts with a session marker and a [diag] block (versions, paths, displays) - paste it into an issue."
+      "libraryTitle": "Library & collections",
+      "library": [
+        "Collections: right-click a game > Collections, tick one or choose New collection…. The collections button next to Show installed games only then filters the library, and the profile numbers follow.",
+        "Edit collection… in that button’s menu changes the name, colour, icon or picture, and deletes the collection. The games stay in your library.",
+        "The round button next to the completion rate opens Library stats: completion, unlocked and locked counts, playtime, trophies, platinum games, rarest achievements and one row per platform.",
+        "A selector between the search field and the + button switches between six library views. Settings > Appearance > Library tiles sets the tile size, the spacing and what each tile shows.",
+        "The + button adds a game no source finds: a title and an executable, with an optional platform and Steam AppID. Launches and playtime are tracked, without achievements.",
+        "Right-click a game > Game settings > Rename… changes the name shown for it. Achievements & playtime > Edit playtime… fixes its total (12.5 or 12h30)."
       ],
       "sourcesTitle": "Launchers & sources",
       "sources": [
-        "Steam profile mode lists installed or owned games, but unlocks still come from local save files.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay and EA Desktop can be enabled separately in Sources.",
-        "Owned Steam games count as installed only when Steam’s registry confirms it."
+        "Steam, Epic Games and Xbox PC each offer None, Installed or Owned in Settings > Sources. Owned lists the whole library of a connected account, installed or not.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC and EA Desktop each have their own switch in Settings > Sources. EA Desktop only covers games outside EA’s managed folders.",
+        "Owned Steam games count as installed only when Steam’s registry confirms it.",
+        "Steam unlocks are read from the stats Steam keeps on this PC, so a private profile works. Connecting an account is optional: it adds games played on another PC and Steam Family games.",
+        "A game saved somewhere unusual: add its folder in Settings > Folders. Choose the folder that directly holds the saves, the AppID folders or the emulator configuration, or a library folder that holds many games.",
+        "RetroAchievements: switch the source on, enter your username and Web API key, then press Import library. Unlocks come from your account, so keep RetroAchievements on in the emulator.",
+        "In Simple mode a few rarely used source rows stay hidden while they are unused. They come back as soon as they matter, and Advanced always lists them all.",
+        "PlayStation trophies show their grade, the share of players who have them and PlayStation's own rarity tier. The rates come from Exophase; connect a PlayStation account in Settings > Sources to get Sony's own figures for the games on that account."
+      ],
+      "notifications": [
+        "Automatic is the default: the in-game popup when the game can show it, a Windows notification when it cannot, never both.",
+        "Settings > Notification holds Notification type (Automatic, Windows notification, In-game overlay or Both), the preset, sound, volume, position, scale and opacity. The Tests buttons fire a real popup.",
+        "Open a game’s tools button (top right of its tile) and go to its notification settings to give that one game its own preset, position, sound or scale.",
+        "Screenshot on unlock keeps a picture of the moment in Pictures\\Achievement Watcher Next.",
+        "Rare achievement sound, 100% completion sound and Progress sound (Advanced mode) give those popups a sound of their own. Random picks a different sound each time, and you can import your own files.",
+        "Gold, silver and bronze mark rare unlocks. Settings > General > Rarity display switches to Trophy mode, which grades every achievement and shows platinum on finished games.",
+        "For counters, Progress milestones shows a popup only at 10, 25 or 50% steps. Right-click a game > Mute progress notifications silences one game without touching its unlocks.",
+        "Two more switches in Settings > Notification: Priority notifications lets unlocks through Do Not Disturb (Windows 11), and Steam client games adds AW Next’s popup for games Steam itself runs."
+      ],
+      "gameHealthTitle": "Game health",
+      "gameHealth": [
+        "Click the tools button of a game (top right of its tile), or right-click it, to open Game health. It says whether the game is Ready, Needs attention or Not tracking.",
+        "The sentence under the state explains the cause in plain words. The checks below show which part is at fault: game files, executable, achievement data, emulator setup, live tracking or notifications.",
+        "Repair buttons only appear when AW Next can really fix that game, such as Locate the game, Rewrite the achievement data, Restore the emulator file or Watch this game. Each one says what it will change, keeps a backup and asks first.",
+        "Send a test notification fires a popup with that game’s own name and artwork, delivered the way it really would be.",
+        "Technical details holds the exact paths, counts and emulator codes: press Copy and paste it into a bug report. The coloured dot on a tile can be hidden in Settings > Appearance > Library tiles."
+      ],
+      "troubleshootTitle": "Troubleshooting",
+      "troubleshoot": [
+        "If a game is missing: check its source in Settings > Sources, run Smart Find or Generate configs in Settings > Folders, add its folder by hand if needed, and try turning off Show installed games only.",
+        "If notifications don’t appear: read the Notifications row in the game’s Game health, then check Windows Do not disturb / Focus Assist. Priority notifications in Settings > Notification can let unlocks through.",
+        "Settings > Advanced > Diagnostics opens the logs and data folders, and Export logs (.zip) bundles the logs with your user name and keys masked. Attach it when reporting an issue.",
+        "Logs are appended, so a crash survives the next launch. Each run starts with a session marker and a [diag] block (versions, paths, displays): paste it into an issue.",
+        "A game stuck at 0%? That is normal until its first unlock is written. If AW Next matched the wrong Steam release, right-click the game > Set AppID manually….",
+        "Playtime not counted? Open the game’s tools button > Executable and pick the program that stays open while you play, not a launcher.",
+        "New achievements from a game update appear within 3 days, or right away with Settings > Advanced > Recheck achievement lists.",
+        "An app update keeps failing on the same file? Settings > Advanced > Clear caches only removes re-downloadable files, never your settings or saves."
       ],
       "steamTitle": "Steam emulators",
       "steam": [
         "GBE / Goldberg saves are usually under %APPDATA%\\GSE Saves or %APPDATA%\\Goldberg SteamEmu Saves.",
         "CODEX / RUNE saves often live under Public Documents\\Steam\\CODEX or Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 and Hoodlum are detected from their config/save folders.",
-        "The right-click emulator fix can add GBE Fork files, achievement schemas and DLC data.",
-        "Simple mode is fast; Advanced runs generate_emu_config for deeper Steam data and can take minutes."
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI and the Nemirtingas emulators are read from their own config or save folders. If a game is not found, add its folder in Settings > Folders.",
+        "Right-click a game > Emulator & tools > Apply emulator fix… installs GBE Fork, builds steam_settings (achievement list and icons) and writes steam_appid.txt when it is missing. Every replaced file is backed up first.",
+        "In Settings > Steam / GBE Fork, steam_settings data set to Simple uses AW Next’s own anonymous fetch and is fast. Advanced runs generate_emu_config for deeper Steam data and can take minutes.",
+        "Nothing is written into a game folder on its own: Automatically fix newly detected games, Manage DLC ownership and Write account name and language are all off by default.",
+        "Diagnose emulator in the same menu only reads and reports. Back up GBE/Goldberg setup and Restore latest GBE/Goldberg backup put a game back the way it was."
       ],
       "emulatorTitle": "Console emulators",
       "emulators": [
-        "RPCS3 trophies are read from dev_hdd0\\home\\...\\trophy near the RPCS3 install.",
-        "shadPS4 trophies are read from its app data game_data/trophy folders; leftover data is not install proof.",
-        "Xenia progress is read from Xbox profile files such as .gpd."
+        "RPCS3 trophies are read from dev_hdd0\\home\\...\\trophy near the RPCS3 install. A moved virtual disk is followed.",
+        "shadPS4 trophies are read from its game_data folder (the TROP XML files). You can add the emulator, its user folder or game_data itself.",
+        "Xenia progress is read from the Xbox profile files (.gpd) and follows the storage folders set in its config.",
+        "KytyPS5 trophies are read from its _Trophies folder, for the user the launcher runs the game as.",
+        "Xbox 360 games recompiled for PC and PS4 ports (Bloodborne, Uncharted, God of War III Remastered, MediEvil and others) are their own sources in Settings > Sources. If one does not show up, add its folder in Settings > Folders.",
+        "Each console can have its own popup preset and sound in Settings > Notification > Emulators (Advanced mode). Recompiled Xbox 360 games follow Xenia’s choice, PS4 ports follow shadPS4’s, and Same as main keeps the main settings."
       ],
       "controllerTitle": "Controller (gamepad)",
       "controller": [
-        "Enable Settings > Controller first, then Back + Start + LB opens the in-game overlay.",
-        "LB + X toggles in-overlay navigation.",
-        "Navigation mode: D-pad/left stick move the focus, A confirms, B cancels, X searches, Y opens the options.",
+        "In Settings > Controller, turn on Control the in-game overlay with a controller (off by default), then Back + Start + LB opens the overlay in game.",
+        "Control the app with a controller (on by default) drives AW Next itself: D-pad or left stick move the focus, A opens a game, B goes back, X searches, Y or Start opens Settings, LB / RB switch settings tabs.",
+        "In the library, RT launches the selected game and LT opens its Game health.",
+        "In the overlay, LB + X toggles navigation: D-pad or left stick move the focus, A confirms, B cancels, X searches, Y opens the options.",
         "Hold LB + RB to move the overlay with the left stick and scroll with the right stick.",
-        "Works with Xbox, PlayStation (DualShock 4 / DualSense) and Switch Pro controllers."
+        "If the game still reacts to your buttons, turn on Focus overlay when it opens or Send Escape to the game when opening with controller (both off by default).",
+        "Works with Xbox, PlayStation (DualShock 4 / DualSense) and Switch Pro controllers. Controller layout sets the button names shown, and each shortcut takes one to three buttons.",
+        "Pad not detected? Check it in Windows (joy.cpl) first, make sure the right switch is on, then try XInput in Controller backend."
       ],
       "overlayTitle": "In-game overlay",
       "overlay": [
-        "Open it with the overlay hotkey (Ctrl+Shift+K by default) or Back + Start + LB on a controller.",
-        "Sort by one column at a time: Rarity, Date or Status (ascending / descending / none).",
+        "Open it with the overlay hotkey (Ctrl+Shift+K by default) or Back + Start + LB on a controller while a supported game runs. The hotkey is set in Settings > General.",
+        "It lists the achievements of the running game: name, description, locked or unlocked, unlock date and progress. Drag it by its header.",
+        "A hidden achievement stays hidden until you click it (or press A on a controller), so nothing is spoiled.",
+        "The pills All, Unlocked, Locked and In progress filter the list. Click Achievement, Rarity, Date or Status to sort: ascending, descending, then back to normal. One column at a time.",
         "Press / to focus the search, Esc to clear it or close the options panel.",
-        "The gear panel changes accent, density, zoom, opacity and visible rows; 'Use app theme' follows the active theme.",
+        "The gear panel changes accent, density, icon size, zoom, opacity and visible rows. Use app theme follows the active theme, and Reset defaults undoes it all.",
         "Every achievement with a known rate shows its rarity: gray for common, gold/silver/bronze for rare."
       ],
       "streamTitle": "Stream overlay (OBS)",
       "stream": [
-        "Settings > Notification > OBS browser source > Copy link, then add a Browser source in OBS and paste it as the URL.",
-        "Set the source's width and height to the size http://127.0.0.1:8082/obs/_config reports: the preset's own box at your scale.",
+        "Settings > Notification > OBS browser source (Advanced mode): Preview checks it in your browser and Copy link copies the address. In OBS, add a Browser source and paste it as the URL.",
+        "Any width and height work, the card scales to fill the box. A bigger source is sharper: give it about twice the preset’s own size (http://127.0.0.1:8082/obs/_config reports it) and place it at half size.",
         "Add ?test=1 to the URL while you place the source. It shows a sample unlock every ten seconds; remove it once you are done.",
         "The source draws the same popup as the in-game one, and stays empty between unlocks so it costs nothing while you stream.",
-        "It reads the local notification feed, so leave Websocket @localhost:8082 on in Settings > Notification > Transport."
+        "More options after the address: ?scale=2 pins the zoom, ?duration=8000 sets how long each card stays, ?sound=1 plays the sound through the source, /obs/preset/Xbox/ uses one preset whatever the desktop uses.",
+        "It reads the local notification feed, so leave Websocket @localhost:8082 on in Settings > Notification > Integrations. It only works on this PC, and only one copy of AW Next can serve it."
+      ],
+      "souvenirsTitle": "Screenshots & video clips",
+      "souvenirs": [
+        "Settings > Notification > Screenshot on unlock saves a picture a moment after the popup, notification included, in one subfolder per game. Open folder takes you there.",
+        "HDR screenshots (Automatic) corrects the colours when Windows HDR is on. Souvenirs capture the primary monitor, so play on it.",
+        "Video clip on unlock (off until you turn it on, further down Settings > Notification) keeps the last seconds of play in memory and saves an MP4 around each unlock. Nothing is written until an achievement unlocks.",
+        "Clip length (10 to 30 seconds), Format (H.264, HEVC or AV1), Resolution, Frame rate, Quality and Sound (Game only or Whole PC) can all be changed. H.264 plays everywhere.",
+        "The graphics card’s own encoder does the work, with well under 1% of the processor. Without a hardware H.264 encoder, Windows’ software encoder takes over at 1080p and 30 FPS at most. A very old game in exclusive fullscreen may record black frames."
       ],
       "shortcutsTitle": "Keyboard shortcuts",
       "shortcuts": [
-        "Ctrl+Shift+K (default): toggle the in-game overlay - configurable in Settings > General.",
-        "Ctrl+Alt+Shift+Arrows move the overlay; Ctrl+Alt+Shift+1-5 snap it to a preset position.",
-        "Ctrl+Alt+Shift+C toggles click-through; Ctrl+F focuses Settings search."
+        "Ctrl+Shift+K (default): toggle the in-game overlay. Change it in Settings > General.",
+        "Ctrl+Alt+Shift+Arrows move the overlay; Ctrl+Alt+Shift+1-5 snap it to a preset position; Ctrl+Alt+Shift+C toggles click-through.",
+        "In the overlay, / focuses the search and Esc clears it. In the preset designer, Ctrl+Z and Ctrl+Y undo and redo.",
+        "Ctrl+F focuses the Settings search and Esc clears it. F5 refreshes the library."
       ],
       "themesTitle": "Custom themes",
       "themes": [
-        "Custom starts as Steam Blue; every layer (background, header, panels, cards, settings, text, borders, accent) is editable.",
-        "Layer images sit under a colored veil with a light frosted blur; effects are per layer.",
+        "Settings > Appearance has built-in themes and every one can be edited: window, top bar, panels, cards, settings, text, borders and accent each take a colour, a gradient or an image.",
+        "Save theme turns your edit into a theme of your own: keep the name to replace it, type another for a copy. Reset all puts back the theme you started from.",
         "Drop a CSS theme into <userData>\\themes and it appears in the theme dropdown.",
-        "The custom preset builder can preview a design as a real popup before saving it, reopen a saved preset to change it, and delete the ones you do not keep.",
-        "Export the theme you use as one .awtheme file, or import one somebody sent you: it is previewed before it installs and then behaves like a built-in."
+        "Export theme… writes one .awtheme file (a built-in must be saved under your own name first). Import theme… previews it before it installs, and Delete theme removes an imported one.",
+        "Themes made by the community are in the theme gallery on the project website, and sending yours takes one file."
+      ],
+      "presetsTitle": "Popup presets",
+      "presets": [
+        "A preset is the look of the in-game popup, chosen in Settings > Notification > Preset. It has no effect when Notification type is Windows notification.",
+        "Settings > Notification presets is a designer made of ordinary controls: pick a starting point or press Surprise me, watch the live preview (Card, Compare, Screen), then Create preset. Nothing is saved before that.",
+        "Customize a bundled preset changes only a few things (background, text colour, accent, border, glow, font, logo) and keeps following the bundled preset if it improves.",
+        "Edit a preset reopens one you designed. Export and Import move a preset as one .awpreset file, with its images, fonts and sound.",
+        "Import > SAN theme… reads a Steam Achievement Notifier theme (a .san file), and Import > From SAN on this PC brings in the themes SAN already uses. They keep their SAN look and sounds."
       ],
       "tipsTitle": "Tips & tricks",
       "tips": [
         "Right-click a game tile to launch it, choose its executable, open folders and links, use emulator tools, or uninstall it when that menu is enabled.",
-        "Right-click a game and choose mute progress to stop progress popups without disabling unlocks.",
-        "The emulator fix (Simple fast / Advanced complete) installs GBE Fork, the achievement schema and DLC data.",
-        "Playtime is tracked while the game runs; progress and playtime notifications can be enabled in Notifications.",
-        "New achievements from a game update appear automatically within 3 days, or right away from Settings > Advanced > Recheck achievement lists."
+        "Mark as manually unlocked (right-click an achievement) records an unlock no source can see.",
+        "Reset achievements… plays a game again from zero and backs up every file first. It works for emulated games, not for Steam, Epic or Xbox, whose unlocks live on your account.",
+        "Playtime is tracked while the game runs; Playtime tracking in Settings > Notification turns on the start and end notifications.",
+        "Forget this game… clears everything AW Next keeps about a game (saves are backed up first). Remove from list only hides it.",
+        "Game settings > Achievement language shows one game’s achievements and notifications in another language than the rest.",
+        "Settings > Advanced > Profile backup: Export profile… saves your settings, presets, themes, covers and playtime in one .awbackup file for a reinstall or a new PC. Sign-ins are not saved."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Grade achievements gold, silver or bronze by rarity. Turn it on in Settings.",
     "clipsTitle": "Video clips",
     "clipsCopy": "Keep a short clip around each unlock. Turn it on in Settings under Notifications.",
-    "backupTitle": "Profile backup",
-    "backupCopy": "Save your settings and library choices to one file, and restore them after a reinstall.",
+    "statsTitle": "Library stats",
+    "statsCopy": "Under your profile, “See the detailed breakdown” shows your completion, playtime and progress per platform.",
+    "healthTitle": "Game health",
+    "healthCopy": "A coloured dot on a game tells you whether its achievements are tracked. Its settings button explains what is wrong.",
     "profileTitle": "Profile",
     "profileCopy": "Pick the name shown in the header and optionally set a local avatar.",
     "username": "Display name",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "saves + libraries",
     "addSaveHint": "one emulator/source",
     "addLibraryHint": "many installed games",
+    "addFolder": "Something missing? Add a folder",
     "saveList": "Save / config folders",
     "libraryList": "Game libraries",
     "emptyList": "Nothing added this session.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "You can reopen this guide at any time from Settings > General.",
     "sourcesTitle": "Where your achievements come from",
     "sourcesCopy": "Every source installed on this PC is read automatically, so the defaults are fine. Sign in below only if you want more.",
+    "sourcesCopySimple": "The launchers and emulators on this PC are already read. Connect an account only if you want what it adds.",
     "sourcesMore": "Fine-tune sources ({count} enabled)",
     "accountsTitle": "Accounts (optional)",
-    "accountsCopy": "Sign in to read unlocks from a private Steam profile, add your Steam Family games, import your Xbox PC library and show your Epic progress. You can skip this and connect later in Settings > Sources.",
+    "accountsCopy": "Sign in to read unlocks from a private Steam profile, add your Steam Family games, import your Xbox PC library, show your Epic progress, get PlayStation's own trophy rates and import your RetroAchievements games. You can skip this and connect later in Settings > Sources.",
+    "raKeyPage": "Where is my Web API key?",
     "sourcesEmulators": "Emulators",
     "sourcesEmulatorsCopy": "Each one is read only when it is installed, so leaving them on costs nothing.",
     "source": "Display Steam games",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Game name",
     "manual-game-appid-optional": "Steam AppID (optional)",
     "manual-game-platform-other": "Other",
+    "manual-game-note": "Launches and playtime are tracked, without achievements.",
+    "collection-create": "Create",
+    "collection-create-note": "Once it is created, right-click a game > Collections to add it.",
+    "psn-ultra-rare": "Ultra rare",
+    "psn-very-rare": "Very rare",
+    "psn-rare": "Rare",
+    "psn-common": "Common",
+    "psn-title": "PlayStation account",
+    "psn-desc": "Optional. Shows PlayStation's own trophy rates for the games already on your PSN account; the others keep the Exophase figures. Your session token is stored encrypted on this PC.",
+    "psn-btn-hint": "opens the Sony sign-in window",
+    "psn-connect": "Connect PlayStation account",
+    "psn-connecting": "Opening the Sony sign-in window…",
+    "psn-connected": "PlayStation account connected.",
+    "psn-disconnected": "PlayStation account disconnected.",
+    "psn-failed": "PlayStation sign-in failed",
+    "connect-playstation-account": "Connect PlayStation account",
     "manual-source": "Manual",
     "no-config-eligible-games": "No unconfigured Steam game without an existing fix was found.",
     "no-config-eligible-games-configured": "{count} Steam-compatible install(s) found - all of them already have a setup. To rebuild those, use Advanced > Fix all games.",

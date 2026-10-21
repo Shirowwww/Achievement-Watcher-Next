@@ -195,7 +195,9 @@ function translateUI(lang, locale, template) {
   libraryViewSelects.find("option[value='portrait-compact']").text(clear(libraryView.value.portraitCompact));
   libraryViewSelects.find("option[value='list']").text(clear(libraryView.value.list));
   libraryViewSelects.find("option[value='details']").text(clear(libraryView.value.details));
-  $('.library-layout-control').attr('title', clear(libraryView.description || libraryView.name));
+  // The name only: the Settings description talks about every view, which reads oddly as the hint
+  // of whichever one is picked.
+  $('.library-layout-control').attr('title', clear(libraryView.name));
   $('#library-layout-select').attr('aria-label', clear(libraryView.name));
   if (libraryView.description) selector.find('li:nth-child(2) .help').text(clear(libraryView.description));
   selector.find('li:nth-child(3) .left span').text(clear(template.settings.general.hiddenAch.name));
@@ -508,6 +510,9 @@ function translateUI(lang, locale, template) {
       bindHelpText('help-group-personalize', help.groups.personalize);
     }
     bindHelpText('help-quick-title', help.quickTitle);
+    bindHelpText('help-library-title', help.libraryTitle);
+    bindHelpText('help-presets-title', help.presetsTitle);
+    bindHelpText('help-souvenirs-title', help.souvenirsTitle);
     // The notification topic borrows the settings tab's own name, so both say the same word.
     bindHelpText('help-notif-title', template.settings.sideMenu && template.settings.sideMenu.notification);
     bindHelpText('help-gamehealth-title', help.gameHealthTitle);
@@ -523,6 +528,9 @@ function translateUI(lang, locale, template) {
     bindHelpText('help-tips-title', help.tipsTitle);
     bindHelpText('help-troubleshoot-title', help.troubleshootTitle);
     bindHelpList('help-quick-list', help.quick);
+    bindHelpList('help-library-list', help.library);
+    bindHelpList('help-presets-list', help.presets);
+    bindHelpList('help-souvenirs-list', help.souvenirs);
     bindHelpList('help-notif-list', help.notifications);
     bindHelpList('help-gamehealth-list', help.gameHealth);
     bindHelpList('help-stream-list', help.stream);
@@ -608,7 +616,19 @@ function translateUI(lang, locale, template) {
   $('#notify_playtime_test span').text(clear(template.settings.notification.test.playtime));
   $('#notify_platinum_test span').text(clear(template.settings.notification.test.platinum));
   // Overlay (in-game) notification section - bound by stable ids to avoid nth-child fragility.
-  $('#overlay-notify-title').text(clear(template.settings.notification.title.overlay));
+  {
+    // The popup settings are split into cards; a locale without the card titles keeps the old heading.
+    const titles = template.settings.notification.title;
+    const opt = template.settings.notification.option;
+    $('#overlay-notify-title').text(clear(titles.overlayDisplay || titles.overlay));
+    $('#overlay-progress-title').text(clear(titles.overlayProgress || opt.overlayProgressPosition));
+    $('#overlay-sounds-title').text(clear(titles.overlaySounds || opt.overlaySound));
+    $('#overlay-emulators-title').text(clear(titles.overlayEmulators || ''));
+    $('#overlay-obs-title').text(clear(titles.overlayObs || opt.obsSource.name));
+    $('#overlay-emulators-desc').text(clear(opt.overlayEmulatorsDesc || ''));
+    $('#lbl-emuPresetColumn').text(clear(opt.overlayPreset));
+    $('#lbl-emuSoundColumn').text(clear(opt.overlaySound));
+  }
   $('#lbl-notifMode').text(clear(template.settings.notification.option.mode.name));
   $("#option_notifMode option[value='auto']").text(clear(template.settings.notification.option.mode.value.auto));
   $("#option_notifMode option[value='toast']").text(clear(template.settings.notification.option.mode.value.toast));
@@ -619,10 +639,18 @@ function translateUI(lang, locale, template) {
     const opt = template.settings.notification.option;
     // "Same as main" is dynamic (the dropdowns are (re)populated async) - expose it as a data attr
     // and refresh the '' option if it is already there.
-    $('#option_overlayPresetXenia, #option_overlayPresetRpcs3, #option_overlayPresetShadps4').attr('data-lang-same', clear(opt.presetSameAsMain));
-    $("#option_overlayPresetXenia option[value=''], #option_overlayPresetRpcs3 option[value=''], #option_overlayPresetShadps4 option[value='']").text(
-      clear(opt.presetSameAsMain)
-    );
+    const emulatorSelects = [
+      '#option_overlayPresetXenia',
+      '#option_overlayPresetRpcs3',
+      '#option_overlayPresetShadps4',
+      '#option_overlayPresetKytyps5',
+      '#option_overlaySoundXenia',
+      '#option_overlaySoundRpcs3',
+      '#option_overlaySoundShadps4',
+      '#option_overlaySoundKytyps5',
+    ];
+    $(emulatorSelects.join(', ')).attr('data-lang-same', clear(opt.presetSameAsMain));
+    $(emulatorSelects.map((id) => `${id} option[value='']`).join(', ')).text(clear(opt.presetSameAsMain));
   }
   $('#lbl-overlayPosition').text(clear(template.settings.notification.option.overlayPosition));
   $('#lbl-overlayScale').text(clear(template.settings.notification.option.overlayScale));
@@ -672,12 +700,6 @@ function translateUI(lang, locale, template) {
   }
   $('#lbl-notifMode').closest('li').find('.help').text(clear(template.settings.notification.option.mode.description));
   $('#lbl-overlayPreset').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPresetDesc));
-  $('#lbl-overlayPresetXenia').text(clear(template.settings.notification.option.overlayPresetXenia));
-  $('#lbl-overlayPresetXenia').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPresetXeniaDesc));
-  $('#lbl-overlayPresetRpcs3').text(clear(template.settings.notification.option.overlayPresetRpcs3));
-  $('#lbl-overlayPresetRpcs3').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPresetRpcs3Desc));
-  $('#lbl-overlayPresetShadps4').text(clear(template.settings.notification.option.overlayPresetShadps4));
-  $('#lbl-overlayPresetShadps4').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPresetShadps4Desc));
   $('#lbl-overlayPosition').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPositionDesc));
   $('#lbl-overlaySound').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundDesc));
   $('#lbl-overlayScale').closest('li').find('.help').text(clear(template.settings.notification.option.overlayScaleDesc));

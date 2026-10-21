@@ -176,6 +176,14 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     if (!isBusy) updateStepButtons();
   }
 
+  // Aliased to t so the locale lint recognizes these as translated calls.
+  function applyRetroAchievementsLabels() {
+    const t = onboardingT;
+    $('#onboard-ra-user-label').text(t('retroachievements-username', 'Username', 'Nom d’utilisateur'));
+    $('#onboard-ra-key-label').text(t('retroachievements-apikey', 'Web API key', 'Clé Web API'));
+    $('#onboard-ra-submit span').text(t('retroachievements-connect', 'Connect account', 'Connecter le compte'));
+  }
+
   function applyText() {
     const t = text();
     $('#onboarding-settings-label').text(t.settingsLabel);
@@ -213,10 +221,11 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-smart-find-hint').text(t.smartFindHint);
     $('#onboard-add-save-dir-hint').text(t.addSaveHint);
     $('#onboard-add-library-dir-hint').text(t.addLibraryHint);
+    $('#onboard-add-folder-more span').text(t.addFolder);
     $('#onboard-save-list-title').text(t.saveList);
     $('#onboard-library-list-title').text(t.libraryList);
     $('#onboard-sources-title').text(t.sourcesTitle);
-    $('#onboard-sources-copy').text(t.sourcesCopy);
+    $('#onboard-sources-copy').text(onboardingInterfaceMode.isSimple(chosenInterfaceMode) ? t.sourcesCopySimple : t.sourcesCopy);
     $('#onboard-sources-emulator-title').text(t.sourcesEmulators);
     $('#onboard-sources-emulator-copy').text(t.sourcesEmulatorsCopy);
     translateSourceRows(t);
@@ -241,6 +250,8 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-merge-hint').text(t.mergeHint);
     $('#onboard-accounts-title').text(t.accountsTitle);
     $('#onboard-accounts-copy').text(t.accountsCopy);
+    applyRetroAchievementsLabels();
+    $('#onboard-ra-key-page span').text(t.raKeyPage);
     $('#onboard-more-label').text(t.moreOptions);
     $('#onboard-ready-title').text(t.readyTitle);
     $('#onboard-ready-copy').text(t.readyCopy);
@@ -253,8 +264,10 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-feat-trophy-copy').text(t.trophyCopy);
     $('#onboard-feat-clips-title').text(t.clipsTitle);
     $('#onboard-feat-clips-copy').text(t.clipsCopy);
-    $('#onboard-feat-backup-title').text(t.backupTitle);
-    $('#onboard-feat-backup-copy').text(t.backupCopy);
+    $('#onboard-feat-stats-title').text(t.statsTitle);
+    $('#onboard-feat-stats-copy').text(t.statsCopy);
+    $('#onboard-feat-health-title').text(t.healthTitle);
+    $('#onboard-feat-health-copy').text(t.healthCopy);
     $('#onboard-summary-reopen').text(t.summaryReopen);
     $("#onboard-notification-mode option[value='auto']").text(t.notificationAuto);
     $("#onboard-notification-mode option[value='toast']").text(t.toast);
@@ -316,6 +329,8 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
   function applyModeToGuide() {
     const simple = onboardingInterfaceMode.isSimple(chosenInterfaceMode);
     $('#onboard-auto-fix').closest('label').toggle(!simple);
+    // Simple shows only the accounts on this step, so its intro speaks of those alone.
+    $('#onboard-sources-copy').text(simple ? text().sourcesCopySimple : text().sourcesCopy);
 
     const enabled = {};
     for (const key of Object.keys(onboardingInterfaceMode.OPTIONAL_SOURCES)) {
@@ -422,7 +437,50 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         };
       },
     },
+    psn: {
+      status: 'psn:status',
+      login: 'psn:login',
+      cancelled: 'window-closed',
+      // Sony's token carries no display name worth a request.
+      name: () => '',
+      // Aliased to t so the locale lint recognizes these as translated calls.
+      text: () => {
+        const t = onboardingT;
+        return {
+          connect: t('psn-connect', 'Connect PlayStation account', 'Connecter le compte PlayStation'),
+          reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
+          connectedAs: () => t('connected', 'Connected', 'Connecté'),
+          notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
+          connecting: t('psn-connecting', 'Opening the Sony sign-in window…', 'Ouverture de la fenêtre de connexion Sony…'),
+          cancelled: t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+          failed: t('psn-failed', 'PlayStation sign-in failed', 'Échec de la connexion PlayStation'),
+        };
+      },
+    },
+    // Connected through the inline form (connectRetroAchievements), so it has no `login` channel.
+    ra: {
+      status: 'retroachievements:status',
+      name: (state) => state.username,
+      // Aliased to t so the locale lint recognizes these as translated calls.
+      text: () => {
+        const t = onboardingT;
+        return {
+          connect: t('retroachievements-connect', 'Connect account', 'Connecter le compte'),
+          reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
+          connectedAs: (n) => t('retroachievements-connected-as', 'Connected as {name}', 'Connecté en tant que {name}', { name: n }),
+          notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
+          connecting: t('retroachievements-connecting', 'Checking the account…', 'Vérification du compte…'),
+          importing: t('retroachievements-importing', 'Importing the RetroAchievements library…', 'Importation de la bibliothèque RetroAchievements…'),
+          missing: t(
+            'retroachievements-missing',
+            'Enter your username and the Web API key shown on retroachievements.org/settings (now open in your browser).',
+            'Saisis ton nom d’utilisateur et la clé Web API affichée sur retroachievements.org/settings (ouverte dans ton navigateur).'
+          ),
+        };
+      },
+    },
   };
+  const RA_KEY_PAGE = 'https://retroachievements.org/settings';
 
   function setAccountStatus(key, message, kind) {
     $(`#onboard-${key}-status`)
@@ -443,9 +501,12 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $(`#onboard-${key}-connect span`).text(state.connected ? labels.reconnect : labels.connect);
     if (state.connected) connectedAccounts.add(key);
     else connectedAccounts.delete(key);
+    // A success already on screen (an import summary) stays; a connected account never reads
+    // "Not connected", which it used to every second refresh.
     if (state.connected && state.needsReconnect && labels.needsReconnect) setAccountStatus(key, labels.needsReconnect, 'error');
-    else if (state.connected && !$(`#onboard-${key}-status`).hasClass('success')) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
-    else if (!$(`#onboard-${key}-status`).hasClass('error')) setAccountStatus(key, labels.notConnected);
+    else if (state.connected) {
+      if (!$(`#onboard-${key}-status`).hasClass('success')) setAccountStatus(key, labels.connectedAs(account.name(state)), 'success');
+    } else if (!$(`#onboard-${key}-status`).hasClass('error')) setAccountStatus(key, labels.notConnected);
   }
 
   function refreshAccounts() {
@@ -461,6 +522,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     setAccountStatus(key, labels.connecting);
     try {
       const result = (await ipcRenderer.invoke(account.login)) || {};
+      if (result.ok) window.dispatchEvent(new Event('aw-accounts-changed'));
       if (result.ok && account.afterLogin) return await account.afterLogin(key, labels);
       if (result.ok) setAccountStatus(key, '');
       else if (result.error === account.cancelled) setAccountStatus(key, labels.cancelled, 'error');
@@ -470,6 +532,47 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     } finally {
       button.prop('disabled', false);
       refreshAccount(key);
+    }
+  }
+
+  function toggleRetroAchievementsForm(open, { focus = true } = {}) {
+    $('#onboard-ra-form').prop('hidden', !open);
+    $('#onboard-ra-connect').attr('aria-expanded', String(open));
+    if (open && focus) setTimeout(() => $('#onboard-ra-user').trigger('focus'), 0);
+  }
+
+  // The Settings card's flow: check the key, keep it, then import at once so the games show up.
+  async function connectRetroAchievements(event) {
+    event.preventDefault();
+    const labels = ACCOUNTS.ra.text();
+    const messages = require(path.join(appPath, 'util/retroAchievementsMessages.js'));
+    const username = String($('#onboard-ra-user').val() || '').trim();
+    const apiKey = String($('#onboard-ra-key').val() || '').trim();
+    const submit = $('#onboard-ra-submit');
+    if (submit.prop('disabled')) return;
+    if (!username || !apiKey) {
+      remote.shell.openExternal(RA_KEY_PAGE);
+      setAccountStatus('ra', labels.missing, 'error');
+      return;
+    }
+    submit.prop('disabled', true);
+    setAccountStatus('ra', labels.connecting);
+    try {
+      const res = (await ipcRenderer.invoke('retroachievements:connect', { username, apiKey })) || {};
+      if (!res.ok) return setAccountStatus('ra', messages.errorText(res.error), 'error');
+      $('#onboard-ra-key').val('');
+      toggleRetroAchievementsForm(false);
+      window.dispatchEvent(new Event('aw-accounts-changed'));
+      setAccountStatus('ra', labels.importing);
+      const imported = (await ipcRenderer.invoke('retroachievements:import')) || {};
+      if (!imported.ok) return setAccountStatus('ra', messages.errorText(imported.error), 'error');
+      const summary = messages.importText(imported.result);
+      setAccountStatus('ra', summary.text, summary.kind);
+    } catch (err) {
+      setAccountStatus('ra', messages.errorText(err.message || String(err)), 'error');
+    } finally {
+      submit.prop('disabled', false);
+      refreshAccount('ra');
     }
   }
 
@@ -733,11 +836,18 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     return raw === '0' || raw === 'false';
   }
 
+  // The sources the guide will save, so a folder is read by the readers the library will use.
+  function chosenSources() {
+    return Object.fromEntries(SOURCE_ROWS.map((row) => [row.key, !sourceIsOff(row.key)]));
+  }
+
+  // What the library will list from one folder: its readers in its order, appid save roots included.
   async function scanFolderOnce(dir) {
-    const key = normalizeDir(dir);
+    const sources = chosenSources();
+    const key = `${normalizeDir(dir)}|${JSON.stringify(sources)}`;
     if (!folderScanCache.has(key)) {
       try {
-        folderScanCache.set(key, (await userDir.scan(dir)) || []);
+        folderScanCache.set(key, (await achievements.previewWatchedFolder(dir, sources)) || []);
       } catch (err) {
         debug.log(`onboarding: could not scan ${dir} (${err})`);
         folderScanCache.set(key, []);
@@ -812,6 +922,8 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
           .attr('type', 'button')
           .text(t.detectReviewSources)
           .on('click', () => {
+            // Simple folds the switches away; this note is the one reason to bring them back.
+            $('#onboarding').addClass('is-sources-open');
             $('#onboard-sources-details').prop('open', true);
             showStep(stepOf('#onboard-sources-details'));
           })
@@ -827,7 +939,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     const mode = chosenInterfaceMode === 'simple' ? t.modeSimple : chosenInterfaceMode === 'advanced' ? t.modeAdvanced : t.none;
     const folders = savedFolderCount || addedSaveDirs.length + addedLibraryDirs.length;
     const games = detection ? detection.total : 0;
-    const accounts = [...connectedAccounts].map((key) => ({ steam: 'Steam', xbox: 'Xbox', epic: 'Epic Games' })[key]);
+    const accounts = [...connectedAccounts].map((key) => ({ steam: 'Steam', xbox: 'Xbox', epic: 'Epic Games', psn: 'PlayStation', ra: 'RetroAchievements' })[key]);
     const sources = fill(t.summarySources, { count: enabledSourceCount() }) + (accounts.length ? ` · ${fill(t.summaryAccounts, { names: accounts.join(', ') })}` : '');
     const theme = $('#onboard-theme option:selected').text();
     const alerts = $('#onboard-notification-mode option:selected').text();
@@ -857,7 +969,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
   async function reportFolderScan(dir) {
     setFolderStatus(text().smartRunning, 'running');
     try {
-      const found = await userDir.scan(dir);
+      const found = await scanFolderOnce(dir);
       const count = Array.isArray(found) ? found.length : 0;
       setFolderStatus(count > 0 ? fill(text().folderGames, { count }) : text().invalidFolder, count > 0 ? 'success' : '');
     } catch (err) {
@@ -1140,6 +1252,9 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     detectRun += 1;
     folderScanCache.clear();
     $('#onboarding details').prop('open', false);
+    $('#onboarding').removeClass('is-folders-open is-sources-open');
+    $('#onboard-ra-key').val('');
+    toggleRetroAchievementsForm(false, { focus: false });
     chosenInterfaceMode = isFirstRunSession ? '' : onboardingInterfaceMode.normalize(app.config.general?.interfaceMode);
     addedSaveDirs = [];
     addedLibraryDirs = [];
@@ -1189,6 +1304,14 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-steam-connect').on('click', () => connectAccount('steam'));
     $('#onboard-xbox-connect').on('click', () => connectAccount('xbox'));
     $('#onboard-epic-connect').on('click', () => connectAccount('epic'));
+    $('#onboard-psn-connect').on('click', () => connectAccount('psn'));
+    $('#onboard-ra-connect').on('click', () => toggleRetroAchievementsForm($('#onboard-ra-form').prop('hidden')));
+    $('#onboard-ra-form').on('submit', connectRetroAchievements);
+    $('#onboard-ra-key-page').on('click', () => remote.shell.openExternal(RA_KEY_PAGE));
+    $('#onboard-add-folder-more').on('click', () => {
+      $('#onboarding').addClass('is-folders-open');
+      $('#onboard-add-save-dir').trigger('focus');
+    });
     $('#onboard-add-save-dir').on('click', pickSaveDir);
     $('#onboard-smart-find').on('click', smartFindDirs);
     $('#onboard-add-library-dir').on('click', pickLibraryDir);

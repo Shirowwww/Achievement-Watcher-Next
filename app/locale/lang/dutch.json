@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Bibliotheekweergave",
-        "description": "Kies de indeling van de kaarten. Liggend behoudt het huidige uiterlijk; compact liggend en staand, Lijst en Details ruilen grote artwork in voor meer dichtheid of rijkere activiteit.",
+        "description": "Kies de kaartindeling. Liggend toont brede afbeeldingen; compact liggend en staand, Lijst en Details ruilen afbeeldingsgrootte in voor dichtheid of rijkere activiteit.",
         "value": {
           "portrait": "Staand",
           "landscape": "Liggend",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Zilver tot",
-          "description": "In zeldzame niveaus krijgen prestaties tot dit percentage zilver. Houd het tussen de goud- en zeldzaamheidsgrens, anders keren alle drie terug naar hun standaardwaarden."
+          "description": "Bij zeldzaamheidsklassen krijgen prestaties tot dit percentage zilver. Het blijft altijd boven goud en onder de zeldzaamheidsgrens: als je één schuifregelaar verplaatst, schuiven de andere mee."
         },
         "rareMax": {
           "name": "Zeldzaam tot",
@@ -557,8 +557,13 @@
         "transport": "Integraties",
         "chromium": "Chromium-melding",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Pop-up"
+        "test": "Tests",
+        "overlay": "Pop-up",
+        "overlayDisplay": "Weergave",
+        "overlayProgress": "Voortgang",
+        "overlaySounds": "Geluiden",
+        "overlayEmulators": "Emulators",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Sommige functies werken alleen in Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Preset (ShadPS4)",
         "overlayPresetShadps4Desc": "Preset voor meldingen van ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Zelfde als hoofdpreset",
+        "overlayEmulatorsDesc": "Games die in een emulator draaien kunnen een eigen preset en een eigen geluid hebben; hercompileerde pc-ports volgen hun console. “Zelfde als hoofdpreset” behoudt de instellingen hierboven.",
         "overlayPosition": "Positie",
         "overlayPositionDesc": "Waar de pop-up van de in-game overlay op het scherm verschijnt",
         "overlayScale": "Schaal",
@@ -755,6 +761,9 @@
           "importedOnly": "Geïmporteerde preset - exporteer of verwijder hem hier; met de schuifregelaars is hij niet te bewerken.",
           "importSan": "SAN-thema importeren",
           "importSanSetup": "SAN op deze pc importeren",
+          "importMenuFile": "Presetbestand…",
+          "importMenuSan": "SAN-thema…",
+          "importMenuSanSetup": "Van SAN op deze pc",
           "layer": {
             "none": "Niet aanpassen",
             "title": "Een meegeleverde preset aanpassen"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Help",
       "title": "Help en tips",
-      "intro": "Alles wat handig is om te weten - detectie, meldingen, controller, overlay, thema's en probleemoplossing.",
+      "intro": "Alles wat handig is om te weten: je games vinden, meldingen, emulators, de overlay, de controller, thema's en wat je doet als er iets mis is.",
       "setupTitle": "Je huidige configuratie",
       "topicsTitle": "Bladeren per onderwerp",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Eerste stappen",
       "quick": [
-        "Voeg save-/configmappen toe bij Instellingen > Mappen en schakel daarna de bijbehorende bron in bij Instellingen > Bronnen.",
-        "De Watchdog draait op de achtergrond - hij moet actief zijn voor live meldingen en speeltijd.",
+        "Laat Slim zoeken je games zoeken bij Instellingen > Mappen, of voeg zelf een map toe, en schakel daarna de bijbehorende bron in bij Instellingen > Bronnen.",
+        "De Watchdog draait op de achtergrond. Hij moet draaien voor live meldingen en speeltijd.",
         "Alles (instellingen, caches, logboeken, eigen thema's) staat in %APPDATA%\\Achievement Watcher Next.",
-        "Elke sectie met instellingen klapt dicht onder zijn eigen kop - het pijltje wijst omlaag als de sectie open staat en opzij als hij dicht is. Je keuzes worden onthouden."
+        "De keuze Interface bovenaan Instellingen schakelt tussen Eenvoudig (de tabbladen voor dagelijks gebruik) en Geavanceerd (voegt Steam / GBE Fork, Ubisoft / Uplay R1/R2, Geavanceerd en diepere opties toe). Eenvoudig verbergt alleen bediening, er wordt niets uitgeschakeld.",
+        "Als je het hoofdvenster sluit, blijft AW Next in het systeemvak, waar het volgen doorgaat. Gebruik het menu in het systeemvak om af te sluiten. Starten met Windows en Sluiten naar het systeemvak staan bij Instellingen > Algemeen.",
+        "Het zoekveld bovenaan Instellingen vindt een optie in elk tabblad. De Startgids bij Instellingen > Algemeen opent de installatie opnieuw."
       ],
-      "notifications": [
-        "Automatisch is de standaard: de pop-up in de game als de game die kan tonen, anders een Windows-melding, nooit allebei.",
-        "Bij Instellingen > Meldingen staan preset, geluid, volume, positie en schaal; de testknoppen tonen een echte pop-up.",
-        "Klik met rechts op een game > Meldingen om die ene game een eigen preset, positie, geluid of schaal te geven.",
-        "Schermafbeelding bij ontgrendeling bewaart een beeld van het moment in Afbeeldingen\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Gamestatus",
-      "gameHealth": [
-        "Open de gereedschapsknop van een game (rechtsboven op de tegel) om te zien of hij Gereed is, Aandacht nodig heeft of Niet gevolgd wordt.",
-        "De zin onder de status legt de oorzaak in gewone taal uit; de controles eronder tonen welk onderdeel de boosdoener is.",
-        "Reparatieknoppen verschijnen alleen wanneer AW Next die game echt kan repareren - elke knop vertelt wat er verandert en waar de vorige bestanden blijven.",
-        "Onder Technische details staan de exacte paden, aantallen en emulatorcodes; plak die in een bugmelding."
-      ],
-      "troubleshootTitle": "Problemen oplossen",
-      "troubleshoot": [
-        "Ontbreekt er een game: voeg mappen toe, scan opnieuw en controleer daarna de schakelaar van de bron en de zwarte lijst.",
-        "Verschijnen er geen meldingen: controleer Niet storen / Focusassistent van Windows en start de app met dezelfde rechten als je games.",
-        "Geavanceerd > Diagnostiek opent de logboek- en gegevensmappen; voeg die toe wanneer je een probleem meldt.",
-        "Logboeken worden aangevuld, dus een crash overleeft de volgende start. Elke sessie begint met een sessiemarkering en een [diag]-blok (versies, paden, schermen) - plak dat in je melding."
+      "libraryTitle": "Bibliotheek en collecties",
+      "library": [
+        "Collecties: klik met de rechtermuisknop op een game > Collecties, vink er een aan of kies Nieuwe collectie…. De collectieknop naast Alleen geïnstalleerde games tonen filtert dan de bibliotheek, en de profielcijfers volgen.",
+        "Collectie bewerken… in het menu van die knop wijzigt de naam, kleur, het pictogram of de afbeelding en verwijdert de collectie. De games blijven in je bibliotheek.",
+        "De ronde knop naast het voltooiingspercentage opent Bibliotheekstatistieken: voltooiing, aantallen ontgrendelde en vergrendelde prestaties, speeltijd, trofeeën, platinagames, zeldzaamste prestaties en één rij per platform.",
+        "Een keuzelijst tussen het zoekveld en de +-knop schakelt tussen zes bibliotheekweergaven. Instellingen > Weergave > Bibliotheektegels bepaalt de tegelgrootte, de tussenruimte en wat elke tegel toont.",
+        "De +-knop voegt een game toe die geen enkele bron vindt: een titel en een uitvoerbaar bestand, met optioneel een platform en Steam-AppID. Starts en speeltijd worden bijgehouden, zonder prestaties.",
+        "Klik met de rechtermuisknop op een game > Game-instellingen > Hernoemen… om de getoonde naam te wijzigen. Prestaties en speeltijd > Speeltijd bewerken… corrigeert het totaal (12.5 of 12h30)."
       ],
       "sourcesTitle": "Launchers en bronnen",
       "sources": [
-        "De profielmodus van Steam toont geïnstalleerde games of games in je bezit, maar ontgrendelingen komen nog steeds uit lokale savebestanden.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay en EA Desktop schakel je apart in bij Bronnen.",
-        "Steam-games in je bezit tellen pas als geïnstalleerd wanneer het register van Steam dat bevestigt."
+        "Steam, Epic Games en Xbox PC bieden elk Geen, Geïnstalleerd of In bezit bij Instellingen > Bronnen. In bezit toont de hele bibliotheek van een gekoppeld account, geïnstalleerd of niet.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC en EA Desktop hebben elk een eigen schakelaar bij Instellingen > Bronnen. EA Desktop dekt alleen games buiten de door EA beheerde mappen.",
+        "Steam-games die je bezit tellen alleen als geïnstalleerd als het Steam-register dat bevestigt.",
+        "Steam-ontgrendelingen worden gelezen uit de statistieken die Steam op deze pc bewaart, dus een privéprofiel werkt. Een account koppelen is optioneel: het voegt games toe die op een andere pc zijn gespeeld en Steam Family-games.",
+        "Een game die op een ongewone plek staat: voeg de map toe bij Instellingen > Mappen. Kies de map die rechtstreeks de saves, de AppID-mappen of de emulatorconfiguratie bevat, of een bibliotheekmap met veel games.",
+        "RetroAchievements: schakel de bron in, vul je gebruikersnaam en Web API-sleutel in en druk op Bibliotheek importeren. Ontgrendelingen komen van je account, dus laat RetroAchievements in de emulator aan staan.",
+        "In de modus Eenvoudig blijven een paar zelden gebruikte bronrijen verborgen zolang ze ongebruikt zijn. Ze komen terug zodra ze ertoe doen, en Geavanceerd toont ze altijd allemaal.",
+        "PlayStation-trofeeën tonen hun graad, het aandeel spelers dat ze heeft en de eigen zeldzaamheidsklasse van PlayStation. De percentages komen van Exophase; koppel een PlayStation-account bij Instellingen > Bronnen om de eigen cijfers van Sony te krijgen voor de games op dat account."
+      ],
+      "notifications": [
+        "Automatisch is de standaard: de pop-up in de game als de game die kan tonen, een Windows-melding als dat niet kan, nooit allebei.",
+        "Instellingen > Meldingen bevat Soort melding (Automatisch, Windows-melding, In-game overlay of Beide), de preset, het geluid, het volume, de positie, de schaal en de dekking. De knoppen Tests laten een echte pop-up verschijnen.",
+        "Open de gereedschapsknop van een game (rechtsboven op de tegel) en ga naar de meldingsinstellingen ervan om alleen die game een eigen preset, positie, geluid of schaal te geven.",
+        "Screenshot bij ontgrendeling bewaart een beeld van het moment in Afbeeldingen\\Achievement Watcher Next.",
+        "Geluid voor zeldzame prestatie, Geluid voor 100% voltooiing en Geluid voor voortgang (modus Geavanceerd) geven die pop-ups een eigen geluid. Willekeurig kiest telkens een ander geluid, en je kunt je eigen bestanden importeren.",
+        "Goud, zilver en brons markeren zeldzame ontgrendelingen. Instellingen > Algemeen > Zeldzaamheidsweergave schakelt over op Trofeeënmodus, die elke prestatie een klasse geeft en platina toont bij voltooide games.",
+        "Bij tellers toont Voortgangsmijlpalen een pop-up alleen bij stappen van 10, 25 of 50%. Klik met de rechtermuisknop op een game > Voortgangsmeldingen dempen om één game stil te maken zonder zijn ontgrendelingen aan te raken.",
+        "Nog twee schakelaars bij Instellingen > Meldingen: Meldingen met prioriteit laat ontgrendelingen door Niet storen heen komen (Windows 11), en Games van de Steam-client voegt de pop-up van AW Next toe voor games die Steam zelf start."
+      ],
+      "gameHealthTitle": "Gamestatus",
+      "gameHealth": [
+        "Klik op de gereedschapsknop van een game (rechtsboven op de tegel), of klik met de rechtermuisknop erop, om de Gamestatus te openen. Die zegt of de game Gereed is, Aandacht nodig heeft of Niet gevolgd wordt.",
+        "De zin onder de status legt de oorzaak in gewone woorden uit. De controles eronder laten zien welk onderdeel de oorzaak is: gamebestanden, uitvoerbaar bestand, prestatiegegevens, emulatorconfiguratie, live volgen of meldingen.",
+        "Herstelknoppen verschijnen alleen als AW Next die game echt kan repareren, zoals De game opzoeken, De prestatiegegevens opnieuw schrijven, Het emulatorbestand terugzetten of Deze game bewaken. Elke knop zegt wat hij verandert, bewaart een back-up en vraagt eerst toestemming.",
+        "Een testmelding sturen laat een pop-up verschijnen met de eigen naam en afbeelding van die game, afgeleverd zoals het echt zou gaan.",
+        "Technische details bevat de exacte paden, aantallen en emulatorcodes: druk op Kopiëren en plak het in een bugmelding. Het gekleurde bolletje op een tegel kun je verbergen bij Instellingen > Weergave > Bibliotheektegels."
+      ],
+      "troubleshootTitle": "Problemen oplossen",
+      "troubleshoot": [
+        "Als een game ontbreekt: controleer de bron bij Instellingen > Bronnen, voer Slim zoeken of Configuraties genereren uit bij Instellingen > Mappen, voeg zo nodig de map handmatig toe en probeer Alleen geïnstalleerde games tonen uit te schakelen.",
+        "Als meldingen niet verschijnen: lees de rij Meldingen in de Gamestatus van de game en controleer daarna Niet storen / Focusassistent van Windows. Meldingen met prioriteit bij Instellingen > Meldingen kunnen ontgrendelingen doorlaten.",
+        "Instellingen > Geavanceerd > Diagnostiek opent de mappen met logboeken en gegevens, en Logboeken exporteren (.zip) bundelt de logboeken met je gebruikersnaam en sleutels afgeschermd. Voeg het bij als je een probleem meldt.",
+        "Logboeken worden aangevuld, dus een crash overleeft de volgende start. Elke sessie begint met een sessiemarkering en een [diag]-blok (versies, paden, schermen): plak het in een issue.",
+        "Een game die op 0% blijft staan? Dat is normaal totdat de eerste ontgrendeling is weggeschreven. Als AW Next de verkeerde Steam-uitgave heeft gekozen, klik dan met de rechtermuisknop op de game > AppID handmatig instellen….",
+        "Wordt de speeltijd niet geteld? Open de gereedschapsknop van de game > Uitvoerbaar bestand en kies het programma dat open blijft terwijl je speelt, geen launcher.",
+        "Nieuwe prestaties uit een game-update verschijnen binnen 3 dagen, of meteen via Instellingen > Geavanceerd > Prestatielijsten opnieuw controleren.",
+        "Blijft een app-update steeds op hetzelfde bestand mislukken? Instellingen > Geavanceerd > Caches wissen verwijdert alleen bestanden die opnieuw te downloaden zijn, nooit je instellingen of saves."
       ],
       "steamTitle": "Steam-emulators",
       "steam": [
-        "Saves van GBE / Goldberg staan meestal in %APPDATA%\\GSE Saves of %APPDATA%\\Goldberg SteamEmu Saves.",
-        "Saves van CODEX / RUNE staan vaak in Public Documents\\Steam\\CODEX of Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 en Hoodlum worden herkend aan hun config- of savemappen.",
-        "De emulatorfix uit het rechtsklikmenu kan GBE Fork-bestanden, prestatieschema's en DLC-gegevens toevoegen.",
-        "Eenvoudig is snel; Geavanceerd voert generate_emu_config uit voor diepere Steam-gegevens en kan minuten duren."
+        "GBE- / Goldberg-saves staan meestal onder %APPDATA%\\GSE Saves of %APPDATA%\\Goldberg SteamEmu Saves.",
+        "CODEX- / RUNE-saves staan vaak onder Public Documents\\Steam\\CODEX of Public Documents\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI en de Nemirtingas-emulators worden gelezen uit hun eigen config- of savemappen. Wordt een game niet gevonden, voeg dan de map toe bij Instellingen > Mappen.",
+        "Klik met de rechtermuisknop op een game > Emulator en tools > Emulatorfix toepassen… om GBE Fork te installeren, steam_settings (prestatielijst en pictogrammen) op te bouwen en steam_appid.txt te schrijven als die ontbreekt. Elk vervangen bestand krijgt eerst een back-up.",
+        "Bij Instellingen > Steam / GBE Fork gebruikt Gegevens voor steam_settings op Eenvoudig de eigen anonieme ophaalmethode van AW Next en is snel. Geavanceerd voert generate_emu_config uit voor diepere Steam-gegevens en kan minuten duren.",
+        "Er wordt nooit uit zichzelf iets in een gamemap geschreven: Nieuw gedetecteerde games automatisch repareren, DLC-eigendom beheren en Accountnaam en taal schrijven staan standaard allemaal uit.",
+        "Emulator diagnosticeren in hetzelfde menu leest en rapporteert alleen. Back-up maken van GBE/Goldberg-configuratie en Laatste GBE/Goldberg-back-up terugzetten zetten een game terug zoals hij was."
       ],
       "emulatorTitle": "Console-emulators",
       "emulators": [
-        "Trofeeën van RPCS3 worden gelezen uit dev_hdd0\\home\\...\\trophy bij de RPCS3-installatie.",
-        "Trofeeën van shadPS4 worden gelezen uit de mappen game_data/trophy in zijn app-gegevens; achtergebleven gegevens bewijzen geen installatie.",
-        "De voortgang van Xenia wordt gelezen uit Xbox-profielbestanden zoals .gpd."
+        "RPCS3-trofeeën worden gelezen uit dev_hdd0\\home\\...\\trophy bij de RPCS3-installatie. Een verplaatste virtuele schijf wordt gevolgd.",
+        "shadPS4-trofeeën worden gelezen uit de map game_data (de TROP-XML-bestanden). Je kunt de emulator, de gebruikersmap of game_data zelf toevoegen.",
+        "Xenia-voortgang wordt gelezen uit de Xbox-profielbestanden (.gpd) en volgt de opslagmappen die in de configuratie staan.",
+        "KytyPS5-trofeeën worden gelezen uit de map _Trophies, voor de gebruiker als wie de launcher de game start.",
+        "Voor pc hercompileerde Xbox 360-games en PS4-ports (Bloodborne, Uncharted, God of War III Remastered, MediEvil en andere) zijn eigen bronnen bij Instellingen > Bronnen. Verschijnt er een niet, voeg dan de map toe bij Instellingen > Mappen.",
+        "Elke console kan een eigen pop-uppreset en geluid hebben bij Instellingen > Meldingen > Emulators (modus Geavanceerd). Hercompileerde Xbox 360-games volgen de keuze van Xenia, PS4-ports die van shadPS4, en Zelfde als hoofdpreset behoudt de hoofdinstellingen."
       ],
       "controllerTitle": "Controller en gamepad",
       "controller": [
-        "Schakel eerst Instellingen > Controller in; daarna opent Back + Start + LB de in-game overlay.",
-        "LB + X schakelt de navigatie in de overlay in en uit.",
-        "Navigatiemodus: D-pad/linkerstick verplaatsen de focus, A bevestigt, B annuleert, X zoekt en Y opent de opties.",
+        "Schakel bij Instellingen > Controller De in-game overlay met een controller bedienen in (standaard uit), dan opent Back + Start + LB de overlay in de game.",
+        "De app met een controller bedienen (standaard aan) bedient AW Next zelf: D-pad of linkerstick verplaatsen de focus, A opent een game, B gaat terug, X zoekt, Y of Start opent Instellingen, LB / RB wisselen van instellingentabblad.",
+        "In de bibliotheek start RT de geselecteerde game en opent LT de Gamestatus ervan.",
+        "In de overlay schakelt LB + X de navigatie om: D-pad of linkerstick verplaatsen de focus, A bevestigt, B annuleert, X zoekt, Y opent de opties.",
         "Houd LB + RB ingedrukt om de overlay met de linkerstick te verplaatsen en met de rechterstick te scrollen.",
-        "Werkt met controllers van Xbox, PlayStation (DualShock 4 / DualSense) en de Switch Pro Controller."
+        "Reageert de game nog op je knoppen, schakel dan Overlay focus geven bij openen of Escape naar de game sturen bij openen met de controller in (beide standaard uit).",
+        "Werkt met Xbox-, PlayStation- (DualShock 4 / DualSense) en Switch Pro-controllers. Knopindeling controller bepaalt de getoonde knopnamen, en elke sneltoets neemt één tot drie knoppen.",
+        "Wordt de controller niet herkend? Controleer hem eerst in Windows (joy.cpl), zorg dat de juiste schakelaar aan staat en probeer dan XInput bij Controller-backend."
       ],
       "overlayTitle": "De in-game overlay",
       "overlay": [
-        "Open hem met de sneltoets van de overlay (standaard Ctrl+Shift+K) of met Back + Start + LB op een controller.",
-        "Sorteer op één kolom tegelijk: Zeldzaamheid, Datum of Status (oplopend / aflopend / geen).",
-        "Druk op / om het zoekveld te focussen en op Esc om het te wissen of het optiepaneel te sluiten.",
-        "Via het tandwielpaneel pas je accent, dichtheid, zoom, dekking en het aantal zichtbare rijen aan; 'Thema van de app gebruiken' volgt het actieve thema.",
-        "Elke prestatie met een bekend percentage toont zijn zeldzaamheid: grijs voor gewoon, goud/zilver/brons voor zeldzaam."
+        "Open hem met de sneltoets van de overlay (standaard Ctrl+Shift+K) of met Back + Start + LB op een controller terwijl een ondersteunde game draait. De sneltoets stel je in bij Instellingen > Algemeen.",
+        "Hij toont de prestaties van de lopende game: naam, beschrijving, vergrendeld of ontgrendeld, ontgrendelingsdatum en voortgang. Sleep hem aan de kop.",
+        "Een verborgen prestatie blijft verborgen tot je erop klikt (of op een controller op A drukt), zodat niets wordt verklapt.",
+        "De filters Alle, Ontgrendeld, Vergrendeld en Bezig filteren de lijst. Klik op Prestatie, Zeldzaamheid, Datum of Status om te sorteren: oplopend, aflopend en dan weer normaal. Steeds één kolom tegelijk.",
+        "Druk op / om de zoekopdracht focus te geven en op Esc om hem te wissen of het optiepaneel te sluiten.",
+        "Het tandwielpaneel wijzigt accent, dichtheid, grootte pictogram, zoom, dekking en zichtbare rijen. Thema van de app gebruiken volgt het actieve thema, en Standaardwaarden herstellen maakt alles ongedaan.",
+        "Elke prestatie met een bekend percentage toont de zeldzaamheid: grijs voor gewoon, goud/zilver/brons voor zeldzaam."
       ],
       "streamTitle": "Streamoverlay (OBS)",
       "stream": [
-        "Instellingen > Meldingen > OBS-browserbron > Link kopiëren, voeg daarna een Browserbron toe in OBS en plak deze als URL.",
-        "Stel de breedte en hoogte van de bron in op de afmeting die http://127.0.0.1:8082/obs/_config meldt: het eigen kader van de preset op jouw schaal.",
-        "Voeg ?test=1 toe aan de URL terwijl je de bron plaatst. Er verschijnt elke tien seconden een voorbeeldontgrendeling; verwijder dit zodra je klaar bent.",
-        "De bron toont dezelfde pop-up als de in-game overlay, en blijft leeg tussen ontgrendelingen, dus kost niets terwijl je streamt.",
-        "De bron leest de lokale meldingenfeed, dus laat Websocket @localhost:8082 ingeschakeld onder Instellingen > Meldingen > Meldingskanaal."
+        "Instellingen > Meldingen > OBS-browserbron (modus Geavanceerd): Voorbeeld controleert hem in je browser en Link kopiëren kopieert het adres. Voeg in OBS een Browserbron toe en plak het als URL.",
+        "Elke breedte en hoogte werkt, de kaart schaalt mee om het vak te vullen. Een grotere bron is scherper: geef hem ongeveer tweemaal de eigen grootte van de preset (http://127.0.0.1:8082/obs/_config meldt die) en plaats hem op halve grootte.",
+        "Voeg ?test=1 toe aan de URL terwijl je de bron plaatst. Hij toont elke tien seconden een voorbeeldontgrendeling; haal het weg als je klaar bent.",
+        "De bron tekent dezelfde pop-up als die in de game en blijft leeg tussen ontgrendelingen, dus hij kost niets terwijl je streamt.",
+        "Meer opties na het adres: ?scale=2 zet de zoom vast, ?duration=8000 bepaalt hoe lang elke kaart blijft, ?sound=1 speelt het geluid via de bron af, /obs/preset/Xbox/ gebruikt één preset, wat het bureaublad ook gebruikt.",
+        "Hij leest de lokale meldingenfeed, dus laat Websocket @localhost:8082 aan staan bij Instellingen > Meldingen > Integraties. Het werkt alleen op deze pc, en slechts één exemplaar van AW Next kan het aanbieden."
+      ],
+      "souvenirsTitle": "Screenshots en videoclips",
+      "souvenirs": [
+        "Instellingen > Meldingen > Screenshot bij ontgrendeling bewaart kort na de pop-up een beeld, melding inbegrepen, in een submap per game. Map openen brengt je er direct heen.",
+        "HDR-screenshots (Automatisch) corrigeert de kleuren als Windows HDR aan staat. De opnamen leggen de primaire monitor vast, dus speel erop.",
+        "Videoclip bij ontgrendelen (uit totdat je het inschakelt, verderop bij Instellingen > Meldingen) houdt de laatste seconden van het spel in het geheugen en bewaart rond elke ontgrendeling een MP4. Er wordt niets geschreven totdat een prestatie wordt ontgrendeld.",
+        "Cliplengte (10 tot 30 seconden), Formaat (H.264, HEVC of AV1), Resolutie, Framerate, Kwaliteit en Geluid (Alleen game of Hele pc) kun je allemaal wijzigen. H.264 speelt overal af.",
+        "De encoder van de videokaart zelf doet het werk, met ruim onder 1% van de processor. Zonder hardware-H.264-encoder neemt de software-encoder van Windows het over, met hooguit 1080p en 30 FPS. Een zeer oude game in exclusief volledig scherm kan zwarte beelden opnemen."
       ],
       "shortcutsTitle": "Sneltoetsen",
       "shortcuts": [
-        "Ctrl+Shift+K (standaard): de in-game overlay tonen of verbergen - in te stellen bij Instellingen > Algemeen.",
-        "Ctrl+Alt+Shift+pijltoetsen verplaatsen de overlay; Ctrl+Alt+Shift+1-5 zetten hem op een vaste positie.",
-        "Ctrl+Alt+Shift+C schakelt doorklikken in en uit; Ctrl+F zet de cursor in het zoekveld van Instellingen."
+        "Ctrl+Shift+K (standaard): de in-game overlay tonen of verbergen. Wijzig dit bij Instellingen > Algemeen.",
+        "Ctrl+Alt+Shift+pijltjestoetsen verplaatsen de overlay; Ctrl+Alt+Shift+1-5 zet hem op een vaste positie; Ctrl+Alt+Shift+C schakelt doorklikken in of uit.",
+        "In de overlay geeft / de zoekopdracht focus en wist Esc hem. In de presetontwerper maken Ctrl+Z en Ctrl+Y ongedaan en opnieuw.",
+        "Ctrl+F geeft de zoekopdracht van Instellingen focus en Esc wist hem. F5 vernieuwt de bibliotheek."
       ],
       "themesTitle": "Eigen thema's",
       "themes": [
-        "Aangepast begint als Steam Blue; elke laag (achtergrond, kopbalk, panelen, kaarten, instellingen, tekst, randen, accent) is aanpasbaar.",
-        "Afbeeldingen per laag liggen onder een gekleurde sluier met een lichte matte vervaging; effecten stel je per laag in.",
-        "Zet een CSS-thema in <userData>\\themes en het verschijnt in de keuzelijst met thema's.",
-        "Met de presetontwerper kun je een ontwerp als echte pop-up bekijken voordat je het opslaat, een opgeslagen preset opnieuw openen om hem te wijzigen en de presets verwijderen die je niet houdt.",
-        "Exporteer het thema dat je gebruikt als één .awtheme-bestand, of importeer er een dat iemand je stuurde: het wordt getoond voordat het wordt geïnstalleerd en gedraagt zich daarna als een ingebouwd thema."
+        "Instellingen > Weergave heeft ingebouwde thema's en elk ervan kan worden bewerkt: venster, bovenbalk, panelen, kaarten, instellingen, tekst, randen en accent krijgen elk een kleur, een verloop of een afbeelding.",
+        "Thema opslaan maakt van je bewerking een eigen thema: behoud de naam om het te vervangen, typ een andere voor een kopie. Alles resetten zet het thema terug waarmee je begon.",
+        "Zet een CSS-thema in <userData>\\themes en het verschijnt in de themakeuzelijst.",
+        "Thema exporteren… schrijft één .awtheme-bestand (een ingebouwd thema moet eerst onder je eigen naam worden opgeslagen). Thema importeren… toont een voorbeeld voordat het wordt geïnstalleerd, en Thema verwijderen verwijdert een geïmporteerd thema.",
+        "Thema's gemaakt door de community staan in de themagalerij op de projectwebsite, en het insturen van het jouwe kost maar één bestand."
+      ],
+      "presetsTitle": "Pop-uppresets",
+      "presets": [
+        "Een preset is de uitstraling van de pop-up in de game, te kiezen bij Instellingen > Meldingen > Preset. Hij heeft geen effect als Soort melding Windows-melding is.",
+        "Instellingen > Meldingspresets is een ontwerper opgebouwd uit gewone bedieningselementen: kies een beginpunt of druk op Verras me, bekijk het live voorbeeld (Kaart, Vergelijken, Scherm) en kies dan Preset maken. Tot dan wordt er niets opgeslagen.",
+        "Een meegeleverde preset aanpassen wijzigt maar een paar dingen (achtergrond, tekstkleur, accent, rand, gloed, lettertype, logo) en blijft de meegeleverde preset volgen als die wordt verbeterd.",
+        "Een preset bewerken opent er een die je zelf hebt ontworpen opnieuw. Exporteren en Importeren verplaatsen een preset als één .awpreset-bestand, met de afbeeldingen, lettertypen en het geluid.",
+        "Importeren > SAN-thema… leest een Steam Achievement Notifier-thema (een .san-bestand), en Importeren > Van SAN op deze pc haalt de thema's binnen die SAN al gebruikt. Ze behouden hun SAN-uiterlijk en -geluiden."
       ],
       "tipsTitle": "Tips en trucs",
       "tips": [
-        "Klik met rechts op een gametegel om hem te starten, het uitvoerbare bestand te kiezen, mappen en links te openen, emulatorgereedschap te gebruiken of de game te verwijderen als dat menu ingeschakeld is.",
-        "Klik met rechts op een game en kies voortgang dempen om voortgangspop-ups te stoppen zonder ontgrendelingen uit te schakelen.",
-        "De emulatorfix (Eenvoudig is snel / Geavanceerd is volledig) installeert GBE Fork, het prestatieschema en de DLC-gegevens.",
-        "Speeltijd wordt bijgehouden terwijl de game draait; meldingen over voortgang en speeltijd schakel je in bij Meldingen.",
-        "Nieuwe prestaties uit een game-update verschijnen binnen 3 dagen vanzelf, of meteen via Instellingen > Geavanceerd > Prestatielijsten opnieuw controleren."
+        "Klik met de rechtermuisknop op een gametegel om de game te starten, het uitvoerbare bestand te kiezen, mappen en links te openen, emulatortools te gebruiken of de game te verwijderen als dat menu is ingeschakeld.",
+        "Handmatig als ontgrendeld markeren (rechtermuisknop op een prestatie) legt een ontgrendeling vast die geen enkele bron ziet.",
+        "Prestaties resetten… laat je een game opnieuw vanaf nul spelen en maakt eerst een back-up van elk bestand. Het werkt voor geëmuleerde games, niet voor Steam, Epic of Xbox, waarvan de ontgrendelingen op je account staan.",
+        "Speeltijd wordt bijgehouden terwijl de game draait; Speeltijd bijhouden bij Instellingen > Meldingen schakelt de start- en eindmeldingen in.",
+        "Deze game vergeten… wist alles wat AW Next over een game bewaart (saves krijgen eerst een back-up). Uit lijst verwijderen verbergt hem alleen.",
+        "Game-instellingen > Taal van prestaties toont de prestaties en meldingen van één game in een andere taal dan de rest.",
+        "Instellingen > Geavanceerd > Profielback-up: Profiel exporteren… bewaart je instellingen, presets, thema's, covers en speeltijd in één .awbackup-bestand voor een herinstallatie of een nieuwe pc. Aanmeldingen worden niet bewaard."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Geef prestaties goud, zilver of brons naar zeldzaamheid. Schakel het in via Instellingen.",
     "clipsTitle": "Videoclips",
     "clipsCopy": "Bewaar een korte clip rond elke ontgrendeling. Schakel het in via Instellingen onder Meldingen.",
-    "backupTitle": "Profielback-up",
-    "backupCopy": "Sla je instellingen en bibliotheekkeuzes op in één bestand en herstel ze na een herinstallatie.",
+    "statsTitle": "Bibliotheekstatistieken",
+    "statsCopy": "Onder je profiel toont “Bekijk het gedetailleerde overzicht” je voltooiing, speeltijd en voortgang per platform.",
+    "healthTitle": "Gamestatus",
+    "healthCopy": "Een gekleurd bolletje op een game laat zien of de prestaties ervan worden gevolgd. De instellingenknop van de game legt uit wat er mis is.",
     "profileTitle": "Profiel",
     "profileCopy": "Kies de naam die in de kopbalk komt te staan en stel eventueel een lokale avatar in.",
     "username": "Weergavenaam",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "saves + bibliotheken",
     "addSaveHint": "één emulator/bron",
     "addLibraryHint": "veel geïnstalleerde games",
+    "addFolder": "Mist er iets? Voeg een map toe",
     "saveList": "Save- / configmappen",
     "libraryList": "Gamebibliotheken",
     "emptyList": "Deze sessie is er niets toegevoegd.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Je kunt deze gids op elk moment opnieuw openen via Instellingen > Algemeen.",
     "sourcesTitle": "Waar je prestaties vandaan komen",
     "sourcesCopy": "Elke bron die op deze pc is geïnstalleerd, wordt automatisch gelezen, dus de standaardinstellingen zijn prima. Meld je hieronder alleen aan als je meer wilt.",
+    "sourcesCopySimple": "De launchers en emulators op deze pc worden al gelezen. Koppel alleen een account als je wilt wat het toevoegt.",
     "sourcesMore": "Bronnen verfijnen ({count} ingeschakeld)",
     "accountsTitle": "Accounts (optioneel)",
-    "accountsCopy": "Log in om ontgrendelingen van een privé Steam-profiel te lezen, je Steam Family-games toe te voegen, je Xbox PC-bibliotheek te importeren en je Epic-voortgang te tonen. Je kunt dit overslaan en later verbinding maken in Instellingen > Bronnen.",
+    "accountsCopy": "Log in om ontgrendelingen van een privé Steam-profiel te lezen, je Steam Family-games toe te voegen, je Xbox PC-bibliotheek te importeren, je Epic-voortgang te tonen, de eigen trofeepercentages van PlayStation op te halen en je RetroAchievements-games te importeren. Je kunt dit overslaan en later koppelen via Instellingen > Bronnen.",
+    "raKeyPage": "Waar vind ik mijn Web API-sleutel?",
     "sourcesEmulators": "Emulators",
     "sourcesEmulatorsCopy": "Elke bron wordt alleen gelezen als hij is geïnstalleerd, dus ze aan laten staan kost niets.",
     "source": "Steam-games tonen",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Naam van de game",
     "manual-game-appid-optional": "Steam AppID (optioneel)",
     "manual-game-platform-other": "Overig",
+    "manual-game-note": "Starts en speeltijd worden bijgehouden, zonder prestaties.",
+    "collection-create": "Maken",
+    "collection-create-note": "Is de collectie gemaakt, klik dan met de rechtermuisknop op een game > Collecties om er een game aan toe te voegen.",
+    "psn-ultra-rare": "Ultrazeldzaam",
+    "psn-very-rare": "Zeer zeldzaam",
+    "psn-rare": "Zeldzaam",
+    "psn-common": "Gewoon",
+    "psn-title": "PlayStation-account",
+    "psn-desc": "Optioneel. Toont de eigen trofeepercentages van PlayStation voor de games die al op je PSN-account staan; de overige games houden de cijfers van Exophase. Je sessietoken wordt versleuteld op deze pc opgeslagen.",
+    "psn-btn-hint": "opent het inlogvenster van Sony",
+    "psn-connect": "PlayStation-account koppelen",
+    "psn-connecting": "Het inlogvenster van Sony wordt geopend…",
+    "psn-connected": "PlayStation-account gekoppeld.",
+    "psn-disconnected": "PlayStation-account losgekoppeld.",
+    "psn-failed": "Inloggen bij PlayStation mislukt",
+    "connect-playstation-account": "PlayStation-account koppelen",
     "manual-source": "Handmatig",
     "no-config-eligible-games": "Er is geen niet-geconfigureerde Steam-game zonder bestaande fix gevonden.",
     "no-config-eligible-games-configured": "{count} Steam-compatibele installatie(s) gevonden - ze hebben allemaal al een configuratie. Gebruik Geavanceerd > Alle games repareren om die opnieuw op te bouwen.",

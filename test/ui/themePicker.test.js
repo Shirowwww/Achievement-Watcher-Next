@@ -67,25 +67,22 @@ test('primary themes are visually distinct from one another', () => {
   }
 });
 
-test('the More themes… sentinel cannot collide with a real selection', () => {
-  assert.ok(sentinel, 'MORE_THEMES_VALUE must stay a literal in settings.js');
-  assert.equal(themeLayers.BUILTIN_COLORS[sentinel], undefined, 'the sentinel must not name a built-in theme');
-  assert.notEqual(sentinel, 'custom', 'the sentinel must not collide with the Custom theme');
-  // It is a command, so it must be intercepted before anything treats it as a theme value.
-  const handler = source.slice(source.indexOf("$('#option_theme').on('change'"));
-  const guard = handler.indexOf('MORE_THEMES_VALUE');
-  const apply = handler.indexOf('applyThemeValue(value)');
-  assert.ok(guard !== -1 && guard < apply, 'the change handler must return on the sentinel before applying it as a theme');
-});
-
-test('the long list folds both ways and never hides the active theme', () => {
-  // One sentinel, flipped rather than latched, is what makes the row collapsible as well.
-  assert.match(source, /themeListExpanded = !themeListExpanded/, 'the toggle must invert the state, not only expand it');
-  assert.match(source, /themeFewer/, 'the toggle needs a collapse label');
-  assert.match(source, /themeMore/, 'the toggle needs an expand label');
-  // Collapsing while an extra theme is selected must keep that row present.
+/*
+  "More themes…" used to be a sentinel <option>: picking it closed the list, rebuilt the <select> and
+  needed a second click to show the long list. The extras are now always in the <select>, marked
+  data-more, and the dropdown (ui/selectMenu.js) unfolds them in place; it opens unfolded when the
+  applied theme is one of them.
+*/
+test('the long list is folded inside the dropdown, not behind a command row', () => {
+  assert.equal(sentinel, undefined, 'no sentinel value: a command row is not a theme');
   const populate = source.slice(source.indexOf('function populateThemeSelect'));
-  assert.match(populate.slice(0, populate.indexOf('ipcRenderer')), /MORE_THEMES\.find\(/, 'a selected extra theme must survive collapsing');
+  const body = populate.slice(0, populate.indexOf('ipcRenderer'));
+  assert.match(body, /for \(const \[value, label\] of MORE_THEMES\) sel\.append\(themeOption\(value, label\)\.attr\('data-more', ''\)\)/, 'every extra theme is listed, folded');
+  assert.match(body, /data-more-label', t\('themeMore'/, 'the fold row is labelled More themes…');
+
+  const menu = fs.readFileSync(path.join(appDir, 'ui', 'selectMenu.js'), 'utf8');
+  assert.match(menu, /option\.hasAttribute\('data-more'\)/, 'the dropdown reads the fold marker');
+  assert.match(menu, /!items\.some\(\(item\) => item\.more && item\.index === select\.selectedIndex\)/, 'a selected extra theme opens the list unfolded');
 });
 
 test('theme rows stay plain so the selected one is obvious', () => {

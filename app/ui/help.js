@@ -4,6 +4,9 @@
 
 const HELP_LISTS = {
   'help-quick-list': 'quick',
+  'help-library-list': 'library',
+  'help-presets-list': 'presets',
+  'help-souvenirs-list': 'souvenirs',
   'help-notif-list': 'notifications',
   'help-gamehealth-list': 'gameHealth',
   'help-sources-list': 'sources',
@@ -290,8 +293,34 @@ function withEmulatorRepairHelp(settingsLocale) {
   };
 }
 
+// The topics sit two by two and an open one takes a whole row, so a closed topic can be left alone
+// on its row. That one spans the row too, and no group ends on a hole whatever is open or matched.
+function balanceHelpGrids(root) {
+  for (const grid of root.querySelectorAll('.help-grid')) {
+    let alone = null;
+    for (const panel of grid.querySelectorAll('.help-panel')) {
+      panel.classList.remove('is-wide');
+      if (panel.hidden || panel.classList.contains('mode-hidden')) continue;
+      if (panel.open) {
+        if (alone) alone.classList.add('is-wide');
+        alone = null;
+      } else alone = alone ? null : panel;
+    }
+    if (alone) alone.classList.add('is-wide');
+  }
+}
+
+const helpCard = ($) => $('#settings .content[data-view="help"] .help-card');
+
 function applyHelpSearch($, rawQuery) {
-  const card = $('#settings .content[data-view="help"] .help-card');
+  const result = filterHelpTopics($, rawQuery);
+  const card = helpCard($)[0];
+  if (card) balanceHelpGrids(card);
+  return result;
+}
+
+function filterHelpTopics($, rawQuery) {
+  const card = helpCard($);
   // Topics the interface mode is hiding are not part of the search: counting them would report
   // matches the user cannot see, and `panel.hidden = false` would never bring them back anyway.
   // 'mode-hidden' is interfaceMode.HIDDEN_CLASS; this file has no require(), hence the literal.
@@ -361,6 +390,12 @@ function bindSearch($) {
     input.val('').focus();
     applyHelpSearch($, '');
   });
+  // `toggle` does not bubble, hence the capture listener; bound once per card.
+  const card = helpCard($)[0];
+  if (card && !card.dataset.helpBalanced) {
+    card.dataset.helpBalanced = '1';
+    card.addEventListener('toggle', () => balanceHelpGrids(card), true);
+  }
 }
 
 function render($) {
@@ -386,6 +421,7 @@ const helpApi = {
   parseSearchTerms,
   matchesHelpQuery,
   applyHelpSearch,
+  balanceHelpGrids,
   withEmulatorRepairHelp,
   HELP_LISTS,
   DEFAULT_TOGGLE,

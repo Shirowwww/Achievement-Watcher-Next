@@ -118,8 +118,15 @@ const RANDOM_SOUND_VALUE = '__random__';
 // The global dropdown uses '' for silence, but a per-game blank means "inherit". This distinct
 // value lets one game explicitly mute its popup while every other game keeps the global sound.
 const NO_SOUND_VALUE = '__none__';
-// The rows that override the unlock sound for one kind of popup.
+// The rows that override the unlock sound for one kind of popup, or for one emulator's games.
 const TIER_SOUND_SELECTS = '#option_overlaySoundRare, #option_overlaySoundPlatinum, #option_overlaySoundProgress';
+const EMULATOR_SOUND_SELECTS = {
+  '#option_overlaySoundXenia': 'notificationSoundXenia',
+  '#option_overlaySoundRpcs3': 'notificationSoundRpcs3',
+  '#option_overlaySoundShadps4': 'notificationSoundShadps4',
+  '#option_overlaySoundKytyps5': 'notificationSoundKytyps5',
+};
+const PICKED_SOUND_SELECTS = [TIER_SOUND_SELECTS, ...Object.keys(EMULATOR_SOUND_SELECTS)].join(', ');
 
 // Frames are created on first use, not shipped in the page: an empty iframe is still a live
 // document, and the six of these cost 4.6 MB of renderer memory for panels most users never open.
@@ -298,7 +305,8 @@ function fadeTheme(apply) {
 }
 
 // Eighteen built-ins is too many to choose from cold, so the picker opens on a short contrasting
-// set and keeps the rest behind "More themes…", appended to the same <select> on expand.
+// set and folds the rest behind "More themes…": they carry data-more, and ui/selectMenu.js opens
+// them in place inside the list.
 const PRIMARY_THEMES = [
   ['default', 'Steam Blue'],
   ['light', 'Light'],
@@ -316,12 +324,6 @@ const MORE_THEMES = [
   ['everforest', 'Everforest'],
   ['ocean', 'Ocean'],
 ];
-// One sentinel toggles the list both ways; only its label changes.
-const MORE_THEMES_VALUE = '__more-themes__';
-let themeListExpanded = false;
-// Last theme the user actually selected, so toggling the list can restore a preview that has not
-// been saved yet instead of snapping back to the persisted value.
-let themeSelection = null;
 
 // Plain rows on purpose: a native <select> can't control swatch rendering, so a color tint fights
 // Chromium's own highlight for the selected row.
@@ -344,22 +346,10 @@ function customThemeLabel() {
 function populateThemeSelect(preferred) {
   const sel = $('#option_theme');
   const wanted = preferred || (app.config.general && app.config.general.theme) || 'default';
-  sel.empty();
+  sel.empty().attr('data-more-label', t('themeMore', 'More themes…', 'Plus de thèmes…'));
   for (const [value, label] of PRIMARY_THEMES) sel.append(themeOption(value, label));
-  if (themeListExpanded) {
-    for (const [value, label] of MORE_THEMES) sel.append(themeOption(value, label));
-  } else {
-    // Collapsing must never hide the theme that is actually applied, so a selection from the long
-    // list stays on show as an eighth row while the other extras fold away.
-    const active = MORE_THEMES.find(([value]) => value === wanted);
-    if (active) sel.append(themeOption(active[0], active[1]));
-  }
-  // The toggle sits after whatever it controls, so it reads as "…and more" / "…show fewer".
-  sel.append(
-    $('<option>')
-      .attr('value', MORE_THEMES_VALUE)
-      .text(themeListExpanded ? t('themeFewer', 'Fewer themes…', 'Moins de thèmes…') : t('themeMore', 'More themes…', 'Plus de thèmes…'))
-  );
+  // The list opens unfolded when one of these is the applied theme, so it is never hidden.
+  for (const [value, label] of MORE_THEMES) sel.append(themeOption(value, label).attr('data-more', ''));
   sel.append($('<option>').attr('value', 'custom').text(customThemeLabel()));
   // Both lists in one round trip: saved and imported themes are the same kind of entry here.
   Promise.all([ipcRenderer.invoke('list-installed-themes').catch(() => []), ipcRenderer.invoke('list-user-themes').catch(() => [])])
@@ -532,19 +522,48 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     const RARITY_DEFAULTS = { ...settingsRarityTiers.TROPHY_DEFAULTS, ...settingsRarityTiers.RARE_DEFAULTS };
     const RARITY_SELECTS = { goldBelow: 'trophyGoldBelow', silverBelow: 'trophySilverBelow', rareGoldMax: 'rareGoldMax', rareSilverMax: 'rareSilverMax', rareMax: 'rareMax' };
 
+    // The threshold sliders, read back as numbers; the select sweep in the save handler skips them.
+    function readRaritySliders() {
+      const values = {};
+      for (const option of Object.values(RARITY_SELECTS)) values[option] = Number($(`#option_${option}`).val());
+      return values;
+    }
+
+    function showRaritySliders(values) {
+      for (const [option, value] of Object.entries(values)) {
+        $(`#option_${option}`).val(String(value));
+        $(`[data-rarity-value="${option}"]`).text(`${value}%`);
+      }
+    }
+
     function syncRarityThresholdsChoice() {
       const current = settingsRarityTiers.gradingFrom(app.config.achievement).thresholds;
       const custom = Object.keys(RARITY_DEFAULTS).some((key) => current[key] !== RARITY_DEFAULTS[key]);
+      const shown = {};
+      for (const [key, option] of Object.entries(RARITY_SELECTS)) shown[option] = current[key];
+      showRaritySliders(shown);
       $('#rarityThresholdsChoice').val(custom ? 'custom' : 'default');
       updateRarityUi();
     }
 
     function onRarityThresholdsChoice() {
       if ($('#rarityThresholdsChoice').val() === 'default') {
-        for (const [key, option] of Object.entries(RARITY_SELECTS)) $(`#option_${option}`).val(String(RARITY_DEFAULTS[key]));
+        const defaults = {};
+        for (const [key, option] of Object.entries(RARITY_SELECTS)) defaults[option] = RARITY_DEFAULTS[key];
+        showRaritySliders(defaults);
       }
       updateRarityUi();
     }
+
+    // A slider that would cross its neighbour pushes it instead: gold at 10% puts silver at 11%.
+    $('#settings').on('input', '.rarity-slider input[type="range"]', function () {
+      const changed = this.id.replace('option_', '');
+      const mode = changed.startsWith('trophy') ? 'trophy' : 'rare';
+      const linked = settingsRarityTiers.BOUND_KEYS[mode].map(([key]) => key);
+      const values = readRaritySliders();
+      const pushed = settingsRarityTiers.pushBounds(mode, values, changed);
+      showRaritySliders(Object.fromEntries(linked.map((key) => [key, pushed[key]])));
+    });
 
     // Rows that only matter while another switch is on are dimmed, never hidden: the value stays and
     // is still saved. The rules are in util/settingsDependencies.js.
@@ -554,7 +573,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const inactive = settingsDependencies.inactiveControls(values);
       for (const id of settingsDependencies.dimmableControls()) {
         const off = inactive.has(id);
-        $(`#${id}`).closest('li').toggleClass('is-inactive', off).attr('aria-disabled', String(off));
+        // An emulator line holds two controls; only the one a rule names dims.
+        $(`#${id}`).closest('.emu-pick, li').toggleClass('is-inactive', off).attr('aria-disabled', String(off));
       }
     }
     $('#settings').on('change.dependentRows', 'select', updateDependentRows);
@@ -704,6 +724,20 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       librarySnapshotOnOpen = libraryRefresh.signature({ config: app.config, ...folders });
     }
 
+    /*
+      The exit mirror of the opening animation: a short compositor-only fade, then the caller hides
+      the panel. A timer, not animationend, which a hidden window may never deliver.
+    */
+    const SETTINGS_CLOSE_MS = 220;
+    function animateSettingsClose(done) {
+      const modal = $('#settings');
+      modal.removeClass('is-opening').addClass('is-closing');
+      setTimeout(() => {
+        done();
+        modal.removeClass('is-closing');
+      }, SETTINGS_CLOSE_MS);
+    }
+
     // Put the panel away and leave the library alone. Everything resetUI() does beyond this is about
     // rebuilding the grid, which closing Settings does not by itself require.
     function closeSettingsPanel() {
@@ -736,7 +770,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#game-config').hide();
       const settingsModal = $('#settings');
       const settingsBox = $('#settings .box');
-      settingsModal.removeClass('is-opening').show();
+      settingsModal.removeClass('is-opening is-closing').show();
       settingsBox.stop(true, true).show();
       // Restart the compositor-only entrance animation when Settings is reopened.
       void settingsModal[0].offsetWidth;
@@ -899,6 +933,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             ['#option_overlayPresetXenia', cfgOverlay.notificationPresetXenia || ''],
             ['#option_overlayPresetRpcs3', cfgOverlay.notificationPresetRpcs3 || ''],
             ['#option_overlayPresetShadps4', cfgOverlay.notificationPresetShadps4 || ''],
+            ['#option_overlayPresetKytyps5', cfgOverlay.notificationPresetKytyps5 || ''],
           ]) {
             const typeSel = $(id);
             typeSel.empty();
@@ -920,6 +955,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $('#option_overlaySoundRare').val('').attr('data-value', cfgOverlay.notificationSoundRare || '');
           $('#option_overlaySoundPlatinum').val('').attr('data-value', cfgOverlay.notificationSoundPlatinum || '');
           $('#option_overlaySoundProgress').val('').attr('data-value', cfgOverlay.notificationSoundProgress || '');
+          for (const [id, key] of Object.entries(EMULATOR_SOUND_SELECTS)) $(id).val('').attr('data-value', cfgOverlay[key] || '');
           fillSoundDropdown(sounds, cfgOverlay.randomSound === true ? RANDOM_SOUND_VALUE : shown);
           refreshUserSounds();
         })
@@ -1390,7 +1426,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#btn-settings-cancel, #settings .overlay').click(function () {
       let self = $(this);
       self.css('pointer-events', 'none');
-      $('#settings .box').fadeOut(() => {
+      animateSettingsClose(() => {
         closeSettingsPanel();
         self.css('pointer-events', 'initial');
         // Cancel reverts an unsaved theme preview back to the persisted choice.
@@ -1453,6 +1489,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // re-request their covers if the orientation changed) instead of rebuilding the library.
       if (typeof window.applyLibraryView === 'function') window.applyLibraryView(app.config.achievement.libraryLayout, previousLayout);
       Object.assign(app.config.achievement, readLibraryChromeUi());
+      Object.assign(app.config.achievement, readRaritySliders());
       if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
       // Profile card (Appearance): outside the General containers, so it is read here.
       app.config.achievement.profileCompact = $('#option_profileCompact').val() === 'true';
@@ -1611,14 +1648,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           const after = libraryRefresh.signature({ config: app.config, userDirs: userDirList, libraryDirs: libraryDirList });
           const rescan = libraryRefresh.needsRescan(librarySnapshotOnOpen, after) || window.__awBlacklistDirty === true;
           window.__awBlacklistDirty = false;
-          $('#settings .box').fadeOut(() => {
+          animateSettingsClose(() => {
             self.css('pointer-events', 'initial');
             if (rescan) resetUI();
             else closeSettingsPanel();
           });
         })
         .catch((err) => {
-          $('#settings .box').fadeOut(() => {
+          animateSettingsClose(() => {
             $('#settings').hide();
             let elem = $('#settingNav li[data-view]').first();
             $('#settingNav li[data-view]').removeClass('active');
@@ -2126,27 +2163,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const disconnectBtn = $('#retroachievements-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
       const busy = (button, on) => button.toggleClass('disabled', on).css('pointer-events', on ? 'none' : '');
+      const { errorText, importText } = require(path.join(appPath, 'util/retroAchievementsMessages.js'));
       let lastStatus = null;
-
-      const errorText = (code) => {
-        switch (code) {
-          case 'retroachievements-unauthorized':
-            return t('retroachievements-error-key', 'RetroAchievements refused this Web API key.', 'RetroAchievements a refusé cette clé Web API.');
-          case 'retroachievements-user-not-found':
-            return t('retroachievements-error-user', 'No RetroAchievements account has this username.', 'Aucun compte RetroAchievements ne porte ce nom.');
-          case 'retroachievements-username-invalid':
-          case 'retroachievements-api-key-invalid':
-            return t(
-              'retroachievements-error-format',
-              'Check the username and the Web API key: one of them is not in the expected format.',
-              'Vérifie le nom d’utilisateur et la clé Web API : l’un des deux n’a pas le format attendu.'
-            );
-          case 'retroachievements-network-error':
-            return t('retroachievements-error-network', 'RetroAchievements could not be reached. Try again later.', 'RetroAchievements est injoignable. Réessaie plus tard.');
-          default:
-            return `${t('retroachievements-error', 'RetroAchievements request failed', 'Échec de la requête RetroAchievements')}${code ? ': ' + code : ''}`;
-        }
-      };
 
       registerLocaleRefresh(function applyRetroAchievementsLabels() {
         $('#retroachievements-connect-desc').text(
@@ -2199,37 +2217,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             return;
           }
           const r = res.result || {};
-          const counts = { created: r.created || 0, updated: r.updated || 0, unchanged: r.unchanged || 0, failed: r.failed || 0 };
-          if (r.rateLimited) {
-            setStatus(
-              t(
-                'retroachievements-imported-partial',
-                'Paused by the RetroAchievements rate limit after {created} added and {updated} updated. Import again in a few minutes to continue where it stopped.',
-                'Mis en pause par la limite de RetroAchievements après {created} ajouté(s) et {updated} mis à jour. Relance l’import dans quelques minutes pour reprendre là où il s’est arrêté.',
-                counts
-              ),
-              'error'
-            );
-          } else if (!r.total) {
-            setStatus(
-              t(
-                'retroachievements-imported-none',
-                'No game with achievements on this account yet: play one with RetroAchievements and it will show up here.',
-                'Aucun jeu avec des succès sur ce compte pour l’instant : joues-en un avec RetroAchievements et il apparaîtra ici.'
-              ),
-              'success'
-            );
-          } else {
-            setStatus(
-              t(
-                'retroachievements-imported',
-                'Import complete: {created} added, {updated} updated, {unchanged} unchanged, {failed} failed.',
-                'Importation terminée : {created} ajouté(s), {updated} mis à jour, {unchanged} inchangé(s), {failed} en échec.',
-                counts
-              ),
-              'success'
-            );
-          }
+          const summary = importText(r);
+          setStatus(summary.text, summary.kind);
           if ((r.created || 0) + (r.updated || 0) > 0) app.onStart(); // show the new and updated games
         } catch (err) {
           setStatus(errorText(err.message || String(err)), 'error');
@@ -2308,6 +2297,81 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         refresh();
       });
 
+      // The first-start guide connects the same account; this card is built once and must follow.
+      window.addEventListener('aw-accounts-changed', refresh);
+      refresh();
+    })();
+
+    // PlayStation account card (Settings > Sources): Sony's sign-in window, for official trophy rates.
+    (function () {
+      const status = $('#psn-connect-status');
+      const badge = $('#psn-connect-badge');
+      const connectBtn = $('#psn-connect-btn');
+      const disconnectBtn = $('#psn-disconnect-btn');
+      const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      let lastStatus = null;
+
+      registerLocaleRefresh(function applyPsnLabels() {
+        $('#psn-connect-title').text(t('psn-title', 'PlayStation account', 'Compte PlayStation'));
+        $('#psn-connect-desc').text(
+          t(
+            'psn-desc',
+            "Optional. Shows PlayStation's own trophy rates for the games already on your PSN account; the others keep the Exophase figures. Your session token is stored encrypted on this PC.",
+            'Optionnel. Affiche les pourcentages officiels PlayStation pour les jeux déjà présents sur ton compte PSN ; les autres gardent ceux d’Exophase. Ton jeton est stocké chiffré sur ce PC.'
+          )
+        );
+        $('#psn-connect-btn-hint').text(t('psn-btn-hint', 'opens the Sony sign-in window', 'ouvre la fenêtre de connexion Sony'));
+        $('#psn-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
+        $('#psn-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+        if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
+      });
+
+      function paintStatus(s) {
+        badge.toggle(!!s.connected);
+        disconnectBtn.toggle(!!s.connected);
+        $('#psn-connect-btn-label').text(s.connected ? t('xbox-reconnect', 'Reconnect', 'Reconnecter') : t('psn-connect', 'Connect PlayStation account', 'Connecter le compte PlayStation'));
+        if (s.connected) setStatus(t('connected', 'Connected', 'Connecté'), 'success');
+        else if (!status.hasClass('error')) setStatus(t('xbox-not-connected', 'Not connected', 'Non connecté'));
+      }
+
+      async function refresh() {
+        let s = {};
+        try {
+          s = (await ipcRenderer.invoke('psn:status')) || {};
+        } catch {}
+        lastStatus = s;
+        paintStatus(s);
+        status.data('stateText', status.text());
+      }
+
+      connectBtn.off('click').on('click', async function () {
+        if (connectBtn.hasClass('disabled')) return;
+        connectBtn.addClass('disabled').css('pointer-events', 'none');
+        setStatus(t('psn-connecting', 'Opening the Sony sign-in window…', 'Ouverture de la fenêtre de connexion Sony…'), 'running');
+        try {
+          const res = (await ipcRenderer.invoke('psn:login')) || {};
+          if (res.ok) setStatus(t('psn-connected', 'PlayStation account connected.', 'Compte PlayStation connecté.'), 'success');
+          else if (res.error === 'window-closed') setStatus(t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'), 'error');
+          else setStatus(`${t('psn-failed', 'PlayStation sign-in failed', 'Échec de la connexion PlayStation')}${res.error ? ': ' + res.error : ''}`, 'error');
+        } catch (err) {
+          setStatus(`${t('psn-failed', 'PlayStation sign-in failed', 'Échec de la connexion PlayStation')}: ${err.message || err}`, 'error');
+        } finally {
+          connectBtn.removeClass('disabled').css('pointer-events', '');
+          refresh();
+        }
+      });
+
+      disconnectBtn.off('click').on('click', async function () {
+        try {
+          await ipcRenderer.invoke('psn:logout');
+          setStatus(t('psn-disconnected', 'PlayStation account disconnected.', 'Compte PlayStation déconnecté.'));
+        } catch (err) {
+          setStatus(`${err.message || err}`, 'error');
+        }
+        refresh();
+      });
+
+      window.addEventListener('aw-accounts-changed', refresh);
       refresh();
     })();
 
@@ -2976,7 +3040,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const imported = installedTheme(value);
       // Shown for every theme the app can write out except a user stylesheet, built-ins included;
       // Export itself refuses a built-in and explains why.
-      const shown = value !== MORE_THEMES_VALUE && userThemes.parseValue(value) === null;
+      const shown = userThemes.parseValue(value) === null;
       $('#theme-library').toggle(shown);
       $('#btn-export-theme').prop('disabled', !shown);
       $('#btn-delete-theme').prop('hidden', !imported);
@@ -3304,22 +3368,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Cancel restores whatever is saved in the config.
     $('#option_theme').on('change', function () {
       const value = $(this).val() || 'default';
-      // The toggle row is a command, not a theme: it folds the built-ins in or out, restores the
-      // interrupted selection, and reopens the dropdown synchronously on the same click.
-      if (value === MORE_THEMES_VALUE) {
-        const previous = themeSelection || (app.config.general && app.config.general.theme) || 'default';
-        themeListExpanded = !themeListExpanded;
-        populateThemeSelect(previous);
-        $(this).val(previous);
-        try {
-          this.showPicker();
-        } catch {
-          /* showPicker needs a user gesture and is not in every runtime: the list is rebuilt either
-             way, so the user just reopens the dropdown themselves */
-        }
-        return;
-      }
-      themeSelection = value;
       fadeTheme(() => applyThemeValue(value));
       // Every theme is editable except a user stylesheet, which has no color model to edit.
       if (userThemes.parseValue(value)) closeThemeEditor();
@@ -4082,17 +4130,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function updateOverlayOptionsVisibility() {
       const mode = $('#option_notifMode').val() || 'auto';
       const visible = mode !== 'toast';
-      // Sound controls also apply to Windows toasts.
-      const KEEP_VISIBLE_OVERLAY_IDS = new Set([
-        'lbl-overlaySound',
-        'lbl-overlaySoundRare',
-        'lbl-overlaySoundPlatinum',
-        'lbl-overlaySoundProgress',
-        'lbl-overlayVolume',
-      ]);
+      // Only what a popup looks like folds away: the Sounds and Emulators cards serve toasts too.
       $('#options-notify-overlay > li:not(:first-child)').each(function () {
-        const labelId = $(this).find('[id^="lbl-overlay"]').first().attr('id') || '';
-        animateOverlaySettingCollapse(this, visible || KEEP_VISIBLE_OVERLAY_IDS.has(labelId));
+        animateOverlaySettingCollapse(this, visible);
+      });
+      $('#options-notify-progress, #options-notify-obs').each(function () {
+        animateOverlaySettingCollapse($(this).closest('.notify-card')[0], visible);
       });
     }
     // Presets style the in-game overlay; on Windows-toast-only transport nothing a preset describes
@@ -4537,9 +4580,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       updateDeleteSoundButton();
       fillTierSoundDropdowns(sounds);
     }
-    // The rare, 100% and progress rows offer the same files, plus "Same as unlocks" ('') and "None".
+    // The rare, 100%, progress and emulator rows offer the same files, plus "Same as ..." ('') and "None".
     function fillTierSoundDropdowns(sounds) {
-      $(TIER_SOUND_SELECTS).each(function () {
+      $(PICKED_SOUND_SELECTS).each(function () {
         const sel = $(this);
         const wanted = String(sel.val() || sel.attr('data-value') || '');
         sel.empty();
@@ -4551,7 +4594,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         sel.removeAttr('data-value');
       });
     }
-    $(TIER_SOUND_SELECTS).on('change', function () {
+    $(PICKED_SOUND_SELECTS).on('change', function () {
       const v = $(this).val();
       if (settingsReady && v && v !== NO_SOUND_VALUE) previewSoundAtVolume(v);
     });
@@ -4950,7 +4993,32 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       presetLayerTool.buildLayerCss({ base: layerMode.base, sections: [...layerSections], options: values }, { assetUrl: presetAssetUrl });
 
     const stylesheetFor = (values) => (layerMode ? layerStylesheet(values) : previewCss(values));
-    const previewBox = (values) => (layerMode ? { width: layerMode.width, height: layerMode.height } : presetGenerator.presetBoxSize(values));
+    /*
+      A preset the controls cannot rebuild (an imported SAN theme or .awpreset) is shown as a picture
+      the main process renders offscreen, or the stage would keep showing the previous draft. Cleared
+      as soon as a control is touched, since that starts a design of the user's own.
+    */
+    let presetSnapshot = null;
+    async function showPresetSnapshot(name) {
+      presetSnapshot = null;
+      const shot = await ipcRenderer.invoke('preset-snapshot', { preset: name, payload: previewPayload() }).catch((err) => {
+        debug.log(err);
+        return null;
+      });
+      if (!shot || String($('#pd-load').val() || '') !== name) return;
+      presetSnapshot = { name, ...shot };
+      renderPreviewDocument(readPresetOptions());
+    }
+    function snapshotDocument({ image, width, height }) {
+      return `<!doctype html><html><body style="margin:0;background:transparent"><img alt="" src="${image}" style="display:block;width:${width}px;height:${height}px"></body></html>`;
+    }
+
+    const previewBox = (values) =>
+      presetSnapshot
+        ? { width: presetSnapshot.width, height: presetSnapshot.height }
+        : layerMode
+          ? { width: layerMode.width, height: layerMode.height }
+          : presetGenerator.presetBoxSize(values);
 
     // The logo is one extra element inside the card; the preview document is built without it.
     function syncLayerLogo(doc) {
@@ -4978,6 +5046,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function renderPreviewDocument(values, { hold = true } = {}) {
       const frame = previewFrame();
       if (!frame) return;
+      if (presetSnapshot) {
+        frame.onload = null;
+        frame.srcdoc = snapshotDocument(presetSnapshot);
+        layoutPreview(values);
+        return;
+      }
       frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined });
       frame.onload = () => {
         try {
@@ -5011,6 +5085,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     // Re-feed the sample payload so the state classes and the entry animation are applied again.
     function replayPreview() {
+      if (presetSnapshot) return void showPresetSnapshot(presetSnapshot.name);
       const frame = previewFrame();
       try {
         if (frame && frame.contentWindow && frame.contentWindow.awPreviewApply) {
@@ -5142,6 +5217,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#options-notify-designer').on('input change', 'input, select', function () {
       if (this.id === 'pd-load' || this.id === 'pd-name' || this.id === 'pd-resolution' || this.id === 'pd-search') return;
+      if (presetSnapshot) {
+        presetSnapshot = null;
+        renderPreviewDocument(readPresetOptions());
+      }
       schedulePreview();
       recordPresetHistory();
     });
@@ -5599,6 +5678,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       '#option_overlayPresetXenia',
       '#option_overlayPresetRpcs3',
       '#option_overlayPresetShadps4',
+      '#option_overlayPresetKytyps5',
     ];
     async function refreshOverlayPresetMenu(preferred) {
       const presets = (await ipcRenderer.invoke('list-presets')) || [];
@@ -5980,8 +6060,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#pd-name').val('');
         updateCreateButtonMode();
         updateDeleteButtonVisibility();
+        await showPresetSnapshot(name);
         return 'imported';
       }
+      if (presetSnapshot) presetSnapshot = null;
       if (opts.layered) {
         if (!(await openLayerBase(opts.base, opts.sections))) return 'failed';
       } else {
@@ -6001,6 +6083,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       updateDeleteButtonVisibility();
       if (!name) {
         setPresetStatus('');
+        if (presetSnapshot) {
+          presetSnapshot = null;
+          renderPreviewDocument(readPresetOptions());
+        }
         return;
       }
       try {
@@ -6130,6 +6216,40 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         setPresetStatus((($('#pd-status').attr('data-fail') || '') + ': ' + err).trim(), 'error');
       }
       self.css('pointer-events', 'initial');
+    });
+
+    // A timer ends the Import menu's closing animation: a hidden window never fires transitionend.
+    const IMPORT_MENU_CLOSE_MS = 120;
+    let importMenuTimer = null;
+    function setImportMenu(open) {
+      const box = $('#pd-import');
+      if (box.hasClass('is-open') === open) return;
+      clearTimeout(importMenuTimer);
+      box.toggleClass('is-open', open).toggleClass('is-closing', !open);
+      $('#btn-import-menu').attr('aria-expanded', String(open));
+      if (open) $('#pd-import-list .pd-import-item').first().trigger('focus');
+      else importMenuTimer = setTimeout(() => box.removeClass('is-closing'), IMPORT_MENU_CLOSE_MS);
+    }
+    $('#btn-import-menu').on('click', () => setImportMenu(!$('#pd-import').hasClass('is-open')));
+    $('#pd-import-list').on('click', '.pd-import-item', () => setImportMenu(false));
+    $('#pd-import').on('keydown', function (e) {
+      if (!$(this).hasClass('is-open')) return;
+      const items = $('#pd-import-list .pd-import-item').toArray();
+      const at = items.indexOf(document.activeElement);
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        setImportMenu(false);
+        $('#btn-import-menu').trigger('focus');
+      } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const step = e.key === 'ArrowDown' ? 1 : -1;
+        const next = at < 0 ? (step > 0 ? 0 : items.length - 1) : (at + step + items.length) % items.length;
+        items[next].focus();
+      }
+    });
+    $(document).on('mousedown.pdImport', (e) => {
+      if (!$(e.target).closest('#pd-import').length) setImportMenu(false);
     });
 
     $('#btn-import-preset').click(async function () {
@@ -6445,6 +6565,7 @@ function readNotificationSettings() {
   app.config.overlay.notificationPresetXenia = $('#option_overlayPresetXenia').val() || '';
   app.config.overlay.notificationPresetRpcs3 = $('#option_overlayPresetRpcs3').val() || '';
   app.config.overlay.notificationPresetShadps4 = $('#option_overlayPresetShadps4').val() || '';
+  app.config.overlay.notificationPresetKytyps5 = $('#option_overlayPresetKytyps5').val() || '';
   app.config.overlay.notificationPosition = $('#option_overlayPosition').val() || 'center-bottom';
   app.config.overlay.notificationScale = parseFloat($('#option_overlayScale').val()) || 1;
   app.config.overlay.notificationOpacity = parseInt($('#option_overlayOpacity').val(), 10) || 100;
@@ -6460,6 +6581,7 @@ function readNotificationSettings() {
     ['#option_overlaySoundRare', 'notificationSoundRare'],
     ['#option_overlaySoundPlatinum', 'notificationSoundPlatinum'],
     ['#option_overlaySoundProgress', 'notificationSoundProgress'],
+    ...Object.entries(EMULATOR_SOUND_SELECTS),
   ]) {
     if ($(id).find('option').length > 0) app.config.overlay[key] = String($(id).val() || '');
   }

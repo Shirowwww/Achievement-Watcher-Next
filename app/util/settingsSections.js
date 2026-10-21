@@ -23,6 +23,9 @@ const HEADER_SELECTOR = '.title, .emulator-group-title, .emulator-login-heading'
   people use. Keys are section ids (see sectionKey). Bump DEFAULTS_VERSION when this list changes,
   so a profile that already stored its own open/closed state is brought up to date once.
 */
+// Keys added after version 2, so a profile stored at 2 gains only these and keeps every section it reopened.
+const ADDED_IN = { 3: ['options-notify-progress', 'options-notify-emulators', 'options-notify-obs'] };
+
 const DEFAULT_COLLAPSED = [
   'options-ui-app',
   'options-ui-trophies',
@@ -50,8 +53,10 @@ const DEFAULT_COLLAPSED = [
   'options-emulator2',
   'profile-band',
   'library-tiles',
+  // Version 3: the popup settings split into cards; the rarer ones start folded.
+  ...ADDED_IN[3],
 ];
-const DEFAULTS_VERSION = 2;
+const DEFAULTS_VERSION = 3;
 
 /*
   The collapsed keys to apply, given what was stored. A profile with no stored state gets the
@@ -60,10 +65,17 @@ const DEFAULTS_VERSION = 2;
 */
 function resolveCollapsed(stored, seenVersion) {
   const keys = new Set(Array.isArray(stored) ? stored : DEFAULT_COLLAPSED);
-  if (!Array.isArray(stored) || Number(seenVersion) >= DEFAULTS_VERSION) {
+  const seen = Number(seenVersion) || 0;
+  if (!Array.isArray(stored) || seen >= DEFAULTS_VERSION) {
     return { keys, version: DEFAULTS_VERSION, changed: false };
   }
-  DEFAULT_COLLAPSED.forEach((key) => keys.add(key));
+  const added =
+    seen >= 2
+      ? Object.entries(ADDED_IN)
+          .filter(([version]) => Number(version) > seen)
+          .flatMap(([, list]) => list)
+      : DEFAULT_COLLAPSED;
+  added.forEach((key) => keys.add(key));
   return { keys, version: DEFAULTS_VERSION, changed: true };
 }
 

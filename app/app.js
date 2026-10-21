@@ -497,6 +497,14 @@ function trophyLabels() {
 
 window.trophyLabels = trophyLabels;
 
+// PlayStation's own rarity names, keyed as rarityTiers.psnRarity returns them.
+window.psnRarityLabels = () => ({
+  ultraRare: t('psn-ultra-rare', 'Ultra rare', 'Ultra rare'),
+  veryRare: t('psn-very-rare', 'Very rare', 'Très rare'),
+  rare: t('psn-rare', 'Rare', 'Rare'),
+  common: t('psn-common', 'Common', 'Commun'),
+});
+
 // The "Rarity display" setting, in the shape trophyStats and rarityTiers take.
 function rarityGrading() {
   return rarityTiers.gradingFrom(app.config && app.config.achievement);
@@ -823,9 +831,22 @@ const PROFILE_STATS_PLATFORMS = {
   ea: { label: 'EA', img: 'ea' },
   socialclub: { label: 'Social Club', img: 'Goldberg SocialClub' },
   playstation: { label: 'PlayStation', img: 'RPCS3 Emulator' },
+  'playstation-3': { label: 'PlayStation 3', img: 'RPCS3 Emulator' },
+  'playstation-4': { label: 'PlayStation 4', img: 'ShadPS4 Emulator' },
+  'playstation-5': { label: 'PlayStation 5', img: 'KytyPS5 Emulator' },
   xbox: { label: 'Xbox', img: 'Xenia Emulator' },
+  'xbox-360': { label: 'Xbox 360', img: 'Xenia Emulator' },
   retroachievements: { label: 'RetroAchievements', img: 'RetroAchievements' },
   pcport: { label: 'PC Port', img: 'PC Port' },
+};
+
+const PROFILE_STATS_CONSOLE_BY_SOURCE = {
+  'rpcs3 emulator': 'playstation-3',
+  'shadps4 emulator': 'playstation-4',
+  'ps4 recomp': 'playstation-4',
+  'kytyps5 emulator': 'playstation-5',
+  'xenia emulator': 'xbox-360',
+  'xbox 360 recomp': 'xbox-360',
 };
 
 function profileStatsGroupOf(game) {
@@ -835,6 +856,9 @@ function profileStatsGroupOf(game) {
   } catch {
     kind = '';
   }
+  // A console family splits by console when the source names one; a manual entry stays generic.
+  const consoleKey = kind === 'playstation' || kind === 'xbox' ? PROFILE_STATS_CONSOLE_BY_SOURCE[String(game.source || '').toLowerCase()] : '';
+  if (consoleKey) kind = consoleKey;
   const known = PROFILE_STATS_PLATFORMS[kind] || PROFILE_STATS_PLATFORMS.steam;
   return { key: kind === 'steam-owned' ? 'steam' : kind || 'steam', label: known.label, img: known.img };
 }
@@ -850,26 +874,40 @@ function profileStatsIconFor(key) {
 }
 
 /*
-  Playtime is one synchronous registry read per game, so on a large library it is the single
-  expensive number in the panel. It is filled in after the panel is on screen rather than before:
-  everything else is already known from the library in memory and should not wait behind it.
+  Playtime is one synchronous registry read per game, the only costly number in the panel. It is
+  filled in after the panel opens, in slices of a few ms between frames: one block took ~220ms on
+  78 games and froze the opening animation.
 */
+const PLAYTIME_SLICE_MS = 5;
+let profileStatsPlaytimeRun = 0;
+
 function fillProfileStatsPlaytime(games) {
+  const run = ++profileStatsPlaytimeRun;
   let seconds = 0;
   let played = 0;
-  for (const game of games) {
-    let playtime = 0;
-    try {
-      playtime = Number(PlaytimeTracking.readSync(game.appid).playtime) || 0;
-    } catch {
-      playtime = 0;
+  let index = 0;
+  const step = () => {
+    // A newer render took over, or the panel was closed again meanwhile.
+    if (run !== profileStatsPlaytimeRun || $('#profile-stats').attr('aria-hidden') !== 'false') return;
+    const until = performance.now() + PLAYTIME_SLICE_MS;
+    for (; index < games.length && performance.now() < until; index++) {
+      let playtime = 0;
+      try {
+        playtime = Number(PlaytimeTracking.readSync(games[index].appid).playtime) || 0;
+      } catch {
+        playtime = 0;
+      }
+      if (playtime <= 0) continue;
+      seconds += playtime;
+      played += 1;
     }
-    if (playtime <= 0) continue;
-    seconds += playtime;
-    played += 1;
-  }
-  // The panel may have been closed again while this ran.
-  if ($('#profile-stats').attr('aria-hidden') !== 'false') return;
+    if (index < games.length) setTimeout(step, 0);
+    else showProfileStatsPlaytime(seconds, played);
+  };
+  step();
+}
+
+function showProfileStatsPlaytime(seconds, played) {
   // Averaged over the games that were actually played, not over the whole library: a library full of
   // never-launched games would otherwise report an average of a few minutes and mean nothing.
   const average = played > 0 ? Math.round(seconds / played) : 0;
@@ -1200,8 +1238,23 @@ window.applyLibraryChrome = applyLibraryChrome;
 
 // Compact profile band (issue #123): one row instead of the full banner. The fold button in the band
 // and Settings > Appearance both land here, so the two always agree.
+let profileCompactInitialised = false;
+let profileRefoldTimer = null;
+const PROFILE_REFOLD_MS = 320;
+
 function applyProfileCompact(compact) {
+  const changed = profileCompactInitialised && $('#home').hasClass('profile-compact') !== compact;
+  profileCompactInitialised = true;
   $('#home').toggleClass('profile-compact', compact);
+  // A short settle of the band's content after a fold or unfold, never on the first paint. A timer
+  // rather than animationend, which a hidden window may never deliver.
+  if (changed) {
+    const band = $('#user-info').removeClass('is-refolding');
+    void band[0]?.offsetWidth; // reflow, so a second toggle restarts the animation
+    band.addClass('is-refolding');
+    clearTimeout(profileRefoldTimer);
+    profileRefoldTimer = setTimeout(() => band.removeClass('is-refolding'), PROFILE_REFOLD_MS);
+  }
   refreshProfileBandLabels();
   $('#profile-compact-toggle')
     .attr('aria-pressed', String(compact))
@@ -7046,7 +7099,7 @@ var app = {
                                 <span>${escapeHtml(unlockAt)}</span>
                                 <span>${escapeHtml(unlockAgo)}</span>
                               </div>
-                              <div class="community"><i class="fab fa-steam"></i> <span class="data">--</span> ${globalStatLabel}</div>
+                              <div class="community"><i class="fab fa-steam"></i> <span class="data">--</span> <span class="global-stat">${globalStatLabel}</span></div>
                             </div>
                         </div>
 
@@ -7187,10 +7240,9 @@ var app = {
         $('.achievement .stats .community').hide();
       } else {
         $('.achievement .stats .community').show();
-        $('.achievement .stats .community i').attr(
-          'class',
-          rarityContext.kind === 'emulator' || rarityContext.source === 'RetroAchievements' ? 'fas fa-trophy' : 'fab fa-steam'
-        );
+        const rarityIcon =
+          game.system === 'playstation' ? 'fab fa-playstation' : rarityContext.kind === 'emulator' || rarityContext.source === 'RetroAchievements' ? 'fas fa-trophy' : 'fab fa-steam';
+        $('.achievement .stats .community i').attr('class', rarityIcon);
         if (rarityContext.kind === 'xbox') {
           // Rarity was cached at import time on each schema entry - paint it directly, no network.
           const entries = (game.achievement.list || [])
@@ -7201,7 +7253,7 @@ var app = {
         } else if (rarityContext.kind === 'steam-bridge') {
           getGlobalStat(rarityContext.cacheId, 'steam-bridge', game.name, game.achievement.list, rarityContext);
         } else if (rarityContext.kind === 'emulator') {
-          getGlobalStat(game.appid, rarityContext.source, game.name, game.achievement.list, { gameNames: game.rarityTitles });
+          getGlobalStat(game.appid, rarityContext.source, game.name, game.achievement.list, { gameNames: game.rarityTitles, npCommId: game.npCommId });
         } else if (rarityContext.kind === 'steam') {
           getGlobalStat(rarityContext.appid, 'steam', game.name, game.achievement.list);
         } else {
@@ -8030,22 +8082,28 @@ var app = {
       $('#add-game-manually span, #manual-game-title').text(addManualGameLabel);
       $('#add-game-manually').attr({ title: addManualGameLabel, 'aria-label': addManualGameLabel });
       $('#manual-game-name-label').text(manualGameNameLabel);
-      $('#manual-game-name').attr('placeholder', manualGameNameLabel);
-      $('#manual-game-exe-label, #manual-game-pick-exe span').text(t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"));
+      const pickExeLabel = t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu");
+      $('#manual-game-exe-label, #manual-game-pick-exe .manual-exe-action').text(pickExeLabel);
       $('#manual-game-platform-label').text(t('manual-game-platform', 'Platform', 'Plateforme'));
       $('#manual-game-platform-other').text(t('manual-game-platform-other', 'Other', 'Autre'));
       $('#manual-game-appid-label').text(manualGameAppidLabel);
-      $('#manual-game-appid').attr('placeholder', manualGameAppidLabel);
-      $('#manual-game-note').html(`<i class="fas fa-info-circle"></i> ${escapeHtml(t('achievements-not-available', 'No achievements', 'Pas de succès'))}`);
+      $('#manual-game-note').html(`<i class="fas fa-info-circle"></i> ${escapeHtml(t('manual-game-note', 'Launches and playtime are tracked, without achievements.', 'Lancements et temps de jeu suivis, sans succès.'))}`);
       $('#manual-game-cancel').text(t('cancel', 'Cancel', 'Annuler'));
       $('#manual-game-save').text(t('blacklist-add-button', 'Add', 'Ajouter'));
+      // Add stays off until there is something to add, so the form says what it still needs.
+      const syncManualSave = () => $('#manual-game-save').prop('disabled', !manualExe || !$('#manual-game-name').val().trim());
+      $('#manual-game-name').on('input', syncManualSave);
       $('#add-game-manually').on('click', () => {
         manualExe = '';
         $('#manual-game-name, #manual-game-appid').val('');
         $('#manual-game-platform').val('PC');
-        $('#manual-game-exe-path').text('');
+        $('#manual-game-exe-path').text('').removeAttr('title');
+        $('#manual-game-pick-exe').removeClass('has-file');
+        $('#manual-game-pick-exe .manual-exe-action').text(pickExeLabel);
+        $('#manual-game-pick-exe .manual-exe-icon').removeClass('has-icon').css('background-image', '');
+        syncManualSave();
         $('#manual-game').attr('aria-hidden', 'false').show();
-        setTimeout(() => $('#manual-game-name').trigger('focus'), 0);
+        setTimeout(() => $('#manual-game-pick-exe').trigger('focus'), 0);
       });
       $('#manual-game-cancel, #manual-game > .overlay').on('click', closeManualGame);
       $(document).on('keydown.manual-game', (event) => {
@@ -8053,13 +8111,24 @@ var app = {
       });
       $('#manual-game-pick-exe').on('click', async () => {
         const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
-          title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
+          title: pickExeLabel,
           filters: [{ name: 'Executables', extensions: ['exe', 'bat', 'cmd'] }],
           properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
         });
         if (!dialog.filePaths || !dialog.filePaths[0]) return;
-        manualExe = dialog.filePaths[0];
-        $('#manual-game-exe-path').text(manualExe).attr('title', manualExe);
+        const chosen = dialog.filePaths[0];
+        manualExe = chosen;
+        // The picker becomes the file: its own icon, its name, and the folder it sits in below.
+        $('#manual-game-pick-exe .manual-exe-action').text(path.basename(chosen));
+        $('#manual-game-exe-path').text(path.dirname(chosen)).attr('title', chosen);
+        $('#manual-game-pick-exe').addClass('has-file');
+        remote.app
+          .getFileIcon(chosen, { size: 'large' })
+          .then((icon) => {
+            if (manualExe !== chosen || icon.isEmpty()) return;
+            $('#manual-game-pick-exe .manual-exe-icon').addClass('has-icon').css('background-image', cssUrl(icon.toDataURL()));
+          })
+          .catch((err) => debug.log(`[manual-game] no icon for ${chosen}: ${err.message || err}`));
         if (!$('#manual-game-name').val().trim()) {
           let detectedName = '';
           try {
@@ -8067,6 +8136,7 @@ var app = {
           } catch {}
           $('#manual-game-name').val(detectedName || path.basename(manualExe, path.extname(manualExe)));
         }
+        syncManualSave();
       });
       $('#manual-game form').on('submit', async (event) => {
         event.preventDefault();

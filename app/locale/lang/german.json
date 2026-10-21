@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Bibliotheksansicht",
-        "description": "Wähle das Kartenlayout. Querformat behält die aktuelle Ansicht bei; Kompaktes Raster, Liste und Details setzen auf Dichte oder zusätzliche Aktivitätsdaten.",
+        "description": "Wähle das Kartenlayout. Querformat zeigt breites Artwork; kompaktes Querformat und Hochformat, Liste und Details tauschen Artwork-Größe gegen Dichte oder reichhaltigere Aktivität.",
         "value": {
           "portrait": "Hochformat",
           "landscape": "Querformat",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Silber bis",
-          "description": "In den Seltenheitsstufen erhalten Erfolge bis zu dieser Quote Silber. Der Wert muss zwischen der Gold- und der Seltenheitsgrenze liegen, sonst kehren alle drei zu ihren Standardwerten zurück."
+          "description": "In seltenen Stufen erhalten Erfolge bis zu dieser Quote Silber. Sie bleibt immer über Gold und unter der Seltenheitsgrenze: Wer einen Regler verschiebt, schiebt die anderen mit."
         },
         "rareMax": {
           "name": "Selten bis",
@@ -557,8 +557,13 @@
         "transport": "Integrationen",
         "chromium": "Chromium-Benachrichtigung",
         "watchdog": "Watchdog",
-        "test": "Test",
-        "overlay": "Popup"
+        "test": "Tests",
+        "overlay": "Popup",
+        "overlayDisplay": "Anzeige",
+        "overlayProgress": "Fortschritt",
+        "overlaySounds": "Töne",
+        "overlayEmulators": "Emulatoren",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Einige Funktionen sind nur unter Windows 10 verfügbar",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Voreinstellung (ShadPS4)",
         "overlayPresetShadps4Desc": "Preset für ShadPS4-Benachrichtigungen (PlayStation 4)",
         "presetSameAsMain": "Wie Haupt-Preset",
+        "overlayEmulatorsDesc": "In einem Emulator gestartete Spiele können eine eigene Vorlage und einen eigenen Ton haben; neu kompilierte PC-Ports folgen ihrer Konsole. „Wie Haupt-Preset“ behält die obigen Einstellungen.",
         "overlayPosition": "Position",
         "overlayPositionDesc": "Wo das In-Game-Overlay-Popup auf dem Bildschirm erscheint",
         "overlayScale": "Größe",
@@ -755,6 +761,9 @@
           "importedOnly": "Importierte Vorlage - hier exportierbar oder löschbar; mit den Reglern nicht bearbeitbar.",
           "importSan": "SAN-Theme importieren",
           "importSanSetup": "Von SAN auf diesem PC importieren",
+          "importMenuFile": "Vorlagendatei…",
+          "importMenuSan": "SAN-Theme…",
+          "importMenuSanSetup": "Von SAN auf diesem PC",
           "layer": {
             "none": "Keine Anpassung",
             "title": "Mitgelieferte Vorlage anpassen"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Hilfe",
       "title": "Hilfe & Tipps",
-      "intro": "Alles Wissenswerte - Erkennung, Benachrichtigungen, Controller, Overlay, Designs und Fehlerbehebung.",
+      "intro": "Alles Wissenswerte: Spiele finden, Benachrichtigungen, Emulatoren, das Overlay, der Controller, Designs und was zu tun ist, wenn etwas nicht stimmt.",
       "setupTitle": "Deine aktuelle Einrichtung",
       "topicsTitle": "Nach Thema durchsuchen",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Erste Schritte",
       "quick": [
-        "Füge Speicher-/Konfigurationsordner unter Einstellungen > Ordner hinzu und aktiviere anschließend die passende Quelle unter Einstellungen > Quellen.",
-        "Der Watchdog läuft im Hintergrund - er muss aktiv sein, damit Live-Benachrichtigungen und Spielzeit funktionieren.",
-        "Alles (Einstellungen, Caches, Protokolle und benutzerdefinierte Designs) befindet sich in %APPDATA%\\Achievement Watcher Next.",
-        "Jeder Einstellungsbereich lässt sich über seine Kopfzeile einklappen - der Pfeil zeigt nach unten, wenn er offen ist, zur Seite, wenn er zu ist. Deine Auswahl wird gemerkt."
+        "Lass die Intelligente Suche unter Einstellungen > Ordner nach deinen Spielen suchen oder füge selbst einen Ordner hinzu und aktiviere dann die passende Quelle unter Einstellungen > Quelle.",
+        "Der Watchdog läuft im Hintergrund. Er muss laufen, damit Live-Benachrichtigungen und Spielzeit funktionieren.",
+        "Alles (Einstellungen, Caches, Protokolle, benutzerdefinierte Designs) befindet sich in %APPDATA%\\Achievement Watcher Next.",
+        "Die Auswahl Oberfläche oben in den Einstellungen wechselt zwischen Einfach (die Tabs für den Alltag) und Erweitert (ergänzt Steam / GBE Fork, Ubisoft / Uplay R1/R2, Erweitert und tiefergehende Optionen). Einfach blendet nur Bedienelemente aus, nichts wird deaktiviert.",
+        "Wenn du das Hauptfenster schließt, bleibt AW Next im Infobereich, wo die Überwachung weiterläuft. Zum Beenden nutze das Infobereich-Menü. Beim Start ausführen und In Infobereich minimieren findest du unter Einstellungen > Allgemein.",
+        "Das Suchfeld oben in den Einstellungen findet eine Option in jedem Tab. Der Erststart-Assistent unter Einstellungen > Allgemein öffnet die Einrichtung erneut."
       ],
-      "notifications": [
-        "Automatisch ist die Voreinstellung: das Pop-up im Spiel, wenn das Spiel es zeigen kann, sonst eine Windows-Benachrichtigung, nie beides.",
-        "Unter Einstellungen > Benachrichtigung stehen Preset, Ton, Lautstärke, Position und Größe; die Testschaltflächen zeigen ein echtes Pop-up.",
-        "Rechtsklick auf ein Spiel > Benachrichtigung gibt genau diesem Spiel ein eigenes Preset, eine eigene Position, einen eigenen Ton oder eine eigene Größe.",
-        "Screenshot beim Freischalten legt ein Bild des Moments in Bilder\\Achievement Watcher Next ab."
-      ],
-      "gameHealthTitle": "Spielzustand",
-      "gameHealth": [
-        "Öffne die Werkzeug-Schaltfläche eines Spiels (oben rechts auf der Kachel), um zu sehen, ob es Bereit ist, geprüft werden muss oder nicht verfolgt wird.",
-        "Der Satz unter dem Zustand nennt die Ursache in klaren Worten; die Prüfungen darunter zeigen, welcher Teil betroffen ist.",
-        "Reparatur-Schaltflächen erscheinen nur, wenn AW Next das Spiel wirklich reparieren kann - jede nennt die Änderung und wo die vorherigen Dateien bleiben.",
-        "Technische Details enthält die genauen Pfade, Zahlen und Emulator-Codes; kopiere sie in einen Fehlerbericht."
-      ],
-      "troubleshootTitle": "Fehlerbehebung",
-      "troubleshoot": [
-        "Wenn ein Spiel fehlt: Ordner hinzufügen, erneut scannen und anschließend Quellenschalter sowie Sperrliste prüfen.",
-        "Wenn keine Benachrichtigungen erscheinen: Windows-Fokusassistent prüfen und die App mit denselben Rechten wie die Spiele ausführen.",
-        "Erweitert > Diagnose öffnet Protokoll- und Datenordner; füge sie einer Fehlermeldung bei.",
-        "Protokolle werden angehängt, ein Absturz übersteht also den nächsten Start. Jeder Lauf beginnt mit einer Sitzungsmarke und einem [diag]-Block (Versionen, Pfade, Bildschirme) - füge ihn dem Ticket bei."
+      "libraryTitle": "Bibliothek und Sammlungen",
+      "library": [
+        "Sammlungen: Rechtsklick auf ein Spiel > Sammlungen, eine anhaken oder Neue Sammlung… wählen. Die Sammlungen-Schaltfläche neben Nur installierte Spiele anzeigen filtert dann die Bibliothek, und die Profilzahlen folgen.",
+        "Sammlung bearbeiten… im Menü dieser Schaltfläche ändert Name, Farbe, Symbol oder Bild und löscht die Sammlung. Die Spiele bleiben in deiner Bibliothek.",
+        "Die runde Schaltfläche neben der Abschlussquote öffnet die Bibliotheksstatistik: Abschluss, Anzahl freigeschalteter und gesperrter Erfolge, Spielzeit, Trophäen, Platin-Spiele, seltenste Erfolge und eine Zeile pro Plattform.",
+        "Eine Auswahl zwischen dem Suchfeld und der +-Schaltfläche wechselt zwischen sechs Bibliotheksansichten. Einstellungen > Darstellung > Bibliothekskacheln legt Kachelgröße, Abstände und die Anzeige jeder Kachel fest.",
+        "Die +-Schaltfläche fügt ein Spiel hinzu, das keine Quelle findet: einen Titel und eine Programmdatei, optional mit Plattform und Steam-AppID. Starts und Spielzeit werden erfasst, aber keine Erfolge.",
+        "Rechtsklick auf ein Spiel > Spieleinstellungen > Umbenennen… ändert den angezeigten Namen. Erfolge und Spielzeit > Spielzeit bearbeiten… korrigiert die Gesamtzeit (12.5 oder 12h30)."
       ],
       "sourcesTitle": "Launcher & Quellen",
       "sources": [
-        "Der Steam-Profilmodus listet installierte oder eigene Spiele auf; Freischaltungen stammen jedoch weiterhin aus lokalen Speicherdateien.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay und EA Desktop können unter Quellen getrennt aktiviert werden.",
-        "Eigene Steam-Spiele gelten nur dann als installiert, wenn die Steam-Registrierung dies bestätigt."
+        "Steam, Epic Games und Xbox PC bieten unter Einstellungen > Quelle jeweils Keine, Installiert oder Im Besitz. Im Besitz listet die gesamte Bibliothek eines verbundenen Kontos auf, installiert oder nicht.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC und EA Desktop haben unter Einstellungen > Quelle jeweils einen eigenen Schalter. EA Desktop deckt nur Spiele außerhalb der von EA verwalteten Ordner ab.",
+        "Eigene Steam-Spiele gelten nur dann als installiert, wenn die Steam-Registrierung dies bestätigt.",
+        "Steam-Freischaltungen werden aus den Statistiken gelesen, die Steam auf diesem PC speichert, daher funktioniert auch ein privates Profil. Ein Konto zu verbinden ist optional: Es ergänzt auf einem anderen PC gespielte Spiele und Steam-Family-Spiele.",
+        "Ein Spiel liegt an einem ungewöhnlichen Ort? Füge seinen Ordner unter Einstellungen > Ordner hinzu. Wähle den Ordner, der direkt die Spielstände, die AppID-Ordner oder die Emulator-Konfiguration enthält, oder einen Bibliotheksordner mit vielen Spielen.",
+        "RetroAchievements: Schalte die Quelle ein, gib deinen Benutzernamen und Web-API-Schlüssel ein und drücke dann Bibliothek importieren. Die Freischaltungen kommen von deinem Konto, lass also RetroAchievements im Emulator eingeschaltet.",
+        "Im Modus Einfach bleiben einige selten genutzte Quellenzeilen ausgeblendet, solange sie ungenutzt sind. Sie kehren zurück, sobald sie relevant werden, und Erweitert zeigt immer alle.",
+        "PlayStation-Trophäen zeigen ihren Grad, den Anteil der Spieler, die sie haben, und die eigene Seltenheitsstufe von PlayStation. Die Quoten stammen von Exophase; verbinde unter Einstellungen > Quelle ein PlayStation-Konto, um Sonys eigene Zahlen für die Spiele dieses Kontos zu erhalten."
+      ],
+      "notifications": [
+        "Automatisch ist die Voreinstellung: das Pop-up im Spiel, wenn das Spiel es zeigen kann, sonst eine Windows-Benachrichtigung, nie beides.",
+        "Einstellungen > Benachrichtigung enthält Benachrichtigungstyp (Automatisch, Windows-Benachrichtigung, In-Game-Overlay oder Beides), Vorlage, Ton, Lautstärke, Position, Skalierung und Deckkraft. Die Test-Schaltflächen lösen ein echtes Pop-up aus.",
+        "Öffne die Werkzeug-Schaltfläche eines Spiels (oben rechts auf seiner Kachel) und gehe zu dessen Benachrichtigungseinstellungen, um genau diesem Spiel eine eigene Vorlage, Position, einen eigenen Ton oder eine eigene Skalierung zu geben.",
+        "Screenshot beim Freischalten legt ein Bild des Moments in Bilder\\Achievement Watcher Next ab.",
+        "Ton für seltene Erfolge, Ton für 100 % Abschluss und Ton für Fortschritt (Modus Erweitert) geben diesen Pop-ups einen eigenen Ton. Zufällig wählt jedes Mal einen anderen Ton, und du kannst eigene Dateien importieren.",
+        "Gold, Silber und Bronze markieren seltene Freischaltungen. Einstellungen > Allgemein > Seltenheitsanzeige wechselt in den Trophäenmodus, der jeden Erfolg einstuft und bei abgeschlossenen Spielen Platin zeigt.",
+        "Bei Zählern zeigt Fortschrittsetappen ein Pop-up nur in 10-, 25- oder 50-%-Schritten. Rechtsklick auf ein Spiel > Fortschrittsbenachrichtigungen stummschalten macht ein Spiel still, ohne seine Freischaltungen anzutasten.",
+        "Zwei weitere Schalter unter Einstellungen > Benachrichtigung: Prioritätsbenachrichtigungen lässt Freischaltungen durch „Nicht stören“ (Windows 11), und Spiele des Steam-Clients ergänzt das Pop-up von AW Next für Spiele, die Steam selbst startet."
+      ],
+      "gameHealthTitle": "Spielzustand",
+      "gameHealth": [
+        "Klicke auf die Werkzeug-Schaltfläche eines Spiels (oben rechts auf seiner Kachel) oder mache einen Rechtsklick darauf, um den Spielzustand zu öffnen. Er zeigt, ob das Spiel Bereit ist, Prüfen braucht oder Nicht verfolgt wird.",
+        "Der Satz unter dem Status erklärt die Ursache in einfachen Worten. Die Prüfungen darunter zeigen, welcher Teil schuld ist: Spieldateien, Programmdatei, Erfolgsdaten, Emulator-Einrichtung, Live-Überwachung oder Benachrichtigungen.",
+        "Reparatur-Schaltflächen erscheinen nur, wenn AW Next dieses Spiel wirklich reparieren kann, etwa Spiel suchen, Erfolgsdaten neu schreiben, Emulator-Datei wiederherstellen oder Dieses Spiel überwachen. Jede sagt, was sie ändert, legt eine Sicherung an und fragt vorher.",
+        "Testbenachrichtigung senden löst ein Pop-up mit Namen und Artwork des jeweiligen Spiels aus, zugestellt auf dem Weg, den es wirklich nehmen würde.",
+        "Technische Details enthält die genauen Pfade, Zahlen und Emulator-Codes: Drücke Kopieren und füge sie in einen Fehlerbericht ein. Der farbige Punkt auf einer Kachel lässt sich unter Einstellungen > Darstellung > Bibliothekskacheln ausblenden."
+      ],
+      "troubleshootTitle": "Fehlerbehebung",
+      "troubleshoot": [
+        "Fehlt ein Spiel: Prüfe seine Quelle unter Einstellungen > Quelle, starte Intelligente Suche oder Konfigurationen generieren unter Einstellungen > Ordner, füge bei Bedarf seinen Ordner von Hand hinzu und schalte versuchsweise Nur installierte Spiele anzeigen aus.",
+        "Erscheinen keine Benachrichtigungen: Lies die Zeile Benachrichtigungen im Spielzustand des Spiels und prüfe dann „Nicht stören“ / Fokus-Assistent von Windows. Prioritätsbenachrichtigungen unter Einstellungen > Benachrichtigung können Freischaltungen durchlassen.",
+        "Einstellungen > Erweitert > Diagnose öffnet die Ordner für Protokolle und Daten, und Protokolle exportieren (.zip) bündelt die Protokolle mit maskiertem Benutzernamen und Schlüsseln. Hänge die Datei an, wenn du ein Problem meldest.",
+        "Protokolle werden angehängt, ein Absturz überlebt also den nächsten Start. Jeder Lauf beginnt mit einer Sitzungsmarkierung und einem [diag]-Block (Versionen, Pfade, Bildschirme): Füge ihn in ein Issue ein.",
+        "Ein Spiel hängt bei 0 %? Das ist normal, bis seine erste Freischaltung geschrieben wird. Hat AW Next die falsche Steam-Version zugeordnet, mache einen Rechtsklick auf das Spiel > AppID manuell festlegen….",
+        "Spielzeit wird nicht gezählt? Öffne die Werkzeug-Schaltfläche des Spiels > Programmdatei und wähle das Programm, das während des Spielens geöffnet bleibt, keinen Launcher.",
+        "Neue Erfolge aus einem Spiel-Update erscheinen innerhalb von 3 Tagen, oder sofort mit Einstellungen > Erweitert > Erfolgslisten erneut prüfen.",
+        "Ein App-Update scheitert immer wieder an derselben Datei? Einstellungen > Erweitert > Caches leeren entfernt nur erneut herunterladbare Dateien, niemals deine Einstellungen oder Spielstände."
       ],
       "steamTitle": "Steam-Emulatoren",
       "steam": [
         "GBE-/Goldberg-Spielstände befinden sich normalerweise unter %APPDATA%\\GSE Saves oder %APPDATA%\\Goldberg SteamEmu Saves.",
         "CODEX-/RUNE-Spielstände liegen häufig unter Public Documents\\Steam\\CODEX oder Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 und Hoodlum werden anhand ihrer Konfigurations-/Speicherordner erkannt.",
-        "Die Emulator-Reparatur im Kontextmenü kann GBE-Fork-Dateien, Erfolgsschemata und DLC-Daten hinzufügen.",
-        "Der einfache Modus ist schnell; Erweitert führt generate_emu_config für ausführlichere Steam-Daten aus und kann mehrere Minuten dauern."
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI und die Nemirtingas-Emulatoren werden aus ihren eigenen Konfigurations- oder Spielstandordnern gelesen. Wird ein Spiel nicht gefunden, füge seinen Ordner unter Einstellungen > Ordner hinzu.",
+        "Rechtsklick auf ein Spiel > Emulator & Tools > Emulator-Fix anwenden… installiert GBE Fork, erstellt steam_settings (Erfolgsliste und Symbole) und schreibt steam_appid.txt, falls sie fehlt. Jede ersetzte Datei wird vorher gesichert.",
+        "Unter Einstellungen > Steam / GBE Fork nutzt steam_settings-Daten auf Einfach den eigenen anonymen Abruf von AW Next und ist schnell. Erweitert führt generate_emu_config für tiefere Steam-Daten aus und kann Minuten dauern.",
+        "Von selbst wird nichts in einen Spielordner geschrieben: Neu erkannte Spiele automatisch reparieren, DLC-Besitz verwalten und Kontoname und Sprache schreiben sind standardmäßig alle aus.",
+        "Emulator diagnostizieren im selben Menü liest und meldet nur. GBE/Goldberg-Setup sichern und Letzte GBE/Goldberg-Sicherung wiederherstellen bringen ein Spiel in den vorherigen Zustand zurück."
       ],
       "emulatorTitle": "Konsolen-Emulatoren",
       "emulators": [
-        "RPCS3-Trophäen werden aus dev_hdd0\\home\\...\\trophy nahe der RPCS3-Installation gelesen.",
-        "shadPS4-Trophäen werden aus den game_data-/trophy-Ordnern der App-Daten gelesen; übrig gebliebene Daten sind kein Installationsnachweis.",
-        "Der Xenia-Fortschritt wird aus Xbox-Profildateien wie .gpd gelesen."
+        "RPCS3-Trophäen werden aus dev_hdd0\\home\\...\\trophy neben der RPCS3-Installation gelesen. Eine verschobene virtuelle Festplatte wird verfolgt.",
+        "shadPS4-Trophäen werden aus seinem Ordner game_data gelesen (die TROP-XML-Dateien). Du kannst den Emulator, seinen Benutzerordner oder game_data selbst hinzufügen.",
+        "Der Xenia-Fortschritt wird aus den Xbox-Profildateien (.gpd) gelesen und folgt den in seiner Konfiguration festgelegten Speicherordnern.",
+        "KytyPS5-Trophäen werden aus seinem Ordner _Trophies gelesen, für den Benutzer, unter dem der Launcher das Spiel startet.",
+        "Für PC neu kompilierte Xbox-360-Spiele und PS4-Ports (Bloodborne, Uncharted, God of War III Remastered, MediEvil und andere) sind eigene Quellen unter Einstellungen > Quelle. Taucht eines nicht auf, füge seinen Ordner unter Einstellungen > Ordner hinzu.",
+        "Jede Konsole kann unter Einstellungen > Benachrichtigung > Emulatoren (Modus Erweitert) eine eigene Pop-up-Vorlage und einen eigenen Ton haben. Neu kompilierte Xbox-360-Spiele folgen der Wahl von Xenia, PS4-Ports der von shadPS4, und Wie Haupt-Preset behält die Haupteinstellungen."
       ],
       "controllerTitle": "Controller (Gamepad)",
       "controller": [
-        "Aktiviere zuerst Einstellungen > Controller; danach öffnet Back + Start + LB das In-Game-Overlay.",
-        "LB + X schaltet die Navigation im Overlay ein oder aus.",
-        "Navigationsmodus: Steuerkreuz/linker Stick verschieben den Fokus, A bestätigt, B bricht ab, X sucht und Y öffnet die Optionen.",
+        "Aktiviere unter Einstellungen > Controller die Option In-Game-Overlay mit einem Controller steuern (standardmäßig aus), dann öffnet Back + Start + LB das Overlay im Spiel.",
+        "App mit Controller steuern (standardmäßig an) bedient AW Next selbst: Steuerkreuz oder linker Stick bewegen den Fokus, A öffnet ein Spiel, B geht zurück, X sucht, Y oder Start öffnet die Einstellungen, LB / RB wechseln die Einstellungs-Tabs.",
+        "In der Bibliothek startet RT das ausgewählte Spiel und LT öffnet dessen Spielzustand.",
+        "Im Overlay schaltet LB + X die Navigation um: Steuerkreuz oder linker Stick bewegen den Fokus, A bestätigt, B bricht ab, X sucht, Y öffnet die Optionen.",
         "Halte LB + RB gedrückt, um das Overlay mit dem linken Stick zu verschieben und mit dem rechten Stick zu scrollen.",
-        "Funktioniert mit Xbox-, PlayStation- (DualShock 4 / DualSense) und Switch-Pro-Controllern."
+        "Reagiert das Spiel weiterhin auf deine Tasten, schalte Overlay beim Öffnen fokussieren oder Escape-Taste an das Spiel senden, wenn per Controller geöffnet wird ein (beide standardmäßig aus).",
+        "Funktioniert mit Xbox-, PlayStation-Controllern (DualShock 4 / DualSense) und Switch-Pro-Controllern. Controller-Layout legt die angezeigten Tastennamen fest, und jedes Tastenkürzel besteht aus einer bis drei Tasten.",
+        "Controller wird nicht erkannt? Prüfe ihn zuerst in Windows (joy.cpl), vergewissere dich, dass der richtige Schalter an ist, und probiere dann XInput unter Controller-Backend."
       ],
       "overlayTitle": "In-Game-Overlay",
       "overlay": [
-        "Öffne es mit dem Overlay-Tastenkürzel (standardmäßig Ctrl+Shift+K) oder mit Back + Start + LB auf einem Controller.",
-        "Sortiere jeweils nach einer Spalte: Seltenheit, Datum oder Status (aufsteigend / absteigend / keine Sortierung).",
+        "Öffne es mit dem Overlay-Tastenkürzel (standardmäßig Ctrl+Shift+K) oder mit Back + Start + LB auf einem Controller, während ein unterstütztes Spiel läuft. Das Tastenkürzel legst du unter Einstellungen > Allgemein fest.",
+        "Es listet die Erfolge des laufenden Spiels auf: Name, Beschreibung, gesperrt oder freigeschaltet, Freischaltdatum und Fortschritt. Ziehe es an seiner Kopfzeile.",
+        "Ein versteckter Erfolg bleibt versteckt, bis du ihn anklickst (oder auf einem Controller A drückst), damit nichts gespoilert wird.",
+        "Die Filter Alle, Freigeschaltet, Gesperrt und In Arbeit filtern die Liste. Klicke auf Erfolg, Seltenheit, Datum oder Status zum Sortieren: aufsteigend, absteigend, dann wieder normal. Jeweils nur eine Spalte.",
         "Drücke /, um die Suche zu fokussieren, und Esc, um sie zu leeren oder das Optionsfeld zu schließen.",
-        "Im Zahnradmenü lassen sich Akzent, Dichte, Zoom, Deckkraft und sichtbare Zeilen ändern; „App-Design verwenden“ folgt dem aktiven Design.",
+        "Das Zahnrad-Feld ändert Akzent, Dichte, Symbolgröße, Zoom, Deckkraft und sichtbare Zeilen. App-Design verwenden folgt dem aktiven Design, und Zurücksetzen macht alles rückgängig.",
         "Jeder Erfolg mit bekannter Quote zeigt seine Seltenheit: Grau für häufige, Gold/Silber/Bronze für seltene."
       ],
       "streamTitle": "Stream-Overlay (OBS)",
       "stream": [
-        "Einstellungen > Benachrichtigung > OBS-Browserquelle > Link kopieren, dann eine Browserquelle in OBS hinzufügen und als URL einfügen.",
-        "Setze Breite und Höhe der Quelle auf die Größe, die http://127.0.0.1:8082/obs/_config angibt: die eigene Fläche der Vorlage bei deiner eingestellten Größe.",
+        "Einstellungen > Benachrichtigung > OBS-Browserquelle (Modus Erweitert): Vorschau prüft sie in deinem Browser und Link kopieren kopiert die Adresse. Füge in OBS eine Browser-Quelle hinzu und trage sie als URL ein.",
+        "Jede Breite und Höhe funktioniert, die Karte skaliert, um das Feld zu füllen. Eine größere Quelle ist schärfer: Gib ihr etwa die doppelte Größe der Vorlage (http://127.0.0.1:8082/obs/_config nennt sie) und platziere sie in halber Größe.",
         "Füge ?test=1 an die URL an, während du die Quelle platzierst. Sie zeigt alle zehn Sekunden eine Beispiel-Freischaltung; entferne es, wenn du fertig bist.",
-        "Die Quelle zeigt dasselbe Popup wie das In-Game-Overlay und bleibt zwischen Freischaltungen leer, sodass sie beim Streamen nichts kostet.",
-        "Sie liest den lokalen Benachrichtigungs-Feed, lass daher Websocket @localhost:8082 unter Einstellungen > Benachrichtigung > Transport aktiviert."
+        "Die Quelle zeigt dasselbe Pop-up wie im Spiel und bleibt zwischen Freischaltungen leer, sodass sie beim Streamen nichts kostet.",
+        "Weitere Optionen nach der Adresse: ?scale=2 fixiert den Zoom, ?duration=8000 legt fest, wie lange jede Karte bleibt, ?sound=1 spielt den Ton über die Quelle ab, /obs/preset/Xbox/ nutzt eine bestimmte Vorlage, egal welche der Desktop verwendet.",
+        "Sie liest den lokalen Benachrichtigungsfeed, lass also Websocket @localhost:8082 unter Einstellungen > Benachrichtigung > Integrationen eingeschaltet. Es funktioniert nur auf diesem PC, und nur eine Instanz von AW Next kann es bereitstellen."
+      ],
+      "souvenirsTitle": "Screenshots und Videoclips",
+      "souvenirs": [
+        "Einstellungen > Benachrichtigung > Screenshot beim Freischalten speichert einen Moment nach dem Pop-up ein Bild, Benachrichtigung inklusive, in einem Unterordner pro Spiel. Ordner öffnen führt dich dorthin.",
+        "HDR-Screenshots (Automatisch) korrigiert die Farben, wenn Windows HDR an ist. Die Aufnahmen erfassen den Hauptmonitor, spiele also auf diesem.",
+        "Videoclip beim Freischalten (aus, bis du es einschaltest, weiter unten unter Einstellungen > Benachrichtigung) hält die letzten Spielsekunden im Speicher und speichert um jede Freischaltung herum ein MP4. Geschrieben wird erst, wenn ein Erfolg freigeschaltet wird.",
+        "Clip-Länge (10 bis 30 Sekunden), Format (H.264, HEVC oder AV1), Auflösung, Bildrate, Qualität und Ton (Nur Spiel oder Ganzer PC) lassen sich alle ändern. H.264 läuft überall.",
+        "Die Arbeit erledigt der Encoder der Grafikkarte, mit deutlich unter 1 % des Prozessors. Ohne Hardware-H.264-Encoder übernimmt der Software-Encoder von Windows, höchstens mit 1080p und 30 FPS. Ein sehr altes Spiel im exklusiven Vollbild kann schwarze Bilder aufnehmen."
       ],
       "shortcutsTitle": "Tastenkürzel",
       "shortcuts": [
-        "Ctrl+Shift+K (Standard): In-Game-Overlay ein-/ausblenden - konfigurierbar unter Einstellungen > Allgemein.",
-        "Ctrl+Alt+Shift+Pfeiltasten verschieben das Overlay; Ctrl+Alt+Shift+1-5 rasten es an einer vorgegebenen Position ein.",
-        "Ctrl+Alt+Shift+C schaltet den Klickdurchgriff um; Ctrl+F fokussiert die Einstellungssuche."
+        "Ctrl+Shift+K (Standard): In-Game-Overlay ein-/ausblenden. Änderbar unter Einstellungen > Allgemein.",
+        "Ctrl+Alt+Shift+Pfeiltasten verschieben das Overlay; Ctrl+Alt+Shift+1-5 rastet es an einer voreingestellten Position ein; Ctrl+Alt+Shift+C schaltet Durchklicken um.",
+        "Im Overlay fokussiert / die Suche und Esc leert sie. Im Vorlagen-Designer machen Ctrl+Z und Ctrl+Y rückgängig und wiederholen.",
+        "Ctrl+F fokussiert die Einstellungssuche und Esc leert sie. F5 aktualisiert die Bibliothek."
       ],
       "themesTitle": "Benutzerdefinierte Designs",
       "themes": [
-        "Benutzerdefiniert startet mit Steam Blue; jede Ebene (Hintergrund, Kopfzeile, Felder, Karten, Einstellungen, Text, Ränder, Akzent) ist bearbeitbar.",
-        "Ebenenbilder liegen unter einem farbigen Schleier mit leichtem Milchglas-Effekt; die Effekte werden pro Ebene eingestellt.",
+        "Einstellungen > Darstellung enthält mitgelieferte Designs, und jedes lässt sich bearbeiten: Fenster, obere Leiste, Panels, Karten, Einstellungen, Text, Rahmen und Akzent bekommen jeweils eine Farbe, einen Verlauf oder ein Bild.",
+        "Design speichern macht aus deiner Bearbeitung ein eigenes Design: Behalte den Namen, um es zu ersetzen, oder gib einen anderen für eine Kopie ein. Alles zurücksetzen stellt das Design wieder her, mit dem du begonnen hast.",
         "Lege ein CSS-Design in <userData>\\themes ab, damit es in der Design-Auswahl erscheint.",
-        "Der Vorlagen-Editor kann ein Design vor dem Speichern als echtes Pop-up zeigen, eine gespeicherte Vorlage zum Ändern erneut öffnen und nicht benötigte löschen.",
-        "Exportiere das genutzte Design als eine .awtheme-Datei oder importiere eines, das dir jemand geschickt hat: es wird vor der Installation gezeigt und verhält sich danach wie ein eingebautes."
+        "Design exportieren… schreibt eine .awtheme-Datei (ein mitgeliefertes muss zuerst unter eigenem Namen gespeichert werden). Design importieren… zeigt eine Vorschau, bevor es installiert wird, und Design löschen entfernt ein importiertes.",
+        "Von der Community erstellte Designs findest du in der Design-Galerie auf der Projektwebsite, und deines einzuschicken braucht nur eine Datei."
+      ],
+      "presetsTitle": "Pop-up-Vorlagen",
+      "presets": [
+        "Eine Vorlage ist das Aussehen des Pop-ups im Spiel, gewählt unter Einstellungen > Benachrichtigung > Vorlage. Sie hat keine Wirkung, wenn der Benachrichtigungstyp Windows-Benachrichtigung ist.",
+        "Einstellungen > Benachrichtigungs-Presets ist ein Designer aus gewöhnlichen Bedienelementen: Wähle einen Ausgangspunkt oder drücke Überrasch mich, sieh dir die Live-Vorschau an (Karte, Vergleich, Bildschirm) und klicke dann auf Vorlage erstellen. Vorher wird nichts gespeichert.",
+        "Mitgelieferte Vorlage anpassen ändert nur wenige Dinge (Hintergrund, Textfarbe, Akzent, Rahmen, Leuchten, Schriftart, Logo) und folgt weiter der mitgelieferten Vorlage, wenn diese verbessert wird.",
+        "Vorlage bearbeiten öffnet eine selbst gestaltete erneut. Exportieren und Importieren verschieben eine Vorlage als eine .awpreset-Datei, mit ihren Bildern, Schriftarten und Tönen.",
+        "Importieren > SAN-Theme… liest ein Steam-Achievement-Notifier-Theme (eine .san-Datei), und Importieren > Von SAN auf diesem PC übernimmt die Themes, die SAN bereits verwendet. Sie behalten ihr SAN-Aussehen und ihre Töne."
       ],
       "tipsTitle": "Tipps & Tricks",
       "tips": [
-        "Klicke mit der rechten Maustaste auf eine Spielkachel für Schnellaktionen: Emulator-Reparatur, Erfolge, Steam-Seite, GBE-Fork-Installation und Deinstallation.",
-        "Klicke mit der rechten Maustaste auf ein Spiel und wähle „Fortschritt stummschalten“, um Fortschritts-Pop-ups zu stoppen, ohne Freischaltungen zu deaktivieren.",
-        "Die Emulator-Reparatur (Einfach schnell / Erweitert vollständig) installiert GBE Fork, das Erfolgsschema und DLC-Daten.",
-        "Die Spielzeit wird erfasst, solange das Spiel läuft; Fortschritts- und Spielzeitbenachrichtigungen lassen sich unter Benachrichtigungen aktivieren.",
-        "Neue Erfolge aus einem Spielupdate erscheinen automatisch innerhalb von 3 Tagen oder sofort über Einstellungen > Erweitert > Erfolgslisten erneut prüfen."
+        "Rechtsklick auf eine Spielkachel startet es, wählt seine Programmdatei, öffnet Ordner und Links, nutzt Emulator-Tools oder deinstalliert es, wenn dieses Menü aktiviert ist.",
+        "Als manuell freigeschaltet markieren (Rechtsklick auf einen Erfolg) hält eine Freischaltung fest, die keine Quelle sehen kann.",
+        "Erfolge zurücksetzen… spielt ein Spiel von vorn und sichert vorher jede Datei. Es funktioniert bei Emulator-Spielen, nicht bei Steam, Epic oder Xbox, deren Freischaltungen auf deinem Konto liegen.",
+        "Die Spielzeit wird erfasst, solange das Spiel läuft; Spielzeit-Tracking unter Einstellungen > Benachrichtigung schaltet die Start- und Ende-Benachrichtigungen ein.",
+        "Dieses Spiel vergessen… löscht alles, was AW Next über ein Spiel speichert (Spielstände werden vorher gesichert). Aus der Liste entfernen blendet es nur aus.",
+        "Spieleinstellungen > Sprache der Erfolge zeigt die Erfolge und Benachrichtigungen eines Spiels in einer anderen Sprache als der Rest.",
+        "Einstellungen > Erweitert > Profilsicherung: Profil exportieren… speichert deine Einstellungen, Vorlagen, Designs, Cover und Spielzeit in einer .awbackup-Datei für eine Neuinstallation oder einen neuen PC. Anmeldungen werden nicht gespeichert."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Bewerte Erfolge je nach Seltenheit mit Gold, Silber oder Bronze. Aktiviere das in den Einstellungen.",
     "clipsTitle": "Videoclips",
     "clipsCopy": "Behalte einen kurzen Clip rund um jede Freischaltung. Aktiviere das in den Einstellungen unter Benachrichtigungen.",
-    "backupTitle": "Profilsicherung",
-    "backupCopy": "Speichere deine Einstellungen und Bibliotheksauswahl in einer Datei und stelle sie nach einer Neuinstallation wieder her.",
+    "statsTitle": "Bibliotheksstatistik",
+    "statsCopy": "Unter deinem Profil zeigt „Detaillierte Übersicht anzeigen“ deinen Abschluss, die Spielzeit und den Fortschritt pro Plattform.",
+    "healthTitle": "Spielzustand",
+    "healthCopy": "Ein farbiger Punkt auf einem Spiel zeigt, ob seine Erfolge verfolgt werden. Die Einstellungs-Schaltfläche erklärt, was nicht stimmt.",
     "profileTitle": "Profil",
     "profileCopy": "Wähle den in der Kopfzeile angezeigten Namen und lege optional einen lokalen Avatar fest.",
     "username": "Anzeigename",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "Spielstände + Bibliotheken",
     "addSaveHint": "ein Emulator/eine Quelle",
     "addLibraryHint": "viele installierte Spiele",
+    "addFolder": "Fehlt etwas? Ordner hinzufügen",
     "saveList": "Spielstand-/Konfigurationsordner",
     "libraryList": "Bibliotheksordner",
     "emptyList": "In dieser Sitzung wurde nichts hinzugefügt.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Du kannst diese Anleitung jederzeit über Einstellungen > Allgemein erneut öffnen.",
     "sourcesTitle": "Woher deine Erfolge stammen",
     "sourcesCopy": "Jede auf diesem PC installierte Quelle wird automatisch gelesen, die Standardwerte passen also. Melde dich unten nur an, wenn du mehr möchtest.",
+    "sourcesCopySimple": "Die Launcher und Emulatoren auf diesem PC werden bereits gelesen. Verbinde ein Konto nur, wenn du das willst, was es zusätzlich bringt.",
     "sourcesMore": "Quellen feinjustieren ({count} aktiviert)",
     "accountsTitle": "Konten (optional)",
-    "accountsCopy": "Melde dich an, um Freischaltungen von einem privaten Steam-Profil zu lesen, deine Steam-Family-Spiele hinzuzufügen, deine Xbox PC-Bibliothek zu importieren und deinen Epic-Fortschritt anzuzeigen. Du kannst das überspringen und später in Einstellungen > Quelle verbinden.",
+    "accountsCopy": "Melde dich an, um Freischaltungen aus einem privaten Steam-Profil zu lesen, deine Steam-Family-Spiele hinzuzufügen, deine Xbox-PC-Bibliothek zu importieren, deinen Epic-Fortschritt anzuzeigen, Sonys eigene Trophäenquoten zu erhalten und deine RetroAchievements-Spiele zu importieren. Du kannst das überspringen und später unter Einstellungen > Quelle verbinden.",
+    "raKeyPage": "Wo finde ich meinen Web-API-Schlüssel?",
     "sourcesEmulators": "Emulatoren",
     "sourcesEmulatorsCopy": "Jeder wird nur gelesen, wenn er installiert ist - sie eingeschaltet zu lassen kostet also nichts.",
     "source": "Steam-Spiele anzeigen",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Spielname",
     "manual-game-appid-optional": "Steam-AppID (optional)",
     "manual-game-platform-other": "Andere",
+    "manual-game-note": "Starts und Spielzeit werden erfasst, ohne Erfolge.",
+    "collection-create": "Erstellen",
+    "collection-create-note": "Nach dem Erstellen fügst du ein Spiel per Rechtsklick > Sammlungen hinzu.",
+    "psn-ultra-rare": "Ultra selten",
+    "psn-very-rare": "Sehr selten",
+    "psn-rare": "Selten",
+    "psn-common": "Häufig",
+    "psn-title": "PlayStation-Konto",
+    "psn-desc": "Optional. Zeigt die eigenen Trophäenquoten von PlayStation für Spiele, die bereits auf deinem PSN-Konto sind; die übrigen behalten die Exophase-Zahlen. Dein Sitzungstoken wird verschlüsselt auf diesem PC gespeichert.",
+    "psn-btn-hint": "öffnet das Anmeldefenster von Sony",
+    "psn-connect": "PlayStation-Konto verbinden",
+    "psn-connecting": "Das Anmeldefenster von Sony wird geöffnet…",
+    "psn-connected": "PlayStation-Konto verbunden.",
+    "psn-disconnected": "PlayStation-Konto getrennt.",
+    "psn-failed": "PlayStation-Anmeldung fehlgeschlagen",
+    "connect-playstation-account": "PlayStation-Konto verbinden",
     "manual-source": "Manuell",
     "no-config-eligible-games": "Kein unkonfiguriertes Steam-Spiel ohne vorhandenen Fix gefunden.",
     "no-config-eligible-games-configured": "{count} Steam-kompatible Installation(en) gefunden - alle haben bereits eine Konfiguration. Zum Neuaufbau: Erweitert > Alle Spiele reparieren.",

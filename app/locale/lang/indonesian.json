@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Tampilan perpustakaan",
-        "description": "Pilih tata letak kartu. Lanskap mempertahankan tampilan saat ini; lanskap ringkas dan potret, Daftar, serta Detail menukar ukuran gambar dengan kepadatan atau aktivitas yang lebih lengkap.",
+        "description": "Pilih tata letak kartu. Lanskap menampilkan gambar lebar; lanskap ringkas dan potret, Daftar, dan Detail menukar ukuran gambar dengan kepadatan atau aktivitas yang lebih kaya.",
         "value": {
           "portrait": "Potret",
           "landscape": "Lanskap",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Perak hingga",
-          "description": "Pada tingkat langka, pencapaian hingga angka ini mendapat perak. Nilainya harus berada di antara batas emas dan langka, atau ketiganya kembali ke nilai bawaan."
+          "description": "Pada tingkat kelangkaan, pencapaian hingga persentase ini mendapat perak. Nilainya selalu di atas emas dan di bawah batas langka: menggeser satu penggeser ikut mendorong yang lain."
         },
         "rareMax": {
           "name": "Langka hingga",
@@ -558,7 +558,12 @@
         "chromium": "Notifikasi Chromium",
         "watchdog": "Watchdog",
         "test": "Uji",
-        "overlay": "Popup"
+        "overlay": "Popup",
+        "overlayDisplay": "Tampilan",
+        "overlayProgress": "Progres",
+        "overlaySounds": "Suara",
+        "overlayEmulators": "Emulator",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Sebagian fitur hanya tersedia di Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Preset (ShadPS4)",
         "overlayPresetShadps4Desc": "Preset yang dipakai untuk notifikasi ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Sama seperti utama",
+        "overlayEmulatorsDesc": "Game yang berjalan di emulator bisa punya preset dan suara sendiri; port PC hasil kompilasi ulang mengikuti konsolnya. “Sama seperti utama” mempertahankan pengaturan di atas.",
         "overlayPosition": "Posisi",
         "overlayPositionDesc": "Tempat pop-up overlay dalam game muncul di layar",
         "overlayScale": "Skala",
@@ -755,6 +761,9 @@
           "importedOnly": "Preset hasil impor - ekspor atau hapus di sini; preset ini tidak dapat diubah dengan penggeser.",
           "importSan": "Impor tema SAN",
           "importSanSetup": "Impor dari SAN di PC ini",
+          "importMenuFile": "File preset…",
+          "importMenuSan": "Tema SAN…",
+          "importMenuSanSetup": "Dari SAN di PC ini",
           "layer": {
             "none": "Tidak dikustomisasi",
             "title": "Kustomisasi preset bawaan"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Bantuan",
       "title": "Bantuan & tips",
-      "intro": "Semua yang perlu diketahui - deteksi, notifikasi, kontroler, overlay, tema, dan penanganan masalah.",
+      "intro": "Semua yang berguna untuk diketahui: menemukan game, notifikasi, emulator, overlay, kontroler, tema, dan apa yang harus dilakukan saat ada masalah.",
       "setupTitle": "Penyiapan Anda saat ini",
       "topicsTitle": "Telusuri menurut topik",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Langkah awal",
       "quick": [
-        "Tambahkan folder save/konfigurasi di Pengaturan > Folder, lalu aktifkan sumber yang sesuai di Pengaturan > Sumber.",
-        "Watchdog berjalan di latar belakang - ia harus aktif agar notifikasi langsung dan waktu bermain berfungsi.",
+        "Biarkan Pencarian Cerdas mencari game Anda di Pengaturan > Folder, atau tambahkan folder sendiri, lalu aktifkan sumber yang sesuai di Pengaturan > Sumber.",
+        "Watchdog berjalan di latar belakang. Ia harus berjalan agar notifikasi langsung dan waktu bermain berfungsi.",
         "Semuanya (pengaturan, cache, log, tema kustom) berada di %APPDATA%\\Achievement Watcher Next.",
-        "Setiap bagian pengaturan dapat dilipat lewat judulnya sendiri - tanda panah menghadap ke bawah saat terbuka dan ke samping saat tertutup. Pilihan Anda diingat."
+        "Pilihan Antarmuka di bagian atas Pengaturan beralih antara Sederhana (tab untuk penggunaan sehari-hari) dan Lanjutan (menambahkan Steam / GBE Fork, Ubisoft / Uplay R1/R2, Lanjutan, dan opsi yang lebih mendalam). Sederhana hanya menyembunyikan kontrol, tidak ada yang dimatikan.",
+        "Menutup jendela utama membuat AW Next tetap berada di baki sistem, tempat pelacakan terus berjalan. Untuk keluar, gunakan menu baki. Jalankan saat startup dan Tutup ke Baki Sistem ada di Pengaturan > Umum.",
+        "Kolom pencarian di bagian atas Pengaturan menemukan opsi di tab mana pun. Panduan awal di Pengaturan > Umum membuka kembali penyiapan."
       ],
-      "notifications": [
-        "Otomatis adalah bawaan: pop-up dalam game saat game bisa menampilkannya, dan notifikasi Windows saat tidak bisa, tidak pernah keduanya.",
-        "Pengaturan > Notifikasi memuat preset, suara, volume, posisi, dan skala; tombol uji menampilkan pop-up sungguhan.",
-        "Klik kanan sebuah game > Notifikasi untuk memberi game itu saja preset, posisi, suara, atau skala sendiri.",
-        "Tangkapan layar saat terbuka menyimpan gambar momen itu di Pictures\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Kesehatan game",
-      "gameHealth": [
-        "Buka tombol alat sebuah game (kanan atas kartunya) untuk melihat apakah statusnya Siap, Perlu perhatian, atau Tidak dilacak.",
-        "Kalimat di bawah status menjelaskan penyebabnya dengan bahasa sederhana; daftar pemeriksaan di bawahnya menunjukkan bagian mana yang bermasalah.",
-        "Tombol perbaikan hanya muncul bila AW Next benar-benar bisa memperbaiki game tersebut - masing-masing menjelaskan apa yang akan diubah dan di mana file sebelumnya disimpan.",
-        "Detail teknis memuat jalur, jumlah, dan kode emulator yang tepat; salin isinya ke laporan bug Anda."
-      ],
-      "troubleshootTitle": "Penanganan masalah",
-      "troubleshoot": [
-        "Bila sebuah game tidak muncul: tambahkan folder, pindai ulang, lalu periksa sakelar sumber dan daftar hitam.",
-        "Bila notifikasi tidak muncul: periksa Jangan Ganggu / Focus Assist di Windows dan jalankan aplikasi dengan hak akses yang sama seperti game Anda.",
-        "Lanjutan > Diagnostik membuka folder log dan data; lampirkan keduanya saat melaporkan masalah.",
-        "Log ditambahkan terus, jadi jejak kerusakan tetap ada setelah peluncuran berikutnya. Setiap sesi diawali penanda sesi dan blok [diag] (versi, jalur, layar) - tempelkan itu ke laporan masalah."
+      "libraryTitle": "Perpustakaan dan koleksi",
+      "library": [
+        "Koleksi: klik kanan sebuah game > Koleksi, centang salah satu atau pilih Koleksi baru…. Tombol koleksi di samping Tampilkan hanya game yang terpasang kemudian menyaring perpustakaan, dan angka profil mengikutinya.",
+        "Edit koleksi… di menu tombol itu mengubah nama, warna, ikon, atau gambar, dan menghapus koleksi. Game tetap ada di perpustakaan Anda.",
+        "Tombol bulat di samping persentase penyelesaian membuka Statistik perpustakaan: penyelesaian, jumlah pencapaian yang terbuka dan terkunci, waktu bermain, piala, game platinum, pencapaian paling langka, dan satu baris per platform.",
+        "Pemilih di antara kolom pencarian dan tombol + beralih di antara enam tampilan perpustakaan. Pengaturan > Tampilan > Kartu perpustakaan menentukan ukuran kartu, jarak, dan apa yang ditampilkan setiap kartu.",
+        "Tombol + menambahkan game yang tidak ditemukan sumber mana pun: judul dan file eksekusi, dengan platform dan Steam AppID opsional. Peluncuran dan waktu bermain dilacak, tanpa pencapaian.",
+        "Klik kanan sebuah game > Pengaturan game > Ganti nama… mengubah nama yang ditampilkan. Pencapaian dan waktu bermain > Ubah waktu bermain… memperbaiki totalnya (12.5 atau 12h30)."
       ],
       "sourcesTitle": "Launcher & sumber",
       "sources": [
-        "Mode profil Steam menampilkan game yang terpasang atau dimiliki, tetapi status terbuka tetap berasal dari file save lokal.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay, dan EA Desktop dapat diaktifkan secara terpisah di Sumber.",
-        "Game Steam yang dimiliki dihitung terpasang hanya bila registri Steam membenarkannya."
+        "Steam, Epic Games, dan Xbox PC masing-masing menawarkan Tidak ada, Terpasang, atau Dimiliki di Pengaturan > Sumber. Dimiliki mencantumkan seluruh pustaka akun yang terhubung, terpasang atau tidak.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC, dan EA Desktop masing-masing punya sakelar sendiri di Pengaturan > Sumber. EA Desktop hanya mencakup game di luar folder yang dikelola EA.",
+        "Game Steam yang dimiliki dianggap terpasang hanya jika registri Steam memastikannya.",
+        "Pencapaian Steam dibaca dari statistik yang disimpan Steam di PC ini, sehingga profil privat tetap berfungsi. Menghubungkan akun bersifat opsional: ia menambahkan game yang dimainkan di PC lain dan game Steam Family.",
+        "Game yang disimpan di lokasi tidak biasa: tambahkan foldernya di Pengaturan > Folder. Pilih folder yang langsung berisi save, folder AppID, atau konfigurasi emulator, atau folder pustaka yang berisi banyak game.",
+        "RetroAchievements: aktifkan sumbernya, masukkan nama pengguna dan kunci Web API Anda, lalu tekan Impor pustaka. Pencapaian berasal dari akun Anda, jadi biarkan RetroAchievements tetap aktif di emulator.",
+        "Dalam mode Sederhana, beberapa baris sumber yang jarang dipakai tetap tersembunyi selama tidak digunakan. Baris itu muncul kembali begitu diperlukan, dan Lanjutan selalu menampilkan semuanya.",
+        "Piala PlayStation menampilkan tingkatnya, persentase pemain yang memilikinya, dan tingkat kelangkaan resmi dari PlayStation. Persentase berasal dari Exophase; hubungkan akun PlayStation di Pengaturan > Sumber untuk mendapatkan angka resmi dari Sony untuk game di akun tersebut."
+      ],
+      "notifications": [
+        "Otomatis adalah bawaan: popup dalam game saat game bisa menampilkannya, notifikasi Windows saat tidak bisa, tidak pernah keduanya.",
+        "Pengaturan > Notifikasi berisi Jenis notifikasi (Otomatis, Notifikasi Windows, Overlay dalam game, atau Keduanya), preset, suara, volume, posisi, skala, dan opasitas. Tombol Uji memicu popup sungguhan.",
+        "Buka tombol alat sebuah game (kanan atas kartunya) dan masuk ke pengaturan notifikasinya untuk memberi game itu preset, posisi, suara, atau skala tersendiri.",
+        "Tangkapan layar saat terbuka menyimpan gambar momen tersebut di Gambar\\Achievement Watcher Next.",
+        "Suara pencapaian langka, Suara penyelesaian 100%, dan Suara progres (mode Lanjutan) memberi popup tersebut suara tersendiri. Suara acak memilih suara berbeda setiap kali, dan Anda bisa mengimpor file sendiri.",
+        "Emas, perak, dan perunggu menandai pencapaian langka. Pengaturan > Umum > Tampilan kelangkaan beralih ke Mode piala, yang menilai setiap pencapaian dan menampilkan platinum pada game yang selesai.",
+        "Untuk penghitung, Tonggak progres menampilkan popup hanya pada kelipatan 10, 25, atau 50%. Klik kanan sebuah game > Bisukan notifikasi progres membisukan satu game tanpa menyentuh pencapaiannya.",
+        "Dua sakelar lagi di Pengaturan > Notifikasi: Notifikasi prioritas membiarkan pencapaian lolos dari Jangan Ganggu (Windows 11), dan Game klien Steam menambahkan popup AW Next untuk game yang dijalankan Steam sendiri."
+      ],
+      "gameHealthTitle": "Kesehatan game",
+      "gameHealth": [
+        "Klik tombol alat sebuah game (kanan atas kartunya), atau klik kanan padanya, untuk membuka Kesehatan game. Di sana tertulis apakah game itu Siap, Perlu perhatian, atau Tidak dilacak.",
+        "Kalimat di bawah status menjelaskan penyebabnya dengan bahasa sederhana. Pemeriksaan di bawahnya menunjukkan bagian mana yang bermasalah: file game, file eksekusi, data pencapaian, penyiapan emulator, pelacakan langsung, atau notifikasi.",
+        "Tombol perbaikan hanya muncul saat AW Next benar-benar bisa memperbaiki game tersebut, seperti Temukan game ini, Tulis ulang data pencapaian, Pulihkan file emulator, atau Pantau game ini. Masing-masing menyebutkan apa yang akan diubah, menyimpan cadangan, dan bertanya dulu.",
+        "Kirim notifikasi uji memunculkan popup dengan nama dan gambar game itu sendiri, dikirim persis seperti yang sebenarnya terjadi.",
+        "Detail teknis berisi jalur, jumlah, dan kode emulator yang tepat: tekan Salin dan tempelkan ke laporan bug. Titik berwarna pada kartu bisa disembunyikan di Pengaturan > Tampilan > Kartu perpustakaan."
+      ],
+      "troubleshootTitle": "Penanganan masalah",
+      "troubleshoot": [
+        "Jika sebuah game tidak ada: periksa sumbernya di Pengaturan > Sumber, jalankan Pencarian Cerdas atau Buat konfigurasi di Pengaturan > Folder, tambahkan foldernya secara manual bila perlu, dan coba matikan Tampilkan hanya game yang terpasang.",
+        "Jika notifikasi tidak muncul: baca baris Notifikasi di Kesehatan game milik game tersebut, lalu periksa Jangan Ganggu / Focus Assist di Windows. Notifikasi prioritas di Pengaturan > Notifikasi bisa meloloskan pencapaian.",
+        "Pengaturan > Lanjutan > Diagnostik membuka folder log dan data, dan Ekspor log (.zip) mengemas log dengan nama pengguna dan kunci Anda disamarkan. Lampirkan saat melaporkan masalah.",
+        "Log ditambahkan terus, sehingga crash tetap tercatat pada peluncuran berikutnya. Setiap sesi dimulai dengan penanda sesi dan blok [diag] (versi, jalur, tampilan): tempelkan ke issue.",
+        "Game macet di 0%? Itu normal sampai pencapaian pertamanya ditulis. Jika AW Next mencocokkan rilis Steam yang salah, klik kanan game > Atur AppID secara manual….",
+        "Waktu bermain tidak terhitung? Buka tombol alat game > File eksekusi dan pilih program yang tetap terbuka selama Anda bermain, bukan launcher.",
+        "Pencapaian baru dari pembaruan game muncul dalam 3 hari, atau langsung dengan Pengaturan > Lanjutan > Periksa ulang daftar pencapaian.",
+        "Pembaruan aplikasi terus gagal pada file yang sama? Pengaturan > Lanjutan > Bersihkan cache hanya menghapus file yang bisa diunduh ulang, tidak pernah pengaturan atau save Anda."
       ],
       "steamTitle": "Emulator Steam",
       "steam": [
-        "Save GBE / Goldberg biasanya ada di %APPDATA%\\GSE Saves atau %APPDATA%\\Goldberg SteamEmu Saves.",
+        "Save GBE / Goldberg biasanya berada di %APPDATA%\\GSE Saves atau %APPDATA%\\Goldberg SteamEmu Saves.",
         "Save CODEX / RUNE sering berada di Public Documents\\Steam\\CODEX atau Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, dan Hoodlum dikenali dari folder konfigurasi/save-nya.",
-        "Perbaikan emulator lewat klik kanan dapat menambahkan file GBE Fork, skema pencapaian, dan data DLC.",
-        "Mode Sederhana berjalan cepat; Lanjutan menjalankan generate_emu_config untuk data Steam yang lebih dalam dan bisa memakan waktu beberapa menit."
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI, dan emulator Nemirtingas dibaca dari folder konfigurasi atau save-nya sendiri. Jika game tidak ditemukan, tambahkan foldernya di Pengaturan > Folder.",
+        "Klik kanan sebuah game > Emulator & alat > Terapkan perbaikan emulator… memasang GBE Fork, membuat steam_settings (daftar pencapaian dan ikon), dan menulis steam_appid.txt jika belum ada. Setiap file yang diganti dicadangkan terlebih dahulu.",
+        "Di Pengaturan > Steam / GBE Fork, Data steam_settings yang diatur ke Sederhana memakai pengambilan anonim milik AW Next sendiri dan cepat. Lanjutan menjalankan generate_emu_config untuk data Steam yang lebih dalam dan bisa memakan waktu beberapa menit.",
+        "Tidak ada yang ditulis ke folder game dengan sendirinya: Perbaiki otomatis game yang baru terdeteksi, Kelola kepemilikan DLC, dan Tulis nama akun dan bahasa semuanya nonaktif secara bawaan.",
+        "Diagnosis emulator di menu yang sama hanya membaca dan melaporkan. Cadangkan setelan GBE/Goldberg dan Pulihkan cadangan GBE/Goldberg terbaru mengembalikan game seperti semula."
       ],
       "emulatorTitle": "Emulator konsol",
       "emulators": [
-        "Trofi RPCS3 dibaca dari dev_hdd0\\home\\...\\trophy di dekat pemasangan RPCS3.",
-        "Trofi shadPS4 dibaca dari folder game_data/trophy pada data aplikasinya; data sisa bukan bukti pemasangan.",
-        "Progres Xenia dibaca dari file profil Xbox seperti .gpd."
+        "Piala RPCS3 dibaca dari dev_hdd0\\home\\...\\trophy di dekat instalasi RPCS3. Disk virtual yang dipindahkan akan diikuti.",
+        "Piala shadPS4 dibaca dari folder game_data-nya (file XML TROP). Anda bisa menambahkan emulator, folder penggunanya, atau game_data itu sendiri.",
+        "Progres Xenia dibaca dari file profil Xbox (.gpd) dan mengikuti folder penyimpanan yang diatur di konfigurasinya.",
+        "Piala KytyPS5 dibaca dari folder _Trophies-nya, untuk pengguna yang menjalankan game lewat launcher.",
+        "Game Xbox 360 yang dikompilasi ulang untuk PC dan port PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil, dan lainnya) adalah sumber tersendiri di Pengaturan > Sumber. Jika ada yang tidak muncul, tambahkan foldernya di Pengaturan > Folder.",
+        "Setiap konsol bisa punya preset popup dan suara sendiri di Pengaturan > Notifikasi > Emulator (mode Lanjutan). Game Xbox 360 yang dikompilasi ulang mengikuti pilihan Xenia, port PS4 mengikuti shadPS4, dan Sama seperti utama mempertahankan pengaturan utama."
       ],
       "controllerTitle": "Kontroler (gamepad)",
       "controller": [
-        "Aktifkan Pengaturan > Kontroler dahulu, lalu Back + Start + LB membuka overlay dalam game.",
-        "LB + X mengalihkan navigasi di dalam overlay.",
-        "Mode navigasi: D-pad/stik kiri memindahkan fokus, A mengonfirmasi, B membatalkan, X mencari, Y membuka opsi.",
-        "Tahan LB + RB untuk memindahkan overlay dengan stik kiri dan menggulir dengan stik kanan.",
-        "Berfungsi dengan kontroler Xbox, PlayStation (DualShock 4 / DualSense), dan Switch Pro."
+        "Di Pengaturan > Kontroler, aktifkan Kendalikan overlay dalam game dengan kontroler (nonaktif secara bawaan), lalu Back + Start + LB membuka overlay di dalam game.",
+        "Kendalikan aplikasi dengan kontroler (aktif secara bawaan) mengendalikan AW Next sendiri: D-pad atau stik kiri memindahkan fokus, A membuka game, B kembali, X mencari, Y atau Start membuka Pengaturan, LB / RB berpindah tab pengaturan.",
+        "Di perpustakaan, RT meluncurkan game yang dipilih dan LT membuka Kesehatan game miliknya.",
+        "Di overlay, LB + X mengaktifkan atau menonaktifkan navigasi: D-pad atau stik kiri memindahkan fokus, A mengonfirmasi, B membatalkan, X mencari, Y membuka opsi.",
+        "Tahan LB + RB untuk menggeser overlay dengan stik kiri dan menggulir dengan stik kanan.",
+        "Jika game masih bereaksi terhadap tombol Anda, aktifkan Fokuskan overlay saat terbuka atau Kirim Escape ke game saat membuka dengan kontroler (keduanya nonaktif secara bawaan).",
+        "Bekerja dengan kontroler Xbox, PlayStation (DualShock 4 / DualSense), dan Switch Pro. Tata letak kontroler menentukan nama tombol yang ditampilkan, dan setiap pintasan memakai satu sampai tiga tombol.",
+        "Kontroler tidak terdeteksi? Periksa dulu di Windows (joy.cpl), pastikan sakelar yang tepat aktif, lalu coba XInput di Backend kontroler."
       ],
       "overlayTitle": "Overlay dalam game",
       "overlay": [
-        "Buka dengan pintasan overlay (Ctrl+Shift+K secara bawaan) atau Back + Start + LB pada kontroler.",
-        "Urutkan satu kolom pada satu waktu: Kelangkaan, Tanggal, atau Status (naik / turun / tanpa urutan).",
-        "Tekan / untuk memfokuskan pencarian, Esc untuk mengosongkannya atau menutup panel opsi.",
-        "Panel roda gigi mengubah aksen, kepadatan, zoom, opasitas, dan baris yang terlihat; 'Pakai tema aplikasi' mengikuti tema yang aktif.",
-        "Setiap pencapaian dengan persentase yang diketahui menampilkan kelangkaannya: abu-abu untuk umum, emas/perak/perunggu untuk yang langka."
+        "Buka dengan pintasan overlay (Ctrl+Shift+K secara bawaan) atau Back + Start + LB pada kontroler saat game yang didukung berjalan. Pintasan diatur di Pengaturan > Umum.",
+        "Overlay mencantumkan pencapaian game yang sedang berjalan: nama, deskripsi, terkunci atau terbuka, tanggal terbuka, dan progres. Seret melalui header-nya.",
+        "Pencapaian tersembunyi tetap tersembunyi sampai Anda mengkliknya (atau menekan A pada kontroler), jadi tidak ada yang terspoiler.",
+        "Filter Semua, Terbuka, Terkunci, dan Sedang berjalan menyaring daftar. Klik Pencapaian, Kelangkaan, Tanggal, atau Status untuk mengurutkan: naik, turun, lalu kembali normal. Satu kolom pada satu waktu.",
+        "Tekan / untuk memfokuskan pencarian, Esc untuk menghapusnya atau menutup panel opsi.",
+        "Panel roda gigi mengubah aksen, kepadatan, ukuran ikon, zoom, opasitas, dan baris yang terlihat. Pakai tema aplikasi mengikuti tema yang aktif, dan Kembalikan ke bawaan membatalkan semuanya.",
+        "Setiap pencapaian dengan persentase yang diketahui menampilkan kelangkaannya: abu-abu untuk umum, emas/perak/perunggu untuk langka."
       ],
       "streamTitle": "Overlay stream (OBS)",
       "stream": [
-        "Pengaturan > Notifikasi > Sumber browser OBS > Salin tautan, lalu tambahkan Sumber browser di OBS dan tempelkan sebagai URL.",
-        "Atur lebar dan tinggi sumber sesuai ukuran yang dilaporkan http://127.0.0.1:8082/obs/_config: kotak asli preset pada skala kamu.",
-        "Tambahkan ?test=1 ke URL saat kamu menempatkan sumber. Ini menampilkan contoh pencapaian terbuka setiap sepuluh detik; hapus setelah selesai.",
-        "Sumber ini menampilkan pop-up yang sama seperti overlay dalam game, dan tetap kosong di antara pencapaian yang terbuka, jadi tidak membebani apa pun saat kamu streaming.",
-        "Sumber ini membaca feed notifikasi lokal, jadi biarkan Websocket @localhost:8082 aktif di Pengaturan > Notifikasi > Transport."
+        "Pengaturan > Notifikasi > Sumber browser OBS (mode Lanjutan): Pratinjau memeriksanya di browser Anda dan Salin tautan menyalin alamatnya. Di OBS, tambahkan sumber Browser dan tempelkan sebagai URL.",
+        "Lebar dan tinggi berapa pun berfungsi, kartu menyesuaikan skala untuk mengisi kotak. Sumber yang lebih besar lebih tajam: beri ukuran sekitar dua kali ukuran preset itu sendiri (http://127.0.0.1:8082/obs/_config melaporkannya) dan tempatkan pada setengah ukuran.",
+        "Tambahkan ?test=1 ke URL saat Anda menempatkan sumber. Ia menampilkan contoh pencapaian setiap sepuluh detik; hapus setelah selesai.",
+        "Sumber ini menggambar popup yang sama seperti di dalam game, dan tetap kosong di antara pencapaian, jadi tidak membebani saat Anda streaming.",
+        "Opsi lain setelah alamat: ?scale=2 mengunci zoom, ?duration=8000 menetapkan berapa lama setiap kartu tampil, ?sound=1 memutar suara lewat sumber, /obs/preset/Xbox/ memakai satu preset apa pun yang dipakai desktop.",
+        "Ia membaca feed notifikasi lokal, jadi biarkan Websocket @localhost:8082 tetap aktif di Pengaturan > Notifikasi > Integrasi. Hanya berfungsi di PC ini, dan hanya satu salinan AW Next yang bisa menyajikannya."
+      ],
+      "souvenirsTitle": "Tangkapan layar dan klip video",
+      "souvenirs": [
+        "Pengaturan > Notifikasi > Tangkapan layar saat terbuka menyimpan gambar sesaat setelah popup, termasuk notifikasinya, dalam satu subfolder per game. Buka folder membawa Anda ke sana.",
+        "Tangkapan layar HDR (Otomatis) mengoreksi warna saat HDR Windows aktif. Tangkapan ini merekam monitor utama, jadi bermainlah di sana.",
+        "Klip video saat membuka (nonaktif sampai Anda mengaktifkannya, lebih bawah di Pengaturan > Notifikasi) menyimpan beberapa detik terakhir permainan di memori dan menyimpan MP4 di sekitar setiap pencapaian. Tidak ada yang ditulis sampai sebuah pencapaian terbuka.",
+        "Panjang klip (10 sampai 30 detik), Format (H.264, HEVC, atau AV1), Resolusi, Kecepatan bingkai, Kualitas, dan Suara (Hanya game atau Seluruh PC) semuanya bisa diubah. H.264 bisa diputar di mana saja.",
+        "Encoder bawaan kartu grafis yang mengerjakannya, dengan jauh di bawah 1% prosesor. Tanpa encoder H.264 perangkat keras, encoder perangkat lunak Windows mengambil alih pada 1080p dan 30 FPS paling tinggi. Game yang sangat lama dalam layar penuh eksklusif bisa merekam bingkai hitam."
       ],
       "shortcutsTitle": "Pintasan papan ketik",
       "shortcuts": [
-        "Ctrl+Shift+K (bawaan): buka atau tutup overlay dalam game - dapat diatur di Pengaturan > Umum.",
-        "Ctrl+Alt+Shift+Panah memindahkan overlay; Ctrl+Alt+Shift+1-5 menempelkannya ke posisi yang telah disiapkan.",
-        "Ctrl+Alt+Shift+C mengalihkan mode tembus klik; Ctrl+F memfokuskan pencarian Pengaturan."
+        "Ctrl+Shift+K (bawaan): buka atau tutup overlay dalam game. Ubah di Pengaturan > Umum.",
+        "Ctrl+Alt+Shift+Panah memindahkan overlay; Ctrl+Alt+Shift+1-5 menempelkannya ke posisi preset; Ctrl+Alt+Shift+C mengaktifkan atau menonaktifkan klik tembus.",
+        "Di overlay, / memfokuskan pencarian dan Esc menghapusnya. Di desainer preset, Ctrl+Z dan Ctrl+Y membatalkan dan mengulangi.",
+        "Ctrl+F memfokuskan pencarian Pengaturan dan Esc menghapusnya. F5 menyegarkan perpustakaan."
       ],
       "themesTitle": "Tema kustom",
       "themes": [
-        "Kustom dimulai dari Steam Blue; setiap lapisan (latar, header, panel, kartu, pengaturan, teks, bingkai, aksen) dapat diubah.",
-        "Gambar lapisan berada di bawah selubung berwarna dengan efek buram tipis; efeknya diatur per lapisan.",
-        "Letakkan tema CSS ke <userData>\\themes dan tema itu akan muncul di daftar pilihan tema.",
-        "Perancang preset kustom dapat memperlihatkan sebuah desain sebagai pop-up sungguhan sebelum disimpan, membuka kembali preset tersimpan untuk diubah, dan menghapus yang tidak Anda pakai.",
-        "Ekspor tema yang kamu pakai sebagai satu berkas .awtheme, atau impor tema kiriman orang lain: temanya ditampilkan sebelum dipasang, lalu berperilaku seperti tema bawaan."
+        "Pengaturan > Tampilan memiliki tema bawaan dan setiap tema bisa diedit: jendela, bilah atas, panel, kartu, pengaturan, teks, bingkai, dan aksen masing-masing bisa diberi warna, gradien, atau gambar.",
+        "Simpan tema mengubah suntingan Anda menjadi tema milik Anda sendiri: pertahankan nama untuk menggantinya, ketik nama lain untuk membuat salinan. Atur ulang semua mengembalikan tema yang Anda mulai.",
+        "Letakkan tema CSS di <userData>\\themes dan tema itu muncul di daftar tema.",
+        "Ekspor tema… menulis satu file .awtheme (tema bawaan harus disimpan dulu dengan nama Anda sendiri). Impor tema… menampilkan pratinjau sebelum dipasang, dan Hapus tema menghapus tema yang diimpor.",
+        "Tema buatan komunitas ada di galeri tema di situs web proyek, dan mengirim tema Anda hanya perlu satu file."
+      ],
+      "presetsTitle": "Preset popup",
+      "presets": [
+        "Preset adalah tampilan popup dalam game, dipilih di Pengaturan > Notifikasi > Preset. Tidak berpengaruh saat Jenis notifikasi adalah Notifikasi Windows.",
+        "Pengaturan > Preset notifikasi adalah desainer yang dibuat dari kontrol biasa: pilih titik awal atau tekan Kejutkan saya, lihat pratinjau langsung (Kartu, Bandingkan, Layar), lalu Buat preset. Tidak ada yang disimpan sebelum itu.",
+        "Kustomisasi preset bawaan hanya mengubah beberapa hal (latar, warna teks, aksen, bingkai, pendar, fon, logo) dan terus mengikuti preset bawaan jika preset itu diperbarui.",
+        "Edit sebuah preset membuka kembali preset yang Anda desain. Ekspor dan Impor memindahkan preset sebagai satu file .awpreset, lengkap dengan gambar, fon, dan suaranya.",
+        "Impor > Tema SAN… membaca tema Steam Achievement Notifier (file .san), dan Impor > Dari SAN di PC ini membawa masuk tema yang sudah dipakai SAN. Tema itu mempertahankan tampilan dan suara SAN-nya."
       ],
       "tipsTitle": "Tips & trik",
       "tips": [
         "Klik kanan kartu game untuk menjalankannya, memilih file eksekusinya, membuka folder dan tautan, memakai alat emulator, atau mencopot pemasangannya bila menu itu diaktifkan.",
-        "Klik kanan sebuah game lalu pilih bisukan progres untuk menghentikan pop-up progres tanpa mematikan notifikasi pencapaian yang terbuka.",
-        "Perbaikan emulator (Sederhana cepat / Lanjutan lengkap) memasang GBE Fork, skema pencapaian, dan data DLC.",
-        "Waktu bermain dilacak selama game berjalan; notifikasi progres dan waktu bermain dapat diaktifkan di Notifikasi.",
-        "Pencapaian baru dari pembaruan game muncul otomatis dalam 3 hari, atau langsung lewat Pengaturan > Lanjutan > Periksa ulang daftar pencapaian."
+        "Tandai terbuka secara manual (klik kanan sebuah pencapaian) mencatat pencapaian yang tidak terlihat oleh sumber mana pun.",
+        "Atur ulang pencapaian… memainkan game dari nol lagi dan mencadangkan setiap file terlebih dahulu. Berfungsi untuk game yang diemulasi, bukan untuk Steam, Epic, atau Xbox, yang pencapaiannya tersimpan di akun Anda.",
+        "Waktu bermain dilacak selama game berjalan; Pelacakan waktu bermain di Pengaturan > Notifikasi mengaktifkan notifikasi mulai dan selesai.",
+        "Lupakan game ini… menghapus semua yang disimpan AW Next tentang sebuah game (save dicadangkan terlebih dahulu). Hapus dari daftar hanya menyembunyikannya.",
+        "Pengaturan game > Bahasa pencapaian menampilkan pencapaian dan notifikasi satu game dalam bahasa yang berbeda dari yang lain.",
+        "Pengaturan > Lanjutan > Cadangan profil: Ekspor profil… menyimpan pengaturan, preset, tema, sampul, dan waktu bermain Anda dalam satu file .awbackup untuk instal ulang atau PC baru. Data masuk akun tidak disimpan."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Beri pencapaian peringkat emas, perak, atau perunggu berdasarkan kelangkaannya. Aktifkan di Pengaturan.",
     "clipsTitle": "Klip video",
     "clipsCopy": "Simpan klip singkat di sekitar setiap pembukaan. Aktifkan di Pengaturan, di bagian Notifikasi.",
-    "backupTitle": "Cadangan profil",
-    "backupCopy": "Simpan pengaturan dan pilihan perpustakaan Anda ke satu berkas, lalu pulihkan setelah instal ulang.",
+    "statsTitle": "Statistik perpustakaan",
+    "statsCopy": "Di bawah profil Anda, “Lihat rincian lengkap” menampilkan penyelesaian, waktu bermain, dan progres per platform.",
+    "healthTitle": "Kesehatan game",
+    "healthCopy": "Titik berwarna pada sebuah game menunjukkan apakah pencapaiannya dilacak. Tombol pengaturannya menjelaskan apa yang salah.",
     "profileTitle": "Profil",
     "profileCopy": "Pilih nama yang tampil di header dan, bila mau, tetapkan avatar lokal.",
     "username": "Nama tampilan",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "save + perpustakaan",
     "addSaveHint": "satu emulator/sumber",
     "addLibraryHint": "banyak game terpasang",
+    "addFolder": "Ada yang kurang? Tambahkan folder",
     "saveList": "Folder save / konfigurasi",
     "libraryList": "Perpustakaan game",
     "emptyList": "Belum ada yang ditambahkan pada sesi ini.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Anda dapat membuka kembali panduan ini kapan saja dari Pengaturan > Umum.",
     "sourcesTitle": "Dari mana pencapaian Anda berasal",
     "sourcesCopy": "Setiap sumber yang terpasang di PC ini dibaca otomatis, jadi pengaturan bawaan sudah cukup. Masuk di bawah hanya jika Anda ingin lebih.",
+    "sourcesCopySimple": "Launcher dan emulator di PC ini sudah dibaca. Hubungkan akun hanya jika Anda menginginkan tambahan darinya.",
     "sourcesMore": "Atur sumber ({count} diaktifkan)",
     "accountsTitle": "Akun (opsional)",
-    "accountsCopy": "Masuk untuk membaca pencapaian yang terbuka dari profil Steam pribadi, menambahkan game Steam Family Anda, mengimpor pustaka Xbox PC Anda, dan menampilkan progres Epic Anda. Anda dapat melewati ini dan menghubungkan akun nanti di Pengaturan > Sumber.",
+    "accountsCopy": "Masuk untuk membaca pencapaian dari profil Steam privat, menambahkan game Steam Family, mengimpor pustaka Xbox PC, menampilkan progres Epic, mendapatkan persentase piala resmi dari PlayStation, dan mengimpor game RetroAchievements Anda. Anda bisa melewatinya dan menghubungkan nanti di Pengaturan > Sumber.",
+    "raKeyPage": "Di mana kunci Web API saya?",
     "sourcesEmulators": "Emulator",
     "sourcesEmulatorsCopy": "Masing-masing hanya dibaca kalau sudah terpasang, jadi membiarkannya aktif tidak merugikan apa pun.",
     "source": "Tampilkan game Steam",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Nama game",
     "manual-game-appid-optional": "Steam AppID (opsional)",
     "manual-game-platform-other": "Lainnya",
+    "manual-game-note": "Peluncuran dan waktu bermain dilacak, tanpa pencapaian.",
+    "collection-create": "Buat",
+    "collection-create-note": "Setelah dibuat, klik kanan sebuah game > Koleksi untuk menambahkannya.",
+    "psn-ultra-rare": "Ultra langka",
+    "psn-very-rare": "Sangat langka",
+    "psn-rare": "Langka",
+    "psn-common": "Umum",
+    "psn-title": "Akun PlayStation",
+    "psn-desc": "Opsional. Menampilkan persentase piala resmi dari PlayStation untuk game yang sudah ada di akun PSN Anda; game lainnya tetap memakai angka dari Exophase. Token sesi Anda disimpan dalam bentuk terenkripsi di PC ini.",
+    "psn-btn-hint": "membuka jendela masuk Sony",
+    "psn-connect": "Hubungkan akun PlayStation",
+    "psn-connecting": "Membuka jendela masuk Sony…",
+    "psn-connected": "Akun PlayStation terhubung.",
+    "psn-disconnected": "Akun PlayStation diputuskan.",
+    "psn-failed": "Masuk ke PlayStation gagal",
+    "connect-playstation-account": "Hubungkan akun PlayStation",
     "manual-source": "Manual",
     "no-config-eligible-games": "Tidak ditemukan game Steam tanpa konfigurasi yang belum memiliki perbaikan.",
     "no-config-eligible-games-configured": "{count} pemasangan yang kompatibel dengan Steam ditemukan - semuanya sudah memiliki penyiapan. Untuk membangunnya ulang, pakai Lanjutan > Perbaiki semua game.",

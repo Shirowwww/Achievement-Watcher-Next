@@ -267,14 +267,21 @@ test('the action row is two groups, with the file actions kept together', () => 
   // nothing else is.
   const pair = files.querySelector('.pd-file-pair');
   assert.ok(pair, 'Import and Export are not a pair');
-  const inPair = pair.querySelectorAll('button').map((node) => node.getAttribute('id'));
-  assert.deepEqual(inPair, ['btn-import-preset', 'btn-export-preset'], 'the pair holds exactly Import then Export');
+  const halves = pair.childNodes.filter((node) => node.nodeType === 1);
+  assert.deepEqual(
+    halves.map((node) => node.getAttribute('id')),
+    ['pd-import', 'btn-export-preset'],
+    'the pair holds exactly Import then Export'
+  );
 
-  // The SAN import stays available, in the file group, but outside the pair and marked as quieter.
-  const san = files.querySelector('#btn-import-san');
-  assert.ok(san, 'the SAN import left the file actions');
-  assert.equal(pair.querySelector('#btn-import-san'), null, 'it must not be a third half of the pair');
-  assert.match(san.getAttribute('class') || '', /\bpd-quiet-btn\b/, 'it must be marked as the secondary action it is');
+  // Import is one button whose menu lists the three sources, the SAN ones included: no second
+  // "import from SAN" button anywhere else in the row.
+  const trigger = halves[0].querySelector('#btn-import-menu');
+  assert.ok(trigger, 'Import has no menu button');
+  assert.equal(trigger.getAttribute('aria-haspopup'), 'menu');
+  const entries = halves[0].querySelectorAll('[role="menuitem"]').map((node) => node.getAttribute('id'));
+  assert.deepEqual(entries, ['btn-import-preset', 'btn-import-san', 'btn-import-san-setup']);
+  assert.equal(actions.querySelectorAll('[id^="btn-import-san"]').length, 2, 'a SAN import sits outside the menu');
 
   // One report line, still the last thing in the row.
   assert.ok(actions.querySelector('#pd-status'), '#pd-status is gone');

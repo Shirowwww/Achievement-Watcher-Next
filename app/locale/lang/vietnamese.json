@@ -163,7 +163,7 @@
       },
       "thumbnail": {
         "name": "Kiểu xem thư viện",
-        "description": "Chọn bố cục thẻ. Kiểu ngang giữ nguyên giao diện hiện tại; ngang thu gọn và dọc, Danh sách và Chi tiết đánh đổi kích thước ảnh để lấy mật độ cao hơn hoặc nhiều thông tin hoạt động hơn.",
+        "description": "Chọn bố cục thẻ. Ngang hiển thị ảnh rộng; ngang gọn và dọc, Danh sách và Chi tiết đổi kích thước ảnh lấy mật độ dày hơn hoặc hoạt động phong phú hơn.",
         "value": {
           "portrait": "Dọc",
           "landscape": "Ngang",
@@ -307,7 +307,7 @@
         },
         "rareSilverMax": {
           "name": "Bạc đến",
-          "description": "Ở cấp hiếm, thành tựu đến tỷ lệ này nhận bạc. Giá trị phải nằm giữa ngưỡng vàng và ngưỡng hiếm, nếu không cả ba sẽ về mặc định."
+          "description": "Ở các bậc hiếm, thành tựu có tỷ lệ đến mức này nhận bạc. Nó luôn cao hơn vàng và thấp hơn giới hạn hiếm: kéo một thanh trượt sẽ đẩy các thanh còn lại."
         },
         "rareMax": {
           "name": "Hiếm đến",
@@ -557,8 +557,13 @@
         "transport": "Tích hợp",
         "chromium": "Thông báo Chromium",
         "watchdog": "Watchdog",
-        "test": "Thử",
-        "overlay": "Cửa sổ bật lên"
+        "test": "Thử nghiệm",
+        "overlay": "Cửa sổ bật lên",
+        "overlayDisplay": "Hiển thị",
+        "overlayProgress": "Tiến độ",
+        "overlaySounds": "Âm thanh",
+        "overlayEmulators": "Trình giả lập",
+        "overlayObs": "OBS"
       },
       "info": {
         "toast": "Một số tính năng chỉ có trên Windows 10",
@@ -628,6 +633,7 @@
         "overlayPresetShadps4": "Mẫu (ShadPS4)",
         "overlayPresetShadps4Desc": "Mẫu dùng cho thông báo của ShadPS4 (PlayStation 4)",
         "presetSameAsMain": "Giống mẫu chính",
+        "overlayEmulatorsDesc": "Các trò chơi chạy trong trình giả lập có thể có mẫu và âm thanh riêng; các bản port PC biên dịch lại theo máy console của chúng. “Giống mẫu chính” giữ nguyên các cài đặt phía trên.",
         "overlayPosition": "Vị trí",
         "overlayPositionDesc": "Nơi khung thông báo lớp phủ trong trò chơi xuất hiện trên màn hình",
         "overlayScale": "Cỡ",
@@ -755,6 +761,9 @@
           "importedOnly": "Mẫu đã nhập - bạn có thể xuất hoặc xóa nó ở đây; không thể chỉnh bằng các thanh trượt.",
           "importSan": "Nhập chủ đề SAN",
           "importSanSetup": "Nhập từ SAN trên PC này",
+          "importMenuFile": "Tệp mẫu…",
+          "importMenuSan": "Chủ đề SAN…",
+          "importMenuSanSetup": "Từ SAN trên PC này",
           "layer": {
             "none": "Không tùy chỉnh",
             "title": "Tùy chỉnh một mẫu có sẵn"
@@ -1131,7 +1140,7 @@
     "help": {
       "nav": "Trợ giúp",
       "title": "Trợ giúp và mẹo",
-      "intro": "Mọi điều hữu ích cần biết - phát hiện trò chơi, thông báo, tay cầm, lớp phủ, chủ đề và khắc phục sự cố.",
+      "intro": "Mọi điều đáng biết: tìm trò chơi của bạn, thông báo, trình giả lập, lớp phủ, tay cầm, chủ đề và cách xử lý khi có gì đó không ổn.",
       "setupTitle": "Thiết lập hiện tại của bạn",
       "topicsTitle": "Xem theo chủ đề",
       "groups": {
@@ -1152,96 +1161,151 @@
       },
       "quickTitle": "Các bước đầu tiên",
       "quick": [
-        "Thêm thư mục lưu/cấu hình trong Cài đặt > Thư mục, rồi bật nguồn tương ứng trong Cài đặt > Nguồn.",
-        "Watchdog chạy nền - nó phải đang chạy thì mới có thông báo tức thời và theo dõi thời gian chơi.",
+        "Hãy để Tìm thông minh tìm các trò chơi của bạn trong Cài đặt > Thư mục, hoặc tự thêm một thư mục, rồi bật nguồn tương ứng trong Cài đặt > Nguồn.",
+        "Watchdog chạy ngầm. Nó phải đang chạy thì mới có thông báo trực tiếp và tính thời gian chơi.",
         "Mọi thứ (cài đặt, bộ nhớ đệm, nhật ký, chủ đề tùy chỉnh) nằm trong %APPDATA%\\Achievement Watcher Next.",
-        "Mỗi phần cài đặt đều có thể gập lại dưới tiêu đề riêng - mũi tên chỉ xuống khi đang mở, chỉ ngang khi đã đóng. Lựa chọn của bạn được ghi nhớ."
+        "Công tắc Giao diện ở đầu Cài đặt chuyển giữa Đơn giản (các tab dùng hằng ngày) và Nâng cao (thêm Steam / GBE Fork, Ubisoft / Uplay R1/R2, Nâng cao và các tùy chọn sâu hơn). Đơn giản chỉ ẩn các điều khiển, không có gì bị tắt.",
+        "Đóng cửa sổ chính sẽ giữ AW Next trong khay hệ thống, nơi việc theo dõi vẫn tiếp tục. Để thoát, hãy dùng menu ở khay. Khởi chạy cùng máy và Đóng xuống khay hệ thống nằm trong Cài đặt > Chung.",
+        "Ô tìm kiếm ở đầu Cài đặt tìm được tùy chọn ở mọi tab. Hướng dẫn lần đầu trong Cài đặt > Chung sẽ mở lại phần thiết lập ban đầu."
       ],
-      "notifications": [
-        "Tự động là chế độ mặc định: khung thông báo trong trò chơi khi trò chơi hiển thị được, và thông báo Windows khi không, không bao giờ cả hai.",
-        "Cài đặt > Thông báo chứa preset, âm thanh, âm lượng, vị trí và tỷ lệ; các nút thử nghiệm bật một khung thông báo thật.",
-        "Nhấn chuột phải vào một trò chơi > Thông báo để riêng trò chơi đó có preset, vị trí, âm thanh hoặc tỷ lệ riêng.",
-        "Chụp màn hình khi mở khóa lưu lại hình ảnh khoảnh khắc đó trong Pictures\\Achievement Watcher Next."
-      ],
-      "gameHealthTitle": "Tình trạng trò chơi",
-      "gameHealth": [
-        "Mở nút công cụ của một trò chơi (góc trên bên phải thẻ của nó) để xem nó đang Sẵn sàng, Cần xem lại hay Không theo dõi.",
-        "Câu bên dưới trạng thái giải thích nguyên nhân bằng lời dễ hiểu; các mục kiểm tra bên dưới cho thấy phần nào đang có vấn đề.",
-        "Nút sửa chỉ xuất hiện khi AW Next thực sự sửa được trò chơi đó - mỗi nút đều nói rõ nó sẽ thay đổi gì và các tệp cũ được giữ ở đâu.",
-        "Chi tiết kỹ thuật chứa đường dẫn, số lượng và mã giả lập chính xác; hãy chép nó vào báo cáo lỗi."
-      ],
-      "troubleshootTitle": "Khắc phục sự cố",
-      "troubleshoot": [
-        "Nếu thiếu một trò chơi: hãy thêm thư mục, quét lại, rồi kiểm tra công tắc nguồn và danh sách đen.",
-        "Nếu thông báo không hiện ra: hãy kiểm tra chế độ Không làm phiền / Focus Assist của Windows và chạy ứng dụng với cùng quyền như các trò chơi của bạn.",
-        "Nâng cao > Chẩn đoán sẽ mở thư mục nhật ký và dữ liệu; hãy đính kèm chúng khi báo lỗi.",
-        "Nhật ký được ghi nối tiếp, nên một sự cố vẫn còn dấu vết sau lần chạy kế tiếp. Mỗi lần chạy bắt đầu bằng một dấu phiên và một khối [diag] (phiên bản, đường dẫn, màn hình) - hãy dán nó vào báo cáo lỗi."
+      "libraryTitle": "Thư viện và bộ sưu tập",
+      "library": [
+        "Bộ sưu tập: nhấp chuột phải vào một trò chơi > Bộ sưu tập, đánh dấu một bộ sưu tập hoặc chọn Bộ sưu tập mới…. Nút bộ sưu tập cạnh Chỉ hiện trò chơi đã cài đặt sẽ lọc thư viện, và các con số trong hồ sơ cũng thay đổi theo.",
+        "Chỉnh sửa bộ sưu tập… trong menu của nút đó đổi tên, màu, biểu tượng hoặc hình ảnh, và xóa bộ sưu tập. Các trò chơi vẫn nằm trong thư viện của bạn.",
+        "Nút tròn cạnh tỷ lệ hoàn thành mở Thống kê thư viện: mức hoàn thành, số lượng đã mở khóa và chưa mở khóa, thời gian chơi, cúp, trò chơi có bạch kim, các thành tựu hiếm nhất và mỗi nền tảng một dòng.",
+        "Bộ chọn giữa ô tìm kiếm và nút + chuyển giữa sáu kiểu xem thư viện. Cài đặt > Giao diện > Thẻ thư viện đặt kích thước thẻ, khoảng cách và nội dung mỗi thẻ hiển thị.",
+        "Nút + thêm một trò chơi mà không nguồn nào tìm thấy: một tiêu đề và một tệp thực thi, kèm nền tảng và Steam AppID tùy chọn. Số lần khởi chạy và thời gian chơi được theo dõi, không có thành tựu.",
+        "Nhấp chuột phải vào một trò chơi > Cài đặt trò chơi > Đổi tên… để đổi tên hiển thị. Thành tựu và thời gian chơi > Sửa thời gian chơi… chỉnh lại tổng số (12.5 hoặc 12h30)."
       ],
       "sourcesTitle": "Ứng dụng phát hành và nguồn",
       "sources": [
-        "Chế độ hồ sơ Steam liệt kê các trò chơi đã cài hoặc đang sở hữu, nhưng thành tựu mở khóa vẫn đến từ tệp lưu trên máy.",
-        "GOG, Epic, Ubisoft Connect/LumaPlay và EA Desktop có thể được bật riêng trong Nguồn.",
-        "Trò chơi Steam đang sở hữu chỉ được tính là đã cài đặt khi registry của Steam xác nhận điều đó."
+        "Steam, Epic Games và Xbox PC đều có các lựa chọn Không, Đã cài đặt hoặc Đang sở hữu trong Cài đặt > Nguồn. Đang sở hữu liệt kê toàn bộ thư viện của tài khoản đã kết nối, dù đã cài hay chưa.",
+        "GOG Galaxy, Epic, Ubisoft Connect, Xbox PC và EA Desktop đều có công tắc riêng trong Cài đặt > Nguồn. EA Desktop chỉ bao gồm các trò chơi nằm ngoài thư mục do EA quản lý.",
+        "Trò chơi Steam đang sở hữu chỉ được tính là đã cài đặt khi sổ đăng ký của Steam xác nhận điều đó.",
+        "Lượt mở khóa Steam được đọc từ số liệu thống kê mà Steam giữ trên máy tính này, nên hồ sơ riêng tư vẫn dùng được. Kết nối tài khoản là tùy chọn: nó thêm các trò chơi đã chơi trên máy tính khác và các trò chơi Steam Family.",
+        "Một trò chơi lưu ở nơi bất thường: hãy thêm thư mục của nó trong Cài đặt > Thư mục. Chọn thư mục chứa trực tiếp các bản lưu, các thư mục AppID hoặc cấu hình trình giả lập, hoặc một thư mục thư viện chứa nhiều trò chơi.",
+        "RetroAchievements: bật nguồn, nhập tên người dùng và khóa Web API, rồi bấm Nhập thư viện. Lượt mở khóa đến từ tài khoản của bạn, nên hãy để RetroAchievements luôn bật trong trình giả lập.",
+        "Ở chế độ Đơn giản, một vài dòng nguồn hiếm khi dùng sẽ được ẩn khi chưa được dùng. Chúng trở lại ngay khi cần, và Nâng cao luôn liệt kê tất cả.",
+        "Cúp PlayStation hiển thị hạng của chúng, tỷ lệ người chơi đã có và mức độ hiếm riêng của PlayStation. Tỷ lệ lấy từ Exophase; hãy kết nối tài khoản PlayStation trong Cài đặt > Nguồn để có số liệu riêng của Sony cho các trò chơi trong tài khoản đó."
+      ],
+      "notifications": [
+        "Tự động là mặc định: cửa sổ bật lên trong trò chơi khi trò chơi hiển thị được, và thông báo Windows khi không, không bao giờ cả hai.",
+        "Cài đặt > Thông báo gồm Kiểu thông báo (Tự động, Thông báo Windows, Lớp phủ trong trò chơi hoặc Cả hai), mẫu, âm thanh, âm lượng, vị trí, cỡ và độ đục. Các nút thử sẽ hiện một cửa sổ bật lên thật.",
+        "Mở nút công cụ của một trò chơi (góc trên bên phải của thẻ) và vào cài đặt thông báo của nó để cho riêng trò chơi đó mẫu, vị trí, âm thanh hoặc cỡ riêng.",
+        "Chụp màn hình khi mở khóa lưu lại hình ảnh khoảnh khắc đó trong Hình ảnh\\Achievement Watcher Next.",
+        "Âm thanh thành tích hiếm, Âm thanh hoàn thành 100% và Âm thanh tiến độ (chế độ Nâng cao) cho các cửa sổ bật lên đó âm thanh riêng. Âm thanh ngẫu nhiên chọn một âm thanh khác mỗi lần, và bạn có thể nhập tệp của riêng mình.",
+        "Vàng, bạc và đồng đánh dấu các lượt mở khóa hiếm. Cài đặt > Chung > Hiển thị độ hiếm chuyển sang Chế độ cúp, chế độ này xếp hạng từng thành tựu và hiển thị bạch kim trên các trò chơi đã hoàn thành.",
+        "Với các bộ đếm, Mốc tiến độ chỉ hiện cửa sổ bật lên ở các bước 10, 25 hoặc 50%. Nhấp chuột phải vào một trò chơi > Tắt thông báo tiến độ để tắt tiếng một trò chơi mà không đụng đến các lượt mở khóa của nó.",
+        "Còn hai công tắc nữa trong Cài đặt > Thông báo: Thông báo ưu tiên cho phép lượt mở khóa vượt qua chế độ Không làm phiền (Windows 11), và Trò chơi của ứng dụng Steam thêm cửa sổ bật lên của AW Next cho các trò chơi do chính Steam chạy."
+      ],
+      "gameHealthTitle": "Tình trạng trò chơi",
+      "gameHealth": [
+        "Nhấp vào nút công cụ của một trò chơi (góc trên bên phải của thẻ), hoặc nhấp chuột phải vào nó, để mở Tình trạng trò chơi. Nó cho biết trò chơi đang Sẵn sàng, Cần chú ý hay Không theo dõi.",
+        "Câu bên dưới trạng thái giải thích nguyên nhân bằng lời đơn giản. Các mục kiểm tra bên dưới cho thấy phần nào có lỗi: tệp trò chơi, tệp thực thi, dữ liệu thành tựu, thiết lập giả lập, theo dõi trực tiếp hoặc thông báo.",
+        "Các nút sửa chữa chỉ xuất hiện khi AW Next thật sự sửa được trò chơi đó, chẳng hạn Tìm vị trí trò chơi, Ghi lại dữ liệu thành tựu, Khôi phục tệp của trình giả lập hoặc Theo dõi trò chơi này. Mỗi nút cho biết nó sẽ thay đổi gì, giữ một bản sao lưu và hỏi trước.",
+        "Gửi một thông báo thử hiện một cửa sổ bật lên với tên và hình của chính trò chơi đó, được gửi đúng như khi thật.",
+        "Chi tiết kỹ thuật chứa đường dẫn, số liệu và mã trình giả lập chính xác: bấm Chép rồi dán vào báo cáo lỗi. Chấm màu trên thẻ có thể ẩn trong Cài đặt > Giao diện > Thẻ thư viện."
+      ],
+      "troubleshootTitle": "Khắc phục sự cố",
+      "troubleshoot": [
+        "Nếu thiếu một trò chơi: kiểm tra nguồn của nó trong Cài đặt > Nguồn, chạy Tìm thông minh hoặc Tạo cấu hình trong Cài đặt > Thư mục, thêm thư mục của nó thủ công nếu cần và thử tắt Chỉ hiện trò chơi đã cài đặt.",
+        "Nếu thông báo không hiện ra: đọc dòng Thông báo trong Tình trạng trò chơi của trò chơi đó, rồi kiểm tra Không làm phiền / Hỗ trợ tập trung của Windows. Thông báo ưu tiên trong Cài đặt > Thông báo có thể cho lượt mở khóa đi qua.",
+        "Cài đặt > Nâng cao > Chẩn đoán mở các thư mục nhật ký và dữ liệu, còn Xuất nhật ký (.zip) gói nhật ký lại với tên người dùng và khóa của bạn được che đi. Hãy đính kèm khi báo cáo sự cố.",
+        "Nhật ký được ghi nối tiếp, nên một lần sập vẫn còn sau lần khởi chạy tiếp theo. Mỗi lần chạy bắt đầu bằng một dấu phiên và một khối [diag] (phiên bản, đường dẫn, màn hình): hãy dán nó vào báo cáo.",
+        "Một trò chơi kẹt ở 0%? Điều đó bình thường cho đến khi lượt mở khóa đầu tiên được ghi. Nếu AW Next ghép nhầm bản phát hành Steam, nhấp chuột phải vào trò chơi > Đặt AppID thủ công….",
+        "Thời gian chơi không được tính? Mở nút công cụ của trò chơi > Tệp thực thi và chọn chương trình luôn mở trong lúc bạn chơi, không phải trình khởi chạy.",
+        "Thành tựu mới từ bản cập nhật trò chơi xuất hiện trong vòng 3 ngày, hoặc ngay lập tức với Cài đặt > Nâng cao > Kiểm tra lại danh sách thành tựu.",
+        "Bản cập nhật ứng dụng cứ lỗi ở cùng một tệp? Cài đặt > Nâng cao > Xóa bộ nhớ đệm chỉ xóa các tệp có thể tải lại, không bao giờ đụng đến cài đặt hay bản lưu của bạn."
       ],
       "steamTitle": "Trình giả lập Steam",
       "steam": [
         "Bản lưu của GBE / Goldberg thường nằm trong %APPDATA%\\GSE Saves hoặc %APPDATA%\\Goldberg SteamEmu Saves.",
-        "Bản lưu của CODEX / RUNE thường nằm trong Public Documents\\Steam\\CODEX hoặc Public Documents\\Steam\\RUNE.",
-        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213 và Hoodlum được nhận diện qua thư mục cấu hình/lưu của chúng.",
-        "Bản sửa giả lập trong menu chuột phải có thể thêm tệp GBE Fork, danh sách thành tựu và dữ liệu DLC.",
-        "Chế độ Đơn giản chạy nhanh; Nâng cao chạy generate_emu_config để lấy dữ liệu Steam sâu hơn và có thể mất vài phút."
+        "Bản lưu của CODEX / RUNE thường nằm trong Tài liệu công cộng\\Steam\\CODEX hoặc Tài liệu công cộng\\Steam\\RUNE.",
+        "TENOKE, UniverseLAN, SmartSteamEmu, ALI213, Hoodlum, CreamAPI và các trình giả lập Nemirtingas được đọc từ thư mục cấu hình hoặc thư mục lưu riêng của chúng. Nếu không tìm thấy trò chơi, hãy thêm thư mục của nó trong Cài đặt > Thư mục.",
+        "Nhấp chuột phải vào một trò chơi > Giả lập và công cụ > Áp dụng bản sửa giả lập… để cài GBE Fork, dựng steam_settings (danh sách thành tựu và biểu tượng) và ghi steam_appid.txt khi thiếu. Mọi tệp bị thay thế đều được sao lưu trước.",
+        "Trong Cài đặt > Steam / GBE Fork, dữ liệu steam_settings đặt ở Đơn giản dùng cách tải ẩn danh riêng của AW Next và rất nhanh. Nâng cao chạy generate_emu_config để có dữ liệu Steam sâu hơn và có thể mất vài phút.",
+        "Không có gì tự ghi vào thư mục trò chơi: Tự sửa những trò chơi mới phát hiện, Quản lý quyền sở hữu DLC và Ghi tên tài khoản và ngôn ngữ đều tắt theo mặc định.",
+        "Chẩn đoán trình giả lập trong cùng menu chỉ đọc và báo cáo. Sao lưu thiết lập GBE/Goldberg và Khôi phục bản sao lưu GBE/Goldberg mới nhất đưa trò chơi về như cũ."
       ],
       "emulatorTitle": "Trình giả lập máy chơi game",
       "emulators": [
-        "Cúp của RPCS3 được đọc từ dev_hdd0\\home\\...\\trophy gần nơi cài RPCS3.",
-        "Cúp của shadPS4 được đọc từ các thư mục game_data/trophy trong dữ liệu ứng dụng của nó; dữ liệu còn sót lại không chứng tỏ trò chơi đã được cài.",
-        "Tiến độ của Xenia được đọc từ các tệp hồ sơ Xbox như .gpd."
+        "Cúp của RPCS3 được đọc từ dev_hdd0\\home\\...\\trophy cạnh bản cài RPCS3. Ổ đĩa ảo đã di chuyển cũng được theo dõi.",
+        "Cúp của shadPS4 được đọc từ thư mục game_data của nó (các tệp TROP XML). Bạn có thể thêm trình giả lập, thư mục người dùng của nó hoặc chính game_data.",
+        "Tiến độ của Xenia được đọc từ các tệp hồ sơ Xbox (.gpd) và theo các thư mục lưu trữ đặt trong cấu hình của nó.",
+        "Cúp của KytyPS5 được đọc từ thư mục _Trophies của nó, cho người dùng mà trình khởi chạy dùng để chạy trò chơi.",
+        "Các trò chơi Xbox 360 được biên dịch lại cho PC và các bản port PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil và nhiều trò khác) là các nguồn riêng trong Cài đặt > Nguồn. Nếu có trò không hiện ra, hãy thêm thư mục của nó trong Cài đặt > Thư mục.",
+        "Mỗi máy console có thể có mẫu cửa sổ bật lên và âm thanh riêng trong Cài đặt > Thông báo > Trình giả lập (chế độ Nâng cao). Các trò chơi Xbox 360 biên dịch lại theo lựa chọn của Xenia, bản port PS4 theo của shadPS4, và Giống mẫu chính giữ nguyên cài đặt chính."
       ],
       "controllerTitle": "Tay cầm (gamepad)",
       "controller": [
-        "Trước tiên hãy bật Cài đặt > Tay cầm, sau đó Back + Start + LB sẽ mở lớp phủ trong trò chơi.",
-        "LB + X bật hoặc tắt điều hướng bên trong lớp phủ.",
-        "Chế độ điều hướng: D-pad/cần trái di chuyển vùng chọn, A xác nhận, B hủy, X tìm kiếm, Y mở tùy chọn.",
+        "Trong Cài đặt > Tay cầm, bật Điều khiển lớp phủ trong trò chơi bằng tay cầm (tắt theo mặc định), khi đó Back + Start + LB mở lớp phủ trong trò chơi.",
+        "Điều khiển ứng dụng bằng tay cầm (bật theo mặc định) điều khiển chính AW Next: phím điều hướng hoặc cần trái di chuyển tiêu điểm, A mở một trò chơi, B quay lại, X tìm kiếm, Y hoặc Start mở Cài đặt, LB / RB chuyển giữa các tab cài đặt.",
+        "Trong thư viện, RT khởi chạy trò chơi đang chọn và LT mở Tình trạng trò chơi của nó.",
+        "Trong lớp phủ, LB + X bật hoặc tắt điều hướng: phím điều hướng hoặc cần trái di chuyển tiêu điểm, A xác nhận, B hủy, X tìm kiếm, Y mở các tùy chọn.",
         "Giữ LB + RB để di chuyển lớp phủ bằng cần trái và cuộn bằng cần phải.",
-        "Hoạt động với tay cầm Xbox, PlayStation (DualShock 4 / DualSense) và Switch Pro."
+        "Nếu trò chơi vẫn phản ứng với các nút của bạn, hãy bật Đưa lớp phủ lên trước khi mở hoặc Gửi phím Escape cho trò chơi khi mở bằng tay cầm (cả hai tắt theo mặc định).",
+        "Hoạt động với tay cầm Xbox, PlayStation (DualShock 4 / DualSense) và Switch Pro. Kiểu tay cầm đặt tên các nút được hiển thị, và mỗi phím tắt nhận từ một đến ba nút.",
+        "Không nhận tay cầm? Hãy kiểm tra nó trong Windows (joy.cpl) trước, chắc chắn công tắc đúng đang bật, rồi thử XInput trong Nền tảng nhận tay cầm."
       ],
       "overlayTitle": "Lớp phủ trong trò chơi",
       "overlay": [
-        "Mở nó bằng phím tắt lớp phủ (mặc định là Ctrl+Shift+K) hoặc Back + Start + LB trên tay cầm.",
-        "Chỉ sắp xếp theo một cột mỗi lần: Độ hiếm, Ngày hoặc Trạng thái (tăng dần / giảm dần / không).",
-        "Nhấn / để vào ô tìm kiếm, Esc để xóa nội dung hoặc đóng bảng tùy chọn.",
-        "Bảng bánh răng cho phép đổi màu nhấn, mật độ, mức phóng, độ mờ và số hàng hiển thị; 'Dùng chủ đề ứng dụng' sẽ theo chủ đề đang bật.",
-        "Mỗi thành tựu có tỷ lệ đã biết đều hiện độ hiếm: xám cho phổ biến, vàng/bạc/đồng cho hiếm."
+        "Mở nó bằng phím tắt lớp phủ (mặc định Ctrl+Shift+K) hoặc Back + Start + LB trên tay cầm khi một trò chơi được hỗ trợ đang chạy. Phím tắt được đặt trong Cài đặt > Chung.",
+        "Nó liệt kê thành tựu của trò chơi đang chạy: tên, mô tả, chưa mở khóa hay đã mở khóa, ngày mở khóa và tiến độ. Kéo nó bằng thanh tiêu đề.",
+        "Một thành tựu ẩn vẫn ẩn cho đến khi bạn nhấp vào nó (hoặc bấm A trên tay cầm), nên không bị lộ nội dung.",
+        "Các nhãn Tất cả, Đã mở khóa, Chưa mở khóa và Đang tiến hành lọc danh sách. Nhấp vào Thành tựu, Độ hiếm, Ngày hoặc Trạng thái để sắp xếp: tăng dần, giảm dần, rồi trở lại bình thường. Mỗi lần một cột.",
+        "Bấm / để chuyển đến ô tìm kiếm, bấm Esc để xóa nó hoặc đóng bảng tùy chọn.",
+        "Bảng bánh răng đổi màu nhấn, mật độ, kích thước biểu tượng, thu phóng, độ đục và các hàng hiển thị. Dùng chủ đề ứng dụng theo chủ đề đang dùng, và Đặt lại mặc định hoàn tác tất cả.",
+        "Mỗi thành tựu có tỷ lệ đã biết đều hiển thị độ hiếm: xám cho phổ biến, vàng/bạc/đồng cho hiếm."
       ],
       "streamTitle": "Lớp phủ khi phát trực tiếp (OBS)",
       "stream": [
-        "Cài đặt > Thông báo > Nguồn trình duyệt OBS > Chép liên kết, sau đó thêm một Nguồn trình duyệt trong OBS và dán vào làm URL.",
-        "Đặt chiều rộng và chiều cao của nguồn theo kích thước mà http://127.0.0.1:8082/obs/_config báo cáo: khung riêng của mẫu theo cỡ bạn đã chọn.",
-        "Thêm ?test=1 vào URL trong lúc bạn đặt nguồn. Nó hiển thị một lượt mở khóa mẫu mỗi mười giây; hãy gỡ bỏ khi bạn đặt xong.",
-        "Nguồn này hiển thị đúng khung thông báo giống như lớp phủ trong trò chơi, và để trống giữa các lượt mở khóa nên không tốn gì khi bạn phát trực tiếp.",
-        "Nó đọc luồng thông báo cục bộ, vì vậy hãy để Websocket @localhost:8082 bật trong Cài đặt > Thông báo > Cách gửi."
+        "Cài đặt > Thông báo > Nguồn trình duyệt OBS (chế độ Nâng cao): Xem thử kiểm tra nó trong trình duyệt của bạn và Chép liên kết sao chép địa chỉ. Trong OBS, thêm một nguồn Trình duyệt và dán nó làm URL.",
+        "Chiều rộng và chiều cao nào cũng được, thẻ sẽ co giãn để lấp đầy khung. Nguồn lớn hơn thì nét hơn: hãy đặt nó khoảng gấp đôi kích thước của chính mẫu (http://127.0.0.1:8082/obs/_config cho biết kích thước này) và đặt ở nửa kích thước.",
+        "Thêm ?test=1 vào URL khi bạn đặt nguồn. Nó hiện một lượt mở khóa mẫu mỗi mười giây; hãy xóa đi khi xong.",
+        "Nguồn vẽ cùng cửa sổ bật lên như trong trò chơi, và để trống giữa các lượt mở khóa nên không tốn gì khi bạn phát trực tiếp.",
+        "Thêm tùy chọn sau địa chỉ: ?scale=2 cố định thu phóng, ?duration=8000 đặt thời gian mỗi thẻ hiện, ?sound=1 phát âm thanh qua nguồn, /obs/preset/Xbox/ dùng một mẫu bất kể màn hình nền đang dùng mẫu nào.",
+        "Nó đọc luồng thông báo cục bộ, nên hãy để Websocket @localhost:8082 bật trong Cài đặt > Thông báo > Tích hợp. Nó chỉ hoạt động trên máy tính này, và chỉ một bản AW Next có thể phục vụ nó."
+      ],
+      "souvenirsTitle": "Ảnh chụp màn hình và đoạn video",
+      "souvenirs": [
+        "Cài đặt > Thông báo > Chụp màn hình khi mở khóa lưu một ảnh ngay sau cửa sổ bật lên, có cả thông báo, vào một thư mục con cho mỗi trò chơi. Mở thư mục đưa bạn đến đó.",
+        "Ảnh chụp HDR (Tự động) chỉnh màu khi HDR của Windows đang bật. Ảnh kỷ niệm chụp màn hình chính, nên hãy chơi trên đó.",
+        "Đoạn video khi mở khóa (tắt cho đến khi bạn bật, nằm phía dưới trong Cài đặt > Thông báo) giữ vài giây cuối của lúc chơi trong bộ nhớ và lưu một tệp MP4 quanh mỗi lượt mở khóa. Không có gì được ghi cho đến khi một thành tựu được mở khóa.",
+        "Độ dài đoạn video (10 đến 30 giây), Định dạng (H.264, HEVC hoặc AV1), Độ phân giải, Tốc độ khung hình, Chất lượng và Âm thanh (Chỉ trò chơi hoặc Cả PC) đều có thể thay đổi. H.264 phát được ở mọi nơi.",
+        "Bộ mã hóa của chính card đồ họa làm việc này, dùng ít hơn nhiều so với 1% bộ xử lý. Nếu không có bộ mã hóa H.264 phần cứng, bộ mã hóa phần mềm của Windows sẽ đảm nhận, tối đa 1080p và 30 FPS. Một trò chơi rất cũ ở chế độ toàn màn hình độc quyền có thể ghi ra khung hình đen."
       ],
       "shortcutsTitle": "Phím tắt bàn phím",
       "shortcuts": [
-        "Ctrl+Shift+K (mặc định): bật hoặc tắt lớp phủ trong trò chơi - đổi được trong Cài đặt > Chung.",
-        "Ctrl+Alt+Shift+phím mũi tên để di chuyển lớp phủ; Ctrl+Alt+Shift+1-5 đưa nó về một vị trí định sẵn.",
-        "Ctrl+Alt+Shift+C bật hoặc tắt xuyên chuột; Ctrl+F đưa con trỏ vào ô tìm kiếm của Cài đặt."
+        "Ctrl+Shift+K (mặc định): bật hoặc tắt lớp phủ trong trò chơi. Đổi nó trong Cài đặt > Chung.",
+        "Ctrl+Alt+Shift+phím mũi tên di chuyển lớp phủ; Ctrl+Alt+Shift+1-5 gắn nó vào một vị trí định sẵn; Ctrl+Alt+Shift+C bật hoặc tắt chế độ nhấp xuyên qua.",
+        "Trong lớp phủ, / chuyển đến ô tìm kiếm và Esc xóa nó. Trong trình thiết kế mẫu, Ctrl+Z và Ctrl+Y hoàn tác và làm lại.",
+        "Ctrl+F chuyển đến ô tìm kiếm của Cài đặt và Esc xóa nó. F5 làm mới thư viện."
       ],
       "themesTitle": "Chủ đề tùy chỉnh",
       "themes": [
-        "Chủ đề tùy chỉnh bắt đầu từ Steam Blue; mọi lớp (nền, thanh tiêu đề, bảng, thẻ, cài đặt, chữ, viền, màu nhấn) đều sửa được.",
-        "Ảnh của từng lớp nằm dưới một lớp màng màu cùng hiệu ứng mờ nhẹ; hiệu ứng được đặt riêng cho từng lớp.",
+        "Cài đặt > Giao diện có các chủ đề dựng sẵn và chủ đề nào cũng chỉnh sửa được: cửa sổ, thanh trên, bảng, thẻ, cài đặt, văn bản, viền và màu nhấn đều nhận một màu, một dải chuyển màu hoặc một hình ảnh.",
+        "Lưu chủ đề biến bản chỉnh sửa của bạn thành chủ đề riêng: giữ nguyên tên để thay thế, gõ tên khác để tạo bản sao. Đặt lại tất cả đưa về chủ đề bạn đã bắt đầu.",
         "Thả một chủ đề CSS vào <userData>\\themes và nó sẽ xuất hiện trong danh sách chủ đề.",
-        "Trình tạo mẫu tùy chỉnh có thể xem trước một thiết kế dưới dạng khung thông báo thật trước khi lưu, mở lại một mẫu đã lưu để sửa, và xóa những mẫu bạn không giữ.",
-        "Xuất chủ đề bạn đang dùng thành một tệp .awtheme, hoặc nhập tệp ai đó gửi cho bạn: nó được xem trước khi cài và sau đó hoạt động như một chủ đề có sẵn."
+        "Xuất chủ đề… ghi ra một tệp .awtheme (chủ đề dựng sẵn phải được lưu dưới tên của bạn trước). Nhập chủ đề… xem trước trước khi cài, và Xóa chủ đề gỡ một chủ đề đã nhập.",
+        "Các chủ đề do cộng đồng làm nằm trong thư viện chủ đề trên trang web của dự án, và gửi chủ đề của bạn chỉ cần một tệp."
+      ],
+      "presetsTitle": "Mẫu cửa sổ bật lên",
+      "presets": [
+        "Mẫu là diện mạo của cửa sổ bật lên trong trò chơi, được chọn trong Cài đặt > Thông báo > Mẫu. Nó không có tác dụng khi Kiểu thông báo là Thông báo Windows.",
+        "Cài đặt > Mẫu thông báo là trình thiết kế làm từ các điều khiển thông thường: chọn một điểm xuất phát hoặc bấm Gợi ý ngẫu nhiên, xem bản xem trước trực tiếp (Thẻ, So sánh, Màn hình), rồi bấm Tạo mẫu. Chưa có gì được lưu trước đó.",
+        "Tùy chỉnh một mẫu có sẵn chỉ đổi vài thứ (nền, màu chữ, màu nhấn, viền, ánh sáng, phông chữ, logo) và vẫn theo mẫu có sẵn nếu nó được cải tiến.",
+        "Sửa một mẫu mở lại mẫu bạn đã thiết kế. Xuất và Nhập chuyển một mẫu thành một tệp .awpreset, kèm hình ảnh, phông chữ và âm thanh.",
+        "Nhập > Chủ đề SAN… đọc một chủ đề Steam Achievement Notifier (tệp .san), và Nhập > Từ SAN trên PC này đưa vào các chủ đề mà SAN đang dùng. Chúng giữ nguyên diện mạo và âm thanh của SAN."
       ],
       "tipsTitle": "Mẹo và thủ thuật",
       "tips": [
-        "Nhấn chuột phải vào một thẻ trò chơi để khởi chạy nó, chọn tệp thực thi, mở thư mục và liên kết, dùng công cụ giả lập, hoặc gỡ cài đặt khi menu đó được bật.",
-        "Nhấn chuột phải vào một trò chơi và chọn tắt thông báo tiến độ để ngừng các khung tiến độ mà vẫn giữ thông báo mở khóa.",
-        "Bản sửa giả lập (Đơn giản nhanh gọn / Nâng cao đầy đủ) sẽ cài GBE Fork, danh sách thành tựu và dữ liệu DLC.",
-        "Thời gian chơi được ghi nhận khi trò chơi đang chạy; thông báo tiến độ và thời gian chơi có thể bật trong mục Thông báo.",
-        "Thành tựu mới từ một bản cập nhật trò chơi sẽ tự xuất hiện trong vòng 3 ngày, hoặc ngay lập tức qua Cài đặt > Nâng cao > Kiểm tra lại danh sách thành tựu."
+        "Nhấp chuột phải vào thẻ trò chơi để khởi chạy, chọn tệp thực thi, mở thư mục và liên kết, dùng công cụ trình giả lập hoặc gỡ cài đặt khi menu đó được bật.",
+        "Đánh dấu là mở khóa thủ công (nhấp chuột phải vào một thành tựu) ghi lại một lượt mở khóa mà không nguồn nào thấy được.",
+        "Đặt lại thành tựu… cho chơi lại một trò chơi từ đầu và sao lưu mọi tệp trước. Nó dùng được cho trò chơi giả lập, không dùng cho Steam, Epic hay Xbox, nơi lượt mở khóa nằm trên tài khoản của bạn.",
+        "Thời gian chơi được theo dõi khi trò chơi đang chạy; Theo dõi thời gian chơi trong Cài đặt > Thông báo bật thông báo bắt đầu và kết thúc.",
+        "Quên trò chơi này… xóa mọi thứ AW Next lưu về một trò chơi (các bản lưu được sao lưu trước). Xóa khỏi danh sách chỉ ẩn nó đi.",
+        "Cài đặt trò chơi > Ngôn ngữ thành tựu hiển thị thành tựu và thông báo của một trò chơi bằng ngôn ngữ khác với phần còn lại.",
+        "Cài đặt > Nâng cao > Sao lưu hồ sơ: Xuất hồ sơ… lưu cài đặt, mẫu, chủ đề, ảnh bìa và thời gian chơi của bạn vào một tệp .awbackup để cài lại hoặc dùng máy mới. Thông tin đăng nhập không được lưu."
       ]
     },
     "advanced": {
@@ -1331,8 +1395,10 @@
     "trophyCopy": "Xếp hạng thành tựu vàng, bạc hoặc đồng theo độ hiếm. Bật trong Cài đặt.",
     "clipsTitle": "Đoạn video",
     "clipsCopy": "Giữ một đoạn ngắn quanh mỗi lần mở khóa. Bật trong Cài đặt, mục Thông báo.",
-    "backupTitle": "Sao lưu hồ sơ",
-    "backupCopy": "Lưu cài đặt và lựa chọn thư viện của bạn vào một tệp, rồi khôi phục sau khi cài đặt lại.",
+    "statsTitle": "Thống kê thư viện",
+    "statsCopy": "Bên dưới hồ sơ của bạn, “Xem chi tiết đầy đủ” hiển thị mức hoàn thành, thời gian chơi và tiến độ theo từng nền tảng.",
+    "healthTitle": "Tình trạng trò chơi",
+    "healthCopy": "Chấm màu trên một trò chơi cho biết thành tựu của nó có đang được theo dõi hay không. Nút cài đặt của trò chơi sẽ giải thích có gì không ổn.",
     "profileTitle": "Hồ sơ",
     "profileCopy": "Chọn tên hiển thị ở thanh trên cùng và nếu muốn thì đặt một ảnh đại diện lưu trên máy.",
     "username": "Tên hiển thị",
@@ -1361,6 +1427,7 @@
     "smartFindHint": "bản lưu + thư viện",
     "addSaveHint": "một trình giả lập/nguồn",
     "addLibraryHint": "nhiều trò chơi đã cài",
+    "addFolder": "Thiếu gì đó? Thêm một thư mục",
     "saveList": "Thư mục lưu / cấu hình",
     "libraryList": "Thư viện trò chơi",
     "emptyList": "Chưa thêm gì trong phiên này.",
@@ -1379,9 +1446,11 @@
     "summaryReopen": "Bạn có thể mở lại hướng dẫn này bất cứ lúc nào từ Cài đặt > Chung.",
     "sourcesTitle": "Thành tựu của bạn đến từ đâu",
     "sourcesCopy": "Mọi nguồn được cài trên PC này đều được đọc tự động, nên mặc định là đủ. Chỉ đăng nhập bên dưới nếu bạn muốn nhiều hơn.",
+    "sourcesCopySimple": "Các trình khởi chạy và trình giả lập trên máy tính này đã được đọc sẵn. Chỉ kết nối tài khoản nếu bạn muốn những gì nó bổ sung.",
     "sourcesMore": "Tinh chỉnh nguồn ({count} đã bật)",
     "accountsTitle": "Tài khoản (tùy chọn)",
-    "accountsCopy": "Đăng nhập để đọc các mục mở khóa từ hồ sơ Steam riêng tư, thêm các trò chơi Steam Family của bạn, nhập thư viện Xbox PC của bạn và hiển thị tiến độ Epic của bạn. Bạn có thể bỏ qua bước này và kết nối sau trong Cài đặt > Nguồn.",
+    "accountsCopy": "Đăng nhập để đọc lượt mở khóa từ hồ sơ Steam riêng tư, thêm các trò chơi Steam Family của bạn, nhập thư viện Xbox PC, hiển thị tiến độ Epic, nhận tỷ lệ cúp của chính PlayStation và nhập các trò chơi RetroAchievements của bạn. Bạn có thể bỏ qua và kết nối sau trong Cài đặt > Nguồn.",
+    "raKeyPage": "Khóa Web API của tôi ở đâu?",
     "sourcesEmulators": "Trình giả lập",
     "sourcesEmulatorsCopy": "Mỗi trình chỉ được đọc khi đã cài đặt, nên bật chúng lên không tốn gì cả.",
     "source": "Hiện trò chơi Steam",
@@ -1582,6 +1651,22 @@
     "manual-game-name": "Tên trò chơi",
     "manual-game-appid-optional": "Steam AppID (không bắt buộc)",
     "manual-game-platform-other": "Khác",
+    "manual-game-note": "Số lần khởi chạy và thời gian chơi được theo dõi, không có thành tựu.",
+    "collection-create": "Tạo",
+    "collection-create-note": "Sau khi tạo xong, nhấp chuột phải vào một trò chơi > Bộ sưu tập để thêm nó vào.",
+    "psn-ultra-rare": "Cực hiếm",
+    "psn-very-rare": "Rất hiếm",
+    "psn-rare": "Hiếm",
+    "psn-common": "Phổ biến",
+    "psn-title": "Tài khoản PlayStation",
+    "psn-desc": "Tùy chọn. Hiển thị tỷ lệ cúp của chính PlayStation cho các trò chơi đã có trong tài khoản PSN của bạn; những trò chơi khác vẫn dùng số liệu của Exophase. Mã phiên của bạn được lưu mã hóa trên máy tính này.",
+    "psn-btn-hint": "mở cửa sổ đăng nhập của Sony",
+    "psn-connect": "Kết nối tài khoản PlayStation",
+    "psn-connecting": "Đang mở cửa sổ đăng nhập của Sony…",
+    "psn-connected": "Đã kết nối tài khoản PlayStation.",
+    "psn-disconnected": "Đã ngắt kết nối tài khoản PlayStation.",
+    "psn-failed": "Đăng nhập PlayStation không thành công",
+    "connect-playstation-account": "Kết nối tài khoản PlayStation",
     "manual-source": "Thủ công",
     "no-config-eligible-games": "Không tìm thấy trò chơi Steam nào chưa được cấu hình mà cũng chưa có bản sửa.",
     "no-config-eligible-games-configured": "Tìm thấy {count} bản cài tương thích Steam - tất cả đều đã được thiết lập. Để dựng lại chúng, hãy dùng Nâng cao > Sửa mọi trò chơi.",
