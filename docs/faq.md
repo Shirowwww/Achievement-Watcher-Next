@@ -204,6 +204,7 @@ bypass online ownership checks.
 [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues) with the app version,
 your Windows version (or Linux distribution and desktop), the source involved and the relevant logs. For a suspected vulnerability, use
 the private process in the [security policy](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) instead.
+For a question, or help before you are sure it is a bug, ask in the [Discord server](https://discord.gg/DjTMrDsXTh).
 
 ---
 

@@ -18,7 +18,7 @@ saves and console emulators, shows them in one library, and pops up each unlock 
 ![Linux](https://img.shields.io/badge/Linux-AppImage%20beta-FCC624?logo=linux&logoColor=black&style=flat-square)
 [![License](https://img.shields.io/badge/license-LGPL--3.0-blue?style=flat-square)](LICENSE)
 
-### [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) &nbsp;·&nbsp; [Website](https://shirowwww.github.io/Achievement-Watcher-Next/) &nbsp;·&nbsp; [Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html)
+### [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) &nbsp;·&nbsp; [Website](https://shirowwww.github.io/Achievement-Watcher-Next/) &nbsp;·&nbsp; [Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) &nbsp;·&nbsp; [Discord](https://discord.gg/DjTMrDsXTh)
 
 <img src="docs/screenshot/aw-next-banner.gif" width="100%" alt="Achievement Watcher Next in 36 seconds: the unlock popup in ten presets, the in-game list, video clips, nine sources in one library, thirteen themes, Game Health, trophy grades, and much more">
 
@@ -176,7 +176,8 @@ installer, portable ZIP and updater files to `app\dist`; the AppImage is built o
 
 Ideas and bugs go to the [issue tracker](https://github.com/Shirowwww/Achievement-Watcher-Next/issues)
 or the [cs.rin thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187), where releases are
-announced. Report a vulnerability privately through the [security policy](SECURITY.md).
+announced. For questions, help and sharing presets, join the [Discord server](https://discord.gg/DjTMrDsXTh).
+Report a vulnerability privately through the [security policy](SECURITY.md).
 
 Download only from the [official releases](https://github.com/Shirowwww/Achievement-Watcher-Next/releases).
 Each release can be checked on VirusTotal by its SHA-256

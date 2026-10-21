@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ask on Discord
+    url: https://discord.gg/DjTMrDsXTh
+    about: Questions, help with a setup, and sharing presets and themes.
+  - name: Read the FAQ
+    url: https://shirowwww.github.io/Achievement-Watcher-Next/faq.html
+    about: Short answers to the questions that come up most.

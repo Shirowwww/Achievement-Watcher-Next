@@ -98,6 +98,8 @@ const links = {
   */
   community: {
     forum: 'https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187',
+    // The project's own Discord server: help forum, ideas, presets and release news.
+    discord: 'https://discord.gg/DjTMrDsXTh',
   },
 
   // Other people's projects. Everything else here belongs to this one.

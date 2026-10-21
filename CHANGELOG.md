@@ -59,6 +59,8 @@ renamed in 3.9.0 and the history is kept under one file.
   time, thirty a day.
 - **A sound per emulator.** Settings > Notification > Emulators picks a sound as well as a preset
   for Xenia, RPCS3, ShadPS4 and KytyPS5 games. Recompiled PC ports follow their console.
+- **A Discord server** for questions, ideas, presets and release news. Help links to it next to the
+  forum thread, and so do the README, the website and the FAQ.
 
 ### Improved
 

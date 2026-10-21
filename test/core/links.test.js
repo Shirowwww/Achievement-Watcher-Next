@@ -48,6 +48,8 @@ test('the named destinations are the pages they claim to be', () => {
   // Pinned like the rest: the thread id is what makes the link the project's own, and a wrong one
   // would send people to somebody else's topic without anything failing.
   assert.equal(links.community.forum, 'https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187');
+  // A permanent invite: one that expires leaves every installed copy pointing at nothing.
+  assert.equal(links.community.discord, 'https://discord.gg/DjTMrDsXTh');
   assert.equal(links.presets, 'https://shirowwww.github.io/Achievement-Watcher-Next/presets.html');
   assert.equal(links.troubleshooting, 'https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html');
   assert.equal(links.upstream.original, 'https://github.com/xan105/Achievement-Watcher');
