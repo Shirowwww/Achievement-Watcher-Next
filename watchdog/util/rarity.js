@@ -116,6 +116,7 @@ const CACHE_ONLY_SOURCES = new Set([
   'ea',
   'Xbox PC',
   'RetroAchievements',
+  'PlayStation Network',
 ]);
 
 function isSteamRarityId(appid, source) {

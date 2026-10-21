@@ -1314,6 +1314,23 @@
                     </div>
                     <div class="help" id="source-help-retroAchievements"></div>
                   </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>PlayStation Network</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_psnLibrary">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-psnLibrary"></div>
+                  </li>
                 </ul>
               </div>
 
@@ -1334,7 +1351,8 @@
                     </span>
                     <i class="fas fa-chevron-right emulator-test-arrow"></i>
                   </button>
-                  <button type="button" id="epic-disconnect-btn" class="btn secondary" style="display:none">
+                  <button type="button" id="epic-disconnect-btn" class="btn secondary is-disconnect" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span class="emulator-test-copy"><strong id="epic-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="epic-connect-status" aria-live="polite"></span>
@@ -1358,7 +1376,8 @@
                     </span>
                     <i class="fas fa-chevron-right emulator-test-arrow"></i>
                   </button>
-                  <button type="button" id="steam-disconnect-btn" class="btn secondary" style="display:none">
+                  <button type="button" id="steam-disconnect-btn" class="btn secondary is-disconnect" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span class="emulator-test-copy"><strong id="steam-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="steam-connect-status" aria-live="polite"></span>
@@ -1456,7 +1475,8 @@
                       <small id="xbox-import-btn-hint">fetch achievements from Xbox Network</small>
                     </span>
                   </button>
-                  <button type="button" id="xbox-disconnect-btn" class="btn secondary" style="display:none">
+                  <button type="button" id="xbox-disconnect-btn" class="btn secondary is-disconnect" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span class="emulator-test-copy"><strong id="xbox-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="xbox-connect-status" aria-live="polite"></span>
@@ -1499,22 +1519,23 @@
                       <small id="retroachievements-import-btn-hint">fetch your games from RetroAchievements</small>
                     </span>
                   </button>
-                  <button type="button" id="retroachievements-disconnect-btn" class="btn secondary" style="display:none">
+                  <button type="button" id="retroachievements-disconnect-btn" class="btn secondary is-disconnect" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span class="emulator-test-copy"><strong id="retroachievements-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="retroachievements-connect-status" aria-live="polite"></span>
                 </div>
               </div>
 
-              <!-- PlayStation account: official trophy rates for the lists already on the account. -->
+              <!-- PlayStation account: the trophy lists of the account, and their official rates. -->
               <div id="psn-connect" class="settings-card">
                 <div class="emulator-login-heading">
                   <div class="title"><i class="fab fa-playstation"></i> <span id="psn-connect-title">PlayStation account</span></div>
                   <span class="emulator-warning is-success" id="psn-connect-badge" style="display:none"><i class="fas fa-check-circle"></i> <span id="psn-connect-badge-label">Connected</span></span>
                 </div>
                 <p id="psn-connect-desc">
-                  Optional. Shows PlayStation's own trophy rates for the games already on your PSN account; the others keep the
-                  Exophase figures. Your session token is stored encrypted on this PC.
+                  Optional. Imports your PlayStation games and trophies, and shows PlayStation's own trophy rates for the games on
+                  your PSN account. Your session token is stored encrypted on this PC.
                 </p>
                 <div class="emulator-login-actions">
                   <button type="button" id="psn-connect-btn" class="btn">
@@ -1525,10 +1546,27 @@
                     </span>
                     <i class="fas fa-chevron-right emulator-test-arrow"></i>
                   </button>
-                  <button type="button" id="psn-disconnect-btn" class="btn secondary" style="display:none">
+                  <button type="button" id="psn-import-btn" class="btn" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-download"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="psn-import-btn-label">Import library</strong>
+                      <small id="psn-import-btn-hint">fetch your games and trophies from PSN</small>
+                    </span>
+                  </button>
+                  <button type="button" id="psn-disconnect-btn" class="btn secondary is-disconnect" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-out-alt"></i></span>
                     <span class="emulator-test-copy"><strong id="psn-disconnect-btn-label">Disconnect</strong></span>
                   </button>
                   <span id="psn-connect-status" aria-live="polite"></span>
+                </div>
+                <div id="psn-add" class="psn-add" style="display:none">
+                  <label for="psn-add-search" id="psn-add-label">Add a PlayStation game you do not own</label>
+                  <div class="psn-add-field">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input id="psn-add-search" type="search" maxlength="100" autocomplete="off" spellcheck="false" placeholder="Game name" />
+                  </div>
+                  <p id="psn-add-status" class="psn-add-status" aria-live="polite"></p>
+                  <ul id="psn-add-results" class="psn-add-results"></ul>
                 </div>
               </div>
             </section>
@@ -4538,6 +4576,14 @@
                         <option value="false"></option>
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-retroAchievements-hint"></small>
+                    </label>
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fab fa-playstation" aria-hidden="true"></i> PlayStation Network</span>
+                      <select id="onboard-src-psnLibrary">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-psnLibrary-hint"></small>
                     </label>
                   </div>
                 </div>

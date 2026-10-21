@@ -397,6 +397,10 @@ module.exports.load = () => {
       options.achievement_source.retroAchievements = true;
     }
 
+    if (typeof options.achievement_source.psnLibrary !== 'boolean') {
+      options.achievement_source.psnLibrary = true;
+    }
+
     if (typeof options.achievement_source.markerpatch !== 'boolean') {
       options.achievement_source.markerpatch = true;
     }
@@ -725,6 +729,7 @@ module.exports.load = () => {
         xenia: true,
         xlln: true,
         retroAchievements: true,
+        psnLibrary: true,
         markerpatch: true,
         madnesspatch: true,
         pcports: true,

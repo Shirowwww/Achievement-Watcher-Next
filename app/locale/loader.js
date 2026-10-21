@@ -908,7 +908,7 @@ function translateUI(lang, locale, template) {
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
   // Rows with a proper name only need help text translated, bound by id: the nth-child bindings
   // above break if a row is inserted anywhere but the end.
-  for (const key of ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'xlln', 'markerpatch', 'madnesspatch', 'pcports', 'retroAchievements']) {
+  for (const key of ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'xlln', 'markerpatch', 'madnesspatch', 'pcports', 'retroAchievements', 'psnLibrary']) {
     const source = template.settings.source[key];
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));
     $(`#option_${key} option[value='true']`).text(clear(template.settings.common.enable));

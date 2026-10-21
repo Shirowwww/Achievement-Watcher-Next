@@ -262,6 +262,11 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    if (typeof options.achievement_source.psnLibrary !== 'boolean') {
+      options.achievement_source.psnLibrary = true;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.markerpatch !== 'boolean') {
       options.achievement_source.markerpatch = true;
       fixFile = true;
@@ -608,6 +613,7 @@ module.exports.load = async (cfg_file) => {
         xenia: true,
         xlln: true,
         retroAchievements: true,
+        psnLibrary: true,
         markerpatch: true,
         madnesspatch: true,
         pcports: true,

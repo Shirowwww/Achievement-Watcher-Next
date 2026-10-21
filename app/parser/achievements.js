@@ -2709,6 +2709,26 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   mark('retroAchievements');
 
+  // PlayStation Network: the account's trophy lists, imported like the RetroAchievements games and
+  // never merged by name either - a PS4 list and a PC achievement set unlock separately.
+  if (!scope && source.psnLibrary) {
+    try {
+      const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
+      psnLibrary.setUserDataPath(_userDataPath || userDataDir());
+      // Read through the memo so an import moves the scan fingerprint, as for RetroAchievements.
+      fs.mkdirSync(psnLibrary.cacheRoot(), { recursive: true });
+      dirCache.readdir(psnLibrary.cacheRoot());
+      for (const appid of psnLibrary.listCachedTitles()) {
+        const title = psnLibrary.cachedTitleName(appid);
+        data.push({ appid, name: title, source: psnLibrary.SOURCE, data: { type: psnLibrary.DATA_TYPE, title } });
+      }
+    } catch (err) {
+      debug.log(err);
+    }
+  }
+
+  mark('psnLibrary');
+
   if (!scope && source.importCache) {
     try {
       data = data.concat(await watchdog.scan());
@@ -3090,6 +3110,10 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     const retroAchievements = require(path.join(appPath, 'retroAchievements.js'));
     retroAchievements.setUserDataPath(_userDataPath || userDataDir());
     return retroAchievements.getAchievements(appid.appid);
+  } else if (dataType === 'psnLibrary') {
+    const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
+    psnLibrary.setUserDataPath(_userDataPath || userDataDir());
+    return psnLibrary.getAchievements(appid.appid);
   } else if (dataType === 'uplay') {
     // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
     // only the schema is available (already loaded into `game`). Show the game with everything
@@ -3341,6 +3365,12 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           /* not in a renderer: the page paints the plain picture */
         }
       }
+    } else if (appid.data.type === 'psnLibrary') {
+      const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
+      psnLibrary.setUserDataPath(_userDataPath || userDataDir());
+      // No Steam art borrowed by name: console exclusives match unrelated PC games ("SingStar" found
+      // "Star Singularity"), so a list without a store picture keeps its own trophy icon.
+      game = psnLibrary.getGameData(appid.appid);
     } else {
       game = await steam.getGameData({
         appID: appid.appid,
@@ -3361,7 +3391,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured'].includes(appid.data.type);
+    const benefitsFromFullFallback =
+      ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured'].includes(appid.data.type) ||
+      (appid.data.type === 'psnLibrary' && game.img.headerStandIn);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*
@@ -3381,6 +3413,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         debug.log(`[${appid.appid}] artwork fallback failed: ${err.message || err}`);
       }
     }
+    // A PlayStation list nobody has a cover for shows its trophy icon on the portrait card too.
+    if (appid.data.type === 'psnLibrary' && !game.img.portrait) game.img.portrait = game.img.header;
 
     if (
       game.achievement &&
@@ -3431,7 +3465,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // non-Goldberg installs (GOG/standalone, bare cracks) also get an install dir.
     let resolvedGameDir = appid.data && appid.data.gameDir ? appid.data.gameDir : null;    // A RetroAchievements game is a ROM played in an emulator: a PC folder matching its title is
     // some other game.
-    if (!resolvedGameDir && game.name && dataType !== 'retroAchievements') resolvedGameDir = await resolveGameDirByName(game.name);
+    if (!resolvedGameDir && game.name && dataType !== 'retroAchievements' && dataType !== 'psnLibrary') resolvedGameDir = await resolveGameDirByName(game.name);
     if (resolvedGameDir) game.gameDir = resolvedGameDir;
     /*
       The ROM's folder is shown as the install folder but kept out of resolvedGameDir: everything

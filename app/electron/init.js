@@ -2417,6 +2417,7 @@ ipcMain.on('fetch-source-img', async (event, arg) => {
     case 'ShadPS4 Emulator':
     case 'KytyPS5 Emulator':
     case 'PS4 Recomp':
+    case 'PlayStation Network':
       event.returnValue = path.join(userData, 'Source', 'playstation.svg');
       break;
     case 'Xenia Emulator':

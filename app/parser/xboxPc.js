@@ -922,6 +922,7 @@ module.exports = {
   normalizeXuid,
   normalizeXboxClientId,
   normalizeXboxAchievement,
+  xboxLocaleForLang,
   buildXboxStateSnapshot,
   mergeXboxStateSnapshots,
   mergeXboxArtwork,

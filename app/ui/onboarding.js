@@ -370,6 +370,12 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-sources-more').text(fill(text().sourcesMore, { count: enabledSourceCount() }));
   }
 
+  // The account cards' wording: "Connected: <name>", or "Connected" when the service names nobody.
+  function accountConnectedAs(name) {
+    const t = onboardingT;
+    return name ? t('account-connected-as', 'Connected: {name}', 'Connecté : {name}', { name }) : t('connected', 'Connected', 'Connecté');
+  }
+
   /*
     Optional sign-ins, driving the same main-process flows as the account cards in Settings >
     Sources (init.js steam:* / epic:* IPC). Every label is one those cards already translate.
@@ -386,7 +392,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         return {
           connect: t('steam-connect', 'Connect Steam account', 'Connecter le compte Steam'),
           reconnect: t('steam-reconnect', 'Reconnect', 'Reconnecter'),
-          connectedAs: (n) => t('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          connectedAs: accountConnectedAs,
           notConnected: t('steam-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('steam-connecting', 'Opening the Steam sign-in window…', 'Ouverture de la fenêtre de connexion Steam…'),
           cancelled: t('steam-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
@@ -408,7 +414,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         return {
           connect: t('xbox-connect', 'Connect Xbox account', 'Connecter le compte Xbox'),
           reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
-          connectedAs: (n) => t('xbox-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          connectedAs: accountConnectedAs,
           notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('xbox-connecting', 'Opening the Microsoft sign-in window…', 'Ouverture de la fenêtre de connexion Microsoft…'),
           cancelled: t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
@@ -429,7 +435,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         return {
           connect: t('epic-connect', 'Connect Epic account', 'Connecter le compte Epic'),
           reconnect: t('epic-reconnect', 'Reconnect', 'Reconnecter'),
-          connectedAs: (n) => t('epic-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          connectedAs: accountConnectedAs,
           notConnected: t('epic-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('epic-connecting', 'Opening the Epic sign-in window…', 'Ouverture de la fenêtre de connexion Epic…'),
           cancelled: t('epic-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
@@ -441,15 +447,15 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
       status: 'psn:status',
       login: 'psn:login',
       cancelled: 'window-closed',
-      // Sony's token carries no display name worth a request.
-      name: () => '',
+      afterLogin: importPsnLibrary,
+      name: (state) => state.onlineId,
       // Aliased to t so the locale lint recognizes these as translated calls.
       text: () => {
         const t = onboardingT;
         return {
           connect: t('psn-connect', 'Connect PlayStation account', 'Connecter le compte PlayStation'),
           reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
-          connectedAs: () => t('connected', 'Connected', 'Connecté'),
+          connectedAs: accountConnectedAs,
           notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('psn-connecting', 'Opening the Sony sign-in window…', 'Ouverture de la fenêtre de connexion Sony…'),
           cancelled: t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
@@ -467,7 +473,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         return {
           connect: t('retroachievements-connect', 'Connect account', 'Connecter le compte'),
           reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
-          connectedAs: (n) => t('retroachievements-connected-as', 'Connected as {name}', 'Connecté en tant que {name}', { name: n }),
+          connectedAs: accountConnectedAs,
           notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('retroachievements-connecting', 'Checking the account…', 'Vérification du compte…'),
           importing: t('retroachievements-importing', 'Importing the RetroAchievements library…', 'Importation de la bibliothèque RetroAchievements…'),
@@ -598,6 +604,21 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     }
   }
 
+  // Same import and summary as the PlayStation card in Settings.
+  async function importPsnLibrary(key) {
+    const messages = require(path.join(appPath, 'util/psnMessages.js'));
+    setAccountStatus(key, onboardingT('psn-importing', 'Importing the PlayStation library…', 'Importation de la bibliothèque PlayStation…'));
+    try {
+      const res = (await ipcRenderer.invoke('psn:import')) || {};
+      if (!res.ok) return setAccountStatus(key, messages.psnImportErrorText(res.error), 'error');
+      const summary = messages.psnImportText(res.result);
+      setAccountStatus(key, summary.text, summary.kind);
+      if (!$('#onboarding').is(':visible')) app.onStart();
+    } catch (err) {
+      setAccountStatus(key, messages.psnImportErrorText(err.message || String(err)), 'error');
+    }
+  }
+
   // The step that owns the mode cards (and the language), found by markup rather than by a
   // hard-coded index so inserting another step never silently moves the gate onto the wrong one.
   function interfaceModeStep() {
@@ -681,6 +702,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'madnesspatch', fallback: true },
     { key: 'pcports', fallback: true },
     { key: 'retroAchievements', fallback: true },
+    { key: 'psnLibrary', fallback: true },
     { key: 'importCache', fallback: true },
   ];
 

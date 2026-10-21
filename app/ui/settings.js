@@ -1767,12 +1767,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
+    // One wording on every account card: "Connected: <name>", or "Connected" when the service names nobody.
+    const accountConnectedAs = (name) => (name ? t('account-connected-as', 'Connected: {name}', 'Connecté : {name}', { name }) : t('connected', 'Connected', 'Connecté'));
+
     // Epic account connect: shows unlock state for installed Epic games (epic-official source).
     // The login window and encrypted token storage live in the main process (init.js epic:* IPC).
     (function wireEpicConnect() {
       const T = () =>
         ({
-          connectedAs: (n) => t('epic-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          connectedAs: accountConnectedAs,
           notConnected: t('epic-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('epic-connecting', 'Opening the Epic sign-in window…', 'Ouverture de la fenêtre de connexion Epic…'),
           connected: t('epic-connected', 'Epic account connected.', 'Compte Epic connecté.'),
@@ -1864,7 +1867,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // window and encrypted session live in the main process (init.js steam:* IPC); no password here.
     (function wireSteamConnect() {
       const T = () => ({
-        connectedAs: (n) => t('steam-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+        connectedAs: accountConnectedAs,
         notConnected: t('steam-not-connected', 'Not connected', 'Non connecté'),
         connecting: t('steam-connecting', 'Opening the Steam sign-in window…', 'Ouverture de la fenêtre de connexion Steam…'),
         connected: t('steam-connected', 'Steam account connected.', 'Compte Steam connecté.'),
@@ -2015,7 +2018,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     (function () {
       const T = () =>
         ({
-          connectedAs: (n) => t('xbox-connected-as', 'Connected{suffix}', 'Connecté{suffix}', { suffix: n ? ': ' + n : '' }),
+          connectedAs: accountConnectedAs,
           notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
           connecting: t('xbox-connecting', 'Opening the Microsoft sign-in window…', 'Ouverture de la fenêtre de connexion Microsoft…'),
           connected: t('xbox-connected', 'Xbox account connected.', 'Compte Xbox connecté.'),
@@ -2204,7 +2207,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         fields.toggle(!s.connected);
         connectBtn.toggle(!s.connected);
         // Disconnected, the line keeps whatever it last said ("disconnected", an error).
-        if (s.connected) setStatus(t('retroachievements-connected-as', 'Connected as {name}', 'Connecté en tant que {name}', { name: s.username }), 'success');
+        if (s.connected) setStatus(accountConnectedAs(s.username), 'success');
       }
 
       async function runImport() {
@@ -2307,8 +2310,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const status = $('#psn-connect-status');
       const badge = $('#psn-connect-badge');
       const connectBtn = $('#psn-connect-btn');
+      const importBtn = $('#psn-import-btn');
       const disconnectBtn = $('#psn-disconnect-btn');
       const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      const { psnImportErrorText, psnImportText } = require(path.join(appPath, 'util/psnMessages.js'));
       let lastStatus = null;
 
       registerLocaleRefresh(function applyPsnLabels() {
@@ -2316,11 +2321,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#psn-connect-desc').text(
           t(
             'psn-desc',
-            "Optional. Shows PlayStation's own trophy rates for the games already on your PSN account; the others keep the Exophase figures. Your session token is stored encrypted on this PC.",
-            'Optionnel. Affiche les pourcentages officiels PlayStation pour les jeux déjà présents sur ton compte PSN ; les autres gardent ceux d’Exophase. Ton jeton est stocké chiffré sur ce PC.'
+            "Optional. Imports your PlayStation games and trophies, and shows PlayStation's own trophy rates for the games on your PSN account. Your session token is stored encrypted on this PC.",
+            'Optionnel. Importe tes jeux et trophées PlayStation, et affiche les pourcentages officiels PlayStation pour les jeux de ton compte PSN. Ton jeton est stocké chiffré sur ce PC.'
           )
         );
         $('#psn-connect-btn-hint').text(t('psn-btn-hint', 'opens the Sony sign-in window', 'ouvre la fenêtre de connexion Sony'));
+        $('#psn-import-btn-label').text(t('retroachievements-import-btn-label', 'Import library', 'Importer la bibliothèque'));
+        $('#psn-import-btn-hint').text(t('psn-import-btn-hint', 'fetch your games and trophies from PSN', 'récupère tes jeux et trophées depuis le PSN'));
+        $('#psn-add-label').text(t('psn-add-label', 'Add a PlayStation game you do not own', 'Ajouter un jeu PlayStation que tu n’as pas'));
+        $('#psn-add-search').attr('placeholder', t('manual-game-name', 'Game name', 'Nom du jeu'));
         $('#psn-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
         $('#psn-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
         if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
@@ -2328,9 +2337,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       function paintStatus(s) {
         badge.toggle(!!s.connected);
+        importBtn.toggle(!!s.connected);
+        $('#psn-add').toggle(!!s.connected);
         disconnectBtn.toggle(!!s.connected);
         $('#psn-connect-btn-label').text(s.connected ? t('xbox-reconnect', 'Reconnect', 'Reconnecter') : t('psn-connect', 'Connect PlayStation account', 'Connecter le compte PlayStation'));
-        if (s.connected) setStatus(t('connected', 'Connected', 'Connecté'), 'success');
+        if (s.connected) setStatus(accountConnectedAs(s.onlineId), 'success');
         else if (!status.hasClass('error')) setStatus(t('xbox-not-connected', 'Not connected', 'Non connecté'));
       }
 
@@ -2350,8 +2361,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         setStatus(t('psn-connecting', 'Opening the Sony sign-in window…', 'Ouverture de la fenêtre de connexion Sony…'), 'running');
         try {
           const res = (await ipcRenderer.invoke('psn:login')) || {};
-          if (res.ok) setStatus(t('psn-connected', 'PlayStation account connected.', 'Compte PlayStation connecté.'), 'success');
-          else if (res.error === 'window-closed') setStatus(t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'), 'error');
+          if (res.ok) {
+            setStatus(t('psn-connected', 'PlayStation account connected.', 'Compte PlayStation connecté.'), 'success');
+            await refresh();
+            runImport();
+          } else if (res.error === 'window-closed') setStatus(t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'), 'error');
           else setStatus(`${t('psn-failed', 'PlayStation sign-in failed', 'Échec de la connexion PlayStation')}${res.error ? ': ' + res.error : ''}`, 'error');
         } catch (err) {
           setStatus(`${t('psn-failed', 'PlayStation sign-in failed', 'Échec de la connexion PlayStation')}: ${err.message || err}`, 'error');
@@ -2369,6 +2383,137 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           setStatus(`${err.message || err}`, 'error');
         }
         refresh();
+      });
+
+      async function runImport() {
+        importBtn.addClass('disabled').css('pointer-events', 'none');
+        setStatus(t('psn-importing', 'Importing the PlayStation library…', 'Importation de la bibliothèque PlayStation…'), 'running');
+        try {
+          const res = (await ipcRenderer.invoke('psn:import')) || {};
+          if (!res.ok) {
+            setStatus(psnImportErrorText(res.error), 'error');
+            return;
+          }
+          const summary = psnImportText(res.result);
+          setStatus(summary.text, summary.kind);
+          if ((res.result.created || 0) + (res.result.updated || 0) > 0) app.onStart(); // show the new and updated games
+        } catch (err) {
+          setStatus(psnImportErrorText(err.message || String(err)), 'error');
+        } finally {
+          importBtn.removeClass('disabled').css('pointer-events', '');
+        }
+      }
+
+      importBtn.off('click').on('click', function () {
+        if (!importBtn.hasClass('disabled')) runImport();
+      });
+
+      // The catalog search: typed words wait a moment, and an answer to an older query is dropped.
+      const addStatus = $('#psn-add-status');
+      const addResults = $('#psn-add-results');
+      const setAddStatus = (text, cls = '') => addStatus.removeClass('error').addClass(cls).text(text || '');
+      let searchTimer = null;
+      let searchSeq = 0;
+      const SEARCH_RETRY_MS = 3000;
+
+      const removeLabel = () => t('psn-add-remove', 'Remove', 'Retirer');
+
+      // An added list can go again in one click; the account's own lists only show they are there.
+      function setRowButton(button, game) {
+        button.off('click').prop('disabled', false).removeClass('primary secondary');
+        if (game.added) button.addClass('secondary').text(removeLabel()).on('click', () => removeGame(game, button));
+        else if (game.inLibrary) button.addClass('secondary').prop('disabled', true).text(t('psn-add-owned', 'In library', 'Dans la bibliothèque'));
+        else button.addClass('primary').text(t('blacklist-add-button', 'Add', 'Ajouter')).on('click', () => addGame(game, button));
+      }
+
+      function renderResults(results) {
+        addResults.empty();
+        for (const game of results) {
+          const button = $('<button type="button" class="inline-action-btn">');
+          setRowButton(button, game);
+          addResults.append(
+            $('<li>').append(
+              $('<img alt="" loading="lazy">').attr('src', game.icon || ''),
+              $('<span class="psn-add-name">').text(game.name).attr('title', game.name),
+              $('<span class="psn-add-platform">').text(game.platform),
+              button
+            )
+          );
+        }
+      }
+
+      async function runSearch(query) {
+        const seq = ++searchSeq;
+        if (!addResults.children().length) setAddStatus(t('psn-add-searching', 'Searching…', 'Recherche…'));
+        const res = (await ipcRenderer.invoke('psn:catalog-search', query).catch((err) => ({ ok: false, error: err.message }))) || {};
+        if (seq !== searchSeq) return;
+        if (!res.ok) {
+          addResults.empty();
+          setAddStatus(psnImportErrorText(res.error), 'error');
+          return;
+        }
+        renderResults(res.results);
+        // The first catalog load fills in the background: the answer grows while it runs.
+        if (res.loading) {
+          setAddStatus(t('psn-add-loading', 'Loading the catalog in the background: {count} lists so far.', 'Chargement du catalogue en arrière-plan : {count} listes pour l’instant.', { count: res.count }));
+          searchTimer = setTimeout(() => seq === searchSeq && runSearch(query), SEARCH_RETRY_MS);
+          return;
+        }
+        setAddStatus(res.results.length ? '' : t('psn-add-none', 'No PlayStation trophy list has this name.', 'Aucune liste de trophées PlayStation ne porte ce nom.'));
+      }
+
+      async function addGame(game, button) {
+        button.prop('disabled', true).text(t('psn-add-adding', 'Adding…', 'Ajout…'));
+        const res = (await ipcRenderer.invoke('psn:add-game', game.id).catch((err) => ({ ok: false, error: err.message }))) || {};
+        if (!res.ok) {
+          button.prop('disabled', false).text(t('blacklist-add-button', 'Add', 'Ajouter'));
+          setAddStatus(psnImportErrorText(res.error), 'error');
+          return;
+        }
+        setRowButton(button, { ...game, inLibrary: true, added: true });
+        setAddStatus(t('psn-add-done', '{name} is in your library.', '{name} est dans ta bibliothèque.', { name: res.game.name }));
+        app.onStart();
+      }
+
+      async function removeGame(game, button) {
+        button.prop('disabled', true);
+        const res = (await ipcRenderer.invoke('psn:remove-game', game.id).catch((err) => ({ ok: false, error: err.message }))) || {};
+        if (!res.ok) {
+          setRowButton(button, game);
+          setAddStatus(psnImportErrorText(res.error), 'error');
+          return;
+        }
+        setRowButton(button, { ...game, inLibrary: false, added: false });
+        setAddStatus(t('psn-add-removed', '{name} left your library.', '{name} a quitté ta bibliothèque.', { name: res.game.name }));
+        app.onStart();
+      }
+
+      // With nothing typed, the list shows the games added before, ready to be removed.
+      async function showAddedGames() {
+        const seq = ++searchSeq;
+        const res = (await ipcRenderer.invoke('psn:added-games').catch(() => null)) || {};
+        if (seq !== searchSeq) return;
+        renderResults(res.ok ? res.results : []);
+        setAddStatus('');
+      }
+
+      $('#psn-add-search').on('input', function () {
+        clearTimeout(searchTimer);
+        const query = String($(this).val() || '').trim();
+        if (query.length < 2) {
+          showAddedGames();
+          return;
+        }
+        searchTimer = setTimeout(() => runSearch(query), 350);
+      });
+
+      showAddedGames();
+
+      // The background check found new or changed lists.
+      ipcRenderer.on('psn:library-changed', () => app.onStart());
+
+      ipcRenderer.on('psn:import-progress', (_event, p) => {
+        if (p && p.detail) setStatus(`${t('psn-importing', 'Importing the PlayStation library…', 'Importation de la bibliothèque PlayStation…')} ${p.current}/${p.total} - ${p.detail}`, 'running');
       });
 
       window.addEventListener('aw-accounts-changed', refresh);

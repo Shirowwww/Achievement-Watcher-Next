@@ -56,6 +56,41 @@ test('signing in trades the NPSSO for a code, then for tokens kept encrypted, an
   assert.deepEqual(await psnAuth.status(options), { connected: true });
 });
 
+function namedAccount(calls) {
+  return async (url) => {
+    const target = String(url);
+    calls.push(target);
+    if (target.includes('/authorize?')) return response(302, null, { location: 'x://redirect/?code=v3.N' });
+    if (target.endsWith('/trophySummary')) return response(200, { accountId: '1234567890123456789' });
+    if (target.endsWith('/1234567890123456789/profiles')) return response(200, { onlineId: 'Shirowww_' });
+    return response(200, tokenBody('ACCESS-N', 'REFRESH-N'));
+  };
+}
+
+test('signing in keeps the online id with the tokens, so the status names the account without asking again', async () => {
+  const options = profile('named');
+  const calls = [];
+  options.fetchImpl = namedAccount(calls);
+
+  await psnAuth.signIn(NPSSO, options);
+  const asked = calls.length;
+
+  assert.deepEqual(await psnAuth.status(options), { connected: true, onlineId: 'Shirowww_' });
+  assert.equal(calls.length, asked, 'the name comes from the stored tokens');
+});
+
+test('an account connected before the name was kept is asked for it once', async () => {
+  const options = profile('named-later');
+  options.fetchImpl = async (url) => (String(url).includes('/authorize?') ? response(302, null, { location: 'x://redirect/?code=v3.L' }) : response(200, tokenBody('ACCESS-L', 'REFRESH-L')));
+  await psnAuth.signIn(NPSSO, options);
+
+  const calls = [];
+  options.fetchImpl = namedAccount(calls);
+  assert.deepEqual(await psnAuth.status(options), { connected: true, onlineId: 'Shirowww_' });
+  assert.deepEqual(await psnAuth.status(options), { connected: true, onlineId: 'Shirowww_' });
+  assert.equal(calls.length, 2, 'summary and profile, asked once');
+});
+
 test('a malformed NPSSO or a refused code stops before anything is stored', async () => {
   const options = profile('refused');
   let asked = 0;

@@ -12,6 +12,7 @@ const path = require('path');
 const AUTH_BASE_URL = 'https://ca.account.sony.com/api/authz/v3/oauth';
 const SIGN_IN_URL = 'https://www.playstation.com/';
 const TROPHY_API = 'https://m.np.playstation.com/api/trophy/v1';
+const PROFILE_API = 'https://m.np.playstation.com/api/userProfile/v1/internal/users';
 // The PlayStation App's own public client, which every PSN client signs in as: not a user secret.
 const CLIENT_ID = '09515159-7237-4370-9b40-3806e67c0891';
 const CLIENT_BASIC = 'MDk1MTUxNTktNzIzNy00MzcwLTliNDAtMzgwNmU2N2MwODkxOnVjUGprYTV0bnRCMktxc1A=';
@@ -20,8 +21,12 @@ const SCOPE = 'psn:mobile.v2.core psn:clientapp';
 
 const NPSSO_RE = /^[A-Za-z0-9]{64}$/;
 const NPCOMMID_RE = /^NPWR\d{5}_\d{2}$/;
+const ACCOUNT_ID_RE = /^\d{1,20}$/;
+const ONLINE_ID_RE = /^[A-Za-z0-9_-]{3,16}$/;
 const SERVICES = new Set(['trophy', 'trophy2']);
 const TIMEOUT_MS = 15000;
+// The account name is only a label, and the Settings card waits for it: it gets less patience.
+const NAME_TIMEOUT_MS = 4000;
 // Renewed this long before it runs out, so a request never leaves with a token about to expire.
 const EXPIRY_MARGIN_MS = 60 * 1000;
 
@@ -96,7 +101,9 @@ async function signIn(npsso, options = {}) {
   try {
     const code = await codeFromNpsso(config, npsso);
     if (!code) return { ok: false, error: 'psn-code-refused' };
-    writeTokens(config, await requestTokens(config, { code, redirect_uri: REDIRECT_URI, grant_type: 'authorization_code' }));
+    const tokens = await requestTokens(config, { code, redirect_uri: REDIRECT_URI, grant_type: 'authorization_code' });
+    const onlineId = await fetchOnlineId(config, tokens.access_token);
+    writeTokens(config, onlineId ? { ...tokens, online_id: onlineId } : tokens);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err && String(err.message).startsWith('psn-') ? err.message : 'psn-unreachable' };
@@ -112,14 +119,44 @@ async function accessToken(options = {}) {
   if (tokens.expires_at - EXPIRY_MARGIN_MS > now) return tokens.access_token;
   if (tokens.refresh_expires_at <= now) return '';
   const renewed = await requestTokens(config, { refresh_token: tokens.refresh_token, grant_type: 'refresh_token', scope: SCOPE });
-  writeTokens(config, renewed);
+  writeTokens(config, { ...renewed, online_id: tokens.online_id });
   return renewed.access_token;
 }
+
+// The account's online id, for the "Connected: <name>" line: two requests, so it is kept with the tokens.
+async function fetchOnlineId(config, token) {
+  const get = async (url) => {
+    const res = await config.fetchImpl(url, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }, signal: AbortSignal.timeout(NAME_TIMEOUT_MS) });
+    return res.ok ? res.json() : null;
+  };
+  try {
+    const summary = await get(`${TROPHY_API}/users/me/trophySummary`);
+    const accountId = String((summary && summary.accountId) || '');
+    if (!ACCOUNT_ID_RE.test(accountId)) return '';
+    const profile = await get(`${PROFILE_API}/${accountId}/profiles`);
+    const onlineId = String((profile && profile.onlineId) || '');
+    return ONLINE_ID_RE.test(onlineId) ? onlineId : '';
+  } catch {
+    return '';
+  }
+}
+
+// Accounts connected before the name was kept are asked once per run, so a failing lookup is not retried on every repaint.
+const onlineIdLookedUp = new Set();
 
 async function status(options = {}) {
   const config = settings(options);
   const tokens = readTokens(config);
-  return { connected: !!tokens && tokens.refresh_expires_at > config.now() };
+  const connected = !!tokens && tokens.refresh_expires_at > config.now();
+  if (!connected) return { connected };
+  let onlineId = tokens.online_id || '';
+  if (!onlineId && !onlineIdLookedUp.has(config.file)) {
+    onlineIdLookedUp.add(config.file);
+    const token = await accessToken(options).catch(() => '');
+    onlineId = token ? await fetchOnlineId(config, token) : '';
+    if (onlineId) writeTokens(config, { ...readTokens(config), online_id: onlineId });
+  }
+  return onlineId ? { connected, onlineId } : { connected };
 }
 
 async function clear(options = {}) {

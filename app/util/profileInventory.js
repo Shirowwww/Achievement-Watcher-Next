@@ -30,6 +30,7 @@ const RULES = [
   { path: 'steam_cache/data', include: true, mode: 'replace', why: 'achievement reset baselines' },
   { path: 'steam_cache/xbox', include: true, mode: 'replace', why: 'imported Xbox library, no public source to refetch it' },
   { path: 'steam_cache/retroachievements', include: true, mode: 'replace', why: 'imported RetroAchievements library' },
+  { path: 'steam_cache/psn', include: true, mode: 'replace', why: 'imported PlayStation Network library' },
   { path: 'cache/uplayR2', include: true, mode: 'replace', why: 'user-seeded Uplay R2 loader, no download source' },
   { path: 'cache/gse_fork/custom', include: true, mode: 'replace', why: 'user-imported emulator dll, no download source' },
 
@@ -39,6 +40,7 @@ const RULES = [
   { path: 'cfg/secret.key', include: false, why: 'secret: DPAPI-held key of this Windows account' },
   { path: 'cfg/xbox-auth.json', include: false, why: 'secret: Xbox session' },
   { path: 'cfg/retroachievements-auth.json', include: false, why: 'secret: RetroAchievements API key' },
+  { path: 'cfg/psn-auth.json', include: false, why: 'secret: PlayStation session' },
   { path: '.updaterId', include: false, why: 'machine identity' },
   { path: 'cfg/mainWindowState.json', include: false, why: 'window bounds of this monitor layout' },
   { path: 'cfg/overlayBounds.json', include: false, why: 'overlay bounds of this monitor layout' },
