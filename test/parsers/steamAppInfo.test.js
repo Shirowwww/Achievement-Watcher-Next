@@ -9,6 +9,9 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 const appInfo = require('../../app/parser/steamAppInfo.js');
 
@@ -161,4 +164,21 @@ test('an appid the client has never seen is unknown, not "not a game"', () => {
   assert.equal(appInfo.isLibraryGame('C:/nowhere-at-all', 730), null, 'an absent catalogue must never be read as a verdict');
   assert.equal(appInfo.nameOf('C:/nowhere-at-all', 730), '');
   assert.equal(appInfo.typeOf('C:/nowhere-at-all', 730), '');
+});
+
+test('a verdict from an entry in hand matches the one read from the file', (t) => {
+  const steamDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-appinfo-'));
+  t.after(() => {
+    appInfo.releaseCache();
+    fs.rmSync(steamDir, { recursive: true, force: true });
+  });
+  fs.mkdirSync(path.join(steamDir, 'appcache'));
+  fs.writeFileSync(path.join(steamDir, 'appcache', 'appinfo.vdf'), buildAppInfo(CATALOGUE));
+
+  const byAppid = appInfo.load(steamDir);
+  for (const appid of [...CATALOGUE.map((entry) => String(entry.appid)), '999999999']) {
+    assert.equal(appInfo.libraryVerdict(byAppid.get(appid)), appInfo.isLibraryGame(steamDir, appid), `verdicts differ for ${appid}`);
+  }
+  assert.equal(appInfo.libraryVerdict(null), null, 'no entry is unknown, never "not a game"');
+  assert.equal(appInfo.libraryVerdict({ appid: '1', type: '' }), null, 'an entry without a type is unknown too');
 });

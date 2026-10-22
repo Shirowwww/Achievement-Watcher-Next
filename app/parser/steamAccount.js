@@ -44,9 +44,10 @@ const EMPTY_LIBRARY = () => ({ owned: [], family: [], names: new Map(), owners: 
 
 const REQUEST_TIMEOUT_MS = 15 * 1000;
 
-async function getJson(fetchImpl, url) {
+async function getJson(fetchImpl, url, signal = null) {
   // A hung socket is not a failure the circuit breaker counts, so a scan worker would wait forever.
-  const response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+  const timeout = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+  const response = await fetchImpl(url, { signal: signal ? AbortSignal.any([timeout, signal]) : timeout });
   if (!response || !response.ok) throw new Error(`steam-api-http-${response ? response.status : 'none'}`);
   return await response.json();
 }
@@ -178,16 +179,17 @@ const privateProfiles = new Map();
 const keyIndexes = new Map();
 
 // A hash of 0 is an empty player answer, which says nothing about the schema: not cached.
-async function schemaKeyIndex(request, app, schemaHash) {
+async function schemaKeyIndex(request, app, schemaHash, signal) {
   const cached = keyIndexes.get(app);
   if (schemaHash && cached && cached.hash === schemaHash) return cached.index;
-  const json = await getJson(request, `${GAME_ACHIEVEMENTS_URL}?appid=${encodeURIComponent(app)}&language=english`);
+  const json = await getJson(request, `${GAME_ACHIEVEMENTS_URL}?appid=${encodeURIComponent(app)}&language=english`, signal);
   const index = steamSchemaFetch.officialKeyIndex(json && json.response);
   if (schemaHash) keyIndexes.set(app, { hash: schemaHash, index });
   return index;
 }
 
-async function fetchPlayerAchievements({ steamid, appid, fetchImpl, log = () => {}, now = Date.now() } = {}) {
+// `signal` lets the caller cut the call short, on top of each request's own timeout.
+async function fetchPlayerAchievements({ steamid, appid, fetchImpl, log = () => {}, now = Date.now(), signal = null } = {}) {
   const user = String(steamid || '').trim();
   const app = String(appid || '').trim();
   if (!user || !app) throw new Error('steam-player-achievements-needs-a-connected-account');
@@ -195,9 +197,9 @@ async function fetchPlayerAchievements({ steamid, appid, fetchImpl, log = () => 
   if (now - (privateProfiles.get(user) || 0) < PRIVATE_PROFILE_RETRY_MS) throw new Error('steam-profile-private');
 
   const request = fetchImpl || require(path.join(__dirname, '..', 'util', 'xboxLiveIcons.js')).nodeFetch;
-  const json = await getJson(request, `${PLAYER_ACHIEVEMENTS_URL}?appid=${encodeURIComponent(app)}&steamid=${encodeURIComponent(user)}`);
+  const json = await getJson(request, `${PLAYER_ACHIEVEMENTS_URL}?appid=${encodeURIComponent(app)}&steamid=${encodeURIComponent(user)}`, signal);
   const response = (json && json.response) || {};
-  const index = await schemaKeyIndex(request, app, Number(response.schema_hash) || 0);
+  const index = await schemaKeyIndex(request, app, Number(response.schema_hash) || 0, signal);
   const unlocks = steamSchemaFetch.mapUserAchievements(response, index);
   if (unlocks) return unlocks;
   // Steam answers the same empty object for a game without stats and for hidden game details.

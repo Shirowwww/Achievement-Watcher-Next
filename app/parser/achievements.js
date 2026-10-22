@@ -813,7 +813,7 @@ const _steamDbLaunchInFlight = new Set();
 // A library entry for a game whose metadata lookup failed or timed out. Discovery found real
 // achievement data on disk; the Steam lookup only decorates it, so a failed lookup must never remove
 // it. `provisional` marks it "known to exist, not yet described" and is never cached.
-function buildProvisionalGame(appid) {
+function buildProvisionalGame(appid, lang) {
   if (!appid || !appid.appid) return null;
   const id = String(appid.appid);
   const record = (appid && appid.data) || {};
@@ -849,8 +849,11 @@ function buildProvisionalGame(appid) {
   // entry expires days from now. unresolvedSince is stamped once, the first time the miss was
   // confirmed - stable across scans, unlike Date.now() here, which would reset every time this
   // provisional record is rebuilt. libraryReuse.js uses the two together to stop letting one such
-  // game force a full network rescan of the whole library on every launch.
-  const unresolvedSince = !accountRecord && /^\d+$/.test(id) ? steam.unresolvedSince(id) : null;
+  // game force a full network rescan of the whole library on every launch. An Epic game Epic said
+  // has no achievements is the same kind of answer: most owned Epic games are one (#137).
+  let unresolvedSince = null;
+  if (!accountRecord && /^\d+$/.test(id)) unresolvedSince = steam.unresolvedSince(id);
+  else if (record.type === 'epicOfficial') unresolvedSince = epicOfficial.noAchievementsSince(record.namespace, lang);
 
   return {
     appid: appid.appid,
@@ -4731,7 +4734,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
             // exists; the lookup that failed only decorates it. Dropping the entry would make the
             // library depend on network luck - each scan listing a different handful of games, a
             // missing card indistinguishable from one that was never installed.
-            game = buildProvisionalGame(appid);
+            game = buildProvisionalGame(appid, option.achievement && option.achievement.lang);
             }
             // Everything a real source found on this PC belongs in the library, whether or not it has
             // achievements and whether or not it is installed right now - a game with none renders as

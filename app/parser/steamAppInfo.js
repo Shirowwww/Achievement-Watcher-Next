@@ -212,8 +212,12 @@ module.exports.nameOf = (steamPath, appid) => {
 const LIBRARY_TYPES = new Set(['game', 'beta']);
 module.exports.LIBRARY_TYPES = LIBRARY_TYPES;
 
-module.exports.isLibraryGame = (steamPath, appid) => {
-  const type = module.exports.typeOf(steamPath, appid);
+// The same verdict for an entry already in hand, so a caller judging many appids parses once.
+function libraryVerdict(entry) {
+  const type = entry ? entry.type : '';
   if (!type) return null; // unknown: let the caller decide, do not claim it is not a game
   return LIBRARY_TYPES.has(type);
-};
+}
+module.exports.libraryVerdict = libraryVerdict;
+
+module.exports.isLibraryGame = (steamPath, appid) => libraryVerdict(module.exports.lookup(steamPath, appid));

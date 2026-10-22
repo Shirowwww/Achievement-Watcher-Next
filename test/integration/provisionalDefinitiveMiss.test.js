@@ -59,3 +59,38 @@ test('a game with no recorded miss is provisional but not flagged definitive', (
   assert.equal(entry.provisionalDefinitive, false, 'not in the negative cache seeded above');
   assert.ok(entry.provisionalAt >= before, 'falls back to the rebuild time, not a remembered one');
 });
+
+// Most owned Epic games have no achievements, and Epic saying so used to leave them provisional and
+// non-definitive: 94 of them made every launch rebuild the whole library (#137).
+test('an Epic game Epic answered "no achievements" for is a definitive miss, dated by that answer', (t) => {
+  const epicOfficial = require('../../app/parser/epicOfficial.js');
+  const userData = tempDir('epic-empty');
+  epicOfficial.setUserDataPath(userData);
+  t.after(() => epicOfficial.setUserDataPath(''));
+  const cacheDir = path.join(userData, 'steam_cache', 'epicOfficial');
+  fs.mkdirSync(cacheDir, { recursive: true });
+  const write = (sandbox, locale, list, ageMs) => {
+    const file = path.join(cacheDir, `${sandbox}_${locale}.json`);
+    fs.writeFileSync(file, JSON.stringify({ productId: '', list }));
+    const at = new Date(Date.now() - ageMs);
+    fs.utimesSync(file, at, at);
+    return fs.statSync(file).mtimeMs;
+  };
+  const answeredAt = write('emptysandbox', 'fr', [], 2 * 60 * 60 * 1000);
+  write('fullsandbox', 'fr', [{ name: 'A' }], 60 * 1000);
+  write('expiredsandbox', 'fr', [], 25 * 60 * 60 * 1000);
+  const epicGame = (namespace) => ({ appid: namespace, source: 'epic-official', data: { type: 'epicOfficial', namespace, title: 'Some Epic game' } });
+
+  const empty = buildProvisionalGame(epicGame('emptysandbox'), 'french');
+  assert.equal(empty.provisionalDefinitive, true);
+  assert.equal(empty.provisionalAt, answeredAt, 'dated by when Epic answered, so the grace period is not reset by each rebuild');
+
+  for (const [namespace, lang, why] of [
+    ['fullsandbox', 'french', 'a cached schema with achievements means this failure is something else'],
+    ['expiredsandbox', 'french', 'an expired answer is due a retry'],
+    ['emptysandbox', 'english', 'the answer was cached for another language'],
+    ['neverasked', 'french', 'Epic never answered for this one'],
+  ]) {
+    assert.equal(buildProvisionalGame(epicGame(namespace), lang).provisionalDefinitive, false, why);
+  }
+});

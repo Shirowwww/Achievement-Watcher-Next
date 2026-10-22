@@ -88,7 +88,7 @@ test('an imported account-library game keeps its tile when its load fails, with 
 });
 
 test('makeList admits the provisional entry and no longer silently skips a failed load', () => {
-  assert.match(source, /game = buildProvisionalGame\(appid\);/, 'a failed load must fall back to the local entry');
+  assert.match(source, /game = buildProvisionalGame\(appid[,)]/, 'a failed load must fall back to the local entry');
   // The keep-filter used to require achievements or a verified install, which dropped fifteen owned
   // games (ULTRAKILL, Lethal Company, R.E.P.O., VRChat among others) purely for not having been
   // played yet - owning a game is reason enough to show it. What remains excluded is a watchdog

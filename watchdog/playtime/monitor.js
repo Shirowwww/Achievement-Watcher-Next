@@ -196,28 +196,42 @@ async function resolveSteamCataloguePath() {
   return steamCatalogue.path;
 }
 
+/*
+  Judges every appid not judged yet from one parse of appinfo.vdf, then lets the parse go. Parsing
+  per appid cost ~30 ms each, and a game index holds hundreds to tens of thousands of rows: a
+  27,606-row legacy catalogue kept the monitor's event loop blocked for about 17 minutes (#137).
+*/
+function judgeSteamAppTypes(appids) {
+  if (!steamCatalogue.path) return;
+  const pending = [...new Set(appids.map(normalizeAppid))].filter((key) => key && !nonGameVerdicts.has(key));
+  if (pending.length === 0) return;
+  try {
+    const appInfo = require(sharedAppModulePath('parser/steamAppInfo.js'));
+    const byAppid = appInfo.load(steamCatalogue.path);
+    for (const key of pending) {
+      // Only a definite "not a game" excludes; null means the catalogue has no record of it.
+      const verdict = appInfo.libraryVerdict(byAppid ? byAppid.get(key) : null) === false;
+      if (verdict) debug.log(`[Playtime] ${key} is a Steam application/tool, not a game - not tracked`);
+      nonGameVerdicts.set(key, verdict);
+    }
+    appInfo.releaseCache();
+  } catch (err) {
+    debug.warn(`[Playtime] Steam type lookup failed for ${pending.length} appid(s): ${err.message || err}`);
+    for (const key of pending) nonGameVerdicts.set(key, false);
+  }
+}
+
 function isNonGameSteamApp(appid) {
   const key = normalizeAppid(appid);
   if (!key || !steamCatalogue.path) return false;
-  if (nonGameVerdicts.has(key)) return nonGameVerdicts.get(key);
-  let verdict = false;
-  try {
-    const appInfo = require(sharedAppModulePath('parser/steamAppInfo.js'));
-    // Only a definite "not a game" excludes; null means the catalogue has no record of it.
-    verdict = appInfo.isLibraryGame(steamCatalogue.path, key) === false;
-    appInfo.releaseCache();
-    if (verdict) debug.log(`[Playtime] ${key} is a Steam application/tool, not a game - not tracked`);
-  } catch (err) {
-    debug.warn(`[Playtime] Steam type lookup failed for ${key}: ${err.message || err}`);
-  }
-  nonGameVerdicts.set(key, verdict);
-  return verdict;
+  if (!nonGameVerdicts.has(key)) judgeSteamAppTypes([key]);
+  return nonGameVerdicts.get(key) === true;
 }
 
-function isIgnoredAppid(appid) {
+function isIgnoredAppid(appid, ignored = getIgnoredAppids()) {
   const key = normalizeAppid(appid);
   if (key === '') return false;
-  return getIgnoredAppids().has(key) || isNonGameSteamApp(key);
+  return ignored.has(key) || isNonGameSteamApp(key);
 }
 
 // Official Steam-library records are gated by achievement_source.legitSteam; the renderer already
@@ -712,8 +726,10 @@ async function getGameIndex() {
   }
 
   const { list: merged, yielded } = mergeGameIndexes(cached, userOverride);
-  for (const game of yielded) {
-    debug.log(`[Playtime] catalogue row ${game.name}(${game.appid}) yields "${game.binary}" to the library's own entry`);
+  // One line, not one per row: an old catalogue yields over a thousand rows on every start.
+  if (yielded.length > 0) {
+    const sample = yielded.slice(0, 3).map((game) => `${game.name}(${game.appid}) "${game.binary}"`);
+    debug.log(`[Playtime] ${yielded.length} catalogue row(s) yield their executable to the library's own entry, e.g. ${sample.join(', ')}`);
   }
   // Marks a row that exists only in the bundled legacy catalogue - a guess about every install that
   // shares its binary name, never corroborated by anything found on this machine. See the
@@ -725,12 +741,13 @@ async function getGameIndex() {
   const options = await loadWatchdogOptions();
   const sourceFiltered = filterGamesByAchievementSources(merged, options);
   officialSteamTracked = tracksOfficialSteam(options);
+  const kept = new Set(sourceFiltered);
   disabledOfficialSteamAppids = new Set(
-    merged
-      .filter((game) => isOfficialSteamLibraryGame(game) && !sourceFiltered.includes(game))
-      .map((game) => normalizeAppid(game.appid))
+    merged.filter((game) => isOfficialSteamLibraryGame(game) && !kept.has(game)).map((game) => normalizeAppid(game.appid))
   );
-  return sourceFiltered.filter((game) => !isIgnoredAppid(game.appid));
+  judgeSteamAppTypes(sourceFiltered.map((game) => game.appid));
+  const ignored = getIgnoredAppids();
+  return sourceFiltered.filter((game) => !isIgnoredAppid(game.appid, ignored));
 }
 
 module.exports = {
@@ -745,6 +762,7 @@ module.exports = {
   // exercised directly against the real local catalogue rather than inferred from a quiet log.
   resolveSteamCataloguePath,
   isNonGameSteamApp,
+  judgeSteamAppTypes,
   // Exported for the test suite: pure helpers behind the interpreter-child and legacy-catalogue
   // matching in the creation handler above.
   isInterpreterProcess,

@@ -272,6 +272,24 @@ function localeFor(lang) {
 }
 
 /*
+  When Epic last answered "no achievements" for this sandbox, or null. That answer stands until the
+  cache expires, so a game left without a description because of it is not a failure to retry on
+  every launch: the counterpart of steam.unresolvedSince for libraryReuse.js.
+*/
+module.exports.noAchievementsSince = (sandboxId, lang) => {
+  if (!cacheRoot || !sandboxId) return null;
+  try {
+    const cacheFile = schemaCacheFile(sandboxId, localeFor(lang));
+    const { mtimeMs } = fs.statSync(cacheFile);
+    if (Date.now() - mtimeMs >= SCHEMA_CACHE_TTL_MS) return null;
+    const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    return cached && Array.isArray(cached.list) && cached.list.length === 0 ? mtimeMs : null;
+  } catch {
+    return null;
+  }
+};
+
+/*
   The last resort when Epic gives no schema: games-infos-datas, where Nemirtingas' EpicRetriever
   stored what the game itself receives. Only a few dozen games so far, and it grows when he runs it
   again. Its icons, when shipped, are bare names beside the list, which fetchIcon downloads like any

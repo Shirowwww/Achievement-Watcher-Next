@@ -244,15 +244,16 @@ async function discoverRpcs3TrophyDirsUnder(root, options = {}) {
   const found = [];
   await walkTree(
     root,
-    async (full) => {
-      if (!fs.existsSync(full)) return true;
-      let stat;
-      try {
-        stat = fs.statSync(full);
-      } catch {
-        return true;
+    async (full, ent, depth, isDir) => {
+      // The walk already knows what each entry is; only a link needs a stat to learn its target.
+      if (!isDir) {
+        if (!ent.isSymbolicLink()) return true;
+        try {
+          if (!fs.statSync(full).isDirectory()) return true;
+        } catch {
+          return true;
+        }
       }
-      if (!stat.isDirectory()) return true;
       if (
         fs.existsSync(path.join(full, 'TROPCONF.SFM')) &&
         fs.existsSync(path.join(full, 'TROPUSR.DAT'))

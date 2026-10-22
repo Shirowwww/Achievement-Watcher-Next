@@ -234,3 +234,56 @@ test('rate limiting and server errors open the breaker, not just a dead host', (
   assert.match(declaration, /429/, 'a throttled Steam must count towards opening the breaker');
   assert.match(declaration, /5\\d\\d/, 'so must a server error');
 });
+
+test('a request is cut short by the caller signal, on top of its own timeout', async () => {
+  const seen = [];
+  const fetchImpl = (url, options) => {
+    seen.push(options.signal);
+    return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => reject(options.signal.reason)));
+  };
+  const controller = new AbortController();
+  const pending = steamAccount.fetchPlayerAchievements({ ...freshAccount(), appid: '106', fetchImpl, signal: controller.signal });
+  controller.abort(new Error('cancelled'));
+  await assert.rejects(pending, /cancelled/);
+  assert.equal(seen.length, 1);
+  assert.equal(seen[0].aborted, true);
+});
+
+// Runs last: it opens the module's breaker for ten minutes. #137: seven games each held a scan
+// worker for about 32s after Steam had answered 429, waiting out two 15s timeouts.
+test('opening the breaker releases the requests already waiting on Steam', async () => {
+  const root = scratch();
+  const statsDir = path.join(root, 'appcache', 'stats');
+  fs.mkdirSync(statsDir, { recursive: true });
+  const real = steamAccount.fetchPlayerAchievements;
+  const hung = [];
+  const SAFETY_MS = 5000;
+  steamAccount.fetchPlayerAchievements = async ({ appid, signal }) => {
+    if (appid.startsWith('7')) {
+      hung.push(signal);
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => resolve([{ apiname: 'LATE', achieved: 1, unlocktime: 1 }]), SAFETY_MS);
+        signal.addEventListener('abort', () => {
+          clearTimeout(timer);
+          reject(new Error('aborted'));
+        });
+      });
+    }
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    throw new Error('steam-api-http-429');
+  };
+  const read = (appID) => steam.getAchievementsFromAPI({ appID, user: USER, path: statsDir, account: ACCOUNT });
+  try {
+    const started = Date.now();
+    const waiting = ['701', '702', '703'].map(read);
+    for (const appID of ['801', '802', '803']) await read(appID);
+    const results = await Promise.all(waiting);
+    assert.ok(Date.now() - started < SAFETY_MS / 2, 'the waiting reads end when the breaker opens, not at their timeout');
+    assert.equal(hung.length, 3);
+    assert.ok(hung.every((signal) => signal.aborted));
+    assert.deepEqual(results, [[], [], []], 'a cancelled read leaves the game at its local answer');
+    assert.ok(!fs.existsSync(path.join(root, 'steam_cache', 'user', USER.user, '701.db')), 'nothing is cached from a cancelled read');
+  } finally {
+    steamAccount.fetchPlayerAchievements = real;
+  }
+});

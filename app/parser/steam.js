@@ -982,6 +982,9 @@ const accountUnlocksCircuit = createNetworkCircuit({
   cooldownMs: 10 * 60 * 1000,
   shouldCount: (err) => isSteamTransportFailure(err) || /steam-api-http-(429|5\d\d)/.test(String((err && err.message) || err || '')),
 });
+// Opening the breaker also cancels the requests already out. Left to their own timeouts (two
+// requests of 15s each) they held a scan worker apiece for 30s after Steam had refused (#137).
+let accountUnlocksAbort = new AbortController();
 
 /*
   The unlocks Steam holds for a game this PC has no stats file for, or null when the question could
@@ -1013,6 +1016,7 @@ async function readAccountUnlocks(cfg, cacheFile, cachedAt) {
   if (accountUnlocksCircuit.unavailable()) return null;
 
   let unlocks;
+  const { signal } = accountUnlocksAbort;
   try {
     const steamAccount = require('./steamAccount.js');
     unlocks = await steamAccount.fetchPlayerAchievements({
@@ -1020,11 +1024,16 @@ async function readAccountUnlocks(cfg, cacheFile, cachedAt) {
       steamid: account.steamid,
       appid: cfg.appID,
       log: (message) => debug.log(message),
+      signal,
     });
     accountUnlocksCircuit.recordSuccess();
   } catch (err) {
+    // Cancelled because the breaker opened: that failure is already counted.
+    if (signal.aborted) return null;
     if (accountUnlocksCircuit.recordFailure(err)) {
       debug.log(`[steam] account unlocks unreachable, skipping them for ${accountUnlocksCircuit.cooldownMs / 60000} minute(s) => ${err}`);
+      accountUnlocksAbort.abort();
+      accountUnlocksAbort = new AbortController();
     }
     return null;
   }

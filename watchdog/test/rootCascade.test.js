@@ -10,6 +10,7 @@ const {
   getStrictRootProfile,
   isAppIdName,
   shouldIgnoreDiscoveredId,
+  discoverRpcs3TrophyDirsUnder,
 } = require('../util/rootCascade.js');
 
 function fixture() {
@@ -98,6 +99,34 @@ test('Steam appcache stats root is detected with schema bins', async () => {
 test('strict root profile matches RLD! and CODEX save roots', () => {
   assert.equal(getStrictRootProfile('C:\\Public\\Documents\\Steam\\RLD!').key, 'steam-rld');
   assert.equal(getStrictRootProfile('C:\\Public\\Documents\\Steam\\CODEX').key, 'steam-codex');
+});
+
+test('RPCS3 trophy folders are found among files, nested, and through a linked folder', async (t) => {
+  const dir = fixture();
+  const outside = fixture();
+  t.after(() => {
+    cleanup(dir);
+    cleanup(outside);
+  });
+  const trophyDir = (base) => {
+    fs.mkdirSync(base, { recursive: true });
+    fs.writeFileSync(path.join(base, 'TROPCONF.SFM'), '<trophyconf/>');
+    fs.writeFileSync(path.join(base, 'TROPUSR.DAT'), 'x');
+  };
+  trophyDir(path.join(dir, 'home', '00000001', 'trophy', 'NPWR00001_00'));
+  trophyDir(path.join(dir, 'home', '00000001', 'trophy', 'NPWR00002_00'));
+  // Half a set is not a trophy folder; nor is a file wearing a folder's name.
+  fs.mkdirSync(path.join(dir, 'home', '00000001', 'trophy', 'NPWR00003_00'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'home', '00000001', 'trophy', 'NPWR00003_00', 'TROPCONF.SFM'), '<trophyconf/>');
+  fs.writeFileSync(path.join(dir, 'home', 'NPWR00004_00'), 'not a folder');
+  for (let i = 0; i < 50; i++) fs.writeFileSync(path.join(dir, 'home', `noise${i}.bin`), '');
+  // Found sets are not searched further.
+  trophyDir(path.join(dir, 'home', '00000001', 'trophy', 'NPWR00001_00', 'NPWR00009_00'));
+  trophyDir(path.join(outside, 'NPWR00005_00'));
+  fs.symlinkSync(path.join(outside, 'NPWR00005_00'), path.join(dir, 'home', 'NPWR00005_00'), 'junction');
+
+  const found = (await discoverRpcs3TrophyDirsUnder(dir, { maxDepth: 6 })).map((full) => path.basename(full)).sort();
+  assert.deepEqual(found, ['NPWR00001_00', 'NPWR00002_00', 'NPWR00005_00']);
 });
 
 test('appid validation rejects padding and user ids', () => {
