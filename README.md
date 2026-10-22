@@ -20,7 +20,7 @@ saves and console emulators, shows them in one library, and pops up each unlock 
 
 ### [Download](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest) &nbsp;·&nbsp; [Website](https://shirowwww.github.io/Achievement-Watcher-Next/) &nbsp;·&nbsp; [Docs](https://shirowwww.github.io/Achievement-Watcher-Next/README.html) &nbsp;·&nbsp; [Discord](https://discord.gg/DjTMrDsXTh)
 
-<img src="docs/screenshot/aw-next-banner.gif" width="100%" alt="Achievement Watcher Next in 36 seconds: the unlock popup in ten presets, the in-game list, video clips, nine sources in one library, thirteen themes, Game Health, trophy grades, and much more">
+<img src="docs/screenshot/aw-next-banner.webp" width="100%" alt="Achievement Watcher Next in 52 seconds: the unlock popup in ten presets, the in-game list, one library for every store and emulator, rarity, thirteen themes, Game Health, trophy grades, six library layouts, the preset designer, notification options, a switch for every source, controller navigation and 28 languages, on Windows, Linux and the Steam Deck">
 
 <sub>[The same tour with sound](https://shirowwww.github.io/Achievement-Watcher-Next/#tour) · [Presets](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) · [Themes](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/) · [cs.rin thread](https://cs.rin.ru/forum/viewtopic.php?f=20&t=161187)</sub>
 

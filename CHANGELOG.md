@@ -82,6 +82,8 @@ renamed in 3.9.0 and the history is kept under one file.
   again, and ColdClient in its own folder is recognised.
 - **Saves redirected by a GBE or Goldberg config** are watched where they land, and the automatic fix
   makes a restore point only when it is about to write.
+- **OK in Settings no longer deletes save folders.** It saved only the folders on screen, and the
+  panel hid a game folder AW did not recognise or a drive that was not plugged in.
 - **Half-written clips** keep the part that plays, and the recorder is no longer stopped mid-write.
 - **Covers, icons and screens.** GOG shows its store artwork, broken icons stuck in the cache are
   downloaded again, and recompiled Xbox 360 screens are darkened like the others.
@@ -97,6 +99,10 @@ renamed in 3.9.0 and the history is kept under one file.
   Crew Motorfest have their achievements awarded by the publisher's servers, so a crack records
   nothing; their panel says so from the first launch. online-fix's Ubisoft builds are recognised, and
   an achievement fix there warns that online play may stop.
+
+### Website & Docs
+
+- **A new 52-second tour** on the website, and an animated banner at the top of the README.
 
 ## 3.12.1 - 2026-10-16
 

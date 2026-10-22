@@ -967,11 +967,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // before it is populated would look empty and make every OK a change.
       takeLibrarySnapshot(foldersFromDom());
       $('#settings #dirlist').empty();
+      // Every saved folder is shown, recognised by userDir.check() or not: OK saves the rows on screen,
+      // so a folder hidden here (a game the scan reads, a drive not plugged in) was deleted by any OK.
       const userDirsShown = (userDir.getEntries ? userDir.getEntries() : userDir.get())
-        .then(async (userDirList) => {
-          for (let dir of userDirList) {
+        .then((userDirList) => {
+          for (const dir of userDirList) {
             try {
-              if (await userDir.check(dir.path)) populateUserDirList({ ...dir, dir: dir.path, reverse: true });
+              populateUserDirList({ ...dir, dir: dir.path, reverse: true });
             } catch (err) {
               debug.log(err);
             }
