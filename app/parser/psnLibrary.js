@@ -2,9 +2,9 @@
 
 /*
   PlayStation Network library: every trophy list of the signed-in account, imported into
-  steam_cache/psn/<NPWR id> the way the Xbox and RetroAchievements libraries are. Each list is a
-  tile of its own and is never merged by name with a PC game: a PS4 trophy list and a Steam
-  achievement set are different games, with different unlocks.
+  steam_cache/psn/<NPWR id> the way the Xbox and RetroAchievements libraries are. A list is never
+  merged by name with a PC game: a PS4 trophy list and a Steam achievement set are different games,
+  with different unlocks. Only the lists of one game on two consoles may share a card.
 */
 
 const fs = require('fs');
@@ -359,9 +359,16 @@ async function fetchTrophyList(ctx, title, owner = 'me') {
   return { definitions, earned, groups };
 }
 
+// "(PlayStation®5)", "PS4™ & PS5™", "(PS4)": Sony gives the PS4 and PS5 titles of one game the same
+// store name, so the console a store name carries can be the wrong one for the list.
+const STORE_CONSOLE_TAG = /\s*[-:]?\s*\(?\s*(playstation\s*®?\s*[45]|ps[45]\s*™?(\s*(&|and|\/)\s*ps[45]\s*™?)?)\s*\)?\s*$/i;
+const withoutConsoleTag = (name) => name.replace(STORE_CONSOLE_TAG, '').trim() || name;
+
 // The tile names, with the console added where one game has a list on two of them.
 function displayNames(titles, storeInfo) {
-  const names = new Map(titles.map((title) => [title.npCommunicationId, (storeInfo.get(title.npCommunicationId) || {}).name || cleanTitleName(title.trophyTitleName)]));
+  const names = new Map(
+    titles.map((title) => [title.npCommunicationId, withoutConsoleTag((storeInfo.get(title.npCommunicationId) || {}).name || cleanTitleName(title.trophyTitleName))])
+  );
   const counts = new Map();
   for (const name of names.values()) {
     const key = normalizedName(name);
@@ -372,6 +379,52 @@ function displayNames(titles, storeInfo) {
     if (counts.get(normalizedName(name)) > 1) names.set(title.npCommunicationId, `${name} (${platformLabel(title.trophyTitlePlatform)})`);
   }
   return names;
+}
+
+// The game's name and the tile's name of a saved list. Lists saved before 3.12.2 still carry the
+// store's console tag ("Grand Theft Auto V (PlayStation®5) (PS4)"), so it is dropped on reading too.
+function savedNames(schema) {
+  const name = String(schema.name || '').trim();
+  const suffix = schema.platform ? ` (${schema.platform})` : '';
+  const labelled = suffix !== '' && name.endsWith(suffix) && name.length > suffix.length;
+  const game = withoutConsoleTag(labelled ? name.slice(0, -suffix.length) : name);
+  return { game, tile: labelled ? `${game}${suffix}` : game };
+}
+
+const CONSOLE_RANK = ['PS5', 'PS4', 'PS3', 'PS Vita'];
+const consoleRank = (schema) => (CONSOLE_RANK.includes(schema.platform) ? CONSOLE_RANK.indexOf(schema.platform) : CONSOLE_RANK.length);
+
+/*
+  For a library that shows one card per game: each list that joins the same game's list on another
+  console (GTA V on PS4 and PS5), mapped to the list that keeps the card - the one with the most
+  trophies earned, then the newest console. Two games that only share a name share few trophy
+  titles and stay apart, and so does a list whose earned trophies would not all find their match.
+*/
+function sameGameLists(appids) {
+  const { indexByTitle, remapUnlocksOntoSchema } = require('../util/crossSchemaUnlocks.js');
+  const groups = new Map();
+  for (const appid of appids) {
+    const schema = readSchema(normalizeListId(appid));
+    const key = schema ? normalizedName(savedNames(schema).game) : '';
+    if (key) groups.set(key, [...(groups.get(key) || []), { appid: String(appid), schema, earned: getAchievements(appid) }]);
+  }
+  const joins = new Map();
+  for (const lists of groups.values()) {
+    if (lists.length < 2) continue;
+    const count = (list) => Object.keys(list.earned).length;
+    const [holder, ...others] = [...lists].sort((a, b) => count(b) - count(a) || consoleRank(a.schema) - consoleRank(b.schema) || a.appid.localeCompare(b.appid));
+    const holderList = holder.schema.achievement.list;
+    const holderTitles = indexByTitle(holderList);
+    for (const other of others) {
+      const titles = indexByTitle(other.schema.achievement.list);
+      const shared = [...titles.keys()].filter((title) => holderTitles.has(title)).length;
+      const sameGame = shared > 0 && shared * 2 > Math.min(titles.size, holderTitles.size);
+      if (sameGame && Object.keys(remapUnlocksOntoSchema(other.earned, other.schema.achievement.list, holderList)).length === count(other)) {
+        joins.set(other.appid, holder.appid);
+      }
+    }
+  }
+  return joins;
 }
 
 // A change of app language counts as a change: the trophy texts are fetched in the new one.
@@ -426,7 +479,11 @@ async function importLibrary(options = {}) {
     const title = titles[index];
     const name = names.get(title.npCommunicationId);
     options.onProgress?.({ current: index + 1, total: titles.length, detail: name, appid: toAppid(normalizeListId(title.npCommunicationId)) });
-    if (!options.force && isFresh(readSchema(normalizeListId(title.npCommunicationId)), title, ctx.locale)) {
+    const listId = normalizeListId(title.npCommunicationId);
+    const cached = readSchema(listId);
+    if (!options.force && isFresh(cached, title, ctx.locale)) {
+      // A better tile name needs no trip to Sony: only the name is rewritten.
+      if (name && cached.name !== name) writeJson(schemaFile(listId), { ...cached, name });
       result.unchanged += 1;
       continue;
     }
@@ -459,7 +516,13 @@ function listCachedTitles() {
 
 function cachedTitleName(appid) {
   const schema = readSchema(normalizeListId(appid));
-  return schema ? String(schema.name || '').trim() : '';
+  return schema ? savedNames(schema).tile : '';
+}
+
+// The name without the console, for a card that holds the game's lists from several consoles.
+function cachedGameName(appid) {
+  const schema = readSchema(normalizeListId(appid));
+  return schema ? savedNames(schema).game : '';
 }
 
 function getGameData(appid) {
@@ -475,7 +538,7 @@ function getGameData(appid) {
   const { trophyIcon, ...img } = schema.img || {};
   return {
     appid: toAppid(listId),
-    name: schema.name || listId,
+    name: savedNames(schema).tile || listId,
     source: SOURCE,
     system: 'playstation',
     npCommId: listId,
@@ -503,6 +566,13 @@ function getAchievements(appid) {
     if (entry.earned) unlocks[id] = { Achieved: true, UnlockTime: entry.earned_time || 0 };
   }
   return unlocks;
+}
+
+// A list read for the card of its game's list on another console: the trophies match by title.
+function unlocksForSchema(appid, schemaList) {
+  const schema = readSchema(normalizeListId(appid));
+  if (!schema) return {};
+  return require('../util/crossSchemaUnlocks.js').remapUnlocksOntoSchema(getAchievements(appid), schema.achievement.list, schemaList);
 }
 
 module.exports = {
@@ -533,6 +603,9 @@ module.exports = {
   importLibrary,
   listCachedTitles,
   cachedTitleName,
+  cachedGameName,
+  sameGameLists,
   getGameData,
   getAchievements,
+  unlocksForSchema,
 };

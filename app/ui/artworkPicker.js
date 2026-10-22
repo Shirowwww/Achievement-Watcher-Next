@@ -42,6 +42,31 @@ async function resolvePickerPreview(url, cacheAppid) {
   return (await imagePreviewReady(preview)) ? imageDisplayUrl(preview) : null;
 }
 
+// The title row both galleries share: the dialog's icon, its title and the game it is for.
+function pickerHeading(iconClass, title, gameName) {
+  const head = document.createElement('div');
+  head.className = 'aw-prompt-heading';
+  const icon = document.createElement('div');
+  icon.className = 'aw-prompt-icon';
+  const glyph = document.createElement('i');
+  glyph.className = `fas ${iconClass}`;
+  glyph.setAttribute('aria-hidden', 'true');
+  icon.append(glyph);
+  const text = document.createElement('div');
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'aw-prompt-title';
+  titleWrap.textContent = title;
+  text.append(titleWrap);
+  if (gameName) {
+    const subtitle = document.createElement('div');
+    subtitle.className = 'aw-prompt-description';
+    subtitle.textContent = gameName;
+    text.append(subtitle);
+  }
+  head.append(icon, text);
+  return head;
+}
+
 // Show alternate SteamDB and SteamGridDB covers for a game.
 function openCoverPicker(game, appid, coverCacheAppid) {
   const portraitView = !!(app.config && app.config.achievement && app.config.achievement.thumbnailPortrait);
@@ -56,21 +81,9 @@ function openCoverPicker(game, appid, coverCacheAppid) {
   box.className = 'aw-prompt aw-cover-picker';
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-modal', 'true');
-  box.setAttribute('aria-label', t('chooseAnotherCoverTitle', 'Choose another cover', 'Choisir une autre jaquette'));
-  const head = document.createElement('div');
-  head.className = 'aw-prompt-heading';
-  const icon = document.createElement('div');
-  icon.className = 'aw-prompt-icon';
-  icon.innerHTML = '<i class="fas fa-images"></i>';
-  const titleWrap = document.createElement('div');
-  titleWrap.className = 'aw-prompt-title';
-  titleWrap.textContent = t('chooseAnotherCoverTitle', 'Choose another cover', 'Choisir une autre jaquette');
-  head.append(icon, titleWrap);
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'aw-prompt-button secondary aw-cover-picker-close';
-  closeBtn.textContent = '×';
-  closeBtn.title = t('cancel', 'Cancel', 'Annuler');
-  head.append(closeBtn);
+  const title = t('chooseAnotherCoverTitle', 'Choose another cover', 'Choisir une autre jaquette');
+  box.setAttribute('aria-label', title);
+  const head = pickerHeading('fa-images', title, game && game.name);
   const status = document.createElement('div');
   status.className = 'aw-cover-picker-status';
   status.setAttribute('aria-live', 'polite');
@@ -99,7 +112,6 @@ function openCoverPicker(game, appid, coverCacheAppid) {
     document.removeEventListener('keydown', onKey);
     if (opener && opener.isConnected) opener.focus({ preventScroll: true });
   };
-  closeBtn.onclick = done;
   cancelBtn.onclick = done;
   overlay.onmousedown = (ev) => {
     if (ev.target === overlay) done();
@@ -298,20 +310,7 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   box.setAttribute('aria-modal', 'true');
   const title = t('chooseAnotherIconTitle', 'Choose another icon', "Choisir une autre icône");
   box.setAttribute('aria-label', title);
-  const head = document.createElement('div');
-  head.className = 'aw-prompt-heading';
-  const icon = document.createElement('div');
-  icon.className = 'aw-prompt-icon';
-  icon.innerHTML = '<i class="fas fa-icons"></i>';
-  const titleWrap = document.createElement('div');
-  titleWrap.className = 'aw-prompt-title';
-  titleWrap.textContent = title;
-  head.append(icon, titleWrap);
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'aw-prompt-button secondary aw-cover-picker-close';
-  closeBtn.textContent = '×';
-  closeBtn.title = t('cancel', 'Cancel', 'Annuler');
-  head.append(closeBtn);
+  const head = pickerHeading('fa-icons', title, game && game.name);
   const status = document.createElement('div');
   status.className = 'aw-cover-picker-status';
   status.setAttribute('aria-live', 'polite');
@@ -348,7 +347,6 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
   const onKey = (e) => {
     if (e.key === 'Escape') done();
   };
-  closeBtn.onclick = done;
   cancelBtn.onclick = done;
   overlay.onmousedown = (ev) => {
     if (ev.target === overlay) done();

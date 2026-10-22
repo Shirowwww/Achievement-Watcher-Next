@@ -3566,14 +3566,16 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar,
 .onboarding-step::-webkit-scrollbar,
 .gh-technical-dump::-webkit-scrollbar,
-#game-config .box .container::-webkit-scrollbar {
+#game-config .box .container::-webkit-scrollbar,
+.aw-cover-picker-grid::-webkit-scrollbar {
   width: 11px;
 }
 #settings .box .content::-webkit-scrollbar-track,
 #settings .psn-add-results::-webkit-scrollbar-track,
 .onboarding-step::-webkit-scrollbar-track,
 .gh-technical-dump::-webkit-scrollbar-track,
-#game-config .box .container::-webkit-scrollbar-track {
+#game-config .box .container::-webkit-scrollbar-track,
+.aw-cover-picker-grid::-webkit-scrollbar-track {
   background: transparent;
   margin-block: 9px;
 }
@@ -3581,7 +3583,8 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar-thumb,
 .onboarding-step::-webkit-scrollbar-thumb,
 .gh-technical-dump::-webkit-scrollbar-thumb,
-#game-config .box .container::-webkit-scrollbar-thumb {
+#game-config .box .container::-webkit-scrollbar-thumb,
+.aw-cover-picker-grid::-webkit-scrollbar-thumb {
   background: color-mix(in srgb, var(--border) 70%, transparent);
   border-radius: var(--radius-sm);
   border: 3px solid transparent;
@@ -3591,7 +3594,8 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar-thumb:hover,
 .onboarding-step::-webkit-scrollbar-thumb:hover,
 .gh-technical-dump::-webkit-scrollbar-thumb:hover,
-#game-config .box .container::-webkit-scrollbar-thumb:hover {
+#game-config .box .container::-webkit-scrollbar-thumb:hover,
+.aw-cover-picker-grid::-webkit-scrollbar-thumb:hover {
   background: var(--border);
   background-clip: padding-box;
 }
@@ -3599,7 +3603,8 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar-corner,
 .onboarding-step::-webkit-scrollbar-corner,
 .gh-technical-dump::-webkit-scrollbar-corner,
-#game-config .box .container::-webkit-scrollbar-corner {
+#game-config .box .container::-webkit-scrollbar-corner,
+.aw-cover-picker-grid::-webkit-scrollbar-corner {
   background: transparent;
 }
 
@@ -7011,19 +7016,43 @@ body.is-resizing #game-list {
 }
 
 /* Cover picker modal (right-click -> "Choose another cover...") - mirrors the shared
-   aw-prompt chrome and the app surface tokens so it follows every theme. */
+   aw-prompt chrome and the app surface tokens so it follows every theme. The title and the
+   buttons stay put and only the gallery scrolls, so Cancel is never a scroll away. */
 .aw-cover-picker {
+  display: flex;
+  flex-direction: column;
   width: min(960px, calc(100vw - 48px));
-  max-height: 88vh;
-  overflow: auto;
+  max-height: min(88vh, calc(100vh - 78px));
+  padding: 18px 0 16px;
+  overflow: hidden;
 }
-.aw-cover-picker-close {
-  margin-left: auto;
-  min-width: 34px;
-  width: 34px;
-  padding: 4px 0;
-  font-size: var(--fs-lg);
-  line-height: 1;
+.aw-cover-picker > .aw-prompt-heading,
+.aw-cover-picker > .aw-cover-picker-status,
+.aw-cover-picker > .aw-prompt-actions {
+  flex: none;
+  padding-inline: 20px;
+}
+.aw-cover-picker > .aw-prompt-heading {
+  align-items: center;
+  margin-bottom: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--set-hairline-soft);
+}
+.aw-cover-picker .aw-prompt-title {
+  margin: 0;
+}
+.aw-cover-picker .aw-prompt-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aw-cover-picker > .aw-prompt-heading > div:nth-child(2) {
+  min-width: 0;
+}
+.aw-cover-picker > .aw-prompt-actions {
+  margin-top: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--set-hairline-soft);
 }
 .aw-cover-picker-status {
   display: flex;
@@ -7033,17 +7062,26 @@ body.is-resizing #game-list {
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: var(--fs-md);
-  padding: 22px 4px;
+  padding-block: 28px;
   text-align: center;
 }
 .aw-cover-picker-retry {
   margin: 0;
 }
+/* The right padding plus the reserved scrollbar gutter matches the left padding. */
 .aw-cover-picker-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 14px;
   align-items: start;
+  padding: 16px 9px 16px 20px;
+}
+.aw-cover-picker-grid:empty {
+  display: none;
 }
 .aw-cover-picker-tile {
   position: relative;
@@ -7089,8 +7127,7 @@ body.is-resizing #game-list {
   padding: 2px 7px;
   border: 1px solid color-mix(in srgb, var(--border) 30%, transparent);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 78%, transparent);
-  backdrop-filter: blur(4px);
+  background: color-mix(in srgb, var(--surface-sunken) 90%, transparent);
   color: var(--text);
   font-family: var(--font-body);
   font-size: var(--fs-xs);
@@ -9654,7 +9691,12 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 #settings .source-list > li.official-source {
+  border-radius: var(--radius-sm);
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+#settings .source-list > li.official-source + li.official-source {
+  margin-top: 6px;
 }
 
 #settings .source-list .source-official-badge {

@@ -169,6 +169,83 @@ test('one game with lists on two consoles gets the console in each tile name', (
   assert.deepEqual([...names.values()], ['Same Game (PS4)', 'Same Game (PS5)', 'Solo']);
 });
 
+// Sony names the PS4 and PS5 store titles of a game after its PS5 edition, so the PS4 list read "(PlayStation®5)".
+test('a console tag in the store name gives way to the console of each list', () => {
+  const titles = [
+    { npCommunicationId: 'NPWR06221_00', trophyTitleName: 'Grand Theft Auto V', trophyTitlePlatform: 'PS4' },
+    { npCommunicationId: 'NPWR21647_00', trophyTitleName: 'Grand Theft Auto V', trophyTitlePlatform: 'PS5' },
+    { npCommunicationId: 'NPWR00003_00', trophyTitleName: 'Solo', trophyTitlePlatform: 'PS5' },
+    { npCommunicationId: 'NPWR00004_00', trophyTitleName: 'Pair', trophyTitlePlatform: 'PS4' },
+  ];
+  const store = new Map([
+    ['NPWR06221_00', { name: 'Grand Theft Auto V (PlayStation®5)' }],
+    ['NPWR21647_00', { name: 'Grand Theft Auto V (PlayStation®5)' }],
+    ['NPWR00003_00', { name: 'Solo PS4™ & PS5™' }],
+    ['NPWR00004_00', { name: 'Pair (PS4)' }],
+  ]);
+  const names = psnLibrary.displayNames(titles, store);
+  assert.deepEqual([...names.values()], ['Grand Theft Auto V (PS4)', 'Grand Theft Auto V (PS5)', 'Solo', 'Pair']);
+});
+
+test('a list already imported takes its corrected name without asking Sony for it again', async () => {
+  const first = sony();
+  await run(first.fetchImpl);
+  const file = path.join(temp, `profile-${profile}`, 'steam_cache', 'psn', 'NPWR11111_00', 'schema.json');
+  fs.writeFileSync(file, JSON.stringify({ ...JSON.parse(fs.readFileSync(file, 'utf8')), name: 'ASTRO BOT (PlayStation®5)' }));
+
+  const second = sony();
+  assert.equal((await run(second.fetchImpl)).unchanged, 2);
+  assert.equal(psnLibrary.cachedTitleName('psn-NPWR11111_00'), 'ASTRO BOT');
+  assert.ok(!second.calls.some((call) => call.url.includes('/trophyGroups/all/')), 'no trophy list asked again');
+});
+
+// A saved list as the import writes it: trophy ids are positions, `earned` the positions unlocked.
+function saveList(listId, { name, platform, titles, earned = [] }) {
+  const dir = path.join(temp, `profile-${profile}`, 'steam_cache', 'psn', listId);
+  fs.mkdirSync(dir, { recursive: true });
+  const list = titles.map((displayName, id) => ({ name: String(id), displayName }));
+  fs.writeFileSync(path.join(dir, 'schema.json'), JSON.stringify({ listId, name, platform, achievement: { total: list.length, list } }));
+  fs.writeFileSync(path.join(dir, 'state.json'), JSON.stringify(Object.fromEntries(earned.map((id) => [String(id), { earned: true, earned_time: 1000 + id }]))));
+}
+
+const GTA = ['Welcome to Los Santos', 'A Friendship Resurrected', "A Fair Day's Pay", 'The Moment of Truth'];
+
+test('a list saved before the fix loses the console tag the store put in its name', () => {
+  saveList('NPWR06221_00', { name: 'Grand Theft Auto V (PlayStation®5) (PS4)', platform: 'PS4', titles: GTA });
+  assert.equal(psnLibrary.cachedTitleName('psn-NPWR06221_00'), 'Grand Theft Auto V (PS4)');
+  assert.equal(psnLibrary.getGameData('psn-NPWR06221_00').name, 'Grand Theft Auto V (PS4)');
+  assert.equal(psnLibrary.cachedGameName('psn-NPWR06221_00'), 'Grand Theft Auto V');
+});
+
+test('one game on two consoles joins the list with the most trophies earned, matched by title', () => {
+  saveList('NPWR06221_00', { name: 'Grand Theft Auto V (PS4)', platform: 'PS4', titles: GTA, earned: [0, 1] });
+  // Numbered the other way round: the PS5 trophy 3 is the PS4 trophy 0.
+  saveList('NPWR21647_00', { name: 'Grand Theft Auto V (PS5)', platform: 'PS5', titles: GTA.toReversed(), earned: [3] });
+
+  const joins = psnLibrary.sameGameLists(['psn-NPWR21647_00', 'psn-NPWR06221_00']);
+  assert.deepEqual([...joins], [['psn-NPWR21647_00', 'psn-NPWR06221_00']]);
+  const cardList = psnLibrary.getGameData('psn-NPWR06221_00').achievement.list;
+  assert.deepEqual(Object.keys(psnLibrary.unlocksForSchema('psn-NPWR21647_00', cardList)), ['0']);
+});
+
+test('with nothing earned anywhere, the newest console keeps the card', () => {
+  saveList('NPWR13412_00', { name: 'Fortnite (PS4)', platform: 'PS4', titles: GTA });
+  saveList('NPWR22022_00', { name: 'Fortnite (PS5)', platform: 'PS5', titles: GTA });
+  assert.deepEqual([...psnLibrary.sameGameLists(['psn-NPWR13412_00', 'psn-NPWR22022_00'])], [['psn-NPWR13412_00', 'psn-NPWR22022_00']]);
+});
+
+test('two games that only share a name stay apart', () => {
+  saveList('NPWR03511_00', { name: 'Ratchet & Clank (PS3)', platform: 'PS3', titles: ['Bolt Collector', "Taste o' Victory", 'Mmmm... Pie'] });
+  saveList('NPWR09811_00', { name: 'Ratchet & Clank (PS4)', platform: 'PS4', titles: ['Bolt Collector', 'Heavy Hitter', 'Old Friends', 'To the Rescue'] });
+  assert.equal(psnLibrary.sameGameLists(['psn-NPWR03511_00', 'psn-NPWR09811_00']).size, 0);
+});
+
+test('a list whose earned trophy has no match on the card stays apart', () => {
+  saveList('NPWR06221_00', { name: 'Grand Theft Auto V (PS4)', platform: 'PS4', titles: GTA, earned: [0, 1] });
+  saveList('NPWR21647_00', { name: 'Grand Theft Auto V (PS5)', platform: 'PS5', titles: [...GTA, 'Next Gen Only'], earned: [4] });
+  assert.equal(psnLibrary.sameGameLists(['psn-NPWR06221_00', 'psn-NPWR21647_00']).size, 0);
+});
+
 test('only well-formed trophy list ids are accepted', () => {
   assert.equal(psnLibrary.normalizeListId('psn-npwr12345_00'), 'NPWR12345_00');
   assert.equal(psnLibrary.normalizeListId('NPWR12345_00/../x'), '');

@@ -503,6 +503,23 @@ function sameGameTarget(title, steamTargets) {
   return require('../util/fuzzyAppid.js').sameTitleAppid(title, steamTargets);
 }
 
+/*
+  PlayStation lists of one game on two consoles, each mapped to the list whose card it joins. Worked
+  out over every saved list, hidden ones included: hiding a card must not bring back the game's
+  list from the other console as a card of its own.
+*/
+function samePsnGameLists(records) {
+  if (!records.some((g) => g && g.data && g.data.type === 'psnLibrary')) return new Map();
+  try {
+    const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
+    psnLibrary.setUserDataPath(_userDataPath || userDataDir());
+    return psnLibrary.sameGameLists(psnLibrary.listCachedTitles());
+  } catch (err) {
+    if (debug) debug.warn(`[merge] PlayStation lists left apart => ${err}`);
+    return new Map();
+  }
+}
+
 function mergeCrossSourceDuplicates(input) {
   // The caller's records may be a cached discovery list the next scan is handed again.
   const appidList = copyDiscoveryList(input || []);
@@ -522,9 +539,17 @@ function mergeCrossSourceDuplicates(input) {
     }))
     .filter((t) => t.name);
   const steamTargets = require('../util/fuzzyAppid.js').titleIndex(namedTargets);
+  const psnJoins = samePsnGameLists(appidList);
   const merged = [];
   for (const g of appidList) {
     if (drop.has(String(g.appid))) continue;
+    const psnHolderId = psnJoins.get(String(g.appid));
+    if (psnHolderId) {
+      const psnHolder = byAppid.get(psnHolderId);
+      if (psnHolder) mergeDiscoveryRecord(psnHolder, g);
+      if (debug) debug.log(`[merge] ${g.appid} ${psnHolder ? 'merged into' : 'hidden with'} ${psnHolderId} (same game on another console)`);
+      continue;
+    }
     const isUbisoft = g && g.data && (g.data.type === 'ubisoftOfficial' || g.data.type === 'uplay') && g.data.uplayId;
     if (isUbisoft) {
       try {
@@ -3118,6 +3143,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   } else if (dataType === 'psnLibrary') {
     const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
     psnLibrary.setUserDataPath(_userDataPath || userDataDir());
+    // The same game's list on another console numbers its trophies its own way.
+    if (game.appid && String(appid.appid) !== String(game.appid)) return psnLibrary.unlocksForSchema(appid.appid, game.achievement.list);
     return psnLibrary.getAchievements(appid.appid);
   } else if (dataType === 'uplay') {
     // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
@@ -3376,6 +3403,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // No Steam art borrowed by name: console exclusives match unrelated PC games ("SingStar" found
       // "Star Singularity"), so a list without a store picture keeps its own trophy icon.
       game = psnLibrary.getGameData(appid.appid);
+      // A card holding the game's lists from several consoles is named for the game alone.
+      if (game && appids.filter((record) => record && record.data && record.data.type === 'psnLibrary').length > 1) {
+        game.name = psnLibrary.cachedGameName(appid.appid) || game.name;
+      }
     } else {
       game = await steam.getGameData({
         appID: appid.appid,
