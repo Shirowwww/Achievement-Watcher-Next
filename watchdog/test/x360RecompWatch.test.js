@@ -146,8 +146,27 @@ test('only a path that can be an unlock list wakes discovery up', () => {
     'C:\\G\\GearGame\\SaveData\\Achievements.json',
     'C:\\Jeux\\Unleashed\\save\\ACH-DATA',
     'C:\\Jeux\\reNut\\renut.cfg',
+    'C:\\Jeux\\LostOdyssey\\profile\\achievements.ini',
+    'C:\\Jeux\\LostOdyssey\\profiles\\alice\\achievements.ini',
+    'C:\\Jeux\\Game\\profiles\\alice\\achievements.json',
+    'C:\\Jeux\\LostOdyssey\\game-path.txt',
+    'C:\\Users\\x\\AppData\\Roaming\\MarathonRecomp\\save\\SonicNextAchievementData.bin',
+    'C:\\Jeux\\OpenJam\\mods\\retro\\saves.path',
+    'C:\\Jeux\\Gears2\\gow2.toml',
+    'C:\\Jeux\\Gears2\\gow2_game_path.txt',
   ];
-  const misses = ['C:\\Jeux\\Game\\saves\\slot1.sav', 'C:\\Jeux\\myachievementsmod\\x.txt', 'C:\\Jeux\\Game\\achievements.log', 'C:\\Jeux\\Game\\save\\ACH-DATA.bak'];
+  const misses = [
+    'C:\\Jeux\\Game\\saves\\slot1.sav',
+    'C:\\Jeux\\myachievementsmod\\x.txt',
+    'C:\\Jeux\\Game\\achievements.log',
+    'C:\\Jeux\\Game\\save\\ACH-DATA.bak',
+    'C:\\Jeux\\Game\\mods\\achievements.ini',
+    'C:\\Jeux\\Game\\profiles\\alice\\settings.ini',
+    'C:\\Jeux\\Game\\saves.path.bak',
+    'C:\\Jeux\\Game\\settings.toml',
+    'C:\\Jeux\\Game\\achievements\\progress.dat',
+    'C:\\Jeux\\Game\\achievements\\5752084B.toml.tmp',
+  ];
   for (const name of hits) assert.ok(LIST_PATH_RE.test(name), name);
   for (const name of misses) assert.ok(!LIST_PATH_RE.test(name), name);
 });
@@ -222,3 +241,72 @@ test("re:Blue's profiles are watched together, and resetting one keeps the other
   await handleChange(record, mine, ctx);
   assert.deepEqual(sent.map((event) => event.achievementDisplayName), ['Name 3', 'Name 1'], 'only the reset profile starts over');
 });
+
+test('an earned-ini list toasts its new unlock, and a profile that appears later is watched', async () => {
+  const titleId = '4D5307FA';
+  const root = path.join(temp, 'LostOdyssey');
+  const header = '# Achievements earned: id=unix time\n';
+  const main = write(path.join(root, 'profile', 'achievements.ini'), `${header}1=1600000000\n`);
+  cacheTitle(titleId, [1, 2, 3]);
+  const record = (profileFiles) => ({ appid: `x360-${titleId}`, data: { type: 'x360recomp', format: 'ini-earned', titleId, file: main, profileFiles, folder: 'LostOdyssey', pendingRoot: root } });
+  const sent = [];
+  try {
+    await watcher._internal.rediscover(ctxFor(sent), () => [record([main])], { full: true });
+    const before = watcher._internal.watched.get(`x360-${titleId}`).key;
+    const alice = write(path.join(root, 'profiles', 'alice', 'achievements.ini'), `${header}2=${Math.floor(Date.now() / 1000) - 20}\n`);
+    await watcher._internal.rediscover(ctxFor(sent), () => [record([main, alice])], { full: true });
+    assert.notEqual(watcher._internal.watched.get(`x360-${titleId}`).key, before, 'the new profile folder is watched');
+    assert.deepEqual(sent.map((event) => event.achievementDisplayName), ['Name 2'], 'its recent unlock toasts, the old one does not');
+  } finally {
+    watcher.stop();
+  }
+});
+
+test('a profile copied in later joins the baseline with its old unlocks, only a recent one toasts', async () => {
+  const titleId = '4D5307FB';
+  const root = path.join(temp, 'CopiedProfile');
+  const header = '# Achievements earned: id=unix time\n';
+  const main = write(path.join(root, 'profile', 'achievements.ini'), `${header}1=1600000000\n`);
+  cacheTitle(titleId, [1, 2, 3, 4]);
+  const record = (profileFiles) => ({ appid: `x360-${titleId}`, data: { type: 'x360recomp', format: 'ini-earned', titleId, file: main, profileFiles, folder: 'CopiedProfile', pendingRoot: root } });
+  const sent = [];
+  try {
+    await watcher._internal.rediscover(ctxFor(sent), () => [record([main])], { full: true });
+    const recent = Math.floor(Date.now() / 1000) - 20;
+    const alice = write(path.join(root, 'profiles', 'alice', 'achievements.ini'), `${header}2=1600000000\n3=1600000100\n4=${recent}\n`);
+    await watcher._internal.rediscover(ctxFor(sent), () => [record([main, alice])], { full: true });
+    assert.deepEqual(sent.map((event) => event.achievementDisplayName), ['Name 4'], 'unlocks from 2020 are not news');
+  } finally {
+    watcher.stop();
+  }
+});
+
+test('a change inside a list already watched, or to a file never read, does not wake discovery', async () => {
+  const { wakesDiscovery } = watcher._internal;
+  const file = write(path.join(temp, 'Wake', 'achievements', '44444444.toml'), toml([1]));
+  cacheTitle('44444444', [1]);
+  const record = { appid: 'x360-44444444', data: { type: 'x360recomp', format: 'toml', titleId: '44444444', file, folder: 'Wake' } };
+  try {
+    await watcher._internal.rediscover(ctxFor([]), () => [record], { full: true });
+    assert.equal(wakesDiscovery(file), false, 'its own watcher handles it');
+    assert.equal(wakesDiscovery(path.join(temp, 'Wake', 'achievements', 'progress.dat')), false, 'not a list');
+    assert.equal(wakesDiscovery(path.join(temp, 'Other', 'achievements', '55555555.toml')), true, 'a new list elsewhere');
+  } finally {
+    watcher.stop();
+  }
+});
+
+test('the folders followed for new games are told apart the way the platform compares paths', (t) => {
+  const realPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+  t.after(() => Object.defineProperty(process, 'platform', realPlatform));
+  const upper = path.join(temp, 'CaseRoot');
+  const lower = path.join(temp, 'caseroot');
+  fs.mkdirSync(upper, { recursive: true });
+  fs.mkdirSync(lower, { recursive: true });
+  const config = write(path.join(temp, 'caseroots.db'), JSON.stringify([upper, lower]));
+  Object.defineProperty(process, 'platform', { value: 'linux' });
+  assert.equal(watcher._internal.watchRoots(config).length, 2, 'Linux keeps Game and game apart');
+  Object.defineProperty(process, 'platform', { value: 'win32' });
+  assert.equal(watcher._internal.watchRoots(config).length, 1, 'Windows does not');
+});
+

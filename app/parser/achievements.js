@@ -66,7 +66,7 @@ const genEmuConfig = require(path.join(appPath, 'genEmuConfig.js'));
 const gameIndex = require(path.join(appPath, 'gameIndex.js'));
 const { userDataDir } = require(path.join(appPath, '..', 'util', 'userDataPath.js'));
 const saveRedirects = require(path.join(appPath, '..', 'util', 'saveRedirects.js'));
-const { resolveAchievementDataPath } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
+const { resolveAchievementDataPath, achievementDataPaths } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
 const installState = require(path.join(appPath, 'installState.js'));
@@ -2214,11 +2214,11 @@ async function resolveUplayR2Mapping(u) {
 const scanError = (err) => (err && err.message ? err.message : err);
 
 // The readers a watched folder is tried with, in order: the first that recognises it claims it.
-async function claimFolder(dir, source) {
+async function claimFolder(dir, source, kytyOptions) {
   let scanned = [];
   if (source.rpcs3) scanned = await rpcs3.scan(dir);
   if (scanned.length === 0 && source.shadps4) scanned = await shadps4.scan(dir);
-  if (scanned.length === 0 && source.kytyps5) scanned = kytyps5.scan(dir);
+  if (scanned.length === 0 && source.kytyps5) scanned = kytyps5.scan(dir, kytyOptions);
   if (scanned.length === 0 && source.xenia) scanned = await xenia.scan(dir);
   // Games for Windows LIVE installs running XLiveLessNess. Like the console emulators these are
   // game folders, so they are resolved before the appid-named save scan below.
@@ -2249,10 +2249,10 @@ async function claimFolder(dir, source) {
   What one watched folder holds for the library, with the same readers in the same order. A folder
   no reader claims is an appid-named save root (GSE Saves and its kind), read with the default roots.
 */
-async function scanWatchedFolder(dir, source) {
+async function scanWatchedFolder(dir, source, kytyOptions = kytyps5.excludingOtherSources(() => [dir])) {
   let claimed = { games: [], appidRoot: false };
   try {
-    claimed = await claimFolder(dir, source);
+    claimed = await claimFolder(dir, source, kytyOptions);
   } catch (err) {
     debug.log(`[userdir] ${dir} could not be scanned: ${scanError(err)}`);
   }
@@ -2305,6 +2305,8 @@ async function discoverInScope(source, steamAccFilter, scope) {
   try {
     const configuredDirs = await userDir.get();
     const userDirs = scope ? scanScope.filterSelectedDirectories(configuredDirs, scope.userDirs, (dir) => dir.path) : configuredDirs;
+    // No PS5 game lives inside a recompiled or ported game's install, wherever it is watched from.
+    const kytyOptions = kytyps5.excludingOtherSources(() => configuredDirs.map((dir) => dir.path));
     for (let dir of userDirs) {
       // Per directory, not around the loop: one scanner throwing on one folder used to abandon every
       // folder after it, across every emulator source, with a single line in the log.
@@ -2316,7 +2318,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
       } catch (err) {
         debug.log(`[userdir] ${dir.path} could not be checked for LumaPlay: ${scanError(err)}`);
       }
-      const { games, appidRoot } = await scanWatchedFolder(dir.path, source);
+      const { games, appidRoot } = await scanWatchedFolder(dir.path, source, kytyOptions);
       if (appidRoot) additionalSearch.push(dir.path);
       data = data.concat(games.filter((g) => g.data?.type !== 'ps4recomp' || !data.some((known) => known.appid === g.appid)));
     }
@@ -3491,8 +3493,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // to whichever record happened to win the merge.
     const perSource = [];
     for (const record of Array.isArray(appid._sources) && appid._sources.length > 0 ? appid._sources : [appid]) {
-      // shadPS4 0.19 keeps the unlocks apart from the trophy folder, in one file per user.
-      for (const p of [resolveAchievementDataPath(record?.data), resolveAchievementDataPath({ path: record?.data?.statePath })]) {
+      // shadPS4 0.19 keeps the unlocks apart from the trophy folder, in one file per user, and a
+      // recompiled Xbox 360 game can keep one list per profile.
+      for (const p of achievementDataPaths(record?.data)) {
         if (p && !perSource.some((s) => s.path.toLowerCase() === p.toLowerCase())) {
           perSource.push({ source: record?.source || appid.source || '', path: p });
         }

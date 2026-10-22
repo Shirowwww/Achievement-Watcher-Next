@@ -80,3 +80,46 @@ console.log('PASS: the XLiveLessNess SPAFILE reader decodes a title and refuses 
   assert.strictEqual(spa.pickLanguage(regional, 'turkish'), 1, 'a language the game does not ship falls back to English');
   console.log('PASS: regional language variants read the table the console ships');
 }
+
+// The XLAST source (XSRC) and stats (XVC2) sections are optional: one that points past the end of the
+// file is skipped and logged, while a bad achievement, string, title or image entry still rejects the SPA.
+{
+  const { xstr } = require(path.join(__dirname, '..', 'helpers', 'xlln.js'));
+  const XSRC = 0x58535243;
+  const XVC2 = 0x58564332;
+  const base = [
+    { namespace: 1, id: 1, data: xthd(SAMPLE_TITLE_ID) },
+    { namespace: 1, id: 2, data: xach([{ id: 1, titleStringId: 10, unlockedDescriptionId: 11, lockedDescriptionId: 12, imageId: 100, gamerscore: 5, flags: 0x8 }]) },
+    { namespace: 3, id: 1, data: xstr(new Map([[0x8000, 'Game'], [10, 'One']])) },
+    { namespace: 2, id: 100, data: PNG },
+  ];
+  // The entry at `index` claims 0x7000000 bytes, far past the end of the buffer.
+  const withBrokenEntry = (extra, index) => {
+    const buffer = xdbf([...base, ...extra]);
+    buffer.writeUInt32BE(0x7000000, 24 + index * 18 + 14);
+    return buffer;
+  };
+  const optional = (id) => ({ namespace: 1, id, data: Buffer.from('optional data') });
+
+  const skipped = [];
+  const onSkip = (message) => skipped.push(message);
+  const noXsrc = spa.parseSpa(withBrokenEntry([optional(XSRC), optional(XVC2)], base.length), { onSkip });
+  assert.strictEqual(noXsrc.achievements.length, 1, 'the achievements survive a broken optional section');
+  assert.strictEqual(skipped.length, 1, 'only the entry that is out of range is reported');
+  assert.match(skipped[0], /XSRC/);
+
+  const noXvc2 = spa.parseSpa(withBrokenEntry([optional(XSRC), optional(XVC2)], base.length + 1), { onSkip });
+  assert.strictEqual(noXvc2.stringsByLanguage.size, 1);
+  assert.match(skipped[1], /XVC2/);
+  assert.doesNotThrow(() => spa.parseSpa(withBrokenEntry([optional(XVC2)], base.length)), 'logging is optional');
+
+  // Every other section stays strict.
+  assert.throws(() => spa.parseSpa(withBrokenEntry([], 1)), /outside the buffer/, 'the achievement table');
+  assert.throws(() => spa.parseSpa(withBrokenEntry([], 2)), /outside the buffer/, 'a string table');
+  assert.throws(() => spa.parseSpa(withBrokenEntry([], 0)), /outside the buffer/, 'the title header');
+  assert.throws(() => spa.parseSpa(withBrokenEntry([], 3)), /outside the buffer/, 'an image');
+  assert.throws(() => spa.parseSpa(withBrokenEntry([optional(0x1234)], base.length)), /outside the buffer/, 'an unknown metadata entry');
+  assert.throws(() => spa.parseSpa(withBrokenEntry([{ namespace: 3, id: XSRC, data: Buffer.from('x') }], base.length)), /outside the buffer/, 'the id only counts in the metadata namespace');
+
+  console.log('PASS: a broken optional XSRC or XVC2 section is skipped, any other broken section still rejects');
+}

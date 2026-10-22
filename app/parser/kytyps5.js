@@ -397,8 +397,57 @@ function addArchiveGame(games, file) {
   if (titleId && !games.has(titleId)) games.set(titleId, { gameDir: file, param, archive: true });
 }
 
+function isInside(parent, child) {
+  const relative = path.relative(pathKey(parent), pathKey(child));
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+/*
+  The install roots of other sources (PS4 recomp, Xbox 360 recomp, PC ports) that no game search may
+  enter, from options.excludedRoots or options.getExcludedRoots(). One that holds the emulator
+  folder itself is dropped, so a neighbour wrongly detected around it cannot hide the emulator.
+*/
+function excludedFor(root, options = {}) {
+  const given = typeof options.getExcludedRoots === 'function' ? options.getExcludedRoots() : options.excludedRoots;
+  return (Array.isArray(given) ? given : []).filter((dir) => typeof dir === 'string' && path.isAbsolute(dir) && !isInside(dir, root));
+}
+
+// How each other source finds the install folders under a watched folder (cheap: a folder walk and
+// a few small list headers, no schema and no network).
+// Required lazily: those parsers are only needed once an emulator folder is there.
+const OTHER_SOURCE_FINDERS = [
+  ['x360Recomp.js', (source, dir) => source.discover(dir).map((target) => target.gameDir)],
+  ['ps4Recomp.js', (source, dir) => source.findInstallations(dir).map((install) => install.root)],
+  ['pcports.js', (source, dir) => [(source.discover(dir) || {}).root]],
+];
+
+// The install folders of the recompiled and ported games under the watched folders: no PS5 game lives in them.
+function otherSourceRoots(folders) {
+  const roots = new Set();
+  for (const [file, find] of OTHER_SOURCE_FINDERS) {
+    try {
+      const source = require(path.join(__dirname, file));
+      for (const dir of folders) for (const root of find(source, dir)) if (root) roots.add(path.resolve(root));
+    } catch (err) {
+      debug.warn(`[kytyps5] cannot list the installs of ${file}: ${err}`);
+    }
+  }
+  return [...roots];
+}
+
+// Scan options that look the excluded roots up once, and only if an emulator folder needs them.
+function excludingOtherSources(getFolders) {
+  let roots = null;
+  return {
+    getExcludedRoots: () => {
+      if (!roots) roots = otherSourceRoots(getFolders());
+      return roots;
+    },
+  };
+}
+
 // The launcher's own walk: a folder holding eboot.bin, or a .zar holding one, is a game and is not searched further.
-function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH) {
+function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH, excluded = []) {
   const games = new Map();
   const pending = gameDirs.map((dir) => ({ dir, depth: 0 }));
   let visited = 0;
@@ -406,6 +455,7 @@ function findGames(gameDirs, maxDepth = MAX_GAME_DEPTH) {
   while (visited < pending.length && visited < MAX_GAME_DIRECTORIES) {
     const { dir, depth } = pending[visited];
     visited++;
+    if (excluded.some((other) => isInside(other, dir))) continue;
     if (isFile(path.join(dir, 'eboot.bin'))) {
       const param = readParam(dir);
       const titleId = titleIdOf(param);
@@ -535,12 +585,13 @@ function titleRecord(record, game) {
   before its first unlock, when _Trophies does not exist yet. A title with unlocks but never seen
   with its game is left out: its unlock file alone names no trophy, and bare numbers are worse.
 */
-function discover(dir) {
+function discover(dir, options = {}) {
   const root = emulatorRoot(dir);
   if (!root) return [];
-  const games = findGames(configuredGameDirs(root));
+  const excluded = excludedFor(root, options);
+  const games = findGames(configuredGameDirs(root), MAX_GAME_DEPTH, excluded);
   // Games unpacked beside the emulator, for a launcher that was never given a game folder.
-  for (const [titleId, game] of findGames([root], NEARBY_GAME_DEPTH)) if (!games.has(titleId)) games.set(titleId, game);
+  for (const [titleId, game] of findGames([root], NEARBY_GAME_DEPTH, excluded)) if (!games.has(titleId)) games.set(titleId, game);
   const records = new Map();
   for (const title of titleFolders(root)) records.set(title.titleId, { titleId: title.titleId, root, path: title.dir });
   for (const titleId of games.keys()) {
@@ -550,8 +601,8 @@ function discover(dir) {
   return [...records.values()].map((record) => titleRecord(record, games.get(record.titleId))).filter(Boolean);
 }
 
-function scan(dir) {
-  return discover(dir).map((title) => ({
+function scan(dir, options = {}) {
+  return discover(dir, options).map((title) => ({
     appid: title.titleId,
     source: SOURCE,
     data: { type: 'kytyps5', ...title, trustedInstalled: title.installed },
@@ -827,6 +878,8 @@ module.exports.UNLOCKS_FILE = UNLOCKS_FILE;
 module.exports.emulatorRoot = emulatorRoot;
 module.exports.discover = discover;
 module.exports.scan = scan;
+module.exports.otherSourceRoots = otherSourceRoots;
+module.exports.excludingOtherSources = excludingOtherSources;
 module.exports.getGameData = getGameData;
 module.exports.getAchievements = getAchievements;
 module.exports.iconDirFor = iconDirFor;

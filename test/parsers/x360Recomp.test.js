@@ -127,6 +127,57 @@ test('unlocks are merged across TSV profiles, keeping the earliest time', (t) =>
   assert.deepEqual(x360.getAchievements({ format: 'toml', file: path.join(dir, 'missing.toml') }), [], 'no list yet is a 0% game');
 });
 
+test('profiles/<name>/achievements/<TITLEID>.toml lists merge into one game, at the earliest time', (t) => {
+  const library = tempDir(t);
+  const game = path.join(library, 'Some Game');
+  write(path.join(game, 'some.exe'), '');
+  const alice = write(path.join(game, 'profiles', 'alice', 'achievements', `${TITLE}.toml`), `[unlocked.1]\nfiletime = 0\n\n[unlocked.2]\nfiletime = ${FILETIME}\n`);
+  const bob = write(path.join(game, 'profiles', 'bob', 'achievements', `${TITLE}.toml`), rexToml([1]));
+  const found = x360.scan(library);
+  assert.equal(found.length, 1);
+  assert.deepEqual([...found[0].data.profileFiles].sort(), [alice, bob].sort());
+  assert.deepEqual(
+    x360.getAchievements(found[0].data).map((a) => [a.id, a.earned_time]),
+    [['1', FILETIME_UNIX], ['2', FILETIME_UNIX]]
+  );
+});
+
+test('a title found in a watched folder and in Documents reads both lists', (t) => {
+  const library = tempDir(t);
+  const docs = tempDir(t);
+  write(path.join(library, 'Game', 'game.exe'), '');
+  write(path.join(library, 'Game', 'achievements', `${TITLE}.toml`), rexToml([1]));
+  write(path.join(docs, 'game', 'achievements', `${TITLE}.toml`), rexToml([2]));
+  const [kept] = x360.scan(library);
+  const [found] = x360.scan(docs);
+  const { records, changed } = x360.mergeRecords([kept], [found]);
+  assert.equal(changed, 1);
+  assert.deepEqual(x360.getAchievements(records[0].data).map((a) => a.id).sort(), ['1', '2']);
+  assert.equal(x360.mergeRecords(records, [found]).changed, 0, 'a second pass changes nothing');
+});
+
+test("one oversized profile list does not hide the other profiles' unlocks", (t) => {
+  const game = tempDir(t);
+  const alice = write(path.join(game, 'profiles', 'alice', 'achievements', `${TITLE}.toml`), rexToml([1]));
+  const bob = write(path.join(game, 'profiles', 'bob', 'achievements', `${TITLE}.toml`), `# ${'x'.repeat(2 * 1024 * 1024)}\n`);
+  const only = x360.getAchievements({ format: 'toml', file: alice, profileFiles: [alice, bob] });
+  assert.deepEqual(only.map((a) => a.id), ['1']);
+  assert.throws(() => x360.getAchievements({ format: 'toml', file: bob }), /too large/, 'a lone unreadable list still fails');
+});
+
+test('profiles/<name>/achievements.json lists merge into one game, and a bare JSON elsewhere is not read', (t) => {
+  const library = tempDir(t);
+  const list = (flags) => JSON.stringify({ achievements: flags.map((unlocked, i) => ({ id: i + 1, name: `n${i + 1}`, unlocked })) });
+  const alice = write(path.join(library, 'Game', 'profiles', 'alice', 'achievements.json'), list([true, false, false]));
+  const bob = write(path.join(library, 'Game', 'profiles', 'bob', 'achievements.json'), list([false, false, true]));
+  write(path.join(library, 'Loose', 'achievements.json'), list([true]));
+  write(path.join(library, 'Game', 'profiles', 'carol', 'achievements.json'), '{"achievements": [');
+  const found = x360.scan(library);
+  assert.deepEqual(found.map((g) => g.appid), ['x360-game']);
+  assert.deepEqual([...found[0].data.profileFiles].sort(), [alice, bob].sort());
+  assert.deepEqual(x360.getAchievements(found[0].data).map((a) => a.id), ['1', '3']);
+});
+
 test('the schema comes from dbox.tools in the chosen language, with icons only where ids line up', async (t) => {
   const root = tempDir(t);
   x360.setDataRoot(root);
@@ -358,4 +409,194 @@ test('a PC game that keeps a file of the same name is not taken for an Xbox 360 
   write(path.join(library, 'Other Game', 'SaveData', 'Achievements.json'), JSON.stringify({ achievements: [{ id: 'ACH_WIN', achieved: true }] }));
   write(path.join(library, 'Mod', 'achievements', 'ABCDEF01', 'readme.tsv'), 'name\tvalue\nfoo\t1\n');
   assert.deepEqual(x360.scan(library), []);
+});
+
+const jsonList = (flags) => JSON.stringify({ achievements: flags.map((unlocked, i) => ({ id: i + 1, name: `n${i + 1}`, unlocked })) });
+
+test('a library whose root holds a launcher lists each game apart and never claims itself', (t) => {
+  const library = tempDir(t);
+  write(path.join(library, 'launcher.exe'), 'MZ');
+  write(path.join(library, 'GameA', 'Data', 'SaveData', 'Achievements.json'), jsonList([true, false]));
+  write(path.join(library, 'GameB', 'Data', 'SaveData', 'Achievements.json'), jsonList([false, true]));
+  const games = x360.scan(library);
+  assert.deepEqual(games.map((g) => g.appid).sort(), ['x360-gamea', 'x360-gameb']);
+  assert.ok(games.every((g) => !g.data.gameDir && !g.data.exe), "the launcher is no game's executable");
+
+  // One game beside another program's folder is still a library.
+  const mixed = tempDir(t);
+  write(path.join(mixed, 'launcher.exe'), 'MZ');
+  write(path.join(mixed, 'GameA', 'Data', 'SaveData', 'Achievements.json'), jsonList([true]));
+  write(path.join(mixed, 'PC Game', 'pc.exe'), 'MZ');
+  const [only] = x360.scan(mixed);
+  assert.equal(only.appid, 'x360-gamea');
+  assert.equal(only.data.gameDir, undefined);
+});
+
+test('a list beside profiles/<name> lists of the same title is one game reading both', (t) => {
+  const docs = tempDir(t);
+  const main = write(path.join(docs, 'pdz', 'achievements', `${TITLE}.toml`), rexToml([1]));
+  const second = write(path.join(docs, 'pdz', 'profiles', 'p2', 'achievements', `${TITLE}.toml`), rexToml([7]));
+  const games = x360.scanDocuments([docs]);
+  assert.equal(games.length, 1);
+  assert.deepEqual([...games[0].data.profileFiles].sort(), [main, second].sort());
+  assert.deepEqual(x360.getAchievements(games[0].data).map((a) => a.id), ['1', '7']);
+});
+
+test('a TSV profile that vanished or names another title is skipped, the others still count', (t) => {
+  const dir = path.join(tempDir(t), 'Achievements', '415608B2');
+  write(path.join(dir, 'a.tsv'), `T\t415608B2\tA\n55\t${FILETIME}\n`);
+  write(path.join(dir, 'other.tsv'), `T\t454108CF\tB\n77\t${FILETIME}\n`);
+  const gone = { name: 'gone.tsv', isFile: () => true, isDirectory: () => false };
+  x360.setDirectoryReader((d) => [...fs.readdirSync(d, { withFileTypes: true }), ...(d === dir ? [gone] : [])]);
+  t.after(() => x360.setDirectoryReader(null));
+  assert.deepEqual(x360.getAchievements({ format: 'tsv', dir }).map((a) => a.id), ['55']);
+});
+
+test('a JSON entry counts only with a whole-number id', (t) => {
+  const entries = [{ id: '', unlocked: true }, { id: true, unlocked: true }, { id: null, unlocked: true }, { id: 1.5, unlocked: true }, { id: '7', unlocked: true }, { id: 8, unlocked: false }];
+  assert.deepEqual(x360.parseJson(Buffer.from(JSON.stringify({ achievements: entries }))).map((e) => e.id), [7, 8]);
+  const library = tempDir(t);
+  write(path.join(library, 'Odd', 'SaveData', 'Achievements.json'), JSON.stringify({ achievements: [{ id: '', unlocked: true }] }));
+  assert.deepEqual(x360.scan(library), [], 'an empty id is not an Xbox 360 list');
+});
+
+test('a Xenia dump is neither an install nor remembered', (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => x360.setDataRoot(''));
+  write(path.join(root, 'Xenia', 'xenia_canary.exe'), 'MZ');
+  write(path.join(root, 'Xenia', 'games', 'Sample', 'default.xex'), buildXex({ spa: gameSpa(0x454108cf), titleId: 0x454108cf }));
+  write(path.join(root, 'Docs', 'sample_game', 'achievements', `${TITLE}.toml`), rexToml([1]));
+  x360.scan(path.join(root, 'Xenia', 'games'));
+  x360.scan(root);
+  const index = path.join(root, 'data', 'steam_cache', 'x360recomp', 'xex-index.json');
+  assert.equal(fs.existsSync(index) && TITLE in JSON.parse(fs.readFileSync(index, 'utf8')), false);
+  assert.equal(x360.scanDocuments([path.join(root, 'Docs')])[0].data.gameDir, undefined, 'the emulator is not the game');
+});
+
+test("a game's executable is read once per change, and the index once per scan", (t) => {
+  const xex = require('../../app/parser/xex.js');
+  const realRead = xex.readTitleId;
+  const realReadFile = fs.readFileSync;
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  let reads = 0;
+  let indexReads = 0;
+  xex.readTitleId = (file) => {
+    reads += 1;
+    return realRead(file);
+  };
+  t.after(() => {
+    x360.setDataRoot('');
+    xex.readTitleId = realRead;
+    fs.readFileSync = realReadFile;
+  });
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  const file = write(path.join(game, 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  for (const id of ['11111111', '22222222', '33333333']) write(path.join(root, 'Games', `Other ${id}`, 'achievements', `${id}.toml`), rexToml([1]));
+  x360.scan(path.join(root, 'Games'));
+  x360.scan(path.join(root, 'Games'));
+  assert.equal(reads, 1, 'an unchanged default.xex is not read again');
+  fs.utimesSync(file, new Date(), new Date(Date.now() + 60000));
+  fs.readFileSync = function (target, ...rest) {
+    if (String(target).endsWith('xex-index.json')) indexReads += 1;
+    return realReadFile.call(fs, target, ...rest);
+  };
+  x360.scan(path.join(root, 'Games'));
+  assert.equal(reads, 2, 'a changed one is');
+  assert.equal(indexReads, 1, 'four lists, one read of the index');
+});
+
+test('a cached SPA that no longer reads is extracted again from the executable', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => x360.setDataRoot(''));
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'assets', 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = x360.scan(path.join(root, 'Games'));
+  write(path.join(root, 'data', 'steam_cache', 'x360recomp', '415608B2.spa'), 'not a spa');
+  const host = fakeFetch([dboxEntry(1), dboxEntry(2)]);
+  await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  const again = await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(again.achievement.list[0].displayName, 'Bridge');
+});
+
+test('an icon write cut short leaves no picture behind to be kept', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  const realWrite = fs.writeFileSync;
+  t.after(() => {
+    x360.setDataRoot('');
+    fs.writeFileSync = realWrite;
+  });
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = x360.scan(path.join(root, 'Games'));
+  fs.writeFileSync = function (file, data, ...rest) {
+    if (String(file).endsWith(`${path.sep}7.png`)) {
+      realWrite.call(fs, file, Buffer.from(data).subarray(0, 2));
+      throw new Error('disk full');
+    }
+    return realWrite.call(fs, file, data, ...rest);
+  };
+  await x360.getGameData(record.data, 'english', { fetchImpl: fakeFetch([], { fail: true }).fetchImpl });
+  fs.writeFileSync = realWrite;
+  const icon = path.join(root, 'data', 'icon_cache', 'x360recomp', '415608B2', '7.png');
+  assert.ok(!fs.existsSync(icon) || fs.readFileSync(icon).equals(PNG), 'no truncated picture');
+});
+
+test('an identification cut short by failed list requests is asked again later', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => x360.setDataRoot(''));
+  const entries = [1, 2, 3, 4, 5].map((id) => ({ id, name: `Local ${id}`, gamerscore: 10, unlocked: false }));
+  const file = write(path.join(root, 'Hollow Build', 'SaveData', 'Achievements.json'), JSON.stringify({ achievements: entries }));
+  const fetchImpl = async (url) => {
+    if (url.includes('/title_ids/?name=')) return { ok: true, status: 200, json: async () => ({ items: [{ title_id: 'AAAA0001' }] }) };
+    if (url.includes('/achievements/v1/')) return { ok: false, status: 503, json: async () => ({}) };
+    throw new Error('offline');
+  };
+  await x360.getGameData({ format: 'json', file, folder: 'Hollow Build' }, 'english', { fetchImpl });
+  assert.equal(fs.existsSync(path.join(root, 'data', 'steam_cache', 'x360recomp', 'identity-hollow-build.json')), false);
+});
+
+test('a marketplace name lost to a failed request is asked again, a missing product is not', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => x360.setDataRoot(''));
+  for (const file of ['boxartlg.jpg', 'background.jpg', 'tile.png']) write(path.join(root, 'data', 'icon_cache', 'x360recomp', TITLE, 'art', file), 'img');
+  const cache = path.join(root, 'data', 'steam_cache', 'x360recomp', `title-${TITLE}.json`);
+  const hostAnswering = (status) => async (url) => {
+    if (url.includes('/achievements/v1/')) return { ok: true, status: 200, json: async () => [dboxEntry(1)] };
+    if (url.includes('/marketplace/products/')) return { ok: false, status, json: async () => ({}) };
+    if (url.includes('/title_ids/')) return { ok: true, status: 200, json: async () => ({ name: 'Sample Title' }) };
+    throw new Error('offline');
+  };
+  await x360.getGameData({ format: 'toml', titleId: TITLE }, 'english', { fetchImpl: hostAnswering(503) });
+  assert.equal(fs.existsSync(cache), false, 'a failed request is not an answer');
+  await x360.getGameData({ format: 'toml', titleId: TITLE }, 'english', { fetchImpl: hostAnswering(404) });
+  assert.deepEqual(JSON.parse(fs.readFileSync(cache, 'utf8')), { name: 'Sample Title', marketName: '' });
+});
+
+test('a walk cut short by its folder limit says so', (t) => {
+  const root = tempDir(t);
+  const folder = (name) => ({ name, isFile: () => false, isDirectory: () => true });
+  x360.setDirectoryReader(() => Array.from({ length: 10 }, (_, i) => folder(`d${i}`)));
+  const warnings = [];
+  const realWarn = console.warn;
+  console.warn = (line) => warnings.push(String(line));
+  x360.initDebug({ isDev: true, userDataPath: root });
+  t.after(() => {
+    console.warn = realWarn;
+    x360.setDirectoryReader(null);
+    x360.initDebug({ isDev: false, userDataPath: root });
+  });
+  x360.discover(root);
+  assert.ok(warnings.some((line) => line.includes('3000')), warnings.join('\n'));
 });

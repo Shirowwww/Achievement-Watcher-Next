@@ -210,3 +210,186 @@ test("Unleashed's ACH-DATA is read only when its size, header and checksum hold"
   assert.throws(() => x360.parseUnleashed(build([record(24, when), record(0, 0), record(25, when)])), /record/);
   assert.throws(() => x360.parseUnleashed(build([record(24, when), record(24, when)])), /record/);
 });
+
+const EARNED_HEADER = '# Achievements earned: id=unix time\n';
+const WHEN = Date.UTC(2026, 0, 2) / 1000;
+
+test('Lost Odyssey waits on profile/achievements.ini and finds its game data through game-path.txt', (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'Lost Odyssey', ['LostOdysseyRecomp.exe']);
+  let [game] = only(x360.scan(folders.library), 'x360-4D5307FA');
+  assert.equal(game.data.format, 'ini-earned');
+  assert.equal(game.data.file, path.join(dir, 'profile', 'achievements.ini'));
+  assert.equal(game.data.pending, true);
+  assert.equal(game.data.xex, undefined, 'no game data yet');
+  assert.deepEqual(x360.getAchievements(game.data), []);
+
+  const outside = path.join(path.dirname(folders.library), 'LO game');
+  write(path.join(outside, 'disc1', 'default.xex'), xexOf('4D5307FA'));
+  write(path.join(dir, 'game-path.txt'), `${outside}\r\n`);
+  [game] = only(x360.scan(folders.library), 'x360-4D5307FA');
+  assert.equal(game.data.xex, path.join(outside, 'disc1', 'default.xex'));
+
+  write(path.join(dir, 'game-path.txt'), path.join(outside, 'disc1', 'default.xex'));
+  [game] = only(x360.scan(folders.library), 'x360-4D5307FA');
+  assert.equal(game.data.xex, path.join(outside, 'disc1', 'default.xex'), 'the pointer may name the file itself');
+
+  write(path.join(dir, 'game-path.txt'), path.join(outside, 'missing'));
+  write(path.join(dir, 'game', 'disc1', 'default.xex'), xexOf('4D5307FA'));
+  [game] = only(x360.scan(folders.library), 'x360-4D5307FA');
+  assert.equal(game.data.xex, path.join(dir, 'game', 'disc1', 'default.xex'), 'a pointer to nothing falls back to the importer folders');
+});
+
+test("Lost Odyssey's game data is refused when it is another title", (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'Lost Odyssey', ['lostodysseyrecomp.exe']);
+  write(path.join(dir, 'game', 'default.xex'), xexOf('5841089D'));
+  assert.deepEqual(only(x360.scan(folders.library), 'x360-4D5307FA'), []);
+});
+
+test('the earned list is read only with its header, whole lines and no repeated id', (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'Lost Odyssey', ['lostodysseyrecomp.exe']);
+  const file = write(path.join(dir, 'profile', 'achievements.ini'), `${EARNED_HEADER}3=${WHEN}\n7=${WHEN + 60}\n`);
+  const [game] = only(x360.scan(folders.library), 'x360-4D5307FA');
+  assert.equal(game.data.pending, false);
+  assert.deepEqual(x360.getAchievements(game.data).map((a) => [a.id, a.earned_time]), [['3', WHEN], ['7', WHEN + 60]]);
+
+  assert.throws(() => x360.parseEarnedIni(`3=${WHEN}\n`), /header/);
+  assert.throws(() => x360.parseEarnedIni(`${EARNED_HEADER}3=${WHEN}\n7=\n`), /entry/);
+  assert.throws(() => x360.parseEarnedIni(`${EARNED_HEADER}3=${WHEN}\n3=${WHEN}\n`), /repeated/);
+  assert.equal(x360.parseEarnedIni(`${EARNED_HEADER}3=12\n`).get(3), 0, 'a time that is not a real date is no date');
+  fs.writeFileSync(file, 'half');
+  assert.throws(() => x360.getAchievements(game.data), /header/, 'a damaged list is refused, not read as empty');
+});
+
+test('Lost Odyssey merges profiles/<name>/achievements.ini with the main list, and the extension alone is no port', (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'Lost Odyssey', ['lostodysseyrecomp.exe']);
+  write(path.join(dir, 'profile', 'achievements.ini'), `${EARNED_HEADER}3=${WHEN + 5}\n`);
+  write(path.join(dir, 'profiles', 'alice', 'achievements.ini'), `${EARNED_HEADER}3=${WHEN}\n9=${WHEN}\n`);
+  const [game] = only(x360.scan(folders.library), 'x360-4D5307FA');
+  assert.equal(game.data.profileFiles.length, 2);
+  assert.deepEqual(x360.getAchievements(game.data).map((a) => [a.id, a.earned_time]), [['3', WHEN], ['9', WHEN]]);
+
+  write(path.join(folders.library, 'Other', 'profile', 'achievements.ini'), `${EARNED_HEADER}1=${WHEN}\n`);
+  assert.equal(x360.scan(path.join(folders.library, 'Other')).length, 0, 'no port descriptor, no game');
+});
+
+test('the user_data family keeps its folder beside the program, the others use Documents', (t) => {
+  const folders = setup(t);
+  const cases = [
+    ['SSF2T', 'ssf2t_hd_remix.exe', '584108A4', 'beside', 'user_data'],
+    ['GW2', 'geometry_wars_retro_evolved_2.exe', '584108FF', 'beside', 'user_data'],
+    ['HCU', 'hard_corps_uprising.exe', '58410A18', 'beside', 'user_data'],
+    ['SvR', 'svr2011.exe', '5451085D', 'beside', 'UserData'],
+    ['RR6', 'rr6_recomp.exe', '4E4D07D3', 'documents', 'rr6_recomp'],
+    ['Kong', 'king_kong.exe', '555307D3', 'documents', 'king_kong'],
+    ['Wet', 'wetrecomp.exe', '425307DB', 'documents', 'wetrecomp'],
+    ['PDZ', 'perfectdarkzerorecomp.exe', '4D5307D3', 'documents', 'perfectdarkzerorecomp'],
+  ];
+  const dirs = new Map(cases.map(([name, exe]) => [name, install(folders, name, [exe])]));
+  const games = x360.scan(folders.library);
+  for (const [name, , titleId, where, folder] of cases) {
+    const base = where === 'beside' ? dirs.get(name) : folders.documents;
+    const [game] = only(games, `x360-${titleId}`);
+    assert.equal(game.data.file, path.join(base, folder, 'achievements', `${titleId}.toml`), name);
+    assert.equal(game.data.pending, true, name);
+  }
+});
+
+test("WWE SvR 2011 ignores a launcher's save folder, and Perfect Dark Zero merges its local profiles", (t) => {
+  const folders = setup(t);
+  const svr = install(folders, 'SvR', ['svr2011.exe']);
+  write(path.join(svr, 'play.bat'), '"%~dp0svr2011.exe" --user_data_root "%~dp0elsewhere"\r\n');
+  const pdz = install(folders, 'PDZ', ['perfectdarkzerorecomp.exe']);
+  const main = path.join(folders.documents, 'perfectdarkzerorecomp', 'achievements', '4D5307D3.toml');
+  const second = path.join(folders.documents, 'perfectdarkzerorecomp', 'profiles', 'p2', 'achievements', '4D5307D3.toml');
+  write(main, `[unlocked.2]\nfiletime = ${FILETIME}\n`);
+  write(second, `[unlocked.5]\nfiletime = ${FILETIME}\n`);
+  const games = x360.scan(folders.library);
+  assert.equal(only(games, 'x360-5451085D')[0].data.file, path.join(svr, 'UserData', 'achievements', '5451085D.toml'));
+  const [game] = only(games, 'x360-4D5307D3');
+  assert.equal(game.data.gameDir, pdz);
+  assert.deepEqual(game.data.profileFiles, [main, second]);
+  assert.deepEqual(x360.getAchievements(game.data).map((a) => a.id), ['2', '5']);
+});
+
+test("Hard Corps: Uprising's achievement 0 is stored under the alias the runtime accepts", (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'HCU', ['hard_corps_uprising.exe']);
+  write(path.join(dir, 'user_data', 'achievements', '58410A18.toml'), `[unlocked.65536]\nfiletime = ${FILETIME}\n\n[unlocked.4]\nfiletime = ${FILETIME}\n`);
+  const [game] = only(x360.scan(folders.library), 'x360-58410A18');
+  assert.deepEqual(x360.getAchievements(game.data).map((a) => a.id), ['0', '4']);
+});
+
+test("Marathon Recompiled reads Sonic '06's 23-record file under AppData, or beside itself when portable", (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'Marathon', ['MarathonRecomp.exe']);
+  const row = (id, seconds) => {
+    const buffer = Buffer.alloc(16);
+    buffer.writeUInt16LE(id, 0);
+    buffer.writeBigInt64LE(BigInt(seconds), 2);
+    return buffer;
+  };
+  const body = Buffer.concat([row(3, WHEN), Buffer.alloc(16 * 22)]);
+  const head = Buffer.alloc(16);
+  head.write('ACH ', 0, 'ascii');
+  head.writeUInt32LE(1, 4);
+  head.writeUInt32LE(body.reduce((sum, byte) => sum ^ byte, 0), 8);
+  let [game] = only(x360.scan(folders.library), 'x360-534507D6');
+  assert.equal(game.data.file, path.join(folders.appData, 'MarathonRecomp', 'save', 'SonicNextAchievementData.bin'));
+  assert.deepEqual(x360.getAchievements(game.data), []);
+
+  write(game.data.file, Buffer.concat([head, body]));
+  [game] = only(x360.scan(folders.library), 'x360-534507D6');
+  assert.deepEqual(x360.getAchievements(game.data).map((a) => [a.id, a.earned_time]), [['3', WHEN]]);
+
+  write(path.join(dir, 'portable.txt'), '');
+  [game] = only(x360.scan(folders.library), 'x360-534507D6');
+  assert.equal(game.data.file, path.join(dir, 'save', 'SonicNextAchievementData.bin'));
+  assert.throws(() => x360.parseUnleashed(Buffer.concat([head, body])), /size/, 'the 50-record reader refuses a 23-record file');
+});
+
+test('the same port installed twice reads both lists as one game', (t) => {
+  const folders = setup(t);
+  const first = install(folders, 'Crackdown', ['crackdown.exe']);
+  const second = install(folders, 'Crackdown v2', ['crackdown.exe']);
+  const a = write(path.join(first, 'user_data', 'achievements', '4D5307DC.toml'), `[unlocked.1]\nfiletime = ${FILETIME}\n`);
+  const b = write(path.join(second, 'user_data', 'achievements', '4D5307DC.toml'), `[unlocked.5]\nfiletime = ${FILETIME}\n`);
+  const games = only(x360.scan(folders.library), 'x360-4D5307DC');
+  assert.equal(games.length, 1);
+  assert.deepEqual([...games[0].data.profileFiles].sort(), [a, b].sort());
+  assert.deepEqual(x360.getAchievements(games[0].data).map((entry) => entry.id), ['1', '5']);
+});
+
+test('a port that fails to resolve does not take the rest of the folder down', (t) => {
+  const folders = setup(t);
+  const dante = install(folders, "Dante's Inferno", ['dantes_inferno.exe']);
+  install(folders, 'LEGO', ['legodimensions.exe']);
+  const ports = require('../../app/parser/x360Ports.js');
+  const real = ports.resolvePort;
+  ports.resolvePort = (dir, ...rest) => {
+    if (dir === dante) throw new Error('broken install');
+    return real(dir, ...rest);
+  };
+  t.after(() => {
+    ports.resolvePort = real;
+  });
+  assert.deepEqual(x360.scan(folders.library).map((g) => g.appid), ['x360-5752084B']);
+});
+
+test("a port's own folders are read through the scan's directory reader", (t) => {
+  const folders = setup(t);
+  install(folders, 'PDZ', ['perfectdarkzerorecomp.exe']);
+  const profiles = path.join(folders.documents, 'perfectdarkzerorecomp', 'profiles');
+  write(path.join(profiles, 'p2', 'achievements', '4D5307D3.toml'), `[unlocked.5]\nfiletime = ${FILETIME}\n`);
+  const seen = [];
+  x360.setDirectoryReader((dir) => {
+    seen.push(dir);
+    return fs.readdirSync(dir, { withFileTypes: true });
+  });
+  t.after(() => x360.setDirectoryReader(null));
+  x360.scan(folders.library);
+  assert.ok(seen.includes(profiles), 'the memoised reader sees the profiles folder');
+});

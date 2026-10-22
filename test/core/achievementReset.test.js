@@ -345,6 +345,12 @@ test('a recompiled Xbox 360 game is reset in every one of its three shapes, and 
   achievementReset.restore('x360-5752084B', tomlResult.backupId);
   assert.equal(fs.existsSync(toml), true);
 
+  // Lost Odyssey's earned list and the Unleashed/Marathon records are unlock state only too.
+  for (const name of ['achievements.ini', 'ACH-DATA', 'SonicNextAchievementData.bin']) {
+    assert.equal(targets.resetActionFor(name, source), targets.ACTION.DELETE, name);
+  }
+  assert.equal(targets.resetActionFor('SYS-DATA', source), null, 'the game save beside it is never touched');
+
   // One .tsv per profile inside the title folder.
   const tsvDir = path.join(profile, 'eot', 'Achievements', '415608B2');
   write(path.join(tsvDir, 'B13E07DFF9AB6772.tsv'), 'EOTACH1\t415608B2\tB13E07DFF9AB6772\n55\t1\n');
@@ -364,6 +370,22 @@ test('a recompiled Xbox 360 game is reset in every one of its three shapes, and 
   const after = fs.readFileSync(json);
   assert.deepEqual([after[0], after[1]], [0xff, 0xfe], 'the byte-order mark the game wrote is kept');
   assert.deepEqual(x360.parseJson(after).map((entry) => [entry.name, entry.unlocked]), [['Зеленый', false], ['b', false]]);
+});
+
+test('a recompiled game kept in several profiles is reset in every one of them', (t) => {
+  const profile = tempProfile();
+  t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
+  const { achievementDataPaths } = require(path.join(appDir, 'util', 'achievementDataPath.js'));
+  const source = 'Xbox 360 Recomp';
+  const header = '# Achievements earned: id=unix time\n';
+  const main = write(path.join(profile, 'lo', 'profile', 'achievements.ini'), `${header}1=1600000000\n`);
+  const alice = write(path.join(profile, 'lo', 'profiles', 'alice', 'achievements.ini'), `${header}2=1600000000\n`);
+  const data = { type: 'x360recomp', format: 'ini-earned', path: main, file: main, profileFiles: [main, alice] };
+  const dataPaths = achievementDataPaths(data).map((p) => ({ source, path: p }));
+  const resetPlan = achievementReset.plan({ appid: 'x360-4D5307FA', source, dataPaths });
+  assert.deepEqual(resetPlan.files.map((file) => file.path).sort(), [main, alice].sort());
+  achievementReset.run(resetPlan);
+  assert.equal(fs.existsSync(main) || fs.existsSync(alice), false);
 });
 
 test('a JSON list that does not parse is left alone rather than rewritten', () => {

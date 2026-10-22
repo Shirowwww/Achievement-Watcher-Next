@@ -15,7 +15,9 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const xlln = require(path.join(__dirname, '..', '..', 'app', 'parser', 'xlln.js'));
-const { SAMPLE_TITLE_ID_HEX, makeGameFolder, unlockRecord, sampleSpa } = require(path.join(__dirname, '..', 'helpers', 'xlln.js'));
+const { SAMPLE_TITLE_ID_HEX, PNG, makeGameFolder, unlockRecord, sampleSpa, dlcSpa, writeDlcPack } = require(path.join(__dirname, '..', 'helpers', 'xlln.js'));
+
+const fileUrlToPath = (url) => url.slice('file:///'.length);
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-xlln-'));
 xlln.setIconRoot(path.join(temp, 'icons'));
@@ -136,6 +138,97 @@ process.env.LOCALAPPDATA = path.join(temp, 'LocalAppData');
     await assert.rejects(() => xlln.getGameData({ titleId: SAMPLE_TITLE_ID_HEX, exe: path.join(temp, 'absent.exe') }), /no readable achievement data/);
 
     console.log('PASS: XLiveLessNess games are read from their own install, and refused when it disagrees');
+  }
+
+  /*
+    DLC achievements: the runtime keeps one spa.bin per content pack under <storage>/dlc/<TITLE>/<pack>/Content.
+    A pack only adds ids the base game does not know, tagged as DLC, and a pack that cannot be trusted
+    (wrong title, no table, garbage, a symlink) costs the base list nothing.
+  */
+  {
+    const dlcGame = makeGameFolder(temp, 'Dlc Game', { unlocks: [unlockRecord(1, 1577836800), unlockRecord(3, 1600000000)] });
+    const dlcTarget = xlln.inspect(dlcGame);
+    const storage = path.join(dlcGame, 'XLiveLessNess');
+    const other = Buffer.concat([PNG, Buffer.from(' from the pack')]);
+    const record = (id, title, imageId) => ({ id, titleStringId: title, unlockedDescriptionId: title + 1, lockedDescriptionId: title + 2, imageId, gamerscore: 15, flags: 0x8 });
+    const packStrings = new Map([[0x8000, 'DLC Pack'], [10, 'Hijack'], [30, 'Dlc Three'], [31, 'You beat the DLC.'], [32, 'Beat the DLC.'], [40, 'Dlc Four'], [41, 'Four done.'], [42, 'Do four.']]);
+    const pack = dlcSpa({ achievements: [record(1, 10, 100), record(3, 30, 100), record(4, 40, 200)], strings: packStrings, images: [{ id: 100, data: other }] });
+
+    const before = await xlln.getGameData(dlcTarget, 'english');
+    assert.deepStrictEqual(before.achievement.list.map((entry) => entry.name), ['1', '2'], 'without a pack the list is the base game');
+
+    writeDlcPack(storage, SAMPLE_TITLE_ID_HEX, 'Pack1', pack);
+    const withDlc = await xlln.getGameData(dlcTarget, 'english');
+    assert.deepStrictEqual(withDlc.achievement.list.map((entry) => entry.name), ['1', '2', '3', '4'], 'a pack found later adds its unknown ids');
+    assert.strictEqual(withDlc.achievement.total, 4);
+    const [baseOne, , dlcThree, dlcFour] = withDlc.achievement.list;
+    assert.strictEqual(baseOne.displayName, 'First Steps', 'an id the base game knows keeps the base game text');
+    assert.strictEqual(baseOne.dlc, undefined, 'base achievements carry no DLC tag');
+    assert.strictEqual(dlcThree.displayName, 'Dlc Three');
+    assert.strictEqual(dlcThree.description, 'You beat the DLC.');
+    assert.strictEqual(dlcThree.dlc, true);
+    assert.strictEqual(dlcThree.category, 'DLC');
+    assert.strictEqual(dlcThree.gamerscore, 15);
+    assert.strictEqual(dlcThree.hidden, 0);
+    assert.notStrictEqual(dlcThree.icon, baseOne.icon, 'the pack icon does not overwrite the base icon that shares its image id');
+    assert.ok(fs.readFileSync(fileUrlToPath(dlcThree.icon)).equals(other));
+    assert.ok(fs.readFileSync(fileUrlToPath(baseOne.icon)).equals(PNG));
+    assert.strictEqual(dlcFour.icon, '', 'a DLC achievement whose icon the pack lacks has none');
+    assert.deepStrictEqual(xlln.getAchievements(dlcTarget).map((entry) => entry.id).sort(), ['1', '3'], 'DLC unlocks come from the same profile file');
+
+    // A pack changed in place is read again.
+    writeDlcPack(storage, SAMPLE_TITLE_ID_HEX, 'Pack1', dlcSpa({ achievements: [record(3, 30, 100), record(4, 40, 200), record(5, 50, 300)], strings: new Map([...packStrings, [50, 'Dlc Five']]) }));
+    const edited = await xlln.getGameData(dlcTarget, 'english');
+    assert.deepStrictEqual(edited.achievement.list.map((entry) => entry.name), ['1', '2', '3', '4', '5'], 'an edited pack is not served from the cache');
+
+    // Packs that cannot be trusted are left out, the base list and the good pack stand.
+    writeDlcPack(storage, SAMPLE_TITLE_ID_HEX, 'WrongTitle', dlcSpa({ titleId: 0x11111111, achievements: [record(7, 70, 400)], strings: new Map([[70, 'Wrong']]) }));
+    writeDlcPack(storage, SAMPLE_TITLE_ID_HEX, 'NoTable', dlcSpa({ strings: new Map([[0x8000, 'Content only']]) }));
+    writeDlcPack(storage, SAMPLE_TITLE_ID_HEX, 'Garbage', Buffer.from('this is not an XDBF container'));
+    writeDlcPack(storage, SAMPLE_TITLE_ID_HEX, 'Untitled', dlcSpa({ titleId: null, achievements: [record(8, 80, 500)], strings: new Map([[80, 'No header']]) }));
+    const trusted = await xlln.getGameData(dlcTarget, 'english');
+    assert.deepStrictEqual(trusted.achievement.list.map((entry) => entry.name), ['1', '2', '3', '4', '5', '8'], 'a wrong title, an empty pack and garbage add nothing; a pack with no title header is accepted');
+
+    // A link could point at any file on the disk: neither a linked pack folder nor a linked spa.bin counts.
+    const outside = path.join(temp, 'outside-pack');
+    writeDlcPack(outside, SAMPLE_TITLE_ID_HEX, 'Linked', dlcSpa({ achievements: [record(9, 90, 600)], strings: new Map([[90, 'Linked']]) }));
+    const outsidePack = path.join(outside, 'dlc', SAMPLE_TITLE_ID_HEX, 'Linked');
+    let linked = true;
+    try {
+      fs.symlinkSync(outsidePack, path.join(storage, 'dlc', SAMPLE_TITLE_ID_HEX, 'LinkedFolder'), 'junction');
+      const contentDir = path.join(storage, 'dlc', SAMPLE_TITLE_ID_HEX, 'LinkedFile', 'Content');
+      fs.mkdirSync(contentDir, { recursive: true });
+      fs.symlinkSync(path.join(outsidePack, 'Content', 'spa.bin'), path.join(contentDir, 'spa.bin'), 'file');
+    } catch {
+      linked = false; // creating links needs a privilege this machine may not grant
+    }
+    const afterLinks = await xlln.getGameData(dlcTarget, 'english');
+    assert.ok(!afterLinks.achievement.list.some((entry) => entry.name === '9'), linked ? 'linked packs are ignored' : 'no link was created here');
+  }
+
+  // The listing bounds: file count, size of one file, size of all of them.
+  {
+    const folder = makeGameFolder(temp, 'Bounded Game', { titleId: '77777777' });
+    const storage = path.join(folder, 'XLiveLessNess');
+    writeDlcPack(storage, '77777777', 'A', Buffer.alloc(60));
+    writeDlcPack(storage, '77777777', 'B', Buffer.alloc(200));
+    writeDlcPack(storage, '77777777', 'C', Buffer.alloc(60));
+    writeDlcPack(storage, '77777777', 'D', Buffer.alloc(30));
+    const names = (limits) => xlln.listDlcSpaFiles(folder, '77777777', limits).map((entry) => path.basename(path.dirname(path.dirname(entry.file))));
+    assert.deepStrictEqual(names({ maxFiles: 10, maxFileBytes: 100, maxTotalBytes: 1000 }), ['A', 'C', 'D'], 'a file over the size bound is skipped, the others stay');
+    assert.deepStrictEqual(names({ maxFiles: 10, maxFileBytes: 100, maxTotalBytes: 100 }), ['A', 'D'], 'a file that no longer fits the total is skipped');
+    assert.deepStrictEqual(names({ maxFiles: 2, maxFileBytes: 1000, maxTotalBytes: 1000 }), ['A', 'B'], 'the file count is capped');
+    assert.deepStrictEqual(xlln.listDlcSpaFiles(folder, 'not-a-title'), [], 'a malformed title id lists nothing');
+    assert.deepStrictEqual(xlln.listDlcSpaFiles(path.join(temp, 'nowhere'), '77777777'), [], 'no storage, no packs');
+
+    // A pack unpacked with other letter cases still loads in the game (Wine ignores case), so it is read.
+    const spelled = makeGameFolder(temp, 'Spelled Game', { titleId: 'ABCDEF12' });
+    const spelledFile = path.join(spelled, 'XLiveLessNess', 'DLC', 'abcdef12', 'Pack', 'content', 'SPA.BIN');
+    fs.mkdirSync(path.dirname(spelledFile), { recursive: true });
+    fs.writeFileSync(spelledFile, Buffer.alloc(40));
+    assert.deepStrictEqual(xlln.listDlcSpaFiles(spelled, 'ABCDEF12').map((entry) => entry.file), [spelledFile], 'the file is named as the disk spells it');
+    assert.deepStrictEqual(xlln.DLC_LIMITS, { maxFiles: 128, maxFileBytes: 64 * 1024 * 1024, maxTotalBytes: 128 * 1024 * 1024 });
+    console.log('PASS: DLC packs add their own achievements, tagged, and untrusted or oversized packs are left out');
   }
 })()
   .catch((err) => {

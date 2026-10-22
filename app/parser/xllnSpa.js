@@ -203,7 +203,19 @@ function extractSpa(source) {
   return extractSpaFromPe(buffer);
 }
 
-function parseXdbf(buffer) {
+// XLAST's source (XSRC) and stats (XVC2) sections: nothing here reads them, so a bad one costs nothing.
+const OPTIONAL_SECTIONS = new Map([
+  [0x58535243, 'XSRC'],
+  [0x58564332, 'XVC2'],
+]);
+
+function optionalSectionName(buffer, at, namespace) {
+  if (namespace !== NAMESPACE_METADATA || u32be(buffer, at + 2, 'XDBF id') !== 0) return '';
+  return OPTIONAL_SECTIONS.get(u32be(buffer, at + 6, 'XDBF id')) || '';
+}
+
+// `onSkip(message)` hears about an optional section that was left out; anything else out of range throws.
+function parseXdbf(buffer, { onSkip } = {}) {
   if (!Buffer.isBuffer(buffer) || buffer.length < HEADER_SIZE) throw new Error('XDBF container is too small');
   if (buffer.subarray(0, 4).toString('ascii') !== XDBF_MAGIC) throw new Error('invalid XDBF magic');
 
@@ -228,7 +240,14 @@ function parseXdbf(buffer) {
     const offset = dataOffset + u32be(buffer, at + 10, 'XDBF entry offset');
     const length = u32be(buffer, at + 14, 'XDBF entry length');
     if (!length) continue;
-    need(buffer, offset, length, 'XDBF entry data');
+    try {
+      need(buffer, offset, length, 'XDBF entry data');
+    } catch (err) {
+      const section = optionalSectionName(buffer, at, namespace);
+      if (!section) throw err;
+      if (typeof onSkip === 'function') onSkip(`optional ${section} section is outside the file - skipped`);
+      continue;
+    }
     entries.push({ namespace, id, data: buffer.subarray(offset, offset + length) });
   }
   return entries;
@@ -276,8 +295,8 @@ function magicOf(data) {
   return data.length >= 4 ? data.subarray(0, 4).toString('ascii') : '';
 }
 
-function parseSpa(spaBuffer) {
-  const entries = parseXdbf(spaBuffer);
+function parseSpa(spaBuffer, options) {
+  const entries = parseXdbf(spaBuffer, options);
 
   const xach = entries.find((entry) => entry.namespace === NAMESPACE_METADATA && entry.data.length >= 14 && magicOf(entry.data) === 'XACH');
   if (!xach) throw new Error('SPAFILE carries no achievement table');

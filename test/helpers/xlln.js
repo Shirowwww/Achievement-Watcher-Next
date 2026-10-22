@@ -229,7 +229,30 @@ function makeGameFolder(parent, name, { titleId = SAMPLE_TITLE_ID_HEX, runtime =
   return dir;
 }
 
+/*
+  A DLC pack's spa.bin, the XDBF the runtime keeps at <storage>/dlc/<TITLE>/<pack>/Content: its own
+  achievements, string table and icons. `titleId` null leaves the title header out.
+*/
+function dlcSpa({ titleId = SAMPLE_TITLE_ID, achievements = [], strings = new Map(), images = [] } = {}) {
+  const entries = [];
+  if (titleId !== null) entries.push({ namespace: 1, id: 1, data: xthd(titleId) });
+  if (achievements.length > 0) entries.push({ namespace: 1, id: 2, data: xach(achievements) });
+  entries.push({ namespace: 3, id: 1, data: xstr(strings) });
+  for (const image of images) entries.push({ namespace: 2, id: image.id, data: image.data });
+  return xdbf(entries);
+}
+
+function writeDlcPack(storageRoot, titleId, pack, content) {
+  const dir = path.join(storageRoot, 'dlc', titleId, pack, 'Content');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, 'spa.bin');
+  fs.writeFileSync(file, content);
+  return file;
+}
+
 module.exports = {
+  dlcSpa,
+  writeDlcPack,
   PNG,
   SAMPLE_TITLE_ID,
   SAMPLE_TITLE_ID_HEX,

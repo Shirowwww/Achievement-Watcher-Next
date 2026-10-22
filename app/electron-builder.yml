@@ -52,9 +52,18 @@ asarUnpack:
   - parser/pcports.js
   - parser/runeUplay.js
   - parser/x360Recomp.js
+  - parser/x360RecompState.js
+  - parser/x360RecompFormats.js
+  - parser/x360RecompDiscovery.js
+  - parser/x360RecompSchema.js
   - parser/ps4Recomp.js
   - parser/ps4RecompTrophies.js
   - parser/ps4RecompLogs.js
+  - parser/ps4RecompProgress.js
+  - parser/ps4RecompConfig.js
+  - parser/ps4RecompPackages.js
+  - parser/ps4RecompPyInstaller.js
+  - parser/ps4RecompSchema.js
   - parser/xex.js
   # Started as a worker thread or a forked process by xex.js, which cannot load it from the asar.
   - parser/xexWorker.js

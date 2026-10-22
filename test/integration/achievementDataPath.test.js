@@ -2,7 +2,25 @@
 
 const assert = require('assert');
 const test = require('node:test');
-const { resolveAchievementDataPath, isFilesystemPath } = require('../../app/util/achievementDataPath.js');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const { resolveAchievementDataPath, achievementDataPaths, isFilesystemPath } = require('../../app/util/achievementDataPath.js');
+
+test('a game kept in several profile files exposes every one of them that exists', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-datapaths-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const main = path.join(dir, 'profile', 'achievements.ini');
+  const alice = path.join(dir, 'profiles', 'alice', 'achievements.ini');
+  for (const file of [main, alice]) {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, '');
+  }
+  const missing = path.join(dir, 'profiles', 'bob', 'achievements.ini');
+  assert.deepStrictEqual(achievementDataPaths({ path: main, profileFiles: [main, alice, missing] }), [main, alice]);
+  assert.deepStrictEqual(achievementDataPaths({ path: main, statePath: alice }), [main, alice]);
+  assert.deepStrictEqual(achievementDataPaths({ type: 'greenluma', path: 'SOFTWARE/GreenLuma' }), []);
+});
 
 test('the folder an entry was parsed from is exposed for the context menu (issue #21)', () => {
   // Shapes recorded by the parsers: emulator save folders, trophy dirs, Ubisoft spool folders.

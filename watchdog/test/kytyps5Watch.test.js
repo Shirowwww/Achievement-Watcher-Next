@@ -232,3 +232,20 @@ test('an unlock file already present when the watcher takes over is caught up', 
   await waitFor(() => ctx.sent.length > 0);
   assert.deepEqual(ctx.sent.map((payload) => payload.achievementDisplayName), ['First Steps']);
 });
+
+test('a game inside an Xbox 360 recomp or PC port install is not taken for a PS5 game', () => {
+  const root = path.join(temp, 'neighbours');
+  const library = path.join(root, 'Library');
+  // A recompiled port is known by its executable; the PS5 game below it must not be listed.
+  fs.mkdirSync(path.join(library, 'Dantes'), { recursive: true });
+  fs.writeFileSync(path.join(library, 'Dantes', 'dantes_inferno.exe'), 'MZ');
+  makeGame(path.join(library, 'Dantes', 'misplaced'), { titleId: 'PPSA00701', folder: 'Inside' });
+  makeGame(path.join(library, 'PS5'), { titleId: 'PPSA00702', folder: 'Outside' });
+  const emulator = makeEmulator(root, { gameDirs: [library], unlocks: null });
+  const configFile = path.join(temp, 'neighbours.db');
+  fs.writeFileSync(configFile, JSON.stringify([{ path: emulator, enabled: true }, { path: library, enabled: true }]));
+
+  const [target] = discover(configFile);
+  assert.deepEqual(target.titles.map((title) => title.titleId), ['PPSA00702']);
+});
+

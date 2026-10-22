@@ -71,15 +71,19 @@ function watchedFolders(configFile = userDirFile) {
   }
 }
 
+// The other sources' install folders, looked up once per discovery pass and only when needed.
+let kytyOptions = kyty.excludingOtherSources(() => watchedFolders(userDirFile));
+
 // Each emulator folder below the user's folders once, with the titles it already has unlocks for.
 function discover(configFile = userDirFile) {
   const roots = new Map();
+  kytyOptions = kyty.excludingOtherSources(() => watchedFolders(configFile));
   for (const dir of watchedFolders(configFile)) {
     const root = kyty.emulatorRoot(dir);
     if (!root || roots.has(root.toLowerCase())) continue;
     let titles = [];
     try {
-      titles = kyty.discover(root);
+      titles = kyty.discover(root, kytyOptions);
     } catch (err) {
       debug.warn(`[kytyps5] discovery failed under "${root}": ${err}`);
     }
@@ -213,7 +217,7 @@ function titleFor(target, file) {
   const titleId = path.basename(path.dirname(file)).toUpperCase();
   const known = target.titles.find((title) => title.titleId === titleId);
   if (known) return known;
-  const found = kyty.discover(target.root).find((title) => title.titleId === titleId);
+  const found = kyty.discover(target.root, kytyOptions).find((title) => title.titleId === titleId);
   if (found) target.titles.push(found);
   return found || null;
 }

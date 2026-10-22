@@ -23,15 +23,43 @@ const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 
 const x360 = require(sharedAppModulePath('parser/x360Recomp.js'));
+const { isDirectory } = require(sharedAppModulePath('parser/x360Ports.js'));
 const { pathKey } = require(sharedAppModulePath('util/winHosts.js'));
 
 const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // Same schema and icon caches as the app, so whatever either side fetched serves both.
 x360.setDataRoot(userDataDir());
 
+/*
+  A game's list only appears with its first unlock, so a game never seen before has nothing to watch
+  at startup. The watched folders are followed for a new `achievements` path (one native recursive
+  watch per root, no polling) and discovery runs again when one shows up. Documents is only checked
+  every two minutes, and cheaply: it holds Windows' legacy junctions ("My Music"), whose EPERM on a
+  recursive watch killed the whole Watchdog in a restart loop. A slow full pass is the safety net. A
+  list found that way is new: its recent unlocks toast, anything older joins the baseline, since a
+  folder added later can hold years of history.
+*/
+const FALLBACK_REDISCOVER_MS = 10 * 60 * 1000;
+const DOCUMENTS_CHECK_MS = 2 * 60 * 1000;
+const NEW_LIST_SETTLE_MS = 3000;
+// Longer than the runtime's delete-then-rename, short enough to follow a reset.
+const LIST_GONE_MS = 1500;
+const RECENT_UNLOCK_S = 15 * 60;
+const DUPLICATE_UNLOCK_MS = 15000;
+// The lists themselves (achievements\<TITLEID>.toml, a TSV profile, the JSON, ACH-DATA, per-profile
+// lists) and the files whose arrival names a port's folders: reNut's renut.cfg, Lost Odyssey's
+// game-path.txt and friends. Anything else in an achievements folder is never read.
+const LIST_PATH_RE = /[\\/]achievements(?:[\\/][0-9a-f]{8}(?:\.toml|[\\/][^\\/]+\.tsv)?)?$|[\\/]savedata[\\/]achievements\.json$|[\\/]save[\\/](?:ach-data|sonicnextachievementdata\.bin)$|[\\/]profiles?[\\/](?:[^\\/]+[\\/])?achievements\.(?:ini|json)$|[\\/](?:renut\.cfg|game-path\.txt|saves\.path|gow2\.toml|gow2_game_path\.txt)$/i;
+
 let watchers = [];
 let lifecycle = 0; // bumped by stop(), so an in-flight rediscover() can tell it was cancelled
+let rediscoverTimer = null;
+let documentsTimer = null;
+let settleTimer = null;
 const changes = createChangeCoalescer();
+// appid -> { key, waiting, lists, watchers }: what is watched for it, whether its list is still
+// awaited, and the list folders it follows.
+const watched = new Map();
 
 function watchedFolders(configFile = userDirFile) {
   try {
@@ -68,7 +96,7 @@ function discover(configFile = userDirFile, documentsRoots = undefined) {
   return targets;
 }
 
-// The list files of a target: one, or one per re:Blue profile.
+// The list files of a target: one, or one per profile or install of the game.
 function listFiles(data) {
   if (Array.isArray(data.profileFiles) && data.profileFiles.length) return data.profileFiles;
   return data.file ? [data.file] : [];
@@ -88,14 +116,6 @@ function listSpecs(record) {
 }
 
 const watchSpec = (record) => listSpecs(record)[0];
-
-function isDirectory(dir) {
-  try {
-    return fs.statSync(dir).isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 // The nearest folder that exists on the way to `dir`, never above `stop`; '' when there is none.
 function nearestExisting(dir, stop) {
@@ -128,104 +148,111 @@ const watchKey = (specs) => specs.map((spec) => `${spec.waitingFor ? 'wait' : 'l
 const listExists = (data) => (data.format === 'tsv' ? isDirectory(data.dir || '') : listFiles(data).some((file) => fs.existsSync(file)));
 
 const baseline = createBaselineCache({ prefix: 'x360recomp', tag: 'x360recomp', debug });
-const cacheLoad = (key) => baseline.load(key);
-const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
+const { load: cacheLoad, save: cacheSave } = baseline;
 
 // The runtime writes a temp file then renames it, which can fire twice for one unlock.
 const recentUnlocks = new Map();
 function isDuplicateUnlock(appid, achievementId) {
   const key = `${appid}:${achievementId}`;
   const now = Date.now();
-  for (const [seen, at] of recentUnlocks) if (now - at > 15000) recentUnlocks.delete(seen);
+  for (const [seen, at] of recentUnlocks) if (now - at > DUPLICATE_UNLOCK_MS) recentUnlocks.delete(seen);
   const last = recentUnlocks.get(key);
   recentUnlocks.set(key, now);
-  return last != null && now - last < 15000;
+  return last != null && now - last < DUPLICATE_UNLOCK_MS;
+}
+
+/*
+  ReXGlue deletes the list before renaming its replacement in: read in between, it looks empty, and
+  that baseline would replay every unlock as new on the next write. Still gone a moment later, it
+  was removed on purpose (a reset): the baseline starts over, so re-earned ones toast. With several
+  profiles, the one whose list went is the one reset; the others still count. True when it was gone.
+*/
+async function settledGoneList(record, changedFile) {
+  const listFile = changedFile && record.data.format !== 'tsv' ? changedFile : record.data.file;
+  if (!listFile || fs.existsSync(listFile)) return false;
+  await new Promise((resolve) => setTimeout(resolve, LIST_GONE_MS));
+  if (!fs.existsSync(listFile)) cacheSave(record.appid, x360.getAchievements(record.data).map((entry) => entry.id));
+  return true;
+}
+
+function toastOptions(ctx, described) {
+  return {
+    notify: ctx.options.notification.notify,
+    transport: {
+      mode: ctx.options.notification_transport.mode,
+      websocket: ctx.options.notification_transport.websocket,
+    },
+    toast: {
+      appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
+      winrt: ctx.options.notification_transport.winRT,
+      balloonFallback: ctx.options.notification_transport.balloon,
+      customAudio: ctx.options.notification_toast.customToastAudio,
+      volume: notificationVolumePercent(ctx.options),
+      imageIntegration: '0',
+      group: ctx.options.notification_toast.groupToast,
+      attribution: described.gamerscore > 0 ? `${described.gamerscore} G` : notifyStrings.forLang(ctx.options.achievement.lang).achievement,
+    },
+    prefetch: false, // the icons are already local files
+    rumble: ctx.options.notification.rumble,
+  };
+}
+
+function unlockEvent(record, entry, described, game) {
+  const icon = iconPathOf(described);
+  return {
+    source: x360.SOURCE,
+    appid: record.appid,
+    gameDisplayName: game.name,
+    achievementName: String(entry.id),
+    achievementDisplayName: described.displayName,
+    achievementDescription: described.description,
+    icon: icon || undefined,
+    time: entry.earned_time || moment().unix(),
+    delay: game.delay,
+    completion: game.completion,
+  };
+}
+
+// Toasts the `fresh` unlocks; false when the game's list could not be loaded to describe them.
+async function announceUnlocks(record, fresh, unlocked, ctx) {
+  let schema = null;
+  try {
+    schema = await x360.getGameData(record.data, ctx.options.achievement.lang);
+  } catch (err) {
+    debug.warn(`[x360recomp] cannot load the achievement list of ${record.appid}: ${err}`);
+  }
+  if (!schema) return false;
+  const byId = new Map((schema.achievement ? schema.achievement.list : []).map((entry) => [String(entry.name), entry]));
+  const name = schema.name || record.appid;
+  const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
+  let delay = 0;
+  for (const entry of fresh) {
+    if (isDuplicateUnlock(record.appid, entry.id)) continue;
+    const described = byId.get(String(entry.id));
+    if (!described) {
+      debug.warn(`[x360recomp] ${name} unlocked achievement ${entry.id}, which its list does not describe`);
+      continue;
+    }
+    debug.log(`[x360recomp] Unlocked: ${name} - ${described.displayName}`);
+    await ctx.notify(unlockEvent(record, entry, described, { name, completion, delay }), toastOptions(ctx, described));
+    delay += 1;
+  }
+  return true;
 }
 
 async function handleChange(record, changedFile, ctx) {
   try {
     if (changedFile) await waitForFileStable(changedFile);
-    // ReXGlue deletes the list before renaming its replacement in: read in between, it looks empty,
-    // and that baseline would replay every unlock as new on the next write. Still gone a moment
-    // later, it was removed on purpose (a reset): the baseline starts over, so re-earned ones toast.
-    // With several profiles, the one whose list went is the one reset; the others still count.
-    const listFile = changedFile && record.data.format !== 'tsv' ? changedFile : record.data.file;
-    if (listFile && !fs.existsSync(listFile)) {
-      await new Promise((resolve) => setTimeout(resolve, LIST_GONE_MS));
-      if (!fs.existsSync(listFile)) cacheSave(record.appid, x360.getAchievements(record.data).map((entry) => entry.id));
-      return;
-    }
-
+    if (await settledGoneList(record, changedFile)) return;
     const unlocked = x360.getAchievements(record.data);
     const cache = cacheLoad(record.appid);
-    const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
-
     // First observation: record the baseline silently so a back-catalogue does not toast on launch.
-    if (!isFirstObservation) {
+    if (cache && Array.isArray(cache.unlocked)) {
       const previous = new Set(cache.unlocked.map(String));
       const fresh = unlocked.filter((entry) => !previous.has(String(entry.id)));
-      if (fresh.length > 0) {
-        let schema = null;
-        try {
-          schema = await x360.getGameData(record.data, ctx.options.achievement.lang);
-        } catch (err) {
-          debug.warn(`[x360recomp] cannot load the achievement list of ${record.appid}: ${err}`);
-        }
-        // Keep the old baseline so these unlocks are announced on the next write instead of lost.
-        if (!schema) return;
-        const byId = new Map((schema && schema.achievement ? schema.achievement.list : []).map((entry) => [String(entry.name), entry]));
-        const gameName = (schema && schema.name) || record.appid;
-        const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
-
-        let delay = 0;
-        for (const entry of fresh) {
-          if (isDuplicateUnlock(record.appid, entry.id)) continue;
-          const described = byId.get(String(entry.id));
-          if (!described) {
-            debug.warn(`[x360recomp] ${gameName} unlocked achievement ${entry.id}, which its list does not describe`);
-            continue;
-          }
-          debug.log(`[x360recomp] Unlocked: ${gameName} - ${described.displayName}`);
-          const icon = iconPathOf(described);
-          await ctx.notify(
-            {
-              source: x360.SOURCE,
-              appid: record.appid,
-              gameDisplayName: gameName,
-              achievementName: String(entry.id),
-              achievementDisplayName: described.displayName,
-              achievementDescription: described.description,
-              icon: icon || undefined,
-              time: entry.earned_time || moment().unix(),
-              delay,
-              completion,
-            },
-            {
-              notify: ctx.options.notification.notify,
-              transport: {
-                mode: ctx.options.notification_transport.mode,
-                websocket: ctx.options.notification_transport.websocket,
-              },
-              toast: {
-                appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-                winrt: ctx.options.notification_transport.winRT,
-                balloonFallback: ctx.options.notification_transport.balloon,
-                customAudio: ctx.options.notification_toast.customToastAudio,
-                volume: notificationVolumePercent(ctx.options),
-                imageIntegration: '0',
-                group: ctx.options.notification_toast.groupToast,
-                attribution:
-                  described.gamerscore > 0 ? `${described.gamerscore} G` : notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-              },
-              prefetch: false, // the icons are already local files
-              rumble: ctx.options.notification.rumble,
-            }
-          );
-          delay += 1;
-        }
-      }
+      // Keep the old baseline so these unlocks are announced on the next write instead of lost.
+      if (fresh.length > 0 && !(await announceUnlocks(record, fresh, unlocked, ctx))) return;
     }
-
     cacheSave(record.appid, unlocked.map((entry) => entry.id));
   } catch (err) {
     debug.warn(`[x360recomp] handleChange failed for ${record.appid}: ${err}`);
@@ -233,33 +260,20 @@ async function handleChange(record, changedFile, ctx) {
 }
 
 /*
-  A game's list only appears with its first unlock, so a game never seen before has nothing to watch
-  at startup. The watched folders are followed for a new `achievements` path (one native recursive
-  watch per root, no polling) and discovery runs again when one shows up. Documents is only checked
-  every two minutes, and cheaply: it holds Windows' legacy junctions ("My Music"), whose EPERM on a
-  recursive watch killed the whole Watchdog in a restart loop. A slow full pass is the safety net. A
-  list found that way is new: its recent unlocks toast, anything older joins the baseline, since a
-  folder added later can hold years of history.
+  The baseline a title starts from. Seen for the first time, it takes every unlock its lists hold.
+  With `keepRecent` (a list found after startup, a profile copied in later) only the older unlocks
+  join, an existing baseline included: the recent ones still toast, years-old ones never do.
 */
-const FALLBACK_REDISCOVER_MS = 10 * 60 * 1000;
-const DOCUMENTS_CHECK_MS = 2 * 60 * 1000;
-let documentsTimer = null;
-const NEW_LIST_SETTLE_MS = 3000;
-// Also Unleashed's save\ACH-DATA, and reNut's renut.cfg, whose arrival names the save folder.
-const LIST_PATH_RE = /[\\/]achievements(?:[\\/]|$)|[\\/]savedata[\\/]achievements\.json$|[\\/]save[\\/]ach-data$|[\\/]renut\.cfg$/i;
-// Longer than the runtime's delete-then-rename, short enough to follow a reset.
-const LIST_GONE_MS = 1500;
-const RECENT_UNLOCK_S = 15 * 60;
-let rediscoverTimer = null;
-// appid -> { key, waiting, watchers }: what is watched for it, and whether its list is still awaited.
-const watched = new Map();
-
 function seedBaseline(record, { keepRecent = false, now = Math.floor(Date.now() / 1000) } = {}) {
-  if (cacheLoad(record.appid)) return;
+  const cache = cacheLoad(record.appid);
+  if (cache && !keepRecent) return;
+  const known = cache && Array.isArray(cache.unlocked) ? cache.unlocked.map(String) : [];
   try {
     const unlocked = x360.getAchievements(record.data);
     const old = keepRecent ? unlocked.filter((entry) => !(entry.earned_time > now - RECENT_UNLOCK_S)) : unlocked;
-    cacheSave(record.appid, old.map((entry) => entry.id));
+    const ids = old.map((entry) => String(entry.id));
+    if (cache && ids.every((id) => known.includes(id))) return;
+    cacheSave(record.appid, [...new Set([...known, ...ids])]);
   } catch (err) {
     debug.warn(`[x360recomp] baseline seed failed for ${record.appid}: ${err}`);
   }
@@ -270,6 +284,20 @@ function scheduleRediscover(ctx) {
   clearTimeout(settleTimer);
   settleTimer = setTimeout(() => rediscover(ctx), NEW_LIST_SETTLE_MS);
   settleTimer.unref();
+}
+
+// A list a title is already watched for: its own watcher handles the change.
+function isWatchedList(file) {
+  const key = pathKey(file);
+  const parent = pathKey(path.dirname(file));
+  const name = path.basename(file);
+  return [...watched.values()].some((entry) => entry.lists.some((list) => list.key === key || (list.key === parent && list.matches(name))));
+}
+
+// Whether a change seen by the recursive watch over a root can reveal a list not watched yet.
+function wakesDiscovery(name) {
+  const file = String(name || '');
+  return LIST_PATH_RE.test(file) && !isWatchedList(file);
 }
 
 function onEvent(spec, record, ctx, evt, name) {
@@ -300,7 +328,8 @@ function openWatch(spec, record, ctx) {
 
 function attach(record, ctx) {
   const specs = watchSpecs(record);
-  const entry = { key: watchKey(specs), waiting: !specs.length || specs.some((spec) => spec.waitingFor), watchers: [] };
+  const lists = specs.filter((spec) => !spec.waitingFor).map((spec) => ({ key: pathKey(spec.dir), matches: spec.matches }));
+  const entry = { key: watchKey(specs), waiting: !specs.length || specs.some((spec) => spec.waitingFor), lists, watchers: [] };
   watched.set(record.appid, entry);
   if (!specs.length) debug.log(`[x360recomp] ${record.appid}: unlock source pending, nothing to watch until discovery finds where`);
   for (const spec of specs) {
@@ -309,24 +338,26 @@ function attach(record, ctx) {
   }
 }
 
+function closeWatcher(watcher) {
+  try {
+    watcher.close();
+  } catch {
+    /* already closed */
+  }
+}
+
 function detach(appid) {
   const entry = watched.get(appid);
   if (!entry) return;
-  for (const watcher of entry.watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
+  for (const watcher of entry.watchers) closeWatcher(watcher);
   watchers = watchers.filter((watcher) => !entry.watchers.includes(watcher));
   watched.delete(appid);
 }
 
 /*
   A full pass re-attaches a title whose watched folders changed (a list that appeared, a new
-  re:Blue profile); a partial one (Documents only) replaces only a title still waiting for its
-  list, so two sources of one title never take turns.
+  profile); a partial one (Documents only) replaces only a title still waiting for its list, so two
+  sources of one title never take turns.
 */
 async function rediscover(ctx, found = discover, { full = found === discover } = {}) {
   let targets;
@@ -347,6 +378,29 @@ async function rediscover(ctx, found = discover, { full = found === discover } =
     if (!listExists(record.data)) continue;
     seedBaseline(record, { keepRecent: true });
     await handleChange(record, '', ctx);
+  }
+}
+
+// The user's folders to follow for new games, each once, compared the way the platform compares paths.
+function watchRoots(configFile = userDirFile) {
+  const seen = new Set();
+  return watchedFolders(configFile).filter((dir) => {
+    const key = pathKey(dir);
+    if (seen.has(key) || !isDirectory(dir)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function watchForNewLists(ctx, configFile = userDirFile) {
+  for (const dir of watchRoots(configFile)) {
+    try {
+      const watcher = watch(longPath(dir), { recursive: true, filter: wakesDiscovery }, () => scheduleRediscover(ctx));
+      guardWatcher(watcher, `'${dir}'`, debug);
+      watchers.push(watcher);
+    } catch (err) {
+      debug.warn(`[x360recomp] cannot follow '${dir}' for new games: ${err}`);
+    }
   }
 }
 
@@ -380,29 +434,6 @@ module.exports.start = async (ctx) => {
   documentsTimer.unref();
 };
 
-
-let settleTimer = null;
-
-function watchForNewLists(ctx, configFile = userDirFile) {
-  const roots = watchedFolders(configFile).filter((dir, i, all) => {
-    if (all.findIndex((other) => other.toLowerCase() === dir.toLowerCase()) !== i) return false;
-    try {
-      return fs.statSync(dir).isDirectory();
-    } catch {
-      return false;
-    }
-  });
-  for (const dir of roots) {
-    try {
-      const watcher = watch(longPath(dir), { recursive: true, filter: (name) => LIST_PATH_RE.test(String(name || '')) }, () => scheduleRediscover(ctx));
-      guardWatcher(watcher, `'${dir}'`, debug);
-      watchers.push(watcher);
-    } catch (err) {
-      debug.warn(`[x360recomp] cannot follow '${dir}' for new games: ${err}`);
-    }
-  }
-}
-
 module.exports.stop = () => {
   lifecycle += 1;
   if (rediscoverTimer) clearInterval(rediscoverTimer);
@@ -412,15 +443,9 @@ module.exports.stop = () => {
   if (documentsTimer) clearInterval(documentsTimer);
   documentsTimer = null;
   changes.clear();
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
+  for (const watcher of watchers) closeWatcher(watcher);
   watchers = [];
   watched.clear();
 };
 
-module.exports._internal = { discover, watchSpec, watchSpecs, watchedFolders, iconPathOf, handleChange, seedBaseline, rediscover, watched, LIST_PATH_RE };
+module.exports._internal = { discover, watchSpec, watchSpecs, watchedFolders, watchRoots, iconPathOf, handleChange, seedBaseline, rediscover, wakesDiscovery, watched, LIST_PATH_RE };

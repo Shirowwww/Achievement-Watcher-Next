@@ -8,6 +8,7 @@
 // Only unlocked entries are appended, never rewritten, so a truncated file must be refused outright
 // or a half-written read would relock and replay every achievement as new.
 
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const spa = require(path.join(__dirname, 'xllnSpa.js'));
@@ -114,9 +115,9 @@ function readTitleConfig(file) {
 // Reading a game executable costs tens of megabytes, and discovery visits the same one on every
 // scan. Keyed by the file's own size and timestamp, so a patched game is read again.
 const spaCache = new Map();
-const SPA_CACHE_MAX = 8;
+const SPA_CACHE_MAX = 32;
 
-function loadSpa(exePath) {
+function loadSpa(exePath, { extract = spa.extractSpa, label = 'SPAFILE' } = {}) {
   let key;
   try {
     const stat = fs.statSync(exePath);
@@ -133,9 +134,9 @@ function loadSpa(exePath) {
 
   let parsed = null;
   try {
-    parsed = spa.parseSpa(spa.extractSpa(exePath));
+    parsed = spa.parseSpa(extract(exePath), { onSkip: (message) => debug.log(`[xlln] '${exePath}': ${message}`) });
   } catch (err) {
-    debug.log(`[xlln] '${exePath}' carries no readable SPAFILE => ${err.message || err}`);
+    debug.log(`[xlln] '${exePath}' carries no readable ${label} => ${err.message || err}`);
     parsed = null;
   }
   spaCache.set(key, parsed);
@@ -325,56 +326,148 @@ function iconDirFor(titleId) {
 }
 
 /*
-  Schema for one title, with the icons written out of the executable so the UI can show them through
-  file:// like it does for the console emulators.
+  DLC achievements: the runtime keeps one spa.bin per content pack under
+  <storage>\dlc\<TITLE>\<pack>\Content. Every bound below keeps a crafted pack folder from turning
+  into a long read, and nothing reached through a link is read at all.
 */
-async function getGameData(data, lang = 'english') {
-  const info = data && typeof data === 'object' ? data : {};
-  const parsed = loadSpa(info.exe);
-  if (!parsed) throw new Error(`XLiveLessNess: '${info.exe}' carries no readable achievement data`);
+const DLC_DIR = 'dlc';
+const DLC_SPA_FILE = 'spa.bin';
+const DLC_MAX_PACKS_PER_TITLE = 512;
+const DLC_LIMITS = Object.freeze({ maxFiles: 128, maxFileBytes: 64 * 1024 * 1024, maxTotalBytes: 128 * 1024 * 1024 });
+const DLC_CATEGORY = 'DLC';
 
+// The entry's stat when it is not a link and passes `accept`, else null.
+function plainStat(target, accept) {
+  try {
+    const stat = fs.lstatSync(target);
+    return accept(stat) && !stat.isSymbolicLink() ? stat : null;
+  } catch {
+    return null;
+  }
+}
+
+const isPlainDirectory = (target) => plainStat(target, (stat) => stat.isDirectory()) !== null;
+
+// `name` in `dir` as the disk spells it: the game finds it under Wine whatever its case, Linux does not.
+function plainChild(dir, name, wantDirectory) {
+  const lower = name.toLowerCase();
+  const hit = readDirectory(dir).find((entry) => entry.name.toLowerCase() === lower && (wantDirectory ? entry.isDirectory() : entry.isFile()));
+  return hit ? path.join(dir, hit.name) : '';
+}
+
+// The spa.bin of every content pack of a title that can be read: [{ file, size, mtimeMs }].
+function listDlcSpaFiles(gameDir, titleId, limits = DLC_LIMITS) {
+  const id = String(titleId || '').trim().toUpperCase();
+  if (!TITLE_ID_RE.test(id)) return [];
+  const files = [];
+  const seen = new Set();
+  let total = 0;
+  for (const root of storageRoots(gameDir)) {
+    const dlcRoot = plainChild(root, DLC_DIR, true);
+    const titleRoot = dlcRoot && plainChild(dlcRoot, id, true);
+    if (!titleRoot || !isPlainDirectory(dlcRoot) || !isPlainDirectory(titleRoot)) continue;
+    const packs = readDirectory(titleRoot).filter((entry) => entry.isDirectory());
+    packs.sort((left, right) => left.name.localeCompare(right.name));
+    for (const pack of packs.slice(0, DLC_MAX_PACKS_PER_TITLE)) {
+      const content = plainChild(path.join(titleRoot, pack.name), 'Content', true);
+      const file = content && plainChild(content, DLC_SPA_FILE, false);
+      const stat = file && isPlainDirectory(content) ? plainStat(file, (entry) => entry.isFile()) : null;
+      if (!stat || seen.has(file.toLowerCase())) continue;
+      if (stat.size > limits.maxFileBytes || total + stat.size > limits.maxTotalBytes) {
+        debug.log(`[xlln] DLC pack '${file}' (${stat.size} bytes) is over the size bounds - left unread`);
+        continue;
+      }
+      if (files.length >= limits.maxFiles) return files;
+      seen.add(file.toLowerCase());
+      total += stat.size;
+      files.push({ file, size: stat.size, mtimeMs: stat.mtimeMs });
+    }
+  }
+  return files;
+}
+
+// The packs that really belong to this title and describe achievements, parsed: [{ parsed, key }].
+function loadDlcPacks(gameDir, titleId) {
+  const packs = [];
+  for (const { file } of listDlcSpaFiles(gameDir, titleId)) {
+    const parsed = loadSpa(file, { extract: (target) => fs.readFileSync(target), label: 'DLC pack' });
+    if (!parsed || parsed.achievements.length === 0) continue;
+    const packTitle = parsed.titleId === null ? '' : formatTitleId(parsed.titleId);
+    if (packTitle && packTitle !== String(titleId).toUpperCase()) {
+      debug.log(`[xlln] DLC pack '${file}' declares title ${packTitle}, not ${titleId} - ignored`);
+      continue;
+    }
+    packs.push({ parsed, key: crypto.createHash('sha1').update(path.resolve(file).toLowerCase()).digest('hex').slice(0, 8) });
+  }
+  return packs;
+}
+
+function textReader(parsed, lang) {
   const languageId = spa.pickLanguage(parsed, lang);
   const strings = languageId == null ? new Map() : parsed.stringsByLanguage.get(languageId) || new Map();
   const englishId = spa.pickLanguage(parsed, 'english');
   const english = englishId == null ? strings : parsed.stringsByLanguage.get(englishId) || strings;
-  const text = (id) => String(strings.get(id) || english.get(id) || '').trim();
+  return (id) => String(strings.get(id) || english.get(id) || '').trim();
+}
 
-  const iconDir = iconDirFor(info.titleId);
-  let iconsWritten = false;
+// The icon as a file:// URL, written once into the cache; '' when it cannot be.
+function iconUrlFor(iconDir, fileName, image) {
+  if (!iconDir || !image || image.length === 0) return '';
+  const iconPath = path.join(iconDir, fileName);
   try {
-    fs.mkdirSync(iconDir, { recursive: true });
-    iconsWritten = true;
+    if (!fs.existsSync(iconPath)) fs.writeFileSync(iconPath, image);
+    return 'file:///' + iconPath.replace(/\\/g, '/');
   } catch {
-    /* the achievements still list, just without their art */
+    return ''; // leave it empty rather than fail the whole game
   }
+}
 
-  const list = [];
+// One SPA's achievements as schema rows, leaving out the ids in `known`. A pack's icons carry its
+// own prefix: its image ids are numbered independently of the base game's.
+function schemaRows(parsed, lang, { iconDir, iconPrefix = '', known = new Set(), extra = {} }) {
+  const text = textReader(parsed, lang);
+  const rows = [];
   for (const achievement of parsed.achievements) {
-    let icon = '';
-    const image = parsed.images.get(achievement.imageId);
-    if (iconsWritten && image && image.length > 0) {
-      const iconPath = path.join(iconDir, `${achievement.imageId}.png`);
-      try {
-        if (!fs.existsSync(iconPath)) fs.writeFileSync(iconPath, image);
-        icon = 'file:///' + iconPath.replace(/\\/g, '/');
-      } catch {
-        /* leave it empty rather than fail the whole game */
-      }
-    }
-
-    const unlockedDescription = text(achievement.unlockedDescriptionId);
-    const lockedDescription = text(achievement.lockedDescriptionId);
-    list.push({
+    if (known.has(String(achievement.id))) continue;
+    const icon = iconUrlFor(iconDir, `${iconPrefix}${achievement.imageId}.png`, parsed.images.get(achievement.imageId));
+    rows.push({
       name: String(achievement.id),
       displayName: text(achievement.titleStringId) || String(achievement.id),
-      description: unlockedDescription || lockedDescription,
+      description: text(achievement.unlockedDescriptionId) || text(achievement.lockedDescriptionId),
       // Bit 3 shows an achievement before it is earned; without it the achievement is secret. Bit 0
       // is part of the achievement type, which read as "secret" hid every plain one.
       hidden: (achievement.flags & 0x8) === 0 ? 1 : 0,
       gamerscore: achievement.gamerscore,
       icon,
       icongray: icon,
+      ...extra,
     });
+  }
+  return rows;
+}
+
+/*
+  Schema for one title, with the icons written out of the executable so the UI can show them through
+  file:// like it does for the console emulators. DLC packs are read on every call (their listing is
+  cheap and the parse is cached), so a pack installed later shows up without a rescan.
+*/
+async function getGameData(data, lang = 'english') {
+  const info = data && typeof data === 'object' ? data : {};
+  const parsed = loadSpa(info.exe);
+  if (!parsed) throw new Error(`XLiveLessNess: '${info.exe}' carries no readable achievement data`);
+
+  const iconDir = iconDirFor(info.titleId);
+  let writableIconDir = iconDir;
+  try {
+    fs.mkdirSync(iconDir, { recursive: true });
+  } catch {
+    writableIconDir = ''; // the achievements still list, just without their art
+  }
+
+  const list = schemaRows(parsed, lang, { iconDir: writableIconDir });
+  for (const pack of loadDlcPacks(info.gameDir, info.titleId)) {
+    const known = new Set(list.map((entry) => entry.name));
+    list.push(...schemaRows(pack.parsed, lang, { iconDir: writableIconDir, iconPrefix: `dlc-${pack.key}-`, known, extra: { dlc: true, category: DLC_CATEGORY } }));
   }
 
   return {
@@ -422,6 +515,8 @@ module.exports.discover = discover;
 module.exports.inspect = inspect;
 module.exports.storageRoots = storageRoots;
 module.exports.stateFiles = stateFiles;
+module.exports.listDlcSpaFiles = listDlcSpaFiles;
+module.exports.DLC_LIMITS = DLC_LIMITS;
 module.exports.parseState = parseState;
 module.exports.parseTitleConfig = parseTitleConfig;
 module.exports.decodeConfig = decodeConfig;

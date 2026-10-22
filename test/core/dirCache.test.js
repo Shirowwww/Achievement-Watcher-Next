@@ -40,6 +40,29 @@ test('a directory is read once per scope and re-read after it closes', () => {
   }
 });
 
+test('folders differing only by case are one listing on Windows and two on Linux', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-dircache-'));
+  const realPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+  t.after(() => {
+    Object.defineProperty(process, 'platform', realPlatform);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const upper = path.join(root, 'Game');
+  const lower = path.join(root, 'game');
+  fs.mkdirSync(upper);
+  fs.mkdirSync(lower, { recursive: true });
+  fs.writeFileSync(path.join(upper, 'a.txt'), 'x');
+  Object.defineProperty(process, 'platform', { value: 'linux' });
+  dirCache.beginScope();
+  try {
+    dirCache.readdir(upper);
+    fs.writeFileSync(path.join(lower, 'b.txt'), 'y');
+    assert.ok(dirCache.readdir(lower).some((entry) => entry.name === 'b.txt'), 'game is not served the listing of Game');
+  } finally {
+    dirCache.endScope();
+  }
+});
+
 test('nested scopes share one cache and only the outermost clears it', () => {
   const root = makeTree();
   try {

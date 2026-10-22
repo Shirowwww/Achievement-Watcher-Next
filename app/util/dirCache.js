@@ -9,6 +9,11 @@
 */
 
 const fs = require('fs');
+const path = require('path');
+const { pathKey } = require(path.join(__dirname, 'winHosts.js'));
+
+// Case-insensitive on Windows only: on Linux, Game and game are two folders with two listings.
+const keyOf = (dir) => (dir ? pathKey(dir) : '');
 
 let depth = 0;
 let entriesCache = null;
@@ -51,7 +56,7 @@ function lastVisitedDirs() {
   library/save root, which the discovery walk visits itself).
 */
 function readdir(dir, { track = true } = {}) {
-  const key = String(dir).toLowerCase();
+  const key = keyOf(dir);
   if (entriesCache && entriesCache.has(key)) return entriesCache.get(key);
   let result;
   try {
@@ -67,7 +72,7 @@ function readdir(dir, { track = true } = {}) {
 }
 
 function readdirNames(dir) {
-  const key = String(dir).toLowerCase();
+  const key = keyOf(dir);
   if (namesCache && namesCache.has(key)) return namesCache.get(key);
   let result;
   const entries = readdir(dir);

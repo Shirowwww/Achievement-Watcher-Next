@@ -68,6 +68,8 @@ function resetActionFor(fileName, source = '') {
     // ReXGlue's .toml and the per-profile .tsv hold unlocks only, and a missing one reads as none.
     // The JSON shape also carries the list itself, so only its flags are cleared.
     if (/^[0-9a-f]{8}\.toml$/.test(name) || name.endsWith('.tsv')) return ACTION.DELETE;
+    // Lost Odyssey's earned list and the Unleashed/Marathon unlock records hold nothing else either.
+    if (name === 'achievements.ini' || name === 'ach-data' || name === 'sonicnextachievementdata.bin') return ACTION.DELETE;
     if (name === 'achievements.json') return ACTION.CLEAR_X360_JSON;
     return null;
   }

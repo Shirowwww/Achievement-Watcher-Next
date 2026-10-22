@@ -303,3 +303,45 @@ test('a binary that never writes trophies is not an emulator folder before its f
   fs.writeFileSync(path.join(root, 'kyty_emulator.exe'), 'MZ with _Trophies inside');
   assert.equal(kyty.emulatorRoot(root), root);
 });
+
+test('games inside another source install are skipped, the rest of the launcher folders are still read', () => {
+  const root = path.join(temp, 'excluded');
+  const ps4Install = path.join(root, 'Games', 'PS4 recomp');
+  makeGame(path.join(ps4Install, 'dump'), { titleId: 'PPSA00601', folder: 'Inside' });
+  makeGame(path.join(root, 'Games', 'PS5'), { titleId: 'PPSA00602', folder: 'Outside' });
+  const emulator = makeEmulator(root, { gameDirs: [path.join(root, 'Games')], unlocks: null, titleId: 'PPSA00602' });
+
+  assert.deepEqual(kyty.scan(emulator).map((game) => game.appid).sort(), ['PPSA00601', 'PPSA00602'], 'without a guard both are listed');
+  assert.deepEqual(kyty.scan(emulator, { excludedRoots: [ps4Install] }).map((game) => game.appid), ['PPSA00602']);
+  const lazy = kyty.scan(emulator, { getExcludedRoots: () => [path.join(ps4Install, '..', 'PS4 recomp')] });
+  assert.deepEqual(lazy.map((game) => game.appid), ['PPSA00602'], 'a function gives the roots, normalised');
+  assert.equal(kyty.scan(emulator, { excludedRoots: ['relative/path', 7, null] }).length, 2, 'only absolute folders count');
+});
+
+test('a game_path entry is still read, but not when it names a folder inside an excluded install', () => {
+  const root = path.join(temp, 'excluded-game-path');
+  const pcPort = path.join(root, 'PC port');
+  const inside = makeGame(path.join(pcPort, 'data'), { titleId: 'PPSA00603' });
+  const emulator = makeEmulator(root, { unlocks: null, gameUsers: [{ path: inside, user: 1000 }] });
+  assert.deepEqual(kyty.scan(emulator).map((game) => game.appid), ['PPSA00603']);
+  assert.deepEqual(kyty.scan(emulator, { excludedRoots: [pcPort] }), []);
+});
+
+test('an excluded root around the emulator folder itself is ignored', () => {
+  const root = path.join(temp, 'excluded-around');
+  const emulator = makeEmulator(root, { unlocks: null });
+  makeGame(path.join(emulator, 'games'), { titleId: 'PPSA00604' });
+  assert.deepEqual(kyty.scan(emulator, { excludedRoots: [path.dirname(root), root] }).map((game) => game.appid), ['PPSA00604']);
+});
+
+test('the other sources are looked up once per pass, and only when a game search needs them', () => {
+  let lookups = 0;
+  const options = kyty.excludingOtherSources(() => {
+    lookups++;
+    return [fs.mkdtempSync(path.join(os.tmpdir(), 'aw-kyty-others-'))];
+  });
+  assert.equal(lookups, 0);
+  assert.deepEqual(options.getExcludedRoots(), []);
+  options.getExcludedRoots();
+  assert.equal(lookups, 1);
+});
