@@ -169,7 +169,7 @@
   "install.step3Body": "É ele que vigia. As notificações ao vivo e o tempo de jogo dependem disso.",
   "install.step3Title": "Deixe na bandeja",
   "install.title": "Colocando para rodar",
-  "install.virustotal": "O instalador atual no <a href=\"https://www.virustotal.com/gui/file/72315a76f29f976c534b5807dd2df14ebb3925da4c0716b26d4b6e47c240f463\" rel=\"noopener\">VirusTotal</a>. As poucas detecções heurísticas são o falso positivo dos emuladores; verifique você mesmo qualquer versão comparando o SHA-256 dela.",
+  "install.virustotal": "O instalador atual no <a href=\"https://www.virustotal.com/gui/file/960fcd46c228e46a908b7f870ffbf1fd1e703f58892388c4c1c35447e5dce03b\" rel=\"noopener\">VirusTotal</a>. As poucas detecções heurísticas são o falso positivo dos emuladores; verifique você mesmo qualquer versão comparando o SHA-256 dela.",
   "install.windowsData": "Configurações e dados: <code>%APPDATA%\\Achievement Watcher Next</code>",
   "more.backupBody": "Configurações, escolhas da biblioteca, predefinições, temas e tempo de jogo em um só arquivo, para uma reinstalação ou um PC novo.",
   "more.backupTitle": "Backup do perfil",
