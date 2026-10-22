@@ -96,6 +96,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A redesigned Game Health panel** with clearer tabs, a smooth resize between them, and a panel
   that scrolls in a small window. Console emulator games are no longer asked for a Windows
   executable or game files, and Xbox 360 games from XLLN show their real cover.
+- **One platinum row.** A game's PlayStation platinum reads like any platinum trophy, with Sony's
+  share of players when it is known ("Platinum · 4.4% of all players"). PlayStation games now take
+  the first SteamGridDB cover, with Sony's art as the fallback.
 
 ### Fixed
 

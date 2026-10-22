@@ -98,8 +98,10 @@ test('a game finds its PlayStation list, its grades, DLC groups and platinum', a
   const psn = sony();
   const link = await links.linkGame(await psn.ctx(), { appid: '1029690', name: 'Sniper Elite 5', achievements });
   assert.equal(link.listId, 'NPWR21465_00', 'the list of another game with the same name is left out');
+  assert.equal(link.service, 'trophy2', 'the link remembers which trophy service holds the list');
+  assert.match(link.platinum.id, /^\d+$/, 'the link remembers which trophy of the list is the platinum');
   assert.deepEqual(link.trophies, { ACH_FIRST: { type: 'B' }, ACH_GHOST: { type: 'G' }, ACH_COLLECT: { type: 'S', group: 'Deathstorm' } });
-  assert.deepEqual(link.platinum, { name: 'Tireur d’élite', description: 'Tous les trophées', icon: 'https://img/0.png' });
+  assert.deepEqual(link.platinum, { id: '0', name: 'Tireur d’élite', description: 'Tous les trophées', icon: 'https://img/0.png' });
   assert.deepEqual(links.readLink('1029690'), link);
   assert.equal(links.isFresh('1029690', 'fr-FR'), true);
   assert.equal(links.isFresh('1029690', 'de-DE'), false, 'another language links again');

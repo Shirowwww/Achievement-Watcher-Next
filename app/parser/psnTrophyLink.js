@@ -16,7 +16,7 @@ const MISS_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 const MAX_CANDIDATES = 3;
 const MIN_MATCHED = 3;
 // Raised when a link is built differently: older links are made again on the next pass.
-const LINK_VERSION = 2;
+const LINK_VERSION = 3;
 // Below half of the smaller list, a list with the same name is another game.
 const MIN_SHARE = 0.5;
 // "Definitive Edition" on one store is often the plain name on the other.
@@ -114,9 +114,10 @@ function buildLink(candidate, definitions, groups, matched, locale) {
     locale,
     listId: candidate.id,
     platform: candidate.platform,
+    service: candidate.service === 'trophy2' ? 'trophy2' : 'trophy',
     trophies,
     platinum: platinum
-      ? { name: String(platinum.trophyName || ''), description: String(platinum.trophyDetail || ''), icon: String(platinum.trophyIconUrl || '').startsWith('https://') ? platinum.trophyIconUrl : '' }
+      ? { id: String(platinum.trophyId), name: String(platinum.trophyName || ''), description: String(platinum.trophyDetail || ''), icon: String(platinum.trophyIconUrl || '').startsWith('https://') ? platinum.trophyIconUrl : '' }
       : null,
   };
 }

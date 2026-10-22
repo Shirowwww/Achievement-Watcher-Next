@@ -3396,9 +3396,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback =
-      ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'xlln', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured'].includes(appid.data.type) ||
-      (appid.data.type === 'psnLibrary' && game.img.headerStandIn);
+    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'xlln', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured', 'psnLibrary'].includes(appid.data.type);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*

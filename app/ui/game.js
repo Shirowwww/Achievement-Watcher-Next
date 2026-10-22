@@ -139,7 +139,7 @@ let rarityRequest = 0;
 
 // Once the lookup is over, a row nobody has a rate for says nothing rather than "--".
 function hideUnknownRarity() {
-  $('#achievement .achievement-list ul > li .stats .community').each((_, row) => {
+  $('#achievement .achievement-list ul > li .achievement:not(.psn-platinum) .stats .community').each((_, row) => {
     if (!$(row).find('span.data').attr('data-percent')) $(row).hide();
   });
 }

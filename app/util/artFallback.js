@@ -3,12 +3,14 @@
 /*
   Fills the gaps in a game's pictures from SteamGridDB's set. A source's own art always wins, except a
   header it marks `headerStandIn`: a trophy or achievement icon put up only so the card is not empty.
+  A PlayStation list is the exception: SteamGridDB's covers come first, Sony's store art is the fallback.
 */
 function fillArt(img, fallback, type) {
   const { headerStandIn, ...art } = img || {};
   const ownHeader = headerStandIn ? '' : art.header;
-  art.header = ownHeader || fallback.landscape || art.header || '';
-  art.portrait = art.portrait || fallback.portrait || '';
+  const gridFirst = type === 'psnLibrary';
+  art.header = (gridFirst ? fallback.landscape || ownHeader : ownHeader || fallback.landscape) || art.header || '';
+  art.portrait = (gridFirst ? fallback.portrait || art.portrait : art.portrait || fallback.portrait) || '';
   // A community hero is raw key art, not one of Steam's pre-darkened page backgrounds, so the
   // game screen has to veil it to keep the text on top readable.
   if (!art.background && fallback.background) {

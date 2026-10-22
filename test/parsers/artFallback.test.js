@@ -35,5 +35,14 @@ const SGDB = { landscape: 'sgdb/grid.jpg', portrait: 'sgdb/portrait.png', backgr
   assert.equal(fillArt(input, { logo: 'sgdb/logo.png' }, 'xenia').icon, 'sgdb/logo.png');
   assert.deepEqual(input, { header: 'TROP000.PNG', headerStandIn: true });
 
+  // A PlayStation list takes SteamGridDB's covers first and keeps Sony's art as the fallback.
+  const psn = fillArt({ header: 'psn/hub.jpg', portrait: 'psn/portrait.jpg' }, SGDB, 'psnLibrary');
+  assert.equal(psn.header, 'sgdb/grid.jpg');
+  assert.equal(psn.portrait, 'sgdb/portrait.png');
+  const psnAlone = fillArt({ header: 'psn/hub.jpg', portrait: 'psn/portrait.jpg' }, {}, 'psnLibrary');
+  assert.equal(psnAlone.header, 'psn/hub.jpg');
+  assert.equal(psnAlone.portrait, 'psn/portrait.jpg');
+  assert.equal(fillArt({ header: 'TROP000.PNG', headerStandIn: true }, {}, 'psnLibrary').header, 'TROP000.PNG');
+
   console.log('PASS: artFallback fills the gaps of a game\'s pictures');
 })();

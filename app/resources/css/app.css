@@ -3012,9 +3012,11 @@ body.is-resizing #game-list {
   color: var(--trophy-bronze);
 }
 
-/* A PlayStation trophy's figure already says everything ("Platinum · 7.1% · Very rare") and wears
-   the colour of its grade, the same as the cup beside its name. */
-.achievement.ps-trophy .stats .community .global-stat {
+/* A PlayStation trophy's figure wears the colour of its grade, the same as the cup beside its name.
+   Only the platinum spells out whose share it is ("Platine · 7,1 % de tous les joueurs"); the other
+   grades keep the short form, and so does a platinum whose rate is not known yet. */
+.achievement.ps-trophy:not([data-trophy='platinum']) .stats .community .global-stat,
+.achievement.ps-trophy .stats .community span.data:not([data-percent]) + .global-stat {
   display: none;
 }
 

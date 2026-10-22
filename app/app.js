@@ -550,18 +550,35 @@ function psnPlatinumRow(game) {
         intlFormat.formatDateTime(earnedAt, uiLang(), { dateStyle: 'short', timeStyle: 'short' })
       )}</span> <span>${escapeHtml(intlFormat.formatRelativeTime(earnedAt, uiLang()))}</span></div>`
     : '';
+  // The same figure as a platinum tied to an achievement: grade, then the share of players.
+  const communityHtml = `<div class="community"><i class="fab fa-playstation"></i> <span class="data">${escapeHtml(trophyLabels().platinum)}</span> <span class="global-stat">${escapeHtml(
+    $('#achievement .achievements').data('lang-globalStat') || ''
+  )}</span></div>`;
   const html = `<li>
-      <div class="achievement psn-platinum${achieved ? ' rare rarity-platinum' : ''}" data-index="-1" data-achieved="${achieved ? 1 : 0}">
+      <div class="achievement psn-platinum ps-trophy${achieved ? ' rare rarity-platinum' : ''}" data-trophy="platinum" data-index="-1" data-achieved="${achieved ? 1 : 0}">
         <div class="box"><div class="glow mask contain"><div class="glow mask ray"><div class="glow fx"></div></div></div>
           <div class="icon" style="background: ${cssUrl(icon)};"></div></div>
         <div class="content">
           <div class="title"><i class="fas fa-trophy" data-type="P"></i> ${escapeHtml(platinum.name)}</div>
-          <div class="ach-category">${escapeHtml(t('trophy-platinum', 'Platinum', 'Platine'))}</div>
           <div class="description">${escapeHtml(platinum.description || '')}</div>
         </div>
-        <div class="stats">${time}</div>
+        <div class="stats">${time}${communityHtml}</div>
       </div></li>`;
   return { html, achieved };
+}
+
+// Sony's share of players for a linked game's platinum, when one can be had.
+async function paintLinkedPlatinumRate(game) {
+  const link = psnLinkOf(game);
+  const platinum = linkedPlatinumOf(game);
+  if (!link || !link.listId || !platinum || platinum.id == null) return;
+  const service = link.service || (link.platform === 'PS5' ? 'trophy2' : 'trophy');
+  const answer = await ipcRenderer.invoke('psn:trophy-rates', { npCommId: link.listId, service }).catch(() => null);
+  const entry = answer && answer.ok && Array.isArray(answer.entries) ? answer.entries.find((candidate) => candidate.name === platinum.id) : null;
+  if (!entry || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
+  const percent = Math.round(entry.percent * 10) / 10;
+  const text = formatPercentValue(percent, 1) || String(percent);
+  $('#achievement .achievement.psn-platinum .stats .community .data').attr('data-percent', percent).text(`${trophyLabels().platinum} · ${text}`);
 }
 
 function requestPsnTrophyLinks(list) {
@@ -7245,6 +7262,7 @@ var app = {
       if (platinumRow) (platinumRow.achieved ? unlockRows : lockRows).unshift(platinumRow.html);
       if (unlockRows.length) unlock.append(unlockRows.join(''));
       if (lockRows.length) lock.append(lockRows.join(''));
+      if (platinumRow) paintLinkedPlatinumRate(game).catch((err) => debug.log(`[psn] platinum rate not painted: ${err.message || err}`));
 
       // Paints the first candidate that actually decodes and reports whether one did. A row stays
       // on its placeholder rather than a broken image, so the caller can try the next source.
@@ -7364,12 +7382,12 @@ var app = {
       // get the same Steam column; console emulators use Exophase, Xbox PC its import cache, EA hides it.
       const rarityContext = resolveGameRarityContext(game, { emulatorSources: EMU_LOCAL_ICON_SOURCES });
       if (!rarityContext) {
-        $('.achievement .stats .community').hide();
+        $('.achievement:not(.psn-platinum) .stats .community').hide();
       } else {
-        $('.achievement .stats .community').show();
+        $('.achievement:not(.psn-platinum) .stats .community').show();
         const rarityIcon =
           game.system === 'playstation' ? 'fab fa-playstation' : rarityContext.kind === 'emulator' || rarityContext.source === 'RetroAchievements' ? 'fas fa-trophy' : 'fab fa-steam';
-        $('.achievement .stats .community i').attr('class', rarityIcon);
+        $('.achievement:not(.psn-platinum) .stats .community i').attr('class', rarityIcon);
         if (rarityContext.kind === 'xbox') {
           // Rarity was cached at import time on each schema entry - paint it directly, no network.
           const entries = (game.achievement.list || [])
