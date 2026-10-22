@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Palauta alkuperäinen nimi",
     "rename-game-failed": "Uuden nimen tallentaminen epäonnistui.",
     "edit-playtime": "Muokkaa peliaikaa…",
-    "edit-playtime-prompt": "Pelin “{name}” kokonaispeliaika tunteina (12,5) tai tunteina ja minuutteina (12h30).",
     "edit-playtime-invalid": "AW Next ei osaa lukea tätä peliaikaa.",
     "edit-playtime-failed": "Peliaikaa ei voitu tallentaa.",
     "launch-game": "Käynnistä peli",

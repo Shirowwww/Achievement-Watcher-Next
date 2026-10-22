@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Khôi phục tên gốc",
     "rename-game-failed": "Không thể lưu tên mới.",
     "edit-playtime": "Sửa thời gian chơi…",
-    "edit-playtime-prompt": "Tổng thời gian chơi của “{name}”, tính bằng giờ (12,5) hoặc giờ và phút (12h30).",
     "edit-playtime-invalid": "AW Next không đọc được thời gian chơi này.",
     "edit-playtime-failed": "Không thể lưu thời gian chơi.",
     "launch-game": "Khởi chạy trò chơi",

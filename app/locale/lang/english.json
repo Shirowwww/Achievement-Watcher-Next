@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Restore the original name",
     "rename-game-failed": "Could not save the new name.",
     "edit-playtime": "Edit playtime…",
-    "edit-playtime-prompt": "Total playtime for \"{name}\", in hours (12.5) or hours and minutes (12h30).",
     "edit-playtime-invalid": "This is not a playtime AW Next can read.",
     "edit-playtime-failed": "Could not save the playtime.",
     "launch-game": "Launch game",

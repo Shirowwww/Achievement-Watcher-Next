@@ -1731,7 +1731,6 @@
     "rename-game-reset": "원래 이름으로 복원",
     "rename-game-failed": "새 이름을 저장할 수 없습니다.",
     "edit-playtime": "플레이 시간 편집…",
-    "edit-playtime-prompt": "“{name}”의 총 플레이 시간을 시간(12.5) 또는 시간과 분(12h30)으로 입력하세요.",
     "edit-playtime-invalid": "AW Next에서 읽을 수 없는 플레이 시간입니다.",
     "edit-playtime-failed": "플레이 시간을 저장하지 못했습니다.",
     "launch-game": "게임 실행",

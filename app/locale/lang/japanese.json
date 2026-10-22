@@ -1731,7 +1731,6 @@
     "rename-game-reset": "元の名前に戻す",
     "rename-game-failed": "新しい名前を保存できませんでした。",
     "edit-playtime": "プレイ時間を編集…",
-    "edit-playtime-prompt": "「{name}」の合計プレイ時間を、時間（12.5）または時間と分（12h30）で入力してください。",
     "edit-playtime-invalid": "この形式のプレイ時間は AW Next では読み取れません。",
     "edit-playtime-failed": "プレイ時間を保存できませんでした。",
     "launch-game": "ゲームを起動",

@@ -1731,7 +1731,6 @@
     "rename-game-reset": "คืนค่าชื่อเดิม",
     "rename-game-failed": "ไม่สามารถบันทึกชื่อใหม่ได้",
     "edit-playtime": "แก้ไขเวลาเล่น…",
-    "edit-playtime-prompt": "เวลาเล่นทั้งหมดของ “{name}” เป็นชั่วโมง (12.5) หรือชั่วโมงและนาที (12h30)",
     "edit-playtime-invalid": "AW Next อ่านเวลาเล่นนี้ไม่ได้",
     "edit-playtime-failed": "ไม่สามารถบันทึกเวลาเล่นได้",
     "launch-game": "เริ่มเกม",

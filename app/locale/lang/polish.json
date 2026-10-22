@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Przywróć oryginalną nazwę",
     "rename-game-failed": "Nie udało się zapisać nowej nazwy.",
     "edit-playtime": "Edytuj czas gry…",
-    "edit-playtime-prompt": "Łączny czas gry w „{name}” w godzinach (12,5) lub w godzinach i minutach (12h30).",
     "edit-playtime-invalid": "AW Next nie potrafi odczytać tego czasu gry.",
     "edit-playtime-failed": "Nie udało się zapisać czasu gry.",
     "launch-game": "Uruchom grę",

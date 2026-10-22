@@ -92,6 +92,14 @@ test('durations are phrased by Intl for every bundled locale, with no leading ze
   }
 });
 
+test('time unit names come in every bundled language', () => {
+  assert.equal(intlFormat.unitName('day', 'english'), 'days');
+  assert.equal(intlFormat.unitName('hour', 'french'), 'heures');
+  for (const id of bundledLocales()) {
+    for (const unit of ['day', 'hour', 'minute']) assert.ok(intlFormat.unitName(unit, id), `${id}: ${unit}`);
+  }
+});
+
 test('lists are joined the way the language joins them', () => {
   assert.equal(intlFormat.formatList(['Steam', 'GOG', 'Epic'], 'english'), 'Steam, GOG, and Epic');
   assert.match(intlFormat.formatList(['Steam', 'GOG', 'Epic'], 'french'), / et Epic$/);

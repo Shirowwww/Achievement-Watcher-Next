@@ -1615,40 +1615,112 @@ function paintTilePlaytime(appid) {
   row.find('.library-scroll-content').text(shown);
 }
 
-// "Edit playtime…": the prompt opens on the current total; an invalid entry is refused, not saved.
-async function editPlaytime(appid, name) {
-  const current = PlaytimeTracking.readSync(appid).playtime;
-  const typed = await promptText(
-    t(
-      'edit-playtime-prompt',
-      'Total playtime for "{name}", in hours (12.5) or hours and minutes (12h30).',
-      'Temps de jeu total pour « {name} », en heures (12,5) ou en heures et minutes (12h30).',
-      { name }
-    ),
-    playtimeInput.formatPlaytimeInput(current),
-    'text',
-    { title: t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…'), icon: 'fa-stopwatch' }
-  );
-  if (typed === null) return;
-  const seconds = playtimeInput.parsePlaytime(typed);
-  const failure = (message, detail) =>
-    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-      type: 'error',
-      title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
-      message,
-      detail,
+// The days, hours and minutes fields, built in the order the dialog shows them.
+function playtimeFields(current, onChange) {
+  const row = document.createElement('div');
+  row.className = 'aw-playtime-fields';
+  const inputs = {};
+  for (const [field, unit] of [['days', 'day'], ['hours', 'hour'], ['minutes', 'minute']]) {
+    const label = document.createElement('label');
+    label.className = 'aw-playtime-field';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.inputMode = 'numeric';
+    input.maxLength = 7;
+    input.className = 'aw-prompt-input';
+    input.value = String(current[field]);
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D+/g, '');
+      onChange();
     });
-  if (seconds === null) {
-    failure(t('edit-playtime-invalid', 'This is not a playtime AW Next can read.', 'Ce temps de jeu n’est pas lisible par AW Next.'), typed);
-    return;
+    input.addEventListener('focus', () => input.select());
+    const name = document.createElement('span');
+    name.className = 'aw-playtime-unit';
+    name.textContent = intlFormat.unitName(unit, uiLang());
+    label.append(input, name);
+    row.append(label);
+    inputs[field] = input;
   }
-  try {
-    await PlaytimeTracking.setTotal(appid, seconds);
-  } catch (err) {
-    failure(t('edit-playtime-failed', 'Could not save the playtime.', 'Impossible d’enregistrer le temps de jeu.'), `${err}`);
-    return;
-  }
-  paintTilePlaytime(appid);
+  return { row, inputs };
+}
+
+// "Edit playtime…": the cover picker's frame around three fields, with the total read back below
+// them in the library's own wording. Save stays disabled while the total cannot be stored.
+function editPlaytime(appid, name) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'aw-prompt-overlay';
+    const box = document.createElement('div');
+    box.className = 'aw-prompt aw-playtime-editor';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    const title = t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…').replace(/\s*(?:…|\.\.\.)$/, '');
+    box.setAttribute('aria-label', title);
+    const total = document.createElement('div');
+    total.className = 'aw-playtime-total';
+    total.setAttribute('aria-live', 'polite');
+    const actions = document.createElement('div');
+    actions.className = 'aw-prompt-actions';
+    const cancel = document.createElement('button');
+    cancel.className = 'aw-prompt-button secondary';
+    cancel.textContent = t('cancel', 'Cancel', 'Annuler');
+    const save = document.createElement('button');
+    save.className = 'aw-prompt-button primary';
+    save.textContent = t('confirm', 'Confirm', 'Valider');
+    actions.append(cancel, save);
+
+    const values = () => Object.fromEntries(Object.entries(fields.inputs).map(([key, input]) => [key, input.value]));
+    const refresh = () => {
+      const seconds = playtimeInput.joinPlaytime(values());
+      save.disabled = seconds === null;
+      total.classList.toggle('is-invalid', seconds === null);
+      total.textContent =
+        seconds === null
+          ? t('edit-playtime-invalid', 'This is not a playtime AW Next can read.', 'Ce temps de jeu n’est pas lisible par AW Next.')
+          : formatPlaytime(seconds, { units: ['days', 'hours', 'minutes'] }) || `0 ${intlFormat.unitName('minute', uiLang())}`;
+    };
+    const fields = playtimeFields(playtimeInput.splitPlaytime(PlaytimeTracking.readSync(appid).playtime), refresh);
+    box.append(pickerHeading('fa-stopwatch', title, name), fields.row, total, actions);
+    overlay.append(box);
+    document.body.append(overlay);
+    refresh();
+    fields.inputs.hours.focus();
+
+    let answered = false;
+    const close = () => {
+      answered = true;
+      overlay.classList.add('is-closing');
+      setTimeout(() => overlay.remove(), 140);
+      resolve();
+    };
+    cancel.onclick = () => {
+      if (!answered) close();
+    };
+    save.onclick = async () => {
+      const seconds = playtimeInput.joinPlaytime(values());
+      if (answered || seconds === null) return;
+      close();
+      try {
+        await PlaytimeTracking.setTotal(appid, seconds);
+      } catch (err) {
+        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+          type: 'error',
+          title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+          message: t('edit-playtime-failed', 'Could not save the playtime.', 'Impossible d’enregistrer le temps de jeu.'),
+          detail: `${err}`,
+        });
+        return;
+      }
+      paintTilePlaytime(appid);
+    };
+    overlay.onmousedown = (ev) => {
+      if (ev.target === overlay) cancel.click();
+    };
+    box.onkeydown = (ev) => {
+      if (ev.key === 'Enter') save.click();
+      else if (ev.key === 'Escape') cancel.click();
+    };
+  });
 }
 
 function editPlaytimeMenuItem(appid, game) {
@@ -5038,21 +5110,20 @@ var app = {
             })
           );
 
-          if (isManualGame || isUbisoftSource) {
-            // Non-Ubisoft games get their own reset-playtime entry in the emulator section below.
-            playtimeItems.push(
-              editPlaytimeMenuItem(appid, ctxGame),
-              new MenuItem({
-                label: $('#game-list').attr('data-ctx-resetplaytime') || '',
-                async click() {
-                  self.css('pointer-events', 'none');
-                  await PlaytimeTracking.reset(appid).catch((err) => debug.error(err));
-                  paintTilePlaytime(appid);
-                  self.css('pointer-events', 'initial');
-                },
-              })
-            );
-          }
+          // Every game has a tracked playtime, console ones included, so no source gate here. It used
+          // to sit in the PC emulator block, which left PlayStation and other console games with no way to fix it.
+          playtimeItems.push(
+            editPlaytimeMenuItem(appid, ctxGame),
+            new MenuItem({
+              label: $('#game-list').attr('data-ctx-resetplaytime') || '',
+              async click() {
+                self.css('pointer-events', 'none');
+                await PlaytimeTracking.reset(appid).catch((err) => debug.error(err));
+                paintTilePlaytime(appid);
+                self.css('pointer-events', 'initial');
+              },
+            })
+          );
 
           if (!isManualGame) {
             progressMenu.append(
@@ -5140,22 +5211,6 @@ var app = {
           // isUbisoftSource, so a forced override still opens this block.
           if (!isConsoleSystem) {
             if (!isUbisoftSource) {
-            if (!isManualGame) {
-              playtimeItems.push(
-                editPlaytimeMenuItem(appid, ctxGame),
-                new MenuItem({
-                  label: $('#game-list').attr('data-ctx-resetplaytime') || '',
-                  async click() {
-                    self.css('pointer-events', 'none');
-                    await PlaytimeTracking.reset(appid).catch((err) => {
-                      debug.error(err);
-                    });
-                    paintTilePlaytime(appid);
-                    self.css('pointer-events', 'initial');
-                  },
-                })
-              );
-            }
             if (app.config.notification_advanced.iconPrefetch) {
               if (!isManualGame) emulatorMenu.append(
                 new MenuItem({
@@ -6242,77 +6297,82 @@ var app = {
                 );
               }
             }
+          }
 
-            // Open the actual game install folder, when AW managed to resolve one (Goldberg/GBE scan
-            // or name-based folder match).
-            const gameForDir = list.find((g) => g.appid == appid);
-            if (gameForDir?.gameDir && fs.existsSync(gameForDir.gameDir)) {
-              folderMenu.append(
-                new MenuItem({
-                  icon: menuIcon('folder-open.png'),
-                  label: $('#game-list').attr('data-ctx-installloc') || '',
-                  click() {
-                    remote.shell.openPath(gameForDir.gameDir);
-                  },
-                })
-              );
-            }
-
-            // Keeps the top-level menu short while retaining useful maintenance paths. Some sources
-            // point at the save FILE itself, so reveal it rather than trying to open a file as a folder.
-            const revealDataPath = (target) => {
-              try {
-                if (!fs.existsSync(target)) return;
-                if (fs.statSync(target).isDirectory()) remote.shell.openPath(target);
-                else remote.shell.showItemInFolder(target);
-              } catch (err) {
-                debug.error(err);
-              }
-            };
-            // A merged card can have several sources. Keep each real source available in one
-            // submenu instead of silently picking a fallback or filling the parent menu with paths.
-            const seenDataPaths = new Set();
-            const dataPaths = (gameForDir?.dataPaths?.length ? gameForDir.dataPaths : [{ source: '', path: gameForDir?.dataPath }]).filter(
-              (entry) => {
-                if (!entry.path || seenDataPaths.has(entry.path) || !fs.existsSync(entry.path)) return false;
-                seenDataPaths.add(entry.path);
-                return true;
-              }
+          // Folders and links are not Steam-specific, so console games get them too (the PS4/PS3/Xenia
+          // link branches below were unreachable while this sat in the PC-only block). Install folder
+          // first, when AW resolved one (Goldberg/GBE scan or name-based folder match).
+          const gameForDir = list.find((g) => g.appid == appid);
+          if (gameForDir?.gameDir && fs.existsSync(gameForDir.gameDir)) {
+            folderMenu.append(
+              new MenuItem({
+                icon: menuIcon('folder-open.png'),
+                label: $('#game-list').attr('data-ctx-installloc') || '',
+                click() {
+                  remote.shell.openPath(gameForDir.gameDir);
+                },
+              })
             );
-            if (dataPaths.length) {
-              const dataMenu = new Menu();
-              const segments = (folderPath) => folderPath.replace(/[\\/]+$/, '').split(/[\\/]/).filter(Boolean);
-              const rootOf = (folderPath) => segments(folderPath).slice(-2)[0] || segments(folderPath).pop() || folderPath;
-              const labels = dataPaths.map((entry) => entry.source || rootOf(entry.path));
-              const labelCounts = labels.reduce((counts, label) => counts.set(label, (counts.get(label) || 0) + 1), new Map());
-              dataPaths.forEach((entry, index) => {
-                const label = labels[index];
-                dataMenu.append(
-                  new MenuItem({
-                    icon: menuIcon('folder-open.png'),
-                    label: labelCounts.get(label) > 1 ? `${label} - ${rootOf(entry.path)}` : label,
-                    click: () => revealDataPath(entry.path),
-                  })
-                );
-              });
-              dataMenu.append(new MenuItem({ type: 'separator' }));
+          }
+
+          // Keeps the top-level menu short while retaining useful maintenance paths. Some sources
+          // point at the save FILE itself, so reveal it rather than trying to open a file as a folder.
+          const revealDataPath = (target) => {
+            try {
+              if (!fs.existsSync(target)) return;
+              if (fs.statSync(target).isDirectory()) remote.shell.openPath(target);
+              else remote.shell.showItemInFolder(target);
+            } catch (err) {
+              debug.error(err);
+            }
+          };
+          // A merged card can have several sources. Keep each real source available in one
+          // submenu instead of silently picking a fallback or filling the parent menu with paths.
+          const seenDataPaths = new Set();
+          const dataPaths = (gameForDir?.dataPaths?.length ? gameForDir.dataPaths : [{ source: '', path: gameForDir?.dataPath }]).filter(
+            (entry) => {
+              if (!entry.path || seenDataPaths.has(entry.path) || !fs.existsSync(entry.path)) return false;
+              seenDataPaths.add(entry.path);
+              return true;
+            }
+          );
+          if (dataPaths.length) {
+            const dataMenu = new Menu();
+            const segments = (folderPath) => folderPath.replace(/[\\/]+$/, '').split(/[\\/]/).filter(Boolean);
+            const rootOf = (folderPath) => segments(folderPath).slice(-2)[0] || segments(folderPath).pop() || folderPath;
+            const labels = dataPaths.map((entry) => entry.source || rootOf(entry.path));
+            const labelCounts = labels.reduce((counts, label) => counts.set(label, (counts.get(label) || 0) + 1), new Map());
+            dataPaths.forEach((entry, index) => {
+              const label = labels[index];
               dataMenu.append(
                 new MenuItem({
-                  label: t('copy-achievement-data-path', 'Copy achievement data path', 'Copier le chemin des données de succès'),
-                  click() {
-                    copyText(dataPaths.map((entry) => entry.path).join('\r\n'));
-                  },
-                })
-              );
-              folderMenu.append(
-                new MenuItem({
                   icon: menuIcon('folder-open.png'),
-                  label: t('achievement-data-folders', 'Achievement data', 'Données de succès'),
-                  submenu: dataMenu,
+                  label: labelCounts.get(label) > 1 ? `${label} - ${rootOf(entry.path)}` : label,
+                  click: () => revealDataPath(entry.path),
                 })
               );
-            }
+            });
+            dataMenu.append(new MenuItem({ type: 'separator' }));
+            dataMenu.append(
+              new MenuItem({
+                label: t('copy-achievement-data-path', 'Copy achievement data path', 'Copier le chemin des données de succès'),
+                click() {
+                  copyText(dataPaths.map((entry) => entry.path).join('\r\n'));
+                },
+              })
+            );
+            folderMenu.append(
+              new MenuItem({
+                icon: menuIcon('folder-open.png'),
+                label: t('achievement-data-folders', 'Achievement data', 'Données de succès'),
+                submenu: dataMenu,
+              })
+            );
+          }
 
+          // These are the Steam schema and icon caches; console parsers read their own trophy files and
+          // never write there, so the entries would open nothing for them.
+          if (!isConsoleSystem) {
             const cacheMenu = new Menu();
             cacheMenu.append(
               new MenuItem({
@@ -6341,169 +6401,137 @@ var app = {
                 submenu: cacheMenu,
               })
             );
+          }
 
-            // Catalog links use the mapped Steam appid for Ubisoft records (including namespaced
-            // uplay-<productId> official entries). Never emit broken URLs with a local/native id.
-            if (/^[0-9]+$/.test(catalogAppid)) {
-              linkMenu.append(
-                new MenuItem({
-                  icon: menuIcon('globe.png'),
-                  label: 'Steam',
-                  click() {
-                    openSteamTarget(steamClientLinks.steamStoreUrl, catalogAppid);
-                  },
-                })
-              );
-              linkMenu.append(
-                new MenuItem({
-                  icon: menuIcon('globe.png'),
-                  label: 'SteamDB',
-                  click() {
-                    remote.shell.openExternal(`https://steamdb.info/app/${catalogAppid}/`);
-                  },
-                })
-              );
-              linkMenu.append(
-                new MenuItem({
-                  icon: menuIcon('globe.png'),
-                  label: 'PCGamingWiki',
-                  click() {
-                    remote.shell.openExternal(`https://pcgamingwiki.com/api/appid.php?appid=${catalogAppid}`);
-                  },
-                })
-              );
-              linkMenu.append(
-                new MenuItem({
-                  icon: menuIcon('globe.png'),
-                  label: 'SteamHunters',
-                  click() {
-                    remote.shell.openExternal(`https://steamhunters.com/apps/${catalogAppid}/achievements`);
-                  },
-                })
-              );
-              linkMenu.append(
-                new MenuItem({
-                  icon: menuIcon('globe.png'),
-                  label: 'Steam Community',
-                  click() {
-                    openSteamTarget(steamClientLinks.steamGameHubUrl, catalogAppid);
-                  },
-                })
-              );
-            }
+          // Catalog links use the mapped Steam appid for Ubisoft records (including namespaced
+          // uplay-<productId> official entries). Never emit broken URLs with a local/native id.
+          if (/^[0-9]+$/.test(catalogAppid)) {
+            linkMenu.append(
+              new MenuItem({
+                icon: menuIcon('globe.png'),
+                label: 'Steam',
+                click() {
+                  openSteamTarget(steamClientLinks.steamStoreUrl, catalogAppid);
+                },
+              })
+            );
+            linkMenu.append(
+              new MenuItem({
+                icon: menuIcon('globe.png'),
+                label: 'SteamDB',
+                click() {
+                  remote.shell.openExternal(`https://steamdb.info/app/${catalogAppid}/`);
+                },
+              })
+            );
+            linkMenu.append(
+              new MenuItem({
+                icon: menuIcon('globe.png'),
+                label: 'PCGamingWiki',
+                click() {
+                  remote.shell.openExternal(`https://pcgamingwiki.com/api/appid.php?appid=${catalogAppid}`);
+                },
+              })
+            );
+            linkMenu.append(
+              new MenuItem({
+                icon: menuIcon('globe.png'),
+                label: 'SteamHunters',
+                click() {
+                  remote.shell.openExternal(`https://steamhunters.com/apps/${catalogAppid}/achievements`);
+                },
+              })
+            );
+            linkMenu.append(
+              new MenuItem({
+                icon: menuIcon('globe.png'),
+                label: 'Steam Community',
+                click() {
+                  openSteamTarget(steamClientLinks.steamGameHubUrl, catalogAppid);
+                },
+              })
+            );
+          }
 
-            // Platform metadata links: non-Steam sources get a
-            // store/search page plus PCGamingWiki instead of Steam-only links.
-            const linkGame = list.find((g) => g.appid == appid);
-            const linkName = encodeURIComponent((linkGame && linkGame.name) || '');
-            const sourceLower = String((linkGame && linkGame.source) || '').toLowerCase();
-            const globeIcon = () => menuIcon('globe.png');
-            const hasLink = (label) => linkMenu.items.some((item) => item.label === label);
-            const addPcgw = (label) => {
-              if (hasLink(label)) return;
+          // Platform metadata links: non-Steam sources get a
+          // store/search page plus PCGamingWiki instead of Steam-only links.
+          const linkGame = list.find((g) => g.appid == appid);
+          const linkName = encodeURIComponent((linkGame && linkGame.name) || '');
+          const sourceLower = String((linkGame && linkGame.source) || '').toLowerCase();
+          const globeIcon = () => menuIcon('globe.png');
+          const hasLink = (label) => linkMenu.items.some((item) => item.label === label);
+          const addPcgw = (label) => {
+            if (hasLink(label)) return;
+            linkMenu.append(
+              new MenuItem({
+                icon: globeIcon(),
+                label,
+                click() {
+                  remote.shell.openExternal(`https://pcgamingwiki.com/w/index.php?search=${linkName}`);
+                },
+              })
+            );
+          };
+          if (linkName) {
+            if (sourceLower.startsWith('epic')) {
               linkMenu.append(
                 new MenuItem({
                   icon: globeIcon(),
-                  label,
+                  label: 'Epic Games Store',
                   click() {
-                    remote.shell.openExternal(`https://pcgamingwiki.com/w/index.php?search=${linkName}`);
+                    remote.shell.openExternal(`https://store.epicgames.com/search?q=${linkName}`);
                   },
                 })
               );
-            };
-            if (linkName) {
-              if (sourceLower.startsWith('epic')) {
-                linkMenu.append(
-                  new MenuItem({
-                    icon: globeIcon(),
-                    label: 'Epic Games Store',
-                    click() {
-                      remote.shell.openExternal(`https://store.epicgames.com/search?q=${linkName}`);
-                    },
-                  })
-                );
-                addPcgw('PCGamingWiki');
-              } else if (sourceLower.startsWith('gog')) {
-                linkMenu.append(
-                  new MenuItem({
-                    icon: globeIcon(),
-                    label: 'GOG',
-                    click() {
-                      remote.shell.openExternal(`https://www.gog.com/games?search=${linkName}`);
-                    },
-                  })
-                );
-                addPcgw('PCGamingWiki');
-              } else if (sourceLower === 'ea') {
-                linkMenu.append(
-                  new MenuItem({
-                    icon: globeIcon(),
-                    label: 'EA',
-                    click() {
-                      remote.shell.openExternal(`https://www.ea.com/search?q=${linkName}`);
-                    },
-                  })
-                );
-                addPcgw('PCGamingWiki');
-              } else if (sourceLower.includes('rpcs3')) {
-                linkMenu.append(
-                  new MenuItem({
-                    icon: globeIcon(),
-                    label: 'RPCS3 Wiki',
-                    click() {
-                      remote.shell.openExternal(`https://wiki.rpcs3.net/index.php?search=${linkName}`);
-                    },
-                  })
-                );
-                addPcgw('PCGamingWiki');
-              } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower === 'ps4 recomp' || sourceLower.includes('xenia')) {
-                addPcgw('PCGamingWiki');
-              } else if (sourceLower.includes('uplay') || sourceLower === 'lumaplay' || sourceLower.includes('ubisoft')) {
-                linkMenu.append(
-                  new MenuItem({
-                    icon: globeIcon(),
-                    label: 'Ubisoft Store',
-                    click() {
-                      remote.shell.openExternal(`https://store.ubi.com/us/search?q=${linkName}`);
-                    },
-                  })
-                );
-                addPcgw('PCGamingWiki');
-              }
-            }
-          }
-
-          // Console-style manual entries skip the PC tools above but still need safe navigation and
-          // catalog links. PC manual entries already received those common items in the main block.
-          if (isManualGame && isConsoleSystem) {
-            if (ctxGame?.gameDir && fs.existsSync(ctxGame.gameDir)) {
-              folderMenu.append(
-                new MenuItem({
-                  icon: menuIcon('folder-open.png'),
-                  label: $('#game-list').attr('data-ctx-installloc') || '',
-                  click() {
-                    remote.shell.openPath(ctxGame.gameDir);
-                  },
-                })
-              );
-            }
-            if (/^[0-9]+$/.test(catalogAppid)) {
-              for (const [label, url] of [
-                ['Steam', `https://store.steampowered.com/app/${catalogAppid}/`],
-                ['SteamDB', `https://steamdb.info/app/${catalogAppid}/`],
-                ['PCGamingWiki', `https://pcgamingwiki.com/api/appid.php?appid=${catalogAppid}`],
-              ]) {
-                linkMenu.append(new MenuItem({ icon: menuIcon('globe.png'), label, click: () => remote.shell.openExternal(url) }));
-              }
-            } else if (ctxGame?.name) {
-              const query = encodeURIComponent(ctxGame.name);
+              addPcgw('PCGamingWiki');
+            } else if (sourceLower.startsWith('gog')) {
               linkMenu.append(
                 new MenuItem({
-                  icon: menuIcon('globe.png'),
-                  label: 'PCGamingWiki',
-                  click: () => remote.shell.openExternal(`https://pcgamingwiki.com/w/index.php?search=${query}`),
+                  icon: globeIcon(),
+                  label: 'GOG',
+                  click() {
+                    remote.shell.openExternal(`https://www.gog.com/games?search=${linkName}`);
+                  },
                 })
               );
+              addPcgw('PCGamingWiki');
+            } else if (sourceLower === 'ea') {
+              linkMenu.append(
+                new MenuItem({
+                  icon: globeIcon(),
+                  label: 'EA',
+                  click() {
+                    remote.shell.openExternal(`https://www.ea.com/search?q=${linkName}`);
+                  },
+                })
+              );
+              addPcgw('PCGamingWiki');
+            } else if (sourceLower.includes('rpcs3')) {
+              linkMenu.append(
+                new MenuItem({
+                  icon: globeIcon(),
+                  label: 'RPCS3 Wiki',
+                  click() {
+                    remote.shell.openExternal(`https://wiki.rpcs3.net/index.php?search=${linkName}`);
+                  },
+                })
+              );
+              addPcgw('PCGamingWiki');
+            } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower === 'ps4 recomp' || sourceLower.includes('xenia')) {
+              addPcgw('PCGamingWiki');
+            } else if (sourceLower.includes('uplay') || sourceLower === 'lumaplay' || sourceLower.includes('ubisoft')) {
+              linkMenu.append(
+                new MenuItem({
+                  icon: globeIcon(),
+                  label: 'Ubisoft Store',
+                  click() {
+                    remote.shell.openExternal(`https://store.ubi.com/us/search?q=${linkName}`);
+                  },
+                })
+              );
+              addPcgw('PCGamingWiki');
+            } else if (isManualGame) {
+              addPcgw('PCGamingWiki');
             }
           }
 

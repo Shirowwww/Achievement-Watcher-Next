@@ -190,6 +190,21 @@
     return formatter ? formatter.format(shown) : null;
   }
 
+  // A time unit's plural name ("days", "jours") for a field label, from the runtime's own locale
+  // data, so the playtime dialog needs no translated strings of its own.
+  function unitName(unit, lang) {
+    const formatter = build(Intl.NumberFormat, lang, { style: 'unit', unit, unitDisplay: 'long' });
+    const name = formatter
+      ? formatter
+          .formatToParts(2)
+          .filter((part) => part.type === 'unit')
+          .map((part) => part.value)
+          .join('')
+          .trim()
+      : '';
+    return name || `${unit}s`;
+  }
+
   // "a, b and c" in the reader's language, for the source and folder lists.
   function formatList(values, lang, options = { style: 'long', type: 'conjunction' }) {
     const items = (Array.isArray(values) ? values : []).map((value) => String(value)).filter(Boolean);
@@ -207,6 +222,7 @@
     formatDateTime,
     formatRelativeTime,
     formatDuration,
+    unitName,
     formatList,
   };
 });

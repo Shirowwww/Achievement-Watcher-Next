@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Pulihkan nama asli",
     "rename-game-failed": "Tidak dapat menyimpan nama baru.",
     "edit-playtime": "Ubah waktu bermain…",
-    "edit-playtime-prompt": "Total waktu bermain untuk “{name}”, dalam jam (12,5) atau jam dan menit (12h30).",
     "edit-playtime-invalid": "Ini bukan waktu bermain yang dapat dibaca AW Next.",
     "edit-playtime-failed": "Tidak dapat menyimpan waktu bermain.",
     "launch-game": "Jalankan game",

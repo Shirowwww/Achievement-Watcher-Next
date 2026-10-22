@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Відновити початкову назву",
     "rename-game-failed": "Не вдалося зберегти нову назву.",
     "edit-playtime": "Змінити час гри…",
-    "edit-playtime-prompt": "Загальний час гри в «{name}» у годинах (12,5) або в годинах і хвилинах (12h30).",
     "edit-playtime-invalid": "AW Next не може прочитати цей час гри.",
     "edit-playtime-failed": "Не вдалося зберегти час гри.",
     "launch-game": "Запустити гру",

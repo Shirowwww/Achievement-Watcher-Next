@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Gendan det oprindelige navn",
     "rename-game-failed": "Det nye navn kunne ikke gemmes.",
     "edit-playtime": "Rediger spilletid…",
-    "edit-playtime-prompt": "Samlet spilletid for “{name}” i timer (12,5) eller timer og minutter (12h30).",
     "edit-playtime-invalid": "Det er ikke en spilletid, som AW Next kan læse.",
     "edit-playtime-failed": "Spilletiden kunne ikke gemmes.",
     "launch-game": "Start spillet",

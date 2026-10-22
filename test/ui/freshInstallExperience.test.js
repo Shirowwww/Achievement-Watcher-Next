@@ -158,8 +158,7 @@ test('manual games keep guarded per-game tools and the common uninstall flow', (
   assert.match(app, /if \(!isManualGame\) emulatorMenu\.append/);
   assert.match(app, /if \(!isManualGame\) appendCrackFixItem\(\)/);
   assert.match(app, /if \(app\.config\?\.general\?\.uninstallContextMenu !== false\)/);
-  assert.match(app, /if \(isManualGame && isConsoleSystem\)[\s\S]*?PCGamingWiki/);
-  assert.match(app, /if \(isManualGame \|\| isUbisoftSource\)[\s\S]*?PlaytimeTracking\.reset/);
+  assert.match(app, /\} else if \(isManualGame\) \{\s*addPcgw\('PCGamingWiki'\);/);
 });
 
 test('zero-achievement games render a localized unavailable state instead of zero percent', () => {

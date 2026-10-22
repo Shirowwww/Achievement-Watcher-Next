@@ -1731,7 +1731,6 @@
     "rename-game-reset": "還原原名稱",
     "rename-game-failed": "無法儲存新名稱。",
     "edit-playtime": "編輯遊玩時數…",
-    "edit-playtime-prompt": "「{name}」的總遊玩時數，以小時（12.5）或小時加分鐘（12h30）輸入。",
     "edit-playtime-invalid": "AW Next 無法讀取這個遊玩時數。",
     "edit-playtime-failed": "無法儲存遊玩時數。",
     "launch-game": "啟動遊戲",

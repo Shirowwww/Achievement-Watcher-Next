@@ -1731,7 +1731,6 @@
     "rename-game-reset": "De oorspronkelijke naam herstellen",
     "rename-game-failed": "De nieuwe naam kon niet worden opgeslagen.",
     "edit-playtime": "Speeltijd bewerken…",
-    "edit-playtime-prompt": "Totale speeltijd voor “{name}”, in uren (12,5) of in uren en minuten (12h30).",
     "edit-playtime-invalid": "Dit is geen speeltijd die AW Next kan lezen.",
     "edit-playtime-failed": "Kan de speeltijd niet opslaan.",
     "launch-game": "Game starten",

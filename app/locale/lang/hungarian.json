@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Az eredeti név visszaállítása",
     "rename-game-failed": "Az új nevet nem sikerült elmenteni.",
     "edit-playtime": "Játékidő szerkesztése…",
-    "edit-playtime-prompt": "A(z) „{name}” teljes játékideje órában (12,5) vagy órában és percben (12h30).",
     "edit-playtime-invalid": "Ezt a játékidőt az AW Next nem tudja beolvasni.",
     "edit-playtime-failed": "A játékidőt nem sikerült elmenteni.",
     "launch-game": "Játék indítása",

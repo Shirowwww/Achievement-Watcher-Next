@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Obnoviť pôvodný názov",
     "rename-game-failed": "Nový názov sa nepodarilo uložiť.",
     "edit-playtime": "Upraviť čas hrania…",
-    "edit-playtime-prompt": "Celkový čas hrania pre „{name}“ v hodinách (12,5) alebo v hodinách a minútach (12h30).",
     "edit-playtime-invalid": "Tento čas hrania AW Next nedokáže prečítať.",
     "edit-playtime-failed": "Čas hrania sa nepodarilo uložiť.",
     "launch-game": "Spustiť hru",

@@ -7028,31 +7028,75 @@ body.is-resizing #game-list {
 }
 .aw-cover-picker > .aw-prompt-heading,
 .aw-cover-picker > .aw-cover-picker-status,
-.aw-cover-picker > .aw-prompt-actions {
+.aw-cover-picker > .aw-prompt-actions,
+.aw-playtime-editor > * {
   flex: none;
   padding-inline: 20px;
 }
-.aw-cover-picker > .aw-prompt-heading {
+.aw-cover-picker > .aw-prompt-heading,
+.aw-playtime-editor > .aw-prompt-heading {
   align-items: center;
   margin-bottom: 0;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--set-hairline-soft);
 }
-.aw-cover-picker .aw-prompt-title {
+.aw-cover-picker .aw-prompt-title,
+.aw-playtime-editor .aw-prompt-title {
   margin: 0;
 }
-.aw-cover-picker .aw-prompt-description {
+.aw-cover-picker .aw-prompt-description,
+.aw-playtime-editor .aw-prompt-description {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.aw-cover-picker > .aw-prompt-heading > div:nth-child(2) {
+.aw-cover-picker > .aw-prompt-heading > div:nth-child(2),
+.aw-playtime-editor > .aw-prompt-heading > div:nth-child(2) {
   min-width: 0;
 }
-.aw-cover-picker > .aw-prompt-actions {
+.aw-cover-picker > .aw-prompt-actions,
+.aw-playtime-editor > .aw-prompt-actions {
   margin-top: 0;
   padding-top: 14px;
   border-top: 1px solid var(--set-hairline-soft);
+}
+/* "Edit playtime...": the cover picker's frame (rules above) around three number fields. */
+.aw-playtime-editor {
+  width: min(400px, calc(100vw - 48px));
+  padding: 18px 0 16px;
+}
+.aw-playtime-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding-block: 18px 10px;
+}
+.aw-playtime-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.aw-playtime-field .aw-prompt-input {
+  min-height: 44px;
+  text-align: center;
+  font-size: var(--fs-2xl);
+  font-variant-numeric: tabular-nums;
+}
+.aw-playtime-unit {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.aw-playtime-total {
+  padding-bottom: 16px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+.aw-playtime-total.is-invalid {
+  color: var(--danger);
 }
 .aw-cover-picker-status {
   display: flex;

@@ -1,38 +1,38 @@
 'use strict';
 
-// Reading and writing the playtime a user types in the "Edit playtime" prompt. Plain numbers are
-// hours ("12", "12.5", "12,5"); "12:30", "12h30", "12h 30m" and "90m" are hours and minutes.
+// Reading and writing the playtime a user enters in the "Edit playtime" dialog: one whole number
+// each for days, hours and minutes. A blank field counts as zero, and no field has to stay below
+// the next unit up ("31" hours is as good as 1 day and 7 hours).
 
 const MAX_SECONDS = 0xffffffff; // the registry stores the total as a DWORD
 
-const HOURS_ONLY = /^(\d+(?:[.,]\d+)?)\s*h?$/i;
-const HOURS_MINUTES = /^(\d+)\s*(?::|h)\s*(\d{1,2})\s*(?:m|min)?$/i;
-const MINUTES_ONLY = /^(\d+)\s*(?:m|min)$/i;
+const FIELDS = [
+  ['days', 86400],
+  ['hours', 3600],
+  ['minutes', 60],
+];
 
-// Seconds, or null when the text is not a duration.
-function parsePlaytime(text) {
-  const value = String(text == null ? '' : text).trim();
-  let seconds = null;
-  let match;
-  if ((match = HOURS_MINUTES.exec(value))) {
-    const minutes = Number(match[2]);
-    if (minutes >= 60) return null;
-    seconds = Number(match[1]) * 3600 + minutes * 60;
-  } else if ((match = MINUTES_ONLY.exec(value))) {
-    seconds = Number(match[1]) * 60;
-  } else if ((match = HOURS_ONLY.exec(value))) {
-    seconds = Math.round(Number(match[1].replace(',', '.')) * 3600);
+// { days, hours, minutes } for the dialog's starting values; seconds are dropped.
+function splitPlaytime(seconds) {
+  let left = Math.max(0, Math.floor(Number(seconds) || 0));
+  const parts = {};
+  for (const [name, size] of FIELDS) {
+    parts[name] = Math.floor(left / size);
+    left -= parts[name] * size;
   }
-  if (seconds == null || !Number.isFinite(seconds) || seconds > MAX_SECONDS) return null;
-  return seconds;
+  return parts;
 }
 
-// The prompt's starting value, in a form parsePlaytime reads back: "12h30", "5h", "0h45".
-function formatPlaytimeInput(seconds) {
-  const total = Math.max(0, Math.floor(Number(seconds) || 0));
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  return minutes > 0 ? `${hours}h${String(minutes).padStart(2, '0')}` : `${hours}h`;
+// Seconds, or null when a field is not a whole number or the total does not fit.
+function joinPlaytime(values) {
+  let seconds = 0;
+  for (const [name, size] of FIELDS) {
+    const raw = String((values && values[name]) ?? '').trim();
+    if (raw === '') continue;
+    if (!/^\d+$/.test(raw)) return null;
+    seconds += Number(raw) * size;
+  }
+  return seconds > MAX_SECONDS ? null : seconds;
 }
 
-module.exports = { parsePlaytime, formatPlaytimeInput, MAX_SECONDS };
+module.exports = { splitPlaytime, joinPlaytime, MAX_SECONDS };

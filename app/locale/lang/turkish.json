@@ -1731,7 +1731,6 @@
     "rename-game-reset": "Özgün adı geri yükle",
     "rename-game-failed": "Yeni ad kaydedilemedi.",
     "edit-playtime": "Oynama süresini düzenle…",
-    "edit-playtime-prompt": "“{name}” için toplam oynama süresi, saat (12,5) veya saat ve dakika (12h30) olarak.",
     "edit-playtime-invalid": "AW Next bu oynama süresini okuyamıyor.",
     "edit-playtime-failed": "Oynama süresi kaydedilemedi.",
     "launch-game": "Oyunu başlat",
