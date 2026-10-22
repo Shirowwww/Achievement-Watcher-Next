@@ -7,7 +7,7 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.2 - 2026-10-22
 
 ### Added
 
@@ -85,13 +85,16 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A new first-start guide and Help rewritten**, with RetroAchievements and PlayStation among the
   accounts and seventeen help topics on today's app.
 - **Tidier Settings and game settings**, clearer drop-down lists, auto search that finds more in one
-  pass, the overlay sorted by name, and the current PlayStation logo.
+  pass, the overlay sorted by name, and the current PlayStation logo. The cover and icon galleries
+  keep their title and buttons in view while the pictures scroll.
+- **One card per PlayStation game.** With "Merge Duplicates" on, a game's trophy lists on two
+  consoles (GTA V on PS4 and PS5) share one card; with it off, each card names its console. A PS4
+  list no longer takes the name of the PS5 edition.
 - **A redesigned Game Health panel** with clearer tabs, a smooth resize between them, and a panel
   that scrolls in a small window. Console emulator games are no longer asked for a Windows
   executable or game files, and Xbox 360 games from XLLN show their real cover.
 - **One platinum row.** A game's PlayStation platinum reads like any platinum trophy, with Sony's
-  share of players when it is known ("Platinum · 4.4% of all players"). PlayStation games now take
-  the first SteamGridDB cover, with Sony's art as the fallback.
+  share of players when it is known ("Platinum · 4.4% of all players").
 - **Settings scroll more cleanly.** The blur under the pinned headers follows the panel's rounded
   corner without overflowing, and a pinned header keeps its rounded top.
 - **Steam and Xbox PC in Official launchers.** Show Steam games and the Xbox PC row now sit with
@@ -133,6 +136,11 @@ renamed in 3.9.0 and the history is kept under one file.
   theme in the preset designer, emulator saves in the first-start guide, advanced steam_settings of
   the wrong game, and Open Sans clipping a "q".
 
+### Security
+
+- `ip-address` was updated to 10.7.4: the Steam client's proxy dependency could be stalled by a
+  single long IPv6 address.
+
 ### Compatibility
 
 - **Game Health names the games no offline emulator can record.** Halo: Campaign Evolved and The
@@ -143,8 +151,9 @@ renamed in 3.9.0 and the history is kept under one file.
 ### Performance
 
 - **Large libraries no longer stall.** The playtime monitor reads Steam's catalogue once instead of
-  once per game, which could block the Watchdog for minutes and show it as not responding; Epic games without achievements no longer force a
-  full rescan at every launch; Steam account requests stop as soon as Steam refuses them.
+  once per game, which could block the Watchdog for minutes and show it as not responding; Epic
+  games without achievements no longer force a full rescan at every launch; Steam account requests
+  stop as soon as Steam refuses them.
 
 ### Website & Docs
 

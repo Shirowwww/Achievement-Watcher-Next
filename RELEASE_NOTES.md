@@ -1,29 +1,32 @@
-# Achievement Watcher Next 3.12.1
+# Achievement Watcher Next 3.12.2
 
-A quick follow-up to 3.12.0 with performance and security fixes: library scans are fast again, updates and notifications no longer run PowerShell, and exported logs are safe to share.
+PlayStation trophies come to AW Next: connect your PlayStation account to import your games, and any game that also came out on PlayStation shows its real platinum. This release also reads dozens more PS4 and Xbox 360 ports, refreshes the interface and fixes a long list of notification, detection and Settings problems.
 
 ## Highlights
 
-- **Updating from 3.12.0 works again.** The update stopped on an "AW Next cannot be closed" box and left the old version in place. If you saw it, let AW Next check again or install this version over it.
-- **Library scans are fast again on Windows.** 3.12.0 shipped without its compiled registry reader, so a full scan took 40 to 60 seconds. The reader is back.
-- **Bitdefender no longer blocks updates or quarantines the app (#128).** The update's signature check now runs inside the app instead of a PowerShell script. It still verifies both signature layers and the pinned certificate.
-- **Windows notifications appear at once and start no other program.** They no longer go through PowerShell, which took seconds and is what antivirus engines flag.
-- **Exported logs are safe to attach to a public issue (#127).** **Export logs (.zip)** masks your Windows user name and any key, token or password in the archive.
-- **Updates no longer steal the focus.** A new version is announced with a notification and the title-bar chip instead of a window that opens over your game.
-- **A notification hidden by a full-screen game is reported (#126)** in the game's Game Health panel, and the notification test no longer reports "Unexpected response".
-- **Fixes:** a saved Steam sign-in is reused by every generate_emu_config version (#125), and a Settings save folder under the temp directory is no longer written into every game.
+- **PlayStation trophies.** Connect your account in Settings > Sources (you sign in on Sony's page, AW keeps only an encrypted token). Your PlayStation games and trophies are imported with Sony's own rate on each trophy, and a game from Steam, Ubisoft, GOG or any other source that also came out on PlayStation shows the real platinum of its list. With Merge Duplicates on, a game with a list on PS4 and PS5 is one card.
+- **A Discord server** for questions, ideas, presets and release news: [discord.gg/DjTMrDsXTh](https://discord.gg/DjTMrDsXTh).
+- **The 100% popup for every source.** Xenia, recompiled ports, GOG Galaxy, Ubisoft Connect, Xbox PC and the other sources AW follows live now pop the platinum at 100%.
+- **More PS4 and Xbox 360 ports.** Bloodborne, the Uncharted collection, inFAMOUS Second Son, The Last Guardian, Lost Odyssey, Gears of War 2, Forza Horizon and many more are read, and Games for Windows LIVE titles running XLiveLessNess show their DLC achievements.
+- **A refreshed interface** in Open Sans, with reworked themes, a simpler theme editor, a livelier stats panel and a redesigned Game Health panel.
+- **Update notices you cannot miss.** The notice stays until closed and comes back after a game, never during one, and the update window lists every release you skipped.
+- **Your games, your way.** Rename a game or edit its playtime from its right-click menu, and Steam games can take their title in your achievement language.
+- **SAN themes as they looked in SAN**, with their layouts, pictures, fonts and sounds. Settings > Notification presets imports every theme saved on this PC in one go.
+- **OK in Settings no longer deletes save folders.** It saved only the folders on screen, so a game folder AW did not recognise or a drive that was not plugged in was dropped.
+- **Large libraries no longer stall the Watchdog**, and Epic games without achievements no longer force a full rescan at every launch.
+- **Fixes:** two quick unlocks both pop, popups and screenshots follow the monitor the game is on, trophy mode grades every achievement again, and text cut short with "…" no longer clips letters in any language.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3121---2026-10-16) for the complete list.
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3122---2026-10-22) for the complete list.
 
 ## Install
 
 | File | What it is |
 |---|---|
-| `Achievement.Watcher.Setup.3.12.1.exe` | The Windows installer. An installed copy also updates itself. |
-| `Achievement.Watcher.Portable.3.12.1.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
-| `Achievement.Watcher.3.12.1.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
+| `Achievement.Watcher.Setup.3.12.2.exe` | The Windows installer. An installed copy also updates itself. |
+| `Achievement.Watcher.Portable.3.12.2.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
+| `Achievement.Watcher.3.12.2.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
 | `.blockmap`, `latest.yml` and `latest-linux.yml` | Used by automatic updates, nothing to download by hand. |
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3121---2026-10-16) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3122---2026-10-22) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
