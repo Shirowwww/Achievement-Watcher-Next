@@ -89,8 +89,8 @@ body[ss] .wrapper#bg {
     position: relative;
     outline: var(--outset);
     border-radius: var(--iconroundness);
-    width: 17.5cqmax;
-    height: 17.5cqmax;
+    width: calc(17.5 * max(var(--sanvw), var(--sanvh)));
+    height: calc(17.5 * max(var(--sanvw), var(--sanvh)));
     margin-left: 0.6rem;
     overflow: hidden;
     background-color: var(--primarycolor);

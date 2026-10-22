@@ -17,7 +17,7 @@ const path = require('path');
 const archive = require('./profileArchive.js');
 const inventory = require('./profileInventory.js');
 const rebase = require('./profileRebase.js');
-const { replaceFileSync } = require('./replaceFile.js');
+const { replaceFileSync, renameRetry } = require('./replaceFile.js');
 
 const RESTORE_DIR = '.profile-restore';
 const MARKER = 'pending.json';
@@ -29,10 +29,6 @@ const dirOf = (userDataDir) => path.join(userDataDir, RESTORE_DIR);
 const stagingOf = (userDataDir) => path.join(dirOf(userDataDir), 'staging');
 const previousOf = (userDataDir, id) => path.join(dirOf(userDataDir), 'previous', id);
 const toPath = (root, rel) => path.join(root, ...rel.split('/'));
-
-function sleepSync(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
 
 function writeJsonAtomic(file, value) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -51,19 +47,6 @@ function readJson(file) {
 
 function removeTree(target) {
   fs.rmSync(target, { recursive: true, force: true, maxRetries: 5, retryDelay: 80 });
-}
-
-// A directory rename that survives an antivirus scan holding a file inside for a moment.
-function renameRetry(from, to) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      fs.renameSync(from, to);
-      return;
-    } catch (err) {
-      if (attempt >= 4 || !['EPERM', 'EACCES', 'EBUSY'].includes(err.code)) throw err;
-      sleepSync(100);
-    }
-  }
 }
 
 function unitsFor(files) {

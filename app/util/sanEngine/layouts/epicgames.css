@@ -147,7 +147,7 @@ body[bgonly] .shadow {
 }
 
 #overlay {
-    width: 20cqh;
+    width: calc(20 * var(--sanvh));
     height: 200%;
     translate: 0 50%;
     transform: skew(45deg,0deg);

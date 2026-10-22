@@ -24,10 +24,12 @@ page, so it looks the same as in SAN. Its author allowed AW Next to reuse SAN's 
   screenshot overlay.
 - The placeholder `src="../img/achicon.png"` is removed from the markup: the engine sets every
   achievement picture.
-- SAN sizes each popup window to its card, while AW Next sizes one window for all the states of a
-  theme. So the body takes the card's size, the root font size follows the card, and the cards'
-  viewport units (`vw`, `vh`, `vmax`) become container units (`cqw`, `cqh`, `cqmax`). With a window
-  of the card's own size, the result is the same, pixel for pixel.
+- SAN sizes each popup window to its card plus 25px of glow room on each side, while AW Next sizes
+  one window for all the states of a theme. So the body takes the card's size, and the viewport units
+  (`vw`, `vh`, `vmax`, `vmin`) of the cards and of the root font size become `--sanvw` and `--sanvh`,
+  one hundredth of the window SAN would have opened. A state's own `scale` zooms its card, and the
+  window fits the largest card at its scale. Checked side by side against SAN 1.9.47's own page, every
+  card at 100% and 150%: the same within text antialiasing.
 
 `node tools/sync-san-notify.js <SteamAchievementNotifier checkout>` makes the copy again, for a newer
 SAN; `engine.js` and `host.js` are then checked against its `src/notify/base.ts` by hand, and

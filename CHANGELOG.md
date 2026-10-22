@@ -7,6 +7,15 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **SAN themes at SAN's exact size.** Text on an imported SAN theme came out a little smaller than in
+  SAN, and a theme's own scale setting was ignored; both now match SAN. Installed SAN presets are
+  rebuilt on their own. Importing no longer fails with "EPERM" when an antivirus briefly holds a
+  freshly written file.
+
 ## 3.12.2 - 2026-10-22
 
 ### Added

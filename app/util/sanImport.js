@@ -14,6 +14,7 @@ const sanEngine = require('./sanEngine/index.js');
 const engine = require('./sanEngine/engine.js');
 const { sanitizePresetName, PRESET_PACKAGE_FILE } = require('./customPreset.js');
 const { fontKind } = require('./presetSchema.js');
+const { renameRetry } = require('./replaceFile.js');
 const { safePackagePath, isInside, installSideFile, PRESET_PACKAGE_FORMAT, PRESET_PACKAGE_FORMAT_VERSION } = require('./presetPackage.js');
 
 const SAN_MANIFEST = 'usertheme.json';
@@ -563,14 +564,14 @@ function installPreset({
     fs.writeFileSync(path.join(stagedPreset, PRESET_PACKAGE_FILE), JSON.stringify(manifest, null, 2), 'utf8');
 
     if (fs.existsSync(destination)) {
-      fs.renameSync(destination, backup);
+      renameRetry(destination, backup);
       backedUp = true;
     }
     try {
-      fs.renameSync(stagedPreset, destination);
+      renameRetry(stagedPreset, destination);
     } catch (err) {
       if (backedUp) {
-        fs.renameSync(backup, destination);
+        renameRetry(backup, destination);
         backedUp = false;
       }
       throw err;

@@ -276,7 +276,7 @@ test('an imported theme is kept whole and drawn by the SAN engine', (t) => {
 
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
   assert.equal(sanEngine.engineVersionOf(html), sanEngine.ENGINE_VERSION);
-  assert.match(html, /<meta width="353" height="58" \/>/, 'the window is the size of the card the theme was built on');
+  assert.match(html, /<meta width="442" height="73" \/>/, 'the window is the card the theme was built on, at its own 125%');
   assert.ok(fs.existsSync(path.join(dir, 'layout-xqjan.css')));
 
   // The theme, not a translation of it: the values SAN wrote, with every file now a preset asset.
@@ -504,7 +504,7 @@ test('the four themes in use become one preset that switches like SAN, plus one 
   assert.equal(setup.showpercent, 'all');
   assert.equal(setup.notify1line, true);
   const html = fs.readFileSync(path.join(dirs.presets, 'SAN - Neon', 'index.html'), 'utf8');
-  assert.match(html, /<meta width="353" height="58" \/>/, 'the window holds the largest card of the four');
+  assert.match(html, /<meta width="442" height="73" \/>/, 'the window holds the largest card of the four, at 125%');
   for (const card of ['xqjan', 'ps5', 'xbox360']) assert.ok(fs.existsSync(path.join(dirs.presets, 'SAN - Neon', `layout-${card}.css`)), card);
 
   // Each state plays what it played in SAN; the rare one picks from its folder.
@@ -571,4 +571,35 @@ test('each SAN state plays its own sound, by the theme cut-offs', (t) => {
   fs.writeFileSync(path.join(dir, PRESET_PACKAGE_FILE), JSON.stringify({ sound: 'x.wav' }));
   assert.equal(sanEngine.presetSound(dir, {}), null, 'an ordinary preset is left to the ordinary rules');
   assert.equal(sanEngine.presetSound(path.join(dirs.root, 'absent'), {}), null);
+});
+
+test('an antivirus holding a fresh theme file for a moment does not fail the import', (t) => {
+  const dirs = workspace(t);
+  const rename = fs.renameSync;
+  let refused = 0;
+  // Windows refuses to rename a folder while a scanner still has a file inside it open.
+  t.mock.method(fs, 'renameSync', (from, to) => {
+    if (String(from).includes('.awsan-') && refused < 2) {
+      refused += 1;
+      throw Object.assign(new Error(`EPERM: operation not permitted, rename '${from}' -> '${to}'`), { code: 'EPERM' });
+    }
+    return rename(from, to);
+  });
+  const out = install(dirs, fixturePackage(dirs));
+  assert.equal(out.ok, true, out.error);
+  assert.equal(refused, 2);
+  assert.ok(fs.existsSync(path.join(dirs.presets, out.name, 'index.html')));
+});
+
+test('a rename that stays refused still fails the import cleanly', (t) => {
+  const dirs = workspace(t);
+  const rename = fs.renameSync;
+  t.mock.method(fs, 'renameSync', (from, to) => {
+    if (String(from).includes('.awsan-')) throw Object.assign(new Error('EPERM: operation not permitted'), { code: 'EPERM' });
+    return rename(from, to);
+  });
+  const out = install(dirs, fixturePackage(dirs));
+  assert.equal(out.ok, false);
+  assert.match(out.error, /EPERM/);
+  assert.deepEqual(fs.readdirSync(dirs.presets), [], 'no staging folder is left behind');
 });

@@ -93,8 +93,8 @@ body[bottomcenter] .wrapper#ssdisplay {
 }
 
 .wrapper#achiconwrapper {
-    max-width: 15cqmax;
-    max-height: 15cqmax;
+    max-width: calc(15 * max(var(--sanvw), var(--sanvh)));
+    max-height: calc(15 * max(var(--sanvw), var(--sanvh)));
 }
 
 .wrapper#achcontent {

@@ -56,6 +56,11 @@
     return Number.isFinite(parsed) ? parsed : fallback;
   }
 
+  // A state's own size as a factor: SAN's scale setting runs from 10% to 1000%.
+  function scaleOf(customisation) {
+    return Math.min(1000, Math.max(10, num(customisation && customisation.scale, 100))) / 100;
+  }
+
   // SAN's own defaults for its two rarity cut-offs, in percent.
   const DEFAULT_RARITY = 10;
   const DEFAULT_SEMIRARITY = 25;
@@ -337,7 +342,10 @@
     const html = doc.documentElement;
     const c = Object.assign({}, opts.customisation || {});
     c.preset = layoutOf(c.preset);
-    // The host zooms the whole page to the chosen size, so the theme is drawn at its design size.
+    // The state's own scale zooms the card, as SAN's window does; the host's page zoom (AW Next's
+    // size setting) comes on top. The properties below are then computed at the design size.
+    const zoom = scaleOf(c);
+    if (zoom !== 1) body.style.zoom = String(zoom);
     c.scale = 100;
     const info = opts.info || {};
     const type = TYPES.includes(info.type) ? info.type : 'main';
@@ -478,6 +486,7 @@
     TYPES: TYPES,
     TEXT_SLOTS: TEXT_SLOTS,
     layoutOf: layoutOf,
+    scaleOf: scaleOf,
     notifyType: notifyType,
     stateOf: stateOf,
     tierOf: tierOf,

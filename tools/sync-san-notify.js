@@ -8,6 +8,22 @@
 const fs = require('fs');
 const path = require('path');
 
+// SAN's window is the card plus 25px of glow room on each side, and its viewport units measure that
+// window; base.css defines --sanvw and --sanvh as one hundredth of it.
+const CARD_UNITS = {
+  vw: 'var(--sanvw)',
+  vh: 'var(--sanvh)',
+  vmax: 'max(var(--sanvw), var(--sanvh))',
+  vmin: 'min(var(--sanvw), var(--sanvh))',
+};
+const toCardUnits = (css) =>
+  css.replace(/(-?\d*\.?\d+)(vmax|vmin|vw|vh)\b/g, (m, value, unit) => `calc(${value} * ${CARD_UNITS[unit]})`);
+
+if (require.main !== module) {
+  module.exports = { toCardUnits };
+  return;
+}
+
 const sanRoot = process.argv[2];
 const awRoot = path.join(__dirname, '..');
 if (!sanRoot || !fs.existsSync(path.join(sanRoot, 'notify', 'presets'))) {
@@ -29,10 +45,6 @@ const asciiOnly = (name, text) => {
   if (bad) throw new Error(`${name}: non-ASCII character U+${bad[0].charCodeAt(0).toString(16)}`);
   return text;
 };
-
-// The window of a popup is one card, so the viewport units SAN writes are the card's own size.
-const CARD_UNITS = { vw: 'cqw', vh: 'cqh', vmax: 'cqmax', vmin: 'cqmin' };
-const toCardUnits = (css) => css.replace(/(\d)(vmax|vmin|vw|vh)\b/g, (m, digit, unit) => digit + CARD_UNITS[unit]);
 
 // AW Next ships these faces in fonts.css (WOFF2), so the per-card @font-face rules go.
 const withoutFontFaces = (css) => css.replace(/@font-face\s*\{[^}]*\}\s*/g, '');
@@ -88,11 +100,14 @@ const adapter = `
 /* ---- AW Next ----------------------------------------------------------------------------------- */
 
 /*
-  SAN sizes each popup window to its card. AW Next sizes one window for every state of a theme, so
-  the card is drawn in a body of its own size and the text scale follows the card, not the window.
+  SAN sizes each popup window to its card plus 25px of glow room on each side. AW Next sizes one
+  window for every state of a theme, so the card is drawn in a body of its own size, and SAN's
+  viewport units (the text scale among them) measure the window SAN would have opened for it.
 */
 :root {
-    font-size: clamp(0.05rem, 0.05rem + max(var(--notifywidth), var(--notifyheight)) * 0.03, 12.5rem);
+    --sanvw: calc((var(--notifywidth) + 50px) / 100);
+    --sanvh: calc((var(--notifyheight) + 50px) / 100);
+    font-size: clamp(0.05rem, 0.05rem + 3 * max(var(--sanvw), var(--sanvh)), 12.5rem);
 }
 
 body {

@@ -43,6 +43,19 @@ function isRecoverable(err) {
   return !!err && RECOVERABLE.has(err.code);
 }
 
+// A directory rename that survives an antivirus scan holding a file inside for a moment.
+function renameRetry(from, to) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      fs.renameSync(from, to);
+      return;
+    } catch (err) {
+      if (attempt >= 4 || !isRecoverable(err)) throw err;
+      sleepSync(100);
+    }
+  }
+}
+
 function unlinkForce(file) {
   try {
     clearReadOnly(file);
@@ -175,4 +188,4 @@ function writeFileAtomicSync(file, data) {
   }
 }
 
-module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, sweepSidecars };
+module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, sweepSidecars, renameRetry };

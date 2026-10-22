@@ -15,7 +15,7 @@ const { normalizeOptions } = require('../presetSchema.js');
 
 // Raised whenever a change here, in engine.js, host.js, base.css or a layout must reach presets
 // that are already installed.
-const ENGINE_VERSION = 2;
+const ENGINE_VERSION = 3;
 
 const THEME_BLOCK_ID = 'aw-san-theme';
 const ENGINE_META = 'aw-san-engine';
@@ -42,14 +42,17 @@ function layoutsOf(theme) {
   return [...ids];
 }
 
-// The window must hold the largest card among the states; each card is drawn at its own size.
-function windowSize(layouts) {
+// The window must hold the largest card among the states, each at the scale its state gives it.
+function windowSize(theme) {
+  const types = (theme && theme.types) || {};
+  const states = engine.TYPES.map((type) => types[type]).filter(Boolean);
   let width = 0;
   let height = 0;
-  for (const id of layouts) {
-    const layout = engine.LAYOUTS[id];
-    width = Math.max(width, layout.width);
-    height = Math.max(height, layout.height);
+  for (const customisation of states.length ? states : [{}]) {
+    const layout = engine.LAYOUTS[engine.layoutOf(customisation.preset)];
+    const scale = engine.scaleOf(customisation);
+    width = Math.max(width, Math.ceil(layout.width * scale));
+    height = Math.max(height, Math.ceil(layout.height * scale));
   }
   return { width, height };
 }
@@ -85,7 +88,7 @@ function fontsUsedBy(css) {
 */
 function buildPresetFiles(theme, { name = '' } = {}) {
   const layouts = layoutsOf(theme);
-  const size = windowSize(layouts);
+  const size = windowSize(theme);
   const base = read('base.css');
   const layoutCss = {};
   for (const id of layouts) layoutCss[id] = readOptional(`layouts/${id}.css`);

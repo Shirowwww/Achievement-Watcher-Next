@@ -594,11 +594,14 @@ body[ss] .wrapper#achcontent > #desc {
 /* ---- AW Next ----------------------------------------------------------------------------------- */
 
 /*
-  SAN sizes each popup window to its card. AW Next sizes one window for every state of a theme, so
-  the card is drawn in a body of its own size and the text scale follows the card, not the window.
+  SAN sizes each popup window to its card plus 25px of glow room on each side. AW Next sizes one
+  window for every state of a theme, so the card is drawn in a body of its own size, and SAN's
+  viewport units (the text scale among them) measure the window SAN would have opened for it.
 */
 :root {
-    font-size: clamp(0.05rem, 0.05rem + max(var(--notifywidth), var(--notifyheight)) * 0.03, 12.5rem);
+    --sanvw: calc((var(--notifywidth) + 50px) / 100);
+    --sanvh: calc((var(--notifyheight) + 50px) / 100);
+    font-size: clamp(0.05rem, 0.05rem + 3 * max(var(--sanvw), var(--sanvh)), 12.5rem);
 }
 
 body {

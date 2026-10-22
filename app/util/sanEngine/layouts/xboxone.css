@@ -58,7 +58,7 @@ body[bgonly] .wrapper#bg {
     left: 50%;
     translate: -150% -50%;
     transform: skew(-30deg,0deg);
-    width: 30cqw;
+    width: calc(30 * var(--sanvw));
     height: calc(var(--notifyheight) * 2);
     place-self: center;
     background-color: white;
@@ -227,7 +227,7 @@ body[ss] .wrapper#achcontent:has(#title):has(#decoration) #desc[unit="%"]::befor
 #title {
     --finish: slideup calc(var(--transition) * 2) calc(var(--displaytime) / 2 - calc(var(--transition)) * 2) cubic-bezier(0.5, 0, 1, 1) forwards;
     --elemopacity: 1;
-    --translate: -100cqh;
+    --translate: calc(-100 * var(--sanvh));
     animation:
         fadein calc(var(--transition) * 2) calc((var(--transition) * 8.5)) forwards,
         var(--finish);
@@ -256,7 +256,7 @@ body[fastanim] #title {
     --translate: 0;
     align-self: center;
     grid-row: 1 / span 2;
-    translate: 0 100cqh;
+    translate: 0 calc(100 * var(--sanvh));
     opacity: 1;
     animation:
         var(--start),

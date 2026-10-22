@@ -180,14 +180,28 @@ test('a card loads nothing from outside its preset: no script, no remote resourc
   }
 });
 
-test('a card is sized by itself, not by the window that holds every state of the theme', () => {
-  // SAN's window is always its card; AW Next's fits the largest card of the theme.
+test('a card measures SAN window units against its own card plus the glow room around it', () => {
+  // SAN's window is the card plus 25px of glow room on each side (listeners.js setnotifybounds), and
+  // its vw/vh/vmax measure that window. AW Next's window fits the largest card of the theme instead.
   for (const file of fs.readdirSync(path.join(engineDir, 'layouts')).filter((name) => name.endsWith('.css'))) {
-    assert.doesNotMatch(fs.readFileSync(path.join(engineDir, 'layouts', file), 'utf8'), /\d(?:vw|vh|vmax|vmin)\b/, `${file} measures the window`);
+    const css = fs.readFileSync(path.join(engineDir, 'layouts', file), 'utf8');
+    assert.doesNotMatch(css, /\d(?:vw|vh|vmax|vmin)\b/, `${file} measures the window`);
+    assert.doesNotMatch(css, /\dcq(?:w|h|max|min)\b/, `${file} measures the card without its glow room`);
   }
   const adapter = fs.readFileSync(path.join(engineDir, 'base.css'), 'utf8').split('/* ---- AW Next')[1] || '';
-  assert.match(adapter, /body \{\s*width: var\(--notifywidth\);\s*height: var\(--notifyheight\);\s*container-type: size;/);
-  assert.match(adapter, /font-size: clamp\([^;]*max\(var\(--notifywidth\), var\(--notifyheight\)\)/);
+  assert.match(adapter, /body \{\s*width: var\(--notifywidth\);\s*height: var\(--notifyheight\);/);
+  assert.match(adapter, /--sanvw: calc\(\(var\(--notifywidth\) \+ 50px\) \/ 100\);/);
+  assert.match(adapter, /--sanvh: calc\(\(var\(--notifyheight\) \+ 50px\) \/ 100\);/);
+  assert.match(adapter, /font-size: clamp\(0\.05rem, 0\.05rem \+ 3 \* max\(var\(--sanvw\), var\(--sanvh\)\), 12\.5rem\);/);
+});
+
+test('the sync tool turns SAN viewport units into glow-aware card units, signs included', () => {
+  const { toCardUnits } = require(path.join(__dirname, '..', '..', 'tools', 'sync-san-notify.js'));
+  assert.equal(toCardUnits('width: 30vw;'), 'width: calc(30 * var(--sanvw));');
+  assert.equal(toCardUnits('height: 17.5vmax;'), 'height: calc(17.5 * max(var(--sanvw), var(--sanvh)));');
+  assert.equal(toCardUnits('--translate: -100vh;'), '--translate: calc(-100 * var(--sanvh));');
+  assert.equal(toCardUnits('translate: 0 100vh;'), 'translate: 0 calc(100 * var(--sanvh));');
+  assert.equal(toCardUnits('min-width: 2vmin;'), 'min-width: calc(2 * min(var(--sanvw), var(--sanvh)));');
 });
 
 test('every typeface a card asks for is bundled', () => {
@@ -231,6 +245,15 @@ test('a preset carries one card per state it uses, in a window that fits the lar
   assert.ok(built.files['layout-xqjan.css'] !== undefined && built.files['layout-windows.css'] !== undefined);
   // Only the fonts the cards name travel with the preset.
   for (const relative of Object.values(built.fonts)) assert.match(built.files['style.css'], new RegExp(relative.replace(/[.]/g, '\\.')));
+});
+
+test('the window fits each state at the scale the theme gives it, as SAN sizes its window', () => {
+  const built = sanEngine.buildPresetFiles(sampleTheme({ main: { preset: 'xqjan', scale: 150 }, rare: { preset: 'windows', scale: 50 }, plat: { preset: 'default' } }));
+  // xqjan 353x58 at 150% is 529.5x87; windows 300x100 at 50% is 150x50; default 300x50 at 100%.
+  assert.deepEqual(built.size, { width: 530, height: 87 });
+  assert.match(built.files['index.html'], /<meta width="530" height="87" \/>/);
+  const out = sanEngine.buildPresetFiles(sampleTheme({ main: { preset: 'default', scale: 'huge' }, plat: { preset: 'default', scale: 5000 } }));
+  assert.deepEqual(out.size, { width: 3000, height: 500 }, 'a missing scale is 100%, a wild one stops at SAN\'s 1000%');
 });
 
 test('the theme block cannot close its own script element, whatever a label says', () => {

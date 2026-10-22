@@ -137,3 +137,43 @@ test('every base card draws each state from a real preset page and closes itself
   }
   assert.ok(cards.includes('default'), 'the default card is missing');
 });
+
+test('a state is drawn at the scale its theme gives it, text included', { timeout: 60000 }, async (t) => {
+  const executablePath = findBrowser();
+  if (!executablePath) return t.skip('no Chromium-based browser installed');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-scale-'));
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-browser-'));
+  const browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu', '--allow-file-access-from-files'] });
+  t.after(async () => {
+    await browser.close().catch(() => {});
+    await removeBrowserProfile(userDataDir);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const measure = async (scale) => {
+    const theme = themeFor('default');
+    theme.types.main.scale = scale;
+    const dir = path.join(root, String(scale));
+    fs.mkdirSync(dir);
+    sanEngine.writePresetFiles(dir, theme, { name: 'scaled' });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 800, height: 300 });
+    await page.evaluateOnNewDocument(bridge);
+    await page.goto(pathToFileURL(path.join(dir, 'index.html')).href, { waitUntil: 'load' });
+    await page.evaluate((d) => window.__aw.show(d), payload({}));
+    await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
+    // The text slides in after the card; measure once it has settled.
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+    const size = await page.evaluate(() => ({
+      card: document.body.getBoundingClientRect().width,
+      text: document.getElementById('title').getBoundingClientRect().height,
+    }));
+    await page.close();
+    return size;
+  };
+  const normal = await measure(100);
+  const double = await measure(200);
+  assert.ok(Math.abs(normal.card - 300) < 1, `the default card is 300px wide at 100%, got ${normal.card}`);
+  assert.ok(Math.abs(double.card - 600) < 1, `the default card is 600px wide at 200%, got ${double.card}`);
+  assert.ok(Math.abs(double.text / normal.text - 2) < 0.05, `the text doubles too: ${normal.text} -> ${double.text}`);
+});
