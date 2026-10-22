@@ -116,6 +116,33 @@ function decryptEsfm(buffer, npcommid, keyHex = RETAIL_TROPHY_KEY) {
   }
 }
 
+/*
+  The NP id a set's ESFM was encrypted with, when npbind.dat cannot tell it: a dump unpacked from a
+  .pkg can keep that file encrypted. Every NPWRnnnnn_00 is tried on the first block, which opens
+  with an XML declaration under the right one: 0.5s at worst, so the caller caches the answer.
+*/
+const NPCOMMID_SEARCH_LIMIT = 100000;
+const XML_OPENING = /^\s*<(?:\?xml|!--|trophyconf\b)/;
+
+function findNpcommid(files, keyHex = RETAIL_TROPHY_KEY) {
+  if (!(files instanceof Map) || !/^[0-9a-f]{32}$/i.test(String(keyHex || ''))) return '';
+  const name = [...files.keys()].find((entry) => /\.ESFM$/i.test(entry));
+  const esfm = name && files.get(name);
+  if (!Buffer.isBuffer(esfm) || esfm.length < 32) return '';
+  const key = Buffer.from(keyHex, 'hex');
+  for (let number = 0; number < NPCOMMID_SEARCH_LIMIT; number++) {
+    const npcommid = `NPWR${String(number).padStart(5, '0')}_00`;
+    const identity = Buffer.alloc(16);
+    identity.write(npcommid, 'ascii');
+    const cipher = crypto.createCipheriv('aes-128-ecb', key, null);
+    cipher.setAutoPadding(false);
+    const decipher = crypto.createDecipheriv('aes-128-cbc', cipher.update(identity), esfm.subarray(0, 16));
+    decipher.setAutoPadding(false);
+    if (XML_OPENING.test(decipher.update(esfm.subarray(16, 32)).toString('latin1')) && decryptEsfm(esfm, npcommid, keyHex)) return npcommid;
+  }
+  return '';
+}
+
 // A service label is a big-endian u32 in npbind.dat; some tools write it as ASCII digits instead.
 function serviceLabel(value) {
   const text = value.toString('latin1').replace(/\0/g, '').trim();
@@ -370,6 +397,7 @@ module.exports = {
   readBounded,
   readTrp,
   decryptEsfm,
+  findNpcommid,
   readNpbind,
   readSfo,
   isTrophyPng,

@@ -42,6 +42,11 @@ renamed in 3.9.0 and the history is kept under one file.
   240 Hz included.
 - **A Discord server** for questions, ideas, presets and release news, linked from Help, the README,
   the website and the FAQ.
+- **Undo the emulator switch.** Where "Switch to the supported emulator" ran, Game Health offers a
+  link that puts the crack's own files back.
+- **BilalReloaded's Uncharted: The Nathan Drake Collection port**, and any other port on the same
+  runtime. Each game gets its own entry, named and illustrated from your copy of the game, and every
+  trophy is notified as it is earned.
 
 ### Improved
 
@@ -106,6 +111,12 @@ renamed in 3.9.0 and the history is kept under one file.
   Crew Motorfest have their achievements awarded by the publisher's servers, so a crack records
   nothing; their panel says so from the first launch. online-fix's Ubisoft builds are recognised, and
   an achievement fix there warns that online play may stop.
+
+### Performance
+
+- **Large libraries no longer stall.** The playtime monitor reads Steam's catalogue once instead of
+  once per game, which could block the Watchdog for minutes and show it as not responding; Epic games without achievements no longer force a
+  full rescan at every launch; Steam account requests stop as soon as Steam refuses them.
 
 ### Website & Docs
 

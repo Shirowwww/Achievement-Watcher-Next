@@ -155,6 +155,35 @@ test('a port writing its own trophy list is announced from unlocked.txt', async 
   }
 });
 
+// #138: the folder appears with the first trophy ever earned, and each game has its own file.
+test('the Nathan Drake Collection port is followed until its first trophyNN.txt line', async () => {
+  const root = fixture.makeCollectionPort(path.join(temp, 'ndc', 'Uncharted-windows'));
+  writeDb([root]);
+  const groups = discover(userDirDb);
+  assert.equal(groups.length, 1, 'the three games share one watched folder');
+  assert.equal(groups[0].records.length, 3);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const trophyDir = path.join(root, 'analysis', 'uncharted-user', 'trophy');
+    fs.mkdirSync(trophyDir);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fs.writeFileSync(path.join(trophyDir, 'trophy02.txt'), '1 1792644204\r\n');
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'the first unlock written after start is announced');
+    assert.equal(ctx.sent[0].gameDisplayName, 'Uncharted 2', 'by the game whose list file grew');
+    assert.equal(ctx.sent[0].achievementDisplayName, 'Hunter');
+    assert.equal(ctx.sent[0].time, 1792644204);
+
+    fs.appendFileSync(path.join(trophyDir, 'trophy02.txt'), '2 1792645166\r\n');
+    assert.ok(await waitFor(() => ctx.sent.length > 1), 'a later line is announced too');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert.deepEqual(ctx.sent.map((p) => [p.gameDisplayName, p.achievementName]), [['Uncharted 2', '1'], ['Uncharted 2', '2']], 'the other two games stay silent');
+  } finally {
+    watcher.stop();
+  }
+});
+
 test('the source switch turns the watcher off', async () => {
   const root = makeBloodborne('off');
   writeDb([root]);

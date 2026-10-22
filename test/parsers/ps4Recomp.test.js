@@ -161,14 +161,14 @@ test('trophies.log and last_run.log give the unlocks, an unfinished line is left
 
 test('the Uncharted collection gets one entry per game, unlocks split by the game being played', () => {
   const root = fixture.makePort(dir('unch', 'Uncharted'), 'uncharted');
-  const sets = [0, 1, 2].map((slot) => ({ slot, npcommid: `NPWR0866${slot}_00`, title: `Uncharted ${slot + 1}` }));
-  fixture.makeGameDump(dir('unch', 'Collection'), { sets });
+  fixture.makeGameDump(dir('unch', 'Collection'), { sets: fixture.COLLECTION_SETS });
   fixture.settingsFile(appData, 'uncharted-launcher', { game_dir: dir('unch', 'Collection') });
   const records = ps4Recomp.scan(root);
+  // The real dump numbers its lists 01-03 (service labels 1-3), never 00.
   assert.deepEqual(records.map((r) => [r.data.game, r.data.slot, r.appid]), [
-    ['u1', 0, 'ps4recomp-NPWR08660_00'],
-    ['u2', 1, 'ps4recomp-NPWR08661_00'],
-    ['u3', 2, 'ps4recomp-NPWR08662_00'],
+    ['u1', 1, 'ps4recomp-NPWR08661_00'],
+    ['u2', 2, 'ps4recomp-NPWR08662_00'],
+    ['u3', 3, 'ps4recomp-NPWR08663_00'],
   ]);
   assert.deepEqual(records[0].data.logs, ['last_run.log'], 'trophies.log does not say which game');
 
@@ -181,6 +181,103 @@ test('the Uncharted collection gets one entry per game, unlocks split by the gam
   fixture.write(log, 'Runtime: SystemService: load executable big3/eboot/boot-linked.bin\nRuntime: trophy 7 unlocked\n');
   assert.deepEqual(byGame(), [['3'], ['5'], ['7']]);
   assert.equal(logs.gameFromText('Switching to big3-ps4_Shipping.elf'), 'u3');
+});
+
+// #138: the reporter's trophy01.txt, CRLF lines included.
+const REPORTED_LIST = '12 1792644204\r\n41 1792645166\r\n';
+
+test('the Nathan Drake Collection port without run.py gets one entry per game, unlocks from trophyNN.txt', async () => {
+  const root = fixture.makeCollectionPort(dir('ndc', 'Uncharted-windows'));
+  assert.equal(identifyPort(root).port, 'probe-uncharted');
+  const records = ps4Recomp.scan(dir('ndc'));
+  const trophyDir = path.join(root, 'analysis', 'uncharted-user', 'trophy');
+  assert.deepEqual(records.map((r) => [r.appid, r.data.slot, r.data.logs]), [
+    ['ps4recomp-NPWR08661_00', 1, ['trophy01.txt']],
+    ['ps4recomp-NPWR08662_00', 2, ['trophy02.txt']],
+    ['ps4recomp-NPWR08663_00', 3, ['trophy03.txt']],
+  ]);
+  for (const record of records) {
+    assert.equal(record.data.userDir, trophyDir, 'the folder the port writes trophy lists in, before it exists');
+    assert.equal(record.data.dumpDir, path.join(root, 'game', 'CUSA02344', 'uroot'), "the launcher's default game folder");
+    assert.equal(record.data.exe, path.join(root, 'Uncharted Launcher.exe'));
+  }
+  // The run.py collection test above journaled the same appids.
+  for (const record of records) fs.rmSync(ps4Recomp._internal.journalFile(record.appid), { force: true });
+  assert.deepEqual(ps4Recomp.getAchievements(records[0].data), [], 'no trophy folder yet is nothing unlocked');
+
+  fixture.write(path.join(trophyDir, 'trophy01.txt'), '1 1792644204\r\n2 1792645166\r\n');
+  fixture.write(path.join(trophyDir, 'trophy03.txt'), '0 1792646000\n');
+  const byGame = records.map((r) => ps4Recomp.getAchievements(r.data).map((u) => [u.id, u.earned_time]));
+  assert.deepEqual(byGame, [[['1', 1792644204], ['2', 1792645166]], [], [['0', 1792646000]]], 'each list file is its own game');
+  assert.ok(!fs.existsSync(ps4Recomp._internal.journalFile(records[0].appid)), 'a list file keeps its unlocks, no journal is needed');
+
+  const game = await ps4Recomp.getGameData(records[0].data);
+  assert.equal(game.name, 'Uncharted 1', "the name is the trophy list's own");
+  assert.equal(game.achievement.total, 3);
+});
+
+test('the Collection port reads its game folder from launcher.json, the default when that is gone', () => {
+  const root = fixture.makeCollectionPort(dir('ndccfg', 'Port'), { dump: false });
+  const elsewhere = fixture.makeGameDump(dir('ndccfg', 'Games', 'CUSA02344'), { titleId: 'CUSA02344', sets: fixture.COLLECTION_SETS });
+  const config = path.join(appData, 'Uncharted Launcher', 'launcher.json');
+  fixture.write(config, JSON.stringify({ game: 'u2', game_dir: elsewhere }));
+  try {
+    assert.equal(ps4Recomp.scan(root).length, 3);
+    assert.equal(ps4Recomp.scan(root)[0].data.dumpDir, elsewhere);
+
+    fixture.write(config, JSON.stringify({ game_dir: dir('ndccfg', 'unplugged') }));
+    assert.deepEqual(ps4Recomp.scan(root), [], 'no dump anywhere: no trophy names, no entry');
+    fixture.makeGameDump(path.join(root, 'game', 'CUSA02344', 'uroot'), { sets: fixture.COLLECTION_SETS });
+    assert.equal(ps4Recomp.scan(root)[0].data.dumpDir, path.join(root, 'game', 'CUSA02344', 'uroot'), 'a missing setting falls back to the default folder');
+
+    fixture.write(config, '{ cut off');
+    assert.equal(ps4Recomp.scan(root).length, 3, 'an unreadable launcher.json is no setting at all');
+  } finally {
+    fs.rmSync(path.dirname(config), { recursive: true, force: true });
+  }
+});
+
+// A dump unpacked from a .pkg can keep npbind.dat encrypted: the real CUSA02343 one does.
+test('a dump whose npbind.dat cannot be read still opens its trophy lists', async () => {
+  const root = fixture.makeCollectionPort(dir('nobind', 'Port'));
+  fs.rmSync(path.join(root, 'game', 'CUSA02344', 'uroot', 'sce_sys', 'npbind.dat'));
+  const records = ps4Recomp.scan(root);
+  assert.deepEqual(records.map((r) => r.appid), ['ps4recomp-NPWR08661_00', 'ps4recomp-NPWR08662_00', 'ps4recomp-NPWR08663_00'], 'the same ids as with a readable npbind.dat');
+  const game = await ps4Recomp.getGameData(records[1].data);
+  assert.equal(game.name, 'Uncharted 2', 'the NP id is found from the encrypted list itself');
+  assert.equal(game.achievement.total, 3);
+  assert.equal(require(path.join(__dirname, '..', '..', 'app', 'parser', 'ps4RecompTrophies.js')).findNpcommid(new Map([['TROPCONF.ESFM', Buffer.alloc(64, 1)]])), '', 'a list no NP id opens finds none');
+});
+
+test('any port on the same runtime is read the same way, not only Uncharted', async () => {
+  const root = dir('runtime', 'GoW3 Port');
+  fixture.write(path.join(root, 'tools', 'probe_gow3.py'), '');
+  fixture.write(path.join(root, 'God of War III Launcher.exe'), 'MZ');
+  fixture.write(path.join(root, 'analysis', 'gow3-user', 'probe.ini'), '');
+  fixture.write(path.join(root, 'trophy.key'), `${fixture.TEST_KEY}\n`);
+  const dump = fixture.makeGameDump(path.join(root, 'game', 'CUSA01623'), { titleId: 'CUSA01623', title: 'God of War III Remastered' });
+  fixture.write(path.join(root, 'analysis', 'gow3-user', 'trophy', 'trophy00.txt'), '2 1792650000\r\n');
+
+  const [record, ...others] = ps4Recomp.scan(dir('runtime'));
+  assert.equal(others.length, 0);
+  assert.equal(record.appid, `ps4recomp-${fixture.NPCOMMID}`);
+  assert.equal(record.data.port, 'probe-gow3');
+  assert.equal(record.data.dumpDir, dump, 'a bundled game/<title id> folder without uroot');
+  assert.equal(record.data.exe, path.join(root, 'God of War III Launcher.exe'));
+  assert.deepEqual(record.data.logs, ['trophy00.txt']);
+  assert.deepEqual(ps4Recomp.getAchievements(record.data).map((u) => [u.id, u.earned_time]), [['2', 1792650000]]);
+  assert.equal((await ps4Recomp.getGameData(record.data)).name, 'God of War III Remastered');
+
+  const loose = dir('runtime-loose', 'Tools');
+  fixture.write(path.join(loose, 'tools', 'probe_thing.py'), '');
+  assert.equal(identifyPort(loose), null, 'a probe script alone, with no user folder or launcher, is not a port');
+});
+
+test('the reported trophy01.txt reads as two dated unlocks', () => {
+  const root = fixture.makeCollectionPort(dir('ndcreal', 'Port'));
+  fixture.write(path.join(root, 'analysis', 'uncharted-user', 'trophy', 'trophy01.txt'), REPORTED_LIST);
+  const [first] = ps4Recomp.scan(root);
+  assert.deepEqual(ps4Recomp.getAchievements(first.data).map((u) => [u.id, u.earned_time]), [['12', 1792644204], ['41', 1792645166]]);
 });
 
 test('a port that writes its own trophy list is read from its user folder, no dump needed', async () => {
@@ -239,6 +336,12 @@ test('Settings > Folders accepts a port folder, and a folder inside it as the po
   const inside = await userDir.diagnose(path.join(root, 'launcher'));
   assert.equal(inside.accepted, true);
   assert.equal(inside.canonicalPath, root, 'the port folder is the one kept');
+
+  const collection = fixture.makeCollectionPort(dir('folders', 'Uncharted-windows'));
+  assert.equal((await userDir.diagnose(collection)).code, 'recompilation', 'the Collection port without run.py too');
+  const nested = await userDir.diagnose(path.join(collection, 'analysis', 'uncharted-user'));
+  assert.equal(nested.accepted, true);
+  assert.equal(nested.canonicalPath, collection);
 });
 
 test('a reset never touches the files of a port user folder', () => {

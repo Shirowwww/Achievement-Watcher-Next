@@ -22,6 +22,9 @@ const ACTION = {
   // Same install, offered over a folder a scene crack already serves: the runtime is there, it just
   // is not one that reads a steam_settings folder. Its own action so the button can say that.
   SWITCH_RUNTIME: 'switch-runtime',
+  // crackLoaderDetect.restoreSwitchedLoader() - puts the crack back. Never in a report's actions: the
+  // panel offers it as a quiet footer link wherever a switch left its .bak files.
+  UNDO_SWITCH_RUNTIME: 'undo-switch-runtime',
   START_TRACKING: 'start-tracking', //  gameIndex.upsert() - the same seed the scan writes
   UNMUTE_PROGRESS: 'unmute-progress', // progressMute.toggle()
   FETCH_PROGRESS: 'fetch-progress', // anonymous generate_emu_config, kept in AW's cache only

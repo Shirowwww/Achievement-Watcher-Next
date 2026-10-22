@@ -152,6 +152,52 @@ function disableLoaderMarkers(dirs) {
   return moved;
 }
 
+const SIDELINED_MARKERS = new Set(KNOWN_CRACK_LOADERS.filter((loader) => loader.replaceable).flatMap((loader) => loader.markers.map((marker) => `${marker}.bak`)));
+
+function sidelinedMarkersIn(dir) {
+  try {
+    return fs.readdirSync(dir).filter((name) => SIDELINED_MARKERS.has(name.toLowerCase()));
+  } catch {
+    return [];
+  }
+}
+
+// The folders disableLoaderMarkers() set aside, i.e. where "Switch to the supported emulator" ran.
+function switchedLoaderDirs(dirs) {
+  const found = [];
+  for (const dir of Array.isArray(dirs) ? dirs : [dirs]) {
+    if (!dir || found.some((known) => path.resolve(known).toLowerCase() === path.resolve(dir).toLowerCase())) continue;
+    if (sidelinedMarkersIn(dir).length > 0) found.push(dir);
+  }
+  return found;
+}
+
+/*
+  Undo of the runtime switch: the crack's files come back, and its dll comes back from the .bak
+  gbeInstaller kept - but only over a dll that is still an emulator build, so a runtime put there
+  since is never overwritten. A marker already back in place keeps its live copy.
+*/
+function restoreSwitchedLoader(dirs) {
+  const restored = [];
+  for (const dir of switchedLoaderDirs(dirs)) {
+    for (const name of sidelinedMarkersIn(dir)) {
+      const to = path.join(dir, name.slice(0, -'.bak'.length));
+      if (fs.existsSync(to)) continue;
+      fs.renameSync(path.join(dir, name), to);
+      restored.push(to);
+    }
+    for (const dll of STEAM_API_DLLS) {
+      const live = path.join(dir, dll);
+      const backup = `${live}.bak`;
+      if (!fs.existsSync(backup) || (fs.existsSync(live) && !isEmulatorDll(live))) continue;
+      fs.rmSync(live, { force: true });
+      fs.renameSync(backup, live);
+      restored.push(live);
+    }
+  }
+  return restored;
+}
+
 /*
   Returns { name } for the first known crack loader whose markers exist directly in `gameDir`, or in
   the Steamworks folder a packaged Unreal build loads its dll from, or null.
@@ -271,4 +317,4 @@ function servesOnlinePlay(gameDir) {
   return !!loader && loader.name === 'OnlineFix';
 }
 
-module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

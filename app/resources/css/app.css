@@ -5791,7 +5791,8 @@ body.is-resizing #game-list {
 }
 
 /* A link, not a button: it navigates to the control in Settings, it does not perform the check. */
-.gh-verified {
+.gh-verified,
+.gh-undo-switch {
   flex: 0 0 auto;
   background: none;
   border: 0;
@@ -5807,12 +5808,15 @@ body.is-resizing #game-list {
 }
 
 .gh-verified:hover,
-.gh-verified:focus-visible {
+.gh-verified:focus-visible,
+.gh-undo-switch:hover,
+.gh-undo-switch:focus-visible {
   color: var(--text);
   opacity: 1;
 }
 
-.gh-verified[hidden] {
+.gh-verified[hidden],
+.gh-undo-switch[hidden] {
   display: none;
 }
 

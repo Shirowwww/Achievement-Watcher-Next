@@ -212,6 +212,23 @@ function makePort(root, port, { script, key = TEST_KEY, withMarker = true, withE
   return root;
 }
 
+/*
+  BilalReloaded's Nathan Drake Collection port (0.5.0, #138): no run.py, the games are started by
+  tools/probe_uncharted.py, and the user folder is analysis/uncharted-user. `dump` puts the
+  Collection's trophy01-03.trp at the launcher's default game/CUSA02344/uroot.
+*/
+const COLLECTION_SETS = [1, 2, 3].map((slot) => ({ slot, npcommid: `NPWR0866${slot}_00`, title: `Uncharted ${slot}` }));
+
+function makeCollectionPort(root, { dump = true, key = TEST_KEY } = {}) {
+  write(path.join(root, 'tools', 'probe_uncharted.py'), 'ROOT = Path(__file__).resolve().parent.parent\n');
+  write(path.join(root, 'launcher', 'uncharted_launcher.pyw'), 'USER_DIR = ROOT / "analysis" / "uncharted-user"\n');
+  write(path.join(root, 'Uncharted Launcher.exe'), 'MZ');
+  write(path.join(root, 'analysis', 'uncharted-user', 'disabled-optimizations.txt'), '');
+  if (key) write(path.join(root, 'trophy.key'), `${key}\n`);
+  if (dump) makeGameDump(path.join(root, 'game', 'CUSA02344', 'uroot'), { titleId: 'CUSA02344', title: 'Uncharted Collection', sets: COLLECTION_SETS });
+  return root;
+}
+
 function settingsFile(appData, folder, settings) {
   return write(path.join(appData, folder, 'settings.json'), JSON.stringify(settings));
 }
@@ -255,5 +272,7 @@ module.exports = {
   trophyFiles,
   makeGameDump,
   makePort,
+  COLLECTION_SETS,
+  makeCollectionPort,
   settingsFile,
 };

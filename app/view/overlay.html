@@ -104,8 +104,15 @@
         height: 24px;
         border-radius: var(--radius-sm);
         background: rgba(var(--accent-rgb), 0.18);
-        color: var(--accent);
-        font-size: 13px;
+      }
+
+      /* The app's own mark, tinted like the update window's, not an emoji. */
+      .brand-mark {
+        display: block;
+        width: 15px;
+        height: 15px;
+        background: var(--accent);
+        -webkit-mask: url('../resources/img/brand-mark.png') center / contain no-repeat;
       }
 
       .overlay-brand .title {
@@ -564,7 +571,9 @@
       }
 
       .overlay-empty .empty-icon {
-        font-size: 26px;
+        width: 28px;
+        height: 28px;
+        background: var(--muted);
         opacity: 0.6;
       }
 
@@ -889,7 +898,7 @@
     <div class="overlay-panel" id="overlayPanel">
       <header class="overlay-header">
         <div class="overlay-brand">
-          <span class="trophy">🏆</span>
+          <span class="trophy"><span class="brand-mark" aria-hidden="true"></span></span>
           <span class="title" id="overlay-title">Achievements</span>
           <div class="overlay-actions">
             <span class="overlay-mode-badge" id="overlay-mode-badge" hidden></span>
@@ -940,7 +949,7 @@
       <div class="overlay-body" id="overlayBody">
         <div id="overlayRows"></div>
         <div class="overlay-empty" id="overlay-empty">
-          <span class="empty-icon">🏆</span>
+          <span class="empty-icon brand-mark" aria-hidden="true"></span>
           <span class="empty-text" id="overlay-empty-text">Select a config!</span>
         </div>
       </div>

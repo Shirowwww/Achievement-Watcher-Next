@@ -847,6 +847,8 @@ function gameHealthActionLabel(action) {
       return t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur');
     case gameHealth.ACTION.SWITCH_RUNTIME:
       return t('gh-action-switch-runtime', 'Switch to the supported emulator', 'Passer à l’émulateur pris en charge');
+    case gameHealth.ACTION.UNDO_SWITCH_RUNTIME:
+      return t('gh-action-undo-switch', 'Undo the emulator switch', 'Annuler le changement d’émulateur');
     case gameHealth.ACTION.START_TRACKING:
       return t('gh-action-start-tracking', 'Watch this game', 'Surveiller ce jeu');
     case gameHealth.ACTION.UNMUTE_PROGRESS:
@@ -907,12 +909,27 @@ function paintGameHealth(report) {
     )
     .join('');
   root.find('.gh-actions').html(actions);
+  paintUndoSwitch(root, gameList.find((g) => g.appid == reportAppid));
 
   root.find('.gh-technical-label').text(t('gh-technical', 'Technical details', 'Détails techniques'));
   root.find('.gh-copy').html(`<i class="fas fa-copy"></i> ${escapeHtml(t('gh-copy', 'Copy', 'Copier'))}`);
   root.find('.gh-technical-dump').text(JSON.stringify(report.technical, null, 2));
   paintGameHealthVerified(root, report);
   mirrorGameHealthState();
+}
+
+// Where a runtime switch can have set a crack's files aside: the game root and every steam_api dll folder.
+function switchedRuntimeDirs(game) {
+  if (!game || !game.gameDir || !fs.existsSync(game.gameDir)) return [];
+  const dllDirs = goldberg.detectEmulator(game.gameDir).dll.map((dll) => path.dirname(dll));
+  return crackLoaderDetect.switchedLoaderDirs([game.gameDir, ...dllDirs]);
+}
+
+function paintUndoSwitch(root, game) {
+  const link = root.find('.gh-undo-switch');
+  link.text(gameHealthActionLabel(gameHealth.ACTION.UNDO_SWITCH_RUNTIME));
+  if (switchedRuntimeDirs(game).length > 0) link.removeAttr('hidden');
+  else link.attr('hidden', 'hidden');
 }
 
 // The state chip is also worn on the panel's title band, where it is seen whatever is scrolled.
@@ -1030,6 +1047,7 @@ const GAME_HEALTH_ACTIONS_NEEDING_RESCAN = new Set([
   gameHealth.ACTION.REMOVE_UPLAY_TICKET,
   gameHealth.ACTION.INSTALL_RUNTIME,
   gameHealth.ACTION.SWITCH_RUNTIME,
+  gameHealth.ACTION.UNDO_SWITCH_RUNTIME,
   gameHealth.ACTION.FIX_APPID,
   gameHealth.ACTION.FETCH_PROGRESS,
 ]);
@@ -1518,6 +1536,35 @@ async function runGameHealthAction(appid, action, button) {
       }),
       detail: t('diagnosis-icons-summary', 'icons: {downloaded} downloaded, {failed} failed, {skipped} skipped', 'icônes : {downloaded} téléchargées, {failed} en échec, {skipped} ignorées', summary.icons)
         + (summary.icons.unavailable ? '\n' + t('diagnosis-icons-unavailable', 'Steam has no achievement artwork for this game yet, so no icon could be downloaded. The achievement list itself is complete; run the repair again once the artwork is published.', "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relancez la réparation une fois les illustrations publiées.") : ''),
+      noLink: true,
+    });
+    return true;
+  }
+
+  if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {
+    const dirs = switchedRuntimeDirs(game);
+    if (dirs.length === 0) return false;
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'question',
+      title: gameHealthActionLabel(action),
+      message: t(
+        'gh-confirm-undo-switch-message',
+        'AW Next will put back the crack files this game came with and take the supported emulator out.',
+        'AW Next va remettre les fichiers du crack d’origine et retirer l’émulateur pris en charge.'
+      ),
+      detail: dirs.join('\n'),
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('restore', 'Restore', 'Restaurer')],
+      defaultId: 1,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return false;
+    const restored = crackLoaderDetect.restoreSwitchedLoader(dirs);
+    debug.log(`[health] undid the runtime switch: ${restored.join(', ')}`);
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'info',
+      title: gameHealthActionLabel(action),
+      message: t('gh-undo-switch-done', '{count} file(s) put back.', '{count} fichier(s) remis en place.', { count: restored.length }),
       noLink: true,
     });
     return true;

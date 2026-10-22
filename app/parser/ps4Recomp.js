@@ -23,7 +23,10 @@ const LAST_RUN_LOG = 'last_run.log';
 const UNLOCKED_LIST = 'unlocked.txt';
 const TROPHY_LIST = 'trophies.tsv';
 const RUNNER_LOGS = [TROPHIES_LOG, LAST_RUN_LOG];
-const LOG_FILES = [...RUNNER_LOGS, UNLOCKED_LIST];
+// A port on BilalReloaded's runtime keeps the unlocks of trophy list NN in trophy/trophyNN.txt.
+const listLog = (slot) => `trophy${String(slot).padStart(2, '0')}.txt`;
+const LIST_LOGS = Array.from({ length: 100 }, (_, slot) => listLog(slot));
+const LOG_FILES = [...RUNNER_LOGS, UNLOCKED_LIST, ...LIST_LOGS];
 const TITLE_ID = /^[A-Z]{4}\d{5}$/;
 
 const MAX_SCRIPT_BYTES = 512 * 1024;
@@ -37,21 +40,18 @@ const SKIP_DIRECTORIES = /^(?:bin|out|_internal|launcher|user|node_modules|\.git
 const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
 const LIST_PORT = { port: 'tsv', launcher: '', settings: '', env: '', marker: '' };
 
+// The Collection dump (CUSA02344) binds service labels 1-3 to sce_sys/trophy/trophy01-03.trp.
+const UNCHARTED_GAMES = [
+  { game: 'u1', title: "Uncharted: Drake's Fortune Remastered", slot: 1 },
+  { game: 'u2', title: 'Uncharted 2: Among Thieves Remastered', slot: 2 },
+  { game: 'u3', title: "Uncharted 3: Drake's Deception Remastered", slot: 3 },
+];
+const PROBE_SCRIPT = /^probe_([a-z0-9_]{1,40})\.py$/i;
+
 // `env` is the prefix of the runner's <PREFIX>_GAME_DIR / _DATA_DIR / _USER_DIR variables.
 const PORTS = [
   { port: 'bloodborne', launcher: 'Bloodborne.exe', settings: 'bbport-launcher', env: 'BB', marker: 'bloodborne' },
-  {
-    port: 'uncharted',
-    launcher: 'Uncharted.exe',
-    settings: 'uncharted-launcher',
-    env: 'BB',
-    marker: 'uncharted',
-    games: [
-      { game: 'u1', title: "Uncharted: Drake's Fortune Remastered", slot: 0 },
-      { game: 'u2', title: 'Uncharted 2: Among Thieves Remastered', slot: 1 },
-      { game: 'u3', title: "Uncharted 3: Drake's Deception Remastered", slot: 2 },
-    ],
-  },
+  { port: 'uncharted', launcher: 'Uncharted.exe', settings: 'uncharted-launcher', env: 'BB', marker: 'uncharted', games: UNCHARTED_GAMES },
   { port: 'gow3', launcher: 'God of War III.exe', settings: 'gow3-launcher', env: 'GOW3', marker: 'gow3' },
   { port: 'medievil', launcher: 'MediEvil.exe', settings: 'medievil-launcher', env: 'GOW3', marker: 'medievil' },
 ];
@@ -160,9 +160,30 @@ function genericPort(root, script) {
   return { port: 'generic', launcher: '', settings: hinted.length === 1 ? hinted[0] : '', env: prefixes[0] || '', marker: '' };
 }
 
+/*
+  A port on BilalReloaded's runtime, the Nathan Drake Collection's (#138), has no run.py:
+  tools/probe_<name>.py starts the game and the runtime appends each trophy list's unlocks to
+  analysis/<name>-user/trophy/trophyNN.txt. Any port laid out that way is read, not only Uncharted.
+*/
+function runtimePort(root) {
+  for (const entry of readDirectory(path.join(root, 'tools'))) {
+    const probe = entry.isFile() && PROBE_SCRIPT.exec(entry.name);
+    if (!probe) continue;
+    const name = probe[1].toLowerCase();
+    if (!isRealDirectory(path.join(root, 'analysis', `${name}-user`)) && !isRegularFile(path.join(root, 'launcher', `${name}_launcher.pyw`))) continue;
+    const launcher = readDirectory(root).find((item) => item.isFile() && / launcher\.exe$/i.test(item.name));
+    const games = name === 'uncharted' ? UNCHARTED_GAMES : null;
+    return { port: `probe-${name}`, launcher: launcher ? launcher.name : '', settings: '', env: '', marker: '', runtime: name, games };
+  }
+  return null;
+}
+
 // The port a folder holding run.py is: by its own files, then its launcher's name, then the runner.
 function identifyPort(root) {
-  if (!isRealDirectory(root) || !isRegularFile(path.join(root, RUNNER))) return null;
+  if (!isRealDirectory(root)) return null;
+  const runtime = runtimePort(root);
+  if (runtime) return runtime;
+  if (!isRegularFile(path.join(root, RUNNER))) return null;
   const script = readText(path.join(root, RUNNER), MAX_SCRIPT_BYTES);
   if (!script) return null;
   const owned = PORTS.filter((port) => ownsPortFiles(root, port));
@@ -344,7 +365,29 @@ function launcherExe(root, port) {
   return port.launcher && hasFileNamed(root, port.launcher) ? path.join(root, port.launcher) : '';
 }
 
+/*
+  One game per trophy list of the dump. A list log holds that list's unlocks only and keeps them:
+  no game tag, no journal. The NP id names the game the same way whether npbind.dat is readable or not.
+*/
+function runtimeTargets(install, dirs, identity, sets) {
+  const { root, port } = install;
+  const known = new Map((port.games || []).map((entry) => [entry.slot, entry.title]));
+  const exe = launcherExe(root, port);
+  const key = trophyKey(root);
+  return [...sets.keys()]
+    .sort((a, b) => a - b)
+    .map((slot) => {
+      const set = sets.get(slot);
+      const npcommid = identity.bindings.get(slot) || (set.trp ? recoveredNpcommid(set.trp, key) : '');
+      const fallbackId = `${port.runtime}-${identity.titleId || 'game'}-${String(slot).padStart(2, '0')}`;
+      const title = known.get(slot) || identity.title;
+      const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: dirs.userDir };
+      return { appid: appidOf(npcommid || fallbackId), ...base, game: '', title, slot, npcommid, exe, logs: [listLog(slot)] };
+    });
+}
+
 function gameTargets(install, dirs, identity, sets) {
+  if (install.port.runtime) return runtimeTargets(install, dirs, identity, sets);
   const { root, port } = install;
   const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: dirs.userDir };
   const exe = launcherExe(root, port);
@@ -386,8 +429,37 @@ function listTargets(install, dirs) {
   });
 }
 
+/*
+  Its launcher.json ("Uncharted Launcher" for probe_uncharted.py): the shared Linux one under Wine,
+  else each host's %APPDATA%.
+*/
+function runtimeSettings(root, name) {
+  const title = name.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  const files = hostsFor(root).map((host) => hostPath(host, 'APPDATA', `${title} Launcher`, 'launcher.json'));
+  if (process.platform !== 'win32') files.unshift(path.join(process.env.XDG_DATA_HOME || path.join(os.homedir(), '.local', 'share'), `${name}-launcher`, 'launcher.json'));
+  for (const file of files) {
+    const values = file && isRegularFile(file) ? readSettings(file) : null;
+    if (values) return values;
+  }
+  return {};
+}
+
+// The game folder the launcher would start: its setting, else the port's own game/<title id>/uroot.
+function runtimeDirs(root, name) {
+  const settings = runtimeSettings(root, name);
+  const isDump = (dir) => !!dir && allowedFromConfig(dir, root) && isRegularFile(path.join(dir, 'sce_sys', 'param.sfo'));
+  const linuxDir = process.platform !== 'win32' && typeof settings.game_dir_unix === 'string' && path.isAbsolute(settings.game_dir_unix) ? settings.game_dir_unix : '';
+  const bundled = readDirectory(path.join(root, 'game'))
+    .filter((entry) => entry.isDirectory() && TITLE_ID.test(entry.name))
+    .flatMap((entry) => [path.join(root, 'game', entry.name, 'uroot'), path.join(root, 'game', entry.name)]);
+  const candidates = [linuxDir, localDir(root, settings.game_dir), ...bundled];
+  const dataDir = path.join(root, 'analysis', `${name}-user`);
+  return { gameDir: candidates.find(isDump) || findDump(root), dataDir, userDir: path.join(dataDir, 'trophy') };
+}
+
 function installDirs(install) {
   if (install.port === LIST_PORT) return { gameDir: '', dataDir: install.root, userDir: '' };
+  if (install.port.runtime) return runtimeDirs(install.root, install.port.runtime);
   const script = readText(path.join(install.root, RUNNER), MAX_SCRIPT_BYTES);
   const dirs = resolveDirs(install.root, install.port, launcherSettings(install.root, install.port).values, script);
   return dirs.gameDir ? dirs : { ...dirs, gameDir: findDump(install.root) };
@@ -505,8 +577,8 @@ function loadTrophySet(info) {
   }
   const set = trophySets(info.dumpDir, info.installRoot).get(Number(info.slot));
   if (!set) return null;
-  const key = formats.readKeyFile(path.join(String(info.installRoot || ''), 'trophy.key')) || formats.RETAIL_TROPHY_KEY;
-  const trp = () => formats.readTrp(formats.readBounded(set.trp, formats.MAX_TRP_BYTES));
+  const key = trophyKey(String(info.installRoot || ''));
+  const trp = () => readTrpFile(set.trp);
   for (const dir of set.exports) {
     const exported = containerOf(formats.readExportFolder(dir), info, '');
     if (!exported) continue;
@@ -514,7 +586,31 @@ function loadTrophySet(info) {
     if (packed) return { ...exported, icons: formats.readContainer(packed, '', '').icons };
     return exported;
   }
-  return set.trp ? containerOf(trp(), info, key) : null;
+  if (!set.trp) return null;
+  const files = trp();
+  return containerOf(files, { ...info, npcommid: info.npcommid || recoveredNpcommid(set.trp, key, files) }, key);
+}
+
+function trophyKey(installRoot) {
+  return formats.readKeyFile(path.join(installRoot, 'trophy.key')) || formats.RETAIL_TROPHY_KEY;
+}
+
+function readTrpFile(file) {
+  return formats.readTrp(formats.readBounded(file, formats.MAX_TRP_BYTES));
+}
+
+// A set's NP id found by search, kept per file while it is unchanged: the search is not free.
+const recoveredIds = new Map();
+function recoveredNpcommid(file, key, files = null) {
+  let stamp = '';
+  try {
+    const stat = fs.statSync(file);
+    stamp = `${file}|${stat.size}|${stat.mtimeMs}|${key}`;
+  } catch {
+    return '';
+  }
+  if (!recoveredIds.has(stamp)) recoveredIds.set(stamp, formats.findNpcommid(files || readTrpFile(file), key));
+  return recoveredIds.get(stamp);
 }
 
 function toFileUrl(file) {
