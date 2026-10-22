@@ -31,6 +31,27 @@ test('Automatic lets the helper follow the display, Off asks it for the plain ca
   assert.deepEqual(calls, [[path.join(dir, 'auto.png')], ['--sdr', path.join(dir, 'off.png')]]);
 });
 
+test('the screenshot follows the running game to its own monitor, and forgets it once it closes', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-pid-'));
+  t.after(() => {
+    souvenir.followGame(null);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+  const calls = [];
+  const run = (helper, args, _options, callback) => {
+    calls.push(args);
+    fs.writeFileSync(args[args.length - 1], Buffer.concat([PNG_SIGNATURE, Buffer.alloc(64)]));
+    callback(null, '', '');
+  };
+
+  souvenir.followGame({ pids: new Set([4242]) });
+  await souvenir._captureNative(path.join(dir, 'game.png'), 'off', { helper: 'helper.exe', run });
+  souvenir.followGame(null);
+  await souvenir._captureNative(path.join(dir, 'none.png'), 'auto', { helper: 'helper.exe', run });
+
+  assert.deepEqual(calls, [['--pid', '4242', '--sdr', path.join(dir, 'game.png')], [path.join(dir, 'none.png')]]);
+});
+
 test('nothing else ever takes the screenshot, and a failure leaves no partial file', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-fail-'));
   const file = path.join(dir, 'capture.png');

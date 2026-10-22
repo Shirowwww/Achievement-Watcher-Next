@@ -69,9 +69,17 @@ function isPng(file) {
   }
 }
 
+// The game being played, so the helper shoots the monitor it is on rather than the primary one.
+let gamePid = 0;
+
+function helperArgs(file, hdrMode, pid) {
+  const args = hdrMode === 'auto' ? [file] : ['--sdr', file];
+  return pid > 0 ? ['--pid', String(pid), ...args] : args;
+}
+
 // `auto` lets the helper follow the display (tone-mapped when Windows HDR is on); anything else asks
 // for the plain 8-bit capture.
-function captureNative(file, hdrMode, { helper = resolveHdrHelper(), run = execFile, timeoutMs = HDR_TIMEOUT_MS } = {}) {
+function captureNative(file, hdrMode, { helper = resolveHdrHelper(), run = execFile, timeoutMs = HDR_TIMEOUT_MS, pid = gamePid } = {}) {
   return new Promise((resolve, reject) => {
     if (!helper) {
       const error = new Error('screenshot helper was not found');
@@ -82,7 +90,7 @@ function captureNative(file, hdrMode, { helper = resolveHdrHelper(), run = execF
 
     run(
       helper,
-      hdrMode === 'auto' ? [file] : ['--sdr', file],
+      helperArgs(file, hdrMode, pid),
       {
         windowsHide: true,
         timeout: timeoutMs,
@@ -167,6 +175,12 @@ module.exports.capture = async function ({ game, achievement, dir, hdr = 'auto' 
 };
 
 module.exports.souvenirPath = souvenirPath;
+
+// Called with the latest running game, or null once none is left.
+module.exports.followGame = function (game) {
+  const [pid] = game && game.pids ? [...game.pids] : [];
+  gamePid = Number(pid) || 0;
+};
 
 // Exported for the tests: both decide the path a screenshot is written to.
 module.exports._sanitize = sanitize;

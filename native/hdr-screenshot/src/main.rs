@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 use aw_next_hdr_screenshot::AnyError;
 use aw_next_hdr_screenshot::display::*;
 use aw_next_hdr_screenshot::tone::*;
+use aw_next_hdr_screenshot::window;
+use std::ffi::OsString;
 use half::f16;
 use png::{BitDepth, ColorType, DeflateCompression, Encoder, SrgbRenderingIntent};
 use windows::Win32::Devices::Display::DISPLAYCONFIG_PATH_INFO;
@@ -122,30 +124,42 @@ impl GraphicsCaptureApiHandler for SnapshotCapture {
 
 // Windows reports the HDR toggle through DisplayConfig, not through DXGI. IDXGIOutput6::GetDesc1
 // keeps returning the SDR color space while the desktop composes in HDR, so the toggle has to be
-// read from the display path that drives the primary monitor.
-fn primary_device_name(primary: Monitor) -> Result<Vec<u16>, AnyError> {
+// read from the display path that drives the captured monitor.
+fn device_name(monitor: Monitor) -> Result<Vec<u16>, AnyError> {
     let mut info = MONITORINFOEXW::default();
     info.monitorInfo.cbSize = size_of::<MONITORINFOEXW>() as u32;
-    let handle = HMONITOR(primary.as_raw_hmonitor());
+    let handle = HMONITOR(monitor.as_raw_hmonitor());
     unsafe { GetMonitorInfoW(handle, &mut info.monitorInfo).ok()? };
     Ok(info.szDevice.to_vec())
 }
 
-fn primary_path(primary: Monitor) -> Result<DISPLAYCONFIG_PATH_INFO, AnyError> {
-    let primary_name = primary_device_name(primary)?;
-
-    for path in active_display_paths()? {
-        match path_source_name(&path) {
-            Some(name) if name == primary_name => return Ok(path),
-            _ => continue,
-        }
-    }
-
-    Err("The primary display was not found through DisplayConfig".into())
+fn monitor_path(monitor: Monitor) -> Result<DISPLAYCONFIG_PATH_INFO, AnyError> {
+    path_for_device(&device_name(monitor)?)
 }
 
-fn primary_hdr_active(primary: Monitor) -> Result<bool, AnyError> {
-    path_hdr_enabled(&primary_path(primary)?)
+// The game's own screen, so a game on a second monitor is not missed; then the window in front,
+// then the primary monitor.
+fn target_monitor(pid: u32) -> Monitor {
+    let handle = window::game_monitor(pid)
+        .or_else(window::foreground_monitor)
+        .unwrap_or_else(window::primary_monitor);
+    Monitor::from_raw_hmonitor(handle.0)
+}
+
+// `--pid <n>` may come anywhere; the rest keeps its positional order.
+fn split_pid(args: Vec<OsString>) -> Result<(u32, Vec<OsString>), AnyError> {
+    let mut pid = 0;
+    let mut rest = Vec::new();
+    let mut args = args.into_iter();
+    while let Some(arg) = args.next() {
+        if arg == "--pid" {
+            let value = args.next().ok_or("--pid needs a process id")?;
+            pid = value.to_str().and_then(|text| text.parse().ok()).ok_or("--pid needs a number")?;
+        } else {
+            rest.push(arg);
+        }
+    }
+    Ok((pid, rest))
 }
 
 fn read_half(raw: &[u8], offset: usize) -> f32 {
@@ -454,16 +468,17 @@ fn capture_graphics(canvas: Canvas, primary: Monitor, mode: CaptureMode, white_s
 }
 
 fn run() -> Result<(), AnyError> {
-    let mut args = std::env::args_os().skip(1);
+    let (pid, args) = split_pid(std::env::args_os().skip(1).collect())?;
+    let mut args = args.into_iter();
     let first = args
         .next()
-        .ok_or("Usage: aw-next-hdr-screenshot.exe [--status | --force | --sdr | --duplication] <output.png>")?;
-    let primary = Monitor::primary()?;
+        .ok_or("Usage: aw-next-hdr-screenshot.exe [--pid <n>] [--status | --force | --sdr | --duplication] <output.png>")?;
+    let monitor = target_monitor(pid);
 
     if first == "--status" {
         println!(
             "{}",
-            if primary_hdr_active(primary)? {
+            if path_hdr_enabled(&monitor_path(monitor)?)? {
                 "hdr-active"
             } else {
                 "sdr"
@@ -490,13 +505,13 @@ fn run() -> Result<(), AnyError> {
         PathBuf::from(first)
     };
 
-    let path = primary_path(primary)?;
+    let path = monitor_path(monitor)?;
     let mode = match forced {
         Some(mode) => mode,
         None if path_hdr_enabled(&path)? => CaptureMode::Hdr,
         None => CaptureMode::Sdr,
     };
-    capture(&output, primary, mode, path_sdr_white_scale(&path), duplication)
+    capture(&output, monitor, mode, path_sdr_white_scale(&path), duplication)
 }
 
 fn main() {
@@ -509,6 +524,30 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn os_args(args: &[&str]) -> Vec<OsString> {
+        args.iter().map(OsString::from).collect()
+    }
+
+    #[test]
+    fn the_pid_is_taken_out_wherever_it_stands() {
+        let (pid, rest) = split_pid(os_args(&["--sdr", "--pid", "4242", "shot.png"])).unwrap();
+        assert_eq!(pid, 4242);
+        assert_eq!(rest, os_args(&["--sdr", "shot.png"]));
+    }
+
+    #[test]
+    fn without_a_pid_the_arguments_are_unchanged() {
+        let (pid, rest) = split_pid(os_args(&["shot.png"])).unwrap();
+        assert_eq!(pid, 0);
+        assert_eq!(rest, os_args(&["shot.png"]));
+    }
+
+    #[test]
+    fn a_pid_that_is_not_a_number_is_refused() {
+        assert!(split_pid(os_args(&["--pid", "game", "shot.png"])).is_err());
+        assert!(split_pid(os_args(&["shot.png", "--pid"])).is_err());
+    }
 
     fn fp16_pixel(red: f32, green: f32, blue: f32) -> Vec<u8> {
         [red, green, blue, 1.0]

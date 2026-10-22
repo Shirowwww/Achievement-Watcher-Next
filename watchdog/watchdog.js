@@ -412,10 +412,12 @@ function forwardGameActivity() {
   }
 }
 
-// The clip recorder follows the latest game still running, with the current settings.
+// The clip recorder follows the latest game still running, with the current settings; the
+// screenshot helper follows the same game's monitor.
 function syncClipRecorder() {
   try {
     const game = runningGames.length > 0 ? runningGames[runningGames.length - 1] : null;
+    require('./notification/souvenir.js').followGame(game);
     require('./notification/clip.js').sync(app.options.souvenir, game);
   } catch (err) {
     debug.error(`[clip] ${err}`);

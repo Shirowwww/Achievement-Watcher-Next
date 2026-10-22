@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 
 use aw_next_hdr_screenshot::display::{path_for_device, path_hdr_enabled, path_sdr_white_scale};
 use aw_next_hdr_screenshot::tone::{HALF_INFINITY, PixelTables, rel_from_pq};
+use aw_next_hdr_screenshot::window;
 use windows::Win32::Foundation::*;
 use windows::Win32::Graphics::Direct3D::Fxc::D3DCompile;
 use windows::Win32::Graphics::Direct3D::*;
@@ -15,7 +16,6 @@ use windows::Win32::Graphics::Dxgi::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::Media::MediaFoundation::*;
 use windows::Win32::System::Variant::*;
-use windows::Win32::UI::WindowsAndMessaging::*;
 use windows::core::*;
 
 use crate::ring::{Packet, SECOND};
@@ -84,43 +84,9 @@ fn variant_bool(value: bool) -> VARIANT {
     variant
 }
 
-struct WindowSearch {
-    pid: u32,
-    best: HWND,
-    area: i64,
-}
-
-unsafe extern "system" fn visit_window(window: HWND, param: LPARAM) -> BOOL {
-    unsafe {
-        let search = &mut *(param.0 as *mut WindowSearch);
-        let mut owner = 0u32;
-        GetWindowThreadProcessId(window, Some(&mut owner));
-        if owner == search.pid && IsWindowVisible(window).as_bool() && !IsIconic(window).as_bool() {
-            let mut rect = RECT::default();
-            if GetWindowRect(window, &mut rect).is_ok() {
-                let area = (rect.right - rect.left) as i64 * (rect.bottom - rect.top) as i64;
-                if area > search.area {
-                    search.area = area;
-                    search.best = window;
-                }
-            }
-        }
-        TRUE
-    }
-}
-
 // The monitor showing the game's largest window, or the primary one while it has none.
 fn game_monitor(pid: u32) -> HMONITOR {
-    unsafe {
-        if pid != 0 {
-            let mut search = WindowSearch { pid, best: HWND::default(), area: 0 };
-            let _ = EnumWindows(Some(visit_window), LPARAM(&mut search as *mut _ as isize));
-            if search.area > 0 {
-                return MonitorFromWindow(search.best, MONITOR_DEFAULTTOPRIMARY);
-            }
-        }
-        MonitorFromPoint(POINT::default(), MONITOR_DEFAULTTOPRIMARY)
-    }
+    window::game_monitor(pid).unwrap_or_else(window::primary_monitor)
 }
 
 fn output_for(monitor: HMONITOR) -> Result<(IDXGIAdapter1, IDXGIOutput)> {

@@ -289,7 +289,7 @@ Windows refuses as a folder name is handled rather than silently losing its scre
 ### Playing with Windows HDR on
 
 **HDR screenshots** defaults to **Automatic**. At capture time, AW Next checks whether HDR is active
-on the primary display. If it is, a small one-shot helper captures an FP16 frame through Windows
+on the display showing the game. If it is, a small one-shot helper captures an FP16 frame through Windows
 Graphics Capture and tone-maps its highlights into an ordinary SDR/sRGB PNG. The helper exits as
 soon as that one image is written; it does not keep a recorder, GPU session or Electron window alive.
 
@@ -298,8 +298,8 @@ uses that standard path. Missing Windows support, a blocked capture, a timeout o
 failure also falls back to the standard screenshot instead of losing the souvenir or interrupting
 the notification.
 
-On multi-monitor setups the souvenir captures the primary monitor, so play on it if you want your
-screenshots to match.
+On multi-monitor setups the souvenir captures the monitor the game is on, like the video clips. When
+the game has no visible window, it takes the monitor of the window in front, then the primary one.
 
 ## Video clips
 

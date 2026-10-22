@@ -2,7 +2,8 @@
 
 This transient Windows helper takes every achievement screenshot on Windows; it is shipped only as
 a Windows executable, and Linux takes its screenshots another way (see [docs/linux.md](../../docs/linux.md)).
-It captures the primary display
+It captures the monitor showing the game (`--pid <n>`, the game's largest visible window, then the
+window in front, then the primary display)
 with Windows Graphics Capture and writes an ordinary PNG: in `R16G16B16A16_FLOAT`, tone-mapped to
 SDR sRGB, when HDR is active, and as the plain `R8G8B8A8` frame otherwise. It replaced
 `screenshot-desktop`, whose Windows path compiled a C# screen grabber with `csc.exe` into `%TEMP%`
@@ -13,7 +14,7 @@ screen. Where Windows has no switch for it, the helper takes the shot with DXGI 
 instead, which draws nothing; frames that only moved the pointer are skipped, since their texture
 is still black. Both paths feed the same tone mapping.
 
-Whether HDR is on is read from the display path of the primary monitor with
+Whether HDR is on is read from the display path of the captured monitor with
 `DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting
 the SDR color space while the desktop composes in HDR, and the older `..._ADVANCED_COLOR_INFO`
 query cannot tell HDR apart from Windows 11 automatic colour management. The capture is divided by
