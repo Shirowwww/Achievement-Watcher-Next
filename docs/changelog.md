@@ -47,6 +47,28 @@ renamed in 3.9.0 and the history is kept under one file.
 - **BilalReloaded's Uncharted: The Nathan Drake Collection port**, and any other port on the same
   runtime. Each game gets its own entry, named and illustrated from your copy of the game, and every
   trophy is notified as it is earned.
+- **More PS4 ports.** Dragon's Crown Pro, inFAMOUS Second Son, inFAMOUS First Light, The Last
+  Guardian, Gravity Rush 2, Killzone Shadow Fall, Driveclub, Shadow of the Colossus, Fist of the North
+  Star: Lost Paradise, PROTOTYPE and PROTOTYPE 2 (one entry each), UFC 1 to 4 through PORTHEON and the
+  standalone UFC 3, God of War III SpartanPort, WipEout Omega Collection, Unicorn Overlord and The
+  Order: 1886. Native ports without `run.py`, ports shipped as a single launcher executable, data
+  kept in `%LOCALAPPDATA%` or a folder beside the game, and every unlock file these ports write
+  (progress snapshots, trophy bitmasks, rotated and dated session logs) are read, with all profiles
+  merged. Unlocks a port only prints to a log are kept once the log is rewritten.
+- **More Xbox 360 ports.** Lost Odyssey, Perfect Dark Zero, Sonic the Hedgehog (Marathon
+  Recompiled), Ridge Racer 6, King Kong, WET, WWE SmackDown vs. Raw 2011, Super Street Fighter II
+  Turbo HD Remix, Geometry Wars: Retro Evolved 2, Hard Corps: Uprising, Army of Two, Gears of War 2,
+  NBA Jam: On Fire Edition (mods included), Crackdown, Kameo, Ace Combat 6, Call of Duty 3, Superman
+  Returns, Peggle, Vigilante 8 Arcade, Dragon Ball Z: Burst Limit, Forza Motorsport 4, Forza Horizon,
+  2014 FIFA World Cup Brazil, WWE All Stars, GoldenEye 007, Aegis Wing, Fuse, SEGA Superstars Tennis,
+  Outpost Kaloki X, both South Park games, 3 on 3 NHL Arcade, Tenchu Z, NCAA Football 14 (mods
+  included), Naruto: The Broken Bond, The Bigs 2, Skate 2, Dragon Ball Z Budokai HD, WWE SmackDown vs.
+  Raw 2007 to 2009, NHL 14, Forza Motorsport 3, Burnout Revenge, Banjo-Tooie, Plants vs. Zombies,
+  Pinyon Shift, both The Darkness ports and Guitar Hero II on Linux. Ports that keep one list per
+  profile are merged into one game, and the Linux builds of Unleashed, Marathon and Lost Odyssey are
+  read too, Flatpak included.
+- **DLC achievements for Games for Windows LIVE titles** running XLiveLessNess, read from each
+  content pack.
 
 ### Improved
 
@@ -60,7 +82,7 @@ renamed in 3.9.0 and the history is kept under one file.
   an archived achievement no longer blocks 100% unless earned.
 - **A PlayStation game has its platinum once the platinum trophy is earned**, DLC trophies left or
   not, as on the console.
-- **Recompiled Xbox 360 games show up before their first achievement**: sixteen known ports, Sonic
+- **Recompiled Xbox 360 games show up before their first achievement**: more than sixty known ports, Sonic
   Unleashed's own save and every re:Blue profile. KytyPS5 counts the user you play as and lists a
   game before its first trophy.
 - **Video clips that keep going.** Windows' software encoder takes over without a hardware one, the
@@ -77,6 +99,12 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **XLiveLessNess games with a damaged optional section** in their achievement data are listed again
+  instead of showing nothing.
+- **PS4 ports in your language.** A port's own `trophies.tsv` written in another language than
+  English is read as that language.
+- **Screenshots of a game on a second monitor.** The unlock screenshot now shoots the monitor the
+  game is on, like the video clips, instead of always the primary one.
 - **Clipped letters.** Text cut short with "…" no longer shaves the bottom of g, j, p and y or the
   accents above capitals, in every language. Long values in Game Health scroll on hover.
 - **Language changes reach everything.** Picking a language in the first-start guide now switches

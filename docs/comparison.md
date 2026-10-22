@@ -20,7 +20,7 @@ See [NOTICE](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/NOT
 | Platform | Windows and Linux | Windows only | Windows only | Linux only |
 | License | LGPL-3.0 | MIT | LGPL-3.0 | MIT |
 | Desktop runtime | Electron 44 | Electron 44 | Electron 12 | Go with GTK 4 and WebKitGTK 6 |
-| Development | Active | Active (last push 4 October 2026) | Archived 13 October 2026, read-only, no longer maintained | Active (v2.1.1, 11 October 2026) |
+| Development | Active | Active (last push 22 October 2026) | Archived 13 October 2026, read-only, no longer maintained | Active (v2.1.1, 11 October 2026) |
 
 ## Where the achievements come from
 
@@ -32,16 +32,17 @@ See [NOTICE](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/NOT
 | Portable releases with no config | ✅ Save tree read on its own | ⚠️ Manual entry | ❌ | ⚠️ Prefixes added by hand |
 | Goldberg Uplay R2 (Ubisoft) | ✅ Loader-version aware | ❌ | ❌ | ✅ |
 | Goldberg SocialClub (Rockstar / GTA) | ✅ | ❌ | ❌ | ❌ |
-| Console emulators | ✅ RPCS3 · ShadPS4 · KytyPS5 · Xenia | ✅ RPCS3 · ShadPS4 · Xenia | ⚠️ RPCS3 only | ❌ |
-| Xbox 360 games recompiled for PC (ReXGlue and similar) | ✅ List, icons, DLC and live unlocks | ❌ | ❌ | ❌ |
-| Games for Windows LIVE | ✅ XLiveLessNess, schema and icons read from the game | ✅ XLiveLessNess | ❌ | ❌ |
+| Console emulators | ✅ RPCS3 · ShadPS4 · KytyPS5 · Xenia | ✅ RPCS3 · ShadPS4 · KytyPS5 · Xenia | ⚠️ RPCS3 only | ❌ |
+| Xbox 360 games recompiled for PC (ReXGlue and similar) | ✅ List, icons, DLC and live unlocks, more than 60 known ports, Linux builds | ✅ | ❌ | ❌ |
+| PS4 games ported to PC | ✅ run.py, native and single-executable ports, PROTOTYPE, PORTHEON (UFC) | ✅ | ❌ | ❌ |
+| Games for Windows LIVE | ✅ XLiveLessNess, schema, DLC and icons read from the game | ✅ XLiveLessNess | ❌ | ❌ |
 | RetroAchievements | ✅ Played games imported, games found on disk through RetroArch history or playlists, live unlocks with any emulator | ✅ | ❌ | ❌ |
-| Niche patches | ✅ FINAL FANTASY VII (2013) | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ❌ | ❌ |
+| Niche patches | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ✅ MarkerPatch · MadnessPatch · FINAL FANTASY VII (2013) | ❌ | ❌ |
 | Folder discovery | ✅ Auto-config & Smart Find | ✅ Auto-config | ✅ Smart Find | ⚠️ Rescans the prefixes you add |
 | Custom folders and manual games | ✅ Per game or whole library | ✅ Per game | ⚠️ Manual config | ⚠️ Prefix and emulator paths |
 
-Achievements covers a few more niche patches; AW Next reaches further into the emulated PC
-layouts, and is the only one of the four that can fix Uplay R2 and SocialClub saves.
+AW Next and Achievements now read much the same sources; AW Next reaches further into the emulated
+PC layouts, and is the only one of the four that can fix Uplay R2 and SocialClub saves.
 
 ## When a game does not report
 
@@ -100,8 +101,8 @@ confirmed on a real Deck yet.
 
 <sub>✅ = supported and documented · ⚠️ = partial, manual or a different workflow · ❌ = unavailable or
 not documented on the current public branch. Competitor columns were compared against the public
-READMEs, GitHub repository metadata and package manifests on 15 October 2026. The AW Next column
-reflects version 3.11.3 and the unreleased changes of October 2026. A ❌ in someone else's column
+READMEs, GitHub repository metadata and package manifests on 22 October 2026. The AW Next column
+reflects version 3.12.1 and the unreleased changes of October 2026. A ❌ in someone else's column
 usually means undocumented rather than impossible, and every one of these projects moves fast.</sub>
 
 ## In short
@@ -111,8 +112,8 @@ emulated saves side by side, a health report that repairs a Goldberg or GBE setu
 reporting it, notifications that pick their own transport, and presets and themes you can design and
 share.
 
-**Achievements** has the widest source list on Windows, RetroAchievements and several niche patches
-included, with a strong auto-configuration, animated overlay and video clips of an unlock.
+**Achievements** has a wide source list on Windows, RetroAchievements, recompiled ports and niche
+patches included, with a strong auto-configuration, animated overlay and video clips of an unlock.
 
 **Achievement Watcher 2.x** is the historical base: broad emulator compatibility and legacy
 notification transports, on Electron 12. Its repository was archived on 13 October 2026 and is no longer
