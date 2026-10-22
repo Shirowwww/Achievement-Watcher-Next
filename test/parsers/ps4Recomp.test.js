@@ -89,6 +89,20 @@ test('the retail key is used unless trophy.key overrides it', async () => {
   assert.equal((await ps4Recomp.getGameData(record.data)).name, 'MediEvil');
 });
 
+test("a fork of the God of War III launcher reads its own settings, not God of War III's", () => {
+  // AbdelmoumenDeghbouche/wipeout_pc keeps launcher/gow3.ico and gow3_launcher_win.py.
+  const root = fixture.makePort(dir('fork', 'WipEout'), 'gow3', { withExe: false });
+  fixture.write(path.join(root, 'WipEout.exe'), 'MZ');
+  const wipeout = fixture.makeGameDump(dir('fork', 'CUSA02320'), { title: 'WipEout Omega Collection' });
+  const gow3 = fixture.makeGameDump(dir('fork', 'CUSA07671'), { title: 'God of War III Remastered' });
+  fixture.settingsFile(appData, 'wipeout-launcher', { game_dir: wipeout });
+  fixture.settingsFile(appData, 'gow3-launcher', { game_dir: gow3 });
+  assert.equal(identifyPort(root).port, 'wipeout');
+  assert.equal(ps4Recomp.scan(root)[0].data.dumpDir, wipeout);
+  const source = fixture.makePort(dir('fork', 'GOW3 source'), 'gow3', { withExe: false });
+  assert.equal(identifyPort(source).port, 'gow3', 'without a launcher exe the art still means God of War III');
+});
+
 test('plain trophy data needs no key', async () => {
   const root = fixture.makePort(dir('plain', 'GOW3'), 'gow3', { key: '' });
   const dump = fixture.makeGameDump(dir('plain', 'Dump'), { title: 'God of War III Remastered', encrypted: false });
@@ -306,6 +320,22 @@ test('a port that writes its own trophy list is read from its user folder, no du
   assert.deepEqual(unlocked.map((u) => [u.id, u.earned_time]), [['21', 1792472145], ['43', 1792472177], ['2', 1792472243]], 'CRLF lines are read');
 });
 
+test('a trophy list in another language is shown in it, without English rarity names', async () => {
+  const user = dir('tsvlang', 'Port', 'user');
+  const list = fixture.makeTrophyList(user);
+  const file = path.join(list, 'trophies.tsv');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('#lang\t1', '#lang\t2').replace('Get off me!', 'Lâche-moi !'));
+  const [record] = ps4Recomp.scan(user);
+  for (const lang of ['french', 'english']) {
+    const game = await ps4Recomp.getGameData(record.data, lang);
+    const trophy = game.achievement.list.find((entry) => entry.name === '43');
+    assert.equal(trophy.displayName, 'Lâche-moi !', `${lang}: the only text there is`);
+    assert.equal(trophy.rarityName, undefined, 'French text never stands in for the English name');
+  }
+  const english = await ps4Recomp.getGameData(ps4Recomp.scan(fixture.makeTrophyList(dir('tsvlang', 'Other', 'user')))[0].data, 'french');
+  assert.equal(english.achievement.list.find((entry) => entry.name === '43').rarityName, 'Get off me!', '#lang 1 is English');
+});
+
 test('a trophy list is found from the user or trophies folder itself, and before any unlock', () => {
   const user = dir('tsvdirs', 'Game', 'user');
   const list = fixture.makeTrophyList(user);
@@ -391,6 +421,20 @@ test('a log rewritten in place with the same opening lines is read again from it
   assert.deepEqual(logs.parseLastRunLog(logs.readLog(file).lines).map((unlock) => `${unlock.game}:${unlock.id}`), ['u2:3']);
   fs.writeFileSync(file, `${banner}Preparing big3-ps4_Shipping.elf\n${'Runtime: frame presented\n'.repeat(50)}Runtime: trophy 7 unlocked\n`);
   assert.deepEqual(logs.parseLastRunLog(logs.readLog(file).lines).map((unlock) => `${unlock.game}:${unlock.id}`), ['u3:7']);
+});
+
+test('the other runtimes unlock lines are read, a repeated unlock is not a new one', () => {
+  const lines = ['Trophies: trophy 4 unlocked', 'Runtime: trophy 5 unlocked (saved to C:/UFC/user/trophies.json)', 'Runtime: trophy 6 was already unlocked'];
+  assert.deepEqual(logs.parseLastRunLog(lines).map((unlock) => unlock.id), ['4', '5']);
+});
+
+test('the PROTOTYPE bundle log is split by the game started, from the one the launcher chose', () => {
+  const file = fixture.write(dir('proto-log', 'last_run.log'), ['Runtime: trophy 1 unlocked', 'The game started prototype2_ps4f.elf', 'Runtime: trophy 2 unlocked', 'The game started eboot.bin', 'Runtime: trophy 3 unlocked', ''].join('\n'));
+  const read = logs.readLog(file).lines;
+  assert.ok(read.includes('The game started prototype2_ps4f.elf'), 'the context line is kept by the reader');
+  const split = logs.parseLastRunLog(read, { port: 'prototype', initial: 'p1' }).map((unlock) => `${unlock.game}:${unlock.id}`);
+  assert.deepEqual(split, ['p1:1', 'p2:2', 'p1:3']);
+  assert.equal(logs.gameFromText('Switching to big2-ps4_Shipping.elf', 'prototype'), '', 'each collection reads its own executables');
 });
 
 test('a log over the read limit keeps its last lines, without the one cut in half', () => {

@@ -68,6 +68,15 @@ test('param.sfo gives the title and title id', () => {
   assert.equal(sfo.TITLE_ID, 'CUSA00900');
 });
 
+test('a trophies.tsv says its language with #lang, by the console code', () => {
+  const french = trophies.parseTrophyTsv('#lang\t2\n#title\tJeu\n1\tB\t0\tChasseur\tVaincre une bête\n');
+  assert.equal(french.language, 'french');
+  assert.equal(french.trophies[0].name, 'Chasseur');
+  assert.equal(trophies.parseTrophyTsv('#lang\t01\n1\tB\t0\tHunter\t\n').language, 'english', 'a zero-padded code');
+  assert.equal(trophies.parseTrophyTsv('1\tB\t0\tHunter\t\n').language, '', 'no header: the default document');
+  assert.equal(trophies.parseTrophyTsv('#lang\t99\n1\tB\t0\tHunter\t\n').language, '', 'an unknown code is no language');
+});
+
 test('a crafted trophy document costs linear time, not a stall per unclosed tag', () => {
   const unclosed = `<trophyconf><title-name>${'<trophy id="1" ttype="B">'.repeat(40000)}<name><![CDATA[`.repeat(2);
   const started = Date.now();

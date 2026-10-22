@@ -1,9 +1,9 @@
 'use strict';
 
 /*
-  Notifies on the trophies PC ports of PS4 games log, read by the app's own parser so the library
-  and the notifications agree. The user folder holding the logs may not exist before the first
-  session: its nearest existing parent is watched until it does.
+  Notifies on the trophies PC ports of PS4 games record (logs, progress files), read by the app's
+  own parser so the library and the notifications agree. A folder holding them may not exist
+  before the first session: its nearest existing parent is watched until it does.
 */
 
 const fs = require('fs');
@@ -213,41 +213,83 @@ function checkGroup(group, ctx) {
   for (const record of group.records) changes.run(record.appid, () => handleChange(record, ctx));
 }
 
-function attachLogs(group, ctx) {
-  const logName = (name) => ps4.LOG_FILES.includes(path.basename(String(name || '')).toLowerCase());
-  const watcher = watch(longPath(group.userDir), { recursive: false }, (evt, name) => {
-    if (logName(name)) checkGroup(group, ctx);
+const listed = (value) => (Array.isArray(value) ? value : []);
+
+/*
+  The folders a group's records read: the log folder, the user folders and the progress folders in
+  them (trophies/, trophy/<NP id>/), the session log folders, recursively since a launcher may date
+  a folder per session, and the folders of declared logs.
+*/
+function foldersOf(group) {
+  const found = new Map();
+  const add = (dir, recursive = false) => {
+    if (!dir) return;
+    const resolved = path.resolve(String(dir));
+    const key = process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+    found.set(key, { dir: resolved, recursive: recursive || (found.has(key) && found.get(key).recursive) });
+  };
+  for (const { data } of group.records) {
+    add(data.logDir || data.userDir);
+    for (const dir of [data.userDir, ...listed(data.progressDirs)].filter(Boolean)) {
+      add(dir);
+      add(path.join(dir, 'trophies'));
+      if (data.npcommid) add(path.join(dir, 'trophy', data.npcommid));
+    }
+    for (const entry of listed(data.sessionDirs)) add(typeof entry === 'string' ? entry : entry && entry.dir, true);
+    for (const file of listed(data.logFiles)) add(path.dirname(String(file)));
+  }
+  return [...found.values()];
+}
+
+function attachLogs(folder, group, ctx) {
+  const watcher = watch(longPath(folder.dir), { recursive: folder.recursive }, (evt, name) => {
+    if (ps4.isProgressName(name)) checkGroup(group, ctx);
   });
-  watchers.push(guardWatcher(watcher, `'${group.userDir}'`, debug));
-  debug.log(`[ps4recomp] watching the unlock logs in '${group.userDir}'`);
+  watchers.push(guardWatcher(watcher, `'${folder.dir}'`, debug));
+  debug.log(`[ps4recomp] watching the unlock records in '${folder.dir}'`);
 }
 
 /*
-  A user folder that does not exist yet: its nearest parent is watched, one level closer each time
-  a level appears, and the logs are read as soon as the folder itself does.
+  Folders that do not exist yet: their nearest parent is watched, one level closer each time a level
+  appears, and the records are read as soon as a folder itself does. One watcher per parent.
 */
-function attach(group, ctx) {
-  try {
-    if (isDirectory(group.userDir)) {
-      attachLogs(group, ctx);
-      return;
+function awaitFolders(parent, folders, group, ctx) {
+  const generation = lifecycle;
+  let waiting = folders;
+  const pending = watch(longPath(parent), { recursive: false }, () => {
+    if (generation !== lifecycle) return;
+    const moved = waiting.filter((folder) => isDirectory(folder.dir) || nearestExisting(folder.dir) !== parent);
+    if (moved.length === 0) return;
+    waiting = waiting.filter((folder) => !moved.includes(folder));
+    if (waiting.length === 0) closeWatcher(pending);
+    attach(moved, group, ctx);
+    if (moved.some((folder) => isDirectory(folder.dir))) checkGroup(group, ctx);
+  });
+  watchers.push(guardWatcher(pending, `'${parent}'`, debug));
+  debug.log(`[ps4recomp] waiting for ${folders.length} folder(s) from '${parent}'`);
+}
+
+function attach(folders, group, ctx) {
+  const waiting = new Map();
+  for (const folder of folders) {
+    try {
+      if (isDirectory(folder.dir)) {
+        attachLogs(folder, group, ctx);
+        continue;
+      }
+      const parent = nearestExisting(folder.dir);
+      if (parent) waiting.set(parent, [...(waiting.get(parent) || []), folder]);
+      else debug.log(`[ps4recomp] '${folder.dir}' and its parents are missing, not watched`);
+    } catch (err) {
+      debug.warn(`[ps4recomp] failed to watch ${folder.dir}: ${err}`);
     }
-    const parent = nearestExisting(group.userDir);
-    if (!parent) {
-      debug.log(`[ps4recomp] '${group.userDir}' and its parents are missing, not watched`);
-      return;
+  }
+  for (const [parent, list] of waiting) {
+    try {
+      awaitFolders(parent, list, group, ctx);
+    } catch (err) {
+      debug.warn(`[ps4recomp] failed to watch ${parent}: ${err}`);
     }
-    const generation = lifecycle;
-    const pending = watch(longPath(parent), { recursive: false }, () => {
-      if (generation !== lifecycle || (!isDirectory(group.userDir) && nearestExisting(group.userDir) === parent)) return;
-      closeWatcher(pending);
-      attach(group, ctx);
-      if (isDirectory(group.userDir)) checkGroup(group, ctx);
-    });
-    watchers.push(guardWatcher(pending, `'${parent}'`, debug));
-    debug.log(`[ps4recomp] no user folder yet - waiting for '${group.userDir}' from '${parent}'`);
-  } catch (err) {
-    debug.warn(`[ps4recomp] failed to watch ${group.userDir}: ${err}`);
   }
 }
 
@@ -269,7 +311,7 @@ module.exports.start = async (ctx) => {
   }
   for (const group of groups) {
     group.records.forEach(seedBaseline);
-    attach(group, ctx);
+    attach(foldersOf(group), group, ctx);
   }
 };
 
@@ -283,4 +325,4 @@ module.exports.stop = () => {
   baselines.clear();
 };
 
-module.exports._internal = { discover, watchedFolders, handleChange, seedBaseline, nearestExisting, baselines };
+module.exports._internal = { discover, watchedFolders, handleChange, seedBaseline, nearestExisting, foldersOf, baselines };

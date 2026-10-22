@@ -106,7 +106,9 @@ test('what is unlocked at start is silent, a new line is announced with its grad
   assert.deepEqual(ctx.sent.map((p) => p.trophyGrade), ['gold', 'platinum'], 'the same trophy in both logs is announced once');
 });
 
+// The fixtures share one NP id, and the unlock journal is kept per NP id: each test starts without one.
 function writeDb(paths) {
+  fs.rmSync(path.join(process.env.AW_USER_DATA, 'cache', 'ps4recomp'), { recursive: true, force: true });
   fs.mkdirSync(path.dirname(userDirDb), { recursive: true });
   fs.writeFileSync(userDirDb, JSON.stringify(paths.map((p) => ({ path: p, enabled: true }))));
   return userDirDb;
@@ -179,6 +181,52 @@ test('the Nathan Drake Collection port is followed until its first trophyNN.txt 
     assert.ok(await waitFor(() => ctx.sent.length > 1), 'a later line is announced too');
     await new Promise((resolve) => setTimeout(resolve, 300));
     assert.deepEqual(ctx.sent.map((p) => [p.gameDisplayName, p.achievementName]), [['Uncharted 2', '1'], ['Uncharted 2', '2']], 'the other two games stay silent');
+  } finally {
+    watcher.stop();
+  }
+});
+
+// Dragon's Crown Pro writes a snapshot per profile in user/trophy/<NP id>, a folder made on the first unlock.
+test('a native port is followed until its first progress snapshot', async () => {
+  const root = path.join(temp, 'dcp', 'Dragons Crown Pro');
+  fixture.write(path.join(root, 'game', 'image', 'CUSA10454-1.01', 'boot.bin'), 'boot');
+  fixture.write(path.join(root, 'trophy.key'), fixture.TEST_KEY);
+  fixture.makeGameDump(path.join(root, 'game', 'prepared', 'CUSA10454-1.01'));
+  writeDb([root]);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const snapshots = path.join(root, 'user', 'trophy', fixture.NPCOMMID);
+    fs.mkdirSync(snapshots, { recursive: true });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fs.writeFileSync(path.join(snapshots, 'progress_user1.txt'), `DCP-TROPHIES 1\nnpcommid ${fixture.NPCOMMID}\nunlocked 2 1792512300\n`);
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'the snapshot written after start is announced');
+    assert.equal(ctx.sent[0].achievementDisplayName, 'Yharnam Sunrise');
+    assert.equal(ctx.sent[0].time, 1792512300);
+  } finally {
+    watcher.stop();
+  }
+});
+
+// HayatoG's launchers start a new out/logs/run-<date>.log per session.
+test('a new session log of a native port is announced, the old ones stay silent', async () => {
+  const root = path.join(temp, 'tlg', 'port');
+  const dump = fixture.makeGameDump(path.join(temp, 'tlg', 'game'));
+  fixture.write(path.join(root, 'trophy.key'), fixture.TEST_KEY);
+  fixture.write(path.join(root, 'out', 'boot-linked.bin'), 'linked');
+  fixture.write(path.join(root, 'launcher', 'tlg_run.py'), "return base / 'tlg-launcher' / 'settings.json'\n");
+  fixture.write(path.join(process.env.APPDATA, 'tlg-launcher', 'settings.json'), JSON.stringify({ game_dir: dump }));
+  fixture.write(path.join(root, 'out', 'logs', 'run-20261020-101010.log'), 'Runtime: trophy 1 unlocked\n');
+  writeDb([root]);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fs.writeFileSync(path.join(root, 'out', 'logs', 'run-20261021-101010.log'), 'boot\nTrophies: trophy 2 unlocked\n');
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'the unlock of the new session is announced');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert.deepEqual(ctx.sent.map((p) => p.achievementDisplayName), ['Yharnam Sunrise']);
   } finally {
     watcher.stop();
   }

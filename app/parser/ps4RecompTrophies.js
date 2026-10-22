@@ -295,16 +295,19 @@ function parseTrophyXml(text) {
 }
 
 /*
-  The trophies.tsv a port's runtime writes itself: "#key<TAB>value" header lines (#title), then one
-  "id<TAB>grade<TAB>hidden<TAB>name<TAB>detail" line per trophy. Same shape as parseTrophyXml.
+  The trophies.tsv a port's runtime writes itself: "#key<TAB>value" header lines (#title, and #lang
+  as a console language code), then one "id<TAB>grade<TAB>hidden<TAB>name<TAB>detail" line per
+  trophy. Same shape as parseTrophyXml, plus `language`: AW's name for #lang, '' when unknown.
 */
 function parseTrophyTsv(text) {
   const trophies = [];
   const seen = new Set();
   let title = '';
+  let language = '';
   for (const line of String(text || '').split(/\r?\n/)) {
     const fields = line.split('\t');
     if (fields[0] === '#title') title = (fields[1] || '').trim();
+    if (fields[0] === '#lang') language = LANGUAGE_BY_CODE[String(fields[1] || '').trim().padStart(2, '0')] || '';
     if (fields.length < 4 || !/^\d{1,4}$/.test(fields[0]) || trophies.length >= MAX_TROPHIES) continue;
     const id = String(Number(fields[0]));
     const grade = fields[1].trim().toUpperCase();
@@ -312,7 +315,7 @@ function parseTrophyTsv(text) {
     seen.add(id);
     trophies.push({ id, grade, hidden: /^(?:1|yes|true)$/i.test(fields[2].trim()), name: fields[3].trim(), detail: (fields[4] || '').trim() });
   }
-  return trophies.length > 0 ? { title, npcommid: '', trophies } : null;
+  return trophies.length > 0 ? { title, npcommid: '', language, trophies } : null;
 }
 
 // The language a TROP document is written in: '' for the set's default (TROP.XML), else AW's name.

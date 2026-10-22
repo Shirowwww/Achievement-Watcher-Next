@@ -1,19 +1,24 @@
 'use strict';
 
 /*
-  PC ports of PS4 games built on the run.py runner. The launcher's settings.json names the original
-  game dump (game_dir), whose trophy list is read, and the user folder holding the unlock logs.
-  Other ports write the list themselves, in <user>/trophies/<title id>/trophies.tsv beside unlocked.txt.
-  Scripts are only ever read for literal values, never run. Synchronous and dependency-free: the
-  Watchdog loads this file through sharedAppModule.
+  PC ports of PS4 games (run.py, native, runtime and PORTHEON layouts): their trophy lists and unlock
+  logs. Scripts, sources and frozen launchers are only read for literal values, never run.
+  Synchronous and dependency-free: the Watchdog loads this file through sharedAppModule.
 */
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { hostPath, hostsFor, allowedFromConfig } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { writeFileAtomicSync } = require(path.join(__dirname, '..', 'util', 'replaceFile.js'));
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
 const logs = require(path.join(__dirname, 'ps4RecompLogs.js'));
+const config = require(path.join(__dirname, 'ps4RecompConfig.js'));
+const packages = require(path.join(__dirname, 'ps4RecompPackages.js'));
+const progress = require(path.join(__dirname, 'ps4RecompProgress.js'));
+const { compiledLauncherStrings } = require(path.join(__dirname, 'ps4RecompPyInstaller.js'));
+const schema = require(path.join(__dirname, 'ps4RecompSchema.js'));
+const { trophySets, trophyKey, recoveredNpcommid } = schema;
 
 const SOURCE = 'PS4 Recomp';
 const TYPE = 'ps4recomp';
@@ -23,10 +28,13 @@ const LAST_RUN_LOG = 'last_run.log';
 const UNLOCKED_LIST = 'unlocked.txt';
 const TROPHY_LIST = 'trophies.tsv';
 const RUNNER_LOGS = [TROPHIES_LOG, LAST_RUN_LOG];
+// The Shadow of the Colossus launcher keeps the sessions before the last as last_run.1-4.log.
+const ROTATED_LOGS = [1, 2, 3, 4].map((n) => `last_run.${n}.log`);
+const isRunLog = (name) => name === LAST_RUN_LOG || ROTATED_LOGS.includes(name);
 // A port on BilalReloaded's runtime keeps the unlocks of trophy list NN in trophy/trophyNN.txt.
 const listLog = (slot) => `trophy${String(slot).padStart(2, '0')}.txt`;
 const LIST_LOGS = Array.from({ length: 100 }, (_, slot) => listLog(slot));
-const LOG_FILES = [...RUNNER_LOGS, UNLOCKED_LIST, ...LIST_LOGS];
+const LOG_FILES = [...RUNNER_LOGS, ...ROTATED_LOGS, UNLOCKED_LIST, ...LIST_LOGS];
 const TITLE_ID = /^[A-Z]{4}\d{5}$/;
 
 const MAX_SCRIPT_BYTES = 512 * 1024;
@@ -39,6 +47,9 @@ const MAX_DUMP_DIRECTORIES = 128;
 const SKIP_DIRECTORIES = /^(?:bin|out|_internal|launcher|user|node_modules|\.git|sce_sys|\$recycle\.bin|windows)$/i;
 const WINDOWS_ABSOLUTE = /^[a-zA-Z]:[\\/]/;
 const LIST_PORT = { port: 'tsv', launcher: '', settings: '', env: '', marker: '' };
+const NATIVE_PORT = { port: 'native', launcher: '', settings: '', env: '', marker: '', native: true };
+// Where native ports keep their user folder, in the order they are looked for.
+const NATIVE_USER_DIRS = [['user'], ['data', 'user'], ['bin', 'user']];
 
 // The Collection dump (CUSA02344) binds service labels 1-3 to sce_sys/trophy/trophy01-03.trp.
 const UNCHARTED_GAMES = [
@@ -54,6 +65,8 @@ const PORTS = [
   { port: 'uncharted', launcher: 'Uncharted.exe', settings: 'uncharted-launcher', env: 'BB', marker: 'uncharted', games: UNCHARTED_GAMES },
   { port: 'gow3', launcher: 'God of War III.exe', settings: 'gow3-launcher', env: 'GOW3', marker: 'gow3' },
   { port: 'medievil', launcher: 'MediEvil.exe', settings: 'medievil-launcher', env: 'GOW3', marker: 'medievil' },
+  // A fork that kept the God of War III launcher's art: only its exe tells it apart.
+  { port: 'wipeout', launcher: 'WipEout.exe', settings: 'wipeout-launcher', env: 'GOW3', marker: 'gow3' },
 ];
 
 let debug = { log() {}, warn() {}, error() {} };
@@ -63,6 +76,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
+  schema.setLogger(debug);
 };
 
 // Resolved on first use and overridable: the Watchdog locates userData its own way.
@@ -124,27 +138,40 @@ function ownsPortFiles(root, port) {
   return names.some((name) => isRegularFile(path.join(launcher, name)));
 }
 
-function localSettingsFiles(root) {
-  return [path.join(root, 'settings.json'), path.join(root, 'launcher', 'settings.json')].filter(isRegularFile);
-}
-
-// Where a launcher keeps settings.json: under each host's APPDATA, and ~/.config for a native Linux build.
-function hostSettingsFiles(root, folder) {
+// Where a launcher keeps its settings: under each host's APPDATA, and ~/.config for a native Linux build.
+function hostSettingsFiles(root, folder, name = 'settings.json') {
   const files = [];
   for (const host of hostsFor(root)) {
-    const file = hostPath(host, 'APPDATA', folder, 'settings.json');
+    const file = hostPath(host, 'APPDATA', folder, name);
     if (file) files.push(file);
   }
-  if (process.platform !== 'win32') files.push(path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), folder, 'settings.json'));
+  if (process.platform !== 'win32') files.push(path.join(process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config'), folder, name));
   return files;
 }
 
-// Launcher folder names the runner or the launcher sources spell out literally ("bbport-launcher").
+/*
+  Launcher folder names the runner, the launcher sources or a frozen (PyInstaller) launcher spell
+  out literally ("bbport-launcher", "tlg-launcher").
+*/
 function launcherFolderHints(root, script) {
   let text = script;
   const sources = readDirectory(path.join(root, 'launcher')).filter((entry) => entry.isFile() && /\.py$/i.test(entry.name));
   for (const entry of sources.slice(0, MAX_LAUNCHER_SOURCES)) text += `\n${readText(path.join(root, 'launcher', entry.name), MAX_LAUNCHER_SOURCE_BYTES)}`;
+  for (const value of compiledLauncherStrings(root)) text += `\n'${value}'`;
   return [...new Set([...text.matchAll(/['"]([a-z0-9][a-z0-9._-]{0,63}[-_]launcher)['"]/gi)].map((match) => match[1]))];
+}
+
+// A folder setting as a local path the port's own files may name (see allowedFromConfig).
+function configResolver(root) {
+  return (value) => {
+    const dir = localDir(root, value);
+    return dir && allowedFromConfig(dir, root) ? dir : '';
+  };
+}
+
+// A port without run.py: a linked boot image, or runtime folders beside a setting naming the dump.
+function nativePort(root) {
+  return config.hasBootImage(root) || config.configuredGame(root, configResolver(root)) ? NATIVE_PORT : null;
 }
 
 /*
@@ -156,7 +183,7 @@ function genericPort(root, script) {
   const prefixes = [...new Set([...script.matchAll(/\b([A-Z][A-Z0-9_]*)_GAME_DIR\b/g)].map((match) => match[1]))];
   if (prefixes.length > 1) return null;
   const hinted = launcherFolderHints(root, script).filter((folder) => hostSettingsFiles(root, folder).some(isRegularFile));
-  if (prefixes.length === 0 && hinted.length === 0 && localSettingsFiles(root).length === 0 && !isRegularFile(path.join(root, 'sce_sys', 'param.sfo'))) return null;
+  if (prefixes.length === 0 && hinted.length === 0 && config.localConfigFiles(root).length === 0 && !isRegularFile(path.join(root, 'sce_sys', 'param.sfo'))) return null;
   return { port: 'generic', launcher: '', settings: hinted.length === 1 ? hinted[0] : '', env: prefixes[0] || '', marker: '' };
 }
 
@@ -183,14 +210,17 @@ function identifyPort(root) {
   if (!isRealDirectory(root)) return null;
   const runtime = runtimePort(root);
   if (runtime) return runtime;
-  if (!isRegularFile(path.join(root, RUNNER))) return null;
+  if (!isRegularFile(path.join(root, RUNNER))) return nativePort(root);
   const script = readText(path.join(root, RUNNER), MAX_SCRIPT_BYTES);
   if (!script) return null;
+  const collection = packages.identifyCollection(script);
+  if (collection) return collection;
   const owned = PORTS.filter((port) => ownsPortFiles(root, port));
   if (owned.length === 1) return owned[0];
   const candidates = owned.length > 1 ? owned : PORTS;
   const launched = candidates.filter((port) => hasFileNamed(root, port.launcher));
   if (launched.length === 1) return launched[0];
+  if (owned.length > 1 && owned.every((port) => port.marker === owned[0].marker)) return owned[0];
   if (/big2-ps4_Shipping\.elf/.test(script) && /big3-ps4_Shipping\.elf/.test(script)) return PORTS.find((port) => port.port === 'uncharted');
   return genericPort(root, script);
 }
@@ -204,12 +234,12 @@ function readSettings(file) {
   }
 }
 
+// The first launcher settings found, JSON or INI: the port's own, then its launcher folder's.
 function launcherSettings(root, port) {
-  const files = [...localSettingsFiles(root), ...(port.settings ? hostSettingsFiles(root, port.settings) : [])];
+  const files = [...config.localConfigFiles(root), ...(port.settings ? hostSettingsFiles(root, port.settings, port.settingsName) : [])];
   for (const file of files) {
-    if (!isRegularFile(file)) continue;
-    const values = readSettings(file);
-    if (values) return { file, values };
+    const values = isRegularFile(file) ? config.readConfig(file) : {};
+    if (Object.keys(values).length > 0) return { file, values };
   }
   return { file: '', values: {} };
 }
@@ -235,7 +265,7 @@ function scriptDefault(script, key, bases) {
   const call = new RegExp(`(?:env|environ|os\\.environ)\\.get\\(\\s*['"]${key}['"]\\s*,\\s*([^\\r\\n)]+)\\)`).exec(script);
   if (!call) return '';
   const expression = /^([A-Za-z_]\w*)((?:\.parent)*)((?:\s*\/\s*(?:'[^'\r\n]*'|"[^"\r\n]*"))*)\s*$/.exec(call[1].trim());
-  if (!expression || !bases[expression[1]]) return '';
+  if (!expression || !Object.hasOwn(bases, expression[1]) || !bases[expression[1]]) return '';
   let result = bases[expression[1]];
   for (let parents = expression[2].split('.parent').length - 1; parents > 0; parents -= 1) result = path.dirname(result);
   for (const part of expression[3].matchAll(/['"]([^'"]*)['"]/g)) result = path.resolve(result, part[1]);
@@ -305,56 +335,54 @@ function titleFolders(dir) {
 }
 
 /*
+  A frozen port whose launcher keeps its data out of the program folder: PortGaGotoku-data beside
+  it (Fist of the North Star), or <LOCALAPPDATA>/inFAMOUS First Light PC when it cannot write next to
+  itself. The folder name is a literal of the launcher, and the folder must be a port of its own.
+*/
+function externalDataPort(dir) {
+  if (!isRealDirectory(path.join(dir, 'scripts')) && !isRegularFile(path.join(dir, 'port', RUNNER))) return null;
+  const sourced = config.launcherSources(dir).flatMap((text) => [...text.matchAll(/['"]([^'"\r\n]{1,64})['"]/g)].map((match) => match[1]));
+  const names = [...new Set([...compiledLauncherStrings(dir), ...sourced])].filter((name) => /^[A-Za-z0-9][\w .-]{0,63}$/.test(name));
+  const local = hostsFor(dir).map((host) => hostPath(host, 'LOCALAPPDATA')).filter(Boolean);
+  for (const name of names) {
+    const candidates = /-data$/i.test(name) ? [path.join(path.dirname(dir), name)] : local.map((base) => path.join(base, name)).filter((data) => isRegularFile(path.join(data, 'launcher.json')));
+    for (const data of candidates) {
+      const port = isRealDirectory(data) && allowedFromConfig(data, dir) ? identifyPort(data) : null;
+      if (port) return { root: data, port };
+    }
+  }
+  return null;
+}
+
+/*
   The port installs at or below a folder the user added. A port is a game of its own, never a
-  library: nothing below one is searched.
+  library: nothing below one is searched. A package gives each port it declares, wherever it is.
 */
 function findInstallations(dir) {
   const installs = [];
+  const roots = new Set();
+  const add = (install) => {
+    const key = path.resolve(install.root).toLowerCase();
+    if (!roots.has(key)) installs.push(install);
+    roots.add(key);
+  };
   const queue = [{ dir: path.resolve(String(dir || '')), depth: 0 }];
   let visited = 0;
   while (queue.length && visited++ < MAX_INSTALL_DIRECTORIES) {
     const current = queue.shift();
-    const port = identifyPort(current.dir) || (titleFolders(current.dir).length > 0 ? LIST_PORT : null);
-    if (port) {
-      installs.push({ root: current.dir, port });
-      continue;
-    }
+    const packaged = packages.findPackage(current.dir);
+    const port = packaged.length > 0 ? null : identifyPort(current.dir) || (titleFolders(current.dir).length > 0 ? LIST_PORT : null);
+    packaged.forEach(add);
+    if (port) add({ root: current.dir, port });
+    const external = port || packaged.length > 0 ? null : externalDataPort(current.dir);
+    if (external) add(external);
+    if (port || packaged.length > 0 || external) continue;
     if (current.depth >= MAX_INSTALL_DEPTH) continue;
     for (const entry of readDirectory(current.dir)) {
       if (entry.isDirectory() && !SKIP_DIRECTORIES.test(entry.name)) queue.push({ dir: path.join(current.dir, entry.name), depth: current.depth + 1 });
     }
   }
   return installs;
-}
-
-const SET_FILE = /^trophy(\d{2})(\.trp)?$/i;
-
-// trophy set slot -> { trp, exports }: the dump's trophy<NN>.trp, and decrypted exports of it.
-function trophySets(dumpDir, installRoot) {
-  const sets = new Map();
-  const add = (slot, key, value) => {
-    const set = sets.get(slot) || { trp: '', exports: [] };
-    if (key === 'trp' && !set.trp) set.trp = value;
-    if (key === 'exports') set.exports.push(value);
-    sets.set(slot, set);
-  };
-  for (const folder of [dumpDir && path.join(dumpDir, 'sce_sys', 'trophy'), installRoot && path.join(installRoot, 'TrophyFiles')]) {
-    if (!folder) continue;
-    for (const entry of readDirectory(folder)) {
-      const match = SET_FILE.exec(entry.name);
-      if (!match) continue;
-      const file = path.join(folder, entry.name);
-      if (match[2] && entry.isFile()) add(Number(match[1]), 'trp', file);
-      else if (!match[2] && entry.isDirectory()) add(Number(match[1]), 'exports', file);
-    }
-  }
-  return sets;
-}
-
-function dumpIdentity(dumpDir) {
-  const sfo = dumpDir ? formats.readSfo(formats.readBounded(path.join(dumpDir, 'sce_sys', 'param.sfo'), formats.MAX_SMALL_BYTES)) : {};
-  const bindings = dumpDir ? formats.readNpbind(formats.readBounded(path.join(dumpDir, 'sce_sys', 'npbind.dat'), formats.MAX_SMALL_BYTES)) : new Map();
-  return { title: sfo.TITLE || '', titleId: /^CUSA\d{5}$/.test(sfo.TITLE_ID || '') ? sfo.TITLE_ID : '', bindings };
 }
 
 function appidOf(identity) {
@@ -386,19 +414,45 @@ function runtimeTargets(install, dirs, identity, sets) {
     });
 }
 
+// A collection's games and their sets: by slot, or by each set's list title (PROTOTYPE).
+function collectionGames(install, identity, sets) {
+  const games = install.port.games;
+  if (games.every((entry) => Number.isInteger(entry.slot))) return games.filter((entry) => sets.has(entry.slot));
+  const titled = [...sets.keys()].map((slot) => ({ slot, title: schema.setTitle(install.root, sets.get(slot), identity.bindings.get(slot) || '') }));
+  return packages.assignByTitle(games, titled);
+}
+
+/*
+  What a record reads besides its unlock logs: progress files in its user folders, the session logs
+  its launcher rotates (in a package, any log of the data folder), the logs its sources declare and,
+  for PROTOTYPE, the launcher setting naming the game a session starts in.
+*/
+function recordSources(install, dirs, identity) {
+  const { root, port } = install;
+  const declared = port.packaged ? { files: [], dirs: [] } : config.declaredLogs(root, config.launcherSources(root));
+  const own = [path.join(root, 'logs'), path.join(root, 'out', 'logs'), path.join(root, 'data', 'logs'), dirs.userDir && path.join(dirs.userDir, 'logs'), ...declared.dirs];
+  const packaged = [dirs.dataDir && path.join(dirs.dataDir, 'logs'), dirs.logDir].filter(Boolean).map((dir) => ({ dir, anyLog: true }));
+  return {
+    titleId: identity.titleId,
+    progressDirs: [...new Set([dirs.userDir, path.join(root, 'bin', 'user')].filter(Boolean))],
+    sessionDirs: port.packaged ? packaged : [...new Set(own.filter(Boolean))],
+    logFiles: declared.files,
+    logDir: port.logsInRoot ? root : '',
+    initial: port.initialGameKey && dirs.settingsFile ? { file: dirs.settingsFile, key: port.initialGameKey } : null,
+  };
+}
+
 function gameTargets(install, dirs, identity, sets) {
   if (install.port.runtime) return runtimeTargets(install, dirs, identity, sets);
   const { root, port } = install;
-  const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: dirs.userDir };
+  const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: dirs.userDir, ...recordSources(install, dirs, identity) };
   const exe = launcherExe(root, port);
   if (port.games) {
-    return port.games
-      .filter((entry) => sets.has(entry.slot))
-      .map((entry) => {
-        const npcommid = identity.bindings.get(entry.slot) || '';
-        const appid = appidOf(npcommid || `${port.port}-${entry.game}`);
-        return { appid, ...base, game: entry.game, title: entry.title, slot: entry.slot, npcommid, exe, logs: [LAST_RUN_LOG] };
-      });
+    return collectionGames(install, identity, sets).map((entry) => {
+      const npcommid = identity.bindings.get(entry.slot) || '';
+      const appid = appidOf(npcommid || `${port.port}-${entry.game}`);
+      return { appid, ...base, game: entry.game, title: entry.title, slot: entry.slot, npcommid, exe, logs: [LAST_RUN_LOG] };
+    });
   }
   if (sets.size !== 1) {
     debug.log(`[ps4recomp] '${root}': ${sets.size} trophy sets, a single-game port needs exactly one`);
@@ -411,10 +465,6 @@ function gameTargets(install, dirs, identity, sets) {
   return [{ appid: appidOf(id), ...base, game: '', title: identity.title, slot, npcommid, exe, logs: RUNNER_LOGS.slice() }];
 }
 
-function readTrophyList(file) {
-  return formats.parseTrophyTsv(readText(file, formats.MAX_SMALL_BYTES));
-}
-
 // One game per trophies.tsv the port wrote: its title folder is the user folder watched.
 function listTargets(install, dirs) {
   const { root, port } = install;
@@ -422,7 +472,7 @@ function listTargets(install, dirs) {
   const exe = launcherExe(root, port);
   return folders.flatMap((folder) => {
     const file = path.join(folder, TROPHY_LIST);
-    const list = readTrophyList(file);
+    const list = schema.readTrophyList(file);
     if (!list) return [];
     const base = { port: port.port, installRoot: root, dumpDir: dirs.gameDir, dataDir: dirs.dataDir, userDir: folder };
     return [{ appid: appidOf(path.basename(folder)), ...base, game: '', title: list.title, slot: 0, npcommid: '', exe, logs: [UNLOCKED_LIST], trophyList: file }];
@@ -447,22 +497,70 @@ function runtimeSettings(root, name) {
 // The game folder the launcher would start: its setting, else the port's own game/<title id>/uroot.
 function runtimeDirs(root, name) {
   const settings = runtimeSettings(root, name);
-  const isDump = (dir) => !!dir && allowedFromConfig(dir, root) && isRegularFile(path.join(dir, 'sce_sys', 'param.sfo'));
+  const isAllowedDump = (dir) => !!dir && allowedFromConfig(dir, root) && isRegularFile(path.join(dir, 'sce_sys', 'param.sfo'));
   const linuxDir = process.platform !== 'win32' && typeof settings.game_dir_unix === 'string' && path.isAbsolute(settings.game_dir_unix) ? settings.game_dir_unix : '';
   const bundled = readDirectory(path.join(root, 'game'))
     .filter((entry) => entry.isDirectory() && TITLE_ID.test(entry.name))
     .flatMap((entry) => [path.join(root, 'game', entry.name, 'uroot'), path.join(root, 'game', entry.name)]);
   const candidates = [linuxDir, localDir(root, settings.game_dir), ...bundled];
   const dataDir = path.join(root, 'analysis', `${name}-user`);
-  return { gameDir: candidates.find(isDump) || findDump(root), dataDir, userDir: path.join(dataDir, 'trophy') };
+  return { gameDir: candidates.find(isAllowedDump) || findDump(root), dataDir, userDir: path.join(dataDir, 'trophy') };
+}
+
+// A native port's game: named by its own settings, then its launcher folder's, then prepared by it.
+function nativeGameDir(root) {
+  const resolve = configResolver(root);
+  for (const file of config.localConfigFiles(root)) {
+    const dir = config.gameDirFrom(config.readConfig(file), resolve);
+    if (dir) return dir;
+  }
+  for (const folder of launcherFolderHints(root, '')) {
+    for (const file of hostSettingsFiles(root, folder).filter(isRegularFile)) {
+      const dir = config.gameDirFrom(config.readConfig(file), resolve);
+      if (dir) return dir;
+    }
+  }
+  return config.preparedDumps(root)[0] || findDump(root);
+}
+
+// A user folder a local launcher setting moves (user_dir), taken back above savedata as SotC's launcher does.
+function configuredUserDir(root) {
+  const resolve = configResolver(root);
+  for (const file of config.localConfigFiles(root)) {
+    const dir = resolve(config.readConfig(file).user_dir);
+    const parts = dir.split(/[\\/]/);
+    const at = parts.map((part) => part.toLowerCase()).lastIndexOf('savedata');
+    const folder = at > 0 ? parts.slice(0, at).join(path.sep) : dir;
+    if (folder && isRealDirectory(folder)) return folder;
+  }
+  return '';
+}
+
+function nativeDirs(root) {
+  const userDir = configuredUserDir(root) || NATIVE_USER_DIRS.map((parts) => path.join(root, ...parts)).find(isRealDirectory) || path.join(root, 'user');
+  return { gameDir: nativeGameDir(root), dataDir: root, userDir };
+}
+
+// A packaged port keeps everything in its data folder, its game in the settings file there.
+function packagedDirs(install) {
+  const { dataDir, settingsFile } = install.port.packaged;
+  const values = settingsFile && isRegularFile(settingsFile) ? config.readConfig(settingsFile) : {};
+  const resolve = configResolver(install.root);
+  // log_dir= moves every log of a run (GNSB's launcher); <data>/logs stays the default.
+  const logDir = resolve(values.log_dir);
+  return { gameDir: config.gameDirFrom(values, resolve), dataDir, userDir: dataDir ? path.join(dataDir, 'user') : '', logDir: isRealDirectory(logDir) ? logDir : '' };
 }
 
 function installDirs(install) {
   if (install.port === LIST_PORT) return { gameDir: '', dataDir: install.root, userDir: '' };
   if (install.port.runtime) return runtimeDirs(install.root, install.port.runtime);
+  if (install.port.packaged) return packagedDirs(install);
+  if (install.port.native) return nativeDirs(install.root);
   const script = readText(path.join(install.root, RUNNER), MAX_SCRIPT_BYTES);
-  const dirs = resolveDirs(install.root, install.port, launcherSettings(install.root, install.port).values, script);
-  return dirs.gameDir ? dirs : { ...dirs, gameDir: findDump(install.root) };
+  const settings = launcherSettings(install.root, install.port);
+  const dirs = resolveDirs(install.root, install.port, settings.values, script);
+  const gameDir = dirs.gameDir || config.gameDirFrom(settings.values, configResolver(install.root)) || findDump(install.root);
+  return { ...dirs, gameDir, settingsFile: settings.file };
 }
 
 // Every game of every port at or below `dir` whose trophy list can be read: its own, else its original dump's.
@@ -471,9 +569,9 @@ function discover(dir) {
   for (const install of findInstallations(dir)) {
     try {
       const dirs = installDirs(install);
-      const listed = listTargets(install, dirs);
-      if (listed.length > 0) {
-        games.push(...listed);
+      const targets = listTargets(install, dirs);
+      if (targets.length > 0) {
+        games.push(...targets);
         continue;
       }
       const sets = trophySets(dirs.gameDir, install.root);
@@ -481,7 +579,7 @@ function discover(dir) {
         debug.log(`[ps4recomp] '${install.root}': no trophy data, the launcher must point at the original game`);
         continue;
       }
-      games.push(...gameTargets(install, dirs, dumpIdentity(dirs.gameDir), sets));
+      games.push(...gameTargets(install, dirs, schema.dumpIdentity(dirs.gameDir), sets));
     } catch (err) {
       debug.warn(`[ps4recomp] '${install.root}' could not be read: ${err && err.message ? err.message : err}`);
     }
@@ -497,22 +595,17 @@ function scan(dir) {
   }));
 }
 
-// The logs a record reads: the collection's only carries its game in last_run.log.
+// The logs a record reads: the collection's only carries its game in last_run.log; a single game's last_run.log may be rotated.
 function logNames(info) {
   const wanted = Array.isArray(info.logs) ? info.logs : info.game ? [LAST_RUN_LOG] : RUNNER_LOGS;
-  return wanted.filter((name) => LOG_FILES.includes(name));
-}
-
-function writeAtomic(file, content) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(temporary, content);
-  fs.renameSync(temporary, file);
+  const rotated = !info.game && wanted.includes(LAST_RUN_LOG) ? ROTATED_LOGS : [];
+  return [...wanted, ...rotated].filter((name) => LOG_FILES.includes(name));
 }
 
 /*
-  last_run.log is rewritten every session, and a collection game has no other record of its
-  unlocks: what was once read is kept in a small journal of its own, merged into every read.
+  last_run.log is rewritten every session, launchers prune their session logs, and many ports keep
+  no other record of their unlocks: what was once read is kept in a small journal of its own,
+  merged into every read.
 */
 function rememberUnlocks(appid, unlocked) {
   const file = journalFile(appid);
@@ -520,7 +613,8 @@ function rememberUnlocks(appid, unlocked) {
   try {
     const parsed = JSON.parse(readText(file, formats.MAX_SMALL_BYTES) || '{}');
     if (parsed && parsed.unlocked && typeof parsed.unlocked === 'object') stored = parsed.unlocked;
-  } catch {
+  } catch (err) {
+    debug.warn(`[ps4recomp] unreadable unlock journal '${file}', starting it again: ${err}`);
     stored = {};
   }
   const merged = new Map(Object.entries(stored).filter(([id, time]) => /^\d{1,4}$/.test(id) && Number.isFinite(time)));
@@ -528,7 +622,7 @@ function rememberUnlocks(appid, unlocked) {
   for (const [id, time] of unlocked) if (!merged.has(id) || (time > 0 && !(merged.get(id) > 0))) merged.set(id, time);
   if (grew) {
     try {
-      writeAtomic(file, JSON.stringify({ unlocked: Object.fromEntries(merged) }));
+      writeFileAtomicSync(file, JSON.stringify({ unlocked: Object.fromEntries(merged) }));
     } catch (err) {
       debug.warn(`[ps4recomp] could not keep the unlocks of ${appid}: ${err}`);
     }
@@ -536,26 +630,60 @@ function rememberUnlocks(appid, unlocked) {
   return merged;
 }
 
+const toEntries = (map) => [...map].map(([id, time]) => ({ id, time }));
+const listed = (value) => (Array.isArray(value) ? value : []);
+
+// The game PROTOTYPE's launcher was told to start ("p1"), read when its log names none.
+function initialGame(info) {
+  const initial = info.initial;
+  if (!initial || typeof initial.file !== 'string' || typeof initial.key !== 'string') return '';
+  const value = String(config.readConfig(initial.file)[initial.key] || '').toLowerCase();
+  return /^[a-z]{1,3}\d{1,2}$/.test(value) ? value : '';
+}
+
+// The unlocks of one log, of this record's game when the log is a collection's.
+function logUnlocks(info, file, lines) {
+  const name = path.basename(file).toLowerCase();
+  const parsed = isRunLog(name) || !LOG_FILES.includes(name) ? logs.parseLastRunLog(lines, { port: info.port, initial: initialGame(info) }) : logs.parseLog(name, lines);
+  return parsed.filter((unlock) => !info.game || unlock.game === info.game);
+}
+
+// { unlocked, unstable } of the given log files.
+function readLogFiles(info, files) {
+  const unlocked = new Map();
+  let unstable = false;
+  for (const file of new Set(files.map(String))) {
+    const read = logs.readLog(file);
+    if (read.unstable) unstable = true;
+    progress.mergeInto(unlocked, logUnlocks(info, file, read.lines));
+  }
+  return { unlocked, unstable };
+}
+
 /*
   { unlocked: Map(id -> unix seconds, 0 when unknown), unstable }. `unstable` says a log was being
-  rewritten: what it held is left out of this read and must be read again.
+  rewritten: what it held is left out of this read and must be read again. last_run logs, rotated
+  and declared logs go through the journal; a collection game's whole read does.
 */
 function readUnlocks(data) {
   const info = data && typeof data === 'object' ? data : {};
-  const unlocked = new Map();
-  let unstable = false;
-  const keep = (id, time) => {
-    const previous = unlocked.get(id);
-    if (previous === undefined || (time > 0 && (previous === 0 || time < previous))) unlocked.set(id, time);
-  };
-  if (!info.userDir) return { unlocked, unstable };
-  for (const name of logNames(info)) {
-    const read = logs.readLog(path.join(String(info.userDir), name));
-    if (read.unstable) unstable = true;
-    for (const unlock of logs.parseLog(name, read.lines)) if (!info.game || unlock.game === info.game) keep(unlock.id, unlock.time);
+  if (!info.userDir) return { unlocked: new Map(), unstable: false };
+  const names = logNames(info);
+  const inLogDir = (list) => list.map((name) => path.join(String(info.logDir || info.userDir), name));
+  const own = readLogFiles(info, inLogDir(names.filter((name) => !isRunLog(name))));
+  const runLogs = inLogDir(names.filter(isRunLog));
+  const session = readLogFiles(info, [...runLogs, ...progress.sessionLogs(info), ...listed(info.logFiles)]);
+  const unstable = own.unstable || session.unstable;
+  if (info.game) {
+    const read = progress.mergeInto(own.unlocked, toEntries(session.unlocked));
+    return { unlocked: info.appid ? rememberUnlocks(info.appid, read) : read, unstable };
   }
-  if (info.game && info.appid) return { unlocked: rememberUnlocks(info.appid, unlocked), unstable };
-  return { unlocked, unstable };
+  const saved = progress.readProgress(info);
+  if (saved.rejected.length > 0) debug.log(`[ps4recomp] ${info.appid}: ignored progress files of another game: ${saved.rejected.join(', ')}`);
+  progress.mergeInto(own.unlocked, toEntries(saved.unlocked));
+  const journaled = info.appid && (runLogs.length > 0 || listed(info.sessionDirs).length > 0 || listed(info.logFiles).length > 0);
+  progress.mergeInto(own.unlocked, toEntries(journaled ? rememberUnlocks(info.appid, session.unlocked) : session.unlocked));
+  return { unlocked: own.unlocked, unstable: unstable || saved.unstable };
 }
 
 function getAchievements(data) {
@@ -564,133 +692,9 @@ function getAchievements(data) {
   return [...read.unlocked].map(([id, earned_time]) => ({ id, achieved: true, earned_time }));
 }
 
-function containerOf(files, info, key) {
-  const container = files ? formats.readContainer(files, info.npcommid, key) : null;
-  return container && container.documents.size > 0 ? container : null;
-}
-
-// The trophy list of a record's set: the port's own trophies.tsv, a decrypted export, else the dump's .trp.
-function loadTrophySet(info) {
-  if (info.trophyList) {
-    const list = readTrophyList(String(info.trophyList));
-    return list ? { documents: new Map([['', list]]), icons: new Map(), icon0: null } : null;
-  }
-  const set = trophySets(info.dumpDir, info.installRoot).get(Number(info.slot));
-  if (!set) return null;
-  const key = trophyKey(String(info.installRoot || ''));
-  const trp = () => readTrpFile(set.trp);
-  for (const dir of set.exports) {
-    const exported = containerOf(formats.readExportFolder(dir), info, '');
-    if (!exported) continue;
-    const packed = exported.icons.size === 0 && set.trp ? trp() : null;
-    if (packed) return { ...exported, icons: formats.readContainer(packed, '', '').icons };
-    return exported;
-  }
-  if (!set.trp) return null;
-  const files = trp();
-  return containerOf(files, { ...info, npcommid: info.npcommid || recoveredNpcommid(set.trp, key, files) }, key);
-}
-
-function trophyKey(installRoot) {
-  return formats.readKeyFile(path.join(installRoot, 'trophy.key')) || formats.RETAIL_TROPHY_KEY;
-}
-
-function readTrpFile(file) {
-  return formats.readTrp(formats.readBounded(file, formats.MAX_TRP_BYTES));
-}
-
-// A set's NP id found by search, kept per file while it is unchanged: the search is not free.
-const recoveredIds = new Map();
-function recoveredNpcommid(file, key, files = null) {
-  let stamp = '';
-  try {
-    const stat = fs.statSync(file);
-    stamp = `${file}|${stat.size}|${stat.mtimeMs}|${key}`;
-  } catch {
-    return '';
-  }
-  if (!recoveredIds.has(stamp)) recoveredIds.set(stamp, formats.findNpcommid(files || readTrpFile(file), key));
-  return recoveredIds.get(stamp);
-}
-
-function toFileUrl(file) {
-  return 'file:///' + file.replace(/\\/g, '/');
-}
-
-function writeIcon(file, image) {
-  if (!image || image.length === 0) return '';
-  try {
-    if (!isRegularFile(file) || fs.statSync(file).size !== image.length) fs.writeFileSync(file, image);
-    return toFileUrl(file);
-  } catch (err) {
-    debug.warn(`[ps4recomp] could not write icon '${file}': ${err}`);
-    return '';
-  }
-}
-
-// The dump's own key art and icon, the trophy set's icon when the dump has none.
-function gameArt(info, container, iconDir) {
-  const art = (name) => (isRegularFile(path.join(String(info.dumpDir || ''), 'sce_sys', name)) ? toFileUrl(path.join(info.dumpDir, 'sce_sys', name)) : '');
-  const background = art('pic1.png') || art('pic0.png');
-  const icon = art('icon0.png') || writeIcon(path.join(iconDir, 'icon0.png'), container.icon0);
-  // The square icon only stands in for a header until SteamGridDB's landscape art replaces it.
-  return { header: background || icon, headerStandIn: !background, background, overlay: !!background, icon };
-}
-
-function textsById(document) {
-  return new Map((document ? document.trophies : []).map((trophy) => [trophy.id, trophy]));
-}
-
-function trophyEntry(trophy, local, english, icon) {
-  const own = local.get(trophy.id) || {};
-  const reference = english.get(trophy.id) || {};
-  return {
-    name: trophy.id,
-    displayName: own.name || reference.name || trophy.name || trophy.id,
-    description: own.detail || reference.detail || trophy.detail || '',
-    rarityName: reference.name || undefined,
-    rarityDescription: reference.detail || undefined,
-    hidden: trophy.hidden ? 1 : 0,
-    type: trophy.grade,
-    icon,
-    icongray: icon,
-  };
-}
-
-function cleanTitle(text) {
-  return String(text || '').replace(/[™®©]/g, '').replace(/\s+/g, ' ').trim();
-}
-
-async function getGameData(data, lang = 'english') {
-  const info = data && typeof data === 'object' ? data : {};
-  const container = loadTrophySet(info);
-  if (!container) throw new Error(`PS4 Recomp: no readable trophy list for ${info.appid} (set ${info.slot}) under '${info.dumpDir}'`);
-  const documents = container.documents;
-  const base = documents.get('') || documents.get('english') || documents.values().next().value;
-  const local = documents.get(String(lang || '').toLowerCase()) || base;
-  const english = documents.get('english') || base;
-  const iconDir = iconDirFor(info.appid);
-  try {
-    fs.mkdirSync(iconDir, { recursive: true });
-  } catch {
-    /* the trophies still list, just without their art */
-  }
-  const img = gameArt(info, container, iconDir);
-  const localTexts = textsById(local);
-  const englishTexts = textsById(english);
-  const list = base.trophies.map((trophy) => {
-    const icon = writeIcon(path.join(iconDir, `${trophy.id}.png`), container.icons.get(trophy.id)) || img.icon;
-    return trophyEntry(trophy, localTexts, englishTexts, icon);
-  });
-  return {
-    name: cleanTitle(local.title) || cleanTitle(base.title) || info.title || info.npcommid || String(info.appid || ''),
-    appid: String(info.appid || ''),
-    system: 'playstation',
-    npCommId: info.npcommid || undefined,
-    img,
-    rarityTitles: [...new Set([cleanTitle(english.title), info.title].filter(Boolean))],
-    achievement: { total: list.length, list },
-  };
+// The trophy list and art of a record (ps4RecompSchema.js), its icons in this side's cache.
+function getGameData(data, lang = 'english') {
+  return schema.getGameData(data, lang, iconDirFor);
 }
 
 module.exports.SOURCE = SOURCE;
@@ -703,4 +707,5 @@ module.exports.readUnlocks = readUnlocks;
 module.exports.getAchievements = getAchievements;
 module.exports.getGameData = getGameData;
 module.exports.iconDirFor = iconDirFor;
+module.exports.isProgressName = progress.isProgressName;
 module.exports._internal = { PORTS, identifyPort, resolveDirs, scriptDefault, parseExtraEnv, launcherSettings, trophySets, findDump, journalFile };

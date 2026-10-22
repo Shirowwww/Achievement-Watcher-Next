@@ -2,9 +2,9 @@
 
 /*
   A PS4 Recomp port's unlock logs: trophies.log ("<id> <unix time>" lines) and last_run.log, whose
-  "Runtime: trophy N unlocked" lines carry no date and, in the Uncharted collection, belong to the
-  game the last "Preparing" or "Switching to" line named. Synchronous and dependency-free: the
-  Watchdog loads this file through sharedAppModule.
+  "Runtime: trophy N unlocked" lines carry no date and, in a collection (Uncharted, PROTOTYPE), belong
+  to the game the last "Preparing", "Switching to" or "The game started" line named. Synchronous and
+  dependency-free: the Watchdog loads this file through sharedAppModule.
 */
 
 const fs = require('fs');
@@ -15,8 +15,9 @@ const MAX_LOG_BYTES = 256 * 1024 * 1024;
 const CHUNK_BYTES = 4 * 1024 * 1024;
 const MAX_UNIX_S = 4102444800;
 const TROPHY_LINE = /^\s*(\d{1,4})\s+(\d{1,13})\s*$/;
-const RUNTIME_UNLOCK = /Runtime: trophy (\d{1,4}) unlocked\b/;
-const CONTEXT_LINE = /\b(?:Preparing |Switching to |Runtime: SystemService: load executable )/;
+const RUNTIME_UNLOCK = /(?:Runtime|Trophies): trophy (\d{1,4}) unlocked\b/;
+const CONTEXT_LINE = /\b(?:Preparing |Switching to |The game started |Runtime: SystemService: load executable )|^Output: /;
+const COLLECTIONS = ['uncharted', 'prototype'];
 
 // The bytes that tell a log that grew from one rewritten since it was last read: its first ones,
 // and the last ones before where the previous read stopped.
@@ -31,7 +32,7 @@ const UNSTABLE = { lines: [], missing: false, unstable: true };
   that shrank, or whose first bytes changed, is a new one and is read again from its start.
 */
 const tails = new Map();
-const relevant = (line) => TROPHY_LINE.test(line) || RUNTIME_UNLOCK.test(line) || (CONTEXT_LINE.test(line) && gameFromText(line) !== '');
+const relevant = (line) => TROPHY_LINE.test(line) || RUNTIME_UNLOCK.test(line) || (CONTEXT_LINE.test(line) && COLLECTIONS.some((port) => gameFromText(line, port) !== ''));
 
 // null when the file ended before `end`: it shrank while it was read.
 function readRange(fd, start, end) {
@@ -141,20 +142,33 @@ function parseTrophiesLog(lines) {
   return unlocks;
 }
 
-// Which collection game a context line names, from the executable it loads.
-function gameFromText(text) {
+/*
+  Which game of a collection a context line names, from the executable it loads. PROTOTYPE's
+  prepare.py prints "Output: <image folder>" at every start: out/prototype2_ps4f for PROTOTYPE 2,
+  out itself for PROTOTYPE.
+*/
+function gameFromText(text, port = 'uncharted') {
+  if (port === 'prototype') {
+    if (/prototype2_ps4f(?:\.elf|[\\/].*boot-linked\.bin)|^Output: .*[\\/]out[\\/]prototype2_ps4f[\\/]?\s*$/i.test(text)) return 'p2';
+    if (/(?:eboot\.bin|[\\/]out[\\/]boot-linked\.bin)|^Output: .*[\\/]out[\\/]?\s*$/i.test(text)) return 'p1';
+    return '';
+  }
+  if (port !== 'uncharted') return '';
   if (/big2(?:-ps4_Shipping\.elf|[\\/].*boot-linked\.bin)/i.test(text)) return 'u2';
   if (/big3(?:-ps4_Shipping\.elf|[\\/].*boot-linked\.bin)/i.test(text)) return 'u3';
   if (/(?:eboot\.bin|[\\/]eboot[\\/].*boot-linked\.bin)/i.test(text)) return 'u1';
   return '';
 }
 
-// [{ id, time: 0, game }] from last_run.log, each unlock tagged with the game last named before it.
-function parseLastRunLog(lines) {
+/*
+  [{ id, time: 0, game }] from last_run.log, each unlock tagged with the game last named before it.
+  `initial` is the game a session starts in when its log names none (PROTOTYPE's launcher choice).
+*/
+function parseLastRunLog(lines, { port = 'uncharted', initial = '' } = {}) {
   const unlocks = [];
-  let game = '';
+  let game = initial;
   for (const line of lines) {
-    if (CONTEXT_LINE.test(line)) game = gameFromText(line) || game;
+    if (CONTEXT_LINE.test(line)) game = gameFromText(line, port) || game;
     const match = RUNTIME_UNLOCK.exec(line);
     if (match) unlocks.push({ id: String(Number(match[1])), time: 0, game });
   }
