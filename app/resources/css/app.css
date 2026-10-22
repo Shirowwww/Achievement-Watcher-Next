@@ -3510,20 +3510,27 @@ body.is-resizing #game-list {
    band spans that strip - the top of the panel down to the section header - and blurs and fades
    whatever passes under it, so a row leaves the view the same way it does under a pinned header
    instead of being sliced. It sits below those headers (z-index 2), which therefore stay crisp,
-   takes no space in the flow (the margins cancel its own height), and swallows no clicks. */
+   takes no space in the flow (the margins cancel its own height), and swallows no clicks.
+   Its offsets come from the pane's own padding (--set-pane-top / --set-pane-x, set where the
+   padding is), so the band fills the padding box exactly: it never reaches past the pane's sides,
+   and its top-left corner follows the pane's rounded corner instead of cutting across it. */
 #settings .box .content::before {
   content: '';
   display: block;
   position: sticky;
   /* Chromium pins a sticky child against the scroller's CONTENT box, so `top: 0` would park the
-     band 18px down - level with the pinned headers, leaving the strip above it (the one that
+     band one padding down - level with the pinned headers, leaving the strip above it (the one that
      needed covering) untouched. The negative offset is exactly the padding it has to climb back. */
-  top: -18px;
+  top: calc(-1 * var(--set-pane-top, 16px));
   z-index: 1;
   height: 46px;
-  /* -18px/-24px cancel the scroller's own padding so the band starts at the very top edge and
-     reaches both sides; -28px gives back the height it would otherwise add above the first card. */
-  margin: -18px -24px -28px;
+  /* The negative margins cancel the scroller's own padding so the band starts at the very top edge
+     and spans the padding box; the bottom one gives back the height it would otherwise add above
+     the first card. */
+  margin: calc(-1 * var(--set-pane-top, 16px)) calc(-1 * var(--set-pane-x, 18px)) calc(var(--set-pane-top, 16px) - 46px);
+  /* The pane's radius less its 1px border: the blur stops at the same curve as the pane. The right
+     end meets the scrollbar, so only the left corner is rounded. */
+  border-top-left-radius: calc(var(--radius-md) - 1px);
   pointer-events: none;
   backdrop-filter: blur(7px);
   -webkit-backdrop-filter: blur(7px);
@@ -9387,7 +9394,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 #settings .box .content {
-  padding: 16px 18px 20px;
+  --set-pane-top: 16px;
+  --set-pane-x: 18px;
+  padding: var(--set-pane-top) var(--set-pane-x) 20px;
 }
 
 /* ONE header for every section, in every tab. It sits at the top of its card and its
@@ -9446,6 +9455,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   position: sticky;
   top: 0;
   z-index: 2;
+  /* At the top of its card the header takes the card's rounded corners from the card's clip; once
+     pinned it has left them behind, so it carries the same curve itself. */
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   /* --set-panel on its own is translucent enough that rows scrolled visibly THROUGH the pinned
      header. Compositing it over the modal surface first gives the header a colour of its own
      instead of one borrowed from whatever is passing behind it. */
@@ -11827,6 +11839,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   }
 
   #settings .box .content {
+    --set-pane-top: 18px;
+    --set-pane-x: 18px;
     padding: 18px;
   }
 

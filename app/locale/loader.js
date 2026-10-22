@@ -866,43 +866,31 @@ function translateUI(lang, locale, template) {
     $('#source-official-title').text(clear(template.settings.source.officialPlatforms.title));
     $('#source-official-description').text(clear(template.settings.source.officialPlatforms.description));
   }
-  selector.find('li:nth-child(1) .left span').text(clear(template.settings.source.legitSteam.name));
-  selector.find("li:nth-child(1) .right select option[value='0']").text(clear(template.settings.source.legitSteam.value.none));
-  selector.find("li:nth-child(1) .right select option[value='1']").text(clear(template.settings.source.legitSteam.value.installed));
-  selector.find("li:nth-child(1) .right select option[value='2']").text(clear(template.settings.source.legitSteam.value.owned));
-  selector.find('li:nth-child(1) .help').text(clear(template.settings.source.legitSteam.description));
-  selector.find('li:nth-child(2) .left span').text(clear(template.settings.source.steamEmu.name));
+  selector.find('li:nth-child(1) .left span').text(clear(template.settings.source.steamEmu.name));
+  selector.find("li:nth-child(1) .right select option[value='true']").text(clear(template.settings.common.enable));
+  selector.find("li:nth-child(1) .right select option[value='false']").text(clear(template.settings.common.disable));
+  if (template.settings.source.steamEmu.description) selector.find('li:nth-child(1) .help').text(clear(template.settings.source.steamEmu.description));
   selector.find("li:nth-child(2) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(2) .right select option[value='false']").text(clear(template.settings.common.disable));
-  if (template.settings.source.steamEmu.description) selector.find('li:nth-child(2) .help').text(clear(template.settings.source.steamEmu.description));
+  selector.find('li:nth-child(2) .help').text(clear(template.settings.source.greenLuma.description));
   selector.find("li:nth-child(3) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(3) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(3) .help').text(clear(template.settings.source.greenLuma.description));
+  selector.find('li:nth-child(3) .help').text(clear(template.settings.source.rpcs3.description));
   selector.find("li:nth-child(4) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(4) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(4) .help').text(clear(template.settings.source.rpcs3.description));
+  selector.find('li:nth-child(4) .help').text(clear(template.settings.source.lumaPlay.description));
+  selector.find('li:nth-child(5) .left span').text(clear(template.settings.source.ea.name));
   selector.find("li:nth-child(5) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(5) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(5) .help').text(clear(template.settings.source.lumaPlay.description));
-  selector.find('li:nth-child(6) .left span').text(clear(template.settings.source.ea.name));
+  selector.find('li:nth-child(5) .help').text(clear(template.settings.source.ea.description));
+  selector.find('li:nth-child(6) .left span').text(clear(template.settings.source.importCache.name));
   selector.find("li:nth-child(6) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(6) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(6) .help').text(clear(template.settings.source.ea.description));
-  selector.find('li:nth-child(7) .left span').text(clear(template.settings.source.xboxPc.name));
-  // Same three states as the Steam row above, with words of its own: a row borrowing another row's
-  // keys drifts the moment either one moves.
-  selector.find("li:nth-child(7) .right select option[value='0']").text(clear(template.settings.source.xboxPc.value.none));
-  selector.find("li:nth-child(7) .right select option[value='1']").text(clear(template.settings.source.xboxPc.value.installed));
-  selector.find("li:nth-child(7) .right select option[value='2']").text(clear(template.settings.source.xboxPc.value.owned));
-  selector.find('li:nth-child(7) .help').text(clear(template.settings.source.xboxPc.description));
-  selector.find('li:nth-child(8) .left span').text(clear(template.settings.source.importCache.name));
-  selector.find("li:nth-child(8) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(8) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(8) .help').text(clear(template.settings.source.importCache.description));
-  selector.find('li:nth-child(9) .left span').text(clear(template.settings.source.socialClub.name));
-  selector.find("li:nth-child(9) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(9) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(9) .help').text(clear(template.settings.source.socialClub.description));
+  selector.find('li:nth-child(6) .help').text(clear(template.settings.source.importCache.description));
+  selector.find('li:nth-child(7) .left span').text(clear(template.settings.source.socialClub.name));
+  selector.find("li:nth-child(7) .right select option[value='true']").text(clear(template.settings.common.enable));
+  selector.find("li:nth-child(7) .right select option[value='false']").text(clear(template.settings.common.disable));
+  selector.find('li:nth-child(7) .help').text(clear(template.settings.source.socialClub.description));
   $('#source-stores-title').text(clear(template.settings.source.groupStores));
   $('#source-emulators-title').text(clear(template.settings.source.groupEmulators));
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
@@ -923,6 +911,16 @@ function translateUI(lang, locale, template) {
     $("#option_epicOfficial option[value='0']").text(clear(template.settings.source.epicOfficial.value.none));
     $("#option_epicOfficial option[value='1']").text(clear(template.settings.source.epicOfficial.value.installed));
     $("#option_epicOfficial option[value='2']").text(clear(template.settings.source.epicOfficial.value.owned));
+  }
+  // Steam and Xbox PC sit in the official launchers card with the same three states, but their names
+  // come from the locale; each has words of its own so a row never borrows another row's keys.
+  for (const key of ['legitSteam', 'xboxPc']) {
+    const source = template.settings.source[key];
+    $(`#source-name-${key}`).text(clear(source.name));
+    $(`#source-help-${key}`).text(clear(source.description));
+    $(`#option_${key} option[value='0']`).text(clear(source.value.none));
+    $(`#option_${key} option[value='1']`).text(clear(source.value.installed));
+    $(`#option_${key} option[value='2']`).text(clear(source.value.owned));
   }
   $('#advanced-blacklist-title').text(clear(template.settings.advanced.blacklistTitle));
   $('#blacklist_reset span').text(clear(template.settings.advanced.blacklistButton));

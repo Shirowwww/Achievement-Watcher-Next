@@ -101,7 +101,7 @@ test('positional locale bindings still point at the row they describe', () => {
     assert.strictEqual(row.key, source[1], `row ${position[1]} is #option_${row.key}, localized as "${source[1]}"`);
     checked += 1;
   }
-  assert.ok(checked >= 9, `expected the positional bindings to be covered, only saw ${checked}`);
+  assert.ok(checked >= 7, `expected the positional bindings to be covered, only saw ${checked}`);
 });
 
 // Rows added after the positional block are bound by id instead; each needs its help element and a
@@ -113,10 +113,11 @@ test('id-bound source rows have a help element and a description in every locale
   assert.ok(keys, 'loader.js must list the id-bound source keys');
   const looped = keys.split(',').map((k) => k.trim().replace(/^'|'$/g, '')).filter(Boolean);
   assert.deepStrictEqual(looped, ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'xlln', 'markerpatch', 'madnesspatch', 'pcports', 'retroAchievements', 'psnLibrary']);
-  // Epic is id-bound too, but apart from the loop: it carries the same three states as Steam and
-  // Xbox rather than an on/off switch, so its options are named one by one.
+  // Epic, Steam and Xbox PC are id-bound too, but apart from the loop: they carry three states
+  // rather than an on/off switch, so their options are named one by one.
   assert.match(loaderJs, /#source-help-epicOfficial/, 'loader.js must bind the Epic help text by id');
-  const list = [...looped, 'epicOfficial'];
+  assert.match(loaderJs, /for \(const key of \['legitSteam', 'xboxPc'\]\)/, 'loader.js must bind the Steam and Xbox PC rows by id');
+  const list = [...looped, 'epicOfficial', 'legitSteam', 'xboxPc'];
 
   const rows = new Map(sourceListItems().map((item) => [item.key, item.html]));
   for (const key of list) {

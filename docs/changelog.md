@@ -99,6 +99,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **One platinum row.** A game's PlayStation platinum reads like any platinum trophy, with Sony's
   share of players when it is known ("Platinum · 4.4% of all players"). PlayStation games now take
   the first SteamGridDB cover, with Sony's art as the fallback.
+- **Settings scroll more cleanly.** The blur under the pinned headers follows the panel's rounded
+  corner without overflowing, and a pinned header keeps its rounded top.
+- **Steam and Xbox PC in Official launchers.** Show Steam games and the Xbox PC row now sit with
+  Ubisoft Connect, GOG Galaxy and Epic Games in Settings > Sources.
 
 ### Fixed
 

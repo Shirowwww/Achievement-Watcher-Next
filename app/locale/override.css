@@ -57,7 +57,7 @@ html[lang="ru"] #options-notify-toast li:nth-child(1).hasHelper,
 html[lang="ru"] #options-notify-toast li:nth-child(2).hasHelper,
 html[lang="ru"] #options-notify-transport li:nth-child(2).hasHelper,
 html[lang="ru"] #options-notify-transport li:nth-child(3).hasHelper,
-html[lang="ru"] #options-source li:nth-child(1).hasHelper
+html[lang="ru"] #options-source-stores li:nth-child(1).hasHelper
 {
   margin-bottom: 32px;
 }
@@ -77,7 +77,7 @@ html[lang="hu"] .achievement .stats .community
     width: 240px;
 }
 html[lang="hu"] #options-notify-transport li:nth-child(2).hasHelper,
-html[lang="hu"] #options-source li:nth-child(1).hasHelper
+html[lang="hu"] #options-source-stores li:nth-child(1).hasHelper
 {
   margin-bottom: 32px;
 }
@@ -94,7 +94,7 @@ html[lang="pl"] .arrow-list li
 {
   font-size: 15px;
 }
-html[lang="pl"] #options-source li:nth-child(6).hasHelper,
+html[lang="pl"] #options-source li:nth-child(5).hasHelper,
 html[lang="pl"] #options-notify-transport li:nth-child(2).hasHelper
 {
   margin-bottom: 32px;
@@ -124,7 +124,7 @@ html[lang="pt-br"] #options-notify-toast li:nth-child(3).hasHelper.expand
 
 html[lang="de"] #options-ui li:nth-child(5).hasHelper,
 html[lang="de"] #options-notify-transport li:nth-child(2).hasHelper,
-html[lang="de"] #options-source li:nth-child(1).hasHelper
+html[lang="de"] #options-source-stores li:nth-child(1).hasHelper
 {
   margin-bottom: 32px;
 }

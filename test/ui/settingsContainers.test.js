@@ -75,7 +75,7 @@ const MOVED_GENERAL = {
   'options-ui-app': ['option_startWithWindows', 'option_closeToTray', 'option_uninstallContextMenu', 'option_disableHardwareAccel'],
 };
 const MOVED_SOURCE = {
-  'options-source-stores': ['option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial'],
+  'options-source-stores': ['option_legitSteam', 'option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial', 'option_xboxPc'],
   'options-source-emulators': ['option_gog', 'option_epic', 'option_xlln', 'option_markerpatch', 'option_madnesspatch', 'option_pcports'],
   'options-source-consoles': ['option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_xenia', 'option_retroAchievements', 'option_psnLibrary'],
 };
@@ -105,20 +105,10 @@ test('General selects the sweep skips are saved explicitly by id', () => {
   }
 });
 
-test('the first source list still carries the nine rows the loader binds by nth-child', () => {
+test('the first source list still carries the seven rows the loader binds by nth-child', () => {
   const head = root.querySelector('#options-source');
   const keys = head.querySelectorAll('li').map((li) => li.querySelector('select').getAttribute('id'));
-  assert.deepEqual(keys, [
-    'option_legitSteam',
-    'option_steamEmu',
-    'option_greenLuma',
-    'option_rpcs3',
-    'option_lumaPlay',
-    'option_ea',
-    'option_xboxPc',
-    'option_importCache',
-    'option_socialClub',
-  ]);
+  assert.deepEqual(keys, ['option_steamEmu', 'option_greenLuma', 'option_rpcs3', 'option_lumaPlay', 'option_ea', 'option_importCache', 'option_socialClub']);
 });
 
 test('the General head list keeps the seven rows the loader binds by nth-child', () => {
