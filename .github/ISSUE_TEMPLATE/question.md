@@ -19,7 +19,7 @@ What are you trying to do, what did you expect, and where are you stuck?
 ## Environment
 
 - AW Next version:
-- Windows version:
+- Windows version, or Linux distribution and desktop:
 - Source or emulator involved:
 
 Add screenshots or relevant logs if they make the question easier to understand. Remove credentials and private data first.

@@ -1,73 +1,70 @@
 # HDR screenshot helper
 
-This transient Windows helper takes every achievement screenshot on Windows; it is shipped only as
-a Windows executable, and Linux takes its screenshots another way (see [docs/linux.md](../../docs/linux.md)).
-It captures the monitor showing the game (`--pid <n>`, the game's largest visible window, then the
-window in front, then the primary display)
-with Windows Graphics Capture and writes an ordinary PNG: in `R16G16B16A16_FLOAT`, tone-mapped to
-SDR sRGB, when HDR is active, and as the plain `R8G8B8A8` frame otherwise. It replaced
-`screenshot-desktop`, whose Windows path compiled a C# screen grabber with `csc.exe` into `%TEMP%`
-and ran it, which antivirus behaviour engines report as a screen-capture tool.
+This short-lived Windows helper takes every achievement screenshot on Windows. It ships only as a
+Windows executable, and Linux takes its screenshots another way (see
+[docs/linux.md](../../docs/linux.md)). It captures the monitor showing the game with Windows Graphics
+Capture and writes an ordinary PNG: tone-mapped to SDR sRGB from `R16G16B16A16_FLOAT` when HDR is
+active, the plain `R8G8B8A8` frame otherwise. The monitor is chosen with `--pid <n>` (the game's
+largest visible window), then the window in front, then the primary display. The helper replaced
+`screenshot-desktop`, whose Windows path compiled a C# screen grabber with `csc.exe` into `%TEMP%` and
+ran it, which antivirus behaviour engines report as a screen-capture tool.
 
-Windows 10 cannot turn off the yellow border Windows Graphics Capture draws around a captured
-screen. Where Windows has no switch for it, the helper takes the shot with DXGI Desktop Duplication
-instead, which draws nothing; frames that only moved the pointer are skipped, since their texture
-is still black. Both paths feed the same tone mapping.
+Windows 10 cannot turn off the yellow border Windows Graphics Capture draws around a captured screen.
+Where Windows has no switch for it, the helper uses DXGI Desktop Duplication, which draws nothing, and
+skips frames that only moved the pointer, since their texture is still black. Both paths feed the same
+tone mapping.
 
-Whether HDR is on is read from the display path of the captured monitor with
-`DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting
-the SDR color space while the desktop composes in HDR, and the older `..._ADVANCED_COLOR_INFO`
-query cannot tell HDR apart from Windows 11 automatic colour management. The capture is divided by
-the SDR white level of that same path, so the desktop is not crushed when the "SDR content
-brightness" slider sits above its minimum.
+HDR is read from the display path of the captured monitor with
+`DISPLAYCONFIG_GET_ADVANCED_COLOR_INFO_2`, not from DXGI: `IDXGIOutput6::GetDesc1` keeps reporting the
+SDR color space while the desktop composes in HDR, and the older `..._ADVANCED_COLOR_INFO` query cannot
+tell HDR from Windows 11 automatic colour management. The capture is divided by the SDR white level of
+that same path, so the desktop is not crushed when the "SDR content brightness" slider is above its
+minimum.
 
-It is started only for an achievement screenshot: with the output path alone when the HDR preference
+The helper runs only for an achievement screenshot: with the output path alone when the HDR preference
 is `Automatic`, with `--sdr` when it is off. It does not run in the background and does not change
 Electron's renderer color mode.
 
 ## Tone mapping
 
-The goal is a screenshot that looks like the SDR capture of the same scene, with the highlights an
-SDR capture would have thrown away still present. Everything is therefore anchored on diffuse
-white rather than on the display peak the way broadcast display mapping is: BT.2390's EETF,
-libplacebo's spline and BT.2446 method A all darken diffuse white by design, because they assume a
-viewer whose eye adapts to the whole picture. A screenshot is looked at next to ordinary SDR
-content, so it cannot spend that.
+The goal is a screenshot that looks like an SDR capture of the same scene, with the highlights an SDR
+capture would have thrown away still present. Everything is anchored on diffuse white, not on the
+display peak as broadcast mapping does. BT.2390's EETF, libplacebo's spline and BT.2446 method A all
+darken diffuse white by design, because they assume a viewer whose eye adapts to the whole picture. A
+screenshot is viewed next to ordinary SDR content and cannot afford that.
 
-- **Scene peak.** A histogram indexed by the f16 bit pattern itself, taken over the *second*
-  brightest pixel of every 2x2 block, read at the 99.99th percentile. The rank filter is what
-  separates a hundred isolated specular samples from a real bright window; the bit-pattern
-  histogram makes the percentile exact and keeps the scan free of decoding.
-- **Curve.** Identity up to a knee placed a fixed perceptual distance (`SHOULDER`, in normalised
-  PQ) below diffuse white, then an extended Reinhard shoulder that lands exactly on the scene peak
-  with a small but non-zero slope. Working in PQ rather than in linear light is what lets a handful
-  of remaining output codes cover several stops of highlight; the non-zero end slope is what stops
-  the brightest highlights collapsing into one flat white. A fixed shoulder width also makes the
-  result insensitive to over-estimating the peak - a scene read as 49x diffuse white instead of 8x
-  moves the whole picture by about a tenth of one output code.
-- **Application.** The curve drives the brightest channel and the other two follow by the same
-  factor, so hue and saturation survive untouched; a highlight is then blended towards its own
-  brightest channel with rising intensity, because scaling alone cannot brighten a channel that is
-  already at maximum and a coloured light would otherwise render as one flat patch at every
-  intensity.
-- **No local contrast pass.** An earlier tile-based base/detail split re-added the full detail term
-  after compressing the base, which undid the roll-off for every pixel brighter than its
-  neighbourhood: it clipped essentially all above-white content. Restricting the term to a genuine
-  high-frequency residual fixes the clipping but rings around bright edges, and buys little; the
-  curve alone measured better and is cheaper.
+- **Scene peak.** A histogram indexed by the f16 bit pattern, taken over the *second* brightest pixel
+  of every 2x2 block and read at the 99.99th percentile. The rank filter separates a hundred isolated
+  specular samples from a real bright window, and the bit-pattern histogram makes the percentile exact
+  without decoding.
+- **Curve.** Identity up to a knee a fixed perceptual distance (`SHOULDER`, in normalised PQ) below
+  diffuse white, then an extended Reinhard shoulder that lands exactly on the scene peak with a small
+  non-zero slope. PQ rather than linear light lets the few remaining output codes cover several stops of
+  highlight, and the non-zero end slope stops the brightest highlights collapsing into one flat white.
+  A fixed shoulder width makes the result insensitive to over-estimating the peak: a scene read as 49x
+  diffuse white instead of 8x moves the picture by about a tenth of one output code.
+- **Application.** The curve drives the brightest channel and the other two follow by the same factor,
+  so hue and saturation survive. A highlight is then blended towards its own brightest channel with
+  rising intensity, because scaling cannot brighten a channel already at maximum, and a coloured light
+  would otherwise render as one flat patch at every intensity.
+- **No local contrast pass.** A tile-based base/detail split added the full detail term back after
+  compressing the base, which undid the roll-off for every pixel brighter than its neighbourhood and
+  clipped nearly everything above white. Restricting the term to a high-frequency residual fixes the
+  clipping but rings around bright edges and gains little. The curve alone measured better and is
+  cheaper.
 
-Both the compression and the highlight blend depend only on the brightest channel, which is one of
-the 31744 finite non-negative f16 patterns, so both are resolved once into a lookup table and cost
-a single lookup per pixel. The tables hold exactly what the curve would return - no interpolation.
+Compression and highlight blend depend only on the brightest channel, which is one of the 31744 finite
+non-negative f16 patterns. Both are resolved once into a lookup table and cost one lookup per pixel,
+holding exactly what the curve returns, with no interpolation.
 
 ## Encoding
 
-The PNG is written as RGB, not RGBA: a screenshot is opaque, so the alpha channel only ever held
-255 and cost a quarter of the file. DEFLATE runs at level 3 rather than the crate default of 6,
-which was measured at about a fifth of the time for a file a few percent *smaller* than the RGBA
-one it replaces. Level 1 and `FdeflateUltraFast` are faster still but give up 10 to 20 percent of
-the size, and level 6 costs four times level 3 for another 4 percent - the curve is flat past 3.
-Encoding is nonetheless still the largest single cost of a capture.
+The PNG is written as RGB, not RGBA: a screenshot is opaque, so the alpha channel only held 255 and
+cost a quarter of the file. DEFLATE runs at level 3 rather than the crate default of 6, which measured
+about a fifth of the time for a file a few percent *smaller* than the RGBA one it replaces. Level 1 and
+`FdeflateUltraFast` are faster but give up 10 to 20 percent of the size, and level 6 costs four times
+level 3 for another 4 percent, so the curve is flat past 3. Encoding is still the largest single cost
+of a capture.
 
 Build and copy the x64 release binaries from the repository root:
 
@@ -80,57 +77,57 @@ Copy-Item native/hdr-screenshot/target/release/aw-next-clip.exe `
   watchdog/native/aw-next-clip.exe -Force
 ```
 
-The `RUSTFLAGS` line is not optional. `strip = "symbols"` drops the symbol table but not the
-panic locations, so without it the committed executable carries the absolute source path of every
-dependency and publishes the account name of whoever built it. Cargo's own `trim-paths` profile
-setting would replace it, but it is still unstable as of Cargo 1.97. Check a rebuilt binary with
+The `RUSTFLAGS` line is required. `strip = "symbols"` drops the symbol table but not the panic
+locations, so without it the committed executable carries the absolute source path of every dependency
+and publishes the account name of whoever built it. Cargo's `trim-paths` profile setting would replace
+it, but it is still unstable as of Cargo 1.97. Check a rebuilt binary with
 `Select-String -Path watchdog/native/aw-next-hdr-screenshot.exe -Pattern 'C:\\Users' -Encoding ascii`,
 which must find nothing.
 
-`--status` prints `hdr-active` or `sdr`. `--force <output.png>` is available for development-time
-capture testing on an SDR desktop, and `--sdr <output.png>` takes the plain 8-bit capture even on
-an HDR desktop. `--duplication <output.png>` takes the Windows 10 path on any Windows. End users do
-not need Rust or the Windows SDK.
+`--status` prints `hdr-active` or `sdr`. `--force <output.png>` captures on an SDR desktop for
+development, `--sdr <output.png>` takes the plain 8-bit capture even on an HDR desktop, and
+`--duplication <output.png>` takes the Windows 10 path on any Windows. End users need neither Rust nor
+the Windows SDK.
 
-The helper depends on the MIT-licensed `windows-capture` crate. Its license is shipped beside the
+The helper depends on the MIT-licensed `windows-capture` crate. Its license ships beside the
 executable, together with the license for the HDR capture implementation.
 
 # Video clip recorder
 
-`aw-next-clip.exe`, the second binary of this crate, records the video souvenirs. The Watchdog
-starts it when a tracked game starts with clips enabled and stops it when the game exits. It shares
-the DisplayConfig queries (`src/display.rs`) and the tone curve (`src/tone.rs`) with the screenshot
-helper, so an HDR clip looks like an HDR screenshot of the same scene.
+`aw-next-clip.exe`, the second binary of this crate, records the video clips. The Watchdog starts it
+when a tracked game starts with clips enabled and stops it when the game exits. It shares the
+DisplayConfig queries (`src/display.rs`) and the tone curve (`src/tone.rs`) with the screenshot helper,
+so an HDR clip looks like an HDR screenshot of the same scene.
 
 Everything runs on parts of Windows, with no third-party media library:
 
-- **Capture**: DXGI Desktop Duplication of the monitor showing the game's largest window. It draws
-  no capture border on Windows 10 and injects nothing into the game. The display is asked for FP16
-  only when DisplayConfig reports it in HDR; automatic colour management composes even SDR desktops
-  in FP16, and the mode description can say FP16 while the frames are 8-bit, so each frame's own
-  format decides whether it goes through the tone-mapping pixel shader.
-- **Conversion**: the D3D11 video processor scales to the chosen height and converts to NV12
-  (BT.709, limited range). The screen is read once per output frame, and an unchanged desktop is
-  not converted again.
-- **Encoding**: the GPU's own Media Foundation encoder (H.264, HEVC or AV1, picked with `MFTEnum2`
-  on the capturing adapter), fed with GPU textures. Constant bitrate, one keyframe a second, no
-  B-frames. The bitrate comes from the quality level and the real output size (`bitrate()` in
-  `video.rs`; `app/util/clipProfile.js` uses the same numbers for the size estimate).
-  An encoder that refuses the rate is retried at 120, 60 and 30 FPS (`fallback fps` line). With no
-  hardware H.264 encoder, or when every hardware attempt failed for a reason that is not a lost
-  device, Windows' software H.264 encoder is used instead (`fallback encoder` line): pictures are read
-  back from the GPU as NV12 bytes, the rate is capped at 30 FPS and the picture at 1080p, late ticks
-  are skipped, and B-frames are switched off because the ring and the muxer sort by time only.
+- **Capture**: DXGI Desktop Duplication of the monitor showing the game's largest window. It draws no
+  capture border on Windows 10 and injects nothing into the game. The display is asked for FP16 only
+  when DisplayConfig reports HDR. Automatic colour management composes even SDR desktops in FP16, and
+  the mode description can say FP16 while the frames are 8-bit, so each frame's own format decides
+  whether it goes through the tone-mapping pixel shader.
+- **Conversion**: the D3D11 video processor scales to the chosen height and converts to NV12 (BT.709,
+  limited range). The screen is read once per output frame, and an unchanged desktop is not converted
+  again.
+- **Encoding**: the GPU's own Media Foundation encoder (H.264, HEVC or AV1, picked with `MFTEnum2` on
+  the capturing adapter), fed with GPU textures. Constant bitrate, one keyframe a second, no B-frames.
+  The bitrate comes from the quality level and the real output size (`bitrate()` in `video.rs`;
+  `app/util/clipProfile.js` uses the same numbers for the size estimate). An encoder that refuses the
+  rate is retried at 120, 60 and 30 FPS (`fallback fps` line). With no hardware H.264 encoder, or when
+  every hardware attempt failed for a reason other than a lost device, Windows' software H.264 encoder
+  takes over (`fallback encoder` line). Pictures are then read back from the GPU as NV12 bytes, the rate
+  is capped at 30 FPS and the picture at 1080p, late ticks are skipped, and B-frames are off because the
+  ring and the muxer sort by time only.
 - **Frame rate**: `--fps <n>` (1 to 480) or `--fps unlocked`, which reads the refresh rate of the
-  monitor showing the game (`EnumDisplaySettingsW`) and rebuilds the capture within three seconds of
-  a change. The rate the encoder really runs at is in the `ready` line and sets the last frame's
+  monitor showing the game (`EnumDisplaySettingsW`) and rebuilds the capture within three seconds of a
+  change. The `ready` line reports the rate the encoder really runs at, which sets the last frame's
   length in the MP4.
 - **Sound**: WASAPI process loopback on the game's process tree, or the default output device, at
   48 kHz, encoded by Windows' AAC encoder and timed on the same performance counter as the video.
-- **Saving**: packets live in a ring in memory (`ring.rs`). A clip is cut from the keyframe before
-  its start, its times rebased to zero, and written by the sink writer with the encoders' own output
-  types as input types, so nothing is encoded twice. Unlocks that land before a clip has ended
-  extend it, up to 60 seconds.
+- **Saving**: packets live in a ring in memory (`ring.rs`). A clip is cut from the keyframe before its
+  start, its times rebased to zero, and written by the sink writer with the encoders' own output types
+  as input types, so nothing is encoded twice. Unlocks that land before a clip has ended extend it, up
+  to 60 seconds.
 
 The Watchdog talks to it over stdin and stdout, one line per message:
 
@@ -140,29 +137,28 @@ The Watchdog talks to it over stdin and stdout, one line per message:
 | in | `quit`, or stdin closing: finish the pending clips, then exit |
 | out | `ready ...`, `writing <path>`, `saved <path>`, `saved-partial <frames>/<total> <path>`, `merged <path>`, `fallback fps ...`, `fallback encoder ...`, `error <code> <detail>`, `log <text>`, `stats ...` |
 
-`stats` is also the heartbeat: it is printed every five seconds while the capture loop turns and
-not at all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the first one) before
-killing and restarting the recorder. Exit codes 2 (bad arguments), 3 (no Media Foundation) and 4 (no
-encoder at all, after `error no-encoder`) are not restarted.
+`stats` doubles as the heartbeat. It prints every five seconds while the capture loop turns and not at
+all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the first one) before killing
+and restarting the recorder. Exit codes 2 (bad arguments), 3 (no Media Foundation) and 4 (no encoder at
+all, after `error no-encoder`) are not restarted.
 
-A clip is written under `<path>.part` and renamed. If writing fails midway, the file is closed so
-that what was written plays, checked by reading its first picture, and kept under the final name
-with a `saved-partial` line when it holds at least a second of video; otherwise it is deleted.
-A finished file that cannot be renamed is left as `<path>.part`, since it is the only copy.
+A clip is written under `<path>.part` and renamed. If writing fails midway, the file is closed so that
+what was written plays, checked by reading its first picture, and kept under the final name with a
+`saved-partial` line when it holds at least a second of video. Otherwise it is deleted. A finished file
+that cannot be renamed stays as `<path>.part`, since it is the only copy.
 
 `writing <path>` comes before each write, which ends with `saved`, `saved-partial` or
-`error write-failed`. In between, the Watchdog does not kill the recorder, neither when it goes
-silent nor when it takes longer than 30 s to quit, unless the write has lasted a minute. A recorder
-that dies anyway leaves a `.part` that `watchdog/notification/clipPart.js` settles: renamed when its
-`moov` box is complete, since only the rename failed; deleted otherwise, since the index is written
-last and no player opens a file without it. Each new recorder also settles the `.part` files older
-than two minutes in the clip folder, left by a PC that went down mid-write.
+`error write-failed`. In between, the Watchdog does not kill the recorder, neither when it goes silent
+nor when it takes longer than 30 s to quit, unless the write has lasted a minute. A recorder that dies
+anyway leaves a `.part` that `watchdog/notification/clipPart.js` settles: renamed when its `moov` box
+is complete (only the rename failed), deleted otherwise (the index is written last, and no player opens
+a file without it). Each new recorder also settles the `.part` files older than two minutes in the clip
+folder, left by a PC that went down mid-write.
 
 `--selftest <out.mp4> [seconds]` records the desktop for that long and writes it, without the
-Watchdog. `--hdr force` runs the tone-mapping pass even on an SDR desktop. `--encoder software`
-skips the GPU encoders, to try the software one on a machine that has a GPU.
+Watchdog. `--hdr force` runs the tone-mapping pass even on an SDR desktop. `--encoder software` skips
+the GPU encoders, to try the software one on a machine that has a GPU.
 
-NVIDIA's H.264 encoder still runs a work item after it has been shut down, and releasing it straight
-away crashed in that callback about once in thirty runs. A retired encoder is therefore kept for a
-few seconds before release, and at exit the process leaves the last one to Media Foundation's own
-shutdown.
+NVIDIA's H.264 encoder still runs a work item after it has been shut down, and releasing it at once
+crashed in that callback about once in thirty runs. A retired encoder is therefore kept for a few
+seconds before release, and at exit the process leaves the last one to Media Foundation's own shutdown.

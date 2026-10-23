@@ -1,210 +1,198 @@
 # FAQ
 
-Short answers to the questions that come up most. Each one links to the guide that covers it
-properly.
+Short answers to the usual questions. Each links to the guide that covers it.
 
 ## Getting set up
 
 ### Do I need a Steam Web API key, or to sign in to Steam?
-No. Achievement lists are fetched with a keyless chain of public endpoints, and nothing requires an
+No. Achievement lists come from a chain of public endpoints that needs no key, and nothing requires an
 account. Your own Steam unlocks are read from the stats Steam keeps on this PC, so a private profile
-works for every game played here. Connecting a Steam account is optional: it adds the games played
-only on your other PCs, and Steam Family - see [Connected accounts](sources.md#connected-accounts).
+works for every game played here. Connecting Steam is optional: it adds games played only on your
+other PCs, and Steam Family. See [Connected accounts](sources.md#connected-accounts).
 
 ### Which platforms does it run on?
-Windows 10 and Windows 11, and Linux (x64). Packaged releases include their own runtime; Node.js is
-needed only to build from source.
+Windows 10 and 11, and Linux (x64). Releases include their own runtime. Node.js is needed only to
+build from source.
 
 ### Does it run on Linux or the Steam Deck?
-Yes on Linux, as a beta: download `Achievement.Watcher.<version>.AppImage` from the same release, make it executable and start it (it needs FUSE 2, `libfuse2`). It updates itself from the same releases
-as the Windows app. AW Next runs as a native Linux app, never through Wine, on GNOME and KDE Plasma,
-Wayland or X11. It finds the games you run with Steam and Proton, Wine, Lutris, Heroic or Bottles in
-their prefixes, reads their processes for playtime and shows unlocks in the in-game overlay or as
-desktop notifications. Settings and data live in `~/.config/Achievement Watcher Next`.
-
-On the Steam Deck, support is new and has not been checked on a real Deck yet. In Desktop Mode it is
-the same AppImage; with **Launch at startup** on it also runs in Game Mode, where unlocks are meant
-to appear over the game, from the top-left corner. See [Linux and the Steam Deck](linux.md).
+On Linux, yes, as a beta: a native AppImage (never run through Wine) for GNOME and KDE Plasma, under
+Wayland or X11. It finds games run with Steam and Proton, Wine, Lutris, Heroic or Bottles, and updates
+itself from the same releases as the Windows app. On the Steam Deck, support is new and has not been
+checked on a real Deck. See [Linux and the Steam Deck](linux.md).
 
 ### Does it support RetroAchievements?
 Yes. Turn on the **RetroAchievements** source, connect your account with its username and Web API
 key, and **Import library** brings in every game you played. New unlocks are announced while any
 RetroAchievements-enabled emulator runs. See [RetroAchievements](sources.md#retroachievements).
 
-### Do I have to connect any account?
-No. Steam, Epic and Xbox PC can each be connected *optionally*, to read what the local files do not
-carry, and RetroAchievements asks for your username and Web API key only if you use it; every token
-and key is encrypted before it is stored on this PC. Everything else works without an account.
+### Does it show PlayStation trophies?
+Yes. Connect your PlayStation account in **Settings → Sources** (you sign in on Sony's page) and your
+games and trophies are imported, with Sony's rate for each trophy. A game from another source that
+also came out on PlayStation shows the real platinum of its list. See
+[Connected accounts](sources.md#connected-accounts).
+
+### Do I have to connect an account?
+No. Steam, Epic, Xbox PC and PlayStation can each be connected to read what local files do not carry,
+and RetroAchievements asks for your username and Web API key. Every token and key is encrypted before
+it is stored on this PC. Everything else works without an account.
 
 ### Does it work offline?
 Yes, for local sources and anything already cached. Achievement names, descriptions and artwork are
-fetched online the first time and then reused from
-`%APPDATA%\Achievement Watcher Next\steam_cache` (`~/.config/Achievement Watcher Next/steam_cache` on
-Linux).
+fetched once, then reused from `%APPDATA%\Achievement Watcher Next\steam_cache`
+(`~/.config/Achievement Watcher Next/steam_cache` on Linux).
 
-### Simple or Advanced - do I lose anything by choosing Simple?
-No. Simple hides controls, it never turns a feature off. No parser, watcher, scan or stored value
-changes with it, and switching back restores every control with the value it already had. See
+### Do I lose anything by choosing Simple mode?
+No. Simple hides controls and never turns a feature off. Nothing that scans, watches or is stored
+changes, and switching back restores every control with its value. See
 [Getting started](getting-started.md#simple-and-advanced).
 
 ### Can it show games I own but never installed, or unlocks from another PC?
-Yes. With the Steam source set to **Owned**, two switches in the Steam account card - **Add the
-games you own** and **Add the games shared with you through Steam Family** - list your whole library, including titles never installed on this
-PC; both are off by default, since a large library makes the first scan much longer. With a Steam
-account connected, a game with nothing to read locally is also read from your Steam profile (its
-game details must be public), and the answer is cached for six hours. See
+Yes. With the Steam source set to **Owned**, two switches in the Steam account card, **Add the games
+you own** and **Add the games shared with you through Steam Family**, list your whole library. Both
+are off by default because a large library makes the first scan much longer. With a Steam account
+connected, a game with nothing to read locally is read from your Steam profile (its game details
+must be public) and the answer is cached for six hours. See
 [Connected accounts](sources.md#connected-accounts).
 
 ## The library
 
 ### A game is missing
-Check that its source is enabled in **Settings → Sources**, run **Smart Find** under
-**Settings → Folders**, and turn off **Show installed games only** to see whether it is known but no
-longer considered installed. Full checklist:
-[Troubleshooting](troubleshooting.md#a-game-is-missing).
+Check that its source is enabled in **Settings → Sources**, run **Smart Find** under **Settings →
+Folders**, and turn off **Show installed games only** to see whether the game is known but no longer
+installed. The full checklist is in [Troubleshooting](troubleshooting.md#a-game-is-missing).
 
 ### A game shows "No achievements"
-That game has no achievement set at all. It stays launchable and keeps tracking playtime, and it is
-left out of completion statistics rather than dragging the average down as a 0%. Its tile has no
-progress bar, the artwork takes that space; **Settings → Appearance → Library tiles → Bar of games
-without achievements** shows the "No achievements" bar again.
+That game has no achievement set. It stays launchable and keeps tracking playtime, and it is left out
+of completion statistics instead of counting as 0%. Its tile shows artwork where the progress bar
+would be. **Settings → Appearance → Library tiles → Bar of games without achievements** brings the
+bar back.
 
-### A game shows 0% even though I have unlocked achievements
-There is a schema but no runtime unlock file. Open the game's
-**[Game Health](game-health.md)** panel - it names the missing piece and offers only the repairs that
-apply.
+### A game shows 0% although I have unlocked achievements
+The game has a schema but no unlock file at runtime. Open its [Game Health](game-health.md) panel: it
+names the missing piece and offers only the repairs that apply.
 
 ### Why does the same game appear twice?
-It was found through two sources. **Merge Duplicates** in Settings → General combines them; if one
+It was found through two sources. **Merge Duplicates** in Settings → General combines them. If one
 entry is a stale save folder for a game you now own elsewhere, blacklist it.
 
 ### A game update added achievements and I do not see them
-A cached list re-checks itself every 3 days. To pick them up now, use **Settings → Advanced →
-Recheck achievement lists**, which works even with **Automatic achievement data updates** turned off.
-Nothing already cached is removed by either check.
+A cached list re-checks itself every 3 days. To pick up new ones now, use **Settings → Advanced →
+Recheck achievement lists**, which works even with **Automatic achievement data updates** off. Neither
+check removes anything already cached.
 
 ### A game was matched to the wrong Steam release
-Right-click it and choose **Set AppID manually...** - the AppID is written to `steam_appid.txt` and
-remembered for that install folder. See
-[Set a game's AppID by hand](advanced.md#set-a-games-appid-by-hand).
+Right-click it and choose **Set AppID manually...**. The AppID is written to `steam_appid.txt` and
+remembered for that install folder. See [Set a game's AppID by hand](advanced.md#set-a-games-appid-by-hand).
 
 ## Notifications
 
 ### Nothing appears when I unlock something
-Start with the Notifications row of that game's [Game Health](game-health.md) panel: it names the
-transport that last delivered and why. Then work through
+Start with the Notifications row of that game's [Game Health](game-health.md) panel, which names the
+transport that last delivered and why. Then follow
 [If a test or unlock does not appear](notifications.md#if-a-test-or-unlock-does-not-appear).
 
 ### The overlay popup does not show in one particular game
-That game is very likely in exclusive fullscreen, where an always-on-top popup is not drawn at all.
-On **Automatic** this is handled for you: that unlock arrives as a Windows notification shown over the
-game. A game that holds the screen in legacy exclusive mode lets nothing through; switch it to
-borderless. See [how Automatic decides](notifications.md#how-automatic-decides).
+That game is probably in exclusive fullscreen, where an always-on-top popup cannot be drawn. On
+**Automatic**, AW Next sends that unlock as a Windows notification shown over the game. A game in
+legacy exclusive mode lets nothing through: switch it to borderless. See
+[how Automatic decides](notifications.md#how-automatic-decides).
 
 ### Notifications are hidden while I play
 That is Windows' Do Not Disturb. Turn on **Priority notifications** and approve Windows' one-time
-request - see [Priority Windows notifications](notifications.md#priority-windows-notifications).
+request. See [Priority Windows notifications](notifications.md#priority-windows-notifications).
 
 ### Can I change how the popup looks, or share a design?
-Yes - nine presets ship with the app, the **Preset Designer** builds your own with ordinary controls,
-and any preset exports to a single `.awpreset` file. See
-[Presets and the Preset Designer](presets.md).
+Yes. Ten presets ship with the app, the **Preset Designer** builds your own with ordinary controls,
+and any preset exports to one `.awpreset` file. See [Presets and the Preset Designer](presets.md).
 
 ### Can I put unlocks on my stream?
-Yes, with a Browser source in OBS. Capturing the popup as a *window* cannot work - it exists for one
-unlock and is gone before OBS lists it - so AW Next serves the same popup as a page instead. Settings
-→ Notification → **OBS browser source** carries the address; see
+Yes, with a Browser source in OBS. Capturing the popup as a window cannot work, since it exists for
+one unlock and is gone before OBS lists it, so AW Next serves the same popup as a page. The address is
+in Settings → Notification → **OBS browser source**. See
 [Show unlocks on stream (OBS)](notifications.md#show-unlocks-on-stream-obs).
 
-### Is the in-game overlay the same thing as the popup?
+### Is the overlay the same thing as the popup?
 No. The popup is a one-shot notification styled by a preset. The **overlay** is the full achievement
-list you open with `Ctrl+Shift+K` while a game runs - see the [Overlay guide](overlay.md).
+list you open with `Ctrl+Shift+K` while a game runs. See the [Overlay guide](overlay.md).
 
 ### On Linux, Ctrl+Shift+K does nothing in my game
-Under Wayland, AW Next cannot see keys pressed while a native Wayland window has the focus, such as
-a Linux game in Wayland mode or Proton with its Wayland driver. Bind a key in your desktop's keyboard
-settings to `/home/you/.local/bin/achievement-watcher --toggle-overlay` instead, with your user name
-in place of `you`. AW Next keeps that command pointing at the current AppImage, so the shortcut
-survives updates - see [Overlay shortcut](linux.md#overlay-shortcut).
+Under Wayland, AW Next cannot see keys pressed while a native Wayland window has focus, such as a
+Linux game in Wayland mode or Proton with its Wayland driver. Bind a key in your desktop's keyboard
+settings to `/home/you/.local/bin/achievement-watcher --toggle-overlay`, with your user name in place
+of `you`. AW Next keeps that command pointing at the current AppImage, so the shortcut survives
+updates. See [Overlay shortcut](linux.md#overlay-shortcut).
 
 ## Safety and data
 
 ### Does AW Next modify my games, or send anything off my PC?
-Only when you ask it to. Reading achievements is read-only. The emulator repair tools - in a game's
-right-click **Emulator & tools** submenu and under **Settings → Emulators** - do write to a game
-folder, always after a confirmation and always with a backup. Use them only with games you own.
-Nothing else leaves this PC beyond read-only lookups and, if you connect one, whatever a connected
-account sends back - see [What leaves this PC](README.md#what-leaves-this-pc).
+Only when you ask. Reading achievements is read-only. The emulator repair tools (a game's
+right-click **Emulator & tools** submenu and **Settings → Emulators**) write to a game folder, always
+after a confirmation and with a backup. Use them only with games you own. Beyond read-only lookups
+and what a connected account sends back, nothing leaves this PC. See
+[What leaves this PC](README.md#what-leaves-this-pc).
 
-### My antivirus flagged a file, or removed one
-Almost certainly the Steam emulator or a Ubisoft loader, and it is a false positive. Those files
-stand in for a game's Steam or Ubisoft library, which is exactly the behaviour detection engines look
-for, so they are flagged on what they do rather than on anything they contain. The alert fires the
-moment a file is written - a repair you ran, opening **Settings → Emulators**, or automatic repair
-during a scan - and Windows Defender takes every copy at once, including the ones installed with the
-app. Nothing is written unless you asked for one of those. Allow the file your antivirus named, or
-exclude `%APPDATA%\Achievement Watcher Next\cache`; never switch protection off. See
-[Troubleshooting → Antivirus](troubleshooting.md#antivirus-or-smartscreen-warning).
+### My antivirus flagged or removed a file
+It is almost certainly the Steam emulator or a Ubisoft loader, and a false positive: these files stand
+in for a game's Steam or Ubisoft library, which is the behaviour detection engines look for. Nothing is
+written unless you ran a repair, opened **Settings → Emulators**, or turned on automatic repair. Allow
+the file your antivirus named, or exclude `%APPDATA%\Achievement Watcher Next\cache`. Never switch
+protection off. See [Troubleshooting → Antivirus](troubleshooting.md#antivirus-or-smartscreen-warning).
 
 ### Windows SmartScreen warns about the installer
-Releases are signed with the project's own certificate rather than a commercial one, pinned by its
-exact thumbprint, so SmartScreen may still ask for confirmation. You never need to install that
-certificate yourself: the in-app updater checks the signer, the pinned thumbprint and that the file
-was not modified after signing before it installs anything. Download only from the
-[official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases) and check
-the installer against the SHA-512 value in the matching `latest.yml` if you want a second opinion.
-
-An installer can be checked against VirusTotal by its own SHA-256 without trusting anyone: run
-`Get-FileHash <installer> -Algorithm SHA256` and open `https://www.virustotal.com/gui/file/<hash>`.
-The current release is [3.12.2](https://www.virustotal.com/gui/file/960fcd46c228e46a908b7f870ffbf1fd1e703f58892388c4c1c35447e5dce03b).
+Releases are signed with the project's own certificate, pinned by thumbprint, rather than a commercial
+one, so SmartScreen may ask for confirmation. You never need to install that certificate: the in-app
+updater checks the signer, the pinned thumbprint and that the file was not modified after signing
+before it installs anything. Download only from the
+[official releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). To check an
+installer yourself, run `Get-FileHash <installer> -Algorithm SHA256` and open
+`https://www.virustotal.com/gui/file/<hash>`. The current release is
+[3.12.2](https://www.virustotal.com/gui/file/960fcd46c228e46a908b7f870ffbf1fd1e703f58892388c4c1c35447e5dce03b).
 See [Troubleshooting → Checking a release yourself](troubleshooting.md#checking-a-release-yourself).
 
 ### On Linux, why does a keyring prompt appear?
-AW Next keeps its sign-in tokens encrypted with a key held by your desktop's keyring (GNOME Keyring
-or KDE Wallet). With automatic login the keyring stays locked after you sign in, so the desktop asks
-you to unlock it, or to create one, when AW Next starts. Cancelling is safe: the app keeps working,
-the prompt comes back on the next start. See [Keyring prompt](linux.md#keyring-prompt).
+AW Next encrypts its sign-in tokens with a key held by your desktop keyring (GNOME Keyring or KDE
+Wallet). With automatic login the keyring stays locked, so the desktop asks you to unlock or create
+one when AW Next starts. Cancelling is safe: the app keeps working and the prompt returns at the next
+start. See [Keyring prompt](linux.md#keyring-prompt).
 
 ### Where is my data, does updating lose it, and how big are updates?
-Everything lives in `%APPDATA%\Achievement Watcher Next` (`~/.config/Achievement Watcher Next` on
-Linux), and installing a newer build over an older
-one preserves it. The first launch after upgrading imports an older Achievement Watcher folder
-without ever modifying or deleting it. Updates themselves now download only what changed since your
-installed version instead of the full installer, and fall back to a full download on their own if
-that ever fails - see
+Everything is in `%APPDATA%\Achievement Watcher Next` (`~/.config/Achievement Watcher Next` on Linux),
+and installing a newer build keeps it. The first launch after upgrading imports an older Achievement
+Watcher folder without modifying or deleting it. Updates download only what changed since your
+installed version, and fall back to a full download by themselves if that fails. See
 [Updates and existing data](getting-started.md#updates-and-existing-data).
 
-### How do I move to a new PC, or keep a backup of my setup?
+### How do I move to a new PC, or back up my setup?
 **Settings → Advanced → Profile backup → Export profile…** writes your settings, library choices,
 presets, themes, covers and playtime to one `.awbackup` file. Install AW Next on the new PC, choose
-**Restore profile…** and it is applied at the next start; the files it replaces are kept. Sign-ins
-are never saved, so connect Steam, Epic, Xbox and RetroAchievements again. See
+**Restore profile…**, and it is applied at the next start; the files it replaces are kept. Sign-ins
+are never saved, so connect Steam, Epic, Xbox, PlayStation and RetroAchievements again. See
 [Profile backup](advanced.md#profile-backup).
 
 ### Is there a portable version?
-Yes. The portable ZIP keeps the app and its data together in one folder and checks the same release
-feed as the installed app, but it never downloads or runs the installer - it only offers the release
-page when a newer version is out, and extracting the new archive over the old folder keeps your data.
+Yes. The portable ZIP keeps the app and its data in one folder and checks the same release feed as the
+installed app. It never downloads or runs the installer: it offers the release page when a newer
+version is out, and extracting the new archive over the old folder keeps your data.
 
 ### How do I quit completely?
-Closing the window keeps AW Next in the system tray so tracking continues. Use the tray menu to exit
-fully.
+Closing the window keeps AW Next in the system tray so tracking continues. Use the tray menu to exit.
 
 ## The project
 
 ### How does this differ from Achievement Watcher 2.x?
-AW Next is a continuation with a modern runtime and a large compatibility, reliability and feature
-pass. Side-by-side table: [Comparison](comparison.md).
+AW Next continues it with a modern runtime and a large pass on compatibility, reliability and
+features. See the [Comparison](comparison.md).
 
 ### Can it get me games, keys or accounts?
 No, and the issue tracker cannot help with that either. AW Next contains no game files and does not
 bypass online ownership checks.
 
-### I found a bug / I have an idea
+### I found a bug or have an idea
 [Open an issue](https://github.com/Shirowwww/Achievement-Watcher-Next/issues) with the app version,
-your Windows version (or Linux distribution and desktop), the source involved and the relevant logs. For a suspected vulnerability, use
-the private process in the [security policy](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md) instead.
-For a question, or help before you are sure it is a bug, ask in the [Discord server](https://discord.gg/DjTMrDsXTh).
+your Windows version (or Linux distribution and desktop), the source involved and the relevant logs.
+Report a suspected vulnerability privately through the
+[security policy](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/SECURITY.md). For a
+question, or help before you know it is a bug, ask on the [Discord server](https://discord.gg/DjTMrDsXTh).
 
 ---
 

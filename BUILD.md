@@ -1,27 +1,29 @@
 # Build AW Next
 
-This guide covers local development, Windows packaging and the Linux AppImage. Use [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md) for versioning, publishing, CI and auto-update validation.
+Local development, Windows packaging and the Linux AppImage. [docs/RELEASE_WORKFLOW.md](docs/RELEASE_WORKFLOW.md) covers versioning, publishing, CI and auto-update validation.
 
 <p align="center"><a href="README.md">← Project home</a> · <a href="docs/README.md">Documentation</a> · <a href="CONTRIBUTING.md">Contributing</a></p>
 
 ## Requirements
 
-- Windows 10 or Windows 11 for the Windows build.
+- Windows 10 or 11 for the Windows build.
 - A 64-bit Linux system for Linux work and the AppImage, see
   [Develop and test on Linux](#develop-and-test-on-linux).
-- Node.js `22.22.2+` or `24.15+`, matching the `engines` field in both package manifests.
+- Node.js `22.22.2+` or `24.15+`, matching the `engines` field in both package manifests. CI runs
+  Node 22.22.2 and 24.19.0 on Windows and 24.19.0 on Linux.
 - npm, included with Node.js.
 
-Electron is installed with the app dependencies. The supported native packages ship prebuilt binaries, so a normal setup does not require Visual Studio, Python or a manual `node-gyp` build.
+Electron comes with the app dependencies. The supported native packages ship prebuilt binaries, so a
+normal setup needs no Visual Studio, Python or manual `node-gyp` build.
 
-The HDR screenshot helper is also checked in as a prebuilt x64 executable, so normal development and
-packaging do not require Rust. Install the stable x64 MSVC Rust toolchain only when changing that
-helper; its source, tests and reproducible copy command are in
-[`native/hdr-screenshot`](native/hdr-screenshot/README.md).
+The HDR screenshot helper is checked in as a prebuilt x64 executable, so Rust is not needed for
+normal development and packaging. Install the stable x64 MSVC Rust toolchain only to change that
+helper; its source, tests and copy command are in [`native/hdr-screenshot`](native/hdr-screenshot/README.md).
 
 ## Install dependencies
 
-The desktop app and background Watchdog are separate npm workspaces. Install both from the repository root:
+The desktop app and the background Watchdog are separate npm workspaces. Install both from the
+repository root:
 
 ```powershell
 Push-Location watchdog
@@ -33,7 +35,7 @@ npm ci
 Pop-Location
 ```
 
-Use `npm install` instead of `npm ci` only when intentionally updating a dependency or lockfile.
+Use `npm install` instead of `npm ci` only to update a dependency or lockfile.
 
 On Windows, if npm skips install scripts, `registry-js` is left without its compiled addon and every
 registry read falls back to spawning `reg.exe`, which makes library scans several times slower.
@@ -49,9 +51,9 @@ npm start
 Pop-Location
 ```
 
-The command starts Electron directly from `app/`. The background Watchdog is launched by the main process.
+This starts Electron directly from `app/`; the main process launches the Watchdog.
 
-DevTools stays available but is closed by default so a hidden dev instance matches the tray footprint more closely. Open it explicitly when needed:
+DevTools is closed by default so a hidden dev instance matches the tray footprint. Open it with:
 
 ```powershell
 $env:AW_OPEN_DEVTOOLS = '1'
@@ -59,56 +61,40 @@ npm start
 Remove-Item Env:AW_OPEN_DEVTOOLS -ErrorAction SilentlyContinue
 ```
 
-If `ELECTRON_RUN_AS_NODE` is present in the parent environment, remove it first:
+If `ELECTRON_RUN_AS_NODE` is set in the parent environment, remove it first, because it makes
+Electron start as plain Node and the desktop app cannot load:
 
 ```powershell
 Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 ```
 
-That variable is used only for the Watchdog child process. Setting it globally makes Electron start as plain Node and prevents the desktop app from loading.
-
-It is not installed as a user or machine environment variable. The packaged desktop app never sets it for itself; only its private Watchdog child receives it.
+Only the Watchdog child process receives that variable. The packaged app never sets it for itself, and
+it is not installed as a user or machine environment variable.
 
 ### Library performance diagnostics
 
-Development builds write lightweight `[perf]` entries to the renderer log: renderer module load
-time, time to paint the last complete local library (with the per-tile breakdown), time to the first
-freshly scanned tile, and total fresh-scan time. The parser log adds one line per discovery with its
-per-source breakdown, and the main log reports how long the window took to become showable. The
-first paint value appears from the second launch onward when the library settings have not changed.
-These timings do not add polling or delay startup work; set `AW_PERF=1` to get them from a packaged
-build.
+Development builds write `[perf]` entries to the renderer log (module load, time to paint the last
+complete local library, time to the first fresh tile, total scan time), one parser-log line per
+discovery with its per-source breakdown, and the main log's time to a showable window. The first
+paint value appears from the second launch on. `AW_PERF=1` enables them in a packaged build.
 
-The local-state microbenchmark uses synthetic data and writes only below the system temporary
-directory:
+Two benchmarks catch regressions in the work shape; absolute numbers are machine-specific. The first
+uses synthetic data and writes only below the system temporary directory. The second walks real
+install folders, so it takes the roots as arguments, exits quietly when none exist, and fails if a
+memoized pass detects a different executable than the plain walk:
 
 ```powershell
 node tools/benchmark-library-state.js 500
-```
-
-On the Windows development machine used for the 2026-08 performance pass, the 500-row index path
-changed from 570 ms of repeated whole-file writes to 15 ms with one batched write. Five hundred name
-lookups changed from 255 ms to 18 ms through the shared in-process index. Restoring a deliberately
-heavy 500-game snapshot containing 50,000 achievement rows took 14 ms (3.95 MB). Treat the absolute
-numbers as machine-specific; the benchmark exists to catch regressions in the work shape.
-
-The discovery-walk benchmark runs against real install folders, so it takes the roots to scan as
-arguments and exits quietly when none of them exist:
-
-```powershell
 node tools/benchmark-discovery-walk.js C:\Games
 ```
 
-It reports the same walk four ways - with no memo, memoized cold, memoized warm, and with the
-executable memo reloaded from disk the way the next launch sees it - and fails if any pass detects a
-different executable than the plain walk. On the same development machine, a library whose largest
-game folder holds ~33,000 directories went from 24,464 directory reads and 1.6 s to 4,167 reads and
-0.34 s once each folder is read at most once per scan and the executable search is remembered per
-install folder.
-
 ### Driving the running app
 
-The main window, the in-game overlay and the notification windows are all BrowserWindows inside the one tray-daemon process. `tools/aw-probe.ps1` drives a running dev build from the command line, and `tools/aw-page.js` drives its pages through the Chromium debug port that `Start` opens (9333, `-DebugPort 0` for none). An installed copy holds the same single-instance lock, so `Start` refuses to run while one is up: quit it from its tray icon first.
+The main window, the in-game overlay and the notification windows are all BrowserWindows inside the
+one tray-daemon process. `tools/aw-probe.ps1` drives a running dev build from the command line, and
+`tools/aw-page.js` drives its pages through the Chromium debug port that `Start` opens (9333,
+`-DebugPort 0` for none). An installed copy holds the same single-instance lock, so `Start` refuses
+to run while one is up: quit it from its tray icon first.
 
 ```powershell
 .\tools\aw-probe.ps1 Start                                     # launch and wait for the main window
@@ -121,7 +107,8 @@ The main window, the in-game overlay and the notification windows are all Browse
 .\tools\aw-probe.ps1 Stop
 ```
 
-To navigate the interface itself, `Click` and `Scroll` take coordinates relative to a window, so a position read off a screenshot can be replayed wherever the window sits:
+`Click` and `Scroll` take coordinates relative to a window, so a position read off a screenshot can
+be replayed wherever the window sits:
 
 ```powershell
 .\tools\aw-probe.ps1 Click  -Match 'AW Next' -X 1137 -Y 15      # the settings gear
@@ -130,11 +117,17 @@ To navigate the interface itself, `Click` and `Scroll` take coordinates relative
 .\tools\aw-probe.ps1 Shot   -Screen -Out desktop.png                        # native menus need this
 ```
 
-Take a screenshot after every step rather than chaining clicks blindly: several panels re-layout as settings change (the Notifications tab grows overlay-only sections when the transport is set to the in-game overlay), so a coordinate read a moment ago can land somewhere else entirely. Native context menus are not part of the Electron window, so capture them with `-Screen`.
+Take a screenshot after every step instead of chaining clicks: panels re-layout as settings change,
+so a coordinate read a moment ago can land elsewhere. Native context menus are not part of the
+Electron window; capture them with `-Screen`.
 
-`Send` works because the single-instance lock forwards argv to the running instance - the same channel the Watchdog uses. Window enumeration, not the log files, is the reliable answer to "is the overlay on screen?": the main process logs an incoming overlay *request* before deciding what to do with it.
+`Send` works because the single-instance lock forwards argv to the running instance, the channel the
+Watchdog uses. To know whether the overlay is on screen, enumerate windows rather than read the logs:
+the main process logs an overlay request before it decides what to do with it.
 
-The pages themselves are best driven through `tools/aw-page.js`: a capture comes from the renderer, so it is exact and works on a covered or hidden window, and clicks and typing aim at a CSS selector instead of a pixel. `--page` matches a window's title or URL.
+`tools/aw-page.js` drives the pages themselves. A capture comes from the renderer, so it works on a
+covered or hidden window, and clicks and typing aim at a CSS selector. `--page` matches a window's
+title or URL.
 
 ```powershell
 node tools/aw-page.js list                                          # every page and its URL
@@ -156,11 +149,16 @@ The notification area and Windows toasts are outside the app's windows:
 .\tools\aw-probe.ps1 Offer -Version 3.12.2    # dev only: a fake update through the real offer path
 ```
 
-`Offer` makes the running dev app offer an update that does not exist (`--fake-update`, ignored by a packaged build), with the notes of the two latest real releases, so the notification, the tray dot and the update window can be checked without publishing anything. Accepting it fails at the download. Toasts that stay on screen (the update one does) stack over the hidden-icons flyout: close them before `Tray`. Without `-Out`, captures go to `..\preuves\<Subject>\` when that workspace folder exists (`-Subject`, default `gui-probe`; `aw-page.js` takes `--subject`), else to the current folder.
+`Offer` makes the running dev app offer a fake update (`--fake-update`, ignored by a packaged build)
+with the notes of the two latest real releases, so the notification, the tray dot and the update
+window can be checked without publishing. Accepting it fails at the download. The update toast stays
+on screen and stacks over the hidden-icons flyout: close it before `Tray`. Without `-Out`, captures
+go to `..\preuves\<Subject>\` when that workspace folder exists (`-Subject`, default `gui-probe`;
+`aw-page.js` takes `--subject`), else to the current folder.
 
-Never send a key without `-FocusMatch` from a tool that runs inside another app: it reaches whatever window is in front.
-
-Dev and the installed app share `%APPDATA%\Achievement Watcher Next`. Back up `cfg\options.ini` before a test that changes settings, and restore it afterwards.
+Never send a key without `-FocusMatch` from a tool that runs inside another app: it reaches whatever
+window is in front. Dev and the installed app share `%APPDATA%\Achievement Watcher Next`, so back up
+`cfg\options.ini` before a test that changes settings and restore it afterwards.
 
 ## Run tests
 
@@ -174,15 +172,17 @@ npm test
 Pop-Location
 ```
 
-The app suite includes parser, discovery, install-state, locale-completeness and local Markdown
-link/anchor checks. Its categories and focused-run commands are documented in
-[test/README.md](test/README.md). The Watchdog suite covers monitoring, notifications and related
-helpers.
+`npm test` in `app/` runs both suites (the Watchdog one as a second process), so the second block
+only repeats the Watchdog half. The app suite covers parsers, discovery, install state, locale
+completeness and local Markdown link and anchor checks. Its categories and focused-run commands are
+in [test/README.md](test/README.md).
 
-The app suite includes real-DOM checks for the game list, rarity display, settings filter and sorting. They need a Chromium-family browser, try each installed candidate in turn (an installed browser is not always a launchable one), and skip - printing why - only when none will start. Point them at a specific binary with `PUPPETEER_EXECUTABLE_PATH`.
+The real-DOM checks (game list, rarity display, settings filter, sorting) need a Chromium-family
+browser. They try each installed candidate in turn and skip, printing why, only when none starts.
+Point them at a specific binary with `PUPPETEER_EXECUTABLE_PATH`.
 
 After touching a user-visible string, a locale file or an external link, run the locale linter. It
-reports every finding at once, which is faster to act on than the assertion the suite stops at:
+reports every finding at once, which is faster than the single assertion the suite stops at:
 
 ```powershell
 node tools/locale-lint.js
@@ -191,9 +191,8 @@ node tools/locale-lint.js
 It covers key parity, empty values, placeholder and markup drift against English, English prose
 copied into another language, a `t()` slug with no entry, interface text hardcoded in JavaScript,
 and Achievement Watcher addresses written outside `app/util/links.js`. Every rule also runs in
-`npm test`, so this is a convenience rather than an extra gate. `--pseudo` writes a pseudo-locale to
-`scratch/pseudo.json` for a visual pass; the full strategy is in
-[docs/localization.md](docs/localization.md).
+`npm test`. `--pseudo` writes a pseudo-locale to `scratch/pseudo.json` for a visual pass; the full
+strategy is in [docs/localization.md](docs/localization.md).
 
 Before handing off a change, also run:
 
@@ -201,7 +200,8 @@ Before handing off a change, also run:
 git diff --check
 ```
 
-The repository is LF-only except for Windows command files (`.cmd` and `.bat`), which stay CRLF. Confirm that an editor has not silently restyled a file:
+The repository is LF-only except for Windows command files (`.cmd` and `.bat`), which stay CRLF.
+Confirm that an editor has not restyled a file:
 
 ```powershell
 $a = git diff --numstat; $b = git diff --numstat --ignore-cr-at-eol
@@ -210,9 +210,9 @@ if (Compare-Object $a $b) { 'line endings were rewritten - fix before committing
 
 ## Develop and test on Linux
 
-Windows remains the reference platform: a Linux change must leave the Windows path exactly as it
-was. On Linux the app is a native Electron app: it never starts Wine itself, and sees Windows games
-running under Wine or Proton through their files inside each prefix and through `/proc`.
+Windows is the reference platform: a Linux change must leave the Windows path exactly as it was. On
+Linux the app is a native Electron app. It never starts Wine itself, and sees Windows games running
+under Wine or Proton through their files inside each prefix and through `/proc`.
 
 Install, test and run from a POSIX shell:
 
@@ -235,13 +235,13 @@ chmod +x app/node_modules/7zip-bin/linux/x64/7za
   (Xvfb) with a notification daemon such as dunst, record the `Notify` calls with `dbus-monitor
   "interface='org.freedesktop.Notifications'"`, and capture the screen with ImageMagick's
   `import -window root`.
-- A source that reads files under a Windows profile is checked against a real Wine prefix: a test
-  game linked to a Steam emulator and run under Wine writes its saves where a player's game would.
+- Check a source that reads files under a Windows profile against a real Wine prefix: a test game
+  linked to a Steam emulator and run under Wine writes its saves where a player's game would.
 - Under a Wayland session the app restarts itself once through XWayland (`--ozone-platform=x11`,
-  `app/util/linuxSession.js`), so that its popups and overlay can stay above Wine games, which are
-  X11 windows. A second start with `--toggle-overlay` toggles the overlay of the running copy; it
-  is what a desktop keyboard shortcut should run, since the global shortcut does not fire while a
-  native Wayland window has the focus.
+  `app/util/linuxSession.js`), so its popups and overlay can stay above Wine games, which are X11
+  windows. A second start with `--toggle-overlay` toggles the overlay of the running copy. Bind that
+  to a desktop keyboard shortcut, since the global shortcut does not fire while a native Wayland
+  window has the focus.
 
 ### Build the AppImage
 
@@ -249,7 +249,7 @@ chmod +x app/node_modules/7zip-bin/linux/x64/7za
 (cd app && npm run build:linux)
 ```
 
-It runs on Linux only and writes `app/dist/Achievement.Watcher.<version>.AppImage` and
+It runs on Linux only. It writes `app/dist/Achievement.Watcher.<version>.AppImage` and
 `app/dist/latest-linux.yml`, then checks that both match (see the
 [release workflow](docs/RELEASE_WORKFLOW.md#linux-appimage)). The manual **Linux build** workflow in
 GitHub Actions does the same on a clean runner. Running an AppImage needs FUSE 2 (`libfuse2`,
@@ -263,17 +263,12 @@ npx electron-builder --dir --config electron-builder.yml
 Pop-Location
 ```
 
-The executable is written to:
-
-```text
-app\dist\win-unpacked\Achievement Watcher.exe
-```
-
-Use the unpacked build for packaging smoke tests. It is not the installed release used to prove automatic updates.
+The executable is `app\dist\win-unpacked\Achievement Watcher.exe`. Use it for packaging smoke tests;
+it is not the installed release that proves automatic updates.
 
 ## Build the installer
 
-Make sure Watchdog dependencies are installed, then run:
+With the Watchdog dependencies installed:
 
 ```powershell
 Push-Location app
@@ -290,14 +285,15 @@ app\dist\Achievement.Watcher.Portable.<version>.zip
 app\dist\latest.yml
 ```
 
-The installer uses NSIS. `latest.yml` and the blockmap are required by the automatic updater. The
-portable ZIP can be extracted anywhere; its marker makes AW Next keep the whole profile in a `data`
-folder beside `Achievement Watcher.exe`, without importing the installed app's profile. The final
-`win-unpacked` directory comes from that portable packaging pass and follows the same rule.
+The installer uses NSIS. The automatic updater needs `latest.yml` and the blockmap. The portable ZIP
+can be extracted anywhere; its marker makes AW Next keep the whole profile in a `data` folder beside
+`Achievement Watcher.exe`, without importing the installed app's profile. The final `win-unpacked`
+directory comes from that portable packaging pass and follows the same rule.
 
 ### Watchdog dependencies after a build
 
-`npm run build` calls `npm run prepare:watchdog`, which prunes Watchdog development dependencies before packaging. Restore the development tree before running more Watchdog tests:
+`npm run build` calls `npm run prepare:watchdog`, which prunes Watchdog development dependencies
+before packaging. Restore them before running more Watchdog tests:
 
 ```powershell
 Push-Location watchdog
@@ -305,11 +301,10 @@ npm install
 Pop-Location
 ```
 
-The prune can also update `watchdog/package-lock.json`; inspect the worktree after every build and keep only intentional changes.
+The prune can also change `watchdog/package-lock.json`. Inspect the worktree after every build and
+keep only intentional changes.
 
 ## Packaging configuration
-
-The main packaging files are:
 
 | Path | Purpose |
 |---|---|
@@ -321,22 +316,26 @@ The main packaging files are:
 | `app/build/afterPack.js` | Ensures the packaged Watchdog dependency tree is copied correctly |
 | `app/build/icon.ico` | Application and installer icon |
 
-The Watchdog runs under Electron's bundled Node runtime through `ELECTRON_RUN_AS_NODE`. No separate portable Node or NW.js runtime is packaged.
+The Watchdog runs under Electron's bundled Node through `ELECTRON_RUN_AS_NODE`; no separate Node or
+NW.js runtime is packaged.
 
 ### Why `npmRebuild` is disabled
 
-`app/electron-builder.yml` sets `npmRebuild: false`. Keep it unless the native-dependency strategy changes. The current dependencies ship compatible prebuilt binaries, while Electron Builder's rebuild path can fail when the repository path contains spaces.
+`app/electron-builder.yml` sets `npmRebuild: false`. Keep it unless the native-dependency strategy
+changes. The current dependencies ship compatible prebuilt binaries, and electron-builder's rebuild
+path can fail when the repository path contains spaces.
 
 ### Signing
 
-No *publicly trusted* code-signing certificate is configured, so official releases may still
-trigger SmartScreen. Release installers use the project's self-signed `CN=Shirow` certificate. The
-in-app updater accepts only installers signed by one of the certificates pinned by thumbprint in
-`app/util/updateSignature.js` (the release certificate and an offline standby), without requiring
-users to install either, and refuses unsigned ones. `npm run build` refuses to finish a signed
-build whose certificate is not pinned. Rotation and backup:
+No publicly trusted code-signing certificate is configured, so official releases can still trigger
+SmartScreen. Release installers use the project's self-signed `CN=Shirow` certificate. The in-app
+updater accepts only installers signed by one of the certificates pinned by thumbprint in
+`app/util/updateSignature.js` (the release certificate and an offline standby) and refuses unsigned
+ones; users install neither certificate. `npm run build` refuses to finish a signed build whose
+certificate is not pinned. Rotation and backup:
 [docs/INSTALLER_AND_UPDATES.md](docs/INSTALLER_AND_UPDATES.md#certificates-and-what-happens-if-one-is-lost).
-Local builds support the same signing setup:
+
+Local builds use the same setup:
 
 ```powershell
 Push-Location app
@@ -344,17 +343,15 @@ powershell -ExecutionPolicy Bypass -File build/signing/create-self-signed-cert.p
 Pop-Location
 ```
 
-The script creates `CN=Shirow` and exports `app/build/signing/Shirow.pfx`
-plus a local `.password` file (both git-ignored). It does not touch the
-Windows trust stores by default, so it never shows a certificate-install
-prompt. Once the PFX exists, `npm run build` signs the app and installer
-automatically; without it the build stays unsigned (see `app/build/build.js`), and an unsigned
-build must never be published: installed copies refuse it as an update.
-The packager explicitly excludes the PFX, certificate and password: downloaders
-never receive them and the installer never asks to install a certificate.
+The script creates `CN=Shirow` and exports `app/build/signing/Shirow.pfx` plus a local `.password`
+file (both git-ignored), leaving the Windows trust stores alone. Once the PFX exists, `npm run build`
+signs the app and installer; without it the build stays unsigned (see `app/build/build.js`). Never
+publish an unsigned build: installed copies refuse it as an update. The packager excludes the PFX,
+certificate and password, so downloaders never receive them and the installer never asks to install
+a certificate.
 
-To also suppress SmartScreen on a machine you control, run the script again
-with `-InstallTrust` (accepting the one-time Windows confirmation):
+To also suppress SmartScreen on a machine you control, run the script again with `-InstallTrust` and
+accept the one-time Windows confirmation, which appears only on that machine:
 
 ```powershell
 Push-Location app
@@ -362,44 +359,27 @@ powershell -ExecutionPolicy Bypass -File build/signing/create-self-signed-cert.p
 Pop-Location
 ```
 
-That confirmation only ever appears on the machine where the script is run -
-people who download or run the app are never asked to install a certificate.
+The certificate is trusted for the current Windows user only, so other machines still show "Windows
+protected your PC". Never describe a release as signed by a trusted publisher unless a real
+certificate and signature verification have been added.
 
-Important: a self-signed certificate removes the SmartScreen
-"Windows protected your PC" warning only on machines that trust the
-certificate (this script trusts it for the current Windows user). Other
-machines still need either this certificate installed or a certificate issued
-by a public CA. A release must never be described as signed by a trusted
-publisher unless a real certificate and signature verification have been added.
+The Windows Firewall prompt shows the publisher name from the executable metadata and the signing
+certificate subject; both are `Shirow` (CompanyName comes from `author` in `app/package.json`).
 
-The Windows Firewall prompt shows the publisher name from the executable
-metadata and the signing certificate subject; both are set to `Shirow`
-(CompanyName comes from `author` in `app/package.json`).
+### Why a self-signed certificate cannot silence SmartScreen for users
 
-### Why self-signed cannot silence SmartScreen for users
+Microsoft's SmartScreen documentation says a self-signed certificate behaves on first download like
+no signature at all, and no registry key, flag or build option changes that for machines that do not
+trust it. The ways to a warning-free install:
 
-Microsoft's official SmartScreen documentation is explicit: a self-signed
-certificate has the same first-download behavior as no signature at all -
-Windows still shows "Windows protected your PC". There is no registry key,
-flag, or build option that changes this for machines that do not trust the
-certificate. The only real paths to a warning-free install for end users are:
-
-1. **Publish through the Microsoft Store.** Store apps are re-signed by
-   Microsoft and never show a SmartScreen download warning. This is the only
-   option with a guaranteed absence of warnings.
-2. **Sign with a public code-signing certificate (OV/EV) or Microsoft
-   Artifact Signing** (formerly Trusted Signing, roughly $10/month). Even
-   then, a brand-new file is flagged as "unrecognized" until reputation
-   accumulates (typically weeks and hundreds of downloads). EV certificates
-   no longer bypass SmartScreen; they only make the verified publisher name
-   visible instead of "unknown publisher".
-3. **Enterprise-only:** distribute from a trusted intranet location, or let
-   an IT administrator submit files through the Microsoft Security
-   Intelligence portal.
-
-For one machine you control, installing the self-signed certificate into that
-machine's trusted stores (`-InstallTrust`) is the only local way to avoid the
-warning - it never applies to other users.
+1. **Publish through the Microsoft Store.** Microsoft re-signs Store apps, which never show a
+   SmartScreen download warning. This is the only option that guarantees none.
+2. **Sign with a public code-signing certificate (OV/EV) or Microsoft Artifact Signing** (formerly
+   Trusted Signing, roughly $10/month). A new file is still flagged "unrecognized" until reputation
+   builds (typically weeks and hundreds of downloads). EV certificates no longer bypass SmartScreen;
+   they only show the verified publisher name.
+3. **Enterprise only:** distribute from a trusted intranet location, or have an IT administrator
+   submit files through the Microsoft Security Intelligence portal.
 
 References:
 
@@ -409,6 +389,8 @@ References:
 
 ## Versioning
 
-The app and Watchdog versions must stay synchronized across both `package.json` files and both lockfiles. The app version controls the installer name and update feed.
+The app and Watchdog versions must match across both `package.json` files and both lockfiles. The
+app version sets the installer name and the update feed.
 
-Do not edit `app/dist/latest.yml` by hand. It is generated from the package version during the build. Follow the [release workflow](docs/RELEASE_WORKFLOW.md) for the complete checklist.
+Do not edit `app/dist/latest.yml` by hand: the build generates it from the package version. The
+[release workflow](docs/RELEASE_WORKFLOW.md) has the complete checklist.

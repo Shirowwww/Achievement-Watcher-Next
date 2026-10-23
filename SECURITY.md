@@ -6,16 +6,16 @@ Please use GitHub's private **Report a vulnerability** form in this repository's
 Do not open a public issue for a suspected vulnerability and do not include credentials, OAuth
 tokens, personal paths, save data or log archives in a report.
 
-Include the affected version, Windows version, concise reproduction steps and the expected security
-impact. A minimal synthetic example is preferred over user data.
+Include the affected version, your Windows version or Linux distribution, short reproduction steps and
+the expected security impact. A minimal synthetic example is better than user data.
 
 ## Update integrity
 
-The auto-updater only installs a release signed by the project's own certificate, checked by
-thumbprint rather than by name (`CN=Shirow` alone proves nothing, since anyone can create one). A
-pinned offline standby certificate exists so the release certificate can be rotated without
-stranding installed clients; losing both would strand every client on its current version until a
-manual download. An unsigned installer, or one signed by any other certificate, is refused.
+The auto-updater installs only a release signed by the project's own certificate, checked by
+thumbprint, not by name (`CN=Shirow` alone proves nothing, since anyone can create one). A pinned
+offline standby certificate lets the release certificate be rotated without stranding installed
+clients. If both were lost, every client would stay on its current version until a manual download. An
+unsigned installer, or one signed by any other certificate, is refused.
 
 ## Supported versions
 

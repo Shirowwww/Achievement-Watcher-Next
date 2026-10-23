@@ -3,7 +3,7 @@
 AW Next announces an unlock with a native Windows notification (toast), an in-game overlay popup, or
 both. Choose how under **Settings → Notification**.
 
-On Linux, the notification is the desktop's own (GNOME or KDE), and the overlay works the same way.
+On Linux the notification is the desktop's own (GNOME or KDE) and the overlay works the same way.
 Do Not Disturb and the Priority notifications switch are covered in [Supported desktops](linux.md#supported-desktops).
 
 <div align="center">
@@ -15,190 +15,173 @@ Do Not Disturb and the Priority notifications switch are covered in [Supported d
 
 | Mode | Behavior |
 |---|---|
-| **Automatic** (default) | Uses the in-game overlay when it can be shown, and a Windows notification when it cannot. Nothing to configure. |
-| **In-game overlay** | Always opens the styled popup above the running game, including in exclusive fullscreen where it may not be visible. If the overlay reports that it could not display at all, that one notification still arrives as a Windows notification rather than being lost. |
-| **Windows notification** | Always uses the Windows system notification. Achievement and progress notifications use the achievement icon; playtime notifications can include game artwork and a progress bar. |
-| **Both** | Sends the same event to both transports. |
+| **Automatic** (default) | The in-game overlay when it can be shown, a Windows notification when it cannot. |
+| **In-game overlay** | Always the styled popup above the running game, even in exclusive fullscreen, where it may not be visible. If the overlay cannot display at all, that notification arrives as a Windows notification. |
+| **Windows notification** | Always the Windows system notification. Achievement and progress notifications use the achievement icon; playtime notifications can include game artwork and a progress bar. |
+| **Both** | The same event on both transports. |
 
-The main library window may stay closed in every mode: the background tracker handles delivery.
+AW Next posts Windows notifications itself and starts no other program, PowerShell included, so they
+appear at once. A custom app id set in `options.ini` (`[notification_advanced] appID`) still goes
+through the former PowerShell route.
+
+The library window can stay closed in every mode: the background tracker handles delivery.
 
 <div align="center">
 <picture><source srcset="assets/shot/notification-popup.webp 594w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/notification-popup.png" width="440" height="126" alt="An unlock popup" loading="lazy" decoding="async"></picture><br>
 <sub>The overlay popup, drawn by the selected preset with the game's own artwork</sub>
 </div>
 
-Independently of the mode, **Websocket @localhost:8082** broadcasts every notification event as JSON
-on a local websocket, for stream overlays and other external tooling. It is on by default, listens on
-`127.0.0.1` only - so nothing on the network can read it - and adds no visible notification of its
-own. Turn the row off if you do not use it. The same address also serves a ready-made stream overlay,
-described in [Show unlocks on stream (OBS)](#show-unlocks-on-stream-obs).
+Whatever the mode, **Websocket @localhost:8082** broadcasts every notification event as JSON on a
+local websocket, for stream overlays and other tools. It is on by default, listens on `127.0.0.1`
+only and shows nothing itself. Turn it off if you do not use it. The same address serves a ready-made
+stream overlay: see [Show unlocks on stream (OBS)](#show-unlocks-on-stream-obs).
 
 > [!TIP]
-> Use the built-in test buttons after changing the mode. A successful test confirms the display path;
-> a real unlock still depends on the relevant game source being watched correctly.
+> Use the test buttons after changing the mode. A successful test confirms the display path; a real
+> unlock still depends on the game source being watched correctly.
 
 ### How Automatic decides
 
-Each notification is routed once, from what AW Next can actually observe at that moment:
+Each notification is routed once, from what AW Next can observe at that moment:
 
 | Situation | What happens |
 |---|---|
 | Nothing covering the screen | In-game overlay. |
-| The game is in **fullscreen** (Direct3D, with Windows' fullscreen optimizations, which most games get) | Windows notification, shown over the game without taking its focus. The popup is not drawn there and Windows holds an ordinary notification back, so AW Next sends one that Windows does show: a priority notification when those are on, otherwise a reminder that AW Next closes after the usual notification time. Borderless and windowed games keep the overlay. |
-| The game holds the screen in **legacy exclusive mode** (older games, many OpenGL games, or fullscreen optimizations turned off) | Nothing from another app is drawn on that screen. The notification goes to Notification Center, and its sound and the controller rumble still play. Borderless mode in the game brings it back on screen. |
-| The app reports it cannot display the popup (no usable preset, renderer unavailable) | That notification is sent as a Windows notification instead. |
-| The overlay fails to display | Automatic stays on Windows notifications for ten minutes, then tries the overlay again. |
-| The overlay was asked but never reported back | No second notification is sent - a duplicate is worse than a delayed switch - and the next unlock uses a Windows notification. |
+| The game is in **fullscreen** (Direct3D with Windows' fullscreen optimizations, which most games get) | Windows notification, shown over the game without taking its focus: a priority notification when those are on, otherwise a reminder that AW Next closes after the usual notification time. Borderless and windowed games keep the overlay. |
+| The game holds the screen in **legacy exclusive mode** (older games, many OpenGL games, or fullscreen optimizations off) | Nothing from another app is drawn on that screen. The notification goes to Notification Center; its sound and the controller rumble still play. Borderless mode in the game brings it back on screen. |
+| The app cannot display the popup (no usable preset, renderer unavailable) | A Windows notification. |
+| The overlay fails to display | Windows notifications for ten minutes, then the overlay is tried again. |
+| The overlay was asked but never reported back | No second notification, to avoid a duplicate. The next unlock uses a Windows notification. |
 
-AW Next remembers which transport last delivered for each game and uses it only as a tie-breaker,
-when Windows cannot answer whether a game is in exclusive fullscreen. A live answer always wins over
-what was remembered, so a game never gets stuck on the wrong transport.
-
-The transport is chosen **before** anything is sent, and a fallback is only ever allowed when the
-primary transport reported a definite failure. The same unlock is therefore never announced twice.
-
-> [!NOTE]
-> Exclusive fullscreen is respected rather than worked around: AW Next does not inject into games or
-> force display-mode changes to put a popup on top of one.
+AW Next remembers which transport last delivered for each game and uses it only as a tie-breaker when
+Windows cannot say whether a game is in exclusive fullscreen. A fallback happens only after a definite
+failure, so the same unlock is never announced twice. AW Next does not inject into games or force
+display-mode changes.
 
 ### Where the current state is shown
 
-Open a game and check its **Game Health** panel. The Notifications row reports the transport that
-actually delivered the last notification for that game and why - for example *Working - Windows
-fallback active* in Simple mode, or *Windows notification · game in exclusive fullscreen* in
-Advanced. Until a game has had a notification, the row shows the configured mode instead of claiming
-an observation that has not happened. See [Game Health](game-health.md).
+A game's **Game Health** panel has a Notifications row naming the transport that delivered the last
+notification and why, for example *Working - Windows fallback active* (Simple mode). With no
+notification yet it shows the configured mode. If Windows kept a notification in Notification Center
+because the game was full screen or Do Not Disturb was on, the row says so. See
+[Game Health](game-health.md).
 
 ## Priority Windows notifications
 
 Full-screen games and other automatic Windows rules can turn on **Do Not Disturb**, which sends
-ordinary toasts to Notification Center without showing them on screen. Enable **Settings →
-Notification → Priority notifications** to mark achievement unlocks as important. Windows then asks
-once whether AW Next may send those notifications; you can allow or refuse it in Windows notification
-settings.
+ordinary toasts to Notification Center without showing them. **Settings → Notification → Priority
+notifications** marks achievement unlocks as important. Windows asks once whether AW Next may send
+them; change the answer in Windows notification settings.
 
-This is deliberately off by default. It applies to achievement and completion unlocks only, never to
-progress or playtime updates. The underlying Windows toast uses the `urgent` scenario, supported on
-Windows 11 (build 22546) and later, and remains subject to Windows' notification permission and system
-policy. Windows 10 does not know it, so the setting does nothing there. See [Microsoft's app-notification documentation](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/app-notifications/app-notifications-content).
+It is off by default and covers achievement and completion unlocks only, never progress or playtime.
+The toast uses the `urgent` scenario, which needs Windows 11 (build 22546) or later; on Windows 10
+the setting does nothing. See [Microsoft's app-notification documentation](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/app-notifications/app-notifications-content).
 
 ## Games Steam runs
 
 Steam shows its own pop-up for the games it runs, so AW Next stays quiet for them by default. Enable
 **Settings → Notification → Steam client games** to get AW Next's notification too, with its sound,
 overlay, rarity and screenshot souvenir. It covers owned games and games added through SteamTools,
-LuaTools or GreenLuma alike: AW Next follows the stats file Steam rewrites in `appcache\stats` when a
-game records an unlock, and only an unlock that just happened is announced. To keep AW Next's
-notification alone, turn off **Steam → Settings → Notifications → I unlock an achievement**.
+LuaTools or GreenLuma: AW Next follows the stats file Steam rewrites in `appcache\stats`. To keep
+only AW Next's notification, turn off **Steam → Settings → Notifications → I unlock an achievement**.
 
 ## How the popup looks
 
-The look of the in-game popup is a **preset**: nine ship with the app, you can design your own with
-ordinary controls, and a preset can be shared as a single `.awpreset` file.
-
-→ **[Presets and the Preset Designer](presets.md)**
+The look of the in-game popup is a **preset**: ten ship with the app, you can design your own, and a
+preset can be shared as one `.awpreset` file. See [Presets and the Preset Designer](presets.md).
+**Opacity** (30% to 100%) in the same settings sets how see-through the popup is.
 
 ## Sounds, volume and duration
 
 - Import `.wav`, `.mp3`, `.ogg`, `.flac`, `.m4a` or `.aac` files from the Notification settings.
-- **Random** is an entry in the sound list, picked like any other sound: choose it and every
-  notification plays a different file from the ones you have. It previews like any other choice too -
-  selecting it, moving the volume slider under it or firing a test all play a real sound, a different
-  one each time.
-- **Rare achievement sound** and **100% completion sound** (Advanced mode) give a rare unlock and
-  the completion popup a sound of their own, for both the overlay and Windows notifications. Both
-  start on "Same as unlocks"; "None" makes that kind of popup silent. A sound chosen for one game
-  in its own panel still wins.
-- **Progress sound** (Advanced mode) does the same for progress popups: "None" mutes them while
-  unlocks keep their sound. It wins over a game's own sound, since it is about the kind of popup,
-  except for a game set to no sound at all. To stop one game's progress popups entirely, right-click
-  it and mute its progress instead.
-- Overlay volume ranges from 0% to 200%. Values above 100% apply an overlay-side boost; Windows
-  notification playback is limited by the system audio path.
-- Duration can follow the preset automatically or use a fixed cap.
-- Playtime notifications are silent by design.
+- **Random** in the sound list plays a different file from yours for every notification, and for
+  every preview or test.
+- **Rare achievement sound** and **100% completion sound** (Advanced mode) give those popups their own
+  sound, for the overlay and Windows notifications. Both start on "Same as unlocks"; "None" makes
+  that kind of popup silent. A sound chosen for one game in its own panel still wins.
+- **Progress sound** (Advanced mode) does the same for progress popups. It wins over a game's own
+  sound, except for a game set to no sound. To silence one game's progress popups, right-click it and
+  mute its progress.
+- **Emulators** (Advanced mode) gives each console its own preset and sound: Xenia, RPCS3, shadPS4 and
+  Kyty are listed. Recompiled Xbox 360 games follow Xenia's choice, PS4 ports follow shadPS4's, and
+  **Same as main** keeps the main settings.
+- Overlay volume goes from 0% to 200%; above 100% the overlay boosts the sound. Windows notification
+  playback is limited by the system audio path.
+- Duration follows the preset or uses a fixed cap.
+- Playtime notifications are silent.
 
-A preset someone shared with you can carry its own sound, which is used instead of the one selected
-here. See [Share a preset](presets.md#share-a-preset).
+A shared preset can carry its own sound, which replaces the one selected here. See
+[Share a preset](presets.md#share-a-preset).
 
 ## Position and scale
 
-Choose a corner, edge or centered position from the Notification settings. Positions are measured
-against the whole screen, so a bottom anchor sits on the bottom edge rather than above the taskbar,
-matching the layout shown in the preset builder. The card itself touches the chosen edges, whatever
-room for shadow or glow its preset leaves around it: AW measures each preset once per position, in
-the background after its first popup, so that first popup still shows where it used to. A preset
-whose card follows the length of its text (Indiana, PS5 Steam, Slim) is also measured with each
-popup's text, which holds that popup back about half a second. The custom
-position can be moved with
-**Reposition** and is stored for later sessions; it is used exactly as you left it, and a position
-saved on a monitor that is no longer connected is brought back into view.
+Choose a corner, edge or centered position in the Notification settings. Positions are measured
+against the whole screen, so a bottom anchor sits on the bottom edge, not above the taskbar, and the
+card touches the chosen edges whatever room for shadow or glow its preset leaves around it. AW
+measures each preset once per position, in the background after its first popup, so that first popup
+shows at the old place. A preset whose card follows the length of its text (Indiana, PS5 Steam, Slim)
+is measured with each popup, which holds it back about half a second.
 
-With several screens, on Windows, the popup appears on the screen of the game you are playing (the
-window in front), not on the one under the mouse. A custom position keeps its place relative to that
-screen. Windows notifications always show on the main screen; Windows decides that.
+**Reposition** moves the custom position, used exactly as you left it; one saved on a monitor that is
+gone is brought back into view. With several screens, the popup appears on the screen of the game
+you are playing, not the one under the mouse, and a custom position keeps its place relative to that
+screen. Windows notifications always show on the main screen.
 
-The scale setting resizes the whole popup without changing the preset's layout: every preset is drawn
-exactly as it is at 100%, only larger or smaller. **Reposition** shows the popup at the selected
-scale, so what you place is what you get.
+The scale setting resizes the whole popup without changing its layout, and **Reposition** previews
+it at that scale.
 
 ### Progress popups
 
 Counter achievements (kill 50 enemies, travel 100 km) can raise a progress popup at every step. In
-Advanced mode, **Progress position** and **Progress scale** give those popups a place and a size of
-their own, for example unlocks at the bottom right and smaller progress at the bottom left.
-**Same as unlocks**, the default, keeps today's behaviour and follows a game's own position when it
-has one. Any other choice applies to the progress popups of every game, which is what keeps them apart
-from unlocks even where a game has its own position. The crosshair beside **Progress position** places
-a custom anchor for progress only; until it is placed once, it starts from the unlock anchor. These
-two settings only move the in-game popup: Windows decides where its own notifications appear.
+Advanced mode, **Progress position** and **Progress scale** give those popups their own place and
+size. **Same as unlocks**, the default, follows a game's own position when it has one; any other
+choice applies to the progress popups of every game. The crosshair beside **Progress position** places
+a custom anchor for progress only. These settings move only the in-game popup.
 
 **Progress milestones**, in the common notification settings, shows a progress notification only when
-a counter crosses another 10, 25 or 50% of its goal instead of at every step. It applies to both the
-popup and the Windows notification. The unlock itself is always shown.
+a counter crosses another 10, 25 or 50% of its goal. It applies to the popup and the Windows
+notification. The unlock itself is always shown.
 
-The in-game overlay list also supports keyboard shortcuts for moving, snapping and click-through -
-see the [Overlay guide](overlay.md#keyboard-shortcuts-overlay-open) - plus optional gamepad control,
-covered in the [Controller guide](controller.md).
+The overlay list has its own keyboard shortcuts (see the
+[Overlay guide](overlay.md#keyboard-shortcuts-overlay-open)) and optional gamepad control (see the
+[Controller guide](controller.md)).
 
 ## Per-game behavior
 
-Open a game's tools panel and choose **Notification** to give that game a different popup preset,
-position, sound or scale. Every field inherits the global setting by default, and only the values you
-change for that game are stored; sound also offers explicit silence and random choices. The crosshair
-beside Position drags a preview where that game's popup should appear, without moving the global
-position or another game's. The five test buttons preview that game, its artwork and every selection
-currently shown, without changing achievement progress. A preset or sound that is removed falls back
-to the global value, and renaming a user preset in the designer keeps its game assignments.
+Open a game's tools panel and choose **Notification** to give that game its own popup preset,
+position, sound or scale. Every field inherits the global setting, and only the values you change are
+stored; sound also offers silence and random. The crosshair beside Position drags a preview to where
+that game's popup should appear. The five test buttons preview that game and its artwork without
+changing achievement progress. A removed preset or sound falls back to the global value, and renaming
+a user preset keeps its game assignments.
 
-Right-click a game to mute its progress notifications without disabling achievement unlocks or
-completion notifications. A duplicate guard also prevents the same unlock from appearing twice when a
-watched save is rewritten.
+Right-click a game to mute its progress notifications while keeping unlocks and completion
+notifications.
 
-Achievements with a global unlock rate below the rare threshold display their rarity percentage and
-are drawn in the preset's rare styling: **gold** at 5% or less, **silver** up to 10%, **bronze** up to
-15%.
+An achievement with a global unlock rate at or below the rare limit prints its percentage and gets
+the preset's rare styling: **gold** at 5% or less, **silver** up to 10%, **bronze** up to 15%. Move
+these limits with **Settings → General → Rarity thresholds** set to Custom (Advanced mode).
 
 ### Trophy mode
 
 **Settings → General → Rarity display** switches to **Trophy mode**: every achievement is graded by
 its global unlock rate (gold under 20%, silver under 50%, bronze otherwise or when the rate is
-unknown), in the game window, the overlay, the profile trophies and the notification. All three
-grades use the preset's rare styling (`state-rare` plus `tier-gold`, `tier-silver` or `tier-bronze`),
-so a preset needs nothing new; platinum stays the separate completion state. In Advanced mode the
-two bounds can be moved. The app tells a preset its tier in `rarityTier` (with `rarityMode` and the
-localized `rarityGrade`); a preset that predates the field falls back to the percentage and so keeps
-the rare tiers.
+unknown) in the game window, the overlay, the profile trophies and the notification. **Rarity
+thresholds** moves the bounds. All three grades use the preset's rare styling (`state-rare` plus
+`tier-gold`, `tier-silver` or `tier-bronze`); platinum stays the separate completion state. The app
+gives a preset its tier in `rarityTier` (with `rarityMode` and the localized `rarityGrade`); a preset
+without the field falls back to the percentage.
 
-With a PlayStation account connected, a game that also came out on PlayStation uses its real list
-instead, wherever its achievements come from: each achievement takes the grade and DLC group of the
-trophy with the same name or description. The real platinum shows in every rarity mode, trophy mode
-or not: on the game page, in the stats and in the 100% popup, with its name, description and icon,
-in the same style. Sources AW watches live (Xenia, recompiled ports, GOG Galaxy, Ubisoft Connect, Xbox
-PC) get the same 100% popup, or pop the achievement tied to the platinum as the platinum when the
-game has one. PlayStation emulators keep their own trophies. AW finds the list by the game's original name, so renaming a game changes
-nothing. A game played on PlayStation counts its platinum once that trophy is earned, even with DLC
-trophies left.
+With a PlayStation account connected (**Settings → Sources**), a game that also came out on
+PlayStation uses its real trophy list, wherever its achievements come from: each achievement takes the
+grade and DLC group of the trophy with the same name or description. The real platinum shows in every
+rarity mode (game page, stats, 100% popup) with its name, description and icon, and counts once that
+trophy is earned, even with DLC trophies left. PlayStation emulators keep their own trophies. AW
+finds the list by the game's original name, so renaming a game changes nothing.
+
+Every source pops the 100% popup, the live ones included (Xenia, recompiled ports, GOG Galaxy,
+Ubisoft Connect, Xbox PC). When the game has a platinum, the achievement tied to it pops as the
+platinum.
 
 <div align="center">
 <picture><source srcset="assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/trophy-profile.png" width="440" height="148" alt="The profile header with platinum, gold, silver, bronze and common trophy counts" loading="lazy" decoding="async"></picture><br>
@@ -217,33 +200,24 @@ trophies left.
 
 ## Show unlocks on stream (OBS)
 
-Capturing the popup as a *window* does not work, and cannot: the popup window is created for one
-unlock and destroyed a few seconds later, so by the time OBS lists it, it is already gone. Use a
-**Browser** source instead. OBS keeps a browser source loaded for the whole stream, so there is
-nothing to catch in time.
+Capturing the popup as a window does not work: the popup window lives a few seconds, so OBS never
+catches it. Use a **Browser** source, which OBS keeps loaded for the whole stream.
 
 1. **Settings -> Notification -> OBS browser source.** **Preview** opens the page in your browser
-   with a sample unlock every ten seconds, which is the quickest way to confirm the whole chain
-   works. **Copy link** puts the address on the clipboard.
+   with a sample unlock every ten seconds, the quickest check that the chain works. **Copy link**
+   copies the address.
 2. In OBS: **+ -> Browser**, paste the address into **URL**.
-3. Give the source whatever **Width** and **Height** suit your layout. The card scales itself to
-   fill the box, so there is no size to work out.
+3. Set any **Width** and **Height**. The card scales to fill the box.
 
-That is all. The source shows the same preset, the same artwork and the same rarity styling as the
-in-game popup, and follows the preset you pick in Settings from then on. The test buttons under
-**Settings -> Notification** fire into it as well, whichever delivery mode is selected, so one click
-checks the popup and the stream at once.
+The source shows the same preset, artwork and rarity styling as the in-game popup and follows the
+preset you pick in Settings. The test buttons under **Settings -> Notification** fire into it too,
+whatever the delivery mode.
 
 > [!TIP]
-> **A bigger source is a sharper card.** The card is laid out at the source's size rather than drawn
-> small and stretched, so a source with more pixels renders more detail. Give it roughly twice the
-> preset's own box and place it at half size in your scene:
-> `http://127.0.0.1:8082/obs/_config` reports both numbers. The only part that cannot get sharper is
-> the achievement icon itself, which Steam only publishes at 64x64.
-
-> [!TIP]
-> Add `?test=1` to the address while you position the source: it shows a sample unlock every ten
-> seconds so you can see what you are aligning. Remove it when you are done.
+> **A bigger source is a sharper card.** The card is laid out at the source's size, not stretched.
+> Give the source roughly twice the preset's own box and place it at half size in your scene:
+> `http://127.0.0.1:8082/obs/_config` reports both numbers. Only the achievement icon stays soft,
+> since Steam publishes it at 64x64.
 
 ### Options
 
@@ -251,65 +225,55 @@ Append them to the address, `?first=x&then=y`:
 
 | Option | Effect |
 |---|---|
-| `?test=1` | Repeats a sample unlock every ten seconds, for positioning the source. |
+| `?test=1` | Repeats a sample unlock every ten seconds, for positioning the source. Remove it afterwards. |
 | `?scale=2` | Pins the card at that zoom instead of fitting it to the source. `?scale=app` follows the scale set in Settings. |
 | `?duration=8000` | Holds each card for that many milliseconds instead of the configured duration. |
-| `?sound=1` | Plays the notification sound through the browser source, so it reaches the stream without capturing desktop audio. Off by default, since the app already plays it on your own speakers. Tick **Control audio via OBS** on the source to put it in the mix. |
+| `?sound=1` | Plays the notification sound through the browser source, so it reaches the stream without capturing desktop audio. Off by default, since the app already plays it on your speakers. Tick **Control audio via OBS** on the source to put it in the mix. |
 | `/obs/preset/Xbox/` | Uses one named preset for the stream, whatever the desktop is set to. Any installed preset name works, including your own. |
 
 ### Notes
 
-- **The page is deliberately blank between unlocks.** It is not broken, and it is not idling either:
-  the whole document is taken out of the layout, so no animation runs and OBS has nothing to
-  repaint. A stream overlay that keeps animating costs real CPU for hours at a time; this one costs
-  nothing until an achievement pops.
-- **It is local only.** Both the page and the feed listen on `127.0.0.1`, so the address works on
-  the machine running AW Next and nowhere else. Nothing on your network, and nobody watching the
-  stream, can reach it.
-- **Achievement icons are served from this machine** for sources that keep their artwork locally
-  (Goldberg, emulators, and your own library art). Only pictures a notification actually announced
-  are served, and only pictures.
-- **One copy of AW Next serves it.** The address belongs to whichever copy started first, so a
-  second instance (or anything else already using port 8082) leaves the source with nothing to
-  connect to. Close the extra copy and the source reconnects on its own within a few seconds.
-- If the source stays blank on a real unlock, check that notifications work at all first with the
-  test buttons in Settings, then that the **Websocket** row is on.
+- The page is blank between unlocks by design: nothing is drawn, so it costs no CPU until an
+  achievement pops.
+- It is local only. The page and the feed listen on `127.0.0.1`, so nothing else on your network can
+  reach them.
+- Achievement icons are served from this machine for sources that keep their artwork locally
+  (Goldberg, emulators, your own library art), and only for pictures a notification announced.
+- One copy of AW Next serves the address: the one that started first. A second instance, or anything
+  else on port 8082, leaves the source with nothing to connect to. Close the extra copy and the source
+  reconnects within a few seconds.
+- If the source stays blank on a real unlock, check that the test buttons work, then that the
+  **Websocket** row is on.
 
 ## Screenshot souvenirs
 
-**Screenshot on unlock** saves a picture of the screen a moment after an achievement pops, so the
-notification itself is in the shot. Files land in `<folder>\<game>\<date> - <achievement>.png`, and
-**Open folder** in the same row takes you straight there - creating the folder first if nothing has
-been saved yet. The folder defaults to `Pictures\Achievement Watcher Next` and can be changed at any
-time; the button shows the one in use.
+**Screenshot on unlock** saves a picture of the screen a moment after an achievement pops, once the
+popup has finished appearing, so the notification is in the shot. Files land in
+`<folder>\<game>\<date> - <achievement>.png`. **Open folder** in the same row opens it, creating it
+first if needed. The folder defaults to `Pictures\Achievement Watcher Next` and can be changed.
 
-Several achievements unlocking in the same second each keep their own file, and a game whose title
-Windows refuses as a folder name is handled rather than silently losing its screenshots.
+Achievements unlocking in the same second each keep their own file, and a game whose title Windows
+refuses as a folder name still gets its screenshots. On multi-monitor setups the souvenir captures
+the monitor the game is on, like the video clips; with no visible game window, it takes the monitor
+of the window in front, then the primary one.
 
 ### Playing with Windows HDR on
 
 **HDR screenshots** defaults to **Automatic**. At capture time, AW Next checks whether HDR is active
-on the display showing the game. If it is, a small one-shot helper captures an FP16 frame through Windows
-Graphics Capture and tone-maps its highlights into an ordinary SDR/sRGB PNG. The helper exits as
-soon as that one image is written; it does not keep a recorder, GPU session or Electron window alive.
-
-When Windows HDR is off, **Automatic** uses the same standard capture path as before. **Off** always
-uses that standard path. Missing Windows support, a blocked capture, a timeout or any other helper
-failure also falls back to the standard screenshot instead of losing the souvenir or interrupting
-the notification.
-
-On multi-monitor setups the souvenir captures the monitor the game is on, like the video clips. When
-the game has no visible window, it takes the monitor of the window in front, then the primary one.
+on the display showing the game. If so, a one-shot helper captures an FP16 frame through Windows
+Graphics Capture and tone-maps its highlights into an SDR/sRGB PNG, then exits. With HDR off,
+**Automatic** and **Off** use the standard capture. Any helper failure (missing Windows support, a
+blocked capture, a timeout) also falls back to the standard screenshot, so the souvenir and the
+notification are not lost.
 
 ## Video clips
 
-**Video clip on unlock** works like a console's trophy video. While a game AW Next tracks is
-running, the last seconds of play are kept in memory, already compressed by the graphics card's own
-video encoder; when an achievement pops, the stretch around it is saved as an MP4 in
-`<folder>\<game>\<date> - <achievement>.mp4`. The folder is the card's own, `Videos\Achievement
-Watcher Next` unless you pick another. The unlock sits in the middle of the
-clip, so the toast or overlay popup is in it too. Achievements unlocking close together share one
-clip instead of writing near-identical copies.
+**Video clip on unlock** works like a console's trophy video. While a game AW Next tracks is running,
+the last seconds of play are kept in memory, already compressed by the graphics card's video encoder.
+When an achievement pops, the stretch around it is saved as an MP4 in
+`<folder>\<game>\<date> - <achievement>.mp4`, with the popup in the middle of it. The folder is
+`Videos\Achievement Watcher Next` unless you pick another. Achievements unlocking close together
+share one clip.
 
 | Setting | Choices | Default |
 |---|---|---|
@@ -325,47 +289,44 @@ clip instead of writing near-identical copies.
 <sub>The Video clip section sits at the bottom of the Notification tab and is off until you turn it on</sub>
 </div>
 
-The row under them estimates the size of one clip for your screen. It is a ceiling: the encoder runs
-at a constant bitrate and a quiet scene comes out smaller.
+The row under the table estimates the size of one clip for your screen. It is a ceiling: the encoder
+runs at a constant bitrate and a quiet scene comes out smaller.
 
-- **What it costs.** Nothing runs while no game does. During play, capture, scaling and encoding stay
-  on the GPU, on the encoder block that is separate from the one rendering the game; the recorder
-  uses well under 1 % of the CPU and about 70 to 110 MB of memory plus the length of one clip.
-  Nothing is written to disk until an achievement unlocks.
+- **Cost.** Nothing runs while no game does. Capture, scaling and encoding stay on the GPU, on an
+  encoder block separate from the one rendering the game. The recorder uses well under 1 % of the CPU
+  and about 70 to 110 MB of memory plus one clip. Nothing is written to disk until an achievement
+  unlocks.
 - **Format.** H.264 plays everywhere, Discord and phones included. HEVC and AV1 make smaller files.
-  AV1 needs a GeForce RTX 40, Radeon RX 7000, Intel Arc or newer graphics card; on a card without
-  the chosen format the clip is recorded in H.264. A card without any hardware H.264 encoder uses
-  Windows' software encoder instead: on the processor, at 1080p and 30 FPS at most.
+  AV1 needs a GeForce RTX 40, Radeon RX 7000, Intel Arc or newer; without the chosen format the clip
+  is recorded in H.264. A card with no hardware H.264 encoder uses Windows' software encoder, on the
+  processor, at 1080p and 30 FPS at most.
 - **Frame rate.** **Unlocked** records at the refresh rate of the monitor showing the game and
-  follows it when it changes. When the encoder refuses a rate, the recorder steps down to 60, then 30
-  FPS rather than stopping, and the log says so. The size estimate assumes twice the 30 FPS
-  bitrate for Unlocked, so it is a ceiling on a 60 Hz screen.
+  follows it when it changes. If the encoder refuses a rate, the recorder steps down to 60, then 30
+  FPS, and logs it. The size estimate assumes twice the 30 FPS bitrate for Unlocked.
 - **If the recorder stops answering.** AW Next restarts it after a wait that doubles each time, and
-  gives up on a game after five failed restarts. A clip whose writing fails halfway is kept when
-  what was written plays; otherwise nothing is left under the clip's name. The recorder is never
-  stopped while it writes a clip, and a clip left half written by a PC that went down is cleaned up
+  gives up on a game after five failed restarts. A clip whose writing fails halfway is kept if what
+  was written plays, otherwise removed. A clip left half written by a PC that went down is cleaned up
   the next time a game is recorded.
-- **HDR.** With Windows HDR on, the clip is tone-mapped with the same curve as HDR screenshots, so it
-  looks right on any screen. **HDR screenshots** set to **Off** applies to clips too.
-- **Sound.** **Game only** records the game and leaves voice chat and music out. When the game's
-  sound cannot be recorded on its own, the whole PC is recorded instead.
-- **What is captured.** The monitor showing the game, as it appears on screen, notifications
-  included. A very old game running in exclusive fullscreen may record as black frames.
+- **HDR.** With Windows HDR on, clips are tone-mapped like HDR screenshots; **HDR screenshots** set to
+  **Off** applies to clips too.
+- **Sound.** **Game only** leaves out voice chat and music. If the game's sound cannot be recorded
+  alone, the whole PC is recorded.
+- **What is captured.** The monitor showing the game, notifications included. A very old game in
+  exclusive fullscreen may record black frames.
 
 ## If a test or unlock does not appear
 
-1. Confirm notifications are enabled, and check the Notifications row of the game's
-   **[Game Health](game-health.md)** panel - it names the transport that last delivered and why.
+1. Confirm notifications are enabled, and read the Notifications row of the game's
+   **[Game Health](game-health.md)** panel.
 2. Check that the background tracker is running.
 3. For overlays, select a valid preset and test again outside an exclusive fullscreen game.
-   **Automatic** already handles both of those cases on its own.
+   **Automatic** already handles both cases.
 4. If a full-screen game or Do Not Disturb hides Windows notifications, enable **Priority
-   notifications** and approve Windows' one-time request for AW Next.
-5. Check Windows notification settings for AW Next when notifications are missing.
+   notifications** and approve Windows' one-time request.
+5. Check Windows notification settings for AW Next.
 6. Open **Settings → Advanced → Diagnostics** and inspect the logs.
 
-Continue with [Troubleshooting](troubleshooting.md#notifications-do-not-appear) if the problem
-remains.
+If the problem remains, continue with [Troubleshooting](troubleshooting.md#notifications-do-not-appear).
 
 ---
 
