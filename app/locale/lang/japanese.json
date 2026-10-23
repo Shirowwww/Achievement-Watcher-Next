@@ -2700,6 +2700,8 @@
     "achievement": "実績",
     "achievementUnlocked": "実績を解除",
     "congratulations": "おめでとうございます!",
+    "gameComplete": "100% 完了",
+    "gameCompleteDesc": "すべての実績を解除しました！",
     "unknownOperation": "不明な操作",
     "unknownReward": "不明な報酬",
     "trophy": "トロフィー",

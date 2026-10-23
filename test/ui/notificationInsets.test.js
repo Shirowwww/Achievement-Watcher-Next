@@ -56,6 +56,16 @@ test('an edge anchor moves the window past that edge by its transparent room, sc
   assert.deepEqual(edgeShift('bottom-left', room, 1), { dx: -10, dy: 15 });
 });
 
+test('a gap keeps the card that far inside each edge it is anchored to', () => {
+  const room = { left: 10, top: 6, right: 20, bottom: 15 };
+  assert.deepEqual(edgeShift('top-right', room, 1, 25), { dx: -5, dy: 19 });
+  assert.deepEqual(edgeShift('bottom-left', room, 1, 25), { dx: 15, dy: -10 });
+  assert.deepEqual(edgeShift('center-bottom', room, 1, 25), { dx: 0, dy: -10 });
+  // Not measured yet: the gap still applies, from the window edge.
+  assert.deepEqual(edgeShift('top-left', null, 1, 25), { dx: 25, dy: 25 });
+  assert.deepEqual(edgeShift('custom', room, 1, 25), { dx: 0, dy: 0 }, 'a custom position is used verbatim');
+});
+
 test('a window coordinate is snapped to the nearest whole physical pixel', () => {
   assert.equal(snapToDevicePixel(1349, 1.25), 1348);
   assert.equal(snapToDevicePixel(1351, 1.25), 1352);

@@ -126,6 +126,9 @@ test('legacyPresetAlias only answers for names that were removed', () => {
   assert.equal(legacyPresetAlias('Xbox 360'), 'Xbox');
   assert.equal(legacyPresetAlias('PS5 enhanced'), 'PlayStation');
   assert.equal(legacyPresetAlias('mudoss'), 'Outline');
+  assert.equal(legacyPresetAlias('Hexagon'), DEFAULT_PRESET);
+  assert.equal(legacyPresetAlias('Indiana'), DEFAULT_PRESET);
+  assert.equal(legacyPresetAlias('TigerDX Award'), DEFAULT_PRESET);
   assert.equal(legacyPresetAlias('Steam'), 'Steam Modern');
   assert.equal(legacyPresetAlias(DEFAULT_PRESET), '');
   assert.equal(legacyPresetAlias('something a user made'), '');

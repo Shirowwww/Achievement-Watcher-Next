@@ -2700,6 +2700,8 @@
     "achievement": "Достижение",
     "achievementUnlocked": "Достижение открыто",
     "congratulations": "Поздравляем!",
+    "gameComplete": "Пройдено на 100%",
+    "gameCompleteDesc": "Вы получили все достижения!",
     "unknownOperation": "Неизвестная операция",
     "unknownReward": "Неизвестная награда",
     "trophy": "Трофей",

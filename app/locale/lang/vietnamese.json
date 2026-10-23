@@ -2700,6 +2700,8 @@
     "achievement": "Thành tựu",
     "achievementUnlocked": "Đã mở khóa thành tựu",
     "congratulations": "Chúc mừng!",
+    "gameComplete": "Hoàn thành 100%",
+    "gameCompleteDesc": "Bạn đã mở khóa tất cả thành tựu!",
     "unknownOperation": "Thao tác không xác định",
     "unknownReward": "Phần thưởng không xác định",
     "trophy": "Cúp",

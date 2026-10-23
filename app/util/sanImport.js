@@ -310,6 +310,38 @@ function diskRecord(file) {
   }
 }
 
+/*
+  SAN's own pictures (saniconborder*.png and the like) ship with SAN and a .san export leaves them
+  out. When SAN is installed here, its resources/img folder fills the gap; the newest install wins.
+*/
+const SAN_PROGRAM_DIR_RE = /^steamachievementnotifierv(\d+(?:\.\d+)*)$/i;
+
+function findSanImages({ platform = process.platform, env = process.env } = {}) {
+  if (platform !== 'win32' || !env.LOCALAPPDATA) return '';
+  const programs = path.join(env.LOCALAPPDATA, 'Programs');
+  let names;
+  try {
+    names = fs.readdirSync(programs);
+  } catch {
+    return '';
+  }
+  const found = names
+    .map((name) => ({ name, match: SAN_PROGRAM_DIR_RE.exec(name) }))
+    .filter((entry) => entry.match)
+    .map((entry) => ({ dir: path.join(programs, entry.name, 'resources', 'img'), version: entry.match[1].split('.').map(Number) }))
+    .filter((entry) => fs.existsSync(entry.dir))
+    .sort((a, b) => compareVersions(b.version, a.version));
+  return found.length ? found[0].dir : '';
+}
+
+function compareVersions(a, b) {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const diff = (a[i] || 0) - (b[i] || 0);
+    if (diff) return diff;
+  }
+  return 0;
+}
+
 function diskFolder(dir) {
   if (typeof dir !== 'string' || !path.isAbsolute(dir)) return [];
   try {
@@ -605,12 +637,15 @@ function themeLabel(theme) {
   A `.san` (or the usertheme.json of a theme SAN unpacked). It carries one of SAN's four themes; it
   paints every state of the preset, like SAN with "sync theme" on.
 */
-function installSanTheme({ file, presetsDir, soundsDir, appVersion = '', duplicate = 'fail', reservedNames = [], takenNames = [] }) {
+function installSanTheme({ file, presetsDir, soundsDir, appVersion = '', duplicate = 'fail', reservedNames = [], takenNames = [], sanImagesDir = findSanImages() }) {
   const read = readSanTheme(file);
   if (!read.ok) return read;
   const theme = read.theme;
   const suffix = SAN_TYPE_SUFFIX.exec(text(theme.userthemedir));
-  const lookupFile = (value) => read.files.get(sanTheme.baseName(value).toLowerCase()) || null;
+  const lookupFile = (value) => {
+    const base = sanTheme.baseName(value);
+    return read.files.get(base.toLowerCase()) || (sanImagesDir && base ? diskRecord(path.join(sanImagesDir, base)) : null);
+  };
   const lookupFolder = (value) => read.folders.get(sanTheme.baseName(value).toLowerCase()) || [];
   const out = installPreset({
     name: themeLabel(theme),
@@ -672,6 +707,7 @@ module.exports = {
   SAN_LIMITS,
   readSanTheme,
   findSanConfig,
+  findSanImages,
   installSanTheme,
   installSanSetup,
 };

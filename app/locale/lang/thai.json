@@ -2700,6 +2700,8 @@
     "achievement": "ความสำเร็จ",
     "achievementUnlocked": "ปลดล็อกความสำเร็จ",
     "congratulations": "ขอแสดงความยินดี!",
+    "gameComplete": "สำเร็จ 100%",
+    "gameCompleteDesc": "คุณปลดล็อกความสำเร็จทั้งหมดแล้ว!",
     "unknownOperation": "การดำเนินการที่ไม่รู้จัก",
     "unknownReward": "รางวัลที่ไม่รู้จัก",
     "trophy": "ถ้วยรางวัล",

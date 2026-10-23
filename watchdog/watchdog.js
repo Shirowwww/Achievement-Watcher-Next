@@ -1559,6 +1559,7 @@ var app = {
                   source: game.source,
                   appid: game.appid,
                   notificationType: 'platinum',
+                  realPlatinum: Boolean(realPlatinum),
                   gameDisplayName: game.name,
                   achievementDisplayName: realPlatinum ? realPlatinum.name : game.name,
                   achievementDescription: realPlatinum ? realPlatinum.description : wdStrings.platinumDesc,

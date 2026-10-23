@@ -2700,6 +2700,8 @@
     "achievement": "Prestasjon",
     "achievementUnlocked": "Prestasjon låst opp",
     "congratulations": "Gratulerer!",
+    "gameComplete": "100 % fullført",
+    "gameCompleteDesc": "Du har låst opp alle prestasjonene!",
     "unknownOperation": "Ukjent operasjon",
     "unknownReward": "Ukjent belønning",
     "trophy": "Trofé",

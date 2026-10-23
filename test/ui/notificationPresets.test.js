@@ -13,7 +13,6 @@ const defaultPresetsRoot = path.join(appRoot, 'presets', 'Default Presets');
 // so only the contract that keeps them loadable is checked.
 const userPresets = [
   ['presets/Users Presets/Xbox Series', /onNotification/],
-  ['presets/Users Presets/Hexagon', /onNotification/],
   ['presets/Users Presets/Pantheon', /onNotification/],
   ['presets/Users Presets/Batman', /onNotification/],
 ];

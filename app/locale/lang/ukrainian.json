@@ -2700,6 +2700,8 @@
     "achievement": "Досягнення",
     "achievementUnlocked": "Досягнення відкрито",
     "congratulations": "Вітаємо!",
+    "gameComplete": "Пройдено на 100%",
+    "gameCompleteDesc": "Ви отримали всі досягнення!",
     "unknownOperation": "Невідома операція",
     "unknownReward": "Невідома нагорода",
     "trophy": "Трофей",

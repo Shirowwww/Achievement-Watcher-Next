@@ -4,7 +4,7 @@
   Presets are arbitrary HTML, so the transparent room around each card is measured by rendering the
   preset offscreen (see util/notificationInsets.js): once per preset version and position, in the
   background after its first popup, stored in <userData>/cfg/presetInsets.json. A preset whose card
-  follows its text (Indiana, PS5 Steam, Slim) is also rendered with each popup's own text first.
+  follows its text (PS5 Steam, Slim) is also rendered with each popup's own text first.
 */
 
 const fs = require('fs');

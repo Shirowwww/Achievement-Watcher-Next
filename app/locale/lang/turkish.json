@@ -2700,6 +2700,8 @@
     "achievement": "Başarım",
     "achievementUnlocked": "Başarım açıldı",
     "congratulations": "Tebrikler!",
+    "gameComplete": "%100 tamamlandı",
+    "gameCompleteDesc": "Tüm başarımların kilidini açtın!",
     "unknownOperation": "Bilinmeyen işlem",
     "unknownReward": "Bilinmeyen ödül",
     "trophy": "Kupa",

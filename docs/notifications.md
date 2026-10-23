@@ -119,7 +119,7 @@ Choose a corner, edge or centered position in the Notification settings. Positio
 against the whole screen, so a bottom anchor sits on the bottom edge, not above the taskbar, and the
 card touches the chosen edges whatever room for shadow or glow its preset leaves around it. AW
 measures each preset once per position, in the background after its first popup, so that first popup
-shows at the old place. A preset whose card follows the length of its text (Indiana, PS5 Steam, Slim)
+shows at the old place. A preset whose card follows the length of its text (PS5 Steam, Slim)
 is measured with each popup, which holds it back about half a second.
 
 **Reposition** moves the custom position, used exactly as you left it; one saved on a monitor that is

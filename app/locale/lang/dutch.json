@@ -2700,6 +2700,8 @@
     "achievement": "Prestatie",
     "achievementUnlocked": "Prestatie ontgrendeld",
     "congratulations": "Gefeliciteerd!",
+    "gameComplete": "100% voltooid",
+    "gameCompleteDesc": "Je hebt alle prestaties ontgrendeld!",
     "unknownOperation": "Onbekende bewerking",
     "unknownReward": "Onbekende beloning",
     "trophy": "Trofee",

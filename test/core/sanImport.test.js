@@ -59,7 +59,7 @@ function fixturePackage(dirs, { manifest = theme(), assets = {} } = {}) {
 }
 
 const install = (dirs, file, extra = {}) =>
-  sanImport.installSanTheme({ file, presetsDir: dirs.presets, soundsDir: dirs.sounds, appVersion: '3.9.2', ...extra });
+  sanImport.installSanTheme({ file, presetsDir: dirs.presets, soundsDir: dirs.sounds, appVersion: '3.9.2', sanImagesDir: '', ...extra });
 
 const presetTheme = (dirs, name) => sanEngine.readEmbeddedTheme(fs.readFileSync(path.join(dirs.presets, name, 'index.html'), 'utf8'));
 const presetManifest = (dirs, name) => JSON.parse(fs.readFileSync(path.join(dirs.presets, name, PRESET_PACKAGE_FILE), 'utf8'));
@@ -602,4 +602,32 @@ test('a rename that stays refused still fails the import cleanly', (t) => {
   assert.equal(out.ok, false);
   assert.match(out.error, /EPERM/);
   assert.deepEqual(fs.readdirSync(dirs.presets), [], 'no staging folder is left behind');
+});
+
+test('a picture SAN ships itself and a .san leaves out comes from the SAN install', (t) => {
+  const dirs = workspace(t);
+  const sanImages = path.join(dirs.root, 'san-img');
+  fs.mkdirSync(sanImages);
+  fs.writeFileSync(path.join(sanImages, 'saniconborder.png'), PNG);
+  const file = fixturePackage(dirs);
+  const missingBorder = (out) => out.report.missing.some((entry) => entry.name === 'saniconborder.png');
+
+  const without = install(dirs, file);
+  assert.ok(without.ok);
+  assert.ok(missingBorder(without), 'no SAN install: reported missing');
+
+  const out = install(dirs, file, { sanImagesDir: sanImages, duplicate: 'auto' });
+  assert.ok(out.ok);
+  assert.ok(!missingBorder(out), 'taken from the SAN install');
+});
+
+test('the SAN install is found under its versioned program folder, newest first', (t) => {
+  const dirs = workspace(t);
+  const img = (version) => path.join(dirs.root, 'Programs', `steamachievementnotifierv${version}`, 'resources', 'img');
+  fs.mkdirSync(img('1.8'), { recursive: true });
+  fs.mkdirSync(img('1.9'), { recursive: true });
+
+  assert.equal(sanImport.findSanImages({ platform: 'win32', env: { LOCALAPPDATA: dirs.root } }), img('1.9'));
+  assert.equal(sanImport.findSanImages({ platform: 'win32', env: { LOCALAPPDATA: path.join(dirs.root, 'none') } }), '');
+  assert.equal(sanImport.findSanImages({ platform: 'linux', env: {} }), '');
 });

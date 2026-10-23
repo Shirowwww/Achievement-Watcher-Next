@@ -21,6 +21,7 @@ const CANONICAL_WINDOW_ARGS = [
   'progressMax',
   'progressPercent',
   'rarityPercent',
+  'realPlatinum',
   'silent',
   'source',
   'trophyGrade',

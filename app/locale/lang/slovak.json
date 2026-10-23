@@ -2700,6 +2700,8 @@
     "achievement": "Úspech",
     "achievementUnlocked": "Úspech odomknutý",
     "congratulations": "Gratulujeme!",
+    "gameComplete": "100 % dokončené",
+    "gameCompleteDesc": "Odomkli ste všetky úspechy!",
     "unknownOperation": "Neznáma operácia",
     "unknownReward": "Neznáma odmena",
     "trophy": "Trofej",

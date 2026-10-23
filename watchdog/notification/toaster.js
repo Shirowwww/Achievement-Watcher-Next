@@ -291,6 +291,8 @@ module.exports = async (message, option = {}) => {
           if (message.hidden === true) overlayArgs.push('--achievementHidden=1');
           // A PlayStation trophy's own grade, which the popup paints instead of a tier from a rate.
           if (/^(?:platinum|gold|silver|bronze)$/.test(String(message.trophyGrade || ''))) overlayArgs.push(`--trophyGrade=${message.trophyGrade}`);
+          // The game's real PlayStation platinum: an imported SAN theme then shows it, not its own 100% card.
+          if (message.realPlatinum === true) overlayArgs.push('--realPlatinum=1');
           // Some notifications (e.g. playtime) must never play the overlay sound.
           if (message.silent) overlayArgs.push('--silent=1');
           // With several displays the popup goes to the game's, not to the one under the cursor.

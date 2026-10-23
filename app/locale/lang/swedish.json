@@ -2700,6 +2700,8 @@
     "achievement": "Prestation",
     "achievementUnlocked": "Prestation upplåst",
     "congratulations": "Grattis!",
+    "gameComplete": "100 % klart",
+    "gameCompleteDesc": "Du har låst upp alla prestationer!",
     "unknownOperation": "Okänd åtgärd",
     "unknownReward": "Okänd belöning",
     "trophy": "Trofé",

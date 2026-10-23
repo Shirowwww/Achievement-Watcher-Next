@@ -56,8 +56,11 @@ const LEGACY_PRESET_ALIASES = {
   // Community presets renamed for what they look like rather than who submitted them.
   ArmsofGod: 'Pantheon',
   'Epic Preset': 'Onyx',
-  'TigerDX Award': 'Hexagon',
+  'TigerDX Award': DEFAULT_PRESET,
   mudoss: 'Outline',
+  // Community presets dropped for their look; nothing close enough replaces them.
+  Hexagon: DEFAULT_PRESET,
+  Indiana: DEFAULT_PRESET,
 };
 
 // The preset a removed bundled name stands in for, or '' when the name is not one of them.

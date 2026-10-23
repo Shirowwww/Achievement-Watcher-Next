@@ -2700,6 +2700,8 @@
     "achievement": "Επίτευγμα",
     "achievementUnlocked": "Ξεκλειδώσατε επίτευγμα",
     "congratulations": "Συγχαρητήρια!",
+    "gameComplete": "Ολοκλήρωση 100%",
+    "gameCompleteDesc": "Ξεκλειδώσατε όλα τα επιτεύγματα!",
     "unknownOperation": "Άγνωστη ενέργεια",
     "unknownReward": "Άγνωστη ανταμοιβή",
     "trophy": "Τρόπαιο",

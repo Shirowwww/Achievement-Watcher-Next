@@ -20,6 +20,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
   handles are wider, so they show even at small sizes.
+- **Fewer, better community presets.** Hexagon and Indiana are gone. If you used one of them, your
+  popups switch to AW Next on their own.
+- **A centred PlayStation mark.** The logo inside the PlayStation preset's ring sat about a pixel low
+  and now reads centred. Its preview in the gallery shows the logo too.
 
 ### Fixed
 
@@ -27,6 +31,14 @@ renamed in 3.9.0 and the history is kept under one file.
   SAN, and a theme's own scale setting was ignored; both now match SAN. Installed SAN presets are
   rebuilt on their own. Importing no longer fails with "EPERM" when an antivirus briefly holds a
   freshly written file.
+- **SAN themes where SAN puts them.** An imported SAN theme now keeps the same 25px from the edges of
+  the screen as in SAN, instead of touching them.
+- **The 100% popup of a SAN theme.** It shows the theme's own 100% picture and SAN's two lines ("100%
+  Complete", "You've unlocked all achievements!") instead of the game's icon and name. When the game
+  has a real PlayStation platinum, the popup shows that trophy: its name, description and icon.
+- **SAN's own pictures in an imported theme.** A `.san` file leaves out the pictures SAN ships with,
+  such as its bronze and silver icon borders, so the import reported them missing. When SAN is
+  installed on the PC, they are now taken from SAN's own folder.
 
 ## 3.12.2 - 2026-10-22
 

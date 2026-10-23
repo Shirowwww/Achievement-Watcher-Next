@@ -2700,6 +2700,8 @@
     "achievement": "도전 과제",
     "achievementUnlocked": "도전 과제 달성",
     "congratulations": "축하합니다!",
+    "gameComplete": "100% 완료",
+    "gameCompleteDesc": "모든 업적을 달성했습니다!",
     "unknownOperation": "알 수 없는 작업",
     "unknownReward": "알 수 없는 보상",
     "trophy": "트로피",

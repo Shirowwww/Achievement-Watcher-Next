@@ -2700,6 +2700,8 @@
     "achievement": "Succès",
     "achievementUnlocked": "Succès débloqué",
     "congratulations": "Félicitations !",
+    "gameComplete": "100 % terminé",
+    "gameCompleteDesc": "Vous avez débloqué tous les succès !",
     "unknownOperation": "Opération inconnue",
     "unknownReward": "Récompense inconnue",
     "trophy": "Trophée",

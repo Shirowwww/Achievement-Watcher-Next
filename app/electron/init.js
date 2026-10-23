@@ -5865,6 +5865,8 @@ function notificationPagePayload(data) {
     // `headerPath` (Game Cover background). Keep them as aliases of our own fields.
     // A platinum trophy is painted like a completion: it is the PlayStation's own 100%.
     isPlatinum: String(data.notificationType || '').toLowerCase() === 'platinum' || notificationTier.tier === 'platinum',
+    // The game's own PlayStation platinum (name, description, icon), not a plain 100%.
+    realPlatinum: data.realPlatinum === true,
     iconPath: data.iconPath || data.icon || '',
     gameIconPath: data.gameIconPath || data.gameIcon || '',
     imagePath: data.imagePath || data.image || '',
@@ -5885,6 +5887,8 @@ function notificationPagePayload(data) {
       unknownOperation: notifStrings.unknownOperation || 'Unknown operation',
       unknownReward: notifStrings.unknownReward || 'Unknown reward',
       congratulations: notifStrings.congratulations || 'Congratulations!',
+      gameComplete: notifStrings.gameComplete || '',
+      gameCompleteDesc: notifStrings.gameCompleteDesc || '',
     },
   };
 }
@@ -5933,11 +5937,15 @@ function createNotificationWindow(data = {}) {
   const profile = edgeAnchored ? presetInsets.get(presetFolder, layer, position) : null;
   if (edgeAnchored && !profile) presetInsets.measureLater(presetFolder, layer, position);
   const room = profile ? data.textInsets || profile.insets : null;
-  const { dx, dy } = notificationInsets.edgeShift(position, room, scale);
+  const pageTier = edgeAnchored ? describeNotificationTier(data) : null;
+  const sanGap = pageTier
+    ? sanEngine.edgeGap(presetFolder, { notificationType: data.notificationType, rarityTier: pageTier.tier, rarityMode: pageTier.mode, unlockRate: data.unlockRate, zoom: scale })
+    : 0;
+  const { dx, dy } = notificationInsets.edgeShift(position, room, scale, sanGap);
   const { width: w, height: h } = placed;
   let x = placed.x + dx;
   let y = placed.y + dy;
-  if (room) {
+  if (room || sanGap) {
     const scaleFactor = notificationDisplayScale(workArea);
     x = notificationInsets.snapToDevicePixel(x, scaleFactor);
     y = notificationInsets.snapToDevicePixel(y, scaleFactor);
@@ -5958,7 +5966,8 @@ function createNotificationWindow(data = {}) {
       w +
       'x' +
       h +
-      (dx || dy ? ` edge-shift=${dx},${dy}` : '')
+      (dx || dy ? ` edge-shift=${dx},${dy}` : '') +
+      (sanGap ? ` san-gap=${sanGap}` : '')
   );
 
   const notif = new BrowserWindow({
@@ -6736,6 +6745,7 @@ async function enqueueNotificationFromArgs(args) {
     hidden: String(args.achievementHidden) === '1',
     trophyGrade: rarityTiers.trophyGrade(args.trophyGrade),
     notificationType,
+    realPlatinum: String(args.realPlatinum) === '1',
     iconPath: primaryIconPath,
     achievementIconPath: iconPath,
     gameIconPath,

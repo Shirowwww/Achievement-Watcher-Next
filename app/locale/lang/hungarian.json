@@ -2700,6 +2700,8 @@
     "achievement": "Teljesítmény",
     "achievementUnlocked": "Teljesítmény feloldva",
     "congratulations": "Gratulálunk!",
+    "gameComplete": "100% teljesítve",
+    "gameCompleteDesc": "Az összes teljesítményt feloldottad!",
     "unknownOperation": "Ismeretlen művelet",
     "unknownReward": "Ismeretlen jutalom",
     "trophy": "Trófea",

@@ -2700,6 +2700,8 @@
     "achievement": "Pencapaian",
     "achievementUnlocked": "Pencapaian Terbuka",
     "congratulations": "Selamat!",
+    "gameComplete": "100% selesai",
+    "gameCompleteDesc": "Kamu telah membuka semua pencapaian!",
     "unknownOperation": "Operasi tidak dikenal",
     "unknownReward": "Hadiah tidak dikenal",
     "trophy": "Trofi",

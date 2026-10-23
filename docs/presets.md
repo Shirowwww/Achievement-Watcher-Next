@@ -50,8 +50,9 @@ the popup is.
 > **AW Next**, `Steam` to **Steam Modern**, `PS4`/`PS5 enhanced` to **PlayStation**,
 > `Xbox 360`/`Xbox One` to **Xbox**, `Game Cover`/`Sunset` to **Cover**, `Clean`/`Modern`/`Smooth Pop` to **Glass**,
 > `Neon Future`/`LAZ0RBOX` to **Arcade**, and the community `ArmsofGod`, `Epic Preset`,
-> `TigerDX Award` and `mudoss` to **Pantheon**, **Onyx**, **Hexagon** and **Outline**. A preset of
-> your own with one of those names is used ahead of the replacement.
+> and `mudoss` to **Pantheon**, **Onyx** and **Outline**. The community **Hexagon** and **Indiana**
+> were removed, and they and `TigerDX Award` fall back to **AW Next**. A preset of your own with one
+> of those names is used ahead of the replacement.
 
 ## Design your own
 

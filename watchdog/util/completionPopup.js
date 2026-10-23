@@ -27,6 +27,7 @@ function platinumPopup(options, unlock) {
     source: unlock.source,
     appid: unlock.appid,
     notificationType: 'platinum',
+    realPlatinum: Boolean(real),
     gameDisplayName: unlock.gameDisplayName,
     achievementDisplayName: real ? real.name : unlock.gameDisplayName,
     achievementDescription: real ? real.description : strings.platinumDesc,

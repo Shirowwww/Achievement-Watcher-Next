@@ -2700,6 +2700,8 @@
     "achievement": "成就",
     "achievementUnlocked": "成就解鎖",
     "congratulations": "恭喜！",
+    "gameComplete": "100% 完成",
+    "gameCompleteDesc": "您已解鎖所有成就！",
     "unknownOperation": "未知的操作",
     "unknownReward": "未知的獎勵",
     "trophy": "獎盃",

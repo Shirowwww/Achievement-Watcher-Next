@@ -47,14 +47,14 @@ test('a live watcher unlock takes the grade and platinum popup of the linked tro
   const unlock = (name) => ({ source: 'Xenia Emulator', appid: '4D5307E6', achievementName: name });
   assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, unlock('1')), { trophyGrade: 'silver', ...unlock('1') });
   assert.deepEqual(psnTrophyLink.withLinkedTrophy(rareMode, unlock('1')), unlock('1'), 'grades stay with the trophy mode');
-  assert.deepEqual(psnTrophyLink.withLinkedTrophy(rareMode, unlock('9')), { notificationType: 'platinum', ...unlock('9') });
+  assert.deepEqual(psnTrophyLink.withLinkedTrophy(rareMode, unlock('9')), { notificationType: 'platinum', realPlatinum: true, ...unlock('9') });
   assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, { ...unlock('9'), trophyGrade: 'gold' }).trophyGrade, 'gold', 'the watcher own grade wins');
   assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, unlock('404')), unlock('404'));
   assert.deepEqual(psnTrophyLink.withLinkedTrophy(trophyMode, { ...unlock('1'), appid: 'none' }), { ...unlock('1'), appid: 'none' });
 });
 
 test('an emulator platinum trophy uses the platinum popup unless it is turned off', () => {
-  assert.deepEqual(platinumFields('P', {}), { notificationType: 'platinum' });
+  assert.deepEqual(platinumFields('P', {}), { notificationType: 'platinum', realPlatinum: true });
   assert.deepEqual(platinumFields('G', {}), {});
   assert.deepEqual(platinumFields('P', { notification: { platinum: false } }), {});
 });

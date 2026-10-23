@@ -123,6 +123,8 @@
     const c = customisation || {};
     const s = strings || {};
     const platinum = info.type === 'plat';
+    // A real PlayStation platinum keeps its own name and description; a plain 100% gets SAN's lines.
+    const sanCompletion = platinum && !info.realPlatinum;
     const game = String(info.gameName || '').trim() || s.gameTitle || '';
     const custom = (slot) => {
       if (!c.usecustomtext) return '';
@@ -131,8 +133,8 @@
     };
     return {
       unlockmsg: custom('unlockmsg') || (platinum ? s.congrats : s.unlocked) || '',
-      title: custom('title') || String(info.title || ''),
-      desc: custom('desc') || String(info.desc || ''),
+      title: custom('title') || (sanCompletion && s.gameComplete) || String(info.title || ''),
+      desc: custom('desc') || (sanCompletion && s.gameCompleteDesc) || String(info.desc || ''),
     };
   }
 
@@ -369,6 +371,9 @@
     let icon = info.icon || '';
     if (c.usecustomimgicon && c.customimgicon) icon = url(c.customimgicon);
     else if (c.usegameicon) icon = (c.gameicontype === 'logo' ? info.gameLogo : info.gameIcon) || info.icon || '';
+    // SAN's completion popup shows the theme's own 100% picture, unless the game has a real platinum.
+    else if (type === 'plat' && !(info.realPlatinum && icon) && c.customicons && typeof c.customicons.plat === 'string' && c.customicons.plat)
+      icon = url(c.customicons.plat);
     for (const img of doc.querySelectorAll('#achicon')) {
       if (icon) img.setAttribute('src', icon);
       else img.removeAttribute('src');

@@ -174,3 +174,44 @@ test('a state is drawn at the scale its theme gives it, text included', { timeou
   assert.ok(Math.abs(double.card - 600) < 1, `the default card is 600px wide at 200%, got ${double.card}`);
   assert.ok(Math.abs(double.text / normal.text - 2) < 0.05, `the text doubles too: ${normal.text} -> ${double.text}`);
 });
+
+test('a completion shows the theme 100% picture, a real PlayStation platinum its own trophy', { timeout: 60000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-plat-'));
+  t.after(async () => {
+    await closeBrowser(browser, userDataDir);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const RIBBON = PNG.replace('ADUlEQVR4', 'ADUlEQVR5');
+  const theme = themeFor('ps5');
+  theme.types.plat.customicons = { plat: RIBBON };
+  sanEngine.writePresetFiles(root, theme, { name: 'plat' });
+
+  const draw = async (extra) => {
+    const page = await browser.newPage();
+    await page.evaluateOnNewDocument(bridge);
+    await page.goto(pathToFileURL(path.join(root, 'index.html')).href, { waitUntil: 'load' });
+    await page.evaluate((d) => window.__aw.show(d), payload({ notificationType: 'platinum', isPlatinum: true, rarityTier: 'platinum', ...extra }));
+    await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
+    const drawn = await page.evaluate(() => ({
+      icon: document.getElementById('achicon').getAttribute('src'),
+      title: document.getElementById('title').textContent,
+      desc: document.getElementById('desc').textContent,
+    }));
+    await page.close();
+    return drawn;
+  };
+  const fallback = { achievementUnlocked: 'Achievement Unlocked', congratulations: 'Congratulations!', gameComplete: '100% Complete', gameCompleteDesc: 'All unlocked' };
+
+  const plain = await draw({ fallback });
+  assert.equal(plain.icon, RIBBON, 'a plain 100% shows the theme picture');
+  assert.equal(plain.title, '100% Complete');
+  assert.equal(plain.desc, 'All unlocked');
+
+  const real = await draw({ fallback, realPlatinum: true, displayName: 'King of the Hill', description: 'Every trophy' });
+  assert.equal(real.icon, PNG, 'a real platinum shows its own trophy icon');
+  assert.equal(real.title, 'King of the Hill');
+  assert.equal(real.desc, 'Every trophy');
+});

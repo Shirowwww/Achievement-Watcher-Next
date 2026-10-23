@@ -2700,6 +2700,8 @@
     "achievement": "Saavutus",
     "achievementUnlocked": "Saavutus avattu",
     "congratulations": "Onnittelut!",
+    "gameComplete": "100% valmis",
+    "gameCompleteDesc": "Olet avannut kaikki saavutukset!",
     "unknownOperation": "Tuntematon toiminto",
     "unknownReward": "Tuntematon palkinto",
     "trophy": "Pokaali",

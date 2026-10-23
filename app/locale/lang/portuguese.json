@@ -2700,6 +2700,8 @@
     "achievement": "Proeza",
     "achievementUnlocked": "Proeza desbloqueada",
     "congratulations": "Parabéns!",
+    "gameComplete": "100% concluído",
+    "gameCompleteDesc": "Desbloqueaste todas as conquistas!",
     "unknownOperation": "Operação desconhecida",
     "unknownReward": "Recompensa desconhecida",
     "trophy": "Troféu",

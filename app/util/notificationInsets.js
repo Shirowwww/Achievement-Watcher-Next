@@ -42,17 +42,22 @@ function mergeInsets(list) {
   return { left: side('left'), top: side('top'), right: side('right'), bottom: side('bottom') };
 }
 
-// Window move, in screen pixels, that brings the painted card onto the edge(s) `position` names.
-function edgeShift(position, insets, zoom = 1) {
+/*
+  Window move, in screen pixels, that brings the painted card onto the edge(s) `position` names, or
+  `gap` pixels inside them (an imported SAN theme sits off the edge, as in SAN).
+*/
+function edgeShift(position, insets, zoom = 1, gap = 0) {
   const shift = { dx: 0, dy: 0 };
-  if (!insets || position === 'custom') return shift;
+  if ((!insets && !gap) || position === 'custom') return shift;
+  const room = insets || {};
   const factor = Number(zoom) > 0 ? Number(zoom) : 1;
   const scaled = (value) => Math.floor((Number(value) || 0) * factor);
+  const inset = Math.max(0, Math.round(Number(gap) || 0));
   const name = String(position || 'center-bottom');
-  if (name.endsWith('-left')) shift.dx = -scaled(insets.left);
-  if (name.endsWith('-right')) shift.dx = scaled(insets.right);
-  if (name.startsWith('top-') || name === 'center-top') shift.dy = -scaled(insets.top);
-  if (name.startsWith('bottom-') || name === 'center-bottom') shift.dy = scaled(insets.bottom);
+  if (name.endsWith('-left')) shift.dx = inset - scaled(room.left);
+  if (name.endsWith('-right')) shift.dx = scaled(room.right) - inset;
+  if (name.startsWith('top-') || name === 'center-top') shift.dy = inset - scaled(room.top);
+  if (name.startsWith('bottom-') || name === 'center-bottom') shift.dy = scaled(room.bottom) - inset;
   return shift;
 }
 

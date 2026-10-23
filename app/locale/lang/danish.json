@@ -2700,6 +2700,8 @@
     "achievement": "Præstation",
     "achievementUnlocked": "Præstation låst op",
     "congratulations": "Tillykke!",
+    "gameComplete": "100% færdig",
+    "gameCompleteDesc": "Du har låst alle præstationer op!",
     "unknownOperation": "Ukendt handling",
     "unknownReward": "Ukendt belønning",
     "trophy": "Trofæ",

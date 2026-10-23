@@ -71,6 +71,13 @@ test('the three lines follow the theme custom text, the game title, and the comp
   const info = { title: 'First Blood', desc: 'Win a match', gameName: 'Quake', type: 'main' };
   assert.deepEqual(engine.textLines({}, info, strings), { unlockmsg: 'Unlocked', title: 'First Blood', desc: 'Win a match' });
   assert.equal(engine.textLines({}, { ...info, type: 'plat' }, strings).unlockmsg, 'Bravo');
+  // SAN's completion popup prints its own two lines, not the achievement that finished the game.
+  const done = { ...strings, gameComplete: '100% Complete', gameCompleteDesc: 'All unlocked' };
+  assert.deepEqual(engine.textLines({}, { ...info, type: 'plat' }, done), { unlockmsg: 'Bravo', title: '100% Complete', desc: 'All unlocked' });
+  assert.equal(engine.textLines({ usecustomtext: true, usegametitledesc: true }, { ...info, type: 'plat' }, done).desc, 'Quake');
+  // The game's real PlayStation platinum keeps its own name and description.
+  const real = { ...info, type: 'plat', realPlatinum: true, title: 'King', desc: 'Every trophy' };
+  assert.deepEqual(engine.textLines({}, real, done), { unlockmsg: 'Bravo', title: 'King', desc: 'Every trophy' });
 
   const custom = { usecustomtext: true, customtextunlockmsg: 'GG', usegametitletitle: true, customtextdesc: '' };
   assert.deepEqual(engine.textLines(custom, info, strings), { unlockmsg: 'GG', title: 'Quake', desc: 'Win a match' });
@@ -294,4 +301,14 @@ test('an installed preset follows the engine it was built with, and nothing else
   assert.equal(sanEngine.refreshPreset(plain), false);
   assert.equal(sanEngine.isSanPreset(plain), false);
   assert.equal(sanEngine.refreshPreset(path.join(plain, 'absent')), false);
+});
+
+test('a SAN card sits 25px off the screen edges, as SAN places it', (t) => {
+  const dir = scratch(t);
+  sanEngine.writePresetFiles(dir, sampleTheme({ main: { preset: 'ps5', scale: 200 }, plat: { preset: 'ps4', scale: 150 } }), { name: 'gap' });
+  // A card with an offset keeps 25px whatever its scale or AW Next's size.
+  assert.equal(sanEngine.edgeGap(dir, { zoom: 2 }), 25);
+  // ps4 has no offset: the glow room stays, so the gap grows with the theme scale and the size.
+  assert.equal(sanEngine.edgeGap(dir, { notificationType: 'platinum', zoom: 2 }), 75);
+  assert.equal(sanEngine.edgeGap(scratch(t)), 0, 'not a SAN preset');
 });

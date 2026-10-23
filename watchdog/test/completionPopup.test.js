@@ -85,6 +85,15 @@ test('a linked PlayStation platinum gives its real name, description and icon', 
   assert.equal(sent[1].achievementDisplayName, 'Roi');
   assert.equal(sent[1].achievementDescription, 'Tout fait');
   assert.equal(sent[1].icon, 'https://img/p.png');
+  // A theme that draws its own 100% picture steps aside for the real trophy.
+  assert.equal(sent[1].realPlatinum, true);
+});
+
+test('a completion with no PlayStation list is not marked as a real platinum', async () => {
+  const { sent, notify } = wrapped();
+  await notify(unlock('G8', { unlocked: 1, total: 1 }));
+  assert.equal(sent[1].notificationType, 'platinum');
+  assert.equal(sent[1].realPlatinum, false);
 });
 
 test('a list whose own trophy is the platinum gives no second popup', async () => {

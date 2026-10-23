@@ -109,6 +109,7 @@
           gameName: data.gameName,
           percent: rate,
           hidden: data.hidden === true,
+          realPlatinum: data.realPlatinum === true,
         },
         thresholds: theme.thresholds,
         showpercent: theme.showpercent,
@@ -117,6 +118,8 @@
         strings: {
           unlocked: strings.achievementUnlocked || 'Achievement unlocked',
           congrats: strings.congratulations || 'Congratulations!',
+          gameComplete: strings.gameComplete || '100% Complete',
+          gameCompleteDesc: strings.gameCompleteDesc || "You've unlocked all achievements!",
           gameTitle: strings.gameTitle || 'Game Title',
         },
         url: assetUrl,
