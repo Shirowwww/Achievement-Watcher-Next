@@ -127,6 +127,7 @@ const steamLanguageList = require(path.join(appPath, 'locale/steam.json'));
 schemaLanguage.setUserDataPath(getUserDataPath());
 const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
+const coverFit = require(path.join(appPath, 'util/coverFit.js'));
 const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
 const backgroundStore = require(path.join(appPath, 'util/backgroundStore.js'));
@@ -1615,76 +1616,227 @@ function paintTilePlaytime(appid) {
   row.find('.library-scroll-content').text(shown);
 }
 
-// The days, hours and minutes fields, built in the order the dialog shows them.
-function playtimeFields(current, onChange) {
-  const row = document.createElement('div');
-  row.className = 'aw-playtime-fields';
-  const inputs = {};
-  for (const [field, unit] of [['days', 'day'], ['hours', 'hour'], ['minutes', 'minute']]) {
-    const label = document.createElement('label');
-    label.className = 'aw-playtime-field';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.inputMode = 'numeric';
-    input.maxLength = 7;
-    input.className = 'aw-prompt-input';
-    input.value = String(current[field]);
-    input.addEventListener('input', () => {
-      input.value = input.value.replace(/\D+/g, '');
-      onChange();
-    });
-    input.addEventListener('focus', () => input.select());
-    const name = document.createElement('span');
-    name.className = 'aw-playtime-unit';
-    name.textContent = intlFormat.unitName(unit, uiLang());
-    label.append(input, name);
-    row.append(label);
-    inputs[field] = input;
-  }
-  return { row, inputs };
+const PLAYTIME_REPEAT_DELAY_MS = 380;
+const PLAYTIME_REPEAT_EVERY_MS = 70;
+const PLAYTIME_ROLL_MS = 160;
+const PLAYTIME_PAGE_STEP = 10;
+const PLAYTIME_KEY_STEPS = Object.freeze({ ArrowUp: 1, ArrowDown: -1, PageUp: PLAYTIME_PAGE_STEP, PageDown: -PLAYTIME_PAGE_STEP });
+
+// A changed number slides in from the side it counts towards, inside its own box: up when it grew.
+function rollPlaytimeDigit(input, direction) {
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const from = still ? { opacity: 0.35 } : { opacity: 0.25, transform: `translateY(${direction > 0 ? 55 : -55}%)` };
+  input.getAnimations().forEach((animation) => animation.cancel());
+  input.animate([from, { opacity: 1, transform: 'none' }], { duration: PLAYTIME_ROLL_MS, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
 }
 
-// "Edit playtime…": the cover picker's frame around three fields, with the total read back below
-// them in the library's own wording. Save stays disabled while the total cannot be stored.
+// Press and hold: one step at once, then a steady repeat. Keyboard activation is a single step.
+function holdToRepeat(button, action) {
+  let delay = null;
+  let repeat = null;
+  const stop = () => {
+    clearTimeout(delay);
+    clearInterval(repeat);
+  };
+  button.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    action(true);
+    delay = setTimeout(() => {
+      repeat = setInterval(() => action(false), PLAYTIME_REPEAT_EVERY_MS);
+    }, PLAYTIME_REPEAT_DELAY_MS);
+  });
+  for (const type of ['pointerup', 'pointerleave', 'pointercancel']) button.addEventListener(type, stop);
+  button.addEventListener('click', (event) => {
+    if (event.detail === 0) action(false);
+  });
+}
+
+function playtimeStepButton(sign, unitName) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'aw-playtime-step';
+  button.tabIndex = -1;
+  button.setAttribute('aria-label', `${sign > 0 ? t('playtime-increase', 'Increase', 'Augmenter') : t('playtime-decrease', 'Decrease', 'Diminuer')} (${unitName})`);
+  button.innerHTML = `<i class="fas fa-${sign > 0 ? 'plus' : 'minus'}" aria-hidden="true"></i>`;
+  return button;
+}
+
+// One field: - / number / +. The wheel and the arrow keys step it too, carrying into the next unit.
+function playtimeField(field, unit, value, { onType, onStep }) {
+  const unitName = intlFormat.unitName(unit, uiLang());
+  const label = document.createElement('label');
+  label.className = 'aw-playtime-field';
+  const box = document.createElement('div');
+  box.className = 'aw-playtime-box';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.inputMode = 'numeric';
+  input.maxLength = 7;
+  input.className = 'aw-playtime-input';
+  input.value = String(value);
+  input.setAttribute('aria-label', unitName);
+  const minus = playtimeStepButton(-1, unitName);
+  const plus = playtimeStepButton(1, unitName);
+  box.append(minus, input, plus);
+  const name = document.createElement('span');
+  name.className = 'aw-playtime-unit';
+  name.textContent = unitName;
+  label.append(box, name);
+
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D+/g, '');
+    onType();
+  });
+  input.addEventListener('focus', () => input.select());
+  input.addEventListener('keydown', (event) => {
+    const steps = PLAYTIME_KEY_STEPS;
+    if (!(event.key in steps)) return;
+    event.preventDefault();
+    onStep(field, steps[event.key], false);
+  });
+  box.addEventListener(
+    'wheel',
+    (event) => {
+      if (!event.deltaY) return;
+      event.preventDefault();
+      onStep(field, event.deltaY < 0 ? 1 : -1, true);
+    },
+    { passive: false }
+  );
+  holdToRepeat(minus, (first) => onStep(field, -1, first));
+  holdToRepeat(plus, (first) => onStep(field, 1, first));
+  return { label, input };
+}
+
+// The "before -> after" line under the fields; the difference is shown once there is one.
+function playtimeDiffLine() {
+  const line = document.createElement('div');
+  line.className = 'aw-playtime-diff';
+  line.setAttribute('aria-live', 'polite');
+  line.innerHTML =
+    '<i class="fas fa-stopwatch" aria-hidden="true"></i><span class="was"></span><i class="fas fa-arrow-right arrow" aria-hidden="true"></i><span class="now"></span><span class="delta"></span>';
+  const [was, now, delta] = ['.was', '.now', '.delta'].map((selector) => line.querySelector(selector));
+  // The short form ("4 h 40 min") keeps before, after and the difference on one line.
+  const units = ['days', 'hours', 'minutes'];
+  const short = (seconds) => intlFormat.formatDuration(seconds, uiLang(), { units, style: 'short' }) || formatPlaytime(seconds, { units });
+  const shortDuration = (seconds) => short(seconds) || `0 ${intlFormat.unitName('minute', uiLang())}`;
+  const paint = (original, seconds) => {
+    line.classList.toggle('is-invalid', seconds === null);
+    if (seconds === null) {
+      now.textContent = t('edit-playtime-invalid', 'This is not a playtime AW Next can read.', 'Ce temps de jeu n’est pas lisible par AW Next.');
+      line.classList.remove('is-changed');
+      return;
+    }
+    const change = seconds - original;
+    line.classList.toggle('is-changed', change !== 0);
+    line.classList.toggle('is-down', change < 0);
+    was.textContent = shortDuration(original);
+    now.textContent = shortDuration(seconds);
+    delta.textContent = change ? `${change > 0 ? '+' : '-'}${short(Math.abs(change))}` : '';
+  };
+  return { line, paint };
+}
+
+function playtimeChip(icon, text, className = '') {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = `aw-chip ${className}`.trim();
+  chip.innerHTML = `<i class="fas fa-${icon}" aria-hidden="true"></i> `;
+  chip.append(text);
+  return chip;
+}
+
+function playtimeActions() {
+  const actions = document.createElement('div');
+  actions.className = 'aw-prompt-actions';
+  const hint = document.createElement('span');
+  hint.className = 'aw-prompt-hint';
+  hint.innerHTML = '<i class="fas fa-mouse" aria-hidden="true"></i> ';
+  hint.append(t('playtime-hint', 'Wheel or arrow keys to adjust', 'Molette ou flèches pour ajuster'));
+  const cancel = document.createElement('button');
+  cancel.className = 'aw-prompt-button secondary';
+  cancel.textContent = t('cancel', 'Cancel', 'Annuler');
+  const save = document.createElement('button');
+  save.className = 'aw-prompt-button primary';
+  save.textContent = t('confirm', 'Confirm', 'Valider');
+  actions.append(hint, cancel, save);
+  return { actions, cancel, save };
+}
+
+async function savePlaytime(appid, seconds) {
+  try {
+    await PlaytimeTracking.setTotal(appid, seconds);
+  } catch (err) {
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'error',
+      title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+      message: t('edit-playtime-failed', 'Could not save the playtime.', 'Impossible d’enregistrer le temps de jeu.'),
+      detail: `${err}`,
+    });
+    return;
+  }
+  paintTilePlaytime(appid);
+}
+
+// "Edit playtime…": the game's band over three stepped fields, the change read back below them.
 function editPlaytime(appid, name) {
   return new Promise((resolve) => {
+    const game = gameList.find((entry) => String(entry.appid) === String(appid));
+    const original = playtimeInput.splitPlaytime(PlaytimeTracking.readSync(appid).playtime);
+    const originalSeconds = playtimeInput.joinPlaytime(original);
+    const title = t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…').replace(/\s*(?:…|\.\.\.)$/, '');
     const overlay = document.createElement('div');
     overlay.className = 'aw-prompt-overlay';
     const box = document.createElement('div');
-    box.className = 'aw-prompt aw-playtime-editor';
+    box.className = 'aw-prompt has-band aw-playtime-editor';
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-modal', 'true');
-    const title = t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…').replace(/\s*(?:…|\.\.\.)$/, '');
     box.setAttribute('aria-label', title);
-    const total = document.createElement('div');
-    total.className = 'aw-playtime-total';
-    total.setAttribute('aria-live', 'polite');
-    const actions = document.createElement('div');
-    actions.className = 'aw-prompt-actions';
-    const cancel = document.createElement('button');
-    cancel.className = 'aw-prompt-button secondary';
-    cancel.textContent = t('cancel', 'Cancel', 'Annuler');
-    const save = document.createElement('button');
-    save.className = 'aw-prompt-button primary';
-    save.textContent = t('confirm', 'Confirm', 'Valider');
-    actions.append(cancel, save);
 
-    const values = () => Object.fromEntries(Object.entries(fields.inputs).map(([key, input]) => [key, input.value]));
+    const inputs = {};
+    const values = () => Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value]));
+    const diff = playtimeDiffLine();
+    const restore = playtimeChip('undo', t('playtime-restore', 'Original value', "Valeur d'origine"));
+    const reset = playtimeChip('eraser', t('playtime-reset', 'Reset to zero', 'Remettre à zéro'), 'is-danger');
+    const { actions, cancel, save } = playtimeActions();
     const refresh = () => {
       const seconds = playtimeInput.joinPlaytime(values());
       save.disabled = seconds === null;
-      total.classList.toggle('is-invalid', seconds === null);
-      total.textContent =
-        seconds === null
-          ? t('edit-playtime-invalid', 'This is not a playtime AW Next can read.', 'Ce temps de jeu n’est pas lisible par AW Next.')
-          : formatPlaytime(seconds, { units: ['days', 'hours', 'minutes'] }) || `0 ${intlFormat.unitName('minute', uiLang())}`;
+      restore.disabled = seconds === originalSeconds;
+      reset.disabled = seconds === 0;
+      diff.paint(originalSeconds, seconds);
     };
-    const fields = playtimeFields(playtimeInput.splitPlaytime(PlaytimeTracking.readSync(appid).playtime), refresh);
-    box.append(pickerHeading('fa-stopwatch', title, name), fields.row, total, actions);
+    const show = (parts, direction, animate) => {
+      for (const [field, input] of Object.entries(inputs)) {
+        const next = String(parts[field]);
+        if (input.value === next) continue;
+        input.value = next;
+        if (animate) rollPlaytimeDigit(input, direction);
+      }
+      refresh();
+    };
+    const step = (field, delta, animate) => show(playtimeInput.stepPlaytime(values(), field, delta), delta, animate);
+
+    const row = document.createElement('div');
+    row.className = 'aw-playtime-fields';
+    for (const [field, unit] of [['days', 'day'], ['hours', 'hour'], ['minutes', 'minute']]) {
+      const made = playtimeField(field, unit, original[field], { onType: refresh, onStep: step });
+      inputs[field] = made.input;
+      row.append(made.label);
+    }
+    restore.onclick = () => show(original, Math.sign(originalSeconds - (playtimeInput.joinPlaytime(values()) ?? 0)), true);
+    reset.onclick = () => show({ days: 0, hours: 0, minutes: 0 }, -1, true);
+    const chips = document.createElement('div');
+    chips.className = 'aw-chip-row';
+    chips.append(restore, reset);
+    const body = document.createElement('div');
+    body.className = 'aw-dialog-body';
+    body.append(row, diff.line, chips);
+    box.append(gameDialogBand({ glyph: 'fa-stopwatch', title, subtitle: name, game, appid }), body, actions);
     overlay.append(box);
     document.body.append(overlay);
     refresh();
-    fields.inputs.hours.focus();
+    inputs.hours.focus();
 
     let answered = false;
     const close = () => {
@@ -1696,28 +1848,17 @@ function editPlaytime(appid, name) {
     cancel.onclick = () => {
       if (!answered) close();
     };
-    save.onclick = async () => {
+    save.onclick = () => {
       const seconds = playtimeInput.joinPlaytime(values());
       if (answered || seconds === null) return;
       close();
-      try {
-        await PlaytimeTracking.setTotal(appid, seconds);
-      } catch (err) {
-        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-          type: 'error',
-          title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
-          message: t('edit-playtime-failed', 'Could not save the playtime.', 'Impossible d’enregistrer le temps de jeu.'),
-          detail: `${err}`,
-        });
-        return;
-      }
-      paintTilePlaytime(appid);
+      savePlaytime(appid, seconds);
     };
     overlay.onmousedown = (ev) => {
       if (ev.target === overlay) cancel.click();
     };
     box.onkeydown = (ev) => {
-      if (ev.key === 'Enter') save.click();
+      if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') save.click();
       else if (ev.key === 'Escape') cancel.click();
     };
   });
@@ -1989,6 +2130,23 @@ let coverOverrides = coverStore.readAll();
 function reloadCoverOverrides() {
   coverOverrides = coverStore.readAll();
 }
+// Fill / whole / stretch per tile (cfg/coverFit.json), snapshotted for the same reason.
+let coverFits = coverFit.readAll();
+function reloadCoverFits() {
+  coverFits = coverFit.readAll();
+}
+function coverFitFor(appid, orientation) {
+  const fit = (coverFits[String(appid)] || {})[orientation];
+  return coverFit.FITS.includes(fit) ? fit : coverFit.DEFAULT_FIT;
+}
+// "Whole" draws the picture again over a blurred copy of the tile's own background (app.css).
+function applyCoverFit(headerEl, appid, orientation) {
+  const element = headerEl && headerEl[0];
+  if (!element) return;
+  const fit = coverFitFor(appid, orientation);
+  headerEl.toggleClass('cover-fit-contain', fit === 'contain').toggleClass('cover-fit-stretch', fit === 'stretch');
+  element.style.setProperty('--cover-url', fit === 'contain' ? element.style.backgroundImage || 'none' : '');
+}
 // `orientation` ('portrait' | 'landscape') selects between independently-set covers; omitted, this
 // falls back to whatever legacy single value is on record (applies to every orientation).
 function coverOverrideFor(appid, orientation) {
@@ -2108,6 +2266,16 @@ function localGameIconUrls(game) {
     debug.warn(`[icon] local game icon lookup failed => ${err.message || err}`);
     return [];
   }
+}
+
+const XBOX_SOURCES = new Set(['Xenia Emulator', 'XLiveLessNess', 'Xbox 360 Recomp']);
+
+// The console a game comes from, whose logo its header icon shows while it has no icon of its own.
+function gameBrand(game) {
+  if (!game) return '';
+  if (game.system === 'playstation') return 'playstation';
+  if (XBOX_SOURCES.has(game.source)) return 'xbox';
+  return '';
 }
 
 // Paints the square logo, in order: user's own pick, host notification square logo (community set
@@ -2423,6 +2591,33 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
   return coverRecoveryCache.get(key);
 }
 
+/*
+  Emulators and PC ports have no Steam store page: their art is what the source extracted, then
+  SteamGridDB by name. A header that is only the game's icon (a PC port's first achievement) is not
+  a cover, and a portrait tile takes the extracted landscape art only when nothing else exists.
+*/
+async function loadLocalSourceCover(game, headerEl, portrait, force, generation, retry) {
+  const image = game.img || {};
+  const header = image.header && image.header !== image.icon ? image.header : null;
+  const paint = (url, ownShape) => {
+    headerEl.toggleClass('portrait-fallback', portrait && !ownShape).toggleClass('glow', ownShape).css('background', cssUrl(url));
+    setLibraryArtworkFeedback(headerEl, 'clear');
+  };
+  const own = portrait ? image.portrait : header;
+  if (own) return paint(own, true);
+  const recovered = await recoverLibraryCover(game, portrait ? 'portrait' : 'landscape', { force });
+  if (generation !== artworkLoadGeneration || !headerEl[0]?.isConnected) return;
+  if (recovered.path) {
+    if (portrait) image.portrait = recovered.source || recovered.path;
+    else image.header = recovered.source || recovered.path;
+    return paint(recovered.path, true);
+  }
+  const fallback = portrait ? header || image.header : image.portrait || image.header;
+  if (fallback) return paint(fallback, false);
+  headerEl.removeClass('glow').css('background', 'none');
+  setLibraryArtworkFeedback(headerEl, recovered.reason === 'failed' ? 'failed' : 'missing', retry);
+}
+
 // The glossy sweep belongs on a cover of the tile's own shape only: stretched over a cross-shape
 // fallback it reads as a smear, not a highlight.
 function hasOwnShapeCover(image, portrait) {
@@ -2483,13 +2678,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
       }
     }
     if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
-      if (image.header) {
-        headerEl.toggleClass('glow', !portrait).css('background', cssUrl(image.header));
-        setLibraryArtworkFeedback(headerEl, 'clear');
-      } else {
-        headerEl.removeClass('glow').css('background', 'none');
-        setLibraryArtworkFeedback(headerEl, 'missing', () => load(true));
-      }
+      await loadLocalSourceCover(game, headerEl, portrait, force, generation, () => load(true));
       return;
     }
 
@@ -2549,7 +2738,9 @@ function scheduleLibraryCover(game, headerEl, portrait) {
   };
 
   libraryArtwork.schedule(headerEl[0], () =>
-    load(false).catch((err) => {
+    load(false)
+      .then(() => applyCoverFit(headerEl, game.appid, portrait ? 'portrait' : 'landscape'))
+      .catch((err) => {
       if (!headerEl[0]?.isConnected) return;
       debug.warn(`[cover] artwork load failed for ${game.appid} => ${err.message || err}`);
       setLibraryArtworkFeedback(headerEl, 'failed', () => load(true));
@@ -3790,6 +3981,34 @@ async function takenExePaths(appid) {
 }
 
 let gameConfigFocusReturn = null;
+
+// Game Health's title band, painted like the other game dialogs' (ui/artworkPicker.js): the game's
+// hero art behind its own icon, the tile's cover only while nothing better arrives. The panel is
+// reused from game to game, so a late answer checks the panel still shows the game it was asked for.
+function paintGameConfigBand(game, appid, tileCover) {
+  const panel = document.getElementById('game-config');
+  const icon = document.getElementById('game-config-icon');
+  panel.dataset.bandFor = String(appid);
+  panel.style.setProperty('--gc-cover', tileCover || 'none');
+  icon.classList.remove('has-icon');
+  icon.style.removeProperty('--band-icon');
+  if (!game) return;
+  const stillShown = () => panel.dataset.bandFor === String(appid);
+  bandHeroArt(game, appid)
+    .then((hero) => {
+      if (hero && stillShown()) panel.style.setProperty('--gc-cover', cssUrl(imageDisplayUrl(hero)));
+    })
+    .catch((err) => debug.warn(`[game-config] band artwork failed => ${err}`));
+  const iconSource = gameIconOverrideFor(appid) || (game.img && game.img.icon);
+  if (!iconSource) return;
+  resolvePickerPreview(iconSource, String(game.steamappid || appid))
+    .then((url) => {
+      if (!url || !stillShown()) return;
+      icon.style.setProperty('--band-icon', cssUrl(url));
+      icon.classList.add('has-icon');
+    })
+    .catch((err) => debug.warn(`[game-config] band icon failed => ${err}`));
+}
 
 var app = {
   args: getArgs(remote.process.argv),
@@ -7085,13 +7304,15 @@ var app = {
       // one covers the time before it is built.
       const stylized = customBackground ? null : stylizedArtwork.existingStylizedBackground(getUserDataPath(), game.appid, game.img.background);
       const pageBackground = () => (stylized ? Promise.resolve(stylized) : ipcRenderer.invoke('fetch-icon', game.img.background, game.steamappid || game.appid));
+      const ownBackground = () => (game.img.background ? pageBackground() : Promise.resolve(null));
+      const steamPage = isSteamPageBackground(game.img.background);
       const background = customBackground
         ? Promise.resolve(customBackground)
-        : !game.img.background
-        ? coverArt()
-        : isSteamPageBackground(game.img.background)
-        ? steamHeroBackground(game).then((hero) => hero || pageBackground())
-        : pageBackground().then((art) => art || coverArt());
+        : bandHeroArt(game, game.appid)
+            .catch(() => null)
+            .then((hero) => hero || (steamPage ? null : ownBackground()))
+            .then((art) => art || coverArt())
+            .then((art) => art || (steamPage ? ownBackground() : null));
       background.then((localPath) => {
         // This fetch can outlive the page that asked for it: going back before it resolved used to
         // repaint the *home* screen. The header's data-appid only exists while that page is on screen, so it doubles as the freshness check.
@@ -7133,6 +7354,8 @@ var app = {
       } else {
         $('#achievement .wrapper > .header').removeAttr('data-system');
       }
+      if (gameBrand(game)) $('#achievement .wrapper > .header').attr('data-brand', gameBrand(game));
+      else $('#achievement .wrapper > .header').removeAttr('data-brand');
 
       // The header box is square; Steam's clienticon (32x32, blurry) is often missing entirely for
       // new releases, so this asks the host for the same square logo a notification uses (community set, then cropped artwork).
@@ -7946,9 +8169,7 @@ var app = {
     // The panel covers several tabs now, so it is titled after the game rather than after one of them.
     const named = gameList.find((g) => g.appid == appid);
     $('#game-config-title').text(named?.name || t('game-config-title', 'Executable configuration', "Configuration de l'exécutable"));
-    // The title band wears the same artwork as the tile that opened the panel.
-    const tileCover = self.closest('.game-box').find('.header.glow').css('background-image');
-    gameConfig[0].style.setProperty('--gc-cover', tileCover || 'none');
+    paintGameConfigBand(named, appid, self.closest('.game-box').find('.header.glow').css('background-image'));
     applyGameConfigTabLabels();
     // Health opens first: it answers "is this game ready" without the user knowing which tab to
     // look in. The executable configuration is one click away and still loads below either way.
@@ -8250,81 +8471,300 @@ var app = {
       });
 
       // Manual library entries are first-class launch/playtime records even when no achievement
-      // provider supports the game. Metadata and artwork are resolved during the normal scan.
+      // provider supports the game. Picking the executable asks the library's own readers what it is
+      // (util/manualGameDetect.js), so the dialog says whether its achievements will follow.
+      const manualGameDetect = require(path.join(appPath, 'util/manualGameDetect.js'));
+      const manualSteam = require(path.join(appPath, 'parser/steam.js'));
+      const MANUAL_DETECT_SOURCES = { steamEmu: true, rpcs3: true, shadps4: true, kytyps5: true, xenia: true, xlln: true, markerpatch: true, madnesspatch: true, pcports: true, socialClub: true, ps4recomp: true };
+      const manualDialog = $('#manual-game');
+      const manualPicker = $('#manual-game-pick-exe');
       let manualExe = '';
-      const closeManualGame = () => {
-        $('#manual-game').attr('aria-hidden', 'true').hide();
-        manualExe = '';
-        $('#add-game-manually').trigger('focus');
-      };
+      let manualFound = null;
+      let manualView = null;
+      let manualAutoAppid = '';
+      let manualAutoName = '';
       const addManualGameLabel = t('add-game-manually', 'Add game manually', 'Ajouter un jeu manuellement');
       const manualGameNameLabel = t('manual-game-name', 'Game name', 'Nom du jeu');
       const manualGameAppidLabel = t('manual-game-appid-optional', 'Steam AppID (optional)', 'AppID Steam (facultatif)');
-      $('#add-game-manually span, #manual-game-title').text(addManualGameLabel);
+      const manualAddLabel = t('blacklist-add-button', 'Add', 'Ajouter');
+      const manualFollowLabel = t('manual-game-follow-folder', 'Follow this folder', 'Suivre ce dossier');
+      const manualEmptyHint = t('manual-game-subtitle-empty', 'Pick its executable, AW Next recognises the rest', "Choisis son exécutable, AW Next reconnaît le reste");
+      $('#add-game-manually span').text(addManualGameLabel);
       $('#add-game-manually').attr({ title: addManualGameLabel, 'aria-label': addManualGameLabel });
       $('#manual-game-name-label').text(manualGameNameLabel);
       const pickExeLabel = t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu");
-      $('#manual-game-exe-label, #manual-game-pick-exe .manual-exe-action').text(pickExeLabel);
+      const dropExeLabel = t('manual-game-drop', 'Drop the executable here', "Glisse l'exécutable ici");
+      $('#manual-game-exe-label').text(pickExeLabel);
       $('#manual-game-platform-label').text(t('manual-game-platform', 'Platform', 'Plateforme'));
       $('#manual-game-platform-other').text(t('manual-game-platform-other', 'Other', 'Autre'));
       $('#manual-game-appid-label').text(manualGameAppidLabel);
-      $('#manual-game-note').html(`<i class="fas fa-info-circle"></i> ${escapeHtml(t('manual-game-note', 'Launches and playtime are tracked, without achievements.', 'Lancements et temps de jeu suivis, sans succès.'))}`);
+      $('#manual-game-appid-hint').html(`<i class="fas fa-check" aria-hidden="true"></i> ${escapeHtml(t('manual-game-appid-detected', 'detected', 'détecté'))}`);
       $('#manual-game-cancel').text(t('cancel', 'Cancel', 'Annuler'));
-      $('#manual-game-save').text(t('blacklist-add-button', 'Add', 'Ajouter'));
+
+      const setManualBandImage = (selector, property, url) => {
+        const el = $(selector).toggleClass(property === '--mg-art' ? 'has-art' : 'has-icon', !!url);
+        if (url) el[0].style.setProperty(property, cssUrl(url));
+        else el[0].style.removeProperty(property);
+        return el;
+      };
+      const renderManualChecks = (checks, fresh) => {
+        const list = $('#manual-game-checks');
+        list.children('li').each((index, li) => {
+          const check = checks[index];
+          $(li).attr('data-state', check.state);
+          $(li).children('i').attr('class', check.icon);
+          $(li).find('small').text(check.label);
+          $(li).find('b').text(check.value).attr('title', check.value);
+        });
+        // Restarting the animation is what makes a new verdict arrive the way Game Health's checks do.
+        list.removeClass('is-fresh');
+        if (fresh) {
+          void list[0].offsetWidth;
+          list.addClass('is-fresh');
+        }
+      };
+      const pendingManualChecks = () => {
+        const pending = t('manual-game-pending', 'To detect', 'À détecter');
+        const card = (label) => ({ state: 'pending', icon: 'far fa-circle', label, value: pending });
+        return [
+          card(t('manual-game-check-emulator', 'Emulator', 'Émulateur')),
+          card(t('manual-game-check-appid', 'Steam AppID', 'AppID Steam')),
+          card(t('manual-game-check-achievements', 'Achievements', 'Succès')),
+          { ...card(t('manual-game-check-playtime', 'Playtime', 'Temps de jeu')), value: t('manual-game-playtime-tracked', 'Tracked when it runs', 'Suivi au lancement') },
+        ];
+      };
+      const setManualVerdict = (verdict) => {
+        const chip = $('#manual-game-verdict');
+        if (!verdict) return chip.prop('hidden', true).empty();
+        return chip
+          .attr('class', `manual-game-verdict is-${verdict.tone}`)
+          .html(`<i class="${verdict.icon}" aria-hidden="true"></i> ${escapeHtml(verdict.text)}`)
+          .prop('hidden', false);
+      };
+      const setManualNote = (text) => {
+        $('#manual-game-note')
+          .html(text ? `<i class="fas fa-info-circle" aria-hidden="true"></i> ${escapeHtml(text)}` : '')
+          .toggle(!!text);
+      };
+      const syncManualTitle = () => $('#manual-game-title').text((manualExe && $('#manual-game-name').val().trim()) || addManualGameLabel);
+      const syncManualAppidHint = () => $('#manual-game-appid-hint').prop('hidden', !manualAutoAppid || $('#manual-game-appid').val().trim() !== manualAutoAppid);
       // Add stays off until there is something to add, so the form says what it still needs.
-      const syncManualSave = () => $('#manual-game-save').prop('disabled', !manualExe || !$('#manual-game-name').val().trim());
-      $('#manual-game-name').on('input', syncManualSave);
-      $('#add-game-manually').on('click', () => {
+      const syncManualSave = () => {
+        const following = manualView && manualView.route === 'folder';
+        const ready = !!manualExe && (following ? manualView.canAdd : !!$('#manual-game-name').val().trim());
+        $('#manual-game-save').prop('disabled', !ready).text(following ? manualFollowLabel : manualAddLabel);
+      };
+
+      const resetManualGame = () => {
         manualExe = '';
-        $('#manual-game-name, #manual-game-appid').val('');
-        $('#manual-game-platform').val('PC');
-        $('#manual-game-exe-path').text('').removeAttr('title');
-        $('#manual-game-pick-exe').removeClass('has-file');
-        $('#manual-game-pick-exe .manual-exe-action').text(pickExeLabel);
-        $('#manual-game-pick-exe .manual-exe-icon').removeClass('has-icon').css('background-image', '');
+        manualFound = null;
+        manualView = null;
+        manualAutoAppid = '';
+        manualAutoName = '';
+        $('#manual-game-name, #manual-game-appid').val('').prop('disabled', false);
+        $('#manual-game-platform').val('PC').prop('disabled', false);
+        $('#manual-game-exe-path').text(t('manual-game-drop-hint', 'or click to choose it', 'ou clique pour le choisir')).removeAttr('title');
+        manualPicker.removeClass('has-file is-drop-target');
+        manualPicker.find('.manual-exe-action').text(dropExeLabel);
+        manualPicker.find('.manual-exe-change').text('');
+        manualPicker.find('.manual-exe-icon').removeClass('has-icon fa-file').addClass('fa-file-import').css('background-image', '');
+        setManualBandImage('#manual-game .manual-game-band', '--mg-art', '');
+        setManualBandImage('#manual-game .manual-game-band-icon', '--mg-icon', '').removeClass('is-exe-icon');
+        $('#manual-game-subtitle').text(manualEmptyHint);
+        $('#manual-game-appid-hint').prop('hidden', true);
+        renderManualChecks(pendingManualChecks(), false);
+        setManualVerdict(null);
+        setManualNote('');
+        syncManualTitle();
         syncManualSave();
-        $('#manual-game').attr('aria-hidden', 'false').show();
-        setTimeout(() => $('#manual-game-pick-exe').trigger('focus'), 0);
+      };
+      const closeManualGame = () => {
+        if (manualDialog.attr('aria-hidden') === 'true') return;
+        manualExe = '';
+        // The dialog plays its opening backwards before it is hidden (app.css .simple-modal.is-closing).
+        manualDialog.attr('aria-hidden', 'true').addClass('is-closing');
+        setTimeout(() => {
+          if (manualDialog.attr('aria-hidden') === 'true') manualDialog.removeClass('is-closing').hide();
+        }, 150);
+        $('#add-game-manually').trigger('focus');
+      };
+
+      // The executable's own icon, read from its resources: the shell's answer is a generic glyph
+      // for a file that carries none (util/exeIcon.js).
+      const exeIconUrl = (exe) => {
+        const icon = require(path.join(appPath, 'util/exeIcon.js')).extractIcon(exe);
+        return icon ? `data:${icon.format === 'png' ? 'image/png' : 'image/x-icon'};base64,${icon.data.toString('base64')}` : '';
+      };
+      const isWatchedFolder = async (folder) => {
+        const key = path.resolve(folder).toLowerCase();
+        return (await userDir.get()).some((entry) => entry && entry.path && path.resolve(entry.path).toLowerCase() === key);
+      };
+      const isInLibrary = (appid) => !!appid && gameList.some((game) => game && (String(game.appid) === appid || String(game.steamappid) === appid));
+
+      const applyManualDetection = (found, view) => {
+        renderManualChecks(view.checks, true);
+        setManualVerdict(view.verdict);
+        setManualNote(view.note);
+        $('#manual-game-platform').val(found.name === 'Steam' ? 'Steam' : found.platform || 'PC');
+        const typed = $('#manual-game-appid').val().trim();
+        if (/^\d+$/.test(found.appid) && (!typed || typed === manualAutoAppid)) {
+          manualAutoAppid = found.appid;
+          $('#manual-game-appid').val(found.appid);
+        }
+        syncManualAppidHint();
+        $('#manual-game-name, #manual-game-platform, #manual-game-appid').prop('disabled', view.route === 'folder');
+        syncManualSave();
+        if (!/^\d+$/.test(found.appid)) return;
+        // Steam's own name beats the exe's product string ("Leading Brand UNDERTALE-type Software"),
+        // unless the user already typed one.
+        manualSteam
+          .getAppNameByAppid(found.appid)
+          .then((name) => {
+            if (!name || manualFound !== found || $('#manual-game-name').val().trim() !== manualAutoName) return;
+            manualAutoName = name;
+            $('#manual-game-name').val(name);
+            syncManualTitle();
+          })
+          .catch((err) => debug.log(`[manual-game] no Steam name for ${found.appid}: ${formatErr(err)}`));
+        steamHeroBackground({ appid: found.appid })
+          .then((art) => {
+            if (art && manualFound === found) setManualBandImage('#manual-game .manual-game-band', '--mg-art', imageDisplayUrl(art));
+          })
+          .catch((err) => debug.log(`[manual-game] no artwork for ${found.appid}: ${formatErr(err)}`));
+      };
+      const detectManualExe = async (exe) => {
+        let found;
+        try {
+          const readers = manualGameDetect.defaultReaders({ folderGames: (dir) => achievements.previewWatchedFolder(dir, MANUAL_DETECT_SOURCES) });
+          found = await manualGameDetect.detectManualGame(exe, { ...readers, gameDirFor: resolveGameDirFromExe });
+        } catch (err) {
+          debug.log(`[manual-game] could not read ${exe} => ${formatErr(err)}`);
+          found = { kind: 'none', name: '', appid: '', platform: 'PC', achievements: 'none', count: 0, games: [] };
+        }
+        // The scan resolves a nameless emulator the same way (achievements.js manualSteamAppid), so
+        // the dialog can already show the AppID, the artwork and the name it will end up with.
+        if (found.achievements === 'by-title') {
+          const byName = String((await manualSteam.findAppidByName($('#manual-game-name').val().trim()).catch(() => '')) || '');
+          if (/^\d+$/.test(byName)) found = { ...found, appid: byName, achievements: 'tracked' };
+        }
+        const watched = found.folder ? await isWatchedFolder(found.folder).catch(() => false) : false;
+        if (manualExe !== exe) return;
+        manualFound = found;
+        manualView = manualGameDetect.describeDetection(found, { t, watched, inLibrary: isInLibrary(found.appid) });
+        debug.log(`[manual-game] ${exe}: ${found.kind} ${found.name || '-'} appid=${found.appid || '-'} achievements=${found.achievements}`);
+        applyManualDetection(found, manualView);
+      };
+      const chooseManualExe = (chosen) => {
+        manualExe = chosen;
+        manualFound = null;
+        manualView = null;
+        const iconUrl = exeIconUrl(chosen);
+        // The picker becomes the file: its own icon, its name, and the folder it sits in below.
+        manualPicker.addClass('has-file').find('.manual-exe-action').text(path.basename(chosen));
+        manualPicker.find('.manual-exe-change').text(t('manual-game-change', 'Change', 'Changer'));
+        manualPicker
+          .find('.manual-exe-icon')
+          .toggleClass('has-icon', !!iconUrl)
+          .removeClass('fa-file-import')
+          .toggleClass('fa-file', !iconUrl)
+          .css('background-image', iconUrl ? cssUrl(iconUrl) : '');
+        $('#manual-game-exe-path').text(path.dirname(chosen)).attr('title', chosen);
+        // What the previous file filled in goes with it; what the user typed stays.
+        if ($('#manual-game-appid').val().trim() === manualAutoAppid) $('#manual-game-appid').val('');
+        manualAutoAppid = '';
+        $('#manual-game-appid-hint').prop('hidden', true);
+        const typedName = $('#manual-game-name').val().trim();
+        if (!typedName || typedName === manualAutoName) {
+          let detectedName = '';
+          try {
+            detectedName = require(path.join(appPath, 'util/pe.js')).readExeProductName(chosen) || '';
+          } catch (err) {
+            debug.log(`[manual-game] no product name in ${chosen} => ${formatErr(err)}`);
+          }
+          manualAutoName = detectedName || path.basename(chosen, path.extname(chosen));
+          $('#manual-game-name').val(manualAutoName);
+        }
+        setManualBandImage('#manual-game .manual-game-band', '--mg-art', '');
+        setManualBandImage('#manual-game .manual-game-band-icon', '--mg-icon', iconUrl).toggleClass('is-exe-icon', !!iconUrl);
+        $('#manual-game-subtitle').text(addManualGameLabel);
+        renderManualChecks(pendingManualChecks(), false);
+        setManualVerdict(null);
+        setManualNote('');
+        syncManualTitle();
+        syncManualSave();
+        return detectManualExe(chosen);
+      };
+
+      $('#manual-game-name').on('input', () => {
+        syncManualTitle();
+        syncManualSave();
+      });
+      $('#manual-game-appid').on('input', syncManualAppidHint);
+      $('#add-game-manually').on('click', () => {
+        resetManualGame();
+        manualDialog.removeClass('is-closing').attr('aria-hidden', 'false').show();
+        setTimeout(() => manualPicker.trigger('focus'), 0);
       });
       $('#manual-game-cancel, #manual-game > .overlay').on('click', closeManualGame);
       $(document).on('keydown.manual-game', (event) => {
-        if (event.key === 'Escape' && $('#manual-game').attr('aria-hidden') === 'false') closeManualGame();
+        if (event.key === 'Escape' && manualDialog.attr('aria-hidden') === 'false') closeManualGame();
       });
-      $('#manual-game-pick-exe').on('click', async () => {
+      manualPicker.on('click', async () => {
         const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
           title: pickExeLabel,
           filters: [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat', 'cmd'] }],
           properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
         });
-        if (!dialog.filePaths || !dialog.filePaths[0]) return;
-        const chosen = dialog.filePaths[0];
-        manualExe = chosen;
-        // The picker becomes the file: its own icon, its name, and the folder it sits in below.
-        $('#manual-game-pick-exe .manual-exe-action').text(path.basename(chosen));
-        $('#manual-game-exe-path').text(path.dirname(chosen)).attr('title', chosen);
-        $('#manual-game-pick-exe').addClass('has-file');
-        remote.app
-          .getFileIcon(chosen, { size: 'large' })
-          .then((icon) => {
-            if (manualExe !== chosen || icon.isEmpty()) return;
-            $('#manual-game-pick-exe .manual-exe-icon').addClass('has-icon').css('background-image', cssUrl(icon.toDataURL()));
-          })
-          .catch((err) => debug.log(`[manual-game] no icon for ${chosen}: ${err.message || err}`));
-        if (!$('#manual-game-name').val().trim()) {
-          let detectedName = '';
-          try {
-            detectedName = require(path.join(appPath, 'util/pe.js')).readExeProductName(manualExe) || '';
-          } catch {}
-          $('#manual-game-name').val(detectedName || path.basename(manualExe, path.extname(manualExe)));
-        }
-        syncManualSave();
+        if (dialog.filePaths && dialog.filePaths[0]) chooseManualExe(dialog.filePaths[0]);
       });
+      // A file dropped anywhere on the dialog is taken as the executable; without this Chromium would
+      // open the dropped file in place of the app.
+      manualDialog.on('dragover', (event) => {
+        event.preventDefault();
+        event.originalEvent.dataTransfer.dropEffect = 'copy';
+        manualPicker.addClass('is-drop-target');
+      });
+      manualDialog.on('dragleave', (event) => {
+        if (!manualDialog[0].contains(event.originalEvent.relatedTarget)) manualPicker.removeClass('is-drop-target');
+      });
+      manualDialog.on('drop', (event) => {
+        event.preventDefault();
+        manualPicker.removeClass('is-drop-target');
+        const file = event.originalEvent.dataTransfer.files[0];
+        const dropped = file ? require('electron').webUtils.getPathForFile(file) : '';
+        if (/\.(exe|bat|cmd)$/i.test(dropped)) chooseManualExe(dropped);
+      });
+
+      const followManualFolder = async (folder) => {
+        const key = path.resolve(folder).toLowerCase();
+        const entries = await userDir.getEntries();
+        const known = entries.some((entry) => path.resolve(entry.path).toLowerCase() === key);
+        const next = known
+          ? entries.map((entry) => (path.resolve(entry.path).toLowerCase() === key ? { ...entry, enabled: true } : entry))
+          : [...entries, { path: folder, notify: true, origin: 'manual', enabled: true }];
+        await userDir.save(next);
+      };
       $('#manual-game form').on('submit', async (event) => {
         event.preventDefault();
+        try {
+          await saveManualGame();
+        } catch (err) {
+          debug.warn(`[manual-game] save failed => ${formatErr(err)}`);
+          setManualNote(formatErr(err));
+        }
+      });
+      const saveManualGame = async () => {
+        if (manualView && manualView.route === 'folder') {
+          if (!manualView.canAdd) return;
+          await followManualFolder(manualFound.folder);
+          closeManualGame();
+          app.onStart();
+          return;
+        }
         const title = $('#manual-game-name').val().trim();
         if (!title || !manualExe || !fs.existsSync(manualExe)) {
           if (!title) $('#manual-game-name').trigger('focus');
-          else $('#manual-game-pick-exe').trigger('focus');
+          else manualPicker.trigger('focus');
           return;
         }
         const entry = manualGames.upsert({
@@ -8337,7 +8777,7 @@ var app = {
         gameIndex.upsert({ appid: entry.id, name: entry.title, binary: path.basename(entry.exe), exePath: entry.exe, source: 'Manual', steamappid: entry.storeAppId });
         closeManualGame();
         app.onStart();
-      });
+      };
 
       // On a genuine first run, defer the initial library scan until the onboarding guide is done:
       // onboarding lets the user set their profile (and game folders), and finish()/skip()

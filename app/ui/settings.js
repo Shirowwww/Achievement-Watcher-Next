@@ -1408,7 +1408,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const target = focusTrapTarget({
         panel,
         landed: event.target,
-        exempt: '.aw-prompt-overlay, #onboarding, #theme-preview, .simple-modal, title-bar',
+        exempt: '.aw-prompt-overlay, .aw-color-popover, #onboarding, #theme-preview, .simple-modal, title-bar',
         preferred: gameConfig ? '#game-config-tabs button.active' : '#settingNav li.active',
       });
       if (target) target.focus({ preventScroll: true });

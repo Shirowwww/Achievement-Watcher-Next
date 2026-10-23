@@ -2262,6 +2262,7 @@ module.exports.resolveWorkingIconUrl = resolveWorkingIconUrl;
   game onto a single cache file that each download overwrote in turn, and the game screen showed 306
   empty squares. A query means the basename is not the identity, so the query is folded in.
 */
+const MAX_CACHE_NAME = 64;
 function iconCacheFilename(rawUrl, appID) {
   const raw = String(rawUrl || '');
   const mark = raw.indexOf('?');
@@ -2269,7 +2270,11 @@ function iconCacheFilename(rawUrl, appID) {
   // The folder is the library entry's appid; art of another app (a game sold under a hub appid, a
   // borrowed Steam cover) shares file names like header.jpg with the entry's own, so it carries its app.
   const owner = (raw.match(/\/apps\/(\d+)\//) || [])[1];
-  const base = owner && appID != null && String(appID) !== owner ? `${owner}-${parsed}` : parsed;
+  const named = owner && appID != null && String(appID) !== owner ? `${owner}-${parsed}` : parsed;
+  // Sony names some pictures with a 100-character token, which pushed the cached path past Windows'
+  // 260-character limit: the file was saved but the window could not load it.
+  const ext = path.extname(named);
+  const base = named.length > MAX_CACHE_NAME ? `${named.slice(0, 12)}-${require('crypto').createHash('sha1').update(named).digest('hex').slice(0, 16)}${ext}` : named;
   if (mark < 0) return base;
   const digest = require('crypto').createHash('sha1').update(raw).digest('hex').slice(0, 16);
   return `${base || 'icon'}-${digest}`;

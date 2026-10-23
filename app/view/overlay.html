@@ -10,6 +10,7 @@
       content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self'; media-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <title>Achievements Overlay</title>
+    <link rel="stylesheet" href="../resources/css/colorPicker.css" type="text/css" />
     <style>
       @font-face {
         font-family: "Open Sans";
@@ -684,6 +685,12 @@
         overflow: hidden;
       }
 
+      /* A chosen custom colour shows itself, ringed by the rainbow that says "pick your own". */
+      .swatch-custom.active {
+        background: radial-gradient(circle closest-side, var(--custom-accent) 0 calc(100% - 3px), transparent calc(100% - 2.5px)),
+          conic-gradient(#f33, #ff3, #3f3, #3ff, #33f, #f3f, #f33) !important;
+      }
+
       .swatch-custom input {
         position: absolute;
         inset: -4px;
@@ -1036,6 +1043,7 @@
     <script src="../util/rarityTiers.js"></script>
     <script src="../util/overlayUi.js"></script>
     <script src="../util/controllerLabels.js"></script>
+    <script src="../ui/colorPicker.js"></script>
     <script src="./overlay.js"></script>
   </body>
 </html>

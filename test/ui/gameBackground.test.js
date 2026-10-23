@@ -59,19 +59,18 @@ test('every game page picture is painted under the same single veil', () => {
   assert.doesNotMatch(stylize.slice(0, stylize.indexOf('writeFileSync')), /fill-opacity|composite\(/, 'the stylizer must not tint the picture');
 });
 
-// Steam's page background is dark by design: its library hero goes first, the page one is the fallback.
-test('a Steam game page shows the library hero, falling back to the page background', () => {
-  assert.match(appJs, /return ipcRenderer\.invoke\('fetch-icon', 'library_hero\.jpg', appid\)\.catch\(\(\) => null\);/, 'a failed hero download falls through to the page background');
-  assert.match(appJs, /: isSteamPageBackground\(game\.img\.background\)\n\s*\? steamHeroBackground\(game\)\.then\(\(hero\) => hero \|\| pageBackground\(\)\)/);
-  // A picture the user chose still wins over both.
-  assert.match(appJs, /const background = customBackground\n\s*\? Promise\.resolve\(customBackground\)\n/);
-});
-
-// A Ubisoft title has no page background at all: its cover is painted instead of the generic picture.
-test('a game without a page background falls back to its cover art', () => {
+// Every source in one order, so a page never looks different only because of where the game came
+// from: Steam's hero, SteamGridDB's (Dolphin Up has no library hero), the source's own background
+// unless it is Steam's blue-tinted page one, the cover (a Ubisoft title, Sovereign Tower), and that
+// blue page background last.
+test('every game page tries a hero first, whatever its source, and the blue Steam page last', () => {
+  assert.match(appJs, /return ipcRenderer\.invoke\('fetch-icon', 'library_hero\.jpg', appid\)\.catch\(\(\) => null\);/, 'a failed hero download falls through');
   assert.match(appJs, /const coverArt = \(\) => fetchArt\(game\.img\.header\)\.then\(\(art\) => art \|\| fetchArt\(game\.img\.portrait\)\);/);
-  assert.match(appJs, /: !game\.img\.background\n\s*\? coverArt\(\)/);
-  assert.match(appJs, /: pageBackground\(\)\.then\(\(art\) => art \|\| coverArt\(\)\);/, 'a failed fetch falls back too');
+  assert.match(appJs, /const steamPage = isSteamPageBackground\(game\.img\.background\);/);
+  assert.match(
+    appJs,
+    /const background = customBackground\n\s*\? Promise\.resolve\(customBackground\)\n\s*: bandHeroArt\(game, game\.appid\)\n\s*\.catch\(\(\) => null\)\n\s*\.then\(\(hero\) => hero \|\| \(steamPage \? null : ownBackground\(\)\)\)\n\s*\.then\(\(art\) => art \|\| coverArt\(\)\)\n\s*\.then\(\(art\) => art \|\| \(steamPage \? ownBackground\(\) : null\)\);/
+  );
   assert.match(appJs, /if \(!localPath \|\| String\(/, 'nothing found keeps the generic picture');
 });
 

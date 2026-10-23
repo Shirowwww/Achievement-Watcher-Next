@@ -35,4 +35,14 @@ function joinPlaytime(values) {
   return seconds > MAX_SECONDS ? null : seconds;
 }
 
-module.exports = { splitPlaytime, joinPlaytime, MAX_SECONDS };
+// The fields after one press of a field's - or + button: the total moves by one of that unit and
+// is read back, so 59 minutes and one more is 1 hour. Unreadable fields start again from zero.
+function stepPlaytime(values, field, delta) {
+  const size = (FIELDS.find(([name]) => name === field) || [])[1] || 0;
+  const seconds = joinPlaytime(values) ?? 0;
+  const minutes = Math.floor(seconds / 60) * 60;
+  const next = Math.min(Math.max(0, minutes + delta * size), Math.floor(MAX_SECONDS / 60) * 60);
+  return splitPlaytime(next);
+}
+
+module.exports = { splitPlaytime, joinPlaytime, stepPlaytime, MAX_SECONDS };

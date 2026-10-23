@@ -224,11 +224,12 @@
     const panel = $('<div class="select-menu collection-menu" role="menu"></div>').attr('aria-label', t('collections', 'Collections', 'Collections'));
     const allMarker = $('<span class="collection-menu-marker is-all" aria-hidden="true"><i class="fas fa-layer-group"></i></span>');
     panel.append(menuRow({ label: t('collection-all', 'All games', 'Tous les jeux'), marker: allMarker, selected: !current, onPick: () => setActive('') }));
+    const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
     for (const collection of state.collections) {
       panel.append(
         menuRow({
           label: collection.name,
-          count: collection.games.length,
+          count: collections.countGames(gameList, state, collection.id, { installedOnly }),
           marker: menuMarker(collection),
           selected: collection.id === current,
           onPick: () => setActive(collection.id),
@@ -352,11 +353,17 @@
       return button;
     });
     row.append(...buttons);
-    return row;
+    return { row, buttons };
   }
 
   const withoutEllipsis = (text) => String(text).replace(/\s*(?:…|\.\.\.)$/, '');
   const fileUrl = (file) => 'file:///' + encodeURI(String(file).replace(/\\/g, '/'));
+  const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+  const draftPicture = (draft) => {
+    if (draft.imagePath) return fileUrl(draft.imagePath);
+    return draft.clearImage ? '' : draft.imageUrl;
+  };
+  const iconMarkup = (draft, picture) => (picture ? '' : `<i class="fas fa-${draft.icon || DEFAULT_BUTTON_ICON}" aria-hidden="true"></i>`);
 
   // The filter button as it will look, redrawn as the form changes.
   function previewChip(draft) {
@@ -369,9 +376,8 @@
     label.className = 'aw-collection-preview-name';
     chip.append(marker, label);
     const paint = () => {
-      marker.style.setProperty('--collection-color', draft.color);
-      const picture = draft.imagePath ? fileUrl(draft.imagePath) : draft.clearImage ? '' : draft.imageUrl;
-      marker.innerHTML = picture ? '' : `<i class="fas fa-${draft.icon || DEFAULT_BUTTON_ICON}" aria-hidden="true"></i>`;
+      const picture = draftPicture(draft);
+      marker.innerHTML = iconMarkup(draft, picture);
       marker.style.backgroundImage = picture ? `url("${picture}")` : '';
       marker.classList.toggle('has-image', !!picture);
       label.textContent = draft.name.trim() || t('collection-default-name', 'New collection', 'Nouvelle collection');
@@ -380,89 +386,161 @@
     return { chip, paint };
   }
 
+  // A picked or dropped picture; anything but an image file is refused here, the size by the store.
   function imageField(draft, paint) {
     const imageRow = field(t('collection-field-image', 'Image', 'Image'));
-    const buttons = document.createElement('div');
-    buttons.className = 'aw-collection-image-row';
-    const chooseImage = document.createElement('button');
-    chooseImage.type = 'button';
-    chooseImage.className = 'aw-prompt-button secondary';
-    chooseImage.textContent = t('collection-choose-image', 'Choose image…', 'Choisir une image…');
-    const clearImage = document.createElement('button');
-    clearImage.type = 'button';
-    clearImage.className = 'aw-prompt-button secondary';
-    clearImage.textContent = t('collection-remove-image', 'Remove image', "Retirer l'image");
-    clearImage.hidden = !draft.imageUrl;
-    chooseImage.onclick = () => {
+    const zone = document.createElement('button');
+    zone.type = 'button';
+    zone.className = 'aw-collection-drop';
+    zone.innerHTML = '<span class="aw-collection-drop-thumb" aria-hidden="true"><i class="fas fa-image"></i></span><span class="aw-collection-drop-text"><b></b><small></small></span>';
+    const thumb = zone.querySelector('.aw-collection-drop-thumb');
+    const [title, hint] = [zone.querySelector('b'), zone.querySelector('small')];
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'aw-collection-drop-clear';
+    clear.title = t('collection-remove-image', 'Remove image', "Retirer l'image");
+    clear.setAttribute('aria-label', clear.title);
+    clear.innerHTML = '<i class="fas fa-times" aria-hidden="true"></i>';
+    const show = () => {
+      const picture = draftPicture(draft);
+      zone.classList.toggle('has-image', !!picture);
+      thumb.style.backgroundImage = picture ? `url("${picture}")` : '';
+      title.textContent = picture ? t('collection-image-replaces-icon', 'The image replaces the icon', "L'image remplace l'icône") : t('collection-image-drop', 'Drop an image here', 'Glisse une image ici');
+      hint.textContent = picture ? t('collection-image-change', 'Click to change it', 'Clique pour la changer') : t('collection-image-drop-hint', 'or click to choose one · PNG, JPEG, GIF, WebP, 5 MB max', 'ou clique pour la choisir · PNG, JPEG, GIF, WebP, 5 Mo max');
+      clear.hidden = !picture;
+      paint();
+    };
+    const use = (file) => {
+      if (!file || !IMAGE_EXTENSIONS.includes(String(file).split('.').pop().toLowerCase())) return false;
+      Object.assign(draft, { imagePath: file, clearImage: false });
+      show();
+      return true;
+    };
+    zone.onclick = () => {
       const files = remote().dialog.showOpenDialogSync({
-        title: chooseImage.textContent,
+        title: t('collection-choose-image', 'Choose image…', 'Choisir une image…'),
         properties: ['openFile'],
-        filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'] }],
+        filters: [{ name: 'Images', extensions: IMAGE_EXTENSIONS }],
       });
-      if (!files || !files[0]) return;
-      Object.assign(draft, { imagePath: files[0], clearImage: false });
-      clearImage.hidden = false;
-      chooseImage.classList.add('chosen');
-      paint();
+      if (files && files[0]) use(files[0]);
     };
-    clearImage.onclick = () => {
+    zone.addEventListener('dragover', (event) => {
+      event.preventDefault();
+      zone.classList.add('is-drop-target');
+    });
+    zone.addEventListener('dragleave', () => zone.classList.remove('is-drop-target'));
+    zone.addEventListener('drop', (event) => {
+      event.preventDefault();
+      zone.classList.remove('is-drop-target');
+      const file = event.dataTransfer.files[0];
+      if (file) use(require('electron').webUtils.getPathForFile(file));
+    });
+    clear.onclick = () => {
       Object.assign(draft, { imagePath: '', clearImage: true });
-      clearImage.hidden = true;
-      chooseImage.classList.remove('chosen');
-      paint();
+      show();
     };
-    buttons.append(chooseImage, clearImage);
-    imageRow.append(buttons);
+    const row = document.createElement('div');
+    row.className = 'aw-collection-drop-row';
+    row.append(zone, clear);
+    imageRow.append(row);
+    show();
     return imageRow;
   }
 
-  function lookFields(draft, paint) {
-    const colorField = field(t('collection-field-color', 'Color', 'Couleur'));
-    colorField.append(
-      choiceButtons(
-        collections.COLORS,
-        draft.color,
-        (button, color, index) => {
-          button.className = 'aw-collection-swatch';
-          button.style.background = color;
-          button.setAttribute('aria-label', `${t('collection-field-color', 'Color', 'Couleur')} ${index + 1}`);
-        },
-        (color) => {
-          draft.color = color;
-          paint();
-        }
-      )
+  // The eight presets, then one swatch that opens the colour picker for any other colour.
+  function colorField(draft, paint) {
+    const label = t('collection-field-color', 'Color', 'Couleur');
+    const colorRow = field(label);
+    const custom = document.createElement('button');
+    const { row, buttons } = choiceButtons(
+      collections.COLORS,
+      draft.color,
+      (button, color, index) => {
+        button.className = 'aw-collection-swatch';
+        button.style.setProperty('--swatch', color);
+        button.setAttribute('aria-label', `${label} ${index + 1}`);
+      },
+      (color) => {
+        draft.color = color;
+        custom.setAttribute('aria-checked', 'false');
+        paint();
+      }
     );
-    const iconField = field(t('collection-field-icon', 'Icon', 'Icône'));
-    iconField.append(
-      choiceButtons(
-        collections.ICONS,
-        draft.icon,
-        (button, icon, index) => {
-          button.className = 'aw-collection-icon';
-          button.innerHTML = `<i class="fas fa-${icon}" aria-hidden="true"></i>`;
-          button.setAttribute('aria-label', `${t('collection-field-icon', 'Icon', 'Icône')} ${index + 1}`);
-        },
-        (icon) => {
-          draft.icon = icon;
+    const isCustom = () => !collections.COLORS.includes(draft.color);
+    custom.type = 'button';
+    custom.className = 'aw-collection-swatch is-custom';
+    custom.setAttribute('role', 'radio');
+    custom.setAttribute('aria-label', t('collection-custom-color', 'Custom colour', 'Couleur personnalisée'));
+    custom.title = custom.getAttribute('aria-label');
+    const showCustom = () => {
+      custom.setAttribute('aria-checked', String(isCustom()));
+      custom.style.setProperty('--swatch', isCustom() ? draft.color : 'transparent');
+    };
+    custom.onclick = () => {
+      window.awColorPicker.open(custom, {
+        value: draft.color,
+        onInput: (hex) => {
+          draft.color = hex;
+          buttons.forEach((button, index) => button.setAttribute('aria-checked', String(collections.COLORS[index] === hex)));
+          showCustom();
           paint();
-        }
-      )
-    );
-    return [colorField, iconField, imageField(draft, paint)];
+        },
+      });
+    };
+    showCustom();
+    row.append(custom);
+    colorRow.append(row);
+    return colorRow;
   }
 
-  function formHeading(creating) {
-    const heading = document.createElement('div');
-    heading.className = 'aw-prompt-heading';
+  function iconField(draft, paint) {
+    const label = t('collection-field-icon', 'Icon', 'Icône');
+    const iconRow = field(label);
+    const { row } = choiceButtons(
+      collections.ICONS,
+      draft.icon,
+      (button, icon, index) => {
+        button.className = 'aw-collection-icon';
+        button.innerHTML = `<i class="fas fa-${icon}" aria-hidden="true"></i>`;
+        button.setAttribute('aria-label', `${label} ${index + 1}`);
+      },
+      (icon) => {
+        draft.icon = icon;
+        paint();
+      }
+    );
+    iconRow.append(row);
+    return iconRow;
+  }
+
+  // The band takes the collection's colour, shows its icon or picture, and the filter button as it will look.
+  function formBand(creating, draft) {
+    const band = document.createElement('div');
+    band.className = 'aw-band aw-collection-band';
     const icon = document.createElement('span');
-    icon.className = 'aw-prompt-icon';
-    icon.innerHTML = `<i class="fas ${creating ? 'fa-folder-plus' : 'fa-pen'}" aria-hidden="true"></i>`;
+    icon.className = 'aw-band-icon';
+    const text = document.createElement('div');
+    text.className = 'aw-band-text';
     const title = document.createElement('div');
-    title.className = 'aw-prompt-title';
+    title.className = 'aw-band-title';
     title.textContent = creating ? withoutEllipsis(t('collection-new', 'New collection…', 'Nouvelle collection…')) : withoutEllipsis(t('collection-edit', 'Edit collection…', 'Modifier la collection…'));
-    heading.append(icon, title);
-    return { heading, title: title.textContent };
+    text.append(title);
+    const { chip, paint: paintChip } = previewChip(draft);
+    band.append(icon, text, chip);
+    const paint = () => {
+      const picture = draftPicture(draft);
+      // On the whole dialog, so the chosen icon below takes the colour too.
+      const host = band.parentElement || band;
+      host.style.setProperty('--band-tint', draft.color);
+      host.style.setProperty('--band-tint-soft', `color-mix(in srgb, ${draft.color} 22%, transparent)`);
+      chip.style.setProperty('--collection-color', draft.color);
+      chip.querySelector('.collection-menu-marker').style.setProperty('--collection-color', draft.color);
+      icon.classList.toggle('has-icon', !!picture);
+      icon.style.setProperty('--band-icon', picture ? `url("${picture}")` : 'none');
+      icon.innerHTML = iconMarkup(draft, picture);
+      paintChip();
+    };
+    return { band, title: title.textContent, paint };
   }
 
   function confirmDelete(collection) {
@@ -521,6 +599,22 @@
     return { actions, remove, cancel, ok };
   }
 
+  function nameField(draft, paint) {
+    const row = field(t('collection-field-name', 'Name', 'Nom'));
+    const input = document.createElement('input');
+    input.className = 'aw-prompt-input';
+    input.setAttribute('aria-label', row.firstChild.textContent);
+    input.maxLength = collections.MAX_NAME_LENGTH;
+    input.value = draft.name;
+    input.placeholder = t('collection-default-name', 'New collection', 'Nouvelle collection');
+    input.addEventListener('input', () => {
+      draft.name = input.value;
+      paint();
+    });
+    row.append(input);
+    return { row, input };
+  }
+
   /*
     One form for creating and editing. Creating has no Delete, says what to do next and hands the
     new collection to onDone (null when cancelled); the library stays on the view it was showing.
@@ -534,48 +628,38 @@
     const overlay = document.createElement('div');
     overlay.className = 'aw-prompt-overlay';
     const box = document.createElement('div');
-    box.className = 'aw-prompt aw-collection-editor';
+    box.className = 'aw-prompt has-band aw-collection-editor';
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-modal', 'true');
-    const { heading, title } = formHeading(creating);
+    const { band, title, paint } = formBand(creating, draft);
     box.setAttribute('aria-label', title);
 
-    const { chip, paint } = previewChip(draft);
-    const nameField = field(t('collection-field-name', 'Name', 'Nom'));
-    const nameRow = document.createElement('div');
-    nameRow.className = 'aw-collection-name-row';
-    const input = document.createElement('input');
-    input.className = 'aw-prompt-input';
-    input.maxLength = collections.MAX_NAME_LENGTH;
-    input.value = draft.name;
-    input.placeholder = t('collection-default-name', 'New collection', 'Nouvelle collection');
-    input.addEventListener('input', () => {
-      draft.name = input.value;
-      paint();
-    });
-    nameRow.append(input, chip);
-    nameField.append(nameRow);
-
-    const parts = [heading, nameField, ...lookFields(draft, paint)];
+    const name = nameField(draft, paint);
+    const body = document.createElement('div');
+    body.className = 'aw-dialog-body';
+    body.append(name.row, colorField(draft, paint), iconField(draft, paint), imageField(draft, paint));
     if (creating) {
       const note = document.createElement('p');
       note.className = 'aw-collection-note';
       note.innerHTML = '<i class="fas fa-info-circle" aria-hidden="true"></i> ';
       note.append(t('collection-create-note', 'Once it is created, right-click a game > Collections to add it.', "Une fois créée, fais un clic droit sur un jeu > Collections pour l'y ajouter."));
-      parts.push(note);
+      body.append(note);
     }
     const { actions, remove, cancel, ok } = formActions(creating);
-    box.append(...parts, actions);
+    box.append(band, body, actions);
     overlay.append(box);
     document.body.append(overlay);
-    input.focus();
-    input.select();
+    paint();
+    name.input.focus();
+    name.input.select();
 
     let settled = false;
     const close = (made = null) => {
-      overlay.remove();
-      if (!settled) onDone(made);
+      if (settled) return;
       settled = true;
+      overlay.classList.add('is-closing');
+      setTimeout(() => overlay.remove(), 140);
+      onDone(made);
     };
     cancel.onclick = () => close();
     overlay.onmousedown = (event) => {
@@ -583,11 +667,11 @@
     };
     box.onkeydown = (event) => {
       if (event.key === 'Escape') close();
-      else if (event.key === 'Enter' && event.target === input) ok.click();
+      else if (event.key === 'Enter' && event.target === name.input) ok.click();
     };
     if (remove) remove.onclick = () => confirmDelete(collection) && close();
     ok.onclick = () => {
-      draft.name = input.value.trim() || (creating ? input.placeholder : '');
+      draft.name = name.input.value.trim() || (creating ? name.input.placeholder : '');
       let made = null;
       if (saveForm(collection, draft, (result) => (made = result))) close(made);
     };

@@ -94,3 +94,19 @@ test("another app's artwork does not take the cache file of the library entry's 
   assert.notEqual(other, own);
   assert.equal(other, '4435490-header.jpg');
 });
+
+/*
+  Sony names some store pictures with a 100-character token. Kept whole under the cache folder, the
+  path passed Windows' 260-character limit once the profile folder was a little long, and Injustice 2
+  showed an empty card: the file was on disk, but the window could not load it.
+*/
+test('a very long picture name is shortened to a stable one, keeping its extension', () => {
+  const token = '11307yTtQHHs5rGByVI5LQJK9AvsV7Q577v082BvkKfSmBsU7lzxIutUgVvcL3eofKipLaEvL_QzCJrkhL-TREkeZScQmBUo';
+  const url = (id) => `https://image.api.playstation.com/vulcan/img/cfn/${id}.png`;
+  const name = steam.iconCacheFilename(url(token), 'psn-NPWR11338_00');
+
+  assert.ok(name.length <= 40, `${name} is short enough`);
+  assert.match(name, /\.png$/);
+  assert.notEqual(name, steam.iconCacheFilename(url(`${token.slice(0, -1)}X`), 'psn-NPWR11338_00'), 'two long names stay two files');
+  assert.equal(name, steam.iconCacheFilename(url(token), 'psn-NPWR11338_00'), 'stable');
+});

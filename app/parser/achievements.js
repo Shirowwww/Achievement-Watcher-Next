@@ -3447,8 +3447,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         debug.log(`[${appid.appid}] artwork fallback failed: ${err.message || err}`);
       }
     }
-    // A PlayStation list nobody has a cover for shows its trophy icon on the portrait card too.
-    if (appid.data.type === 'psnLibrary' && !game.img.portrait) game.img.portrait = game.img.header;
+    // A PlayStation list nobody has a cover for shows its square store icon on the portrait card, which
+    // crops less of it than the wide key art would, else its trophy icon.
+    if (appid.data.type === 'psnLibrary' && !game.img.portrait) game.img.portrait = game.img.icon || game.img.header;
 
     if (
       game.achievement &&

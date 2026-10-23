@@ -64,7 +64,7 @@ test('the square logo carries a right-click menu with the same four actions the 
 
 test('the icon picker is the cover picker\'s gallery, with icon sources and a manual way out', () => {
   const fn = sliceFunction(appSource, 'function openIconPicker(game, appid, iconCacheAppid, exePath) {', '\n}\n');
-  assert.match(fn, /className = 'aw-prompt aw-cover-picker aw-icon-picker'/, 'the dialog chrome is shared, not rebuilt');
+  assert.match(fn, /className = 'aw-prompt has-band aw-cover-picker aw-icon-picker'/, 'the dialog chrome is shared, not rebuilt');
   assert.match(fn, /resolvePickerPreview\(previewUrl, iconCacheAppid\)/, 'and so is the preview resolution');
   assert.match(fn, /browseBtn\.onclick = \(\) => \{\s*if \(chooseLocalGameIcon\(game, appid\)\) done\(\);/);
   // Local sources are painted before anything is asked of the network, so the gallery is usable

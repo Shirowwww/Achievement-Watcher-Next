@@ -99,7 +99,15 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       return Array.from(element.children).some(isVisible);
     }
 
+    function openColorPicker() {
+      const panel = document.querySelector('.aw-color-popover:not(.is-closing)');
+      return isContainerVisible(panel) ? panel : null;
+    }
+
     function activeRoot() {
+      // The colour picker is appended to body, over whatever dialog opened it.
+      const picker = openColorPicker();
+      if (picker) return picker;
       const prompt = document.querySelector('.aw-prompt-overlay');
       if (isContainerVisible(prompt)) return prompt;
       // The library stats and manual-game dialogs sit over #home but outside it, so they come first.
@@ -130,7 +138,9 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     function ensureSelected() {
       const items = candidates();
       if (selected && items.includes(selected)) return items;
-      const preferred = items.find((element) => element.matches('.active, :checked, #game-list .game-box')) || items[0];
+      // A dialog that just closed hands focus back to its opener: carry on from there.
+      const focused = items.includes(document.activeElement) ? document.activeElement : null;
+      const preferred = focused || items.find((element) => element.matches('.active, :checked, #game-list .game-box')) || items[0];
       if (preferred) setSelected(preferred);
       return items;
     }
@@ -142,8 +152,11 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         if (next === selected.selectedIndex) return true;
         selected.selectedIndex = next;
       } else if (selected.matches('input[type="range"], input[type="number"]')) {
-        if (direction < 0) selected.stepDown();
-        else selected.stepUp();
+        // One unit per tick is fine on 0-100; a hue's 0-359 needs bigger strides to be crossable.
+        const span = Number(selected.max) - Number(selected.min);
+        const ticks = selected.matches('[type="range"]') && span > 100 ? Math.round(span / 36) : 1;
+        if (direction < 0) selected.stepDown(ticks);
+        else selected.stepUp(ticks);
       } else {
         return false;
       }
@@ -175,14 +188,32 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       setTimeout(() => ensureSelected(), 80);
     }
 
+    // Cancel sits just before the primary button; the first secondary can be "Delete collection"
+    // or a hidden "Retry", so it is never taken blindly.
+    function promptCancelButton() {
+      const overlay = document.querySelector('.aw-prompt-overlay');
+      if (!isContainerVisible(overlay)) return null;
+      const beforePrimary = overlay.querySelector('.aw-prompt-button.primary')?.previousElementSibling;
+      if (beforePrimary?.matches('.aw-prompt-button.secondary') && isVisible(beforePrimary)) return beforePrimary;
+      const secondaries = Array.from(overlay.querySelectorAll('.aw-prompt-button.secondary')).filter(isVisible);
+      return secondaries[secondaries.length - 1] || null;
+    }
+
     function back() {
       const active = document.activeElement;
       if (active && active.matches?.('input, textarea')) {
         active.blur();
         return;
       }
-      const promptCancel = document.querySelector('.aw-prompt-overlay .aw-prompt-button.secondary');
-      if (isVisible(promptCancel)) return promptCancel.click();
+      // B leaves the colour picker keeping the colour, as a click outside it does.
+      if (openColorPicker()) {
+        window.awColorPicker?.close();
+        // The panel leaves after its 110ms close; selection then resumes on the swatch it opened from.
+        setTimeout(() => ensureSelected(), 140);
+        return;
+      }
+      const promptCancel = promptCancelButton();
+      if (promptCancel) return promptCancel.click();
       if (isContainerVisible(document.querySelector('#onboarding'))) {
         const previous = document.querySelector('#onboarding-prev');
         const close = document.querySelector('#onboarding-close');

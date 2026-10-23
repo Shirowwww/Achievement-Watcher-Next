@@ -243,6 +243,7 @@
     document.querySelectorAll('#iconsize-seg button').forEach((b) => b.classList.toggle('active', Number(b.dataset.iconsize) === settings.iconSize));
     document.querySelectorAll('.swatch[data-accent]').forEach((b) => b.classList.toggle('active', b.dataset.accent === settings.accent));
     $('swatch-custom').classList.toggle('active', !ACCENT_PRESETS[settings.accent]);
+    $('swatch-custom').style.setProperty('--custom-accent', settings.accent);
 
     updateStats();
     renderRows();

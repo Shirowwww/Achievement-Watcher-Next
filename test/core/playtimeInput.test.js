@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
 
-const { splitPlaytime, joinPlaytime, MAX_SECONDS } = require(path.join(__dirname, '../../app/util/playtimeInput.js'));
+const { splitPlaytime, joinPlaytime, stepPlaytime, MAX_SECONDS } = require(path.join(__dirname, '../../app/util/playtimeInput.js'));
 
 test('a total opens as days, hours and minutes', () => {
   assert.deepEqual(splitPlaytime(31 * 3600), { days: 1, hours: 7, minutes: 0 });
@@ -36,4 +36,21 @@ test('a total reads back to the same minute', () => {
     const fields = Object.fromEntries(Object.entries(parts).map(([key, value]) => [key, String(value)]));
     assert.equal(joinPlaytime(fields), Math.floor(seconds / 60) * 60, String(seconds));
   }
+});
+
+test('a step carries into the next unit, as a clock would', () => {
+  assert.deepEqual(stepPlaytime({ days: '0', hours: '4', minutes: '59' }, 'minutes', 1), { days: 0, hours: 5, minutes: 0 });
+  assert.deepEqual(stepPlaytime({ days: '1', hours: '0', minutes: '0' }, 'hours', -1), { days: 0, hours: 23, minutes: 0 });
+  assert.deepEqual(stepPlaytime({ days: '0', hours: '2', minutes: '10' }, 'hours', 1), { days: 0, hours: 3, minutes: 10 });
+});
+
+test('a step never goes below zero or past what the registry holds', () => {
+  assert.deepEqual(stepPlaytime({ days: '0', hours: '0', minutes: '0' }, 'minutes', -1), { days: 0, hours: 0, minutes: 0 });
+  assert.deepEqual(stepPlaytime({ days: '0', hours: '0', minutes: '20' }, 'hours', -1), { days: 0, hours: 0, minutes: 0 });
+  const top = splitPlaytime(MAX_SECONDS);
+  assert.deepEqual(stepPlaytime(top, 'days', 1), top);
+});
+
+test('a step from fields that do not read starts again from zero', () => {
+  assert.deepEqual(stepPlaytime({ hours: 'abc' }, 'minutes', 5), { days: 0, hours: 0, minutes: 5 });
 });

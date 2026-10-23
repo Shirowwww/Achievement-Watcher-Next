@@ -135,6 +135,22 @@ test('an edition name finds the plain list, and English names give a second chan
   assert.deepEqual(Object.keys(link.trophies).sort(), ['ACH_COLLECT', 'ACH_FIRST', 'ACH_GHOST']);
 });
 
+// LEGO Batman: Legacy of the Dark Knight has English-only achievements on Steam, even asked in
+// French, and no English copy in the cache: its own texts are the English ones to try.
+test('a game whose store answers in English matches the English trophies without an English copy', async () => {
+  seedCatalog();
+  const psn = sony();
+  const englishCtx = await lib.createContext({ auth, fetchImpl: psn.fetchImpl, locale: 'en-US' });
+  const untranslated = [
+    { name: 'ACH_FIRST', displayName: 'First Shot', description: '' },
+    { name: 'ACH_GHOST', displayName: 'Ghost', description: '' },
+    { name: 'ACH_COLLECT', displayName: 'Collector', description: '' },
+  ];
+  const link = await links.linkGame(await psn.ctx(), { appid: '2215200', name: 'Sniper Elite 5', achievements: untranslated }, { englishCtx, english: null });
+  assert.equal(link && link.listId, 'NPWR21465_00');
+  assert.deepEqual(Object.keys(link.trophies).sort(), ['ACH_COLLECT', 'ACH_FIRST', 'ACH_GHOST']);
+});
+
 test('a game missing from the catalog is looked up in the store, within the pass budget', async () => {
   seedCatalog();
   const psn = sony();

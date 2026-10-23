@@ -135,6 +135,25 @@ test('without any store picture, the trophy icon stands in and says so', async (
   assert.equal(game.img.headerStandIn, true);
 });
 
+/*
+  Most PS4 games have no portrait banner on the store, only the square MASTER icon. Taken as the
+  portrait, it filled the tall library card cropped on both sides and kept SteamGridDB's real cover
+  out, since that fallback only fills an empty slot (Red Dead Redemption 2, Call of Duty, Minecraft).
+*/
+test('a square store icon is never the portrait, even in a list saved before the fix', async () => {
+  const images = [{ type: 'GAMEHUB_COVER_ART', url: 'https://img/hub.jpg' }, { type: 'MASTER', url: 'https://img/master.png' }];
+  const { fetchImpl } = sony({ '/gamelist/v2/': { titles: [{ titleId: 'PPSA01234_00', name: 'ASTRO BOT', localizedName: 'ASTRO BOT', concept: { media: { images } } }] } });
+  await run(fetchImpl);
+  const fresh = psnLibrary.getGameData('psn-NPWR11111_00');
+  assert.equal(fresh.img.icon, 'https://img/master.png');
+  assert.ok(!fresh.img.portrait, 'the square icon is left out of the portrait slot');
+
+  const file = path.join(psnLibrary.cacheRoot(), 'NPWR11111_00', 'schema.json');
+  const schema = JSON.parse(fs.readFileSync(file, 'utf8'));
+  fs.writeFileSync(file, JSON.stringify({ ...schema, img: { ...schema.img, portrait: schema.img.icon } }));
+  assert.ok(!psnLibrary.getGameData('psn-NPWR11111_00').img.portrait, 'an older import that saved it there drops it too');
+});
+
 test('a second import skips the lists that did not move, and never loses an unlock', async () => {
   const first = sony();
   await run(first.fetchImpl);

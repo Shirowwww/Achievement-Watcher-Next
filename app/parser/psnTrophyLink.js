@@ -125,10 +125,13 @@ function buildLink(candidate, definitions, groups, matched, locale) {
 /*
   `game` is { appid, name, achievements: [{ name, displayName, description }] } in the app language;
   `english` the same achievements in English when the store gave them, a second chance to match.
+  Without that copy the game's own texts are tried against the English trophies: a store with no
+  translation (LEGO Batman: Legacy of the Dark Knight) answers in English whatever was asked.
 */
 async function linkGame(ctx, game, { englishCtx = null, english = null, budget = null } = {}) {
   const { lists, settled } = await findCandidates(ctx, game.name, budget);
   if (!settled) return null;
+  const englishTexts = Array.isArray(english) ? english : game.achievements;
   let best = null;
   for (const candidate of lists) {
     const title = { npCommunicationId: candidate.id, npServiceName: candidate.service };
@@ -136,10 +139,10 @@ async function linkGame(ctx, game, { englishCtx = null, english = null, budget =
     const trophies = (definitions && definitions.trophies) || [];
     const { matched, size } = matchTrophies(game.achievements, trophies);
     const comparable = Math.min(game.achievements.length, size);
-    if (englishCtx && Array.isArray(english) && matched.size < comparable) {
+    if (englishCtx && matched.size < comparable) {
       const englishDefs = (await lib.fetchDefinitions(englishCtx, title, { withGroups: false })).definitions;
       const byId = new Map(trophies.map((trophy) => [trophy.trophyId, trophy]));
-      const englishMatched = matchTrophies(english, (englishDefs && englishDefs.trophies) || []).matched;
+      const englishMatched = matchTrophies(englishTexts, (englishDefs && englishDefs.trophies) || []).matched;
       for (const [name, trophy] of englishMatched) if (!matched.has(name) && byId.has(trophy.trophyId)) matched.set(name, byId.get(trophy.trophyId));
     }
     const needed = Math.max(MIN_MATCHED, Math.ceil(MIN_SHARE * comparable));

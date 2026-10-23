@@ -109,6 +109,17 @@ test('filtering lists only members and keeps references to games that are gone',
   assert.equal(collections.filterGames([{ appid: 'removed-from-disk' }], state, ID).length, 1);
 });
 
+test('the menu count leaves out members gone from the library, and uninstalled ones when asked', () => {
+  let state = collections.createCollection(collections.emptyState(), { id: ID, name: 'Mine' }).state;
+  state = collections.addGames(state, ID, ['1', '2', '3', 'removed-from-library']);
+  const library = [{ appid: 1, installed: true }, { appid: '2', installed: false }, { appid: 3, installed: true }, { appid: 4, installed: true }];
+  assert.equal(collections.countGames(library, state, ID), 3);
+  assert.equal(collections.countGames(library, state, ID, { installedOnly: true }), 2);
+  assert.equal(collections.countGames(library, state, 'unknown'), 0);
+  assert.equal(collections.countGames(null, state, ID), 0);
+  assert.equal(state.collections[0].games.length, 4);
+});
+
 test('the store round-trips through an atomic write and leaves no temporary file', (t) => {
   const dir = tempDir(t);
   const store = createCollectionStore(dir);

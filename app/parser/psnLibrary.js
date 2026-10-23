@@ -33,11 +33,12 @@ const TYPE_LETTER = { platinum: 'P', gold: 'G', silver: 'S', bronze: 'B' };
 const PLATFORM_ORDER = ['PS5', 'PS4', 'PS3', 'PSVITA'];
 const PLATFORM_LABEL = { PSVITA: 'PS Vita' };
 
-// Store pictures per slot, best first: the hub art is the wide key art, MASTER the square icon.
+// Store pictures per slot, best first: the hub art is the wide key art, MASTER the square icon. The
+// square icon is no portrait: left empty, the slot takes SteamGridDB's cover (parser/achievements.js).
 const ART_TYPES = {
   header: ['GAMEHUB_COVER_ART', 'FOUR_BY_THREE_BANNER', 'MASTER'],
   background: ['GAMEHUB_COVER_ART', 'BACKGROUND_LAYER_ART', 'FOUR_BY_THREE_BANNER'],
-  portrait: ['PORTRAIT_BANNER', 'MASTER'],
+  portrait: ['PORTRAIT_BANNER'],
   icon: ['MASTER'],
   logo: ['LOGO'],
 };
@@ -536,6 +537,8 @@ function getGameData(appid) {
     return { ...trophy, Achieved: entry.earned, UnlockTime: entry.earned_time || 0, ...progress };
   });
   const { trophyIcon, ...img } = schema.img || {};
+  // Imports before the square icon left ART_TYPES.portrait saved it there.
+  if (img.portrait && img.portrait === img.icon) delete img.portrait;
   return {
     appid: toAppid(listId),
     name: savedNames(schema).tile || listId,

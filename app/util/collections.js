@@ -142,6 +142,13 @@ function filterGames(games, state, id) {
   return (Array.isArray(games) ? games : []).filter((game) => game && members.has(String(game.appid)));
 }
 
+// What the menu shows next to a collection: the games the library would list for it right now.
+function countGames(games, state, id, { installedOnly = false } = {}) {
+  if (!collectionById(state, id)) return 0;
+  const listed = filterGames(games, state, id);
+  return installedOnly ? listed.filter((game) => game.installed).length : listed.length;
+}
+
 module.exports = {
   FORMAT,
   MAX_COLLECTIONS,
@@ -166,4 +173,5 @@ module.exports = {
   removeGames,
   memberKeys,
   filterGames,
+  countGames,
 };
