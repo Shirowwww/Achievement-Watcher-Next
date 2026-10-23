@@ -11,7 +11,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
 
-const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+const { sharedBrowser } = require('../helpers/chromium');
+
+const inContext = sharedBrowser();
 
 const root = path.join(__dirname, '..', '..');
 const appDir = path.join(root, 'app');
@@ -88,8 +90,8 @@ function page(language) {
   </body></html>`;
 }
 
-async function measure(browser, language, viewport) {
-  const tab = await browser.newPage();
+async function measure(context, language, viewport) {
+  const tab = await context.newPage();
   await tab.setViewport(viewport);
   await tab.setContent(page(language), { waitUntil: 'domcontentloaded' });
   const out = await tab.evaluate(() => {
@@ -131,133 +133,118 @@ const WIDE = { width: 1300, height: 900 };
 // The app's own minimum window width, where the Settings panel is at its narrowest.
 const NARROW = { width: 900, height: 900 };
 
-test('the explanation over the starting points gets the width of the card', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
-
-  for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
-    const m = await measure(browser, language, viewport);
-    // The old cap left it at 360px of a card twice that size; two thirds means a paragraph across
-    // the card, not a column beside something.
-    assert.ok(
-      m.intro.width > m.card.width * 0.66,
-      `${language} at ${viewport.width}: the sentence has ${Math.round(m.intro.width)}px of a ${Math.round(m.card.width)}px card`
-    );
-    assert.ok(m.introLines <= 3, `${language} at ${viewport.width}: the sentence folded onto ${m.introLines} lines`);
-    assert.notEqual(m.introColor, m.titleColor, 'the heading and the sentence are the same colour');
-    assert.ok(m.title.bottom <= m.intro.top + 1, 'the heading must sit above the sentence');
-    assert.ok(m.intro.bottom <= m.chips.top + 1, 'and the sentence above the swatches');
-  }
-});
+test('the explanation over the starting points gets the width of the card', (t) =>
+  inContext(t, async (context) => {
+    for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
+      const m = await measure(context, language, viewport);
+      // The old cap left it at 360px of a card twice that size; two thirds means a paragraph across
+      // the card, not a column beside something.
+      assert.ok(
+        m.intro.width > m.card.width * 0.66,
+        `${language} at ${viewport.width}: the sentence has ${Math.round(m.intro.width)}px of a ${Math.round(m.card.width)}px card`
+      );
+      assert.ok(m.introLines <= 3, `${language} at ${viewport.width}: the sentence folded onto ${m.introLines} lines`);
+      assert.notEqual(m.introColor, m.titleColor, 'the heading and the sentence are the same colour');
+      assert.ok(m.title.bottom <= m.intro.top + 1, 'the heading must sit above the sentence');
+      assert.ok(m.intro.bottom <= m.chips.top + 1, 'and the sentence above the swatches');
+    }
+  }));
 
 /* Import and Export are the same action in opposite directions, so they are one equal pair. */
-test('Import and Export are one pair of equal halves', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+test('Import and Export are one pair of equal halves', (t) =>
+  inContext(t, async (context) => {
+    for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
+      const m = await measure(context, language, viewport);
+      const where = `${language} at ${viewport.width}`;
 
-  for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
-    const m = await measure(browser, language, viewport);
-    const where = `${language} at ${viewport.width}`;
-
-    assert.ok(Math.abs(m.import.width - m.export.width) <= 1, `${where}: the two are ${m.import.width} and ${m.export.width} wide`);
-    assert.ok(Math.abs(m.import.top - m.export.top) <= 1, `${where}: they are not on the same line`);
-    assert.ok(Math.abs(m.import.height - m.export.height) <= 1, `${where}: they are not the same height`);
-    assert.ok(m.export.left > m.import.right, `${where}: Export must follow Import`);
-    // Equal spacing: the gap between them matches the gap to the edges of the pair they fill.
-    const gap = m.export.left - m.import.right;
-    assert.ok(gap > 0 && gap <= 16, `${where}: the gap between them is ${Math.round(gap)}px`);
-    assert.ok(Math.abs(m.import.left - m.pair.left) <= 1 && Math.abs(m.export.right - m.pair.right) <= 1, `${where}: the pair is not filled evenly`);
-  }
-});
+      assert.ok(Math.abs(m.import.width - m.export.width) <= 1, `${where}: the two are ${m.import.width} and ${m.export.width} wide`);
+      assert.ok(Math.abs(m.import.top - m.export.top) <= 1, `${where}: they are not on the same line`);
+      assert.ok(Math.abs(m.import.height - m.export.height) <= 1, `${where}: they are not the same height`);
+      assert.ok(m.export.left > m.import.right, `${where}: Export must follow Import`);
+      // Equal spacing: the gap between them matches the gap to the edges of the pair they fill.
+      const gap = m.export.left - m.import.right;
+      assert.ok(gap > 0 && gap <= 16, `${where}: the gap between them is ${Math.round(gap)}px`);
+      assert.ok(Math.abs(m.import.left - m.pair.left) <= 1 && Math.abs(m.export.right - m.pair.right) <= 1, `${where}: the pair is not filled evenly`);
+    }
+  }));
 
 /*
   The three sources (a preset file, a SAN theme, SAN on this PC) are entries of one Import menu:
   hidden at rest, opening above the button since this row closes the card. Import and Export are
   drawn alike, and the action the whole tab leads to is the only filled one.
 */
-test('Import opens one menu of the three sources, above the button', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+test('Import opens one menu of the three sources, above the button', (t) =>
+  inContext(t, async (context) => {
+    const tab = await context.newPage();
+    await tab.setViewport(WIDE);
+    await tab.setContent(page('de'), { waitUntil: 'domcontentloaded' });
+    const read = () =>
+      tab.evaluate(() => {
+        const look = (selector) => {
+          const node = document.querySelector(selector);
+          const style = getComputedStyle(node);
+          const rect = node.getBoundingClientRect();
+          return { top: rect.top, bottom: rect.bottom, width: rect.width, visibility: style.visibility, background: style.backgroundColor, border: style.borderTopColor };
+        };
+        return {
+          list: look('#pd-import-list'),
+          items: ['#btn-import-preset', '#btn-import-san', '#btn-import-san-setup'].map(look),
+          imp: look('#btn-import-menu'),
+          exp: look('#btn-export-preset'),
+          create: look('#btn-create-preset'),
+        };
+      });
+    const rest = await read();
+    await tab.evaluate(() => document.querySelector('#pd-import').classList.add('is-open'));
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const open = await read();
+    await tab.close();
 
-  const tab = await browser.newPage();
-  await tab.setViewport(WIDE);
-  await tab.setContent(page('de'), { waitUntil: 'domcontentloaded' });
-  const read = () =>
-    tab.evaluate(() => {
-      const look = (selector) => {
-        const node = document.querySelector(selector);
-        const style = getComputedStyle(node);
-        const rect = node.getBoundingClientRect();
-        return { top: rect.top, bottom: rect.bottom, width: rect.width, visibility: style.visibility, background: style.backgroundColor, border: style.borderTopColor };
-      };
-      return {
-        list: look('#pd-import-list'),
-        items: ['#btn-import-preset', '#btn-import-san', '#btn-import-san-setup'].map(look),
-        imp: look('#btn-import-menu'),
-        exp: look('#btn-export-preset'),
-        create: look('#btn-create-preset'),
-      };
-    });
-  const rest = await read();
-  await tab.evaluate(() => document.querySelector('#pd-import').classList.add('is-open'));
-  await new Promise((resolve) => setTimeout(resolve, 300));
-  const open = await read();
-  await tab.close();
+    const invisible = (color) => /rgba\(0, 0, 0, 0\)|^transparent$|\/ 0\)/.test(color);
 
-  const invisible = (color) => /rgba\(0, 0, 0, 0\)|^transparent$|\/ 0\)/.test(color);
-
-  assert.equal(rest.list.visibility, 'hidden', 'the menu shows before Import is clicked');
-  assert.equal(open.list.visibility, 'visible');
-  assert.ok(open.list.bottom <= open.imp.top, 'the menu must open above the button');
-  for (const item of open.items) {
-    assert.ok(Math.abs(item.width - open.items[0].width) <= 1, 'the entries are not one column');
-  }
-  assert.equal(rest.imp.border, rest.exp.border, 'Import and Export are not drawn alike');
-  assert.equal(rest.imp.background, rest.exp.background, 'Import and Export are not drawn alike');
-  assert.notEqual(open.imp.border, open.exp.border, 'an open Import should show it is open');
-  assert.ok(!invisible(rest.create.background), `the primary action is filled (${rest.create.background})`);
-  assert.ok(invisible(rest.imp.background), 'Import is outlined rather than filled, so only one button is');
-});
+    assert.equal(rest.list.visibility, 'hidden', 'the menu shows before Import is clicked');
+    assert.equal(open.list.visibility, 'visible');
+    assert.ok(open.list.bottom <= open.imp.top, 'the menu must open above the button');
+    for (const item of open.items) {
+      assert.ok(Math.abs(item.width - open.items[0].width) <= 1, 'the entries are not one column');
+    }
+    assert.equal(rest.imp.border, rest.exp.border, 'Import and Export are not drawn alike');
+    assert.equal(rest.imp.background, rest.exp.background, 'Import and Export are not drawn alike');
+    assert.notEqual(open.imp.border, open.exp.border, 'an open Import should show it is open');
+    assert.ok(!invisible(rest.create.background), `the primary action is filled (${rest.create.background})`);
+    assert.ok(invisible(rest.imp.background), 'Import is outlined rather than filled, so only one button is');
+  }));
 
 /*
   Pins one arrangement (file actions under design actions) rather than "side by side or stacked":
   an earlier version used a viewport query that never fired at the card's actual width, leaving a
   column layout's leftover hairline pointing at nothing while a looser test allowed either shape.
 */
-test('the file actions are their own row under the design actions', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+test('the file actions are their own row under the design actions', (t) =>
+  inContext(t, async (context) => {
+    for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
+      const m = await measure(context, language, viewport);
+      const where = `${language} at ${viewport.width}`;
 
-  for (const [language, viewport] of [['en', WIDE], ['de', WIDE], ['de', NARROW]]) {
-    const m = await measure(browser, language, viewport);
-    const where = `${language} at ${viewport.width}`;
-
-    assert.ok(m.files.top >= m.primary.bottom - 1, `${where}: the file actions are not under the design actions`);
-    assert.ok(m.files.left <= m.primary.left + 1, `${where}: the file actions are indented like a column that is not there`);
-    assert.equal(m.overflows, false, `${where}: the card scrolls sideways`);
-    assert.ok(m.create.top <= m.import.top + 1, `${where}: the file actions came before the primary one`);
-    // The separator belongs to the edge the two groups actually meet on.
-    assert.equal(m.filesBorder.left, '0px', `${where}: the group still carries the left rule of a column layout`);
-    assert.notEqual(m.filesBorder.top, '0px', `${where}: nothing separates the two groups`);
-  }
-});
+      assert.ok(m.files.top >= m.primary.bottom - 1, `${where}: the file actions are not under the design actions`);
+      assert.ok(m.files.left <= m.primary.left + 1, `${where}: the file actions are indented like a column that is not there`);
+      assert.equal(m.overflows, false, `${where}: the card scrolls sideways`);
+      assert.ok(m.create.top <= m.import.top + 1, `${where}: the file actions came before the primary one`);
+      // The separator belongs to the edge the two groups actually meet on.
+      assert.equal(m.filesBorder.left, '0px', `${where}: the group still carries the left rule of a column layout`);
+      assert.notEqual(m.filesBorder.top, '0px', `${where}: nothing separates the two groups`);
+    }
+  }));
 
 /*
   The card now grows with the window, so "no room for two columns" no longer guarantees the row's
   shape at the widest size; only this test does.
 */
-test('the action row keeps its shape on the widest window there is', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
-
-  const widest = await measure(browser, 'en', { width: 2560, height: 1000 });
-  // Measured rather than assumed: the point is that the shape holds however wide the card gets.
-  assert.ok(widest.card.width > 700, `the card should grow on a big screen, got ${Math.round(widest.card.width)}px`);
-  assert.ok(widest.files.top >= widest.primary.bottom - 1, 'even at 2560px the file actions stay their own row');
-  assert.ok(widest.files.left <= widest.primary.left + 1, 'and start at the same edge, not indented like a column');
-});
+test('the action row keeps its shape on the widest window there is', (t) =>
+  inContext(t, async (context) => {
+    const widest = await measure(context, 'en', { width: 2560, height: 1000 });
+    // Measured rather than assumed: the point is that the shape holds however wide the card gets.
+    assert.ok(widest.card.width > 700, `the card should grow on a big screen, got ${Math.round(widest.card.width)}px`);
+    assert.ok(widest.files.top >= widest.primary.bottom - 1, 'even at 2560px the file actions stay their own row');
+    assert.ok(widest.files.left <= widest.primary.left + 1, 'and start at the same edge, not indented like a column');
+  }));

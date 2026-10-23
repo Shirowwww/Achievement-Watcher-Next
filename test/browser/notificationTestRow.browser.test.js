@@ -9,66 +9,10 @@ const { test } = require('node:test');
 const { BUNDLED_LOCALE_COUNT } = require('../helpers/locales.js');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
-
-function findBrowsers() {
-  return [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ]
-    .filter(Boolean)
-    .filter((file) => fs.existsSync(file));
-}
-
-function killBrowserUsing(userDataDir) {
-  if (process.platform !== 'win32' || !userDataDir) return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_TESTROW_PROFILE) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_TESTROW_PROFILE: userDataDir } }
-    );
-  } catch {
-    // Closing Chromium normally is enough; this only clears a failed launch that detached itself.
-  }
-}
-
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-testrow-browser-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        headless: true,
-        timeout: 30000,
-        protocolTimeout: 60000,
-        userDataDir,
-        args: ['--no-sandbox', '--disable-gpu', '--allow-file-access-from-files'],
-      });
-      return { browser, userDataDir, failures };
-    } catch (error) {
-      failures.push(`${path.basename(executablePath)}: ${String(error.message || error).split('\n')[0]}`);
-      killBrowserUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killBrowserUsing);
-    }
-  }
-  return { browser: null, userDataDir: null, failures };
-}
 
 // The five buttons, in the order app.html lists them.
 const TEST_KEYS = ['achievement', 'rare', 'progress', 'playtime', 'platinum'];
@@ -143,9 +87,9 @@ async function measureRow(page, labels, width) {
 }
 
 test('the notification test buttons share the line evenly, in every locale', { concurrency: 1, timeout: 300000 }, async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
   if (!browser) {
-    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -179,8 +123,6 @@ test('the notification test buttons share the line evenly, in every locale', { c
       assert.equal(row.overflowing, 0, `${name}: a label is clipped when the panel is narrow`);
     }
   } finally {
-    if (browser) await browser.close().catch(() => {});
-    killBrowserUsing(userDataDir);
-    await removeBrowserProfile(userDataDir, killBrowserUsing);
+    await closeBrowser(browser, userDataDir);
   }
 });

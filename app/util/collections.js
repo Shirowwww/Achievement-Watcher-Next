@@ -130,11 +130,6 @@ function removeGames(state, id, keys) {
   return replaceCollection(state, id, { games: current.games.filter((key) => !drop.has(key)) });
 }
 
-function hasGame(state, id, key) {
-  const current = collectionById(state, id);
-  return !!current && current.games.includes(normalizeGameKey(key));
-}
-
 function memberKeys(state, id) {
   const current = collectionById(state, id);
   return current ? new Set(current.games) : null;
@@ -169,7 +164,6 @@ module.exports = {
   removeCollection,
   addGames,
   removeGames,
-  hasGame,
   memberKeys,
   filterGames,
 };

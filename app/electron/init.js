@@ -5420,7 +5420,7 @@ async function createOverlayWindow(info) {
     // would drift from the app's own view/overlay.html + util/overlayUi.js.
     overlayVisible = true;
     overlayWindow.loadFile(path.join(__dirname, '../view/overlay.html'));
-    overlayWindow.webContents.on('dom-ready', () => insertSegoeFallback(overlayWindow.webContents, { log: debug.log }));
+    overlayWindow.webContents.on('dom-ready', () => insertSegoeFallback(overlayWindow.webContents, { log: (line) => debug.log(line) }));
     overlayWindow.webContents.on('did-finish-load', () => {
       showOverlayAfterLoad(info);
     });
@@ -5791,7 +5791,7 @@ function watchPresetWindow(win) {
 function dressPresetWindow(win, layer) {
   watchPresetWindow(win);
   win.webContents.once('dom-ready', () => {
-    if (!win.isDestroyed()) insertSegoeFallback(win.webContents, { log: debug.log });
+    if (!win.isDestroyed()) insertSegoeFallback(win.webContents, { log: (line) => debug.log(line) });
   });
   if (!layer) return;
   // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
@@ -5812,7 +5812,7 @@ const presetInsets = require('./presetInsets.js').createPresetInsets({
   imagePath: path.join(__dirname, '../resources/img/avatar.png'),
   dimensions: getPresetDimensions,
   prepare: dressPresetWindow,
-  log: debug.log,
+  log: (line) => debug.log(line),
 });
 
 // A preset whose card follows its text is rendered with this popup's own text before it is placed;

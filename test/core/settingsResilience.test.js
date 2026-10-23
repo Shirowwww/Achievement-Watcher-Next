@@ -63,7 +63,7 @@ test('every section a load can touch survives being absent', () => {
   for (const section of sections) {
     const stripped = COMPLETE.split(/\r?\n/)
       .filter((line, index, lines) => {
-        const header = lines.slice(0, index + 1).reverse().find((l) => l.startsWith('['));
+        const header = lines.slice(0, index + 1).findLast((l) => l.startsWith('['));
         return header !== `[${section}]`;
       })
       .join('\n');

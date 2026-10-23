@@ -42,11 +42,6 @@ function payloadToMap(payload) {
   return map;
 }
 
-// Synchronous, no freshness gate - instant lookup for the toast hot path.
-function readRarityMap(appid) {
-  return payloadToMap(readPayload(appid));
-}
-
 function writeCache(appid, entries) {
   try {
     fs.mkdirSync(CACHE_DIR, { recursive: true });
@@ -144,4 +139,4 @@ async function getRarityMap(appid, { ttlMs = DEFAULT_TTL_MS, source = '' } = {})
   return payloadToMap(payload);
 }
 
-module.exports = { readRarityMap, getRarityMap, cacheFile, isSteamRarityId, CACHE_ONLY_SOURCES };
+module.exports = { getRarityMap, cacheFile, isSteamRarityId, CACHE_ONLY_SOURCES };

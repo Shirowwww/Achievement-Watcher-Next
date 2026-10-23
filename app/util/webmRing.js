@@ -131,7 +131,7 @@ function createWebmRing({ keepMs }) {
   function cut(fromMs, toMs) {
     const keys = clusters.map((cluster, i) => (cluster.key ? i : -1)).filter((i) => i >= 0);
     if (!header || !keys.length) return null;
-    const first = keys.filter((i) => clusters[i].time <= fromMs).pop() ?? keys[0];
+    const first = keys.findLast((i) => clusters[i].time <= fromMs) ?? keys[0];
     const picked = clusters.slice(first).filter((cluster) => cluster.time <= toMs);
     if (!picked.length) return null;
     const start = picked[0].time;

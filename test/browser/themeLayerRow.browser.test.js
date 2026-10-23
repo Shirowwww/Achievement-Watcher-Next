@@ -15,7 +15,9 @@ const { test } = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+const { sharedBrowser } = require('../helpers/chromium');
+
+const inContext = sharedBrowser();
 
 const root = path.join(__dirname, '..', '..');
 const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
@@ -79,72 +81,64 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><style>
 </body></html>`;
 
 test('every layer row keeps its controls beside the label, however long the name is', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    await page.setViewport({ width: 1100, height: 900 });
+    await page.setContent(PAGE, { waitUntil: 'domcontentloaded' });
 
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1100, height: 900 });
-  await page.setContent(PAGE, { waitUntil: 'domcontentloaded' });
+    const measured = await page.evaluate(() =>
+      Array.prototype.map.call(document.querySelectorAll('.theme-layer-row'), (element) => {
+        const label = element.querySelector('.theme-layer-label').getBoundingClientRect();
+        const controls = element.querySelector('.theme-layer-controls').getBoundingClientRect();
+        return {
+          name: element.querySelector('.theme-layer-name').textContent,
+          rowWidth: element.getBoundingClientRect().width,
+          controlsRight: Math.round(controls.right),
+          wrapped: controls.top >= label.bottom,
+          overflows: controls.right > element.getBoundingClientRect().right + 1,
+        };
+      })
+    );
 
-  const measured = await page.evaluate(() =>
-    Array.prototype.map.call(document.querySelectorAll('.theme-layer-row'), (element) => {
-      const label = element.querySelector('.theme-layer-label').getBoundingClientRect();
-      const controls = element.querySelector('.theme-layer-controls').getBoundingClientRect();
-      return {
-        name: element.querySelector('.theme-layer-name').textContent,
-        rowWidth: element.getBoundingClientRect().width,
-        controlsRight: Math.round(controls.right),
-        wrapped: controls.top >= label.bottom,
-        overflows: controls.right > element.getBoundingClientRect().right + 1,
-      };
-    })
-  );
+    assert.equal(measured.length, 5, 'all five rows must render');
+    for (const line of measured) {
+      assert.equal(line.wrapped, false, `"${line.name}" dropped its controls onto a second line`);
+      assert.equal(line.overflows, false, `"${line.name}" pushed its controls out of the row`);
+    }
 
-  assert.equal(measured.length, 5, 'all five rows must render');
-  for (const line of measured) {
-    assert.equal(line.wrapped, false, `"${line.name}" dropped its controls onto a second line`);
-    assert.equal(line.overflows, false, `"${line.name}" pushed its controls out of the row`);
-  }
-
-  // And they line up: the controls are pinned to the same right edge on every row, which is what
-  // makes the five read as one list rather than five differently-shaped ones.
-  const edges = new Set(measured.map((line) => line.controlsRight));
-  assert.equal(edges.size, 1, `the controls must end on one edge, got ${[...edges].join(', ')}`);
-
-  await page.close();
+    // And they line up: the controls are pinned to the same right edge on every row, which is what
+    // makes the five read as one list rather than five differently-shaped ones.
+    const edges = new Set(measured.map((line) => line.controlsRight));
+    assert.equal(edges.size, 1, `the controls must end on one edge, got ${[...edges].join(', ')}`);
+  });
 });
 
 test('a name with no room left still wraps rather than widening the row', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    await page.setViewport({ width: 1100, height: 900 });
+    // A name no language would really produce, to prove the row bends instead of breaking.
+    await page.setContent(
+      PAGE.replace('Fond de la fenêtre', 'Fond de la fenêtre principale de l application avec un nom deraisonnablement long'),
+      { waitUntil: 'domcontentloaded' }
+    );
 
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1100, height: 900 });
-  // A name no language would really produce, to prove the row bends instead of breaking.
-  await page.setContent(
-    PAGE.replace('Fond de la fenêtre', 'Fond de la fenêtre principale de l application avec un nom deraisonnablement long'),
-    { waitUntil: 'domcontentloaded' }
-  );
+    const first = await page.evaluate(() => {
+      const element = document.querySelector('.theme-layer-row');
+      const label = element.querySelector('.theme-layer-label').getBoundingClientRect();
+      const controls = element.querySelector('.theme-layer-controls').getBoundingClientRect();
+      const name = element.querySelector('.theme-layer-name');
+      return {
+        wrapped: controls.top >= label.bottom,
+        lines: Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)),
+        rowWidth: element.getBoundingClientRect().width,
+      };
+    });
 
-  const first = await page.evaluate(() => {
-    const element = document.querySelector('.theme-layer-row');
-    const label = element.querySelector('.theme-layer-label').getBoundingClientRect();
-    const controls = element.querySelector('.theme-layer-controls').getBoundingClientRect();
-    const name = element.querySelector('.theme-layer-name');
-    return {
-      wrapped: controls.top >= label.bottom,
-      lines: Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)),
-      rowWidth: element.getBoundingClientRect().width,
-    };
+    assert.equal(first.wrapped, false, 'the controls stay beside a name that does not fit');
+    assert.ok(first.lines >= 2, 'the name is what takes the extra line');
+    assert.ok(first.rowWidth <= 620, 'and the row itself never grows past its panel');
   });
-
-  assert.equal(first.wrapped, false, 'the controls stay beside a name that does not fit');
-  assert.ok(first.lines >= 2, 'the name is what takes the extra line');
-  assert.ok(first.rowWidth <= 620, 'and the row itself never grows past its panel');
-
-  await page.close();
 });
 
 /*
@@ -156,42 +150,38 @@ test('a name with no room left still wraps rather than widening the row', async 
   the width of the row rather than the width of the label.
 */
 test('every layer hint is shown in full, on the width of the row', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    await page.setViewport({ width: 1100, height: 900 });
+    await page.setContent(PAGE, { waitUntil: 'domcontentloaded' });
 
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1100, height: 900 });
-  await page.setContent(PAGE, { waitUntil: 'domcontentloaded' });
+    const measured = await page.evaluate(() =>
+      Array.prototype.map.call(document.querySelectorAll('.theme-layer-row'), (element) => {
+        const hint = element.querySelector('.theme-layer-hint');
+        const label = element.querySelector('.theme-layer-label');
+        const style = getComputedStyle(hint);
+        return {
+          text: hint.textContent,
+          clipped: hint.scrollWidth > hint.clientWidth + 1,
+          ellipsis: style.textOverflow === 'ellipsis' && style.overflow !== 'visible',
+          nowrap: style.whiteSpace === 'nowrap',
+          width: Math.round(hint.getBoundingClientRect().width),
+          labelWidth: Math.round(label.getBoundingClientRect().width),
+          below: hint.getBoundingClientRect().top >= label.getBoundingClientRect().bottom,
+          lines: Math.round(hint.getBoundingClientRect().height / parseFloat(style.lineHeight)),
+        };
+      })
+    );
 
-  const measured = await page.evaluate(() =>
-    Array.prototype.map.call(document.querySelectorAll('.theme-layer-row'), (element) => {
-      const hint = element.querySelector('.theme-layer-hint');
-      const label = element.querySelector('.theme-layer-label');
-      const style = getComputedStyle(hint);
-      return {
-        text: hint.textContent,
-        clipped: hint.scrollWidth > hint.clientWidth + 1,
-        ellipsis: style.textOverflow === 'ellipsis' && style.overflow !== 'visible',
-        nowrap: style.whiteSpace === 'nowrap',
-        width: Math.round(hint.getBoundingClientRect().width),
-        labelWidth: Math.round(label.getBoundingClientRect().width),
-        below: hint.getBoundingClientRect().top >= label.getBoundingClientRect().bottom,
-        lines: Math.round(hint.getBoundingClientRect().height / parseFloat(style.lineHeight)),
-      };
-    })
-  );
-
-  assert.equal(measured.length, 5, 'all five rows must render');
-  for (const line of measured) {
-    assert.equal(line.nowrap, false, `"${line.text}" is still held on one line`);
-    assert.equal(line.ellipsis, false, `"${line.text}" is still truncated with an ellipsis`);
-    assert.equal(line.clipped, false, `"${line.text}" does not fit the box that draws it`);
-    assert.equal(line.below, true, `"${line.text}" must sit under the name, not beside it`);
-    assert.ok(line.width > line.labelWidth, `"${line.text}" is still confined to the label column`);
-    // Two lines is a wrap; five is the ribbon this replaced.
-    assert.ok(line.lines <= 2, `"${line.text}" wrapped onto ${line.lines} lines`);
-  }
-
-  await page.close();
+    assert.equal(measured.length, 5, 'all five rows must render');
+    for (const line of measured) {
+      assert.equal(line.nowrap, false, `"${line.text}" is still held on one line`);
+      assert.equal(line.ellipsis, false, `"${line.text}" is still truncated with an ellipsis`);
+      assert.equal(line.clipped, false, `"${line.text}" does not fit the box that draws it`);
+      assert.equal(line.below, true, `"${line.text}" must sit under the name, not beside it`);
+      assert.ok(line.width > line.labelWidth, `"${line.text}" is still confined to the label column`);
+      // Two lines is a wrap; five is the ribbon this replaced.
+      assert.ok(line.lines <= 2, `"${line.text}" wrapped onto ${line.lines} lines`);
+    }
+  });
 });

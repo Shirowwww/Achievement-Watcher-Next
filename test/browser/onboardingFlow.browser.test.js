@@ -8,7 +8,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+const { sharedBrowser } = require('../helpers/chromium');
 const { openStaticApp, appDir } = require('../helpers/staticApp');
 
 const read = (...parts) => fs.readFileSync(path.join(appDir, ...parts), 'utf8');
@@ -125,8 +125,8 @@ function baseWorld(overrides = {}) {
   };
 }
 
-async function openGuide(browser, world = baseWorld()) {
-  const page = await openStaticApp(browser, { width: 1280, height: 860 });
+async function openGuide(context, world = baseWorld()) {
+  const page = await openStaticApp(context,{ width: 1280, height: 860 });
   await page.evaluate(() => {
     for (const value of ['default', 'steam-blue']) $('#option_theme').append($('<option>').attr('value', value).text(value));
   });
@@ -149,15 +149,9 @@ const state = (page) =>
 
 const settle = (page, ms = 120) => new Promise((resolve) => setTimeout(resolve, ms)).then(() => page.evaluate(() => null));
 
-async function withGuide(t, fn, world) {
-  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
-  if (!browser) return t.skip(skipReason(failures));
-  try {
-    await fn(await openGuide(browser, world), browser);
-  } finally {
-    await closeBrowser(browser, userDataDir);
-  }
-}
+const inContext = sharedBrowser(['--allow-file-access-from-files']);
+
+const withGuide = (t, fn, world) => inContext(t, async (context) => fn(await openGuide(context, world)));
 
 async function answerBasics(page, { language = 'english', mode = 'simple' } = {}) {
   await page.select('#onboard-language', language);

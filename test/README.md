@@ -11,13 +11,33 @@ folders:
 - `updates-security`: updater boundaries and security and privacy checks;
 - `site`: the website in `docs/`: guides, home page, galleries, generated files.
 
-Reusable browser cleanup code goes in `helpers`, and binary and HTML samples in `fixtures`.
+Reusable code goes in `helpers` (`chromium.js` launches and closes the browser, `contrast.js` is the
+WCAG maths, `runReport.js` is the runner's reporter), and binary and HTML samples in `fixtures`.
 
 The Watchdog's own suite lives in `watchdog/test`. It resolves `regodit` and `koffi` from
 `watchdog/node_modules`, so the runner starts it as a second process in that folder. `npm test` from
 `app/` runs both suites and fails if either does; `npm test` from `watchdog/` runs only the Watchdog
 suite. Within a suite, files run in parallel, except the few that touch the real Windows registry or
 rewrite a shipped asset, which `test/run.js` lists by name and runs one at a time.
+
+How `test/run.js` keeps the run short:
+
+- both suites run at the same time, the slowest browser files first (`LONGEST_FIRST`), so no long
+  file starts last;
+- `AW_TEST_CONCURRENCY` sets how many app files run together (default: cores minus one, at most 8;
+  more is slower, the suite is CPU-bound);
+- a file that fails under load is rerun alone once: it is reported as `flaky` if it then passes and as
+  `FAILED` if it does not (`AW_TEST_RERUN=0` turns the rerun off);
+- each batch gets a small temp root of its own (`TEMP` points into it), so tests that scan the folders
+  above their working directory do not walk the machine's real Temp;
+- the run ends with the slowest files (`AW_TEST_SLOWEST` sets how many, default 8), then
+  `=== total: N passed, F files failed, K flaky, Ss ===`; the exit code is 1 only when a file still
+  fails.
+
+A browser test starts Chromium once for the whole file with `sharedBrowser(args)` from
+`helpers/chromium.js`, and runs each test in a fresh `BrowserContext` (`inContext(t, async (context)
+=> ...)`). A test that opens many pages at once gives each page a context of its own: a hidden tab of
+a shared context does not run animations or timers.
 
 To run one family or one file from `app/`:
 

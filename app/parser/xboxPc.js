@@ -12,7 +12,6 @@ const { execFile } = require('child_process');
 const { parseUnlockTimeSeconds } = require('../util/unlockTime.js');
 const { writeFileAtomicSync } = require('../util/replaceFile.js');
 
-const XBOX_PC_PLATFORM = 'xbox-pc';
 const XBOX_PC_SOURCE = 'Xbox PC';
 const XBOX_PC_CLIENT_ID =
   String(process.env.XBOX_PC_CLIENT_ID || '').trim() || '388ea51c-0b25-4029-aae2-17df49d23905';
@@ -903,7 +902,6 @@ function status() {
 
 module.exports = {
   setUserDataPath,
-  XBOX_PC_PLATFORM,
   XBOX_PC_SOURCE,
   XBOX_PC_CLIENT_ID,
   XBOX_PC_REDIRECT_URI,

@@ -13,7 +13,9 @@ const http = require('node:http');
 const path = require('node:path');
 const { test } = require('node:test');
 
-const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+const { sharedBrowser } = require('../helpers/chromium');
+
+const inContext = sharedBrowser();
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 const { buildThemeMock } = require(path.join(appDir, 'util', 'themeMock.js'));
@@ -56,34 +58,30 @@ async function serve(document) {
 }
 
 async function withFrame(t, mock, run) {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) {
-    t.skip(skipReason(failures));
-    return;
-  }
-  const { server, url } = await serve(host(mock));
-  try {
-    const page = await browser.newPage();
-    const errors = [];
-    page.on('pageerror', (err) => errors.push(String(err.message || err)));
+  await inContext(t, async (context) => {
+    const { server, url } = await serve(host(mock));
+    try {
+      const page = await context.newPage();
+      const errors = [];
+      page.on('pageerror', (err) => errors.push(String(err.message || err)));
 
-    await page.goto(url, { waitUntil: 'load' });
-    // Filling the frame the way settings.js does. The JSON island keeps the mock out of the host
-    // markup, so nothing here can be confused with a parser difference.
-    await page.evaluate(() => {
-      const frame = document.getElementById('frame');
-      frame.srcdoc = JSON.parse(document.getElementById('fill').textContent);
-    });
-    await page.waitForFunction(() => {
-      const frame = document.getElementById('frame');
-      return frame.contentDocument && frame.contentDocument.querySelector('.mock');
-    }, { timeout: 15000 });
+      await page.goto(url, { waitUntil: 'load' });
+      // Filling the frame the way settings.js does. The JSON island keeps the mock out of the host
+      // markup, so nothing here can be confused with a parser difference.
+      await page.evaluate(() => {
+        const frame = document.getElementById('frame');
+        frame.srcdoc = JSON.parse(document.getElementById('fill').textContent);
+      });
+      await page.waitForFunction(() => {
+        const frame = document.getElementById('frame');
+        return frame.contentDocument && frame.contentDocument.querySelector('.mock');
+      }, { timeout: 15000 });
 
-    await run(page, errors);
-  } finally {
-    server.close();
-    await closeBrowser(browser, userDataDir);
-  }
+      await run(page, errors);
+    } finally {
+      server.close();
+    }
+  });
 }
 
 test('the frame paints the sample with the theme it was given', { concurrency: 1, timeout: 120000 }, async (t) => {

@@ -68,10 +68,6 @@ function splitPathLower(inputPath) {
     .filter(Boolean);
 }
 
-function isShadPs4RuntimePath(inputPath) {
-  return splitPathLower(inputPath).includes('shadps4');
-}
-
 function matchesPathSuffix(pathParts, suffixParts) {
   if (!Array.isArray(pathParts) || !Array.isArray(suffixParts)) return false;
   if (!suffixParts.length || pathParts.length < suffixParts.length) return false;
@@ -88,42 +84,6 @@ function getStrictRootProfile(rootPath) {
     if (matchesPathSuffix(parts, profile.suffix)) return profile;
   }
   return null;
-}
-
-function getRelativeSegmentsFromRoot(rootPath, targetPath) {
-  if (!rootPath || !targetPath) return [];
-  let rel = '';
-  try {
-    rel = path.relative(rootPath, targetPath);
-  } catch {
-    return [];
-  }
-  if (!rel || rel === '.') return [];
-  if (rel.startsWith('..') || path.isAbsolute(rel)) return [];
-  return rel.split(/[\\/]+/).filter(Boolean);
-}
-
-function parseStrictRootAppId(rootPath, targetPath) {
-  const segments = getRelativeSegmentsFromRoot(rootPath, targetPath);
-  if (!segments.length) return null;
-  const first = segments[0];
-  return isAppIdName(first) ? first : null;
-}
-
-function isPathInsideRoot(rootPath, targetPath) {
-  if (!rootPath || !targetPath) return false;
-  let rel = '';
-  try {
-    rel = path.relative(rootPath, targetPath);
-  } catch {
-    return false;
-  }
-  if (!rel || rel === '.') return true;
-  return (
-    rel !== '..' &&
-    !rel.startsWith(`..${path.sep}`) &&
-    !path.isAbsolute(rel)
-  );
 }
 
 function normalizeRoot(inputRoot) {
@@ -877,10 +837,7 @@ module.exports = {
   findUniverseLanAppId,
   getStrictRootProfile,
   isAppIdName,
-  isPathInsideRoot,
-  isShadPs4RuntimePath,
   normalizeRoot,
-  parseStrictRootAppId,
   scanRootOnce,
   shouldIgnoreDiscoveredId,
 };

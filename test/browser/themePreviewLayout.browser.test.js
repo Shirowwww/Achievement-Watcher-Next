@@ -14,7 +14,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
 
-const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+const { sharedBrowser } = require('../helpers/chromium');
+
+const inContext = sharedBrowser();
 
 const root = path.join(__dirname, '..', '..');
 const appDir = path.join(root, 'app');
@@ -100,22 +102,18 @@ function design() {
 }
 
 test('the whole modal fits inside the smallest window the app allows', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    const measured = await layout(page, MINIMUM);
 
-  const page = await browser.newPage();
-  const measured = await layout(page, MINIMUM);
-
-  assert.ok(measured.header.top >= measured.top - 1, `the header starts above the modal area (${measured.header.top})`);
-  assert.ok(
-    measured.actions.bottom <= measured.viewport.height,
-    `Cancel and Import are below the bottom edge (${measured.actions.bottom} > ${measured.viewport.height})`
-  );
-  assert.ok(measured.box.left >= 0 && measured.box.right <= measured.viewport.width, 'the modal runs off the side');
-  assert.equal(measured.bodyOverflows, false, 'the page scrolls sideways');
-
-  await page.close();
+    assert.ok(measured.header.top >= measured.top - 1, `the header starts above the modal area (${measured.header.top})`);
+    assert.ok(
+      measured.actions.bottom <= measured.viewport.height,
+      `Cancel and Import are below the bottom edge (${measured.actions.bottom} > ${measured.viewport.height})`
+    );
+    assert.ok(measured.box.left >= 0 && measured.box.right <= measured.viewport.width, 'the modal runs off the side');
+    assert.equal(measured.bodyOverflows, false, 'the page scrolls sideways');
+  });
 });
 
 /*
@@ -123,43 +121,35 @@ test('the whole modal fits inside the smallest window the app allows', async (t)
   picture that is shorter but also narrower is right and one that is squashed is not.
 */
 test('the sample is scaled, never squashed', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
-
-  const page = await browser.newPage();
-  const ratio = DESIGN.width / DESIGN.height;
-  for (const size of [MINIMUM, { width: 1300, height: 800 }, { width: 1920, height: 1080 }]) {
-    const measured = await layout(page, size);
-    const actual = measured.frame.width / measured.frame.height;
-    assert.ok(
-      Math.abs(actual - ratio) < 0.02,
-      `at ${size.width}x${size.height} the sample is ${actual.toFixed(3)} rather than ${ratio.toFixed(3)}`
-    );
-    assert.ok(measured.frame.width > 260, `at ${size.width}x${size.height} the sample is too small to judge a theme by`);
-  }
-
-  await page.close();
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    const ratio = DESIGN.width / DESIGN.height;
+    for (const size of [MINIMUM, { width: 1300, height: 800 }, { width: 1920, height: 1080 }]) {
+      const measured = await layout(page, size);
+      const actual = measured.frame.width / measured.frame.height;
+      assert.ok(
+        Math.abs(actual - ratio) < 0.02,
+        `at ${size.width}x${size.height} the sample is ${actual.toFixed(3)} rather than ${ratio.toFixed(3)}`
+      );
+      assert.ok(measured.frame.width > 260, `at ${size.width}x${size.height} the sample is too small to judge a theme by`);
+    }
+  });
 });
 
 // Header and actions are pinned and only the middle scrolls, so a window too short for everything
 // still shows the decision rather than hiding it below the fold.
 test('a window too short for the detail scrolls the detail, not the buttons', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
-  if (!browser) return t.skip(skipReason(failures));
-  t.after(() => closeBrowser(browser, userDataDir));
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    // Below anything the app itself allows: this is about the modal's own behaviour when the detail
+    // genuinely does not fit, not about a window size a user can reach.
+    const measured = await layout(page, { width: MINIMUM.width, height: 300 });
 
-  const page = await browser.newPage();
-  // Below anything the app itself allows: this is about the modal's own behaviour when the detail
-  // genuinely does not fit, not about a window size a user can reach.
-  const measured = await layout(page, { width: MINIMUM.width, height: 300 });
-
-  assert.ok(measured.scrolls, 'nothing scrolled, so this window was not short enough to prove anything');
-  assert.ok(
-    measured.actions.bottom <= measured.viewport.height,
-    `the buttons still have to be reachable (${measured.actions.bottom} > ${measured.viewport.height})`
-  );
-  assert.ok(measured.actions.top >= measured.header.top, 'the buttons must stay under the header');
-
-  await page.close();
+    assert.ok(measured.scrolls, 'nothing scrolled, so this window was not short enough to prove anything');
+    assert.ok(
+      measured.actions.bottom <= measured.viewport.height,
+      `the buttons still have to be reachable (${measured.actions.bottom} > ${measured.viewport.height})`
+    );
+    assert.ok(measured.actions.top >= measured.header.top, 'the buttons must stay under the header');
+  });
 });

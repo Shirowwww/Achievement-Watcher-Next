@@ -80,14 +80,17 @@ async function deliver(page, preset) {
   await page.evaluate((payload) => window.__deliver(payload), PAYLOAD);
 }
 
-test('every bundled preset settles with its title visible and still', { concurrency: 1, timeout: 300000 }, async (t) => {
+// Presets settle on their own clocks, so several are checked side by side. A tab behind another is
+// hidden and its animations stop; a context of its own keeps its page visible.
+test('every bundled preset settles with its title visible and still', { concurrency: 6, timeout: 300000 }, async (t) => {
   if (!shared.browser) {
     t.skip(skipReason(shared.failures));
     return;
   }
-  for (const preset of PRESETS) {
-    await t.test(`${preset.group}/${preset.name}`, async () => {
-      const page = await shared.browser.newPage();
+  const checks = PRESETS.map((preset) =>
+    t.test(`${preset.group}/${preset.name}`, async () => {
+      const context = await shared.browser.createBrowserContext();
+      const page = await context.newPage();
       try {
         await deliver(page, preset);
         // As the main process does: the preset's own render-ready call first, then the probe.
@@ -101,10 +104,11 @@ test('every bundled preset settles with its title visible and still', { concurre
         const later = await titleBox(page);
         assert.deepEqual({ x: later.x, y: later.y }, { x: atAnswer.x, y: atAnswer.y }, 'the title was still moving');
       } finally {
-        await page.close();
+        await context.close();
       }
-    });
-  }
+    }),
+  );
+  await Promise.all(checks);
 });
 
 test('a card still sliding in is not reported as settled', { timeout: 60000 }, async (t) => {

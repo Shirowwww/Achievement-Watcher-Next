@@ -15,7 +15,6 @@ const { replaceFileSync, unlinkForce } = require('../util/replaceFile.js');
 
 const noopLog = { log() {}, error() {} };
 
-const DLL_NAMES = Object.freeze({ x86: 'Galaxy.dll', x64: 'Galaxy64.dll' });
 const SERVER_NAMES = Object.freeze({ x86: 'UniverseLANServer.exe', x64: 'UniverseLANServer64.exe' });
 const DATA_FOLDER_NAMES = Object.freeze(['UniverseLANData', 'UniverseLANServerData']);
 const BACKUP_DIR_NAME = '.aw-universelan-backups';
@@ -589,7 +588,6 @@ function getGameData(appid) {
 }
 
 module.exports = {
-  DLL_NAMES,
   SERVER_NAMES,
   DATA_FOLDER_NAMES,
   BACKUP_DIR_NAME,

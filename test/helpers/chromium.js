@@ -102,4 +102,30 @@ async function closeBrowser(browser, userDataDir) {
   await removeBrowserProfile(userDataDir, killProcessesUsing);
 }
 
-module.exports = { findBrowsers, launchBrowser, closeBrowser, killProcessesUsing, skipReason, puppeteer };
+/*
+  One browser per test file instead of one per test: starting Chromium costs more than most tests.
+  Each test gets a context of its own (storage and pages not shared, pages visible so timers run),
+  skipped when no browser started and closed when the test is done. A failed close is ignored: it
+  must never fail a test that already ran.
+*/
+function sharedBrowser(extraArgs) {
+  const { before, after } = require('node:test');
+  let launched = { browser: null, userDataDir: null, failures: [] };
+  before(async () => {
+    launched = await launchBrowser(extraArgs);
+  });
+  after(async () => {
+    await closeBrowser(launched.browser, launched.userDataDir);
+  });
+  return async function inContext(t, run) {
+    if (!launched.browser) return t.skip(skipReason(launched.failures));
+    const context = await launched.browser.createBrowserContext();
+    try {
+      return await run(context);
+    } finally {
+      await context.close().catch(() => {});
+    }
+  };
+}
+
+module.exports = { findBrowsers, launchBrowser, closeBrowser, sharedBrowser, killProcessesUsing, skipReason, puppeteer };

@@ -9,64 +9,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
-
-function findBrowsers() {
-  const candidates = [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ].filter(Boolean);
-  return candidates.filter((file) => fs.existsSync(file));
-}
-
-function killBrowserUsing(userDataDir) {
-  if (process.platform !== 'win32' || !userDataDir) return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        'Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_FOCUS_TEST_PROFILE) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }',
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_FOCUS_TEST_PROFILE: userDataDir } }
-    );
-  } catch {
-    // Closing Chromium normally is enough; this only clears a failed launch that detached itself.
-  }
-}
-
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-focus-browser-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        headless: true,
-        timeout: 30000,
-        protocolTimeout: 60000,
-        userDataDir,
-        args: ['--no-sandbox', '--disable-gpu'],
-      });
-      return { browser, userDataDir, failures };
-    } catch (error) {
-      failures.push(`${path.basename(executablePath)}: ${String(error.message || error).split('\n')[0]}`);
-      killBrowserUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killBrowserUsing);
-    }
-  }
-  return { browser: null, userDataDir: null, failures };
-}
 
 function row(name, extraClass) {
   return (
@@ -132,7 +78,7 @@ function buildHarness() {
 test('toast-click focus scrolls to a row, expands its list and survives a missing name', { concurrency: 1, timeout: 180000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) {
-    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -141,11 +87,9 @@ test('toast-click focus scrolls to a row, expands its list and survives a missin
   fs.writeFileSync(harness, buildHarness());
 
   /*
-    Focus scrolls and expands through jQuery animations, so the assertions have to run after those
-    finish. A fixed sleep only stands in for that on an idle machine - the scroll runs for 500ms and
-    a 200ms wait was passing because nothing else was competing for the CPU. jQuery keeps its
-    running animations in $.timers, so waiting for that to drain asks the real question and answers
-    it the same whatever else the machine is doing.
+    Focus scrolls and expands through jQuery animations, so the assertions wait for $.timers to drain.
+    A fixed sleep only matches that on an idle machine: the scroll runs 500ms and a 200ms wait passed
+    when nothing else was using the CPU.
   */
   const settle = (page) =>
     page.waitForFunction(() => window.jQuery && window.jQuery.timers.length === 0, { polling: 'raf', timeout: 10000 });
@@ -205,9 +149,7 @@ test('toast-click focus scrolls to a row, expands its list and survives a missin
     assert.equal(afterCollapsed.listActive, true);
     assert.ok(afterCollapsed.scrollTop > 0);
   } finally {
-    if (browser) await browser.close().catch(() => {});
-    killBrowserUsing(userDataDir);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(harnessDir, { recursive: true, force: true });
-    await removeBrowserProfile(userDataDir, killBrowserUsing);
   }
 });

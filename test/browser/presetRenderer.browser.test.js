@@ -8,67 +8,11 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
 const generator = require(path.join(appDir, 'util', 'customPreset.js'));
-
-function findBrowsers() {
-  return [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ]
-    .filter(Boolean)
-    .filter((file) => fs.existsSync(file));
-}
-
-function killBrowserUsing(userDataDir) {
-  if (process.platform !== 'win32' || !userDataDir) return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_PRESET_TEST_PROFILE) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_PRESET_TEST_PROFILE: userDataDir } }
-    );
-  } catch {
-    // Closing Chromium normally is enough; this only clears a failed launch that detached itself.
-  }
-}
-
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-preset-browser-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        headless: true,
-        timeout: 30000,
-        protocolTimeout: 60000,
-        userDataDir,
-        args: ['--no-sandbox', '--disable-gpu'],
-      });
-      return { browser, userDataDir, failures };
-    } catch (error) {
-      failures.push(`${path.basename(executablePath)}: ${String(error.message || error).split('\n')[0]}`);
-      killBrowserUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killBrowserUsing);
-    }
-  }
-  return { browser: null, userDataDir: null, failures };
-}
 
 // A 1x1 PNG, so artwork can be tested without reading a file the frame is not allowed to load.
 const SAMPLE_IMAGE =
@@ -108,8 +52,11 @@ async function renderPreset(page, options, state = 'normal', assetUrl = undefine
   // the whole notification, and the exit after that ends at opacity 0.
   await page.evaluate(async () => {
     const entry = document.getAnimations().find((animation) => animation.animationName === 'aw_in');
-    if (entry) await entry.finished.catch(() => {});
-    else await new Promise((resolve) => setTimeout(resolve, 800));
+    if (entry) {
+      // Jumped to its end rather than watched: the resting values are the same, whatever its length.
+      entry.finish();
+      await entry.finished.catch(() => {});
+    } else await new Promise((resolve) => setTimeout(resolve, 800));
   });
   return page.evaluate(() => {
     const card = document.querySelector('.ach');
@@ -188,7 +135,7 @@ async function renderPreset(page, options, state = 'normal', assetUrl = undefine
 test('a designed preset renders every property it was given', { concurrency: 1, timeout: 300000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) {
-    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -530,8 +477,6 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
       assert.match(played, /<meta name="duration" content="3000"/);
     });
   } finally {
-    if (browser) await browser.close().catch(() => {});
-    killBrowserUsing(userDataDir);
-    await removeBrowserProfile(userDataDir, killBrowserUsing);
+    await closeBrowser(browser, userDataDir);
   }
 });

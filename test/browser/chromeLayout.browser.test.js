@@ -8,66 +8,10 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
-
-function findBrowsers() {
-  return [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ]
-    .filter(Boolean)
-    .filter((file) => fs.existsSync(file));
-}
-
-function killBrowserUsing(userDataDir) {
-  if (process.platform !== 'win32' || !userDataDir) return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_CHROME_PROFILE) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_CHROME_PROFILE: userDataDir } }
-    );
-  } catch {
-    // Closing Chromium normally is enough; this only clears a failed launch that detached itself.
-  }
-}
-
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-chrome-browser-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        headless: true,
-        timeout: 30000,
-        protocolTimeout: 60000,
-        userDataDir,
-        args: ['--no-sandbox', '--disable-gpu', '--allow-file-access-from-files'],
-      });
-      return { browser, userDataDir, failures };
-    } catch (error) {
-      failures.push(`${path.basename(executablePath)}: ${String(error.message || error).split('\n')[0]}`);
-      killBrowserUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killBrowserUsing);
-    }
-  }
-  return { browser: null, userDataDir: null, failures };
-}
 
 function appCss() {
   return fs.readFileSync(path.join(appDir, 'resources', 'css', 'app.css'), 'utf8').replace(/<\/style/gi, '<\\/style');
@@ -122,9 +66,9 @@ const settingsHarness = `<!doctype html><html><head><meta charset="utf-8"><style
   </body></html>`;
 
 test('window chrome: the title bar reaches the window edges and pinned headers are opaque enough to read over', async (t) => {
-  const { browser, userDataDir, failures } = await launchBrowser();
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
   if (!browser) {
-    t.skip(`no Chromium-based browser available (${failures.join('; ') || 'none found'})`);
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -301,7 +245,6 @@ test('window chrome: the title bar reaches the window edges and pinned headers a
       assert.equal(style.blur, parity.plain.blur, `with the same frosted treatment (${who})`);
     }
   } finally {
-    await browser.close().catch(() => {});
-    await removeBrowserProfile(userDataDir, killBrowserUsing);
+    await closeBrowser(browser, userDataDir);
   }
 });

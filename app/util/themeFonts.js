@@ -58,9 +58,4 @@ function themeMockFontCss() {
   return cached;
 }
 
-// Tests build several installs in one process; nothing in the app calls this.
-function resetForTests() {
-  cached = null;
-}
-
-module.exports = { FACES, themeMockFontCss, resetForTests };
+module.exports = { FACES, themeMockFontCss };

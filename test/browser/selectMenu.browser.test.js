@@ -5,77 +5,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 /*
-  The dropdown panel that replaces Chromium's native popup (ui/selectMenu.js), driven in a real
-  browser engine over the real settings markup and the real stylesheet. A fake DOM would prove
-  nothing here: what matters is that the native popup never opens, that the panel escapes the
-  modal's own clipping, and that the <select> behind it still ends up holding the value, because
-  every read-back loop and locale binding in the app goes through that element.
+  The dropdown that replaces Chromium's native popup (ui/selectMenu.js), driven in a real browser over
+  the real settings markup and stylesheet. The native popup must never open, the panel must escape the
+  modal's clipping, and the <select> behind it must still hold the value: the app reads it everywhere.
 */
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
-
-function findBrowsers() {
-  const candidates = [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ].filter(Boolean);
-  return candidates.filter((file) => {
-    try {
-      return fs.existsSync(file);
-    } catch {
-      return false;
-    }
-  });
-}
-
-function killProcessesUsing(userDataDir) {
-  if (process.platform !== 'win32') return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_TEST_PROFILE_DIR) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_TEST_PROFILE_DIR: userDataDir } }
-    );
-  } catch {
-    /* best effort: a leftover browser must never fail the test */
-  }
-}
-
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-browser-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        headless: true,
-        timeout: 30000,
-        protocolTimeout: 60000,
-        userDataDir,
-        args: ['--no-sandbox', '--disable-gpu'],
-      });
-      return { browser, executablePath, userDataDir, failures };
-    } catch (err) {
-      failures.push(`${path.basename(executablePath)}: ${String(err.message || err).split('\n')[0]}`);
-      killProcessesUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killProcessesUsing);
-    }
-  }
-  return { browser: null, executablePath: null, userDataDir: null, failures };
-}
 
 /*
   The settings section of app.html, its stylesheet and the dropdown module, in a standalone page.
@@ -126,7 +64,7 @@ async function clickRow(page, selector) {
 test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, timeout: 180000 }, async (t) => {
   const { browser, executablePath, userDataDir, failures } = await launchBrowser();
   if (!browser) {
-    t.skip(`no usable Chromium browser: ${failures.join('; ') || 'none installed'}`);
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -152,11 +90,9 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     assert.deepEqual(reachable.blocked, [], 'no settings select may be unclickable');
 
     /*
-      The rows are driven on a plain stage rather than inside the modal. The real panel is laid out
-      by the app at runtime (a centred, scrollable box whose tabs are activated one at a time), and
-      a harness that forces all of it open at once puts most rows at an offset nothing can scroll
-      to. The rows themselves are the shipped elements, moved, not copies: same markup, same CSS,
-      a layout a click can reach.
+      The rows are driven on a plain stage, not inside the modal: the app lays the real panel out at
+      runtime (tabs opened one at a time), and forcing every tab open puts most rows where no click
+      can reach them. The rows are the shipped elements, moved, not copies.
     */
     const stagedLongList = await page.evaluate(() => {
       const stage = document.createElement('ul');
@@ -360,9 +296,7 @@ test('the dropdown panel behaves correctly in a real DOM', { concurrency: 1, tim
     assert.deepEqual(pageErrors, [], 'the module must not throw while driving it');
   } finally {
     await page.close().catch(() => {});
-    await browser.close().catch(() => {});
-    killProcessesUsing(userDataDir);
-    await removeBrowserProfile(userDataDir, killProcessesUsing);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(harnessDir, { recursive: true, force: true });
     t.diagnostic(`browser: ${executablePath}`);
   }

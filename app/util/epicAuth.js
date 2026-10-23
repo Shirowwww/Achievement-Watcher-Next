@@ -14,8 +14,6 @@ const EPIC_LOGIN_URL = 'https://www.epicgames.com/id/login';
 const EPIC_AUTH_REDIRECT_URL = 'https://www.epicgames.com/id/api/redirect';
 const DEFAULT_EPIC_REDIRECT_URI = 'https://www.epicgames.com/id/api/redirect';
 const DEFAULT_EPIC_TOKEN_SECRET = 'epic_default_passphrase';
-const EPIC_LAUNCHER_USER_AGENT =
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) EpicGamesLauncher';
 // Public EpicGamesLauncher OAuth client (identical to what the desktop launcher presents).
 const EPIC_CLIENT_ID = '34a02cf8f4414e29b15921876da36f9a';
 const EPIC_BASIC_TOKEN = 'MzRhMDJjZjhmNDQxNGUyOWIxNTkyMTg3NmRhMzZmOWE6ZGFhZmJjY2M3Mzc3NDUwMzlkZmZlNTNkOTRmYzc2Y2Y=';
@@ -242,7 +240,6 @@ async function getEpicAuthStatus(options = {}) {
 module.exports = {
   DEFAULT_EPIC_TOKEN_SECRET,
   DEFAULT_EPIC_REDIRECT_URI,
-  EPIC_LAUNCHER_USER_AGENT,
   encryptTokens,
   decryptTokens,
   getEpicAuthConfig,

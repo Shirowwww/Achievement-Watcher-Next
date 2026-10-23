@@ -6,7 +6,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const SOUND_EXTENSIONS = ['.wav', '.mp3', '.ogg', '.flac', '.m4a', '.aac'];
 const SOUND_EXT_RE = /\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
 
 /*
@@ -84,7 +83,6 @@ function emulatorSound(overlay, platform) {
 }
 
 module.exports = {
-  SOUND_EXTENSIONS,
   SOUND_EXT_RE,
   RENAMED_SOUNDS,
   NO_SOUND,

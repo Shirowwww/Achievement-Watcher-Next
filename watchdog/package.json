@@ -19,12 +19,9 @@
     "patch-package": "^8.0.1"
   },
   "optionalDependencies": {
-    "@nodert-win10-rs4/windows.data.xml.dom": "^0.4.4",
-    "@nodert-win10-rs4/windows.ui.notifications": "^0.4.4",
     "win-tasklist": "^2.2.0"
   },
   "dependencies": {
-    "@xan105/is": "^2.4.0",
     "@xboxreplay/xboxlive-auth": "^5.1.0",
     "crc": "^4.3.2",
     "fast-glob": "^3.2.5",

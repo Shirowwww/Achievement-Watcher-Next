@@ -37,7 +37,6 @@ const LAYER_SECTIONS = Object.freeze({
   logo: ['logoImage', 'logoPosition', 'logoSize', 'logoOffset'],
 });
 const LAYER_SECTION_NAMES = Object.freeze(Object.keys(LAYER_SECTIONS));
-const LAYER_KEYS = Object.freeze(Object.values(LAYER_SECTIONS).flat());
 
 // The two backgrounds that make sense over somebody else's layout: a colour or a gradient.
 const LAYER_BACKGROUND_MODES = ['solid', 'gradient'];
@@ -184,7 +183,6 @@ module.exports = {
   LAYER_LOGO_CLASS,
   LAYER_SECTIONS,
   LAYER_SECTION_NAMES,
-  LAYER_KEYS,
   LAYER_BACKGROUND_MODES,
   isLayerableHtml,
   normalizeLayer,

@@ -63,11 +63,6 @@ const PACKAGES = Object.freeze({
 function packageFor(flavour) {
   return PACKAGES[String((flavour && flavour.id) || flavour || 'r2').toLowerCase()] || PACKAGES.r2;
 }
-// Kept for callers that name a single generation: they all mean R2.
-const BUNDLED_LOADERS_DIR = PACKAGES.r2.dir;
-const BUNDLED_RECOVERY_ARCHIVE = path.join(PACKAGES.r2.dir, PACKAGES.r2.archive);
-const BUNDLED_RECOVERY_SHA256 = PACKAGES.r2.archiveSha256;
-const BUNDLED_LOADER_SHA256 = PACKAGES.r2.sha256;
 const MAX_SCAN_FILES = 4096;
 const MAX_ARCHIVE_BYTES = 256 * 1024 * 1024;
 const POST_REPAIR_WARNING_FAILURES = new Set(['NO_INI', 'BAD_SAVE_REDIRECT', 'SCHEMA_KEYS_NOT_CANONICAL']);
@@ -1005,10 +1000,6 @@ module.exports = {
   packageFor,
   loaderNamesFor,
   PACKAGE_MANIFEST,
-  BUNDLED_LOADERS_DIR,
-  BUNDLED_LOADER_SHA256,
-  BUNDLED_RECOVERY_ARCHIVE,
-  BUNDLED_RECOVERY_SHA256,
   inspectPackageDll,
   findPackageDlls,
   importPackage,

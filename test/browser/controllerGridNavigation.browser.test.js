@@ -5,69 +5,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
 const { pathToFileURL } = require('node:url');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
-
-function findBrowsers() {
-  const candidates = [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ].filter(Boolean);
-  return candidates.filter((file) => fs.existsSync(file));
-}
-
-function killBrowserUsing(userDataDir) {
-  if (process.platform !== 'win32' || !userDataDir) return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_CONTROLLER_GRID_TEST_PROFILE) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_CONTROLLER_GRID_TEST_PROFILE: userDataDir } }
-    );
-  } catch {
-    /* a normal close is sufficient; this only handles a failed detached launch */
-  }
-}
-
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-controller-grid-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        userDataDir,
-        headless: true,
-        args: ['--no-sandbox', '--disable-gpu'],
-      });
-      return { browser, userDataDir, failures };
-    } catch (error) {
-      failures.push(`${path.basename(executablePath)}: ${String(error.message || error).split('\n')[0]}`);
-      killBrowserUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killBrowserUsing);
-    }
-  }
-  return { browser: null, userDataDir: null, failures };
-}
 
 // A library grid at real tile geometry: two tiles side by side, each carrying the three controls
 // app.js paints on it (achievements top-left, health/config top-right, play centred at opacity 0
 // until hovered). The tiles are LANDSCAPE on purpose: the wider the tile, the further the
 // neighbour's centre is, until a tile's own top-right button becomes the cheapest "move right" target.
 function buildHarness() {
-  const controller = fs.readFileSync(path.join(appDir, 'ui', 'controller.js'), 'utf8').replace(/<\/script/gi, '</script');
+  const controller = fs.readFileSync(path.join(appDir, 'ui', 'controller.js'), 'utf8').replace(/<\/script/gi, '<\\/script');
   const tile = (appid, left) => `
     <div class="game-box" data-appid="${appid}" style="position:absolute;left:${left}px;top:0;width:400px;height:190px;">
       <div class="header" style="position:absolute;inset:0;">
@@ -89,7 +37,7 @@ function buildHarness() {
 test('controller navigation crosses the library grid tile by tile', { concurrency: 1, timeout: 180000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) {
-    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -139,9 +87,7 @@ test('controller navigation crosses the library grid tile by tile', { concurrenc
     assert.equal(result.keptCount, 2);
     assert.equal(result.fixedLandedOnSecondTile, true, 'right must move to the next game');
   } finally {
-    await browser.close().catch(() => {});
-    killBrowserUsing(userDataDir);
-    await removeBrowserProfile(userDataDir, killBrowserUsing);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(harnessDir, { recursive: true, force: true });
   }
 });

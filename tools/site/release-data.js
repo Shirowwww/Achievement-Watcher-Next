@@ -30,8 +30,6 @@ const API = 'https://api.github.com/repos/Shirowwww/Achievement-Watcher-Next/rel
 // the updater.
 const INSTALLER_RE = /^Achievement\.Watcher\.Setup\..*\.exe$/i;
 const SHA256_RE = /^[0-9a-f]{64}$/;
-const SCAN = 'https://www.virustotal.com/gui/file/';
-
 // Every file that quotes the digest or the version, and what its sentences look like.
 function quoting() {
   const i18n = path.join(root, 'docs', 'assets', 'i18n');
@@ -149,7 +147,7 @@ async function build() {
   console.log(`release data: ${data.version}${data.installerBytes ? ` (${Math.round(data.installerBytes / 1048576)} MB)` : ''}, ${touched} files updated`);
 }
 
-module.exports = { SCAN, mismatches, quoting };
+module.exports = { mismatches, quoting };
 
 if (require.main === module) {
   if (process.argv.includes('--check')) {

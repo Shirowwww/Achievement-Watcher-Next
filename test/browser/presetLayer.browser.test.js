@@ -83,8 +83,10 @@ async function render(page, presetName, layer) {
   }, SAMPLE_IMAGE);
   await page.evaluate(async () => {
     const entry = document.getAnimations().find((animation) => animation.animationName && animation.animationName.endsWith('in'));
-    if (entry) await entry.finished.catch(() => {});
-    else await new Promise((resolve) => setTimeout(resolve, 900));
+    if (entry) {
+      entry.finish();
+      await entry.finished.catch(() => {});
+    } else await new Promise((resolve) => setTimeout(resolve, 900));
     await document.fonts.ready;
   });
   return page.evaluate((className) => {

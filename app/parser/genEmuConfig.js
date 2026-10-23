@@ -331,14 +331,6 @@ function pruneGeneratedOutputs(cacheDir, now = Date.now()) {
   return pruned;
 }
 
-function findGeneratedSteamSettings(...baseDirs) {
-  for (const baseDir of baseDirs.filter(Boolean)) {
-    const hit = collectGeneratedSteamSettings(baseDir)[0];
-    if (hit) return hit;
-  }
-  return null;
-}
-
 // Only this game's folder, <appid> or the older <name>-<appid>: the tool keeps every earlier game's
 // folder beside it, so any other match would merge the wrong game's achievements.
 function findGeneratedSteamSettingsForAppid(appid, ...baseDirs) {
@@ -609,5 +601,5 @@ function mergeIntoGame(srcSteamSettings, destSteamSettings, { overwrite = false 
   return added;
 }
 
-module.exports = { ensureGenerateEmuConfig, hasSavedSignIn, generate, mergeIntoGame, findGeneratedSteamSettings, pruneGeneratedOutputs };
+module.exports = { ensureGenerateEmuConfig, hasSavedSignIn, generate, mergeIntoGame, pruneGeneratedOutputs };
 module.exports._internal = { resolveToolExe, isInsideDir, findExe, findGeneratedSteamSettingsForAppid, TOOL_NAME };

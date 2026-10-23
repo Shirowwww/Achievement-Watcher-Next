@@ -10,23 +10,15 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
+
+const PAGES_AT_ONCE = 12;
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
+const { mapLimit } = require(path.join(appDir, 'util', 'onboardingDetect.js'));
 const engine = require(path.join(appDir, 'util', 'sanEngine', 'engine.js'));
 const sanEngine = require(path.join(appDir, 'util', 'sanEngine', 'index.js'));
-
-function findBrowser() {
-  return [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ]
-    .filter(Boolean)
-    .find((file) => fs.existsSync(file));
-}
+const { probeSource } = require(path.join(appDir, 'electron', 'notificationPaint.js'));
 
 const PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -85,30 +77,35 @@ const payload = (extra) => ({
 });
 
 test('every base card draws each state from a real preset page and closes itself', { timeout: 240000 }, async (t) => {
-  const executablePath = findBrowser();
-  if (!executablePath) return t.skip('no Chromium-based browser installed');
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
   const cards = engine.LAYOUT_IDS.filter((id) => fs.existsSync(path.join(appDir, 'util', 'sanEngine', 'layouts', `${id}.html`)));
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-page-'));
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-browser-'));
-  const browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu', '--allow-file-access-from-files'] });
   t.after(async () => {
-    await browser.close().catch(() => {});
-    await removeBrowserProfile(userDataDir);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(root, { recursive: true, force: true });
   });
 
+  const states = [
+    ['main', payload({})],
+    ['semi', payload({ unlockRate: 12, rarityTier: 'bronze' })],
+    ['rare', payload({ unlockRate: 3, rarityTier: 'gold', hidden: true })],
+    ['plat', payload({ notificationType: 'platinum', isPlatinum: true, rarityTier: 'platinum' })],
+  ];
+  const jobs = [];
   for (const card of cards) {
     const dir = path.join(root, card);
     fs.mkdirSync(dir);
     sanEngine.writePresetFiles(dir, themeFor(card), { name: card });
-    const states = [
-      ['main', payload({})],
-      ['semi', payload({ unlockRate: 12, rarityTier: 'bronze' })],
-      ['rare', payload({ unlockRate: 3, rarityTier: 'gold', hidden: true })],
-      ['plat', payload({ notificationType: 'platinum', isPlatinum: true, rarityTier: 'platinum' })],
-    ];
-    for (const [state, data] of states) {
-      const page = await browser.newPage();
+    for (const [state, data] of states) jobs.push({ card, dir, state, data });
+  }
+
+  // Each card waits for its own 2 s to play out, so the pages are drawn side by side. A tab behind
+  // another is hidden and never plays out; a context of its own keeps its page visible.
+  await mapLimit(jobs, PAGES_AT_ONCE, async ({ card, dir, state, data }) => {
+    const context = await browser.createBrowserContext();
+    const page = await context.newPage();
+    try {
       const errors = [];
       page.on('pageerror', (error) => errors.push(String(error.message || error)));
       await page.evaluateOnNewDocument(bridge);
@@ -132,27 +129,27 @@ test('every base card draws each state from a real preset page and closes itself
 
       // A 2 s card plays out, fades and asks to be closed, well before the host's catch-all.
       await page.waitForFunction(() => window.__aw.closed > 0, { timeout: 9000 });
-      await page.close();
+    } finally {
+      await context.close().catch(() => {});
     }
-  }
+  });
   assert.ok(cards.includes('default'), 'the default card is missing');
 });
 
 test('a state is drawn at the scale its theme gives it, text included', { timeout: 60000 }, async (t) => {
-  const executablePath = findBrowser();
-  if (!executablePath) return t.skip('no Chromium-based browser installed');
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-scale-'));
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-browser-'));
-  const browser = await puppeteer.launch({ executablePath, headless: true, userDataDir, args: ['--no-sandbox', '--disable-gpu', '--allow-file-access-from-files'] });
   t.after(async () => {
-    await browser.close().catch(() => {});
-    await removeBrowserProfile(userDataDir);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(root, { recursive: true, force: true });
   });
 
   const measure = async (scale) => {
     const theme = themeFor('default');
     theme.types.main.scale = scale;
+    // Long enough that the card cannot start leaving while it is being measured.
+    theme.types.main.displaytime = 30;
     const dir = path.join(root, String(scale));
     fs.mkdirSync(dir);
     sanEngine.writePresetFiles(dir, theme, { name: 'scaled' });
@@ -162,8 +159,8 @@ test('a state is drawn at the scale its theme gives it, text included', { timeou
     await page.goto(pathToFileURL(path.join(dir, 'index.html')).href, { waitUntil: 'load' });
     await page.evaluate((d) => window.__aw.show(d), payload({}));
     await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
-    // The text slides in after the card; measure once it has settled.
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    // The text slides in after the card and a late web font can reflow it: measure once it has settled.
+    assert.equal(await page.evaluate(probeSource(6000)), 'settled', `scale ${scale}: the card never settled`);
     const size = await page.evaluate(() => ({
       card: document.body.getBoundingClientRect().width,
       text: document.getElementById('title').getBoundingClientRect().height,

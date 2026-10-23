@@ -5,8 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { execFileSync } = require('node:child_process');
-const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
+const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 
 /*
   Runs the real filter over the real app.html in a real browser engine - the only layer that proves the
@@ -14,77 +13,9 @@ const { removeBrowserProfile } = require('../helpers/browserProfileCleanup');
 */
 
 const appDir = path.join(__dirname, '..', '..', 'app');
-const puppeteer = require(path.join(appDir, 'node_modules', 'puppeteer-core'));
 // Read from the module rather than repeated as a literal: adding a Help topic is a normal change,
 // and it used to fail here in five places that each had to be found and edited by hand.
 const HELP_TOPICS = Object.keys(require(path.join(appDir, 'ui', 'help.js')).HELP_LISTS).length;
-
-function findBrowsers() {
-  const candidates = [
-    process.env.PUPPETEER_EXECUTABLE_PATH,
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-    path.join(process.env.ProgramFiles || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-    path.join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ].filter(Boolean);
-  return candidates.filter((file) => {
-    try {
-      return fs.existsSync(file);
-    } catch {
-      return false;
-    }
-  });
-}
-
-// A browser that fails to launch can leave detached processes behind (Edge re-execs itself), so each
-// attempt gets its own profile directory that a failure can clean up by pid.
-function killProcessesUsing(userDataDir) {
-  if (process.platform !== 'win32') return;
-  try {
-    execFileSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-NonInteractive',
-        '-Command',
-        // The directory travels in the environment, never interpolated into the script: a temp path
-        // holding a quote (a user named O'Brien) would end the string, and `-like` would read `[`,
-        // `]`, `*` and `?` in it as wildcards. `.Contains()` on an env var has neither problem.
-        "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:AW_TEST_PROFILE_DIR) } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
-      ],
-      { stdio: 'ignore', timeout: 30000, env: { ...process.env, AW_TEST_PROFILE_DIR: userDataDir } }
-    );
-  } catch {
-    /* best effort: a leftover browser must never fail the test */
-  }
-}
-
-// An installed browser is not necessarily a usable one, so try each until one actually starts -
-// this machine has a working Chrome sitting right behind an Edge that cannot start headless. The
-// explicit `timeout` matters just as much: without it a browser that starts but never speaks CDP
-// hangs this test, and the suite with it, forever.
-async function launchBrowser() {
-  const failures = [];
-  for (const executablePath of findBrowsers()) {
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-browser-'));
-    try {
-      const browser = await puppeteer.launch({
-        executablePath,
-        headless: true,
-        timeout: 30000,
-        protocolTimeout: 60000,
-        userDataDir,
-        args: ['--no-sandbox', '--disable-gpu'],
-      });
-      return { browser, executablePath, userDataDir, failures };
-    } catch (err) {
-      failures.push(`${path.basename(executablePath)}: ${String(err.message || err).split('\n')[0]}`);
-      killProcessesUsing(userDataDir);
-      await removeBrowserProfile(userDataDir, killProcessesUsing);
-    }
-  }
-  return { browser: null, executablePath: null, userDataDir: null, failures };
-}
 
 // The settings panel, jQuery and the filter module, wired into a standalone page. `module.exports`
 // is shimmed so the CommonJS module used by the app loads unchanged.
@@ -129,7 +60,7 @@ test('the settings filter behaves correctly in a real DOM', { concurrency: 1, ti
     // Skipped, not failed: with no browser that will start, this test can say nothing at all about
     // the filter. The reasons are printed so an environment fault stays visible instead of hiding
     // behind a quiet skip.
-    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -212,19 +143,15 @@ test('the settings filter behaves correctly in a real DOM', { concurrency: 1, ti
     assert.strictEqual(await groupHits('linux'), 0);
     await page.evaluate(() => $('html').attr('data-platform', 'win32'));
   } finally {
-    await browser.close().catch(() => {});
-    // close() returns before the OS has torn the processes down; anything still holding the profile
-    // would keep it locked and strand the directory.
-    killProcessesUsing(userDataDir);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(path.dirname(harness), { recursive: true, force: true });
-    await removeBrowserProfile(userDataDir, killProcessesUsing);
   }
 });
 
 test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeout: 180000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) {
-    t.skip(failures.length ? `no usable Chromium-family browser - ${failures.join(' | ')}` : 'no Chromium-family browser installed');
+    t.skip(skipReason(failures));
     return;
   }
 
@@ -279,9 +206,7 @@ test('the Help filter behaves correctly in a real DOM', { concurrency: 1, timeou
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[hidden]').length), 0);
     assert.strictEqual(await page.evaluate(() => document.querySelectorAll('.help-panel[open]').length), 1, 'clearing restores the original disclosure state');
   } finally {
-    await browser.close().catch(() => {});
-    killProcessesUsing(userDataDir);
+    await closeBrowser(browser, userDataDir);
     fs.rmSync(path.dirname(harness), { recursive: true, force: true });
-    await removeBrowserProfile(userDataDir, killProcessesUsing);
   }
 });

@@ -221,42 +221,9 @@ const CONTROLLER_BUTTON_ORDER = [
 // Three buttons on purpose: Back+Start alone is easy to hit by accident during play, so the
 // default adds a shoulder button to make accidental toggling far less likely.
 const DEFAULT_OVERLAY_CONTROLLER_TOGGLE_BINDING = ["BACK", "START", "LEFT_SHOULDER"];
-const OVERLAY_CONTROLLER_TOGGLE_ALLOWED_BUTTONS = [
-  "BACK",
-  "START",
-  "GUIDE",
-  "A",
-  "B",
-  "X",
-  "Y",
-  "LEFT_SHOULDER",
-  "RIGHT_SHOULDER",
-  "LEFT_THUMB",
-  "RIGHT_THUMB",
-  "DPAD_UP",
-  "DPAD_DOWN",
-  "DPAD_LEFT",
-  "DPAD_RIGHT",
-];
 const DEFAULT_OVERLAY_CONTROLLER_CONTROL_MODE_BINDING = [
   "LEFT_SHOULDER",
   "RIGHT_SHOULDER",
-];
-const OVERLAY_CONTROLLER_CONTROL_MODE_ALLOWED_BUTTONS = [
-  "BACK",
-  "START",
-  "A",
-  "B",
-  "X",
-  "Y",
-  "LEFT_SHOULDER",
-  "RIGHT_SHOULDER",
-  "LEFT_THUMB",
-  "RIGHT_THUMB",
-  "DPAD_UP",
-  "DPAD_DOWN",
-  "DPAD_LEFT",
-  "DPAD_RIGHT",
 ];
 const DEFAULT_OVERLAY_CONTROLLER_UI_MODE_BINDING = ["LEFT_SHOULDER", "X"];
 
@@ -2630,41 +2597,6 @@ function resolvePreferredBackend(logger, preferredBackend = "auto", options = {}
   throw new Error(errors.join(" | ") || "No controller backend available");
 }
 
-function inspectControllerBackendAvailability() {
-  const gameInput = {
-    available: false,
-    dllName: null,
-    error: null,
-  };
-  const xInput = {
-    available: false,
-    dllName: null,
-    error: null,
-  };
-
-  try {
-    const api = resolveGameInputApi();
-    gameInput.available = !!api;
-    gameInput.dllName = api?.dllName || null;
-  } catch (err) {
-    gameInput.error = err?.message || String(err);
-  }
-
-  try {
-    const api = resolveXInputApi();
-    xInput.available = !!api;
-    xInput.dllName = api?.dllName || null;
-  } catch (err) {
-    xInput.error = err?.message || String(err);
-  }
-
-  return {
-    anyAvailable: gameInput.available || xInput.available,
-    gameInput,
-    xInput,
-  };
-}
-
 function createControllerInputManager(options = {}) {
   const logger = createLogger(options.logger);
   const debugLoggingEnabled = options.debugLoggingEnabled === true;
@@ -3746,7 +3678,6 @@ function createControllerInputManager(options = {}) {
 
 module.exports = {
   createControllerInputManager,
-  inspectControllerBackendAvailability,
   normalizeBackendPreference,
   normalizeControllerBinding,
   matchesControllerBinding,
@@ -3758,7 +3689,5 @@ module.exports = {
   DEFAULT_OVERLAY_CONTROLLER_TOGGLE_BINDING,
   DEFAULT_OVERLAY_CONTROLLER_CONTROL_MODE_BINDING,
   DEFAULT_OVERLAY_CONTROLLER_UI_MODE_BINDING,
-  OVERLAY_CONTROLLER_TOGGLE_ALLOWED_BUTTONS,
-  OVERLAY_CONTROLLER_CONTROL_MODE_ALLOWED_BUTTONS,
   XINPUT_BUTTONS,
 };

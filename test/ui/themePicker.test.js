@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const htmlParser = require(path.join(__dirname, '..', '..', 'app', 'node_modules', 'node-html-parser'));
+const { luminance, contrast } = require('../helpers/contrast');
 
 // The theme picker opens on a short primary set and keeps the rest behind "More themes…". The real
 // risk is silent loss: a built-in listed in neither array disappears from the UI while its palette
@@ -24,21 +25,6 @@ function listValues(name) {
 const primary = listValues('PRIMARY_THEMES');
 const more = listValues('MORE_THEMES');
 const sentinel = (source.match(/const MORE_THEMES_VALUE = '([^']+)'/) || [])[1];
-
-// WCAG relative luminance, used to prove "light" really is light and readable.
-function luminance(hex) {
-  const n = parseInt(hex.slice(1), 16);
-  const channel = (c) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
-  };
-  return 0.2126 * channel((n >> 16) & 255) + 0.7152 * channel((n >> 8) & 255) + 0.0722 * channel(n & 255);
-}
-
-function contrast(a, b) {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
 
 test('the picker opens on a set small enough to choose from', () => {
   assert.ok(primary.length >= 6 && primary.length <= 7, `expected 6-7 primary themes, got ${primary.length}`);
