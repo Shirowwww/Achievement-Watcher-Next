@@ -7,7 +7,8 @@
 
   The source is white line art sitting on a cloud of grey smoke, with a feathered edge - fine at
   poster size, unusable at 16 points, where a soft edge and a mid grey are the same thing once
-  Windows has averaged them. Nothing here redraws anything; the drawing is reduced to what survives:
+  Windows has averaged them. Nothing here redraws the art, apart from the handles and stars of the tray frames;
+  the drawing is reduced to what survives:
 
     - the smoke is dropped, being the only thing in the file between black and white;
     - the edge is hardened, so a half-transparent pixel cannot be averaged into the background;
@@ -15,7 +16,9 @@
     - the large enclosed gaps are filled, so the outlined cup becomes a solid shape - an outline
       needs three pixels to read (stroke, plus a gap either side) and 16 points does not have them -
       while the narrow ones stay open, because the handles are only handles as long as there is
-      daylight through them.
+      daylight through them;
+    - for the tray frames, those handle slots are opened wider and the handles pushed out by the
+      same amount, since the slots as drawn are under a pixel wide at 16 points.
 
   Every frame is stored PNG-encoded, because createTray() in electron/init.js only collects PNG
   entries - a frame written as a BMP is silently skipped and the tray falls back to the blurry
@@ -45,6 +48,15 @@ const GAP_FLOOR = 0.005;
   Above it the shell is drawing an icon somewhere else and has room for the whole drawing.
 */
 const TRAY_UPTO = 48;
+// The handles are reworked on a copy this long on its longer side, with a margin so a widened handle never meets the edge.
+const EAR_WORK = 320;
+const EAR_MARGIN = 24;
+// In working pixels: how far the slots open, and how far from a slot a pixel still counts as handle.
+const EAR_OPEN = 5;
+const EAR_REACH = 14;
+// In the tray frames the stars shrink to this share and sit this many working pixels above the cup.
+const STAR_SCALE = 0.8;
+const STAR_GAP = 6;
 // The alpha ramp a downscale leaves behind, steepened back toward a hard edge.
 const EDGE_MIDPOINT = 110;
 const EDGE_CONTRAST = 2.6;
@@ -188,48 +200,139 @@ function keepLargestShapes({ ink, width, height }) {
   return { ink: kept, width, height };
 }
 
-/*
-  The biggest shape on its own - here the cup, without the stars sitting above it.
-
-  A square frame is filled by whichever side of the drawing is longer, so a tall drawing pays for
-  its height in width it never uses: cup and stars together measure 805x1047 and fill 77% of the
-  box, while the cup alone is 805x779 and fills 97%. At 16 points that difference is the whole
-  icon, and it is spent on three stars that are three specks at that size anyway.
-*/
-function largestShapeOnly({ ink, width, height }) {
-  const total = width * height;
-  const seen = new Uint8Array(total);
-  const stack = new Int32Array(total);
-  let best = [];
-
-  for (let start = 0; start < total; start += 1) {
-    if (!ink[start] || seen[start]) continue;
-    let top = 0;
-    stack[top] = start;
-    top += 1;
-    seen[start] = 1;
-    const cells = [];
-    while (top > 0) {
-      top -= 1;
-      const pixel = stack[top];
-      cells.push(pixel);
+// Numbers every connected shape of the mask; background pixels get -1.
+function labelShapes({ ink, width }) {
+  const label = new Int32Array(ink.length).fill(-1);
+  const sizes = [];
+  for (let start = 0; start < ink.length; start += 1) {
+    if (!ink[start] || label[start] >= 0) continue;
+    const id = sizes.length;
+    const stack = [start];
+    label[start] = id;
+    let count = 0;
+    while (stack.length > 0) {
+      const pixel = stack.pop();
+      count += 1;
       const x = pixel % width;
-      const y = (pixel - x) / width;
-      const neighbours = [x > 0 ? pixel - 1 : -1, x < width - 1 ? pixel + 1 : -1, y > 0 ? pixel - width : -1, y < height - 1 ? pixel + width : -1];
-      for (const next of neighbours) {
-        if (next >= 0 && ink[next] && !seen[next]) {
-          seen[next] = 1;
-          stack[top] = next;
-          top += 1;
+      for (const next of [x > 0 ? pixel - 1 : -1, x < width - 1 ? pixel + 1 : -1, pixel - width, pixel + width]) {
+        if (next >= 0 && next < ink.length && ink[next] && label[next] < 0) {
+          label[next] = id;
+          stack.push(next);
         }
       }
     }
-    if (cells.length > best.length) best = cells;
+    sizes.push(count);
   }
+  return { label, sizes };
+}
 
-  const kept = new Uint8Array(total);
-  for (const pixel of best) kept[pixel] = 1;
-  return { ink: kept, width, height };
+/*
+  The drawing is taller than wide, so the frame is filled by its height and the gap between the
+  stars and the cup is paid for in cup size. Shrinking the stars to STAR_SCALE (about the frame's
+  centre column and their bottom row) and lowering them to STAR_GAP above the rim gives that height back to the cup.
+*/
+function lowerStars(mask) {
+  const { ink, width, height } = mask;
+  const { label, sizes } = labelShapes(mask);
+  const cup = sizes.indexOf(Math.max(...sizes));
+  let cupTop = height;
+  let starTop = height;
+  let starBottom = 0;
+  for (let pixel = 0; pixel < ink.length; pixel += 1) {
+    if (label[pixel] < 0) continue;
+    const y = Math.floor(pixel / width);
+    if (label[pixel] === cup) {
+      cupTop = Math.min(cupTop, y);
+    } else {
+      starTop = Math.min(starTop, y);
+      starBottom = Math.max(starBottom, y);
+    }
+  }
+  if (starTop === height) return mask;
+
+  const shift = cupTop - starBottom - STAR_GAP;
+  const lowered = label.map((id) => (id === cup ? 1 : 0));
+  const centreX = width / 2;
+  for (let y = 0; y < height; y += 1) {
+    const sourceY = Math.round(starBottom + (y - shift - starBottom) / STAR_SCALE);
+    if (sourceY < 0 || sourceY >= height) continue;
+    for (let x = 0; x < width; x += 1) {
+      const sourceX = Math.round(centreX + (x - centreX) / STAR_SCALE);
+      if (sourceX < 0 || sourceX >= width) continue;
+      const id = label[sourceY * width + sourceX];
+      if (id >= 0 && id !== cup) lowered[y * width + x] = 1;
+    }
+  }
+  return { ink: Uint8Array.from(lowered), width, height };
+}
+
+// The drawing as a mask EAR_WORK pixels on its longer side, inside an empty margin.
+async function workingMask(png) {
+  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+  const { data, info } = await sharp(png)
+    .resize(EAR_WORK, EAR_WORK, { fit: 'contain', background: transparent })
+    .extend({ top: EAR_MARGIN, bottom: EAR_MARGIN, left: EAR_MARGIN, right: EAR_MARGIN, background: transparent })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const ink = new Uint8Array(info.width * info.height);
+  for (let pixel = 0; pixel < ink.length; pixel += 1) ink[pixel] = data[pixel * 4 + 3] >= 128 ? 1 : 0;
+  return { ink, width: info.width, height: info.height };
+}
+
+// Grows every set pixel into a square of side 2r+1, as two separable passes.
+function dilate(mask, width, height, radius) {
+  const across = new Uint8Array(mask.length);
+  const grown = new Uint8Array(mask.length);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      let on = 0;
+      for (let k = Math.max(0, x - radius); k <= Math.min(width - 1, x + radius) && !on; k += 1) on = mask[y * width + k];
+      across[y * width + x] = on;
+    }
+  }
+  for (let x = 0; x < width; x += 1) {
+    for (let y = 0; y < height; y += 1) {
+      let on = 0;
+      for (let k = Math.max(0, y - radius); k <= Math.min(height - 1, y + radius) && !on; k += 1) on = across[k * width + x];
+      grown[y * width + x] = on;
+    }
+  }
+  return grown;
+}
+
+// The background that no border can reach: after fillEnclosedFields, only the handle slots.
+function enclosedGaps({ ink, width, height }) {
+  const outside = new Uint8Array(ink.length);
+  const stack = [];
+  for (let x = 0; x < width; x += 1) stack.push(x, (height - 1) * width + x);
+  for (let y = 0; y < height; y += 1) stack.push(y * width, y * width + width - 1);
+  while (stack.length > 0) {
+    const pixel = stack.pop();
+    if (ink[pixel] || outside[pixel]) continue;
+    outside[pixel] = 1;
+    const x = pixel % width;
+    if (x > 0) stack.push(pixel - 1);
+    if (x < width - 1) stack.push(pixel + 1);
+    if (pixel >= width) stack.push(pixel - width);
+    if (pixel < ink.length - width) stack.push(pixel + width);
+  }
+  return ink.map((on, pixel) => (!on && !outside[pixel] ? 1 : 0));
+}
+
+/*
+  Opens each handle slot by EAR_OPEN and grows the ink around it by the same amount, so the handles
+  get bigger rather than thinner: widening the slot alone would eat the handle's outer wall, which
+  is already under a pixel at 16 points.
+*/
+function widenHandles(mask) {
+  const { ink, width, height } = mask;
+  const slots = enclosedGaps(mask);
+  const handleZone = dilate(slots, width, height, EAR_REACH);
+  const handles = dilate(ink.map((on, pixel) => (on && handleZone[pixel] ? 1 : 0)), width, height, EAR_OPEN);
+  const reach = dilate(handleZone, width, height, EAR_OPEN);
+  const opened = dilate(slots, width, height, EAR_OPEN);
+  const widened = ink.map((on, pixel) => ((on || (handles[pixel] && reach[pixel])) && !opened[pixel] ? 1 : 0));
+  return { ink: widened, width, height };
 }
 
 /*
@@ -324,11 +427,13 @@ async function main() {
   */
   const drawing = fillEnclosedFields(keepLargestShapes(await inkMask(fs.readFileSync(source))));
   const whole = await sharp(await maskToPng(drawing)).trim({ threshold: 1 }).png().toBuffer();
-  const cupOnly = await sharp(await maskToPng(largestShapeOnly(drawing))).trim({ threshold: 1 }).png().toBuffer();
+  // The stars stay at every size: they are three dots at 16 points, but they are what makes the
+  // cup read as this app's logo rather than any trophy.
+  const tray = await sharp(await maskToPng(lowerStars(widenHandles(await workingMask(whole))))).trim({ threshold: 1 }).png().toBuffer();
 
   const frames = [];
   for (const size of SIZES) {
-    frames.push({ size, data: await crispResize(size <= TRAY_UPTO ? cupOnly : whole, size) });
+    frames.push({ size, data: await crispResize(size <= TRAY_UPTO ? tray : whole, size) });
   }
 
   fs.writeFileSync(target, packIco(frames));
@@ -336,7 +441,7 @@ async function main() {
   for (const { size, data } of frames) badged.push({ size, data: await withBadge(data, size) });
   fs.writeFileSync(badgedTarget, packIco(badged));
   const big = await sharp(whole).metadata();
-  const small = await sharp(cupOnly).metadata();
+  const small = await sharp(tray).metadata();
   console.log(
     `${path.relative(path.join(__dirname, '..'), target)} - ${frames.length} frames, ` +
       `<=${TRAY_UPTO}px from ${small.width}x${small.height} (${fill(small)}% of the box), ` +

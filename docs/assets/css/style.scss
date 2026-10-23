@@ -494,7 +494,7 @@ body.aw-guide {
   display: flex;
   align-items: center;
   gap: 10px;
-  max-width: 1320px;
+  max-width: 1640px;
   min-height: 64px;
   margin: 0 auto;
   padding: 8px 24px;
@@ -617,7 +617,7 @@ body.aw-guide {
   display: grid;
   grid-template-columns: 252px minmax(0, 1fr);
   column-gap: 56px;
-  max-width: 1320px;
+  max-width: 1640px;
   margin: 0 auto;
   padding: 0 24px;
 }
@@ -632,7 +632,7 @@ body.aw-guide {
 }
 
 .markdown-body {
-  max-width: 800px;
+  max-width: 1000px;
 }
 
 .markdown-body :is(h1, h2, h3, h4) {
@@ -986,7 +986,7 @@ body.aw-guide {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px 24px;
-  max-width: 800px;
+  max-width: 1000px;
   margin-top: 56px;
   padding-top: 18px;
   border-top: 1px solid var(--aw-border);
@@ -1007,8 +1007,8 @@ body.aw-guide {
 /* Wide enough for the contents beside the text. */
 @media (min-width: 1281px) {
   .aw-shell {
-    grid-template-columns: 252px minmax(0, 1fr) 220px;
-    column-gap: 48px;
+    grid-template-columns: 272px minmax(0, 1fr) 240px;
+    column-gap: 56px;
   }
 
   .aw-toc {

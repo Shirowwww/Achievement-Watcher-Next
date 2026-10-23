@@ -9,6 +9,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Improved
+
+- **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
+  handles are wider, so they show even at small sizes.
+
 ### Fixed
 
 - **SAN themes at SAN's exact size.** Text on an imported SAN theme came out a little smaller than in
