@@ -77,18 +77,40 @@ window.addEventListener('DOMContentLoaded', function () {
     meter.style.width = progress.percent + "%";
     label.textContent = progress.current + "/" + progress.max + " - " + progress.percent + "%";
   }
-  function startMarqueeIfOverflow(lineEl) {
-    if (!lineEl) return;
+  /*
+    A line too long for the card stays still long enough to be read from its start, scrolls to its
+    end, rests there, then comes back, for as long as the card is up. The card stays up for one full
+    pass of its longest line (capped), so the end of a long description is never cut off.
+  */
+  var MARQUEE_LEAD_MS = 2500;
+  var MARQUEE_REST_MS = 1500;
+  var MARQUEE_BACK_MS = 1200;
+  var MARQUEE_MAX_TOTAL_MS = 15000;
+  function marqueePlan(lineEl) {
+    if (!lineEl) return null;
     try { lineEl.getAnimations().forEach(function (a) { a.cancel(); }); } catch (e) {}
     lineEl.classList.remove('marquee');
     void lineEl.offsetWidth;
     var clip = lineEl.closest('.text_wrap') || lineEl;
     var overflow = Math.round((lineEl.scrollWidth || 0) - (clip.clientWidth || 0));
-    if (overflow > 2) {
-      var px = Math.ceil(overflow + 24);
-      lineEl.classList.add('marquee');
-      lineEl.animate([{ transform: "translateX(0)" }, { transform: "translateX(-" + px + "px)" }], { duration: Math.max(3000, Math.round(px / 50) * 1000), delay: 1000, easing: "linear", fill: "both" });
-    }
+    if (overflow <= 2) return null;
+    var px = Math.ceil(overflow + 24);
+    var scrollMs = Math.max(3000, Math.round((px / 50) * 1000));
+    return { el: lineEl, px: px, scrollMs: scrollMs, readMs: MARQUEE_LEAD_MS + scrollMs + MARQUEE_REST_MS };
+  }
+  function startMarquee(plan) {
+    if (!plan) return;
+    var cycle = plan.readMs + MARQUEE_BACK_MS;
+    var home = "translateX(0)";
+    var end = "translateX(-" + plan.px + "px)";
+    plan.el.classList.add('marquee');
+    plan.el.animate([
+      { transform: home, offset: 0 },
+      { transform: home, offset: MARQUEE_LEAD_MS / cycle },
+      { transform: end, offset: (MARQUEE_LEAD_MS + plan.scrollMs) / cycle },
+      { transform: end, offset: plan.readMs / cycle },
+      { transform: home, offset: 1 }
+    ], { duration: cycle, easing: "linear", iterations: Infinity });
   }
   /*
     The line above the title (game name + rarity). Each half hides when the payload lacks it,
@@ -126,18 +148,21 @@ window.addEventListener('DOMContentLoaded', function () {
     applyProgress(data);
     var inMs = timing('--ach-in', 520);
     var outMs = timing('--ach-out', 380);
-    var holdMs = Math.max(0, total - inMs - outMs);
+    var marquees = [marqueePlan(titleEl), marqueePlan(detailEl)];
+    var readMs = Math.max(0, (marquees[0] || {}).readMs || 0, (marquees[1] || {}).readMs || 0);
+    var shownMs = readMs > 0 ? Math.max(total, Math.min(inMs + readMs + outMs, MARQUEE_MAX_TOTAL_MS)) : total;
+    var holdMs = Math.max(0, shownMs - inMs - outMs);
     root.style.setProperty('--ach-hold', holdMs + 'ms');
     root.classList.remove('active');
     void root.offsetWidth;
     root.classList.add('active');
     if (window.api && window.api.notificationRenderReady) window.api.notificationRenderReady();
-    requestAnimationFrame(function () { startMarqueeIfOverflow(titleEl); startMarqueeIfOverflow(detailEl); });
+    requestAnimationFrame(function () { marquees.forEach(startMarquee); });
     clearTimeout(closeTimer);
     closeTimer = setTimeout(function () {
       root.classList.remove('active');
       if (window.api && window.api.closeNotificationWindow) window.api.closeNotificationWindow();
-    }, total);
+    }, shownMs);
   }
   if (window.api && window.api.onNotification) window.api.onNotification(function (d) {
     onPayload(d && d.displayName, d && d.description, d && (d.iconPath || d.icon), d && d.scale, d || {});

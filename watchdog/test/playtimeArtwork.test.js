@@ -8,6 +8,9 @@ const { numericSteamId, usableArtwork, resolvePlaytimeArtwork } = require('../ut
 
 // Local artwork is a native absolute path on whichever host cached it.
 const nativeCover = path.join(os.tmpdir(), 'cache', '480.png');
+// A data folder with no cached logo. Left out, the real profile is read, and a SteamGridDB logo the
+// installed app once cached for appid 480 turns these expectations into a test of that machine.
+const isolated = { userDataRoot: path.join(os.tmpdir(), 'aw-playtime-artwork-no-cache') };
 
 test('manual games use their resolved artwork instead of synthetic Steam URLs', () => {
   const game = {
@@ -18,7 +21,7 @@ test('manual games use their resolved artwork instead of synthetic Steam URLs', 
     portraitUrl: 'https://cdn2.steamgriddb.com/grid/ryujinx.jpg',
   };
 
-  assert.deepEqual(resolvePlaytimeArtwork(game), {
+  assert.deepEqual(resolvePlaytimeArtwork(game, isolated), {
     icon: game.iconUrl,
     gameIcon: game.iconUrl,
     image: game.headerUrl,
@@ -27,7 +30,7 @@ test('manual games use their resolved artwork instead of synthetic Steam URLs', 
 
 test('manual games without artwork do not manufacture invalid Steam CDN URLs', () => {
   assert.equal(numericSteamId({ appid: 'manual-abc' }), '');
-  assert.deepEqual(resolvePlaytimeArtwork({ appid: 'manual-abc', icon: 'hash' }), {
+  assert.deepEqual(resolvePlaytimeArtwork({ appid: 'manual-abc', icon: 'hash' }, isolated), {
     icon: undefined,
     gameIcon: undefined,
     image: undefined,
@@ -36,7 +39,7 @@ test('manual games without artwork do not manufacture invalid Steam CDN URLs', (
 
 test('a game with only a square logo still gets an image for the playtime card', () => {
   const game = { appid: 'manual-abc', iconUrl: 'https://cdn2.steamgriddb.com/icon/ryujinx.png' };
-  assert.deepEqual(resolvePlaytimeArtwork(game), {
+  assert.deepEqual(resolvePlaytimeArtwork(game, isolated), {
     icon: game.iconUrl,
     gameIcon: game.iconUrl,
     image: game.iconUrl,
@@ -45,18 +48,18 @@ test('a game with only a square logo still gets an image for the playtime card',
 
 test('a Steam game with no header or portrait art falls back to its square logo', () => {
   // The common gameIndex shape: a numeric appid plus the legacy Steam icon hash, no scan artwork.
-  const artwork = resolvePlaytimeArtwork({ appid: '480', icon: 'hash' });
+  const artwork = resolvePlaytimeArtwork({ appid: '480', icon: 'hash' }, isolated);
   assert.match(artwork.icon, /\/480\/hash\.jpg$/);
   assert.match(artwork.image, /\/480\/header\.jpg$/);
 
   // Without a numeric appid there is no Steam header to fall back to, so the logo fills the slot.
-  const synthetic = resolvePlaytimeArtwork({ appid: 'gse-480', icon: 'hash', iconUrl: nativeCover });
+  const synthetic = resolvePlaytimeArtwork({ appid: 'gse-480', icon: 'hash', iconUrl: nativeCover }, isolated);
   assert.equal(synthetic.image, nativeCover);
   assert.equal(synthetic.gameIcon, nativeCover);
 });
 
 test('a manual optional Steam AppID remains a valid fallback', () => {
-  const artwork = resolvePlaytimeArtwork({ appid: 'manual-abc', steamappid: '123', icon: 'hash' });
+  const artwork = resolvePlaytimeArtwork({ appid: 'manual-abc', steamappid: '123', icon: 'hash' }, isolated);
   assert.match(artwork.icon, /\/123\/hash\.jpg$/);
   assert.match(artwork.gameIcon, /\/123\/library_600x900\.jpg$/);
   assert.match(artwork.image, /\/123\/header\.jpg$/);

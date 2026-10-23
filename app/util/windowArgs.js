@@ -4,9 +4,11 @@
 // instance forwards argv to the resident one. Keep the public CLI contract
 // camel-cased, but accept a case-folded spelling from that hand-off too.
 const CANONICAL_WINDOW_ARGS = [
+  'achievementHidden',
   'appid',
   'description',
   'displayName',
+  'gameDisplayAt',
   'gameDisplayName',
   'gameIcon',
   'hidden',
@@ -14,6 +16,7 @@ const CANONICAL_WINDOW_ARGS = [
   'image',
   'notificationType',
   'notifyId',
+  'paintReport',
   'progressCurrent',
   'progressMax',
   'progressPercent',
@@ -21,6 +24,7 @@ const CANONICAL_WINDOW_ARGS = [
   'silent',
   'source',
   'trophyGrade',
+  'unlockRate',
   'wintype',
 ];
 

@@ -400,6 +400,33 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
       assert.ok(scrolled.spill <= 1, 'the scrolling title is painted outside the text column');
     });
 
+    await t.test('a long line waits to be read before it scrolls, and keeps the card up for one pass', async () => {
+      await page.setViewport({ width: 500, height: 200 });
+      await page.setContent(generator.buildPresetPreviewHtml({ width: 320, duration: 3000 }, { hold: false }), { waitUntil: 'load' });
+      const shortHold = await page.evaluate((image) => {
+        window.awPreviewApply({ displayName: 'Short', description: 'Fits', iconPath: image, scale: 1 });
+        return parseFloat(getComputedStyle(document.querySelector('.ach')).getPropertyValue('--ach-hold'));
+      }, SAMPLE_IMAGE);
+      const longHold = await page.evaluate((image) => {
+        window.awPreviewApply({
+          displayName: 'Short',
+          description: 'A description long enough that it has to scroll a long way before its last word shows up',
+          iconPath: image,
+          scale: 1,
+        });
+        return parseFloat(getComputedStyle(document.querySelector('.ach')).getPropertyValue('--ach-hold'));
+      }, SAMPLE_IMAGE);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const early = await page.evaluate(() => {
+        const detail = document.querySelector('.detail');
+        return { marquee: detail.classList.contains('marquee'), transform: getComputedStyle(detail).transform };
+      });
+      assert.ok(longHold > shortHold + 3000, `the card is not kept up for the scroll (${shortHold}ms against ${longHold}ms)`);
+      assert.ok(longHold <= 15000, 'the card is kept up past the cap');
+      assert.equal(early.marquee, true, 'the long description is not scrolled at all');
+      assert.ok(early.transform === 'none' || /matrix\(1, 0, 0, 1, 0, 0\)/.test(early.transform), `the line moved before it could be read (${early.transform})`);
+    });
+
     await t.test('the game name and rarity badge are printed, and never leave an empty row', async () => {
       const design = { showGameName: true, showRarity: true };
       const shown = await renderPreset(page, design, 'rare-gold');

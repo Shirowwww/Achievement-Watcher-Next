@@ -6084,7 +6084,8 @@ function createNotificationWindow(data = {}) {
     }
     // Custom duration: hold on screen by FREEZING all animations ~3s in for the chosen time, then
     // resume (an interval catches newly-started ones too). Close is deferred (ipc.js, awFrozenUntil)
-    // so a preset's own self-close can't cut the hold short. 'auto' = no freeze.
+    // so a preset's own self-close can't cut the hold short. 'auto' = no freeze. A scrolling line
+    // (class `marquee`) is left running, or a long description stops halfway through the hold.
     const holdMs = Number.isFinite(Number(data.durationMs)) && Number(data.durationMs) > 0 ? Number(data.durationMs) : 0;
     if (holdMs > 0 && !reposition) {
       const FREEZE_AFTER = 3000;
@@ -6092,7 +6093,8 @@ function createNotificationWindow(data = {}) {
       notif.webContents
         .executeJavaScript(
           '(function(){var F=' + FREEZE_AFTER + ',H=' + holdMs + ';' +
-          'function all(){try{return document.getAnimations?document.getAnimations():[];}catch(e){return [];}}' +
+          'function scrolls(a){var el=a.effect&&a.effect.target;return !!(el&&el.classList&&el.classList.contains("marquee"));}' +
+          'function all(){try{return document.getAnimations?document.getAnimations().filter(function(a){return !scrolls(a);}):[];}catch(e){return [];}}' +
           'setTimeout(function(){' +
           'all().forEach(function(a){try{a.pause();}catch(e){}});' +
           'var iv=setInterval(function(){all().forEach(function(a){try{a.pause();}catch(e){}});},100);' +
@@ -6139,9 +6141,11 @@ function createNotificationWindow(data = {}) {
 
   // Safety net: the preset normally self-closes via window.api.closeNotificationWindow(). With a
   // custom duration the catch-all must outlast 3s + hold + exit (never cut short, see ipc.js's defer).
-  // 'auto' keeps the 20s catch-all; the reposition witness stays up much longer.
+  // Never under 20s either: a preset keeps itself up to 15s for a long scrolling line, whatever the
+  // custom duration. The reposition witness stays up much longer.
   const customMs = Number(data.durationMs);
-  const closeAfter = reposition ? 120000 : Number.isFinite(customMs) && customMs > 0 ? 3000 + customMs + 4000 : 20000;
+  const holdCloseMs = Number.isFinite(customMs) && customMs > 0 ? 3000 + customMs + 4000 : 0;
+  const closeAfter = reposition ? 120000 : Math.max(20000, holdCloseMs);
   const safety = setTimeout(() => {
     if (!notif.isDestroyed()) notif.close();
   }, closeAfter);

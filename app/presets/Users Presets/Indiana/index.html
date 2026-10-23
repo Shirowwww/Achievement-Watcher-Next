@@ -145,7 +145,14 @@
           label.textContent = `${progress.current}/${progress.max} - ${progress.percent}%`;
         }
 
-        function startMarqueeIfOverflow(lineEl) {
+        // A line too long for the card stays still long enough to be read, scrolls to its end,
+        // rests there, then comes back; the card stays up for one full pass (capped).
+        const MARQUEE_LEAD_MS = 2500;
+        const MARQUEE_REST_MS = 1500;
+        const MARQUEE_BACK_MS = 1200;
+        const MARQUEE_MAX_TOTAL_MS = 15000;
+
+        function marqueePlan(lineEl) {
           try {
             lineEl.getAnimations().forEach((a) => a.cancel());
           } catch {}
@@ -155,22 +162,28 @@
           const overflow = Math.round(
             (lineEl.scrollWidth || 0) - (clip.clientWidth || 0)
           );
-          if (overflow > 2) {
-            const px = Math.ceil(overflow + 24);
-            lineEl.classList.add("marquee");
-            lineEl.animate(
-              [
-                { transform: "translateX(0)" },
-                { transform: `translateX(-${px}px)` },
-              ],
-              {
-                duration: Math.max(3000, Math.round(px / 50) * 1000),
-                delay: 1000,
-                easing: "linear",
-                fill: "both",
-              }
-            );
-          }
+          if (overflow <= 2) return null;
+          const px = Math.ceil(overflow + 24);
+          const scrollMs = Math.max(3000, Math.round((px / 50) * 1000));
+          return { el: lineEl, px, scrollMs, readMs: MARQUEE_LEAD_MS + scrollMs + MARQUEE_REST_MS };
+        }
+
+        function startMarquee(plan) {
+          if (!plan) return;
+          const cycle = plan.readMs + MARQUEE_BACK_MS;
+          const home = "translateX(0)";
+          const end = `translateX(-${plan.px}px)`;
+          plan.el.classList.add("marquee");
+          plan.el.animate(
+            [
+              { transform: home, offset: 0 },
+              { transform: home, offset: MARQUEE_LEAD_MS / cycle },
+              { transform: end, offset: (MARQUEE_LEAD_MS + plan.scrollMs) / cycle },
+              { transform: end, offset: plan.readMs / cycle },
+              { transform: home, offset: 1 },
+            ],
+            { duration: cycle, easing: "linear", iterations: Infinity }
+          );
         }
 
         function restartAnimation() {
@@ -209,12 +222,11 @@
 
             restartAnimation();
             notifyScreenshotReady(360);
-            requestAnimationFrame(() => {
-              startMarqueeIfOverflow(titleEl);
-              startMarqueeIfOverflow(detailEl);
-            });
+            const marquees = [marqueePlan(titleEl), marqueePlan(detailEl)];
+            requestAnimationFrame(() => marquees.forEach(startMarquee));
 
-            const closeDelay = getCloseDelay();
+            const readMs = Math.max(0, ...marquees.map((plan) => (plan ? plan.readMs : 0)));
+            const closeDelay = Math.max(getCloseDelay(), Math.min(readMs + 1500, MARQUEE_MAX_TOTAL_MS));
             docEl.style.setProperty("--displaytime", `${closeDelay}ms`);
             setTimeout(() => {
               container?.classList.remove("is-active");
