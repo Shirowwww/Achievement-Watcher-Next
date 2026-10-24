@@ -714,6 +714,7 @@
             "iconSize": "Tamaño del icono",
             "layout": "Disposición",
             "letterSpacing": "Espaciado de letras",
+            "brandMark": "Quitar el ícono de marca integrado",
             "logoImage": "Logotipo",
             "logoOffset": "Distancia del logotipo al borde",
             "logoPosition": "Posición del logotipo",

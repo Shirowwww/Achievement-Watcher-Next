@@ -714,6 +714,7 @@
             "iconSize": "아이콘 크기",
             "layout": "배치",
             "letterSpacing": "자간",
+            "brandMark": "내장 브랜드 아이콘 제거",
             "logoImage": "로고",
             "logoOffset": "로고와 가장자리 간격",
             "logoPosition": "로고 위치",

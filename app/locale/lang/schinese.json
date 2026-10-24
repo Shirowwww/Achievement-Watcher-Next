@@ -714,6 +714,7 @@
             "iconSize": "图标大小",
             "layout": "排列方式",
             "letterSpacing": "字间距",
+            "brandMark": "移除内置品牌图标",
             "logoImage": "徽标",
             "logoOffset": "徽标与边缘的距离",
             "logoPosition": "徽标位置",

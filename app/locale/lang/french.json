@@ -714,6 +714,7 @@
             "iconSize": "Taille de l’icône",
             "layout": "Agencement",
             "letterSpacing": "Interlettrage",
+            "brandMark": "Retirer l’icône de marque intégrée",
             "logoImage": "Logo",
             "logoOffset": "Distance du logo au bord",
             "logoPosition": "Position du logo",

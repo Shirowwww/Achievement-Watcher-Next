@@ -714,6 +714,7 @@
             "iconSize": "Simge boyutu",
             "layout": "Yerleşim",
             "letterSpacing": "Harf aralığı",
+            "brandMark": "Yerleşik marka simgesini kaldır",
             "logoImage": "Logo",
             "logoOffset": "Logonun kenara uzaklığı",
             "logoPosition": "Logo konumu",

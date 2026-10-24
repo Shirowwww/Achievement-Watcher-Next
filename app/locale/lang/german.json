@@ -714,6 +714,7 @@
             "iconSize": "Symbolgröße",
             "layout": "Anordnung",
             "letterSpacing": "Zeichenabstand",
+            "brandMark": "Integriertes Markensymbol entfernen",
             "logoImage": "Logo",
             "logoOffset": "Abstand des Logos zum Rand",
             "logoPosition": "Position des Logos",
