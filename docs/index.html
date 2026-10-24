@@ -14,10 +14,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Achievement Watcher Next - achievement tracker for Steam, cracked and emulated games</title>
+    <title>Achievement Watcher Next - achievements for Steam and cracked games</title>
     <meta
       name="description"
-      content="Achievement Watcher Next, the successor of Achievement Watcher: a free Windows and Linux app that tracks achievements, rarity and playtime for Steam, GOG, Epic, Ubisoft, EA, Xbox PC and RetroAchievements, and for cracked and emulated games (Goldberg, GBE Fork, CODEX, RUNE, CPY, Uplay R1 and R2), with an achievement popup over the game. Open source."
+      content="Free, open-source achievement tracker for Windows and Linux. Steam, GOG, Epic, Ubisoft, EA, Xbox PC, RetroAchievements and emulated games, with a popup in game."
     />
     <meta name="google-site-verification" content="R2gEUCdKG7hQa-91M4ssHsQWLzD9uacTC4ZgXxqBss0" />
     <link rel="canonical" href="https://shirowwww.github.io/Achievement-Watcher-Next/" />
@@ -67,6 +67,11 @@
           "url": "https://github.com/Shirowwww"
         }
       }
+    </script>
+
+    <!-- Fetch a guide while the pointer rests on its link, so the next page opens at once. Prefetch only: a prerender would run its scripts too. -->
+    <script type="speculationrules">
+      { "prefetch": [{ "where": { "href_matches": "/Achievement-Watcher-Next/*" }, "eagerness": "moderate" }] }
     </script>
 
     <link rel="icon" href="assets/favicon.ico" sizes="any" />
@@ -1041,7 +1046,7 @@
         </div>
 
         <div class="foot-menu">
-          <a class="brand" href="./">
+          <a class="brand" href="./" aria-label="Achievement Watcher Next">
             <span class="brand-mark" aria-hidden="true"></span>
             <span class="brand-word">Achievement Watcher Next</span>
           </a>
