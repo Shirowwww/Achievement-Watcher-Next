@@ -92,6 +92,23 @@ library afterwards to read the restored unlocks.
 > A reset also clears AW Next's own record of what was already unlocked, including in the running
 > background tracker. Otherwise a re-earned achievement would never be announced again.
 
+## Re-lock a single achievement
+
+Right-click an unlocked achievement on the game's page and choose **Re-lock this achievement** to
+play for that one again. Only that achievement goes back to locked: its flag, unlock time and
+progress in the emulator's save, its counter when the save links one to it, and AW Next's own
+record, so it is announced as new when you earn it. The confirmation lists the files and every file
+is backed up first, as for a reset; **Restore an achievement backup** puts it back.
+
+Close the game first. An emulator keeps its unlocks in memory and writes them back when the game
+exits, which would undo the change, so AW Next refuses while a game is running.
+
+It works with the text saves of the Steam emulators (Goldberg and GSE, CODEX, RUNE, OnlineFix, RLD!,
+3DM, ALI213, TENOKE, Hoodlum, RAZOR1911, CreamAPI), UniverseLAN, Nemirtingas, Uplay R1 and R2,
+GreenLuma and LumaPlay on Windows, and the console saves of RPCS3, ShadPS4, Xenia, KytyPS5, the Xbox
+360 ports and XLLN. SmartSteamEmu (`stats.bin`) and SKIDROW (`achieve.dat`) saves are not edited one
+achievement at a time, as their layout is not documented; use **Reset achievements** for those.
+
 ## Forget a game
 
 **Forget this game...**, in the right-click menu, clears everything AW Next keeps about a game: its

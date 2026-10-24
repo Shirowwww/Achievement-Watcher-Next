@@ -9,6 +9,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Re-lock a single achievement.** Right-click an unlocked achievement and choose **Re-lock this
+  achievement**: the emulator's save is edited so the game can unlock it again, and AW Next announces
+  it as new. The files are listed before anything changes and backed up first. It works with most
+  emulator saves, text and binary alike (Goldberg and GSE, CODEX, RUNE, OnlineFix, TENOKE, RPCS3,
+  ShadPS4, Xenia and more); SmartSteamEmu and SKIDROW saves, official platforms and PS4 ports keep
+  only the full reset. Close the game first: an emulator writes its unlocks back when it exits.
+
 ### Improved
 
 - **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
@@ -20,6 +29,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Reset achievements resets everything.** Some saves survived a reset and the game unlocked their
+  achievements again at once: RAZOR1911, CreamAPI, XLLN, Final Fantasy VII, RUNE's Ubisoft saves,
+  MadnessPatch and MarkerPatch, GreenLuma and LumaPlay registry entries, and the progress counters of
+  Goldberg and GSE. They are now backed up and reset too, and a console trophy earned again after a
+  reset is announced.
 - **SAN themes at SAN's exact size.** Text on an imported SAN theme came out a little smaller than in
   SAN, and a theme's own scale setting was ignored; both now match SAN. Installed SAN presets are
   rebuilt on their own. Importing no longer fails with "EPERM" when an antivirus briefly holds a

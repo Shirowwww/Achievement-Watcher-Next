@@ -802,6 +802,16 @@ process.on('message', (msg) => {
       .catch((err) => debug.warn(`[reset] could not drop the baseline for ${appid}: ${err.message || err}`));
     return;
   }
+  // The app relocked achievements of a game: they go back to locked in the baseline this process
+  // diffs against, so earning one again notifies like a first unlock.
+  if (msg.relockAchievement && msg.relockAchievement.appid && Array.isArray(msg.relockAchievement.names)) {
+    const appid = String(msg.relockAchievement.appid);
+    track
+      .relock(appid, msg.relockAchievement.names)
+      .then((count) => debug.log(`[relock] ${count} achievement(s) relocked in the baseline of ${appid}`))
+      .catch((err) => debug.warn(`[relock] could not relock the baseline of ${appid}: ${err.message || err}`));
+    return;
+  }
   // The app holds the overlay shortcut; this is the press coming back.
   if (msg.overlayHotkeyPressed === true) {
     toggleOverlayForRunningGame();

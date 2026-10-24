@@ -274,6 +274,12 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
           label: $('#game-list').attr('data-ctx-manualunlock') || '',
           click: () => window.app?.manualUnlockAction?.(appid, source, name, 'mark-unlocked'),
         });
+      } else {
+        const { t } = require(require('path').join(remote.app.getAppPath(), 'locale/t.js'));
+        items.push({
+          label: t('relock-ach-menu', 'Re-lock this achievement', 'Reverrouiller ce succès'),
+          click: () => window.app?.relockAchievementAction?.(appid, name),
+        });
       }
       if (items.length === 0) return;
       event.preventDefault();

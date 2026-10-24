@@ -434,7 +434,7 @@ module.exports.getAchievements = async (gpdPath) => {
   zeroed) with no length change, keeping the entry/free tables and strings valid. Returns the buffer
   and how many were earned before.
 */
-function clearGpdBuffer(raw) {
+function clearGpdBuffer(raw, onlyId = null) {
   if (!Buffer.isBuffer(raw)) return { buffer: raw, cleared: 0 };
   const entries = parseXdbfEntries(raw);
   if (!entries.length) return { buffer: raw, cleared: 0 };
@@ -451,6 +451,7 @@ function clearGpdBuffer(raw) {
     if (SYNC_ENTRY_IDS.has(String(entry.id))) continue;
     // 0x1c is the smallest payload that still carries flags and the unlock time.
     if (entry.length < ACHIEVEMENT_STRUCT_SIZE || entry.offset + ACHIEVEMENT_STRUCT_SIZE > buffer.length) continue;
+    if (onlyId != null && buffer[readU32](entry.offset + 0x04) !== Number(onlyId)) continue;
     const flagsAt = entry.offset + 0x10;
     const flags = buffer[readU32](flagsAt);
     if ((flags & ACHIEVEMENT_EARNED_FLAG) !== 0) cleared += 1;

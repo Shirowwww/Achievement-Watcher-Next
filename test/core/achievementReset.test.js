@@ -233,7 +233,7 @@ test('the folder walk is bounded in depth and in count', (t) => {
   assert.equal(found.length, 1, 'only the file within the depth bound is reachable');
 });
 
-test('nothing is deleted when its backup could not be written', (t) => {
+test('a file whose backup could not be written stops the reset and puts back what was cleared', (t) => {
   const profile = tempProfile();
   t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
   const game = goldbergGame(profile);
@@ -243,10 +243,11 @@ test('nothing is deleted when its backup could not be written', (t) => {
   plan.files.push({ path: missing, action: targets.ACTION.DELETE, source: 'Goldberg' });
 
   const result = achievementReset.run(plan);
+  assert.equal(result.ok, false);
   assert.equal(result.errors.length, 1);
   assert.equal(result.errors[0].stage, 'backup');
-  // The rest of the plan still ran: one unreadable file must not cost the user the whole reset.
-  assert.equal(fs.existsSync(path.join(profile, 'GSE Saves', '480', 'achievements.json')), false);
+  // Half a reset would leave saves and AW Next's records disagreeing: all of it or none of it.
+  assert.equal(fs.existsSync(path.join(profile, 'GSE Saves', '480', 'achievements.json')), true);
 });
 
 // Xenia.

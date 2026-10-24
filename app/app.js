@@ -114,6 +114,7 @@ progressMute.setUserDataPath(getUserDataPath());
 const notificationHealth = require(path.join(appPath, 'parser/notificationHealth.js'));
 notificationHealth.setUserDataPath(getUserDataPath());
 const achievementReset = require(path.join(appPath, 'parser/achievementReset.js'));
+const achievementRelock = require(path.join(appPath, 'parser/achievementRelock.js'));
 const forgetGame = require(path.join(appPath, 'util/forgetGame.js'));
 achievementReset.setUserDataPath(getUserDataPath());
 const emulatorSourceOverride = require(path.join(appPath, 'parser/emulatorSourceOverride.js'));
@@ -2024,20 +2025,58 @@ async function forgetWatchdogBaseline(appid) {
   }
 }
 
+// The Watchdog's copy of one relocked achievement goes back to locked, so earning it again notifies.
+// Best effort, like forgetWatchdogBaseline: the app has already relocked the .db file itself.
+async function relockWatchdogBaseline(appids, names) {
+  for (const appid of appids) {
+    try {
+      await ipcRenderer.invoke('watchdog-relock-achievement', { appid: String(appid), names });
+    } catch (err) {
+      debug.warn(`[relock] the monitor could not be told to relock ${appid}: ${formatErr(err)}`);
+    }
+  }
+}
+
+// The main process only counts running games, it does not say which: any one refuses a relock.
+// null when it cannot answer, which refuses too.
+async function isAnyGameRunning() {
+  try {
+    const running = await ipcRenderer.invoke('game-activity:running');
+    return running == null ? null : Boolean(running);
+  } catch (err) {
+    debug.warn(`[relock] could not ask whether a game is running: ${formatErr(err)}`);
+    return null;
+  }
+}
+
+function lockAchievementEntry(achievement) {
+  achievement.Achieved = false;
+  achievement.UnlockTime = 0;
+  achievement.CurProgress = 0;
+  delete achievement.manual;
+  delete achievement.manualForced;
+}
+
 // Zeroes the in-memory copy of a game after its saves were cleared, then repaints: the library is
 // only re-read from disk on a scan, so without this stale unlocks would linger until the next one.
 function repaintGameAfterReset(appid, game) {
   if (game && game.achievement && Array.isArray(game.achievement.list)) {
-    for (const achievement of game.achievement.list) {
-      if (!achievement) continue;
-      achievement.Achieved = false;
-      achievement.UnlockTime = 0;
-      achievement.CurProgress = 0;
-      delete achievement.manual;
-      delete achievement.manualForced;
-    }
+    for (const achievement of game.achievement.list) if (achievement) lockAchievementEntry(achievement);
     game.achievement.unlocked = 0;
   }
+  repaintGameView(appid);
+}
+
+function repaintGameAfterRelock(appid, game, name) {
+  const list = game && game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list : [];
+  for (const achievement of list) {
+    if (achievement && String(achievement.name).toUpperCase() === String(name).toUpperCase()) lockAchievementEntry(achievement);
+  }
+  if (game && game.achievement) game.achievement.unlocked = list.filter((achievement) => achievement && achievement.Achieved).length;
+  repaintGameView(appid);
+}
+
+function repaintGameView(appid) {
   const box = $('#game-list .game-box')
     .filter(function () {
       return String($(this).data('appid')) === String(appid);
@@ -2045,6 +2084,95 @@ function repaintGameAfterReset(appid, game) {
     .first();
   if (box.length && typeof app.onGameBoxClick === 'function') app.onGameBoxClick(box, gameList);
   refreshLibraryProgressFor(appid, gameList);
+}
+
+// Product names, shown as they are written, for the formats a relock refuses.
+const RELOCK_FORMAT_NAMES = {
+  smartsteamemu: 'SmartSteamEmu (stats.bin)',
+  skidrow: 'SKIDROW (achieve.dat)',
+  'stats-json': 'stats.json',
+  'ps4-recomp': 'PS4 Recomp',
+  'pc-port': 'PC Port',
+};
+
+// [message, detail] for a refused relock.
+function relockRefusalText(refusal) {
+  switch (refusal.reason) {
+    case 'official':
+      return [
+        t('reset-ach-official', 'This game’s achievements are stored by its platform, not on this PC.', 'Les succès de ce jeu sont conservés par sa plateforme, pas sur ce PC.'),
+        t('reset-ach-official-detail', 'Steam, GOG Galaxy, Ubisoft Connect, EA, Epic and Xbox keep unlocks on your account and re-synchronise them. Only the account itself can clear them.', 'Steam, GOG Galaxy, Ubisoft Connect, EA, Epic et Xbox conservent les succès sur ton compte et les resynchronisent. Seul le compte peut les effacer.'),
+      ];
+    case 'running':
+      return [
+        t('relock-ach-running', 'Close the game first.', 'Ferme d’abord le jeu.'),
+        t('relock-ach-running-detail', 'An emulator keeps its unlocks in memory and writes them back when the game closes, which would undo the relock.', 'Un émulateur garde ses succès en mémoire et les réécrit à la fermeture du jeu, ce qui annulerait le reverrouillage.'),
+      ];
+    case 'running-unknown':
+      return [t('relock-ach-running-unknown', 'AW Next could not tell whether a game is running, so nothing was changed.', 'AW Next n’a pas pu savoir si un jeu est lancé, donc rien n’a été modifié.'), ''];
+    case 'unsupported':
+      return [
+        t('relock-ach-unsupported', 'This save format cannot relock a single achievement.', 'Ce format de sauvegarde ne permet pas de reverrouiller un seul succès.'),
+        t('relock-ach-unsupported-detail', 'Format: {format}. Reset achievements locks them all, with a backup.', 'Format : {format}. Réinitialiser les succès les reverrouille tous, avec une sauvegarde.', {
+          format: RELOCK_FORMAT_NAMES[refusal.format] || refusal.format || '',
+        }),
+      ];
+    case 'uncertain':
+      return [t('relock-ach-uncertain', 'AW Next could not read this save well enough to change one achievement safely. Nothing was changed.', 'AW Next n’a pas pu lire cette sauvegarde assez bien pour modifier un seul succès sans risque. Rien n’a été modifié.'), `${refusal.file || ''}\n${refusal.message || ''}`.trim()];
+    case 'registry-prefix':
+      return [t('relock-ach-registry-prefix', 'This achievement is stored in the registry of a Wine prefix, which AW Next does not edit.', 'Ce succès est enregistré dans le registre d’un préfixe Wine, qu’AW Next ne modifie pas.'), ''];
+    default:
+      return [t('relock-ach-nothing', 'AW Next found no save that records this achievement as unlocked.', 'AW Next n’a trouvé aucune sauvegarde où ce succès est débloqué.'), ''];
+  }
+}
+
+function relockConfirmDetail(relockPlan) {
+  const files = relockPlan.edits.filter((edit) => edit.kind !== 'state');
+  const shown = files.slice(0, 8).map((edit) => `• ${edit.path}`);
+  if (files.length > shown.length) shown.push(t('reset-ach-more-files', '…and {count} more', '…et {count} de plus', { count: files.length - shown.length }));
+  const detail = files.length ? [t('relock-ach-detail-files', '{count} file(s) will be backed up, then edited:', '{count} fichier(s) seront sauvegardés, puis modifiés :', { count: files.length }), ...shown] : [];
+  if (relockPlan.registry.length) detail.push(t('relock-ach-detail-registry', '{count} registry value(s) will be set to 0.', '{count} valeur(s) du registre seront remises à 0.', { count: relockPlan.registry.length }));
+  if (relockPlan.stat) {
+    detail.push(t('relock-ach-detail-stat', 'Its counter "{stat}" goes back to 0 too; other achievements counted by it may show less progress.', 'Son compteur « {stat} » repasse aussi à 0 ; d’autres succès comptés par lui peuvent afficher moins de progression.', { stat: relockPlan.stat }));
+  } else if (relockPlan.statUnknown) {
+    detail.push(t('relock-ach-detail-stat-unknown', 'This game also keeps counters. If one of them unlocks this achievement, the game may unlock it again straight away.', 'Ce jeu garde aussi des compteurs. Si l’un d’eux débloque ce succès, le jeu peut le redébloquer aussitôt.'));
+  }
+  if (relockPlan.manual) detail.push(t('relock-ach-detail-manual', 'Its manual unlock will be cleared too.', 'Son déblocage manuel sera aussi effacé.'));
+  detail.push('', t('reset-ach-detail-backup', 'Backup: {path}', 'Sauvegarde : {path}', { path: achievementReset.gameBackupRoot(relockPlan.appid) }));
+  return detail.join('\n');
+}
+
+function showRelockDone(result) {
+  const backup = t('reset-ach-done-detail', 'Backup: {path}', 'Sauvegarde : {path}', { path: result.backupDir });
+  const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: result.errors.length > 0 ? 'warning' : 'info',
+    title: t('relock-ach-done-title', 'Achievement re-locked', 'Succès reverrouillé'),
+    message: t('relock-ach-done-message', 'Unlock it again in game and it will be announced as new.', 'Débloque-le à nouveau en jeu et il sera annoncé comme neuf.'),
+    detail: [backup, ...result.errors.map((entry) => `• ${entry.path} - ${entry.message}`)].join('\n'),
+    buttons: [t('ok', 'OK', 'OK'), t('open-backup-folder', 'Open backup folder', 'Ouvrir la sauvegarde')],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (answer === 1) remote.shell.openPath(result.backupDir);
+}
+
+// What a rolled-back relock or reset tells the user: each failure, then where the backup is.
+function runFailureText(result) {
+  return [
+    ...result.errors.map((entry) => `• ${entry.path} - ${entry.message}`),
+    '',
+    t('reset-ach-done-detail', 'Backup: {path}', 'Sauvegarde : {path}', { path: result.backupDir }),
+  ].join('\n');
+}
+
+function showRelockFailure(err) {
+  remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'error',
+    title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+    message: t('relock-ach-failed', 'The achievement could not be re-locked.', 'Le succès n’a pas pu être reverrouillé.'),
+    detail: `${err && (err.message || err)}`,
+  });
 }
 
 // Open catalog links only after validating their http(s) scheme.
@@ -7720,7 +7848,7 @@ var app = {
 
     if (!resetPlan.supported) {
       // Say which of the two it is: a platform that owns its unlocks, or simply nothing recorded yet.
-      const official = resetPlan.blocked.length > 0;
+      const official = resetPlan.blocked.some((entry) => entry.reason === 'official-platform');
       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
         type: 'info',
         title: t('reset-ach-title', 'Reset achievements', 'Réinitialiser les succès'),
@@ -7746,6 +7874,9 @@ var app = {
       '',
       t('reset-ach-detail-backup', 'Backup: {path}', 'Sauvegarde : {path}', { path: achievementReset.gameBackupRoot(resetPlan.appid) }),
     ];
+    if (resetPlan.registry.length > 0) {
+      detail.push(t('reset-ach-detail-registry', '{count} registry key(s) will have their values set to 0.', '{count} clé(s) du registre verront leurs valeurs remises à 0.', { count: resetPlan.registry.length }));
+    }
     if (resetPlan.manualEntries > 0) {
       detail.push(t('reset-ach-detail-manual', 'Manual unlocks for this game will also be cleared ({count}).', 'Les déblocages manuels de ce jeu seront aussi effacés ({count}).', { count: resetPlan.manualEntries }));
     }
@@ -7784,6 +7915,17 @@ var app = {
       });
       return false;
     }
+    // Rolled back: the saves are as they were, so the Watchdog and the view keep their unlocks.
+    if (!result.ok) {
+      debug.error(`[reset] rolled back for ${appid}: ${result.errors.map((entry) => `${entry.stage} ${entry.message}`).join('; ')}`);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'error',
+        title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
+        message: t('reset-ach-failed', 'The achievements could not be reset.', 'Les succès n’ont pas pu être réinitialisés.'),
+        detail: runFailureText(result),
+      });
+      return false;
+    }
 
     await forgetWatchdogBaseline(resetPlan.appid);
     repaintGameAfterReset(appid, game);
@@ -7806,6 +7948,64 @@ var app = {
       noLink: true,
     });
     if (answer === 1) remote.shell.openPath(result.backupDir);
+    return true;
+  },
+  // Re-locks one achievement so the game can unlock it again and AW Next announces it as new. Same
+  // safety as the reset: the user approves the file list, and everything touched is backed up first.
+  relockAchievementAction: async function (appid, name) {
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    if (!game) return false;
+    let relockPlan;
+    try {
+      relockPlan = achievementRelock.plan(game, name, { gameRunning: await isAnyGameRunning() });
+    } catch (err) {
+      debug.error(`[relock] planning failed for ${appid}/${name} => ${formatErr(err)}`);
+      showRelockFailure(err);
+      return false;
+    }
+    if (relockPlan.refusal) {
+      const [message, detail] = relockRefusalText(relockPlan.refusal);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), { type: 'info', title: t('relock-ach-title', 'Re-lock achievement', 'Reverrouiller le succès'), message, detail });
+      return false;
+    }
+    const listed = (game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list : []).find((entry) => entry && entry.name === name);
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'warning',
+      title: t('relock-ach-confirm-title', 'Re-lock this achievement?', 'Reverrouiller ce succès ?'),
+      message: t('relock-ach-confirm-message', '{achievement} goes back to locked in {game}, so the game can unlock it again.', '{achievement} repasse en verrouillé dans {game}, pour que le jeu puisse le débloquer à nouveau.', {
+        achievement: (listed && listed.displayName) || name,
+        game: game.name || relockPlan.appid,
+      }),
+      detail: relockConfirmDetail(relockPlan),
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('relock-ach-confirm-button', 'Re-lock', 'Reverrouiller')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return false;
+    let result;
+    try {
+      // Asked again: a game started while the dialog was open would write its unlocks back on exit.
+      result = achievementRelock.run(relockPlan, { gameRunning: await isAnyGameRunning() });
+    } catch (err) {
+      debug.error(`[relock] failed for ${appid}/${name} => ${formatErr(err)}`);
+      showRelockFailure(err);
+      return false;
+    }
+    if (result.refusal) {
+      const [message, detail] = relockRefusalText(result.refusal);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), { type: 'info', title: t('relock-ach-title', 'Re-lock achievement', 'Reverrouiller le succès'), message, detail });
+      return false;
+    }
+    // Rolled back: the saves are as they were, so neither the Watchdog nor the view may say otherwise.
+    if (!result.ok) {
+      debug.error(`[relock] rolled back for ${appid}/${name}: ${result.errors.map((entry) => `${entry.stage} ${entry.message}`).join('; ')}`);
+      showRelockFailure(runFailureText(result));
+      return false;
+    }
+    await relockWatchdogBaseline([...new Set([game.appid, game.steamappid].filter((id) => id != null && id !== '').map(String))], [relockPlan.achievement]);
+    repaintGameAfterRelock(appid, game, relockPlan.achievement);
+    showRelockDone(result);
     return true;
   },
   /*

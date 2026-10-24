@@ -38,6 +38,25 @@ module.exports.forget = async (appID) => {
   await fs.unlink(cacheFilePath(key)).catch(() => {});
 };
 
+/*
+  The app relocked some achievements of a game. Unlike forget(), the rest of the baseline stays, so
+  only the relocked ones notify when earned again; an empty baseline would re-announce old unlocks.
+*/
+module.exports.relock = async (appID, names) => {
+  const key = cacheKey(appID);
+  const pending = writeQueues.get(key);
+  if (pending) await pending.catch(() => {});
+  const wanted = new Set((Array.isArray(names) ? names : []).map((name) => String(name).toUpperCase()));
+  let relocked = 0;
+  const next = (await module.exports.load(key)).map((entry) => {
+    if (!entry || !wanted.has(String(entry.name ?? '').toUpperCase())) return entry;
+    relocked += 1;
+    return { ...entry, Achieved: false, UnlockTime: 0, CurProgress: 0 };
+  });
+  if (relocked > 0) await module.exports.save(key, next);
+  return relocked;
+};
+
 module.exports.load = async (appID) => {
   const key = cacheKey(appID);
   if (memoryCache.has(key)) return snapshotOf(memoryCache.get(key));

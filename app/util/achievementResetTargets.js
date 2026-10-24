@@ -15,16 +15,19 @@ const ACTION = {
   CLEAR_SHADPS4_XML: 'clear-shadps4-xml',
   CLEAR_XENIA_GPD: 'clear-xenia-gpd',
   CLEAR_X360_JSON: 'clear-x360-json',
+  // Saves that also hold settings or every user's other games: their unlock fields are zeroed in place.
+  CLEAR_RUNE_CFG: 'clear-rune-cfg',
+  CLEAR_UNLOCK_FLAG: 'clear-unlock-flag',
+  CLEAR_ACL: 'clear-acl',
+  CLEAR_CONSOLE_BASELINE: 'clear-console-baseline',
 };
 
 const X360_RECOMP_SOURCE = 'xbox 360 recomp';
 const PS4_RECOMP_SOURCE = 'ps4 recomp';
 
 /*
-  Emulator save files; mirrors the list watchdog/monitor.js watches (files.achievement plus the
-  console/cascade entries) - keep both in sync. Matched case-insensitively since builds vary.
-  Stats files are included on purpose: for progressive achievements the counter IS the progress,
-  so leaving it maxed would re-fire or block the unlock. Everything here is backed up first.
+  Emulator save files, mirroring the list watchdog/monitor.js watches (keep both in sync). Matched
+  case-insensitively. Stats count too: a maxed counter would re-fire or block a progressive unlock.
 */
 const SAVE_FILES = new Set(
   [
@@ -37,6 +40,7 @@ const SAVE_FILES = new Set(
     'stats.bin',
     'user_stats.ini',
     'stats.json',
+    'creamapi.achievements.cfg',
     // RPCS3 keeps unlock state apart from the schema, so this one is safe to remove outright.
     'tropusr.dat',
   ].map((name) => name.toLowerCase())
@@ -76,6 +80,8 @@ function resetActionFor(fileName, source = '') {
   // A PS4 port's user folder also holds the game's own saves; its unlock logs are not reset from here.
   if (String(source || '').trim().toLowerCase() === PS4_RECOMP_SOURCE) return null;
   if (SAVE_FILES.has(name)) return ACTION.DELETE;
+  // RAZOR1911's `achievement` only in its own root: the name alone is too common to delete elsewhere.
+  if (name === 'achievement') return String(source || '').trim().toLowerCase() === 'razor1911' ? ACTION.DELETE : null;
   // KytyPS5 keeps one unlock list per user and trophy set, apart from the list in the game's package.
   if (/^trophies_\d+_\d+\.json$/.test(name)) return ACTION.DELETE;
   // ShadPS4 ships one file per language (TROP.XML, TROP_01.XML, …); all of them carry the state.

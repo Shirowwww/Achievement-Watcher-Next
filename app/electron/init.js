@@ -3101,6 +3101,29 @@ ipcMain.handle('watchdog-forget-achievement-baseline', (event, appid) => {
   }
 });
 
+// Relocking one achievement must not empty the whole baseline: the next write would then seed and
+// re-announce the most recent unlocks.
+ipcMain.handle('watchdog-relock-achievement', (event, request) => {
+  const appid = request && request.appid;
+  const names = request && Array.isArray(request.names) ? request.names.map(String) : [];
+  if (!appid || names.length === 0) return false;
+  if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return false;
+  try {
+    monitorProc.send({ relockAchievement: { appid: String(appid), names } });
+    return true;
+  } catch (err) {
+    debug.log(`[monitor] achievement relock request failed: ${err.message}`);
+    return false;
+  }
+});
+
+// Any detected game blocks a relock: the Watchdog reports how many run, not which. Without a
+// connected Watchdog the count says nothing, so the answer is unknown (null), which refuses too.
+ipcMain.handle('game-activity:running', () => {
+  if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return null;
+  return isGameRunning();
+});
+
 ipcMain.handle('watchdog-reload-playtime-index', () => {
   if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return false;
   try {

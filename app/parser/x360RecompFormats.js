@@ -152,12 +152,13 @@ function parseJson(buffer) {
   The JSON list with every unlocked flag cleared, written back in the encoding it came in (the game
   writes UTF-16 with a byte-order mark). Refuses a file it cannot parse rather than overwrite it.
 */
-function clearJsonBuffer(buffer) {
+function clearJsonBuffer(buffer, onlyId = null) {
   const bom = bomOf(buffer);
   const parsed = JSON.parse(decodeText(buffer));
   if (!parsed || !Array.isArray(parsed.achievements)) throw new Error('no achievements array');
   let cleared = 0;
   for (const entry of parsed.achievements) {
+    if (onlyId != null && !(entry && isWholeId(entry.id) && Number(entry.id) === Number(onlyId))) continue;
     if (entry && entry.unlocked === true) cleared += 1;
     if (entry && typeof entry === 'object') entry.unlocked = false;
   }

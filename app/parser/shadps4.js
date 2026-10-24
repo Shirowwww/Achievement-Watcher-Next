@@ -378,10 +378,12 @@ module.exports.getGameData = async (dir, lang) => {
   losing any attribute/entity this reader does not model. Only unlockstate/unlocked/timestamp change.
   Returns the new text and how many trophies were unlocked before.
 */
-function clearTrophyXml(text) {
+function clearTrophyXml(text, onlyId = null) {
   const source = String(text == null ? '' : text);
   let cleared = 0;
   const updated = source.replace(/<trophy\b[^>]*>/gi, (tag) => {
+    // Ids are zero-padded in some files ("003"), so one trophy is matched by number.
+    if (onlyId != null && parseInt((/\bid\s*=\s*"([^"]*)"/i.exec(tag) || [])[1], 10) !== parseInt(onlyId, 10)) return tag;
     if (/unlockstate\s*=\s*"true"/i.test(tag) || /unlocked\s*=\s*"yes"/i.test(tag)) cleared += 1;
     return tag
       .replace(/(unlockstate\s*=\s*")[^"]*(")/gi, '$1false$2')
