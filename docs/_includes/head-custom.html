@@ -34,4 +34,9 @@
     }
   })();
 </script>
+
+<!-- Fetch a guide while the pointer rests on its link, so the next page opens at once. Prefetch only: a prerender would run its scripts too. -->
+<script type="speculationrules">
+  { "prefetch": [{ "where": { "href_matches": "{{ '/*' | relative_url }}" }, "eagerness": "moderate" }] }
+</script>
 {% if page.name == 'faq.md' %}{% include faq-jsonld.html %}{% endif %}

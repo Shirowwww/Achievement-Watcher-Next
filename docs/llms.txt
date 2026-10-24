@@ -1,0 +1,26 @@
+# Achievement Watcher Next
+
+> A free, open-source achievement tracker for Windows and Linux. It reads achievements, rarity and playtime from Steam, GOG, Epic, Ubisoft, EA, Xbox PC and RetroAchievements, and from emulated and cracked games (Goldberg, GBE Fork, CODEX, RUNE, CPY, Uplay R1 and R2), and shows a popup over the game when one unlocks. Successor of Achievement Watcher 2.x. License: LGPL-3.0.
+
+- Download: https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest
+- Source code: https://github.com/Shirowwww/Achievement-Watcher-Next
+
+## Guides
+
+- [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html): install, the first-run guide, Simple or Advanced, finding your games, updates
+- [Compatible sources](https://shirowwww.github.io/Achievement-Watcher-Next/sources.html): every game source the app reads and what each one needs
+- [Notifications](https://shirowwww.github.io/Achievement-Watcher-Next/notifications.html): overlay popups or Windows notifications, sounds, trophy mode, OBS, clips
+- [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html): missing games, wrong progress, notifications that do not appear, antivirus warnings
+- [FAQ](https://shirowwww.github.io/Achievement-Watcher-Next/faq.html): accounts, sources, safety, backups and supported platforms
+- [Linux and the Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html): the AppImage, Proton, Lutris, Heroic and Bottles
+- [Goldberg and GBE Fork setup](https://shirowwww.github.io/Achievement-Watcher-Next/emulator-setup.html): diagnose or repair an emulated Steam game
+- [Goldberg Uplay setup, R1 and R2](https://shirowwww.github.io/Achievement-Watcher-Next/uplay-r2.html): achievements for compatible Ubisoft games
+- [How AW Next compares](https://shirowwww.github.io/Achievement-Watcher-Next/comparison.html): differences from Achievement Watcher 2.x and the Achievements app
+
+## Optional
+
+- [Presets and the Preset Designer](https://shirowwww.github.io/Achievement-Watcher-Next/presets.html)
+- [In-game overlay](https://shirowwww.github.io/Achievement-Watcher-Next/overlay.html)
+- [Game Health](https://shirowwww.github.io/Achievement-Watcher-Next/game-health.html)
+- [Preset gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/) and [theme gallery](https://shirowwww.github.io/Achievement-Watcher-Next/gallery/themes/)
+- [Changelog](https://shirowwww.github.io/Achievement-Watcher-Next/changelog.html)
