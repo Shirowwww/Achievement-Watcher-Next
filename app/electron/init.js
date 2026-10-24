@@ -1893,7 +1893,28 @@ async function acquirePuppeteerSlot() {
     const next = puppeteerSlotQueue.shift();
     if (next) next();
     else puppeteerSlotsInUse -= 1;
+    schedulePuppeteerIdleClose();
   };
+}
+
+/*
+  The hidden browser is closed after a scan, but a later lookup (a cover, launch data) opened it
+  again until the next one. Idle, it only costs memory and, on Windows, empty windows in Alt+Tab.
+*/
+const PUPPETEER_IDLE_CLOSE_MS = 60000;
+let puppeteerIdleTimer = null;
+
+function schedulePuppeteerIdleClose() {
+  clearTimeout(puppeteerIdleTimer);
+  puppeteerIdleTimer = setTimeout(() => {
+    puppeteerIdleTimer = null;
+    if (!puppeteerWindow || !puppeteerWindow.browser) return;
+    const busy = puppeteerLeases.size > 0 || currentlyscraping.steamcommunity || currentlyscraping.steamhunters;
+    if (busy) return schedulePuppeteerIdleClose();
+    debug.log('puppeteer: idle, closing the browser');
+    closePuppeteer().catch(() => {});
+  }, PUPPETEER_IDLE_CLOSE_MS);
+  if (puppeteerIdleTimer.unref) puppeteerIdleTimer.unref();
 }
 
 let puppeteerClosing = null;
@@ -2157,9 +2178,8 @@ ipcMain.on('get-steam-appid-from-title', async (event, arg) => {
 ipcMain.handle('get-steam-appid-from-title', (event, arg) => resolveSteamAppidFromTitle(arg));
 
 async function resolveTitleFromEpicId(arg) {
-  let info = { appid: arg.appid };
-  await searchForGameName(info); // bounded internally; info.title may be undefined on a miss
-  return info.title;
+  const cacheFile = path.join(userData, 'steam_cache', 'epic_titles.json');
+  return (await require('../util/epicTitle.js').resolveEpicTitle(arg && arg.appid, { cacheFile })) || undefined;
 }
 
 ipcMain.on('get-title-from-epic-id', async (event, arg) => {
@@ -3331,6 +3351,7 @@ async function startPuppeteer(headless, strip) {
       });
     }
   }
+  schedulePuppeteerIdleClose();
 }
 
 async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
@@ -4397,73 +4418,6 @@ async function fetchSteamDbLaunch(appid) {
 ipcMain.handle('get-steamdb-launch', async (event, appid) => {
   return await fetchSteamDbLaunch(appid);
 });
-
-async function searchForGameName(info = { appid: '' }) {
-  if (info.appid.length === 0) {
-    info.title = undefined;
-    return;
-  }
-
-  let startIndex = 0;
-  let matchResult;
-  await startPuppeteer(true, false);
-
-  async function scrapePage(startIndex) {
-    const page = await puppeteerWindow.context.newPage();
-
-    const url = `https://store.epicgames.com/pt/browse?sortBy=releaseDate&sortDir=DESC&tag=Windows&priceTier=tier3&category=Game&count=40&start=${
-      40 * startIndex
-    }`;
-
-    try {
-      await page.setExtraHTTPHeaders({
-        'Accept-Language': 'en-US,en;q=0.9',
-      });
-      await page.setUserAgent(
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-      );
-      await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-
-      await page.waitForFunction(() => !!window.__REACT_QUERY_INITIAL_QUERIES__, { timeout: 15000 });
-      const queries = await page.evaluate(() => window.__REACT_QUERY_INITIAL_QUERIES__);
-      if (queries.queries) {
-        const catalogQuery = queries.queries.find((q) => q?.state?.data?.Catalog?.searchStore?.elements);
-        if (catalogQuery) {
-          const elements = catalogQuery.state.data.Catalog.searchStore.elements;
-          const found = elements.find((el) => el.namespace === info.appid);
-          if (found) {
-            matchResult = found.title;
-          }
-        }
-      }
-    } catch (err) {
-      debug.log(`[steam-search] page ${startIndex} failed: ${err.message || err}`);
-    } finally {
-      await page.close();
-    }
-    return matchResult;
-  }
-
-  async function run(start) {
-    const tasks = [];
-    for (let i = start; i < start + 5; i++) {
-      const startIndex = i;
-      tasks.push(scrapePage(startIndex));
-    }
-
-    await Promise.all(tasks);
-  }
-
-  // Bound the catalog scan: without a cap, a title that never matches (delisted, renamed, region-
-  // locked) scrapes Epic's store endlessly. Stop after MAX_PAGES; info.title stays undefined on a miss.
-  const MAX_PAGES = 100;
-  while (!info.title && startIndex < MAX_PAGES) {
-    await run(startIndex);
-    info.title = matchResult;
-    startIndex += 5;
-  }
-  return;
-}
 
 function searchForSteamAppId(info = { name: '' }) {
   if (info.name.length === 0) {

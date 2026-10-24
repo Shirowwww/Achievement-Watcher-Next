@@ -14,7 +14,8 @@ const debug = require('../util/log.js');
 // One native helper takes every screenshot: compiling a C# grabber into %TEMP% at run time (the old
 // SDR path) is what antivirus behaviour engines flagged.
 const HDR_HELPER_NAME = 'aw-next-hdr-screenshot.exe';
-const HDR_TIMEOUT_MS = 5000;
+// A shot took 4.9 s on a busy machine while a game ran; at 5 s such a shot was silently lost.
+const HDR_TIMEOUT_MS = 10000;
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 // Names Windows refuses whatever the extension, so a game called "NUL" or "COM1" would lose its

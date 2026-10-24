@@ -196,7 +196,7 @@ module.exports.getGameData = async (cfg) => {
       if (!gameSlug) throw !gameSlug;
       title = await getGameTitleFromMapping(gameSlug);
     } catch (err) {
-      // The mapping may not contain new or custom ids; fall back to the store lookup.
+      // The mapping may not contain new or custom ids; fall back to the cached egdata lookup.
       title = (await ipcRenderer.invoke('get-title-from-epic-id', { appid: cfg.appID })) || 'Unknown game';
     }
   }

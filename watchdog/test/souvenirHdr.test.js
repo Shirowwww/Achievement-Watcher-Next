@@ -31,6 +31,20 @@ test('Automatic lets the helper follow the display, Off asks it for the plain ca
   assert.deepEqual(calls, [[path.join(dir, 'auto.png')], ['--sdr', path.join(dir, 'off.png')]]);
 });
 
+test('a slow shot is given ten seconds before it counts as failed', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-timeout-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  let timeout = 0;
+  const run = (helper, args, options, callback) => {
+    timeout = options.timeout;
+    fs.writeFileSync(args[args.length - 1], Buffer.concat([PNG_SIGNATURE, Buffer.alloc(64)]));
+    callback(null, '', '');
+  };
+
+  await souvenir._captureNative(path.join(dir, 'slow.png'), 'auto', { helper: 'helper.exe', run });
+  assert.equal(timeout, 10000);
+});
+
 test('the screenshot follows the running game to its own monitor, and forgets it once it closes', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-pid-'));
   t.after(() => {

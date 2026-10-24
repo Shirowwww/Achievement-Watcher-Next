@@ -1646,7 +1646,7 @@ body.is-resizing #game-list {
   align-items: center;
   box-sizing: border-box;
   height: var(--toolbar-h);
-  gap: 2px;
+  gap: 3px;
   padding: 3px;
   border-radius: var(--radius-sm);
   border: 1px solid;
@@ -1656,7 +1656,7 @@ body.is-resizing #game-list {
   align-items: center;
   justify-content: center;
   height: 26px;
-  padding: 0 11px;
+  padding: 0 15px;
   border-radius: var(--radius-sm);
   font-size: var(--fs-base);
   cursor: pointer;

@@ -17,14 +17,46 @@ function jsonResponse(status, body) {
   return { status, json: async () => body };
 }
 
-test('resolveEpicArtifactIdentity rejects non-hex ids without a network call', async () => {
+test('resolveEpicArtifactIdentity rejects ids that cannot be an Epic id without a network call', async () => {
   await withFetchStub(
     async () => {
-      throw new Error('must not fetch for a non-hex id');
+      throw new Error('must not fetch for an invalid id');
     },
     async () => {
-      assert.equal(await epicIdentity.resolveEpicArtifactIdentity('not-hex-id'), null);
+      assert.equal(await epicIdentity.resolveEpicArtifactIdentity('../assets'), null);
+      assert.equal(await epicIdentity.resolveEpicArtifactIdentity('two words'), null);
       assert.equal(await epicIdentity.resolveEpicArtifactIdentity(''), null);
+    }
+  );
+});
+
+test('resolveEpicArtifactIdentity resolves an older code-name artifact id', async () => {
+  epicIdentity.clearEpicIdentityCache();
+  await withFetchStub(
+    async (url) => {
+      if (String(url).endsWith('/assets/Kinglet')) {
+        return jsonResponse(200, { artifactId: 'Kinglet', itemId: 'item-1', namespace: 'ns-civ', platform: 'Windows' });
+      }
+      if (String(url).endsWith('/items/item-1')) return jsonResponse(200, { title: "Sid Meier's Civilization VI" });
+      throw new Error(`unexpected url ${url}`);
+    },
+    async () => {
+      const identity = await epicIdentity.resolveEpicArtifactIdentity('Kinglet');
+      assert.equal(identity.namespace, 'ns-civ');
+      assert.equal(identity.displayName, "Sid Meier's Civilization VI");
+    }
+  );
+});
+
+test('resolveEpicNamespaceName reads the sandbox display name and treats a 404 as unknown', async () => {
+  await withFetchStub(
+    async (url) => {
+      if (String(url).endsWith('/sandboxes/ns-known')) return jsonResponse(200, { name: 'ns-known', displayName: 'Known Game' });
+      return jsonResponse(404, { error: 'not found' });
+    },
+    async () => {
+      assert.equal(await epicIdentity.resolveEpicNamespaceName('ns-known'), 'Known Game');
+      assert.equal(await epicIdentity.resolveEpicNamespaceName('ns-missing'), '');
     }
   );
 });

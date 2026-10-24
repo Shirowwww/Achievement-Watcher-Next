@@ -14,6 +14,11 @@ function cleanId(value) {
   return String(value || '').trim();
 }
 
+// Recent artifact ids are hex, older ones a code name (Civilization VI is "Kinglet"); namespaces are hex.
+function isEpicId(id) {
+  return /^[A-Za-z0-9._-]{1,128}$/.test(id);
+}
+
 function normalizePlatformList(value) {
   if (Array.isArray(value)) return value.map((v) => String(v || '').trim()).filter(Boolean);
   const platform = String(value || '').trim();
@@ -60,7 +65,7 @@ async function egdataGet(pathname, { timeoutMs = 15000 } = {}) {
 
 async function resolveEpicArtifactIdentityUncached(sourceId, options) {
   const id = cleanId(sourceId);
-  if (!/^[0-9a-fA-F]+$/.test(id)) return null; // artifact ids are always hex
+  if (!isEpicId(id)) return null;
 
   const assetRes = await egdataGet(`/assets/${encodeURIComponent(id)}`, options);
   if (assetRes.status === 404) return null;
@@ -129,4 +134,14 @@ function clearEpicIdentityCache() {
   identityCache.clear();
 }
 
-module.exports = { resolveEpicArtifactIdentity, clearEpicIdentityCache };
+// The store name of a namespace (sandbox), or '' when egdata does not know it.
+async function resolveEpicNamespaceName(namespace, options = {}) {
+  const id = cleanId(namespace);
+  if (!isEpicId(id)) return '';
+  const res = await egdataGet(`/sandboxes/${encodeURIComponent(id)}`, options);
+  if (res.status === 404) return '';
+  if (res.status >= 400) throw new Error(`EGData sandbox lookup ${res.status}`);
+  return pickDisplayName(unwrapPayload(res.data));
+}
+
+module.exports = { resolveEpicArtifactIdentity, resolveEpicNamespaceName, clearEpicIdentityCache };

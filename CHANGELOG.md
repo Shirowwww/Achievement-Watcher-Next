@@ -26,9 +26,20 @@ renamed in 3.9.0 and the history is kept under one file.
   popups switch to AW Next on their own.
 - **A centred PlayStation mark.** The logo inside the PlayStation preset's ring sat about a pixel low
   and now reads centred. Its preview in the gallery shows the logo too.
+- **Epic emulator games get their real name.** Older Epic titles known by a code name ("Kinglet" is
+  Civilization VI) are now named, a name found once is remembered, and a game Epic does not know is
+  asked about again only after a few days instead of on every scan.
+- **The hidden browser closes when idle.** The browser AW Next uses for SteamDB and SteamHunters now
+  closes a minute after its last lookup instead of staying open until the next scan.
 
 ### Fixed
 
+- **No more "Epic Games Store" windows in Alt+Tab.** Looking up the name of an Epic emulator game
+  opened up to a hundred hidden store pages in Chrome or Edge, and on Windows they showed up as empty
+  windows in Alt+Tab that could not be closed. The name now comes from a plain web request, without
+  any browser.
+- **Screenshots on a slow or busy PC.** A souvenir screenshot that took more than 5 seconds was
+  silently dropped; it now has 10.
 - **Reset achievements resets everything.** Some saves survived a reset and the game unlocked their
   achievements again at once: RAZOR1911, CreamAPI, XLLN, Final Fantasy VII, RUNE's Ubisoft saves,
   MadnessPatch and MarkerPatch, GreenLuma and LumaPlay registry entries, and the progress counters of
