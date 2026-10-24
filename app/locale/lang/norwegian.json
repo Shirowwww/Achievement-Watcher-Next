@@ -714,6 +714,7 @@
             "iconSize": "Ikonstørrelse",
             "layout": "Oppstilling",
             "letterSpacing": "Tegnavstand",
+            "brandMark": "Fjern det innebygde merkeikonet",
             "logoImage": "Logo",
             "logoOffset": "Logoens avstand fra kanten",
             "logoPosition": "Logoens plassering",

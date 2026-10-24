@@ -714,6 +714,7 @@
             "iconSize": "アイコンサイズ",
             "layout": "配置",
             "letterSpacing": "字間",
+            "brandMark": "組み込みのブランドアイコンを削除",
             "logoImage": "ロゴ",
             "logoOffset": "ロゴと端の距離",
             "logoPosition": "ロゴの位置",

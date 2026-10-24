@@ -714,6 +714,7 @@
             "iconSize": "ขนาดไอคอน",
             "layout": "การจัดวาง",
             "letterSpacing": "ระยะห่างตัวอักษร",
+            "brandMark": "ลบไอคอนแบรนด์ในตัว",
             "logoImage": "โลโก้",
             "logoOffset": "ระยะห่างของโลโก้จากขอบ",
             "logoPosition": "ตำแหน่งโลโก้",

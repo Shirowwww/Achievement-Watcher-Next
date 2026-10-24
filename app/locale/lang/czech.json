@@ -714,6 +714,7 @@
             "iconSize": "Velikost ikony",
             "layout": "Uspořádání",
             "letterSpacing": "Rozestup písmen",
+            "brandMark": "Odebrat vestavěnou ikonu značky",
             "logoImage": "Logo",
             "logoOffset": "Vzdálenost loga od okraje",
             "logoPosition": "Poloha loga",

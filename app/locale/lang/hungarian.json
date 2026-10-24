@@ -714,6 +714,7 @@
             "iconSize": "Ikonméret",
             "layout": "Elrendezés",
             "letterSpacing": "Betűköz",
+            "brandMark": "Beépített márkaikon eltávolítása",
             "logoImage": "Logó",
             "logoOffset": "A logó távolsága a széltől",
             "logoPosition": "A logó helye",

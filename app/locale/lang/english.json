@@ -714,6 +714,7 @@
             "iconSize": "Icon size",
             "layout": "Arrangement",
             "letterSpacing": "Letter spacing",
+            "brandMark": "Remove the built-in brand icon",
             "logoImage": "Logo",
             "logoOffset": "Logo distance from the edge",
             "logoPosition": "Logo position",

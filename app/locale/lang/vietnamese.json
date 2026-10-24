@@ -714,6 +714,7 @@
             "iconSize": "Cỡ biểu tượng",
             "layout": "Cách sắp xếp",
             "letterSpacing": "Giãn chữ",
+            "brandMark": "Xóa biểu tượng thương hiệu tích hợp",
             "logoImage": "Logo",
             "logoOffset": "Khoảng cách từ logo đến mép",
             "logoPosition": "Vị trí logo",

@@ -714,6 +714,7 @@
             "iconSize": "Kuvakkeen koko",
             "layout": "Asettelu",
             "letterSpacing": "Merkkiväli",
+            "brandMark": "Poista sisäänrakennettu brändikuvake",
             "logoImage": "Logo",
             "logoOffset": "Logon etäisyys reunasta",
             "logoPosition": "Logon sijainti",

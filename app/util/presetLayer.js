@@ -34,6 +34,8 @@ const LAYER_SECTIONS = Object.freeze({
   border: ['borderWidth', 'borderColor'],
   glow: ['glow'],
   font: ['fontFamily', 'fontFile'],
+  // Ticked = the bundled preset's own brand mark is removed. It has no value of its own to store.
+  brand: [],
   logo: ['logoImage', 'logoPosition', 'logoSize', 'logoOffset'],
 });
 const LAYER_SECTION_NAMES = Object.freeze(Object.keys(LAYER_SECTIONS));
@@ -110,6 +112,8 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name } = {}) {
       `.ach { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 ${Math.round((v.glow / 100) * 22)}px color-mix(in srgb, var(--accent, ${v.accent}) 65%, transparent) !important; }`
     );
   }
+  // `--mark-opacity` is what the bundled presets' brand marks read, in every state and animation.
+  if (on.has('brand')) css.push('.ach { --mark-opacity: 0 !important; }');
   if (on.has('logo') && v.logoImage) {
     css.push(
       `.ach > .${LAYER_LOGO_CLASS} { position: absolute; z-index: -1; pointer-events: none; ${logoPosition(v.logoPosition, v.logoOffset)}; ` +

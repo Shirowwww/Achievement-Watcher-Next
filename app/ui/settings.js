@@ -6004,6 +6004,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         toggle.find('span').text(labelNode.text());
         first.before(toggle);
       }
+      // The brand icon has no field of its own: its checkbox sits just above the logo's.
+      const brandToggle = $('<label class="pd-layer-toggle"><input type="checkbox"><span></span></label>');
+      brandToggle.find('input').attr('data-section', 'brand');
+      brandToggle.find('span').text($('#pd-layer-brand-label').text());
+      pdRoot.find('.pd-layer-toggle input[data-section="logo"]').closest('label').before(brandToggle);
       // The Advanced halves of a group fold away fields the layer needs, so they open and stay open.
       pdRoot.find('.pd-controls .pd-adv').each(function () {
         if (!this.hidden || !$(this).find('.pd-field[data-layer-section]').length) return;

@@ -714,6 +714,7 @@
             "iconSize": "Ukuran ikon",
             "layout": "Susunan",
             "letterSpacing": "Jarak huruf",
+            "brandMark": "Hapus ikon merek bawaan",
             "logoImage": "Logo",
             "logoOffset": "Jarak logo dari tepi",
             "logoPosition": "Posisi logo",

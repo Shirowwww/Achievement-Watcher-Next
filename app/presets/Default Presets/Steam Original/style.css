@@ -67,7 +67,7 @@ body {
   width: 190px;
   height: 190px;
   background: #ffffff;
-  opacity: 0.07;
+  opacity: var(--mark-opacity, 0.07);
   -webkit-mask: url('logo.svg') center / contain no-repeat;
   mask: url('logo.svg') center / contain no-repeat;
   pointer-events: none;

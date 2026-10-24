@@ -714,6 +714,7 @@
             "iconSize": "Grootte pictogram",
             "layout": "Rangschikking",
             "letterSpacing": "Letterafstand",
+            "brandMark": "Ingebouwd merkpictogram verwijderen",
             "logoImage": "Logo",
             "logoOffset": "Afstand van logo tot rand",
             "logoPosition": "Positie van logo",
