@@ -462,12 +462,15 @@ async function downloadAndCache(cacheDir, tag, assetUrl, log, linuxUrl = null) {
 /*
   Where a scene release keeps the Valve dll it replaced. RUNE renames the original to
   steam_api64.rne beside its own runtime (1.1 MB emulator, 295 KB original on The Blood of
-  Dawnwalker), and a loader swap that sets the crack aside renames that one to .rne.bak in turn. The
-  name alone proves nothing, so every candidate still goes through the emulator-marker test.
+  Dawnwalker), and a loader swap that sets the crack aside renames that one to .rne.bak in turn.
+  CODEX does the same with steam_api64.cdx (Dark Souls III). The name alone proves nothing, so every
+  candidate still goes through the emulator-marker test.
 */
+const PRESERVED_ORIGINAL_SUFFIXES = ['.rne', '.rne.bak', '.cdx', '.cdx.bak'];
+
 function preservedOriginalsFor(dllFile) {
   const stem = String(dllFile).replace(/\.dll$/i, '');
-  return stem === String(dllFile) ? [] : [`${stem}.rne`, `${stem}.rne.bak`];
+  return stem === String(dllFile) ? [] : PRESERVED_ORIGINAL_SUFFIXES.map((suffix) => `${stem}${suffix}`);
 }
 
 // libsteam_api.so, or a backup of it.
@@ -508,12 +511,68 @@ function interfaceSourceFor(dllPath, candidates = []) {
   return original ? { file: original, reason: '' } : { file: '', reason: 'emulator-dll' };
 }
 
+const SCENE_INTERFACE_LINE = /^\s*Steam\w*\s*=\s*([A-Za-z_]+\d{3})\s*$/;
+
+/*
+  CODEX and RUNE list the interface versions the game was built against in steam_emu.ini
+  [Interfaces], which is what steam_interfaces.txt holds. It stands in when no Valve dll survived the
+  crack: without either, an old game such as Dark Souls III closes three seconds after launch.
+*/
+function sceneIniInterfaces(dirs) {
+  for (const dir of dirs) {
+    const file = path.join(dir, 'steam_emu.ini');
+    let text = '';
+    try {
+      text = fs.readFileSync(file, 'latin1');
+    } catch {
+      continue;
+    }
+    const found = [];
+    let inSection = false;
+    for (const line of text.split(/\r?\n/)) {
+      const header = /^\s*\[([^\]]+)\]/.exec(line);
+      if (header) inSection = header[1].trim().toLowerCase() === 'interfaces';
+      else if (inSection) {
+        const match = SCENE_INTERFACE_LINE.exec(line);
+        if (match) found.push(match[1]);
+      }
+    }
+    if (found.length > 0) return { file, interfaces: found };
+  }
+  return null;
+}
+
+function writeSceneInterfaces({ dllPath, candidates, steamSettings, log }) {
+  const dirs = [...new Set([dllPath, ...(candidates || [])].filter(Boolean).map((file) => path.dirname(file)))];
+  const scene = sceneIniInterfaces(dirs);
+  if (!scene) return null;
+  fs.mkdirSync(steamSettings, { recursive: true });
+  const dest = path.join(steamSettings, 'steam_interfaces.txt');
+  fs.writeFileSync(dest, `${scene.interfaces.join('\n')}\n`);
+  log.log(`[gbe] generated ${dest} from ${scene.file} (${scene.interfaces.length} interfaces)`);
+  return { generated: true, file: dest, original: scene.file, arch: archOfSteamApiFile(dllPath) };
+}
+
 // Generate steam_settings/steam_interfaces.txt from the original game DLL, picked by
-// interfaceSourceFor above. The tool works in a private temp directory so it never drops files
-// beside the game unexpectedly.
+// interfaceSourceFor above, or from a scene crack's steam_emu.ini when the dll yields nothing.
 async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [], log = noopLog } = {}) {
   if (!dllPath) return { generated: false, reason: 'missing-dll' };
   if (!steamSettings) throw new Error('generateInterfaces: steamSettings path is required');
+  const sceneArgs = { dllPath, candidates, steamSettings, log };
+  let result;
+  try {
+    result = await generateFromDll({ dllPath, steamSettings, dlls, candidates, log });
+  } catch (err) {
+    const scene = writeSceneInterfaces(sceneArgs);
+    if (scene) return scene;
+    throw err;
+  }
+  if (result.generated) return result;
+  return writeSceneInterfaces(sceneArgs) || result;
+}
+
+// The tool works in a private temp directory so it never drops files beside the game unexpectedly.
+async function generateFromDll({ dllPath, steamSettings, dlls, candidates, log }) {
   const source = interfaceSourceFor(dllPath, candidates);
   if (!source.file) {
     if (source.reason === 'emulator-dll') {
@@ -564,6 +623,17 @@ async function generateInterfaces({ dllPath, steamSettings, dlls, candidates = [
     return { generated: true, file: dest, original, arch };
   } finally {
     try { fs.rmSync(workDir, { recursive: true, force: true }); } catch {}
+  }
+}
+
+// generateInterfaces into a throwaway steam_settings, to learn whether it can work before anything
+// in the game folder changes. Same result shape; the file it made is removed with the folder.
+async function tryGenerateInterfaces({ dllPath, dlls, candidates = [], log = noopLog } = {}) {
+  const trialDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gse-interfaces-trial-'));
+  try {
+    return await generateInterfaces({ dllPath, steamSettings: path.join(trialDir, 'steam_settings'), dlls, candidates, log });
+  } finally {
+    try { fs.rmSync(trialDir, { recursive: true, force: true }); } catch {}
   }
 }
 
@@ -895,6 +965,7 @@ module.exports = {
   ensureEmulatorDlls,
   installDlls,
   generateInterfaces,
+  tryGenerateInterfaces,
   matchesCachedDll,
   runtimeDllDirs,
   runtimeDllState,

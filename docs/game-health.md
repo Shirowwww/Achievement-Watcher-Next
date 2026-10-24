@@ -19,12 +19,12 @@ sound and scale (see [Per-game behavior](notifications.md#per-game-behavior)).
 |---|---|
 | **Ready** | The game is detected, its achievement data is available, and AW Next is watching it for unlocks. |
 | **Needs attention** | The game works, but part of its setup is incomplete. The checks show which part. |
-| **Not tracking** | Something essential is missing: the game cannot be located, or it has no achievement data at all. |
+| **Not tracking** | Something essential is missing, so no unlock can be recorded: the game cannot be located, it has no achievement data, or it lacks the emulator that writes its unlocks. |
 
 The sentence under the state gives the cause, the checks show which part is at fault, and a repair
 button acts on exactly that.
 
-- **Simple** mode states outcomes in plain words (*Achievement data found*, *Tracking active*).
+- **Simple** mode states outcomes in plain words (*Achievement data found*, *Detected when the game starts*).
   **Advanced** adds exact counts, the watched process and the notification transport.
 - **Technical details**, at the bottom in both modes, holds every raw value. Press **Copy** for a bug
   report. A long value scrolls on hover.
@@ -46,7 +46,7 @@ panel says so from the first launch.
 | **Emulator setup** | Does a game that needs a Steam emulator have one, and which one serves it? For a Ubisoft game this also covers the Uplay loader and whether it ever asked for an achievement. | **Restore the emulator file**, **Switch to the supported emulator**, or **Repair Ubisoft achievement support** |
 | **Progress** | Has any unlock or save been found yet? | Launch the game and unlock something |
 | **Progress counters** | For CODEX/RUNE-style games that track a stat instead of a flat unlock, has AW Next fetched the stat behind each achievement? Shown only for games that use one. | **Fetch progress counters** |
-| **Live tracking** | Is the background tracker watching this game's process? | **Watch this game** |
+| **Game launch detection** | Does the background tracker notice when this game starts? On its own it records no unlock: that is the emulator's job. | **Watch this game** |
 | **Notifications** | Which transport delivered the last notification for this game, and why? | **Send a test notification** |
 
 ## The repairs

@@ -12,6 +12,7 @@ const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
 const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
+const { isSharedSaveRoot } = require(path.join(__dirname, 'saveRoots.js'));
 const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
 const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedConfig.js'));
@@ -849,6 +850,9 @@ function forgetMisplacedSeeds({ appid, steamSettings, savesRoots = writableSaves
   falls back to its built-in interface versions. gbeInstaller.interfaceSourceFor makes the same call
   at install time and only writes it to the log; this is the same answer, in the report.
 */
+// Same list as gbeInstaller's, which this module does not load.
+const PRESERVED_ORIGINAL_SUFFIXES = ['.rne', '.rne.bak', '.cdx', '.cdx.bak'];
+
 function originalSteamApiDll(dirs) {
   const seen = new Set();
   for (const dir of dirs || []) {
@@ -857,11 +861,12 @@ function originalSteamApiDll(dirs) {
     if (seen.has(key)) continue;
     seen.add(key);
     for (const name of EMU_DLL_NAMES) {
-      // A RUNE release keeps the Valve dll it replaced as steam_api64.rne (see
+      // RUNE keeps the Valve dll it replaced as steam_api64.rne, CODEX as steam_api64.cdx (see
       // gbeInstaller.preservedOriginalsFor); the marker test below still decides.
       const stem = name.replace(/\.dll$/i, '');
       // Before AW Next's own .bak, which holds the crack's runtime once the swap has run.
-      const candidates = [`${stem}.rne`, `${stem}.rne.bak`, `${name}.bak`, name].map((file) => path.join(dir, file));
+      const preserved = PRESERVED_ORIGINAL_SUFFIXES.map((suffix) => `${stem}${suffix}`);
+      const candidates = [...preserved, `${name}.bak`, name].map((file) => path.join(dir, file));
       for (const candidate of candidates) {
         try {
           if (!fs.existsSync(candidate)) continue;
@@ -1947,6 +1952,8 @@ function findCompatibleGames(roots, { maxDepth = 5, onSkip = null } = {}) {
     const entries = dirCache.readdir(dir);
     if (!entries) return;
     const marker = gameRootMarker(dir, entries);
+    // GBE files an older fix wrote into a shared save root do not make it a game.
+    if (marker && isSharedSaveRoot(marker.gameDir)) return;
     if (marker) {
       // A game Steam installed is not an emulator install, however much it looks like one here: it
       // ships steam_api64.dll, and a Source game ships steam_appid.txt too. Listing it made the app

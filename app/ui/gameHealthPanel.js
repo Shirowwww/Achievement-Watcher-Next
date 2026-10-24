@@ -381,11 +381,14 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     // for them and must not be reported as a fault.
     // A recompiled Xbox 360 game is a native PC program, and its play time comes from the process.
     officialPlatform: isOfficialPlatformSource(source),
+    steamClientServed: steamClientRecords(source, appid),
+    spacewar: gameDirExists && crackLoaderDetect.runsAsSpacewar([gameDir, exe ? path.dirname(exe) : '']),
     processTracking: (!isConsole || source === 'Xbox 360 Recomp') && !isOfficialPlatformSource(source),
     tracking: { indexed: !!indexEntry, binary: (indexEntry && indexEntry.binary) || '' },
     notifications: {
       transport: (app.config && app.config.notification_transport && app.config.notification_transport.mode) || 'auto',
       progressMuted: progressMute.isMuted(appid),
+      steamClient: !!(app.config && app.config.notification && app.config.notification.steamClient),
       // What the Watchdog observed last time it announced something for this game. Absent until it
       // has actually delivered one, and never guessed at from the setting.
       effective: notificationHealth.forGame(appid),
@@ -393,6 +396,21 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     playtime: { total: playtime.playtime || 0, lastPlayed: playtime.lastplayed || 0 },
     counters,
   };
+}
+
+// Steam writes appcache/stats/UserGameStats_<account>_<appid>.bin only for a game it runs on this
+// PC, bought or added through SteamTools: the proof that the Steam client keeps its unlocks.
+function steamClientRecords(source, appid) {
+  if (!/^steam\s*\(/i.test(String(source || '')) || !/^\d+$/.test(String(appid || ''))) return false;
+  try {
+    const clientDir = require(path.join(appPath, 'parser/steamLibrary.js')).steamClientDir();
+    if (!clientDir) return false;
+    const statsFile = new RegExp(`^UserGameStats_\\d+_${appid}\\.bin$`, 'i');
+    return fs.readdirSync(path.join(clientDir, 'appcache', 'stats')).some((name) => statsFile.test(name));
+  } catch (err) {
+    debug.log(`[health] Steam stats unreadable for ${appid} => ${formatErr(err)}`);
+    return false;
+  }
 }
 
 /*
@@ -484,6 +502,12 @@ function gameHealthExplanation(report) {
         "Ce jeu fait attribuer ses succès par les serveurs de son éditeur, jamais par Steam. Avec {servedBy}, il tourne hors-ligne : aucun succès ne sera jamais enregistré, sur ce PC comme sur un compte. Ce n'est pas un problème d'AW Next ni de configuration. Pour une méthode en ligne, renseigne-toi sur cs.rin.ru ou online-fix.me.",
         p
       );
+    case 'spacewar':
+      return t(
+        'gh-why-spacewar',
+        "This game runs as Spacewar (Steam ID 480), the trick some online fixes use to reach real Steam. Steam then rejects the game's achievements, since they are not in Spacewar's list, so nothing records them anywhere and AW Next has nothing to read. To get achievements, use a version that keeps them, such as an OnlineFix release, or an emulator.",
+        "Ce jeu tourne déguisé en Spacewar (identifiant Steam 480), l'astuce de certains correctifs en ligne pour passer par le vrai Steam. Steam refuse alors les succès du jeu, absents de la liste de Spacewar : rien ne les enregistre nulle part et AW Next n'a rien à lire. Pour avoir les succès, utilise une version qui les garde, comme une release OnlineFix, ou un émulateur."
+      );
     case 'crack-records-nothing':
       return p.canSwitch
         ? t('gh-why-crack-records-nothing', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all. AW Next can install the supported emulator over it - the current file is kept.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.", p)
@@ -526,7 +550,7 @@ function gameHealthCheckLabel(id, simple) {
       case 'nemirtingas':
         return t('gh-check-nemirtingas', 'Epic emulator', 'Émulateur Epic');
       case 'tracking':
-        return t('gh-simple-check-tracking', 'Tracking', 'Suivi');
+        return t('gh-simple-check-tracking', 'Game launch', 'Lancement du jeu');
       default:
         return t('gh-check-notifications', 'Notifications', 'Notifications');
     }
@@ -550,7 +574,7 @@ function gameHealthCheckLabel(id, simple) {
     case 'nemirtingas':
       return t('gh-check-nemirtingas', 'Epic emulator', 'Émulateur Epic');
     case 'tracking':
-      return t('gh-check-tracking', 'Live tracking', 'Suivi en direct');
+      return t('gh-check-tracking', 'Game launch detection', 'Détection du lancement');
     default:
       return t('gh-check-notifications', 'Notifications', 'Notifications');
   }
@@ -558,6 +582,14 @@ function gameHealthCheckLabel(id, simple) {
 
 // Simple mode: one plain outcome per check, in the words a player would use. No paths, no process
 // names, no appid, no transport name - those are what Technical details is for.
+function gameHealthSteamClientOffLabel() {
+  return t(
+    'gh-notifications-steam-client-off',
+    'Steam shows its own popup. For AW Next’s, turn on Settings > Notification > Steam client games',
+    'Steam affiche sa propre notification. Pour celle d’AW Next, active Paramètres > Notification > Jeux du client Steam'
+  );
+}
+
 function gameHealthSimpleCheckValue(entry) {
   const p = entry.params || {};
   const ok = entry.level === gameHealth.LEVEL.OK;
@@ -580,6 +612,7 @@ function gameHealthSimpleCheckValue(entry) {
     case 'emulator':
     case 'uplay':
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
+      if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
       if (p.oldSave || p.stalled) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
@@ -606,9 +639,10 @@ function gameHealthSimpleCheckValue(entry) {
       return gameHealthNemirtingasValue(entry);
     case 'tracking':
       return ok
-        ? t('gh-simple-tracking-ok', 'Tracking active', 'Suivi actif')
-        : t('gh-simple-tracking-off', 'Not being tracked yet', 'Pas encore suivi');
+        ? t('gh-simple-tracking-ok', 'Detected when the game starts', 'Détecté au démarrage du jeu')
+        : t('gh-simple-tracking-off', 'Not watched for yet', 'Pas encore surveillé');
     default: {
+      if (p.steamClientOff) return gameHealthSteamClientOffLabel();
       if (entry.level === gameHealth.LEVEL.INFO)
         return t('gh-simple-notifications-muted', 'Progress notifications are muted', 'Notifications de progression coupées');
       if (entry.level === gameHealth.LEVEL.WARN && p.outcome === 'suppressed')
@@ -763,6 +797,7 @@ function gameHealthCheckValue(entry, simple) {
       if (p.servedBy) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
         if (p.serverAwarded) return `${servedBy} · ${t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement')}`;
+        if (p.spacewar) return `${servedBy} · ${t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès')}`;
         if (p.oldSave) return `${servedBy} · ${t('gh-value-old-goldberg-save', 'the only save found is an old Goldberg one it never writes', 'la seule sauvegarde trouvée est une ancienne sauvegarde Goldberg qu’il n’écrit jamais')}`;
         return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
       }
@@ -801,6 +836,7 @@ function gameHealthCheckValue(entry, simple) {
       if (p.binary) return t('gh-value-watching', 'watching {binary}', 'surveille {binary}', p);
       return t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant');
     default: {
+      if (p.steamClientOff) return gameHealthSteamClientOffLabel();
       if (entry.level === gameHealth.LEVEL.INFO) return t('gh-value-muted', 'progress muted', 'progression coupée');
       // Nothing has been announced for this game yet: all there is to report is the setting.
       if (!p.effective) return gameHealthTransportLabel(p.transport);
@@ -1621,6 +1657,30 @@ async function runGameHealthAction(appid, action, button) {
       noLink: true,
     });
     if (confirmed !== 1) return false;
+
+    if (switching) {
+      setGameHealthProgress({ phase: 'runtime' });
+      let readiness;
+      try {
+        readiness = await gameHealthRepair.switchInterfacesReady({ gbeInstaller, plan, cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'), steamSettings, log: debug });
+      } finally {
+        setGameHealthProgress(null);
+      }
+      if (!readiness.ready) {
+        debug.log(`[health] ${appid} runtime switch refused: no steam_interfaces.txt can be made (${readiness.reason})`);
+        remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+          type: 'warning',
+          title: gameHealthActionLabel(action),
+          message: t(
+            'gh-switch-runtime-refused',
+            'This game cannot switch emulators safely. It is an older game that needs the list of its Steam interfaces, and the crack replaced the original Steam file that list is read from. The switch would stop the game from starting, so nothing was changed.',
+            "Ce jeu ne peut pas changer d'émulateur sans risque. C'est un jeu ancien qui a besoin de la liste de ses interfaces Steam, et le crack a remplacé le fichier Steam d'origine d'où elle est lue. Le changement empêcherait le jeu de démarrer, donc rien n'a été modifié."
+          ),
+          noLink: true,
+        });
+        return false;
+      }
+    }
 
     /*
       Before the dll goes in, not after: while the other crack's ini is still on disk the folder

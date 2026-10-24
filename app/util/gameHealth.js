@@ -315,6 +315,15 @@ function emulatorCheck(signals) {
   if (offlineServedBy) {
     return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: offlineServedBy, serverAwarded: true } });
   }
+  // Steam has recorded this game's stats on this PC, so the Steam client runs it and keeps its
+  // unlocks: an emulator file left in the folder is not what serves it.
+  if (signals.steamClientServed) return check('emulator', LEVEL.OK, { params: { servedBy: 'Steam' } });
+  // Run as Spacewar on real Steam, which rejects the real game's unlocks. OnlineFix does the same
+  // but keeps them on disk, and an emulator writes its own saves.
+  const keepsOwnRecord = signals.emulated || (signals.crackLoader && signals.crackLoader.name === 'OnlineFix');
+  if (signals.spacewar && !keepsOwnRecord) {
+    return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: 'Spacewar (480)', spacewar: true } });
+  }
   const goldberg = signals.goldberg;
   /*
     A folder a crack loader already serves (RUNE, CODEX, OnlineFix, ...) is deliberately never
@@ -557,6 +566,10 @@ function notificationCheck(signals) {
   if (effective && (effective.outcome === 'failed' || effective.outcome === 'suppressed')) {
     return check('notifications', LEVEL.WARN, { params, actions: [ACTION.TEST_NOTIFICATION] });
   }
+  // Steam shows its own popup; AW Next adds one only with "Steam client games" on.
+  if (signals.steamClientServed && notifications.steamClient === false) {
+    return check('notifications', LEVEL.INFO, { params: { ...params, steamClientOff: true }, actions: [ACTION.TEST_NOTIFICATION] });
+  }
   return check('notifications', LEVEL.OK, { params, actions: [ACTION.TEST_NOTIFICATION] });
 }
 
@@ -614,6 +627,7 @@ function explain(state, checks, signals) {
   if (hasNoAchievements(signals)) return { reason: 'no-achievements', params: {} };
   // Nothing below can change it: the game never hands its unlocks to the emulator at all.
   if (emulator && emulator.params && emulator.params.serverAwarded) return { reason: 'server-awarded', params: emulator.params };
+  if (emulator && emulator.params && emulator.params.spacewar) return { reason: 'spacewar', params: emulator.params };
   if (data && data.level === LEVEL.FAIL && data.blocking) return { reason: 'no-achievement-data', params: data.params };
   // Only a blocking emulator failure means "there is no emulator here"; a report that merely
   // carries schema or config errors is explained by the check that owns those instead.

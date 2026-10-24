@@ -29,6 +29,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Epic emulator games get their real name.** Older Epic titles known by a code name ("Kinglet" is
   Civilization VI) are now named, a name found once is remembered, and a game Epic does not know is
   asked about again only after a few days instead of on every scan.
+- **Game health says what the launch row checks.** The row that read "Tracking active" while the
+  game was "Not tracking" now reads "Game launch: Detected when the game starts". It only means AW
+  Next notices the game starting; recording unlocks is the emulator's job.
 - **The hidden browser closes when idle.** The browser AW Next uses for SteamDB and SteamHunters now
   closes a minute after its last lookup instead of staying open until the next scan.
 
@@ -38,6 +41,24 @@ renamed in 3.9.0 and the history is kept under one file.
   opened up to a hundred hidden store pages in Chrome or Edge, and on Windows they showed up as empty
   windows in Alt+Tab that could not be closed. The name now comes from a plain web request, without
   any browser.
+- **Adding Documents\Steam as a folder no longer misconfigures CODEX games.** That folder holds the
+  saves of every CODEX and RUNE game at once, and AW Next took it for each game's install folder:
+  "Fix all" wrote several games' emulator settings into it, and an empty save it created then hid
+  the real CODEX one. It is now read as a save folder only, and a save with nothing unlocked never
+  replaces another one.
+- **Switching an older game to the supported emulator no longer breaks it.** Games built before
+  mid-2016 need a list of their Steam interfaces. AW Next now finds it where CODEX keeps it: Valve's
+  original file saved as `steam_api64.cdx`, or the `[Interfaces]` section of `steam_emu.ini`. When
+  neither is there, the switch is refused with an explanation instead of leaving a game that closes
+  a few seconds after launch (Dark Souls III over CODEX).
+- **Game health understands games the Steam client runs.** A game Steam records, bought or added
+  through SteamTools, no longer reads "Not tracking, needs a Steam emulator" because an emulator
+  file sits in its folder. It shows as served by Steam, and the notification row says when AW
+  Next's own popup is off for it.
+- **Game health explains games run as Spacewar.** Some online fixes run a game as Spacewar (Steam
+  ID 480) to reach real Steam, which then rejects all of its achievements, so nothing ever records
+  them. Such a game now says so instead of looking untracked. OnlineFix releases are not affected:
+  they keep their achievements, and AW Next reads them.
 - **Screenshots on a slow or busy PC.** A souvenir screenshot that took more than 5 seconds was
   silently dropped; it now has 10.
 - **Reset achievements resets everything.** Some saves survived a reset and the game unlocked their

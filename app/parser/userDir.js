@@ -171,6 +171,8 @@ function sceneSaveFallback(dir, appid) {
 // folder actually holds a readable unlock file.
 function collectPortableSceneSaves(dir) {
   const found = [];
+  // The saves of a shared root belong to many games, none of which is installed there.
+  const gameDir = saveRoots.isSharedSaveRoot(dir) ? undefined : dir;
   for (const relative of PORTABLE_SCENE_SAVE_DIRS) {
     const base = path.join(dir, relative);
     let entries;
@@ -186,7 +188,7 @@ function collectPortableSceneSaves(dir) {
       if (!/^\d{3,10}$/.test(entry.name)) continue;
       const candidate = path.join(base, entry.name);
       if (!hasSceneSaveFile(candidate)) continue;
-      found.push({ appid: entry.name, source, data: { type: 'file', path: candidate, gameDir: dir } });
+      found.push({ appid: entry.name, source, data: { type: 'file', path: candidate, ...(gameDir ? { gameDir } : {}) } });
     }
   }
   return found;

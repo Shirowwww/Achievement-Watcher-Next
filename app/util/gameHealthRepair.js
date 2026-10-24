@@ -8,6 +8,7 @@
   are injected so this is testable without Electron, a network or a game install.
 */
 
+const fs = require('fs');
 const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
 
@@ -163,4 +164,27 @@ async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSetti
   return { ...summary, interfaces };
 }
 
-module.exports = { planAchievementDataRepair, planRuntimeInstall, repairAchievementData, installEmulatorRuntime };
+/*
+  Whether swapping the runtime in `plan` for GBE Fork leaves the game able to start. A game whose
+  original steam_api dll predates May 2016 needs steam_interfaces.txt (Goldberg's readme), and once a
+  crack has replaced Valve's dll nothing may be left to generate it from: Dark Souls III over CODEX
+  then closed three seconds after every launch. Tried before anything changes, in a throwaway folder.
+*/
+async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettings = null, log } = {}) {
+  if (steamSettings && fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) return { ready: true, reason: '' };
+  if (plan.native) return { ready: true, reason: '' };
+  const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, log });
+  try {
+    const result = await gbeInstaller.tryGenerateInterfaces({
+      dllPath: path.join(plan.dirs[0], plan.file),
+      dlls,
+      candidates: plan.dirs.slice(1).map((dir) => path.join(dir, plan.file)),
+      log,
+    });
+    return result && result.generated ? { ready: true, reason: '' } : { ready: false, reason: (result && result.reason) || 'no-output' };
+  } catch (err) {
+    return { ready: false, reason: String((err && err.message) || err) };
+  }
+}
+
+module.exports = { planAchievementDataRepair, planRuntimeInstall, repairAchievementData, installEmulatorRuntime, switchInterfacesReady };

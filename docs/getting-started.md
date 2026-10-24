@@ -66,7 +66,7 @@ Pick one in the first-run guide, and change it any time with the **Interface** c
 
 **Simple hides controls and never turns anything off.** Tracking, scanning and notifications behave the
 same, and every value you set is still there when you switch back. Game Health follows the same idea:
-Simple says *Achievement data found* or *Tracking active*, Advanced gives exact counts, files and
+Simple says *Achievement data found* or *Detected when the game starts*, Advanced gives exact counts, files and
 process names. An existing installation upgrades to **Advanced**, so nothing you used disappears.
 
 The search field at the top of **Settings** filters every tab at once and counts the matches per tab.

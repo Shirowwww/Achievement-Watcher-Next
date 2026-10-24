@@ -1956,13 +1956,9 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
           // The record found earlier (from a %APPDATA% save folder the emulator created once and
           // then abandoned) points at a path with no progress in it. The install tells us where the
           // unlocks really are, so it wins - but only when its folder holds more of them.
-          if (existing.data.type === 'file' && savePath !== existing.data.path) {
-            const installWeight = steam.goldbergSaveWeight(savePath);
-            const existingWeight = steam.goldbergSaveWeight(existing.data.path);
-            if (installWeight > existingWeight) {
-              debug.log(`[goldberg-scan] ${appid} save folder corrected to ${savePath} (${installWeight} unlock(s) there against ${Math.max(0, existingWeight)} in ${existing.data.path})`);
-              existing.data.path = savePath;
-            }
+          if (existing.data.type === 'file' && savePath !== existing.data.path && steam.goldbergSaveWins(savePath, existing.data.path)) {
+            debug.log(`[goldberg-scan] ${appid} save folder corrected to ${savePath} (${steam.goldbergSaveWeight(savePath)} unlock(s) there against ${Math.max(0, steam.goldbergSaveWeight(existing.data.path))} in ${existing.data.path})`);
+            existing.data.path = savePath;
           }
           if (!hasSchema && !existing.data.needsSchema) {
             existing.data.needsSchema = true;

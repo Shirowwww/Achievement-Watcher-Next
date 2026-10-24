@@ -97,6 +97,13 @@ function goldbergSaveWeight(dir) {
 }
 module.exports.goldbergSaveWeight = goldbergSaveWeight;
 
+/*
+  Whether `candidate` should replace the save folder a game is read from. Only a folder proving more
+  unlocks does: a CODEX or RUNE folder has no achievements.json and weighs -1, so a GSE file seeded
+  with every achievement locked (weight 0) took its place and its unlocks were never read again.
+*/
+module.exports.goldbergSaveWins = (candidate, current) => goldbergSaveWeight(candidate) > Math.max(0, goldbergSaveWeight(current));
+
 module.exports.scan = async (additionalSearch = []) => scanAppidRoots(saveRoots.defaultSteamScanRoots(additionalSearch));
 
 // The appid-named save folders under the given roots, labelled by the emulator each root belongs to.

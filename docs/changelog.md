@@ -16,6 +16,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Re-lock a single achievement.** Right-click an unlocked achievement and choose **Re-lock this
+  achievement**: the emulator's save is edited so the game can unlock it again, and AW Next announces
+  it as new. The files are listed before anything changes and backed up first. It works with most
+  emulator saves, text and binary alike (Goldberg and GSE, CODEX, RUNE, OnlineFix, TENOKE, RPCS3,
+  ShadPS4, Xenia and more); SmartSteamEmu and SKIDROW saves, official platforms and PS4 ports keep
+  only the full reset. Close the game first: an emulator writes its unlocks back when it exits.
+
 ### Improved
 
 - **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
@@ -24,9 +33,46 @@ renamed in 3.9.0 and the history is kept under one file.
   popups switch to AW Next on their own.
 - **A centred PlayStation mark.** The logo inside the PlayStation preset's ring sat about a pixel low
   and now reads centred. Its preview in the gallery shows the logo too.
+- **Epic emulator games get their real name.** Older Epic titles known by a code name ("Kinglet" is
+  Civilization VI) are now named, a name found once is remembered, and a game Epic does not know is
+  asked about again only after a few days instead of on every scan.
+- **Game health says what the launch row checks.** The row that read "Tracking active" while the
+  game was "Not tracking" now reads "Game launch: Detected when the game starts". It only means AW
+  Next notices the game starting; recording unlocks is the emulator's job.
+- **The hidden browser closes when idle.** The browser AW Next uses for SteamDB and SteamHunters now
+  closes a minute after its last lookup instead of staying open until the next scan.
 
 ### Fixed
 
+- **No more "Epic Games Store" windows in Alt+Tab.** Looking up the name of an Epic emulator game
+  opened up to a hundred hidden store pages in Chrome or Edge, and on Windows they showed up as empty
+  windows in Alt+Tab that could not be closed. The name now comes from a plain web request, without
+  any browser.
+- **Adding Documents\Steam as a folder no longer misconfigures CODEX games.** That folder holds the
+  saves of every CODEX and RUNE game at once, and AW Next took it for each game's install folder:
+  "Fix all" wrote several games' emulator settings into it, and an empty save it created then hid
+  the real CODEX one. It is now read as a save folder only, and a save with nothing unlocked never
+  replaces another one.
+- **Switching an older game to the supported emulator no longer breaks it.** Games built before
+  mid-2016 need a list of their Steam interfaces. AW Next now finds it where CODEX keeps it: Valve's
+  original file saved as `steam_api64.cdx`, or the `[Interfaces]` section of `steam_emu.ini`. When
+  neither is there, the switch is refused with an explanation instead of leaving a game that closes
+  a few seconds after launch (Dark Souls III over CODEX).
+- **Game health understands games the Steam client runs.** A game Steam records, bought or added
+  through SteamTools, no longer reads "Not tracking, needs a Steam emulator" because an emulator
+  file sits in its folder. It shows as served by Steam, and the notification row says when AW
+  Next's own popup is off for it.
+- **Game health explains games run as Spacewar.** Some online fixes run a game as Spacewar (Steam
+  ID 480) to reach real Steam, which then rejects all of its achievements, so nothing ever records
+  them. Such a game now says so instead of looking untracked. OnlineFix releases are not affected:
+  they keep their achievements, and AW Next reads them.
+- **Screenshots on a slow or busy PC.** A souvenir screenshot that took more than 5 seconds was
+  silently dropped; it now has 10.
+- **Reset achievements resets everything.** Some saves survived a reset and the game unlocked their
+  achievements again at once: RAZOR1911, CreamAPI, XLLN, Final Fantasy VII, RUNE's Ubisoft saves,
+  MadnessPatch and MarkerPatch, GreenLuma and LumaPlay registry entries, and the progress counters of
+  Goldberg and GSE. They are now backed up and reset too, and a console trophy earned again after a
+  reset is announced.
 - **SAN themes at SAN's exact size.** Text on an imported SAN theme came out a little smaller than in
   SAN, and a theme's own scale setting was ignored; both now match SAN. Installed SAN presets are
   rebuilt on their own. Importing no longer fails with "EPERM" when an antivirus briefly holds a

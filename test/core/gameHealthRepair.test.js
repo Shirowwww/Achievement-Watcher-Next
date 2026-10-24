@@ -248,3 +248,57 @@ test('a download failure aborts the install instead of reporting a partial succe
     assert.equal(fs.existsSync(path.join(target, 'steam_appid.txt')), false);
   });
 }
+
+/*
+  Swapping a crack's runtime for GBE Fork on a game built before May 2016 needs steam_interfaces.txt,
+  or the game no longer starts (Dark Souls III over CODEX, 2026-10-24). The check runs before anything
+  changes, against the dll in place now, and leaves nothing behind.
+*/
+{
+  const { switchInterfacesReady } = require(path.join(appDir, 'util', 'gameHealthRepair.js'));
+  const stubWith = (generate) => ({
+    ARCH: { x64: { file: 'steam_api64.dll' } },
+    runtimeDllDirs: () => ['C:/Jeux/DS3'],
+    ensureEmulatorDlls: async () => ({ tag: 'v1' }),
+    tryGenerateInterfaces: generate,
+  });
+
+  test('a switch is not ready when no steam_interfaces.txt can be made for the game', async () => {
+    const stub = stubWith(async () => ({ generated: false, reason: 'no-interfaces' }));
+    const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/DS3', arch: 'x64' });
+    const result = await switchInterfacesReady({ gbeInstaller: stub, plan, cacheDir: 'C:/cache', steamSettings: null });
+    assert.deepEqual(result, { ready: false, reason: 'no-interfaces' });
+  });
+
+  test('a switch is ready when the interfaces can be generated from the dll in place now', async () => {
+    const stub = stubWith(async ({ dllPath }) => {
+      assert.equal(dllPath, path.join('C:/Jeux/DS3', 'steam_api64.dll'));
+      return { generated: true };
+    });
+    const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/DS3', arch: 'x64' });
+    const result = await switchInterfacesReady({ gbeInstaller: stub, plan, cacheDir: 'C:/cache', steamSettings: null });
+    assert.deepEqual(result, { ready: true, reason: '' });
+  });
+
+  test('a generator that fails outright refuses the switch instead of throwing', async () => {
+    const stub = stubWith(async () => {
+      throw new Error('generator exploded');
+    });
+    const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/DS3', arch: 'x64' });
+    const result = await switchInterfacesReady({ gbeInstaller: stub, plan, cacheDir: 'C:/cache', steamSettings: null });
+    assert.equal(result.ready, false);
+    assert.match(result.reason, /generator exploded/);
+  });
+
+  test('a steam_interfaces.txt already in steam_settings is enough, without running the generator', async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-switch-ready-'));
+    try {
+      fs.writeFileSync(path.join(dir, 'steam_interfaces.txt'), 'SteamUser017\n');
+      const stub = stubWith(async () => assert.fail('the generator must not run'));
+      const plan = planRuntimeInstall({ gbeInstaller: stub, gameDir: 'C:/Jeux/DS3', arch: 'x64' });
+      assert.deepEqual(await switchInterfacesReady({ gbeInstaller: stub, plan, cacheDir: 'C:/cache', steamSettings: dir }), { ready: true, reason: '' });
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+}

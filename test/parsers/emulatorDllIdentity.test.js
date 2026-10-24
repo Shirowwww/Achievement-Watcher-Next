@@ -205,6 +205,66 @@ test("the Valve dll RUNE preserved is the interface source, not the crack's runt
   assert.equal(described.preservedOriginal, 'steam_api64.rne.bak');
 });
 
+/*
+  Dark Souls III CODEX, from a real install: CODEX's runtime is steam_api64.dll and the Valve dll it
+  replaced is kept as steam_api64.cdx. The runtime yields no interfaces, so switching to GBE was
+  refused (or, before that check, left a game that closed three seconds after launch).
+*/
+test("the Valve dll CODEX preserved as .cdx is the interface source", () => {
+  const dir = tmpdir('aw-codex-cdx-source-');
+  const dll = write(path.join(dir, 'steam_api64.dll'), 'codex runtime');
+  const cdx = write(path.join(dir, 'steam_api64.cdx'), VALVE_ORIGINAL);
+
+  assert.equal(gbe.interfaceSourceFor(dll).file, cdx);
+  assert.equal(goldberg.originalSteamApiDll([dir]), cdx);
+  assert.equal(gbe.archOfSteamApiFile(cdx), 'x64');
+
+  // After the swap the crack's runtime is steam_api64.dll.bak, and the .cdx must still win.
+  fs.renameSync(dll, `${dll}.bak`);
+  write(dll, AW_BUILD);
+  assert.equal(gbe.interfaceSourceFor(dll).file, cdx);
+  assert.equal(goldberg.originalSteamApiDll([dir]), cdx);
+});
+
+// The same release without its .cdx: steam_emu.ini's [Interfaces] is then the only record left.
+test("CODEX's steam_emu.ini [Interfaces] gives steam_interfaces.txt when no Valve dll is left", async () => {
+  const dir = tmpdir('aw-codex-ini-interfaces-');
+  const dll = write(path.join(dir, 'steam_api64.dll'), 'codex runtime');
+  write(path.join(dir, 'steam_emu.ini'), [
+    '### Game data is stored at %SystemDrive%\\Users\\Public\\Documents\\Steam\\CODEX\\374320',
+    '[Settings]',
+    'AppId=374320',
+    '[Interfaces]',
+    '###',
+    'SteamClient=SteamClient012',
+    'SteamUserStats=STEAMUSERSTATS_INTERFACE_VERSION011',
+    'SteamUtils=SteamUtils005',
+    '[Crack]',
+    '0762fa56992221f7=b7d5bc716512b5d6',
+  ].join('\r\n'));
+  const steamSettings = path.join(dir, 'steam_settings');
+
+  const result = await gbe.generateInterfaces({ dllPath: dll, steamSettings, dlls: {} });
+
+  assert.equal(result.generated, true);
+  assert.equal(result.original, path.join(dir, 'steam_emu.ini'));
+  assert.equal(
+    fs.readFileSync(path.join(steamSettings, 'steam_interfaces.txt'), 'utf8'),
+    'SteamClient012\nSTEAMUSERSTATS_INTERFACE_VERSION011\nSteamUtils005\n',
+  );
+});
+
+test('without a Valve dll or a scene ini, steam_interfaces.txt is still not invented', async () => {
+  const dir = tmpdir('aw-codex-no-interfaces-');
+  const dll = write(path.join(dir, 'steam_api64.dll'), 'codex runtime');
+  write(path.join(dir, 'steam_emu.ini'), '[Settings]\r\nAppId=374320\r\n');
+
+  const result = await gbe.generateInterfaces({ dllPath: dll, steamSettings: path.join(dir, 'steam_settings'), dlls: {} });
+
+  assert.equal(result.generated, false);
+  assert.equal(fs.existsSync(path.join(dir, 'steam_settings')), false);
+});
+
 test('a .rne that is itself an emulator is never taken for the original', () => {
   const dir = tmpdir('aw-rune-rne-fake-');
   write(path.join(dir, 'steam_api64.dll'), AW_BUILD);

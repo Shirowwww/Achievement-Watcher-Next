@@ -317,4 +317,20 @@ function servesOnlinePlay(gameDir) {
   return !!loader && loader.name === 'OnlineFix';
 }
 
-module.exports = { detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+// Spacewar, Valve's free test app, which online fixes (FreeTP and the like) run games as so that
+// they reach real Steam. Steam then rejects every unlock: the real game's names are not in its list.
+const SPACEWAR_APPID = '480';
+
+function runsAsSpacewar(dirs) {
+  for (const dir of dirs || []) {
+    if (!dir) continue;
+    try {
+      if (fs.readFileSync(path.join(dir, 'steam_appid.txt'), 'utf8').trim() === SPACEWAR_APPID) return true;
+    } catch {
+      /* no steam_appid.txt in this folder */
+    }
+  }
+  return false;
+}
+
+module.exports = { runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

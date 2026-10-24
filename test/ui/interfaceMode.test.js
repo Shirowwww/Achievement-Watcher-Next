@@ -432,7 +432,7 @@ test('Simple rewords the Game Health checks instead of computing a different rep
 test('Simple states outcomes, and every exact value stays in Technical details', () => {
   const values = appSource.slice(appSource.indexOf('function gameHealthSimpleCheckValue'));
   const body = values.slice(0, values.indexOf('\n}\n'));
-  for (const phrase of ['Achievement data found', 'Achievement progress found', 'Tracking active', 'Game saves detected', 'Notifications working']) {
+  for (const phrase of ['Achievement data found', 'Achievement progress found', 'Detected when the game starts', 'Game saves detected', 'Notifications working']) {
     assert.ok(body.includes(phrase), `Simple should say "${phrase}"`);
   }
   // None of the low-level vocabulary may be interpolated into a Simple row.

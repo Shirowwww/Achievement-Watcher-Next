@@ -47,6 +47,14 @@ function publicSceneSaveRoot(gameDir) {
   return hostPath(hostFor(gameDir), 'PUBLIC', 'Documents', 'Steam', 'RUNE');
 }
 
+// A profile's Documents (or Documents\Steam, Roaming\Steam): scene emulators keep every game's saves
+// there side by side, so it is never one game's install folder, on Windows or in a Wine prefix.
+const SHARED_SAVE_ROOT = /[\\/]users[\\/][^\\/]+[\\/](?:(?:onedrive[\\/])?documents|appdata[\\/]roaming[\\/]steam)(?:[\\/]steam)?[\\/]*$/i;
+
+function isSharedSaveRoot(dir) {
+  return SHARED_SAVE_ROOT.test(String(dir || ''));
+}
+
 function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam = false } = {}) {
   const roots = [];
   for (const host of appHosts()) addHostRoots(roots, host, { expandProgramDataSteam });
@@ -384,6 +392,7 @@ module.exports = {
   discoverEmulatorRoots,
   discoverLibraryRoots,
   expandKnownSteamSourceRoots,
+  isSharedSaveRoot,
   isSteamLikePath,
   EMULATOR_LIBRARY_FOLDER_NAMES,
   GAME_LIBRARY_FOLDER_NAMES,

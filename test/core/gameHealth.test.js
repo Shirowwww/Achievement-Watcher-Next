@@ -817,3 +817,46 @@ test('an emulated Epic game with a known executable but no index row offers to s
   assert.equal(tracking.level, LEVEL.WARN);
   assert.deepEqual(tracking.actions, [ACTION.START_TRACKING]);
 });
+
+/*
+  A game the Steam client runs (bought, or added through SteamTools or GreenLuma) has Steam record its
+  unlocks. Moon Sweepers was reported "Not tracking, needs a Steam emulator" while AW Next read its 12
+  unlocks from Steam all along, because an emulator file sat in its folder (2026-10-24).
+*/
+function steamClientGame(overrides = {}) {
+  return healthyGame({
+    appid: '5335510',
+    name: 'Moon Sweepers',
+    source: 'Steam (Ghostly)',
+    officialPlatform: true,
+    processTracking: false,
+    steamClientServed: true,
+    saveSources: [],
+    goldberg: { emulator: 'none', steamSettings: '', dllCount: 1, achievements: { expected: 0, found: 0, missing: [], missingIcons: [] }, issues: [], ok: false },
+    notifications: { transport: 'toast', progressMuted: false, steamClient: true },
+    ...overrides,
+  });
+}
+
+test('a game Steam records is served by Steam, whatever emulator file sits in its folder', () => {
+  const report = deriveHealth(steamClientGame());
+  assert.equal(report.state, STATE.READY);
+  assert.notEqual(report.reason, 'emulator-missing');
+  const emulator = checkFor(report, 'emulator');
+  assert.equal(emulator.level, LEVEL.OK);
+  assert.equal(emulator.params.servedBy, 'Steam');
+});
+
+test('with "Steam client games" off, the notification row says AW Next shows nothing for it', () => {
+  const report = deriveHealth(steamClientGame({ notifications: { transport: 'toast', progressMuted: false, steamClient: false } }));
+  const notifications = checkFor(report, 'notifications');
+  assert.equal(notifications.level, LEVEL.INFO);
+  assert.equal(notifications.params.steamClientOff, true);
+  assert.equal(report.state, STATE.READY, 'Steam still records and shows its own unlocks');
+  assert.equal(checkFor(deriveHealth(steamClientGame()), 'notifications').level, LEVEL.OK);
+});
+
+test('the Steam notification setting means nothing for an emulated game', () => {
+  const report = deriveHealth(healthyGame({ notifications: { transport: 'toast', progressMuted: false, steamClient: false } }));
+  assert.equal(checkFor(report, 'notifications').level, LEVEL.OK);
+});
