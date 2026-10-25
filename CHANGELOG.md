@@ -7,104 +7,71 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.3 - 2026-10-25
 
 ### Added
 
 - **Re-lock a single achievement.** Right-click an unlocked achievement and choose **Re-lock this
   achievement**: the emulator's save is edited so the game can unlock it again, and AW Next announces
-  it as new. The files are listed before anything changes and backed up first. It works with most
-  emulator saves, text and binary alike (Goldberg and GSE, CODEX, RUNE, OnlineFix, TENOKE, RPCS3,
-  ShadPS4, Xenia and more); SmartSteamEmu and SKIDROW saves, official platforms and PS4 ports keep
-  only the full reset. Close the game first: an emulator writes its unlocks back when it exits.
-- **A layout editor for your presets.** In the preset designer, "Layout" opens a full-screen editor:
-  move or resize the card's parts, add text, pictures and shapes, resize the card itself and zoom in.
-  Shapes can take the accent colour, so they turn bronze, silver, gold or platinum with the card.
-- **Every tier in the preview.** The designer previews and compares bronze, silver and gold unlocks
-  side by side, instead of a single "Rare" card.
-- **A plain starting point.** The new Base template is one flat colour in the app's own theme.
+  it as new. The files are listed and backed up before anything changes. It works with most emulator
+  saves (Goldberg and GSE, CODEX, RUNE, OnlineFix, TENOKE, RPCS3, ShadPS4, Xenia and more);
+  SmartSteamEmu and SKIDROW saves, official platforms and PS4 ports keep only the full reset. Close
+  the game first: an emulator writes its unlocks back when it exits.
+- **A full-screen editor for your presets.** In the preset designer, "Editor" opens every setting
+  around a large preview: move or resize the card's parts, add text, pictures and shapes, resize the
+  card and zoom in. Click a line of the card to give it its own colour, font and size, and stack the
+  parts and your additions in any order. On a customised bundled preset, the Epic, PlayStation, Xbox
+  and Steam logos can be moved or removed, and the accent bar works there too.
+- **More choice in the designer.** The preview compares bronze, silver and gold unlocks side by side,
+  and the new Base template is one flat colour in the app's own theme.
 
 ### Improved
 
+- **Stats that move.** Switching the stats panel to installed games counts each figure over to its
+  new value and slides the bars.
 - **An empty library can find your games.** When no game shows up, "Detect my games" looks for save
   folders and game libraries on this PC, adds the new ones and reloads the list.
-- **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
-  handles are wider, so they show even at small sizes.
-- **One Steam sound.** "Steam" and "Steam Original" were the same sound; only Steam Original is
-  left, and a setting that picked "Steam" plays it.
-- **A tidier overlay header.** The search magnifier and the settings button are bigger, the
-  magnifier sits centred in the field, and the AW Next logo no longer has a box around it.
-- **Fewer, better community presets.** Hexagon and Indiana are gone. If you used one of them, your
-  popups switch to AW Next on their own.
-- **A centred PlayStation mark.** The logo inside the PlayStation preset's ring sat about a pixel low
-  and now reads centred. Its preview in the gallery shows the logo too.
-- **Epic emulator games get their real name.** Older Epic titles known by a code name ("Kinglet" is
-  Civilization VI) are now named, a name found once is remembered, and a game Epic does not know is
-  asked about again only after a few days instead of on every scan.
-- **Game health says what the launch row checks.** The row that read "Tracking active" while the
-  game was "Not tracking" now reads "Game launch: Detected when the game starts". It only means AW
-  Next notices the game starting; recording unlocks is the emulator's job.
-- **The hidden browser closes when idle.** The browser AW Next uses for SteamDB and SteamHunters now
-  closes a minute after its last lookup instead of staying open until the next scan.
+- **Interface touches.** The tray trophy keeps the logo's three stars and reads at small sizes, the
+  overlay's search and settings buttons are bigger, "Steam" and "Steam Original" are now one sound,
+  and the PlayStation preset's logo sits centred in its ring.
+- **Fewer, better community presets.** Hexagon and Indiana are gone; popups that used them switch to
+  AW Next on their own.
+- **Epic emulator games get their real name.** Titles known by a code name ("Kinglet" is
+  Civilization VI) are named, and the name is remembered.
+- **The hidden browser closes when idle**, a minute after its last SteamDB or SteamHunters lookup.
 
 ### Fixed
 
-- **The Ubisoft achievement fix no longer stops Denuvo repacks from starting.** Some repacks keep
-  their Uplay settings, including the ticket their Denuvo bypass checks, in a file the installed
-  emulator never reads, so the fix replaced them with defaults and the game hung at launch
-  (Assassin's Creed Odyssey). Those settings are now carried over; only the achievement part is
-  AW Next's. Game Health's "Undo the emulator switch" now also restores a Ubisoft repair.
-- **No more "Epic Games Store" windows in Alt+Tab.** Looking up the name of an Epic emulator game
-  opened up to a hundred hidden store pages in Chrome or Edge, and on Windows they showed up as empty
-  windows in Alt+Tab that could not be closed. The name now comes from a plain web request, without
-  any browser.
-- **Adding Documents\Steam as a folder no longer misconfigures CODEX games.** That folder holds the
-  saves of every CODEX and RUNE game at once, and AW Next took it for each game's install folder:
-  "Fix all" wrote several games' emulator settings into it, and an empty save it created then hid
-  the real CODEX one. It is now read as a save folder only, and a save with nothing unlocked never
-  replaces another one.
-- **Switching an older game to the supported emulator no longer breaks it.** Games built before
-  mid-2016 need a list of their Steam interfaces. AW Next now finds it where CODEX keeps it: Valve's
-  original file saved as `steam_api64.cdx`, or the `[Interfaces]` section of `steam_emu.ini`. When
-  neither is there, the switch is refused with an explanation instead of leaving a game that closes
-  a few seconds after launch (Dark Souls III over CODEX).
-- **Game health understands games the Steam client runs.** A game Steam records, bought or added
-  through SteamTools, no longer reads "Not tracking, needs a Steam emulator" because an emulator
-  file sits in its folder. It shows as served by Steam, and the notification row says when AW
-  Next's own popup is off for it.
-- **Game health explains games run as Spacewar.** Some online fixes run a game as Spacewar (Steam
-  ID 480) to reach real Steam, which then rejects all of its achievements, so nothing ever records
-  them. Such a game now says so instead of looking untracked. OnlineFix releases are not affected:
-  they keep their achievements, and AW Next reads them.
-- **Screenshots on a slow or busy PC.** A souvenir screenshot that took more than 5 seconds was
-  silently dropped; it now has 10.
-- **Reset achievements resets everything.** Some saves survived a reset and the game unlocked their
-  achievements again at once: RAZOR1911, CreamAPI, XLLN, Final Fantasy VII, RUNE's Ubisoft saves,
-  MadnessPatch and MarkerPatch, GreenLuma and LumaPlay registry entries, and the progress counters of
-  Goldberg and GSE. They are now backed up and reset too, and a console trophy earned again after a
-  reset is announced.
-- **SAN themes at SAN's exact size.** Text on an imported SAN theme came out a little smaller than in
-  SAN, and a theme's own scale setting was ignored; both now match SAN. Installed SAN presets are
-  rebuilt on their own. Importing no longer fails with "EPERM" when an antivirus briefly holds a
-  freshly written file.
-- **SAN themes where SAN puts them.** An imported SAN theme now keeps the same 25px from the edges of
-  the screen as in SAN, instead of touching them.
-- **The 100% popup of a SAN theme.** It shows the theme's own 100% picture and SAN's two lines ("100%
-  Complete", "You've unlocked all achievements!") instead of the game's icon and name. When the game
-  has a real PlayStation platinum, the popup shows that trophy: its name, description and icon.
-- **SAN's own pictures in an imported theme.** A `.san` file leaves out the pictures SAN ships with,
-  such as its bronze and silver icon borders, so the import reported them missing. When SAN is
-  installed on the PC, they are now taken from SAN's own folder.
+- **The Ubisoft achievement fix no longer stops Denuvo repacks from starting.** Repacks that keep
+  their Uplay settings in a file the emulator never reads lost them, and the game hung at launch
+  (Assassin's Creed Odyssey). Those settings are now carried over, and Game Health's "Undo the
+  emulator switch" also restores a Ubisoft repair.
+- **No more "Epic Games Store" windows in Alt+Tab.** Looking up an Epic game's name opened hidden
+  store pages that showed up as empty windows; it is now a plain web request.
+- **Adding Documents\Steam as a folder no longer misconfigures CODEX games.** It is read as a save
+  folder only, and a save with nothing unlocked never replaces another one.
+- **Switching an older game to the supported emulator no longer breaks it.** Games from before
+  mid-2016 need their list of Steam interfaces; AW Next finds it in CODEX's files, or refuses the
+  switch with an explanation (Dark Souls III over CODEX).
+- **Game Health reads more setups right.** Games run by the Steam client (bought or added through
+  SteamTools) show as served by Steam, games an online fix runs as Spacewar say that Steam rejects
+  their achievements, and the launch row reads "Detected when the game starts".
+- **Reset achievements resets everything.** RAZOR1911, CreamAPI, XLLN, Final Fantasy VII, RUNE's
+  Ubisoft saves, MadnessPatch and MarkerPatch, GreenLuma and LumaPlay, and Goldberg and GSE progress
+  counters survived a reset; they are now backed up and reset too.
+- **Imported SAN themes look as they did in SAN**: the same text size, scale and 25px from the screen
+  edges, SAN's own 100% popup and lines, and SAN's built-in pictures taken from its folder when SAN
+  is installed. An antivirus holding a file no longer fails the import with "EPERM".
+- **Screenshots on a slow or busy PC** get 10 seconds instead of 5 before being dropped.
 
 ### Compatibility
 
 - **Hyprland and COSMIC on Linux.** The popup no longer takes the keyboard from a native Wayland
   game, AW Next no longer restarts toward an XWayland that is gone, and closing the window without a
-  tray hides it where Hyprland ignores minimizing (starting AW Next again brings it back).
-- **The screenshot question on Wayland.** GNOME 47 and later, Plasma 6, COSMIC and Hyprland ask once
-  whether apps may take screenshots. AW Next waits for that answer instead of asking again through
-  the screen-sharing dialog at every unlock, respects a refusal, and leaves no stray file in
-  Pictures when the answer comes late.
+  tray hides it where Hyprland ignores minimizing.
+- **The screenshot question on Wayland.** On GNOME 47 and later, Plasma 6, COSMIC and Hyprland, AW
+  Next waits for the one-time screenshot permission instead of asking at every unlock, and respects
+  a refusal.
 
 ## 3.12.2 - 2026-10-22
 

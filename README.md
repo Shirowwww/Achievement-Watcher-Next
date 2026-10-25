@@ -50,7 +50,7 @@ otherwise. OBS can draw the same popup on your stream.
 <td valign="top">
 
 **Presets and themes**<br>
-Ten popup presets and a designer that previews the real popup. Thirteen interface themes. Both share
+Ten popup presets and a full-screen editor to design your own. Thirteen interface themes. Both share
 as one file, and Steam Achievement Notifier `.san` themes convert.
 
 </td>
