@@ -43,6 +43,7 @@ const RENAMED_SOUNDS = {
   'Playstation5.wav': 'PlayStation 5.wav',
   'Playstation5 Platinum.wav': 'PlayStation 5 Platinum.wav',
   'Xbox.v1.wav': 'Xbox Classic.wav',
+  'Steam.wav': 'Steam Original.wav',
 };
 
 function resolveSoundFile(name) {

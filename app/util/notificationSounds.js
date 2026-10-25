@@ -18,6 +18,8 @@ const RENAMED_SOUNDS = {
   'Playstation5.wav': 'PlayStation 5.wav',
   'Playstation5 Platinum.wav': 'PlayStation 5 Platinum.wav',
   'Xbox.v1.wav': 'Xbox Classic.wav',
+  // "Steam" and "Steam Original" were the same sound twice; only Steam Original ships now.
+  'Steam.wav': 'Steam Original.wav',
 };
 
 // Current name for a sound the user may have picked under an older name; '' when it was not renamed.

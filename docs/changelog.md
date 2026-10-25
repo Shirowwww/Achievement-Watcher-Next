@@ -35,6 +35,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
   handles are wider, so they show even at small sizes.
+- **One Steam sound.** "Steam" and "Steam Original" were the same sound; only Steam Original is
+  left, and a setting that picked "Steam" plays it.
+- **A tidier overlay header.** The search magnifier and the settings button are bigger, the
+  magnifier sits centred in the field, and the AW Next logo no longer has a box around it.
 - **Fewer, better community presets.** Hexagon and Indiana are gone. If you used one of them, your
   popups switch to AW Next on their own.
 - **A centred PlayStation mark.** The logo inside the PlayStation preset's ring sat about a pixel low

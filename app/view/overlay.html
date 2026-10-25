@@ -101,17 +101,13 @@
       .overlay-brand .trophy {
         display: grid;
         place-items: center;
-        width: 24px;
-        height: 24px;
-        border-radius: var(--radius-sm);
-        background: rgba(var(--accent-rgb), 0.18);
       }
 
       /* The app's own mark, tinted like the update window's, not an emoji. */
       .brand-mark {
         display: block;
-        width: 15px;
-        height: 15px;
+        width: 20px;
+        height: 20px;
         background: var(--accent);
         -webkit-mask: url('../resources/img/brand-mark.png') center / contain no-repeat;
       }
@@ -147,6 +143,10 @@
         transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
       }
 
+      #overlay-settings-toggle {
+        font-size: 19px;
+      }
+
       .icon-btn:hover,
       .icon-btn.active {
         background: var(--bg-hover);
@@ -173,20 +173,22 @@
         position: relative;
       }
 
+      /* Drawn, not a text glyph: "⌕" sat low in its line box. */
       .overlay-search .search-icon {
         position: absolute;
         left: 9px;
         top: 50%;
+        width: 15px;
+        height: 15px;
         transform: translateY(-50%);
         color: var(--muted);
-        font-size: 11px;
         pointer-events: none;
       }
 
       .overlay-search input {
         width: 100%;
         height: 30px;
-        padding: 0 28px 0 26px;
+        padding: 0 28px 0 32px;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
         background: var(--bg-soft);
@@ -916,7 +918,10 @@
 
         <div class="overlay-tools">
           <div class="overlay-search" id="overlay-search-box">
-            <span class="search-icon">⌕</span>
+            <svg class="search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <circle cx="7" cy="7" r="5" />
+              <path d="M10.7 10.7 14.5 14.5" />
+            </svg>
             <input id="overlay-search" type="text" autocomplete="off" spellcheck="false" placeholder="Search achievements…" />
             <button type="button" class="clear" id="overlay-search-clear" aria-label="Clear">×</button>
           </div>

@@ -12201,7 +12201,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 
 #settings .pd-cv-props-head b {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -13020,7 +13020,8 @@ body.pd-cv-open #settings .content {
 }
 
 #settings .pd-cv-layer span {
-  overflow: hidden;
+  min-width: 0;
+  overflow-x: clip;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
