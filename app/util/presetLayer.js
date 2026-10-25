@@ -18,7 +18,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const schema = require('./presetSchema.js');
 const { cssUrl } = require('./cssUrl.js');
-const { PRESET_ENGINE } = require('./customPreset.js');
+const { PRESET_ENGINE, canvasCss, canvasScript } = require('./customPreset.js');
 
 // The file that marks a folder as a layer, and the element the logo is drawn on.
 const LAYER_FILE = 'aw-layer.json';
@@ -37,6 +37,8 @@ const LAYER_SECTIONS = Object.freeze({
   // Ticked = the bundled preset's own brand mark is removed. It has no value of its own to store.
   brand: [],
   logo: ['logoImage', 'logoPosition', 'logoSize', 'logoOffset'],
+  // The free layout: the bundled card's parts moved, and items added over it.
+  canvas: ['canvas'],
 });
 const LAYER_SECTION_NAMES = Object.freeze(Object.keys(LAYER_SECTIONS));
 
@@ -46,6 +48,11 @@ const LAYER_BACKGROUND_MODES = ['solid', 'gradient'];
 // A bundled preset can be layered only when it runs the shared engine verbatim.
 function isLayerableHtml(html) {
   return typeof html === 'string' && html.includes(PRESET_ENGINE.trim());
+}
+
+// The brand section works only on a stylesheet whose mark fades through --mark-opacity.
+function hasBrandMark(css) {
+  return typeof css === 'string' && /var\(\s*--mark-opacity(?![\w-])/.test(css);
 }
 
 // Strict parse of aw-layer.json (or of what a designer sends): unknown sections and keys are dropped.
@@ -120,6 +127,10 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name } = {}) {
         `height: ${v.logoSize}px; aspect-ratio: 1 / 1; background: ${cssUrl(assetUrl(v.logoImage))} no-repeat center / contain; }`
     );
   }
+  if (on.has('canvas')) {
+    const free = canvasCss(v.canvas, { assetUrl });
+    if (free) css.push(free);
+  }
   return css.join('\n');
 }
 
@@ -167,6 +178,13 @@ const LAYER_LOGO_SCRIPT =
   `(function () { var card = document.querySelector('.ach'); if (!card || card.querySelector('.${LAYER_LOGO_CLASS}')) return; ` +
   `var logo = document.createElement('div'); logo.className = '${LAYER_LOGO_CLASS}'; card.insertBefore(logo, card.firstChild); })();`;
 
+// The script that puts the layer's added items into the bundled page, or '' when it has none.
+function layerCanvasScript(rawLayer) {
+  const layer = normalizeLayer(rawLayer);
+  if (!layer.sections.includes('canvas') || !layer.options.canvas.items.length) return '';
+  return canvasScript(layer.options.canvas);
+}
+
 // The files a layer folder may hold, named by the layer: used to copy, and to clean up.
 function layerAssets(rawLayer) {
   const layer = normalizeLayer(rawLayer);
@@ -174,6 +192,8 @@ function layerAssets(rawLayer) {
   return {
     fontFile: on.has('font') ? layer.options.fontFile : '',
     logoImage: on.has('logo') ? layer.options.logoImage : '',
+    canvasImages: on.has('canvas') ? schema.canvasFiles(layer.options.canvas) : [],
+    canvasFonts: on.has('canvas') ? schema.canvasFonts(layer.options.canvas) : [],
   };
 }
 
@@ -189,6 +209,7 @@ module.exports = {
   LAYER_SECTION_NAMES,
   LAYER_BACKGROUND_MODES,
   isLayerableHtml,
+  hasBrandMark,
   normalizeLayer,
   layerOptions,
   buildLayerCss,
@@ -197,6 +218,7 @@ module.exports = {
   LAYER_FIELD_SECTION,
   layerHasLogo,
   LAYER_LOGO_SCRIPT,
+  layerCanvasScript,
   layerAssets,
   layerAssetFileUrl,
 };

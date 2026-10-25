@@ -10,6 +10,25 @@ const { PRESET_PROPERTIES, normalizeOptions } = require('./presetSchema.js');
 
 const PRESET_TEMPLATES = [
   {
+    // A plain card to build on: one flat colour, no bar, no glow. `followTheme` has the designer
+    // fill in the app theme's own colours when it is picked, so it starts in place with the rest.
+    name: 'Base',
+    followTheme: true,
+    options: {
+      bgMode: 'solid',
+      bg: '#1d2027',
+      text: '#e7edf6',
+      accent: '#6c91ff',
+      radius: 12,
+      accentBar: 'none',
+      borderWidth: 1,
+      borderColor: '#33384a',
+      shadow: 30,
+      glow: 0,
+      iconRadius: 10,
+    },
+  },
+  {
     // The design the builder has always produced, kept as a template so "back to the classic look"
     // is one click rather than a memory exercise.
     name: 'Classic',

@@ -5780,6 +5780,10 @@ function dressPresetWindow(win, layer) {
     if (presetLayer.layerHasLogo(layer)) {
       win.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch((err) => debug.log(`[overlay-notif] layer logo failed: ${err.message || err}`));
     }
+    const canvasScript = presetLayer.layerCanvasScript(layer);
+    if (canvasScript) {
+      win.webContents.executeJavaScript(canvasScript).catch((err) => debug.log(`[overlay-notif] layer items failed: ${err.message || err}`));
+    }
   });
 }
 
@@ -6852,9 +6856,10 @@ function copyPresetAsset(dir, name, sourceDir, check, label) {
 function dropStalePresetAssets(dir, next) {
   try {
     const previous = JSON.parse(fs.readFileSync(path.join(dir, PRESET_OPTIONS_FILE), 'utf8'));
-    for (const key of ['bgImage', 'fontFile', 'logoImage']) {
-      const old = typeof previous[key] === 'string' ? previous[key] : '';
-      if (!old || ['bgImage', 'fontFile', 'logoImage'].some((other) => next[other] === old)) continue;
+    const assetNames = (values) => ['bgImage', 'fontFile', 'logoImage'].map((key) => values[key]).concat(presetAssets.canvasFiles(values.canvas), presetAssets.canvasFonts(values.canvas));
+    const kept = new Set(assetNames(next));
+    for (const old of assetNames(previous)) {
+      if (typeof old !== 'string' || !old || kept.has(old)) continue;
       const target = path.join(dir, old);
       if (path.dirname(path.resolve(target)) === path.resolve(dir)) fs.rmSync(target, { force: true });
     }
@@ -6870,6 +6875,8 @@ function writeCustomPreset(name, opts) {
   copyPresetImage(dir, values.bgImage);
   copyPresetAsset(dir, values.fontFile, userPresetFontsDir(), presetAssets.checkFont, 'font');
   copyPresetAsset(dir, values.logoImage, userPresetImagesDir(), presetAssets.checkLogo, 'logo');
+  for (const file of presetAssets.canvasFiles(values.canvas)) copyPresetAsset(dir, file, userPresetImagesDir(), presetAssets.checkLogo, 'picture');
+  for (const file of presetAssets.canvasFonts(values.canvas)) copyPresetAsset(dir, file, userPresetFontsDir(), presetAssets.checkFont, 'font');
   fs.writeFileSync(path.join(dir, 'index.html'), buildCustomPresetHtml(opts), 'utf8');
   fs.writeFileSync(path.join(dir, 'style.css'), buildCustomPresetCss(opts), 'utf8');
   fs.writeFileSync(path.join(dir, PRESET_OPTIONS_FILE), JSON.stringify({ name, ...values }, null, 2), 'utf8');
@@ -6986,9 +6993,9 @@ function readLayeredPreset(name) {
 function dropStaleLayerAssets(dir, next) {
   try {
     const previous = presetLayer.layerAssets(JSON.parse(fs.readFileSync(path.join(dir, presetLayer.LAYER_FILE), 'utf8')));
-    for (const key of ['fontFile', 'logoImage']) {
-      const old = previous[key];
-      if (!old || old === next.fontFile || old === next.logoImage) continue;
+    const kept = new Set([next.fontFile, next.logoImage, ...next.canvasImages, ...next.canvasFonts]);
+    for (const old of [previous.fontFile, previous.logoImage, ...previous.canvasImages, ...previous.canvasFonts]) {
+      if (!old || kept.has(old)) continue;
       const target = path.join(dir, old);
       if (path.dirname(path.resolve(target)) === path.resolve(dir)) fs.rmSync(target, { force: true });
     }
@@ -7006,6 +7013,8 @@ function writeLayeredPreset(name, request) {
   dropStaleLayerAssets(dir, assets);
   copyPresetAsset(dir, assets.fontFile, userPresetFontsDir(), presetAssets.checkFont, 'font');
   copyPresetAsset(dir, assets.logoImage, userPresetImagesDir(), presetAssets.checkLogo, 'logo');
+  for (const file of assets.canvasImages) copyPresetAsset(dir, file, userPresetImagesDir(), presetAssets.checkLogo, 'picture');
+  for (const file of assets.canvasFonts) copyPresetAsset(dir, file, userPresetFontsDir(), presetAssets.checkFont, 'font');
   const stored = { name, base: layer.base, sections: layer.sections, options: presetLayer.layerOptions(layer) };
   fs.writeFileSync(path.join(dir, presetLayer.LAYER_FILE), JSON.stringify(stored, null, 2), 'utf8');
   invalidateNotificationPresetFolders();

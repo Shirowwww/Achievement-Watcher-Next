@@ -48,7 +48,7 @@ test('what is stored is only the sections that were switched on', () => {
   const stored = layerTool.layerOptions(layerTool.normalizeLayer(layer));
   assert.deepEqual(Object.keys(stored).sort(), ['borderColor', 'borderWidth', 'fontFamily', 'fontFile']);
   assert.equal(stored.accent, undefined, 'a section that is off must not be written');
-  assert.deepEqual(layerTool.layerAssets(layer), { fontFile: 'Face.ttf', logoImage: '' });
+  assert.deepEqual(layerTool.layerAssets(layer), { fontFile: 'Face.ttf', logoImage: '', canvasImages: [], canvasFonts: [] });
 });
 
 test('the stylesheet carries exactly the sections that are on', () => {
@@ -65,6 +65,26 @@ test('the stylesheet carries exactly the sections that are on', () => {
   assert.doesNotMatch(layerTool.buildLayerCss({ base: 'x', sections: ['logo'], options: {} }), /aw-layer-logo/);
   assert.equal(layerTool.layerHasLogo({ sections: ['logo'], options: { logoImage: 'a.png' } }), true);
   assert.equal(layerTool.layerHasLogo({ sections: ['accent'], options: { logoImage: 'a.png' } }), false);
+});
+
+test('the brand section hides the bundled mark and is offered only where a mark reads it', () => {
+  const layer = layerTool.normalizeLayer({ base: 'Xbox', sections: ['brand'], options: {} });
+  assert.deepEqual(layer.sections, ['brand']);
+  assert.equal(layerTool.buildLayerCss(layer), '.ach { --mark-opacity: 0 !important; }');
+  assert.doesNotMatch(layerTool.buildLayerCss({ base: 'x', sections: ['accent'], options: {} }), /--mark-opacity/);
+
+  // Every bundled preset that masks a brand mark must fade it through --mark-opacity, or the
+  // checkbox would be missing there; one without a mark (or with it baked into a picture) gets none.
+  const drawsMark = /mask:\s*(?:url\(['"]?logo\.svg|var\(--ps-mark\))/;
+  const withMark = [];
+  for (const name of fs.readdirSync(BUNDLED)) {
+    const css = fs.readFileSync(path.join(BUNDLED, name, 'style.css'), 'utf8');
+    assert.equal(layerTool.hasBrandMark(css), drawsMark.test(css), `${name}: its mark and --mark-opacity disagree`);
+    if (layerTool.hasBrandMark(css)) withMark.push(name);
+  }
+  assert.deepEqual(withMark.sort(), ['Epic Games', 'PlayStation', 'Steam Original', 'Xbox']);
+  assert.equal(layerTool.hasBrandMark(''), false);
+  assert.equal(layerTool.hasBrandMark(null), false);
 });
 
 test('the logo sits where the position says, and its files come from the layer folder', () => {

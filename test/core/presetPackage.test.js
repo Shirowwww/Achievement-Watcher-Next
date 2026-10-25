@@ -644,6 +644,7 @@ test('every designed property survives the round trip, not just the eight the bu
     else if (property.type === 'toggle') design[property.key] = !property.def;
     else if (property.type === 'color') design[property.key] = '#123456';
     else if (property.type === 'sound') design[property.key] = 'fanfare.wav';
+    else if (property.type === 'canvas') design[property.key] = { move: { icon: { x: 12, y: 0, r: 0, s: 1 } }, items: [{ kind: 'shape', fill: '#123456' }] };
   }
   const expected = schema.normalizeOptions(design);
 
@@ -667,7 +668,7 @@ test('every designed property survives the round trip, not just the eight the bu
 
   const stored = JSON.parse(fs.readFileSync(path.join(dirs.presets, 'Everything', 'aw-preset.json'), 'utf8'));
   for (const property of schema.PRESET_PROPERTIES) {
-    assert.equal(stored[property.key], expected[property.key], `${property.key} did not survive the package round trip`);
+    assert.deepEqual(stored[property.key], expected[property.key], `${property.key} did not survive the package round trip`);
   }
 });
 

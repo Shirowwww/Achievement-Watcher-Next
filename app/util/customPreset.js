@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const schema = require('./presetSchema.js');
 const { cssUrl } = require('./cssUrl.js');
+const { escapeHtml } = require('./escapeHtml.js');
 const { PRESET_PROPERTIES, FONT_STACKS, ICON_SHAPES, BG_PATTERNS, BG_PATTERN_SIZES, MOTION_OFFSETS, EASINGS, normalizeOptions, cssValue } = schema;
 
 // The family name @font-face gives the preset's own font file.
@@ -204,39 +205,189 @@ const PRESET_MARKUP = [
   '<div class="progress_line" hidden><span class="progress_track"><span class="progress_meter"></span></span><span class="progress_label"></span></div></div></div>',
 ].join('');
 
+/*
+  Parts move through their own `translate`, `rotate` and `scale`, so they compose with a preset's
+  animated `transform`. Items sit in one container with no stacking context: z-index -1 puts one
+  behind the text, still above the card's background.
+*/
+const CANVAS_CLASS = 'aw-canvas';
+const CANVAS_PART_SELECTORS = { icon: '.icon', text: '.text_wrap', title: '.title', detail: '.detail', meta: '.meta', progress: '.progress_line' };
+const CANVAS_TEXT_PARTS = ['title', 'detail', 'meta', 'progress'];
+const CANVAS_TEXT_COLOR = { accent: 'var(--accent, #ffffff)', text: 'var(--text, #ffffff)' };
+
+const CANVAS_FONT_FAMILY = 'AW Item Font';
+
+// Shapes CSS cannot draw with a border: an SVG polygon in a 100x100 box stretched over the item.
+const starPoints = () =>
+  Array.from({ length: 10 }, (_, i) => {
+    const radius = i % 2 ? 21 : 50;
+    const angle = (Math.PI / 5) * i - Math.PI / 2;
+    return `${(50 + radius * Math.cos(angle)).toFixed(1)},${(53 + radius * Math.sin(angle)).toFixed(1)}`;
+  }).join(' ');
+const CANVAS_POLYGONS = {
+  triangle: '50,0 100,100 0,100',
+  diamond: '50,0 100,50 50,100 0,50',
+  star: starPoints(),
+  arrow: '0,30 58,30 58,0 100,50 58,100 58,70 0,70',
+};
+
+function shapePaint(item) {
+  if (item.fillMode === 'none') return 'transparent';
+  if (item.fillMode === 'accent') return 'var(--accent)';
+  return item.fillMode === 'gradient' ? `linear-gradient(${item.angle}deg, ${item.fill}, ${item.fill2})` : item.fill;
+}
+
+function shapeFilter(item) {
+  const filters = [];
+  if (item.shadow) filters.push(`drop-shadow(0 ${Math.round(item.shadow / 3)}px ${item.shadow}px rgba(0, 0, 0, 0.55))`);
+  if (item.blur) filters.push(`blur(${item.blur}px)`);
+  return filters.length ? `filter: ${filters.join(' ')};` : '';
+}
+
+// Every value here went through the schema: hex colours and plain numbers only.
+function polygonSvg(item, index) {
+  const gradientId = `aw-cv-g${index}`;
+  const defs =
+    item.fillMode === 'gradient'
+      ? `<defs><linearGradient id="${gradientId}" gradientTransform="rotate(${item.angle - 90} 0.5 0.5)"><stop offset="0" stop-color="${item.fill}"/><stop offset="1" stop-color="${item.fill2}"/></linearGradient></defs>`
+      : '';
+  // The state colour is a CSS variable, which only a style (not a fill attribute) resolves.
+  const fill = item.fillMode === 'none' ? 'none' : item.fillMode === 'gradient' ? `url(#${gradientId})` : item.fill;
+  const paint = item.fillMode === 'accent' ? 'style="fill: var(--accent)"' : `fill="${fill}"`;
+  const stroke = item.stroke ? ` stroke="${item.strokeColor}" stroke-width="${item.stroke}" stroke-linejoin="round" vector-effect="non-scaling-stroke"` : '';
+  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${defs}<polygon points="${CANVAS_POLYGONS[item.shape]}" ${paint}${stroke}/></svg>`;
+}
+
+// No rule for 'card' without a file: the item inherits the card's font, whichever the preset uses.
+function canvasFontRule(item, fonts) {
+  const family = FONT_STACKS[item.font];
+  if (item.fontFile) return `font-family: '${CANVAS_FONT_FAMILY} ${fonts.indexOf(item.fontFile)}', ${family || 'var(--font, sans-serif)'};`;
+  return family ? `font-family: ${family};` : '';
+}
+
+function canvasCss(rawCanvas, { assetUrl } = {}) {
+  const canvas = schema.normalizeCanvas(rawCanvas);
+  const css = [];
+  for (const [part, move] of Object.entries(canvas.move)) {
+    css.push(`.ach ${CANVAS_PART_SELECTORS[part]} { translate: ${move.x}px ${move.y}px !important; rotate: ${move.r}deg !important; scale: ${move.s} !important; }`);
+  }
+  // The text column clips (and fades) its lines so a long one can scroll; a line moved out of it
+  // would be cut off, so the column stops clipping once one of its lines has moved.
+  if (CANVAS_TEXT_PARTS.some((part) => canvas.move[part])) {
+    css.push('.ach .text_wrap { overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important; }');
+  }
+  if (!canvas.items.length) return css.join('\n');
+  css.push(`.ach > .${CANVAS_CLASS} { position: absolute !important; inset: 0; z-index: auto !important; pointer-events: none; }`);
+  css.push(`.ach > .${CANVAS_CLASS} > div { position: absolute; box-sizing: border-box; margin: 0; }`);
+  css.push(`.ach > .${CANVAS_CLASS} svg { display: block; width: 100%; height: 100%; overflow: visible; }`);
+  const fonts = schema.canvasFonts(canvas);
+  fonts.forEach((file, index) => {
+    const url = cssUrl(assetUrl ? assetUrl(file) : file);
+    css.push(`@font-face { font-family: '${CANVAS_FONT_FAMILY} ${index}'; src: ${url} format('${schema.fontFormat(file)}'); font-display: block; }`);
+  });
+  canvas.items.forEach((item, index) => {
+    const rules = [
+      `left: ${item.x}px; top: ${item.y}px; width: ${item.w}px;`,
+      item.kind === 'text' ? '' : `height: ${item.h}px;`,
+      `rotate: ${item.r}deg; opacity: ${item.o}; z-index: ${item.back ? -1 : 2};`,
+    ];
+    if (item.kind === 'text') {
+      rules.push(
+        `font-size: ${item.size}px; font-weight: ${item.weight}; line-height: 1.25; color: ${CANVAS_TEXT_COLOR[item.color] || item.color};`,
+        `text-align: ${item.align}; white-space: pre-wrap; overflow-wrap: anywhere;`,
+        item.upper ? 'text-transform: uppercase; letter-spacing: 0.06em;' : '',
+        canvasFontRule(item, fonts)
+      );
+    } else if (item.kind === 'image') {
+      const url = cssUrl(assetUrl ? assetUrl(item.file) : item.file);
+      const height = Number((item.fit.w / item.fit.ar).toFixed(1));
+      rules.push(
+        `border-radius: ${item.radius}%; background: ${url} no-repeat;`,
+        `background-size: ${item.fit.w}px ${height}px; background-position: ${item.fit.x}px ${item.fit.y}px;`
+      );
+    } else if (CANVAS_POLYGONS[item.shape]) {
+      rules.push(shapeFilter(item));
+    } else {
+      rules.push(
+        `background: ${shapePaint(item)}; border-radius: ${item.shape === 'ellipse' ? '50%' : `${item.radius}px`};`,
+        item.stroke ? `border: ${item.stroke}px solid ${item.strokeColor};` : '',
+        shapeFilter(item)
+      );
+    }
+    css.push(`.ach > .${CANVAS_CLASS} > [data-i="${index}"] { ${rules.filter(Boolean).join(' ')} }`);
+  });
+  return css.join('\n');
+}
+
+// The items' elements; their look is all in canvasCss. Text is escaped, nothing else is user text.
+function canvasMarkup(rawCanvas) {
+  const canvas = schema.normalizeCanvas(rawCanvas);
+  if (!canvas.items.length) return '';
+  const inner = (item, index) => {
+    if (item.kind === 'text') return escapeHtml(item.text);
+    return item.kind === 'shape' && CANVAS_POLYGONS[item.shape] ? polygonSvg(item, index) : '';
+  };
+  const items = canvas.items.map((item, index) => `<div data-i="${index}" data-kind="${item.kind}">${inner(item, index)}</div>`);
+  return `<div class="${CANVAS_CLASS}" aria-hidden="true">${items.join('')}</div>`;
+}
+
+// The card's markup with the items in it, for a page this module writes itself. A replacer
+// function, because a user's text may hold `$&` and the like, which a replacement string expands.
+const markupWithCanvas = (canvas) => PRESET_MARKUP.replace('<div class="ach">', () => `<div class="ach">${canvasMarkup(canvas)}`);
+
+/*
+  For a page this module did not write (a bundled preset under a layer): run in the page once it has
+  loaded, it swaps the items in. The markup travels as a JSON string and is already escaped.
+*/
+function canvasScript(rawCanvas) {
+  return (
+    `(function () { var card = document.querySelector('.ach'); if (!card) return; ` +
+    `var old = card.querySelector(':scope > .${CANVAS_CLASS}'); if (old) old.remove(); ` +
+    `card.insertAdjacentHTML('afterbegin', ${JSON.stringify(canvasMarkup(rawCanvas))}); })();`
+  );
+}
+
 // A plain padlock, used as a mask so it takes the colour of the text it sits in.
 const HIDDEN_LOCK_MASK =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10V7a5 5 0 0 1 10 0v3h1.5A1.5 1.5 0 0 1 20 11.5v9A1.5 1.5 0 0 1 18.5 22h-13A1.5 1.5 0 0 1 4 20.5v-9A1.5 1.5 0 0 1 5.5 10H7zm2 0h6V7a3 3 0 0 0-6 0v3z'/%3E%3C/svg%3E";
 
 /*
-  Slack around the card inside its host window, sized from the meta box below - anything painted
-  outside the card (drop shadow, state glow) is clipped without it. It also IS the visible gap to
-  the screen corner, since the host places the window against the edge: a wider shadow would cost
-  twice this margin on all four sides, which is why both are kept deliberately tight.
+  Slack around the card inside its host window: what the drop shadow and the state glow paint past
+  its edge, and no more. It IS the visible gap to the screen corner, since the host places the
+  window against the edge, so a card with neither gets almost none.
 */
-const CUSTOM_PRESET_WINDOW_MARGIN = 22;
-const CUSTOM_PRESET_VERTICAL_MARGIN = 40;
 const GLOW_RADIUS_PX = 22;
 const MAX_PRESET_HEIGHT = 460;
+const EDGE_BASE_PX = 4;
+// The card's box-shadow is `0 4px 12px`: 12px of blur each side, shifted 4px down.
+const SHADOW_EDGE = { x: 12, y: 16 };
 
-/*
-  Extra room the strongest glow needs, beyond the base margin. The card is centred, so a modest
-  glow costs nothing extra; only a design that glows harder than that widens the box, keeping
-  existing presets anchored exactly where they were.
-*/
-function glowRoom(values, margin) {
-  const strongest = Math.max(values.glow, values.rareGlow, values.platinumGlow) / 100;
-  return Math.max(0, Math.round(strongest * GLOW_RADIUS_PX - margin / 2));
+function presetEdge(values) {
+  const glow = (Math.max(values.glow, values.rareGlow, values.platinumGlow) / 100) * GLOW_RADIUS_PX;
+  const shadow = values.shadow > 0;
+  return {
+    x: Math.ceil(Math.max(shadow ? SHADOW_EDGE.x : 0, glow)) + EDGE_BASE_PX,
+    y: Math.ceil(Math.max(shadow ? SHADOW_EDGE.y : 0, glow)) + EDGE_BASE_PX,
+  };
 }
 
 /*
   The host window's size, written as `<meta width height>`; createNotificationWindow() gives the
-  popup exactly this box, so a taller card is cropped. Used to be a fixed 150px, which only fit
-  the one layout the old builder produced - the designer's icon-top layout needs it derived from
-  the same options that generate the stylesheet.
+  popup exactly this box, so a taller card is cropped. It is derived from the same options that
+  generate the stylesheet, so every layout (icon-top included) gets a box that fits.
 */
-function presetBoxSize(options = {}) {
+function presetBoxSize(options = {}, { editing = false } = {}) {
   const values = normalizeOptions(options);
+  const room = canvasRoom(values, { editing });
+  const card = cardSize(values);
+  const edge = presetEdge(values);
+  return {
+    width: values.width + room.left + room.right + edge.x * 2,
+    height: Math.min(MAX_PRESET_HEIGHT + room.top + room.bottom, Math.round(card.height) + room.top + room.bottom + edge.y * 2),
+  };
+}
+
+function cardSize(values) {
   const lineHeight = 1.35;
   const titleHeight = values.fontSize * lineHeight;
   const detailHeight = values.fontSize * (values.detailScale / 100) * lineHeight * values.descriptionLines;
@@ -247,14 +398,77 @@ function presetBoxSize(options = {}) {
   const textHeight = metaHeight + titleHeight + detailHeight + progressHeight;
   const iconHeight = values.layout === 'text-only' ? 0 : values.iconSize;
   const contentHeight = values.layout === 'icon-top' ? iconHeight + values.gap + textHeight : Math.max(iconHeight, textHeight);
-  const cardHeight = contentHeight + values.padY * 2 + values.borderWidth * 2;
-  return {
-    width: values.width + CUSTOM_PRESET_WINDOW_MARGIN + glowRoom(values, CUSTOM_PRESET_WINDOW_MARGIN) * 2,
-    height: Math.min(
-      MAX_PRESET_HEIGHT,
-      Math.round(cardHeight) + CUSTOM_PRESET_VERTICAL_MARGIN + glowRoom(values, CUSTOM_PRESET_VERTICAL_MARGIN) * 2
-    ),
-  };
+  return { width: values.width, height: Math.max(values.minHeight, contentHeight + values.padY * 2 + values.borderWidth * 2) };
+}
+
+/*
+  The popup shows the card and whatever touches it; an item left floating away from it is a draft
+  and only the designer shows it. Sizes are estimated from the options (text wraps unmeasured), the
+  same way the card's own height is, so a small margin stands in for the guess.
+*/
+const CANVAS_TOUCH_PX = 2;
+const CANVAS_MAX_ROOM = 400;
+// How far past the card the designer lets an item go; the editor keeps items inside it. The pad
+// leaves the handles and the rotation knob of an item on the card's edge room to be grabbed.
+const CANVAS_EDIT_ROOM = { x: 240, y: 160 };
+const CANVAS_EDIT_PAD = 28;
+
+function canvasItemBounds(item) {
+  let h = item.h;
+  if (item.kind === 'text') {
+    const perLine = Math.max(1, Math.floor(item.w / (item.size * 0.55)));
+    const lines = item.text.split('\n').reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / perLine)), 0);
+    h = lines * item.size * 1.25;
+  }
+  const rad = (item.r * Math.PI) / 180;
+  const halfW = (Math.abs(item.w * Math.cos(rad)) + Math.abs(h * Math.sin(rad))) / 2;
+  const halfH = (Math.abs(item.w * Math.sin(rad)) + Math.abs(h * Math.cos(rad))) / 2;
+  const spread = item.kind === 'shape' ? item.shadow + item.blur + item.stroke : 0;
+  const cx = item.x + item.w / 2;
+  const cy = item.y + h / 2;
+  return { left: cx - halfW - spread, right: cx + halfW + spread, top: cy - halfH - spread, bottom: cy + halfH + spread };
+}
+
+const touchesCard = (box, card) =>
+  box.left <= card.width + CANVAS_TOUCH_PX && box.right >= -CANVAS_TOUCH_PX && box.top <= card.height + CANVAS_TOUCH_PX && box.bottom >= -CANVAS_TOUCH_PX;
+
+// Room each side of the card needs, and the items the popup leaves out.
+function canvasRoom(values, { editing = false } = {}) {
+  const canvas = schema.normalizeCanvas(values.canvas);
+  const card = cardSize(values);
+  const room = { left: 0, top: 0, right: 0, bottom: 0, detached: [] };
+  canvas.items.forEach((item, index) => {
+    const box = canvasItemBounds(item);
+    if (!touchesCard(box, card)) {
+      room.detached.push(index);
+      if (!editing) return;
+    }
+    room.left = Math.max(room.left, -box.left);
+    room.top = Math.max(room.top, -box.top);
+    room.right = Math.max(room.right, box.right - card.width);
+    room.bottom = Math.max(room.bottom, box.bottom - card.height);
+  });
+  if (editing) {
+    // Even on both sides, so the card stays centred and still under the pointer as the room grows.
+    const x = Math.min(CANVAS_EDIT_ROOM.x, Math.max(room.left, room.right)) + CANVAS_EDIT_PAD;
+    const y = Math.min(CANVAS_EDIT_ROOM.y, Math.max(room.top, room.bottom)) + CANVAS_EDIT_PAD;
+    return { left: Math.ceil(x), right: Math.ceil(x), top: Math.ceil(y), bottom: Math.ceil(y), detached: room.detached };
+  }
+  for (const side of ['left', 'top', 'right', 'bottom']) room[side] = Math.min(CANVAS_MAX_ROOM, Math.ceil(room[side]));
+  return room;
+}
+
+// The card sits off centre by half the difference, so the room on each side is where it is needed.
+function canvasPlacementRules(values, editing) {
+  const room = canvasRoom(values, { editing });
+  const rules = [];
+  const dx = (room.left - room.right) / 2;
+  const dy = (room.top - room.bottom) / 2;
+  if (dx || dy) rules.push(`.ach { left: calc(50% + ${dx}px); top: calc(50% + ${dy}px); }`);
+  for (const index of room.detached) {
+    rules.push(`.ach > .${CANVAS_CLASS} > [data-i="${index}"] { ${editing ? 'opacity: 0.35; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none;'} }`);
+  }
+  return rules.join('\n');
 }
 
 function buildCustomPresetHtml(options) {
@@ -269,7 +483,7 @@ function buildCustomPresetHtml(options) {
     `<meta width="${box.width}" height="${box.height}" />`,
     '<title>AW Custom Preset</title>',
     '</head><body>',
-    PRESET_MARKUP,
+    markupWithCanvas(values.canvas),
     inlineScript(PRESET_ENGINE),
     '</body></html>',
   ].join('\n');
@@ -297,7 +511,7 @@ const PREVIEW_HOLD_MS = 3600000;
 const PREVIEW_SCRIPT_HASHES = [inlineScriptHash(PRESET_PREVIEW_BRIDGE), inlineScriptHash(PRESET_ENGINE)];
 
 // `css` replaces the generated stylesheet: the designer previews a layer over a bundled preset's own.
-function buildPresetPreviewHtml(options, { hold = true, assetUrl, css } = {}) {
+function buildPresetPreviewHtml(options, { hold = true, assetUrl, css, editing = false } = {}) {
   const values = normalizeOptions(options);
   return [
     '<!DOCTYPE html>',
@@ -305,11 +519,11 @@ function buildPresetPreviewHtml(options, { hold = true, assetUrl, css } = {}) {
     '<meta charset="UTF-8" />',
     `<meta name="duration" content="${hold ? PREVIEW_HOLD_MS : values.duration}" />`,
     '<style id="aw-preview-css">',
-    css != null ? css : buildCustomPresetCss(values, { assetUrl }),
+    css != null ? css : buildCustomPresetCss(values, { assetUrl, editing }),
     '</style>',
     inlineScript(PRESET_PREVIEW_BRIDGE),
     '</head><body>',
-    PRESET_MARKUP,
+    markupWithCanvas(values.canvas),
     inlineScript(PRESET_ENGINE),
     '</body></html>',
   ].join('\n');
@@ -398,7 +612,7 @@ function detailRule(values) {
 function layoutRules(values) {
   const rules = [];
   if (values.layout === 'icon-right') rules.push('  flex-direction: row-reverse;');
-  else if (values.layout === 'icon-top') rules.push(`  flex-direction: column; align-items: ${FLEX_ALIGN[values.align]};`);
+  else if (values.layout === 'icon-top') rules.push(`  flex-direction: column; justify-content: center; align-items: ${FLEX_ALIGN[values.align]};`);
   return rules;
 }
 
@@ -495,7 +709,7 @@ function fontFaceRule(values, assetUrl) {
   return `@font-face { font-family: '${CUSTOM_FONT_FAMILY}'; src: ${url} format('${schema.fontFormat(values.fontFile)}'); font-display: block; }`;
 }
 
-function buildCustomPresetCss(options, { assetUrl } = {}) {
+function buildCustomPresetCss(options, { assetUrl, editing = false } = {}) {
   const values = normalizeOptions(options);
   const flexAlign = FLEX_ALIGN[values.align];
   const artwork = values.bgMode === 'artwork';
@@ -514,7 +728,7 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     '  position: fixed; left: 50%; top: 50%;',
     '  transform: translate(-50%, -50%) scale(var(--scale, 1)); transform-origin: center center;',
     '  display: flex; align-items: center; gap: var(--gap); box-sizing: border-box;',
-    '  width: var(--width); padding: var(--pad-y) var(--pad-x);',
+    '  width: var(--width); min-height: var(--min-height); padding: var(--pad-y) var(--pad-x);',
     '  color: var(--text); border-radius: var(--radius);',
     '  font-family: var(--font); font-size: var(--font-size); letter-spacing: var(--letter-spacing);',
     // One shadow behind every line, so text stays readable once it sits on artwork instead of a flat
@@ -610,6 +824,8 @@ function buildCustomPresetCss(options, { assetUrl } = {}) {
     '.progress_track { display: block; flex: 1 1 auto; min-width: 70px; height: var(--progress-height); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }',
     '.progress_meter { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 45%, #ffffff) 100%); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent); transition: width 0.35s ease; }',
     '.progress_label { flex: 0 0 auto; max-width: 110px; overflow: hidden; color: var(--text); font-size: 12px; font-weight: 700; line-height: 1; text-align: right; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }',
+    canvasCss(values.canvas, { assetUrl }),
+    canvasPlacementRules(values, editing),
     ''
   );
 
@@ -672,7 +888,7 @@ function sanitizePresetName(raw) {
 }
 
 module.exports = {
-  CUSTOM_PRESET_WINDOW_MARGIN,
+  presetEdge,
   GENERATED_PRESETS_SUBPATH,
   PRESET_OPTIONS_FILE,
   PRESET_PACKAGE_FILE,
@@ -680,6 +896,13 @@ module.exports = {
   CUSTOM_FONT_FAMILY,
   PRESET_MARKUP,
   PREVIEW_SCRIPT_HASHES,
+  CANVAS_CLASS,
+  CANVAS_EDIT_ROOM,
+  CANVAS_PART_SELECTORS,
+  canvasCss,
+  canvasMarkup,
+  canvasScript,
+  markupWithCanvas,
   // Kept under its original name: init.js and the package format both clamp through it, and an
   // .awpreset written by any build has always been re-validated by whatever this returns.
   customPresetNumbers: normalizeOptions,

@@ -117,6 +117,8 @@ const PRESET_PROPERTIES = [
   */
   { key: 'showGameName', type: 'toggle', def: false, group: 'layout' },
   { key: 'width', type: 'number', def: 420, min: 280, max: 620, step: 10, group: 'layout', css: '--width', unit: 'px' },
+  // 0 lets the content decide; anything above makes the card at least that tall, content centred.
+  { key: 'minHeight', type: 'number', def: 0, min: 0, max: 300, step: 2, group: 'layout', css: '--min-height', unit: 'px' },
   { key: 'padX', type: 'number', def: 18, min: 4, max: 48, step: 1, group: 'layout', css: '--pad-x', unit: 'px', advanced: true },
   { key: 'padY', type: 'number', def: 12, min: 4, max: 40, step: 1, group: 'layout', css: '--pad-y', unit: 'px', advanced: true },
   { key: 'gap', type: 'number', def: 12, min: 0, max: 36, step: 1, group: 'layout', css: '--gap', unit: 'px', advanced: true },
@@ -214,7 +216,18 @@ const PRESET_PROPERTIES = [
   // border & corners
   { key: 'radius', type: 'number', def: 12, min: 0, max: 40, step: 1, group: 'border', css: '--radius', unit: 'px' },
   { key: 'accentBar', type: 'select', def: 'left', values: ['left', 'right', 'top', 'bottom', 'outline', 'none'], group: 'border' },
-  { key: 'accentBarSize', type: 'number', def: 4, min: 1, max: 14, step: 1, group: 'border', css: '--bar-size', unit: 'px' },
+  {
+    key: 'accentBarSize',
+    type: 'number',
+    def: 4,
+    min: 1,
+    max: 14,
+    step: 1,
+    group: 'border',
+    css: '--bar-size',
+    unit: 'px',
+    shownFor: { accentBar: ['left', 'right', 'top', 'bottom', 'outline'] },
+  },
   { key: 'borderWidth', type: 'number', def: 0, min: 0, max: 6, step: 1, group: 'border', advanced: true, css: '--border-width', unit: 'px' },
   { key: 'borderColor', type: 'color', def: '#ffffff', group: 'border', advanced: true, css: '--border-color' },
 
@@ -272,6 +285,12 @@ const PRESET_PROPERTIES = [
   // A padlock before the title of a hidden achievement. Off by default, like the rarity chip.
   { key: 'hiddenLock', type: 'toggle', def: false, group: 'state', advanced: true },
 
+  /*
+    The free layout drawn on the preview: offsets for the card's own parts and the text, pictures and
+    shapes added on top. Empty by default, which changes nothing; see normalizeCanvas below.
+  */
+  { key: 'canvas', type: 'canvas', def: Object.freeze({ move: Object.freeze({}), items: Object.freeze([]) }), group: 'layout' },
+
   // sound
   // '' means "whatever the Notifications tab is set to"; a filename makes the sound part of the
   // preset, which is what lets a shared package sound the way its author intended.
@@ -282,7 +301,7 @@ const PROPERTY_BY_KEY = new Map(PRESET_PROPERTIES.map((property) => [property.ke
 
 // Same colour syntax the builder has always accepted. Anything else falls back to the default, so a
 // hand-edited options file cannot smuggle declarations into the generated stylesheet.
-const COLOR_RE = /^(#[0-9a-f]{3,8}|rgba?\([^)]*\)|[a-z]+)$/i;
+const COLOR_RE = /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%/+-]+\)|[a-z]+)$/i;
 
 // A sound is a bare filename in the app's or the user's sounds folder - never a path.
 const SOUND_RE = /^[^\\/:*?"<>|\x00-\x1f]+\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
@@ -291,7 +310,7 @@ const SOUND_RE = /^[^\\/:*?"<>|\x00-\x1f]+\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
   path, so nothing a preset names can point outside the folder it was installed into. SVG is left out
   on purpose - it is a document that can carry script, and a background is not worth that.
 */
-const ASSET_RE = /^[^/:*?"<>| -]+.(?:png|jpe?g|gif|webp|bmp)$/i;
+const ASSET_RE = /^[^\\/:*?"<>|\x00-\x1f]+\.(?:png|jpe?g|gif|webp|bmp)$/i;
 
 /*
   The files a preset can carry beyond its stylesheet: a font and a logo. They come from the user or
@@ -386,8 +405,125 @@ function clampNumber(value, property) {
   return Number(Math.max(property.min, Math.min(property.max, snapped)).toFixed(decimals));
 }
 
+/*
+  The free layout. `move` shifts, turns and scales the parts every preset has (by the names in
+  CANVAS_PARTS); `items` are what the user added. Everything ends up in a stylesheet or as text in the
+  page, so each number is clamped, each colour checked and each picture a bare image filename.
+*/
+const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress'];
+const CANVAS_ITEM_KINDS = ['text', 'image', 'shape'];
+const CANVAS_SHAPES = ['rect', 'ellipse', 'line', 'triangle', 'diamond', 'star', 'arrow'];
+// 'accent' paints with the state colour, so a shape turns bronze, silver, gold or platinum with the card.
+const CANVAS_FILLS = ['solid', 'gradient', 'accent', 'none'];
+const CANVAS_WEIGHTS = [400, 600, 700, 800];
+const CANVAS_ALIGNS = ['left', 'center', 'right'];
+const CANVAS_MAX_ITEMS = 24;
+const CANVAS_MAX_TEXT = 160;
+
+const canvasNumber = (value, min, max, fallback, digits = 1) => {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Number(Math.max(min, Math.min(max, number)).toFixed(digits));
+};
+// Hex only: the colour pickers produce nothing else, and a hex value cannot carry CSS punctuation.
+const canvasColor = (value, fallback) => (typeof value === 'string' && /^#[0-9a-f]{3,8}$/i.test(value.trim()) ? value.trim() : fallback);
+
+function normalizeCanvasMove(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const part of CANVAS_PARTS) {
+    const source = raw[part];
+    if (!source || typeof source !== 'object') continue;
+    const move = {
+      x: canvasNumber(source.x, -600, 600, 0),
+      y: canvasNumber(source.y, -400, 400, 0),
+      r: canvasNumber(source.r, -180, 180, 0),
+      s: canvasNumber(source.s, 0.2, 4, 1, 3),
+    };
+    // A part back where it started is not stored, so "unchanged" has one spelling.
+    if (move.x || move.y || move.r || move.s !== 1) out[part] = move;
+  }
+  return out;
+}
+
+function normalizeCanvasItem(source) {
+  if (!source || typeof source !== 'object' || !CANVAS_ITEM_KINDS.includes(source.kind)) return null;
+  const item = {
+    kind: source.kind,
+    x: canvasNumber(source.x, -600, 1200, 0),
+    y: canvasNumber(source.y, -400, 800, 0),
+    w: canvasNumber(source.w, 1, 1200, 80),
+    h: canvasNumber(source.h, 1, 800, 40),
+    r: canvasNumber(source.r, -180, 180, 0),
+    o: canvasNumber(source.o, 0, 1, 1, 2),
+    back: source.back === true,
+  };
+  if (item.kind === 'text') {
+    const text = String(source.text ?? '').replace(/[\x00-\x09\x0b-\x1f\x7f]/g, '').slice(0, CANVAS_MAX_TEXT);
+    item.text = text.trim() ? text : 'Text';
+    item.size = canvasNumber(source.size, 6, 96, 16);
+    item.weight = CANVAS_WEIGHTS.includes(Number(source.weight)) ? Number(source.weight) : 700;
+    item.color = source.color === 'accent' || source.color === 'text' ? source.color : canvasColor(source.color, 'text');
+    item.align = CANVAS_ALIGNS.includes(source.align) ? source.align : 'left';
+    item.upper = source.upper === true;
+    // 'card' follows the preset's own font, the imported one included; the rest name a family.
+    item.font = Object.hasOwn(FONT_STACKS, source.font) ? source.font : 'card';
+    // An imported font for this text alone; the family above stays as its fallback.
+    const fontFile = typeof source.fontFile === 'string' ? source.fontFile.trim() : '';
+    item.fontFile = FONT_NAME_RE.test(fontFile) ? fontFile : '';
+  } else if (item.kind === 'image') {
+    const file = typeof source.file === 'string' ? source.file.trim() : '';
+    if (!IMAGE_NAME_RE.test(file)) return null;
+    const fit = source.fit && typeof source.fit === 'object' ? source.fit : {};
+    item.file = file;
+    item.radius = canvasNumber(source.radius, 0, 50, 0);
+    item.fit = {
+      x: canvasNumber(fit.x, -4800, 0, 0),
+      y: canvasNumber(fit.y, -4800, 0, 0),
+      w: canvasNumber(fit.w, 1, 4800, item.w),
+      ar: canvasNumber(fit.ar, 0.05, 20, 1, 4),
+    };
+  } else {
+    item.shape = CANVAS_SHAPES.includes(source.shape) ? source.shape : 'rect';
+    item.fill = canvasColor(source.fill, '#ffffff');
+    item.radius = canvasNumber(source.radius, 0, 200, 0);
+    // Older layouts have none of these; their defaults draw the plain filled shape they always were.
+    item.fillMode = CANVAS_FILLS.includes(source.fillMode) ? source.fillMode : 'solid';
+    item.fill2 = canvasColor(source.fill2, '#4aa3ff');
+    item.angle = canvasNumber(source.angle, 0, 360, 135, 0);
+    item.stroke = canvasNumber(source.stroke, 0, 20, 0);
+    item.strokeColor = canvasColor(source.strokeColor, '#ffffff');
+    item.shadow = canvasNumber(source.shadow, 0, 40, 0, 0);
+    item.blur = canvasNumber(source.blur, 0, 20, 0);
+  }
+  return item;
+}
+
+// Takes the object itself or its JSON text (what the designer's hidden field holds).
+function normalizeCanvas(raw) {
+  let source = raw;
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      source = null;
+    }
+  }
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return { move: {}, items: [] };
+  const items = Array.isArray(source.items) ? source.items.slice(0, CANVAS_MAX_ITEMS).map(normalizeCanvasItem).filter(Boolean) : [];
+  return { move: normalizeCanvasMove(source.move), items };
+}
+
+// The picture files a free layout names, once each.
+const canvasFiles = (canvas) => [...new Set(normalizeCanvas(canvas).items.filter((item) => item.kind === 'image').map((item) => item.file))];
+
+// The font files the text items of a free layout name, once each.
+const canvasFonts = (canvas) => [...new Set(normalizeCanvas(canvas).items.map((item) => item.fontFile).filter(Boolean))];
+
 function normalizeValue(raw, property) {
   switch (property.type) {
+    case 'canvas':
+      return normalizeCanvas(raw);
     case 'color':
       return typeof raw === 'string' && COLOR_RE.test(raw.trim()) ? raw.trim() : property.def;
     case 'number':
@@ -460,4 +596,10 @@ module.exports = {
   ASSET_RE,
   normalizeOptions,
   cssValue,
+  CANVAS_PARTS,
+  CANVAS_SHAPES,
+  CANVAS_MAX_ITEMS,
+  normalizeCanvas,
+  canvasFiles,
+  canvasFonts,
 };
