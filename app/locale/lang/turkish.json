@@ -674,7 +674,7 @@
             "addLine": "Çizgi",
             "hint": "Önizlemenin bir parçasına tıklayarak onu taşıyabilir, yeniden boyutlandırabilir veya döndürebilirsin.",
             "cardHint": "Kartın kenarlarını sürükleyerek yeniden boyutlandırabilirsin. Buradaki her şey yalnızca kartı etkiler.",
-            "fullscreen": "Düzen",
+            "fullscreen": "Düzenleyici",
             "general": "Tüm ayarlar",
             "done": "Bitti",
             "snap": "Kılavuzlara yapış (çok yakınlaştırınca kapanır)",
@@ -702,7 +702,8 @@
               "title": "Başlık",
               "detail": "Açıklama",
               "meta": "Oyun adı",
-              "progress": "İlerleme çubuğu"
+              "progress": "İlerleme çubuğu",
+              "mark": "Marka logosu"
             },
             "kind": {
               "text": "Metin",

@@ -674,7 +674,7 @@
             "addLine": "Linea",
             "hint": "Clicca su una parte dell’anteprima per spostarla, ridimensionarla o ruotarla.",
             "cardHint": "Trascina i bordi della scheda per ridimensionarla. Tutto ciò che trovi qui riguarda solo la scheda.",
-            "fullscreen": "Layout",
+            "fullscreen": "Editor",
             "general": "Tutte le impostazioni",
             "done": "Fatto",
             "snap": "Aggancia alle guide (si disattiva con zoom elevato)",
@@ -702,7 +702,8 @@
               "title": "Titolo",
               "detail": "Descrizione",
               "meta": "Nome del gioco",
-              "progress": "Barra di avanzamento"
+              "progress": "Barra di avanzamento",
+              "mark": "Logo del marchio"
             },
             "kind": {
               "text": "Testo",

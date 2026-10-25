@@ -67,6 +67,15 @@ test('the stylesheet carries exactly the sections that are on', () => {
   assert.equal(layerTool.layerHasLogo({ sections: ['accent'], options: { logoImage: 'a.png' } }), false);
 });
 
+test('the bar section draws the accent bar on the chosen edge of a bundled card', () => {
+  const left = layerTool.buildLayerCss({ base: 'x', sections: ['bar'], options: { accentBar: 'left', accentBarSize: 6, accent: '#ff0000' } });
+  assert.equal(left, '.ach { border-left: 6px solid var(--accent, #ff0000) !important; }');
+  assert.match(layerTool.buildLayerCss({ base: 'x', sections: ['bar'], options: { accentBar: 'outline' } }), /\.ach \{ border: 4px solid/);
+  assert.equal(layerTool.buildLayerCss({ base: 'x', sections: ['bar'], options: { accentBar: 'none' } }), '');
+  const both = layerTool.buildLayerCss({ base: 'x', sections: ['border', 'bar'], options: { borderWidth: 2, accentBar: 'top' } });
+  assert.ok(both.indexOf('border-top') > both.indexOf('border: 2px'), 'the bar must come after the border it overrides');
+});
+
 test('the brand section hides the bundled mark and is offered only where a mark reads it', () => {
   const layer = layerTool.normalizeLayer({ base: 'Xbox', sections: ['brand'], options: {} });
   assert.deepEqual(layer.sections, ['brand']);
@@ -83,8 +92,32 @@ test('the brand section hides the bundled mark and is offered only where a mark 
     if (layerTool.hasBrandMark(css)) withMark.push(name);
   }
   assert.deepEqual(withMark.sort(), ['Epic Games', 'PlayStation', 'Steam Original', 'Xbox']);
+  // Its pseudo-element is what the editor moves and hides.
+  const pseudoOf = (name) => layerTool.brandMarkPseudo(fs.readFileSync(path.join(BUNDLED, name, 'style.css'), 'utf8'));
+  assert.deepEqual(withMark.map(pseudoOf), ['after', 'after,before', 'before', 'after']);
+  assert.match(layerTool.buildLayerCss({ base: 'x', sections: ['canvas'], options: { canvas: { move: {}, items: [], hidden: ['mark'] } } }, { markPseudo: 'after,before' }), /\.ach::after, \.ach::before \{ visibility: hidden/);
+  assert.equal(layerTool.brandMarkPseudo('.ach::after { content: ""; }'), '');
   assert.equal(layerTool.hasBrandMark(''), false);
   assert.equal(layerTool.hasBrandMark(null), false);
+});
+
+test('the brand mark can be moved and removed through the canvas, on its own pseudo-element', () => {
+  const layer = { base: 'Xbox', sections: ['canvas'], options: { canvas: { move: { mark: { x: -40, y: 5, r: 0, s: 1.5 } }, items: [], hidden: ['mark', 'bogus'] } } };
+  const css = layerTool.buildLayerCss(layer, { markPseudo: 'after' });
+  assert.match(css, /\.ach::after \{[^}]*translate: -40px 5px/);
+  assert.match(css, /\.ach::after \{ visibility: hidden !important; \}/);
+  assert.match(layerTool.buildLayerCss(layer, { markPseudo: 'after', editing: true }), /\.ach::after \{ opacity: 0\.3 !important;/);
+  // Without a known pseudo-element nothing is aimed at a mark that may not exist.
+  assert.doesNotMatch(layerTool.buildLayerCss(layer), /::after|::before/);
+});
+
+test('a saved layer knows which pseudo-element draws its base’s mark', (t) => {
+  const { users } = workspace(t);
+  fs.mkdirSync(path.join(users, 'Steam'), { recursive: true });
+  fs.writeFileSync(path.join(users, 'Steam', layerTool.LAYER_FILE), JSON.stringify({ base: 'Steam Original', sections: [], options: {} }));
+  assert.equal(layerTool.readLayerFolder(users, BUNDLED, 'Steam').layer.markPseudo, 'before');
+  fs.writeFileSync(path.join(users, 'Mine', layerTool.LAYER_FILE), JSON.stringify({ base: 'AW Next', sections: [], options: {} }));
+  assert.equal(layerTool.readLayerFolder(users, BUNDLED, 'Mine').layer.markPseudo, '');
 });
 
 test('the logo sits where the position says, and its files come from the layer folder', () => {

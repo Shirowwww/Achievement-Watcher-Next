@@ -674,7 +674,7 @@
             "addLine": "Ligne",
             "hint": "Clique sur une partie de l’aperçu pour la déplacer, la redimensionner ou la tourner.",
             "cardHint": "Tire les bords de la carte pour la redimensionner. Ces réglages ne touchent que la carte.",
-            "fullscreen": "Mise en page",
+            "fullscreen": "Éditeur",
             "general": "Tous les réglages",
             "done": "Terminé",
             "snap": "Aimanter aux repères (se coupe quand on zoome fort)",
@@ -702,7 +702,8 @@
               "title": "Titre",
               "detail": "Description",
               "meta": "Nom du jeu",
-              "progress": "Barre de progression"
+              "progress": "Barre de progression",
+              "mark": "Logo de marque"
             },
             "kind": {
               "text": "Texte",

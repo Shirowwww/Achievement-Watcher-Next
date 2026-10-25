@@ -27,6 +27,8 @@ test('keyboard focus is visible on controls that have no ring of their own', asy
         for (const view of document.querySelectorAll('#settings .content')) view.classList.remove('active');
         const wanted = document.querySelector(target);
         if (wanted && wanted.matches('.content')) wanted.classList.add('active');
+        // The designer's controls are shown only in its full-screen editor, which the static page never opens.
+        for (const controls of document.querySelectorAll('.pd-workspace > .pd-controls')) controls.style.display = 'flex';
         for (const step of document.querySelectorAll('.onboarding-step')) step.classList.add('active');
       }, content);
       await page.keyboard.press('Shift');

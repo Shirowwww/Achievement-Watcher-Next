@@ -674,7 +674,7 @@
             "addLine": "Đường thẳng",
             "hint": "Nhấp vào một phần của bản xem trước để di chuyển, đổi kích thước hoặc xoay nó.",
             "cardHint": "Kéo các cạnh của thẻ để đổi kích thước. Mọi thiết lập ở đây chỉ ảnh hưởng đến thẻ.",
-            "fullscreen": "Bố cục",
+            "fullscreen": "Trình chỉnh sửa",
             "general": "Tất cả cài đặt",
             "done": "Xong",
             "snap": "Bắt dính vào đường dẫn (tự tắt khi phóng to nhiều)",
@@ -702,7 +702,8 @@
               "title": "Tiêu đề",
               "detail": "Mô tả",
               "meta": "Tên trò chơi",
-              "progress": "Thanh tiến độ"
+              "progress": "Thanh tiến độ",
+              "mark": "Logo thương hiệu"
             },
             "kind": {
               "text": "Chữ",

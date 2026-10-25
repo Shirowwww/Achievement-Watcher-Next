@@ -674,7 +674,7 @@
             "addLine": "Vonal",
             "hint": "Kattints az előnézet egy részére, hogy mozgasd, átméretezd vagy elforgasd.",
             "cardHint": "Húzd a kártya szélét az átméretezéshez. Az itt található beállítások csak a kártyára vonatkoznak.",
-            "fullscreen": "Elrendezés",
+            "fullscreen": "Szerkesztő",
             "general": "Minden beállítás",
             "done": "Kész",
             "snap": "Illesztés a segédvonalakhoz (erős nagyításnál kikapcsol)",
@@ -702,7 +702,8 @@
               "title": "Cím",
               "detail": "Leírás",
               "meta": "Játék neve",
-              "progress": "Folyamatjelző"
+              "progress": "Folyamatjelző",
+              "mark": "Márkalogó"
             },
             "kind": {
               "text": "Szöveg",

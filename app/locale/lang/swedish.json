@@ -674,7 +674,7 @@
             "addLine": "Linje",
             "hint": "Klicka på en del av förhandsvisningen för att flytta, ändra storlek på eller rotera den.",
             "cardHint": "Dra i kortets kanter för att ändra storleken. Allt här påverkar bara kortet.",
-            "fullscreen": "Layout",
+            "fullscreen": "Redigerare",
             "general": "Alla inställningar",
             "done": "Klar",
             "snap": "Fäst vid hjälplinjer (stängs av vid kraftig zoomning)",
@@ -702,7 +702,8 @@
               "title": "Titel",
               "detail": "Beskrivning",
               "meta": "Spelets namn",
-              "progress": "Framstegsindikator"
+              "progress": "Framstegsindikator",
+              "mark": "Varumärkeslogotyp"
             },
             "kind": {
               "text": "Text",

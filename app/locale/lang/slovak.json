@@ -674,7 +674,7 @@
             "addLine": "Čiara",
             "hint": "Kliknutím na časť náhľadu ju môžete presunúť, zmeniť jej veľkosť alebo otočiť.",
             "cardHint": "Ťahaním okrajov karty zmeníš jej veľkosť. Všetky nastavenia tu sa týkajú iba karty.",
-            "fullscreen": "Rozloženie",
+            "fullscreen": "Editor",
             "general": "Všetky nastavenia",
             "done": "Hotovo",
             "snap": "Prichytávať k vodidlám (pri veľkom priblížení sa vypne)",
@@ -702,7 +702,8 @@
               "title": "Názov",
               "detail": "Popis",
               "meta": "Názov hry",
-              "progress": "Ukazovateľ priebehu"
+              "progress": "Ukazovateľ priebehu",
+              "mark": "Logo značky"
             },
             "kind": {
               "text": "Text",

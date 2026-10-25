@@ -652,7 +652,7 @@ function renderProfileTrophies(installedOnly) {
   scheduleTrophyRarityPrefetch();
 }
 
-function renderProfileStatsTrophies(installedOnly) {
+function renderProfileStatsTrophies(installedOnly, animate = false) {
   const section = $('#profile-stats-trophies');
   const stats = trophyStatsFor(installedOnly);
   const labels = trophyLabels();
@@ -667,7 +667,7 @@ function renderProfileStatsTrophies(installedOnly) {
   for (const tier of TROPHY_TIERS) {
     const tile = section.find(`.profile-stats-trophy.trophy-${tier}`);
     tile.find('.name').text(labels[tier]);
-    tile.find('b').text(formatCount(stats[tier]));
+    tile.find('b').each((_, node) => countTo(node, stats[tier], countText, animate));
     section.find(`.profile-stats-trophy-bar .trophy-${tier}`).css('flex-grow', stats[tier]);
   }
   section.find('.profile-stats-trophy.trophy-platinum small').text(t('profile-trophies-platinum-desc', 'games with their platinum', 'jeux platinés'));
@@ -1047,7 +1047,49 @@ function showProfileStatsPlaytime(seconds, played) {
   $('#profile-stats-playtime-average-value').text(average > 0 ? libraryPlaytime(average) : localeText('neverPlayed'));
 }
 
-function renderProfileStatsPanel() {
+// What each platform row showed last, so a scope switch counts its figures and slides its bar.
+let profileStatsGroupsShown = new Map();
+
+function renderProfileStatsGroups(groups, animate) {
+  const rows = groups
+    .map((group) => {
+      const icon = profileStatsIconFor(group.key);
+      return `<tr>
+        <td><span class="platform-cell">${icon ? `<img src="${escapeHtml(icon)}" alt="" />` : ''}${escapeHtml(group.label)}</span></td>
+        <td class="is-games"></td>
+        <td class="is-perfect"></td>
+        <td class="is-unlocked"></td>
+        <td><span class="completion-cell"><span><i></i></span><b></b></span></td>
+      </tr>`;
+    })
+    .join('');
+  const body = $('#profile-stats .profile-stats-table tbody').html(rows);
+  const shown = new Map();
+  body.children('tr').each(function (index) {
+    const group = groups[index];
+    const before = profileStatsGroupsShown.get(group.key);
+    const completion = Math.round(group.completion);
+    const cells = { games: this.querySelector('.is-games'), perfect: this.querySelector('.is-perfect'), unlocked: this.querySelector('.is-unlocked'), completion: this.querySelector('.completion-cell b') };
+    const bar = this.querySelector('.completion-cell i');
+    if (animate && before) {
+      cells.games.awCount = [before.games];
+      cells.perfect.awCount = [before.perfect];
+      cells.unlocked.awCount = [before.unlocked, before.total];
+      cells.completion.awCount = [before.completion];
+      bar.style.width = `${before.completion}%`;
+      void bar.offsetWidth;
+    }
+    bar.style.width = `${completion}%`;
+    countTo(cells.games, group.games, countText, animate);
+    countTo(cells.perfect, group.perfect, countText, animate);
+    countTo(cells.unlocked, [group.unlocked, group.total], (unlocked, total) => `${countText(unlocked)} / ${countText(total)}`, animate);
+    countTo(cells.completion, completion, (value) => formatPercentValue(Math.round(value)), animate);
+    shown.set(group.key, { games: group.games, perfect: group.perfect, unlocked: group.unlocked, total: group.total, completion });
+  });
+  profileStatsGroupsShown = shown;
+}
+
+function renderProfileStatsPanel({ animate = false } = {}) {
   const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
   const scoped = libraryScopeGames();
   const games = installedOnly ? scoped.filter((game) => game && game.installed) : scoped.slice();
@@ -1058,10 +1100,10 @@ function renderProfileStatsPanel() {
   $('#profile-stats-scope').toggleClass('active', installedOnly).attr('aria-pressed', String(installedOnly));
   $('#profile-stats-scope span').text(localeText('installedOnly'));
   $('#profile-stats-ring').css('--value', overall);
-  $('#profile-stats-overall-value').text(formatCount(overall));
-  $('#profile-stats-overall-detail').text(
-    `${formatCount(stats.achievements.unlocked)} / ${formatCount(stats.achievements.total)} ${localeText('achievements')}`
-  );
+  const showCount = (selector, value, format = countText) => $(selector).each((_, node) => countTo(node, value, format, animate));
+  showCount('#profile-stats-overall-value', overall);
+  const achievementsWord = localeText('achievements');
+  showCount('#profile-stats-overall-detail', [stats.achievements.unlocked, stats.achievements.total], (unlocked, total) => `${countText(unlocked)} / ${countText(total)} ${achievementsWord}`);
 
   const trackedGames = Math.max(1, stats.library.tracked);
   const share = (count) => `${(100 * count) / trackedGames}%`;
@@ -1069,40 +1111,22 @@ function renderProfileStatsPanel() {
   $('#profile-stats-split .is-progress').css('width', share(stats.games.inProgress));
   $('#profile-stats-split .is-untouched').css('width', share(stats.games.notStarted));
 
-  $('#profile-stats-perfect-value').text(formatCount(stats.games.perfect));
-  $('#profile-stats-progress-value').text(formatCount(stats.games.inProgress));
-  $('#profile-stats-untouched-value').text(formatCount(stats.games.notStarted));
-  $('#profile-stats-unlocked-value').text(formatCount(stats.achievements.unlocked));
-  $('#profile-stats-locked-value').text(formatCount(stats.achievements.locked));
-  $('#profile-stats-tracked-value, #profile-stats-split-count').text(formatCount(stats.library.tracked));
-  $('#profile-stats-average-value').text(formatPercentValue(stats.completion.average));
+  showCount('#profile-stats-perfect-value', stats.games.perfect);
+  showCount('#profile-stats-progress-value', stats.games.inProgress);
+  showCount('#profile-stats-untouched-value', stats.games.notStarted);
+  showCount('#profile-stats-unlocked-value', stats.achievements.unlocked);
+  showCount('#profile-stats-locked-value', stats.achievements.locked);
+  showCount('#profile-stats-tracked-value, #profile-stats-split-count', stats.library.tracked);
+  showCount('#profile-stats-average-value', stats.completion.average, (value) => formatPercentValue(value));
   $('#profile-stats-playtime-average-value, #profile-stats-playtime-value').text(localeText('loading'));
   setTimeout(() => fillProfileStatsPlaytime(games), 0);
 
-  const rows = stats.groups
-    .map((group) => {
-      const icon = profileStatsIconFor(group.key);
-      const completion = Math.round(group.completion);
-      return `<tr>
-        <td><span class="platform-cell">${
-          icon ? `<img src="${escapeHtml(icon)}" alt="" />` : ''
-        }${escapeHtml(group.label)}</span></td>
-        <td>${escapeHtml(formatCount(group.games))}</td>
-        <td>${escapeHtml(formatCount(group.perfect))}</td>
-        <td>${escapeHtml(`${formatCount(group.unlocked)} / ${formatCount(group.total)}`)}</td>
-        <td><span class="completion-cell"><span><i style="width: ${completion}%"></i></span>${escapeHtml(
-          formatPercentValue(completion)
-        )}</span></td>
-      </tr>`;
-    })
-    .join('');
-
-  $('#profile-stats .profile-stats-table tbody').html(rows);
+  renderProfileStatsGroups(stats.groups, animate);
   $('#profile-stats .profile-stats-table-wrap').toggle(stats.groups.length > 0);
   $('#profile-stats-empty').prop('hidden', stats.groups.length > 0);
 
   try {
-    renderProfileStatsTrophies(installedOnly);
+    renderProfileStatsTrophies(installedOnly, animate);
   } catch (err) {
     debug.warn(`[trophies] could not build the panel section: ${err && err.message ? err.message : err}`);
   }
@@ -1155,7 +1179,7 @@ function openProfileStats({ section = null } = {}) {
 window.refreshProfileStatsPanel = () => {
   if ($('#profile-stats').attr('aria-hidden') !== 'false') return;
   try {
-    renderProfileStatsPanel();
+    renderProfileStatsPanel({ animate: true });
     if (allAchievementsOpen()) renderAllAchievements();
   } catch (err) {
     debug.warn(`[profile-stats] could not rebuild the summary: ${err && err.message ? err.message : err}`);
@@ -1547,6 +1571,43 @@ function formatCount(value) {
 function formatPercentValue(value, digits = 0) {
   return intlFormat.formatPercent(value, uiLang(), { maximumFractionDigits: digits });
 }
+
+const STAT_COUNT_MS = 450;
+const STAT_COUNT_STEP_MS = 16;
+
+/*
+  Counts the figures a node shows (one or several) from what it showed last to `to`, then prints
+  them with `format`. A timer, not requestAnimationFrame: a frame callback never runs in a hidden
+  window, and the last value must land whatever happens to the panel meanwhile.
+*/
+function countTo(node, to, format, animate) {
+  if (!node) return;
+  const target = [].concat(to).map((value) => Number(value) || 0);
+  const from = node.awCount;
+  node.awCount = target;
+  clearInterval(node.awCountTimer);
+  const still =
+    !animate ||
+    !from ||
+    from.length !== target.length ||
+    from.every((value, index) => value === target[index]) ||
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (still) {
+    node.textContent = format(...target);
+    return;
+  }
+  const start = performance.now();
+  const step = () => {
+    const progress = Math.min(1, (performance.now() - start) / STAT_COUNT_MS);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    node.textContent = format(...target.map((value, index) => (progress >= 1 ? value : from[index] + (value - from[index]) * eased)));
+    if (progress >= 1) clearInterval(node.awCountTimer);
+  };
+  node.awCountTimer = setInterval(step, STAT_COUNT_STEP_MS);
+  step();
+}
+
+const countText = (value) => formatCount(Math.round(value));
 
 function libraryRelativeTime(timestamp) {
   const seconds = Number(timestamp);

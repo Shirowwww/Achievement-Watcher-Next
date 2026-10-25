@@ -674,7 +674,7 @@
             "addLine": "Linha",
             "hint": "Clique em uma parte da prévia para mover, redimensionar ou girar.",
             "cardHint": "Arraste as bordas do cartão para redimensioná-lo. Tudo aqui afeta apenas o cartão.",
-            "fullscreen": "Layout",
+            "fullscreen": "Editor",
             "general": "Todas as configurações",
             "done": "Concluído",
             "snap": "Alinhar às guias (desliga com muito zoom)",
@@ -702,7 +702,8 @@
               "title": "Título",
               "detail": "Descrição",
               "meta": "Nome do jogo",
-              "progress": "Barra de progresso"
+              "progress": "Barra de progresso",
+              "mark": "Logo da marca"
             },
             "kind": {
               "text": "Texto",

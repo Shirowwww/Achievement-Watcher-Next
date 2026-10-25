@@ -11987,6 +11987,17 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0;
 }
 
+/* Around the mock display (the full-screen editor's wide stage) is not a scene, just a plain surround
+   that sets the screen off: black, or white when the backdrop chosen is the dark one. A spread shadow
+   clipped by the stage, because the screen inherits the stage's own background for its inside. */
+#settings .pd-stage[data-view='screen'] .pd-screen.is-screen {
+  box-shadow: 0 0 0 100vmax #000;
+}
+
+#settings .pd-stage[data-view='screen'][data-backdrop='dark'] .pd-screen.is-screen {
+  box-shadow: 0 0 0 100vmax #fff;
+}
+
 /* Screen view: a mock display at the chosen resolution, with the popup at its true relative size in
    the corner it will actually appear in. Its width is set by ui/settings.js so the whole 16:9 box
    fits the stage - at the full stage width the box was taller than the stage, and the top and
@@ -13022,6 +13033,12 @@ body.pd-cv-open #settings .content {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+/* A part removed from the card: still listed, so "put back" can bring it back. */
+#settings .pd-cv-layer-row.is-hidden .pd-cv-layer {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
 #settings .pd-cv-layer {
   display: flex;
   flex: 1 1 auto;
@@ -13121,6 +13138,12 @@ body.pd-cv-open #settings .content {
   flex-direction: column;
   gap: 8px;
   min-width: 0;
+}
+
+/* Every control lives in the full-screen editor, which moves this panel into its side column; under
+   the preview only the actions are left. */
+#settings .pd-workspace > .pd-controls {
+  display: none;
 }
 
 /* Navigating the control panel */
@@ -13444,6 +13467,7 @@ body.pd-cv-open #settings .content {
 */
 #settings #options-notify-designer #pd-actions {
   align-items: flex-start;
+  justify-content: center;
   gap: 14px 20px;
   /* The last control group closes right above it, and with no room of its own the Create button read
      as part of that group rather than as what the whole card leads to. */
@@ -13454,6 +13478,7 @@ body.pd-cv-open #settings .content {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   flex: 1 1 320px;
   min-width: 0;
@@ -13473,6 +13498,7 @@ body.pd-cv-open #settings .content {
 #settings .pd-actions-files {
   display: flex;
   align-items: center;
+  justify-content: center;
   /*
     A full-width basis is what puts it on its own line, so nothing may clamp it here: a max-width
     on a flex item is applied to the hypothetical size the browser breaks lines by, so capping the
@@ -15811,6 +15837,29 @@ body.pd-cv-open #settings .content {
   position: absolute;
   inset: 0 auto 0 0;
   background: var(--accent);
+  transition: width 0.45s var(--ease-out);
+}
+
+/* The percentage beside the bar: a <b> only so it is not taken for the bar's own span. */
+.profile-stats-table .completion-cell b {
+  font-weight: inherit;
+}
+
+/* The installed-only switch counts the figures over; the tier bar slides with them. */
+.profile-stats-trophy-bar i {
+  transition: flex-grow 0.45s var(--ease-out);
+}
+
+/* Figures that count keep their width steady while the digits change. */
+.profile-stats-body {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-stats-table .completion-cell span i,
+  .profile-stats-trophy-bar i {
+    transition: none;
+  }
 }
 
 .profile-stats-empty {
@@ -16559,8 +16608,10 @@ html:not([data-platform='linux']) [data-linux-only] {
 #settings .pd-foot .pd-cv-full {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
+  justify-content: center;
+  gap: 8px;
+  min-width: 128px;
+  padding: 5px 20px;
   font-size: var(--fs-sm);
 }
 

@@ -674,7 +674,7 @@
             "addLine": "Linie",
             "hint": "Klicke auf einen Teil der Vorschau, um ihn zu verschieben, zu skalieren oder zu drehen.",
             "cardHint": "Ziehe an den Rändern der Karte, um ihre Größe zu ändern. Alles hier betrifft nur die Karte.",
-            "fullscreen": "Layout",
+            "fullscreen": "Editor",
             "general": "Alle Einstellungen",
             "done": "Fertig",
             "snap": "An Hilfslinien ausrichten (wird bei starkem Zoom deaktiviert)",
@@ -702,7 +702,8 @@
               "title": "Titel",
               "detail": "Beschreibung",
               "meta": "Spielname",
-              "progress": "Fortschrittsbalken"
+              "progress": "Fortschrittsbalken",
+              "mark": "Markenlogo"
             },
             "kind": {
               "text": "Text",

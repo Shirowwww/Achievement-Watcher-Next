@@ -5149,12 +5149,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let layerMode = null;
     const layerSections = new Set();
 
-    const layerStylesheet = (values) =>
+    const layerStylesheet = (values, editing = editingLayout()) =>
       layerMode.css +
       '\n' +
-      presetLayerTool.buildLayerCss({ base: layerMode.base, sections: [...layerSections], options: values }, { assetUrl: presetAssetUrl });
+      presetLayerTool.buildLayerCss(
+        { base: layerMode.base, sections: [...layerSections], options: values },
+        { assetUrl: presetAssetUrl, markPseudo: layerMode.markPseudo, editing }
+      );
 
-    const stylesheetFor = (values, editing = editingLayout()) => (layerMode ? layerStylesheet(values) : previewCss(values, editing));
+    const stylesheetFor = (values, editing = editingLayout()) => (layerMode ? layerStylesheet(values, editing) : previewCss(values, editing));
     /*
       A preset the controls cannot rebuild (an imported SAN theme or .awpreset) is shown as a picture
       the main process renders offscreen, or the stage would keep showing the previous draft. Cleared
@@ -5731,6 +5734,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         else updatePreviewStyles(refreshPresetControls());
       },
       assetUrl: presetAssetUrl,
+      // The bundled preset's brand mark, which only a layer has: 'after', 'before' or ''.
+      markPseudo: () => (layerMode && layerMode.markPseudo) || '',
       importImage: loggedImport(importCanvasImage),
       importFont: loggedImport(importCanvasFont),
       status: (message, state) => setPresetStatus(message, state),
@@ -5773,7 +5778,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const cellHeight = Math.max(24, (stageCeiling() - ROW_GAP * (gridRows - 1)) / gridRows - LABEL_ROOM);
       const zoom = Math.min(1, cellWidth / box.width, cellHeight / box.height);
       fitStageTo((Math.ceil(box.height * zoom) + LABEL_ROOM) * gridRows + ROW_GAP * (gridRows - 1));
-      const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined });
+      const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values, false) : undefined });
       for (const row of rows) {
         const wrap = row.querySelector('.pd-compare-frame');
         const frame = ensureFrame(wrap, { title: String(row.getAttribute('data-state') || 'normal') });
@@ -6143,6 +6148,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         width: base.width,
         height: base.height,
         css: presetLayerTool.absolutizeCssUrls(base.css, require('url').pathToFileURL(base.folder).href),
+        markPseudo: presetLayerTool.brandMarkPseudo(base.css),
       };
       layerSections.clear();
       for (const name of sections || []) if (presetLayerTool.LAYER_SECTION_NAMES.includes(name)) layerSections.add(name);

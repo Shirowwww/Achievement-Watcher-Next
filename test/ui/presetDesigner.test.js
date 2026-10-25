@@ -341,7 +341,7 @@ test('the live preview swaps only the stylesheet, and never reloads on every key
   assert.match(settings, /const previewCss = \(values, editing = editingLayout\(\)\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing \}\);/);
   // One function picks the stylesheet: the generated one, or a bundled preset's own plus a layer.
   assert.match(settings, /styleEl\.textContent = stylesheetFor\(values\);/);
-  assert.match(settings, /const stylesheetFor = \(values, editing = editingLayout\(\)\) => \(layerMode \? layerStylesheet\(values\) : previewCss\(values, editing\)\);/);
+  assert.match(settings, /const stylesheetFor = \(values, editing = editingLayout\(\)\) => \(layerMode \? layerStylesheet\(values, editing\) : previewCss\(values, editing\)\);/);
   assert.match(settings, /getElementById\('aw-preview-css'\)/);
   assert.match(settings, /previewPending = setTimeout/, 'preview updates are not batched');
   // …and the preview is fed the same payload shape the notification window sends.

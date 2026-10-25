@@ -6,8 +6,8 @@
   Coordinates are the card's own CSS pixels: the preview frame is zoomed from outside.
 */
 
-const { CANVAS_MAX_ITEMS, CANVAS_SHAPES, normalizeCanvas } = require('../util/presetSchema.js');
-const { CANVAS_EDIT_ROOM, CANVAS_PART_SELECTORS } = require('../util/customPreset.js');
+const { CANVAS_MAX_ITEMS, CANVAS_SHAPES, CANVAS_STYLED_PARTS, canvasOrder, normalizeCanvas } = require('../util/presetSchema.js');
+const { CANVAS_EDIT_ROOM, CANVAS_PART_SELECTORS, CANVAS_STYLE_SELECTORS } = require('../util/customPreset.js');
 
 // The designer controls that shape the card itself, shown alone while the card is selected.
 const CARD_KEYS = [
@@ -16,8 +16,9 @@ const CARD_KEYS = [
 ];
 const CARD_ID = 'card';
 
-// Paint order on the card: the text block before the lines inside it, so a line wins a click.
-const PART_ORDER = ['text', 'icon', 'meta', 'title', 'detail', 'progress'];
+const TEXT_BLOCK = 'text';
+const MARK = 'mark';
+const WEIGHTS = [400, 600, 700, 800];
 const TRANSFORM_PROPS = ['translate', 'rotate', 'scale'];
 const HANDLES = { nw: [-1, -1], n: [0, -1], ne: [1, -1], e: [1, 0], se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0] };
 const CORNERS = ['nw', 'ne', 'se', 'sw'];
@@ -61,6 +62,7 @@ function icon(name) {
  * @param {() => boolean} options.active   true while the designer tab is on screen
  * @param {() => void} options.apply     repaint the preview from the controls, synchronously
  * @param {(name: string) => string} options.assetUrl  a picture's URL for the crop ghost
+ * @param {() => string} options.markPseudo  'after', 'before', 'after,before' or '' for the base's brand mark
  * @param {() => Promise<object|null>} options.importImage  {name, width, height}, {refused}, or null
  * @param {() => Promise<object|null>} options.importFont  {name}, or null when cancelled or refused (it reports a refusal itself)
  * @param {(text: string, kind?: string) => void} options.status
@@ -180,6 +182,7 @@ function createCanvasEditor(options) {
   // Where a part sits without its own move. Presets animate their parts, so transitions stay off
   // until the restored transform is computed, or the part would glide home and back each time.
   function measurePart(g, key) {
+    if (key === MARK) return measureMark(g);
     const node = g.card.querySelector(CANVAS_PART_SELECTORS[key]);
     if (!node || !node.getClientRects().length) return null;
     node.style.setProperty('transition', 'none', 'important');
@@ -190,6 +193,25 @@ function createCanvasEditor(options) {
     node.style.removeProperty('transition');
     if (rect.width < 1 || rect.height < 1) return null;
     return { cx: rect.left + rect.width / 2 - g.ox, cy: rect.top + rect.height / 2 - g.oy, w: rect.width, h: rect.height };
+  }
+
+  /*
+    A bundled preset's brand mark is a pseudo-element, which has no rect of its own. Its offsets come
+    resolved in pixels from the card's padding box, the same origin as the canvas, and the move's
+    translate, rotate and scale never change them.
+  */
+  function measureMark(g) {
+    // The first is the mark itself; a ring that follows it is not what the handles frame.
+    const pseudo = options.markPseudo().split(',')[0];
+    if (!pseudo) return null;
+    const style = g.doc.defaultView.getComputedStyle(g.card, `::${pseudo}`);
+    if (style.display === 'none' || style.position !== 'absolute') return null;
+    const px = (prop) => parseFloat(style.getPropertyValue(prop)) || 0;
+    const extra = (a, b) => (style.boxSizing === 'border-box' ? 0 : px(`padding-${a}`) + px(`padding-${b}`) + px(`border-${a}-width`) + px(`border-${b}-width`));
+    const w = px('width') + extra('left', 'right');
+    const h = px('height') + extra('top', 'bottom');
+    if (w < 1 || h < 1) return null;
+    return { cx: px('left') + px('margin-left') + w / 2, cy: px('top') + px('margin-top') + h / 2, w, h };
   }
 
   const freshMove = () => ({ x: 0, y: 0, r: 0, s: 1 });
@@ -213,10 +235,12 @@ function createCanvasEditor(options) {
     return { id: `i:${index}`, type: 'item', index, cx: item.x + item.w / 2, cy: item.y + h / 2, w: item.w, h, r: item.r };
   }
 
+  // Bottom first, as the card stacks them. The text block, which holds the lines, comes before all,
+  // so a line wins a click over it.
   function collectBoxes(g) {
-    const items = canvas.items.map((item, index) => itemBox(g, item, index));
-    const parts = PART_ORDER.map((key) => partBox(g, key)).filter(Boolean);
-    return [...items.filter((box) => canvas.items[box.index].back), ...parts, ...items.filter((box) => !canvas.items[box.index].back)];
+    const layers = canvasOrder(canvas).map((entry) => (Number.isInteger(entry) ? itemBox(g, canvas.items[entry], entry) : partBox(g, entry)));
+    // The mark is drawn by the card itself, under or over its content, so it never joins the order.
+    return [partBox(g, MARK), partBox(g, TEXT_BLOCK), ...layers].filter(Boolean);
   }
 
   const selectedBox = () => (current && current.boxes.find((box) => box.id === selected)) || null;
@@ -373,6 +397,18 @@ function createCanvasEditor(options) {
   }
 
   /* ---------- editing ---------- */
+
+  const entryOf = (id) => (id.startsWith('i:') ? Number(id.slice(2)) : id.slice(2));
+  const idOf = (entry) => (Number.isInteger(entry) ? `i:${entry}` : `p:${entry}`);
+
+  // `back` follows the order, so a build that only knows `back` still draws what is closest to it.
+  function setOrder(order) {
+    canvas.order = order;
+    const firstPart = order.findIndex((entry) => !Number.isInteger(entry));
+    order.forEach((entry, position) => {
+      if (Number.isInteger(entry)) canvas.items[entry].back = position < firstPart;
+    });
+  }
 
   function ensureMove(key) {
     if (!canvas.move[key]) canvas.move[key] = freshMove();
@@ -677,10 +713,30 @@ function createCanvasEditor(options) {
     addItem({ kind: 'image', file: picked.name, fit: { x: 0, y: 0, w, ar }, ...centred(w, h) });
   }
 
+  const isHidden = (key) => Boolean(canvas.hidden && canvas.hidden.includes(key));
+
+  // A part goes back where the preset puts it, and is shown again if it had been removed.
+  function homeSelected() {
+    if (!selected || !selected.startsWith('p:')) return;
+    const key = selected.slice(2);
+    delete canvas.move[key];
+    if (canvas.hidden) canvas.hidden = canvas.hidden.filter((part) => part !== key);
+    commit();
+  }
+
+  // A part of the card cannot be deleted, only hidden: the preset still draws it.
   function removeSelected() {
     if (!selected || selected === CARD_ID) return;
-    if (selected.startsWith('p:')) delete canvas.move[selected.slice(2)];
-    else canvas.items.splice(Number(selected.slice(2)), 1);
+    if (selected.startsWith('p:')) {
+      const key = selected.slice(2);
+      if (isHidden(key)) return;
+      canvas.hidden = [...(canvas.hidden || []), key];
+      return commit();
+    } else {
+      const index = Number(selected.slice(2));
+      canvas.items.splice(index, 1);
+      if (canvas.order) canvas.order = canvas.order.filter((entry) => entry !== index).map((entry) => (Number.isInteger(entry) && entry > index ? entry - 1 : entry));
+    }
     selected = null;
     cropping = false;
     commit();
@@ -692,13 +748,24 @@ function createCanvasEditor(options) {
     addItem({ ...clone(item), x: item.x + 10, y: item.y + 10 });
   }
 
-  function reorder(index, step) {
-    const to = index + step;
-    if (to < 0 || to >= canvas.items.length) return;
-    const items = canvas.items;
-    [items[index], items[to]] = [items[to], items[index]];
-    if (selected === `i:${index}`) selected = `i:${to}`;
-    else if (selected === `i:${to}`) selected = `i:${index}`;
+  // One step past the next layer on screen: a part this card hides is not one to step over by hand.
+  function reorder(id, step) {
+    const order = canvasOrder(canvas);
+    const entry = entryOf(id);
+    const visible = new Set(current ? current.boxes.map((box) => box.id) : []);
+    const shown = order.filter((other) => visible.has(idOf(other)));
+    const target = shown[shown.indexOf(entry) + step];
+    if (target === undefined) return;
+    const rest = order.filter((other) => other !== entry);
+    rest.splice(rest.indexOf(target) + (step > 0 ? 1 : 0), 0, entry);
+    setOrder(rest);
+    commit();
+  }
+
+  // To the very bottom or the very top of the stack.
+  function sendItem(index, back) {
+    const rest = canvasOrder(canvas).filter((entry) => entry !== index);
+    setOrder(back ? [index, ...rest] : [...rest, index]);
     commit();
   }
 
@@ -822,7 +889,8 @@ function createCanvasEditor(options) {
     return cell;
   }
 
-  function textRows(item) {
+  // `item` is an added text, or a card line seen through partStyle(); only the first has words to edit.
+  function textRows(item, withText = true) {
     const text = el('input');
     Object.assign(text, { type: 'text', value: item.text, maxLength: 160 });
     text.dataset.prop = 'text';
@@ -851,14 +919,14 @@ function createCanvasEditor(options) {
     );
     return {
       text: [
-        propRow('prop.text', text),
+        withText ? propRow('prop.text', text) : null,
         propRow('prop.font', selectControl(fontChoices(), item.font, (v) => (item.font = v))),
         propRow('prop.fontFile', fontFileControl(item)),
         propRow('prop.size', numberControl(item.size, TEXT_SIZE[0], TEXT_SIZE[1], 1, (v) => (item.size = v))),
-        propRow('prop.weight', selectControl([400, 600, 700, 800].map((w) => [w, String(w)]), item.weight, (v) => (item.weight = Number(v)))),
+        propRow('prop.weight', selectControl(WEIGHTS.map((w) => [w, String(w)]), item.weight, (v) => (item.weight = Number(v)))),
         propRow('prop.align', align),
         propRow('prop.upper', upper),
-      ],
+      ].filter(Boolean),
       look: [propRow('prop.color', colorCell)],
     };
   }
@@ -916,19 +984,60 @@ function createCanvasEditor(options) {
 
   function itemActions(item) {
     const actions = [
-      actionButton(item.back ? 'act.back' : 'act.front', item.back ? 'fa-level-down-alt' : 'fa-level-up-alt', () => {
-        item.back = !item.back;
-        commit();
-      }),
+      actionButton(item.back ? 'act.back' : 'act.front', item.back ? 'fa-level-down-alt' : 'fa-level-up-alt', () => sendItem(canvas.items.indexOf(item), !item.back)),
     ];
     if (item.kind === 'image') actions.push(actionButton(cropping ? 'act.cropDone' : 'act.crop', 'fa-crop-alt', toggleCrop, cropping));
     actions.push(actionButton('act.duplicate', 'fa-clone', duplicateSelected), actionButton('act.delete', 'fa-trash-alt', removeSelected));
     return actions;
   }
 
+  // What a line looks like before the user restyles it, read off the preview.
+  function partLook(key) {
+    const g = current && current.g;
+    const node = g && g.card.querySelector(CANVAS_STYLE_SELECTORS[key]);
+    const look = { color: 'text', font: 'card', fontFile: '', size: 16, weight: 400, align: 'left', upper: false };
+    if (key === 'title') {
+      const mode = root.querySelector('#pd-titleColorMode');
+      const custom = root.querySelector('#pd-titleColor');
+      look.color = mode && mode.value === 'custom' ? (custom && custom.value) || '#ffffff' : (mode && mode.value) || 'accent';
+    }
+    if (!node) return look;
+    const style = g.doc.defaultView.getComputedStyle(node);
+    look.size = clamp(round1(parseFloat(style.fontSize) || 16), TEXT_SIZE[0], TEXT_SIZE[1]);
+    const weight = parseFloat(style.fontWeight) || 400;
+    look.weight = WEIGHTS.reduce((best, w) => (Math.abs(w - weight) < Math.abs(best - weight) ? w : best), WEIGHTS[0]);
+    look.align = /center/.test(style.textAlign) ? 'center' : /right|end/.test(style.textAlign) ? 'right' : 'left';
+    look.upper = style.textTransform === 'uppercase';
+    return look;
+  }
+
+  // A stand-in item whose fields read the line's own style, or else its look, and write the style.
+  function partStyle(key) {
+    const look = partLook(key);
+    const target = {};
+    for (const prop of Object.keys(look)) {
+      Object.defineProperty(target, prop, {
+        enumerable: true,
+        get: () => {
+          const own = canvas.style && canvas.style[key];
+          return own && own[prop] !== undefined ? own[prop] : look[prop];
+        },
+        set: (value) => {
+          if (!canvas.style) canvas.style = {};
+          if (!canvas.style[key]) canvas.style[key] = {};
+          canvas.style[key][prop] = value;
+        },
+      });
+    }
+    return target;
+  }
+
   function partRows(key) {
     const m = moveOf(key);
+    const { text = [], look = [] } = CANVAS_STYLED_PARTS.includes(key) ? textRows(partStyle(key), false) : {};
     return {
+      text,
+      look,
       place: [
         propRow('prop.scale', numberControl(Math.round(m.s * 100), PART_SCALE[0] * 100, PART_SCALE[1] * 100, 5, (v) => (ensureMove(key).s = v / 100))),
         propRow('prop.rotation', numberControl(m.r, -180, 180, 1, (v) => (ensureMove(key).r = v))),
@@ -956,7 +1065,9 @@ function createCanvasEditor(options) {
     cardPanel.classList.toggle('is-card-only', cardOnly);
     cardTitle.textContent = label(cardOnly ? 'card' : 'general');
     cardHint.textContent = label(cardOnly ? 'cardHint' : 'generalHint');
-    barToggle.checked = barSelect.value !== 'none';
+    // Over a bundled preset the bar is only drawn once its section is ticked.
+    const inherited = barSelect.closest('.pd-field[data-layer-section]') && barSelect.closest('.pd-field').classList.contains('is-inherited');
+    barToggle.checked = barSelect.value !== 'none' && !inherited;
     // Rebuilding the panel under the caret would throw away what is being typed.
     if (!force && props.contains(document.activeElement) && document.activeElement.tagName !== 'BUTTON') return;
     if (!box) {
@@ -969,7 +1080,8 @@ function createCanvasEditor(options) {
     const item = box.type === 'item' ? canvas.items[box.index] : null;
     if (item) head.appendChild(el('span', 'pd-cv-chip', label(`kind.${item.kind}`)));
     const rows = item ? itemRows(item) : partRows(box.key);
-    const actions = item ? itemActions(item) : [actionButton('act.home', 'fa-undo', removeSelected)];
+    const actions = item ? itemActions(item) : [actionButton('act.home', 'fa-undo', homeSelected)];
+    if (!item && !isHidden(box.key)) actions.push(actionButton('act.delete', 'fa-trash-alt', removeSelected));
     const sections = [];
     if (rows.text && rows.text.length) sections.push(section('section.text', rows.text));
     if (rows.look && rows.look.length) sections.push(section('section.look', rows.look));
@@ -981,6 +1093,7 @@ function createCanvasEditor(options) {
 
   function layerRow(box) {
     const row = el('div', box.id === selected ? 'pd-cv-layer-row is-on' : 'pd-cv-layer-row');
+    if (box.type === 'part' && isHidden(box.key)) row.classList.add('is-hidden');
     row.setAttribute('role', 'listitem');
     const pick = el('button', 'pd-cv-layer');
     pick.type = 'button';
@@ -989,7 +1102,7 @@ function createCanvasEditor(options) {
     pick.append(icon(iconFor(box)), el('span', '', boxName(box)));
     pick.addEventListener('click', () => select(box.id));
     row.appendChild(pick);
-    if (box.type === 'item') {
+    if (box.key !== TEXT_BLOCK && box.key !== MARK) {
       for (const [step, name, key] of [[1, 'fa-chevron-up', 'act.layerUp'], [-1, 'fa-chevron-down', 'act.layerDown']]) {
         const move = el('button', 'pd-cv-layer-step');
         move.type = 'button';
@@ -997,10 +1110,10 @@ function createCanvasEditor(options) {
         move.setAttribute('aria-label', label(key));
         move.dataset.step = String(step);
         move.appendChild(icon(name));
-        // The list is rebuilt by the move: keep the keyboard on the same arrow of the same item.
+        // The list is rebuilt by the move: keep the keyboard on the same arrow of the same layer.
         move.addEventListener('click', () => {
-          reorder(box.index, step);
-          const again = layerList.querySelector(`[data-id="i:${box.index + step}"]`);
+          reorder(box.id, step);
+          const again = layerList.querySelector(`[data-id="${box.id}"]`);
           const target = again && again.parentNode.querySelector(`[data-step="${step}"]`);
           if (target) target.focus();
         });
@@ -1021,11 +1134,8 @@ function createCanvasEditor(options) {
 
   function renderPanels() {
     renderProps();
+    // Top first, parts and added items in one stack, as the card draws them.
     const boxes = current ? current.boxes.toReversed() : [];
-    const groups = [
-      ['layersAdded', boxes.filter((box) => box.type === 'item')],
-      ['layersParts', boxes.filter((box) => box.type !== 'item')],
-    ].filter(([, list]) => list.length);
     // The card itself, first, under which everything else is drawn.
     const cardRow = el('div', selected === CARD_ID ? 'pd-cv-layer-row is-on' : 'pd-cv-layer-row');
     const cardPick = el('button', 'pd-cv-layer');
@@ -1034,16 +1144,10 @@ function createCanvasEditor(options) {
     cardPick.append(icon('fa-id-card'), el('span', '', label('card')));
     cardPick.addEventListener('click', () => select(CARD_ID));
     cardRow.appendChild(cardPick);
-    layerList.replaceChildren(
-      cardRow,
-      ...groups.flatMap(([key, list]) => {
-        const rows = el('div', 'pd-cv-layer-group');
-        rows.setAttribute('role', 'list');
-        rows.setAttribute('aria-label', label(key));
-        rows.append(...list.map(layerRow));
-        return [el('span', 'pd-cv-section-title', label(key)), rows];
-      })
-    );
+    const rows = el('div', 'pd-cv-layer-group');
+    rows.setAttribute('role', 'list');
+    rows.append(...boxes.map(layerRow));
+    layerList.replaceChildren(cardRow, ...(boxes.length ? [rows] : []));
     renderSummary();
     const atCap = canvas.items.length >= CANVAS_MAX_ITEMS;
     for (const button of root.querySelectorAll('[data-cv-add]')) button.disabled = atCap;

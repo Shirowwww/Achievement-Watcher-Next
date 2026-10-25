@@ -265,31 +265,88 @@ function canvasFontRule(item, fonts) {
   return family ? `font-family: ${family};` : '';
 }
 
-function canvasCss(rawCanvas, { assetUrl } = {}) {
+// Where a restyled line's text is: the progress line keeps its words in its label.
+const CANVAS_STYLE_SELECTORS = { title: '.title', detail: '.detail', meta: '.meta', progress: '.progress_label' };
+const CANVAS_SELF_ALIGN = { left: 'flex-start', center: 'center', right: 'flex-end' };
+
+// A line's own look, over the preset's text settings. Colour and face reach into the spans a line
+// holds (the game name, the rarity chip), which have colours of their own.
+function canvasStyleCss(part, style, fonts) {
+  const selector = `.ach ${CANVAS_STYLE_SELECTORS[part]}`;
+  const textRules = [];
+  const boxRules = [];
+  if (style.color) textRules.push(`color: ${CANVAS_TEXT_COLOR[style.color] || style.color} !important;`);
+  if (style.fontFile || style.font) textRules.push(canvasFontRule({ font: style.font, fontFile: style.fontFile }, fonts).replace(';', ' !important;'));
+  if (style.weight) textRules.push(`font-weight: ${style.weight} !important;`);
+  if (style.upper === true) textRules.push('text-transform: uppercase !important; letter-spacing: 0.06em !important;');
+  if (style.upper === false) textRules.push('text-transform: none !important; letter-spacing: normal !important;');
+  if (style.size) boxRules.push(`font-size: ${style.size}px !important;`);
+  if (style.align) boxRules.push(`text-align: ${style.align} !important; align-self: ${CANVAS_SELF_ALIGN[style.align]} !important;`);
+  const css = [];
+  if (textRules.length) css.push(`${selector}, ${selector} * { ${textRules.join(' ')} }`);
+  if (style.size) css.push(`${selector} * { font-size: inherit !important; }`);
+  if (boxRules.length) css.push(`${selector} { ${boxRules.join(' ')} }`);
+  return css;
+}
+
+/*
+  A stored order gives every layer a z-index of its own, all inside the card's stacking context. The
+  text column must not open one of its own, or its lines could not go between two items: it loses
+  its z-index and its fade. A moved column still opens one (its translate does), and its lines then
+  stack among themselves only.
+*/
+function canvasOrderCss(canvas) {
+  if (!canvas.order) return { css: [], zOf: () => null };
+  const css = ['.ach .text_wrap { z-index: auto !important; -webkit-mask-image: none !important; mask-image: none !important; }'];
+  const z = new Map(canvas.order.map((entry, position) => [entry, position + 1]));
+  for (const part of schema.CANVAS_LAYER_PARTS) css.push(`.ach ${CANVAS_PART_SELECTORS[part]} { z-index: ${z.get(part)} !important; }`);
+  return { css, zOf: (index) => z.get(index) };
+}
+
+// A bundled preset's mark is its card's ::after or ::before, which only its own stylesheet tells.
+const partSelector = (part, markPseudo) => {
+  if (part !== 'mark') return `.ach ${CANVAS_PART_SELECTORS[part]}`;
+  const pseudos = String(markPseudo || '').split(',').filter((name) => name === 'after' || name === 'before');
+  return pseudos.length ? pseudos.map((name) => `.ach::${name}`).join(', ') : null;
+};
+
+/*
+  `markPseudo` names the pseudo-element that draws the base's brand mark, for a layer. `editing`
+  keeps a removed part faintly on screen, so the layout editor can still pick it and put it back.
+*/
+function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false } = {}) {
   const canvas = schema.normalizeCanvas(rawCanvas);
   const css = [];
   for (const [part, move] of Object.entries(canvas.move)) {
-    css.push(`.ach ${CANVAS_PART_SELECTORS[part]} { translate: ${move.x}px ${move.y}px !important; rotate: ${move.r}deg !important; scale: ${move.s} !important; }`);
+    const selector = partSelector(part, markPseudo);
+    if (selector) css.push(`${selector} { translate: ${move.x}px ${move.y}px !important; rotate: ${move.r}deg !important; scale: ${move.s} !important; }`);
+  }
+  for (const part of canvas.hidden || []) {
+    const selector = partSelector(part, markPseudo);
+    if (selector) css.push(`${selector} { ${editing ? 'opacity: 0.3 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'visibility: hidden !important;'} }`);
   }
   // The text column clips (and fades) its lines so a long one can scroll; a line moved out of it
   // would be cut off, so the column stops clipping once one of its lines has moved.
   if (CANVAS_TEXT_PARTS.some((part) => canvas.move[part])) {
     css.push('.ach .text_wrap { overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important; }');
   }
-  if (!canvas.items.length) return css.join('\n');
-  css.push(`.ach > .${CANVAS_CLASS} { position: absolute !important; inset: 0; z-index: auto !important; pointer-events: none; }`);
-  css.push(`.ach > .${CANVAS_CLASS} > div { position: absolute; box-sizing: border-box; margin: 0; }`);
-  css.push(`.ach > .${CANVAS_CLASS} svg { display: block; width: 100%; height: 100%; overflow: visible; }`);
   const fonts = schema.canvasFonts(canvas);
   fonts.forEach((file, index) => {
     const url = cssUrl(assetUrl ? assetUrl(file) : file);
     css.push(`@font-face { font-family: '${CANVAS_FONT_FAMILY} ${index}'; src: ${url} format('${schema.fontFormat(file)}'); font-display: block; }`);
   });
+  for (const [part, style] of Object.entries(canvas.style || {})) css.push(...canvasStyleCss(part, style, fonts));
+  const order = canvasOrderCss(canvas);
+  css.push(...order.css);
+  if (!canvas.items.length) return css.join('\n');
+  css.push(`.ach > .${CANVAS_CLASS} { position: absolute !important; inset: 0; z-index: auto !important; pointer-events: none; }`);
+  css.push(`.ach > .${CANVAS_CLASS} > div { position: absolute; box-sizing: border-box; margin: 0; }`);
+  css.push(`.ach > .${CANVAS_CLASS} svg { display: block; width: 100%; height: 100%; overflow: visible; }`);
   canvas.items.forEach((item, index) => {
     const rules = [
       `left: ${item.x}px; top: ${item.y}px; width: ${item.w}px;`,
       item.kind === 'text' ? '' : `height: ${item.h}px;`,
-      `rotate: ${item.r}deg; opacity: ${item.o}; z-index: ${item.back ? -1 : 2};`,
+      `rotate: ${item.r}deg; opacity: ${item.o}; z-index: ${order.zOf(index) ?? (item.back ? -1 : 2)};`,
     ];
     if (item.kind === 'text') {
       rules.push(
@@ -824,7 +881,7 @@ function buildCustomPresetCss(options, { assetUrl, editing = false } = {}) {
     '.progress_track { display: block; flex: 1 1 auto; min-width: 70px; height: var(--progress-height); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }',
     '.progress_meter { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 45%, #ffffff) 100%); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent); transition: width 0.35s ease; }',
     '.progress_label { flex: 0 0 auto; max-width: 110px; overflow: hidden; color: var(--text); font-size: 12px; font-weight: 700; line-height: 1; text-align: right; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }',
-    canvasCss(values.canvas, { assetUrl }),
+    canvasCss(values.canvas, { assetUrl, editing }),
     canvasPlacementRules(values, editing),
     ''
   );
@@ -899,6 +956,7 @@ module.exports = {
   CANVAS_CLASS,
   CANVAS_EDIT_ROOM,
   CANVAS_PART_SELECTORS,
+  CANVAS_STYLE_SELECTORS,
   canvasCss,
   canvasMarkup,
   canvasScript,

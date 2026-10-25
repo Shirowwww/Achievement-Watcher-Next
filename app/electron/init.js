@@ -5774,7 +5774,7 @@ function dressPresetWindow(win, layer) {
   // for did-finish-load, i.e. for the page's pictures and fonts too).
   win.webContents.once('dom-ready', () => {
     if (win.isDestroyed()) return;
-    const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name) });
+    const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name), markPseudo: layer.markPseudo });
     if (css) win.webContents.insertCSS(css).catch((err) => debug.log(`[overlay-notif] layer css failed: ${err.message || err}`));
     if (presetLayer.layerHasLogo(layer)) {
       win.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch((err) => debug.log(`[overlay-notif] layer logo failed: ${err.message || err}`));

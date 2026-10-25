@@ -674,7 +674,7 @@
             "addLine": "Línea",
             "hint": "Haz clic en una parte de la vista previa para moverla, cambiarle el tamaño o girarla.",
             "cardHint": "Arrastra los bordes de la tarjeta para cambiar su tamaño. Todo lo de aquí afecta solo a la tarjeta.",
-            "fullscreen": "Diseño",
+            "fullscreen": "Editor",
             "general": "Todos los ajustes",
             "done": "Listo",
             "snap": "Ajustar a las guías (se desactiva con mucho zoom)",
@@ -702,7 +702,8 @@
               "title": "Título",
               "detail": "Descripción",
               "meta": "Nombre del juego",
-              "progress": "Barra de progreso"
+              "progress": "Barra de progreso",
+              "mark": "Logo de marca"
             },
             "kind": {
               "text": "Texto",

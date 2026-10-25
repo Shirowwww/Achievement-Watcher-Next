@@ -674,7 +674,7 @@
             "addLine": "Lijn",
             "hint": "Klik op een onderdeel van het voorbeeld om het te verplaatsen, het formaat te wijzigen of het te draaien.",
             "cardHint": "Sleep aan de randen van de kaart om het formaat te wijzigen. Alles hier geldt alleen voor de kaart.",
-            "fullscreen": "Indeling",
+            "fullscreen": "Editor",
             "general": "Alle instellingen",
             "done": "Klaar",
             "snap": "Uitlijnen op hulplijnen (gaat uit bij sterk inzoomen)",
@@ -702,7 +702,8 @@
               "title": "Titel",
               "detail": "Beschrijving",
               "meta": "Naam van de game",
-              "progress": "Voortgangsbalk"
+              "progress": "Voortgangsbalk",
+              "mark": "Merklogo"
             },
             "kind": {
               "text": "Tekst",

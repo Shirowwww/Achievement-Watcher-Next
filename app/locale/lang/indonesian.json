@@ -674,7 +674,7 @@
             "addLine": "Garis",
             "hint": "Klik bagian pratinjau untuk memindahkan, mengubah ukuran, atau memutarnya.",
             "cardHint": "Seret tepi kartu untuk mengubah ukurannya. Semua pengaturan di sini hanya memengaruhi kartu.",
-            "fullscreen": "Tata letak",
+            "fullscreen": "Editor",
             "general": "Semua pengaturan",
             "done": "Selesai",
             "snap": "Tempel ke pemandu (mati saat diperbesar jauh)",
@@ -702,7 +702,8 @@
               "title": "Judul",
               "detail": "Deskripsi",
               "meta": "Nama game",
-              "progress": "Bilah progres"
+              "progress": "Bilah progres",
+              "mark": "Logo merek"
             },
             "kind": {
               "text": "Teks",

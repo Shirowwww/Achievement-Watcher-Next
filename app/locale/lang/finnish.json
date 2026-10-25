@@ -674,7 +674,7 @@
             "addLine": "Viiva",
             "hint": "Napsauta esikatselun osaa, jos haluat siirtää, skaalata tai kiertää sitä.",
             "cardHint": "Muuta kortin kokoa vetämällä sen reunoista. Kaikki tämän alueen asetukset koskevat vain korttia.",
-            "fullscreen": "Asettelu",
+            "fullscreen": "Editori",
             "general": "Kaikki asetukset",
             "done": "Valmis",
             "snap": "Kohdista apuviivoihin (poistuu käytöstä lähellä zoomattaessa)",
@@ -702,7 +702,8 @@
               "title": "Otsikko",
               "detail": "Kuvaus",
               "meta": "Pelin nimi",
-              "progress": "Edistymispalkki"
+              "progress": "Edistymispalkki",
+              "mark": "Tuotemerkin logo"
             },
             "kind": {
               "text": "Teksti",

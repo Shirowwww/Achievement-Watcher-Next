@@ -674,7 +674,7 @@
             "addLine": "Line",
             "hint": "Click a part of the preview to move, resize or rotate it.",
             "cardHint": "Drag the card's edges to resize it. Everything here shapes the card only.",
-            "fullscreen": "Layout",
+            "fullscreen": "Editor",
             "general": "All settings",
             "done": "Done",
             "snap": "Snap to guides (turns off when zoomed far in)",
@@ -702,7 +702,8 @@
               "title": "Title",
               "detail": "Description",
               "meta": "Game name",
-              "progress": "Progress bar"
+              "progress": "Progress bar",
+              "mark": "Brand logo"
             },
             "kind": {
               "text": "Text",

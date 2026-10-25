@@ -31,6 +31,8 @@ const LAYER_SECTIONS = Object.freeze({
   background: ['bgMode', 'bg', 'bg2', 'bgAngle'],
   text: ['text'],
   accent: ['accent'],
+  // The custom presets' accent bar, drawn over a bundled card as one coloured edge.
+  bar: ['accentBar', 'accentBarSize'],
   border: ['borderWidth', 'borderColor'],
   glow: ['glow'],
   font: ['fontFamily', 'fontFile'],
@@ -53,6 +55,17 @@ function isLayerableHtml(html) {
 // The brand section works only on a stylesheet whose mark fades through --mark-opacity.
 function hasBrandMark(css) {
   return typeof css === 'string' && /var\(\s*--mark-opacity(?![\w-])/.test(css);
+}
+
+/*
+  Which of the card's pseudo-elements draws that mark ('after' or 'before'), or '' when none does.
+  The other one joins it ('after,before') when its rule says `--follows-mark`, as PlayStation's ring.
+*/
+function brandMarkPseudo(css) {
+  const found = typeof css === 'string' && /\.ach::(after|before)\s*\{[^}]*var\(\s*--mark-opacity(?![\w-])/.exec(css);
+  if (!found) return '';
+  const other = found[1] === 'after' ? 'before' : 'after';
+  return new RegExp(`\\.ach::${other}\\s*\\{[^}]*--follows-mark\\s*:`).test(css) ? `${found[1]},${other}` : found[1];
 }
 
 // Strict parse of aw-layer.json (or of what a designer sends): unknown sections and keys are dropped.
@@ -89,7 +102,7 @@ function logoPosition(position, offset) {
   Declarations that a bundled stylesheet writes as shorthands with several layers are `!important`,
   because a generic override has no way to out-specify every selector a preset uses.
 */
-function buildLayerCss(rawLayer, { assetUrl = (name) => name } = {}) {
+function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editing = false } = {}) {
   const layer = normalizeLayer(rawLayer);
   const on = new Set(layer.sections);
   const v = layer.options;
@@ -114,6 +127,11 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name } = {}) {
     );
   }
   if (on.has('border')) css.push(`.ach { border: ${v.borderWidth}px solid ${v.borderColor} !important; }`);
+  // After the border, so the bar wins its edge, as on a custom preset.
+  if (on.has('bar') && v.accentBar !== 'none') {
+    const edge = v.accentBar === 'outline' ? 'border' : `border-${v.accentBar}`;
+    css.push(`.ach { ${edge}: ${v.accentBarSize}px solid var(--accent, ${v.accent}) !important; }`);
+  }
   if (on.has('glow')) {
     css.push(
       `.ach { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45), 0 0 ${Math.round((v.glow / 100) * 22)}px color-mix(in srgb, var(--accent, ${v.accent}) 65%, transparent) !important; }`
@@ -128,7 +146,7 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name } = {}) {
     );
   }
   if (on.has('canvas')) {
-    const free = canvasCss(v.canvas, { assetUrl });
+    const free = canvasCss(v.canvas, { assetUrl, markPseudo, editing });
     if (free) css.push(free);
   }
   return css.join('\n');
@@ -164,7 +182,9 @@ function readLayerFolder(usersDir, baseRoot, name) {
   const baseHtml = path.join(baseFolder, 'index.html');
   if (!layer.base || path.basename(baseFolder) !== layer.base || !fs.existsSync(baseHtml)) return null;
   if (!isLayerableHtml(fs.readFileSync(baseHtml, 'utf8'))) return null;
-  return { baseFolder, layer: { ...layer, dir } };
+  const baseCss = path.join(baseFolder, 'style.css');
+  const markPseudo = fs.existsSync(baseCss) ? brandMarkPseudo(fs.readFileSync(baseCss, 'utf8')) : '';
+  return { baseFolder, layer: { ...layer, dir, markPseudo } };
 }
 
 // True when the layer draws a logo, which needs one extra element inside the card.
@@ -210,6 +230,7 @@ module.exports = {
   LAYER_BACKGROUND_MODES,
   isLayerableHtml,
   hasBrandMark,
+  brandMarkPseudo,
   normalizeLayer,
   layerOptions,
   buildLayerCss,

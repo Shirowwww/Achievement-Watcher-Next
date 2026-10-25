@@ -674,7 +674,7 @@
             "addLine": "Linje",
             "hint": "Klikk på en del av forhåndsvisningen for å flytte, endre størrelse på eller rotere den.",
             "cardHint": "Dra i kantene på kortet for å endre størrelsen. Alt her påvirker bare kortet.",
-            "fullscreen": "Oppsett",
+            "fullscreen": "Editor",
             "general": "Alle innstillinger",
             "done": "Ferdig",
             "snap": "Fest til hjelpelinjer (slås av ved sterk zoom)",
@@ -702,7 +702,8 @@
               "title": "Tittel",
               "detail": "Beskrivelse",
               "meta": "Spillnavn",
-              "progress": "Fremgangsstripe"
+              "progress": "Fremgangsstripe",
+              "mark": "Merkelogo"
             },
             "kind": {
               "text": "Tekst",

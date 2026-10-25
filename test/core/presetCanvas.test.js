@@ -212,3 +212,51 @@ test('a layer carries the layout only when its canvas section is on', () => {
   assert.deepEqual(layerTool.layerAssets(off).canvasImages, []);
   assert.deepEqual(Object.keys(layerTool.layerOptions(layerTool.normalizeLayer(on))), ['canvas']);
 });
+
+test('a card line keeps only the look the user changed, from checked values', () => {
+  const canvas = schema.normalizeCanvas({
+    style: {
+      title: { color: '#ff0000', size: 200, weight: 650, upper: false, align: 'center', font: 'serif', fontFile: '../x.ttf' },
+      detail: { color: 'red;}body{', size: '' },
+      icon: { color: '#00ff00' },
+      meta: { color: 'accent', fontFile: 'Brand.woff2' },
+    },
+  });
+  assert.deepEqual(canvas.style, {
+    title: { color: '#ff0000', size: 96, upper: false, align: 'center', font: 'serif' },
+    meta: { color: 'accent', fontFile: 'Brand.woff2' },
+  });
+  assert.deepEqual(schema.canvasFonts(canvas), ['Brand.woff2'], 'a restyled line packages its font like an added text');
+});
+
+test('a restyled line wins over the preset text settings, reaching into its spans', () => {
+  const css = generator.canvasCss({ style: { meta: { color: 'accent', size: 14, upper: true }, progress: { align: 'right' } } });
+  assert.match(css, /\.ach \.meta, \.ach \.meta \* \{ color: var\(--accent, #ffffff\) !important; text-transform: uppercase !important;/);
+  assert.match(css, /\.ach \.meta \{ font-size: 14px !important; \}/);
+  assert.match(css, /\.ach \.progress_label \{ text-align: right !important; align-self: flex-end !important; \}/);
+  assert.doesNotMatch(css, /@font-face/, 'no font, no @font-face');
+  const withFont = generator.canvasCss({ style: { title: { fontFile: 'Brand.woff2' } } });
+  assert.match(withFont, /@font-face \{ font-family: 'AW Item Font 0'/, 'a line font is declared without any added item');
+  assert.match(withFont, /\.ach \.title, \.ach \.title \* \{ font-family: 'AW Item Font 0', var\(--font, sans-serif\) !important; \}/);
+});
+
+test('parts and items share one stacking order, and an order back to normal is not stored', () => {
+  const items = [{ kind: 'text', text: 'a' }, { kind: 'text', text: 'b', back: true }];
+  assert.equal(schema.normalizeCanvas({ items, order: [1, 'icon', 'meta', 'title', 'detail', 'progress', 0] }).order, undefined);
+  const canvas = schema.normalizeCanvas({ items, order: ['icon', 0, 'title', 'hostile', 0, 7] });
+  assert.deepEqual(canvas.order, ['icon', 0, 'title', 1, 'meta', 'detail', 'progress']);
+  assert.deepEqual(canvas.items.map((item) => item.back), [false, false], '`back` follows the order for older builds');
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\.ach \.text_wrap \{ z-index: auto !important;/, 'the text column must not trap its lines');
+  assert.match(css, /\.ach \.icon \{ z-index: 1 !important; \}/);
+  assert.match(css, /\.ach \.title \{ z-index: 3 !important; \}/);
+  assert.match(css, /\[data-i="0"\] \{[^}]*z-index: 2;/);
+  assert.match(css, /\[data-i="1"\] \{[^}]*z-index: 4;/);
+});
+
+test('a stored order follows its items past one the schema drops', () => {
+  const canvas = schema.normalizeCanvas({ items: [{ kind: 'script' }, { kind: 'text', text: 'kept' }], order: [1, 'icon', 'meta', 'title', 'detail', 'progress'] });
+  assert.equal(canvas.items.length, 1);
+  assert.equal(canvas.items[0].back, true, 'the kept item stays at the bottom where the order put it');
+  assert.equal(canvas.order, undefined);
+});

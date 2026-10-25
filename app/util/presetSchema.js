@@ -410,7 +410,8 @@ function clampNumber(value, property) {
   CANVAS_PARTS); `items` are what the user added. Everything ends up in a stylesheet or as text in the
   page, so each number is clamped, each colour checked and each picture a bare image filename.
 */
-const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress'];
+// 'mark' is a bundled preset's brand mark, drawn by a pseudo-element: only a layer has one.
+const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress', 'mark'];
 const CANVAS_ITEM_KINDS = ['text', 'image', 'shape'];
 const CANVAS_SHAPES = ['rect', 'ellipse', 'line', 'triangle', 'diamond', 'star', 'arrow'];
 // 'accent' paints with the state colour, so a shape turns bronze, silver, gold or platinum with the card.
@@ -499,6 +500,57 @@ function normalizeCanvasItem(source) {
   return item;
 }
 
+/*
+  The card's own text lines can take the look of an added text: only what the user changed is kept,
+  so a line nobody touched still follows the preset's text settings.
+*/
+const CANVAS_STYLED_PARTS = ['title', 'detail', 'meta', 'progress'];
+
+function normalizeCanvasStyle(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const part of CANVAS_STYLED_PARTS) {
+    const source = raw[part];
+    if (!source || typeof source !== 'object') continue;
+    const style = {};
+    const color = source.color === 'accent' || source.color === 'text' ? source.color : canvasColor(source.color, '');
+    if (color) style.color = color;
+    if (Object.hasOwn(FONT_STACKS, source.font)) style.font = source.font;
+    const fontFile = typeof source.fontFile === 'string' ? source.fontFile.trim() : '';
+    if (FONT_NAME_RE.test(fontFile)) style.fontFile = fontFile;
+    if (source.size != null && source.size !== '' && Number.isFinite(Number(source.size))) style.size = canvasNumber(source.size, 6, 96, 16);
+    if (CANVAS_WEIGHTS.includes(Number(source.weight))) style.weight = Number(source.weight);
+    if (typeof source.upper === 'boolean') style.upper = source.upper;
+    if (CANVAS_ALIGNS.includes(source.align)) style.align = source.align;
+    if (Object.keys(style).length) out[part] = style;
+  }
+  return out;
+}
+
+/*
+  One stacking order for the card's parts and the added items, bottom first: a part by its name, an
+  item by its index. Without one, items marked `back` sit under the parts and the rest above them,
+  which is also what an older build draws, so `back` is kept in step with any order.
+*/
+const CANVAS_LAYER_PARTS = ['icon', 'meta', 'title', 'detail', 'progress'];
+
+const defaultCanvasOrder = (items) => [
+  ...items.flatMap((item, index) => (item.back ? [index] : [])),
+  ...CANVAS_LAYER_PARTS,
+  ...items.flatMap((item, index) => (item.back ? [] : [index])),
+];
+
+// Every part and item once each: what a stored order lacks goes on top, what it names twice or
+// does not have is dropped.
+function canvasOrder(canvas) {
+  const items = canvas.items || [];
+  const fallback = defaultCanvasOrder(items);
+  if (!Array.isArray(canvas.order)) return fallback;
+  const valid = (entry) => CANVAS_LAYER_PARTS.includes(entry) || (Number.isInteger(entry) && entry >= 0 && entry < items.length);
+  const order = [...new Set(canvas.order.filter(valid))];
+  return [...order, ...fallback.filter((entry) => !order.includes(entry))];
+}
+
 // Takes the object itself or its JSON text (what the designer's hidden field holds).
 function normalizeCanvas(raw) {
   let source = raw;
@@ -510,15 +562,44 @@ function normalizeCanvas(raw) {
     }
   }
   if (!source || typeof source !== 'object' || Array.isArray(source)) return { move: {}, items: [] };
-  const items = Array.isArray(source.items) ? source.items.slice(0, CANVAS_MAX_ITEMS).map(normalizeCanvasItem).filter(Boolean) : [];
-  return { move: normalizeCanvasMove(source.move), items };
+  const rawItems = Array.isArray(source.items) ? source.items.slice(0, CANVAS_MAX_ITEMS) : [];
+  // Indices in a stored order name the raw list, so they follow each item past the ones dropped here.
+  const kept = [];
+  const items = [];
+  rawItems.forEach((rawItem, index) => {
+    const item = normalizeCanvasItem(rawItem);
+    if (!item) return;
+    kept[index] = items.length;
+    items.push(item);
+  });
+  const out = { move: normalizeCanvasMove(source.move), items };
+  // Parts the user removed from the card, kept by name so "put back" can bring them back.
+  const hidden = Array.isArray(source.hidden) ? CANVAS_PARTS.filter((part) => source.hidden.includes(part)) : [];
+  if (hidden.length) out.hidden = hidden;
+  const style = normalizeCanvasStyle(source.style);
+  if (Object.keys(style).length) out.style = style;
+  if (Array.isArray(source.order)) {
+    const remapped = source.order.map((entry) => (Number.isInteger(entry) ? kept[entry] : entry)).filter((entry) => entry !== undefined);
+    const order = canvasOrder({ items, order: remapped });
+    const firstPart = order.findIndex((entry) => typeof entry === 'string');
+    order.forEach((entry, position) => {
+      if (Number.isInteger(entry)) items[entry].back = position < firstPart;
+    });
+    // An order that only says what `back` already says is not stored, so "unchanged" has one spelling.
+    if (order.join() !== defaultCanvasOrder(items).join()) out.order = order;
+  }
+  return out;
 }
 
 // The picture files a free layout names, once each.
 const canvasFiles = (canvas) => [...new Set(normalizeCanvas(canvas).items.filter((item) => item.kind === 'image').map((item) => item.file))];
 
-// The font files the text items of a free layout name, once each.
-const canvasFonts = (canvas) => [...new Set(normalizeCanvas(canvas).items.map((item) => item.fontFile).filter(Boolean))];
+// The font files the texts of a free layout name, its added texts and its restyled lines, once each.
+const canvasFonts = (canvas) => {
+  const normalized = normalizeCanvas(canvas);
+  const styles = Object.values(normalized.style || {});
+  return [...new Set([...normalized.items, ...styles].map((entry) => entry.fontFile).filter(Boolean))];
+};
 
 function normalizeValue(raw, property) {
   switch (property.type) {
@@ -599,6 +680,9 @@ module.exports = {
   CANVAS_PARTS,
   CANVAS_SHAPES,
   CANVAS_MAX_ITEMS,
+  CANVAS_STYLED_PARTS,
+  CANVAS_LAYER_PARTS,
+  canvasOrder,
   normalizeCanvas,
   canvasFiles,
   canvasFonts,
