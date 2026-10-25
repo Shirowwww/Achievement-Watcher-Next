@@ -114,6 +114,8 @@ body {
   border: 2px solid var(--accent);
   border-radius: 50%;
   opacity: 0;
+  /* Tells the designer this ring belongs to the mark: moving or removing the mark takes it along. */
+  --follows-mark: 1;
 }
 
 /* The mark at its centre, masked so it takes the trophy tier's colour. */

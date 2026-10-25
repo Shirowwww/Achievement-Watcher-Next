@@ -169,7 +169,7 @@
   "install.step3Body": "Das ist der Wächter. Live-Benachrichtigungen und Spielzeit hängen daran.",
   "install.step3Title": "Im Infobereich laufen lassen",
   "install.title": "In Betrieb nehmen",
-  "install.virustotal": "Das aktuelle Installationsprogramm auf <a href=\"https://www.virustotal.com/gui/file/960fcd46c228e46a908b7f870ffbf1fd1e703f58892388c4c1c35447e5dce03b\" rel=\"noopener\">VirusTotal</a>. Die wenigen heuristischen Funde sind der Emulator-Fehlalarm; prüfen Sie jede Version selbst, indem Sie ihren SHA-256 vergleichen.",
+  "install.virustotal": "Das aktuelle Installationsprogramm auf <a href=\"https://www.virustotal.com/gui/file/277d0e7da8c2d04eb38eb43d3778cd595feb3901ebe653e88ebd521fd03cf7d1\" rel=\"noopener\">VirusTotal</a>. Die wenigen heuristischen Funde sind der Emulator-Fehlalarm; prüfen Sie jede Version selbst, indem Sie ihren SHA-256 vergleichen.",
   "install.windowsData": "Einstellungen und Daten: <code>%APPDATA%\\Achievement Watcher Next</code>",
   "more.backupBody": "Einstellungen, Bibliotheksauswahl, Vorlagen, Designs und Spielzeit in einer Datei, für eine Neuinstallation oder einen neuen PC.",
   "more.backupTitle": "Profilsicherung",
