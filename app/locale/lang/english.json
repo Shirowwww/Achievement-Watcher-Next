@@ -2,9 +2,10 @@
   "achievements": "Achievements",
   "perfectGame": "Perfect Games",
   "completionRate": "Avg. Game Completion Rate",
-  "emptyList": "No Games",
-  "emptyListHint": "No achievements found yet. Add the folder where your games store their achievement files, then refresh (F5).",
+  "emptyList": "No games yet",
+  "emptyListHint": "AW Next can look for your games and their achievement files on this PC. You can also add a folder yourself.",
   "emptyListAction": "Open folder settings",
+  "emptyListDetect": "Detect my games",
   "installedOnly": "Show installed games only",
   "refreshLibrary": "Refresh the library (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Shade",
     "color-picker-hue": "Hue",
     "color-picker-code": "Colour code",
-    "color-picker-eyedropper": "Pick a colour on screen"
+    "color-picker-eyedropper": "Pick a colour on screen",
+    "empty-detect-running": "Looking for games on this PC…",
+    "empty-detect-none": "Nothing new found. Add a folder yourself if a game is missing.",
+    "empty-detect-found": "Folders found: {count}. Loading your games…"
   },
   "watchdog": {
     "rare": "Rare {percent}%",

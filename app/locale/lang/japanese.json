@@ -2,9 +2,10 @@
   "achievements": "実績",
   "perfectGame": "コンプリート済みゲーム",
   "completionRate": "平均達成率",
-  "emptyList": "ゲームなし",
-  "emptyListHint": "まだ実績が見つかりません。ゲームが実績ファイルを保存するフォルダーを追加してから更新（F5）してください。",
+  "emptyList": "まだゲームがありません",
+  "emptyListHint": "AW Next は、このPC上でゲームとその実績ファイルを探せます。フォルダーを自分で追加することもできます。",
   "emptyListAction": "フォルダー設定を開く",
+  "emptyListDetect": "ゲームを検出",
   "installedOnly": "インストール済みのゲームのみ表示",
   "refreshLibrary": "ライブラリを更新 (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "明度と彩度",
     "color-picker-hue": "色相",
     "color-picker-code": "カラーコード",
-    "color-picker-eyedropper": "画面から色を取得"
+    "color-picker-eyedropper": "画面から色を取得",
+    "empty-detect-running": "このPCでゲームを探しています…",
+    "empty-detect-none": "新しいものは見つかりませんでした。足りないゲームがある場合は、フォルダーを自分で追加してください。",
+    "empty-detect-found": "見つかったフォルダー: {count}。ゲームを読み込んでいます…"
   },
   "watchdog": {
     "rare": "レア {percent}%",

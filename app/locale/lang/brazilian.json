@@ -2,9 +2,10 @@
   "achievements": "Conquistas",
   "perfectGame": "Jogos concluídos",
   "completionRate": "Taxa média de conclusão",
-  "emptyList": "Sem jogos",
-  "emptyListHint": "Nenhuma conquista encontrada ainda. Adicione a pasta onde seus jogos salvam os arquivos de conquistas e depois atualize (F5).",
+  "emptyList": "Ainda sem jogos",
+  "emptyListHint": "O AW Next pode procurar seus jogos e os arquivos de conquistas deles neste PC. Você também pode adicionar uma pasta por conta própria.",
   "emptyListAction": "Abrir configurações de pastas",
+  "emptyListDetect": "Detectar meus jogos",
   "installedOnly": "Mostrar apenas os jogos instalados",
   "refreshLibrary": "Atualizar a biblioteca (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Sombra",
     "color-picker-hue": "Matiz",
     "color-picker-code": "Código da cor",
-    "color-picker-eyedropper": "Selecionar uma cor na tela"
+    "color-picker-eyedropper": "Selecionar uma cor na tela",
+    "empty-detect-running": "Procurando jogos neste PC…",
+    "empty-detect-none": "Nada de novo encontrado. Adicione uma pasta se algum jogo estiver faltando.",
+    "empty-detect-found": "Pastas encontradas: {count}. Carregando seus jogos…"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

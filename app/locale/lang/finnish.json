@@ -2,9 +2,10 @@
   "achievements": "Saavutukset",
   "perfectGame": "Täydelliset pelit",
   "completionRate": "Pelien keskim. suoritusaste",
-  "emptyList": "Ei pelejä",
-  "emptyListHint": "Saavutuksia ei ole vielä löytynyt. Lisää kansio, johon pelisi tallentavat saavutustiedostonsa, ja päivitä sitten (F5).",
+  "emptyList": "Ei vielä pelejä",
+  "emptyListHint": "AW Next voi etsiä pelisi ja niiden saavutustiedostot tältä tietokoneelta. Voit myös lisätä kansion itse.",
   "emptyListAction": "Avaa kansioasetukset",
+  "emptyListDetect": "Tunnista pelini",
   "installedOnly": "Näytä vain asennetut pelit",
   "refreshLibrary": "Päivitä kirjasto (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Vivahde",
     "color-picker-hue": "Värisävy",
     "color-picker-code": "Värikoodi",
-    "color-picker-eyedropper": "Poimi väri näytöltä"
+    "color-picker-eyedropper": "Poimi väri näytöltä",
+    "empty-detect-running": "Etsitään pelejä tältä tietokoneelta…",
+    "empty-detect-none": "Uutta ei löytynyt. Lisää kansio itse, jos jokin peli puuttuu.",
+    "empty-detect-found": "Löytyneet kansiot: {count}. Ladataan pelejäsi…"
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

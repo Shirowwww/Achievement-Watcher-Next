@@ -4025,6 +4025,35 @@ function updateGameBox(appid, newProgress) {
   if (value) value.textContent = formatPercentValue(newProgress);
 }
 
+/*
+  Smart Find without its review step: an empty library has nothing to review. A folder already listed
+  keeps its entry, so one the user switched off stays off. Returns how many folders were added.
+*/
+async function addDetectedGameFolders() {
+  const key = (dir) => path.normalize(String(dir || '')).toLowerCase();
+  const merge = (existing, found) => {
+    const seen = new Set(existing.map((entry) => key(typeof entry === 'string' ? entry : entry.path)));
+    const additions = found.filter((entry) => entry.path && !seen.has(key(entry.path)) && seen.add(key(entry.path)));
+    return { all: [...existing, ...additions], added: additions.length };
+  };
+  const [saveDirs, libraries, foundSaves, foundLibraries] = await Promise.all([
+    userDir.getEntries(),
+    libraryDirs.getEntries(),
+    userDir.findEntries(),
+    libraryDirs.findEntries(),
+  ]);
+  const checkedSaves = [];
+  for (const entry of foundSaves) {
+    if (await userDir.check(entry.path)) checkedSaves.push(entry);
+  }
+  const savesMerge = merge(saveDirs, checkedSaves);
+  const librariesMerge = merge(libraries, foundLibraries);
+  if (savesMerge.added > 0) await userDir.save(savesMerge.all);
+  if (librariesMerge.added > 0) await libraryDirs.save(librariesMerge.all);
+  debug.log(`empty-state detection: ${savesMerge.added} save folder(s), ${librariesMerge.added} game library folder(s) added`);
+  return savesMerge.added + librariesMerge.added;
+}
+
 function autodetectGameExe(gameDir, gameName, taken) {
   if (!gameDir) return null;
   try {
@@ -4266,6 +4295,7 @@ var app = {
     const freshRenderedAppids = new Set();
     // Reset the list and handlers so onStart() stays idempotent.
     $('#game-list ul').empty();
+    $('#game-list .isEmpty').hide();
     clearSkeletonTiles();
     gameElements.clear();
     libraryArtwork.disconnect();
@@ -6498,9 +6528,8 @@ var app = {
               // Undo the last fix: every Uplay R1/R2 repair snapshots the schema + ini files it
               // overwrites, but nothing read those back until this entry. Only offered when a snapshot exists.
               {
-                const restoreDir = ctxGame?.gameDir && fs.existsSync(ctxGame.gameDir) ? ctxGame.gameDir : null;
-                const backups = restoreDir ? uplayR2.listConfigBackups(restoreDir) : [];
-                if (backups.length > 0) {
+                const restoreDir = ctxGame?.gameDir;
+                if (latestUplayR2Backup(restoreDir)) {
                   emulatorMenu.append(
                     new MenuItem({
                       icon: menuIcon('redo-alt.png'),
@@ -6508,39 +6537,7 @@ var app = {
                         $('#game-list').attr('data-ctx-restoreuplayr2') ||
                         t('restore-uplay-r2-config', 'Restore the previous Uplay R1/R2 configuration…', 'Restaurer la configuration Uplay R1/R2 précédente…'),
                       async click() {
-                        try {
-                          const latest = backups[0];
-                          const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                            type: 'question',
-                            buttons: [t('restore', 'Restore', 'Restaurer'), t('cancel', 'Cancel', 'Annuler')],
-                            defaultId: 0,
-                            cancelId: 1,
-                            title: t('restore-uplay-r2-title', 'Restore Uplay R1/R2 configuration', 'Restaurer la configuration Uplay R1/R2'),
-                            message: t(
-                              'restore-uplay-r2-message',
-                              'Restore the snapshot taken before the last repair?',
-                              'Restaurer la sauvegarde prise avant la dernière réparation ?'
-                            ),
-                            detail: `${latest.name}\n${latest.files.join('\n')}`,
-                            noLink: true,
-                          });
-                          if (confirmed !== 0) return;
-                          const result = uplayR2.restoreConfigBackup({ dir: restoreDir, backup: latest });
-                          remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-                            type: 'info',
-                            title: t('restore-uplay-r2-title', 'Restore Uplay R1/R2 configuration', 'Restaurer la configuration Uplay R1/R2'),
-                            message: t('restore-uplay-r2-done', 'Configuration restored.', 'Configuration restaurée.'),
-                            detail: [...result.restored, ...result.removed.map((file) => `[-] ${file}`)].join('\n'),
-                            noLink: true,
-                          });
-                        } catch (err) {
-                          remote.dialog.showMessageBoxSync({
-                            type: 'error',
-                            title: t('restore-failed', 'Restore failed', 'Échec de la restauration'),
-                            message: t('could-not-restore-the-uplay-r2-setup', 'Could not restore the Uplay R1/R2 configuration.', 'Impossible de restaurer la configuration Uplay R1/R2.'),
-                            detail: `${err}`,
-                          });
-                        }
+                        await restoreUplayR2Backup(restoreDir);
                       },
                     })
                   );
@@ -8992,6 +8989,28 @@ var app = {
       $('#empty-open-folders').on('click', function () {
         $('title-bar').trigger('open-settings');
         $("#settingNav li[data-view='folder']").trigger('click');
+      });
+
+      $('#empty-detect-games').on('click', async function () {
+        const self = $(this);
+        if (self.hasClass('is-busy')) return;
+        const status = $('#game-list .isEmpty .empty-status');
+        self.addClass('is-busy').attr('aria-disabled', 'true');
+        status.text(t('empty-detect-running', 'Looking for games on this PC…', 'Recherche des jeux sur ce PC…'));
+        try {
+          const added = await addDetectedGameFolders();
+          if (added === 0) {
+            status.text(t('empty-detect-none', 'Nothing new found. Add a folder yourself if a game is missing.', 'Rien de nouveau trouvé. Ajoute un dossier toi-même si un jeu manque.'));
+            return;
+          }
+          status.text(t('empty-detect-found', 'Folders found: {count}. Loading your games…', 'Dossiers trouvés : {count}. Chargement de tes jeux…', { count: added }));
+          app.onStart();
+        } catch (err) {
+          debug.error(`empty-state detection failed => ${formatErr(err)}`);
+          status.text(t('error-while-auto-finding-folder-s', 'Error while auto-finding folder(s)', 'Erreur lors de la recherche automatique de dossiers'));
+        } finally {
+          self.removeClass('is-busy').removeAttr('aria-disabled');
+        }
       });
 
       // Reveal a hidden achievement's masked description in place. Delegated from the stable #achievement

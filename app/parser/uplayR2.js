@@ -1257,6 +1257,43 @@ function normalizeLoaderLanguage(language) {
   return UPLAY_LANGUAGE_CODES[value.toLowerCase()] || UPLAY_LANGUAGE_VALUES.get(value.toLowerCase()) || 'en-US';
 }
 
+/*
+  A release can keep its loader settings under a name the installed loader never opens (DenuvOwO's
+  uplay_r1_loader.ini). Its identity has to survive the swap - above all the ticket a Denuvo bypass
+  checks: AC Odyssey hung at launch on the template's ticket (#141). AW keeps the achievement keys.
+*/
+const RELEASE_INI_PATTERN = /^(?:uplay|upc)_r[12]_loader(?:64)?\.ini$/i;
+const RELEASE_INI_MAX_BYTES = 64 * 1024;
+const AW_OWNED_KEYS = new Set(['achievements', 'achkeyprefix', 'achsavetype', 'achsavepath']);
+
+function releaseIniValues(dir, kind) {
+  let names;
+  try {
+    names = fs.readdirSync(dir).filter((name) => RELEASE_INI_PATTERN.test(name));
+  } catch {
+    return {};
+  }
+  for (const name of names) {
+    const file = path.join(dir, name);
+    let text;
+    try {
+      if (fs.statSync(file).size > RELEASE_INI_MAX_BYTES) continue;
+      text = fs.readFileSync(file, 'utf8');
+    } catch {
+      continue; // an unreadable leftover is not a config to carry over
+    }
+    const section = getIniSection(parseIni(text), kind.section);
+    if (!section) continue;
+    const values = {};
+    for (const line of section.body) {
+      const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
+      if (m && !AW_OWNED_KEYS.has(m[1].toLowerCase())) values[m[1]] = sanitizeIniValue(m[2]);
+    }
+    if (Object.keys(values).length > 0) return values;
+  }
+  return {};
+}
+
 // Read-modify-write BOTH of a generation's ini names beside the loader dll, preserving every other
 // key and section. Only keys the installed loader parses are written, or the ini would look
 // configured while saves stay elsewhere. R1 holds the same keys under [Uplay].
@@ -1281,15 +1318,18 @@ function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, lo
 
   const template = kind.id === 'r1' ? DEFAULT_INI_TEMPLATE_R1 : DEFAULT_INI_TEMPLATE;
   const written = [];
+  let releaseValues;
   for (const iniName of kind.iniNames) {
     const file = path.join(dir, iniName);
-    const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : template;
+    const exists = fs.existsSync(file);
+    const previous = exists ? fs.readFileSync(file, 'utf8') : template;
     const doc = parseIni(previous);
     let settings = getIniSection(doc, kind.section);
     if (!settings) {
       settings = { key: kind.section.toLowerCase(), header: `[${kind.section}]`, body: [] };
       doc.sections.unshift(settings);
     }
+    if (!exists) settings.body = upsertIniKeys(settings.body, (releaseValues ??= releaseIniValues(dir, kind)));
     settings.body = upsertIniKeys(settings.body, updates);
     const next = stringifyIni(doc);
     const changed = previous !== next;

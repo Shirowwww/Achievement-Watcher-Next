@@ -2,9 +2,10 @@
   "achievements": "Prestaties",
   "perfectGame": "Perfecte games",
   "completionRate": "Gem. voltooiingspercentage",
-  "emptyList": "Geen games",
-  "emptyListHint": "Nog geen prestaties gevonden. Voeg de map toe waarin je games hun prestatiebestanden opslaan en vernieuw daarna (F5).",
+  "emptyList": "Nog geen games",
+  "emptyListHint": "AW Next kan op deze pc zoeken naar je games en hun prestatiebestanden. Je kunt ook zelf een map toevoegen.",
   "emptyListAction": "Mapinstellingen openen",
+  "emptyListDetect": "Mijn games zoeken",
   "installedOnly": "Alleen geïnstalleerde games tonen",
   "refreshLibrary": "Bibliotheek vernieuwen (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Schakering",
     "color-picker-hue": "Kleurtoon",
     "color-picker-code": "Kleurcode",
-    "color-picker-eyedropper": "Kies een kleur op het scherm"
+    "color-picker-eyedropper": "Kies een kleur op het scherm",
+    "empty-detect-running": "Games zoeken op deze pc…",
+    "empty-detect-none": "Niets nieuws gevonden. Voeg zelf een map toe als er een game ontbreekt.",
+    "empty-detect-found": "Mappen gevonden: {count}. Je games worden geladen…"
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

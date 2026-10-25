@@ -26,6 +26,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **An empty library can find your games.** When no game shows up, "Detect my games" looks for save
+  folders and game libraries on this PC, adds the new ones and reloads the list.
 - **A clearer tray icon.** The trophy in the notification area keeps the logo's three stars, and its
   handles are wider, so they show even at small sizes.
 - **One Steam sound.** "Steam" and "Steam Original" were the same sound; only Steam Original is
@@ -47,6 +49,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The Ubisoft achievement fix no longer stops Denuvo repacks from starting.** Some repacks keep
+  their Uplay settings, including the ticket their Denuvo bypass checks, in a file the installed
+  emulator never reads, so the fix replaced them with defaults and the game hung at launch
+  (Assassin's Creed Odyssey). Those settings are now carried over; only the achievement part is
+  AW Next's. Game Health's "Undo the emulator switch" now also restores a Ubisoft repair.
 - **No more "Epic Games Store" windows in Alt+Tab.** Looking up the name of an Epic emulator game
   opened up to a hundred hidden store pages in Chrome or Edge, and on Windows they showed up as empty
   windows in Alt+Tab that could not be closed. The name now comes from a plain web request, without

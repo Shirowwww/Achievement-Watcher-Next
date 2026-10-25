@@ -964,7 +964,8 @@ function switchedRuntimeDirs(game) {
 function paintUndoSwitch(root, game) {
   const link = root.find('.gh-undo-switch');
   link.text(gameHealthActionLabel(gameHealth.ACTION.UNDO_SWITCH_RUNTIME));
-  if (switchedRuntimeDirs(game).length > 0) link.removeAttr('hidden');
+  const hasUplayBackup = !!game && !!game.gameDir && fs.existsSync(game.gameDir) && uplayR2.listConfigBackups(game.gameDir).length > 0;
+  if (switchedRuntimeDirs(game).length > 0 || hasUplayBackup) link.removeAttr('hidden');
   else link.attr('hidden', 'hidden');
 }
 
@@ -1579,7 +1580,8 @@ async function runGameHealthAction(appid, action, button) {
 
   if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {
     const dirs = switchedRuntimeDirs(game);
-    if (dirs.length === 0) return false;
+    // A Ubisoft repair swaps the Uplay loader instead, and keeps its own snapshot.
+    if (dirs.length === 0) return restoreUplayR2Backup(game.gameDir);
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: gameHealthActionLabel(action),

@@ -2,9 +2,10 @@
   "achievements": "Teljesítmények",
   "perfectGame": "Befejezett játékok",
   "completionRate": "Átl. teljesítési arány",
-  "emptyList": "Nincs játék",
-  "emptyListHint": "Még nem található teljesítmény. Add hozzá a mappát, ahová a játékaid a teljesítményfájlokat mentik, majd frissíts (F5).",
+  "emptyList": "Még nincs játék",
+  "emptyListHint": "Az AW Next képes megkeresni a játékaidat és a hozzájuk tartozó teljesítményfájlokat ezen a gépen. Mappát te is hozzáadhatsz.",
   "emptyListAction": "Mappabeállítások megnyitása",
+  "emptyListDetect": "Játékaim felismerése",
   "installedOnly": "Csak a telepített játékok megjelenítése",
   "refreshLibrary": "Könyvtár frissítése (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Árnyalat",
     "color-picker-hue": "Színezet",
     "color-picker-code": "Színkód",
-    "color-picker-eyedropper": "Szín választása a képernyőről"
+    "color-picker-eyedropper": "Szín választása a képernyőről",
+    "empty-detect-running": "Játékok keresése ezen a gépen…",
+    "empty-detect-none": "Nem található semmi új. Ha hiányzik egy játék, add hozzá a mappáját te magad.",
+    "empty-detect-found": "Talált mappák: {count}. A játékaid betöltése…"
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

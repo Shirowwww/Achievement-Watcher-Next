@@ -2,9 +2,10 @@
   "achievements": "Prestasjoner",
   "perfectGame": "Perfekte spill",
   "completionRate": "Gj.sn. fullføringsgrad",
-  "emptyList": "Ingen spill",
-  "emptyListHint": "Fant ingen prestasjoner ennå. Legg til mappen der spillene dine lagrer prestasjonsfilene sine, og oppdater deretter (F5).",
+  "emptyList": "Ingen spill ennå",
+  "emptyListHint": "AW Next kan lete etter spillene dine og prestasjonsfilene deres på denne PC-en. Du kan også legge til en mappe selv.",
   "emptyListAction": "Åpne mappeinnstillinger",
+  "emptyListDetect": "Finn spillene mine",
   "installedOnly": "Vis bare installerte spill",
   "refreshLibrary": "Oppdater biblioteket (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Nyanse",
     "color-picker-hue": "Fargetone",
     "color-picker-code": "Fargekode",
-    "color-picker-eyedropper": "Velg en farge på skjermen"
+    "color-picker-eyedropper": "Velg en farge på skjermen",
+    "empty-detect-running": "Leter etter spill på denne PC-en…",
+    "empty-detect-none": "Fant ikke noe nytt. Legg til en mappe selv hvis et spill mangler.",
+    "empty-detect-found": "Mapper funnet: {count}. Laster inn spillene dine…"
   },
   "watchdog": {
     "rare": "Sjelden {percent} %",

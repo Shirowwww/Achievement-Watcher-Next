@@ -451,3 +451,22 @@ test('both repair paths resolve the settings folder through the same plan', () =
   assert.match(body, /planAchievementDataRepair\(/, 'the right-click repair must not resolve its own target');
   assert.match(body, /dllDirs: report\.dllDirs/);
 });
+
+/*
+  Undoing a repair from Game Health only knew Steam's swapped steam_api dll, so a Ubisoft game whose
+  loader AW had replaced (AC Odyssey hung at launch, #141) had no way back from the panel. Both entry
+  points share one restore, so they cannot drift apart.
+*/
+test('Game Health undoes a Ubisoft repair through the same restore as the right-click menu', () => {
+  assert.equal(appSource.match(/^async function restoreUplayR2Backup\(/gm)?.length, 1, 'one shared restore');
+  assert.equal(appSource.match(/uplayR2\.restoreConfigBackup\(\{ dir: gameDir, backup: latest \}\)/g)?.length, 1, 'nobody restores on their own');
+
+  const paint = appSource.slice(appSource.indexOf('function paintUndoSwitch('));
+  assert.match(paint.slice(0, paint.indexOf('\n}\n')), /uplayR2\.listConfigBackups\(/, 'the link shows for a Ubisoft backup too');
+
+  const undo = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {'));
+  assert.match(undo.slice(0, undo.indexOf('\n  }\n')), /restoreUplayR2Backup\(game\.gameDir\)/);
+
+  const menu = appSource.slice(appSource.indexOf("t('restore-uplay-r2-config'"));
+  assert.match(menu.slice(0, 400), /restoreUplayR2Backup\(/);
+});

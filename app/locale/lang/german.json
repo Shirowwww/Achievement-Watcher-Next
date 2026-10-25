@@ -2,9 +2,10 @@
   "achievements": "Erfolge",
   "perfectGame": "Abgeschlossene Spiele",
   "completionRate": "Durchschn. Abschlussrate",
-  "emptyList": "Keine Spiele",
-  "emptyListHint": "Noch keine Erfolge gefunden. Füge den Ordner hinzu, in dem deine Spiele ihre Erfolgsdateien speichern, und aktualisiere dann (F5).",
+  "emptyList": "Noch keine Spiele",
+  "emptyListHint": "AW Next kann auf diesem PC nach deinen Spielen und ihren Erfolgsdateien suchen. Du kannst auch selbst einen Ordner hinzufügen.",
   "emptyListAction": "Ordnereinstellungen öffnen",
+  "emptyListDetect": "Meine Spiele erkennen",
   "installedOnly": "Nur installierte Spiele anzeigen",
   "refreshLibrary": "Bibliothek aktualisieren (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Schattierung",
     "color-picker-hue": "Farbton",
     "color-picker-code": "Farbcode",
-    "color-picker-eyedropper": "Farbe vom Bildschirm aufnehmen"
+    "color-picker-eyedropper": "Farbe vom Bildschirm aufnehmen",
+    "empty-detect-running": "Suche nach Spielen auf diesem PC…",
+    "empty-detect-none": "Nichts Neues gefunden. Füge selbst einen Ordner hinzu, wenn ein Spiel fehlt.",
+    "empty-detect-found": "Gefundene Ordner: {count}. Deine Spiele werden geladen…"
   },
   "watchdog": {
     "rare": "Selten {percent}%",

@@ -3,8 +3,9 @@
   "perfectGame": "已完成的游戏",
   "completionRate": "平均完成率",
   "emptyList": "暂无游戏",
-  "emptyListHint": "尚未找到任何成就。请添加游戏保存成就文件的文件夹，然后刷新（F5）。",
+  "emptyListHint": "AW Next 可以在此电脑上查找你的游戏及其成就文件。你也可以自行添加文件夹。",
   "emptyListAction": "打开文件夹设置",
+  "emptyListDetect": "检测我的游戏",
   "installedOnly": "仅显示已安装的游戏",
   "refreshLibrary": "刷新游戏库 (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "明暗",
     "color-picker-hue": "色相",
     "color-picker-code": "颜色代码",
-    "color-picker-eyedropper": "从屏幕上取色"
+    "color-picker-eyedropper": "从屏幕上取色",
+    "empty-detect-running": "正在此电脑上查找游戏…",
+    "empty-detect-none": "未发现新内容。如有游戏缺失，请自行添加文件夹。",
+    "empty-detect-found": "已找到文件夹：{count}。正在加载你的游戏…"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

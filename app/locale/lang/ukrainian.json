@@ -2,9 +2,10 @@
   "achievements": "Досягнення",
   "perfectGame": "Завершені ігри",
   "completionRate": "Сер. відсоток завершення",
-  "emptyList": "Немає ігор",
-  "emptyListHint": "Досягнень поки не знайдено. Додайте папку, де ваші ігри зберігають файли досягнень, потім оновіть (F5).",
+  "emptyList": "Ігор поки немає",
+  "emptyListHint": "AW Next може знайти на цьому ПК ваші ігри та файли їхніх досягнень. Папку також можна додати самостійно.",
   "emptyListAction": "Відкрити налаштування папок",
+  "emptyListDetect": "Знайти мої ігри",
   "installedOnly": "Показувати лише встановлені ігри",
   "refreshLibrary": "Оновити бібліотеку (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Відтінок",
     "color-picker-hue": "Тон",
     "color-picker-code": "Код кольору",
-    "color-picker-eyedropper": "Узяти колір з екрана"
+    "color-picker-eyedropper": "Узяти колір з екрана",
+    "empty-detect-running": "Пошук ігор на цьому ПК…",
+    "empty-detect-none": "Нічого нового не знайдено. Якщо якоїсь гри бракує, додайте папку самостійно.",
+    "empty-detect-found": "Знайдено папок: {count}. Завантаження ваших ігор…"
   },
   "watchdog": {
     "rare": "Рідкісне {percent}%",

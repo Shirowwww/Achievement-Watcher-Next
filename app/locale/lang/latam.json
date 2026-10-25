@@ -2,9 +2,10 @@
   "achievements": "Logros",
   "perfectGame": "Juegos completados",
   "completionRate": "Tasa media de finalización",
-  "emptyList": "Sin juegos",
-  "emptyListHint": "Aún no se encontraron logros. Agrega la carpeta donde tus juegos guardan sus archivos de logros y luego actualiza (F5).",
+  "emptyList": "Aún no hay juegos",
+  "emptyListHint": "AW Next puede buscar tus juegos y sus archivos de logros en esta PC. También puedes agregar una carpeta tú mismo.",
   "emptyListAction": "Abrir ajustes de carpetas",
+  "emptyListDetect": "Detectar mis juegos",
   "installedOnly": "Mostrar solo los juegos instalados",
   "refreshLibrary": "Actualizar la biblioteca (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Tono",
     "color-picker-hue": "Matiz",
     "color-picker-code": "Código de color",
-    "color-picker-eyedropper": "Elegir un color en pantalla"
+    "color-picker-eyedropper": "Elegir un color en pantalla",
+    "empty-detect-running": "Buscando juegos en esta PC…",
+    "empty-detect-none": "No se encontró nada nuevo. Agrega una carpeta tú mismo si falta algún juego.",
+    "empty-detect-found": "Carpetas encontradas: {count}. Cargando tus juegos…"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

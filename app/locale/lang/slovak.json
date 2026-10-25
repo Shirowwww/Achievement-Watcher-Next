@@ -2,9 +2,10 @@
   "achievements": "Úspechy",
   "perfectGame": "Dokončené hry",
   "completionRate": "Priem. miera dokončenia",
-  "emptyList": "Žiadne hry",
-  "emptyListHint": "Zatiaľ neboli nájdené žiadne úspechy. Pridajte priečinok, kam vaše hry ukladajú súbory úspechov, a potom obnovte (F5).",
+  "emptyList": "Zatiaľ žiadne hry",
+  "emptyListHint": "AW Next dokáže na tomto počítači vyhľadať vaše hry a ich súbory úspechov. Priečinok môžete pridať aj sami.",
   "emptyListAction": "Otvoriť nastavenia priečinkov",
+  "emptyListDetect": "Nájsť moje hry",
   "installedOnly": "Zobraziť iba nainštalované hry",
   "refreshLibrary": "Obnoviť knižnicu (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Sýtosť a jas",
     "color-picker-hue": "Odtieň",
     "color-picker-code": "Kód farby",
-    "color-picker-eyedropper": "Vybrať farbu z obrazovky"
+    "color-picker-eyedropper": "Vybrať farbu z obrazovky",
+    "empty-detect-running": "Hľadám hry na tomto počítači…",
+    "empty-detect-none": "Nenašlo sa nič nové. Ak nejaká hra chýba, pridajte priečinok sami.",
+    "empty-detect-found": "Nájdené priečinky: {count}. Načítavam vaše hry…"
   },
   "watchdog": {
     "rare": "Vzácny {percent}%",

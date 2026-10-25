@@ -2,9 +2,10 @@
   "achievements": "Başarımlar",
   "perfectGame": "Tamamlanan oyunlar",
   "completionRate": "Ort. tamamlama oranı",
-  "emptyList": "Oyun yok",
-  "emptyListHint": "Henüz başarım bulunamadı. Oyunlarının başarım dosyalarını kaydettiği klasörü ekle, ardından yenile (F5).",
+  "emptyList": "Henüz oyun yok",
+  "emptyListHint": "AW Next bu bilgisayarda oyunlarını ve başarım dosyalarını arayabilir. İstersen bir klasörü kendin de ekleyebilirsin.",
   "emptyListAction": "Klasör ayarlarını aç",
+  "emptyListDetect": "Oyunlarımı bul",
   "installedOnly": "Yalnızca yüklü oyunları göster",
   "refreshLibrary": "Kütüphaneyi yenile (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Ton",
     "color-picker-hue": "Renk tonu",
     "color-picker-code": "Renk kodu",
-    "color-picker-eyedropper": "Ekrandan renk seç"
+    "color-picker-eyedropper": "Ekrandan renk seç",
+    "empty-detect-running": "Bu bilgisayarda oyunlar aranıyor…",
+    "empty-detect-none": "Yeni bir şey bulunamadı. Eksik bir oyun varsa klasörü kendin ekle.",
+    "empty-detect-found": "Bulunan klasörler: {count}. Oyunların yükleniyor…"
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

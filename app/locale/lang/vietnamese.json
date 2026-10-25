@@ -2,9 +2,10 @@
   "achievements": "Thành tựu",
   "perfectGame": "Trò chơi hoàn hảo",
   "completionRate": "Tỷ lệ hoàn thành trung bình",
-  "emptyList": "Không có trò chơi",
-  "emptyListHint": "Chưa tìm thấy thành tựu nào. Hãy thêm thư mục nơi các trò chơi lưu tệp thành tựu của chúng, rồi làm mới (F5).",
+  "emptyList": "Chưa có trò chơi nào",
+  "emptyListHint": "AW Next có thể tìm các trò chơi của bạn và tệp thành tựu của chúng trên PC này. Bạn cũng có thể tự thêm một thư mục.",
   "emptyListAction": "Mở cài đặt thư mục",
+  "emptyListDetect": "Tìm trò chơi của tôi",
   "installedOnly": "Chỉ hiện trò chơi đã cài đặt",
   "refreshLibrary": "Làm mới thư viện (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Độ đậm nhạt",
     "color-picker-hue": "Sắc độ",
     "color-picker-code": "Mã màu",
-    "color-picker-eyedropper": "Chọn màu trên màn hình"
+    "color-picker-eyedropper": "Chọn màu trên màn hình",
+    "empty-detect-running": "Đang tìm trò chơi trên PC này…",
+    "empty-detect-none": "Không tìm thấy gì mới. Hãy tự thêm một thư mục nếu thiếu trò chơi nào.",
+    "empty-detect-found": "Đã tìm thấy thư mục: {count}. Đang tải trò chơi của bạn…"
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",

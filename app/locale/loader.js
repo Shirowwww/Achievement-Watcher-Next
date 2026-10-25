@@ -112,6 +112,7 @@ function translateUI(lang, locale, template) {
   selector.find('.isEmpty .empty-title').text(clear(template.emptyList));
   selector.find('.isEmpty .empty-hint').text(clear(template.emptyListHint));
   selector.find('.isEmpty .empty-action').text(clear(template.emptyListAction));
+  selector.find('.isEmpty .empty-detect').text(clear(template.emptyListDetect));
   selector.attr('data-contextMenu0', clear(template.removeFromList));
   selector.attr('data-contextMenu1', clear(template.buildIconPrefetchCache));
   if (template.contextMenu) {

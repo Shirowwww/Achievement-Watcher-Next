@@ -2,9 +2,10 @@
   "achievements": "成就",
   "perfectGame": "完美遊戲",
   "completionRate": "平均遊戲完成度",
-  "emptyList": "沒有遊戲",
-  "emptyListHint": "尚未找到任何成就。請新增遊戲存放成就檔案的資料夾，然後重新整理（F5）。",
+  "emptyList": "尚無遊戲",
+  "emptyListHint": "AW Next 可以在這台電腦上尋找你的遊戲及其成就檔案。你也可以自行新增資料夾。",
   "emptyListAction": "開啟資料夾設定",
+  "emptyListDetect": "偵測我的遊戲",
   "installedOnly": "僅顯示已安裝的遊戲",
   "refreshLibrary": "重新整理收藏庫 (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "明暗",
     "color-picker-hue": "色相",
     "color-picker-code": "顏色代碼",
-    "color-picker-eyedropper": "從螢幕上取色"
+    "color-picker-eyedropper": "從螢幕上取色",
+    "empty-detect-running": "正在這台電腦上尋找遊戲…",
+    "empty-detect-none": "沒有發現新內容。如有遊戲缺少，請自行新增資料夾。",
+    "empty-detect-found": "已找到資料夾：{count}。正在載入你的遊戲…"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

@@ -2,9 +2,10 @@
   "achievements": "Proezas",
   "perfectGame": "Jogos concluídos",
   "completionRate": "Taxa média de conclusão",
-  "emptyList": "Sem jogos",
-  "emptyListHint": "Ainda não foram encontradas proezas. Adicione a pasta onde os seus jogos guardam os ficheiros de proezas e depois atualize (F5).",
+  "emptyList": "Ainda sem jogos",
+  "emptyListHint": "O AW Next pode procurar os seus jogos e os respetivos ficheiros de proezas neste PC. Também pode adicionar uma pasta por si.",
   "emptyListAction": "Abrir definições de pastas",
+  "emptyListDetect": "Detetar os meus jogos",
   "installedOnly": "Mostrar apenas os jogos instalados",
   "refreshLibrary": "Atualizar a biblioteca (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Sombra",
     "color-picker-hue": "Matiz",
     "color-picker-code": "Código da cor",
-    "color-picker-eyedropper": "Escolher uma cor no ecrã"
+    "color-picker-eyedropper": "Escolher uma cor no ecrã",
+    "empty-detect-running": "A procurar jogos neste PC…",
+    "empty-detect-none": "Não foi encontrado nada de novo. Adicione uma pasta se faltar algum jogo.",
+    "empty-detect-found": "Pastas encontradas: {count}. A carregar os seus jogos…"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

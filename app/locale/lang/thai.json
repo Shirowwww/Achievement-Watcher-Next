@@ -2,9 +2,10 @@
   "achievements": "ความสำเร็จ",
   "perfectGame": "เกมที่เล่นจบแล้ว",
   "completionRate": "อัตราการทำสำเร็จเฉลี่ย",
-  "emptyList": "ไม่มีเกม",
-  "emptyListHint": "ยังไม่พบความสำเร็จ เพิ่มโฟลเดอร์ที่เกมของคุณบันทึกไฟล์ความสำเร็จ แล้วรีเฟรช (F5)",
+  "emptyList": "ยังไม่มีเกม",
+  "emptyListHint": "AW Next สามารถค้นหาเกมของคุณและไฟล์ความสำเร็จของเกมในพีซีเครื่องนี้ได้ คุณยังเพิ่มโฟลเดอร์เองได้ด้วย",
   "emptyListAction": "เปิดการตั้งค่าโฟลเดอร์",
+  "emptyListDetect": "ตรวจหาเกมของฉัน",
   "installedOnly": "แสดงเฉพาะเกมที่ติดตั้งแล้ว",
   "refreshLibrary": "รีเฟรชคลัง (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "ความเข้ม",
     "color-picker-hue": "เฉดสี",
     "color-picker-code": "รหัสสี",
-    "color-picker-eyedropper": "เลือกสีบนหน้าจอ"
+    "color-picker-eyedropper": "เลือกสีบนหน้าจอ",
+    "empty-detect-running": "กำลังค้นหาเกมในพีซีเครื่องนี้…",
+    "empty-detect-none": "ไม่พบสิ่งใหม่ หากมีเกมหายไป ให้เพิ่มโฟลเดอร์เอง",
+    "empty-detect-found": "พบโฟลเดอร์: {count} กำลังโหลดเกมของคุณ…"
   },
   "watchdog": {
     "rare": "หายาก {percent}%",

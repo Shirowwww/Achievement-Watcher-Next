@@ -2,9 +2,10 @@
   "achievements": "Obiettivi",
   "perfectGame": "Giochi completati",
   "completionRate": "Tasso medio di completamento",
-  "emptyList": "Nessun gioco",
-  "emptyListHint": "Nessun obiettivo trovato per ora. Aggiungi la cartella in cui i tuoi giochi salvano i file degli obiettivi, poi aggiorna (F5).",
+  "emptyList": "Ancora nessun gioco",
+  "emptyListHint": "AW Next può cercare i tuoi giochi e i relativi file degli obiettivi su questo PC. Puoi anche aggiungere una cartella da solo.",
   "emptyListAction": "Apri impostazioni cartelle",
+  "emptyListDetect": "Rileva i miei giochi",
   "installedOnly": "Mostra solo i giochi installati",
   "refreshLibrary": "Aggiorna la libreria (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Sfumatura",
     "color-picker-hue": "Tonalità",
     "color-picker-code": "Codice colore",
-    "color-picker-eyedropper": "Preleva un colore dallo schermo"
+    "color-picker-eyedropper": "Preleva un colore dallo schermo",
+    "empty-detect-running": "Ricerca dei giochi su questo PC…",
+    "empty-detect-none": "Non è stato trovato nulla di nuovo. Aggiungi tu una cartella se manca un gioco.",
+    "empty-detect-found": "Cartelle trovate: {count}. Caricamento dei tuoi giochi…"
   },
   "watchdog": {
     "rare": "Raro {percent}%",

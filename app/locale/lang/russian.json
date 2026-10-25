@@ -2,9 +2,10 @@
   "achievements": "Достижения",
   "perfectGame": "Завершённые игры",
   "completionRate": "Ср. процент завершения",
-  "emptyList": "Нет игр",
-  "emptyListHint": "Достижения пока не найдены. Добавьте папку, в которой ваши игры сохраняют файлы достижений, затем обновите (F5).",
+  "emptyList": "Игр пока нет",
+  "emptyListHint": "AW Next может найти на этом ПК ваши игры и файлы их достижений. Папку также можно добавить самостоятельно.",
   "emptyListAction": "Открыть настройки папок",
+  "emptyListDetect": "Найти мои игры",
   "installedOnly": "Показывать только установленные игры",
   "refreshLibrary": "Обновить библиотеку (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Оттенок",
     "color-picker-hue": "Тон",
     "color-picker-code": "Код цвета",
-    "color-picker-eyedropper": "Взять цвет с экрана"
+    "color-picker-eyedropper": "Взять цвет с экрана",
+    "empty-detect-running": "Поиск игр на этом ПК…",
+    "empty-detect-none": "Ничего нового не найдено. Если какой-то игры не хватает, добавьте папку самостоятельно.",
+    "empty-detect-found": "Найдено папок: {count}. Загрузка ваших игр…"
   },
   "watchdog": {
     "rare": "Редкое {percent}%",

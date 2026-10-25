@@ -2,9 +2,10 @@
   "achievements": "Prestationer",
   "perfectGame": "Perfekta spel",
   "completionRate": "Genomsn. slutförandegrad",
-  "emptyList": "Inga spel",
-  "emptyListHint": "Inga prestationer har hittats än. Lägg till mappen där dina spel sparar sina prestationsfiler och uppdatera sedan (F5).",
+  "emptyList": "Inga spel än",
+  "emptyListHint": "AW Next kan leta efter dina spel och deras prestationsfiler på den här datorn. Du kan också lägga till en mapp själv.",
   "emptyListAction": "Öppna mappinställningar",
+  "emptyListDetect": "Hitta mina spel",
   "installedOnly": "Visa bara installerade spel",
   "refreshLibrary": "Uppdatera biblioteket (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Nyans",
     "color-picker-hue": "Färgton",
     "color-picker-code": "Färgkod",
-    "color-picker-eyedropper": "Välj en färg på skärmen"
+    "color-picker-eyedropper": "Välj en färg på skärmen",
+    "empty-detect-running": "Letar efter spel på den här datorn…",
+    "empty-detect-none": "Hittade inget nytt. Lägg till en mapp själv om ett spel saknas.",
+    "empty-detect-found": "Hittade mappar: {count}. Läser in dina spel…"
   },
   "watchdog": {
     "rare": "Sällsynt {percent} %",

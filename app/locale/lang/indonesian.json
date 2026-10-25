@@ -2,9 +2,10 @@
   "achievements": "Pencapaian",
   "perfectGame": "Game Sempurna",
   "completionRate": "Rata-rata Penyelesaian Game",
-  "emptyList": "Tidak Ada Game",
-  "emptyListHint": "Belum ada pencapaian yang ditemukan. Tambahkan folder tempat game Anda menyimpan file pencapaiannya, lalu muat ulang (F5).",
+  "emptyList": "Belum ada game",
+  "emptyListHint": "AW Next dapat mencari game Anda beserta file pencapaiannya di PC ini. Anda juga dapat menambahkan folder sendiri.",
   "emptyListAction": "Buka pengaturan folder",
+  "emptyListDetect": "Deteksi game saya",
   "installedOnly": "Tampilkan hanya game yang terpasang",
   "refreshLibrary": "Segarkan perpustakaan (F5)",
   "sort": {
@@ -2808,7 +2809,10 @@
     "color-picker-shade": "Gradasi",
     "color-picker-hue": "Rona",
     "color-picker-code": "Kode warna",
-    "color-picker-eyedropper": "Ambil warna dari layar"
+    "color-picker-eyedropper": "Ambil warna dari layar",
+    "empty-detect-running": "Mencari game di PC ini…",
+    "empty-detect-none": "Tidak ada yang baru ditemukan. Tambahkan folder sendiri jika ada game yang belum muncul.",
+    "empty-detect-found": "Folder ditemukan: {count}. Memuat game Anda…"
   },
   "watchdog": {
     "rare": "Langka {percent}%",

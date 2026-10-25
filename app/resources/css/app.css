@@ -2093,7 +2093,26 @@ body.is-resizing #game-list {
   font-size: var(--fs-md);
   line-height: 1.55;
   color: var(--text-muted);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+#game-list .isEmpty .empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+#game-list .isEmpty .btn.is-busy {
+  pointer-events: none;
+  opacity: 0.6;
+}
+#game-list .isEmpty .empty-status {
+  min-height: 1.4em;
+  margin: 12px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+#game-list .isEmpty .empty-status:empty {
+  display: none;
 }
 
 .loading {

@@ -222,6 +222,49 @@ async function replaceUplayR2SteamMapping({ game, gameDir, appid, box = null } =
   return saved;
 }
 
+// Newest Uplay R1/R2 snapshot of this game folder, or null.
+function latestUplayR2Backup(gameDir) {
+  if (!gameDir || !fs.existsSync(gameDir)) return null;
+  return uplayR2.listConfigBackups(gameDir)[0] || null;
+}
+
+// Put back the snapshot the last Uplay R1/R2 repair took. Returns whether anything was restored.
+async function restoreUplayR2Backup(gameDir) {
+  const latest = latestUplayR2Backup(gameDir);
+  if (!latest) return false;
+  try {
+    const title = t('restore-uplay-r2-title', 'Restore Uplay R1/R2 configuration', 'Restaurer la configuration Uplay R1/R2');
+    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'question',
+      buttons: [t('restore', 'Restore', 'Restaurer'), t('cancel', 'Cancel', 'Annuler')],
+      defaultId: 0,
+      cancelId: 1,
+      title,
+      message: t('restore-uplay-r2-message', 'Restore the snapshot taken before the last repair?', 'Restaurer la sauvegarde prise avant la dernière réparation ?'),
+      detail: `${latest.name}\n${latest.files.join('\n')}`,
+      noLink: true,
+    });
+    if (confirmed !== 0) return false;
+    const result = uplayR2.restoreConfigBackup({ dir: gameDir, backup: latest });
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'info',
+      title,
+      message: t('restore-uplay-r2-done', 'Configuration restored.', 'Configuration restaurée.'),
+      detail: [...result.restored, ...result.removed.map((file) => `[-] ${file}`)].join('\n'),
+      noLink: true,
+    });
+    return true;
+  } catch (err) {
+    remote.dialog.showMessageBoxSync({
+      type: 'error',
+      title: t('restore-failed', 'Restore failed', 'Échec de la restauration'),
+      message: t('could-not-restore-the-uplay-r2-setup', 'Could not restore the Uplay R1/R2 configuration.', 'Impossible de restaurer la configuration Uplay R1/R2.'),
+      detail: `${err}`,
+    });
+    return false;
+  }
+}
+
 // One renderer Uplay R1/R2 repair entry point for the context menu, Game Health, and Fix all. The
 // background scanner calls the same installer transaction directly; validation is identical.
 async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactive = true, showResult = true } = {}) {
