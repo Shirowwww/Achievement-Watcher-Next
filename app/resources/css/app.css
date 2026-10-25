@@ -3946,6 +3946,8 @@ body.is-resizing #game-list {
 
 #settings .box .content::-webkit-scrollbar,
 #settings .psn-add-results::-webkit-scrollbar,
+#settings .pd-cv-layers::-webkit-scrollbar,
+#settings .pd-cv-props::-webkit-scrollbar,
 .onboarding-step::-webkit-scrollbar,
 .gh-technical-dump::-webkit-scrollbar,
 #game-config .box .container::-webkit-scrollbar,
@@ -3955,6 +3957,8 @@ body.is-resizing #game-list {
 }
 #settings .box .content::-webkit-scrollbar-track,
 #settings .psn-add-results::-webkit-scrollbar-track,
+#settings .pd-cv-layers::-webkit-scrollbar-track,
+#settings .pd-cv-props::-webkit-scrollbar-track,
 .onboarding-step::-webkit-scrollbar-track,
 .gh-technical-dump::-webkit-scrollbar-track,
 #game-config .box .container::-webkit-scrollbar-track,
@@ -3965,6 +3969,8 @@ body.is-resizing #game-list {
 }
 #settings .box .content::-webkit-scrollbar-thumb,
 #settings .psn-add-results::-webkit-scrollbar-thumb,
+#settings .pd-cv-layers::-webkit-scrollbar-thumb,
+#settings .pd-cv-props::-webkit-scrollbar-thumb,
 .onboarding-step::-webkit-scrollbar-thumb,
 .gh-technical-dump::-webkit-scrollbar-thumb,
 #game-config .box .container::-webkit-scrollbar-thumb,
@@ -3977,6 +3983,8 @@ body.is-resizing #game-list {
 }
 #settings .box .content::-webkit-scrollbar-thumb:hover,
 #settings .psn-add-results::-webkit-scrollbar-thumb:hover,
+#settings .pd-cv-layers::-webkit-scrollbar-thumb:hover,
+#settings .pd-cv-props::-webkit-scrollbar-thumb:hover,
 .onboarding-step::-webkit-scrollbar-thumb:hover,
 .gh-technical-dump::-webkit-scrollbar-thumb:hover,
 #game-config .box .container::-webkit-scrollbar-thumb:hover,
@@ -12097,6 +12105,948 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   font-size: 0.8em;
 }
 
+/* Free layout (ui/presetCanvasEditor.js): a tool row, the selection's properties, and handles drawn
+   over the preview. Full screen is the same blocks in a grid, with the layer list beside the card. */
+#settings .pd-cv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+#settings .pd-cv-add {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+#settings .pd-cv-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  padding: 3px 9px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: var(--radius-sm);
+  background: var(--set-surface-sunken);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+#settings .pd-cv-btn:hover:not(:disabled) {
+  border-color: var(--set-control-border);
+  background: var(--set-surface-elevated);
+}
+
+#settings .pd-cv-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+#settings .pd-cv-btn.is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+#settings .pd-cv-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+#settings .pd-cv-hint {
+  flex: 1 1 160px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.8em;
+}
+
+#settings .pd-cv-close,
+#settings .pd-cv-layers {
+  display: none;
+}
+
+#settings .pd-cv-props {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  padding: 6px 8px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: var(--radius-sm);
+  background: var(--set-well);
+  font-size: var(--fs-sm);
+  animation: pd-cv-in 140ms ease-out;
+}
+
+#settings .pd-cv-props[hidden] {
+  display: none;
+}
+
+@keyframes pd-cv-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+#settings .pd-cv-props-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+}
+
+#settings .pd-cv-props-head b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#settings .pd-cv-props-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+
+#settings .pd-cv-prop {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+#settings .pd-cv-prop input[type='number'] {
+  width: 58px;
+}
+
+#settings .pd-cv-prop input[type='text'] {
+  width: 150px;
+}
+
+#settings .pd-cv-prop input[type='number'],
+#settings .pd-cv-prop input[type='text'],
+#settings .pd-cv-prop input[type='color'],
+#settings .pd-cv-prop select {
+  min-height: 26px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border: 1px solid var(--set-control-border);
+  border-radius: var(--radius-sm);
+  background: var(--set-surface-sunken);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+}
+
+#settings .pd-cv-prop input[type='color'] {
+  width: 44px;
+  padding: 2px;
+  cursor: pointer;
+}
+
+/* The app-wide ring skips number and text fields; here their border marks focus. */
+#settings .pd-cv-prop input[type='number']:focus-visible,
+#settings .pd-cv-prop input[type='text']:focus-visible,
+#settings .pd-cv-prop input[type='color']:focus-visible {
+  border-color: var(--accent);
+  outline: 1px solid var(--accent);
+  outline-offset: 0;
+}
+
+#settings .pd-cv-pair {
+  display: inline-flex;
+  gap: 4px;
+}
+
+#settings .pd-cv-pair .pd-cv-btn {
+  flex: none;
+  justify-content: center;
+  width: 28px;
+  padding: 0;
+}
+
+#settings .pd-cv-pair [hidden] {
+  display: none;
+}
+
+#settings .pd-stage {
+  position: relative;
+}
+
+/* The handles never block the stage itself; only the boxes and handles take the pointer. */
+#settings .pd-cv-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+#settings .pd-cv-overlay[hidden] {
+  display: none;
+}
+
+#settings .pd-cv-box,
+#settings .pd-cv-sel {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: auto;
+  cursor: move;
+}
+
+#settings .pd-cv-box {
+  border: 1px dashed transparent;
+  border-radius: 2px;
+  transition: border-color 100ms ease;
+}
+
+#settings .pd-cv-box:hover {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+#settings .pd-cv-sel {
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+#settings .pd-cv-h {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--accent);
+  border-radius: 2px;
+  background: #ffffff;
+  transform: translate(-50%, -50%);
+}
+
+#settings .pd-cv-h[data-h='nw'] { left: 0; top: 0; cursor: nwse-resize; }
+#settings .pd-cv-h[data-h='n'] { left: 50%; top: 0; cursor: ns-resize; }
+#settings .pd-cv-h[data-h='ne'] { left: 100%; top: 0; cursor: nesw-resize; }
+#settings .pd-cv-h[data-h='e'] { left: 100%; top: 50%; cursor: ew-resize; }
+#settings .pd-cv-h[data-h='se'] { left: 100%; top: 100%; cursor: nwse-resize; }
+#settings .pd-cv-h[data-h='s'] { left: 50%; top: 100%; cursor: ns-resize; }
+#settings .pd-cv-h[data-h='sw'] { left: 0; top: 100%; cursor: nesw-resize; }
+#settings .pd-cv-h[data-h='w'] { left: 0; top: 50%; cursor: ew-resize; }
+
+#settings .pd-cv-rot {
+  position: absolute;
+  left: 50%;
+  top: -20px;
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  background: #ffffff;
+  transform: translateX(-50%);
+  cursor: grab;
+}
+
+#settings .pd-cv-rot.is-below {
+  top: calc(100% + 9px);
+}
+
+#settings .pd-cv-sel.is-cropping {
+  overflow: visible;
+  cursor: grab;
+}
+
+#settings .pd-cv-ghost {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed rgba(255, 255, 255, 0.7);
+  background-size: 100% 100%;
+  opacity: 0.35;
+  pointer-events: auto;
+}
+
+#settings .pd-cv-guide {
+  position: absolute;
+  background: #ff4fa3;
+  pointer-events: none;
+}
+
+#settings .pd-cv-guide.is-x {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+#settings .pd-cv-guide.is-y {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+#settings .pd-fields .pd-canvas-field {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px 12px;
+  grid-column: 1 / -1;
+  text-align: left;
+}
+
+#settings .pd-canvas-summary {
+  flex: 1 1 auto;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+/* Full screen: the preview block covers the whole window under the title bar, the card is drawn up
+   to 2.5x, and the layers and properties sit on either side of it. `fixed` resolves against the
+   nearest transformed or contained ancestor: the Settings box (centred with a transform, blurred
+   behind) and the tab's kept opening animation would each trap it, so both let go while it is open
+   and the Settings layer itself, which starts under the title bar, becomes the frame. */
+body.pd-cv-open #settings {
+  contain: layout;
+}
+
+body.pd-cv-open #settings .box {
+  transform: none;
+  backdrop-filter: none;
+}
+
+body.pd-cv-open #settings .box,
+body.pd-cv-open #settings .content {
+  animation: none !important;
+}
+
+#settings .pd-preview.is-cv-full {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  grid-template-columns: 228px minmax(0, 1fr) 288px;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'bar bar bar'
+    'layers stage props'
+    'layers toolbar props'
+    'layers foot props';
+  gap: 0 12px;
+  margin: 0;
+  padding: 14px 16px 16px;
+  background: var(--set-modal-bottom);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  animation: pd-cv-in 160ms ease-out;
+}
+
+/* Four blocks on the window ground: the tool bar, the layers, the card with its two bars, the
+   properties. Each is a panel of its own; the card's column reads as one panel in three rows. */
+#settings .pd-preview.is-cv-full .pd-cv-bar,
+#settings .pd-preview.is-cv-full .pd-cv-layers,
+#settings .pd-preview.is-cv-full .pd-cv-props,
+#settings .pd-preview.is-cv-full .pd-toolbar,
+#settings .pd-preview.is-cv-full .pd-foot {
+  border: 1px solid var(--set-hairline-soft);
+  background: var(--set-surface);
+}
+
+/* The stage keeps its own ground (checker, dark, light or the game's art): only the frame is shared. */
+#settings .pd-preview.is-cv-full .pd-stage {
+  border: 1px solid var(--set-hairline-soft);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-bar {
+  grid-area: bar;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-history { display: inline-flex; }
+#settings .pd-preview.is-cv-full .pd-cv-hint,
+#settings .pd-preview.is-cv-full .pd-cv-full { display: none; }
+
+#settings .pd-preview.is-cv-full .pd-cv-close {
+  display: inline-flex;
+  justify-self: end;
+  min-height: 32px;
+  padding: 0 14px;
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-close:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--accent-strong);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-add {
+  flex-wrap: nowrap;
+  gap: 2px;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-add .pd-cv-btn {
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 68px;
+  min-height: 50px;
+  padding: 4px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-add .pd-cv-btn i {
+  font-size: var(--fs-lg);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-add .pd-cv-btn:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--set-row-hover);
+  color: var(--text);
+}
+
+#settings .pd-preview.is-cv-full .pd-stage {
+  grid-area: stage;
+  align-self: stretch;
+  min-height: 0;
+  max-height: none;
+  border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+#settings .pd-preview.is-cv-full .pd-toolbar {
+  grid-area: toolbar;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 0;
+}
+
+#settings .pd-preview.is-cv-full #pd-play {
+  flex: none;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+#settings .pd-preview.is-cv-full .pd-foot {
+  grid-area: foot;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top-color: var(--set-hairline-soft);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+#settings .pd-preview.is-cv-full .pd-foot-label,
+#settings .pd-preview.is-cv-full .pd-seg button {
+  white-space: nowrap;
+}
+
+#settings .pd-preview.is-cv-full #pd-size-note {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-layers {
+  grid-area: layers;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 8px 10px;
+  border-radius: var(--radius-md);
+  overflow: auto;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-layers-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0 -8px 4px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--set-hairline-soft);
+  background: var(--set-surface);
+  color: var(--text);
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props {
+  grid-area: props;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  align-self: stretch;
+  gap: 0;
+  min-height: 0;
+  padding: 0;
+  border-radius: var(--radius-md);
+  overflow: auto;
+  overflow-x: hidden;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props-head {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--set-hairline-soft);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-section {
+  gap: 8px;
+  padding: 14px;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-section + .pd-cv-section {
+  border-top: 1px solid var(--set-hairline-soft);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props-actions .pd-cv-btn {
+  justify-content: center;
+  min-height: 30px;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props-actions > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 1100px) {
+  #settings .pd-preview.is-cv-full {
+    grid-template-columns: 196px minmax(0, 1fr) 264px;
+  }
+
+  #settings .pd-preview.is-cv-full .pd-cv-add .pd-cv-btn {
+    width: 58px;
+  }
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-full { display: none; }
+#settings .pd-preview.is-cv-full .pd-cv-close { display: inline-flex; }
+
+/* The card's own controls, moved into the right-hand column while nothing on it is selected. */
+/* The full-screen rules below give both panels a display, which would beat a bare [hidden]. */
+#settings .pd-preview .pd-cv-card[hidden],
+#settings .pd-preview.is-cv-full .pd-cv-card[hidden],
+#settings .pd-preview.is-cv-full .pd-cv-props[hidden] {
+  display: none;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-card {
+  grid-area: props;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: var(--radius-md);
+  background: var(--set-surface);
+  overflow: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-card > .pd-cv-props-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--set-hairline-soft);
+  background: var(--set-surface);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-card > p.pd-cv-props-empty {
+  padding: 10px 14px 0;
+  text-align: left;
+  font-size: var(--fs-xs);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-card .pd-controls {
+  gap: 6px;
+  padding: 10px 10px 14px;
+}
+
+/* Zoom and snapping, at the end of the bar under the card. */
+#settings .pd-zoom {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+}
+
+#settings .pd-zoom[hidden] {
+  display: none;
+}
+
+#settings .pd-zoom .pd-icon-btn {
+  width: 28px;
+  height: 28px;
+  color: var(--text-muted);
+}
+
+#settings .pd-zoom .pd-icon-btn:hover {
+  color: var(--text);
+}
+
+#settings .pd-zoom-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--set-hairline-soft);
+}
+
+#settings .pd-zoom-value {
+  min-width: 54px;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+#settings .pd-zoom-value:hover {
+  background: var(--set-row-hover);
+}
+
+#settings #pd-cv-snap[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* On, but standing aside while the zoom is too close for it to help. */
+#settings #pd-cv-snap.is-suspended {
+  opacity: 0.5;
+}
+
+/* Zoomed past the fit, the card is larger than the stage: it scrolls, starting from its corner. */
+#settings .pd-stage.is-zoomed {
+  justify-content: safe center;
+  align-items: safe center;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--set-control-border) transparent;
+}
+
+#settings .pd-stage.is-zoomed .pd-screen {
+  flex: none;
+  max-width: none;
+}
+
+/* The properties: a title row, then one block per section (what it says, how it looks, where it
+   sits). Under the card the sections sit side by side; in full screen they stack in the column. */
+#settings .pd-cv-props {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+#settings .pd-cv-props-head {
+  display: flex;
+  gap: 8px;
+  font-size: var(--fs-md);
+}
+
+#settings .pd-cv-chip {
+  flex: none;
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+}
+
+#settings .pd-cv-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px 20px;
+}
+
+#settings .pd-cv-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+#settings .pd-cv-section-title {
+  color: var(--text-muted);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+/* One label column per panel, so every control starts on the same line; narrower in full screen. */
+#settings .pd-cv-props {
+  --pd-cv-label: 128px;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props {
+  --pd-cv-label: 100px;
+}
+
+#settings .pd-cv-section .pd-cv-prop {
+  display: grid;
+  grid-template-columns: var(--pd-cv-label) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  line-height: 1.25;
+}
+
+#settings .pd-cv-section .pd-cv-prop input[type='text'],
+#settings .pd-cv-section .pd-cv-prop input[type='number'],
+#settings .pd-cv-section .pd-cv-prop select,
+#settings .pd-cv-section .pd-cv-pair {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#settings .pd-cv-section .pd-cv-pair select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#settings .pd-cv-section .pd-cv-prop input[type='color'] {
+  justify-self: start;
+}
+
+#settings .pd-cv-section .pd-cv-pair input[type='color'] {
+  flex: none;
+  width: 36px;
+}
+
+#settings .pd-cv-props-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* `#settings .box p` would take the padding back, hence the element in the selector. */
+#settings p.pd-cv-props-empty {
+  margin: 0;
+  padding: 28px 22px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+#settings .pd-cv-seg {
+  display: inline-flex;
+  justify-self: start;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: var(--radius-sm);
+  background: var(--set-surface-sunken);
+}
+
+#settings .pd-cv-seg button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+#settings .pd-cv-seg button:hover {
+  color: var(--text);
+}
+
+#settings .pd-cv-seg button[aria-pressed='true'] {
+  background: var(--set-surface-elevated);
+  color: var(--text);
+}
+
+#settings .pd-cv-switch {
+  appearance: none;
+  position: relative;
+  justify-self: start;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--set-control-border);
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+#settings .pd-cv-switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform 120ms ease;
+}
+
+#settings .pd-cv-switch:checked {
+  background: var(--accent);
+}
+
+#settings .pd-cv-switch:checked::before {
+  background: var(--on-accent);
+  transform: translateX(14px);
+}
+
+#settings .pd-cv-switch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Undo and redo already sit beside the designer's search; only full screen needs its own pair. */
+#settings .pd-cv-history {
+  display: none;
+  gap: 2px;
+}
+
+#settings .pd-cv-history .pd-cv-btn {
+  justify-content: center;
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+#settings .pd-cv-history .pd-cv-btn:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--set-row-hover);
+  color: var(--text);
+}
+
+#settings .pd-cv-layer-group {
+  display: grid;
+  gap: 2px;
+}
+
+#settings #pd-cv-layer-list > .pd-cv-section-title {
+  display: block;
+  padding: 12px 8px 6px;
+}
+
+#settings #pd-cv-layer-list > .pd-cv-section-title:first-child {
+  padding-top: 6px;
+}
+
+#settings .pd-cv-layer-row.is-on {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #settings .pd-cv-switch,
+  #settings .pd-cv-switch::before {
+    transition: none;
+  }
+}
+
+#settings .pd-cv-layers-title {
+  color: var(--text-muted);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+#settings #pd-cv-layer-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#settings .pd-cv-layer-row {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: var(--radius-sm);
+}
+
+#settings .pd-cv-layer-row.is-on {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+#settings .pd-cv-layer {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+#settings .pd-cv-layer span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#settings .pd-cv-layer-step {
+  flex: none;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+#settings .pd-cv-layer-step:hover,
+#settings .pd-cv-layer:hover {
+  color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #settings .pd-cv-props,
+  #settings .pd-preview.is-cv-full {
+    animation: none;
+  }
+}
+
 /* Where the popup appears on screen. Nine cells with the middle one empty: that is the setting's own
    shape, and it is the same value the Notifications tab keeps - the designer only mirrors it. */
 #settings .pd-anchors {
@@ -15573,4 +16523,162 @@ html:not([data-platform='linux']) [data-linux-only] {
 /* The full unlock list slides in over the summary it replaces, like a tab of its own. */
 #profile-stats-all:not([hidden]) {
   animation: settings-view-reveal 0.16s var(--ease-out) both;
+}
+
+/* The mock display shows the backdrop picked under the stage, like the card view does. */
+#settings .pd-stage[data-view='screen'] .pd-screen.is-screen {
+  background: inherit;
+}
+
+/* The normal view previews and sets; adding and placing things happens in full screen only. */
+#settings .pd-preview:not(.is-cv-full) .pd-cv-bar {
+  display: none;
+}
+
+/* The way into the layout editor, so it reads as the main action of the preview, not a tool. */
+#settings .pd-foot .pd-cv-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: var(--fs-sm);
+}
+
+/* The card on the canvas: picked by a click, resized from its edges, never dragged. */
+#settings .pd-cv-box.is-card,
+#settings .pd-cv-sel.is-card {
+  cursor: pointer;
+}
+
+#settings .pd-cv-sel.is-card {
+  border-style: dashed;
+}
+
+/* With the card picked, its panel keeps only what shapes the card, advanced rows included. */
+#settings .pd-cv-card.is-card-only .pd-field:not([data-card]),
+#settings .pd-cv-card.is-card-only .pd-group:not(:has(.pd-field[data-card])),
+#settings .pd-cv-card.is-card-only .pd-fields:not(:has(.pd-field[data-card])),
+#settings .pd-cv-card.is-card-only .pd-more {
+  display: none;
+}
+
+#settings .pd-cv-card.is-card-only .pd-fields.pd-adv[hidden]:has(.pd-field[data-card]) {
+  display: grid;
+}
+
+/* Few enough rows to show them all: the card's groups open whatever state they were left in. */
+#settings .pd-cv-card.is-card-only .pd-group-body {
+  display: block;
+}
+
+#settings .pd-foot .pd-cv-full[hidden] {
+  display: none;
+}
+
+/* The accent bar on/off shortcut, only beside the card's own settings. */
+#settings .pd-cv-quick {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 12px 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+#settings .pd-cv-card.is-card-only .pd-cv-quick {
+  display: flex;
+}
+
+#settings .pd-cv-quick input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Écran view: position and scale sit on the foot's single row instead of folding it onto the controls. */
+#settings .pd-foot-group:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+#settings .pd-foot .pd-anchors {
+  grid-template-columns: repeat(3, 14px);
+  grid-template-rows: repeat(3, 9px);
+  gap: 2px;
+}
+
+#settings .pd-foot .pd-anchors button {
+  border-radius: 2px;
+}
+
+/* Layout editor motion: panels settle in when full screen opens, and a panel that swaps (card,
+   selection, all settings) fades in as it is shown. The stage never moves: its handles are placed
+   from the frame's position. */
+@keyframes pd-cv-in-left {
+  from { opacity: 0; transform: translateX(-10px); }
+}
+
+@keyframes pd-cv-in-right {
+  from { opacity: 0; transform: translateX(10px); }
+}
+
+@keyframes pd-cv-in-down {
+  from { opacity: 0; transform: translateY(-8px); }
+}
+
+@keyframes pd-cv-fade {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-bar {
+  animation: pd-cv-in-down 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-layers {
+  animation: pd-cv-in-left 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-props,
+#settings .pd-preview.is-cv-full .pd-cv-card {
+  animation: pd-cv-in-right 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+#settings .pd-cv-card .pd-cv-quick {
+  animation: pd-cv-fade 180ms ease-out both;
+}
+
+#settings .pd-cv-layer-row,
+#settings .pd-cv-quick,
+#settings .pd-foot .pd-cv-full {
+  transition: background-color 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+#settings .pd-foot .pd-cv-full:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #settings .pd-preview.is-cv-full .pd-cv-bar,
+  #settings .pd-preview.is-cv-full .pd-cv-layers,
+  #settings .pd-preview.is-cv-full .pd-cv-props,
+  #settings .pd-preview.is-cv-full .pd-cv-card,
+  #settings .pd-cv-card .pd-cv-quick {
+    animation: none;
+  }
+
+  #settings .pd-foot .pd-cv-full:active {
+    transform: none;
+  }
+}
+
+#settings .pd-cv-quick:hover {
+  border-color: var(--accent);
 }

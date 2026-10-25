@@ -4414,7 +4414,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return Math.round((tier.min + Math.random() * (tier.max - tier.min)) * 10) / 10;
     }
     // Build a notification test payload using the current overlay settings.
-    function overlayTestData(kind, notificationOverrides, label, game) {
+    function overlayTestData(kind, notificationOverrides, label, game, rarePercent) {
       // One preset renders every kind of notification: a rare unlock and a 100% completion are
       // states the preset itself paints, not separate presets to pick.
       const overrides =
@@ -4462,7 +4462,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         ? overrides.sound
         : globalSound;
       const notificationType = kind === 'toast' || kind === 'rare' ? 'achievement' : kind;
-      const rarePct = kind === 'rare' ? randomRareRarity() : null;
+      const rarePct = kind === 'rare' ? rarePercent || randomRareRarity() : null;
       // The rare and 100% tests play the sound those popups would, unless the game picked its own.
       // The progress sound wins over a game's own sound, as it does live, but not over a muted game.
       const gameKeepsSound = Object.prototype.hasOwnProperty.call(overrides, 'sound')
@@ -4926,7 +4926,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const control = $('#pd-' + property.key);
         if (!control.length) continue;
         const value = values[property.key];
-        control.val(property.type === 'number' && property.percent ? Math.round(value * 100) : String(value));
+        if (property.type === 'canvas') control.val(JSON.stringify(value));
+        else control.val(property.type === 'number' && property.percent ? Math.round(value * 100) : String(value));
       }
       refreshPresetControls();
     }
@@ -4948,7 +4949,18 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Sample payloads matching createNotificationWindow(); artwork/icon are inlined as data URIs
     // since the preview frame is a srcdoc document where file:// images aren't reliably loadable.
     let previewState = 'normal';
+    // One sample rarity per tier, inside the bands the popup sorts into gold, silver and bronze.
+    const RARE_PREVIEW = { bronze: 12.4, silver: 7.2, gold: 1.4 };
     let previewView = 'card';
+    // Created once the designer's helpers exist (below); the preview code checks for it.
+    let canvasEditor = null;
+    const CANVAS_FULL_ZOOM = 2.5;
+    // The +/- and Ctrl+wheel magnification, see zoomStage().
+    let stageZoom = 1;
+    // Held while something is dragged: a refit then would move the card out from under the pointer.
+    let heldFit = null;
+    // Full screen edits with room around the card; the normal view shows the popup as it ships.
+    const editingLayout = () => Boolean(canvasEditor && canvasEditor.isFull());
     function fileAsDataUri(file, mime) {
       try {
         return `data:${mime};base64,${settingsFs.readFileSync(file).toString('base64')}`;
@@ -5024,12 +5036,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         gameName: t('preset-sample-game', 'Sample Game', 'Jeu d’exemple'),
         scale: 1,
       };
-      if (previewState === 'rare') {
+      const percent = RARE_PREVIEW[previewState];
+      if (percent) {
         return Object.assign(base, {
           displayName: t('test-rare-name', 'Rare Achievement', 'Succès rare'),
-          description: t('test-rare-desc', 'Rare · {percent}% of players', 'Rare · {percent} % des joueurs', { percent: 1.4 }),
+          description: t('test-rare-desc', 'Rare · {percent}% of players', 'Rare · {percent} % des joueurs', { percent }),
           notificationType: 'achievement',
-          rarityPercent: 1.4,
+          rarityPercent: percent,
+          rarityTier: previewState,
           // Shown as a hidden one too, so the padlock option has somewhere to be seen.
           hidden: true,
         });
@@ -5125,7 +5139,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     // The generated stylesheet as the PREVIEW needs it. The only difference from what is written to
     // disk is how a preset's own picture is addressed; every other value is identical.
-    const previewCss = (values) => presetGenerator.buildCustomPresetCss(values, { assetUrl: presetAssetUrl });
+    const previewCss = (values, editing = editingLayout()) => presetGenerator.buildCustomPresetCss(values, { assetUrl: presetAssetUrl, editing });
 
     /*
       Customising a bundled preset. `layerMode` holds the base (its own stylesheet, with relative
@@ -5140,7 +5154,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       '\n' +
       presetLayerTool.buildLayerCss({ base: layerMode.base, sections: [...layerSections], options: values }, { assetUrl: presetAssetUrl });
 
-    const stylesheetFor = (values) => (layerMode ? layerStylesheet(values) : previewCss(values));
+    const stylesheetFor = (values, editing = editingLayout()) => (layerMode ? layerStylesheet(values) : previewCss(values, editing));
     /*
       A preset the controls cannot rebuild (an imported SAN theme or .awpreset) is shown as a picture
       the main process renders offscreen, or the stage would keep showing the previous draft. Cleared
@@ -5161,12 +5175,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return `<!doctype html><html><body style="margin:0;background:transparent"><img alt="" src="${image}" style="display:block;width:${width}px;height:${height}px"></body></html>`;
     }
 
-    const previewBox = (values) =>
+    const previewBox = (values, editing = editingLayout()) =>
       presetSnapshot
         ? { width: presetSnapshot.width, height: presetSnapshot.height }
         : layerMode
           ? { width: layerMode.width, height: layerMode.height }
-          : presetGenerator.presetBoxSize(values);
+          : presetGenerator.presetBoxSize(values, { editing });
 
     // The logo is one extra element inside the card; the preview document is built without it.
     function syncLayerLogo(doc) {
@@ -5187,6 +5201,22 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
 
+    // The added items are markup inside the card, so a stylesheet swap alone cannot add or remove
+    // one. Over a bundled preset they exist only while the layout section is ticked.
+    function syncCanvasMarkup(doc) {
+      try {
+        const card = doc && doc.querySelector('.ach');
+        if (!card) return;
+        const wanted = layerMode && !layerSections.has('canvas') ? '' : presetGenerator.canvasMarkup(readPresetOptions().canvas);
+        const existing = card.querySelector(':scope > .' + presetGenerator.CANVAS_CLASS);
+        if ((existing ? existing.outerHTML : '') === wanted) return;
+        if (existing) existing.remove();
+        if (wanted) card.insertAdjacentHTML('afterbegin', wanted);
+      } catch (e) {
+        debug.log(e);
+      }
+    }
+
     const previewFrame = () => ensureFrame(document.getElementById('pd-frame-wrap'), { id: 'pd-frame', title: 'preview' });
 
     // Only needed when the frame must be re-created (play-through, first render); editing a
@@ -5200,14 +5230,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         layoutPreview(values);
         return;
       }
-      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined });
+      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined, editing: editingLayout() });
       frame.onload = () => {
         try {
           syncLayerLogo(frame.contentDocument);
+          syncCanvasMarkup(frame.contentDocument);
           frame.contentWindow.awPreviewApply(previewPayload());
         } catch (e) {
           debug.log(e);
         }
+        if (canvasEditor) canvasEditor.refresh();
       };
       layoutPreview(values);
     }
@@ -5227,6 +5259,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       styleEl.textContent = stylesheetFor(values);
       syncLayerLogo(frame.contentDocument);
+      syncCanvasMarkup(frame.contentDocument);
       if (previewView === 'compare') renderComparePreviews(values);
       layoutPreview(values);
     }
@@ -5264,6 +5297,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function stageCeiling(padding = STAGE_PADDING) {
       const node = document.querySelector('#options-notify-designer .pd-stage');
       if (!node) return 170;
+      // Full screen gives the stage its grid cell: the ceiling is that cell, once a height left by
+      // the tab layout is cleared.
+      if (editingLayout()) {
+        node.style.height = '';
+        return Math.max(60, node.clientHeight - padding * 2);
+      }
       const cap = parseFloat(getComputedStyle(node).maxHeight);
       return Number.isFinite(cap) && cap > 60 ? cap - padding * 2 : 170;
     }
@@ -5272,6 +5311,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     function fitStageTo(contentHeight, padding = STAGE_PADDING) {
       const node = document.querySelector('#options-notify-designer .pd-stage');
       if (!node) return;
+      if (editingLayout()) return void (node.style.height = '');
       const style = getComputedStyle(node);
       const floor = parseFloat(style.minHeight) || 96;
       const cap = parseFloat(style.maxHeight) || 300;
@@ -5299,6 +5339,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#pd-resolution').prop('hidden', true);
         $('#pd-placement').prop('hidden', true);
         $('#pd-size-note').text(`${box.width}×${box.height}`);
+        if (canvasEditor) canvasEditor.refresh();
         return;
       }
       if (previewView === 'screen') {
@@ -5316,10 +5357,21 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       } else {
         screen.classList.remove('is-screen');
         screen.style.width = '';
-        // Never larger than life, and never taller than the stage will let it be.
-        zoom = Math.min(1, stageWidth / box.width, stageCeiling() / box.height);
-        fitStageTo(box.height * zoom);
+        // Never larger than life, and never taller than the stage will let it be. The full-screen
+        // layout editor is the exception: precise handles need the card bigger than it ships.
+        const zoomCap = editingLayout() ? CANVAS_FULL_ZOOM : 1;
+        const dragging = canvasEditor && canvasEditor.isDragging();
+        const fit = dragging && heldFit ? heldFit : Math.min(zoomCap, stageWidth / box.width, stageCeiling() / box.height);
+        heldFit = fit;
+        // The stage keeps the height of the fitted card; a closer look scrolls inside it.
+        fitStageTo(box.height * fit);
+        zoom = fit * stageZoom;
       }
+      $('#pd-zoom').prop('hidden', previewView !== 'card' || !editingLayout());
+      // The layout is edited on the single card, so the way in is offered there only.
+      $('#pd-cv-full').prop('hidden', previewView !== 'card');
+      $('#pd-zoom-fit').text(`${Math.round(zoom * 100)}%`);
+      $('#pd-stage').toggleClass('is-zoomed', previewView === 'card' && stageZoom > 1);
       frame.style.transform = `scale(${zoom})`;
       wrap.style.width = Math.round(box.width * zoom) + 'px';
       wrap.style.height = Math.round(box.height * zoom) + 'px';
@@ -5336,8 +5388,45 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // design is small". A custom position is drawn at bottom-centre with a label, never guessed.
       const custom = previewView === 'screen' && String($('#option_overlayPosition').val()) === 'custom';
       const customLabel = custom ? ` · ${$("#option_overlayPosition option[value='custom']").text()}` : '';
-      $('#pd-size-note').text(`${box.width}×${box.height} · ${Math.round(zoom * 100)}%${customLabel}`);
+      // The card view has its own zoom readout beside this note.
+      const zoomNote = previewView === 'card' ? '' : ` · ${Math.round(zoom * 100)}%`;
+      $('#pd-size-note').text(`${box.width}×${box.height}${zoomNote}${customLabel}`);
+      if (canvasEditor) canvasEditor.refresh();
     }
+
+    /*
+      The user's magnification on top of the fit, card view only. Buttons step through round values;
+      Ctrl+wheel moves freely and keeps the point under the pointer where it was.
+    */
+    const STAGE_ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2, 3, 4, 6];
+    const STAGE_ZOOM_WHEEL = 1.15;
+    function zoomStage(next, anchor) {
+      const stage = document.getElementById('pd-stage');
+      const before = stageZoom;
+      stageZoom = Math.min(STAGE_ZOOM_STEPS.at(-1), Math.max(STAGE_ZOOM_STEPS[0], next));
+      if (Math.abs(stageZoom - 1) < 0.04) stageZoom = 1;
+      if (!stage || stageZoom === before) return;
+      const rect = stage.getBoundingClientRect();
+      const px = anchor ? anchor.clientX - rect.left : stage.clientWidth / 2;
+      const py = anchor ? anchor.clientY - rect.top : stage.clientHeight / 2;
+      const scroll = { x: stage.scrollLeft, y: stage.scrollTop };
+      layoutPreview();
+      const ratio = stageZoom / before;
+      stage.scrollLeft = (scroll.x + px) * ratio - px;
+      stage.scrollTop = (scroll.y + py) * ratio - py;
+    }
+    $('#pd-zoom-in').on('click', () => zoomStage(STAGE_ZOOM_STEPS.find((step) => step > stageZoom + 0.01) || stageZoom));
+    $('#pd-zoom-out').on('click', () => zoomStage(STAGE_ZOOM_STEPS.findLast((step) => step < stageZoom - 0.01) || stageZoom));
+    $('#pd-zoom-fit').on('click', () => zoomStage(1));
+    document.getElementById('pd-stage').addEventListener(
+      'wheel',
+      (event) => {
+        if (!event.ctrlKey || previewView !== 'card') return;
+        event.preventDefault();
+        zoomStage(stageZoom * (event.deltaY < 0 ? STAGE_ZOOM_WHEEL : 1 / STAGE_ZOOM_WHEEL), event);
+      },
+      { passive: false }
+    );
 
     // Mirror of util/notificationBounds.placeNotification for the mock screen. Its 2px edge margin is
     // below one preview pixel at these scales, so the anchors are exact without repeating it.
@@ -5362,6 +5451,17 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         if (String($('#pd-search').val() || '')) filterDesigner($('#pd-search').val());
       }, 40);
     }
+
+    // A label forwards a click anywhere on its row to its control, which for a colour means a picker
+    // opening from empty space beside the swatch. Only the swatch itself opens it.
+    document.getElementById('options-notify-designer').addEventListener(
+      'click',
+      (event) => {
+        const row = event.target.closest('label');
+        if (row && event.target.tagName !== 'INPUT' && row.querySelector('input[type="color"]')) event.preventDefault();
+      },
+      true
+    );
 
     $('#options-notify-designer').on('input change', 'input, select', function () {
       if (this.id === 'pd-load' || this.id === 'pd-name' || this.id === 'pd-resolution' || this.id === 'pd-search') return;
@@ -5485,8 +5585,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let historyRestoring = false;
 
     function updateHistoryButtons() {
-      $('#btn-preset-undo').prop('disabled', !presetHistory.canUndo());
-      $('#btn-preset-redo').prop('disabled', !presetHistory.canRedo());
+      $('#btn-preset-undo, #pd-cv-undo').prop('disabled', !presetHistory.canUndo());
+      $('#btn-preset-redo, #pd-cv-redo').prop('disabled', !presetHistory.canRedo());
     }
 
     // Dragging a slider is one gesture, not one step per pixel, so a state settles before it counts.
@@ -5531,8 +5631,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       updateHistoryButtons();
     }
 
-    $('#btn-preset-undo').click(() => stepPresetHistory(true));
-    $('#btn-preset-redo').click(() => stepPresetHistory(false));
+    $('#btn-preset-undo, #pd-cv-undo').click(() => stepPresetHistory(true));
+    $('#btn-preset-redo, #pd-cv-redo').click(() => stepPresetHistory(false));
 
     // Ctrl+Z/Y, but only while the designer tab is on screen and focus is not in a text field where
     // the browser's own undo is what the user means.
@@ -5581,6 +5681,63 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       layoutPreview();
     });
 
+    // A picture added to the free layout goes through the logo import: same checks, same folder.
+    // Its size is read from the decoded picture, which knows every format the import accepts.
+    async function importCanvasImage() {
+      const res = await ipcRenderer.invoke('import-preset-logo');
+      if (!res || res.canceled) return null;
+      if (!res.ok) return { refused: true };
+      await refreshPresetImages(null, null);
+      const size = await new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+        image.onerror = () => resolve({ width: 1, height: 1 });
+        image.src = presetAssetUrl(res.name);
+      });
+      return { name: res.name, ...size };
+    }
+
+    // A text's own font goes through the card's font import; the card keeps the font it had.
+    async function importCanvasFont() {
+      const res = await ipcRenderer.invoke('import-preset-font');
+      if (!res || res.canceled) return null;
+      if (!res.ok) {
+        setPresetStatus(refusalText('font'), 'error');
+        return null;
+      }
+      await refreshPresetFonts(null);
+      return { name: res.name };
+    }
+
+    const loggedImport = (run) => () =>
+      run().catch((err) => {
+        debug.log(err);
+        return null;
+      });
+
+    canvasEditor = require(path.join(appPath, 'ui/presetCanvasEditor.js')).createCanvasEditor({
+      root: document.getElementById('options-notify-designer'),
+      stage: document.getElementById('pd-stage'),
+      input: document.getElementById('pd-canvas'),
+      frame: () => document.getElementById('pd-frame'),
+      enabled: () => previewView === 'card' && !presetSnapshot && canvasEditor.isFull(),
+      active: () => $("#settings .content[data-view='presets']").is(':visible'),
+      apply: () => updatePreviewStyles(readPresetOptions()),
+      // Through the sliders themselves, so the readouts, undo and saving see the new size.
+      resizeCard: (size, done) => {
+        $('#pd-width').val(size.width);
+        if (size.minHeight !== undefined) $('#pd-minHeight').val(size.minHeight);
+        if (done) $('#pd-width').trigger('change');
+        else updatePreviewStyles(refreshPresetControls());
+      },
+      assetUrl: presetAssetUrl,
+      importImage: loggedImport(importCanvasImage),
+      importFont: loggedImport(importCanvasFont),
+      status: (message, state) => setPresetStatus(message, state),
+    });
+    // Its summary and layer names are read from the locale, which may land after it was built.
+    registerLocaleRefresh(() => canvasEditor.refresh());
+
     // Seeing all three states side by side answers "does it look DIFFERENT?", not just "what does
     // a rare unlock look like?".
     function comparePayload(state) {
@@ -5602,7 +5759,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const rows = document.querySelectorAll('#pd-compare .pd-compare-row');
       if (!rows.length) return;
       markCurrentCompareRow();
-      const box = previewBox(values);
+      const box = previewBox(values, false);
       const stageWidth = measuredStageWidth();
       // Fits height as well as width (fitting width alone ran tall popups off the bottom); these
       // numbers must agree with .pd-compare in the stylesheet, the only other place the grid is described.
@@ -5633,7 +5790,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         try {
           if (frame.contentWindow && frame.contentWindow.awPreviewApply) {
             const style = frame.contentDocument.getElementById('aw-preview-css');
-            if (style) style.textContent = stylesheetFor(values);
+            if (style) style.textContent = stylesheetFor(values, false);
             syncLayerLogo(frame.contentDocument);
             frame.contentWindow.awPreviewApply(payload);
             continue;
@@ -5671,9 +5828,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       previewState = String($(this).attr('data-state') || 'normal');
       $('#pd-state button').removeClass('is-on');
       $(this).addClass('is-on');
-      // Looking at the rare or completion card is when its colours are worth having in reach, and
-      // they live in a group that starts collapsed - so asking for the state opens it.
-      if (previewState === 'rare' || previewState === 'completion' || previewState === 'progress') {
+      // Every state but normal has its colours in a group that starts collapsed, so asking for one opens it.
+      if (previewState !== 'normal') {
         $("#options-notify-designer .pd-group[data-group='state']").addClass('is-open');
       }
       // In Compare every state is on screen at once, so asking for one marks it rather than
@@ -6004,11 +6160,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         toggle.find('span').text(labelNode.text());
         first.before(toggle);
       }
-      // The brand icon has no field of its own: its checkbox sits just above the logo's.
-      const brandToggle = $('<label class="pd-layer-toggle"><input type="checkbox"><span></span></label>');
-      brandToggle.find('input').attr('data-section', 'brand');
-      brandToggle.find('span').text($('#pd-layer-brand-label').text());
-      pdRoot.find('.pd-layer-toggle input[data-section="logo"]').closest('label').before(brandToggle);
+      // The brand icon has no field of its own: its checkbox sits just above the logo's, and only
+      // on a base whose mark can be hidden (Steam Modern's is baked into its picture).
+      if (presetLayerTool.hasBrandMark(base.css)) {
+        const brandToggle = $('<label class="pd-layer-toggle"><input type="checkbox"><span></span></label>');
+        brandToggle.find('input').attr('data-section', 'brand');
+        brandToggle.find('span').text($('#pd-layer-brand-label').text());
+        pdRoot.find('.pd-layer-toggle input[data-section="logo"]').closest('label').before(brandToggle);
+      } else {
+        layerSections.delete('brand');
+      }
       // The Advanced halves of a group fold away fields the layer needs, so they open and stay open.
       pdRoot.find('.pd-controls .pd-adv').each(function () {
         if (!this.hidden || !$(this).find('.pd-field[data-layer-section]').length) return;
@@ -6142,13 +6303,32 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       filterDesigner($('#pd-search').val());
     }
 
+    // The app theme's colours as #rrggbb, the only form a colour input takes. Read through an element
+    // so whatever a theme writes (a var, color-mix) arrives resolved.
+    function themeColors() {
+      const probe = document.createElement('span');
+      (document.getElementById('settings') || document.body).appendChild(probe);
+      const read = (cssColor) => {
+        probe.style.color = cssColor;
+        const computed = getComputedStyle(probe).color;
+        // color-mix() values come back as color(srgb 0-1 channels); rgb() ones in 0-255. Alpha is dropped.
+        const scale = computed.startsWith('color(') ? 255 : 1;
+        const [r, g, b] = (computed.match(/\d+(\.\d+)?/g) || []).map((v) => Number(v) * scale);
+        return [r, g, b].every(Number.isFinite) ? '#' + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('') : null;
+      };
+      const colors = { bg: read('var(--set-surface)'), text: read('var(--text)'), accent: read('var(--accent)'), borderColor: read('var(--set-control-border)') };
+      probe.remove();
+      return Object.fromEntries(Object.entries(colors).filter(([, value]) => value));
+    }
+    const templateDesign = (template) => (template.followTheme ? { ...template.options, ...themeColors() } : template.options);
+
     function buildTemplateChips() {
       const list = $('#pd-templates');
       if (!list.length) return;
       list.empty();
       for (const template of presetTemplates.PRESET_TEMPLATES) {
         // A swatch showing the template's own colours, so the row reads as designs rather than words.
-        const values = presetSchema.normalizeOptions(template.options);
+        const values = presetSchema.normalizeOptions(templateDesign(template));
         const swatch = $('<span class="pd-template-swatch">').css({
           background: values.bgMode === 'gradient' ? `linear-gradient(135deg, ${values.bg}, ${values.bg2})` : values.bg,
           'border-color': values.accent,
@@ -6164,8 +6344,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#options-notify-designer').on('click', '.pd-template', function () {
       const name = String($(this).attr('data-template') || '');
-      const options = presetTemplates.templateOptions(name);
-      if (!options) return;
+      const template = presetTemplates.PRESET_TEMPLATES.find((entry) => entry.name === name);
+      if (!template) return;
+      const options = presetSchema.normalizeOptions(templateDesign(template));
       $('#options-notify-designer .pd-template').removeClass('is-on');
       $(this).addClass('is-on');
       exitLayerMode();
@@ -6262,10 +6443,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // Preview whatever the picker holds. An imported preset has no control values behind it, so
         // it must preview by name rather than by building a scratch preset from the (unrelated) controls.
         const loaded = String($('#pd-load').val() || '');
-        const kind = previewState === 'completion' ? 'platinum' : previewState === 'normal' ? 'toast' : previewState;
+        const rarePercent = RARE_PREVIEW[previewState];
+        const kind = previewState === 'completion' ? 'platinum' : previewState === 'normal' ? 'toast' : rarePercent ? 'rare' : previewState;
         if (loaded && !isEditablePreset(loaded)) {
           setPresetStatus('');
-          ipcRenderer.send('spawn-overlay-notification', overlayTestData(kind, loaded, loaded));
+          ipcRenderer.send('spawn-overlay-notification', overlayTestData(kind, loaded, loaded, undefined, rarePercent));
           self.css('pointer-events', 'initial');
           return;
         }
@@ -6278,7 +6460,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           // Only name the design when the user actually named it, or the picker's "New preset…"
           // placeholder leaks into the preview text.
           const label = ($('#pd-name').val() || '').trim();
-          const data = overlayTestData(kind, res.name, label);
+          const data = overlayTestData(kind, res.name, label, undefined, rarePercent);
           // A preset that names its own sound is what a real unlock would play, so the preview does
           // too - otherwise the one thing the designer cannot show inline stays untested.
           if (options.sound) data.soundPath = resolveSoundFile(options.sound);

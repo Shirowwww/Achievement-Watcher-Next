@@ -24,6 +24,12 @@ renamed in 3.9.0 and the history is kept under one file.
   emulator saves, text and binary alike (Goldberg and GSE, CODEX, RUNE, OnlineFix, TENOKE, RPCS3,
   ShadPS4, Xenia and more); SmartSteamEmu and SKIDROW saves, official platforms and PS4 ports keep
   only the full reset. Close the game first: an emulator writes its unlocks back when it exits.
+- **A layout editor for your presets.** In the preset designer, "Layout" opens a full-screen editor:
+  move or resize the card's parts, add text, pictures and shapes, resize the card itself and zoom in.
+  Shapes can take the accent colour, so they turn bronze, silver, gold or platinum with the card.
+- **Every tier in the preview.** The designer previews and compares bronze, silver and gold unlocks
+  side by side, instead of a single "Rare" card.
+- **A plain starting point.** The new Base template is one flat colour in the app's own theme.
 
 ### Improved
 

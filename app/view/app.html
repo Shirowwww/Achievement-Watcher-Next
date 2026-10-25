@@ -2547,7 +2547,9 @@
                           </div>
                           <div class="pd-seg" id="pd-state">
                             <button type="button" class="is-on" data-state="normal" data-lang="preview.normal"></button>
-                            <button type="button" data-state="rare" data-lang="preview.rare"></button>
+                            <button type="button" data-state="bronze" data-lang="preview.bronze"></button>
+                            <button type="button" data-state="silver" data-lang="preview.silver"></button>
+                            <button type="button" data-state="gold" data-lang="preview.gold"></button>
                             <button type="button" data-state="completion" data-lang="preview.completion"></button>
                             <button type="button" data-state="progress" data-lang="preview.progress"></button>
                           </div>
@@ -2559,6 +2561,95 @@
                           </select>
                           <button type="button" id="pd-play" class="inline-action-btn secondary"><i class="fas fa-play"></i> <span data-lang="preview.play"></span></button>
                         </div>
+                        <!-- The free-layout tools: add an item, act on the selection, go full screen.
+                             Filled and driven by ui/presetCanvasEditor.js; the strings below are read
+                             from the DOM so every label comes from the locale like the rest of the tab. -->
+                        <div class="pd-cv-bar" id="pd-cv-bar">
+                          <!-- Full screen hides the designer's own undo and redo; these press them. -->
+                          <div class="pd-cv-history">
+                            <button type="button" class="pd-cv-btn" id="pd-cv-undo" disabled data-lang-title="undo"><i class="fas fa-undo" aria-hidden="true"></i></button>
+                            <button type="button" class="pd-cv-btn" id="pd-cv-redo" disabled data-lang-title="redo"><i class="fas fa-redo" aria-hidden="true"></i></button>
+                          </div>
+                          <div class="pd-cv-add">
+                            <button type="button" class="pd-cv-btn" data-cv-add="text"><i class="fas fa-font" aria-hidden="true"></i> <span data-lang="canvas.addText"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="image"><i class="far fa-image" aria-hidden="true"></i> <span data-lang="canvas.addImage"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="rect"><i class="far fa-square" aria-hidden="true"></i> <span data-lang="canvas.addRect"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="ellipse"><i class="far fa-circle" aria-hidden="true"></i> <span data-lang="canvas.addEllipse"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="line"><i class="fas fa-minus" aria-hidden="true"></i> <span data-lang="canvas.addLine"></span></button>
+                          </div>
+                          <span class="pd-cv-hint" id="pd-cv-hint" data-lang="canvas.hint"></span>
+                          <button type="button" class="pd-cv-btn pd-cv-close" id="pd-cv-close"><i class="fas fa-compress" aria-hidden="true"></i> <span data-lang="canvas.done"></span></button>
+                        </div>
+                        <div class="pd-cv-layers" id="pd-cv-layers">
+                          <span class="pd-cv-layers-title" data-lang="canvas.layers"></span>
+                          <div id="pd-cv-layer-list"></div>
+                        </div>
+                        <div id="pd-cv-text" hidden>
+                          <span data-cv="part.icon" data-lang="canvas.part.icon"></span>
+                          <span data-cv="part.text" data-lang="canvas.part.text"></span>
+                          <span data-cv="part.title" data-lang="canvas.part.title"></span>
+                          <span data-cv="part.detail" data-lang="canvas.part.detail"></span>
+                          <span data-cv="part.meta" data-lang="canvas.part.meta"></span>
+                          <span data-cv="part.progress" data-lang="canvas.part.progress"></span>
+                          <span data-cv="kind.text" data-lang="canvas.kind.text"></span>
+                          <span data-cv="kind.image" data-lang="canvas.kind.image"></span>
+                          <span data-cv="kind.shape" data-lang="canvas.kind.shape"></span>
+                          <span data-cv="newText" data-lang="canvas.newText"></span>
+                          <span data-cv="summaryNone" data-lang="canvas.summaryNone"></span>
+                          <span data-cv="summaryMoved" data-lang="canvas.summaryMoved"></span>
+                          <span data-cv="summaryItems" data-lang="canvas.summaryItems"></span>
+                          <span data-cv="prop.text" data-lang="canvas.prop.text"></span>
+                          <span data-cv="prop.font" data-lang="canvas.prop.font"></span>
+                          <span data-cv="prop.fontCard" data-lang="canvas.prop.fontCard"></span>
+                          <span data-cv="prop.fontFile" data-lang="canvas.prop.fontFile"></span>
+                          <span data-cv="act.importFont" data-lang="canvas.act.importFont"></span>
+                          <span data-cv="act.layerUp" data-lang="canvas.act.layerUp"></span>
+                          <span data-cv="act.layerDown" data-lang="canvas.act.layerDown"></span>
+                          <span data-cv="prop.size" data-lang="canvas.prop.size"></span>
+                          <span data-cv="prop.weight" data-lang="canvas.prop.weight"></span>
+                          <span data-cv="prop.color" data-lang="canvas.prop.color"></span>
+                          <span data-cv="prop.colorAccent" data-lang="canvas.prop.colorAccent"></span>
+                          <span data-cv="prop.colorText" data-lang="canvas.prop.colorText"></span>
+                          <span data-cv="prop.colorCustom" data-lang="canvas.prop.colorCustom"></span>
+                          <span data-cv="prop.align" data-lang="canvas.prop.align"></span>
+                          <span data-cv="prop.upper" data-lang="canvas.prop.upper"></span>
+                          <span data-cv="prop.fill" data-lang="canvas.prop.fill"></span>
+                          <span data-cv="prop.radius" data-lang="canvas.prop.radius"></span>
+                          <span data-cv="prop.opacity" data-lang="canvas.prop.opacity"></span>
+                          <span data-cv="prop.rotation" data-lang="canvas.prop.rotation"></span>
+                          <span data-cv="prop.scale" data-lang="canvas.prop.scale"></span>
+                          <span data-cv="card" data-lang="canvas.card"></span>
+                          <span data-cv="cardHint" data-lang="canvas.cardHint"></span>
+                          <span data-cv="general" data-lang="canvas.general"></span>
+                          <span data-cv="generalHint" data-lang="canvas.hint"></span>
+                          <span data-cv="prop.shape" data-lang="canvas.prop.shape"></span>
+                          <span data-cv="shape.triangle" data-lang="canvas.shape.triangle"></span>
+                          <span data-cv="shape.diamond" data-lang="canvas.shape.diamond"></span>
+                          <span data-cv="shape.star" data-lang="canvas.shape.star"></span>
+                          <span data-cv="shape.arrow" data-lang="canvas.shape.arrow"></span>
+                          <span data-cv="fill.solid" data-lang="value.solid"></span>
+                          <span data-cv="fill.gradient" data-lang="value.gradient"></span>
+                          <span data-cv="fill.none" data-lang="canvas.fillNone"></span>
+                          <span data-cv="prop.gradient" data-lang="canvas.prop.gradient"></span>
+                          <span data-cv="prop.angle" data-lang="field.bgAngle"></span>
+                          <span data-cv="prop.stroke" data-lang="canvas.prop.stroke"></span>
+                          <span data-cv="prop.shadow" data-lang="field.shadow"></span>
+                          <span data-cv="prop.blur" data-lang="canvas.prop.blur"></span>
+                          <span data-cv="act.front" data-lang="canvas.act.front"></span>
+                          <span data-cv="act.back" data-lang="canvas.act.back"></span>
+                          <span data-cv="act.crop" data-lang="canvas.act.crop"></span>
+                          <span data-cv="act.cropDone" data-lang="canvas.act.cropDone"></span>
+                          <span data-cv="act.duplicate" data-lang="canvas.act.duplicate"></span>
+                          <span data-cv="act.delete" data-lang="canvas.act.delete"></span>
+                          <span data-cv="act.home" data-lang="canvas.act.home"></span>
+                          <span data-cv="imageRefused" data-lang="canvas.imageRefused"></span>
+                          <span data-cv="full" data-lang="canvas.full"></span>
+                          <span data-cv="section.text" data-lang="group.text"></span>
+                          <span data-cv="section.look" data-lang="canvas.section.look"></span>
+                          <span data-cv="section.place" data-lang="canvas.section.place"></span>
+                          <span data-cv="layersAdded" data-lang="canvas.layersAdded"></span>
+                          <span data-cv="layersParts" data-lang="canvas.layersParts"></span>
+                        </div>
                         <div class="pd-stage" id="pd-stage" data-backdrop="checker" data-view="card">
                           <div class="pd-screen" id="pd-screen">
                             <!-- The frame itself is created on first use (ui/settings.js). -->
@@ -2569,8 +2660,16 @@
                               <span class="pd-compare-label" data-lang="preview.normal"></span>
                               <div class="pd-compare-frame"></div>
                             </div>
-                            <div class="pd-compare-row" data-state="rare">
-                              <span class="pd-compare-label" data-lang="preview.rare"></span>
+                            <div class="pd-compare-row" data-state="bronze">
+                              <span class="pd-compare-label" data-lang="preview.bronze"></span>
+                              <div class="pd-compare-frame"></div>
+                            </div>
+                            <div class="pd-compare-row" data-state="silver">
+                              <span class="pd-compare-label" data-lang="preview.silver"></span>
+                              <div class="pd-compare-frame"></div>
+                            </div>
+                            <div class="pd-compare-row" data-state="gold">
+                              <span class="pd-compare-label" data-lang="preview.gold"></span>
                               <div class="pd-compare-frame"></div>
                             </div>
                             <div class="pd-compare-row" data-state="completion">
@@ -2587,6 +2686,19 @@
                         <!-- Position and scale only affect the "Screen" view (layoutPreview applies
                              the user scale there alone), so elsewhere they hide like the resolution
                              picker beside them, rather than sit there inert. -->
+                        <!-- Under the stage on purpose: appearing on a selection, it must not push the
+                             card away from the pointer that is grabbing it. -->
+                        <div class="pd-cv-props" id="pd-cv-props" hidden></div>
+                        <!-- Full screen: the card's own controls (.pd-controls) move in here, see setFull(). -->
+                        <div class="pd-cv-card" id="pd-cv-card" hidden>
+                          <div class="pd-cv-props-head"><i class="fas fa-id-card" aria-hidden="true"></i> <b id="pd-cv-card-title"></b></div>
+                          <p class="pd-cv-props-empty" id="pd-cv-card-hint"></p>
+                          <!-- A shortcut for the accent bar, the one part of the card people look for first. -->
+                          <label class="pd-cv-quick" id="pd-cv-bar-quick">
+                            <span data-lang="field.accentBar"></span>
+                            <input type="checkbox" class="pd-switch" id="pd-cv-bar-toggle" />
+                          </label>
+                        </div>
                         <div class="pd-foot">
                           <span class="pd-foot-label" data-lang="preview.backdrop"></span>
                           <div class="pd-seg pd-backdrops" id="pd-backdrop">
@@ -2619,6 +2731,16 @@
                             </select>
                           </span>
                           <span class="pd-foot-note" id="pd-size-note"></span>
+                          <!-- Card view only: magnify the card, and turn snapping off (it also stops on its own when zoomed far in). -->
+                          <span class="pd-zoom" id="pd-zoom">
+                            <button type="button" class="pd-icon-btn" id="pd-cv-snap" aria-pressed="true" data-lang-title="canvas.snap"><i class="fas fa-magnet" aria-hidden="true"></i></button>
+                            <span class="pd-zoom-sep" aria-hidden="true"></span>
+                            <button type="button" class="pd-icon-btn" id="pd-zoom-out" data-lang-title="canvas.zoomOut"><i class="fas fa-minus" aria-hidden="true"></i></button>
+                            <button type="button" class="pd-zoom-value" id="pd-zoom-fit" data-lang-title="canvas.zoomFit">100 %</button>
+                            <button type="button" class="pd-icon-btn" id="pd-zoom-in" data-lang-title="canvas.zoomIn"><i class="fas fa-plus" aria-hidden="true"></i></button>
+                          </span>
+                          <!-- The only way into the layout editor: the normal view previews, full screen edits. -->
+                          <button type="button" class="inline-action-btn primary pd-cv-full" id="pd-cv-full"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> <span data-lang="canvas.fullscreen"></span></button>
                         </div>
                       </div>
 
@@ -2677,6 +2799,18 @@
                                 <span><span data-lang="field.width"></span> <b class="pd-value" id="pd-val-width"></b></span>
                                 <input type="range" id="pd-width" min="280" max="620" step="10" value="420" />
                               </label>
+                              <label class="pd-field" data-key="minHeight">
+                                <span><span data-lang="field.minHeight"></span> <b class="pd-value" id="pd-val-minHeight"></b></span>
+                                <input type="range" id="pd-minHeight" min="0" max="300" step="2" value="0" />
+                              </label>
+                              <!-- The free layout is edited on the preview itself (ui/presetCanvasEditor.js);
+                                   this field only holds its value and says what it contains. -->
+                              <div class="pd-field pd-canvas-field" data-key="canvas">
+                                <span data-lang="field.canvas"></span>
+                                <input type="hidden" id="pd-canvas" value="" />
+                                <span class="pd-canvas-summary" id="pd-canvas-summary"></span>
+                                <button type="button" id="pd-canvas-reset" class="inline-action-btn secondary"><i class="fas fa-undo" aria-hidden="true"></i> <span data-lang="canvas.reset"></span></button>
+                              </div>
                             </div>
                             <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
                             <div class="pd-fields pd-adv" data-advanced="1" hidden>
@@ -2948,7 +3082,7 @@
                                   <option value="none" data-lang="value.none"></option>
                                 </select>
                               </label>
-                              <label class="pd-field" data-key="accentBarSize">
+                              <label class="pd-field" data-key="accentBarSize" data-shown-for="accentBar:left,right,top,bottom,outline">
                                 <span><span data-lang="field.accentBarSize"></span> <b class="pd-value" id="pd-val-accentBarSize"></b></span>
                                 <input type="range" id="pd-accentBarSize" min="1" max="14" step="1" value="4" />
                               </label>

@@ -260,8 +260,9 @@ test('the control panel can be searched and stepped back', () => {
   // Undo starts again on a load, so a step can never carry across two designs.
   assert.match(settings, /function resetPresetHistory\(/);
   assert.match(settings, /resetPresetHistory\(\);/);
-  assert.match(settings, /\$\('#btn-preset-undo'\)\.click\(\(\) => stepPresetHistory\(true\)\)/);
-  assert.match(settings, /\$\('#btn-preset-redo'\)\.click\(\(\) => stepPresetHistory\(false\)\)/);
+  // The full-screen editor's own pair presses the same history.
+  assert.match(settings, /\$\('#btn-preset-undo, #pd-cv-undo'\)\.click\(\(\) => stepPresetHistory\(true\)\)/);
+  assert.match(settings, /\$\('#btn-preset-redo, #pd-cv-redo'\)\.click\(\(\) => stepPresetHistory\(false\)\)/);
 });
 
 test('undo and redo step through whole designs rather than through edits', () => {
@@ -337,10 +338,10 @@ test('the designer reads and writes its controls from the schema rather than by 
 test('the live preview swaps only the stylesheet, and never reloads on every keystroke', () => {
   // Rebuilding the document on each input would restart the animation under the user's cursor and
   // make dragging a slider feel broken; the stylesheet is the only thing that has to change.
-  assert.match(settings, /const previewCss = \(values\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl \}\);/);
+  assert.match(settings, /const previewCss = \(values, editing = editingLayout\(\)\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing \}\);/);
   // One function picks the stylesheet: the generated one, or a bundled preset's own plus a layer.
   assert.match(settings, /styleEl\.textContent = stylesheetFor\(values\);/);
-  assert.match(settings, /const stylesheetFor = \(values\) => \(layerMode \? layerStylesheet\(values\) : previewCss\(values\)\);/);
+  assert.match(settings, /const stylesheetFor = \(values, editing = editingLayout\(\)\) => \(layerMode \? layerStylesheet\(values\) : previewCss\(values, editing\)\);/);
   assert.match(settings, /getElementById\('aw-preview-css'\)/);
   assert.match(settings, /previewPending = setTimeout/, 'preview updates are not batched');
   // …and the preview is fed the same payload shape the notification window sends.
@@ -406,7 +407,7 @@ test('every state can be compared side by side', () => {
   );
   // Editing has to reach the compare frames, and cheaply: the stylesheet is swapped, not reloaded.
   assert.match(settings, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
-  assert.match(settings, /style\.textContent = stylesheetFor\(values\)/);
+  assert.match(settings, /style\.textContent = stylesheetFor\(values, false\)/, 'compared states show the real popup, without designer-only parts');
 
   /*
     And the state switch keeps meaning something while Compare is open: it marks the row it names

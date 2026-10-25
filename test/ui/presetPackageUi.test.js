@@ -199,7 +199,7 @@ test('Preview shows the imported preset, not the unrelated slider draft', () => 
   // previewed a default dark card instead of the preset the user had just picked.
   assert.match(handler[0], /const loaded = String\(\$\('#pd-load'\)\.val\(\) \|\| ''\);/);
   assert.match(handler[0], /if \(loaded && !isEditablePreset\(loaded\)\) \{/);
-  assert.match(handler[0], /overlayTestData\(kind, loaded, loaded\)/, 'the preview does not render the selected preset');
+  assert.match(handler[0], /overlayTestData\(kind, loaded, loaded[,)]/, 'the preview does not render the selected preset');
   // The popup on screen shows the state the designer is previewing, so a rare or completion design
   // can be judged at full size and not only as a normal unlock.
   assert.match(handler[0], /const kind = previewState === 'completion' \? 'platinum' :/);

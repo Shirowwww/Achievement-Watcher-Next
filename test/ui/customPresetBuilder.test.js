@@ -14,7 +14,7 @@ const vm = require('node:vm');
 const appRoot = path.join(__dirname, '..', '..', 'app');
 const generator = require(path.join(appRoot, 'util', 'customPreset.js'));
 const schema = require(path.join(appRoot, 'util', 'presetSchema.js'));
-const { customPresetNumbers, buildCustomPresetCss, buildCustomPresetHtml, buildPresetPreviewHtml, presetBoxSize, CUSTOM_PRESET_WINDOW_MARGIN } = generator;
+const { customPresetNumbers, buildCustomPresetCss, buildCustomPresetHtml, buildPresetPreviewHtml, presetBoxSize, presetEdge } = generator;
 
 // A design that moves every property off its default, so a value that silently fails to reach the
 // stylesheet cannot pass by looking like the default.
@@ -22,6 +22,7 @@ const FULL = {
   layout: 'icon-top',
   align: 'center',
   width: 520,
+  minHeight: 120,
   padX: 24,
   padY: 20,
   gap: 6,
@@ -89,6 +90,7 @@ const FULL = {
   logoPosition: 'bottom-left',
   logoSize: 48,
   logoOffset: 14,
+  canvas: { move: { icon: { x: 10, y: 0, r: 0, s: 1 } }, items: [{ kind: 'text', text: 'GG' }] },
 };
 
 test('the reference design covers every property, so nothing new is silently untested', () => {
@@ -119,7 +121,7 @@ test('every option is clamped to the range the designer offers', () => {
   // No options at all is the same as the built-in defaults, so an empty payload still renders.
   const defaults = customPresetNumbers();
   for (const property of schema.PRESET_PROPERTIES) {
-    assert.equal(defaults[property.key], property.def, `${property.key} has no usable default`);
+    assert.deepEqual(defaults[property.key], property.def, `${property.key} has no usable default`);
   }
   // A select or a sound that is not one of the values the designer can produce falls back too.
   const nonsense = customPresetNumbers({ layout: 'diagonal', animIn: 'sideways', sound: '../../evil.exe', showProgress: 'maybe' });
@@ -325,12 +327,16 @@ test('the host window is sized from the design, so a taller or glowing preset is
     const html = buildCustomPresetHtml(options);
     const meta = /<meta width="(\d+)" height="(\d+)"/.exec(html);
     assert.ok(meta, `no window-size metadata for width ${width}`);
-    assert.equal(Number(meta[1]), width + CUSTOM_PRESET_WINDOW_MARGIN, `window too narrow for a ${width}px popup`);
+    assert.equal(Number(meta[1]), width + presetEdge(customPresetNumbers(options)).x * 2, `window too narrow for a ${width}px popup`);
     assert.ok(Number(meta[2]) > 0);
   }
   // An out-of-range width is clamped identically in the CSS and in the metadata.
   const clamped = customPresetNumbers({ width: 5000 }).width;
-  assert.equal(Number(/<meta width="(\d+)"/.exec(buildCustomPresetHtml({ width: 5000, glow: 0, rareGlow: 0, platinumGlow: 0 }))[1]), clamped + CUSTOM_PRESET_WINDOW_MARGIN);
+  assert.equal(Number(/<meta width="(\d+)"/.exec(buildCustomPresetHtml({ width: 5000, glow: 0, rareGlow: 0, platinumGlow: 0 }))[1]), clamped + presetEdge(customPresetNumbers({ glow: 0, rareGlow: 0, platinumGlow: 0 })).x * 2);
+
+  // The slack is what the shadow and glow paint past the card: a flat card gets almost none.
+  const flat = presetBoxSize({ shadow: 0, glow: 0, rareGlow: 0, platinumGlow: 0 });
+  assert.ok(flat.width - 420 <= 10 && flat.height - presetBoxSize({ glow: 0, rareGlow: 0, platinumGlow: 0 }).height < 0, 'empty room around a card that paints nothing outside it');
 
   // A stacked layout is taller than the row layout it replaced, and the box has to follow or the
   // popup is cropped on screen - the meta box is the whole window the notification gets.
@@ -366,7 +372,7 @@ test('the designer previews the real preset rather than a second renderer', () =
   // Same engine, same markup, same generated stylesheet - the preview only adds the bridge that
   // stands in for the notification window's IPC.
   assert.ok(preview.includes(generator.PRESET_ENGINE), 'the preview does not run the preset engine');
-  assert.ok(preview.includes(generator.PRESET_MARKUP), 'the preview does not use the preset markup');
+  assert.ok(preview.includes(generator.markupWithCanvas(FULL.canvas)), 'the preview does not use the preset markup');
   assert.ok(preview.includes(buildCustomPresetCss(FULL)), 'the preview does not use the generated stylesheet');
   assert.match(preview, /<style id="aw-preview-css">/, 'the designer cannot swap the stylesheet live');
   assert.match(preview, /window\.awPreviewApply/, 'the designer cannot feed it a sample notification');
