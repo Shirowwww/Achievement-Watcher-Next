@@ -4948,15 +4948,14 @@ function createMainWindow() {
         return;
       }
       const win = MainWin;
-      require('../util/linuxTrayHost.js')
-        .hasStatusNotifierHost()
-        .then((visible) => {
-          if (win.isDestroyed()) return;
-          if (visible) return win.hide();
-          // No tray host on this desktop: a hidden window could only come back by relaunching AW.
-          debug.log('[MainWindow] no StatusNotifier host -> minimizing instead of hiding to tray');
-          win.minimize();
-        });
+      const trayHost = require('../util/linuxTrayHost.js');
+      trayHost.hasStatusNotifierHost().then(async (visible) => {
+        if (win.isDestroyed()) return;
+        if (visible) return win.hide();
+        // No tray host on this desktop: nothing would show a window hidden to the tray.
+        debug.log('[MainWindow] no StatusNotifier host -> minimizing instead of hiding to tray');
+        if ((await trayHost.minimizeOrHide(win)) === 'hidden') debug.log('[MainWindow] minimize ignored by the window manager -> hidden');
+      });
     });
 
     MainWin.on('closed', () => {
@@ -5964,6 +5963,10 @@ function createNotificationWindow(data = {}) {
     // Reposition witnesses must be focusable on Windows or their draggable region can let the
     // mouse gesture fall through to the main window behind them. Real notifications stay inert.
     focusable: reposition,
+    // Hyprland and wlroots give the keyboard to an unmanaged X11 window when it maps, unless its
+    // _NET_WM_WINDOW_TYPE marks it a notification: a native Wayland game lost its keys otherwise.
+    // Not under gamescope, whose popup was proven with the plain type.
+    type: process.platform === 'linux' && !reposition && !gamescope().isActive() ? 'notification' : undefined,
     hasShadow: false,
     fullscreenable: false,
     webPreferences: {

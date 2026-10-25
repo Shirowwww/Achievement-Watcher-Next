@@ -77,6 +77,32 @@ test('on Wayland the Screenshot portal takes the shot, and the screen-sharing di
   assert.match(logs.at(-1), /ScreenCast portal/);
 });
 
+test('screenshots the user refused, or has not answered yet, are not asked for again through the screen-sharing dialog', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-shot-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const cases = [
+    [{ refused: true }, 'screenshots are refused in the desktop permissions'],
+    [{ unanswered: true }, 'the desktop is still asking whether AW Next may take screenshots'],
+  ];
+  for (const [flag, message] of cases) {
+    const asked = [];
+    const logs = [];
+    const take = createScreenshotTaker({
+      desktopCapturer: { getSources: async () => (asked.push('screencast'), [{ thumbnail: image(png(1600, 900)) }]) },
+      screen,
+      log: (m) => logs.push(m),
+      wayland: true,
+      takePortalShot: async () => {
+        throw Object.assign(new Error(message), flag);
+      },
+    });
+    assert.equal(await take({ file: path.join(dir, 'Game', 'shot.png') }), null);
+    assert.deepEqual(asked, []);
+    assert.deepEqual(fs.readdirSync(dir), []);
+    assert.ok(logs.at(-1).includes(message));
+  }
+});
+
 test('while the software recorder runs, its stream gives the screenshot and no desktop is asked', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-shot-'));
   t.after(() => fs.rmSync(dir, { recursive: true, force: true }));

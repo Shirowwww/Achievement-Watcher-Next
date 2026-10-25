@@ -18,17 +18,45 @@ function hasPlatformChoice(args) {
   return args.some((arg) => arg.startsWith('--ozone-platform'));
 }
 
+function readNetUnix() {
+  try {
+    return require('fs').readFileSync('/proc/net/unix', 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/*
+  A DISPLAY inherited from an ended session (systemd keeps it) can name a gone XWayland whose socket
+  file is still on disk, so only a bound socket in /proc/net/unix (file or abstract) proves a server.
+  A remote display, or an unreadable /proc/net/unix, cannot be checked and is trusted.
+*/
+function xServerListening(display, { netUnix = readNetUnix } = {}) {
+  const local = /^(?:unix)?:(\d+)(?:\.\d+)?$/.exec(String(display || ''));
+  if (!local) return true;
+  const sockets = netUnix();
+  if (sockets === null) return true;
+  const socket = `/tmp/.X11-unix/X${local[1]}`;
+  return sockets.split('\n').some((line) => line.endsWith(` ${socket}`) || line.endsWith(` @${socket}`));
+}
+
 /*
   Returns the command to restart through XWayland, or null when this process should carry on.
   Inside an AppImage this is the mounted binary too: the copy inherits the pipe the AppImage runtime
   watches, so the same mount stays up for it, where starting the .AppImage file again would mount a
   second copy and leave the first one behind.
 */
-function xwaylandRelaunch({ platform = process.platform, env = process.env, argv = process.argv, execPath = process.execPath } = {}) {
+function xwaylandRelaunch({
+  platform = process.platform,
+  env = process.env,
+  argv = process.argv,
+  execPath = process.execPath,
+  xServerUp = xServerListening,
+} = {}) {
   // Electron goes native Wayland on exactly this variable; any other session is already X11.
   if (platform !== 'linux' || env.XDG_SESSION_TYPE !== 'wayland') return null;
-  // No XWayland in this session: native Wayland is the only display there is.
-  if (!env.DISPLAY) return null;
+  // No XWayland in this session (Hyprland unsets DISPLAY when it is off): native Wayland is the only display.
+  if (!env.DISPLAY || !xServerUp(env.DISPLAY)) return null;
   const args = argv.slice(1);
   // A shortcut's `--toggle-overlay` only hands its press to the running copy: no window, no restart.
   if (hasPlatformChoice(args) || args.includes('--toggle-overlay')) return null;
@@ -81,4 +109,4 @@ function adoptSteamDisplay({
   return true;
 }
 
-module.exports = { xwaylandRelaunch, restartThroughXWayland, adoptSteamDisplay, X11_SWITCH };
+module.exports = { xwaylandRelaunch, xServerListening, restartThroughXWayland, adoptSteamDisplay, X11_SWITCH };

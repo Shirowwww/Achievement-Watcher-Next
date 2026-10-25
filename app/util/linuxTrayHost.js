@@ -35,4 +35,25 @@ async function waitForStatusNotifierHost({ timeoutMs = 120000, intervalMs = 2000
   return check();
 }
 
-module.exports = { WATCHER, hasStatusNotifierHost, waitForStatusNotifierHost };
+/*
+  Without a tray host, closing minimizes so the dock can bring the window back. Hyprland has no
+  minimized state and ignores it, which left the close button doing nothing: the window is then
+  hidden, and launching AW again shows it.
+*/
+async function minimizeOrHide(win, { checkAfterMs = 1000, wait = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  // A 'minimize' event means the desktop honoured it, even if the user restored the window since.
+  let honoured = false;
+  const onMinimize = () => {
+    honoured = true;
+  };
+  win.once('minimize', onMinimize);
+  win.minimize();
+  await wait(checkAfterMs);
+  if (win.isDestroyed()) return 'gone';
+  win.removeListener('minimize', onMinimize);
+  if (honoured || win.isMinimized() || !win.isVisible()) return 'minimized';
+  win.hide();
+  return 'hidden';
+}
+
+module.exports = { WATCHER, hasStatusNotifierHost, waitForStatusNotifierHost, minimizeOrHide };

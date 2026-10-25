@@ -2,13 +2,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const { portalScreenshot } = require('./portalScreenshot.js');
+const { portalScreenshot, removeQuietly } = require('./portalScreenshot.js');
 
 /*
   Souvenir screenshots on Linux, asked for by the Watchdog. While the software clip recorder runs,
   its stream gives the picture. Otherwise, on X11 desktopCapturer reads the X server directly; on
-  Wayland the Screenshot portal takes the shot without asking (see portalScreenshot.js), and
-  desktopCapturer, which shows the screen-sharing dialog at every call, is only the fallback.
+  Wayland the Screenshot portal takes the shot (see portalScreenshot.js), and desktopCapturer,
+  which shows the screen-sharing dialog at every call, is only the fallback for a portal that cannot.
 */
 
 // The whole desktop in physical pixels, like the Windows helper's shot.
@@ -59,6 +59,8 @@ function createScreenshotTaker({
     try {
       return { data: await portalPng(takePortalShot), via: 'Screenshot portal' };
     } catch (err) {
+      // Asked or refused: the screen-sharing dialog would only ask the same thing again.
+      if (err.refused || err.unanswered) throw err;
       log(`[souvenir] Screenshot portal: ${err.message || err}; trying the screen-sharing portal`);
       return { data: await capturerPng({ desktopCapturer, screen }), via: 'ScreenCast portal' };
     }
@@ -82,7 +84,7 @@ function createScreenshotTaker({
       return file;
     } catch (err) {
       log(`[souvenir] capture failed: ${err.message || err}`);
-      fs.promises.rm(partial, { force: true }).catch(() => {});
+      removeQuietly(partial);
       return null;
     }
   };

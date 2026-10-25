@@ -46,22 +46,46 @@ AppImage file still points at the old name, so point it at that command instead.
 ## Supported desktops
 
 AW Next is tested on GNOME and KDE Plasma, under Wayland and X11 (Ubuntu 24.04 with GNOME 46 and
-Plasma 5.27). Other desktops may work but have not been tried.
+Plasma 5.27), and on Fedora 44 with GNOME 50, Plasma 6.7, Hyprland 0.56 and COSMIC 1.0, in a virtual
+machine. Other desktops may work but have not been tried.
 
 - **Wayland.** AW Next restarts itself once through XWayland at startup so its popups and overlay can
-  stay above games, which run as X11 windows under Wine and Proton.
-- **Tray.** KDE shows the tray icon as is. GNOME needs the AppIndicator extension, which Ubuntu ships
-  turned on; without it, closing the window minimizes AW Next instead of hiding it.
+  stay above games, which run as X11 windows under Wine and Proton. Hyprland and COSMIC start XWayland
+  by default. Without it (`xwayland.enabled = false` on Hyprland), AW Next stays a native Wayland app:
+  the library, tray and notifications work, but the compositor places the popups and the overlay like
+  any window, and a popup takes the keyboard from the game while it shows.
+- **Tray.** KDE and COSMIC show the tray icon as is. GNOME needs the AppIndicator extension, which
+  Ubuntu ships turned on. Hyprland needs a bar with a tray, such as Waybar with its `tray` module.
+  Without a tray, closing the window minimizes AW Next instead of hiding it; Hyprland has no minimized
+  windows, so there it hides, and starting AW Next again brings the window back.
 - **Notifications** are the desktop's own. Do Not Disturb hides them unless **Settings → Notification →
-  Priority notifications** is on, in which case unlocks still show on GNOME and KDE.
+  Priority notifications** is on, in which case unlocks still show on GNOME and KDE. Hyprland has none
+  of its own: run a notification daemon such as mako, dunst or SwayNC. mako draws under a full-screen
+  game unless its config sets `layer=overlay`, and keeps each notification until you click it unless
+  it sets `default-timeout` (in milliseconds). COSMIC holds its notifications while a game is full
+  screen. AW Next's own popup shows above the game either way.
 - Options that exist only on Windows are marked as such in Settings.
 
 ## Screenshots and clips
 
-Screenshots and clips of each unlock work on X11 and on Wayland, where the desktop asks once to share
-the screen. Clips are recorded by gpu-screen-recorder with the graphics card when it is installed. If
-you choose it in Settings, AW Next's own software recorder saves WebM files instead and shows what it
-cost.
+Screenshots and clips of each unlock work on X11 and on Wayland. Clips are recorded by
+gpu-screen-recorder with the graphics card when it is installed. If you choose it in Settings, AW
+Next's own software recorder saves WebM files instead and shows what it cost.
+
+On Wayland, the first screenshot makes the desktop ask whether apps may take screenshots (GNOME 47
+and later, KDE Plasma 6, COSMIC and Hyprland). AW Next waits a few seconds for the answer, then skips
+that shot, and the ones of unlocks that come while the question is open. Click **Allow**, since Enter
+picks **Deny** on GNOME and Hyprland, and the next screenshots are taken without a word. If you deny
+it, AW Next takes no screenshots and does not ask again. To be asked again at the next screenshot,
+run:
+
+```bash
+flatpak permission-remove screenshot screenshot
+```
+
+The software recorder captures the screen through the desktop's screen-sharing dialog, which comes
+back each time a game starts and, on COSMIC and Hyprland, takes the game out of full screen.
+gpu-screen-recorder asks once.
 
 ## Overlay shortcut
 
@@ -85,8 +109,29 @@ from the first start of the AppImage, and AW Next refreshes it at every start, s
   the command, then set the shortcut.
 - **KDE Plasma 5:** **System Settings → Shortcuts → Custom Shortcuts → Edit → New → Global Shortcut →
   Command/URL**. Set the keys on **Trigger** and the command on **Action**.
+- **Hyprland** 0.55 and later, in `~/.config/hypr/hyprland.lua`:
 
-Whether the overlay shows above a native Wayland game in full screen has not been tested.
+  ```lua
+  hl.bind("CTRL + SHIFT + K", hl.dsp.exec_cmd("/home/you/.local/bin/achievement-watcher --toggle-overlay"))
+  ```
+
+  In an older `hyprland.conf`, the same line reads
+  `bind = CTRL SHIFT, K, exec, /home/you/.local/bin/achievement-watcher --toggle-overlay`.
+  Hyprland takes the keys before any window does, so one press opens or closes the overlay once,
+  whatever the game.
+- **COSMIC:** **Settings → Input devices → Keyboard → Keyboard shortcuts → Custom shortcuts → Add
+  shortcut**. Fill in **Shortcut name** and **Command**, then type the keys. It works over a native
+  Wayland game too. COSMIC's **Global shortcuts in X11 applications** setting does not help: AW Next
+  still does not see the keys there.
+
+On Hyprland and COSMIC the overlay shows above a full-screen game, Wine or native Wayland. With
+**Focus overlay when it opens** on (see the [Controller guide](controller.md)), both take the game out
+of full screen to show it. On Hyprland, this window rule keeps the game full screen and the overlay
+above it:
+
+```lua
+hl.window_rule({ name = "aw-next-overlay", match = { title = "Achievements Overlay" }, float = true, pin = true })
+```
 
 A controller works too. AW Next reads gamepads directly, so the controller shortcuts of the
 [Controller guide](controller.md) open and drive the overlay without taking anything from the game.
@@ -96,7 +141,8 @@ While Steam Input runs, AW Next reads only Steam's virtual pads, so one press is
 
 The few secrets AW Next keeps (Steam, Epic, Xbox and PlayStation sign-in tokens, the RetroAchievements
 key, an emulator Steam password) are encrypted with a key held by your desktop keyring: GNOME Keyring
-or KDE Wallet.
+or KDE Wallet. Hyprland has none of its own and uses the one installed, which starts when AW Next first
+asks for it.
 
 With **automatic login**, the keyring is not unlocked when your session starts. The first time AW Next
 needs it, the desktop asks you to unlock it, or to create one if there is none; KDE opens the KDE

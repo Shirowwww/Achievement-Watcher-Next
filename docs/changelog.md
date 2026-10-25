@@ -96,6 +96,16 @@ renamed in 3.9.0 and the history is kept under one file.
   such as its bronze and silver icon borders, so the import reported them missing. When SAN is
   installed on the PC, they are now taken from SAN's own folder.
 
+### Compatibility
+
+- **Hyprland and COSMIC on Linux.** The popup no longer takes the keyboard from a native Wayland
+  game, AW Next no longer restarts toward an XWayland that is gone, and closing the window without a
+  tray hides it where Hyprland ignores minimizing (starting AW Next again brings it back).
+- **The screenshot question on Wayland.** GNOME 47 and later, Plasma 6, COSMIC and Hyprland ask once
+  whether apps may take screenshots. AW Next waits for that answer instead of asking again through
+  the screen-sharing dialog at every unlock, respects a refusal, and leaves no stray file in
+  Pictures when the answer comes late.
+
 ## 3.12.2 - 2026-10-22
 
 ### Added
