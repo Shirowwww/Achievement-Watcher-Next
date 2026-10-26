@@ -178,6 +178,25 @@ test("EMPRESS game saves are copied under the installed loader's names, never ov
   assert.ok(fs.existsSync(path.join(source, '12.save')), 'the EMPRESS copy stays for a restore');
 });
 
+// DenuvOwO's AC Odyssey 1.5.6 ships the same EMPRESS emulator with SavePath = SAVES, which the
+// emulator resolves from the game folder: <game>\SAVES\uplay_emu\EMPRESS\<id>\storage_files.
+test('DenuvOwO saves under a relative SavePath are copied from the game folder', (t) => {
+  const dir = tempDir(t);
+  const appData = tempDir(t);
+  fs.writeFileSync(
+    path.join(dir, 'uplay_r1_loader.ini'),
+    ['[Settings]', 'GameAppId = 5059', 'SavePath = SAVES', 'RetrieveChunks=1', 'StoreConnected=1', ''].join('\r\n')
+  );
+  const source = path.join(dir, 'SAVES', 'uplay_emu', 'EMPRESS', '5059', 'storage_files');
+  fs.mkdirSync(source, { recursive: true });
+  fs.writeFileSync(path.join(source, '10.save'), 'slot ten');
+
+  const copied = uplayR2.migrateReleaseSaves({ dir, appData });
+
+  assert.deepEqual(copied.map((entry) => path.basename(entry.to)), ['a.save']);
+  assert.equal(fs.readFileSync(path.join(appData, 'R1 UplayEmu Saves', '5059', 'a.save'), 'utf8'), 'slot ten');
+});
+
 test('no EMPRESS config, no save copy', (t) => {
   const dir = tempDir(t);
   const appData = tempDir(t);

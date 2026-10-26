@@ -25,8 +25,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
-- **The Ubisoft achievement fix works on EMPRESS releases.** AC Odyssey froze at launch after the
-  fix: the EMPRESS settings were left behind and the game waited on an empty chunk list. The fix
+- **The Ubisoft achievement fix works on EMPRESS and DenuvOwO releases.** AC Odyssey froze at launch
+  after the fix: the EMPRESS settings were left behind and the game waited on an empty chunk list. The fix
   now carries them over, and copies the EMPRESS game saves to where the new loader reads them.
 - **Two achievements unlocked together are both announced.** The second one waited for the first
   popup to show, then counted as too old and was skipped, with no popup and no screenshot.

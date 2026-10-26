@@ -1357,7 +1357,9 @@ function replaceListSection(doc, name, lines) {
   EMPRESS keeps game saves in %APPDATA%\uplay_emu\EMPRESS\<id>\storage_files\<slot>.save; the
   installed R1 loader reads the same file layout (a 0x228-byte header, then the data) from
   %APPDATA%\R1 UplayEmu Saves\<id>\<slot in hex>.save. Copied, never moved or overwritten, so a
-  restore of the original loader finds every save where it left it.
+  restore of the original loader finds every save where it left it. Any other SavePath (DenuvOwO
+  ships "SAVES") replaces %APPDATA% in that layout; a relative one resolves from the game's
+  working directory, which is the loader's folder.
 */
 function migrateReleaseSaves({ dir, appData } = {}) {
   if (!dir || !appData) return [];
@@ -1367,8 +1369,10 @@ function migrateReleaseSaves({ dir, appData } = {}) {
   if (!settings) return [];
   const values = sectionEntries(settings);
   const id = String(values.GameAppId || '').trim();
-  if (!/^\d+$/.test(id) || String(values.SavePath || '').trim().toLowerCase() !== EMPRESS_DEFAULT_SAVE_PATH) return [];
-  const source = path.join(appData, 'uplay_emu', 'EMPRESS', id, 'storage_files');
+  const savePath = String(values.SavePath || '').trim();
+  if (!/^\d+$/.test(id) || !savePath) return [];
+  const saveBase = savePath.toLowerCase() === EMPRESS_DEFAULT_SAVE_PATH ? appData : path.resolve(dir, savePath);
+  const source = path.join(saveBase, 'uplay_emu', 'EMPRESS', id, 'storage_files');
   const target = path.join(appData, FLAVOURS.r1.saveRoot, id);
   let names;
   try {
