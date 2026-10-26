@@ -692,7 +692,8 @@
             "fillNone": "Aucun",
             "section": {
               "look": "Apparence",
-              "place": "Disposition"
+              "place": "Disposition",
+              "motion": "Animation"
             },
             "full": "Éditeur de mise en page",
             "newText": "Ton texte",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Texte",
               "image": "Image",
-              "shape": "Forme"
+              "shape": "Forme",
+              "icon": "Icône"
             },
             "shape": {
               "triangle": "Triangle",
@@ -741,7 +743,16 @@
               "radius": "Coins",
               "opacity": "Opacité",
               "rotation": "Rotation",
-              "scale": "Échelle"
+              "scale": "Échelle",
+              "icon": "Icône",
+              "states": "Affiché sur",
+              "alignCard": "Aligner sur la carte",
+              "position": "Position",
+              "dims": "Taille",
+              "offset": "Décalage",
+              "entrance": "Entrée",
+              "delay": "Délai (ms)",
+              "insert": "Insérer"
             },
             "act": {
               "front": "Devant la carte",
@@ -753,8 +764,104 @@
               "home": "Remettre en place",
               "importFont": "Importer une police",
               "layerUp": "Monter",
-              "layerDown": "Descendre"
-            }
+              "layerDown": "Descendre",
+              "show": "Afficher",
+              "hide": "Masquer",
+              "lock": "Verrouiller sur place",
+              "unlock": "Déverrouiller"
+            },
+            "addIcon": "Icône",
+            "enter": {
+              "none": "Avec la carte",
+              "fade": "Fondu",
+              "rise": "Montée",
+              "drop": "Chute",
+              "left": "Depuis la gauche",
+              "right": "Depuis la droite",
+              "zoom": "Zoom avant",
+              "pop": "Surgissement"
+            },
+            "token": {
+              "game": "Jeu",
+              "title": "Succès",
+              "detail": "Description",
+              "rarity": "Rareté",
+              "tier": "Palier"
+            },
+            "fillState": "Suit le palier",
+            "fillPlatinum": "Platine",
+            "icon": {
+              "trophy": "Trophée",
+              "medal": "Médaille",
+              "crown": "Couronne",
+              "star": "Étoile",
+              "sparkle": "Étincelle",
+              "shield": "Bouclier",
+              "gem": "Gemme",
+              "flame": "Flamme",
+              "bolt": "Éclair",
+              "heart": "Cœur",
+              "check": "Coche",
+              "gamepad": "Manette"
+            },
+            "align": {
+              "left": "Bord gauche",
+              "center": "Centré, en largeur",
+              "right": "Bord droit",
+              "top": "Bord supérieur",
+              "middle": "Centré, en hauteur",
+              "bottom": "Bord inférieur"
+            },
+            "copied": "Copié. Ctrl + V le colle, dans un autre preset aussi.",
+            "help": {
+              "title": "Raccourcis",
+              "nudge": "Déplace la sélection d’un pixel, de 10 avec Maj",
+              "shift": "Redimensionnement : garder ou libérer les proportions. Rotation : par pas de 15 degrés",
+              "alt": "Déplacement : sans aimantation aux repères",
+              "duplicate": "Dupliquer la sélection",
+              "copy": "Copier, puis coller, dans un autre preset aussi",
+              "undo": "Annuler, puis rétablir",
+              "delete": "Supprimer un élément, ou retirer une partie de la carte",
+              "escape": "Désélectionner, puis quitter l’éditeur",
+              "zoom": "Avec la molette de la souris : zoom avant et arrière",
+              "dblclick": "Double-clic : modifier un texte, recadrer une image",
+              "sheet": "Afficher ou masquer cette liste",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Maj",
+                "alt": "Alt",
+                "delete": "Suppr",
+                "escape": "Échap"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Ajouter des éléments",
+                "body": "Textes, images, formes et icônes. Chacun se place sur la carte comme un calque à part."
+              },
+              "edit": {
+                "title": "Choisir, puis déplacer",
+                "body": "Clique sur un élément de la carte pour le sélectionner, glisse-le pour le déplacer. Les coins le redimensionnent, la poignée ronde le fait pivoter."
+              },
+              "props": {
+                "title": "Ses réglages",
+                "body": "Sans sélection, ce panneau contient les réglages de la carte elle-même. Sélectionne un élément pour régler sa taille, sa couleur et les paliers où il s’affiche."
+              },
+              "layers": {
+                "title": "Calques",
+                "body": "Tout ce qui est sur la carte, le plus haut en premier. L’œil masque un élément, le cadenas le verrouille sur place."
+              },
+              "help": {
+                "title": "Raccourcis",
+                "body": "Ce bouton, ou la touche ?, liste tous les raccourcis. Tu peux y revoir la visite guidée."
+              },
+              "next": "Suivant",
+              "skip": "Passer",
+              "done": "Compris",
+              "replay": "Revoir la visite"
+            },
+            "motionHint": "La carte reste immobile pendant que tu la modifies : Lire, sous la carte, montre les animations d'entrée.",
+            "maxItems": "La carte est pleine. Supprime un élément pour en ajouter un autre."
           },
           "create": "Créer le preset",
           "created": "Créé et sélectionné :",
@@ -961,6 +1068,24 @@
             "transparent": "Transparent",
             "uppercase": "MAJUSCULES",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Thème SAN importé",
+            "tierPictures": "Image du trophée",
+            "tierAuto": "Suit le palier",
+            "tierHint": "Pour les thèmes qui dessinent un trophée de bronze, d’argent et d’or. Suit le palier affiche celui qui correspond au déblocage ; choisis une couleur pour toujours l’afficher.",
+            "states": "Thème par palier",
+            "statesHint": "Dessine un palier avec un autre thème SAN importé, son compris.",
+            "own": "Ce thème",
+            "loaded": "Thème SAN importé : son image de trophée et ses thèmes par palier se règlent sous l’aperçu.",
+            "saved": "Enregistré :"
+          },
+          "gallery": {
+            "title": "Presets",
+            "close": "Fermer",
+            "mine": "Tes presets",
+            "bundled": "Fournis",
+            "browse": "Parcourir les presets"
           }
         },
         "souvenirTitle": "Capture souvenir",

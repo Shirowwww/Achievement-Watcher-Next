@@ -128,6 +128,11 @@ const PRESET_ENGINE = [
   '    The line above the title (game name + rarity). Each half hides when the payload lacks it,',
   '    and the whole row disappears when both do, so it never reserves an empty line.',
   '  */',
+  '  function rarityText(data) {',
+  '    var percent = data && data.rarityPercent;',
+  "    if (percent == null || percent === '' || !isFinite(Number(percent))) return '';",
+  "    return (Math.round(Number(percent) * 10) / 10) + '%';",
+  '  }',
   '  function applyMeta(data) {',
   "    var row = document.querySelector('.meta');",
   "    var gameEl = document.querySelector('.game');",
@@ -136,11 +141,18 @@ const PRESET_ENGINE = [
   "    var game = String((data && data.gameName) || '').trim();",
   '    gameEl.textContent = game;',
   '    gameEl.hidden = !game;',
-  '    var percent = data && data.rarityPercent;',
-  "    var hasRarity = percent != null && percent !== '' && isFinite(Number(percent));",
-  "    rarityEl.textContent = hasRarity ? (Math.round(Number(percent) * 10) / 10) + '%' : '';",
-  '    rarityEl.hidden = !hasRarity;',
-  '    row.hidden = !game && !hasRarity;',
+  '    var rarity = rarityText(data);',
+  '    rarityEl.textContent = rarity;',
+  '    rarityEl.hidden = !rarity;',
+  '    row.hidden = !game && !rarity;',
+  '  }',
+  '  // An added text that says {game}, {title}... gets those words here; {tier} is in the stylesheet.',
+  '  function applyTokens(words) {',
+  "    var spans = document.querySelectorAll('.aw-canvas [data-tok]');",
+  '    for (var i = 0; i < spans.length; i++) {',
+  "      var key = spans[i].getAttribute('data-tok');",
+  "      if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];",
+  '    }',
   '  }',
   '  var closeTimer = null;',
   '  function onPayload(displayName, description, iconPath, scale, data) {',
@@ -158,6 +170,7 @@ const PRESET_ENGINE = [
   '    applyArtwork(data);',
   '    applyMeta(data);',
   '    applyProgress(data);',
+  "    applyTokens({ game: String(data.gameName || '').trim(), title: titleEl.textContent, detail: detailEl.textContent, rarity: rarityText(data) });",
   "    var inMs = timing('--ach-in', 520);",
   "    var outMs = timing('--ach-out', 380);",
   '    var marquees = [marqueePlan(titleEl), marqueePlan(detailEl)];',
@@ -231,10 +244,70 @@ const CANVAS_POLYGONS = {
   arrow: '0,30 58,30 58,0 100,50 58,100 58,70 0,70',
 };
 
+// A tier's own colour, with the custom presets' defaults for a bundled base that has none.
+const CANVAS_TIER_PAINT = {
+  bronze: 'var(--rare-bronze, #cd7f32)',
+  silver: 'var(--rare-silver, #9fb2cc)',
+  gold: 'var(--rare-accent, #ffd24e)',
+  platinum: 'var(--platinum-accent, #cfe3ff)',
+};
+
 function shapePaint(item) {
   if (item.fillMode === 'none') return 'transparent';
   if (item.fillMode === 'accent') return 'var(--accent)';
+  if (CANVAS_TIER_PAINT[item.fillMode]) return CANVAS_TIER_PAINT[item.fillMode];
   return item.fillMode === 'gradient' ? `linear-gradient(${item.angle}deg, ${item.fill}, ${item.fill2})` : item.fill;
+}
+
+// An icon is its paint seen through the icon's outline.
+const canvasIconMask = (name) =>
+  `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='${schema.CANVAS_ICONS[name]}'/></svg>`)}")`;
+
+/*
+  Where each state can be told apart on the card: the engine's state classes, and the progress line
+  it shows for a progress popup (normal and progress popups have no class of their own).
+*/
+const CANVAS_STATE_SELECTORS = {
+  normal: ':not(.state-rare, .state-platinum):not(:has(.progress_line:not([hidden])))',
+  bronze: '.tier-bronze',
+  silver: '.tier-silver',
+  gold: '.tier-gold',
+  platinum: '.state-platinum',
+  progress: ':not(.state-platinum):has(.progress_line:not([hidden]))',
+};
+
+// Where each tier's word for {tier} shows; a platinum popup carries no tier class.
+const CANVAS_TIER_STATES = { bronze: '.tier-bronze', silver: '.tier-silver', gold: '.tier-gold', platinum: '.state-platinum' };
+
+// A CSS string for `content`. `<` is escaped too, so a word cannot close the <style> it sits in.
+const cssString = (text) => `"${String(text).replace(/[\\"<\n]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `)}"`;
+
+/*
+  Each entrance starts from its own frame and ends where the item sits. It runs while the engine
+  holds `.active` on the card, so it replays with every popup; its delay counts from the card's start.
+*/
+const CANVAS_ENTER_MS = 480;
+const CANVAS_ENTER_FROM = {
+  fade: 'opacity: 0;',
+  rise: 'opacity: 0; transform: translateY(14px);',
+  drop: 'opacity: 0; transform: translateY(-14px);',
+  left: 'opacity: 0; transform: translateX(-18px);',
+  right: 'opacity: 0; transform: translateX(18px);',
+  zoom: 'opacity: 0; transform: scale(0.8);',
+  pop: 'opacity: 0; transform: scale(0.5);',
+};
+const CANVAS_ENTER_EASE = { pop: 'cubic-bezier(0.34, 1.56, 0.64, 1)' };
+const CANVAS_ENTER_EASE_DEFAULT = 'cubic-bezier(0.22, 1, 0.36, 1)';
+
+function canvasEntranceCss(items) {
+  const entering = items.map((item, index) => [item, index]).filter(([item]) => item.enter);
+  if (!entering.length) return [];
+  const rules = [...new Set(entering.map(([item]) => item.enter))].map((name) => `@keyframes aw-cv-${name} { from { ${CANVAS_ENTER_FROM[name]} } }`);
+  for (const [item, index] of entering) {
+    const ease = CANVAS_ENTER_EASE[item.enter] || CANVAS_ENTER_EASE_DEFAULT;
+    rules.push(`.ach.active > .${CANVAS_CLASS} > [data-i="${index}"] { animation: aw-cv-${item.enter} ${CANVAS_ENTER_MS}ms ${ease} ${item.delay || 0}ms both; }`);
+  }
+  return [`@media (prefers-reduced-motion: no-preference) {\n${rules.join('\n')}\n}`];
 }
 
 function shapeFilter(item) {
@@ -251,9 +324,10 @@ function polygonSvg(item, index) {
     item.fillMode === 'gradient'
       ? `<defs><linearGradient id="${gradientId}" gradientTransform="rotate(${item.angle - 90} 0.5 0.5)"><stop offset="0" stop-color="${item.fill}"/><stop offset="1" stop-color="${item.fill2}"/></linearGradient></defs>`
       : '';
-  // The state colour is a CSS variable, which only a style (not a fill attribute) resolves.
+  // The state and tier colours are CSS variables, which only a style (not a fill attribute) resolves.
   const fill = item.fillMode === 'none' ? 'none' : item.fillMode === 'gradient' ? `url(#${gradientId})` : item.fill;
-  const paint = item.fillMode === 'accent' ? 'style="fill: var(--accent)"' : `fill="${fill}"`;
+  const variable = item.fillMode === 'accent' ? 'var(--accent)' : CANVAS_TIER_PAINT[item.fillMode];
+  const paint = variable ? `style="fill: ${variable}"` : `fill="${fill}"`;
   const stroke = item.stroke ? ` stroke="${item.strokeColor}" stroke-width="${item.stroke}" stroke-linejoin="round" vector-effect="non-scaling-stroke"` : '';
   return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${defs}<polygon points="${CANVAS_POLYGONS[item.shape]}" ${paint}${stroke}/></svg>`;
 }
@@ -314,7 +388,7 @@ const partSelector = (part, markPseudo) => {
   `markPseudo` names the pseudo-element that draws the base's brand mark, for a layer. `editing`
   keeps a removed part faintly on screen, so the layout editor can still pick it and put it back.
 */
-function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false } = {}) {
+function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances = !editing } = {}) {
   const canvas = schema.normalizeCanvas(rawCanvas);
   const css = [];
   for (const [part, move] of Object.entries(canvas.move)) {
@@ -362,6 +436,13 @@ function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false } = {}) {
         `border-radius: ${item.radius}%; background: ${url} no-repeat;`,
         `background-size: ${item.fit.w}px ${height}px; background-position: ${item.fit.x}px ${item.fit.y}px;`
       );
+    } else if (item.kind === 'icon') {
+      // The shadow goes on the item and the mask on its child: a mask would cut the shadow off.
+      const mask = `${canvasIconMask(item.icon)} center / contain no-repeat`;
+      rules.push(shapeFilter(item));
+      css.push(
+        `.ach > .${CANVAS_CLASS} > [data-i="${index}"] > span { display: block; width: 100%; height: 100%; background: ${shapePaint(item)}; -webkit-mask: ${mask}; mask: ${mask}; }`
+      );
     } else if (CANVAS_POLYGONS[item.shape]) {
       rules.push(shapeFilter(item));
     } else {
@@ -372,16 +453,38 @@ function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false } = {}) {
       );
     }
     css.push(`.ach > .${CANVAS_CLASS} > [data-i="${index}"] { ${rules.filter(Boolean).join(' ')} }`);
+    // A switched-off item, or one kept to some states: gone elsewhere, faint while it is edited.
+    const shownIn = item.off ? [] : item.states;
+    if (shownIn) {
+      const away = shownIn.length ? `.ach:not(:is(${shownIn.map((state) => CANVAS_STATE_SELECTORS[state]).join(', ')}))` : '.ach';
+      const look = editing ? 'opacity: 0.25 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none !important;';
+      css.push(`${away} > .${CANVAS_CLASS} > [data-i="${index}"] { ${look} }`);
+    }
   });
+  for (const [tier, word] of Object.entries(canvas.words || {})) {
+    css.push(`.ach${CANVAS_TIER_STATES[tier]} > .${CANVAS_CLASS} [data-tok="tier"]::after { content: ${cssString(word)}; }`);
+  }
+  // Not while editing, unless asked: an item would vanish and come back at every change.
+  if (entrances) css.push(...canvasEntranceCss(canvas.items));
   return css.join('\n');
 }
+
+const TOKEN_RE = new RegExp(`\\{(${schema.CANVAS_TOKENS.join('|')})\\}`);
+
+// A text's words, with an empty span the engine (or, for {tier}, the stylesheet) fills per token.
+const textMarkup = (text) =>
+  text
+    .split(TOKEN_RE)
+    .map((piece, index) => (index % 2 ? `<span data-tok="${piece}"></span>` : escapeHtml(piece)))
+    .join('');
 
 // The items' elements; their look is all in canvasCss. Text is escaped, nothing else is user text.
 function canvasMarkup(rawCanvas) {
   const canvas = schema.normalizeCanvas(rawCanvas);
   if (!canvas.items.length) return '';
   const inner = (item, index) => {
-    if (item.kind === 'text') return escapeHtml(item.text);
+    if (item.kind === 'text') return textMarkup(item.text);
+    if (item.kind === 'icon') return '<span></span>';
     return item.kind === 'shape' && CANVAS_POLYGONS[item.shape] ? polygonSvg(item, index) : '';
   };
   const items = canvas.items.map((item, index) => `<div data-i="${index}" data-kind="${item.kind}">${inner(item, index)}</div>`);
@@ -480,7 +583,7 @@ function canvasItemBounds(item) {
   const rad = (item.r * Math.PI) / 180;
   const halfW = (Math.abs(item.w * Math.cos(rad)) + Math.abs(h * Math.sin(rad))) / 2;
   const halfH = (Math.abs(item.w * Math.sin(rad)) + Math.abs(h * Math.cos(rad))) / 2;
-  const spread = item.kind === 'shape' ? item.shadow + item.blur + item.stroke : 0;
+  const spread = item.kind === 'shape' || item.kind === 'icon' ? item.shadow + item.blur + (item.stroke || 0) : 0;
   const cx = item.x + item.w / 2;
   const cy = item.y + h / 2;
   return { left: cx - halfW - spread, right: cx + halfW + spread, top: cy - halfH - spread, bottom: cy + halfH + spread };
@@ -568,7 +671,7 @@ const PREVIEW_HOLD_MS = 3600000;
 const PREVIEW_SCRIPT_HASHES = [inlineScriptHash(PRESET_PREVIEW_BRIDGE), inlineScriptHash(PRESET_ENGINE)];
 
 // `css` replaces the generated stylesheet: the designer previews a layer over a bundled preset's own.
-function buildPresetPreviewHtml(options, { hold = true, assetUrl, css, editing = false } = {}) {
+function buildPresetPreviewHtml(options, { hold = true, assetUrl, css, editing = false, entrances = !editing } = {}) {
   const values = normalizeOptions(options);
   return [
     '<!DOCTYPE html>',
@@ -576,7 +679,7 @@ function buildPresetPreviewHtml(options, { hold = true, assetUrl, css, editing =
     '<meta charset="UTF-8" />',
     `<meta name="duration" content="${hold ? PREVIEW_HOLD_MS : values.duration}" />`,
     '<style id="aw-preview-css">',
-    css != null ? css : buildCustomPresetCss(values, { assetUrl, editing }),
+    css != null ? css : buildCustomPresetCss(values, { assetUrl, editing, entrances }),
     '</style>',
     inlineScript(PRESET_PREVIEW_BRIDGE),
     '</head><body>',
@@ -766,7 +869,7 @@ function fontFaceRule(values, assetUrl) {
   return `@font-face { font-family: '${CUSTOM_FONT_FAMILY}'; src: ${url} format('${schema.fontFormat(values.fontFile)}'); font-display: block; }`;
 }
 
-function buildCustomPresetCss(options, { assetUrl, editing = false } = {}) {
+function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = !editing } = {}) {
   const values = normalizeOptions(options);
   const flexAlign = FLEX_ALIGN[values.align];
   const artwork = values.bgMode === 'artwork';
@@ -881,7 +984,7 @@ function buildCustomPresetCss(options, { assetUrl, editing = false } = {}) {
     '.progress_track { display: block; flex: 1 1 auto; min-width: 70px; height: var(--progress-height); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }',
     '.progress_meter { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 45%, #ffffff) 100%); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent); transition: width 0.35s ease; }',
     '.progress_label { flex: 0 0 auto; max-width: 110px; overflow: hidden; color: var(--text); font-size: 12px; font-weight: 700; line-height: 1; text-align: right; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }',
-    canvasCss(values.canvas, { assetUrl, editing }),
+    canvasCss(values.canvas, { assetUrl, editing, entrances }),
     canvasPlacementRules(values, editing),
     ''
   );
@@ -957,6 +1060,7 @@ module.exports = {
   CANVAS_EDIT_ROOM,
   CANVAS_PART_SELECTORS,
   CANVAS_STYLE_SELECTORS,
+  canvasIconMask,
   canvasCss,
   canvasMarkup,
   canvasScript,

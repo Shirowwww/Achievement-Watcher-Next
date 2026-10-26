@@ -692,7 +692,8 @@
             "fillNone": "Nessuno",
             "section": {
               "look": "Aspetto",
-              "place": "Posizione"
+              "place": "Posizione",
+              "motion": "Animazione"
             },
             "full": "Editor del layout libero",
             "newText": "Il tuo testo",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Testo",
               "image": "Immagine",
-              "shape": "Forma"
+              "shape": "Forma",
+              "icon": "Icona"
             },
             "shape": {
               "triangle": "Triangolo",
@@ -741,7 +743,16 @@
               "radius": "Angoli",
               "opacity": "Opacità",
               "rotation": "Rotazione",
-              "scale": "Scala"
+              "scale": "Scala",
+              "icon": "Icona",
+              "states": "Mostrato su",
+              "alignCard": "Allinea alla scheda",
+              "position": "Posizione",
+              "dims": "Dimensione",
+              "offset": "Scostamento",
+              "entrance": "Entrata",
+              "delay": "Ritardo (ms)",
+              "insert": "Inserisci"
             },
             "act": {
               "front": "Davanti alla scheda",
@@ -753,8 +764,104 @@
               "home": "Rimetti a posto",
               "importFont": "Importa un carattere",
               "layerUp": "Sposta su",
-              "layerDown": "Sposta giù"
-            }
+              "layerDown": "Sposta giù",
+              "show": "Mostra",
+              "hide": "Nascondi",
+              "lock": "Blocca sul posto",
+              "unlock": "Sblocca"
+            },
+            "addIcon": "Icona",
+            "enter": {
+              "none": "Con la scheda",
+              "fade": "Dissolvenza",
+              "rise": "Salita",
+              "drop": "Caduta",
+              "left": "Da sinistra",
+              "right": "Da destra",
+              "zoom": "Ingrandimento",
+              "pop": "Comparsa"
+            },
+            "token": {
+              "game": "Gioco",
+              "title": "Obiettivo",
+              "detail": "Descrizione",
+              "rarity": "Rarità",
+              "tier": "Livello"
+            },
+            "fillState": "Segue il livello",
+            "fillPlatinum": "Platino",
+            "icon": {
+              "trophy": "Trofeo",
+              "medal": "Medaglia",
+              "crown": "Corona",
+              "star": "Stella",
+              "sparkle": "Scintilla",
+              "shield": "Scudo",
+              "gem": "Gemma",
+              "flame": "Fiamma",
+              "bolt": "Fulmine",
+              "heart": "Cuore",
+              "check": "Segno di spunta",
+              "gamepad": "Controller"
+            },
+            "align": {
+              "left": "Bordo sinistro",
+              "center": "Centro, in larghezza",
+              "right": "Bordo destro",
+              "top": "Bordo superiore",
+              "middle": "Centro, in altezza",
+              "bottom": "Bordo inferiore"
+            },
+            "copied": "Copiato. Ctrl + V lo incolla, anche in un altro preset.",
+            "help": {
+              "title": "Scorciatoie",
+              "nudge": "Sposta la selezione di 1 pixel, di 10 con Maiusc",
+              "shift": "Ridimensionamento: mantieni o libera le proporzioni. Rotazione: a passi di 15 gradi",
+              "alt": "Spostamento: senza aggancio alle guide",
+              "duplicate": "Duplica la selezione",
+              "copy": "Copia, poi incolla, anche in un altro preset",
+              "undo": "Annulla, poi ripeti",
+              "delete": "Elimina un elemento o togli una parte dalla scheda",
+              "escape": "Deseleziona, poi esci dall’editor",
+              "zoom": "Con la rotellina del mouse: ingrandisci e riduci",
+              "dblclick": "Doppio clic: modifica un testo, ritaglia un’immagine",
+              "sheet": "Mostra o nascondi questo elenco",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Maiusc",
+                "alt": "Alt",
+                "delete": "Canc",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Aggiungi elementi",
+                "body": "Testi, immagini, forme e icone. Ognuno finisce sulla scheda come un livello a sé."
+              },
+              "edit": {
+                "title": "Scegli, poi sposta",
+                "body": "Fai clic su un elemento della scheda per selezionarlo e trascinalo per spostarlo. Gli angoli lo ridimensionano, la maniglia rotonda lo ruota."
+              },
+              "props": {
+                "title": "Le sue impostazioni",
+                "body": "Senza selezione, questo pannello contiene le impostazioni della scheda stessa. Seleziona un elemento per impostarne dimensione, colore e i livelli in cui viene mostrato."
+              },
+              "layers": {
+                "title": "Livelli",
+                "body": "Tutto ciò che c’è sulla scheda, quello in alto per primo. L’occhio nasconde un elemento, il lucchetto lo blocca sul posto."
+              },
+              "help": {
+                "title": "Scorciatoie",
+                "body": "Questo pulsante, o il tasto ?, elenca tutte le scorciatoie. Da lì puoi rivedere il tour."
+              },
+              "next": "Avanti",
+              "skip": "Salta",
+              "done": "Ho capito",
+              "replay": "Rivedi il tour"
+            },
+            "motionHint": "La scheda resta ferma mentre la modifichi: Riproduci, sotto la scheda, mostra le animazioni di entrata.",
+            "maxItems": "La scheda è piena. Elimina un elemento per aggiungerne un altro."
           },
           "create": "Crea preimpostazione",
           "created": "Creata e selezionata:",
@@ -961,6 +1068,24 @@
             "transparent": "Trasparente",
             "uppercase": "MAIUSCOLO",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Tema SAN importato",
+            "tierPictures": "Immagine del trofeo",
+            "tierAuto": "Segue il livello",
+            "tierHint": "Per i temi che disegnano un trofeo di bronzo, argento e oro. Segue il livello mostra quello che corrisponde allo sblocco; scegli un colore per mostrare sempre quello.",
+            "states": "Tema per livello",
+            "statesHint": "Disegna un livello con un altro tema SAN importato, suono incluso.",
+            "own": "Questo tema",
+            "loaded": "Tema SAN importato: l’immagine del trofeo e i temi per livello si impostano sotto l’anteprima.",
+            "saved": "Salvato:"
+          },
+          "gallery": {
+            "title": "Preset",
+            "close": "Chiudi",
+            "mine": "I tuoi preset",
+            "bundled": "Inclusi",
+            "browse": "Sfoglia i preset"
           }
         },
         "souvenirTitle": "Screenshot souvenir",

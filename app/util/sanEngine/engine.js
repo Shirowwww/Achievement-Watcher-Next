@@ -105,6 +105,7 @@
 
   // The tier a state paints its per-tier pictures and glow with, as SAN pairs them.
   const STATE_TIER = { plat: 'gold', rare: 'gold', semi: 'silver', main: 'bronze' };
+  const PICTURE_TIERS = ['bronze', 'silver', 'gold'];
 
   // bronze/silver/gold for an unlock rate, by the same two cut-offs.
   function tierOf(percent, thresholds) {
@@ -113,6 +114,45 @@
     if (value <= cut.rarity) return 'gold';
     if (value <= cut.semirarity) return 'silver';
     return 'bronze';
+  }
+
+  /*
+    The tier the per-tier pictures and colours are drawn in. SAN grades them by the unlock rate, so
+    its state and its picture always agree; AW Next's tier is the grade shown to the user, so a
+    silver unlock gets the silver trophy even though rare mode paints it with SAN's rare state.
+    `fixed` is the preset's own choice to always show one tier.
+  */
+  function pictureTier(opts) {
+    const o = opts || {};
+    if (PICTURE_TIERS.indexOf(o.fixed) !== -1) return o.fixed;
+    if (o.platinum || o.tier === 'platinum') return 'gold';
+    if (typeof o.tier !== 'string') return tierOf(o.percent, o.thresholds);
+    return PICTURE_TIERS.indexOf(o.tier) !== -1 ? o.tier : 'bronze';
+  }
+
+  // AW Next's own states, each of which a preset may give a theme of its own.
+  const AW_STATES = ['normal', 'bronze', 'silver', 'gold', 'platinum'];
+  const TYPE_AW_STATE = { plat: 'platinum', rare: 'gold', semi: 'silver', main: 'normal' };
+
+  function awStateOf(opts) {
+    const o = opts || {};
+    if (o.platinum || o.tier === 'platinum') return 'platinum';
+    if (typeof o.tier !== 'string') return TYPE_AW_STATE[notifyType(o.percent, o.thresholds, false)];
+    return PICTURE_TIERS.indexOf(o.tier) !== -1 ? o.tier : 'normal';
+  }
+
+  /*
+    The theme that draws one unlock: the one the preset gave that AW Next state, else the SAN state's
+    own, else `main`. `type` stays SAN's state, which decides the wording (a completion's lines).
+  */
+  function customisationFor(theme, opts) {
+    const t = theme || {};
+    const o = Object.assign({}, opts || {}, { thresholds: t.thresholds });
+    const type = stateOf(o);
+    const state = awStateOf(o);
+    const own = t.states && Object.prototype.hasOwnProperty.call(t.states, state) ? t.states[state] : null;
+    const types = t.types || {};
+    return { type: type, state: state, customisation: own || types[type] || types.main || {} };
   }
 
   /*
@@ -410,7 +450,7 @@
     const props = computeProperties(c, {
       url: url,
       percent: percent,
-      tier: STATE_TIER[type],
+      tier: PICTURE_TIERS.indexOf(opts.tier) !== -1 ? opts.tier : STATE_TIER[type],
       thresholds: thresholds,
       background: background,
       lockIcon: opts.lockIcon,
@@ -495,6 +535,10 @@
     notifyType: notifyType,
     stateOf: stateOf,
     tierOf: tierOf,
+    pictureTier: pictureTier,
+    AW_STATES: AW_STATES,
+    awStateOf: awStateOf,
+    customisationFor: customisationFor,
     textLines: textLines,
     percentValue: percentValue,
     percentSuffix: percentSuffix,

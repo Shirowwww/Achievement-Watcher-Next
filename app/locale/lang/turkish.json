@@ -692,7 +692,8 @@
             "fillNone": "Yok",
             "section": {
               "look": "Görünüm",
-              "place": "Yerleşim"
+              "place": "Yerleşim",
+              "motion": "Animasyon"
             },
             "full": "Serbest yerleşim düzenleyicisi",
             "newText": "Metnin",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Metin",
               "image": "Görsel",
-              "shape": "Şekil"
+              "shape": "Şekil",
+              "icon": "Simge"
             },
             "shape": {
               "triangle": "Üçgen",
@@ -741,7 +743,16 @@
               "radius": "Köşeler",
               "opacity": "Saydamlık",
               "rotation": "Döndürme",
-              "scale": "Ölçek"
+              "scale": "Ölçek",
+              "icon": "Simge",
+              "states": "Gösterildiği yer",
+              "alignCard": "Kartla hizala",
+              "position": "Konum",
+              "dims": "Boyut",
+              "offset": "Kayma",
+              "entrance": "Giriş",
+              "delay": "Gecikme (ms)",
+              "insert": "Ekle"
             },
             "act": {
               "front": "Kartın önünde",
@@ -753,8 +764,104 @@
               "home": "Yerine koy",
               "importFont": "Yazı tipi içe aktar",
               "layerUp": "Yukarı taşı",
-              "layerDown": "Aşağı taşı"
-            }
+              "layerDown": "Aşağı taşı",
+              "show": "Göster",
+              "hide": "Gizle",
+              "lock": "Yerinde kilitle",
+              "unlock": "Kilidi aç"
+            },
+            "addIcon": "Simge",
+            "enter": {
+              "none": "Kartla birlikte",
+              "fade": "Belirerek gir",
+              "rise": "Yükselerek gir",
+              "drop": "Düşerek gir",
+              "left": "Soldan",
+              "right": "Sağdan",
+              "zoom": "Yakınlaşarak gir",
+              "pop": "Zıplayarak gir"
+            },
+            "token": {
+              "game": "Oyun",
+              "title": "Başarım",
+              "detail": "Açıklama",
+              "rarity": "Nadirlik",
+              "tier": "Seviye"
+            },
+            "fillState": "Seviyeyi izler",
+            "fillPlatinum": "Platin",
+            "icon": {
+              "trophy": "Kupa",
+              "medal": "Madalya",
+              "crown": "Taç",
+              "star": "Yıldız",
+              "sparkle": "Parıltı",
+              "shield": "Kalkan",
+              "gem": "Mücevher",
+              "flame": "Alev",
+              "bolt": "Şimşek",
+              "heart": "Kalp",
+              "check": "Onay işareti",
+              "gamepad": "Kumanda"
+            },
+            "align": {
+              "left": "Sol kenar",
+              "center": "Ortada, yatay",
+              "right": "Sağ kenar",
+              "top": "Üst kenar",
+              "middle": "Ortada, dikey",
+              "bottom": "Alt kenar"
+            },
+            "copied": "Kopyalandı. Ctrl + V yapıştırır, başka bir ön ayarda da.",
+            "help": {
+              "title": "Kısayollar",
+              "nudge": "Seçimi 1 piksel taşır, Shift ile 10 piksel",
+              "shift": "Yeniden boyutlandırma: oranları koru ya da serbest bırak. Döndürme: 15 derecelik adımlarla",
+              "alt": "Taşıma: kılavuzlara yapışmaz",
+              "duplicate": "Seçimi çoğalt",
+              "copy": "Kopyala, sonra yapıştır, başka bir ön ayarda da",
+              "undo": "Geri al, sonra yinele",
+              "delete": "Bir öğeyi sil ya da kartın bir parçasını çıkar",
+              "escape": "Seçimi kaldır, sonra düzenleyiciden çık",
+              "zoom": "Fare tekerleğiyle: yakınlaştır ve uzaklaştır",
+              "dblclick": "Çift tıklama: metni düzenle, görseli kırp",
+              "sheet": "Bu listeyi göster veya gizle",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Öğe ekleyin",
+                "body": "Metinler, görseller, şekiller ve simgeler. Her biri karta ayrı bir katman olarak girer."
+              },
+              "edit": {
+                "title": "Seçin, sonra taşıyın",
+                "body": "Seçmek için karttaki herhangi bir şeye tıklayın, taşımak için sürükleyin. Köşeler boyutu değiştirir, yuvarlak tutamaç döndürür."
+              },
+              "props": {
+                "title": "Ayarları",
+                "body": "Hiçbir şey seçili değilken bu panelde kartın kendi ayarları bulunur. Boyutunu, rengini ve gösterileceği seviyeleri ayarlamak için bir öğe seçin."
+              },
+              "layers": {
+                "title": "Katmanlar",
+                "body": "Karttaki her şey, en üsttekiler önce. Göz bir öğeyi gizler, asma kilit yerinde tutar."
+              },
+              "help": {
+                "title": "Kısayollar",
+                "body": "Bu düğme ya da ? tuşu tüm kısayolları listeler. Turu buradan yeniden oynatabilirsiniz."
+              },
+              "next": "İleri",
+              "skip": "Atla",
+              "done": "Anladım",
+              "replay": "Turu yeniden oynat"
+            },
+            "motionHint": "Düzenlerken kart yerinde durur: kartın altındaki Oynat girişleri gösterir.",
+            "maxItems": "Kart dolu. Başka bir öğe eklemek için bir öğeyi sil."
           },
           "create": "Ön ayar oluştur",
           "created": "Oluşturuldu ve seçildi:",
@@ -961,6 +1068,24 @@
             "transparent": "Saydam",
             "uppercase": "BÜYÜK HARF",
             "zoom": "Yakınlaştırma"
+          },
+          "san": {
+            "title": "İçe aktarılan SAN teması",
+            "tierPictures": "Kupa görseli",
+            "tierAuto": "Seviyeyi izler",
+            "tierHint": "Bronz, gümüş ve altın kupa çizen temalar için. Seviyeyi izler, açılışa uyan kupayı gösterir; her zaman onu göstermek için bir renk seçin.",
+            "states": "Seviye başına tema",
+            "statesHint": "Bir seviyeyi, sesi dahil, içe aktarılan başka bir SAN temasıyla çizin.",
+            "own": "Bu tema",
+            "loaded": "İçe aktarılan SAN teması: kupa görseli ve seviye başına temalar önizlemenin altında ayarlanır.",
+            "saved": "Kaydedildi:"
+          },
+          "gallery": {
+            "title": "Ön ayarlar",
+            "close": "Kapat",
+            "mine": "Ön ayarlarınız",
+            "bundled": "Dahil olanlar",
+            "browse": "Ön ayarlara göz at"
           }
         },
         "souvenirTitle": "Anı ekran görüntüsü",

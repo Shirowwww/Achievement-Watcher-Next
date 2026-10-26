@@ -692,7 +692,8 @@
             "fillNone": "Nincs",
             "section": {
               "look": "Megjelenés",
-              "place": "Elrendezés"
+              "place": "Elrendezés",
+              "motion": "Animáció"
             },
             "full": "Szabad elrendezés szerkesztője",
             "newText": "A te szöveged",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Szöveg",
               "image": "Kép",
-              "shape": "Alakzat"
+              "shape": "Alakzat",
+              "icon": "Ikon"
             },
             "shape": {
               "triangle": "Háromszög",
@@ -741,7 +743,16 @@
               "radius": "Sarkok",
               "opacity": "Átlátszatlanság",
               "rotation": "Forgatás",
-              "scale": "Méretarány"
+              "scale": "Méretarány",
+              "icon": "Ikon",
+              "states": "Itt jelenik meg",
+              "alignCard": "Igazítás a kártyához",
+              "position": "Pozíció",
+              "dims": "Méret",
+              "offset": "Eltolás",
+              "entrance": "Belépés",
+              "delay": "Késleltetés (ms)",
+              "insert": "Beszúrás"
             },
             "act": {
               "front": "A kártya előtt",
@@ -753,8 +764,104 @@
               "home": "Vissza a helyére",
               "importFont": "Betűtípus importálása",
               "layerUp": "Feljebb",
-              "layerDown": "Lejjebb"
-            }
+              "layerDown": "Lejjebb",
+              "show": "Megjelenítés",
+              "hide": "Elrejtés",
+              "lock": "Rögzítés a helyén",
+              "unlock": "Rögzítés feloldása"
+            },
+            "addIcon": "Ikon",
+            "enter": {
+              "none": "A kártyával együtt",
+              "fade": "Átúszás",
+              "rise": "Emelkedés",
+              "drop": "Beesés",
+              "left": "Balról",
+              "right": "Jobbról",
+              "zoom": "Ráközelítés",
+              "pop": "Felpattanás"
+            },
+            "token": {
+              "game": "Játék",
+              "title": "Eredmény",
+              "detail": "Leírás",
+              "rarity": "Ritkaság",
+              "tier": "Szint"
+            },
+            "fillState": "Követi a szintet",
+            "fillPlatinum": "Platina",
+            "icon": {
+              "trophy": "Trófea",
+              "medal": "Érem",
+              "crown": "Korona",
+              "star": "Csillag",
+              "sparkle": "Szikra",
+              "shield": "Pajzs",
+              "gem": "Drágakő",
+              "flame": "Láng",
+              "bolt": "Villám",
+              "heart": "Szív",
+              "check": "Pipa",
+              "gamepad": "Kontroller"
+            },
+            "align": {
+              "left": "Bal szél",
+              "center": "Középre, vízszintesen",
+              "right": "Jobb szél",
+              "top": "Felső szél",
+              "middle": "Középre, függőlegesen",
+              "bottom": "Alsó szél"
+            },
+            "copied": "Másolva. A Ctrl + V beilleszti, másik előbeállításba is.",
+            "help": {
+              "title": "Billentyűparancsok",
+              "nudge": "A kijelölés mozgatása 1 képponttal, Shifttel 10-zel",
+              "shift": "Átméretezés: az arányok megtartása vagy feloldása. Forgatás: 15 fokos lépésekben",
+              "alt": "Mozgatás: nincs illesztés a segédvonalakhoz",
+              "duplicate": "A kijelölés duplikálása",
+              "copy": "Másolás, majd beillesztés, másik előbeállításba is",
+              "undo": "Visszavonás, majd ismétlés",
+              "delete": "Elem törlése, vagy egy rész levétele a kártyáról",
+              "escape": "Kijelölés megszüntetése, majd kilépés a szerkesztőből",
+              "zoom": "Az egérgörgővel: nagyítás és kicsinyítés",
+              "dblclick": "Dupla kattintás: szöveg szerkesztése, kép vágása",
+              "sheet": "A lista megjelenítése vagy elrejtése",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Elemek hozzáadása",
+                "body": "Szövegek, képek, alakzatok és ikonok. Mindegyik külön rétegként kerül a kártyára."
+              },
+              "edit": {
+                "title": "Válassz, majd mozgasd",
+                "body": "Kattints bármire a kártyán a kijelöléshez, húzd a mozgatáshoz. A sarkok átméreteznek, a kerek fogantyú forgat."
+              },
+              "props": {
+                "title": "A beállításai",
+                "body": "Ha semmi sincs kijelölve, ez a panel a kártya saját beállításait tartalmazza. Jelölj ki egy elemet a méretének, színének és a szintek beállításához, amelyeken megjelenik."
+              },
+              "layers": {
+                "title": "Rétegek",
+                "body": "Minden, ami a kártyán van, a legfelső elöl. A szem elrejti az elemet, a lakat a helyén tartja."
+              },
+              "help": {
+                "title": "Billentyűparancsok",
+                "body": "Ez a gomb vagy a ? billentyű felsorolja az összes billentyűparancsot. Innen megismételhető a bemutató."
+              },
+              "next": "Tovább",
+              "skip": "Kihagyás",
+              "done": "Értem",
+              "replay": "A bemutató ismétlése"
+            },
+            "motionHint": "A kártya mozdulatlan marad szerkesztés közben: a kártya alatti Lejátszás megmutatja a belépéseket.",
+            "maxItems": "A kártya megtelt. Törölj egy elemet, hogy újat adhass hozzá."
           },
           "create": "Előbeállítás létrehozása",
           "created": "Létrehozva és kiválasztva:",
@@ -961,6 +1068,24 @@
             "transparent": "Átlátszó",
             "uppercase": "NAGYBETŰS",
             "zoom": "Nagyítás"
+          },
+          "san": {
+            "title": "Importált SAN-téma",
+            "tierPictures": "Trófea képe",
+            "tierAuto": "Követi a szintet",
+            "tierHint": "Olyan témákhoz, amelyek bronz-, ezüst- és aranytrófeát rajzolnak. A szint követése a feloldáshoz illőt mutatja; válassz színt, hogy mindig azt mutassa.",
+            "states": "Téma szintenként",
+            "statesHint": "Rajzolj egy szintet egy másik importált SAN-témával, hanggal együtt.",
+            "own": "Ez a téma",
+            "loaded": "Importált SAN-téma: a trófea képe és a szintenkénti témák az előnézet alatt állíthatók be.",
+            "saved": "Mentve:"
+          },
+          "gallery": {
+            "title": "Előbeállítások",
+            "close": "Bezárás",
+            "mine": "Saját előbeállításaid",
+            "bundled": "Mellékelt",
+            "browse": "Előbeállítások böngészése"
           }
         },
         "souvenirTitle": "Emlék képernyőkép",

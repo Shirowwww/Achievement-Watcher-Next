@@ -116,6 +116,11 @@ window.addEventListener('DOMContentLoaded', function () {
     The line above the title (game name + rarity). Each half hides when the payload lacks it,
     and the whole row disappears when both do, so it never reserves an empty line.
   */
+  function rarityText(data) {
+    var percent = data && data.rarityPercent;
+    if (percent == null || percent === '' || !isFinite(Number(percent))) return '';
+    return (Math.round(Number(percent) * 10) / 10) + '%';
+  }
   function applyMeta(data) {
     var row = document.querySelector('.meta');
     var gameEl = document.querySelector('.game');
@@ -124,11 +129,18 @@ window.addEventListener('DOMContentLoaded', function () {
     var game = String((data && data.gameName) || '').trim();
     gameEl.textContent = game;
     gameEl.hidden = !game;
-    var percent = data && data.rarityPercent;
-    var hasRarity = percent != null && percent !== '' && isFinite(Number(percent));
-    rarityEl.textContent = hasRarity ? (Math.round(Number(percent) * 10) / 10) + '%' : '';
-    rarityEl.hidden = !hasRarity;
-    row.hidden = !game && !hasRarity;
+    var rarity = rarityText(data);
+    rarityEl.textContent = rarity;
+    rarityEl.hidden = !rarity;
+    row.hidden = !game && !rarity;
+  }
+  // An added text that says {game}, {title}... gets those words here; {tier} is in the stylesheet.
+  function applyTokens(words) {
+    var spans = document.querySelectorAll('.aw-canvas [data-tok]');
+    for (var i = 0; i < spans.length; i++) {
+      var key = spans[i].getAttribute('data-tok');
+      if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];
+    }
   }
   var closeTimer = null;
   function onPayload(displayName, description, iconPath, scale, data) {
@@ -146,6 +158,7 @@ window.addEventListener('DOMContentLoaded', function () {
     applyArtwork(data);
     applyMeta(data);
     applyProgress(data);
+    applyTokens({ game: String(data.gameName || '').trim(), title: titleEl.textContent, detail: detailEl.textContent, rarity: rarityText(data) });
     var inMs = timing('--ach-in', 520);
     var outMs = timing('--ach-out', 380);
     var marquees = [marqueePlan(titleEl), marqueePlan(detailEl)];

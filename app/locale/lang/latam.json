@@ -692,7 +692,8 @@
             "fillNone": "Ninguno",
             "section": {
               "look": "Apariencia",
-              "place": "Disposición"
+              "place": "Disposición",
+              "motion": "Animación"
             },
             "full": "Editor de diseño libre",
             "newText": "Tu texto",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Texto",
               "image": "Imagen",
-              "shape": "Forma"
+              "shape": "Forma",
+              "icon": "Ícono"
             },
             "shape": {
               "triangle": "Triángulo",
@@ -741,7 +743,16 @@
               "radius": "Esquinas",
               "opacity": "Opacidad",
               "rotation": "Rotación",
-              "scale": "Escala"
+              "scale": "Escala",
+              "icon": "Ícono",
+              "states": "Se muestra en",
+              "alignCard": "Alinear con la tarjeta",
+              "position": "Posición",
+              "dims": "Tamaño",
+              "offset": "Desplazamiento",
+              "entrance": "Entrada",
+              "delay": "Retraso (ms)",
+              "insert": "Insertar"
             },
             "act": {
               "front": "Delante de la tarjeta",
@@ -753,8 +764,104 @@
               "home": "Devolver a su lugar",
               "importFont": "Importar una fuente",
               "layerUp": "Subir",
-              "layerDown": "Bajar"
-            }
+              "layerDown": "Bajar",
+              "show": "Mostrar",
+              "hide": "Ocultar",
+              "lock": "Fijar en su lugar",
+              "unlock": "Desbloquear"
+            },
+            "addIcon": "Ícono",
+            "enter": {
+              "none": "Con la tarjeta",
+              "fade": "Aparecer",
+              "rise": "Subir",
+              "drop": "Caer",
+              "left": "Desde la izquierda",
+              "right": "Desde la derecha",
+              "zoom": "Acercar",
+              "pop": "Surgir"
+            },
+            "token": {
+              "game": "Juego",
+              "title": "Logro",
+              "detail": "Descripción",
+              "rarity": "Rareza",
+              "tier": "Nivel"
+            },
+            "fillState": "Sigue el nivel",
+            "fillPlatinum": "Platino",
+            "icon": {
+              "trophy": "Trofeo",
+              "medal": "Medalla",
+              "crown": "Corona",
+              "star": "Estrella",
+              "sparkle": "Destello",
+              "shield": "Escudo",
+              "gem": "Gema",
+              "flame": "Llama",
+              "bolt": "Rayo",
+              "heart": "Corazón",
+              "check": "Marca de verificación",
+              "gamepad": "Control"
+            },
+            "align": {
+              "left": "Borde izquierdo",
+              "center": "Centro, a lo ancho",
+              "right": "Borde derecho",
+              "top": "Borde superior",
+              "middle": "Centro, a lo alto",
+              "bottom": "Borde inferior"
+            },
+            "copied": "Copiado. Ctrl + V lo pega, también en otro preset.",
+            "help": {
+              "title": "Atajos",
+              "nudge": "Mueve la selección 1 píxel, 10 con Mayús",
+              "shift": "Cambiar tamaño: mantener o liberar las proporciones. Girar: de 15 en 15 grados",
+              "alt": "Mover: sin ajuste a las guías",
+              "duplicate": "Duplicar la selección",
+              "copy": "Copiar y luego pegar, también en otro preset",
+              "undo": "Deshacer y luego rehacer",
+              "delete": "Eliminar un elemento o quitar una parte de la tarjeta",
+              "escape": "Deseleccionar y luego salir del editor",
+              "zoom": "Con la rueda del mouse: acercar y alejar",
+              "dblclick": "Doble clic: editar un texto, recortar una imagen",
+              "sheet": "Mostrar u ocultar esta lista",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Mayús",
+                "alt": "Alt",
+                "delete": "Supr",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Agrega elementos",
+                "body": "Textos, imágenes, formas e íconos. Cada uno se coloca en la tarjeta como una capa propia."
+              },
+              "edit": {
+                "title": "Elige y mueve",
+                "body": "Haz clic en cualquier cosa de la tarjeta para seleccionarla y arrástrala para moverla. Las esquinas cambian el tamaño, el control redondo la gira."
+              },
+              "props": {
+                "title": "Sus ajustes",
+                "body": "Sin nada seleccionado, este panel contiene los ajustes de la propia tarjeta. Selecciona un elemento para ajustar su tamaño, su color y los niveles en los que se muestra."
+              },
+              "layers": {
+                "title": "Capas",
+                "body": "Todo lo que hay en la tarjeta, el de arriba primero. El ojo oculta un elemento, el candado lo fija en su lugar."
+              },
+              "help": {
+                "title": "Atajos",
+                "body": "Este botón, o la tecla ?, muestra todos los atajos. Desde ahí puedes repetir el recorrido."
+              },
+              "next": "Siguiente",
+              "skip": "Omitir",
+              "done": "Entendido",
+              "replay": "Repetir el recorrido"
+            },
+            "motionHint": "La tarjeta se queda quieta mientras la editas: Reproducir, debajo de la tarjeta, muestra las entradas.",
+            "maxItems": "La tarjeta está llena. Elimina un elemento para agregar otro."
           },
           "create": "Crear preajuste",
           "created": "Creado y seleccionado:",
@@ -961,6 +1068,24 @@
             "transparent": "Transparente",
             "uppercase": "MAYÚSCULAS",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Tema SAN importado",
+            "tierPictures": "Imagen del trofeo",
+            "tierAuto": "Sigue el nivel",
+            "tierHint": "Para temas que dibujan un trofeo de bronce, plata y oro. Sigue el nivel muestra el que corresponde al desbloqueo; elige un color para mostrar siempre ese.",
+            "states": "Tema por nivel",
+            "statesHint": "Dibuja un nivel con otro tema SAN importado, con su sonido incluido.",
+            "own": "Este tema",
+            "loaded": "Tema SAN importado: su imagen de trofeo y sus temas por nivel se ajustan debajo de la vista previa.",
+            "saved": "Guardado:"
+          },
+          "gallery": {
+            "title": "Presets",
+            "close": "Cerrar",
+            "mine": "Tus presets",
+            "bundled": "Incluidos",
+            "browse": "Explorar los presets"
           }
         },
         "souvenirTitle": "Captura souvenir",

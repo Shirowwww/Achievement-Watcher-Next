@@ -1402,7 +1402,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         onboardingOpen: $('#onboarding').is(':visible'),
         promptOpen: document.querySelector('.aw-prompt-overlay') !== null,
         recordingHotkey: listeningHotkey,
+        themePreviewOpen: $('#theme-preview').is(':visible'),
       });
+      if (panel === 'theme-preview') return void closeThemePreview();
       const cancel = panel === 'game-config' ? $('#btn-game-config-cancel') : panel === 'settings' ? $('#btn-settings-cancel') : null;
       // Cancel locks itself while it fades the panel out; a second Escape must not start it again.
       if (cancel && cancel.css('pointer-events') !== 'none') cancel.trigger('click');
@@ -4958,8 +4960,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Sample payloads matching createNotificationWindow(); artwork/icon are inlined as data URIs
     // since the preview frame is a srcdoc document where file:// images aren't reliably loadable.
     let previewState = 'normal';
-    // One sample rarity per tier, inside the bands the popup sorts into gold, silver and bronze.
-    const RARE_PREVIEW = { bronze: 12.4, silver: 7.2, gold: 1.4 };
+    // One sample rarity per tier, inside that tier's band for the saved grading: the popup and the
+    // main process grade it again, so a fixed rate showed gold for every tier in trophy mode.
+    function rarePreviewRate(state) {
+      const grading = settingsRarityTiers.gradingFrom(app.config && app.config.achievement);
+      return settingsRarityTiers.sampleRate(state, grading.mode, grading.thresholds);
+    }
     let previewView = 'card';
     // Created once the designer's helpers exist (below); the preview code checks for it.
     let canvasEditor = null;
@@ -4981,6 +4987,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // Preview artwork is one of the user's own game headers (what a notification is actually seen
     // over); an empty library falls back to a painted scene rather than the app logo.
     let previewArt = null;
+    let previewArtFile = '';
     // Width/height read straight from the PNG or JPEG header bytes, cheaper than an image library.
     function imageDimensions(file) {
       try {
@@ -5027,13 +5034,26 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         if (pool.length) {
           const file = pool[Math.floor(Math.random() * pool.length)];
           previewArt = fileAsDataUri(file, /\.png$/i.test(file) ? 'image/png' : 'image/jpeg');
+          previewArtFile = file;
         }
       } catch (e) {
         debug.log(e);
       }
       return previewArt;
     }
-    function previewPayload() {
+    // An offscreen snapshot loads the preset from its own folder, where a file path works for every
+    // preset; some shipped ones put file:/// in front of whatever they get, a data URI included.
+    function snapshotPayload(payload) {
+      const files = new Map([
+        [previewIcon, path.join(appPath, 'resources/img/achievement.svg')],
+        [previewArt, previewArtFile],
+      ]);
+      const out = { ...payload };
+      for (const key of ['iconPath', 'imagePath', 'gameIconPath']) if (out[key] && files.get(out[key])) out[key] = files.get(out[key]);
+      return out;
+    }
+
+    function previewPayload(state = previewState) {
       if (!previewIcon) previewIcon = fileAsDataUri(path.join(appPath, 'resources/img/achievement.svg'), 'image/svg+xml');
       const artwork = previewArtwork();
       const base = {
@@ -5045,19 +5065,19 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         gameName: t('preset-sample-game', 'Sample Game', 'Jeu d’exemple'),
         scale: 1,
       };
-      const percent = RARE_PREVIEW[previewState];
+      const percent = rarePreviewRate(state);
       if (percent) {
         return Object.assign(base, {
           displayName: t('test-rare-name', 'Rare Achievement', 'Succès rare'),
           description: t('test-rare-desc', 'Rare · {percent}% of players', 'Rare · {percent} % des joueurs', { percent }),
           notificationType: 'achievement',
           rarityPercent: percent,
-          rarityTier: previewState,
+          rarityTier: state,
           // Shown as a hidden one too, so the padlock option has somewhere to be seen.
           hidden: true,
         });
       }
-      if (previewState === 'completion') {
+      if (state === 'completion') {
         return Object.assign(base, {
           displayName: t('test-platinum-name', 'Platinum!', 'Trophée Platine'),
           description: t('test-platinum-desc', '100% completed', '100 % complété'),
@@ -5065,7 +5085,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           isPlatinum: true,
         });
       }
-      if (previewState === 'progress') {
+      if (state === 'progress') {
         return Object.assign(base, {
           displayName: t('test-progress-name', 'Progress', 'Progression'),
           description: t('test-progress-desc', '3 / 10', '3 / 10'),
@@ -5158,12 +5178,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let layerMode = null;
     const layerSections = new Set();
 
-    const layerStylesheet = (values, editing = editingLayout()) =>
+    const layerStylesheet = (values, editing = editingLayout(), entrances = !editing) =>
       layerMode.css +
       '\n' +
       presetLayerTool.buildLayerCss(
         { base: layerMode.base, sections: [...layerSections], options: values },
-        { assetUrl: presetAssetUrl, markPseudo: layerMode.markPseudo, editing }
+        { assetUrl: presetAssetUrl, markPseudo: layerMode.markPseudo, editing, entrances }
       );
 
     const stylesheetFor = (values, editing = editingLayout()) => (layerMode ? layerStylesheet(values, editing) : previewCss(values, editing));
@@ -5175,17 +5195,49 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     let presetSnapshot = null;
     async function showPresetSnapshot(name) {
       presetSnapshot = null;
-      const shot = await ipcRenderer.invoke('preset-snapshot', { preset: name, payload: previewPayload() }).catch((err) => {
+      const shot = await ipcRenderer.invoke('preset-snapshot', { preset: name, payload: snapshotPayload(previewPayload()) }).catch((err) => {
         debug.log(err);
         return null;
       });
       if (!shot || String($('#pd-load').val() || '') !== name) return;
       presetSnapshot = { name, ...shot };
       renderPreviewDocument(readPresetOptions());
+      if (previewView === 'compare') renderComparePreviews(readPresetOptions());
     }
     function snapshotDocument({ image, width, height }) {
       return `<!doctype html><html><body style="margin:0;background:transparent"><img alt="" src="${image}" style="display:block;width:${width}px;height:${height}px"></body></html>`;
     }
+
+    // Every preset as a picture of its card, opened from the preset row of the Notifications tab and
+    // from the designer's own menu. A plain unlock, so the pictures compare like for like.
+    const presetGallery = require(path.join(appPath, 'ui/presetGallery.js')).createPresetGallery({
+      label: (key) => $(`#pd-gallery-text [data-pg="${key}"]`).text() || key,
+      snapshot: (name) => ipcRenderer.invoke('preset-snapshot', { preset: name, payload: snapshotPayload(previewPayload('normal')) }),
+    });
+    const galleryTitle = (key) => $(`#pd-gallery-text [data-pg="${key}"]`).text();
+    $('#btn-browse-presets').on('click', function () {
+      const names = $('#option_overlayPreset option')
+        .map((_, option) => String(option.value))
+        .get();
+      const mine = new Set(generatedPresets.map((preset) => preset.name));
+      presetGallery.show({
+        groups: [
+          { title: galleryTitle('mine'), names: names.filter((name) => mine.has(name)) },
+          { title: galleryTitle('bundled'), names: names.filter((name) => !mine.has(name)) },
+        ],
+        current: String($('#option_overlayPreset').val() || ''),
+        onPick: (name) => $('#option_overlayPreset').val(name).change(),
+        opener: this,
+      });
+    });
+    $('#pd-browse').on('click', function () {
+      presetGallery.show({
+        groups: [{ title: galleryTitle('mine'), names: generatedPresets.map((preset) => preset.name) }],
+        current: String($('#pd-load').val() || ''),
+        onPick: (name) => $('#pd-load').val(name).trigger('change'),
+        opener: this,
+      });
+    });
 
     const previewBox = (values, editing = editingLayout()) =>
       presetSnapshot
@@ -5221,11 +5273,30 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         if (!card) return;
         const wanted = layerMode && !layerSections.has('canvas') ? '' : presetGenerator.canvasMarkup(readPresetOptions().canvas);
         const existing = card.querySelector(':scope > .' + presetGenerator.CANVAS_CLASS);
-        if ((existing ? existing.outerHTML : '') === wanted) return;
+        if (canvasMarkupOf(existing) === wanted) return;
         if (existing) existing.remove();
-        if (wanted) card.insertAdjacentHTML('afterbegin', wanted);
+        if (!wanted) return;
+        card.insertAdjacentHTML('afterbegin', wanted);
+        fillCanvasTokens(doc, card.querySelector(':scope > .' + presetGenerator.CANVAS_CLASS));
       } catch (e) {
         debug.log(e);
+      }
+    }
+
+    // The markup as generated: the engine has since written the popup's words into the token spans.
+    function canvasMarkupOf(node) {
+      if (!node) return '';
+      const bare = node.cloneNode(true);
+      for (const span of bare.querySelectorAll('[data-tok]')) span.textContent = '';
+      return bare.outerHTML;
+    }
+
+    // New markup between two payloads gets the words the engine already put on the card ({tier} is CSS).
+    const TOKEN_SOURCES = { game: '.game', title: '.title', detail: '.detail', rarity: '.rarity' };
+    function fillCanvasTokens(doc, layer) {
+      for (const span of layer.querySelectorAll('[data-tok]')) {
+        const source = TOKEN_SOURCES[span.dataset.tok] && doc.querySelector(TOKEN_SOURCES[span.dataset.tok]);
+        if (source) span.textContent = source.textContent;
       }
     }
 
@@ -5242,7 +5313,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         layoutPreview(values);
         return;
       }
-      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, { hold, assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values) : undefined, editing: editingLayout() });
+      // A play-through shows the items' entrances even in the layout editor, which leaves them out.
+      const editing = editingLayout();
+      const entrances = !hold || !editing;
+      frame.srcdoc = presetGenerator.buildPresetPreviewHtml(values, {
+        hold,
+        assetUrl: presetAssetUrl,
+        css: layerMode ? layerStylesheet(values, editing, entrances) : undefined,
+        editing,
+        entrances,
+      });
       frame.onload = () => {
         try {
           syncLayerLogo(frame.contentDocument);
@@ -5381,7 +5461,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
       $('#pd-zoom').prop('hidden', previewView !== 'card' || !editingLayout());
       // The layout is edited on the single card, so the way in is offered there only.
-      $('#pd-cv-full').prop('hidden', previewView !== 'card');
+      $('#pd-cv-full').prop('hidden', previewView !== 'card' || Boolean(presetSnapshot));
       $('#pd-zoom-fit').text(`${Math.round(zoom * 100)}%`);
       $('#pd-stage').toggleClass('is-zoomed', previewView === 'card' && stageZoom > 1);
       frame.style.transform = `scale(${zoom})`;
@@ -5477,6 +5557,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#options-notify-designer').on('input change', 'input, select', function () {
       if (this.id === 'pd-load' || this.id === 'pd-name' || this.id === 'pd-resolution' || this.id === 'pd-search') return;
+      // The SAN panel saves into the imported preset itself; it is not a draft of the user's own.
+      if ($(this).closest('#pd-san').length) return;
       if (presetSnapshot) {
         presetSnapshot = null;
         renderPreviewDocument(readPresetOptions());
@@ -5787,7 +5869,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const cellHeight = Math.max(24, (stageCeiling() - ROW_GAP * (gridRows - 1)) / gridRows - LABEL_ROOM);
       const zoom = Math.min(1, cellWidth / box.width, cellHeight / box.height);
       fitStageTo((Math.ceil(box.height * zoom) + LABEL_ROOM) * gridRows + ROW_GAP * (gridRows - 1));
-      const document_ = presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values, false) : undefined });
+      const snapshotName = presetSnapshot ? presetSnapshot.name : '';
+      const document_ = snapshotName ? '' : presetGenerator.buildPresetPreviewHtml(values, { assetUrl: presetAssetUrl, css: layerMode ? layerStylesheet(values, false) : undefined });
+      const snapshotFrames = [];
       for (const row of rows) {
         const wrap = row.querySelector('.pd-compare-frame');
         const frame = ensureFrame(wrap, { title: String(row.getAttribute('data-state') || 'normal') });
@@ -5800,6 +5884,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         wrap.style.width = Math.round(box.width * zoom) + 'px';
         wrap.style.height = Math.round(box.height * zoom) + 'px';
         const payload = comparePayload(String(row.getAttribute('data-state') || 'normal'));
+        if (snapshotName) {
+          snapshotFrames.push({ frame, payload });
+          continue;
+        }
         // Already loaded: feed it again rather than reloading, so editing stays as cheap as one card.
         try {
           if (frame.contentWindow && frame.contentWindow.awPreviewApply) {
@@ -5821,6 +5909,27 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           }
         };
         frame.srcdoc = document_;
+      }
+      if (snapshotName) void showCompareSnapshots(snapshotName, snapshotFrames);
+    }
+
+    // An imported preset has no controls to restyle a frame with, so each state is a picture of its
+    // own (a SAN theme can draw every tier differently), a few at a time: each one takes seconds.
+    const COMPARE_SNAPSHOTS_AT_ONCE = 3;
+    let compareSnapshotRun = 0;
+    async function showCompareSnapshots(name, frames) {
+      const run = ++compareSnapshotRun;
+      const show = async ({ frame, payload }) => {
+        const shot = await ipcRenderer.invoke('preset-snapshot', { preset: name, payload: snapshotPayload(payload) }).catch((err) => {
+          debug.log(err);
+          return null;
+        });
+        if (!shot || run !== compareSnapshotRun || !presetSnapshot || presetSnapshot.name !== name) return;
+        frame.onload = null;
+        frame.srcdoc = snapshotDocument(shot);
+      };
+      for (let i = 0; i < frames.length && run === compareSnapshotRun; i += COMPARE_SNAPSHOTS_AT_ONCE) {
+        await Promise.all(frames.slice(i, i + COMPARE_SNAPSHOTS_AT_ONCE).map(show));
       }
     }
 
@@ -6050,6 +6159,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           await refreshGeneratedPresetList(res.name);
           $('#pd-name').val(res.name);
           updateCreateButtonMode();
+          presetGallery.forget(res.name);
           setPresetStatus(`${$('#pd-status').attr('data-renamed') || ''} ${res.name}`.trim(), 'ok');
         } else {
           setPresetStatus((($('#pd-status').attr('data-fail') || '') + (res && res.error ? ': ' + res.error : '')).trim(), 'error');
@@ -6084,6 +6194,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           await refreshOverlayPresetMenu();
           $('#pd-name').val('');
           await refreshGeneratedPresetList('');
+          presetGallery.forget(name);
           setPresetStatus(`${$('#pd-status').attr('data-deleted') || ''} ${name}`.trim(), 'ok');
         } else {
           setPresetStatus((($('#pd-status').attr('data-fail') || '') + (res && res.error ? ': ' + res.error : '')).trim(), 'error');
@@ -6410,9 +6521,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         updateCreateButtonMode();
         updateDeleteButtonVisibility();
         await showPresetSnapshot(name);
+        await refreshSanPanel(name);
         return 'imported';
       }
       if (presetSnapshot) presetSnapshot = null;
+      $('#pd-san').prop('hidden', true);
       if (opts.layered) {
         if (!(await openLayerBase(opts.base, opts.sections))) return 'failed';
       } else {
@@ -6432,6 +6545,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       updateDeleteButtonVisibility();
       if (!name) {
         setPresetStatus('');
+        $('#pd-san').prop('hidden', true);
         if (presetSnapshot) {
           presetSnapshot = null;
           renderPreviewDocument(readPresetOptions());
@@ -6441,7 +6555,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       try {
         const outcome = await loadPresetIntoBuilder(name);
         if (outcome === 'failed') setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
-        else if (outcome === 'imported') setPresetStatus($('#pd-status').attr('data-imported-only') || '', 'info');
+        else if (outcome === 'imported') setPresetStatus((sanPanelShown() ? $('#pd-san-loaded').text() : $('#pd-status').attr('data-imported-only')) || '', 'info');
         else setPresetStatus(`${$('#pd-status').attr('data-loaded') || ''} ${name}`.trim(), 'info');
       } catch (err) {
         debug.log(err);
@@ -6458,7 +6572,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         // Preview whatever the picker holds. An imported preset has no control values behind it, so
         // it must preview by name rather than by building a scratch preset from the (unrelated) controls.
         const loaded = String($('#pd-load').val() || '');
-        const rarePercent = RARE_PREVIEW[previewState];
+        const rarePercent = rarePreviewRate(previewState);
         const kind = previewState === 'completion' ? 'platinum' : previewState === 'normal' ? 'toast' : rarePercent ? 'rare' : previewState;
         if (loaded && !isEditablePreset(loaded)) {
           setPresetStatus('');
@@ -6504,11 +6618,14 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           ? await ipcRenderer.invoke('create-layered-preset', { name, base: layerMode.base, sections: [...layerSections], options: readPresetOptions() })
           : await ipcRenderer.invoke('create-custom-preset', Object.assign({ name }, readPresetOptions()));
         if (res && res.ok) {
+          presetGallery.forget(res.name);
           // Refresh the preset dropdown and select the new preset (autosave persists the choice).
           await refreshOverlayPresetMenu(res.name);
           await refreshGeneratedPresetList(res.name);
           const done = res.replaced ? status.attr('data-updated') : status.attr('data-ok');
           setPresetStatus(`${done || ''} ${res.name}`.trim(), 'ok');
+        } else if (res && res.error === 'name-taken') {
+          setPresetStatus(t('import-preset-duplicate-message', 'A preset named "{name}" is already installed.', 'Un preset nommé « {name} » est déjà installé.', { name }), 'error');
         } else {
           setPresetStatus(((status.attr('data-fail') || '') + (res && res.error ? ': ' + res.error : '')).trim(), 'error');
         }
@@ -6638,6 +6755,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
 
         if (res && res.ok) {
+          // A replacing import keeps the name, so the gallery would show the old one's picture.
+          presetGallery.forget(res.name);
           await refreshOverlayPresetMenu(res.name);
           await refreshGeneratedPresetList(res.name);
           // Selecting it in code fires no change event, so load it into the controls explicitly or
@@ -6702,8 +6821,77 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return lines.join('\n');
     }
 
+    /*
+      What AW Next can still change on an imported SAN theme: the trophy picture it shows (the tier
+      of the unlock, or one fixed tier) and, per tier, another imported theme that draws it instead.
+    */
+    async function refreshSanPanel(name) {
+      const settings = await ipcRenderer.invoke('san-preset-settings', name).catch((err) => {
+        debug.log(err);
+        return null;
+      });
+      const panel = $('#pd-san');
+      if (!settings || String($('#pd-load').val() || '') !== name) {
+        panel.prop('hidden', true);
+        return;
+      }
+      panel.prop('hidden', false).attr('data-preset', name);
+      const tier = settings.tierPictures || 'auto';
+      $('#pd-san-tier button').each(function () {
+        const on = $(this).attr('data-tier') === tier;
+        $(this).toggleClass('is-on', on).attr('aria-pressed', String(on));
+      });
+      const own = $('#pd-san-own').text();
+      const sources = settings.sources || [];
+      // Trophy mode grades every unlock, so no popup is ever drawn as a plain one.
+      const trophyMode = settingsRarityTiers.normalizeMode(app.config.achievement && app.config.achievement.rarityMode) === settingsRarityTiers.MODE_TROPHY;
+      $('#pd-san-states label').each(function () {
+        const state = String($(this).attr('data-state'));
+        const current = (settings.stateFrom && settings.stateFrom[state]) || '';
+        // A look copied from a theme deleted since is still in the preset, so its name stays listed.
+        const names = current && !sources.includes(current) ? [current, ...sources] : sources;
+        const select = $(this).find('select').empty().append($('<option>').val('').text(own));
+        for (const source of names) select.append($('<option>').val(source).text(source));
+        select.val(current).prop('disabled', !names.length);
+        $(this).prop('hidden', state === 'normal' && trophyMode);
+      });
+    }
+
+    const sanPanelShown = () => !$('#pd-san').prop('hidden');
+
+    async function saveSanSetting(change) {
+      const name = String($('#pd-san').attr('data-preset') || '');
+      if (!name) return;
+      $('#pd-san').addClass('is-busy');
+      try {
+        const res = await ipcRenderer.invoke('san-preset-save', { name, ...change });
+        if (res && res.ok) {
+          presetGallery.forget(name);
+          setPresetStatus(`${$('#pd-san-saved').text()} ${name}`.trim(), 'ok');
+        } else setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
+      } catch (err) {
+        debug.log(err);
+        setPresetStatus($('#pd-status').attr('data-fail') || '', 'error');
+      } finally {
+        $('#pd-san').removeClass('is-busy');
+      }
+      if (String($('#pd-load').val() || '') !== name) return;
+      await refreshSanPanel(name);
+      await showPresetSnapshot(name);
+    }
+
+    $('#pd-san-tier').on('click', 'button', function () {
+      if ($(this).hasClass('is-on')) return;
+      void saveSanSetting({ tierPictures: String($(this).attr('data-tier')) });
+    });
+    $('#pd-san-states').on('change', 'select', function () {
+      const state = String($(this).closest('label').attr('data-state'));
+      void saveSanSetting({ states: { [state]: String($(this).val() || '') } });
+    });
+
     // A SAN preset has no designer options behind it, so it is selected for use instead of opened.
     async function showImportedSanPreset(name) {
+      presetGallery.forget(name);
       await refreshOverlayPresetMenu(name);
       await refreshGeneratedPresetList(name);
       await loadPresetIntoBuilder(name);

@@ -157,3 +157,22 @@ test('a moved threshold pushes its neighbours instead of crossing them', () => {
   const pushed = tiers.pushBounds('rare', { rareGoldMax: 19, rareSilverMax: 3, rareMax: 3 }, 'rareGoldMax');
   assert.deepEqual(tiers.normalizeRareBounds(pushed), pushed);
 });
+
+test('a preview rate lands in the tier it is drawn for, in either mode and at any bounds', () => {
+  const gradings = [
+    tiers.gradingFrom({}),
+    tiers.gradingFrom({ rarityMode: 'trophy' }),
+    tiers.gradingFrom({ rarityMode: 'trophy', trophyGoldBelow: 1, trophySilverBelow: 90 }),
+    tiers.gradingFrom({ rareGoldMax: 1, rareSilverMax: 2, rareMax: 3 }),
+    tiers.gradingFrom({ rareGoldMax: 20, rareSilverMax: 30, rareMax: 50 }),
+  ];
+  for (const { mode, thresholds } of gradings) {
+    for (const tier of ['gold', 'silver', 'bronze']) {
+      const rate = tiers.sampleRate(tier, mode, thresholds);
+      assert.equal(tiers.tierFor(rate, mode, thresholds), tier, `${mode} ${tier} at ${rate}%`);
+    }
+  }
+  // The fixed rates it replaces were all gold in trophy mode.
+  assert.equal(tiers.tierFor(7.2, 'trophy', tiers.gradingFrom({}).thresholds), 'gold');
+  assert.equal(tiers.sampleRate('normal', 'rare', {}), null);
+});

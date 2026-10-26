@@ -692,7 +692,8 @@
             "fillNone": "无",
             "section": {
               "look": "外观",
-              "place": "位置"
+              "place": "位置",
+              "motion": "动画"
             },
             "full": "自由布局编辑器",
             "newText": "你的文本",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "文本",
               "image": "图片",
-              "shape": "形状"
+              "shape": "形状",
+              "icon": "图标"
             },
             "shape": {
               "triangle": "三角形",
@@ -741,7 +743,16 @@
               "radius": "圆角",
               "opacity": "不透明度",
               "rotation": "旋转",
-              "scale": "缩放"
+              "scale": "缩放",
+              "icon": "图标",
+              "states": "显示于",
+              "alignCard": "与卡片对齐",
+              "position": "位置",
+              "dims": "大小",
+              "offset": "偏移",
+              "entrance": "入场",
+              "delay": "延迟 (ms)",
+              "insert": "插入"
             },
             "act": {
               "front": "置于卡片前方",
@@ -753,8 +764,104 @@
               "home": "还原",
               "importFont": "导入字体",
               "layerUp": "上移",
-              "layerDown": "下移"
-            }
+              "layerDown": "下移",
+              "show": "显示",
+              "hide": "隐藏",
+              "lock": "锁定位置",
+              "unlock": "解锁"
+            },
+            "addIcon": "图标",
+            "enter": {
+              "none": "随卡片",
+              "fade": "淡入",
+              "rise": "上升",
+              "drop": "落下",
+              "left": "从左侧",
+              "right": "从右侧",
+              "zoom": "放大",
+              "pop": "弹出"
+            },
+            "token": {
+              "game": "游戏",
+              "title": "成就",
+              "detail": "描述",
+              "rarity": "稀有度",
+              "tier": "等级"
+            },
+            "fillState": "跟随等级",
+            "fillPlatinum": "白金",
+            "icon": {
+              "trophy": "奖杯",
+              "medal": "奖牌",
+              "crown": "皇冠",
+              "star": "星星",
+              "sparkle": "闪光",
+              "shield": "盾牌",
+              "gem": "宝石",
+              "flame": "火焰",
+              "bolt": "闪电",
+              "heart": "爱心",
+              "check": "对勾",
+              "gamepad": "手柄"
+            },
+            "align": {
+              "left": "左边缘",
+              "center": "居中（水平）",
+              "right": "右边缘",
+              "top": "上边缘",
+              "middle": "居中（垂直）",
+              "bottom": "下边缘"
+            },
+            "copied": "已复制。按 Ctrl + V 粘贴，也可粘贴到其他预设。",
+            "help": {
+              "title": "快捷键",
+              "nudge": "将所选内容移动 1 像素，按住 Shift 移动 10 像素",
+              "shift": "调整大小：保持或解除比例。旋转：以 15 度为步长",
+              "alt": "移动：不吸附参考线",
+              "duplicate": "复制所选内容",
+              "copy": "复制后粘贴，也可粘贴到其他预设",
+              "undo": "撤销，然后重做",
+              "delete": "删除元素，或从卡片上移除一个部分",
+              "escape": "取消选择，然后退出编辑器",
+              "zoom": "使用鼠标滚轮：放大和缩小",
+              "dblclick": "双击：编辑文字，裁剪图片",
+              "sheet": "显示或隐藏此列表",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "添加元素",
+                "body": "文字、图片、形状和图标。每一项都会作为独立图层放在卡片上。"
+              },
+              "edit": {
+                "title": "先选中，再移动",
+                "body": "点击卡片上的任意内容即可选中，拖动即可移动。边角用于调整大小，圆形手柄用于旋转。"
+              },
+              "props": {
+                "title": "元素设置",
+                "body": "未选中任何内容时，此面板显示卡片本身的设置。选中元素后，可设置其大小、颜色以及显示在哪些等级。"
+              },
+              "layers": {
+                "title": "图层",
+                "body": "卡片上的所有内容，最上层的排在最前。眼睛图标用于隐藏元素，挂锁图标用于锁定位置。"
+              },
+              "help": {
+                "title": "快捷键",
+                "body": "此按钮或 ? 键会列出所有快捷键。也可以从这里重新查看导览。"
+              },
+              "next": "下一步",
+              "skip": "跳过",
+              "done": "知道了",
+              "replay": "重新查看导览"
+            },
+            "motionHint": "编辑时卡片保持静止，点击卡片下方的播放即可查看入场效果。",
+            "maxItems": "卡片已满。删除一个元素后才能添加新的。"
           },
           "create": "创建预设",
           "created": "已创建并选择：",
@@ -961,6 +1068,24 @@
             "transparent": "透明",
             "uppercase": "大写",
             "zoom": "缩放"
+          },
+          "san": {
+            "title": "已导入的 SAN 主题",
+            "tierPictures": "奖杯图片",
+            "tierAuto": "跟随等级",
+            "tierHint": "适用于绘制铜、银、金奖杯的主题。“跟随等级”会显示与解锁相符的奖杯；选择一种颜色即可始终显示它。",
+            "states": "按等级设置主题",
+            "statesHint": "用另一个已导入的 SAN 主题绘制某一等级，音效一并使用。",
+            "own": "此主题",
+            "loaded": "已导入的 SAN 主题：其奖杯图片和按等级的主题在预览下方设置。",
+            "saved": "已保存："
+          },
+          "gallery": {
+            "title": "预设",
+            "close": "关闭",
+            "mine": "您的预设",
+            "bundled": "内置",
+            "browse": "浏览预设"
           }
         },
         "souvenirTitle": "纪念截图",

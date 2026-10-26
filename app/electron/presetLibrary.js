@@ -24,6 +24,8 @@ const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js')
 const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require('../util/presetSchema.js');
 const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
+const sanEngine = lazyRequire(path.join(__dirname, '../util/sanEngine/index.js'));
+const RarityTiers = require('../util/rarityTiers.js');
 const presetAssets = presetSchema;
 const presetLayer = require('../util/presetLayer.js');
 const customPreset = require('../util/customPreset.js');
@@ -300,6 +302,59 @@ ipcMain.handle('import-san-setup', async () => {
     };
   } catch (err) {
     debug.log('[san-import] settings import failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+/*
+  What AW Next adds over an imported SAN theme, edited from the designer: the tier its trophies are
+  drawn in, and which other imported theme draws one AW Next state. Only the user's own presets.
+*/
+function sanPresetFolder(name) {
+  const safe = sanitizePresetName(name);
+  const folder = safe ? path.join(usersPresetsDir(), safe) : '';
+  return folder && sanEngine.isSanPreset(folder) ? folder : '';
+}
+
+function sanPresetNames() {
+  try {
+    return fs
+      .readdirSync(usersPresetsDir())
+      .filter((name) => sanEngine.isSanPreset(path.join(usersPresetsDir(), name)))
+      .sort((a, b) => a.localeCompare(b));
+  } catch {
+    return [];
+  }
+}
+
+ipcMain.handle('san-preset-settings', async (event, name) => {
+  const folder = sanPresetFolder(name);
+  const settings = folder ? sanEngine.awSettingsOf(folder) : null;
+  if (!settings) return null;
+  return { ...settings, sources: sanPresetNames().filter((other) => other !== path.basename(folder)) };
+});
+
+ipcMain.handle('san-preset-save', async (event, { name, tierPictures, states } = {}) => {
+  try {
+    const folder = sanPresetFolder(name);
+    if (!folder) return { ok: false, error: 'not-san' };
+    const sources = {};
+    for (const [state, source] of Object.entries(states && typeof states === 'object' ? states : {})) {
+      if (!sanEngine.AW_STATES.includes(state)) continue;
+      const from = source ? sanPresetFolder(source) : '';
+      if (source && (!from || from === folder)) return { ok: false, error: 'not-san' };
+      sources[state] = from;
+    }
+    const out = sanEngine.updateAwSettings(folder, {
+      tierPictures: sanEngine.TIER_PICTURES.includes(tierPictures) ? tierPictures : undefined,
+      states: sources,
+      mode: RarityTiers.normalizeMode(getConfig()?.achievement?.rarityMode),
+    });
+    if (out.ok) invalidateNotificationPresetFolders();
+    debug.log(`[san-preset] ${path.basename(folder)} settings: ${out.ok ? 'saved' : out.error}`);
+    return out;
+  } catch (err) {
+    debug.log('[san-preset] settings failed: ' + (err.message || err));
     return { ok: false, error: String(err.message || err) };
   }
 });

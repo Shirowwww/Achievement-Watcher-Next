@@ -692,7 +692,8 @@
             "fillNone": "Tidak ada",
             "section": {
               "look": "Tampilan",
-              "place": "Tata letak"
+              "place": "Tata letak",
+              "motion": "Animasi"
             },
             "full": "Editor tata letak bebas",
             "newText": "Teks Anda",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Teks",
               "image": "Gambar",
-              "shape": "Bentuk"
+              "shape": "Bentuk",
+              "icon": "Ikon"
             },
             "shape": {
               "triangle": "Segitiga",
@@ -741,7 +743,16 @@
               "radius": "Sudut",
               "opacity": "Opasitas",
               "rotation": "Rotasi",
-              "scale": "Skala"
+              "scale": "Skala",
+              "icon": "Ikon",
+              "states": "Ditampilkan pada",
+              "alignCard": "Ratakan dengan kartu",
+              "position": "Posisi",
+              "dims": "Ukuran",
+              "offset": "Pergeseran",
+              "entrance": "Masuk",
+              "delay": "Jeda (ms)",
+              "insert": "Sisipkan"
             },
             "act": {
               "front": "Di depan kartu",
@@ -753,8 +764,104 @@
               "home": "Kembalikan",
               "importFont": "Impor fon",
               "layerUp": "Pindah ke atas",
-              "layerDown": "Pindah ke bawah"
-            }
+              "layerDown": "Pindah ke bawah",
+              "show": "Tampilkan",
+              "hide": "Sembunyikan",
+              "lock": "Kunci di tempat",
+              "unlock": "Buka kunci"
+            },
+            "addIcon": "Ikon",
+            "enter": {
+              "none": "Bersama kartu",
+              "fade": "Memudar masuk",
+              "rise": "Naik",
+              "drop": "Jatuh masuk",
+              "left": "Dari kiri",
+              "right": "Dari kanan",
+              "zoom": "Memperbesar",
+              "pop": "Muncul"
+            },
+            "token": {
+              "game": "Game",
+              "title": "Pencapaian",
+              "detail": "Deskripsi",
+              "rarity": "Kelangkaan",
+              "tier": "Tingkat"
+            },
+            "fillState": "Mengikuti tingkat",
+            "fillPlatinum": "Platinum",
+            "icon": {
+              "trophy": "Piala",
+              "medal": "Medali",
+              "crown": "Mahkota",
+              "star": "Bintang",
+              "sparkle": "Kilau",
+              "shield": "Perisai",
+              "gem": "Permata",
+              "flame": "Api",
+              "bolt": "Petir",
+              "heart": "Hati",
+              "check": "Tanda centang",
+              "gamepad": "Kontroler"
+            },
+            "align": {
+              "left": "Tepi kiri",
+              "center": "Tengah, melintang",
+              "right": "Tepi kanan",
+              "top": "Tepi atas",
+              "middle": "Tengah, vertikal",
+              "bottom": "Tepi bawah"
+            },
+            "copied": "Tersalin. Ctrl + V menempelkannya, juga di preset lain.",
+            "help": {
+              "title": "Pintasan",
+              "nudge": "Geser pilihan 1 piksel, 10 dengan Shift",
+              "shift": "Mengubah ukuran: pertahankan atau lepas proporsi. Memutar: per 15 derajat",
+              "alt": "Memindahkan: tanpa menempel ke pemandu",
+              "duplicate": "Gandakan pilihan",
+              "copy": "Salin, lalu tempel, juga di preset lain",
+              "undo": "Urungkan, lalu ulangi",
+              "delete": "Hapus elemen, atau lepaskan bagian dari kartu",
+              "escape": "Batalkan pilihan, lalu keluar dari editor",
+              "zoom": "Dengan roda mouse: perbesar dan perkecil",
+              "dblclick": "Klik dua kali: ubah teks, pangkas gambar",
+              "sheet": "Tampilkan atau sembunyikan daftar ini",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Tambahkan elemen",
+                "body": "Teks, gambar, bentuk, dan ikon. Masing-masing masuk ke kartu sebagai lapisan tersendiri."
+              },
+              "edit": {
+                "title": "Pilih, lalu pindahkan",
+                "body": "Klik apa saja di kartu untuk memilihnya, seret untuk memindahkannya. Sudut mengubah ukuran, gagang bulat memutarnya."
+              },
+              "props": {
+                "title": "Pengaturannya",
+                "body": "Saat tidak ada yang dipilih, panel ini berisi pengaturan kartu itu sendiri. Pilih elemen untuk mengatur ukuran, warna, dan tingkat tempat elemen itu ditampilkan."
+              },
+              "layers": {
+                "title": "Lapisan",
+                "body": "Semua yang ada di kartu, yang paling atas lebih dulu. Mata menyembunyikan elemen, gembok menahannya di tempat."
+              },
+              "help": {
+                "title": "Pintasan",
+                "body": "Tombol ini, atau tombol ?, mendaftar semua pintasan. Dari sana tur dapat diulang."
+              },
+              "next": "Berikutnya",
+              "skip": "Lewati",
+              "done": "Mengerti",
+              "replay": "Ulangi tur"
+            },
+            "motionHint": "Kartu tetap diam selama diedit: Putar, di bawah kartu, menampilkan efek masuk.",
+            "maxItems": "Kartu sudah penuh. Hapus satu elemen untuk menambah yang lain."
           },
           "create": "Buat preset",
           "created": "Dibuat & dipilih:",
@@ -961,6 +1068,24 @@
             "transparent": "Transparan",
             "uppercase": "HURUF BESAR",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Tema SAN yang diimpor",
+            "tierPictures": "Gambar piala",
+            "tierAuto": "Mengikuti tingkat",
+            "tierHint": "Untuk tema yang menggambar piala perunggu, perak, dan emas. Mengikuti tingkat menampilkan piala yang cocok dengan pembukaan; pilih warna agar selalu menampilkannya.",
+            "states": "Tema per tingkat",
+            "statesHint": "Gambar satu tingkat dengan tema SAN impor lain, termasuk suaranya.",
+            "own": "Tema ini",
+            "loaded": "Tema SAN yang diimpor: gambar piala dan tema per tingkat diatur di bawah pratinjau.",
+            "saved": "Tersimpan:"
+          },
+          "gallery": {
+            "title": "Preset",
+            "close": "Tutup",
+            "mine": "Preset Anda",
+            "bundled": "Bawaan",
+            "browse": "Jelajahi preset"
           }
         },
         "souvenirTitle": "Tangkapan layar suvenir",

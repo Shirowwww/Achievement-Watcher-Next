@@ -94,6 +94,47 @@ test('an accent shape takes the state colour, so it follows bronze, silver, gold
   assert.match(generator.canvasMarkup({ items: [{ kind: 'shape', shape: 'star', fillMode: 'accent' }] }), /<polygon points="[\d., ]+" style="fill: var\(--accent\)"\/>/);
 });
 
+test('a shape or an icon can wear one tier colour whatever state the popup is in', () => {
+  const css = generator.canvasCss({ items: [{ kind: 'shape', shape: 'rect', fillMode: 'gold' }, { kind: 'shape', shape: 'ellipse', fillMode: 'bronze' }] });
+  assert.match(css, /\[data-i="0"\] \{[^}]*background: var\(--rare-accent, #ffd24e\);/);
+  assert.match(css, /\[data-i="1"\] \{[^}]*background: var\(--rare-bronze, #cd7f32\);/);
+  assert.match(generator.canvasMarkup({ items: [{ kind: 'shape', shape: 'star', fillMode: 'platinum' }] }), /style="fill: var\(--platinum-accent, #cfe3ff\)"/);
+});
+
+test('an icon draws a built-in outline filled with its paint, and an unknown one falls back to the trophy', () => {
+  const canvas = schema.normalizeCanvas({ items: [{ kind: 'icon', icon: 'crown', shadow: 6 }, { kind: 'icon', icon: '<script>' }] });
+  assert.deepEqual(
+    canvas.items.map((item) => [item.icon, item.fillMode]),
+    [['crown', 'accent'], ['trophy', 'accent']]
+  );
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\[data-i="0"\] > span \{[^}]*background: var\(--accent\);[^}]*mask: url\("data:image\/svg\+xml,[^"]+"\) center \/ contain no-repeat;/);
+  assert.match(css, /\[data-i="0"\] \{[^}]*filter: drop-shadow/, 'the shadow sits on the item, outside the mask');
+  assert.ok(css.includes(encodeURIComponent(schema.CANVAS_ICONS.crown)));
+  assert.match(generator.canvasMarkup(canvas), /<div data-i="0" data-kind="icon"><span><\/span><\/div>/);
+  for (const [name, d] of Object.entries(schema.CANVAS_ICONS)) assert.match(d, /^[MmLlHhVvCcSsAaZz\d\s.,-]+$/, `${name} is a bare path`);
+});
+
+test('an item kept to some states is stored in one spelling and hidden in the others', () => {
+  const items = schema.normalizeCanvas({
+    items: [
+      { kind: 'icon', states: ['gold', 'nope', 'bronze', 'gold'] },
+      { kind: 'icon', states: [...schema.CANVAS_STATES] },
+      { kind: 'icon', states: [] },
+      { kind: 'icon', states: 'gold', off: 'yes', lock: 1 },
+      { kind: 'text', text: 'x', off: true, lock: true },
+    ],
+  }).items;
+  assert.deepEqual(items[0].states, ['bronze', 'gold']);
+  for (const item of items.slice(1, 4)) assert.deepEqual([item.states, item.off, item.lock], [undefined, undefined, undefined]);
+  assert.deepEqual([items[4].off, items[4].lock], [true, true]);
+  const css = generator.canvasCss({ items: [items[0], items[4], { kind: 'icon' }] });
+  assert.match(css, /\.ach:not\(:is\(\.tier-bronze, \.tier-gold\)\) > \.aw-canvas > \[data-i="0"\] \{ display: none !important; \}/);
+  assert.match(css, /\.ach > \.aw-canvas > \[data-i="1"\] \{ display: none !important; \}/, 'a switched-off item is never drawn');
+  assert.doesNotMatch(css, /\[data-i="2"\] \{ display: none/);
+  assert.match(generator.canvasCss({ items: [items[0]] }, { editing: true }), /\[data-i="0"\] \{ opacity: 0\.25 !important;/, 'the editor still shows it, faintly');
+});
+
 test('the popup grows for what touches the card and leaves out what floats away from it', () => {
   const plain = generator.presetBoxSize({});
   const touching = { items: [{ kind: 'shape', shape: 'rect', x: -40, y: 10, w: 60, h: 20 }] };
@@ -259,4 +300,52 @@ test('a stored order follows its items past one the schema drops', () => {
   assert.equal(canvas.items.length, 1);
   assert.equal(canvas.items[0].back, true, 'the kept item stays at the bottom where the order put it');
   assert.equal(canvas.order, undefined);
+});
+
+test('a text holds the popup words as empty spans, and nothing else becomes markup', () => {
+  const html = generator.canvasMarkup({ items: [{ kind: 'text', text: '{game} - {title} {nope} <b>{tier}</b> {rarity}{detail}' }] });
+  assert.ok(
+    html.includes(
+      '<span data-tok="game"></span> - <span data-tok="title"></span> {nope} &lt;b&gt;<span data-tok="tier"></span>&lt;/b&gt; <span data-tok="rarity"></span><span data-tok="detail"></span>'
+    ),
+    html
+  );
+  assert.ok(generator.PRESET_ENGINE.includes("querySelectorAll('.aw-canvas [data-tok]')"), 'the engine fills the spans');
+});
+
+test('the words for {tier} are kept only while a text says {tier}, checked and escaped', () => {
+  const words = { gold: '  Or "1" </style>', silver: 'x'.repeat(40), bronze: '', hostile: 'no', platinum: 7 };
+  assert.equal(schema.normalizeCanvas({ items: [{ kind: 'text', text: 'no token' }], words }).words, undefined);
+  const canvas = schema.normalizeCanvas({ items: [{ kind: 'text', text: 'Trophy {tier}' }], words });
+  assert.deepEqual(canvas.words, { silver: 'x'.repeat(24), gold: 'Or "1" </style>' });
+  const css = generator.canvasCss(canvas);
+  assert.ok(css.includes('.ach.tier-gold > .aw-canvas [data-tok="tier"]::after { content: "Or \\22 1\\22  \\3c /style>"; }'), css);
+  assert.doesNotMatch(css, /<\/style>/i, 'a word cannot close the stylesheet');
+});
+
+test('an entrance is stored with its delay, played with the card and left out while editing', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'shape', enter: 'rise', delay: 123.4 },
+      { kind: 'shape', enter: 'none', delay: 500 },
+      { kind: 'shape', enter: 'explode' },
+      { kind: 'icon', enter: 'pop', delay: 99999 },
+    ],
+  });
+  assert.deepEqual(
+    canvas.items.map(({ enter, delay }) => [enter, delay]),
+    [
+      ['rise', 120],
+      [undefined, undefined],
+      [undefined, undefined],
+      ['pop', 3000],
+    ]
+  );
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) \{/);
+  assert.match(css, /@keyframes aw-cv-rise \{ from \{ opacity: 0; transform: translateY\(14px\); \} \}/);
+  assert.match(css, /\.ach\.active > \.aw-canvas > \[data-i="0"\] \{ animation: aw-cv-rise 480ms [^;]+ 120ms both; \}/);
+  assert.match(css, /\[data-i="3"\] \{ animation: aw-cv-pop 480ms cubic-bezier\(0\.34, 1\.56, 0\.64, 1\) 3000ms both; \}/);
+  assert.doesNotMatch(css, /data-i="1"\] \{ animation/);
+  assert.doesNotMatch(generator.canvasCss(canvas, { editing: true }), /animation:/);
 });

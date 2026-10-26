@@ -15,7 +15,7 @@ const { normalizeOptions } = require('../presetSchema.js');
 
 // Raised whenever a change here, in engine.js, host.js, base.css or a layout must reach presets
 // that are already installed.
-const ENGINE_VERSION = 4;
+const ENGINE_VERSION = 5;
 
 const THEME_BLOCK_ID = 'aw-san-theme';
 const ENGINE_META = 'aw-san-engine';
@@ -33,19 +33,23 @@ function readOptional(relative) {
   }
 }
 
-// The base cards a theme draws with, one per state it carries.
-function layoutsOf(theme) {
+// Every look a theme can draw: SAN's four states, then the ones AW Next's states were given.
+function customisationsOf(theme) {
   const types = (theme && theme.types) || {};
-  const ids = new Set();
-  for (const type of engine.TYPES) if (types[type]) ids.add(engine.layoutOf(types[type].preset));
+  const states = (theme && theme.states) || {};
+  return [...engine.TYPES.map((type) => types[type]), ...engine.AW_STATES.map((state) => states[state])].filter(Boolean);
+}
+
+// The base cards a theme draws with, one per look it carries.
+function layoutsOf(theme) {
+  const ids = new Set(customisationsOf(theme).map((customisation) => engine.layoutOf(customisation.preset)));
   if (!ids.size) ids.add(engine.layoutOf(''));
   return [...ids];
 }
 
-// The window must hold the largest card among the states, each at the scale its state gives it.
+// The window must hold the largest card among the looks, each at the scale its look gives it.
 function windowSize(theme) {
-  const types = (theme && theme.types) || {};
-  const states = engine.TYPES.map((type) => types[type]).filter(Boolean);
+  const states = customisationsOf(theme);
   let width = 0;
   let height = 0;
   for (const customisation of states.length ? states : [{}]) {
@@ -93,7 +97,7 @@ function buildPresetFiles(theme, { name = '' } = {}) {
   const layoutCss = {};
   for (const id of layouts) layoutCss[id] = readOptional(`layouts/${id}.css`);
   const faces = fontsUsedBy([base, ...Object.values(layoutCss)].join('\n'));
-  const longest = Math.max(...engine.TYPES.map((type) => Number(theme.types && theme.types[type] && theme.types[type].displaytime) || 0), 10);
+  const longest = Math.max(...customisationsOf(theme).map((customisation) => Number(customisation.displaytime) || 0), 10);
 
   const templates = layouts
     .map((id) => `<template id="aw-san-layout-${id}">\n${readOptional(`layouts/${id}.html`).trim()}\n</template>`)
@@ -192,14 +196,15 @@ function cleanEmbeddedTheme(dir, theme) {
     const match = /^assets\/([^/\\]+)$/.exec(String(value || ''));
     return match && sanTheme.assetAccepts(kind, match[1]) && fs.existsSync(path.join(dir, 'assets', match[1])) ? match[0] : '';
   };
+  const clean = (customisation) => sanTheme.cleanCustomisation(customisation, { resolveAsset }).customisation;
   const types = {};
   for (const type of engine.TYPES) {
-    if (theme.types[type]) types[type] = sanTheme.cleanCustomisation(theme.types[type], { resolveAsset }).customisation;
+    if (theme.types[type]) types[type] = clean(theme.types[type]);
   }
   if (!types.main) types.main = types[Object.keys(types)[0]] || {};
   const thresholds = theme.thresholds || {};
   const cutOff = (value, fallback) => (Number.isFinite(Number(value)) ? Math.min(100, Math.max(0, Number(value))) : fallback);
-  return {
+  const cleaned = {
     label: String(theme.label || '').slice(0, 80),
     sanVersion: String(theme.sanVersion || '').slice(0, 32),
     thresholds: { rarity: cutOff(thresholds.rarity, 10), semirarity: cutOff(thresholds.semirarity, 25) },
@@ -207,6 +212,127 @@ function cleanEmbeddedTheme(dir, theme) {
     notify1line: theme.notify1line === true,
     types,
   };
+  return withAwSettings(cleaned, theme, clean);
+}
+
+/*
+  What AW Next adds over SAN's own data, both optional so a theme without them stays byte for byte
+  what it was: `tierPictures` pins the per-tier pictures to one tier, `states` gives an AW Next state
+  a look of its own (copied from another imported theme). `clean` makes a look safe to draw.
+*/
+const TIER_PICTURES = ['auto', 'bronze', 'silver', 'gold'];
+
+function withAwSettings(target, source, clean) {
+  const out = { ...target };
+  if (TIER_PICTURES.includes(source && source.tierPictures) && source.tierPictures !== 'auto') out.tierPictures = source.tierPictures;
+  const raw = source && source.states && typeof source.states === 'object' ? source.states : {};
+  const from = source && source.stateFrom && typeof source.stateFrom === 'object' ? source.stateFrom : {};
+  const states = {};
+  const stateFrom = {};
+  for (const state of engine.AW_STATES) {
+    if (!Object.prototype.hasOwnProperty.call(raw, state) || !raw[state] || typeof raw[state] !== 'object') continue;
+    states[state] = clean(raw[state]);
+    // Only a name to show in the designer: the look itself is copied in and needs nothing else.
+    if (Object.prototype.hasOwnProperty.call(from, state)) stateFrom[state] = String(from[state] || '').slice(0, 48);
+  }
+  if (Object.keys(states).length) {
+    out.states = states;
+    out.stateFrom = stateFrom;
+  }
+  return out;
+}
+
+// An AW Next state as the tier the payload of such an unlock carries.
+const STATE_PAYLOAD = { normal: { tier: '' }, bronze: { tier: 'bronze' }, silver: { tier: 'silver' }, gold: { tier: 'gold' }, platinum: { tier: 'platinum', platinum: true } };
+
+/*
+  Copies one picture of another preset into this one, under its own name when that is free or holds
+  the same bytes, else under a numbered one. Answers the theme value for it, '' when it cannot.
+*/
+function adoptAsset(fromDir, toDir, kind, value) {
+  const match = /^assets\/([^/\\]+)$/.exec(String(value || ''));
+  if (!match || !sanTheme.assetAccepts(kind, match[1])) return '';
+  const source = path.join(fromDir, 'assets', match[1]);
+  let bytes;
+  try {
+    bytes = fs.readFileSync(source);
+  } catch {
+    return '';
+  }
+  fs.mkdirSync(path.join(toDir, 'assets'), { recursive: true });
+  const ext = path.extname(match[1]);
+  const stem = path.basename(match[1], ext);
+  for (let n = 1; n < 100; n += 1) {
+    const name = n === 1 ? match[1] : `${stem}-${n}${ext}`;
+    const target = path.join(toDir, 'assets', name);
+    if (!fs.existsSync(target)) {
+      fs.writeFileSync(target, bytes);
+      return `assets/${name}`;
+    }
+    if (fs.readFileSync(target).equals(bytes)) return `assets/${name}`;
+  }
+  return '';
+}
+
+function readJson(file) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/*
+  Saves what AW Next adds to an installed SAN preset. `states` maps an AW Next state to the folder of
+  another imported theme whose look (pictures and sound included) it takes, or to '' to give the
+  state back to the preset's own theme; a state left out keeps what it has. `mode` is the rarity
+  mode, which decides which of the other theme's looks that state would have shown there.
+*/
+function updateAwSettings(dir, { tierPictures, states = {}, mode = 'rare' } = {}) {
+  const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+  const theme = readEmbeddedTheme(html);
+  if (!theme) return { ok: false, error: 'not-san' };
+  const manifestFile = path.join(dir, PRESET_PACKAGE_FILE);
+  const manifest = readJson(manifestFile) || {};
+  const sounds = { ...manifest.sanSounds };
+  const next = { ...theme, states: { ...theme.states }, stateFrom: { ...theme.stateFrom } };
+  if (tierPictures !== undefined) next.tierPictures = tierPictures;
+
+  for (const state of engine.AW_STATES) {
+    if (!Object.prototype.hasOwnProperty.call(states, state)) continue;
+    const fromDir = states[state];
+    delete next.states[state];
+    delete next.stateFrom[state];
+    delete sounds[state];
+    if (!fromDir) continue;
+    const fromTheme = readEmbeddedTheme(fs.readFileSync(path.join(fromDir, 'index.html'), 'utf8'));
+    if (!fromTheme) return { ok: false, error: 'not-san', state };
+    const picked = engine.customisationFor(fromTheme, { ...STATE_PAYLOAD[state], mode });
+    next.states[state] = sanTheme.cleanCustomisation(picked.customisation, { resolveAsset: (kind, value) => adoptAsset(fromDir, dir, kind, value) }).customisation;
+    next.stateFrom[state] = path.basename(fromDir);
+    const fromSounds = (readJson(path.join(fromDir, PRESET_PACKAGE_FILE)) || {}).sanSounds || {};
+    const sound = fromSounds[picked.state] || fromSounds[picked.type] || fromSounds.main;
+    if (sound) sounds[state] = sound;
+  }
+
+  writePresetFiles(dir, cleanEmbeddedTheme(dir, next), { name: path.basename(dir) });
+  if (Object.keys(sounds).length || manifest.sanSounds) {
+    fs.writeFileSync(manifestFile, JSON.stringify({ ...manifest, sanSounds: sounds }, null, 2), 'utf8');
+  }
+  return { ok: true };
+}
+
+// What the designer shows of a SAN preset's AW Next settings.
+function awSettingsOf(dir) {
+  let theme = null;
+  try {
+    theme = readEmbeddedTheme(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'));
+  } catch {
+    return null;
+  }
+  if (!theme) return null;
+  const clean = withAwSettings({}, theme, (look) => look);
+  return { tierPictures: clean.tierPictures || 'auto', stateFrom: clean.stateFrom || {} };
 }
 
 /*
@@ -225,8 +351,9 @@ function presetSound(dir, { notificationType = '', rarityTier, rarityMode = '', 
   const sounds = manifest && manifest.sanSounds;
   if (!sounds || typeof sounds !== 'object') return null;
   const platinum = String(notificationType || '').toLowerCase() === 'platinum';
-  const type = engine.stateOf({ tier: rarityTier, mode: rarityMode, platinum, percent: unlockRate, thresholds: manifest.sanThresholds });
-  const entry = sounds[type] || sounds.main;
+  const { type, state } = engine.customisationFor({ thresholds: manifest.sanThresholds }, { tier: rarityTier, mode: rarityMode, platinum, percent: unlockRate });
+  // A state given a theme of its own brings that theme's sound with it.
+  const entry = sounds[state] || sounds[type] || sounds.main;
   const files = (entry && Array.isArray(entry.files) ? entry.files : []).map((name) => normalizeOptions({ sound: name }).sound).filter(Boolean);
   if (!files.length) return '';
   return files[Math.min(files.length - 1, Math.floor(random() * files.length))];
@@ -249,8 +376,7 @@ function edgeGap(dir, { notificationType = '', rarityTier, rarityMode = '', unlo
   }
   if (!theme) return 0;
   const platinum = String(notificationType || '').toLowerCase() === 'platinum';
-  const type = engine.stateOf({ tier: rarityTier, mode: rarityMode, platinum, percent: unlockRate, thresholds: theme.thresholds });
-  const c = theme.types[type] || theme.types.main || {};
+  const c = engine.customisationFor(theme, { tier: rarityTier, mode: rarityMode, platinum, percent: unlockRate }).customisation;
   const layout = engine.layoutOf(c.preset);
   if (engine.LAYOUTS[layout].offset !== 0) return SAN_EDGE_GAP;
   return SAN_EDGE_GAP * engine.scaleOf(c) * (Number(zoom) > 0 ? Number(zoom) : 1);
@@ -266,6 +392,11 @@ function isSanPreset(dir) {
 
 module.exports = {
   ENGINE_VERSION,
+  AW_STATES: engine.AW_STATES,
+  TIER_PICTURES,
+  withAwSettings,
+  updateAwSettings,
+  awSettingsOf,
   layoutsOf,
   buildPresetFiles,
   writePresetFiles,

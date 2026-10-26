@@ -136,6 +136,51 @@ test('every base card draws each state from a real preset page and closes itself
   assert.ok(cards.includes('default'), 'the default card is missing');
 });
 
+test('the trophy follows the tier shown, a pinned tier, and a state drawn by a theme of its own', { timeout: 60000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-tier-'));
+  t.after(async () => {
+    await closeBrowser(browser, userDataDir);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+  const trophies = { decoration: ['assets/b.png', 'assets/s.png', 'assets/g.png'] };
+  const ps5 = { ...themeFor('ps5').types.main, decorationpos: 1, customicons: { ps5: trophies } };
+  const draw = async (name, theme, data) => {
+    const dir = path.join(root, name);
+    fs.mkdirSync(dir);
+    sanEngine.writePresetFiles(dir, theme, { name });
+    const page = await browser.newPage();
+    try {
+      await page.evaluateOnNewDocument(bridge);
+      await page.goto(pathToFileURL(path.join(dir, 'index.html')).href, { waitUntil: 'load' });
+      await page.evaluate((d) => window.__aw.show(d), data);
+      await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
+      return await page.evaluate(() => ({
+        decoration: document.documentElement.style.getPropertyValue('--decoration'),
+        attrs: [...document.body.attributes].map((attr) => attr.name),
+        card: [...document.styleSheets].map((sheet) => /layout-(\w+)\.css$/.exec(sheet.href || '')).filter(Boolean).map((m) => m[1]),
+      }));
+    } finally {
+      await page.close().catch(() => {});
+    }
+  };
+  const theme = { ...themeFor('ps5'), types: { main: ps5 } };
+  const silver = payload({ unlockRate: 7, rarityTier: 'silver' });
+
+  // Rare mode paints silver with SAN's rare state; its trophy must still be the silver one.
+  const shown = await draw('auto', theme, silver);
+  assert.ok(shown.attrs.includes('rare'), shown.attrs.join(' '));
+  assert.match(shown.decoration, /s\.png/);
+  assert.match((await draw('bronze', theme, payload({ unlockRate: 12, rarityTier: 'bronze' }))).decoration, /b\.png/);
+  assert.match((await draw('pinned', { ...theme, tierPictures: 'gold' }, silver)).decoration, /g\.png/);
+
+  // Silver given a look of its own: drawn on that look's card, the others keep the theme's.
+  const own = { ...theme, states: { silver: { ...themeFor('xboxone').types.main } } };
+  assert.deepEqual((await draw('own', own, silver)).card, ['xboxone']);
+  assert.deepEqual((await draw('other', own, payload({ unlockRate: 2, rarityTier: 'gold' }))).card, ['ps5']);
+});
+
 test('a state is drawn at the scale its theme gives it, text included', { timeout: 60000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
   if (!browser) return t.skip(skipReason(failures));

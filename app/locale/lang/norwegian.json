@@ -692,7 +692,8 @@
             "fillNone": "Ingen",
             "section": {
               "look": "Utseende",
-              "place": "Plassering"
+              "place": "Plassering",
+              "motion": "Animasjon"
             },
             "full": "Editor for fritt oppsett",
             "newText": "Teksten din",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Tekst",
               "image": "Bilde",
-              "shape": "Form"
+              "shape": "Form",
+              "icon": "Ikon"
             },
             "shape": {
               "triangle": "Trekant",
@@ -741,7 +743,16 @@
               "radius": "Hjørner",
               "opacity": "Gjennomsiktighet",
               "rotation": "Rotasjon",
-              "scale": "Skala"
+              "scale": "Skala",
+              "icon": "Ikon",
+              "states": "Vises ved",
+              "alignCard": "Juster etter kortet",
+              "position": "Posisjon",
+              "dims": "Størrelse",
+              "offset": "Forskyvning",
+              "entrance": "Inntreden",
+              "delay": "Forsinkelse (ms)",
+              "insert": "Sett inn"
             },
             "act": {
               "front": "Foran kortet",
@@ -753,8 +764,104 @@
               "home": "Sett tilbake på plass",
               "importFont": "Importer en skrift",
               "layerUp": "Flytt opp",
-              "layerDown": "Flytt ned"
-            }
+              "layerDown": "Flytt ned",
+              "show": "Vis",
+              "hide": "Skjul",
+              "lock": "Lås på plass",
+              "unlock": "Lås opp"
+            },
+            "addIcon": "Ikon",
+            "enter": {
+              "none": "Med kortet",
+              "fade": "Tone inn",
+              "rise": "Stige opp",
+              "drop": "Droppe inn",
+              "left": "Fra venstre",
+              "right": "Fra høyre",
+              "zoom": "Zoome inn",
+              "pop": "Pop"
+            },
+            "token": {
+              "game": "Spill",
+              "title": "Prestasjon",
+              "detail": "Beskrivelse",
+              "rarity": "Sjeldenhet",
+              "tier": "Nivå"
+            },
+            "fillState": "Følger nivået",
+            "fillPlatinum": "Platina",
+            "icon": {
+              "trophy": "Trofé",
+              "medal": "Medalje",
+              "crown": "Krone",
+              "star": "Stjerne",
+              "sparkle": "Glimt",
+              "shield": "Skjold",
+              "gem": "Edelstein",
+              "flame": "Flamme",
+              "bolt": "Lyn",
+              "heart": "Hjerte",
+              "check": "Hake",
+              "gamepad": "Kontroller"
+            },
+            "align": {
+              "left": "Venstre kant",
+              "center": "Midten, på tvers",
+              "right": "Høyre kant",
+              "top": "Øvre kant",
+              "middle": "Midten, opp og ned",
+              "bottom": "Nedre kant"
+            },
+            "copied": "Kopiert. Ctrl + V limer det inn, også i en annen preset.",
+            "help": {
+              "title": "Hurtigtaster",
+              "nudge": "Flytt markeringen 1 piksel, 10 med Shift",
+              "shift": "Endre størrelse: behold eller frigi proporsjonene. Rotere: i trinn på 15 grader",
+              "alt": "Flytting: ingen festing til hjelpelinjer",
+              "duplicate": "Dupliser markeringen",
+              "copy": "Kopier, og lim deretter inn, også i en annen preset",
+              "undo": "Angre, og gjør deretter om",
+              "delete": "Slett et element, eller ta en del av kortet",
+              "escape": "Fjern markeringen, og forlat deretter editoren",
+              "zoom": "Med musehjulet: zoom inn og ut",
+              "dblclick": "Dobbeltklikk: rediger en tekst, beskjær et bilde",
+              "sheet": "Vis eller skjul denne listen",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Legg til elementer",
+                "body": "Tekster, bilder, former og ikoner. Hvert element legges på kortet som et eget lag."
+              },
+              "edit": {
+                "title": "Velg, og flytt deretter",
+                "body": "Klikk på noe på kortet for å velge det, og dra det for å flytte det. Hjørnene endrer størrelsen, det runde håndtaket roterer det."
+              },
+              "props": {
+                "title": "Innstillingene",
+                "body": "Når ingenting er valgt, rommer dette panelet kortets egne innstillinger. Velg et element for å stille inn størrelse, farge og nivåene det vises på."
+              },
+              "layers": {
+                "title": "Lag",
+                "body": "Alt på kortet, det øverste først. Øyet skjuler et element, hengelåsen holder det på plass."
+              },
+              "help": {
+                "title": "Hurtigtaster",
+                "body": "Denne knappen, eller tasten ?, viser alle hurtigtastene. Herfra kan du ta omvisningen på nytt."
+              },
+              "next": "Neste",
+              "skip": "Hopp over",
+              "done": "Forstått",
+              "replay": "Ta omvisningen på nytt"
+            },
+            "motionHint": "Kortet står stille mens du redigerer: Spill av under kortet viser inntredenene.",
+            "maxItems": "Kortet er fullt. Slett et element for å legge til et nytt."
           },
           "create": "Lag preset",
           "created": "Opprettet og valgt:",
@@ -961,6 +1068,24 @@
             "transparent": "Gjennomsiktig",
             "uppercase": "STORE BOKSTAVER",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Importert SAN-tema",
+            "tierPictures": "Trofébilde",
+            "tierAuto": "Følger nivået",
+            "tierHint": "For temaer som tegner et bronse-, sølv- og gulltrofé. Følger nivået viser det som passer til opplåsingen; velg en farge for å alltid vise den.",
+            "states": "Tema per nivå",
+            "statesHint": "Tegn ett nivå med et annet importert SAN-tema, lyden inkludert.",
+            "own": "Dette temaet",
+            "loaded": "Importert SAN-tema: trofébildet og temaene per nivå stilles inn under forhåndsvisningen.",
+            "saved": "Lagret:"
+          },
+          "gallery": {
+            "title": "Presets",
+            "close": "Lukk",
+            "mine": "Dine presets",
+            "bundled": "Medfølgende",
+            "browse": "Bla gjennom presets"
           }
         },
         "souvenirTitle": "Suvenirbilde",

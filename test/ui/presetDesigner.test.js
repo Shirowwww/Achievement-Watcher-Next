@@ -335,6 +335,15 @@ test('the designer reads and writes its controls from the schema rather than by 
   assert.match(settings, /options: readPresetOptions\(\)/, 'export does not send the design in the controls');
 });
 
+test('saving a design never writes over a preset that is not the builder own', () => {
+  const { mainProcessSource } = require('../helpers/mainProcessSource.js');
+  const handler = /ipcMain\.handle\('create-custom-preset'[\s\S]*?\n\}\);/.exec(mainProcessSource());
+  assert.ok(handler, 'the save handler is gone');
+  // An imported or SAN theme carries the package manifest; a bundled or hand-made one carries no marker.
+  assert.match(handler[0], /marker === customPreset\.PRESET_PACKAGE_FILE \|\| \(!marker && findNotificationPresetFolder\(name\)\)\) return \{ ok: false, error: 'name-taken' \}/);
+  assert.ok(handler[0].indexOf('name-taken') < handler[0].indexOf('writeCustomPreset('), 'the check comes after the write');
+});
+
 test('the live preview swaps only the stylesheet, and never reloads on every keystroke', () => {
   // Rebuilding the document on each input would restart the animation under the user's cursor and
   // make dragging a slider feel broken; the stylesheet is the only thing that has to change.

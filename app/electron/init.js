@@ -6945,6 +6945,10 @@ ipcMain.handle('create-custom-preset', async (event, opts = {}) => {
     const name = sanitizePresetName(opts.name);
     if (!name) return { ok: false, error: 'invalid-name' };
     if (name === PREVIEW_PRESET_NAME) return { ok: false, error: 'reserved-name' };
+    // A design of the builder's own, or a layered one, is rewritten; an imported or SAN theme, a
+    // bundled or a hand-made preset of that name is not the builder's to write over.
+    const marker = managedPresetMarker(name);
+    if (marker === customPreset.PRESET_PACKAGE_FILE || (!marker && findNotificationPresetFolder(name))) return { ok: false, error: 'name-taken' };
     const existed = fs.existsSync(path.join(usersPresetsDir(), name, 'index.html'));
     debug.log('[custom-preset] wrote ' + writeCustomPreset(name, opts));
     return { ok: true, name, replaced: existed };

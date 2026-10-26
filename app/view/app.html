@@ -8,7 +8,7 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-uhd3Lp1gFTpNffEosi/S0Un7XN7ydezfFiTEFXGVNkk='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-OguB3BtFLHgdyZQj8bqtJYLwaWQPqrY7XsEE7Bmd4wk='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -2008,6 +2008,7 @@
                       <div class="left">
                         <i class="fas fa-palette"></i> <span id="lbl-overlayPreset"></span>
                         <button type="button" id="btn-open-presets" class="inline-action-btn"><i class="fas fa-tools"></i></button>
+                        <button type="button" id="btn-browse-presets" class="inline-action-btn"><i class="fas fa-th-large"></i></button>
                       </div>
                       <div class="right">
                         <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -2533,7 +2534,16 @@
                   </li>
                   <li class="pd-row">
                     <div class="pd-bar">
-                      <label class="pd-file"><span data-lang="load"></span><select autocomplete="off" id="pd-load"></select></label>
+                      <div class="pd-load-row">
+                        <label class="pd-file"><span data-lang="load"></span><select autocomplete="off" id="pd-load"></select></label>
+                        <button type="button" class="inline-action-btn secondary" id="pd-browse" data-lang-title="gallery.browse"><i class="fas fa-th-large" aria-hidden="true"></i></button>
+                      </div>
+                      <span id="pd-gallery-text" hidden>
+                        <span data-pg="title" data-lang="gallery.title"></span>
+                        <span data-pg="close" data-lang="gallery.close"></span>
+                        <span data-pg="mine" data-lang="gallery.mine"></span>
+                        <span data-pg="bundled" data-lang="gallery.bundled"></span>
+                      </span>
                       <label class="pd-file"><span data-lang="name"></span><input type="text" id="pd-name" maxlength="48" /></label>
                       <!-- A layer: a bundled preset plus a few overrides, instead of a design from scratch. -->
                       <label class="pd-file"><span data-lang="layer.title"></span><select autocomplete="off" id="pd-layer-base" data-lang-none="layer.none"></select></label>
@@ -2580,9 +2590,13 @@
                             <button type="button" class="pd-cv-btn" data-cv-add="rect"><i class="far fa-square" aria-hidden="true"></i> <span data-lang="canvas.addRect"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="ellipse"><i class="far fa-circle" aria-hidden="true"></i> <span data-lang="canvas.addEllipse"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="line"><i class="fas fa-minus" aria-hidden="true"></i> <span data-lang="canvas.addLine"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="icon"><i class="fas fa-trophy" aria-hidden="true"></i> <span data-lang="canvas.addIcon"></span></button>
                           </div>
                           <span class="pd-cv-hint" id="pd-cv-hint" data-lang="canvas.hint"></span>
-                          <button type="button" class="pd-cv-btn pd-cv-close" id="pd-cv-close"><i class="fas fa-compress" aria-hidden="true"></i> <span data-lang="canvas.done"></span></button>
+                          <div class="pd-cv-end">
+                            <button type="button" class="pd-cv-btn" id="pd-cv-help" aria-expanded="false" data-lang-title="canvas.help.title"><i class="fas fa-keyboard" aria-hidden="true"></i></button>
+                            <button type="button" class="pd-cv-btn pd-cv-close" id="pd-cv-close"><i class="fas fa-compress" aria-hidden="true"></i> <span data-lang="canvas.done"></span></button>
+                          </div>
                         </div>
                         <div class="pd-cv-layers" id="pd-cv-layers">
                           <span class="pd-cv-layers-title" data-lang="canvas.layers"></span>
@@ -2654,6 +2668,92 @@
                           <span data-cv="section.place" data-lang="canvas.section.place"></span>
                           <span data-cv="layersAdded" data-lang="canvas.layersAdded"></span>
                           <span data-cv="layersParts" data-lang="canvas.layersParts"></span>
+                          <span data-cv="kind.icon" data-lang="canvas.kind.icon"></span>
+                          <span data-cv="prop.icon" data-lang="canvas.prop.icon"></span>
+                          <span data-cv="prop.states" data-lang="canvas.prop.states"></span>
+                          <span data-cv="prop.alignCard" data-lang="canvas.prop.alignCard"></span>
+                          <span data-cv="prop.position" data-lang="canvas.prop.position"></span>
+                          <span data-cv="prop.dims" data-lang="canvas.prop.dims"></span>
+                          <span data-cv="prop.offset" data-lang="canvas.prop.offset"></span>
+                          <span data-cv="fill.state" data-lang="canvas.fillState"></span>
+                          <span data-cv="fill.bronze" data-lang="preview.bronze"></span>
+                          <span data-cv="fill.silver" data-lang="preview.silver"></span>
+                          <span data-cv="fill.gold" data-lang="preview.gold"></span>
+                          <span data-cv="fill.platinum" data-lang="canvas.fillPlatinum"></span>
+                          <span data-cv="icon.trophy" data-lang="canvas.icon.trophy"></span>
+                          <span data-cv="icon.medal" data-lang="canvas.icon.medal"></span>
+                          <span data-cv="icon.crown" data-lang="canvas.icon.crown"></span>
+                          <span data-cv="icon.star" data-lang="canvas.icon.star"></span>
+                          <span data-cv="icon.sparkle" data-lang="canvas.icon.sparkle"></span>
+                          <span data-cv="icon.shield" data-lang="canvas.icon.shield"></span>
+                          <span data-cv="icon.gem" data-lang="canvas.icon.gem"></span>
+                          <span data-cv="icon.flame" data-lang="canvas.icon.flame"></span>
+                          <span data-cv="icon.bolt" data-lang="canvas.icon.bolt"></span>
+                          <span data-cv="icon.heart" data-lang="canvas.icon.heart"></span>
+                          <span data-cv="icon.check" data-lang="canvas.icon.check"></span>
+                          <span data-cv="icon.gamepad" data-lang="canvas.icon.gamepad"></span>
+                          <span data-cv="align.left" data-lang="canvas.align.left"></span>
+                          <span data-cv="align.center" data-lang="canvas.align.center"></span>
+                          <span data-cv="align.right" data-lang="canvas.align.right"></span>
+                          <span data-cv="align.top" data-lang="canvas.align.top"></span>
+                          <span data-cv="align.middle" data-lang="canvas.align.middle"></span>
+                          <span data-cv="align.bottom" data-lang="canvas.align.bottom"></span>
+                          <span data-cv="act.show" data-lang="canvas.act.show"></span>
+                          <span data-cv="act.hide" data-lang="canvas.act.hide"></span>
+                          <span data-cv="act.lock" data-lang="canvas.act.lock"></span>
+                          <span data-cv="act.unlock" data-lang="canvas.act.unlock"></span>
+                          <span data-cv="copied" data-lang="canvas.copied"></span>
+                          <span data-cv="help.close" data-lang="canvas.done"></span>
+                          <span data-cv="help.title" data-lang="canvas.help.title"></span>
+                          <span data-cv="help.nudge" data-lang="canvas.help.nudge"></span>
+                          <span data-cv="help.shift" data-lang="canvas.help.shift"></span>
+                          <span data-cv="help.alt" data-lang="canvas.help.alt"></span>
+                          <span data-cv="help.duplicate" data-lang="canvas.help.duplicate"></span>
+                          <span data-cv="help.copy" data-lang="canvas.help.copy"></span>
+                          <span data-cv="help.undo" data-lang="canvas.help.undo"></span>
+                          <span data-cv="help.delete" data-lang="canvas.help.delete"></span>
+                          <span data-cv="help.escape" data-lang="canvas.help.escape"></span>
+                          <span data-cv="help.zoom" data-lang="canvas.help.zoom"></span>
+                          <span data-cv="help.dblclick" data-lang="canvas.help.dblclick"></span>
+                          <span data-cv="help.sheet" data-lang="canvas.help.sheet"></span>
+                          <span data-cv="help.key.ctrl" data-lang="canvas.help.key.ctrl"></span>
+                          <span data-cv="help.key.shift" data-lang="canvas.help.key.shift"></span>
+                          <span data-cv="help.key.alt" data-lang="canvas.help.key.alt"></span>
+                          <span data-cv="help.key.delete" data-lang="canvas.help.key.delete"></span>
+                          <span data-cv="help.key.escape" data-lang="canvas.help.key.escape"></span>
+                          <span data-cv="tour.add.title" data-lang="canvas.tour.add.title"></span>
+                          <span data-cv="tour.add.body" data-lang="canvas.tour.add.body"></span>
+                          <span data-cv="tour.edit.title" data-lang="canvas.tour.edit.title"></span>
+                          <span data-cv="tour.edit.body" data-lang="canvas.tour.edit.body"></span>
+                          <span data-cv="tour.props.title" data-lang="canvas.tour.props.title"></span>
+                          <span data-cv="tour.props.body" data-lang="canvas.tour.props.body"></span>
+                          <span data-cv="tour.layers.title" data-lang="canvas.tour.layers.title"></span>
+                          <span data-cv="tour.layers.body" data-lang="canvas.tour.layers.body"></span>
+                          <span data-cv="tour.help.title" data-lang="canvas.tour.help.title"></span>
+                          <span data-cv="tour.help.body" data-lang="canvas.tour.help.body"></span>
+                          <span data-cv="tour.next" data-lang="canvas.tour.next"></span>
+                          <span data-cv="tour.skip" data-lang="canvas.tour.skip"></span>
+                          <span data-cv="tour.done" data-lang="canvas.tour.done"></span>
+                          <span data-cv="tour.replay" data-lang="canvas.tour.replay"></span>
+                          <span data-cv="section.motion" data-lang="canvas.section.motion"></span>
+                          <span data-cv="prop.entrance" data-lang="canvas.prop.entrance"></span>
+                          <span data-cv="prop.delay" data-lang="canvas.prop.delay"></span>
+                          <span data-cv="enter.none" data-lang="canvas.enter.none"></span>
+                          <span data-cv="enter.fade" data-lang="canvas.enter.fade"></span>
+                          <span data-cv="enter.rise" data-lang="canvas.enter.rise"></span>
+                          <span data-cv="enter.drop" data-lang="canvas.enter.drop"></span>
+                          <span data-cv="enter.left" data-lang="canvas.enter.left"></span>
+                          <span data-cv="enter.right" data-lang="canvas.enter.right"></span>
+                          <span data-cv="enter.zoom" data-lang="canvas.enter.zoom"></span>
+                          <span data-cv="enter.pop" data-lang="canvas.enter.pop"></span>
+                          <span data-cv="motionHint" data-lang="canvas.motionHint"></span>
+                          <span data-cv="maxItems" data-lang="canvas.maxItems"></span>
+                          <span data-cv="prop.insert" data-lang="canvas.prop.insert"></span>
+                          <span data-cv="token.game" data-lang="canvas.token.game"></span>
+                          <span data-cv="token.title" data-lang="canvas.token.title"></span>
+                          <span data-cv="token.detail" data-lang="canvas.token.detail"></span>
+                          <span data-cv="token.rarity" data-lang="canvas.token.rarity"></span>
+                          <span data-cv="token.tier" data-lang="canvas.token.tier"></span>
                         </div>
                         <div class="pd-stage" id="pd-stage" data-backdrop="checker" data-view="card">
                           <div class="pd-screen" id="pd-screen">
@@ -2746,6 +2846,35 @@
                           </span>
                           <!-- The only way into the layout editor: the normal view previews, full screen edits. -->
                           <button type="button" class="inline-action-btn primary pd-cv-full" id="pd-cv-full"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> <span data-lang="canvas.fullscreen"></span></button>
+                        </div>
+                        <!-- An imported SAN theme has no controls behind it: what AW Next can still
+                             change is which trophy picture it shows and which theme draws each tier. -->
+                        <div class="pd-san" id="pd-san" hidden>
+                          <div class="pd-san-head"><i class="fas fa-trophy" aria-hidden="true"></i> <b data-lang="san.title"></b></div>
+                          <div class="pd-san-row">
+                            <span class="pd-foot-label" data-lang="san.tierPictures"></span>
+                            <div class="pd-seg" id="pd-san-tier">
+                              <button type="button" data-tier="auto" data-lang="san.tierAuto"></button>
+                              <button type="button" data-tier="bronze" data-lang="preview.bronze"></button>
+                              <button type="button" data-tier="silver" data-lang="preview.silver"></button>
+                              <button type="button" data-tier="gold" data-lang="preview.gold"></button>
+                            </div>
+                          </div>
+                          <p class="pd-san-hint" data-lang="san.tierHint"></p>
+                          <div class="pd-san-row pd-san-states-head">
+                            <span class="pd-foot-label" data-lang="san.states"></span>
+                          </div>
+                          <p class="pd-san-hint" data-lang="san.statesHint"></p>
+                          <div class="pd-san-states" id="pd-san-states">
+                            <label data-state="normal"><span data-lang="preview.normal"></span><select autocomplete="off"></select></label>
+                            <label data-state="bronze"><span data-lang="preview.bronze"></span><select autocomplete="off"></select></label>
+                            <label data-state="silver"><span data-lang="preview.silver"></span><select autocomplete="off"></select></label>
+                            <label data-state="gold"><span data-lang="preview.gold"></span><select autocomplete="off"></select></label>
+                            <label data-state="platinum"><span data-lang="preview.completion"></span><select autocomplete="off"></select></label>
+                          </div>
+                          <span id="pd-san-own" data-lang="san.own" hidden></span>
+                          <span id="pd-san-loaded" data-lang="san.loaded" hidden></span>
+                          <span id="pd-san-saved" data-lang="san.saved" hidden></span>
                         </div>
                       </div>
 

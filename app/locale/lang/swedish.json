@@ -692,7 +692,8 @@
             "fillNone": "Ingen",
             "section": {
               "look": "Utseende",
-              "place": "Placering"
+              "place": "Placering",
+              "motion": "Animation"
             },
             "full": "Editor för fri layout",
             "newText": "Din text",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Text",
               "image": "Bild",
-              "shape": "Form"
+              "shape": "Form",
+              "icon": "Ikon"
             },
             "shape": {
               "triangle": "Triangel",
@@ -741,7 +743,16 @@
               "radius": "Hörn",
               "opacity": "Genomskinlighet",
               "rotation": "Rotation",
-              "scale": "Skala"
+              "scale": "Skala",
+              "icon": "Ikon",
+              "states": "Visas på",
+              "alignCard": "Justera mot kortet",
+              "position": "Position",
+              "dims": "Storlek",
+              "offset": "Förskjutning",
+              "entrance": "Intåg",
+              "delay": "Fördröjning (ms)",
+              "insert": "Infoga"
             },
             "act": {
               "front": "Framför kortet",
@@ -753,8 +764,104 @@
               "home": "Lägg tillbaka på plats",
               "importFont": "Importera ett typsnitt",
               "layerUp": "Flytta upp",
-              "layerDown": "Flytta ned"
-            }
+              "layerDown": "Flytta ned",
+              "show": "Visa",
+              "hide": "Dölj",
+              "lock": "Lås på plats",
+              "unlock": "Lås upp"
+            },
+            "addIcon": "Ikon",
+            "enter": {
+              "none": "Med kortet",
+              "fade": "Tona in",
+              "rise": "Stiga upp",
+              "drop": "Falla in",
+              "left": "Från vänster",
+              "right": "Från höger",
+              "zoom": "Zooma in",
+              "pop": "Poppa"
+            },
+            "token": {
+              "game": "Spel",
+              "title": "Prestation",
+              "detail": "Beskrivning",
+              "rarity": "Sällsynthet",
+              "tier": "Nivå"
+            },
+            "fillState": "Följer nivån",
+            "fillPlatinum": "Platina",
+            "icon": {
+              "trophy": "Trofé",
+              "medal": "Medalj",
+              "crown": "Krona",
+              "star": "Stjärna",
+              "sparkle": "Gnista",
+              "shield": "Sköld",
+              "gem": "Ädelsten",
+              "flame": "Låga",
+              "bolt": "Blixt",
+              "heart": "Hjärta",
+              "check": "Bock",
+              "gamepad": "Handkontroll"
+            },
+            "align": {
+              "left": "Vänsterkant",
+              "center": "Centrerad, på bredden",
+              "right": "Högerkant",
+              "top": "Överkant",
+              "middle": "Mitten, på höjden",
+              "bottom": "Underkant"
+            },
+            "copied": "Kopierat. Ctrl + V klistrar in det, även i en annan förinställning.",
+            "help": {
+              "title": "Genvägar",
+              "nudge": "Flytta markeringen 1 pixel, 10 med Skift",
+              "shift": "Ändra storlek: behåll eller frigör proportionerna. Rotera: i steg om 15 grader",
+              "alt": "Flytta: ingen fästning vid hjälplinjer",
+              "duplicate": "Duplicera markeringen",
+              "copy": "Kopiera och klistra sedan in, även i en annan förinställning",
+              "undo": "Ångra och gör sedan om",
+              "delete": "Ta bort ett element eller ta bort en del från kortet",
+              "escape": "Avmarkera och lämna sedan redigeraren",
+              "zoom": "Med mushjulet: zooma in och ut",
+              "dblclick": "Dubbelklick: redigera en text, beskär en bild",
+              "sheet": "Visa eller dölj den här listan",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Skift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Lägg till element",
+                "body": "Texter, bilder, former och ikoner. Varje element hamnar på kortet som ett eget lager."
+              },
+              "edit": {
+                "title": "Välj och flytta sedan",
+                "body": "Klicka på något på kortet för att markera det och dra det för att flytta det. Hörnen ändrar storleken, det runda handtaget roterar det."
+              },
+              "props": {
+                "title": "Dess inställningar",
+                "body": "När inget är markerat rymmer den här panelen kortets egna inställningar. Markera ett element för att ställa in dess storlek, färg och de nivåer där det visas."
+              },
+              "layers": {
+                "title": "Lager",
+                "body": "Allt på kortet, det översta först. Ögat döljer ett element, hänglåset håller det på plats."
+              },
+              "help": {
+                "title": "Genvägar",
+                "body": "Den här knappen, eller tangenten ?, listar alla genvägar. Därifrån kan du göra rundturen igen."
+              },
+              "next": "Nästa",
+              "skip": "Hoppa över",
+              "done": "Uppfattat",
+              "replay": "Gör rundturen igen"
+            },
+            "motionHint": "Kortet står stilla medan du redigerar: Spela upp under kortet visar intågen.",
+            "maxItems": "Kortet är fullt. Ta bort ett element för att lägga till ett nytt."
           },
           "create": "Skapa förinställning",
           "created": "Skapad och vald:",
@@ -961,6 +1068,24 @@
             "transparent": "Genomskinlig",
             "uppercase": "VERSALER",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Importerat SAN-tema",
+            "tierPictures": "Trofébild",
+            "tierAuto": "Följer nivån",
+            "tierHint": "För teman som ritar en brons-, silver- och guldtrofé. Följer nivån visar den som matchar upplåsningen; välj en färg för att alltid visa den.",
+            "states": "Tema per nivå",
+            "statesHint": "Rita en nivå med ett annat importerat SAN-tema, ljudet inkluderat.",
+            "own": "Det här temat",
+            "loaded": "Importerat SAN-tema: dess trofébild och teman per nivå ställs in under förhandsvisningen.",
+            "saved": "Sparat:"
+          },
+          "gallery": {
+            "title": "Förinställningar",
+            "close": "Stäng",
+            "mine": "Dina förinställningar",
+            "bundled": "Medföljande",
+            "browse": "Bläddra bland förinställningarna"
           }
         },
         "souvenirTitle": "Souvenirskärmbild",

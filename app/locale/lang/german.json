@@ -692,7 +692,8 @@
             "fillNone": "Keine",
             "section": {
               "look": "Aussehen",
-              "place": "Anordnung"
+              "place": "Anordnung",
+              "motion": "Animation"
             },
             "full": "Editor für freie Anordnung",
             "newText": "Dein Text",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Text",
               "image": "Bild",
-              "shape": "Form"
+              "shape": "Form",
+              "icon": "Symbol"
             },
             "shape": {
               "triangle": "Dreieck",
@@ -741,7 +743,16 @@
               "radius": "Ecken",
               "opacity": "Deckkraft",
               "rotation": "Drehung",
-              "scale": "Skalierung"
+              "scale": "Skalierung",
+              "icon": "Symbol",
+              "states": "Angezeigt bei",
+              "alignCard": "An der Karte ausrichten",
+              "position": "Position",
+              "dims": "Größe",
+              "offset": "Versatz",
+              "entrance": "Eingang",
+              "delay": "Verzögerung (ms)",
+              "insert": "Einfügen"
             },
             "act": {
               "front": "Vor der Karte",
@@ -753,8 +764,104 @@
               "home": "An seinen Platz zurück",
               "importFont": "Schrift importieren",
               "layerUp": "Nach oben",
-              "layerDown": "Nach unten"
-            }
+              "layerDown": "Nach unten",
+              "show": "Anzeigen",
+              "hide": "Ausblenden",
+              "lock": "Fixieren",
+              "unlock": "Entsperren"
+            },
+            "addIcon": "Symbol",
+            "enter": {
+              "none": "Mit der Karte",
+              "fade": "Einblenden",
+              "rise": "Aufsteigen",
+              "drop": "Hereinfallen",
+              "left": "Von links",
+              "right": "Von rechts",
+              "zoom": "Heranzoomen",
+              "pop": "Aufploppen"
+            },
+            "token": {
+              "game": "Spiel",
+              "title": "Erfolg",
+              "detail": "Beschreibung",
+              "rarity": "Seltenheit",
+              "tier": "Stufe"
+            },
+            "fillState": "Folgt der Stufe",
+            "fillPlatinum": "Platin",
+            "icon": {
+              "trophy": "Pokal",
+              "medal": "Medaille",
+              "crown": "Krone",
+              "star": "Stern",
+              "sparkle": "Funkeln",
+              "shield": "Schild",
+              "gem": "Edelstein",
+              "flame": "Flamme",
+              "bolt": "Blitz",
+              "heart": "Herz",
+              "check": "Häkchen",
+              "gamepad": "Controller"
+            },
+            "align": {
+              "left": "Linker Rand",
+              "center": "Mittig, quer",
+              "right": "Rechter Rand",
+              "top": "Oberer Rand",
+              "middle": "Mittig, hoch und runter",
+              "bottom": "Unterer Rand"
+            },
+            "copied": "Kopiert. Mit Ctrl + V fügst du es ein, auch in einem anderen Preset.",
+            "help": {
+              "title": "Tastenkürzel",
+              "nudge": "Auswahl um 1 Pixel verschieben, mit Umschalt um 10",
+              "shift": "Größe ändern: Proportionen beibehalten oder freigeben. Drehen: in 15-Grad-Schritten",
+              "alt": "Verschieben: kein Einrasten an Hilfslinien",
+              "duplicate": "Auswahl duplizieren",
+              "copy": "Kopieren, dann einfügen, auch in einem anderen Preset",
+              "undo": "Rückgängig, dann wiederholen",
+              "delete": "Ein Element löschen oder einen Teil von der Karte nehmen",
+              "escape": "Auswahl aufheben, dann den Editor verlassen",
+              "zoom": "Mit dem Mausrad: hinein- und herauszoomen",
+              "dblclick": "Doppelklick: Text bearbeiten, Bild zuschneiden",
+              "sheet": "Diese Liste ein- oder ausblenden",
+              "key": {
+                "ctrl": "Strg",
+                "shift": "Umschalt",
+                "alt": "Alt",
+                "delete": "Entf",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Elemente hinzufügen",
+                "body": "Texte, Bilder, Formen und Symbole. Jedes liegt als eigene Ebene auf der Karte."
+              },
+              "edit": {
+                "title": "Auswählen, dann verschieben",
+                "body": "Klicke auf etwas auf der Karte, um es auszuwählen, und ziehe es, um es zu verschieben. Die Ecken ändern die Größe, der runde Griff dreht."
+              },
+              "props": {
+                "title": "Die Einstellungen",
+                "body": "Ist nichts ausgewählt, enthält dieses Feld die Einstellungen der Karte selbst. Wähle ein Element, um Größe, Farbe und die Stufen festzulegen, bei denen es erscheint."
+              },
+              "layers": {
+                "title": "Ebenen",
+                "body": "Alles auf der Karte, das oberste zuerst. Das Auge blendet ein Element aus, das Schloss hält es fest."
+              },
+              "help": {
+                "title": "Tastenkürzel",
+                "body": "Diese Schaltfläche oder die Taste ? zeigt alle Tastenkürzel. Dort kannst du auch die Tour wiederholen."
+              },
+              "next": "Weiter",
+              "skip": "Überspringen",
+              "done": "Verstanden",
+              "replay": "Tour wiederholen"
+            },
+            "motionHint": "Die Karte steht still, solange du sie bearbeitest: Abspielen unter der Karte zeigt die Eingangseffekte.",
+            "maxItems": "Die Karte ist voll. Lösche ein Element, um ein weiteres hinzuzufügen."
           },
           "create": "Vorlage erstellen",
           "created": "Erstellt & ausgewählt:",
@@ -961,6 +1068,24 @@
             "transparent": "Transparent",
             "uppercase": "GROSSBUCHSTABEN",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Importiertes SAN-Theme",
+            "tierPictures": "Pokalbild",
+            "tierAuto": "Folgt der Stufe",
+            "tierHint": "Für Themes, die einen Bronze-, Silber- und Goldpokal zeichnen. Folgt der Stufe zeigt den Pokal, der zur Freischaltung passt; wähle eine Farbe, um immer diesen zu zeigen.",
+            "states": "Theme pro Stufe",
+            "statesHint": "Zeichne eine Stufe mit einem anderen importierten SAN-Theme, samt Ton.",
+            "own": "Dieses Theme",
+            "loaded": "Importiertes SAN-Theme: Pokalbild und Themes pro Stufe stellst du unter der Vorschau ein.",
+            "saved": "Gespeichert:"
+          },
+          "gallery": {
+            "title": "Presets",
+            "close": "Schließen",
+            "mine": "Deine Presets",
+            "bundled": "Mitgeliefert",
+            "browse": "Presets durchsuchen"
           }
         },
         "souvenirTitle": "Souvenir-Screenshot",

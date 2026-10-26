@@ -412,14 +412,46 @@ function clampNumber(value, property) {
 */
 // 'mark' is a bundled preset's brand mark, drawn by a pseudo-element: only a layer has one.
 const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress', 'mark'];
-const CANVAS_ITEM_KINDS = ['text', 'image', 'shape'];
+const CANVAS_ITEM_KINDS = ['text', 'image', 'shape', 'icon'];
 const CANVAS_SHAPES = ['rect', 'ellipse', 'line', 'triangle', 'diamond', 'star', 'arrow'];
-// 'accent' paints with the state colour, so a shape turns bronze, silver, gold or platinum with the card.
-const CANVAS_FILLS = ['solid', 'gradient', 'accent', 'none'];
+/*
+  'accent' paints with the state colour, so a shape turns bronze, silver, gold or platinum with the
+  card; a tier name paints with that tier's colour whatever the state.
+*/
+const CANVAS_TIER_FILLS = ['bronze', 'silver', 'gold', 'platinum'];
+const CANVAS_FILLS = ['solid', 'gradient', 'accent', 'none', ...CANVAS_TIER_FILLS];
+// The states a popup can be in, which an item can be limited to.
+const CANVAS_STATES = ['normal', 'bronze', 'silver', 'gold', 'platinum', 'progress'];
+/*
+  The icons an item can draw: one filled path each in a 24px box, even-odd, used as a mask so the
+  item's paint fills it. Drawn for AW Next, so a shared preset carries no third-party artwork.
+*/
+const CANVAS_ICONS = {
+  trophy:
+    'M6 2h12v2h4v3a5 5 0 0 1-4.6 5A6 6 0 0 1 13 15.9V18h4v4H7v-4h4v-2.1A6 6 0 0 1 6.6 12 5 5 0 0 1 2 7V4h4zM4 6h2v3.6A3 3 0 0 1 4 7zM20 6h-2v3.6A3 3 0 0 0 20 7z',
+  medal: 'M6 2h4l2.2 5.2-2.6 1.6zM18 2h-4l-2.2 5.2 2.6 1.6zM12 9a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM12 12a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z',
+  crown: 'M3 7l4.5 4L12 4l4.5 7L21 7l-2 10H5zM5 18.5h14v2H5z',
+  star: 'M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6-5.9-3.3-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z',
+  sparkle: 'M12 2c.8 5.5 4.5 9.2 10 10-5.5.8-9.2 4.5-10 10-.8-5.5-4.5-9.2-10-10 5.5-.8 9.2-4.5 10-10z',
+  shield: 'M12 2l8 3v6c0 5-3.4 9.4-8 11-4.6-1.6-8-6-8-11V5z',
+  gem: 'M7 3h10l4 6-9 12L3 9z',
+  flame: 'M12 2c1.2 4 6 6.5 6 12a6 6 0 0 1-12 0c0-2.6 1.3-4.6 3-5.8 0 2 1 3.4 2.6 3.9C11 8.6 11.2 5.2 12 2z',
+  bolt: 'M13 2L4 14h6l-1 8 9-12h-6z',
+  heart: 'M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z',
+  check: 'M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zM10.5 13.6l-3-3-1.4 1.4 4.4 4.4 7.4-7.4-1.4-1.4z',
+  gamepad:
+    'M7 7h10a5 5 0 0 1 4.9 6l-.8 4a2.8 2.8 0 0 1-4.8 1.3L14 16h-4l-2.3 2.3A2.8 2.8 0 0 1 2.9 17l-.8-4A5 5 0 0 1 7 7zM6.2 10.5h1.3V9.2h1.6v1.3h1.3v1.6H9.1v1.3H7.5v-1.3H6.2zM15.5 10.2a1 1 0 1 0 2 0 1 1 0 1 0-2 0zM17.3 12.6a1 1 0 1 0 2 0 1 1 0 1 0-2 0z',
+};
 const CANVAS_WEIGHTS = [400, 600, 700, 800];
 const CANVAS_ALIGNS = ['left', 'center', 'right'];
 const CANVAS_MAX_ITEMS = 24;
 const CANVAS_MAX_TEXT = 160;
+// Words of the popup an added text can hold, written {game}, {title}... and filled in when it shows.
+const CANVAS_TOKENS = ['game', 'title', 'detail', 'rarity', 'tier'];
+// How an item comes in once the card is up, after its own delay; 'none' arrives with the card.
+const CANVAS_ENTRANCES = ['none', 'fade', 'rise', 'drop', 'left', 'right', 'zoom', 'pop'];
+const CANVAS_MAX_DELAY_MS = 3000;
+const CANVAS_MAX_WORD = 24;
 
 const canvasNumber = (value, min, max, fallback, digits = 1) => {
   const number = Number(value);
@@ -484,20 +516,52 @@ function normalizeCanvasItem(source) {
       w: canvasNumber(fit.w, 1, 4800, item.w),
       ar: canvasNumber(fit.ar, 0.05, 20, 1, 4),
     };
+  } else if (item.kind === 'icon') {
+    item.icon = Object.hasOwn(CANVAS_ICONS, source.icon) ? source.icon : 'trophy';
+    normalizeCanvasPaint(item, source, 'accent');
   } else {
     item.shape = CANVAS_SHAPES.includes(source.shape) ? source.shape : 'rect';
-    item.fill = canvasColor(source.fill, '#ffffff');
     item.radius = canvasNumber(source.radius, 0, 200, 0);
     // Older layouts have none of these; their defaults draw the plain filled shape they always were.
-    item.fillMode = CANVAS_FILLS.includes(source.fillMode) ? source.fillMode : 'solid';
-    item.fill2 = canvasColor(source.fill2, '#4aa3ff');
-    item.angle = canvasNumber(source.angle, 0, 360, 135, 0);
+    normalizeCanvasPaint(item, source, 'solid');
     item.stroke = canvasNumber(source.stroke, 0, 20, 0);
     item.strokeColor = canvasColor(source.strokeColor, '#ffffff');
-    item.shadow = canvasNumber(source.shadow, 0, 40, 0, 0);
-    item.blur = canvasNumber(source.blur, 0, 20, 0);
+  }
+  // Each of these is stored only when set, so an item nobody limited has one spelling.
+  const states = Array.isArray(source.states) ? CANVAS_STATES.filter((state) => source.states.includes(state)) : [];
+  if (states.length && states.length < CANVAS_STATES.length) item.states = states;
+  if (source.off === true) item.off = true;
+  if (source.lock === true) item.lock = true;
+  if (CANVAS_ENTRANCES.includes(source.enter) && source.enter !== 'none') {
+    item.enter = source.enter;
+    const delay = Math.round(canvasNumber(source.delay, 0, CANVAS_MAX_DELAY_MS, 0, 0) / 10) * 10;
+    if (delay) item.delay = delay;
   }
   return item;
+}
+
+/*
+  What {tier} reads in each tier, in the words of whoever made the layout (the engine has no locale).
+  Kept only while a text says {tier}.
+*/
+function normalizeCanvasWords(raw, items) {
+  if (!raw || typeof raw !== 'object' || !items.some((item) => item.kind === 'text' && item.text.includes('{tier}'))) return null;
+  const words = {};
+  for (const tier of CANVAS_TIER_FILLS) {
+    const word = typeof raw[tier] === 'string' ? raw[tier].replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, CANVAS_MAX_WORD) : '';
+    if (word) words[tier] = word;
+  }
+  return Object.keys(words).length ? words : null;
+}
+
+// What a shape or an icon is filled with, and the soft edges it can have.
+function normalizeCanvasPaint(item, source, fallbackMode) {
+  item.fill = canvasColor(source.fill, '#ffffff');
+  item.fillMode = CANVAS_FILLS.includes(source.fillMode) ? source.fillMode : fallbackMode;
+  item.fill2 = canvasColor(source.fill2, '#4aa3ff');
+  item.angle = canvasNumber(source.angle, 0, 360, 135, 0);
+  item.shadow = canvasNumber(source.shadow, 0, 40, 0, 0);
+  item.blur = canvasNumber(source.blur, 0, 20, 0);
 }
 
 /*
@@ -578,6 +642,8 @@ function normalizeCanvas(raw) {
   if (hidden.length) out.hidden = hidden;
   const style = normalizeCanvasStyle(source.style);
   if (Object.keys(style).length) out.style = style;
+  const words = normalizeCanvasWords(source.words, items);
+  if (words) out.words = words;
   if (Array.isArray(source.order)) {
     const remapped = source.order.map((entry) => (Number.isInteger(entry) ? kept[entry] : entry)).filter((entry) => entry !== undefined);
     const order = canvasOrder({ items, order: remapped });
@@ -679,6 +745,12 @@ module.exports = {
   cssValue,
   CANVAS_PARTS,
   CANVAS_SHAPES,
+  CANVAS_TIER_FILLS,
+  CANVAS_STATES,
+  CANVAS_ICONS,
+  CANVAS_TOKENS,
+  CANVAS_ENTRANCES,
+  CANVAS_MAX_DELAY_MS,
   CANVAS_MAX_ITEMS,
   CANVAS_STYLED_PARTS,
   CANVAS_LAYER_PARTS,

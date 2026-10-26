@@ -347,6 +347,8 @@ function looksLikeUiProse(value) {
   if (/^[A-Z_ ]+$/.test(value)) return false;
   if (/https?:|\\|\/\/|\.(js|json|dll|exe|ini|html|css)\b/i.test(value)) return false;
   if (/[<>{}$]/.test(value)) return false;
+  // SVG path data ("M4 3h9v4H4z"): drawing commands and numbers only.
+  if (/^[MmLlHhVvCcSsQqTtAaZz\d\s,.-]+$/.test(value)) return false;
   // A "Name/1.2" token means a version string, not a sentence: user agents look like prose otherwise.
   if (/\b[A-Za-z]+\/\d/.test(value)) return false;
   // Two or more unspaced slashes make it a path or a key, never a sentence. One is left alone,

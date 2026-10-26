@@ -16,6 +16,13 @@ test('Escape closes the panel that is on top', () => {
   assert.equal(panelToClose(), null);
 });
 
+test('an imported theme preview closes before the Settings window under it', () => {
+  assert.equal(panelToClose({ settingsOpen: true, themePreviewOpen: true }), 'theme-preview');
+  const source = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
+  assert.match(source, /themePreviewOpen: \$\('#theme-preview'\)\.is\(':visible'\)/);
+  assert.match(source, /panel === 'theme-preview'\) return void closeThemePreview\(\)/);
+});
+
 test('Escape belongs to whatever has its own use for it', () => {
   for (const busy of ['onboardingOpen', 'promptOpen', 'recordingHotkey']) {
     assert.equal(panelToClose({ settingsOpen: true, gameConfigOpen: true, [busy]: true }), null, busy);

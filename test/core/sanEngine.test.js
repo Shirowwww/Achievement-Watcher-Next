@@ -61,6 +61,46 @@ test('AW Next rarity tier decides the state, in both rarity modes', () => {
   assert.equal(engine.computeProperties(c, { percent: 80, tier: 'gold' })['--glowcolor'], '#333333');
 });
 
+test('the per-tier pictures follow the tier AW Next shows, not the SAN state it maps to', () => {
+  const tierFor = (tier, extra = {}) => engine.pictureTier({ tier, percent: 50, thresholds: THRESHOLDS, ...extra });
+  // Rare mode sends silver to SAN's rare state, which pairs with gold: the picture must stay silver.
+  assert.deepEqual(['gold', 'silver', 'bronze'].map((tier) => tierFor(tier)), ['gold', 'silver', 'bronze']);
+  assert.equal(tierFor(''), 'bronze', 'an ordinary unlock gets the plainest picture');
+  assert.equal(tierFor('platinum'), 'gold');
+  assert.equal(tierFor('', { platinum: true }), 'gold');
+  // An older payload with no tier at all grades by the theme's own cut-offs, as SAN does.
+  assert.equal(engine.pictureTier({ percent: 20, thresholds: THRESHOLDS }), 'silver');
+  // A preset that pins its pictures to one tier keeps it whatever was unlocked.
+  for (const fixed of ['bronze', 'silver', 'gold']) {
+    assert.deepEqual(['gold', 'silver', 'bronze', '', 'platinum'].map((tier) => tierFor(tier, { fixed })), Array(5).fill(fixed), fixed);
+  }
+  assert.equal(tierFor('silver', { fixed: 'auto' }), 'silver');
+  assert.equal(tierFor('silver', { fixed: '../x' }), 'silver', 'an unknown setting is automatic');
+
+  const decoration = ['assets/b.svg', 'assets/s.svg', 'assets/g.svg'];
+  const c = { preset: 'ps5', decorationpos: 1, customicons: { ps5: { decoration } } };
+  assert.match(engine.computeProperties(c, { tier: tierFor('silver') })['--decoration'], /s\.svg/);
+});
+
+test('each AW Next state can be drawn by a theme of its own, the SAN state still decides the wording', () => {
+  const main = { preset: 'ps5' };
+  const silver = { preset: 'xboxone' };
+  const theme = { thresholds: THRESHOLDS, types: { main }, states: { silver } };
+  const pick = (tier, extra = {}) => engine.customisationFor(theme, { tier, mode: 'rare', percent: 50, ...extra });
+  assert.equal(pick('silver').customisation, silver);
+  assert.equal(pick('silver').type, 'rare');
+  assert.equal(pick('silver').state, 'silver');
+  assert.equal(pick('gold').customisation, main, 'a state with no theme of its own keeps the preset one');
+  assert.equal(pick('').state, 'normal');
+  assert.equal(pick('platinum').state, 'platinum');
+  assert.equal(pick('bronze', { mode: 'trophy' }).type, 'main');
+  // No tier in the payload: the theme's cut-offs name the state.
+  assert.equal(engine.customisationFor(theme, { percent: 20 }).state, 'silver');
+  assert.equal(engine.customisationFor({ types: { main } }, { tier: 'gold' }).customisation, main);
+  assert.equal(engine.customisationFor({ types: { main }, states: { __proto__: null } }, { tier: 'gold' }).customisation, main);
+  assert.deepEqual(engine.AW_STATES, ['normal', 'bronze', 'silver', 'gold', 'platinum']);
+});
+
 test('a theme with no known base card is drawn on the default one', () => {
   assert.equal(engine.layoutOf('ps5'), 'ps5');
   for (const odd of ['', 'os', '../evil', '__proto__', 'constructor', undefined]) assert.equal(engine.layoutOf(odd), 'default', String(odd));
@@ -311,4 +351,58 @@ test('a SAN card sits 25px off the screen edges, as SAN places it', (t) => {
   // ps4 has no offset: the glow room stays, so the gap grows with the theme scale and the size.
   assert.equal(sanEngine.edgeGap(dir, { notificationType: 'platinum', zoom: 2 }), 75);
   assert.equal(sanEngine.edgeGap(scratch(t)), 0, 'not a SAN preset');
+});
+
+test('a SAN preset can pin its trophy tier and borrow another theme for one AW Next state', (t) => {
+  const target = scratch(t);
+  const source = scratch(t);
+  const asset = (dir, name, bytes) => {
+    fs.mkdirSync(path.join(dir, 'assets'), { recursive: true });
+    fs.writeFileSync(path.join(dir, 'assets', name), bytes);
+  };
+  asset(target, 'bg.png', 'target picture');
+  asset(source, 'bg.png', 'source picture');
+  asset(source, 'logo.png', 'logo');
+  sanEngine.writePresetFiles(target, sampleTheme({ main: { preset: 'ps5', bgimg: 'assets/bg.png' } }), { name: 'Target' });
+  sanEngine.writePresetFiles(source, sampleTheme({ main: { preset: 'xboxone', bgimg: 'assets/bg.png', customicons: { xboxone: { logo: 'assets/logo.png' } } } }), { name: 'Source' });
+  fs.writeFileSync(path.join(target, 'aw-package.json'), JSON.stringify({ name: 'Target', sanSounds: { main: { mode: 'file', files: ['own.wav'] } } }));
+  fs.writeFileSync(path.join(source, 'aw-package.json'), JSON.stringify({ name: 'Source', sanSounds: { main: { mode: 'file', files: ['borrowed.wav'] } } }));
+
+  assert.deepEqual(sanEngine.awSettingsOf(target), { tierPictures: 'auto', stateFrom: {} });
+  assert.deepEqual(sanEngine.updateAwSettings(target, { tierPictures: 'gold', states: { silver: source }, mode: 'rare' }), { ok: true });
+
+  const theme = sanEngine.readEmbeddedTheme(fs.readFileSync(path.join(target, 'index.html'), 'utf8'));
+  assert.equal(theme.tierPictures, 'gold');
+  assert.equal(theme.states.silver.preset, 'xboxone');
+  // Same name, other bytes: copied beside the preset's own picture rather than over it.
+  assert.equal(theme.states.silver.bgimg, 'assets/bg-2.png');
+  assert.equal(fs.readFileSync(path.join(target, 'assets', 'bg-2.png'), 'utf8'), 'source picture');
+  assert.equal(fs.readFileSync(path.join(target, 'assets', 'bg.png'), 'utf8'), 'target picture');
+  assert.equal(theme.states.silver.customicons.xboxone.logo, 'assets/logo.png');
+  assert.equal(theme.types.main.bgimg, 'assets/bg.png');
+  assert.deepEqual(sanEngine.awSettingsOf(target), { tierPictures: 'gold', stateFrom: { silver: path.basename(source) } });
+  const manifest = JSON.parse(fs.readFileSync(path.join(target, 'aw-package.json'), 'utf8'));
+  assert.deepEqual(manifest.sanSounds.silver.files, ['borrowed.wav']);
+  assert.deepEqual(manifest.sanSounds.main.files, ['own.wav']);
+  // The borrowed look counts for the cards the page carries, and brings its sound.
+  assert.match(fs.readFileSync(path.join(target, 'index.html'), 'utf8'), /<template id="aw-san-layout-xboxone">/);
+  assert.equal(sanEngine.presetSound(target, { rarityTier: 'silver', rarityMode: 'rare' }), 'borrowed.wav');
+  assert.equal(sanEngine.presetSound(target, { rarityTier: 'gold', rarityMode: 'rare' }), 'own.wav');
+
+  // A rebuild for a newer engine keeps all of it.
+  const stale = fs.readFileSync(path.join(target, 'index.html'), 'utf8').replace(/name="aw-san-engine" content="\d+"/, 'name="aw-san-engine" content="0"');
+  fs.writeFileSync(path.join(target, 'index.html'), stale);
+  assert.equal(sanEngine.refreshPreset(target), true);
+  assert.deepEqual(sanEngine.awSettingsOf(target), { tierPictures: 'gold', stateFrom: { silver: path.basename(source) } });
+
+  // Giving the state back, and an automatic tier, leave the block as an import writes it.
+  sanEngine.updateAwSettings(target, { tierPictures: 'auto', states: { silver: '' } });
+  const back = sanEngine.readEmbeddedTheme(fs.readFileSync(path.join(target, 'index.html'), 'utf8'));
+  assert.equal('states' in back || 'stateFrom' in back || 'tierPictures' in back, false);
+  assert.equal('silver' in JSON.parse(fs.readFileSync(path.join(target, 'aw-package.json'), 'utf8')).sanSounds, false);
+
+  const plain = scratch(t);
+  fs.writeFileSync(path.join(plain, 'index.html'), '<html></html>');
+  assert.equal(sanEngine.updateAwSettings(target, { states: { gold: plain } }).error, 'not-san');
+  assert.equal(sanEngine.awSettingsOf(plain), null);
 });

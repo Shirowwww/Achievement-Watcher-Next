@@ -126,7 +126,8 @@ function cleanOrigin(value) {
   What each state of an imported Steam Achievement Notifier theme plays (util/sanImport.js): per
   state, one file or a folder's worth to pick from. Optional; bare sound names only, like `sound`.
 */
-const SAN_STATES = ['main', 'semi', 'rare', 'plat'];
+// SAN's four states, then AW Next's own, which a preset may give the look (and sound) of another theme.
+const SAN_STATES = ['main', 'semi', 'rare', 'plat', 'normal', 'bronze', 'silver', 'gold', 'platinum'];
 function cleanSanSounds(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const out = {};

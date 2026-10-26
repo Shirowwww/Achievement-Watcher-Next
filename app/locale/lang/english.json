@@ -692,7 +692,8 @@
             "fillNone": "None",
             "section": {
               "look": "Appearance",
-              "place": "Placement"
+              "place": "Placement",
+              "motion": "Animation"
             },
             "full": "Free layout editor",
             "newText": "Your text",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Text",
               "image": "Picture",
-              "shape": "Shape"
+              "shape": "Shape",
+              "icon": "Icon"
             },
             "shape": {
               "triangle": "Triangle",
@@ -741,7 +743,16 @@
               "radius": "Corners",
               "opacity": "Opacity",
               "rotation": "Rotation",
-              "scale": "Scale"
+              "scale": "Scale",
+              "icon": "Icon",
+              "states": "Shown on",
+              "alignCard": "Line up with the card",
+              "position": "Position",
+              "dims": "Size",
+              "offset": "Offset",
+              "entrance": "Entrance",
+              "delay": "Delay (ms)",
+              "insert": "Insert"
             },
             "act": {
               "front": "In front of the card",
@@ -753,8 +764,104 @@
               "home": "Put back",
               "importFont": "Import a font",
               "layerUp": "Move up",
-              "layerDown": "Move down"
-            }
+              "layerDown": "Move down",
+              "show": "Show",
+              "hide": "Hide",
+              "lock": "Lock in place",
+              "unlock": "Unlock"
+            },
+            "addIcon": "Icon",
+            "enter": {
+              "none": "With the card",
+              "fade": "Fade in",
+              "rise": "Rise",
+              "drop": "Drop in",
+              "left": "From the left",
+              "right": "From the right",
+              "zoom": "Zoom in",
+              "pop": "Pop"
+            },
+            "token": {
+              "game": "Game",
+              "title": "Achievement",
+              "detail": "Description",
+              "rarity": "Rarity",
+              "tier": "Tier"
+            },
+            "fillState": "Follows the tier",
+            "fillPlatinum": "Platinum",
+            "icon": {
+              "trophy": "Trophy",
+              "medal": "Medal",
+              "crown": "Crown",
+              "star": "Star",
+              "sparkle": "Sparkle",
+              "shield": "Shield",
+              "gem": "Gem",
+              "flame": "Flame",
+              "bolt": "Lightning",
+              "heart": "Heart",
+              "check": "Check mark",
+              "gamepad": "Controller"
+            },
+            "align": {
+              "left": "Left edge",
+              "center": "Centre, across",
+              "right": "Right edge",
+              "top": "Top edge",
+              "middle": "Middle, up and down",
+              "bottom": "Bottom edge"
+            },
+            "copied": "Copied. Ctrl + V pastes it, in another preset too.",
+            "help": {
+              "title": "Shortcuts",
+              "nudge": "Move the selection by 1 pixel, 10 with Shift",
+              "shift": "Resizing: keep or free the proportions. Turning: steps of 15 degrees",
+              "alt": "Moving: no snapping to guides",
+              "duplicate": "Duplicate the selection",
+              "copy": "Copy, then paste, in another preset too",
+              "undo": "Undo, then redo",
+              "delete": "Delete an element, or take a part off the card",
+              "escape": "Deselect, then leave the editor",
+              "zoom": "With the mouse wheel: zoom in and out",
+              "dblclick": "Double-click: edit a text, crop a picture",
+              "sheet": "Show or hide this list",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Add elements",
+                "body": "Texts, pictures, shapes and icons. Each one goes on the card as a layer of its own."
+              },
+              "edit": {
+                "title": "Pick, then move",
+                "body": "Click anything on the card to select it, drag it to move it. The corners resize it, the round handle turns it."
+              },
+              "props": {
+                "title": "Its settings",
+                "body": "With nothing selected, this panel holds the card's own settings. Select an element to set its size, its colour and the tiers it is shown on."
+              },
+              "layers": {
+                "title": "Layers",
+                "body": "Everything on the card, the top one first. The eye hides an element, the padlock holds it in place."
+              },
+              "help": {
+                "title": "Shortcuts",
+                "body": "This button, or the ? key, lists every shortcut. The tour can be replayed from there."
+              },
+              "next": "Next",
+              "skip": "Skip",
+              "done": "Got it",
+              "replay": "Replay the tour"
+            },
+            "motionHint": "The card holds still while you edit it: Play, under the card, shows the entrances.",
+            "maxItems": "The card is full. Delete an element to add another."
           },
           "create": "Create preset",
           "created": "Created & selected:",
@@ -961,6 +1068,24 @@
             "transparent": "Transparent",
             "uppercase": "UPPERCASE",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Imported SAN theme",
+            "tierPictures": "Trophy picture",
+            "tierAuto": "Follows the tier",
+            "tierHint": "For themes that draw a bronze, silver and gold trophy. Follows the tier shows the one that matches the unlock; pick a colour to always show it.",
+            "states": "Theme per tier",
+            "statesHint": "Draw one tier with another imported SAN theme, its sound included.",
+            "own": "This theme",
+            "loaded": "Imported SAN theme: its trophy picture and per-tier themes are set under the preview.",
+            "saved": "Saved:"
+          },
+          "gallery": {
+            "title": "Presets",
+            "close": "Close",
+            "mine": "Your presets",
+            "bundled": "Included",
+            "browse": "Browse the presets"
           }
         },
         "souvenirTitle": "Souvenir screenshot",

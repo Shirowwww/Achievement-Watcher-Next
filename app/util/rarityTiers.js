@@ -148,6 +148,22 @@
     return trophyGrade(grade) || tierFor(percent, mode, thresholds) || '';
   }
 
+  /*
+    An unlock rate that lands in `tier` under this grading, for previews and test popups. A fixed
+    sample rate cannot: 7.2% is silver in rare mode and gold in trophy mode.
+  */
+  function sampleRate(tier, mode, thresholds) {
+    const rare = normalizeRareBounds(thresholds);
+    const trophy = normalizeThresholds(thresholds);
+    const bands =
+      normalizeMode(mode) === MODE_TROPHY
+        ? { gold: [0, trophy.goldBelow], silver: [trophy.goldBelow, trophy.silverBelow], bronze: [trophy.silverBelow, 100] }
+        : { gold: [0, rare.rareGoldMax], silver: [rare.rareGoldMax, rare.rareSilverMax], bronze: [rare.rareSilverMax, rare.rareMax] };
+    const band = bands[tier];
+    if (!band) return null;
+    return Math.round((band[0] + (band[1] - band[0]) * 0.4) * 10) / 10;
+  }
+
   return {
     MODE_RARE,
     MODE_TROPHY,
@@ -166,5 +182,6 @@
     tierFor,
     trophyGrade,
     notificationTier,
+    sampleRate,
   };
 });

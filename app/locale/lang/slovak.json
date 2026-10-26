@@ -692,7 +692,8 @@
             "fillNone": "Žiadna",
             "section": {
               "look": "Vzhľad",
-              "place": "Umiestnenie"
+              "place": "Umiestnenie",
+              "motion": "Animácia"
             },
             "full": "Editor voľného rozloženia",
             "newText": "Váš text",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Text",
               "image": "Obrázok",
-              "shape": "Tvar"
+              "shape": "Tvar",
+              "icon": "Ikona"
             },
             "shape": {
               "triangle": "Trojuholník",
@@ -741,7 +743,16 @@
               "radius": "Rohy",
               "opacity": "Priehľadnosť",
               "rotation": "Otočenie",
-              "scale": "Mierka"
+              "scale": "Mierka",
+              "icon": "Ikona",
+              "states": "Zobrazené na",
+              "alignCard": "Zarovnať podľa karty",
+              "position": "Poloha",
+              "dims": "Veľkosť",
+              "offset": "Posun",
+              "entrance": "Nájazd",
+              "delay": "Oneskorenie (ms)",
+              "insert": "Vložiť"
             },
             "act": {
               "front": "Pred kartou",
@@ -753,8 +764,104 @@
               "home": "Vrátiť na miesto",
               "importFont": "Importovať písmo",
               "layerUp": "Presunúť nahor",
-              "layerDown": "Presunúť nadol"
-            }
+              "layerDown": "Presunúť nadol",
+              "show": "Zobraziť",
+              "hide": "Skryť",
+              "lock": "Zamknúť na mieste",
+              "unlock": "Odomknúť"
+            },
+            "addIcon": "Ikona",
+            "enter": {
+              "none": "S kartou",
+              "fade": "Prelínanie",
+              "rise": "Vzostup",
+              "drop": "Pád",
+              "left": "Zľava",
+              "right": "Sprava",
+              "zoom": "Priblíženie",
+              "pop": "Vyskočenie"
+            },
+            "token": {
+              "game": "Hra",
+              "title": "Úspech",
+              "detail": "Popis",
+              "rarity": "Vzácnosť",
+              "tier": "Úroveň"
+            },
+            "fillState": "Podľa úrovne",
+            "fillPlatinum": "Platina",
+            "icon": {
+              "trophy": "Trofej",
+              "medal": "Medaila",
+              "crown": "Koruna",
+              "star": "Hviezda",
+              "sparkle": "Iskra",
+              "shield": "Štít",
+              "gem": "Drahokam",
+              "flame": "Plameň",
+              "bolt": "Blesk",
+              "heart": "Srdce",
+              "check": "Začiarknutie",
+              "gamepad": "Ovládač"
+            },
+            "align": {
+              "left": "Ľavý okraj",
+              "center": "Na stred, naprieč",
+              "right": "Pravý okraj",
+              "top": "Horný okraj",
+              "middle": "Na stred, hore a dole",
+              "bottom": "Dolný okraj"
+            },
+            "copied": "Skopírované. Ctrl + V to vloží, aj do inej predvoľby.",
+            "help": {
+              "title": "Skratky",
+              "nudge": "Posun výberu o 1 pixel, o 10 so Shiftom",
+              "shift": "Zmena veľkosti: zachovať alebo uvoľniť pomer strán. Otáčanie: po 15 stupňoch",
+              "alt": "Presúvanie: bez prichytávania k vodidlám",
+              "duplicate": "Duplikovať výber",
+              "copy": "Kopírovať a potom vložiť, aj do inej predvoľby",
+              "undo": "Späť a potom znova",
+              "delete": "Odstrániť prvok alebo odobrať časť z karty",
+              "escape": "Zrušiť výber a potom opustiť editor",
+              "zoom": "Kolieskom myši: priblíženie a oddialenie",
+              "dblclick": "Dvojklik: upraviť text, orezať obrázok",
+              "sheet": "Zobraziť alebo skryť tento zoznam",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Pridávajte prvky",
+                "body": "Texty, obrázky, tvary a ikony. Každý sa na kartu umiestni ako samostatná vrstva."
+              },
+              "edit": {
+                "title": "Vyberte, potom presuňte",
+                "body": "Kliknutím na čokoľvek na karte to vyberiete a ťahaním presuniete. Rohy menia veľkosť, okrúhla rukoväť otáča."
+              },
+              "props": {
+                "title": "Jeho nastavenia",
+                "body": "Keď nie je nič vybrané, v tomto paneli sú nastavenia samotnej karty. Vyberte prvok a nastavte jeho veľkosť, farbu a úrovne, na ktorých sa zobrazuje."
+              },
+              "layers": {
+                "title": "Vrstvy",
+                "body": "Všetko, čo je na karte, najvyššie ako prvé. Oko prvok skryje, zámok ho drží na mieste."
+              },
+              "help": {
+                "title": "Skratky",
+                "body": "Toto tlačidlo alebo kláves ? vypíše všetky skratky. Odtiaľ možno prehliadku zopakovať."
+              },
+              "next": "Ďalej",
+              "skip": "Preskočiť",
+              "done": "Rozumiem",
+              "replay": "Zopakovať prehliadku"
+            },
+            "motionHint": "Karta sa pri úpravách nehýbe: Prehrať pod kartou ukáže nájazdy.",
+            "maxItems": "Karta je plná. Odstráňte prvok, aby ste mohli pridať ďalší."
           },
           "create": "Vytvoriť predvoľbu",
           "created": "Vytvorené a vybrané:",
@@ -961,6 +1068,24 @@
             "transparent": "Priehľadné",
             "uppercase": "VEĽKÉ PÍSMENÁ",
             "zoom": "Priblíženie"
+          },
+          "san": {
+            "title": "Importovaný motív SAN",
+            "tierPictures": "Obrázok trofeje",
+            "tierAuto": "Podľa úrovne",
+            "tierHint": "Pre motívy, ktoré kreslia bronzovú, striebornú a zlatú trofej. Podľa úrovne zobrazí tú, ktorá zodpovedá odomknutiu; vyberte farbu, aby sa zobrazovala vždy.",
+            "states": "Motív pre úroveň",
+            "statesHint": "Nakreslite jednu úroveň iným importovaným motívom SAN, vrátane zvuku.",
+            "own": "Tento motív",
+            "loaded": "Importovaný motív SAN: obrázok trofeje a motívy pre jednotlivé úrovne nastavíte pod ukážkou.",
+            "saved": "Uložené:"
+          },
+          "gallery": {
+            "title": "Predvoľby",
+            "close": "Zavrieť",
+            "mine": "Vaše predvoľby",
+            "bundled": "Pribalené",
+            "browse": "Prehliadať predvoľby"
           }
         },
         "souvenirTitle": "Spomienkový snímok",

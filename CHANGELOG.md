@@ -14,6 +14,16 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Updates can install themselves.** Turn on Settings > General > Install updates automatically,
   or tick the box in the update window: new versions download and install without asking once no
   game is running, and a notification says so after the restart. A closed window stays closed.
+- **Pick a preset by its look.** The grid button beside the preset setting, and beside "Edit a
+  preset" in the designer, shows every preset as a picture of its card.
+- **More freedom in the preset editor.** Icons join texts, pictures and shapes. An element can be
+  kept to some notifications only (a crown on gold unlocks, say), painted in a tier's colour, hidden
+  or locked from its layer, placed by typing its position and size, lined up with the card, and
+  copied into another preset. A text can show the game, the achievement, its rarity or its tier, and
+  each element can make its own entrance after a delay. The ? key lists the shortcuts, and a short
+  tour shows the editor around the first time it opens.
+- **Imported SAN themes per tier.** Pick which trophy picture a SAN theme draws, or draw a tier with
+  another imported SAN theme, its sound included.
 
 ### Improved
 
@@ -30,6 +40,15 @@ renamed in 3.9.0 and the history is kept under one file.
   now carries them over, and copies the EMPRESS game saves to where the new loader reads them.
 - **Two achievements unlocked together are both announced.** The second one waited for the first
   popup to show, then counted as too old and was skipped, with no popup and no screenshot.
+- **A SAN theme's trophy matches the tier.** Themes that draw a bronze, silver and gold trophy showed
+  the gold one on every rare unlock, and the designer previewed silver and bronze as gold in trophy
+  mode.
+- **Six included presets preview with their icon.** Batman, Onyx, Outline, PS5 Steam, Pantheon and
+  Xbox Series showed a broken picture instead of the sample icon in the designer's preview.
+- **Saving a design never writes over an imported or SAN theme.** A design saved under the name of
+  one is refused, where it used to replace part of the theme's files and leave the rest.
+- **Escape closes an imported theme's preview.** It closed Settings behind it and left the preview
+  on screen.
 
 - **God of War III is found again after SpartanPort's rename.** The port formerly called gow3_pc now
   keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next

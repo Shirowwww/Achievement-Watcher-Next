@@ -692,7 +692,8 @@
             "fillNone": "Brak",
             "section": {
               "look": "Wygląd",
-              "place": "Układ"
+              "place": "Układ",
+              "motion": "Animacja"
             },
             "full": "Edytor dowolnego układu",
             "newText": "Twój tekst",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Tekst",
               "image": "Obraz",
-              "shape": "Kształt"
+              "shape": "Kształt",
+              "icon": "Ikona"
             },
             "shape": {
               "triangle": "Trójkąt",
@@ -741,7 +743,16 @@
               "radius": "Narożniki",
               "opacity": "Przezroczystość",
               "rotation": "Obrót",
-              "scale": "Skala"
+              "scale": "Skala",
+              "icon": "Ikona",
+              "states": "Pokazywane na",
+              "alignCard": "Wyrównaj do karty",
+              "position": "Pozycja",
+              "dims": "Rozmiar",
+              "offset": "Przesunięcie",
+              "entrance": "Wejście",
+              "delay": "Opóźnienie (ms)",
+              "insert": "Wstaw"
             },
             "act": {
               "front": "Przed kartą",
@@ -753,8 +764,104 @@
               "home": "Przywróć na miejsce",
               "importFont": "Importuj czcionkę",
               "layerUp": "Przenieś w górę",
-              "layerDown": "Przenieś w dół"
-            }
+              "layerDown": "Przenieś w dół",
+              "show": "Pokaż",
+              "hide": "Ukryj",
+              "lock": "Zablokuj w miejscu",
+              "unlock": "Odblokuj"
+            },
+            "addIcon": "Ikona",
+            "enter": {
+              "none": "Razem z kartą",
+              "fade": "Pojawienie się",
+              "rise": "Wznoszenie",
+              "drop": "Opadanie",
+              "left": "Z lewej",
+              "right": "Z prawej",
+              "zoom": "Przybliżenie",
+              "pop": "Wyskoczenie"
+            },
+            "token": {
+              "game": "Gra",
+              "title": "Osiągnięcie",
+              "detail": "Opis",
+              "rarity": "Rzadkość",
+              "tier": "Poziom"
+            },
+            "fillState": "Zgodnie z poziomem",
+            "fillPlatinum": "Platyna",
+            "icon": {
+              "trophy": "Trofeum",
+              "medal": "Medal",
+              "crown": "Korona",
+              "star": "Gwiazda",
+              "sparkle": "Błysk",
+              "shield": "Tarcza",
+              "gem": "Klejnot",
+              "flame": "Płomień",
+              "bolt": "Piorun",
+              "heart": "Serce",
+              "check": "Znacznik wyboru",
+              "gamepad": "Kontroler"
+            },
+            "align": {
+              "left": "Lewa krawędź",
+              "center": "Środek, w poziomie",
+              "right": "Prawa krawędź",
+              "top": "Górna krawędź",
+              "middle": "Środek, w pionie",
+              "bottom": "Dolna krawędź"
+            },
+            "copied": "Skopiowano. Ctrl + V wkleja to, także w innym presecie.",
+            "help": {
+              "title": "Skróty",
+              "nudge": "Przesuń zaznaczenie o 1 piksel, o 10 z klawiszem Shift",
+              "shift": "Zmiana rozmiaru: zachowaj lub zwolnij proporcje. Obracanie: co 15 stopni",
+              "alt": "Przesuwanie: bez przyciągania do linii pomocniczych",
+              "duplicate": "Powiel zaznaczenie",
+              "copy": "Skopiuj, a potem wklej, także w innym presecie",
+              "undo": "Cofnij, a potem ponów",
+              "delete": "Usuń element lub zdejmij część z karty",
+              "escape": "Odznacz, a potem wyjdź z edytora",
+              "zoom": "Kółkiem myszy: przybliżanie i oddalanie",
+              "dblclick": "Dwukrotne kliknięcie: edytuj tekst, przytnij obraz",
+              "sheet": "Pokaż lub ukryj tę listę",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Dodawaj elementy",
+                "body": "Teksty, obrazy, kształty i ikony. Każdy trafia na kartę jako osobna warstwa."
+              },
+              "edit": {
+                "title": "Wybierz, potem przesuń",
+                "body": "Kliknij cokolwiek na karcie, aby to zaznaczyć, i przeciągnij, aby przesunąć. Rogi zmieniają rozmiar, okrągły uchwyt obraca."
+              },
+              "props": {
+                "title": "Jego ustawienia",
+                "body": "Gdy nic nie jest zaznaczone, ten panel zawiera ustawienia samej karty. Zaznacz element, aby ustawić jego rozmiar, kolor i poziomy, na których jest pokazywany."
+              },
+              "layers": {
+                "title": "Warstwy",
+                "body": "Wszystko, co jest na karcie, najwyższe jako pierwsze. Oko ukrywa element, kłódka blokuje go w miejscu."
+              },
+              "help": {
+                "title": "Skróty",
+                "body": "Ten przycisk lub klawisz ? pokazuje wszystkie skróty. Stąd można też powtórzyć przewodnik."
+              },
+              "next": "Dalej",
+              "skip": "Pomiń",
+              "done": "Rozumiem",
+              "replay": "Powtórz przewodnik"
+            },
+            "motionHint": "Karta stoi w miejscu podczas edycji: Odtwórz pod kartą pokazuje wejścia.",
+            "maxItems": "Karta jest pełna. Usuń element, aby dodać kolejny."
           },
           "create": "Utwórz ustawienie",
           "created": "Utworzono i wybrano:",
@@ -961,6 +1068,24 @@
             "transparent": "Przezroczyste",
             "uppercase": "WIELKIE LITERY",
             "zoom": "Zbliżenie"
+          },
+          "san": {
+            "title": "Zaimportowany motyw SAN",
+            "tierPictures": "Obraz trofeum",
+            "tierAuto": "Zgodnie z poziomem",
+            "tierHint": "Dla motywów, które rysują brązowe, srebrne i złote trofeum. Zgodnie z poziomem pokazuje to, które pasuje do odblokowania; wybierz kolor, aby zawsze pokazywać właśnie to.",
+            "states": "Motyw dla poziomu",
+            "statesHint": "Narysuj jeden poziom innym zaimportowanym motywem SAN, razem z dźwiękiem.",
+            "own": "Ten motyw",
+            "loaded": "Zaimportowany motyw SAN: obraz trofeum i motywy dla poziomów ustawisz pod podglądem.",
+            "saved": "Zapisano:"
+          },
+          "gallery": {
+            "title": "Presety",
+            "close": "Zamknij",
+            "mine": "Twoje presety",
+            "bundled": "Dołączone",
+            "browse": "Przeglądaj presety"
           }
         },
         "souvenirTitle": "Zrzut pamiątkowy",

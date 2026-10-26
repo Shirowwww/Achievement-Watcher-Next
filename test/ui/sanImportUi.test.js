@@ -163,7 +163,7 @@ test('the preview resolves a preset picture rather than showing a broken one', (
   */
   assert.match(settings, /function presetAssetUrl\(name\)/);
   assert.match(settings, /const previewCss = \(values, editing = editingLayout\(\)\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing \}\);/);
-  assert.match(settings, /buildPresetPreviewHtml\(values, \{ hold, assetUrl: presetAssetUrl, css:/);
+  assert.match(settings, /buildPresetPreviewHtml\(values, \{\s*hold,\s*assetUrl: presetAssetUrl,\s*css:/);
   // Cached: the stylesheet is rebuilt on every slider movement, and a wallpaper is not cheap to encode.
   assert.match(settings, /presetImageUris\.has\(name\)/);
 });

@@ -692,7 +692,8 @@
             "fillNone": "Geen",
             "section": {
               "look": "Uiterlijk",
-              "place": "Plaatsing"
+              "place": "Plaatsing",
+              "motion": "Animatie"
             },
             "full": "Editor voor vrije indeling",
             "newText": "Jouw tekst",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Tekst",
               "image": "Afbeelding",
-              "shape": "Vorm"
+              "shape": "Vorm",
+              "icon": "Pictogram"
             },
             "shape": {
               "triangle": "Driehoek",
@@ -741,7 +743,16 @@
               "radius": "Hoeken",
               "opacity": "Dekking",
               "rotation": "Rotatie",
-              "scale": "Schaal"
+              "scale": "Schaal",
+              "icon": "Pictogram",
+              "states": "Getoond bij",
+              "alignCard": "Uitlijnen met de kaart",
+              "position": "Positie",
+              "dims": "Grootte",
+              "offset": "Verschuiving",
+              "entrance": "Intrede",
+              "delay": "Vertraging (ms)",
+              "insert": "Invoegen"
             },
             "act": {
               "front": "Voor de kaart",
@@ -753,8 +764,104 @@
               "home": "Terugzetten",
               "importFont": "Een lettertype importeren",
               "layerUp": "Omhoog verplaatsen",
-              "layerDown": "Omlaag verplaatsen"
-            }
+              "layerDown": "Omlaag verplaatsen",
+              "show": "Tonen",
+              "hide": "Verbergen",
+              "lock": "Vastzetten",
+              "unlock": "Ontgrendelen"
+            },
+            "addIcon": "Pictogram",
+            "enter": {
+              "none": "Met de kaart",
+              "fade": "Infaden",
+              "rise": "Omhoogkomen",
+              "drop": "Naar binnen vallen",
+              "left": "Van links",
+              "right": "Van rechts",
+              "zoom": "Inzoomen",
+              "pop": "Verschijnen"
+            },
+            "token": {
+              "game": "Game",
+              "title": "Prestatie",
+              "detail": "Beschrijving",
+              "rarity": "Zeldzaamheid",
+              "tier": "Niveau"
+            },
+            "fillState": "Volgt het niveau",
+            "fillPlatinum": "Platina",
+            "icon": {
+              "trophy": "Trofee",
+              "medal": "Medaille",
+              "crown": "Kroon",
+              "star": "Ster",
+              "sparkle": "Glinstering",
+              "shield": "Schild",
+              "gem": "Edelsteen",
+              "flame": "Vlam",
+              "bolt": "Bliksem",
+              "heart": "Hart",
+              "check": "Vinkje",
+              "gamepad": "Controller"
+            },
+            "align": {
+              "left": "Linkerrand",
+              "center": "Gecentreerd, in de breedte",
+              "right": "Rechterrand",
+              "top": "Bovenrand",
+              "middle": "Gecentreerd, in de hoogte",
+              "bottom": "Onderrand"
+            },
+            "copied": "Gekopieerd. Met Ctrl + V plak je het, ook in een andere preset.",
+            "help": {
+              "title": "Sneltoetsen",
+              "nudge": "Verplaats de selectie 1 pixel, 10 met Shift",
+              "shift": "Formaat wijzigen: verhoudingen behouden of vrijgeven. Draaien: in stappen van 15 graden",
+              "alt": "Verplaatsen: niet vastklikken op hulplijnen",
+              "duplicate": "De selectie dupliceren",
+              "copy": "Kopiëren en plakken, ook in een andere preset",
+              "undo": "Ongedaan maken en opnieuw uitvoeren",
+              "delete": "Een element verwijderen of een onderdeel van de kaart halen",
+              "escape": "Selectie opheffen en dan de editor verlaten",
+              "zoom": "Met het muiswiel: in- en uitzoomen",
+              "dblclick": "Dubbelklik: een tekst bewerken, een afbeelding bijsnijden",
+              "sheet": "Deze lijst tonen of verbergen",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Elementen toevoegen",
+                "body": "Teksten, afbeeldingen, vormen en pictogrammen. Elk komt als aparte laag op de kaart."
+              },
+              "edit": {
+                "title": "Kiezen en dan verplaatsen",
+                "body": "Klik op iets op de kaart om het te selecteren en sleep het om het te verplaatsen. De hoeken wijzigen het formaat, de ronde greep draait het."
+              },
+              "props": {
+                "title": "De instellingen",
+                "body": "Als niets is geselecteerd, bevat dit paneel de instellingen van de kaart zelf. Selecteer een element om de grootte, de kleur en de niveaus waarbij het verschijnt in te stellen."
+              },
+              "layers": {
+                "title": "Lagen",
+                "body": "Alles op de kaart, de bovenste eerst. Het oog verbergt een element, het hangslot zet het vast."
+              },
+              "help": {
+                "title": "Sneltoetsen",
+                "body": "Deze knop, of de toets ?, toont alle sneltoetsen. Van daaruit kun je de rondleiding opnieuw bekijken."
+              },
+              "next": "Volgende",
+              "skip": "Overslaan",
+              "done": "Begrepen",
+              "replay": "Rondleiding herhalen"
+            },
+            "motionHint": "De kaart staat stil terwijl je bewerkt: Afspelen, onder de kaart, toont de intredes.",
+            "maxItems": "De kaart is vol. Verwijder een element om een ander toe te voegen."
           },
           "create": "Preset maken",
           "created": "Gemaakt en gekozen:",
@@ -961,6 +1068,24 @@
             "transparent": "Transparant",
             "uppercase": "HOOFDLETTERS",
             "zoom": "Zoom"
+          },
+          "san": {
+            "title": "Geïmporteerd SAN-thema",
+            "tierPictures": "Trofeeafbeelding",
+            "tierAuto": "Volgt het niveau",
+            "tierHint": "Voor thema's die een bronzen, zilveren en gouden trofee tekenen. Volgt het niveau toont de trofee die bij de ontgrendeling past; kies een kleur om altijd die te tonen.",
+            "states": "Thema per niveau",
+            "statesHint": "Teken één niveau met een ander geïmporteerd SAN-thema, inclusief het geluid.",
+            "own": "Dit thema",
+            "loaded": "Geïmporteerd SAN-thema: de trofeeafbeelding en de thema's per niveau stel je onder het voorbeeld in.",
+            "saved": "Opgeslagen:"
+          },
+          "gallery": {
+            "title": "Presets",
+            "close": "Sluiten",
+            "mine": "Jouw presets",
+            "bundled": "Meegeleverd",
+            "browse": "De presets bekijken"
           }
         },
         "souvenirTitle": "Souvenirscreenshot",

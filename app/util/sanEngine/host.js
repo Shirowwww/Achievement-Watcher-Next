@@ -14,7 +14,6 @@
     // The block is written and cleaned by util/sanEngine/index.js; a damaged one still draws SAN's
     // default card rather than leaving the popup blank until its safety timeout.
   }
-  var types = theme.types || {};
 
   // AW Next's screen positions onto SAN's six corners, which decide where a card slides in from.
   var CORNERS = {
@@ -88,8 +87,11 @@
     data = data || {};
     var rate = data.unlockRate != null ? data.unlockRate : data.rarityPercent;
     // AW Next's own tier decides the state, so the rarity settings apply to this preset too.
-    var type = engine.stateOf({ tier: data.rarityTier, mode: data.rarityMode, platinum: data.isPlatinum, percent: rate, thresholds: theme.thresholds });
-    var customisation = types[type] || types.main || {};
+    var unlock = { tier: data.rarityTier, mode: data.rarityMode, platinum: data.isPlatinum, percent: rate };
+    var picked = engine.customisationFor(theme, unlock);
+    var type = picked.type;
+    var customisation = picked.customisation;
+    var tier = engine.pictureTier(Object.assign({ thresholds: theme.thresholds, fixed: theme.tierPictures }, unlock));
     var layout = engine.layoutOf(customisation.preset);
     var template = document.getElementById('aw-san-layout-' + layout);
     var strings = data.fallback || {};
@@ -112,6 +114,7 @@
           realPlatinum: data.realPlatinum === true,
         },
         thresholds: theme.thresholds,
+        tier: tier,
         showpercent: theme.showpercent,
         notify1line: theme.notify1line === true,
         pos: CORNERS[data.position] || customisation.pos || 'bottomcenter',

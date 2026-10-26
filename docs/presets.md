@@ -3,6 +3,8 @@
 A **preset** is the look of the in-game overlay popup: its layout, colours, motion and the way it
 paints a rare unlock or a 100% completion. Pick one under **Settings → Notification → Preset**,
 design your own in **Settings → Notification presets**, or import one somebody shared with you.
+The grid button beside the preset setting shows every preset as a picture of its card: click one to
+use it.
 
 > [!NOTE]
 > Presets style the in-game overlay. With **Notification type** set to *Windows notification*,
@@ -146,6 +148,27 @@ hand-written presets are never touched.
 > Presets you create are stored in `%APPDATA%\Achievement Watcher Next\presets\Users Presets`, not in
 > the installation folder, and survive app updates.
 
+### The layout editor
+
+**Editor**, under the preview, opens the design full screen: the card in the middle, its layers on the
+left, the settings of what is selected on the right. Drag anything on the card to move it, pull a
+corner to resize it, turn it with the round handle. The first time it opens, a short tour shows
+where things are; **?** lists every shortcut and can replay the tour.
+
+| | What it does |
+| --- | --- |
+| **Add** | A text, a picture, a rectangle, an ellipse, a line, or an **icon** (trophy, medal, crown, star and eight more). Each one is a layer of its own. |
+| **Words of the popup** | A text can hold `{game}`, `{title}`, `{detail}`, `{rarity}` and `{tier}`: the buttons under the text field insert them, and the popup puts the game's name, the achievement, its description, its unlock rate or its tier's name in their place. |
+| **Fill** | A shape or an icon is painted with a colour, a gradient, the colour of the popup's tier (it turns bronze, silver or gold with the card), or one tier's colour whatever the popup. |
+| **Shown on** | Keeps an element to some notifications: normal, bronze, silver, gold, 100% or progress. A gold crown that only a gold unlock shows is one icon with one chip ticked. |
+| **Entrance** | How an element comes in once the card is up (fade, rise, drop, from a side, zoom or pop) and after what delay. The editor holds still while you work; **Play** shows the entrances. |
+| **Position and size** | Typed values for X, Y, width and height, and six buttons that line the element up with the card's edges or centre. |
+| **Layers** | The eye hides an element. The padlock holds it in place: it cannot be moved, resized or deleted until it is unlocked, and a click goes through it. Arrows change the stacking order. |
+| **Copy and paste** | **Ctrl+C** and **Ctrl+V** copy an element, into another preset too. The colour pickers offer the colours the design already uses. |
+
+Preset files made before this version keep working, and a preset that uses none of this looks and
+exports as before.
+
 ## Customize a bundled preset
 
 **Customize a bundled preset**, at the top of the designer, starts from a preset that ships with the
@@ -194,8 +217,15 @@ icon border, percentage badges, hidden-achievement icon), its font, and its soun
 a folder SAN picks from at random). The preset carries all of it, so SAN is not needed afterwards,
 and it exports as an `.awpreset`.
 
-Its controls are SAN's, not the designer's sliders, so pick it in the preset list rather than in
-**Edit a preset**. To change one, change it in SAN and import it again.
+Its look is SAN's, not the designer's sliders: **Edit a preset** shows it as a picture, with a panel
+for two choices underneath.
+
+- **Trophy picture**, for a theme that draws a bronze, a silver and a gold trophy: *Follows the
+  tier* shows the one that matches the unlock, or pick one colour to always show it.
+- **Theme per tier** draws one tier with another imported SAN theme, its sound included, so a gold
+  unlock can look entirely different from a bronze one.
+
+Anything else is changed in SAN and imported again.
 
 The state a notification gets follows your rarity settings in AW Next. A 100% completion uses SAN's
 100% card. In rare mode, gold and silver use its rare card and bronze its semi-rare one; in trophy

@@ -692,7 +692,8 @@
             "fillNone": "Ei mitään",
             "section": {
               "look": "Ulkoasu",
-              "place": "Sijoittelu"
+              "place": "Sijoittelu",
+              "motion": "Animaatio"
             },
             "full": "Vapaan asettelun muokkain",
             "newText": "Tekstisi",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Teksti",
               "image": "Kuva",
-              "shape": "Muoto"
+              "shape": "Muoto",
+              "icon": "Kuvake"
             },
             "shape": {
               "triangle": "Kolmio",
@@ -741,7 +743,16 @@
               "radius": "Kulmat",
               "opacity": "Peittävyys",
               "rotation": "Kierto",
-              "scale": "Skaalaus"
+              "scale": "Skaalaus",
+              "icon": "Kuvake",
+              "states": "Näkyy tasolla",
+              "alignCard": "Tasaa kortin mukaan",
+              "position": "Sijainti",
+              "dims": "Koko",
+              "offset": "Siirtymä",
+              "entrance": "Sisääntulo",
+              "delay": "Viive (ms)",
+              "insert": "Lisää"
             },
             "act": {
               "front": "Kortin edessä",
@@ -753,8 +764,104 @@
               "home": "Palauta paikalleen",
               "importFont": "Tuo kirjasin",
               "layerUp": "Siirrä ylös",
-              "layerDown": "Siirrä alas"
-            }
+              "layerDown": "Siirrä alas",
+              "show": "Näytä",
+              "hide": "Piilota",
+              "lock": "Lukitse paikalleen",
+              "unlock": "Poista lukitus"
+            },
+            "addIcon": "Kuvake",
+            "enter": {
+              "none": "Kortin mukana",
+              "fade": "Häivytys sisään",
+              "rise": "Nousu",
+              "drop": "Pudotus",
+              "left": "Vasemmalta",
+              "right": "Oikealta",
+              "zoom": "Zoomaus sisään",
+              "pop": "Poksahdus"
+            },
+            "token": {
+              "game": "Peli",
+              "title": "Saavutus",
+              "detail": "Kuvaus",
+              "rarity": "Harvinaisuus",
+              "tier": "Taso"
+            },
+            "fillState": "Seuraa tasoa",
+            "fillPlatinum": "Platina",
+            "icon": {
+              "trophy": "Pokaali",
+              "medal": "Mitali",
+              "crown": "Kruunu",
+              "star": "Tähti",
+              "sparkle": "Kimallus",
+              "shield": "Kilpi",
+              "gem": "Jalokivi",
+              "flame": "Liekki",
+              "bolt": "Salama",
+              "heart": "Sydän",
+              "check": "Valintamerkki",
+              "gamepad": "Ohjain"
+            },
+            "align": {
+              "left": "Vasen reuna",
+              "center": "Keskellä, leveyssuunnassa",
+              "right": "Oikea reuna",
+              "top": "Yläreuna",
+              "middle": "Keskellä, korkeussuunnassa",
+              "bottom": "Alareuna"
+            },
+            "copied": "Kopioitu. Ctrl + V liittää sen, myös toiseen esiasetukseen.",
+            "help": {
+              "title": "Pikanäppäimet",
+              "nudge": "Siirrä valintaa 1 kuvapisteen, 10 Shiftillä",
+              "shift": "Koon muuttaminen: säilytä tai vapauta mittasuhteet. Kääntäminen: 15 asteen askelin",
+              "alt": "Siirtäminen: ei kiinnittymistä apuviivoihin",
+              "duplicate": "Monista valinta",
+              "copy": "Kopioi ja liitä, myös toiseen esiasetukseen",
+              "undo": "Kumoa ja tee uudelleen",
+              "delete": "Poista elementti tai ota osa pois kortilta",
+              "escape": "Poista valinta ja poistu sitten muokkaimesta",
+              "zoom": "Hiiren rullalla: lähennä ja loitonna",
+              "dblclick": "Kaksoisnapsautus: muokkaa tekstiä, rajaa kuvaa",
+              "sheet": "Näytä tai piilota tämä luettelo",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Lisää elementtejä",
+                "body": "Tekstejä, kuvia, muotoja ja kuvakkeita. Jokainen tulee kortille omana tasonaan."
+              },
+              "edit": {
+                "title": "Valitse ja siirrä",
+                "body": "Valitse jokin kortilta napsauttamalla ja siirrä se vetämällä. Kulmat muuttavat kokoa, pyöreä kahva kääntää."
+              },
+              "props": {
+                "title": "Sen asetukset",
+                "body": "Kun mitään ei ole valittu, tässä paneelissa ovat kortin omat asetukset. Valitse elementti asettaaksesi sen koon, värin ja tasot, joilla se näkyy."
+              },
+              "layers": {
+                "title": "Tasot",
+                "body": "Kaikki kortilla oleva, ylin ensin. Silmä piilottaa elementin, riippulukko pitää sen paikallaan."
+              },
+              "help": {
+                "title": "Pikanäppäimet",
+                "body": "Tämä painike tai ?-näppäin luettelee kaikki pikanäppäimet. Sieltä kierroksen voi toistaa."
+              },
+              "next": "Seuraava",
+              "skip": "Ohita",
+              "done": "Selvä",
+              "replay": "Toista kierros"
+            },
+            "motionHint": "Kortti pysyy paikallaan muokatessasi: Toista kortin alla näyttää sisääntulot.",
+            "maxItems": "Kortti on täynnä. Poista elementti, jotta voit lisätä toisen."
           },
           "create": "Luo esiasetus",
           "created": "Luotu ja valittu:",
@@ -961,6 +1068,24 @@
             "transparent": "Läpinäkyvä",
             "uppercase": "SUURAAKKOSET",
             "zoom": "Zoomaus"
+          },
+          "san": {
+            "title": "Tuotu SAN-teema",
+            "tierPictures": "Pokaalin kuva",
+            "tierAuto": "Seuraa tasoa",
+            "tierHint": "Teemoille, jotka piirtävät pronssi-, hopea- ja kultapokaalin. Seuraa tasoa näyttää avaukseen sopivan pokaalin; valitse väri, niin se näytetään aina.",
+            "states": "Teema tasoa kohti",
+            "statesHint": "Piirrä yksi taso toisella tuodulla SAN-teemalla, äänineen.",
+            "own": "Tämä teema",
+            "loaded": "Tuotu SAN-teema: sen pokaalin kuva ja tasokohtaiset teemat asetetaan esikatselun alla.",
+            "saved": "Tallennettu:"
+          },
+          "gallery": {
+            "title": "Esiasetukset",
+            "close": "Sulje",
+            "mine": "Omat esiasetuksesi",
+            "bundled": "Mukana tulevat",
+            "browse": "Selaa esiasetuksia"
           }
         },
         "souvenirTitle": "Muistokuvakaappaus",

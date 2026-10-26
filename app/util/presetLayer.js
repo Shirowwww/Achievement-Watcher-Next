@@ -102,7 +102,7 @@ function logoPosition(position, offset) {
   Declarations that a bundled stylesheet writes as shorthands with several layers are `!important`,
   because a generic override has no way to out-specify every selector a preset uses.
 */
-function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editing = false } = {}) {
+function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editing = false, entrances = !editing } = {}) {
   const layer = normalizeLayer(rawLayer);
   const on = new Set(layer.sections);
   const v = layer.options;
@@ -146,7 +146,7 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editin
     );
   }
   if (on.has('canvas')) {
-    const free = canvasCss(v.canvas, { assetUrl, markPseudo, editing });
+    const free = canvasCss(v.canvas, { assetUrl, markPseudo, editing, entrances });
     if (free) css.push(free);
   }
   return css.join('\n');

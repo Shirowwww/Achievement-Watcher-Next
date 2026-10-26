@@ -771,6 +771,8 @@ function translateUI(lang, locale, template) {
     $("#settingNav li[data-view='presets'] span").text(clear(template.settings.sideMenu.presets));
     // The button on the preset row in the Notification tab, which opens this tab.
     $('#btn-open-presets').attr('title', clear(c.open));
+    const browse = clear((c.gallery || {}).browse || '');
+    $('#btn-browse-presets').attr('title', browse).attr('aria-label', browse);
     const designerText = (dotted) =>
       String(dotted)
         .split('.')

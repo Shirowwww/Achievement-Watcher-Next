@@ -692,7 +692,8 @@
             "fillNone": "Không có",
             "section": {
               "look": "Diện mạo",
-              "place": "Bố cục"
+              "place": "Bố cục",
+              "motion": "Hoạt ảnh"
             },
             "full": "Trình chỉnh bố cục tự do",
             "newText": "Chữ của bạn",
@@ -712,7 +713,8 @@
             "kind": {
               "text": "Chữ",
               "image": "Hình ảnh",
-              "shape": "Hình dạng"
+              "shape": "Hình dạng",
+              "icon": "Biểu tượng"
             },
             "shape": {
               "triangle": "Tam giác",
@@ -741,7 +743,16 @@
               "radius": "Bo góc",
               "opacity": "Độ mờ",
               "rotation": "Xoay",
-              "scale": "Tỷ lệ"
+              "scale": "Tỷ lệ",
+              "icon": "Biểu tượng",
+              "states": "Hiển thị ở",
+              "alignCard": "Căn theo thẻ",
+              "position": "Vị trí",
+              "dims": "Kích thước",
+              "offset": "Độ lệch",
+              "entrance": "Xuất hiện",
+              "delay": "Độ trễ (ms)",
+              "insert": "Chèn"
             },
             "act": {
               "front": "Phía trước thẻ",
@@ -753,8 +764,104 @@
               "home": "Đưa về chỗ cũ",
               "importFont": "Nhập phông chữ",
               "layerUp": "Di chuyển lên",
-              "layerDown": "Di chuyển xuống"
-            }
+              "layerDown": "Di chuyển xuống",
+              "show": "Hiện",
+              "hide": "Ẩn",
+              "lock": "Khóa tại chỗ",
+              "unlock": "Mở khóa"
+            },
+            "addIcon": "Biểu tượng",
+            "enter": {
+              "none": "Cùng với thẻ",
+              "fade": "Mờ dần vào",
+              "rise": "Trồi lên",
+              "drop": "Rơi vào",
+              "left": "Từ bên trái",
+              "right": "Từ bên phải",
+              "zoom": "Phóng to vào",
+              "pop": "Bật lên"
+            },
+            "token": {
+              "game": "Trò chơi",
+              "title": "Thành tựu",
+              "detail": "Mô tả",
+              "rarity": "Độ hiếm",
+              "tier": "Cấp"
+            },
+            "fillState": "Theo cấp",
+            "fillPlatinum": "Bạch kim",
+            "icon": {
+              "trophy": "Cúp",
+              "medal": "Huy chương",
+              "crown": "Vương miện",
+              "star": "Ngôi sao",
+              "sparkle": "Tia sáng",
+              "shield": "Khiên",
+              "gem": "Đá quý",
+              "flame": "Ngọn lửa",
+              "bolt": "Tia chớp",
+              "heart": "Trái tim",
+              "check": "Dấu kiểm",
+              "gamepad": "Tay cầm"
+            },
+            "align": {
+              "left": "Mép trái",
+              "center": "Giữa, theo chiều ngang",
+              "right": "Mép phải",
+              "top": "Mép trên",
+              "middle": "Giữa, theo chiều dọc",
+              "bottom": "Mép dưới"
+            },
+            "copied": "Đã sao chép. Ctrl + V sẽ dán nó, cả trong mẫu khác.",
+            "help": {
+              "title": "Phím tắt",
+              "nudge": "Di chuyển vùng chọn 1 điểm ảnh, 10 điểm với Shift",
+              "shift": "Đổi kích thước: giữ hoặc bỏ tỷ lệ. Xoay: từng bước 15 độ",
+              "alt": "Di chuyển: không bám vào đường dẫn",
+              "duplicate": "Nhân đôi vùng chọn",
+              "copy": "Sao chép rồi dán, cả trong mẫu khác",
+              "undo": "Hoàn tác rồi làm lại",
+              "delete": "Xóa một thành phần, hoặc gỡ một phần khỏi thẻ",
+              "escape": "Bỏ chọn rồi thoát trình chỉnh sửa",
+              "zoom": "Với con lăn chuột: phóng to và thu nhỏ",
+              "dblclick": "Nhấp đúp: sửa văn bản, cắt hình ảnh",
+              "sheet": "Hiện hoặc ẩn danh sách này",
+              "key": {
+                "ctrl": "Ctrl",
+                "shift": "Shift",
+                "alt": "Alt",
+                "delete": "Del",
+                "escape": "Esc"
+              }
+            },
+            "tour": {
+              "add": {
+                "title": "Thêm thành phần",
+                "body": "Văn bản, hình ảnh, hình khối và biểu tượng. Mỗi thứ nằm trên thẻ như một lớp riêng."
+              },
+              "edit": {
+                "title": "Chọn rồi di chuyển",
+                "body": "Nhấp vào bất cứ thứ gì trên thẻ để chọn, kéo để di chuyển. Các góc đổi kích thước, tay nắm tròn dùng để xoay."
+              },
+              "props": {
+                "title": "Thiết lập của nó",
+                "body": "Khi chưa chọn gì, bảng này chứa thiết lập của chính thẻ. Chọn một thành phần để đặt kích thước, màu và các cấp mà nó hiển thị."
+              },
+              "layers": {
+                "title": "Lớp",
+                "body": "Mọi thứ trên thẻ, lớp trên cùng trước. Con mắt ẩn một thành phần, ổ khóa giữ nó tại chỗ."
+              },
+              "help": {
+                "title": "Phím tắt",
+                "body": "Nút này, hoặc phím ?, liệt kê mọi phím tắt. Từ đó bạn có thể xem lại phần hướng dẫn."
+              },
+              "next": "Tiếp",
+              "skip": "Bỏ qua",
+              "done": "Đã hiểu",
+              "replay": "Xem lại hướng dẫn"
+            },
+            "motionHint": "Thẻ đứng yên khi bạn chỉnh sửa: Phát, bên dưới thẻ, sẽ cho xem hiệu ứng xuất hiện.",
+            "maxItems": "Thẻ đã đầy. Hãy xóa một thành phần để thêm thành phần khác."
           },
           "create": "Tạo mẫu",
           "created": "Đã tạo và chọn:",
@@ -961,6 +1068,24 @@
             "transparent": "Trong suốt",
             "uppercase": "IN HOA",
             "zoom": "Phóng to"
+          },
+          "san": {
+            "title": "Chủ đề SAN đã nhập",
+            "tierPictures": "Hình cúp",
+            "tierAuto": "Theo cấp",
+            "tierHint": "Dành cho chủ đề vẽ cúp đồng, bạc và vàng. Theo cấp hiển thị cúp khớp với lần mở khóa; chọn một màu để luôn hiển thị cúp đó.",
+            "states": "Chủ đề theo cấp",
+            "statesHint": "Vẽ một cấp bằng chủ đề SAN đã nhập khác, kèm cả âm thanh.",
+            "own": "Chủ đề này",
+            "loaded": "Chủ đề SAN đã nhập: hình cúp và các chủ đề theo cấp được đặt bên dưới bản xem trước.",
+            "saved": "Đã lưu:"
+          },
+          "gallery": {
+            "title": "Mẫu",
+            "close": "Đóng",
+            "mine": "Mẫu của bạn",
+            "bundled": "Có sẵn",
+            "browse": "Duyệt các mẫu"
           }
         },
         "souvenirTitle": "Ảnh kỷ niệm",
