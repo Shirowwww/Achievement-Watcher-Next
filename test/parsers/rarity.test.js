@@ -183,6 +183,16 @@ test('resolveGameRarityContext reconciles every source to the right rarity path'
   );
   assert.equal(rarity.resolveGameRarityContext(base({ appid: 'epic-product', source: 'epic' })).kind, 'native');
 
+  // A game added by hand keeps its own "manual-…" id; its Steam AppID carries the percentages,
+  // whatever platform was picked, since that AppID is where its list came from.
+  for (const system of [undefined, 'playstation', 'xbox', 'nintendo']) {
+    assert.deepEqual(
+      rarity.resolveGameRarityContext(base({ appid: 'manual-0123456789ab', steamappid: '3245820', source: 'Manual', system })),
+      { kind: 'steam', appid: '3245820' }
+    );
+  }
+  assert.equal(rarity.resolveGameRarityContext(base({ appid: 'manual-0123456789ab', source: 'Manual' })), null);
+
   // GOG's numeric product id must NOT be mistaken for a Steam AppID.
   assert.equal(rarity.resolveGameRarityContext(base({ appid: '1423049311', source: 'GOG Galaxy' })).kind, 'native');
   assert.equal(rarity.resolveGameRarityContext(base({ appid: '1423049311', source: 'gog' })).kind, 'native');

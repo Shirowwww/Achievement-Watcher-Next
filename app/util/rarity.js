@@ -320,6 +320,13 @@ function resolveGameRarityContext(game, options = {}) {
     return { kind: 'steam', appid: steamappid };
   }
 
+  // A game added by hand has its own "manual-…" id. Its achievement list only ever comes from the
+  // Steam AppID it was given (or resolved to by name), whatever platform was picked, so its
+  // percentages live there too. Without that AppID it has no list to rank.
+  if (source === 'Manual' && /^\d+$/.test(steamappid)) {
+    return { kind: 'steam', appid: steamappid };
+  }
+
   // Official Ubisoft Connect / Lumaplay: namespaced appid ("uplay-…"/"UPLAY…") whose schema names
   // are native numeric ids - the Steam percentages live in the bridge cache keyed on this appid.
   if (system === 'uplay' && !/^\d+$/.test(appid) && /^\d+$/.test(steamappid)) {

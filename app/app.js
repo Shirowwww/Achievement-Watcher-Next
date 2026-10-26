@@ -7823,7 +7823,7 @@ var app = {
       } else {
         $('.achievement:not(.psn-platinum) .stats .community').show();
         const rarityIcon =
-          game.system === 'playstation' ? 'fab fa-playstation' : rarityContext.kind === 'emulator' || rarityContext.source === 'RetroAchievements' ? 'fas fa-trophy' : 'fab fa-steam';
+          game.system === 'playstation' && rarityContext.kind !== 'steam' ? 'fab fa-playstation' : rarityContext.kind === 'emulator' || rarityContext.source === 'RetroAchievements' ? 'fas fa-trophy' : 'fab fa-steam';
         $('.achievement:not(.psn-platinum) .stats .community i').attr('class', rarityIcon);
         if (rarityContext.kind === 'xbox') {
           // Rarity was cached at import time on each schema entry - paint it directly, no network.
