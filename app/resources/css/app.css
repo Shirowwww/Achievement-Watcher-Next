@@ -790,12 +790,11 @@ main {
   position: relative;
   display: flex;
   flex-direction: column;
-  /* Single source of truth for the library panel's left/right inset (#game-list is
-     centered via `width: min(94%, 1540px); margin: 0 auto`, so its edge sits this far
-     from the viewport edge). #sort-box and #search-bar key off the same variable so the
-     header controls always line up with the panel below instead of drifting apart when
-     either one's width formula changes. */
-  --library-inset: calc((100% - min(94%, 1540px)) / 2);
+  /* Single source of truth for the library panel's width (#game-list, centered with
+     `margin: 0 auto`) and so for its inset from the viewport edge. #sort-box and
+     #search-bar key off the inset so the header controls line up with the panel below. */
+  --library-panel-width: min(97%, 1920px);
+  --library-inset: calc((100% - var(--library-panel-width)) / 2);
 }
 
 /* The home header is a single grid row - library controls, profile, sort controls. The controls
@@ -8187,7 +8186,7 @@ body {
   --library-card-border: 1px;
   --library-column: calc(var(--library-card-width) + 2 * var(--library-card-border) + 2 * var(--library-item-padding));
   --library-cover-height: calc(117px * var(--library-scale));
-  width: min(95%, 1540px);
+  width: var(--library-panel-width);
   padding: 18px clamp(14px, 2vw, 26px);
   background: color-mix(in srgb, var(--bg-panel) 62%, transparent);
   border-color: color-mix(in srgb, var(--border) 15%, transparent);
