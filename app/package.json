@@ -28,7 +28,7 @@
     "electron-builder": "^26.15.3",
     "electron-context-menu": "^5.1.0",
     "fast-xml-parser": "^5.11.2",
-    "oxlint": "^1.88.0",
+    "oxlint": "^1.89.0",
     "patch-package": "^8.0.1"
   },
   "dependencies": {
