@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomicSync } = require('./replaceFile.js');
 
 const AUTH_BASE_URL = 'https://ca.account.sony.com/api/authz/v3/oauth';
 const SIGN_IN_URL = 'https://www.playstation.com/';
@@ -51,8 +52,7 @@ function readTokens({ file, cipher }) {
 }
 
 function writeTokens({ file, cipher }, tokens) {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, cipher.encrypt(JSON.stringify(tokens)), 'utf8');
+  writeFileAtomicSync(file, cipher.encrypt(JSON.stringify(tokens)));
 }
 
 function withLifetimes(body, now) {

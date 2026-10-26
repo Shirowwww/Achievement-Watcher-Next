@@ -116,3 +116,31 @@ test('the removed Steam API key is erased during settings migration', async (t) 
   assert.equal(Object.hasOwn(persisted.steam, 'apiKey'), false);
   assert.equal(persisted.steam.main, '0');
 });
+
+test('a locked options.ini is not overwritten with defaults', async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-locked-settings-'));
+  const file = path.join(dir, 'options.ini');
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.writeFileSync(file, '[achievement]\nlang=french\n', 'utf8');
+
+  const originalReadFile = fsAsync.readFile;
+  const originalWriteFile = fsAsync.writeFile;
+  let writeCount = 0;
+  fsAsync.readFile = async () => {
+    throw Object.assign(new Error('resource busy or locked'), { code: 'EBUSY' });
+  };
+  fsAsync.writeFile = async (...args) => {
+    writeCount += 1;
+    return originalWriteFile(...args);
+  };
+  t.after(() => {
+    fsAsync.readFile = originalReadFile;
+    fsAsync.writeFile = originalWriteFile;
+  });
+
+  const options = await settings.load(file);
+
+  assert.ok(options.achievement);
+  assert.equal(writeCount, 0);
+  assert.equal(fs.readFileSync(file, 'utf8'), '[achievement]\nlang=french\n');
+});

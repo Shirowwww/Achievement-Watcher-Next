@@ -58,6 +58,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Settings and saved data survive a locked or damaged file.** A settings file held for a moment by
+  an antivirus no longer resets every setting, a damaged list of manual unlocks, custom images or
+  per-game presets is kept aside instead of being wiped by the next save, and a crash while saving a
+  Steam, Epic or PSN sign-in no longer signs you out.
 - **Customized bundled presets show the game and achievement names and replay their GIFs** in the
   real popup, spinning elements spin, and a group dragged against the edge keeps its shape.
 - **Games added by hand show how many players unlocked each achievement.** A game added from its

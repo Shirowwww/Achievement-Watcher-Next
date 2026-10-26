@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomicSync, quarantineCorruptFile } = require('../util/replaceFile.js');
 
 let userDataPath = null;
 
@@ -33,15 +34,15 @@ function readMap(filePath) {
   try {
     const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
-  } catch {
+  } catch (err) {
+    if (err instanceof SyntaxError) quarantineCorruptFile(filePath);
     return {};
   }
 }
 
 function writeMap(filePath, map) {
   if (!filePath) return;
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(map, null, 2), 'utf8');
+  writeFileAtomicSync(filePath, JSON.stringify(map, null, 2));
 }
 
 function getEntriesForGame(map, appid, source) {

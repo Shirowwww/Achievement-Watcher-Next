@@ -188,4 +188,16 @@ function writeFileAtomicSync(file, data) {
   }
 }
 
-module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, sweepSidecars, renameRetry };
+// Moves an unparsable store aside as <file>.corrupt-<timestamp>, so the next save cannot erase what
+// the user had in it. Returns the backup path, or null when the file could not be moved.
+function quarantineCorruptFile(file) {
+  const backup = `${file}.corrupt-${Date.now()}`;
+  try {
+    fs.renameSync(file, backup);
+    return backup;
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, sweepSidecars, renameRetry, quarantineCorruptFile };

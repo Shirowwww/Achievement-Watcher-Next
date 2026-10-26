@@ -9,6 +9,7 @@
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
+const { writeFileAtomicSync } = require('./replaceFile.js');
 const crypto = require('node:crypto');
 
 const DEFAULT_TOKEN_SECRET = 'steam_default_passphrase';
@@ -99,8 +100,8 @@ function decryptSession(blob, tokenSecret) {
 }
 
 async function saveSessionEncrypted(sessionFile, payload, tokenSecret) {
-  await fsp.mkdir(path.dirname(sessionFile), { recursive: true });
-  await fsp.writeFile(sessionFile, encryptSession(payload, tokenSecret), 'utf8');
+  // Atomic: a session torn by a crash fails to decrypt and silently signs the user out.
+  writeFileAtomicSync(sessionFile, encryptSession(payload, tokenSecret));
 }
 
 async function loadSession({ sessionFile, tokenSecret } = {}) {

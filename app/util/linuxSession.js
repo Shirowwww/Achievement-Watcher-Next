@@ -67,7 +67,10 @@ function xwaylandRelaunch({
 function restartThroughXWayland(options) {
   const command = xwaylandRelaunch(options);
   if (!command) return false;
-  spawn(command.execPath, command.args, { detached: true, stdio: 'inherit' }).unref();
+  const child = spawn(command.execPath, command.args, { detached: true, stdio: 'inherit' });
+  // A failed spawn (a stale AppImage path) must not become an uncaught exception at startup.
+  child.on('error', (err) => console.warn(`[linuxSession] XWayland relaunch failed: ${err.message}`));
+  child.unref();
   return true;
 }
 

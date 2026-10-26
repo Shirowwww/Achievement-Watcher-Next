@@ -604,7 +604,7 @@ async function init() {
           // Record where it ran from: another game can ship the same executable name, and the folder
           // is what the next match uses to tell them apart.
           game = { appid, binary: process, icon: iconHash, name: d.name, exePath: filepath };
-          addToGameIndex(game);
+          addToGameIndex(game).catch((err) => debug.warn(`[Playtime] could not save ${game.name} to gameIndex.json: ${err.message}`));
         }
         // The lookups above take time: a launcher can be gone already, and a session holding a dead
         // pid would never see its exit.
@@ -699,7 +699,13 @@ async function addToGameIndex(game) {
   try {
     userOverride = JSON.parse(fs.readFileSync(path.join(userDataDir(), 'cfg', 'gameIndex.json'), 'utf8'));
   } catch (err) {
-    if (err.code === 'ENOENT') userOverride = [];
+    // A locked or half-written file is left alone: rewriting it from scratch would drop the
+    // user's other entries; the caller still tracks this run, and the next launch retries.
+    if (err.code !== 'ENOENT') {
+      debug.warn(`[Playtime] gameIndex.json unreadable, ${game.name} not saved to it: ${err.message}`);
+      return;
+    }
+    userOverride = [];
   }
   if (userOverride.find((g) => normalizeAppid(g.appid) === normalizeAppid(game.appid))) return;
   userOverride.push(game);

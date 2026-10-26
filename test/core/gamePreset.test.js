@@ -171,3 +171,16 @@ test('unreadable legacy content degrades to the global preset', (t) => {
   gamePreset.invalidate();
   assert.equal(gamePreset.get('10'), '');
 });
+
+test('a corrupt per-game preset file is kept aside before the next save replaces it', (t) => {
+  const userData = tempUserData(t);
+  const file = path.join(userData, 'cfg', 'gamePreset.json');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, '{"10": {"preset": "Xbo', 'utf8');
+  gamePreset.invalidate();
+
+  gamePreset.setSettings('20', { preset: 'Steam' });
+
+  const kept = fs.readdirSync(path.dirname(file)).filter((name) => name.startsWith('gamePreset.json.corrupt-'));
+  assert.equal(kept.length, 1);
+});

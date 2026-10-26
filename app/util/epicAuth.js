@@ -6,6 +6,7 @@
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
+const { writeFileAtomicSync } = require('./replaceFile.js');
 const crypto = require('crypto');
 
 const EPIC_ACCOUNT_AUTH_BASE = 'https://account-public-service-prod03.ol.epicgames.com/account/api';
@@ -148,10 +149,8 @@ async function loadEpicTokensEncrypted(filePath, tokenSecret) {
 
 async function saveEpicTokensEncrypted(filePath, token, tokenSecret) {
   if (!filePath || !token) return;
-  try {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  } catch {}
-  await fsp.writeFile(filePath, encryptTokens(normalizeTokenLifetimes(token), tokenSecret));
+  // Atomic: tokens torn by a crash fail to decrypt and silently sign the user out.
+  writeFileAtomicSync(filePath, encryptTokens(normalizeTokenLifetimes(token), tokenSecret));
 }
 
 async function clearEpicTokens(options = {}) {
@@ -173,6 +172,7 @@ async function requestEpicToken(grant, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), Number(options?.timeoutMs) > 0 ? Number(options.timeoutMs) : 15000);
   let res;
+  let data;
   try {
     res = await fetch(`${EPIC_ACCOUNT_AUTH_BASE}/oauth/token`, {
       method: 'POST',
@@ -180,10 +180,11 @@ async function requestEpicToken(grant, options = {}) {
       body: new URLSearchParams(bodyParams).toString(),
       signal: controller.signal,
     });
+    // Read inside the timeout too: a server that sends headers and then stalls must not hang forever.
+    data = await res.json().catch(() => ({}));
   } finally {
     clearTimeout(timer);
   }
-  const data = await res.json().catch(() => ({}));
   if (res.status >= 400) {
     const details = data?.errorMessage || data?.error_description || data?.error || data?.message || '';
     throw new Error(details ? `Epic token ${res.status}: ${details}` : `Epic token ${res.status}`);

@@ -343,14 +343,14 @@ ul > li#btn-close:hover {
 /* Settings cog gently turns on hover (previously gated behind a `.animate` host class that was never
    set, so it never fired). */
 ul > li#btn-settings i {
-  transition: transform 0.4s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 ul > li#btn-settings:hover i {
   transform: rotate(90deg);
 }
 ul > li#btn-refresh i {
   font-size: 13px;
-  transition: transform 0.4s ease;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
 }
 ul > li#btn-refresh:hover i {
   transform: rotate(180deg);

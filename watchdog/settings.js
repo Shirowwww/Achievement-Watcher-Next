@@ -693,7 +693,9 @@ module.exports.load = async (cfg_file) => {
       options.achievement.lang = 'english';
     }
 
-    await fs.writeFile(cfg_file, ini.stringify(options), 'utf8').catch(() => {});
+    // Only a missing file is a first run. A locked or unreadable one keeps its contents: writing the
+    // defaults over it would wipe every setting the user made.
+    if (err && err.code === 'ENOENT') await fs.writeFile(cfg_file, ini.stringify(options), 'utf8').catch(() => {});
   }
 
   return options;

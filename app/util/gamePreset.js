@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { writeFileAtomicSync, quarantineCorruptFile } = require('./replaceFile.js');
 
 const POSITIONS = [
   'center-bottom',
@@ -96,8 +97,10 @@ function read() {
         if (!isEmpty(settings)) map.set(String(appid), settings);
       }
     }
-  } catch {
-    // No file yet, or an unreadable one: every game uses the global notification settings.
+  } catch (err) {
+    // No file yet, or an unreadable one: every game uses the global notification settings. A
+    // corrupt one is moved aside first, so the next save does not erase the other games' overrides.
+    if (err instanceof SyntaxError) quarantineCorruptFile(file());
   }
   cache = map;
   return cache;
@@ -119,7 +122,7 @@ function all() {
 
 function persist(map) {
   fs.mkdirSync(path.dirname(file()), { recursive: true });
-  if (map.size) fs.writeFileSync(file(), `${JSON.stringify(Object.fromEntries(map), null, 2)}\n`, 'utf8');
+  if (map.size) writeFileAtomicSync(file(), `${JSON.stringify(Object.fromEntries(map), null, 2)}\n`);
   else if (fs.existsSync(file())) fs.rmSync(file());
 }
 

@@ -137,3 +137,16 @@ test('clearing a manual unlock lowers the count, but never undoes a real unlock'
   assert.equal(game.achievement.list[0].Achieved, true, 'a real unlock survives clearing its override');
   assert.equal(game.achievement.unlocked, 2, 'and the count is unchanged by that round trip');
 });
+
+test('a corrupt manual-unlock file is kept aside, not overwritten by the next mark', () => {
+  manualUnlock.setUserDataPath(makeTempDir('aw-manual-unlock-corrupt-'));
+  const file = manualUnlock.sidecarFile();
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, '{"123::steamEmu": {"ach_a": {"manual": tr', 'utf8');
+
+  manualUnlock.saveUpdate('123', 'steamEmu', 'ach_b', 'mark-unlocked');
+
+  const kept = fs.readdirSync(path.dirname(file)).filter((name) => name.startsWith('manual-unlocks.json.corrupt-'));
+  assert.equal(kept.length, 1);
+  assert.match(fs.readFileSync(path.join(path.dirname(file), kept[0]), 'utf8'), /ach_a/);
+});

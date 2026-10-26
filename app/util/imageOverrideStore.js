@@ -13,6 +13,7 @@ const path = require('path');
 const { fileURLToPath, pathToFileURL } = require('url');
 const { userDataDir } = require('./userDataPath.js');
 const { imageSize } = require('./imageSize.js');
+const { writeFileAtomicSync, quarantineCorruptFile } = require('./replaceFile.js');
 
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif']);
 
@@ -143,8 +144,7 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
   }
 
   function writeMapToFile(targetFile, map) {
-    fs.mkdirSync(path.dirname(targetFile), { recursive: true });
-    fs.writeFileSync(targetFile, JSON.stringify(map, null, 2), 'utf8');
+    writeFileAtomicSync(targetFile, JSON.stringify(map, null, 2));
   }
 
   function readAll() {
@@ -158,7 +158,9 @@ function createImageOverrideStore({ fileName, folder, recoverPrefix = null } = {
       cacheStamp = nextStamp;
       cacheMap = data && typeof data === 'object' ? data : {};
       return { ...cacheMap };
-    } catch {
+    } catch (err) {
+      // Moved aside so the next set() cannot erase every other custom image with it.
+      if (err instanceof SyntaxError) quarantineCorruptFile(f);
       cachePath = f;
       cacheStamp = null;
       cacheMap = {};
