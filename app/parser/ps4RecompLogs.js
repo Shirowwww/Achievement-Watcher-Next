@@ -15,7 +15,7 @@ const MAX_LOG_BYTES = 256 * 1024 * 1024;
 const CHUNK_BYTES = 4 * 1024 * 1024;
 const MAX_UNIX_S = 4102444800;
 const TROPHY_LINE = /^\s*(\d{1,4})\s+(\d{1,13})\s*$/;
-const RUNTIME_UNLOCK = /(?:Runtime|Trophies): trophy (\d{1,4}) unlocked\b/;
+const RUNTIME_UNLOCK = /(?:Runtime|Trophies): trophy (\d{1,4}) (?:\(platinum\) )?unlocked\b/;
 const CONTEXT_LINE = /\b(?:Preparing |Switching to |The game started |Runtime: SystemService: load executable )|^Output: /;
 const COLLECTIONS = ['uncharted', 'prototype'];
 

@@ -64,6 +64,8 @@ const PORTS = [
   { port: 'bloodborne', launcher: 'Bloodborne.exe', settings: 'bbport-launcher', env: 'BB', marker: 'bloodborne' },
   { port: 'uncharted', launcher: 'Uncharted.exe', settings: 'uncharted-launcher', env: 'BB', marker: 'uncharted', games: UNCHARTED_GAMES },
   { port: 'gow3', launcher: 'God of War III.exe', settings: 'gow3-launcher', env: 'GOW3', marker: 'gow3' },
+  // gow3 renamed (2.6): it keeps 'God of War III.exe' for old shortcuts, and an update can leave the old art.
+  { port: 'spartanport', launcher: 'SpartanPort.exe', settings: 'spartanport-launcher', env: 'SPARTAN', marker: 'spartanport', supersedes: 'gow3' },
   { port: 'medievil', launcher: 'MediEvil.exe', settings: 'medievil-launcher', env: 'GOW3', marker: 'medievil' },
   // A fork that kept the God of War III launcher's art: only its exe tells it apart.
   { port: 'wipeout', launcher: 'WipEout.exe', settings: 'wipeout-launcher', env: 'GOW3', marker: 'gow3' },
@@ -205,6 +207,11 @@ function runtimePort(root) {
   return null;
 }
 
+// A renamed port found beside what its former name left behind is the renamed one.
+function withoutSuperseded(ports) {
+  return ports.filter((port) => !ports.some((other) => other.supersedes === port.port));
+}
+
 // The port a folder holding run.py is: by its own files, then its launcher's name, then the runner.
 function identifyPort(root) {
   if (!isRealDirectory(root)) return null;
@@ -215,10 +222,10 @@ function identifyPort(root) {
   if (!script) return null;
   const collection = packages.identifyCollection(script);
   if (collection) return collection;
-  const owned = PORTS.filter((port) => ownsPortFiles(root, port));
+  const owned = withoutSuperseded(PORTS.filter((port) => ownsPortFiles(root, port)));
   if (owned.length === 1) return owned[0];
   const candidates = owned.length > 1 ? owned : PORTS;
-  const launched = candidates.filter((port) => hasFileNamed(root, port.launcher));
+  const launched = withoutSuperseded(candidates.filter((port) => hasFileNamed(root, port.launcher)));
   if (launched.length === 1) return launched[0];
   if (owned.length > 1 && owned.every((port) => port.marker === owned[0].marker)) return owned[0];
   if (/big2-ps4_Shipping\.elf/.test(script) && /big3-ps4_Shipping\.elf/.test(script)) return PORTS.find((port) => port.port === 'uncharted');

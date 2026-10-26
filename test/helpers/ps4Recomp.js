@@ -196,6 +196,7 @@ const PORT_FILES = {
   bloodborne: { exe: 'Bloodborne.exe', marker: 'bloodborne' },
   uncharted: { exe: 'Uncharted.exe', marker: 'uncharted' },
   gow3: { exe: 'God of War III.exe', marker: 'gow3' },
+  spartanport: { exe: 'SpartanPort.exe', marker: 'spartanport' },
   medievil: { exe: 'MediEvil.exe', marker: 'medievil' },
 };
 

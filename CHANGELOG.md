@@ -7,6 +7,15 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **God of War III is found again after SpartanPort's rename.** The port formerly called gow3_pc now
+  keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next
+  took it for the old port and found no game. Both versions are read, and the platinum is picked up
+  from its log line too.
+
 ## 3.12.3 - 2026-10-25
 
 ### Added

@@ -103,6 +103,34 @@ test("a fork of the God of War III launcher reads its own settings, not God of W
   assert.equal(identifyPort(source).port, 'gow3', 'without a launcher exe the art still means God of War III');
 });
 
+test('SpartanPort, the renamed God of War III port, reads its own settings and SPARTAN_ variables', () => {
+  // 2.6 kept 'God of War III.exe' as a copy of SpartanPort.exe for old shortcuts.
+  const root = fixture.makePort(dir('spartan', 'spartanport-windows'), 'spartanport');
+  fixture.write(path.join(root, 'God of War III.exe'), 'MZ');
+  const dump = fixture.makeGameDump(dir('spartan', 'Dumps', 'CUSA01623'), { title: 'God of War III Remastered' });
+  assert.equal(identifyPort(root).port, 'spartanport');
+
+  fixture.settingsFile(appData, 'spartanport-launcher', { game_dir: dump });
+  assert.equal(ps4Recomp.scan(root)[0].data.dumpDir, dump, 'the launcher folder under %APPDATA%');
+
+  const user = dir('spartan', 'Saves');
+  fixture.write(path.join(root, 'settings.json'), JSON.stringify({ extra_env: `SPARTAN_GAME_DIR="${dump}" SPARTAN_USER_DIR=${user}` }));
+  const [record] = ps4Recomp.scan(root);
+  assert.equal(record.data.dumpDir, dump);
+  assert.equal(record.data.userDir, user);
+});
+
+test('an install updated to SpartanPort with the old launcher art left behind is SpartanPort', () => {
+  const root = fixture.makePort(dir('spartan-update', 'GOW3'), 'spartanport');
+  fixture.write(path.join(root, 'God of War III.exe'), 'MZ');
+  fixture.write(path.join(root, 'launcher', 'gow3.ico'), 'x');
+  fixture.write(path.join(root, 'launcher', 'gow3.png'), 'x');
+  assert.equal(identifyPort(root).port, 'spartanport');
+  const bare = fixture.makePort(dir('spartan-update', 'no art'), 'spartanport', { withMarker: false });
+  fixture.write(path.join(bare, 'God of War III.exe'), 'MZ');
+  assert.equal(identifyPort(bare).port, 'spartanport', 'both launcher names, no art');
+});
+
 test('plain trophy data needs no key', async () => {
   const root = fixture.makePort(dir('plain', 'GOW3'), 'gow3', { key: '' });
   const dump = fixture.makeGameDump(dir('plain', 'Dump'), { title: 'God of War III Remastered', encrypted: false });
@@ -424,8 +452,8 @@ test('a log rewritten in place with the same opening lines is read again from it
 });
 
 test('the other runtimes unlock lines are read, a repeated unlock is not a new one', () => {
-  const lines = ['Trophies: trophy 4 unlocked', 'Runtime: trophy 5 unlocked (saved to C:/UFC/user/trophies.json)', 'Runtime: trophy 6 was already unlocked'];
-  assert.deepEqual(logs.parseLastRunLog(lines).map((unlock) => unlock.id), ['4', '5']);
+  const lines = ['Trophies: trophy 4 unlocked', 'Runtime: trophy 5 unlocked (saved to C:/UFC/user/trophies.json)', 'Runtime: trophy 6 was already unlocked', 'Runtime: trophy 0 (platinum) unlocked'];
+  assert.deepEqual(logs.parseLastRunLog(lines).map((unlock) => unlock.id), ['4', '5', '0'], "SpartanPort names the platinum");
 });
 
 test('the PROTOTYPE bundle log is split by the game started, from the one the launcher chose', () => {
