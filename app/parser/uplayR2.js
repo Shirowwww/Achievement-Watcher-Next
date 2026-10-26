@@ -1259,39 +1259,135 @@ function normalizeLoaderLanguage(language) {
 
 /*
   A release can keep its loader settings under a name the installed loader never opens (DenuvOwO's
-  uplay_r1_loader.ini). Its identity has to survive the swap - above all the ticket a Denuvo bypass
-  checks: AC Odyssey hung at launch on the template's ticket (#141). AW keeps the achievement keys.
+  and EMPRESS's uplay_r1_loader.ini). Its identity has to survive the swap; AW keeps the achievement
+  keys. EMPRESS's own R1 emulator reads [Settings] under other key names, so those are translated and
+  everything this loader does not parse is left behind (#141).
 */
 const RELEASE_INI_PATTERN = /^(?:uplay|upc)_r[12]_loader(?:64)?\.ini$/i;
 const RELEASE_INI_MAX_BYTES = 64 * 1024;
 const AW_OWNED_KEYS = new Set(['achievements', 'achkeyprefix', 'achsavetype', 'achsavepath']);
+const RELEASE_LIST_SECTIONS = ['DLC', 'Items', 'Chunks'];
+const EMPRESS_R1_KEYS = Object.freeze({
+  gameappid: 'GameUplayId',
+  ticketid: 'TickedId',
+  unlockalldlcs: 'IsAppOwned',
+  username: 'Username',
+  email: 'Email',
+  password: 'Password',
+  language: 'Language',
+  userid: 'UserId',
+  cdkey: 'CdKey',
+});
+const EMPRESS_DEFAULT_SAVE_PATH = '%empress_default%';
 
-function releaseIniValues(dir, kind) {
+function readReleaseIni(dir) {
   let names;
   try {
     names = fs.readdirSync(dir).filter((name) => RELEASE_INI_PATTERN.test(name));
   } catch {
-    return {};
+    return [];
   }
+  const docs = [];
   for (const name of names) {
     const file = path.join(dir, name);
-    let text;
     try {
       if (fs.statSync(file).size > RELEASE_INI_MAX_BYTES) continue;
-      text = fs.readFileSync(file, 'utf8');
+      docs.push(parseIni(fs.readFileSync(file, 'utf8')));
     } catch {
       continue; // an unreadable leftover is not a config to carry over
     }
-    const section = getIniSection(parseIni(text), kind.section);
-    if (!section) continue;
-    const values = {};
-    for (const line of section.body) {
-      const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
-      if (m && !AW_OWNED_KEYS.has(m[1].toLowerCase())) values[m[1]] = sanitizeIniValue(m[2]);
-    }
-    if (Object.keys(values).length > 0) return values;
   }
-  return {};
+  return docs;
+}
+
+function sectionEntries(section) {
+  const values = {};
+  for (const line of section.body) {
+    const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (m) values[m[1]] = sanitizeIniValue(m[2]);
+  }
+  return values;
+}
+
+function listLines(section) {
+  return section.body.map((line) => line.trim()).filter((line) => line && !line.startsWith(';') && !line.startsWith('#'));
+}
+
+// What a release config hands the installed loader: identity values, and for R1 the list sections
+// it answers DLC, item and chunk queries from. null when the folder has no such config.
+function releaseConfig(dir, kind) {
+  for (const doc of readReleaseIni(dir)) {
+    const own = getIniSection(doc, kind.section);
+    const empress = kind.id === 'r1' && !own ? getIniSection(doc, 'Settings') : null;
+    if (!own && !empress) continue;
+    const values = {};
+    for (const [key, value] of Object.entries(sectionEntries(own || empress))) {
+      if (empress) {
+        if (EMPRESS_R1_KEYS[key.toLowerCase()]) values[EMPRESS_R1_KEYS[key.toLowerCase()]] = value;
+      } else if (!AW_OWNED_KEYS.has(key.toLowerCase())) {
+        values[key] = value;
+      }
+    }
+    if (Object.keys(values).length === 0) continue;
+    const lists = {};
+    if (kind.id === 'r1') {
+      for (const name of RELEASE_LIST_SECTIONS) {
+        const section = getIniSection(doc, name);
+        if (section) lists[name] = listLines(section);
+      }
+      // EMPRESS's emulator reports one installed chunk however the game asks; this loader reports
+      // its [Chunks] list, and AC Odyssey froze waiting on an empty one.
+      if (empress && !lists.Chunks) lists.Chunks = ['0'];
+    }
+    return { values, lists };
+  }
+  return null;
+}
+
+function replaceListSection(doc, name, lines) {
+  let section = getIniSection(doc, name);
+  if (!section) {
+    section = { key: name.toLowerCase(), header: `[${name}]`, body: [] };
+    doc.sections.push(section);
+  }
+  section.body = [...lines, ''];
+}
+
+/*
+  EMPRESS keeps game saves in %APPDATA%\uplay_emu\EMPRESS\<id>\storage_files\<slot>.save; the
+  installed R1 loader reads the same file layout (a 0x228-byte header, then the data) from
+  %APPDATA%\R1 UplayEmu Saves\<id>\<slot in hex>.save. Copied, never moved or overwritten, so a
+  restore of the original loader finds every save where it left it.
+*/
+function migrateReleaseSaves({ dir, appData } = {}) {
+  if (!dir || !appData) return [];
+  const settings = readReleaseIni(dir)
+    .map((doc) => getIniSection(doc, 'Settings'))
+    .find(Boolean);
+  if (!settings) return [];
+  const values = sectionEntries(settings);
+  const id = String(values.GameAppId || '').trim();
+  if (!/^\d+$/.test(id) || String(values.SavePath || '').trim().toLowerCase() !== EMPRESS_DEFAULT_SAVE_PATH) return [];
+  const source = path.join(appData, 'uplay_emu', 'EMPRESS', id, 'storage_files');
+  const target = path.join(appData, FLAVOURS.r1.saveRoot, id);
+  let names;
+  try {
+    names = fs.readdirSync(source);
+  } catch {
+    return [];
+  }
+  const copied = [];
+  for (const name of names) {
+    const m = name.match(/^(\d+)\.save$/i);
+    if (!m) continue;
+    const to = path.join(target, `${Number(m[1]).toString(16)}.save`);
+    if (fs.existsSync(to)) continue;
+    const from = path.join(source, name);
+    fs.mkdirSync(target, { recursive: true });
+    fs.copyFileSync(from, to, fs.constants.COPYFILE_EXCL);
+    copied.push({ from, to });
+  }
+  return copied;
 }
 
 // Read-modify-write BOTH of a generation's ini names beside the loader dll, preserving every other
@@ -1318,7 +1414,7 @@ function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, lo
 
   const template = kind.id === 'r1' ? DEFAULT_INI_TEMPLATE_R1 : DEFAULT_INI_TEMPLATE;
   const written = [];
-  let releaseValues;
+  let release;
   for (const iniName of kind.iniNames) {
     const file = path.join(dir, iniName);
     const exists = fs.existsSync(file);
@@ -1329,7 +1425,10 @@ function planSettingsConfig({ dir, steamAppid, prefix, accountName, language, lo
       settings = { key: kind.section.toLowerCase(), header: `[${kind.section}]`, body: [] };
       doc.sections.unshift(settings);
     }
-    if (!exists) settings.body = upsertIniKeys(settings.body, (releaseValues ??= releaseIniValues(dir, kind)));
+    if (!exists && (release ??= releaseConfig(dir, kind) || false)) {
+      settings.body = upsertIniKeys(settings.body, release.values);
+      for (const [name, lines] of Object.entries(release.lists)) replaceListSection(doc, name, lines);
+    }
     settings.body = upsertIniKeys(settings.body, updates);
     const next = stringifyIni(doc);
     const changed = previous !== next;
@@ -1876,6 +1975,10 @@ function repair({ dir, gameDir, steamAppid, schema, prefix, objectiveIds = null,
   }
 
   summary.ini = applySettingsConfigPlan(iniPlan);
+  if (iniPlan.flavour === 'r1') {
+    const host = loaderHosts(dir)[0];
+    summary.migratedSaves = host ? migrateReleaseSaves({ dir, appData: winHosts.hostPath(host, 'APPDATA') }) : [];
+  }
   // The Watchdog needs the id -> api-name direction to notify a live unlock; it cannot always derive it.
   summary.wroteObjectiveMap = saveObjectiveMap({ steamAppid, prefix, objectiveIds });
   /*
@@ -2089,6 +2192,7 @@ module.exports = {
   buildAchievementsSchemaJson,
   normalizeLoaderLanguage,
   planSettingsConfig,
+  migrateReleaseSaves,
   applySettingsConfigPlan,
   writeSettingsConfig,
   pruneLoaderLog,

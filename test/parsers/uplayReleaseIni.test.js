@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 const uplayR2 = require('../../app/parser/uplayR2.js');
-const { parseIni, readIniSectionValues } = require('../../app/util/emuIni.js');
+const { parseIni, getIniSection, readIniSectionValues } = require('../../app/util/emuIni.js');
 
 if (!process.env.APPDATA) process.env.APPDATA = path.join(os.tmpdir(), 'aw-uplay-release-ini-appdata');
 
@@ -82,4 +82,106 @@ test('without a release config the template is used unchanged', (t) => {
   const plan = planFor(dir);
 
   assert.equal(plannedValues(plan, 'upc_r1.ini', 'Uplay').tickedid, 'noT456umPqRt');
+  assert.deepEqual(sectionLines(plannedFile(plan, 'upc_r1.ini').next, 'Chunks'), []);
+});
+
+function sectionLines(text, name) {
+  const section = getIniSection(parseIni(text), name);
+  return section ? section.body.map((line) => line.trim()).filter((line) => line && !line.startsWith(';')) : null;
+}
+
+// The EMPRESS AC Odyssey 1.5.3 crack, as released: its own R1 emulator reads [Settings] under
+// EMPRESS key names (TicketId, GameAppId), from a file the installed loader never opens.
+const EMPRESS_INI = [
+  '; Save data is stored in %appdata%\\uplay_emu\\EMPRESS\\5059\\storage_files',
+  '[Settings]',
+  'GameAppId = 5059',
+  'Username = EMPRESS',
+  'Language = en-US',
+  'SavePath = %empress_default%',
+  'UnlockAllDLCs = 1',
+  'IsUserConnected = 1',
+  'OnlineMode = 0',
+  'UserId = c91c91c9-1c91-c91c-91c9-1c91c91c91c9',
+  'CdKey = 3337-3337-3337-3337',
+  'TicketId = YOUCANNOTTAKEFREEDOMAWAY',
+  'Email = PIRATEQUEEN@irdeto.com',
+  'Password = PIRATEQUEEN',
+  '',
+].join('\r\n');
+
+test("an EMPRESS R1 config is translated into the installed loader's key names", (t) => {
+  const dir = tempDir(t);
+  fs.writeFileSync(path.join(dir, 'uplay_r1_loader.ini'), EMPRESS_INI);
+
+  const values = plannedValues(planFor(dir), 'upc_r1.ini', 'Uplay');
+
+  assert.equal(values.tickedid, 'YOUCANNOTTAKEFREEDOMAWAY');
+  assert.equal(values.gameuplayid, '5059');
+  assert.equal(values.username, 'EMPRESS');
+  assert.equal(values.email, 'PIRATEQUEEN@irdeto.com');
+  assert.equal(values.password, 'PIRATEQUEEN');
+  assert.equal(values.cdkey, '3337-3337-3337-3337');
+  assert.equal(values.isappowned, '1');
+  assert.equal(values.savetype, '0', 'EMPRESS paths mean nothing to this loader');
+  assert.equal(values.savepath, '');
+  for (const foreign of ['ticketid', 'gameappid', 'unlockalldlcs', 'isuserconnected', 'onlinemode']) {
+    assert.equal(values[foreign], undefined, `${foreign} is not a key this loader reads`);
+  }
+});
+
+// The EMPRESS emulator answers UPLAY_INSTALLER_GetChunks with one chunk; the installed loader
+// answers with its [Chunks] list, and AC Odyssey froze right after an empty one (#141).
+test('an emulator swap away from EMPRESS keeps GetChunks non-empty', (t) => {
+  const dir = tempDir(t);
+  fs.writeFileSync(path.join(dir, 'uplay_r1_loader.ini'), EMPRESS_INI);
+
+  const plan = planFor(dir);
+
+  for (const iniName of ['upc_r1.ini', 'uplay_r1.ini']) {
+    assert.deepEqual(sectionLines(plannedFile(plan, iniName).next, 'Chunks'), ['0'], iniName);
+  }
+});
+
+test("a release config's own DLC, item and chunk lists are carried over", (t) => {
+  const dir = tempDir(t);
+  fs.writeFileSync(
+    path.join(dir, 'uplay_r1_loader.ini'),
+    ['[Uplay]', 'TickedId = DenuvOwO', '[DLC]', '5151', '5152', '[Items]', '[Chunks]', '3', '126', ''].join('\n')
+  );
+
+  const next = plannedFile(planFor(dir), 'upc_r1.ini').next;
+
+  assert.deepEqual(sectionLines(next, 'DLC'), ['5151', '5152']);
+  assert.deepEqual(sectionLines(next, 'Items'), []);
+  assert.deepEqual(sectionLines(next, 'Chunks'), ['3', '126']);
+});
+
+test("EMPRESS game saves are copied under the installed loader's names, never overwritten", (t) => {
+  const dir = tempDir(t);
+  const appData = tempDir(t);
+  fs.writeFileSync(path.join(dir, 'uplay_r1_loader.ini'), EMPRESS_INI);
+  const source = path.join(appData, 'uplay_emu', 'EMPRESS', '5059', 'storage_files');
+  const target = path.join(appData, 'R1 UplayEmu Saves', '5059');
+  fs.mkdirSync(source, { recursive: true });
+  fs.mkdirSync(target, { recursive: true });
+  fs.writeFileSync(path.join(source, '1.save'), 'slot one');
+  fs.writeFileSync(path.join(source, '12.save'), 'slot twelve');
+  fs.writeFileSync(path.join(source, 'notes.txt'), 'not a save');
+  fs.writeFileSync(path.join(target, '1.save'), 'already played here');
+
+  const copied = uplayR2.migrateReleaseSaves({ dir, appData });
+
+  assert.deepEqual(copied.map((entry) => path.basename(entry.to)), ['c.save'], 'the loader names slots in hex');
+  assert.equal(fs.readFileSync(path.join(target, 'c.save'), 'utf8'), 'slot twelve');
+  assert.equal(fs.readFileSync(path.join(target, '1.save'), 'utf8'), 'already played here');
+  assert.ok(fs.existsSync(path.join(source, '12.save')), 'the EMPRESS copy stays for a restore');
+});
+
+test('no EMPRESS config, no save copy', (t) => {
+  const dir = tempDir(t);
+  const appData = tempDir(t);
+  fs.writeFileSync(path.join(dir, 'uplay_r1_loader.ini'), '[Uplay]\nTickedId = DenuvOwO\n');
+
+  assert.deepEqual(uplayR2.migrateReleaseSaves({ dir, appData }), []);
 });
