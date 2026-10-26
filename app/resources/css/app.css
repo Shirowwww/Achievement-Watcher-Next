@@ -12901,7 +12901,8 @@ body.pd-cv-open #settings .content {
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
-  color: var(--accent);
+  /* Pulled toward the text colour: the accent alone is under 4.5:1 on its own tint at this size. */
+  color: color-mix(in srgb, var(--accent) 60%, var(--text));
   font-size: var(--fs-2xs);
   font-weight: 700;
 }
@@ -13310,6 +13311,14 @@ body.pd-cv-open #settings .content {
   font-size: var(--fs-xs);
 }
 
+/* Kept in sight while the settings under it scroll: it says where every edit below goes. */
+#settings .pd-preview.is-cv-full .pd-cv-tier {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--set-surface);
+}
+
 #settings p.pd-cv-tier-note {
   display: flex;
   flex-basis: 100%;
@@ -13642,6 +13651,11 @@ body.pd-cv-open #settings .content {
   padding: 16px 20px 20px;
   scrollbar-width: thin;
   scrollbar-color: var(--set-control-border) transparent;
+}
+
+.pg-empty {
+  margin: 0;
+  color: var(--text-muted);
 }
 
 .pg-group-title {
@@ -14355,6 +14369,21 @@ body.pd-cv-open #settings .content {
 
 #settings #pd-status:empty {
   display: none;
+}
+
+/* In the full-screen editor the message floats over the foot of the card, where the eye already is. */
+#settings .pd-preview.is-cv-full #pd-status {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  z-index: 3;
+  max-width: min(560px, 60vw);
+  padding: 6px 12px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 6px;
+  background: var(--set-surface);
+  font-size: 0.9em;
+  transform: translateX(-50%);
 }
 
 #settings #pd-status.is-ok {
@@ -16842,7 +16871,7 @@ body.pd-cv-open #settings .content {
    value, and the ring on a transparent, borderless select reads as a rendering fault. */
 .arrow-list li .right select:focus-visible,
 #settings select:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }

@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Alle instellingen",
             "done": "Klaar",
+            "save": "Opslaan",
             "snap": "Uitlijnen op hulplijnen (gaat uit bij sterk inzoomen)",
             "zoomIn": "Inzoomen",
             "zoomOut": "Uitzoomen",
@@ -715,7 +716,11 @@
               "detail": "Beschrijving",
               "meta": "Naam van de game",
               "progress": "Voortgangsbalk",
-              "mark": "Merklogo"
+              "mark": "Merklogo",
+              "cardBefore": "Kaartdecoratie 1",
+              "cardAfter": "Kaartdecoratie 2",
+              "iconBefore": "Pictogramdecoratie 1",
+              "iconAfter": "Pictogramdecoratie 2"
             },
             "kind": {
               "text": "Tekst",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Tekst",
+              "boxWidth": "Breedte van het vak",
               "font": "Lettertype",
               "fontCard": "Zelfde als de kaart",
               "fontFile": "Lettertypebestand",
@@ -773,6 +779,10 @@
               "loop": "Herhalen",
               "alignGroup": "Onderling uitlijnen",
               "insert": "Invoegen"
+            },
+            "axis": {
+              "w": "B",
+              "h": "H"
             },
             "act": {
               "front": "Voor de kaart plaatsen",
@@ -873,6 +883,8 @@
               "escape": "Selectie opheffen en dan de editor verlaten",
               "zoom": "Met het muiswiel: in- en uitzoomen",
               "dblclick": "Dubbelklik: een tekst bewerken, een afbeelding bijsnijden",
+              "crop": "Tijdens het bijsnijden: de pijltjes verplaatsen de afbeelding, + en - zoomen",
+              "or": "of",
               "group": "Klikken: een element aan de selectie toevoegen of eruit halen",
               "selectAll": "Alles selecteren. Slepen vanaf een lege plek selecteert wat het kader raakt",
               "sheet": "Deze lijst tonen of verbergen",
@@ -1136,7 +1148,8 @@
             "close": "Sluiten",
             "mine": "Jouw presets",
             "bundled": "Meegeleverd",
-            "browse": "De presets bekijken"
+            "browse": "De presets bekijken",
+            "empty": "Je hebt nog geen eigen presets. Maak er een in de ontwerper en hij verschijnt hier."
           }
         },
         "souvenirTitle": "Souvenirscreenshot",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Kies een kleur op het scherm",
     "empty-detect-running": "Games zoeken op deze pc…",
     "empty-detect-none": "Niets nieuws gevonden. Voeg zelf een map toe als er een game ontbreekt.",
-    "empty-detect-found": "Mappen gevonden: {count}. Je games worden geladen…"
+    "empty-detect-found": "Mappen gevonden: {count}. Je games worden geladen…",
+    "pd-preview-title": "Voorbeeld van de melding",
+    "pd-replace-title": "Je wijzigingen vervangen?",
+    "pd-replace-detail": "Het ontwerp waaraan je werkt, heeft wijzigingen die nog niet zijn opgeslagen.",
+    "pd-replace": "Vervangen",
+    "preset-rename-same": "Typ eerst een nieuwe naam in het veld Naam en kies dan Hernoemen.",
+    "preset-view-readonly": "Deze weergave toont alleen de kaart. Ga terug naar Kaart om de indeling te bewerken.",
+    "preset-layer-fixed": "{presets} tekenen hun kaart met hun eigen code, dus ze kunnen hier niet worden aangepast. Je kunt ze nog wel gebruiken zoals ze zijn.",
+    "preset-play-reduced": "Windows is ingesteld om minder animaties te tonen, dus het voorbeeld blijft stilstaan. Zet “Animatie-effecten” weer aan in de Windows-instellingen om ze te zien."
   },
   "watchdog": {
     "rare": "Zeldzaam {percent}%",

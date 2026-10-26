@@ -17,7 +17,7 @@ const SHORTCUTS = [
   [[['←'], ['↑'], ['→'], ['↓']], 'help.nudge'],
   [[['shift']], 'help.shift'],
   [[['alt']], 'help.alt'],
-  [[['shift'], ['ctrl']], 'help.group'],
+  [[['shift'], ['ctrl']], 'help.group', { or: true }],
   [[['ctrl', 'A']], 'help.selectAll'],
   [[['ctrl', 'D']], 'help.duplicate'],
   [[['ctrl', 'C'], ['ctrl', 'V']], 'help.copy'],
@@ -26,6 +26,7 @@ const SHORTCUTS = [
   [[['escape']], 'help.escape'],
   [[['ctrl']], 'help.zoom'],
   [[], 'help.dblclick'],
+  [[['←'], ['↑'], ['→'], ['↓'], ['+'], ['-']], 'help.crop'],
   [[['?']], 'help.sheet'],
 ];
 const TOUR = [
@@ -94,11 +95,12 @@ function createEditorHelp({ root, label }) {
     return el('kbd', '', NAMED_KEYS.includes(name) ? label(`help.key.${name}`) : name);
   }
 
-  function shortcutRow([combos, key]) {
+  function shortcutRow([combos, key, { or } = {}]) {
     const row = el('div', 'pd-cv-help-row');
     const keys = el('span', 'pd-cv-help-keys');
     // One wrapper per combination, so a narrow column breaks between Ctrl+C and Ctrl+V, never inside one.
-    for (const combo of combos) {
+    for (const [nth, combo] of combos.entries()) {
+      if (or && nth) keys.appendChild(el('span', 'pd-cv-help-or', label('help.or')));
       const group = el('span', 'pd-cv-help-combo');
       combo.forEach((name, at) => {
         if (at) group.appendChild(document.createTextNode('+'));

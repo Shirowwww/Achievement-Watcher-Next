@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Všechna nastavení",
             "done": "Hotovo",
+            "save": "Uložit",
             "snap": "Přichytávat k vodítkům (při velkém přiblížení se vypne)",
             "zoomIn": "Přiblížit",
             "zoomOut": "Oddálit",
@@ -715,7 +716,11 @@
               "detail": "Popis",
               "meta": "Název hry",
               "progress": "Ukazatel průběhu",
-              "mark": "Logo značky"
+              "mark": "Logo značky",
+              "cardBefore": "Dekorace karty 1",
+              "cardAfter": "Dekorace karty 2",
+              "iconBefore": "Dekorace ikony 1",
+              "iconAfter": "Dekorace ikony 2"
             },
             "kind": {
               "text": "Text",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Text",
+              "boxWidth": "Šířka rámečku",
               "font": "Písmo",
               "fontCard": "Stejné jako karta",
               "fontFile": "Soubor s písmem",
@@ -773,6 +779,10 @@
               "loop": "Smyčka",
               "alignGroup": "Zarovnat vzájemně",
               "insert": "Vložit"
+            },
+            "axis": {
+              "w": "Š",
+              "h": "V"
             },
             "act": {
               "front": "Přenést před kartu",
@@ -873,6 +883,8 @@
               "escape": "Zrušit výběr a pak opustit editor",
               "zoom": "Kolečkem myši: přiblížení a oddálení",
               "dblclick": "Dvojklik: upravit text, oříznout obrázek",
+              "crop": "Při oříznutí: šipky posouvají obrázek, + a - ho přibližují a oddalují",
+              "or": "nebo",
               "group": "Kliknutí: přidat prvek do výběru nebo ho z něj odebrat",
               "selectAll": "Vybrat vše. Tažení z prázdného místa vybere to, čeho se rámeček dotkne",
               "sheet": "Zobrazit nebo skrýt tento seznam",
@@ -1136,7 +1148,8 @@
             "close": "Zavřít",
             "mine": "Vaše předvolby",
             "bundled": "Přibalené",
-            "browse": "Procházet předvolby"
+            "browse": "Procházet předvolby",
+            "empty": "Zatím nemáte žádné vlastní předvolby. Vytvořte jednu v návrháři a objeví se tady."
           }
         },
         "souvenirTitle": "Vzpomínkový snímek",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Vybrat barvu na obrazovce",
     "empty-detect-running": "Hledám hry v tomto PC…",
     "empty-detect-none": "Nic nového nenalezeno. Pokud nějaká hra chybí, přidejte složku sami.",
-    "empty-detect-found": "Nalezené složky: {count}. Načítám vaše hry…"
+    "empty-detect-found": "Nalezené složky: {count}. Načítám vaše hry…",
+    "pd-preview-title": "Náhled oznámení",
+    "pd-replace-title": "Nahradit vaše změny?",
+    "pd-replace-detail": "Návrh, na kterém pracujete, obsahuje neuložené změny.",
+    "pd-replace": "Nahradit",
+    "preset-rename-same": "Nejprve zadejte nový název do pole Název a potom stiskněte Přejmenovat.",
+    "preset-view-readonly": "Toto zobrazení ukazuje jen kartu. Pro úpravu rozvržení se vraťte na Karta.",
+    "preset-layer-fixed": "{presets} vykreslují svou kartu vlastním kódem, a proto je tady nelze upravit. Stále je ale můžete používat tak, jak jsou.",
+    "preset-play-reduced": "Windows je nastaveno tak, aby zobrazovalo méně animací, takže náhled zůstává nehybný. Chcete-li je vidět, znovu zapněte „Efekty animace“ v nastavení Windows."
   },
   "watchdog": {
     "rare": "Vzácný {percent}%",

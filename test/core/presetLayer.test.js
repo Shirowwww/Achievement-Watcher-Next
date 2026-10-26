@@ -111,6 +111,31 @@ test('the brand mark can be moved and removed through the canvas, on its own pse
   assert.doesNotMatch(layerTool.buildLayerCss(layer), /::after|::before/);
 });
 
+test('a bundled card’s decorations can be hidden, moved and recoloured, per state too', () => {
+  const canvas = {
+    move: { iconAfter: { x: 4, y: 0, r: 0, s: 1 } },
+    items: [],
+    hidden: ['cardBefore'],
+    style: { iconBefore: { color: '#ff0000', font: 'mono', size: 30 } },
+    tiers: { gold: { hidden: { cardBefore: false } } },
+  };
+  const css = layerTool.buildLayerCss({ base: 'Arcade', sections: ['canvas'], options: { canvas } });
+  const hiding = /^\.ach:is\((.*)\)::before \{ visibility: hidden !important; \}$/m.exec(css);
+  assert.ok(hiding && !hiding[1].includes('tier-gold') && hiding[1].includes('tier-silver'), 'hidden in every state but gold');
+  assert.match(css, /\.ach \.icon::after \{[^}]*translate: 4px 0px/);
+  // A decoration takes a colour only, as the accent it is drawn with; nothing of a text's look.
+  assert.match(css, /\.ach \.icon::before \{ --accent: #ff0000 !important; \}/);
+  assert.doesNotMatch(css, /font-size: 30px/);
+});
+
+test('a decoration offers a colour only when its base draws it with the accent', () => {
+  const css = '/* the glow */\n.ach.tier-gold::after { background: var(--accent); }\n.ach .icon::before { color: red; }';
+  assert.equal(layerTool.decorUsesAccent(css, 'cardAfter'), true, 'a comment before the rule does not hide it');
+  assert.equal(layerTool.decorUsesAccent(css, 'iconBefore'), false);
+  assert.equal(layerTool.decorUsesAccent('.ach::before { color: var(--accent-soft); }', 'cardBefore'), false);
+  assert.equal(layerTool.decorUsesAccent(css, 'nope'), false);
+});
+
 test('a saved layer knows which pseudo-element draws its base’s mark', (t) => {
   const { users } = workspace(t);
   fs.mkdirSync(path.join(users, 'Steam'), { recursive: true });
@@ -168,11 +193,28 @@ test('a saved layer resolves to its bundled base, and to nothing for a base that
   assert.throws(() => layerTool.readLayerFolder(users, BUNDLED, 'Bad'));
 });
 
+test('items reaching past a bundled card grow its popup evenly, so the popup cuts none of them', () => {
+  const box = { width: 474, height: 134 };
+  const card = { width: 452, height: 112 };
+  const layer = { base: 'Glass', sections: ['canvas'], card, options: { canvas: { items: [{ kind: 'shape', x: -60, y: 20, w: 80, h: 20 }] } } };
+  assert.deepEqual(layerTool.normalizeLayer(layer).card, card);
+  const grown = layerTool.layerBoxSize(layer, box);
+  assert.ok(grown.width >= card.width + 2 * 60, `the popup is ${grown.width}px wide`);
+  assert.equal(grown.height, box.height, 'nothing reaches past the top or the bottom');
+  // A layer saved before the card was measured keeps the bundled box, as it always had.
+  assert.deepEqual(layerTool.layerBoxSize({ ...layer, card: undefined }, box), box);
+  assert.equal(layerTool.normalizeLayer({ ...layer, card: { width: 'wide', height: 9 } }).card, null);
+});
+
 test('the main process lists, reads and writes layers only through the layer helpers', () => {
   const main = mainProcessSource();
   assert.match(main, /presetLayer\.readLayerFolder\(usersPresetsDir\(\), bundledPresetRoots\(\)\[0\], name\)/);
   assert.match(main, /function dressPresetWindow\(win, layer\)[\s\S]*?win\.webContents\.once\('dom-ready'/);
-  assert.match(main, /dressPresetWindow\(notif, layer\)/);
+  assert.match(main, /const dressed = dressPresetWindow\(notif, layer\)/);
+  // The added texts get their {game}, {title}... from the payload: it must not overtake the items.
+  assert.match(main, /on\('did-finish-load', async \(\) => \{\s*await dressed;[\s\S]*?send\('show-notification'/);
+  assert.match(main, /getPresetDimensions\(presetFolder, layer\)/);
+  assert.match(main, /\.\.\.\(layer\.card \? \{ card: layer\.card \} : \{\}\)/);
   assert.match(main, /insertCSS\(css\)/);
   assert.match(main, /executeJavaScript\(presetLayer\.LAYER_LOGO_SCRIPT\)/);
   assert.match(main, /ipcMain\.handle\('create-layered-preset'/);

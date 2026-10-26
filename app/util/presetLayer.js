@@ -18,12 +18,14 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const schema = require('./presetSchema.js');
 const { cssUrl } = require('./cssUrl.js');
-const { PRESET_ENGINE, canvasCss, canvasScript } = require('./customPreset.js');
+const { PRESET_ENGINE, CANVAS_MAX_ROOM, CANVAS_DECOR_SELECTORS, canvasCss, canvasOverhang, canvasScript } = require('./customPreset.js');
 
 // The file that marks a folder as a layer, and the element the logo is drawn on.
 const LAYER_FILE = 'aw-layer.json';
 const LAYER_LOGO_CLASS = 'aw-layer-logo';
 const CUSTOM_FONT_FAMILY = 'AW Layer Font';
+const MIN_CARD_PX = 40;
+const MAX_CARD_PX = 2000;
 
 // What can be overridden, as sections the user switches on or off, with the designer values each
 // one reads. A section that is off leaves the bundled preset's own look untouched.
@@ -68,6 +70,20 @@ function brandMarkPseudo(css) {
   return new RegExp(`\\.ach::${other}\\s*\\{[^}]*--follows-mark\\s*:`).test(css) ? `${found[1]},${other}` : found[1];
 }
 
+/*
+  Whether a decoration of the bundled card paints with the accent, in any state: only then does a
+  colour of its own change it. A rule counts by its selectors, with the state classes taken off.
+*/
+function decorUsesAccent(css, part) {
+  const wanted = CANVAS_DECOR_SELECTORS[part];
+  if (!wanted || typeof css !== 'string') return false;
+  const bare = (selector) => selector.trim().replace(/\.(ach|icon)(?:[.:][\w-]+(?:\([^)]*\))?)*?(?=::|\s|$)/g, '.$1');
+  for (const [, selectors, body] of css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (/var\(\s*--accent\s*[,)]/.test(body) && selectors.split(',').some((one) => bare(one) === wanted)) return true;
+  }
+  return false;
+}
+
 // Strict parse of aw-layer.json (or of what a designer sends): unknown sections and keys are dropped.
 function normalizeLayer(raw) {
   const source = raw && typeof raw === 'object' ? raw : {};
@@ -75,7 +91,30 @@ function normalizeLayer(raw) {
   const sections = LAYER_SECTION_NAMES.filter((name) => Array.isArray(source.sections) && source.sections.includes(name));
   const options = schema.normalizeOptions(source.options || {});
   if (!LAYER_BACKGROUND_MODES.includes(options.bgMode)) options.bgMode = 'solid';
-  return { base, sections, options };
+  return { base, sections, options, card: normalizeCardSize(source.card) };
+}
+
+// The bundled card's size as the designer measured it, or null for a layer saved without it.
+function normalizeCardSize(raw) {
+  const size = (value) => (Number.isFinite(value) && value >= MIN_CARD_PX && value <= MAX_CARD_PX ? Math.round(value) : null);
+  const width = size(raw && raw.width);
+  const height = size(raw && raw.height);
+  return width && height ? { width, height } : null;
+}
+
+/*
+  The bundled window, grown evenly so items reaching past the card are drawn: the bundled card stays
+  centred in it. Only the designer can measure that card, so a layer saved without it keeps the box.
+*/
+function layerBoxSize(rawLayer, box) {
+  const layer = normalizeLayer(rawLayer);
+  if (!layer.card || !layer.sections.includes('canvas')) return box;
+  const room = canvasOverhang(layer.options.canvas, layer.card);
+  const grow = (reach, outer, inner) => 2 * Math.max(0, Math.ceil(Math.min(CANVAS_MAX_ROOM, reach) - (outer - inner) / 2));
+  return {
+    width: box.width + grow(Math.max(room.left, room.right), box.width, layer.card.width),
+    height: box.height + grow(Math.max(room.top, room.bottom), box.height, layer.card.height),
+  };
 }
 
 // Only the values of the sections that are switched on, so the file records what was changed and
@@ -231,8 +270,10 @@ module.exports = {
   isLayerableHtml,
   hasBrandMark,
   brandMarkPseudo,
+  decorUsesAccent,
   normalizeLayer,
   layerOptions,
+  layerBoxSize,
   buildLayerCss,
   absolutizeCssUrls,
   readLayerFolder,

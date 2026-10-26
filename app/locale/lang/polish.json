@@ -681,6 +681,7 @@
             "fullscreen": "Edytor",
             "general": "Wszystkie ustawienia",
             "done": "Gotowe",
+            "save": "Zapisz",
             "snap": "Przyciągaj do prowadnic (wyłącza się przy dużym powiększeniu)",
             "zoomIn": "Powiększ",
             "zoomOut": "Pomniejsz",
@@ -715,7 +716,11 @@
               "detail": "Opis",
               "meta": "Nazwa gry",
               "progress": "Pasek postępu",
-              "mark": "Logo marki"
+              "mark": "Logo marki",
+              "cardBefore": "Ozdoba karty 1",
+              "cardAfter": "Ozdoba karty 2",
+              "iconBefore": "Ozdoba ikony 1",
+              "iconAfter": "Ozdoba ikony 2"
             },
             "kind": {
               "text": "Tekst",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Tekst",
+              "boxWidth": "Szerokość ramki",
               "font": "Czcionka",
               "fontCard": "Jak karta",
               "fontFile": "Plik czcionki",
@@ -773,6 +779,10 @@
               "loop": "Zapętlenie",
               "alignGroup": "Wyrównaj względem siebie",
               "insert": "Wstaw"
+            },
+            "axis": {
+              "w": "S",
+              "h": "W"
             },
             "act": {
               "front": "Przesuń przed kartę",
@@ -873,6 +883,8 @@
               "escape": "Odznacz, a potem wyjdź z edytora",
               "zoom": "Kółkiem myszy: przybliżanie i oddalanie",
               "dblclick": "Dwukrotne kliknięcie: edytuj tekst, przytnij obraz",
+              "crop": "Podczas przycinania: strzałki przesuwają obraz, a + i - powiększają go lub pomniejszają",
+              "or": "lub",
               "group": "Kliknięcie: dodaje element do zaznaczenia lub go z niego usuwa",
               "selectAll": "Zaznacz wszystko. Przeciągnięcie z pustego miejsca zaznacza to, czego dotyka ramka",
               "sheet": "Pokaż lub ukryj tę listę",
@@ -1136,7 +1148,8 @@
             "close": "Zamknij",
             "mine": "Twoje presety",
             "bundled": "Dołączone",
-            "browse": "Przeglądaj presety"
+            "browse": "Przeglądaj presety",
+            "empty": "Nie masz jeszcze własnych presetów. Utwórz jeden w kreatorze, a pojawi się tutaj."
           }
         },
         "souvenirTitle": "Zrzut pamiątkowy",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Pobierz kolor z ekranu",
     "empty-detect-running": "Szukanie gier na tym komputerze…",
     "empty-detect-none": "Nie znaleziono niczego nowego. Jeśli brakuje jakiejś gry, dodaj folder samodzielnie.",
-    "empty-detect-found": "Znalezione foldery: {count}. Wczytywanie Twoich gier…"
+    "empty-detect-found": "Znalezione foldery: {count}. Wczytywanie Twoich gier…",
+    "pd-preview-title": "Podgląd powiadomienia",
+    "pd-replace-title": "Zastąpić Twoje zmiany?",
+    "pd-replace-detail": "Projekt, nad którym pracujesz, ma niezapisane zmiany.",
+    "pd-replace": "Zastąp",
+    "preset-rename-same": "Najpierw wpisz nową nazwę w polu Nazwa, a potem naciśnij Zmień nazwę.",
+    "preset-view-readonly": "Ten widok pokazuje tylko kartę. Wróć do Karty, aby edytować układ.",
+    "preset-layer-fixed": "{presets} rysują swoją kartę własnym kodem, więc nie można ich tu dostosować. Nadal możesz ich używać w obecnej postaci.",
+    "preset-play-reduced": "System Windows jest ustawiony tak, aby pokazywać mniej animacji, więc podgląd pozostaje nieruchomy. Aby je zobaczyć, włącz ponownie „Efekty animacji” w ustawieniach systemu Windows."
   },
   "watchdog": {
     "rare": "Rzadkie {percent}%",

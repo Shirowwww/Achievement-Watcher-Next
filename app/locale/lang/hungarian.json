@@ -681,6 +681,7 @@
             "fullscreen": "Szerkesztő",
             "general": "Minden beállítás",
             "done": "Kész",
+            "save": "Mentés",
             "snap": "Illesztés a segédvonalakhoz (erős nagyításnál kikapcsol)",
             "zoomIn": "Nagyítás",
             "zoomOut": "Kicsinyítés",
@@ -715,7 +716,11 @@
               "detail": "Leírás",
               "meta": "Játék neve",
               "progress": "Folyamatjelző",
-              "mark": "Márkalogó"
+              "mark": "Márkalogó",
+              "cardBefore": "Kártyadísz 1",
+              "cardAfter": "Kártyadísz 2",
+              "iconBefore": "Ikondísz 1",
+              "iconAfter": "Ikondísz 2"
             },
             "kind": {
               "text": "Szöveg",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Szöveg",
+              "boxWidth": "Doboz szélessége",
               "font": "Betűtípus",
               "fontCard": "Megegyezik a kártyával",
               "fontFile": "Betűtípusfájl",
@@ -773,6 +779,10 @@
               "loop": "Ismétlés",
               "alignGroup": "Egymáshoz igazítás",
               "insert": "Beszúrás"
+            },
+            "axis": {
+              "w": "Sz",
+              "h": "M"
             },
             "act": {
               "front": "Áthelyezés a kártya elé",
@@ -873,6 +883,8 @@
               "escape": "Kijelölés megszüntetése, majd kilépés a szerkesztőből",
               "zoom": "Az egérgörgővel: nagyítás és kicsinyítés",
               "dblclick": "Dupla kattintás: szöveg szerkesztése, kép vágása",
+              "crop": "Vágás közben: a nyilak mozgatják a képet, a + és a - nagyít vagy kicsinyít",
+              "or": "vagy",
               "group": "Kattintás: elem hozzáadása a kijelöléshez, vagy kivétele belőle",
               "selectAll": "Mindent kijelöl. Üres helyről húzva azt jelöli ki, amit a keret érint",
               "sheet": "A lista megjelenítése vagy elrejtése",
@@ -1136,7 +1148,8 @@
             "close": "Bezárás",
             "mine": "Saját előbeállításaid",
             "bundled": "Mellékelt",
-            "browse": "Előbeállítások böngészése"
+            "browse": "Előbeállítások böngészése",
+            "empty": "Még nincs saját előbeállításod. Készíts egyet a tervezőben, és itt meg fog jelenni."
           }
         },
         "souvenirTitle": "Emlék képernyőkép",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Szín választása a képernyőről",
     "empty-detect-running": "Játékok keresése ezen a gépen…",
     "empty-detect-none": "Nem található semmi új. Ha hiányzik egy játék, add hozzá a mappáját te magad.",
-    "empty-detect-found": "Talált mappák: {count}. A játékaid betöltése…"
+    "empty-detect-found": "Talált mappák: {count}. A játékaid betöltése…",
+    "pd-preview-title": "Az értesítés előnézete",
+    "pd-replace-title": "Lecseréled a módosításaidat?",
+    "pd-replace-detail": "A tervezet, amelyen dolgozol, nem mentett módosításokat tartalmaz.",
+    "pd-replace": "Csere",
+    "preset-rename-same": "Először írj be egy új nevet a Név mezőbe, majd nyomd meg az Átnevezés gombot.",
+    "preset-view-readonly": "Ez a nézet csak a kártyát mutatja. A kialakítás szerkesztéséhez lépj vissza a Kártya nézetre.",
+    "preset-layer-fixed": "A(z) {presets} a kártyáját saját kóddal rajzolja ki, ezért itt nem szabható testre. Továbbra is használhatod így, ahogy van.",
+    "preset-play-reduced": "A Windows kevesebb animációt jelenít meg, ezért az előnézet mozdulatlan marad. A megjelenítésükhöz kapcsold vissza az „Animációs effektusok” beállítást a Windows beállításaiban."
   },
   "watchdog": {
     "rare": "Ritka {percent}%",

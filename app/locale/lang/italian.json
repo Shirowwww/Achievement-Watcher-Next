@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Tutte le impostazioni",
             "done": "Fatto",
+            "save": "Salva",
             "snap": "Aggancia alle guide (si disattiva con zoom elevato)",
             "zoomIn": "Ingrandisci",
             "zoomOut": "Riduci",
@@ -715,7 +716,11 @@
               "detail": "Descrizione",
               "meta": "Nome del gioco",
               "progress": "Barra di avanzamento",
-              "mark": "Logo del marchio"
+              "mark": "Logo del marchio",
+              "cardBefore": "Decorazione della scheda 1",
+              "cardAfter": "Decorazione della scheda 2",
+              "iconBefore": "Decorazione dell’icona 1",
+              "iconAfter": "Decorazione dell’icona 2"
             },
             "kind": {
               "text": "Testo",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Testo",
+              "boxWidth": "Larghezza del riquadro",
               "font": "Carattere",
               "fontCard": "Come la scheda",
               "fontFile": "File del carattere",
@@ -773,6 +779,10 @@
               "loop": "Ciclo",
               "alignGroup": "Allinea tra loro",
               "insert": "Inserisci"
+            },
+            "axis": {
+              "w": "L",
+              "h": "A"
             },
             "act": {
               "front": "Porta davanti alla scheda",
@@ -873,6 +883,8 @@
               "escape": "Deseleziona, poi esci dall’editor",
               "zoom": "Con la rotellina del mouse: ingrandisci e riduci",
               "dblclick": "Doppio clic: modifica un testo, ritaglia un’immagine",
+              "crop": "Durante il ritaglio: le frecce spostano l’immagine, + e - fanno lo zoom",
+              "or": "o",
               "group": "Clic: aggiungere un elemento alla selezione o toglierlo",
               "selectAll": "Seleziona tutto. Trascinare da un punto vuoto seleziona ciò che il riquadro tocca",
               "sheet": "Mostra o nascondi questo elenco",
@@ -1136,7 +1148,8 @@
             "close": "Chiudi",
             "mine": "I tuoi preset",
             "bundled": "Inclusi",
-            "browse": "Sfoglia i preset"
+            "browse": "Sfoglia i preset",
+            "empty": "Non hai ancora preset tuoi. Creane uno nell’editor e comparirà qui."
           }
         },
         "souvenirTitle": "Screenshot souvenir",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Preleva un colore dallo schermo",
     "empty-detect-running": "Ricerca dei giochi su questo PC…",
     "empty-detect-none": "Non è stato trovato nulla di nuovo. Aggiungi tu una cartella se manca un gioco.",
-    "empty-detect-found": "Cartelle trovate: {count}. Caricamento dei tuoi giochi…"
+    "empty-detect-found": "Cartelle trovate: {count}. Caricamento dei tuoi giochi…",
+    "pd-preview-title": "Anteprima della notifica",
+    "pd-replace-title": "Sostituire le tue modifiche?",
+    "pd-replace-detail": "Il design su cui stai lavorando ha modifiche non salvate.",
+    "pd-replace": "Sostituisci",
+    "preset-rename-same": "Scrivi prima un nuovo nome nel campo Nome, poi premi Rinomina.",
+    "preset-view-readonly": "Questa vista mostra solo la scheda. Torna a Scheda per modificare il layout.",
+    "preset-layer-fixed": "{presets} disegnano la propria scheda con un codice proprio, quindi non si possono personalizzare qui. Puoi comunque usarli così come sono.",
+    "preset-play-reduced": "Windows è impostato per mostrare meno animazioni, quindi l’anteprima resta ferma. Riattiva “Effetti animazione” nelle impostazioni di Windows per vederle."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Semua pengaturan",
             "done": "Selesai",
+            "save": "Simpan",
             "snap": "Tempel ke pemandu (mati saat diperbesar jauh)",
             "zoomIn": "Perbesar",
             "zoomOut": "Perkecil",
@@ -715,7 +716,11 @@
               "detail": "Deskripsi",
               "meta": "Nama game",
               "progress": "Bilah progres",
-              "mark": "Logo merek"
+              "mark": "Logo merek",
+              "cardBefore": "Dekorasi kartu 1",
+              "cardAfter": "Dekorasi kartu 2",
+              "iconBefore": "Dekorasi ikon 1",
+              "iconAfter": "Dekorasi ikon 2"
             },
             "kind": {
               "text": "Teks",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Teks",
+              "boxWidth": "Lebar kotak",
               "font": "Fon",
               "fontCard": "Sama dengan kartu",
               "fontFile": "Berkas fon",
@@ -773,6 +779,10 @@
               "loop": "Berulang",
               "alignGroup": "Ratakan satu sama lain",
               "insert": "Sisipkan"
+            },
+            "axis": {
+              "w": "L",
+              "h": "T"
             },
             "act": {
               "front": "Bawa ke depan kartu",
@@ -873,6 +883,8 @@
               "escape": "Batalkan pilihan, lalu keluar dari editor",
               "zoom": "Dengan roda mouse: perbesar dan perkecil",
               "dblclick": "Klik dua kali: ubah teks, pangkas gambar",
+              "crop": "Saat memangkas: tombol panah menggeser gambar, + dan - memperbesar atau memperkecil",
+              "or": "atau",
               "group": "Klik: tambahkan elemen ke pilihan, atau keluarkan dari pilihan",
               "selectAll": "Pilih semua. Menyeret dari area kosong memilih apa yang disentuh kotak",
               "sheet": "Tampilkan atau sembunyikan daftar ini",
@@ -1136,7 +1148,8 @@
             "close": "Tutup",
             "mine": "Preset Anda",
             "bundled": "Bawaan",
-            "browse": "Jelajahi preset"
+            "browse": "Jelajahi preset",
+            "empty": "Anda belum punya preset sendiri. Buat satu di perancang dan preset itu akan muncul di sini."
           }
         },
         "souvenirTitle": "Tangkapan layar suvenir",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Ambil warna dari layar",
     "empty-detect-running": "Mencari game di PC ini…",
     "empty-detect-none": "Tidak ada yang baru ditemukan. Tambahkan folder sendiri jika ada game yang belum muncul.",
-    "empty-detect-found": "Folder ditemukan: {count}. Memuat game Anda…"
+    "empty-detect-found": "Folder ditemukan: {count}. Memuat game Anda…",
+    "pd-preview-title": "Pratinjau notifikasi",
+    "pd-replace-title": "Ganti perubahan Anda?",
+    "pd-replace-detail": "Desain yang sedang Anda kerjakan memiliki perubahan yang belum disimpan.",
+    "pd-replace": "Ganti",
+    "preset-rename-same": "Ketik nama baru di kolom Nama terlebih dahulu, lalu tekan Ganti nama.",
+    "preset-view-readonly": "Tampilan ini hanya menampilkan kartu. Kembali ke Kartu untuk mengedit tata letak.",
+    "preset-layer-fixed": "{presets} menggambar kartunya dengan kode sendiri, sehingga tidak dapat disesuaikan di sini. Anda tetap dapat menggunakannya apa adanya.",
+    "preset-play-reduced": "Windows diatur untuk menampilkan lebih sedikit animasi, jadi pratinjau tetap diam. Aktifkan kembali “Efek animasi” di pengaturan Windows untuk melihatnya."
   },
   "watchdog": {
     "rare": "Langka {percent}%",

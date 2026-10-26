@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Alle Einstellungen",
             "done": "Fertig",
+            "save": "Speichern",
             "snap": "An Hilfslinien ausrichten (wird bei starkem Zoom deaktiviert)",
             "zoomIn": "Vergrößern",
             "zoomOut": "Verkleinern",
@@ -715,7 +716,11 @@
               "detail": "Beschreibung",
               "meta": "Spielname",
               "progress": "Fortschrittsbalken",
-              "mark": "Markenlogo"
+              "mark": "Markenlogo",
+              "cardBefore": "Kartendekor 1",
+              "cardAfter": "Kartendekor 2",
+              "iconBefore": "Symboldekor 1",
+              "iconAfter": "Symboldekor 2"
             },
             "kind": {
               "text": "Text",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Text",
+              "boxWidth": "Breite des Rahmens",
               "font": "Schriftart",
               "fontCard": "Wie die Karte",
               "fontFile": "Schriftdatei",
@@ -773,6 +779,10 @@
               "loop": "Schleife",
               "alignGroup": "Aneinander ausrichten",
               "insert": "Einfügen"
+            },
+            "axis": {
+              "w": "B",
+              "h": "H"
             },
             "act": {
               "front": "Vor die Karte holen",
@@ -873,6 +883,8 @@
               "escape": "Auswahl aufheben, dann den Editor verlassen",
               "zoom": "Mit dem Mausrad: hinein- und herauszoomen",
               "dblclick": "Doppelklick: Text bearbeiten, Bild zuschneiden",
+              "crop": "Beim Zuschneiden: Die Pfeiltasten verschieben das Bild, + und - zoomen",
+              "or": "oder",
               "group": "Klicken: ein Element zur Auswahl hinzufügen oder daraus entfernen",
               "selectAll": "Alles auswählen. Ziehen von einer leeren Stelle wählt aus, was der Rahmen berührt",
               "sheet": "Diese Liste ein- oder ausblenden",
@@ -1136,7 +1148,8 @@
             "close": "Schließen",
             "mine": "Deine Presets",
             "bundled": "Mitgeliefert",
-            "browse": "Presets durchsuchen"
+            "browse": "Presets durchsuchen",
+            "empty": "Du hast noch keine eigenen Presets. Erstelle eines im Designer, dann erscheint es hier."
           }
         },
         "souvenirTitle": "Souvenir-Screenshot",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Farbe vom Bildschirm aufnehmen",
     "empty-detect-running": "Suche nach Spielen auf diesem PC…",
     "empty-detect-none": "Nichts Neues gefunden. Füge selbst einen Ordner hinzu, wenn ein Spiel fehlt.",
-    "empty-detect-found": "Gefundene Ordner: {count}. Deine Spiele werden geladen…"
+    "empty-detect-found": "Gefundene Ordner: {count}. Deine Spiele werden geladen…",
+    "pd-preview-title": "Vorschau der Benachrichtigung",
+    "pd-replace-title": "Deine Änderungen ersetzen?",
+    "pd-replace-detail": "Das Design, an dem du arbeitest, hat Änderungen, die nicht gespeichert sind.",
+    "pd-replace": "Ersetzen",
+    "preset-rename-same": "Gib zuerst im Feld Name einen neuen Namen ein und klicke dann auf Umbenennen.",
+    "preset-view-readonly": "Diese Ansicht zeigt nur die Karte. Wechsle zurück zu Karte, um das Layout zu bearbeiten.",
+    "preset-layer-fixed": "{presets} zeichnen ihre Karte mit eigenem Code und lassen sich hier deshalb nicht anpassen. Du kannst sie aber weiterhin so verwenden, wie sie sind.",
+    "preset-play-reduced": "Windows ist so eingestellt, dass weniger Animationen angezeigt werden, deshalb bleibt die Vorschau still. Aktiviere „Animationseffekte“ in den Windows-Einstellungen wieder, um sie zu sehen."
   },
   "watchdog": {
     "rare": "Selten {percent}%",

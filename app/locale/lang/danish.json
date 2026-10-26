@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Alle indstillinger",
             "done": "Færdig",
+            "save": "Gem",
             "snap": "Fastgør til hjælpelinjer (slås fra ved kraftig zoom)",
             "zoomIn": "Zoom ind",
             "zoomOut": "Zoom ud",
@@ -715,7 +716,11 @@
               "detail": "Beskrivelse",
               "meta": "Spillets navn",
               "progress": "Fremskridtslinje",
-              "mark": "Brandlogo"
+              "mark": "Brandlogo",
+              "cardBefore": "Kortdekoration 1",
+              "cardAfter": "Kortdekoration 2",
+              "iconBefore": "Ikondekoration 1",
+              "iconAfter": "Ikondekoration 2"
             },
             "kind": {
               "text": "Tekst",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Tekst",
+              "boxWidth": "Boksens bredde",
               "font": "Skrifttype",
               "fontCard": "Samme som kortet",
               "fontFile": "Skrifttypefil",
@@ -773,6 +779,10 @@
               "loop": "Gentag",
               "alignGroup": "Justér i forhold til hinanden",
               "insert": "Indsæt"
+            },
+            "axis": {
+              "w": "B",
+              "h": "H"
             },
             "act": {
               "front": "Flyt foran kortet",
@@ -873,6 +883,8 @@
               "escape": "Fravælg, og forlad derefter editoren",
               "zoom": "Med musehjulet: zoom ind og ud",
               "dblclick": "Dobbeltklik: redigér en tekst, beskær et billede",
+              "crop": "Under beskæring: piletasterne flytter billedet, + og - zoomer",
+              "or": "eller",
               "group": "Klik: føj et element til markeringen, eller fjern det",
               "selectAll": "Markér alt. Hvis du trækker fra et tomt sted, markeres det, rammen rører",
               "sheet": "Vis eller skjul denne liste",
@@ -1136,7 +1148,8 @@
             "close": "Luk",
             "mine": "Dine presets",
             "bundled": "Medfølgende",
-            "browse": "Gennemse presets"
+            "browse": "Gennemse presets",
+            "empty": "Du har endnu ingen egne presets. Lav en i designeren, så dukker den op her."
           }
         },
         "souvenirTitle": "Souvenirskærmbillede",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Vælg en farve på skærmen",
     "empty-detect-running": "Leder efter spil på denne pc…",
     "empty-detect-none": "Intet nyt fundet. Tilføj selv en mappe, hvis et spil mangler.",
-    "empty-detect-found": "Mapper fundet: {count}. Indlæser dine spil…"
+    "empty-detect-found": "Mapper fundet: {count}. Indlæser dine spil…",
+    "pd-preview-title": "Forhåndsvisning af notifikationen",
+    "pd-replace-title": "Erstat dine ændringer?",
+    "pd-replace-detail": "Det design, du arbejder på, har ændringer, der ikke er gemt.",
+    "pd-replace": "Erstat",
+    "preset-rename-same": "Skriv først et nyt navn i feltet Navn, og tryk derefter på Omdøb.",
+    "preset-view-readonly": "Denne visning viser kun kortet. Gå tilbage til Kort for at redigere layoutet.",
+    "preset-layer-fixed": "{presets} tegner deres kort med deres egen kode, så de kan ikke tilpasses her. Du kan stadig bruge dem, som de er.",
+    "preset-play-reduced": "Windows er indstillet til at vise færre animationer, så forhåndsvisningen står stille. Slå »Animationseffekter« til igen i Windows-indstillingerne for at se dem."
   },
   "watchdog": {
     "rare": "Sjælden {percent} %",

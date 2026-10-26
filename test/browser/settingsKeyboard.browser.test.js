@@ -5,11 +5,13 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium');
 const { openStaticApp, showPanel, appDir } = require('../helpers/staticApp');
 
-const EXEMPT = '.aw-prompt-overlay, #onboarding, #theme-preview, .simple-modal, title-bar';
+// What Settings actually lets keep focus over it, read from its source so the two cannot drift.
+const EXEMPT = /exempt: '([^']+)'/.exec(fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8'))[1];
 
 test('the panels are named dialogs and every Settings tab can take focus', async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
@@ -74,7 +76,18 @@ test('focus that lands behind an open panel is sent back inside it', async (t) =
       prompt.className = 'aw-prompt-overlay';
       prompt.append(stray);
       document.body.append(prompt);
+      // The preset editor's tour and the preset gallery sit over Settings, outside its box.
+      const over = (className) => {
+        const layer = document.createElement('div');
+        layer.className = className;
+        const control = document.createElement('button');
+        layer.append(control);
+        document.body.append(layer);
+        return control;
+      };
       return {
+        tour: ask(over('pd-cv-tour'), '#settingNav li.active'),
+        gallery: ask(over('pg-backdrop'), '#settingNav li.active'),
         behind: ask(behind, '#settingNav li.active'),
         behindNoPreference: ask(behind),
         inside: ask(inside, '#settingNav li.active'),
@@ -90,6 +103,8 @@ test('focus that lands behind an open panel is sent back inside it', async (t) =
     assert.equal(outcome.inside, null, 'focus already inside stays put');
     assert.equal(outcome.prompt, null, 'a prompt above the panel keeps focus');
     assert.equal(outcome.titleBar, null, 'so does the title bar');
+    assert.equal(outcome.tour, null, 'so does the preset editor tour');
+    assert.equal(outcome.gallery, null, 'so does the preset gallery');
     assert.ok(outcome.hiddenPreference, 'a preference that does not exist falls back to the first control');
     assert.equal(outcome.noPanel, null, 'with no panel open nothing is redirected');
   } finally {

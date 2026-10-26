@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Todos los ajustes",
             "done": "Listo",
+            "save": "Guardar",
             "snap": "Ajustar a las guías (se desactiva con mucho zoom)",
             "zoomIn": "Acercar",
             "zoomOut": "Alejar",
@@ -715,7 +716,11 @@
               "detail": "Descripción",
               "meta": "Nombre del juego",
               "progress": "Barra de progreso",
-              "mark": "Logo de marca"
+              "mark": "Logo de marca",
+              "cardBefore": "Decoración de la tarjeta 1",
+              "cardAfter": "Decoración de la tarjeta 2",
+              "iconBefore": "Decoración del icono 1",
+              "iconAfter": "Decoración del icono 2"
             },
             "kind": {
               "text": "Texto",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Texto",
+              "boxWidth": "Ancho del cuadro",
               "font": "Fuente",
               "fontCard": "Igual que la tarjeta",
               "fontFile": "Archivo de fuente",
@@ -773,6 +779,10 @@
               "loop": "En bucle",
               "alignGroup": "Alinear entre sí",
               "insert": "Insertar"
+            },
+            "axis": {
+              "w": "An",
+              "h": "Al"
             },
             "act": {
               "front": "Pasar delante de la tarjeta",
@@ -873,6 +883,8 @@
               "escape": "Deseleccionar y luego salir del editor",
               "zoom": "Con la rueda del mouse: acercar y alejar",
               "dblclick": "Doble clic: editar un texto, recortar una imagen",
+              "crop": "Al recortar: las flechas mueven la imagen, + y - acercan o alejan",
+              "or": "o",
               "group": "Clic: agregar un elemento a la selección o quitarlo",
               "selectAll": "Seleccionar todo. Arrastrar desde un lugar vacío selecciona lo que toca el recuadro",
               "sheet": "Mostrar u ocultar esta lista",
@@ -1136,7 +1148,8 @@
             "close": "Cerrar",
             "mine": "Tus presets",
             "bundled": "Incluidos",
-            "browse": "Explorar los presets"
+            "browse": "Explorar los presets",
+            "empty": "Aún no tienes presets propios. Crea uno en el diseñador y aparecerá aquí."
           }
         },
         "souvenirTitle": "Captura souvenir",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Elegir un color en pantalla",
     "empty-detect-running": "Buscando juegos en esta PC…",
     "empty-detect-none": "No se encontró nada nuevo. Agrega una carpeta tú mismo si falta algún juego.",
-    "empty-detect-found": "Carpetas encontradas: {count}. Cargando tus juegos…"
+    "empty-detect-found": "Carpetas encontradas: {count}. Cargando tus juegos…",
+    "pd-preview-title": "Vista previa de la notificación",
+    "pd-replace-title": "¿Reemplazar tus cambios?",
+    "pd-replace-detail": "El diseño en el que estás trabajando tiene cambios sin guardar.",
+    "pd-replace": "Reemplazar",
+    "preset-rename-same": "Primero escribe un nuevo nombre en el campo Nombre y luego presiona Renombrar.",
+    "preset-view-readonly": "Esta vista solo muestra la tarjeta. Vuelve a Tarjeta para editar la disposición.",
+    "preset-layer-fixed": "{presets} dibujan su tarjeta con su propio código, por lo que no se pueden personalizar aquí. Aun así, puedes usarlos tal cual.",
+    "preset-play-reduced": "Windows está configurado para mostrar menos animaciones, así que la vista previa permanece quieta. Vuelve a activar «Efectos de animación» en la configuración de Windows para verlas."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

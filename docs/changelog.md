@@ -51,9 +51,15 @@ renamed in 3.9.0 and the history is kept under one file.
   achievement's shots. Files saved earlier keep their name.
 - **An achievement's name and description can be selected and copied** from its list, to search
   for how to unlock it. A hidden description stays masked.
+- **Bundled presets are more customizable.** Their card and icon decorations show as layers that can
+  be hidden, moved and recoloured. The six presets that cannot be customized now say why, and a
+  template, Surprise me or another base asks before replacing unsaved changes (Ctrl+Z undoes it).
+  The full-screen editor has its own Save button, and its help lists the crop keys.
 
 ### Fixed
 
+- **Customized bundled presets show the game and achievement names and replay their GIFs** in the
+  real popup, spinning elements spin, and a group dragged against the edge keeps its shape.
 - **Games added by hand show how many players unlocked each achievement.** A game added from its
   executable with a Steam AppID now gets the same global percentages as its Steam release, whatever
   platform was picked for it.

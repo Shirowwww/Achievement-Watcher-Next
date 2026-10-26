@@ -2543,11 +2543,13 @@
                         <span data-pg="close" data-lang="gallery.close"></span>
                         <span data-pg="mine" data-lang="gallery.mine"></span>
                         <span data-pg="bundled" data-lang="gallery.bundled"></span>
+                        <span data-pg="empty" data-lang="gallery.empty"></span>
                       </span>
                       <label class="pd-file"><span data-lang="name"></span><input type="text" id="pd-name" maxlength="48" /></label>
                       <!-- A layer: a bundled preset plus a few overrides, instead of a design from scratch. -->
-                      <label class="pd-file"><span data-lang="layer.title"></span><select autocomplete="off" id="pd-layer-base" data-lang-none="layer.none"></select></label>
+                      <label class="pd-file"><span data-lang="layer.title"></span><select autocomplete="off" id="pd-layer-base" data-lang-none="layer.none" aria-describedby="pd-layer-fixed"></select></label>
                     </div>
+                    <p class="pd-layer-note pd-layer-fixed" id="pd-layer-fixed" hidden></p>
                     <p class="pd-layer-note" id="pd-layer-note" hidden></p>
                     <span id="pd-layer-brand-label" data-lang="field.brandMark" hidden></span>
 
@@ -2595,6 +2597,7 @@
                           <span class="pd-cv-hint" id="pd-cv-hint" data-lang="canvas.hint"></span>
                           <div class="pd-cv-end">
                             <button type="button" class="pd-cv-btn" id="pd-cv-help" aria-expanded="false" data-lang-title="canvas.help.title"><i class="fas fa-keyboard" aria-hidden="true"></i></button>
+                            <button type="button" class="pd-cv-btn" id="pd-cv-save"><i class="fas fa-save" aria-hidden="true"></i> <span data-lang="canvas.save"></span></button>
                             <button type="button" class="pd-cv-btn pd-cv-close" id="pd-cv-close"><i class="fas fa-compress" aria-hidden="true"></i> <span data-lang="canvas.done"></span></button>
                           </div>
                         </div>
@@ -2610,6 +2613,10 @@
                           <span data-cv="part.meta" data-lang="canvas.part.meta"></span>
                           <span data-cv="part.progress" data-lang="canvas.part.progress"></span>
                           <span data-cv="part.mark" data-lang="canvas.part.mark"></span>
+                          <span data-cv="part.cardBefore" data-lang="canvas.part.cardBefore"></span>
+                          <span data-cv="part.cardAfter" data-lang="canvas.part.cardAfter"></span>
+                          <span data-cv="part.iconBefore" data-lang="canvas.part.iconBefore"></span>
+                          <span data-cv="part.iconAfter" data-lang="canvas.part.iconAfter"></span>
                           <span data-cv="kind.text" data-lang="canvas.kind.text"></span>
                           <span data-cv="kind.image" data-lang="canvas.kind.image"></span>
                           <span data-cv="kind.shape" data-lang="canvas.kind.shape"></span>
@@ -2625,6 +2632,9 @@
                           <span data-cv="act.layerUp" data-lang="canvas.act.layerUp"></span>
                           <span data-cv="act.layerDown" data-lang="canvas.act.layerDown"></span>
                           <span data-cv="prop.size" data-lang="canvas.prop.size"></span>
+                          <span data-cv="prop.boxWidth" data-lang="canvas.prop.boxWidth"></span>
+                          <span data-cv="axis.w" data-lang="canvas.axis.w"></span>
+                          <span data-cv="axis.h" data-lang="canvas.axis.h"></span>
                           <span data-cv="prop.weight" data-lang="canvas.prop.weight"></span>
                           <span data-cv="prop.color" data-lang="canvas.prop.color"></span>
                           <span data-cv="prop.colorAccent" data-lang="canvas.prop.colorAccent"></span>
@@ -2720,6 +2730,8 @@
                           <span data-cv="help.escape" data-lang="canvas.help.escape"></span>
                           <span data-cv="help.zoom" data-lang="canvas.help.zoom"></span>
                           <span data-cv="help.dblclick" data-lang="canvas.help.dblclick"></span>
+                          <span data-cv="help.crop" data-lang="canvas.help.crop"></span>
+                          <span data-cv="help.or" data-lang="canvas.help.or"></span>
                           <span data-cv="help.sheet" data-lang="canvas.help.sheet"></span>
                           <span data-cv="help.key.ctrl" data-lang="canvas.help.key.ctrl"></span>
                           <span data-cv="help.key.shift" data-lang="canvas.help.key.shift"></span>
@@ -3485,7 +3497,7 @@
                           <button type="button" id="btn-export-preset" class="inline-action-btn secondary"><i class="fas fa-file-export"></i> <span data-lang="exportLabel"></span></button>
                         </div>
                       </div>
-                      <span id="pd-status"></span>
+                      <span id="pd-status" role="status" aria-live="polite"></span>
                     </div>
                   </li>
                 </ul>

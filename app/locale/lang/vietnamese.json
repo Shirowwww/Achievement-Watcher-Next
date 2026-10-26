@@ -681,6 +681,7 @@
             "fullscreen": "Trình chỉnh sửa",
             "general": "Tất cả cài đặt",
             "done": "Xong",
+            "save": "Lưu",
             "snap": "Bắt dính vào đường dẫn (tự tắt khi phóng to nhiều)",
             "zoomIn": "Phóng to",
             "zoomOut": "Thu nhỏ",
@@ -715,7 +716,11 @@
               "detail": "Mô tả",
               "meta": "Tên trò chơi",
               "progress": "Thanh tiến độ",
-              "mark": "Logo thương hiệu"
+              "mark": "Logo thương hiệu",
+              "cardBefore": "Trang trí thẻ 1",
+              "cardAfter": "Trang trí thẻ 2",
+              "iconBefore": "Trang trí biểu tượng 1",
+              "iconAfter": "Trang trí biểu tượng 2"
             },
             "kind": {
               "text": "Chữ",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Chữ",
+              "boxWidth": "Chiều rộng khung",
               "font": "Phông chữ",
               "fontCard": "Giống thẻ",
               "fontFile": "Tệp phông chữ",
@@ -773,6 +779,10 @@
               "loop": "Lặp lại",
               "alignGroup": "Căn theo nhau",
               "insert": "Chèn"
+            },
+            "axis": {
+              "w": "R",
+              "h": "C"
             },
             "act": {
               "front": "Đưa lên trước thẻ",
@@ -873,6 +883,8 @@
               "escape": "Bỏ chọn rồi thoát trình chỉnh sửa",
               "zoom": "Với con lăn chuột: phóng to và thu nhỏ",
               "dblclick": "Nhấp đúp: sửa văn bản, cắt hình ảnh",
+              "crop": "Khi cắt: phím mũi tên di chuyển hình ảnh, + và - phóng to hoặc thu nhỏ",
+              "or": "hoặc",
               "group": "Nhấp: thêm một phần tử vào vùng chọn hoặc bỏ nó ra",
               "selectAll": "Chọn tất cả. Kéo từ một chỗ trống sẽ chọn những gì khung chạm tới",
               "sheet": "Hiện hoặc ẩn danh sách này",
@@ -1136,7 +1148,8 @@
             "close": "Đóng",
             "mine": "Mẫu của bạn",
             "bundled": "Có sẵn",
-            "browse": "Duyệt các mẫu"
+            "browse": "Duyệt các mẫu",
+            "empty": "Bạn chưa có mẫu riêng nào. Hãy tạo một mẫu trong trình thiết kế và nó sẽ hiện ở đây."
           }
         },
         "souvenirTitle": "Ảnh kỷ niệm",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Chọn màu trên màn hình",
     "empty-detect-running": "Đang tìm trò chơi trên PC này…",
     "empty-detect-none": "Không tìm thấy gì mới. Hãy tự thêm một thư mục nếu thiếu trò chơi nào.",
-    "empty-detect-found": "Đã tìm thấy thư mục: {count}. Đang tải trò chơi của bạn…"
+    "empty-detect-found": "Đã tìm thấy thư mục: {count}. Đang tải trò chơi của bạn…",
+    "pd-preview-title": "Xem thử thông báo",
+    "pd-replace-title": "Thay thế các thay đổi của bạn?",
+    "pd-replace-detail": "Thiết kế bạn đang làm có các thay đổi chưa được lưu.",
+    "pd-replace": "Thay thế",
+    "preset-rename-same": "Hãy nhập tên mới vào ô Tên trước, rồi nhấn Đổi tên.",
+    "preset-view-readonly": "Chế độ xem này chỉ hiển thị thẻ. Hãy quay lại Thẻ để chỉnh sửa bố cục.",
+    "preset-layer-fixed": "{presets} vẽ thẻ bằng mã riêng nên không thể tùy chỉnh ở đây. Bạn vẫn có thể dùng chúng như hiện có.",
+    "preset-play-reduced": "Windows đang được đặt để hiển thị ít hiệu ứng động hơn nên bản xem thử đứng yên. Hãy bật lại “Hiệu ứng hoạt ảnh” trong cài đặt Windows để xem."
   },
   "watchdog": {
     "rare": "Hiếm {percent}%",

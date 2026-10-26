@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "Todas as definições",
             "done": "Concluído",
+            "save": "Guardar",
             "snap": "Alinhar às guias (desliga com muito zoom)",
             "zoomIn": "Ampliar",
             "zoomOut": "Reduzir",
@@ -715,7 +716,11 @@
               "detail": "Descrição",
               "meta": "Nome do jogo",
               "progress": "Barra de progresso",
-              "mark": "Logótipo da marca"
+              "mark": "Logótipo da marca",
+              "cardBefore": "Decoração do cartão 1",
+              "cardAfter": "Decoração do cartão 2",
+              "iconBefore": "Decoração do ícone 1",
+              "iconAfter": "Decoração do ícone 2"
             },
             "kind": {
               "text": "Texto",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Texto",
+              "boxWidth": "Largura da caixa",
               "font": "Tipo de letra",
               "fontCard": "Igual ao cartão",
               "fontFile": "Ficheiro de tipo de letra",
@@ -773,6 +779,10 @@
               "loop": "Em ciclo",
               "alignGroup": "Alinhar entre si",
               "insert": "Inserir"
+            },
+            "axis": {
+              "w": "L",
+              "h": "A"
             },
             "act": {
               "front": "Passar para a frente do cartão",
@@ -873,6 +883,8 @@
               "escape": "Desselecionar e depois sair do editor",
               "zoom": "Com a roda do rato: aumentar e diminuir o zoom",
               "dblclick": "Duplo clique: editar um texto, recortar uma imagem",
+              "crop": "Durante o recorte: as setas movem a imagem, + e - aumentam ou diminuem o zoom",
+              "or": "ou",
               "group": "Clique: adicionar um elemento à seleção ou retirá-lo",
               "selectAll": "Selecionar tudo. Arrastar a partir de um local vazio seleciona o que a caixa toca",
               "sheet": "Mostrar ou ocultar esta lista",
@@ -1136,7 +1148,8 @@
             "close": "Fechar",
             "mine": "As suas predefinições",
             "bundled": "Incluídas",
-            "browse": "Explorar as predefinições"
+            "browse": "Explorar as predefinições",
+            "empty": "Ainda não tem predefinições suas. Crie uma no editor e ela aparece aqui."
           }
         },
         "souvenirTitle": "Captura de recordação",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Escolher uma cor no ecrã",
     "empty-detect-running": "A procurar jogos neste PC…",
     "empty-detect-none": "Não foi encontrado nada de novo. Adicione uma pasta se faltar algum jogo.",
-    "empty-detect-found": "Pastas encontradas: {count}. A carregar os seus jogos…"
+    "empty-detect-found": "Pastas encontradas: {count}. A carregar os seus jogos…",
+    "pd-preview-title": "Pré-visualização da notificação",
+    "pd-replace-title": "Substituir as suas alterações?",
+    "pd-replace-detail": "O design em que está a trabalhar tem alterações por guardar.",
+    "pd-replace": "Substituir",
+    "preset-rename-same": "Escreva primeiro um novo nome no campo Nome e depois prima Mudar o nome.",
+    "preset-view-readonly": "Esta vista mostra apenas o cartão. Volte a Cartão para editar a disposição.",
+    "preset-layer-fixed": "{presets} desenham o seu cartão com código próprio, por isso não podem ser personalizados aqui. Pode continuar a usá-los tal como estão.",
+    "preset-play-reduced": "O Windows está definido para mostrar menos animações, por isso a pré-visualização fica parada. Volte a ativar «Efeitos de animação» nas definições do Windows para as ver."
   },
   "watchdog": {
     "rare": "Raro {percent}%",

@@ -681,6 +681,7 @@
             "fullscreen": "編輯器",
             "general": "所有設定",
             "done": "完成",
+            "save": "儲存",
             "snap": "吸附至參考線(大幅放大時自動關閉)",
             "zoomIn": "放大",
             "zoomOut": "縮小",
@@ -715,7 +716,11 @@
               "detail": "說明",
               "meta": "遊戲名稱",
               "progress": "進度列",
-              "mark": "品牌標誌"
+              "mark": "品牌標誌",
+              "cardBefore": "卡片裝飾 1",
+              "cardAfter": "卡片裝飾 2",
+              "iconBefore": "圖示裝飾 1",
+              "iconAfter": "圖示裝飾 2"
             },
             "kind": {
               "text": "文字",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "文字",
+              "boxWidth": "文字方塊寬度",
               "font": "字型",
               "fontCard": "與卡片相同",
               "fontFile": "字型檔案",
@@ -773,6 +779,10 @@
               "loop": "循環",
               "alignGroup": "彼此對齊",
               "insert": "插入"
+            },
+            "axis": {
+              "w": "寬",
+              "h": "高"
             },
             "act": {
               "front": "移到卡片前方",
@@ -873,6 +883,8 @@
               "escape": "取消選取，然後離開編輯器",
               "zoom": "使用滑鼠滾輪：放大與縮小",
               "dblclick": "按兩下：編輯文字，裁切圖片",
+              "crop": "裁切時：方向鍵移動圖片，+ 和 - 縮放",
+              "or": "或",
               "group": "點一下：將元素加入選取，或從選取中移除",
               "selectAll": "全選。從空白處拖曳可選取方框碰到的內容",
               "sheet": "顯示或隱藏此清單",
@@ -1136,7 +1148,8 @@
             "close": "關閉",
             "mine": "您的預設集",
             "bundled": "內建",
-            "browse": "瀏覽預設集"
+            "browse": "瀏覽預設集",
+            "empty": "您還沒有自己的預設集。在設計工具中建立一個，它就會顯示在這裡。"
           }
         },
         "souvenirTitle": "紀念截圖",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "從螢幕上取色",
     "empty-detect-running": "正在這台電腦上尋找遊戲…",
     "empty-detect-none": "沒有發現新內容。如有遊戲缺少，請自行新增資料夾。",
-    "empty-detect-found": "已找到資料夾：{count}。正在載入你的遊戲…"
+    "empty-detect-found": "已找到資料夾：{count}。正在載入你的遊戲…",
+    "pd-preview-title": "通知預覽",
+    "pd-replace-title": "要取代您的變更嗎？",
+    "pd-replace-detail": "您正在編輯的設計有尚未儲存的變更。",
+    "pd-replace": "取代",
+    "preset-rename-same": "請先在「名稱」欄位輸入新名稱，再按一下「重新命名」。",
+    "preset-view-readonly": "此檢視只顯示卡片。請回到「卡片」以編輯版面配置。",
+    "preset-layer-fixed": "{presets} 使用內建程式碼繪製卡片，因此無法在此自訂。您仍可依原樣使用。",
+    "preset-play-reduced": "Windows 已設定為顯示較少動畫，因此預覽會保持靜止。若要查看動畫，請在 Windows 設定中重新開啟「動畫效果」。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

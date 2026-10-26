@@ -1417,7 +1417,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const target = focusTrapTarget({
         panel,
         landed: event.target,
-        exempt: '.aw-prompt-overlay, .aw-color-popover, #onboarding, #theme-preview, .simple-modal, title-bar',
+        exempt: '.aw-prompt-overlay, .aw-color-popover, .pd-cv-tour, .pg-backdrop, #onboarding, #theme-preview, .simple-modal, title-bar',
         preferred: gameConfig ? '#game-config-tabs button.active' : '#settingNav li.active',
       });
       if (target) target.focus({ preventScroll: true });
@@ -5246,6 +5246,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           ? { width: layerMode.width, height: layerMode.height }
           : presetGenerator.presetBoxSize(values, { editing });
 
+    // The bundled card as the preview lays it out, which the popup needs to fit items reaching past it.
+    function layerCardSize() {
+      try {
+        const card = document.getElementById('pd-frame').contentDocument.querySelector('.ach');
+        return card && card.offsetWidth ? { width: card.offsetWidth, height: card.offsetHeight } : null;
+      } catch {
+        return null;
+      }
+    }
+
     // The logo is one extra element inside the card; the preview document is built without it.
     function syncLayerLogo(doc) {
       try {
@@ -5300,7 +5310,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     }
 
-    const previewFrame = () => ensureFrame(document.getElementById('pd-frame-wrap'), { id: 'pd-frame', title: 'preview' });
+    const previewFrame = () => ensureFrame(document.getElementById('pd-frame-wrap'), { id: 'pd-frame', title: t('pd-preview-title', 'Notification preview', 'Aperçu de la notification') });
 
     // Only needed when the frame must be re-created (play-through, first render); editing a
     // property swaps the stylesheet inside the existing document instead, to keep slider drags cheap.
@@ -5432,6 +5442,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         screen.style.width = '';
         $('#pd-resolution').prop('hidden', true);
         $('#pd-placement').prop('hidden', true);
+        $('#pd-zoom').prop('hidden', true);
         $('#pd-size-note').text(`${box.width}×${box.height}`);
         if (canvasEditor) canvasEditor.refresh();
         return;
@@ -5701,7 +5712,40 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       clearTimeout(historyTimer);
       historyTimer = null;
       presetHistory.reset(JSON.stringify(readPresetOptions()));
+      markDesignClean();
       updateHistoryButtons();
+    }
+
+    // A step about to be taken by something other than a control: what is pending counts first.
+    function settlePresetHistory() {
+      if (historyTimer === null) return;
+      clearTimeout(historyTimer);
+      historyTimer = null;
+      presetHistory.record(JSON.stringify(readPresetOptions()));
+    }
+
+    // The design as it was loaded, started or saved, to tell whether replacing it loses work.
+    let cleanDesign = null;
+    const designKey = () => JSON.stringify([readPresetOptions(), [...layerSections].sort()]);
+    function markDesignClean() {
+      cleanDesign = designKey();
+    }
+
+    // Asked before a load, a starting point or a surprise replaces changes nobody saved.
+    function confirmReplaceDesign() {
+      if (cleanDesign === null || designKey() === cleanDesign) return true;
+      const question = t('pd-replace-title', 'Replace your changes?', 'Remplacer tes modifications ?');
+      const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'question',
+        title: question,
+        message: question,
+        detail: t('pd-replace-detail', 'The design you are working on has changes that are not saved.', 'Le design en cours a des modifications qui ne sont pas enregistrées.'),
+        buttons: [t('cancel', 'Cancel', 'Annuler'), t('pd-replace', 'Replace', 'Remplacer')],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      });
+      return answer === 1;
     }
 
     function stepPresetHistory(back) {
@@ -5775,6 +5819,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       document.getElementById('pd-stage').setAttribute('data-view', previewView);
       if (previewView === 'compare') renderComparePreviews(readPresetOptions());
       layoutPreview();
+      // The layers stay listed but cannot be picked outside the single card.
+      const readonly = t('preset-view-readonly', 'This view only shows the card. Go back to Card to edit the layout.', 'Cette vue montre seulement la carte. Reviens sur Carte pour modifier la mise en page.');
+      if (previewView !== 'card' && canvasEditor && canvasEditor.isFull()) setPresetStatus(readonly);
+      else if ($('#pd-status').text() === readonly) setPresetStatus('');
     });
 
     // A picture added to the free layout goes through the logo import: same checks, same folder.
@@ -5831,6 +5879,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       markPseudo: () => (layerMode && layerMode.markPseudo) || '',
       // Over a bundled preset, whose engine cannot cut through the card.
       isLayer: () => Boolean(layerMode),
+      // A decoration can be recoloured only when its base draws it with the accent.
+      decorUsesAccent: (key) => Boolean(layerMode) && presetLayerTool.decorUsesAccent(layerMode.css, key),
       importImage: loggedImport(importCanvasImage),
       importFont: loggedImport(importCanvasFont),
       status: (message, state) => setPresetStatus(message, state),
@@ -5975,6 +6025,16 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // Re-read the controls when it ends rather than restoring the design as it was at Play, since
       // an edit made during playback should not appear to vanish.
       previewPlayTimer = setTimeout(() => renderPreviewDocument(readPresetOptions()), values.duration + 400);
+      // The animations sit behind prefers-reduced-motion, so Play would otherwise seem broken.
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        setPresetStatus(
+          t(
+            'preset-play-reduced',
+            'Windows is set to show fewer animations, so the preview stays still. Turn "Animation effects" back on in Windows settings to see them.',
+            'Windows est réglé pour afficher moins d’animations : l’aperçu reste immobile. Réactive « Effets d’animation » dans les paramètres de Windows pour les voir.'
+          )
+        );
+      }
     });
 
     // Mirrors the Notifications tab's position setting rather than adding a second one: a preset
@@ -6089,6 +6149,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       sel.append($('<option>').attr('value', '').text(sel.attr('data-new') || ''));
       generatedPresets.forEach((preset) => sel.append($('<option>').attr('value', preset.name).text(preset.name)));
       sel.val(managedPresetNames().includes(selected) ? selected : '');
+      sel.data('shown', String(sel.val() || ''));
       updateCreateButtonMode();
       updateDeleteButtonVisibility();
     }
@@ -6142,7 +6203,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const to = ($('#pd-name').val() || '').trim();
       if (!from) return;
       if (!to || to === from) {
-        setPresetStatus($('#pd-status').attr('data-err') || '', 'error');
+        setPresetStatus(
+          to
+            ? t('preset-rename-same', 'Type a new name in the Name field first, then press Rename.', 'Tape d’abord un nouveau nom dans le champ Nom, puis appuie sur Renommer.')
+            : $('#pd-status').attr('data-err') || '',
+          'error'
+        );
         $('#pd-name').trigger('focus');
         return;
       }
@@ -6361,14 +6427,39 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
 
     function refreshLayerBases() {
-      return ipcRenderer
-        .invoke('list-layer-bases')
-        .then((names) => fillLayerBases(names || [], layerMode ? layerMode.base : ''))
+      return Promise.all([ipcRenderer.invoke('list-layer-bases'), ipcRenderer.invoke('list-fixed-presets')])
+        .then(([names, fixed]) => {
+          fillLayerBases(names || [], layerMode ? layerMode.base : '');
+          showFixedPresets(fixed || []);
+        })
         .catch((err) => debug.log(err));
+    }
+
+    // Without this the missing presets look like a bug rather than a limit.
+    function showFixedPresets(names) {
+      const hint = $('#pd-layer-fixed');
+      if (!names.length) {
+        hint.prop('hidden', true).text('');
+        return;
+      }
+      hint
+        .prop('hidden', false)
+        .text(
+          t(
+            'preset-layer-fixed',
+            '{presets} draw their card with their own code, so they cannot be customized here. You can still use them as they are.',
+            '{presets} dessinent leur carte avec leur propre code : on ne peut pas les personnaliser ici. Tu peux toujours les utiliser tels quels.',
+            { presets: names.join(', ') }
+          )
+        );
     }
 
     $('#pd-layer-base').on('change', async function () {
       const name = String($(this).val() || '');
+      if (name && !confirmReplaceDesign()) {
+        $(this).val(layerMode ? layerMode.base : '');
+        return;
+      }
       if (!name) {
         exitLayerMode();
         writePresetOptions({});
@@ -6419,7 +6510,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     // A template is an ordinary set of options; the name field is left alone, since a starting
     // point is a look, not a preset, and overwriting a typed name would lose the user's work.
-    function applyDesignToControls(options) {
+    function applyDesignToControls(options, { undoable = false } = {}) {
+      if (undoable) settlePresetHistory();
       writePresetOptions(options);
       const values = presetSchema.normalizeOptions(options);
       refreshPresetSounds(values.sound || '');
@@ -6427,9 +6519,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       refreshPresetFonts(values.fontFile || '');
       updatePreviewStyles(readPresetOptions());
       replayPreview();
-      // A load, a template or a reset starts a design rather than continuing one: undoing across it
-      // would step back into a different preset's values.
-      resetPresetHistory();
+      // A load or a reset starts a design rather than continuing one: undoing across it would step
+      // back into a different preset's values. A starting point or a surprise over the same kind of
+      // design is one step, which Ctrl+Z takes back.
+      if (undoable) {
+        presetHistory.record(JSON.stringify(readPresetOptions()));
+        updateHistoryButtons();
+      } else {
+        resetPresetHistory();
+      }
       filterDesigner($('#pd-search').val());
     }
 
@@ -6475,21 +6573,25 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     $('#options-notify-designer').on('click', '.pd-template', function () {
       const name = String($(this).attr('data-template') || '');
       const template = presetTemplates.PRESET_TEMPLATES.find((entry) => entry.name === name);
-      if (!template) return;
+      if (!template || !confirmReplaceDesign()) return;
       const options = presetSchema.normalizeOptions(templateDesign(template));
       $('#options-notify-designer .pd-template').removeClass('is-on');
       $(this).addClass('is-on');
+      // Undo can only step back within one kind of design, not out of a bundled preset's layer.
+      const undoable = !layerMode;
       exitLayerMode();
-      applyDesignToControls(options);
+      applyDesignToControls(options, { undoable });
       setPresetStatus(`${$('#pd-status').attr('data-template') || ''} ${name}`.trim(), 'info');
     });
 
     // A design nobody would have thought to try. Constrained rather than uniform-random: one hue
     // drives the accent and the background is built around it, so the result is a design, not noise.
     $('#btn-random-preset').click(function () {
+      if (!confirmReplaceDesign()) return;
       $('#options-notify-designer .pd-template').removeClass('is-on');
+      const undoable = !layerMode;
       exitLayerMode();
-      applyDesignToControls(presetTemplates.randomPresetOptions());
+      applyDesignToControls(presetTemplates.randomPresetOptions(), { undoable });
       setPresetStatus($('#pd-status').attr('data-randomized') || '', 'info');
     });
 
@@ -6546,6 +6648,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     $('#pd-load').on('change', async function () {
       const name = String($(this).val() || '');
+      // Kept on a refusal: the picker goes back to what is still being edited.
+      if (name && !confirmReplaceDesign()) {
+        $(this).val($(this).data('shown') || '');
+        return;
+      }
+      $(this).data('shown', name);
       updateDeleteButtonVisibility();
       if (!name) {
         setPresetStatus('');
@@ -6586,7 +6694,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
         const options = readPresetOptions();
         const res = layerMode
-          ? await ipcRenderer.invoke('preview-layered-preset', { base: layerMode.base, sections: [...layerSections], options })
+          ? await ipcRenderer.invoke('preview-layered-preset', { base: layerMode.base, sections: [...layerSections], options, card: layerCardSize() })
           : await ipcRenderer.invoke('preview-custom-preset', options);
         if (res && res.ok) {
           setPresetStatus('');
@@ -6608,6 +6716,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'initial');
     });
 
+    // The full-screen editor covers the designer's own buttons: its Save is the same action.
+    $('#pd-cv-save').on('click', () => $('#btn-create-preset').trigger('click'));
+
     $('#btn-create-preset').click(async function () {
       const self = $(this);
       const status = $('#pd-status');
@@ -6619,10 +6730,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       self.css('pointer-events', 'none');
       try {
         const res = layerMode
-          ? await ipcRenderer.invoke('create-layered-preset', { name, base: layerMode.base, sections: [...layerSections], options: readPresetOptions() })
+          ? await ipcRenderer.invoke('create-layered-preset', { name, base: layerMode.base, sections: [...layerSections], options: readPresetOptions(), card: layerCardSize() })
           : await ipcRenderer.invoke('create-custom-preset', Object.assign({ name }, readPresetOptions()));
         if (res && res.ok) {
           presetGallery.forget(res.name);
+          markDesignClean();
           // Refresh the preset dropdown and select the new preset (autosave persists the choice).
           await refreshOverlayPresetMenu(res.name);
           await refreshGeneratedPresetList(res.name);

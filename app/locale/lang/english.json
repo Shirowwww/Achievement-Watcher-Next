@@ -681,6 +681,7 @@
             "fullscreen": "Editor",
             "general": "All settings",
             "done": "Done",
+            "save": "Save",
             "snap": "Snap to guides (turns off when zoomed far in)",
             "zoomIn": "Zoom in",
             "zoomOut": "Zoom out",
@@ -715,7 +716,11 @@
               "detail": "Description",
               "meta": "Game name",
               "progress": "Progress bar",
-              "mark": "Brand logo"
+              "mark": "Brand logo",
+              "cardBefore": "Card decoration 1",
+              "cardAfter": "Card decoration 2",
+              "iconBefore": "Icon decoration 1",
+              "iconAfter": "Icon decoration 2"
             },
             "kind": {
               "text": "Text",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Text",
+              "boxWidth": "Box width",
               "font": "Font",
               "fontCard": "Same as the card",
               "fontFile": "Font file",
@@ -773,6 +779,10 @@
               "loop": "Loop",
               "alignGroup": "Line up together",
               "insert": "Insert"
+            },
+            "axis": {
+              "w": "W",
+              "h": "H"
             },
             "act": {
               "front": "Bring in front of the card",
@@ -873,6 +883,8 @@
               "escape": "Deselect, then leave the editor",
               "zoom": "With the mouse wheel: zoom in and out",
               "dblclick": "Double-click: edit a text, crop a picture",
+              "crop": "While cropping: the arrows move the picture, + and - zoom it",
+              "or": "or",
               "group": "Clicking: add an element to the selection, or take it out",
               "selectAll": "Select everything. Dragging from an empty spot selects what the box touches",
               "sheet": "Show or hide this list",
@@ -1136,7 +1148,8 @@
             "close": "Close",
             "mine": "Your presets",
             "bundled": "Included",
-            "browse": "Browse the presets"
+            "browse": "Browse the presets",
+            "empty": "You have no presets of your own yet. Make one in the designer and it shows up here."
           }
         },
         "souvenirTitle": "Souvenir screenshot",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Pick a colour on screen",
     "empty-detect-running": "Looking for games on this PC…",
     "empty-detect-none": "Nothing new found. Add a folder yourself if a game is missing.",
-    "empty-detect-found": "Folders found: {count}. Loading your games…"
+    "empty-detect-found": "Folders found: {count}. Loading your games…",
+    "pd-preview-title": "Notification preview",
+    "pd-replace-title": "Replace your changes?",
+    "pd-replace-detail": "The design you are working on has changes that are not saved.",
+    "pd-replace": "Replace",
+    "preset-rename-same": "Type a new name in the Name field first, then press Rename.",
+    "preset-view-readonly": "This view only shows the card. Go back to Card to edit the layout.",
+    "preset-layer-fixed": "{presets} draw their card with their own code, so they cannot be customized here. You can still use them as they are.",
+    "preset-play-reduced": "Windows is set to show fewer animations, so the preview stays still. Turn \"Animation effects\" back on in Windows settings to see them."
   },
   "watchdog": {
     "rare": "Rare {percent}%",

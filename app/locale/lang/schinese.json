@@ -681,6 +681,7 @@
             "fullscreen": "编辑器",
             "general": "所有设置",
             "done": "完成",
+            "save": "保存",
             "snap": "吸附到参考线(大幅放大时自动关闭)",
             "zoomIn": "放大",
             "zoomOut": "缩小",
@@ -715,7 +716,11 @@
               "detail": "描述",
               "meta": "游戏名称",
               "progress": "进度条",
-              "mark": "品牌标志"
+              "mark": "品牌标志",
+              "cardBefore": "卡片装饰 1",
+              "cardAfter": "卡片装饰 2",
+              "iconBefore": "图标装饰 1",
+              "iconAfter": "图标装饰 2"
             },
             "kind": {
               "text": "文本",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "文本",
+              "boxWidth": "框宽度",
               "font": "字体",
               "fontCard": "与卡片相同",
               "fontFile": "字体文件",
@@ -773,6 +779,10 @@
               "loop": "循环",
               "alignGroup": "相互对齐",
               "insert": "插入"
+            },
+            "axis": {
+              "w": "宽",
+              "h": "高"
             },
             "act": {
               "front": "移到卡片前方",
@@ -873,6 +883,8 @@
               "escape": "取消选择，然后退出编辑器",
               "zoom": "使用鼠标滚轮：放大和缩小",
               "dblclick": "双击：编辑文字，裁剪图片",
+              "crop": "裁剪时：方向键移动图片，+ 和 - 缩放",
+              "or": "或",
               "group": "点击：将元素加入选择，或从选择中移除",
               "selectAll": "全选。从空白处拖动可选中方框碰到的内容",
               "sheet": "显示或隐藏此列表",
@@ -1136,7 +1148,8 @@
             "close": "关闭",
             "mine": "您的预设",
             "bundled": "内置",
-            "browse": "浏览预设"
+            "browse": "浏览预设",
+            "empty": "您还没有自己的预设。在设计器中创建一个，它就会显示在这里。"
           }
         },
         "souvenirTitle": "纪念截图",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "从屏幕上取色",
     "empty-detect-running": "正在此电脑上查找游戏…",
     "empty-detect-none": "未发现新内容。如有游戏缺失，请自行添加文件夹。",
-    "empty-detect-found": "已找到文件夹：{count}。正在加载你的游戏…"
+    "empty-detect-found": "已找到文件夹：{count}。正在加载你的游戏…",
+    "pd-preview-title": "通知预览",
+    "pd-replace-title": "要替换您的更改吗？",
+    "pd-replace-detail": "您正在编辑的设计有尚未保存的更改。",
+    "pd-replace": "替换",
+    "preset-rename-same": "请先在“名称”字段中输入新名称，然后点击“重命名”。",
+    "preset-view-readonly": "此视图仅显示卡片。请返回“卡片”以编辑布局。",
+    "preset-layer-fixed": "{presets} 使用自带代码绘制卡片，因此无法在此自定义。您仍然可以按原样使用它们。",
+    "preset-play-reduced": "Windows 已设置为显示较少的动画，因此预览保持静止。要查看动画，请在 Windows 设置中重新打开“动画效果”。"
   },
   "watchdog": {
     "rare": "稀有 {percent}%",

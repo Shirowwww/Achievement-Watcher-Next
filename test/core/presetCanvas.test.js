@@ -532,6 +532,9 @@ test('a picture can be cut to a shape, rounded or not', () => {
 });
 
 test('a looping animation follows the entrance, keeps the item filters and stays out of the editor', () => {
+  // A text the user emptied keeps being empty after a save, instead of turning into "Text".
+  assert.equal(schema.normalizeCanvas({ items: [{ kind: 'text', text: ' ' }] }).items[0].text, ' ');
+  assert.equal(schema.normalizeCanvas({ items: [{ kind: 'text' }] }).items[0].text, 'Text');
   const canvas = schema.normalizeCanvas({
     items: [
       { kind: 'icon', loop: 'spin' },
@@ -542,7 +545,9 @@ test('a looping animation follows the entrance, keeps the item filters and stays
   });
   assert.deepEqual(canvas.items.map((item) => item.loop), ['spin', 'float', 'shine', undefined]);
   const css = generator.canvasCss(canvas);
-  assert.match(css, /@keyframes aw-cv-loop-spin \{ to \{ transform: rotate\(360deg\); \} \}/);
+  // Both ends written: after an entrance that moved it, the implied start is not a rotation, and
+  // Chromium then reads 0 to 360 degrees as no turn at all.
+  assert.match(css, /@keyframes aw-cv-loop-spin \{ from \{ transform: rotate\(0deg\); \} to \{ transform: rotate\(360deg\); \} \}/);
   assert.match(css, /\.ach\.active > \.aw-canvas > \[data-i="0"\] \{ animation: aw-cv-loop-spin \d+ms linear 0ms infinite; \}/);
   assert.match(css, /\[data-i="1"\] \{ animation: aw-cv-rise 480ms cubic-bezier\([^)]+\) 200ms both, aw-cv-loop-float \d+ms ease-in-out 680ms infinite; \}/);
   assert.match(css, /@keyframes aw-cv-shine-2 \{ 50% \{ filter: drop-shadow\(0 1px 4px rgba\(0, 0, 0, 0\.55\)\) brightness\(1\.35\); \} \}/);

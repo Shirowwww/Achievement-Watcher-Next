@@ -507,7 +507,9 @@ const CANVAS_LOOP_KEYFRAMES = {
   pulse: '50% { transform: scale(1.06); }',
   float: '50% { transform: translateY(-3px); }',
   swing: '25% { transform: rotate(4deg); } 75% { transform: rotate(-4deg); }',
-  spin: 'to { transform: rotate(360deg); }',
+  // Both ends written: after an entrance that moved the item, Chromium reads an implied start to
+  // 360deg as no turn at all.
+  spin: 'from { transform: rotate(0deg); } to { transform: rotate(360deg); }',
 };
 const CANVAS_LOOP_TIMING = { pulse: '1600ms ease-in-out', float: '2400ms ease-in-out', swing: '2000ms ease-in-out', spin: '6000ms linear', shine: '2200ms ease-in-out' };
 
@@ -624,11 +626,15 @@ function canvasFontRule(item, fonts) {
 
 // Where a restyled line's text is: the progress line keeps its words in its label.
 const CANVAS_STYLE_SELECTORS = { title: '.title', detail: '.detail', meta: '.meta', progress: '.progress_label' };
+// The pseudo-elements a bundled card draws its decorations with, whole selectors.
+const CANVAS_DECOR_SELECTORS = { cardBefore: '.ach::before', cardAfter: '.ach::after', iconBefore: '.ach .icon::before', iconAfter: '.ach .icon::after' };
 const CANVAS_SELF_ALIGN = { left: 'flex-start', center: 'center', right: 'flex-end' };
 
 // A line's own look, over the preset's text settings. Colour and face reach into the spans a line
 // holds (the game name, the rarity chip), which have colours of their own.
 function canvasStyleCss(part, style, fonts, states = ALL_STATES) {
+  // A decoration paints with the card's accent: its colour is that accent, on it alone.
+  if (CANVAS_DECOR_SELECTORS[part]) return [`${inStates(CANVAS_DECOR_SELECTORS[part], states)} { --accent: ${style.color} !important; }`];
   const selector = `${inStates('.ach', states)} ${CANVAS_STYLE_SELECTORS[part]}`;
   const textRules = [];
   const boxRules = [];
@@ -662,6 +668,7 @@ function canvasOrderCss(canvas) {
 
 // A bundled preset's mark is its card's ::after or ::before, which only its own stylesheet tells.
 const partSelector = (part, markPseudo) => {
+  if (CANVAS_DECOR_SELECTORS[part]) return CANVAS_DECOR_SELECTORS[part];
   if (part !== 'mark') return `.ach ${CANVAS_PART_SELECTORS[part]}`;
   const pseudos = String(markPseudo || '').split(',').filter((name) => name === 'after' || name === 'before');
   return pseudos.length ? pseudos.map((name) => `.ach::${name}`).join(', ') : null;
@@ -983,10 +990,22 @@ const touchesCard = (box, card) =>
 
 // Room each side of the card needs for every state's items, and the elements the popup leaves out.
 function canvasRoom(values, { editing = false } = {}) {
-  const canvas = schema.normalizeCanvas(values.canvas);
-  const card = cardSize(values);
+  const room = canvasOverhang(values.canvas, cardSize(values), { editing });
+  if (editing) {
+    // Even on both sides, so the card stays centred and still under the pointer as the room grows.
+    const x = Math.min(CANVAS_EDIT_ROOM.x, Math.max(room.left, room.right)) + CANVAS_EDIT_PAD;
+    const y = Math.min(CANVAS_EDIT_ROOM.y, Math.max(room.top, room.bottom)) + CANVAS_EDIT_PAD;
+    return { left: Math.ceil(x), right: Math.ceil(x), top: Math.ceil(y), bottom: Math.ceil(y), detached: room.detached };
+  }
+  for (const side of ['left', 'top', 'right', 'bottom']) room[side] = Math.min(CANVAS_MAX_ROOM, Math.ceil(room[side]));
+  return room;
+}
+
+// How far the items reach past a card of this size, unclamped. A bundled card under a layer is
+// measured by the designer; a generated one is estimated from the options.
+function canvasOverhang(rawCanvas, card, { editing = false } = {}) {
   const room = { left: 0, top: 0, right: 0, bottom: 0, detached: [] };
-  canvasVariants(canvas).forEach(({ item, select, shown }) => {
+  canvasVariants(schema.normalizeCanvas(rawCanvas)).forEach(({ item, select, shown }) => {
     // Switched off in every state it stands for, it is never drawn: only the designer shows it. A
     // see-through shape paints nothing of its own.
     if (!editing && (!shown.length || item.cut)) return;
@@ -1000,13 +1019,6 @@ function canvasRoom(values, { editing = false } = {}) {
     room.right = Math.max(room.right, box.right - card.width);
     room.bottom = Math.max(room.bottom, box.bottom - card.height);
   });
-  if (editing) {
-    // Even on both sides, so the card stays centred and still under the pointer as the room grows.
-    const x = Math.min(CANVAS_EDIT_ROOM.x, Math.max(room.left, room.right)) + CANVAS_EDIT_PAD;
-    const y = Math.min(CANVAS_EDIT_ROOM.y, Math.max(room.top, room.bottom)) + CANVAS_EDIT_PAD;
-    return { left: Math.ceil(x), right: Math.ceil(x), top: Math.ceil(y), bottom: Math.ceil(y), detached: room.detached };
-  }
-  for (const side of ['left', 'top', 'right', 'bottom']) room[side] = Math.min(CANVAS_MAX_ROOM, Math.ceil(room[side]));
   return room;
 }
 
@@ -1488,10 +1500,13 @@ module.exports = {
   PREVIEW_SCRIPT_HASHES,
   CANVAS_CLASS,
   CANVAS_EDIT_ROOM,
+  CANVAS_MAX_ROOM,
+  CANVAS_DECOR_SELECTORS,
   CANVAS_PART_SELECTORS,
   CANVAS_STYLE_SELECTORS,
   canvasIconMask,
   canvasCss,
+  canvasOverhang,
   canvasMarkup,
   canvasScript,
   markupWithCanvas,

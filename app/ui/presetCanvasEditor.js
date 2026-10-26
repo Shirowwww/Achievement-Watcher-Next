@@ -20,6 +20,7 @@ const {
   CANVAS_SHAPES,
   CANVAS_STATES,
   CANVAS_STYLED_PARTS,
+  CANVAS_DECOR_PARTS,
   CANVAS_TIER_FILLS,
   CANVAS_TOKENS,
   canvasIn,
@@ -42,6 +43,10 @@ const CARD_ID = 'card';
 
 const TEXT_BLOCK = 'text';
 const MARK = 'mark';
+// Each decoration as the element that draws it (none: the card) and which of its pseudo-elements.
+const DECOR_PSEUDOS = { cardBefore: ['', 'before'], cardAfter: ['', 'after'], iconBefore: ['.icon', 'before'], iconAfter: ['.icon', 'after'] };
+// Drawn by the card itself, never stacked with the rest.
+const UNSTACKED = new Set([MARK, TEXT_BLOCK, ...CANVAS_DECOR_PARTS]);
 const WEIGHTS = [400, 600, 700, 800];
 const TRANSFORM_PROPS = ['translate', 'rotate', 'scale'];
 const HANDLES = { nw: [-1, -1], n: [0, -1], ne: [1, -1], e: [1, 0], se: [1, 1], s: [0, 1], sw: [-1, 1], w: [-1, 0] };
@@ -50,6 +55,8 @@ const SNAP_PX = 5;
 // Close enough to place by eye: snapping would only fight a pixel-exact drag.
 const SNAP_OFF_ZOOM = 3;
 const DRAG_THRESHOLD_PX = 3;
+const DOUBLE_PRESS_MS = 450;
+const CROP_ZOOM_STEP = 1.08;
 const ROTATOR_ROOM_PX = 26;
 const NUDGE_BIG = 10;
 const PART_SCALE = [0.2, 4];
@@ -144,6 +151,11 @@ function createCanvasEditor(options) {
   let lastBar = 'left';
   const controls = root.querySelector('.pd-controls');
   const controlsHome = document.createComment('pd-controls');
+  // The designer's messages ("Copied", a refused picture) are read where the editor is.
+  const status = document.getElementById('pd-status');
+  const statusHome = document.createComment('pd-status');
+  // What full screen covers, kept from taking focus while it is covered.
+  let covered = [];
   const layerList = root.querySelector('#pd-cv-layer-list');
   const summary = root.querySelector('#pd-canvas-summary');
   const overlay = el('div', 'pd-cv-overlay');
@@ -201,7 +213,10 @@ function createCanvasEditor(options) {
     lastView = clone(canvas);
     sources = new WeakMap(canvas.items.map((item, index) => [item, index]));
   }
+  // Another state, an undo or another preset: edits go back to what every state shares, so a
+  // "Gold only" picked earlier never keeps steering edits nobody sees it steer.
   function project() {
+    alone = false;
     viewState = previewState();
     canvas = canvasIn(layout, viewState);
     settle();
@@ -311,6 +326,7 @@ function createCanvasEditor(options) {
   // until the restored transform is computed, or the part would glide home and back each time.
   function measurePart(g, key) {
     if (key === MARK) return measureMark(g);
+    if (DECOR_PSEUDOS[key]) return measureDecor(g, key);
     const node = g.card.querySelector(CANVAS_PART_SELECTORS[key]);
     if (!node || !node.getClientRects().length) return null;
     node.style.setProperty('transition', 'none', 'important');
@@ -331,9 +347,24 @@ function createCanvasEditor(options) {
   function measureMark(g) {
     // The first is the mark itself; a ring that follows it is not what the handles frame.
     const pseudo = options.markPseudo().split(',')[0];
-    if (!pseudo) return null;
-    const style = g.doc.defaultView.getComputedStyle(g.card, `::${pseudo}`);
-    if (style.display === 'none' || style.position !== 'absolute') return null;
+    return pseudo ? measurePseudo(g, g.card, pseudo) : null;
+  }
+
+  // Over a bundled card only, and not the pseudo-element its mark already is.
+  function measureDecor(g, key) {
+    const [host, pseudo] = DECOR_PSEUDOS[key];
+    if (!options.isLayer() || (!host && options.markPseudo().split(',').includes(pseudo))) return null;
+    const node = host ? g.card.querySelector(host) : g.card;
+    if (!node || !node.getClientRects().length) return null;
+    // Offsets come from the host's padding box: moved into the card's, where the canvas starts.
+    const rect = node.getBoundingClientRect();
+    const box = measurePseudo(g, node, pseudo);
+    return box && host ? { ...box, cx: box.cx + rect.left + node.clientLeft - g.ox, cy: box.cy + rect.top + node.clientTop - g.oy } : box;
+  }
+
+  function measurePseudo(g, node, pseudo) {
+    const style = g.doc.defaultView.getComputedStyle(node, `::${pseudo}`);
+    if (style.display === 'none' || style.content === 'none' || style.position !== 'absolute') return null;
     const px = (prop) => parseFloat(style.getPropertyValue(prop)) || 0;
     const extra = (a, b) => (style.boxSizing === 'border-box' ? 0 : px(`padding-${a}`) + px(`padding-${b}`) + px(`border-${a}-width`) + px(`border-${b}-width`));
     const w = px('width') + extra('left', 'right');
@@ -369,7 +400,7 @@ function createCanvasEditor(options) {
   function collectBoxes(g) {
     const layers = canvasOrder(canvas).map((entry) => (Number.isInteger(entry) ? itemBox(g, canvas.items[entry], entry) : partBox(g, entry)));
     // The mark is drawn by the card itself, under or over its content, so it never joins the order.
-    return [partBox(g, MARK), partBox(g, TEXT_BLOCK), ...layers].filter(Boolean);
+    return [partBox(g, MARK), ...CANVAS_DECOR_PARTS.map((key) => partBox(g, key)), partBox(g, TEXT_BLOCK), ...layers].filter(Boolean);
   }
 
   const selectedBox = () => (current && current.boxes.find((box) => box.id === selected)) || null;
@@ -622,12 +653,43 @@ function createCanvasEditor(options) {
   }
 
   // Past the working area an item would leave the preview, and nothing could pick it up again.
+  function roomFor(g, box) {
+    const item = canvas.items[box.index];
+    const h = itemHeight(g, item, box.index);
+    return {
+      x: [-CANVAS_EDIT_ROOM.x, g.cardW + CANVAS_EDIT_ROOM.x - Math.min(item.w, g.cardW + CANVAS_EDIT_ROOM.x * 2)],
+      y: [-CANVAS_EDIT_ROOM.y, g.cardH + CANVAS_EDIT_ROOM.y - Math.min(h, g.cardH + CANVAS_EDIT_ROOM.y * 2)],
+    };
+  }
+
   function keepInside(g, box) {
     if (box.type !== 'item') return;
     const item = canvas.items[box.index];
-    const h = itemHeight(g, item, box.index);
-    item.x = round1(clamp(item.x, -CANVAS_EDIT_ROOM.x, g.cardW + CANVAS_EDIT_ROOM.x - Math.min(item.w, g.cardW + CANVAS_EDIT_ROOM.x * 2)));
-    item.y = round1(clamp(item.y, -CANVAS_EDIT_ROOM.y, g.cardH + CANVAS_EDIT_ROOM.y - Math.min(h, g.cardH + CANVAS_EDIT_ROOM.y * 2)));
+    const room = roomFor(g, box);
+    item.x = round1(clamp(item.x, ...room.x));
+    item.y = round1(clamp(item.y, ...room.y));
+  }
+
+  // A group stops as one at the first edge any of its items meets, so it never changes shape.
+  // Measured once per drag: the boxes it starts from do not move while it lasts.
+  function groupRoom(g, boxes) {
+    let [loX, hiX, loY, hiY] = [-Infinity, Infinity, -Infinity, Infinity];
+    for (const box of boxes) {
+      if (box.type !== 'item') continue;
+      const room = roomFor(g, box);
+      const left = box.cx - box.w / 2;
+      const top = box.cy - box.h / 2;
+      loX = Math.max(loX, room.x[0] - left);
+      hiX = Math.min(hiX, room.x[1] - left);
+      loY = Math.max(loY, room.y[0] - top);
+      hiY = Math.min(hiY, room.y[1] - top);
+    }
+    return { loX, hiX, loY, hiY };
+  }
+
+  function groupShift(room, dx, dy) {
+    const within = (d, lo, hi) => (lo > hi ? d : clamp(d, lo, hi));
+    return { dx: within(dx, room.loX, room.hiX), dy: within(dy, room.loY, room.hiY) };
   }
 
   function setRotation(box, deg) {
@@ -780,7 +842,9 @@ function createCanvasEditor(options) {
       return void render();
     }
     if (drag.kind === 'group') {
-      moveBoxes(drag.boxes, dx, dy);
+      drag.room = drag.room || groupRoom(current.g, drag.boxes);
+      const shift = groupShift(drag.room, dx, dy);
+      moveBoxes(drag.boxes, shift.dx, shift.dy);
     } else if (drag.kind === 'move') {
       const free = event.altKey || !snapping();
       const target = free ? { cx: drag.box.cx + dx, cy: drag.box.cy + dy } : snapCenter(drag.box, drag.box.cx + dx, drag.box.cy + dy);
@@ -863,6 +927,10 @@ function createCanvasEditor(options) {
     if (id === CARD_ID) return startMarquee(event, CARD_ID);
     if (addsToGroup(event)) return toggleMember(id);
     if (grouped() && picks.includes(id)) return startGroupDrag(event);
+    if (secondPress(id, event) && id === selected) {
+      event.preventDefault();
+      return openSelected();
+    }
     if (cropping && id === selected) return startDrag('pan', event);
     if (id !== selected) select(id);
     startDrag('move', event);
@@ -875,40 +943,67 @@ function createCanvasEditor(options) {
     startMarquee(event, null);
   });
 
-  overlay.addEventListener('dblclick', (event) => {
+  // Two presses on the same box: its text to type, or its picture to crop. Told apart here because
+  // each press repaints the overlay, so the browser never sees a click, let alone a double one.
+  let lastPress = null;
+  function secondPress(id, event) {
+    const twice = lastPress && lastPress.id === id && event.timeStamp - lastPress.at < DOUBLE_PRESS_MS;
+    lastPress = twice ? null : { id, at: event.timeStamp };
+    return twice;
+  }
+  function openSelected() {
     const item = selectedItem();
-    if (!item || !event.target.closest('[data-id]')) return;
+    if (!item) return;
     if (item.kind === 'image') return toggleCrop();
     if (item.kind === 'text') {
       const field = props.querySelector('[data-prop="text"]');
       if (field) field.focus();
     }
-  });
+  }
 
   // In crop mode the wheel zooms the picture inside its frame, around the frame's centre.
   overlay.addEventListener(
     'wheel',
     (event) => {
-      const item = selectedItem();
-      if (!cropping || !item || item.kind !== 'image') return;
+      if (!croppedItem()) return;
       event.preventDefault();
-      const fit = item.fit;
-      const rx = (item.w / 2 - fit.x) / fit.w;
-      const ry = (item.h / 2 - fit.y) / (fit.w / fit.ar);
-      fit.w = fit.w * (event.deltaY < 0 ? 1.08 : 1 / 1.08);
-      fit.x = item.w / 2 - rx * fit.w;
-      fit.y = item.h / 2 - ry * (fit.w / fit.ar);
-      clampFit(item);
-      write();
-      commit();
+      zoomPicture(event.deltaY < 0 ? CROP_ZOOM_STEP : 1 / CROP_ZOOM_STEP);
     },
     { passive: false }
   );
 
+  const croppedItem = () => {
+    const item = selectedItem();
+    return cropping && item && item.kind === 'image' ? item : null;
+  };
+  function zoomPicture(factor) {
+    const item = croppedItem();
+    const fit = item.fit;
+    const rx = (item.w / 2 - fit.x) / fit.w;
+    const ry = (item.h / 2 - fit.y) / (fit.w / fit.ar);
+    fit.w = fit.w * factor;
+    fit.x = item.w / 2 - rx * fit.w;
+    fit.y = item.h / 2 - ry * (fit.w / fit.ar);
+    clampFit(item);
+    write();
+    commit();
+  }
+  // The keyboard's way to crop: arrows move the picture inside its frame.
+  function panPicture(dx, dy) {
+    const item = croppedItem();
+    item.fit = { ...item.fit, x: item.fit.x + dx, y: item.fit.y + dy };
+    clampFit(item);
+    write();
+    commit();
+  }
+
   /* ---------- actions ---------- */
 
   function select(id) {
-    if (id !== selected) cropping = false;
+    if (id !== selected) {
+      cropping = false;
+      alone = false;
+    }
     selected = id;
     picks = [];
     if (!id) cropping = false;
@@ -1131,7 +1226,8 @@ function createCanvasEditor(options) {
   function nudge(dx, dy) {
     const boxes = movable();
     if (!boxes.length) return;
-    moveBoxes(boxes, dx, dy);
+    const shift = current ? groupShift(groupRoom(current.g, boxes), dx, dy) : { dx, dy };
+    moveBoxes(boxes, shift.dx, shift.dy);
     write();
     commit();
   }
@@ -1609,16 +1705,23 @@ function createCanvasEditor(options) {
   }
 
   function sizeRows(item) {
+    const g = current && current.g;
+    // The bounds a drag keeps to, so a typed position never sends the item off the stage.
+    const xMax = g ? Math.round(g.cardW + CANVAS_EDIT_ROOM.x) : 1200;
+    const yMax = g ? Math.round(g.cardH + CANVAS_EDIT_ROOM.y) : 800;
+    const w = label('axis.w');
+    const h = label('axis.h');
     const rows = [
-      propRow('prop.position', pair(axisControl('X', item.x, -600, 1200, (v) => (item.x = v)), axisControl('Y', item.y, -400, 800, (v) => (item.y = v)))),
+      propRow('prop.position', pair(axisControl('X', item.x, -CANVAS_EDIT_ROOM.x, xMax, (v) => (item.x = v)), axisControl('Y', item.y, -CANVAS_EDIT_ROOM.y, yMax, (v) => (item.y = v)))),
     ];
-    if (item.kind === 'text') rows.push(propRow('prop.dims', axisControl('W', item.w, 16, 1200, (v) => (item.w = v))));
+    // A text's own size is its letters ("Size" above); this is how wide its box is.
+    if (item.kind === 'text') rows.push(propRow('prop.boxWidth', axisControl(w, item.w, 16, 1200, (v) => (item.w = v))));
     else if (item.kind === 'image') {
       const base = { w: item.w, h: item.h, fit: { ...item.fit } };
-      rows.push(propRow('prop.dims', axisControl('W', item.w, 4, 1200, (v) => scaleImage(item, v, base))));
+      rows.push(propRow('prop.dims', axisControl(w, item.w, 4, 1200, (v) => scaleImage(item, v, base))));
     } else {
       const minH = isLine(item) ? 1 : 4;
-      rows.push(propRow('prop.dims', pair(axisControl('W', item.w, 4, 1200, (v) => (item.w = v)), axisControl('H', item.h, minH, 800, (v) => (item.h = v)))));
+      rows.push(propRow('prop.dims', pair(axisControl(w, item.w, 4, 1200, (v) => (item.w = v)), axisControl(h, item.h, minH, 800, (v) => (item.h = v)))));
     }
     return rows;
   }
@@ -1768,9 +1871,27 @@ function createCanvasEditor(options) {
     return target;
   }
 
+  // A decoration's colour is the accent it is drawn with, offered only where its rules read it.
+  function decorLook(key) {
+    if (!options.decorUsesAccent(key)) return [];
+    const own = canvas.style && canvas.style[key] && canvas.style[key].color;
+    const g = current && current.g;
+    const accent = g ? g.doc.defaultView.getComputedStyle(g.card).getPropertyValue('--accent').trim() : '';
+    return [
+      propRow(
+        'prop.color',
+        colorControl(own || accent, (hex) => {
+          if (!canvas.style) canvas.style = {};
+          canvas.style[key] = { color: hex };
+        })
+      ),
+    ];
+  }
+
   function partRows(key) {
     const m = moveOf(key);
-    const { text = [], look = [] } = CANVAS_STYLED_PARTS.includes(key) ? textRows(partStyle(key), false) : {};
+    const decor = CANVAS_DECOR_PARTS.includes(key);
+    const { text = [], look = decor ? decorLook(key) : [] } = CANVAS_STYLED_PARTS.includes(key) && !decor ? textRows(partStyle(key), false) : {};
     for (const field of PART_KEYS[key] || []) {
       const row = proxyRow(field);
       if (row) look.push(row);
@@ -1840,7 +1961,8 @@ function createCanvasEditor(options) {
     if (item) head.appendChild(el('span', 'pd-cv-chip', label(`kind.${item.kind}`)));
     const rows = item ? itemRows(item) : partRows(box.key);
     const actions = item ? itemActions(item) : [actionButton('act.home', 'fa-undo', homeSelected)];
-    if (!item && !isHidden(box.key)) actions.push(actionButton('act.delete', 'fa-trash-alt', removeSelected));
+    // A part of the card is only taken off it, never deleted: named for what it does.
+    if (!item && !isHidden(box.key)) actions.push(actionButton('act.hide', 'fa-eye-slash', removeSelected));
     const sections = [];
     if (rows.text && rows.text.length) sections.push(section('section.text', rows.text));
     if (rows.look && rows.look.length) sections.push(section('section.look', rows.look));
@@ -1857,12 +1979,7 @@ function createCanvasEditor(options) {
     button.title = label(key);
     button.setAttribute('aria-label', `${label(key)}: ${boxName(box)}`);
     button.appendChild(icon(iconName));
-    button.addEventListener('click', () => {
-      onClick();
-      const again = layerList.querySelector(`[data-id="${box.id}"]`);
-      const target = again && again.parentNode.querySelector(`.pd-cv-layer-${kind}`);
-      if (target) target.focus();
-    });
+    button.addEventListener('click', onClick);
     return button;
   }
 
@@ -1881,21 +1998,15 @@ function createCanvasEditor(options) {
     row.appendChild(pick);
     row.appendChild(layerButton(box, 'eye', shown, shown ? 'fa-eye' : 'fa-eye-slash', shown ? 'act.hide' : 'act.show', () => toggleShown(box)));
     if (item) row.appendChild(layerButton(box, 'lock', !item.lock, item.lock ? 'fa-lock' : 'fa-lock-open', item.lock ? 'act.unlock' : 'act.lock', () => toggleLock(box)));
-    if (box.key !== TEXT_BLOCK && box.key !== MARK) {
+    if (!UNSTACKED.has(box.key)) {
       for (const [step, name, key] of [[1, 'fa-chevron-up', 'act.layerUp'], [-1, 'fa-chevron-down', 'act.layerDown']]) {
         const move = el('button', 'pd-cv-layer-step');
         move.type = 'button';
         move.title = label(key);
-        move.setAttribute('aria-label', label(key));
+        move.setAttribute('aria-label', `${label(key)}: ${boxName(box)}`);
         move.dataset.step = String(step);
         move.appendChild(icon(name));
-        // The list is rebuilt by the move: keep the keyboard on the same arrow of the same layer.
-        move.addEventListener('click', () => {
-          reorder(box.id, step);
-          const again = layerList.querySelector(`[data-id="${box.id}"]`);
-          const target = again && again.parentNode.querySelector(`[data-step="${step}"]`);
-          if (target) target.focus();
-        });
+        move.addEventListener('click', () => reorder(box.id, step));
         row.appendChild(move);
       }
     }
@@ -1922,7 +2033,23 @@ function createCanvasEditor(options) {
     swatches.replaceChildren(...[...seen].slice(0, MAX_SWATCHES).map((value) => Object.assign(el('option'), { value })));
   }
 
+  /*
+    The list is rebuilt on every repaint, including the one a moment after a click: the keyboard
+    stays on the same button of the same layer, wherever the layer went.
+  */
+  function layerFocus() {
+    const node = document.activeElement;
+    const row = node && layerList.contains(node) ? node.closest('.pd-cv-layer-row') : null;
+    const pick = row && row.querySelector('[data-id]');
+    return pick ? { id: pick.dataset.id, index: [...row.children].indexOf(node) } : null;
+  }
+  function restoreLayerFocus(spot) {
+    const pick = spot && layerList.querySelector(`[data-id="${spot.id}"]`);
+    if (pick) (pick.parentNode.children[spot.index] || pick).focus({ preventScroll: true });
+  }
+
   function renderPanels(force = false) {
+    const focusSpot = layerFocus();
     refreshSwatches();
     renderProps(force);
     // Top first, parts and added items in one stack, as the card draws them.
@@ -1939,6 +2066,7 @@ function createCanvasEditor(options) {
     rows.setAttribute('role', 'list');
     rows.append(...boxes.map(layerRow));
     layerList.replaceChildren(cardRow, ...(boxes.length ? [rows] : []));
+    restoreLayerFocus(focusSpot);
     renderSummary();
     const atCap = canvas.items.length >= CANVAS_MAX_ITEMS;
     for (const button of root.querySelectorAll('[data-cv-add]')) button.disabled = atCap;
@@ -1969,10 +2097,15 @@ function createCanvasEditor(options) {
   function onKey(event) {
     if (!options.active()) return;
     const focused = document.activeElement;
+    // An open colour picker spends its own keys, Escape included: it closes the picker alone.
+    if (focused && focused.closest && focused.closest('.aw-color-popover')) return;
     if (focused && /^(?:input|textarea|select)$/i.test(focused.tagName)) {
       // Escape leaves the field; passed on, it would close Settings under the editor.
       if (event.key !== 'Escape' || !full) return;
       focused.blur();
+      // Back to the selection's layer, rather than to nowhere.
+      const layer = selected && layerList.querySelector(`[data-id="${selected}"]`);
+      if (layer) layer.focus({ preventScroll: true });
       event.preventDefault();
       return void event.stopPropagation();
     }
@@ -2001,7 +2134,10 @@ function createCanvasEditor(options) {
     } else if (event.key.startsWith('Arrow')) {
       const step = event.shiftKey ? NUDGE_BIG : 1;
       const delta = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] }[event.key];
-      nudge(delta[0], delta[1]);
+      if (croppedItem()) panPicture(delta[0], delta[1]);
+      else nudge(delta[0], delta[1]);
+    } else if ((event.key === '+' || event.key === '-') && croppedItem()) {
+      zoomPicture(event.key === '+' ? CROP_ZOOM_STEP : 1 / CROP_ZOOM_STEP);
     } else if (event.key === 'Delete' || event.key === 'Backspace') {
       removeSelected();
     } else if (event.ctrlKey && event.key.toLowerCase() === 'd') {
@@ -2020,8 +2156,29 @@ function createCanvasEditor(options) {
     if (full && controls.parentNode !== cardPanel) {
       controls.before(controlsHome);
       cardPanel.appendChild(controls);
+      if (status) {
+        status.before(statusHome);
+        preview.appendChild(status);
+      }
     } else if (!full && controlsHome.parentNode) {
       controlsHome.replaceWith(controls);
+      if (status && statusHome.parentNode) statusHome.replaceWith(status);
+    }
+  }
+
+  // Everything of Settings beside the editor, up to the panel: Tab would otherwise walk buttons
+  // nobody can see under it.
+  function coverRest(on) {
+    covered.forEach((node) => (node.inert = false));
+    covered = [];
+    if (!on) return;
+    const top = preview.closest('#settings');
+    for (let node = preview; node && node !== top && node.parentElement; node = node.parentElement) {
+      for (const sibling of node.parentElement.children) {
+        if (sibling === node || sibling.inert) continue;
+        sibling.inert = true;
+        covered.push(sibling);
+      }
     }
   }
 
@@ -2032,6 +2189,7 @@ function createCanvasEditor(options) {
       cropping = false;
     }
     placeControls();
+    coverRest(full);
     preview.classList.toggle('is-cv-full', full);
     document.body.classList.toggle('pd-cv-open', full);
     // Full screen edits around the card, the normal view shows the popup as it ships: a new stylesheet.
@@ -2040,6 +2198,12 @@ function createCanvasEditor(options) {
     if (full) help.maybeTour();
     else help.close();
   }
+
+  // Settings closed under the editor, whichever way it closed: the editor goes with it, tour included,
+  // rather than leaving the tour over the library.
+  new ResizeObserver(() => {
+    if (full && !preview.offsetWidth) setFull(false);
+  }).observe(preview);
 
   // Called after anything repainted the preview: undo, a load, a state switch, a resize.
   function refresh() {

@@ -681,6 +681,7 @@
             "fullscreen": "Düzenleyici",
             "general": "Tüm ayarlar",
             "done": "Bitti",
+            "save": "Kaydet",
             "snap": "Kılavuzlara yapış (çok yakınlaştırınca kapanır)",
             "zoomIn": "Yakınlaştır",
             "zoomOut": "Uzaklaştır",
@@ -715,7 +716,11 @@
               "detail": "Açıklama",
               "meta": "Oyun adı",
               "progress": "İlerleme çubuğu",
-              "mark": "Marka logosu"
+              "mark": "Marka logosu",
+              "cardBefore": "Kart dekoru 1",
+              "cardAfter": "Kart dekoru 2",
+              "iconBefore": "Simge dekoru 1",
+              "iconAfter": "Simge dekoru 2"
             },
             "kind": {
               "text": "Metin",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Metin",
+              "boxWidth": "Kutu genişliği",
               "font": "Yazı tipi",
               "fontCard": "Kartla aynı",
               "fontFile": "Yazı tipi dosyası",
@@ -773,6 +779,10 @@
               "loop": "Döngü",
               "alignGroup": "Birbirine göre hizala",
               "insert": "Ekle"
+            },
+            "axis": {
+              "w": "G",
+              "h": "Y"
             },
             "act": {
               "front": "Kartın önüne getir",
@@ -873,6 +883,8 @@
               "escape": "Seçimi kaldır, sonra düzenleyiciden çık",
               "zoom": "Fare tekerleğiyle: yakınlaştır ve uzaklaştır",
               "dblclick": "Çift tıklama: metni düzenle, görseli kırp",
+              "crop": "Kırparken: oklar görseli taşır, + ve - yakınlaştırır veya uzaklaştırır",
+              "or": "veya",
               "group": "Tık: seçime bir öğe ekle ya da çıkar",
               "selectAll": "Hepsini seç. Boş bir yerden sürüklemek, çerçevenin dokunduklarını seçer",
               "sheet": "Bu listeyi göster veya gizle",
@@ -1136,7 +1148,8 @@
             "close": "Kapat",
             "mine": "Ön ayarlarınız",
             "bundled": "Dahil olanlar",
-            "browse": "Ön ayarlara göz at"
+            "browse": "Ön ayarlara göz at",
+            "empty": "Henüz kendinize ait ön ayarınız yok. Tasarımcıda bir tane oluşturun, burada görünsün."
           }
         },
         "souvenirTitle": "Anı ekran görüntüsü",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Ekrandan renk seç",
     "empty-detect-running": "Bu bilgisayarda oyunlar aranıyor…",
     "empty-detect-none": "Yeni bir şey bulunamadı. Eksik bir oyun varsa klasörü kendin ekle.",
-    "empty-detect-found": "Bulunan klasörler: {count}. Oyunların yükleniyor…"
+    "empty-detect-found": "Bulunan klasörler: {count}. Oyunların yükleniyor…",
+    "pd-preview-title": "Bildirim önizlemesi",
+    "pd-replace-title": "Değişiklikleriniz yenisiyle değiştirilsin mi?",
+    "pd-replace-detail": "Üzerinde çalıştığınız tasarımda kaydedilmemiş değişiklikler var.",
+    "pd-replace": "Değiştir",
+    "preset-rename-same": "Önce Ad alanına yeni bir ad yazın, sonra Yeniden adlandır’a basın.",
+    "preset-view-readonly": "Bu görünüm yalnızca kartı gösterir. Düzeni düzenlemek için Kart’a dönün.",
+    "preset-layer-fixed": "{presets} kartlarını kendi kodlarıyla çizer, bu yüzden burada özelleştirilemez. Yine de onları olduğu gibi kullanabilirsiniz.",
+    "preset-play-reduced": "Windows daha az animasyon gösterecek şekilde ayarlı, bu yüzden önizleme durağan kalır. Görmek için Windows ayarlarında “Animasyon efektleri”ni yeniden açın."
   },
   "watchdog": {
     "rare": "Nadir {percent}%",

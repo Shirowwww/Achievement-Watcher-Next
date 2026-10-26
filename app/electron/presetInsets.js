@@ -76,8 +76,8 @@ function settled(samples) {
 
 /**
  * @param {{ cacheFile: string, preloadPath: string, imagePath: string,
- *   dimensions: (folder: string) => { width: number, height: number },
- *   prepare: (win: BrowserWindow, layer: object|null) => void, log: (line: string) => void }} options
+ *   dimensions: (folder: string, layer: object|null) => { width: number, height: number },
+ *   prepare: (win: BrowserWindow, layer: object|null) => Promise<void>, log: (line: string) => void }} options
  */
 function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, prepare, log }) {
   let cache = null;
@@ -111,7 +111,7 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
 
   // Renders `payload` offscreen and returns read(image, ratio) for a capture taken at each of `times`.
   async function renderOffscreen(folder, layer, payload, times, read) {
-    const { width, height } = dimensions(folder);
+    const { width, height } = dimensions(folder, layer);
     const win = new BrowserWindow({
       width,
       height,
@@ -122,7 +122,7 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
     });
     try {
       win.webContents.setAudioMuted(true);
-      prepare(win, layer);
+      const dressed = prepare(win, layer);
       const loaded = new Promise((resolve, reject) => {
         win.webContents.once('did-finish-load', resolve);
         win.webContents.once('did-fail-load', (event, code, description) => reject(new Error(description || String(code))));
@@ -130,6 +130,7 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
       // A failed load is reported by did-fail-load or by the timeout below.
       win.loadFile(path.join(folder, 'index.html')).catch(() => {});
       await Promise.race([loaded, wait(LOAD_TIMEOUT_MS).then(() => Promise.reject(new Error('load timeout')))]);
+      await dressed;
       win.webContents.setZoomFactor(1);
       win.webContents.send('show-notification', payload);
       const sentAt = Date.now();
@@ -222,7 +223,7 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
         return [];
       });
       const sample = samples[0];
-      return sample && sample.value ? { image: sample.value, ...dimensions(folder) } : null;
+      return sample && sample.value ? { image: sample.value, ...dimensions(folder, layer) } : null;
     },
   };
 }

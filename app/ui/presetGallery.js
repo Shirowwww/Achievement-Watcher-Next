@@ -153,6 +153,7 @@ function createPresetGallery({ label, snapshot }) {
       section.append(grid);
       body.append(section);
     }
+    if (!tiles.length) body.append(el('p', 'pg-empty', label('empty')));
     dialog.append(head, body);
     backdrop.append(dialog);
     backdrop.addEventListener('mousedown', (event) => {

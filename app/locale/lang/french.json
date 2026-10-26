@@ -681,10 +681,11 @@
             "fullscreen": "Éditeur",
             "general": "Tous les réglages",
             "done": "Terminé",
+            "save": "Enregistrer",
             "snap": "Aimanter aux repères (se coupe quand on zoome fort)",
             "zoomIn": "Zoom avant",
             "zoomOut": "Zoom arrière",
-            "zoomFit": "Ajuster à l'aperçu (Ctrl + molette pour zoomer)",
+            "zoomFit": "Ajuster à l’aperçu (Ctrl + molette pour zoomer)",
             "layers": "Calques",
             "layersAdded": "Ajouts",
             "layersParts": "Parties de la carte",
@@ -715,7 +716,11 @@
               "detail": "Description",
               "meta": "Nom du jeu",
               "progress": "Barre de progression",
-              "mark": "Logo de marque"
+              "mark": "Logo de marque",
+              "cardBefore": "Décor de la carte 1",
+              "cardAfter": "Décor de la carte 2",
+              "iconBefore": "Décor de l’icône 1",
+              "iconAfter": "Décor de l’icône 2"
             },
             "kind": {
               "text": "Texte",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Texte",
+              "boxWidth": "Largeur du cadre",
               "font": "Police",
               "fontCard": "Comme la carte",
               "fontFile": "Fichier de police",
@@ -766,13 +772,17 @@
               "apex": "Position du sommet (%)",
               "dash": "Trait",
               "flip": "Miroir",
-              "shadowColor": "Couleur de l'ombre",
-              "shadowSize": "Taille de l'ombre",
+              "shadowColor": "Couleur de l’ombre",
+              "shadowSize": "Taille de l’ombre",
               "replay": "Rejouer le GIF à chaque notification",
               "cut": "Transparente",
               "loop": "En boucle",
               "alignGroup": "Aligner entre eux",
               "insert": "Insérer"
+            },
+            "axis": {
+              "w": "L",
+              "h": "H"
             },
             "act": {
               "front": "Passer devant la carte",
@@ -836,7 +846,7 @@
             },
             "group": {
               "count": "{count} éléments",
-              "hint": "Fais glisser l'un d'eux pour tous les déplacer. Maj ou Ctrl + clic ajoute ou retire un élément."
+              "hint": "Fais glisser l’un d’eux pour tous les déplacer. Maj ou Ctrl + clic ajoute ou retire un élément."
             },
             "icon": {
               "trophy": "Trophée",
@@ -873,7 +883,9 @@
               "escape": "Désélectionner, puis quitter l’éditeur",
               "zoom": "Avec la molette de la souris : zoom avant et arrière",
               "dblclick": "Double-clic : modifier un texte, recadrer une image",
-              "group": "Au clic : ajouter un élément à la sélection, ou l'en retirer",
+              "crop": "Pendant le recadrage : les flèches déplacent l’image, + et - la zooment",
+              "or": "ou",
+              "group": "Au clic : ajouter un élément à la sélection, ou l’en retirer",
               "selectAll": "Tout sélectionner. Glisser depuis un endroit vide sélectionne ce que le cadre touche",
               "sheet": "Afficher ou masquer cette liste",
               "key": {
@@ -891,7 +903,7 @@
               },
               "edit": {
                 "title": "Choisir, puis déplacer",
-                "body": "Clique sur un élément de la carte pour le sélectionner, glisse-le pour le déplacer. Les coins le redimensionnent, la poignée ronde le fait pivoter. Maj + clic, ou un cadre tracé depuis un endroit vide, en sélectionne plusieurs d'un coup."
+                "body": "Clique sur un élément de la carte pour le sélectionner, glisse-le pour le déplacer. Les coins le redimensionnent, la poignée ronde le fait pivoter. Maj + clic, ou un cadre tracé depuis un endroit vide, en sélectionne plusieurs d’un coup."
               },
               "props": {
                 "title": "Ses réglages",
@@ -911,7 +923,7 @@
               "replay": "Revoir la visite"
             },
             "motionHint": "La carte reste immobile pendant que tu la modifies : Lire, sous la carte, montre les entrées et les boucles.",
-            "cutHint": "Cette forme n'affiche rien elle-même : tout ce qui est en dessous devient transparent, la carte comprise. Ce qui est au-dessus reste visible.",
+            "cutHint": "Cette forme n’affiche rien elle-même : tout ce qui est en dessous devient transparent, la carte comprise. Ce qui est au-dessus reste visible.",
             "maxItems": "La carte est pleine. Supprime un élément pour en ajouter un autre."
           },
           "create": "Créer le preset",
@@ -1048,7 +1060,7 @@
           "renamed": "Renommé en",
           "reset": "Réinitialiser",
           "resetDone": "Retour au design par défaut",
-          "search": "Filtrer les réglages",
+          "search": "Filtrer",
           "searchNoMatch": "Aucun réglage ne correspond.",
           "templates": {
             "applied": "Basé sur",
@@ -1136,7 +1148,8 @@
             "close": "Fermer",
             "mine": "Tes presets",
             "bundled": "Fournis",
-            "browse": "Parcourir les presets"
+            "browse": "Parcourir les presets",
+            "empty": "Tu n’as encore aucun preset à toi. Crées-en un dans l’éditeur et il apparaîtra ici."
           }
         },
         "souvenirTitle": "Capture souvenir",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Prendre une couleur à l'écran",
     "empty-detect-running": "Recherche des jeux sur ce PC…",
     "empty-detect-none": "Rien de nouveau trouvé. Ajoute un dossier toi-même si un jeu manque.",
-    "empty-detect-found": "Dossiers trouvés : {count}. Chargement de tes jeux…"
+    "empty-detect-found": "Dossiers trouvés : {count}. Chargement de tes jeux…",
+    "pd-preview-title": "Aperçu de la notification",
+    "pd-replace-title": "Remplacer tes modifications ?",
+    "pd-replace-detail": "Le design en cours a des modifications qui ne sont pas enregistrées.",
+    "pd-replace": "Remplacer",
+    "preset-rename-same": "Tape d’abord un nouveau nom dans le champ Nom, puis appuie sur Renommer.",
+    "preset-view-readonly": "Cette vue montre seulement la carte. Reviens sur Carte pour modifier la mise en page.",
+    "preset-layer-fixed": "{presets} dessinent leur carte avec leur propre code : on ne peut pas les personnaliser ici. Tu peux toujours les utiliser tels quels.",
+    "preset-play-reduced": "Windows est réglé pour afficher moins d’animations : l’aperçu reste immobile. Réactive « Effets d’animation » dans les paramètres de Windows pour les voir."
   },
   "watchdog": {
     "rare": "Rare {percent} %",

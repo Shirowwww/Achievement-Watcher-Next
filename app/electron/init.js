@@ -5638,11 +5638,15 @@ function resolveNotificationPreset(names) {
 }
 
 // Read the preset's window size from its <meta width="" height=""> tag (reference convention).
-function getPresetDimensions(presetFolder) {
+// A layer's added items can reach past the bundled card, which grows the box.
+function getPresetDimensions(presetFolder, layer = null) {
   try {
     const content = fs.readFileSync(path.join(presetFolder, 'index.html'), 'utf8');
     const m = content.match(/<meta\s+width\s*=\s*"(\d+)"\s+height\s*=\s*"(\d+)"\s*\/?>/i);
-    if (m) return { width: parseInt(m[1], 10), height: parseInt(m[2], 10) };
+    if (m) {
+      const box = { width: parseInt(m[1], 10), height: parseInt(m[2], 10) };
+      return layer ? presetLayer.layerBoxSize(layer, box) : box;
+    }
   } catch (err) {
     debug.log('[overlay-notif] preset dimensions read failed: ' + (err.message || err));
   }
@@ -5816,26 +5820,28 @@ function watchPresetWindow(win) {
 }
 
 // What every preset page gets before its payload: the request filter, the Segoe fallback and, for a
-// layered preset, its CSS and logo. Shared by live popups and the insets measurement.
+// layered preset, its CSS and logo. Shared by live popups and the insets measurement. Resolves once
+// all of it is in: the payload waits for it, since the page fills the added texts' {game}, {title}...
+// and restarts their pictures only when the payload lands, and a script queued at dom-ready can
+// still run after did-finish-load.
 function dressPresetWindow(win, layer) {
   watchPresetWindow(win);
   win.webContents.once('dom-ready', () => {
     if (!win.isDestroyed()) insertSegoeFallback(win.webContents, { log: (line) => debug.log(line) });
   });
-  if (!layer) return;
-  // Inserted once the bundled page's DOM exists and well before the payload arrives (that waits
-  // for did-finish-load, i.e. for the page's pictures and fonts too).
-  win.webContents.once('dom-ready', () => {
-    if (win.isDestroyed()) return;
-    const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name), markPseudo: layer.markPseudo });
-    if (css) win.webContents.insertCSS(css).catch((err) => debug.log(`[overlay-notif] layer css failed: ${err.message || err}`));
-    if (presetLayer.layerHasLogo(layer)) {
-      win.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch((err) => debug.log(`[overlay-notif] layer logo failed: ${err.message || err}`));
-    }
-    const canvasScript = presetLayer.layerCanvasScript(layer);
-    if (canvasScript) {
-      win.webContents.executeJavaScript(canvasScript).catch((err) => debug.log(`[overlay-notif] layer items failed: ${err.message || err}`));
-    }
+  if (!layer) return Promise.resolve();
+  return new Promise((resolve) => {
+    win.webContents.once('dom-ready', () => {
+      if (win.isDestroyed()) return resolve();
+      const logged = (what) => (err) => debug.log(`[overlay-notif] layer ${what} failed: ${err.message || err}`);
+      const work = [];
+      const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name), markPseudo: layer.markPseudo });
+      if (css) work.push(win.webContents.insertCSS(css).catch(logged('css')));
+      if (presetLayer.layerHasLogo(layer)) work.push(win.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch(logged('logo')));
+      const canvasScript = presetLayer.layerCanvasScript(layer);
+      if (canvasScript) work.push(win.webContents.executeJavaScript(canvasScript).catch(logged('items')));
+      Promise.all(work).then(() => resolve());
+    });
   });
 }
 
@@ -5940,7 +5946,7 @@ function createNotificationWindow(data = {}) {
   const requestedScale = Number.isFinite(scaleRaw) && scaleRaw > 0 ? scaleRaw : 1;
   const volumeRaw = Number(data.volume);
   const volumePercent = Number.isFinite(volumeRaw) ? Math.max(0, Math.min(200, volumeRaw)) : 100;
-  const { width: baseW, height: baseH } = getPresetDimensions(presetFolder);
+  const { width: baseW, height: baseH } = getPresetDimensions(presetFolder, layer);
   const position = data.position || 'center-bottom';
   let customAnchor = null;
   if (position === 'custom') {
@@ -6061,7 +6067,7 @@ function createNotificationWindow(data = {}) {
       }
     });
   }
-  dressPresetWindow(notif, layer);
+  const dressed = dressPresetWindow(notif, layer);
   // Real notifications are click-through; the reposition witness stays interactive so it can be dragged.
   if (reposition) {
     // Be explicit instead of relying on BrowserWindow's default: this window may be created after
@@ -6075,7 +6081,8 @@ function createNotificationWindow(data = {}) {
 
   // Match the proven overlayWindow pattern: show inactively once content is loaded
   // (no reliance on 'ready-to-show', which the working in-game overlay also avoids).
-  notif.webContents.on('did-finish-load', () => {
+  notif.webContents.on('did-finish-load', async () => {
+    await dressed;
     if (notif.isDestroyed()) return;
     // Scaling belongs to the host: zooming the page by the preset's scale factor lays it out at its
     // design size, filling the window exactly (a self-scaling preset would shrink dense layouts twice).
@@ -7028,6 +7035,23 @@ const layerBaseNames = () => {
 
 ipcMain.handle('list-layer-bases', async () => layerBaseNames());
 
+// The bundled presets that draw their card with their own script, named so the designer can say why
+// they are missing from the bases.
+ipcMain.handle('list-fixed-presets', async () => {
+  const bases = new Set(layerBaseNames());
+  const fixed = bundledPresetRoots().flatMap((root) => {
+    try {
+      return fs
+        .readdirSync(root, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && !bases.has(entry.name) && fs.existsSync(path.join(root, entry.name, 'index.html')))
+        .map((entry) => entry.name);
+    } catch {
+      return [];
+    }
+  });
+  return [...new Set(fixed)].sort((a, b) => a.localeCompare(b));
+});
+
 // The base's own window size and stylesheet, which the designer needs to preview a layer over it.
 ipcMain.handle('read-layer-base', async (event, name) => {
   const base = String(name || '');
@@ -7075,7 +7099,7 @@ function writeLayeredPreset(name, request) {
   copyPresetAsset(dir, assets.logoImage, userPresetImagesDir(), presetAssets.checkLogo, 'logo');
   for (const file of assets.canvasImages) copyPresetAsset(dir, file, userPresetImagesDir(), presetAssets.checkLogo, 'picture');
   for (const file of assets.canvasFonts) copyPresetAsset(dir, file, userPresetFontsDir(), presetAssets.checkFont, 'font');
-  const stored = { name, base: layer.base, sections: layer.sections, options: presetLayer.layerOptions(layer) };
+  const stored = { name, base: layer.base, sections: layer.sections, options: presetLayer.layerOptions(layer), ...(layer.card ? { card: layer.card } : {}) };
   fs.writeFileSync(path.join(dir, presetLayer.LAYER_FILE), JSON.stringify(stored, null, 2), 'utf8');
   invalidateNotificationPresetFolders();
   return dir;

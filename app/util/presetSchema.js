@@ -411,8 +411,10 @@ function clampNumber(value, property) {
   CANVAS_PARTS); `items` are what the user added. Everything ends up in a stylesheet or as text in the
   page, so each number is clamped, each colour checked and each picture a bare image filename.
 */
-// 'mark' is a bundled preset's brand mark, drawn by a pseudo-element: only a layer has one.
-const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress', 'mark'];
+// 'mark' is a bundled preset's brand mark, drawn by a pseudo-element: only a layer has one. The
+// decorations are the other pseudo-elements a bundled card or its icon draws (a ring, a veil, lines).
+const CANVAS_DECOR_PARTS = ['cardBefore', 'cardAfter', 'iconBefore', 'iconAfter'];
+const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress', 'mark', ...CANVAS_DECOR_PARTS];
 const CANVAS_ITEM_KINDS = ['text', 'image', 'shape', 'icon'];
 const CANVAS_SHAPES = ['rect', 'ellipse', 'line', 'triangle', 'diamond', 'star', 'arrow'];
 /*
@@ -513,7 +515,9 @@ function normalizeCanvasItem(source) {
   };
   if (item.kind === 'text') {
     const text = String(source.text ?? '').replace(/[\x00-\x09\x0b-\x1f\x7f]/g, '').slice(0, CANVAS_MAX_TEXT);
-    item.text = text.trim() ? text : 'Text';
+    // Emptied by the user (the designer keeps a space), it stays empty; only a text with none at all
+    // gets the placeholder.
+    item.text = text ? text : 'Text';
     item.size = canvasNumber(source.size, 6, 96, 16);
     item.weight = CANVAS_WEIGHTS.includes(Number(source.weight)) ? Number(source.weight) : 700;
     item.color = source.color === 'accent' || source.color === 'text' ? source.color : canvasColor(source.color, 'text');
@@ -685,7 +689,8 @@ function normalizeCanvasPaint(item, source, fallbackMode) {
   The card's own text lines can take the look of an added text: only what the user changed is kept,
   so a line nobody touched still follows the preset's text settings.
 */
-const CANVAS_STYLED_PARTS = ['title', 'detail', 'meta', 'progress'];
+// A decoration takes a colour alone: the accent it is drawn with.
+const CANVAS_STYLED_PARTS = ['title', 'detail', 'meta', 'progress', ...CANVAS_DECOR_PARTS];
 
 function normalizeCanvasStyle(raw) {
   const out = {};
@@ -694,6 +699,11 @@ function normalizeCanvasStyle(raw) {
     const source = raw[part];
     if (!source || typeof source !== 'object') continue;
     const style = {};
+    if (CANVAS_DECOR_PARTS.includes(part)) {
+      const hex = canvasColor(source.color, '');
+      if (hex) out[part] = { color: hex };
+      continue;
+    }
     const color = source.color === 'accent' || source.color === 'text' ? source.color : canvasColor(source.color, '');
     if (color) style.color = color;
     if (Object.hasOwn(FONT_STACKS, source.font)) style.font = source.font;
@@ -958,6 +968,7 @@ module.exports = {
   CANVAS_MAX_DELAY_MS,
   CANVAS_MAX_ITEMS,
   CANVAS_STYLED_PARTS,
+  CANVAS_DECOR_PARTS,
   CANVAS_LAYER_PARTS,
   canvasOrder,
   normalizeCanvas,

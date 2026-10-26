@@ -681,6 +681,7 @@
             "fullscreen": "Editori",
             "general": "Kaikki asetukset",
             "done": "Valmis",
+            "save": "Tallenna",
             "snap": "Kohdista apuviivoihin (poistuu käytöstä lähellä zoomattaessa)",
             "zoomIn": "Lähennä",
             "zoomOut": "Loitonna",
@@ -715,7 +716,11 @@
               "detail": "Kuvaus",
               "meta": "Pelin nimi",
               "progress": "Edistymispalkki",
-              "mark": "Tuotemerkin logo"
+              "mark": "Tuotemerkin logo",
+              "cardBefore": "Kortin koriste 1",
+              "cardAfter": "Kortin koriste 2",
+              "iconBefore": "Kuvakkeen koriste 1",
+              "iconAfter": "Kuvakkeen koriste 2"
             },
             "kind": {
               "text": "Teksti",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Teksti",
+              "boxWidth": "Kehyksen leveys",
               "font": "Kirjasin",
               "fontCard": "Sama kuin kortti",
               "fontFile": "Kirjasintiedosto",
@@ -773,6 +779,10 @@
               "loop": "Silmukka",
               "alignGroup": "Tasaa keskenään",
               "insert": "Lisää"
+            },
+            "axis": {
+              "w": "L",
+              "h": "K"
             },
             "act": {
               "front": "Tuo kortin eteen",
@@ -873,6 +883,8 @@
               "escape": "Poista valinta ja poistu sitten muokkaimesta",
               "zoom": "Hiiren rullalla: lähennä ja loitonna",
               "dblclick": "Kaksoisnapsautus: muokkaa tekstiä, rajaa kuvaa",
+              "crop": "Rajauksen aikana: nuolet siirtävät kuvaa, + ja - zoomaavat sitä",
+              "or": "tai",
               "group": "Napsautus: lisää elementti valintaan tai poista se siitä",
               "selectAll": "Valitse kaikki. Vetäminen tyhjästä kohdasta valitsee sen, mihin kehys osuu",
               "sheet": "Näytä tai piilota tämä luettelo",
@@ -1136,7 +1148,8 @@
             "close": "Sulje",
             "mine": "Omat esiasetuksesi",
             "bundled": "Mukana tulevat",
-            "browse": "Selaa esiasetuksia"
+            "browse": "Selaa esiasetuksia",
+            "empty": "Sinulla ei ole vielä omia esiasetuksia. Tee sellainen suunnittelunäkymässä, niin se ilmestyy tähän."
           }
         },
         "souvenirTitle": "Muistokuvakaappaus",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Poimi väri näytöltä",
     "empty-detect-running": "Etsitään pelejä tältä tietokoneelta…",
     "empty-detect-none": "Uutta ei löytynyt. Lisää kansio itse, jos jokin peli puuttuu.",
-    "empty-detect-found": "Löytyneet kansiot: {count}. Ladataan pelejäsi…"
+    "empty-detect-found": "Löytyneet kansiot: {count}. Ladataan pelejäsi…",
+    "pd-preview-title": "Ilmoituksen esikatselu",
+    "pd-replace-title": "Korvataanko muutoksesi?",
+    "pd-replace-detail": "Työstämässäsi mallissa on tallentamattomia muutoksia.",
+    "pd-replace": "Korvaa",
+    "preset-rename-same": "Kirjoita ensin uusi nimi Nimi-kenttään ja paina sitten Nimeä uudelleen.",
+    "preset-view-readonly": "Tämä näkymä näyttää vain kortin. Palaa Kortti-näkymään muokataksesi asettelua.",
+    "preset-layer-fixed": "{presets} piirtävät korttinsa omalla koodillaan, joten niitä ei voi mukauttaa tässä. Voit silti käyttää niitä sellaisenaan.",
+    "preset-play-reduced": "Windows on asetettu näyttämään vähemmän animaatioita, joten esikatselu pysyy paikallaan. Ota ”Animaatiotehosteet” takaisin käyttöön Windowsin asetuksista nähdäksesi ne."
   },
   "watchdog": {
     "rare": "Harvinainen {percent} %",

@@ -681,6 +681,7 @@
             "fullscreen": "Redigerare",
             "general": "Alla inställningar",
             "done": "Klar",
+            "save": "Spara",
             "snap": "Fäst vid hjälplinjer (stängs av vid kraftig zoomning)",
             "zoomIn": "Zooma in",
             "zoomOut": "Zooma ut",
@@ -715,7 +716,11 @@
               "detail": "Beskrivning",
               "meta": "Spelets namn",
               "progress": "Framstegsindikator",
-              "mark": "Varumärkeslogotyp"
+              "mark": "Varumärkeslogotyp",
+              "cardBefore": "Kortdekoration 1",
+              "cardAfter": "Kortdekoration 2",
+              "iconBefore": "Ikondekoration 1",
+              "iconAfter": "Ikondekoration 2"
             },
             "kind": {
               "text": "Text",
@@ -731,6 +736,7 @@
             },
             "prop": {
               "text": "Text",
+              "boxWidth": "Rutans bredd",
               "font": "Typsnitt",
               "fontCard": "Samma som kortet",
               "fontFile": "Typsnittsfil",
@@ -773,6 +779,10 @@
               "loop": "Upprepa",
               "alignGroup": "Justera mot varandra",
               "insert": "Infoga"
+            },
+            "axis": {
+              "w": "B",
+              "h": "H"
             },
             "act": {
               "front": "Flytta framför kortet",
@@ -873,6 +883,8 @@
               "escape": "Avmarkera och lämna sedan redigeraren",
               "zoom": "Med mushjulet: zooma in och ut",
               "dblclick": "Dubbelklick: redigera en text, beskär en bild",
+              "crop": "Vid beskärning: pilarna flyttar bilden, + och - zoomar",
+              "or": "eller",
               "group": "Klick: lägg till ett element i markeringen eller ta bort det",
               "selectAll": "Markera allt. Att dra från en tom plats markerar det som rutan rör vid",
               "sheet": "Visa eller dölj den här listan",
@@ -1136,7 +1148,8 @@
             "close": "Stäng",
             "mine": "Dina förinställningar",
             "bundled": "Medföljande",
-            "browse": "Bläddra bland förinställningarna"
+            "browse": "Bläddra bland förinställningarna",
+            "empty": "Du har inga egna förinställningar än. Skapa en i formgivaren så visas den här."
           }
         },
         "souvenirTitle": "Souvenirskärmbild",
@@ -2997,7 +3010,15 @@
     "color-picker-eyedropper": "Välj en färg på skärmen",
     "empty-detect-running": "Letar efter spel på den här datorn…",
     "empty-detect-none": "Hittade inget nytt. Lägg till en mapp själv om ett spel saknas.",
-    "empty-detect-found": "Hittade mappar: {count}. Läser in dina spel…"
+    "empty-detect-found": "Hittade mappar: {count}. Läser in dina spel…",
+    "pd-preview-title": "Förhandsvisning av aviseringen",
+    "pd-replace-title": "Ersätta dina ändringar?",
+    "pd-replace-detail": "Designen du arbetar med har ändringar som inte är sparade.",
+    "pd-replace": "Ersätt",
+    "preset-rename-same": "Skriv först ett nytt namn i fältet Namn och tryck sedan på Byt namn.",
+    "preset-view-readonly": "Den här vyn visar bara kortet. Gå tillbaka till Kort för att redigera layouten.",
+    "preset-layer-fixed": "{presets} ritar sitt kort med egen kod och kan därför inte anpassas här. Du kan fortfarande använda dem som de är.",
+    "preset-play-reduced": "Windows är inställt på att visa färre animeringar, så förhandsvisningen står still. Slå på ”Animeringseffekter” igen i Windows-inställningarna för att se dem."
   },
   "watchdog": {
     "rare": "Sällsynt {percent} %",
