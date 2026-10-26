@@ -57,7 +57,7 @@ test('the launch appid comes from SteamAppId, then SteamGameId, and never from a
 });
 
 /*
-  Live processes for the Linux-only cases: a copy of a system binary under a long name, so the
+  Live processes for the Linux-only cases: a copy of Node under a long name, so the
   executable link, argv[0] and the 15-character comm all disagree in length.
 */
 const fs = require('fs');
@@ -67,9 +67,10 @@ const { spawn } = require('child_process');
 function startSleeper(name, env = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-proc-'));
   const binary = path.join(dir, name);
-  fs.copyFileSync('/bin/sleep', binary);
+  // A copy of Node, not of /bin/sleep: Ubuntu 26.04's coreutils exits at once when copied and renamed.
+  fs.copyFileSync(process.execPath, binary);
   fs.chmodSync(binary, 0o755);
-  const child = spawn(binary, ['30'], { env: { PATH: process.env.PATH, ...env }, stdio: 'ignore' });
+  const child = spawn(binary, ['-e', 'setTimeout(() => {}, 30000)'], { env: { PATH: process.env.PATH, ...env }, stdio: 'ignore' });
   const stop = () => {
     child.kill();
     fs.rmSync(dir, { recursive: true, force: true });
