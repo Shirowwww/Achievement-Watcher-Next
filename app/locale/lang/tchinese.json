@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "全部復原",
             "addText": "文字",
-            "addImage": "圖片",
+            "addImage": "圖片或 GIF",
             "addRect": "矩形",
             "addEllipse": "圓形",
             "addLine": "線條",
@@ -700,7 +700,14 @@
             "summaryNone": "尚未移動或新增任何內容",
             "summaryMoved": "已移動的部分：{count}",
             "summaryItems": "已新增的項目：{count}",
-            "imageRefused": "無法使用這張圖片。請使用不超過 2 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
+            "imageRefused": "無法使用這張圖片。請使用不超過 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
+            "tier": {
+              "edit": "編輯：",
+              "all": "全部",
+              "only": "僅{tier}",
+              "changed": "{tier}有獨立設定",
+              "reset": "還原為基礎設定"
+            },
             "part": {
               "icon": "圖示",
               "text": "文字區塊",
@@ -745,18 +752,30 @@
               "rotation": "旋轉",
               "scale": "縮放",
               "icon": "圖示",
-              "states": "顯示於",
+              "visible": "可見",
               "alignCard": "與卡片對齊",
               "position": "位置",
               "dims": "大小",
               "offset": "位移",
               "entrance": "進場",
               "delay": "延遲 (ms)",
+              "points": "角數",
+              "depth": "凹陷深度 (%)",
+              "head": "箭頭 (%)",
+              "shaft": "箭桿 (%)",
+              "apex": "頂點位置 (%)",
+              "dash": "線條樣式",
+              "flip": "鏡像",
+              "shadowColor": "陰影顏色",
+              "shadowSize": "陰影大小",
+              "replay": "每次彈出時重新播放 GIF",
+              "loop": "循環",
+              "alignGroup": "彼此對齊",
               "insert": "插入"
             },
             "act": {
-              "front": "置於卡片前方",
-              "back": "置於卡片後方",
+              "front": "移到卡片前方",
+              "back": "移到卡片後方",
               "crop": "裁切",
               "cropDone": "完成裁切",
               "duplicate": "複製",
@@ -790,6 +809,34 @@
             },
             "fillState": "跟隨等級",
             "fillPlatinum": "白金",
+            "fillRadial": "放射狀漸層",
+            "dash": {
+              "solid": "實線",
+              "dashed": "虛線",
+              "dotted": "點線"
+            },
+            "flip": {
+              "x": "左右鏡像",
+              "y": "上下鏡像"
+            },
+            "shadow": {
+              "none": "無",
+              "drop": "投影",
+              "glow": "光暈",
+              "black": "黑色"
+            },
+            "loop": {
+              "none": "無",
+              "pulse": "脈動",
+              "float": "漂浮",
+              "swing": "擺動",
+              "spin": "持續旋轉",
+              "shine": "閃耀"
+            },
+            "group": {
+              "count": "{count} 個元素",
+              "hint": "拖曳其中任何一個即可一起移動。Shift 或 Ctrl + 點一下可新增或移除元素。"
+            },
             "icon": {
               "trophy": "獎盃",
               "medal": "獎牌",
@@ -825,6 +872,8 @@
               "escape": "取消選取，然後離開編輯器",
               "zoom": "使用滑鼠滾輪：放大與縮小",
               "dblclick": "按兩下：編輯文字，裁切圖片",
+              "group": "點一下：將元素加入選取，或從選取中移除",
+              "selectAll": "全選。從空白處拖曳可選取方框碰到的內容",
               "sheet": "顯示或隱藏此清單",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "新增元素",
-                "body": "文字、圖片、形狀與圖示。每一項都會以獨立圖層放在卡片上。"
+                "body": "文字、圖片與 GIF、形狀與圖示。每一項都會以獨立圖層放在卡片上。"
               },
               "edit": {
                 "title": "先選取，再移動",
-                "body": "點一下卡片上的任何內容即可選取，拖曳即可移動。邊角用來調整大小，圓形控點用來旋轉。"
+                "body": "點一下卡片上的任何內容即可選取，拖曳即可移動。邊角用來調整大小，圓形控點用來旋轉。Shift + 點一下，或從空白處拖曳出的方框，可一次選取多個。"
               },
               "props": {
                 "title": "元素設定",
@@ -860,7 +909,7 @@
               "done": "知道了",
               "replay": "重新觀看導覽"
             },
-            "motionHint": "編輯時卡片保持靜止，點一下卡片下方的播放即可查看進場效果。",
+            "motionHint": "編輯時卡片保持靜止，點一下卡片下方的播放即可查看進場效果和循環。",
             "maxItems": "卡片已滿。刪除一個元素後才能新增其他的。"
           },
           "create": "建立預設集",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "選擇背景圖片",
     "choose-preset-font": "選擇字型檔案",
     "choose-preset-logo": "選擇標誌",
+    "choose-preset-picture": "選擇圖片或 GIF",
     "preset-font-refused": "該檔案不是可用的字型。請使用不超過 4 MB 的 TTF、OTF、WOFF 或 WOFF2 檔案。",
-    "preset-logo-refused": "該檔案不是可用的標誌。請使用不超過 2 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
+    "preset-logo-refused": "該檔案不是可用的標誌。請使用不超過 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
     "preset-layer-note": "正在自訂 {preset}。勾選某個部分即可變更;未勾選的部分維持內建預設集的原樣。你的變更疊加在其上:內建預設集不會被複製或修改。",
     "folder-reason-ea-app": "這是 EA app 版本。透過 EA app 啟動的遊戲會把成就保存在 EA 帳戶上，而不是遊戲資料夾裡，因此這裡沒有可讀取的解鎖檔案。那些解鎖會由「設定 > 來源」中的 EA 來源接手，而不是靠監看資料夾。",
     "folder-reason-game-no-data": "這是遊戲資料夾，但裡面沒有模擬器設定，也沒有任何 AW Next 讀得懂的解鎖檔案格式。",

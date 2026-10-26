@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Đưa mọi thứ về chỗ cũ",
             "addText": "Chữ",
-            "addImage": "Hình ảnh",
+            "addImage": "Hình ảnh hoặc GIF",
             "addRect": "Hình chữ nhật",
             "addEllipse": "Hình tròn",
             "addLine": "Đường thẳng",
@@ -700,7 +700,14 @@
             "summaryNone": "Chưa di chuyển hay thêm gì",
             "summaryMoved": "Phần đã di chuyển: {count}",
             "summaryItems": "Mục đã thêm: {count}",
-            "imageRefused": "Không dùng được hình ảnh này. Hãy dùng hình PNG, JPEG, GIF, WebP hoặc BMP tối đa 2 MB.",
+            "imageRefused": "Không dùng được hình ảnh này. Hãy dùng hình PNG, JPEG, GIF, WebP hoặc BMP tối đa 5 MB.",
+            "tier": {
+              "edit": "Chỉnh sửa:",
+              "all": "Tất cả",
+              "only": "Chỉ {tier}",
+              "changed": "{tier} có cài đặt riêng",
+              "reset": "Về mặc định"
+            },
             "part": {
               "icon": "Biểu tượng",
               "text": "Khối chữ",
@@ -745,18 +752,30 @@
               "rotation": "Xoay",
               "scale": "Tỷ lệ",
               "icon": "Biểu tượng",
-              "states": "Hiển thị ở",
+              "visible": "Hiển thị",
               "alignCard": "Căn theo thẻ",
               "position": "Vị trí",
               "dims": "Kích thước",
               "offset": "Độ lệch",
               "entrance": "Xuất hiện",
               "delay": "Độ trễ (ms)",
+              "points": "Số cánh",
+              "depth": "Độ khuyết (%)",
+              "head": "Mũi tên (%)",
+              "shaft": "Thân (%)",
+              "apex": "Vị trí đỉnh (%)",
+              "dash": "Kiểu đường",
+              "flip": "Lật gương",
+              "shadowColor": "Màu bóng",
+              "shadowSize": "Kích thước bóng",
+              "replay": "Phát lại GIF mỗi lần hiện",
+              "loop": "Lặp lại",
+              "alignGroup": "Căn theo nhau",
               "insert": "Chèn"
             },
             "act": {
-              "front": "Phía trước thẻ",
-              "back": "Phía sau thẻ",
+              "front": "Đưa lên trước thẻ",
+              "back": "Đưa ra sau thẻ",
               "crop": "Cắt",
               "cropDone": "Xong cắt",
               "duplicate": "Nhân đôi",
@@ -790,6 +809,34 @@
             },
             "fillState": "Theo cấp",
             "fillPlatinum": "Bạch kim",
+            "fillRadial": "Chuyển màu tròn",
+            "dash": {
+              "solid": "Liền",
+              "dashed": "Nét đứt",
+              "dotted": "Nét chấm"
+            },
+            "flip": {
+              "x": "Lật trái sang phải",
+              "y": "Lật trên xuống dưới"
+            },
+            "shadow": {
+              "none": "Không",
+              "drop": "Bóng đổ",
+              "glow": "Ánh sáng",
+              "black": "Đen"
+            },
+            "loop": {
+              "none": "Không",
+              "pulse": "Nhịp đập",
+              "float": "Lơ lửng",
+              "swing": "Đu đưa",
+              "spin": "Xoay liên tục",
+              "shine": "Lấp lánh"
+            },
+            "group": {
+              "count": "{count} phần tử",
+              "hint": "Kéo một phần tử để di chuyển tất cả. Shift hoặc Ctrl + nhấp để thêm hoặc bỏ một phần tử."
+            },
             "icon": {
               "trophy": "Cúp",
               "medal": "Huy chương",
@@ -825,6 +872,8 @@
               "escape": "Bỏ chọn rồi thoát trình chỉnh sửa",
               "zoom": "Với con lăn chuột: phóng to và thu nhỏ",
               "dblclick": "Nhấp đúp: sửa văn bản, cắt hình ảnh",
+              "group": "Nhấp: thêm một phần tử vào vùng chọn hoặc bỏ nó ra",
+              "selectAll": "Chọn tất cả. Kéo từ một chỗ trống sẽ chọn những gì khung chạm tới",
               "sheet": "Hiện hoặc ẩn danh sách này",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Thêm thành phần",
-                "body": "Văn bản, hình ảnh, hình khối và biểu tượng. Mỗi thứ nằm trên thẻ như một lớp riêng."
+                "body": "Văn bản, hình ảnh và GIF, hình khối và biểu tượng. Mỗi thứ nằm trên thẻ như một lớp riêng."
               },
               "edit": {
                 "title": "Chọn rồi di chuyển",
-                "body": "Nhấp vào bất cứ thứ gì trên thẻ để chọn, kéo để di chuyển. Các góc đổi kích thước, tay nắm tròn dùng để xoay."
+                "body": "Nhấp vào bất cứ thứ gì trên thẻ để chọn, kéo để di chuyển. Các góc đổi kích thước, tay nắm tròn dùng để xoay. Shift + nhấp, hoặc khung kéo từ chỗ trống, sẽ chọn nhiều phần tử cùng lúc."
               },
               "props": {
                 "title": "Thiết lập của nó",
@@ -860,7 +909,7 @@
               "done": "Đã hiểu",
               "replay": "Xem lại hướng dẫn"
             },
-            "motionHint": "Thẻ đứng yên khi bạn chỉnh sửa: Phát, bên dưới thẻ, sẽ cho xem hiệu ứng xuất hiện.",
+            "motionHint": "Thẻ đứng yên khi bạn chỉnh sửa: Phát, bên dưới thẻ, sẽ cho xem hiệu ứng xuất hiện và vòng lặp.",
             "maxItems": "Thẻ đã đầy. Hãy xóa một thành phần để thêm thành phần khác."
           },
           "create": "Tạo mẫu",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Chọn một hình nền",
     "choose-preset-font": "Chọn một tệp phông chữ",
     "choose-preset-logo": "Chọn một logo",
+    "choose-preset-picture": "Chọn hình ảnh hoặc GIF",
     "preset-font-refused": "Tệp đó không phải là phông chữ dùng được. Hãy dùng tệp TTF, OTF, WOFF hoặc WOFF2 tối đa 4 MB.",
-    "preset-logo-refused": "Tệp đó không phải là logo dùng được. Hãy dùng ảnh PNG, JPEG, GIF, WebP hoặc BMP tối đa 2 MB.",
+    "preset-logo-refused": "Tệp đó không phải là logo dùng được. Hãy dùng ảnh PNG, JPEG, GIF, WebP hoặc BMP tối đa 5 MB.",
     "preset-layer-note": "Đang tùy chỉnh {preset}. Đánh dấu một phần để thay đổi; những gì bạn không đánh dấu sẽ giữ nguyên như mẫu có sẵn cung cấp. Thay đổi của bạn được đặt lên trên: mẫu có sẵn không bị sao chép hay sửa đổi.",
     "folder-reason-ea-app": "Đây là bản phát hành của ứng dụng EA. Trò chơi chạy qua ứng dụng EA giữ thành tựu trên tài khoản EA chứ không phải trong thư mục trò chơi, nên ở đây không có tệp mở khóa nào để đọc. Những thành tựu đó được lấy qua nguồn EA trong Cài đặt > Nguồn thay vì qua một thư mục được theo dõi.",
     "folder-reason-game-no-data": "Đây là một thư mục trò chơi, nhưng nó không chứa cấu hình giả lập nào và cũng không có tệp mở khóa theo bất kỳ định dạng nào AW Next đọc được.",

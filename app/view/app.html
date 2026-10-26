@@ -8,7 +8,7 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-OguB3BtFLHgdyZQj8bqtJYLwaWQPqrY7XsEE7Bmd4wk='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-tZs/p2YVltPPmBlareFLHD88AlbqoJD+hcYmJfZnp2A='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -2670,7 +2670,12 @@
                           <span data-cv="layersParts" data-lang="canvas.layersParts"></span>
                           <span data-cv="kind.icon" data-lang="canvas.kind.icon"></span>
                           <span data-cv="prop.icon" data-lang="canvas.prop.icon"></span>
-                          <span data-cv="prop.states" data-lang="canvas.prop.states"></span>
+                          <span data-cv="prop.visible" data-lang="canvas.prop.visible"></span>
+                          <span data-cv="tier.edit" data-lang="canvas.tier.edit"></span>
+                          <span data-cv="tier.all" data-lang="canvas.tier.all"></span>
+                          <span data-cv="tier.only" data-lang="canvas.tier.only"></span>
+                          <span data-cv="tier.changed" data-lang="canvas.tier.changed"></span>
+                          <span data-cv="tier.reset" data-lang="canvas.tier.reset"></span>
                           <span data-cv="prop.alignCard" data-lang="canvas.prop.alignCard"></span>
                           <span data-cv="prop.position" data-lang="canvas.prop.position"></span>
                           <span data-cv="prop.dims" data-lang="canvas.prop.dims"></span>
@@ -2747,6 +2752,38 @@
                           <span data-cv="enter.zoom" data-lang="canvas.enter.zoom"></span>
                           <span data-cv="enter.pop" data-lang="canvas.enter.pop"></span>
                           <span data-cv="motionHint" data-lang="canvas.motionHint"></span>
+                          <span data-cv="fill.radial" data-lang="canvas.fillRadial"></span>
+                          <span data-cv="prop.points" data-lang="canvas.prop.points"></span>
+                          <span data-cv="prop.depth" data-lang="canvas.prop.depth"></span>
+                          <span data-cv="prop.head" data-lang="canvas.prop.head"></span>
+                          <span data-cv="prop.shaft" data-lang="canvas.prop.shaft"></span>
+                          <span data-cv="prop.apex" data-lang="canvas.prop.apex"></span>
+                          <span data-cv="prop.dash" data-lang="canvas.prop.dash"></span>
+                          <span data-cv="prop.flip" data-lang="canvas.prop.flip"></span>
+                          <span data-cv="prop.shadowColor" data-lang="canvas.prop.shadowColor"></span>
+                          <span data-cv="prop.shadowSize" data-lang="canvas.prop.shadowSize"></span>
+                          <span data-cv="prop.replay" data-lang="canvas.prop.replay"></span>
+                          <span data-cv="prop.loop" data-lang="canvas.prop.loop"></span>
+                          <span data-cv="prop.alignGroup" data-lang="canvas.prop.alignGroup"></span>
+                          <span data-cv="dash.solid" data-lang="canvas.dash.solid"></span>
+                          <span data-cv="dash.dashed" data-lang="canvas.dash.dashed"></span>
+                          <span data-cv="dash.dotted" data-lang="canvas.dash.dotted"></span>
+                          <span data-cv="flip.x" data-lang="canvas.flip.x"></span>
+                          <span data-cv="flip.y" data-lang="canvas.flip.y"></span>
+                          <span data-cv="shadow.none" data-lang="canvas.shadow.none"></span>
+                          <span data-cv="shadow.drop" data-lang="canvas.shadow.drop"></span>
+                          <span data-cv="shadow.glow" data-lang="canvas.shadow.glow"></span>
+                          <span data-cv="shadow.black" data-lang="canvas.shadow.black"></span>
+                          <span data-cv="loop.none" data-lang="canvas.loop.none"></span>
+                          <span data-cv="loop.pulse" data-lang="canvas.loop.pulse"></span>
+                          <span data-cv="loop.float" data-lang="canvas.loop.float"></span>
+                          <span data-cv="loop.swing" data-lang="canvas.loop.swing"></span>
+                          <span data-cv="loop.spin" data-lang="canvas.loop.spin"></span>
+                          <span data-cv="loop.shine" data-lang="canvas.loop.shine"></span>
+                          <span data-cv="group.count" data-lang="canvas.group.count"></span>
+                          <span data-cv="group.hint" data-lang="canvas.group.hint"></span>
+                          <span data-cv="help.group" data-lang="canvas.help.group"></span>
+                          <span data-cv="help.selectAll" data-lang="canvas.help.selectAll"></span>
                           <span data-cv="maxItems" data-lang="canvas.maxItems"></span>
                           <span data-cv="prop.insert" data-lang="canvas.prop.insert"></span>
                           <span data-cv="token.game" data-lang="canvas.token.game"></span>

@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Minden vissza a helyére",
             "addText": "Szöveg",
-            "addImage": "Kép",
+            "addImage": "Kép vagy GIF",
             "addRect": "Téglalap",
             "addEllipse": "Kör",
             "addLine": "Vonal",
@@ -700,7 +700,14 @@
             "summaryNone": "Még semmi nincs áthelyezve vagy hozzáadva",
             "summaryMoved": "Áthelyezett részek: {count}",
             "summaryItems": "Hozzáadott elemek: {count}",
-            "imageRefused": "Ez a kép nem használható. Legfeljebb 2 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet használj.",
+            "imageRefused": "Ez a kép nem használható. Legfeljebb 5 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet használj.",
+            "tier": {
+              "edit": "Szerkesztés:",
+              "all": "Mind",
+              "only": "Csak {tier}",
+              "changed": "A(z) {tier} saját beállításokkal rendelkezik",
+              "reset": "Vissza az alapra"
+            },
             "part": {
               "icon": "Ikon",
               "text": "Szövegblokk",
@@ -745,18 +752,30 @@
               "rotation": "Forgatás",
               "scale": "Méretarány",
               "icon": "Ikon",
-              "states": "Itt jelenik meg",
+              "visible": "Látható",
               "alignCard": "Igazítás a kártyához",
               "position": "Pozíció",
               "dims": "Méret",
               "offset": "Eltolás",
               "entrance": "Belépés",
               "delay": "Késleltetés (ms)",
+              "points": "Csúcsok",
+              "depth": "Mélység (%)",
+              "head": "Nyílhegy (%)",
+              "shaft": "Szár (%)",
+              "apex": "A csúcs helye (%)",
+              "dash": "Vonalstílus",
+              "flip": "Tükrözés",
+              "shadowColor": "Árnyék színe",
+              "shadowSize": "Árnyék mérete",
+              "replay": "GIF újrajátszása minden megjelenéskor",
+              "loop": "Ismétlés",
+              "alignGroup": "Egymáshoz igazítás",
               "insert": "Beszúrás"
             },
             "act": {
-              "front": "A kártya előtt",
-              "back": "A kártya mögött",
+              "front": "Áthelyezés a kártya elé",
+              "back": "Áthelyezés a kártya mögé",
               "crop": "Körbevágás",
               "cropDone": "Körbevágás kész",
               "duplicate": "Duplikálás",
@@ -790,6 +809,34 @@
             },
             "fillState": "Követi a szintet",
             "fillPlatinum": "Platina",
+            "fillRadial": "Sugaras színátmenet",
+            "dash": {
+              "solid": "Folytonos",
+              "dashed": "Szaggatott",
+              "dotted": "Pontozott"
+            },
+            "flip": {
+              "x": "Tükrözés balról jobbra",
+              "y": "Tükrözés fentről lefelé"
+            },
+            "shadow": {
+              "none": "Nincs",
+              "drop": "Vetett árnyék",
+              "glow": "Ragyogás",
+              "black": "Fekete"
+            },
+            "loop": {
+              "none": "Nincs",
+              "pulse": "Lüktetés",
+              "float": "Lebegés",
+              "swing": "Lengés",
+              "spin": "Folyamatos forgás",
+              "shine": "Csillogás"
+            },
+            "group": {
+              "count": "{count} elem",
+              "hint": "Húzd el az egyiket, és az összes elmozdul. Shift vagy Ctrl + kattintás hozzáad vagy eltávolít egy elemet."
+            },
             "icon": {
               "trophy": "Trófea",
               "medal": "Érem",
@@ -825,6 +872,8 @@
               "escape": "Kijelölés megszüntetése, majd kilépés a szerkesztőből",
               "zoom": "Az egérgörgővel: nagyítás és kicsinyítés",
               "dblclick": "Dupla kattintás: szöveg szerkesztése, kép vágása",
+              "group": "Kattintás: elem hozzáadása a kijelöléshez, vagy kivétele belőle",
+              "selectAll": "Mindent kijelöl. Üres helyről húzva azt jelöli ki, amit a keret érint",
               "sheet": "A lista megjelenítése vagy elrejtése",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Elemek hozzáadása",
-                "body": "Szövegek, képek, alakzatok és ikonok. Mindegyik külön rétegként kerül a kártyára."
+                "body": "Szövegek, képek és GIF-ek, alakzatok és ikonok. Mindegyik külön rétegként kerül a kártyára."
               },
               "edit": {
                 "title": "Válassz, majd mozgasd",
-                "body": "Kattints bármire a kártyán a kijelöléshez, húzd a mozgatáshoz. A sarkok átméreteznek, a kerek fogantyú forgat."
+                "body": "Kattints bármire a kártyán a kijelöléshez, húzd a mozgatáshoz. A sarkok átméreteznek, a kerek fogantyú forgat. Shift + kattintás, vagy egy üres helyről húzott keret egyszerre többet jelöl ki."
               },
               "props": {
                 "title": "A beállításai",
@@ -860,7 +909,7 @@
               "done": "Értem",
               "replay": "A bemutató ismétlése"
             },
-            "motionHint": "A kártya mozdulatlan marad szerkesztés közben: a kártya alatti Lejátszás megmutatja a belépéseket.",
+            "motionHint": "A kártya mozdulatlan marad szerkesztés közben: a kártya alatti Lejátszás megmutatja a belépéseket és az ismétlődő mozgásokat.",
             "maxItems": "A kártya megtelt. Törölj egy elemet, hogy újat adhass hozzá."
           },
           "create": "Előbeállítás létrehozása",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Háttérkép kiválasztása",
     "choose-preset-font": "Betűtípusfájl kiválasztása",
     "choose-preset-logo": "Logó kiválasztása",
+    "choose-preset-picture": "Válassz egy képet vagy GIF-et",
     "preset-font-refused": "Ez a fájl nem használható betűtípus. Használj legfeljebb 4 MB méretű TTF, OTF, WOFF vagy WOFF2 fájlt.",
-    "preset-logo-refused": "Ez a fájl nem használható logó. Használj legfeljebb 2 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet.",
+    "preset-logo-refused": "Ez a fájl nem használható logó. Használj legfeljebb 5 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet.",
     "preset-layer-note": "{preset} testreszabása. Jelölj be egy szakaszt a módosításhoz; amit bejelöletlenül hagysz, az olyan marad, amilyennek a mellékelt előbeállítás adja. A módosításaid ráépülnek: a mellékelt előbeállítást nem másoljuk és nem módosítjuk.",
     "folder-reason-ea-app": "Ez egy EA app kiadás. Az EA appon keresztül indított játék az EA-fiókban tárolja a teljesítményeit, nem a játék mappájában, így itt nincs feloldásokat tartalmazó fájl, amit be lehetne olvasni. Ezeket a teljesítményeket a Beállítások > Források alatti EA forrás gyűjti be, nem egy figyelt mappa.",
     "folder-reason-game-no-data": "Ez egy játékmappa, de nem tartalmaz emulátor-konfigurációt és olyan feloldásfájlt sem, amelyet az AW Next be tudna olvasni.",

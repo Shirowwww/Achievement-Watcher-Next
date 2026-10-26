@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Palauta kaikki paikoilleen",
             "addText": "Teksti",
-            "addImage": "Kuva",
+            "addImage": "Kuva tai GIF",
             "addRect": "Suorakulmio",
             "addEllipse": "Ympyrä",
             "addLine": "Viiva",
@@ -700,7 +700,14 @@
             "summaryNone": "Mitään ei ole vielä siirretty tai lisätty",
             "summaryMoved": "Siirretyt osat: {count}",
             "summaryItems": "Lisätyt kohteet: {count}",
-            "imageRefused": "Kuvaa ei voi käyttää. Käytä enintään 2 Mt:n PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa.",
+            "imageRefused": "Kuvaa ei voi käyttää. Käytä enintään 5 Mt:n PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa.",
+            "tier": {
+              "edit": "Muokkaa:",
+              "all": "Kaikki",
+              "only": "Vain {tier}",
+              "changed": "{tier} on omat asetukset",
+              "reset": "Palauta perusasetukset"
+            },
             "part": {
               "icon": "Kuvake",
               "text": "Tekstilohko",
@@ -745,18 +752,30 @@
               "rotation": "Kierto",
               "scale": "Skaalaus",
               "icon": "Kuvake",
-              "states": "Näkyy tasolla",
+              "visible": "Näkyvissä",
               "alignCard": "Tasaa kortin mukaan",
               "position": "Sijainti",
               "dims": "Koko",
               "offset": "Siirtymä",
               "entrance": "Sisääntulo",
               "delay": "Viive (ms)",
+              "points": "Kärjet",
+              "depth": "Syvyys (%)",
+              "head": "Kärki (%)",
+              "shaft": "Varsi (%)",
+              "apex": "Huipun sijainti (%)",
+              "dash": "Viivatyyli",
+              "flip": "Peilaus",
+              "shadowColor": "Varjon väri",
+              "shadowSize": "Varjon koko",
+              "replay": "Toista GIF uudelleen joka ilmoituksella",
+              "loop": "Silmukka",
+              "alignGroup": "Tasaa keskenään",
               "insert": "Lisää"
             },
             "act": {
-              "front": "Kortin edessä",
-              "back": "Kortin takana",
+              "front": "Tuo kortin eteen",
+              "back": "Vie kortin taakse",
               "crop": "Rajaa",
               "cropDone": "Rajaus valmis",
               "duplicate": "Monista",
@@ -790,6 +809,34 @@
             },
             "fillState": "Seuraa tasoa",
             "fillPlatinum": "Platina",
+            "fillRadial": "Säteittäinen liukuväri",
+            "dash": {
+              "solid": "Yhtenäinen",
+              "dashed": "Katkoviiva",
+              "dotted": "Pisteviiva"
+            },
+            "flip": {
+              "x": "Peilaa vasemmalta oikealle",
+              "y": "Peilaa ylhäältä alas"
+            },
+            "shadow": {
+              "none": "Ei mitään",
+              "drop": "Heittovarjo",
+              "glow": "Hehku",
+              "black": "Musta"
+            },
+            "loop": {
+              "none": "Ei mitään",
+              "pulse": "Sykintä",
+              "float": "Leijunta",
+              "swing": "Heilunta",
+              "spin": "Jatkuva pyöriminen",
+              "shine": "Kimallus"
+            },
+            "group": {
+              "count": "{count} elementtiä",
+              "hint": "Vedä yhtä niistä siirtääksesi kaikkia. Shift tai Ctrl + napsautus lisää tai poistaa elementin."
+            },
             "icon": {
               "trophy": "Pokaali",
               "medal": "Mitali",
@@ -825,6 +872,8 @@
               "escape": "Poista valinta ja poistu sitten muokkaimesta",
               "zoom": "Hiiren rullalla: lähennä ja loitonna",
               "dblclick": "Kaksoisnapsautus: muokkaa tekstiä, rajaa kuvaa",
+              "group": "Napsautus: lisää elementti valintaan tai poista se siitä",
+              "selectAll": "Valitse kaikki. Vetäminen tyhjästä kohdasta valitsee sen, mihin kehys osuu",
               "sheet": "Näytä tai piilota tämä luettelo",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Lisää elementtejä",
-                "body": "Tekstejä, kuvia, muotoja ja kuvakkeita. Jokainen tulee kortille omana tasonaan."
+                "body": "Tekstejä, kuvia ja GIF-kuvia, muotoja ja kuvakkeita. Jokainen tulee kortille omana tasonaan."
               },
               "edit": {
                 "title": "Valitse ja siirrä",
-                "body": "Valitse jokin kortilta napsauttamalla ja siirrä se vetämällä. Kulmat muuttavat kokoa, pyöreä kahva kääntää."
+                "body": "Valitse jokin kortilta napsauttamalla ja siirrä se vetämällä. Kulmat muuttavat kokoa, pyöreä kahva kääntää. Shift + napsautus tai tyhjästä kohdasta vedetty kehys valitsee useita kerralla."
               },
               "props": {
                 "title": "Sen asetukset",
@@ -860,7 +909,7 @@
               "done": "Selvä",
               "replay": "Toista kierros"
             },
-            "motionHint": "Kortti pysyy paikallaan muokatessasi: Toista kortin alla näyttää sisääntulot.",
+            "motionHint": "Kortti pysyy paikallaan muokatessasi: Toista kortin alla näyttää sisääntulot ja silmukat.",
             "maxItems": "Kortti on täynnä. Poista elementti, jotta voit lisätä toisen."
           },
           "create": "Luo esiasetus",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Valitse taustakuva",
     "choose-preset-font": "Valitse kirjasintiedosto",
     "choose-preset-logo": "Valitse logo",
+    "choose-preset-picture": "Valitse kuva tai GIF",
     "preset-font-refused": "Tämä tiedosto ei ole käyttökelpoinen kirjasin. Käytä TTF-, OTF-, WOFF- tai WOFF2-tiedostoa, jonka koko on enintään 4 Mt.",
-    "preset-logo-refused": "Tämä tiedosto ei ole käyttökelpoinen logo. Käytä PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa, jonka koko on enintään 2 Mt.",
+    "preset-logo-refused": "Tämä tiedosto ei ole käyttökelpoinen logo. Käytä PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa, jonka koko on enintään 5 Mt.",
     "preset-layer-note": "Mukautetaan esiasetusta {preset}. Valitse osio muuttaaksesi sitä; mitä jätät valitsematta, pysyy sellaisena kuin mukana tuleva esiasetus sen tarjoaa. Muutoksesi tulevat sen päälle: mukana tulevaa esiasetusta ei kopioida eikä muokata.",
     "folder-reason-ea-app": "Tämä on EA app -julkaisu. EA appin kautta käynnistetty peli säilyttää saavutuksensa EA-tilillä eikä pelikansiossa, joten täällä ei ole luettavaa avaustiedostoa. Nämä avaukset poimitaan kohdan Asetukset > Lähteet EA-lähteestä eikä valvotusta kansiosta.",
     "folder-reason-game-no-data": "Tämä on pelikansio, mutta siinä ei ole emulaattorin asetuksia eikä avaustiedostoa missään sellaisessa muodossa, jota AW Next osaisi lukea.",

@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Alles an seinen Platz zurück",
             "addText": "Text",
-            "addImage": "Bild",
+            "addImage": "Bild oder GIF",
             "addRect": "Rechteck",
             "addEllipse": "Kreis",
             "addLine": "Linie",
@@ -700,7 +700,14 @@
             "summaryNone": "Noch nichts verschoben oder hinzugefügt",
             "summaryMoved": "Verschobene Teile: {count}",
             "summaryItems": "Hinzugefügte Elemente: {count}",
-            "imageRefused": "Dieses Bild kann nicht verwendet werden. Nimm ein PNG-, JPEG-, GIF-, WebP- oder BMP-Bild mit höchstens 2 MB.",
+            "imageRefused": "Dieses Bild kann nicht verwendet werden. Nimm ein PNG-, JPEG-, GIF-, WebP- oder BMP-Bild mit höchstens 5 MB.",
+            "tier": {
+              "edit": "Bearbeiten:",
+              "all": "Alle",
+              "only": "Nur {tier}",
+              "changed": "{tier} hat eigene Einstellungen",
+              "reset": "Zurück zur Basis"
+            },
             "part": {
               "icon": "Symbol",
               "text": "Textblock",
@@ -745,18 +752,30 @@
               "rotation": "Drehung",
               "scale": "Skalierung",
               "icon": "Symbol",
-              "states": "Angezeigt bei",
+              "visible": "Sichtbar",
               "alignCard": "An der Karte ausrichten",
               "position": "Position",
               "dims": "Größe",
               "offset": "Versatz",
               "entrance": "Eingang",
               "delay": "Verzögerung (ms)",
+              "points": "Zacken",
+              "depth": "Tiefe (%)",
+              "head": "Spitze (%)",
+              "shaft": "Schaft (%)",
+              "apex": "Position der Spitze (%)",
+              "dash": "Linienart",
+              "flip": "Spiegeln",
+              "shadowColor": "Schattenfarbe",
+              "shadowSize": "Schattengröße",
+              "replay": "GIF bei jedem Einblenden neu abspielen",
+              "loop": "Schleife",
+              "alignGroup": "Aneinander ausrichten",
               "insert": "Einfügen"
             },
             "act": {
-              "front": "Vor der Karte",
-              "back": "Hinter der Karte",
+              "front": "Vor die Karte holen",
+              "back": "Hinter die Karte schieben",
               "crop": "Zuschneiden",
               "cropDone": "Zuschneiden beenden",
               "duplicate": "Duplizieren",
@@ -790,6 +809,34 @@
             },
             "fillState": "Folgt der Stufe",
             "fillPlatinum": "Platin",
+            "fillRadial": "Radialverlauf",
+            "dash": {
+              "solid": "Durchgezogen",
+              "dashed": "Gestrichelt",
+              "dotted": "Gepunktet"
+            },
+            "flip": {
+              "x": "Von links nach rechts spiegeln",
+              "y": "Von oben nach unten spiegeln"
+            },
+            "shadow": {
+              "none": "Keiner",
+              "drop": "Schlagschatten",
+              "glow": "Leuchten",
+              "black": "Schwarz"
+            },
+            "loop": {
+              "none": "Keine",
+              "pulse": "Pulsieren",
+              "float": "Schweben",
+              "swing": "Pendeln",
+              "spin": "Endlos drehen",
+              "shine": "Glanz"
+            },
+            "group": {
+              "count": "{count} Elemente",
+              "hint": "Zieh eines davon, um alle zu verschieben. Umschalt oder Strg + Klick fügt ein Element hinzu oder entfernt es."
+            },
             "icon": {
               "trophy": "Pokal",
               "medal": "Medaille",
@@ -825,6 +872,8 @@
               "escape": "Auswahl aufheben, dann den Editor verlassen",
               "zoom": "Mit dem Mausrad: hinein- und herauszoomen",
               "dblclick": "Doppelklick: Text bearbeiten, Bild zuschneiden",
+              "group": "Klicken: ein Element zur Auswahl hinzufügen oder daraus entfernen",
+              "selectAll": "Alles auswählen. Ziehen von einer leeren Stelle wählt aus, was der Rahmen berührt",
               "sheet": "Diese Liste ein- oder ausblenden",
               "key": {
                 "ctrl": "Strg",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Elemente hinzufügen",
-                "body": "Texte, Bilder, Formen und Symbole. Jedes liegt als eigene Ebene auf der Karte."
+                "body": "Texte, Bilder und GIFs, Formen und Symbole. Jedes liegt als eigene Ebene auf der Karte."
               },
               "edit": {
                 "title": "Auswählen, dann verschieben",
-                "body": "Klicke auf etwas auf der Karte, um es auszuwählen, und ziehe es, um es zu verschieben. Die Ecken ändern die Größe, der runde Griff dreht."
+                "body": "Klicke auf etwas auf der Karte, um es auszuwählen, und ziehe es, um es zu verschieben. Die Ecken ändern die Größe, der runde Griff dreht. Umschalt + Klick oder ein von einer leeren Stelle aufgezogener Rahmen wählt mehrere auf einmal aus."
               },
               "props": {
                 "title": "Die Einstellungen",
@@ -860,7 +909,7 @@
               "done": "Verstanden",
               "replay": "Tour wiederholen"
             },
-            "motionHint": "Die Karte steht still, solange du sie bearbeitest: Abspielen unter der Karte zeigt die Eingangseffekte.",
+            "motionHint": "Die Karte steht still, solange du sie bearbeitest: Abspielen unter der Karte zeigt die Eingangseffekte und Schleifen.",
             "maxItems": "Die Karte ist voll. Lösche ein Element, um ein weiteres hinzuzufügen."
           },
           "create": "Vorlage erstellen",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Hintergrundbild auswählen",
     "choose-preset-font": "Schriftdatei auswählen",
     "choose-preset-logo": "Logo auswählen",
+    "choose-preset-picture": "Bild oder GIF auswählen",
     "preset-font-refused": "Diese Datei ist keine verwendbare Schriftart. Verwende eine TTF-, OTF-, WOFF- oder WOFF2-Datei mit höchstens 4 MB.",
-    "preset-logo-refused": "Diese Datei ist kein verwendbares Logo. Verwende ein PNG-, JPEG-, GIF-, WebP- oder BMP-Bild mit höchstens 2 MB.",
+    "preset-logo-refused": "Diese Datei ist kein verwendbares Logo. Verwende ein PNG-, JPEG-, GIF-, WebP- oder BMP-Bild mit höchstens 5 MB.",
     "preset-layer-note": "{preset} wird angepasst. Hake einen Abschnitt an, um ihn zu ändern; alles, was du nicht anhakst, bleibt so, wie die mitgelieferte Vorlage es enthält. Deine Änderungen liegen darüber: Die mitgelieferte Vorlage wird weder kopiert noch verändert.",
     "folder-reason-ea-app": "Dies ist eine EA-app-Version. Ein über die EA app gestartetes Spiel speichert seine Erfolge im EA-Konto und nicht im Spielordner, hier gibt es also keine Freischaltdatei zu lesen. Diese Erfolge werden von der EA-Quelle unter Einstellungen > Quellen erfasst, nicht von einem überwachten Ordner.",
     "folder-reason-game-no-data": "Dies ist ein Spielordner, er enthält jedoch keine Emulator-Konfiguration und keine Freischaltdatei in einem Format, das AW Next lesen kann.",

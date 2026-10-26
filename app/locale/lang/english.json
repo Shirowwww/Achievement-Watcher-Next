@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Put everything back",
             "addText": "Text",
-            "addImage": "Picture",
+            "addImage": "Picture or GIF",
             "addRect": "Rectangle",
             "addEllipse": "Circle",
             "addLine": "Line",
@@ -700,7 +700,14 @@
             "summaryNone": "Nothing moved or added yet",
             "summaryMoved": "Parts moved: {count}",
             "summaryItems": "Items added: {count}",
-            "imageRefused": "That picture cannot be used. Use a PNG, JPEG, GIF, WebP or BMP picture of 2 MB at most.",
+            "imageRefused": "That picture cannot be used. Use a PNG, JPEG, GIF, WebP or BMP picture of 5 MB at most.",
+            "tier": {
+              "edit": "Edit:",
+              "all": "All",
+              "only": "{tier} only",
+              "changed": "{tier} has its own settings",
+              "reset": "Back to base"
+            },
             "part": {
               "icon": "Icon",
               "text": "Text block",
@@ -745,18 +752,30 @@
               "rotation": "Rotation",
               "scale": "Scale",
               "icon": "Icon",
-              "states": "Shown on",
+              "visible": "Visible",
               "alignCard": "Line up with the card",
               "position": "Position",
               "dims": "Size",
               "offset": "Offset",
               "entrance": "Entrance",
               "delay": "Delay (ms)",
+              "points": "Points",
+              "depth": "Depth (%)",
+              "head": "Head (%)",
+              "shaft": "Shaft (%)",
+              "apex": "Peak position (%)",
+              "dash": "Line style",
+              "flip": "Mirror",
+              "shadowColor": "Shadow colour",
+              "shadowSize": "Shadow size",
+              "replay": "Replay the GIF on each popup",
+              "loop": "Loop",
+              "alignGroup": "Line up together",
               "insert": "Insert"
             },
             "act": {
-              "front": "In front of the card",
-              "back": "Behind the card",
+              "front": "Bring in front of the card",
+              "back": "Send behind the card",
               "crop": "Crop",
               "cropDone": "Done cropping",
               "duplicate": "Duplicate",
@@ -790,6 +809,34 @@
             },
             "fillState": "Follows the tier",
             "fillPlatinum": "Platinum",
+            "fillRadial": "Radial gradient",
+            "dash": {
+              "solid": "Solid",
+              "dashed": "Dashed",
+              "dotted": "Dotted"
+            },
+            "flip": {
+              "x": "Mirror left to right",
+              "y": "Mirror top to bottom"
+            },
+            "shadow": {
+              "none": "None",
+              "drop": "Drop shadow",
+              "glow": "Glow",
+              "black": "Black"
+            },
+            "loop": {
+              "none": "None",
+              "pulse": "Pulse",
+              "float": "Float",
+              "swing": "Swing",
+              "spin": "Spin",
+              "shine": "Shine"
+            },
+            "group": {
+              "count": "{count} elements",
+              "hint": "Drag one of them to move them all. Shift or Ctrl + click adds or removes an element."
+            },
             "icon": {
               "trophy": "Trophy",
               "medal": "Medal",
@@ -825,6 +872,8 @@
               "escape": "Deselect, then leave the editor",
               "zoom": "With the mouse wheel: zoom in and out",
               "dblclick": "Double-click: edit a text, crop a picture",
+              "group": "Clicking: add an element to the selection, or take it out",
+              "selectAll": "Select everything. Dragging from an empty spot selects what the box touches",
               "sheet": "Show or hide this list",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Add elements",
-                "body": "Texts, pictures, shapes and icons. Each one goes on the card as a layer of its own."
+                "body": "Texts, pictures and GIFs, shapes and icons. Each one goes on the card as a layer of its own."
               },
               "edit": {
                 "title": "Pick, then move",
-                "body": "Click anything on the card to select it, drag it to move it. The corners resize it, the round handle turns it."
+                "body": "Click anything on the card to select it, drag it to move it. The corners resize it, the round handle turns it. Shift + click, or a box drawn from an empty spot, picks several at once."
               },
               "props": {
                 "title": "Its settings",
@@ -860,7 +909,7 @@
               "done": "Got it",
               "replay": "Replay the tour"
             },
-            "motionHint": "The card holds still while you edit it: Play, under the card, shows the entrances.",
+            "motionHint": "The card holds still while you edit it: Play, under the card, shows the entrances and loops.",
             "maxItems": "The card is full. Delete an element to add another."
           },
           "create": "Create preset",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Choose a background image",
     "choose-preset-font": "Choose a font file",
     "choose-preset-logo": "Choose a logo",
+    "choose-preset-picture": "Choose a picture or a GIF",
     "preset-font-refused": "That file is not a usable font. Use a TTF, OTF, WOFF or WOFF2 file of 4 MB at most.",
-    "preset-logo-refused": "That file is not a usable logo. Use a PNG, JPEG, GIF, WebP or BMP picture of 2 MB at most.",
+    "preset-logo-refused": "That file is not a usable logo. Use a PNG, JPEG, GIF, WebP or BMP picture of 5 MB at most.",
     "preset-layer-note": "Customizing {preset}. Tick a section to change it; whatever you leave unticked stays as the bundled preset ships. Your changes sit on top of it: the bundled preset is not copied or modified.",
     "folder-reason-ea-app": "This is an EA app release. A game started through the EA app keeps its achievements on the EA account rather than in the game folder, so there is no unlock file here to read. Those unlocks are picked up by the EA source in Settings > Sources instead of by a watched folder.",
     "folder-reason-game-no-data": "This is a game folder, but it holds no emulator configuration and no unlock file in any layout AW Next can read.",

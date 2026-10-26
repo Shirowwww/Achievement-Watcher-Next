@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Alles terugzetten",
             "addText": "Tekst",
-            "addImage": "Afbeelding",
+            "addImage": "Afbeelding of GIF",
             "addRect": "Rechthoek",
             "addEllipse": "Cirkel",
             "addLine": "Lijn",
@@ -700,7 +700,14 @@
             "summaryNone": "Nog niets verplaatst of toegevoegd",
             "summaryMoved": "Verplaatste onderdelen: {count}",
             "summaryItems": "Toegevoegde items: {count}",
-            "imageRefused": "Deze afbeelding kan niet worden gebruikt. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 2 MB.",
+            "imageRefused": "Deze afbeelding kan niet worden gebruikt. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 5 MB.",
+            "tier": {
+              "edit": "Bewerken:",
+              "all": "Alle",
+              "only": "Alleen {tier}",
+              "changed": "{tier} heeft eigen instellingen",
+              "reset": "Terug naar basis"
+            },
             "part": {
               "icon": "Pictogram",
               "text": "Tekstblok",
@@ -745,18 +752,30 @@
               "rotation": "Rotatie",
               "scale": "Schaal",
               "icon": "Pictogram",
-              "states": "Getoond bij",
+              "visible": "Zichtbaar",
               "alignCard": "Uitlijnen met de kaart",
               "position": "Positie",
               "dims": "Grootte",
               "offset": "Verschuiving",
               "entrance": "Intrede",
               "delay": "Vertraging (ms)",
+              "points": "Punten",
+              "depth": "Diepte (%)",
+              "head": "Pijlpunt (%)",
+              "shaft": "Schacht (%)",
+              "apex": "Positie van de top (%)",
+              "dash": "Lijnstijl",
+              "flip": "Spiegelen",
+              "shadowColor": "Schaduwkleur",
+              "shadowSize": "Schaduwgrootte",
+              "replay": "GIF opnieuw afspelen bij elke melding",
+              "loop": "Herhalen",
+              "alignGroup": "Onderling uitlijnen",
               "insert": "Invoegen"
             },
             "act": {
-              "front": "Voor de kaart",
-              "back": "Achter de kaart",
+              "front": "Voor de kaart plaatsen",
+              "back": "Achter de kaart plaatsen",
               "crop": "Bijsnijden",
               "cropDone": "Klaar met bijsnijden",
               "duplicate": "Dupliceren",
@@ -790,6 +809,34 @@
             },
             "fillState": "Volgt het niveau",
             "fillPlatinum": "Platina",
+            "fillRadial": "Radiaal verloop",
+            "dash": {
+              "solid": "Doorgetrokken",
+              "dashed": "Gestreept",
+              "dotted": "Gestippeld"
+            },
+            "flip": {
+              "x": "Spiegelen van links naar rechts",
+              "y": "Spiegelen van boven naar beneden"
+            },
+            "shadow": {
+              "none": "Geen",
+              "drop": "Slagschaduw",
+              "glow": "Gloed",
+              "black": "Zwart"
+            },
+            "loop": {
+              "none": "Geen",
+              "pulse": "Pulseren",
+              "float": "Zweven",
+              "swing": "Slingeren",
+              "spin": "Doorlopend draaien",
+              "shine": "Glinstering"
+            },
+            "group": {
+              "count": "{count} elementen",
+              "hint": "Sleep er een om ze allemaal te verplaatsen. Shift of Ctrl + klik voegt een element toe of haalt het weg."
+            },
             "icon": {
               "trophy": "Trofee",
               "medal": "Medaille",
@@ -825,6 +872,8 @@
               "escape": "Selectie opheffen en dan de editor verlaten",
               "zoom": "Met het muiswiel: in- en uitzoomen",
               "dblclick": "Dubbelklik: een tekst bewerken, een afbeelding bijsnijden",
+              "group": "Klikken: een element aan de selectie toevoegen of eruit halen",
+              "selectAll": "Alles selecteren. Slepen vanaf een lege plek selecteert wat het kader raakt",
               "sheet": "Deze lijst tonen of verbergen",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Elementen toevoegen",
-                "body": "Teksten, afbeeldingen, vormen en pictogrammen. Elk komt als aparte laag op de kaart."
+                "body": "Teksten, afbeeldingen en GIF's, vormen en pictogrammen. Elk komt als aparte laag op de kaart."
               },
               "edit": {
                 "title": "Kiezen en dan verplaatsen",
-                "body": "Klik op iets op de kaart om het te selecteren en sleep het om het te verplaatsen. De hoeken wijzigen het formaat, de ronde greep draait het."
+                "body": "Klik op iets op de kaart om het te selecteren en sleep het om het te verplaatsen. De hoeken wijzigen het formaat, de ronde greep draait het. Shift + klik, of een kader dat vanaf een lege plek wordt getekend, selecteert er meerdere tegelijk."
               },
               "props": {
                 "title": "De instellingen",
@@ -860,7 +909,7 @@
               "done": "Begrepen",
               "replay": "Rondleiding herhalen"
             },
-            "motionHint": "De kaart staat stil terwijl je bewerkt: Afspelen, onder de kaart, toont de intredes.",
+            "motionHint": "De kaart staat stil terwijl je bewerkt: Afspelen, onder de kaart, toont de intredes en de herhalingen.",
             "maxItems": "De kaart is vol. Verwijder een element om een ander toe te voegen."
           },
           "create": "Preset maken",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Kies een achtergrondafbeelding",
     "choose-preset-font": "Kies een lettertypebestand",
     "choose-preset-logo": "Kies een logo",
+    "choose-preset-picture": "Kies een afbeelding of een GIF",
     "preset-font-refused": "Dit bestand is geen bruikbaar lettertype. Gebruik een TTF-, OTF-, WOFF- of WOFF2-bestand van maximaal 4 MB.",
-    "preset-logo-refused": "Dit bestand is geen bruikbaar logo. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 2 MB.",
+    "preset-logo-refused": "Dit bestand is geen bruikbaar logo. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 5 MB.",
     "preset-layer-note": "{preset} wordt aangepast. Vink een onderdeel aan om het te wijzigen; wat je niet aanvinkt, blijft zoals de meegeleverde preset het levert. Je wijzigingen komen er bovenop: de meegeleverde preset wordt niet gekopieerd of gewijzigd.",
     "folder-reason-ea-app": "Dit is een release van de EA app. Een game die je via de EA app start, bewaart zijn prestaties op het EA-account en niet in de gamemap, dus er valt hier geen ontgrendelbestand te lezen. Die ontgrendelingen worden opgepikt door de EA-bron bij Instellingen > Bronnen en niet door een bewaakte map.",
     "folder-reason-game-no-data": "Dit is een gamemap, maar er staat geen emulatorconfiguratie in en geen ontgrendelbestand in een indeling die AW Next kan lezen.",

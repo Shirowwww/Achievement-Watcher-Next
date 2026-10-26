@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Vrátiť všetko na miesto",
             "addText": "Text",
-            "addImage": "Obrázok",
+            "addImage": "Obrázok alebo GIF",
             "addRect": "Obdĺžnik",
             "addEllipse": "Kruh",
             "addLine": "Čiara",
@@ -700,7 +700,14 @@
             "summaryNone": "Zatiaľ nič nepresunuté ani nepridané",
             "summaryMoved": "Presunuté časti: {count}",
             "summaryItems": "Pridané prvky: {count}",
-            "imageRefused": "Tento obrázok nemožno použiť. Použite obrázok PNG, JPEG, GIF, WebP alebo BMP s veľkosťou najviac 2 MB.",
+            "imageRefused": "Tento obrázok nemožno použiť. Použite obrázok PNG, JPEG, GIF, WebP alebo BMP s veľkosťou najviac 5 MB.",
+            "tier": {
+              "edit": "Upraviť:",
+              "all": "Všetky",
+              "only": "Iba {tier}",
+              "changed": "{tier} má vlastné nastavenia",
+              "reset": "Späť na základ"
+            },
             "part": {
               "icon": "Ikona",
               "text": "Textový blok",
@@ -745,18 +752,30 @@
               "rotation": "Otočenie",
               "scale": "Mierka",
               "icon": "Ikona",
-              "states": "Zobrazené na",
+              "visible": "Viditeľné",
               "alignCard": "Zarovnať podľa karty",
               "position": "Poloha",
               "dims": "Veľkosť",
               "offset": "Posun",
               "entrance": "Nájazd",
               "delay": "Oneskorenie (ms)",
+              "points": "Cípy",
+              "depth": "Hĺbka (%)",
+              "head": "Hrot (%)",
+              "shaft": "Driek (%)",
+              "apex": "Poloha vrcholu (%)",
+              "dash": "Štýl čiary",
+              "flip": "Zrkadliť",
+              "shadowColor": "Farba tieňa",
+              "shadowSize": "Veľkosť tieňa",
+              "replay": "Prehrať GIF znova pri každom zobrazení",
+              "loop": "Slučka",
+              "alignGroup": "Zarovnať navzájom",
               "insert": "Vložiť"
             },
             "act": {
-              "front": "Pred kartou",
-              "back": "Za kartou",
+              "front": "Presunúť pred kartu",
+              "back": "Presunúť za kartu",
               "crop": "Orezať",
               "cropDone": "Dokončiť orezanie",
               "duplicate": "Duplikovať",
@@ -790,6 +809,34 @@
             },
             "fillState": "Podľa úrovne",
             "fillPlatinum": "Platina",
+            "fillRadial": "Kruhový prechod",
+            "dash": {
+              "solid": "Plná",
+              "dashed": "Čiarkovaná",
+              "dotted": "Bodkovaná"
+            },
+            "flip": {
+              "x": "Zrkadliť zľava doprava",
+              "y": "Zrkadliť zhora nadol"
+            },
+            "shadow": {
+              "none": "Žiadny",
+              "drop": "Vrhaný tieň",
+              "glow": "Žiara",
+              "black": "Čierna"
+            },
+            "loop": {
+              "none": "Žiadna",
+              "pulse": "Pulzovanie",
+              "float": "Vznášanie",
+              "swing": "Kyvadlo",
+              "spin": "Nepretržité otáčanie",
+              "shine": "Trblietanie"
+            },
+            "group": {
+              "count": "{count} prvkov",
+              "hint": "Presunutím jedného z nich presuniete všetky. Shift alebo Ctrl + kliknutie pridá alebo odoberie prvok."
+            },
             "icon": {
               "trophy": "Trofej",
               "medal": "Medaila",
@@ -825,6 +872,8 @@
               "escape": "Zrušiť výber a potom opustiť editor",
               "zoom": "Kolieskom myši: priblíženie a oddialenie",
               "dblclick": "Dvojklik: upraviť text, orezať obrázok",
+              "group": "Kliknutie: pridať prvok do výberu alebo ho z neho odobrať",
+              "selectAll": "Vybrať všetko. Ťahanie z prázdneho miesta vyberie to, čoho sa rámček dotkne",
               "sheet": "Zobraziť alebo skryť tento zoznam",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Pridávajte prvky",
-                "body": "Texty, obrázky, tvary a ikony. Každý sa na kartu umiestni ako samostatná vrstva."
+                "body": "Texty, obrázky a GIF-y, tvary a ikony. Každý sa na kartu umiestni ako samostatná vrstva."
               },
               "edit": {
                 "title": "Vyberte, potom presuňte",
-                "body": "Kliknutím na čokoľvek na karte to vyberiete a ťahaním presuniete. Rohy menia veľkosť, okrúhla rukoväť otáča."
+                "body": "Kliknutím na čokoľvek na karte to vyberiete a ťahaním presuniete. Rohy menia veľkosť, okrúhla rukoväť otáča. Shift + kliknutie alebo rámik nakreslený z prázdneho miesta vyberie viac prvkov naraz."
               },
               "props": {
                 "title": "Jeho nastavenia",
@@ -860,7 +909,7 @@
               "done": "Rozumiem",
               "replay": "Zopakovať prehliadku"
             },
-            "motionHint": "Karta sa pri úpravách nehýbe: Prehrať pod kartou ukáže nájazdy.",
+            "motionHint": "Karta sa pri úpravách nehýbe: Prehrať pod kartou ukáže nájazdy a slučky.",
             "maxItems": "Karta je plná. Odstráňte prvok, aby ste mohli pridať ďalší."
           },
           "create": "Vytvoriť predvoľbu",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Vybrať obrázok pozadia",
     "choose-preset-font": "Vybrať súbor s písmom",
     "choose-preset-logo": "Vybrať logo",
+    "choose-preset-picture": "Vybrať obrázok alebo GIF",
     "preset-font-refused": "Tento súbor nie je použiteľné písmo. Použite súbor TTF, OTF, WOFF alebo WOFF2 s veľkosťou najviac 4 MB.",
-    "preset-logo-refused": "Tento súbor nie je použiteľné logo. Použite obrázok PNG, JPEG, GIF, WebP alebo BMP s veľkosťou najviac 2 MB.",
+    "preset-logo-refused": "Tento súbor nie je použiteľné logo. Použite obrázok PNG, JPEG, GIF, WebP alebo BMP s veľkosťou najviac 5 MB.",
     "preset-layer-note": "Úprava predvoľby {preset}. Zaškrtnite časť, ktorú chcete zmeniť; čo nezaškrtnete, zostane tak, ako to pribalená predvoľba dodáva. Vaše zmeny sa vrstvia navrch: pribalená predvoľba sa nekopíruje ani nemení.",
     "folder-reason-ea-app": "Toto je vydanie pre EA app. Hra spustená cez EA app ukladá svoje úspechy na účet EA, nie do priečinka hry, takže tu nie je žiadny súbor s odomknutiami na čítanie. Tieto úspechy načítava zdroj EA v Nastavenia > Zdroje, nie sledovaný priečinok.",
     "folder-reason-game-no-data": "Toto je priečinok hry, neobsahuje však žiadnu konfiguráciu emulátora ani súbor s odomknutiami vo formáte, ktorý AW Next dokáže prečítať.",

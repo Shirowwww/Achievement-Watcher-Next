@@ -141,6 +141,30 @@ window.addEventListener('DOMContentLoaded', function () {
       if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];
     }
   }
+  // An animated picture set to replay starts over as it appears: a new address is a new animation,
+  // swapped in once loaded so the element never shows a gap. A picture held inline (the
+  // designer preview) gets its new address from a parameter of its media type.
+  var replayTimers = [];
+  var replayCount = 0;
+  function restartPicture(node) {
+    node.style.backgroundImage = '';
+    var match = /^url\("(.+)"\)$/.exec(getComputedStyle(node).backgroundImage);
+    if (!match) return;
+    replayCount += 1;
+    var next = match[1].indexOf('data:') === 0
+      ? match[1].replace(/^data:([^;,]*)(;replay=\d+)?/, 'data:$1;replay=' + replayCount)
+      : match[1].replace(/[?#].*$/, '') + '?replay=' + replayCount;
+    var picture = new Image();
+    picture.onload = function () { node.style.backgroundImage = 'url("' + next + '")'; };
+    picture.src = next;
+  }
+  function replayPictures() {
+    replayTimers.forEach(clearTimeout);
+    var nodes = document.querySelectorAll('.aw-canvas [data-replay]');
+    replayTimers = Array.prototype.map.call(nodes, function (node) {
+      return setTimeout(function () { restartPicture(node); }, Number(node.getAttribute('data-replay')) || 0);
+    });
+  }
   var closeTimer = null;
   function onPayload(displayName, description, iconPath, scale, data) {
     var titleEl = document.querySelector('.title');
@@ -168,6 +192,7 @@ window.addEventListener('DOMContentLoaded', function () {
     root.classList.remove('active');
     void root.offsetWidth;
     root.classList.add('active');
+    replayPictures();
     if (window.api && window.api.notificationRenderReady) window.api.notificationRenderReady();
     requestAnimationFrame(function () { marquees.forEach(startMarquee); });
     clearTimeout(closeTimer);

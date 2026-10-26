@@ -17,6 +17,8 @@ const SHORTCUTS = [
   [[['←'], ['↑'], ['→'], ['↓']], 'help.nudge'],
   [[['shift']], 'help.shift'],
   [[['alt']], 'help.alt'],
+  [[['shift'], ['ctrl']], 'help.group'],
+  [[['ctrl', 'A']], 'help.selectAll'],
   [[['ctrl', 'D']], 'help.duplicate'],
   [[['ctrl', 'C'], ['ctrl', 'V']], 'help.copy'],
   [[['ctrl', 'Z'], ['ctrl', 'Y']], 'help.undo'],

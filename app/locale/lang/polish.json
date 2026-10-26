@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Przywróć wszystko na miejsce",
             "addText": "Tekst",
-            "addImage": "Obraz",
+            "addImage": "Obraz lub GIF",
             "addRect": "Prostokąt",
             "addEllipse": "Koło",
             "addLine": "Linia",
@@ -700,7 +700,14 @@
             "summaryNone": "Nic jeszcze nie przesunięto ani nie dodano",
             "summaryMoved": "Przesunięte części: {count}",
             "summaryItems": "Dodane elementy: {count}",
-            "imageRefused": "Tego obrazu nie można użyć. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 2 MB.",
+            "imageRefused": "Tego obrazu nie można użyć. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 5 MB.",
+            "tier": {
+              "edit": "Edytuj:",
+              "all": "Wszystkie",
+              "only": "Tylko {tier}",
+              "changed": "{tier} ma własne ustawienia",
+              "reset": "Wróć do podstawy"
+            },
             "part": {
               "icon": "Ikona",
               "text": "Blok tekstu",
@@ -745,18 +752,30 @@
               "rotation": "Obrót",
               "scale": "Skala",
               "icon": "Ikona",
-              "states": "Pokazywane na",
+              "visible": "Widoczny",
               "alignCard": "Wyrównaj do karty",
               "position": "Pozycja",
               "dims": "Rozmiar",
               "offset": "Przesunięcie",
               "entrance": "Wejście",
               "delay": "Opóźnienie (ms)",
+              "points": "Ramiona",
+              "depth": "Głębokość (%)",
+              "head": "Grot (%)",
+              "shaft": "Trzon (%)",
+              "apex": "Położenie wierzchołka (%)",
+              "dash": "Styl linii",
+              "flip": "Odbicie",
+              "shadowColor": "Kolor cienia",
+              "shadowSize": "Rozmiar cienia",
+              "replay": "Odtwarzaj GIF od nowa przy każdym pokazaniu",
+              "loop": "Zapętlenie",
+              "alignGroup": "Wyrównaj względem siebie",
               "insert": "Wstaw"
             },
             "act": {
-              "front": "Przed kartą",
-              "back": "Za kartą",
+              "front": "Przesuń przed kartę",
+              "back": "Przesuń za kartę",
               "crop": "Przytnij",
               "cropDone": "Zakończ przycinanie",
               "duplicate": "Duplikuj",
@@ -790,6 +809,34 @@
             },
             "fillState": "Zgodnie z poziomem",
             "fillPlatinum": "Platyna",
+            "fillRadial": "Gradient kołowy",
+            "dash": {
+              "solid": "Ciągła",
+              "dashed": "Kreskowana",
+              "dotted": "Kropkowana"
+            },
+            "flip": {
+              "x": "Odbij od lewej do prawej",
+              "y": "Odbij od góry do dołu"
+            },
+            "shadow": {
+              "none": "Brak",
+              "drop": "Cień rzucany",
+              "glow": "Poświata",
+              "black": "Czarny"
+            },
+            "loop": {
+              "none": "Brak",
+              "pulse": "Pulsowanie",
+              "float": "Unoszenie",
+              "swing": "Kołysanie",
+              "spin": "Ciągły obrót",
+              "shine": "Połysk"
+            },
+            "group": {
+              "count": "{count} elementów",
+              "hint": "Przeciągnij jeden z nich, aby przesunąć wszystkie. Shift lub Ctrl + kliknięcie dodaje lub usuwa element."
+            },
             "icon": {
               "trophy": "Trofeum",
               "medal": "Medal",
@@ -825,6 +872,8 @@
               "escape": "Odznacz, a potem wyjdź z edytora",
               "zoom": "Kółkiem myszy: przybliżanie i oddalanie",
               "dblclick": "Dwukrotne kliknięcie: edytuj tekst, przytnij obraz",
+              "group": "Kliknięcie: dodaje element do zaznaczenia lub go z niego usuwa",
+              "selectAll": "Zaznacz wszystko. Przeciągnięcie z pustego miejsca zaznacza to, czego dotyka ramka",
               "sheet": "Pokaż lub ukryj tę listę",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Dodawaj elementy",
-                "body": "Teksty, obrazy, kształty i ikony. Każdy trafia na kartę jako osobna warstwa."
+                "body": "Teksty, obrazy i GIF-y, kształty i ikony. Każdy trafia na kartę jako osobna warstwa."
               },
               "edit": {
                 "title": "Wybierz, potem przesuń",
-                "body": "Kliknij cokolwiek na karcie, aby to zaznaczyć, i przeciągnij, aby przesunąć. Rogi zmieniają rozmiar, okrągły uchwyt obraca."
+                "body": "Kliknij cokolwiek na karcie, aby to zaznaczyć, i przeciągnij, aby przesunąć. Rogi zmieniają rozmiar, okrągły uchwyt obraca. Shift + kliknięcie lub ramka narysowana od pustego miejsca zaznacza kilka naraz."
               },
               "props": {
                 "title": "Jego ustawienia",
@@ -860,7 +909,7 @@
               "done": "Rozumiem",
               "replay": "Powtórz przewodnik"
             },
-            "motionHint": "Karta stoi w miejscu podczas edycji: Odtwórz pod kartą pokazuje wejścia.",
+            "motionHint": "Karta stoi w miejscu podczas edycji: Odtwórz pod kartą pokazuje wejścia i zapętlenia.",
             "maxItems": "Karta jest pełna. Usuń element, aby dodać kolejny."
           },
           "create": "Utwórz ustawienie",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Wybierz obraz tła",
     "choose-preset-font": "Wybierz plik czcionki",
     "choose-preset-logo": "Wybierz logo",
+    "choose-preset-picture": "Wybierz obraz lub GIF",
     "preset-font-refused": "Ten plik nie jest użyteczną czcionką. Użyj pliku TTF, OTF, WOFF lub WOFF2 o rozmiarze do 4 MB.",
-    "preset-logo-refused": "Ten plik nie jest użytecznym logo. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 2 MB.",
+    "preset-logo-refused": "Ten plik nie jest użytecznym logo. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 5 MB.",
     "preset-layer-note": "Dostosowywanie: {preset}. Zaznacz sekcję, aby ją zmienić; wszystko, czego nie zaznaczysz, pozostaje takie, jak w dołączonym ustawieniu. Twoje zmiany są nałożone na wierzch: dołączone ustawienie nie jest kopiowane ani modyfikowane.",
     "folder-reason-ea-app": "To wydanie uruchamiane przez EA app. Gra startowana z EA app przechowuje osiągnięcia na koncie EA, a nie w folderze gry, więc nie ma tu żadnego pliku odblokowań do odczytania. Takie osiągnięcia pobiera źródło EA w Ustawienia > Źródła, a nie obserwowany folder.",
     "folder-reason-game-no-data": "To folder gry, ale nie zawiera żadnej konfiguracji emulatora ani pliku odblokowań w formacie, który AW Next potrafi odczytać.",

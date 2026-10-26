@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "全部还原",
             "addText": "文本",
-            "addImage": "图片",
+            "addImage": "图片或 GIF",
             "addRect": "矩形",
             "addEllipse": "圆形",
             "addLine": "线条",
@@ -700,7 +700,14 @@
             "summaryNone": "尚未移动或添加任何内容",
             "summaryMoved": "已移动的部分：{count}",
             "summaryItems": "已添加的元素：{count}",
-            "imageRefused": "无法使用该图片。请使用不超过 2 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
+            "imageRefused": "无法使用该图片。请使用不超过 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
+            "tier": {
+              "edit": "编辑：",
+              "all": "全部",
+              "only": "仅{tier}",
+              "changed": "{tier}有独立设置",
+              "reset": "恢复为基础设置"
+            },
             "part": {
               "icon": "图标",
               "text": "文本块",
@@ -745,18 +752,30 @@
               "rotation": "旋转",
               "scale": "缩放",
               "icon": "图标",
-              "states": "显示于",
+              "visible": "可见",
               "alignCard": "与卡片对齐",
               "position": "位置",
               "dims": "大小",
               "offset": "偏移",
               "entrance": "入场",
               "delay": "延迟 (ms)",
+              "points": "角数",
+              "depth": "凹陷深度 (%)",
+              "head": "箭头 (%)",
+              "shaft": "箭杆 (%)",
+              "apex": "顶点位置 (%)",
+              "dash": "线条样式",
+              "flip": "镜像",
+              "shadowColor": "阴影颜色",
+              "shadowSize": "阴影大小",
+              "replay": "每次弹出时重新播放 GIF",
+              "loop": "循环",
+              "alignGroup": "相互对齐",
               "insert": "插入"
             },
             "act": {
-              "front": "置于卡片前方",
-              "back": "置于卡片后方",
+              "front": "移到卡片前方",
+              "back": "移到卡片后方",
               "crop": "裁剪",
               "cropDone": "完成裁剪",
               "duplicate": "复制",
@@ -790,6 +809,34 @@
             },
             "fillState": "跟随等级",
             "fillPlatinum": "白金",
+            "fillRadial": "径向渐变",
+            "dash": {
+              "solid": "实线",
+              "dashed": "虚线",
+              "dotted": "点线"
+            },
+            "flip": {
+              "x": "左右镜像",
+              "y": "上下镜像"
+            },
+            "shadow": {
+              "none": "无",
+              "drop": "投影",
+              "glow": "光晕",
+              "black": "黑色"
+            },
+            "loop": {
+              "none": "无",
+              "pulse": "脉动",
+              "float": "漂浮",
+              "swing": "摆动",
+              "spin": "持续旋转",
+              "shine": "闪耀"
+            },
+            "group": {
+              "count": "{count} 个元素",
+              "hint": "拖动其中任意一个即可一起移动。Shift 或 Ctrl + 点击可添加或移除元素。"
+            },
             "icon": {
               "trophy": "奖杯",
               "medal": "奖牌",
@@ -825,6 +872,8 @@
               "escape": "取消选择，然后退出编辑器",
               "zoom": "使用鼠标滚轮：放大和缩小",
               "dblclick": "双击：编辑文字，裁剪图片",
+              "group": "点击：将元素加入选择，或从选择中移除",
+              "selectAll": "全选。从空白处拖动可选中方框碰到的内容",
               "sheet": "显示或隐藏此列表",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "添加元素",
-                "body": "文字、图片、形状和图标。每一项都会作为独立图层放在卡片上。"
+                "body": "文字、图片和 GIF、形状和图标。每一项都会作为独立图层放在卡片上。"
               },
               "edit": {
                 "title": "先选中，再移动",
-                "body": "点击卡片上的任意内容即可选中，拖动即可移动。边角用于调整大小，圆形手柄用于旋转。"
+                "body": "点击卡片上的任意内容即可选中，拖动即可移动。边角用于调整大小，圆形手柄用于旋转。Shift + 点击，或从空白处拖出的方框，可一次选中多个。"
               },
               "props": {
                 "title": "元素设置",
@@ -860,7 +909,7 @@
               "done": "知道了",
               "replay": "重新查看导览"
             },
-            "motionHint": "编辑时卡片保持静止，点击卡片下方的播放即可查看入场效果。",
+            "motionHint": "编辑时卡片保持静止，点击卡片下方的播放即可查看入场效果和循环。",
             "maxItems": "卡片已满。删除一个元素后才能添加新的。"
           },
           "create": "创建预设",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "选择背景图片",
     "choose-preset-font": "选择字体文件",
     "choose-preset-logo": "选择徽标",
+    "choose-preset-picture": "选择图片或 GIF",
     "preset-font-refused": "该文件不是可用的字体。请使用不超过 4 MB 的 TTF、OTF、WOFF 或 WOFF2 文件。",
-    "preset-logo-refused": "该文件不是可用的徽标。请使用不超过 2 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
+    "preset-logo-refused": "该文件不是可用的徽标。请使用不超过 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
     "preset-layer-note": "正在自定义 {preset}。勾选某个部分即可更改;未勾选的部分保持内置预设的原样。你的更改叠加在其上:内置预设不会被复制或修改。",
     "folder-reason-ea-app": "这是 EA app 版本。通过 EA app 启动的游戏会把成就保存在 EA 账户中，而不是游戏文件夹里，因此这里没有可读取的解锁文件。这类成就由设置 > 来源中的 EA 来源获取，而不是由被监视的文件夹获取。",
     "folder-reason-game-no-data": "这是一个游戏文件夹，但其中既没有模拟器配置，也没有 AW Next 能够读取的任何解锁文件。",

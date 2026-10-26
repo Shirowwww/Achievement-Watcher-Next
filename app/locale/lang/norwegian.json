@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Sett alt tilbake på plass",
             "addText": "Tekst",
-            "addImage": "Bilde",
+            "addImage": "Bilde eller GIF",
             "addRect": "Rektangel",
             "addEllipse": "Sirkel",
             "addLine": "Linje",
@@ -700,7 +700,14 @@
             "summaryNone": "Ingenting er flyttet eller lagt til ennå",
             "summaryMoved": "Flyttede deler: {count}",
             "summaryItems": "Elementer lagt til: {count}",
-            "imageRefused": "Bildet kan ikke brukes. Bruk et PNG-, JPEG-, GIF-, WebP- eller BMP-bilde på maks 2 MB.",
+            "imageRefused": "Bildet kan ikke brukes. Bruk et PNG-, JPEG-, GIF-, WebP- eller BMP-bilde på maks 5 MB.",
+            "tier": {
+              "edit": "Rediger:",
+              "all": "Alle",
+              "only": "Bare {tier}",
+              "changed": "{tier} har egne innstillinger",
+              "reset": "Tilbake til basis"
+            },
             "part": {
               "icon": "Ikon",
               "text": "Tekstblokk",
@@ -745,18 +752,30 @@
               "rotation": "Rotasjon",
               "scale": "Skala",
               "icon": "Ikon",
-              "states": "Vises ved",
+              "visible": "Synlig",
               "alignCard": "Juster etter kortet",
               "position": "Posisjon",
               "dims": "Størrelse",
               "offset": "Forskyvning",
               "entrance": "Inntreden",
               "delay": "Forsinkelse (ms)",
+              "points": "Spisser",
+              "depth": "Dybde (%)",
+              "head": "Pilspiss (%)",
+              "shaft": "Skaft (%)",
+              "apex": "Toppunktets plassering (%)",
+              "dash": "Linjestil",
+              "flip": "Speil",
+              "shadowColor": "Skyggefarge",
+              "shadowSize": "Skyggestørrelse",
+              "replay": "Spill av GIF-en på nytt ved hver visning",
+              "loop": "Gjenta",
+              "alignGroup": "Juster mot hverandre",
               "insert": "Sett inn"
             },
             "act": {
-              "front": "Foran kortet",
-              "back": "Bak kortet",
+              "front": "Flytt foran kortet",
+              "back": "Flytt bak kortet",
               "crop": "Beskjær",
               "cropDone": "Ferdig med beskjæring",
               "duplicate": "Dupliser",
@@ -790,6 +809,34 @@
             },
             "fillState": "Følger nivået",
             "fillPlatinum": "Platina",
+            "fillRadial": "Radial overgang",
+            "dash": {
+              "solid": "Hel",
+              "dashed": "Stiplet",
+              "dotted": "Prikket"
+            },
+            "flip": {
+              "x": "Speil fra venstre mot høyre",
+              "y": "Speil fra topp til bunn"
+            },
+            "shadow": {
+              "none": "Ingen",
+              "drop": "Slagskygge",
+              "glow": "Glød",
+              "black": "Svart"
+            },
+            "loop": {
+              "none": "Ingen",
+              "pulse": "Puls",
+              "float": "Svev",
+              "swing": "Pendel",
+              "spin": "Kontinuerlig rotasjon",
+              "shine": "Glimt"
+            },
+            "group": {
+              "count": "{count} elementer",
+              "hint": "Dra i ett av dem for å flytte alle. Shift eller Ctrl + klikk legger til eller fjerner et element."
+            },
             "icon": {
               "trophy": "Trofé",
               "medal": "Medalje",
@@ -825,6 +872,8 @@
               "escape": "Fjern markeringen, og forlat deretter editoren",
               "zoom": "Med musehjulet: zoom inn og ut",
               "dblclick": "Dobbeltklikk: rediger en tekst, beskjær et bilde",
+              "group": "Klikk: legg et element til i utvalget, eller fjern det",
+              "selectAll": "Velg alt. Å dra fra et tomt sted velger det rammen berører",
               "sheet": "Vis eller skjul denne listen",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Legg til elementer",
-                "body": "Tekster, bilder, former og ikoner. Hvert element legges på kortet som et eget lag."
+                "body": "Tekster, bilder og GIF-er, former og ikoner. Hvert element legges på kortet som et eget lag."
               },
               "edit": {
                 "title": "Velg, og flytt deretter",
-                "body": "Klikk på noe på kortet for å velge det, og dra det for å flytte det. Hjørnene endrer størrelsen, det runde håndtaket roterer det."
+                "body": "Klikk på noe på kortet for å velge det, og dra det for å flytte det. Hjørnene endrer størrelsen, det runde håndtaket roterer det. Shift + klikk, eller en ramme trukket fra et tomt punkt, velger flere samtidig."
               },
               "props": {
                 "title": "Innstillingene",
@@ -860,7 +909,7 @@
               "done": "Forstått",
               "replay": "Ta omvisningen på nytt"
             },
-            "motionHint": "Kortet står stille mens du redigerer: Spill av under kortet viser inntredenene.",
+            "motionHint": "Kortet står stille mens du redigerer: Spill av under kortet viser inntredenene og løkkene.",
             "maxItems": "Kortet er fullt. Slett et element for å legge til et nytt."
           },
           "create": "Lag preset",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Velg et bakgrunnsbilde",
     "choose-preset-font": "Velg en skriftfil",
     "choose-preset-logo": "Velg en logo",
+    "choose-preset-picture": "Velg et bilde eller en GIF",
     "preset-font-refused": "Den filen er ikke en brukbar skrift. Bruk en TTF-, OTF-, WOFF- eller WOFF2-fil på maks 4 MB.",
-    "preset-logo-refused": "Den filen er ikke en brukbar logo. Bruk et PNG-, JPEG-, GIF-, WebP- eller BMP-bilde på maks 2 MB.",
+    "preset-logo-refused": "Den filen er ikke en brukbar logo. Bruk et PNG-, JPEG-, GIF-, WebP- eller BMP-bilde på maks 5 MB.",
     "preset-layer-note": "Tilpasser {preset}. Kryss av for en del for å endre den; alt du lar stå uten avkryssing, forblir slik den medfølgende presetten leveres. Endringene dine legges oppå: den medfølgende presetten kopieres eller endres ikke.",
     "folder-reason-ea-app": "Dette er en utgivelse for EA-appen. Et spill som startes gjennom EA-appen, lagrer prestasjonene sine på EA-kontoen og ikke i spillmappen, så det finnes ingen opplåsingsfil å lese her. De opplåsingene fanges opp av EA-kilden under Innstillinger > Kilder i stedet for av en overvåket mappe.",
     "folder-reason-game-no-data": "Dette er en spillmappe, men den inneholder verken emulatoroppsett eller en opplåsingsfil i noe format AW Next kan lese.",

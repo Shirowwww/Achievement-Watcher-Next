@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Colocar tudo de volta no lugar",
             "addText": "Texto",
-            "addImage": "Imagem",
+            "addImage": "Imagem ou GIF",
             "addRect": "Retângulo",
             "addEllipse": "Círculo",
             "addLine": "Linha",
@@ -700,7 +700,14 @@
             "summaryNone": "Nada movido ou adicionado ainda",
             "summaryMoved": "Partes movidas: {count}",
             "summaryItems": "Itens adicionados: {count}",
-            "imageRefused": "Não é possível usar essa imagem. Use uma imagem PNG, JPEG, GIF, WebP ou BMP de no máximo 2 MB.",
+            "imageRefused": "Não é possível usar essa imagem. Use uma imagem PNG, JPEG, GIF, WebP ou BMP de no máximo 5 MB.",
+            "tier": {
+              "edit": "Editar:",
+              "all": "Todos",
+              "only": "Somente {tier}",
+              "changed": "{tier} tem configurações próprias",
+              "reset": "Voltar ao padrão"
+            },
             "part": {
               "icon": "Ícone",
               "text": "Bloco de texto",
@@ -745,18 +752,30 @@
               "rotation": "Rotação",
               "scale": "Escala",
               "icon": "Ícone",
-              "states": "Exibido em",
+              "visible": "Visível",
               "alignCard": "Alinhar ao cartão",
               "position": "Posição",
               "dims": "Tamanho",
               "offset": "Deslocamento",
               "entrance": "Entrada",
               "delay": "Atraso (ms)",
+              "points": "Pontas",
+              "depth": "Profundidade (%)",
+              "head": "Ponta da seta (%)",
+              "shaft": "Haste (%)",
+              "apex": "Posição do vértice (%)",
+              "dash": "Estilo da linha",
+              "flip": "Espelhar",
+              "shadowColor": "Cor da sombra",
+              "shadowSize": "Tamanho da sombra",
+              "replay": "Reproduzir o GIF a cada notificação",
+              "loop": "Em loop",
+              "alignGroup": "Alinhar entre si",
               "insert": "Inserir"
             },
             "act": {
-              "front": "À frente do cartão",
-              "back": "Atrás do cartão",
+              "front": "Passar para a frente do cartão",
+              "back": "Enviar para trás do cartão",
               "crop": "Recortar",
               "cropDone": "Concluir recorte",
               "duplicate": "Duplicar",
@@ -790,6 +809,34 @@
             },
             "fillState": "Segue o nível",
             "fillPlatinum": "Platina",
+            "fillRadial": "Gradiente radial",
+            "dash": {
+              "solid": "Sólido",
+              "dashed": "Tracejado",
+              "dotted": "Pontilhado"
+            },
+            "flip": {
+              "x": "Espelhar da esquerda para a direita",
+              "y": "Espelhar de cima para baixo"
+            },
+            "shadow": {
+              "none": "Nenhuma",
+              "drop": "Sombra projetada",
+              "glow": "Brilho",
+              "black": "Preto"
+            },
+            "loop": {
+              "none": "Nenhum",
+              "pulse": "Pulsação",
+              "float": "Flutuação",
+              "swing": "Balanço",
+              "spin": "Rotação contínua",
+              "shine": "Cintilação"
+            },
+            "group": {
+              "count": "{count} elementos",
+              "hint": "Arraste um deles para mover todos. Shift ou Ctrl + clique adiciona ou remove um elemento."
+            },
             "icon": {
               "trophy": "Troféu",
               "medal": "Medalha",
@@ -825,6 +872,8 @@
               "escape": "Desmarcar e depois sair do editor",
               "zoom": "Com a roda do mouse: aumentar e diminuir o zoom",
               "dblclick": "Clique duplo: editar um texto, recortar uma imagem",
+              "group": "Clique: adicionar um elemento à seleção ou tirá-lo dela",
+              "selectAll": "Selecionar tudo. Arrastar a partir de um ponto vazio seleciona o que o quadro toca",
               "sheet": "Mostrar ou ocultar esta lista",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Adicione elementos",
-                "body": "Textos, imagens, formas e ícones. Cada um entra no cartão como uma camada própria."
+                "body": "Textos, imagens e GIFs, formas e ícones. Cada um entra no cartão como uma camada própria."
               },
               "edit": {
                 "title": "Escolha e depois mova",
-                "body": "Clique em qualquer coisa no cartão para selecioná-la e arraste para movê-la. Os cantos redimensionam, a alça redonda gira."
+                "body": "Clique em qualquer coisa no cartão para selecioná-la e arraste para movê-la. Os cantos redimensionam, a alça redonda gira. Shift + clique, ou uma caixa traçada a partir de um espaço vazio, seleciona vários de uma vez."
               },
               "props": {
                 "title": "Suas configurações",
@@ -860,7 +909,7 @@
               "done": "Entendi",
               "replay": "Rever o tour"
             },
-            "motionHint": "O cartão fica parado enquanto você edita: Reproduzir, abaixo do cartão, mostra as entradas.",
+            "motionHint": "O cartão fica parado enquanto você edita: Reproduzir, abaixo do cartão, mostra as entradas e os loops.",
             "maxItems": "O cartão está cheio. Exclua um elemento para adicionar outro."
           },
           "create": "Criar predefinição",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Escolher uma imagem de fundo",
     "choose-preset-font": "Escolher um arquivo de fonte",
     "choose-preset-logo": "Escolher um logotipo",
+    "choose-preset-picture": "Escolher uma imagem ou um GIF",
     "preset-font-refused": "Esse arquivo não é uma fonte utilizável. Use um arquivo TTF, OTF, WOFF ou WOFF2 de no máximo 4 MB.",
-    "preset-logo-refused": "Esse arquivo não é um logotipo utilizável. Use uma imagem PNG, JPEG, GIF, WebP ou BMP de no máximo 2 MB.",
+    "preset-logo-refused": "Esse arquivo não é um logotipo utilizável. Use uma imagem PNG, JPEG, GIF, WebP ou BMP de no máximo 5 MB.",
     "preset-layer-note": "Personalizando {preset}. Marque uma seção para alterá-la; tudo o que você deixar desmarcado continua como a predefinição incluída o traz. Suas alterações ficam por cima: a predefinição incluída não é copiada nem modificada.",
     "folder-reason-ea-app": "Esta é uma versão do EA app. Um jogo iniciado pelo EA app mantém suas conquistas na conta EA e não na pasta do jogo, então não há aqui nenhum arquivo de desbloqueio para ler. Essas conquistas são captadas pela fonte EA em Configurações > Fontes, e não por uma pasta monitorada.",
     "folder-reason-game-no-data": "Esta é uma pasta de jogo, mas não contém nenhuma configuração de emulador nem arquivo de desbloqueio em um formato que o AW Next consiga ler.",

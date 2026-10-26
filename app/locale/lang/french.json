@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Tout remettre en place",
             "addText": "Texte",
-            "addImage": "Image",
+            "addImage": "Image ou GIF",
             "addRect": "Rectangle",
             "addEllipse": "Cercle",
             "addLine": "Ligne",
@@ -700,7 +700,14 @@
             "summaryNone": "Rien de déplacé ni d’ajouté pour l’instant",
             "summaryMoved": "Parties déplacées : {count}",
             "summaryItems": "Éléments ajoutés : {count}",
-            "imageRefused": "Cette image n’est pas utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 2 Mo au plus.",
+            "imageRefused": "Cette image n’est pas utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 5 Mo au plus.",
+            "tier": {
+              "edit": "Modifier :",
+              "all": "Tous",
+              "only": "{tier} seulement",
+              "changed": "{tier} a ses propres réglages",
+              "reset": "Revenir à la base"
+            },
             "part": {
               "icon": "Icône",
               "text": "Bloc de texte",
@@ -745,18 +752,30 @@
               "rotation": "Rotation",
               "scale": "Échelle",
               "icon": "Icône",
-              "states": "Affiché sur",
+              "visible": "Visible",
               "alignCard": "Aligner sur la carte",
               "position": "Position",
               "dims": "Taille",
               "offset": "Décalage",
               "entrance": "Entrée",
               "delay": "Délai (ms)",
+              "points": "Branches",
+              "depth": "Creux (%)",
+              "head": "Pointe (%)",
+              "shaft": "Corps (%)",
+              "apex": "Position du sommet (%)",
+              "dash": "Trait",
+              "flip": "Miroir",
+              "shadowColor": "Couleur de l'ombre",
+              "shadowSize": "Taille de l'ombre",
+              "replay": "Rejouer le GIF à chaque notification",
+              "loop": "En boucle",
+              "alignGroup": "Aligner entre eux",
               "insert": "Insérer"
             },
             "act": {
-              "front": "Devant la carte",
-              "back": "Derrière la carte",
+              "front": "Passer devant la carte",
+              "back": "Passer derrière la carte",
               "crop": "Recadrer",
               "cropDone": "Fin du recadrage",
               "duplicate": "Dupliquer",
@@ -790,6 +809,34 @@
             },
             "fillState": "Suit le palier",
             "fillPlatinum": "Platine",
+            "fillRadial": "Dégradé circulaire",
+            "dash": {
+              "solid": "Plein",
+              "dashed": "Tirets",
+              "dotted": "Pointillés"
+            },
+            "flip": {
+              "x": "Retourner de gauche à droite",
+              "y": "Retourner de haut en bas"
+            },
+            "shadow": {
+              "none": "Aucune",
+              "drop": "Ombre portée",
+              "glow": "Lueur",
+              "black": "Noir"
+            },
+            "loop": {
+              "none": "Aucune",
+              "pulse": "Pulsation",
+              "float": "Flottement",
+              "swing": "Balancier",
+              "spin": "Rotation continue",
+              "shine": "Scintillement"
+            },
+            "group": {
+              "count": "{count} éléments",
+              "hint": "Fais glisser l'un d'eux pour tous les déplacer. Maj ou Ctrl + clic ajoute ou retire un élément."
+            },
             "icon": {
               "trophy": "Trophée",
               "medal": "Médaille",
@@ -825,6 +872,8 @@
               "escape": "Désélectionner, puis quitter l’éditeur",
               "zoom": "Avec la molette de la souris : zoom avant et arrière",
               "dblclick": "Double-clic : modifier un texte, recadrer une image",
+              "group": "Au clic : ajouter un élément à la sélection, ou l'en retirer",
+              "selectAll": "Tout sélectionner. Glisser depuis un endroit vide sélectionne ce que le cadre touche",
               "sheet": "Afficher ou masquer cette liste",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Ajouter des éléments",
-                "body": "Textes, images, formes et icônes. Chacun se place sur la carte comme un calque à part."
+                "body": "Textes, images et GIF, formes et icônes. Chacun se place sur la carte comme un calque à part."
               },
               "edit": {
                 "title": "Choisir, puis déplacer",
-                "body": "Clique sur un élément de la carte pour le sélectionner, glisse-le pour le déplacer. Les coins le redimensionnent, la poignée ronde le fait pivoter."
+                "body": "Clique sur un élément de la carte pour le sélectionner, glisse-le pour le déplacer. Les coins le redimensionnent, la poignée ronde le fait pivoter. Maj + clic, ou un cadre tracé depuis un endroit vide, en sélectionne plusieurs d'un coup."
               },
               "props": {
                 "title": "Ses réglages",
@@ -860,7 +909,7 @@
               "done": "Compris",
               "replay": "Revoir la visite"
             },
-            "motionHint": "La carte reste immobile pendant que tu la modifies : Lire, sous la carte, montre les animations d'entrée.",
+            "motionHint": "La carte reste immobile pendant que tu la modifies : Lire, sous la carte, montre les entrées et les boucles.",
             "maxItems": "La carte est pleine. Supprime un élément pour en ajouter un autre."
           },
           "create": "Créer le preset",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Choisir une image de fond",
     "choose-preset-font": "Choisir un fichier de police",
     "choose-preset-logo": "Choisir un logo",
+    "choose-preset-picture": "Choisir une image ou un GIF",
     "preset-font-refused": "Ce fichier n'est pas une police utilisable. Utilise un fichier TTF, OTF, WOFF ou WOFF2 de 4 Mo maximum.",
-    "preset-logo-refused": "Ce fichier n'est pas un logo utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 2 Mo maximum.",
+    "preset-logo-refused": "Ce fichier n'est pas un logo utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 5 Mo maximum.",
     "preset-layer-note": "Personnalisation de {preset}. Coche une section pour la modifier ; tout ce que tu laisses décoché reste tel que le preset fourni l'apporte. Tes changements se placent par-dessus : le preset fourni n'est ni copié ni modifié.",
     "folder-reason-ea-app": "Il s'agit d'une version EA app. Un jeu lancé via l'EA app conserve ses succès sur le compte EA et non dans le dossier du jeu : il n'y a donc ici aucun fichier de déblocage à lire. Ces succès sont récupérés par la source EA dans Paramètres > Sources, pas par un dossier surveillé.",
     "folder-reason-game-no-data": "Il s'agit bien d'un dossier de jeu, mais il ne contient aucune configuration d'émulateur ni fichier de déblocage dans un format lisible par AW Next.",

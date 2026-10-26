@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "모두 제자리로",
             "addText": "글자",
-            "addImage": "이미지",
+            "addImage": "이미지 또는 GIF",
             "addRect": "사각형",
             "addEllipse": "원",
             "addLine": "선",
@@ -700,7 +700,14 @@
             "summaryNone": "아직 옮기거나 추가한 것이 없습니다",
             "summaryMoved": "옮긴 부분: {count}",
             "summaryItems": "추가한 항목: {count}",
-            "imageRefused": "이 이미지는 사용할 수 없습니다. 2 MB 이하의 PNG, JPEG, GIF, WebP 또는 BMP 이미지를 사용하세요.",
+            "imageRefused": "이 이미지는 사용할 수 없습니다. 5 MB 이하의 PNG, JPEG, GIF, WebP 또는 BMP 이미지를 사용하세요.",
+            "tier": {
+              "edit": "편집:",
+              "all": "전체",
+              "only": "{tier}만",
+              "changed": "{tier}에 개별 설정이 있습니다",
+              "reset": "기본으로 되돌리기"
+            },
             "part": {
               "icon": "아이콘",
               "text": "글자 블록",
@@ -745,18 +752,30 @@
               "rotation": "회전",
               "scale": "배율",
               "icon": "아이콘",
-              "states": "표시할 단계",
+              "visible": "표시",
               "alignCard": "카드에 맞춰 정렬",
               "position": "위치",
               "dims": "크기",
               "offset": "오프셋",
               "entrance": "등장",
               "delay": "지연 (ms)",
+              "points": "꼭짓점 수",
+              "depth": "깊이 (%)",
+              "head": "화살촉 (%)",
+              "shaft": "몸통 (%)",
+              "apex": "꼭대기 위치 (%)",
+              "dash": "선 스타일",
+              "flip": "대칭",
+              "shadowColor": "그림자 색상",
+              "shadowSize": "그림자 크기",
+              "replay": "나타날 때마다 GIF 다시 재생",
+              "loop": "반복",
+              "alignGroup": "서로 맞춰 정렬",
               "insert": "삽입"
             },
             "act": {
-              "front": "카드 앞",
-              "back": "카드 뒤",
+              "front": "카드 앞으로 가져오기",
+              "back": "카드 뒤로 보내기",
               "crop": "자르기",
               "cropDone": "자르기 완료",
               "duplicate": "복제",
@@ -790,6 +809,34 @@
             },
             "fillState": "단계에 따름",
             "fillPlatinum": "플래티넘",
+            "fillRadial": "원형 그라데이션",
+            "dash": {
+              "solid": "실선",
+              "dashed": "파선",
+              "dotted": "점선"
+            },
+            "flip": {
+              "x": "좌우 대칭",
+              "y": "상하 대칭"
+            },
+            "shadow": {
+              "none": "없음",
+              "drop": "드롭 섀도",
+              "glow": "발광",
+              "black": "검정"
+            },
+            "loop": {
+              "none": "없음",
+              "pulse": "맥동",
+              "float": "부유",
+              "swing": "흔들림",
+              "spin": "계속 회전",
+              "shine": "반짝임"
+            },
+            "group": {
+              "count": "요소 {count}개",
+              "hint": "하나를 끌면 모두 함께 움직여요. Shift 또는 Ctrl + 클릭으로 요소를 추가하거나 뺄 수 있어요."
+            },
             "icon": {
               "trophy": "트로피",
               "medal": "메달",
@@ -825,6 +872,8 @@
               "escape": "선택 해제 후 편집기 나가기",
               "zoom": "마우스 휠: 확대 및 축소",
               "dblclick": "두 번 클릭: 텍스트 편집, 이미지 자르기",
+              "group": "클릭: 선택에 요소를 추가하거나 선택에서 빼기",
+              "selectAll": "모두 선택. 빈 곳에서 끌면 상자에 닿는 것이 선택돼요",
               "sheet": "이 목록 표시 또는 숨기기",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "요소 추가",
-                "body": "텍스트, 이미지, 도형, 아이콘. 각각 카드 위에 독립된 레이어로 놓입니다."
+                "body": "텍스트, 이미지와 GIF, 도형, 아이콘. 각각 카드 위에 독립된 레이어로 놓입니다."
               },
               "edit": {
                 "title": "선택한 뒤 이동",
-                "body": "카드의 아무 요소나 클릭해 선택하고 끌어서 이동하세요. 모서리로 크기를 바꾸고, 둥근 핸들로 회전합니다."
+                "body": "카드의 아무 요소나 클릭해 선택하고 끌어서 이동하세요. 모서리로 크기를 바꾸고, 둥근 핸들로 회전합니다. Shift + 클릭이나 빈 곳에서 끌어 그린 상자로 여러 개를 한 번에 선택합니다."
               },
               "props": {
                 "title": "요소 설정",
@@ -860,7 +909,7 @@
               "done": "확인",
               "replay": "둘러보기 다시 보기"
             },
-            "motionHint": "편집하는 동안 카드는 멈춰 있어요. 카드 아래의 재생을 누르면 등장을 볼 수 있어요.",
+            "motionHint": "편집하는 동안 카드는 멈춰 있어요. 카드 아래의 재생을 누르면 등장과 반복을 볼 수 있어요.",
             "maxItems": "카드가 가득 찼어요. 요소를 삭제하면 다른 요소를 추가할 수 있어요."
           },
           "create": "프리셋 만들기",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "배경 이미지 선택",
     "choose-preset-font": "글꼴 파일 선택",
     "choose-preset-logo": "로고 선택",
+    "choose-preset-picture": "이미지 또는 GIF 선택",
     "preset-font-refused": "이 파일은 사용할 수 있는 글꼴이 아닙니다. 4 MB 이하의 TTF, OTF, WOFF 또는 WOFF2 파일을 사용하세요.",
-    "preset-logo-refused": "이 파일은 사용할 수 있는 로고가 아닙니다. 2 MB 이하의 PNG, JPEG, GIF, WebP 또는 BMP 이미지를 사용하세요.",
+    "preset-logo-refused": "이 파일은 사용할 수 있는 로고가 아닙니다. 5 MB 이하의 PNG, JPEG, GIF, WebP 또는 BMP 이미지를 사용하세요.",
     "preset-layer-note": "{preset}을(를) 사용자 지정하는 중입니다. 변경할 항목을 선택하세요. 선택하지 않은 항목은 기본 제공 프리셋 그대로 유지됩니다. 변경 사항은 그 위에 적용되며, 기본 제공 프리셋은 복사되거나 수정되지 않습니다.",
     "folder-reason-ea-app": "EA app 버전입니다. EA app으로 실행한 게임은 도전 과제를 게임 폴더가 아니라 EA 계정에 보관하므로, 여기에는 읽을 달성 파일이 없습니다. 그런 달성 기록은 감시 폴더가 아니라 설정 > 소스의 EA 소스가 가져옵니다.",
     "folder-reason-game-no-data": "게임 폴더가 맞지만, 에뮬레이터 설정도 없고 AW Next가 읽을 수 있는 형식의 달성 파일도 없습니다.",

@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Sæt det hele tilbage på plads",
             "addText": "Tekst",
-            "addImage": "Billede",
+            "addImage": "Billede eller GIF",
             "addRect": "Rektangel",
             "addEllipse": "Cirkel",
             "addLine": "Linje",
@@ -700,7 +700,14 @@
             "summaryNone": "Intet flyttet eller tilføjet endnu",
             "summaryMoved": "Flyttede dele: {count}",
             "summaryItems": "Tilføjede elementer: {count}",
-            "imageRefused": "Billedet kan ikke bruges. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 2 MB.",
+            "imageRefused": "Billedet kan ikke bruges. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 5 MB.",
+            "tier": {
+              "edit": "Rediger:",
+              "all": "Alle",
+              "only": "Kun {tier}",
+              "changed": "{tier} har egne indstillinger",
+              "reset": "Tilbage til basis"
+            },
             "part": {
               "icon": "Ikon",
               "text": "Tekstblok",
@@ -745,18 +752,30 @@
               "rotation": "Rotation",
               "scale": "Skala",
               "icon": "Ikon",
-              "states": "Vist ved",
+              "visible": "Synlig",
               "alignCard": "Justér efter kortet",
               "position": "Placering",
               "dims": "Størrelse",
               "offset": "Forskydning",
               "entrance": "Indtræden",
               "delay": "Forsinkelse (ms)",
+              "points": "Spidser",
+              "depth": "Dybde (%)",
+              "head": "Pilespids (%)",
+              "shaft": "Skaft (%)",
+              "apex": "Toppunktets placering (%)",
+              "dash": "Linjetype",
+              "flip": "Spejl",
+              "shadowColor": "Skyggefarve",
+              "shadowSize": "Skyggestørrelse",
+              "replay": "Afspil GIF'en igen ved hver notifikation",
+              "loop": "Gentag",
+              "alignGroup": "Justér i forhold til hinanden",
               "insert": "Indsæt"
             },
             "act": {
-              "front": "Foran kortet",
-              "back": "Bag kortet",
+              "front": "Flyt foran kortet",
+              "back": "Flyt bag kortet",
               "crop": "Beskær",
               "cropDone": "Færdig med beskæring",
               "duplicate": "Duplikér",
@@ -790,6 +809,34 @@
             },
             "fillState": "Følger niveauet",
             "fillPlatinum": "Platin",
+            "fillRadial": "Radial overgang",
+            "dash": {
+              "solid": "Hel",
+              "dashed": "Stiplet",
+              "dotted": "Prikket"
+            },
+            "flip": {
+              "x": "Spejl fra venstre mod højre",
+              "y": "Spejl fra top til bund"
+            },
+            "shadow": {
+              "none": "Ingen",
+              "drop": "Slagskygge",
+              "glow": "Glød",
+              "black": "Sort"
+            },
+            "loop": {
+              "none": "Ingen",
+              "pulse": "Puls",
+              "float": "Svæv",
+              "swing": "Pendul",
+              "spin": "Kontinuerlig rotation",
+              "shine": "Glimt"
+            },
+            "group": {
+              "count": "{count} elementer",
+              "hint": "Træk i et af dem for at flytte dem alle. Shift eller Ctrl + klik tilføjer eller fjerner et element."
+            },
             "icon": {
               "trophy": "Trofæ",
               "medal": "Medalje",
@@ -825,6 +872,8 @@
               "escape": "Fravælg, og forlad derefter editoren",
               "zoom": "Med musehjulet: zoom ind og ud",
               "dblclick": "Dobbeltklik: redigér en tekst, beskær et billede",
+              "group": "Klik: føj et element til markeringen, eller fjern det",
+              "selectAll": "Markér alt. Hvis du trækker fra et tomt sted, markeres det, rammen rører",
               "sheet": "Vis eller skjul denne liste",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Tilføj elementer",
-                "body": "Tekster, billeder, former og ikoner. Hvert element lægges på kortet som et lag for sig."
+                "body": "Tekster, billeder og GIF'er, former og ikoner. Hvert element lægges på kortet som et lag for sig."
               },
               "edit": {
                 "title": "Vælg, og flyt derefter",
-                "body": "Klik på noget på kortet for at vælge det, og træk det for at flytte det. Hjørnerne ændrer størrelsen, det runde håndtag drejer det."
+                "body": "Klik på noget på kortet for at vælge det, og træk det for at flytte det. Hjørnerne ændrer størrelsen, det runde håndtag drejer det. Shift + klik eller en ramme trukket fra et tomt sted vælger flere på én gang."
               },
               "props": {
                 "title": "Dets indstillinger",
@@ -860,7 +909,7 @@
               "done": "Forstået",
               "replay": "Gentag rundvisningen"
             },
-            "motionHint": "Kortet står stille, mens du redigerer: Afspil under kortet viser indtrædenerne.",
+            "motionHint": "Kortet står stille, mens du redigerer: Afspil under kortet viser indtrædener og løkker.",
             "maxItems": "Kortet er fuldt. Slet et element for at tilføje et andet."
           },
           "create": "Opret preset",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Vælg et baggrundsbillede",
     "choose-preset-font": "Vælg en skrifttypefil",
     "choose-preset-logo": "Vælg et logo",
+    "choose-preset-picture": "Vælg et billede eller en GIF",
     "preset-font-refused": "Den fil er ikke en brugbar skrifttype. Brug en TTF-, OTF-, WOFF- eller WOFF2-fil på højst 4 MB.",
-    "preset-logo-refused": "Den fil er ikke et brugbart logo. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 2 MB.",
+    "preset-logo-refused": "Den fil er ikke et brugbart logo. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 5 MB.",
     "preset-layer-note": "Tilpasser {preset}. Afkryds et afsnit for at ændre det; alt, du lader være afkrydset fra, forbliver som det medfølgende preset leveres. Dine ændringer lægges oven på: det medfølgende preset kopieres eller ændres ikke.",
     "folder-reason-ea-app": "Dette er en udgivelse til EA app. Et spil, der startes gennem EA app, gemmer sine præstationer på EA-kontoen i stedet for i spilmappen, så der er ingen oplåsningsfil at læse her. De oplåsninger opsamles af EA-kilden under Indstillinger > Kilder i stedet for af en overvåget mappe.",
     "folder-reason-game-no-data": "Dette er en spilmappe, men den indeholder hverken en emulatorkonfiguration eller en oplåsningsfil i et format, AW Next kan læse.",

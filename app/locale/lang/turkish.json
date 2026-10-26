@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Her şeyi yerine koy",
             "addText": "Metin",
-            "addImage": "Görsel",
+            "addImage": "Görsel veya GIF",
             "addRect": "Dikdörtgen",
             "addEllipse": "Daire",
             "addLine": "Çizgi",
@@ -700,7 +700,14 @@
             "summaryNone": "Henüz hiçbir şey taşınmadı veya eklenmedi",
             "summaryMoved": "Taşınan parçalar: {count}",
             "summaryItems": "Eklenen öğeler: {count}",
-            "imageRefused": "Bu görsel kullanılamaz. En fazla 2 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
+            "imageRefused": "Bu görsel kullanılamaz. En fazla 5 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
+            "tier": {
+              "edit": "Düzenle:",
+              "all": "Tümü",
+              "only": "Yalnızca {tier}",
+              "changed": "{tier} kendi ayarlarına sahip",
+              "reset": "Temele dön"
+            },
             "part": {
               "icon": "Simge",
               "text": "Metin bloğu",
@@ -745,18 +752,30 @@
               "rotation": "Döndürme",
               "scale": "Ölçek",
               "icon": "Simge",
-              "states": "Gösterildiği yer",
+              "visible": "Görünür",
               "alignCard": "Kartla hizala",
               "position": "Konum",
               "dims": "Boyut",
               "offset": "Kayma",
               "entrance": "Giriş",
               "delay": "Gecikme (ms)",
+              "points": "Uç sayısı",
+              "depth": "Derinlik (%)",
+              "head": "Ok başı (%)",
+              "shaft": "Gövde (%)",
+              "apex": "Tepe konumu (%)",
+              "dash": "Çizgi stili",
+              "flip": "Ayna",
+              "shadowColor": "Gölge rengi",
+              "shadowSize": "Gölge boyutu",
+              "replay": "GIF'i her gösterimde yeniden oynat",
+              "loop": "Döngü",
+              "alignGroup": "Birbirine göre hizala",
               "insert": "Ekle"
             },
             "act": {
-              "front": "Kartın önünde",
-              "back": "Kartın arkasında",
+              "front": "Kartın önüne getir",
+              "back": "Kartın arkasına gönder",
               "crop": "Kırp",
               "cropDone": "Kırpmayı bitir",
               "duplicate": "Çoğalt",
@@ -790,6 +809,34 @@
             },
             "fillState": "Seviyeyi izler",
             "fillPlatinum": "Platin",
+            "fillRadial": "Dairesel geçiş",
+            "dash": {
+              "solid": "Düz",
+              "dashed": "Kesikli",
+              "dotted": "Noktalı"
+            },
+            "flip": {
+              "x": "Soldan sağa yansıt",
+              "y": "Yukarıdan aşağı yansıt"
+            },
+            "shadow": {
+              "none": "Yok",
+              "drop": "Düşen gölge",
+              "glow": "Parıltı",
+              "black": "Siyah"
+            },
+            "loop": {
+              "none": "Yok",
+              "pulse": "Nabız",
+              "float": "Süzülme",
+              "swing": "Sallanma",
+              "spin": "Sürekli dönme",
+              "shine": "Işıltı"
+            },
+            "group": {
+              "count": "{count} öğe",
+              "hint": "Birini sürüklersen hepsi birlikte taşınır. Shift veya Ctrl + tık bir öğeyi ekler veya çıkarır."
+            },
             "icon": {
               "trophy": "Kupa",
               "medal": "Madalya",
@@ -825,6 +872,8 @@
               "escape": "Seçimi kaldır, sonra düzenleyiciden çık",
               "zoom": "Fare tekerleğiyle: yakınlaştır ve uzaklaştır",
               "dblclick": "Çift tıklama: metni düzenle, görseli kırp",
+              "group": "Tık: seçime bir öğe ekle ya da çıkar",
+              "selectAll": "Hepsini seç. Boş bir yerden sürüklemek, çerçevenin dokunduklarını seçer",
               "sheet": "Bu listeyi göster veya gizle",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Öğe ekleyin",
-                "body": "Metinler, görseller, şekiller ve simgeler. Her biri karta ayrı bir katman olarak girer."
+                "body": "Metinler, görseller ve GIF'ler, şekiller ve simgeler. Her biri karta ayrı bir katman olarak girer."
               },
               "edit": {
                 "title": "Seçin, sonra taşıyın",
-                "body": "Seçmek için karttaki herhangi bir şeye tıklayın, taşımak için sürükleyin. Köşeler boyutu değiştirir, yuvarlak tutamaç döndürür."
+                "body": "Seçmek için karttaki herhangi bir şeye tıklayın, taşımak için sürükleyin. Köşeler boyutu değiştirir, yuvarlak tutamaç döndürür. Shift + tık ya da boş bir noktadan çizilen kutu, birden çok öğeyi aynı anda seçer."
               },
               "props": {
                 "title": "Ayarları",
@@ -860,7 +909,7 @@
               "done": "Anladım",
               "replay": "Turu yeniden oynat"
             },
-            "motionHint": "Düzenlerken kart yerinde durur: kartın altındaki Oynat girişleri gösterir.",
+            "motionHint": "Düzenlerken kart yerinde durur: kartın altındaki Oynat girişleri ve döngüleri gösterir.",
             "maxItems": "Kart dolu. Başka bir öğe eklemek için bir öğeyi sil."
           },
           "create": "Ön ayar oluştur",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Bir arka plan görseli seç",
     "choose-preset-font": "Bir yazı tipi dosyası seç",
     "choose-preset-logo": "Bir logo seç",
+    "choose-preset-picture": "Bir görsel veya GIF seç",
     "preset-font-refused": "Bu dosya kullanılabilir bir yazı tipi değil. En fazla 4 MB boyutunda bir TTF, OTF, WOFF veya WOFF2 dosyası kullan.",
-    "preset-logo-refused": "Bu dosya kullanılabilir bir logo değil. En fazla 2 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
+    "preset-logo-refused": "Bu dosya kullanılabilir bir logo değil. En fazla 5 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
     "preset-layer-note": "{preset} özelleştiriliyor. Değiştirmek için bir bölümü işaretle; işaretlemeden bıraktığın her şey, birlikte gelen ön ayarın sunduğu gibi kalır. Değişikliklerin onun üzerine eklenir: birlikte gelen ön ayar kopyalanmaz ve değiştirilmez.",
     "folder-reason-ea-app": "Bu bir EA app sürümüdür. EA app üzerinden başlatılan bir oyun başarımlarını oyun klasöründe değil EA hesabında tutar, bu yüzden burada okunacak bir kilit açma dosyası yoktur. Bu başarımları izlenen bir klasör değil, Ayarlar > Kaynaklar altındaki EA kaynağı toplar.",
     "folder-reason-game-no-data": "Burası bir oyun klasörü, ancak içinde ne bir emülatör yapılandırması ne de AW Next’in okuyabileceği bir kilit açma dosyası var.",

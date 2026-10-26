@@ -494,11 +494,14 @@ ipcMain.handle('import-preset-font', async () => {
   }
 });
 
-// The same picture library as the background, with the limits of a logo.
-ipcMain.handle('import-preset-logo', async () => {
+// The same picture library as the background, with the limits of a logo. The free layout asks
+// through here too, for a picture that may be an animated GIF.
+ipcMain.handle('import-preset-logo', async (_event, purpose) => {
   try {
+    const title =
+      purpose === 'picture' ? t('choose-preset-picture', 'Choose a picture or a GIF', 'Choisir une image ou un GIF') : t('choose-preset-logo', 'Choose a logo', 'Choisir un logo');
     const res = await dialog.showOpenDialog({
-      title: t('choose-preset-logo', 'Choose a logo', 'Choisir un logo'),
+      title,
       properties: ['openFile', 'dontAddToRecent'],
       filters: [{ name: 'Images', extensions: presetAssets.IMAGE_EXTENSIONS }],
     });

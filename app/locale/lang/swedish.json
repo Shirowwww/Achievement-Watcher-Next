@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Lägg allt tillbaka på plats",
             "addText": "Text",
-            "addImage": "Bild",
+            "addImage": "Bild eller GIF",
             "addRect": "Rektangel",
             "addEllipse": "Cirkel",
             "addLine": "Linje",
@@ -700,7 +700,14 @@
             "summaryNone": "Inget har flyttats eller lagts till ännu",
             "summaryMoved": "Flyttade delar: {count}",
             "summaryItems": "Tillagda objekt: {count}",
-            "imageRefused": "Bilden kan inte användas. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 2 MB.",
+            "imageRefused": "Bilden kan inte användas. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 5 MB.",
+            "tier": {
+              "edit": "Redigera:",
+              "all": "Alla",
+              "only": "Endast {tier}",
+              "changed": "{tier} har egna inställningar",
+              "reset": "Tillbaka till bas"
+            },
             "part": {
               "icon": "Ikon",
               "text": "Textblock",
@@ -745,18 +752,30 @@
               "rotation": "Rotation",
               "scale": "Skala",
               "icon": "Ikon",
-              "states": "Visas på",
+              "visible": "Synlig",
               "alignCard": "Justera mot kortet",
               "position": "Position",
               "dims": "Storlek",
               "offset": "Förskjutning",
               "entrance": "Intåg",
               "delay": "Fördröjning (ms)",
+              "points": "Spetsar",
+              "depth": "Djup (%)",
+              "head": "Pilspets (%)",
+              "shaft": "Skaft (%)",
+              "apex": "Topppunktens läge (%)",
+              "dash": "Linjestil",
+              "flip": "Spegla",
+              "shadowColor": "Skuggfärg",
+              "shadowSize": "Skuggstorlek",
+              "replay": "Spela upp GIF:en igen vid varje visning",
+              "loop": "Upprepa",
+              "alignGroup": "Justera mot varandra",
               "insert": "Infoga"
             },
             "act": {
-              "front": "Framför kortet",
-              "back": "Bakom kortet",
+              "front": "Flytta framför kortet",
+              "back": "Flytta bakom kortet",
               "crop": "Beskär",
               "cropDone": "Klar med beskärning",
               "duplicate": "Duplicera",
@@ -790,6 +809,34 @@
             },
             "fillState": "Följer nivån",
             "fillPlatinum": "Platina",
+            "fillRadial": "Radiell toning",
+            "dash": {
+              "solid": "Hel",
+              "dashed": "Streckad",
+              "dotted": "Prickad"
+            },
+            "flip": {
+              "x": "Spegla från vänster till höger",
+              "y": "Spegla uppifrån och ned"
+            },
+            "shadow": {
+              "none": "Ingen",
+              "drop": "Slagskugga",
+              "glow": "Sken",
+              "black": "Svart"
+            },
+            "loop": {
+              "none": "Ingen",
+              "pulse": "Puls",
+              "float": "Svävande",
+              "swing": "Pendel",
+              "spin": "Kontinuerlig rotation",
+              "shine": "Glimt"
+            },
+            "group": {
+              "count": "{count} element",
+              "hint": "Dra ett av dem för att flytta alla. Skift eller Ctrl + klick lägger till eller tar bort ett element."
+            },
             "icon": {
               "trophy": "Trofé",
               "medal": "Medalj",
@@ -825,6 +872,8 @@
               "escape": "Avmarkera och lämna sedan redigeraren",
               "zoom": "Med mushjulet: zooma in och ut",
               "dblclick": "Dubbelklick: redigera en text, beskär en bild",
+              "group": "Klick: lägg till ett element i markeringen eller ta bort det",
+              "selectAll": "Markera allt. Att dra från en tom plats markerar det som rutan rör vid",
               "sheet": "Visa eller dölj den här listan",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Lägg till element",
-                "body": "Texter, bilder, former och ikoner. Varje element hamnar på kortet som ett eget lager."
+                "body": "Texter, bilder och GIF:ar, former och ikoner. Varje element hamnar på kortet som ett eget lager."
               },
               "edit": {
                 "title": "Välj och flytta sedan",
-                "body": "Klicka på något på kortet för att markera det och dra det för att flytta det. Hörnen ändrar storleken, det runda handtaget roterar det."
+                "body": "Klicka på något på kortet för att markera det och dra det för att flytta det. Hörnen ändrar storleken, det runda handtaget roterar det. Skift + klick, eller en ruta dragen från en tom punkt, markerar flera samtidigt."
               },
               "props": {
                 "title": "Dess inställningar",
@@ -860,7 +909,7 @@
               "done": "Uppfattat",
               "replay": "Gör rundturen igen"
             },
-            "motionHint": "Kortet står stilla medan du redigerar: Spela upp under kortet visar intågen.",
+            "motionHint": "Kortet står stilla medan du redigerar: Spela upp under kortet visar intågen och looparna.",
             "maxItems": "Kortet är fullt. Ta bort ett element för att lägga till ett nytt."
           },
           "create": "Skapa förinställning",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Välj en bakgrundsbild",
     "choose-preset-font": "Välj en typsnittsfil",
     "choose-preset-logo": "Välj en logotyp",
+    "choose-preset-picture": "Välj en bild eller en GIF",
     "preset-font-refused": "Den filen är inte ett användbart typsnitt. Använd en TTF-, OTF-, WOFF- eller WOFF2-fil på högst 4 MB.",
-    "preset-logo-refused": "Den filen är inte en användbar logotyp. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 2 MB.",
+    "preset-logo-refused": "Den filen är inte en användbar logotyp. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 5 MB.",
     "preset-layer-note": "Anpassar {preset}. Kryssa i ett avsnitt för att ändra det; allt du inte kryssar i förblir som den medföljande förinställningen levereras. Dina ändringar läggs ovanpå: den medföljande förinställningen kopieras eller ändras inte.",
     "folder-reason-ea-app": "Det här är en utgåva för EA-appen. Ett spel som startas via EA-appen sparar sina prestationer på EA-kontot i stället för i spelmappen, så det finns ingen upplåsningsfil att läsa här. De upplåsningarna hämtas av EA-källan under Inställningar > Källor i stället för av en bevakad mapp.",
     "folder-reason-game-no-data": "Det här är en spelmapp, men den innehåller varken någon emulatorkonfiguration eller någon upplåsningsfil i ett format som AW Next kan läsa.",

@@ -12606,9 +12606,11 @@ body.pd-cv-open #settings .content {
   flex-direction: column;
   justify-content: center;
   gap: 4px;
-  width: 68px;
+  /* A longer name ("Picture or GIF") widens its button rather than folding onto two lines. */
+  min-width: 68px;
   min-height: 50px;
-  padding: 4px;
+  padding: 4px 8px;
+  white-space: nowrap;
   border-color: transparent;
   background: transparent;
   color: var(--text-muted);
@@ -12746,7 +12748,7 @@ body.pd-cv-open #settings .content {
   }
 
   #settings .pd-preview.is-cv-full .pd-cv-add .pd-cv-btn {
-    width: 58px;
+    min-width: 58px;
   }
 
   /* The view, state and backdrop switches wrap to a second row rather than run under Play or off the edge. */
@@ -12957,7 +12959,6 @@ body.pd-cv-open #settings .content {
   flex: 1 1 auto;
   min-width: 0;
 }
-
 #settings .pd-cv-section .pd-cv-prop input[type='color'] {
   justify-self: start;
 }
@@ -13232,7 +13233,7 @@ body.pd-cv-open #settings .content {
 }
 
 #settings .pd-cv-icons button,
-#settings .pd-cv-states button,
+#settings .pd-cv-tier-choice button,
 #settings .pd-cv-tokens button {
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
@@ -13262,48 +13263,67 @@ body.pd-cv-open #settings .content {
 }
 
 #settings .pd-cv-icons button:hover,
-#settings .pd-cv-states button:hover,
+#settings .pd-cv-tier-choice button:hover,
 #settings .pd-cv-tokens button:hover {
   border-color: var(--set-control-border);
   color: var(--text);
 }
 
 #settings .pd-cv-icons button[aria-pressed='true'],
-#settings .pd-cv-states button[aria-pressed='true'] {
+#settings .pd-cv-tier-choice button[aria-pressed='true'] {
   border-color: color-mix(in srgb, var(--accent) 60%, transparent);
   background: color-mix(in srgb, var(--accent) 18%, transparent);
   color: var(--text);
 }
 
 #settings .pd-cv-icons button:focus-visible,
-#settings .pd-cv-states button:focus-visible,
+#settings .pd-cv-tier-choice button:focus-visible,
 #settings .pd-cv-tokens button:focus-visible,
 #settings .pd-cv-align button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
 
-/* The states an element is drawn in: chips that wrap, an unticked one reads as off. */
-#settings .pd-cv-states,
+#settings .pd-cv-tier-choice,
 #settings .pd-cv-tokens {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-#settings .pd-cv-states button,
+#settings .pd-cv-tier-choice button,
 #settings .pd-cv-tokens button {
   padding: 3px 9px;
   font-family: var(--font-body);
   font-size: var(--fs-xs);
 }
 
-#settings .pd-cv-states button[aria-pressed='false'] {
-  text-decoration: line-through;
-  opacity: 0.7;
+/* Above an element's settings: whether an edit goes to every state or to the shown one alone. */
+#settings .pd-cv-tier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }
 
-#settings .pd-cv-align button svg {
+#settings p.pd-cv-tier-note {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  color: var(--text);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+#settings .pd-cv-seg button svg {
   width: 16px;
   height: 16px;
 }
@@ -13316,6 +13336,29 @@ body.pd-cv-open #settings .content {
 #settings .pd-cv-sel.is-locked {
   border-style: dashed;
   pointer-events: none;
+}
+
+/* A group: each member outlined without handles, and one frame drawn a little outside them all. */
+#settings .pd-cv-sel.is-member {
+  border-width: 1px;
+  box-shadow: none;
+}
+
+#settings .pd-cv-group,
+#settings .pd-cv-marquee {
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+#settings .pd-cv-group {
+  outline: 1px dashed var(--accent);
+  outline-offset: 4px;
+}
+
+#settings .pd-cv-marquee {
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 #settings .pd-cv-layer-eye,
@@ -13400,6 +13443,12 @@ body.pd-cv-open #settings .content {
   align-items: center;
   gap: 3px;
   white-space: nowrap;
+}
+
+/* Keys side by side are alternatives, not one combination: Shift / Ctrl, never Shift Ctrl. */
+#settings .pd-cv-help-combo + .pd-cv-help-combo::before {
+  content: '/';
+  margin-left: -3px;
 }
 
 #settings .pd-cv-help-keys kbd {
@@ -13733,7 +13782,7 @@ body.pd-cv-open #settings .content {
 
   .pd-cv-tour-ring,
   #settings .pd-cv-icons button,
-  #settings .pd-cv-states button,
+  #settings .pd-cv-tier-choice button,
   #settings .pd-cv-tokens button,
   #settings .pd-cv-layer-eye,
   #settings .pd-cv-layer-lock {

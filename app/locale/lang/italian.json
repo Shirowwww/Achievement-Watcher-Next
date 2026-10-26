@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Rimetti tutto a posto",
             "addText": "Testo",
-            "addImage": "Immagine",
+            "addImage": "Immagine o GIF",
             "addRect": "Rettangolo",
             "addEllipse": "Cerchio",
             "addLine": "Linea",
@@ -700,7 +700,14 @@
             "summaryNone": "Ancora niente di spostato o aggiunto",
             "summaryMoved": "Parti spostate: {count}",
             "summaryItems": "Elementi aggiunti: {count}",
-            "imageRefused": "Questa immagine non può essere usata. Usa un’immagine PNG, JPEG, GIF, WebP o BMP di 2 MB al massimo.",
+            "imageRefused": "Questa immagine non può essere usata. Usa un’immagine PNG, JPEG, GIF, WebP o BMP di 5 MB al massimo.",
+            "tier": {
+              "edit": "Modifica:",
+              "all": "Tutti",
+              "only": "Solo {tier}",
+              "changed": "{tier} ha impostazioni proprie",
+              "reset": "Torna alla base"
+            },
             "part": {
               "icon": "Icona",
               "text": "Blocco di testo",
@@ -745,18 +752,30 @@
               "rotation": "Rotazione",
               "scale": "Scala",
               "icon": "Icona",
-              "states": "Mostrato su",
+              "visible": "Visibile",
               "alignCard": "Allinea alla scheda",
               "position": "Posizione",
               "dims": "Dimensione",
               "offset": "Scostamento",
               "entrance": "Entrata",
               "delay": "Ritardo (ms)",
+              "points": "Punte",
+              "depth": "Profondità (%)",
+              "head": "Punta (%)",
+              "shaft": "Asta (%)",
+              "apex": "Posizione del vertice (%)",
+              "dash": "Stile linea",
+              "flip": "Specchia",
+              "shadowColor": "Colore dell’ombra",
+              "shadowSize": "Dimensione dell’ombra",
+              "replay": "Riproduci di nuovo la GIF a ogni comparsa",
+              "loop": "Ciclo",
+              "alignGroup": "Allinea tra loro",
               "insert": "Inserisci"
             },
             "act": {
-              "front": "Davanti alla scheda",
-              "back": "Dietro la scheda",
+              "front": "Porta davanti alla scheda",
+              "back": "Manda dietro la scheda",
               "crop": "Ritaglia",
               "cropDone": "Fine ritaglio",
               "duplicate": "Duplica",
@@ -790,6 +809,34 @@
             },
             "fillState": "Segue il livello",
             "fillPlatinum": "Platino",
+            "fillRadial": "Gradiente radiale",
+            "dash": {
+              "solid": "Continuo",
+              "dashed": "Tratteggiato",
+              "dotted": "Punteggiato"
+            },
+            "flip": {
+              "x": "Specchia da sinistra a destra",
+              "y": "Specchia dall’alto in basso"
+            },
+            "shadow": {
+              "none": "Nessuna",
+              "drop": "Ombra esterna",
+              "glow": "Bagliore",
+              "black": "Nero"
+            },
+            "loop": {
+              "none": "Nessuna",
+              "pulse": "Pulsazione",
+              "float": "Fluttuazione",
+              "swing": "Oscillazione",
+              "spin": "Rotazione continua",
+              "shine": "Scintillio"
+            },
+            "group": {
+              "count": "{count} elementi",
+              "hint": "Trascinane uno per spostarli tutti. Maiusc o Ctrl + clic aggiunge o rimuove un elemento."
+            },
             "icon": {
               "trophy": "Trofeo",
               "medal": "Medaglia",
@@ -825,6 +872,8 @@
               "escape": "Deseleziona, poi esci dall’editor",
               "zoom": "Con la rotellina del mouse: ingrandisci e riduci",
               "dblclick": "Doppio clic: modifica un testo, ritaglia un’immagine",
+              "group": "Clic: aggiungere un elemento alla selezione o toglierlo",
+              "selectAll": "Seleziona tutto. Trascinare da un punto vuoto seleziona ciò che il riquadro tocca",
               "sheet": "Mostra o nascondi questo elenco",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Aggiungi elementi",
-                "body": "Testi, immagini, forme e icone. Ognuno finisce sulla scheda come un livello a sé."
+                "body": "Testi, immagini e GIF, forme e icone. Ognuno finisce sulla scheda come un livello a sé."
               },
               "edit": {
                 "title": "Scegli, poi sposta",
-                "body": "Fai clic su un elemento della scheda per selezionarlo e trascinalo per spostarlo. Gli angoli lo ridimensionano, la maniglia rotonda lo ruota."
+                "body": "Fai clic su un elemento della scheda per selezionarlo e trascinalo per spostarlo. Gli angoli lo ridimensionano, la maniglia rotonda lo ruota. Maiusc + clic, o un riquadro tracciato da un punto vuoto, ne seleziona diversi in una volta."
               },
               "props": {
                 "title": "Le sue impostazioni",
@@ -860,7 +909,7 @@
               "done": "Ho capito",
               "replay": "Rivedi il tour"
             },
-            "motionHint": "La scheda resta ferma mentre la modifichi: Riproduci, sotto la scheda, mostra le animazioni di entrata.",
+            "motionHint": "La scheda resta ferma mentre la modifichi: Riproduci, sotto la scheda, mostra le animazioni di entrata e i cicli.",
             "maxItems": "La scheda è piena. Elimina un elemento per aggiungerne un altro."
           },
           "create": "Crea preimpostazione",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Scegli un’immagine di sfondo",
     "choose-preset-font": "Scegli un file di carattere",
     "choose-preset-logo": "Scegli un logo",
+    "choose-preset-picture": "Scegli un’immagine o una GIF",
     "preset-font-refused": "Questo file non è un carattere utilizzabile. Usa un file TTF, OTF, WOFF o WOFF2 di massimo 4 MB.",
-    "preset-logo-refused": "Questo file non è un logo utilizzabile. Usa un’immagine PNG, JPEG, GIF, WebP o BMP di massimo 2 MB.",
+    "preset-logo-refused": "Questo file non è un logo utilizzabile. Usa un’immagine PNG, JPEG, GIF, WebP o BMP di massimo 5 MB.",
     "preset-layer-note": "Personalizzazione di {preset}. Seleziona una sezione per modificarla; ciò che lasci deselezionato resta com'è nella preimpostazione inclusa. Le tue modifiche si sovrappongono: la preimpostazione inclusa non viene copiata né modificata.",
     "folder-reason-ea-app": "È una versione EA app. Un gioco avviato tramite EA app conserva i suoi obiettivi sull'account EA e non nella cartella del gioco, quindi qui non c'è alcun file di sblocco da leggere. Quegli obiettivi vengono raccolti dalla sorgente EA in Impostazioni > Sorgenti, non da una cartella sorvegliata.",
     "folder-reason-game-no-data": "Questa è una cartella di gioco, ma non contiene alcuna configurazione di emulatore né file di sblocco in un formato leggibile da AW Next.",

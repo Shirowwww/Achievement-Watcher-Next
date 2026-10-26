@@ -672,7 +672,7 @@
           "canvas": {
             "reset": "Kembalikan semuanya",
             "addText": "Teks",
-            "addImage": "Gambar",
+            "addImage": "Gambar atau GIF",
             "addRect": "Persegi panjang",
             "addEllipse": "Lingkaran",
             "addLine": "Garis",
@@ -700,7 +700,14 @@
             "summaryNone": "Belum ada yang dipindahkan atau ditambahkan",
             "summaryMoved": "Bagian dipindahkan: {count}",
             "summaryItems": "Item ditambahkan: {count}",
-            "imageRefused": "Gambar itu tidak dapat digunakan. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 2 MB.",
+            "imageRefused": "Gambar itu tidak dapat digunakan. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 5 MB.",
+            "tier": {
+              "edit": "Ubah:",
+              "all": "Semua",
+              "only": "Hanya {tier}",
+              "changed": "{tier} punya pengaturan sendiri",
+              "reset": "Kembali ke dasar"
+            },
             "part": {
               "icon": "Ikon",
               "text": "Blok teks",
@@ -745,18 +752,30 @@
               "rotation": "Rotasi",
               "scale": "Skala",
               "icon": "Ikon",
-              "states": "Ditampilkan pada",
+              "visible": "Terlihat",
               "alignCard": "Ratakan dengan kartu",
               "position": "Posisi",
               "dims": "Ukuran",
               "offset": "Pergeseran",
               "entrance": "Masuk",
               "delay": "Jeda (ms)",
+              "points": "Ujung",
+              "depth": "Kedalaman (%)",
+              "head": "Kepala panah (%)",
+              "shaft": "Batang (%)",
+              "apex": "Posisi puncak (%)",
+              "dash": "Gaya garis",
+              "flip": "Cermin",
+              "shadowColor": "Warna bayangan",
+              "shadowSize": "Ukuran bayangan",
+              "replay": "Putar ulang GIF setiap kali muncul",
+              "loop": "Berulang",
+              "alignGroup": "Ratakan satu sama lain",
               "insert": "Sisipkan"
             },
             "act": {
-              "front": "Di depan kartu",
-              "back": "Di belakang kartu",
+              "front": "Bawa ke depan kartu",
+              "back": "Kirim ke belakang kartu",
               "crop": "Pangkas",
               "cropDone": "Selesai memangkas",
               "duplicate": "Duplikat",
@@ -790,6 +809,34 @@
             },
             "fillState": "Mengikuti tingkat",
             "fillPlatinum": "Platinum",
+            "fillRadial": "Gradasi radial",
+            "dash": {
+              "solid": "Solid",
+              "dashed": "Putus-putus",
+              "dotted": "Titik-titik"
+            },
+            "flip": {
+              "x": "Cerminkan kiri ke kanan",
+              "y": "Cerminkan atas ke bawah"
+            },
+            "shadow": {
+              "none": "Tidak ada",
+              "drop": "Bayangan jatuh",
+              "glow": "Pendar",
+              "black": "Hitam"
+            },
+            "loop": {
+              "none": "Tidak ada",
+              "pulse": "Denyut",
+              "float": "Melayang",
+              "swing": "Ayunan",
+              "spin": "Putaran terus-menerus",
+              "shine": "Kilau"
+            },
+            "group": {
+              "count": "{count} elemen",
+              "hint": "Seret salah satunya untuk memindahkan semuanya. Shift atau Ctrl + klik menambah atau menghapus elemen."
+            },
             "icon": {
               "trophy": "Piala",
               "medal": "Medali",
@@ -825,6 +872,8 @@
               "escape": "Batalkan pilihan, lalu keluar dari editor",
               "zoom": "Dengan roda mouse: perbesar dan perkecil",
               "dblclick": "Klik dua kali: ubah teks, pangkas gambar",
+              "group": "Klik: tambahkan elemen ke pilihan, atau keluarkan dari pilihan",
+              "selectAll": "Pilih semua. Menyeret dari area kosong memilih apa yang disentuh kotak",
               "sheet": "Tampilkan atau sembunyikan daftar ini",
               "key": {
                 "ctrl": "Ctrl",
@@ -837,11 +886,11 @@
             "tour": {
               "add": {
                 "title": "Tambahkan elemen",
-                "body": "Teks, gambar, bentuk, dan ikon. Masing-masing masuk ke kartu sebagai lapisan tersendiri."
+                "body": "Teks, gambar dan GIF, bentuk, dan ikon. Masing-masing masuk ke kartu sebagai lapisan tersendiri."
               },
               "edit": {
                 "title": "Pilih, lalu pindahkan",
-                "body": "Klik apa saja di kartu untuk memilihnya, seret untuk memindahkannya. Sudut mengubah ukuran, gagang bulat memutarnya."
+                "body": "Klik apa saja di kartu untuk memilihnya, seret untuk memindahkannya. Sudut mengubah ukuran, gagang bulat memutarnya. Shift + klik, atau kotak yang digambar dari tempat kosong, memilih beberapa sekaligus."
               },
               "props": {
                 "title": "Pengaturannya",
@@ -860,7 +909,7 @@
               "done": "Mengerti",
               "replay": "Ulangi tur"
             },
-            "motionHint": "Kartu tetap diam selama diedit: Putar, di bawah kartu, menampilkan efek masuk.",
+            "motionHint": "Kartu tetap diam selama diedit: Putar, di bawah kartu, menampilkan efek masuk dan perulangan.",
             "maxItems": "Kartu sudah penuh. Hapus satu elemen untuk menambah yang lain."
           },
           "create": "Buat preset",
@@ -1799,8 +1848,9 @@
     "choose-preset-image": "Pilih gambar latar",
     "choose-preset-font": "Pilih berkas fon",
     "choose-preset-logo": "Pilih logo",
+    "choose-preset-picture": "Pilih gambar atau GIF",
     "preset-font-refused": "Berkas itu bukan fon yang dapat dipakai. Gunakan berkas TTF, OTF, WOFF, atau WOFF2 maksimal 4 MB.",
-    "preset-logo-refused": "Berkas itu bukan logo yang dapat dipakai. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 2 MB.",
+    "preset-logo-refused": "Berkas itu bukan logo yang dapat dipakai. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 5 MB.",
     "preset-layer-note": "Mengustomisasi {preset}. Centang bagian untuk mengubahnya; apa pun yang tidak dicentang tetap seperti yang disediakan preset bawaan. Perubahanmu diterapkan di atasnya: preset bawaan tidak disalin atau diubah.",
     "folder-reason-ea-app": "Ini rilis aplikasi EA. Game yang dijalankan lewat aplikasi EA menyimpan pencapaiannya di akun EA, bukan di folder game, jadi tidak ada file pembuka pencapaian yang bisa dibaca di sini. Pencapaian tersebut diambil oleh sumber EA di Pengaturan > Sumber, bukan oleh folder yang dipantau.",
     "folder-reason-game-no-data": "Ini folder game, tetapi tidak memuat konfigurasi emulator maupun file pencapaian dalam tata letak apa pun yang dapat dibaca AW Next.",

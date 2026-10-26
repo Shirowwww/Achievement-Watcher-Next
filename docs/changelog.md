@@ -29,6 +29,16 @@ renamed in 3.9.0 and the history is kept under one file.
   copied into another preset. A text can show the game, the achievement, its rarity or its tier, and
   each element can make its own entrance after a delay. The ? key lists the shortcuts, and a short
   tour shows the editor around the first time it opens.
+- **GIFs, finer shapes and movement in the preset editor.** A picture can be an animated GIF of up
+  to 5 MB, started over with each popup, and cut to a shape. Stars, arrows and triangles have
+  settings of their own, any shape can get rounded corners, a dashed outline or a mirror, and texts,
+  shapes and icons can glow in the tier's colour. An element can keep moving after its entrance
+  (pulse, float, swing, spin or shine). Shift+click, a box drawn round them or Ctrl+A picks several
+  elements, to move, line up, copy or delete together.
+- **A different look per tier in the preset editor.** Every state starts from the same design; with
+  "Gold only" picked above an element's settings, a change applies to gold unlocks alone (colour,
+  size, position, text, visibility, anything), and "Back to base" undoes it. The card's own title,
+  icon and description work the same way.
 - **Imported SAN themes per tier.** Pick which trophy picture a SAN theme draws, or draw a tier with
   another imported SAN theme, its sound included.
 

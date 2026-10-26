@@ -7,19 +7,28 @@
 */
 
 const {
+  ANIMATED_IMAGE_RE,
+  CANVAS_DASHES,
   CANVAS_ENTRANCES,
   CANVAS_ICONS,
+  CANVAS_LOOPS,
+  CANVAS_MASK_SHAPES,
   CANVAS_MAX_DELAY_MS,
   CANVAS_MAX_ITEMS,
+  CANVAS_POLYGON_SHAPES,
+  CANVAS_SHAPE_SETTINGS,
   CANVAS_SHAPES,
   CANVAS_STATES,
   CANVAS_STYLED_PARTS,
   CANVAS_TIER_FILLS,
   CANVAS_TOKENS,
+  canvasIn,
   canvasOrder,
   normalizeCanvas,
+  normalizeCanvasItem,
 } = require('../util/presetSchema.js');
 const { createEditorHelp } = require('./presetEditorHelp.js');
+const { drawnOnlyIn, foldEdit, itemOwns, partOwns, resetItem, resetPart } = require('./presetCanvasTiers.js');
 const { CANVAS_EDIT_ROOM, CANVAS_PART_SELECTORS, CANVAS_STYLE_SELECTORS, canvasIconMask } = require('../util/customPreset.js');
 
 // The designer controls that shape the card itself, shown alone while the card is selected.
@@ -50,6 +59,8 @@ const PART_KEYS = { icon: ['iconSize', 'iconShape', 'iconRadius', 'iconBorder', 
 const STATE_BUTTONS = { platinum: 'completion' };
 const MAX_SWATCHES = 16;
 const PASTE_STEP_PX = 10;
+// The size a shadow or a glow starts at once it is picked: enough to be seen on any card.
+const SHADOW_START = { drop: 8, glow: 12 };
 // A 16px glyph per way to line the selection up with the card: the edge, then two bars against it.
 const ALIGN_GLYPHS = {
   left: ['M2 1v14', 'M4 3h9v4H4zM4 9h6v4H4z'],
@@ -59,11 +70,19 @@ const ALIGN_GLYPHS = {
   middle: ['M1 8h14', 'M3 3h4v10H3zM9 5h4v6H9z'],
   bottom: ['M1 14h14', 'M3 3h4v9H3zM9 6h4v6H9z'],
 };
+// The mirror buttons: the axis, a solid triangle and its outlined reflection, as image editors draw it.
+const FLIP_GLYPHS = {
+  x: ['M8 1v14', 'M6 3v10L1 8z', 'M10 3.5v9L14.5 8z'],
+  y: ['M1 8h14', 'M3 6h10L8 1z', 'M3.5 10h9L8 14.5z'],
+};
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const round1 = (value) => Math.round(value * 10) / 10;
 const isLine = (item) => item.kind === 'shape' && item.shape === 'line';
 const clone = (value) => JSON.parse(JSON.stringify(value));
+// A text that shows the tier's name, in any state.
+const saysTier = (item) =>
+  item.kind === 'text' && [item, ...Object.values(item.tiers || {})].some((own) => typeof own.text === 'string' && own.text.includes('{tier}'));
 function rotVec(x, y, deg) {
   const rad = (deg * Math.PI) / 180;
   return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
@@ -79,13 +98,13 @@ function icon(name) {
   node.setAttribute('aria-hidden', 'true');
   return node;
 }
-function alignGlyph(edge) {
+// A 16px glyph from [path, 'stroke' | 'fill'] pairs, drawn in the button's own colour.
+function svgGlyph(parts) {
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', '0 0 16 16');
   svg.setAttribute('aria-hidden', 'true');
-  const [line, bars] = ALIGN_GLYPHS[edge];
-  for (const [d, paint] of [[line, 'stroke'], [bars, 'fill']]) {
+  for (const [d, paint] of parts) {
     const path = document.createElementNS(NS, 'path');
     path.setAttribute('d', d);
     path.setAttribute(paint, 'currentColor');
@@ -94,6 +113,8 @@ function alignGlyph(edge) {
   }
   return svg;
 }
+const alignGlyph = (edge) => svgGlyph([[ALIGN_GLYPHS[edge][0], 'stroke'], [ALIGN_GLYPHS[edge][1], 'fill']]);
+const flipGlyph = (axis) => svgGlyph([[FLIP_GLYPHS[axis][0], 'stroke'], [FLIP_GLYPHS[axis][1], 'fill'], [FLIP_GLYPHS[axis][2], 'stroke']]);
 
 /**
  * @param {object} options
@@ -137,7 +158,17 @@ function createCanvasEditor(options) {
     if (CARD_KEYS.includes(field.dataset.key)) field.dataset.card = '1';
   }
 
-  let canvas = normalizeCanvas(input.value);
+  /*
+    `layout` is what is stored, with what each state changes; `canvas` is the layout as the preview's
+    state draws it, which every edit works on and store() folds back in. `alone` sends an edit to
+    that state only, rather than to what every state shares.
+  */
+  let layout = normalizeCanvas(input.value);
+  let canvas = null;
+  let viewState = 'normal';
+  let lastView = null;
+  let sources = new WeakMap();
+  let alone = false;
   let selected = null;
   let cropping = false;
   let drag = null;
@@ -146,6 +177,8 @@ function createCanvasEditor(options) {
   let full = false;
   let watchedDoc = null;
   let snapOn = true;
+  // Two or more boxes picked together: Shift or Ctrl + click, a box drawn round them, or Ctrl+A.
+  let picks = [];
   const snapButton = root.querySelector('#pd-cv-snap');
   const snapping = () => snapOn && current && current.g.zoom < SNAP_OFF_ZOOM;
 
@@ -154,24 +187,58 @@ function createCanvasEditor(options) {
     return (node && node.textContent) || key;
   };
 
+  // The state the preview shows, by its button: the one the layout is edited in.
+  function previewState() {
+    const button = root.querySelector('#pd-state button.is-on');
+    const name = button ? button.dataset.state : 'normal';
+    const state = Object.keys(STATE_BUTTONS).find((key) => STATE_BUTTONS[key] === name) || name;
+    return CANVAS_STATES.includes(state) ? state : 'normal';
+  }
+  // The view the next edit is told apart from, and where each of its items is stored.
+  function settle() {
+    lastView = clone(canvas);
+    sources = new WeakMap(canvas.items.map((item, index) => [item, index]));
+  }
+  function project() {
+    viewState = previewState();
+    canvas = canvasIn(layout, viewState);
+    settle();
+  }
+  project();
+
   // A live edit repaints the preview, which calls refresh(): re-reading our own value there would
   // swap `canvas` for a copy while the panel still edits the old item, losing the next keystroke.
   let stored = null;
   // True when it did swap: an undo or a load, after which the panel holds items that are gone.
   function read() {
     if (input.value === stored) return false;
-    canvas = normalizeCanvas(input.value);
+    layout = normalizeCanvas(input.value);
     stored = input.value;
+    project();
     return true;
   }
+  // The preview went to another state: the layout as that state draws it is the one edited now.
+  function restate() {
+    if (previewState() === viewState) return false;
+    project();
+    return true;
+  }
+  // The preview swaps states in place, without a repaint that would call refresh(). Its own
+  // handler, on the button, has run by the time the click reaches the group.
+  root.querySelector('#pd-state').addEventListener('click', () => {
+    if (drag || !restate()) return;
+    render();
+    renderPanels(true);
+  });
   // Live: the preview follows the pointer. Committed: one history step, through the change event
   // every designer control fires.
   function store() {
+    layout = foldEdit(layout, lastView, canvas, { state: viewState, alone, sourceOf: (item) => sources.get(item) });
+    settle();
     // {tier} shows the tier's name in the words of whoever edits the layout last.
-    if (canvas.items.some((item) => item.kind === 'text' && item.text.includes('{tier}'))) {
-      canvas.words = Object.fromEntries(CANVAS_TIER_FILLS.map((tier) => [tier, label(`fill.${tier}`)]));
-    } else delete canvas.words;
-    input.value = JSON.stringify(canvas);
+    if (layout.items.some(saysTier)) layout.words = Object.fromEntries(CANVAS_TIER_FILLS.map((tier) => [tier, label(`fill.${tier}`)]));
+    else delete layout.words;
+    input.value = JSON.stringify(layout);
     stored = input.value;
   }
   function write() {
@@ -281,7 +348,8 @@ function createCanvasEditor(options) {
 
   function itemHeight(g, item, index) {
     if (item.kind !== 'text') return item.h;
-    const node = g.doc.querySelector(`.aw-canvas > [data-i="${index}"]`);
+    // A tier may draw the item its own way, as another element: the one on screen is this state's.
+    const node = [...g.doc.querySelectorAll(`.aw-canvas > [data-i="${index}"]`)].find((one) => one.getClientRects().length);
     return node && node.offsetHeight ? node.offsetHeight : Math.round(item.size * 1.25);
   }
 
@@ -300,6 +368,36 @@ function createCanvasEditor(options) {
 
   const selectedBox = () => (current && current.boxes.find((box) => box.id === selected)) || null;
   const selectedItem = () => (selected && selected.startsWith('i:') ? canvas.items[Number(selected.slice(2))] : null);
+  const grouped = () => picks.length > 1;
+  const selection = () => (grouped() ? picks : selected && selected !== CARD_ID ? [selected] : []);
+  const selectionBoxes = () => (current ? selection().map((id) => current.boxes.find((box) => box.id === id)).filter(Boolean) : []);
+  const selectedItems = () => selection().filter((id) => id.startsWith('i:')).map((id) => canvas.items[Number(id.slice(2))]).filter(Boolean);
+  const movable = () => selectionBoxes().filter((box) => !isLocked(box));
+  const addsToGroup = (event) => event.shiftKey || event.ctrlKey;
+  // The text block holds the lines: picked with one of them, it would carry that line twice.
+  const groupable = (id) => id !== CARD_ID && id !== `p:${TEXT_BLOCK}`;
+  // What a drawn box or Ctrl+A sweeps up: nothing locked or switched off either.
+  const pickable = (box) => groupable(box.id) && !isLocked(box) && !(box.type === 'item' && canvas.items[box.index].off);
+
+  // A box's outline on the card, a turned one included.
+  function extentOf(box) {
+    const rad = (box.r * Math.PI) / 180;
+    const halfW = (Math.abs(box.w * Math.cos(rad)) + Math.abs(box.h * Math.sin(rad))) / 2;
+    const halfH = (Math.abs(box.w * Math.sin(rad)) + Math.abs(box.h * Math.cos(rad))) / 2;
+    return { left: box.cx - halfW, right: box.cx + halfW, top: box.cy - halfH, bottom: box.cy + halfH };
+  }
+  function boundsOf(boxes) {
+    const all = boxes.map(extentOf);
+    return {
+      left: Math.min(...all.map((e) => e.left)),
+      right: Math.max(...all.map((e) => e.right)),
+      top: Math.min(...all.map((e) => e.top)),
+      bottom: Math.max(...all.map((e) => e.bottom)),
+    };
+  }
+  const frameBox = (b) => ({ cx: (b.left + b.right) / 2, cy: (b.top + b.bottom) / 2, w: b.right - b.left, h: b.bottom - b.top, r: 0 });
+  const areaOf = ({ start, end }) => ({ left: Math.min(start.x, end.x), right: Math.max(start.x, end.x), top: Math.min(start.y, end.y), bottom: Math.max(start.y, end.y) });
+  const touches = (a, b) => a.left <= b.right && a.right >= b.left && a.top <= b.bottom && a.bottom >= b.top;
 
   /* ---------- drawing ---------- */
 
@@ -371,6 +469,26 @@ function createCanvasEditor(options) {
     return node;
   }
 
+  // Each member outlined, and one frame round them all that lets clicks through to them.
+  function groupNodes(g) {
+    const boxes = selectionBoxes();
+    const frame = el('div', 'pd-cv-group');
+    place(frame, g, frameBox(boundsOf(boxes)));
+    const members = boxes.map((box) => {
+      const node = el('div', isLocked(box) ? 'pd-cv-sel is-member is-locked' : 'pd-cv-sel is-member');
+      node.dataset.id = box.id;
+      place(node, g, box);
+      return node;
+    });
+    return [frame, ...members];
+  }
+
+  function marqueeNode(g) {
+    const node = el('div', 'pd-cv-marquee');
+    place(node, g, frameBox(areaOf(drag)));
+    return node;
+  }
+
   function guideNode(g, guide) {
     const node = el('div', `pd-cv-guide is-${guide.axis}`);
     if (guide.axis === 'x') node.style.left = `${g.sx + (g.ox + guide.pos) * g.zoom}px`;
@@ -389,6 +507,12 @@ function createCanvasEditor(options) {
     current = { g, boxes: collectBoxes(g) };
     snapButton.classList.toggle('is-suspended', snapOn && !snapping());
     if (selected && selected !== CARD_ID && !selectedBox()) selected = null;
+    // A member gone (an undo, a part this card hides) leaves the group; the last one left is a plain pick.
+    if (grouped()) {
+      picks = picks.filter((id) => current.boxes.some((box) => box.id === id));
+      if (picks.length === 1) selected = picks[0];
+      if (!grouped()) picks = [];
+    }
     // Under everything else, so a click on a part or an item still picks that.
     const card = el('div', 'pd-cv-box is-card');
     card.dataset.id = CARD_ID;
@@ -405,8 +529,10 @@ function createCanvasEditor(options) {
       }),
     ];
     const box = selectedBox();
-    if (box) nodes.push(selectionNode(g, box));
+    if (grouped()) nodes.push(...groupNodes(g));
+    else if (box) nodes.push(selectionNode(g, box));
     else if (selected === CARD_ID) nodes.push(cardSelectionNode(g));
+    if (drag && drag.kind === 'marquee' && drag.moved) nodes.push(marqueeNode(g));
     for (const guide of guides) nodes.push(guideNode(g, guide));
     overlay.replaceChildren(...nodes);
   }
@@ -585,16 +711,54 @@ function createCanvasEditor(options) {
 
   /* ---------- pointer ---------- */
 
-  function startDrag(kind, event, extra = {}) {
-    const box = selectedBox();
-    if (!box || !current || isLocked(box)) return;
-    const orig = box.type === 'part' ? clone(moveOf(box.key)) : clone(canvas.items[box.index]);
-    drag = { kind, box: { ...box }, orig, start: toCanvas(current.g, event), moved: false, ...extra };
+  function follow(event) {
     event.preventDefault();
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', endDrag);
     window.addEventListener('pointercancel', endDrag);
   }
+
+  function startDrag(kind, event, extra = {}) {
+    const box = selectedBox();
+    if (!box || !current || isLocked(box)) return;
+    const orig = box.type === 'part' ? clone(moveOf(box.key)) : clone(canvas.items[box.index]);
+    drag = { kind, box: { ...box }, orig, start: toCanvas(current.g, event), moved: false, ...extra };
+    follow(event);
+  }
+
+  // The group moves as one and does not snap: each member would pull towards a different line.
+  function startGroupDrag(event) {
+    const boxes = movable();
+    if (!boxes.length) return;
+    drag = { kind: 'group', boxes: boxes.map((box) => ({ ...box })), start: toCanvas(current.g, event), moved: false };
+    follow(event);
+  }
+
+  // From the card or around it a drag draws a box that picks what it touches, and a click picks
+  // `clickId` (the card, or nothing). With Shift or Ctrl held, both add to what is picked already.
+  function startMarquee(event, clickId) {
+    if (!current) return;
+    // A field being typed in settles first, as a click anywhere else would settle it.
+    if (props.contains(document.activeElement)) document.activeElement.blur();
+    const add = addsToGroup(event);
+    const start = toCanvas(current.g, event);
+    drag = { kind: 'marquee', clickId, add, base: add ? selection() : [], start, end: start, moved: false };
+    follow(event);
+  }
+
+  function endMarquee(done) {
+    if (done.moved) {
+      const area = areaOf(done);
+      const touched = current ? current.boxes.filter((box) => pickable(box) && touches(extentOf(box), area)).map((box) => box.id) : [];
+      return pickMany([...new Set([...done.base, ...touched])]);
+    }
+    if (done.add) return render();
+    if (done.clickId === CARD_ID) return selected === CARD_ID ? render() : select(CARD_ID);
+    if (selected || grouped() || cropping) return select(null);
+    render();
+  }
+
+  const moveBoxes = (boxes, dx, dy) => boxes.forEach((box) => setCenter(box, box.cx + dx, box.cy + dy));
 
   function onMove(event) {
     if (!drag || !current) return;
@@ -605,7 +769,13 @@ function createCanvasEditor(options) {
     const dy = p.y - drag.start.y;
     if (!drag.moved && Math.hypot(dx, dy) * current.g.zoom < DRAG_THRESHOLD_PX) return;
     drag.moved = true;
-    if (drag.kind === 'move') {
+    if (drag.kind === 'marquee') {
+      drag.end = p;
+      return void render();
+    }
+    if (drag.kind === 'group') {
+      moveBoxes(drag.boxes, dx, dy);
+    } else if (drag.kind === 'move') {
       const free = event.altKey || !snapping();
       const target = free ? { cx: drag.box.cx + dx, cy: drag.box.cy + dy } : snapCenter(drag.box, drag.box.cx + dx, drag.box.cy + dy);
       if (free) guides = [];
@@ -618,7 +788,7 @@ function createCanvasEditor(options) {
     } else if (drag.kind === 'pan') {
       pan(p);
     }
-    keepInside(current.g, drag.box);
+    for (const box of drag.boxes || [drag.box]) keepInside(current.g, box);
     write();
   }
 
@@ -664,10 +834,11 @@ function createCanvasEditor(options) {
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', endDrag);
     window.removeEventListener('pointercancel', endDrag);
-    const moved = drag && drag.moved;
+    const done = drag;
     drag = null;
     guides = [];
-    if (moved) commit();
+    if (done && done.kind === 'marquee') return endMarquee(done);
+    if (done && done.moved) commit();
     render();
   }
 
@@ -679,11 +850,13 @@ function createCanvasEditor(options) {
     const handle = event.target.closest('[data-h]');
     if (handle && selected === CARD_ID) return startCardResize(event, handle.dataset.h);
     if (handle) return startDrag('resize', event, { handle: handle.dataset.h });
-    if (event.target.closest(`[data-id="${CARD_ID}"]`)) return void (selected !== CARD_ID && select(CARD_ID));
     if (event.target.closest('.pd-cv-rot')) return startDrag('rotate', event);
     const node = event.target.closest('[data-id]');
     if (!node) return;
     const id = node.dataset.id;
+    if (id === CARD_ID) return startMarquee(event, CARD_ID);
+    if (addsToGroup(event)) return toggleMember(id);
+    if (grouped() && picks.includes(id)) return startGroupDrag(event);
     if (cropping && id === selected) return startDrag('pan', event);
     if (id !== selected) select(id);
     startDrag('move', event);
@@ -691,7 +864,9 @@ function createCanvasEditor(options) {
 
   stage.addEventListener('pointerdown', (event) => {
     if (event.button !== 0 || event.target.closest('.pd-cv-overlay [data-id], .pd-cv-overlay [data-h], .pd-cv-rot')) return;
-    if (selected || cropping) select(null);
+    // A press on the stage's own scroll bar scrolls it.
+    if (event.target === stage && (event.offsetX >= stage.clientWidth || event.offsetY >= stage.clientHeight)) return;
+    startMarquee(event, null);
   });
 
   overlay.addEventListener('dblclick', (event) => {
@@ -729,8 +904,24 @@ function createCanvasEditor(options) {
   function select(id) {
     if (id !== selected) cropping = false;
     selected = id;
+    picks = [];
     if (!id) cropping = false;
     repaint();
+  }
+
+  // Two or more make a group; one is a plain pick, with its handles and its own panel.
+  function pickMany(ids) {
+    if (ids.length < 2) return select(ids[0] || null);
+    picks = ids;
+    selected = null;
+    cropping = false;
+    repaint();
+  }
+
+  function toggleMember(id) {
+    if (!groupable(id)) return;
+    const ids = selection();
+    pickMany(ids.includes(id) ? ids.filter((other) => other !== id) : [...ids, id]);
   }
 
   function toggleCrop() {
@@ -740,16 +931,20 @@ function createCanvasEditor(options) {
     repaint();
   }
 
-  function addItem(raw) {
-    if (canvas.items.length >= CANVAS_MAX_ITEMS) return void options.status(label('maxItems'), 'error');
+  // What was added comes in picked: one item alone, several (a pasted group) as a group.
+  function addItems(raws) {
+    if (canvas.items.length + raws.length > CANVAS_MAX_ITEMS) return void options.status(label('maxItems'), 'error');
     const before = canvas.items.length;
-    canvas.items.push(raw);
-    canvas = normalizeCanvas(canvas);
-    if (canvas.items.length === before) return void options.status(label('imageRefused'), 'error');
-    selected = `i:${canvas.items.length - 1}`;
+    canvas.items.push(...raws.map(normalizeCanvasItem).filter(Boolean));
+    const added = canvas.items.length - before;
+    if (!added) return void options.status(label('imageRefused'), 'error');
+    const ids = Array.from({ length: added }, (_, offset) => `i:${before + offset}`);
+    picks = added > 1 ? ids : [];
+    selected = added > 1 ? null : ids[0];
     cropping = false;
     commit();
   }
+  const addItem = (raw) => addItems([raw]);
 
   // A new item lands in the middle of the card, so it is seen at once whatever the layout.
   function centred(w, h) {
@@ -787,67 +982,87 @@ function createCanvasEditor(options) {
     commit();
   }
 
-  // A part of the card cannot be deleted, only hidden: the preset still draws it.
+  function dropItem(index) {
+    canvas.items.splice(index, 1);
+    if (canvas.order) canvas.order = canvas.order.filter((entry) => entry !== index).map((entry) => (Number.isInteger(entry) && entry > index ? entry - 1 : entry));
+  }
+
+  /*
+    A part of the card cannot be deleted, only hidden: the preset still draws it. A locked item
+    holds, deleting included, until it is unlocked. Edited for one state alone, an item another
+    state still draws is only switched off in this one.
+  */
   function removeSelected() {
-    if (!selected || selected === CARD_ID) return;
-    if (selected.startsWith('p:')) {
-      const key = selected.slice(2);
-      if (isHidden(key)) return;
-      canvas.hidden = [...(canvas.hidden || []), key];
-      return commit();
-    } else {
-      const index = Number(selected.slice(2));
-      // Locked holds it in place, deleting included, until it is unlocked.
-      if (!canvas.items[index] || canvas.items[index].lock) return;
-      canvas.items.splice(index, 1);
-      if (canvas.order) canvas.order = canvas.order.filter((entry) => entry !== index).map((entry) => (Number.isInteger(entry) && entry > index ? entry - 1 : entry));
+    const ids = selection();
+    const parts = ids.filter((id) => id.startsWith('p:')).map(entryOf).filter((key) => !isHidden(key));
+    const items = ids.filter((id) => id.startsWith('i:')).map(entryOf).filter((index) => canvas.items[index] && !canvas.items[index].lock);
+    if (!parts.length && !items.length) return;
+    if (parts.length) canvas.hidden = [...(canvas.hidden || []), ...parts];
+    // Highest first, so each index still names its item when its turn comes.
+    for (const index of items.sort((a, b) => b - a)) {
+      const from = sources.get(canvas.items[index]);
+      if (alone && from !== undefined && !drawnOnlyIn(layout, from, viewState)) canvas.items[index].off = true;
+      else dropItem(index);
     }
-    selected = null;
-    cropping = false;
+    if (items.length) {
+      selected = null;
+      picks = [];
+      cropping = false;
+    }
     commit();
   }
 
   // A copy is a new element to place, so it never comes in locked.
-  function looseCopy(item) {
+  function looseCopy(item, step) {
     const copy = clone(item);
     delete copy.lock;
-    return copy;
+    return { ...copy, x: item.x + step, y: item.y + step };
   }
 
   function duplicateSelected() {
-    const item = selectedItem();
-    if (!item) return;
-    addItem({ ...looseCopy(item), x: item.x + PASTE_STEP_PX, y: item.y + PASTE_STEP_PX });
+    const items = selectedItems();
+    if (items.length) addItems(items.map((item) => looseCopy(item, PASTE_STEP_PX)));
   }
 
-  // Kept for the editor's lifetime, so an element can go from one preset to another.
+  // Kept for the editor's lifetime, so elements can go from one preset to another.
   let clipboard = null;
   let pastes = 0;
   function copySelected() {
-    const item = selectedItem();
-    if (!item) return;
-    clipboard = clone(item);
+    const items = selectedItems();
+    if (!items.length) return;
+    clipboard = clone(items);
     pastes = 0;
     options.status(label('copied'), 'info');
   }
   function pasteItem() {
     if (!clipboard) return;
     pastes += 1;
-    const step = PASTE_STEP_PX * pastes;
-    addItem({ ...looseCopy(clipboard), x: clipboard.x + step, y: clipboard.y + step });
+    addItems(clipboard.map((item) => looseCopy(item, PASTE_STEP_PX * pastes)));
   }
 
-  // Lines the selection up with an edge or the middle of the card, turned boxes by their outline.
-  function alignSelected(edge) {
-    const box = selectedBox();
-    if (!box || !current || isLocked(box)) return;
-    const rad = (box.r * Math.PI) / 180;
-    const halfW = (Math.abs(box.w * Math.cos(rad)) + Math.abs(box.h * Math.sin(rad))) / 2;
-    const halfH = (Math.abs(box.w * Math.sin(rad)) + Math.abs(box.h * Math.cos(rad))) / 2;
-    const { cardW, cardH } = current.g;
-    const cx = { left: halfW, center: cardW / 2, right: cardW - halfW }[edge] ?? box.cx;
-    const cy = { top: halfH, middle: cardH / 2, bottom: cardH - halfH }[edge] ?? box.cy;
-    setCenter(box, cx, cy);
+  // How far a box must go so that its outline meets an edge or the middle of `frame`.
+  function alignShift(extent, frame, edge) {
+    const dx = { left: frame.left - extent.left, center: (frame.left + frame.right - extent.left - extent.right) / 2, right: frame.right - extent.right }[edge];
+    const dy = { top: frame.top - extent.top, middle: (frame.top + frame.bottom - extent.top - extent.bottom) / 2, bottom: frame.bottom - extent.bottom }[edge];
+    return [dx || 0, dy || 0];
+  }
+
+  // On the card, the selection moves as one block; among themselves, each member meets the
+  // group's own outline, a locked member included, which holds still and shows where.
+  function alignSelected(edge, onCard = true) {
+    const boxes = selectionBoxes();
+    const free = movable();
+    if (!free.length) return;
+    if (onCard) {
+      const [dx, dy] = alignShift(boundsOf(free), { left: 0, top: 0, right: current.g.cardW, bottom: current.g.cardH }, edge);
+      moveBoxes(free, dx, dy);
+    } else {
+      const frame = boundsOf(boxes);
+      for (const box of free) {
+        const [dx, dy] = alignShift(extentOf(box), frame, edge);
+        setCenter(box, box.cx + dx, box.cy + dy);
+      }
+    }
     commit();
   }
 
@@ -895,15 +1110,17 @@ function createCanvasEditor(options) {
   }
 
   function nudge(dx, dy) {
-    const box = selectedBox();
-    if (!box || isLocked(box)) return;
-    setCenter(box, box.cx + dx, box.cy + dy);
+    const boxes = movable();
+    if (!boxes.length) return;
+    moveBoxes(boxes, dx, dy);
     write();
     commit();
   }
 
+  // Every state at once, whichever is edited.
   function resetAll() {
-    canvas = { move: {}, items: [] };
+    layout = normalizeCanvas(null);
+    project();
     selected = null;
     cropping = false;
     commit();
@@ -1000,6 +1217,43 @@ function createCanvasEditor(options) {
     return bind(control, (node) => apply(node.value));
   }
 
+  // A colour that can follow something else: `named` lists those as [value, label key], and the
+  // picker beside them only shows for a colour of the user's own.
+  function colorChoice(value, named, apply) {
+    const own = !named.some(([key]) => key === value);
+    const custom = colorControl(own ? value : '#ffffff', (hex) => apply(hex));
+    custom.hidden = !own;
+    const choices = [...named.map(([key, text]) => [key, label(text)]), ['custom', label('prop.colorCustom')]];
+    const mode = selectControl(choices, own ? 'custom' : value, (picked) => {
+      custom.hidden = picked !== 'custom';
+      apply(picked === 'custom' ? custom.value : picked);
+    });
+    return pair(mode, custom);
+  }
+
+  function switchControl(on, apply) {
+    const control = el('input', 'pd-cv-switch');
+    Object.assign(control, { type: 'checkbox', checked: Boolean(on) });
+    control.setAttribute('role', 'switch');
+    return bind(control, (node) => apply(node.checked));
+  }
+
+  // A field at its default is left out, so the layout keeps one spelling of it.
+  function setOrDrop(item, key, value, fallback) {
+    if (value === fallback) delete item[key];
+    else item[key] = value;
+  }
+
+  // The panel shows more rows once a number leaves zero (a stroke, a shadow), and fewer when it
+  // comes back: drawn again only then, so typing a width keeps the caret.
+  function rebuildAcrossZero(control, valueNow) {
+    const was = valueNow() > 0;
+    control.addEventListener('change', () => {
+      if (valueNow() > 0 !== was) renderProps(true);
+    });
+    return control;
+  }
+
   function actionButton(key, iconName, onClick, on = false) {
     const button = el('button', `pd-cv-btn${on ? ' is-on' : ''}`);
     button.type = 'button';
@@ -1045,23 +1299,8 @@ function createCanvasEditor(options) {
     Object.assign(text, { type: 'text', value: item.text, maxLength: 160 });
     text.dataset.prop = 'text';
     bind(text, (node) => (item.text = node.value || ' '));
-    const colorMode = item.color === 'accent' || item.color === 'text' ? item.color : 'custom';
-    const custom = colorControl(colorMode === 'custom' ? item.color : '#ffffff', (hex) => (item.color = hex));
-    custom.hidden = colorMode !== 'custom';
-    const mode = selectControl(
-      [['accent', label('prop.colorAccent')], ['text', label('prop.colorText')], ['custom', label('prop.colorCustom')]],
-      colorMode,
-      (value) => {
-        custom.hidden = value !== 'custom';
-        item.color = value === 'custom' ? custom.value : value;
-      }
-    );
-    const upper = el('input', 'pd-cv-switch');
-    Object.assign(upper, { type: 'checkbox', checked: item.upper });
-    upper.setAttribute('role', 'switch');
-    bind(upper, (node) => (item.upper = node.checked));
-    const colorCell = el('span', 'pd-cv-pair');
-    colorCell.append(mode, custom);
+    const colorCell = colorChoice(item.color, [['accent', 'prop.colorAccent'], ['text', 'prop.colorText']], (value) => (item.color = value));
+    const upper = switchControl(item.upper, (on) => (item.upper = on));
     const align = segmentControl(
       ['left', 'center', 'right'].map((a) => [a, `fa-align-${a}`, menuName('pd-align', a)]),
       item.align,
@@ -1078,7 +1317,8 @@ function createCanvasEditor(options) {
         propRow('prop.align', align),
         propRow('prop.upper', upper),
       ].filter(Boolean),
-      look: [propRow('prop.color', colorCell)],
+      // A card line keeps the preset's own shadow; only an added text gets one of its own.
+      look: [propRow('prop.color', colorCell), ...(withText ? shadowRows(item, false) : [])],
     };
   }
 
@@ -1122,39 +1362,127 @@ function createCanvasEditor(options) {
 
   // What fills a shape or an icon: a colour, a gradient, the colour of the popup's tier, or one tier's.
   function paintRows(item, withNone) {
-    const modes = [['solid', label('fill.solid')], ['gradient', label('fill.gradient')], ['accent', label('fill.state')]];
+    const modes = [['solid', label('fill.solid')], ['gradient', label('fill.gradient')], ['radial', label('fill.radial')], ['accent', label('fill.state')]];
     for (const tier of CANVAS_TIER_FILLS) modes.push([tier, label(`fill.${tier}`)]);
     if (withNone) modes.push(['none', label('fill.none')]);
     const rows = [propRow('prop.fill', selectControl(modes, item.fillMode, (v) => (item.fillMode = v), { rebuild: true }))];
     if (item.fillMode === 'solid') rows.push(propRow('prop.color', colorControl(item.fill, (hex) => (item.fill = hex))));
-    if (item.fillMode === 'gradient') {
-      rows.push(
-        propRow('prop.gradient', pair(colorControl(item.fill, (hex) => (item.fill = hex)), colorControl(item.fill2, (hex) => (item.fill2 = hex)))),
-        propRow('prop.angle', numberControl(item.angle, 0, 360, 5, (v) => (item.angle = v)))
-      );
+    if (item.fillMode === 'gradient' || item.fillMode === 'radial') {
+      rows.push(propRow('prop.gradient', pair(colorControl(item.fill, (hex) => (item.fill = hex)), colorControl(item.fill2, (hex) => (item.fill2 = hex)))));
     }
+    // A radial gradient spreads from the middle, so it has no direction to set.
+    if (item.fillMode === 'gradient') rows.push(propRow('prop.angle', numberControl(item.angle, 0, 360, 5, (v) => (item.angle = v))));
     return rows;
   }
 
-  const softRows = (item) => [
-    propRow('prop.shadow', numberControl(item.shadow, 0, 40, 1, (v) => (item.shadow = v))),
-    propRow('prop.blur', numberControl(item.blur, 0, 20, 1, (v) => (item.blur = v))),
-  ];
+  // Picked by name, so "no shadow" is a choice rather than a size of 0. A glow is seen at once, lit
+  // in the tier's colour: a black glow reads as a smudge.
+  function setShadow(item, kind) {
+    if (kind === 'none') {
+      item.shadow = 0;
+      delete item.shadowStyle;
+      delete item.shadowColor;
+      return;
+    }
+    setOrDrop(item, 'shadowStyle', kind, 'drop');
+    if (!item.shadow) item.shadow = SHADOW_START[kind];
+    if (kind === 'glow' && !item.shadowColor) item.shadowColor = 'accent';
+  }
+
+  // A drop shadow or a glow, in black, in the colour of the popup's tier or in any colour.
+  function shadowRows(item, withBlur) {
+    // The blur softens the element itself, so it comes first and the shadow's rows stay together.
+    const rows = withBlur ? [propRow('prop.blur', numberControl(item.blur, 0, 20, 1, (v) => (item.blur = v)))] : [];
+    const kind = item.shadow ? item.shadowStyle || 'drop' : 'none';
+    const choices = ['none', 'drop', 'glow'].map((name) => [name, label(`shadow.${name}`)]);
+    rows.push(propRow('prop.shadow', selectControl(choices, kind, (value) => setShadow(item, value), { rebuild: true })));
+    if (!item.shadow) return rows;
+    const size = rebuildAcrossZero(numberControl(item.shadow, 0, 40, 1, (v) => (item.shadow = v)), () => item.shadow || 0);
+    const color = colorChoice(item.shadowColor || 'black', [['black', 'shadow.black'], ['accent', 'fill.state']], (value) => setOrDrop(item, 'shadowColor', value, 'black'));
+    rows.push(propRow('prop.shadowSize', size), propRow('prop.shadowColor', color));
+    return rows;
+  }
+
+  // The settings one shape has of its own: a star's points, an arrow's head, a triangle's top.
+  const shapeSettingRows = (item, shape) =>
+    Object.entries(CANVAS_SHAPE_SETTINGS[shape] || {}).map(([key, [min, max, fallback]]) =>
+      propRow(`prop.${key}`, numberControl(item[key] ?? fallback, min, max, 1, (v) => setOrDrop(item, key, v, fallback)))
+    );
+
+  // Another shape keeps none of the last one's settings, so the layout holds only what it draws.
+  // A picture's plain rectangle is no shape at all.
+  function setShape(item, shape) {
+    for (const key of Object.keys(CANVAS_SHAPE_SETTINGS[item.shape] || {})) delete item[key];
+    const polygon = CANVAS_POLYGON_SHAPES.includes(shape);
+    if (!polygon) delete item.round;
+    // A plain shape looks the same mirrored, and the panel no longer offers to undo it.
+    if (item.kind === 'shape' && !polygon) {
+      delete item.flipX;
+      delete item.flipY;
+    }
+    if (shape) item.shape = shape;
+    else delete item.shape;
+  }
+
+  function dashControl(item) {
+    return selectControl(CANVAS_DASHES.map((dash) => [dash, label(`dash.${dash}`)]), item.dash || 'solid', (v) => setOrDrop(item, 'dash', v, 'solid'));
+  }
+
+  // Mirrors the item; a shape that is the same both ways round has nothing to mirror.
+  function flipRow(item) {
+    const group = el('span', 'pd-cv-seg');
+    group.setAttribute('role', 'group');
+    for (const [key, axis] of [['flipX', 'x'], ['flipY', 'y']]) {
+      const button = el('button');
+      button.type = 'button';
+      button.title = label(`flip.${axis}`);
+      button.setAttribute('aria-label', button.title);
+      button.setAttribute('aria-pressed', String(Boolean(item[key])));
+      button.appendChild(flipGlyph(axis));
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        setOrDrop(item, key, !item[key], false);
+        commit();
+      });
+      group.appendChild(button);
+    }
+    return groupRow('prop.flip', group);
+  }
+
+  // How round the corners are: a rectangle's in pixels, a polygon's as a share of its size.
+  function cornerRow(item) {
+    if (item.shape === 'rect') return propRow('prop.radius', numberControl(item.radius, 0, 200, 1, (v) => (item.radius = v)));
+    if (!CANVAS_POLYGON_SHAPES.includes(item.shape)) return null;
+    return propRow('prop.radius', numberControl(item.round || 0, 0, 100, 1, (v) => setOrDrop(item, 'round', v, 0)));
+  }
 
   function shapeRows(item) {
     const rows = [
-      propRow('prop.shape', selectControl(CANVAS_SHAPES.map((shape) => [shape, shapeName(shape)]), item.shape, (v) => (item.shape = v), { rebuild: true })),
+      propRow('prop.shape', selectControl(CANVAS_SHAPES.map((shape) => [shape, shapeName(shape)]), item.shape, (v) => setShape(item, v), { rebuild: true })),
     ];
     if (isLine(item)) {
-      rows.push(propRow('prop.color', colorControl(item.fill, (hex) => (item.fill = hex))));
+      rows.push(propRow('prop.color', colorControl(item.fill, (hex) => (item.fill = hex))), propRow('prop.dash', dashControl(item)));
       return rows;
     }
-    rows.push(...paintRows(item, true));
-    if (item.shape === 'rect') rows.push(propRow('prop.radius', numberControl(item.radius, 0, 200, 1, (v) => (item.radius = v))));
-    rows.push(
-      propRow('prop.stroke', pair(numberControl(item.stroke, 0, 20, 1, (v) => (item.stroke = v)), colorControl(item.strokeColor, (hex) => (item.strokeColor = hex)))),
-      ...softRows(item)
-    );
+    rows.push(...shapeSettingRows(item, item.shape), cornerRow(item), ...paintRows(item, true));
+    const stroke = rebuildAcrossZero(numberControl(item.stroke, 0, 20, 1, (v) => (item.stroke = v)), () => item.stroke);
+    rows.push(propRow('prop.stroke', pair(stroke, colorControl(item.strokeColor, (hex) => (item.strokeColor = hex)))));
+    if (item.stroke) rows.push(propRow('prop.dash', dashControl(item)));
+    if (CANVAS_POLYGON_SHAPES.includes(item.shape)) rows.push(flipRow(item));
+    rows.push(...shadowRows(item, true));
+    return rows.filter(Boolean);
+  }
+
+  // A picture can be cut to any shape but a line, with that shape's own settings.
+  function imageRows(item) {
+    const shape = item.shape || 'rect';
+    const choices = CANVAS_MASK_SHAPES.map((name) => [name, shapeName(name)]);
+    const rows = [propRow('prop.shape', selectControl(choices, shape, (v) => setShape(item, v === 'rect' ? undefined : v), { rebuild: true }))];
+    rows.push(...shapeSettingRows(item, shape));
+    if (shape !== 'ellipse') rows.push(propRow('prop.radius', numberControl(item.radius, 0, 50, 1, (v) => (item.radius = v))));
+    rows.push(flipRow(item));
+    // An animated picture plays from where it is; this starts it over each time the popup shows.
+    if (ANIMATED_IMAGE_RE.test(item.file)) rows.push(propRow('prop.replay', switchControl(item.replay, (on) => setOrDrop(item, 'replay', on, false))));
     return rows;
   }
 
@@ -1177,7 +1505,7 @@ function createCanvasEditor(options) {
       });
       grid.appendChild(button);
     }
-    return [groupRow('prop.icon', grid), ...paintRows(item, false), ...softRows(item)];
+    return [groupRow('prop.icon', grid), ...paintRows(item, false), flipRow(item), ...shadowRows(item, true)];
   }
 
   const stateName = (state) => {
@@ -1185,30 +1513,47 @@ function createCanvasEditor(options) {
     return (button && button.textContent) || state;
   };
 
-  // The states the item is drawn in. One at least: the layer's eye is what hides it everywhere.
-  function statesRow(item) {
-    const group = el('span', 'pd-cv-states');
-    group.setAttribute('role', 'group');
-    const shown = new Set(item.states || CANVAS_STATES);
-    for (const state of CANVAS_STATES) {
-      const button = el('button', '', stateName(state));
+  // The layer's eye, as a setting like the others: for every state, or for the shown one alone.
+  const visibleRow = (item) => propRow('prop.visible', switchControl(!item.off, (on) => setOrDrop(item, 'off', !on, false)));
+
+  /*
+    Where an edit goes: to what every state shares, or to the shown state alone. A state that has
+    its own values for the selection says so, with the way back to the shared look.
+  */
+  function tierBar(box) {
+    const name = stateName(viewState);
+    const bar = el('div', 'pd-cv-tier');
+    const choice = el('span', 'pd-cv-tier-choice');
+    choice.setAttribute('role', 'group');
+    choice.setAttribute('aria-label', label('tier.edit'));
+    for (const [only, text] of [[false, label('tier.all')], [true, label('tier.only').replace('{tier}', name)]]) {
+      const button = el('button', '', text);
       button.type = 'button';
-      button.setAttribute('aria-pressed', String(shown.has(state)));
+      button.setAttribute('aria-pressed', String(alone === only));
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        if (shown.has(state) && shown.size === 1) return;
-        if (shown.has(state)) shown.delete(state);
-        else shown.add(state);
-        if (shown.size === CANVAS_STATES.length) delete item.states;
-        else item.states = CANVAS_STATES.filter((name) => shown.has(name));
-        commit();
+        alone = only;
+        renderProps(true);
       });
-      group.appendChild(button);
+      choice.appendChild(button);
     }
-    return groupRow('prop.states', group);
+    bar.append(el('span', 'pd-cv-tier-label', label('tier.edit')), choice);
+    const owns = box && (box.type === 'item' ? itemOwns(layout, sources.get(canvas.items[box.index]), viewState) : partOwns(layout, box.key, viewState));
+    if (owns) {
+      const note = el('p', 'pd-cv-tier-note', label('tier.changed').replace('{tier}', name));
+      note.appendChild(actionButton('tier.reset', 'fa-undo', () => resetToShared(box)));
+      bar.appendChild(note);
+    }
+    return bar;
   }
 
-  function alignRow() {
+  function resetToShared(box) {
+    layout = box.type === 'item' ? resetItem(layout, sources.get(canvas.items[box.index]), viewState) : resetPart(layout, box.key, viewState);
+    project();
+    commit();
+  }
+
+  function alignRow(onCard = true) {
     const group = el('span', 'pd-cv-seg pd-cv-align');
     group.setAttribute('role', 'group');
     for (const edge of Object.keys(ALIGN_GLYPHS)) {
@@ -1219,11 +1564,11 @@ function createCanvasEditor(options) {
       button.appendChild(alignGlyph(edge));
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        alignSelected(edge);
+        alignSelected(edge, onCard);
       });
       group.appendChild(button);
     }
-    return groupRow('prop.alignCard', group);
+    return groupRow(onCard ? 'prop.alignCard' : 'prop.alignGroup', group);
   }
 
   // A picture keeps its proportions and its crop when its width is typed. Scaled from the size the
@@ -1301,13 +1646,14 @@ function createCanvasEditor(options) {
     const { text = [], look = [] } = item.kind === 'text' ? textRows(item) : {};
     if (item.kind === 'shape') look.push(...shapeRows(item));
     if (item.kind === 'icon') look.push(...iconRows(item));
-    if (item.kind === 'image') look.push(propRow('prop.radius', numberControl(item.radius, 0, 50, 1, (v) => (item.radius = v))));
+    if (item.kind === 'image') look.push(...imageRows(item));
     look.push(propRow('prop.opacity', numberControl(Math.round(item.o * 100), 0, 100, 5, (v) => (item.o = v / 100))));
     const where = item.lock ? [] : [...sizeRows(item), propRow('prop.rotation', numberControl(item.r, -180, 180, 1, (v) => (item.r = v))), alignRow()];
-    return { text, look, motion: motionRows(item), place: [...where, statesRow(item)] };
+    return { text, look, motion: motionRows(item), place: [...where, visibleRow(item)] };
   }
 
-  // How the item comes in, counted from the card's own start; the layout editor itself holds still.
+  // How the item comes in, counted from the card's own start, then how it keeps moving; the layout
+  // editor itself holds still.
   function motionRows(item) {
     const choices = CANVAS_ENTRANCES.map((name) => [name, label(`enter.${name}`)]);
     const entrance = selectControl(
@@ -1327,15 +1673,20 @@ function createCanvasEditor(options) {
         else delete item.delay;
       });
       rows.push(propRow('prop.delay', delay));
-      // The card holds still while it is edited, so say where the entrance can be seen.
-      rows.push(el('p', 'pd-cv-note', label('motionHint')));
     }
+    const loop = selectControl(CANVAS_LOOPS.map((name) => [name, label(`loop.${name}`)]), item.loop || 'none', (v) => setOrDrop(item, 'loop', v, 'none'), {
+      rebuild: true,
+    });
+    rows.push(propRow('prop.loop', loop));
+    // The card holds still while it is edited, so say where the movement can be seen.
+    if (item.enter || item.loop) rows.push(el('p', 'pd-cv-note', label('motionHint')));
     return rows;
   }
 
   function itemActions(item) {
     const actions = [
-      actionButton(item.back ? 'act.back' : 'act.front', item.back ? 'fa-level-down-alt' : 'fa-level-up-alt', () => sendItem(canvas.items.indexOf(item), !item.back)),
+      // Named for what it does: an element behind the card is brought forward, and the other way round.
+      actionButton(item.back ? 'act.front' : 'act.back', item.back ? 'fa-level-up-alt' : 'fa-level-down-alt', () => sendItem(canvas.items.indexOf(item), !item.back)),
     ];
     // Locked: nothing that changes it, and the way out where the delete button was.
     if (item.lock) {
@@ -1421,11 +1772,23 @@ function createCanvasEditor(options) {
     return block;
   }
 
+  function groupProps() {
+    const head = el('div', 'pd-cv-props-head');
+    head.append(icon('fa-object-group'), el('b', '', label('group.count').replace('{count}', picks.length)));
+    const actions = [];
+    if (selectedItems().length) actions.push(actionButton('act.duplicate', 'fa-clone', duplicateSelected));
+    actions.push(actionButton('act.delete', 'fa-trash-alt', removeSelected));
+    const body = el('div', 'pd-cv-sections');
+    // Among themselves first: that is what a group is usually lined up for.
+    body.appendChild(section('section.place', [alignRow(false), alignRow(true), el('p', 'pd-cv-note', label('group.hint'))], actions));
+    return [head, tierBar(null), body];
+  }
+
   function renderProps(force = false) {
     const box = selectedBox();
     // The controls panel: every control with nothing selected, only the card's own with the card.
     const cardOnly = selected === CARD_ID;
-    cardPanel.hidden = !full || Boolean(box);
+    cardPanel.hidden = !full || Boolean(box) || grouped();
     cardPanel.classList.toggle('is-card-only', cardOnly);
     cardTitle.textContent = label(cardOnly ? 'card' : 'general');
     cardHint.textContent = label(cardOnly ? 'cardHint' : 'generalHint');
@@ -1434,6 +1797,10 @@ function createCanvasEditor(options) {
     barToggle.checked = barSelect.value !== 'none' && !inherited;
     // Rebuilding the panel under the caret would throw away what is being typed.
     if (!force && props.contains(document.activeElement) && document.activeElement.tagName !== 'BUTTON') return;
+    if (grouped()) {
+      props.hidden = false;
+      return void props.replaceChildren(...groupProps());
+    }
     if (!box) {
       props.hidden = true;
       return void props.replaceChildren();
@@ -1453,7 +1820,7 @@ function createCanvasEditor(options) {
     sections.push(section('section.place', rows.place, actions));
     const body = el('div', 'pd-cv-sections');
     body.append(...sections);
-    props.replaceChildren(head, body);
+    props.replaceChildren(head, tierBar(box), body);
   }
 
   function layerButton(box, kind, on, iconName, key, onClick) {
@@ -1474,7 +1841,7 @@ function createCanvasEditor(options) {
   function layerRow(box) {
     const item = box.type === 'item' ? canvas.items[box.index] : null;
     const shown = item ? !item.off : !isHidden(box.key);
-    const row = el('div', box.id === selected ? 'pd-cv-layer-row is-on' : 'pd-cv-layer-row');
+    const row = el('div', selection().includes(box.id) ? 'pd-cv-layer-row is-on' : 'pd-cv-layer-row');
     if (!shown) row.classList.add('is-hidden');
     row.setAttribute('role', 'listitem');
     const pick = el('button', 'pd-cv-layer');
@@ -1482,7 +1849,7 @@ function createCanvasEditor(options) {
     pick.dataset.id = box.id;
     pick.title = boxName(box);
     pick.append(icon(iconFor(box)), el('span', '', boxName(box)));
-    pick.addEventListener('click', () => select(box.id));
+    pick.addEventListener('click', (event) => (addsToGroup(event) ? toggleMember(box.id) : select(box.id)));
     row.appendChild(pick);
     row.appendChild(layerButton(box, 'eye', shown, shown ? 'fa-eye' : 'fa-eye-slash', shown ? 'act.hide' : 'act.show', () => toggleShown(box)));
     if (item) row.appendChild(layerButton(box, 'lock', !item.lock, item.lock ? 'fa-lock' : 'fa-lock-open', item.lock ? 'act.unlock' : 'act.lock', () => toggleLock(box)));
@@ -1522,7 +1889,7 @@ function createCanvasEditor(options) {
       if (typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value)) seen.add(value.toLowerCase());
     };
     for (const control of controls.querySelectorAll('input[type="color"]')) add(control.value);
-    for (const item of canvas.items) [item.fill, item.fill2, item.strokeColor, item.color].forEach(add);
+    for (const item of canvas.items) [item.fill, item.fill2, item.strokeColor, item.color, item.shadowColor].forEach(add);
     for (const style of Object.values(canvas.style || {})) add(style.color);
     swatches.replaceChildren(...[...seen].slice(0, MAX_SWATCHES).map((value) => Object.assign(el('option'), { value })));
   }
@@ -1588,14 +1955,16 @@ function createCanvasEditor(options) {
     if (event.key === 'Escape') {
       if (help.isOpen()) help.close();
       else if (cropping) toggleCrop();
-      else if (selected) select(null);
+      else if (selected || grouped()) select(null);
       else if (full) setFull(false);
       else return;
     } else if (event.key === '?' && full) {
       help.toggle();
     } else if (ctrl && key === 'v' && full) {
       pasteItem();
-    } else if (!selected) {
+    } else if (ctrl && key === 'a' && full) {
+      pickMany(current ? current.boxes.filter(pickable).map((box) => box.id) : []);
+    } else if (!selected && !grouped()) {
       return;
     } else if (ctrl && key === 'c') {
       // Text selected on the page is the user's copy, not the element's.
@@ -1646,7 +2015,7 @@ function createCanvasEditor(options) {
 
   // Called after anything repainted the preview: undo, a load, a state switch, a resize.
   function refresh() {
-    const swapped = !drag && read();
+    const swapped = !drag && (read() || restate());
     render();
     if (!drag) renderPanels(swapped);
   }

@@ -5778,7 +5778,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     // A picture added to the free layout goes through the logo import: same checks, same folder.
     // Its size is read from the decoded picture, which knows every format the import accepts.
     async function importCanvasImage() {
-      const res = await ipcRenderer.invoke('import-preset-logo');
+      const res = await ipcRenderer.invoke('import-preset-logo', 'picture');
       if (!res || res.canceled) return null;
       if (!res.ok) return { refused: true };
       await refreshPresetImages(null, null);

@@ -115,7 +115,7 @@ test('an icon draws a built-in outline filled with its paint, and an unknown one
   for (const [name, d] of Object.entries(schema.CANVAS_ICONS)) assert.match(d, /^[MmLlHhVvCcSsAaZz\d\s.,-]+$/, `${name} is a bare path`);
 });
 
-test('an item kept to some states is stored in one spelling and hidden in the others', () => {
+test('an item an older layout kept to some states is switched off in the others', () => {
   const items = schema.normalizeCanvas({
     items: [
       { kind: 'icon', states: ['gold', 'nope', 'bronze', 'gold'] },
@@ -125,14 +125,66 @@ test('an item kept to some states is stored in one spelling and hidden in the ot
       { kind: 'text', text: 'x', off: true, lock: true },
     ],
   }).items;
-  assert.deepEqual(items[0].states, ['bronze', 'gold']);
-  for (const item of items.slice(1, 4)) assert.deepEqual([item.states, item.off, item.lock], [undefined, undefined, undefined]);
+  const off = { off: true };
+  assert.deepEqual(items[0].tiers, { normal: off, silver: off, platinum: off, progress: off });
+  assert.equal(items[0].states, undefined, 'the old field is not written back');
+  for (const item of items.slice(1, 4)) assert.deepEqual([item.tiers, item.off, item.lock], [undefined, undefined, undefined]);
   assert.deepEqual([items[4].off, items[4].lock], [true, true]);
   const css = generator.canvasCss({ items: [items[0], items[4], { kind: 'icon' }] });
   assert.match(css, /\.ach:not\(:is\(\.tier-bronze, \.tier-gold\)\) > \.aw-canvas > \[data-i="0"\] \{ display: none !important; \}/);
   assert.match(css, /\.ach > \.aw-canvas > \[data-i="1"\] \{ display: none !important; \}/, 'a switched-off item is never drawn');
   assert.doesNotMatch(css, /\[data-i="2"\] \{ display: none/);
   assert.match(generator.canvasCss({ items: [items[0]] }, { editing: true }), /\[data-i="0"\] \{ opacity: 0\.25 !important;/, 'the editor still shows it, faintly');
+});
+
+test('a tier keeps only what it changes on an item, and never what every state shares', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [{ kind: 'shape', shape: 'rect', x: 0, y: 0, w: 50, h: 20, tiers: { gold: { w: 80, lock: true, back: true }, silver: { w: 50 }, nope: { w: 9 } } }],
+  });
+  assert.deepEqual(canvas.items[0].tiers, { gold: { w: 80 } }, 'an equal value, a shared key and an unknown state leave nothing');
+  assert.equal(schema.canvasItemIn(canvas.items[0], 'gold').w, 80);
+  assert.equal(schema.canvasItemIn(canvas.items[0], 'normal').w, 50);
+  assert.equal(schema.canvasItemIn(canvas.items[0], 'gold').tiers, undefined);
+  assert.equal(JSON.stringify(schema.normalizeCanvas(canvas)), JSON.stringify(canvas), 'a stored layout reads back the same');
+});
+
+test('an item a tier changes is drawn once per look, each shown in its own states', () => {
+  const canvas = { items: [{ kind: 'shape', shape: 'star', x: 0, y: 0, w: 40, h: 40, fillMode: 'gradient', tiers: { gold: { w: 80 }, platinum: { off: true } } }] };
+  const markup = generator.canvasMarkup(canvas);
+  assert.match(markup, /<div data-i="0" data-v="0" data-kind="shape">/);
+  assert.match(markup, /<div data-i="0" data-v="1" data-kind="shape">/);
+  assert.ok(markup.includes('id="aw-cv-g0-0"') && markup.includes('id="aw-cv-g0-1"'), 'each copy has its own gradient');
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\[data-i="0"\]\[data-v="1"\] \{[^}]*width: 80px;/);
+  assert.match(css, /\.ach:not\(:is\(\.tier-gold\)\) > \.aw-canvas > \[data-i="0"\]\[data-v="1"\] \{ display: none !important; \}/);
+  assert.match(css, /\.ach:not\(:is\(:not\(\.state-rare[^{]*\.tier-silver[^{]*\)\) > \.aw-canvas > \[data-i="0"\]\[data-v="0"\] \{ display: none !important; \}/);
+  const editing = generator.canvasCss(canvas, { editing: true });
+  assert.match(editing, /\.ach:not\(:is\(\.tier-gold\)\) > \.aw-canvas > \[data-i="0"\]\[data-v="1"\] \{ display: none !important; \}/, 'the other look is never shown');
+  assert.match(editing, /\.ach:not\(:is\([^{]*\)\) > \.aw-canvas > \[data-i="0"\]\[data-v="0"\] \{ opacity: 0\.25 !important;/, 'switched off on platinum, faint there');
+  assert.doesNotMatch(generator.canvasMarkup({ items: [{ kind: 'icon' }] }), /data-v/, 'an item no tier changes keeps one element');
+});
+
+test('a tier moves, hides and restyles the card parts for itself only', () => {
+  const canvas = {
+    move: { icon: { x: 4 } },
+    style: { title: { size: 20 } },
+    tiers: { gold: { move: { title: { y: 6 } }, style: { title: { size: 24 } }, hidden: { meta: true } }, silver: { move: { icon: { x: 4 } } } },
+  };
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /^\.ach \.icon \{ translate: 4px 0px/m, 'a part every state places alike keeps its plain rule');
+  assert.match(css, /^\.ach:is\(\.tier-gold\) \.title \{ translate: 0px 6px/m);
+  assert.match(css, /^\.ach:is\(\.tier-gold\) \.meta \{ visibility: hidden !important; \}/m);
+  assert.match(css, /\.ach:is\(\.tier-gold\) \.title \{ font-size: 24px !important;/);
+  assert.match(css, /\.ach:is\([^{]*\.tier-silver[^{]*\) \.title \{ font-size: 20px !important;/);
+  assert.ok(css.includes('.ach .text_wrap { overflow: visible !important;'), 'a line moved in one state lets the column overflow');
+});
+
+test('the popup makes room for the largest look a tier gives an item', () => {
+  const plain = generator.presetBoxSize({ canvas: { items: [{ kind: 'shape', shape: 'rect', x: 0, y: 0, w: 40, h: 20 }] } });
+  const grown = generator.presetBoxSize({ canvas: { items: [{ kind: 'shape', shape: 'rect', x: 0, y: 0, w: 40, h: 20, tiers: { gold: { x: -30 } } }] } });
+  assert.equal(grown.width, plain.width + 30);
+  const goldOnly = generator.presetBoxSize({ canvas: { items: [{ kind: 'shape', shape: 'rect', x: -50, y: 0, w: 40, h: 20, off: true, tiers: { gold: { off: null, x: -30 } } }] } });
+  assert.equal(goldOnly.width, plain.width + 30, 'a look no state draws takes no room');
 });
 
 test('the popup grows for what touches the card and leaves out what floats away from it', () => {
@@ -348,4 +400,196 @@ test('an entrance is stored with its delay, played with the card and left out wh
   assert.match(css, /\[data-i="3"\] \{ animation: aw-cv-pop 480ms cubic-bezier\(0\.34, 1\.56, 0\.64, 1\) 3000ms both; \}/);
   assert.doesNotMatch(css, /data-i="1"\] \{ animation/);
   assert.doesNotMatch(generator.canvasCss(canvas, { editing: true }), /animation:/);
+});
+
+test('a star, an arrow and a triangle take their own settings, stored only when changed', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'shape', shape: 'star', points: 99, depth: 3 },
+      { kind: 'shape', shape: 'arrow', head: 30, shaft: 60 },
+      { kind: 'shape', shape: 'triangle', apex: 0 },
+      { kind: 'shape', shape: 'star', points: 5, depth: 42 },
+      { kind: 'shape', shape: 'rect', points: 7, apex: 10 },
+    ],
+  });
+  const [star, arrow, triangle, plainStar, rect] = canvas.items;
+  assert.deepEqual([star.points, star.depth], [12, 10]);
+  assert.deepEqual([arrow.head, arrow.shaft], [30, 60]);
+  assert.equal(triangle.apex, 0);
+  assert.ok(!('points' in plainStar) && !('depth' in plainStar), 'the default star has one spelling');
+  assert.ok(!('points' in rect) && !('apex' in rect), 'a rectangle has none of them');
+  const markup = generator.canvasMarkup(canvas);
+  assert.match(markup, /data-i="1"[^>]*><svg[^>]*><polygon points="0,20 70,20 70,0 100,50 70,100 70,80 0,80"/);
+  assert.match(markup, /data-i="2"[^>]*><svg[^>]*><polygon points="0,0 100,100 0,100"/);
+  const starPoints = /data-i="0"[^>]*><svg[^>]*><polygon points="([^"]+)"/.exec(markup)[1].split(' ');
+  assert.equal(starPoints.length, 24, 'twelve branches');
+  const ys = starPoints.map((point) => Number(point.split(',')[1]));
+  assert.deepEqual([Math.min(...ys), Math.max(...ys)], [0, 100], 'a star fills its box, so its handles frame it');
+  assert.match(generator.canvasMarkup({ items: [{ kind: 'shape', shape: 'arrow' }] }), /points="0,30 58,30 58,0 100,50 58,100 58,70 0,70"/, 'the default arrow is unchanged');
+});
+
+test('rounded corners turn a polygon into a path drawn at the size of the item', () => {
+  const canvas = schema.normalizeCanvas({ items: [{ kind: 'shape', shape: 'triangle', w: 120, h: 60, round: 999 }, { kind: 'shape', shape: 'diamond', round: 0 }] });
+  assert.equal(canvas.items[0].round, 100);
+  assert.ok(!('round' in canvas.items[1]));
+  const markup = generator.canvasMarkup(canvas);
+  assert.match(markup, /data-i="0"[^>]*><svg viewBox="0 0 120 60" preserveAspectRatio="none"><path d="M[\d. ]+(L[\d. ]+Q[\d. ]+)+Z"/);
+  assert.match(markup, /data-i="1"[^>]*><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polygon /);
+});
+
+test('an outline can be dashed or dotted, a line included', () => {
+  const css = generator.canvasCss({
+    items: [
+      { kind: 'shape', shape: 'rect', stroke: 3, strokeColor: '#ff0000', dash: 'dashed' },
+      { kind: 'shape', shape: 'line', fill: '#00ff00', h: 4, dash: 'dotted' },
+      { kind: 'shape', shape: 'line', fill: '#00ff00', h: 2, dash: 'dashed' },
+      { kind: 'shape', shape: 'rect', stroke: 3, dash: 'wavy' },
+    ],
+  });
+  assert.match(css, /\[data-i="0"\] \{[^}]*border: 3px dashed #ff0000;/);
+  assert.match(css, /\[data-i="1"\] \{[^}]*background: radial-gradient\(circle closest-side, #00ff00 96%, transparent\) 0 0 \/ 8px 4px repeat-x;/);
+  assert.match(css, /\[data-i="2"\] \{[^}]*background: repeating-linear-gradient\(90deg, #00ff00 0 6px, transparent 6px 10px\);/);
+  assert.match(css, /\[data-i="3"\] \{[^}]*border: 3px solid/, 'an unknown style is a plain outline');
+  const markup = generator.canvasMarkup({ items: [{ kind: 'shape', shape: 'star', w: 50, h: 50, stroke: 2, dash: 'dotted' }] });
+  assert.match(markup, /<svg viewBox="0 0 50 50"[^>]*><polygon points="[\d., ]+"[^>]*stroke-dasharray="0 4" stroke-linecap="round"/);
+});
+
+test('a radial gradient paints shapes and icons from the middle out', () => {
+  const css = generator.canvasCss({ items: [{ kind: 'shape', shape: 'rect', fillMode: 'radial', fill: '#111111', fill2: '#222222' }, { kind: 'icon', fillMode: 'radial', fill: '#333333', fill2: '#444444' }] });
+  assert.match(css, /\[data-i="0"\] \{[^}]*background: radial-gradient\(closest-side, #111111, #222222\);/);
+  assert.match(css, /\[data-i="1"\] > span \{[^}]*background: radial-gradient\(closest-side, #333333, #444444\);/);
+  const markup = generator.canvasMarkup({ items: [{ kind: 'shape', shape: 'diamond', fillMode: 'radial', fill: '#111111', fill2: '#222222' }] });
+  assert.match(markup, /<radialGradient id="aw-cv-g0" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#111111"\/><stop offset="1" stop-color="#222222"\/><\/radialGradient>/);
+  assert.match(markup, /fill="url\(#aw-cv-g0\)"/);
+});
+
+test('shapes, icons and pictures can be mirrored, texts cannot', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'shape', flipX: true },
+      { kind: 'icon', flipX: true, flipY: true },
+      { kind: 'image', file: 'a.png', flipY: true },
+      { kind: 'text', text: 'x', flipX: true },
+      { kind: 'shape', flipX: 'yes' },
+    ],
+  });
+  assert.deepEqual(
+    canvas.items.map((item) => [item.flipX, item.flipY]),
+    [[true, undefined], [true, true], [undefined, true], [undefined, undefined], [undefined, undefined]]
+  );
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\[data-i="0"\] \{[^}]*scale: -1 1;/);
+  assert.match(css, /\[data-i="1"\] \{[^}]*scale: -1 -1;/);
+  assert.match(css, /\[data-i="2"\] \{[^}]*scale: 1 -1;/);
+  assert.doesNotMatch(css, /\[data-i="[34]"\] \{[^}]*scale:/);
+});
+
+test('a shadow can take a colour or become a glow, and texts can have one too', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'shape', shadow: 9 },
+      { kind: 'shape', shadow: 12, shadowStyle: 'glow', shadowColor: 'accent' },
+      { kind: 'icon', shadow: 6, shadowColor: '#ff0000' },
+      { kind: 'text', text: 'x', shadow: 8, shadowStyle: 'glow', shadowColor: '#00ffaa' },
+      { kind: 'text', text: 'y', shadowStyle: 'glow', shadowColor: 'red;}' },
+    ],
+  });
+  const [plain, glow, red, text, bare] = canvas.items;
+  assert.ok(!('shadowStyle' in plain) && !('shadowColor' in plain), 'a plain shadow has one spelling');
+  assert.deepEqual([glow.shadowStyle, glow.shadowColor], ['glow', 'accent']);
+  assert.equal(red.shadowColor, '#ff0000');
+  assert.deepEqual([text.shadow, text.shadowStyle, text.shadowColor], [8, 'glow', '#00ffaa']);
+  assert.ok(!('shadow' in bare) && !('shadowStyle' in bare) && !('shadowColor' in bare), 'a text without a shadow keeps none of it');
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\[data-i="0"\] \{[^}]*filter: drop-shadow\(0 3px 9px rgba\(0, 0, 0, 0\.55\)\);/);
+  assert.match(css, /\[data-i="1"\] \{[^}]*filter: drop-shadow\(0 0 6px var\(--accent\)\) drop-shadow\(0 0 12px var\(--accent\)\);/);
+  assert.match(css, /\[data-i="2"\] \{[^}]*filter: drop-shadow\(0 2px 6px #ff0000\);/);
+  assert.match(css, /\[data-i="3"\] \{[^}]*filter: drop-shadow\(0 0 4px #00ffaa\) drop-shadow\(0 0 8px #00ffaa\);/);
+  assert.doesNotMatch(css, /\[data-i="4"\] \{[^}]*filter:/);
+});
+
+test('a picture can be cut to a shape, rounded or not', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'image', file: 'a.png', shape: 'ellipse' },
+      { kind: 'image', file: 'a.png', shape: 'diamond' },
+      { kind: 'image', file: 'a.png', shape: 'star', points: 6, radius: 20, w: 100, h: 50 },
+      { kind: 'image', file: 'a.png', shape: 'line' },
+      { kind: 'image', file: 'a.png', shape: 'rect', radius: 10 },
+    ],
+  });
+  assert.deepEqual(
+    canvas.items.map((item) => item.shape),
+    ['ellipse', 'diamond', 'star', undefined, undefined]
+  );
+  assert.equal(canvas.items[2].points, 6);
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\[data-i="0"\] \{[^}]*border-radius: 50%;/);
+  assert.match(css, /\[data-i="1"\] \{[^}]*clip-path: polygon\(50% 0%, 100% 50%, 50% 100%, 0% 50%\);/);
+  assert.match(css, /\[data-i="2"\] \{[^}]*clip-path: path\('M[\d. ]+(L[\d. ]+Q[\d. ]+)+Z'\);/);
+  assert.match(css, /\[data-i="4"\] \{[^}]*border-radius: 10%;/);
+  assert.doesNotMatch(css, /\[data-i="4"\] \{[^}]*clip-path/);
+});
+
+test('a looping animation follows the entrance, keeps the item filters and stays out of the editor', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'icon', loop: 'spin' },
+      { kind: 'shape', loop: 'float', enter: 'rise', delay: 200 },
+      { kind: 'text', text: 'x', loop: 'shine', shadow: 4 },
+      { kind: 'shape', loop: 'explode' },
+    ],
+  });
+  assert.deepEqual(canvas.items.map((item) => item.loop), ['spin', 'float', 'shine', undefined]);
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /@keyframes aw-cv-loop-spin \{ to \{ transform: rotate\(360deg\); \} \}/);
+  assert.match(css, /\.ach\.active > \.aw-canvas > \[data-i="0"\] \{ animation: aw-cv-loop-spin \d+ms linear 0ms infinite; \}/);
+  assert.match(css, /\[data-i="1"\] \{ animation: aw-cv-rise 480ms cubic-bezier\([^)]+\) 200ms both, aw-cv-loop-float \d+ms ease-in-out 680ms infinite; \}/);
+  assert.match(css, /@keyframes aw-cv-shine-2 \{ 50% \{ filter: drop-shadow\(0 1px 4px rgba\(0, 0, 0, 0\.55\)\) brightness\(1\.35\); \} \}/);
+  assert.doesNotMatch(generator.canvasCss(canvas, { editing: true }), /animation:|@keyframes/);
+});
+
+test('an animated picture can start over when it appears, a still one cannot', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'image', file: 'party.gif', replay: true, enter: 'fade', delay: 300 },
+      { kind: 'image', file: 'still.png', replay: true },
+      { kind: 'image', file: 'loop.webp', replay: true },
+    ],
+  });
+  assert.deepEqual(canvas.items.map((item) => item.replay), [true, undefined, true]);
+  const markup = generator.canvasMarkup(canvas);
+  assert.match(markup, /<div data-i="0" data-kind="image" data-replay="300" data-file="party\.gif"><\/div>/);
+  assert.match(markup, /<div data-i="1" data-kind="image"><\/div>/);
+  assert.match(markup, /<div data-i="2" data-kind="image" data-replay="0" data-file="loop\.webp"><\/div>/);
+  assert.match(generator.PRESET_ENGINE, /\[data-replay\]/, 'the page engine starts them over');
+});
+
+test('a replayed picture gets a new address, an inline one through its media type', () => {
+  const source = generator.PRESET_ENGINE.match(/function restartPicture\(node\) \{[\s\S]*?\n {2}\}/)[0];
+  class FakeImage {
+    set src(value) {
+      this.onload();
+    }
+  }
+  let sheet = '';
+  const restart = new Function('getComputedStyle', 'Image', `var replayCount = 0; ${source} return restartPicture;`)(() => ({ backgroundImage: `url("${sheet}")` }), FakeImage);
+  const shown = (url) => {
+    sheet = url;
+    const node = { style: { backgroundImage: '' } };
+    restart(node);
+    return node.style.backgroundImage;
+  };
+
+  assert.equal(shown('file:///C:/presets/p/party.gif'), 'url("file:///C:/presets/p/party.gif?replay=1")');
+  assert.equal(shown('file:///C:/presets/p/party.gif?replay=1'), 'url("file:///C:/presets/p/party.gif?replay=2")');
+  assert.equal(shown('data:image/gif;base64,R0lGODlh'), 'url("data:image/gif;replay=3;base64,R0lGODlh")');
+  assert.equal(shown('data:image/gif;replay=3;base64,R0lGODlh'), 'url("data:image/gif;replay=4;base64,R0lGODlh")');
+});
+
+test('a picture of up to 5 MB is accepted, a GIF included', () => {
+  const gif = (bytes) => Buffer.concat([Buffer.from('GIF89a'), Buffer.alloc(Math.round(bytes) - 6)]);
+  assert.equal(schema.MAX_LOGO_BYTES, 5 * 1024 * 1024);
+  assert.deepEqual(schema.checkLogo('party.gif', gif(4.9 * 1024 * 1024)), { ok: true, kind: 'gif' });
+  assert.deepEqual(schema.checkLogo('party.gif', gif(5.1 * 1024 * 1024)), { ok: false, error: 'image-too-large' });
 });

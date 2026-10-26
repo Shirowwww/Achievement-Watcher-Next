@@ -154,6 +154,30 @@ const PRESET_ENGINE = [
   "      if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];",
   '    }',
   '  }',
+  '  // An animated picture set to replay starts over as it appears: a new address is a new animation,',
+  '  // swapped in once loaded so the element never shows a gap. A picture held inline (the',
+  '  // designer preview) gets its new address from a parameter of its media type.',
+  '  var replayTimers = [];',
+  '  var replayCount = 0;',
+  '  function restartPicture(node) {',
+  "    node.style.backgroundImage = '';",
+  '    var match = /^url\\("(.+)"\\)$/.exec(getComputedStyle(node).backgroundImage);',
+  '    if (!match) return;',
+  '    replayCount += 1;',
+  "    var next = match[1].indexOf('data:') === 0",
+  "      ? match[1].replace(/^data:([^;,]*)(;replay=\\d+)?/, 'data:$1;replay=' + replayCount)",
+  "      : match[1].replace(/[?#].*$/, '') + '?replay=' + replayCount;",
+  '    var picture = new Image();',
+  '    picture.onload = function () { node.style.backgroundImage = \'url("\' + next + \'")\'; };',
+  '    picture.src = next;',
+  '  }',
+  '  function replayPictures() {',
+  '    replayTimers.forEach(clearTimeout);',
+  "    var nodes = document.querySelectorAll('.aw-canvas [data-replay]');",
+  '    replayTimers = Array.prototype.map.call(nodes, function (node) {',
+  "      return setTimeout(function () { restartPicture(node); }, Number(node.getAttribute('data-replay')) || 0);",
+  '    });',
+  '  }',
   '  var closeTimer = null;',
   '  function onPayload(displayName, description, iconPath, scale, data) {',
   "    var titleEl = document.querySelector('.title');",
@@ -181,6 +205,7 @@ const PRESET_ENGINE = [
   "    root.classList.remove('active');",
   '    void root.offsetWidth;',
   "    root.classList.add('active');",
+  '    replayPictures();',
   '    if (window.api && window.api.notificationRenderReady) window.api.notificationRenderReady();',
   '    requestAnimationFrame(function () { marquees.forEach(startMarquee); });',
   '    clearTimeout(closeTimer);',
@@ -231,18 +256,51 @@ const CANVAS_TEXT_COLOR = { accent: 'var(--accent, #ffffff)', text: 'var(--text,
 const CANVAS_FONT_FAMILY = 'AW Item Font';
 
 // Shapes CSS cannot draw with a border: an SVG polygon in a 100x100 box stretched over the item.
-const starPoints = () =>
-  Array.from({ length: 10 }, (_, i) => {
-    const radius = i % 2 ? 21 : 50;
-    const angle = (Math.PI / 5) * i - Math.PI / 2;
-    return `${(50 + radius * Math.cos(angle)).toFixed(1)},${(53 + radius * Math.sin(angle)).toFixed(1)}`;
-  }).join(' ');
-const CANVAS_POLYGONS = {
-  triangle: '50,0 100,100 0,100',
-  diamond: '50,0 100,50 50,100 0,50',
-  star: starPoints(),
-  arrow: '0,30 58,30 58,0 100,50 58,100 58,70 0,70',
-};
+const CANVAS_POLYGONS = new Set(schema.CANVAS_POLYGON_SHAPES);
+const fmt = (value) => String(Number(value.toFixed(1)));
+
+// Stretched to fill its box, so the handles frame the star rather than the circle around it.
+function starPoints(count, depth) {
+  const raw = Array.from({ length: count * 2 }, (_, i) => {
+    const radius = i % 2 ? depth / 2 : 50;
+    const angle = (Math.PI / count) * i - Math.PI / 2;
+    return [radius * Math.cos(angle), radius * Math.sin(angle)];
+  });
+  const xs = raw.map(([x]) => x);
+  const ys = raw.map(([, y]) => y);
+  const [minX, minY] = [Math.min(...xs), Math.min(...ys)];
+  const [spanX, spanY] = [Math.max(...xs) - minX, Math.max(...ys) - minY];
+  return raw.map(([x, y]) => [((x - minX) / spanX) * 100, ((y - minY) / spanY) * 100]);
+}
+
+// A polygon's corners in a 100x100 box, from the shape's own settings.
+function shapePoints(item) {
+  const setting = (key) => item[key] ?? schema.CANVAS_SHAPE_SETTINGS[item.shape][key][2];
+  if (item.shape === 'triangle') return [[setting('apex'), 0], [100, 100], [0, 100]];
+  if (item.shape === 'diamond') return [[50, 0], [100, 50], [50, 100], [0, 50]];
+  if (item.shape === 'arrow') {
+    const neck = 100 - setting('head');
+    const top = 50 - setting('shaft') / 2;
+    return [[0, top], [neck, top], [neck, 0], [100, 50], [neck, 100], [neck, 100 - top], [0, 100 - top]];
+  }
+  return starPoints(setting('points'), setting('depth'));
+}
+
+// Each corner cut back by up to `round` pixels along both its edges, the two cuts joined by a curve.
+function roundedPath(points, round) {
+  const toward = (from, to) => {
+    const length = Math.hypot(to[0] - from[0], to[1] - from[1]) || 1;
+    const cut = Math.min(round, length / 2) / length;
+    return [from[0] + (to[0] - from[0]) * cut, from[1] + (to[1] - from[1]) * cut];
+  };
+  const xy = ([x, y]) => `${fmt(x)} ${fmt(y)}`;
+  const corners = points.map((point, i) => ({
+    from: toward(point, points[(i + points.length - 1) % points.length]),
+    at: point,
+    to: toward(point, points[(i + 1) % points.length]),
+  }));
+  return `M${xy(corners[0].from)}${corners.map((corner) => `L${xy(corner.from)}Q${xy(corner.at)} ${xy(corner.to)}`).join('')}Z`;
+}
 
 // A tier's own colour, with the custom presets' defaults for a bundled base that has none.
 const CANVAS_TIER_PAINT = {
@@ -256,6 +314,7 @@ function shapePaint(item) {
   if (item.fillMode === 'none') return 'transparent';
   if (item.fillMode === 'accent') return 'var(--accent)';
   if (CANVAS_TIER_PAINT[item.fillMode]) return CANVAS_TIER_PAINT[item.fillMode];
+  if (item.fillMode === 'radial') return `radial-gradient(closest-side, ${item.fill}, ${item.fill2})`;
   return item.fillMode === 'gradient' ? `linear-gradient(${item.angle}deg, ${item.fill}, ${item.fill2})` : item.fill;
 }
 
@@ -265,7 +324,9 @@ const canvasIconMask = (name) =>
 
 /*
   Where each state can be told apart on the card: the engine's state classes, and the progress line
-  it shows for a progress popup (normal and progress popups have no class of their own).
+  it shows for a progress popup (normal and progress popups have no class of their own). No card
+  matches two of them, or an item drawn its own way in each would show twice: a rare unlock that
+  carries a progress line is its tier.
 */
 const CANVAS_STATE_SELECTORS = {
   normal: ':not(.state-rare, .state-platinum):not(:has(.progress_line:not([hidden])))',
@@ -273,7 +334,7 @@ const CANVAS_STATE_SELECTORS = {
   silver: '.tier-silver',
   gold: '.tier-gold',
   platinum: '.state-platinum',
-  progress: ':not(.state-platinum):has(.progress_line:not([hidden]))',
+  progress: ':not(.state-rare, .state-platinum):has(.progress_line:not([hidden]))',
 };
 
 // Where each tier's word for {tier} shows; a platinum popup carries no tier class.
@@ -299,37 +360,103 @@ const CANVAS_ENTER_FROM = {
 const CANVAS_ENTER_EASE = { pop: 'cubic-bezier(0.34, 1.56, 0.64, 1)' };
 const CANVAS_ENTER_EASE_DEFAULT = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
-function canvasEntranceCss(items) {
-  const entering = items.map((item, index) => [item, index]).filter(([item]) => item.enter);
-  if (!entering.length) return [];
-  const rules = [...new Set(entering.map(([item]) => item.enter))].map((name) => `@keyframes aw-cv-${name} { from { ${CANVAS_ENTER_FROM[name]} } }`);
-  for (const [item, index] of entering) {
-    const ease = CANVAS_ENTER_EASE[item.enter] || CANVAS_ENTER_EASE_DEFAULT;
-    rules.push(`.ach.active > .${CANVAS_CLASS} > [data-i="${index}"] { animation: aw-cv-${item.enter} ${CANVAS_ENTER_MS}ms ${ease} ${item.delay || 0}ms both; }`);
+/*
+  A loop starts once the item is in, and keeps the look the item already has: `shine` brightens its
+  own filters, so its keyframes are written per item.
+*/
+const CANVAS_LOOP_KEYFRAMES = {
+  pulse: '50% { transform: scale(1.06); }',
+  float: '50% { transform: translateY(-3px); }',
+  swing: '25% { transform: rotate(4deg); } 75% { transform: rotate(-4deg); }',
+  spin: 'to { transform: rotate(360deg); }',
+};
+const CANVAS_LOOP_TIMING = { pulse: '1600ms ease-in-out', float: '2400ms ease-in-out', swing: '2000ms ease-in-out', spin: '6000ms linear', shine: '2200ms ease-in-out' };
+
+function canvasMotionCss(variants) {
+  const keyframes = new Set();
+  const rules = [];
+  variants.forEach(({ item, select, id }) => {
+    const animations = [];
+    if (item.enter) {
+      keyframes.add(`@keyframes aw-cv-${item.enter} { from { ${CANVAS_ENTER_FROM[item.enter]} } }`);
+      const ease = CANVAS_ENTER_EASE[item.enter] || CANVAS_ENTER_EASE_DEFAULT;
+      animations.push(`aw-cv-${item.enter} ${CANVAS_ENTER_MS}ms ${ease} ${item.delay || 0}ms both`);
+    }
+    if (item.loop) {
+      const name = item.loop === 'shine' ? `aw-cv-shine-${id}` : `aw-cv-loop-${item.loop}`;
+      const frames = item.loop === 'shine' ? `50% { filter: ${[...itemFilters(item), 'brightness(1.35)'].join(' ')}; }` : CANVAS_LOOP_KEYFRAMES[item.loop];
+      keyframes.add(`@keyframes ${name} { ${frames} }`);
+      const start = item.enter ? (item.delay || 0) + CANVAS_ENTER_MS : 0;
+      animations.push(`${name} ${CANVAS_LOOP_TIMING[item.loop]} ${start}ms infinite`);
+    }
+    if (animations.length) rules.push(`.ach.active > .${CANVAS_CLASS} > ${select} { animation: ${animations.join(', ')}; }`);
+  });
+  if (!rules.length) return [];
+  return [`@media (prefers-reduced-motion: no-preference) {\n${[...keyframes, ...rules].join('\n')}\n}`];
+}
+
+// A plain shadow falls down and to the back; a glow spreads evenly in its colour, twice for strength.
+function itemFilters(item) {
+  const filters = [];
+  if (item.shadow) {
+    const color = item.shadowColor === 'accent' ? 'var(--accent)' : item.shadowColor || 'rgba(0, 0, 0, 0.55)';
+    if (item.shadowStyle === 'glow') filters.push(`drop-shadow(0 0 ${Math.round(item.shadow / 2)}px ${color})`, `drop-shadow(0 0 ${item.shadow}px ${color})`);
+    else filters.push(`drop-shadow(0 ${Math.round(item.shadow / 3)}px ${item.shadow}px ${color})`);
   }
-  return [`@media (prefers-reduced-motion: no-preference) {\n${rules.join('\n')}\n}`];
+  if (item.blur) filters.push(`blur(${item.blur}px)`);
+  return filters;
 }
 
 function shapeFilter(item) {
-  const filters = [];
-  if (item.shadow) filters.push(`drop-shadow(0 ${Math.round(item.shadow / 3)}px ${item.shadow}px rgba(0, 0, 0, 0.55))`);
-  if (item.blur) filters.push(`blur(${item.blur}px)`);
+  const filters = itemFilters(item);
   return filters.length ? `filter: ${filters.join(' ')};` : '';
 }
 
-// Every value here went through the schema: hex colours and plain numbers only.
-function polygonSvg(item, index) {
-  const gradientId = `aw-cv-g${index}`;
-  const defs =
-    item.fillMode === 'gradient'
-      ? `<defs><linearGradient id="${gradientId}" gradientTransform="rotate(${item.angle - 90} 0.5 0.5)"><stop offset="0" stop-color="${item.fill}"/><stop offset="1" stop-color="${item.fill2}"/></linearGradient></defs>`
-      : '';
+const DASH_ATTRS = {
+  dashed: (width) => ` stroke-dasharray="${width * 3} ${width * 2}"`,
+  dotted: (width) => ` stroke-dasharray="0 ${width * 2}" stroke-linecap="round"`,
+};
+
+/*
+  Every value here went through the schema: hex colours and plain numbers only. Drawn in the item's
+  own pixels once its corners are rounded or its outline dashed, so neither is stretched with the box.
+*/
+const pointsIn = (item, w, h) => shapePoints(item).map(([x, y]) => [(x * w) / 100, (y * h) / 100]);
+
+function polygonSvg(item, id) {
+  const gradientId = `aw-cv-g${id}`;
+  const stops = `<stop offset="0" stop-color="${item.fill}"/><stop offset="1" stop-color="${item.fill2}"/>`;
+  let defs = '';
+  if (item.fillMode === 'gradient') defs = `<defs><linearGradient id="${gradientId}" gradientTransform="rotate(${item.angle - 90} 0.5 0.5)">${stops}</linearGradient></defs>`;
+  if (item.fillMode === 'radial') defs = `<defs><radialGradient id="${gradientId}" cx="0.5" cy="0.5" r="0.5">${stops}</radialGradient></defs>`;
   // The state and tier colours are CSS variables, which only a style (not a fill attribute) resolves.
-  const fill = item.fillMode === 'none' ? 'none' : item.fillMode === 'gradient' ? `url(#${gradientId})` : item.fill;
+  const fill = item.fillMode === 'none' ? 'none' : defs ? `url(#${gradientId})` : item.fill;
   const variable = item.fillMode === 'accent' ? 'var(--accent)' : CANVAS_TIER_PAINT[item.fillMode];
   const paint = variable ? `style="fill: ${variable}"` : `fill="${fill}"`;
-  const stroke = item.stroke ? ` stroke="${item.strokeColor}" stroke-width="${item.stroke}" stroke-linejoin="round" vector-effect="non-scaling-stroke"` : '';
-  return `<svg viewBox="0 0 100 100" preserveAspectRatio="none">${defs}<polygon points="${CANVAS_POLYGONS[item.shape]}" ${paint}${stroke}/></svg>`;
+  const dash = item.stroke && DASH_ATTRS[item.dash] ? DASH_ATTRS[item.dash](item.stroke) : '';
+  const stroke = item.stroke ? ` stroke="${item.strokeColor}" stroke-width="${item.stroke}" stroke-linejoin="round" vector-effect="non-scaling-stroke"${dash}` : '';
+  const [w, h] = item.round || dash ? [item.w, item.h] : [100, 100];
+  const points = pointsIn(item, w, h);
+  const outline = item.round ? `<path d="${roundedPath(points, item.round)}"` : `<polygon points="${points.map(([x, y]) => `${fmt(x)},${fmt(y)}`).join(' ')}"`;
+  return `<svg viewBox="0 0 ${fmt(w)} ${fmt(h)}" preserveAspectRatio="none">${defs}${outline} ${paint}${stroke}/></svg>`;
+}
+
+// A line drawn in dashes or dots of its own thickness.
+function dashedLine(item) {
+  const thickness = Math.max(1, Math.round(item.h));
+  if (item.dash === 'dotted') return `radial-gradient(circle closest-side, ${item.fill} 96%, transparent) 0 0 / ${thickness * 2}px ${thickness}px repeat-x`;
+  const dash = Math.max(4, thickness * 3);
+  return `repeating-linear-gradient(90deg, ${item.fill} 0 ${dash}px, transparent ${dash}px ${dash + Math.max(3, thickness * 2)}px)`;
+}
+
+// A picture's outline: its rounded corners, an ellipse, or a polygon cut out of it.
+function pictureShape(item) {
+  if (item.shape === 'ellipse') return 'border-radius: 50%;';
+  if (!CANVAS_POLYGONS.has(item.shape)) return `border-radius: ${item.radius}%;`;
+  const round = (item.radius / 100) * Math.min(item.w, item.h);
+  if (!round) return `clip-path: polygon(${shapePoints(item).map(([x, y]) => `${fmt(x)}% ${fmt(y)}%`).join(', ')});`;
+  const points = pointsIn(item, item.w, item.h);
+  return `clip-path: path('${roundedPath(points, round)}');`;
 }
 
 // No rule for 'card' without a file: the item inherits the card's font, whichever the preset uses.
@@ -345,8 +472,8 @@ const CANVAS_SELF_ALIGN = { left: 'flex-start', center: 'center', right: 'flex-e
 
 // A line's own look, over the preset's text settings. Colour and face reach into the spans a line
 // holds (the game name, the rarity chip), which have colours of their own.
-function canvasStyleCss(part, style, fonts) {
-  const selector = `.ach ${CANVAS_STYLE_SELECTORS[part]}`;
+function canvasStyleCss(part, style, fonts, states = ALL_STATES) {
+  const selector = `${inStates('.ach', states)} ${CANVAS_STYLE_SELECTORS[part]}`;
   const textRules = [];
   const boxRules = [];
   if (style.color) textRules.push(`color: ${CANVAS_TEXT_COLOR[style.color] || style.color} !important;`);
@@ -384,88 +511,177 @@ const partSelector = (part, markPseudo) => {
   return pseudos.length ? pseudos.map((name) => `.ach::${name}`).join(', ') : null;
 };
 
+const ALL_STATES = schema.CANVAS_STATES;
+const statesSelector = (states) => states.map((state) => CANVAS_STATE_SELECTORS[state]).join(', ');
+
+// The states, gathered by what `pick` gives for each; a single group means they all agree.
+function groupStates(pick) {
+  const groups = new Map();
+  for (const state of ALL_STATES) {
+    const value = pick(state);
+    const key = JSON.stringify(value ?? null);
+    if (!groups.has(key)) groups.set(key, { value, states: [] });
+    groups.get(key).states.push(state);
+  }
+  return [...groups.values()];
+}
+
+// Each selector of a list kept to some states; with all of them it stays as it is.
+const inStates = (selector, states) =>
+  states.length === ALL_STATES.length
+    ? selector
+    : selector
+        .split(', ')
+        .map((one) => one.replace(/^\.ach/, `.ach:is(${statesSelector(states)})`))
+        .join(', ');
+
+/*
+  The ways one item is drawn: states that draw it alike share one element, so an item no state
+  changes is one element with the selector it always had. `off` does not split them: a state that
+  switches the item off hides its element.
+*/
+function itemVariants(item, index) {
+  const groups = groupStates((state) => {
+    const look = schema.canvasItemIn(item, state);
+    delete look.off;
+    return look;
+  });
+  return groups.map(({ value, states }, k) => {
+    const split = groups.length > 1;
+    const shown = states.filter((state) => !schema.canvasItemIn(item, state).off);
+    return {
+      item: value,
+      index,
+      states,
+      shown,
+      v: split ? k : null,
+      id: split ? `${index}-${k}` : String(index),
+      select: split ? `[data-i="${index}"][data-v="${k}"]` : `[data-i="${index}"]`,
+    };
+  });
+}
+
+const canvasVariants = (canvas) => canvas.items.flatMap((item, index) => itemVariants(item, index));
+
+function canvasItemCss({ item, select }, { zIndex, fonts, assetUrl }) {
+  const css = [];
+  const rules = [
+    `left: ${item.x}px; top: ${item.y}px; width: ${item.w}px;`,
+    item.kind === 'text' ? '' : `height: ${item.h}px;`,
+    `rotate: ${item.r}deg; opacity: ${item.o}; z-index: ${zIndex};`,
+    item.flipX || item.flipY ? `scale: ${item.flipX ? -1 : 1} ${item.flipY ? -1 : 1};` : '',
+  ];
+  if (item.kind === 'text') {
+    rules.push(
+      `font-size: ${item.size}px; font-weight: ${item.weight}; line-height: 1.25; color: ${CANVAS_TEXT_COLOR[item.color] || item.color};`,
+      `text-align: ${item.align}; white-space: pre-wrap; overflow-wrap: anywhere;`,
+      item.upper ? 'text-transform: uppercase; letter-spacing: 0.06em;' : '',
+      canvasFontRule(item, fonts),
+      shapeFilter(item)
+    );
+  } else if (item.kind === 'image') {
+    const url = cssUrl(assetUrl ? assetUrl(item.file) : item.file);
+    const height = Number((item.fit.w / item.fit.ar).toFixed(1));
+    rules.push(
+      `${pictureShape(item)} background: ${url} no-repeat;`,
+      `background-size: ${item.fit.w}px ${height}px; background-position: ${item.fit.x}px ${item.fit.y}px;`
+    );
+  } else if (item.kind === 'icon') {
+    // The shadow goes on the item and the mask on its child: a mask would cut the shadow off.
+    const mask = `${canvasIconMask(item.icon)} center / contain no-repeat`;
+    rules.push(shapeFilter(item));
+    css.push(`.ach > .${CANVAS_CLASS} > ${select} > span { display: block; width: 100%; height: 100%; background: ${shapePaint(item)}; -webkit-mask: ${mask}; mask: ${mask}; }`);
+  } else if (CANVAS_POLYGONS.has(item.shape)) {
+    rules.push(shapeFilter(item));
+  } else {
+    const paint = item.shape === 'line' && item.dash ? dashedLine(item) : shapePaint(item);
+    rules.push(
+      `background: ${paint}; border-radius: ${item.shape === 'ellipse' ? '50%' : `${item.radius}px`};`,
+      item.stroke ? `border: ${item.stroke}px ${item.dash || 'solid'} ${item.strokeColor};` : '',
+      shapeFilter(item)
+    );
+  }
+  css.unshift(`.ach > .${CANVAS_CLASS} > ${select} { ${rules.filter(Boolean).join(' ')} }`);
+  return css;
+}
+
+/*
+  An element shows in the states that draw it switched on. While editing, one switched off stays
+  faint so it can be picked and switched back on; another state's element is never shown.
+*/
+function variantVisibilityCss({ select, states, shown }, editing) {
+  const css = [];
+  const at = `> .${CANVAS_CLASS} > ${select}`;
+  if (editing && states.length < ALL_STATES.length) css.push(`.ach:not(:is(${statesSelector(states)})) ${at} { display: none !important; }`);
+  if (shown.length < ALL_STATES.length) {
+    const away = shown.length ? `.ach:not(:is(${statesSelector(shown)}))` : '.ach';
+    const look = editing ? 'opacity: 0.25 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none !important;';
+    css.push(`${away} ${at} { ${look} }`);
+  }
+  return css;
+}
+
+// The card's own parts: placed, hidden and restyled for every state at once, or state by state.
+function canvasPartsCss(canvas, { markPseudo, editing, fonts }) {
+  const views = Object.fromEntries(ALL_STATES.map((state) => [state, schema.canvasPartsIn(canvas, state)]));
+  const css = [];
+  for (const part of schema.CANVAS_PARTS) {
+    const selector = partSelector(part, markPseudo);
+    if (!selector) continue;
+    for (const { value: move, states } of groupStates((state) => views[state].move[part])) {
+      if (move) css.push(`${inStates(selector, states)} { translate: ${move.x}px ${move.y}px !important; rotate: ${move.r}deg !important; scale: ${move.s} !important; }`);
+    }
+  }
+  for (const part of schema.CANVAS_PARTS) {
+    const selector = partSelector(part, markPseudo);
+    const states = ALL_STATES.filter((state) => views[state].hidden.includes(part));
+    if (selector && states.length) css.push(`${inStates(selector, states)} { ${editing ? 'opacity: 0.3 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'visibility: hidden !important;'} }`);
+  }
+  // The text column clips (and fades) its lines so a long one can scroll; a line moved out of it
+  // would be cut off, so the column stops clipping once one of its lines has moved.
+  if (ALL_STATES.some((state) => CANVAS_TEXT_PARTS.some((part) => views[state].move[part]))) {
+    css.push('.ach .text_wrap { overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important; }');
+  }
+  return {
+    css,
+    styles: schema.CANVAS_STYLED_PARTS.flatMap((part) =>
+      groupStates((state) => views[state].style[part]).flatMap(({ value, states }) => (value ? canvasStyleCss(part, value, fonts, states) : []))
+    ),
+  };
+}
+
 /*
   `markPseudo` names the pseudo-element that draws the base's brand mark, for a layer. `editing`
   keeps a removed part faintly on screen, so the layout editor can still pick it and put it back.
 */
 function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances = !editing } = {}) {
   const canvas = schema.normalizeCanvas(rawCanvas);
-  const css = [];
-  for (const [part, move] of Object.entries(canvas.move)) {
-    const selector = partSelector(part, markPseudo);
-    if (selector) css.push(`${selector} { translate: ${move.x}px ${move.y}px !important; rotate: ${move.r}deg !important; scale: ${move.s} !important; }`);
-  }
-  for (const part of canvas.hidden || []) {
-    const selector = partSelector(part, markPseudo);
-    if (selector) css.push(`${selector} { ${editing ? 'opacity: 0.3 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'visibility: hidden !important;'} }`);
-  }
-  // The text column clips (and fades) its lines so a long one can scroll; a line moved out of it
-  // would be cut off, so the column stops clipping once one of its lines has moved.
-  if (CANVAS_TEXT_PARTS.some((part) => canvas.move[part])) {
-    css.push('.ach .text_wrap { overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important; }');
-  }
   const fonts = schema.canvasFonts(canvas);
+  const parts = canvasPartsCss(canvas, { markPseudo, editing, fonts });
+  const css = [...parts.css];
   fonts.forEach((file, index) => {
     const url = cssUrl(assetUrl ? assetUrl(file) : file);
     css.push(`@font-face { font-family: '${CANVAS_FONT_FAMILY} ${index}'; src: ${url} format('${schema.fontFormat(file)}'); font-display: block; }`);
   });
-  for (const [part, style] of Object.entries(canvas.style || {})) css.push(...canvasStyleCss(part, style, fonts));
+  css.push(...parts.styles);
   const order = canvasOrderCss(canvas);
   css.push(...order.css);
   if (!canvas.items.length) return css.join('\n');
   css.push(`.ach > .${CANVAS_CLASS} { position: absolute !important; inset: 0; z-index: auto !important; pointer-events: none; }`);
   css.push(`.ach > .${CANVAS_CLASS} > div { position: absolute; box-sizing: border-box; margin: 0; }`);
   css.push(`.ach > .${CANVAS_CLASS} svg { display: block; width: 100%; height: 100%; overflow: visible; }`);
-  canvas.items.forEach((item, index) => {
-    const rules = [
-      `left: ${item.x}px; top: ${item.y}px; width: ${item.w}px;`,
-      item.kind === 'text' ? '' : `height: ${item.h}px;`,
-      `rotate: ${item.r}deg; opacity: ${item.o}; z-index: ${order.zOf(index) ?? (item.back ? -1 : 2)};`,
-    ];
-    if (item.kind === 'text') {
-      rules.push(
-        `font-size: ${item.size}px; font-weight: ${item.weight}; line-height: 1.25; color: ${CANVAS_TEXT_COLOR[item.color] || item.color};`,
-        `text-align: ${item.align}; white-space: pre-wrap; overflow-wrap: anywhere;`,
-        item.upper ? 'text-transform: uppercase; letter-spacing: 0.06em;' : '',
-        canvasFontRule(item, fonts)
-      );
-    } else if (item.kind === 'image') {
-      const url = cssUrl(assetUrl ? assetUrl(item.file) : item.file);
-      const height = Number((item.fit.w / item.fit.ar).toFixed(1));
-      rules.push(
-        `border-radius: ${item.radius}%; background: ${url} no-repeat;`,
-        `background-size: ${item.fit.w}px ${height}px; background-position: ${item.fit.x}px ${item.fit.y}px;`
-      );
-    } else if (item.kind === 'icon') {
-      // The shadow goes on the item and the mask on its child: a mask would cut the shadow off.
-      const mask = `${canvasIconMask(item.icon)} center / contain no-repeat`;
-      rules.push(shapeFilter(item));
-      css.push(
-        `.ach > .${CANVAS_CLASS} > [data-i="${index}"] > span { display: block; width: 100%; height: 100%; background: ${shapePaint(item)}; -webkit-mask: ${mask}; mask: ${mask}; }`
-      );
-    } else if (CANVAS_POLYGONS[item.shape]) {
-      rules.push(shapeFilter(item));
-    } else {
-      rules.push(
-        `background: ${shapePaint(item)}; border-radius: ${item.shape === 'ellipse' ? '50%' : `${item.radius}px`};`,
-        item.stroke ? `border: ${item.stroke}px solid ${item.strokeColor};` : '',
-        shapeFilter(item)
-      );
-    }
-    css.push(`.ach > .${CANVAS_CLASS} > [data-i="${index}"] { ${rules.filter(Boolean).join(' ')} }`);
-    // A switched-off item, or one kept to some states: gone elsewhere, faint while it is edited.
-    const shownIn = item.off ? [] : item.states;
-    if (shownIn) {
-      const away = shownIn.length ? `.ach:not(:is(${shownIn.map((state) => CANVAS_STATE_SELECTORS[state]).join(', ')}))` : '.ach';
-      const look = editing ? 'opacity: 0.25 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none !important;';
-      css.push(`${away} > .${CANVAS_CLASS} > [data-i="${index}"] { ${look} }`);
-    }
+  const variants = canvas.items.flatMap((item, index) => {
+    const zIndex = order.zOf(index) ?? (item.back ? -1 : 2);
+    return itemVariants(item, index).map((variant) => {
+      css.push(...canvasItemCss(variant, { zIndex, fonts, assetUrl }), ...variantVisibilityCss(variant, editing));
+      return variant;
+    });
   });
   for (const [tier, word] of Object.entries(canvas.words || {})) {
     css.push(`.ach${CANVAS_TIER_STATES[tier]} > .${CANVAS_CLASS} [data-tok="tier"]::after { content: ${cssString(word)}; }`);
   }
   // Not while editing, unless asked: an item would vanish and come back at every change.
-  if (entrances) css.push(...canvasEntranceCss(canvas.items));
+  if (entrances) css.push(...canvasMotionCss(variants));
   return css.join('\n');
 }
 
@@ -482,12 +698,17 @@ const textMarkup = (text) =>
 function canvasMarkup(rawCanvas) {
   const canvas = schema.normalizeCanvas(rawCanvas);
   if (!canvas.items.length) return '';
-  const inner = (item, index) => {
+  const inner = (item, id) => {
     if (item.kind === 'text') return textMarkup(item.text);
     if (item.kind === 'icon') return '<span></span>';
-    return item.kind === 'shape' && CANVAS_POLYGONS[item.shape] ? polygonSvg(item, index) : '';
+    return item.kind === 'shape' && CANVAS_POLYGONS.has(item.shape) ? polygonSvg(item, id) : '';
   };
-  const items = canvas.items.map((item, index) => `<div data-i="${index}" data-kind="${item.kind}">${inner(item, index)}</div>`);
+  // When the engine starts an animated picture over. The file name changes the markup when the
+  // picture does, so the preview rebuilds the element instead of keeping the old picture's restart.
+  const replay = (item) => (item.replay ? ` data-replay="${item.enter ? item.delay || 0 : 0}" data-file="${escapeHtml(item.file)}"` : '');
+  const items = canvasVariants(canvas).map(
+    ({ item, index, id, v }) => `<div data-i="${index}"${v === null ? '' : ` data-v="${v}"`} data-kind="${item.kind}"${replay(item)}>${inner(item, id)}</div>`
+  );
   return `<div class="${CANVAS_CLASS}" aria-hidden="true">${items.join('')}</div>`;
 }
 
@@ -592,15 +813,17 @@ function canvasItemBounds(item) {
 const touchesCard = (box, card) =>
   box.left <= card.width + CANVAS_TOUCH_PX && box.right >= -CANVAS_TOUCH_PX && box.top <= card.height + CANVAS_TOUCH_PX && box.bottom >= -CANVAS_TOUCH_PX;
 
-// Room each side of the card needs, and the items the popup leaves out.
+// Room each side of the card needs for every state's items, and the elements the popup leaves out.
 function canvasRoom(values, { editing = false } = {}) {
   const canvas = schema.normalizeCanvas(values.canvas);
   const card = cardSize(values);
   const room = { left: 0, top: 0, right: 0, bottom: 0, detached: [] };
-  canvas.items.forEach((item, index) => {
+  canvasVariants(canvas).forEach(({ item, select, shown }) => {
+    // Switched off in every state it stands for, it is never drawn: only the designer shows it.
+    if (!editing && !shown.length) return;
     const box = canvasItemBounds(item);
     if (!touchesCard(box, card)) {
-      room.detached.push(index);
+      room.detached.push(select);
       if (!editing) return;
     }
     room.left = Math.max(room.left, -box.left);
@@ -625,8 +848,8 @@ function canvasPlacementRules(values, editing) {
   const dx = (room.left - room.right) / 2;
   const dy = (room.top - room.bottom) / 2;
   if (dx || dy) rules.push(`.ach { left: calc(50% + ${dx}px); top: calc(50% + ${dy}px); }`);
-  for (const index of room.detached) {
-    rules.push(`.ach > .${CANVAS_CLASS} > [data-i="${index}"] { ${editing ? 'opacity: 0.35; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none;'} }`);
+  for (const select of room.detached) {
+    rules.push(`.ach > .${CANVAS_CLASS} > ${select} { ${editing ? 'opacity: 0.35; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none;'} }`);
   }
   return rules.join('\n');
 }

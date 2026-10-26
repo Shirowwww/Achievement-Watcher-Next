@@ -324,7 +324,8 @@ const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'];
 
 // A font family rarely needs more than a few hundred KB; a CJK face is the realistic worst case.
 const MAX_FONT_BYTES = 4 * 1024 * 1024;
-const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+// A picture can be an animated GIF or WebP, which runs larger than a still logo.
+const MAX_LOGO_BYTES = 5 * 1024 * 1024;
 
 // A bare filename: never a path, never anything a url('...') token or a Windows folder would mangle.
 const SAFE_NAME = '[^\\\\/:*?"<>|\\x00-\\x1f\']+';
@@ -419,9 +420,28 @@ const CANVAS_SHAPES = ['rect', 'ellipse', 'line', 'triangle', 'diamond', 'star',
   card; a tier name paints with that tier's colour whatever the state.
 */
 const CANVAS_TIER_FILLS = ['bronze', 'silver', 'gold', 'platinum'];
-const CANVAS_FILLS = ['solid', 'gradient', 'accent', 'none', ...CANVAS_TIER_FILLS];
-// The states a popup can be in, which an item can be limited to.
+const CANVAS_FILLS = ['solid', 'gradient', 'radial', 'accent', 'none', ...CANVAS_TIER_FILLS];
+// The polygons, whose corners `round` softens; a picture can be cut to any shape but a line.
+const CANVAS_POLYGON_SHAPES = ['triangle', 'diamond', 'star', 'arrow'];
+const CANVAS_MASK_SHAPES = CANVAS_SHAPES.filter((shape) => shape !== 'line');
+/*
+  A shape's own settings, in percent of its box: the star's branches and how deep they cut, the
+  arrow's head and shaft, the triangle's top. Each is stored only when it differs from the default.
+*/
+const CANVAS_SHAPE_SETTINGS = {
+  star: { points: [3, 12, 5], depth: [10, 90, 42] },
+  arrow: { head: [10, 90, 42], shaft: [10, 100, 40] },
+  triangle: { apex: [0, 100, 50] },
+};
+const CANVAS_DASHES = ['solid', 'dashed', 'dotted'];
+const CANVAS_LOOPS = ['none', 'pulse', 'float', 'swing', 'spin', 'shine'];
+// Only these can move: a still PNG has nothing to start over.
+const ANIMATED_IMAGE_RE = /\.(?:gif|webp)$/i;
+// The states a popup can be in. Each can draw an item or a part of the card its own way.
 const CANVAS_STATES = ['normal', 'bronze', 'silver', 'gold', 'platinum', 'progress'];
+// What every state shares: what an item is, its lock and its place in the stack.
+const CANVAS_SHARED_KEYS = ['kind', 'lock', 'back'];
+const CANVAS_TIER_FIXED = [...CANVAS_SHARED_KEYS, 'tiers', 'states'];
 /*
   The icons an item can draw: one filled path each in a 24px box, even-odd, used as a mask so the
   item's paint fills it. Drawn for AW Next, so a shared preset carries no third-party artwork.
@@ -504,6 +524,12 @@ function normalizeCanvasItem(source) {
     // An imported font for this text alone; the family above stays as its fallback.
     const fontFile = typeof source.fontFile === 'string' ? source.fontFile.trim() : '';
     item.fontFile = FONT_NAME_RE.test(fontFile) ? fontFile : '';
+    // Older texts have no shadow, so one is stored only once it is set.
+    const shadow = canvasNumber(source.shadow, 0, 40, 0, 0);
+    if (shadow) {
+      item.shadow = shadow;
+      normalizeCanvasShadow(item, source);
+    }
   } else if (item.kind === 'image') {
     const file = typeof source.file === 'string' ? source.file.trim() : '';
     if (!IMAGE_NAME_RE.test(file)) return null;
@@ -516,6 +542,12 @@ function normalizeCanvasItem(source) {
       w: canvasNumber(fit.w, 1, 4800, item.w),
       ar: canvasNumber(fit.ar, 0.05, 20, 1, 4),
     };
+    // Cut to a shape; a plain rectangle (with its rounded corners) is the default.
+    if (CANVAS_MASK_SHAPES.includes(source.shape) && source.shape !== 'rect') {
+      item.shape = source.shape;
+      normalizeShapeSettings(item, source, source.shape);
+    }
+    if (source.replay === true && ANIMATED_IMAGE_RE.test(file)) item.replay = true;
   } else if (item.kind === 'icon') {
     item.icon = Object.hasOwn(CANVAS_ICONS, source.icon) ? source.icon : 'trophy';
     normalizeCanvasPaint(item, source, 'accent');
@@ -526,10 +558,17 @@ function normalizeCanvasItem(source) {
     normalizeCanvasPaint(item, source, 'solid');
     item.stroke = canvasNumber(source.stroke, 0, 20, 0);
     item.strokeColor = canvasColor(source.strokeColor, '#ffffff');
+    if (CANVAS_DASHES.includes(source.dash) && source.dash !== 'solid') item.dash = source.dash;
+    // A polygon's own corner rounding: `radius` may hold what a rectangle had before it was turned.
+    const round = canvasNumber(source.round, 0, 100, 0, 0);
+    if (round && CANVAS_POLYGON_SHAPES.includes(item.shape)) item.round = round;
+    normalizeShapeSettings(item, source, item.shape);
+  }
+  if (item.kind !== 'text') {
+    if (source.flipX === true) item.flipX = true;
+    if (source.flipY === true) item.flipY = true;
   }
   // Each of these is stored only when set, so an item nobody limited has one spelling.
-  const states = Array.isArray(source.states) ? CANVAS_STATES.filter((state) => source.states.includes(state)) : [];
-  if (states.length && states.length < CANVAS_STATES.length) item.states = states;
   if (source.off === true) item.off = true;
   if (source.lock === true) item.lock = true;
   if (CANVAS_ENTRANCES.includes(source.enter) && source.enter !== 'none') {
@@ -537,15 +576,87 @@ function normalizeCanvasItem(source) {
     const delay = Math.round(canvasNumber(source.delay, 0, CANVAS_MAX_DELAY_MS, 0, 0) / 10) * 10;
     if (delay) item.delay = delay;
   }
+  if (CANVAS_LOOPS.includes(source.loop) && source.loop !== 'none') item.loop = source.loop;
+  const tiers = normalizeItemTiers(item, source);
+  if (tiers) item.tiers = tiers;
   return item;
+}
+
+// `base` with `own` over it; a null in `own` takes the value away, back to its default.
+function overlay(base, own, skip = []) {
+  const out = { ...base };
+  for (const [key, value] of Object.entries(own || {})) {
+    if (skip.includes(key)) continue;
+    if (value === null) delete out[key];
+    else out[key] = value;
+  }
+  return out;
+}
+
+const sameValue = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+// What `drawn` changes on `base`, a value it no longer has written null.
+function tierDiff(base, drawn) {
+  const diff = {};
+  for (const key of new Set([...Object.keys(base), ...Object.keys(drawn)])) {
+    if (CANVAS_TIER_FIXED.includes(key) || sameValue(base[key], drawn[key])) continue;
+    diff[key] = drawn[key] === undefined ? null : drawn[key];
+  }
+  return diff;
+}
+
+/*
+  What each state changes on the item, kept only where it differs from the item itself, so a state
+  nobody touched has no entry. An older layout kept an item to some states: it is off in the others.
+*/
+function normalizeItemTiers(item, source) {
+  const raw = source.tiers && typeof source.tiers === 'object' && !Array.isArray(source.tiers) ? source.tiers : {};
+  const legacy = Array.isArray(source.states) ? CANVAS_STATES.filter((state) => source.states.includes(state)) : [];
+  const limited = legacy.length && legacy.length < CANVAS_STATES.length;
+  const tiers = {};
+  for (const state of CANVAS_STATES) {
+    const own = raw[state] && typeof raw[state] === 'object' && !Array.isArray(raw[state]) ? { ...raw[state] } : {};
+    if (limited && !legacy.includes(state) && !Object.hasOwn(own, 'off')) own.off = true;
+    if (!Object.keys(own).length) continue;
+    const drawn = normalizeCanvasItem(overlay(item, own, CANVAS_TIER_FIXED));
+    const diff = drawn ? tierDiff(item, drawn) : {};
+    if (Object.keys(diff).length) tiers[state] = diff;
+  }
+  return Object.keys(tiers).length ? tiers : null;
+}
+
+// The item as one state draws it, with no tiers left on it.
+function canvasItemIn(item, state) {
+  const own = item.tiers && item.tiers[state];
+  const plain = { ...item };
+  delete plain.tiers;
+  return (own && normalizeCanvasItem(overlay(plain, own, CANVAS_TIER_FIXED))) || plain;
+}
+
+function normalizeShapeSettings(item, source, shape) {
+  for (const [key, [min, max, def]] of Object.entries(CANVAS_SHAPE_SETTINGS[shape] || {})) {
+    const value = canvasNumber(source[key], min, max, def, 0);
+    if (value !== def) item[key] = value;
+  }
+}
+
+// A plain black drop shadow is the default, so only another colour or a glow is stored.
+function normalizeCanvasShadow(item, source) {
+  if (source.shadowStyle === 'glow') item.shadowStyle = 'glow';
+  const color = source.shadowColor === 'accent' ? 'accent' : canvasColor(source.shadowColor, '#000000');
+  if (color !== '#000000') item.shadowColor = color;
 }
 
 /*
   What {tier} reads in each tier, in the words of whoever made the layout (the engine has no locale).
   Kept only while a text says {tier}.
 */
+// An item's own values and each state's, for what a layout needs whichever state shows.
+const tierEntries = (item) => [item, ...Object.values(item.tiers || {})];
+const saysTier = (item) => item.kind === 'text' && tierEntries(item).some((entry) => typeof entry.text === 'string' && entry.text.includes('{tier}'));
+
 function normalizeCanvasWords(raw, items) {
-  if (!raw || typeof raw !== 'object' || !items.some((item) => item.kind === 'text' && item.text.includes('{tier}'))) return null;
+  if (!raw || typeof raw !== 'object' || !items.some(saysTier)) return null;
   const words = {};
   for (const tier of CANVAS_TIER_FILLS) {
     const word = typeof raw[tier] === 'string' ? raw[tier].replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, CANVAS_MAX_WORD) : '';
@@ -561,6 +672,8 @@ function normalizeCanvasPaint(item, source, fallbackMode) {
   item.fill2 = canvasColor(source.fill2, '#4aa3ff');
   item.angle = canvasNumber(source.angle, 0, 360, 135, 0);
   item.shadow = canvasNumber(source.shadow, 0, 40, 0, 0);
+  // Its look is kept only while there is a shadow to draw, as for a text.
+  if (item.shadow) normalizeCanvasShadow(item, source);
   item.blur = canvasNumber(source.blur, 0, 20, 0);
 }
 
@@ -588,6 +701,77 @@ function normalizeCanvasStyle(raw) {
     if (CANVAS_ALIGNS.includes(source.align)) style.align = source.align;
     if (Object.keys(style).length) out[part] = style;
   }
+  return out;
+}
+
+const FRESH_MOVE = { x: 0, y: 0, r: 0, s: 1 };
+const MOVE_KEYS = Object.keys(FRESH_MOVE);
+
+// The card's own parts as one state places, styles and shows them: the card's values, then the state's.
+function canvasPartsIn(canvas, state) {
+  const own = (canvas.tiers && canvas.tiers[state]) || {};
+  const move = {};
+  for (const part of CANVAS_PARTS) {
+    const drawn = { ...(canvas.move[part] || FRESH_MOVE), ...(own.move && own.move[part]) };
+    if (MOVE_KEYS.some((key) => drawn[key] !== FRESH_MOVE[key])) move[part] = drawn;
+  }
+  const style = {};
+  for (const part of CANVAS_STYLED_PARTS) {
+    const drawn = overlay(canvas.style && canvas.style[part], own.style && own.style[part]);
+    if (Object.keys(drawn).length) style[part] = drawn;
+  }
+  const shown = own.hidden || {};
+  const hidden = CANVAS_PARTS.filter((part) => (Object.hasOwn(shown, part) ? shown[part] : (canvas.hidden || []).includes(part)));
+  return { move, style, hidden };
+}
+
+// What each state changes on the card's parts, kept only where it differs from the card itself.
+function normalizeCanvasTiers(raw, out) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const base = canvasPartsIn(out, null);
+  const tiers = {};
+  for (const state of CANVAS_STATES) {
+    const source = raw[state];
+    if (!source || typeof source !== 'object') continue;
+    const entry = {};
+    const moves = {};
+    for (const part of CANVAS_PARTS) {
+      const asked = source.move && source.move[part];
+      if (!asked || typeof asked !== 'object') continue;
+      const was = base.move[part] || FRESH_MOVE;
+      const drawn = normalizeCanvasMove({ [part]: { ...was, ...asked } })[part] || FRESH_MOVE;
+      const diff = Object.fromEntries(MOVE_KEYS.filter((key) => drawn[key] !== was[key]).map((key) => [key, drawn[key]]));
+      if (Object.keys(diff).length) moves[part] = diff;
+    }
+    if (Object.keys(moves).length) entry.move = moves;
+    const styles = {};
+    for (const part of CANVAS_STYLED_PARTS) {
+      const asked = source.style && source.style[part];
+      if (!asked || typeof asked !== 'object') continue;
+      const was = base.style[part] || {};
+      const diff = tierDiff(was, normalizeCanvasStyle({ [part]: overlay(was, asked) })[part] || {});
+      if (Object.keys(diff).length) styles[part] = diff;
+    }
+    if (Object.keys(styles).length) entry.style = styles;
+    const hidden = {};
+    for (const part of CANVAS_PARTS) {
+      const asked = source.hidden && source.hidden[part];
+      if (typeof asked === 'boolean' && asked !== base.hidden.includes(part)) hidden[part] = asked;
+    }
+    if (Object.keys(hidden).length) entry.hidden = hidden;
+    if (Object.keys(entry).length) tiers[state] = entry;
+  }
+  return Object.keys(tiers).length ? tiers : null;
+}
+
+// The layout as one state draws it, shaped like what normalizeCanvas returns but with no tiers left.
+function canvasIn(canvas, state) {
+  const { move, style, hidden } = canvasPartsIn(canvas, state);
+  const out = { move, items: canvas.items.map((item) => canvasItemIn(item, state)) };
+  if (hidden.length) out.hidden = hidden;
+  if (Object.keys(style).length) out.style = style;
+  if (canvas.words) out.words = canvas.words;
+  if (canvas.order) out.order = canvas.order;
   return out;
 }
 
@@ -642,6 +826,8 @@ function normalizeCanvas(raw) {
   if (hidden.length) out.hidden = hidden;
   const style = normalizeCanvasStyle(source.style);
   if (Object.keys(style).length) out.style = style;
+  const tiers = normalizeCanvasTiers(source.tiers, out);
+  if (tiers) out.tiers = tiers;
   const words = normalizeCanvasWords(source.words, items);
   if (words) out.words = words;
   if (Array.isArray(source.order)) {
@@ -658,13 +844,21 @@ function normalizeCanvas(raw) {
 }
 
 // The picture files a free layout names, once each.
-const canvasFiles = (canvas) => [...new Set(normalizeCanvas(canvas).items.filter((item) => item.kind === 'image').map((item) => item.file))];
+const canvasFiles = (canvas) => [
+  ...new Set(
+    normalizeCanvas(canvas)
+      .items.filter((item) => item.kind === 'image')
+      .flatMap(tierEntries)
+      .map((entry) => entry.file)
+      .filter(Boolean)
+  ),
+];
 
 // The font files the texts of a free layout name, its added texts and its restyled lines, once each.
 const canvasFonts = (canvas) => {
   const normalized = normalizeCanvas(canvas);
-  const styles = Object.values(normalized.style || {});
-  return [...new Set([...normalized.items, ...styles].map((entry) => entry.fontFile).filter(Boolean))];
+  const styles = [normalized.style, ...Object.values(normalized.tiers || {}).map((own) => own.style)].flatMap((style) => Object.values(style || {}));
+  return [...new Set([...normalized.items.flatMap(tierEntries), ...styles].map((entry) => entry.fontFile).filter(Boolean))];
 };
 
 function normalizeValue(raw, property) {
@@ -745,8 +939,15 @@ module.exports = {
   cssValue,
   CANVAS_PARTS,
   CANVAS_SHAPES,
+  CANVAS_POLYGON_SHAPES,
+  CANVAS_MASK_SHAPES,
+  CANVAS_SHAPE_SETTINGS,
+  CANVAS_DASHES,
+  CANVAS_LOOPS,
+  ANIMATED_IMAGE_RE,
   CANVAS_TIER_FILLS,
   CANVAS_STATES,
+  CANVAS_SHARED_KEYS,
   CANVAS_ICONS,
   CANVAS_TOKENS,
   CANVAS_ENTRANCES,
@@ -756,6 +957,10 @@ module.exports = {
   CANVAS_LAYER_PARTS,
   canvasOrder,
   normalizeCanvas,
+  normalizeCanvasItem,
+  canvasItemIn,
+  canvasPartsIn,
+  canvasIn,
   canvasFiles,
   canvasFonts,
 };
