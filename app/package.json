@@ -50,7 +50,7 @@
     "minimist": "^1.2.5",
     "moment": "^2.31.0",
     "node-7z": "^3.0.0",
-    "node-html-parser": "^9.0.4",
+    "node-html-parser": "^9.0.5",
     "node-unrar-js": "^2.0.2",
     "puppeteer-core": "^25.14.0",
     "puppeteer-extra": "^3.3.4",
