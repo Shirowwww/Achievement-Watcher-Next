@@ -12,7 +12,21 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { _sanitize: sanitize, _uniquePath: uniquePath } = require('../notification/souvenir.js');
+const { _sanitize: sanitize, _uniquePath: uniquePath, souvenirPath } = require('../notification/souvenir.js');
+
+// Achievement first, so a folder sorted by name groups the shots of one achievement; the date stays
+// in the name for sorting by unlock time (a user request, forum post of 2026-10-26).
+test('a souvenir is named after its achievement, then its date', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-name-'));
+  try {
+    const file = souvenirPath({ game: 'Disgaea Mayhem', achievement: 'Ultimate Life Form', dir });
+    assert.equal(path.dirname(file), path.join(dir, 'Disgaea Mayhem'));
+    assert.match(path.basename(file), /^Ultimate Life Form - \d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.png$/);
+    assert.match(path.basename(souvenirPath({ game: 'G', achievement: 'A', dir }, '.mp4')), /^A - .+\.mp4$/);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 test('names Windows would refuse are made safe instead of lost', () => {
   // Reserved device names are rejected whatever the extension.
@@ -47,7 +61,7 @@ test('names Windows would refuse are made safe instead of lost', () => {
 test('a second unlock in the same second does not replace the first', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-'));
   try {
-    const base = '2026-08-15 22-04-11 - Arsenal';
+    const base = 'Arsenal - 2026-08-15 22-04-11';
 
     const first = uniquePath(dir, base);
     assert.equal(path.basename(first), base + '.png');

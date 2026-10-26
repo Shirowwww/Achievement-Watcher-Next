@@ -249,7 +249,7 @@ Append them to the address, `?first=x&then=y`:
 
 **Screenshot on unlock** saves a picture of the screen a moment after an achievement pops, once the
 popup has finished appearing, so the notification is in the shot. Files land in
-`<folder>\<game>\<date> - <achievement>.png`. **Open folder** in the same row opens it, creating it
+`<folder>\<game>\<achievement> - <date>.png`. **Open folder** in the same row opens it, creating it
 first if needed. The folder defaults to `Pictures\Achievement Watcher Next` and can be changed.
 
 Achievements unlocking in the same second each keep their own file, and a game whose title Windows
@@ -271,7 +271,7 @@ notification are not lost.
 **Video clip on unlock** works like a console's trophy video. While a game AW Next tracks is running,
 the last seconds of play are kept in memory, already compressed by the graphics card's video encoder.
 When an achievement pops, the stretch around it is saved as an MP4 in
-`<folder>\<game>\<date> - <achievement>.mp4`, with the popup in the middle of it. The folder is
+`<folder>\<game>\<achievement> - <date>.mp4`, with the popup in the middle of it. The folder is
 `Videos\Achievement Watcher Next` unless you pick another. Achievements unlocking close together
 share one clip.
 

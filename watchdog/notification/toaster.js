@@ -321,7 +321,7 @@ module.exports = async (message, option = {}) => {
 
       // Non-blocking. A popup is photographed once its text is on screen; a toast, alone or shown
       // because no popup will appear, gets the fixed head start it always had. Saved under
-      // <dir>/<game>/<date> - <achievement>.png.
+      // <dir>/<game>/<achievement> - <date>.png.
       if (wantsShot) {
         const toastHeadStart = (reason) => new Promise((resolve) => setTimeout(() => resolve(reason), SOUVENIR_TOAST_DELAY_MS));
         const ready = paintReady ? paintReady.then((reason) => (reason === 'no-popup' ? toastHeadStart(reason) : reason)) : toastHeadStart('');

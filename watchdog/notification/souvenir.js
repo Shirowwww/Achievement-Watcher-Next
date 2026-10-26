@@ -2,7 +2,7 @@
 
 // Souvenir screenshot (simple): capture the desktop a moment after an achievement unlocks (so an
 // on-screen toast or overlay popup is included), and save it under a per-game subfolder named after the
-// achievement and time:  <dir>/<game>/<date> - <achievement>.png. Best-effort - any failure (no display,
+// achievement and time:  <dir>/<game>/<achievement> - <date>.png. Best-effort - any failure (no display,
 // fullscreen-exclusive game, missing native helper) is swallowed so notifications never break.
 
 const path = require('path');
@@ -153,16 +153,17 @@ async function captureImage(file, hdrMode, { platform = process.platform, captur
   return hdrMode === 'auto' ? 'auto' : 'sdr';
 }
 
-// <dir>/<game>/<date> - <achievement><ext>, its folder created. Clips use the same layout.
+// <dir>/<game>/<achievement> - <date><ext>, its folder created. Clips use the same layout.
+// Achievement first so sorting by name groups an achievement's shots; the date still sorts by time.
 function souvenirPath({ game, achievement, dir } = {}, ext = '.png') {
   const baseDir = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
   const gameDir = path.join(baseDir, sanitize(game));
   fs.mkdirSync(gameDir, { recursive: true });
   const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', ' ').slice(0, 19); // e.g. 2026-06-23 23-10-05
-  return uniquePath(gameDir, ts + ' - ' + sanitize(achievement), ext);
+  return uniquePath(gameDir, sanitize(achievement) + ' - ' + ts, ext);
 }
 
-// Capture the full desktop and write it to <dir>/<game>/<date> - <achievement>.png. Returns the path or null.
+// Capture the full desktop and write it to <dir>/<game>/<achievement> - <date>.png. Returns the path or null.
 module.exports.capture = async function ({ game, achievement, dir, hdr = 'auto' } = {}) {
   try {
     const file = souvenirPath({ game, achievement, dir });

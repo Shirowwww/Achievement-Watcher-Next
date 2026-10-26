@@ -16,7 +16,18 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Improved
+
+- **Screenshots and clips are named after the achievement first**, then the date
+  (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
+  achievement's shots. Files saved earlier keep their name.
+- **An achievement's name and description can be selected and copied** from its list, to search
+  for how to unlock it. A hidden description stays masked.
+
 ### Fixed
+
+- **Two achievements unlocked together are both announced.** The second one waited for the first
+  popup to show, then counted as too old and was skipped, with no popup and no screenshot.
 
 - **God of War III is found again after SpartanPort's rename.** The port formerly called gow3_pc now
   keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next

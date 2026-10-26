@@ -113,7 +113,7 @@ test('on Linux an unlock saves the replay half a clip later, renamed into the cl
   const d = linuxDeps(spawner);
   clip.sync(enabled, game, d);
   const file = clip.trigger({ game: 'Some Game', achievement: 'First Blood', dir });
-  assert.match(path.basename(file), / - First Blood\.mp4$/);
+  assert.match(path.basename(file), /^First Blood - .+\.mp4$/);
   assert.equal(clip.trigger({ game: 'Some Game', achievement: 'Second', dir }), file, 'a close unlock joins the same clip');
   assert.deepEqual(d.signals, []);
   t.mock.timers.tick(10000);
@@ -141,7 +141,7 @@ test('the software recorder runs in the app, which the Watchdog only drives', (t
   assert.equal(sent[0].clipRecorder.settings.clipSeconds, 20);
 
   const file = clip.trigger({ game: 'Some Game', achievement: 'First Blood', dir });
-  assert.match(path.basename(file), / - First Blood\.webm$/);
+  assert.match(path.basename(file), /^First Blood - .+\.webm$/);
   assert.deepEqual(sent[1], { clipRecorder: { action: 'trigger', file } });
 
   clip.sync({ ...enabled, clipEngine: 'software' }, null, {});
@@ -187,7 +187,7 @@ test('an unlock asks for an MP4 in the clip folder', (t) => {
   clip.sync(enabled, game, deps(spawner));
   const file = clip.trigger({ game: 'Some Game', achievement: 'First Blood', dir });
   assert.equal(path.dirname(file), path.join(dir, 'Some Game'));
-  assert.match(path.basename(file), / - First Blood\.mp4$/);
+  assert.match(path.basename(file), /^First Blood - .+\.mp4$/);
   assert.equal(spawner.children[0].input, `clip 0 ${file}\n`);
 });
 

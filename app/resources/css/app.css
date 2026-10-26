@@ -3191,6 +3191,14 @@ body.is-resizing #game-list {
   overflow-x: clip;
 }
 
+/* The page is unselectable by default; an achievement's name and description are copied to search
+   for how to unlock it. A masked description stays unselectable (its rule below wins). */
+.achievement .content .title,
+.achievement .content .description {
+  user-select: text;
+  cursor: text;
+}
+
 .achievement .content .description {
   font-family: var(--font-body);
   font-size: var(--fs-base);
