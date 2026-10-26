@@ -29,6 +29,21 @@ test('Timer reports the elapsed session in whole seconds', () => {
   assert.equal(short.played, 0, 'a sub-second session is 0s, not a negative or a NaN');
 });
 
+// A session is saved while it runs, so a power cut loses a minute rather than the whole session;
+// each checkpoint hands over only what was not written yet, and the final one only the remainder.
+test('checkpoints hand over each played second exactly once', () => {
+  const timer = new Timer();
+  timer.startedAt -= 60_000_000_000n;
+  assert.equal(timer.checkpoint(), 60, 'the first checkpoint saves the minute played so far');
+  assert.equal(timer.checkpoint(), 0, 'nothing new was played since');
+
+  timer.startedAt -= 45_000_000_000n;
+  timer.stop();
+  assert.equal(timer.played, 105, 'the whole session is still reported at the end');
+  assert.equal(timer.checkpoint(), 45, 'the last write is only what the checkpoints missed');
+  assert.equal(timer.checkpoint(), 0, 'a stopped session never counts twice');
+});
+
 // The registry counter is an unsigned DWORD, so a negative duration wraps it to a nonsense total.
 // A session is therefore measured on the monotonic clock, which an NTP correction cannot move.
 test('a clock change during a session cannot produce a negative duration', () => {

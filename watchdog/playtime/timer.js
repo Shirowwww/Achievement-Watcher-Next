@@ -8,11 +8,27 @@ class Timer {
     this.start = new Date();
     this.startedAt = process.hrtime.bigint();
     this.played = 0;
+    this.saved = 0;
+    this.stopped = false;
+  }
+
+  elapsed() {
+    if (this.stopped) return this.played;
+    const elapsedSeconds = Number(process.hrtime.bigint() - this.startedAt) / 1e9;
+    return Math.max(0, Math.floor(elapsedSeconds));
   }
 
   stop() {
-    const elapsedSeconds = Number(process.hrtime.bigint() - this.startedAt) / 1e9;
-    this.played = Math.max(0, Math.floor(elapsedSeconds));
+    this.played = this.elapsed();
+    this.stopped = true;
+  }
+
+  // The seconds not written yet, marked as written: the counter is saved while the game runs, so a
+  // power cut loses one interval instead of the whole session.
+  checkpoint() {
+    const seconds = Math.max(0, this.elapsed() - this.saved);
+    this.saved += seconds;
+    return seconds;
   }
 }
 

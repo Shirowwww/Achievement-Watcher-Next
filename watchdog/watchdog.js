@@ -32,14 +32,25 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
       try {
         overlayControllerService?.shutdown('signal');
       } catch {}
-      process.exit();
+      exitAfterSavingPlaytime();
     });
   } catch {}
 }
 
 require('./util/exitWithParent.js').exitWithParent(process, {
   onExit: () => overlayControllerService?.shutdown('app-gone'),
+  exit: exitAfterSavingPlaytime,
 });
+
+// Quitting the app while a game runs used to drop the session; a stuck write never holds the exit.
+function exitAfterSavingPlaytime() {
+  let save = Promise.resolve();
+  try {
+    save = playtimeMonitorEmitter?.saveActiveSessions?.() ?? save;
+  } catch {}
+  const timeout = new Promise((resolve) => setTimeout(resolve, 2000));
+  Promise.race([save, timeout]).finally(() => process.exit());
+}
 
 const debug = require('./util/log.js');
 // Use a separate mutex from the legacy watchdog.

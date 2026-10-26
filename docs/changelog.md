@@ -52,6 +52,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Play time survives a crash or a quit.** It is saved every minute while a game runs, and once
+  more when AW Next closes, instead of only when the game exits, so a power cut loses a minute at
+  most.
 - **The Ubisoft achievement fix works on EMPRESS and DenuvOwO releases.** AC Odyssey froze at launch
   after the fix: the EMPRESS settings were left behind and the game waited on an empty chunk list. The fix
   now carries them over, and copies the EMPRESS game saves to where the new loader reads them.

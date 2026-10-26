@@ -444,6 +444,16 @@ function relatedToFolder(name, filepath) {
   return nameTokens.includes(b) || tokenizeForSimilarity(folder).some((t) => nameTokens.includes(t));
 }
 
+const PLAYTIME_SAVE_INTERVAL_MS = 60_000;
+
+function saveSessionProgress(game) {
+  const seconds = game.timer.checkpoint();
+  if (seconds <= 0) return Promise.resolve();
+  return TimeTrack(game.appid, seconds).catch((err) => {
+    debug.error(err);
+  });
+}
+
 async function init() {
   const emitter = new EventEmitter();
   // Resolved once, before the first process event, so the synchronous filter above has an answer.
@@ -452,6 +462,9 @@ async function init() {
   let nowPlaying = [];
   // Expose startup sessions without replaying launch notifications.
   emitter.getActiveGames = () => snapshotActiveGames(nowPlaying);
+  // Saves what the running sessions played since the last save; also called on the way out.
+  emitter.saveActiveSessions = () => Promise.all(nowPlaying.map(saveSessionProgress));
+  setInterval(emitter.saveActiveSessions, PLAYTIME_SAVE_INTERVAL_MS).unref();
   // The app re-seeds cfg/gameIndex.json after a library scan (e.g. a freshly installed non-Steam
   // game); reloading here lets the monitor track it without a full Watchdog restart.
   emitter.reloadGameIndex = async () => {
@@ -671,9 +684,7 @@ async function init() {
 
     debug.log('playtime: ' + Math.floor(playedtime / 60) + 'min');
 
-    TimeTrack(game.appid, playedtime).catch((err) => {
-      debug.error(err);
-    });
+    saveSessionProgress(game);
     emitter.emit('disable-overlay');
     // Emit the raw played seconds; the watchdog formats & localizes the notification text.
     emitter.emit('notify', [game, playedtime]);
