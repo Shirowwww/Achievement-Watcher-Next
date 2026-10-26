@@ -279,6 +279,10 @@
         "name": "Eltávolítás a játéklistából",
         "description": "Eltávolítási lehetőségeket ad a játékok jobb gombos menüjéhez (Steam-eltávolítás, játék eltávolítója, vagy mappa áthelyezése a Lomtárba)."
       },
+      "autoUpdate": {
+        "name": "Frissítések automatikus telepítése",
+        "description": "Kérdezés nélkül letölti és telepíti az új verziókat, amint nem fut játék. Az AW Next magától újraindul, és utána jelzi ezt."
+      },
       "showTrophies": {
         "name": "Trófeák a profilon",
         "description": "Platina, arany, ezüst és bronz trófeákat jelenít meg a neved alatt. A platina egy 100%-ra teljesített játék; a többi a teljesítményeidet aszerint rangsorolja, hány játékos oldotta fel őket."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "A(z) {version} verzió elérhető. Kattints az újdonságok megtekintéséhez és a frissítéshez.",
     "update-installing-short": "Frissítés telepítése…",
     "update-installing-detail": "A(z) {version} verzió telepítése folyik. Az AW Next magától bezárul és újra megnyílik, ez néhány másodpercet vesz igénybe.",
+    "update-auto-install-option": "A jövőbeli frissítések automatikus telepítése",
+    "update-auto-installed-title": "Az AW Next frissült",
+    "update-auto-installed-body": "A(z) {version} verzió automatikusan telepítve lett. Kattints az újdonságok megtekintéséhez.",
     "diagnosis-emulator": "Emulátor: {emulator}",
     "diagnosis-emulator-none": "nincs észlelve",
     "diagnosis-steam-settings": "steam_settings: {path}",

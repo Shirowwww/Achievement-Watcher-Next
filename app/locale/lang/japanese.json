@@ -279,6 +279,10 @@
         "name": "ゲーム一覧からアンインストール",
         "description": "ゲームタイルの右クリックメニューにアンインストール項目を追加します（Steam アンインストール、ゲームのアンインストーラー、フォルダーをごみ箱へ移動）。"
       },
+      "autoUpdate": {
+        "name": "アップデートを自動的にインストール",
+        "description": "新しいバージョンを確認なしでダウンロードしてインストールします。ゲームが実行されていないときに行われます。AW Next は自動的に再起動し、その後お知らせします。"
+      },
       "showTrophies": {
         "name": "プロフィールのトロフィー",
         "description": "名前の下にプラチナ・ゴールド・シルバー・ブロンズのトロフィーを表示します。プラチナは100%達成したゲーム、それ以外は実績を解除したプレイヤーの割合で分類されます。"
@@ -2339,6 +2343,9 @@
     "update-available-notification": "バージョン {version} が利用可能です。クリックして新機能を確認し、アップデートしてください。",
     "update-installing-short": "アップデートをインストール中…",
     "update-installing-detail": "バージョン {version} をインストールしています。AW Next は自動的に終了して再起動します。数秒かかります。",
+    "update-auto-install-option": "今後のアップデートを自動的にインストールする",
+    "update-auto-installed-title": "AW Next をアップデートしました",
+    "update-auto-installed-body": "バージョン {version} を自動的にインストールしました。クリックして新機能を確認してください。",
     "diagnosis-emulator": "エミュレーター: {emulator}",
     "diagnosis-emulator-none": "検出されませんでした",
     "diagnosis-steam-settings": "steam_settings: {path}",

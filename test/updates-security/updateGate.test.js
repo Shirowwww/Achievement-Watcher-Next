@@ -251,3 +251,20 @@ test('the explicit acceptance is carried from the prompt to the install step', (
   // A held-back install that says nothing is indistinguishable from a broken updater.
   assert.match(init, /notifyUpdateHeldBack\(info\.version\)/, 'a held-back install must tell the user');
 });
+
+test('automatic install is off by default and never applies to a portable copy', () => {
+  assert.equal(gate.autoInstallEnabled({}, { portable: false }), false);
+  assert.equal(gate.autoInstallEnabled({ autoUpdate: 'true' }, { portable: false }), false);
+  assert.equal(gate.autoInstallEnabled({ autoUpdate: true }, { portable: false }), true);
+  assert.equal(gate.autoInstallEnabled({ autoUpdate: true }, { portable: true }), false);
+});
+
+test('an automatic install leaves a note that the next start reads once', () => {
+  const general = { ...fresh(), ...gate.autoInstallPatch('3.13.0', { hidden: true }) };
+  assert.deepEqual(gate.autoInstallOutcome(general, '3.13.0'), { installed: '3.13.0', startHidden: true });
+  assert.deepEqual(gate.autoInstallOutcome({ ...general, autoUpdateHidden: false }, '3.13.0'), { installed: '3.13.0', startHidden: false });
+  // The installer never ran, or ran another version: nothing to announce, nothing to hide.
+  assert.deepEqual(gate.autoInstallOutcome(general, '3.12.3'), { installed: '', startHidden: false });
+  assert.deepEqual(gate.autoInstallOutcome(fresh(), '3.13.0'), { installed: '', startHidden: false });
+  assert.deepEqual(gate.clearAutoInstallPatch(), { autoUpdateInstalled: '', autoUpdateHidden: false });
+});

@@ -194,3 +194,13 @@ test('numbers follow the app language', () => {
   const view = buildUpdateWindowView({ status, offer: OFFER, strings: STRINGS, portable: false, lang: 'french' });
   assert.match(view.progress.percentText, /^41\s%$/u);
 });
+
+test('an offer can turn on automatic installs, a portable copy cannot', () => {
+  const strings = { ...STRINGS, autoInstall: 'Install future updates automatically' };
+  const view = buildUpdateWindowView({ status: updateStatus.initialState(), offer: OFFER, strings, portable: false });
+  assert.deepEqual(view.autoOption, { label: 'Install future updates automatically' });
+  const portable = buildUpdateWindowView({ status: updateStatus.initialState(), offer: OFFER, strings, portable: true });
+  assert.equal(portable.autoOption, null);
+  let status = updateStatus.reduce(updateStatus.initialState(), { type: 'download-started', version: '3.12.0' });
+  assert.equal(buildUpdateWindowView({ status, offer: OFFER, strings, portable: false }).autoOption, undefined);
+});

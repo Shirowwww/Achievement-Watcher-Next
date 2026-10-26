@@ -65,7 +65,8 @@ test('the app says what is happening and gives it time to be seen before it quit
 });
 
 test('the install runs the installer UI by default, with an opt-out that is read from settings', () => {
-  assert.match(init, /const silent = !!\(configJS && configJS\.general && configJS\.general\.silentUpdateInstall\);/);
+  // An automatic install (autoUpdate) is silent too: nobody asked for it, so no window takes the focus.
+  assert.match(init, /const silent = automatic \|\| !!\(configJS && configJS\.general && configJS\.general\.silentUpdateInstall\);/);
   assert.match(init, /(?:autoUpdater|getUpdater\(\))\.quitAndInstall\(silent, true\)/);
 });
 

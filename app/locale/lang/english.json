@@ -279,6 +279,10 @@
         "name": "Uninstall from the game list",
         "description": "Adds Uninstall options to the right-click menu on game tiles (Steam uninstall, game uninstaller, or move folder to Recycle Bin)."
       },
+      "autoUpdate": {
+        "name": "Install updates automatically",
+        "description": "Downloads and installs new versions without asking, once no game is running. AW Next restarts on its own and says so afterwards."
+      },
       "showTrophies": {
         "name": "Trophies on the profile",
         "description": "Shows platinum, gold, silver and bronze trophies under your name. Platinum is a game at 100%; the others rank your achievements by how many players unlocked them."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Version {version} is available. Click to see what's new and update.",
     "update-installing-short": "Installing update…",
     "update-installing-detail": "Installing version {version}. AW Next closes and reopens on its own - this takes a few seconds.",
+    "update-auto-install-option": "Install future updates automatically",
+    "update-auto-installed-title": "AW Next updated",
+    "update-auto-installed-body": "Version {version} was installed automatically. Click to see what's new.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "none detected",
     "diagnosis-steam-settings": "steam_settings: {path}",

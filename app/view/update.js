@@ -59,6 +59,14 @@
     byId('notes-link').textContent = notes.link;
   }
 
+  const autoChecked = () => !byId('auto-option').hidden && byId('auto-check').checked;
+
+  // A redraw keeps the box as ticked; a view without the option hides it.
+  function renderAutoOption(option) {
+    byId('auto-option').hidden = !option;
+    if (option) byId('auto-label').textContent = option.label;
+  }
+
   function renderActions(actions) {
     const footer = byId('actions');
     footer.replaceChildren();
@@ -68,7 +76,7 @@
       button.type = 'button';
       button.className = `action ${action.kind}`;
       button.textContent = action.label;
-      button.addEventListener('click', () => bridge.act(action.id));
+      button.addEventListener('click', () => bridge.act(action.id === 'install' && autoChecked() ? 'install-auto' : action.id));
       footer.appendChild(button);
       if (action.kind === 'primary') primary = button;
     }
@@ -82,6 +90,7 @@
     setText('message', view.message);
     renderProgress(view.progress);
     renderNotes(view.notes);
+    renderAutoOption(view.autoOption);
     renderActions(view.actions);
     byId('close').title = view.close;
     byId('close').setAttribute('aria-label', view.close);

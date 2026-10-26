@@ -118,6 +118,31 @@ function clearPostponePatch() {
   return { updatePostponedVersion: '', updatePostponedUntil: 0 };
 }
 
+/*
+  "Install updates automatically" (general.autoUpdate) skips the question: the download starts on
+  its own and installs once no game is running. A portable copy cannot install anything.
+*/
+function autoInstallEnabled(general, { portable = false } = {}) {
+  return !portable && Boolean(general) && general.autoUpdate === true;
+}
+
+// Written just before an automatic install, so the next start can say it happened and stay in the
+// tray if the window was closed: the installer always relaunches the app with its window.
+function autoInstallPatch(version, { hidden = false } = {}) {
+  return { autoUpdateInstalled: String(version), autoUpdateHidden: Boolean(hidden) };
+}
+
+function clearAutoInstallPatch() {
+  return { autoUpdateInstalled: '', autoUpdateHidden: false };
+}
+
+// A note naming another version means the install never completed: it is cleared without a word.
+function autoInstallOutcome(general, currentVersion) {
+  const noted = general && typeof general.autoUpdateInstalled === 'string' ? general.autoUpdateInstalled : '';
+  const installed = Boolean(noted) && Boolean(coerce(noted)) && coerce(noted) === coerce(currentVersion) ? noted : '';
+  return { installed, startHidden: Boolean(installed) && general.autoUpdateHidden === true };
+}
+
 module.exports = {
   POSTPONE_MS,
   INTERVALS,
@@ -131,4 +156,8 @@ module.exports = {
   shouldHoldInstall,
   postponePatch,
   clearPostponePatch,
+  autoInstallEnabled,
+  autoInstallPatch,
+  clearAutoInstallPatch,
+  autoInstallOutcome,
 };

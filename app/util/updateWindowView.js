@@ -41,6 +41,7 @@ function offerView(offer, strings, portable, lang) {
     meta,
     message: portable ? strings.portableDetail : '',
     progress: null,
+    autoOption: portable || !strings.autoInstall ? null : { label: strings.autoInstall },
     actions: portable
       ? [action('skip', strings.skip, 'link'), action('later', strings.later, 'ghost'), action('release', strings.openReleasePage, 'primary')]
       : [action('skip', strings.skip, 'link'), action('later', strings.later, 'ghost'), action('install', strings.updateNow, 'primary')],

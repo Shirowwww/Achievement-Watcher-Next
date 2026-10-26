@@ -279,6 +279,10 @@
         "name": "Copot pemasangan dari daftar game",
         "description": "Menambahkan opsi Copot pemasangan ke menu klik kanan pada kartu game (copot lewat Steam, uninstaller game, atau pindahkan folder ke Recycle Bin)."
       },
+      "autoUpdate": {
+        "name": "Pasang pembaruan secara otomatis",
+        "description": "Mengunduh dan memasang versi baru tanpa bertanya, begitu tidak ada game yang berjalan. AW Next memulai ulang dengan sendirinya dan memberi tahu setelahnya."
+      },
       "showTrophies": {
         "name": "Trofi pada profil",
         "description": "Menampilkan trofi platinum, emas, perak, dan perunggu di bawah nama Anda. Platinum adalah game yang mencapai 100%; sisanya mengurutkan pencapaian Anda berdasarkan jumlah pemain yang meraihnya."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Versi {version} tersedia. Klik untuk melihat yang baru dan memperbarui.",
     "update-installing-short": "Memasang pembaruan…",
     "update-installing-detail": "Memasang versi {version}. AW Next akan menutup dan membuka kembali dengan sendirinya, ini memakan waktu beberapa detik.",
+    "update-auto-install-option": "Pasang pembaruan berikutnya secara otomatis",
+    "update-auto-installed-title": "AW Next telah diperbarui",
+    "update-auto-installed-body": "Versi {version} telah dipasang secara otomatis. Klik untuk melihat yang baru.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "tidak terdeteksi",
     "diagnosis-steam-settings": "steam_settings: {path}",

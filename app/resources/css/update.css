@@ -344,6 +344,33 @@ footer {
   background: rgba(16, 29, 45, 0.55);
 }
 
+/* Sits right above the buttons it changes, flush with the notes card. */
+.auto-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  margin: 14px 28px -6px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.auto-option[hidden] {
+  display: none;
+}
+
+.auto-option input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.auto-option:hover {
+  color: var(--text);
+}
+
 footer:empty {
   min-height: 20px;
   background: none;

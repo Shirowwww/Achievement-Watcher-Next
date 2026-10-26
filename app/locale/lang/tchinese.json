@@ -279,6 +279,10 @@
         "name": "從遊戲清單解除安裝",
         "description": "在遊戲卡片的右鍵選單中加入解除安裝選項（透過 Steam 解除安裝、執行遊戲解除安裝程式，或將資料夾移到資源回收筒）。"
       },
+      "autoUpdate": {
+        "name": "自動安裝更新",
+        "description": "在沒有遊戲執行時，無需詢問即可下載並安裝新版本。AW Next 會自動重新啟動，並在之後給出提示。"
+      },
       "showTrophies": {
         "name": "個人檔案中的獎盃",
         "description": "在您的名稱下方顯示白金、金、銀、銅獎盃。白金指達成 100% 的遊戲；其餘則依解鎖玩家的比例為您的成就分級。"
@@ -2339,6 +2343,9 @@
     "update-available-notification": "{version} 版本現已可用。點擊以查看更新內容並進行更新。",
     "update-installing-short": "正在安裝更新…",
     "update-installing-detail": "正在安裝版本 {version}。AW Next 會自動關閉並重新開啟，這需要幾秒鐘。",
+    "update-auto-install-option": "自動安裝日後的更新",
+    "update-auto-installed-title": "AW Next 已更新",
+    "update-auto-installed-body": "{version} 版本已自動安裝。點擊以查看更新內容。",
     "diagnosis-emulator": "模擬器：{emulator}",
     "diagnosis-emulator-none": "未偵測到",
     "diagnosis-steam-settings": "steam_settings：{path}",

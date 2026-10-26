@@ -279,6 +279,10 @@
         "name": "Odinštalovať zo zoznamu hier",
         "description": "Pridá možnosti odinštalovania do kontextovej ponuky hier (odinštalovanie cez Steam, odinštalátor hry alebo presun priečinka do Koša)."
       },
+      "autoUpdate": {
+        "name": "Inštalovať aktualizácie automaticky",
+        "description": "Stiahne a nainštaluje nové verzie bez pýtania, hneď ako nie je spustená žiadna hra. AW Next sa sám reštartuje a potom o tom dá vedieť."
+      },
       "showTrophies": {
         "name": "Trofeje v profile",
         "description": "Zobrazuje platinové, zlaté, strieborné a bronzové trofeje pod vaším menom. Platina je hra dokončená na 100 %; ostatné triedia vaše úspechy podľa toho, koľko hráčov ich odomklo."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Je dostupná verzia {version}. Kliknutím zobrazíte novinky a aktualizujete.",
     "update-installing-short": "Inštaluje sa aktualizácia…",
     "update-installing-detail": "Inštaluje sa verzia {version}. AW Next sa sám zavrie a znova otvorí, potrvá to pár sekúnd.",
+    "update-auto-install-option": "Inštalovať budúce aktualizácie automaticky",
+    "update-auto-installed-title": "AW Next bol aktualizovaný",
+    "update-auto-installed-body": "Verzia {version} bola nainštalovaná automaticky. Kliknutím zobrazíte novinky.",
     "diagnosis-emulator": "Emulátor: {emulator}",
     "diagnosis-emulator-none": "žiaden nezistený",
     "diagnosis-steam-settings": "steam_settings: {path}",

@@ -316,6 +316,12 @@ function translateUI(lang, locale, template) {
     $("#option_uninstallContextMenu option[value='true']").text(clear(template.settings.common.enable));
     $("#option_uninstallContextMenu option[value='false']").text(clear(template.settings.common.disable));
   }
+  if (template.settings.general.autoUpdate) {
+    $('#auto-update-settings-label').text(clear(template.settings.general.autoUpdate.name));
+    $('#auto-update-settings-help').text(clear(template.settings.general.autoUpdate.description));
+    $("#option_autoUpdate option[value='true']").text(clear(template.settings.common.enable));
+    $("#option_autoUpdate option[value='false']").text(clear(template.settings.common.disable));
+  }
   if (template.settings.general.showTrophies) {
     $('#trophies-settings-label').text(clear(template.settings.general.showTrophies.name));
     $('#trophies-settings-help').text(clear(template.settings.general.showTrophies.description));

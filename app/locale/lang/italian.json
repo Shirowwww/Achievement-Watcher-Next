@@ -279,6 +279,10 @@
         "name": "Disinstalla dall’elenco dei giochi",
         "description": "Aggiunge opzioni di disinstallazione al menu con il tasto destro sui giochi (disinstallazione Steam, disinstallatore del gioco o spostamento della cartella nel Cestino)."
       },
+      "autoUpdate": {
+        "name": "Installa gli aggiornamenti automaticamente",
+        "description": "Scarica e installa le nuove versioni senza chiedere, appena non è in esecuzione nessun gioco. AW Next si riavvia da solo e te lo segnala in seguito."
+      },
       "showTrophies": {
         "name": "Trofei sul profilo",
         "description": "Mostra i trofei platino, oro, argento e bronzo sotto il tuo nome. Il platino è un gioco al 100%; gli altri classificano i tuoi obiettivi in base a quanti giocatori li hanno sbloccati."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "La versione {version} è disponibile. Fai clic per vedere le novità e aggiornare.",
     "update-installing-short": "Installazione dell’aggiornamento…",
     "update-installing-detail": "Installazione della versione {version}. AW Next si chiude e si riapre da solo, richiede qualche secondo.",
+    "update-auto-install-option": "Installa automaticamente i prossimi aggiornamenti",
+    "update-auto-installed-title": "AW Next aggiornato",
+    "update-auto-installed-body": "La versione {version} è stata installata automaticamente. Fai clic per vedere le novità.",
     "diagnosis-emulator": "Emulatore: {emulator}",
     "diagnosis-emulator-none": "nessuno rilevato",
     "diagnosis-steam-settings": "steam_settings: {path}",

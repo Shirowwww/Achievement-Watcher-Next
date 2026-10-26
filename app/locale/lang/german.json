@@ -279,6 +279,10 @@
         "name": "Aus der Spieleliste deinstallieren",
         "description": "Fügt dem Rechtsklick-Menü der Spiele Deinstallationsoptionen hinzu (Steam-Deinstallation, Spiel-Deinstallationsprogramm oder Ordner in den Papierkorb verschieben)."
       },
+      "autoUpdate": {
+        "name": "Updates automatisch installieren",
+        "description": "Lädt neue Versionen herunter und installiert sie ohne Rückfrage, sobald kein Spiel läuft. AW Next startet von selbst neu und weist danach darauf hin."
+      },
       "showTrophies": {
         "name": "Trophäen im Profil",
         "description": "Zeigt Platin-, Gold-, Silber- und Bronze-Trophäen unter deinem Namen. Platin ist ein Spiel mit 100 %; die anderen ordnen deine Erfolge danach ein, wie viele Spieler sie freigeschaltet haben."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Version {version} ist verfügbar. Klicken, um die Neuerungen anzusehen und zu aktualisieren.",
     "update-installing-short": "Update wird installiert…",
     "update-installing-detail": "Version {version} wird installiert. AW Next schließt und öffnet sich von selbst wieder, das dauert einige Sekunden.",
+    "update-auto-install-option": "Künftige Updates automatisch installieren",
+    "update-auto-installed-title": "AW Next aktualisiert",
+    "update-auto-installed-body": "Version {version} wurde automatisch installiert. Klicken, um die Neuerungen anzusehen.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "keiner erkannt",
     "diagnosis-steam-settings": "steam_settings: {path}",

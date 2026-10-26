@@ -279,6 +279,10 @@
         "name": "从游戏列表中卸载",
         "description": "在游戏磁贴的右键菜单中添加卸载选项（通过 Steam 卸载、游戏卸载程序或将文件夹移至回收站）。"
       },
+      "autoUpdate": {
+        "name": "自动安装更新",
+        "description": "在没有游戏运行时，无需询问即可下载并安装新版本。AW Next 会自动重启，并在之后给出提示。"
+      },
       "showTrophies": {
         "name": "个人资料中的奖杯",
         "description": "在您的名称下方显示白金、金、银、铜奖杯。白金指达成 100% 的游戏；其余则根据解锁玩家的比例对您的成就进行分级。"
@@ -2339,6 +2343,9 @@
     "update-available-notification": "版本 {version} 现已可用。点击查看更新内容并进行更新。",
     "update-installing-short": "正在安装更新…",
     "update-installing-detail": "正在安装版本 {version}。AW Next 会自动关闭并重新打开，这需要几秒钟。",
+    "update-auto-install-option": "自动安装以后的更新",
+    "update-auto-installed-title": "AW Next 已更新",
+    "update-auto-installed-body": "版本 {version} 已自动安装。点击查看更新内容。",
     "diagnosis-emulator": "模拟器：{emulator}",
     "diagnosis-emulator-none": "未检测到",
     "diagnosis-steam-settings": "steam_settings：{path}",

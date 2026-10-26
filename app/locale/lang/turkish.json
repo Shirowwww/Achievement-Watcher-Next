@@ -279,6 +279,10 @@
         "name": "Oyun listesinden kaldır",
         "description": "Oyun kutucuklarının sağ tık menüsüne kaldırma seçenekleri ekler (Steam kaldırma, oyun kaldırıcısı veya klasörü Çöp Kutusu’na taşıma)."
       },
+      "autoUpdate": {
+        "name": "Güncellemeleri otomatik olarak yükle",
+        "description": "Çalışan oyun kalmadığında yeni sürümleri sormadan indirir ve yükler. AW Next kendiliğinden yeniden başlar ve sonrasında bunu bildirir."
+      },
       "showTrophies": {
         "name": "Profildeki kupalar",
         "description": "Adınızın altında platin, altın, gümüş ve bronz kupaları gösterir. Platin, %100 tamamlanmış bir oyundur; diğerleri başarımlarınızı kaç oyuncunun açtığına göre sıralar."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "{version} sürümü kullanıma hazır. Nelerin yeni olduğunu görmek ve güncellemek için tıklayın.",
     "update-installing-short": "Güncelleme yükleniyor…",
     "update-installing-detail": "{version} sürümü yükleniyor. AW Next kendiliğinden kapanıp yeniden açılır, bu birkaç saniye sürer.",
+    "update-auto-install-option": "Sonraki güncellemeleri otomatik olarak yükle",
+    "update-auto-installed-title": "AW Next güncellendi",
+    "update-auto-installed-body": "{version} sürümü otomatik olarak yüklendi. Nelerin yeni olduğunu görmek için tıklayın.",
     "diagnosis-emulator": "Öykünücü: {emulator}",
     "diagnosis-emulator-none": "hiçbiri algılanmadı",
     "diagnosis-steam-settings": "steam_settings: {path}",

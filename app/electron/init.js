@@ -155,6 +155,9 @@ let updateDownloading = false; // true from the accepted "Download && Install" u
 // Set when the user explicitly accepted "Download && Install". Carried through to the install step
 // so a deliberate request is never held back by a process that the monitor classifies as a game.
 let updateAcceptedByUser = false;
+// Set when the download started on its own (Settings > Install updates automatically): the install
+// that follows is silent and leaves a note for the next start instead of announcing itself.
+let autoInstallInFlight = false;
 let checksumRetryInFlight = false; // guards the one automatic retry after a cache-clearing recovery
 const UPDATE_RECHECK_MS = 60 * 60 * 1000; // silent hourly re-check while the app stays resident
 // How long the "installing" state stays on screen before the windows close. Covers one paint plus
@@ -197,6 +200,52 @@ async function postponeUpdate(version) {
   } catch (err) {
     debug.log(`[updater] could not persist the postpone: ${err.message || err}`);
   }
+}
+
+// The checkbox of the update window turns the Settings option on; an open Settings page follows.
+async function enableAutoInstall() {
+  if (!configJS.general) configJS.general = {};
+  const before = configJS.general.autoUpdate;
+  try {
+    configJS.general.autoUpdate = true;
+    await settingsJS.save(configJS);
+    if (MainWin && !MainWin.isDestroyed()) MainWin.webContents.send('auto-update-enabled');
+    debug.log('[updater] automatic updates turned on from the update window');
+  } catch (err) {
+    // Unsaved, so not on: the next save of anything else must not write it after all.
+    configJS.general.autoUpdate = before;
+    debug.log(`[updater] could not turn automatic updates on: ${err.message || err}`);
+  }
+}
+
+// What an automatic install left for this start, read once and then cleared.
+async function takeAutoInstallNote() {
+  const general = (configJS && configJS.general) || {};
+  const outcome = updateGate.autoInstallOutcome(general, app.getVersion());
+  if (general.autoUpdateInstalled) {
+    try {
+      await applyGeneralPatch(updateGate.clearAutoInstallPatch());
+    } catch (err) {
+      debug.log(`[updater] could not clear the automatic install note: ${err.message || err}`);
+    }
+  }
+  return outcome;
+}
+
+function announceAutoInstall(version) {
+  const notice = {
+    title: t('update-auto-installed-title', 'AW Next updated', 'AW Next mis à jour'),
+    body: t(
+      'update-auto-installed-body',
+      "Version {version} was installed automatically. Click to see what's new.",
+      'La version {version} a été installée automatiquement. Clique pour voir les nouveautés.',
+      { version }
+    ),
+    icon: path.join(__dirname, '../resources/icon', process.platform === 'win32' ? 'icon.ico' : 'icon.png'),
+  };
+  desktopNotifier()
+    .notify(notice, () => openReleasePage(version))
+    .catch((err) => debug.log(`[updater] could not announce the automatic install: ${err.message || err}`));
 }
 
 // A user who asks for a check has just overruled their own "later".
@@ -305,6 +354,7 @@ function updateWindowStrings() {
     updateNow: t('update-now', 'Update now', 'Mettre à jour'),
     later: t('later', 'Later', 'Plus tard'),
     skip: t('skip-this-version', 'Skip this version', 'Ignorer cette version'),
+    autoInstall: t('update-auto-install-option', 'Install future updates automatically', 'Installer les prochaines mises à jour automatiquement'),
     whatsNew: t('whats-new', "What's new", 'Nouveautés'),
     notesUnavailable: t('release-notes-unavailable', 'The release notes could not be loaded.', "Les notes de version n'ont pas pu être chargées."),
     fullNotes: t('see-full-release-notes', 'Full release notes on GitHub', 'Notes complètes sur GitHub'),
@@ -443,6 +493,9 @@ function onUpdateWindowAction(id) {
     case 'later':
     case 'closed':
       settleUpdatePrompt(id === 'closed' ? 'later' : id);
+      break;
+    case 'install-auto':
+      if (settleUpdatePrompt('install')) enableAutoInstall();
       break;
     case 'release':
       if (!settleUpdatePrompt('release')) openReleasePage(currentUpdateStatus.version || (updateOffer && updateOffer.version));
@@ -7483,9 +7536,21 @@ try {
           await offerPortableUpdate(offer, manual);
           return;
         }
+        // No question: a running game still holds the install back (shouldHoldInstall).
+        if (updateGate.autoInstallEnabled(configJS && configJS.general)) {
+          debug.log(`[updater] downloading ${info.version} on its own (automatic updates)`);
+          updateOffer = offer;
+          updateDownloading = true;
+          updateAcceptedByUser = false;
+          autoInstallInFlight = true;
+          startUpdateDownload(info.version);
+          if (manual) openUpdateWindow();
+          return;
+        }
         const answer = await askAboutUpdate(offer, { manual });
         if (answer === 'install') {
           debug.log(`[updater] user accepted download of ${info.version}${manual ? ' (manual check)' : ''}`);
+          autoInstallInFlight = false;
           updateDownloading = true;
           // The click is the explicit consent, regardless of whether the offer came from the hourly
           // check or Settings > Check for updates. A manual check alone must not silently install.
@@ -7694,10 +7759,19 @@ try {
     `general.silentUpdateInstall` restores the old windowless behaviour for anyone who wants it.
   */
   async function startUpdateInstall(info) {
-    const silent = !!(configJS && configJS.general && configJS.general.silentUpdateInstall);
+    const automatic = autoInstallInFlight;
+    autoInstallInFlight = false;
+    const silent = automatic || !!(configJS && configJS.general && configJS.general.silentUpdateInstall);
     setUpdateStatus({ type: 'installing', version: info.version });
-    debug.log(`[updater] installing ${info.version} (${silent ? 'silent' : 'with the installer progress window'}) and restarting`);
-    if (tray) {
+    debug.log(`[updater] installing ${info.version} (${silent ? 'silent' : 'with the installer progress window'}${automatic ? ', automatic' : ''}) and restarting`);
+    if (automatic) {
+      try {
+        const hidden = !(MainWin && !MainWin.isDestroyed() && MainWin.isVisible());
+        await applyGeneralPatch(updateGate.autoInstallPatch(info.version, { hidden }));
+      } catch (err) {
+        debug.log(`[updater] could not note the automatic install: ${err.message || err}`);
+      }
+    } else if (tray) {
       try {
         tray.displayBalloon({
           iconType: 'info',
@@ -7762,6 +7836,9 @@ try {
       // its pipe and port - while the window is a separate process that spends its first second parsing
       // a page and loading its own modules. Opening it first overlaps the two instead of queueing
       // them; nothing below is needed to display a library.
+      // The installer reopens the window after every update; an automatic one keeps a closed window closed.
+      const autoInstalled = await takeAutoInstallNote();
+      if (autoInstalled.startHidden) startupArgs.hidden = true;
       if (safeMode) startupArgs.hidden = false;
       const startupToast = parseToastActivation(process.argv);
       if (startupToast) startupArgs.hidden = false; // clicking a toast must surface the window
@@ -7780,6 +7857,7 @@ try {
         }
       }
       createTray();
+      if (autoInstalled.installed) announceAutoInstall(autoInstalled.installed);
       if (process.platform === 'linux' && !manifest.config.debug) installLinuxDesktopEntry();
       if (process.platform === 'linux') settleLinuxKeyring();
       // electron-updater reads resources/app-update.yml generated by electron-builder. Checking a

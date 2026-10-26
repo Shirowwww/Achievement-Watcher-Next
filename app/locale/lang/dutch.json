@@ -279,6 +279,10 @@
         "name": "Verwijderen vanuit de gamelijst",
         "description": "Voegt opties om te verwijderen toe aan het rechtsklikmenu van gametegels (verwijderen via Steam, het verwijderprogramma van de game, of de map naar de Prullenbak verplaatsen)."
       },
+      "autoUpdate": {
+        "name": "Updates automatisch installeren",
+        "description": "Downloadt en installeert nieuwe versies zonder te vragen, zodra er geen game draait. AW Next start zichzelf opnieuw op en meldt dat achteraf."
+      },
       "showTrophies": {
         "name": "Trofeeën op het profiel",
         "description": "Toont platina-, goud-, zilver- en bronzen trofeeën onder je naam. Platina is een game op 100%; de andere rangschikken je prestaties op basis van hoeveel spelers ze hebben ontgrendeld."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Versie {version} is beschikbaar. Klik om te zien wat er nieuw is en bij te werken.",
     "update-installing-short": "Update installeren…",
     "update-installing-detail": "Versie {version} wordt geïnstalleerd. AW Next sluit en opent zichzelf opnieuw, dit duurt een paar seconden.",
+    "update-auto-install-option": "Toekomstige updates automatisch installeren",
+    "update-auto-installed-title": "AW Next is bijgewerkt",
+    "update-auto-installed-body": "Versie {version} is automatisch geïnstalleerd. Klik om te zien wat er nieuw is.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "geen gevonden",
     "diagnosis-steam-settings": "steam_settings: {path}",

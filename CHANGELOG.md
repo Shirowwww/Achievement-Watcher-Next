@@ -9,6 +9,12 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Updates can install themselves.** Turn on Settings > General > Install updates automatically,
+  or tick the box in the update window: new versions download and install without asking once no
+  game is running, and a notification says so after the restart. A closed window stays closed.
+
 ### Improved
 
 - **Screenshots and clips are named after the achievement first**, then the date

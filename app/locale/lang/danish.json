@@ -279,6 +279,10 @@
         "name": "Afinstaller fra spillisten",
         "description": "Tilføjer afinstallationsvalg i højrekliksmenuen på spilfelter (afinstaller via Steam, spillets afinstallationsprogram eller flyt mappen til Papirkurven)."
       },
+      "autoUpdate": {
+        "name": "Installer opdateringer automatisk",
+        "description": "Henter og installerer nye versioner uden at spørge, så snart intet spil kører. AW Next genstarter af sig selv og giver besked bagefter."
+      },
       "showTrophies": {
         "name": "Trofæer på profilen",
         "description": "Viser platin-, guld-, sølv- og bronzetrofæer under dit navn. Platin er et spil på 100%; de andre rangerer dine præstationer efter, hvor mange spillere der har låst dem op."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Version {version} er tilgængelig. Klik for at se nyhederne og opdatere.",
     "update-installing-short": "Installerer opdatering…",
     "update-installing-detail": "Installerer version {version}. AW Next lukker og åbner igen af sig selv, det tager et par sekunder.",
+    "update-auto-install-option": "Installer fremtidige opdateringer automatisk",
+    "update-auto-installed-title": "AW Next er opdateret",
+    "update-auto-installed-body": "Version {version} blev installeret automatisk. Klik for at se nyhederne.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "ingen fundet",
     "diagnosis-steam-settings": "steam_settings: {path}",

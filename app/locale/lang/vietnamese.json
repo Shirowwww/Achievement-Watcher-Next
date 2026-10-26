@@ -279,6 +279,10 @@
         "name": "Gỡ cài đặt từ danh sách trò chơi",
         "description": "Thêm các tùy chọn Gỡ cài đặt vào menu chuột phải trên thẻ trò chơi (gỡ qua Steam, trình gỡ cài đặt của trò chơi, hoặc chuyển thư mục vào Thùng rác)."
       },
+      "autoUpdate": {
+        "name": "Tự động cài đặt bản cập nhật",
+        "description": "Tải xuống và cài đặt phiên bản mới mà không hỏi, ngay khi không còn trò chơi nào đang chạy. AW Next tự khởi động lại và thông báo sau đó."
+      },
       "showTrophies": {
         "name": "Cúp trên hồ sơ",
         "description": "Hiển thị cúp bạch kim, vàng, bạc và đồng dưới tên của bạn. Bạch kim là trò chơi đạt 100%; các cúp còn lại xếp hạng thành tựu của bạn theo số người chơi đã mở khóa chúng."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Phiên bản {version} đã có sẵn. Nhấp để xem điểm mới và cập nhật.",
     "update-installing-short": "Đang cài đặt bản cập nhật…",
     "update-installing-detail": "Đang cài đặt phiên bản {version}. AW Next sẽ tự đóng và mở lại, việc này mất vài giây.",
+    "update-auto-install-option": "Tự động cài đặt các bản cập nhật sau",
+    "update-auto-installed-title": "AW Next đã được cập nhật",
+    "update-auto-installed-body": "Phiên bản {version} đã được cài đặt tự động. Nhấp để xem điểm mới.",
     "diagnosis-emulator": "Trình giả lập: {emulator}",
     "diagnosis-emulator-none": "không phát hiện được",
     "diagnosis-steam-settings": "steam_settings: {path}",

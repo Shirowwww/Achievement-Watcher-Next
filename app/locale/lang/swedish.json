@@ -279,6 +279,10 @@
         "name": "Avinstallera från spellistan",
         "description": "Lägger till avinstallationsalternativ i högerklicksmenyn på spelrutorna (avinstallera via Steam, spelets avinstallationsprogram eller flytta mappen till papperskorgen)."
       },
+      "autoUpdate": {
+        "name": "Installera uppdateringar automatiskt",
+        "description": "Hämtar och installerar nya versioner utan att fråga, så fort inget spel körs. AW Next startar om av sig självt och meddelar det efteråt."
+      },
       "showTrophies": {
         "name": "Troféer på profilen",
         "description": "Visar platina-, guld-, silver- och bronströféer under ditt namn. Platina är ett spel klarat till 100%; de andra rangordnar dina prestationer efter hur många spelare som har låst upp dem."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Version {version} är tillgänglig. Klicka för att se vad som är nytt och uppdatera.",
     "update-installing-short": "Installerar uppdatering…",
     "update-installing-detail": "Installerar version {version}. AW Next stänger och öppnar sig själv igen, det tar några sekunder.",
+    "update-auto-install-option": "Installera framtida uppdateringar automatiskt",
+    "update-auto-installed-title": "AW Next uppdaterat",
+    "update-auto-installed-body": "Version {version} installerades automatiskt. Klicka för att se vad som är nytt.",
     "diagnosis-emulator": "Emulator: {emulator}",
     "diagnosis-emulator-none": "ingen hittades",
     "diagnosis-steam-settings": "steam_settings: {path}",

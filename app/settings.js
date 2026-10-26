@@ -120,6 +120,9 @@ module.exports.load = () => {
     if (typeof options.general.updatePostponedUntil !== 'number' || !Number.isFinite(options.general.updatePostponedUntil)) {
       options.general.updatePostponedUntil = Number(options.general.updatePostponedUntil) || 0;
     }
+    if (typeof options.general.autoUpdate !== 'boolean') {
+      options.general.autoUpdate = false;
+    }
 
     if (typeof options.general.onboardingCompleted !== 'boolean') {
       // Reaching this branch means a settings file already existed. Treat it as an upgraded
@@ -654,6 +657,7 @@ module.exports.load = () => {
         skippedVersion: 'none',
         updatePostponedVersion: '',
         updatePostponedUntil: 0,
+        autoUpdate: false,
         onboardingCompleted: false,
         interfaceMode: '', // '' until onboarding asks; 'simple' | 'advanced' afterwards
         startWithWindows: true,
@@ -838,13 +842,13 @@ module.exports.load = () => {
 };
 
 /*
-  Keys under [general] that only the main process ever writes: which update was skipped, and until
-  when one was postponed. The renderer holds its own copy of the settings for the whole session and
-  saves it whole, so without this a later save of any unrelated setting wrote back the stale values
+  Keys under [general] that only the main process ever writes: which update was skipped, until
+  when one was postponed, and the note an automatic install leaves for the next start. The
+  renderer holds its own copy of the settings for the whole session and saves it whole, so without this a later save of any unrelated setting wrote back the stale values
   it had loaded and silently undid "skip this version". The main process passes
   { keepMainOwnedKeys: false } when it is the one changing them.
 */
-const MAIN_OWNED_GENERAL_KEYS = ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil'];
+const MAIN_OWNED_GENERAL_KEYS = ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil', 'autoUpdateInstalled', 'autoUpdateHidden'];
 
 function carryMainOwnedKeys(options) {
   let onDisk;

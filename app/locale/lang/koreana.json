@@ -279,6 +279,10 @@
         "name": "게임 목록에서 제거",
         "description": "게임 타일의 오른쪽 클릭 메뉴에 제거 항목을 추가합니다(Steam 제거, 게임 제거 프로그램, 폴더를 휴지통으로 이동)."
       },
+      "autoUpdate": {
+        "name": "업데이트 자동 설치",
+        "description": "실행 중인 게임이 없어지면 확인 없이 새 버전을 내려받아 설치합니다. AW Next가 스스로 다시 시작되며, 이후에 알려 줍니다."
+      },
       "showTrophies": {
         "name": "프로필의 트로피",
         "description": "이름 아래에 플래티넘, 골드, 실버, 브론즈 트로피를 표시합니다. 플래티넘은 100% 달성한 게임이며, 나머지는 얼마나 많은 플레이어가 달성했는지에 따라 도전 과제를 등급별로 나눈 것입니다."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "{version} 버전을 사용할 수 있습니다. 클릭하여 새로운 내용을 확인하고 업데이트하세요.",
     "update-installing-short": "업데이트 설치 중…",
     "update-installing-detail": "버전 {version}을(를) 설치하는 중입니다. AW Next가 스스로 종료되었다가 다시 열립니다. 몇 초 정도 걸립니다.",
+    "update-auto-install-option": "앞으로의 업데이트를 자동으로 설치",
+    "update-auto-installed-title": "AW Next 업데이트됨",
+    "update-auto-installed-body": "{version} 버전이 자동으로 설치되었습니다. 클릭하여 새로운 내용을 확인하세요.",
     "diagnosis-emulator": "에뮬레이터: {emulator}",
     "diagnosis-emulator-none": "감지되지 않음",
     "diagnosis-steam-settings": "steam_settings: {path}",

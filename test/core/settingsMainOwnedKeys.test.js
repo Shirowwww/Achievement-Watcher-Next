@@ -85,5 +85,5 @@ test('a key the main process cleared does not come back on the next Settings sav
 });
 
 test('every preserved key is one the renderer has no control over', () => {
-  assert.deepEqual(settings.MAIN_OWNED_GENERAL_KEYS, ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil']);
+  assert.deepEqual(settings.MAIN_OWNED_GENERAL_KEYS, ['skippedVersion', 'updatePostponedVersion', 'updatePostponedUntil', 'autoUpdateInstalled', 'autoUpdateHidden']);
 });

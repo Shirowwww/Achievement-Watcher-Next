@@ -798,6 +798,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_disableAutoRefresh').val(String(app.config.achievement.disableAutoRefresh === true)).change();
       $('#option_closeToTray').val(String(app.config.general.closeToTray !== false)).change();
       $('#option_uninstallContextMenu').val(String(app.config.general.uninstallContextMenu !== false)).change();
+      $('#option_autoUpdate').val(String(app.config.general.autoUpdate === true)).change();
       if (!app.config.controller) app.config.controller = {};
       $('#option_controllerEnabled').val(String(app.config.controller.enabled === true)).change();
       $('#option_controllerAppNavigation').val(String(app.config.controller.appNavigation !== false)).change();
@@ -1212,6 +1213,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (view) labels.addClass(view.cls);
     }
     ipcRenderer.on('update-status', (event, state) => renderSettingsUpdateStatus(state));
+    // Turned on from the update window: a later Settings save must not write the old value back.
+    ipcRenderer.on('auto-update-enabled', () => {
+      if (!app.config.general) app.config.general = {};
+      app.config.general.autoUpdate = true;
+      $('#option_autoUpdate').val('true').change();
+    });
     // Opening Settings mid-download must show the download, not an idle button.
     ipcRenderer.invoke('get-update-status').then(renderSettingsUpdateStatus).catch(() => {});
 
@@ -1474,6 +1481,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
               $(this)[0].id === 'option_disableHardwareAccel' ||
               $(this)[0].id === 'option_closeToTray' ||
               $(this)[0].id === 'option_uninstallContextMenu' ||
+              $(this)[0].id === 'option_autoUpdate' ||
               $(this)[0].id === 'option_theme' ||
               $(this)[0].id === 'rarityThresholdsChoice'
             )
@@ -1505,6 +1513,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       app.config.achievement.disableAutoRefresh = $('#option_disableAutoRefresh').val() === 'true';
       app.config.general.closeToTray = $('#option_closeToTray').val() !== 'false';
       app.config.general.uninstallContextMenu = $('#option_uninstallContextMenu').val() !== 'false';
+      app.config.general.autoUpdate = $('#option_autoUpdate').val() === 'true';
       app.config.general.theme = $('#option_theme').val() || 'default';
 
       if (!app.config.controller) app.config.controller = {};

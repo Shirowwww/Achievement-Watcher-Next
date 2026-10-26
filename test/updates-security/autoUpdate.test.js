@@ -133,3 +133,20 @@ test('the portable build checks the release feed and offers the release page, ne
   assert.match(init, /function openReleasePage\(version\) \{\s+const page = version \? links\.releaseTag\(version\)/, 'the release page is the tag of the offered version');
   assert.match(body, /postponeUpdate\(version\)/, 'opening the page must not let the hourly check ask again at once');
 });
+
+test('automatic updates download without asking, install silently and leave a note for the next start', () => {
+  const appRoot = path.join(__dirname, '..', '..', 'app');
+  const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
+  // The option skips the question but not the game hold: the accepted-by-user flag stays false.
+  assert.match(init, /if \(updateGate\.autoInstallEnabled\(configJS && configJS\.general\)\) \{[\s\S]{0,300}updateAcceptedByUser = false;\s*autoInstallInFlight = true;/);
+  // After the portable branch, so a portable copy never downloads an installer.
+  const handler = init.slice(init.indexOf("autoUpdater.on('update-available'"));
+  assert.ok(handler.indexOf('if (isPortableBuild)') < handler.indexOf('updateGate.autoInstallEnabled('));
+  assert.match(init, /const silent = automatic \|\| /);
+  assert.match(init, /updateGate\.autoInstallPatch\(info\.version, \{ hidden \}\)/);
+  // The note is read once at start, before the window opens.
+  assert.match(init, /const autoInstalled = await takeAutoInstallNote\(\);\s*if \(autoInstalled\.startHidden\) startupArgs\.hidden = true;/);
+  assert.match(init, /if \(autoInstalled\.installed\) announceAutoInstall\(autoInstalled\.installed\);/);
+  // The update window's checkbox answers "install" and turns the option on.
+  assert.match(init, /case 'install-auto':\s*if \(settleUpdatePrompt\('install'\)\) enableAutoInstall\(\);/);
+});

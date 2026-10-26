@@ -279,6 +279,10 @@
         "name": "Asennuksen poisto peliluettelosta",
         "description": "Lisää peliruutujen hiiren kakkospainikkeen valikkoon asennuksenpoiston vaihtoehdot (Steam-poisto, pelin asennuksenpoisto-ohjelma tai kansion siirto roskakoriin)."
       },
+      "autoUpdate": {
+        "name": "Asenna päivitykset automaattisesti",
+        "description": "Lataa ja asentaa uudet versiot kysymättä heti, kun mikään peli ei ole käynnissä. AW Next käynnistyy itse uudelleen ja kertoo siitä jälkeenpäin."
+      },
       "showTrophies": {
         "name": "Pokaalit profiilissa",
         "description": "Näyttää platina-, kulta-, hopea- ja pronssipokaalit nimesi alla. Platina on peli, joka on suoritettu 100-prosenttisesti; muut järjestävät saavutuksesi sen mukaan, kuinka moni pelaaja on avannut ne."
@@ -2339,6 +2343,9 @@
     "update-available-notification": "Versio {version} on saatavilla. Napsauta nähdäksesi uutuudet ja päivittääksesi.",
     "update-installing-short": "Asennetaan päivitystä…",
     "update-installing-detail": "Asennetaan versiota {version}. AW Next sulkeutuu ja avautuu uudelleen itsestään, tämä kestää muutaman sekunnin.",
+    "update-auto-install-option": "Asenna tulevat päivitykset automaattisesti",
+    "update-auto-installed-title": "AW Next päivitetty",
+    "update-auto-installed-body": "Versio {version} asennettiin automaattisesti. Napsauta nähdäksesi uutuudet.",
     "diagnosis-emulator": "Emulaattori: {emulator}",
     "diagnosis-emulator-none": "ei havaittu",
     "diagnosis-steam-settings": "steam_settings: {path}",
