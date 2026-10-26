@@ -769,6 +769,7 @@
               "shadowColor": "Varjon väri",
               "shadowSize": "Varjon koko",
               "replay": "Toista GIF uudelleen joka ilmoituksella",
+              "cut": "Läpinäkyvä",
               "loop": "Silmukka",
               "alignGroup": "Tasaa keskenään",
               "insert": "Lisää"
@@ -910,6 +911,7 @@
               "replay": "Toista kierros"
             },
             "motionHint": "Kortti pysyy paikallaan muokatessasi: Toista kortin alla näyttää sisääntulot ja silmukat.",
+            "cutHint": "Tämä muoto ei näytä itse mitään: kaikki sen alla oleva muuttuu läpinäkyväksi, kortti mukaan lukien. Sen päällä oleva pysyy näkyvissä.",
             "maxItems": "Kortti on täynnä. Poista elementti, jotta voit lisätä toisen."
           },
           "create": "Luo esiasetus",

@@ -593,3 +593,63 @@ test('a picture of up to 5 MB is accepted, a GIF included', () => {
   assert.deepEqual(schema.checkLogo('party.gif', gif(4.9 * 1024 * 1024)), { ok: true, kind: 'gif' });
   assert.deepEqual(schema.checkLogo('party.gif', gif(5.1 * 1024 * 1024)), { ok: false, error: 'image-too-large' });
 });
+
+test('a see-through shape is kept on a shape only, never on a line, and in any state', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [
+      { kind: 'shape', shape: 'ellipse', cut: true },
+      { kind: 'shape', shape: 'line', cut: true },
+      { kind: 'text', text: 'x', cut: true },
+      { kind: 'shape', cut: 'yes' },
+      { kind: 'shape', tiers: { gold: { cut: true } } },
+    ],
+  });
+  assert.deepEqual(canvas.items.map((item) => item.cut), [true, undefined, undefined, undefined, undefined]);
+  assert.equal(canvas.items[4].tiers.gold.cut, true);
+  assert.equal(schema.canvasCuts(canvas), true);
+  assert.equal(schema.canvasCuts(schema.normalizeCanvas({ items: [canvas.items[4]] })), true, 'a cut in one state counts');
+  assert.equal(schema.canvasCuts(schema.normalizeCanvas({ items: [{ kind: 'shape' }] })), false);
+});
+
+test('a see-through shape paints nothing and hands the engine its outline', () => {
+  const canvas = {
+    items: [
+      { kind: 'shape', shape: 'ellipse', x: 10, y: 10, w: 40, h: 20, cut: true, enter: 'rise' },
+      { kind: 'shape', shape: 'star', w: 30, h: 30, cut: true, round: 2 },
+      { kind: 'shape', shape: 'rect', w: 30, h: 10, radius: 40, cut: true },
+    ],
+  };
+  const markup = generator.canvasMarkup(canvas);
+  assert.match(markup, /^<div class="aw-canvas" aria-hidden="true"><div class="aw-card"><\/div><div data-i="0"/, 'the card paints in a layer the engine can cut');
+  assert.match(markup, /data-cut="&lt;ellipse cx=&quot;20&quot; cy=&quot;10&quot; rx=&quot;20&quot; ry=&quot;10&quot;\/&gt;"/);
+  assert.match(markup, /data-cut="&lt;path d=&quot;M[^"]+&quot;\/&gt;"><svg viewBox="0 0 30 30" preserveAspectRatio="none"><path d="M[^"]+"\/><\/svg>/);
+  assert.match(markup, /data-cut="&lt;rect width=&quot;30&quot; height=&quot;10&quot; rx=&quot;5&quot;\/&gt;"/, 'a corner never rounds past half the side');
+  assert.doesNotMatch(markup, /fill=/, 'the engine paints the outline itself');
+  const css = generator.canvasCss(canvas);
+  assert.match(css, /\[data-i="0"\] \{[^}]*visibility: hidden;/);
+  assert.doesNotMatch(css, /animation:/, 'a cut holds still');
+  const editing = generator.canvasCss(canvas, { editing: true });
+  assert.match(editing, /\[data-i="0"\] \{[^}]*border-radius: 50%; outline: 1px dashed/, 'the designer keeps its outline on screen');
+  assert.doesNotMatch(editing, /visibility: hidden/);
+  assert.match(editing, /> \[data-cut\] svg \* \{ fill: none; stroke: [^;]+; stroke-width: 1px; stroke-dasharray: 4 3;/, 'a polygon shows its outline, never a fill');
+  assert.match(generator.PRESET_ENGINE, /window\.awCutHoles = recut;/, 'the designer can ask for a new cut');
+  assert.equal(generator.canvasMarkup({ items: [{ kind: 'shape' }] }).includes('aw-card'), false, 'no layer without a cut');
+});
+
+test('a card that can be cut paints in its layer, to its outer edge, and takes no room for its holes', () => {
+  const plain = { borderWidth: 2, accentBar: 'left', bgMode: 'image', bgImage: 'bg.png' };
+  const cut = { ...plain, canvas: { items: [{ kind: 'shape', shape: 'ellipse', x: 900, y: 0, w: 40, h: 40, cut: true }] } };
+  const before = generator.buildCustomPresetCss(plain);
+  const after = generator.buildCustomPresetCss(cut);
+  const card = (css) => css.slice(css.indexOf('\n.ach {'), css.indexOf('\n}', css.indexOf('\n.ach {')));
+  assert.match(card(before), /background: var\(--bg\);[\s\S]*overflow: hidden;[\s\S]*box-shadow:/);
+  assert.doesNotMatch(card(after), /background:|overflow: hidden|box-shadow:/);
+  assert.match(card(after), /border-left: var\(--bar-size\) solid var\(--accent\);\n {2}border-color: transparent;/, 'the card keeps its border widths');
+  assert.match(
+    after,
+    /\.ach > \.aw-canvas > \.aw-card \{\n {2}position: absolute; inset: calc\(-1 \* var\(--border-width\)\) calc\(-1 \* var\(--border-width\)\) calc\(-1 \* var\(--border-width\)\) calc\(-1 \* var\(--bar-size\)\);/
+  );
+  assert.match(after, /\.ach > \.aw-canvas > \.aw-card::before \{ content: ''/, 'the picture paints in the layer');
+  assert.doesNotMatch(after, /\.ach > \* \{ position: relative; z-index: 1; \}/);
+  assert.deepEqual(generator.presetBoxSize(cut), generator.presetBoxSize(plain), 'a hole far past the card asks for no room');
+});

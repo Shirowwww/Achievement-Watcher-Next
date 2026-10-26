@@ -32,6 +32,8 @@ renamed in 3.9.0 and the history is kept under one file.
   "Gold only" picked above an element's settings, a change applies to gold unlocks alone (colour,
   size, position, text, visibility, anything), and "Back to base" undoes it. The card's own title,
   icon and description work the same way.
+- **See-through shapes in the preset editor.** A shape switched to see-through cuts a hole in
+  everything under it, the card included, so the desktop shows through; what sits above it stays.
 - **Imported SAN themes per tier.** Pick which trophy picture a SAN theme draws, or draw a tier with
   another imported SAN theme, its sound included.
 
@@ -70,6 +72,13 @@ renamed in 3.9.0 and the history is kept under one file.
   keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next
   took it for the old port and found no game. Both versions are read, and the platinum is picked up
   from its log line too.
+
+### Website & Docs
+
+- **Community preset cards show every kind of popup.** Two arrow buttons on a card's picture step
+  through the popup as an ordinary unlock, bronze, silver, gold, 100% and progress, with the state's
+  name in the corner, and the enlarged picture is the one on show. The render tool draws all of them
+  in one go (`node tools/gallery/render-preview.js <preset> out.png --all`).
 
 ## 3.12.3 - 2026-10-25
 

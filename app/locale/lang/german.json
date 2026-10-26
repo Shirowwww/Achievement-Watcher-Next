@@ -769,6 +769,7 @@
               "shadowColor": "Schattenfarbe",
               "shadowSize": "Schattengröße",
               "replay": "GIF bei jedem Einblenden neu abspielen",
+              "cut": "Durchsichtig",
               "loop": "Schleife",
               "alignGroup": "Aneinander ausrichten",
               "insert": "Einfügen"
@@ -910,6 +911,7 @@
               "replay": "Tour wiederholen"
             },
             "motionHint": "Die Karte steht still, solange du sie bearbeitest: Abspielen unter der Karte zeigt die Eingangseffekte und Schleifen.",
+            "cutHint": "Diese Form zeigt selbst nichts an: Alles darunter wird durchsichtig, auch die Karte. Was darüber liegt, bleibt sichtbar.",
             "maxItems": "Die Karte ist voll. Lösche ein Element, um ein weiteres hinzuzufügen."
           },
           "create": "Vorlage erstellen",

@@ -769,6 +769,7 @@
               "shadowColor": "Couleur de l'ombre",
               "shadowSize": "Taille de l'ombre",
               "replay": "Rejouer le GIF à chaque notification",
+              "cut": "Transparente",
               "loop": "En boucle",
               "alignGroup": "Aligner entre eux",
               "insert": "Insérer"
@@ -910,6 +911,7 @@
               "replay": "Revoir la visite"
             },
             "motionHint": "La carte reste immobile pendant que tu la modifies : Lire, sous la carte, montre les entrées et les boucles.",
+            "cutHint": "Cette forme n'affiche rien elle-même : tout ce qui est en dessous devient transparent, la carte comprise. Ce qui est au-dessus reste visible.",
             "maxItems": "La carte est pleine. Supprime un élément pour en ajouter un autre."
           },
           "create": "Créer le preset",

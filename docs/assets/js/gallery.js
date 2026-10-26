@@ -205,28 +205,111 @@
     return { frame: frame, picture: picture, caption: caption, note: explain, close: close };
   }
 
-  function enlarge(entry) {
+  // `name` is the state's name when the card pages through several, and empty for a single picture.
+  function pictureAlt(name) {
+    return name ? kind.previewAlt() + ' (' + name + ')' : kind.previewAlt();
+  }
+
+  function enlarge(entry, shot, name) {
     if (!lightbox) lightbox = buildLightbox();
-    lightbox.picture.src = entry.preview.file;
-    lightbox.picture.alt = kind.previewAlt();
-    lightbox.caption.textContent = entry.name;
+    var title = name ? entry.name + ' · ' + name : entry.name;
+    lightbox.picture.src = shot.file;
+    lightbox.picture.alt = pictureAlt(name);
+    lightbox.caption.textContent = title;
     lightbox.note.textContent = kind.zoomNote();
     lightbox.close.setAttribute('aria-label', t('gallery.zoomClose', 'Close'));
-    lightbox.frame.setAttribute('aria-label', entry.name);
+    lightbox.frame.setAttribute('aria-label', title);
     lightbox.frame.showModal();
+  }
+
+  /*
+    A preset is drawn once per kind of popup: normal, the three rare tiers, 100% and progress. A
+    listing that has them carries `previews`, a map from state to a picture, and a card pages
+    through them; one that does not (a theme, an older listing) has `preview` alone. A state this
+    page does not know is skipped, so a newer listing cannot break an older page.
+  */
+  var STATE_ORDER = ['normal', 'bronze', 'silver', 'gold', 'platinum', 'progress'];
+  var STATE_LABELS = {
+    normal: function () {
+      return t('presets.stateNormal', 'Normal');
+    },
+    bronze: function () {
+      return t('gallery.stateBronze', 'Bronze');
+    },
+    silver: function () {
+      return t('gallery.stateSilver', 'Silver');
+    },
+    gold: function () {
+      return t('gallery.stateGold', 'Gold');
+    },
+    platinum: function () {
+      return t('presets.statePlatinum', '100%');
+    },
+    progress: function () {
+      return t('presets.stateProgress', 'Progress');
+    },
+  };
+
+  function pictures(entry) {
+    var more = entry.previews && typeof entry.previews === 'object' ? entry.previews : {};
+    var list = [];
+    STATE_ORDER.forEach(function (state) {
+      var picture = state === 'normal' ? more.normal || entry.preview : more[state];
+      if (picture && typeof picture.file === 'string') {
+        list.push({ state: state, file: picture.file, width: picture.width, height: picture.height });
+      }
+    });
+    return list;
+  }
+
+  // The state a card shows survives the page being drawn again (a search, a sort, a language).
+  var shownState = {};
+  // Pictures already asked for, so paging back and forth never requests one twice.
+  var warmed = {};
+
+  function warm(file) {
+    if (warmed[file]) return;
+    warmed[file] = true;
+    new Image().src = file;
+  }
+
+  function chevron(direction) {
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', direction < 0 ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7');
+    svg.appendChild(path);
+    return svg;
+  }
+
+  function stepButton(direction) {
+    var button = element('button', 'state-step ' + (direction < 0 ? 'state-step-prev' : 'state-step-next'));
+    button.type = 'button';
+    button.setAttribute('aria-label', direction < 0 ? t('gallery.statePrev', 'Previous state') : t('gallery.stateNext', 'Next state'));
+    button.appendChild(chevron(direction));
+    return button;
   }
 
   function card(entry) {
     var article = element('article', 'preset-card');
 
+    var shots = pictures(entry);
+    var current = Math.max(
+      0,
+      shots
+        .map(function (shot) {
+          return shot.state;
+        })
+        .indexOf(shownState[entry.slug])
+    );
+    var paged = shots.length > 1;
+
     var figure = element('figure');
     var image = element('img');
-    image.src = entry.preview.file;
-    image.width = entry.preview.width;
-    image.height = entry.preview.height;
     image.loading = 'lazy';
     image.decoding = 'async';
-    image.alt = kind.previewAlt();
 
     /*
       The frame is a link to the picture rather than a button: a plain click opens it here, and a
@@ -234,17 +317,73 @@
       itself instead of to nothing at all.
     */
     var zoom = element('a', 'preview-zoom');
-    zoom.href = entry.preview.file;
     zoom.setAttribute('aria-label', t('gallery.zoom', 'See this preview in full size'));
     zoom.appendChild(image);
+    figure.appendChild(zoom);
+
+    var label = null;
+    if (paged) {
+      label = element('span', 'state-label');
+      label.setAttribute('aria-live', 'polite');
+    }
+
+    // The picture, the link and the name all follow the state being shown.
+    function draw() {
+      var shot = shots[current];
+      image.src = shot.file;
+      if (Number(shot.width) > 0 && Number(shot.height) > 0) {
+        image.width = shot.width;
+        image.height = shot.height;
+      }
+      zoom.href = shot.file;
+      if (label) label.textContent = STATE_LABELS[shot.state]();
+      image.alt = pictureAlt(label ? label.textContent : '');
+    }
+
     zoom.addEventListener('click', function (event) {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       if (typeof zoom.ownerDocument.createElement('dialog').showModal !== 'function') return;
       event.preventDefault();
-      enlarge(entry);
+      enlarge(entry, shots[current], label ? label.textContent : '');
     });
 
-    figure.appendChild(zoom);
+    if (paged) {
+      // The neighbours are fetched when they are about to be wanted, not with the page.
+      var warmNeighbours = function () {
+        warm(shots[(current + 1) % shots.length].file);
+        warm(shots[(current + shots.length - 1) % shots.length].file);
+      };
+      var step = function (delta) {
+        current = (current + delta + shots.length) % shots.length;
+        shownState[entry.slug] = shots[current].state;
+        draw();
+        warmNeighbours();
+      };
+
+      var previous = stepButton(-1);
+      var next = stepButton(1);
+      previous.addEventListener('click', function () {
+        step(-1);
+      });
+      next.addEventListener('click', function () {
+        step(1);
+      });
+      figure.addEventListener('keydown', function (event) {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        step(event.key === 'ArrowLeft' ? -1 : 1);
+      });
+      ['pointerenter', 'focusin'].forEach(function (name) {
+        figure.addEventListener(name, warmNeighbours, { once: true });
+      });
+
+      figure.appendChild(previous);
+      figure.appendChild(next);
+      figure.appendChild(label);
+    }
+
+    draw();
     article.appendChild(figure);
 
     var body = element('div', 'body');

@@ -165,6 +165,140 @@ window.addEventListener('DOMContentLoaded', function () {
       return setTimeout(function () { restartPicture(node); }, Number(node.getAttribute('data-replay')) || 0);
     });
   }
+  /*
+    A see-through shape cuts through what lies under it: the card, the parts and the items below
+    it in the stacking order. Each of those gets a mask in its own pixels with the shapes taken
+    out. Probes measure where each one really is, moved, turned or flipped, with its animations
+    held at rest meanwhile; the card itself is the frame both sides are measured in.
+  */
+  var CUT_MARGIN = 400;
+  var CUT_MAX_TRIES = 25;
+  var CUT_RETRY_MS = 80;
+  var CUT_LAYERS = '.aw-canvas > .aw-card, .icon, .meta, .title, .detail, .progress_line, .aw-canvas > [data-i]:not([data-cut])';
+  var MASK_PROPS = ['mask-image', 'mask-position', 'mask-size', 'mask-repeat', 'mask-clip'];
+  var cutMasked = [];
+  var cutTimer = null;
+  var cutTries = 0;
+  function drawn(node) { return node.getClientRects().length > 0; }
+  function moved(style) {
+    return style.transform !== 'none' || style.translate !== 'none' || style.rotate !== 'none' || style.scale !== 'none' || style.filter !== 'none';
+  }
+  // Where a node paints in the card: its own z-index, or that of the outermost stacking context
+  // it sits in. A plain in-flow node paints between the negative ones and the rest.
+  function rankOf(node) {
+    var rank = 0;
+    for (var at = node; at && at !== root; at = at.parentElement) {
+      var style = getComputedStyle(at);
+      var z = style.zIndex === 'auto' ? null : Number(style.zIndex);
+      var context = z !== null || moved(style) || Number(style.opacity) < 1 || style.isolation === 'isolate';
+      if (at === node) rank = z !== null ? z : (context || style.position !== 'static' ? 0 : -0.5);
+      else if (context) rank = z !== null ? z : 0;
+    }
+    return rank;
+  }
+  // Every running animation of the nodes and of what holds them in the card, held at rest.
+  function holdStill(nodes) {
+    var undo = [];
+    var seen = [];
+    nodes.forEach(function (node) {
+      for (var at = node; at && at !== root && seen.indexOf(at) < 0; at = at.parentElement) {
+        seen.push(at);
+        at.getAnimations().forEach(function (anim) {
+          if (anim.playState !== 'running') return;
+          var time = anim.currentTime;
+          var timing = anim.effect && anim.effect.getComputedTiming();
+          anim.pause();
+          anim.currentTime = timing && isFinite(timing.endTime) ? timing.endTime : 0;
+          undo.push(function () { anim.currentTime = time; anim.play(); });
+        });
+      }
+    });
+    return function () { undo.forEach(function (fn) { fn(); }); };
+  }
+  // Three probes in the node give the map from its own pixels to the window, whatever moves it.
+  function placeProbes(node) {
+    var style = getComputedStyle(node);
+    var loose = style.position === 'static' && !moved(style);
+    var before = node.style.getPropertyValue('position');
+    if (loose) node.style.setProperty('position', 'relative');
+    var probes = [[0, 0], [100, 0], [0, 100]].map(function (at) {
+      var probe = document.createElement('i');
+      probe.style.cssText = 'position: absolute; display: block; left: ' + at[0] + 'px; top: ' + at[1] + 'px; width: 0; height: 0; margin: 0; padding: 0; border: 0;';
+      node.appendChild(probe);
+      return probe;
+    });
+    return {
+      node: node,
+      probes: probes,
+      restore: function () { probes.forEach(function (probe) { probe.remove(); }); if (loose) node.style.setProperty('position', before); },
+    };
+  }
+  function frameOf(entry) {
+    var at = entry.probes.map(function (probe) { return probe.getBoundingClientRect(); });
+    return new DOMMatrix([(at[1].left - at[0].left) / 100, (at[1].top - at[0].top) / 100, (at[2].left - at[0].left) / 100, (at[2].top - at[0].top) / 100, at[0].left, at[0].top])
+      .translate(-entry.node.clientLeft, -entry.node.clientTop);
+  }
+  function clearCuts() {
+    cutMasked.forEach(function (node) { MASK_PROPS.forEach(function (prop) { node.style.removeProperty(prop); }); });
+    cutMasked = [];
+  }
+  // White keeps, the shapes in black take out; room around the box keeps a shadow or a glow.
+  function maskOut(node, shapes) {
+    var m = CUT_MARGIN;
+    var w = node.offsetWidth + 2 * m;
+    var h = node.offsetHeight + 2 * m;
+    var box = 'x="' + -m + '" y="' + -m + '" width="' + w + '" height="' + h + '"';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '" viewBox="' + -m + ' ' + -m + ' ' + w + ' ' + h + '">' +
+      '<mask id="c" maskUnits="userSpaceOnUse" ' + box + '><rect ' + box + ' fill="#fff"/><g fill="#000">' + shapes + '</g></mask>' +
+      '<rect ' + box + ' mask="url(#c)"/></svg>';
+    node.style.setProperty('mask-image', 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")', 'important');
+    node.style.setProperty('mask-position', -m + 'px ' + -m + 'px', 'important');
+    node.style.setProperty('mask-size', w + 'px ' + h + 'px', 'important');
+    node.style.setProperty('mask-repeat', 'no-repeat', 'important');
+    node.style.setProperty('mask-clip', 'no-clip', 'important');
+    cutMasked.push(node);
+  }
+  function cutHoles() {
+    clearTimeout(cutTimer);
+    clearCuts();
+    var holes = Array.prototype.filter.call(root.querySelectorAll('.aw-canvas > [data-cut]'), function (hole) {
+      return drawn(hole) && getComputedStyle(hole).getPropertyValue('--aw-cut-off').trim() !== '1';
+    });
+    if (!holes.length) return;
+    var layers = Array.prototype.filter.call(root.querySelectorAll(CUT_LAYERS), drawn);
+    var nodes = holes.concat(layers);
+    var resume = holdStill(nodes);
+    var entries = nodes.map(placeProbes);
+    var frames = entries.map(frameOf);
+    entries.forEach(function (entry) { entry.restore(); });
+    resume();
+    // A card scaled to nothing as it comes in has no frame to measure in yet.
+    if (frames.some(function (f) { return Math.abs(f.a * f.d - f.b * f.c) < 1e-6; })) {
+      cutTries += 1;
+      if (cutTries < CUT_MAX_TRIES) cutTimer = setTimeout(cutHoles, CUT_RETRY_MS);
+      return;
+    }
+    var ranks = nodes.map(rankOf);
+    layers.forEach(function (node, k) {
+      var mine = frames[holes.length + k].inverse();
+      var rank = ranks[holes.length + k];
+      var shapes = '';
+      holes.forEach(function (hole, i) {
+        var over = ranks[i] > rank || (ranks[i] === rank && Boolean(node.compareDocumentPosition(hole) & 4));
+        if (!over) return;
+        var t = mine.multiply(frames[i]);
+        var matrix = [t.a, t.b, t.c, t.d, t.e, t.f].map(function (v) { return Math.round(v * 1000) / 1000; });
+        shapes += '<g transform="matrix(' + matrix.join(' ') + ')">' + hole.getAttribute('data-cut') + '</g>';
+      });
+      if (shapes) maskOut(node, shapes);
+    });
+  }
+  function recut() {
+    cutTries = 0;
+    cutHoles();
+  }
+  // The designer redraws the card in place, without a new payload.
+  window.awCutHoles = recut;
   var closeTimer = null;
   function onPayload(displayName, description, iconPath, scale, data) {
     var titleEl = document.querySelector('.title');
@@ -192,6 +326,9 @@ window.addEventListener('DOMContentLoaded', function () {
     root.classList.remove('active');
     void root.offsetWidth;
     root.classList.add('active');
+    recut();
+    // A font that lands later moves the lines it sets, and the cuts made in them.
+    if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(recut);
     replayPictures();
     if (window.api && window.api.notificationRenderReady) window.api.notificationRenderReady();
     requestAnimationFrame(function () { marquees.forEach(startMarquee); });

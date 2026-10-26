@@ -178,6 +178,140 @@ const PRESET_ENGINE = [
   "      return setTimeout(function () { restartPicture(node); }, Number(node.getAttribute('data-replay')) || 0);",
   '    });',
   '  }',
+  '  /*',
+  '    A see-through shape cuts through what lies under it: the card, the parts and the items below',
+  '    it in the stacking order. Each of those gets a mask in its own pixels with the shapes taken',
+  '    out. Probes measure where each one really is, moved, turned or flipped, with its animations',
+  '    held at rest meanwhile; the card itself is the frame both sides are measured in.',
+  '  */',
+  '  var CUT_MARGIN = 400;',
+  '  var CUT_MAX_TRIES = 25;',
+  '  var CUT_RETRY_MS = 80;',
+  "  var CUT_LAYERS = '.aw-canvas > .aw-card, .icon, .meta, .title, .detail, .progress_line, .aw-canvas > [data-i]:not([data-cut])';",
+  "  var MASK_PROPS = ['mask-image', 'mask-position', 'mask-size', 'mask-repeat', 'mask-clip'];",
+  '  var cutMasked = [];',
+  '  var cutTimer = null;',
+  '  var cutTries = 0;',
+  '  function drawn(node) { return node.getClientRects().length > 0; }',
+  '  function moved(style) {',
+  "    return style.transform !== 'none' || style.translate !== 'none' || style.rotate !== 'none' || style.scale !== 'none' || style.filter !== 'none';",
+  '  }',
+  '  // Where a node paints in the card: its own z-index, or that of the outermost stacking context',
+  '  // it sits in. A plain in-flow node paints between the negative ones and the rest.',
+  '  function rankOf(node) {',
+  '    var rank = 0;',
+  '    for (var at = node; at && at !== root; at = at.parentElement) {',
+  '      var style = getComputedStyle(at);',
+  "      var z = style.zIndex === 'auto' ? null : Number(style.zIndex);",
+  "      var context = z !== null || moved(style) || Number(style.opacity) < 1 || style.isolation === 'isolate';",
+  "      if (at === node) rank = z !== null ? z : (context || style.position !== 'static' ? 0 : -0.5);",
+  '      else if (context) rank = z !== null ? z : 0;',
+  '    }',
+  '    return rank;',
+  '  }',
+  '  // Every running animation of the nodes and of what holds them in the card, held at rest.',
+  '  function holdStill(nodes) {',
+  '    var undo = [];',
+  '    var seen = [];',
+  '    nodes.forEach(function (node) {',
+  '      for (var at = node; at && at !== root && seen.indexOf(at) < 0; at = at.parentElement) {',
+  '        seen.push(at);',
+  '        at.getAnimations().forEach(function (anim) {',
+  "          if (anim.playState !== 'running') return;",
+  '          var time = anim.currentTime;',
+  '          var timing = anim.effect && anim.effect.getComputedTiming();',
+  '          anim.pause();',
+  '          anim.currentTime = timing && isFinite(timing.endTime) ? timing.endTime : 0;',
+  '          undo.push(function () { anim.currentTime = time; anim.play(); });',
+  '        });',
+  '      }',
+  '    });',
+  '    return function () { undo.forEach(function (fn) { fn(); }); };',
+  '  }',
+  '  // Three probes in the node give the map from its own pixels to the window, whatever moves it.',
+  '  function placeProbes(node) {',
+  '    var style = getComputedStyle(node);',
+  "    var loose = style.position === 'static' && !moved(style);",
+  "    var before = node.style.getPropertyValue('position');",
+  "    if (loose) node.style.setProperty('position', 'relative');",
+  '    var probes = [[0, 0], [100, 0], [0, 100]].map(function (at) {',
+  "      var probe = document.createElement('i');",
+  "      probe.style.cssText = 'position: absolute; display: block; left: ' + at[0] + 'px; top: ' + at[1] + 'px; width: 0; height: 0; margin: 0; padding: 0; border: 0;';",
+  '      node.appendChild(probe);',
+  '      return probe;',
+  '    });',
+  '    return {',
+  '      node: node,',
+  '      probes: probes,',
+  "      restore: function () { probes.forEach(function (probe) { probe.remove(); }); if (loose) node.style.setProperty('position', before); },",
+  '    };',
+  '  }',
+  '  function frameOf(entry) {',
+  '    var at = entry.probes.map(function (probe) { return probe.getBoundingClientRect(); });',
+  '    return new DOMMatrix([(at[1].left - at[0].left) / 100, (at[1].top - at[0].top) / 100, (at[2].left - at[0].left) / 100, (at[2].top - at[0].top) / 100, at[0].left, at[0].top])',
+  '      .translate(-entry.node.clientLeft, -entry.node.clientTop);',
+  '  }',
+  '  function clearCuts() {',
+  '    cutMasked.forEach(function (node) { MASK_PROPS.forEach(function (prop) { node.style.removeProperty(prop); }); });',
+  '    cutMasked = [];',
+  '  }',
+  '  // White keeps, the shapes in black take out; room around the box keeps a shadow or a glow.',
+  '  function maskOut(node, shapes) {',
+  '    var m = CUT_MARGIN;',
+  '    var w = node.offsetWidth + 2 * m;',
+  '    var h = node.offsetHeight + 2 * m;',
+  '    var box = \'x="\' + -m + \'" y="\' + -m + \'" width="\' + w + \'" height="\' + h + \'"\';',
+  '    var svg = \'<svg xmlns="http://www.w3.org/2000/svg" width="\' + w + \'" height="\' + h + \'" viewBox="\' + -m + \' \' + -m + \' \' + w + \' \' + h + \'">\' +',
+  '      \'<mask id="c" maskUnits="userSpaceOnUse" \' + box + \'><rect \' + box + \' fill="#fff"/><g fill="#000">\' + shapes + \'</g></mask>\' +',
+  '      \'<rect \' + box + \' mask="url(#c)"/></svg>\';',
+  "    node.style.setProperty('mask-image', 'url(\"data:image/svg+xml,' + encodeURIComponent(svg) + '\")', 'important');",
+  "    node.style.setProperty('mask-position', -m + 'px ' + -m + 'px', 'important');",
+  "    node.style.setProperty('mask-size', w + 'px ' + h + 'px', 'important');",
+  "    node.style.setProperty('mask-repeat', 'no-repeat', 'important');",
+  "    node.style.setProperty('mask-clip', 'no-clip', 'important');",
+  '    cutMasked.push(node);',
+  '  }',
+  '  function cutHoles() {',
+  '    clearTimeout(cutTimer);',
+  '    clearCuts();',
+  "    var holes = Array.prototype.filter.call(root.querySelectorAll('.aw-canvas > [data-cut]'), function (hole) {",
+  "      return drawn(hole) && getComputedStyle(hole).getPropertyValue('--aw-cut-off').trim() !== '1';",
+  '    });',
+  '    if (!holes.length) return;',
+  '    var layers = Array.prototype.filter.call(root.querySelectorAll(CUT_LAYERS), drawn);',
+  '    var nodes = holes.concat(layers);',
+  '    var resume = holdStill(nodes);',
+  '    var entries = nodes.map(placeProbes);',
+  '    var frames = entries.map(frameOf);',
+  '    entries.forEach(function (entry) { entry.restore(); });',
+  '    resume();',
+  '    // A card scaled to nothing as it comes in has no frame to measure in yet.',
+  '    if (frames.some(function (f) { return Math.abs(f.a * f.d - f.b * f.c) < 1e-6; })) {',
+  '      cutTries += 1;',
+  '      if (cutTries < CUT_MAX_TRIES) cutTimer = setTimeout(cutHoles, CUT_RETRY_MS);',
+  '      return;',
+  '    }',
+  '    var ranks = nodes.map(rankOf);',
+  '    layers.forEach(function (node, k) {',
+  '      var mine = frames[holes.length + k].inverse();',
+  '      var rank = ranks[holes.length + k];',
+  "      var shapes = '';",
+  '      holes.forEach(function (hole, i) {',
+  '        var over = ranks[i] > rank || (ranks[i] === rank && Boolean(node.compareDocumentPosition(hole) & 4));',
+  '        if (!over) return;',
+  '        var t = mine.multiply(frames[i]);',
+  '        var matrix = [t.a, t.b, t.c, t.d, t.e, t.f].map(function (v) { return Math.round(v * 1000) / 1000; });',
+  "        shapes += '<g transform=\"matrix(' + matrix.join(' ') + ')\">' + hole.getAttribute('data-cut') + '</g>';",
+  '      });',
+  '      if (shapes) maskOut(node, shapes);',
+  '    });',
+  '  }',
+  '  function recut() {',
+  '    cutTries = 0;',
+  '    cutHoles();',
+  '  }',
+  '  // The designer redraws the card in place, without a new payload.',
+  '  window.awCutHoles = recut;',
   '  var closeTimer = null;',
   '  function onPayload(displayName, description, iconPath, scale, data) {',
   "    var titleEl = document.querySelector('.title');",
@@ -205,6 +339,9 @@ const PRESET_ENGINE = [
   "    root.classList.remove('active');",
   '    void root.offsetWidth;',
   "    root.classList.add('active');",
+  '    recut();',
+  '    // A font that lands later moves the lines it sets, and the cuts made in them.',
+  "    if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(recut);",
   '    replayPictures();',
   '    if (window.api && window.api.notificationRenderReady) window.api.notificationRenderReady();',
   '    requestAnimationFrame(function () { marquees.forEach(startMarquee); });',
@@ -249,6 +386,8 @@ const PRESET_MARKUP = [
   behind the text, still above the card's background.
 */
 const CANVAS_CLASS = 'aw-canvas';
+const CARD_CLASS = 'aw-card';
+const CARD_SELECTOR = `.ach > .${CANVAS_CLASS} > .${CARD_CLASS}`;
 const CANVAS_PART_SELECTORS = { icon: '.icon', text: '.text_wrap', title: '.title', detail: '.detail', meta: '.meta', progress: '.progress_line' };
 const CANVAS_TEXT_PARTS = ['title', 'detail', 'meta', 'progress'];
 const CANVAS_TEXT_COLOR = { accent: 'var(--accent, #ffffff)', text: 'var(--text, #ffffff)' };
@@ -436,9 +575,26 @@ function polygonSvg(item, id) {
   const dash = item.stroke && DASH_ATTRS[item.dash] ? DASH_ATTRS[item.dash](item.stroke) : '';
   const stroke = item.stroke ? ` stroke="${item.strokeColor}" stroke-width="${item.stroke}" stroke-linejoin="round" vector-effect="non-scaling-stroke"${dash}` : '';
   const [w, h] = item.round || dash ? [item.w, item.h] : [100, 100];
-  const points = pointsIn(item, w, h);
-  const outline = item.round ? `<path d="${roundedPath(points, item.round)}"` : `<polygon points="${points.map(([x, y]) => `${fmt(x)},${fmt(y)}`).join(' ')}"`;
-  return `<svg viewBox="0 0 ${fmt(w)} ${fmt(h)}" preserveAspectRatio="none">${defs}${outline} ${paint}${stroke}/></svg>`;
+  return `<svg viewBox="0 0 ${fmt(w)} ${fmt(h)}" preserveAspectRatio="none">${defs}${polygonOutline(pointsIn(item, w, h), item.round)} ${paint}${stroke}/></svg>`;
+}
+
+// A polygon's element, left open for its attributes.
+const polygonOutline = (points, round) =>
+  round ? `<path d="${roundedPath(points, round)}"` : `<polygon points="${points.map(([x, y]) => `${fmt(x)},${fmt(y)}`).join(' ')}"`;
+
+// A see-through shape's outline in its own pixels, for the engine to cut out of what lies under it.
+function cutShape(item) {
+  const [w, h] = [item.w, item.h];
+  if (item.shape === 'ellipse') return `<ellipse cx="${fmt(w / 2)}" cy="${fmt(h / 2)}" rx="${fmt(w / 2)}" ry="${fmt(h / 2)}"/>`;
+  if (!CANVAS_POLYGONS.has(item.shape)) return `<rect width="${fmt(w)}" height="${fmt(h)}" rx="${fmt(Math.min(item.radius, w / 2, h / 2))}"/>`;
+  return `${polygonOutline(pointsIn(item, w, h), item.round)}/>`;
+}
+
+// Kept on screen while editing, so it can be picked: its outline only, dashed.
+function cutLook(item, editing) {
+  if (!editing) return 'visibility: hidden;';
+  if (CANVAS_POLYGONS.has(item.shape)) return '';
+  return `border-radius: ${item.shape === 'ellipse' ? '50%' : `${item.radius}px`}; outline: 1px dashed rgba(255, 255, 255, 0.8); outline-offset: -1px;`;
 }
 
 // A line drawn in dashes or dots of its own thickness.
@@ -563,7 +719,7 @@ function itemVariants(item, index) {
 
 const canvasVariants = (canvas) => canvas.items.flatMap((item, index) => itemVariants(item, index));
 
-function canvasItemCss({ item, select }, { zIndex, fonts, assetUrl }) {
+function canvasItemCss({ item, select }, { zIndex, fonts, assetUrl, editing }) {
   const css = [];
   const rules = [
     `left: ${item.x}px; top: ${item.y}px; width: ${item.w}px;`,
@@ -591,6 +747,8 @@ function canvasItemCss({ item, select }, { zIndex, fonts, assetUrl }) {
     const mask = `${canvasIconMask(item.icon)} center / contain no-repeat`;
     rules.push(shapeFilter(item));
     css.push(`.ach > .${CANVAS_CLASS} > ${select} > span { display: block; width: 100%; height: 100%; background: ${shapePaint(item)}; -webkit-mask: ${mask}; mask: ${mask}; }`);
+  } else if (item.cut) {
+    rules.push(cutLook(item, editing));
   } else if (CANVAS_POLYGONS.has(item.shape)) {
     rules.push(shapeFilter(item));
   } else {
@@ -615,7 +773,8 @@ function variantVisibilityCss({ select, states, shown }, editing) {
   if (editing && states.length < ALL_STATES.length) css.push(`.ach:not(:is(${statesSelector(states)})) ${at} { display: none !important; }`);
   if (shown.length < ALL_STATES.length) {
     const away = shown.length ? `.ach:not(:is(${statesSelector(shown)}))` : '.ach';
-    const look = editing ? 'opacity: 0.25 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none !important;';
+    // Faint, a see-through shape cuts nothing: the engine reads --aw-cut-off.
+    const look = editing ? 'opacity: 0.25 !important; outline: 1px dashed rgba(255, 255, 255, 0.6); --aw-cut-off: 1;' : 'display: none !important;';
     css.push(`${away} ${at} { ${look} }`);
   }
   return css;
@@ -670,18 +829,23 @@ function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances
   css.push(`.ach > .${CANVAS_CLASS} { position: absolute !important; inset: 0; z-index: auto !important; pointer-events: none; }`);
   css.push(`.ach > .${CANVAS_CLASS} > div { position: absolute; box-sizing: border-box; margin: 0; }`);
   css.push(`.ach > .${CANVAS_CLASS} svg { display: block; width: 100%; height: 100%; overflow: visible; }`);
+  // A see-through polygon's outline, drawn only while editing (the popup hides the shape).
+  if (schema.canvasCuts(canvas)) {
+    css.push(`.ach > .${CANVAS_CLASS} > [data-cut] svg * { fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 1px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }`);
+  }
   const variants = canvas.items.flatMap((item, index) => {
     const zIndex = order.zOf(index) ?? (item.back ? -1 : 2);
     return itemVariants(item, index).map((variant) => {
-      css.push(...canvasItemCss(variant, { zIndex, fonts, assetUrl }), ...variantVisibilityCss(variant, editing));
+      css.push(...canvasItemCss(variant, { zIndex, fonts, assetUrl, editing }), ...variantVisibilityCss(variant, editing));
       return variant;
     });
   });
   for (const [tier, word] of Object.entries(canvas.words || {})) {
     css.push(`.ach${CANVAS_TIER_STATES[tier]} > .${CANVAS_CLASS} [data-tok="tier"]::after { content: ${cssString(word)}; }`);
   }
-  // Not while editing, unless asked: an item would vanish and come back at every change.
-  if (entrances) css.push(...canvasMotionCss(variants));
+  // Not while editing, unless asked: an item would vanish and come back at every change. A cut is
+  // made once the card is in, so a see-through shape stays still.
+  if (entrances) css.push(...canvasMotionCss(variants.filter((variant) => !variant.item.cut)));
   return css.join('\n');
 }
 
@@ -701,15 +865,19 @@ function canvasMarkup(rawCanvas) {
   const inner = (item, id) => {
     if (item.kind === 'text') return textMarkup(item.text);
     if (item.kind === 'icon') return '<span></span>';
+    if (item.cut) return CANVAS_POLYGONS.has(item.shape) ? `<svg viewBox="0 0 ${fmt(item.w)} ${fmt(item.h)}" preserveAspectRatio="none">${cutShape(item)}</svg>` : '';
     return item.kind === 'shape' && CANVAS_POLYGONS.has(item.shape) ? polygonSvg(item, id) : '';
   };
   // When the engine starts an animated picture over. The file name changes the markup when the
   // picture does, so the preview rebuilds the element instead of keeping the old picture's restart.
   const replay = (item) => (item.replay ? ` data-replay="${item.enter ? item.delay || 0 : 0}" data-file="${escapeHtml(item.file)}"` : '');
+  const cut = (item) => (item.cut ? ` data-cut="${escapeHtml(cutShape(item))}"` : '');
   const items = canvasVariants(canvas).map(
-    ({ item, index, id, v }) => `<div data-i="${index}"${v === null ? '' : ` data-v="${v}"`} data-kind="${item.kind}"${replay(item)}>${inner(item, id)}</div>`
+    ({ item, index, id, v }) => `<div data-i="${index}"${v === null ? '' : ` data-v="${v}"`} data-kind="${item.kind}"${replay(item)}${cut(item)}>${inner(item, id)}</div>`
   );
-  return `<div class="${CANVAS_CLASS}" aria-hidden="true">${items.join('')}</div>`;
+  // A card that can be cut paints in a layer of its own, which the engine can cut like the rest.
+  const card = schema.canvasCuts(canvas) ? `<div class="${CARD_CLASS}"></div>` : '';
+  return `<div class="${CANVAS_CLASS}" aria-hidden="true">${card}${items.join('')}</div>`;
 }
 
 // The card's markup with the items in it, for a page this module writes itself. A replacer
@@ -819,8 +987,9 @@ function canvasRoom(values, { editing = false } = {}) {
   const card = cardSize(values);
   const room = { left: 0, top: 0, right: 0, bottom: 0, detached: [] };
   canvasVariants(canvas).forEach(({ item, select, shown }) => {
-    // Switched off in every state it stands for, it is never drawn: only the designer shows it.
-    if (!editing && !shown.length) return;
+    // Switched off in every state it stands for, it is never drawn: only the designer shows it. A
+    // see-through shape paints nothing of its own.
+    if (!editing && (!shown.length || item.cut)) return;
     const box = canvasItemBounds(item);
     if (!touchesCard(box, card)) {
       room.detached.push(select);
@@ -849,7 +1018,7 @@ function canvasPlacementRules(values, editing) {
   const dy = (room.top - room.bottom) / 2;
   if (dx || dy) rules.push(`.ach { left: calc(50% + ${dx}px); top: calc(50% + ${dy}px); }`);
   for (const select of room.detached) {
-    rules.push(`.ach > .${CANVAS_CLASS} > ${select} { ${editing ? 'opacity: 0.35; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'display: none;'} }`);
+    rules.push(`.ach > .${CANVAS_CLASS} > ${select} { ${editing ? 'opacity: 0.35; outline: 1px dashed rgba(255, 255, 255, 0.6); --aw-cut-off: 1;' : 'display: none;'} }`);
   }
   return rules.join('\n');
 }
@@ -1063,7 +1232,7 @@ function logoPositionCss(position, offset) {
   The logo shares the card's one `::after` layer with the texture, as the top background layer of
   that pseudo-element: it sits under the text, over the picture, and needs no element of its own.
 */
-function logoLayerRule(values, assetUrl, withPattern) {
+function logoLayerRule(values, assetUrl, withPattern, card = '.ach') {
   const images = [cssUrl(assetUrl ? assetUrl(values.logoImage) : values.logoImage)];
   const sizes = [`auto ${values.logoSize}px`];
   const positions = [logoPositionCss(values.logoPosition, values.logoOffset)];
@@ -1079,7 +1248,7 @@ function logoLayerRule(values, assetUrl, withPattern) {
     });
   }
   return (
-    `.ach::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; ` +
+    `${card}::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; ` +
     `background-image: ${images.join(', ')}; background-repeat: ${repeats.join(', ')}; ` +
     `background-position: ${positions.join(', ')}; background-size: ${sizes.join(', ')}; }`
   );
@@ -1092,16 +1261,52 @@ function fontFaceRule(values, assetUrl) {
   return `@font-face { font-family: '${CUSTOM_FONT_FAMILY}'; src: ${url} format('${schema.fontFormat(values.fontFile)}'); font-display: block; }`;
 }
 
+const CARD_SHADOW = `  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow)), 0 0 calc(var(--glow-strength) * var(--glow-pulse) * ${GLOW_RADIUS_PX}px) color-mix(in srgb, var(--accent) 65%, transparent);`;
+
+// Each edge of the card's border, as the rules above draw it.
+function borderWidths(values) {
+  const base = values.borderWidth > 0 ? 'var(--border-width)' : '0px';
+  const bar = 'var(--bar-size)';
+  if (values.accentBar === 'outline') return { top: bar, right: bar, bottom: bar, left: bar };
+  const widths = { top: base, right: base, bottom: base, left: base };
+  if (widths[values.accentBar]) widths[values.accentBar] = bar;
+  return widths;
+}
+
+/*
+  The card's own paint, in a layer of the canvas when a see-through shape can cut it: the layer
+  covers the card out to its border's outer edge, under every part and item. The card keeps its
+  border's widths, so nothing in it moves.
+*/
+function cardLayerCss(values, layers) {
+  const edge = borderWidths(values);
+  return [
+    `${CARD_SELECTOR} {`,
+    `  position: absolute; inset: calc(-1 * ${edge.top}) calc(-1 * ${edge.right}) calc(-1 * ${edge.bottom}) calc(-1 * ${edge.left});`,
+    '  z-index: -1000; box-sizing: border-box; border-radius: var(--radius); pointer-events: none;',
+    backgroundRule(values),
+    ...borderRules(values),
+    layers ? '  overflow: hidden;' : '',
+    CARD_SHADOW,
+    '}',
+  ];
+}
+
 function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = !editing } = {}) {
   const values = normalizeOptions(options);
   const flexAlign = FLEX_ALIGN[values.align];
   const artwork = values.bgMode === 'artwork';
   const picture = artwork || values.bgMode === 'image';
   const pattern = Boolean(BG_PATTERNS[values.bgPattern]);
+  const logo = Boolean(values.logoImage);
+  const layers = picture || pattern || logo;
   const glowAnimation = GLOW_ANIMATIONS[values.glowAnim] || null;
+  const cuts = schema.canvasCuts(schema.normalizeCanvas(values.canvas));
+  const card = cuts ? CARD_SELECTOR : '.ach';
 
   const css = [
-    '@property --glow-pulse { syntax: "<number>"; inherits: false; initial-value: 1; }',
+    // Inherited, so a card layer (see cardLayerCss) pulses with the card.
+    '@property --glow-pulse { syntax: "<number>"; inherits: true; initial-value: 1; }',
     fontFaceRule(values, assetUrl),
     ':root {',
     ...rootVariables(values, assetUrl),
@@ -1123,12 +1328,14 @@ function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = 
     // The state colour every accent-driven rule reads. The state classes below re-point it, which is
     // how one stylesheet paints a normal, a rare and a completion notification.
     '  --accent: var(--accent-base); --glow-strength: var(--glow);',
-    backgroundRule(values),
+    cuts ? '' : backgroundRule(values),
     ...borderRules(values),
+    cuts ? '  border-color: transparent;' : '',
     ...layoutRules(values),
-    picture || pattern || values.logoImage ? '  overflow: hidden;' : '',
-    '  box-shadow: 0 4px 12px rgba(0, 0, 0, var(--shadow)), 0 0 calc(var(--glow-strength) * var(--glow-pulse) * ' + GLOW_RADIUS_PX + 'px) color-mix(in srgb, var(--accent) 65%, transparent);',
+    layers && !cuts ? '  overflow: hidden;' : '',
+    cuts ? '' : CARD_SHADOW,
     '}',
+    ...(cuts ? cardLayerCss(values, layers) : []),
     '.ach.state-rare { --accent: var(--rare-accent); --glow-strength: var(--rare-glow); }',
     '.ach.state-rare.tier-silver { --accent: var(--rare-silver); }',
     '.ach.state-rare.tier-bronze { --accent: var(--rare-bronze); }',
@@ -1147,26 +1354,26 @@ function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = 
     // every payload; `--bg-image` is the preset's own and is fixed at generation time.
     const source = artwork ? 'var(--artwork)' : 'var(--bg-image)';
     css.push(
-      `.ach::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-image: ${source}; background-size: cover; background-position: center ${values.artworkPosition}; filter: blur(var(--artwork-blur)); opacity: calc(1 - var(--artwork-dim)); }`
+      `${card}::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; background-image: ${source}; background-size: cover; background-position: center ${values.artworkPosition}; filter: blur(var(--artwork-blur)); opacity: calc(1 - var(--artwork-dim)); }`
     );
   }
 
-  const logo = Boolean(values.logoImage);
   if (logo) {
-    css.push(logoLayerRule(values, assetUrl, pattern));
+    css.push(logoLayerRule(values, assetUrl, pattern, card));
   } else if (pattern) {
     // Its own layer above the background and any picture, and below the text.
     const size = BG_PATTERN_SIZES[values.bgPattern];
     css.push(
-      `.ach::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; background-image: ${BG_PATTERNS[values.bgPattern]};` +
+      `${card}::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none; background-image: ${BG_PATTERNS[values.bgPattern]};` +
         (size && size !== 'auto' ? ` background-size: ${size};` : '') +
         ' }'
     );
   }
 
   // An absolutely positioned pseudo-element paints above in-flow content, so once the card has a
-  // layer, the text needs its own stacking position or the picture/pattern draw over it.
-  if (picture || pattern || logo) css.push('.ach > * { position: relative; z-index: 1; }');
+  // layer, the text needs its own stacking position or the picture/pattern draw over it. A card
+  // layer already sits under everything.
+  if (layers && !cuts) css.push('.ach > * { position: relative; z-index: 1; }');
 
   css.push(
     ...iconRules(values),

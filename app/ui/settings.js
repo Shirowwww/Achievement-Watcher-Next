@@ -5352,6 +5352,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       styleEl.textContent = stylesheetFor(values);
       syncLayerLogo(frame.contentDocument);
       syncCanvasMarkup(frame.contentDocument);
+      // What a see-through shape cuts may have moved; a bundled preset's own engine has no cuts.
+      if (frame.contentWindow.awCutHoles) frame.contentWindow.awCutHoles();
       if (previewView === 'compare') renderComparePreviews(values);
       layoutPreview(values);
     }
@@ -5827,6 +5829,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       assetUrl: presetAssetUrl,
       // The bundled preset's brand mark, which only a layer has: 'after', 'before' or ''.
       markPseudo: () => (layerMode && layerMode.markPseudo) || '',
+      // Over a bundled preset, whose engine cannot cut through the card.
+      isLayer: () => Boolean(layerMode),
       importImage: loggedImport(importCanvasImage),
       importFont: loggedImport(importCanvasFont),
       status: (message, state) => setPresetStatus(message, state),

@@ -769,6 +769,7 @@
               "shadowColor": "Farba tieňa",
               "shadowSize": "Veľkosť tieňa",
               "replay": "Prehrať GIF znova pri každom zobrazení",
+              "cut": "Priehľadný",
               "loop": "Slučka",
               "alignGroup": "Zarovnať navzájom",
               "insert": "Vložiť"
@@ -910,6 +911,7 @@
               "replay": "Zopakovať prehliadku"
             },
             "motionHint": "Karta sa pri úpravách nehýbe: Prehrať pod kartou ukáže nájazdy a slučky.",
+            "cutHint": "Tento tvar sám nič nezobrazuje: všetko pod ním sa stane priehľadným, vrátane karty. To, čo je nad ním, zostane viditeľné.",
             "maxItems": "Karta je plná. Odstráňte prvok, aby ste mohli pridať ďalší."
           },
           "create": "Vytvoriť predvoľbu",

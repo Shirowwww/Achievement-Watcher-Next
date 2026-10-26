@@ -171,6 +171,124 @@ test('the optional notes file only carries the three fields it may carry', () =>
   }
 });
 
+const { STATES, STATE_NAMES, stateOutput } = require(path.join(root, 'tools', 'gallery', 'render-preview.js'));
+
+// A package copied under another name, with the pictures a test wants beside it. Everything it
+// wrote is removed afterwards, whatever the assertions did.
+function withStagedPreset(pictures, run) {
+  const source = fs.readdirSync(COMMUNITY).find((file) => file.endsWith('.awpreset'));
+  const written = [path.join(COMMUNITY, 'staged.awpreset')];
+  fs.copyFileSync(path.join(COMMUNITY, source), written[0]);
+  for (const [file, content] of Object.entries(pictures)) {
+    written.push(path.join(COMMUNITY, file));
+    fs.writeFileSync(written.at(-1), content);
+  }
+  try {
+    return run();
+  } finally {
+    for (const file of written) fs.rmSync(file, { force: true });
+  }
+}
+
+test('the pictures of the other states are listed beside the normal one, normal first', () => {
+  const { records, problems } = collect();
+  assert.deepEqual(problems, []);
+
+  const withStates = records.filter((record) => record.previews);
+  assert.ok(withStates.length > 0, 'the example presets ship a picture for every state');
+
+  for (const record of withStates) {
+    assert.deepEqual(Object.keys(record.previews), STATE_NAMES.filter((state) => record.previews[state]), 'states keep their paging order');
+    assert.deepEqual(record.previews.normal, record.preview, 'preview stays the normal picture, for older readers');
+    for (const picture of Object.values(record.previews)) {
+      const file = path.join(root, 'docs', 'gallery', picture.file);
+      assert.ok(fs.existsSync(file), `${picture.file} is listed but missing`);
+      assert.ok(fs.statSync(file).size <= LIMITS.previewBytes, `${picture.file} is over the picture limit`);
+    }
+  }
+
+  // Nothing on disk is left out of the listing.
+  for (const file of fs.readdirSync(COMMUNITY)) {
+    const found = /^([a-z0-9-]+)\.(bronze|silver|gold|platinum|progress)\.png$/.exec(file);
+    if (!found) continue;
+    const record = records.find((entry) => entry.slug === found[1]);
+    assert.equal(record.previews[found[2]].file, `community/${file}`);
+  }
+});
+
+test('a preset with one picture is listed exactly as before', () => {
+  withStagedPreset({ 'staged.png': pngHeader(900, 400) }, () => {
+    const record = collect().records.find((entry) => entry.slug === 'staged');
+    assert.deepEqual(record.preview, { file: 'community/staged.png', width: 900, height: 400 });
+    assert.ok(!('previews' in record), 'no previews key when there is nothing to page through');
+  });
+});
+
+test('a state picture is picked up with its own size and kept after the normal one', () => {
+  withStagedPreset({ 'staged.png': pngHeader(900, 400), 'staged.progress.png': pngHeader(900, 420), 'staged.gold.png': pngHeader(900, 400) }, () => {
+    const { records, problems } = collect();
+    assert.ok(!problems.some((problem) => problem.includes('staged.')), problems.join('; '));
+    const record = records.find((entry) => entry.slug === 'staged');
+    assert.deepEqual(Object.keys(record.previews), ['normal', 'gold', 'progress']);
+    assert.deepEqual(record.previews.progress, { file: 'community/staged.progress.png', width: 900, height: 420 });
+    assert.deepEqual(record.preview, { file: 'community/staged.png', width: 900, height: 400 });
+  });
+});
+
+test('a state picture gets the checks the normal picture gets', () => {
+  const oversized = Buffer.concat([pngHeader(900, 400), Buffer.alloc(LIMITS.previewBytes)]);
+  const cases = [
+    ['staged.silver.png', jpegHeader(900, 400), 'really a jpeg'],
+    ['staged.silver.png', Buffer.from('<svg>not an image</svg>'), 'not a PNG, WebP or JPEG'],
+    ['staged.silver.png', pngHeader(64, 24), 'at least'],
+    ['staged.silver.png', pngHeader(4000, 400), 'the limit is'],
+    ['staged.silver.png', oversized, 'KB; the limit is'],
+  ];
+  for (const [file, content, expected] of cases) {
+    withStagedPreset({ 'staged.png': pngHeader(900, 400), [file]: content }, () => {
+      const problems = collect().problems.filter((problem) => problem.startsWith(file));
+      assert.ok(problems.some((problem) => problem.includes(expected)), `${expected}: ${problems.join('; ')}`);
+    });
+  }
+});
+
+test('a picture named after a state nobody knows, or a preset nobody has, is refused', () => {
+  withStagedPreset({ 'staged.png': pngHeader(900, 400), 'staged.rare.png': pngHeader(900, 400), 'staged.normal.png': pngHeader(900, 400) }, () => {
+    const problems = collect().problems;
+    assert.ok(problems.some((problem) => problem.includes('staged.rare.png: "rare" is not a state')), problems.join('; '));
+    assert.ok(problems.some((problem) => problem.includes('staged.normal.png: "normal" is not a state')), problems.join('; '));
+  });
+
+  const orphan = path.join(COMMUNITY, 'orphan.gold.png');
+  fs.writeFileSync(orphan, pngHeader(900, 400));
+  try {
+    assert.ok(collect().problems.some((problem) => problem.includes('orphan.gold.png has no orphan.awpreset')));
+  } finally {
+    fs.rmSync(orphan, { force: true });
+  }
+});
+
+test('the render tool names its states and its files the way the listing reads them', () => {
+  assert.deepEqual(STATE_NAMES, ['normal', 'bronze', 'silver', 'gold', 'platinum', 'progress']);
+  for (const state of STATE_NAMES) assert.ok(STATES[state], `${state} has no stand-in payload`);
+  assert.equal(STATES.rare, STATES.gold, 'rare is the older name of gold');
+
+  assert.equal(stateOutput('/x/blueprint.png', 'normal'), '/x/blueprint.png');
+  assert.equal(path.basename(stateOutput(path.join('x', 'blueprint.png'), 'gold')), 'blueprint.gold.png');
+  assert.equal(path.basename(stateOutput(path.join('x', 'a.b.webp'), 'progress')), 'a.b.progress.webp');
+});
+
+// The older engine reads only the rate (gold under 3, silver 3 to 6, bronze 6 to 10), the newer one
+// the tier, falling back on the rate. A stand-in that satisfies both draws one tier on every preset.
+test('the rare stand-ins carry a tier and a rate that every engine reads the same way', () => {
+  const band = { gold: [0, 3], silver: [3, 6], bronze: [6, 10] };
+  for (const [tier, [from, to]] of Object.entries(band)) {
+    assert.equal(STATES[tier].rarityTier, tier);
+    assert.ok(STATES[tier].rarityPercent >= from && STATES[tier].rarityPercent < to, `${tier} rate ${STATES[tier].rarityPercent}`);
+  }
+  for (const state of ['normal', 'platinum', 'progress']) assert.ok(!STATES[state].rarityTier, `${state} is not a rare tier`);
+});
+
 test('the committed listing is what the folder produces', () => {
   const { records, problems } = collect();
   assert.deepEqual(problems, []);

@@ -769,6 +769,7 @@
               "shadowColor": "Kolor cienia",
               "shadowSize": "Rozmiar cienia",
               "replay": "Odtwarzaj GIF od nowa przy każdym pokazaniu",
+              "cut": "Przezroczysty",
               "loop": "Zapętlenie",
               "alignGroup": "Wyrównaj względem siebie",
               "insert": "Wstaw"
@@ -910,6 +911,7 @@
               "replay": "Powtórz przewodnik"
             },
             "motionHint": "Karta stoi w miejscu podczas edycji: Odtwórz pod kartą pokazuje wejścia i zapętlenia.",
+            "cutHint": "Ten kształt sam niczego nie wyświetla: wszystko pod nim staje się przezroczyste, łącznie z kartą. To, co jest nad nim, pozostaje widoczne.",
             "maxItems": "Karta jest pełna. Usuń element, aby dodać kolejny."
           },
           "create": "Utwórz ustawienie",

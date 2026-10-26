@@ -769,6 +769,7 @@
               "shadowColor": "Barva stínu",
               "shadowSize": "Velikost stínu",
               "replay": "Přehrát GIF při každém oznámení",
+              "cut": "Průhledný",
               "loop": "Smyčka",
               "alignGroup": "Zarovnat vzájemně",
               "insert": "Vložit"
@@ -910,6 +911,7 @@
               "replay": "Zopakovat prohlídku"
             },
             "motionHint": "Karta se při úpravách nehýbe: Přehrát pod kartou ukáže nájezdy a smyčky.",
+            "cutHint": "Tento tvar sám nic nezobrazuje: vše pod ním se stane průhledným, včetně karty. Co je nad ním, zůstane viditelné.",
             "maxItems": "Karta je plná. Smažte prvek, abyste mohli přidat další."
           },
           "create": "Vytvořit předvolbu",

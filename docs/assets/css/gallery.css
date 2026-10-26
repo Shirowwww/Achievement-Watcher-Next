@@ -401,6 +401,83 @@ main > .section:last-child {
   }
 }
 
+/*
+  A card that pages through the popup's states: two round buttons on the picture and the name of the
+  state being shown. They stay drawn all the time, since a touch screen has no hover, and sit on the
+  backdrop gradient, which is dark in both themes, so they are light on dark in both.
+*/
+.preset-card figure .state-step {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(8, 12, 22, 0.62);
+  color: #fff;
+  cursor: pointer;
+}
+
+.preset-card figure .state-step-prev {
+  left: 8px;
+}
+
+.preset-card figure .state-step-next {
+  right: 8px;
+}
+
+.preset-card figure .state-step:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(8, 12, 22, 0.86);
+}
+
+.preset-card figure .state-step:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.state-step svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.preset-card figure .state-label {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  max-width: calc(100% - 96px);
+  padding: 2px 10px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(8, 12, 22, 0.62);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+@media (pointer: coarse) {
+  .preset-card figure .state-step {
+    width: 40px;
+    height: 40px;
+  }
+}
+
 /* The picture at its own size, over everything else. Escape and the backdrop come with dialog. */
 .lightbox {
   max-width: min(96vw, 1280px);

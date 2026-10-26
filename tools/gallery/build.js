@@ -5,7 +5,14 @@
 
     docs/gallery/community/<name>.awpreset    the file the app exports
     docs/gallery/community/<name>.png         a picture of the popup (webp and jpg work too)
+    docs/gallery/community/<name>.<state>.png optional: the same popup in another state
     docs/gallery/community/<name>.json        optional: { "by", "summary", "link" }
+
+  The states are bronze, silver, gold, platinum (the 100% popup) and progress; the plain picture is
+  the normal one, and `node tools/gallery/render-preview.js <preset> <name>.png --all` writes all of
+  them. A listing entry carries `preview` (the normal picture, as before) and, when there are more,
+  `previews`: { <state>: { file, width, height } } with normal first, so a card can page through
+  them. Every picture is held to the same checks.
 
   Everything else - the preset's name, its description, its version, its tags, the AW Next version
   it needs, the date - is read from the package itself, because the app already wrote it there.
@@ -32,11 +39,14 @@ const COMMUNITY = path.join(root, 'docs', 'gallery', 'community');
 const INDEX = path.join(root, 'docs', 'gallery', 'index.json');
 
 const { readPackage } = require(path.join(root, 'app', 'util', 'presetPackage.js'));
+const { STATE_NAMES } = require(path.join(__dirname, 'render-preview.js'));
 const appVersion = require(path.join(root, 'app', 'package.json')).version;
 
 // 2 to 48 characters, and it may not end on a dash: this is a file name and a URL.
 const NAME_RE = /^[a-z0-9][a-z0-9-]{0,46}[a-z0-9]$/;
 const PREVIEW_EXT = ['.png', '.webp', '.jpg', '.jpeg'];
+// The plain <name>.png is the normal state; these are the ones that take a <name>.<state>.png.
+const EXTRA_STATES = STATE_NAMES.filter((state) => state !== 'normal');
 
 // Gallery limits, well under what the app accepts on a manual import: a file somebody chose to open
 // is not the same as one served to everybody from a page.
@@ -128,6 +138,34 @@ function committer(file) {
 
 // One preset
 
+// <name>.<state> is one more picture of <name>; names have no dot, so the last one is the split.
+function splitPicture(stem) {
+  const dot = stem.lastIndexOf('.');
+  return dot < 0 ? { name: stem, state: '' } : { name: stem.slice(0, dot), state: stem.slice(dot + 1) };
+}
+
+// What a public listing asks of one picture: really an image, of the type it claims, of a size a
+// page can serve and a reader can read.
+function inspectPicture(file) {
+  const problems = [];
+  const buffer = fs.readFileSync(path.join(COMMUNITY, file));
+  const image = imageInfo(buffer);
+  if (!image) return { problems: [`${file} is not a PNG, WebP or JPEG image`] };
+
+  const claimed = path.extname(file).slice(1).toLowerCase().replace('jpg', 'jpeg');
+  if (claimed !== image.type) problems.push(`${file} is really a ${image.type} file`);
+  if (buffer.length > LIMITS.previewBytes) {
+    problems.push(`${file} is ${Math.round(buffer.length / 1024)} KB; the limit is ${LIMITS.previewBytes / 1024} KB`);
+  }
+  if (image.width < LIMITS.previewMin.width || image.height < LIMITS.previewMin.height) {
+    problems.push(`${file} is ${image.width}x${image.height}; at least ${LIMITS.previewMin.width}x${LIMITS.previewMin.height} is needed to read the popup`);
+  }
+  if (image.width > LIMITS.previewMax.width || image.height > LIMITS.previewMax.height) {
+    problems.push(`${file} is ${image.width}x${image.height}; the limit is ${LIMITS.previewMax.width}x${LIMITS.previewMax.height}`);
+  }
+  return { image, problems };
+}
+
 function validate(name, files) {
   const problems = [];
   const packageFile = path.join(COMMUNITY, `${name}.awpreset`);
@@ -137,7 +175,8 @@ function validate(name, files) {
     return { problems };
   }
 
-  const preview = PREVIEW_EXT.map((extension) => `${name}${extension}`).find((candidate) => files.has(candidate));
+  const withExtension = (stem) => PREVIEW_EXT.map((extension) => `${stem}${extension}`).find((candidate) => files.has(candidate));
+  const preview = withExtension(name);
   if (!preview) {
     problems.push(`${name}.awpreset has no picture beside it: add ${name}.png (or .webp, .jpg)`);
     return { problems };
@@ -148,22 +187,18 @@ function validate(name, files) {
     problems.push(`${name}.awpreset is ${Math.round(packageBytes / 1024)} KB; the gallery limit is ${LIMITS.packageBytes / 1024 / 1024} MB`);
   }
 
-  const previewBuffer = fs.readFileSync(path.join(COMMUNITY, preview));
-  const image = imageInfo(previewBuffer);
-  if (!image) {
-    problems.push(`${preview} is not a PNG, WebP or JPEG image`);
-  } else {
-    const claimed = path.extname(preview).slice(1).toLowerCase().replace('jpg', 'jpeg');
-    if (claimed !== image.type) problems.push(`${preview} is really a ${image.type} file`);
-    if (previewBuffer.length > LIMITS.previewBytes) {
-      problems.push(`${preview} is ${Math.round(previewBuffer.length / 1024)} KB; the limit is ${LIMITS.previewBytes / 1024} KB`);
-    }
-    if (image.width < LIMITS.previewMin.width || image.height < LIMITS.previewMin.height) {
-      problems.push(`${preview} is ${image.width}x${image.height}; at least ${LIMITS.previewMin.width}x${LIMITS.previewMin.height} is needed to read the popup`);
-    }
-    if (image.width > LIMITS.previewMax.width || image.height > LIMITS.previewMax.height) {
-      problems.push(`${preview} is ${image.width}x${image.height}; the limit is ${LIMITS.previewMax.width}x${LIMITS.previewMax.height}`);
-    }
+  const plain = inspectPicture(preview);
+  const image = plain.image;
+  problems.push(...plain.problems);
+
+  // The other states, in the order a card pages through them. normal is the picture above.
+  const previews = { normal: image && { file: `community/${preview}`, width: image.width, height: image.height } };
+  for (const state of EXTRA_STATES) {
+    const extra = withExtension(`${name}.${state}`);
+    if (!extra) continue;
+    const found = inspectPicture(extra);
+    problems.push(...found.problems);
+    if (found.image) previews[state] = { file: `community/${extra}`, width: found.image.width, height: found.image.height };
   }
 
   // Optional, and every field in it is optional too.
@@ -207,7 +242,9 @@ function validate(name, files) {
       minAppVersion: (manifest.app && manifest.app.minVersion) || '',
       editable: Boolean(manifest.options),
       sound: manifest.sound || '',
-      preview: { file: `community/${preview}`, width: image.width, height: image.height },
+      preview: previews.normal,
+      // Only when there is something to page through; a listing with one picture reads as before.
+      ...(Object.keys(previews).length > 1 ? { previews } : {}),
       file: {
         path: `community/${name}.awpreset`,
         bytes: packageBytes,
@@ -240,8 +277,14 @@ function collect() {
       problems.push(`docs/gallery/community/${file} is not part of the gallery (a preset is <name>.awpreset plus a picture)`);
       continue;
     }
-    if (extension !== '.awpreset' && !files.has(`${stem}.awpreset`)) {
-      problems.push(`docs/gallery/community/${file} has no ${stem}.awpreset beside it`);
+    // A picture is named after its preset, with the state between the name and the extension.
+    const owner = PREVIEW_EXT.includes(extension) ? splitPicture(stem) : { name: stem, state: '' };
+    if (owner.state && !EXTRA_STATES.includes(owner.state)) {
+      problems.push(`docs/gallery/community/${file}: "${owner.state}" is not a state; use <name>.<state>${extension} with ${EXTRA_STATES.join(', ')}`);
+      continue;
+    }
+    if (extension !== '.awpreset' && !files.has(`${owner.name}.awpreset`)) {
+      problems.push(`docs/gallery/community/${file} has no ${owner.name}.awpreset beside it`);
     }
   }
 

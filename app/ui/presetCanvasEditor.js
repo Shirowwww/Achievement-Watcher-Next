@@ -125,6 +125,7 @@ const flipGlyph = (axis) => svgGlyph([[FLIP_GLYPHS[axis][0], 'stroke'], [FLIP_GL
  * @param {() => void} options.apply     repaint the preview from the controls, synchronously
  * @param {(name: string) => string} options.assetUrl  a picture's URL for the crop ghost
  * @param {() => string} options.markPseudo  'after', 'before', 'after,before' or '' for the base's brand mark
+ * @param {() => boolean} [options.isLayer]  true over a bundled preset, which cannot be cut through
  * @param {() => Promise<object|null>} options.importImage  {name, width, height}, {refused}, or null
  * @param {() => Promise<object|null>} options.importFont  {name}, or null when cancelled or refused (it reports a refusal itself)
  * @param {(text: string, kind?: string) => void} options.status
@@ -132,6 +133,7 @@ const flipGlyph = (axis) => svgGlyph([[FLIP_GLYPHS[axis][0], 'stroke'], [FLIP_GL
  */
 function createCanvasEditor(options) {
   const { root, stage, input } = options;
+  const isLayer = options.isLayer || (() => false);
   const preview = root.querySelector('.pd-preview');
   const props = root.querySelector('#pd-cv-props');
   const cardPanel = root.querySelector('#pd-cv-card');
@@ -1248,11 +1250,11 @@ function createCanvasEditor(options) {
     return pair(mode, custom);
   }
 
-  function switchControl(on, apply) {
+  function switchControl(on, apply, opts) {
     const control = el('input', 'pd-cv-switch');
     Object.assign(control, { type: 'checkbox', checked: Boolean(on) });
     control.setAttribute('role', 'switch');
-    return bind(control, (node) => apply(node.checked));
+    return bind(control, (node) => apply(node.checked), opts);
   }
 
   // A field at its default is left out, so the layout keeps one spelling of it.
@@ -1481,6 +1483,14 @@ function createCanvasEditor(options) {
       rows.push(propRow('prop.color', colorControl(item.fill, (hex) => (item.fill = hex))), propRow('prop.dash', dashControl(item)));
       return rows;
     }
+    // See-through: only the outline counts. A bundled preset's engine cannot cut its card.
+    if (!isLayer()) rows.push(propRow('prop.cut', switchControl(item.cut, (on) => setOrDrop(item, 'cut', on, false), { rebuild: true })));
+    if (item.cut) {
+      rows.push(...shapeSettingRows(item, item.shape), cornerRow(item));
+      if (CANVAS_POLYGON_SHAPES.includes(item.shape)) rows.push(flipRow(item));
+      rows.push(el('p', 'pd-cv-note', label('cutHint')));
+      return rows.filter(Boolean);
+    }
     rows.push(...shapeSettingRows(item, item.shape), cornerRow(item), ...paintRows(item, true));
     const stroke = rebuildAcrossZero(numberControl(item.stroke, 0, 20, 1, (v) => (item.stroke = v)), () => item.stroke);
     rows.push(propRow('prop.stroke', pair(stroke, colorControl(item.strokeColor, (hex) => (item.strokeColor = hex)))));
@@ -1664,9 +1674,10 @@ function createCanvasEditor(options) {
     if (item.kind === 'shape') look.push(...shapeRows(item));
     if (item.kind === 'icon') look.push(...iconRows(item));
     if (item.kind === 'image') look.push(...imageRows(item));
-    look.push(propRow('prop.opacity', numberControl(Math.round(item.o * 100), 0, 100, 5, (v) => (item.o = v / 100))));
+    // A see-through shape paints nothing and holds still: the cut is made once the card is in.
+    if (!item.cut) look.push(propRow('prop.opacity', numberControl(Math.round(item.o * 100), 0, 100, 5, (v) => (item.o = v / 100))));
     const where = item.lock ? [] : [...sizeRows(item), propRow('prop.rotation', numberControl(item.r, -180, 180, 1, (v) => (item.r = v))), alignRow()];
-    return { text, look, motion: motionRows(item), place: [...where, visibleRow(item)] };
+    return { text, look, motion: item.cut ? null : motionRows(item), place: [...where, visibleRow(item)] };
   }
 
   // How the item comes in, counted from the card's own start, then how it keeps moving; the layout

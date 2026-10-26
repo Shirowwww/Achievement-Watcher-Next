@@ -769,6 +769,7 @@
               "shadowColor": "Skuggfärg",
               "shadowSize": "Skuggstorlek",
               "replay": "Spela upp GIF:en igen vid varje visning",
+              "cut": "Genomskinlig",
               "loop": "Upprepa",
               "alignGroup": "Justera mot varandra",
               "insert": "Infoga"
@@ -910,6 +911,7 @@
               "replay": "Gör rundturen igen"
             },
             "motionHint": "Kortet står stilla medan du redigerar: Spela upp under kortet visar intågen och looparna.",
+            "cutHint": "Formen visar ingenting själv: allt under den blir genomskinligt, kortet inräknat. Det som ligger ovanpå förblir synligt.",
             "maxItems": "Kortet är fullt. Ta bort ett element för att lägga till ett nytt."
           },
           "create": "Skapa förinställning",

@@ -25,6 +25,38 @@
         "width": 1188,
         "height": 472
       },
+      "previews": {
+        "normal": {
+          "file": "community/blueprint.png",
+          "width": 1188,
+          "height": 472
+        },
+        "bronze": {
+          "file": "community/blueprint.bronze.png",
+          "width": 1188,
+          "height": 472
+        },
+        "silver": {
+          "file": "community/blueprint.silver.png",
+          "width": 1188,
+          "height": 472
+        },
+        "gold": {
+          "file": "community/blueprint.gold.png",
+          "width": 1188,
+          "height": 472
+        },
+        "platinum": {
+          "file": "community/blueprint.platinum.png",
+          "width": 1188,
+          "height": 472
+        },
+        "progress": {
+          "file": "community/blueprint.progress.png",
+          "width": 1188,
+          "height": 472
+        }
+      },
       "file": {
         "path": "community/blueprint.awpreset",
         "bytes": 5897,
@@ -52,6 +84,38 @@
         "file": "community/ticket.png",
         "width": 1188,
         "height": 456
+      },
+      "previews": {
+        "normal": {
+          "file": "community/ticket.png",
+          "width": 1188,
+          "height": 456
+        },
+        "bronze": {
+          "file": "community/ticket.bronze.png",
+          "width": 1188,
+          "height": 456
+        },
+        "silver": {
+          "file": "community/ticket.silver.png",
+          "width": 1188,
+          "height": 456
+        },
+        "gold": {
+          "file": "community/ticket.gold.png",
+          "width": 1188,
+          "height": 456
+        },
+        "platinum": {
+          "file": "community/ticket.platinum.png",
+          "width": 1188,
+          "height": 456
+        },
+        "progress": {
+          "file": "community/ticket.progress.png",
+          "width": 1188,
+          "height": 456
+        }
       },
       "file": {
         "path": "community/ticket.awpreset",

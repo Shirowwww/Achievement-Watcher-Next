@@ -769,6 +769,7 @@
               "shadowColor": "Color de la sombra",
               "shadowSize": "Tamaño de la sombra",
               "replay": "Repetir el GIF en cada aparición",
+              "cut": "Transparente",
               "loop": "En bucle",
               "alignGroup": "Alinear entre sí",
               "insert": "Insertar"
@@ -910,6 +911,7 @@
               "replay": "Repetir el recorrido"
             },
             "motionHint": "La tarjeta se queda quieta mientras la editas: Reproducir, debajo de la tarjeta, muestra las entradas y los bucles.",
+            "cutHint": "Esta forma no muestra nada por sí misma: todo lo que queda debajo se vuelve transparente, incluida la tarjeta. Lo que queda encima sigue visible.",
             "maxItems": "La tarjeta está llena. Elimina un elemento para agregar otro."
           },
           "create": "Crear preajuste",

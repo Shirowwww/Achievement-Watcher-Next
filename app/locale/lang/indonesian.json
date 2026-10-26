@@ -769,6 +769,7 @@
               "shadowColor": "Warna bayangan",
               "shadowSize": "Ukuran bayangan",
               "replay": "Putar ulang GIF setiap kali muncul",
+              "cut": "Tembus pandang",
               "loop": "Berulang",
               "alignGroup": "Ratakan satu sama lain",
               "insert": "Sisipkan"
@@ -910,6 +911,7 @@
               "replay": "Ulangi tur"
             },
             "motionHint": "Kartu tetap diam selama diedit: Putar, di bawah kartu, menampilkan efek masuk dan perulangan.",
+            "cutHint": "Bentuk ini tidak menampilkan apa pun sendiri: semua yang ada di bawahnya menjadi tembus pandang, termasuk kartu. Yang ada di atasnya tetap terlihat.",
             "maxItems": "Kartu sudah penuh. Hapus satu elemen untuk menambah yang lain."
           },
           "create": "Buat preset",

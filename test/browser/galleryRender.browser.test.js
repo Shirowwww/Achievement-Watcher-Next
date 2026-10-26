@@ -75,7 +75,8 @@ test('both galleries paint their own listing, with the facts their kind carries'
     for (const card of cards) {
       assert.match(card.download, /\.awpreset$/, `${card.name} must download as a preset`);
       assert.ok(card.zoom, `${card.name} must be openable`);
-      assert.equal(card.alt, card.wanted, 'a preset preview is described with the preset wording');
+      // A card with several states names the one on show after the wording: "... (Normal)".
+      assert.ok(card.alt === card.wanted || card.alt.startsWith(`${card.wanted} (`), 'a preset preview is described with the preset wording');
       assert.notEqual(card.alt, card.otherKind);
       assert.equal(card.facts, false, 'a preset card has no palette');
     }

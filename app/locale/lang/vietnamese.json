@@ -769,6 +769,7 @@
               "shadowColor": "Màu bóng",
               "shadowSize": "Kích thước bóng",
               "replay": "Phát lại GIF mỗi lần hiện",
+              "cut": "Trong suốt",
               "loop": "Lặp lại",
               "alignGroup": "Căn theo nhau",
               "insert": "Chèn"
@@ -910,6 +911,7 @@
               "replay": "Xem lại hướng dẫn"
             },
             "motionHint": "Thẻ đứng yên khi bạn chỉnh sửa: Phát, bên dưới thẻ, sẽ cho xem hiệu ứng xuất hiện và vòng lặp.",
+            "cutHint": "Hình này tự nó không hiển thị gì: mọi thứ bên dưới sẽ trở nên trong suốt, kể cả thẻ. Những gì ở phía trên vẫn hiển thị.",
             "maxItems": "Thẻ đã đầy. Hãy xóa một thành phần để thêm thành phần khác."
           },
           "create": "Tạo mẫu",

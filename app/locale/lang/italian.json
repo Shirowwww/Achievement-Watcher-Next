@@ -769,6 +769,7 @@
               "shadowColor": "Colore dell’ombra",
               "shadowSize": "Dimensione dell’ombra",
               "replay": "Riproduci di nuovo la GIF a ogni comparsa",
+              "cut": "Trasparente",
               "loop": "Ciclo",
               "alignGroup": "Allinea tra loro",
               "insert": "Inserisci"
@@ -910,6 +911,7 @@
               "replay": "Rivedi il tour"
             },
             "motionHint": "La scheda resta ferma mentre la modifichi: Riproduci, sotto la scheda, mostra le animazioni di entrata e i cicli.",
+            "cutHint": "Questa forma non mostra nulla di suo: tutto ciò che sta sotto diventa trasparente, scheda compresa. Ciò che sta sopra resta visibile.",
             "maxItems": "La scheda è piena. Elimina un elemento per aggiungerne un altro."
           },
           "create": "Crea preimpostazione",

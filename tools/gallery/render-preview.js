@@ -9,9 +9,13 @@
   photographed once the entry animation has settled. The result is the popup as the app draws it,
   on transparency, at twice its own size.
 
-    node tools/gallery/render-preview.js <preset folder or .awpreset> [output.png] [--state rare]
+    node tools/gallery/render-preview.js <preset folder or .awpreset> [output.png] [--state gold]
+    node tools/gallery/render-preview.js <preset folder or .awpreset> [output.png] --all
 
-  States: normal (default), rare, platinum, progress.
+  States: normal (default), bronze, silver, gold, platinum (the 100% popup), progress. `rare` is the
+  older name of gold. --all renders every state in one browser launch: the normal picture goes to
+  output.png and each other one beside it as <name>.<state>.png, the layout tools/gallery/build.js
+  lists as `previews`.
 
   The browser is whichever Chrome or Edge is installed; nothing is downloaded. A package is
   unpacked into a temporary folder, rendered, and the folder is removed afterwards. Rendering runs
@@ -61,6 +65,22 @@ function findBrowser() {
   return candidates.find((file) => fs.existsSync(file)) || '';
 }
 
+// What the Watchdog would send for each kind of popup. A rare unlock carries the tier and the rate.
+// The rates are picked so that a preset which reads only the rate (the older engine: gold under 3,
+// silver 3 to 6, bronze 6 to 10) draws the same tier as one that reads rarityTier.
+const STATES = {
+  normal: { displayName: 'First Light', description: 'Reach the summit before dawn.', gameName: 'Achievement Watcher Next', rarityPercent: null },
+  bronze: { displayName: 'Steady Hands', description: 'Land every jump without a miss.', gameName: 'Achievement Watcher Next', rarityPercent: 8.4, rarityTier: 'bronze' },
+  silver: { displayName: 'Night Owl', description: 'Finish a run between midnight and dawn.', gameName: 'Achievement Watcher Next', rarityPercent: 5.5, rarityTier: 'silver' },
+  gold: { displayName: 'No Witnesses', description: 'Finish the heist without an alarm.', gameName: 'Achievement Watcher Next', rarityPercent: 1.4, rarityTier: 'gold' },
+  platinum: { displayName: 'Completionist', description: 'Every achievement unlocked.', gameName: 'Achievement Watcher Next', notificationType: 'platinum', isPlatinum: true, rarityPercent: null },
+  progress: { displayName: 'Collector', description: 'Recover the scattered relics.', gameName: 'Achievement Watcher Next', notificationType: 'progress', progress: { current: 34, max: 50, percent: 68 } },
+};
+STATES.rare = STATES.gold;
+
+// The order a gallery card pages through them.
+const STATE_NAMES = ['normal', 'bronze', 'silver', 'gold', 'platinum', 'progress'];
+
 // The preset page waits for the app's notification bridge. This is the same stand-in the website
 // injects, reduced to what one still photograph needs.
 function bridge(state) {
@@ -73,13 +93,7 @@ function bridge(state) {
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 430"><defs><linearGradient id="s" x1="0" y1="0" x2="1" y2="1">' +
         '<stop offset="0" stop-color="#122a52"/><stop offset="0.55" stop-color="#3b2a6b"/><stop offset="1" stop-color="#7a3b6a"/></linearGradient></defs>' +
         '<rect width="920" height="430" fill="url(#s)"/><path d="M0 330 L180 232 L330 300 L520 190 L700 268 L920 168 L920 430 L0 430 Z" fill="#0b1120" opacity="0.72"/></svg>');
-      var STATES = ${JSON.stringify({
-        normal: { displayName: 'First Light', description: 'Reach the summit before dawn.', gameName: 'Achievement Watcher Next', rarityPercent: null },
-        rare: { displayName: 'No Witnesses', description: 'Finish the heist without an alarm.', gameName: 'Achievement Watcher Next', rarityPercent: 1.4 },
-        platinum: { displayName: 'Completionist', description: 'Every achievement unlocked.', gameName: 'Achievement Watcher Next', notificationType: 'platinum', isPlatinum: true, rarityPercent: null },
-        progress: { displayName: 'Collector', description: 'Recover the scattered relics.', gameName: 'Achievement Watcher Next', notificationType: 'progress', progress: { current: 34, max: 50, percent: 68 } },
-      })};
-      var payload = STATES[${JSON.stringify(state)}] || STATES.normal;
+      var payload = ${JSON.stringify(Object.prototype.hasOwnProperty.call(STATES, state) ? STATES[state] : STATES.normal)};
       payload.iconPath = ICON;
       payload.imagePath = ART;
       payload.scale = 1;
@@ -120,11 +134,11 @@ function unpack(file) {
 }
 
 /*
-  One photograph, from a package or from an unpacked preset folder. The gallery server calls this
-  for every submission, which is why it returns instead of exiting: a package it refuses is one
-  rejected upload, not the end of the process.
+  Photographs of one preset, each { state, output } job in one browser launch and one unpacking.
+  The gallery server calls this per submission, so it returns or throws instead of exiting. A
+  failed job leaves the pictures before it on disk; the caller owns the folder.
 */
-async function renderPreview(options) {
+async function renderJobs(options, jobs) {
   const source = path.resolve(options.source);
   if (!fs.existsSync(source)) throw new Error(`${source} does not exist`);
 
@@ -141,7 +155,6 @@ async function renderPreview(options) {
     const puppeteer = require(path.join(appNodeModules, 'puppeteer-core'));
     const size = presetSize(fs.readFileSync(entry, 'utf8'));
     const viewport = { width: size.width + MARGIN.x * 2, height: size.height + MARGIN.y * 2 };
-    const output = path.resolve(options.output);
 
     const browser = await puppeteer.launch({
       executablePath,
@@ -150,32 +163,72 @@ async function renderPreview(options) {
       protocolTimeout: 60000,
       args: ['--force-color-profile=srgb', '--hide-scrollbars'].concat(options.args || []),
     });
+    const results = [];
     try {
-      const page = await browser.newPage();
-      await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: SCALE });
-      await page.evaluateOnNewDocument(bridge(options.state || 'normal'));
-      await page.goto(`file:///${entry.replace(/\\/g, '/')}`, { waitUntil: 'load' });
-      await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
-      fs.mkdirSync(path.dirname(output), { recursive: true });
-      await page.screenshot({ path: output, omitBackground: true });
+      for (const job of jobs) {
+        const page = await browser.newPage();
+        try {
+          await page.setViewport({ width: viewport.width, height: viewport.height, deviceScaleFactor: SCALE });
+          await page.evaluateOnNewDocument(bridge(job.state));
+          await page.goto(`file:///${entry.replace(/\\/g, '/')}`, { waitUntil: 'load' });
+          await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+          fs.mkdirSync(path.dirname(job.output), { recursive: true });
+          await page.screenshot({ path: job.output, omitBackground: true });
+        } finally {
+          await page.close().catch(() => {});
+        }
+        results.push({ path: job.output, width: viewport.width * SCALE, height: viewport.height * SCALE, bytes: fs.statSync(job.output).size });
+      }
     } finally {
       await browser.close().catch(() => {});
     }
-
-    return { path: output, width: viewport.width * SCALE, height: viewport.height * SCALE, bytes: fs.statSync(output).size };
+    return results;
   } finally {
     if (packed) fs.rmSync(presetDir, { recursive: true, force: true });
   }
 }
 
+// One photograph. A state it does not know is drawn as normal, as it always was.
+async function renderPreview(options) {
+  const [result] = await renderJobs(options, [{ state: options.state || 'normal', output: path.resolve(options.output) }]);
+  return result;
+}
+
+// Where a state's picture goes: the normal one at `output`, the others beside it as <name>.<state>.<ext>.
+function stateOutput(output, state) {
+  if (state === 'normal') return output;
+  const parsed = path.parse(output);
+  return path.join(parsed.dir, `${parsed.name}.${state}${parsed.ext}`);
+}
+
+/*
+  Several states of one preset in one browser launch. `output` is the normal picture's path and the
+  other states are written beside it (stateOutput). Resolves to { <state>: { path, width, height,
+  bytes } } in the order asked; with no `states` it renders all of STATE_NAMES. It throws on an
+  unknown state.
+*/
+async function renderPreviews(options) {
+  const states = [...new Set(options.states && options.states.length ? options.states : STATE_NAMES)];
+  const unknown = states.filter((state) => !Object.prototype.hasOwnProperty.call(STATES, state));
+  if (unknown.length) throw new Error(`Unknown state ${unknown.join(', ')}; use ${Object.keys(STATES).join(', ')}`);
+
+  const output = path.resolve(options.output);
+  const results = await renderJobs(options, states.map((state) => ({ state, output: stateOutput(output, state) })));
+  return Object.fromEntries(states.map((state, index) => [state, results[index]]));
+}
+
 async function main() {
   const target = process.argv[2];
-  if (!target) die('Usage: node tools/gallery/render-preview.js <preset folder or .awpreset> [output.png] [--state rare]');
+  if (!target) die('Usage: node tools/gallery/render-preview.js <preset folder or .awpreset> [output.png] [--state gold | --all]');
 
   const output = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : path.join(process.cwd(), 'preview.png');
-  const result = await renderPreview({ source: target, output, state: argValue('state', 'normal') });
+  const results = process.argv.includes('--all')
+    ? Object.values(await renderPreviews({ source: target, output }))
+    : [await renderPreview({ source: target, output, state: argValue('state', 'normal') })];
 
-  console.log(`${path.relative(process.cwd(), result.path)}: ${result.width}x${result.height}, ${Math.round(result.bytes / 1024)} KB`);
+  for (const result of results) {
+    console.log(`${path.relative(process.cwd(), result.path)}: ${result.width}x${result.height}, ${Math.round(result.bytes / 1024)} KB`);
+  }
 }
 
 if (require.main === module) {
@@ -185,4 +238,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { renderPreview, findBrowser, presetSize, MARGIN, SCALE };
+module.exports = { renderPreview, renderPreviews, stateOutput, findBrowser, presetSize, STATES, STATE_NAMES, MARGIN, SCALE };

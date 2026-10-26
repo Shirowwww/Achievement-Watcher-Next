@@ -769,6 +769,7 @@
               "shadowColor": "Schaduwkleur",
               "shadowSize": "Schaduwgrootte",
               "replay": "GIF opnieuw afspelen bij elke melding",
+              "cut": "Doorzichtig",
               "loop": "Herhalen",
               "alignGroup": "Onderling uitlijnen",
               "insert": "Invoegen"
@@ -910,6 +911,7 @@
               "replay": "Rondleiding herhalen"
             },
             "motionHint": "De kaart staat stil terwijl je bewerkt: Afspelen, onder de kaart, toont de intredes en de herhalingen.",
+            "cutHint": "Deze vorm toont zelf niets: alles eronder wordt doorzichtig, de kaart inbegrepen. Wat erboven ligt, blijft zichtbaar.",
             "maxItems": "De kaart is vol. Verwijder een element om een ander toe te voegen."
           },
           "create": "Preset maken",

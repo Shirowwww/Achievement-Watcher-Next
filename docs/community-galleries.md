@@ -50,7 +50,11 @@ leaves only when you press Publish.
 You cannot attach a screenshot to either gallery. The service renders the picture from your package.
 
 For a **preset**, it draws the popup from the package, in the same sandboxed document the app uses,
-once in a browser with no network and no scripting of its own, at the size the app shows it.
+once in a browser with no network and no scripting of its own, at the size the app shows it. It draws
+it in every state a preset has to handle: an ordinary unlock, a bronze, a silver and a gold rare one,
+the 100% popup and a progress step. A card shows one at a time, with an arrow button on each side to
+step through them, and the enlarged picture is the one on show. Check all six when you design: a
+preset that only reads well in one of them shows it here.
 
 A **theme** is colours and numbers, so the server draws a fixed sample of the AW Next interface with
 your theme (title bar, profile row, library, recently unlocked list, settings surface) and photographs
@@ -113,7 +117,7 @@ would refuse.
 |---|---|
 | File name | Lower-case letters, digits and dashes, 2 to 48 characters, built by the service from the name |
 | Package | 4 MB for a preset, 8 MB for a theme |
-| Picture | Rendered by the service, and refused if it comes out outside the size a listing serves |
+| Picture | Rendered by the service, once per state, and refused if one comes out outside the size a listing serves (500 KB at most each) |
 | Name | Unique in its gallery, since two entries with one name collide on import |
 
 Nothing in a package is executed while it is checked, and the website never renders one: a card shows a

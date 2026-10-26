@@ -308,7 +308,8 @@ test('the gallery reads a server when one is named, and the committed listing wh
   assert.match(gallery, /listing\(api \+ kind\.api\)/);
   assert.match(gallery, /\.catch\(function \(\) \{[\s\S]{0,400}listing\('index\.json'\)\.then\(show\)/, 'the fallback is gone');
   // The listing already carries addresses; rebuilding them would break the moment the server moves.
-  assert.match(gallery, /image\.src = entry\.preview\.file;/);
+  assert.match(gallery, /image\.src = shot\.file;/);
+  assert.match(gallery, /more\.normal \|\| entry\.preview/, 'the normal picture is the listing preview');
   assert.match(gallery, /download\.href = entry\.file\.path;/);
 });
 

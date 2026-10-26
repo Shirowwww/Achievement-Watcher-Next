@@ -769,6 +769,7 @@
               "shadowColor": "Gölge rengi",
               "shadowSize": "Gölge boyutu",
               "replay": "GIF'i her gösterimde yeniden oynat",
+              "cut": "Saydam",
               "loop": "Döngü",
               "alignGroup": "Birbirine göre hizala",
               "insert": "Ekle"
@@ -910,6 +911,7 @@
               "replay": "Turu yeniden oynat"
             },
             "motionHint": "Düzenlerken kart yerinde durur: kartın altındaki Oynat girişleri ve döngüleri gösterir.",
+            "cutHint": "Bu şekil kendi başına hiçbir şey göstermez: altındaki her şey saydam olur, kart dahil. Üstündeki her şey görünür kalır.",
             "maxItems": "Kart dolu. Başka bir öğe eklemek için bir öğeyi sil."
           },
           "create": "Ön ayar oluştur",

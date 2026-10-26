@@ -563,6 +563,8 @@ function normalizeCanvasItem(source) {
     const round = canvasNumber(source.round, 0, 100, 0, 0);
     if (round && CANVAS_POLYGON_SHAPES.includes(item.shape)) item.round = round;
     normalizeShapeSettings(item, source, item.shape);
+    // See-through: the shape is not drawn, it cuts through what lies under it. Its paint is kept.
+    if (source.cut === true && item.shape !== 'line') item.cut = true;
   }
   if (item.kind !== 'text') {
     if (source.flipX === true) item.flipX = true;
@@ -654,6 +656,8 @@ function normalizeCanvasShadow(item, source) {
 // An item's own values and each state's, for what a layout needs whichever state shows.
 const tierEntries = (item) => [item, ...Object.values(item.tiers || {})];
 const saysTier = (item) => item.kind === 'text' && tierEntries(item).some((entry) => typeof entry.text === 'string' && entry.text.includes('{tier}'));
+// True when a see-through shape cuts the card in some state.
+const canvasCuts = (canvas) => canvas.items.some((item) => tierEntries(item).some((entry) => entry.cut === true));
 
 function normalizeCanvasWords(raw, items) {
   if (!raw || typeof raw !== 'object' || !items.some(saysTier)) return null;
@@ -961,6 +965,7 @@ module.exports = {
   canvasItemIn,
   canvasPartsIn,
   canvasIn,
+  canvasCuts,
   canvasFiles,
   canvasFonts,
   sameValue,

@@ -769,6 +769,7 @@
               "shadowColor": "Árnyék színe",
               "shadowSize": "Árnyék mérete",
               "replay": "GIF újrajátszása minden megjelenéskor",
+              "cut": "Átlátszó",
               "loop": "Ismétlés",
               "alignGroup": "Egymáshoz igazítás",
               "insert": "Beszúrás"
@@ -910,6 +911,7 @@
               "replay": "A bemutató ismétlése"
             },
             "motionHint": "A kártya mozdulatlan marad szerkesztés közben: a kártya alatti Lejátszás megmutatja a belépéseket és az ismétlődő mozgásokat.",
+            "cutHint": "Ez az alakzat maga semmit sem jelenít meg: minden, ami alatta van, átlátszóvá válik, a kártyát is beleértve. Ami fölötte van, látható marad.",
             "maxItems": "A kártya megtelt. Törölj egy elemet, hogy újat adhass hozzá."
           },
           "create": "Előbeállítás létrehozása",

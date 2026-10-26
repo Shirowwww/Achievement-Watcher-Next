@@ -769,6 +769,7 @@
               "shadowColor": "Cor da sombra",
               "shadowSize": "Tamanho da sombra",
               "replay": "Reproduzir o GIF a cada notificação",
+              "cut": "Transparente",
               "loop": "Em loop",
               "alignGroup": "Alinhar entre si",
               "insert": "Inserir"
@@ -910,6 +911,7 @@
               "replay": "Rever o tour"
             },
             "motionHint": "O cartão fica parado enquanto você edita: Reproduzir, abaixo do cartão, mostra as entradas e os loops.",
+            "cutHint": "Esta forma não mostra nada por si só: tudo o que está embaixo dela fica transparente, inclusive o cartão. O que está acima continua visível.",
             "maxItems": "O cartão está cheio. Exclua um elemento para adicionar outro."
           },
           "create": "Criar predefinição",

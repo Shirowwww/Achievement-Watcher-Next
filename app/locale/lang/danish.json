@@ -769,6 +769,7 @@
               "shadowColor": "Skyggefarve",
               "shadowSize": "Skyggestørrelse",
               "replay": "Afspil GIF'en igen ved hver notifikation",
+              "cut": "Gennemsigtig",
               "loop": "Gentag",
               "alignGroup": "Justér i forhold til hinanden",
               "insert": "Indsæt"
@@ -910,6 +911,7 @@
               "replay": "Gentag rundvisningen"
             },
             "motionHint": "Kortet står stille, mens du redigerer: Afspil under kortet viser indtrædener og løkker.",
+            "cutHint": "Denne form viser intet selv: alt under den bliver gennemsigtigt, også kortet. Det, der ligger over den, forbliver synligt.",
             "maxItems": "Kortet er fuldt. Slet et element for at tilføje et andet."
           },
           "create": "Opret preset",

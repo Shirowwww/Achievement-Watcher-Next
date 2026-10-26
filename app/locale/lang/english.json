@@ -769,6 +769,7 @@
               "shadowColor": "Shadow colour",
               "shadowSize": "Shadow size",
               "replay": "Replay the GIF on each popup",
+              "cut": "See-through",
               "loop": "Loop",
               "alignGroup": "Line up together",
               "insert": "Insert"
@@ -910,6 +911,7 @@
               "replay": "Replay the tour"
             },
             "motionHint": "The card holds still while you edit it: Play, under the card, shows the entrances and loops.",
+            "cutHint": "This shape shows nothing of its own: whatever lies under it becomes see-through, the card included. What is above it stays.",
             "maxItems": "The card is full. Delete an element to add another."
           },
           "create": "Create preset",
