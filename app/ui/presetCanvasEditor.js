@@ -23,12 +23,14 @@ const {
   CANVAS_TIER_FILLS,
   CANVAS_TOKENS,
   canvasIn,
+  canvasItemIn,
   canvasOrder,
   normalizeCanvas,
   normalizeCanvasItem,
+  saysTier,
 } = require('../util/presetSchema.js');
 const { createEditorHelp } = require('./presetEditorHelp.js');
-const { drawnOnlyIn, foldEdit, itemOwns, partOwns, resetItem, resetPart } = require('./presetCanvasTiers.js');
+const { clone, drawnOnlyIn, foldEdit, itemOwns, partOwns, resetItem, resetPart } = require('./presetCanvasTiers.js');
 const { CANVAS_EDIT_ROOM, CANVAS_PART_SELECTORS, CANVAS_STYLE_SELECTORS, canvasIconMask } = require('../util/customPreset.js');
 
 // The designer controls that shape the card itself, shown alone while the card is selected.
@@ -79,10 +81,6 @@ const FLIP_GLYPHS = {
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const round1 = (value) => Math.round(value * 10) / 10;
 const isLine = (item) => item.kind === 'shape' && item.shape === 'line';
-const clone = (value) => JSON.parse(JSON.stringify(value));
-// A text that shows the tier's name, in any state.
-const saysTier = (item) =>
-  item.kind === 'text' && [item, ...Object.values(item.tiers || {})].some((own) => typeof own.text === 'string' && own.text.includes('{tier}'));
 function rotVec(x, y, deg) {
   const rad = (deg * Math.PI) / 180;
   return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
@@ -168,6 +166,8 @@ function createCanvasEditor(options) {
   let viewState = 'normal';
   let lastView = null;
   let sources = new WeakMap();
+  // A copy not stored yet, by the stored item it copies, so every state keeps its look on it.
+  const seeds = new WeakMap();
   let alone = false;
   let selected = null;
   let cropping = false;
@@ -233,7 +233,7 @@ function createCanvasEditor(options) {
   // Live: the preview follows the pointer. Committed: one history step, through the change event
   // every designer control fires.
   function store() {
-    layout = foldEdit(layout, lastView, canvas, { state: viewState, alone, sourceOf: (item) => sources.get(item) });
+    layout = foldEdit(layout, lastView, canvas, { state: viewState, alone, sourceOf: (item) => sources.get(item), seedOf: (item) => seeds.get(item) });
     settle();
     // {tier} shows the tier's name in the words of whoever edits the layout last.
     if (layout.items.some(saysTier)) layout.words = Object.fromEntries(CANVAS_TIER_FILLS.map((tier) => [tier, label(`fill.${tier}`)]));
@@ -241,8 +241,12 @@ function createCanvasEditor(options) {
     input.value = JSON.stringify(layout);
     stored = input.value;
   }
+  // A drag is folded into the layout once, when it ends: until then the preview draws the view.
   function write() {
-    store();
+    if (drag) {
+      input.value = JSON.stringify(canvas);
+      stored = input.value;
+    } else store();
     options.apply();
   }
   function commit() {
@@ -932,10 +936,14 @@ function createCanvasEditor(options) {
   }
 
   // What was added comes in picked: one item alone, several (a pasted group) as a group.
-  function addItems(raws) {
+  function addItems(raws, copied = []) {
     if (canvas.items.length + raws.length > CANVAS_MAX_ITEMS) return void options.status(label('maxItems'), 'error');
     const before = canvas.items.length;
-    canvas.items.push(...raws.map(normalizeCanvasItem).filter(Boolean));
+    const made = raws.map(normalizeCanvasItem);
+    made.forEach((item, index) => {
+      if (item && copied[index]) seeds.set(item, copied[index]);
+    });
+    canvas.items.push(...made.filter(Boolean));
     const added = canvas.items.length - before;
     if (!added) return void options.status(label('imageRefused'), 'error');
     const ids = Array.from({ length: added }, (_, offset) => `i:${before + offset}`);
@@ -1012,16 +1020,25 @@ function createCanvasEditor(options) {
     commit();
   }
 
-  // A copy is a new element to place, so it never comes in locked.
+  // A copy is a new element to place, so it never comes in locked. It takes what each state changes.
   function looseCopy(item, step) {
     const copy = clone(item);
     delete copy.lock;
-    return { ...copy, x: item.x + step, y: item.y + step };
+    for (const own of [copy, ...Object.values(copy.tiers || {})]) {
+      if (typeof own.x === 'number') own.x += step;
+      if (typeof own.y === 'number') own.y += step;
+    }
+    return copy;
+  }
+  const storedOf = (item) => layout.items[sources.get(item)] || item;
+  function addCopies(items, step) {
+    const copies = items.map((item) => looseCopy(item, step));
+    addItems(copies.map((copy) => canvasItemIn(copy, viewState)), copies);
   }
 
   function duplicateSelected() {
     const items = selectedItems();
-    if (items.length) addItems(items.map((item) => looseCopy(item, PASTE_STEP_PX)));
+    if (items.length) addCopies(items.map(storedOf), PASTE_STEP_PX);
   }
 
   // Kept for the editor's lifetime, so elements can go from one preset to another.
@@ -1030,14 +1047,14 @@ function createCanvasEditor(options) {
   function copySelected() {
     const items = selectedItems();
     if (!items.length) return;
-    clipboard = clone(items);
+    clipboard = clone(items.map(storedOf));
     pastes = 0;
     options.status(label('copied'), 'info');
   }
   function pasteItem() {
     if (!clipboard) return;
     pastes += 1;
-    addItems(clipboard.map((item) => looseCopy(item, PASTE_STEP_PX * pastes)));
+    addCopies(clipboard, PASTE_STEP_PX * pastes);
   }
 
   // How far a box must go so that its outline meets an edge or the middle of `frame`.

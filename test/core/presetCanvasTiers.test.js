@@ -14,12 +14,12 @@ const tiers = require(path.join(appRoot, 'ui', 'presetCanvasTiers.js'));
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
 // The editor's view of a state, the same view edited by `change`, and the layout folded from both.
-function edit(layout, state, alone, change) {
+function edit(layout, state, alone, change, seedOf) {
   const before = schema.canvasIn(layout, state);
   const after = clone(before);
   const sources = new Map(after.items.map((item, index) => [item, index]));
   change(after);
-  return tiers.foldEdit(layout, before, after, { state, alone, sourceOf: (item) => sources.get(item) });
+  return tiers.foldEdit(layout, before, after, { state, alone, sourceOf: (item) => sources.get(item), seedOf });
 }
 
 const star = { kind: 'shape', shape: 'star', x: 0, y: 0, w: 40, h: 40 };
@@ -64,6 +64,20 @@ test('an item added while one state is edited alone is drawn in that state only'
   for (const state of schema.CANVAS_STATES) assert.equal(Boolean(schema.canvasItemIn(out.items[1], state).off), state !== 'gold', state);
   assert.ok(tiers.drawnOnlyIn(out, 1, 'gold'));
   assert.ok(!tiers.drawnOnlyIn(out, 0, 'gold'));
+});
+
+test('a copy keeps what each state changes on the original, unless it is made for one state alone', () => {
+  const layout = schema.normalizeCanvas({ items: [{ ...star, tiers: { gold: { w: 60 } } }] });
+  const seed = clone(layout.items[0]);
+  const copy = schema.canvasItemIn(seed, 'gold');
+  const paste = (alone) => edit(layout, 'gold', alone, (view) => view.items.push(copy), (item) => (item === copy ? seed : undefined)).items[1];
+  const shared = paste(false);
+  assert.equal(schema.canvasItemIn(shared, 'gold').w, 60);
+  assert.equal(schema.canvasItemIn(shared, 'normal').w, 40);
+  assert.equal(schema.canvasItemIn(shared, 'normal').off, undefined);
+  const alone = paste(true);
+  assert.equal(schema.canvasItemIn(alone, 'gold').w, 60);
+  assert.equal(schema.canvasItemIn(alone, 'normal').off, true);
 });
 
 test('an item removed from the view is removed, and the order follows the view', () => {

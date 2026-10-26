@@ -6,13 +6,12 @@
   state changes on it. A state keeps what it changed itself until it goes back to the shared look.
 */
 
-const { CANVAS_PARTS, CANVAS_SHARED_KEYS, CANVAS_STATES, CANVAS_STYLED_PARTS, canvasItemIn, normalizeCanvas } = require('../util/presetSchema.js');
+const { CANVAS_PARTS, CANVAS_SHARED_KEYS, CANVAS_STATES, CANVAS_STYLED_PARTS, canvasItemIn, normalizeCanvas, sameValue } = require('../util/presetSchema.js');
 
 const FRESH_MOVE = { x: 0, y: 0, r: 0, s: 1 };
 const PART_FIELDS = ['move', 'style', 'hidden'];
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
-const sameValue = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const changedKeys = (before, after) => [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((key) => !sameValue(before[key], after[key]));
 
 // `undefined` takes the key away, so a value back at its default keeps one spelling.
@@ -118,16 +117,20 @@ function foldHidden(out, before, after, state, alone) {
 /*
   The stored layout once `state` shows `after` where it showed `before`. `sourceOf` gives the stored
   index each edited item came from, undefined for one added since; a stored item it never gives is
-  gone. The stacking order is shared, so it is taken as it is.
+  gone. `seedOf` gives the stored item an added copy was made from, with what each state changes on
+  it; a copy made for one state alone is a new item there. The stacking order is shared, so it is
+  taken as it is.
 */
-function foldEdit(layout, before, after, { state, alone, sourceOf }) {
+function foldEdit(layout, before, after, { state, alone, sourceOf, seedOf = () => undefined }) {
   const out = clone(layout);
   foldMoves(out, before, after, state, alone);
   foldStyles(out, before, after, state, alone);
   foldHidden(out, before, after, state, alone);
   out.items = after.items.map((item) => {
     const from = sourceOf(item);
-    return layout.items[from] ? foldItem(layout.items[from], before.items[from], item, state, alone) : newItem(item, state, alone);
+    if (layout.items[from]) return foldItem(layout.items[from], before.items[from], item, state, alone);
+    const seed = !alone && seedOf(item);
+    return seed ? foldItem(seed, canvasItemIn(seed, state), item, state, alone) : newItem(item, state, alone);
   });
   put(out, 'order', after.order && clone(after.order));
   return normalizeCanvas(out);
@@ -153,4 +156,4 @@ function resetPart(layout, part, state) {
 // True when no other state draws the item: hiding it here would leave it drawn nowhere.
 const drawnOnlyIn = (layout, index, state) => CANVAS_STATES.every((other) => other === state || canvasItemIn(layout.items[index], other).off);
 
-module.exports = { foldEdit, itemOwns, partOwns, resetItem, resetPart, drawnOnlyIn };
+module.exports = { clone, foldEdit, itemOwns, partOwns, resetItem, resetPart, drawnOnlyIn };

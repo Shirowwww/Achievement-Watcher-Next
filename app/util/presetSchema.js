@@ -963,4 +963,6 @@ module.exports = {
   canvasIn,
   canvasFiles,
   canvasFonts,
+  sameValue,
+  saysTier,
 };
