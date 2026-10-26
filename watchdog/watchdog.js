@@ -1266,6 +1266,10 @@ var app = {
               debug.warn(`Achievement parse attempt ${attempt + 1} failed for "${name}": ${err.message || err}`);
             },
           });
+          // Unlock ages are measured from this read, not from "now" inside the loop: each notify below
+          // is awaited (up to several seconds for an overlay report), and a second unlock written in
+          // the same save then aged past the threshold and was dropped as Outatime.
+          const readAt = moment();
           // A repaired setup redirects into GSE Saves, watched without the uplayR2 flag, so the ids
           // have to be re-keyed there too or a Ubisoft unlock is dropped as ACH_NOT_FOUND_IN_SCHEMA.
           if (options.uplayR2 || uplayR2.isUplayR2SteamAppId(appID)) {
@@ -1337,20 +1341,20 @@ var app = {
                   };
 
                   if (!previous.Achieved && achievements[i].Achieved) {
-                    if (!achievements[i].UnlockTime || achievements[i].UnlockTime == 0) achievements[i].UnlockTime = moment().unix();
+                    if (!achievements[i].UnlockTime || achievements[i].UnlockTime == 0) achievements[i].UnlockTime = readAt.unix();
                     /*
                       Steam's stats file holds years of real unlock times, and its first observation
                       is any game the account ever played: only an unlock that just happened may
                       notify there, never the latest three.
                     */
-                    const justUnlocked = moment().diff(moment.unix(achievements[i].UnlockTime), 'seconds') <= self.options.notification_advanced.timeTreshold;
+                    const justUnlocked = readAt.diff(moment.unix(achievements[i].UnlockTime), 'seconds') <= self.options.notification_advanced.timeTreshold;
                     const seedPreview =
                       seedOnly && seedNotifyNames.has(String(achievements[i].name || '').toUpperCase()) && (!options.steamClient || justUnlocked);
                     if (seedOnly && !seedPreview) continue; // baseline seeding: record the unlock, suppress older toasts
                     // Before the timestamp and dedup gates: those decide whether to notify, but an
                     // unlock too old to toast is still one the open library has not counted.
                     reportUnlockToApp(game, ach.name, achievements[i].UnlockTime);
-                    let elapsedTime = moment().diff(moment.unix(achievements[i].UnlockTime), 'seconds');
+                    let elapsedTime = readAt.diff(moment.unix(achievements[i].UnlockTime), 'seconds');
                     if (
                       seedPreview ||
                       options.disableCheckTimestamp ||
