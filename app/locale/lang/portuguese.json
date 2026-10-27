@@ -288,31 +288,31 @@
         "description": "Mostra os troféus platina, ouro, prata e bronze sob o seu nome. A platina é um jogo a 100%; os restantes classificam as suas proezas consoante o número de jogadores que as desbloquearam."
       },
       "rarityDisplay": {
-        "name": "Apresentação da raridade",
-        "description": "Os níveis raros marcam apenas as conquistas mais raras. O modo troféus classifica cada conquista em ouro, prata ou bronze pela sua taxa de desbloqueio e mostra platina nos jogos concluídos.",
-        "rare": "Níveis raros",
-        "trophy": "Modo troféus",
+        "name": "Distintivos de raridade",
+        "description": "Apenas proezas raras: ouro, prata ou bronze para as mais raras, nada para as restantes. Todas: cada proeza recebe um distintivo conforme a taxa de desbloqueio, e um jogo concluído recebe a platina, como os troféus da PlayStation.",
+        "rare": "Apenas proezas raras",
+        "trophy": "Todas, estilo PlayStation",
         "goldBelow": {
           "name": "Troféu de ouro abaixo de",
-          "description": "No modo troféus, as conquistas desbloqueadas por menos jogadores do que esta taxa recebem ouro."
+          "description": "Com todas as proezas, as desbloqueadas por menos jogadores do que esta taxa recebem ouro."
         },
         "silverBelow": {
           "name": "Troféu de prata abaixo de",
-          "description": "No modo troféus, as conquistas abaixo desta taxa recebem prata; as restantes, ou sem taxa conhecida, recebem bronze."
+          "description": "Com todas as proezas, as abaixo desta taxa recebem prata; as restantes, ou sem taxa conhecida, recebem bronze."
         },
         "thresholds": {
           "name": "Limiares de raridade",
-          "description": "Por predefinição, mantêm-se 5%, 10% e 15% para os níveis raros, e 20% e 50% para o modo troféus. Personalizado permite alterá-los.",
+          "description": "Por predefinição, mantêm-se 5%, 10% e 15% para as proezas raras, e 20% e 50% para todas as proezas. Personalizado permite alterá-los.",
           "default": "Predefinido",
           "custom": "Personalizado"
         },
         "rareGoldMax": {
           "name": "Ouro até",
-          "description": "Nos níveis raros, as conquistas desbloqueadas por esta percentagem de jogadores ou menos recebem ouro."
+          "description": "Nas proezas raras, as desbloqueadas por esta percentagem de jogadores ou menos recebem ouro."
         },
         "rareSilverMax": {
           "name": "Prata até",
-          "description": "Nos níveis raros, as proezas até esta taxa recebem prata. Fica sempre acima do ouro e abaixo do limite de raro: mover um cursor empurra os outros."
+          "description": "Nas proezas raras, as até esta taxa recebem prata. Fica sempre acima do ouro e abaixo do limite raro: mover um cursor empurra os outros."
         },
         "rareMax": {
           "name": "Raro até",
@@ -342,8 +342,8 @@
           "description": "Mostra a barra de conclusão em cada cartão."
         },
         "showEmptyProgress": {
-          "name": "Barra dos jogos sem proezas",
-          "description": "Para um jogo que a Steam lista sem proezas: mostrar «Sem proezas» na barra ou deixar a barra de fora."
+          "name": "Jogos sem proezas",
+          "description": "Para um jogo que a Steam lista sem proezas: escrever “Sem proezas” no bloco, ou não mostrar nada."
         },
         "showSource": {
           "name": "Ícone da plataforma",
@@ -1629,9 +1629,9 @@
         "profileExport": "Exportar perfil…",
         "profileRestore": "Restaurar perfil…"
       },
-      "blacklistTitle": "Lista negra de AppID",
-      "blacklistButton": "Repor lista negra",
-      "blacklistInfo": "Clique direito num bloco de jogo para o adicionar à lista negra.",
+      "blacklistTitle": "Jogos ocultos",
+      "blacklistButton": "Mostrar de novo todos os jogos ocultos",
+      "blacklistInfo": "Clique com o botão direito num jogo da biblioteca e escolha “Remover da lista” para o ocultar aqui.",
       "blacklistEmpty": "Não existem jogos ocultos.",
       "blacklistRestore": "Restaurar este jogo",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Escritas {count} proezas em {path}",
     "repair-failed": "Falha na reparação",
     "could-not-write-steam-settings": "Não foi possível escrever os steam_settings.",
-    "blacklist-add-failed": "Não foi possível adicionar o item à lista negra do utilizador",
+    "blacklist-add-failed": "Não foi possível ocultar este jogo",
     "emulator-source": "Origem do emulador",
     "appid-override": "Definir o AppID manualmente…",
     "appid-override-prompt": "Appid do Steam a usar para \"{name}\" ({folder}). Substitui a dedução do AW Next feita pelo nome - útil quando outro jogo tem o mesmo nome desta pasta.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Opacidade",
     "theme-effect-blur-label": "Intensidade",
     "scan-complete": "Análise concluída.",
-    "rescan-selected-folders": "Voltar a analisar as pastas selecionadas",
-    "rescan-selected-help": "Escolhe apenas as pastas de gravações ou bibliotecas que precisam de nova verificação. Usa Atualizar para verificar todas as fontes.",
-    "rescan-select-all": "Selecionar tudo",
-    "rescan-select-none": "Limpar seleção",
-    "rescan-no-folders": "Adiciona uma pasta antes de voltar a analisar.",
-    "rescan-no-selection": "Seleciona pelo menos uma pasta.",
-    "rescan-started": "A analisar novamente {count} pasta(s) selecionada(s)…",
-    "rescan-complete": "Pastas selecionadas analisadas novamente.",
-    "rescan-failed": "Falha ao analisar as pastas selecionadas: {error}",
     "force-recheck-started": "A procurar novas proezas…",
     "force-recheck-done": "Verificação concluída.",
     "force-recheck-failed": "Falha na verificação: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Falha ao gerar as configurações: {error}",
     "error-generating-configs": "Erro ao gerar as configurações",
     "error-while-auto-finding-folder-s": "Erro ao procurar pastas automaticamente",
-    "error-while-trying-to-reset-user-blacklist": "Erro ao tentar repor a lista negra do utilizador",
+    "error-while-trying-to-reset-user-blacklist": "Não foi possível mostrar de novo os jogos ocultos",
     "websocket-connection-error": "Erro de ligação WebSocket",
     "notification-test-failure": "Falha no teste de notificação.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Erro ao estabelecer a ligação: net::ERR_CONNECTION_REFUSED\nO Watchdog está em execução?",

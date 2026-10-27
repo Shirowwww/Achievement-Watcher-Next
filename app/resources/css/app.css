@@ -9510,6 +9510,28 @@ body {
   font-size: var(--fs-xs);
 }
 
+/* What the rarity choice gives, drawn with the trophy colours of the library. A row of its own:
+   every help text of a row sits in row 2, where it would cover the description. */
+#settings .arrow-list li .rarity-mode-sample {
+  grid-row: 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 6px;
+}
+#settings .rarity-sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-variant-numeric: tabular-nums;
+}
+#settings .rarity-sample i {
+  color: var(--trophy);
+}
+#settings .rarity-sample b {
+  font-weight: 600;
+}
+
 #settings .arrow-list li .right {
   width: 212px;
   height: 32px;
@@ -10782,135 +10804,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   margin: 0;
 }
 
-/* Selective folder rescan: a compact, explicit scope rather than a second opaque full-scan button.
-   It is an ordinary settings section (`.settings-card`), so its frame, header and hairline come from
-   the shared section model above and follow the active theme like every other card - it used to
-   carry its own accent-washed frame, which read as a foreign element in every palette. */
-#settings .folder-rescan-help {
-  margin: 8px 0 0;
-  color: var(--text-muted);
-  font-size: var(--fs-sm);
-  line-height: 1.35;
-}
-
-#settings .folder-rescan-toolbar,
-#settings .folder-rescan-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-#settings .folder-rescan-toolbar .inline-action-btn:not(:hover) {
-  border-color: transparent;
-  background: transparent;
-}
-
-#settings .folder-rescan-actions #folder-rescan-run {
-  min-height: 32px;
-  padding: 6px 11px;
-  border-color: color-mix(in srgb, var(--accent) 34%, var(--set-control-border));
-  color: var(--text);
-  background: color-mix(in srgb, var(--set-control-bg) 88%, var(--accent) 7%);
-  box-shadow: none;
-}
-
-#settings .folder-rescan-actions #folder-rescan-run:not(:disabled):hover {
-  border-color: color-mix(in srgb, var(--accent) 58%, var(--set-control-border));
-  background: color-mix(in srgb, var(--set-control-bg) 78%, var(--accent) 12%);
-}
-
-#settings .folder-rescan-actions #folder-rescan-run i {
-  color: var(--accent);
-}
-
-#settings #folder-rescan-list {
-  max-height: 156px;
-  margin: 8px 0 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--set-surface-sunken) 28%, transparent);
-  scrollbar-color: color-mix(in srgb, var(--set-icon) 62%, transparent) transparent;
-  scrollbar-width: thin;
-}
-
-#settings #folder-rescan-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-#settings #folder-rescan-list::-webkit-scrollbar-track,
-#settings #folder-rescan-list::-webkit-scrollbar-corner {
-  background: transparent;
-}
-
-#settings #folder-rescan-list::-webkit-scrollbar-thumb {
-  min-height: 34px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in srgb, var(--set-icon) 52%, transparent);
-}
-
-#settings #folder-rescan-list::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--accent) 62%, var(--set-icon));
-}
-
-#settings #folder-rescan-list:empty {
-  display: none;
-}
-
-#settings #folder-rescan-list > li {
-  margin: 0;
-  padding: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--set-divider) 68%, transparent);
-}
-
-#settings #folder-rescan-list > li:last-child {
-  border-bottom: 0;
-}
-
-#settings .folder-rescan-location label {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  min-height: 32px;
-  gap: 8px;
-  padding: 5px 9px;
-  cursor: pointer;
-}
-
-#settings .folder-rescan-location label:hover {
-  background: var(--set-row-hover);
-}
-
-#settings .folder-rescan-location input {
-  width: 15px;
-  height: 15px;
-  margin: 0;
-  flex: 0 0 auto;
-  accent-color: var(--accent);
-}
-
-#settings .folder-rescan-location i {
-  width: 16px;
-  flex: 0 0 16px;
-  color: var(--set-icon);
-  text-align: center;
-}
-
-#settings .folder-rescan-location span {
-  min-width: 0;
-  overflow-x: clip;
-  color: var(--text);
-  font-size: var(--fs-sm);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-#settings #folder-rescan-result:not(:empty) {
-  margin-top: 8px;
-}
-
 #settings #defaultdir,
 #settings #dirlist,
 #settings #libdirlist {
@@ -10965,7 +10858,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings #dirlist > li,
 #settings #libdirlist > li,
 #settings #blacklist-manager > li,
-#settings #folder-rescan-list > li,
 #settings .settings-section-header {
   transition: background-color var(--dur-fast) var(--ease-out);
 }
@@ -10976,8 +10868,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings #defaultdir > li,
 #settings #dirlist > li,
 #settings #libdirlist > li,
-#settings #blacklist-manager > li,
-#settings #folder-rescan-list > li {
+#settings #blacklist-manager > li {
   border-radius: var(--radius-sm);
 }
 
@@ -10986,8 +10877,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings #defaultdir > li:hover,
 #settings #dirlist > li:hover,
 #settings #libdirlist > li:hover,
-#settings #blacklist-manager > li:hover,
-#settings #folder-rescan-list > li:hover {
+#settings #blacklist-manager > li:hover {
   background: var(--set-row-hover);
 }
 

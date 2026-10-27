@@ -43,6 +43,10 @@ renamed in 3.9.0 and the history is kept under one file.
   platforms another, now with EA Desktop and PlayStation Network, while RPCS3 joins the console
   emulators. LumaPlay (Uplay R1) and RUNE (Uplay R2) get a switch each, and MarkerPatch,
   MadnessPatch and the PC ports one switch together. RUNE starts on or off as LumaPlay was.
+- **Clearer settings.** The rarity choice reads "Rare achievements only" or "All, PlayStation
+  style", and three badges under it show the current cut-offs. The AppID blacklist is now "Hidden
+  games", and the Folders tab drops its selected-folders rescan, which did what Refresh does. A
+  custom theme started from a built-in one is named after it ("Steam Blue 2").
 - **Screenshots and clips are named after the achievement first**, then the date
   (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
   achievement's shots. Files saved earlier keep their name.

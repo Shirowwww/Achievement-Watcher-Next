@@ -288,31 +288,31 @@
         "description": "Muestra los trofeos platino, oro, plata y bronce debajo de tu nombre. El platino es un juego al 100%; los demás clasifican tus logros según cuántos jugadores los desbloquearon."
       },
       "rarityDisplay": {
-        "name": "Visualización de rareza",
-        "description": "Los niveles raros solo marcan los logros más raros. El modo trofeos califica cada logro con oro, plata o bronce según su porcentaje de desbloqueo y muestra platino en los juegos terminados.",
-        "rare": "Niveles raros",
-        "trophy": "Modo trofeos",
+        "name": "Insignias de rareza",
+        "description": "Solo logros raros: oro, plata o bronce para los más raros, nada para el resto. Todos: cada logro recibe una insignia según su tasa de desbloqueo, y un juego terminado recibe el platino, como los trofeos de PlayStation.",
+        "rare": "Solo logros raros",
+        "trophy": "Todos, estilo PlayStation",
         "goldBelow": {
           "name": "Trofeo de oro por debajo de",
-          "description": "En el modo trofeos, los logros desbloqueados por menos jugadores que este porcentaje obtienen oro."
+          "description": "Con todos los logros, los desbloqueados por menos jugadores que esta tasa reciben oro."
         },
         "silverBelow": {
           "name": "Trofeo de plata por debajo de",
-          "description": "En el modo trofeos, los logros por debajo de este porcentaje obtienen plata; el resto, o los que no tienen porcentaje conocido, obtienen bronce."
+          "description": "Con todos los logros, los que están por debajo de esta tasa reciben plata; el resto, o los que no tienen tasa conocida, reciben bronce."
         },
         "thresholds": {
           "name": "Umbrales de rareza",
-          "description": "Predeterminado mantiene 5%, 10% y 15% para los niveles raros, y 20% y 50% para el modo trofeos. Personalizado permite cambiarlos.",
+          "description": "Predeterminado mantiene 5%, 10% y 15% para los logros raros, y 20% y 50% para todos los logros. Personalizado permite cambiarlos.",
           "default": "Predeterminado",
           "custom": "Personalizado"
         },
         "rareGoldMax": {
           "name": "Oro hasta",
-          "description": "En los niveles raros, los logros desbloqueados por este porcentaje de jugadores o menos obtienen oro."
+          "description": "En los logros raros, los desbloqueados por esta proporción de jugadores o menos reciben oro."
         },
         "rareSilverMax": {
           "name": "Plata hasta",
-          "description": "En los niveles de rareza, los logros hasta este porcentaje reciben plata. Siempre queda por encima del oro y por debajo del límite de rareza: mover un control deslizante empuja a los demás."
+          "description": "En los logros raros, los que llegan hasta esta tasa reciben plata. Siempre queda por encima del oro y por debajo del límite raro: mover un control deslizante empuja a los demás."
         },
         "rareMax": {
           "name": "Raro hasta",
@@ -342,8 +342,8 @@
           "description": "Muestra la barra de finalización en cada recuadro."
         },
         "showEmptyProgress": {
-          "name": "Barra de los juegos sin logros",
-          "description": "Para un juego que Steam lista sin logros: mostrar «Sin logros» en su barra o dejar la barra afuera."
+          "name": "Juegos sin logros",
+          "description": "Para un juego que Steam lista sin logros: escribir «Sin logros» en su ficha, o no mostrar nada."
         },
         "showSource": {
           "name": "Ícono de la plataforma",
@@ -1629,9 +1629,9 @@
         "profileExport": "Exportar perfil…",
         "profileRestore": "Restaurar perfil…"
       },
-      "blacklistTitle": "Lista negra de AppID",
-      "blacklistButton": "Restablecer lista negra",
-      "blacklistInfo": "Haz clic derecho en una ficha de juego para agregarla a la lista negra.",
+      "blacklistTitle": "Juegos ocultos",
+      "blacklistButton": "Mostrar de nuevo todos los juegos ocultos",
+      "blacklistInfo": "Haz clic derecho en un juego de la biblioteca y elige «Quitar de la lista» para ocultarlo aquí.",
       "blacklistEmpty": "No hay juegos ocultos.",
       "blacklistRestore": "Restaurar este juego",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Se escribieron {count} logros en {path}",
     "repair-failed": "Error en la reparación",
     "could-not-write-steam-settings": "No se pudieron escribir los steam_settings.",
-    "blacklist-add-failed": "No se pudo agregar el elemento a la lista negra de usuario",
+    "blacklist-add-failed": "No se pudo ocultar este juego",
     "emulator-source": "Origen del emulador",
     "appid-override": "Definir el AppID manualmente…",
     "appid-override-prompt": "Appid de Steam que se usará para \"{name}\" ({folder}). Reemplaza la suposición de AW Next basada en el nombre; útil cuando otro juego tiene el mismo nombre que esta carpeta.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Opacidad",
     "theme-effect-blur-label": "Intensidad",
     "scan-complete": "Escaneo completado.",
-    "rescan-selected-folders": "Volver a escanear las carpetas seleccionadas",
-    "rescan-selected-help": "Elige solo las carpetas de guardados o bibliotecas que necesiten revisarse de nuevo. Usa Actualizar para comprobar todas las fuentes.",
-    "rescan-select-all": "Seleccionar todo",
-    "rescan-select-none": "Limpiar selección",
-    "rescan-no-folders": "Añade una carpeta antes de volver a escanear.",
-    "rescan-no-selection": "Selecciona al menos una carpeta.",
-    "rescan-started": "Volviendo a escanear {count} carpeta(s) seleccionada(s)…",
-    "rescan-complete": "Carpetas seleccionadas escaneadas de nuevo.",
-    "rescan-failed": "Error al escanear las carpetas seleccionadas: {error}",
     "force-recheck-started": "Buscando nuevos logros…",
     "force-recheck-done": "Verificación completa.",
     "force-recheck-failed": "Error en la verificación: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Error al generar las configuraciones: {error}",
     "error-generating-configs": "Error al generar las configuraciones",
     "error-while-auto-finding-folder-s": "Error al buscar carpetas automáticamente",
-    "error-while-trying-to-reset-user-blacklist": "Error al intentar restablecer la lista negra de usuario",
+    "error-while-trying-to-reset-user-blacklist": "No se pudieron mostrar de nuevo los juegos ocultos",
     "websocket-connection-error": "Error de conexión WebSocket",
     "notification-test-failure": "Error en la prueba de notificación.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Error al establecer la conexión: net::ERR_CONNECTION_REFUSED\n¿Está en ejecución el Watchdog?",

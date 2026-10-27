@@ -288,31 +288,31 @@
         "description": "Zobrazuje platinové, zlaté, strieborné a bronzové trofeje pod vaším menom. Platina je hra dokončená na 100 %; ostatné triedia vaše úspechy podľa toho, koľko hráčov ich odomklo."
       },
       "rarityDisplay": {
-        "name": "Zobrazenie vzácnosti",
-        "description": "Vzácne úrovne označujú len najvzácnejšie úspechy. Režim trofejí ohodnotí každý úspech zlatom, striebrom alebo bronzom podľa podielu odomknutí a pri dokončených hrách zobrazí platinu.",
-        "rare": "Vzácne úrovne",
-        "trophy": "Režim trofejí",
+        "name": "Odznaky vzácnosti",
+        "description": "Len vzácne úspechy: zlato, striebro alebo bronz pre najvzácnejšie, ostatným nič. Všetky: každý úspech dostane odznak podľa miery odomknutia a dokončená hra dostane platinu ako trofeje PlayStation.",
+        "rare": "Len vzácne úspechy",
+        "trophy": "Všetky, štýl PlayStation",
         "goldBelow": {
           "name": "Zlatá trofej pod",
-          "description": "V režime trofejí získajú zlato úspechy, ktoré odomklo menej hráčov než tento podiel."
+          "description": "Pri zobrazení všetkých úspechov dostanú zlato tie, ktoré odomklo menej hráčov než táto miera."
         },
         "silverBelow": {
           "name": "Strieborná trofej pod",
-          "description": "V režime trofejí získajú striebro úspechy pod týmto podielom; ostatné, alebo tie bez známeho podielu, získajú bronz."
+          "description": "Pri zobrazení všetkých úspechov dostanú striebro tie pod touto mierou; ostatné, alebo tie bez známej miery, dostanú bronz."
         },
         "thresholds": {
           "name": "Hranice vzácnosti",
-          "description": "Predvolené ponechá 5 %, 10 % a 15 % pre vzácne úrovne a 20 % a 50 % pre režim trofejí. Vlastné umožňuje ich zmeniť.",
+          "description": "Predvolené ponechá 5 %, 10 % a 15 % pre vzácne úspechy a 20 % a 50 % pre všetky úspechy. Vlastné umožňuje ich zmeniť.",
           "default": "Predvolené",
           "custom": "Vlastné"
         },
         "rareGoldMax": {
           "name": "Zlato do",
-          "description": "Vo vzácnych úrovniach získajú zlato úspechy odomknuté týmto podielom hráčov alebo menším."
+          "description": "Pri vzácnych úspechoch dostanú zlato tie, ktoré odomklo tento podiel hráčov alebo menej."
         },
         "rareSilverMax": {
           "name": "Striebro do",
-          "description": "Na vzácnych úrovniach získavajú úspechy do tejto miery striebro. Vždy zostáva nad zlatom a pod hranicou vzácnych: posunutie jedného posúvača posúva ostatné."
+          "description": "Pri vzácnych úspechoch dostanú striebro tie do tejto miery. Zostáva vždy nad zlatom a pod hranicou vzácnosti: posunutie jedného posuvníka posunie aj ostatné."
         },
         "rareMax": {
           "name": "Vzácne do",
@@ -342,8 +342,8 @@
           "description": "Zobrazí ukazovateľ dokončenia na každej dlaždici."
         },
         "showEmptyProgress": {
-          "name": "Ukazovateľ hier bez úspechov",
-          "description": "Pri hre, ktorú Steam uvádza bez úspechov: zobraziť v ukazovateli „Žiadne úspechy“, alebo ukazovateľ vynechať."
+          "name": "Hry bez úspechov",
+          "description": "Pri hre, ktorú Steam uvádza bez úspechov: napísať na dlaždicu „Žiadne úspechy“, alebo nezobraziť nič."
         },
         "showSource": {
           "name": "Ikona platformy",
@@ -1629,9 +1629,9 @@
         "profileExport": "Exportovať profil…",
         "profileRestore": "Obnoviť profil…"
       },
-      "blacklistTitle": "Čierna listina AppID",
-      "blacklistButton": "Resetovať čiernu listinu",
-      "blacklistInfo": "Kliknite pravým tlačidlom na dlaždicu hry pre pridanie na čiernu listinu.",
+      "blacklistTitle": "Skryté hry",
+      "blacklistButton": "Znova zobraziť všetky skryté hry",
+      "blacklistInfo": "Kliknite pravým tlačidlom na hru v knižnici a zvoľte „Odstrániť zo zoznamu“, aby sa tu skryla.",
       "blacklistEmpty": "Žiadne skryté hry.",
       "blacklistRestore": "Obnoviť túto hru",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Zapísaných {count} úspechov do {path}",
     "repair-failed": "Oprava sa nepodarila",
     "could-not-write-steam-settings": "Steam_settings sa nepodarilo zapísať.",
-    "blacklist-add-failed": "Položku sa nepodarilo pridať do používateľskej čiernej listiny",
+    "blacklist-add-failed": "Túto hru sa nepodarilo skryť",
     "emulator-source": "Zdroj emulátora",
     "appid-override": "Nastaviť AppID ručne…",
     "appid-override-prompt": "AppID služby Steam pre „{name}“ ({folder}). Prepíše odhad AW Next podľa názvu - užitočné, keď rovnaký názov nesie iná hra.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Priehľadnosť",
     "theme-effect-blur-label": "Intenzita",
     "scan-complete": "Sken dokončený.",
-    "rescan-selected-folders": "Znova prehľadať vybrané priečinky",
-    "rescan-selected-help": "Vyberte iba priečinky s uloženými dátami alebo knižnicami, ktoré treba znovu skontrolovať. Na kontrolu všetkých zdrojov použite Obnoviť.",
-    "rescan-select-all": "Vybrať všetko",
-    "rescan-select-none": "Vymazať výber",
-    "rescan-no-folders": "Pred opätovným skenovaním pridajte priečinok.",
-    "rescan-no-selection": "Vyberte aspoň jeden priečinok.",
-    "rescan-started": "Znova sa skenuje {count} vybraných priečinkov…",
-    "rescan-complete": "Vybrané priečinky boli znova prehľadané.",
-    "rescan-failed": "Sken vybraných priečinkov zlyhal: {error}",
     "force-recheck-started": "Hľadajú sa nové úspechy…",
     "force-recheck-done": "Kontrola dokončená.",
     "force-recheck-failed": "Kontrola zlyhala: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Generovanie konfigurácií sa nepodarilo: {error}",
     "error-generating-configs": "Chyba pri generovaní konfigurácií",
     "error-while-auto-finding-folder-s": "Chyba pri automatickom hľadaní priečinkov",
-    "error-while-trying-to-reset-user-blacklist": "Chyba pri pokuse o obnovenie používateľskej čiernej listiny",
+    "error-while-trying-to-reset-user-blacklist": "Skryté hry sa nepodarilo znova zobraziť",
     "websocket-connection-error": "Chyba pripojenia WebSocket",
     "notification-test-failure": "Test upozornenia sa nepodaril.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Chyba pri nadväzovaní pripojenia: net::ERR_CONNECTION_REFUSED\nBeží Watchdog?",

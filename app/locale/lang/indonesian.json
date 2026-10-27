@@ -288,31 +288,31 @@
         "description": "Menampilkan trofi platinum, emas, perak, dan perunggu di bawah nama Anda. Platinum adalah game yang mencapai 100%; sisanya mengurutkan pencapaian Anda berdasarkan jumlah pemain yang meraihnya."
       },
       "rarityDisplay": {
-        "name": "Tampilan kelangkaan",
-        "description": "Tingkat langka hanya menandai pencapaian paling langka. Mode piala menilai setiap pencapaian dengan emas, perak, atau perunggu menurut tingkat pembukaannya dan menampilkan platinum pada game yang tamat.",
-        "rare": "Tingkat langka",
-        "trophy": "Mode piala",
+        "name": "Lencana kelangkaan",
+        "description": "Hanya pencapaian langka: emas, perak, atau perunggu untuk yang paling langka, tidak ada untuk sisanya. Semua: setiap pencapaian mendapat lencana menurut tingkat pembukaannya, dan game yang tamat mendapat platinum, seperti piala PlayStation.",
+        "rare": "Hanya pencapaian langka",
+        "trophy": "Semua, gaya PlayStation",
         "goldBelow": {
           "name": "Piala emas di bawah",
-          "description": "Dalam mode piala, pencapaian yang dibuka oleh lebih sedikit pemain dari angka ini mendapat emas."
+          "description": "Dengan semua pencapaian, yang dibuka oleh lebih sedikit pemain dari tingkat ini mendapat emas."
         },
         "silverBelow": {
           "name": "Piala perak di bawah",
-          "description": "Dalam mode piala, pencapaian di bawah angka ini mendapat perak; sisanya, atau yang tidak diketahui angkanya, mendapat perunggu."
+          "description": "Dengan semua pencapaian, yang di bawah tingkat ini mendapat perak; sisanya, atau yang tingkatnya tidak diketahui, mendapat perunggu."
         },
         "thresholds": {
           "name": "Ambang kelangkaan",
-          "description": "Bawaan mempertahankan 5%, 10%, dan 15% untuk tingkat langka, serta 20% dan 50% untuk mode piala. Kustom memungkinkan perubahannya.",
+          "description": "Bawaan mempertahankan 5%, 10%, dan 15% untuk pencapaian langka, serta 20% dan 50% untuk semua pencapaian. Kustom memungkinkan perubahannya.",
           "default": "Bawaan",
           "custom": "Kustom"
         },
         "rareGoldMax": {
           "name": "Emas hingga",
-          "description": "Pada tingkat langka, pencapaian yang dibuka oleh persentase pemain ini atau kurang mendapat emas."
+          "description": "Untuk pencapaian langka, yang dibuka oleh sebanyak ini pemain atau lebih sedikit mendapat emas."
         },
         "rareSilverMax": {
           "name": "Perak hingga",
-          "description": "Pada tingkat kelangkaan, pencapaian hingga persentase ini mendapat perak. Nilainya selalu di atas emas dan di bawah batas langka: menggeser satu penggeser ikut mendorong yang lain."
+          "description": "Untuk pencapaian langka, yang sampai tingkat ini mendapat perak. Selalu di atas emas dan di bawah batas langka: menggeser satu penggeser akan mendorong yang lain."
         },
         "rareMax": {
           "name": "Langka hingga",
@@ -342,8 +342,8 @@
           "description": "Menampilkan bilah penyelesaian pada setiap kartu."
         },
         "showEmptyProgress": {
-          "name": "Bilah game tanpa pencapaian",
-          "description": "Untuk game yang dicantumkan Steam tanpa pencapaian: tampilkan “Tidak ada pencapaian” di bilahnya, atau hilangkan bilahnya."
+          "name": "Game tanpa pencapaian",
+          "description": "Untuk game yang oleh Steam didaftarkan tanpa pencapaian: tulis “Tidak ada pencapaian” pada kartunya, atau jangan tampilkan apa pun."
         },
         "showSource": {
           "name": "Ikon platform",
@@ -1629,9 +1629,9 @@
         "profileExport": "Ekspor profil…",
         "profileRestore": "Pulihkan profil…"
       },
-      "blacklistTitle": "Daftar Hitam AppID",
-      "blacklistButton": "Atur ulang daftar hitam",
-      "blacklistInfo": "Klik kanan sebuah kartu game untuk menambahkannya ke daftar hitam.",
+      "blacklistTitle": "Game tersembunyi",
+      "blacklistButton": "Tampilkan lagi semua game tersembunyi",
+      "blacklistInfo": "Klik kanan sebuah game di pustaka dan pilih “Hapus dari daftar” untuk menyembunyikannya di sini.",
       "blacklistEmpty": "Tidak ada game yang disembunyikan.",
       "blacklistRestore": "Pulihkan game ini",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Menulis {count} pencapaian ke {path}",
     "repair-failed": "Perbaikan gagal",
     "could-not-write-steam-settings": "Tidak dapat menulis steam_settings.",
-    "blacklist-add-failed": "Gagal menambahkan item ke daftar hitam pengguna",
+    "blacklist-add-failed": "Tidak dapat menyembunyikan game ini",
     "emulator-source": "Sumber emulator",
     "appid-override": "Atur AppID secara manual…",
     "appid-override-prompt": "Steam appid untuk \"{name}\" ({folder}). Ini menggantikan tebakan AW Next berdasarkan nama - berguna saat game lain memiliki nama yang sama dengan folder ini.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Opasitas",
     "theme-effect-blur-label": "Intensitas",
     "scan-complete": "Pemindaian selesai.",
-    "rescan-selected-folders": "Pindai ulang folder terpilih",
-    "rescan-selected-help": "Pilih hanya folder data save atau perpustakaan yang perlu dicoba lagi. Pakai Segarkan untuk memeriksa semua sumber.",
-    "rescan-select-all": "Pilih semua",
-    "rescan-select-none": "Kosongkan pilihan",
-    "rescan-no-folders": "Tambahkan sebuah folder sebelum memindai ulang.",
-    "rescan-no-selection": "Pilih setidaknya satu folder.",
-    "rescan-started": "Memindai ulang {count} folder terpilih…",
-    "rescan-complete": "Folder terpilih telah dipindai ulang.",
-    "rescan-failed": "Pemindaian folder terpilih gagal: {error}",
     "force-recheck-started": "Memeriksa pencapaian baru…",
     "force-recheck-done": "Pemeriksaan selesai.",
     "force-recheck-failed": "Pemeriksaan gagal: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Pembuatan konfigurasi gagal: {error}",
     "error-generating-configs": "Kesalahan saat membuat konfigurasi",
     "error-while-auto-finding-folder-s": "Kesalahan saat mencari folder secara otomatis",
-    "error-while-trying-to-reset-user-blacklist": "Kesalahan saat mencoba mengatur ulang daftar hitam pengguna",
+    "error-while-trying-to-reset-user-blacklist": "Tidak dapat menampilkan lagi game tersembunyi",
     "websocket-connection-error": "Kesalahan Koneksi WebSocket",
     "notification-test-failure": "Uji notifikasi gagal.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Kesalahan saat membangun koneksi: net::ERR_CONNECTION_REFUSED\nApakah Watchdog berjalan ?",

@@ -72,12 +72,14 @@ test('the settings filter behaves correctly in a real DOM', { concurrency: 1, ti
     await page.goto('file://' + harness.replace(/\\/g, '/'));
 
     // Rows as the filter defines them: outermost matches per tab (see settingsSearch.ROW_SELECTOR),
-    // less the other system's settings, which this one never shows.
+    // less the other system's settings, which this one never shows, and the rows kept hidden for the
+    // locale loader's nth-child binding.
     await page.evaluate(() => {
       window.allRows = () =>
         $('#settings .box section.content[data-view]')
           .toArray()
           .reduce((set, section) => set.add(window.searchRules.rowsIn($, $(section))), $())
+          .not('[hidden]')
           .filter(function () {
             return $(this).closest(window.searchRules.offPlatformSelector($)).length === 0;
           });

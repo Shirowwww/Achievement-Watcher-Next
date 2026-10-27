@@ -288,31 +288,31 @@
         "description": "Toont platina-, goud-, zilver- en bronzen trofeeën onder je naam. Platina is een game op 100%; de andere rangschikken je prestaties op basis van hoeveel spelers ze hebben ontgrendeld."
       },
       "rarityDisplay": {
-        "name": "Zeldzaamheidsweergave",
-        "description": "Zeldzame niveaus markeren alleen de zeldzaamste prestaties. De trofeeënmodus beoordeelt elke prestatie met goud, zilver of brons op basis van het ontgrendelpercentage en toont platina bij voltooide spellen.",
-        "rare": "Zeldzame niveaus",
-        "trophy": "Trofeeënmodus",
+        "name": "Zeldzaamheidsbadges",
+        "description": "Alleen zeldzame prestaties: goud, zilver of brons voor de zeldzaamste, niets voor de rest. Alle: elke prestatie krijgt een badge naar het ontgrendelpercentage, en een uitgespeelde game krijgt platina, zoals PlayStation-trofeeën.",
+        "rare": "Alleen zeldzame prestaties",
+        "trophy": "Alle, PlayStation-stijl",
         "goldBelow": {
           "name": "Gouden trofee onder",
-          "description": "In de trofeeënmodus krijgen prestaties die door minder spelers zijn behaald dan dit percentage goud."
+          "description": "Bij alle prestaties krijgen die welke door minder spelers dan dit percentage zijn ontgrendeld goud."
         },
         "silverBelow": {
           "name": "Zilveren trofee onder",
-          "description": "In de trofeeënmodus krijgen prestaties onder dit percentage zilver; de rest, of die zonder bekend percentage, krijgt brons."
+          "description": "Bij alle prestaties krijgen die onder dit percentage zilver; de rest, of die zonder bekend percentage, krijgt brons."
         },
         "thresholds": {
           "name": "Zeldzaamheidsdrempels",
-          "description": "Standaard behoudt 5%, 10% en 15% voor zeldzame niveaus en 20% en 50% voor de trofeeënmodus. Aangepast laat je ze wijzigen.",
+          "description": "Standaard behoudt 5%, 10% en 15% voor zeldzame prestaties en 20% en 50% voor alle prestaties. Aangepast laat je ze wijzigen.",
           "default": "Standaard",
           "custom": "Aangepast"
         },
         "rareGoldMax": {
           "name": "Goud tot",
-          "description": "In zeldzame niveaus krijgen prestaties die door dit percentage spelers of minder zijn ontgrendeld goud."
+          "description": "Bij zeldzame prestaties krijgen die welke door dit aandeel spelers of minder zijn ontgrendeld goud."
         },
         "rareSilverMax": {
           "name": "Zilver tot",
-          "description": "Bij zeldzaamheidsklassen krijgen prestaties tot dit percentage zilver. Het blijft altijd boven goud en onder de zeldzaamheidsgrens: als je één schuifregelaar verplaatst, schuiven de andere mee."
+          "description": "Bij zeldzame prestaties krijgen die tot dit percentage zilver. Het blijft altijd boven goud en onder de zeldzaamheidsgrens: als je één schuifregelaar verplaatst, schuiven de andere mee."
         },
         "rareMax": {
           "name": "Zeldzaam tot",
@@ -342,8 +342,8 @@
           "description": "Toont de voltooiingsbalk op elke tegel."
         },
         "showEmptyProgress": {
-          "name": "Balk van games zonder prestaties",
-          "description": "Voor een game die Steam zonder prestaties toont: geef „Geen prestaties“ weer in de balk, of laat de balk weg."
+          "name": "Games zonder prestaties",
+          "description": "Voor een game die Steam zonder prestaties vermeldt: “Geen prestaties” op de tegel zetten, of niets tonen."
         },
         "showSource": {
           "name": "Platformpictogram",
@@ -1629,9 +1629,9 @@
         "profileExport": "Profiel exporteren…",
         "profileRestore": "Profiel herstellen…"
       },
-      "blacklistTitle": "Zwarte lijst met AppID's",
-      "blacklistButton": "Zwarte lijst resetten",
-      "blacklistInfo": "Klik met rechts op een gametegel om hem op de zwarte lijst te zetten.",
+      "blacklistTitle": "Verborgen games",
+      "blacklistButton": "Alle verborgen games weer tonen",
+      "blacklistInfo": "Klik met rechts op een game in de bibliotheek en kies “Uit lijst verwijderen” om hem hier te verbergen.",
       "blacklistEmpty": "Geen verborgen games.",
       "blacklistRestore": "Deze game terugzetten",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "{count} prestaties geschreven naar {path}",
     "repair-failed": "Reparatie mislukt",
     "could-not-write-steam-settings": "Kon steam_settings niet schrijven.",
-    "blacklist-add-failed": "Toevoegen aan de zwarte lijst van de gebruiker mislukt",
+    "blacklist-add-failed": "Deze game kon niet worden verborgen",
     "emulator-source": "Emulatorbron",
     "appid-override": "AppID handmatig instellen…",
     "appid-override-prompt": "Steam-appid voor \"{name}\" ({folder}). Dit vervangt de op naam gebaseerde gok van AW Next - handig als een ander spel dezelfde naam als deze map heeft.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Dekking",
     "theme-effect-blur-label": "Intensiteit",
     "scan-complete": "Scan voltooid.",
-    "rescan-selected-folders": "Geselecteerde mappen opnieuw scannen",
-    "rescan-selected-help": "Kies alleen de save- of bibliotheekmappen die een nieuwe poging nodig hebben. Gebruik Vernieuwen om elke bron te controleren.",
-    "rescan-select-all": "Alles selecteren",
-    "rescan-select-none": "Selectie wissen",
-    "rescan-no-folders": "Voeg eerst een map toe voordat je opnieuw scant.",
-    "rescan-no-selection": "Selecteer minstens één map.",
-    "rescan-started": "{count} geselecteerde map(pen) opnieuw scannen…",
-    "rescan-complete": "Geselecteerde mappen opnieuw gescand.",
-    "rescan-failed": "Scan van de geselecteerde mappen mislukt: {error}",
     "force-recheck-started": "Controleren op nieuwe prestaties…",
     "force-recheck-done": "Controle voltooid.",
     "force-recheck-failed": "Controle mislukt: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Genereren van de configuraties mislukt: {error}",
     "error-generating-configs": "Fout bij het genereren van de configuraties",
     "error-while-auto-finding-folder-s": "Fout tijdens het automatisch zoeken naar map(pen)",
-    "error-while-trying-to-reset-user-blacklist": "Fout bij het resetten van de zwarte lijst van de gebruiker",
+    "error-while-trying-to-reset-user-blacklist": "De verborgen games konden niet weer worden getoond",
     "websocket-connection-error": "Fout in de WebSocket-verbinding",
     "notification-test-failure": "Meldingstest mislukt.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fout bij het opzetten van de verbinding: net::ERR_CONNECTION_REFUSED\nDraait Watchdog wel?",

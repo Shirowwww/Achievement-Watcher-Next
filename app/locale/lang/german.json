@@ -288,31 +288,31 @@
         "description": "Zeigt Platin-, Gold-, Silber- und Bronze-Trophäen unter deinem Namen. Platin ist ein Spiel mit 100 %; die anderen ordnen deine Erfolge danach ein, wie viele Spieler sie freigeschaltet haben."
       },
       "rarityDisplay": {
-        "name": "Seltenheitsanzeige",
-        "description": "Seltenheitsstufen markieren nur die seltensten Erfolge. Der Trophäenmodus bewertet jeden Erfolg nach seiner Freischaltquote mit Gold, Silber oder Bronze und zeigt Platin bei abgeschlossenen Spielen.",
-        "rare": "Seltenheitsstufen",
-        "trophy": "Trophäenmodus",
+        "name": "Seltenheitsabzeichen",
+        "description": "Nur seltene Erfolge: Gold, Silber oder Bronze für die seltensten, nichts für den Rest. Alle: Jeder Erfolg erhält je nach Freischaltquote ein Abzeichen, und ein abgeschlossenes Spiel erhält Platin, wie die PlayStation-Trophäen.",
+        "rare": "Nur seltene Erfolge",
+        "trophy": "Alle, im PlayStation-Stil",
         "goldBelow": {
           "name": "Gold-Trophäe unter",
-          "description": "Im Trophäenmodus erhalten Erfolge, die weniger Spieler freigeschaltet haben, Gold."
+          "description": "Bei allen Erfolgen erhalten diejenigen Gold, die von weniger Spielern als dieser Quote freigeschaltet wurden."
         },
         "silverBelow": {
           "name": "Silber-Trophäe unter",
-          "description": "Im Trophäenmodus erhalten Erfolge unter dieser Quote Silber; alle anderen oder solche ohne bekannte Quote erhalten Bronze."
+          "description": "Bei allen Erfolgen erhalten diejenigen unter dieser Quote Silber; die übrigen oder ohne bekannte Quote erhalten Bronze."
         },
         "thresholds": {
           "name": "Seltenheitsschwellen",
-          "description": "Standard behält 5 %, 10 % und 15 % für Seltenheitsstufen sowie 20 % und 50 % für den Trophäenmodus bei. Benutzerdefiniert erlaubt es, sie zu ändern.",
+          "description": "Standard behält 5 %, 10 % und 15 % für seltene Erfolge sowie 20 % und 50 % für alle Erfolge bei. Benutzerdefiniert erlaubt es, sie zu ändern.",
           "default": "Standard",
           "custom": "Benutzerdefiniert"
         },
         "rareGoldMax": {
           "name": "Gold bis",
-          "description": "In den Seltenheitsstufen erhalten Erfolge, die von diesem Anteil der Spieler oder weniger freigeschaltet wurden, Gold."
+          "description": "Bei seltenen Erfolgen erhalten diejenigen Gold, die von diesem Anteil der Spieler oder weniger freigeschaltet wurden."
         },
         "rareSilverMax": {
           "name": "Silber bis",
-          "description": "In seltenen Stufen erhalten Erfolge bis zu dieser Quote Silber. Sie bleibt immer über Gold und unter der Seltenheitsgrenze: Wer einen Regler verschiebt, schiebt die anderen mit."
+          "description": "Bei seltenen Erfolgen erhalten diejenigen bis zu dieser Quote Silber. Sie bleibt immer über Gold und unter der Seltenheitsgrenze: Wird ein Regler verschoben, schiebt er die anderen mit."
         },
         "rareMax": {
           "name": "Selten bis",
@@ -342,8 +342,8 @@
           "description": "Zeigt den Fertigstellungsbalken auf jeder Kachel."
         },
         "showEmptyProgress": {
-          "name": "Balken für Spiele ohne Erfolge",
-          "description": "Für ein Spiel, das Steam ohne Erfolge auflistet: „Keine Erfolge“ im Balken anzeigen oder den Balken weglassen."
+          "name": "Spiele ohne Erfolge",
+          "description": "Für ein Spiel, das Steam ohne Erfolge listet: „Keine Erfolge“ auf der Kachel anzeigen oder nichts anzeigen."
         },
         "showSource": {
           "name": "Plattformsymbol",
@@ -1629,9 +1629,9 @@
         "profileExport": "Profil exportieren…",
         "profileRestore": "Profil wiederherstellen…"
       },
-      "blacklistTitle": "AppID-Sperrliste",
-      "blacklistButton": "Sperrliste zurücksetzen",
-      "blacklistInfo": "Rechtsklick auf eine Spielkachel, um sie zur Sperrliste hinzuzufügen.",
+      "blacklistTitle": "Ausgeblendete Spiele",
+      "blacklistButton": "Alle ausgeblendeten Spiele wieder anzeigen",
+      "blacklistInfo": "Rechtsklick auf ein Spiel in der Bibliothek und „Aus der Liste entfernen“ wählen, um es hier auszublenden.",
       "blacklistEmpty": "Keine ausgeblendeten Spiele.",
       "blacklistRestore": "Dieses Spiel wieder anzeigen",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "{count} Erfolge nach {path} geschrieben",
     "repair-failed": "Reparatur fehlgeschlagen",
     "could-not-write-steam-settings": "steam_settings konnte nicht geschrieben werden.",
-    "blacklist-add-failed": "Element konnte nicht zur Benutzer-Blacklist hinzugefügt werden",
+    "blacklist-add-failed": "Dieses Spiel konnte nicht ausgeblendet werden",
     "emulator-source": "Emulatorquelle",
     "appid-override": "AppID manuell festlegen…",
     "appid-override-prompt": "Steam-AppID für „{name}“ ({folder}). Ersetzt die namensbasierte Vermutung von AW Next - nützlich, wenn ein anderes Spiel denselben Namen wie der Ordner trägt.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Deckkraft",
     "theme-effect-blur-label": "Intensität",
     "scan-complete": "Scan abgeschlossen.",
-    "rescan-selected-folders": "Ausgewählte Ordner erneut scannen",
-    "rescan-selected-help": "Wähle nur Speicher- oder Bibliotheksordner, die erneut geprüft werden sollen. Mit Aktualisieren werden alle Quellen geprüft.",
-    "rescan-select-all": "Alle auswählen",
-    "rescan-select-none": "Auswahl aufheben",
-    "rescan-no-folders": "Füge vor dem erneuten Scannen einen Ordner hinzu.",
-    "rescan-no-selection": "Wähle mindestens einen Ordner aus.",
-    "rescan-started": "{count} ausgewählte Ordner werden erneut gescannt…",
-    "rescan-complete": "Ausgewählte Ordner wurden erneut gescannt.",
-    "rescan-failed": "Scan ausgewählter Ordner fehlgeschlagen: {error}",
     "force-recheck-started": "Suche nach neuen Erfolgen…",
     "force-recheck-done": "Prüfung abgeschlossen.",
     "force-recheck-failed": "Prüfung fehlgeschlagen: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Konfigurationen erzeugen fehlgeschlagen: {error}",
     "error-generating-configs": "Fehler beim Erzeugen der Konfigurationen",
     "error-while-auto-finding-folder-s": "Fehler beim automatischen Suchen von Ordnern",
-    "error-while-trying-to-reset-user-blacklist": "Fehler beim Zurücksetzen der Benutzer-Blacklist",
+    "error-while-trying-to-reset-user-blacklist": "Die ausgeblendeten Spiele konnten nicht wieder angezeigt werden",
     "websocket-connection-error": "WebSocket-Verbindungsfehler",
     "notification-test-failure": "Test der Benachrichtigung fehlgeschlagen.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fehler beim Verbindungsaufbau: net::ERR_CONNECTION_REFUSED\nLäuft der Watchdog?",

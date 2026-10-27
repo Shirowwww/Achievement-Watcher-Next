@@ -13,7 +13,6 @@ const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const themeMock = require(path.join(appPath, 'util/themeMock.js'));
 const themeFonts = require(path.join(appPath, 'util/themeFonts.js'));
 const DEFAULT_THEME_COLOR = themeLayers.BUILTIN_COLORS.default.bg;
-const scanScopeTools = require(path.join(appPath, 'parser/scanScope.js'));
 const emulatorFixEligibility = require(path.join(appPath, 'util/emulatorFixEligibility.js'));
 const { panelToClose } = require(path.join(appPath, 'util/panelEscape.js'));
 const { focusTrapTarget } = require(path.join(appPath, 'util/panelFocus.js'));
@@ -516,6 +515,21 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#settings li[data-rarity-rows]').each(function () {
         $(this).toggle(custom && $(this).attr('data-rarity-rows') === mode);
       });
+      renderRaritySample();
+    }
+
+    // Three badges under the choice say what it does with the current bounds: rare tiers stop at the
+    // rare limit, trophy mode gives every achievement one.
+    function renderRaritySample() {
+      const mode = settingsRarityTiers.normalizeMode($('#option_rarityMode').val());
+      const v = readRaritySliders();
+      const badges =
+        mode === 'trophy'
+          ? [['gold', `< ${v.trophyGoldBelow}%`], ['silver', `< ${v.trophySilverBelow}%`], ['bronze', `≥ ${v.trophySilverBelow}%`]]
+          : [['gold', `≤ ${v.rareGoldMax}%`], ['silver', `≤ ${v.rareSilverMax}%`], ['bronze', `≤ ${v.rareMax}%`]];
+      $('#rarity-mode-sample')
+        .empty()
+        .append(badges.map(([tier, label]) => $('<span>').addClass(`rarity-sample trophy-${tier}`).append($('<i>').addClass('fas fa-trophy'), $('<b>').text(label))));
     }
 
     // The choice is not stored: a profile whose values all equal the defaults reads as "Default".
@@ -534,6 +548,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $(`#option_${option}`).val(String(value));
         $(`[data-rarity-value="${option}"]`).text(`${value}%`);
       }
+      renderRaritySample();
     }
 
     function syncRarityThresholdsChoice() {
@@ -2646,6 +2661,25 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       return $('#option_theme option:selected').text().replace(/…$/, '').trim();
     }
 
+    // The picker's name for a built-in; the Custom slot and anything unknown start from Steam Blue,
+    // the colours a fresh Custom theme opens with.
+    function builtinThemeLabel(key) {
+      const entry = [...PRIMARY_THEMES, ...MORE_THEMES].find(([value]) => value === key);
+      return entry ? entry[1] : PRIMARY_THEMES[0][1];
+    }
+
+    // "Steam Blue 2", then "Steam Blue 3": the first number no saved or imported theme uses yet.
+    function freeThemeName(base) {
+      const taken = new Set(installedThemes.map((theme) => String(theme.name).toLowerCase()));
+      $('#option_theme option').each(function () {
+        const name = userThemes.parseValue($(this).val());
+        if (name) taken.add(name.toLowerCase());
+      });
+      let number = 2;
+      while (taken.has(`${base} ${number}`.toLowerCase())) number += 1;
+      return `${base} ${number}`;
+    }
+
     function customThemeFromDom() {
       const draft = {};
       for (const meta of CUSTOM_LAYER_META) {
@@ -2957,8 +2991,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           customThemeSnapshot = opening === 'custom' ? theme : null;
           editingBase = model.base || (Object.prototype.hasOwnProperty.call(themeLayers.BUILTIN_COLORS, opening) ? opening : '');
           renderCustomThemeLayers(theme);
-          // Save with the name untouched updates this theme; changing it first creates a new one.
-          $('#theme-customizer-name').val(model.name || selectedThemeLabel());
+          // Save with the name untouched updates this theme; changing it first creates a new one. A
+          // built-in or the unnamed Custom slot has no name of its own, so it gets a free copy name.
+          $('#theme-customizer-name').val(model.name || freeThemeName(builtinThemeLabel(editingBase)));
           refreshThemeNameState();
         })
         .catch((err) => debug.log(`theme load failed: ${err}`));
@@ -3949,133 +3984,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
     });
 
-    // Rescans only the user-selected locations; the scope is ephemeral to the parser call, so
-    // folder preferences and tiles outside the scope stay untouched.
-    let folderRescanBusy = false;
-    const folderRescanKey = scanScopeTools.directoryKey;
-    function getFolderRescanLocations() {
-      const locations = new Map();
-      const add = (value, kind) => {
-        const dir = String(value || '').trim();
-        const key = folderRescanKey(dir);
-        if (!key) return;
-        const record = locations.get(key) || { path: dir, user: false, library: false };
-        record[kind] = true;
-        locations.set(key, record);
-      };
-      $('#settings #dirlist > li').each(function () {
-        if ($(this).attr('data-enabled') !== 'false') add($(this).find('.path > span').first().text(), 'user');
-      });
-      $('#settings #libdirlist > li').each(function () {
-        if ($(this).attr('data-enabled') !== 'false') add($(this).find('.path > span').first().text(), 'library');
-      });
-      return [...locations.values()];
-    }
-    function updateFolderRescanControls() {
-      const inputs = $('#folder-rescan-list input[type="checkbox"]');
-      const hasSelection = inputs.filter(':checked').length > 0;
-      $('#folder-rescan-select-all').prop('disabled', folderRescanBusy || inputs.length === 0);
-      $('#folder-rescan-select-none').prop('disabled', folderRescanBusy || inputs.length === 0);
-      $('#folder-rescan-run').prop('disabled', folderRescanBusy || !hasSelection);
-    }
-    function renderFolderRescanLocations() {
-      const list = $('#folder-rescan-list');
-      const selected = new Set(
-        list
-          .find('input[type="checkbox"]:checked')
-          .map(function () {
-            return String($(this).attr('data-folder-key') || '');
-          })
-          .get()
-      );
-      const keepSelection = list.children().length > 0;
-      const locations = getFolderRescanLocations();
-      list.empty();
-      if (locations.length === 0) {
-        $('#folder-rescan-result').text(t('rescan-no-folders', 'Add a folder before rescanning.', 'Ajoute un dossier avant de relancer une analyse.'));
-        updateFolderRescanControls();
-        return;
-      }
-      for (const location of locations) {
-        const key = folderRescanKey(location.path);
-        const icon = location.user && location.library ? 'fa-layer-group' : location.library ? 'fa-folder-open' : 'fa-save';
-        const row = $('<li>').addClass('folder-rescan-location');
-        const label = $('<label>');
-        const input = $('<input>', { type: 'checkbox' })
-          .attr('data-folder-key', key)
-          .attr('data-user', location.user ? 'true' : 'false')
-          .attr('data-library', location.library ? 'true' : 'false')
-          .attr('aria-label', location.path)
-          .prop('checked', keepSelection ? selected.has(key) : true);
-        label.append(input, $('<i>').addClass(`fas ${icon}`), $('<span>').attr('title', location.path).text(location.path));
-        row.append(label).appendTo(list);
-      }
-      if (!keepSelection) $('#folder-rescan-result').empty();
-      updateFolderRescanControls();
-    }
-    function selectedFolderRescanScope() {
-      const scope = { userDirs: [], libraryDirs: [] };
-      $('#folder-rescan-list input[type="checkbox"]:checked').each(function () {
-        const path = $(this).siblings('span').text();
-        if ($(this).attr('data-user') === 'true') scope.userDirs.push(path);
-        if ($(this).attr('data-library') === 'true') scope.libraryDirs.push(path);
-      });
-      return scope;
-    }
-    function saveCurrentFolderLists() {
-      const userDirList = [];
-      const libraryDirList = [];
-      $('#settings #dirlist > li').each(function () {
-        userDirList.push(folderEntryFromRow(this));
-      });
-      $('#settings #libdirlist > li').each(function () {
-        libraryDirList.push(folderEntryFromRow(this));
-      });
-      settings.setUserDataPath(ipcRenderer.sendSync('get-user-data-path-sync'));
-      return withSettingsTimeout(Promise.all([userDir.save(userDirList), libraryDirs.save(libraryDirList)]), 'Saving folders for selected rescan');
-    }
-    $('#folder-rescan-list').on('change', 'input[type="checkbox"]', function () {
-      $('#folder-rescan-result').empty();
-      updateFolderRescanControls();
-    });
-    $('#folder-rescan-select-all').click(function () {
-      $('#folder-rescan-list input[type="checkbox"]').prop('checked', true).trigger('change');
-    });
-    $('#folder-rescan-select-none').click(function () {
-      $('#folder-rescan-list input[type="checkbox"]').prop('checked', false).trigger('change');
-    });
-    $('#folder-rescan-run').click(async function () {
-      if (folderRescanBusy) return;
-      const scope = selectedFolderRescanScope();
-      const count = scope.userDirs.length + scope.libraryDirs.filter((dir) => !scope.userDirs.some((userDir) => folderRescanKey(userDir) === folderRescanKey(dir))).length;
-      const result = $('#folder-rescan-result');
-      if (count === 0) {
-        result.text(t('rescan-no-selection', 'Select at least one folder.', 'Sélectionne au moins un dossier.'));
-        updateFolderRescanControls();
-        return;
-      }
-      folderRescanBusy = true;
-      updateFolderRescanControls();
-      result.text(t('rescan-started', 'Rescanning {count} selected folder(s)…', 'Analyse des {count} dossier(s) sélectionné(s)…', { count }));
-      try {
-        await saveCurrentFolderLists();
-        await app.onStart({ scanScope: scope });
-        result.text(t('rescan-complete', 'Selected folders rescanned.', 'Dossiers sélectionnés analysés.'));
-      } catch (err) {
-        debug.log(err);
-        result.text(t('rescan-failed', 'Selected-folder scan failed: {error}', 'Échec de l’analyse des dossiers sélectionnés : {error}', { error: err && err.message ? err.message : err }));
-      } finally {
-        folderRescanBusy = false;
-        updateFolderRescanControls();
-      }
-    });
-    $(document).on('folder-rescan-locations-changed', renderFolderRescanLocations);
     // Adding or removing a scan root changes which `local-<hash>` ids can be traced back to a
     // folder, so the resolver's cached folder map has to be rebuilt on the next lookup.
     $(document).on('folder-rescan-locations-changed', function () {
       if (typeof blacklist.forgetLocalInstallIndex === 'function') blacklist.forgetLocalInstallIndex();
     });
-    renderFolderRescanLocations();
 
     // The game-fix row is MarkerPatch's switch and drives the hidden MadnessPatch and PC Ports rows:
     // one choice on screen, one key per scanner in options.ini. Only a user's change spreads, so a

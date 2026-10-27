@@ -288,31 +288,31 @@
         "description": "在您的名稱下方顯示白金、金、銀、銅獎盃。白金指達成 100% 的遊戲；其餘則依解鎖玩家的比例為您的成就分級。"
       },
       "rarityDisplay": {
-        "name": "稀有度顯示",
-        "description": "稀有等級只標記最稀有的成就。獎盃模式會依解鎖率將每個成就評為金、銀或銅，並在已完成的遊戲上顯示白金。",
-        "rare": "稀有等級",
-        "trophy": "獎盃模式",
+        "name": "稀有度徽章",
+        "description": "僅稀有成就：最稀有的獲得金、銀或銅，其餘沒有。全部：每個成就依解鎖率獲得徽章，完成的遊戲獲得白金，如同 PlayStation 獎盃。",
+        "rare": "僅稀有成就",
+        "trophy": "全部，PlayStation 風格",
         "goldBelow": {
           "name": "金獎盃低於",
-          "description": "在獎盃模式下，解鎖玩家比例低於此值的成就獲得金獎盃。"
+          "description": "顯示全部成就時，解鎖玩家比例低於此值的成就獲得金。"
         },
         "silverBelow": {
           "name": "銀獎盃低於",
-          "description": "在獎盃模式下，低於此比例的成就獲得銀獎盃；其餘或比例未知的成就獲得銅獎盃。"
+          "description": "顯示全部成就時，低於此值的獲得銀；其餘或解鎖率未知的獲得銅。"
         },
         "thresholds": {
           "name": "稀有度門檻",
-          "description": "預設值保留稀有等級的 5%、10%、15%，以及獎盃模式的 20%、50%。自訂可修改它們。",
+          "description": "預設值保留稀有成就的 5%、10%、15%，以及全部成就的 20%、50%。自訂可修改它們。",
           "default": "預設",
           "custom": "自訂"
         },
         "rareGoldMax": {
           "name": "金級上限",
-          "description": "在稀有等級中，解鎖玩家比例不高於此值的成就獲得金。"
+          "description": "對於稀有成就，被此比例或更少玩家解鎖的成就獲得金。"
         },
         "rareSilverMax": {
           "name": "銀級上限",
-          "description": "在稀有等級中，取得率不超過此值的成就會獲得銀色。它一律高於金色、低於稀有上限：移動一個滑桿會推動其他滑桿。"
+          "description": "對於稀有成就，不超過此值的獲得銀。它始終高於金、低於稀有上限：移動一個滑桿會推動其他滑桿。"
         },
         "rareMax": {
           "name": "稀有上限",
@@ -342,8 +342,8 @@
           "description": "在每張卡片上顯示完成度進度列。"
         },
         "showEmptyProgress": {
-          "name": "無成就遊戲的進度列",
-          "description": "對於 Steam 列出但沒有成就的遊戲：在其進度列中顯示「沒有成就」，或不顯示進度列。"
+          "name": "沒有成就的遊戲",
+          "description": "對於 Steam 列出但沒有成就的遊戲：在卡片上顯示「沒有成就」，或什麼都不顯示。"
         },
         "showSource": {
           "name": "平台圖示",
@@ -1629,9 +1629,9 @@
         "profileExport": "匯出設定檔…",
         "profileRestore": "還原設定檔…"
       },
-      "blacklistTitle": "AppID 黑名單",
-      "blacklistButton": "重設黑名單",
-      "blacklistInfo": "在遊戲卡片上按右鍵即可把它加入黑名單。",
+      "blacklistTitle": "隱藏的遊戲",
+      "blacklistButton": "重新顯示所有隱藏的遊戲",
+      "blacklistInfo": "在遊戲庫中的遊戲上按右鍵並選擇「從清單中移除」，即可在此處將其隱藏。",
       "blacklistEmpty": "沒有隱藏的遊戲。",
       "blacklistRestore": "還原這款遊戲",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "已將 {count} 個成就寫入 {path}",
     "repair-failed": "修復失敗",
     "could-not-write-steam-settings": "無法寫入 steam_settings。",
-    "blacklist-add-failed": "無法將項目加入使用者黑名單",
+    "blacklist-add-failed": "無法隱藏此遊戲",
     "emulator-source": "模擬器來源",
     "appid-override": "手動設定 AppID…",
     "appid-override-prompt": "用於「{name}」({folder})的 Steam appid。它會覆蓋 AW Next 依名稱所做的猜測,適用於另一款遊戲與此資料夾同名的情況。",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "不透明度",
     "theme-effect-blur-label": "強度",
     "scan-complete": "掃描完成。",
-    "rescan-selected-folders": "重新掃描選取的資料夾",
-    "rescan-selected-help": "只挑選需要重試的存檔或收藏庫資料夾。若要檢查所有來源，請使用重新整理。",
-    "rescan-select-all": "全選",
-    "rescan-select-none": "清除選取",
-    "rescan-no-folders": "請先新增資料夾再重新掃描。",
-    "rescan-no-selection": "請至少選取一個資料夾。",
-    "rescan-started": "正在重新掃描選取的 {count} 個資料夾…",
-    "rescan-complete": "選取的資料夾已重新掃描完成。",
-    "rescan-failed": "選取資料夾的掃描失敗：{error}",
     "force-recheck-started": "正在檢查是否有新成就…",
     "force-recheck-done": "檢查完成。",
     "force-recheck-failed": "檢查失敗：{error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "產生設定檔失敗：{error}",
     "error-generating-configs": "產生設定檔時發生錯誤",
     "error-while-auto-finding-folder-s": "自動尋找資料夾時發生錯誤",
-    "error-while-trying-to-reset-user-blacklist": "嘗試重設使用者黑名單時發生錯誤",
+    "error-while-trying-to-reset-user-blacklist": "無法重新顯示隱藏的遊戲",
     "websocket-connection-error": "WebSocket 連線錯誤",
     "notification-test-failure": "通知測試失敗。",
     "error-in-connection-establishment-net-err-connection-refused-nis": "建立連線時發生錯誤：net::ERR_CONNECTION_REFUSED\nWatchdog 有在執行嗎？",

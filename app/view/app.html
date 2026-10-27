@@ -1641,39 +1641,6 @@
                 <div id="generate-configs-result" class="diag-line"></div>
               </div>
 
-              <div class="folder-rescan-card settings-card" id="folder-rescan">
-                <div class="title"><i class="fas fa-sync-alt"></i> <span id="folder-rescan-title"></span></div>
-                <p id="folder-rescan-help" class="folder-rescan-help"></p>
-                <div class="folder-rescan-toolbar">
-                  <button type="button" class="inline-action-btn secondary" id="folder-rescan-select-all"><i class="fas fa-check"></i> <span></span></button>
-                  <button type="button" class="inline-action-btn secondary" id="folder-rescan-select-none"><i class="fas fa-times"></i> <span></span></button>
-                </div>
-                <ul id="folder-rescan-list"></ul>
-                <div class="folder-rescan-actions">
-                  <button type="button" class="inline-action-btn primary" id="folder-rescan-run" disabled><i class="fas fa-redo"></i> <span></span></button>
-                </div>
-                <div id="folder-rescan-result" class="diag-line" aria-live="polite"></div>
-              </div>
-              <!-- Hidden games. Here rather than in Advanced: "Remove from list" is on every game's menu in
-                   both modes, so the only way to undo it cannot sit behind a mode Simple never shows. -->
-              <div class="arrow-list" id="blacklist-card">
-                <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
-                <ul>
-                  <li class="blacklist-manager-row">
-                    <ul id="blacklist-manager"></ul>
-                    <div id="blacklist-empty" class="diag-line"></div>
-                  </li>
-                  <li class="blacklist-add-row">
-                    <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
-                    <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
-                  </li>
-                  <li class="actions-row">
-                    <div id="blacklist_reset" class="btn" role="button" tabindex="0"><i class="fas fa-file-medical-alt"></i> <span></span></div>
-                    <div id="blacklist-info" class="help"></div>
-                  </li>
-                </ul>
-              </div>
-
               <!-- Read-only: the emulator folders AW Next always watches. Last, folded, and
                    saying so, since there is nothing to do with it. -->
               <div class="arrow-list" data-advanced="1">
@@ -3655,6 +3622,27 @@
                 </ul>
               </div>
 
+              <!-- Hidden games, next to "Hide games at 0 %". In General rather than Advanced: "Remove from list"
+                   is on every game's menu in both modes, so the only way to undo it cannot sit behind a mode
+                   Simple never shows. -->
+              <div class="arrow-list" id="blacklist-card">
+                <div class="title"><i class="fas fa-ban"></i> <span id="advanced-blacklist-title"></span></div>
+                <ul>
+                  <li class="blacklist-manager-row">
+                    <ul id="blacklist-manager"></ul>
+                    <div id="blacklist-empty" class="diag-line"></div>
+                  </li>
+                  <li class="blacklist-add-row">
+                    <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
+                    <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
+                  </li>
+                  <li class="actions-row">
+                    <div id="blacklist_reset" class="btn" role="button" tabindex="0"><i class="fas fa-file-medical-alt"></i> <span></span></div>
+                    <div id="blacklist-info" class="help"></div>
+                  </li>
+                </ul>
+              </div>
+
               <!-- #options-ui keeps the seven rows the loader binds by nth-child, then rows bound by id;
                    these two sections are bound by id. The save handler reads all three containers. -->
               <div id="options-ui-app" class="arrow-list">
@@ -3795,6 +3783,8 @@
                       </div>
                     </div>
                     <div class="help" id="rarity-mode-settings-help">Rare tiers mark only the rarest achievements. Trophy mode grades every achievement gold, silver or bronze by its unlock rate.</div>
+                    <!-- Filled by ui/settings.js from the chosen mode and the current bounds. -->
+                    <div class="help rarity-mode-sample" id="rarity-mode-sample" aria-hidden="true"></div>
                   </li>
 
                   <!-- Not saved: "Default" resets the rows below, "Custom" unfolds the active mode's rows. -->

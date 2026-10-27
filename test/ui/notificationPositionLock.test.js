@@ -7,7 +7,6 @@ const { test } = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
 const init = fs.readFileSync(path.join(root, 'app', 'electron', 'init.js'), 'utf8');
-const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
 
 test('custom notification placement follows its saved display instead of the cursor display', () => {
   assert.match(init, /function notificationPlacementArea\(customAnchor = null\)/);
@@ -45,8 +44,4 @@ test('Windows repositioning persists on move and real custom popups keep exact b
   assert.match(init, /const gameAppid = String\(data\.repositionGameAppid \|\| ''\)/);
   assert.match(init, /if \(!gameAppid\) \{[\s\S]*?writeOverlayBounds\(\{ \[data\.repositionAnchor === 'progressNotif' \? 'progressNotif' : 'notif'\]: customPosition \}\)/);
   assert.match(init, /settings\.customPosition = customPosition[\s\S]*?gamePreset\.setSettings\(gameAppid, settings\)/);
-});
-
-test('selected-folder scan button uses the compact secondary surface', () => {
-  assert.match(css, /#settings \.folder-rescan-actions #folder-rescan-run\s*\{[\s\S]*?box-shadow:\s*none/);
 });

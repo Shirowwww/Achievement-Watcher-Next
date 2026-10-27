@@ -121,7 +121,7 @@ function filterSections($, query, scope = '#settings') {
     const rows = modeHidden
       ? $()
       : rowsIn($, section)
-          .not(`.${MODE_HIDDEN_CLASS}`)
+          .not(`.${MODE_HIDDEN_CLASS}, [hidden]`)
           .filter(function () {
             return $(this).closest(offPlatform).length === 0;
           });

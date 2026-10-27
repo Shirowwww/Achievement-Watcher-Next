@@ -46,7 +46,6 @@ const DEFAULT_COLLAPSED = [
   'epic-connect',
   'xbox-connect',
   'retroachievements-connect',
-  'folder-rescan',
   'blacklist-card',
   'emulator-identity',
   'options-emulator2',

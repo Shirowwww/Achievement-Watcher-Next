@@ -288,31 +288,31 @@
         "description": "Adınızın altında platin, altın, gümüş ve bronz kupaları gösterir. Platin, %100 tamamlanmış bir oyundur; diğerleri başarımlarınızı kaç oyuncunun açtığına göre sıralar."
       },
       "rarityDisplay": {
-        "name": "Nadirlik gösterimi",
-        "description": "Nadir seviyeler yalnızca en nadir başarımları işaretler. Kupa modu, her başarımı açılma oranına göre altın, gümüş veya bronz olarak derecelendirir ve tamamlanan oyunlarda platin gösterir.",
-        "rare": "Nadir seviyeler",
-        "trophy": "Kupa modu",
+        "name": "Nadirlik rozetleri",
+        "description": "Yalnızca nadir başarımlar: en nadirlere altın, gümüş veya bronz, diğerlerine hiçbir şey. Hepsi: her başarım açılma oranına göre rozet alır ve bitirilen oyun, PlayStation kupaları gibi platin alır.",
+        "rare": "Yalnızca nadir başarımlar",
+        "trophy": "Hepsi, PlayStation tarzı",
         "goldBelow": {
           "name": "Altın kupa eşiği",
-          "description": "Kupa modunda, bu orandan daha az oyuncunun açtığı başarımlar altın alır."
+          "description": "Tüm başarımlarda, bu orandan daha az oyuncunun açtığı başarımlar altın alır."
         },
         "silverBelow": {
           "name": "Gümüş kupa eşiği",
-          "description": "Kupa modunda, bu oranın altındaki başarımlar gümüş alır; diğerleri veya oranı bilinmeyenler bronz alır."
+          "description": "Tüm başarımlarda, bu oranın altındakiler gümüş alır; kalanlar veya oranı bilinmeyenler bronz alır."
         },
         "thresholds": {
           "name": "Nadirlik eşikleri",
-          "description": "Varsayılan, nadir seviyeler için %5, %10 ve %15'i, kupa modu için %20 ve %50'yi korur. Özel ise bunları değiştirmenizi sağlar.",
+          "description": "Varsayılan, nadir başarımlar için %5, %10 ve %15’i, tüm başarımlar için %20 ve %50’yi korur. Özel ise bunları değiştirmeni sağlar.",
           "default": "Varsayılan",
           "custom": "Özel"
         },
         "rareGoldMax": {
           "name": "Altın üst sınırı",
-          "description": "Nadir seviyelerde, oyuncuların bu oranı veya daha azı tarafından açılan başarımlar altın alır."
+          "description": "Nadir başarımlarda, oyuncuların bu oranı veya daha azı tarafından açılanlar altın alır."
         },
         "rareSilverMax": {
           "name": "Gümüş üst sınırı",
-          "description": "Nadir kademelerde, bu orana kadar olan başarımlar gümüş kazanır. Her zaman altının üstünde ve nadir sınırının altında kalır: bir kaydırıcıyı oynatmak diğerlerini iter."
+          "description": "Nadir başarımlarda, bu orana kadar olanlar gümüş alır. Her zaman altının üstünde ve nadir sınırının altında kalır: bir kaydırıcıyı oynatmak diğerlerini iter."
         },
         "rareMax": {
           "name": "Nadir üst sınırı",
@@ -342,8 +342,8 @@
           "description": "Her kutucukta tamamlanma çubuğunu gösterir."
         },
         "showEmptyProgress": {
-          "name": "Başarımı olmayan oyunların çubuğu",
-          "description": "Steam'in başarımsız listelediği bir oyun için: çubukta “Başarım yok” göster ya da çubuğu gösterme."
+          "name": "Başarımı olmayan oyunlar",
+          "description": "Steam’in başarımsız listelediği bir oyun için: karosuna “Başarım yok” yaz veya hiçbir şey gösterme."
         },
         "showSource": {
           "name": "Platform simgesi",
@@ -1629,9 +1629,9 @@
         "profileExport": "Profili dışa aktar…",
         "profileRestore": "Profili geri yükle…"
       },
-      "blacklistTitle": "AppID kara listesi",
-      "blacklistButton": "Kara listeyi sıfırla",
-      "blacklistInfo": "Bir oyun karosuna sağ tıklayarak kara listeye ekle.",
+      "blacklistTitle": "Gizli oyunlar",
+      "blacklistButton": "Gizli oyunların hepsini yeniden göster",
+      "blacklistInfo": "Kütüphanedeki bir oyuna sağ tıklayıp “Listeden kaldır” seçeneğini seçerek onu buradan gizle.",
       "blacklistEmpty": "Gizli oyun yok.",
       "blacklistRestore": "Bu oyunu geri yükle",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "{count} başarım {path} konumuna yazıldı",
     "repair-failed": "Onarım başarısız",
     "could-not-write-steam-settings": "steam_settings yazılamadı.",
-    "blacklist-add-failed": "Öğe kullanıcı kara listesine eklenemedi",
+    "blacklist-add-failed": "Bu oyun gizlenemedi",
     "emulator-source": "Emülatör kaynağı",
     "appid-override": "AppID’yi elle ayarla…",
     "appid-override-prompt": "\"{name}\" ({folder}) için kullanılacak Steam appid. AW Next’in ada dayalı tahminini geçersiz kılar - başka bir oyun bu klasörle aynı ada sahipse işe yarar.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Opaklık",
     "theme-effect-blur-label": "Yoğunluk",
     "scan-complete": "Tarama tamamlandı.",
-    "rescan-selected-folders": "Seçili klasörleri yeniden tara",
-    "rescan-selected-help": "Yalnızca yeniden denetlenmesi gereken kayıt verisi veya kitaplık klasörlerini seçin. Tüm kaynakları denetlemek için Yenile’yi kullanın.",
-    "rescan-select-all": "Tümünü seç",
-    "rescan-select-none": "Seçimi temizle",
-    "rescan-no-folders": "Yeniden taramadan önce bir klasör ekleyin.",
-    "rescan-no-selection": "En az bir klasör seçin.",
-    "rescan-started": "{count} seçili klasör yeniden taranıyor…",
-    "rescan-complete": "Seçili klasörler yeniden tarandı.",
-    "rescan-failed": "Seçili klasörlerin taraması başarısız oldu: {error}",
     "force-recheck-started": "Yeni başarımlar aranıyor…",
     "force-recheck-done": "Kontrol tamamlandı.",
     "force-recheck-failed": "Kontrol başarısız oldu: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Yapılandırmalar oluşturulamadı: {error}",
     "error-generating-configs": "Yapılandırmalar oluşturulurken hata",
     "error-while-auto-finding-folder-s": "Klasörler otomatik aranırken hata",
-    "error-while-trying-to-reset-user-blacklist": "Kullanıcı kara listesi sıfırlanmaya çalışılırken hata",
+    "error-while-trying-to-reset-user-blacklist": "Gizli oyunlar yeniden gösterilemedi",
     "websocket-connection-error": "WebSocket bağlantı hatası",
     "notification-test-failure": "Bildirim testi başarısız.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Bağlantı kurulurken hata: net::ERR_CONNECTION_REFUSED\nWatchdog çalışıyor mu?",

@@ -11,19 +11,15 @@ const settingsUi = fs.readFileSync(path.join(root, 'app', 'ui', 'settings.js'), 
 const appUi = fs.readFileSync(path.join(root, 'app', 'app.js'), 'utf8');
 const parser = fs.readFileSync(path.join(root, 'app', 'parser', 'achievements.js'), 'utf8');
 
-test('folder settings expose an explicit selected-folder rescan with reversible selection controls', () => {
-  for (const id of ['folder-rescan-list', 'folder-rescan-select-all', 'folder-rescan-select-none', 'folder-rescan-run']) {
-    assert.match(html, new RegExp(`id="${id}"`));
+// The user asked for the selected-folder card to go: Refresh already rescans every source, and the
+// card read as a second, unclear way to do the same thing. The scoped scan below stays available.
+test('the Folders tab no longer offers a selected-folder rescan card', () => {
+  for (const id of ['folder-rescan', 'folder-rescan-list', 'folder-rescan-run']) {
+    assert.doesNotMatch(html, new RegExp(`id="${id}"`));
   }
-  assert.match(settingsUi, /await saveCurrentFolderLists\(\);[\s\S]*await app\.onStart\(\{ scanScope: scope \}\)/);
-  assert.match(settingsUi, /folderRescanBusy = false;/);
-});
-
-test('selected-folder list uses a compact theme-aware scrollbar', () => {
+  assert.doesNotMatch(settingsUi, /folderRescanBusy|selectedFolderRescanScope/);
   const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
-  assert.match(css, /#settings #folder-rescan-list::-webkit-scrollbar\s*\{[\s\S]*?width:\s*6px/);
-  assert.match(css, /#settings #folder-rescan-list::-webkit-scrollbar-thumb\s*\{[\s\S]*?var\(--set-icon\)/);
-  assert.match(css, /#settings #folder-rescan-list\s*\{[\s\S]*?scrollbar-width:\s*thin/);
+  assert.doesNotMatch(css, /folder-rescan/);
 });
 
 test('a selected rescan limits discovery while preserving unrelated tiles and keeps a distinct cache key', () => {

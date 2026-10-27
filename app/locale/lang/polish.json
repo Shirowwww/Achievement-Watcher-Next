@@ -288,31 +288,31 @@
         "description": "Pokazuje trofea platynowe, złote, srebrne i brązowe pod twoim imieniem. Platyna to gra ukończona w 100%; pozostałe klasyfikują twoje osiągnięcia według liczby graczy, którzy je zdobyli."
       },
       "rarityDisplay": {
-        "name": "Wyświetlanie rzadkości",
-        "description": "Poziomy rzadkości oznaczają tylko najrzadsze osiągnięcia. Tryb trofeów ocenia każde osiągnięcie jako złote, srebrne lub brązowe według odsetka odblokowań i pokazuje platynę przy ukończonych grach.",
-        "rare": "Poziomy rzadkości",
-        "trophy": "Tryb trofeów",
+        "name": "Odznaki rzadkości",
+        "description": "Tylko rzadkie osiągnięcia: złoto, srebro lub brąz dla najrzadszych, nic dla reszty. Wszystkie: każde osiągnięcie dostaje odznakę według odsetka odblokowań, a ukończona gra dostaje platynę, jak trofea PlayStation.",
+        "rare": "Tylko rzadkie osiągnięcia",
+        "trophy": "Wszystkie, styl PlayStation",
         "goldBelow": {
           "name": "Złote trofeum poniżej",
-          "description": "W trybie trofeów osiągnięcia odblokowane przez mniej graczy niż ten odsetek otrzymują złoto."
+          "description": "Przy wszystkich osiągnięciach te odblokowane przez mniej graczy niż ten odsetek dostają złoto."
         },
         "silverBelow": {
           "name": "Srebrne trofeum poniżej",
-          "description": "W trybie trofeów osiągnięcia poniżej tego odsetka otrzymują srebro; pozostałe, lub bez znanego odsetka, otrzymują brąz."
+          "description": "Przy wszystkich osiągnięciach te poniżej tego odsetka dostają srebro; pozostałe, lub bez znanego odsetka, dostają brąz."
         },
         "thresholds": {
           "name": "Progi rzadkości",
-          "description": "Domyślne zachowuje 5%, 10% i 15% dla poziomów rzadkości oraz 20% i 50% dla trybu trofeów. Niestandardowe pozwala je zmienić.",
+          "description": "Domyślne zachowuje 5%, 10% i 15% dla rzadkich osiągnięć oraz 20% i 50% dla wszystkich osiągnięć. Niestandardowe pozwala je zmienić.",
           "default": "Domyślne",
           "custom": "Niestandardowe"
         },
         "rareGoldMax": {
           "name": "Złoto do",
-          "description": "Na poziomach rzadkości osiągnięcia odblokowane przez taki odsetek graczy lub mniejszy otrzymują złoto."
+          "description": "Przy rzadkich osiągnięciach te odblokowane przez tyle graczy lub mniej dostają złoto."
         },
         "rareSilverMax": {
           "name": "Srebro do",
-          "description": "W rzadkich poziomach osiągnięcia do tego wskaźnika dostają srebro. Zawsze pozostaje powyżej złota i poniżej progu rzadkich: przesunięcie jednego suwaka przesuwa pozostałe."
+          "description": "Przy rzadkich osiągnięciach te do tego odsetka dostają srebro. Zawsze pozostaje powyżej złota i poniżej granicy rzadkości: przesunięcie jednego suwaka przesuwa pozostałe."
         },
         "rareMax": {
           "name": "Rzadkie do",
@@ -342,8 +342,8 @@
           "description": "Pokazuje pasek ukończenia na każdym kafelku."
         },
         "showEmptyProgress": {
-          "name": "Pasek gier bez osiągnięć",
-          "description": "Dla gry, którą Steam wyświetla bez osiągnięć: pokaż „Brak osiągnięć” na pasku albo pomiń pasek."
+          "name": "Gry bez osiągnięć",
+          "description": "Dla gry, którą Steam wymienia bez osiągnięć: wpisać „Brak osiągnięć” na jej kafelku albo nic nie pokazywać."
         },
         "showSource": {
           "name": "Ikona platformy",
@@ -1629,9 +1629,9 @@
         "profileExport": "Eksportuj profil…",
         "profileRestore": "Przywróć profil…"
       },
-      "blacklistTitle": "Czarna lista AppID",
-      "blacklistButton": "Resetuj czarną listę",
-      "blacklistInfo": "Kliknij prawym przyciskiem kafelek gry, aby dodać ją do czarnej listy.",
+      "blacklistTitle": "Ukryte gry",
+      "blacklistButton": "Pokaż ponownie wszystkie ukryte gry",
+      "blacklistInfo": "Kliknij prawym przyciskiem grę w bibliotece i wybierz „Usuń z listy”, aby ukryć ją tutaj.",
       "blacklistEmpty": "Brak ukrytych gier.",
       "blacklistRestore": "Przywróć tę grę",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Zapisano {count} osiągnięć do {path}",
     "repair-failed": "Naprawa nie powiodła się",
     "could-not-write-steam-settings": "Nie udało się zapisać steam_settings.",
-    "blacklist-add-failed": "Nie udało się dodać elementu do czarnej listy użytkownika",
+    "blacklist-add-failed": "Nie udało się ukryć tej gry",
     "emulator-source": "Źródło emulatora",
     "appid-override": "Ustaw AppID ręcznie…",
     "appid-override-prompt": "Appid Steam dla „{name}” ({folder}). Zastępuje domysł AW Next oparty na nazwie - przydatne, gdy inna gra ma taką samą nazwę jak folder.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Nieprzezroczystość",
     "theme-effect-blur-label": "Intensywność",
     "scan-complete": "Skanowanie zakończone.",
-    "rescan-selected-folders": "Przeskanuj ponownie wybrane foldery",
-    "rescan-selected-help": "Wybierz tylko foldery zapisów lub bibliotek wymagające ponownego sprawdzenia. Aby sprawdzić wszystkie źródła, użyj Odśwież.",
-    "rescan-select-all": "Zaznacz wszystko",
-    "rescan-select-none": "Wyczyść zaznaczenie",
-    "rescan-no-folders": "Dodaj folder przed ponownym skanowaniem.",
-    "rescan-no-selection": "Wybierz co najmniej jeden folder.",
-    "rescan-started": "Ponowne skanowanie {count} wybranych folderów…",
-    "rescan-complete": "Wybrane foldery przeskanowano ponownie.",
-    "rescan-failed": "Skanowanie wybranych folderów nie powiodło się: {error}",
     "force-recheck-started": "Wyszukiwanie nowych osiągnięć…",
     "force-recheck-done": "Sprawdzanie zakończone.",
     "force-recheck-failed": "Sprawdzanie nie powiodło się: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Generowanie konfiguracji nie powiodło się: {error}",
     "error-generating-configs": "Błąd podczas generowania konfiguracji",
     "error-while-auto-finding-folder-s": "Błąd podczas automatycznego wyszukiwania folderów",
-    "error-while-trying-to-reset-user-blacklist": "Błąd podczas próby zresetowania czarnej listy użytkownika",
+    "error-while-trying-to-reset-user-blacklist": "Nie udało się ponownie pokazać ukrytych gier",
     "websocket-connection-error": "Błąd połączenia WebSocket",
     "notification-test-failure": "Test powiadomienia nie powiódł się.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Błąd podczas nawiązywania połączenia: net::ERR_CONNECTION_REFUSED\nCzy Watchdog działa?",

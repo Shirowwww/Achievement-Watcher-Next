@@ -22,21 +22,9 @@ test('the game context Folders menu keeps only common locations in compact subme
   assert.equal((folderSection.match(/folderMenu\.append\(/g) || []).length, 3, 'the parent menu stays limited to installation, achievement data, and cache groups');
 });
 
-test('folder actions and selective-rescan labels are present in every bundled locale', () => {
+test('folder action labels are present in every bundled locale', () => {
   const localeDir = path.join(__dirname, '..', '..', 'app', 'locale', 'lang');
-  const dialogKeys = [
-    'achievement-data-folders',
-    'cache-folders',
-    'rescan-selected-folders',
-    'rescan-selected-help',
-    'rescan-select-all',
-    'rescan-select-none',
-    'rescan-no-folders',
-    'rescan-no-selection',
-    'rescan-started',
-    'rescan-complete',
-    'rescan-failed',
-  ];
+  const dialogKeys = ['achievement-data-folders', 'cache-folders'];
 
   for (const file of fs.readdirSync(localeDir).filter((name) => name.endsWith('.json'))) {
     const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));

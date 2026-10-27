@@ -288,31 +288,31 @@
         "description": "Viser platin-, guld-, sølv- og bronzetrofæer under dit navn. Platin er et spil på 100%; de andre rangerer dine præstationer efter, hvor mange spillere der har låst dem op."
       },
       "rarityDisplay": {
-        "name": "Visning af sjældenhed",
-        "description": "Sjældne niveauer markerer kun de sjældneste bedrifter. Trofætilstand giver hver bedrift guld, sølv eller bronze efter oplåsningsandel og viser platin på gennemførte spil.",
-        "rare": "Sjældne niveauer",
-        "trophy": "Trofætilstand",
+        "name": "Sjældenhedsmærker",
+        "description": "Kun sjældne præstationer: guld, sølv eller bronze til de sjældneste, intet til resten. Alle: hver præstation får et mærke efter oplåsningsandel, og et gennemført spil får platin, som PlayStation-trofæer.",
+        "rare": "Kun sjældne præstationer",
+        "trophy": "Alle, PlayStation-stil",
         "goldBelow": {
           "name": "Guldtrofæ under",
-          "description": "I trofætilstand får bedrifter, som færre spillere har låst op end denne andel, guld."
+          "description": "Med alle præstationer får dem, som færre spillere har låst op end denne andel, guld."
         },
         "silverBelow": {
           "name": "Sølvtrofæ under",
-          "description": "I trofætilstand får bedrifter under denne andel sølv; resten, eller dem uden kendt andel, får bronze."
+          "description": "Med alle præstationer får dem under denne andel sølv; resten, eller dem uden kendt andel, får bronze."
         },
         "thresholds": {
           "name": "Grænser for sjældenhed",
-          "description": "Standard beholder 5 %, 10 % og 15 % til sjældne niveauer og 20 % og 50 % til trofætilstand. Tilpasset lader dig ændre dem.",
+          "description": "Standard beholder 5 %, 10 % og 15 % til sjældne præstationer og 20 % og 50 % til alle præstationer. Tilpasset lader dig ændre dem.",
           "default": "Standard",
           "custom": "Tilpasset"
         },
         "rareGoldMax": {
           "name": "Guld op til",
-          "description": "I sjældne niveauer får bedrifter, som denne andel af spillerne eller færre har låst op, guld."
+          "description": "Ved sjældne præstationer får dem, som denne andel af spillerne eller færre har låst op, guld."
         },
         "rareSilverMax": {
           "name": "Sølv op til",
-          "description": "I sjældenhedsklasserne får præstationer op til denne andel sølv. Den holder sig altid over guld og under sjældenhedsgrænsen: Flytter du én skyder, skubber den de andre med."
+          "description": "Ved sjældne præstationer får dem op til denne andel sølv. Den ligger altid over guld og under grænsen for sjælden: flyttes én skyder, skubbes de andre med."
         },
         "rareMax": {
           "name": "Sjælden op til",
@@ -342,8 +342,8 @@
           "description": "Viser fuldførelseslinjen på hvert felt."
         },
         "showEmptyProgress": {
-          "name": "Bjælke for spil uden præstationer",
-          "description": "For et spil, som Steam lister uden præstationer: vis „Ingen præstationer“ i bjælken, eller lad bjælken udgå."
+          "name": "Spil uden præstationer",
+          "description": "For et spil, som Steam viser uden præstationer: skriv »Ingen præstationer« på dets felt, eller vis ingenting."
         },
         "showSource": {
           "name": "Platformikon",
@@ -1629,9 +1629,9 @@
         "profileExport": "Eksportér profil…",
         "profileRestore": "Gendan profil…"
       },
-      "blacklistTitle": "Sortliste over AppID'er",
-      "blacklistButton": "Nulstil sortlisten",
-      "blacklistInfo": "Højreklik på et spilfelt for at føje det til sortlisten.",
+      "blacklistTitle": "Skjulte spil",
+      "blacklistButton": "Vis alle skjulte spil igen",
+      "blacklistInfo": "Højreklik på et spil i biblioteket og vælg »Fjern fra listen« for at skjule det her.",
       "blacklistEmpty": "Ingen skjulte spil.",
       "blacklistRestore": "Gendan dette spil",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Skrev {count} præstationer til {path}",
     "repair-failed": "Reparationen mislykkedes",
     "could-not-write-steam-settings": "steam_settings kunne ikke skrives.",
-    "blacklist-add-failed": "Elementet kunne ikke føjes til brugerens sortliste",
+    "blacklist-add-failed": "Dette spil kunne ikke skjules",
     "emulator-source": "Emulatorkilde",
     "appid-override": "Indstil AppID manuelt…",
     "appid-override-prompt": "Steam-appid, der skal bruges til \"{name}\" ({folder}). Det erstatter AW Nexts gæt ud fra navnet - nyttigt, når et andet spil har samme navn som mappen.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Uigennemsigtighed",
     "theme-effect-blur-label": "Intensitet",
     "scan-complete": "Scanningen er færdig.",
-    "rescan-selected-folders": "Scan valgte mapper igen",
-    "rescan-selected-help": "Vælg kun de mapper med gemte data eller biblioteker, der skal prøves igen. Brug Opdater for at tjekke alle kilder.",
-    "rescan-select-all": "Vælg alle",
-    "rescan-select-none": "Ryd markeringen",
-    "rescan-no-folders": "Tilføj en mappe, før du scanner igen.",
-    "rescan-no-selection": "Vælg mindst én mappe.",
-    "rescan-started": "Scanner {count} valgte mappe(r) igen…",
-    "rescan-complete": "De valgte mapper er scannet igen.",
-    "rescan-failed": "Scanningen af de valgte mapper mislykkedes: {error}",
     "force-recheck-started": "Søger efter nye præstationer…",
     "force-recheck-done": "Kontrollen er færdig.",
     "force-recheck-failed": "Kontrollen mislykkedes: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Konfigurationerne kunne ikke genereres: {error}",
     "error-generating-configs": "Fejl under generering af konfigurationer",
     "error-while-auto-finding-folder-s": "Fejl under automatisk søgning efter mappe(r)",
-    "error-while-trying-to-reset-user-blacklist": "Fejl under nulstilling af brugerens sortliste",
+    "error-while-trying-to-reset-user-blacklist": "De skjulte spil kunne ikke vises igen",
     "websocket-connection-error": "Fejl i WebSocket-forbindelsen",
     "notification-test-failure": "Notifikationstesten mislykkedes.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fejl under oprettelse af forbindelse: net::ERR_CONNECTION_REFUSED\nKører Watchdog ?",

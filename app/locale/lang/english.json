@@ -288,31 +288,31 @@
         "description": "Shows platinum, gold, silver and bronze trophies under your name. Platinum is a game at 100%; the others rank your achievements by how many players unlocked them."
       },
       "rarityDisplay": {
-        "name": "Rarity display",
-        "description": "Rare tiers mark only the rarest achievements. Trophy mode grades every achievement gold, silver or bronze by its unlock rate, and shows platinum on finished games.",
-        "rare": "Rare tiers",
-        "trophy": "Trophy mode",
+        "name": "Rarity badges",
+        "description": "Rare achievements only: gold, silver or bronze for the rarest ones, nothing for the rest. All: every achievement gets a badge by its unlock rate, and a finished game gets the platinum, like PlayStation trophies.",
+        "rare": "Rare achievements only",
+        "trophy": "All, PlayStation style",
         "goldBelow": {
           "name": "Gold trophy below",
-          "description": "In trophy mode, achievements unlocked by fewer players than this earn gold."
+          "description": "With all achievements, those unlocked by fewer players than this rate get gold."
         },
         "silverBelow": {
           "name": "Silver trophy below",
-          "description": "In trophy mode, achievements under this rate earn silver; the rest, or those with no known rate, earn bronze."
+          "description": "With all achievements, those under this rate get silver; the rest, or those with no known rate, get bronze."
         },
         "thresholds": {
           "name": "Rarity thresholds",
-          "description": "Default keeps 5%, 10% and 15% for rare tiers, and 20% and 50% for trophy mode. Custom lets you change them.",
+          "description": "Default keeps 5%, 10% and 15% for rare achievements, and 20% and 50% for all achievements. Custom lets you change them.",
           "default": "Default",
           "custom": "Custom"
         },
         "rareGoldMax": {
           "name": "Gold up to",
-          "description": "In rare tiers, achievements unlocked by this share of players or fewer earn gold."
+          "description": "For rare achievements, those unlocked by this share of players or fewer get gold."
         },
         "rareSilverMax": {
           "name": "Silver up to",
-          "description": "In rare tiers, achievements up to this rate earn silver. It always stays above gold and below the rare limit: moving one slider pushes the others."
+          "description": "For rare achievements, those up to this rate get silver. It always stays above gold and below the rare limit: moving one slider pushes the others."
         },
         "rareMax": {
           "name": "Rare up to",
@@ -342,8 +342,8 @@
           "description": "Show the completion bar on each tile."
         },
         "showEmptyProgress": {
-          "name": "Bar of games without achievements",
-          "description": "For a game Steam lists with no achievements: show \"No achievements\" in its bar, or leave the bar out."
+          "name": "Games without achievements",
+          "description": "For a game Steam lists with no achievements: write “No achievements” on its tile, or show nothing."
         },
         "showSource": {
           "name": "Platform icon",
@@ -1629,9 +1629,9 @@
         "profileExport": "Export profile…",
         "profileRestore": "Restore profile…"
       },
-      "blacklistTitle": "AppID Blacklist",
-      "blacklistButton": "Reset blacklist",
-      "blacklistInfo": "Right click on a gamebox to add it to the blacklist.",
+      "blacklistTitle": "Hidden games",
+      "blacklistButton": "Show all hidden games",
+      "blacklistInfo": "Right-click a game in the library and choose “Remove from list” to hide it here.",
       "blacklistEmpty": "No hidden games.",
       "blacklistRestore": "Restore this game",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Wrote {count} achievements to {path}",
     "repair-failed": "Repair failed",
     "could-not-write-steam-settings": "Could not write steam_settings.",
-    "blacklist-add-failed": "Failed to add item to user blacklist",
+    "blacklist-add-failed": "Could not hide this game",
     "emulator-source": "Emulator source",
     "appid-override": "Set AppID manually…",
     "appid-override-prompt": "Steam appid to use for \"{name}\" ({folder}). This overrides AW Next's own name-based guess - useful when another game shares this folder's name.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Opacity",
     "theme-effect-blur-label": "Intensity",
     "scan-complete": "Scan complete.",
-    "rescan-selected-folders": "Rescan selected folders",
-    "rescan-selected-help": "Choose only the saved-data or library folders that need a retry. Use Refresh to check every source.",
-    "rescan-select-all": "Select all",
-    "rescan-select-none": "Clear selection",
-    "rescan-no-folders": "Add a folder before rescanning.",
-    "rescan-no-selection": "Select at least one folder.",
-    "rescan-started": "Rescanning {count} selected folder(s)…",
-    "rescan-complete": "Selected folders rescanned.",
-    "rescan-failed": "Selected-folder scan failed: {error}",
     "force-recheck-started": "Checking for new achievements…",
     "force-recheck-done": "Check complete.",
     "force-recheck-failed": "Check failed: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Generate configs failed: {error}",
     "error-generating-configs": "Error generating configs",
     "error-while-auto-finding-folder-s": "Error while auto-finding folder(s)",
-    "error-while-trying-to-reset-user-blacklist": "Error while trying to reset user blacklist",
+    "error-while-trying-to-reset-user-blacklist": "Could not show the hidden games again",
     "websocket-connection-error": "WebSocket Connection Error",
     "notification-test-failure": "Notification Test Failure.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Error in connection establishment: net::ERR_CONNECTION_REFUSED\nIs Watchdog Running ?",

@@ -288,31 +288,31 @@
         "description": "Visar platina-, guld-, silver- och bronströféer under ditt namn. Platina är ett spel klarat till 100%; de andra rangordnar dina prestationer efter hur många spelare som har låst upp dem."
       },
       "rarityDisplay": {
-        "name": "Visning av sällsynthet",
-        "description": "Sällsynta nivåer markerar bara de sällsyntaste prestationerna. Trofeläget ger varje prestation guld, silver eller brons efter upplåsningsandel och visar platina på avklarade spel.",
-        "rare": "Sällsynta nivåer",
-        "trophy": "Trofeläge",
+        "name": "Sällsynthetsmärken",
+        "description": "Endast sällsynta prestationer: guld, silver eller brons för de sällsyntaste, ingenting för resten. Alla: varje prestation får ett märke efter upplåsningsandel, och ett avklarat spel får platina, som PlayStation-troféer.",
+        "rare": "Endast sällsynta prestationer",
+        "trophy": "Alla, PlayStation-stil",
         "goldBelow": {
           "name": "Guldtrofé under",
-          "description": "I trofeläge får prestationer som färre spelare har låst upp än denna andel guld."
+          "description": "Med alla prestationer får de som färre spelare låst upp än denna andel guld."
         },
         "silverBelow": {
           "name": "Silvertrofé under",
-          "description": "I trofeläge får prestationer under denna andel silver; resten, eller de utan känd andel, får brons."
+          "description": "Med alla prestationer får de under denna andel silver; resten, eller de utan känd andel, får brons."
         },
         "thresholds": {
           "name": "Gränser för sällsynthet",
-          "description": "Standard behåller 5 %, 10 % och 15 % för sällsynta nivåer och 20 % och 50 % för trofeläget. Anpassad låter dig ändra dem.",
+          "description": "Standard behåller 5 %, 10 % och 15 % för sällsynta prestationer och 20 % och 50 % för alla prestationer. Anpassad låter dig ändra dem.",
           "default": "Standard",
           "custom": "Anpassad"
         },
         "rareGoldMax": {
           "name": "Guld upp till",
-          "description": "I sällsynta nivåer får prestationer som denna andel spelare eller färre har låst upp guld."
+          "description": "Bland sällsynta prestationer får de som denna andel spelare eller färre låst upp guld."
         },
         "rareSilverMax": {
           "name": "Silver upp till",
-          "description": "I sällsynta nivåer får prestationer upp till den här andelen silver. Den ligger alltid över guld och under gränsen för sällsynt: när du flyttar ett reglage knuffas de andra med."
+          "description": "Bland sällsynta prestationer får de upp till denna andel silver. Den ligger alltid över guld och under gränsen för sällsynt: flyttar du ett reglage knuffas de andra med."
         },
         "rareMax": {
           "name": "Sällsynt upp till",
@@ -342,8 +342,8 @@
           "description": "Visar förloppsindikatorn på varje ruta."
         },
         "showEmptyProgress": {
-          "name": "Fält för spel utan prestationer",
-          "description": "För ett spel som Steam listar utan prestationer: visa ”Inga prestationer” i fältet, eller utelämna fältet."
+          "name": "Spel utan prestationer",
+          "description": "För ett spel som Steam listar utan prestationer: skriv ”Inga prestationer” på rutan, eller visa ingenting."
         },
         "showSource": {
           "name": "Plattformsikon",
@@ -1629,9 +1629,9 @@
         "profileExport": "Exportera profil…",
         "profileRestore": "Återställ profil…"
       },
-      "blacklistTitle": "Svartlista över AppID",
-      "blacklistButton": "Återställ svartlistan",
-      "blacklistInfo": "Högerklicka på en spelruta för att lägga till den i svartlistan.",
+      "blacklistTitle": "Dolda spel",
+      "blacklistButton": "Visa alla dolda spel igen",
+      "blacklistInfo": "Högerklicka på ett spel i biblioteket och välj ”Ta bort från listan” för att dölja det här.",
       "blacklistEmpty": "Inga dolda spel.",
       "blacklistRestore": "Återställ det här spelet",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Skrev {count} prestationer till {path}",
     "repair-failed": "Reparationen misslyckades",
     "could-not-write-steam-settings": "Det gick inte att skriva steam_settings.",
-    "blacklist-add-failed": "Det gick inte att lägga till posten i användarens svartlista",
+    "blacklist-add-failed": "Det gick inte att dölja det här spelet",
     "emulator-source": "Emulatorkälla",
     "appid-override": "Ange AppID manuellt…",
     "appid-override-prompt": "Steam-appid att använda för \"{name}\" ({folder}). Ersätter AW Nexts gissning utifrån namnet - användbart när ett annat spel har samma namn som mappen.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Genomskinlighet",
     "theme-effect-blur-label": "Intensitet",
     "scan-complete": "Genomsökningen är klar.",
-    "rescan-selected-folders": "Genomsök valda mappar igen",
-    "rescan-selected-help": "Välj bara de spar- eller biblioteksmappar som behöver ett nytt försök. Använd Uppdatera för att kontrollera alla källor.",
-    "rescan-select-all": "Markera alla",
-    "rescan-select-none": "Rensa markeringen",
-    "rescan-no-folders": "Lägg till en mapp innan du genomsöker igen.",
-    "rescan-no-selection": "Välj minst en mapp.",
-    "rescan-started": "Genomsöker {count} valda mappar igen…",
-    "rescan-complete": "De valda mapparna är genomsökta igen.",
-    "rescan-failed": "Genomsökningen av de valda mapparna misslyckades: {error}",
     "force-recheck-started": "Söker efter nya prestationer…",
     "force-recheck-done": "Kontrollen är klar.",
     "force-recheck-failed": "Kontrollen misslyckades: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Det gick inte att generera konfigurationer: {error}",
     "error-generating-configs": "Fel när konfigurationerna genererades",
     "error-while-auto-finding-folder-s": "Fel vid automatisk sökning efter mappar",
-    "error-while-trying-to-reset-user-blacklist": "Fel vid försök att återställa användarens svartlista",
+    "error-while-trying-to-reset-user-blacklist": "Det gick inte att visa de dolda spelen igen",
     "websocket-connection-error": "Anslutningsfel för WebSocket",
     "notification-test-failure": "Aviseringstestet misslyckades.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fel när anslutningen skulle upprättas: net::ERR_CONNECTION_REFUSED\nKörs Watchdog?",

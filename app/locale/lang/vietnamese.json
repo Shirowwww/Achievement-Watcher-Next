@@ -288,31 +288,31 @@
         "description": "Hiển thị cúp bạch kim, vàng, bạc và đồng dưới tên của bạn. Bạch kim là trò chơi đạt 100%; các cúp còn lại xếp hạng thành tựu của bạn theo số người chơi đã mở khóa chúng."
       },
       "rarityDisplay": {
-        "name": "Hiển thị độ hiếm",
-        "description": "Cấp hiếm chỉ đánh dấu những thành tựu hiếm nhất. Chế độ cúp xếp mỗi thành tựu vào vàng, bạc hoặc đồng theo tỷ lệ mở khóa và hiển thị bạch kim cho các trò chơi đã hoàn thành.",
-        "rare": "Cấp hiếm",
-        "trophy": "Chế độ cúp",
+        "name": "Huy hiệu độ hiếm",
+        "description": "Chỉ thành tựu hiếm: vàng, bạc hoặc đồng cho những cái hiếm nhất, còn lại không có gì. Tất cả: mỗi thành tựu nhận một huy hiệu theo tỷ lệ mở khóa, và game đã hoàn thành nhận bạch kim, như cúp PlayStation.",
+        "rare": "Chỉ thành tựu hiếm",
+        "trophy": "Tất cả, kiểu PlayStation",
         "goldBelow": {
           "name": "Cúp vàng dưới",
-          "description": "Ở chế độ cúp, thành tựu được ít người chơi mở khóa hơn tỷ lệ này sẽ nhận vàng."
+          "description": "Với tất cả thành tựu, những cái được ít người chơi mở khóa hơn tỷ lệ này nhận vàng."
         },
         "silverBelow": {
           "name": "Cúp bạc dưới",
-          "description": "Ở chế độ cúp, thành tựu dưới tỷ lệ này nhận bạc; phần còn lại, hoặc chưa biết tỷ lệ, nhận đồng."
+          "description": "Với tất cả thành tựu, những cái dưới tỷ lệ này nhận bạc; phần còn lại, hoặc không rõ tỷ lệ, nhận đồng."
         },
         "thresholds": {
           "name": "Ngưỡng độ hiếm",
-          "description": "Mặc định giữ 5%, 10% và 15% cho cấp hiếm, 20% và 50% cho chế độ cúp. Tùy chỉnh cho phép thay đổi các mức này.",
+          "description": "Mặc định giữ 5%, 10% và 15% cho thành tựu hiếm, 20% và 50% cho tất cả thành tựu. Tùy chỉnh cho phép thay đổi các mức này.",
           "default": "Mặc định",
           "custom": "Tùy chỉnh"
         },
         "rareGoldMax": {
           "name": "Vàng đến",
-          "description": "Ở cấp hiếm, thành tựu được tỷ lệ người chơi này hoặc ít hơn mở khóa sẽ nhận vàng."
+          "description": "Với thành tựu hiếm, những cái được tỷ lệ người chơi này hoặc ít hơn mở khóa nhận vàng."
         },
         "rareSilverMax": {
           "name": "Bạc đến",
-          "description": "Ở các bậc hiếm, thành tựu có tỷ lệ đến mức này nhận bạc. Nó luôn cao hơn vàng và thấp hơn giới hạn hiếm: kéo một thanh trượt sẽ đẩy các thanh còn lại."
+          "description": "Với thành tựu hiếm, những cái đến tỷ lệ này nhận bạc. Luôn nằm trên vàng và dưới giới hạn hiếm: kéo một thanh trượt sẽ đẩy các thanh khác."
         },
         "rareMax": {
           "name": "Hiếm đến",
@@ -342,8 +342,8 @@
           "description": "Hiện thanh hoàn thành trên mỗi thẻ."
         },
         "showEmptyProgress": {
-          "name": "Thanh của game không có thành tựu",
-          "description": "Với game mà Steam liệt kê không có thành tựu: hiển thị “Không có thành tựu” trên thanh, hoặc bỏ thanh đi."
+          "name": "Game không có thành tựu",
+          "description": "Với game mà Steam liệt kê không có thành tựu: ghi “Không có thành tựu” trên thẻ của nó, hoặc không hiển thị gì."
         },
         "showSource": {
           "name": "Biểu tượng nền tảng",
@@ -1629,9 +1629,9 @@
         "profileExport": "Xuất hồ sơ…",
         "profileRestore": "Khôi phục hồ sơ…"
       },
-      "blacklistTitle": "Danh sách đen AppID",
-      "blacklistButton": "Đặt lại danh sách đen",
-      "blacklistInfo": "Nhấn chuột phải vào một thẻ trò chơi để thêm nó vào danh sách đen.",
+      "blacklistTitle": "Game đã ẩn",
+      "blacklistButton": "Hiện lại tất cả game đã ẩn",
+      "blacklistInfo": "Nhấn chuột phải vào một game trong thư viện và chọn “Xóa khỏi danh sách” để ẩn nó ở đây.",
       "blacklistEmpty": "Không có trò chơi nào bị ẩn.",
       "blacklistRestore": "Khôi phục trò chơi này",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Đã ghi {count} thành tựu vào {path}",
     "repair-failed": "Sửa thất bại",
     "could-not-write-steam-settings": "Không thể ghi steam_settings.",
-    "blacklist-add-failed": "Không thêm được mục vào danh sách đen của người dùng",
+    "blacklist-add-failed": "Không ẩn được game này",
     "emulator-source": "Nguồn giả lập",
     "appid-override": "Đặt AppID thủ công…",
     "appid-override-prompt": "Steam appid dùng cho \"{name}\" ({folder}). Giá trị này thay cho phỏng đoán theo tên của AW Next - hữu ích khi một game khác trùng tên với thư mục này.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Độ mờ",
     "theme-effect-blur-label": "Cường độ",
     "scan-complete": "Đã quét xong.",
-    "rescan-selected-folders": "Quét lại các thư mục đã chọn",
-    "rescan-selected-help": "Chỉ chọn những thư mục lưu dữ liệu hoặc thư viện cần thử lại. Dùng Làm mới để kiểm tra mọi nguồn.",
-    "rescan-select-all": "Chọn tất cả",
-    "rescan-select-none": "Bỏ chọn tất cả",
-    "rescan-no-folders": "Hãy thêm một thư mục trước khi quét lại.",
-    "rescan-no-selection": "Hãy chọn ít nhất một thư mục.",
-    "rescan-started": "Đang quét lại {count} thư mục đã chọn…",
-    "rescan-complete": "Đã quét lại các thư mục đã chọn.",
-    "rescan-failed": "Quét thư mục đã chọn thất bại: {error}",
     "force-recheck-started": "Đang kiểm tra thành tựu mới…",
     "force-recheck-done": "Đã kiểm tra xong.",
     "force-recheck-failed": "Kiểm tra thất bại: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Tạo cấu hình thất bại: {error}",
     "error-generating-configs": "Lỗi khi tạo cấu hình",
     "error-while-auto-finding-folder-s": "Lỗi khi tự động tìm thư mục",
-    "error-while-trying-to-reset-user-blacklist": "Lỗi khi đặt lại danh sách đen của người dùng",
+    "error-while-trying-to-reset-user-blacklist": "Không hiện lại được các game đã ẩn",
     "websocket-connection-error": "Lỗi kết nối WebSocket",
     "notification-test-failure": "Thử thông báo thất bại.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Lỗi khi thiết lập kết nối: net::ERR_CONNECTION_REFUSED\nWatchdog có đang chạy không ?",

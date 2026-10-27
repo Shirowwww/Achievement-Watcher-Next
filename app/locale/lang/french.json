@@ -272,31 +272,31 @@
         "description": "Affiche les trophées platine, or, argent et bronze sous ton nom. Le platine est un jeu à 100 % ; les autres classent tes succès selon le nombre de joueurs qui les ont débloqués."
       },
       "rarityDisplay": {
-        "name": "Affichage de la rareté",
-        "description": "Les paliers rares ne marquent que les succès les plus rares. Le mode trophées note chaque succès en or, argent ou bronze selon son taux de déblocage, et affiche le platine sur les jeux terminés.",
-        "rare": "Paliers rares",
-        "trophy": "Mode trophées",
+        "name": "Badges de rareté",
+        "description": "Seulement les succès rares : or, argent ou bronze pour les plus rares, rien pour les autres. Tous : chaque succès reçoit un badge selon son taux de déblocage, et un jeu terminé reçoit le platine, comme les trophées PlayStation.",
+        "rare": "Seulement les succès rares",
+        "trophy": "Tous, façon trophées PlayStation",
         "goldBelow": {
           "name": "Trophée or sous",
-          "description": "En mode trophées, les succès débloqués par moins de joueurs que ce taux obtiennent l’or."
+          "description": "Avec tous les succès, ceux débloqués par moins de joueurs que ce taux obtiennent l’or."
         },
         "silverBelow": {
           "name": "Trophée argent sous",
-          "description": "En mode trophées, les succès sous ce taux obtiennent l’argent ; les autres, ou ceux sans taux connu, obtiennent le bronze."
+          "description": "Avec tous les succès, ceux sous ce taux obtiennent l’argent ; les autres, ou ceux sans taux connu, obtiennent le bronze."
         },
         "thresholds": {
           "name": "Seuils de rareté",
-          "description": "Par défaut : 5 %, 10 % et 15 % pour les paliers rares, 20 % et 50 % pour le mode trophées. Personnalisés permet de les changer.",
+          "description": "Par défaut : 5 %, 10 % et 15 % pour les succès rares, 20 % et 50 % pour tous les succès. Personnalisés permet de les changer.",
           "default": "Par défaut",
           "custom": "Personnalisés"
         },
         "rareGoldMax": {
           "name": "Or jusqu’à",
-          "description": "En paliers rares, les succès débloqués par cette part de joueurs ou moins obtiennent l’or."
+          "description": "Pour les succès rares, ceux débloqués par cette part de joueurs ou moins obtiennent l’or."
         },
         "rareSilverMax": {
           "name": "Argent jusqu’à",
-          "description": "En paliers rares, les succès jusqu’à ce taux obtiennent l’argent. Il reste toujours au-dessus de l’or et sous la limite rare : bouger un curseur pousse les autres."
+          "description": "Pour les succès rares, ceux jusqu’à ce taux obtiennent l’argent. Il reste toujours au-dessus de l’or et sous la limite rare : bouger un curseur pousse les autres."
         },
         "rareMax": {
           "name": "Rare jusqu’à",
@@ -326,8 +326,8 @@
           "description": "Affiche la barre d’achèvement sur chaque tuile."
         },
         "showEmptyProgress": {
-          "name": "Barre des jeux sans succès",
-          "description": "Pour un jeu que Steam liste sans succès : afficher « Pas de succès » dans sa barre, ou ne pas afficher de barre."
+          "name": "Jeux sans succès",
+          "description": "Pour un jeu que Steam liste sans succès : écrire « Pas de succès » sur sa tuile, ou ne rien afficher."
         },
         "showSource": {
           "name": "Icône de plateforme",
@@ -1629,9 +1629,9 @@
         "profileExport": "Exporter le profil…",
         "profileRestore": "Restaurer le profil…"
       },
-      "blacklistTitle": "Liste noire des AppID",
-      "blacklistButton": "Réinitialiser la liste noire",
-      "blacklistInfo": "Faites un clic droit sur une vignette de jeu pour l’ajouter à la liste noire.",
+      "blacklistTitle": "Jeux masqués",
+      "blacklistButton": "Réafficher tous les jeux masqués",
+      "blacklistInfo": "Fais un clic droit sur un jeu de la bibliothèque et choisis « Retirer de la liste » pour le masquer ici.",
       "blacklistEmpty": "Aucun jeu masqué.",
       "blacklistRestore": "Réafficher ce jeu",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "{count} succès écrits dans {path}",
     "repair-failed": "Échec de la réparation",
     "could-not-write-steam-settings": "Impossible d’écrire steam_settings.",
-    "blacklist-add-failed": "Échec de l’ajout à la liste noire",
+    "blacklist-add-failed": "Impossible de masquer ce jeu",
     "emulator-source": "Source de l’émulateur",
     "appid-override": "Définir l’AppID manuellement…",
     "appid-override-prompt": "AppID Steam à utiliser pour « {name} » ({folder}). Il remplace la déduction d’AW Next par le nom - utile quand un autre jeu porte le même nom que ce dossier.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Opacité",
     "theme-effect-blur-label": "Intensité",
     "scan-complete": "Analyse terminée.",
-    "rescan-selected-folders": "Analyser les dossiers sélectionnés",
-    "rescan-selected-help": "Choisis seulement les dossiers de sauvegardes ou bibliothèques à réessayer. Utilise Actualiser pour vérifier toutes les sources.",
-    "rescan-select-all": "Tout sélectionner",
-    "rescan-select-none": "Effacer la sélection",
-    "rescan-no-folders": "Ajoute un dossier avant de relancer une analyse.",
-    "rescan-no-selection": "Sélectionne au moins un dossier.",
-    "rescan-started": "Analyse des {count} dossier(s) sélectionné(s)…",
-    "rescan-complete": "Dossiers sélectionnés analysés.",
-    "rescan-failed": "Échec de l’analyse des dossiers sélectionnés : {error}",
     "force-recheck-started": "Recherche de nouveaux succès…",
     "force-recheck-done": "Vérification terminée.",
     "force-recheck-failed": "Échec de la vérification : {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Génération impossible : {error}",
     "error-generating-configs": "Erreur lors de la génération des configs",
     "error-while-auto-finding-folder-s": "Erreur lors de la recherche automatique de dossiers",
-    "error-while-trying-to-reset-user-blacklist": "Erreur lors de la réinitialisation de la liste noire",
+    "error-while-trying-to-reset-user-blacklist": "Impossible de réafficher les jeux masqués",
     "websocket-connection-error": "Erreur de connexion WebSocket",
     "notification-test-failure": "Échec du test de notification.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Erreur de connexion : net::ERR_CONNECTION_REFUSED\nLe Watchdog tourne-t-il ?",

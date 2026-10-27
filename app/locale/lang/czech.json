@@ -288,31 +288,31 @@
         "description": "Zobrazuje platinové, zlaté, stříbrné a bronzové trofeje pod vaším jménem. Platina je hra dokončená na 100 %; ostatní řadí vaše úspěchy podle toho, kolik hráčů je odemklo."
       },
       "rarityDisplay": {
-        "name": "Zobrazení vzácnosti",
-        "description": "Vzácné úrovně označují jen nejvzácnější úspěchy. Režim trofejí ohodnotí každý úspěch zlatem, stříbrem nebo bronzem podle podílu odemčení a u dokončených her zobrazí platinu.",
-        "rare": "Vzácné úrovně",
-        "trophy": "Režim trofejí",
+        "name": "Odznaky vzácnosti",
+        "description": "Jen vzácné úspěchy: zlato, stříbro nebo bronz pro nejvzácnější, ostatní nic. Všechny: každý úspěch dostane odznak podle míry odemčení a dokončená hra dostane platinu jako trofeje PlayStation.",
+        "rare": "Jen vzácné úspěchy",
+        "trophy": "Všechny, styl PlayStation",
         "goldBelow": {
           "name": "Zlatá trofej pod",
-          "description": "V režimu trofejí získají zlato úspěchy, které odemklo méně hráčů než tento podíl."
+          "description": "Při zobrazení všech úspěchů dostanou zlato ty, které odemklo méně hráčů než tato míra."
         },
         "silverBelow": {
           "name": "Stříbrná trofej pod",
-          "description": "V režimu trofejí získají stříbro úspěchy pod tímto podílem; ostatní, nebo ty bez známého podílu, získají bronz."
+          "description": "Při zobrazení všech úspěchů dostanou stříbro ty pod touto mírou; ostatní, nebo ty bez známé míry, dostanou bronz."
         },
         "thresholds": {
           "name": "Hranice vzácnosti",
-          "description": "Výchozí ponechá 5 %, 10 % a 15 % pro vzácné úrovně a 20 % a 50 % pro režim trofejí. Vlastní umožňuje je změnit.",
+          "description": "Výchozí ponechá 5 %, 10 % a 15 % pro vzácné úspěchy a 20 % a 50 % pro všechny úspěchy. Vlastní umožňuje je změnit.",
           "default": "Výchozí",
           "custom": "Vlastní"
         },
         "rareGoldMax": {
           "name": "Zlato do",
-          "description": "Ve vzácných úrovních získají zlato úspěchy odemknuté tímto podílem hráčů nebo menším."
+          "description": "U vzácných úspěchů dostanou zlato ty, které odemklo tento podíl hráčů nebo méně."
         },
         "rareSilverMax": {
           "name": "Stříbro do",
-          "description": "U úrovní vzácnosti dostanou úspěchy do této míry stříbro. Vždy zůstane nad zlatem a pod hranicí vzácnosti: posun jednoho posuvníku posune i ostatní."
+          "description": "U vzácných úspěchů dostanou stříbro ty do této míry. Zůstává vždy nad zlatem a pod hranicí vzácnosti: posunutí jednoho posuvníku posune ostatní."
         },
         "rareMax": {
           "name": "Vzácné do",
@@ -342,8 +342,8 @@
           "description": "Zobrazí ukazatel dokončení na každé dlaždici."
         },
         "showEmptyProgress": {
-          "name": "Ukazatel her bez úspěchů",
-          "description": "U hry, kterou Steam uvádí bez úspěchů: zobrazit v ukazateli „Žádné úspěchy“, nebo ukazatel vynechat."
+          "name": "Hry bez úspěchů",
+          "description": "U hry, kterou Steam uvádí bez úspěchů: napsat na dlaždici „Žádné úspěchy“, nebo nezobrazit nic."
         },
         "showSource": {
           "name": "Ikona platformy",
@@ -1629,9 +1629,9 @@
         "profileExport": "Exportovat profil…",
         "profileRestore": "Obnovit profil…"
       },
-      "blacklistTitle": "Černá listina AppID",
-      "blacklistButton": "Resetovat černou listinu",
-      "blacklistInfo": "Klikněte pravým tlačítkem na dlaždici hry pro přidání na černou listinu.",
+      "blacklistTitle": "Skryté hry",
+      "blacklistButton": "Znovu zobrazit všechny skryté hry",
+      "blacklistInfo": "Klikněte pravým tlačítkem na hru v knihovně a zvolte „Odebrat ze seznamu“, aby se zde skryla.",
       "blacklistEmpty": "Žádné skryté hry.",
       "blacklistRestore": "Obnovit tuto hru",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Zapsáno {count} úspěchů do {path}",
     "repair-failed": "Oprava se nezdařila",
     "could-not-write-steam-settings": "Steam_settings se nepodařilo zapsat.",
-    "blacklist-add-failed": "Položku se nepodařilo přidat do uživatelské černé listiny",
+    "blacklist-add-failed": "Tuto hru se nepodařilo skrýt",
     "emulator-source": "Zdroj emulátoru",
     "appid-override": "Nastavit AppID ručně…",
     "appid-override-prompt": "AppID služby Steam pro „{name}“ ({folder}). Přepíše odhad AW Next podle názvu - užitečné, když stejný název nese jiná hra.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Průhlednost",
     "theme-effect-blur-label": "Intenzita",
     "scan-complete": "Sken dokončen.",
-    "rescan-selected-folders": "Znovu prohledat vybrané složky",
-    "rescan-selected-help": "Vyberte pouze složky se save daty nebo knihovnami, které potřebují znovu projít. Pro kontrolu všech zdrojů použijte Obnovit.",
-    "rescan-select-all": "Vybrat vše",
-    "rescan-select-none": "Zrušit výběr",
-    "rescan-no-folders": "Před novým skenováním přidejte složku.",
-    "rescan-no-selection": "Vyberte alespoň jednu složku.",
-    "rescan-started": "Znovu se prohledává {count} vybraných složek…",
-    "rescan-complete": "Vybrané složky byly znovu prohledány.",
-    "rescan-failed": "Sken vybraných složek selhal: {error}",
     "force-recheck-started": "Hledají se nové úspěchy…",
     "force-recheck-done": "Kontrola dokončena.",
     "force-recheck-failed": "Kontrola selhala: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Generování konfigurací se nezdařilo: {error}",
     "error-generating-configs": "Chyba při generování konfigurací",
     "error-while-auto-finding-folder-s": "Chyba při automatickém hledání složek",
-    "error-while-trying-to-reset-user-blacklist": "Chyba při pokusu o obnovení uživatelské černé listiny",
+    "error-while-trying-to-reset-user-blacklist": "Skryté hry se nepodařilo znovu zobrazit",
     "websocket-connection-error": "Chyba připojení WebSocket",
     "notification-test-failure": "Test oznámení se nezdařil.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Chyba při navazování připojení: net::ERR_CONNECTION_REFUSED\nBěží Watchdog?",

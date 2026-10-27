@@ -288,31 +288,31 @@
         "description": "이름 아래에 플래티넘, 골드, 실버, 브론즈 트로피를 표시합니다. 플래티넘은 100% 달성한 게임이며, 나머지는 얼마나 많은 플레이어가 달성했는지에 따라 도전 과제를 등급별로 나눈 것입니다."
       },
       "rarityDisplay": {
-        "name": "희귀도 표시",
-        "description": "희귀 단계는 가장 희귀한 도전 과제만 표시합니다. 트로피 모드는 달성률에 따라 모든 도전 과제를 금, 은, 동으로 평가하고 완료한 게임에는 플래티넘을 표시합니다.",
-        "rare": "희귀 단계",
-        "trophy": "트로피 모드",
+        "name": "희귀도 배지",
+        "description": "희귀 도전 과제만: 가장 희귀한 것에 금, 은 또는 동, 나머지는 없음. 전체: 모든 도전 과제가 달성률에 따라 배지를 받고, 완료한 게임은 PlayStation 트로피처럼 플래티넘을 받습니다.",
+        "rare": "희귀 도전 과제만",
+        "trophy": "전체, PlayStation 방식",
         "goldBelow": {
           "name": "금 트로피 기준(미만)",
-          "description": "트로피 모드에서 이 비율보다 적은 플레이어가 달성한 도전 과제는 금을 받습니다."
+          "description": "모든 도전 과제에서, 이 비율보다 적은 플레이어가 달성한 도전 과제는 금을 받습니다."
         },
         "silverBelow": {
           "name": "은 트로피 기준(미만)",
-          "description": "트로피 모드에서 이 비율 미만인 도전 과제는 은을 받고, 나머지나 달성률을 모르는 것은 동을 받습니다."
+          "description": "모든 도전 과제에서, 이 비율 미만은 은을 받고 나머지나 비율을 모르는 것은 동을 받습니다."
         },
         "thresholds": {
           "name": "희귀도 기준",
-          "description": "기본값은 희귀 단계에 5%, 10%, 15%를, 트로피 모드에 20%, 50%를 유지합니다. 사용자 지정으로 변경할 수 있습니다.",
+          "description": "기본값은 희귀 도전 과제에 5%, 10%, 15%를, 모든 도전 과제에 20%, 50%를 유지합니다. 사용자 지정으로 변경할 수 있습니다.",
           "default": "기본값",
           "custom": "사용자 지정"
         },
         "rareGoldMax": {
           "name": "금 상한",
-          "description": "희귀 단계에서 이 비율 이하의 플레이어가 달성한 도전 과제는 금을 받습니다."
+          "description": "희귀 도전 과제에서, 이 비율 이하의 플레이어가 달성한 도전 과제는 금을 받습니다."
         },
         "rareSilverMax": {
           "name": "은 상한",
-          "description": "희귀 단계에서 이 달성률 이하의 도전 과제는 실버를 받습니다. 항상 골드보다 위, 희귀 한계보다 아래에 있으며, 슬라이더 하나를 움직이면 다른 슬라이더도 밀려 움직입니다."
+          "description": "희귀 도전 과제에서, 이 비율까지는 은을 받습니다. 항상 금보다 높고 희귀 상한보다 낮게 유지되며, 슬라이더 하나를 움직이면 다른 슬라이더도 밀립니다."
         },
         "rareMax": {
           "name": "희귀 상한",
@@ -342,8 +342,8 @@
           "description": "각 타일에 완료율 표시줄을 표시합니다."
         },
         "showEmptyProgress": {
-          "name": "도전 과제가 없는 게임의 표시줄",
-          "description": "Steam이 도전 과제 없이 나열하는 게임의 경우: 표시줄에 “도전 과제 없음”을(를) 표시하거나 표시줄을 숨깁니다."
+          "name": "도전 과제 없는 게임",
+          "description": "Steam이 도전 과제 없이 표시하는 게임에 대해: 타일에 “도전 과제 없음”라고 쓰거나 아무것도 표시하지 않습니다."
         },
         "showSource": {
           "name": "플랫폼 아이콘",
@@ -1629,9 +1629,9 @@
         "profileExport": "프로필 내보내기…",
         "profileRestore": "프로필 복원…"
       },
-      "blacklistTitle": "AppID 차단 목록",
-      "blacklistButton": "차단 목록 초기화",
-      "blacklistInfo": "게임 타일을 오른쪽 클릭하면 차단 목록에 추가할 수 있습니다.",
+      "blacklistTitle": "숨긴 게임",
+      "blacklistButton": "숨긴 게임 모두 다시 표시",
+      "blacklistInfo": "라이브러리의 게임을 오른쪽 클릭하고 “목록에서 제거” 항목을 선택하면 여기에 숨길 수 있습니다.",
       "blacklistEmpty": "숨긴 게임이 없습니다.",
       "blacklistRestore": "이 게임 복원",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "도전 과제 {count}개를 {path}에 기록했습니다",
     "repair-failed": "복구 실패",
     "could-not-write-steam-settings": "steam_settings를 기록하지 못했습니다.",
-    "blacklist-add-failed": "사용자 차단 목록에 항목을 추가하지 못했습니다",
+    "blacklist-add-failed": "이 게임을 숨기지 못했습니다",
     "emulator-source": "에뮬레이터 소스",
     "appid-override": "AppID 수동 설정…",
     "appid-override-prompt": "\"{name}\" ({folder})에 사용할 Steam appid입니다. 이름 기반의 AW Next 추측을 덮어씁니다. 다른 게임이 이 폴더와 같은 이름일 때 유용합니다.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "불투명도",
     "theme-effect-blur-label": "강도",
     "scan-complete": "검사를 마쳤습니다.",
-    "rescan-selected-folders": "선택한 폴더 다시 검사",
-    "rescan-selected-help": "다시 시도할 저장 데이터 폴더나 라이브러리 폴더만 고르세요. 모든 소스를 확인하려면 새로 고침을 사용하세요.",
-    "rescan-select-all": "모두 선택",
-    "rescan-select-none": "선택 해제",
-    "rescan-no-folders": "다시 검사하려면 먼저 폴더를 추가하세요.",
-    "rescan-no-selection": "폴더를 하나 이상 고르세요.",
-    "rescan-started": "선택한 폴더 {count}개를 다시 검사하는 중…",
-    "rescan-complete": "선택한 폴더를 다시 검사했습니다.",
-    "rescan-failed": "선택한 폴더 검사에 실패했습니다: {error}",
     "force-recheck-started": "새 도전 과제를 확인하는 중…",
     "force-recheck-done": "확인을 마쳤습니다.",
     "force-recheck-failed": "확인 실패: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "설정 파일 생성 실패: {error}",
     "error-generating-configs": "설정 파일을 생성하는 중 오류가 발생했습니다",
     "error-while-auto-finding-folder-s": "폴더를 자동으로 찾는 중 오류가 발생했습니다",
-    "error-while-trying-to-reset-user-blacklist": "사용자 차단 목록을 초기화하는 중 오류가 발생했습니다",
+    "error-while-trying-to-reset-user-blacklist": "숨긴 게임을 다시 표시하지 못했습니다",
     "websocket-connection-error": "WebSocket 연결 오류",
     "notification-test-failure": "알림 테스트에 실패했습니다.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "연결을 맺는 중 오류가 발생했습니다: net::ERR_CONNECTION_REFUSED\nWatchdog이 실행 중인가요?",

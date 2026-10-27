@@ -288,31 +288,31 @@
         "description": "Näyttää platina-, kulta-, hopea- ja pronssipokaalit nimesi alla. Platina on peli, joka on suoritettu 100-prosenttisesti; muut järjestävät saavutuksesi sen mukaan, kuinka moni pelaaja on avannut ne."
       },
       "rarityDisplay": {
-        "name": "Harvinaisuuden näyttö",
-        "description": "Harvinaiset tasot merkitsevät vain harvinaisimmat saavutukset. Pokaalitila arvioi jokaisen saavutuksen kullaksi, hopeaksi tai pronssiksi avausprosentin mukaan ja näyttää platinan suoritetuissa peleissä.",
-        "rare": "Harvinaiset tasot",
-        "trophy": "Pokaalitila",
+        "name": "Harvinaisuusmerkit",
+        "description": "Vain harvinaiset saavutukset: kulta, hopea tai pronssi harvinaisimmille, ei mitään muille. Kaikki: jokainen saavutus saa merkin avaamisosuuden mukaan, ja läpäisty peli saa platinan kuten PlayStationin pokaalit.",
+        "rare": "Vain harvinaiset saavutukset",
+        "trophy": "Kaikki, PlayStation-tyyli",
         "goldBelow": {
           "name": "Kultapokaali alle",
-          "description": "Pokaalitilassa saavutukset, jotka on avannut tätä pienempi osuus pelaajista, saavat kullan."
+          "description": "Kun kaikki saavutukset näytetään, ne, jotka alle tämä osuus pelaajista on avannut, saavat kullan."
         },
         "silverBelow": {
           "name": "Hopeapokaali alle",
-          "description": "Pokaalitilassa tämän osuuden alle jäävät saavutukset saavat hopean; muut tai ne, joiden osuutta ei tunneta, saavat pronssin."
+          "description": "Kun kaikki saavutukset näytetään, tämän osuuden alle jäävät saavat hopean; muut tai ne, joiden osuus ei ole tiedossa, saavat pronssin."
         },
         "thresholds": {
           "name": "Harvinaisuusrajat",
-          "description": "Oletus säilyttää 5 %, 10 % ja 15 % harvinaisille tasoille sekä 20 % ja 50 % pokaalitilalle. Mukautettu antaa muuttaa ne.",
+          "description": "Oletus säilyttää 5 %, 10 % ja 15 % harvinaisille saavutuksille sekä 20 % ja 50 % kaikille saavutuksille. Mukautettu antaa muuttaa ne.",
           "default": "Oletus",
           "custom": "Mukautettu"
         },
         "rareGoldMax": {
           "name": "Kulta enintään",
-          "description": "Harvinaisilla tasoilla kullan saavat saavutukset, jotka tämä osuus pelaajista tai harvempi on avannut."
+          "description": "Harvinaisissa saavutuksissa kullan saavat ne, jotka tämä osuus pelaajista tai harvempi on avannut."
         },
         "rareSilverMax": {
           "name": "Hopea enintään",
-          "description": "Harvinaisuusluokissa saavutukset tähän osuuteen asti saavat hopeaa. Se pysyy aina kullan yläpuolella ja harvinaisuusrajan alapuolella: yhden liukusäätimen siirtäminen työntää muita."
+          "description": "Harvinaisissa saavutuksissa hopean saavat ne, jotka ovat tähän osuuteen asti. Se pysyy aina kullan yläpuolella ja harvinaisuusrajan alapuolella: yhden liukusäätimen siirtäminen työntää muita."
         },
         "rareMax": {
           "name": "Harvinainen enintään",
@@ -342,8 +342,8 @@
           "description": "Näyttää valmistumispalkin jokaisessa ruudussa."
         },
         "showEmptyProgress": {
-          "name": "Saavutuksettomien pelien palkki",
-          "description": "Pelille, jonka Steam listaa ilman saavutuksia: näytä ”Ei saavutuksia” palkissa tai jätä palkki pois."
+          "name": "Pelit ilman saavutuksia",
+          "description": "Pelille, jonka Steam listaa ilman saavutuksia: kirjoita ruutuun ”Ei saavutuksia” tai älä näytä mitään."
         },
         "showSource": {
           "name": "Alustan kuvake",
@@ -1629,9 +1629,9 @@
         "profileExport": "Vie profiili…",
         "profileRestore": "Palauta profiili…"
       },
-      "blacklistTitle": "AppID-estoluettelo",
-      "blacklistButton": "Tyhjennä estoluettelo",
-      "blacklistInfo": "Lisää peli estoluetteloon napsauttamalla sen ruutua hiiren kakkospainikkeella.",
+      "blacklistTitle": "Piilotetut pelit",
+      "blacklistButton": "Näytä kaikki piilotetut pelit uudelleen",
+      "blacklistInfo": "Napsauta kirjaston peliä hiiren kakkospainikkeella ja valitse ”Poista luettelosta”, niin se piilotetaan tänne.",
       "blacklistEmpty": "Ei piilotettuja pelejä.",
       "blacklistRestore": "Palauta tämä peli",
       "mainSteam": {
@@ -2045,7 +2045,7 @@
     "repair-complete-message": "Kirjoitettiin {count} saavutusta kohteeseen {path}",
     "repair-failed": "Korjaus epäonnistui",
     "could-not-write-steam-settings": "steam_settings-tiedostoa ei voitu kirjoittaa.",
-    "blacklist-add-failed": "Kohteen lisääminen estoluetteloon epäonnistui",
+    "blacklist-add-failed": "Tämän pelin piilottaminen epäonnistui",
     "emulator-source": "Emulaattorin lähde",
     "appid-override": "Aseta AppID käsin…",
     "appid-override-prompt": "Käytettävä Steam-appid pelille \"{name}\" ({folder}). Korvaa AW Nextin nimeen perustuvan arvauksen - hyödyllinen, kun toisella pelillä on sama nimi kuin kansiolla.",
@@ -2459,15 +2459,6 @@
     "theme-effect-opacity-label": "Peittävyys",
     "theme-effect-blur-label": "Voimakkuus",
     "scan-complete": "Tutkinta valmis.",
-    "rescan-selected-folders": "Tutki valitut kansiot uudelleen",
-    "rescan-selected-help": "Valitse vain ne tallennus- tai kirjastokansiot, jotka on syytä yrittää uudelleen. Käytä Päivitä-toimintoa, jos haluat tarkistaa kaikki lähteet.",
-    "rescan-select-all": "Valitse kaikki",
-    "rescan-select-none": "Tyhjennä valinta",
-    "rescan-no-folders": "Lisää kansio ennen uudelleentutkintaa.",
-    "rescan-no-selection": "Valitse vähintään yksi kansio.",
-    "rescan-started": "Tutkitaan uudelleen {count} valittua kansiota…",
-    "rescan-complete": "Valitut kansiot tutkittu uudelleen.",
-    "rescan-failed": "Valittujen kansioiden tutkinta epäonnistui: {error}",
     "force-recheck-started": "Tarkistetaan uusia saavutuksia…",
     "force-recheck-done": "Tarkistus valmis.",
     "force-recheck-failed": "Tarkistus epäonnistui: {error}",
@@ -2485,7 +2476,7 @@
     "generate-configs-failed-x": "Asetustiedostojen luonti epäonnistui: {error}",
     "error-generating-configs": "Virhe asetustiedostoja luotaessa",
     "error-while-auto-finding-folder-s": "Virhe kansioiden automaattisessa etsinnässä",
-    "error-while-trying-to-reset-user-blacklist": "Virhe käyttäjän estoluetteloa tyhjennettäessä",
+    "error-while-trying-to-reset-user-blacklist": "Piilotettujen pelien näyttäminen uudelleen epäonnistui",
     "websocket-connection-error": "WebSocket-yhteysvirhe",
     "notification-test-failure": "Ilmoituksen testaus epäonnistui.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Virhe yhteyden muodostuksessa: net::ERR_CONNECTION_REFUSED\nOnko Watchdog käynnissä?",
