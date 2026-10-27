@@ -420,6 +420,12 @@ module.exports.load = () => {
       options.achievement_source.lumaPlay = true;
     }
 
+    // RUNE's Ubisoft emulator followed the LumaPlay switch until it got its own, so a profile from
+    // before the split keeps whatever LumaPlay was set to.
+    if (typeof options.achievement_source.runeUplay !== 'boolean') {
+      options.achievement_source.runeUplay = options.achievement_source.lumaPlay;
+    }
+
     if (typeof options.achievement_source.gog !== 'boolean') {
       options.achievement_source.gog = true;
     }
@@ -738,6 +744,7 @@ module.exports.load = () => {
         madnesspatch: true,
         pcports: true,
         lumaPlay: true,
+        runeUplay: true,
         gog: true,
         gogOfficial: true,
         ubisoftOfficial: true,

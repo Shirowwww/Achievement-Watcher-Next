@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Giả lập Steam",
-        "description": "Đọc thành tựu do Goldberg / GBE Fork và các trình giả lập Steam tương tự ghi lại."
+        "description": "Đọc thành tựu do Goldberg / GBE Fork và các trình giả lập Steam tương tự ghi lại. Cũng bao gồm các game Ubisoft được sửa bằng bản vá Uplay R2, ghi thành tựu vào cùng một nơi."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 và Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Trình giả lập Playstation 3"
       },
       "lumaPlay": {
-        "description": "Trình giả lập Uplay"
+        "description": "Game Ubisoft chạy bằng LumaPlay, trình giả lập Uplay R1."
+      },
+      "runeUplay": {
+        "description": "Game Ubisoft chạy bằng trình giả lập Ubisoft Connect của RUNE (Uplay R2). Dữ liệu lưu của nó được tìm thấy tự động, không cần thêm thư mục."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Các trò chơi và cúp được nhập từ tài khoản PlayStation của bạn. Kết nối ở thẻ tài khoản bên dưới, rồi nhập thư viện."
       },
       "markerpatch": {
-        "description": "Dead Space 2 thông qua mod MarkerPatch"
+        "name": "Bản sửa lỗi và bản port game",
+        "description": "Game được cộng đồng vá hoặc port sang PC, có thành tựu riêng: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) và Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Bản port PC có thành tựu riêng: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns thông qua mod MadnessPatch"
       },
       "groupStores": "Trình khởi chạy chính thức",
-      "groupEmulators": "Trình giả lập và bản vá",
       "groupConsoles": "Máy console và retro"
     },
     "help": {

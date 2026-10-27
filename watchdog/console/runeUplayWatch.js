@@ -229,13 +229,13 @@ function uniqueAchievementsRoots(roots) {
   return out;
 }
 
-// Safe to call on every settings reload. Gated by the Ubisoft Connect emulator source switch and
-// the notification master switch.
+// Safe to call on every settings reload. Gated by the RUNE (Uplay R2) source switch and the
+// notification master switch.
 module.exports.start = async (ctx, roots = [...runeUplay.defaultRoots(), ...addedRoots()]) => {
   module.exports.stop();
 
   if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.lumaPlay === false) return;
+  if (ctx.options.achievement_source && ctx.options.achievement_source.runeUplay === false) return;
   if (ctx.options.notification && ctx.options.notification.notify === false) return;
   if (typeof ctx.notify !== 'function') return;
 

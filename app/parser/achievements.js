@@ -2335,9 +2335,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
         debug.log(`[userdir] ${dir.path}`);
 
         // Scanned once with the default root below, so one folder is never listed twice.
-        if (source.lumaPlay && runeUplay.resolveAchievementsRoot(dir.path)) runeUplayFolders.push(dir.path);
+        if (source.runeUplay && runeUplay.resolveAchievementsRoot(dir.path)) runeUplayFolders.push(dir.path);
       } catch (err) {
-        debug.log(`[userdir] ${dir.path} could not be checked for LumaPlay: ${scanError(err)}`);
+        debug.log(`[userdir] ${dir.path} could not be checked for RUNE Uplay: ${scanError(err)}`);
       }
       const { games, appidRoot } = await scanWatchedFolder(dir.path, source, kytyOptions);
       if (appidRoot) additionalSearch.push(dir.path);
@@ -2547,6 +2547,13 @@ async function discoverInScope(source, steamAccFilter, scope) {
     } catch (err) {
       debug.error(err);
     }
+
+    // uplay.scanLegit() (legit Ubisoft Connect cache) is intentionally NOT called here: legit Ubisoft
+    // Connect exposes no local unlock-state, so those entries always resolve to root = {} (see
+    // getAchievements 'uplay' branch) and would show as permanent 0% clutter for games the user owns
+    // legitimately. The "Émulateur Ubisoft Connect" toggle is for emulated saves only.
+  }
+  if (!scope && source.runeUplay) {
     // RUNE's Ubisoft emulator keeps its saves in Documents, so no folder has to be added. A folder
     // the user added goes through the same call: a file reached twice is listed once.
     try {
@@ -2554,11 +2561,6 @@ async function discoverInScope(source, steamAccFilter, scope) {
     } catch (err) {
       debug.error(err);
     }
-
-    // uplay.scanLegit() (legit Ubisoft Connect cache) is intentionally NOT called here: legit Ubisoft
-    // Connect exposes no local unlock-state, so those entries always resolve to root = {} (see
-    // getAchievements 'uplay' branch) and would show as permanent 0% clutter for games the user owns
-    // legitimately. The "Émulateur Ubisoft Connect" toggle is for emulated saves only.
   } else if (scope && runeUplayFolders.length > 0) {
     try {
       data = data.concat(runeUplay.scan(runeUplayFolders));

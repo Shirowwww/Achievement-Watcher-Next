@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam emulátor",
-        "description": "Beolvassa a Goldberg / GBE Fork és hasonló Steam emulátorok által írt teljesítményeket."
+        "description": "Beolvassa a Goldberg / GBE Fork és hasonló Steam emulátorok által írt teljesítményeket. Lefedi az Uplay R2 javítással megjavított Ubisoft-játékokat is, amelyek ugyanoda írják a teljesítményeiket."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 és Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 emulátor"
       },
       "lumaPlay": {
-        "description": "Uplay emulátor"
+        "description": "LumaPlayjel, az Uplay R1 emulátorral futtatott Ubisoft-játékok."
+      },
+      "runeUplay": {
+        "description": "A RUNE Ubisoft Connect emulátorával (Uplay R2) futtatott Ubisoft-játékok. A mentései maguktól megtalálhatók, nem kell mappát hozzáadni."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "A PlayStation-fiókból importált játékok és trófeák. Csatlakoztassa az alábbi fiókkártyán, majd importálja a könyvtárat."
       },
       "markerpatch": {
-        "description": "Dead Space 2 a MarkerPatch mod segítségével"
+        "name": "Játékjavítások és portok",
+        "description": "A közösség által javított vagy PC-re portolt játékok saját teljesítményekkel: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) és Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Saját teljesítményekkel rendelkező PC-s portok: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns a MadnessPatch mod segítségével"
       },
       "groupStores": "Hivatalos indítók",
-      "groupEmulators": "Emulátorok és javítások",
       "groupConsoles": "Konzolok és retro"
     },
     "help": {

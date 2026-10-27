@@ -6950,9 +6950,6 @@ body.is-resizing #game-list {
 #settings .emulator-list li.hasHelper:last-child {
   border-bottom: 0;
 }
-#settings .emulator-list li.hasHelper:hover {
-  background: color-mix(in srgb, var(--set-surface) 6%, transparent);
-}
 #settings .emulator-settings .emulator-list li .right {
   width: 236px;
 }
@@ -10689,13 +10686,14 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   line-height: 1.4;
 }
 
+/* The card title and the shield already say "official": the rows look like every other row. */
 #settings .source-list > li.official-source {
   border-radius: var(--radius-sm);
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 55%, transparent);
 }
 
-#settings .source-list > li.official-source + li.official-source {
-  margin-top: 6px;
+/* A row driven by another one (the game fixes). `display: flex` on the rows beats `[hidden]`. */
+#settings .source-list > li[hidden] {
+  display: none;
 }
 
 #settings .source-list .source-official-badge {

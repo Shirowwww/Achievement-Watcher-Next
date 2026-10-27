@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam-emulator",
-        "description": "Læs præstationer skrevet af Goldberg / GBE Fork og lignende Steam-emulatorer."
+        "description": "Læser præstationer skrevet af Goldberg / GBE Fork og lignende Steam-emulatorer. Dækker også Ubisoft-spil repareret med Uplay R2-rettelsen, som skriver deres præstationer samme sted."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 og Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Playstation 3-emulator"
       },
       "lumaPlay": {
-        "description": "Uplay-emulator"
+        "description": "Ubisoft-spil kørt med LumaPlay, Uplay R1-emulatoren."
+      },
+      "runeUplay": {
+        "description": "Ubisoft-spil kørt med RUNEs Ubisoft Connect-emulator (Uplay R2). Dens gemte filer findes af sig selv, uden mappe at tilføje."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Spil og trofæer importeret fra din PlayStation-konto. Tilslut den i kontokortet nedenfor, og importér derefter biblioteket."
       },
       "markerpatch": {
-        "description": "Dead Space 2 via MarkerPatch-modet"
+        "name": "Spilrettelser og porteringer",
+        "description": "Spil rettet eller porteret til pc af fællesskabet, med deres egne præstationer: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) og Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Pc-porte med egne præstationer: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns via MadnessPatch-modet"
       },
       "groupStores": "Officielle launchere",
-      "groupEmulators": "Emulatorer og patches",
       "groupConsoles": "Konsoller og retro"
     },
     "help": {

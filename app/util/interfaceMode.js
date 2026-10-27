@@ -48,14 +48,14 @@ const SIMPLE_HIDDEN_CHECKS = ['identity'];
 */
 const OPTIONAL_SOURCES = {
   greenLuma: ['GreenLuma Reborn', 'GreenLuma 2020', 'GreenLuma 2024', 'GreenLuma 2025'],
-  lumaPlay: ['Lumaplay', 'RUNE Uplay'],
+  lumaPlay: ['Lumaplay'],
+  runeUplay: ['RUNE Uplay'],
   gog: ['gog'],
   epic: ['epic'],
   socialClub: ['Goldberg SocialClub'],
   xlln: ['XLiveLessNess'],
-  markerpatch: ['MarkerPatch'],
-  madnesspatch: ['MadnessPatch'],
-  pcports: ['PC Port'],
+  // One row drives the three game fixes (MadnessPatch and PC Ports follow it), so it answers for all three.
+  markerpatch: ['MarkerPatch', 'MadnessPatch', 'PC Port'],
   importCache: ['Achievement Watcher : Watchdog'],
 };
 

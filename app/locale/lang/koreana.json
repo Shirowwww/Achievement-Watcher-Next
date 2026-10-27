@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam 에뮬레이터",
-        "description": "Goldberg / GBE Fork 등 Steam 에뮬레이터가 기록한 도전 과제를 읽습니다."
+        "description": "Goldberg / GBE Fork 등 Steam 에뮬레이터가 기록한 도전 과제를 읽습니다. Uplay R2 수정 패치로 고친 Ubisoft 게임도 포함하며, 이 게임들은 도전 과제를 같은 위치에 기록합니다."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 및 Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 에뮬레이터"
       },
       "lumaPlay": {
-        "description": "Uplay 에뮬레이터"
+        "description": "Uplay R1 에뮬레이터인 LumaPlay로 실행하는 Ubisoft 게임입니다."
+      },
+      "runeUplay": {
+        "description": "RUNE의 Ubisoft Connect 에뮬레이터(Uplay R2)로 실행하는 Ubisoft 게임입니다. 저장 데이터는 자동으로 찾으므로 폴더를 추가할 필요가 없습니다."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "PlayStation 계정에서 가져온 게임과 트로피입니다. 아래 계정 카드에서 연결한 다음 라이브러리를 가져오세요."
       },
       "markerpatch": {
-        "description": "MarkerPatch 모드를 통한 Dead Space 2"
+        "name": "게임 수정 및 이식",
+        "description": "커뮤니티가 패치하거나 PC로 이식한 게임으로, 자체 도전 과제가 있습니다: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "자체 도전 과제를 가진 PC 포트: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "MadnessPatch 모드를 통한 Alice: Madness Returns"
       },
       "groupStores": "공식 런처",
-      "groupEmulators": "에뮬레이터 및 패치",
       "groupConsoles": "콘솔 및 레트로"
     },
     "help": {

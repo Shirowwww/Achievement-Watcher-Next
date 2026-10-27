@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Эмулятор Steam",
-        "description": "Читает достижения, записанные Goldberg / GBE Fork и подобными эмуляторами Steam."
+        "description": "Читает достижения, записанные Goldberg / GBE Fork и подобными эмуляторами Steam. Также охватывает игры Ubisoft, исправленные патчем Uplay R2, которые записывают достижения в то же место."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 и Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Эмулятор PlayStation 3"
       },
       "lumaPlay": {
-        "description": "Эмулятор Uplay"
+        "description": "Игры Ubisoft, запущенные через LumaPlay, эмулятор Uplay R1."
+      },
+      "runeUplay": {
+        "description": "Игры Ubisoft, запущенные через эмулятор Ubisoft Connect от RUNE (Uplay R2). Его сохранения находятся сами, добавлять папку не нужно."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Игры и трофеи, импортированные из вашего аккаунта PlayStation. Подключите его в карточке аккаунта ниже, затем импортируйте библиотеку."
       },
       "markerpatch": {
-        "description": "Dead Space 2 через мод MarkerPatch"
+        "name": "Исправления и порты игр",
+        "description": "Игры, исправленные или портированные на ПК сообществом, с собственными достижениями: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) и Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "ПК-порты со своими достижениями: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns через мод MadnessPatch"
       },
       "groupStores": "Официальные лаунчеры",
-      "groupEmulators": "Эмуляторы и патчи",
       "groupConsoles": "Консоли и ретро"
     },
     "help": {

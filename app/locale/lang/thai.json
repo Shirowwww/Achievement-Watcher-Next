@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "อีมูเลเตอร์ Steam",
-        "description": "อ่านความสำเร็จที่เขียนโดย Goldberg / GBE Fork และอีมูเลเตอร์ Steam ที่คล้ายกัน"
+        "description": "อ่านความสำเร็จที่เขียนโดย Goldberg / GBE Fork และอีมูเลเตอร์ Steam ที่คล้ายกัน ครอบคลุมเกมของ Ubisoft ที่ซ่อมด้วยตัวแก้ไข Uplay R2 ซึ่งเขียนความสำเร็จไว้ที่เดียวกันด้วย"
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 และ Reborn"
@@ -1350,7 +1350,10 @@
         "description": "อีมูเลเตอร์ PlayStation 3"
       },
       "lumaPlay": {
-        "description": "อีมูเลเตอร์ Uplay"
+        "description": "เกมของ Ubisoft ที่รันด้วย LumaPlay อีมูเลเตอร์ Uplay R1"
+      },
+      "runeUplay": {
+        "description": "เกมของ Ubisoft ที่รันด้วยอีมูเลเตอร์ Ubisoft Connect ของ RUNE (Uplay R2) ระบบจะพบไฟล์เซฟเอง ไม่ต้องเพิ่มโฟลเดอร์"
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "เกมและถ้วยรางวัลที่นำเข้าจากบัญชี PlayStation ของคุณ เชื่อมต่อในการ์ดบัญชีด้านล่าง แล้วนำเข้าคลังเกม"
       },
       "markerpatch": {
-        "description": "Dead Space 2 ผ่านม็อด MarkerPatch"
+        "name": "ตัวแก้ไขและพอร์ตเกม",
+        "description": "เกมที่ชุมชนแพตช์หรือพอร์ตมายังพีซี และมีความสำเร็จของตัวเอง: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) และ Link's Awakening DX HD (LADXHD Updated)"
       },
       "pcports": {
         "description": "พอร์ต PC ที่มีความสำเร็จของตัวเอง: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns ผ่านม็อด MadnessPatch"
       },
       "groupStores": "ตัวเปิดเกมทางการ",
-      "groupEmulators": "อีมูเลเตอร์และแพตช์",
       "groupConsoles": "คอนโซลและเรโทร"
     },
     "help": {

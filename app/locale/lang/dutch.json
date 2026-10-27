@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam-emulator",
-        "description": "Lees prestaties die door Goldberg / GBE Fork en vergelijkbare Steam-emulators zijn weggeschreven."
+        "description": "Leest prestaties die door Goldberg / GBE Fork en vergelijkbare Steam-emulators zijn weggeschreven. Dekt ook Ubisoft-games die met de Uplay R2-fix zijn gerepareerd en hun prestaties op dezelfde plek wegschrijven."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 en Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3-emulator"
       },
       "lumaPlay": {
-        "description": "Uplay-emulator"
+        "description": "Ubisoft-games gestart met LumaPlay, de Uplay R1-emulator."
+      },
+      "runeUplay": {
+        "description": "Ubisoft-games gestart met de Ubisoft Connect-emulator van RUNE (Uplay R2). De savebestanden worden vanzelf gevonden, je hoeft geen map toe te voegen."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Games en trofeeën die zijn geïmporteerd van je PlayStation-account. Koppel het in de accountkaart hieronder en importeer daarna de bibliotheek."
       },
       "markerpatch": {
-        "description": "Dead Space 2 via de MarkerPatch-mod"
+        "name": "Gamefixes en ports",
+        "description": "Games die door de community zijn gepatcht of naar pc zijn geporteerd, met eigen prestaties: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) en Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Pc-ports met eigen prestaties: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns via de MadnessPatch-mod"
       },
       "groupStores": "Officiële launchers",
-      "groupEmulators": "Emulators en patches",
       "groupConsoles": "Consoles en retro"
     },
     "help": {

@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Emulatore Steam",
-        "description": "Legge gli obiettivi scritti da Goldberg / GBE Fork e da emulatori Steam simili."
+        "description": "Legge gli obiettivi scritti da Goldberg / GBE Fork e da emulatori Steam simili. Copre anche i giochi Ubisoft riparati con la correzione Uplay R2, che scrivono i loro obiettivi nello stesso posto."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 e Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Emulatore PlayStation 3"
       },
       "lumaPlay": {
-        "description": "Emulatore Uplay"
+        "description": "Giochi Ubisoft avviati con LumaPlay, l’emulatore di Uplay R1."
+      },
+      "runeUplay": {
+        "description": "Giochi Ubisoft avviati con l’emulatore Ubisoft Connect di RUNE (Uplay R2). I suoi salvataggi vengono trovati da soli, senza cartelle da aggiungere."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Giochi e trofei importati dal tuo account PlayStation. Collegalo nella scheda dell’account qui sotto, poi importa la libreria."
       },
       "markerpatch": {
-        "description": "Dead Space 2 tramite la mod MarkerPatch"
+        "name": "Correzioni e port di giochi",
+        "description": "Giochi corretti o portati su PC dalla community, con obiettivi propri: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) e Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Port per PC con obiettivi propri: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns tramite la mod MadnessPatch"
       },
       "groupStores": "Launcher ufficiali",
-      "groupEmulators": "Emulatori e patch",
       "groupConsoles": "Console e retro"
     },
     "help": {

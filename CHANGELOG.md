@@ -39,6 +39,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Settings > Sources is easier to read.** Emulators and game fixes share one card and the official
+  platforms another, now with EA Desktop and PlayStation Network, while RPCS3 joins the console
+  emulators. LumaPlay (Uplay R1) and RUNE (Uplay R2) get a switch each, and MarkerPatch,
+  MadnessPatch and the PC ports one switch together. RUNE starts on or off as LumaPlay was.
 - **Screenshots and clips are named after the achievement first**, then the date
   (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
   achievement's shots. Files saved earlier keep their name.

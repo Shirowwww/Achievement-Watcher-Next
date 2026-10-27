@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Emulator Steam",
-        "description": "Baca pencapaian yang ditulis oleh Goldberg / GBE Fork dan emulator Steam sejenis."
+        "description": "Baca pencapaian yang ditulis oleh Goldberg / GBE Fork dan emulator Steam sejenis. Juga mencakup game Ubisoft yang diperbaiki dengan perbaikan Uplay R2, yang menulis pencapaiannya di tempat yang sama."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 dan Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Emulator Playstation 3"
       },
       "lumaPlay": {
-        "description": "Emulator Uplay"
+        "description": "Game Ubisoft yang dijalankan dengan LumaPlay, emulator Uplay R1."
+      },
+      "runeUplay": {
+        "description": "Game Ubisoft yang dijalankan dengan emulator Ubisoft Connect milik RUNE (Uplay R2). Data simpanannya ditemukan sendiri, tanpa folder yang perlu ditambahkan."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Game dan piala yang diimpor dari akun PlayStation Anda. Hubungkan di kartu akun di bawah, lalu impor pustaka."
       },
       "markerpatch": {
-        "description": "Dead Space 2 melalui mod MarkerPatch"
+        "name": "Perbaikan dan port game",
+        "description": "Game yang ditambal atau di-port ke PC oleh komunitas, dengan pencapaian sendiri: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), dan Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Port PC dengan pencapaian sendiri: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns melalui mod MadnessPatch"
       },
       "groupStores": "Peluncur resmi",
-      "groupEmulators": "Emulator dan patch",
       "groupConsoles": "Konsol dan retro"
     },
     "help": {

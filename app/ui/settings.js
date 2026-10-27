@@ -4077,6 +4077,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
     renderFolderRescanLocations();
 
+    // The game-fix row is MarkerPatch's switch and drives the hidden MadnessPatch and PC Ports rows:
+    // one choice on screen, one key per scanner in options.ini. Only a user's change spreads, so a
+    // profile that set them apart by hand keeps its values until the switch is touched.
+    $('#option_markerpatch').on('change', function () {
+      if (settingsReady) $('#option_madnesspatch, #option_pcports').val($(this).val());
+    });
+
     $('#smartFind').click(async function () {
       let self = $(this);
       self.css('pointer-events', 'none');

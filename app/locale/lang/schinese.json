@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam 模拟器",
-        "description": "读取由 Goldberg / GBE Fork 及类似 Steam 模拟器写入的成就。"
+        "description": "读取由 Goldberg / GBE Fork 及类似 Steam 模拟器写入的成就。也涵盖用 Uplay R2 修复补丁修复的育碧游戏，它们会把成就写在同一位置。"
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 及 Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 模拟器"
       },
       "lumaPlay": {
-        "description": "Uplay 模拟器"
+        "description": "通过 Uplay R1 模拟器 LumaPlay 运行的育碧游戏。"
+      },
+      "runeUplay": {
+        "description": "通过 RUNE 的 Ubisoft Connect 模拟器 (Uplay R2) 运行的育碧游戏。其存档会被自动找到，无需添加文件夹。"
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "从你的 PlayStation 账号导入的游戏和奖杯。请在下方的账号卡片中连接，然后导入游戏库。"
       },
       "markerpatch": {
-        "description": "通过 MarkerPatch 模组运行的 Dead Space 2"
+        "name": "游戏修复与移植",
+        "description": "由社区打补丁或移植到 PC 的游戏，带有自己的成就：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch) 和 Link's Awakening DX HD (LADXHD Updated)。"
       },
       "pcports": {
         "description": "带有自有成就的 PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "通过 MadnessPatch 模组运行的 Alice: Madness Returns"
       },
       "groupStores": "官方启动器",
-      "groupEmulators": "模拟器与补丁",
       "groupConsoles": "主机与复古"
     },
     "help": {

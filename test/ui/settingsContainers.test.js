@@ -74,10 +74,12 @@ const MOVED_GENERAL = {
   'options-ui-trophies': ['option_showTrophies', 'option_rarityMode'],
   'options-ui-app': ['option_startWithWindows', 'option_closeToTray', 'option_uninstallContextMenu', 'option_autoUpdate', 'option_disableHardwareAccel'],
 };
+// Emulators and fixes share the first card; EA Desktop and PlayStation Network sit with the official
+// launchers, RPCS3 with the consoles.
 const MOVED_SOURCE = {
-  'options-source-stores': ['option_legitSteam', 'option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial', 'option_xboxPc'],
-  'options-source-emulators': ['option_gog', 'option_epic', 'option_xlln', 'option_markerpatch', 'option_madnesspatch', 'option_pcports'],
-  'options-source-consoles': ['option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_xenia', 'option_retroAchievements', 'option_psnLibrary'],
+  'options-source': ['option_steamEmu', 'option_greenLuma', 'option_lumaPlay', 'option_runeUplay', 'option_gog', 'option_epic', 'option_xlln', 'option_socialClub', 'option_markerpatch', 'option_madnesspatch', 'option_pcports', 'option_importCache'],
+  'options-source-stores': ['option_legitSteam', 'option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial', 'option_ea', 'option_xboxPc', 'option_psnLibrary'],
+  'options-source-consoles': ['option_rpcs3', 'option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_xenia', 'option_retroAchievements'],
 };
 
 test('moved rows live in the section the test expects', () => {
@@ -103,12 +105,6 @@ test('General selects the sweep skips are saved explicitly by id', () => {
     assert.match(settingsJs, new RegExp(`\\$\\('#${id}'\\)\\.val\\(\\)`), `${id} needs its own read in the save handler`);
     assert.match(settingsJs, new RegExp(`\\[0\\]\\.id === '${id}'`), `${id} must be skipped by the achievement sweep`);
   }
-});
-
-test('the first source list still carries the seven rows the loader binds by nth-child', () => {
-  const head = root.querySelector('#options-source');
-  const keys = head.querySelectorAll('li').map((li) => li.querySelector('select').getAttribute('id'));
-  assert.deepEqual(keys, ['option_steamEmu', 'option_greenLuma', 'option_rpcs3', 'option_lumaPlay', 'option_ea', 'option_importCache', 'option_socialClub']);
 });
 
 test('the General head list keeps the seven rows the loader binds by nth-child', () => {

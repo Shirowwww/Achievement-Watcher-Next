@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Emulátor Steam",
-        "description": "Čte úspěchy zapsané emulátory Goldberg / GBE Fork a podobnými emulátory Steam."
+        "description": "Čte úspěchy zapsané emulátory Goldberg / GBE Fork a podobnými emulátory Steam. Zahrnuje i hry Ubisoftu opravené opravou Uplay R2, které zapisují úspěchy na stejné místo."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 a Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Emulátor PlayStation 3"
       },
       "lumaPlay": {
-        "description": "Emulátor Uplay"
+        "description": "Hry Ubisoftu spouštěné přes LumaPlay, emulátor Uplay R1."
+      },
+      "runeUplay": {
+        "description": "Hry Ubisoftu spouštěné přes emulátor Ubisoft Connect od RUNE (Uplay R2). Jeho uložené hry se najdou samy, není třeba přidávat složku."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Hry a trofeje importované z vašeho účtu PlayStation. Připojte jej v kartě účtu níže a poté importujte knihovnu."
       },
       "markerpatch": {
-        "description": "Dead Space 2 prostřednictvím modu MarkerPatch"
+        "name": "Opravy a porty her",
+        "description": "Hry opravené nebo portované na PC komunitou, s vlastními úspěchy: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) a Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "PC porty s vlastními úspěchy: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns prostřednictvím modu MadnessPatch"
       },
       "groupStores": "Oficiální launchery",
-      "groupEmulators": "Emulátory a patche",
       "groupConsoles": "Konzole a retro"
     },
     "help": {

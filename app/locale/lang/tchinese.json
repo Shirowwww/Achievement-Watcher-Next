@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam 模擬器",
-        "description": "讀取 Goldberg / GBE Fork 及類似 Steam 模擬器寫入的成就。"
+        "description": "讀取 Goldberg / GBE Fork 及類似 Steam 模擬器寫入的成就。也涵蓋以 Uplay R2 修正修復的 Ubisoft 遊戲，它們會把成就寫在同一個位置。"
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 與 Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 模擬器"
       },
       "lumaPlay": {
-        "description": "Uplay 模擬器"
+        "description": "透過 Uplay R1 模擬器 LumaPlay 執行的 Ubisoft 遊戲。"
+      },
+      "runeUplay": {
+        "description": "透過 RUNE 的 Ubisoft Connect 模擬器 (Uplay R2) 執行的 Ubisoft 遊戲。其存檔會被自動找到，不需要新增資料夾。"
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "從你的 PlayStation 帳號匯入的遊戲和獎盃。請在下方的帳號卡片中連接，然後匯入遊戲庫。"
       },
       "markerpatch": {
-        "description": "透過 MarkerPatch 模組執行的 Dead Space 2"
+        "name": "遊戲修正與移植",
+        "description": "由社群修補或移植到 PC 的遊戲，具有自己的成就：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch) 和 Link's Awakening DX HD (LADXHD Updated)。"
       },
       "pcports": {
         "description": "具備自有成就的 PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "透過 MadnessPatch 模組執行的 Alice: Madness Returns"
       },
       "groupStores": "官方啟動器",
-      "groupEmulators": "模擬器與修補程式",
       "groupConsoles": "主機與復古"
     },
     "help": {

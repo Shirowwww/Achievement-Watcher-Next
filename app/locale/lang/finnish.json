@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam-emulaattori",
-        "description": "Lue saavutukset, jotka Goldberg, GBE Fork tai vastaava Steam-emulaattori on kirjoittanut."
+        "description": "Lukee saavutukset, jotka Goldberg, GBE Fork tai vastaava Steam-emulaattori on kirjoittanut. Kattaa myös Uplay R2 -korjauksella korjatut Ubisoft-pelit, jotka kirjoittavat saavutuksensa samaan paikkaan."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 ja Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 -emulaattori"
       },
       "lumaPlay": {
-        "description": "Uplay-emulaattori"
+        "description": "Ubisoft-pelit, joita ajetaan LumaPlaylla, Uplay R1 -emulaattorilla."
+      },
+      "runeUplay": {
+        "description": "Ubisoft-pelit, joita ajetaan RUNEn Ubisoft Connect -emulaattorilla (Uplay R2). Sen tallennukset löytyvät itsestään, kansiota ei tarvitse lisätä."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "PlayStation-tililtäsi tuodut pelit ja pokaalit. Yhdistä tili alla olevalla tilikortilla ja tuo sitten kirjasto."
       },
       "markerpatch": {
-        "description": "Dead Space 2 MarkerPatch-modin kautta"
+        "name": "Pelikorjaukset ja portit",
+        "description": "Yhteisön korjaamat tai PC:lle portatut pelit, joilla on omat saavutuksensa: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) ja Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "PC-portit, joilla on omat saavutukset: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns MadnessPatch-modin kautta"
       },
       "groupStores": "Viralliset pelikäynnistimet",
-      "groupEmulators": "Emulaattorit ja korjaukset",
       "groupConsoles": "Konsolit ja retro"
     },
     "help": {

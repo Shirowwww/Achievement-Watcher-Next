@@ -861,52 +861,18 @@ function translateUI(lang, locale, template) {
   if (template.settings.folder.generateConfigs) $('#generate-configs-label').text(clear(template.settings.folder.generateConfigs));
   if (template.settings.folder.generateConfigsHelp) $('#generate-configs-help').text(clear(template.settings.folder.generateConfigsHelp));
   $('#folder-library-info').html(clear(template.settings.folder.libraryInfo.join('\n')).replace(/\n/g, '<br>'));
-  const folderRescan = template.dialogs;
-  if (folderRescan) {
-    $('#folder-rescan-title').text(clear(folderRescan['rescan-selected-folders']));
-    $('#folder-rescan-help').text(clear(folderRescan['rescan-selected-help']));
-    $('#folder-rescan-select-all span').text(clear(folderRescan['rescan-select-all']));
-    $('#folder-rescan-select-none span').text(clear(folderRescan['rescan-select-none']));
-    $('#folder-rescan-run span').text(clear(folderRescan['rescan-selected-folders']));
-  }
-  selector = $('#options-source');
   $('#source-options-title').text(clear(template.settings.source.title));
   if (template.settings.source.officialPlatforms) {
     $('#source-official-title').text(clear(template.settings.source.officialPlatforms.title));
     $('#source-official-description').text(clear(template.settings.source.officialPlatforms.description));
   }
-  selector.find('li:nth-child(1) .left span').text(clear(template.settings.source.steamEmu.name));
-  selector.find("li:nth-child(1) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(1) .right select option[value='false']").text(clear(template.settings.common.disable));
-  if (template.settings.source.steamEmu.description) selector.find('li:nth-child(1) .help').text(clear(template.settings.source.steamEmu.description));
-  selector.find("li:nth-child(2) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(2) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(2) .help').text(clear(template.settings.source.greenLuma.description));
-  selector.find("li:nth-child(3) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(3) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(3) .help').text(clear(template.settings.source.rpcs3.description));
-  selector.find("li:nth-child(4) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(4) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(4) .help').text(clear(template.settings.source.lumaPlay.description));
-  selector.find('li:nth-child(5) .left span').text(clear(template.settings.source.ea.name));
-  selector.find("li:nth-child(5) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(5) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(5) .help').text(clear(template.settings.source.ea.description));
-  selector.find('li:nth-child(6) .left span').text(clear(template.settings.source.importCache.name));
-  selector.find("li:nth-child(6) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(6) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(6) .help').text(clear(template.settings.source.importCache.description));
-  selector.find('li:nth-child(7) .left span').text(clear(template.settings.source.socialClub.name));
-  selector.find("li:nth-child(7) .right select option[value='true']").text(clear(template.settings.common.enable));
-  selector.find("li:nth-child(7) .right select option[value='false']").text(clear(template.settings.common.disable));
-  selector.find('li:nth-child(7) .help').text(clear(template.settings.source.socialClub.description));
   $('#source-stores-title').text(clear(template.settings.source.groupStores));
-  $('#source-emulators-title').text(clear(template.settings.source.groupEmulators));
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
-  // Rows with a proper name only need help text translated, bound by id: the nth-child bindings
-  // above break if a row is inserted anywhere but the end.
-  for (const key of ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'xlln', 'markerpatch', 'madnesspatch', 'pcports', 'retroAchievements', 'psnLibrary']) {
+  // Every on/off Sources row is bound by id: rows move between the cards, so a position means
+  // nothing here. A row whose name is a brand keeps it in app.html and has no `name` key.
+  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'gogOfficial', 'ea', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'retroAchievements']) {
     const source = template.settings.source[key];
+    if (source && source.name) $(`#source-name-${key}`).text(clear(source.name));
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));
     $(`#option_${key} option[value='true']`).text(clear(template.settings.common.enable));
     $(`#option_${key} option[value='false']`).text(clear(template.settings.common.disable));

@@ -21,13 +21,6 @@ function rowsOf(list) {
     });
 }
 
-// The first Sources list: its rows are the ones the loader binds by nth-child.
-function headSourceItems() {
-  const list = htmlParser.parse(appHtml).querySelector('#options-source');
-  assert.ok(list, 'the source options list must exist in app.html');
-  return rowsOf(list);
-}
-
 // Every Sources row, across the head list and the sections that follow it.
 function sourceListItems() {
   const lists = htmlParser.parse(appHtml).querySelectorAll('ul.source-list');
@@ -82,37 +75,28 @@ test('source switches outside the Sources tab are read back on save', () => {
   }
 });
 
-// The Sources rows are localized positionally (`li:nth-child(N)`), so inserting a row anywhere but
-// the end silently relabels its neighbours. Pin each position to the source it is meant to describe.
-test('positional locale bindings still point at the row they describe', () => {
-  const start = loaderJs.indexOf("selector = $('#options-source');");
-  assert.ok(start > 0, 'loader.js must localize the source list');
-  const end = loaderJs.indexOf('selector = $(', start + 1);
-  const region = loaderJs.slice(start, end > start ? end : undefined);
-
-  const rows = headSourceItems();
-  let checked = 0;
-  for (const line of region.split('\n')) {
-    const position = line.match(/li:nth-child\((\d+)\)/);
-    const source = line.match(/template\.settings\.source\.(\w+)/);
-    if (!position || !source) continue;
-    const row = rows[Number(position[1]) - 1];
-    assert.ok(row, `loader.js localizes row ${position[1]}, which does not exist`);
-    assert.strictEqual(row.key, source[1], `row ${position[1]} is #option_${row.key}, localized as "${source[1]}"`);
-    checked += 1;
-  }
-  assert.ok(checked >= 7, `expected the positional bindings to be covered, only saw ${checked}`);
+// The Sources rows move between cards (RPCS3 to the consoles, EA Desktop to the launchers), so no
+// label may depend on a row's position: one inserted or moved row used to relabel its neighbours.
+test('no Sources label is bound by position', () => {
+  const start = loaderJs.indexOf("$('#source-options-title')");
+  assert.ok(start > 0, 'loader.js must localize the Sources tab');
+  const end = loaderJs.indexOf("$('#advanced-blacklist-title')", start);
+  assert.ok(end > start, 'the Sources bindings end before the hidden-games card');
+  assert.doesNotMatch(loaderJs.slice(start, end), /nth-child/);
 });
 
-// Rows added after the positional block are bound by id instead; each needs its help element and a
-// description in every bundled locale, or it renders as an unexplained blank switch.
+// Every on/off row is bound by id; each needs its help element and a description in every bundled
+// locale, or it renders as an unexplained blank switch.
 test('id-bound source rows have a help element and a description in every locale', () => {
   const idBound = [...loaderJs.matchAll(/#source-help-\$\{key\}[\s\S]*?/g)];
-  assert.ok(idBound.length > 0, 'loader.js must bind the newer source rows by id');
+  assert.ok(idBound.length > 0, 'loader.js must bind the source rows by id');
   const keys = (loaderJs.match(/for \(const key of \[([^\]]+)\]\)/) || [])[1];
   assert.ok(keys, 'loader.js must list the id-bound source keys');
   const looped = keys.split(',').map((k) => k.trim().replace(/^'|'$/g, '')).filter(Boolean);
-  assert.deepStrictEqual(looped, ['ubisoftOfficial', 'gogOfficial', 'gog', 'epic', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'xlln', 'markerpatch', 'madnesspatch', 'pcports', 'retroAchievements', 'psnLibrary']);
+  const toggles = sourceListItems()
+    .filter((item) => item.html.includes('<option value="true"'))
+    .map((item) => item.key);
+  assert.deepStrictEqual([...looped].sort(), [...toggles].sort(), 'every on/off Sources row is in the id loop, and nothing else');
   // Epic, Steam and Xbox PC are id-bound too, but apart from the loop: they carry three states
   // rather than an on/off switch, so their options are named one by one.
   assert.match(loaderJs, /#source-help-epicOfficial/, 'loader.js must bind the Epic help text by id');
@@ -134,6 +118,22 @@ test('id-bound source rows have a help element and a description in every locale
   }
 });
 
+// Three rows for three single games read as clutter: one "game fixes" row (MarkerPatch's switch)
+// shows, and the MadnessPatch and PC Ports rows follow it, hidden, so each scanner keeps its key.
+test('one game-fix row drives MadnessPatch and PC Ports', () => {
+  const rows = new Map(sourceListItems().map((item) => [item.key, item.html]));
+  assert.match(rows.get('markerpatch'), /id="source-name-markerpatch"/);
+  for (const key of ['madnesspatch', 'pcports']) {
+    assert.match(rows.get(key), /^<li class="hasHelper" hidden>/, `#option_${key} follows the game-fix row`);
+  }
+  const uiJs = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'ui', 'settings.js'), 'utf8');
+  assert.match(uiJs, /\$\('#option_markerpatch'\)\.on\('change', function \(\) \{\s*if \(settingsReady\) \$\('#option_madnesspatch, #option_pcports'\)\.val\(\$\(this\)\.val\(\)\);/);
+  for (const file of fs.readdirSync(localeDir).filter((f) => f.endsWith('.json'))) {
+    const locale = JSON.parse(fs.readFileSync(path.join(localeDir, file), 'utf8'));
+    assert.ok(String(locale.settings.source.markerpatch.name || '').trim(), `${file}: settings.source.markerpatch.name`);
+  }
+});
+
 // settings.js reads each source list back with `.right` > select, so a row
 // whose select is not a direct child of .right would be silently dropped on save.
 test('every source select is a direct child of its .right container', () => {
@@ -147,7 +147,7 @@ test('every source select is a direct child of its .right container', () => {
 });
 
 test('official desktop libraries are identified clearly in every locale', () => {
-  const officialKeys = ['legitSteam', 'xboxPc', 'ubisoftOfficial', 'gogOfficial', 'epicOfficial'];
+  const officialKeys = ['legitSteam', 'xboxPc', 'ubisoftOfficial', 'gogOfficial', 'epicOfficial', 'ea', 'psnLibrary'];
   const rows = new Map(sourceListItems().map((item) => [item.key, item.html]));
 
   assert.ok(appHtml.includes('id="source-official-title"'), 'the Sources tab needs an official-platform heading');

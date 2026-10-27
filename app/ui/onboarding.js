@@ -348,6 +348,8 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     for (const key of Object.keys(onboardingInterfaceMode.OPTIONAL_SOURCES)) {
       $(`#onboard-src-${key}`).closest('.onboarding-source-row').toggle(!hidden.has(key));
     }
+    // The MarkerPatch entry answers for the three game fixes, so their two other rows go with it.
+    $('#onboard-src-madnesspatch, #onboard-src-pcports').closest('.onboarding-source-row').toggle(!hidden.has('markerpatch'));
     // A group whose every row folded away would leave an empty box behind.
     $('#onboarding .onboarding-source-group')
       .not('.onboarding-accounts')
@@ -696,6 +698,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'steamEmu', fallback: true },
     { key: 'greenLuma', fallback: true },
     { key: 'lumaPlay', fallback: true },
+    { key: 'runeUplay', fallback: true },
     { key: 'socialClub', fallback: true },
     { key: 'gog', fallback: true },
     { key: 'epic', fallback: true },

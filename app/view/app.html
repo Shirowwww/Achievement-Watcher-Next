@@ -901,11 +901,12 @@
             </section>
 
             <section class="content" data-view="source">
+              <!-- Every Sources row is bound by id, so a row can move between these cards freely. -->
               <div class="arrow-list">
                 <div class="title"><span id="source-options-title"></span></div>
                 <ul id="options-source" class="source-list">
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-skull-crossbones"></i> <span></span></div>
+                    <div class="left"><i class="fas fa-skull-crossbones"></i> <span id="source-name-steamEmu"></span></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
@@ -918,7 +919,7 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help"></div>
+                    <div class="help" id="source-help-steamEmu"></div>
                   </li>
 
                   <li class="hasHelper">
@@ -935,28 +936,11 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help"></div>
+                    <div class="help" id="source-help-greenLuma"></div>
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>RPCS3</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_rpcs3">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-file-alt"></i> <span>LumaPlay</span></div>
+                    <div class="left"><i class="fas fa-file-alt"></i> <span>LumaPlay (Uplay R1)</span></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
@@ -969,16 +953,16 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help"></div>
+                    <div class="help" id="source-help-lumaPlay"></div>
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-gamepad"></i> <span></span></div>
+                    <div class="left"><i class="fas fa-file-alt"></i> <span>RUNE (Uplay R2)</span></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_ea">
+                      <select autocomplete="off" id="option_runeUplay">
                         <option value="true" selected></option>
                         <option value="false"></option>
                       </select>
@@ -986,16 +970,16 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help"></div>
+                    <div class="help" id="source-help-runeUplay"></div>
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-database"></i> <span></span></div>
+                    <div class="left"><i class="fas fa-file-alt"></i> <span>Nemirtingas Galaxy Emu</span></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_importCache">
+                      <select autocomplete="off" id="option_gog">
                         <option value="true" selected></option>
                         <option value="false"></option>
                       </select>
@@ -1003,11 +987,45 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help"></div>
+                    <div class="help" id="source-help-gog"></div>
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-star"></i> <span></span></div>
+                    <div class="left"><i class="fas fa-file-alt"></i> <span>Nemirtingas Epic Emu</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_epic">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-epic"></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-xbox"></i> <span>XLiveLessNess</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_xlln">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-xlln"></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-star"></i> <span id="source-name-socialClub"></span></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
@@ -1020,12 +1038,80 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help"></div>
+                    <div class="help" id="source-help-socialClub"></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-tools"></i> <span id="source-name-markerpatch"></span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_markerpatch">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-markerpatch"></div>
+                  </li>
+
+                  <!-- The game-fix row above drives these two: one switch for the user, one key per scanner. -->
+                  <li class="hasHelper" hidden>
+                    <div class="left"><i class="fas fa-chess-knight"></i> <span>MadnessPatch</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_madnesspatch">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-madnesspatch"></div>
+                  </li>
+
+                  <li class="hasHelper" hidden>
+                    <div class="left"><i class="fas fa-desktop"></i> <span>PC Ports</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_pcports">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-pcports"></div>
+                  </li>
+
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-database"></i> <span id="source-name-importCache"></span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_importCache">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-importCache"></div>
                   </li>
                 </ul>
               </div>
 
-              <!-- The rows above are bound by nth-child, so only the tail moves: these sections are bound by id. -->
               <div class="arrow-list">
                 <div class="title"><span id="source-stores-title"></span></div>
                 <div class="source-official-summary">
@@ -1106,6 +1192,23 @@
                     <div class="help" id="source-help-epicOfficial"></div>
                   </li>
 
+                  <li class="hasHelper official-source">
+                    <div class="left"><i class="fas fa-gamepad"></i> <span id="source-name-ea"></span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_ea">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-ea"></div>
+                  </li>
+
                   <li class="hasHelper official-source" data-windows-only>
                     <div class="left"><i class="fab fa-xbox"></i> <span id="source-name-xboxPc"></span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
                     <div class="right">
@@ -1123,19 +1226,14 @@
                     </div>
                     <div class="help" id="source-help-xboxPc"></div>
                   </li>
-                </ul>
-              </div>
 
-              <div class="arrow-list">
-                <div class="title"><span id="source-emulators-title"></span></div>
-                <ul id="options-source-emulators" class="source-list">
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-file-alt"></i> <span>Nemirtingas Galaxy Emu</span></div>
+                  <li class="hasHelper official-source">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>PlayStation Network</span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
                     <div class="right">
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_gog">
+                      <select autocomplete="off" id="option_psnLibrary">
                         <option value="true" selected></option>
                         <option value="false"></option>
                       </select>
@@ -1143,92 +1241,7 @@
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
                       </div>
                     </div>
-                    <div class="help" id="source-help-gog"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-file-alt"></i> <span>Nemirtingas Epic Emu</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_epic">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-epic"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-xbox"></i> <span>XLiveLessNess</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_xlln">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-xlln"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-skull"></i> <span>MarkerPatch</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_markerpatch">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-markerpatch"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-chess-knight"></i> <span>MadnessPatch</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_madnesspatch">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-madnesspatch"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-desktop"></i> <span>PC Ports</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_pcports">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-pcports"></div>
+                    <div class="help" id="source-help-psnLibrary"></div>
                   </li>
                 </ul>
               </div>
@@ -1236,6 +1249,23 @@
               <div class="arrow-list">
                 <div class="title"><span id="source-consoles-title"></span></div>
                 <ul id="options-source-consoles" class="source-list">
+                  <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>RPCS3</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rpcs3">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-rpcs3"></div>
+                  </li>
+
                   <li class="hasHelper">
                     <div class="left"><i class="fab fa-playstation"></i> <span>shadPS4</span></div>
                     <div class="right">
@@ -1319,23 +1349,6 @@
                       </div>
                     </div>
                     <div class="help" id="source-help-retroAchievements"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fab fa-playstation"></i> <span>PlayStation Network</span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_psnLibrary">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-psnLibrary"></div>
                   </li>
                 </ul>
               </div>
@@ -4820,12 +4833,20 @@
                       <small class="onboard-field-hint" id="onboard-src-greenLuma-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-file-alt" aria-hidden="true"></i> LumaPlay</span>
+                      <span class="onboarding-source-name"><i class="fas fa-file-alt" aria-hidden="true"></i> LumaPlay (Uplay R1)</span>
                       <select id="onboard-src-lumaPlay">
                         <option value="true"></option>
                         <option value="false"></option>
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-lumaPlay-hint"></small>
+                    </label>
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fas fa-file-alt" aria-hidden="true"></i> RUNE (Uplay R2)</span>
+                      <select id="onboard-src-runeUplay">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-runeUplay-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
                       <span class="onboarding-source-name"><i class="fas fa-star" aria-hidden="true"></i> <span id="onboard-src-socialClub-name">Goldberg SocialClub</span></span>

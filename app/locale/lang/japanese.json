@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam エミュレーター",
-        "description": "Goldberg / GBE Fork や類似の Steam エミュレーターが書き込んだ実績を読み取ります。"
+        "description": "Goldberg / GBE Fork や類似の Steam エミュレーターが書き込んだ実績を読み取ります。Uplay R2 修正で修復された Ubisoft ゲームも対象で、実績は同じ場所に書き込まれます。"
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 および Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 エミュレーター"
       },
       "lumaPlay": {
-        "description": "Uplay エミュレーター"
+        "description": "Uplay R1 エミュレーターの LumaPlay で動かす Ubisoft ゲーム。"
+      },
+      "runeUplay": {
+        "description": "RUNE の Ubisoft Connect エミュレーター (Uplay R2) で動かす Ubisoft ゲーム。セーブは自動で見つかるため、フォルダーを追加する必要はありません。"
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "PlayStation アカウントからインポートしたゲームとトロフィーです。下のアカウントカードで接続し、ライブラリをインポートしてください。"
       },
       "markerpatch": {
-        "description": "MarkerPatch MOD 経由の Dead Space 2"
+        "name": "ゲーム修正と移植",
+        "description": "コミュニティがパッチ適用または PC 移植したゲームで、独自の実績があります：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch)、Link's Awakening DX HD (LADXHD Updated)。"
       },
       "pcports": {
         "description": "独自の実績を持つ PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "MadnessPatch MOD 経由の Alice: Madness Returns"
       },
       "groupStores": "公式ランチャー",
-      "groupEmulators": "エミュレーターとパッチ",
       "groupConsoles": "コンソールとレトロ"
     },
     "help": {

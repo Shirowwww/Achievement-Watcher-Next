@@ -29,7 +29,6 @@ const ADDED_IN = { 3: ['options-notify-progress', 'options-notify-emulators', 'o
 const DEFAULT_COLLAPSED = [
   'options-ui-app',
   'options-ui-trophies',
-  'options-source-emulators',
   'defaultdir',
   'options-notify-transport',
   'options-notify-test',

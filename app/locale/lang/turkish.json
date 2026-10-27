@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Steam emülatörü",
-        "description": "Goldberg / GBE Fork ve benzeri Steam emülatörleri tarafından yazılan başarımları okur."
+        "description": "Goldberg / GBE Fork ve benzeri Steam emülatörleri tarafından yazılan başarımları okur. Uplay R2 düzeltmesiyle onarılan ve başarımlarını aynı yere yazan Ubisoft oyunlarını da kapsar."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 ve Reborn"
@@ -1350,7 +1350,10 @@
         "description": "PlayStation 3 emülatörü"
       },
       "lumaPlay": {
-        "description": "Uplay emülatörü"
+        "description": "Uplay R1 emülatörü LumaPlay ile çalıştırılan Ubisoft oyunları."
+      },
+      "runeUplay": {
+        "description": "RUNE’un Ubisoft Connect emülatörüyle (Uplay R2) çalıştırılan Ubisoft oyunları. Kayıtları kendiliğinden bulunur, eklenecek klasör yoktur."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "PlayStation hesabınızdan içe aktarılan oyunlar ve kupalar. Hesabı aşağıdaki hesap kartından bağlayın, ardından kitaplığı içe aktarın."
       },
       "markerpatch": {
-        "description": "MarkerPatch modu üzerinden Dead Space 2"
+        "name": "Oyun düzeltmeleri ve portlar",
+        "description": "Topluluk tarafından yamalanan veya PC’ye taşınan, kendi başarımları olan oyunlar: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) ve Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Kendi başarımlarına sahip PC portları: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "MadnessPatch modu üzerinden Alice: Madness Returns"
       },
       "groupStores": "Resmi başlatıcılar",
-      "groupEmulators": "Emülatörler ve yamalar",
       "groupConsoles": "Konsollar ve retro"
     },
     "help": {

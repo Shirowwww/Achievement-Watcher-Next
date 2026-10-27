@@ -1341,7 +1341,7 @@
       },
       "steamEmu": {
         "name": "Εξομοιωτής Steam",
-        "description": "Διαβάζει τα επιτεύγματα που γράφουν οι Goldberg / GBE Fork και παρόμοιοι εξομοιωτές Steam."
+        "description": "Διαβάζει τα επιτεύγματα που γράφουν οι Goldberg / GBE Fork και παρόμοιοι εξομοιωτές Steam. Καλύπτει και τα παιχνίδια της Ubisoft που έχουν επιδιορθωθεί με τη διόρθωση Uplay R2 και γράφουν τα επιτεύγματά τους στο ίδιο σημείο."
       },
       "greenLuma": {
         "description": "GreenLuma 2020/2024/2025 και Reborn"
@@ -1350,7 +1350,10 @@
         "description": "Εξομοιωτής Playstation 3"
       },
       "lumaPlay": {
-        "description": "Εξομοιωτής Uplay"
+        "description": "Παιχνίδια της Ubisoft που εκτελούνται με το LumaPlay, τον εξομοιωτή Uplay R1."
+      },
+      "runeUplay": {
+        "description": "Παιχνίδια της Ubisoft που εκτελούνται με τον εξομοιωτή Ubisoft Connect του RUNE (Uplay R2). Οι αποθηκεύσεις του βρίσκονται μόνες τους, χωρίς φάκελο προς προσθήκη."
       },
       "ea": {
         "name": "EA Desktop",
@@ -1415,7 +1418,8 @@
         "description": "Παιχνίδια και τρόπαια που εισήχθησαν από τον λογαριασμό σας PlayStation. Συνδέστε τον στην κάρτα λογαριασμού παρακάτω και μετά εισαγάγετε τη βιβλιοθήκη."
       },
       "markerpatch": {
-        "description": "Dead Space 2 μέσω του mod MarkerPatch"
+        "name": "Διορθώσεις και μεταφορές παιχνιδιών",
+        "description": "Παιχνίδια που έχουν διορθωθεί ή μεταφερθεί σε PC από την κοινότητα, με δικά τους επιτεύγματα: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) και Link's Awakening DX HD (LADXHD Updated)."
       },
       "pcports": {
         "description": "Μεταφορές PC με δικά τους επιτεύγματα: Link's Awakening DX HD (LADXHD Updated)"
@@ -1424,7 +1428,6 @@
         "description": "Alice: Madness Returns μέσω του mod MadnessPatch"
       },
       "groupStores": "Επίσημα launchers",
-      "groupEmulators": "Εξομοιωτές και patches",
       "groupConsoles": "Κονσόλες και retro"
     },
     "help": {
