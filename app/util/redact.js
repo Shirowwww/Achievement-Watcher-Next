@@ -24,6 +24,13 @@ const SECRET_PATTERNS = [
   ],
   // A Steam Web API key: 32 uppercase hex digits, a shape nothing else in these logs has.
   [/\b[0-9A-F]{32}\b/g, '[apikey]'],
+  // Steam ids lead to the public profile: the 64-bit id anywhere, the 32-bit account id only where
+  // Steam puts it (userdata\<id>, UserGameStats_<id>_<appid>), since a bare number is often an appid.
+  [/\b7656119\d{10}\b/g, '[steamid]'],
+  [/([\\/]userdata[\\/]+)\d{3,10}(?=[\\/"'\s]|$)/gim, '$1[accountid]'],
+  [/(UserGameStats(?:Schema)?_)\d{3,10}(?=_\d+\.bin)/g, '$1[accountid]'],
+  // A file name like icon@2x.png has the same shape, so a domain ending in a file extension is kept.
+  [/\b[\w.+-]+@(?:[A-Za-z0-9-]+\.)+(?!(?:png|jpe?g|gif|webp|ico|svg|bmp|dll|exe|json|ini|txt|log|bin|js)\b)[A-Za-z]{2,}\b/g, '[email]'],
 ];
 
 function redactText(text, { usernames = [] } = {}) {

@@ -36,6 +36,11 @@ renamed in 3.9.0 and the history is kept under one file.
   everything under it, the card included, so the desktop shows through; what sits above it stays.
 - **Imported SAN themes per tier.** Pick which trophy picture a SAN theme draws, or draw a tier with
   another imported SAN theme, its sound included.
+- **A diagnostics report in the log export.** Settings > Advanced > Export logs (.zip) adds a
+  `diagnostics.txt` beside the logs: how AW Next is installed, the clock against Steam's, which
+  online services answer, the Windows notification settings, the screens, the settings and the
+  storage used. The library's counts and a Game Health report for the games most likely to need one
+  go with it, and Steam account ids and email addresses are masked along with the user name.
 
 ### Improved
 

@@ -42,6 +42,27 @@ test('a name too short to be told apart from other text is left to the path rule
   assert.equal(redactText('D:\\a\\b and C:\\Users\\a\\x', { usernames: ['a'] }), 'D:\\a\\b and C:\\Users\\[username]\\x');
 });
 
+// A SteamID64 or a Steam account id leads straight to the public profile, and an email to the person.
+test('Steam account ids and email addresses are masked', () => {
+  const text = [
+    'steamid=76561198012345678 owner',
+    'C:\\Program Files (x86)\\Steam\\userdata\\52079950\\config\\localconfig.vdf',
+    'appcache\\stats\\UserGameStats_52079950_1547000.bin',
+    'signed in as jane.doe+aw@example.co.uk',
+  ].join('\n');
+  const masked = redactText(text);
+  assert.ok(!/76561198012345678|52079950|jane\.doe/.test(masked), masked);
+  assert.match(masked, /steamid=\[steamid\] owner/);
+  assert.match(masked, /userdata\\\[accountid\]\\config/);
+  assert.match(masked, /UserGameStats_\[accountid\]_1547000\.bin/);
+  assert.match(masked, /signed in as \[email\]/);
+});
+
+test('appids and icon hashes survive the account id masking', () => {
+  const line = 'appid 1547000 icon b2bb4de1a2f669456330d834988253adb4308507.jpg took 12345678ms, logo@2x.png';
+  assert.equal(redactText(line), line);
+});
+
 test('the local names are the login name and the profile folder', () => {
   const names = localUsernames();
   assert.equal(names.length, 2);

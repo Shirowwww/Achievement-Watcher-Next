@@ -35,7 +35,7 @@ function buildManifest({ appVersion = '', versions = {}, platform = '', release 
     `Achievement Watcher ${appVersion}`.trim(),
     `generated: ${new Date().toISOString()}`,
     `platform: ${platform}${release ? ` ${release}` : ''}`,
-    'masked: the user name in paths, keys and tokens',
+    'masked: the user name in paths, keys, tokens, Steam account ids and email addresses',
   ];
   for (const key of ['electron', 'chrome', 'node']) {
     if (versions && versions[key]) lines.push(`${key}: ${versions[key]}`);
@@ -48,7 +48,8 @@ function buildManifest({ appVersion = '', versions = {}, platform = '', release 
 // A file that can't be read is recorded in `skipped` rather than aborting the export - one
 // unreadable log must never cost the user the other eleven. A file that cannot be masked is
 // skipped too: nothing leaves unredacted.
-function exportLogs({ logsDir, destination, Zip, fs = nodeFs, meta = {}, usernames = [] } = {}) {
+// `extras` are generated reports ({ name, text }) written beside the logs and masked the same way.
+function exportLogs({ logsDir, destination, Zip, fs = nodeFs, meta = {}, usernames = [], extras = [] } = {}) {
   if (!logsDir) throw new Error('exportLogs: logsDir is required');
   if (!destination) throw new Error('exportLogs: destination is required');
   if (typeof Zip !== 'function') throw new Error('exportLogs: a Zip constructor is required');
@@ -73,6 +74,19 @@ function exportLogs({ logsDir, destination, Zip, fs = nodeFs, meta = {}, usernam
       // exactly what a report wants - not a stream racing the writer to the end of the file.
       // Only the copy in the archive is masked (#127); the log on disk keeps its full text.
       const buffer = Buffer.from(redactText(fs.readFileSync(full, 'utf8'), { usernames }), 'utf8');
+      zip.addFile(name, buffer);
+      files.push({ name, bytes: buffer.length });
+    } catch (err) {
+      skipped.push({ name, reason: String((err && err.message) || err) });
+    }
+  }
+
+  for (const extra of extras) {
+    if (!extra || !extra.name || typeof extra.text !== 'string') continue;
+    // Both separators on every platform: path.basename on Linux would keep a Windows-style prefix.
+    const name = String(extra.name).split(/[\\/]/).pop();
+    try {
+      const buffer = Buffer.from(redactText(extra.text, { usernames }), 'utf8');
       zip.addFile(name, buffer);
       files.push({ name, bytes: buffer.length });
     } catch (err) {

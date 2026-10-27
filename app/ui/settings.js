@@ -127,6 +127,33 @@ const EMULATOR_SOUND_SELECTS = {
 };
 const PICKED_SOUND_SELECTS = [TIER_SOUND_SELECTS, ...Object.keys(EMULATOR_SOUND_SELECTS)].join(', ');
 
+/*
+  The library half of a log export: counts for the whole library, and a read-only Game Health report
+  for the games most likely behind a bug report (util/gameHealthDigest.js). Built only on click.
+  `gameList` and `collectGameHealthSignals` come from app.js and ui/gameHealthPanel.js, which share
+  this page's scope; a game whose report fails is noted and the others still go out.
+*/
+async function logExportLibraryReport() {
+  try {
+    const gameHealthDigest = require(path.join(appPath, 'util/gameHealthDigest.js'));
+    const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
+    const games = typeof gameList !== 'undefined' && Array.isArray(gameList) ? gameList : [];
+    const reports = [];
+    for (const game of gameHealthDigest.pickGames(games)) {
+      try {
+        const signals = await collectGameHealthSignals(game.appid, { readOnly: true });
+        reports.push(gameHealthDigest.digestEntry(gameHealth.deriveHealth(signals), game));
+      } catch (err) {
+        reports.push({ appid: String(game.appid), name: game.name || '', error: String((err && err.message) || err) });
+      }
+    }
+    return { library: gameHealthDigest.librarySummary(games), gameHealth: reports };
+  } catch (err) {
+    debug.log(`[export-logs] library report failed: ${err}`);
+    return null;
+  }
+}
+
 // Frames are created on first use, not shipped in the page: an empty iframe is still a live
 // document, and the six of these cost 4.6 MB of renderer memory for panels most users never open.
 function ensureFrame(wrap, { id = '', title = '' } = {}) {
@@ -1094,7 +1121,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       btn.addClass('busy');
       setTransientStatus(result, t('export-logs-running', 'Collecting logs…', 'Collecte des journaux…'), { sticky: true });
       try {
-        const summary = await ipcRenderer.invoke('export-logs');
+        const summary = await ipcRenderer.invoke('export-logs', await logExportLibraryReport());
         if (summary && summary.ok) {
           // Sticky: the destination path is the whole point of the message, and it is longer than
           // anyone can read inside the usual 4.5s fade.

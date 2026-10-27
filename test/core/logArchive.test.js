@@ -135,7 +135,7 @@ test('the account name and credentials are masked in the archive, not on disk', 
     assert.match(exported, /drive_c\/users\/Public\/Documents/, 'a shared folder is not an account');
     assert.match(exported, /GetOwnedGames\/v1\/\?access_token=\[redacted\]&steamid=1 failed/);
     assert.equal(fs.readFileSync(path.join(logsDir, 'parser.log'), 'utf8'), original, 'the log on disk is untouched');
-    assert.match(new AdmZip(out).readAsText('about.txt'), /masked: the user name in paths, keys and tokens/);
+    assert.match(new AdmZip(out).readAsText('about.txt'), /masked: the user name in paths, keys, tokens, Steam account ids/);
   } finally {
     fs.rmSync(logsDir, { recursive: true, force: true });
     fs.rmSync(path.dirname(out), { recursive: true, force: true });
@@ -156,6 +156,33 @@ test('a log that cannot be masked is left out rather than exported as it is', ()
     assert.deepEqual(summary.files, []);
     assert.equal(summary.skipped[0].name, 'parser.log');
     assert.deepEqual(new AdmZip(out).getEntries().map((entry) => entry.entryName), ['about.txt']);
+  } finally {
+    fs.rmSync(logsDir, { recursive: true, force: true });
+    fs.rmSync(path.dirname(out), { recursive: true, force: true });
+  }
+});
+
+test('generated reports go in beside the logs, masked, under a plain file name', () => {
+  const logsDir = tempDir('logs-extras');
+  const out = path.join(tempDir('out-extras'), 'logs.zip');
+  try {
+    fs.writeFileSync(path.join(logsDir, 'parser.log'), 'line\n');
+    const summary = exportLogs({
+      logsDir,
+      destination: out,
+      Zip: AdmZip,
+      usernames: ['jane'],
+      extras: [
+        { name: 'diagnostics.txt', text: '[clock]\n  utc: x\n' },
+        { name: '..\\..\\game_health.json', text: '{"gameDir":"C:\\\\Users\\\\jane\\\\Games"}' },
+        { name: 'empty.txt' },
+      ],
+    });
+    assert.deepEqual(summary.files.map((f) => f.name), ['parser.log', 'diagnostics.txt', 'game_health.json']);
+    const zip = new AdmZip(out);
+    assert.equal(zip.readAsText('diagnostics.txt'), '[clock]\n  utc: x\n');
+    assert.ok(!zip.readAsText('game_health.json').includes('jane'));
+    assert.match(zip.readAsText('about.txt'), /game_health\.json - \d+ bytes/);
   } finally {
     fs.rmSync(logsDir, { recursive: true, force: true });
     fs.rmSync(path.dirname(out), { recursive: true, force: true });

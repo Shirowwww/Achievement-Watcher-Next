@@ -2574,7 +2574,73 @@ ipcMain.handle('delete-game-folder', async (event, { dir, permanent = false } = 
 /* Settings > Advanced > Diagnostics: zip every log file. Hand-copying is not enough, several
    processes keep their log streams open and appending, so read each once here for a consistent
    snapshot without stopping anything. */
-ipcMain.handle('export-logs', async () => {
+// The renderer's part of the export (library counts, Game Health reports), checked at the boundary:
+// it becomes a file in an archive the user may post, so anything malformed or oversized is dropped.
+const EXPORT_REPORT_MAX_CHARS = 4 * 1024 * 1024;
+function rendererExportExtras(payload) {
+  const extras = [];
+  if (!payload || typeof payload !== 'object') return extras;
+  const add = (name, value) => {
+    try {
+      const text = JSON.stringify(value, null, 2);
+      if (text.length <= EXPORT_REPORT_MAX_CHARS) extras.push({ name, text: `${text}\n` });
+    } catch {}
+  };
+  if (payload.library && typeof payload.library === 'object' && !Array.isArray(payload.library)) add('library.json', payload.library);
+  if (Array.isArray(payload.gameHealth)) add('game_health.json', payload.gameHealth);
+  return extras;
+}
+
+// Everything diagnostics.txt says, gathered at click time only. The network probe is the one slow
+// part and is bounded by a single short timeout, since every host is asked at once.
+async function exportDiagnosticsText() {
+  const diagnostics = require(path.join(__dirname, '..', 'util', 'diagnostics.js'));
+  const network = await diagnostics.probeNetwork();
+  const steamApi = network.find((entry) => entry.name === 'steam-api');
+  const electronScreen = require('electron').screen;
+  let registryBackend = 'n/a';
+  if (process.platform === 'win32') {
+    try {
+      require('registry-js');
+      registryBackend = 'registry-js';
+    } catch {
+      registryBackend = 'reg.exe fallback';
+    }
+  }
+  const sections = {
+    install: diagnostics.installReport({
+      execPath: process.execPath,
+      env: process.env,
+      isPackaged: app.isPackaged,
+      portable: isPortableBuild,
+      openAtLogin: process.platform === 'linux' ? undefined : app.getLoginItemSettings().openAtLogin,
+      locale: app.getLocale(),
+      registryBackend,
+      watchdog: `${getWatchdogState() || 'not supervised'}${monitorStartedAt ? `, up ${Math.round((Date.now() - monitorStartedAt) / 1000)}s` : ''}`,
+    }),
+    runtime: {
+      appUptimeSeconds: Math.round(process.uptime()),
+      mainMemoryMB: Math.round(process.memoryUsage().rss / 1048576),
+      gpuCompositing: gpuCompositingState(),
+    },
+    clock: diagnostics.clockReport({ steamServerTime: steamApi && steamApi.serverTime }),
+    network: network.map(({ name, ok, status, ms, error }) => ({ name, ok, status, ms, ...(error ? { error } : {}) })),
+    'windows-notifications':
+      process.platform === 'win32'
+        ? diagnostics.windowsNotificationReport({ readInteger: require(path.join(__dirname, '..', 'util', 'reg.js')).readRegistryInteger, aumid: manifest.config.appid })
+        : null,
+    displays: diagnostics.displaysReport(electronScreen.getAllDisplays(), electronScreen.getPrimaryDisplay().id),
+    settings: null,
+    storage: diagnostics.storageReport({ userData: app.getPath('userData') }),
+  };
+  const text = diagnostics.formatDiagnostics(sections);
+  const settings = Object.entries(diagnostics.settingsSnapshot(configJS))
+    .map(([section, values]) => diagnostics.formatDiagnostics({ [`settings.${section}`]: values }))
+    .join('');
+  return `${text}${settings}`;
+}
+
+ipcMain.handle('export-logs', async (_event, payload) => {
   try {
     const logArchive = require(path.join(__dirname, '..', 'util', 'logArchive.js'));
     const AdmZip = require('adm-zip');
@@ -2588,11 +2654,20 @@ ipcMain.handle('export-logs', async () => {
     });
     if (res.canceled || !res.filePath) return { ok: false, canceled: true };
 
+    const extras = rendererExportExtras(payload);
+    try {
+      extras.unshift({ name: 'diagnostics.txt', text: await exportDiagnosticsText() });
+    } catch (err) {
+      // The logs are the point of the button: a report that fails to build must not cost them.
+      debug.log(`[diag] export diagnostics failed: ${err.message || err}`);
+    }
+
     const summary = logArchive.exportLogs({
       logsDir,
       destination: res.filePath,
       Zip: AdmZip,
       usernames: require(path.join(__dirname, '..', 'util', 'redact.js')).localUsernames(),
+      extras,
       meta: {
         appVersion: app.getVersion(),
         versions: process.versions,
