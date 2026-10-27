@@ -303,6 +303,42 @@ test('the window fits each state at the scale the theme gives it, as SAN sizes i
   assert.deepEqual(out.size, { width: 3000, height: 500 }, 'a missing scale is 100%, a wild one stops at SAN\'s 1000%');
 });
 
+test('a state that glows gets the room SAN keeps around the card for it, at its own scale', () => {
+  const plain = sanEngine.buildPresetFiles(sampleTheme({ main: { preset: 'default', glow: false } }));
+  assert.deepEqual(plain.size, { width: 300, height: 50 }, 'no glow, no room: the window stays the card');
+  const glowing = sanEngine.buildPresetFiles(sampleTheme({ main: { preset: 'default', glow: true, scale: 150 } }));
+  // (300 + 2 x 25) x 1.5 by (50 + 2 x 25) x 1.5.
+  assert.deepEqual(glowing.size, { width: 525, height: 150 });
+  const mixed = sanEngine.windowSize(sampleTheme({ main: { preset: 'windows', glow: false, scale: 200 }, rare: { preset: 'default', glow: true } }));
+  assert.deepEqual(mixed, { width: 600, height: 200 }, 'the largest state wins, glowing or not');
+});
+
+test('the designer previews a preset with a page rebuilt from its theme, loading the engine from the app', (t) => {
+  const dir = scratch(t);
+  const theme = sampleTheme({ main: { preset: 'xqjan', glow: true }, rare: { preset: 'windows' } });
+  theme.awCanvas = { items: [{ type: 'text', text: '{game}' }] };
+  sanEngine.writePresetFiles(dir, theme, { name: 'p' });
+  // What the folder's own page says is never run: a shared package could have put anything there.
+  fs.writeFileSync(path.join(dir, 'index.html'), fs.readFileSync(path.join(dir, 'index.html'), 'utf8').replace('</body>', '<script>window.evil = 1</script></body>'));
+
+  const page = sanEngine.previewPage(dir);
+  assert.ok(page);
+  assert.deepEqual({ width: page.width, height: page.height }, sanEngine.windowSize(page.theme));
+  assert.doesNotMatch(page.html, /window\.evil/);
+  assert.match(page.html, new RegExp(`<base href="${require('node:url').pathToFileURL(dir).href}/" />`), 'the stylesheets and pictures are the folder\'s own');
+  const scripts = [...page.html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((match) => path.basename(new URL(match[1]).pathname));
+  assert.deepEqual(scripts, ['preview.js', 'engine.js', 'host.js'], 'the stand-in for the popup bridge comes first');
+  assert.doesNotMatch(page.html, /AWSanEngine = factory/, 'the engine is loaded, not inlined');
+  // The designer draws the items itself, in a stylesheet of its own.
+  assert.match(page.html, /<style id="aw-preview-css"><\/style>/);
+  assert.doesNotMatch(page.html, /<template id="aw-san-canvas">/);
+  assert.equal(page.theme.types.rare.preset, 'windows');
+
+  const plain = scratch(t);
+  fs.writeFileSync(path.join(plain, 'index.html'), '<html><body>an ordinary preset</body></html>');
+  assert.equal(sanEngine.previewPage(plain), null);
+});
+
 test('the theme block cannot close its own script element, whatever a label says', () => {
   const theme = sampleTheme({ main: { preset: 'default', customtextdesc: '</script><script>alert(1)</script>' } });
   theme.label = '</title><script>alert(2)</script>';
@@ -405,4 +441,75 @@ test('a SAN preset can pin its trophy tier and borrow another theme for one AW N
   fs.writeFileSync(path.join(plain, 'index.html'), '<html></html>');
   assert.equal(sanEngine.updateAwSettings(target, { states: { gold: plain } }).error, 'not-san');
   assert.equal(sanEngine.awSettingsOf(plain), null);
+});
+
+test('a SAN preset has its own settings edited, checked, and can go back to the imported theme', (t) => {
+  const dir = scratch(t);
+  fs.mkdirSync(path.join(dir, 'assets'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'assets', 'bg.png'), 'picture');
+  sanEngine.writePresetFiles(dir, sampleTheme({ main: { preset: 'ps5', glowcolor: '#ff0000', bgimg: 'assets/bg.png' }, rare: { preset: 'xboxone' } }), { name: 'Look' });
+  fs.writeFileSync(path.join(dir, 'aw-package.json'), JSON.stringify({ name: 'Look' }));
+
+  const look = sanEngine.lookOf(dir);
+  assert.deepEqual(look.types, ['main', 'rare']);
+  assert.equal(look.values.main.glowcolor, '#ff0000');
+  assert.equal(look.fields.glowcolor.kind, 'color');
+  assert.equal(look.edited, false);
+
+  assert.deepEqual(sanEngine.updateLook(dir, { type: 'main', changes: { glowcolor: '#00ff00', roundness: 5000, bgimg: 'C:/elsewhere.png', preset: 'nope', usertheme: 'x' } }), { ok: true });
+  const theme = () => sanEngine.readEmbeddedTheme(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'));
+  assert.equal(theme().types.main.glowcolor, '#00ff00');
+  assert.equal(theme().types.main.roundness, 1000, 'bounded like an import');
+  assert.equal(theme().types.main.bgimg, 'assets/bg.png', 'a file is never set from here');
+  assert.equal(theme().types.main.preset, 'ps5', 'an unknown card is refused');
+  assert.equal(theme().types.rare.preset, 'xboxone', 'the other state is untouched');
+  assert.equal(sanEngine.lookOf(dir).edited, true);
+  assert.equal(sanEngine.updateLook(dir, { type: 'semi', changes: { glow: true } }).error, 'no-such-look');
+
+  // A second edit keeps the first original, not the edited one.
+  sanEngine.updateLook(dir, { type: 'main', changes: { glowcolor: '#0000ff' } });
+  assert.deepEqual(sanEngine.restoreLook(dir), { ok: true });
+  assert.equal(theme().types.main.glowcolor, '#ff0000');
+  assert.equal(sanEngine.lookOf(dir).edited, false);
+  assert.equal(sanEngine.lookOf(scratch(t)), null);
+});
+
+test('a SAN preset carries items added on top of its card, with their pictures, and drops them again', (t) => {
+  const dir = scratch(t);
+  const shared = scratch(t);
+  fs.writeFileSync(path.join(shared, 'star.png'), 'picture');
+  sanEngine.writePresetFiles(dir, sampleTheme({ main: { preset: 'ps5' } }), { name: 'Items' });
+  const copied = [];
+  const copyAsset = (file, target) => {
+    copied.push(file);
+    fs.copyFileSync(path.join(shared, file), target);
+    return true;
+  };
+  const canvas = {
+    items: [
+      { kind: 'text', text: 'GG {title}', x: 10, y: 5, w: 120, size: 14 },
+      { kind: 'image', file: 'star.png', x: 200, y: 0, w: 40, h: 40 },
+    ],
+  };
+  assert.deepEqual(sanEngine.updateCanvas(dir, canvas, { copyAsset }), { ok: true });
+  const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+  const theme = sanEngine.readEmbeddedTheme(html);
+  assert.equal(theme.awCanvas.items.length, 2);
+  assert.match(html, /<template id="aw-san-canvas"><div class="aw-canvas"/);
+  assert.match(html, /data-tok="title"/);
+  assert.match(html, /url\(["']?canvas\/star\.png["']?\)/,'the picture is read from the preset itself');
+  assert.ok(fs.existsSync(path.join(dir, 'canvas', 'star.png')));
+  assert.deepEqual(sanEngine.lookOf(dir).canvas.items.map((item) => item.kind), ['text', 'image']);
+
+  // A rebuild for a newer engine keeps them; a look edit too.
+  sanEngine.updateLook(dir, { type: 'main', changes: { glow: true } });
+  assert.equal(sanEngine.readEmbeddedTheme(fs.readFileSync(path.join(dir, 'index.html'), 'utf8')).awCanvas.items.length, 2);
+
+  assert.deepEqual(sanEngine.updateCanvas(dir, { items: [] }, { copyAsset }), { ok: true });
+  const bare = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+  assert.equal(sanEngine.readEmbeddedTheme(bare).awCanvas, undefined);
+  assert.doesNotMatch(bare, /id="aw-san-canvas(-css)?"/);
+  assert.ok(!fs.existsSync(path.join(dir, 'canvas', 'star.png')), 'a picture no item uses is removed');
+  assert.deepEqual(copied, ['star.png']);
+  assert.equal(sanEngine.updateCanvas(scratch(t), canvas, { copyAsset }).error, 'not-san');
 });

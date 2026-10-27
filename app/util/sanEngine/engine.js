@@ -33,6 +33,10 @@
   // The element ids a layout fills; every layout carries all three, hidden or not.
   const TEXT_SLOTS = ['unlockmsg', 'title', 'desc'];
 
+  // The elements the designer may move or hide (`awparts`), by the ids SAN's layouts give them. A
+  // two-part card repeats its ids: both halves follow.
+  const PART_ELEMENTS = { unlockmsg: ['unlockmsg'], title: ['title'], desc: ['desc'], icon: ['achiconwrapper', 'iconbg'], logo: ['logo'] };
+
   // SAN's tier names for an unlock rate, rarest last.
   const TYPES = ['main', 'semi', 'rare', 'plat'];
 
@@ -139,6 +143,12 @@
     if (o.platinum || o.tier === 'platinum') return 'platinum';
     if (typeof o.tier !== 'string') return TYPE_AW_STATE[notifyType(o.percent, o.thresholds, false)];
     return PICTURE_TIERS.indexOf(o.tier) !== -1 ? o.tier : 'normal';
+  }
+
+  // A notification payload as the unlock the functions here read: AW Next's tier and rarity mode.
+  function unlockOf(data) {
+    const d = data || {};
+    return { tier: d.rarityTier, mode: d.rarityMode, platinum: d.isPlatinum, percent: d.unlockRate != null ? d.unlockRate : d.rarityPercent };
   }
 
   /*
@@ -373,6 +383,22 @@
     if (!element.textContent) while (element.firstChild) element.removeChild(element.firstChild);
   }
 
+  // Through `translate`, which adds to the transforms SAN's own animations play on the same element.
+  function placeParts(doc, parts) {
+    if (!parts || typeof parts !== 'object') return;
+    for (const part of Object.keys(PART_ELEMENTS)) {
+      const place = parts[part];
+      if (!place || typeof place !== 'object') continue;
+      const shift = num(place.x, 0) + 'px ' + num(place.y, 0) + 'px';
+      for (const id of PART_ELEMENTS[part]) {
+        for (const element of doc.querySelectorAll('#' + id)) {
+          if (place.x || place.y) element.style.translate = shift;
+          if (place.hidden === true) element.style.visibility = 'hidden';
+        }
+      }
+    }
+  }
+
   /*
     Draws one notification. `opts.layoutHtml` is the base card's markup; `opts.customisation` the
     theme for this state with every asset already resolved through `opts.url`. Calls `opts.onEnd`
@@ -442,6 +468,7 @@
       const element = doc.getElementById(slot);
       if (element) fillSlot(element, placed.slots[slot]);
     }
+    placeParts(doc, c.awparts);
 
     let background = '';
     if (c.bgstyle === 'bgimg') background = c.bgachicon ? icon : c.bgimg ? url(c.bgimg) : '';
@@ -488,7 +515,9 @@
       ended = true;
       if (typeof opts.onEnd === 'function') opts.onEnd();
     };
-    body.addEventListener('animationend', (event) => {
+    // The designer's live preview draws many cards on one page: only the last one may end it.
+    if (body.awSanEnd) body.removeEventListener('animationend', body.awSanEnd);
+    body.awSanEnd = (event) => {
       if (event.animationName !== 'animend') return;
       body.addEventListener('transitionend', (fade) => {
         if (fade.propertyName === 'opacity') finish();
@@ -496,7 +525,8 @@
       html.style.setProperty('--bodyopacity', '0');
       // A layout without a fade transition would never answer; give it the transition's own length.
       setTimeout(finish, 1500);
-    });
+    };
+    body.addEventListener('animationend', body.awSanEnd);
 
     const images = Array.from(doc.querySelectorAll('img'));
     if (background) {
@@ -530,6 +560,8 @@
     LAYOUT_IDS: LAYOUT_IDS,
     TYPES: TYPES,
     TEXT_SLOTS: TEXT_SLOTS,
+    PART_ELEMENTS: PART_ELEMENTS,
+    placeParts: placeParts,
     layoutOf: layoutOf,
     scaleOf: scaleOf,
     notifyType: notifyType,
@@ -538,6 +570,7 @@
     pictureTier: pictureTier,
     AW_STATES: AW_STATES,
     awStateOf: awStateOf,
+    unlockOf: unlockOf,
     customisationFor: customisationFor,
     textLines: textLines,
     percentValue: percentValue,

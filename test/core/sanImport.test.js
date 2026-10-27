@@ -276,7 +276,8 @@ test('an imported theme is kept whole and drawn by the SAN engine', (t) => {
 
   const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
   assert.equal(sanEngine.engineVersionOf(html), sanEngine.ENGINE_VERSION);
-  assert.match(html, /<meta width="442" height="73" \/>/, 'the window is the card the theme was built on, at its own 125%');
+  // (353 + 2 x 25) x 1.25 by (58 + 2 x 25) x 1.25: the card it was built on, with SAN's room for its glow.
+  assert.match(html, /<meta width="504" height="135" \/>/, 'the window is the card the theme was built on and its glow, at its own 125%');
   assert.ok(fs.existsSync(path.join(dir, 'layout-xqjan.css')));
 
   // The theme, not a translation of it: the values SAN wrote, with every file now a preset asset.
@@ -504,7 +505,7 @@ test('the four themes in use become one preset that switches like SAN, plus one 
   assert.equal(setup.showpercent, 'all');
   assert.equal(setup.notify1line, true);
   const html = fs.readFileSync(path.join(dirs.presets, 'SAN - Neon', 'index.html'), 'utf8');
-  assert.match(html, /<meta width="442" height="73" \/>/, 'the window holds the largest card of the four, at 125%');
+  assert.match(html, /<meta width="504" height="135" \/>/, 'the window holds the largest card of the four and its glow, at 125%');
   for (const card of ['xqjan', 'ps5', 'xbox360']) assert.ok(fs.existsSync(path.join(dirs.presets, 'SAN - Neon', `layout-${card}.css`)), card);
 
   // Each state plays what it played in SAN; the rare one picks from its folder.

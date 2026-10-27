@@ -34,8 +34,12 @@ renamed in 3.9.0 and the history is kept under one file.
   icon and description work the same way.
 - **See-through shapes in the preset editor.** A shape switched to see-through cuts a hole in
   everything under it, the card included, so the desktop shows through; what sits above it stays.
-- **Imported SAN themes per tier.** Pick which trophy picture a SAN theme draws, or draw a tier with
-  another imported SAN theme, its sound included.
+- **Imported SAN themes can be changed in the designer.** Pick a tier in the preview to see its
+  look, then change its card, background, colours, texts, glow, border or icon. Click one of the
+  theme's elements to open its settings, drag it or hide it, and add a text, a picture or a shape on
+  top. A tier can also show another trophy picture, or be drawn by another imported SAN theme with
+  its sound. Changes are saved as you go: Undo takes one back, and "Back to the imported theme"
+  puts its whole look back.
 - **A diagnostics report in the log export.** Settings > Advanced > Export logs (.zip) adds a
   `diagnostics.txt` beside the logs: how AW Next is installed, the clock against Steam's, which
   online services answer, the Windows notification settings, the screens, the settings and the

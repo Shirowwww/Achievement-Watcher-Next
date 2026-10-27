@@ -25,6 +25,13 @@ const LOAD_TIMEOUT_MS = 8000;
 // Every bundled preset has settled by then (see PROFILE_END_MS).
 const SNAPSHOT_FALLBACK_MS = 2800;
 const SIDES = ['left', 'top', 'right', 'bottom'];
+// Where the card sits in a snapshot, so the designer can place items over the picture of it.
+const CARD_RECT_SCRIPT = `(() => {
+  const card = document.querySelector('.ach, #outerwrapper');
+  if (!card) return null;
+  const r = card.getBoundingClientRect();
+  return { x: r.left, y: r.top, width: r.width, height: r.height, font: getComputedStyle(card).fontFamily };
+})()`;
 
 // A short and a long text: the smaller room of the two never pushes a card off the screen.
 function samplePayloads(imageUrl, position) {
@@ -142,7 +149,7 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
         const image = await win.webContents.capturePage().catch(() => null);
         const size = image && !image.isEmpty() ? image.getSize() : null;
         // Offscreen captures follow the display scale.
-        samples.push({ at, value: size ? read(image, size.width / width || 1) : null });
+        samples.push({ at, value: size ? await read(image, size.width / width || 1, win.webContents) : null });
       }
       return samples;
     } finally {
@@ -218,12 +225,13 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
     async snapshot(folder, layer, payload) {
       const profile = this.get(folder, layer, payload.position || 'center-bottom');
       const at = profile ? profile.settleMs + 150 : SNAPSHOT_FALLBACK_MS;
-      const samples = await renderOffscreen(folder, layer, payload, [at], (image) => image.toDataURL()).catch((err) => {
+      const read = async (image, ratio, contents) => ({ image: image.toDataURL(), card: await contents.executeJavaScript(CARD_RECT_SCRIPT).catch(() => null) });
+      const samples = await renderOffscreen(folder, layer, payload, [at], read).catch((err) => {
         log(`[overlay-notif] preset snapshot failed for ${path.basename(folder)}: ${err.message || err}`);
         return [];
       });
       const sample = samples[0];
-      return sample && sample.value ? { image: sample.value, ...dimensions(folder, layer) } : null;
+      return sample && sample.value ? { ...sample.value, ...dimensions(folder, layer) } : null;
     },
   };
 }

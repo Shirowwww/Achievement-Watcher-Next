@@ -8,18 +8,26 @@
 
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const engine = require('./engine.js');
 const sanTheme = require('../sanTheme.js');
-const { PRESET_PACKAGE_FILE } = require('../customPreset.js');
-const { normalizeOptions } = require('../presetSchema.js');
+const { PRESET_PACKAGE_FILE, canvasCss, canvasMarkup } = require('../customPreset.js');
+const { normalizeOptions, normalizeCanvas, canvasFiles, canvasFonts } = require('../presetSchema.js');
 
 // Raised whenever a change here, in engine.js, host.js, base.css or a layout must reach presets
 // that are already installed.
-const ENGINE_VERSION = 5;
+const ENGINE_VERSION = 8;
 
 const THEME_BLOCK_ID = 'aw-san-theme';
 const ENGINE_META = 'aw-san-engine';
 const FONTS_DIR = 'fonts';
+// Pictures and fonts of the items added on top of the card, beside SAN's own `assets/`.
+const CANVAS_DIR = 'canvas';
+const CANVAS_BLOCK_ID = 'aw-san-canvas';
+// The designer's live page: its own stylesheet for the items it draws over the card.
+const PREVIEW_STYLE_ID = 'aw-preview-css';
+// What the live page loads from the app, in this order: the stand-in for the popup's bridge first.
+const PREVIEW_SCRIPTS = ['preview.js', 'engine.js', 'host.js'];
 
 function read(relative) {
   return fs.readFileSync(path.join(__dirname, relative), 'utf8');
@@ -47,7 +55,13 @@ function layoutsOf(theme) {
   return [...ids];
 }
 
-// The window must hold the largest card among the looks, each at the scale its look gives it.
+/*
+  The window must hold the largest card among the looks, each at the scale its look gives it. A look
+  that glows also gets the room SAN's window keeps on each side of the card for it, or the glow
+  would be cut off at the window's edge.
+*/
+const GLOW_ROOM = 25;
+
 function windowSize(theme) {
   const states = customisationsOf(theme);
   let width = 0;
@@ -55,8 +69,9 @@ function windowSize(theme) {
   for (const customisation of states.length ? states : [{}]) {
     const layout = engine.LAYOUTS[engine.layoutOf(customisation.preset)];
     const scale = engine.scaleOf(customisation);
-    width = Math.max(width, Math.ceil(layout.width * scale));
-    height = Math.max(height, Math.ceil(layout.height * scale));
+    const room = customisation.glow ? 2 * GLOW_ROOM : 0;
+    width = Math.max(width, Math.ceil((layout.width + room) * scale));
+    height = Math.max(height, Math.ceil((layout.height + room) * scale));
   }
   return { width, height };
 }
@@ -89,8 +104,10 @@ function fontsUsedBy(css) {
 /*
   Every generated file of the preset, as relative path -> text, plus the bundled font files it
   needs (`fonts`: absolute source path -> relative destination). `name` is the preset's own name.
+  `preview` ({ base, scripts }) builds the designer's live page instead: a <base> at the preset's
+  folder, the scripts loaded from the app, and an empty stylesheet the designer fills.
 */
-function buildPresetFiles(theme, { name = '' } = {}) {
+function buildPresetFiles(theme, { name = '', preview = null } = {}) {
   const layouts = layoutsOf(theme);
   const size = windowSize(theme);
   const base = read('base.css');
@@ -102,24 +119,38 @@ function buildPresetFiles(theme, { name = '' } = {}) {
   const templates = layouts
     .map((id) => `<template id="aw-san-layout-${id}">\n${readOptional(`layouts/${id}.html`).trim()}\n</template>`)
     .join('\n');
+  // host.js puts the items into the card once it is drawn; their files sit in the preset's canvas/.
+  const canvas = canvasOf(theme);
+  const canvasStyle = canvas ? `<style id="${CANVAS_BLOCK_ID}-css">\n${canvasCss(canvas, { assetUrl: (file) => `${CANVAS_DIR}/${file}` })}\n</style>` : '';
+  const canvasTemplate = canvas ? `<template id="${CANVAS_BLOCK_ID}">${canvasMarkup(canvas)}</template>` : '';
 
+  const scripts = preview
+    ? preview.scripts.map((src) => `<script src="${escapeHtml(src)}"></script>`)
+    : [`<script>\n${read('engine.js').trim()}\n</script>`, `<script>\n${read('host.js').trim()}\n</script>`];
   const html = [
     '<!DOCTYPE html>',
     '<html lang="en"><head>',
     '<meta charset="UTF-8" />',
+    preview ? `<base href="${escapeHtml(preview.base)}" />` : null,
     `<meta width="${size.width}" height="${size.height}" />`,
     `<meta name="duration" content="${Math.round(longest * 1000 + 1500)}" />`,
     `<meta name="${ENGINE_META}" content="${ENGINE_VERSION}" />`,
     `<title>${escapeHtml(name || theme.label || 'Steam Achievement Notifier theme')}</title>`,
     '<link rel="stylesheet" href="style.css" />',
+    // base.css asks for a dark colour scheme; Chromium paints a frame whose scheme differs from its
+    // <iframe>'s opaque, which would put the designer's card in a black box over any backdrop.
+    preview ? '<style>html, body { color-scheme: normal; }</style>' : null,
+    preview ? `<style id="${PREVIEW_STYLE_ID}"></style>` : canvasStyle,
     '</head><body>',
     templates,
+    preview ? null : canvasTemplate,
     `<script type="application/json" id="${THEME_BLOCK_ID}">${scriptJson(theme)}</script>`,
-    `<script>\n${read('engine.js').trim()}\n</script>`,
-    `<script>\n${read('host.js').trim()}\n</script>`,
+    ...scripts,
     '</body></html>',
     '',
-  ].join('\n');
+  ]
+    .filter((line) => line !== null)
+    .join('\n');
 
   const files = {
     'index.html': html,
@@ -212,7 +243,15 @@ function cleanEmbeddedTheme(dir, theme) {
     notify1line: theme.notify1line === true,
     types,
   };
+  const canvas = canvasOf(theme);
+  if (canvas) cleaned.awCanvas = canvas;
   return withAwSettings(cleaned, theme, clean);
+}
+
+// The items added on top of the card, as the designer stores them, or null when there are none.
+function canvasOf(theme) {
+  const canvas = theme && theme.awCanvas ? normalizeCanvas(theme.awCanvas) : null;
+  return canvas && canvas.items.length ? canvas : null;
 }
 
 /*
@@ -322,6 +361,25 @@ function updateAwSettings(dir, { tierPictures, states = {}, mode = 'rare' } = {}
   return { ok: true };
 }
 
+/*
+  Whether a look draws anything per tier (its pictures, percentage badge, icon border, glow colour,
+  or the Epic Games card's rarity colour): only then does pinning the tier change what is seen.
+*/
+function drawsPerTier(theme) {
+  return customisationsOf(theme).some((c) => {
+    const layout = engine.layoutOf(c.preset);
+    const icons = (c.customicons && c.customicons[layout]) || {};
+    return (
+      Array.isArray(icons.logo) ||
+      Array.isArray(icons.decoration) ||
+      Boolean(c.percentbadge && c.percentbadgeimg) ||
+      Boolean(c.showiconborder && c.iconborderrarity) ||
+      Boolean(c.glow && c.glowrarity) ||
+      layout === 'epicgames'
+    );
+  });
+}
+
 // What the designer shows of a SAN preset's AW Next settings.
 function awSettingsOf(dir) {
   let theme = null;
@@ -333,6 +391,125 @@ function awSettingsOf(dir) {
   if (!theme) return null;
   const clean = withAwSettings({}, theme, (look) => look);
   return { tierPictures: clean.tierPictures || 'auto', stateFrom: clean.stateFrom || {} };
+}
+
+/*
+  The settings of a theme the designer can change, as SAN offers them. Files (pictures, fonts,
+  sounds) are not among them: a theme's files only ever come from its own package.
+*/
+const LOOK_KEYS = [
+  'preset', 'scale', 'roundness', 'opacity', 'displaytime',
+  'bgstyle', 'primarycolor', 'secondarycolor', 'tertiarycolor', 'gradientangle', 'brightness', 'blur',
+  'usecustomfontsizes', 'fontsize', 'unlockmsgfontsize', 'titlefontsize', 'descfontsize',
+  'usecustomfontcolors', 'fontcolor', 'unlockmsgfontcolor', 'titlefontcolor', 'descfontcolor',
+  'fontoutline', 'fontoutlinecolor', 'fontshadow', 'fontshadowcolor',
+  'usecustomtext', 'customtextunlockmsg', 'customtexttitle', 'customtextdesc',
+  'glow', 'glowcolor', 'glowsize', 'glowanim', 'glowspeed', 'glowrarity', 'glowcolorbronze', 'glowcolorsilver', 'glowcolorgold',
+  'useoutline', 'outline', 'outlinecolor', 'outlinewidth',
+  'iconroundness', 'iconscale', 'usegameicon',
+  'awparts',
+];
+const ORIGINAL_KEY = 'sanOriginal';
+
+function readTheme(dir) {
+  try {
+    return readEmbeddedTheme(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function saveTheme(dir, theme) {
+  writePresetFiles(dir, cleanEmbeddedTheme(dir, theme), { name: path.basename(dir) });
+}
+
+function pickLookKeys(source) {
+  const picked = {};
+  for (const key of LOOK_KEYS) if (source && Object.prototype.hasOwnProperty.call(source, key)) picked[key] = source[key];
+  return picked;
+}
+
+// What the designer shows of a theme's own settings: each of SAN's states it carries, and its values.
+function lookOf(dir) {
+  const theme = readTheme(dir);
+  if (!theme) return null;
+  const types = engine.TYPES.filter((type) => theme.types[type]);
+  const values = {};
+  for (const type of types) values[type] = pickLookKeys(theme.types[type]);
+  const fields = {};
+  for (const key of LOOK_KEYS) fields[key] = sanTheme.SAN_FIELDS[key];
+  const manifest = readJson(path.join(dir, PRESET_PACKAGE_FILE)) || {};
+  return { types, values, fields, edited: Boolean(manifest[ORIGINAL_KEY]), canvas: canvasOf(theme) || normalizeCanvas(null) };
+}
+
+/*
+  What the designer needs to show a SAN preset live: the page (`html`, for an iframe's srcdoc), the
+  window it is drawn in, and the theme it draws, which the designer rewrites in the page to show an
+  edit before it is saved. The page is rebuilt from the theme, never read from the preset's own
+  index.html; its stylesheets, fonts and pictures are the preset folder's.
+*/
+function previewPage(dir) {
+  const theme = readTheme(dir);
+  if (!theme) return null;
+  const clean = cleanEmbeddedTheme(dir, theme);
+  const scripts = PREVIEW_SCRIPTS.map((file) => pathToFileURL(path.join(__dirname, file)).href);
+  const base = pathToFileURL(dir).href.replace(/\/?$/, '/');
+  const built = buildPresetFiles(clean, { name: path.basename(dir), preview: { base, scripts } });
+  return { html: built.files['index.html'], width: built.size.width, height: built.size.height, theme: clean };
+}
+
+/*
+  Stores the items added on top of the card. `copyAsset(file, target)` brings a picture or font the
+  items name from the designer's shared folders (and checks it); a file no item names any more goes.
+*/
+function updateCanvas(dir, rawCanvas, { copyAsset = () => false } = {}) {
+  const theme = readTheme(dir);
+  if (!theme) return { ok: false, error: 'not-san' };
+  const canvas = normalizeCanvas(rawCanvas);
+  const folder = path.join(dir, CANVAS_DIR);
+  const wanted = new Set([...canvasFiles(canvas), ...canvasFonts(canvas)]);
+  if (wanted.size) fs.mkdirSync(folder, { recursive: true });
+  for (const file of wanted) {
+    const target = path.join(folder, file);
+    // Names are checked by the schema; this keeps a copy inside the folder whatever they become.
+    if (path.dirname(target) === folder && !fs.existsSync(target)) copyAsset(file, target);
+  }
+  if (fs.existsSync(folder)) {
+    for (const file of fs.readdirSync(folder)) if (!wanted.has(file)) fs.rmSync(path.join(folder, file), { force: true });
+  }
+  const { awCanvas: _old, ...rest } = theme;
+  saveTheme(dir, canvas.items.length ? { ...rest, awCanvas: canvas } : rest);
+  return { ok: true };
+}
+
+/*
+  Changes settings of one of the theme's states, each checked as an import checks it; anything
+  else is ignored. The theme as imported is kept on the first change, for restoreLook.
+*/
+function updateLook(dir, { type, changes = {} } = {}) {
+  const theme = readTheme(dir);
+  if (!theme) return { ok: false, error: 'not-san' };
+  if (!engine.TYPES.includes(type) || !theme.types[type]) return { ok: false, error: 'no-such-look' };
+  const clean = sanTheme.cleanCustomisation(pickLookKeys(changes)).customisation;
+  const manifestFile = path.join(dir, PRESET_PACKAGE_FILE);
+  const manifest = readJson(manifestFile) || {};
+  if (!manifest[ORIGINAL_KEY]) fs.writeFileSync(manifestFile, JSON.stringify({ ...manifest, [ORIGINAL_KEY]: theme.types }, null, 2), 'utf8');
+  saveTheme(dir, { ...theme, types: { ...theme.types, [type]: { ...theme.types[type], ...clean } } });
+  return { ok: true };
+}
+
+// Puts back the theme's settings as they were imported.
+function restoreLook(dir) {
+  const theme = readTheme(dir);
+  if (!theme) return { ok: false, error: 'not-san' };
+  const manifestFile = path.join(dir, PRESET_PACKAGE_FILE);
+  const manifest = readJson(manifestFile) || {};
+  const original = manifest[ORIGINAL_KEY];
+  if (!original || typeof original !== 'object') return { ok: true };
+  saveTheme(dir, { ...theme, types: original });
+  const { [ORIGINAL_KEY]: _dropped, ...rest } = manifest;
+  fs.writeFileSync(manifestFile, JSON.stringify(rest, null, 2), 'utf8');
+  return { ok: true };
 }
 
 /*
@@ -397,6 +574,14 @@ module.exports = {
   withAwSettings,
   updateAwSettings,
   awSettingsOf,
+  lookOf,
+  updateLook,
+  restoreLook,
+  updateCanvas,
+  previewPage,
+  PREVIEW_STYLE_ID,
+  windowSize,
+  drawsPerTier,
   layoutsOf,
   buildPresetFiles,
   writePresetFiles,

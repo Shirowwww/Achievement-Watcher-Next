@@ -359,6 +359,64 @@ ipcMain.handle('san-preset-save', async (event, { name, tierPictures, states } =
   }
 });
 
+// The page the designer shows the theme live with (see sanEngine.previewPage).
+ipcMain.handle('san-preset-page', async (event, name) => {
+  const folder = sanPresetFolder(name);
+  try {
+    return folder ? sanEngine.previewPage(folder) : null;
+  } catch (err) {
+    debug.log('[san-preset] preview page failed: ' + (err.message || err));
+    return null;
+  }
+});
+
+// The theme's own settings, as SAN offers them, for the designer to change.
+ipcMain.handle('san-preset-look', async (event, name) => {
+  const folder = sanPresetFolder(name);
+  return folder ? sanEngine.lookOf(folder) : null;
+});
+
+ipcMain.handle('san-preset-look-save', async (event, { name, type, changes, restore } = {}) => {
+  try {
+    const folder = sanPresetFolder(name);
+    if (!folder) return { ok: false, error: 'not-san' };
+    const out = restore === true ? sanEngine.restoreLook(folder) : sanEngine.updateLook(folder, { type, changes });
+    if (out.ok) invalidateNotificationPresetFolders();
+    else debug.log(`[san-preset] ${path.basename(folder)} look: ${out.error}`);
+    return out;
+  } catch (err) {
+    debug.log('[san-preset] look failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
+// The items added on top of a SAN card; their pictures and fonts come from the designer's folders.
+ipcMain.handle('san-preset-canvas-save', async (event, { name, canvas } = {}) => {
+  try {
+    const folder = sanPresetFolder(name);
+    if (!folder) return { ok: false, error: 'not-san' };
+    const copyAsset = (file, target) => {
+      const font = presetSchema.FONT_NAME_RE.test(file);
+      const source = path.join(font ? userPresetFontsDir() : userPresetImagesDir(), file);
+      if (!fs.existsSync(source)) return false;
+      const bytes = fs.readFileSync(source);
+      const verdict = (font ? presetSchema.checkFont : presetSchema.checkLogo)(file, bytes);
+      if (!verdict.ok) {
+        debug.log(`[san-preset] ${file} not copied: ${verdict.error}`);
+        return false;
+      }
+      fs.writeFileSync(target, bytes);
+      return true;
+    };
+    const out = sanEngine.updateCanvas(folder, canvas, { copyAsset });
+    if (out.ok) invalidateNotificationPresetFolders();
+    return out;
+  } catch (err) {
+    debug.log('[san-preset] items failed: ' + (err.message || err));
+    return { ok: false, error: String(err.message || err) };
+  }
+});
+
 // List available notification sound files for the overlay sound dropdown (bundled + user-imported).
 /*
   Artwork for a notification test that is not tied to a game.

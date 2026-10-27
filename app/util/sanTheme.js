@@ -7,7 +7,7 @@
 */
 
 const path = require('path');
-const { LAYOUT_IDS } = require('./sanEngine/engine.js');
+const { LAYOUT_IDS, PART_ELEMENTS } = require('./sanEngine/engine.js');
 
 const CORNERS = ['topleft', 'topcenter', 'topright', 'bottomleft', 'bottomcenter', 'bottomright'];
 const TEXT_ELEMENTS = ['unlockmsg', 'title', 'desc'];
@@ -165,6 +165,30 @@ const SAN_FIELDS = {
   usegametitle: bool,
 };
 
+// AW Next's own settings, kept beside SAN's: elements of the card moved by hand in the designer, or hidden.
+const AW_FIELDS = { awparts: { kind: 'parts' } };
+
+// The card's elements the designer may move or hide, and how far.
+const SAN_MOVABLE = Object.keys(PART_ELEMENTS);
+const PART_SHIFT = { min: -600, max: 600 };
+
+function cleanParts(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const out = {};
+  for (const part of SAN_MOVABLE) {
+    const raw = value[part];
+    if (!raw || typeof raw !== 'object') continue;
+    const place = {};
+    for (const axis of ['x', 'y']) {
+      const shift = Math.round(cleanNumber(raw[axis], PART_SHIFT) || 0);
+      if (shift) place[axis] = shift;
+    }
+    if (raw.hidden === true) place.hidden = true;
+    if (Object.keys(place).length) out[part] = place;
+  }
+  return out;
+}
+
 const SAN_INTERNAL = new Set(['usertheme', 'synctheme', 'shortcut', 'ssenabled', 'elemsmatch', 'ovpos', 'ovmatch', 'ovx', 'ovy']);
 
 // What each kind of file may be, by extension. No script-capable format: SVG is checked separately.
@@ -221,7 +245,7 @@ function cleanCustomisation(raw, { resolveAsset } = {}) {
     if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
     const value = source[key];
     if (SAN_INTERNAL.has(key)) continue;
-    const spec = SAN_FIELDS[key];
+    const spec = SAN_FIELDS[key] || AW_FIELDS[key];
     if (!spec) {
       // A newer SAN than this table: a plain value is harmless data, so it travels with the theme.
       if (typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value))) out[key] = value;
@@ -275,6 +299,8 @@ function cleanValue(key, value, spec, resolve, report) {
     }
     case 'icons':
       return cleanIcons(value, resolve, report);
+    case 'parts':
+      return cleanParts(value);
   }
 }
 
@@ -339,6 +365,8 @@ function extensionOf(name) {
 module.exports = {
   SAN_FIELDS,
   SAN_INTERNAL,
+  SAN_MOVABLE,
+  PART_SHIFT,
   cleanCustomisation,
   baseName,
   assetAccepts,

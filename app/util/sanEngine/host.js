@@ -7,12 +7,16 @@
   'use strict';
   var engine = window.AWSanEngine;
   var themeNode = document.getElementById('aw-san-theme');
-  var theme = {};
-  try {
-    theme = JSON.parse((themeNode && themeNode.textContent) || '{}');
-  } catch (e) {
-    // The block is written and cleaned by util/sanEngine/index.js; a damaged one still draws SAN's
-    // default card rather than leaving the popup blank until its safety timeout.
+
+  // Read for each card: the designer's live preview rewrites the block between two of them.
+  function readTheme() {
+    try {
+      return JSON.parse((themeNode && themeNode.textContent) || '{}');
+    } catch (e) {
+      // The block is written and cleaned by util/sanEngine/index.js; a damaged one still draws SAN's
+      // default card rather than leaving the popup blank until its safety timeout.
+      return {};
+    }
   }
 
   // AW Next's screen positions onto SAN's six corners, which decide where a card slides in from.
@@ -50,17 +54,33 @@
   }
 
   var loadedCss = {};
+  var layoutLinks = {};
+  var currentLayout = null;
   function layoutCss(id) {
     if (loadedCss[id]) return loadedCss[id];
     loadedCss[id] = new Promise(function (resolve) {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = 'layout-' + id + '.css';
-      link.onload = resolve;
-      link.onerror = resolve;
+      link.onload = link.onerror = function () {
+        // Loaded after another layout's card was drawn: it waits for its own card.
+        if (link.sheet && currentLayout !== null) link.sheet.disabled = currentLayout !== id;
+        resolve();
+      };
+      layoutLinks[id] = link;
       document.head.appendChild(link);
     });
     return loadedCss[id];
+  }
+
+  // The designer's page draws cards of several layouts in turn, and their rules share selectors.
+  // Switched through the CSSOM: a disabled <link> drops its sheet and only gets it back later.
+  function useLayoutCss(id) {
+    currentLayout = id;
+    Object.keys(layoutLinks).forEach(function (other) {
+      var sheet = layoutLinks[other].sheet;
+      if (sheet) sheet.disabled = other !== id;
+    });
   }
 
   // Clears a previous card (the designer preview shows several in a row) without touching the page.
@@ -77,17 +97,65 @@
     document.documentElement.removeAttribute('style');
   }
 
+  // Written as the designer's own cards write it.
+  function rarityText(percent) {
+    if (percent == null || percent === '' || !isFinite(Number(percent))) return '';
+    return Math.round(Number(percent) * 10) / 10 + '%';
+  }
+
+  // AW Next's tier as the classes the designer's items are shown or hidden by.
+  function stateClasses(data) {
+    if (data.isPlatinum || data.rarityTier === 'platinum') return ['state-platinum'];
+    return ['bronze', 'silver', 'gold'].indexOf(data.rarityTier) !== -1 ? ['state-rare', 'tier-' + data.rarityTier] : [];
+  }
+
+  /*
+    The items added in the designer, put into the drawn card. The state's scale zooms the whole page,
+    so the layer takes it back: an item keeps the size it was given over the card as shown.
+    `bare` asks for the card alone (the designer draws the items itself, over a picture of it).
+  */
+  function drawCanvas(data) {
+    var template = document.getElementById('aw-san-canvas');
+    var card = document.getElementById('outerwrapper');
+    if (!template || !card || data.bare === true) return;
+    card.classList.add.apply(card.classList, ['ach'].concat(stateClasses(data)));
+    var layer = template.content.firstElementChild.cloneNode(true);
+    var zoom = parseFloat(document.body.style.zoom) || 1;
+    if (zoom !== 1) layer.style.zoom = String(1 / zoom);
+    var words = {
+      game: String(data.gameName || ''),
+      title: String(data.displayName || ''),
+      detail: String(data.description || ''),
+      rarity: rarityText(data.rarityPercent),
+    };
+    var spans = layer.querySelectorAll('[data-tok]');
+    for (var i = 0; i < spans.length; i++) {
+      var key = spans[i].getAttribute('data-tok');
+      if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];
+    }
+    card.insertBefore(layer, card.firstChild);
+    card.classList.add('active');
+  }
+
   var closeTimer = null;
   function close() {
     clearTimeout(closeTimer);
     if (window.api && window.api.closeNotificationWindow) window.api.closeNotificationWindow();
   }
 
+  // Only the latest card may close the page: a card replaced mid-fade still answers its own timers.
+  var shownCount = 0;
+
   function show(data) {
     data = data || {};
-    var rate = data.unlockRate != null ? data.unlockRate : data.rarityPercent;
+    var shown = ++shownCount;
+    var closeThis = function () {
+      if (shown === shownCount) close();
+    };
+    var theme = readTheme();
     // AW Next's own tier decides the state, so the rarity settings apply to this preset too.
-    var unlock = { tier: data.rarityTier, mode: data.rarityMode, platinum: data.isPlatinum, percent: rate };
+    var unlock = engine.unlockOf(data);
+    var rate = unlock.percent;
     var picked = engine.customisationFor(theme, unlock);
     var type = picked.type;
     var customisation = picked.customisation;
@@ -96,6 +164,9 @@
     var template = document.getElementById('aw-san-layout-' + layout);
     var strings = data.fallback || {};
     return layoutCss(layout).then(function () {
+      // A newer card was asked for while this layout loaded: that one is drawn instead.
+      if (shown !== shownCount) return;
+      useLayoutCss(layout);
       reset();
       var result = engine.render({
         layoutHtml: template ? template.innerHTML : '',
@@ -127,11 +198,14 @@
         },
         url: assetUrl,
         lockIcon: LOCK_ICON,
-        onEnd: close,
+        onEnd: closeThis,
       });
+      drawCanvas(data);
+      // The designer's live page stops the card here, before it is painted.
+      if (window.api && window.api.notificationDrawn) window.api.notificationDrawn();
       // The page closes itself after the card has played; this is only the net under it.
       clearTimeout(closeTimer);
-      closeTimer = setTimeout(close, (Number(customisation.displaytime) || 10) * 1000 + 4000);
+      closeTimer = setTimeout(closeThis, (Number(customisation.displaytime) || 10) * 1000 + 4000);
       return engine.whenImagesSettle(result.images, 3000).then(function () {
         if (window.api && window.api.notificationRenderReady) window.api.notificationRenderReady();
       });

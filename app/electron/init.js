@@ -5964,6 +5964,9 @@ ipcMain.handle('preset-snapshot', async (event, { preset, payload } = {}) => {
   return presetInsets.snapshot(resolved.folder, layer, notificationPagePayload(payload || {}));
 });
 
+// The same payload for the designer's live pages, so a preview is worded and graded as the popup is.
+ipcMain.handle('preset-page-payload', async (event, payload = {}) => notificationPagePayload(payload && typeof payload === 'object' ? payload : {}));
+
 // What the preset page receives with 'show-notification', also used to measure a preset whose card
 // follows its text.
 function notificationPagePayload(data) {
@@ -5981,6 +5984,8 @@ function notificationPagePayload(data) {
     // The unlock rate even above the rare cut-off, and the schema's hidden flag (imported SAN themes).
     unlockRate: data.unlockRate != null ? data.unlockRate : data.rarityPercent,
     hidden: data.hidden === true,
+    // The designer's picture of an imported SAN card leaves out the items it draws over it itself.
+    bare: data.bare === true,
     // The tier the preset paints ('gold' | 'silver' | 'bronze' | 'platinum' | ''), decided here so a
     // preset never carries cut-offs of its own; `rarityGrade` is its localized name.
     rarityTier: notificationTier.tier,

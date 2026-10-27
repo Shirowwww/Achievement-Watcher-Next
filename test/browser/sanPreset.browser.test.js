@@ -220,6 +220,55 @@ test('a state is drawn at the scale its theme gives it, text included', { timeou
   assert.ok(Math.abs(double.text / normal.text - 2) < 0.05, `the text doubles too: ${normal.text} -> ${double.text}`);
 });
 
+test('items added in the designer are drawn in the card at their own size, shown by tier, and left out when bare', { timeout: 60000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
+  if (!browser) return t.skip(skipReason(failures));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-san-items-'));
+  t.after(async () => {
+    await closeBrowser(browser, userDataDir);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+  const theme = themeFor('default');
+  theme.types.main.scale = 200;
+  theme.types.main.displaytime = 30;
+  theme.awCanvas = {
+    items: [
+      { kind: 'text', text: 'GG {title}', x: 10, y: 4, w: 100, size: 12 },
+      { kind: 'shape', shape: 'rect', x: 0, y: 0, w: 50, h: 20, tiers: { gold: { off: true } } },
+    ],
+  };
+  sanEngine.writePresetFiles(dir, theme, { name: 'items' });
+
+  const draw = async (data) => {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 800, height: 300 });
+    await page.evaluateOnNewDocument(bridge);
+    await page.goto(pathToFileURL(path.join(dir, 'index.html')).href, { waitUntil: 'load' });
+    await page.evaluate((d) => window.__aw.show(d), data);
+    await page.waitForFunction(() => window.__aw.ready > 0, { timeout: 10000 });
+    const out = await page.evaluate(() => {
+      const layer = document.querySelector('#outerwrapper > .aw-canvas');
+      const text = layer && layer.querySelector('[data-i="0"]');
+      const shape = layer && layer.querySelector('[data-kind="shape"]');
+      return {
+        layer: Boolean(layer),
+        words: text ? text.textContent : '',
+        width: text ? Math.round(text.getBoundingClientRect().width) : 0,
+        shape: shape ? getComputedStyle(shape).display : 'none',
+      };
+    });
+    await page.close();
+    return out;
+  };
+  const plain = await draw(payload({ displayName: 'Boss' }));
+  assert.equal(plain.layer, true);
+  assert.equal(plain.words, 'GG Boss', 'a token takes the popup words');
+  assert.equal(plain.width, 100, 'the state scale (200%) does not enlarge an item');
+  assert.notEqual(plain.shape, 'none');
+  assert.equal((await draw(payload({ unlockRate: 2, rarityTier: 'gold' }))).shape, 'none', 'switched off for gold');
+  assert.equal((await draw(payload({ bare: true }))).layer, false, 'the designer picture leaves them out');
+});
+
 test('a completion shows the theme 100% picture, a real PlayStation platinum its own trophy', { timeout: 60000 }, async (t) => {
   const { browser, userDataDir, failures } = await launchBrowser(['--allow-file-access-from-files']);
   if (!browser) return t.skip(skipReason(failures));
