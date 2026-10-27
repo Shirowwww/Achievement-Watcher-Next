@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "이 PC의 SAN에서",
           "layer": {
             "none": "사용자 지정 안 함",
-            "title": "기본 제공 프리셋 사용자 지정"
+            "title": "프리셋 사용자 지정"
           },
           "load": "프리셋 편집",
           "loaded": "불러옴:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "이미지 또는 GIF 선택",
     "preset-font-refused": "이 파일은 사용할 수 있는 글꼴이 아닙니다. 4 MB 이하의 TTF, OTF, WOFF 또는 WOFF2 파일을 사용하세요.",
     "preset-logo-refused": "이 파일은 사용할 수 있는 로고가 아닙니다. 5 MB 이하의 PNG, JPEG, GIF, WebP 또는 BMP 이미지를 사용하세요.",
-    "preset-layer-note": "{preset}을(를) 사용자 지정하는 중입니다. 변경할 항목을 선택하세요. 선택하지 않은 항목은 기본 제공 프리셋 그대로 유지됩니다. 변경 사항은 그 위에 적용되며, 기본 제공 프리셋은 복사되거나 수정되지 않습니다.",
+    "preset-layer-note": "{preset}을(를) 사용자 지정하는 중입니다. 변경할 항목을 선택하세요. 선택하지 않은 항목은 프리셋 그대로 유지됩니다. 변경 사항은 그 위에 적용되며, 프리셋 자체는 복사되거나 수정되지 않습니다.",
     "folder-reason-ea-app": "EA app 버전입니다. EA app으로 실행한 게임은 도전 과제를 게임 폴더가 아니라 EA 계정에 보관하므로, 여기에는 읽을 달성 파일이 없습니다. 그런 달성 기록은 감시 폴더가 아니라 설정 > 소스의 EA 소스가 가져옵니다.",
     "folder-reason-game-no-data": "게임 폴더가 맞지만, 에뮬레이터 설정도 없고 AW Next가 읽을 수 있는 형식의 달성 파일도 없습니다.",
     "folder-reason-unreadable": "이 폴더를 읽을 수 없습니다.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "먼저 이름 필드에 새 이름을 입력한 다음 이름 바꾸기를 누르세요.",
     "preset-view-readonly": "이 보기에서는 카드만 표시됩니다. 레이아웃을 편집하려면 카드로 돌아가세요.",
     "preset-layer-fixed": "{presets}은(는) 자체 코드로 카드를 그리므로 여기서 사용자 지정할 수 없습니다. 그대로 사용하는 것은 계속 가능합니다.",
+    "preset-play-popup": "이 프리셋은 자체 코드로 카드를 그리므로 화면의 실제 팝업에서 재생됩니다.",
     "preset-play-reduced": "Windows에서 애니메이션을 줄이도록 설정되어 있어 미리 보기가 멈춰 있습니다. 보려면 Windows 설정에서 “애니메이션 효과”를 다시 켜세요."
   },
   "watchdog": {

@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Bu PC’deki SAN’dan",
           "layer": {
             "none": "Özelleştirme yok",
-            "title": "Birlikte gelen bir ön ayarı özelleştir"
+            "title": "Bir ön ayarı özelleştir"
           },
           "load": "Ön ayarı düzenle",
           "loaded": "Yüklendi:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Bir görsel veya GIF seç",
     "preset-font-refused": "Bu dosya kullanılabilir bir yazı tipi değil. En fazla 4 MB boyutunda bir TTF, OTF, WOFF veya WOFF2 dosyası kullan.",
     "preset-logo-refused": "Bu dosya kullanılabilir bir logo değil. En fazla 5 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
-    "preset-layer-note": "{preset} özelleştiriliyor. Değiştirmek için bir bölümü işaretle; işaretlemeden bıraktığın her şey, birlikte gelen ön ayarın sunduğu gibi kalır. Değişikliklerin onun üzerine eklenir: birlikte gelen ön ayar kopyalanmaz ve değiştirilmez.",
+    "preset-layer-note": "{preset} özelleştiriliyor. Değiştirmek için bir bölümü işaretle; işaretlemeden bıraktığın her şey, ön ayarın sunduğu gibi kalır. Değişikliklerin onun üzerine eklenir: ön ayarın kendisi kopyalanmaz ve değiştirilmez.",
     "folder-reason-ea-app": "Bu bir EA app sürümüdür. EA app üzerinden başlatılan bir oyun başarımlarını oyun klasöründe değil EA hesabında tutar, bu yüzden burada okunacak bir kilit açma dosyası yoktur. Bu başarımları izlenen bir klasör değil, Ayarlar > Kaynaklar altındaki EA kaynağı toplar.",
     "folder-reason-game-no-data": "Burası bir oyun klasörü, ancak içinde ne bir emülatör yapılandırması ne de AW Next’in okuyabileceği bir kilit açma dosyası var.",
     "folder-reason-unreadable": "Bu klasör okunamadı.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Önce Ad alanına yeni bir ad yazın, sonra Yeniden adlandır’a basın.",
     "preset-view-readonly": "Bu görünüm yalnızca kartı gösterir. Düzeni düzenlemek için Kart’a dönün.",
     "preset-layer-fixed": "{presets} kartlarını kendi kodlarıyla çizer, bu yüzden burada özelleştirilemez. Yine de onları olduğu gibi kullanabilirsiniz.",
+    "preset-play-popup": "Bu ön ayar kartını kendi koduyla çizer, bu yüzden ekranda gerçek bir açılır pencerede oynatılır.",
     "preset-play-reduced": "Windows daha az animasyon gösterecek şekilde ayarlı, bu yüzden önizleme durağan kalır. Görmek için Windows ayarlarında “Animasyon efektleri”ni yeniden açın."
   },
   "watchdog": {

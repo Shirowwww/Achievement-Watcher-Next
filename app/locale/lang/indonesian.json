@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Dari SAN di PC ini",
           "layer": {
             "none": "Tidak dikustomisasi",
-            "title": "Kustomisasi preset bawaan"
+            "title": "Kustomisasi preset"
           },
           "load": "Edit sebuah preset",
           "loaded": "Dimuat:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Pilih gambar atau GIF",
     "preset-font-refused": "Berkas itu bukan fon yang dapat dipakai. Gunakan berkas TTF, OTF, WOFF, atau WOFF2 maksimal 4 MB.",
     "preset-logo-refused": "Berkas itu bukan logo yang dapat dipakai. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 5 MB.",
-    "preset-layer-note": "Mengustomisasi {preset}. Centang bagian untuk mengubahnya; apa pun yang tidak dicentang tetap seperti yang disediakan preset bawaan. Perubahanmu diterapkan di atasnya: preset bawaan tidak disalin atau diubah.",
+    "preset-layer-note": "Mengustomisasi {preset}. Centang bagian untuk mengubahnya; apa pun yang tidak dicentang tetap seperti yang disediakan preset. Perubahanmu diterapkan di atasnya: preset itu sendiri tidak disalin atau diubah.",
     "folder-reason-ea-app": "Ini rilis aplikasi EA. Game yang dijalankan lewat aplikasi EA menyimpan pencapaiannya di akun EA, bukan di folder game, jadi tidak ada file pembuka pencapaian yang bisa dibaca di sini. Pencapaian tersebut diambil oleh sumber EA di Pengaturan > Sumber, bukan oleh folder yang dipantau.",
     "folder-reason-game-no-data": "Ini folder game, tetapi tidak memuat konfigurasi emulator maupun file pencapaian dalam tata letak apa pun yang dapat dibaca AW Next.",
     "folder-reason-unreadable": "Folder ini tidak dapat dibaca.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Ketik nama baru di kolom Nama terlebih dahulu, lalu tekan Ganti nama.",
     "preset-view-readonly": "Tampilan ini hanya menampilkan kartu. Kembali ke Kartu untuk mengedit tata letak.",
     "preset-layer-fixed": "{presets} menggambar kartunya dengan kode sendiri, sehingga tidak dapat disesuaikan di sini. Anda tetap dapat menggunakannya apa adanya.",
+    "preset-play-popup": "Preset ini menggambar kartunya dengan kodenya sendiri, jadi diputar di popup sungguhan, di layar.",
     "preset-play-reduced": "Windows diatur untuk menampilkan lebih sedikit animasi, jadi pratinjau tetap diam. Aktifkan kembali “Efek animasi” di pengaturan Windows untuk melihatnya."
   },
   "watchdog": {

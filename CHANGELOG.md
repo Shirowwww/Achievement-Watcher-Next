@@ -44,6 +44,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Gallery presets can be customized.** "Customize a preset" takes a preset installed from the
+  gallery as it takes a bundled one, and keeps your changes on top of it. A preset that draws its
+  card with code of its own plays in a real popup when you press Play.
 - **Settings > Sources is easier to read.** Emulators and game fixes share one card and the official
   platforms another, now with EA Desktop and PlayStation Network, while RPCS3 joins the console
   emulators. LumaPlay (Uplay R1) and RUNE (Uplay R2) get a switch each, and MarkerPatch,

@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "SANista tältä koneelta",
           "layer": {
             "none": "Ei mukautusta",
-            "title": "Mukauta mukana tuleva esiasetus"
+            "title": "Mukauta esiasetusta"
           },
           "load": "Muokkaa esiasetusta",
           "loaded": "Ladattu:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Valitse kuva tai GIF",
     "preset-font-refused": "Tämä tiedosto ei ole käyttökelpoinen kirjasin. Käytä TTF-, OTF-, WOFF- tai WOFF2-tiedostoa, jonka koko on enintään 4 Mt.",
     "preset-logo-refused": "Tämä tiedosto ei ole käyttökelpoinen logo. Käytä PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa, jonka koko on enintään 5 Mt.",
-    "preset-layer-note": "Mukautetaan esiasetusta {preset}. Valitse osio muuttaaksesi sitä; mitä jätät valitsematta, pysyy sellaisena kuin mukana tuleva esiasetus sen tarjoaa. Muutoksesi tulevat sen päälle: mukana tulevaa esiasetusta ei kopioida eikä muokata.",
+    "preset-layer-note": "Mukautetaan esiasetusta {preset}. Valitse osio muuttaaksesi sitä; mitä jätät valitsematta, pysyy sellaisena kuin esiasetus sen tarjoaa. Muutoksesi tulevat sen päälle: itse esiasetusta ei kopioida eikä muokata.",
     "folder-reason-ea-app": "Tämä on EA app -julkaisu. EA appin kautta käynnistetty peli säilyttää saavutuksensa EA-tilillä eikä pelikansiossa, joten täällä ei ole luettavaa avaustiedostoa. Nämä avaukset poimitaan kohdan Asetukset > Lähteet EA-lähteestä eikä valvotusta kansiosta.",
     "folder-reason-game-no-data": "Tämä on pelikansio, mutta siinä ei ole emulaattorin asetuksia eikä avaustiedostoa missään sellaisessa muodossa, jota AW Next osaisi lukea.",
     "folder-reason-unreadable": "Tätä kansiota ei voitu lukea.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Kirjoita ensin uusi nimi Nimi-kenttään ja paina sitten Nimeä uudelleen.",
     "preset-view-readonly": "Tämä näkymä näyttää vain kortin. Palaa Kortti-näkymään muokataksesi asettelua.",
     "preset-layer-fixed": "{presets} piirtävät korttinsa omalla koodillaan, joten niitä ei voi mukauttaa tässä. Voit silti käyttää niitä sellaisenaan.",
+    "preset-play-popup": "Tämä esiasetus piirtää korttinsa omalla koodillaan, joten se toistetaan oikeassa ponnahdusikkunassa näytöllä.",
     "preset-play-reduced": "Windows on asetettu näyttämään vähemmän animaatioita, joten esikatselu pysyy paikallaan. Ota ”Animaatiotehosteet” takaisin käyttöön Windowsin asetuksista nähdäksesi ne."
   },
   "watchdog": {

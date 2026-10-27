@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Fra SAN på denne pc",
           "layer": {
             "none": "Tilpasser ikke",
-            "title": "Tilpas et medfølgende preset"
+            "title": "Tilpas et preset"
           },
           "load": "Rediger et preset",
           "loaded": "Indlæst:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Vælg et billede eller en GIF",
     "preset-font-refused": "Den fil er ikke en brugbar skrifttype. Brug en TTF-, OTF-, WOFF- eller WOFF2-fil på højst 4 MB.",
     "preset-logo-refused": "Den fil er ikke et brugbart logo. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 5 MB.",
-    "preset-layer-note": "Tilpasser {preset}. Afkryds et afsnit for at ændre det; alt, du lader være afkrydset fra, forbliver som det medfølgende preset leveres. Dine ændringer lægges oven på: det medfølgende preset kopieres eller ændres ikke.",
+    "preset-layer-note": "Tilpasser {preset}. Afkryds et afsnit for at ændre det; alt, du lader være afkrydset fra, forbliver, som presettet leveres. Dine ændringer lægges oven på: selve presettet kopieres eller ændres ikke.",
     "folder-reason-ea-app": "Dette er en udgivelse til EA app. Et spil, der startes gennem EA app, gemmer sine præstationer på EA-kontoen i stedet for i spilmappen, så der er ingen oplåsningsfil at læse her. De oplåsninger opsamles af EA-kilden under Indstillinger > Kilder i stedet for af en overvåget mappe.",
     "folder-reason-game-no-data": "Dette er en spilmappe, men den indeholder hverken en emulatorkonfiguration eller en oplåsningsfil i et format, AW Next kan læse.",
     "folder-reason-unreadable": "Denne mappe kunne ikke læses.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Skriv først et nyt navn i feltet Navn, og tryk derefter på Omdøb.",
     "preset-view-readonly": "Denne visning viser kun kortet. Gå tilbage til Kort for at redigere layoutet.",
     "preset-layer-fixed": "{presets} tegner deres kort med deres egen kode, så de kan ikke tilpasses her. Du kan stadig bruge dem, som de er.",
+    "preset-play-popup": "Dette preset tegner sit kort med sin egen kode, så det afspilles i et rigtigt popup på skærmen.",
     "preset-play-reduced": "Windows er indstillet til at vise færre animationer, så forhåndsvisningen står stille. Slå »Animationseffekter« til igen i Windows-indstillingerne for at se dem."
   },
   "watchdog": {

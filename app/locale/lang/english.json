@@ -1031,7 +1031,7 @@
           "importedOnly": "Imported preset - export or delete it here; it is not editable with the sliders.",
           "layer": {
             "none": "Not customizing",
-            "title": "Customize a bundled preset"
+            "title": "Customize a preset"
           },
           "load": "Edit a preset",
           "loaded": "Loaded:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Choose a picture or a GIF",
     "preset-font-refused": "That file is not a usable font. Use a TTF, OTF, WOFF or WOFF2 file of 4 MB at most.",
     "preset-logo-refused": "That file is not a usable logo. Use a PNG, JPEG, GIF, WebP or BMP picture of 5 MB at most.",
-    "preset-layer-note": "Customizing {preset}. Tick a section to change it; whatever you leave unticked stays as the bundled preset ships. Your changes sit on top of it: the bundled preset is not copied or modified.",
+    "preset-layer-note": "Customizing {preset}. Tick a section to change it; whatever you leave unticked stays as the preset ships. Your changes sit on top of it: the preset itself is not copied or modified.",
     "folder-reason-ea-app": "This is an EA app release. A game started through the EA app keeps its achievements on the EA account rather than in the game folder, so there is no unlock file here to read. Those unlocks are picked up by the EA source in Settings > Sources instead of by a watched folder.",
     "folder-reason-game-no-data": "This is a game folder, but it holds no emulator configuration and no unlock file in any layout AW Next can read.",
     "folder-reason-unreadable": "This folder could not be read.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Type a new name in the Name field first, then press Rename.",
     "preset-view-readonly": "This view only shows the card. Go back to Card to edit the layout.",
     "preset-layer-fixed": "{presets} draw their card with their own code, so they cannot be customized here. You can still use them as they are.",
+    "preset-play-popup": "This preset draws its card with code of its own, so it plays in a real popup, on screen.",
     "preset-play-reduced": "Windows is set to show fewer animations, so the preview stays still. Turn \"Animation effects\" back on in Windows settings to see them."
   },
   "watchdog": {

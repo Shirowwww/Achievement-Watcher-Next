@@ -18,7 +18,16 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const schema = require('./presetSchema.js');
 const { cssUrl } = require('./cssUrl.js');
-const { PRESET_ENGINE, CANVAS_MAX_ROOM, CANVAS_DECOR_SELECTORS, canvasCss, canvasOverhang, canvasScript } = require('./customPreset.js');
+const {
+  PRESET_ENGINE,
+  PRESET_OPTIONS_FILE,
+  PRESET_PACKAGE_FILE,
+  CANVAS_MAX_ROOM,
+  CANVAS_DECOR_SELECTORS,
+  canvasCss,
+  canvasOverhang,
+  canvasScript,
+} = require('./customPreset.js');
 
 // The file that marks a folder as a layer, and the element the logo is drawn on.
 const LAYER_FILE = 'aw-layer.json';
@@ -68,6 +77,17 @@ function brandMarkPseudo(css) {
   if (!found) return '';
   const other = found[1] === 'after' ? 'before' : 'after';
   return new RegExp(`\\.ach::${other}\\s*\\{[^}]*--follows-mark\\s*:`).test(css) ? `${found[1]},${other}` : found[1];
+}
+
+/*
+  The colour variable a base's title reads when it is not --text, which the text section always
+  sets: Ticket inks its type with --ink. '' for --text, for the accent (Arcade's title, on purpose)
+  and for a literal colour.
+*/
+function titleInkVar(css) {
+  const rule = typeof css === 'string' && /(?:^|[},])\s*\.ach \.title\s*\{([^}]*)\}/m.exec(css);
+  const ink = rule && /(?:^|[;{\s])color\s*:\s*var\(\s*(--[\w-]+)\s*[,)]/.exec(rule[1]);
+  return ink && ink[1] !== '--text' && ink[1] !== '--accent' ? ink[1] : '';
 }
 
 /*
@@ -141,11 +161,12 @@ function logoPosition(position, offset) {
   Declarations that a bundled stylesheet writes as shorthands with several layers are `!important`,
   because a generic override has no way to out-specify every selector a preset uses.
 */
-function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editing = false, entrances = !editing } = {}) {
+function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, textVar = '', editing = false, entrances = !editing, tokenNames = null } = {}) {
   const layer = normalizeLayer(rawLayer);
   const on = new Set(layer.sections);
   const v = layer.options;
   const css = [];
+  const ink = /^--[\w-]+$/.test(textVar) ? ` ${textVar}: ${v.text};` : '';
 
   if (on.has('font') && v.fontFile) {
     css.push(
@@ -157,7 +178,7 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editin
     css.push(`.ach, .ach .title, .ach .detail, .ach .game, .ach .rarity, .ach .progress_label { font-family: ${stack} !important; }`);
   }
   if (on.has('accent')) css.push(`.ach { --accent: ${v.accent}; }`);
-  if (on.has('text')) css.push(`.ach { --text: ${v.text}; color: ${v.text} !important; }`);
+  if (on.has('text')) css.push(`.ach { --text: ${v.text};${ink} color: ${v.text} !important; }`);
   if (on.has('background')) {
     css.push(
       v.bgMode === 'gradient'
@@ -185,7 +206,7 @@ function buildLayerCss(rawLayer, { assetUrl = (name) => name, markPseudo, editin
     );
   }
   if (on.has('canvas')) {
-    const free = canvasCss(v.canvas, { assetUrl, markPseudo, editing, entrances });
+    const free = canvasCss(v.canvas, { assetUrl, markPseudo, editing, entrances, tokenNames });
     if (free) css.push(free);
   }
   return css.join('\n');
@@ -214,16 +235,51 @@ const LAYER_FIELD_SECTION = Object.freeze(
   up by name there and nowhere else; a layer naming anything else, or a preset that no longer runs
   the shared engine, is unusable (null) and the notification falls back to the default preset.
 */
+function isLayerableFolder(folder) {
+  try {
+    return isLayerableHtml(fs.readFileSync(path.join(folder, 'index.html'), 'utf8'));
+  } catch {
+    return false;
+  }
+}
+
+// Installed from a package (the gallery) with no designer options behind it, and the shared card.
+// A preset made in the designer is edited as it is, so it is never a base.
+const isInstalledBase = (folder) =>
+  fs.existsSync(path.join(folder, PRESET_PACKAGE_FILE)) && !fs.existsSync(path.join(folder, PRESET_OPTIONS_FILE)) && isLayerableFolder(folder);
+
+/*
+  Where the base a layer names lives: an installed preset first, as the popup's own lookup finds it
+  first, then the bundled one. Null for a name that is neither, or that is not a plain folder name.
+*/
+function layerBaseFolder(usersDir, baseRoot, name) {
+  const base = String(name || '');
+  if (!base || path.basename(base) !== base || base.startsWith('.')) return null;
+  if (isInstalledBase(path.join(usersDir, base))) return path.join(usersDir, base);
+  return isLayerableFolder(path.join(baseRoot, base)) ? path.join(baseRoot, base) : null;
+}
+
+// Every preset a layer can be made over, by name.
+function layerBaseNames(usersDir, baseRoot) {
+  const names = (root) => {
+    try {
+      return fs.readdirSync(root);
+    } catch {
+      return [];
+    }
+  };
+  const all = new Set([...names(usersDir), ...names(baseRoot)]);
+  return [...all].filter((name) => layerBaseFolder(usersDir, baseRoot, name)).sort((a, b) => a.localeCompare(b));
+}
+
 function readLayerFolder(usersDir, baseRoot, name) {
   const dir = path.join(usersDir, name);
   const layer = normalizeLayer(JSON.parse(fs.readFileSync(path.join(dir, LAYER_FILE), 'utf8')));
-  const baseFolder = path.join(baseRoot, layer.base);
-  const baseHtml = path.join(baseFolder, 'index.html');
-  if (!layer.base || path.basename(baseFolder) !== layer.base || !fs.existsSync(baseHtml)) return null;
-  if (!isLayerableHtml(fs.readFileSync(baseHtml, 'utf8'))) return null;
+  const baseFolder = layerBaseFolder(usersDir, baseRoot, layer.base);
+  if (!baseFolder) return null;
   const baseCss = path.join(baseFolder, 'style.css');
-  const markPseudo = fs.existsSync(baseCss) ? brandMarkPseudo(fs.readFileSync(baseCss, 'utf8')) : '';
-  return { baseFolder, layer: { ...layer, dir, markPseudo } };
+  const css = fs.existsSync(baseCss) ? fs.readFileSync(baseCss, 'utf8') : '';
+  return { baseFolder, layer: { ...layer, dir, markPseudo: brandMarkPseudo(css), textVar: titleInkVar(css) } };
 }
 
 // True when the layer draws a logo, which needs one extra element inside the card.
@@ -270,12 +326,15 @@ module.exports = {
   isLayerableHtml,
   hasBrandMark,
   brandMarkPseudo,
+  titleInkVar,
   decorUsesAccent,
   normalizeLayer,
   layerOptions,
   layerBoxSize,
   buildLayerCss,
   absolutizeCssUrls,
+  layerBaseFolder,
+  layerBaseNames,
   readLayerFolder,
   LAYER_FIELD_SECTION,
   layerHasLogo,

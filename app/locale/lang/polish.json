@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Z SAN na tym PC",
           "layer": {
             "none": "Bez dostosowywania",
-            "title": "Dostosuj dołączone ustawienie"
+            "title": "Dostosuj ustawienie"
           },
           "load": "Edytuj ustawienie",
           "loaded": "Wczytano:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Wybierz obraz lub GIF",
     "preset-font-refused": "Ten plik nie jest użyteczną czcionką. Użyj pliku TTF, OTF, WOFF lub WOFF2 o rozmiarze do 4 MB.",
     "preset-logo-refused": "Ten plik nie jest użytecznym logo. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 5 MB.",
-    "preset-layer-note": "Dostosowywanie: {preset}. Zaznacz sekcję, aby ją zmienić; wszystko, czego nie zaznaczysz, pozostaje takie, jak w dołączonym ustawieniu. Twoje zmiany są nałożone na wierzch: dołączone ustawienie nie jest kopiowane ani modyfikowane.",
+    "preset-layer-note": "Dostosowywanie: {preset}. Zaznacz sekcję, aby ją zmienić; wszystko, czego nie zaznaczysz, pozostaje takie, jak w ustawieniu. Twoje zmiany są nałożone na wierzch: samo ustawienie nie jest kopiowane ani modyfikowane.",
     "folder-reason-ea-app": "To wydanie uruchamiane przez EA app. Gra startowana z EA app przechowuje osiągnięcia na koncie EA, a nie w folderze gry, więc nie ma tu żadnego pliku odblokowań do odczytania. Takie osiągnięcia pobiera źródło EA w Ustawienia > Źródła, a nie obserwowany folder.",
     "folder-reason-game-no-data": "To folder gry, ale nie zawiera żadnej konfiguracji emulatora ani pliku odblokowań w formacie, który AW Next potrafi odczytać.",
     "folder-reason-unreadable": "Nie udało się odczytać tego folderu.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Najpierw wpisz nową nazwę w polu Nazwa, a potem naciśnij Zmień nazwę.",
     "preset-view-readonly": "Ten widok pokazuje tylko kartę. Wróć do Karty, aby edytować układ.",
     "preset-layer-fixed": "{presets} rysują swoją kartę własnym kodem, więc nie można ich tu dostosować. Nadal możesz ich używać w obecnej postaci.",
+    "preset-play-popup": "To ustawienie rysuje swoją kartę własnym kodem, więc odtwarza się w prawdziwym oknie podręcznym na ekranie.",
     "preset-play-reduced": "System Windows jest ustawiony tak, aby pokazywać mniej animacji, więc podgląd pozostaje nieruchomy. Aby je zobaczyć, włącz ponownie „Efekty animacji” w ustawieniach systemu Windows."
   },
   "watchdog": {

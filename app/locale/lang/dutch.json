@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Van SAN op deze pc",
           "layer": {
             "none": "Niet aanpassen",
-            "title": "Een meegeleverde preset aanpassen"
+            "title": "Een preset aanpassen"
           },
           "load": "Een preset bewerken",
           "loaded": "Geladen:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Kies een afbeelding of een GIF",
     "preset-font-refused": "Dit bestand is geen bruikbaar lettertype. Gebruik een TTF-, OTF-, WOFF- of WOFF2-bestand van maximaal 4 MB.",
     "preset-logo-refused": "Dit bestand is geen bruikbaar logo. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 5 MB.",
-    "preset-layer-note": "{preset} wordt aangepast. Vink een onderdeel aan om het te wijzigen; wat je niet aanvinkt, blijft zoals de meegeleverde preset het levert. Je wijzigingen komen er bovenop: de meegeleverde preset wordt niet gekopieerd of gewijzigd.",
+    "preset-layer-note": "{preset} wordt aangepast. Vink een onderdeel aan om het te wijzigen; wat je niet aanvinkt, blijft zoals de preset het levert. Je wijzigingen komen er bovenop: de preset zelf wordt niet gekopieerd of gewijzigd.",
     "folder-reason-ea-app": "Dit is een release van de EA app. Een game die je via de EA app start, bewaart zijn prestaties op het EA-account en niet in de gamemap, dus er valt hier geen ontgrendelbestand te lezen. Die ontgrendelingen worden opgepikt door de EA-bron bij Instellingen > Bronnen en niet door een bewaakte map.",
     "folder-reason-game-no-data": "Dit is een gamemap, maar er staat geen emulatorconfiguratie in en geen ontgrendelbestand in een indeling die AW Next kan lezen.",
     "folder-reason-unreadable": "Deze map kon niet worden gelezen.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Typ eerst een nieuwe naam in het veld Naam en kies dan Hernoemen.",
     "preset-view-readonly": "Deze weergave toont alleen de kaart. Ga terug naar Kaart om de indeling te bewerken.",
     "preset-layer-fixed": "{presets} tekenen hun kaart met hun eigen code, dus ze kunnen hier niet worden aangepast. Je kunt ze nog wel gebruiken zoals ze zijn.",
+    "preset-play-popup": "Deze preset tekent zijn kaart met eigen code, dus hij wordt afgespeeld in een echte popup op het scherm.",
     "preset-play-reduced": "Windows is ingesteld om minder animaties te tonen, dus het voorbeeld blijft stilstaan. Zet “Animatie-effecten” weer aan in de Windows-instellingen om ze te zien."
   },
   "watchdog": {

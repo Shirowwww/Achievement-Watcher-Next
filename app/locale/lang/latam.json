@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Desde SAN en esta PC",
           "layer": {
             "none": "Sin personalizar",
-            "title": "Personalizar un preajuste incluido"
+            "title": "Personalizar un preajuste"
           },
           "load": "Editar un preajuste",
           "loaded": "Cargado:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Elegir una imagen o un GIF",
     "preset-font-refused": "Ese archivo no es una fuente utilizable. Usa un archivo TTF, OTF, WOFF o WOFF2 de 4 MB como máximo.",
     "preset-logo-refused": "Ese archivo no es un logotipo utilizable. Usa una imagen PNG, JPEG, GIF, WebP o BMP de 5 MB como máximo.",
-    "preset-layer-note": "Personalizando {preset}. Marca una sección para cambiarla; lo que dejes sin marcar queda como lo trae el preajuste incluido. Tus cambios se aplican por encima: el preajuste incluido no se copia ni se modifica.",
+    "preset-layer-note": "Personalizando {preset}. Marca una sección para cambiarla; lo que dejes sin marcar queda como lo trae el preajuste. Tus cambios se aplican por encima: el preajuste en sí no se copia ni se modifica.",
     "folder-reason-ea-app": "Es una versión de EA app. Un juego iniciado desde la EA app guarda sus logros en la cuenta de EA y no en la carpeta del juego, así que aquí no hay ningún archivo de desbloqueo que leer. Esos logros los recoge la fuente EA en Configuración > Fuentes, no una carpeta vigilada.",
     "folder-reason-game-no-data": "Es una carpeta de juego, pero no contiene ninguna configuración de emulador ni archivo de desbloqueo en un formato que AW Next pueda leer.",
     "folder-reason-unreadable": "No se pudo leer esta carpeta.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Primero escribe un nuevo nombre en el campo Nombre y luego presiona Renombrar.",
     "preset-view-readonly": "Esta vista solo muestra la tarjeta. Vuelve a Tarjeta para editar la disposición.",
     "preset-layer-fixed": "{presets} dibujan su tarjeta con su propio código, por lo que no se pueden personalizar aquí. Aun así, puedes usarlos tal cual.",
+    "preset-play-popup": "Este preajuste dibuja su tarjeta con código propio, así que se reproduce en un popup real, en pantalla.",
     "preset-play-reduced": "Windows está configurado para mostrar menos animaciones, así que la vista previa permanece quieta. Vuelve a activar «Efectos de animación» en la configuración de Windows para verlas."
   },
   "watchdog": {

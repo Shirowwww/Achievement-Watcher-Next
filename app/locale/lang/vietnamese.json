@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Từ SAN trên PC này",
           "layer": {
             "none": "Không tùy chỉnh",
-            "title": "Tùy chỉnh một mẫu có sẵn"
+            "title": "Tùy chỉnh một mẫu"
           },
           "load": "Sửa một mẫu",
           "loaded": "Đã tải:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Chọn hình ảnh hoặc GIF",
     "preset-font-refused": "Tệp đó không phải là phông chữ dùng được. Hãy dùng tệp TTF, OTF, WOFF hoặc WOFF2 tối đa 4 MB.",
     "preset-logo-refused": "Tệp đó không phải là logo dùng được. Hãy dùng ảnh PNG, JPEG, GIF, WebP hoặc BMP tối đa 5 MB.",
-    "preset-layer-note": "Đang tùy chỉnh {preset}. Đánh dấu một phần để thay đổi; những gì bạn không đánh dấu sẽ giữ nguyên như mẫu có sẵn cung cấp. Thay đổi của bạn được đặt lên trên: mẫu có sẵn không bị sao chép hay sửa đổi.",
+    "preset-layer-note": "Đang tùy chỉnh {preset}. Đánh dấu một phần để thay đổi; những gì bạn không đánh dấu sẽ giữ nguyên như mẫu cung cấp. Thay đổi của bạn được đặt lên trên: bản thân mẫu không bị sao chép hay sửa đổi.",
     "folder-reason-ea-app": "Đây là bản phát hành của ứng dụng EA. Trò chơi chạy qua ứng dụng EA giữ thành tựu trên tài khoản EA chứ không phải trong thư mục trò chơi, nên ở đây không có tệp mở khóa nào để đọc. Những thành tựu đó được lấy qua nguồn EA trong Cài đặt > Nguồn thay vì qua một thư mục được theo dõi.",
     "folder-reason-game-no-data": "Đây là một thư mục trò chơi, nhưng nó không chứa cấu hình giả lập nào và cũng không có tệp mở khóa theo bất kỳ định dạng nào AW Next đọc được.",
     "folder-reason-unreadable": "Không thể đọc thư mục này.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Hãy nhập tên mới vào ô Tên trước, rồi nhấn Đổi tên.",
     "preset-view-readonly": "Chế độ xem này chỉ hiển thị thẻ. Hãy quay lại Thẻ để chỉnh sửa bố cục.",
     "preset-layer-fixed": "{presets} vẽ thẻ bằng mã riêng nên không thể tùy chỉnh ở đây. Bạn vẫn có thể dùng chúng như hiện có.",
+    "preset-play-popup": "Mẫu này vẽ thẻ bằng mã riêng, nên nó được phát trong một popup thật trên màn hình.",
     "preset-play-reduced": "Windows đang được đặt để hiển thị ít hiệu ứng động hơn nên bản xem thử đứng yên. Hãy bật lại “Hiệu ứng hoạt ảnh” trong cài đặt Windows để xem."
   },
   "watchdog": {

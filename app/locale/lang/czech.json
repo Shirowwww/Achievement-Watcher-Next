@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Ze SAN na tomto PC",
           "layer": {
             "none": "Bez úprav",
-            "title": "Upravit přibalenou předvolbu"
+            "title": "Upravit předvolbu"
           },
           "load": "Upravit předvolbu",
           "loaded": "Načteno:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Vybrat obrázek nebo GIF",
     "preset-font-refused": "Tento soubor není použitelné písmo. Použijte soubor TTF, OTF, WOFF nebo WOFF2 o velikosti nejvýše 4 MB.",
     "preset-logo-refused": "Tento soubor není použitelné logo. Použijte obrázek PNG, JPEG, GIF, WebP nebo BMP o velikosti nejvýše 5 MB.",
-    "preset-layer-note": "Úprava předvolby {preset}. Zaškrtněte část, kterou chcete změnit; co nezaškrtnete, zůstane tak, jak to přibalená předvolba dodává. Vaše změny se vrství navrch: přibalená předvolba se nekopíruje ani nemění.",
+    "preset-layer-note": "Úprava předvolby {preset}. Zaškrtněte část, kterou chcete změnit; co nezaškrtnete, zůstane tak, jak to předvolba dodává. Vaše změny se vrství navrch: samotná předvolba se nekopíruje ani nemění.",
     "folder-reason-ea-app": "Toto je vydání pro EA app. Hra spuštěná přes EA app ukládá své úspěchy na účet EA, nikoli do složky hry, takže tu není žádný soubor s odemčeními ke čtení. Tyto úspěchy načítá zdroj EA v Nastavení > Zdroje, ne sledovaná složka.",
     "folder-reason-game-no-data": "Toto je složka hry, neobsahuje však žádnou konfiguraci emulátoru ani soubor s odemčeními ve formátu, který AW Next umí přečíst.",
     "folder-reason-unreadable": "Tuto složku se nepodařilo přečíst.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Nejprve zadejte nový název do pole Název a potom stiskněte Přejmenovat.",
     "preset-view-readonly": "Toto zobrazení ukazuje jen kartu. Pro úpravu rozvržení se vraťte na Karta.",
     "preset-layer-fixed": "{presets} vykreslují svou kartu vlastním kódem, a proto je tady nelze upravit. Stále je ale můžete používat tak, jak jsou.",
+    "preset-play-popup": "Tato předvolba kreslí kartu vlastním kódem, a proto se přehraje ve skutečném vyskakovacím okně na obrazovce.",
     "preset-play-reduced": "Windows je nastaveno tak, aby zobrazovalo méně animací, takže náhled zůstává nehybný. Chcete-li je vidět, znovu zapněte „Efekty animace“ v nastavení Windows."
   },
   "watchdog": {

@@ -5658,6 +5658,7 @@ let notificationPresetFolders = null;
 const notificationPresetLayers = new Map();
 
 const readPresetLayer = (name) => presetLayer.readLayerFolder(usersPresetsDir(), bundledPresetRoots()[0], name);
+const layerBaseFolder = (name) => presetLayer.layerBaseFolder(usersPresetsDir(), bundledPresetRoots()[0], name);
 
 function refreshNotificationPresetFolders() {
   const folders = new Map();
@@ -5675,6 +5676,17 @@ function refreshNotificationPresetFolders() {
             if (sanEngine.refreshPreset(folder)) debug.log(`[san-preset] ${name} rebuilt for engine ${sanEngine.ENGINE_VERSION}`);
           } catch (err) {
             debug.log(`[san-preset] ${name} could not be rebuilt: ${err.message || err}`);
+          }
+          // A preset made by an older build, a gallery one included, gets this build's preset engine.
+          try {
+            const page = path.join(folder, 'index.html');
+            const upgraded = customPreset.upgradeEngineHtml(fs.readFileSync(page, 'utf8'));
+            if (upgraded) {
+              fs.writeFileSync(page, upgraded, 'utf8');
+              debug.log(`[custom-preset] ${name} given the current preset engine`);
+            }
+          } catch (err) {
+            debug.log(`[custom-preset] ${name} engine not upgraded: ${err.message || err}`);
           }
         }
       }
@@ -5910,7 +5922,7 @@ function dressPresetWindow(win, layer) {
       if (win.isDestroyed()) return resolve();
       const logged = (what) => (err) => debug.log(`[overlay-notif] layer ${what} failed: ${err.message || err}`);
       const work = [];
-      const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name), markPseudo: layer.markPseudo });
+      const css = presetLayer.buildLayerCss(layer, { assetUrl: (name) => presetLayer.layerAssetFileUrl(layer.dir, name), markPseudo: layer.markPseudo, textVar: layer.textVar });
       if (css) work.push(win.webContents.insertCSS(css).catch(logged('css')));
       if (presetLayer.layerHasLogo(layer)) work.push(win.webContents.executeJavaScript(presetLayer.LAYER_LOGO_SCRIPT).catch(logged('logo')));
       const canvasScript = presetLayer.layerCanvasScript(layer);
@@ -7081,31 +7093,20 @@ ipcMain.handle('read-custom-preset', async (event, name) => {
     const parsed = JSON.parse(fs.readFileSync(path.join(usersPresetsDir(), safe, PRESET_OPTIONS_FILE), 'utf8'));
     return { name: safe, editable: true, ...customPresetNumbers(parsed) };
   } catch {
-    return { name: safe, editable: false };
+    // A gallery preset on the shared card is customised the way a bundled one is: as a layer over it.
+    if (!notificationPresetFolders) refreshNotificationPresetFolders();
+    return { name: safe, editable: false, base: layerBaseFolder(safe) === path.join(usersPresetsDir(), safe) };
   }
 });
 
 /*
-  Layered presets (util/presetLayer.js): a bundled preset plus a few overrides, stored as
-  aw-layer.json and the font/logo it names. Only bundled presets that run the shared engine can be a
-  base, and the base is always looked up by name in the bundled library.
+  Layered presets (util/presetLayer.js): a preset plus a few overrides, stored as aw-layer.json and
+  the font/logo it names. A base runs the shared engine: a bundled preset, or one installed from the
+  gallery, which the folder scan has given the current engine first.
 */
 const layerBaseNames = () => {
-  const root = bundledPresetRoots()[0];
-  try {
-    return fs
-      .readdirSync(root)
-      .filter((name) => {
-        try {
-          return presetLayer.isLayerableHtml(fs.readFileSync(path.join(root, name, 'index.html'), 'utf8'));
-        } catch {
-          return false;
-        }
-      })
-      .sort((a, b) => a.localeCompare(b));
-  } catch {
-    return [];
-  }
+  if (!notificationPresetFolders) refreshNotificationPresetFolders();
+  return presetLayer.layerBaseNames(usersPresetsDir(), bundledPresetRoots()[0]);
 };
 
 ipcMain.handle('list-layer-bases', async () => layerBaseNames());
@@ -7130,8 +7131,9 @@ ipcMain.handle('list-fixed-presets', async () => {
 // The base's own window size and stylesheet, which the designer needs to preview a layer over it.
 ipcMain.handle('read-layer-base', async (event, name) => {
   const base = String(name || '');
-  if (!layerBaseNames().includes(base)) return null;
-  const folder = path.join(bundledPresetRoots()[0], base);
+  if (!notificationPresetFolders) refreshNotificationPresetFolders();
+  const folder = layerBaseFolder(base);
+  if (!folder) return null;
   try {
     const dimensions = getPresetDimensions(folder);
     return { name: base, folder, width: dimensions.width, height: dimensions.height, css: fs.readFileSync(path.join(folder, 'style.css'), 'utf8') };
@@ -7163,7 +7165,7 @@ function dropStaleLayerAssets(dir, next) {
 
 function writeLayeredPreset(name, request) {
   const layer = presetLayer.normalizeLayer(request);
-  if (!layerBaseNames().includes(layer.base)) throw new Error('invalid-base');
+  if (!layerBaseFolder(layer.base)) throw new Error('invalid-base');
   const dir = path.join(usersPresetsDir(), name);
   fs.mkdirSync(dir, { recursive: true });
   // The scratch preview folder is reused between a layered and an ordinary draft.

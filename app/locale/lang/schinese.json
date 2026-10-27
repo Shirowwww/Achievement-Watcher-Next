@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "来自此电脑上的 SAN",
           "layer": {
             "none": "不自定义",
-            "title": "自定义内置预设"
+            "title": "自定义预设"
           },
           "load": "编辑预设",
           "loaded": "已加载：",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "选择图片或 GIF",
     "preset-font-refused": "该文件不是可用的字体。请使用不超过 4 MB 的 TTF、OTF、WOFF 或 WOFF2 文件。",
     "preset-logo-refused": "该文件不是可用的徽标。请使用不超过 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
-    "preset-layer-note": "正在自定义 {preset}。勾选某个部分即可更改;未勾选的部分保持内置预设的原样。你的更改叠加在其上:内置预设不会被复制或修改。",
+    "preset-layer-note": "正在自定义 {preset}。勾选某个部分即可更改;未勾选的部分保持预设的原样。你的更改叠加在其上:预设本身不会被复制或修改。",
     "folder-reason-ea-app": "这是 EA app 版本。通过 EA app 启动的游戏会把成就保存在 EA 账户中，而不是游戏文件夹里，因此这里没有可读取的解锁文件。这类成就由设置 > 来源中的 EA 来源获取，而不是由被监视的文件夹获取。",
     "folder-reason-game-no-data": "这是一个游戏文件夹，但其中既没有模拟器配置，也没有 AW Next 能够读取的任何解锁文件。",
     "folder-reason-unreadable": "无法读取此文件夹。",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "请先在“名称”字段中输入新名称，然后点击“重命名”。",
     "preset-view-readonly": "此视图仅显示卡片。请返回“卡片”以编辑布局。",
     "preset-layer-fixed": "{presets} 使用自带代码绘制卡片，因此无法在此自定义。您仍然可以按原样使用它们。",
+    "preset-play-popup": "此预设使用自带的代码绘制卡片，因此会在屏幕上的真实弹窗中播放。",
     "preset-play-reduced": "Windows 已设置为显示较少的动画，因此预览保持静止。要查看动画，请在 Windows 设置中重新打开“动画效果”。"
   },
   "watchdog": {

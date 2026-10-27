@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Depuis SAN sur ce PC",
           "layer": {
             "none": "Aucune personnalisation",
-            "title": "Personnaliser un preset fourni"
+            "title": "Personnaliser un preset"
           },
           "load": "Modifier un preset",
           "loaded": "Chargé :",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Choisir une image ou un GIF",
     "preset-font-refused": "Ce fichier n'est pas une police utilisable. Utilise un fichier TTF, OTF, WOFF ou WOFF2 de 4 Mo maximum.",
     "preset-logo-refused": "Ce fichier n'est pas un logo utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 5 Mo maximum.",
-    "preset-layer-note": "Personnalisation de {preset}. Coche une section pour la modifier ; tout ce que tu laisses décoché reste tel que le preset fourni l'apporte. Tes changements se placent par-dessus : le preset fourni n'est ni copié ni modifié.",
+    "preset-layer-note": "Personnalisation de {preset}. Coche une section pour la modifier ; tout ce que tu laisses décoché reste tel que le preset l'apporte. Tes changements se placent par-dessus : le preset lui-même n'est ni copié ni modifié.",
     "folder-reason-ea-app": "Il s'agit d'une version EA app. Un jeu lancé via l'EA app conserve ses succès sur le compte EA et non dans le dossier du jeu : il n'y a donc ici aucun fichier de déblocage à lire. Ces succès sont récupérés par la source EA dans Paramètres > Sources, pas par un dossier surveillé.",
     "folder-reason-game-no-data": "Il s'agit bien d'un dossier de jeu, mais il ne contient aucune configuration d'émulateur ni fichier de déblocage dans un format lisible par AW Next.",
     "folder-reason-unreadable": "Ce dossier n'a pas pu être lu.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Tape d’abord un nouveau nom dans le champ Nom, puis appuie sur Renommer.",
     "preset-view-readonly": "Cette vue montre seulement la carte. Reviens sur Carte pour modifier la mise en page.",
     "preset-layer-fixed": "{presets} dessinent leur carte avec leur propre code : on ne peut pas les personnaliser ici. Tu peux toujours les utiliser tels quels.",
+    "preset-play-popup": "Ce preset dessine sa carte avec son propre code : il se joue dans un vrai popup, à l’écran.",
     "preset-play-reduced": "Windows est réglé pour afficher moins d’animations : l’aperçu reste immobile. Réactive « Effets d’animation » dans les paramètres de Windows pour les voir."
   },
   "watchdog": {

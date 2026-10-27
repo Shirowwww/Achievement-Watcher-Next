@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Von SAN auf diesem PC",
           "layer": {
             "none": "Keine Anpassung",
-            "title": "Mitgelieferte Vorlage anpassen"
+            "title": "Vorlage anpassen"
           },
           "load": "Vorlage bearbeiten",
           "loaded": "Geladen:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Bild oder GIF auswählen",
     "preset-font-refused": "Diese Datei ist keine verwendbare Schriftart. Verwende eine TTF-, OTF-, WOFF- oder WOFF2-Datei mit höchstens 4 MB.",
     "preset-logo-refused": "Diese Datei ist kein verwendbares Logo. Verwende ein PNG-, JPEG-, GIF-, WebP- oder BMP-Bild mit höchstens 5 MB.",
-    "preset-layer-note": "{preset} wird angepasst. Hake einen Abschnitt an, um ihn zu ändern; alles, was du nicht anhakst, bleibt so, wie die mitgelieferte Vorlage es enthält. Deine Änderungen liegen darüber: Die mitgelieferte Vorlage wird weder kopiert noch verändert.",
+    "preset-layer-note": "{preset} wird angepasst. Hake einen Abschnitt an, um ihn zu ändern; alles, was du nicht anhakst, bleibt so, wie die Vorlage es enthält. Deine Änderungen liegen darüber: Die Vorlage selbst wird weder kopiert noch verändert.",
     "folder-reason-ea-app": "Dies ist eine EA-app-Version. Ein über die EA app gestartetes Spiel speichert seine Erfolge im EA-Konto und nicht im Spielordner, hier gibt es also keine Freischaltdatei zu lesen. Diese Erfolge werden von der EA-Quelle unter Einstellungen > Quellen erfasst, nicht von einem überwachten Ordner.",
     "folder-reason-game-no-data": "Dies ist ein Spielordner, er enthält jedoch keine Emulator-Konfiguration und keine Freischaltdatei in einem Format, das AW Next lesen kann.",
     "folder-reason-unreadable": "Dieser Ordner konnte nicht gelesen werden.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Gib zuerst im Feld Name einen neuen Namen ein und klicke dann auf Umbenennen.",
     "preset-view-readonly": "Diese Ansicht zeigt nur die Karte. Wechsle zurück zu Karte, um das Layout zu bearbeiten.",
     "preset-layer-fixed": "{presets} zeichnen ihre Karte mit eigenem Code und lassen sich hier deshalb nicht anpassen. Du kannst sie aber weiterhin so verwenden, wie sie sind.",
+    "preset-play-popup": "Diese Vorlage zeichnet ihre Karte mit eigenem Code, deshalb wird sie in einem echten Popup auf dem Bildschirm abgespielt.",
     "preset-play-reduced": "Windows ist so eingestellt, dass weniger Animationen angezeigt werden, deshalb bleibt die Vorschau still. Aktiviere „Animationseffekte“ in den Windows-Einstellungen wieder, um sie zu sehen."
   },
   "watchdog": {

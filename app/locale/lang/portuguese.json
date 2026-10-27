@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Do SAN neste PC",
           "layer": {
             "none": "Sem personalização",
-            "title": "Personalizar uma predefinição incluída"
+            "title": "Personalizar uma predefinição"
           },
           "load": "Editar uma predefinição",
           "loaded": "Carregada:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Escolher uma imagem ou um GIF",
     "preset-font-refused": "Este ficheiro não é um tipo de letra utilizável. Utilize um ficheiro TTF, OTF, WOFF ou WOFF2 com um máximo de 4 MB.",
     "preset-logo-refused": "Este ficheiro não é um logótipo utilizável. Utilize uma imagem PNG, JPEG, GIF, WebP ou BMP com um máximo de 5 MB.",
-    "preset-layer-note": "A personalizar {preset}. Assinale uma secção para a alterar; tudo o que deixar por assinalar fica como a predefinição incluída o traz. As suas alterações ficam por cima: a predefinição incluída não é copiada nem modificada.",
+    "preset-layer-note": "A personalizar {preset}. Assinale uma secção para a alterar; tudo o que deixar por assinalar fica como a predefinição o traz. As suas alterações ficam por cima: a predefinição em si não é copiada nem modificada.",
     "folder-reason-ea-app": "Esta é uma versão EA app. Um jogo iniciado através da EA app guarda as suas proezas na conta EA e não na pasta do jogo, por isso não existe aqui qualquer ficheiro de desbloqueio para ler. Essas proezas são recolhidas pela fonte EA em Definições > Fontes e não por uma pasta vigiada.",
     "folder-reason-game-no-data": "Esta é uma pasta de jogo, mas não contém qualquer configuração de emulador nem ficheiro de desbloqueio num formato que o AW Next consiga ler.",
     "folder-reason-unreadable": "Não foi possível ler esta pasta.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Escreva primeiro um novo nome no campo Nome e depois prima Mudar o nome.",
     "preset-view-readonly": "Esta vista mostra apenas o cartão. Volte a Cartão para editar a disposição.",
     "preset-layer-fixed": "{presets} desenham o seu cartão com código próprio, por isso não podem ser personalizados aqui. Pode continuar a usá-los tal como estão.",
+    "preset-play-popup": "Esta predefinição desenha o cartão com código próprio, por isso é reproduzida num popup real, no ecrã.",
     "preset-play-reduced": "O Windows está definido para mostrar menos animações, por isso a pré-visualização fica parada. Volte a ativar «Efeitos de animação» nas definições do Windows para as ver."
   },
   "watchdog": {

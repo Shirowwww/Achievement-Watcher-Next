@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "A SAN-ból erről a gépről",
           "layer": {
             "none": "Nincs testreszabás",
-            "title": "Mellékelt előbeállítás testreszabása"
+            "title": "Előbeállítás testreszabása"
           },
           "load": "Előbeállítás szerkesztése",
           "loaded": "Betöltve:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Válassz egy képet vagy GIF-et",
     "preset-font-refused": "Ez a fájl nem használható betűtípus. Használj legfeljebb 4 MB méretű TTF, OTF, WOFF vagy WOFF2 fájlt.",
     "preset-logo-refused": "Ez a fájl nem használható logó. Használj legfeljebb 5 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet.",
-    "preset-layer-note": "{preset} testreszabása. Jelölj be egy szakaszt a módosításhoz; amit bejelöletlenül hagysz, az olyan marad, amilyennek a mellékelt előbeállítás adja. A módosításaid ráépülnek: a mellékelt előbeállítást nem másoljuk és nem módosítjuk.",
+    "preset-layer-note": "{preset} testreszabása. Jelölj be egy szakaszt a módosításhoz; amit bejelöletlenül hagysz, az olyan marad, amilyennek az előbeállítás adja. A módosításaid ráépülnek: magát az előbeállítást nem másoljuk és nem módosítjuk.",
     "folder-reason-ea-app": "Ez egy EA app kiadás. Az EA appon keresztül indított játék az EA-fiókban tárolja a teljesítményeit, nem a játék mappájában, így itt nincs feloldásokat tartalmazó fájl, amit be lehetne olvasni. Ezeket a teljesítményeket a Beállítások > Források alatti EA forrás gyűjti be, nem egy figyelt mappa.",
     "folder-reason-game-no-data": "Ez egy játékmappa, de nem tartalmaz emulátor-konfigurációt és olyan feloldásfájlt sem, amelyet az AW Next be tudna olvasni.",
     "folder-reason-unreadable": "Ezt a mappát nem sikerült beolvasni.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Először írj be egy új nevet a Név mezőbe, majd nyomd meg az Átnevezés gombot.",
     "preset-view-readonly": "Ez a nézet csak a kártyát mutatja. A kialakítás szerkesztéséhez lépj vissza a Kártya nézetre.",
     "preset-layer-fixed": "A(z) {presets} a kártyáját saját kóddal rajzolja ki, ezért itt nem szabható testre. Továbbra is használhatod így, ahogy van.",
+    "preset-play-popup": "Ez az előbeállítás saját kóddal rajzolja ki a kártyáját, ezért valódi felugró ablakban játszódik le, a képernyőn.",
     "preset-play-reduced": "A Windows kevesebb animációt jelenít meg, ezért az előnézet mozdulatlan marad. A megjelenítésükhöz kapcsold vissza az „Animációs effektusok” beállítást a Windows beállításaiban."
   },
   "watchdog": {

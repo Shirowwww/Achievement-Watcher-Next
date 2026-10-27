@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "來自此電腦上的 SAN",
           "layer": {
             "none": "不自訂",
-            "title": "自訂內建預設集"
+            "title": "自訂預設集"
           },
           "load": "編輯預設集",
           "loaded": "已載入：",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "選擇圖片或 GIF",
     "preset-font-refused": "該檔案不是可用的字型。請使用不超過 4 MB 的 TTF、OTF、WOFF 或 WOFF2 檔案。",
     "preset-logo-refused": "該檔案不是可用的標誌。請使用不超過 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
-    "preset-layer-note": "正在自訂 {preset}。勾選某個部分即可變更;未勾選的部分維持內建預設集的原樣。你的變更疊加在其上:內建預設集不會被複製或修改。",
+    "preset-layer-note": "正在自訂 {preset}。勾選某個部分即可變更;未勾選的部分維持預設集的原樣。你的變更疊加在其上:預設集本身不會被複製或修改。",
     "folder-reason-ea-app": "這是 EA app 版本。透過 EA app 啟動的遊戲會把成就保存在 EA 帳戶上，而不是遊戲資料夾裡，因此這裡沒有可讀取的解鎖檔案。那些解鎖會由「設定 > 來源」中的 EA 來源接手，而不是靠監看資料夾。",
     "folder-reason-game-no-data": "這是遊戲資料夾，但裡面沒有模擬器設定，也沒有任何 AW Next 讀得懂的解鎖檔案格式。",
     "folder-reason-unreadable": "無法讀取這個資料夾。",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "請先在「名稱」欄位輸入新名稱，再按一下「重新命名」。",
     "preset-view-readonly": "此檢視只顯示卡片。請回到「卡片」以編輯版面配置。",
     "preset-layer-fixed": "{presets} 使用內建程式碼繪製卡片，因此無法在此自訂。您仍可依原樣使用。",
+    "preset-play-popup": "此預設集使用自帶的程式碼繪製卡片，因此會在螢幕上的真實彈出視窗中播放。",
     "preset-play-reduced": "Windows 已設定為顯示較少動畫，因此預覽會保持靜止。若要查看動畫，請在 Windows 設定中重新開啟「動畫效果」。"
   },
   "watchdog": {

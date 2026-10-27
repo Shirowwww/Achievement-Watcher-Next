@@ -381,6 +381,40 @@ const PRESET_MARKUP = [
 ].join('');
 
 /*
+  Every earlier PRESET_ENGINE, as the sha256 of its text: a preset made by an older build, a gallery
+  one included, carries one of them. When the engine changes, the hash of the one it replaces joins
+  the list; test/core/presetEngineUpgrade.test.js pins the current one so that is not forgotten.
+*/
+const PAST_ENGINE_HASHES = new Set([
+  '9f39ca91bfb36fec7ede2a7ebdf17a4fcf23173eeb7e0ffe95462a2fa790fb66', // 2026-10-27
+  '0bf7dc63d35232989dc966ef0bb24f4359d4ea7f50f4a5bee036b8c343a698da', // 2026-10-27
+  'a979e46b0cfb4fece4bdce077867c83339f98b289219946e9d72eb0dc9383cf2', // 2026-10-27
+  '1945578c4f4e59811ecae42a93c5354e92cb521d23de68ddaf894edb05b74d37', // 2026-10-26
+  '831f03e4a0257ea1f0a78efe2bbfb8ff523f3e490e8bf862b6ac03da94ed3ef6', // 2026-10-26
+  '29f5f32d4c8f0228c74bc11d80241cf23cc735400fff5556f88510c3ee26595f', // 2026-10-25
+  '68a3c58a2b326263146f581a5203829dde433a7d78d3203d85e4f2318f21b481', // 2026-10-20
+  '407d161123a452db3a887dc76775c2d0fb48211fedda44e1d874fdebb498454c', // 2026-10-08
+  'a371f23e1d7c444ba798ddc0748a800d3057ba11ae6c33a2a5458d6d2c5a421a', // 2026-09-18
+  '2109f39a61a6cffeec4acedb497cf96f130d4ab1f8f04af960b0196403417dda', // 2026-08-23
+  '66b2ad0a496d88e9abedadbd25d48527586289d51a55044bea4e86977c4e5331', // 2026-08-22
+  '8de0348986b96c1e304fc7c798b0b6a07f484e5b133aef72f43bb5dbfa065d8d', // 2026-08-16
+]);
+
+const engineHash = (source) => crypto.createHash('sha256').update(String(source).replace(/\r\n/g, '\n').trim(), 'utf8').digest('hex');
+
+/*
+  A page that is the shared card with one of those engines, given today's: it then draws its tiers
+  as every other preset does, and can be a base the designer customises. Null for a page that is
+  current, is not the shared card, or runs any script that is not one of ours.
+*/
+function upgradeEngineHtml(html) {
+  if (typeof html !== 'string' || !html.includes(PRESET_MARKUP)) return null;
+  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)];
+  if (scripts.length !== 1 || scripts[0][0].slice(0, 8) !== '<script>' || !PAST_ENGINE_HASHES.has(engineHash(scripts[0][1]))) return null;
+  return html.replace(scripts[0][0], () => inlineScript(PRESET_ENGINE));
+}
+
+/*
   Parts move through their own `translate`, `rotate` and `scale`, so they compose with a preset's
   animated `transform`. Items sit in one container with no stacking context: z-index -1 puts one
   behind the text, still above the card's background.
@@ -1495,6 +1529,8 @@ module.exports = {
   PRESET_OPTIONS_FILE,
   PRESET_PACKAGE_FILE,
   PRESET_ENGINE,
+  engineHash,
+  upgradeEngineHtml,
   CUSTOM_FONT_FAMILY,
   PRESET_MARKUP,
   PREVIEW_SCRIPT_HASHES,

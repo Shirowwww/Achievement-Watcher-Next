@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Da SAN su questo PC",
           "layer": {
             "none": "Nessuna personalizzazione",
-            "title": "Personalizza una preimpostazione inclusa"
+            "title": "Personalizza una preimpostazione"
           },
           "load": "Modifica una preimpostazione",
           "loaded": "Caricata:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Scegli un’immagine o una GIF",
     "preset-font-refused": "Questo file non è un carattere utilizzabile. Usa un file TTF, OTF, WOFF o WOFF2 di massimo 4 MB.",
     "preset-logo-refused": "Questo file non è un logo utilizzabile. Usa un’immagine PNG, JPEG, GIF, WebP o BMP di massimo 5 MB.",
-    "preset-layer-note": "Personalizzazione di {preset}. Seleziona una sezione per modificarla; ciò che lasci deselezionato resta com'è nella preimpostazione inclusa. Le tue modifiche si sovrappongono: la preimpostazione inclusa non viene copiata né modificata.",
+    "preset-layer-note": "Personalizzazione di {preset}. Seleziona una sezione per modificarla; ciò che lasci deselezionato resta com’è nella preimpostazione. Le tue modifiche si sovrappongono: la preimpostazione stessa non viene copiata né modificata.",
     "folder-reason-ea-app": "È una versione EA app. Un gioco avviato tramite EA app conserva i suoi obiettivi sull'account EA e non nella cartella del gioco, quindi qui non c'è alcun file di sblocco da leggere. Quegli obiettivi vengono raccolti dalla sorgente EA in Impostazioni > Sorgenti, non da una cartella sorvegliata.",
     "folder-reason-game-no-data": "Questa è una cartella di gioco, ma non contiene alcuna configurazione di emulatore né file di sblocco in un formato leggibile da AW Next.",
     "folder-reason-unreadable": "Non è stato possibile leggere questa cartella.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Scrivi prima un nuovo nome nel campo Nome, poi premi Rinomina.",
     "preset-view-readonly": "Questa vista mostra solo la scheda. Torna a Scheda per modificare il layout.",
     "preset-layer-fixed": "{presets} disegnano la propria scheda con un codice proprio, quindi non si possono personalizzare qui. Puoi comunque usarli così come sono.",
+    "preset-play-popup": "Questa preimpostazione disegna la sua scheda con codice proprio, quindi viene riprodotta in un vero popup, sullo schermo.",
     "preset-play-reduced": "Windows è impostato per mostrare meno animazioni, quindi l’anteprima resta ferma. Riattiva “Effetti animazione” nelle impostazioni di Windows per vederle."
   },
   "watchdog": {

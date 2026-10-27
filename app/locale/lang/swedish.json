@@ -1031,7 +1031,7 @@
           "importMenuSanSetup": "Från SAN på datorn",
           "layer": {
             "none": "Anpassar inte",
-            "title": "Anpassa en medföljande förinställning"
+            "title": "Anpassa en förinställning"
           },
           "load": "Redigera en förinställning",
           "loaded": "Inläst:",
@@ -1869,7 +1869,7 @@
     "choose-preset-picture": "Välj en bild eller en GIF",
     "preset-font-refused": "Den filen är inte ett användbart typsnitt. Använd en TTF-, OTF-, WOFF- eller WOFF2-fil på högst 4 MB.",
     "preset-logo-refused": "Den filen är inte en användbar logotyp. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 5 MB.",
-    "preset-layer-note": "Anpassar {preset}. Kryssa i ett avsnitt för att ändra det; allt du inte kryssar i förblir som den medföljande förinställningen levereras. Dina ändringar läggs ovanpå: den medföljande förinställningen kopieras eller ändras inte.",
+    "preset-layer-note": "Anpassar {preset}. Kryssa i ett avsnitt för att ändra det; allt du inte kryssar i förblir som förinställningen levereras. Dina ändringar läggs ovanpå: själva förinställningen kopieras eller ändras inte.",
     "folder-reason-ea-app": "Det här är en utgåva för EA-appen. Ett spel som startas via EA-appen sparar sina prestationer på EA-kontot i stället för i spelmappen, så det finns ingen upplåsningsfil att läsa här. De upplåsningarna hämtas av EA-källan under Inställningar > Källor i stället för av en bevakad mapp.",
     "folder-reason-game-no-data": "Det här är en spelmapp, men den innehåller varken någon emulatorkonfiguration eller någon upplåsningsfil i ett format som AW Next kan läsa.",
     "folder-reason-unreadable": "Den här mappen kunde inte läsas.",
@@ -3012,6 +3012,7 @@
     "preset-rename-same": "Skriv först ett nytt namn i fältet Namn och tryck sedan på Byt namn.",
     "preset-view-readonly": "Den här vyn visar bara kortet. Gå tillbaka till Kort för att redigera layouten.",
     "preset-layer-fixed": "{presets} ritar sitt kort med egen kod och kan därför inte anpassas här. Du kan fortfarande använda dem som de är.",
+    "preset-play-popup": "Den här förinställningen ritar sitt kort med egen kod, så den spelas upp i en riktig popup på skärmen.",
     "preset-play-reduced": "Windows är inställt på att visa färre animeringar, så förhandsvisningen står still. Slå på ”Animeringseffekter” igen i Windows-inställningarna för att se dem."
   },
   "watchdog": {
