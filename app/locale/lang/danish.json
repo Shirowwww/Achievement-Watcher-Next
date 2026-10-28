@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Vis skjulte præstationer",
-        "description": "Vis navn og beskrivelse på skjulte præstationer, før du låser dem op."
+        "name": "Skjulte præstationer",
+        "description": "Vis: navn og beskrivelse på en skjult præstation vises, før du låser den op. Skjul: de forbliver hemmelige indtil da."
       },
       "mergeDuplicates": {
         "name": "Flet dubletter",
         "description": "Saml det samme spil fra flere kilder i ét felt."
       },
       "timeMerge": {
-        "name": "Fletning af tidsstempler",
-        "description": "Hvilken tidsværdi foretrækkes, når dubletter flettes?",
+        "name": "Dato, der beholdes for flettede spil",
+        "description": "Når det samme spil findes i flere kilder, hvilken oplåsningsdato der beholdes for hver præstation.",
         "value": {
-          "recent": "Nyeste",
-          "oldest": "Ældste"
+          "recent": "Den nyeste",
+          "oldest": "Den ældste"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Udseende",
         "description": "Farvetema for hele appen og overlayet i spillet (vises med det samme, gemmes med OK).",
         "customTitle": "Brugerdefineret tema",
-        "customDesc": "Alle temaer kan redigeres her: vælg en farve og eventuelt et billede til hver blok. Billedet ligger over farven (som bliver et let slør for læsbarheden). Gem beholder det, du lavede, som dit eget tema under navnet ved siden af; et ledigt navn giver dig et tema mere og lader det første være.",
+        "customDesc": "Vælg en farve og eventuelt et billede til hver del af vinduet. Gem beholder det under det viste navn; et nyt navn opretter et andet tema.",
         "customName": "Temanavn",
         "customNamePlaceholder": "Mit tema",
         "saveTheme": "Gem tema",
@@ -342,8 +342,8 @@
           "description": "Viser fuldførelseslinjen på hvert felt."
         },
         "showEmptyProgress": {
-          "name": "Spil uden præstationer",
-          "description": "For et spil, som Steam viser uden præstationer: skriv »Ingen præstationer« på dets felt, eller vis ingenting."
+          "name": "Mærkat »Ingen præstationer«",
+          "description": "For et spil, som Steam viser uden præstationer: skriv »Ingen præstationer« på dets felt, eller lad det stå tomt. Spillet bliver i biblioteket i begge tilfælde."
         },
         "showSource": {
           "name": "Platformikon",
@@ -583,6 +583,7 @@
         "platinum": "Platin",
         "overlay": "Overlay i spillet"
       },
+      "testHint": "Hver knap viser en eksempelnotifikation med dine nuværende indstillinger.",
       "option": {
         "transportMode": {
           "name": "Notifikationstransport",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Fremskridtsnotifikationer",
-          "description": "Giv besked om fremskridt mod en præstation, hvis det er muligt"
+          "description": "Viser en notifikation, når en tællende præstation rykker frem (f.eks. 3/10 fjender), i spil der melder det."
         },
         "progressStep": {
           "name": "Fremskridtsmilepæle",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platin (100 %)",
-          "description": "Send en særlig Windows-notifikation, når et spil når 100 % gennemført"
+          "description": "Send en særlig notifikation, når et spil når 100 % gennemført"
         },
         "mode": {
           "name": "Notifikationstype",
@@ -731,7 +732,7 @@
               "text": "Tekst",
               "image": "Billede",
               "shape": "Form",
-              "icon": "Ikon"
+              "symbol": "Symbol"
             },
             "shape": {
               "triangle": "Trekant",
@@ -762,7 +763,7 @@
               "opacity": "Uigennemsigtighed",
               "rotation": "Rotation",
               "scale": "Skala",
-              "icon": "Ikon",
+              "icon": "Symbol",
               "visible": "Synlig",
               "alignCard": "Justér efter kortet",
               "position": "Placering",
@@ -812,7 +813,8 @@
               "lock": "Lås på plads",
               "unlock": "Lås op"
             },
-            "addIcon": "Ikon",
+            "addSymbol": "Symbol",
+            "lockParts": "Kun de elementer, du selv har tilføjet, kan låses.",
             "enter": {
               "none": "Med kortet",
               "fade": "Fade ind",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Tilføj elementer",
-                "body": "Tekster, billeder og GIF'er, former og ikoner. Hvert element lægges på kortet som et lag for sig."
+                "body": "Tekster, billeder og GIF’er, former og symboler. Hvert element lægges på kortet som et lag for sig."
               },
               "edit": {
                 "title": "Vælg, og flyt derefter",
@@ -1097,7 +1099,8 @@
             "intro": "Vælg et udgangspunkt, og gør det til dit eget. Intet gemmes, før du opretter presettet.",
             "random": "Overrask mig",
             "randomized": "Et design, du ikke har prøvet",
-            "title": "Start fra"
+            "title": "Start fra",
+            "open": "Åbn et preset"
           },
           "title": "Presetdesigner",
           "undo": "Fortryd",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Presets",
+            "hint": "Klik på et kort for at bruge det.",
             "close": "Luk",
             "mine": "Dine presets",
             "bundled": "Medfølgende",
+            "fixed": "Bruges, som de er",
             "browse": "Gennemse presets",
             "empty": "Du har endnu ingen egne presets. Lav en i designeren, så dukker den op her."
           }
         },
         "souvenirTitle": "Souvenirskærmbillede",
         "souvenirScreenshot": "Skærmbillede ved oplåsning",
-        "souvenirScreenshotDesc": "Tag et billede af skærmen, når en præstation låses op. Gemmes pr. spil.",
+        "souvenirScreenshotDesc": "Tager et skærmbillede, når en præstation låses op. Billederne gemmes i én mappe pr. spil.",
         "souvenirHdr": "HDR-skærmbilleder",
         "souvenirHdrDesc": "Automatisk retter farverne, når HDR er aktivt i Windows, til skærmbilleder og klip. Er det ikke muligt, gemmes det almindelige skærmbillede i stedet.",
         "souvenirHdrAuto": "Automatisk",
@@ -1342,7 +1347,8 @@
           "description": "Fald tilbage til et bobletip, når en Windows-notifikation mislykkes"
         },
         "useWS": {
-          "description": "Send præstationen ud til alle tilsluttede klienter"
+          "name": "Lokal udsendelse (port 8082)",
+          "description": "Sender hver oplåsning til værktøjer, der kører på denne pc, f.eks. OBS-kilden. Lad den være slået til, hvis du er i tvivl."
         },
         "obsSource": {
           "name": "OBS-browserkilde",
@@ -1412,17 +1418,17 @@
       "library": "Biblioteksmapper",
       "libraryInfo": [
         "Vælg en mappe, der indeholder mange spilinstallationer (f.eks. D:\\Games, E:\\SteamLibrary).",
-        "Alle spil derinde bliver scannet for Goldberg/GBE-præstationer, også selv om de aldrig er blevet startet."
+        "Alle spil i den scannes for emulatorpræstationer, også selvom de aldrig er startet."
       ],
       "addLibrary": "Tilføj en biblioteksmappe",
       "generateConfigs": "Generer konfigurationer",
-      "generateConfigsHelp": "kun spil uden en eksisterende reparation"
+      "generateConfigsHelp": "fuld scanning, derefter repareres spil, der endnu ikke har en rettelse"
     },
     "source": {
       "title": "Spilkilder",
       "officialPlatforms": {
         "title": "Officielle platforme",
-        "description": "Slå de skjoldmærkede kilder nedenfor til. Kun biblioteker, der findes på denne pc, kan vises."
+        "description": "Skjoldet markerer officielle launchere. Steam, Epic og Xbox har tre valg: Ingen, Installerede (spil på denne pc) eller Ejede (hele biblioteket på en tilsluttet konto). De øvrige er enten til eller fra."
       },
       "legitSteam": {
         "name": "Vis Steam-spil",
@@ -1438,7 +1444,7 @@
         "description": "Læser præstationer skrevet af Goldberg / GBE Fork og lignende Steam-emulatorer. Dækker også Ubisoft-spil repareret med Uplay R2-rettelsen, som skriver deres præstationer samme sted."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 og Reborn"
+        "description": "Steam-spil kørt med GreenLuma (2020, 2024, 2025 og Reborn): læser de præstationer, det registrerer."
       },
       "rpcs3": {
         "description": "Playstation 3-emulator"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC-spil (Game Pass / Microsoft Store). Opret forbindelse og importér fra Indstillinger for at se oplåsninger og sjældenhed.",
+        "description": "Xbox PC-spil (Game Pass / Microsoft Store). Tilslut din konto i kortet Xbox PC-konto længere nede, og importér derefter for at se oplåsninger og sjældenhed.",
       "value": {
         "none": "Ingen",
         "installed": "Installerede",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Gemte filer fra GOG-emulator"
+        "description": "GOG-spil kørt med Nemirtingas’ GOG Galaxy-emulator: læser de præstationer, den gemmer."
       },
       "epic": {
-        "description": "Gemte filer fra Epic-emulator"
+        "description": "Epic-spil kørt med Nemirtingas’ Epic-emulator: læser de præstationer, den gemmer."
       },
       "shadps4": {
         "description": "PlayStation 4-emulator"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE via XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Emulatorspil fra din RetroAchievements-konto. Tilslut den i kontokortet nedenfor; nye præstationer annonceres, mens en emulator kører."
+        "description": "Emulatorspil fra din RetroAchievements-konto. Tilslut den i kontokortet længere nede; nye oplåsninger meldes, mens en emulator kører."
       },
       "psnLibrary": {
         "description": "Spil og trofæer importeret fra din PlayStation-konto. Tilslut den i kontokortet nedenfor, og importér derefter biblioteket."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modet"
       },
-      "groupStores": "Officielle launchere",
+      "groupStores": "Officielle platforme",
+      "groupMemory": "Bibliotekets hukommelse",
       "groupConsoles": "Konsoller og retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Tilføj ?test=1 til URL'en, mens du placerer kilden. Den viser en eksempeloplåsning hvert tiende sekund; fjern det, når du er færdig.",
         "Kilden tegner den samme pop-up som den i spillet og forbliver tom mellem oplåsninger, så den koster ingenting, mens du streamer.",
         "Flere muligheder efter adressen: ?scale=2 låser zoom, ?duration=8000 sætter, hvor længe hvert kort bliver, ?sound=1 afspiller lyden gennem kilden, /obs/preset/Xbox/ bruger ét preset, uanset hvad skrivebordet bruger.",
-        "Den læser det lokale notifikationsfeed, så lad Websocket @localhost:8082 være slået til under Indstillinger > Notifikation > Integrationer. Det virker kun på denne pc, og kun én kopi af AW Next kan levere det."
+        "Den læser det lokale notifikationsfeed, så lad Lokal udsendelse være slået til under Indstillinger > Notifikation > Integrationer. Det virker kun på denne pc, og kun én kopi af AW Next kan levere det."
       ],
       "souvenirsTitle": "Skærmbilleder og videoklip",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Primær Steam-konto",
         "name": "Filtrér efter bruger",
-        "description": "Vis kun Steam-præstationer fra den valgte konto"
+        "description": "Viser kun Steam-præstationerne for den valgte konto. Alle konti: intet filter.",
+        "all": "Alle konti"
       },
       "checkUpdates": "Søg efter opdateringer",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Automatiske opdateringer af præstationsdata",
-        "description": "Deaktiver dette, hvis du selv vedligeholder steam_cache: det stopper den periodiske selvreparation, der udfylder tomme beskrivelser og fanger præstationer, som en spilopdatering har tilføjet. “Tjek præstationslister igen” ovenfor virker stadig som et manuelt engangstjek."
+        "description": "Holder præstationsdata opdaterede: udfylder tomme beskrivelser og opfanger præstationer, som en spilopdatering har tilføjet. Slå det kun fra, hvis du selv vedligeholder disse filer. »Tjek præstationslister igen« ovenfor virker stadig manuelt."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Der er ikke gemt noget præstationsrelateret her: ingen AppID-mappe, ingen emulatorkonfiguration og ingen oplåsningsfil.",
     "folder-reason-found-instead": "Fundet i stedet:",
     "folder-reason-checked": "Her blev der tjekket: undermapper med AppID, alle de emulatorkonfigurationsfiler AW Next kender, og {layouts} bærbare gemmeformater. Mappen blev gennemgået - intet blev sprunget over.",
+    "folder-also-watched": "Overvåges også automatisk",
     "game-health-title": "Spillets tilstand",
     "game-settings-menu": "Spillets indstillinger",
     "game-config-title": "Konfiguration af programfil",
@@ -2002,6 +2011,7 @@
     "update-checked": "Kontrollen er udført",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "Tilføj",
+    "blacklist-appid-help": "Steam App ID er tallet i adressen på spillets Steam-butikside: store.steampowered.com/app/ID",
     "setupLooksValid": "Opsætningen ser rigtig ud.",
     "problemsWereDetected": "Der blev fundet problemer.",
     "repairSteamSettings": "Reparer steam_settings (skriv skema + ikoner)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Skriv først et nyt navn i feltet Navn, og tryk derefter på Omdøb.",
     "preset-view-readonly": "Denne visning viser kun kortet. Gå tilbage til Kort for at redigere layoutet.",
     "preset-layer-fixed": "{presets} tegner deres kort med deres egen kode, så de kan ikke tilpasses her. Du kan stadig bruge dem, som de er.",
+    "preset-layer-named": "Det gemmes som et nyt preset, »{name}«; ændr Navn for at kalde det noget andet.",
+    "preset-layer-start-hidden": "»{start}« er skjult, mens du tilpasser et preset. Vælg »{none}« for at få det tilbage.",
     "preset-play-popup": "Dette preset tegner sit kort med sin egen kode, så det afspilles i et rigtigt popup på skærmen.",
     "preset-play-reduced": "Windows er indstillet til at vise færre animationer, så forhåndsvisningen står stille. Slå »Animationseffekter« til igen i Windows-indstillingerne for at se dem."
   },

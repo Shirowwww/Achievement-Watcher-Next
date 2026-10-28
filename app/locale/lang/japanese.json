@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "隠し実績を表示",
-        "description": "隠し実績の名前と説明を、解除する前に表示します。"
+        "name": "隠し実績",
+        "description": "表示: 隠し実績の名前と説明を、解除する前から表示します。非表示: 解除するまで伏せたままにします。"
       },
       "mergeDuplicates": {
         "name": "重複を統合",
         "description": "複数のソースで見つかった同じゲームを 1 つのタイルに統合します。"
       },
       "timeMerge": {
-        "name": "タイムスタンプの統合",
-        "description": "重複を統合する際、どちらの時間値を優先しますか？",
+        "name": "統合したゲームで残す日付",
+        "description": "同じゲームが複数のソースで見つかったとき、各実績でどの解除日時を残すかを選びます。",
         "value": {
-          "recent": "新しい",
-          "oldest": "古い"
+          "recent": "最も新しい",
+          "oldest": "最も古い"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "外観",
         "description": "アプリウィンドウの配色テーマです（すぐにプレビューされ、OKで保存されます）。",
         "customTitle": "カスタムテーマ",
-        "customDesc": "どのテーマもここで編集できます。ブロックごとに色と、必要なら画像を選びます。画像は色の上に表示され、色は読みやすさのため薄いベールになります。保存すると、隣の名前で自分のテーマとして残ります。まだ使っていない名前にすれば、2 つ目のテーマができ、元のテーマはそのままです。",
+        "customDesc": "ウィンドウの各部分に色を選び、必要なら画像も選びます。保存すると表示中の名前でテーマを保持し、新しい名前にすると2つ目のテーマが作られます。",
         "customName": "テーマ名",
         "customNamePlaceholder": "マイテーマ",
         "saveTheme": "テーマを保存",
@@ -342,8 +342,8 @@
           "description": "各タイルに達成率バーを表示します。"
         },
         "showEmptyProgress": {
-          "name": "実績のないゲーム",
-          "description": "Steam が実績なしと表示するゲームについて、タイルに「実績なし」と表示するか、何も表示しないかを選びます。"
+          "name": "「実績なし」ラベル",
+          "description": "Steam が実績なしと表示するゲームについて、タイルに「実績なし」と表示するか、空白のままにするかを選びます。どちらの場合もゲームはライブラリに残ります。"
         },
         "showSource": {
           "name": "プラットフォームアイコン",
@@ -583,6 +583,7 @@
         "platinum": "プラチナ",
         "overlay": "ゲーム内オーバーレイ"
       },
+      "testHint": "各ボタンは、現在の設定でサンプル通知を表示します。",
       "option": {
         "transportMode": {
           "name": "通知のトランスポート",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "進行状況の通知",
-          "description": "可能なら実績の進捗を通知します"
+          "description": "カウンター付きの実績が進んだとき（例：敵 3/10）に通知を表示します。対応しているゲームのみ。"
         },
         "progressStep": {
           "name": "進捗のマイルストーン",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "プラチナ (100%)",
-          "description": "ゲームが 100% 達成に到達したとき専用の Windows 通知を表示します"
+          "description": "ゲームが 100% 達成に到達したとき専用の通知を表示します"
         },
         "mode": {
           "name": "通知の種類",
@@ -731,7 +732,7 @@
               "text": "テキスト",
               "image": "画像",
               "shape": "図形",
-              "icon": "アイコン"
+              "symbol": "シンボル"
             },
             "shape": {
               "triangle": "三角形",
@@ -762,7 +763,7 @@
               "opacity": "不透明度",
               "rotation": "回転",
               "scale": "拡大率",
-              "icon": "アイコン",
+              "icon": "シンボル",
               "visible": "表示",
               "alignCard": "カードに合わせて配置",
               "position": "位置",
@@ -812,7 +813,8 @@
               "lock": "位置を固定",
               "unlock": "固定を解除"
             },
-            "addIcon": "アイコン",
+            "addSymbol": "シンボル",
+            "lockParts": "ロックできるのは、自分で追加した要素だけです。",
             "enter": {
               "none": "カードと同時",
               "fade": "フェードイン",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "要素を追加",
-                "body": "テキスト、画像と GIF、図形、アイコン。それぞれが独立したレイヤーとしてカードに置かれます。"
+                "body": "テキスト、画像と GIF、図形、シンボル。それぞれが独立したレイヤーとしてカードに置かれます。"
               },
               "edit": {
                 "title": "選んでから動かす",
@@ -1097,7 +1099,8 @@
             "intro": "ベースを選んで自分好みに調整できます。プリセットを作成するまで何も保存されません。",
             "random": "おまかせ",
             "randomized": "まだ試していないデザイン",
-            "title": "ベースを選ぶ"
+            "title": "ベースを選ぶ",
+            "open": "プリセットを開く"
           },
           "title": "プリセットデザイナー",
           "undo": "元に戻す",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "プリセット",
+            "hint": "カードをクリックして使用します。",
             "close": "閉じる",
             "mine": "自分のプリセット",
             "bundled": "付属",
+            "fixed": "そのまま使うもの",
             "browse": "プリセットを見る",
             "empty": "自分のプリセットはまだありません。デザイナーで作成すると、ここに表示されます。"
           }
         },
         "souvenirTitle": "記念スクリーンショット",
         "souvenirScreenshot": "解除時にスクリーンショット",
-        "souvenirScreenshotDesc": "実績解除時に画面をキャプチャします。ゲームごとに保存されます。",
+        "souvenirScreenshotDesc": "実績を解除したときに画面をキャプチャします。画像はゲームごとに1つのフォルダーに保存されます。",
         "souvenirHdr": "HDR スクリーンショット",
         "souvenirHdrDesc": "自動では Windows HDR が有効なときに色を補正します。スクリーンショットとクリップに適用されます。利用できない場合は、標準のスクリーンショットを保存します。",
         "souvenirHdrAuto": "自動",
@@ -1342,7 +1347,8 @@
           "description": "Windows 通知が失敗した場合はバルーンヒントにフォールバックします"
         },
         "useWS": {
-          "description": "接続中のすべてのクライアントに実績をブロードキャストします"
+          "name": "ローカル配信 (port 8082)",
+          "description": "解除のたびに、OBS ソースなど、この PC 上で動作しているツールに送信します。迷ったらオンのままにしてください。"
         },
         "obsSource": {
           "name": "OBSブラウザソース",
@@ -1412,17 +1418,17 @@
       "library": "ライブラリフォルダー",
       "libraryInfo": [
         "多数のゲームインストールフォルダーを含むフォルダーを選択してください（例：D:\\Games、E:\\SteamLibrary）。",
-        "中のすべてのゲームは、一度も起動していなくても Goldberg/GBE 実績がスキャンされます。"
+        "中にあるすべてのゲームが、一度も起動していなくてもエミュレーターの実績を探すためにスキャンされます。"
       ],
       "addLibrary": "ライブラリフォルダーを追加",
       "generateConfigs": "設定を生成",
-      "generateConfigsHelp": "既存の修正がないゲームのみ"
+      "generateConfigsHelp": "フルスキャンを行い、そのあとまだ修正のないゲームを修復します"
     },
     "source": {
       "title": "ゲームソース",
       "officialPlatforms": {
         "title": "公式プラットフォーム",
-        "description": "下の盾マークが付いたソースを有効にしてください。この PC で検出されたライブラリのみ表示できます。"
+        "description": "盾マークは公式ランチャーを示します。Steam、Epic、Xbox には、なし、インストール済み（この PC のゲーム）、所有（接続したアカウントのライブラリ全体）の3つの選択肢があります。ほかはオンかオフです。"
       },
       "legitSteam": {
         "name": "Steam ゲームを表示",
@@ -1438,7 +1444,7 @@
         "description": "Goldberg / GBE Fork や類似の Steam エミュレーターが書き込んだ実績を読み取ります。Uplay R2 修正で修復された Ubisoft ゲームも対象で、実績は同じ場所に書き込まれます。"
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 および Reborn"
+        "description": "GreenLuma（2020、2024、2025、Reborn）で起動した Steam ゲーム：GreenLuma が記録する実績を読み取ります。"
       },
       "rpcs3": {
         "description": "PlayStation 3 エミュレーター"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC ゲーム（Game Pass / Microsoft Store）。設定から接続・インポートすると解除状況とレア度を表示します。",
+        "description": "Xbox PC ゲーム（Game Pass / Microsoft Store）。下のXbox PC アカウントカードでアカウントを接続し、インポートすると解除状況とレア度が表示されます。",
       "value": {
         "none": "なし",
         "installed": "インストール済み",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "GOG エミュレーターのセーブデータ"
+        "description": "Nemirtingas の GOG Galaxy エミュレーターで起動した GOG ゲーム：エミュレーターが保存する実績を読み取ります。"
       },
       "epic": {
-        "description": "Epic エミュレーターのセーブデータ"
+        "description": "Nemirtingas の Epic エミュレーターで起動した Epic ゲーム：エミュレーターが保存する実績を読み取ります。"
       },
       "shadps4": {
         "description": "PlayStation 4 エミュレーター"
@@ -1506,7 +1512,7 @@
         "description": "XLiveLessNess 経由の Games for Windows LIVE"
       },
       "retroAchievements": {
-        "description": "RetroAchievements アカウントのエミュレーターゲームです。下のアカウントカードで接続してください。エミュレーターの実行中に新しい実績の解除が通知されます。"
+        "description": "RetroAchievements アカウントのエミュレーターゲームです。下のアカウントカードで接続してください。エミュレーターの実行中は、新しい解除が通知されます。"
       },
       "psnLibrary": {
         "description": "PlayStation アカウントからインポートしたゲームとトロフィーです。下のアカウントカードで接続し、ライブラリをインポートしてください。"
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "MadnessPatch MOD 経由の Alice: Madness Returns"
       },
-      "groupStores": "公式ランチャー",
+      "groupStores": "公式プラットフォーム",
+      "groupMemory": "ライブラリの記憶",
       "groupConsoles": "コンソールとレトロ"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "ソースを配置している間は、URL に ?test=1 を付けます。10 秒ごとにサンプルの解除を表示します。配置が終わったら外してください。",
         "ソースはゲーム内と同じポップアップを描画し、解除の合間は空のままなので、配信中の負荷はありません。",
         "アドレスの後ろに付けられるオプション：?scale=2 でズームを固定、?duration=8000 で各カードの表示時間を指定、?sound=1 でソース経由でサウンドを再生、/obs/preset/Xbox/ でデスクトップの設定にかかわらず 1 つのプリセットを使用します。",
-        "ローカルの通知フィードを読み取るので、［設定］>［通知］>［連携］で Websocket @localhost:8082 をオンにしておいてください。この PC でのみ動作し、AW Next のコピーは 1 つだけが提供できます。"
+        "ローカルの通知フィードを読み取るので、［設定］>［通知］>［連携］で ローカル配信 をオンにしておいてください。この PC でのみ動作し、AW Next のコピーは 1 つだけが提供できます。"
       ],
       "souvenirsTitle": "スクリーンショットとビデオクリップ",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "メイン Steam アカウント",
         "name": "ユーザーで絞り込み",
-        "description": "選択したアカウントの Steam 実績のみを表示します"
+        "description": "選んだアカウントの Steam 実績だけを表示します。すべてのアカウント：フィルターなし。",
+        "all": "すべてのアカウント"
       },
       "checkUpdates": "更新を確認",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "実績データの自動更新",
-        "description": "steam_cache を自分で管理している場合はこれを無効にしてください。空欄の説明文を埋め、ゲームのアップデートで追加された実績を取り込む定期的な自動修復が停止します。上の「実績リストを再確認」は、その後も手動での単発チェックとして機能します。"
+        "description": "実績データを最新に保ちます。空の説明を補い、ゲームのアップデートで追加された実績を取り込みます。これらのファイルを自分で管理している場合にのみオフにしてください。上の「実績リストを再確認」は、手動なら引き続き使えます。"
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "ここには実績に関するものが何も保存されていません。AppID フォルダーも、エミュレーター設定も、解除ファイルもありません。",
     "folder-reason-found-instead": "代わりに見つかったもの:",
     "folder-reason-checked": "ここで確認した内容: AppID サブフォルダー、AW Next が知るすべてのエミュレーター設定ファイル、そして {layouts} 種類のポータブル保存レイアウト。フォルダーは調査済みで、省略されたものはありません。",
+    "folder-also-watched": "自動でも監視されています",
     "game-health-title": "ゲームの状態",
     "game-settings-menu": "ゲーム設定",
     "game-config-title": "実行ファイルの設定",
@@ -2002,6 +2011,7 @@
     "update-checked": "確認済み",
     "blacklist-add-placeholder": "Steam アプリ ID",
     "blacklist-add-button": "追加",
+    "blacklist-appid-help": "Steam の App ID は、ゲームの Steam ストアページのアドレスにある数字です：store.steampowered.com/app/ID",
     "setupLooksValid": "セットアップは正常です。",
     "problemsWereDetected": "問題が検出されました。",
     "repairSteamSettings": "steam_settings を修復（スキーマとアイコンを書き込み）…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "先に「名前」欄に新しい名前を入力してから、「名前を変更」を押してください。",
     "preset-view-readonly": "この表示ではカードだけが表示されます。レイアウトを編集するには「カード」に戻ってください。",
     "preset-layer-fixed": "{presets} は独自のコードでカードを描画するため、ここではカスタマイズできません。そのままの状態でなら引き続き使用できます。",
+    "preset-layer-named": "新しいプリセット「{name}」として保存されます。別の名前にするには名前を変更してください。",
+    "preset-layer-start-hidden": "プリセットをカスタマイズしている間、「{start}」は非表示になります。元に戻すには「{none}」を選んでください。",
     "preset-play-popup": "このプリセットは独自のコードでカードを描画するため、画面上の実際のポップアップで再生されます。",
     "preset-play-reduced": "Windows がアニメーションを減らす設定になっているため、プレビューは静止したままです。表示するには、Windows の設定で「アニメーション効果」をオンに戻してください。"
   },

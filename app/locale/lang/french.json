@@ -159,19 +159,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Révéler les succès cachés",
-        "description": "Révèle le nom et la description des succès cachés avant de les débloquer."
+        "name": "Succès cachés",
+        "description": "Afficher : le nom et la description d'un succès caché apparaissent avant que tu le débloques. Masquer : ils restent secrets jusque-là."
       },
       "mergeDuplicates": {
         "name": "Fusionner les doublons",
         "description": "Regroupe un même jeu trouvé dans plusieurs sources en une seule vignette."
       },
       "timeMerge": {
-        "name": "Fusion d’horodatage",
-        "description": "Lors de la fusion de doublons, quelle valeur de temps est préférable ?",
+        "name": "Date gardée pour les doublons",
+        "description": "Quand un même jeu est trouvé dans plusieurs sources, quelle date de déblocage garder pour chaque succès.",
         "value": {
-          "recent": "Récente",
-          "oldest": "Ancienne"
+          "recent": "La plus récente",
+          "oldest": "La plus ancienne"
         }
       },
       "hideZero": {
@@ -204,7 +204,7 @@
         "tab": "Apparence",
         "description": "Thème de couleurs de toute l’application et de l’overlay en jeu (aperçu immédiat, enregistré avec OK).",
         "customTitle": "Thème personnalisé",
-        "customDesc": "Tous les thèmes se modifient ici : choisis une couleur et, éventuellement, une image pour chaque bloc. Une image s’affiche par-dessus la couleur (qui devient un voile léger pour la lisibilité). Enregistrer garde ta création comme thème à toi, sous le nom indiqué à côté ; un nom encore inutilisé te donne un second thème et laisse le premier intact.",
+        "customDesc": "Choisis une couleur, et une image si tu veux, pour chaque partie de la fenêtre. Enregistrer la garde sous le nom indiqué ; un nouveau nom crée un second thème.",
         "customName": "Nom du thème",
         "customNamePlaceholder": "Mon thème",
         "saveTheme": "Enregistrer le thème",
@@ -326,8 +326,8 @@
           "description": "Affiche la barre d’achèvement sur chaque tuile."
         },
         "showEmptyProgress": {
-          "name": "Jeux sans succès",
-          "description": "Pour un jeu que Steam liste sans succès : écrire « Pas de succès » sur sa tuile, ou ne rien afficher."
+          "name": "Mention « Pas de succès »",
+          "description": "Pour un jeu que Steam liste sans succès : écrire « Pas de succès » sur sa tuile, ou ne rien afficher. Le jeu reste dans la bibliothèque dans les deux cas."
         },
         "showSource": {
           "name": "Icône de plateforme",
@@ -583,6 +583,7 @@
         "platinum": "Platine",
         "overlay": "Overlay en jeu"
       },
+      "testHint": "Chaque bouton affiche un exemple de notification avec tes réglages actuels.",
       "option": {
         "transportMode": {
           "name": "Transport des notifications",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Notifications de progression",
-          "description": "Informer sur la progression quand c’est possible"
+          "description": "Affiche une notification quand un succès à compteur avance (par exemple 3/10 ennemis), dans les jeux qui le signalent."
         },
         "progressStep": {
           "name": "Étapes de progression",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platine (100%)",
-          "description": "Envoyer une notification Windows dédiée quand un jeu atteint 100 % de complétion"
+          "description": "Afficher une notification dédiée quand un jeu atteint 100 % de complétion"
         },
         "mode": {
           "name": "Type de notification",
@@ -731,7 +732,7 @@
               "text": "Texte",
               "image": "Image",
               "shape": "Forme",
-              "icon": "Icône"
+              "symbol": "Symbole"
             },
             "shape": {
               "triangle": "Triangle",
@@ -762,7 +763,7 @@
               "opacity": "Opacité",
               "rotation": "Rotation",
               "scale": "Échelle",
-              "icon": "Icône",
+              "icon": "Symbole",
               "visible": "Visible",
               "alignCard": "Aligner sur la carte",
               "position": "Position",
@@ -812,7 +813,8 @@
               "lock": "Verrouiller sur place",
               "unlock": "Déverrouiller"
             },
-            "addIcon": "Icône",
+            "addSymbol": "Symbole",
+            "lockParts": "Seuls les éléments que tu as ajoutés peuvent être verrouillés.",
             "enter": {
               "none": "Avec la carte",
               "fade": "Fondu",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Ajouter des éléments",
-                "body": "Textes, images et GIF, formes et icônes. Chacun se place sur la carte comme un calque à part."
+                "body": "Textes, images et GIF, formes et symboles. Chacun se place sur la carte comme un calque à part."
               },
               "edit": {
                 "title": "Choisir, puis déplacer",
@@ -1097,7 +1099,8 @@
             "intro": "Choisis un point de départ, puis personnalise-le. Rien n’est enregistré tant que le preset n’est pas créé.",
             "random": "Surprends-moi",
             "randomized": "Un design que tu n’avais pas essayé",
-            "title": "Partir de"
+            "title": "Partir de",
+            "open": "Ouvrir un preset"
           },
           "title": "Concepteur de preset",
           "undo": "Annuler",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Presets",
+            "hint": "Clique sur une carte pour l’utiliser.",
             "close": "Fermer",
             "mine": "Tes presets",
             "bundled": "Fournis",
+            "fixed": "Utilisables tels quels",
             "browse": "Parcourir les presets",
             "empty": "Tu n’as encore aucun preset à toi. Crées-en un dans l’éditeur et il apparaîtra ici."
           }
         },
         "souvenirTitle": "Capture souvenir",
         "souvenirScreenshot": "Capture au déblocage",
-        "souvenirScreenshotDesc": "Capture l’écran lorsqu’un succès se débloque. Rangée par jeu.",
+        "souvenirScreenshotDesc": "Capture l'écran quand un succès se débloque. Les images sont rangées dans un dossier par jeu.",
         "souvenirHdr": "Captures HDR",
         "souvenirHdrDesc": "Le mode automatique corrige les couleurs lorsque le HDR de Windows est actif, pour les captures et les clips. En cas d’indisponibilité, la capture standard est enregistrée.",
         "souvenirHdrAuto": "Automatique",
@@ -1342,7 +1347,8 @@
           "description": "Utilise une info-bulle quand une notification Windows échoue"
         },
         "useWS": {
-          "description": "Diffusion des succès à tous les clients connectés"
+          "name": "Diffusion locale (port 8082)",
+          "description": "Envoie chaque succès aux outils qui tournent sur ce PC, comme la source OBS. Laisse activé dans le doute."
         },
         "obsSource": {
           "name": "Source navigateur OBS",
@@ -1412,17 +1418,17 @@
       "library": "Dossiers de bibliothèque",
       "libraryInfo": [
         "Sélectionne un dossier qui contient plusieurs dossiers de jeux installés (ex: D:\\Games, E:\\SteamLibrary).",
-        "Tous les jeux qu’il contient seront scannés pour les succès Goldberg/GBE, même s’ils n’ont jamais été lancés."
+        "Tous les jeux qu'il contient sont scannés pour leurs succès d'émulateur, même s'ils n'ont jamais été lancés."
       ],
       "addLibrary": "Ajouter un dossier de bibliothèque",
       "generateConfigs": "Générer les configs",
-      "generateConfigsHelp": "seulement les jeux sans fix existant"
+      "generateConfigsHelp": "scan complet, puis répare les jeux qui n'ont pas encore de correctif"
     },
     "source": {
       "title": "Sources de jeu",
       "officialPlatforms": {
         "title": "Plateformes officielles",
-        "description": "Active ci-dessous les sources marquées d’un bouclier. Seules les bibliothèques détectées sur ce PC peuvent être affichées."
+        "description": "Le bouclier marque les lanceurs officiels. Steam, Epic et Xbox proposent trois choix : Aucun, Installés (les jeux présents sur ce PC) ou Possédés (toute la bibliothèque d'un compte connecté). Les autres s'activent ou se désactivent."
       },
       "legitSteam": {
         "name": "Afficher les jeux Steam",
@@ -1438,7 +1444,7 @@
         "description": "Lit les succès écrits par Goldberg / GBE Fork et les émulateurs Steam similaires. Couvre aussi les jeux Ubisoft réparés avec le correctif Uplay R2, qui écrivent leurs succès au même endroit."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 et Reborn"
+        "description": "Jeux Steam lancés avec GreenLuma (2020, 2024, 2025 et Reborn) : lit les succès qu'il enregistre."
       },
       "rpcs3": {
         "description": "Émulateur PlayStation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Jeux Xbox PC (Game Pass / Microsoft Store). Connecte-toi et importe depuis les Réglages pour voir les succès débloqués et leur rareté.",
+        "description": "Jeux Xbox PC (Game Pass / Microsoft Store). Connecte ton compte dans la carte Compte Xbox PC plus bas, puis importe pour voir les succès débloqués et leur rareté.",
       "value": {
         "none": "Aucun",
         "installed": "Installé(s)",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Sauvegardes de l’émulateur GOG"
+        "description": "Jeux GOG lancés avec l'émulateur GOG Galaxy de Nemirtingas : lit les succès qu'il sauvegarde."
       },
       "epic": {
-        "description": "Sauvegardes de l’émulateur Epic"
+        "description": "Jeux Epic lancés avec l'émulateur Epic de Nemirtingas : lit les succès qu'il sauvegarde."
       },
       "shadps4": {
         "description": "Émulateur PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE, via XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Jeux sur émulateur de ton compte RetroAchievements. Connecte-le dans la carte de compte ci-dessous ; les nouveaux succès sont annoncés pendant qu’un émulateur tourne."
+        "description": "Jeux sur émulateur de ton compte RetroAchievements. Connecte-le dans la carte de compte plus bas ; les nouveaux succès sont annoncés pendant qu'un émulateur tourne."
       },
       "psnLibrary": {
         "description": "Les jeux et trophées importés depuis ton compte PlayStation. Connecte-le dans la carte de compte plus bas, puis importe la bibliothèque."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns, via le mod MadnessPatch"
       },
-      "groupStores": "Lanceurs officiels",
+      "groupStores": "Plateformes officielles",
+      "groupMemory": "Mémoire de la bibliothèque",
       "groupConsoles": "Consoles et rétro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Ajoute ?test=1 à l’URL pendant que tu places la source. Elle affiche un déblocage d’exemple toutes les dix secondes ; retire-le une fois terminé.",
         "La source affiche la même fenêtre de notification que celle en jeu, et reste vide entre les déblocages : elle ne coûte donc rien pendant le stream.",
         "Autres options après l’adresse : ?scale=2 fixe le zoom, ?duration=8000 règle la durée de chaque carte, ?sound=1 joue le son par la source, /obs/preset/Xbox/ impose un préréglage quel que soit celui du bureau.",
-        "Elle lit le flux de notification local, laisse donc Websocket @localhost:8082 activé dans Paramètres > Notification > Intégrations. Elle ne fonctionne que sur ce PC, et une seule copie d’AW Next peut la servir."
+        "Elle lit le flux de notification local, laisse donc « Diffusion locale » activé dans Paramètres > Notification > Intégrations. Elle ne fonctionne que sur ce PC, et une seule copie d’AW Next peut la servir."
       ],
       "souvenirsTitle": "Captures et clips vidéo",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Compte Steam principal",
         "name": "Filtrer par utilisateur",
-        "description": "Afficher uniquement les succès Steam du compte sélectionné"
+        "description": "Montre seulement les succès Steam du compte choisi. Tous les comptes : aucun filtre.",
+        "all": "Tous les comptes"
       },
       "checkUpdates": "Vérifier les mises à jour",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Mises à jour automatiques des données de succès",
-        "description": "Désactive ceci si tu maintiens toi-même steam_cache : cela arrête l’autoréparation périodique qui complète les descriptions vides et détecte les succès ajoutés par une mise à jour du jeu. « Revérifier les listes de succès » ci-dessus fonctionne toujours comme vérification manuelle ponctuelle."
+        "description": "Garde les données des succès à jour : complète les descriptions vides et repère les succès ajoutés par une mise à jour du jeu. Désactive-le seulement si tu gères toi-même ces fichiers. « Revérifier les listes de succès » ci-dessus marche toujours à la main."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Rien de lié aux succès n'est stocké ici : aucun dossier AppID, aucune configuration d'émulateur et aucun fichier de déblocage.",
     "folder-reason-found-instead": "Trouvé à la place :",
     "folder-reason-checked": "Vérifié ici : les sous-dossiers AppID, tous les fichiers de configuration d'émulateur connus d'AW Next et {layouts} dispositions de sauvegarde portables. Le dossier a bien été examiné, rien n'a été ignoré.",
+    "folder-also-watched": "Aussi surveillé automatiquement",
     "game-health-title": "État des jeux",
     "game-settings-menu": "Réglages du jeu",
     "game-config-title": "Configuration de l’exécutable",
@@ -2002,6 +2011,7 @@
     "update-checked": "Vérifié",
     "blacklist-add-placeholder": "ID d’app Steam",
     "blacklist-add-button": "Ajouter",
+    "blacklist-appid-help": "L'ID d'app Steam est le nombre dans l'adresse de la page Steam du jeu : store.steampowered.com/app/ID",
     "setupLooksValid": "La configuration semble valide.",
     "problemsWereDetected": "Des problèmes ont été détectés.",
     "repairSteamSettings": "Réparer steam_settings (écrire le schéma + les icônes)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Tape d’abord un nouveau nom dans le champ Nom, puis appuie sur Renommer.",
     "preset-view-readonly": "Cette vue montre seulement la carte. Reviens sur Carte pour modifier la mise en page.",
     "preset-layer-fixed": "{presets} dessinent leur carte avec leur propre code : on ne peut pas les personnaliser ici. Tu peux toujours les utiliser tels quels.",
+    "preset-layer-named": "Il sera enregistré comme un nouveau preset, « {name} » ; change le Nom pour l’appeler autrement.",
+    "preset-layer-start-hidden": "« {start} » est masqué pendant la personnalisation d’un preset. Choisis « {none} » pour le retrouver.",
     "preset-play-popup": "Ce preset dessine sa carte avec son propre code : il se joue dans un vrai popup, à l’écran.",
     "preset-play-reduced": "Windows est réglé pour afficher moins d’animations : l’aperçu reste immobile. Réactive « Effets d’animation » dans les paramètres de Windows pour les voir."
   },

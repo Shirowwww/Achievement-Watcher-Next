@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Versteckte Erfolge aufdecken",
-        "description": "Name und Beschreibung versteckter Erfolge schon vor dem Freischalten anzeigen."
+        "name": "Versteckte Erfolge",
+        "description": "Anzeigen: Name und Beschreibung eines versteckten Erfolgs erscheinen, bevor du ihn freischaltest. Ausblenden: Sie bleiben bis dahin geheim."
       },
       "mergeDuplicates": {
         "name": "Duplikate zusammenführen",
         "description": "Dasselbe Spiel aus mehreren Quellen zu einer einzigen Kachel zusammenführen."
       },
       "timeMerge": {
-        "name": "Zeitstempel-Zusammenführung",
-        "description": "Welcher Zeitwert wird beim Zusammenführen von Duplikaten bevorzugt ?",
+        "name": "Beibehaltenes Datum bei zusammengeführten Spielen",
+        "description": "Wenn dasselbe Spiel in mehreren Quellen gefunden wird, welches Freischaltdatum für jeden Erfolg behalten wird.",
         "value": {
-          "recent": "Neuester",
-          "oldest": "Ältester"
+          "recent": "Das neueste",
+          "oldest": "Das älteste"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Darstellung",
         "description": "Farbschema des App-Fensters (sofortige Vorschau, Speicherung mit OK).",
         "customTitle": "Eigenes Design",
-        "customDesc": "Jedes Design lässt sich hier bearbeiten: Wähle für jeden Block eine Farbe und optional ein Bild. Ein Bild liegt über der Farbe (die zu einem leichten Schleier für die Lesbarkeit wird). Speichern behält deine Gestaltung als eigenes Design unter dem Namen daneben; ein noch freier Name gibt dir ein zweites Design und lässt das erste unberührt.",
+        "customDesc": "Wähle für jeden Bereich des Fensters eine Farbe und, wenn du magst, ein Bild. Speichern behält es unter dem angezeigten Namen; ein neuer Name erzeugt ein zweites Design.",
         "customName": "Name des Designs",
         "customNamePlaceholder": "Mein Design",
         "saveTheme": "Design speichern",
@@ -342,8 +342,8 @@
           "description": "Zeigt den Fertigstellungsbalken auf jeder Kachel."
         },
         "showEmptyProgress": {
-          "name": "Spiele ohne Erfolge",
-          "description": "Für ein Spiel, das Steam ohne Erfolge listet: „Keine Erfolge“ auf der Kachel anzeigen oder nichts anzeigen."
+          "name": "Hinweis „Keine Erfolge“",
+          "description": "Für ein Spiel, das Steam ohne Erfolge listet: „Keine Erfolge“ auf der Kachel anzeigen oder sie leer lassen. Das Spiel bleibt in beiden Fällen in der Bibliothek."
         },
         "showSource": {
           "name": "Plattformsymbol",
@@ -583,6 +583,7 @@
         "platinum": "Platin",
         "overlay": "In-Game-Overlay"
       },
+      "testHint": "Jede Schaltfläche zeigt eine Beispielbenachrichtigung mit deinen aktuellen Einstellungen.",
       "option": {
         "transportMode": {
           "name": "Benachrichtigungs-Transport",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Fortschrittsbenachrichtigungen",
-          "description": "Bei Erfolgsfortschritt benachrichtigen, wenn möglich"
+          "description": "Zeigt eine Benachrichtigung, wenn ein zählender Erfolg vorankommt (zum Beispiel 3/10 Gegner), in Spielen, die das melden."
         },
         "progressStep": {
           "name": "Fortschrittsetappen",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platin (100 %)",
-          "description": "Eine eigene Windows-Benachrichtigung auslösen, wenn ein Spiel 100 % Abschluss erreicht"
+          "description": "Eine eigene Benachrichtigung auslösen, wenn ein Spiel 100 % Abschluss erreicht"
         },
         "mode": {
           "name": "Benachrichtigungstyp",
@@ -731,7 +732,7 @@
               "text": "Text",
               "image": "Bild",
               "shape": "Form",
-              "icon": "Symbol"
+              "symbol": "Emblem"
             },
             "shape": {
               "triangle": "Dreieck",
@@ -762,7 +763,7 @@
               "opacity": "Deckkraft",
               "rotation": "Drehung",
               "scale": "Skalierung",
-              "icon": "Symbol",
+              "icon": "Emblem",
               "visible": "Sichtbar",
               "alignCard": "An der Karte ausrichten",
               "position": "Position",
@@ -812,7 +813,8 @@
               "lock": "Fixieren",
               "unlock": "Entsperren"
             },
-            "addIcon": "Symbol",
+            "addSymbol": "Emblem",
+            "lockParts": "Nur die Elemente, die du hinzugefügt hast, lassen sich sperren.",
             "enter": {
               "none": "Mit der Karte",
               "fade": "Einblenden",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Elemente hinzufügen",
-                "body": "Texte, Bilder und GIFs, Formen und Symbole. Jedes liegt als eigene Ebene auf der Karte."
+                "body": "Texte, Bilder und GIFs, Formen und Embleme. Jedes liegt als eigene Ebene auf der Karte."
               },
               "edit": {
                 "title": "Auswählen, dann verschieben",
@@ -1097,7 +1099,8 @@
             "intro": "Wähle einen Ausgangspunkt und passe ihn an. Nichts wird gespeichert, bis du das Preset erstellst.",
             "random": "Überrasch mich",
             "randomized": "Ein Design, das du noch nicht hattest",
-            "title": "Ausgangspunkt"
+            "title": "Ausgangspunkt",
+            "open": "Ein Preset öffnen"
           },
           "title": "Preset-Designer",
           "undo": "Rückgängig",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Presets",
+            "hint": "Klicke auf eine Karte, um sie zu verwenden.",
             "close": "Schließen",
             "mine": "Deine Presets",
             "bundled": "Mitgeliefert",
+            "fixed": "Nutzbar, wie sie sind",
             "browse": "Presets durchsuchen",
             "empty": "Du hast noch keine eigenen Presets. Erstelle eines im Designer, dann erscheint es hier."
           }
         },
         "souvenirTitle": "Souvenir-Screenshot",
         "souvenirScreenshot": "Screenshot beim Freischalten",
-        "souvenirScreenshotDesc": "Macht einen Screenshot, wenn ein Erfolg freigeschaltet wird. Pro Spiel gespeichert.",
+        "souvenirScreenshotDesc": "Nimmt den Bildschirm auf, wenn ein Erfolg freigeschaltet wird. Die Bilder landen in einem Ordner pro Spiel.",
         "souvenirHdr": "HDR-Screenshots",
         "souvenirHdrDesc": "Automatisch korrigiert die Farben, wenn Windows-HDR aktiv ist, für Screenshots und Clips. Ist die Funktion nicht verfügbar, wird stattdessen der Standard-Screenshot gespeichert.",
         "souvenirHdrAuto": "Automatisch",
@@ -1342,7 +1347,8 @@
           "description": "Bei Fehlschlag der Windows-Benachrichtigung auf Sprechblasen-Tooltip zurückgreifen"
         },
         "useWS": {
-          "description": "Erfolg an alle verbundenen Clients senden"
+          "name": "Lokale Übertragung (port 8082)",
+          "description": "Sendet jede Freischaltung an Tools, die auf diesem PC laufen, etwa die OBS-Quelle. Lass es eingeschaltet, wenn du unsicher bist."
         },
         "obsSource": {
           "name": "OBS-Browserquelle",
@@ -1412,17 +1418,17 @@
       "library": "Bibliotheksordner",
       "libraryInfo": [
         "Wähle einen Ordner, der viele Spielinstallationsordner enthält (z. B. D:\\Games, E:\\SteamLibrary).",
-        "Alle darin enthaltenen Spiele werden auf Goldberg/GBE-Erfolge gescannt, auch wenn sie nie gestartet wurden."
+        "Jedes Spiel darin wird auf Emulator-Erfolge gescannt, auch wenn es nie gestartet wurde."
       ],
       "addLibrary": "Bibliotheksordner hinzufügen",
       "generateConfigs": "Konfigurationen generieren",
-      "generateConfigsHelp": "nur Spiele ohne vorhandenen Fix"
+      "generateConfigsHelp": "vollständiger Scan, danach werden Spiele repariert, die noch keinen Fix haben"
     },
     "source": {
       "title": "Spielquellen",
       "officialPlatforms": {
         "title": "Offizielle Plattformen",
-        "description": "Aktiviere unten die mit einem Schild markierten Quellen. Nur auf diesem PC erkannte Bibliotheken können angezeigt werden."
+        "description": "Das Schild kennzeichnet offizielle Launcher. Steam, Epic und Xbox bieten drei Optionen: Keine, Installiert (Spiele auf diesem PC) oder Im Besitz (die ganze Bibliothek eines verbundenen Kontos). Die anderen sind ein- oder ausgeschaltet."
       },
       "legitSteam": {
         "name": "Steam-Spiele anzeigen",
@@ -1438,7 +1444,7 @@
         "description": "Liest Erfolge, die von Goldberg / GBE Fork und ähnlichen Steam-Emulatoren geschrieben wurden. Deckt auch Ubisoft-Spiele ab, die mit dem Uplay-R2-Fix repariert wurden und ihre Erfolge am selben Ort ablegen."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 und Reborn"
+        "description": "Steam-Spiele, die mit GreenLuma laufen (2020, 2024, 2025 und Reborn): liest die Erfolge, die es aufzeichnet."
       },
       "rpcs3": {
         "description": "PlayStation-3-Emulator"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox-PC-Spiele (Game Pass / Microsoft Store). Verbinde und importiere in den Einstellungen, um Freischaltstatus und Seltenheit zu sehen.",
+        "description": "Xbox-PC-Spiele (Game Pass / Microsoft Store). Verbinde dein Konto weiter unten in der Karte Xbox-PC-Konto und importiere dann, um Freischaltungen und Seltenheit zu sehen.",
       "value": {
         "none": "Keine",
         "installed": "Installiert",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Spielstände des GOG-Emulators"
+        "description": "GOG-Spiele, die mit dem GOG-Galaxy-Emulator von Nemirtingas laufen: liest die Erfolge, die er speichert."
       },
       "epic": {
-        "description": "Spielstände des Epic-Emulators"
+        "description": "Epic-Spiele, die mit dem Epic-Emulator von Nemirtingas laufen: liest die Erfolge, die er speichert."
       },
       "shadps4": {
         "description": "PlayStation-4-Emulator"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE über XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Emulator-Spiele aus deinem RetroAchievements-Konto. Verbinde es in der Kontokarte unten; neue Erfolge werden gemeldet, während ein Emulator läuft."
+        "description": "Emulator-Spiele aus deinem RetroAchievements-Konto. Verbinde es weiter unten in der Kontokarte; neue Freischaltungen werden gemeldet, solange ein Emulator läuft."
       },
       "psnLibrary": {
         "description": "Spiele und Trophäen, die aus deinem PlayStation-Konto importiert wurden. Verbinde es unten in der Kontokarte und importiere dann die Bibliothek."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns über die MadnessPatch-Mod"
       },
-      "groupStores": "Offizielle Launcher",
+      "groupStores": "Offizielle Plattformen",
+      "groupMemory": "Bibliotheksgedächtnis",
       "groupConsoles": "Konsolen und Retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Füge ?test=1 an die URL an, während du die Quelle platzierst. Sie zeigt alle zehn Sekunden eine Beispiel-Freischaltung; entferne es, wenn du fertig bist.",
         "Die Quelle zeigt dasselbe Pop-up wie im Spiel und bleibt zwischen Freischaltungen leer, sodass sie beim Streamen nichts kostet.",
         "Weitere Optionen nach der Adresse: ?scale=2 fixiert den Zoom, ?duration=8000 legt fest, wie lange jede Karte bleibt, ?sound=1 spielt den Ton über die Quelle ab, /obs/preset/Xbox/ nutzt eine bestimmte Vorlage, egal welche der Desktop verwendet.",
-        "Sie liest den lokalen Benachrichtigungsfeed, lass also Websocket @localhost:8082 unter Einstellungen > Benachrichtigung > Integrationen eingeschaltet. Es funktioniert nur auf diesem PC, und nur eine Instanz von AW Next kann es bereitstellen."
+        "Sie liest den lokalen Benachrichtigungsfeed, lass also Lokale Übertragung unter Einstellungen > Benachrichtigung > Integrationen eingeschaltet. Es funktioniert nur auf diesem PC, und nur eine Instanz von AW Next kann es bereitstellen."
       ],
       "souvenirsTitle": "Screenshots und Videoclips",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Steam-Hauptkonto",
         "name": "Nach Benutzer filtern",
-        "description": "Nur die Steam-Erfolge des ausgewählten Kontos anzeigen"
+        "description": "Zeigt nur die Steam-Erfolge des gewählten Kontos. Alle Konten: kein Filter.",
+        "all": "Alle Konten"
       },
       "checkUpdates": "Nach Updates suchen",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Automatische Aktualisierungen der Erfolgsdaten",
-        "description": "Deaktiviere dies, wenn du steam_cache selbst pflegst: Es stoppt die regelmäßige Selbstreparatur, die leere Beschreibungen ausfüllt und Erfolge erfasst, die durch ein Spiel-Update hinzugekommen sind. „Erfolgslisten erneut prüfen“ oben funktioniert weiterhin als manuelle Einzelprüfung."
+        "description": "Hält die Erfolgsdaten aktuell: füllt leere Beschreibungen aus und erkennt Erfolge, die ein Spiel-Update hinzugefügt hat. Schalte es nur aus, wenn du diese Dateien selbst pflegst. „Erfolgslisten erneut prüfen“ oben funktioniert weiterhin von Hand."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Hier ist nichts zu Erfolgen gespeichert: kein AppID-Ordner, keine Emulator-Konfiguration und keine Freischaltdatei.",
     "folder-reason-found-instead": "Stattdessen gefunden:",
     "folder-reason-checked": "Hier geprüft: AppID-Unterordner, alle AW Next bekannten Emulator-Konfigurationsdateien und {layouts} portable Speicher-Layouts. Der Ordner wurde untersucht, nichts wurde übersprungen.",
+    "folder-also-watched": "Wird auch automatisch überwacht",
     "game-health-title": "Spielzustand",
     "game-settings-menu": "Spieleinstellungen",
     "game-config-title": "Ausführbare Datei konfigurieren",
@@ -2002,6 +2011,7 @@
     "update-checked": "Geprüft",
     "blacklist-add-placeholder": "Steam App-ID",
     "blacklist-add-button": "Hinzufügen",
+    "blacklist-appid-help": "Die Steam-App-ID ist die Zahl in der Steam-Store-Adresse des Spiels: store.steampowered.com/app/ID",
     "setupLooksValid": "Die Einrichtung sieht korrekt aus.",
     "problemsWereDetected": "Es wurden Probleme erkannt.",
     "repairSteamSettings": "steam_settings reparieren (Schema + Symbole schreiben)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Gib zuerst im Feld Name einen neuen Namen ein und klicke dann auf Umbenennen.",
     "preset-view-readonly": "Diese Ansicht zeigt nur die Karte. Wechsle zurück zu Karte, um das Layout zu bearbeiten.",
     "preset-layer-fixed": "{presets} zeichnen ihre Karte mit eigenem Code und lassen sich hier deshalb nicht anpassen. Du kannst sie aber weiterhin so verwenden, wie sie sind.",
+    "preset-layer-named": "Es wird als neues Preset „{name}“ gespeichert; ändere den Namen, um es anders zu nennen.",
+    "preset-layer-start-hidden": "„{start}“ ist ausgeblendet, solange du ein Preset anpasst. Wähle „{none}“, um es zurückzubekommen.",
     "preset-play-popup": "Diese Vorlage zeichnet ihre Karte mit eigenem Code, deshalb wird sie in einem echten Popup auf dem Bildschirm abgespielt.",
     "preset-play-reduced": "Windows ist so eingestellt, dass weniger Animationen angezeigt werden, deshalb bleibt die Vorschau still. Aktiviere „Animationseffekte“ in den Windows-Einstellungen wieder, um sie zu sehen."
   },

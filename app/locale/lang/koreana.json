@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "숨겨진 도전 과제 공개",
-        "description": "달성하기 전에도 숨겨진 도전 과제의 이름과 설명을 공개합니다."
+        "name": "숨겨진 도전 과제",
+        "description": "표시: 숨겨진 도전 과제의 이름과 설명이 달성하기 전에 보입니다. 숨김: 그때까지 비밀로 유지됩니다."
       },
       "mergeDuplicates": {
         "name": "중복 병합",
         "description": "여러 소스에서 발견된 같은 게임을 하나의 타일로 합칩니다."
       },
       "timeMerge": {
-        "name": "시간 병합 기준",
-        "description": "중복을 병합할 때 어느 시간 값을 우선할까요?",
+        "name": "병합된 게임에서 유지할 날짜",
+        "description": "같은 게임이 여러 소스에서 발견되면 각 도전 과제에 어느 달성 날짜를 유지할지 정합니다.",
         "value": {
-          "recent": "최신",
-          "oldest": "가장 오래됨"
+          "recent": "가장 최근",
+          "oldest": "가장 오래된"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "모양",
         "description": "앱 전체와 게임 내 오버레이의 색상 테마입니다(즉시 미리 보이며 확인을 누르면 저장됩니다).",
         "customTitle": "사용자 지정 테마",
-        "customDesc": "모든 테마를 여기서 편집할 수 있습니다. 블록마다 색을, 원하면 이미지를 고르세요. 이미지는 색 위에 표시되고 색은 가독성을 위해 옅은 막이 됩니다. 저장하면 옆의 이름으로 내 테마가 되며, 아직 쓰지 않은 이름을 쓰면 두 번째 테마가 생기고 원래 테마는 그대로 남습니다.",
+        "customDesc": "창의 각 부분에 색을 고르고, 원하면 이미지도 고르세요. 저장하면 표시된 이름으로 테마가 유지되고, 새 이름을 쓰면 두 번째 테마가 만들어집니다.",
         "customName": "테마 이름",
         "customNamePlaceholder": "내 테마",
         "saveTheme": "테마 저장",
@@ -342,8 +342,8 @@
           "description": "각 타일에 완료율 표시줄을 표시합니다."
         },
         "showEmptyProgress": {
-          "name": "도전 과제 없는 게임",
-          "description": "Steam이 도전 과제 없이 표시하는 게임에 대해: 타일에 “도전 과제 없음”라고 쓰거나 아무것도 표시하지 않습니다."
+          "name": "“도전 과제 없음” 표시",
+          "description": "Steam이 도전 과제 없이 표시하는 게임에 대해: 타일에 “도전 과제 없음”이라고 쓰거나 비워 둡니다. 어느 쪽이든 게임은 라이브러리에 남습니다."
         },
         "showSource": {
           "name": "플랫폼 아이콘",
@@ -583,6 +583,7 @@
         "platinum": "플래티넘",
         "overlay": "게임 내 오버레이"
       },
+      "testHint": "각 버튼은 현재 설정으로 샘플 알림을 표시합니다.",
       "option": {
         "transportMode": {
           "name": "알림 전달 방식",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "진행도 알림",
-          "description": "가능하면 도전 과제 진행도를 알립니다"
+          "description": "카운터가 있는 도전 과제가 진행될 때(예: 적 3/10) 알림을 표시합니다. 이를 보고하는 게임에서 동작합니다."
         },
         "progressStep": {
           "name": "진행도 단계 알림",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "플래티넘(100%)",
-          "description": "게임 달성률이 100%가 되면 전용 Windows 알림을 표시합니다"
+          "description": "게임 달성률이 100%가 되면 전용 알림을 표시합니다"
         },
         "mode": {
           "name": "알림 종류",
@@ -731,7 +732,7 @@
               "text": "글자",
               "image": "이미지",
               "shape": "도형",
-              "icon": "아이콘"
+              "symbol": "기호"
             },
             "shape": {
               "triangle": "삼각형",
@@ -762,7 +763,7 @@
               "opacity": "불투명도",
               "rotation": "회전",
               "scale": "배율",
-              "icon": "아이콘",
+              "icon": "기호",
               "visible": "표시",
               "alignCard": "카드에 맞춰 정렬",
               "position": "위치",
@@ -812,7 +813,8 @@
               "lock": "위치 고정",
               "unlock": "고정 해제"
             },
-            "addIcon": "아이콘",
+            "addSymbol": "기호",
+            "lockParts": "직접 추가한 요소만 잠글 수 있습니다.",
             "enter": {
               "none": "카드와 함께",
               "fade": "페이드 인",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "요소 추가",
-                "body": "텍스트, 이미지와 GIF, 도형, 아이콘. 각각 카드 위에 독립된 레이어로 놓입니다."
+                "body": "텍스트, 이미지와 GIF, 도형, 기호. 각각 카드 위에 독립된 레이어로 놓입니다."
               },
               "edit": {
                 "title": "선택한 뒤 이동",
@@ -1097,7 +1099,8 @@
             "intro": "시작할 디자인을 고른 다음 원하는 대로 바꾸세요. 프리셋을 만들기 전까지는 아무것도 저장되지 않습니다.",
             "random": "무작위로 고르기",
             "randomized": "아직 써 보지 않은 디자인",
-            "title": "시작 디자인"
+            "title": "시작 디자인",
+            "open": "프리셋 열기"
           },
           "title": "프리셋 디자이너",
           "undo": "실행 취소",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "프리셋",
+            "hint": "카드를 클릭해 사용하세요.",
             "close": "닫기",
             "mine": "내 프리셋",
             "bundled": "기본 제공",
+            "fixed": "그대로 사용",
             "browse": "프리셋 둘러보기",
             "empty": "아직 내 프리셋이 없습니다. 디자이너에서 만들면 여기에 표시됩니다."
           }
         },
         "souvenirTitle": "기념 스크린샷",
         "souvenirScreenshot": "달성할 때 스크린샷",
-        "souvenirScreenshotDesc": "도전 과제를 달성할 때 화면을 캡처합니다. 게임별로 저장됩니다.",
+        "souvenirScreenshotDesc": "도전 과제를 달성하면 화면을 캡처합니다. 이미지는 게임별로 폴더 하나에 저장됩니다.",
         "souvenirHdr": "HDR 스크린샷",
         "souvenirHdrDesc": "자동은 Windows HDR이 켜져 있을 때 스크린샷과 클립의 색을 보정합니다. 사용할 수 없으면 일반 스크린샷을 대신 저장합니다.",
         "souvenirHdrAuto": "자동",
@@ -1342,7 +1347,8 @@
           "description": "Windows 알림이 실패하면 풍선 도움말로 대체합니다"
         },
         "useWS": {
-          "description": "연결된 모든 클라이언트에 도전 과제를 전송합니다"
+          "name": "로컬 방송 (port 8082)",
+          "description": "달성할 때마다 OBS 소스처럼 이 PC에서 실행 중인 도구로 전송합니다. 잘 모르겠으면 켜 두세요."
         },
         "obsSource": {
           "name": "OBS 브라우저 소스",
@@ -1412,17 +1418,17 @@
       "library": "라이브러리 폴더",
       "libraryInfo": [
         "게임 설치 폴더가 여러 개 들어 있는 폴더를 선택하세요(예: D:\\Games, E:\\SteamLibrary).",
-        "한 번도 실행하지 않은 게임까지 포함해 그 안의 모든 게임에서 Goldberg/GBE 도전 과제를 검사합니다."
+        "안에 있는 모든 게임에서 한 번도 실행하지 않았더라도 에뮬레이터 도전 과제를 검색합니다."
       ],
       "addLibrary": "라이브러리 폴더 추가",
       "generateConfigs": "설정 파일 생성",
-      "generateConfigsHelp": "기존 수정이 없는 게임만 대상으로 합니다"
+      "generateConfigsHelp": "전체 스캔 후, 아직 수정이 없는 게임을 복구합니다"
     },
     "source": {
       "title": "게임 소스",
       "officialPlatforms": {
         "title": "공식 플랫폼",
-        "description": "아래 방패 표시가 있는 소스를 켜세요. 이 PC에서 감지된 라이브러리만 표시할 수 있습니다."
+        "description": "방패는 공식 런처를 표시합니다. Steam, Epic, Xbox는 없음, 설치됨(이 PC의 게임), 보유 중(연결된 계정의 전체 라이브러리)의 세 가지 선택지를 제공합니다. 나머지는 켜거나 끕니다."
       },
       "legitSteam": {
         "name": "Steam 게임 표시",
@@ -1438,7 +1444,7 @@
         "description": "Goldberg / GBE Fork 등 Steam 에뮬레이터가 기록한 도전 과제를 읽습니다. Uplay R2 수정 패치로 고친 Ubisoft 게임도 포함하며, 이 게임들은 도전 과제를 같은 위치에 기록합니다."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 및 Reborn"
+        "description": "GreenLuma(2020, 2024, 2025, Reborn)로 실행한 Steam 게임: GreenLuma가 기록하는 도전 과제를 읽습니다."
       },
       "rpcs3": {
         "description": "PlayStation 3 에뮬레이터"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC 게임(Game Pass / Microsoft Store)입니다. 달성 상태와 희귀도를 보려면 설정에서 계정을 연결하고 가져오세요.",
+        "description": "Xbox PC 게임(Game Pass / Microsoft Store)입니다. 아래의 Xbox PC 계정 카드에서 계정을 연결한 다음 가져오면 달성 상태와 희귀도를 볼 수 있습니다.",
       "value": {
         "none": "없음",
         "installed": "설치됨",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "GOG 에뮬레이터 저장 파일"
+        "description": "Nemirtingas의 GOG Galaxy 에뮬레이터로 실행한 GOG 게임: 에뮬레이터가 저장하는 도전 과제를 읽습니다."
       },
       "epic": {
-        "description": "Epic 에뮬레이터 저장 파일"
+        "description": "Nemirtingas의 Epic 에뮬레이터로 실행한 Epic 게임: 에뮬레이터가 저장하는 도전 과제를 읽습니다."
       },
       "shadps4": {
         "description": "PlayStation 4 에뮬레이터"
@@ -1506,7 +1512,7 @@
         "description": "XLiveLessNess를 통한 Games for Windows LIVE"
       },
       "retroAchievements": {
-        "description": "RetroAchievements 계정의 에뮬레이터 게임입니다. 아래 계정 카드에서 연결하세요. 에뮬레이터가 실행 중일 때 새 도전 과제 달성이 알림으로 표시됩니다."
+        "description": "RetroAchievements 계정의 에뮬레이터 게임입니다. 아래 계정 카드에서 연결하세요. 에뮬레이터가 실행되는 동안 새로 달성한 항목이 알림으로 표시됩니다."
       },
       "psnLibrary": {
         "description": "PlayStation 계정에서 가져온 게임과 트로피입니다. 아래 계정 카드에서 연결한 다음 라이브러리를 가져오세요."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "MadnessPatch 모드를 통한 Alice: Madness Returns"
       },
-      "groupStores": "공식 런처",
+      "groupStores": "공식 플랫폼",
+      "groupMemory": "라이브러리 기억",
       "groupConsoles": "콘솔 및 레트로"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "소스를 배치하는 동안 URL에 ?test=1을 붙이세요. 10초마다 샘플 달성이 표시됩니다. 배치가 끝나면 제거하세요.",
         "소스는 게임 내와 같은 팝업을 그리며 달성 사이에는 비어 있어 방송 중에 부담이 없습니다.",
         "주소 뒤에 붙일 수 있는 옵션: ?scale=2는 확대를 고정하고, ?duration=8000은 카드가 머무는 시간을 정하고, ?sound=1은 소스를 통해 소리를 재생하고, /obs/preset/Xbox/는 데스크톱 설정과 관계없이 한 가지 프리셋을 사용합니다.",
-        "로컬 알림 피드를 읽으므로 설정 > 알림 > 연동에서 Websocket @localhost:8082를 켜 두세요. 이 PC에서만 동작하며, AW Next 하나만 제공할 수 있습니다."
+        "로컬 알림 피드를 읽으므로 설정 > 알림 > 연동에서 로컬 방송를 켜 두세요. 이 PC에서만 동작하며, AW Next 하나만 제공할 수 있습니다."
       ],
       "souvenirsTitle": "스크린샷과 비디오 클립",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "주 Steam 계정",
         "name": "사용자로 필터",
-        "description": "선택한 계정의 Steam 도전 과제만 표시합니다"
+        "description": "선택한 계정의 Steam 도전 과제만 표시합니다. 모든 계정: 필터 없음.",
+        "all": "모든 계정"
       },
       "checkUpdates": "업데이트 확인",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "도전 과제 데이터 자동 업데이트",
-        "description": "steam_cache를 직접 관리한다면 이 기능을 꺼두세요. 빈 설명을 채우고 게임 업데이트로 추가된 도전 과제를 반영하는 주기적인 자동 복구가 중지됩니다. 위의 '도전 과제 목록 다시 확인'은 이후에도 수동 일회성 확인 기능으로 계속 사용할 수 있습니다."
+        "description": "도전 과제 데이터를 최신 상태로 유지합니다. 비어 있는 설명을 채우고 게임 업데이트로 추가된 도전 과제를 찾아냅니다. 이 파일을 직접 관리하는 경우에만 끄세요. 위의 “도전 과제 목록 다시 확인”은 수동으로 계속 사용할 수 있습니다."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "도전 과제와 관련된 것이 전혀 없습니다. AppID 폴더도, 에뮬레이터 설정도, 달성 파일도 없습니다.",
     "folder-reason-found-instead": "대신 발견된 것:",
     "folder-reason-checked": "여기에서 AppID 하위 폴더, AW Next가 아는 모든 에뮬레이터 설정 파일, 이동식 저장 형식 {layouts}가지를 확인했습니다. 폴더 전체를 살펴봤으며 건너뛴 곳은 없습니다.",
+    "folder-also-watched": "자동으로도 감시 중",
     "game-health-title": "게임 상태",
     "game-settings-menu": "게임 설정",
     "game-config-title": "실행 파일 설정",
@@ -2002,6 +2011,7 @@
     "update-checked": "확인 완료",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "추가",
+    "blacklist-appid-help": "Steam 앱 ID는 게임의 Steam 상점 주소에 있는 숫자입니다: store.steampowered.com/app/ID",
     "setupLooksValid": "설정이 정상으로 보입니다.",
     "problemsWereDetected": "문제가 발견되었습니다.",
     "repairSteamSettings": "steam_settings 복구(목록 + 아이콘 기록)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "먼저 이름 필드에 새 이름을 입력한 다음 이름 바꾸기를 누르세요.",
     "preset-view-readonly": "이 보기에서는 카드만 표시됩니다. 레이아웃을 편집하려면 카드로 돌아가세요.",
     "preset-layer-fixed": "{presets}은(는) 자체 코드로 카드를 그리므로 여기서 사용자 지정할 수 없습니다. 그대로 사용하는 것은 계속 가능합니다.",
+    "preset-layer-named": "새 프리셋 “{name}”(으)로 저장됩니다. 다른 이름으로 하려면 이름을 변경하세요.",
+    "preset-layer-start-hidden": "프리셋을 사용자 지정하는 동안 “{start}”은(는) 숨겨집니다. 다시 표시하려면 “{none}”을(를) 선택하세요.",
     "preset-play-popup": "이 프리셋은 자체 코드로 카드를 그리므로 화면의 실제 팝업에서 재생됩니다.",
     "preset-play-reduced": "Windows에서 애니메이션을 줄이도록 설정되어 있어 미리 보기가 멈춰 있습니다. 보려면 Windows 설정에서 “애니메이션 효과”를 다시 켜세요."
   },

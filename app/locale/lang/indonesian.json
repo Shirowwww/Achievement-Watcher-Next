@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Tampilkan Pencapaian Tersembunyi",
-        "description": "Tampilkan nama dan deskripsi pencapaian tersembunyi sebelum Anda membukanya."
+        "name": "Pencapaian tersembunyi",
+        "description": "Tampilkan: nama dan deskripsi pencapaian tersembunyi muncul sebelum Anda membukanya. Sembunyikan: keduanya tetap rahasia sampai saat itu."
       },
       "mergeDuplicates": {
         "name": "Gabungkan Duplikat",
         "description": "Gabungkan game yang sama dari beberapa sumber menjadi satu kartu."
       },
       "timeMerge": {
-        "name": "Penggabungan stempel waktu",
-        "description": "Saat menggabungkan duplikat, nilai waktu mana yang diutamakan?",
+        "name": "Tanggal yang dipertahankan untuk game yang digabung",
+        "description": "Saat satu game ditemukan di beberapa sumber, tanggal pembukaan mana yang dipertahankan untuk setiap pencapaian.",
         "value": {
-          "recent": "Terbaru",
-          "oldest": "Terlama"
+          "recent": "Yang terbaru",
+          "oldest": "Yang terlama"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Tampilan",
         "description": "Tema warna untuk seluruh aplikasi dan overlay dalam game (pratinjau langsung, disimpan dengan OK).",
         "customTitle": "Tema kustom",
-        "customDesc": "Semua tema bisa diubah di sini: pilih warna dan, kalau mau, gambar untuk tiap blok. Gambar tampil di atas warna (warnanya menjadi selubung tipis agar tetap terbaca). Simpan menyimpan hasilmu sebagai tema sendiri dengan nama di sebelahnya; nama yang belum dipakai memberimu tema kedua dan membiarkan yang pertama apa adanya.",
+        "customDesc": "Pilih warna, dan gambar jika Anda mau, untuk setiap bagian jendela. Simpan mempertahankannya dengan nama yang ditampilkan; nama baru membuat tema kedua.",
         "customName": "Nama tema",
         "customNamePlaceholder": "Tema saya",
         "saveTheme": "Simpan tema",
@@ -342,8 +342,8 @@
           "description": "Menampilkan bilah penyelesaian pada setiap kartu."
         },
         "showEmptyProgress": {
-          "name": "Game tanpa pencapaian",
-          "description": "Untuk game yang oleh Steam didaftarkan tanpa pencapaian: tulis “Tidak ada pencapaian” pada kartunya, atau jangan tampilkan apa pun."
+          "name": "Label “Tidak ada pencapaian”",
+          "description": "Untuk game yang oleh Steam didaftarkan tanpa pencapaian: tulis “Tidak ada pencapaian” pada kartunya, atau biarkan kosong. Game tetap ada di pustaka dalam kedua kasus."
         },
         "showSource": {
           "name": "Ikon platform",
@@ -583,6 +583,7 @@
         "platinum": "Platinum",
         "overlay": "Overlay dalam game"
       },
+      "testHint": "Setiap tombol menampilkan contoh notifikasi dengan pengaturan Anda saat ini.",
       "option": {
         "transportMode": {
           "name": "Transport notifikasi",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Notifikasi progres",
-          "description": "Beri notifikasi untuk progres pencapaian bila memungkinkan"
+          "description": "Menampilkan notifikasi saat pencapaian berhitung maju (misalnya 3/10 musuh), pada game yang melaporkannya."
         },
         "progressStep": {
           "name": "Tonggak progres",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platinum (100%)",
-          "description": "Munculkan notifikasi Windows khusus saat sebuah game mencapai penyelesaian 100%"
+          "description": "Munculkan notifikasi khusus saat sebuah game mencapai penyelesaian 100%"
         },
         "mode": {
           "name": "Jenis notifikasi",
@@ -731,7 +732,7 @@
               "text": "Teks",
               "image": "Gambar",
               "shape": "Bentuk",
-              "icon": "Ikon"
+              "symbol": "Simbol"
             },
             "shape": {
               "triangle": "Segitiga",
@@ -762,7 +763,7 @@
               "opacity": "Opasitas",
               "rotation": "Rotasi",
               "scale": "Skala",
-              "icon": "Ikon",
+              "icon": "Simbol",
               "visible": "Terlihat",
               "alignCard": "Ratakan dengan kartu",
               "position": "Posisi",
@@ -812,7 +813,8 @@
               "lock": "Kunci di tempat",
               "unlock": "Buka kunci"
             },
-            "addIcon": "Ikon",
+            "addSymbol": "Simbol",
+            "lockParts": "Hanya elemen yang Anda tambahkan yang dapat dikunci.",
             "enter": {
               "none": "Bersama kartu",
               "fade": "Memudar masuk",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Tambahkan elemen",
-                "body": "Teks, gambar dan GIF, bentuk, dan ikon. Masing-masing masuk ke kartu sebagai lapisan tersendiri."
+                "body": "Teks, gambar dan GIF, bentuk, dan simbol. Masing-masing masuk ke kartu sebagai lapisan tersendiri."
               },
               "edit": {
                 "title": "Pilih, lalu pindahkan",
@@ -1097,7 +1099,8 @@
             "intro": "Pilih titik awal, lalu ubah sesuai selera Anda. Tidak ada yang disimpan sampai Anda membuat presetnya.",
             "random": "Kejutkan saya",
             "randomized": "Desain yang belum pernah Anda coba",
-            "title": "Mulai dari"
+            "title": "Mulai dari",
+            "open": "Buka preset"
           },
           "title": "Perancang preset",
           "undo": "Urungkan",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Preset",
+            "hint": "Klik kartu untuk menggunakannya.",
             "close": "Tutup",
             "mine": "Preset Anda",
             "bundled": "Bawaan",
+            "fixed": "Dipakai apa adanya",
             "browse": "Jelajahi preset",
             "empty": "Anda belum punya preset sendiri. Buat satu di perancang dan preset itu akan muncul di sini."
           }
         },
         "souvenirTitle": "Tangkapan layar suvenir",
         "souvenirScreenshot": "Tangkapan layar saat terbuka",
-        "souvenirScreenshotDesc": "Ambil gambar layar saat sebuah pencapaian terbuka. Disimpan per game.",
+        "souvenirScreenshotDesc": "Mengambil tangkapan layar saat pencapaian terbuka. Gambar disimpan dalam satu folder per game.",
         "souvenirHdr": "Tangkapan layar HDR",
         "souvenirHdrDesc": "Otomatis mengoreksi warna saat HDR Windows aktif, untuk tangkapan layar dan klip. Bila tidak tersedia, tangkapan layar standar yang disimpan.",
         "souvenirHdrAuto": "Otomatis",
@@ -1342,7 +1347,8 @@
           "description": "Beralih ke balon petunjuk bila notifikasi Windows gagal"
         },
         "useWS": {
-          "description": "Siarkan pencapaian ke semua klien yang terhubung"
+          "name": "Siaran lokal (port 8082)",
+          "description": "Mengirim setiap pembukaan ke alat yang berjalan di PC ini, seperti sumber OBS. Biarkan aktif jika ragu."
         },
         "obsSource": {
           "name": "Sumber browser OBS",
@@ -1412,17 +1418,17 @@
       "library": "Folder Perpustakaan",
       "libraryInfo": [
         "Pilih folder yang memuat banyak folder pemasangan game (misalnya D:\\Games, E:\\SteamLibrary).",
-        "Semua game di dalamnya akan dipindai untuk pencapaian Goldberg/GBE, meski belum pernah dijalankan."
+        "Setiap game di dalamnya dipindai untuk mencari pencapaian emulator, meskipun belum pernah dijalankan."
       ],
       "addLibrary": "Tambah Folder Perpustakaan",
       "generateConfigs": "Buat konfigurasi",
-      "generateConfigsHelp": "hanya game tanpa perbaikan yang sudah ada"
+      "generateConfigsHelp": "pindai penuh, lalu perbaiki game yang belum punya perbaikan"
     },
     "source": {
       "title": "Sumber game",
       "officialPlatforms": {
         "title": "Platform resmi",
-        "description": "Aktifkan sumber bertanda perisai di bawah. Hanya perpustakaan yang terdeteksi di PC ini yang dapat ditampilkan."
+        "description": "Perisai menandai peluncur resmi. Steam, Epic, dan Xbox menawarkan tiga pilihan: Tidak ada, Terpasang (game di PC ini), atau Dimiliki (seluruh pustaka akun yang terhubung). Yang lain hanya aktif atau nonaktif."
       },
       "legitSteam": {
         "name": "Tampilkan Game Steam",
@@ -1438,7 +1444,7 @@
         "description": "Baca pencapaian yang ditulis oleh Goldberg / GBE Fork dan emulator Steam sejenis. Juga mencakup game Ubisoft yang diperbaiki dengan perbaikan Uplay R2, yang menulis pencapaiannya di tempat yang sama."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 dan Reborn"
+        "description": "Game Steam yang dijalankan dengan GreenLuma (2020, 2024, 2025, dan Reborn): membaca pencapaian yang dicatatnya."
       },
       "rpcs3": {
         "description": "Emulator Playstation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Game Xbox PC (Game Pass / Microsoft Store). Hubungkan dan impor dari Pengaturan untuk melihat status terbuka dan kelangkaan.",
+        "description": "Game Xbox PC (Game Pass / Microsoft Store). Hubungkan akun Anda di kartu Akun Xbox PC lebih bawah, lalu impor untuk melihat pembukaan dan kelangkaan.",
       "value": {
         "none": "Tidak ada",
         "installed": "Terpasang",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Save emulator GOG"
+        "description": "Game GOG yang dijalankan dengan emulator GOG Galaxy dari Nemirtingas: membaca pencapaian yang disimpannya."
       },
       "epic": {
-        "description": "Save emulator Epic"
+        "description": "Game Epic yang dijalankan dengan emulator Epic dari Nemirtingas: membaca pencapaian yang disimpannya."
       },
       "shadps4": {
         "description": "Emulator PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE melalui XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Game emulator dari akun RetroAchievements Anda. Hubungkan di kartu akun di bawah; pencapaian baru diumumkan saat emulator berjalan."
+        "description": "Game emulator dari akun RetroAchievements Anda. Hubungkan di kartu akun lebih bawah; pembukaan baru diumumkan selama emulator berjalan."
       },
       "psnLibrary": {
         "description": "Game dan piala yang diimpor dari akun PlayStation Anda. Hubungkan di kartu akun di bawah, lalu impor pustaka."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns melalui mod MadnessPatch"
       },
-      "groupStores": "Peluncur resmi",
+      "groupStores": "Platform resmi",
+      "groupMemory": "Memori pustaka",
       "groupConsoles": "Konsol dan retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Tambahkan ?test=1 ke URL saat Anda menempatkan sumber. Ia menampilkan contoh pencapaian setiap sepuluh detik; hapus setelah selesai.",
         "Sumber ini menggambar popup yang sama seperti di dalam game, dan tetap kosong di antara pencapaian, jadi tidak membebani saat Anda streaming.",
         "Opsi lain setelah alamat: ?scale=2 mengunci zoom, ?duration=8000 menetapkan berapa lama setiap kartu tampil, ?sound=1 memutar suara lewat sumber, /obs/preset/Xbox/ memakai satu preset apa pun yang dipakai desktop.",
-        "Ia membaca feed notifikasi lokal, jadi biarkan Websocket @localhost:8082 tetap aktif di Pengaturan > Notifikasi > Integrasi. Hanya berfungsi di PC ini, dan hanya satu salinan AW Next yang bisa menyajikannya."
+        "Ia membaca feed notifikasi lokal, jadi biarkan Siaran lokal tetap aktif di Pengaturan > Notifikasi > Integrasi. Hanya berfungsi di PC ini, dan hanya satu salinan AW Next yang bisa menyajikannya."
       ],
       "souvenirsTitle": "Tangkapan layar dan klip video",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Akun Steam Utama",
         "name": "Saring menurut pengguna",
-        "description": "Tampilkan pencapaian Steam hanya dari akun yang dipilih"
+        "description": "Hanya menampilkan pencapaian Steam dari akun yang dipilih. Semua akun: tanpa filter.",
+        "all": "Semua akun"
       },
       "checkUpdates": "Periksa pembaruan",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Pembaruan otomatis data pencapaian",
-        "description": "Nonaktifkan ini bila Anda mengelola steam_cache sendiri: ini menghentikan perbaikan mandiri berkala yang mengisi deskripsi kosong dan mendeteksi pencapaian yang ditambahkan oleh pembaruan game. “Periksa ulang daftar pencapaian” di atas tetap berfungsi sebagai pemeriksaan manual satu kali."
+        "description": "Menjaga data pencapaian tetap mutakhir: mengisi deskripsi kosong dan menangkap pencapaian yang ditambahkan oleh pembaruan game. Matikan hanya jika Anda mengelola file ini sendiri. “Periksa ulang daftar pencapaian” di atas tetap berfungsi secara manual."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Tidak ada yang berkaitan dengan pencapaian di sini: tidak ada folder AppID, tidak ada konfigurasi emulator, dan tidak ada file pencapaian.",
     "folder-reason-found-instead": "Yang ditemukan justru:",
     "folder-reason-checked": "Yang diperiksa di sini: subfolder AppID, setiap file konfigurasi emulator yang dikenal AW Next, dan {layouts} tata letak save portabel. Folder ini sudah ditelusuri seluruhnya - tidak ada yang dilewati.",
+    "folder-also-watched": "Juga dipantau otomatis",
     "game-health-title": "Kesehatan game",
     "game-settings-menu": "Pengaturan game",
     "game-config-title": "Konfigurasi file eksekusi",
@@ -2002,6 +2011,7 @@
     "update-checked": "Pemeriksaan selesai",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "Tambah",
+    "blacklist-appid-help": "App ID Steam adalah angka pada alamat halaman game di toko Steam: store.steampowered.com/app/ID",
     "setupLooksValid": "Penyiapan tampak valid.",
     "problemsWereDetected": "Ditemukan sejumlah masalah.",
     "repairSteamSettings": "Perbaiki steam_settings (tulis skema + ikon)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Ketik nama baru di kolom Nama terlebih dahulu, lalu tekan Ganti nama.",
     "preset-view-readonly": "Tampilan ini hanya menampilkan kartu. Kembali ke Kartu untuk mengedit tata letak.",
     "preset-layer-fixed": "{presets} menggambar kartunya dengan kode sendiri, sehingga tidak dapat disesuaikan di sini. Anda tetap dapat menggunakannya apa adanya.",
+    "preset-layer-named": "Akan disimpan sebagai preset baru, “{name}”; ubah Nama untuk memberinya nama lain.",
+    "preset-layer-start-hidden": "“{start}” disembunyikan saat Anda mengkustomisasi preset. Pilih “{none}” untuk memunculkannya kembali.",
     "preset-play-popup": "Preset ini menggambar kartunya dengan kodenya sendiri, jadi diputar di popup sungguhan, di layar.",
     "preset-play-reduced": "Windows diatur untuk menampilkan lebih sedikit animasi, jadi pratinjau tetap diam. Aktifkan kembali “Efek animasi” di pengaturan Windows untuk melihatnya."
   },

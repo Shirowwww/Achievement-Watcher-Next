@@ -570,29 +570,55 @@ function createPresetDesigner({
     snapshot: (name) => ipcRenderer.invoke('preset-snapshot', { preset: name, payload: snapshotPayload(previewPayload('normal')) }),
   });
   const galleryTitle = (key) => $(`#pd-gallery-text [data-pg="${key}"]`).text();
-  $('#btn-browse-presets').on('click', function () {
-    const names = $('#option_overlayPreset option')
-      .map((_, option) => String(option.value))
-      .get();
+  // Every menu that picks a preset opens the gallery instead of a list of names. The user's own
+  // come first, as in the designer.
+  const mineThenBundled = (names) => {
     const mine = new Set(generatedPresets.map((preset) => preset.name));
+    return [
+      { title: galleryTitle('mine'), names: names.filter((name) => mine.has(name)) },
+      { title: galleryTitle('bundled'), names: names.filter((name) => !mine.has(name)) },
+    ];
+  };
+  [
+    '#option_overlayPreset',
+    '#option_overlayPresetXenia',
+    '#option_overlayPresetRpcs3',
+    '#option_overlayPresetShadps4',
+    '#option_overlayPresetKytyps5',
+    '#game-notification-preset',
+    '#onboard-notification-preset',
+  ].forEach((selector) => presetGallery.attach(document.querySelector(selector), { groups: mineThenBundled }));
+  // Every preset the designer can open: the user's own to edit, the bundled ones to customize, and
+  // those that can only be used as they are, shown but not picked. Picking one goes through the
+  // menu that would have opened it, so both ways behave alike. Opened from one of the two menus,
+  // its empty choice ("New preset", "None") is offered too.
+  let layerBaseNames = [];
+  let fixedPresetNames = [];
+  function openDesignerGallery(opener, from = null) {
+    const mine = generatedPresets.map((preset) => preset.name);
+    const empty = from ? [...from.options].find((option) => !option.value) : null;
     presetGallery.show({
       groups: [
-        { title: galleryTitle('mine'), names: names.filter((name) => mine.has(name)) },
-        { title: galleryTitle('bundled'), names: names.filter((name) => !mine.has(name)) },
+        { title: galleryTitle('mine'), names: mine },
+        { title: galleryTitle('bundled'), names: layerBaseNames.filter((name) => !mine.includes(name)) },
+        { title: galleryTitle('fixed'), names: fixedPresetNames, note: fixedPresetsText(fixedPresetNames), disabled: true },
       ],
-      current: String($('#option_overlayPreset').val() || ''),
-      onPick: (name) => $('#option_overlayPreset').val(name).change(),
-      opener: this,
+      choices: empty && empty.textContent ? [{ name: '', label: empty.textContent }] : [],
+      current: from ? from.value : String($('#pd-load').val() || (layerMode ? layerMode.base : '')),
+      onPick: (name) => {
+        let target = $(from);
+        if (name) target = mine.includes(name) ? $('#pd-load') : $('#pd-layer-base');
+        if (String(target.val() || '') !== name) target.val(name).trigger('change');
+      },
+      opener,
     });
+  }
+  $('#pd-browse, #pd-open-preset').on('click', function () {
+    openDesignerGallery(this);
   });
-  $('#pd-browse').on('click', function () {
-    presetGallery.show({
-      groups: [{ title: galleryTitle('mine'), names: generatedPresets.map((preset) => preset.name) }],
-      current: String($('#pd-load').val() || ''),
-      onPick: (name) => $('#pd-load').val(name).trigger('change'),
-      opener: this,
-    });
-  });
+  ['#pd-load', '#pd-layer-base'].forEach((selector) =>
+    presetGallery.attach(document.querySelector(selector), { showOwn: (select) => openDesignerGallery(select, select) })
+  );
 
   const previewBox = (values, editing = editingLayout()) =>
     sanLive
@@ -790,10 +816,11 @@ function createPresetDesigner({
     const node = document.querySelector('#options-notify-designer .pd-stage');
     if (!node) return 170;
     // Full screen gives the stage its grid cell: the ceiling is that cell, once a height left by
-    // the tab layout is cleared.
+    // the tab layout is cleared, less a padding read rather than assumed (it keeps the timeline's room).
     if (editingLayout()) {
       node.style.height = '';
-      return Math.max(60, node.clientHeight - padding * 2);
+      const style = getComputedStyle(node);
+      return Math.max(60, node.clientHeight - (parseFloat(style.paddingTop) || 0) - (parseFloat(style.paddingBottom) || 0));
     }
     const cap = parseFloat(getComputedStyle(node).maxHeight);
     return Number.isFinite(cap) && cap > 60 ? cap - padding * 2 : 170;
@@ -887,13 +914,17 @@ function createPresetDesigner({
       wrap.style.left = '';
       wrap.style.top = '';
     }
-    // Shows the popup's real size and the zoom it was shrunk to fit, so 70% doesn't read as "the
-    // design is small". A custom position is drawn at bottom-centre with a label, never guessed.
+    // Shows the popup's real size; the card view has its own zoom readout beside it. The Screen view
+    // speaks the Scale picked beside it (the size on screen at that scale), not the mock screen's
+    // shrink factor. A custom position is drawn at bottom-centre with a label, never guessed.
     const custom = previewView === 'screen' && String($('#option_overlayPosition').val()) === 'custom';
     const customLabel = custom ? ` · ${$("#option_overlayPosition option[value='custom']").text()}` : '';
-    // The card view has its own zoom readout beside this note.
-    const zoomNote = previewView === 'card' ? '' : ` · ${Math.round(zoom * 100)}%`;
-    $('#pd-size-note').text(`${box.width}×${box.height}${zoomNote}${customLabel}`);
+    const shownScale = parseFloat($('#option_overlayScale').val()) || 1;
+    const size =
+      previewView === 'screen'
+        ? `${Math.round(box.width * shownScale)}×${Math.round(box.height * shownScale)} · ${Math.round(shownScale * 100)}%`
+        : `${box.width}×${box.height}`;
+    $('#pd-size-note').text(`${size}${customLabel}`);
     if (canvasEditor) canvasEditor.refresh();
   }
 
@@ -1839,7 +1870,8 @@ function createPresetDesigner({
     for (const [key, section] of Object.entries(presetLayerTool.LAYER_FIELD_SECTION)) {
       pdRoot.find('.pd-field[data-key="' + key + '"]').attr('data-layer-section', section);
     }
-    // One switch in front of the first field of each section, in the order the fields appear.
+    // One switch in front of the first field of each section, in the order the fields appear. It
+    // carries that field's name, so the field's own copy of it is only kept for screen readers.
     for (const section of presetLayerTool.LAYER_SECTION_NAMES) {
       const first = pdRoot.find('.pd-controls .pd-field[data-layer-section="' + section + '"]').first();
       if (!first.length) continue;
@@ -1847,7 +1879,7 @@ function createPresetDesigner({
       const toggle = $('<label class="pd-layer-toggle"><input type="checkbox"><span></span></label>');
       toggle.find('input').attr('data-section', section);
       toggle.find('span').text(labelNode.text());
-      first.before(toggle);
+      first.before(toggle).addClass('pd-layer-named');
     }
     // The brand icon has no field of its own: its checkbox sits just above the logo's, and only
     // on a base whose mark can be hidden (Steam Modern's is baked into its picture).
@@ -1888,6 +1920,17 @@ function createPresetDesigner({
         )
       )
       .prop('hidden', false);
+    // "Start from" steps aside while a preset is customized; said, so it does not look lost.
+    $('#pd-layer-away')
+      .text(
+        t(
+          'preset-layer-start-hidden',
+          '"{start}" is hidden while you customize a preset. Choose "{none}" to get it back.',
+          '« {start} » est masqué pendant la personnalisation d’un preset. Choisis « {none} » pour le retrouver.',
+          { start: $('.pd-start-title').first().text().trim(), none: $('#pd-layer-base option[value=""]').text().trim() }
+        )
+      )
+      .prop('hidden', false);
     refreshLayerToggles();
   }
 
@@ -1896,6 +1939,8 @@ function createPresetDesigner({
     layerMode = null;
     layerSections.clear();
     pdRoot.removeClass('is-layered').find('.pd-layer-toggle').remove();
+    pdRoot.find('.pd-layer-named').removeClass('pd-layer-named');
+    $('#pd-layer-away').prop('hidden', true).text('');
     pdRoot.find('.pd-field[data-layer-section]').removeAttr('data-layer-section').removeClass('is-inherited');
     while (layerRevealedBlocks.length) layerRevealedBlocks.pop().hidden = true;
     pdRoot.find('.pd-controls .pd-group').removeClass('pd-layer-skip').filter('.pd-layer-opened').removeClass('is-open pd-layer-opened');
@@ -1915,7 +1960,16 @@ function createPresetDesigner({
   // A new layer over a base, under a name of its own, its controls seeded from what the base draws.
   async function beginLayer(name) {
     if (!(await openLayerBase(name, []))) return false;
-    $('#pd-name').val(`${name} custom`.slice(0, 48));
+    const named = `${name} custom`.slice(0, 48);
+    $('#pd-name').val(named);
+    // The name was typed for the user: said, so it does not read as the preset being renamed.
+    const saved = t(
+      'preset-layer-named',
+      'It will be saved as a new preset, "{name}"; change the Name to call it something else.',
+      'Il sera enregistré comme un nouveau preset, « {name} » ; change le Nom pour l’appeler autrement.',
+      { name: named }
+    );
+    $('#pd-layer-note').text((_, text) => `${text} ${saved}`);
     $('#options-notify-designer .pd-template').removeClass('is-on');
     writePresetOptions({});
     refreshPresetImages('', '');
@@ -1939,29 +1993,28 @@ function createPresetDesigner({
   function refreshLayerBases() {
     return Promise.all([ipcRenderer.invoke('list-layer-bases'), ipcRenderer.invoke('list-fixed-presets')])
       .then(([names, fixed]) => {
-        fillLayerBases(names || [], layerMode ? layerMode.base : '');
-        showFixedPresets(fixed || []);
+        layerBaseNames = names || [];
+        fixedPresetNames = fixed || [];
+        fillLayerBases(layerBaseNames, layerMode ? layerMode.base : '');
+        showFixedPresets(fixedPresetNames);
       })
       .catch((err) => debug.log(err));
   }
 
-  // Without this the missing presets look like a bug rather than a limit.
+  const fixedPresetsText = (names) =>
+    t(
+      'preset-layer-fixed',
+      '{presets} draw their card with their own code, so they cannot be customized here. You can still use them as they are.',
+      '{presets} dessinent leur carte avec leur propre code : on ne peut pas les personnaliser ici. Tu peux toujours les utiliser tels quels.',
+      { presets: names.join(', ') }
+    );
+
+  // Without this the missing presets look like a bug rather than a limit. Shown while the menu
+  // they are missing from is in use (app.css), not at all times.
   function showFixedPresets(names) {
-    const hint = $('#pd-layer-fixed');
-    if (!names.length) {
-      hint.prop('hidden', true).text('');
-      return;
-    }
-    hint
-      .prop('hidden', false)
-      .text(
-        t(
-          'preset-layer-fixed',
-          '{presets} draw their card with their own code, so they cannot be customized here. You can still use them as they are.',
-          '{presets} dessinent leur carte avec leur propre code : on ne peut pas les personnaliser ici. Tu peux toujours les utiliser tels quels.',
-          { presets: names.join(', ') }
-        )
-      );
+    $('#pd-layer-fixed')
+      .prop('hidden', !names.length)
+      .text(names.length ? fixedPresetsText(names) : '');
   }
 
   $('#pd-layer-base').on('change', async function () {

@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Revelar proezas ocultas",
-        "description": "Revela o nome e a descrição das proezas ocultas antes de as desbloquear."
+        "name": "Proezas ocultas",
+        "description": "Mostrar: o nome e a descrição de uma proeza oculta aparecem antes de a desbloquear. Ocultar: ficam em segredo até lá."
       },
       "mergeDuplicates": {
         "name": "Unir duplicados",
         "description": "Une o mesmo jogo encontrado em várias fontes num único bloco."
       },
       "timeMerge": {
-        "name": "União de data/hora",
-        "description": "Ao unir duplicados, que valor de tempo é preferível ?",
+        "name": "Data mantida nos jogos unidos",
+        "description": "Quando o mesmo jogo é encontrado em várias fontes, que data de desbloqueio manter para cada proeza.",
         "value": {
-          "recent": "Recente",
-          "oldest": "Mais antigo"
+          "recent": "A mais recente",
+          "oldest": "A mais antiga"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Aparência",
         "description": "Tema de cores da janela da aplicação (pré-visualização imediata, guardado com OK).",
         "customTitle": "Tema personalizado",
-        "customDesc": "Todos os temas podem ser editados aqui: escolhe uma cor e, se quiseres, uma imagem para cada bloco. A imagem surge por cima da cor (que passa a ser um véu leve para a legibilidade). Guardar mantém o que fizeste como tema teu, com o nome ao lado; um nome ainda livre cria um segundo tema e deixa o primeiro intacto.",
+        "customDesc": "Escolha uma cor e, se quiser, uma imagem para cada parte da janela. Guardar mantém o tema com o nome indicado; um nome novo cria um segundo tema.",
         "customName": "Nome do tema",
         "customNamePlaceholder": "O meu tema",
         "saveTheme": "Guardar tema",
@@ -342,8 +342,8 @@
           "description": "Mostra a barra de conclusão em cada cartão."
         },
         "showEmptyProgress": {
-          "name": "Jogos sem proezas",
-          "description": "Para um jogo que a Steam lista sem proezas: escrever “Sem proezas” no bloco, ou não mostrar nada."
+          "name": "Etiqueta “Sem proezas”",
+          "description": "Para um jogo que a Steam lista sem proezas: escrever “Sem proezas” no bloco, ou deixá-lo em branco. O jogo fica na biblioteca nos dois casos."
         },
         "showSource": {
           "name": "Ícone da plataforma",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "Overlay no jogo"
       },
+      "testHint": "Cada botão mostra uma notificação de exemplo com as suas definições atuais.",
       "option": {
         "transportMode": {
           "name": "Transporte das notificações",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Notificações de progresso",
-          "description": "Notificar o progresso das proezas, se possível"
+          "description": "Mostra uma notificação quando uma proeza com contador avança (por exemplo, 3/10 inimigos), nos jogos que o indicam."
         },
         "progressStep": {
           "name": "Marcos de progresso",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Dispara uma notificação do Windows dedicada quando um jogo atinge 100% de conclusão"
+          "description": "Dispara uma notificação dedicada quando um jogo atinge 100% de conclusão"
         },
         "mode": {
           "name": "Tipo de notificação",
@@ -731,7 +732,7 @@
               "text": "Texto",
               "image": "Imagem",
               "shape": "Forma",
-              "icon": "Ícone"
+              "symbol": "Símbolo"
             },
             "shape": {
               "triangle": "Triângulo",
@@ -762,7 +763,7 @@
               "opacity": "Opacidade",
               "rotation": "Rotação",
               "scale": "Escala",
-              "icon": "Ícone",
+              "icon": "Símbolo",
               "visible": "Visível",
               "alignCard": "Alinhar com o cartão",
               "position": "Posição",
@@ -812,7 +813,8 @@
               "lock": "Fixar no lugar",
               "unlock": "Desbloquear"
             },
-            "addIcon": "Ícone",
+            "addSymbol": "Símbolo",
+            "lockParts": "Só os elementos que adicionou podem ser bloqueados.",
             "enter": {
               "none": "Com o cartão",
               "fade": "Aparecer",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Adicione elementos",
-                "body": "Textos, imagens e GIFs, formas e ícones. Cada um entra no cartão como uma camada própria."
+                "body": "Textos, imagens e GIFs, formas e símbolos. Cada um entra no cartão como uma camada própria."
               },
               "edit": {
                 "title": "Escolha e depois mova",
@@ -1097,7 +1099,8 @@
             "intro": "Escolha um ponto de partida e personalize-o. Nada é guardado até criar a predefinição.",
             "random": "Surpreende-me",
             "randomized": "Um design que ainda não tinha experimentado",
-            "title": "Começar por"
+            "title": "Começar por",
+            "open": "Abrir uma predefinição"
           },
           "title": "Editor de predefinições",
           "undo": "Anular",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Predefinições",
+            "hint": "Clique num cartão para o utilizar.",
             "close": "Fechar",
             "mine": "As suas predefinições",
             "bundled": "Incluídas",
+            "fixed": "Usadas tal como estão",
             "browse": "Explorar as predefinições",
             "empty": "Ainda não tem predefinições suas. Crie uma no editor e ela aparece aqui."
           }
         },
         "souvenirTitle": "Captura de recordação",
         "souvenirScreenshot": "Captura ao desbloquear",
-        "souvenirScreenshotDesc": "Captura o ecrã quando uma proeza é desbloqueada. Guardado por jogo.",
+        "souvenirScreenshotDesc": "Captura o ecrã quando uma proeza é desbloqueada. As imagens ficam numa pasta por jogo.",
         "souvenirHdr": "Capturas HDR",
         "souvenirHdrDesc": "O modo automático corrige as cores quando o HDR do Windows está ativo, nas capturas e nos clipes. Se não estiver disponível, é guardada a captura padrão.",
         "souvenirHdrAuto": "Automático",
@@ -1342,7 +1347,8 @@
           "description": "Recorrer ao balão de dica se a notificação do Windows falhar"
         },
         "useWS": {
-          "description": "Transmitir a proeza a todos os clientes ligados"
+          "name": "Difusão local (port 8082)",
+          "description": "Envia cada desbloqueio para as ferramentas em execução neste PC, como a fonte do OBS. Deixe ativado em caso de dúvida."
         },
         "obsSource": {
           "name": "Fonte de navegador do OBS",
@@ -1412,17 +1418,17 @@
       "library": "Pastas de biblioteca",
       "libraryInfo": [
         "Selecione uma pasta que contenha muitas pastas de instalação de jogos (ex.: D:\\Games, E:\\SteamLibrary).",
-        "Todos os jogos no seu interior serão analisados para proezas Goldberg/GBE, mesmo que nunca tenham sido iniciados."
+        "Todos os jogos que contém são analisados à procura de proezas de emulador, mesmo que nunca tenham sido iniciados."
       ],
       "addLibrary": "Adicionar uma pasta de biblioteca",
       "generateConfigs": "Gerar configurações",
-      "generateConfigsHelp": "apenas jogos sem correção existente"
+      "generateConfigsHelp": "análise completa e, depois, repara os jogos que ainda não têm correção"
     },
     "source": {
       "title": "Fontes de jogos",
       "officialPlatforms": {
         "title": "Plataformas oficiais",
-        "description": "Ativa abaixo as fontes marcadas com um escudo. Só podem ser mostradas as bibliotecas detetadas neste PC."
+        "description": "O escudo assinala os lançadores oficiais. Steam, Epic e Xbox oferecem três opções: Nenhum, Instalados (jogos neste PC) ou Na biblioteca (toda a biblioteca de uma conta ligada). Os restantes ativam-se ou desativam-se."
       },
       "legitSteam": {
         "name": "Mostrar jogos Steam",
@@ -1438,7 +1444,7 @@
         "description": "Lê as proezas escritas pelo Goldberg / GBE Fork e emuladores Steam semelhantes. Abrange também os jogos da Ubisoft reparados com a correção Uplay R2, que gravam as proezas no mesmo local."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 e Reborn"
+        "description": "Jogos da Steam executados com o GreenLuma (2020, 2024, 2025 e Reborn): lê as proezas que ele regista."
       },
       "rpcs3": {
         "description": "Emulador PlayStation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Jogos de Xbox PC (Game Pass / Microsoft Store). Conecte e importe nas Configurações para ver status e raridade.",
+        "description": "Jogos Xbox PC (Game Pass / Microsoft Store). Ligue a sua conta no cartão Conta Xbox PC mais abaixo e depois importe para ver os desbloqueios e a raridade.",
       "value": {
         "none": "Nenhum",
         "installed": "Instalados",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Saves do emulador GOG"
+        "description": "Jogos da GOG executados com o emulador GOG Galaxy do Nemirtingas: lê as proezas que ele guarda."
       },
       "epic": {
-        "description": "Saves do emulador Epic"
+        "description": "Jogos da Epic executados com o emulador Epic do Nemirtingas: lê as proezas que ele guarda."
       },
       "shadps4": {
         "description": "Emulador de PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE através do XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Jogos de emulador da tua conta do RetroAchievements. Liga-a no cartão de conta abaixo; as novas proezas são anunciadas enquanto um emulador está em execução."
+        "description": "Jogos de emuladores da sua conta RetroAchievements. Ligue-a no cartão da conta mais abaixo; os novos desbloqueios são anunciados enquanto um emulador estiver em execução."
       },
       "psnLibrary": {
         "description": "Jogos e troféus importados da sua conta PlayStation. Ligue-a no cartão da conta abaixo e depois importe a biblioteca."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns através do mod MadnessPatch"
       },
-      "groupStores": "Launchers oficiais",
+      "groupStores": "Plataformas oficiais",
+      "groupMemory": "Memória da biblioteca",
       "groupConsoles": "Consolas e retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Acrescente ?test=1 ao URL enquanto posiciona a fonte. Mostra um desbloqueio de exemplo a cada dez segundos; remova-o quando terminar.",
         "A fonte desenha o mesmo pop-up que o do jogo e fica vazia entre desbloqueios, por isso não custa nada enquanto transmite.",
         "Mais opções a seguir ao endereço: ?scale=2 fixa o zoom, ?duration=8000 define quanto tempo cada cartão fica, ?sound=1 reproduz o som pela fonte, /obs/preset/Xbox/ usa uma predefinição qualquer que seja a do ambiente de trabalho.",
-        "Lê o feed de notificações local, por isso deixe o Websocket @localhost:8082 ligado em Definições > Notificação > Integrações. Só funciona neste PC, e só uma cópia do AW Next o pode servir."
+        "Lê o feed de notificações local, por isso deixe o Difusão local ligado em Definições > Notificação > Integrações. Só funciona neste PC, e só uma cópia do AW Next o pode servir."
       ],
       "souvenirsTitle": "Capturas de ecrã e videoclipes",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Conta Steam principal",
         "name": "Filtrar por utilizador",
-        "description": "Mostrar apenas as proezas Steam da conta selecionada"
+        "description": "Mostra apenas as proezas Steam da conta escolhida. Todas as contas: sem filtro.",
+        "all": "Todas as contas"
       },
       "checkUpdates": "Verificar atualizações",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Atualizações automáticas de dados de proezas",
-        "description": "Desativa isto se mantiveres tu próprio o steam_cache: interrompe a autorreparação periódica que preenche descrições em branco e deteta proezas adicionadas por uma atualização do jogo. «Reverificar listas de proezas» acima continua a funcionar como verificação manual pontual."
+        "description": "Mantém os dados das proezas atualizados: preenche descrições em branco e deteta proezas acrescentadas por uma atualização do jogo. Desative apenas se mantiver estes ficheiros por si. “Reverificar listas de proezas” acima continua a funcionar manualmente."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Nada relacionado com proezas está guardado aqui: nenhuma pasta AppID, nenhuma configuração de emulador e nenhum ficheiro de desbloqueio.",
     "folder-reason-found-instead": "Encontrado em vez disso:",
     "folder-reason-checked": "Verificado aqui: subpastas AppID, todos os ficheiros de configuração de emulador que o AW Next conhece e {layouts} disposições de gravação portáteis. A pasta foi examinada, nada foi ignorado.",
+    "folder-also-watched": "Também vigiada automaticamente",
     "game-health-title": "Estado do jogo",
     "game-settings-menu": "Definições do jogo",
     "game-config-title": "Configuração do executável",
@@ -2002,6 +2011,7 @@
     "update-checked": "Verificação concluída",
     "blacklist-add-placeholder": "ID da App Steam",
     "blacklist-add-button": "Adicionar",
+    "blacklist-appid-help": "O App ID da Steam é o número no endereço da página do jogo na loja Steam: store.steampowered.com/app/ID",
     "setupLooksValid": "A configuração parece válida.",
     "problemsWereDetected": "Foram detetados problemas.",
     "repairSteamSettings": "Reparar steam_settings (escrever esquema + ícones)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Escreva primeiro um novo nome no campo Nome e depois prima Mudar o nome.",
     "preset-view-readonly": "Esta vista mostra apenas o cartão. Volte a Cartão para editar a disposição.",
     "preset-layer-fixed": "{presets} desenham o seu cartão com código próprio, por isso não podem ser personalizados aqui. Pode continuar a usá-los tal como estão.",
+    "preset-layer-named": "Será guardada como uma nova predefinição, “{name}”; altere o Nome para lhe dar outro nome.",
+    "preset-layer-start-hidden": "“{start}” fica oculto enquanto personaliza uma predefinição. Escolha “{none}” para o recuperar.",
     "preset-play-popup": "Esta predefinição desenha o cartão com código próprio, por isso é reproduzida num popup real, no ecrã.",
     "preset-play-reduced": "O Windows está definido para mostrar menos animações, por isso a pré-visualização fica parada. Volte a ativar «Efeitos de animação» nas definições do Windows para as ver."
   },

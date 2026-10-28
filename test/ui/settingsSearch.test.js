@@ -104,6 +104,16 @@ test('a query finds the rows it names, in the tab that owns them', () => {
   assert.deepStrictEqual(searchRules.parseTerms('   '), []);
 });
 
+test('accents and plural or feminine endings do not hide a setting', () => {
+  // "masqués" must reach the "Masquer" choice of every Show / Hide row, and the accents go both ways.
+  assert.ok(searchRules.matches('Afficher Masquer', searchRules.parseTerms('masqués')));
+  assert.ok(searchRules.matches('Jeux masqués', searchRules.parseTerms('masques')));
+  assert.ok(searchRules.matches('Thème', searchRules.parseTerms('themes')));
+  // Short words stay exact, or "les" would match nearly every row.
+  assert.equal(searchRules.stem('les'), 'les');
+  assert.ok(!searchRules.matches('Langue', searchRules.parseTerms('masques')));
+});
+
 test('rows are found across several tabs, so the nav counters have something to point at', () => {
   const hits = search('e');
   assert.ok(Object.keys(hits).length >= 4, `a common letter should match rows in most tabs, got ${JSON.stringify(hits)}`);

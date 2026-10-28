@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Revelar conquistas ocultas",
-        "description": "Revela o nome e a descrição das conquistas ocultas antes de desbloqueá-las."
+        "name": "Conquistas ocultas",
+        "description": "Mostrar: o nome e a descrição de uma conquista oculta aparecem antes de você desbloqueá-la. Ocultar: ficam em segredo até lá."
       },
       "mergeDuplicates": {
         "name": "Mesclar duplicados",
         "description": "Mescla o mesmo jogo encontrado em várias fontes em um único bloco."
       },
       "timeMerge": {
-        "name": "Mesclagem de data/hora",
-        "description": "Ao mesclar duplicados, qual valor de tempo é preferível ?",
+        "name": "Data mantida para jogos mesclados",
+        "description": "Quando o mesmo jogo é encontrado em várias fontes, qual data de desbloqueio manter para cada conquista.",
         "value": {
-          "recent": "Recente",
-          "oldest": "Mais antigo"
+          "recent": "A mais recente",
+          "oldest": "A mais antiga"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Aparência",
         "description": "Tema de cores da janela do aplicativo (prévia imediata, salvo com OK).",
         "customTitle": "Tema personalizado",
-        "customDesc": "Todos os temas podem ser editados aqui: escolha uma cor e, se quiser, uma imagem para cada bloco. A imagem aparece sobre a cor (que vira um véu leve para a legibilidade). Salvar guarda o que você fez como tema seu, com o nome ao lado; um nome ainda livre cria um segundo tema e deixa o primeiro intacto.",
+        "customDesc": "Escolha uma cor e, se quiser, uma imagem para cada parte da janela. Salvar mantém o tema com o nome exibido; um nome novo cria um segundo tema.",
         "customName": "Nome do tema",
         "customNamePlaceholder": "Meu tema",
         "saveTheme": "Salvar tema",
@@ -342,8 +342,8 @@
           "description": "Mostra a barra de conclusão em cada cartão."
         },
         "showEmptyProgress": {
-          "name": "Jogos sem conquistas",
-          "description": "Para um jogo que a Steam lista sem conquistas: escrever “Sem conquistas” no bloco, ou não mostrar nada."
+          "name": "Rótulo “Sem conquistas”",
+          "description": "Para um jogo que a Steam lista sem conquistas: escrever “Sem conquistas” no bloco, ou deixá-lo em branco. O jogo continua na biblioteca nos dois casos."
         },
         "showSource": {
           "name": "Ícone da plataforma",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "Overlay no jogo"
       },
+      "testHint": "Cada botão mostra uma notificação de exemplo com suas configurações atuais.",
       "option": {
         "transportMode": {
           "name": "Transporte das notificações",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Notificações de progresso",
-          "description": "Notificar o progresso das conquistas, se possível"
+          "description": "Mostra uma notificação quando uma conquista com contador avança (por exemplo, 3/10 inimigos), nos jogos que informam isso."
         },
         "progressStep": {
           "name": "Marcos de progresso",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Dispara uma notificação do Windows dedicada quando um jogo atinge 100% de conclusão"
+          "description": "Dispara uma notificação dedicada quando um jogo atinge 100% de conclusão"
         },
         "mode": {
           "name": "Tipo de notificação",
@@ -731,7 +732,7 @@
               "text": "Texto",
               "image": "Imagem",
               "shape": "Forma",
-              "icon": "Ícone"
+              "symbol": "Símbolo"
             },
             "shape": {
               "triangle": "Triângulo",
@@ -762,7 +763,7 @@
               "opacity": "Opacidade",
               "rotation": "Rotação",
               "scale": "Escala",
-              "icon": "Ícone",
+              "icon": "Símbolo",
               "visible": "Visível",
               "alignCard": "Alinhar ao cartão",
               "position": "Posição",
@@ -812,7 +813,8 @@
               "lock": "Travar no lugar",
               "unlock": "Destravar"
             },
-            "addIcon": "Ícone",
+            "addSymbol": "Símbolo",
+            "lockParts": "Só os elementos que você adicionou podem ser bloqueados.",
             "enter": {
               "none": "Junto com o cartão",
               "fade": "Aparecer",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Adicione elementos",
-                "body": "Textos, imagens e GIFs, formas e ícones. Cada um entra no cartão como uma camada própria."
+                "body": "Textos, imagens e GIFs, formas e símbolos. Cada um entra no cartão como uma camada própria."
               },
               "edit": {
                 "title": "Escolha e depois mova",
@@ -1097,7 +1099,8 @@
             "intro": "Escolha um ponto de partida e personalize. Nada é salvo até você criar a predefinição.",
             "random": "Me surpreenda",
             "randomized": "Um design que você ainda não tinha testado",
-            "title": "Começar de"
+            "title": "Começar de",
+            "open": "Abrir uma predefinição"
           },
           "title": "Editor de predefinições",
           "undo": "Desfazer",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Predefinições",
+            "hint": "Clique em um cartão para usá-lo.",
             "close": "Fechar",
             "mine": "Suas predefinições",
             "bundled": "Incluídas",
+            "fixed": "Usadas como estão",
             "browse": "Explorar as predefinições",
             "empty": "Você ainda não tem predefinições próprias. Crie uma no editor e ela aparecerá aqui."
           }
         },
         "souvenirTitle": "Captura de recordação",
         "souvenirScreenshot": "Captura ao desbloquear",
-        "souvenirScreenshotDesc": "Captura a tela quando uma conquista é desbloqueada. Salvo por jogo.",
+        "souvenirScreenshotDesc": "Captura a tela quando uma conquista é desbloqueada. As imagens ficam em uma pasta por jogo.",
         "souvenirHdr": "Capturas HDR",
         "souvenirHdrDesc": "O modo automático corrige as cores quando o HDR do Windows está ativo, nas capturas e nos clipes. Se não estiver disponível, a captura padrão será salva.",
         "souvenirHdrAuto": "Automático",
@@ -1342,7 +1347,8 @@
           "description": "Recorrer ao balão de dica se a notificação do Windows falhar"
         },
         "useWS": {
-          "description": "Transmitir a conquista a todos os clientes conectados"
+          "name": "Transmissão local (port 8082)",
+          "description": "Envia cada desbloqueio para ferramentas em execução neste PC, como a fonte do OBS. Deixe ativado se tiver dúvida."
         },
         "obsSource": {
           "name": "Fonte de navegador do OBS",
@@ -1412,17 +1418,17 @@
       "library": "Pastas de biblioteca",
       "libraryInfo": [
         "Selecione uma pasta que contenha muitas pastas de instalação de jogos (ex.: D:\\Games, E:\\SteamLibrary).",
-        "Todos os jogos no seu interior serão analisados para conquistas Goldberg/GBE, mesmo que nunca tenham sido iniciados."
+        "Todos os jogos dentro dela são verificados em busca de conquistas de emulador, mesmo que nunca tenham sido iniciados."
       ],
       "addLibrary": "Adicionar uma pasta de biblioteca",
       "generateConfigs": "Gerar configurações",
-      "generateConfigsHelp": "somente jogos sem correção existente"
+      "generateConfigsHelp": "verificação completa, depois repara os jogos que ainda não têm correção"
     },
     "source": {
       "title": "Fontes de jogos",
       "officialPlatforms": {
         "title": "Plataformas oficiais",
-        "description": "Ative abaixo as fontes marcadas com um escudo. Só podem ser exibidas as bibliotecas detectadas neste PC."
+        "description": "O escudo marca os lançadores oficiais. Steam, Epic e Xbox oferecem três opções: Nenhum, Instalados (jogos neste PC) ou Na biblioteca (toda a biblioteca de uma conta conectada). Os demais são ativados ou desativados."
       },
       "legitSteam": {
         "name": "Mostrar jogos Steam",
@@ -1438,7 +1444,7 @@
         "description": "Lê as conquistas gravadas pelo Goldberg / GBE Fork e emuladores Steam semelhantes. Também cobre jogos da Ubisoft corrigidos com o fix do Uplay R2, que gravam suas conquistas no mesmo lugar."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 e Reborn"
+        "description": "Jogos da Steam executados com o GreenLuma (2020, 2024, 2025 e Reborn): lê as conquistas que ele registra."
       },
       "rpcs3": {
         "description": "Emulador PlayStation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Jogos de Xbox PC (Game Pass / Microsoft Store). Conecte e importe nas Configurações para ver status e raridade.",
+        "description": "Jogos de Xbox PC (Game Pass / Microsoft Store). Conecte sua conta no cartão Conta Xbox PC mais abaixo e depois importe para ver os desbloqueios e a raridade.",
       "value": {
         "none": "Nenhum",
         "installed": "Instalados",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Saves do emulador GOG"
+        "description": "Jogos da GOG executados com o emulador GOG Galaxy do Nemirtingas: lê as conquistas que ele salva."
       },
       "epic": {
-        "description": "Saves do emulador Epic"
+        "description": "Jogos da Epic executados com o emulador Epic do Nemirtingas: lê as conquistas que ele salva."
       },
       "shadps4": {
         "description": "Emulador de PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE, via XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Jogos de emulador da sua conta do RetroAchievements. Conecte-a no cartão de conta abaixo; novas conquistas são anunciadas enquanto um emulador está em execução."
+        "description": "Jogos de emuladores da sua conta RetroAchievements. Conecte-a no cartão da conta mais abaixo; os novos desbloqueios são anunciados enquanto um emulador estiver em execução."
       },
       "psnLibrary": {
         "description": "Jogos e troféus importados da sua conta PlayStation. Conecte-a no cartão da conta abaixo e depois importe a biblioteca."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns, via mod MadnessPatch"
       },
-      "groupStores": "Launchers oficiais",
+      "groupStores": "Plataformas oficiais",
+      "groupMemory": "Memória da biblioteca",
       "groupConsoles": "Consoles e retrô"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Acrescente ?test=1 à URL enquanto posiciona a fonte. Ela mostra uma conquista de exemplo a cada dez segundos; remova-o quando terminar.",
         "A fonte desenha o mesmo pop-up do jogo e fica vazia entre as conquistas, então não custa nada enquanto você transmite.",
         "Mais opções depois do endereço: ?scale=2 fixa o zoom, ?duration=8000 define quanto tempo cada cartão fica, ?sound=1 toca o som pela fonte, /obs/preset/Xbox/ usa uma predefinição qualquer que seja a do desktop.",
-        "Ela lê o feed local de notificações, então deixe Websocket @localhost:8082 ativado em Configurações > Notificação > Integrações. Só funciona neste PC, e apenas uma cópia do AW Next pode servi-lo."
+        "Ela lê o feed local de notificações, então deixe Transmissão local ativado em Configurações > Notificação > Integrações. Só funciona neste PC, e apenas uma cópia do AW Next pode servi-lo."
       ],
       "souvenirsTitle": "Capturas de tela e videoclipes",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Conta Steam principal",
         "name": "Filtrar por usuário",
-        "description": "Mostrar apenas as conquistas Steam da conta selecionada"
+        "description": "Mostra apenas as conquistas da Steam da conta escolhida. Todas as contas: sem filtro.",
+        "all": "Todas as contas"
       },
       "checkUpdates": "Verificar atualizações",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Atualizações automáticas de dados de conquistas",
-        "description": "Desative isso se você mesmo mantém o steam_cache: isso interrompe a autorreparação periódica que preenche descrições em branco e detecta conquistas adicionadas por uma atualização do jogo. “Reverificar listas de conquistas” acima ainda funciona como uma verificação manual e pontual."
+        "description": "Mantém os dados das conquistas atualizados: preenche descrições em branco e detecta conquistas adicionadas por uma atualização do jogo. Desative somente se você mesmo cuida desses arquivos. “Reverificar listas de conquistas” acima continua funcionando manualmente."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Nada relacionado a conquistas está armazenado aqui: nenhuma pasta AppID, nenhuma configuração de emulador e nenhum arquivo de desbloqueio.",
     "folder-reason-found-instead": "Encontrado em vez disso:",
     "folder-reason-checked": "Verificado aqui: subpastas AppID, todos os arquivos de configuração de emulador conhecidos pelo AW Next e {layouts} disposições de salvamento portáteis. A pasta foi examinada, nada foi ignorado.",
+    "folder-also-watched": "Também monitorada automaticamente",
     "game-health-title": "Estado do jogo",
     "game-settings-menu": "Configurações do jogo",
     "game-config-title": "Configuração do executável",
@@ -2002,6 +2011,7 @@
     "update-checked": "Verificação concluída",
     "blacklist-add-placeholder": "ID do App Steam",
     "blacklist-add-button": "Adicionar",
+    "blacklist-appid-help": "O App ID da Steam é o número no endereço da página do jogo na loja Steam: store.steampowered.com/app/ID",
     "setupLooksValid": "A configuração parece válida.",
     "problemsWereDetected": "Foram detectados problemas.",
     "repairSteamSettings": "Reparar steam_settings (escrever esquema + ícones)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Digite primeiro um novo nome no campo Nome e depois clique em Renomear.",
     "preset-view-readonly": "Esta visualização mostra apenas o cartão. Volte para Cartão para editar o layout.",
     "preset-layer-fixed": "{presets} desenham o cartão com código próprio, então não podem ser personalizados aqui. Você ainda pode usá-los como estão.",
+    "preset-layer-named": "Ela será salva como uma nova predefinição, “{name}”; altere o Nome para chamá-la de outra coisa.",
+    "preset-layer-start-hidden": "“{start}” fica oculto enquanto você personaliza uma predefinição. Escolha “{none}” para recuperá-lo.",
     "preset-play-popup": "Esta predefinição desenha o cartão com código próprio, então ela é reproduzida em um popup de verdade, na tela.",
     "preset-play-reduced": "O Windows está configurado para mostrar menos animações, então a pré-visualização fica parada. Ative novamente “Efeitos de animação” nas configurações do Windows para vê-las."
   },

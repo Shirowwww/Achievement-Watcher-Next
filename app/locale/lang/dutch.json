@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Verborgen prestaties onthullen",
-        "description": "Toon de naam en beschrijving van verborgen prestaties voordat je ze ontgrendelt."
+        "name": "Verborgen prestaties",
+        "description": "Tonen: de naam en beschrijving van een verborgen prestatie verschijnen voordat je die ontgrendelt. Verbergen: ze blijven tot dan geheim."
       },
       "mergeDuplicates": {
         "name": "Duplicaten samenvoegen",
         "description": "Combineer dezelfde game uit meerdere bronnen tot één tegel."
       },
       "timeMerge": {
-        "name": "Tijdstempel samenvoegen",
-        "description": "Welke tijdwaarde krijgt de voorkeur bij het samenvoegen van duplicaten?",
+        "name": "Bewaarde datum bij samengevoegde games",
+        "description": "Als dezelfde game in meerdere bronnen staat, welke ontgrendeldatum je voor elke prestatie bewaart.",
         "value": {
-          "recent": "Recentste",
-          "oldest": "Oudste"
+          "recent": "De meest recente",
+          "oldest": "De oudste"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Weergave",
         "description": "Kleurenthema van de hele app en van de in-game overlay (meteen zichtbaar, opgeslagen met OK).",
         "customTitle": "Aangepast thema",
-        "customDesc": "Elk thema is hier te bewerken: kies een kleur en eventueel een afbeelding voor elk blok. Een afbeelding ligt over de kleur (die een lichte sluier wordt voor de leesbaarheid). Opslaan bewaart wat je maakte als eigen thema, onder de naam ernaast; een nog vrije naam geeft je een tweede thema en laat het eerste met rust.",
+        "customDesc": "Kies een kleur, en eventueel een afbeelding, voor elk onderdeel van het venster. Opslaan bewaart het onder de getoonde naam; een nieuwe naam maakt een tweede thema.",
         "customName": "Themanaam",
         "customNamePlaceholder": "Mijn thema",
         "saveTheme": "Thema opslaan",
@@ -342,8 +342,8 @@
           "description": "Toont de voltooiingsbalk op elke tegel."
         },
         "showEmptyProgress": {
-          "name": "Games zonder prestaties",
-          "description": "Voor een game die Steam zonder prestaties vermeldt: “Geen prestaties” op de tegel zetten, of niets tonen."
+          "name": "Label “Geen prestaties”",
+          "description": "Voor een game die Steam zonder prestaties vermeldt: “Geen prestaties” op de tegel zetten, of de tegel leeg laten. De game blijft in beide gevallen in de bibliotheek."
         },
         "showSource": {
           "name": "Platformpictogram",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "In-game overlay"
       },
+      "testHint": "Elke knop toont een voorbeeldmelding met je huidige instellingen.",
       "option": {
         "transportMode": {
           "name": "Meldingskanaal",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Voortgangsmeldingen",
-          "description": "Meld de voortgang van een prestatie indien mogelijk"
+          "description": "Toont een melding wanneer een getelde prestatie vordert (bijvoorbeeld 3/10 vijanden), in games die dat doorgeven."
         },
         "progressStep": {
           "name": "Voortgangsmijlpalen",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Stuur een aparte Windows-melding zodra een game 100% voltooid is"
+          "description": "Stuur een aparte melding zodra een game 100% voltooid is"
         },
         "mode": {
           "name": "Soort melding",
@@ -731,7 +732,7 @@
               "text": "Tekst",
               "image": "Afbeelding",
               "shape": "Vorm",
-              "icon": "Pictogram"
+              "symbol": "Symbool"
             },
             "shape": {
               "triangle": "Driehoek",
@@ -762,7 +763,7 @@
               "opacity": "Dekking",
               "rotation": "Rotatie",
               "scale": "Schaal",
-              "icon": "Pictogram",
+              "icon": "Symbool",
               "visible": "Zichtbaar",
               "alignCard": "Uitlijnen met de kaart",
               "position": "Positie",
@@ -812,7 +813,8 @@
               "lock": "Vastzetten",
               "unlock": "Ontgrendelen"
             },
-            "addIcon": "Pictogram",
+            "addSymbol": "Symbool",
+            "lockParts": "Alleen elementen die je zelf hebt toegevoegd kunnen worden vergrendeld.",
             "enter": {
               "none": "Met de kaart",
               "fade": "Infaden",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Elementen toevoegen",
-                "body": "Teksten, afbeeldingen en GIF's, vormen en pictogrammen. Elk komt als aparte laag op de kaart."
+                "body": "Teksten, afbeeldingen en GIF’s, vormen en symbolen. Elk komt als aparte laag op de kaart."
               },
               "edit": {
                 "title": "Kiezen en dan verplaatsen",
@@ -1097,7 +1099,8 @@
             "intro": "Kies een startpunt en maak het daarna helemaal van jezelf. Er wordt niets opgeslagen tot je de preset aanmaakt.",
             "random": "Verras me",
             "randomized": "Een ontwerp dat je nog niet hebt geprobeerd",
-            "title": "Beginnen met"
+            "title": "Beginnen met",
+            "open": "Een preset openen"
           },
           "title": "Presetontwerper",
           "undo": "Ongedaan maken",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Presets",
+            "hint": "Klik op een kaart om hem te gebruiken.",
             "close": "Sluiten",
             "mine": "Jouw presets",
             "bundled": "Meegeleverd",
+            "fixed": "Te gebruiken zoals ze zijn",
             "browse": "De presets bekijken",
             "empty": "Je hebt nog geen eigen presets. Maak er een in de ontwerper en hij verschijnt hier."
           }
         },
         "souvenirTitle": "Souvenirscreenshot",
         "souvenirScreenshot": "Screenshot bij ontgrendeling",
-        "souvenirScreenshotDesc": "Leg het scherm vast wanneer een prestatie wordt ontgrendeld. Per game opgeslagen.",
+        "souvenirScreenshotDesc": "Maakt een screenshot wanneer een prestatie wordt ontgrendeld. De afbeeldingen komen in één map per game.",
         "souvenirHdr": "HDR-screenshots",
         "souvenirHdrDesc": "Automatisch corrigeert de kleuren wanneer HDR van Windows actief is, voor screenshots en clips. Is dat niet beschikbaar, dan wordt de gewone screenshot opgeslagen.",
         "souvenirHdrAuto": "Automatisch",
@@ -1342,7 +1347,8 @@
           "description": "Val terug op een ballontekst wanneer een Windows-melding mislukt"
         },
         "useWS": {
-          "description": "Zend de prestatie uit naar alle verbonden clients"
+          "name": "Lokale uitzending (port 8082)",
+          "description": "Stuurt elke ontgrendeling naar tools die op deze pc draaien, zoals de OBS-bron. Laat het aan als je het niet zeker weet."
         },
         "obsSource": {
           "name": "OBS-browserbron",
@@ -1412,17 +1418,17 @@
       "library": "Bibliotheekmappen",
       "libraryInfo": [
         "Selecteer een map met veel installatiemappen van games (bijv. D:\\Games, E:\\SteamLibrary).",
-        "Alle games daarin worden gescand op Goldberg/GBE-prestaties, ook als ze nooit gestart zijn."
+        "Elke game erin wordt gescand op emulatorprestaties, ook als die nooit is gestart."
       ],
       "addLibrary": "Een bibliotheekmap toevoegen",
       "generateConfigs": "Configuraties genereren",
-      "generateConfigsHelp": "alleen games zonder bestaande fix"
+      "generateConfigsHelp": "volledige scan, daarna repareert het games die nog geen fix hebben"
     },
     "source": {
       "title": "Gamebronnen",
       "officialPlatforms": {
         "title": "Officiële platformen",
-        "description": "Schakel de hieronder met een schild gemarkeerde bronnen in. Alleen bibliotheken die op deze pc gevonden zijn, kunnen getoond worden."
+        "description": "Het schild markeert officiële launchers. Steam, Epic en Xbox bieden drie keuzes: Geen, Geïnstalleerd (games op deze pc) of In bezit (de hele bibliotheek van een verbonden account). De rest staat aan of uit."
       },
       "legitSteam": {
         "name": "Steam-games tonen",
@@ -1438,7 +1444,7 @@
         "description": "Leest prestaties die door Goldberg / GBE Fork en vergelijkbare Steam-emulators zijn weggeschreven. Dekt ook Ubisoft-games die met de Uplay R2-fix zijn gerepareerd en hun prestaties op dezelfde plek wegschrijven."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 en Reborn"
+        "description": "Steam-games die met GreenLuma draaien (2020, 2024, 2025 en Reborn): leest de prestaties die het vastlegt."
       },
       "rpcs3": {
         "description": "PlayStation 3-emulator"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox-games op de pc (Game Pass / Microsoft Store). Verbind en importeer via Instellingen om de ontgrendelstatus en de zeldzaamheid te zien.",
+        "description": "Xbox-games op de pc (Game Pass / Microsoft Store). Verbind je account in de kaart Xbox PC-account verderop en importeer daarna om ontgrendelingen en zeldzaamheid te zien.",
       "value": {
         "none": "Geen",
         "installed": "Geïnstalleerd",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Saves van de GOG-emulator"
+        "description": "GOG-games die met de GOG Galaxy-emulator van Nemirtingas draaien: leest de prestaties die hij opslaat."
       },
       "epic": {
-        "description": "Saves van de Epic-emulator"
+        "description": "Epic-games die met de Epic-emulator van Nemirtingas draaien: leest de prestaties die hij opslaat."
       },
       "shadps4": {
         "description": "PlayStation 4-emulator"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE via XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Emulatorgames van je RetroAchievements-account. Koppel het in de accountkaart hieronder; nieuwe prestaties worden aangekondigd terwijl een emulator draait."
+        "description": "Emulatorgames van je RetroAchievements-account. Verbind het in de accountkaart verderop; nieuwe ontgrendelingen worden gemeld zolang een emulator draait."
       },
       "psnLibrary": {
         "description": "Games en trofeeën die zijn geïmporteerd van je PlayStation-account. Koppel het in de accountkaart hieronder en importeer daarna de bibliotheek."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns via de MadnessPatch-mod"
       },
-      "groupStores": "Officiële launchers",
+      "groupStores": "Officiële platformen",
+      "groupMemory": "Bibliotheekgeheugen",
       "groupConsoles": "Consoles en retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Voeg ?test=1 toe aan de URL terwijl je de bron plaatst. Hij toont elke tien seconden een voorbeeldontgrendeling; haal het weg als je klaar bent.",
         "De bron tekent dezelfde pop-up als die in de game en blijft leeg tussen ontgrendelingen, dus hij kost niets terwijl je streamt.",
         "Meer opties na het adres: ?scale=2 zet de zoom vast, ?duration=8000 bepaalt hoe lang elke kaart blijft, ?sound=1 speelt het geluid via de bron af, /obs/preset/Xbox/ gebruikt één preset, wat het bureaublad ook gebruikt.",
-        "Hij leest de lokale meldingenfeed, dus laat Websocket @localhost:8082 aan staan bij Instellingen > Meldingen > Integraties. Het werkt alleen op deze pc, en slechts één exemplaar van AW Next kan het aanbieden."
+        "Hij leest de lokale meldingenfeed, dus laat Lokale uitzending aan staan bij Instellingen > Meldingen > Integraties. Het werkt alleen op deze pc, en slechts één exemplaar van AW Next kan het aanbieden."
       ],
       "souvenirsTitle": "Screenshots en videoclips",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Hoofdaccount van Steam",
         "name": "Filteren op gebruiker",
-        "description": "Toon alleen de Steam-prestaties van het geselecteerde account"
+        "description": "Toont alleen de Steam-prestaties van het gekozen account. Alle accounts: geen filter.",
+        "all": "Alle accounts"
       },
       "checkUpdates": "Controleren op updates",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Automatische updates van prestatiegegevens",
-        "description": "Schakel dit uit als je zelf steam_cache onderhoudt: het stopt de periodieke zelfherstelling die lege beschrijvingen aanvult en prestaties oppikt die door een game-update zijn toegevoegd. “Prestatielijsten opnieuw controleren” hierboven werkt nog steeds als handmatige, eenmalige controle."
+        "description": "Houdt de prestatiegegevens actueel: vult lege beschrijvingen aan en pikt prestaties op die een gameupdate heeft toegevoegd. Zet het alleen uit als je deze bestanden zelf bijhoudt. “Prestatielijsten opnieuw controleren” hierboven werkt nog steeds handmatig."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Hier staat niets dat met prestaties te maken heeft: geen AppID-map, geen emulatorconfiguratie en geen ontgrendelbestand.",
     "folder-reason-found-instead": "In plaats daarvan gevonden:",
     "folder-reason-checked": "Hier gecontroleerd: submappen met AppID, elk emulatorconfiguratiebestand dat AW Next kent, en {layouts} draagbare save-indelingen. De map is volledig onderzocht - er is niets overgeslagen.",
+    "folder-also-watched": "Ook automatisch bewaakt",
     "game-health-title": "Gamestatus",
     "game-settings-menu": "Game-instellingen",
     "game-config-title": "Configuratie van het uitvoerbare bestand",
@@ -2002,6 +2011,7 @@
     "update-checked": "Controle voltooid",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "Toevoegen",
+    "blacklist-appid-help": "De Steam App ID is het nummer in het Steam-winkeladres van de game: store.steampowered.com/app/ID",
     "setupLooksValid": "De configuratie ziet er goed uit.",
     "problemsWereDetected": "Er zijn problemen gevonden.",
     "repairSteamSettings": "steam_settings repareren (schema + pictogrammen schrijven)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Typ eerst een nieuwe naam in het veld Naam en kies dan Hernoemen.",
     "preset-view-readonly": "Deze weergave toont alleen de kaart. Ga terug naar Kaart om de indeling te bewerken.",
     "preset-layer-fixed": "{presets} tekenen hun kaart met hun eigen code, dus ze kunnen hier niet worden aangepast. Je kunt ze nog wel gebruiken zoals ze zijn.",
+    "preset-layer-named": "Hij wordt opgeslagen als een nieuwe preset, “{name}”; wijzig de Naam om hem anders te noemen.",
+    "preset-layer-start-hidden": "“{start}” is verborgen terwijl je een preset aanpast. Kies “{none}” om het terug te krijgen.",
     "preset-play-popup": "Deze preset tekent zijn kaart met eigen code, dus hij wordt afgespeeld in een echte popup op het scherm.",
     "preset-play-reduced": "Windows is ingesteld om minder animaties te tonen, dus het voorbeeld blijft stilstaan. Zet “Animatie-effecten” weer aan in de Windows-instellingen om ze te zien."
   },

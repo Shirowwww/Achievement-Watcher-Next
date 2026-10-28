@@ -45,10 +45,13 @@ const { CANVAS_EDIT_ROOM, CANVAS_PART_SELECTORS, CANVAS_STYLE_SELECTORS, canvasI
 const CARD_KEYS = [
   'width', 'minHeight', 'padX', 'padY', 'bgMode', 'bg', 'bg2', 'bgImage', 'opacity', 'artworkDim', 'bgAngle', 'artworkBlur',
   'artworkPosition', 'bgPattern', 'bgPatternOpacity', 'radius', 'accentBar', 'accentBarSize', 'borderWidth', 'borderColor', 'shadow', 'glow',
+  'glowAnim', 'animIn', 'animOut', 'duration', 'entryDistance', 'animInMs', 'animOutMs', 'easing', 'easingOut',
 ];
 const CARD_ID = 'card';
 
 const TEXT_BLOCK = 'text';
+// The lines the text block holds (the game line carries the game's name and the rarity).
+const CANVAS_TEXT_LINES = new Set(['title', 'detail', 'meta', 'progress']);
 const MARK = 'mark';
 // Each decoration as the element that draws it (none: the card) and which of its pseudo-elements.
 const DECOR_PSEUDOS = { cardBefore: ['', 'before'], cardAfter: ['', 'after'], iconBefore: ['.icon', 'before'], iconAfter: ['.icon', 'after'] };
@@ -79,6 +82,9 @@ const PART_KEYS = { icon: ['iconSize', 'iconShape', 'iconRadius', 'iconBorder', 
 const STATE_BUTTONS = { platinum: 'completion' };
 const MAX_SWATCHES = 16;
 const PASTE_STEP_PX = 10;
+// Where a new item may land: tried every few pixels, and kept this far from what is already there.
+const FREE_SPOT_STEP = 4;
+const FREE_SPOT_GAP = 4;
 // The size a shadow or a glow starts at once it is picked: enough to be seen on any card.
 const SHADOW_START = { drop: 8, glow: 12 };
 // The card's entrance when its stylesheet does not say, as the engine takes it.
@@ -634,15 +640,19 @@ function createCanvasEditor(options) {
 
   // A line too long for the card scrolls on its own (the engine's marquee): at rest the editor holds
   // it at its start, so the frames drawn round the lines stay on them, and lets it go on leaving.
+  // Held, it ends in an ellipsis as a line that fits would, rather than cut mid-word at the edge.
   function holdMarquees(doc, hold = true) {
-    for (const line of doc ? doc.querySelectorAll('.marquee') : []) {
-      for (const animation of line.getAnimations()) {
+    for (const line of doc ? doc.querySelectorAll('.marquee, [data-aw-held]') : []) {
+      const animations = line.getAnimations();
+      for (const animation of animations) {
         if (!hold) animation.play();
         else {
           animation.pause();
           animation.currentTime = 0;
         }
       }
+      line.classList.toggle('marquee', animations.length > 0 && !hold);
+      line.toggleAttribute('data-aw-held', animations.length > 0 && hold);
     }
   }
 
@@ -692,6 +702,8 @@ function createCanvasEditor(options) {
 
   const iconFor = (box) => LINE_ICONS[box.type === 'part' ? 'part' : canvas.items[box.index].kind];
 
+  // An added icon is a "symbol", so it is never confused with the card's own Icon part.
+  const kindName = (item) => label(item.kind === 'icon' ? 'kind.symbol' : `kind.${item.kind}`);
   // A token reads as the word it stands for, so no layer is named in braces.
   const readableText = (text) => text.replace(/\{(\w+)\}/g, (all, token) => (CANVAS_TOKENS.includes(token) ? label(`token.${token}`) : all));
 
@@ -700,8 +712,9 @@ function createCanvasEditor(options) {
     const item = canvas.items[box.index];
     if (item.kind === 'text') return readableText(item.text.split('\n')[0]).slice(0, 28) || label('kind.text');
     // The toolbar buttons already name each shape; three rows called "Shape" tell nothing apart.
-    if (item.kind === 'icon') return label(`icon.${item.icon}`);
-    return item.kind === 'shape' ? shapeName(item.shape) : label(`kind.${item.kind}`);
+    // An added symbol says what it is first: the card's own Icon is another layer.
+    if (item.kind === 'icon') return `${kindName(item)} · ${label(`icon.${item.icon}`)}`;
+    return item.kind === 'shape' ? shapeName(item.shape) : kindName(item);
   }
 
   const isLocked = (box) => box.type === 'item' && Boolean(canvas.items[box.index] && canvas.items[box.index].lock);
@@ -1267,25 +1280,40 @@ function createCanvasEditor(options) {
   }
   const addItem = (raw) => addItems([raw]);
 
-  // A new item lands in the middle of the card, so it is seen at once whatever the layout; the next
-  // ones a step down and right, so they do not land on one another.
-  function centred(w, h) {
+  /*
+    A new item lands on the card where nothing is yet, nearest the spot it prefers (the middle by
+    default): clear of everything if the card has room, else clear of the other added items. A card
+    with no room left steps each one down and right, so they still do not land on one another.
+  */
+  function freeSpot(w, h, prefer) {
     const g = current ? current.g : { cardW: 400, cardH: 100 };
+    const want = prefer || { x: Math.round(g.cardW / 2 - w / 2), y: Math.round(g.cardH / 2 - h / 2) };
+    const boxes = current ? current.boxes.filter((box) => box.type === 'item' || !UNSTACKED.has(box.key)).map(extentOf) : [];
+    const added = current ? current.boxes.filter((box) => box.type === 'item').map(extentOf) : [];
+    const spots = [];
+    for (let y = 0; y <= Math.max(0, g.cardH - h); y += FREE_SPOT_STEP) {
+      for (let x = 0; x <= Math.max(0, g.cardW - w); x += FREE_SPOT_STEP) spots.push({ x, y });
+    }
+    spots.sort((a, b) => Math.hypot(a.x - want.x, a.y - want.y) - Math.hypot(b.x - want.x, b.y - want.y));
+    const clearOf = (spot, others) =>
+      others.every((e) => spot.x >= e.right + FREE_SPOT_GAP || spot.x + w <= e.left - FREE_SPOT_GAP || spot.y >= e.bottom + FREE_SPOT_GAP || spot.y + h <= e.top - FREE_SPOT_GAP);
+    const found = spots.find((spot) => clearOf(spot, boxes)) || spots.find((spot) => clearOf(spot, added));
+    if (found) return { ...found, w, h };
     const step = (canvas.items.length % 5) * 14;
-    return { x: Math.round(g.cardW / 2 - w / 2) + step, y: Math.round(g.cardH / 2 - h / 2) + step, w, h };
+    return { x: want.x + step, y: want.y + step, w, h };
   }
 
   const ADDERS = {
-    text: () => addItem({ kind: 'text', text: label('newText'), size: 16, weight: 700, color: 'text', align: 'center', ...centred(140, 20) }),
+    text: () => addItem({ kind: 'text', text: label('newText'), size: 16, weight: 700, color: 'text', align: 'center', ...freeSpot(140, 20) }),
     // A badge that says the unlock's rarity, outlined in the tier's colour, in the card's corner.
     rarity: () => {
       const g = current ? current.g : { cardW: 400 };
-      addItem({ kind: 'text', text: '{rarity}', size: 15, weight: 700, color: 'accent', align: 'center', radius: 8, pad: 4, stroke: 2, strokeColor: 'accent', x: g.cardW - 86, y: 10, w: 76, h: 32 });
+      addItem({ kind: 'text', text: '{rarity}', size: 15, weight: 700, color: 'accent', align: 'center', radius: 8, pad: 4, stroke: 2, strokeColor: 'accent', ...freeSpot(76, 32, { x: g.cardW - 86, y: 10 }) });
     },
-    rect: () => addItem({ kind: 'shape', shape: 'rect', fill: '#ffffff', fillMode: 'accent', o: 0.85, radius: 6, ...centred(80, 36) }),
-    ellipse: () => addItem({ kind: 'shape', shape: 'ellipse', fill: '#ffffff', fillMode: 'accent', o: 0.85, ...centred(48, 48) }),
-    line: () => addItem({ kind: 'shape', shape: 'line', fill: '#ffffff', o: 0.85, ...centred(120, 2) }),
-    icon: () => addItem({ kind: 'icon', icon: 'trophy', fillMode: 'accent', ...centred(40, 40) }),
+    rect: () => addItem({ kind: 'shape', shape: 'rect', fill: '#ffffff', fillMode: 'accent', o: 0.85, radius: 6, ...freeSpot(80, 36) }),
+    ellipse: () => addItem({ kind: 'shape', shape: 'ellipse', fill: '#ffffff', fillMode: 'accent', o: 0.85, ...freeSpot(48, 48) }),
+    line: () => addItem({ kind: 'shape', shape: 'line', fill: '#ffffff', o: 0.85, ...freeSpot(120, 2) }),
+    icon: () => addItem({ kind: 'icon', icon: 'trophy', fillMode: 'accent', ...freeSpot(40, 40) }),
     image: addImage,
   };
 
@@ -1296,7 +1324,7 @@ function createCanvasEditor(options) {
     const ar = picked.width > 0 && picked.height > 0 ? picked.width / picked.height : 1;
     const w = ar >= 1 ? 80 : Math.round(80 * ar);
     const h = ar >= 1 ? Math.round(80 / ar) : 80;
-    addItem({ kind: 'image', file: picked.name, fit: { x: 0, y: 0, w, ar }, ...centred(w, h) });
+    addItem({ kind: 'image', file: picked.name, fit: { x: 0, y: 0, w, ar }, ...freeSpot(w, h) });
   }
 
   const isHidden = (key) => Boolean(canvas.hidden && canvas.hidden.includes(key));
@@ -2045,6 +2073,7 @@ function createCanvasEditor(options) {
       if (control.tagName === 'SELECT') renderProps(true);
     });
     const row = el('label', 'pd-cv-prop');
+    row.dataset.key = key;
     row.append(el('span', '', name ? name.textContent : key), control);
     return row;
   }
@@ -2278,18 +2307,20 @@ function createCanvasEditor(options) {
       if (CANVAS_WORDED_PARTS.includes(key) && !isLayer()) text.unshift(...wordsRows(styled, key));
       look.push(...lineLookRows(styled, key === 'progress'));
     }
-    for (const field of PART_KEYS[key] || []) {
-      const row = proxyRow(field);
-      if (row) look.push(row);
-    }
+    const proxied = (PART_KEYS[key] || []).map(proxyRow).filter(Boolean);
+    look.push(...proxied);
     const offset = pair(axisControl('X', m.x, -600, 600, (v) => (ensureMove(key).x = v)), axisControl('Y', m.y, -400, 400, (v) => (ensureMove(key).y = v)));
+    // The icon has a size of its own: a scale beside it would be a second size for one thing, so it
+    // shows only once the handles have scaled the icon, to be read and undone there.
+    const ownSize = proxied.some((row) => row.dataset.key === 'iconSize');
+    const scale = propRow('prop.scale', numberControl(Math.round(m.s * 100), PART_SCALE[0] * 100, PART_SCALE[1] * 100, 5, (v) => (ensureMove(key).s = v / 100)));
     return {
       text,
       look,
       motion: CANVAS_MOTION_PARTS.includes(key) ? motionRows(`p:${key}`) : null,
       place: [
         propRow('prop.offset', offset),
-        propRow('prop.scale', numberControl(Math.round(m.s * 100), PART_SCALE[0] * 100, PART_SCALE[1] * 100, 5, (v) => (ensureMove(key).s = v / 100))),
+        ...(ownSize && m.s === 1 ? [] : [scale]),
         propRow('prop.rotation', numberControl(m.r, -180, 180, 1, (v) => (ensureMove(key).r = v))),
         alignRow(),
       ],
@@ -2347,7 +2378,7 @@ function createCanvasEditor(options) {
     const head = el('div', 'pd-cv-props-head');
     head.append(icon(iconFor(box)), el('b', '', boxName(box)));
     const item = box.type === 'item' ? canvas.items[box.index] : null;
-    if (item) head.appendChild(el('span', 'pd-cv-chip', label(`kind.${item.kind}`)));
+    if (item) head.appendChild(el('span', 'pd-cv-chip', kindName(item)));
     const rows = item ? itemRows(item) : partRows(box.key);
     const actions = item ? itemActions(item) : [actionButton('act.home', 'fa-undo', homeSelected)];
     // A part of the card is only taken off it, never deleted: named for what it does.
@@ -2398,6 +2429,13 @@ function createCanvasEditor(options) {
     row.appendChild(pick);
     row.appendChild(layerButton(box, 'eye', shown, shown ? 'fa-eye' : 'fa-eye-slash', shown ? 'act.hide' : 'act.show', () => toggleShown(box)));
     if (item) row.appendChild(layerButton(box, 'lock', !item.lock, item.lock ? 'fa-lock' : 'fa-lock-open', item.lock ? 'act.unlock' : 'act.lock', () => toggleLock(box)));
+    else {
+      // A part cannot be locked: its lock stands greyed in the same column and says why.
+      const none = el('span', 'pd-cv-layer-step pd-cv-layer-lock is-na');
+      none.title = label('lockParts');
+      none.appendChild(icon('fa-lock-open'));
+      row.appendChild(none);
+    }
     if (!UNSTACKED.has(box.key)) {
       for (const [step, name, key] of [[1, 'fa-chevron-up', 'act.layerUp'], [-1, 'fa-chevron-down', 'act.layerDown']]) {
         const move = el('button', 'pd-cv-layer-step');
@@ -2457,9 +2495,15 @@ function createCanvasEditor(options) {
     const away = !current && options.otherView && options.otherView();
     const stack = (current ? current.boxes : away ? unmeasuredBoxes() : []).toReversed();
     const innerOf = (box) => (box.type === 'part' && INNER_PARTS[box.key]) || [];
-    const boxes = stack
+    const listed = stack
       .filter((box) => !INNER_IDS.has(box.id))
       .flatMap((box) => [box, ...stack.filter((inner) => inner.type === 'part' && innerOf(box).includes(inner.key))]);
+    // The text block holds the lines: it is listed above the first of them, as their container,
+    // though the card draws it under everything.
+    const block = listed.find((box) => box.id === `p:${TEXT_BLOCK}`);
+    const rest = listed.filter((box) => box !== block);
+    const firstLine = rest.findIndex((box) => box.type === 'part' && CANVAS_TEXT_LINES.has(box.key));
+    const boxes = block ? rest.toSpliced(firstLine < 0 ? rest.length : firstLine, 0, block) : listed;
     // The card itself, first, under which everything else is drawn.
     const cardRow = el('div', selected === CARD_ID ? 'pd-cv-layer-row is-on' : 'pd-cv-layer-row');
     const cardPick = el('button', 'pd-cv-layer');
@@ -2627,6 +2671,11 @@ function createCanvasEditor(options) {
   new ResizeObserver(() => {
     if (full && !preview.offsetWidth) setFull(false);
   }).observe(preview);
+  // The stage keeps the room the open timeline takes (app.css), less what its folded head already
+  // has, so unfolding it never moves the card.
+  new ResizeObserver(() => {
+    if (timelineHost.classList.contains('is-folded') && timelineHost.offsetHeight) preview.style.setProperty('--pd-tl-folded', `${timelineHost.offsetHeight}px`);
+  }).observe(timelineHost);
 
   // Called after anything repainted the preview: undo, a load, a state switch, a resize.
   function refresh() {

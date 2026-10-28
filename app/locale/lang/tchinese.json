@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "顯示隱藏成就",
-        "description": "在解鎖之前就顯示隱藏成就的名稱與說明。"
+        "name": "隱藏成就",
+        "description": "顯示：隱藏成就的名稱與說明會在你解鎖之前出現。隱藏：在那之前保持保密。"
       },
       "mergeDuplicates": {
         "name": "合併重複項目",
         "description": "將在多個來源中找到的同一款遊戲合併為單一卡片。"
       },
       "timeMerge": {
-        "name": "時間戳記合併",
-        "description": "合併重複項目時，優先採用哪一個時間值？",
+        "name": "合併遊戲保留的日期",
+        "description": "同一款遊戲在多個來源中被找到時，每項成就要保留哪一個解鎖日期。",
         "value": {
-          "recent": "較新",
-          "oldest": "較舊"
+          "recent": "最新的",
+          "oldest": "最早的"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "外觀",
         "description": "整個應用程式與遊戲內嵌介面的配色主題（會立即預覽，按下確定後儲存）。",
         "customTitle": "自訂佈景主題",
-        "customDesc": "每個佈景主題都能在這裡修改：為每個區塊選擇顏色，也可以選一張圖片。圖片顯示在顏色之上，顏色則變成一層淺色薄紗以確保可讀性。儲存會把你的成果保留為自己的佈景主題，使用旁邊的名稱；換一個尚未使用的名稱就會多出一個佈景主題，原本的維持不變。",
+        "customDesc": "為視窗的每個部分選擇一種顏色，也可以選一張圖片。儲存會以顯示的名稱保留佈景主題；使用新名稱則會建立第二個佈景主題。",
         "customName": "佈景主題名稱",
         "customNamePlaceholder": "我的佈景主題",
         "saveTheme": "儲存佈景主題",
@@ -342,8 +342,8 @@
           "description": "在每張卡片上顯示完成度進度列。"
         },
         "showEmptyProgress": {
-          "name": "沒有成就的遊戲",
-          "description": "對於 Steam 列出但沒有成就的遊戲：在卡片上顯示「沒有成就」，或什麼都不顯示。"
+          "name": "「沒有成就」標籤",
+          "description": "對於 Steam 列出但沒有成就的遊戲：在卡片上顯示「沒有成就」，或留空。兩種情況下遊戲都會留在遊戲庫中。"
         },
         "showSource": {
           "name": "平台圖示",
@@ -583,6 +583,7 @@
         "platinum": "白金",
         "overlay": "遊戲內嵌介面"
       },
+      "testHint": "每個按鈕都會用你目前的設定顯示一則範例通知。",
       "option": {
         "transportMode": {
           "name": "通知傳送方式",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "進度通知",
-          "description": "在成就有進度時盡可能發出通知"
+          "description": "當帶計數的成就有進展時（例如 3/10 個敵人）顯示通知，僅限會回報進度的遊戲。"
         },
         "progressStep": {
           "name": "進度里程碑",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "白金（100%）",
-          "description": "當一款遊戲完成度達到 100% 時，發出專屬的 Windows 通知"
+          "description": "當一款遊戲完成度達到 100% 時，發出專屬通知"
         },
         "mode": {
           "name": "通知類型",
@@ -731,7 +732,7 @@
               "text": "文字",
               "image": "圖片",
               "shape": "形狀",
-              "icon": "圖示"
+              "symbol": "符號"
             },
             "shape": {
               "triangle": "三角形",
@@ -762,7 +763,7 @@
               "opacity": "不透明度",
               "rotation": "旋轉",
               "scale": "縮放",
-              "icon": "圖示",
+              "icon": "符號",
               "visible": "可見",
               "alignCard": "與卡片對齊",
               "position": "位置",
@@ -812,7 +813,8 @@
               "lock": "鎖定位置",
               "unlock": "解除鎖定"
             },
-            "addIcon": "圖示",
+            "addSymbol": "符號",
+            "lockParts": "只有你自己新增的元素才能鎖定。",
             "enter": {
               "none": "隨卡片",
               "fade": "淡入",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "新增元素",
-                "body": "文字、圖片與 GIF、形狀與圖示。每一項都會以獨立圖層放在卡片上。"
+                "body": "文字、圖片與 GIF、形狀與符號。每一項都會以獨立圖層放在卡片上。"
               },
               "edit": {
                 "title": "先選取，再移動",
@@ -1097,7 +1099,8 @@
             "intro": "先挑一個起點，再調整成你要的樣子。在你建立預設集之前不會儲存任何內容。",
             "random": "隨機挑一個",
             "randomized": "你還沒試過的設計",
-            "title": "起始樣式"
+            "title": "起始樣式",
+            "open": "開啟預設集"
           },
           "title": "預設集設計工具",
           "undo": "復原",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "預設集",
+            "hint": "點擊卡片即可使用。",
             "close": "關閉",
             "mine": "您的預設集",
             "bundled": "內建",
+            "fixed": "依原樣使用",
             "browse": "瀏覽預設集",
             "empty": "您還沒有自己的預設集。在設計工具中建立一個，它就會顯示在這裡。"
           }
         },
         "souvenirTitle": "紀念截圖",
         "souvenirScreenshot": "解鎖時截圖",
-        "souvenirScreenshotDesc": "在成就解鎖時擷取畫面，並依遊戲分別儲存。",
+        "souvenirScreenshotDesc": "解鎖成就時擷取螢幕。圖片會依遊戲分別存放在一個資料夾中。",
         "souvenirHdr": "HDR 截圖",
         "souvenirHdrDesc": "自動會在 Windows HDR 啟用時校正色彩，適用於截圖與剪輯。若無法使用，則改為儲存一般的截圖。",
         "souvenirHdrAuto": "自動",
@@ -1342,7 +1347,8 @@
           "description": "當 Windows 通知失敗時改用泡泡提示"
         },
         "useWS": {
-          "description": "把成就廣播給所有已連線的用戶端"
+          "name": "本機廣播 (port 8082)",
+          "description": "把每次解鎖傳送給此電腦上執行的工具，例如 OBS 來源。不確定時請保持開啟。"
         },
         "obsSource": {
           "name": "OBS 瀏覽器來源",
@@ -1412,17 +1418,17 @@
       "library": "收藏庫資料夾",
       "libraryInfo": [
         "請選擇一個包含多個遊戲安裝資料夾的資料夾（例如 D:\\Games、E:\\SteamLibrary）。",
-        "其中的所有遊戲都會被掃描 Goldberg/GBE 成就，即使從未啟動過也一樣。"
+        "其中的每款遊戲都會被掃描模擬器成就，即使從未啟動過。"
       ],
       "addLibrary": "新增收藏庫資料夾",
       "generateConfigs": "產生設定檔",
-      "generateConfigsHelp": "僅限尚未套用修復的遊戲"
+      "generateConfigsHelp": "完整掃描，然後修復尚無修復的遊戲"
     },
     "source": {
       "title": "遊戲來源",
       "officialPlatforms": {
         "title": "官方平台",
-        "description": "啟用下方標有盾牌圖示的來源。只會顯示在這台電腦上偵測到的收藏庫。"
+        "description": "盾牌標示官方啟動器。Steam、Epic 與 Xbox 有三種選擇：無、已安裝（此電腦上的遊戲）或已擁有（已連線帳號的整個遊戲庫）。其餘的只能開啟或關閉。"
       },
       "legitSteam": {
         "name": "顯示 Steam 遊戲",
@@ -1438,7 +1444,7 @@
         "description": "讀取 Goldberg / GBE Fork 及類似 Steam 模擬器寫入的成就。也涵蓋以 Uplay R2 修正修復的 Ubisoft 遊戲，它們會把成就寫在同一個位置。"
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 與 Reborn"
+        "description": "透過 GreenLuma（2020、2024、2025 與 Reborn）執行的 Steam 遊戲：讀取它記錄的成就。"
       },
       "rpcs3": {
         "description": "PlayStation 3 模擬器"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC 遊戲（Game Pass／Microsoft Store）。請在設定中連線並匯入，才能看到解鎖狀態與稀有度。",
+        "description": "Xbox PC 遊戲（Game Pass／Microsoft Store）。請在下方的 Xbox PC 帳戶 卡片中連線你的帳戶，然後匯入，即可查看解鎖狀態與稀有度。",
       "value": {
         "none": "無",
         "installed": "已安裝",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "GOG 模擬器存檔"
+        "description": "透過 Nemirtingas 的 GOG Galaxy 模擬器執行的 GOG 遊戲：讀取它儲存的成就。"
       },
       "epic": {
-        "description": "Epic 模擬器存檔"
+        "description": "透過 Nemirtingas 的 Epic 模擬器執行的 Epic 遊戲：讀取它儲存的成就。"
       },
       "shadps4": {
         "description": "PlayStation 4 模擬器"
@@ -1506,7 +1512,7 @@
         "description": "透過 XLiveLessNess 執行的 Games for Windows LIVE"
       },
       "retroAchievements": {
-        "description": "來自你的 RetroAchievements 帳號的模擬器遊戲。請在下方的帳號卡片中連線；模擬器執行時會通知新解鎖的成就。"
+        "description": "來自你的 RetroAchievements 帳號的模擬器遊戲。請在下方的帳號卡片中連線；模擬器執行期間會通知新的解鎖。"
       },
       "psnLibrary": {
         "description": "從你的 PlayStation 帳號匯入的遊戲和獎盃。請在下方的帳號卡片中連接，然後匯入遊戲庫。"
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "透過 MadnessPatch 模組執行的 Alice: Madness Returns"
       },
-      "groupStores": "官方啟動器",
+      "groupStores": "官方平台",
+      "groupMemory": "遊戲庫記憶",
       "groupConsoles": "主機與復古"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "擺放來源時，在 URL 後面加上 ?test=1。它會每十秒顯示一次範例解鎖；完成後請移除它。",
         "該來源繪製的彈出通知與遊戲內的相同，並在兩次解鎖之間保持空白，因此直播時幾乎不佔資源。",
         "網址後的更多選項：?scale=2 固定縮放，?duration=8000 設定每張卡片停留多久，?sound=1 透過該來源播放音效，/obs/preset/Xbox/ 不論桌面使用哪個預設集都固定使用一個預設集。",
-        "它讀取本機通知串流，所以請在 設定 > 通知 > 整合 中保持 Websocket @localhost:8082 開啟。它只能在這台電腦上運作，而且只有一份 AW Next 可以提供它。"
+        "它讀取本機通知串流，所以請在 設定 > 通知 > 整合 中保持 本機廣播 開啟。它只能在這台電腦上運作，而且只有一份 AW Next 可以提供它。"
       ],
       "souvenirsTitle": "截圖與影片剪輯",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "主要 Steam 帳戶",
         "name": "依使用者篩選",
-        "description": "只顯示所選帳戶的 Steam 成就"
+        "description": "只顯示所選帳號的 Steam 成就。所有帳號：不篩選。",
+        "all": "所有帳號"
       },
       "checkUpdates": "檢查更新",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "成就資料自動更新",
-        "description": "如果你自行維護 steam_cache，可以停用這個選項：這會停止定期的自我修復，該修復會補上空白說明並辨識遊戲更新新增的成就。上方的「重新檢查成就清單」仍可作為手動的一次性檢查使用。"
+        "description": "讓成就資料保持最新：補齊空白說明，並偵測遊戲更新新增的成就。僅當你自己維護這些檔案時才關閉。上方的「重新檢查成就清單」仍可手動使用。"
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "這裡沒有存放任何與成就相關的資料：沒有 AppID 資料夾、沒有模擬器設定，也沒有解鎖檔案。",
     "folder-reason-found-instead": "實際找到的是：",
     "folder-reason-checked": "這裡已檢查過：AppID 子資料夾、AW Next 已知的所有模擬器設定檔，以及 {layouts} 種可攜式存檔格式。整個資料夾都檢查過了，沒有略過任何項目。",
+    "folder-also-watched": "也會自動監看",
     "game-health-title": "遊戲健康狀態",
     "game-settings-menu": "遊戲設定",
     "game-config-title": "執行檔設定",
@@ -2002,6 +2011,7 @@
     "update-checked": "檢查完成",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "新增",
+    "blacklist-appid-help": "Steam App ID 是遊戲 Steam 商店頁面網址中的數字：store.steampowered.com/app/ID",
     "setupLooksValid": "設定看起來沒有問題。",
     "problemsWereDetected": "偵測到問題。",
     "repairSteamSettings": "修復 steam_settings（寫入結構與圖示）…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "請先在「名稱」欄位輸入新名稱，再按一下「重新命名」。",
     "preset-view-readonly": "此檢視只顯示卡片。請回到「卡片」以編輯版面配置。",
     "preset-layer-fixed": "{presets} 使用內建程式碼繪製卡片，因此無法在此自訂。您仍可依原樣使用。",
+    "preset-layer-named": "將儲存為新的預設集「{name}」；如需換個名稱，請修改名稱。",
+    "preset-layer-start-hidden": "自訂預設集時會隱藏「{start}」。選擇「{none}」即可恢復。",
     "preset-play-popup": "此預設集使用自帶的程式碼繪製卡片，因此會在螢幕上的真實彈出視窗中播放。",
     "preset-play-reduced": "Windows 已設定為顯示較少動畫，因此預覽會保持靜止。若要查看動畫，請在 Windows 設定中重新開啟「動畫效果」。"
   },

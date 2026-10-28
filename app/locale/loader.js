@@ -612,9 +612,11 @@ function translateUI(lang, locale, template) {
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.transport));
   selector.find("li:nth-child(1) .right select option[value='true']").text(clear(template.settings.common.enable));
   selector.find("li:nth-child(1) .right select option[value='false']").text(clear(template.settings.common.disable));
+  selector.find('li:nth-child(1) .left span').text(clear(template.settings.notification.option.useWS.name));
   selector.find('li:nth-child(1) .help').text(clear(template.settings.notification.option.useWS.description));
   selector = $('#options-notify-test');
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.test));
+  $('#notify-test-hint').text(clear(template.settings.notification.testHint));
   $('#notify_test span').text(clear(template.settings.notification.test.achievement));
   if (template.settings.notification.test.rare) {
     $('#notify_rare_test span').text(clear(template.settings.notification.test.rare));
@@ -867,6 +869,7 @@ function translateUI(lang, locale, template) {
     $('#source-official-description').text(clear(template.settings.source.officialPlatforms.description));
   }
   $('#source-stores-title').text(clear(template.settings.source.groupStores));
+  $('#source-memory-title').text(clear(template.settings.source.groupMemory));
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
   // Every on/off Sources row is bound by id: rows move between the cards, so a position means
   // nothing here. A row whose name is a brand keeps it in app.html and has no `name` key.
@@ -959,7 +962,8 @@ function translateUI(lang, locale, template) {
   selector = $('#options-mainSteam');
   $('#adv-mainsteam-title span').text(clear(template.settings.advanced.mainSteam.title));
   selector.find('li:nth-child(1) .left span').text(clear(template.settings.advanced.mainSteam.name));
-  selector.find('li:nth-child(1) .right select option[value="0"]').text(clear(template.settings.source.legitSteam.value.none));
+  // "0" filters nothing: every account's achievements show, so "None" read as the opposite.
+  selector.find('li:nth-child(1) .right select option[value="0"]').text(clear(template.settings.advanced.mainSteam.all));
   selector.find('li:nth-child(1) .help').text(clear(template.settings.advanced.mainSteam.description));
   selector = $('#settings .box .footer .notice p:nth-child(1)');
   selector.find('span:eq(0)').text(clear(template.settings.common.version));

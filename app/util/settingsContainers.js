@@ -11,7 +11,7 @@
 const GENERAL = ['options-ui', 'options-ui-app', 'options-ui-trophies'];
 
 // Stored under `achievement_source`.
-const SOURCE = ['options-source', 'options-source-stores', 'options-source-consoles'];
+const SOURCE = ['options-source', 'options-source-stores', 'options-source-consoles', 'options-source-memory'];
 
 // The `.right` blocks of every container in a group, as one selector.
 function rightsOf(ids) {

@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Rejtett teljesítmények felfedése",
-        "description": "A rejtett teljesítmények nevének és leírásának megjelenítése a feloldás előtt."
+        "name": "Rejtett teljesítmények",
+        "description": "Megjelenítés: a rejtett teljesítmény neve és leírása a feloldás előtt látható. Elrejtés: addig titokban maradnak."
       },
       "mergeDuplicates": {
         "name": "Duplikátumok egyesítése",
         "description": "A több forrásban megtalált azonos játék egyesítése egyetlen csempévé."
       },
       "timeMerge": {
-        "name": "Időbélyeg egyesítése",
-        "description": "Duplikátumok egyesítésekor melyik időérték előnyösebb ?",
+        "name": "Egyesített játékoknál megtartott dátum",
+        "description": "Ha ugyanaz a játék több forrásban is megtalálható, melyik feloldási dátumot tartsa meg az egyes teljesítményeknél.",
         "value": {
-          "recent": "Legújabb",
-          "oldest": "Legrégebbi"
+          "recent": "A legújabb",
+          "oldest": "A legrégebbi"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Megjelenés",
         "description": "Az alkalmazásablak színtémája (azonnali előnézet, mentés az OK gombbal).",
         "customTitle": "Egyedi téma",
-        "customDesc": "Minden téma szerkeszthető itt: válassz színt és tetszés szerint képet minden blokkhoz. A kép a szín fölött látszik (a szín könnyű fátyollá válik az olvashatóság kedvéért). A mentés saját témaként őrzi meg, a mellette lévő néven; egy még szabad név második témát ad, az elsőt pedig békén hagyja.",
+        "customDesc": "Válassz egy színt, és ha szeretnél, egy képet az ablak minden részéhez. A Mentés a megjelenített néven tartja meg; egy új név második témát hoz létre.",
         "customName": "Téma neve",
         "customNamePlaceholder": "Saját témám",
         "saveTheme": "Téma mentése",
@@ -342,8 +342,8 @@
           "description": "Megjeleníti a teljesítési sávot minden csempén."
         },
         "showEmptyProgress": {
-          "name": "Teljesítmény nélküli játékok",
-          "description": "Olyan játéknál, amelyet a Steam teljesítmények nélkül listáz: a csempén a „Nincsenek teljesítmények” felirat jelenik meg, vagy semmi."
+          "name": "„Nincsenek teljesítmények” felirat",
+          "description": "Olyan játéknál, amelyet a Steam teljesítmények nélkül listáz: a csempén a „Nincsenek teljesítmények” felirat jelenik meg, vagy üresen marad. A játék mindkét esetben a könyvtárban marad."
         },
         "showSource": {
           "name": "Platformikon",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "Játékon belüli overlay"
       },
+      "testHint": "Minden gomb egy mintaértesítést mutat a jelenlegi beállításaiddal.",
       "option": {
         "transportMode": {
           "name": "Értesítések átvitele",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Haladási értesítések",
-          "description": "Értesítés a teljesítmény folyamatáról, ha lehetséges"
+          "description": "Értesítést mutat, amikor egy számlálós teljesítmény előrehalad (például 3/10 ellenség), azokban a játékokban, amelyek jelzik ezt."
         },
         "progressStep": {
           "name": "Haladási mérföldkövek",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Külön Windows-értesítést indít, amikor egy játék eléri a 100%-os teljesítést"
+          "description": "Külön értesítést indít, amikor egy játék eléri a 100%-os teljesítést"
         },
         "mode": {
           "name": "Értesítés típusa",
@@ -731,7 +732,7 @@
               "text": "Szöveg",
               "image": "Kép",
               "shape": "Alakzat",
-              "icon": "Ikon"
+              "symbol": "Szimbólum"
             },
             "shape": {
               "triangle": "Háromszög",
@@ -762,7 +763,7 @@
               "opacity": "Átlátszatlanság",
               "rotation": "Forgatás",
               "scale": "Méretarány",
-              "icon": "Ikon",
+              "icon": "Szimbólum",
               "visible": "Látható",
               "alignCard": "Igazítás a kártyához",
               "position": "Pozíció",
@@ -812,7 +813,8 @@
               "lock": "Rögzítés a helyén",
               "unlock": "Rögzítés feloldása"
             },
-            "addIcon": "Ikon",
+            "addSymbol": "Szimbólum",
+            "lockParts": "Csak a magad által hozzáadott elemek zárolhatók.",
             "enter": {
               "none": "A kártyával együtt",
               "fade": "Átúszás",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Elemek hozzáadása",
-                "body": "Szövegek, képek és GIF-ek, alakzatok és ikonok. Mindegyik külön rétegként kerül a kártyára."
+                "body": "Szövegek, képek és GIF-ek, alakzatok és szimbólumok. Mindegyik külön rétegként kerül a kártyára."
               },
               "edit": {
                 "title": "Válassz, majd mozgasd",
@@ -1097,7 +1099,8 @@
             "intro": "Válassz kiindulópontot, majd alakítsd magadra. Semmi sem mentődik, amíg létre nem hozod.",
             "random": "Lepj meg",
             "randomized": "Egy megjelenés, amit még nem próbáltál",
-            "title": "Kiindulás"
+            "title": "Kiindulás",
+            "open": "Előbeállítás megnyitása"
           },
           "title": "Előbeállítás-tervező",
           "undo": "Visszavonás",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Előbeállítások",
+            "hint": "Kattints egy kártyára a használatához.",
             "close": "Bezárás",
             "mine": "Saját előbeállításaid",
             "bundled": "Mellékelt",
+            "fixed": "Úgy használhatók, ahogy vannak",
             "browse": "Előbeállítások böngészése",
             "empty": "Még nincs saját előbeállításod. Készíts egyet a tervezőben, és itt meg fog jelenni."
           }
         },
         "souvenirTitle": "Emlék képernyőkép",
         "souvenirScreenshot": "Képernyőkép feloldáskor",
-        "souvenirScreenshotDesc": "Képernyőképet készít, amikor egy teljesítmény feloldódik. Játékonként mentve.",
+        "souvenirScreenshotDesc": "Képernyőképet készít, amikor feloldasz egy teljesítményt. A képek játékonként egy mappába kerülnek.",
         "souvenirHdr": "HDR-képernyőképek",
         "souvenirHdrDesc": "Az Automatikus mód kijavítja a színeket, amikor a Windows HDR aktív, a képernyőképeknél és a klipeknél. Ha nem érhető el, a normál képernyőkép lesz mentve.",
         "souvenirHdrAuto": "Automatikus",
@@ -1342,7 +1347,8 @@
           "description": "Visszaesés buboréksúgóra a Windows-értesítés sikertelensége esetén"
         },
         "useWS": {
-          "description": "A teljesítmény közvetítése minden csatlakozott klienshez"
+          "name": "Helyi közvetítés (port 8082)",
+          "description": "Minden feloldást elküld az ezen a gépen futó eszközöknek, például az OBS-forrásnak. Ha bizonytalan vagy, hagyd bekapcsolva."
         },
         "obsSource": {
           "name": "OBS böngészőforrás",
@@ -1412,17 +1418,17 @@
       "library": "Könyvtármappák",
       "libraryInfo": [
         "Válassz egy mappát, amely sok játéktelepítési mappát tartalmaz (pl. D:\\Games, E:\\SteamLibrary).",
-        "Az összes benne lévő játékot beolvassa Goldberg/GBE teljesítményekre, még ha soha nem is indították el."
+        "A benne lévő összes játékot átvizsgálja emulátoros teljesítményekért, akkor is, ha még sosem indították el."
       ],
       "addLibrary": "Könyvtármappa hozzáadása",
       "generateConfigs": "Konfigurációk generálása",
-      "generateConfigsHelp": "csak meglévő javítás nélküli játékok"
+      "generateConfigsHelp": "teljes vizsgálat, majd megjavítja azokat a játékokat, amelyekhez még nincs javítás"
     },
     "source": {
       "title": "Játékforrások",
       "officialPlatforms": {
         "title": "Hivatalos platformok",
-        "description": "Kapcsold be lent a pajzzsal jelölt forrásokat. Csak az ezen a gépen megtalált könyvtárak jeleníthetők meg."
+        "description": "A pajzs a hivatalos indítókat jelöli. A Steam, az Epic és az Xbox három lehetőséget kínál: Nincs, Telepített (a gépen lévő játékok) vagy Birtokolt (egy csatlakoztatott fiók teljes könyvtára). A többi be- vagy kikapcsolható."
       },
       "legitSteam": {
         "name": "Steam játékok megjelenítése",
@@ -1438,7 +1444,7 @@
         "description": "Beolvassa a Goldberg / GBE Fork és hasonló Steam emulátorok által írt teljesítményeket. Lefedi az Uplay R2 javítással megjavított Ubisoft-játékokat is, amelyek ugyanoda írják a teljesítményeiket."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 és Reborn"
+        "description": "GreenLumával futtatott Steam-játékok (2020, 2024, 2025 és Reborn): beolvassa az általa rögzített teljesítményeket."
       },
       "rpcs3": {
         "description": "PlayStation 3 emulátor"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC játékok (Game Pass / Microsoft Store). Csatlakozz és importálj a Beállításokban az állapot és ritkaság megtekintéséhez.",
+        "description": "Xbox PC játékok (Game Pass / Microsoft Store). Csatlakoztasd a fiókodat lejjebb az Xbox PC-fiók kártyán, majd importálj, hogy lásd a feloldásokat és a ritkaságot.",
       "value": {
         "none": "Nincs",
         "installed": "Telepített",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "A GOG-emulátor mentései"
+        "description": "Nemirtingas GOG Galaxy emulátorával futtatott GOG-játékok: beolvassa az általa mentett teljesítményeket."
       },
       "epic": {
-        "description": "Az Epic-emulátor mentései"
+        "description": "Nemirtingas Epic emulátorával futtatott Epic-játékok: beolvassa az általa mentett teljesítményeket."
       },
       "shadps4": {
         "description": "PlayStation 4 emulátor"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE az XLiveLessNess segítségével"
       },
       "retroAchievements": {
-        "description": "Emulátoros játékok a RetroAchievements-fiókodból. Csatlakoztasd az alábbi fiókkártyán; az új teljesítményeket bejelenti, amíg egy emulátor fut."
+        "description": "Emulátoros játékok a RetroAchievements-fiókodból. Csatlakoztasd lejjebb a fiókkártyán; az új feloldásokat bejelenti, amíg fut egy emulátor."
       },
       "psnLibrary": {
         "description": "A PlayStation-fiókból importált játékok és trófeák. Csatlakoztassa az alábbi fiókkártyán, majd importálja a könyvtárat."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns a MadnessPatch mod segítségével"
       },
-      "groupStores": "Hivatalos indítók",
+      "groupStores": "Hivatalos platformok",
+      "groupMemory": "Könyvtármemória",
       "groupConsoles": "Konzolok és retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Adja hozzá a ?test=1 paramétert az URL-hez, amíg elhelyezi a forrást. Tíz másodpercenként egy minta feloldást mutat; ha végzett, vegye ki.",
         "A forrás ugyanazt a felugró ablakot rajzolja, mint a játékon belüli, és a feloldások között üres marad, így semmibe sem kerül, amíg streamel.",
         "További lehetőségek a cím után: a ?scale=2 rögzíti a nagyítást, a ?duration=8000 megadja, meddig marad egy kártya, a ?sound=1 a forráson át játssza le a hangot, a /obs/preset/Xbox/ egyetlen előbeállítást használ, bármit használ is az asztal.",
-        "A helyi értesítési csatornát olvassa, ezért hagyja bekapcsolva a Websocket @localhost:8082 beállítást a Beállítások > Értesítés > Integrációk alatt. Csak ezen a számítógépen működik, és az AW Next csak egy példánya szolgálhatja ki."
+        "A helyi értesítési csatornát olvassa, ezért hagyja bekapcsolva a Helyi közvetítés beállítást a Beállítások > Értesítés > Integrációk alatt. Csak ezen a számítógépen működik, és az AW Next csak egy példánya szolgálhatja ki."
       ],
       "souvenirsTitle": "Képernyőképek és videóklipek",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Fő Steam fiók",
         "name": "Szűrés felhasználó szerint",
-        "description": "Csak a kiválasztott fiók Steam teljesítményeinek megjelenítése"
+        "description": "Csak a kiválasztott fiók Steam-teljesítményeit mutatja. Minden fiók: nincs szűrés.",
+        "all": "Minden fiók"
       },
       "checkUpdates": "Frissítések keresése",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Trófeaadatok automatikus frissítése",
-        "description": "Kapcsold ki ezt, ha te magad tartod karban a steam_cache-t: ez leállítja az időszakos önjavítást, amely kitölti az üres leírásokat, és felismeri a játékfrissítés által hozzáadott trófeákat. A fenti „Trófealisták újraellenőrzése” továbbra is működik kézi, egyszeri ellenőrzésként."
+        "description": "Naprakészen tartja a teljesítményadatokat: kitölti az üres leírásokat, és felveszi a játékfrissítés által hozzáadott teljesítményeket. Csak akkor kapcsold ki, ha ezeket a fájlokat magad karbantartod. A fenti „Trófealisták újraellenőrzése” továbbra is kézzel működik."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Itt semmi teljesítményhez kapcsolódó nincs tárolva: nincs AppID mappa, nincs emulátor-konfiguráció és nincs feloldásfájl.",
     "folder-reason-found-instead": "Ehelyett ez található:",
     "folder-reason-checked": "Itt ellenőrizve: az AppID almappák, az AW Next által ismert összes emulátor-konfigurációs fájl és {layouts} hordozható mentési elrendezés. A mappa át lett vizsgálva, semmi nem maradt ki.",
+    "folder-also-watched": "Automatikusan is figyelve",
     "game-health-title": "Játék állapota",
     "game-settings-menu": "Játék beállításai",
     "game-config-title": "Futtatható fájl beállítása",
@@ -2002,6 +2011,7 @@
     "update-checked": "Ellenőrizve",
     "blacklist-add-placeholder": "Steam alkalmazásazonosító",
     "blacklist-add-button": "Hozzáadás",
+    "blacklist-appid-help": "A Steam App ID a játék Steam-áruházi oldalának címében szereplő szám: store.steampowered.com/app/ID",
     "setupLooksValid": "A beállítás érvényesnek tűnik.",
     "problemsWereDetected": "Problémákat észleltünk.",
     "repairSteamSettings": "steam_settings javítása (séma + ikonok írása)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Először írj be egy új nevet a Név mezőbe, majd nyomd meg az Átnevezés gombot.",
     "preset-view-readonly": "Ez a nézet csak a kártyát mutatja. A kialakítás szerkesztéséhez lépj vissza a Kártya nézetre.",
     "preset-layer-fixed": "A(z) {presets} a kártyáját saját kóddal rajzolja ki, ezért itt nem szabható testre. Továbbra is használhatod így, ahogy van.",
+    "preset-layer-named": "Új előbeállításként lesz mentve: „{name}”; a Név módosításával más néven mentheted.",
+    "preset-layer-start-hidden": "A(z) „{start}” rejtve marad, amíg előbeállítást szabsz testre. Válaszd a(z) „{none}” lehetőséget, hogy visszakapd.",
     "preset-play-popup": "Ez az előbeállítás saját kóddal rajzolja ki a kártyáját, ezért valódi felugró ablakban játszódik le, a képernyőn.",
     "preset-play-reduced": "A Windows kevesebb animációt jelenít meg, ezért az előnézet mozdulatlan marad. A megjelenítésükhöz kapcsold vissza az „Animációs effektusok” beállítást a Windows beállításaiban."
   },

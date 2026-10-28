@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Reveal hidden achievements",
-        "description": "Reveal the name and description of hidden achievements before you unlock them."
+        "name": "Hidden achievements",
+        "description": "Show: a hidden achievement's name and description appear before you unlock it. Hide: they stay secret until then."
       },
       "mergeDuplicates": {
         "name": "Merge Duplicates",
         "description": "Combine the same game found in several sources into a single tile."
       },
       "timeMerge": {
-        "name": "Timestamp merge",
-        "description": "When merging duplicates, which time value is preferred?",
+        "name": "Date kept for merged games",
+        "description": "When one game is found in several sources, which unlock date to keep for each achievement.",
         "value": {
-          "recent": "Recent",
-          "oldest": "Oldest"
+          "recent": "The most recent",
+          "oldest": "The oldest"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Appearance",
         "description": "Color theme of the whole app and the in-game overlay (previews immediately, saved with OK).",
         "customTitle": "Custom theme",
-        "customDesc": "Every theme can be edited here: pick a colour and, optionally, an image for each block. An image shows over the colour (which becomes a light veil for readability). Save keeps what you made as a theme of your own, under the name beside it; a name nothing uses yet gives you a second theme and leaves the first alone.",
+        "customDesc": "Pick a colour, and an image if you like, for each part of the window. Save keeps it under the name shown; a new name makes a second theme.",
         "customName": "Theme name",
         "customNamePlaceholder": "My theme",
         "saveTheme": "Save theme",
@@ -342,8 +342,8 @@
           "description": "Show the completion bar on each tile."
         },
         "showEmptyProgress": {
-          "name": "Games without achievements",
-          "description": "For a game Steam lists with no achievements: write “No achievements” on its tile, or show nothing."
+          "name": "\"No achievements\" label",
+          "description": "For a game Steam lists with no achievements: write \"No achievements\" on its tile, or leave it blank. The game stays in the library either way."
         },
         "showSource": {
           "name": "Platform icon",
@@ -583,6 +583,7 @@
         "platinum": "Platinum",
         "overlay": "In-game overlay"
       },
+      "testHint": "Each button shows a sample notification with your current settings.",
       "option": {
         "transportMode": {
           "name": "Notification transport",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Progress notifications",
-          "description": "Notify on achievement progress if possible"
+          "description": "Show a notification when a counted achievement moves forward (for example 3/10 enemies), in games that report it."
         },
         "progressStep": {
           "name": "Progress milestones",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platinum (100%)",
-          "description": "Fire a dedicated Windows notification when a game reaches 100% completion"
+          "description": "Show a dedicated notification when a game reaches 100% completion"
         },
         "mode": {
           "name": "Notification type",
@@ -731,7 +732,7 @@
               "text": "Text",
               "image": "Picture",
               "shape": "Shape",
-              "icon": "Icon"
+              "symbol": "Symbol"
             },
             "shape": {
               "triangle": "Triangle",
@@ -762,7 +763,7 @@
               "opacity": "Opacity",
               "rotation": "Rotation",
               "scale": "Scale",
-              "icon": "Icon",
+              "icon": "Symbol",
               "visible": "Visible",
               "alignCard": "Line up with the card",
               "position": "Position",
@@ -812,7 +813,8 @@
               "lock": "Lock in place",
               "unlock": "Unlock"
             },
-            "addIcon": "Icon",
+            "addSymbol": "Symbol",
+            "lockParts": "Only the elements you added can be locked.",
             "enter": {
               "none": "With the card",
               "fade": "Fade in",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Add elements",
-                "body": "Texts, pictures and GIFs, shapes and icons. Each one goes on the card as a layer of its own."
+                "body": "Texts, pictures and GIFs, shapes and symbols. Each one goes on the card as a layer of its own."
               },
               "edit": {
                 "title": "Pick, then move",
@@ -1097,7 +1099,8 @@
             "intro": "Pick a starting point, then make it yours. Nothing is saved until you create the preset.",
             "random": "Surprise me",
             "randomized": "A design you have not tried",
-            "title": "Start from"
+            "title": "Start from",
+            "open": "Open a preset"
           },
           "title": "Preset designer",
           "undo": "Undo",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Presets",
+            "hint": "Click a card to use it.",
             "close": "Close",
             "mine": "Your presets",
             "bundled": "Included",
+            "fixed": "Used as they are",
             "browse": "Browse the presets",
             "empty": "You have no presets of your own yet. Make one in the designer and it shows up here."
           }
         },
         "souvenirTitle": "Souvenir screenshot",
         "souvenirScreenshot": "Screenshot on unlock",
-        "souvenirScreenshotDesc": "Capture the screen when an achievement unlocks. Saved per game.",
+        "souvenirScreenshotDesc": "Capture the screen when an achievement unlocks. Pictures go into one folder per game.",
         "souvenirHdr": "HDR screenshots",
         "souvenirHdrDesc": "Automatic corrects colours when Windows HDR is active, for screenshots and clips. If unavailable, the standard capture is saved instead.",
         "souvenirHdrAuto": "Automatic",
@@ -1342,7 +1347,8 @@
           "description": "Fallback to balloon tooltip when a Windows notification fails"
         },
         "useWS": {
-          "description": "Broadcast achievement to all connected clients"
+          "name": "Local broadcast (port 8082)",
+          "description": "Sends each unlock to tools running on this PC, such as the OBS source. Leave it on if unsure."
         },
         "obsSource": {
           "name": "OBS browser source",
@@ -1412,17 +1418,17 @@
       "library": "Library Folders",
       "libraryInfo": [
         "Select a folder that holds many game install folders (e.g. D:\\Games, E:\\SteamLibrary).",
-        "All games inside will be scanned for Goldberg/GBE achievements, even if never launched."
+        "Every game inside is scanned for emulator achievements, even if never launched."
       ],
       "addLibrary": "Add a Library Folder",
       "generateConfigs": "Generate configs",
-      "generateConfigsHelp": "only games without an existing fix"
+      "generateConfigsHelp": "full scan, then repairs games that have no fix yet"
     },
     "source": {
       "title": "Game sources",
       "officialPlatforms": {
         "title": "Official platforms",
-        "description": "Enable the shield-marked sources below. Only libraries detected on this PC can be shown."
+        "description": "The shield marks official launchers. Steam, Epic and Xbox offer three choices: None, Installed (games on this PC) or Owned (the whole library of a connected account). The others are on or off."
       },
       "legitSteam": {
         "name": "Display Steam Games",
@@ -1438,7 +1444,7 @@
         "description": "Reads achievements written by Goldberg / GBE Fork and similar Steam emulators. Also covers Ubisoft games repaired with the Uplay R2 fix, which write their achievements to the same place."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 and Reborn"
+        "description": "Steam games run with GreenLuma (2020, 2024, 2025 and Reborn): reads the achievements it records."
       },
       "rpcs3": {
         "description": "Playstation 3 Emulator"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC games (Game Pass / Microsoft Store). Connect and import from Settings to see unlock state and rarity.",
+        "description": "Xbox PC games (Game Pass / Microsoft Store). Connect your account in the Xbox PC account card further down, then import to see unlocks and rarity.",
         "value": {
           "none": "None",
           "installed": "Installed",
@@ -1485,10 +1491,10 @@
         }
       },
       "gog": {
-        "description": "GOG emulator saves"
+        "description": "GOG games run with Nemirtingas' GOG Galaxy emulator: reads the achievements it saves."
       },
       "epic": {
-        "description": "Epic emulator saves"
+        "description": "Epic games run with Nemirtingas' Epic emulator: reads the achievements it saves."
       },
       "shadps4": {
         "description": "PlayStation 4 emulator"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE, through XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Emulator games from your RetroAchievements account. Connect it in the account card below; new unlocks are announced while an emulator is running."
+        "description": "Emulator games from your RetroAchievements account. Connect it in the account card further down; new unlocks are announced while an emulator is running."
       },
       "psnLibrary": {
         "description": "Games and trophies imported from your PlayStation account. Connect it in the account card below, then import the library."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns, through the MadnessPatch mod"
       },
-      "groupStores": "Official launchers",
+      "groupStores": "Official platforms",
+      "groupMemory": "Library memory",
       "groupConsoles": "Consoles and retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Add ?test=1 to the URL while you place the source. It shows a sample unlock every ten seconds; remove it once you are done.",
         "The source draws the same popup as the in-game one, and stays empty between unlocks so it costs nothing while you stream.",
         "More options after the address: ?scale=2 pins the zoom, ?duration=8000 sets how long each card stays, ?sound=1 plays the sound through the source, /obs/preset/Xbox/ uses one preset whatever the desktop uses.",
-        "It reads the local notification feed, so leave Websocket @localhost:8082 on in Settings > Notification > Integrations. It only works on this PC, and only one copy of AW Next can serve it."
+        "It reads the local notification feed, so leave Local broadcast on in Settings > Notification > Integrations. It only works on this PC, and only one copy of AW Next can serve it."
       ],
       "souvenirsTitle": "Screenshots & video clips",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Main Steam Account",
         "name": "Filter by user",
-        "description": "Show Steam achievements of only the selected account"
+        "description": "Show only the Steam achievements of the chosen account. All accounts: no filter.",
+        "all": "All accounts"
       },
       "checkUpdates": "Check for updates",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Automatic achievement data updates",
-        "description": "Disable this if you maintain steam_cache yourself: it stops the periodic self-repair that fills in blank descriptions and picks up achievements a game update added. \"Recheck achievement lists\" above still works as a manual, one-off check."
+        "description": "Keeps achievement data up to date: fills in blank descriptions and picks up achievements a game update added. Turn it off only if you maintain these files yourself. \"Recheck achievement lists\" above still works by hand."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Nothing achievement related is stored here: no AppID folder, no emulator configuration and no unlock file.",
     "folder-reason-found-instead": "Found instead:",
     "folder-reason-checked": "Checked here: AppID subfolders, every emulator configuration file AW Next knows, and {layouts} portable save layouts. The folder was examined - nothing was skipped.",
+    "folder-also-watched": "Also watched automatically",
     "game-health-title": "Game health",
     "game-settings-menu": "Game settings",
     "game-config-title": "Executable configuration",
@@ -2002,6 +2011,7 @@
     "update-checked": "Check done",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "Add",
+    "blacklist-appid-help": "The Steam App ID is the number in the game's Steam store address: store.steampowered.com/app/ID",
     "setupLooksValid": "Setup looks valid.",
     "problemsWereDetected": "Problems were detected.",
     "repairSteamSettings": "Repair steam_settings (write schema + icons)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Type a new name in the Name field first, then press Rename.",
     "preset-view-readonly": "This view only shows the card. Go back to Card to edit the layout.",
     "preset-layer-fixed": "{presets} draw their card with their own code, so they cannot be customized here. You can still use them as they are.",
+    "preset-layer-named": "It will be saved as a new preset, \"{name}\"; change the Name to call it something else.",
+    "preset-layer-start-hidden": "\"{start}\" is hidden while you customize a preset. Choose \"{none}\" to get it back.",
     "preset-play-popup": "This preset draws its card with code of its own, so it plays in a real popup, on screen.",
     "preset-play-reduced": "Windows is set to show fewer animations, so the preview stays still. Turn \"Animation effects\" back on in Windows settings to see them."
   },

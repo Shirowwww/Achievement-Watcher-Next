@@ -807,7 +807,7 @@
                   </li>
 
                   <li class="hasHelper">
-                    <div class="left"><i class="fas fa-lock"></i> <span id="disable-auto-refresh-label">Automatic achievement data updates</span></div>
+                    <div class="left"><i class="fas fa-cloud-download-alt"></i> <span id="disable-auto-refresh-label">Automatic achievement data updates</span></div>
                     <div class="right">
                       <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
                       <select autocomplete="off" id="option_disableAutoRefresh">
@@ -849,10 +849,12 @@
                     <p id="adv-diag-desc"></p>
                   </li>
                   <li class="actions-row">
+                    <!-- The zip is what a bug report needs, so it leads. Updates are checked from the
+                         footer button, which every tab shows, so this duplicate is hidden. -->
+                    <div id="export-logs" class="btn primary" role="button" tabindex="0"><i class="fas fa-file-archive"></i> <span>Export logs (.zip)</span></div>
                     <div id="open-logs" class="btn" role="button" tabindex="0"><i class="fas fa-folder-open"></i> <span>Open logs folder</span></div>
-                    <div id="export-logs" class="btn" role="button" tabindex="0"><i class="fas fa-file-archive"></i> <span>Export logs (.zip)</span></div>
                     <div id="open-userdata" class="btn" role="button" tabindex="0"><i class="fas fa-folder-open"></i> <span>Open data folder</span></div>
-                    <div id="check-for-updates" class="btn" role="button" tabindex="0"><i class="fas fa-sync"></i> <span id="check-for-updates-label">Check for updates</span></div>
+                    <div id="check-for-updates" class="btn" role="button" tabindex="0" hidden><i class="fas fa-sync"></i> <span id="check-for-updates-label">Check for updates</span></div>
                   </li>
                   <li>
                     <div id="export-logs-result" class="diag-line"></div>
@@ -1091,23 +1093,6 @@
                       </div>
                     </div>
                     <div class="help" id="source-help-pcports"></div>
-                  </li>
-
-                  <li class="hasHelper">
-                    <div class="left"><i class="fas fa-database"></i> <span id="source-name-importCache"></span></div>
-                    <div class="right">
-                      <div class="previous">
-                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
-                      </div>
-                      <select autocomplete="off" id="option_importCache">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
-                      </select>
-                      <div class="next">
-                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
-                      </div>
-                    </div>
-                    <div class="help" id="source-help-importCache"></div>
                   </li>
                 </ul>
               </div>
@@ -1349,6 +1334,29 @@
                       </div>
                     </div>
                     <div class="help" id="source-help-retroAchievements"></div>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Not a game source: it keeps games whose save vanished, so it gets a card of its own. -->
+              <div class="arrow-list">
+                <div class="title"><span id="source-memory-title"></span></div>
+                <ul id="options-source-memory" class="source-list">
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-database"></i> <span id="source-name-importCache"></span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_importCache">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-importCache"></div>
                   </li>
                 </ul>
               </div>
@@ -1641,9 +1649,10 @@
                 <div id="generate-configs-result" class="diag-line"></div>
               </div>
 
-              <!-- Read-only: the emulator folders AW Next always watches. Last, folded, and
-                   saying so, since there is nothing to do with it. -->
-              <div class="arrow-list" data-advanced="1">
+              <!-- Read-only: the emulator folders AW Next always watches. Never shown: a folder of
+                   the user's that is one of them says so on its own row ("folder-also-watched"),
+                   which reads this list, so it stays in the page. -->
+              <div class="arrow-list" data-advanced="1" hidden>
               <div class="title"><i class="fas fa-folder"></i> <span id="folder-default-title"></span></div>
               <p id="folder-default-info" class="folder-default-info"></p>
               <ul id="defaultdir">
@@ -1988,7 +1997,8 @@
                       <div class="left">
                         <i class="fas fa-palette"></i> <span id="lbl-overlayPreset"></span>
                         <button type="button" id="btn-open-presets" class="inline-action-btn"><i class="fas fa-tools"></i></button>
-                        <button type="button" id="btn-browse-presets" class="inline-action-btn"><i class="fas fa-th-large"></i></button>
+                        <!-- Kept for its place only: the preset menu itself opens the gallery now. -->
+                        <button type="button" id="btn-browse-presets" class="inline-action-btn" hidden><i class="fas fa-th-large"></i></button>
                       </div>
                       <div class="right">
                         <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -2296,6 +2306,7 @@
                       <div id="notify_platinum_test" class="btn" role="button" tabindex="0"><i class="fas fa-medal"></i> <span></span></div>
                     </li>
                   </ul>
+                  <p id="notify-test-hint" class="settings-card-hint"></p>
                 </div>
 
                 <div class="arrow-list">
@@ -2508,6 +2519,9 @@
                           <span class="pd-start-title" data-lang="templates.title"></span>
                         </button>
                         <div class="right action-right pd-actions pd-start-actions">
+                          <!-- Simple mode's one way into an existing preset, shown there only (app.css): it
+                               replaces the Edit and Customize menus below, which are Advanced only. -->
+                          <button type="button" id="pd-open-preset" class="inline-action-btn secondary"><i class="fas fa-th-large" aria-hidden="true"></i> <span data-lang="templates.open"></span></button>
                           <button type="button" id="btn-random-preset" class="inline-action-btn secondary"><i class="fas fa-dice"></i> <span data-lang="templates.random"></span></button>
                           <button type="button" id="btn-duplicate-preset" class="inline-action-btn secondary"><i class="fas fa-clone"></i> <span data-lang="templates.duplicate"></span></button>
                         </div>
@@ -2522,23 +2536,27 @@
                   </li>
                   <li class="pd-row">
                     <div class="pd-bar">
-                      <div class="pd-load-row">
+                      <div class="pd-load-row" data-advanced="1">
                         <label class="pd-file"><span data-lang="load"></span><select autocomplete="off" id="pd-load"></select></label>
-                        <button type="button" class="inline-action-btn secondary" id="pd-browse" data-lang-title="gallery.browse"><i class="fas fa-th-large" aria-hidden="true"></i></button>
+                        <button type="button" class="inline-action-btn secondary" id="pd-browse" data-lang-title="gallery.browse" hidden><i class="fas fa-th-large" aria-hidden="true"></i></button>
                       </div>
                       <span id="pd-gallery-text" hidden>
                         <span data-pg="title" data-lang="gallery.title"></span>
+                        <span data-pg="hint" data-lang="gallery.hint"></span>
                         <span data-pg="close" data-lang="gallery.close"></span>
                         <span data-pg="mine" data-lang="gallery.mine"></span>
                         <span data-pg="bundled" data-lang="gallery.bundled"></span>
                         <span data-pg="empty" data-lang="gallery.empty"></span>
+                        <span data-pg="fixed" data-lang="gallery.fixed"></span>
                       </span>
                       <label class="pd-file"><span data-lang="name"></span><input type="text" id="pd-name" maxlength="48" /></label>
                       <!-- A layer: a bundled preset plus a few overrides, instead of a design from scratch. -->
-                      <label class="pd-file"><span data-lang="layer.title"></span><select autocomplete="off" id="pd-layer-base" data-lang-none="layer.none" aria-describedby="pd-layer-fixed"></select></label>
+                      <label class="pd-file" data-advanced="1"><span data-lang="layer.title"></span><select autocomplete="off" id="pd-layer-base" data-lang-none="layer.none" aria-describedby="pd-layer-fixed"></select></label>
                     </div>
                     <p class="pd-layer-note pd-layer-fixed" id="pd-layer-fixed" hidden></p>
                     <p class="pd-layer-note" id="pd-layer-note" hidden></p>
+                    <!-- Advanced only: Simple keeps "Start from" on screen while a preset is customized. -->
+                    <p class="pd-layer-note" id="pd-layer-away" data-advanced="1" hidden></p>
                     <span id="pd-layer-brand-label" data-lang="field.brandMark" hidden></span>
 
                     <div class="pd-workspace">
@@ -2575,12 +2593,13 @@
                             <button type="button" class="pd-cv-btn" data-cv-add="rect"><i class="far fa-square" aria-hidden="true"></i> <span data-lang="canvas.addRect"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="ellipse"><i class="far fa-circle" aria-hidden="true"></i> <span data-lang="canvas.addEllipse"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="line"><i class="fas fa-minus" aria-hidden="true"></i> <span data-lang="canvas.addLine"></span></button>
-                            <button type="button" class="pd-cv-btn" data-cv-add="icon"><i class="fas fa-trophy" aria-hidden="true"></i> <span data-lang="canvas.addIcon"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="icon"><i class="fas fa-trophy" aria-hidden="true"></i> <span data-lang="canvas.addSymbol"></span></button>
                           </div>
                           <span class="pd-cv-hint" id="pd-cv-hint" data-lang="canvas.hint"></span>
                           <div class="pd-cv-end">
                             <button type="button" class="pd-cv-btn" id="pd-cv-help" aria-expanded="false" data-lang-title="canvas.help.title"><i class="fas fa-keyboard" aria-hidden="true"></i></button>
-                            <button type="button" class="pd-cv-btn" id="pd-cv-save"><i class="fas fa-save" aria-hidden="true"></i> <span data-lang="canvas.save"></span></button>
+                            <!-- Advanced only: Simple saves with the one button under the preview, Done leads back to it. -->
+                            <button type="button" class="pd-cv-btn" id="pd-cv-save" data-advanced="1"><i class="fas fa-save" aria-hidden="true"></i> <span data-lang="canvas.save"></span></button>
                             <button type="button" class="pd-cv-btn pd-cv-close" id="pd-cv-close"><i class="fas fa-compress" aria-hidden="true"></i> <span data-lang="canvas.done"></span></button>
                           </div>
                         </div>
@@ -2665,7 +2684,8 @@
                           <span data-cv="section.place" data-lang="canvas.section.place"></span>
                           <span data-cv="layersAdded" data-lang="canvas.layersAdded"></span>
                           <span data-cv="layersParts" data-lang="canvas.layersParts"></span>
-                          <span data-cv="kind.icon" data-lang="canvas.kind.icon"></span>
+                          <span data-cv="kind.symbol" data-lang="canvas.kind.symbol"></span>
+                          <span data-cv="lockParts" data-lang="canvas.lockParts"></span>
                           <span data-cv="prop.icon" data-lang="canvas.prop.icon"></span>
                           <span data-cv="prop.visible" data-lang="canvas.prop.visible"></span>
                           <span data-cv="tier.edit" data-lang="canvas.tier.edit"></span>
@@ -3748,6 +3768,7 @@
                   <li class="blacklist-add-row">
                     <input type="text" id="blacklist-add-input" inputmode="numeric" placeholder="Steam App ID" autocomplete="off" spellcheck="false" />
                     <button type="button" id="blacklist-add-btn" class="inline-action-btn"><i class="fas fa-plus"></i> <span>Add</span></button>
+                    <p id="blacklist-add-help" class="settings-card-hint"></p>
                   </li>
                   <li class="actions-row">
                     <div id="blacklist_reset" class="btn" role="button" tabindex="0"><i class="fas fa-file-medical-alt"></i> <span></span></div>
@@ -4169,8 +4190,7 @@
 
               <div id="theme-customizer" class="settings-card" style="display:none">
                 <div class="emulator-login-heading">
-                  <div class="title"><i class="fas fa-palette"></i> <span id="theme-customizer-title">Custom theme</span></div>
-                </div>
+                  <div class="title"><i class="fas fa-palette"></i> <span id="theme-customizer-title">Custom theme</span></div>                </div>
                 <p id="theme-customizer-desc">
                   Pick a color and, optionally, an image for each block. An image shows over the color
                   (which becomes a light veil for readability). Everything previews live and saves with

@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Visa dolda prestationer",
-        "description": "Visa namn och beskrivning för dolda prestationer innan du låser upp dem."
+        "name": "Dolda prestationer",
+        "description": "Visa: namn och beskrivning för en dold prestation visas innan du låser upp den. Dölj: de förblir hemliga till dess."
       },
       "mergeDuplicates": {
         "name": "Slå ihop dubbletter",
         "description": "Slå ihop samma spel från flera källor till en enda ruta."
       },
       "timeMerge": {
-        "name": "Sammanslagning av tidsstämplar",
-        "description": "Vilket tidsvärde ska föredras när dubbletter slås ihop?",
+        "name": "Datum som behålls för sammanslagna spel",
+        "description": "När samma spel finns i flera källor, vilket upplåsningsdatum som behålls för varje prestation.",
         "value": {
-          "recent": "Senaste",
-          "oldest": "Äldsta"
+          "recent": "Det senaste",
+          "oldest": "Det äldsta"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Utseende",
         "description": "Färgtema för hela appen och overlayen i spelet (förhandsvisas direkt, sparas med OK).",
         "customTitle": "Eget tema",
-        "customDesc": "Alla teman går att redigera här: välj en färg och eventuellt en bild för varje block. Bilden ligger över färgen (som blir en lätt slöja för läsbarheten). Spara behåller det du gjort som ett eget tema under namnet bredvid; ett ledigt namn ger dig ytterligare ett tema och lämnar det första ifred.",
+        "customDesc": "Välj en färg, och en bild om du vill, för varje del av fönstret. Spara behåller det under det visade namnet; ett nytt namn skapar ett andra tema.",
         "customName": "Temanamn",
         "customNamePlaceholder": "Mitt tema",
         "saveTheme": "Spara tema",
@@ -342,8 +342,8 @@
           "description": "Visar förloppsindikatorn på varje ruta."
         },
         "showEmptyProgress": {
-          "name": "Spel utan prestationer",
-          "description": "För ett spel som Steam listar utan prestationer: skriv ”Inga prestationer” på rutan, eller visa ingenting."
+          "name": "Etikett ”Inga prestationer”",
+          "description": "För ett spel som Steam listar utan prestationer: skriv ”Inga prestationer” på rutan, eller lämna den tom. Spelet finns kvar i biblioteket i båda fallen."
         },
         "showSource": {
           "name": "Plattformsikon",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "Overlay i spelet"
       },
+      "testHint": "Varje knapp visar en exempelavisering med dina nuvarande inställningar.",
       "option": {
         "transportMode": {
           "name": "Leveranssätt för aviseringar",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Framstegsaviseringar",
-          "description": "Avisera vid framsteg mot en prestation, om det går"
+          "description": "Visar en avisering när en räknande prestation går framåt (till exempel 3/10 fiender), i spel som rapporterar det."
         },
         "progressStep": {
           "name": "Framstegsmilstolpar",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Visa en egen Windows-avisering när ett spel når 100 % slutförande"
+          "description": "Visa en egen avisering när ett spel når 100 % slutförande"
         },
         "mode": {
           "name": "Aviseringstyp",
@@ -731,7 +732,7 @@
               "text": "Text",
               "image": "Bild",
               "shape": "Form",
-              "icon": "Ikon"
+              "symbol": "Symbol"
             },
             "shape": {
               "triangle": "Triangel",
@@ -762,7 +763,7 @@
               "opacity": "Genomskinlighet",
               "rotation": "Rotation",
               "scale": "Skala",
-              "icon": "Ikon",
+              "icon": "Symbol",
               "visible": "Synlig",
               "alignCard": "Justera mot kortet",
               "position": "Position",
@@ -812,7 +813,8 @@
               "lock": "Lås på plats",
               "unlock": "Lås upp"
             },
-            "addIcon": "Ikon",
+            "addSymbol": "Symbol",
+            "lockParts": "Bara element som du har lagt till kan låsas.",
             "enter": {
               "none": "Med kortet",
               "fade": "Tona in",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Lägg till element",
-                "body": "Texter, bilder och GIF:ar, former och ikoner. Varje element hamnar på kortet som ett eget lager."
+                "body": "Texter, bilder och GIF:ar, former och symboler. Varje element hamnar på kortet som ett eget lager."
               },
               "edit": {
                 "title": "Välj och flytta sedan",
@@ -1097,7 +1099,8 @@
             "intro": "Välj en utgångspunkt och gör den sedan till din egen. Inget sparas förrän du skapar förinställningen.",
             "random": "Överraska mig",
             "randomized": "Ett utseende du inte har provat",
-            "title": "Utgå från"
+            "title": "Utgå från",
+            "open": "Öppna en förinställning"
           },
           "title": "Formgivare för förinställningar",
           "undo": "Ångra",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Förinställningar",
+            "hint": "Klicka på ett kort för att använda det.",
             "close": "Stäng",
             "mine": "Dina förinställningar",
             "bundled": "Medföljande",
+            "fixed": "Används som de är",
             "browse": "Bläddra bland förinställningarna",
             "empty": "Du har inga egna förinställningar än. Skapa en i formgivaren så visas den här."
           }
         },
         "souvenirTitle": "Souvenirskärmbild",
         "souvenirScreenshot": "Skärmbild vid upplåsning",
-        "souvenirScreenshotDesc": "Fånga skärmen när en prestation låses upp. Sparas per spel.",
+        "souvenirScreenshotDesc": "Tar en skärmbild när en prestation låses upp. Bilderna sparas i en mapp per spel.",
         "souvenirHdr": "HDR-skärmbilder",
         "souvenirHdrDesc": "Automatiskt korrigerar färgerna när HDR i Windows är aktivt, för skärmbilder och klipp. Om det inte går sparas den vanliga skärmbilden i stället.",
         "souvenirHdrAuto": "Automatiskt",
@@ -1342,7 +1347,8 @@
           "description": "Fall tillbaka på en pratbubbla när en Windows-avisering misslyckas"
         },
         "useWS": {
-          "description": "Sänd prestationen till alla anslutna klienter"
+          "name": "Lokal sändning (port 8082)",
+          "description": "Skickar varje upplåsning till verktyg som körs på den här datorn, till exempel OBS-källan. Låt den vara på om du är osäker."
         },
         "obsSource": {
           "name": "OBS-webbläsarkälla",
@@ -1412,17 +1418,17 @@
       "library": "Biblioteksmappar",
       "libraryInfo": [
         "Välj en mapp som innehåller många spelinstallationer (t.ex. D:\\Games, E:\\SteamLibrary).",
-        "Alla spel inuti genomsöks efter Goldberg-/GBE-prestationer, även om de aldrig har startats."
+        "Alla spel i den genomsöks efter emulatorprestationer, även om de aldrig har startats."
       ],
       "addLibrary": "Lägg till en biblioteksmapp",
       "generateConfigs": "Generera konfigurationer",
-      "generateConfigsHelp": "bara spel utan en befintlig fix"
+      "generateConfigsHelp": "fullständig genomsökning, därefter repareras spel som ännu saknar korrigering"
     },
     "source": {
       "title": "Spelkällor",
       "officialPlatforms": {
         "title": "Officiella plattformar",
-        "description": "Aktivera källorna med sköldmärke nedan. Bara bibliotek som hittats på den här datorn kan visas."
+        "description": "Skölden markerar officiella startprogram. Steam, Epic och Xbox har tre val: Inga, Installerade (spel på den här datorn) eller Ägda (hela biblioteket på ett anslutet konto). De andra är på eller av."
       },
       "legitSteam": {
         "name": "Visa Steam-spel",
@@ -1438,7 +1444,7 @@
         "description": "Läser prestationer som skrivits av Goldberg / GBE Fork och liknande Steam-emulatorer. Täcker även Ubisoft-spel som reparerats med Uplay R2-fixen och som skriver sina prestationer på samma plats."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 och Reborn"
+        "description": "Steam-spel som körs med GreenLuma (2020, 2024, 2025 och Reborn): läser de prestationer som det registrerar."
       },
       "rpcs3": {
         "description": "Emulator för Playstation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox-spel på PC (Game Pass / Microsoft Store). Anslut och importera i Inställningar för att se upplåsningar och sällsynthet.",
+        "description": "Xbox-spel på PC (Game Pass / Microsoft Store). Anslut ditt konto i kortet Xbox-konto för PC längre ned och importera sedan för att se upplåsningar och sällsynthet.",
       "value": {
         "none": "Inga",
         "installed": "Installerade",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Sparfiler från GOG-emulator"
+        "description": "GOG-spel som körs med Nemirtingas GOG Galaxy-emulator: läser de prestationer som den sparar."
       },
       "epic": {
-        "description": "Sparfiler från Epic-emulator"
+        "description": "Epic-spel som körs med Nemirtingas Epic-emulator: läser de prestationer som den sparar."
       },
       "shadps4": {
         "description": "Emulator för PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE via XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Emulatorspel från ditt RetroAchievements-konto. Anslut det i kontokortet nedan; nya prestationer meddelas medan en emulator körs."
+        "description": "Emulatorspel från ditt RetroAchievements-konto. Anslut det i kontokortet längre ned; nya upplåsningar aviseras medan en emulator körs."
       },
       "psnLibrary": {
         "description": "Spel och troféer importerade från ditt PlayStation-konto. Anslut det i kontokortet nedan och importera sedan biblioteket."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modden"
       },
-      "groupStores": "Officiella launchers",
+      "groupStores": "Officiella plattformar",
+      "groupMemory": "Bibliotekets minne",
       "groupConsoles": "Konsoller och retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Lägg till ?test=1 i URL:en medan du placerar källan. Den visar en exempelupplåsning var tionde sekund; ta bort den när du är klar.",
         "Källan ritar samma popup-fönster som det i spelet och förblir tom mellan upplåsningar, så den kostar ingenting medan du streamar.",
         "Fler alternativ efter adressen: ?scale=2 låser zoomen, ?duration=8000 anger hur länge varje kort visas, ?sound=1 spelar upp ljudet via källan, /obs/preset/Xbox/ använder en viss förinställning oavsett vad skrivbordet använder.",
-        "Den läser det lokala aviseringsflödet, så låt Websocket @localhost:8082 vara på under Inställningar > Aviseringar > Integrationer. Den fungerar bara på den här datorn, och bara en kopia av AW Next kan leverera den."
+        "Den läser det lokala aviseringsflödet, så låt Lokal sändning vara på under Inställningar > Aviseringar > Integrationer. Den fungerar bara på den här datorn, och bara en kopia av AW Next kan leverera den."
       ],
       "souvenirsTitle": "Skärmbilder och videoklipp",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Huvudkonto på Steam",
         "name": "Filtrera efter användare",
-        "description": "Visa bara Steam-prestationer för det valda kontot"
+        "description": "Visar bara Steam-prestationerna för det valda kontot. Alla konton: inget filter.",
+        "all": "Alla konton"
       },
       "checkUpdates": "Sök efter uppdateringar",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Automatiska uppdateringar av prestationsdata",
-        "description": "Inaktivera det här om du underhåller steam_cache själv: det stoppar den periodiska självreparationen som fyller i tomma beskrivningar och fångar upp prestationer som en speluppdatering har lagt till. ”Kontrollera prestationslistorna igen” ovan fungerar fortfarande som en manuell engångskontroll."
+        "description": "Håller prestationsdata uppdaterad: fyller i tomma beskrivningar och fångar upp prestationer som en speluppdatering har lagt till. Stäng av det bara om du själv underhåller de här filerna. ”Kontrollera prestationslistorna igen” ovan fungerar fortfarande manuellt."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Ingenting som rör prestationer lagras här: ingen AppID-mapp, ingen emulatorkonfiguration och ingen upplåsningsfil.",
     "folder-reason-found-instead": "Hittade i stället:",
     "folder-reason-checked": "Kontrollerades här: undermappar med AppID, alla emulatorkonfigurationsfiler som AW Next känner till och {layouts} portabla sparformat. Mappen gicks igenom - ingenting hoppades över.",
+    "folder-also-watched": "Bevakas även automatiskt",
     "game-health-title": "Spelets hälsa",
     "game-settings-menu": "Spelets inställningar",
     "game-config-title": "Konfiguration av körbar fil",
@@ -2002,6 +2011,7 @@
     "update-checked": "Kontrollen är klar",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "Lägg till",
+    "blacklist-appid-help": "Steam App ID är numret i adressen till spelets Steam-butikssida: store.steampowered.com/app/ID",
     "setupLooksValid": "Uppsättningen ser korrekt ut.",
     "problemsWereDetected": "Problem upptäcktes.",
     "repairSteamSettings": "Reparera steam_settings (skriv schema + ikoner)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Skriv först ett nytt namn i fältet Namn och tryck sedan på Byt namn.",
     "preset-view-readonly": "Den här vyn visar bara kortet. Gå tillbaka till Kort för att redigera layouten.",
     "preset-layer-fixed": "{presets} ritar sitt kort med egen kod och kan därför inte anpassas här. Du kan fortfarande använda dem som de är.",
+    "preset-layer-named": "Den sparas som en ny förinställning, ”{name}”; ändra Namn för att kalla den något annat.",
+    "preset-layer-start-hidden": "”{start}” är dolt medan du anpassar en förinställning. Välj ”{none}” för att få tillbaka det.",
     "preset-play-popup": "Den här förinställningen ritar sitt kort med egen kod, så den spelas upp i en riktig popup på skärmen.",
     "preset-play-reduced": "Windows är inställt på att visa färre animeringar, så förhandsvisningen står still. Slå på ”Animeringseffekter” igen i Windows-inställningarna för att se dem."
   },

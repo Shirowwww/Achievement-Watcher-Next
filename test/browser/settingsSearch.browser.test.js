@@ -119,6 +119,34 @@ test('the settings filter behaves correctly in a real DOM', { concurrency: 1, ti
     assert.strictEqual(await signature(), before, 'filtering moved or removed rows');
     assert.strictEqual(await rowCount(), totalRows, 'filtering changed the number of rows in the DOM');
 
+    // A name in a row's own label tells the panel which tab to open: GreenLuma is a Sources row,
+    // while Notification only mentions it in a help sentence.
+    const greenLuma = await page.evaluate(() => window.searchRules.filterSections($, 'greenluma'));
+    assert.ok(greenLuma.labelPerView.source > 0, `the Sources row must count as a label hit, got ${JSON.stringify(greenLuma.labelPerView)}`);
+    assert.ok(!(greenLuma.labelPerView.notification > 0), 'a help sentence is not a label hit');
+    // Account cards hold buttons, not rows, and must still go away when they do not match.
+    assert.deepStrictEqual(
+      await page.evaluate(() => ['#epic-connect', '#retroachievements-connect', '#psn-connect'].filter((id) => !$(id).hasClass('search-hidden'))),
+      [],
+      'account cards that do not mention the query must be hidden'
+    );
+    await page.evaluate(() => window.searchRules.filterSections($, 'retroachievements'));
+    assert.strictEqual(await page.evaluate(() => $('#retroachievements-connect').hasClass('search-hidden')), false, 'a card that matches stays');
+    // A card the page keeps closed (the theme editor until it is opened) is no hit: the tab would
+    // be offered with nothing on it.
+    const closedCard = await page.evaluate(() => window.searchRules.filterSections($, 'optionally image block'));
+    assert.ok(!(closedCard.perView.appearance > 0), `a closed card must not count, got ${JSON.stringify(closedCard.perView)}`);
+
+    // A card found by its title keeps its rows: the hidden-games list holds game names, not the word.
+    await page.evaluate(() => $('#advanced-blacklist-title').text('Jeux masqués'));
+    await page.evaluate(() => window.searchRules.filterSections($, 'masques'));
+    assert.strictEqual(
+      await page.evaluate(() => $('#blacklist-card .blacklist-manager-row').hasClass('search-hidden')),
+      false,
+      'searching the card title must not hide the hidden-games list'
+    );
+    await page.evaluate(() => $('#advanced-blacklist-title').text(''));
+
     // A query nothing matches empties every tab, which is what drives the empty state.
     const none = await page.evaluate(() => window.searchRules.filterSections($, 'zzzznotasetting'));
     assert.strictEqual(none.total, 0);

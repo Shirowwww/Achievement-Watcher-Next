@@ -6343,10 +6343,9 @@ body.is-resizing #game-list {
   font-family: var(--font-body);
 }
 
+/* No inner scroll box: two small scrolling lists inside a scrolling page hid folders below the fold. */
 #dirlist {
-  overflow-y: auto;
   overflow-x: hidden;
-  max-height: 210px;
   font-size: var(--fs-base);
 }
 #libdirlist {
@@ -6384,10 +6383,7 @@ body.is-resizing #game-list {
 
 #defaultdir {
   font-size: var(--fs-sm);
-  overflow-y: auto;
   overflow-x: hidden;
-  height: 60px;
-  max-height: 60px;
 }
 
 #game-config .box .container #dirlist {
@@ -6619,6 +6615,13 @@ body.is-resizing #game-list {
 #settings .blacklist-add-row input {
   flex: 1 1 auto;
   min-width: 0;
+}
+#settings .blacklist-add-row {
+  flex-wrap: wrap;
+}
+#settings .blacklist-add-row .settings-card-hint {
+  flex-basis: 100%;
+  margin: 0;
 }
 
 /* Achievement search (game detail view): filters unlocked/locked rows by title/description. */
@@ -10700,9 +10703,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   margin: 0;
 }
 
+/* The card title already reads "Official platforms"; the heading only serves the first-run guide. */
 #settings .source-official-summary strong {
-  color: var(--set-title);
-  font-size: var(--fs-md);
+  display: none;
 }
 
 #settings .source-official-summary p {
@@ -10725,7 +10728,7 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings .source-list .source-official-badge {
   margin-left: 2px;
   color: color-mix(in srgb, var(--accent) 72%, var(--text-muted));
-  font-size: var(--fs-2xs);
+  font-size: var(--fs-sm);
 }
 
 /* The list inside a section is no longer its own card - the section is. `.emulator-list` also
@@ -10812,7 +10815,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings #dirlist,
 #settings #libdirlist {
   overflow-x: hidden;
-  overflow-y: auto;
 }
 
 /* Section rows bleed to the card edges (negative margin cancels the card padding) so the
@@ -11300,7 +11302,8 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   color: var(--set-icon);
 }
 
-#settings .folder-default-info {
+#settings .folder-default-info,
+#settings .settings-card-hint {
   margin: 10px 0 8px;
   padding: 0 2px;
   color: var(--text-muted);
@@ -11382,16 +11385,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   scrollbar-width: thin;
 }
 
-#settings #defaultdir {
-  height: auto;
-  max-height: 132px;
-}
-
-#settings #dirlist,
-#settings #libdirlist {
-  max-height: 164px;
-}
-
 #settings #dirlist > li,
 #settings #libdirlist > li,
 #settings #defaultdir > li {
@@ -11461,6 +11454,13 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 #settings #dirlist > li .path > .folder-origin,
 #settings #libdirlist > li .path > .folder-origin {
   flex: 0 0 auto;
+}
+#settings #dirlist > li .path > .folder-also-watched {
+  flex: 0 0 auto;
+  margin-left: 8px;
+  color: var(--text-muted);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
 }
 
 #settings #defaultdir > li .path .constant {
@@ -12131,8 +12131,13 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   animation: pd-cv-in 140ms ease-out;
 }
 
-/* An imported preset is used as it is: what would build another design steps aside. */
-#settings #options-notify-designer.is-imported #pd-templates-row,
+/* An imported preset is used as it is: what would build another design steps aside. Simple mode
+   keeps "Start from" for its way to another preset, the only one it has (rules below). */
+#settings:not([data-interface-mode='simple']) #options-notify-designer.is-imported #pd-templates-row,
+#settings #options-notify-designer.is-imported #pd-templates-row .pd-start-body,
+#settings #options-notify-designer.is-imported #pd-templates-row .pd-start-chevron,
+#settings #options-notify-designer.is-imported #btn-random-preset,
+#settings #options-notify-designer.is-imported #btn-duplicate-preset,
 #settings #options-notify-designer.is-imported .pd-file:has(#pd-layer-base),
 #settings #options-notify-designer.is-imported #pd-layer-fixed,
 #settings #options-notify-designer.is-imported #btn-create-preset,
@@ -12830,11 +12835,26 @@ body.pd-cv-open #settings .content {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  max-height: min(36vh, 248px);
+  max-height: var(--pd-tl-open);
   border: 1px solid var(--set-hairline-soft);
   border-bottom: 0;
   background: var(--set-surface);
   user-select: none;
+}
+
+/* The open timeline always takes the same room, and the card's stage keeps that room free below the
+   card while it is folded (less its head, measured by ui/presetCanvasEditor.js): unfolding it takes
+   only that room, so the card stays where it is. */
+#settings .pd-preview.is-cv-full {
+  --pd-tl-open: min(36vh, 248px);
+}
+
+#settings .pd-preview.is-cv-full .pd-tl:not(.is-folded) {
+  height: var(--pd-tl-open);
+}
+
+#settings .pd-preview.is-cv-full:has(#pd-timeline.is-folded) .pd-stage[data-view='card'] {
+  padding-bottom: calc(12px + var(--pd-tl-open) - var(--pd-tl-folded, 35px));
 }
 
 #settings .pd-preview.is-cv-full.has-timeline #pd-play {
@@ -13734,13 +13754,15 @@ body.pd-cv-open #settings .content {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
+/* On every row, quiet until the row is pointed at, focused or picked, so each layer shows it can be
+   hidden without having to find out by hovering. */
 #settings .pd-cv-layer-eye,
 #settings .pd-cv-layer-lock {
-  opacity: 0;
+  opacity: 0.45;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 
-/* Shown on hover and focus, and for good once the element is hidden or locked. */
+/* Full strength on hover and focus, and for good once the element is hidden or locked. */
 #settings .pd-cv-layer-row:hover .pd-cv-layer-step,
 #settings .pd-cv-layer-row:focus-within .pd-cv-layer-step,
 #settings .pd-cv-layer-row.is-on .pd-cv-layer-step,
@@ -13750,6 +13772,13 @@ body.pd-cv-open #settings .content {
 
 #settings .pd-cv-layer-step.is-off {
   color: var(--accent);
+}
+
+/* A card part's lock: there to keep the column, greyed, its tooltip saying parts cannot be locked. */
+#settings .pd-cv-layer-row .pd-cv-layer-lock.is-na {
+  opacity: 0.2;
+  color: var(--text-muted);
+  cursor: help;
 }
 
 /* The shortcuts sheet, over the card. */
@@ -13977,8 +14006,10 @@ body.pd-cv-open #settings .content {
 .pg-dialog {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(960px, 100%);
-  max-height: min(720px, 100%);
+  width: min(1120px, 100%);
+  /* Against the window, not the grid track: a percentage let a long gallery run off the bottom. */
+  max-height: min(800px, calc(100vh - 48px));
+  overflow: hidden;
   border: var(--dialog-border);
   border-radius: var(--dialog-radius);
   background: var(--dialog-bg), var(--bg-base);
@@ -13991,15 +14022,90 @@ body.pd-cv-open #settings .content {
 .pg-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 10px 20px;
+  padding: 14px 14px 14px 18px;
   border-bottom: 1px solid var(--set-divider);
+  background: color-mix(in srgb, var(--set-surface) 60%, transparent);
 }
 
-.pg-head b {
+.pg-mark {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+}
+
+.pg-heading {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pg-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--set-title);
   font-size: var(--fs-lg);
+}
+
+.pg-count,
+.pg-group-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--set-well);
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.pg-hint {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* "Same as main", "None": choices without a picture, above the cards. */
+.pg-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pg-choice {
+  padding: 7px 14px;
+  border: 1px solid var(--set-hairline-soft);
+  border-radius: 999px;
+  background: var(--set-surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.pg-choice:hover {
+  border-color: var(--set-control-border);
+}
+
+.pg-choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pg-choice.is-on {
+  border-color: var(--accent);
+  color: var(--set-title);
+}
+
+/* A preset menu that opens the gallery: the pointer says it is a button, not a list. */
+select.pg-opener {
+  cursor: pointer;
 }
 
 .pg-close {
@@ -14034,6 +14140,9 @@ body.pd-cv-open #settings .content {
 }
 
 .pg-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 10px;
   color: var(--text-muted);
   font-size: var(--fs-xs);
@@ -14042,10 +14151,28 @@ body.pd-cv-open #settings .content {
   text-transform: uppercase;
 }
 
+/* Why a group cannot be picked, under its title. */
+.pg-note {
+  margin: -4px 0 10px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+/* Big enough to judge a card by its look, which is what the gallery is for. */
 .pg-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.pg-tile:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pg-tile:disabled:hover {
+  border-color: var(--set-hairline-soft);
+  transform: none;
 }
 
 .pg-tile {
@@ -14060,14 +14187,23 @@ body.pd-cv-open #settings .content {
   font: inherit;
   text-align: left;
   cursor: pointer;
+  /* Each card rises in a beat after the one before it (--i, set by the gallery), capped short. */
+  animation: pg-tile-in var(--dur-slow) var(--ease-out) backwards;
+  animation-delay: calc(min(var(--i, 0), 12) * 25ms);
   transition:
     border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
 }
 
 .pg-tile:hover {
   border-color: var(--set-control-border);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
   transform: translateY(-2px);
+}
+
+.pg-tile:active {
+  transform: translateY(0) scale(0.99);
 }
 
 .pg-tile:focus-visible {
@@ -14083,7 +14219,7 @@ body.pd-cv-open #settings .content {
 .pg-picture {
   display: grid;
   place-items: center;
-  height: 108px;
+  height: 150px;
   overflow: hidden;
   border-radius: var(--radius-sm);
   background: var(--set-well);
@@ -14094,6 +14230,7 @@ body.pd-cv-open #settings .content {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+  animation: pg-fade var(--dur-base) var(--ease-out);
 }
 
 /* Waiting for its picture: a soft sweep, so the gallery reads as loading rather than empty. */
@@ -14141,9 +14278,18 @@ body.pd-cv-open #settings .content {
   }
 }
 
+@keyframes pg-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pg-backdrop,
   .pg-dialog,
+  .pg-tile,
+  .pg-picture img,
   .pg-picture.is-loading {
     animation: none;
   }
@@ -14477,15 +14623,42 @@ body.pd-cv-open #settings .content {
   font-weight: 700;
 }
 
+/* Simple mode keeps "Start from" while a preset is customized: it is its one way in and out. */
 #settings #options-notify-designer.is-layered .pd-controls .pd-field:not([data-layer-section]),
 #settings #options-notify-designer.is-layered .pd-controls .pd-more,
 #settings #options-notify-designer.is-layered .pd-controls .pd-group.pd-layer-skip,
-#settings #options-notify-designer.is-layered #pd-templates-row {
+#settings:not([data-interface-mode='simple']) #options-notify-designer.is-layered #pd-templates-row {
   display: none;
 }
 
 #settings #options-notify-designer.is-layered .pd-field.is-inherited {
   opacity: 0.45;
+}
+
+/* The section's switch already says the first field's name: the field keeps it for screen readers
+   only, and its slider readout stays on screen. */
+#settings .pd-field.pd-layer-named > [data-lang]:first-child,
+#settings .pd-field.pd-layer-named > span:first-child > [data-lang] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Which presets cannot be customized only matters while that menu is being used. */
+#settings #pd-layer-fixed {
+  display: none;
+}
+
+#settings #options-notify-designer:has(#pd-layer-base:focus) #pd-layer-fixed:not([hidden]) {
+  display: block;
+}
+
+/* Simple mode opens an existing preset from "Start from" alone; Advanced keeps its two menus. */
+#settings:not([data-interface-mode='simple']) #pd-open-preset {
+  display: none;
 }
 
 /* Live readout for each slider. */
@@ -15360,6 +15533,11 @@ body.pd-cv-open #settings .content {
 #theme-customizer .theme-layer-alpha:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+#theme-customizer .theme-layer-alpha-label {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
 }
 
 #theme-customizer .theme-layer-alpha-value {

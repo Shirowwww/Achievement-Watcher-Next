@@ -19,16 +19,30 @@ const ROW_SELECTOR = 'li, .emulator-login, .emulator-hero, .help-panel';
 // matching sections instead of a column of empty headers.
 const BLOCK_SELECTOR = 'ul, .arrow-list, .emulator-group, .settings-card, #epic-connect';
 
+// Blocks searched as a whole when they hold no row (the Epic, Xbox, RetroAchievements... cards):
+// before, nothing could ever hide them, so every query kept them on screen.
+const ROWLESS_CARD_SELECTOR = '.settings-card';
+
 // Rows and tabs the interface mode (util/interfaceMode.js) is hiding. Duplicated as a literal to
 // keep this module dependency-free; interfaceMode.HIDDEN_CLASS is the definition, and
 // test/ui/interfaceMode.test.js pins the two together.
 const MODE_HIDDEN_CLASS = 'mode-hidden';
 
+// Accents are dropped so "masques" finds "masqués" and the other way round.
 function normalize(text) {
   return String(text == null ? '' : text)
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
     .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
+}
+
+// Words this long also match without their plural or feminine ending: "masques" finds the
+// "Masquer" choice of a Show / Hide row, "themes" finds "Theme".
+const STEM_MIN_LENGTH = 5;
+function stem(term) {
+  return term.length >= STEM_MIN_LENGTH ? term.replace(/(es|s|e)$/, '') : term;
 }
 
 // Split a query into words. Matching is per-word and order-independent, so "hide zero" and
@@ -40,7 +54,7 @@ function parseTerms(query) {
 // A row matches when every term appears somewhere in its searchable text.
 function matches(haystack, terms) {
   const text = normalize(haystack);
-  return terms.every((term) => text.includes(term));
+  return terms.every((term) => text.includes(term) || text.includes(stem(term)));
 }
 
 /*
@@ -52,11 +66,23 @@ function buildHaystack({ text = '', ids = [], placeholders = [] } = {}) {
   return normalize([text, ...ids.map((id) => String(id).replace(/^option_/, '')), ...placeholders].join(' '));
 }
 
+// The heading of the card a row sits in. A card found by its title shows all its rows: "hidden"
+// must keep the hidden-games list, whose rows are game names, not the word itself.
+function cardTitleOf($, row) {
+  return $(row).closest('.arrow-list, .settings-card').children('.title, .emulator-login-heading').first().text() || '';
+}
+
+// What a row is called on screen: its label, or the heading of a standalone card.
+function labelOf($, row) {
+  const el = $(row);
+  return el.children('.left').text() || el.find('.title').first().text() || '';
+}
+
 // Searchable text of one row, read through jQuery.
 function haystackFor($, row) {
   const el = $(row);
   return buildHaystack({
-    text: el.text() || '',
+    text: `${el.text() || ''} ${cardTitleOf($, row)}`,
     ids: el
       .find('[id]')
       .map(function () {
@@ -109,6 +135,9 @@ function offPlatformSelector($) {
 function filterSections($, query, scope = '#settings') {
   const terms = parseTerms(query);
   const perView = {};
+  // Hits in a row's own label, per tab: a tab that names the setting beats one whose help text
+  // merely mentions it ("GreenLuma" belongs in Sources, not in a Notification hint).
+  const labelPerView = {};
   const offPlatform = offPlatformSelector($);
   let total = 0;
 
@@ -126,12 +155,14 @@ function filterSections($, query, scope = '#settings') {
             return $(this).closest(offPlatform).length === 0;
           });
     let hits = 0;
+    let labelHits = 0;
 
     rows.each(function () {
       const row = $(this);
       if (terms.length === 0 || matches(haystackFor($, this), terms)) {
         row.removeClass('search-hidden');
         hits++;
+        if (terms.length > 0 && matches(labelOf($, this), terms)) labelHits++;
       } else {
         row.addClass('search-hidden');
       }
@@ -143,14 +174,39 @@ function filterSections($, query, scope = '#settings') {
       const owned = rows.filter(function () {
         return this !== block[0] && block[0].contains(this);
       });
+      if (owned.length === 0 && block.is(ROWLESS_CARD_SELECTOR) && !block.closest(`.${MODE_HIDDEN_CLASS}`).length) {
+        // An account card has buttons, not rows: the card itself is the thing searched. One the page
+        // keeps closed (the theme editor) is never a hit.
+        const found = this.style.display !== 'none' && (terms.length === 0 || matches(haystackFor($, this), terms));
+        block.toggleClass('search-hidden', terms.length > 0 && !found);
+        if (found && terms.length > 0 && block.closest(offPlatform).length === 0) hits++;
+        return;
+      }
       block.toggleClass('search-hidden', terms.length > 0 && owned.length > 0 && owned.not('.search-hidden').length === 0);
     });
 
     perView[section.attr('data-view')] = hits;
+    labelPerView[section.attr('data-view')] = labelHits;
     total += hits;
   });
 
-  return { total, perView };
+  return { total, perView, labelPerView };
 }
 
-module.exports = { ROW_SELECTOR, BLOCK_SELECTOR, MODE_HIDDEN_CLASS, normalize, parseTerms, matches, buildHaystack, haystackFor, rowsIn, countModeHiddenMatches, offPlatformSelector, filterSections };
+module.exports = {
+  ROW_SELECTOR,
+  BLOCK_SELECTOR,
+  MODE_HIDDEN_CLASS,
+  normalize,
+  stem,
+  parseTerms,
+  matches,
+  buildHaystack,
+  cardTitleOf,
+  labelOf,
+  haystackFor,
+  rowsIn,
+  countModeHiddenMatches,
+  offPlatformSelector,
+  filterSections,
+};

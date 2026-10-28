@@ -629,6 +629,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     */
     const AUTOSAVE_VIEWS = ['notification'];
     const UNTRACKED_VIEWS = [...AUTOSAVE_VIEWS, 'help', 'presets'];
+    // Tabs whose own changes never wait for the footer Save (presets have their own button).
+    const SAVE_BUTTON_HIDDEN_VIEWS = [...AUTOSAVE_VIEWS, 'presets'];
     let settingsDirty = false;
     let savedFlashTimer = null;
 
@@ -644,6 +646,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       box.find('i').attr('class', state === 'dirty' ? 'fas fa-circle' : 'fas fa-check-circle');
       const cancelLabel = localeText(settingsDirty ? 'settings.common.cancel' : 'settings.common.close');
       if (cancelLabel) document.getElementById('btn-settings-cancel').textContent = cancelLabel;
+      // A Save button next to "saved automatically" reads as a contradiction; it stays while another
+      // tab still has something to save.
+      $('#btn-settings-save').toggle(settingsDirty || !SAVE_BUTTON_HIDDEN_VIEWS.includes(view));
     }
     registerLocaleRefresh(renderSaveState);
 
@@ -2802,7 +2807,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const alphaGroup = $('<label>')
           .addClass('theme-layer-alpha-group')
           .attr('title', t('theme-layer-opacity', 'Opacity', 'Opacité'));
+        // Named on screen, not only in a tooltip: a bare slider beside a swatch said nothing.
         alphaGroup.append(
+          $('<span>').addClass('theme-layer-alpha-label').text(t('theme-layer-opacity', 'Opacity', 'Opacité')),
           $('<input>')
             .attr('type', 'range')
             .attr('min', '0')
@@ -3759,7 +3766,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       }
 
       $('#settings').addClass('searching');
-      const { total, perView } = searchRules.filterSections($, rawQuery);
+      const { total, perView, labelPerView } = searchRules.filterSections($, rawQuery);
       showAdvancedMatches(rawQuery);
 
       for (const [view, count] of Object.entries(perView)) {
@@ -3773,7 +3780,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // Land the user on results rather than on an empty tab, but never yank them off a tab that
       // still has matches - that would fight their own typing.
       if (total > 0 && $('#settingNav li.active').hasClass('no-match')) {
-        $('#settingNav li[data-view]:not(.no-match)').first().trigger('click');
+        const named = $('#settingNav li[data-view]:not(.no-match)').filter(function () {
+          return labelPerView[$(this).attr('data-view')] > 0;
+        });
+        (named.length ? named : $('#settingNav li[data-view]:not(.no-match)')).first().trigger('click');
       }
     }
 
@@ -4077,6 +4087,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     const blacklistLabel = t('blacklist-add-placeholder', 'Steam App ID', 'ID d’app Steam');
     $('#blacklist-add-input').attr({ placeholder: blacklistLabel, 'aria-label': blacklistLabel });
     $('#blacklist-add-btn span').text(t('blacklist-add-button', 'Add', 'Ajouter'));
+    $('#blacklist-add-help').text(
+      t(
+        'blacklist-appid-help',
+        "The Steam App ID is the number in the game's Steam store address: store.steampowered.com/app/ID",
+        "L'ID d'app Steam est le nombre dans l'adresse de la page Steam du jeu : store.steampowered.com/app/ID"
+      )
+    );
 
     // Resolve missing numeric blacklist names with a short, cacheable Steam lookup.
     const BLACKLIST_NAME_LOOKUP_TIMEOUT_MS = 8000;
@@ -4116,8 +4133,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           .appendTo(li);
         if (!entry.name) unresolved.push({ appid: entry.appid, nameEl });
         $('<span class="appid">').text(entry.appid).appendTo(li);
-        $('<button type="button" class="inline-action-btn"><i class="fas fa-undo"></i></button>')
-          .attr('title', listEl.attr('data-restore') || '')
+        // Worded, not a bare icon: an undo arrow alone did not say it brings the game back.
+        $('<button type="button" class="inline-action-btn"><i class="fas fa-undo"></i> <span></span></button>')
+          .find('span')
+          .text(listEl.attr('data-restore') || '')
+          .end()
           .on('click', async function () {
             const btn = $(this);
             btn.css('pointer-events', 'none');
@@ -5241,6 +5261,24 @@ function populateLibraryDirList(option) {
   });
 }
 
+// The Windows folders listed under "Folders checked automatically", expanded. Linux reads them in
+// every prefix instead, so there is no single path to compare against there.
+let defaultWatchedFolders = null;
+function isDefaultWatchedFolder(dir) {
+  if (process.platform !== 'win32' || !dir) return false;
+  if (!defaultWatchedFolders) {
+    defaultWatchedFolders = new Set();
+    $('#defaultdir > li:not([data-linux-only]) .path').each(function () {
+      const expanded = $(this)
+        .text()
+        .trim()
+        .replace(/%([^%]+)%/g, (whole, name) => process.env[name] || whole);
+      if (!expanded.includes('%') && !expanded.includes('*')) defaultWatchedFolders.add(path.normalize(expanded).toLowerCase());
+    });
+  }
+  return defaultWatchedFolders.has(path.normalize(String(dir)).replace(/[\\/]+$/, '').toLowerCase());
+}
+
 function applyFolderRowMetadata(elem, options) {
   elem
     .attr('data-origin', options.origin)
@@ -5259,6 +5297,13 @@ function applyFolderRowMetadata(elem, options) {
   elem
     .find('.path')
     .append(origin);
+  // Smart Find adds folders AW Next already watches on its own; say so rather than hide the row,
+  // since OK saves exactly the rows on screen.
+  if (isDefaultWatchedFolder(options.dir)) {
+    elem
+      .find('.path')
+      .append($('<small>').addClass('folder-also-watched').text(t('folder-also-watched', 'Also watched automatically', 'Aussi surveillé automatiquement')));
+  }
   const toggle = $('<li>')
     .addClass('source-toggle')
     .append($('<i>').addClass(`fas ${options.enabled === false ? 'fa-toggle-off' : 'fa-toggle-on'}`));

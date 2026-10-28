@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "Rivela obiettivi nascosti",
-        "description": "Rivela il nome e la descrizione degli obiettivi nascosti prima di sbloccarli."
+        "name": "Obiettivi nascosti",
+        "description": "Mostra: il nome e la descrizione di un obiettivo nascosto compaiono prima che tu lo sblocchi. Nascondi: restano segreti fino ad allora."
       },
       "mergeDuplicates": {
         "name": "Unisci duplicati",
         "description": "Unisci lo stesso gioco trovato in più sorgenti in un’unica scheda."
       },
       "timeMerge": {
-        "name": "Unione data/ora",
-        "description": "Quando unisci i duplicati, quale valore temporale è preferibile ?",
+        "name": "Data conservata per i giochi uniti",
+        "description": "Quando lo stesso gioco si trova in più fonti, quale data di sblocco conservare per ogni obiettivo.",
         "value": {
-          "recent": "Recente",
-          "oldest": "Più vecchio"
+          "recent": "La più recente",
+          "oldest": "La più vecchia"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "Aspetto",
         "description": "Tema cromatico della finestra dell’app (anteprima immediata, salvataggio con OK).",
         "customTitle": "Tema personalizzato",
-        "customDesc": "Ogni tema si modifica qui: scegli un colore e, volendo, un’immagine per ogni blocco. L’immagine sta sopra il colore (che diventa un velo leggero per la leggibilità). Salva conserva quello che hai fatto come tema tuo, con il nome accanto; un nome ancora libero ti dà un secondo tema e lascia il primo intatto.",
+        "customDesc": "Scegli un colore e, se vuoi, un’immagine per ogni parte della finestra. Salva lo conserva con il nome mostrato; un nuovo nome crea un secondo tema.",
         "customName": "Nome del tema",
         "customNamePlaceholder": "Il mio tema",
         "saveTheme": "Salva tema",
@@ -342,8 +342,8 @@
           "description": "Mostra la barra di completamento su ogni riquadro."
         },
         "showEmptyProgress": {
-          "name": "Giochi senza obiettivi",
-          "description": "Per un gioco che Steam elenca senza obiettivi: scrivere «Nessun obiettivo» sulla sua scheda, oppure non mostrare nulla."
+          "name": "Etichetta «Nessun obiettivo»",
+          "description": "Per un gioco che Steam elenca senza obiettivi: scrivere «Nessun obiettivo» sulla sua scheda, oppure lasciarla vuota. Il gioco resta nella libreria in entrambi i casi."
         },
         "showSource": {
           "name": "Icona della piattaforma",
@@ -583,6 +583,7 @@
         "platinum": "Platino",
         "overlay": "Overlay di gioco"
       },
+      "testHint": "Ogni pulsante mostra una notifica di esempio con le tue impostazioni attuali.",
       "option": {
         "transportMode": {
           "name": "Trasporto delle notifiche",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Notifiche di avanzamento",
-          "description": "Notifica sul progresso degli obiettivi, se possibile"
+          "description": "Mostra una notifica quando un obiettivo con contatore avanza (per esempio 3/10 nemici), nei giochi che lo segnalano."
         },
         "progressStep": {
           "name": "Tappe di avanzamento",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platino (100%)",
-          "description": "Mostra una notifica di Windows dedicata quando un gioco raggiunge il 100% di completamento"
+          "description": "Mostra una notifica dedicata quando un gioco raggiunge il 100% di completamento"
         },
         "mode": {
           "name": "Tipo di notifica",
@@ -731,7 +732,7 @@
               "text": "Testo",
               "image": "Immagine",
               "shape": "Forma",
-              "icon": "Icona"
+              "symbol": "Simbolo"
             },
             "shape": {
               "triangle": "Triangolo",
@@ -762,7 +763,7 @@
               "opacity": "Opacità",
               "rotation": "Rotazione",
               "scale": "Scala",
-              "icon": "Icona",
+              "icon": "Simbolo",
               "visible": "Visibile",
               "alignCard": "Allinea alla scheda",
               "position": "Posizione",
@@ -812,7 +813,8 @@
               "lock": "Blocca sul posto",
               "unlock": "Sblocca"
             },
-            "addIcon": "Icona",
+            "addSymbol": "Simbolo",
+            "lockParts": "Si possono bloccare solo gli elementi che hai aggiunto.",
             "enter": {
               "none": "Con la scheda",
               "fade": "Dissolvenza",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Aggiungi elementi",
-                "body": "Testi, immagini e GIF, forme e icone. Ognuno finisce sulla scheda come un livello a sé."
+                "body": "Testi, immagini e GIF, forme e simboli. Ognuno finisce sulla scheda come un livello a sé."
               },
               "edit": {
                 "title": "Scegli, poi sposta",
@@ -1097,7 +1099,8 @@
             "intro": "Scegli un punto di partenza e personalizzalo. Nulla viene salvato finché non crei il preset.",
             "random": "Sorprendimi",
             "randomized": "Un design che non avevi provato",
-            "title": "Parti da"
+            "title": "Parti da",
+            "open": "Apri un preset"
           },
           "title": "Editor di preset",
           "undo": "Annulla",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Preset",
+            "hint": "Clicca su una scheda per usarla.",
             "close": "Chiudi",
             "mine": "I tuoi preset",
             "bundled": "Inclusi",
+            "fixed": "Utilizzabili così come sono",
             "browse": "Sfoglia i preset",
             "empty": "Non hai ancora preset tuoi. Creane uno nell’editor e comparirà qui."
           }
         },
         "souvenirTitle": "Screenshot souvenir",
         "souvenirScreenshot": "Screenshot allo sblocco",
-        "souvenirScreenshotDesc": "Cattura lo schermo quando si sblocca un obiettivo. Salvato per gioco.",
+        "souvenirScreenshotDesc": "Cattura lo schermo quando si sblocca un obiettivo. Le immagini vanno in una cartella per gioco.",
         "souvenirHdr": "Screenshot HDR",
         "souvenirHdrDesc": "La modalità automatica corregge i colori quando l’HDR di Windows è attivo, per screenshot e clip. Se non è disponibile, viene salvato lo screenshot standard.",
         "souvenirHdrAuto": "Automatico",
@@ -1342,7 +1347,8 @@
           "description": "Ripiega sul fumetto se la notifica di Windows fallisce"
         },
         "useWS": {
-          "description": "Trasmetti l’obiettivo a tutti i client connessi"
+          "name": "Trasmissione locale (port 8082)",
+          "description": "Invia ogni sblocco agli strumenti in esecuzione su questo PC, come la sorgente OBS. Lascialo attivo se non sei sicuro."
         },
         "obsSource": {
           "name": "Sorgente browser OBS",
@@ -1412,17 +1418,17 @@
       "library": "Cartelle libreria",
       "libraryInfo": [
         "Seleziona una cartella che contiene molte cartelle di installazione di giochi (es. D:\\Games, E:\\SteamLibrary).",
-        "Tutti i giochi al suo interno verranno analizzati per gli obiettivi Goldberg/GBE, anche se mai avviati."
+        "Ogni gioco al suo interno viene scansionato alla ricerca di obiettivi da emulatore, anche se non è mai stato avviato."
       ],
       "addLibrary": "Aggiungi una cartella libreria",
       "generateConfigs": "Genera configurazioni",
-      "generateConfigsHelp": "solo giochi senza fix esistente"
+      "generateConfigsHelp": "scansione completa, poi ripara i giochi che non hanno ancora una correzione"
     },
     "source": {
       "title": "Sorgenti di gioco",
       "officialPlatforms": {
         "title": "Piattaforme ufficiali",
-        "description": "Attiva qui sotto le fonti contrassegnate da uno scudo. Possono essere mostrate solo le librerie rilevate su questo PC."
+        "description": "Lo scudo indica i launcher ufficiali. Steam, Epic e Xbox offrono tre scelte: Nessuno, Installati (giochi su questo PC) o Posseduti (l’intera libreria di un account collegato). Gli altri sono attivi o disattivati."
       },
       "legitSteam": {
         "name": "Mostra i giochi Steam",
@@ -1438,7 +1444,7 @@
         "description": "Legge gli obiettivi scritti da Goldberg / GBE Fork e da emulatori Steam simili. Copre anche i giochi Ubisoft riparati con la correzione Uplay R2, che scrivono i loro obiettivi nello stesso posto."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 e Reborn"
+        "description": "Giochi Steam avviati con GreenLuma (2020, 2024, 2025 e Reborn): legge gli obiettivi che registra."
       },
       "rpcs3": {
         "description": "Emulatore PlayStation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Giochi Xbox PC (Game Pass / Microsoft Store). Collegati e importa dalle Impostazioni per vedere stato e rarità.",
+        "description": "Giochi Xbox PC (Game Pass / Microsoft Store). Collega il tuo account nella scheda Account Xbox PC più in basso, poi importa per vedere gli sblocchi e la rarità.",
       "value": {
         "none": "Nessuno",
         "installed": "Installati",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Salvataggi dell’emulatore GOG"
+        "description": "Giochi GOG avviati con l’emulatore GOG Galaxy di Nemirtingas: legge gli obiettivi che salva."
       },
       "epic": {
-        "description": "Salvataggi dell’emulatore Epic"
+        "description": "Giochi Epic avviati con l’emulatore Epic di Nemirtingas: legge gli obiettivi che salva."
       },
       "shadps4": {
         "description": "Emulatore PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE tramite XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Giochi per emulatore del tuo account RetroAchievements. Collegalo nella scheda dell’account qui sotto; i nuovi obiettivi vengono annunciati mentre un emulatore è in esecuzione."
+        "description": "Giochi da emulatore del tuo account RetroAchievements. Collegalo nella scheda dell’account più in basso; i nuovi sblocchi vengono annunciati mentre un emulatore è in esecuzione."
       },
       "psnLibrary": {
         "description": "Giochi e trofei importati dal tuo account PlayStation. Collegalo nella scheda dell’account qui sotto, poi importa la libreria."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns tramite la mod MadnessPatch"
       },
-      "groupStores": "Launcher ufficiali",
+      "groupStores": "Piattaforme ufficiali",
+      "groupMemory": "Memoria della libreria",
       "groupConsoles": "Console e retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Aggiungi ?test=1 all’URL mentre posizioni la sorgente. Mostra uno sblocco di esempio ogni dieci secondi; rimuovilo quando hai finito.",
         "La sorgente disegna lo stesso popup di quello nel gioco e resta vuota tra uno sblocco e l’altro, quindi non costa nulla mentre trasmetti.",
         "Altre opzioni dopo l’indirizzo: ?scale=2 blocca lo zoom, ?duration=8000 imposta quanto resta ogni scheda, ?sound=1 riproduce il suono tramite la sorgente, /obs/preset/Xbox/ usa una sola preimpostazione qualunque sia quella del desktop.",
-        "Legge il feed locale delle notifiche, quindi lascia attivo Websocket @localhost:8082 in Impostazioni > Notifiche > Integrazioni. Funziona solo su questo PC, e una sola copia di AW Next può servirlo."
+        "Legge il feed locale delle notifiche, quindi lascia attivo Trasmissione locale in Impostazioni > Notifiche > Integrazioni. Funziona solo su questo PC, e una sola copia di AW Next può servirlo."
       ],
       "souvenirsTitle": "Screenshot e clip video",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Account Steam principale",
         "name": "Filtra per utente",
-        "description": "Mostra solo gli obiettivi Steam dell’account selezionato"
+        "description": "Mostra solo gli obiettivi Steam dell’account scelto. Tutti gli account: nessun filtro.",
+        "all": "Tutti gli account"
       },
       "checkUpdates": "Controlla aggiornamenti",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Aggiornamenti automatici dei dati sugli obiettivi",
-        "description": "Disattivalo se gestisci tu stesso steam_cache: interrompe l’auto-riparazione periodica che completa le descrizioni vuote e rileva gli obiettivi aggiunti da un aggiornamento del gioco. «Riverifica elenchi obiettivi» qui sopra continua a funzionare come controllo manuale una tantum."
+        "description": "Mantiene aggiornati i dati degli obiettivi: compila le descrizioni vuote e rileva gli obiettivi aggiunti da un aggiornamento del gioco. Disattivalo solo se gestisci tu questi file. «Riverifica elenchi obiettivi» qui sopra funziona ancora a mano."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Qui non è memorizzato nulla che riguardi gli obiettivi: nessuna cartella AppID, nessuna configurazione di emulatore e nessun file di sblocco.",
     "folder-reason-found-instead": "Trovato invece:",
     "folder-reason-checked": "Controllati qui: le sottocartelle AppID, tutti i file di configurazione degli emulatori noti ad AW Next e {layouts} strutture di salvataggio portatili. La cartella è stata esaminata, nulla è stato ignorato.",
+    "folder-also-watched": "Controllata anche automaticamente",
     "game-health-title": "Stato dei giochi",
     "game-settings-menu": "Impostazioni di gioco",
     "game-config-title": "Configurazione dell’eseguibile",
@@ -2002,6 +2011,7 @@
     "update-checked": "Verifica completata",
     "blacklist-add-placeholder": "ID app Steam",
     "blacklist-add-button": "Aggiungi",
+    "blacklist-appid-help": "L’App ID di Steam è il numero nell’indirizzo della pagina del gioco sullo store Steam: store.steampowered.com/app/ID",
     "setupLooksValid": "La configurazione sembra valida.",
     "problemsWereDetected": "Sono stati rilevati problemi.",
     "repairSteamSettings": "Ripara steam_settings (scrivi schema + icone)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Scrivi prima un nuovo nome nel campo Nome, poi premi Rinomina.",
     "preset-view-readonly": "Questa vista mostra solo la scheda. Torna a Scheda per modificare il layout.",
     "preset-layer-fixed": "{presets} disegnano la propria scheda con un codice proprio, quindi non si possono personalizzare qui. Puoi comunque usarli così come sono.",
+    "preset-layer-named": "Verrà salvato come nuovo preset, «{name}»; cambia il Nome per chiamarlo in un altro modo.",
+    "preset-layer-start-hidden": "«{start}» è nascosto mentre personalizzi un preset. Scegli «{none}» per riaverlo.",
     "preset-play-popup": "Questa preimpostazione disegna la sua scheda con codice proprio, quindi viene riprodotta in un vero popup, sullo schermo.",
     "preset-play-reduced": "Windows è impostato per mostrare meno animazioni, quindi l’anteprima resta ferma. Riattiva “Effetti animazione” nelle impostazioni di Windows per vederle."
   },

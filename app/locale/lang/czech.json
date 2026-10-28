@@ -175,16 +175,16 @@
         }
       },
       "hiddenAch": {
-        "name": "Odhalit skryté úspěchy",
-        "description": "Zobrazit název a popis skrytých úspěchů ještě před jejich odemčením."
+        "name": "Skryté úspěchy",
+        "description": "Zobrazit: název a popis skrytého úspěchu se ukážou ještě před jeho odemčením. Skrýt: do té doby zůstanou tajné."
       },
       "mergeDuplicates": {
         "name": "Sloučit duplicity",
         "description": "Sloučit stejnou hru nalezenou ve více zdrojích do jediné dlaždice."
       },
       "timeMerge": {
-        "name": "Sloučení časové značky",
-        "description": "Která časová hodnota je při slučování duplicit upřednostněna ?",
+        "name": "Datum ponechané u sloučených her",
+        "description": "Když je jedna hra nalezena ve více zdrojích, které datum odemčení ponechat u každého úspěchu.",
         "value": {
           "recent": "Nejnovější",
           "oldest": "Nejstarší"
@@ -220,7 +220,7 @@
         "tab": "Vzhled",
         "description": "Barevný motiv okna aplikace (okamžitý náhled, uložení tlačítkem OK).",
         "customTitle": "Vlastní motiv",
-        "customDesc": "Každý motiv lze upravit tady: vyberte barvu a případně obrázek pro každý blok. Obrázek leží nad barvou (ta se stane lehkým závojem kvůli čitelnosti). Uložit ponechá vaši práci jako vlastní motiv pod jménem vedle; dosud nepoužité jméno vám dá druhý motiv a první nechá být.",
+        "customDesc": "Vyberte barvu a případně obrázek pro každou část okna. Uložit ho ponechá pod uvedeným názvem; nový název vytvoří druhý motiv.",
         "customName": "Název motivu",
         "customNamePlaceholder": "Můj motiv",
         "saveTheme": "Uložit motiv",
@@ -342,8 +342,8 @@
           "description": "Zobrazí ukazatel dokončení na každé dlaždici."
         },
         "showEmptyProgress": {
-          "name": "Hry bez úspěchů",
-          "description": "U hry, kterou Steam uvádí bez úspěchů: napsat na dlaždici „Žádné úspěchy“, nebo nezobrazit nic."
+          "name": "Štítek „Žádné úspěchy“",
+          "description": "U hry, kterou Steam uvádí bez úspěchů: napsat na dlaždici „Žádné úspěchy“, nebo ji nechat prázdnou. Hra v knihovně zůstává v obou případech."
         },
         "showSource": {
           "name": "Ikona platformy",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "Overlay ve hře"
       },
+      "testHint": "Každé tlačítko zobrazí ukázkové oznámení s vaším aktuálním nastavením.",
       "option": {
         "transportMode": {
           "name": "Přenos oznámení",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Oznámení o postupu",
-          "description": "Oznámit postup úspěchu, pokud je to možné"
+          "description": "Zobrazí oznámení, když se posune počítaný úspěch (například 3/10 nepřátel), ve hrách, které to hlásí."
         },
         "progressStep": {
           "name": "Milníky postupu",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Spustí vyhrazené oznámení Windows, když hra dosáhne 100% dokončení"
+          "description": "Spustí vyhrazené oznámení, když hra dosáhne 100% dokončení"
         },
         "mode": {
           "name": "Typ oznámení",
@@ -731,7 +732,7 @@
               "text": "Text",
               "image": "Obrázek",
               "shape": "Tvar",
-              "icon": "Ikona"
+              "symbol": "Symbol"
             },
             "shape": {
               "triangle": "Trojúhelník",
@@ -762,7 +763,7 @@
               "opacity": "Průhlednost",
               "rotation": "Otočení",
               "scale": "Měřítko",
-              "icon": "Ikona",
+              "icon": "Symbol",
               "visible": "Viditelné",
               "alignCard": "Zarovnat podle karty",
               "position": "Poloha",
@@ -812,7 +813,8 @@
               "lock": "Zamknout na místě",
               "unlock": "Odemknout"
             },
-            "addIcon": "Ikona",
+            "addSymbol": "Symbol",
+            "lockParts": "Zamknout lze jen prvky, které jste přidali.",
             "enter": {
               "none": "S kartou",
               "fade": "Prolnutí",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Přidávejte prvky",
-                "body": "Texty, obrázky a GIFy, tvary a ikony. Každý se na kartu umístí jako samostatná vrstva."
+                "body": "Texty, obrázky a GIFy, tvary a symboly. Každý se na kartu umístí jako samostatná vrstva."
               },
               "edit": {
                 "title": "Vyberte, pak přesuňte",
@@ -1097,7 +1099,8 @@
             "intro": "Vyberte výchozí bod a upravte si jej. Nic se neuloží, dokud předvolbu nevytvoříte.",
             "random": "Překvap mě",
             "randomized": "Vzhled, který jste ještě nezkusili",
-            "title": "Začít od"
+            "title": "Začít od",
+            "open": "Otevřít předvolbu"
           },
           "title": "Návrhář předvoleb",
           "undo": "Zpět",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Předvolby",
+            "hint": "Klepnutím na kartu ji použiješ.",
             "close": "Zavřít",
             "mine": "Vaše předvolby",
             "bundled": "Přibalené",
+            "fixed": "Použitelné tak, jak jsou",
             "browse": "Procházet předvolby",
             "empty": "Zatím nemáte žádné vlastní předvolby. Vytvořte jednu v návrháři a objeví se tady."
           }
         },
         "souvenirTitle": "Vzpomínkový snímek",
         "souvenirScreenshot": "Snímek při odemčení",
-        "souvenirScreenshotDesc": "Pořídí snímek obrazovky při odemčení úspěchu. Ukládá se podle hry.",
+        "souvenirScreenshotDesc": "Zachytí obrazovku při odemčení úspěchu. Snímky se ukládají do jedné složky pro každou hru.",
         "souvenirHdr": "Snímky HDR",
         "souvenirHdrDesc": "Automatický režim opraví barvy, když je ve Windows aktivní HDR, u snímků i klipů. Pokud není dostupný, uloží se standardní snímek.",
         "souvenirHdrAuto": "Automaticky",
@@ -1342,7 +1347,8 @@
           "description": "Při selhání oznámení Windows přejít na bublinovou nápovědu"
         },
         "useWS": {
-          "description": "Vysílat úspěch všem připojeným klientům"
+          "name": "Místní vysílání (port 8082)",
+          "description": "Posílá každé odemčení nástrojům spuštěným v tomto počítači, například zdroji OBS. Pokud si nejste jistí, nechte zapnuté."
         },
         "obsSource": {
           "name": "Zdroj prohlížeče OBS",
@@ -1412,17 +1418,17 @@
       "library": "Složky knihovny",
       "libraryInfo": [
         "Vyberte složku obsahující mnoho instalačních složek her (např. D:\\Games, E:\\SteamLibrary).",
-        "Všechny hry uvnitř budou prohledány na úspěchy Goldberg/GBE, i když nikdy nebyly spuštěny."
+        "Každá hra v ní se prohledá kvůli úspěchům z emulátoru, i když nebyla nikdy spuštěna."
       ],
       "addLibrary": "Přidat složku knihovny",
       "generateConfigs": "Generovat konfigurace",
-      "generateConfigsHelp": "jen hry bez existující opravy"
+      "generateConfigsHelp": "úplné prohledání, poté opraví hry, které ještě nemají opravu"
     },
     "source": {
       "title": "Zdroje her",
       "officialPlatforms": {
         "title": "Oficiální platformy",
-        "description": "Zapněte níže zdroje označené štítem. Zobrazit lze jen knihovny nalezené na tomto PC."
+        "description": "Štít označuje oficiální launchery. Steam, Epic a Xbox nabízejí tři možnosti: Žádné, Nainstalované (hry v tomto počítači) nebo Vlastněné (celá knihovna připojeného účtu). Ostatní se zapínají nebo vypínají."
       },
       "legitSteam": {
         "name": "Zobrazit hry Steam",
@@ -1438,7 +1444,7 @@
         "description": "Čte úspěchy zapsané emulátory Goldberg / GBE Fork a podobnými emulátory Steam. Zahrnuje i hry Ubisoftu opravené opravou Uplay R2, které zapisují úspěchy na stejné místo."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 a Reborn"
+        "description": "Hry Steam spouštěné s GreenLuma (2020, 2024, 2025 a Reborn): čte úspěchy, které zaznamenává."
       },
       "rpcs3": {
         "description": "Emulátor PlayStation 3"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Hry Xbox PC (Game Pass / Microsoft Store). Připojte a importujte v Nastavení pro zobrazení stavu a vzácnosti.",
+        "description": "Hry Xbox PC (Game Pass / Microsoft Store). Připojte svůj účet v kartě Účet Xbox PC níže a poté importujte, abyste viděli odemčení a vzácnost.",
       "value": {
         "none": "Žádné",
         "installed": "Nainstalované",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "Uložené pozice emulátoru GOG"
+        "description": "Hry GOG spouštěné s emulátorem GOG Galaxy od Nemirtingas: čte úspěchy, které ukládá."
       },
       "epic": {
-        "description": "Uložené pozice emulátoru Epic"
+        "description": "Hry Epic spouštěné s emulátorem Epic od Nemirtingas: čte úspěchy, které ukládá."
       },
       "shadps4": {
         "description": "Emulátor PlayStation 4"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE prostřednictvím XLiveLessNess"
       },
       "retroAchievements": {
-        "description": "Hry z emulátorů z tvého účtu RetroAchievements. Připoj jej v kartě účtu níže; nové úspěchy se oznamují, zatímco běží emulátor."
+        "description": "Hry z emulátorů z vašeho účtu RetroAchievements. Připojte jej v kartě účtu níže; nová odemčení se oznamují, dokud běží emulátor."
       },
       "psnLibrary": {
         "description": "Hry a trofeje importované z vašeho účtu PlayStation. Připojte jej v kartě účtu níže a poté importujte knihovnu."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns prostřednictvím modu MadnessPatch"
       },
-      "groupStores": "Oficiální launchery",
+      "groupStores": "Oficiální platformy",
+      "groupMemory": "Paměť knihovny",
       "groupConsoles": "Konzole a retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Při umísťování zdroje přidejte k URL ?test=1. Každých deset sekund ukáže ukázkové odemčení; až budete hotovi, odstraňte to.",
         "Zdroj vykresluje stejné okno jako ve hře a mezi odemčeními zůstává prázdný, takže při streamování nic nestojí.",
         "Další možnosti za adresou: ?scale=2 pevně nastaví přiblížení, ?duration=8000 určí, jak dlouho karta zůstane, ?sound=1 přehraje zvuk přes zdroj, /obs/preset/Xbox/ použije jednu předvolbu bez ohledu na to, kterou používá plocha.",
-        "Čte místní kanál oznámení, takže nechte Websocket @localhost:8082 zapnutý v Nastavení > Oznámení > Integrace. Funguje jen na tomto PC a poskytovat ho může jen jedna kopie AW Next."
+        "Čte místní kanál oznámení, takže nechte Místní vysílání zapnutý v Nastavení > Oznámení > Integrace. Funguje jen na tomto PC a poskytovat ho může jen jedna kopie AW Next."
       ],
       "souvenirsTitle": "Snímky obrazovky a videoklipy",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Hlavní účet Steam",
         "name": "Filtrovat podle uživatele",
-        "description": "Zobrazit úspěchy Steam pouze vybraného účtu"
+        "description": "Zobrazí jen úspěchy Steam vybraného účtu. Všechny účty: bez filtru.",
+        "all": "Všechny účty"
       },
       "checkUpdates": "Zkontrolovat aktualizace",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Automatické aktualizace dat o úspěších",
-        "description": "Toto vypněte, pokud si steam_cache spravujete sami: zastaví to pravidelnou automatickou opravu, která doplňuje prázdné popisy a zachycuje úspěchy přidané aktualizací hry. „Znovu zkontrolovat seznamy úspěchů“ výše stále funguje jako ruční jednorázová kontrola."
+        "description": "Udržuje data úspěchů aktuální: doplňuje prázdné popisy a zachytí úspěchy přidané aktualizací hry. Vypněte to jen tehdy, pokud tyto soubory spravujete sami. „Znovu zkontrolovat seznamy úspěchů“ výše stále funguje ručně."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Není zde uloženo nic, co by souviselo s úspěchy: žádná složka AppID, žádná konfigurace emulátoru a žádný soubor s odemčeními.",
     "folder-reason-found-instead": "Nalezeno místo toho:",
     "folder-reason-checked": "Zkontrolováno zde: podsložky AppID, všechny konfigurační soubory emulátorů, které AW Next zná, a {layouts} přenosných rozložení uložení. Složka byla prozkoumána, nic nebylo přeskočeno.",
+    "folder-also-watched": "Také automaticky sledováno",
     "game-health-title": "Stav hry",
     "game-settings-menu": "Nastavení hry",
     "game-config-title": "Nastavení spustitelného souboru",
@@ -2002,6 +2011,7 @@
     "update-checked": "Zkontrolováno",
     "blacklist-add-placeholder": "ID aplikace Steam",
     "blacklist-add-button": "Přidat",
+    "blacklist-appid-help": "Steam App ID je číslo v adrese stránky hry v obchodě Steam: store.steampowered.com/app/ID",
     "setupLooksValid": "Nastavení vypadá v pořádku.",
     "problemsWereDetected": "Byly zjištěny problémy.",
     "repairSteamSettings": "Opravit steam_settings (zapsat schéma + ikony)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Nejprve zadejte nový název do pole Název a potom stiskněte Přejmenovat.",
     "preset-view-readonly": "Toto zobrazení ukazuje jen kartu. Pro úpravu rozvržení se vraťte na Karta.",
     "preset-layer-fixed": "{presets} vykreslují svou kartu vlastním kódem, a proto je tady nelze upravit. Stále je ale můžete používat tak, jak jsou.",
+    "preset-layer-named": "Uloží se jako nová předvolba „{name}“; chcete-li ji pojmenovat jinak, změňte Název.",
+    "preset-layer-start-hidden": "„{start}“ je skryto, dokud předvolbu upravujete. Zvolte „{none}“ a znovu se zobrazí.",
     "preset-play-popup": "Tato předvolba kreslí kartu vlastním kódem, a proto se přehraje ve skutečném vyskakovacím okně na obrazovce.",
     "preset-play-reduced": "Windows je nastaveno tak, aby zobrazovalo méně animací, takže náhled zůstává nehybný. Chcete-li je vidět, znovu zapněte „Efekty animace“ v nastavení Windows."
   },

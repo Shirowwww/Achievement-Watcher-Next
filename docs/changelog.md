@@ -21,8 +21,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Updates can install themselves.** Turn on Settings > General > Install updates automatically,
   or tick the box in the update window: new versions download and install without asking once no
   game is running, and a notification says so after the restart. A closed window stays closed.
-- **Pick a preset by its look.** The grid button beside the preset setting, and beside "Edit a
-  preset" in the designer, shows every preset as a picture of its card.
+- **Pick a preset by its look.** Every preset menu (the main one, the emulators', a game's own, the
+  designer's and the first-start one) opens a gallery that shows each preset as a picture of its
+  card.
 - **More freedom in the preset editor.** Icons join texts, pictures and shapes. An element can be
   kept to some notifications only (a crown on gold unlocks, say), painted in a tier's colour, hidden
   or locked from its layer, placed by typing its position and size, lined up with the card, and
@@ -75,6 +76,10 @@ renamed in 3.9.0 and the history is kept under one file.
   style", and three badges under it show the current cut-offs. The AppID blacklist is now "Hidden
   games", and the Folders tab drops its selected-folders rescan, which did what Refresh does. A
   custom theme started from a built-in one is named after it ("Steam Blue 2").
+- **Settings say more plainly what they do.** Many labels and help lines are reworded, a folder AW
+  Next already watches on its own says so on its row, and the search ignores accents and plurals and
+  opens the tab that names the setting. In Simple mode the designer has one "Open a preset" button
+  and saves with "Create preset" alone.
 - **Screenshots and clips are named after the achievement first**, then the date
   (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
   achievement's shots. Files saved earlier keep their name.
@@ -113,6 +118,8 @@ renamed in 3.9.0 and the history is kept under one file.
   one is refused, where it used to replace part of the theme's files and leave the rest.
 - **Escape closes an imported theme's preview.** It closed Settings behind it and left the preview
   on screen.
+- **The settings search hides the account cards that do not match**, and the preset designer's
+  Animation group shows when the card is picked.
 
 - **God of War III is found again after SpartanPort's rename.** The port formerly called gow3_pc now
   keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next

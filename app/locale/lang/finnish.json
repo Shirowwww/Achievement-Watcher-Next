@@ -175,16 +175,16 @@
         }
       },
       "hiddenAch": {
-        "name": "Paljasta piilotetut saavutukset",
-        "description": "Paljasta piilotettujen saavutusten nimi ja kuvaus jo ennen niiden avaamista."
+        "name": "Piilotetut saavutukset",
+        "description": "Näytä: piilotetun saavutuksen nimi ja kuvaus näkyvät ennen kuin avaat sen. Piilota: ne pysyvät salassa siihen asti."
       },
       "mergeDuplicates": {
         "name": "Yhdistä kaksoiskappaleet",
         "description": "Yhdistä useasta lähteestä löytynyt sama peli yhdeksi ruuduksi."
       },
       "timeMerge": {
-        "name": "Aikaleimojen yhdistäminen",
-        "description": "Kumpi aika-arvo on etusijalla kaksoiskappaleita yhdistettäessä?",
+        "name": "Yhdistetyille peleille säilytettävä päiväys",
+        "description": "Kun sama peli löytyy useasta lähteestä, mikä avauspäiväys säilytetään kullekin saavutukselle.",
         "value": {
           "recent": "Uusin",
           "oldest": "Vanhin"
@@ -220,7 +220,7 @@
         "tab": "Ulkoasu",
         "description": "Koko sovelluksen ja pelinsisäisen peittokuvan väriteema (esikatselu heti, tallennetaan OK-painikkeella).",
         "customTitle": "Mukautettu teema",
-        "customDesc": "Kaikkia teemoja voi muokata täällä: valitse kullekin lohkolle väri ja halutessasi kuva. Kuva näkyy värin päällä (väristä tulee kevyt huntu luettavuuden vuoksi). Tallenna säilyttää tekemäsi omana teemana viereisellä nimellä; vapaa nimi antaa toisen teeman ja jättää ensimmäisen rauhaan.",
+        "customDesc": "Valitse väri ja halutessasi kuva ikkunan jokaiselle osalle. Tallenna säilyttää teeman näytetyllä nimellä; uusi nimi luo toisen teeman.",
         "customName": "Teeman nimi",
         "customNamePlaceholder": "Oma teema",
         "saveTheme": "Tallenna teema",
@@ -342,8 +342,8 @@
           "description": "Näyttää valmistumispalkin jokaisessa ruudussa."
         },
         "showEmptyProgress": {
-          "name": "Pelit ilman saavutuksia",
-          "description": "Pelille, jonka Steam listaa ilman saavutuksia: kirjoita ruutuun ”Ei saavutuksia” tai älä näytä mitään."
+          "name": "”Ei saavutuksia” -merkintä",
+          "description": "Pelille, jonka Steam listaa ilman saavutuksia: kirjoita ruutuun ”Ei saavutuksia” tai jätä se tyhjäksi. Peli pysyy kirjastossa molemmissa tapauksissa."
         },
         "showSource": {
           "name": "Alustan kuvake",
@@ -583,6 +583,7 @@
         "platinum": "Platina",
         "overlay": "Pelinsisäinen peittokuva"
       },
+      "testHint": "Jokainen painike näyttää esimerkki-ilmoituksen nykyisillä asetuksillasi.",
       "option": {
         "transportMode": {
           "name": "Ilmoitusten välitystapa",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "Edistymisilmoitukset",
-          "description": "Ilmoita saavutuksen edistymisestä, jos mahdollista"
+          "description": "Näyttää ilmoituksen, kun laskettava saavutus etenee (esimerkiksi 3/10 vihollista), peleissä, jotka kertovat siitä."
         },
         "progressStep": {
           "name": "Edistymisen virstanpylväät",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Näytä oma Windows-ilmoitus, kun peli saavuttaa 100 %:n suoritusasteen"
+          "description": "Näytä oma ilmoitus, kun peli saavuttaa 100 %:n suoritusasteen"
         },
         "mode": {
           "name": "Ilmoituksen tyyppi",
@@ -731,7 +732,7 @@
               "text": "Teksti",
               "image": "Kuva",
               "shape": "Muoto",
-              "icon": "Kuvake"
+              "symbol": "Symboli"
             },
             "shape": {
               "triangle": "Kolmio",
@@ -762,7 +763,7 @@
               "opacity": "Peittävyys",
               "rotation": "Kierto",
               "scale": "Skaalaus",
-              "icon": "Kuvake",
+              "icon": "Symboli",
               "visible": "Näkyvissä",
               "alignCard": "Tasaa kortin mukaan",
               "position": "Sijainti",
@@ -812,7 +813,8 @@
               "lock": "Lukitse paikalleen",
               "unlock": "Poista lukitus"
             },
-            "addIcon": "Kuvake",
+            "addSymbol": "Symboli",
+            "lockParts": "Vain itse lisäämäsi elementit voi lukita.",
             "enter": {
               "none": "Kortin mukana",
               "fade": "Häivytys sisään",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "Lisää elementtejä",
-                "body": "Tekstejä, kuvia ja GIF-kuvia, muotoja ja kuvakkeita. Jokainen tulee kortille omana tasonaan."
+                "body": "Tekstejä, kuvia ja GIF-kuvia, muotoja ja symboleja. Jokainen tulee kortille omana tasonaan."
               },
               "edit": {
                 "title": "Valitse ja siirrä",
@@ -1097,7 +1099,8 @@
             "intro": "Valitse lähtökohta ja muokkaa siitä omasi. Mitään ei tallenneta ennen kuin luot esiasetuksen.",
             "random": "Yllätä minut",
             "randomized": "Ulkoasu, jota et ole vielä kokeillut",
-            "title": "Aloita pohjasta"
+            "title": "Aloita pohjasta",
+            "open": "Avaa esiasetus"
           },
           "title": "Esiasetusten suunnittelu",
           "undo": "Kumoa",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "Esiasetukset",
+            "hint": "Valitse esiasetus napsauttamalla korttia.",
             "close": "Sulje",
             "mine": "Omat esiasetuksesi",
             "bundled": "Mukana tulevat",
+            "fixed": "Käytettävissä sellaisenaan",
             "browse": "Selaa esiasetuksia",
             "empty": "Sinulla ei ole vielä omia esiasetuksia. Tee sellainen suunnittelunäkymässä, niin se ilmestyy tähän."
           }
         },
         "souvenirTitle": "Muistokuvakaappaus",
         "souvenirScreenshot": "Kuvakaappaus avattaessa",
-        "souvenirScreenshotDesc": "Ota kuvakaappaus näytöstä, kun saavutus avautuu. Tallennetaan pelikohtaisesti.",
+        "souvenirScreenshotDesc": "Ottaa kuvakaappauksen, kun saavutus avataan. Kuvat tallennetaan pelikohtaisiin kansioihin.",
         "souvenirHdr": "HDR-kuvakaappaukset",
         "souvenirHdrDesc": "Automaattinen korjaa värit, kun Windowsin HDR on käytössä, kuvakaappauksissa ja klipeissä. Jos se ei ole käytettävissä, tallennetaan tavallinen kuvakaappaus.",
         "souvenirHdrAuto": "Automaattinen",
@@ -1342,7 +1347,8 @@
           "description": "Käytä kuplavihjettä varalla, jos Windows-ilmoitus epäonnistuu"
         },
         "useWS": {
-          "description": "Lähetä saavutus kaikille yhdistetyille asiakkaille"
+          "name": "Paikallinen lähetys (port 8082)",
+          "description": "Lähettää jokaisen avauksen tällä tietokoneella toimiville työkaluille, kuten OBS-lähteelle. Jätä päälle, jos olet epävarma."
         },
         "obsSource": {
           "name": "OBS-selainlähde",
@@ -1412,17 +1418,17 @@
       "library": "Kirjastokansiot",
       "libraryInfo": [
         "Valitse kansio, jonka sisällä on useita pelien asennuskansioita (esim. D:\\Games, E:\\SteamLibrary).",
-        "Kaikista sen sisällä olevista peleistä etsitään Goldberg- ja GBE-saavutuksia, vaikka niitä ei olisi koskaan käynnistetty."
+        "Jokaisesta sen sisällä olevasta pelistä haetaan emulaattorisaavutukset, vaikka sitä ei olisi koskaan käynnistetty."
       ],
       "addLibrary": "Lisää kirjastokansio",
       "generateConfigs": "Luo asetustiedostot",
-      "generateConfigsHelp": "vain pelit, joilla ei vielä ole korjausta"
+      "generateConfigsHelp": "täysi skannaus, sitten korjataan pelit, joilla ei vielä ole korjausta"
     },
     "source": {
       "title": "Pelien lähteet",
       "officialPlatforms": {
         "title": "Viralliset alustat",
-        "description": "Ota alla olevat kilvellä merkityt lähteet käyttöön. Vain tältä tietokoneelta löytyvät kirjastot voidaan näyttää."
+        "description": "Kilpi merkitsee viralliset käynnistysohjelmat. Steamissa, Epicissä ja Xboxissa on kolme vaihtoehtoa: Ei mitään, Asennetut (tämän tietokoneen pelit) tai Omistetut (yhdistetyn tilin koko kirjasto). Muut ovat päällä tai pois."
       },
       "legitSteam": {
         "name": "Näytä Steam-pelit",
@@ -1438,7 +1444,7 @@
         "description": "Lukee saavutukset, jotka Goldberg, GBE Fork tai vastaava Steam-emulaattori on kirjoittanut. Kattaa myös Uplay R2 -korjauksella korjatut Ubisoft-pelit, jotka kirjoittavat saavutuksensa samaan paikkaan."
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 ja Reborn"
+        "description": "Steam-pelit, jotka käynnistetään GreenLumalla (2020, 2024, 2025 ja Reborn): lukee sen tallentamat saavutukset."
       },
       "rpcs3": {
         "description": "PlayStation 3 -emulaattori"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC -pelit (Game Pass ja Microsoft Store). Yhdistä tili ja tuo kirjasto asetuksista, niin näet avaustilan ja harvinaisuuden.",
+        "description": "Xbox PC -pelit (Game Pass ja Microsoft Store). Yhdistä tilisi alempana olevassa kortissa Xbox PC -tili ja tuo sitten kirjasto nähdäksesi avaukset ja harvinaisuuden.",
       "value": {
         "none": "Ei mitään",
         "installed": "Asennetut",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "GOG-emulaattorin tallennukset"
+        "description": "GOG-pelit, jotka käynnistetään Nemirtingasin GOG Galaxy -emulaattorilla: lukee sen tallentamat saavutukset."
       },
       "epic": {
-        "description": "Epic-emulaattorin tallennukset"
+        "description": "Epic-pelit, jotka käynnistetään Nemirtingasin Epic-emulaattorilla: lukee sen tallentamat saavutukset."
       },
       "shadps4": {
         "description": "PlayStation 4 -emulaattori"
@@ -1506,7 +1512,7 @@
         "description": "Games for Windows LIVE XLiveLessNessin kautta"
       },
       "retroAchievements": {
-        "description": "Emulaattoripelit RetroAchievements-tililtäsi. Yhdistä se alla olevalla tilikortilla; uusista saavutuksista ilmoitetaan emulaattorin ollessa käynnissä."
+        "description": "RetroAchievements-tilisi emulaattoripelit. Yhdistä tili alempana olevalla tilikortilla; uudet avaukset ilmoitetaan, kun emulaattori on käynnissä."
       },
       "psnLibrary": {
         "description": "PlayStation-tililtäsi tuodut pelit ja pokaalit. Yhdistä tili alla olevalla tilikortilla ja tuo sitten kirjasto."
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "Alice: Madness Returns MadnessPatch-modin kautta"
       },
-      "groupStores": "Viralliset pelikäynnistimet",
+      "groupStores": "Viralliset alustat",
+      "groupMemory": "Kirjaston muisti",
       "groupConsoles": "Konsolit ja retro"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "Lisää ?test=1 URL-osoitteeseen lähdettä sijoittaessasi. Se näyttää esimerkkiavauksen kymmenen sekunnin välein; poista se, kun olet valmis.",
         "Lähde piirtää saman ponnahdusikkunan kuin pelinsisäinen ja pysyy tyhjänä avausten välillä, joten se ei maksa mitään lähettäessäsi.",
         "Lisää valintoja osoitteen jälkeen: ?scale=2 lukitsee zoomauksen, ?duration=8000 määrää, kuinka kauan kukin kortti näkyy, ?sound=1 toistaa äänen lähteen kautta, /obs/preset/Xbox/ käyttää yhtä esiasetusta riippumatta siitä, mitä työpöytä käyttää.",
-        "Se lukee paikallista ilmoitussyötettä, joten pidä Websocket @localhost:8082 päällä kohdassa Asetukset > Ilmoitukset > Integraatiot. Se toimii vain tällä koneella, ja vain yksi AW Nextin kopio voi tarjota sitä."
+        "Se lukee paikallista ilmoitussyötettä, joten pidä Paikallinen lähetys päällä kohdassa Asetukset > Ilmoitukset > Integraatiot. Se toimii vain tällä koneella, ja vain yksi AW Nextin kopio voi tarjota sitä."
       ],
       "souvenirsTitle": "Kuvakaappaukset ja videoklipit",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Steamin päätili",
         "name": "Suodata käyttäjän mukaan",
-        "description": "Näytä vain valitun tilin Steam-saavutukset"
+        "description": "Näyttää vain valitun tilin Steam-saavutukset. Kaikki tilit: ei suodatusta.",
+        "all": "Kaikki tilit"
       },
       "checkUpdates": "Tarkista päivitykset",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "Saavutustietojen automaattiset päivitykset",
-        "description": "Poista tämä käytöstä, jos ylläpidät steam_cachea itse: se pysäyttää määräajoin tehtävän itsekorjauksen, joka täyttää tyhjät kuvaukset ja huomioi pelin päivityksen tuomat saavutukset. Yllä oleva ”Tarkista saavutusluettelot uudelleen” toimii edelleen manuaalisena, kertaluonteisena tarkistuksena."
+        "description": "Pitää saavutustiedot ajan tasalla: täyttää tyhjät kuvaukset ja poimii pelipäivityksen lisäämät saavutukset. Poista käytöstä vain, jos ylläpidät näitä tiedostoja itse. Yllä oleva ”Tarkista saavutusluettelot uudelleen” toimii edelleen käsin."
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "Täällä ei ole mitään saavutuksiin liittyvää: ei AppID-kansiota, ei emulaattorin asetuksia eikä avaustiedostoa.",
     "folder-reason-found-instead": "Löytyi sen sijaan:",
     "folder-reason-checked": "Täältä tarkistettiin: AppID-alikansiot, kaikki AW Nextin tuntemat emulaattorien asetustiedostot ja {layouts} siirrettävää tallennusmuotoa. Kansio käytiin läpi kokonaan, mitään ei ohitettu.",
+    "folder-also-watched": "Seurataan myös automaattisesti",
     "game-health-title": "Pelin kunto",
     "game-settings-menu": "Pelin asetukset",
     "game-config-title": "Ohjelmatiedoston määritys",
@@ -2002,6 +2011,7 @@
     "update-checked": "Tarkistus tehty",
     "blacklist-add-placeholder": "Steam App ID",
     "blacklist-add-button": "Lisää",
+    "blacklist-appid-help": "Steamin App ID on numero pelin Steam-kauppasivun osoitteessa: store.steampowered.com/app/ID",
     "setupLooksValid": "Asetukset vaikuttavat kunnossa olevilta.",
     "problemsWereDetected": "Ongelmia havaittiin.",
     "repairSteamSettings": "Korjaa steam_settings (kirjoita luettelo ja kuvakkeet)…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "Kirjoita ensin uusi nimi Nimi-kenttään ja paina sitten Nimeä uudelleen.",
     "preset-view-readonly": "Tämä näkymä näyttää vain kortin. Palaa Kortti-näkymään muokataksesi asettelua.",
     "preset-layer-fixed": "{presets} piirtävät korttinsa omalla koodillaan, joten niitä ei voi mukauttaa tässä. Voit silti käyttää niitä sellaisenaan.",
+    "preset-layer-named": "Se tallennetaan uutena esiasetuksena ”{name}”; vaihda Nimi, jos haluat antaa sille toisen nimen.",
+    "preset-layer-start-hidden": "”{start}” on piilossa, kun mukautat esiasetusta. Valitse ”{none}” saadaksesi sen takaisin.",
     "preset-play-popup": "Tämä esiasetus piirtää korttinsa omalla koodillaan, joten se toistetaan oikeassa ponnahdusikkunassa näytöllä.",
     "preset-play-reduced": "Windows on asetettu näyttämään vähemmän animaatioita, joten esikatselu pysyy paikallaan. Ota ”Animaatiotehosteet” takaisin käyttöön Windowsin asetuksista nähdäksesi ne."
   },

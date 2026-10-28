@@ -175,19 +175,19 @@
         }
       },
       "hiddenAch": {
-        "name": "显示隐藏成就",
-        "description": "在解锁前显示隐藏成就的名称和描述。"
+        "name": "隐藏成就",
+        "description": "显示：隐藏成就的名称和描述会在你解锁前出现。隐藏：在此之前保持保密。"
       },
       "mergeDuplicates": {
         "name": "合并重复项",
         "description": "将在多个来源中找到的同一游戏合并为单个卡片。"
       },
       "timeMerge": {
-        "name": "时间戳合并",
-        "description": "合并重复项时，优先使用哪个时间值？",
+        "name": "合并游戏保留的日期",
+        "description": "同一个游戏在多个来源中被找到时，每项成就保留哪个解锁日期。",
         "value": {
-          "recent": "较新",
-          "oldest": "较旧"
+          "recent": "最新的",
+          "oldest": "最早的"
         }
       },
       "hideZero": {
@@ -220,7 +220,7 @@
         "tab": "外观",
         "description": "应用窗口的配色主题（即时预览，点击“确定”保存）。",
         "customTitle": "自定义主题",
-        "customDesc": "每个主题都可以在这里修改：为每个区块选择颜色，也可以选一张图片。图片显示在颜色之上，颜色则变成一层浅色薄纱以保证可读性。保存会把你的成果作为自己的主题保留，使用旁边的名称；换一个尚未使用的名称就会多出一个主题，原来的保持不变。",
+        "customDesc": "为窗口的每个部分选择一种颜色，也可以选一张图片。保存会以显示的名称保留主题；使用新名称则会创建第二个主题。",
         "customName": "主题名称",
         "customNamePlaceholder": "我的主题",
         "saveTheme": "保存主题",
@@ -342,8 +342,8 @@
           "description": "在每个磁贴上显示完成度进度条。"
         },
         "showEmptyProgress": {
-          "name": "无成就的游戏",
-          "description": "对于 Steam 列出但没有成就的游戏：在卡片上显示“无成就”，或什么都不显示。"
+          "name": "“无成就”标签",
+          "description": "对于 Steam 列出但没有成就的游戏：在卡片上显示“无成就”，或留空。两种情况下游戏都会保留在库中。"
         },
         "showSource": {
           "name": "平台图标",
@@ -583,6 +583,7 @@
         "platinum": "白金",
         "overlay": "游戏内叠加层"
       },
+      "testHint": "每个按钮都会用你当前的设置显示一条示例通知。",
       "option": {
         "transportMode": {
           "name": "通知传输",
@@ -603,7 +604,7 @@
         },
         "notifyOnProgress": {
           "name": "进度通知",
-          "description": "可能时在成就有进度时通知"
+          "description": "当带计数的成就有进展时（例如 3/10 个敌人）显示通知，仅限会报告进度的游戏。"
         },
         "progressStep": {
           "name": "进度里程碑",
@@ -617,7 +618,7 @@
         },
         "platinum": {
           "name": "白金 (100%)",
-          "description": "当游戏达到 100% 完成度时触发专门的 Windows 通知"
+          "description": "当游戏达到 100% 完成度时触发专门的通知"
         },
         "mode": {
           "name": "通知类型",
@@ -731,7 +732,7 @@
               "text": "文本",
               "image": "图片",
               "shape": "形状",
-              "icon": "图标"
+              "symbol": "符号"
             },
             "shape": {
               "triangle": "三角形",
@@ -762,7 +763,7 @@
               "opacity": "不透明度",
               "rotation": "旋转",
               "scale": "缩放",
-              "icon": "图标",
+              "icon": "符号",
               "visible": "可见",
               "alignCard": "与卡片对齐",
               "position": "位置",
@@ -812,7 +813,8 @@
               "lock": "锁定位置",
               "unlock": "解锁"
             },
-            "addIcon": "图标",
+            "addSymbol": "符号",
+            "lockParts": "只有你自己添加的元素才能锁定。",
             "enter": {
               "none": "随卡片",
               "fade": "淡入",
@@ -926,7 +928,7 @@
             "tour": {
               "add": {
                 "title": "添加元素",
-                "body": "文字、图片和 GIF、形状和图标。每一项都会作为独立图层放在卡片上。"
+                "body": "文字、图片和 GIF、形状和符号。每一项都会作为独立图层放在卡片上。"
               },
               "edit": {
                 "title": "先选中，再移动",
@@ -1097,7 +1099,8 @@
             "intro": "选择一个起点再自由调整。在你创建预设之前不会保存任何内容。",
             "random": "随机生成",
             "randomized": "一个你还没试过的设计",
-            "title": "从模板开始"
+            "title": "从模板开始",
+            "open": "打开预设"
           },
           "title": "预设设计器",
           "undo": "撤销",
@@ -1239,16 +1242,18 @@
           },
           "gallery": {
             "title": "预设",
+            "hint": "点击卡片即可使用。",
             "close": "关闭",
             "mine": "您的预设",
             "bundled": "内置",
+            "fixed": "按原样使用",
             "browse": "浏览预设",
             "empty": "您还没有自己的预设。在设计器中创建一个，它就会显示在这里。"
           }
         },
         "souvenirTitle": "纪念截图",
         "souvenirScreenshot": "解锁时截图",
-        "souvenirScreenshotDesc": "在解锁成就时捕获屏幕。按游戏保存。",
+        "souvenirScreenshotDesc": "解锁成就时截取屏幕。图片按游戏分别存放在一个文件夹中。",
         "souvenirHdr": "HDR 截图",
         "souvenirHdrDesc": "自动模式会在 Windows HDR 启用时校正颜色，适用于截图和剪辑。如果不可用，则改为保存标准截图。",
         "souvenirHdrAuto": "自动",
@@ -1342,7 +1347,8 @@
           "description": "当 Windows 通知失败时回退到气球提示"
         },
         "useWS": {
-          "description": "向所有已连接的客户端广播成就"
+          "name": "本地广播 (port 8082)",
+          "description": "把每次解锁发送给此电脑上运行的工具，例如 OBS 来源。不确定时请保持开启。"
         },
         "obsSource": {
           "name": "OBS 浏览器源",
@@ -1412,17 +1418,17 @@
       "library": "库文件夹",
       "libraryInfo": [
         "选择一个包含多个游戏安装文件夹的文件夹（例如 D:\\Games、E:\\SteamLibrary）。",
-        "其中的所有游戏都会被扫描 Goldberg/GBE 成就，即使从未启动过。"
+        "其中的每个游戏都会被扫描模拟器成就，即使从未启动过。"
       ],
       "addLibrary": "添加库文件夹",
       "generateConfigs": "生成配置",
-      "generateConfigsHelp": "仅限没有现有修复的游戏"
+      "generateConfigsHelp": "完整扫描，然后修复尚无修复的游戏"
     },
     "source": {
       "title": "游戏来源",
       "officialPlatforms": {
         "title": "官方平台",
-        "description": "启用下方带盾牌标记的来源。只能显示在本机上检测到的库。"
+        "description": "盾牌标记官方启动器。Steam、Epic 和 Xbox 有三种选择：无、已安装（此电脑上的游戏）或拥有（已连接账号的整个游戏库）。其余的只能开或关。"
       },
       "legitSteam": {
         "name": "显示 Steam 游戏",
@@ -1438,7 +1444,7 @@
         "description": "读取由 Goldberg / GBE Fork 及类似 Steam 模拟器写入的成就。也涵盖用 Uplay R2 修复补丁修复的育碧游戏，它们会把成就写在同一位置。"
       },
       "greenLuma": {
-        "description": "GreenLuma 2020/2024/2025 及 Reborn"
+        "description": "通过 GreenLuma（2020、2024、2025 和 Reborn）运行的 Steam 游戏：读取它记录的成就。"
       },
       "rpcs3": {
         "description": "PlayStation 3 模拟器"
@@ -1455,7 +1461,7 @@
       },
       "xboxPc": {
         "name": "Xbox PC",
-        "description": "Xbox PC 游戏（Game Pass / Microsoft Store）。在设置中连接并导入以查看解锁状态和稀有度。",
+        "description": "Xbox PC 游戏（Game Pass / Microsoft Store）。请在下方的 Xbox PC 账户 卡片中连接你的账户，然后导入，即可查看解锁状态和稀有度。",
       "value": {
         "none": "无",
         "installed": "已安装",
@@ -1485,10 +1491,10 @@
       }
       },
       "gog": {
-        "description": "GOG 模拟器存档"
+        "description": "通过 Nemirtingas 的 GOG Galaxy 模拟器运行的 GOG 游戏：读取它保存的成就。"
       },
       "epic": {
-        "description": "Epic 模拟器存档"
+        "description": "通过 Nemirtingas 的 Epic 模拟器运行的 Epic 游戏：读取它保存的成就。"
       },
       "shadps4": {
         "description": "PlayStation 4 模拟器"
@@ -1506,7 +1512,7 @@
         "description": "通过 XLiveLessNess 运行的 Games for Windows LIVE"
       },
       "retroAchievements": {
-        "description": "来自你的 RetroAchievements 账户的模拟器游戏。请在下方的账户卡片中连接；模拟器运行时会通知新解锁的成就。"
+        "description": "来自你的 RetroAchievements 账号的模拟器游戏。请在下方的账号卡片中连接；模拟器运行期间会通知新的解锁。"
       },
       "psnLibrary": {
         "description": "从你的 PlayStation 账号导入的游戏和奖杯。请在下方的账号卡片中连接，然后导入游戏库。"
@@ -1521,7 +1527,8 @@
       "madnesspatch": {
         "description": "通过 MadnessPatch 模组运行的 Alice: Madness Returns"
       },
-      "groupStores": "官方启动器",
+      "groupStores": "官方平台",
+      "groupMemory": "游戏库记忆",
       "groupConsoles": "主机与复古"
     },
     "help": {
@@ -1652,7 +1659,7 @@
         "摆放源时，在 URL 后加上 ?test=1。它会每十秒显示一次示例解锁；完成后请移除它。",
         "该源绘制的弹窗与游戏内的相同，并在两次解锁之间保持空白，因此直播时几乎不占资源。",
         "地址后的更多选项：?scale=2 固定缩放，?duration=8000 设置每张卡片停留多久，?sound=1 通过该源播放声音，/obs/preset/Xbox/ 无论桌面使用哪个预设都固定使用一个预设。",
-        "它读取本地通知流，所以请在 设置 > 通知 > 集成 中保持 Websocket @localhost:8082 开启。它只能在这台电脑上工作，并且只有一份 AW Next 可以提供它。"
+        "它读取本地通知流，所以请在 设置 > 通知 > 集成 中保持 本地广播 开启。它只能在这台电脑上工作，并且只有一份 AW Next 可以提供它。"
       ],
       "souvenirsTitle": "截图与视频剪辑",
       "souvenirs": [
@@ -1731,7 +1738,8 @@
       "mainSteam": {
         "title": "Steam 主账号",
         "name": "按用户筛选",
-        "description": "仅显示所选账号的 Steam 成就"
+        "description": "只显示所选账号的 Steam 成就。所有账号：不筛选。",
+        "all": "所有账号"
       },
       "checkUpdates": "检查更新",
       "clearUpdateCache": {
@@ -1746,7 +1754,7 @@
       },
       "disableAutoRefresh": {
         "name": "成就数据自动更新",
-        "description": "如果你自己维护 steam_cache，可以关闭此项：这会停止定期的自我修复，该修复会填补空白说明并识别游戏更新新增的成就。上方的「重新检查成就列表」仍可作为手动的一次性检查使用。"
+        "description": "让成就数据保持最新：补全空白描述，并识别游戏更新新增的成就。仅当你自己维护这些文件时才关闭。上方的“重新检查成就列表”仍可手动使用。"
       }
     },
     "interfaceMode": {
@@ -1970,6 +1978,7 @@
     "folder-reason-no-marker": "这里没有存放任何与成就相关的内容：没有 AppID 文件夹，没有模拟器配置，也没有解锁文件。",
     "folder-reason-found-instead": "实际找到的是：",
     "folder-reason-checked": "已在此检查：AppID 子文件夹、AW Next 已知的全部模拟器配置文件，以及 {layouts} 种便携存档布局。该文件夹已被检查，没有任何遗漏。",
+    "folder-also-watched": "也被自动监视",
     "game-health-title": "游戏状态",
     "game-settings-menu": "游戏设置",
     "game-config-title": "可执行文件配置",
@@ -2002,6 +2011,7 @@
     "update-checked": "已检查",
     "blacklist-add-placeholder": "Steam 应用 ID",
     "blacklist-add-button": "添加",
+    "blacklist-appid-help": "Steam App ID 是游戏 Steam 商店页面地址中的数字：store.steampowered.com/app/ID",
     "setupLooksValid": "设置看起来有效。",
     "problemsWereDetected": "检测到问题。",
     "repairSteamSettings": "修复 steam_settings（写入架构 + 图标）…",
@@ -3106,6 +3116,8 @@
     "preset-rename-same": "请先在“名称”字段中输入新名称，然后点击“重命名”。",
     "preset-view-readonly": "此视图仅显示卡片。请返回“卡片”以编辑布局。",
     "preset-layer-fixed": "{presets} 使用自带代码绘制卡片，因此无法在此自定义。您仍然可以按原样使用它们。",
+    "preset-layer-named": "将保存为新预设“{name}”；如需换个名字，请修改名称。",
+    "preset-layer-start-hidden": "自定义预设时会隐藏“{start}”。选择“{none}”即可恢复。",
     "preset-play-popup": "此预设使用自带的代码绘制卡片，因此会在屏幕上的真实弹窗中播放。",
     "preset-play-reduced": "Windows 已设置为显示较少的动画，因此预览保持静止。要查看动画，请在 Windows 设置中重新打开“动画效果”。"
   },
