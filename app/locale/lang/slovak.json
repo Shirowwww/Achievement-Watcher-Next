@@ -353,6 +353,12 @@
           "name": "Bodka stavu hry",
           "description": "Zobrazí farebnú bodku, ktorá upozorní, že hra nie je sledovaná. Stav hry zostáva dostupný z kontextovej ponuky."
         },
+        "playtime": {
+          "name": "Čas hrania",
+          "description": "Ako knižnica zapisuje dlhý čas hrania: v dňoch a hodinách, alebo len v hodinách.",
+          "auto": "Dni a hodiny",
+          "hours": "Len hodiny"
+        },
         "showAchievementButton": {
           "name": "Tlačidlo úspechov",
           "description": "Zobrazí tlačidlo trofeje na grafike. Kliknutie na samotnú dlaždicu tiež otvorí úspechy."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Veľkosť vyskakovacieho overlayu",
         "overlayOpacity": "Nepriehľadnosť",
         "overlayOpacityDesc": "Aké priehľadné je vyskakovacie okno v hre. 100 % je úplne nepriehľadné.",
+        "overlayEdgeGap": "Vzdialenosť od okraja",
+        "overlayEdgeGapDesc": "Medzera medzi vyskakovacím oknom a okrajom obrazovky pri všetkých umiestneniach okrem Vlastné. Hodnota 0 ho posunie tesne k okraju. Vyskakovacie okno zobrazené na obrazovke sleduje posuvník.",
         "overlayProgressPosition": "Pozícia postupu",
         "overlayProgressPositionDesc": "Kde sa zobrazujú vyskakovacie okná postupu (kroky postupu +1).",
         "overlayProgressScale": "Veľkosť postupu",
@@ -1248,7 +1256,10 @@
             "bundled": "Pribalené",
             "fixed": "Použiteľné tak, ako sú",
             "browse": "Prehliadať predvoľby",
-            "empty": "Zatiaľ nemáte žiadne vlastné predvoľby. Vytvorte jednu v návrhári a zobrazí sa tu."
+            "empty": "Zatiaľ nemáte žiadne vlastné predvoľby. Vytvorte jednu v návrhári a zobrazí sa tu.",
+            "search": "Hľadať predvoľby",
+            "noMatch": "Žiadna predvoľba nezodpovedá.",
+            "states": "Zobraziť karty ako"
           }
         },
         "souvenirTitle": "Spomienkový snímok",
@@ -1306,6 +1317,8 @@
           "custom": "Vlastné"
         },
         "reposition": "Zmeniť umiestnenie vyskakovacieho okna (presuňte ho, kam chcete)",
+        "centerHorizontally": "Vycentrovať vyskakovacie okno vodorovne",
+        "centerVertically": "Vycentrovať vyskakovacie okno zvisle",
         "customToastAudio": {
           "name": "Zvuk oznámenia Windows",
           "description": "Určuje zvuk prehraný pri zobrazení oznámenia Windows",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PC porty hier pre PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): pridaj priečinok portu v sekcii Priečinky"
+      },
+      "x360recomp": {
+        "description": "PC rekompilácie hier pre Xbox 360 (porty ReXGlue): nachádzajú sa v Dokumentoch, alebo pridaj priečinok portu v sekcii Priečinky"
       },
       "xenia": {
         "description": "Emulátor Xbox 360"

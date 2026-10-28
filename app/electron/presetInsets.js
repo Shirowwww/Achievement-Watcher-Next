@@ -84,9 +84,10 @@ function settled(samples) {
 /**
  * @param {{ cacheFile: string, preloadPath: string, imagePath: string,
  *   dimensions: (folder: string, layer: object|null) => { width: number, height: number },
- *   prepare: (win: BrowserWindow, layer: object|null) => Promise<void>, log: (line: string) => void }} options
+ *   prepare: (win: BrowserWindow, layer: object|null) => Promise<void>, log: (line: string) => void,
+ *   pictures?: ReturnType<typeof import('../util/pictureCache.js').createPictureCache> | null }} options
  */
-function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, prepare, log }) {
+function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, prepare, log, pictures = null }) {
   let cache = null;
   // Measured or tried this session: a preset that fails is not measured again until the next start.
   const attempted = new Set();
@@ -222,7 +223,22 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
       cannot rebuild from its controls (an imported SAN theme). Waits as long as the stored profile
       says the card takes to settle, else as long as the slowest bundled preset.
     */
-    async snapshot(folder, layer, payload) {
+    async snapshot(folder, layer, payload, { cached = false } = {}) {
+      // The gallery's pictures are kept on disk: drawn once per preset version, shown at once after.
+      const key = cached && pictures ? pictures.keyOf(`${folder}|${(layer && layer.dir) || ''}`, filesSignature([folder, layer && layer.dir]), payload) : null;
+      const kept = key ? pictures.get(key) : null;
+      if (kept) return kept;
+      const shot = await this.render(folder, layer, payload);
+      if (key && shot) {
+        try {
+          pictures.set(key, shot);
+        } catch (err) {
+          log(`[overlay-notif] preset picture not kept: ${err.message || err}`);
+        }
+      }
+      return shot;
+    },
+    async render(folder, layer, payload) {
       const profile = this.get(folder, layer, payload.position || 'center-bottom');
       const at = profile ? profile.settleMs + 150 : SNAPSHOT_FALLBACK_MS;
       const read = async (image, ratio, contents) => ({ image: image.toDataURL(), card: await contents.executeJavaScript(CARD_RECT_SCRIPT).catch(() => null) });

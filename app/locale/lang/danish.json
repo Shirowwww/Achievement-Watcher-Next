@@ -353,6 +353,12 @@
           "name": "Spiltilstandsprik",
           "description": "Viser den farvede prik, der advarer, når et spil ikke registreres. Spillets tilstand er stadig tilgængelig fra højrekliksmenuen."
         },
+        "playtime": {
+          "name": "Spilletid",
+          "description": "Hvordan biblioteket skriver en lang spilletid: i dage og timer eller kun i timer.",
+          "auto": "Dage og timer",
+          "hours": "Kun timer"
+        },
         "showAchievementButton": {
           "name": "Præstationsknap",
           "description": "Viser trofæknappen på grafikken. Klik på selve feltet åbner også præstationerne."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Størrelsen på pop op-vinduet i overlayet",
         "overlayOpacity": "Uigennemsigtighed",
         "overlayOpacityDesc": "Hvor gennemsigtigt pop op-vinduet i spillet er. 100 % er helt uigennemsigtigt.",
+        "overlayEdgeGap": "Afstand fra kanten",
+        "overlayEdgeGapDesc": "Afstand mellem pop op-vinduet og skærmkanten, for alle placeringer undtagen Brugerdefineret. 0 placerer det helt ind til kanten. Et pop op-vindue på skærmen følger skyderen.",
         "overlayProgressPosition": "Placering af fremskridt",
         "overlayProgressPositionDesc": "Hvor pop op-vinduerne med fremskridt vises (fremskridtstrinene på +1).",
         "overlayProgressScale": "Størrelse på fremskridt",
@@ -1248,7 +1256,10 @@
             "bundled": "Medfølgende",
             "fixed": "Bruges, som de er",
             "browse": "Gennemse presets",
-            "empty": "Du har endnu ingen egne presets. Lav en i designeren, så dukker den op her."
+            "empty": "Du har endnu ingen egne presets. Lav en i designeren, så dukker den op her.",
+            "search": "Søg i presets",
+            "noMatch": "Ingen preset matcher.",
+            "states": "Vis kort som"
           }
         },
         "souvenirTitle": "Souvenirskærmbillede",
@@ -1306,6 +1317,8 @@
           "custom": "Brugerdefineret"
         },
         "reposition": "Flyt pop op-vinduet (træk det derhen, hvor du vil have det)",
+        "centerHorizontally": "Centrer pop op-vinduet vandret",
+        "centerVertically": "Centrer pop op-vinduet lodret",
         "customToastAudio": {
           "name": "Lyd til Windows-notifikation",
           "description": "Angiver den lyd, der afspilles, når en Windows-notifikation vises",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Pc-porte af PlayStation 4-spil (Bloodborne, Uncharted, God of War III, MediEvil): tilføj portens mappe under Mapper"
+      },
+      "x360recomp": {
+        "description": "Pc-rekompileringer af Xbox 360-spil (ReXGlue-porte): findes i Dokumenter, eller tilføj portens mappe under Mapper"
       },
       "xenia": {
         "description": "Xbox 360-emulator"

@@ -353,6 +353,12 @@
           "name": "Spielzustandspunkt",
           "description": "Zeigt den farbigen Punkt, der warnt, wenn ein Spiel nicht erfasst wird. Der Spielzustand bleibt über das Rechtsklick-Menü erreichbar."
         },
+        "playtime": {
+          "name": "Spielzeit",
+          "description": "Wie die Bibliothek eine lange Spielzeit schreibt: in Tagen und Stunden oder nur in Stunden.",
+          "auto": "Tage und Stunden",
+          "hours": "Nur Stunden"
+        },
         "showAchievementButton": {
           "name": "Erfolge-Schaltfläche",
           "description": "Zeigt die Pokal-Schaltfläche auf der Grafik. Ein Klick auf die Kachel selbst öffnet die Erfolge ebenfalls."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Größe des In-Game-Overlay-Popups",
         "overlayOpacity": "Deckkraft",
         "overlayOpacityDesc": "Wie durchsichtig das Popup im Spiel ist. 100 % ist vollständig deckend.",
+        "overlayEdgeGap": "Abstand zum Rand",
+        "overlayEdgeGapDesc": "Abstand zwischen dem Popup und dem Bildschirmrand, für alle Positionen außer Benutzerdefiniert. Bei 0 liegt es direkt am Rand. Ein angezeigtes Popup folgt dem Schieberegler.",
         "overlayProgressPosition": "Fortschrittsposition",
         "overlayProgressPositionDesc": "Wo die Fortschritts-Popups erscheinen (die +1-Schritte beim Fortschritt).",
         "overlayProgressScale": "Fortschrittsgröße",
@@ -1248,7 +1256,10 @@
             "bundled": "Mitgeliefert",
             "fixed": "Nutzbar, wie sie sind",
             "browse": "Presets durchsuchen",
-            "empty": "Du hast noch keine eigenen Presets. Erstelle eines im Designer, dann erscheint es hier."
+            "empty": "Du hast noch keine eigenen Presets. Erstelle eines im Designer, dann erscheint es hier.",
+            "search": "Presets suchen",
+            "noMatch": "Kein Preset passt.",
+            "states": "Karten anzeigen als"
           }
         },
         "souvenirTitle": "Souvenir-Screenshot",
@@ -1306,6 +1317,8 @@
           "custom": "Benutzerdefiniert"
         },
         "reposition": "Popup neu positionieren (an die gewünschte Stelle ziehen)",
+        "centerHorizontally": "Popup horizontal zentrieren",
+        "centerVertically": "Popup vertikal zentrieren",
         "customToastAudio": {
           "name": "Ton der Windows-Benachrichtigung",
           "description": "Legt den Ton fest, der beim Anzeigen einer Windows-Benachrichtigung abgespielt wird",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PC-Portierungen von PlayStation-4-Spielen (Bloodborne, Uncharted, God of War III, MediEvil): Füge den Ordner der Portierung unter Ordner hinzu"
+      },
+      "x360recomp": {
+        "description": "PC-Rekompilierungen von Xbox-360-Spielen (ReXGlue-Portierungen): zu finden unter Dokumente, oder füge den Ordner der Portierung unter Ordner hinzu"
       },
       "xenia": {
         "description": "Xbox-360-Emulator"

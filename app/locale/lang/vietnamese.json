@@ -353,6 +353,12 @@
           "name": "Chấm tình trạng trò chơi",
           "description": "Hiện chấm màu cảnh báo khi một trò chơi không được theo dõi. Tình trạng trò chơi vẫn có thể truy cập từ menu chuột phải."
         },
+        "playtime": {
+          "name": "Thời gian chơi",
+          "description": "Cách thư viện viết thời gian chơi dài: theo ngày và giờ, hoặc chỉ theo giờ.",
+          "auto": "Ngày và giờ",
+          "hours": "Chỉ giờ"
+        },
         "showAchievementButton": {
           "name": "Nút thành tựu",
           "description": "Hiện nút cúp trên hình ảnh. Nhấp vào chính thẻ đó cũng mở thành tựu."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Kích thước của khung thông báo lớp phủ trong trò chơi",
         "overlayOpacity": "Độ đục",
         "overlayOpacityDesc": "Khung thông báo trong trò chơi trong suốt đến mức nào. 100% là hoàn toàn đục.",
+        "overlayEdgeGap": "Khoảng cách tới mép",
+        "overlayEdgeGapDesc": "Khoảng trống giữa khung thông báo và mép màn hình, cho mọi vị trí trừ Tùy chỉnh. Giá trị 0 đặt sát mép. Khung thông báo đang hiện trên màn hình sẽ chạy theo thanh trượt.",
         "overlayProgressPosition": "Vị trí tiến độ",
         "overlayProgressPositionDesc": "Nơi các khung thông báo tiến độ (các bước +1 của tiến độ) xuất hiện.",
         "overlayProgressScale": "Cỡ tiến độ",
@@ -1248,7 +1256,10 @@
             "bundled": "Có sẵn",
             "fixed": "Dùng nguyên trạng",
             "browse": "Duyệt các mẫu",
-            "empty": "Bạn chưa có mẫu riêng nào. Hãy tạo một mẫu trong trình thiết kế và nó sẽ hiện ở đây."
+            "empty": "Bạn chưa có mẫu riêng nào. Hãy tạo một mẫu trong trình thiết kế và nó sẽ hiện ở đây.",
+            "search": "Tìm mẫu",
+            "noMatch": "Không có mẫu nào khớp.",
+            "states": "Hiển thị thẻ dưới dạng"
           }
         },
         "souvenirTitle": "Ảnh kỷ niệm",
@@ -1306,6 +1317,8 @@
           "custom": "Tùy chỉnh"
         },
         "reposition": "Đổi vị trí khung thông báo (kéo tới nơi bạn muốn)",
+        "centerHorizontally": "Căn giữa khung thông báo theo chiều ngang",
+        "centerVertically": "Căn giữa khung thông báo theo chiều dọc",
         "customToastAudio": {
           "name": "Âm thanh thông báo Windows",
           "description": "Chọn âm thanh phát khi một thông báo Windows hiện ra",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Bản port PC của các game PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): thêm thư mục của bản port trong Thư mục"
+      },
+      "x360recomp": {
+        "description": "Bản biên dịch lại PC của các game Xbox 360 (bản port ReXGlue): tìm thấy trong Tài liệu, hoặc thêm thư mục của bản port trong Thư mục"
       },
       "xenia": {
         "description": "Trình giả lập Xbox 360"

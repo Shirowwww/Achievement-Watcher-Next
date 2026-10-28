@@ -353,6 +353,12 @@
           "name": "Játék állapotának pontja",
           "description": "Megjeleníti a színes pontot, amely figyelmeztet, ha egy játékot nem követ a rendszer. A Játék állapota továbbra is elérhető a jobb gombos menüből."
         },
+        "playtime": {
+          "name": "Játékidő",
+          "description": "Hogyan írja a könyvtár a hosszú játékidőt: napokban és órákban, vagy csak órákban.",
+          "auto": "Napok és órák",
+          "hours": "Csak órák"
+        },
         "showAchievementButton": {
           "name": "Teljesítmények gomb",
           "description": "Megjeleníti a trófeagombot a grafikán. Magára a csempére kattintva is megnyílnak a teljesítmények."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "A felugró overlay mérete",
         "overlayOpacity": "Átlátszatlanság",
         "overlayOpacityDesc": "Mennyire átlátszó a játékon belüli felugró ablak. A 100% teljesen átlátszatlan.",
+        "overlayEdgeGap": "Távolság a széltől",
+        "overlayEdgeGapDesc": "A felugró ablak és a képernyő széle közti hely, az Egyéni kivételével minden pozícióhoz. A 0 egészen a szélhez teszi. A képernyőn látható felugró ablak követi a csúszkát.",
         "overlayProgressPosition": "Haladás pozíciója",
         "overlayProgressPositionDesc": "Hol jelennek meg a haladási felugró ablakok (a haladás +1 lépései).",
         "overlayProgressScale": "Haladás mérete",
@@ -1248,7 +1256,10 @@
             "bundled": "Mellékelt",
             "fixed": "Úgy használhatók, ahogy vannak",
             "browse": "Előbeállítások böngészése",
-            "empty": "Még nincs saját előbeállításod. Készíts egyet a tervezőben, és itt meg fog jelenni."
+            "empty": "Még nincs saját előbeállításod. Készíts egyet a tervezőben, és itt meg fog jelenni.",
+            "search": "Előbeállítások keresése",
+            "noMatch": "Nincs egyező előbeállítás.",
+            "states": "Kártyák megjelenítése így"
           }
         },
         "souvenirTitle": "Emlék képernyőkép",
@@ -1306,6 +1317,8 @@
           "custom": "Egyéni"
         },
         "reposition": "Felugró ablak áthelyezése (húzd oda, ahová szeretnéd)",
+        "centerHorizontally": "Felugró ablak vízszintes középre igazítása",
+        "centerVertically": "Felugró ablak függőleges középre igazítása",
         "customToastAudio": {
           "name": "Windows-értesítés hangja",
           "description": "Megadja a Windows-értesítés megjelenésekor lejátszandó hangot",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PlayStation 4-es játékok PC-s portjai (Bloodborne, Uncharted, God of War III, MediEvil): add hozzá a port mappáját a Mappák részben"
+      },
+      "x360recomp": {
+        "description": "Xbox 360-as játékok PC-s újrafordításai (ReXGlue-portok): a Dokumentumok mappában találhatók, vagy add hozzá a port mappáját a Mappák részben"
       },
       "xenia": {
         "description": "Xbox 360 emulátor"

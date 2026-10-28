@@ -169,25 +169,44 @@ function createPresetDesigner({
     return null;
   }
 
+  // The covers a sample card can show, landscape ones first.
+  function artworkPool() {
+    const userData = ipcRenderer.sendSync('get-user-data-path-sync');
+    const candidates = [];
+    // covers/ only exists once a custom cover was picked; its absence is not worth a stack trace.
+    const covers = path.join(userData, 'covers');
+    const names = settingsFs.existsSync(covers) ? settingsFs.readdirSync(covers) : [];
+    for (const name of names) {
+      if (/\.(png|jpe?g|webp)$/i.test(name)) candidates.push(path.join(covers, name));
+    }
+    // Landscape first: a header fills the card, where a portrait cover is cropped to a sliver of
+    // itself. Read from the file header rather than pulling in an image library for one number.
+    const landscape = candidates.filter((file) => {
+      const size = imageDimensions(file);
+      return size && size.width > size.height;
+    });
+    return landscape.length ? landscape : candidates;
+  }
+
+  // The gallery's pictures are kept between sessions, so they always show the same cover: a random
+  // one would make every launch a miss and draw them all again.
+  let galleryArt = null;
+  function galleryArtFile() {
+    if (galleryArt !== null) return galleryArt;
+    try {
+      galleryArt = artworkPool().sort()[0] || '';
+    } catch (e) {
+      debug.log(e);
+      galleryArt = '';
+    }
+    return galleryArt;
+  }
+
   function previewArtwork() {
     if (previewArt !== null) return previewArt;
     previewArt = '';
     try {
-      const userData = ipcRenderer.sendSync('get-user-data-path-sync');
-      const candidates = [];
-      // covers/ only exists once a custom cover was picked; its absence is not worth a stack trace.
-      const covers = path.join(userData, 'covers');
-      const names = settingsFs.existsSync(covers) ? settingsFs.readdirSync(covers) : [];
-      for (const name of names) {
-        if (/\.(png|jpe?g|webp)$/i.test(name)) candidates.push(path.join(covers, name));
-      }
-      // Landscape first: a header fills the card, where a portrait cover is cropped to a sliver of
-      // itself. Read from the file header rather than pulling in an image library for one number.
-      const landscape = candidates.filter((file) => {
-        const size = imageDimensions(file);
-        return size && size.width > size.height;
-      });
-      const pool = landscape.length ? landscape : candidates;
+      const pool = artworkPool();
       if (pool.length) {
         const file = pool[Math.floor(Math.random() * pool.length)];
         previewArt = fileAsDataUri(file, /\.png$/i.test(file) ? 'image/png' : 'image/jpeg');
@@ -567,7 +586,22 @@ function createPresetDesigner({
   // from the designer's own menu. A plain unlock, so the pictures compare like for like.
   const presetGallery = require(path.join(appPath, 'ui/presetGallery.js')).createPresetGallery({
     label: (key) => $(`#pd-gallery-text [data-pg="${key}"]`).text() || key,
-    snapshot: (name) => ipcRenderer.invoke('preset-snapshot', { preset: name, payload: snapshotPayload(previewPayload('normal')) }),
+    snapshot: (name, state) => {
+      const payload = snapshotPayload(previewPayload(state));
+      const art = galleryArtFile();
+      if (payload.imagePath) payload.imagePath = art;
+      if (payload.gameIconPath) payload.gameIconPath = art;
+      return ipcRenderer.invoke('preset-snapshot', { preset: name, payload, cached: true });
+    },
+    // Every state the designer's preview has, named as it names them.
+    states: () =>
+      ['normal', 'bronze', 'silver', 'gold', 'completion', 'progress'].map((key) => ({ key, label: $(`#pd-state button[data-state="${key}"]`).text().trim() || key })),
+  });
+  // Opening Settings draws the pictures not kept yet, one at a time, before the gallery is opened.
+  // Asked for, not read from the menu: on the first opening the menu is still being filled.
+  $('title-bar').one('open-settings', async () => {
+    const names = await ipcRenderer.invoke('list-presets').catch(() => []);
+    presetGallery.warm(Array.isArray(names) ? names : []);
   });
   const galleryTitle = (key) => $(`#pd-gallery-text [data-pg="${key}"]`).text();
   // Every menu that picks a preset opens the gallery instead of a list of names. The user's own
@@ -1283,6 +1317,39 @@ function createPresetDesigner({
     stepPresetHistory(key === 'z' && !event.shiftKey);
   });
 
+  // Which settings group draws each part of a designed card.
+  const PART_GROUPS = {
+    card: 'color',
+    cardBefore: 'color',
+    cardAfter: 'color',
+    icon: 'icon',
+    iconBefore: 'icon',
+    iconAfter: 'icon',
+    mark: 'icon',
+    text: 'text',
+    title: 'text',
+    detail: 'text',
+    meta: 'text',
+    game: 'text',
+    rarity: 'state',
+    progress: 'layout',
+  };
+
+  // Opens a group, with its Advanced half where the interface shows it, and brings it into view.
+  function revealDesignerGroup(name) {
+    const group = name ? $(`#options-notify-designer .pd-controls .pd-group[data-group="${name}"]`) : $();
+    if (!group.length || group.hasClass('pd-layer-skip')) return;
+    group.addClass('is-open');
+    const more = group.find('.pd-more');
+    if (more.length && more.is(':visible') && !more.hasClass('is-on')) more.trigger('click');
+    group[0].classList.remove('is-revealed');
+    void group[0].offsetWidth;
+    group[0].classList.add('is-revealed');
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    group[0].scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' });
+    syncDesignerToggleAria();
+  }
+
   // Collapsible groups, and the per-group Advanced disclosure.
   $('#options-notify-designer').on('click', '.pd-group-head', function () {
     $(this).closest('.pd-group').toggleClass('is-open');
@@ -1373,6 +1440,10 @@ function createPresetDesigner({
       return part && { ...part, name: sanLook.partName(part.id) };
     },
     openCardPart: (id) => sanLook.reveal(id),
+    // A part of a designed card opens its settings group, Advanced half included.
+    partSelected: (key) => {
+      if (!sanLive && !presetSnapshot) revealDesignerGroup(PART_GROUPS[key]);
+    },
     // Moved by hand: the theme's own scale zooms its page, so a shift is counted in its pixels.
     cardPartMovable: (id) => Boolean(sanLive) && sanLook.movable(id),
     moveCardPart: (id, dx, dy, done) => {
@@ -1409,6 +1480,8 @@ function createPresetDesigner({
       if (on) warnReducedMotion();
     },
     restart: () => replayPreview(),
+    // How long the card is on screen, for the timeline to run to the end of its exit.
+    cardLife: () => Number(readPresetOptions().duration) || 0,
   });
   // Its summary and layer names are read from the locale, which may land after it was built.
   registerLocaleRefresh(() => canvasEditor.refresh());

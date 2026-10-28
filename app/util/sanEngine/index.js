@@ -536,29 +536,6 @@ function presetSound(dir, { notificationType = '', rarityTier, rarityMode = '', 
   return files[Math.min(files.length - 1, Math.floor(random() * files.length))];
 }
 
-/*
-  How far inside the screen edges SAN keeps a card (listeners.js, setnotifybounds): its window has
-  25px of glow room per side at 100%, and the cards with an offset pull it back to a fixed 25px at
-  any scale; ps4 and gfwl (offset 0) keep the room, so theirs grows with the card. `zoom` is AW
-  Next's size setting. 0 for a preset that is not an imported SAN theme.
-*/
-const SAN_EDGE_GAP = 25;
-
-function edgeGap(dir, { notificationType = '', rarityTier, rarityMode = '', unlockRate = null, zoom = 1 } = {}) {
-  let theme;
-  try {
-    theme = readEmbeddedTheme(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'));
-  } catch {
-    return 0;
-  }
-  if (!theme) return 0;
-  const platinum = String(notificationType || '').toLowerCase() === 'platinum';
-  const c = engine.customisationFor(theme, { tier: rarityTier, mode: rarityMode, platinum, percent: unlockRate }).customisation;
-  const layout = engine.layoutOf(c.preset);
-  if (engine.LAYOUTS[layout].offset !== 0) return SAN_EDGE_GAP;
-  return SAN_EDGE_GAP * engine.scaleOf(c) * (Number(zoom) > 0 ? Number(zoom) : 1);
-}
-
 function isSanPreset(dir) {
   try {
     return fs.readFileSync(path.join(dir, 'index.html'), 'utf8').includes(`name="${ENGINE_META}"`);
@@ -590,5 +567,4 @@ module.exports = {
   refreshPreset,
   isSanPreset,
   presetSound,
-  edgeGap,
 };

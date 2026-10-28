@@ -150,3 +150,11 @@ test('a custom 75% popup can sit flush over the taskbar on a 150% scaled 4K disp
   assert.deepEqual(bounds, { x: 2245, y: 1312, width: 315, height: 128, margin: 0 });
   assert.equal(bounds.y + bounds.height, 1440);
 });
+
+test('centring a custom popup moves it on one axis only, inside the screen it is on', () => {
+  const { centerOnAxis } = require('../../app/util/notificationBounds.js');
+  const bounds = { x: -300, y: 900, width: 400, height: 100 };
+  assert.deepEqual(centerOnAxis(bounds, workArea, 'x'), { x: -1920 + 760, y: 900 });
+  assert.deepEqual(centerOnAxis(bounds, workArea, 'y'), { x: -300, y: 40 + 470 });
+  assert.deepEqual(centerOnAxis(bounds, workArea, 'z'), { x: -300, y: 900 });
+});

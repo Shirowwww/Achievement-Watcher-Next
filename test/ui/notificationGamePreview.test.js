@@ -53,10 +53,12 @@ test('every field the preview payload sets is one the notification window actual
     'achievementIconPath',
     // Read where the popup is placed, not where it is drawn: gamePositionAppid names the game whose
     // saved anchor applies, customPosition is the anchor a preview is being dragged to, and
-    // customAnchor picks the saved global anchor (unlocks or progress).
+    // customAnchor picks the saved global anchor (unlocks or progress), edgeGap is the distance from
+    // the edge the Settings slider is showing.
     'gamePositionAppid',
     'customPosition',
     'customAnchor',
+    'edgeGap',
   ]);
   const unread = [...returned.matchAll(/^\s{10}([A-Za-z][\w]*):/gm)]
     .map((m) => m[1])

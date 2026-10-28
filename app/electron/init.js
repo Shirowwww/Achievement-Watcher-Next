@@ -2015,6 +2015,11 @@ async function startEngines() {
   configJS = await settingsJS.load();
   // Not awaited: a registry lookup and a folder watch have no business delaying the window.
   syncSteamAppcacheWatch();
+  try {
+    warmPresetInsets(configJS && configJS.overlay);
+  } catch (err) {
+    debug.log('[overlay-notif] preset insets warm-up skipped: ' + (err.message || err));
+  }
 }
 
 // Moves the open library as Steam records an unlock or a counter (see util/steamAppcacheWatch.js). Follows the
@@ -5939,7 +5944,76 @@ const presetInsets = require('./presetInsets.js').createPresetInsets({
   dimensions: getPresetDimensions,
   prepare: dressPresetWindow,
   log: (line) => debug.log(line),
+  pictures: require('../util/pictureCache.js').createPictureCache({ dir: path.join(userData, 'cache', 'presetPictures') }),
 });
+
+// Where an edge-anchored popup goes for a given distance from the edge, snapped to whole pixels.
+function edgePlacedPoint({ placed, position, room, scale, scaleFactor }, userGap) {
+  const { dx, dy } = notificationInsets.edgeShift(position, room, scale, userGap);
+  if (!room && !userGap) return { x: placed.x, y: placed.y, dx, dy };
+  return {
+    x: notificationInsets.snapToDevicePixel(placed.x + dx, scaleFactor),
+    y: notificationInsets.snapToDevicePixel(placed.y + dy, scaleFactor),
+    dx,
+    dy,
+  };
+}
+
+// Popups on screen that sit against an edge, with what placed them.
+const edgePlacedNotifications = new Map();
+
+// The Settings slider: moves every popup on screen to the new distance, and says how many it moved.
+ipcMain.handle('preview-notification-edge-gap', (event, gap) => {
+  const userGap = notificationPlacement.normalizeEdgeGap(gap);
+  let moved = 0;
+  for (const [win, edgePlacement] of edgePlacedNotifications) {
+    if (win.isDestroyed()) {
+      edgePlacedNotifications.delete(win);
+      continue;
+    }
+    const { x, y } = edgePlacedPoint(edgePlacement, userGap);
+    // setBounds, not setPosition: Windows widens a transparent window moved past a screen edge.
+    win.setBounds({ x, y, width: edgePlacement.placed.width, height: edgePlacement.placed.height }, false);
+    moved++;
+  }
+  return moved;
+});
+
+// Reposition witnesses on screen. Centring one moves it, and its move handler saves the position.
+const repositionWitnesses = new Set();
+
+ipcMain.handle('center-notification-reposition', (event, axis) => {
+  if (axis !== 'x' && axis !== 'y') return 0;
+  let centered = 0;
+  for (const win of repositionWitnesses) {
+    if (win.isDestroyed()) {
+      repositionWitnesses.delete(win);
+      continue;
+    }
+    const bounds = win.getBounds();
+    const { workArea } = require('electron').screen.getDisplayMatching(bounds);
+    const { x, y } = notificationBounds.centerOnAxis(bounds, workArea, axis);
+    win.setBounds({ ...bounds, x, y }, false);
+    centered++;
+  }
+  return centered;
+});
+
+/*
+  Measures the configured preset at its configured positions in the background, so the first popup
+  after a change is already placed like every later one instead of keeping its transparent room.
+*/
+function warmPresetInsets(overlayConfig) {
+  const ov = overlayConfig || {};
+  const resolved = resolveNotificationPreset([String(ov.notificationPreset || DEFAULT_PRESET), DEFAULT_PRESET]);
+  if (!resolved.folder) return;
+  const layer = notificationPresetLayers.get(resolved.name) || null;
+  const positions = new Set([ov.notificationPosition || 'center-bottom', ov.notificationProgressPosition].filter(Boolean));
+  for (const position of positions) {
+    if (position === 'custom' || presetInsets.get(resolved.folder, layer, position)) continue;
+    presetInsets.measureLater(resolved.folder, layer, position);
+  }
+}
 
 // A preset whose card follows its text is rendered with this popup's own text before it is placed;
 // every other popup goes straight through.
@@ -5957,11 +6031,11 @@ function withTextInsets(data) {
 
 // The designer's picture of a preset it cannot rebuild from its controls (an imported SAN theme or
 // .awpreset), rendered offscreen with the designer's sample text and artwork.
-ipcMain.handle('preset-snapshot', async (event, { preset, payload } = {}) => {
+ipcMain.handle('preset-snapshot', async (event, { preset, payload, cached = false } = {}) => {
   const resolved = resolveNotificationPreset([String(preset || '')]);
   if (!resolved.folder || resolved.name !== String(preset || '')) return null;
   const layer = notificationPresetLayers.get(resolved.name) || null;
-  return presetInsets.snapshot(resolved.folder, layer, notificationPagePayload(payload || {}));
+  return presetInsets.snapshot(resolved.folder, layer, notificationPagePayload(payload || {}), { cached: cached === true });
 });
 
 // The same payload for the designer's live pages, so a preview is worded and graded as the popup is.
@@ -6068,19 +6142,13 @@ function createNotificationWindow(data = {}) {
   const profile = edgeAnchored ? presetInsets.get(presetFolder, layer, position) : null;
   if (edgeAnchored && !profile) presetInsets.measureLater(presetFolder, layer, position);
   const room = profile ? data.textInsets || profile.insets : null;
-  const pageTier = edgeAnchored ? describeNotificationTier(data) : null;
-  const sanGap = pageTier
-    ? sanEngine.edgeGap(presetFolder, { notificationType: data.notificationType, rarityTier: pageTier.tier, rarityMode: pageTier.mode, unlockRate: data.unlockRate, zoom: scale })
-    : 0;
-  const { dx, dy } = notificationInsets.edgeShift(position, room, scale, sanGap);
+  // No preset, bundled or imported (SAN included), brings a margin of its own: only the user's
+  // distance from the edge moves the card inside it.
+  const userGap = edgeAnchored ? notificationPlacement.normalizeEdgeGap(data.edgeGap) : 0;
+  // Kept on the window so the Settings slider can move a popup already on screen.
+  const edgePlacement = edgeAnchored ? { placed, position, room, scale, scaleFactor: notificationDisplayScale(workArea) } : null;
   const { width: w, height: h } = placed;
-  let x = placed.x + dx;
-  let y = placed.y + dy;
-  if (room || sanGap) {
-    const scaleFactor = notificationDisplayScale(workArea);
-    x = notificationInsets.snapToDevicePixel(x, scaleFactor);
-    y = notificationInsets.snapToDevicePixel(y, scaleFactor);
-  }
+  const { x, y, dx, dy } = edgeAnchored ? edgePlacedPoint(edgePlacement, userGap) : { x: placed.x, y: placed.y, dx: 0, dy: 0 };
 
   debug.log(
     '[overlay-notif] preset=' +
@@ -6098,7 +6166,7 @@ function createNotificationWindow(data = {}) {
       'x' +
       h +
       (dx || dy ? ` edge-shift=${dx},${dy}` : '') +
-      (sanGap ? ` san-gap=${sanGap}` : '')
+      (userGap ? ` edge-gap=${userGap}` : '')
   );
 
   const notif = new BrowserWindow({
@@ -6139,6 +6207,14 @@ function createNotificationWindow(data = {}) {
   notif.setAlwaysOnTop(true, 'screen-saver');
   notif.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   gamescope().showAboveGame(notif);
+  if (edgePlacement) {
+    edgePlacedNotifications.set(notif, edgePlacement);
+    notif.once('closed', () => edgePlacedNotifications.delete(notif));
+  }
+  if (reposition) {
+    repositionWitnesses.add(notif);
+    notif.once('closed', () => repositionWitnesses.delete(notif));
+  }
   const lockedCustomBounds = position === 'custom' && !reposition ? { x, y, width: w, height: h } : null;
   if (lockedCustomBounds) {
     // A real custom-position notification is click-through and must never be nudged by a preset,
@@ -6869,6 +6945,7 @@ async function enqueueNotificationFromArgs(args) {
     gameDisplayAt: args.gameDisplayAt != null ? String(args.gameDisplayAt) : '',
     volume: Number.isFinite(Number(ov.notificationVolume)) ? Number(ov.notificationVolume) : 100,
     opacity: Number(ov.notificationOpacity) || 100,
+    edgeGap: notificationPlacement.normalizeEdgeGap(ov.notificationEdgeGap),
     durationMs: durSec > 0 ? durSec * 1000 : undefined,
     // Playtime notifications pass the game name in both fields. Keeping the dedicated game-name
     // fallback prevents a lost/empty displayName argument from becoming "Achievement Unlocked".

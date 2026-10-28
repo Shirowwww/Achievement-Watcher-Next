@@ -376,6 +376,12 @@ function translateUI(lang, locale, template) {
       $(`${select} option[value='true']`).text(clear(template.settings.common.show));
       $(`${select} option[value='false']`).text(clear(template.settings.common.hide));
     }
+    if (lib.playtime) {
+      $('#library-playtime-label').text(clear(lib.playtime.name));
+      $('#library-playtime-help').text(clear(lib.playtime.description));
+      $("#option_libraryPlaytimeUnits option[value='auto']").text(clear(lib.playtime.auto));
+      $("#option_libraryPlaytimeUnits option[value='hours']").text(clear(lib.playtime.hours));
+    }
   }
   // Profile card (Appearance) - bound by stable id, so it shifts no nth-child binding.
   const band = template.settings.general.profileBand;
@@ -712,6 +718,8 @@ function translateUI(lang, locale, template) {
   $('#lbl-overlayPosition').closest('li').find('.help').text(clear(template.settings.notification.option.overlayPositionDesc));
   $('#lbl-overlaySound').closest('li').find('.help').text(clear(template.settings.notification.option.overlaySoundDesc));
   $('#lbl-overlayScale').closest('li').find('.help').text(clear(template.settings.notification.option.overlayScaleDesc));
+  $('#lbl-overlayEdgeGap').text(clear(template.settings.notification.option.overlayEdgeGap));
+  $('#lbl-overlayEdgeGap').closest('li').find('.help').text(clear(template.settings.notification.option.overlayEdgeGapDesc));
   $('#lbl-overlayOpacity').text(clear(template.settings.notification.option.overlayOpacity));
   $('#lbl-overlayOpacity').closest('li').find('.help').text(clear(template.settings.notification.option.overlayOpacityDesc));
   $('#lbl-overlayVolume').closest('li').find('.help').text(clear(template.settings.notification.option.overlayVolumeDesc));
@@ -842,6 +850,8 @@ function translateUI(lang, locale, template) {
   if (template.settings.notification.option.reposition) {
     $('#btn-overlay-reposition, #btn-overlay-progress-reposition').attr('title', clear(template.settings.notification.option.reposition));
   }
+  $('#btn-overlay-center-x').attr('title', clear(template.settings.notification.option.centerHorizontally));
+  $('#btn-overlay-center-y').attr('title', clear(template.settings.notification.option.centerVertically));
   $('#option_overlaySound').attr('data-lang-none', clear(template.settings.notification.option.soundNone));
   selector = $("#settings .box .content[data-view='folder']");
   // An intro sentence now rather than a heading, so the heading's trailing colon goes.
@@ -873,7 +883,7 @@ function translateUI(lang, locale, template) {
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
   // Every on/off Sources row is bound by id: rows move between the cards, so a position means
   // nothing here. A row whose name is a brand keeps it in app.html and has no `name` key.
-  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'gogOfficial', 'ea', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'xenia', 'retroAchievements']) {
+  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'gogOfficial', 'ea', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'x360recomp', 'xenia', 'retroAchievements']) {
     const source = template.settings.source[key];
     if (source && source.name) $(`#source-name-${key}`).text(clear(source.name));
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));

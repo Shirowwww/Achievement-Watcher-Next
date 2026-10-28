@@ -204,6 +204,7 @@ module.exports.load = () => {
       options.overlay.notificationProgressPosition
     );
     options.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale(options.overlay.notificationProgressScale);
+    options.overlay.notificationEdgeGap = notificationPlacement.normalizeEdgeGap(options.overlay.notificationEdgeGap);
     if (typeof options.overlay.notificationSound !== 'string') {
       options.overlay.notificationSound = '';
     }
@@ -297,6 +298,7 @@ module.exports.load = () => {
     for (const toggle of libraryChrome.TOGGLES) {
       if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
     }
+    options.achievement.libraryPlaytimeUnits = libraryChrome.normalizePlaytimeUnits(options.achievement.libraryPlaytimeUnits);
 
     if (typeof options.achievement.showHidden !== 'boolean') {
       options.achievement.showHidden = false;
@@ -390,6 +392,11 @@ module.exports.load = () => {
 
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
+    }
+
+    // Unset until Sources shows it: it then takes what the Xenia switch said, which used to cover it.
+    if (typeof options.achievement_source.x360recomp !== 'boolean') {
+      options.achievement_source.x360recomp = options.achievement_source.xenia !== false;
     }
 
     if (typeof options.achievement_source.xlln !== 'boolean') {
@@ -684,6 +691,7 @@ module.exports.load = () => {
         notificationOpacity: 100, // percent, 30-100
         notificationProgressPosition: '',
         notificationProgressScale: '',
+        notificationEdgeGap: 0, // px between an edge-anchored card and the screen edge
         notificationSound: '',
         notificationSoundRare: '',
         notificationSoundPlatinum: '',
@@ -706,6 +714,7 @@ module.exports.load = () => {
         profileCompact: false, // issue #123: the profile band folded into one row
         libraryShowSource: true,
         libraryShowHealth: true,
+        libraryPlaytimeUnits: 'auto', // 'hours' keeps a long playtime in hours, never days
         libraryShowAchievementButton: true,
         libraryShowConfigButton: true,
         thumbnailPortrait: false,
@@ -736,6 +745,7 @@ module.exports.load = () => {
         shadps4: true,
         kytyps5: true,
         ps4recomp: true,
+        x360recomp: true,
         xenia: true,
         xlln: true,
         retroAchievements: true,

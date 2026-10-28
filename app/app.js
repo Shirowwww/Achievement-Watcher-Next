@@ -1386,6 +1386,7 @@ function applyLibraryChrome(achievement) {
     .css('--library-gap-scale', String(chrome.density))
     .removeClass(chrome.allClasses.join(' '));
   if (chrome.hiddenClasses.length) list.addClass(chrome.hiddenClasses.join(' '));
+  setLibraryPlaytimeMode(achievement && achievement.libraryPlaytimeUnits);
   return chrome;
 }
 
@@ -1663,8 +1664,19 @@ function formatPlaytime(seconds, { units } = {}) {
   return humanizeDuration(total * 1000, { language: moment.locale(), fallbacks: ['en'], units: shortUnits, round: true, largest: 2 });
 }
 
+// Set by applyLibraryChrome, so a Settings preview, a Cancel and a save all repaint through one path.
+let libraryPlaytimeMode = 'auto';
+
 function libraryPlaytime(seconds) {
-  return formatPlaytime(seconds);
+  const units = libraryChrome.playtimeUnits(seconds, libraryPlaytimeMode);
+  return units ? formatPlaytime(seconds, { units }) : formatPlaytime(seconds);
+}
+
+function setLibraryPlaytimeMode(mode) {
+  const next = libraryChrome.normalizePlaytimeUnits(mode);
+  if (next === libraryPlaytimeMode) return;
+  libraryPlaytimeMode = next;
+  for (const appid of gameElements.keys()) paintTilePlaytime(appid);
 }
 
 // Repaints a tile's playtime row after its total was edited or reset.

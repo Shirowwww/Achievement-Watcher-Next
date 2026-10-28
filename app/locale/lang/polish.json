@@ -353,6 +353,12 @@
           "name": "Kropka stanu gry",
           "description": "Pokazuje kolorową kropkę, która ostrzega, gdy gra nie jest śledzona. Stan gry pozostaje dostępny w menu kontekstowym."
         },
+        "playtime": {
+          "name": "Czas gry",
+          "description": "Jak biblioteka zapisuje długi czas gry: w dniach i godzinach albo tylko w godzinach.",
+          "auto": "Dni i godziny",
+          "hours": "Tylko godziny"
+        },
         "showAchievementButton": {
           "name": "Przycisk osiągnięć",
           "description": "Pokazuje przycisk trofeum na grafice. Kliknięcie samego kafelka również otwiera osiągnięcia."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Rozmiar wyskakującej nakładki",
         "overlayOpacity": "Nieprzezroczystość",
         "overlayOpacityDesc": "Jak bardzo przezroczyste jest wyskakujące okno w grze. 100% oznacza pełną nieprzezroczystość.",
+        "overlayEdgeGap": "Odległość od krawędzi",
+        "overlayEdgeGapDesc": "Odstęp między wyskakującym oknem a krawędzią ekranu dla wszystkich położeń oprócz Niestandardowa. Wartość 0 przysuwa je do samej krawędzi. Okno widoczne na ekranie podąża za suwakiem.",
         "overlayProgressPosition": "Pozycja postępu",
         "overlayProgressPositionDesc": "Gdzie pojawiają się wyskakujące powiadomienia o postępie (kroki postępu +1).",
         "overlayProgressScale": "Rozmiar postępu",
@@ -1248,7 +1256,10 @@
             "bundled": "Dołączone",
             "fixed": "Używane w obecnej postaci",
             "browse": "Przeglądaj presety",
-            "empty": "Nie masz jeszcze własnych presetów. Utwórz jeden w kreatorze, a pojawi się tutaj."
+            "empty": "Nie masz jeszcze własnych presetów. Utwórz jeden w kreatorze, a pojawi się tutaj.",
+            "search": "Szukaj presetów",
+            "noMatch": "Żaden preset nie pasuje.",
+            "states": "Pokaż karty jako"
           }
         },
         "souvenirTitle": "Zrzut pamiątkowy",
@@ -1306,6 +1317,8 @@
           "custom": "Niestandardowa"
         },
         "reposition": "Zmień położenie wyskakującego okna (przeciągnij je tam, gdzie chcesz)",
+        "centerHorizontally": "Wyśrodkuj wyskakujące okno w poziomie",
+        "centerVertically": "Wyśrodkuj wyskakujące okno w pionie",
         "customToastAudio": {
           "name": "Dźwięk powiadomienia systemu Windows",
           "description": "Określa dźwięk odtwarzany podczas wyświetlania powiadomienia systemu Windows",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Porty PC gier z PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): dodaj folder portu w sekcji Foldery"
+      },
+      "x360recomp": {
+        "description": "Rekompilacje PC gier z Xbox 360 (porty ReXGlue): znajdziesz je w Dokumentach, albo dodaj folder portu w sekcji Foldery"
       },
       "xenia": {
         "description": "Emulator Xbox 360"

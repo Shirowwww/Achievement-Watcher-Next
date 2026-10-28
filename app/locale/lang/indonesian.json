@@ -353,6 +353,12 @@
           "name": "Titik kesehatan game",
           "description": "Menampilkan titik berwarna yang memperingatkan saat sebuah game tidak dilacak. Kesehatan game tetap bisa diakses dari menu klik kanan."
         },
+        "playtime": {
+          "name": "Waktu Bermain",
+          "description": "Cara perpustakaan menulis waktu bermain yang panjang: dalam hari dan jam, atau hanya dalam jam.",
+          "auto": "Hari dan jam",
+          "hours": "Hanya jam"
+        },
         "showAchievementButton": {
           "name": "Tombol pencapaian",
           "description": "Menampilkan tombol piala pada gambar. Mengklik kartu itu sendiri juga membuka pencapaian."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Ukuran pop-up overlay dalam game",
         "overlayOpacity": "Opasitas",
         "overlayOpacityDesc": "Seberapa tembus pandang pop-up dalam game. 100% berarti sepenuhnya buram.",
+        "overlayEdgeGap": "Jarak dari tepi",
+        "overlayEdgeGapDesc": "Ruang antara pop-up dan tepi layar, untuk semua posisi kecuali Kustom. Nilai 0 menempelkannya tepat di tepi. Pop-up yang sedang tampil di layar mengikuti penggeser.",
         "overlayProgressPosition": "Posisi progres",
         "overlayProgressPositionDesc": "Tempat pop-up progres muncul (langkah progres +1).",
         "overlayProgressScale": "Skala progres",
@@ -1248,7 +1256,10 @@
             "bundled": "Bawaan",
             "fixed": "Dipakai apa adanya",
             "browse": "Jelajahi preset",
-            "empty": "Anda belum punya preset sendiri. Buat satu di perancang dan preset itu akan muncul di sini."
+            "empty": "Anda belum punya preset sendiri. Buat satu di perancang dan preset itu akan muncul di sini.",
+            "search": "Cari preset",
+            "noMatch": "Tidak ada preset yang cocok.",
+            "states": "Tampilkan kartu sebagai"
           }
         },
         "souvenirTitle": "Tangkapan layar suvenir",
@@ -1306,6 +1317,8 @@
           "custom": "Kustom"
         },
         "reposition": "Atur ulang posisi pop-up (seret ke tempat yang Anda mau)",
+        "centerHorizontally": "Pusatkan pop-up secara horizontal",
+        "centerVertically": "Pusatkan pop-up secara vertikal",
         "customToastAudio": {
           "name": "Suara notifikasi Windows",
           "description": "Menentukan suara yang diputar saat notifikasi Windows ditampilkan",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Port PC dari game PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): tambahkan folder port di Folder"
+      },
+      "x360recomp": {
+        "description": "Rekompilasi PC dari game Xbox 360 (port ReXGlue): ditemukan di Dokumen, atau tambahkan folder port di Folder"
       },
       "xenia": {
         "description": "Emulator Xbox 360"

@@ -353,6 +353,12 @@
           "name": "Tečka stavu hry",
           "description": "Zobrazí barevnou tečku, která upozorní, že hra není sledována. Stav hry zůstává dostupný z kontextové nabídky."
         },
+        "playtime": {
+          "name": "Doba hraní",
+          "description": "Jak knihovna zapisuje dlouhou dobu hraní: ve dnech a hodinách, nebo jen v hodinách.",
+          "auto": "Dny a hodiny",
+          "hours": "Jen hodiny"
+        },
         "showAchievementButton": {
           "name": "Tlačítko úspěchů",
           "description": "Zobrazí tlačítko trofeje na grafice. Kliknutí na samotnou dlaždici úspěchy otevře také."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Velikost vyskakovacího overlaye",
         "overlayOpacity": "Neprůhlednost",
         "overlayOpacityDesc": "Jak průhledné je vyskakovací okno ve hře. 100 % je zcela neprůhledné.",
+        "overlayEdgeGap": "Vzdálenost od okraje",
+        "overlayEdgeGapDesc": "Mezera mezi vyskakovacím oknem a okrajem obrazovky u všech umístění kromě Vlastní. Hodnota 0 ho posune těsně k okraji. Vyskakovací okno zobrazené na obrazovce sleduje posuvník.",
         "overlayProgressPosition": "Pozice postupu",
         "overlayProgressPositionDesc": "Kde se zobrazují vyskakovací okna postupu (kroky postupu +1).",
         "overlayProgressScale": "Velikost postupu",
@@ -1248,7 +1256,10 @@
             "bundled": "Přibalené",
             "fixed": "Použitelné tak, jak jsou",
             "browse": "Procházet předvolby",
-            "empty": "Zatím nemáte žádné vlastní předvolby. Vytvořte jednu v návrháři a objeví se tady."
+            "empty": "Zatím nemáte žádné vlastní předvolby. Vytvořte jednu v návrháři a objeví se tady.",
+            "search": "Hledat předvolby",
+            "noMatch": "Žádná předvolba neodpovídá.",
+            "states": "Zobrazit karty jako"
           }
         },
         "souvenirTitle": "Vzpomínkový snímek",
@@ -1306,6 +1317,8 @@
           "custom": "Vlastní"
         },
         "reposition": "Změnit umístění vyskakovacího okna (přetáhněte ho, kam chcete)",
+        "centerHorizontally": "Vycentrovat vyskakovací okno vodorovně",
+        "centerVertically": "Vycentrovat vyskakovací okno svisle",
         "customToastAudio": {
           "name": "Zvuk oznámení Windows",
           "description": "Určuje zvuk přehraný při zobrazení oznámení Windows",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PC porty her pro PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): přidej složku portu v části Složky"
+      },
+      "x360recomp": {
+        "description": "PC rekompilace her pro Xbox 360 (porty ReXGlue): nacházejí se v Dokumentech, nebo přidej složku portu v části Složky"
       },
       "xenia": {
         "description": "Emulátor Xbox 360"

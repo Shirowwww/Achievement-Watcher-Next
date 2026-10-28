@@ -79,7 +79,7 @@ const MOVED_GENERAL = {
 const MOVED_SOURCE = {
   'options-source': ['option_steamEmu', 'option_greenLuma', 'option_lumaPlay', 'option_runeUplay', 'option_gog', 'option_epic', 'option_xlln', 'option_socialClub', 'option_markerpatch', 'option_madnesspatch', 'option_pcports'],
   'options-source-stores': ['option_legitSteam', 'option_ubisoftOfficial', 'option_gogOfficial', 'option_epicOfficial', 'option_ea', 'option_xboxPc', 'option_psnLibrary'],
-  'options-source-consoles': ['option_rpcs3', 'option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_xenia', 'option_retroAchievements'],
+  'options-source-consoles': ['option_rpcs3', 'option_shadps4', 'option_kytyps5', 'option_ps4recomp', 'option_x360recomp', 'option_xenia', 'option_retroAchievements'],
   // Not a game source, so it left the emulator card for one of its own.
   'options-source-memory': ['option_importCache'],
 };

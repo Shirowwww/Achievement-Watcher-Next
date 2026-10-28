@@ -24,6 +24,8 @@ const DRAG_THRESHOLD_PX = 3;
 // What a click in an empty row gives the element.
 const NEW_ENTRANCE = 'fade';
 const SLIDER_KEYS = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 };
+// Where the playhead lands in the window when playing turns its page.
+const FOLLOW_LEAD = 0.25;
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toStep = (value, step) => Math.round(value / step) * step;
@@ -45,6 +47,21 @@ function spanOf(rows) {
   const ends = rows.filter((row) => row.enter !== 'none').map((row) => row.delay + row.dur);
   const end = Math.max(0, ...ends);
   return Math.max(MIN_SPAN_MS, Math.ceil((end + SPAN_ROOM_MS) / SPAN_STEP_MS) * SPAN_STEP_MS);
+}
+
+// How long the whole timeline runs: the card's life (in, hold, exit), never less than its window.
+function totalOf(view, life) {
+  const card = Number(life) > 0 ? Math.ceil(Number(life) / TICK_MS) * TICK_MS : 0;
+  return Math.max(view, card);
+}
+
+// Where the window starts so the playhead `at` is in it: kept while it is, else a page further with
+// the playhead a quarter in, on whole ticks and never past either end.
+function pageOffset(at, offset, view, total) {
+  const last = Math.max(0, total - view);
+  if (at >= offset && at <= offset + view) return clamp(offset, 0, last);
+  const ahead = at < offset ? at : at - view * FOLLOW_LEAD;
+  return clamp(Math.floor(ahead / TICK_MS) * TICK_MS, 0, last);
 }
 
 // The point nearest to one of a bar's edges, within `near`, and which edge it caught.
@@ -87,7 +104,11 @@ function createTimeline(options) {
   const { host, label } = options;
   const seconds = (ms) => intlFormat.formatNumber(ms / 1000, options.lang(), { style: 'unit', unit: 'second', unitDisplay: 'narrow', maximumFractionDigits: 2 });
   let rows = [];
+  // `span` is the whole timeline, to the end of the card's exit; `view` the stretch on screen, as
+  // wide as the entrances need, and `offset` where it starts, moved by the scroll bar under it.
   let span = MIN_SPAN_MS;
+  let view = MIN_SPAN_MS;
+  let offset = 0;
   // 'rest': the card holds still as it ends; 'play': the entrances run; 'hold': held at `at`.
   let mode = 'rest';
   let at = MIN_SPAN_MS;
@@ -98,6 +119,8 @@ function createTimeline(options) {
   let startedAt = 0;
   let drag = null;
   let scrubbing = false;
+  // A scroll the timeline set itself, not the user's.
+  let scrollSetting = false;
   // The timeline's own switches redraw the preview, which must not read as an edit.
   let switching = false;
 
@@ -123,20 +146,56 @@ function createTimeline(options) {
   const guide = el('div', 'pd-tl-guide');
   guide.hidden = true;
   for (const node of [cursor, guide]) node.setAttribute('aria-hidden', 'true');
+  // Under the tracks while unfolded, for the part of the card past the entrances: its hold and exit.
+  const scroller = el('div', 'pd-tl-scroll');
+  const scrollRoom = el('div', 'pd-tl-scroll-room');
+  scroller.appendChild(scrollRoom);
+  scroller.setAttribute('aria-hidden', 'true');
   host.setAttribute('role', 'group');
-  host.append(head, list, cursor, guide);
+  host.append(head, list, scroller, cursor, guide);
 
-  const pct = (ms) => `${(ms / span) * 100}%`;
+  const pct = (ms) => `${((ms - offset) / view) * 100}%`;
   function place(node, start, length) {
     node.style.left = pct(start);
-    node.style.width = pct(length);
+    node.style.width = `${(length / view) * 100}%`;
   }
   // The ruler and every track share one width: a moment's x in the timeline's own box.
-  const xOf = (ms) => ruler.offsetLeft + (ms / span) * ruler.clientWidth;
+  const xOf = (ms) => ruler.offsetLeft + ((ms - offset) / view) * ruler.clientWidth;
   const timeIn = (node, event) => {
     const rect = node.getBoundingClientRect();
-    return clamp(((event.clientX - rect.left) / rect.width) * span, 0, span);
+    return clamp(offset + ((event.clientX - rect.left) / rect.width) * view, 0, span);
   };
+
+  // The card's life as the design sets it (the preview's own page holds it for an hour), then as
+  // its page states it; 0 when unknown.
+  function cardLife() {
+    const life = options.life ? Number(options.life()) : 0;
+    if (life > 0) return life;
+    const doc = options.doc();
+    const meta = doc && doc.querySelector('meta[name="duration"]');
+    return meta ? Number(meta.content) || 0 : 0;
+  }
+  // A timing of the card's stylesheet, in ms.
+  function cardTiming(name) {
+    const doc = options.doc();
+    const card = doc && doc.querySelector('.ach');
+    if (!card) return 0;
+    const value = doc.defaultView.getComputedStyle(card).getPropertyValue(name).trim();
+    return value.endsWith('ms') ? parseFloat(value) || 0 : (parseFloat(value) || 0) * 1000;
+  }
+  const exitLength = () => cardTiming('--ach-out');
+
+  // The popup again from its start, with the hold the design asks for rather than the preview's
+  // hour, so its exit comes when it would on screen.
+  function restartCard() {
+    options.restart();
+    const doc = options.doc();
+    const card = doc && doc.querySelector('.ach');
+    const life = cardLife();
+    if (!card || !life) return;
+    const hold = Math.max(0, life - cardTiming('--ach-in') - exitLength());
+    card.style.setProperty('--ach-hold', `${hold}ms`);
+  }
 
   /* ---------- the preview ---------- */
 
@@ -173,7 +232,42 @@ function createTimeline(options) {
     grab();
     for (const animation of held) if (animation.playState !== 'idle') animation.currentTime = at;
     frameText();
+    follow();
     drawHead();
+  }
+
+  /* ---------- the window over the timeline ---------- */
+
+  // Redraws what depends on the window: the ruler's marks and every bar's place.
+  function relayout() {
+    drawRuler();
+    const spot = focusSpot();
+    list.replaceChildren(...rows.map(rowNode));
+    alignMenus();
+    restoreFocus(spot);
+    drawHead();
+  }
+
+  function syncScroller() {
+    const room = scroller.scrollWidth - scroller.clientWidth;
+    const left = span > view && room > 0 ? Math.round((offset / (span - view)) * room) : 0;
+    // A position it already has fires no scroll event, which would leave the flag to eat the next one.
+    if (Math.abs(scroller.scrollLeft - left) < 1) return;
+    scrollSetting = true;
+    scroller.scrollLeft = left;
+  }
+
+  function setOffset(next, fromScroller = false) {
+    const value = clamp(Math.round(next / TICK_MS) * TICK_MS, 0, Math.max(0, span - view));
+    if (value === offset) return;
+    offset = value;
+    if (!fromScroller) syncScroller();
+    relayout();
+  }
+
+  // The playhead never leaves the window: it turns a page when it runs past an edge.
+  function follow() {
+    setOffset(pageOffset(at, offset, view, span));
   }
 
   function stopPlaying() {
@@ -188,7 +282,7 @@ function createTimeline(options) {
       held = new Set();
       switchMotion(() => {
         options.motion(true);
-        options.restart();
+        restartCard();
       });
     }
     setMode('hold');
@@ -201,16 +295,19 @@ function createTimeline(options) {
     held = new Set();
     switchMotion(() => {
       if (mode === 'rest') options.motion(true);
-      options.restart();
+      restartCard();
     });
     at = 0;
     startedAt = performance.now();
     setMode('play');
+    follow();
     frame = requestAnimationFrame(tick);
   }
 
+  // Played to the end of the card's exit; then the card is shown whole again, from the start.
   function tick(now) {
     at = clamp(now - startedAt, 0, span);
+    follow();
     drawHead();
     if (at >= span) return void rest();
     frame = requestAnimationFrame(tick);
@@ -218,28 +315,22 @@ function createTimeline(options) {
 
   const toggle = () => (mode === 'play' ? holdAt(at) : play());
 
-  // What was held runs on from the end of the window, so the card ends as it does after a play.
-  function settle() {
-    for (const animation of held) {
-      if (animation.playState === 'idle') continue;
-      if (animation.currentTime < span) animation.currentTime = span;
-      const timing = animation.effect && animation.effect.getComputedTiming();
-      if (timing && animation.currentTime < timing.endTime) animation.play();
-    }
-  }
-
   function rest() {
     stopPlaying();
     cancelAnimationFrame(reholdFrame);
     if (mode === 'rest') return;
-    if (mode === 'hold') settle();
     held = new Set();
     setMode('rest');
-    switchMotion(() => options.motion(false));
+    // Held or played past the exit, the card was left faded out: drawn again at rest, it is whole.
+    switchMotion(() => {
+      options.motion(false);
+      options.restart();
+    });
     // A count held halfway is written in full again once its animation is gone.
     frameText();
     options.rested();
     render();
+    setOffset(0);
   }
 
   // The preview was drawn again (an edit, an undo, another state): held, it is held again there.
@@ -248,7 +339,7 @@ function createTimeline(options) {
     cancelAnimationFrame(reholdFrame);
     reholdFrame = requestAnimationFrame(() => {
       held = new Set();
-      switchMotion(() => options.restart());
+      switchMotion(() => restartCard());
       seek(at);
     });
   }
@@ -259,6 +350,7 @@ function createTimeline(options) {
   function setFolded(folded) {
     host.classList.toggle('is-folded', folded);
     list.hidden = folded;
+    scroller.hidden = folded || span <= view;
     foldButton.setAttribute('aria-expanded', String(!folded));
     alignMenus();
   }
@@ -282,6 +374,7 @@ function createTimeline(options) {
 
   function drawHead() {
     at = Math.min(at, span);
+    cursor.hidden = at < offset || at > offset + view;
     cursor.style.left = `${xOf(at)}px`;
     clock.textContent = seconds(at);
     ruler.setAttribute('aria-valuenow', String(Math.round(at)));
@@ -289,12 +382,12 @@ function createTimeline(options) {
   }
 
   function drawRuler() {
-    ruler.style.setProperty('--tl-ticks', String(span / TICK_MS));
+    ruler.style.setProperty('--tl-ticks', String(view / TICK_MS));
     ruler.setAttribute('aria-valuemax', String(span));
     ruler.setAttribute('aria-label', label('tl.playhead'));
-    const every = span > LONG_SPAN_MS ? 1000 : 500;
+    const every = view > LONG_SPAN_MS ? 1000 : 500;
     const marks = [];
-    for (let ms = 0; ms < span; ms += every) {
+    for (let ms = Math.ceil(offset / every) * every; ms < offset + view; ms += every) {
       const mark = el('span', 'pd-tl-mark', seconds(ms));
       mark.style.left = pct(ms);
       marks.push(mark);
@@ -305,6 +398,9 @@ function createTimeline(options) {
   // A scroll bar on the rows narrows their tracks: the ruler gives up the same room.
   function alignHead() {
     head.style.paddingRight = `${list.offsetWidth - list.clientWidth}px`;
+    // The scroll bar spans the tracks only, under the ruler.
+    scroller.style.marginLeft = `${ruler.offsetLeft}px`;
+    scroller.style.width = `${ruler.clientWidth}px`;
   }
 
   function setSlider(node, value, min, max) {
@@ -359,6 +455,16 @@ function createTimeline(options) {
       return track;
     }
     track.appendChild(barNode(row));
+    // The card's own row carries its exit too, at the end of its life, where Play reaches it.
+    const exit = row.card ? exitLength() : 0;
+    const life = exit ? cardLife() : 0;
+    if (exit && life > exit) {
+      const leave = el('span', 'pd-tl-exit');
+      place(leave, life - exit, exit);
+      const name = (options.exitLabel && options.exitLabel()) || '';
+      leave.title = `${name}${name ? ' ' : ''}(${seconds(life - exit)} - ${seconds(life)})`;
+      track.appendChild(leave);
+    }
     if (row.loop) {
       const end = row.delay + row.dur;
       const tail = el('span', 'pd-tl-loop');
@@ -421,15 +527,21 @@ function createTimeline(options) {
     const spot = focusSpot();
     const top = list.scrollTop;
     rows = options.rows();
-    span = spanOf(rows);
-    if (mode === 'rest') at = span;
+    view = spanOf(rows);
+    span = totalOf(view, cardLife());
+    offset = clamp(offset, 0, span - view);
+    // At rest the card is shown whole and the playhead waits at the start, where Play begins.
+    if (mode === 'rest') at = 0;
     setMode(mode);
+    scroller.hidden = list.hidden || span <= view;
+    scrollRoom.style.width = `${(span / view) * 100}%`;
     drawRuler();
     list.replaceChildren(...rows.map(rowNode));
     alignMenus();
     list.scrollTop = top;
     restoreFocus(spot);
     alignHead();
+    syncScroller();
     drawHead();
   }
 
@@ -472,8 +584,8 @@ function createTimeline(options) {
     const dx = event.clientX - drag.x0;
     if (!drag.moved && Math.abs(dx) < DRAG_THRESHOLD_PX) return;
     drag.moved = true;
-    const shift = (dx / drag.width) * span;
-    const near = (SNAP_PX / drag.width) * span;
+    const shift = (dx / drag.width) * view;
+    const near = (SNAP_PX / drag.width) * view;
     const next = drag.kind === 'move' ? movedStart(drag.row, shift, near) : movedLength(drag.row, shift, near);
     drag.patch = next.patch;
     place(drag.bar, next.start, next.length);
@@ -548,6 +660,18 @@ function createTimeline(options) {
   });
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) ruler.addEventListener(type, () => (scrubbing = false));
   ruler.addEventListener('keydown', onRulerKey);
+  scroller.addEventListener('scroll', () => {
+    if (scrollSetting) return void (scrollSetting = false);
+    const room = scroller.scrollWidth - scroller.clientWidth;
+    if (room > 0) setOffset((scroller.scrollLeft / room) * (span - view), true);
+  });
+  // The wheel over the tracks scrolls the rows; with Shift, or sideways, it moves along the time.
+  list.addEventListener('wheel', (event) => {
+    const along = event.shiftKey ? event.deltaY : event.deltaX;
+    if (!along || scroller.hidden) return;
+    event.preventDefault();
+    scroller.scrollLeft += along;
+  }, { passive: false });
   host.addEventListener('pointermove', onDragMove);
   for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) host.addEventListener(type, endDrag);
   new ResizeObserver(() => {
@@ -566,4 +690,4 @@ function createTimeline(options) {
   };
 }
 
-module.exports = { createTimeline, spanOf, snapOf };
+module.exports = { createTimeline, spanOf, snapOf, totalOf, pageOffset };

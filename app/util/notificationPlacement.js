@@ -21,6 +21,15 @@ function normalizeProgressScale(value) {
   return SCALES.includes(scale) ? scale : '';
 }
 
+// Distance in screen pixels between an edge-anchored card and the screen edge. 0 = flush.
+const EDGE_GAP_MAX = 64;
+
+function normalizeEdgeGap(value) {
+  if (value === '' || value == null || typeof value === 'boolean') return 0;
+  const gap = Number(value);
+  return Number.isNaN(gap) ? 0 : Math.min(EDGE_GAP_MAX, Math.max(0, Math.round(gap)));
+}
+
 function positiveScale(value) {
   const scale = Number(value);
   return Number.isFinite(scale) && scale > 0 ? scale : 0;
@@ -55,6 +64,8 @@ function resolvePlacement({ kind, game, global } = {}) {
 }
 
 module.exports = {
+  EDGE_GAP_MAX,
+  normalizeEdgeGap,
   normalizeProgressPosition,
   normalizeProgressScale,
   resolvePlacement,

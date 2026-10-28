@@ -929,6 +929,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_overlayPosition').val(cfgOverlay.notificationPosition || 'center-bottom').change();
       $('#option_overlayScale').val(String(cfgOverlay.notificationScale || 1)).change();
       $('#option_overlayOpacity').val(String(cfgOverlay.notificationOpacity || 100)).change();
+      $('#option_overlayEdgeGap').val(String(notificationPlacement.normalizeEdgeGap(cfgOverlay.notificationEdgeGap))).change();
       $('#option_overlayProgressPosition').val(cfgOverlay.notificationProgressPosition || '').change();
       $('#option_overlayProgressScale').val(String(cfgOverlay.notificationProgressScale || '')).change();
       $('#option_overlayVolume').val(String(cfgOverlay.notificationVolume != null ? cfgOverlay.notificationVolume : 100)).change();
@@ -1416,6 +1417,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         libraryDensity: settingsLibraryChrome.normalizeDensity(Number($('#option_libraryDensity').val()) / 100),
       };
       for (const key of LIBRARY_TOGGLES) chrome[key] = $(`#option_${key}`).val() !== 'false';
+      chrome.libraryPlaytimeUnits = settingsLibraryChrome.normalizePlaytimeUnits($('#option_libraryPlaytimeUnits').val());
       return chrome;
     }
 
@@ -1433,11 +1435,12 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_libraryTileScale').val(Math.round(settingsLibraryChrome.normalizeTileScale(settings.libraryTileScale) * 100));
       $('#option_libraryDensity').val(Math.round(settingsLibraryChrome.normalizeDensity(settings.libraryDensity) * 100));
       for (const key of LIBRARY_TOGGLES) $(`#option_${key}`).val(String(settings[key] !== false)).change();
+      $('#option_libraryPlaytimeUnits').val(settingsLibraryChrome.normalizePlaytimeUnits(settings.libraryPlaytimeUnits)).change();
       previewLibraryChrome();
     }
 
     $('#option_libraryTileScale, #option_libraryDensity').on('input change', previewLibraryChrome);
-    $(LIBRARY_TOGGLES.map((key) => `#option_${key}`).join(', ')).on('change', previewLibraryChrome);
+    $([...LIBRARY_TOGGLES, 'libraryPlaytimeUnits'].map((key) => `#option_${key}`).join(', ')).on('change', previewLibraryChrome);
 
     // Escape closes the topmost panel like Cancel does. Anything with its own Escape (a prompt, the
     // cover picker, a search field, a hotkey being recorded) gets the key first and is left alone.
@@ -4228,6 +4231,48 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     // Auto-save notification controls, excluding customizer sliders.
     $("#settings .box section.content[data-view='notification']").on('change', 'select, #option_overlayVolume', autosaveNotifications);
+    $('#option_overlayEdgeGap').on('change', autosaveNotifications);
+
+    /*
+      Distance from the edge: the label follows the slider, and a test popup on screen follows it too
+      while it is dragged. With none on screen the first move opens one, so the change is always seen.
+    */
+    // A test popup goes through the notification queue and takes a few seconds to show.
+    const EDGE_GAP_WAIT_STEP_MS = 200;
+    const EDGE_GAP_WAIT_MAX_MS = 10000;
+    let edgeGapPopupPending = false;
+    const currentEdgeGap = () => notificationPlacement.normalizeEdgeGap($('#option_overlayEdgeGap').val());
+    function updateOverlayEdgeGapLabel() {
+      $('#overlayEdgeGap-value').text(`${currentEdgeGap()} px`);
+    }
+    // How many popups on screen moved to the slider's current value.
+    function moveEdgeGapPopups() {
+      return ipcRenderer.invoke('preview-notification-edge-gap', currentEdgeGap()).catch((err) => {
+        debug.log(`edge gap preview failed: ${err && (err.message || err)}`);
+        return 0;
+      });
+    }
+    // Opens one popup, then puts it at the value the slider holds once it shows.
+    async function openEdgeGapPopup() {
+      edgeGapPopupPending = true;
+      try {
+        ipcRenderer.send('spawn-overlay-notification', overlayTestData('toast'));
+        for (let waited = 0; waited < EDGE_GAP_WAIT_MAX_MS; waited += EDGE_GAP_WAIT_STEP_MS) {
+          await new Promise((resolve) => setTimeout(resolve, EDGE_GAP_WAIT_STEP_MS));
+          if (await moveEdgeGapPopups()) return;
+        }
+      } finally {
+        edgeGapPopupPending = false;
+      }
+    }
+    async function previewOverlayEdgeGap() {
+      updateOverlayEdgeGapLabel();
+      // A Custom popup keeps its dragged spot, so the distance has nothing to show there.
+      if (!settingsReady || edgeGapPopupPending || $('#option_overlayPosition').val() === 'custom') return;
+      if (!(await moveEdgeGapPopups())) openEdgeGapPopup();
+    }
+    $('#option_overlayEdgeGap').on('input', previewOverlayEdgeGap);
+    $('#option_overlayEdgeGap').on('change', updateOverlayEdgeGapLabel);
 
     // Collapse overlay-only controls when toast-only mode is selected.
     function animateOverlaySettingCollapse(el, visible) {
@@ -4530,6 +4575,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           rarityPercent: rarePct,
           position: placement.position,
           scale: placement.scale,
+          edgeGap: notificationPlacement.normalizeEdgeGap(settingsReady ? $('#option_overlayEdgeGap').val() : cfgOverlay.notificationEdgeGap),
           volume: globalVolume,
           durationMs: durSec > 0 ? durSec * 1000 : undefined,
           // The primary icon. A preview has no per-achievement art, so a game-scoped one shows the
@@ -4801,6 +4847,27 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // Make sure the dropdown reflects that custom positioning is now in use.
       $('#option_overlayPosition').val('custom').change();
     });
+    /*
+      Centres the popup being placed on one axis. With none on screen it opens one first and centres
+      it as soon as it shows: the witness goes through the notification queue, so it is not immediate.
+    */
+    const CENTER_WAIT_STEP_MS = 150;
+    const CENTER_WAIT_MAX_MS = 5000;
+    async function centerNotificationReposition(axis) {
+      $('#option_overlayPosition').val('custom').change();
+      const center = () => ipcRenderer.invoke('center-notification-reposition', axis).catch((err) => {
+        debug.log(`centring the popup failed: ${err && (err.message || err)}`);
+        return 0;
+      });
+      if (await center()) return;
+      spawnNotificationReposition();
+      for (let waited = 0; waited < CENTER_WAIT_MAX_MS; waited += CENTER_WAIT_STEP_MS) {
+        await new Promise((resolve) => setTimeout(resolve, CENTER_WAIT_STEP_MS));
+        if (await center()) return;
+      }
+    }
+    $('#btn-overlay-center-x').click(() => centerNotificationReposition('x'));
+    $('#btn-overlay-center-y').click(() => centerNotificationReposition('y'));
     $('#btn-overlay-progress-reposition').click(function () {
       // Selected first, so the witness already takes the progress scale.
       $('#option_overlayProgressPosition').val('custom').change();
@@ -4978,6 +5045,7 @@ function readNotificationSettings() {
   app.config.overlay.notificationPosition = $('#option_overlayPosition').val() || 'center-bottom';
   app.config.overlay.notificationScale = parseFloat($('#option_overlayScale').val()) || 1;
   app.config.overlay.notificationOpacity = parseInt($('#option_overlayOpacity').val(), 10) || 100;
+  app.config.overlay.notificationEdgeGap = notificationPlacement.normalizeEdgeGap($('#option_overlayEdgeGap').val());
   app.config.overlay.notificationProgressPosition = notificationPlacement.normalizeProgressPosition($('#option_overlayProgressPosition').val());
   app.config.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale($('#option_overlayProgressScale').val());
   // 'Random' lives in the sound list now, so one control writes both keys: the flag the

@@ -353,6 +353,12 @@
           "name": "Pelin kunnon piste",
           "description": "Näyttää värillisen pisteen, joka varoittaa, kun peliä ei seurata. Pelin kunto on yhä käytettävissä hiiren kakkospainikkeen valikosta."
         },
+        "playtime": {
+          "name": "Peliaika",
+          "description": "Miten kirjasto kirjoittaa pitkän peliajan: päivinä ja tunteina vai pelkkinä tunteina.",
+          "auto": "Päivät ja tunnit",
+          "hours": "Vain tunnit"
+        },
         "showAchievementButton": {
           "name": "Saavutukset-painike",
           "description": "Näyttää pokaalipainikkeen kuvituksen päällä. Ruudun napsauttaminen avaa saavutukset myös."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Pelinsisäisen ponnahdusilmoituksen koko",
         "overlayOpacity": "Läpinäkymättömyys",
         "overlayOpacityDesc": "Kuinka läpinäkyvä pelinsisäinen ponnahdusilmoitus on. 100 % on täysin läpinäkymätön.",
+        "overlayEdgeGap": "Etäisyys reunasta",
+        "overlayEdgeGapDesc": "Ponnahdusilmoituksen ja näytön reunan välinen tila kaikissa sijainneissa paitsi Mukautettu. Arvolla 0 se on aivan reunassa. Näytöllä oleva ponnahdusilmoitus seuraa liukusäädintä.",
         "overlayProgressPosition": "Edistymisen sijainti",
         "overlayProgressPositionDesc": "Missä edistymisen ponnahdusilmoitukset näkyvät (edistymisen +1-askeleet).",
         "overlayProgressScale": "Edistymisen koko",
@@ -1248,7 +1256,10 @@
             "bundled": "Mukana tulevat",
             "fixed": "Käytettävissä sellaisenaan",
             "browse": "Selaa esiasetuksia",
-            "empty": "Sinulla ei ole vielä omia esiasetuksia. Tee sellainen suunnittelunäkymässä, niin se ilmestyy tähän."
+            "empty": "Sinulla ei ole vielä omia esiasetuksia. Tee sellainen suunnittelunäkymässä, niin se ilmestyy tähän.",
+            "search": "Hae esiasetuksia",
+            "noMatch": "Mikään esiasetus ei täsmää.",
+            "states": "Näytä kortit muodossa"
           }
         },
         "souvenirTitle": "Muistokuvakaappaus",
@@ -1306,6 +1317,8 @@
           "custom": "Mukautettu"
         },
         "reposition": "Siirrä ponnahdusilmoitus (vedä se haluamaasi kohtaan)",
+        "centerHorizontally": "Keskitä ponnahdusilmoitus vaakasuunnassa",
+        "centerVertically": "Keskitä ponnahdusilmoitus pystysuunnassa",
         "customToastAudio": {
           "name": "Windows-ilmoituksen ääni",
           "description": "Määrittää äänen, joka soitetaan Windows-ilmoituksen näkyessä",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PlayStation 4 -pelien PC-portit (Bloodborne, Uncharted, God of War III, MediEvil): lisää portin kansio kohdassa Kansiot"
+      },
+      "x360recomp": {
+        "description": "Xbox 360 -pelien PC-uudelleenkäännökset (ReXGlue-portit): löytyvät kohdasta Asiakirjat, tai lisää portin kansio kohdassa Kansiot"
       },
       "xenia": {
         "description": "Xbox 360 -emulaattori"

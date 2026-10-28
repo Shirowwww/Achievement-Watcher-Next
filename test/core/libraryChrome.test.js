@@ -148,3 +148,13 @@ test('a number written as a string by options.ini still reads as a number', () =
   assert.equal(libraryChrome.normalizeDensity('0'), 0);
   assert.equal(libraryChrome.resolve({ libraryTileScale: '1.6', libraryDensity: '0' }).tileScale, 1.6);
 });
+
+test('library playtime reads in hours on request, and keeps days and hours by default', () => {
+  assert.equal(libraryChrome.normalizePlaytimeUnits('hours'), 'hours');
+  for (const unset of [undefined, '', 'days', 42]) assert.equal(libraryChrome.normalizePlaytimeUnits(unset), 'auto');
+  const twoDays = 2 * 86400 + 11 * 3600;
+  assert.equal(libraryChrome.playtimeUnits(twoDays, 'auto'), null);
+  assert.deepEqual(libraryChrome.playtimeUnits(twoDays, 'hours'), ['hours', 'minutes']);
+  // Under a minute there is nothing to say in hours.
+  assert.equal(libraryChrome.playtimeUnits(30, 'hours'), null);
+});

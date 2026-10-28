@@ -82,3 +82,16 @@ test('the custom anchor of progress falls back to the unlock anchor until it is 
   assert.equal(placement.savedAnchor({}, 'progressNotif'), null);
   assert.equal(placement.savedAnchor(null, 'notif'), null);
 });
+
+test('the edge distance is a whole pixel count from 0 to 64, flush with the edge when unset', () => {
+  assert.equal(placement.normalizeEdgeGap(16), 16);
+  // INI hands numbers back as strings.
+  assert.equal(placement.normalizeEdgeGap('37'), 37);
+  assert.equal(placement.normalizeEdgeGap(12.6), 13);
+  assert.equal(placement.normalizeEdgeGap(64), 64);
+  // A hand-edited value out of range is clamped rather than reset.
+  assert.equal(placement.normalizeEdgeGap(9999), 64);
+  assert.equal(placement.normalizeEdgeGap('1e999'), 64);
+  assert.equal(placement.normalizeEdgeGap(-8), 0);
+  for (const unset of [undefined, null, '', 'abc', true]) assert.equal(placement.normalizeEdgeGap(unset), 0);
+});

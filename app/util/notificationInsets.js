@@ -44,7 +44,7 @@ function mergeInsets(list) {
 
 /*
   Window move, in screen pixels, that brings the painted card onto the edge(s) `position` names, or
-  `gap` pixels inside them (an imported SAN theme sits off the edge, as in SAN).
+  `gap` pixels inside them (the user's distance from the edge, never one a preset brings).
 */
 function edgeShift(position, insets, zoom = 1, gap = 0) {
   const shift = { dx: 0, dy: 0 };

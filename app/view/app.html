@@ -1303,6 +1303,23 @@
                   </li>
 
                   <li class="hasHelper">
+                    <div class="left"><i class="fab fa-xbox"></i> <span>Xbox 360 Recomp</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_x360recomp">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-x360recomp"></div>
+                  </li>
+
+                  <li class="hasHelper">
                     <div class="left"><i class="fab fa-xbox"></i> <span>Xenia</span></div>
                     <div class="right">
                       <div class="previous">
@@ -2012,6 +2029,8 @@
                       <div class="left">
                         <i class="fas fa-arrows-alt"></i> <span id="lbl-overlayPosition"></span>
                         <button type="button" id="btn-overlay-reposition" class="inline-action-btn" title="Reposition popup"><i class="fas fa-crosshairs"></i></button>
+                        <button type="button" id="btn-overlay-center-x" class="inline-action-btn" title="Centre horizontally"><i class="fas fa-arrows-alt-h"></i></button>
+                        <button type="button" id="btn-overlay-center-y" class="inline-action-btn" title="Centre vertically"><i class="fas fa-arrows-alt-v"></i></button>
                       </div>
                       <div class="right">
                         <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -2027,6 +2046,15 @@
                           <option value="custom">Custom</option>
                         </select>
                         <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-border-style"></i> <span id="lbl-overlayEdgeGap"></span></div>
+                      <div class="right volume-slider">
+                        <input type="range" id="option_overlayEdgeGap" min="0" max="64" step="1" value="0" />
+                        <span id="overlayEdgeGap-value" class="volume-value">0 px</span>
                       </div>
                       <div class="help"></div>
                     </li>
@@ -2548,6 +2576,9 @@
                         <span data-pg="bundled" data-lang="gallery.bundled"></span>
                         <span data-pg="empty" data-lang="gallery.empty"></span>
                         <span data-pg="fixed" data-lang="gallery.fixed"></span>
+                        <span data-pg="search" data-lang="gallery.search"></span>
+                        <span data-pg="noMatch" data-lang="gallery.noMatch"></span>
+                        <span data-pg="states" data-lang="gallery.states"></span>
                       </span>
                       <label class="pd-file"><span data-lang="name"></span><input type="text" id="pd-name" maxlength="48" /></label>
                       <!-- A layer: a bundled preset plus a few overrides, instead of a design from scratch. -->
@@ -2594,6 +2625,8 @@
                             <button type="button" class="pd-cv-btn" data-cv-add="ellipse"><i class="far fa-circle" aria-hidden="true"></i> <span data-lang="canvas.addEllipse"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="line"><i class="fas fa-minus" aria-hidden="true"></i> <span data-lang="canvas.addLine"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="icon"><i class="fas fa-trophy" aria-hidden="true"></i> <span data-lang="canvas.addSymbol"></span></button>
+                            <!-- Shown on a progress popup whose design leaves the bar out, to put it back. -->
+                            <button type="button" class="pd-cv-btn" id="pd-cv-add-progress" hidden><i class="fas fa-tasks" aria-hidden="true"></i> <span data-lang="canvas.part.progress"></span></button>
                           </div>
                           <span class="pd-cv-hint" id="pd-cv-hint" data-lang="canvas.hint"></span>
                           <div class="pd-cv-end">
@@ -4122,6 +4155,18 @@
                     <div class="help" id="library-health-help">Show the coloured dot that warns when a game is not being tracked. Game health stays reachable from the right-click menu.</div>
                   </li>
                   <li class="hasHelper">
+                    <div class="left"><i class="fas fa-hourglass-half"></i> <span id="library-playtime-label">Playtime</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryPlaytimeUnits">
+                        <option value="auto" selected>Days and hours</option>
+                        <option value="hours">Hours only</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-playtime-help">How the library writes a long playtime: "2 days, 11 hours" or "59 hours, 36 minutes".</div>
+                  </li>
+                  <li class="hasHelper">
                     <div class="left"><i class="fas fa-trophy"></i> <span id="library-achbutton-label">Achievements button</span></div>
                     <div class="right">
                       <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
@@ -5026,6 +5071,14 @@
                         <option value="false"></option>
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-ps4recomp-hint"></small>
+                    </label>
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fab fa-xbox" aria-hidden="true"></i> Xbox 360 Recomp</span>
+                      <select id="onboard-src-x360recomp">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-x360recomp-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
                       <span class="onboarding-source-name"><i class="fab fa-xbox" aria-hidden="true"></i> Xenia</span>

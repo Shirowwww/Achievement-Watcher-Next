@@ -94,6 +94,62 @@ test('the randomiser only ever produces a design the designer can show back', ()
   }
 });
 
+test('the randomiser reaches every look it can draw, and names the icon shape it draws', () => {
+  const templates = require(path.join(appRoot, 'util', 'presetTemplates.js'));
+  let seed = 7;
+  const random = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  const seen = { iconShape: new Set(), bgPattern: new Set(), easingOut: new Set(), stateTint: new Set(), hiddenLock: new Set() };
+  for (let draw = 0; draw < 300; draw += 1) {
+    const options = templates.randomPresetOptions(random);
+    for (const key of Object.keys(seen)) seen[key].add(options[key]);
+    // A square icon is the square shape, never "rounded" with no rounding: the menu would say Rounded.
+    if (options.iconShape === 'rounded') assert.ok(options.iconRadius >= 6, `a rounded icon drawn with a ${options.iconRadius}% radius`);
+  }
+  const values = (key) => schema.PRESET_PROPERTIES.find((property) => property.key === key).values;
+  assert.deepEqual([...seen.iconShape].sort(), [...values('iconShape')].sort(), 'every icon shape can come up');
+  assert.deepEqual([...seen.bgPattern].sort(), [...values('bgPattern')].sort(), 'every background pattern can come up');
+  assert.ok(seen.easingOut.size > 2, 'the exit easing is drawn too');
+  assert.ok(seen.stateTint.size > 1, 'the state tint is drawn too');
+  assert.equal(seen.hiddenLock.size, 2, 'the hidden padlock is drawn too');
+});
+
+test('the randomiser brings the card in element by element too, in reading order, or all at once', () => {
+  const templates = require(path.join(appRoot, 'util', 'presetTemplates.js'));
+  let seed = 11;
+  const random = () => {
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    return seed / 2147483648;
+  };
+  let staged = 0;
+  let together = 0;
+  const effects = new Set();
+  for (let draw = 0; draw < 300; draw += 1) {
+    const options = templates.randomPresetOptions(random);
+    const motion = (options.canvas && options.canvas.motion) || {};
+    const parts = Object.keys(motion);
+    if (!parts.length) {
+      together += 1;
+      continue;
+    }
+    staged += 1;
+    for (const part of parts) {
+      assert.ok(schema.CANVAS_MOTION_PARTS.includes(part), `${part} cannot come in on its own`);
+      assert.ok(schema.canvasEntrances({ part }).includes(motion[part].enter), `${part} cannot take ${motion[part].enter}`);
+      effects.add(motion[part].enter);
+    }
+    // The icon leads, then the text from the top down: each starts no earlier than the one before.
+    const order = ['icon', 'game', 'title', 'detail', 'rarity', 'progress'].filter((part) => motion[part]);
+    const delays = order.map((part) => motion[part].delay || 0);
+    assert.deepEqual(delays, [...delays].sort((a, b) => a - b), `entrances out of order: ${JSON.stringify(motion)}`);
+  }
+  assert.ok(staged > 60, `only ${staged} designs came in element by element`);
+  assert.ok(together > 30, `only ${together} designs came in all at once`);
+  assert.ok(effects.size >= 5, `only ${[...effects].join(', ')} were drawn`);
+});
+
 test('every schema property has a control, in its own group, on the right side of Advanced', () => {
   for (const property of schema.PRESET_PROPERTIES) {
     const control = designer.querySelector(`#pd-${property.key}`);
@@ -550,4 +606,16 @@ test('the template status strings exist and are translated in every locale', () 
       assert.ok(value, `${file}: designer.templates.${key} must be translated - there is no English fallback at runtime`);
     }
   }
+});
+
+test('a progress popup drawn without its bar can have it added back from the layout editor', () => {
+  const adder = designer.querySelector('.pd-cv-add #pd-cv-add-progress');
+  assert.ok(adder, 'no progress bar button among the additions');
+  assert.ok(adder.hasAttribute('hidden'), 'the button shows before the editor decides it applies');
+  // Not one of the item adders: it switches the design's own bar on rather than adding an item.
+  assert.equal(adder.getAttribute('data-cv-add'), undefined);
+  assert.equal(adder.querySelector('[data-lang]').getAttribute('data-lang'), 'canvas.part.progress');
+  const toggle = designer.querySelector('.pd-field[data-key="showProgress"] select#pd-showProgress');
+  assert.ok(toggle, 'the bar it switches on has no control');
+  assert.equal(toggle.parentNode.getAttribute('data-states'), 'progress');
 });

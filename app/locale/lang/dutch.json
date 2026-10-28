@@ -353,6 +353,12 @@
           "name": "Gamestatuspunt",
           "description": "Toont het gekleurde punt dat waarschuwt wanneer een game niet wordt gevolgd. De gamestatus blijft bereikbaar via het rechtsklikmenu."
         },
+        "playtime": {
+          "name": "Speeltijd",
+          "description": "Hoe de bibliotheek een lange speeltijd weergeeft: in dagen en uren, of alleen in uren.",
+          "auto": "Dagen en uren",
+          "hours": "Alleen uren"
+        },
         "showAchievementButton": {
           "name": "Prestatiesknop",
           "description": "Toont de trofeeknop op de artwork. Klikken op de tegel zelf opent de prestaties ook."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Grootte van de pop-up van de in-game overlay",
         "overlayOpacity": "Dekking",
         "overlayOpacityDesc": "Hoe doorzichtig de pop-up in de game is. 100% is volledig ondoorzichtig.",
+        "overlayEdgeGap": "Afstand tot de rand",
+        "overlayEdgeGapDesc": "Ruimte tussen de pop-up en de schermrand, voor alle posities behalve Aangepast. Bij 0 zit hij tegen de rand aan. Een pop-up die in beeld is volgt de schuifregelaar.",
         "overlayProgressPosition": "Positie van voortgang",
         "overlayProgressPositionDesc": "Waar de voortgangspop-ups verschijnen (de +1-stappen van de voortgang).",
         "overlayProgressScale": "Schaal van voortgang",
@@ -1248,7 +1256,10 @@
             "bundled": "Meegeleverd",
             "fixed": "Te gebruiken zoals ze zijn",
             "browse": "De presets bekijken",
-            "empty": "Je hebt nog geen eigen presets. Maak er een in de ontwerper en hij verschijnt hier."
+            "empty": "Je hebt nog geen eigen presets. Maak er een in de ontwerper en hij verschijnt hier.",
+            "search": "Presets zoeken",
+            "noMatch": "Geen preset komt overeen.",
+            "states": "Kaarten tonen als"
           }
         },
         "souvenirTitle": "Souvenirscreenshot",
@@ -1306,6 +1317,8 @@
           "custom": "Aangepast"
         },
         "reposition": "De pop-up verplaatsen (sleep hem naar de gewenste plek)",
+        "centerHorizontally": "De pop-up horizontaal centreren",
+        "centerVertically": "De pop-up verticaal centreren",
         "customToastAudio": {
           "name": "Geluid van de Windows-melding",
           "description": "Bepaalt welk geluid klinkt wanneer er een Windows-melding verschijnt",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Pc-ports van PlayStation 4-games (Bloodborne, Uncharted, God of War III, MediEvil): voeg de map van de port toe bij Mappen"
+      },
+      "x360recomp": {
+        "description": "Pc-hercompilaties van Xbox 360-games (ReXGlue-ports): te vinden in Documenten, of voeg de map van de port toe bij Mappen"
       },
       "xenia": {
         "description": "Xbox 360-emulator"

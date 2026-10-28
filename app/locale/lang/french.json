@@ -337,6 +337,12 @@
           "name": "Point d’état du jeu",
           "description": "Affiche le point coloré qui avertit quand un jeu n’est pas suivi. L’État des jeux reste accessible depuis le clic droit."
         },
+        "playtime": {
+          "name": "Temps de jeu",
+          "description": "Façon dont la bibliothèque écrit un long temps de jeu : en jours et heures, ou en heures seulement.",
+          "auto": "Jours et heures",
+          "hours": "Heures seulement"
+        },
         "showAchievementButton": {
           "name": "Bouton des succès",
           "description": "Affiche le bouton trophée sur l’illustration. Cliquer sur la tuile elle-même ouvre aussi les succès."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Taille de la fenêtre overlay en jeu",
         "overlayOpacity": "Opacité",
         "overlayOpacityDesc": "Transparence de la popup en jeu. 100 % la rend totalement opaque.",
+        "overlayEdgeGap": "Distance au bord",
+        "overlayEdgeGapDesc": "Espace entre le popup et le bord de l’écran, pour toutes les positions sauf Personnalisée. 0 le colle au bord. Un popup affiché à l’écran suit le curseur.",
         "overlayProgressPosition": "Position de la progression",
         "overlayProgressPositionDesc": "Où s’affichent les fenêtres de progression (les +1 de progression).",
         "overlayProgressScale": "Échelle de la progression",
@@ -1248,7 +1256,10 @@
             "bundled": "Fournis",
             "fixed": "Utilisables tels quels",
             "browse": "Parcourir les presets",
-            "empty": "Tu n’as encore aucun preset à toi. Crées-en un dans l’éditeur et il apparaîtra ici."
+            "empty": "Tu n’as encore aucun preset à toi. Crées-en un dans l’éditeur et il apparaîtra ici.",
+            "search": "Rechercher des presets",
+            "noMatch": "Aucun preset ne correspond.",
+            "states": "Afficher les cartes en"
           }
         },
         "souvenirTitle": "Capture souvenir",
@@ -1306,6 +1317,8 @@
           "custom": "Personnalisée"
         },
         "reposition": "Repositionner le popup (glisse-le où tu veux)",
+        "centerHorizontally": "Centrer le popup horizontalement",
+        "centerVertically": "Centrer le popup verticalement",
         "customToastAudio": {
           "name": "Son de la notification Windows",
           "description": "Spécifie le son à jouer lorsqu’une notification Windows est affichée",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Portages PC de jeux PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil) : ajoute le dossier du portage dans Dossiers"
+      },
+      "x360recomp": {
+        "description": "Recompilations PC de jeux Xbox 360 (portages ReXGlue) : détectées dans Documents, ou ajoute le dossier du portage dans Dossiers"
       },
       "xenia": {
         "description": "Émulateur Xbox 360"

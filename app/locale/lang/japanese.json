@@ -353,6 +353,12 @@
           "name": "ゲームの状態ドット",
           "description": "ゲームが検出されていないときに警告する色付きのドットを表示します。ゲームの状態は右クリックメニューから引き続き確認できます。"
         },
+        "playtime": {
+          "name": "プレイ時間",
+          "description": "ライブラリで長いプレイ時間を日と時間で表示するか、時間のみで表示するかを選びます。",
+          "auto": "日と時間",
+          "hours": "時間のみ"
+        },
         "showAchievementButton": {
           "name": "実績ボタン",
           "description": "画像上にトロフィーボタンを表示します。タイル自体をクリックしても実績が開きます。"
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "ゲーム内オーバーレイのポップアップのサイズ",
         "overlayOpacity": "不透明度",
         "overlayOpacityDesc": "ゲーム内ポップアップの透け具合です。100%で完全に不透明になります。",
+        "overlayEdgeGap": "端からの距離",
+        "overlayEdgeGapDesc": "ポップアップと画面の端との間隔です。カスタム以外のすべての位置に適用されます。0にすると端にぴったり付きます。画面に表示中のポップアップはスライダーに合わせて動きます。",
         "overlayProgressPosition": "進捗の位置",
         "overlayProgressPositionDesc": "進捗ポップアップ（進捗の+1ステップ）を表示する場所です。",
         "overlayProgressScale": "進捗のサイズ",
@@ -1248,7 +1256,10 @@
             "bundled": "付属",
             "fixed": "そのまま使うもの",
             "browse": "プリセットを見る",
-            "empty": "自分のプリセットはまだありません。デザイナーで作成すると、ここに表示されます。"
+            "empty": "自分のプリセットはまだありません。デザイナーで作成すると、ここに表示されます。",
+            "search": "プリセットを検索",
+            "noMatch": "一致するプリセットはありません。",
+            "states": "カードの表示形式"
           }
         },
         "souvenirTitle": "記念スクリーンショット",
@@ -1306,6 +1317,8 @@
           "custom": "カスタム"
         },
         "reposition": "ポップアップの位置を変更（好きな場所にドラッグ）",
+        "centerHorizontally": "ポップアップを左右中央に配置",
+        "centerVertically": "ポップアップを上下中央に配置",
         "customToastAudio": {
           "name": "Windows 通知のサウンド",
           "description": "Windows 通知表示時に再生する音を指定します",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PlayStation 4 ゲームの PC 移植版 (Bloodborne、Uncharted、God of War III、MediEvil)：移植版のフォルダーを「フォルダー」で追加します"
+      },
+      "x360recomp": {
+        "description": "Xbox 360 ゲームの PC 再コンパイル版 (ReXGlue 移植版)：「ドキュメント」で検出されます。または移植版のフォルダーを「フォルダー」で追加します"
       },
       "xenia": {
         "description": "Xbox 360 エミュレーター"

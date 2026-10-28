@@ -87,4 +87,26 @@ function resolve(achievement) {
   };
 }
 
-module.exports = { TILE_SCALE, DENSITY, TOGGLES, normalizeTileScale, normalizeDensity, resolve };
+// How a tile writes its playtime: 'auto' turns a long one into days and hours, 'hours' never does.
+const PLAYTIME_UNITS = Object.freeze(['auto', 'hours']);
+
+function normalizePlaytimeUnits(value) {
+  return PLAYTIME_UNITS.includes(value) ? value : 'auto';
+}
+
+// The units to write `seconds` with, or null for the shared default.
+function playtimeUnits(seconds, mode) {
+  return normalizePlaytimeUnits(mode) === 'hours' && Number(seconds) >= 60 ? ['hours', 'minutes'] : null;
+}
+
+module.exports = {
+  TILE_SCALE,
+  DENSITY,
+  TOGGLES,
+  PLAYTIME_UNITS,
+  normalizeTileScale,
+  normalizeDensity,
+  normalizePlaytimeUnits,
+  playtimeUnits,
+  resolve,
+};

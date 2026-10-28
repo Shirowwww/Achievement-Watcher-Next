@@ -353,6 +353,12 @@
           "name": "游戏状态圆点",
           "description": "显示彩色圆点，用于在游戏未被追踪时发出提示。游戏状态仍可通过右键菜单查看。"
         },
+        "playtime": {
+          "name": "游戏时长",
+          "description": "游戏库如何显示较长的游戏时长：按天和小时，或仅按小时。",
+          "auto": "天和小时",
+          "hours": "仅小时"
+        },
         "showAchievementButton": {
           "name": "成就按钮",
           "description": "在封面上显示奖杯按钮。点击磁贴本身同样会打开成就。"
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "游戏内叠加层弹窗的大小",
         "overlayOpacity": "不透明度",
         "overlayOpacityDesc": "游戏内弹窗的透明程度。100% 为完全不透明。",
+        "overlayEdgeGap": "与边缘的距离",
+        "overlayEdgeGapDesc": "弹窗与屏幕边缘之间的间距，适用于除“自定义”以外的所有位置。设为 0 时紧贴边缘。屏幕上正在显示的弹窗会跟随滑块变化。",
         "overlayProgressPosition": "进度位置",
         "overlayProgressPositionDesc": "进度弹窗（进度的 +1 步骤）出现的位置。",
         "overlayProgressScale": "进度大小",
@@ -1248,7 +1256,10 @@
             "bundled": "内置",
             "fixed": "按原样使用",
             "browse": "浏览预设",
-            "empty": "您还没有自己的预设。在设计器中创建一个，它就会显示在这里。"
+            "empty": "您还没有自己的预设。在设计器中创建一个，它就会显示在这里。",
+            "search": "搜索预设",
+            "noMatch": "没有匹配的预设。",
+            "states": "卡片显示为"
           }
         },
         "souvenirTitle": "纪念截图",
@@ -1306,6 +1317,8 @@
           "custom": "自定义"
         },
         "reposition": "重新定位弹窗（拖到你想要的位置）",
+        "centerHorizontally": "弹窗水平居中",
+        "centerVertically": "弹窗垂直居中",
         "customToastAudio": {
           "name": "Windows 通知声音",
           "description": "指定显示 Windows 通知时播放的声音",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PlayStation 4 游戏的 PC 移植版（Bloodborne、Uncharted、God of War III、MediEvil）：请在“文件夹”中添加移植版所在的文件夹"
+      },
+      "x360recomp": {
+        "description": "Xbox 360 游戏的 PC 重编译版（ReXGlue 移植版）：可在“文档”中找到，或在“文件夹”中添加移植版所在的文件夹"
       },
       "xenia": {
         "description": "Xbox 360 模拟器"

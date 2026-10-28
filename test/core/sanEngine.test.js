@@ -379,14 +379,12 @@ test('an installed preset follows the engine it was built with, and nothing else
   assert.equal(sanEngine.refreshPreset(path.join(plain, 'absent')), false);
 });
 
-test('a SAN card sits 25px off the screen edges, as SAN places it', (t) => {
-  const dir = scratch(t);
-  sanEngine.writePresetFiles(dir, sampleTheme({ main: { preset: 'ps5', scale: 200 }, plat: { preset: 'ps4', scale: 150 } }), { name: 'gap' });
-  // A card with an offset keeps 25px whatever its scale or AW Next's size.
-  assert.equal(sanEngine.edgeGap(dir, { zoom: 2 }), 25);
-  // ps4 has no offset: the glow room stays, so the gap grows with the theme scale and the size.
-  assert.equal(sanEngine.edgeGap(dir, { notificationType: 'platinum', zoom: 2 }), 75);
-  assert.equal(sanEngine.edgeGap(scratch(t)), 0, 'not a SAN preset');
+// The user asked for no margin a preset brings on its own: a SAN card touches the edge like any other,
+// and only the user's distance from the edge moves it inside.
+test('a SAN theme brings no margin of its own to where its popup is placed', () => {
+  assert.equal(sanEngine.edgeGap, undefined);
+  const init = fs.readFileSync(path.join(__dirname, '../../app/electron/init.js'), 'utf8');
+  assert.doesNotMatch(init, /sanEngine\.edgeGap|sanGap/);
 });
 
 test('a SAN preset can pin its trophy tier and borrow another theme for one AW Next state', (t) => {

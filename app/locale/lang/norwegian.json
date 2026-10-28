@@ -353,6 +353,12 @@
           "name": "Spilltilstandsprikk",
           "description": "Viser den fargede prikken som varsler når et spill ikke blir registrert. Spilltilstand er fortsatt tilgjengelig fra høyreklikkmenyen."
         },
+        "playtime": {
+          "name": "Spilletid",
+          "description": "Hvordan biblioteket skriver en lang spilletid: i dager og timer, eller bare i timer.",
+          "auto": "Dager og timer",
+          "hours": "Bare timer"
+        },
         "showAchievementButton": {
           "name": "Prestasjonsknapp",
           "description": "Viser trofeknappen på grafikken. Å klikke på selve ruten åpner også prestasjonene."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Størrelsen på popup-vinduet i spilloverlayet",
         "overlayOpacity": "Ugjennomsiktighet",
         "overlayOpacityDesc": "Hvor gjennomsiktig popup-vinduet i spillet er. 100 % er helt ugjennomsiktig.",
+        "overlayEdgeGap": "Avstand fra kanten",
+        "overlayEdgeGapDesc": "Avstand mellom popup-vinduet og skjermkanten, for alle posisjoner unntatt Egendefinert. 0 legger det helt inntil kanten. Et popup-vindu på skjermen følger glidebryteren.",
         "overlayProgressPosition": "Plassering av fremgang",
         "overlayProgressPositionDesc": "Hvor popup-vinduene for fremgang vises (fremgangstrinnene på +1).",
         "overlayProgressScale": "Størrelse på fremgang",
@@ -1248,7 +1256,10 @@
             "bundled": "Medfølgende",
             "fixed": "Brukes som de er",
             "browse": "Bla gjennom presets",
-            "empty": "Du har ingen egne presets ennå. Lag en i designeren, så dukker den opp her."
+            "empty": "Du har ingen egne presets ennå. Lag en i designeren, så dukker den opp her.",
+            "search": "Søk i presets",
+            "noMatch": "Ingen presets samsvarer.",
+            "states": "Vis kort som"
           }
         },
         "souvenirTitle": "Suvenirbilde",
@@ -1306,6 +1317,8 @@
           "custom": "Egendefinert"
         },
         "reposition": "Flytt popup-vinduet (dra det dit du vil ha det)",
+        "centerHorizontally": "Sentrer popup-vinduet horisontalt",
+        "centerVertically": "Sentrer popup-vinduet vertikalt",
         "customToastAudio": {
           "name": "Lyd for Windows-varsel",
           "description": "Angir lyden som spilles når et Windows-varsel vises",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PC-porter av PlayStation 4-spill (Bloodborne, Uncharted, God of War III, MediEvil): legg til portens mappe under Mapper"
+      },
+      "x360recomp": {
+        "description": "PC-rekompileringer av Xbox 360-spill (ReXGlue-porter): finnes i Dokumenter, eller legg til portens mappe under Mapper"
       },
       "xenia": {
         "description": "Emulator for Xbox 360"

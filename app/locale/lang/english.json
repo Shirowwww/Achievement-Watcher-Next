@@ -353,6 +353,12 @@
           "name": "Game health dot",
           "description": "Show the coloured dot that warns when a game is not being tracked. Game health stays reachable from the right-click menu."
         },
+        "playtime": {
+          "name": "Playtime",
+          "description": "How the library writes a long playtime: in days and hours, or in hours only.",
+          "auto": "Days and hours",
+          "hours": "Hours only"
+        },
         "showAchievementButton": {
           "name": "Achievements button",
           "description": "Show the trophy button on the artwork. Clicking the tile itself opens the achievements either way."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Size of the in-game overlay popup",
         "overlayOpacity": "Opacity",
         "overlayOpacityDesc": "How see-through the in-game popup is. 100% is fully opaque.",
+        "overlayEdgeGap": "Distance from the edge",
+        "overlayEdgeGapDesc": "Space between the popup and the screen edge, for every position except Custom. 0 puts it right against the edge. A popup on screen follows the slider.",
         "overlayProgressPosition": "Progress position",
         "overlayProgressPositionDesc": "Where progress popups appear (the +1 progress steps).",
         "overlayProgressScale": "Progress scale",
@@ -1248,7 +1256,10 @@
             "bundled": "Included",
             "fixed": "Used as they are",
             "browse": "Browse the presets",
-            "empty": "You have no presets of your own yet. Make one in the designer and it shows up here."
+            "empty": "You have no presets of your own yet. Make one in the designer and it shows up here.",
+            "search": "Search presets",
+            "noMatch": "No preset matches.",
+            "states": "Show cards as"
           }
         },
         "souvenirTitle": "Souvenir screenshot",
@@ -1306,6 +1317,8 @@
           "custom": "Custom"
         },
         "reposition": "Reposition the popup (drag it where you want)",
+        "centerHorizontally": "Centre the popup horizontally",
+        "centerVertically": "Centre the popup vertically",
         "customToastAudio": {
           "name": "Windows notification sound",
           "description": "Specifies the sound to play when a Windows notification is displayed",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PC ports of PlayStation 4 games (Bloodborne, Uncharted, God of War III, MediEvil): add the port's folder in Folders"
+      },
+      "x360recomp": {
+        "description": "PC recompilations of Xbox 360 games (ReXGlue ports): found in Documents, or add the port's folder in Folders"
       },
       "xenia": {
         "description": "Xbox 360 emulator"

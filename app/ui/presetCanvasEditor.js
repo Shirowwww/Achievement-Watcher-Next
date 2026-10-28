@@ -174,6 +174,10 @@ function createCanvasEditor(options) {
   const barToggle = root.querySelector('#pd-cv-bar-toggle');
   const barSelect = root.querySelector('#pd-accentBar');
   let lastBar = 'left';
+  const progressAdder = root.querySelector('#pd-cv-add-progress');
+  const progressToggle = root.querySelector('#pd-showProgress');
+  // A part asked for before the card draws it, picked once it is measured.
+  let pendingPick = null;
   const controls = root.querySelector('.pd-controls');
   const controlsHome = document.createComment('pd-controls');
   // The designer's messages ("Copied", a refused picture) are read where the editor is.
@@ -206,6 +210,12 @@ function createCanvasEditor(options) {
     motion: (on) => options.motion && options.motion(on),
     restart: () => options.restart && options.restart(),
     rested: () => render(),
+    life: () => (options.cardLife ? options.cardLife() : 0),
+    // The exit is named as its own setting is in the Motion group.
+    exitLabel: () => {
+      const field = root.querySelector('.pd-field[data-key="animOut"] > span');
+      return field ? field.textContent.trim() : '';
+    },
   });
   for (const field of controls.querySelectorAll('.pd-field[data-key]')) {
     if (CARD_KEYS.includes(field.dataset.key)) field.dataset.card = '1';
@@ -667,6 +677,11 @@ function createCanvasEditor(options) {
     if (!timeline.moving()) holdMarquees(g.doc);
     current = { g, boxes: collectBoxes(g) };
     measuredParts = new Set(current.boxes.filter((box) => box.type === 'part').map((box) => box.key));
+    if (pendingPick && current.boxes.some((box) => box.id === pendingPick)) {
+      selected = pendingPick;
+      picks = [];
+      pendingPick = null;
+    }
     snapButton.classList.toggle('is-suspended', snapOn && !snapping());
     if (selected && selected !== CARD_ID && !selectedBox()) selected = null;
     // A member gone (an undo, a part this card hides) leaves the group; the last one left is a plain pick.
@@ -1237,6 +1252,8 @@ function createCanvasEditor(options) {
     picks = [];
     if (!id) cropping = false;
     repaint();
+    // The panel opens the settings of what was picked: a layout part by its key, the card as 'card'.
+    if (id && options.partSelected) options.partSelected(id === CARD_ID ? CARD_ID : String(id).startsWith('p:') ? String(id).slice(2) : null);
   }
 
   // Two or more make a group; one is a plain pick, with its handles and its own panel.
@@ -2520,12 +2537,36 @@ function createCanvasEditor(options) {
     renderSummary();
     const atCap = canvas.items.length >= CANVAS_MAX_ITEMS;
     for (const button of root.querySelectorAll('[data-cv-add]')) button.disabled = atCap;
+    if (progressAdder) progressAdder.hidden = !canAddProgress();
     timeline.render();
     // Its own Play replaces the preview's while it is on screen.
     preview.classList.toggle('has-timeline', !timelineHost.hidden);
   }
 
+  /*
+    A design with "Progress bar" off draws no bar at all, so the card has no part to pick or show
+    again: on a progress popup the bar is offered with the other additions, and comes back as the
+    part every other preset has, picked at once.
+  */
+  function canAddProgress() {
+    const field = progressToggle && progressToggle.closest('.pd-field');
+    return viewState === 'progress' && Boolean(field) && fieldShown(field) && progressToggle.value === 'false';
+  }
+
+  function addProgress() {
+    if (!canAddProgress()) return;
+    if (isHidden('progress')) {
+      canvas.hidden = canvas.hidden.filter((part) => part !== 'progress');
+      commit();
+    }
+    pendingPick = 'p:progress';
+    progressToggle.value = 'true';
+    progressToggle.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
   /* ---------- wiring ---------- */
+
+  if (progressAdder) progressAdder.addEventListener('click', addProgress);
 
   for (const button of root.querySelectorAll('[data-cv-add]')) {
     button.addEventListener('click', () => ADDERS[button.dataset.cvAdd]());
@@ -2671,11 +2712,6 @@ function createCanvasEditor(options) {
   new ResizeObserver(() => {
     if (full && !preview.offsetWidth) setFull(false);
   }).observe(preview);
-  // The stage keeps the room the open timeline takes (app.css), less what its folded head already
-  // has, so unfolding it never moves the card.
-  new ResizeObserver(() => {
-    if (timelineHost.classList.contains('is-folded') && timelineHost.offsetHeight) preview.style.setProperty('--pd-tl-folded', `${timelineHost.offsetHeight}px`);
-  }).observe(timelineHost);
 
   // Called after anything repainted the preview: undo, a load, a state switch, a resize.
   function refresh() {

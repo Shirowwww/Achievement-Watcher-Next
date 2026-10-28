@@ -353,6 +353,12 @@
           "name": "Punto de estado del juego",
           "description": "Muestra el punto de color que avisa cuando un juego no se está registrando. El Estado del juego sigue disponible desde el menú contextual."
         },
+        "playtime": {
+          "name": "Tiempo de juego",
+          "description": "Cómo escribe la biblioteca un tiempo de juego largo: en días y horas, o solo en horas.",
+          "auto": "Días y horas",
+          "hours": "Solo horas"
+        },
         "showAchievementButton": {
           "name": "Botón de logros",
           "description": "Muestra el botón de trofeo sobre la ilustración. Hacer clic en el recuadro también abre los logros."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Tamaño del popup overlay en el juego",
         "overlayOpacity": "Opacidad",
         "overlayOpacityDesc": "Cuán transparente es el popup en el juego. 100 % es totalmente opaco.",
+        "overlayEdgeGap": "Distancia al borde",
+        "overlayEdgeGapDesc": "Espacio entre el popup y el borde de la pantalla, en todas las posiciones salvo Personalizada. Con 0 queda pegado al borde. Un popup que ya está en pantalla sigue el control deslizante.",
         "overlayProgressPosition": "Posición del progreso",
         "overlayProgressPositionDesc": "Dónde aparecen los popups de progreso (los +1 de progreso).",
         "overlayProgressScale": "Tamaño del progreso",
@@ -1248,7 +1256,10 @@
             "bundled": "Incluidos",
             "fixed": "Se usan tal cual",
             "browse": "Explorar los presets",
-            "empty": "Todavía no tienes ningún preset propio. Crea uno en el diseñador y aparecerá aquí."
+            "empty": "Todavía no tienes ningún preset propio. Crea uno en el diseñador y aparecerá aquí.",
+            "search": "Buscar presets",
+            "noMatch": "Ningún preset coincide.",
+            "states": "Mostrar tarjetas como"
           }
         },
         "souvenirTitle": "Captura souvenir",
@@ -1306,6 +1317,8 @@
           "custom": "Personalizada"
         },
         "reposition": "Reposiciona el popup (arrástralo donde quieras)",
+        "centerHorizontally": "Centrar el popup en horizontal",
+        "centerVertically": "Centrar el popup en vertical",
         "customToastAudio": {
           "name": "Sonido de la notificación de Windows",
           "description": "Especifica el sonido que se reproduce al mostrar una notificación de Windows",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "Ports para PC de juegos de PlayStation 4 (Bloodborne, Uncharted, God of War III, MediEvil): añade la carpeta del port en Carpetas"
+      },
+      "x360recomp": {
+        "description": "Recompilaciones para PC de juegos de Xbox 360 (ports ReXGlue): se encuentran en Documentos, o añade la carpeta del port en Carpetas"
       },
       "xenia": {
         "description": "Emulador de Xbox 360"

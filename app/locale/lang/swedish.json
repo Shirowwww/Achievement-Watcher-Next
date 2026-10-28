@@ -353,6 +353,12 @@
           "name": "Hälsoprick för spel",
           "description": "Visar den färgade prick som varnar när ett spel inte spåras. Spelets hälsa går fortfarande att nå via högerklicksmenyn."
         },
+        "playtime": {
+          "name": "Speltid",
+          "description": "Hur biblioteket skriver en lång speltid: i dagar och timmar, eller bara i timmar.",
+          "auto": "Dagar och timmar",
+          "hours": "Bara timmar"
+        },
         "showAchievementButton": {
           "name": "Prestationsknapp",
           "description": "Visar trofeknappen på grafiken. Att klicka på själva rutan öppnar också prestationerna."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Storlek på popupen i overlayen",
         "overlayOpacity": "Opacitet",
         "overlayOpacityDesc": "Hur genomskinlig popupen i spelet är. 100 % är helt ogenomskinlig.",
+        "overlayEdgeGap": "Avstånd från kanten",
+        "overlayEdgeGapDesc": "Utrymme mellan popupen och skärmkanten, för alla positioner utom Egen. 0 lägger den precis mot kanten. En popup som visas på skärmen följer reglaget.",
         "overlayProgressPosition": "Position för framsteg",
         "overlayProgressPositionDesc": "Var popuperna för framsteg visas (framstegens +1-steg).",
         "overlayProgressScale": "Storlek på framsteg",
@@ -1248,7 +1256,10 @@
             "bundled": "Medföljande",
             "fixed": "Används som de är",
             "browse": "Bläddra bland förinställningarna",
-            "empty": "Du har inga egna förinställningar än. Skapa en i formgivaren så visas den här."
+            "empty": "Du har inga egna förinställningar än. Skapa en i formgivaren så visas den här.",
+            "search": "Sök förinställningar",
+            "noMatch": "Ingen förinställning matchar.",
+            "states": "Visa kort som"
           }
         },
         "souvenirTitle": "Souvenirskärmbild",
@@ -1306,6 +1317,8 @@
           "custom": "Egen"
         },
         "reposition": "Flytta popupen (dra den dit du vill)",
+        "centerHorizontally": "Centrera popupen horisontellt",
+        "centerVertically": "Centrera popupen vertikalt",
         "customToastAudio": {
           "name": "Ljud för Windows-aviseringar",
           "description": "Anger vilket ljud som spelas när en Windows-avisering visas",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PC-portar av PlayStation 4-spel (Bloodborne, Uncharted, God of War III, MediEvil): lägg till portens mapp under Mappar"
+      },
+      "x360recomp": {
+        "description": "PC-omkompileringar av Xbox 360-spel (ReXGlue-portar): finns i Dokument, eller lägg till portens mapp under Mappar"
       },
       "xenia": {
         "description": "Emulator för Xbox 360"

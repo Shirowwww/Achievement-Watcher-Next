@@ -353,6 +353,12 @@
           "name": "遊戲健康狀態圓點",
           "description": "顯示彩色圓點，在遊戲未被追蹤時提出警告。遊戲健康狀態仍可透過右鍵選單開啟。"
         },
+        "playtime": {
+          "name": "遊玩時數",
+          "description": "收藏庫如何顯示較長的遊玩時數：以天和小時顯示，或僅以小時顯示。",
+          "auto": "天和小時",
+          "hours": "僅小時"
+        },
         "showAchievementButton": {
           "name": "成就按鈕",
           "description": "在美術圖上顯示獎盃按鈕。點擊卡片本身同樣會開啟成就。"
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "遊戲內嵌介面彈出通知的大小",
         "overlayOpacity": "不透明度",
         "overlayOpacityDesc": "遊戲內彈出通知的透明程度。100% 為完全不透明。",
+        "overlayEdgeGap": "與邊緣的距離",
+        "overlayEdgeGapDesc": "彈出通知與螢幕邊緣之間的間距，適用於「自訂」以外的所有位置。設為 0 時緊貼邊緣。螢幕上正在顯示的彈出通知會跟著滑桿變動。",
         "overlayProgressPosition": "進度位置",
         "overlayProgressPositionDesc": "進度彈出通知（進度的 +1 步驟）出現的位置。",
         "overlayProgressScale": "進度縮放比例",
@@ -1248,7 +1256,10 @@
             "bundled": "內建",
             "fixed": "依原樣使用",
             "browse": "瀏覽預設集",
-            "empty": "您還沒有自己的預設集。在設計工具中建立一個，它就會顯示在這裡。"
+            "empty": "您還沒有自己的預設集。在設計工具中建立一個，它就會顯示在這裡。",
+            "search": "搜尋預設集",
+            "noMatch": "沒有符合的預設集。",
+            "states": "卡片顯示為"
           }
         },
         "souvenirTitle": "紀念截圖",
@@ -1306,6 +1317,8 @@
           "custom": "自訂"
         },
         "reposition": "重新擺放彈出通知（拖曳到你要的位置）",
+        "centerHorizontally": "彈出通知水平置中",
+        "centerVertically": "彈出通知垂直置中",
         "customToastAudio": {
           "name": "Windows 通知音效",
           "description": "指定顯示 Windows 通知時要播放的音效",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PlayStation 4 遊戲的 PC 移植版（Bloodborne、Uncharted、God of War III、MediEvil）：請在「資料夾」中新增移植版所在的資料夾"
+      },
+      "x360recomp": {
+        "description": "Xbox 360 遊戲的 PC 重新編譯版（ReXGlue 移植版）：可在「文件」中找到，或在「資料夾」中新增移植版所在的資料夾"
       },
       "xenia": {
         "description": "Xbox 360 模擬器"

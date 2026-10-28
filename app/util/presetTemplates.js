@@ -489,7 +489,7 @@ const RANDOM_ARCHETYPES = [
   // Quiet and see-through, with no accent bar at all.
   { key: 'glass', weight: 2, bgMode: 'gradient', light: false, bgLight: [10, 20], bgSat: [15, 40], glow: [10, 35], glowAnim: ['none', 'breathe'], bars: ['none'], border: true, opacity: [0.72, 0.92], fonts: ['rounded', 'sans', 'serif'] },
   // Monospaced, square and hard-edged. A look rather than a treatment, so it stays uncommon.
-  { key: 'terminal', weight: 1, bgMode: 'solid', light: false, bgLight: [3, 8], bgSat: [20, 60], glow: [20, 55], bars: ['outline', 'left', 'none'], fonts: ['mono'], upper: true, radius: [0, 4], layouts: ['icon-left', 'text-only'] },
+  { key: 'terminal', weight: 1, bgMode: 'solid', light: false, bgLight: [3, 8], bgSat: [20, 60], glow: [20, 55], bars: ['outline', 'left', 'none'], fonts: ['mono'], upper: true, radius: [0, 4], layouts: ['icon-left', 'text-only'], shapes: ['square', 'square', 'diamond'] },
   // Light. Rare, because most people watch a game on a dark screen, but it has to be reachable.
   { key: 'paper', weight: 1, bgMode: 'solid', light: true, bgLight: [88, 96], bgSat: [4, 22], glow: [0, 10], bars: ['left', 'none'], border: true, fonts: ['serif', 'sans', 'rounded'], radius: [2, 12] },
 ];
@@ -504,7 +504,38 @@ function pickArchetype(random) {
   return RANDOM_ARCHETYPES[0];
 }
 
+/*
+  How the card's own parts come in after it: null (all with the card, as most presets do), or one
+  after the other from the icon down, a short beat apart and starting while the card is still
+  arriving. The text shares one effect so the card reads as one design; a title may type itself
+  and a count may run up, as the designer's own text entrances do.
+*/
+function randomPartMotion(random, design) {
+  if (random() < 0.4) return null;
+  const textEnter = pick(random, ['rise', 'rise', 'fade', 'left', 'right', 'drop']);
+  const step = between(random, 70, 180, 10);
+  let delay = Math.round((design.animInMs * between(random, 30, 70, 10)) / 1000) * 10;
+  const motion = {};
+  const add = (part, enter) => {
+    motion[part] = { enter, delay: Math.min(delay, 3000) };
+    delay += step;
+  };
+  if (design.layout !== 'text-only' && random() < 0.8) add('icon', pick(random, ['pop', 'pop', 'zoom', 'fade', 'drop', 'burst']));
+  if (design.showGameName) add('game', textEnter);
+  add('title', random() < 0.2 ? 'type' : textEnter);
+  add('detail', textEnter);
+  if (design.showRarity) add('rarity', random() < 0.5 ? 'count' : textEnter);
+  if (design.showProgress) add('progress', random() < 0.5 ? 'count' : 'fade');
+  return motion;
+}
+
 function randomPresetOptions(random = Math.random) {
+  const design = randomLook(random);
+  const motion = randomPartMotion(random, design);
+  return motion ? normalizeOptions({ ...design, canvas: { ...design.canvas, motion } }) : design;
+}
+
+function randomLook(random) {
   const archetype = pickArchetype(random);
   const range = (name, fallback, step) => {
     const bounds = archetype[name] || fallback;
@@ -530,6 +561,8 @@ function randomPresetOptions(random = Math.random) {
   const glow = range('glow', [0, 40], 5);
   const descriptionLines = pick(random, [1, 1, 1, 2, 2, 3]);
   const showGameName = random() < 0.45;
+  const iconShape = pick(random, archetype.shapes || ['rounded', 'rounded', 'square', 'circle', 'circle', 'squircle', 'hexagon', 'diamond']);
+  const bgPattern = pick(random, ['none', 'none', 'none', 'none', 'grid', 'dots', 'lines', 'noise']);
 
   return normalizeOptions({
     layout,
@@ -570,7 +603,8 @@ function randomPresetOptions(random = Math.random) {
     opacity: archetype.opacity ? between(random, archetype.opacity[0], archetype.opacity[1], 0.02) : 1,
 
     iconSize: between(random, 52, 84, 2),
-    iconRadius: pick(random, [0, 8, 14, 20, 50, 50]),
+    // Set below with the shape, so a square icon is the square shape and the menu says so.
+    iconRadius: 14,
     iconBorder: pick(random, [0, 0, 0, 1, 2]),
     iconGlow: pick(random, [0, 0, 25, 45, 65]),
 
@@ -603,6 +637,15 @@ function randomPresetOptions(random = Math.random) {
     progressHeight: between(random, 5, 12),
     rareSilver: hsl(between(random, 200, 225), 20, light ? 45 : 72),
     rareBronze: hsl(between(random, 20, 32), 55, light ? 40 : 52),
+
+    // A rounded icon always gets a visible radius: 0 would draw a square the menu calls rounded.
+    iconShape,
+    ...(iconShape === 'rounded' ? { iconRadius: between(random, 8, 30, 2) } : {}),
+    bgPattern,
+    bgPatternOpacity: bgPattern === 'none' ? 20 : between(random, 10, 35, 5),
+    easingOut: pick(random, ['same', 'same', 'same', 'smooth', 'gentle', 'snap', 'back', 'linear', 'elastic']),
+    stateTint: pick(random, [0, 0, 0, 10, 20, 30]),
+    hiddenLock: random() < 0.3,
   });
 }
 

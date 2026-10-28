@@ -131,8 +131,21 @@ function placeNotification({ position, width, height, workArea, custom, margin =
   };
 }
 
+// A custom popup centred on one axis ('x' or 'y') of the work area it is on; the other stays put.
+function centerOnAxis(bounds, workArea, axis) {
+  const area = normalizeWorkArea(workArea);
+  const x = Math.round(number(bounds && bounds.x, area.x));
+  const y = Math.round(number(bounds && bounds.y, area.y));
+  const width = number(bounds && bounds.width, 0);
+  const height = number(bounds && bounds.height, 0);
+  if (axis === 'x') return { x: area.x + Math.floor((area.width - width) / 2), y };
+  if (axis === 'y') return { x, y: area.y + Math.floor((area.height - height) / 2) };
+  return { x, y };
+}
+
 module.exports = {
   DEFAULT_MARGIN,
+  centerOnAxis,
   MIN_VISIBLE_RATIO,
   fitNotificationScale,
   placeNotification,

@@ -353,6 +353,12 @@
           "name": "Oyun durumu noktası",
           "description": "Bir oyun izlenmediğinde uyaran renkli noktayı gösterir. Oyun durumuna sağ tık menüsünden ulaşılabilir olmaya devam eder."
         },
+        "playtime": {
+          "name": "Oynama süresi",
+          "description": "Kütüphanenin uzun bir oynama süresini nasıl yazacağı: gün ve saat olarak ya da yalnızca saat olarak.",
+          "auto": "Gün ve saat",
+          "hours": "Yalnızca saat"
+        },
         "showAchievementButton": {
           "name": "Başarımlar düğmesi",
           "description": "Görselin üzerinde kupa düğmesini gösterir. Kutucuğun kendisine tıklamak da başarımları açar."
@@ -646,6 +652,8 @@
         "overlayScaleDesc": "Oyun içi yer paylaşımı açılır penceresinin boyutu",
         "overlayOpacity": "Opaklık",
         "overlayOpacityDesc": "Oyun içi açılır pencerenin ne kadar şeffaf olduğu. %100 tamamen opaktır.",
+        "overlayEdgeGap": "Kenara uzaklık",
+        "overlayEdgeGapDesc": "Açılır pencere ile ekran kenarı arasındaki boşluk, Özel dışındaki tüm konumlar için. 0 değeri pencereyi kenara yapıştırır. Ekranda görünen bir açılır pencere kaydırıcıyı izler.",
         "overlayProgressPosition": "İlerleme konumu",
         "overlayProgressPositionDesc": "İlerleme açılır pencerelerinin göründüğü yer (ilerlemedeki +1 adımları).",
         "overlayProgressScale": "İlerleme boyutu",
@@ -1248,7 +1256,10 @@
             "bundled": "Dahil olanlar",
             "fixed": "Olduğu gibi kullanılır",
             "browse": "Ön ayarlara göz at",
-            "empty": "Henüz kendinize ait ön ayarınız yok. Tasarımcıda bir tane oluşturun, burada görünsün."
+            "empty": "Henüz kendinize ait ön ayarınız yok. Tasarımcıda bir tane oluşturun, burada görünsün.",
+            "search": "Ön ayarlarda ara",
+            "noMatch": "Hiçbir ön ayar eşleşmiyor.",
+            "states": "Kartları şu şekilde göster"
           }
         },
         "souvenirTitle": "Anı ekran görüntüsü",
@@ -1306,6 +1317,8 @@
           "custom": "Özel"
         },
         "reposition": "Açılır pencereyi yeniden konumlandır (istediğin yere sürükle)",
+        "centerHorizontally": "Açılır pencereyi yatay ortala",
+        "centerVertically": "Açılır pencereyi dikey ortala",
         "customToastAudio": {
           "name": "Windows bildirimi sesi",
           "description": "Bir Windows bildirimi görüntülendiğinde çalınacak sesi belirtir",
@@ -1504,6 +1517,9 @@
       },
       "ps4recomp": {
         "description": "PlayStation 4 oyunlarının PC portları (Bloodborne, Uncharted, God of War III, MediEvil): portun klasörünü Klasörler bölümünden ekle"
+      },
+      "x360recomp": {
+        "description": "Xbox 360 oyunlarının PC yeniden derlemeleri (ReXGlue portları): Belgeler içinde bulunur, ya da portun klasörünü Klasörler bölümünden ekle"
       },
       "xenia": {
         "description": "Xbox 360 öykünücüsü"
