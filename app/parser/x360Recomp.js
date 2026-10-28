@@ -25,7 +25,15 @@ const formats = require(path.join(__dirname, 'x360RecompFormats.js'));
 const discovery = require(path.join(__dirname, 'x360RecompDiscovery.js'));
 const schema = require(path.join(__dirname, 'x360RecompSchema.js'));
 
+// The Sources switch of the recompilations; until it is set, the Xenia one, which used to cover them.
+function isEnabled(source) {
+  const flags = source && typeof source === 'object' ? source : {};
+  if (typeof flags.x360recomp === 'boolean') return flags.x360recomp;
+  return flags.xenia !== false;
+}
+
 module.exports = {
+  isEnabled,
   SOURCE: state.SOURCE,
   TYPE: state.TYPE,
   initDebug: state.initDebug,

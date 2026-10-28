@@ -252,6 +252,12 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
+    // Unset until Sources shows it: it then takes what the Xenia switch said, which used to cover it.
+    if (typeof options.achievement_source.x360recomp !== 'boolean') {
+      options.achievement_source.x360recomp = options.achievement_source.xenia !== false;
+      fixFile = true;
+    }
+
     if (typeof options.achievement_source.xlln !== 'boolean') {
       options.achievement_source.xlln = true;
       fixFile = true;
@@ -617,6 +623,7 @@ module.exports.load = async (cfg_file) => {
         shadps4: true,
         kytyps5: true,
         ps4recomp: true,
+        x360recomp: true,
         xenia: true,
         xlln: true,
         retroAchievements: true,

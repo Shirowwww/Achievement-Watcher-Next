@@ -94,6 +94,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Games added by hand show how many players unlocked each achievement.** A game added from its
   executable with a Steam AppID now gets the same global percentages as its Steam release, whatever
   platform was picked for it.
+- **A video clip keeps its footage when the capture restarts.** When the screen wakes up or the
+  game switches display mode during a clip, the part recorded before is kept instead of leaving a
+  clip of a single frame.
 - **Play time survives a crash or a quit.** It is saved every minute while a game runs, and once
   more when AW Next closes, instead of only when the game exits, so a power cut loses a minute at
   most.

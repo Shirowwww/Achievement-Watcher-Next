@@ -977,8 +977,8 @@ pub fn run(config: &Config, shared: &Shared) {
                 }
             }
         }
-        shared.ring.lock().unwrap().clear_video();
-        *shared.video_type.lock().unwrap() = None;
+        let retired_type = shared.video_type.lock().unwrap().take();
+        shared.ring.lock().unwrap().retire_video(retired_type);
         let pause = Duration::from_millis(250 * u64::from(failures.clamp(1, 8)));
         let started = Instant::now();
         while started.elapsed() < pause && !shared.stop.load(Ordering::Relaxed) {

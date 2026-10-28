@@ -2076,6 +2076,8 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     if (_claimedDirs.has(path.resolve(dir).toLowerCase())) return;
     if (isKnownNonGameToolInstall(dir)) return;
     if (launcherDetect.isOfficialLauncherInstall(dir)) return; // legit launcher game - never "Unconfigured"
+    // A PS4 port with trophies is listed by its own source; one without its game yet is not a game.
+    if (ps4Recomp.isPortFolder(dir)) return;
     if (isLinkedSubtree(dir)) return; // this folder already hosts a real-appid game (avoid duplicate)
     // A launcher above an install the appid scan already found (MW4's cod.exe over its GBE sp26
     // folder) is that same game, not a second one to name-match.
@@ -2280,7 +2282,8 @@ async function scanWatchedFolder(dir, source, kytyOptions = kytyps5.excludingOth
   const games = claimed.games.slice();
   // Recompiled games sit among ordinary ones in a library folder, so they add to the scans above;
   // a PS4 port another reader already listed is left to it.
-  if (source.xenia) {
+  // settings.js fills x360recomp from the Xenia switch while it is unset (x360Recomp.isEnabled).
+  if (source.x360recomp !== false) {
     try {
       games.push(...x360Recomp.scan(dir));
     } catch (err) {
@@ -2387,7 +2390,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('ff7');
 
   //ReXGlue recompilations write Documents\<game>\achievements\<titleid>.toml unless the game moves it.
-  if (!scope && source.xenia) {
+  if (!scope && source.x360recomp !== false) {
     try {
       // A known port still waiting for its list gives way to the list found here.
       const merged = x360Recomp.mergeRecords(data, x360Recomp.scanDocuments());

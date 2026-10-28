@@ -404,13 +404,13 @@ function watchForNewLists(ctx, configFile = userDirFile) {
   }
 }
 
-// Tear down any existing watchers and (re)start from the current options. Gated by the Xbox 360
-// source flag, which covers the emulator and the recompilations alike, and the master notify switch.
+// Tear down any existing watchers and (re)start from the current options. Gated by the
+// recompilations' own Sources switch (the Xenia one until it is set) and the master notify switch.
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
   if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.xenia === false) return;
+  if (!x360.isEnabled(ctx.options.achievement_source)) return;
   if (ctx.options.notification && ctx.options.notification.notify === false) return;
   if (typeof ctx.notify !== 'function') return;
 

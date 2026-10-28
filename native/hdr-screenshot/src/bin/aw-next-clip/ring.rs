@@ -17,9 +17,16 @@ pub struct Clip {
     pub audio: Vec<Packet>,
 }
 
+// The video of the stream that ran before the last restart, with the media type that decodes it.
+struct Retired {
+    video: VecDeque<Packet>,
+    media_type: Vec<u8>,
+}
+
 pub struct Ring {
     video: VecDeque<Packet>,
     audio: VecDeque<Packet>,
+    retired: Option<Retired>,
     keep: i64,
     max_bytes: usize,
     bytes: usize,
@@ -27,13 +34,17 @@ pub struct Ring {
 
 impl Ring {
     pub fn new(keep: i64, max_bytes: usize) -> Self {
-        Self { video: VecDeque::new(), audio: VecDeque::new(), keep, max_bytes, bytes: 0 }
+        Self { video: VecDeque::new(), audio: VecDeque::new(), retired: None, keep, max_bytes, bytes: 0 }
     }
 
     pub fn push_video(&mut self, packet: Packet) {
+        let newest = packet.time;
         self.bytes += packet.data.len();
         self.video.push_back(packet);
         self.trim_video();
+        if self.retired.as_ref().and_then(|r| r.video.back()).is_some_and(|p| p.time < newest - self.keep) {
+            self.retired = None;
+        }
     }
 
     pub fn push_audio(&mut self, packet: Packet) {
@@ -44,10 +55,15 @@ impl Ring {
         }
     }
 
-    // A new resolution or format starts a new stream: older packets cannot be decoded with it.
-    pub fn clear_video(&mut self) {
-        self.video.clear();
+    // A new resolution or format starts a new stream: older packets cannot be decoded with it, so
+    // they are set aside with their own type, for a clip that falls mostly before the restart.
+    // Without a type there is nothing to write them with, and the stream set aside earlier stays.
+    pub fn retire_video(&mut self, media_type: Option<Vec<u8>>) {
+        let video = std::mem::take(&mut self.video);
         self.bytes = 0;
+        if let Some(media_type) = media_type.filter(|_| !video.is_empty()) {
+            self.retired = Some(Retired { video, media_type });
+        }
     }
 
     pub fn video_bytes(&self) -> usize {
@@ -77,17 +93,28 @@ impl Ring {
     }
 
     // Video from the keyframe at or before `start`, audio over the same span, both rebased to zero.
-    pub fn select(&self, start: i64, end: i64) -> Option<Clip> {
-        let first = self
-            .video
-            .iter()
-            .rposition(|p| p.key && p.time <= start)
-            .or_else(|| self.video.iter().position(|p| p.key))?;
-        let origin = self.video[first].time;
+    // A clip that straddles a restart keeps the stream that covers more of it; the media type comes
+    // back only when that is the retired stream, the current one is the caller's.
+    pub fn select(&self, start: i64, end: i64) -> Option<(Clip, Option<Vec<u8>>)> {
+        let current = self.cut(&self.video, start, end);
+        let retired = self.retired.as_ref().and_then(|r| self.cut(&r.video, start, end).map(|cut| (cut, r.media_type.clone())));
+        match (current, retired) {
+            (Some((_, current_frames)), Some(((clip, frames), media_type))) if frames > current_frames => Some((clip, Some(media_type))),
+            (Some((clip, _)), _) => Some((clip, None)),
+            (None, retired) => retired.map(|((clip, _), media_type)| (clip, Some(media_type))),
+        }
+    }
+
+    // Also returns how many of its frames fall inside the asked span: the cut starts up to one group
+    // of pictures before it.
+    fn cut(&self, video: &VecDeque<Packet>, start: i64, end: i64) -> Option<(Clip, usize)> {
+        let first = video.iter().rposition(|p| p.key && p.time <= start).or_else(|| video.iter().position(|p| p.key && p.time <= end))?;
+        let origin = video[first].time;
         let rebase = |p: &Packet| Packet { time: p.time - origin, ..p.clone() };
-        let video: Vec<Packet> = self.video.iter().skip(first).take_while(|p| p.time <= end).map(rebase).collect();
+        let video: Vec<Packet> = video.iter().skip(first).take_while(|p| p.time <= end).map(rebase).collect();
+        let frames = video.iter().filter(|p| p.time + origin >= start).count();
         let audio = self.audio.iter().filter(|p| p.time >= origin && p.time <= end).map(rebase).collect();
-        Some(Clip { video, audio })
+        Some((Clip { video, audio }, frames))
     }
 }
 
@@ -162,7 +189,8 @@ mod tests {
     #[test]
     fn a_clip_starts_on_the_keyframe_before_its_start_and_is_rebased() {
         let ring = filled(30, 20);
-        let clip = ring.select(15 * SECOND + SECOND / 2, 25 * SECOND).unwrap();
+        let (clip, media_type) = ring.select(15 * SECOND + SECOND / 2, 25 * SECOND).unwrap();
+        assert!(media_type.is_none(), "the current stream is written with the caller's type");
         assert_eq!(clip.video[0].time, 0);
         assert!(clip.video[0].key);
         assert_eq!(clip.video.len(), 101, "15.0 s to 25.0 s inclusive at 10 fps");
@@ -172,7 +200,7 @@ mod tests {
     #[test]
     fn a_clip_older_than_the_ring_starts_at_the_first_keyframe() {
         let ring = filled(5, 20);
-        let clip = ring.select(-30 * SECOND, 4 * SECOND).unwrap();
+        let (clip, _) = ring.select(-30 * SECOND, 4 * SECOND).unwrap();
         assert_eq!(clip.video.len(), 41);
     }
 
@@ -187,11 +215,41 @@ mod tests {
     }
 
     #[test]
-    fn a_new_stream_empties_the_video() {
+    fn a_restart_without_a_type_empties_the_video() {
         let mut ring = filled(3, 10);
-        ring.clear_video();
+        ring.retire_video(None);
         assert!(ring.select(0, SECOND).is_none());
         assert_eq!(ring.video_bytes(), 0);
+    }
+
+    // 20 s of one stream, a restart, then the new stream from 20 s to `until`.
+    fn restarted(until: i64) -> Ring {
+        let mut ring = filled(20, 30);
+        ring.retire_video(Some(vec![1]));
+        for i in 200..until * 10 {
+            ring.push_video(packet(i * SECOND / 10, i % 10 == 0));
+        }
+        ring
+    }
+
+    #[test]
+    fn a_clip_mostly_before_a_restart_keeps_the_old_stream_and_its_type() {
+        let (clip, media_type) = restarted(21).select(10 * SECOND, 21 * SECOND).unwrap();
+        assert_eq!(media_type, Some(vec![1]));
+        assert_eq!(clip.video.len(), 100, "10.0 s to 19.9 s, the end of the old stream");
+    }
+
+    #[test]
+    fn a_clip_mostly_after_a_restart_keeps_the_new_stream() {
+        let (clip, media_type) = restarted(30).select(18 * SECOND, 29 * SECOND).unwrap();
+        assert!(media_type.is_none());
+        assert_eq!(clip.video.len(), 91, "20.0 s to 29.0 s");
+    }
+
+    #[test]
+    fn the_old_stream_is_dropped_once_the_new_one_fills_the_ring() {
+        let ring = restarted(55);
+        assert!(ring.retired.is_none());
     }
 
     #[test]

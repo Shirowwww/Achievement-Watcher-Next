@@ -715,4 +715,6 @@ module.exports.getAchievements = getAchievements;
 module.exports.getGameData = getGameData;
 module.exports.iconDirFor = iconDirFor;
 module.exports.isProgressName = progress.isProgressName;
+// A PS4 port's own folder, game installed or not: the library scan never lists it as another game.
+module.exports.isPortFolder = (dir) => identifyPort(dir) !== null;
 module.exports._internal = { PORTS, identifyPort, resolveDirs, scriptDefault, parseExtraEnv, launcherSettings, trophySets, findDump, journalFile };

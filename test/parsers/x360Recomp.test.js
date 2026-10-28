@@ -600,3 +600,14 @@ test('a walk cut short by its folder limit says so', (t) => {
   x360.discover(root);
   assert.ok(warnings.some((line) => line.includes('3000')), warnings.join('\n'));
 });
+
+// The recompilations have their own switch in Sources. An options.ini written before it existed
+// keeps what the Xenia switch said, since that switch used to cover them too.
+test('the recompilation source follows its own switch, and Xenia until it has one', () => {
+  assert.equal(x360.isEnabled({ x360recomp: true, xenia: false }), true);
+  assert.equal(x360.isEnabled({ x360recomp: false, xenia: true }), false);
+  assert.equal(x360.isEnabled({ xenia: false }), false);
+  assert.equal(x360.isEnabled({ xenia: true }), true);
+  assert.equal(x360.isEnabled({}), true);
+  assert.equal(x360.isEnabled(null), true);
+});

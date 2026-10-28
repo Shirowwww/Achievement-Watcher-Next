@@ -260,3 +260,18 @@ test("PROTOTYPE: the image folder prepare.py prints names a session's game, what
   assert.deepEqual(split, ['p2:4', 'p1:6']);
   assert.equal(logs.gameFromText('Output: C:\\uncharted\\out', 'uncharted'), '', 'only the PROTOTYPE bundle reads it');
 });
+
+// A port's launcher folder with no game dumped yet has no trophies to list, and is not an
+// "Unconfigured" game either: the library scan skips what this says is a port.
+test('SpartanPort without its game: a port folder, with nothing to list', () => {
+  const root = dir('spartanport-windows');
+  fs.mkdirSync(root, { recursive: true });
+  fs.writeFileSync(path.join(root, 'run.py'), 'import os\nGAME_DIR = os.environ.get("SPARTAN_GAME_DIR")\n');
+  for (const exe of ['SpartanPort.exe', 'God of War III.exe', 'Play SpartanPort.exe']) fs.writeFileSync(path.join(root, exe), 'MZ');
+  assert.equal(ps4Recomp.isPortFolder(root), true);
+  assert.deepEqual(ps4Recomp.scan(root), []);
+  const plain = dir('Some Game');
+  fs.mkdirSync(plain, { recursive: true });
+  fs.writeFileSync(path.join(plain, 'Game.exe'), 'MZ');
+  assert.equal(ps4Recomp.isPortFolder(plain), false);
+});

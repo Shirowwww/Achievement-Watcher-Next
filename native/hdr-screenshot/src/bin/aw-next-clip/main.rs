@@ -189,8 +189,12 @@ fn read_commands(sender: mpsc::Sender<Command>) {
 
 fn save(job: &ring::Job, shared: &Shared) {
     let frame = SECOND / i64::from(shared.fps.load(Ordering::Relaxed).max(1));
-    let clip = shared.ring.lock().unwrap().select(job.start, job.end);
-    let video_type = shared.video_type.lock().unwrap().clone();
+    let selected = shared.ring.lock().unwrap().select(job.start, job.end);
+    let (clip, video_type) = match selected {
+        Some((clip, Some(retired_type))) => (Some(clip), Some(retired_type)),
+        Some((clip, None)) => (Some(clip), shared.video_type.lock().unwrap().clone()),
+        None => (None, None),
+    };
     let audio_type = shared.audio_type.lock().unwrap().clone();
     match (clip, video_type) {
         (Some(clip), Some(video_type)) if !clip.video.is_empty() => {
