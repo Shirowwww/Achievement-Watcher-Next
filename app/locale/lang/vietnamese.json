@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Đưa mọi thứ về chỗ cũ",
             "addText": "Chữ",
+            "addRarity": "Độ hiếm",
             "addImage": "Hình ảnh hoặc GIF",
             "addRect": "Hình chữ nhật",
             "addEllipse": "Hình tròn",
             "addLine": "Đường thẳng",
             "hint": "Nhấp vào một phần của bản xem trước để di chuyển, đổi kích thước hoặc xoay nó.",
             "cardHint": "Kéo các cạnh của thẻ để đổi kích thước. Mọi thiết lập ở đây chỉ ảnh hưởng đến thẻ.",
+            "fixedHint": "Chủ đề SAN đã nhập giữ nguyên thẻ riêng của nó. Hãy nhấp vào một phần tử của thẻ để mở thiết lập của nó, hoặc kéo để di chuyển. Bạn cũng có thể thêm văn bản, hình ảnh hay hình khối lên trên.",
             "fullscreen": "Trình chỉnh sửa",
             "general": "Tất cả cài đặt",
             "done": "Xong",
@@ -701,6 +703,7 @@
             "summaryNone": "Chưa di chuyển hay thêm gì",
             "summaryMoved": "Phần đã di chuyển: {count}",
             "summaryItems": "Mục đã thêm: {count}",
+            "heightFloor": "Thẻ không thể thấp hơn nội dung của nó: hãy thu nhỏ biểu tượng hoặc văn bản để thấp hơn nữa.",
             "imageRefused": "Không dùng được hình ảnh này. Hãy dùng hình PNG, JPEG, GIF, WebP hoặc BMP tối đa 5 MB.",
             "tier": {
               "edit": "Chỉnh sửa:",
@@ -714,7 +717,9 @@
               "text": "Khối chữ",
               "title": "Tiêu đề",
               "detail": "Mô tả",
-              "meta": "Tên trò chơi",
+              "meta": "Dòng trò chơi",
+              "game": "Tên trò chơi",
+              "rarity": "Độ hiếm",
               "progress": "Thanh tiến độ",
               "mark": "Logo thương hiệu",
               "cardBefore": "Trang trí thẻ 1",
@@ -778,7 +783,14 @@
               "cut": "Trong suốt",
               "loop": "Lặp lại",
               "alignGroup": "Căn theo nhau",
-              "insert": "Chèn"
+              "insert": "Chèn",
+              "insertHint": "Thêm một từ mà popup tự điền: trò chơi, thành tựu, mô tả, độ hiếm hoặc cấp.",
+              "duration": "Thời lượng (ms)",
+              "back": "Nền",
+              "pad": "Đệm trong",
+              "strokeColor": "Màu viền",
+              "track": "Màu nền thanh",
+              "thickness": "Độ dày"
             },
             "axis": {
               "w": "R",
@@ -809,7 +821,22 @@
               "left": "Từ bên trái",
               "right": "Từ bên phải",
               "zoom": "Phóng to vào",
-              "pop": "Bật lên"
+              "pop": "Bật lên",
+              "shake": "Rung",
+              "burst": "Lóe sáng",
+              "type": "Máy đánh chữ",
+              "count": "Đếm lên",
+              "countFill": "Đếm lên và lấp đầy"
+            },
+            "tl": {
+              "title": "Dòng thời gian",
+              "play": "Phát",
+              "pause": "Tạm dừng",
+              "playhead": "Thời điểm đang hiển thị",
+              "start": "Bắt đầu",
+              "length": "Độ dài",
+              "add": "Nhấp vào hàng để cho nó hiệu ứng xuất hiện riêng",
+              "cardFixed": "Thẻ xuất hiện theo mẫu của nó"
             },
             "token": {
               "game": "Trò chơi",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Lớp",
-                "body": "Mọi thứ trên thẻ, lớp trên cùng trước. Con mắt ẩn một thành phần, ổ khóa giữ nó tại chỗ."
+                "body": "Mọi thứ trên thẻ, lớp trên cùng trước. Con mắt ẩn một thành phần; ổ khóa, ở các thành phần bạn thêm, giữ nó tại chỗ."
               },
               "help": {
                 "title": "Phím tắt",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Màu nhấn",
             "accentBar": "Thanh màu nhấn",
+            "accentBarPlace": "Vị trí thanh màu nhấn",
             "accentBarSize": "Độ dày thanh",
             "align": "Căn lề",
             "animIn": "Vào từ",
@@ -1122,6 +1150,7 @@
             "smooth": "Mượt",
             "snap": "Dứt khoát",
             "solid": "Màu đặc",
+            "square": "Hình vuông",
             "squircle": "Hình vuông bo góc",
             "text": "Màu chữ",
             "textOnly": "Chỉ chữ",
@@ -1130,7 +1159,8 @@
             "topRight": "Trên cùng bên phải",
             "transparent": "Trong suốt",
             "uppercase": "IN HOA",
-            "zoom": "Phóng to"
+            "zoom": "Phóng to",
+            "auto": "Tự động"
           },
           "san": {
             "tierPictures": "Hình cúp",

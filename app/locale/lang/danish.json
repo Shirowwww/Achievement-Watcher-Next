@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Sæt det hele tilbage på plads",
             "addText": "Tekst",
+            "addRarity": "Sjældenhed",
             "addImage": "Billede eller GIF",
             "addRect": "Rektangel",
             "addEllipse": "Cirkel",
             "addLine": "Linje",
             "hint": "Klik på en del af forhåndsvisningen for at flytte, ændre størrelse på eller rotere den.",
             "cardHint": "Træk i kortets kanter for at ændre størrelsen. Alt her påvirker kun kortet.",
+            "fixedHint": "Et importeret SAN-tema beholder sit eget kort. Klik på et af dets elementer for at åbne dets indstillinger, eller træk det for at flytte det. Du kan også tilføje en tekst, et billede eller en form oven på det.",
             "fullscreen": "Editor",
             "general": "Alle indstillinger",
             "done": "Færdig",
@@ -701,6 +703,7 @@
             "summaryNone": "Intet flyttet eller tilføjet endnu",
             "summaryMoved": "Flyttede dele: {count}",
             "summaryItems": "Tilføjede elementer: {count}",
+            "heightFloor": "Kortet kan ikke blive lavere end det, det indeholder: gør ikonet eller teksten mindre for at komme længere ned.",
             "imageRefused": "Billedet kan ikke bruges. Brug et PNG-, JPEG-, GIF-, WebP- eller BMP-billede på højst 5 MB.",
             "tier": {
               "edit": "Rediger:",
@@ -714,7 +717,9 @@
               "text": "Tekstblok",
               "title": "Titel",
               "detail": "Beskrivelse",
-              "meta": "Spillets navn",
+              "meta": "Spillinje",
+              "game": "Spillets navn",
+              "rarity": "Sjældenhed",
               "progress": "Fremskridtslinje",
               "mark": "Brandlogo",
               "cardBefore": "Kortdekoration 1",
@@ -778,7 +783,14 @@
               "cut": "Gennemsigtig",
               "loop": "Gentag",
               "alignGroup": "Justér i forhold til hinanden",
-              "insert": "Indsæt"
+              "insert": "Indsæt",
+              "insertHint": "Tilføjer et ord, som popup’en udfylder: spillet, bedriften, dens beskrivelse, dens sjældenhed eller dens niveau.",
+              "duration": "Varighed (ms)",
+              "back": "Baggrund",
+              "pad": "Indvendig margen",
+              "strokeColor": "Konturfarve",
+              "track": "Farve på bjælkens bund",
+              "thickness": "Tykkelse"
             },
             "axis": {
               "w": "B",
@@ -809,7 +821,22 @@
               "left": "Fra venstre",
               "right": "Fra højre",
               "zoom": "Zoom ind",
-              "pop": "Pop"
+              "pop": "Pop",
+              "shake": "Ryst",
+              "burst": "Glimt",
+              "type": "Skrivemaskine",
+              "count": "Tæl op",
+              "countFill": "Tæl op og fyld"
+            },
+            "tl": {
+              "title": "Tidslinje",
+              "play": "Afspil",
+              "pause": "Pause",
+              "playhead": "Vist tidspunkt",
+              "start": "Start",
+              "length": "Varighed",
+              "add": "Klik i rækken for at give den sin egen indtræden",
+              "cardFixed": "Kortet kommer ind, som dets preset foreskriver"
             },
             "token": {
               "game": "Spil",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Lag",
-                "body": "Alt på kortet, det øverste først. Øjet skjuler et element, hængelåsen holder det på plads."
+                "body": "Alt på kortet, det øverste først. Øjet skjuler et element; hængelåsen, på de elementer du tilføjer, holder det på plads."
               },
               "help": {
                 "title": "Genveje",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Accent",
             "accentBar": "Accentlinje",
+            "accentBarPlace": "Placering af accentlinjen",
             "accentBarSize": "Linjetykkelse",
             "align": "Justering",
             "animIn": "Kommer ind fra",
@@ -1122,6 +1150,7 @@
             "smooth": "Blød",
             "snap": "Skarp",
             "solid": "Ensfarvet",
+            "square": "Firkant",
             "squircle": "Afrundet firkant",
             "text": "Tekstfarve",
             "textOnly": "Kun tekst",
@@ -1130,7 +1159,8 @@
             "topRight": "Øverst til højre",
             "transparent": "Gennemsigtig",
             "uppercase": "STORE BOGSTAVER",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Trofæbillede",

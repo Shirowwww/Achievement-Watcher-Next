@@ -60,14 +60,17 @@ const EASINGS = {
 /*
   The icon's outline. `rounded` is the shape the designer has always drawn - a square whose corner
   radius is the `iconRadius` slider - so it stays the default and nothing already saved moves. The
-  others are clip paths, and they ignore the radius because their outline is their own.
+  square, the circle and the squircle are fixed radii, so the border and the glow follow them the
+  same way. The polygons are clip paths, which cut off anything drawn round the picture, so the
+  stylesheet draws their border and glow around it instead.
 */
 const ICON_SHAPES = {
-  rounded: '',
-  circle: 'circle(50% at 50% 50%)',
-  squircle: 'inset(0 0 0 0 round 32%)',
-  hexagon: 'polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%)',
-  diamond: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+  rounded: { radius: 'var(--icon-radius)' },
+  square: { radius: '0' },
+  circle: { radius: '50%' },
+  squircle: { radius: '32%' },
+  hexagon: { clip: 'polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0% 50%)' },
+  diamond: { clip: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' },
 };
 
 /*
@@ -120,7 +123,8 @@ const PRESET_PROPERTIES = [
   // 0 lets the content decide; anything above makes the card at least that tall, content centred.
   { key: 'minHeight', type: 'number', def: 0, min: 0, max: 300, step: 2, group: 'layout', css: '--min-height', unit: 'px' },
   { key: 'padX', type: 'number', def: 18, min: 4, max: 48, step: 1, group: 'layout', css: '--pad-x', unit: 'px', advanced: true },
-  { key: 'padY', type: 'number', def: 12, min: 4, max: 40, step: 1, group: 'layout', css: '--pad-y', unit: 'px', advanced: true },
+  // Down to 0: shortening the card on the canvas takes its height out of this padding.
+  { key: 'padY', type: 'number', def: 12, min: 0, max: 40, step: 1, group: 'layout', css: '--pad-y', unit: 'px', advanced: true },
   { key: 'gap', type: 'number', def: 12, min: 0, max: 36, step: 1, group: 'layout', css: '--gap', unit: 'px', advanced: true },
 
   // text
@@ -273,17 +277,17 @@ const PRESET_PROPERTIES = [
     which is what keeps a rare unlock on an existing preset looking exactly as it did.
   */
   { key: 'stateTint', type: 'number', def: 0, min: 0, max: 60, step: 5, group: 'state', css: '--state-tint', scale: 100 },
-  { key: 'showProgress', type: 'toggle', def: true, group: 'state' },
+  { key: 'showProgress', type: 'toggle', def: true, group: 'layout' },
   /*
     The rarity chip: the unlock rate the popup was told about, printed on the card. Off by default -
     it is information a preset opts into, not something an existing design should suddenly grow.
   */
-  { key: 'showRarity', type: 'toggle', def: false, group: 'state' },
-  { key: 'progressHeight', type: 'number', def: 8, min: 3, max: 20, step: 1, group: 'state', advanced: true, css: '--progress-height', unit: 'px' },
+  { key: 'showRarity', type: 'toggle', def: false, group: 'layout' },
+  { key: 'progressHeight', type: 'number', def: 8, min: 3, max: 20, step: 1, group: 'layout', advanced: true, css: '--progress-height', unit: 'px' },
   { key: 'rareSilver', type: 'color', def: '#9fb2cc', group: 'state', advanced: true, css: '--rare-silver' },
   { key: 'rareBronze', type: 'color', def: '#cd7f32', group: 'state', advanced: true, css: '--rare-bronze' },
   // A padlock before the title of a hidden achievement. Off by default, like the rarity chip.
-  { key: 'hiddenLock', type: 'toggle', def: false, group: 'state', advanced: true },
+  { key: 'hiddenLock', type: 'toggle', def: false, group: 'text', advanced: true },
 
   /*
     The free layout drawn on the preview: offsets for the card's own parts and the text, pictures and
@@ -414,7 +418,8 @@ function clampNumber(value, property) {
 // 'mark' is a bundled preset's brand mark, drawn by a pseudo-element: only a layer has one. The
 // decorations are the other pseudo-elements a bundled card or its icon draws (a ring, a veil, lines).
 const CANVAS_DECOR_PARTS = ['cardBefore', 'cardAfter', 'iconBefore', 'iconAfter'];
-const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'progress', 'mark', ...CANVAS_DECOR_PARTS];
+// 'game' and 'rarity' are the two halves of the game line ('meta'), each picked on its own.
+const CANVAS_PARTS = ['icon', 'text', 'title', 'detail', 'meta', 'game', 'rarity', 'progress', 'mark', ...CANVAS_DECOR_PARTS];
 const CANVAS_ITEM_KINDS = ['text', 'image', 'shape', 'icon'];
 const CANVAS_SHAPES = ['rect', 'ellipse', 'line', 'triangle', 'diamond', 'star', 'arrow'];
 /*
@@ -470,9 +475,22 @@ const CANVAS_MAX_ITEMS = 24;
 const CANVAS_MAX_TEXT = 160;
 // Words of the popup an added text can hold, written {game}, {title}... and filled in when it shows.
 const CANVAS_TOKENS = ['game', 'title', 'detail', 'rarity', 'tier'];
-// How an item comes in once the card is up, after its own delay; 'none' arrives with the card.
-const CANVAS_ENTRANCES = ['none', 'fade', 'rise', 'drop', 'left', 'right', 'zoom', 'pop'];
+/*
+  How an element comes in once the card is up, after its own delay; 'none' arrives with the card.
+  `type` writes a text out letter by letter and `count` runs its numbers up from zero (the progress
+  bar fills with them): both need words, so an added text and the card's lines take them alone.
+*/
+const CANVAS_ENTRANCES = ['none', 'fade', 'rise', 'drop', 'left', 'right', 'zoom', 'pop', 'shake', 'burst', 'type', 'count'];
+const CANVAS_TEXT_ENTRANCES = ['type', 'count'];
 const CANVAS_MAX_DELAY_MS = 3000;
+// How long an entrance takes, stored only when it is not its effect's own length.
+const CANVAS_DURATION_MS = [100, 4000];
+const CANVAS_ENTER_MS = 480;
+const CANVAS_EFFECT_MS = { shake: 520, burst: 700, type: 1000, count: 1000 };
+const canvasEnterMs = (enter, dur) => dur || CANVAS_EFFECT_MS[enter] || CANVAS_ENTER_MS;
+// The card's own parts that can come in on their own, and which lines type or count.
+const CANVAS_MOTION_PARTS = ['icon', 'game', 'rarity', 'title', 'detail', 'progress'];
+const CANVAS_PART_TEXT_ENTRANCES = { game: ['type'], title: ['type'], detail: ['type'], rarity: ['count'], progress: ['count'] };
 const CANVAS_MAX_WORD = 24;
 
 const canvasNumber = (value, min, max, fallback, digits = 1) => {
@@ -482,6 +500,36 @@ const canvasNumber = (value, min, max, fallback, digits = 1) => {
 };
 // Hex only: the colour pickers produce nothing else, and a hex value cannot carry CSS punctuation.
 const canvasColor = (value, fallback) => (typeof value === 'string' && /^#[0-9a-f]{3,8}$/i.test(value.trim()) ? value.trim() : fallback);
+
+// The entrances an added item (by its kind) or a part of the card (by its name) can take.
+function canvasEntrances({ kind, part } = {}) {
+  const own = part ? CANVAS_PART_TEXT_ENTRANCES[part] || [] : kind === 'text' ? CANVAS_TEXT_ENTRANCES : [];
+  return CANVAS_ENTRANCES.filter((enter) => !CANVAS_TEXT_ENTRANCES.includes(enter) || own.includes(enter));
+}
+
+// When an entrance starts, from the card's own start, and how long it lasts: each kept only when
+// it is not the default, so an entrance nobody timed has one spelling.
+function canvasTiming(source, enter) {
+  const out = {};
+  const delay = Math.round(canvasNumber(source.delay, 0, CANVAS_MAX_DELAY_MS, 0, 0) / 10) * 10;
+  if (delay) out.delay = delay;
+  const usual = canvasEnterMs(enter);
+  const dur = Math.round(canvasNumber(source.dur, CANVAS_DURATION_MS[0], CANVAS_DURATION_MS[1], usual, 0) / 10) * 10;
+  if (dur !== usual) out.dur = dur;
+  return out;
+}
+
+// How the card's own parts come in; every state shares it.
+function normalizeCanvasMotion(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const part of CANVAS_MOTION_PARTS) {
+    const source = raw[part];
+    if (!source || typeof source !== 'object' || source.enter === 'none' || !canvasEntrances({ part }).includes(source.enter)) continue;
+    out[part] = { enter: source.enter, ...canvasTiming(source, source.enter) };
+  }
+  return out;
+}
 
 function normalizeCanvasMove(raw) {
   const out = {};
@@ -534,6 +582,7 @@ function normalizeCanvasItem(source) {
       item.shadow = shadow;
       normalizeCanvasShadow(item, source);
     }
+    normalizeCanvasBox(item, source);
   } else if (item.kind === 'image') {
     const file = typeof source.file === 'string' ? source.file.trim() : '';
     if (!IMAGE_NAME_RE.test(file)) return null;
@@ -577,10 +626,9 @@ function normalizeCanvasItem(source) {
   // Each of these is stored only when set, so an item nobody limited has one spelling.
   if (source.off === true) item.off = true;
   if (source.lock === true) item.lock = true;
-  if (CANVAS_ENTRANCES.includes(source.enter) && source.enter !== 'none') {
+  if (canvasEntrances(item).includes(source.enter) && source.enter !== 'none') {
     item.enter = source.enter;
-    const delay = Math.round(canvasNumber(source.delay, 0, CANVAS_MAX_DELAY_MS, 0, 0) / 10) * 10;
-    if (delay) item.delay = delay;
+    Object.assign(item, canvasTiming(source, source.enter));
   }
   if (CANVAS_LOOPS.includes(source.loop) && source.loop !== 'none') item.loop = source.loop;
   const tiers = normalizeItemTiers(item, source);
@@ -663,14 +711,47 @@ const saysTier = (item) => item.kind === 'text' && tierEntries(item).some((entry
 // True when a see-through shape cuts the card in some state.
 const canvasCuts = (canvas) => canvas.items.some((item) => tierEntries(item).some((entry) => entry.cut === true));
 
-function normalizeCanvasWords(raw, items) {
-  if (!raw || typeof raw !== 'object' || !items.some(saysTier)) return null;
+// A card line says {tier} in its own words, in the card's look or in one state's.
+const lineSaysTier = (style) => Object.values(style || {}).some((look) => typeof look.text === 'string' && look.text.includes('{tier}'));
+const canvasSaysTier = (canvas) => canvas.items.some(saysTier) || lineSaysTier(canvas.style) || Object.values(canvas.tiers || {}).some((tier) => lineSaysTier(tier.style));
+
+function normalizeCanvasWords(raw, saysIt) {
+  if (!raw || typeof raw !== 'object' || !saysIt) return null;
   const words = {};
   for (const tier of CANVAS_TIER_FILLS) {
     const word = typeof raw[tier] === 'string' ? raw[tier].replace(/[\x00-\x1f\x7f]/g, '').trim().slice(0, CANVAS_MAX_WORD) : '';
     if (word) words[tier] = word;
   }
   return Object.keys(words).length ? words : null;
+}
+
+// The outline of a text or a line may follow the tier's colour, as its text can.
+const boxColor = (value) => (value === 'accent' ? 'accent' : canvasColor(value, '#ffffff'));
+
+/*
+  What a text or a card line draws behind itself: a fill, round corners, room inside and an
+  outline. Each is stored only once set, so an older layout and an untouched line keep one spelling.
+  A line without a fill of its own keeps the preset's: there, 'none' is a choice and is kept.
+*/
+function normalizeCanvasBox(out, source, { line = false } = {}) {
+  const fillMode = CANVAS_FILLS.includes(source.fillMode) ? source.fillMode : line ? '' : 'none';
+  if (line && fillMode === 'none') out.fillMode = 'none';
+  else if (fillMode && fillMode !== 'none') {
+    out.fillMode = fillMode;
+    if (['solid', 'gradient', 'radial'].includes(fillMode)) out.fill = canvasColor(source.fill, '#ffffff');
+    if (fillMode === 'gradient' || fillMode === 'radial') out.fill2 = canvasColor(source.fill2, '#4aa3ff');
+    if (fillMode === 'gradient') out.angle = canvasNumber(source.angle, 0, 360, 135, 0);
+  }
+  // On a line, square corners or no room inside replace the preset's own, so 0 is kept there too.
+  for (const [key, max] of [['radius', 200], ['pad', 40]]) {
+    const value = source[key] == null || source[key] === '' ? 0 : canvasNumber(source[key], 0, max, 0, 0);
+    if (value || (line && source[key] != null && source[key] !== '')) out[key] = value;
+  }
+  const stroke = canvasNumber(source.stroke, 0, 20, 0, 0);
+  if (stroke) {
+    out.stroke = stroke;
+    out.strokeColor = boxColor(source.strokeColor);
+  }
 }
 
 // What a shape or an icon is filled with, and the soft edges it can have.
@@ -690,7 +771,40 @@ function normalizeCanvasPaint(item, source, fallbackMode) {
   so a line nobody touched still follows the preset's text settings.
 */
 // A decoration takes a colour alone: the accent it is drawn with.
-const CANVAS_STYLED_PARTS = ['title', 'detail', 'meta', 'progress', ...CANVAS_DECOR_PARTS];
+// The halves of the game line come after it, so their own look wins over the line's.
+const CANVAS_STYLED_PARTS = ['title', 'detail', 'meta', 'game', 'rarity', 'progress', ...CANVAS_DECOR_PARTS];
+const CANVAS_PROGRESS_WIDTH = [40, 600];
+// The lines whose words can be rewritten; each says its own token, {title} and so on, until then.
+const CANVAS_WORDED_PARTS = ['title', 'detail', 'game', 'rarity'];
+const CANVAS_PROGRESS_HEIGHT = [2, 24];
+
+/*
+  A card line can take what an added text has: its own words, a box behind it, an opacity and a
+  shadow. The progress bar's fill paints the bar itself, on a track of its own colour and height.
+*/
+function normalizeLineLook(part, style, source) {
+  if (CANVAS_WORDED_PARTS.includes(part) && typeof source.text === 'string') {
+    const text = source.text.replace(/[\x00-\x1f\x7f]/g, '').slice(0, CANVAS_MAX_TEXT);
+    if (text.trim() && text !== `{${part}}`) style.text = text;
+  }
+  normalizeCanvasBox(style, source, { line: true });
+  if (part === 'progress') {
+    // A bar has no room inside, and is always filled: its outline goes round the track.
+    delete style.pad;
+    if (style.fillMode === 'none') delete style.fillMode;
+    const track = canvasColor(source.track, '');
+    if (track) style.track = track;
+    const height = canvasNumber(source.h, CANVAS_PROGRESS_HEIGHT[0], CANVAS_PROGRESS_HEIGHT[1], 0, 0);
+    if (height) style.h = height;
+  }
+  const opacity = canvasNumber(source.o, 0, 1, 1, 2);
+  if (opacity < 1) style.o = opacity;
+  const shadow = canvasNumber(source.shadow, 0, 40, 0, 0);
+  if (shadow) {
+    style.shadow = shadow;
+    normalizeCanvasShadow(style, source);
+  }
+}
 
 function normalizeCanvasStyle(raw) {
   const out = {};
@@ -713,6 +827,11 @@ function normalizeCanvasStyle(raw) {
     if (CANVAS_WEIGHTS.includes(Number(source.weight))) style.weight = Number(source.weight);
     if (typeof source.upper === 'boolean') style.upper = source.upper;
     if (CANVAS_ALIGNS.includes(source.align)) style.align = source.align;
+    // The progress bar alone takes a width of its own, stretched from its sides on the canvas.
+    if (part === 'progress' && source.w != null && source.w !== '' && Number.isFinite(Number(source.w))) {
+      style.w = canvasNumber(source.w, CANVAS_PROGRESS_WIDTH[0], CANVAS_PROGRESS_WIDTH[1], CANVAS_PROGRESS_WIDTH[0], 0);
+    }
+    normalizeLineLook(part, style, source);
     if (Object.keys(style).length) out[part] = style;
   }
   return out;
@@ -784,6 +903,7 @@ function canvasIn(canvas, state) {
   const out = { move, items: canvas.items.map((item) => canvasItemIn(item, state)) };
   if (hidden.length) out.hidden = hidden;
   if (Object.keys(style).length) out.style = style;
+  if (canvas.motion) out.motion = canvas.motion;
   if (canvas.words) out.words = canvas.words;
   if (canvas.order) out.order = canvas.order;
   return out;
@@ -840,9 +960,11 @@ function normalizeCanvas(raw) {
   if (hidden.length) out.hidden = hidden;
   const style = normalizeCanvasStyle(source.style);
   if (Object.keys(style).length) out.style = style;
+  const motion = normalizeCanvasMotion(source.motion);
+  if (Object.keys(motion).length) out.motion = motion;
   const tiers = normalizeCanvasTiers(source.tiers, out);
   if (tiers) out.tiers = tiers;
-  const words = normalizeCanvasWords(source.words, items);
+  const words = normalizeCanvasWords(source.words, canvasSaysTier({ items, style: out.style, tiers: out.tiers }));
   if (words) out.words = words;
   if (Array.isArray(source.order)) {
     const remapped = source.order.map((entry) => (Number.isInteger(entry) ? kept[entry] : entry)).filter((entry) => entry !== undefined);
@@ -952,6 +1074,7 @@ module.exports = {
   normalizeOptions,
   cssValue,
   CANVAS_PARTS,
+  CANVAS_PROGRESS_WIDTH,
   CANVAS_SHAPES,
   CANVAS_POLYGON_SHAPES,
   CANVAS_MASK_SHAPES,
@@ -966,8 +1089,14 @@ module.exports = {
   CANVAS_TOKENS,
   CANVAS_ENTRANCES,
   CANVAS_MAX_DELAY_MS,
+  CANVAS_DURATION_MS,
+  CANVAS_MOTION_PARTS,
+  canvasEnterMs,
+  canvasEntrances,
   CANVAS_MAX_ITEMS,
   CANVAS_STYLED_PARTS,
+  CANVAS_WORDED_PARTS,
+  CANVAS_PROGRESS_HEIGHT,
   CANVAS_DECOR_PARTS,
   CANVAS_LAYER_PARTS,
   canvasOrder,
@@ -981,4 +1110,5 @@ module.exports = {
   canvasFonts,
   sameValue,
   saysTier,
+  canvasSaysTier,
 };

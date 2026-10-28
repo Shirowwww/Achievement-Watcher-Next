@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Vrátiť všetko na miesto",
             "addText": "Text",
+            "addRarity": "Vzácnosť",
             "addImage": "Obrázok alebo GIF",
             "addRect": "Obdĺžnik",
             "addEllipse": "Kruh",
             "addLine": "Čiara",
             "hint": "Kliknutím na časť náhľadu ju môžete presunúť, zmeniť jej veľkosť alebo otočiť.",
             "cardHint": "Ťahaním okrajov karty zmeníš jej veľkosť. Všetky nastavenia tu sa týkajú iba karty.",
+            "fixedHint": "Importovaná téma SAN si ponecháva vlastnú kartu. Klikni na niektorý z jej prvkov a otvoríš jeho nastavenia, alebo ho presuň ťahaním. Navrch môžeš pridať aj text, obrázok či tvar.",
             "fullscreen": "Editor",
             "general": "Všetky nastavenia",
             "done": "Hotovo",
@@ -701,6 +703,7 @@
             "summaryNone": "Zatiaľ nič nepresunuté ani nepridané",
             "summaryMoved": "Presunuté časti: {count}",
             "summaryItems": "Pridané prvky: {count}",
+            "heightFloor": "Karta nemôže byť nižšia, než je jej obsah: zmenši ikonu alebo text, aby šla ešte nižšie.",
             "imageRefused": "Tento obrázok nemožno použiť. Použite obrázok PNG, JPEG, GIF, WebP alebo BMP s veľkosťou najviac 5 MB.",
             "tier": {
               "edit": "Upraviť:",
@@ -714,7 +717,9 @@
               "text": "Textový blok",
               "title": "Názov",
               "detail": "Popis",
-              "meta": "Názov hry",
+              "meta": "Riadok hry",
+              "game": "Názov hry",
+              "rarity": "Vzácnosť",
               "progress": "Ukazovateľ priebehu",
               "mark": "Logo značky",
               "cardBefore": "Dekorácia karty 1",
@@ -778,7 +783,14 @@
               "cut": "Priehľadný",
               "loop": "Slučka",
               "alignGroup": "Zarovnať navzájom",
-              "insert": "Vložiť"
+              "insert": "Vložiť",
+              "insertHint": "Pridá slovo, ktoré popup vyplní: hru, úspech, jeho popis, vzácnosť alebo úroveň.",
+              "duration": "Trvanie (ms)",
+              "back": "Pozadie",
+              "pad": "Vnútorný okraj",
+              "strokeColor": "Farba obrysu",
+              "track": "Farba pozadia lišty",
+              "thickness": "Hrúbka"
             },
             "axis": {
               "w": "Š",
@@ -809,7 +821,22 @@
               "left": "Zľava",
               "right": "Sprava",
               "zoom": "Priblíženie",
-              "pop": "Vyskočenie"
+              "pop": "Vyskočenie",
+              "shake": "Zatrasenie",
+              "burst": "Záblesk",
+              "type": "Písací stroj",
+              "count": "Počítanie",
+              "countFill": "Počítanie a napĺňanie"
+            },
+            "tl": {
+              "title": "Časová os",
+              "play": "Prehrať",
+              "pause": "Pozastaviť",
+              "playhead": "Zobrazený okamih",
+              "start": "Začiatok",
+              "length": "Trvanie",
+              "add": "Klikni do riadka a daj mu vlastný nájazd",
+              "cardFixed": "Nájazd karty určuje jej predvoľba"
             },
             "token": {
               "game": "Hra",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Vrstvy",
-                "body": "Všetko, čo je na karte, najvyššie ako prvé. Oko prvok skryje, zámok ho drží na mieste."
+                "body": "Všetko, čo je na karte, najvyššie ako prvé. Oko prvok skryje; zámok u prvkov, ktoré pridáte, ho drží na mieste."
               },
               "help": {
                 "title": "Skratky",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Zvýraznenie",
             "accentBar": "Pruh akcentu",
+            "accentBarPlace": "Umiestnenie pruhu akcentu",
             "accentBarSize": "Hrúbka pruhu",
             "align": "Zarovnanie",
             "animIn": "Nábeh z",
@@ -1122,6 +1150,7 @@
             "smooth": "Plynulý",
             "snap": "Prudký",
             "solid": "Jednofarebné",
+            "square": "Štvorec",
             "squircle": "Zaoblený štvorec",
             "text": "Farba textu",
             "textOnly": "Iba text",
@@ -1130,7 +1159,8 @@
             "topRight": "Vpravo hore",
             "transparent": "Priehľadné",
             "uppercase": "VEĽKÉ PÍSMENÁ",
-            "zoom": "Priblíženie"
+            "zoom": "Priblíženie",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Obrázok trofeje",

@@ -40,6 +40,15 @@ renamed in 3.9.0 and the history is kept under one file.
   top. A tier can also show another trophy picture, or be drawn by another imported SAN theme with
   its sound. Changes are saved as you go: Undo takes one back, and "Back to the imported theme"
   puts its whole look back.
+- **A timeline in the preset editor.** A bar along the bottom of the full-screen editor shows when
+  each element comes in and for how long: drag a bar to move or stretch it, press Play to watch the
+  card, or drag along the ruler to stop on one moment. It stays folded until an animation setting
+  changes. Entrances can also shake, flash, type their text out, or count up to the rarity or the
+  progress.
+- **Boxes behind texts in the preset editor.** The title, the description and the game line can be
+  reworded and given a box of their own, with a fill, padding, rounded corners and an outline. A
+  rarity text joins the elements, the progress bar gets a thickness and a track colour, and icons
+  can be square.
 - **A diagnostics report in the log export.** Settings > Advanced > Export logs (.zip) adds a
   `diagnostics.txt` beside the logs: how AW Next is installed, the clock against Steam's, which
   online services answer, the Windows notification settings, the screens, the settings and the

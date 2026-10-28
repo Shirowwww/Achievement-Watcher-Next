@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Przywróć wszystko na miejsce",
             "addText": "Tekst",
+            "addRarity": "Rzadkość",
             "addImage": "Obraz lub GIF",
             "addRect": "Prostokąt",
             "addEllipse": "Koło",
             "addLine": "Linia",
             "hint": "Kliknij część podglądu, aby ją przesunąć, zmienić jej rozmiar lub obrócić.",
             "cardHint": "Przeciągnij krawędzie karty, aby zmienić jej rozmiar. Wszystkie ustawienia tutaj dotyczą tylko karty.",
+            "fixedHint": "Zaimportowany motyw SAN zachowuje własną kartę. Kliknij jeden z jej elementów, aby otworzyć jego ustawienia, albo przeciągnij go, aby go przesunąć. Możesz też dodać na niej tekst, obraz lub kształt.",
             "fullscreen": "Edytor",
             "general": "Wszystkie ustawienia",
             "done": "Gotowe",
@@ -701,6 +703,7 @@
             "summaryNone": "Nic jeszcze nie przesunięto ani nie dodano",
             "summaryMoved": "Przesunięte części: {count}",
             "summaryItems": "Dodane elementy: {count}",
+            "heightFloor": "Karta nie może być niższa niż jej zawartość: zmniejsz ikonę lub tekst, aby zejść niżej.",
             "imageRefused": "Tego obrazu nie można użyć. Użyj obrazu PNG, JPEG, GIF, WebP lub BMP o rozmiarze do 5 MB.",
             "tier": {
               "edit": "Edytuj:",
@@ -714,7 +717,9 @@
               "text": "Blok tekstu",
               "title": "Tytuł",
               "detail": "Opis",
-              "meta": "Nazwa gry",
+              "meta": "Wiersz gry",
+              "game": "Nazwa gry",
+              "rarity": "Rzadkość",
               "progress": "Pasek postępu",
               "mark": "Logo marki",
               "cardBefore": "Ozdoba karty 1",
@@ -778,7 +783,14 @@
               "cut": "Przezroczysty",
               "loop": "Zapętlenie",
               "alignGroup": "Wyrównaj względem siebie",
-              "insert": "Wstaw"
+              "insert": "Wstaw",
+              "insertHint": "Dodaje słowo, które popup uzupełnia: grę, osiągnięcie, jego opis, rzadkość lub poziom.",
+              "duration": "Czas trwania (ms)",
+              "back": "Tło",
+              "pad": "Margines wewnętrzny",
+              "strokeColor": "Kolor obrysu",
+              "track": "Kolor tła paska",
+              "thickness": "Grubość"
             },
             "axis": {
               "w": "S",
@@ -809,7 +821,22 @@
               "left": "Z lewej",
               "right": "Z prawej",
               "zoom": "Przybliżenie",
-              "pop": "Wyskoczenie"
+              "pop": "Wyskoczenie",
+              "shake": "Drżenie",
+              "burst": "Błysk",
+              "type": "Maszyna do pisania",
+              "count": "Liczenie w górę",
+              "countFill": "Liczenie i wypełnianie"
+            },
+            "tl": {
+              "title": "Oś czasu",
+              "play": "Odtwórz",
+              "pause": "Wstrzymaj",
+              "playhead": "Pokazywana chwila",
+              "start": "Początek",
+              "length": "Długość",
+              "add": "Kliknij wiersz, aby nadać mu własne wejście",
+              "cardFixed": "Karta wchodzi tak, jak określa jej ustawienie"
             },
             "token": {
               "game": "Gra",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Warstwy",
-                "body": "Wszystko, co jest na karcie, najwyższe jako pierwsze. Oko ukrywa element, kłódka blokuje go w miejscu."
+                "body": "Wszystko, co jest na karcie, najwyższe jako pierwsze. Oko ukrywa element; kłódka, na dodanych przez ciebie elementach, blokuje go w miejscu."
               },
               "help": {
                 "title": "Skróty",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Akcent",
             "accentBar": "Pasek akcentu",
+            "accentBarPlace": "Położenie paska akcentu",
             "accentBarSize": "Grubość paska",
             "align": "Wyrównanie",
             "animIn": "Wjeżdża z",
@@ -1122,6 +1150,7 @@
             "smooth": "Płynny",
             "snap": "Gwałtowny",
             "solid": "Jednolite",
+            "square": "Kwadrat",
             "squircle": "Zaokrąglony kwadrat",
             "text": "Kolor tekstu",
             "textOnly": "Sam tekst",
@@ -1130,7 +1159,8 @@
             "topRight": "Prawa góra",
             "transparent": "Przezroczyste",
             "uppercase": "WIELKIE LITERY",
-            "zoom": "Zbliżenie"
+            "zoom": "Zbliżenie",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Obraz trofeum",

@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Alles an seinen Platz zurück",
             "addText": "Text",
+            "addRarity": "Seltenheit",
             "addImage": "Bild oder GIF",
             "addRect": "Rechteck",
             "addEllipse": "Kreis",
             "addLine": "Linie",
             "hint": "Klicke auf einen Teil der Vorschau, um ihn zu verschieben, zu skalieren oder zu drehen.",
             "cardHint": "Ziehe an den Rändern der Karte, um ihre Größe zu ändern. Alles hier betrifft nur die Karte.",
+            "fixedHint": "Ein importiertes SAN-Theme behält seine eigene Karte. Klicke auf eines ihrer Elemente, um dessen Einstellungen zu öffnen, oder ziehe es, um es zu verschieben. Du kannst darüber auch einen Text, ein Bild oder eine Form hinzufügen.",
             "fullscreen": "Editor",
             "general": "Alle Einstellungen",
             "done": "Fertig",
@@ -701,6 +703,7 @@
             "summaryNone": "Noch nichts verschoben oder hinzugefügt",
             "summaryMoved": "Verschobene Teile: {count}",
             "summaryItems": "Hinzugefügte Elemente: {count}",
+            "heightFloor": "Die Karte kann nicht niedriger werden als ihr Inhalt: Verkleinere das Symbol oder den Text, um weiter nach unten zu gehen.",
             "imageRefused": "Dieses Bild kann nicht verwendet werden. Nimm ein PNG-, JPEG-, GIF-, WebP- oder BMP-Bild mit höchstens 5 MB.",
             "tier": {
               "edit": "Bearbeiten:",
@@ -714,7 +717,9 @@
               "text": "Textblock",
               "title": "Titel",
               "detail": "Beschreibung",
-              "meta": "Spielname",
+              "meta": "Spielzeile",
+              "game": "Spielname",
+              "rarity": "Seltenheit",
               "progress": "Fortschrittsbalken",
               "mark": "Markenlogo",
               "cardBefore": "Kartendekor 1",
@@ -778,7 +783,14 @@
               "cut": "Durchsichtig",
               "loop": "Schleife",
               "alignGroup": "Aneinander ausrichten",
-              "insert": "Einfügen"
+              "insert": "Einfügen",
+              "insertHint": "Fügt ein Wort hinzu, das das Popup ausfüllt: das Spiel, den Erfolg, seine Beschreibung, seine Seltenheit oder seine Stufe.",
+              "duration": "Dauer (ms)",
+              "back": "Hintergrund",
+              "pad": "Innenabstand",
+              "strokeColor": "Konturfarbe",
+              "track": "Farbe des Balkenhintergrunds",
+              "thickness": "Dicke"
             },
             "axis": {
               "w": "B",
@@ -809,7 +821,22 @@
               "left": "Von links",
               "right": "Von rechts",
               "zoom": "Heranzoomen",
-              "pop": "Aufploppen"
+              "pop": "Aufploppen",
+              "shake": "Wackeln",
+              "burst": "Aufblitzen",
+              "type": "Schreibmaschine",
+              "count": "Hochzählen",
+              "countFill": "Hochzählen und füllen"
+            },
+            "tl": {
+              "title": "Zeitleiste",
+              "play": "Abspielen",
+              "pause": "Pause",
+              "playhead": "Angezeigter Moment",
+              "start": "Beginn",
+              "length": "Dauer",
+              "add": "Klicke in die Zeile, um ihr einen eigenen Eingang zu geben",
+              "cardFixed": "Die Karte kommt so herein, wie es ihre Vorlage vorgibt"
             },
             "token": {
               "game": "Spiel",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Ebenen",
-                "body": "Alles auf der Karte, das oberste zuerst. Das Auge blendet ein Element aus, das Schloss hält es fest."
+                "body": "Alles auf der Karte, das oberste zuerst. Das Auge blendet ein Element aus; das Schloss hält die von dir hinzugefügten Elemente an ihrem Platz."
               },
               "help": {
                 "title": "Tastenkürzel",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Akzent",
             "accentBar": "Akzentleiste",
+            "accentBarPlace": "Position der Akzentleiste",
             "accentBarSize": "Leistenstärke",
             "align": "Ausrichtung",
             "animIn": "Kommt von",
@@ -1122,6 +1150,7 @@
             "smooth": "Weich",
             "snap": "Abrupt",
             "solid": "Einfarbig",
+            "square": "Quadrat",
             "squircle": "Abgerundetes Quadrat",
             "text": "Textfarbe",
             "textOnly": "Nur Text",
@@ -1130,7 +1159,8 @@
             "topRight": "Oben rechts",
             "transparent": "Transparent",
             "uppercase": "GROSSBUCHSTABEN",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Automatisch"
           },
           "san": {
             "tierPictures": "Pokalbild",

@@ -3976,6 +3976,7 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar,
 #settings .pd-cv-layers::-webkit-scrollbar,
 #settings .pd-cv-props::-webkit-scrollbar,
+#settings .pd-tl-rows::-webkit-scrollbar,
 .onboarding-step::-webkit-scrollbar,
 .gh-technical-dump::-webkit-scrollbar,
 #game-config .box .container::-webkit-scrollbar,
@@ -3987,6 +3988,7 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar-track,
 #settings .pd-cv-layers::-webkit-scrollbar-track,
 #settings .pd-cv-props::-webkit-scrollbar-track,
+#settings .pd-tl-rows::-webkit-scrollbar-track,
 .onboarding-step::-webkit-scrollbar-track,
 .gh-technical-dump::-webkit-scrollbar-track,
 #game-config .box .container::-webkit-scrollbar-track,
@@ -3999,6 +4001,7 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar-thumb,
 #settings .pd-cv-layers::-webkit-scrollbar-thumb,
 #settings .pd-cv-props::-webkit-scrollbar-thumb,
+#settings .pd-tl-rows::-webkit-scrollbar-thumb,
 .onboarding-step::-webkit-scrollbar-thumb,
 .gh-technical-dump::-webkit-scrollbar-thumb,
 #game-config .box .container::-webkit-scrollbar-thumb,
@@ -4013,6 +4016,7 @@ body.is-resizing #game-list {
 #settings .psn-add-results::-webkit-scrollbar-thumb:hover,
 #settings .pd-cv-layers::-webkit-scrollbar-thumb:hover,
 #settings .pd-cv-props::-webkit-scrollbar-thumb:hover,
+#settings .pd-tl-rows::-webkit-scrollbar-thumb:hover,
 .onboarding-step::-webkit-scrollbar-thumb:hover,
 .gh-technical-dump::-webkit-scrollbar-thumb:hover,
 #game-config .box .container::-webkit-scrollbar-thumb:hover,
@@ -11523,31 +11527,21 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 /*
-  The heading of that row: the icon and, beside it, the step's name with the two shortcuts, then the
-  sentence explaining it underneath across the whole card.
+  The heading of that row: a fold button (chevron, icon, the step's name) with the two shortcuts on
+  the same line, then the sentence and the swatches, which the button folds away. The shortcuts stay
+  out of the fold: picking a surprise or duplicating needs no swatch.
 
-  A grid rather than one flex line, because the sentence has to start under the name and run the
-  full width. As a flex line it sat beside the buttons and wrapped at whatever width they left,
-  which is what made it read as a squeezed column instead of a paragraph. The top line is its own
-  flex row so a long translation drops the shortcuts under the name rather than crushing either -
-  no width query decides that, so it holds for any language at any panel width.
+  The top line is its own flex row so a long translation drops the shortcuts under the name rather
+  than crushing either - no width query decides that, so it holds for any language at any width.
 */
 #settings #options-notify-designer > li > .left.pd-start-head {
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  align-items: start;
-  column-gap: 10px;
-  row-gap: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   /* `#settings .content li .left` caps a settings label at 360px so a long row label wraps into a
      column beside its control. The designer's rows are full-width blocks with no control beside
      them, so the cap only ever cut this paragraph in half. */
   max-width: none;
-}
-
-#settings .pd-start-head > i {
-  color: var(--set-icon);
-  line-height: 22px;
-  text-align: center;
 }
 
 #settings .pd-start-topline {
@@ -11557,7 +11551,44 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   justify-content: space-between;
   gap: 8px 16px;
   min-width: 0;
-  min-height: 22px;
+}
+
+/* The whole heading is the fold control, so the click target is the words, not a lone chevron. */
+#settings .pd-start-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 32px;
+  margin: 0 0 0 -6px;
+  padding: 0 8px 0 6px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+#settings .pd-start-toggle:hover {
+  background: var(--set-row-hover);
+}
+#settings .pd-start-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+#settings .pd-start-chevron {
+  width: 12px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+#settings #pd-templates-row.is-folded .pd-start-chevron {
+  transform: rotate(-90deg);
+}
+
+#settings .pd-start-icon {
+  color: var(--set-icon);
 }
 
 #settings .pd-start-title {
@@ -11569,12 +11600,31 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   text-transform: uppercase;
 }
 
+/* Folding animates the row height through a 0fr/1fr grid track, so nothing is measured in script. */
+#settings .pd-start-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.22s var(--ease-out);
+}
+#settings #pd-templates-row.is-folded .pd-start-body {
+  grid-template-rows: 0fr;
+}
+#settings .pd-start-fold {
+  min-height: 0;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  #settings .pd-start-body,
+  #settings .pd-start-chevron {
+    transition: none;
+  }
+}
+
 /* Supporting copy, not a second label: muted and a size down, so the heading above it and the
    swatches below it are what the eye lands on. */
 #settings .pd-start-intro {
-  grid-column: 2;
   min-width: 0;
-  margin: 0;
+  margin: 6px 0 0;
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: var(--fs-sm);
@@ -11785,26 +11835,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   font-weight: 700;
 }
 
-#settings .pd-res {
-  min-height: 28px;
-  padding: 0 8px;
-  border: 1px solid var(--set-control-border);
-  border-radius: var(--radius-sm);
-  background: var(--set-well);
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: var(--fs-sm);
-}
-
 #settings #pd-play {
   width: auto;
   padding: 4px 10px;
   font-size: var(--fs-sm);
-}
-
-/* Only Screen view is drawn at a display resolution, so the picker is not offered in Card view. */
-#settings .pd-res[hidden] {
-  display: none;
 }
 
 /* The backdrop the popup is judged against. Neutral and slightly checkered so a translucent or
@@ -11884,24 +11918,14 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   padding: 0;
 }
 
-/* Around the mock display (the full-screen editor's wide stage) is not a scene, just a plain surround
-   that sets the screen off: black, or white when the backdrop chosen is the dark one. A spread shadow
-   clipped by the stage, because the screen inherits the stage's own background for its inside. */
-#settings .pd-stage[data-view='screen'] .pd-screen.is-screen {
-  box-shadow: 0 0 0 100vmax #000;
-}
-
-#settings .pd-stage[data-view='screen'][data-backdrop='dark'] .pd-screen.is-screen {
-  box-shadow: 0 0 0 100vmax #fff;
-}
-
-/* Screen view: a mock display at the chosen resolution, with the popup at its true relative size in
-   the corner it will actually appear in. Its width is set by ui/settings.js so the whole 16:9 box
-   fits the stage - at the full stage width the box was taller than the stage, and the top and
-   bottom edges the position picker is about were clipped away. */
+/* Screen view: this display, with the popup at its true relative size in the corner it will actually
+   appear in. Its width and proportions are set by ui/settings.js so the whole box fits the stage -
+   at the full stage width the box was taller than the stage, and the top and bottom edges the
+   position picker is about were clipped away. What hangs past its edge is off the screen, so cut. */
 #settings .pd-screen.is-screen {
   width: 100%;
   aspect-ratio: 16 / 9;
+  overflow: hidden;
   border: 1px solid var(--set-hairline-soft);
   border-radius: var(--radius-sm);
   background: linear-gradient(160deg, #2a3350 0%, #131722 60%, #0c0e14 100%);
@@ -12107,70 +12131,157 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   animation: pd-cv-in 140ms ease-out;
 }
 
-/* An imported SAN theme's own settings, under its preview. */
-#settings .pd-san {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
-  border: 1px solid var(--set-hairline-soft);
-  border-radius: var(--radius-sm);
-  background: var(--set-well);
-  font-size: var(--fs-sm);
-  transition: opacity 120ms ease;
-}
-
-#settings .pd-san[hidden] {
+/* An imported preset is used as it is: what would build another design steps aside. */
+#settings #options-notify-designer.is-imported #pd-templates-row,
+#settings #options-notify-designer.is-imported .pd-file:has(#pd-layer-base),
+#settings #options-notify-designer.is-imported #pd-layer-fixed,
+#settings #options-notify-designer.is-imported #btn-create-preset,
+#settings #options-notify-designer.is-imported #btn-reset-preset,
+#settings #options-notify-designer.is-imported #pd-cv-save {
   display: none;
 }
 
-#settings .pd-san.is-busy {
+/* A SAN theme's own settings take the place of the designer's controls, the accent bar included. */
+#settings #options-notify-designer.is-san .pd-controls > :not(.pd-san-look),
+#settings #options-notify-designer.is-san .pd-cv-quick {
+  display: none;
+}
+
+/* The tier the preview shows, what draws it, then its look's groups: one column, no box of its own,
+   so it reads like the designer's controls it replaces. */
+#settings .pd-san-look {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 120ms ease;
+}
+
+#settings .pd-san-look[hidden],
+#settings .pd-san-look .pd-group[hidden] {
+  display: none;
+}
+
+#settings .pd-san-look.is-busy {
   opacity: 0.6;
   pointer-events: none;
 }
 
-#settings .pd-san-head {
+#settings .pd-san-top {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text);
+  flex-direction: column;
+  gap: 4px;
 }
 
-#settings .pd-san-row {
+#settings .pd-san-top-line {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 6px 10px;
+}
+
+#settings .pd-san-editing {
+  color: var(--text);
+  font-size: var(--fs-md);
 }
 
 #settings .pd-san-hint {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.92em;
+  font-size: var(--fs-sm);
   line-height: 1.4;
 }
 
-#settings .pd-san-states {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 6px 10px;
-}
-
-#settings .pd-san-states label {
+#settings .pd-san-choices,
+#settings .pd-san-place {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-  color: var(--text-muted);
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--set-hairline-soft);
 }
 
-#settings .pd-san-states label[hidden] {
+/* Where the element picked on the card is drawn: two shifts and its switch on one row, then the way back. */
+#settings .pd-san-place .pd-fields {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#settings .pd-san-place-home {
+  align-self: flex-start;
+}
+
+#settings .pd-group-body > .pd-san-place {
+  margin-bottom: 10px;
+}
+
+#settings .pd-san-place input[type='number'] {
+  min-height: 28px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border: 1px solid var(--set-control-border);
+  border-radius: var(--radius-sm);
+  background: var(--set-surface-sunken);
+  color: var(--text);
+  font-size: var(--fs-sm);
+}
+
+/* Brought into view from its head, which the panel's own sticky head would otherwise cover. */
+#settings .pd-san-look .pd-group {
+  scroll-margin-top: 56px;
+}
+
+/* In the editor's narrow side column the tier buttons go to a second row rather than out of sight. */
+#settings .pd-san-tier .pd-seg {
+  flex-wrap: wrap;
+}
+
+/* What a click on the card opened, lit for a moment; the shadow gives a field room round its text. */
+#settings .pd-san-look .pd-field,
+#settings .pd-san-look .pd-group-head {
+  border-radius: 6px;
+  transition:
+    background-color 600ms ease,
+    box-shadow 600ms ease;
+}
+
+#settings .pd-san-look .is-pointed {
+  background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  transition-duration: 0ms;
+}
+
+#settings .pd-san-look .pd-field.is-pointed {
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+/* The element of a SAN card under the pointer, which a click opens the settings of. */
+#settings .pd-cv-part {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1.5px solid color-mix(in srgb, var(--accent) 85%, transparent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+#settings .pd-cv-part[hidden] {
   display: none;
 }
 
-#settings .pd-san-states select {
-  min-width: 0;
-  min-height: 28px;
+#settings .pd-cv-part-name {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: -1.5px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  color: var(--on-accent);
+  background: var(--accent);
+  font: var(--fs-xs) var(--font-body);
+  white-space: nowrap;
+}
+
+#settings .pd-cv-part.is-below .pd-cv-part-name {
+  top: calc(100% + 3px);
+  bottom: auto;
 }
 
 #settings .pd-cv-props[hidden] {
@@ -12417,12 +12528,13 @@ body.pd-cv-open #settings .content {
   inset: 0;
   z-index: 1000;
   display: grid;
-  grid-template-columns: 228px minmax(0, 1fr) 288px;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: 228px minmax(0, 1fr) 336px;
+  grid-template-rows: auto minmax(0, 1fr) auto auto auto;
   grid-template-areas:
     'bar bar bar'
     'layers stage props'
     'layers toolbar props'
+    'layers timeline props'
     'layers foot props';
   gap: 0 12px;
   margin: 0;
@@ -12613,8 +12725,14 @@ body.pd-cv-open #settings .content {
   padding: 14px;
 }
 
+/* A line that can be seen between the blocks of a panel: with this many settings, where one block
+   ends must not rest on spacing alone. The card's own groups get the same edge. */
 #settings .pd-preview.is-cv-full .pd-cv-section + .pd-cv-section {
-  border-top: 1px solid var(--set-hairline-soft);
+  border-top: 1px solid var(--set-hairline);
+}
+
+#settings .pd-preview.is-cv-full .pd-cv-card .pd-group {
+  border-color: var(--set-hairline);
 }
 
 #settings .pd-preview.is-cv-full .pd-cv-props-actions {
@@ -12633,7 +12751,7 @@ body.pd-cv-open #settings .content {
 
 @media (max-width: 1100px) {
   #settings .pd-preview.is-cv-full {
-    grid-template-columns: 196px minmax(0, 1fr) 264px;
+    grid-template-columns: 196px minmax(0, 1fr) 296px;
   }
 
   #settings .pd-preview.is-cv-full .pd-cv-add .pd-cv-btn {
@@ -12647,7 +12765,7 @@ body.pd-cv-open #settings .content {
     row-gap: 6px;
   }
 
-  /* A 264px column cannot hold a label beside X and Y, or a menu's full value: the label goes on top. */
+  /* A 296px column cannot hold a label beside X and Y, or a menu's full value: the label goes on top. */
   #settings .pd-preview.is-cv-full .pd-cv-section .pd-cv-prop {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
@@ -12695,7 +12813,357 @@ body.pd-cv-open #settings .content {
 
 #settings .pd-preview.is-cv-full .pd-cv-card .pd-controls {
   gap: 6px;
-  padding: 10px 10px 14px;
+  padding: 10px 14px 14px;
+}
+
+/* The timeline, between the card's bar and its foot: names on the left, then one track per row on
+   the ruler's time scale. Ruler and tracks share their margins, so a moment is at the same x in both. */
+#settings .pd-tl,
+#settings .pd-preview.is-cv-full .pd-tl[hidden] {
+  display: none;
+}
+
+#settings .pd-preview.is-cv-full .pd-tl {
+  --tl-names: 300px;
+  grid-area: timeline;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: min(36vh, 248px);
+  border: 1px solid var(--set-hairline-soft);
+  border-bottom: 0;
+  background: var(--set-surface);
+  user-select: none;
+}
+
+#settings .pd-preview.is-cv-full.has-timeline #pd-play {
+  display: none;
+}
+
+#settings .pd-tl-head,
+#settings .pd-tl-row {
+  display: grid;
+  grid-template-columns: var(--tl-names) minmax(0, 1fr);
+  align-items: center;
+}
+
+#settings .pd-tl-head {
+  flex: none;
+  min-height: 34px;
+  border-bottom: 1px solid var(--set-hairline-soft);
+}
+
+#settings .pd-tl-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+}
+
+#settings .pd-tl-play {
+  width: auto;
+  padding: 3px 10px;
+  font-size: var(--fs-sm);
+}
+
+#settings .pd-tl-fold {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-left: -4px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+#settings .pd-tl-fold:hover {
+  background: var(--set-row-hover);
+  color: var(--text);
+}
+#settings .pd-tl-fold:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+#settings .pd-tl-fold i {
+  font-size: var(--fs-xs);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+#settings .pd-tl.is-folded .pd-tl-fold i {
+  transform: rotate(-90deg);
+}
+#settings .pd-tl.is-folded .pd-tl-head {
+  border-bottom: 0;
+}
+
+#settings .pd-tl-clock {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+#settings .pd-tl-ruler,
+#settings .pd-tl-track {
+  position: relative;
+  margin: 0 14px 0 8px;
+}
+
+#settings .pd-tl-ruler {
+  align-self: stretch;
+  cursor: col-resize;
+  background: repeating-linear-gradient(to right, var(--set-hairline) 0 1px, transparent 1px 100%) 0 100% / calc(100% / var(--tl-ticks, 15)) 5px repeat-x;
+}
+
+#settings .pd-tl-mark {
+  position: absolute;
+  top: 7px;
+  bottom: 0;
+  padding-left: 4px;
+  border-left: 1px solid var(--set-hairline);
+  color: var(--text-muted);
+  font-size: var(--fs-2xs);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#settings .pd-tl-rows {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px 0 6px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#settings .pd-tl-row {
+  min-height: 30px;
+}
+
+#settings .pd-tl-row:hover {
+  background: var(--set-row-hover);
+}
+
+#settings .pd-tl-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 8px 0 6px;
+}
+
+#settings .pd-tl-pick {
+  display: inline-flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 24px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--fs-xs);
+  text-align: left;
+  cursor: pointer;
+}
+
+#settings .pd-tl-pick i {
+  flex: none;
+  width: 14px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+#settings .pd-tl-pick span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#settings .pd-tl-row.is-on .pd-tl-pick,
+#settings .pd-tl-row.is-on .pd-tl-pick i {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* Never narrower than its longest effect, so its name is never cut: the element's name gives way.
+   The timeline sets --tl-effect to the widest menu, so every row's menu lines up. */
+#settings .pd-tl-effect {
+  flex: none;
+  width: var(--tl-effect, auto);
+  max-width: 70%;
+  min-height: 24px;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 1px solid var(--set-control-border);
+  border-radius: var(--radius-sm);
+  background: var(--set-surface-sunken);
+  color: var(--text);
+  font-size: var(--fs-xs);
+}
+
+#settings .pd-tl-track {
+  height: 22px;
+}
+
+#settings .pd-tl-track.is-empty {
+  cursor: copy;
+}
+
+/* Comes in with the card: a faint outline along the card's bar, which a click turns into a bar. */
+#settings .pd-tl-ghost {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border: 1px dashed var(--set-hairline);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+#settings .pd-tl-track.is-empty:hover .pd-tl-ghost {
+  border-color: var(--accent);
+}
+
+#settings .pd-tl-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  min-width: 12px;
+  box-sizing: border-box;
+  padding: 0 12px 0 7px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--accent) 20%, var(--set-surface));
+  color: var(--text);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+}
+
+#settings .pd-tl-bar[role='slider'] {
+  cursor: grab;
+}
+
+#settings .pd-tl-bar[role='slider']:active {
+  cursor: grabbing;
+}
+
+#settings .pd-tl-row.is-on .pd-tl-bar {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 34%, var(--set-surface));
+}
+
+#settings .pd-tl-bar.is-fixed {
+  border-style: dashed;
+  border-color: var(--set-hairline);
+  background: var(--set-row-hover);
+  color: var(--text-muted);
+}
+
+#settings .pd-tl-bar-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The length handle: the bar's right edge. */
+#settings .pd-tl-grip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  cursor: ew-resize;
+}
+
+#settings .pd-tl-grip::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 4px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+}
+
+/* A loop after the entrance, to the end of the window. */
+#settings .pd-tl-loop {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: repeating-linear-gradient(-45deg, color-mix(in srgb, var(--accent) 32%, transparent) 0 3px, transparent 3px 7px);
+}
+
+#settings .pd-tl-cursor,
+#settings .pd-tl-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  pointer-events: none;
+}
+
+#settings .pd-tl-cursor {
+  z-index: 2;
+  margin-left: -1px;
+  border-left: 2px solid var(--accent);
+}
+
+#settings .pd-tl-cursor::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -6px;
+  border: 5px solid transparent;
+  border-top: 7px solid var(--accent);
+  border-bottom: 0;
+}
+
+/* At rest the card shows how it ends: the playhead waits at the end, quieter. */
+#settings .pd-tl.is-rest .pd-tl-cursor {
+  opacity: 0.45;
+}
+
+#settings .pd-tl-guide {
+  z-index: 1;
+  border-left: 1px dashed var(--accent-strong);
+}
+
+#settings .pd-tl-ruler:focus-visible,
+#settings .pd-tl-bar:focus-visible,
+#settings .pd-tl-pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+#settings .pd-tl-grip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* While the timeline or Play runs, the card moves under the boxes: still there to click, unseen. */
+#settings .pd-stage.is-playing .pd-cv-overlay > * {
+  opacity: 0;
+}
+
+@media (max-width: 1100px) {
+  #settings .pd-preview.is-cv-full .pd-tl {
+    --tl-names: 250px;
+  }
 }
 
 /* Zoom and snapping, at the end of the bar under the card. */
@@ -12824,7 +13292,7 @@ body.pd-cv-open #settings .content {
 }
 
 #settings .pd-preview.is-cv-full .pd-cv-props {
-  --pd-cv-label: 100px;
+  --pd-cv-label: 112px;
 }
 
 #settings .pd-cv-section .pd-cv-prop {
@@ -13041,6 +13509,11 @@ body.pd-cv-open #settings .content {
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+/* The game's name and its rarity, set in under the game line that holds them. */
+#settings .pd-cv-layer-row.is-inner {
+  margin-left: 14px;
+}
+
 /* A part removed from the card: still listed, so "put back" can bring it back. */
 #settings .pd-cv-layer-row.is-hidden .pd-cv-layer {
   opacity: 0.5;
@@ -13206,6 +13679,8 @@ body.pd-cv-open #settings .content {
   position: sticky;
   top: 0;
   z-index: 1;
+  /* The side column's one inset, as its title and every row below. */
+  padding-inline: 14px;
   background: var(--set-surface);
 }
 
@@ -13285,7 +13760,7 @@ body.pd-cv-open #settings .content {
   z-index: 5;
   display: grid;
   gap: 10px;
-  width: min(460px, calc(100% - 32px));
+  width: min(500px, calc(100% - 32px));
   max-height: calc(100% - 96px);
   overflow-y: auto;
   padding: 14px 16px 16px;
@@ -13309,17 +13784,21 @@ body.pd-cv-open #settings .content {
   font-size: var(--fs-base);
 }
 
+/* One key column for every row, as wide as the widest keys need: each row is a subgrid of it, so
+   the descriptions all start on the same line. */
 #settings .pd-cv-help-rows {
   display: grid;
-  gap: 2px;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 14px;
+  row-gap: 2px;
 }
 
 #settings .pd-cv-help-row {
   display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
   align-items: center;
-  gap: 12px;
-  padding: 5px 0;
+  padding: 6px 0;
   border-top: 1px solid var(--set-divider);
 }
 
@@ -13332,6 +13811,7 @@ body.pd-cv-open #settings .content {
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 6px;
+  max-width: 172px;
   color: var(--text-muted);
   font-size: var(--fs-xs);
 }
@@ -13343,10 +13823,15 @@ body.pd-cv-open #settings .content {
   white-space: nowrap;
 }
 
-/* Keys side by side are alternatives, not one combination: Shift / Ctrl, never Shift Ctrl. */
-#settings .pd-cv-help-combo + .pd-cv-help-combo::before {
+#settings .pd-cv-help-combo.is-pad {
+  gap: 2px;
+}
+
+/* Keys side by side are alternatives, not one combination: Shift / Ctrl, never Shift Ctrl. The slash
+   ends the first one, so a wrapped line never starts with it. */
+#settings .pd-cv-help-combo:has(+ .pd-cv-help-combo)::after {
   content: '/';
-  margin-left: -3px;
+  margin-left: 3px;
 }
 
 #settings .pd-cv-help-keys kbd {
@@ -13920,7 +14405,9 @@ body.pd-cv-open #settings .content {
 
 /* A property that only applies in one mode (a second gradient colour, artwork dimming) is hidden
    rather than shown doing nothing. */
-#settings .pd-field[hidden] {
+#settings .pd-field[hidden],
+#settings .pd-field.is-other-state,
+#settings .pd-group.is-other-state {
   display: none;
 }
 
@@ -14261,19 +14748,21 @@ body.pd-cv-open #settings .content {
   display: none;
 }
 
-/* In the full-screen editor the message floats over the foot of the card, where the eye already is. */
+/* In the full-screen editor the message floats over the foot of the stage, where the eye already is,
+   and never over the controls of the bar below it. */
 #settings .pd-preview.is-cv-full #pd-status {
-  position: absolute;
-  left: 50%;
-  bottom: 24px;
+  grid-area: stage;
+  align-self: end;
+  justify-self: center;
+  position: relative;
   z-index: 3;
+  margin-bottom: 16px;
   max-width: min(560px, 60vw);
   padding: 6px 12px;
   border: 1px solid var(--set-hairline-soft);
   border-radius: 6px;
   background: var(--set-surface);
   font-size: 0.9em;
-  transform: translateX(-50%);
 }
 
 #settings #pd-status.is-ok {
@@ -17223,6 +17712,15 @@ html:not([data-platform='linux']) [data-linux-only] {
   background: inherit;
 }
 
+/* In the full-screen editor the whole stage is the screen: no band around it, and the popup sits on
+   the stage's own edges. */
+#settings .pd-preview.is-cv-full .pd-stage[data-view='screen'] .pd-screen.is-screen {
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+}
+
 /* The normal view previews and sets; adding and placing things happens in full screen only. */
 #settings .pd-preview:not(.is-cv-full) .pd-cv-bar {
   display: none;
@@ -17245,8 +17743,15 @@ html:not([data-platform='linux']) [data-linux-only] {
   cursor: pointer;
 }
 
+/* The picked card's frame lies over every part on it, so only its handles take the pointer: a click
+   on the icon or a line still picks that one. */
 #settings .pd-cv-sel.is-card {
   border-style: dashed;
+  pointer-events: none;
+}
+
+#settings .pd-cv-sel.is-card .pd-cv-h {
+  pointer-events: auto;
 }
 
 /* With the card picked, its panel keeps only what shapes the card, advanced rows included. */

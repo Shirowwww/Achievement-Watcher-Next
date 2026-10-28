@@ -153,7 +153,146 @@ const PRESET_ENGINE = [
   "      var key = spans[i].getAttribute('data-tok');",
   "      if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];",
   '    }',
+  "    var texts = document.querySelectorAll('.aw-canvas > [data-kind=\"text\"]');",
+  "    for (var j = 0; j < texts.length; j++) texts[j].toggleAttribute('data-empty', saysNothing(texts[j]));",
   '  }',
+  '  // A text made only of words this popup lacks, such as the rarity of a common unlock.',
+  '  function saysNothing(node) {',
+  "    if (node.textContent.trim() || !node.querySelector('[data-tok]')) return false;",
+  "    var tiers = node.querySelectorAll('[data-tok=\"tier\"]');",
+  '    for (var i = 0; i < tiers.length; i++) {',
+  "      if (/^\".+\"$/.test(getComputedStyle(tiers[i], '::after').content)) return false;",
+  '    }',
+  '    return true;',
+  '  }',
+  '  /*',
+  "    A card line the design rewrote says its own words, the popup's in place of its {tokens}. Its",
+  '    stylesheet carries them encoded in --aw-text; a {tier} span is filled by the stylesheet.',
+  '  */',
+  "  var WORDED_LINES = { title: '.title', detail: '.detail', game: '.game', rarity: '.rarity' };",
+  '  var lineWords = {};',
+  '  function lineTemplate(node) {',
+  "    var raw = getComputedStyle(node).getPropertyValue('--aw-text').trim();",
+  "    if (raw.length < 2 || raw.charAt(0) !== '\"') return null;",
+  '    try { return decodeURIComponent(raw.slice(1, -1)); } catch (e) { return null; }',
+  '  }',
+  '  function writeLine(node, template) {',
+  "    node.textContent = '';",
+  '    var pieces = template.split(/\\{(game|title|detail|rarity|tier)\\}/);',
+  '    for (var i = 0; i < pieces.length; i++) {',
+  '      if (i % 2 === 0) {',
+  '        if (pieces[i]) node.appendChild(document.createTextNode(pieces[i]));',
+  '        continue;',
+  '      }',
+  "      var span = document.createElement('span');",
+  "      span.setAttribute('data-tok', pieces[i]);",
+  "      if (pieces[i] !== 'tier') span.textContent = lineWords[pieces[i]] || '';",
+  '      node.appendChild(span);',
+  '    }',
+  '  }',
+  '  function applyWords(words) {',
+  '    if (words) lineWords = words;',
+  '    applyTokens(lineWords);',
+  '    for (var key in WORDED_LINES) {',
+  '      var node = document.querySelector(WORDED_LINES[key]);',
+  '      if (!node) continue;',
+  '      var template = lineTemplate(node);',
+  '      if (template != null) writeLine(node, template);',
+  "      else if (node.awWritten) node.textContent = lineWords[key] || '';",
+  '      node.awWritten = template != null;',
+  '    }',
+  '  }',
+  '  // The designer swaps the stylesheet or the items in place: the words follow without a new payload.',
+  '  window.awWords = function () { applyWords(); };',
+  '  /*',
+  '    A line the stylesheet marks is typed out (--aw-type) or counted up (--aw-count) as the card comes',
+  '    in. A typed line is cut into one span per letter, which the stylesheet shows each in turn; a',
+  '    counted one has its numbers rewritten from the progress of its own CSS animation. Both keep the',
+  '    timing the design gave them, and stand still with that animation when the designer holds it.',
+  '  */',
+  "  var MOTION_LINES = '.title, .detail, .game, .rarity, .progress_label, .aw-canvas > [data-kind=\"text\"]';",
+  "  var graphemes = window.Intl && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;",
+  '  var counted = [];',
+  '  var countFrame = 0;',
+  '  function marked(node, name) {',
+  "    return getComputedStyle(node).getPropertyValue(name).trim() === '1';",
+  '  }',
+  '  function textNodes(node) {',
+  '    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);',
+  '    var found = [];',
+  '    while (walker.nextNode()) found.push(walker.currentNode);',
+  '    return found;',
+  '  }',
+  '  function untype(node) {',
+  "    var letters = node.querySelectorAll('.aw-ch');",
+  '    for (var i = 0; i < letters.length; i++) letters[i].replaceWith(letters[i].textContent);',
+  '    node.normalize();',
+  '  }',
+  '  function typeOut(node) {',
+  '    var n = 0;',
+  '    textNodes(node).forEach(function (text) {',
+  '      var pieces = graphemes ? Array.from(graphemes.segment(text.data), function (s) { return s.segment; }) : Array.from(text.data);',
+  '      var run = document.createDocumentFragment();',
+  '      pieces.forEach(function (piece) {',
+  "        var letter = document.createElement('span');",
+  "        letter.className = 'aw-ch';",
+  "        letter.style.setProperty('--aw-i', String(n));",
+  '        letter.textContent = piece;',
+  '        run.appendChild(letter);',
+  '        n += 1;',
+  '      });',
+  '      text.replaceWith(run);',
+  '    });',
+  "    node.style.setProperty('--aw-n', String(Math.max(1, n)));",
+  '  }',
+  '  // Every number counts up from zero but a total after a slash ("3/10"); figure spaces in front keep',
+  '  // the line as wide as it ends.',
+  '  function countedText(text, at) {',
+  '    return text.replace(/(\\/\\s*)?(\\d+)(?:([.,])(\\d+))?/g, function (all, total, whole, mark, part) {',
+  '      if (total) return all;',
+  "      var shown = (Number(whole + (part ? '.' + part : '')) * at).toFixed(part ? part.length : 0);",
+  "      var pad = Math.max(0, whole.length - shown.split('.')[0].length);",
+  "      return new Array(pad + 1).join('\\u2007') + (mark ? shown.replace('.', mark) : shown);",
+  '    });',
+  '  }',
+  '  // Where its count animation stands, eased; 1 once it has none (reduced motion, or no count).',
+  '  function countAt(line) {',
+  '    var anims = line.getAnimations();',
+  '    for (var i = 0; i < anims.length; i++) {',
+  "      if (anims[i].animationName !== 'aw-cv-count') continue;",
+  '      var p = anims[i].effect.getComputedTiming().progress;',
+  "      return { at: p == null ? 0 : 1 - Math.pow(1 - p, 3), running: anims[i].playState === 'running' };",
+  '    }',
+  '    return { at: 1, running: false };',
+  '  }',
+  '  // Writes the counted lines as their animations stand; true while one of them is still counting.',
+  '  function syncCounts() {',
+  '    var running = false;',
+  '    counted.forEach(function (entry) {',
+  '      var now = countAt(entry.line);',
+  '      running = running || now.running;',
+  '      var text = now.at >= 1 ? entry.data : countedText(entry.data, now.at);',
+  '      if (entry.node.data !== text) entry.node.data = text;',
+  '    });',
+  '    return running;',
+  '  }',
+  '  function tickCounts() {',
+  '    cancelAnimationFrame(countFrame);',
+  '    if (syncCounts()) countFrame = requestAnimationFrame(tickCounts);',
+  '  }',
+  '  function prepareMotion() {',
+  '    counted.forEach(function (entry) { entry.node.data = entry.data; });',
+  '    counted = [];',
+  '    var lines = document.querySelectorAll(MOTION_LINES);',
+  '    for (var i = 0; i < lines.length; i++) {',
+  '      var line = lines[i];',
+  '      untype(line);',
+  "      if (marked(line, '--aw-type')) typeOut(line);",
+  "      else if (marked(line, '--aw-count')) textNodes(line).forEach(function (node) { counted.push({ line: line, node: node, data: node.data }); });",
+  '    }',
+  '  }',
+  '  // The designer holds the card at a moment of its own, then has the counted lines written for it.',
+  '  window.awMotionSync = syncCounts;',
   '  // An animated picture set to replay starts over as it appears: a new address is a new animation,',
   '  // swapped in once loaded so the element never shows a gap. A picture held inline (the',
   '  // designer preview) gets its new address from a parameter of its media type.',
@@ -328,7 +467,9 @@ const PRESET_ENGINE = [
   '    applyArtwork(data);',
   '    applyMeta(data);',
   '    applyProgress(data);',
-  "    applyTokens({ game: String(data.gameName || '').trim(), title: titleEl.textContent, detail: detailEl.textContent, rarity: rarityText(data) });",
+  "    var words = { game: String(data.gameName || '').trim(), title: displayName != null ? String(displayName) : lineWords.title || '', detail: description != null ? String(description) : lineWords.detail || '', rarity: rarityText(data) };",
+  '    applyWords(words);',
+  '    prepareMotion();',
   "    var inMs = timing('--ach-in', 520);",
   "    var outMs = timing('--ach-out', 380);",
   '    var marquees = [marqueePlan(titleEl), marqueePlan(detailEl)];',
@@ -339,6 +480,7 @@ const PRESET_ENGINE = [
   "    root.classList.remove('active');",
   '    void root.offsetWidth;',
   "    root.classList.add('active');",
+  '    tickCounts();',
   '    recut();',
   '    // A font that lands later moves the lines it sets, and the cuts made in them.',
   "    if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(recut);",
@@ -422,8 +564,17 @@ function upgradeEngineHtml(html) {
 const CANVAS_CLASS = 'aw-canvas';
 const CARD_CLASS = 'aw-card';
 const CARD_SELECTOR = `.ach > .${CANVAS_CLASS} > .${CARD_CLASS}`;
-const CANVAS_PART_SELECTORS = { icon: '.icon', text: '.text_wrap', title: '.title', detail: '.detail', meta: '.meta', progress: '.progress_line' };
-const CANVAS_TEXT_PARTS = ['title', 'detail', 'meta', 'progress'];
+const CANVAS_PART_SELECTORS = {
+  icon: '.icon',
+  text: '.text_wrap',
+  title: '.title',
+  detail: '.detail',
+  meta: '.meta',
+  game: '.game',
+  rarity: '.rarity',
+  progress: '.progress_line',
+};
+const CANVAS_TEXT_PARTS = ['title', 'detail', 'meta', 'game', 'rarity', 'progress'];
 const CANVAS_TEXT_COLOR = { accent: 'var(--accent, #ffffff)', text: 'var(--text, #ffffff)' };
 
 const CANVAS_FONT_FAMILY = 'AW Item Font';
@@ -491,6 +642,16 @@ function shapePaint(item) {
   return item.fillMode === 'gradient' ? `linear-gradient(${item.angle}deg, ${item.fill}, ${item.fill2})` : item.fill;
 }
 
+// What a text or a card line draws behind itself; every value went through the schema.
+function boxLook(look) {
+  const rules = [];
+  if (look.fillMode) rules.push(`background: ${shapePaint(look)};`);
+  if (look.radius != null) rules.push(`border-radius: ${look.radius}px;`);
+  if (look.pad != null) rules.push(`padding: ${look.pad}px;`);
+  if (look.stroke) rules.push(`border: ${look.stroke}px solid ${look.strokeColor === 'accent' ? 'var(--accent)' : look.strokeColor};`);
+  return rules;
+}
+
 // An icon is its paint seen through the icon's outline.
 const canvasIconMask = (name) =>
   `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill-rule='evenodd' d='${schema.CANVAS_ICONS[name]}'/></svg>`)}")`;
@@ -517,10 +678,9 @@ const CANVAS_TIER_STATES = { bronze: '.tier-bronze', silver: '.tier-silver', gol
 const cssString = (text) => `"${String(text).replace(/[\\"<\n]/g, (c) => `\\${c.charCodeAt(0).toString(16)} `)}"`;
 
 /*
-  Each entrance starts from its own frame and ends where the item sits. It runs while the engine
+  Each entrance starts from its own frame and ends where the element sits. It runs while the engine
   holds `.active` on the card, so it replays with every popup; its delay counts from the card's start.
 */
-const CANVAS_ENTER_MS = 480;
 const CANVAS_ENTER_FROM = {
   fade: 'opacity: 0;',
   rise: 'opacity: 0; transform: translateY(14px);',
@@ -532,6 +692,26 @@ const CANVAS_ENTER_FROM = {
 };
 const CANVAS_ENTER_EASE = { pop: 'cubic-bezier(0.34, 1.56, 0.64, 1)' };
 const CANVAS_ENTER_EASE_DEFAULT = 'cubic-bezier(0.22, 1, 0.36, 1)';
+/*
+  The effects that keep the element's own look: a shake adds to its transform and a burst to its
+  filters (animation-composition), each after a short fade in. A typed letter is hidden until its
+  turn; the count animation only times the engine, which writes the numbers.
+*/
+const CANVAS_EFFECT_KEYFRAMES = {
+  appear: '@keyframes aw-cv-appear { from { opacity: 0; } }',
+  shake:
+    '@keyframes aw-cv-shake { 0%, 100% { transform: none; } 15% { transform: translateX(-5px) rotate(-1.5deg); } 30% { transform: translateX(5px) rotate(1.5deg); } ' +
+    '45% { transform: translateX(-4px) rotate(-1deg); } 60% { transform: translateX(3px) rotate(0.5deg); } 75% { transform: translateX(-2px); } }',
+  burst:
+    '@keyframes aw-cv-burst { 0% { filter: brightness(2.4) drop-shadow(0 0 0 var(--accent, #ffffff)); } 30% { filter: brightness(1.7) drop-shadow(0 0 10px var(--accent, #ffffff)); } ' +
+    '100% { filter: brightness(1) drop-shadow(0 0 24px transparent); } }',
+  letter: '@keyframes aw-cv-letter { from, to { opacity: 0; } }',
+  count: '@keyframes aw-cv-count { from { --aw-k: 0; } to { --aw-k: 1; } }',
+  fill: '@keyframes aw-cv-fill { from { width: 0; } }',
+};
+const CANVAS_COUNT_EASE = 'cubic-bezier(0.33, 1, 0.68, 1)';
+// Shown each in turn over the typing time, from where the engine numbered them: the last one as it ends.
+const CANVAS_LETTER_RULE = '.ach.active .aw-ch { animation: aw-cv-letter 0s linear calc(var(--aw-type-at) + var(--aw-type-for) * (var(--aw-i) + 1) / var(--aw-n)) backwards; }';
 
 /*
   A loop starts once the item is in, and keeps the look the item already has: `shine` brightens its
@@ -547,27 +727,68 @@ const CANVAS_LOOP_KEYFRAMES = {
 };
 const CANVAS_LOOP_TIMING = { pulse: '1600ms ease-in-out', float: '2400ms ease-in-out', swing: '2000ms ease-in-out', spin: '6000ms linear', shine: '2200ms ease-in-out' };
 
-function canvasMotionCss(variants) {
+/*
+  What one entrance asks of the stylesheet: the animations on its element, each with how it composes
+  with what the element already has, the keyframes they use, and the properties that tell the engine
+  to type or count the element's text.
+*/
+function entranceCss({ enter, delay = 0, dur }) {
+  const ms = schema.canvasEnterMs(enter, dur);
+  if (enter === 'type') return { animations: [], keyframes: ['letter'], marks: `--aw-type: 1; --aw-type-at: ${delay}ms; --aw-type-for: ${ms}ms;` };
+  if (enter === 'count') return { animations: [[`aw-cv-count ${ms}ms linear ${delay}ms both`, 'replace']], keyframes: ['count'], marks: '--aw-count: 1; font-variant-numeric: tabular-nums;' };
+  if (enter === 'shake' || enter === 'burst') {
+    const [fade, fill] = enter === 'shake' ? [120, 'both'] : [160, 'backwards'];
+    const animations = [
+      [`aw-cv-appear ${fade}ms linear ${delay}ms both`, 'replace'],
+      [`aw-cv-${enter} ${ms}ms ease-out ${delay}ms ${fill}`, 'add'],
+    ];
+    return { animations, keyframes: ['appear', enter] };
+  }
+  return { animations: [[`aw-cv-${enter} ${ms}ms ${CANVAS_ENTER_EASE[enter] || CANVAS_ENTER_EASE_DEFAULT} ${delay}ms both`, 'replace']], keyframes: [enter] };
+}
+
+// Selectors follow `.ach`. A part's rules are important, so they win over its preset's own animation.
+function canvasMotionCss(variants, parts = {}) {
   const keyframes = new Set();
+  const marks = [];
   const rules = [];
-  variants.forEach(({ item, select, id }) => {
-    const animations = [];
-    if (item.enter) {
-      keyframes.add(`@keyframes aw-cv-${item.enter} { from { ${CANVAS_ENTER_FROM[item.enter]} } }`);
-      const ease = CANVAS_ENTER_EASE[item.enter] || CANVAS_ENTER_EASE_DEFAULT;
-      animations.push(`aw-cv-${item.enter} ${CANVAS_ENTER_MS}ms ${ease} ${item.delay || 0}ms both`);
+  const use = (names) => names.forEach((name) => keyframes.add(CANVAS_EFFECT_KEYFRAMES[name] || `@keyframes aw-cv-${name} { from { ${CANVAS_ENTER_FROM[name]} } }`));
+  const animate = (at, animations, important = '') => {
+    if (!animations.length) return;
+    const ways = animations.map(([, way]) => way);
+    const composition = ways.includes('add') ? ` animation-composition: ${ways.join(', ')}${important};` : '';
+    rules.push(`.ach.active${at} { animation: ${animations.map(([animation]) => animation).join(', ')}${important};${composition} }`);
+  };
+  for (const [part, motion] of Object.entries(parts)) {
+    const { animations, keyframes: names, marks: mark } = entranceCss(motion);
+    use(names);
+    // The bar's figures count in its label while the bar itself fills.
+    const counter = part === 'progress' && motion.enter === 'count';
+    const at = ` ${counter ? CANVAS_STYLE_SELECTORS.progress : CANVAS_PART_SELECTORS[part]}`;
+    if (mark) marks.push(`.ach${at} { ${mark} }`);
+    animate(at, animations, ' !important');
+    if (counter) {
+      use(['fill']);
+      animate(' .progress_meter', [[`aw-cv-fill ${schema.canvasEnterMs(motion.enter, motion.dur)}ms ${CANVAS_COUNT_EASE} ${motion.delay || 0}ms both`, 'replace']], ' !important');
     }
+  }
+  variants.forEach(({ item, select, id }) => {
+    const at = ` > .${CANVAS_CLASS} > ${select}`;
+    const { animations, keyframes: names, marks: mark } = item.enter ? entranceCss(item) : { animations: [], keyframes: [] };
+    use(names);
+    if (mark) marks.push(`.ach${at} { ${mark} }`);
     if (item.loop) {
       const name = item.loop === 'shine' ? `aw-cv-shine-${id}` : `aw-cv-loop-${item.loop}`;
       const frames = item.loop === 'shine' ? `50% { filter: ${[...itemFilters(item), 'brightness(1.35)'].join(' ')}; }` : CANVAS_LOOP_KEYFRAMES[item.loop];
       keyframes.add(`@keyframes ${name} { ${frames} }`);
-      const start = item.enter ? (item.delay || 0) + CANVAS_ENTER_MS : 0;
-      animations.push(`${name} ${CANVAS_LOOP_TIMING[item.loop]} ${start}ms infinite`);
+      const start = item.enter ? (item.delay || 0) + schema.canvasEnterMs(item.enter, item.dur) : 0;
+      animations.push([`${name} ${CANVAS_LOOP_TIMING[item.loop]} ${start}ms infinite`, 'replace']);
     }
-    if (animations.length) rules.push(`.ach.active > .${CANVAS_CLASS} > ${select} { animation: ${animations.join(', ')}; }`);
+    animate(at, animations);
   });
-  if (!rules.length) return [];
-  return [`@media (prefers-reduced-motion: no-preference) {\n${[...keyframes, ...rules].join('\n')}\n}`];
+  if (keyframes.has(CANVAS_EFFECT_KEYFRAMES.letter)) rules.push(CANVAS_LETTER_RULE);
+  if (!rules.length && !marks.length) return [];
+  return [`@media (prefers-reduced-motion: no-preference) {\n${[...keyframes, ...marks, ...rules].join('\n')}\n}`];
 }
 
 // A plain shadow falls down and to the back; a glow spreads evenly in its colour, twice for strength.
@@ -659,7 +880,7 @@ function canvasFontRule(item, fonts) {
 }
 
 // Where a restyled line's text is: the progress line keeps its words in its label.
-const CANVAS_STYLE_SELECTORS = { title: '.title', detail: '.detail', meta: '.meta', progress: '.progress_label' };
+const CANVAS_STYLE_SELECTORS = { title: '.title', detail: '.detail', meta: '.meta', game: '.game', rarity: '.rarity', progress: '.progress_label' };
 // The pseudo-elements a bundled card draws its decorations with, whole selectors.
 const CANVAS_DECOR_SELECTORS = { cardBefore: '.ach::before', cardAfter: '.ach::after', iconBefore: '.ach .icon::before', iconAfter: '.ach .icon::after' };
 const CANVAS_SELF_ALIGN = { left: 'flex-start', center: 'center', right: 'flex-end' };
@@ -679,10 +900,40 @@ function canvasStyleCss(part, style, fonts, states = ALL_STATES) {
   if (style.upper === false) textRules.push('text-transform: none !important; letter-spacing: normal !important;');
   if (style.size) boxRules.push(`font-size: ${style.size}px !important;`);
   if (style.align) boxRules.push(`text-align: ${style.align} !important; align-self: ${CANVAS_SELF_ALIGN[style.align]} !important;`);
+  // Its own words, which the engine reads back: encoded, so no character of them is CSS.
+  if (style.text) boxRules.push(`--aw-text: "${encodeURIComponent(style.text)}";`);
+  const important = (rule) => rule.replace(/;$/, ' !important;');
+  const line = `${inStates('.ach', states)} ${part === 'progress' ? '.progress_line' : CANVAS_STYLE_SELECTORS[part]}`;
+  const lineRules = [];
+  if (style.o != null) lineRules.push(`opacity: ${style.o} !important;`);
+  const filters = itemFilters(style);
+  if (filters.length) lineRules.push(`filter: ${filters.join(' ')} !important;`);
+  if (part !== 'progress') {
+    // A box of its own replaces the preset's ring round the line.
+    if (style.fillMode || style.stroke) boxRules.push('box-shadow: none !important;');
+    boxRules.push(...boxLook(style).map(important));
+  }
   const css = [];
   if (textRules.length) css.push(`${selector}, ${selector} * { ${textRules.join(' ')} }`);
   if (style.size) css.push(`${selector} * { font-size: inherit !important; }`);
   if (boxRules.length) css.push(`${selector} { ${boxRules.join(' ')} }`);
+  if (lineRules.length) css.push(`${line} { ${lineRules.join(' ')} }`);
+  // The bar's width is the whole line's: its label keeps its room and the track takes the rest.
+  if (style.w) css.push(`${inStates('.ach', states)} .progress_line { width: ${style.w}px !important; max-width: none !important; }`);
+  if (part === 'progress') css.push(...progressBarCss(style, inStates('.ach', states)));
+  return css;
+}
+
+// The bar is the progress line's fill, on its track; the track's colour, height, corners and outline.
+function progressBarCss(style, card) {
+  const css = [];
+  const track = [];
+  if (style.track) track.push(`background: ${style.track} !important;`);
+  if (style.h) track.push(`height: ${style.h}px !important;`);
+  if (style.radius != null) track.push(`border-radius: ${style.radius}px !important;`);
+  if (style.stroke) track.push(`box-shadow: inset 0 0 0 ${style.stroke}px ${style.strokeColor === 'accent' ? 'var(--accent)' : style.strokeColor} !important;`);
+  if (track.length) css.push(`${card} .progress_track { ${track.join(' ')} }`);
+  if (style.fillMode) css.push(`${card} .progress_meter { background: ${shapePaint(style)} !important; }`);
   return css;
 }
 
@@ -774,7 +1025,8 @@ function canvasItemCss({ item, select }, { zIndex, fonts, assetUrl, editing }) {
       `text-align: ${item.align}; white-space: pre-wrap; overflow-wrap: anywhere;`,
       item.upper ? 'text-transform: uppercase; letter-spacing: 0.06em;' : '',
       canvasFontRule(item, fonts),
-      shapeFilter(item)
+      shapeFilter(item),
+      ...boxLook(item)
     );
   } else if (item.kind === 'image') {
     const url = cssUrl(assetUrl ? assetUrl(item.file) : item.file);
@@ -837,9 +1089,10 @@ function canvasPartsCss(canvas, { markPseudo, editing, fonts }) {
     const states = ALL_STATES.filter((state) => views[state].hidden.includes(part));
     if (selector && states.length) css.push(`${inStates(selector, states)} { ${editing ? 'opacity: 0.3 !important; outline: 1px dashed rgba(255, 255, 255, 0.6);' : 'visibility: hidden !important;'} }`);
   }
-  // The text column clips (and fades) its lines so a long one can scroll; a line moved out of it
-  // would be cut off, so the column stops clipping once one of its lines has moved.
-  if (ALL_STATES.some((state) => CANVAS_TEXT_PARTS.some((part) => views[state].move[part]))) {
+  // The text column clips (and fades) its lines so a long one can scroll; a line moved or stretched
+  // out of it would be cut off, so the column stops clipping once one of its lines has.
+  const outgrown = (state) => views[state].style.progress && views[state].style.progress.w;
+  if (ALL_STATES.some((state) => outgrown(state) || CANVAS_TEXT_PARTS.some((part) => views[state].move[part]))) {
     css.push('.ach .text_wrap { overflow: visible !important; -webkit-mask-image: none !important; mask-image: none !important; }');
   }
   return {
@@ -854,7 +1107,17 @@ function canvasPartsCss(canvas, { markPseudo, editing, fonts }) {
   `markPseudo` names the pseudo-element that draws the base's brand mark, for a layer. `editing`
   keeps a removed part faintly on screen, so the layout editor can still pick it and put it back.
 */
-function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances = !editing } = {}) {
+// While editing, a word with nothing to say in the state on show goes by the name the designer gives
+// it (its Insert button's), rather than in braces.
+function tokenNameRules(names) {
+  if (!names || typeof names !== 'object') return '';
+  return Object.entries(names)
+    .filter(([token, name]) => /^\w+$/.test(token) && typeof name === 'string' && name.trim())
+    .map(([token, name]) => ` .ach > .${CANVAS_CLASS} > [data-empty] [data-tok="${token}"]::before { content: ${cssString(name.trim())}; }`)
+    .join('');
+}
+
+function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances = !editing, tokenNames = null } = {}) {
   const canvas = schema.normalizeCanvas(rawCanvas);
   const fonts = schema.canvasFonts(canvas);
   const parts = canvasPartsCss(canvas, { markPseudo, editing, fonts });
@@ -866,10 +1129,23 @@ function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances
   css.push(...parts.styles);
   const order = canvasOrderCss(canvas);
   css.push(...order.css);
-  if (!canvas.items.length) return css.join('\n');
+  // Not while editing, unless asked: an element would vanish and come back at every change. A cut
+  // is made once the card is in, so a see-through shape stays still.
+  const motion = (variants) => (entrances ? canvasMotionCss(variants.filter((variant) => !variant.item.cut), canvas.motion) : []);
+  // {tier} in an added text or in a card line's own words.
+  for (const [tier, word] of Object.entries(canvas.words || {})) {
+    css.push(`.ach${CANVAS_TIER_STATES[tier]} [data-tok="tier"]::after { content: ${cssString(word)}; }`);
+  }
+  if (!canvas.items.length) return [...css, ...motion([])].join('\n');
   css.push(`.ach > .${CANVAS_CLASS} { position: absolute !important; inset: 0; z-index: auto !important; pointer-events: none; }`);
   css.push(`.ach > .${CANVAS_CLASS} > div { position: absolute; box-sizing: border-box; margin: 0; }`);
   css.push(`.ach > .${CANVAS_CLASS} svg { display: block; width: 100%; height: 100%; overflow: visible; }`);
+  // A text that says nothing in this popup is not drawn; while editing it stays faint, its words named.
+  css.push(
+    editing
+      ? `.ach > .${CANVAS_CLASS} > [data-empty][data-i] { opacity: 0.45; } .ach > .${CANVAS_CLASS} > [data-empty] [data-tok]::before { content: '{' attr(data-tok) '}'; }${tokenNameRules(tokenNames)}`
+      : `.ach > .${CANVAS_CLASS} > [data-empty] { visibility: hidden; }`
+  );
   // A see-through polygon's outline, drawn only while editing (the popup hides the shape).
   if (schema.canvasCuts(canvas)) {
     css.push(`.ach > .${CANVAS_CLASS} > [data-cut] svg * { fill: none; stroke: rgba(255, 255, 255, 0.8); stroke-width: 1px; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }`);
@@ -881,12 +1157,7 @@ function canvasCss(rawCanvas, { assetUrl, markPseudo, editing = false, entrances
       return variant;
     });
   });
-  for (const [tier, word] of Object.entries(canvas.words || {})) {
-    css.push(`.ach${CANVAS_TIER_STATES[tier]} > .${CANVAS_CLASS} [data-tok="tier"]::after { content: ${cssString(word)}; }`);
-  }
-  // Not while editing, unless asked: an item would vanish and come back at every change. A cut is
-  // made once the card is in, so a see-through shape stays still.
-  if (entrances) css.push(...canvasMotionCss(variants.filter((variant) => !variant.item.cut)));
+  css.push(...motion(variants));
   return css.join('\n');
 }
 
@@ -1215,18 +1486,27 @@ function layoutRules(values) {
 }
 
 /*
-  The rounded icon shape is the original declaration; every other shape uses a clip path, which
-  would cut off a border/radius drawn round it, so those are left out instead. The glow sits on a
-  wrapper, since a box-shadow on a clipped element gets clipped away with it.
+  A radius shape keeps its border and glow on the picture itself. A polygon is a clip path, and a clip
+  cuts off its own element's border and shadows, so there the border is an accent copy of the polygon
+  behind a picture inset by the border width, and the glow a drop-shadow on the wrapper, which nothing
+  clips.
 */
 function iconImageRule(values) {
   const base =
     '.ach .icon img { display: block; box-sizing: border-box; width: var(--icon-size); height: var(--icon-size); object-fit: cover;';
-  const clip = ICON_SHAPES[values.iconShape];
-  if (!clip) {
-    return `${base} border: var(--icon-border) solid var(--accent); border-radius: var(--icon-radius); box-shadow: 0 0 calc(var(--icon-glow) * 26px) color-mix(in srgb, var(--accent) 70%, transparent); }`;
+  const shape = ICON_SHAPES[values.iconShape] || ICON_SHAPES.rounded;
+  if (!shape.clip) {
+    return `${base} border: var(--icon-border) solid var(--accent); border-radius: ${shape.radius}; box-shadow: 0 0 calc(var(--icon-glow) * 26px) color-mix(in srgb, var(--accent) 70%, transparent); }`;
   }
-  return `${base} clip-path: ${clip}; filter: drop-shadow(0 0 calc(var(--icon-glow) * 18px) color-mix(in srgb, var(--accent) 70%, transparent)); }`;
+  const rules = [
+    '.ach .icon { position: relative; filter: drop-shadow(0 0 calc(var(--icon-glow) * 18px) color-mix(in srgb, var(--accent) 70%, transparent)); }',
+    `${base} position: relative; padding: var(--icon-border); clip-path: ${shape.clip} content-box; }`,
+  ];
+  // Drawn only when there is a border: under a picture that covers it, its edge would still fringe.
+  if (Number(values.iconBorder) > 0) {
+    rules.push(`.ach .icon::before { content: ''; position: absolute; inset: 0; background: var(--accent); clip-path: ${shape.clip}; }`);
+  }
+  return rules.join('\n');
 }
 
 // A text-only card drops the icon entirely rather than rendering it at zero size: the gap and the
@@ -1338,7 +1618,7 @@ function cardLayerCss(values, layers) {
   ];
 }
 
-function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = !editing } = {}) {
+function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = !editing, tokenNames = null } = {}) {
   const values = normalizeOptions(options);
   const flexAlign = FLEX_ALIGN[values.align];
   const artwork = values.bgMode === 'artwork';
@@ -1460,7 +1740,7 @@ function buildCustomPresetCss(options, { assetUrl, editing = false, entrances = 
     '.progress_track { display: block; flex: 1 1 auto; min-width: 70px; height: var(--progress-height); overflow: hidden; border-radius: 999px; background: rgba(0, 0, 0, 0.45); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); }',
     '.progress_meter { display: block; width: 0%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 45%, #ffffff) 100%); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent); transition: width 0.35s ease; }',
     '.progress_label { flex: 0 0 auto; max-width: 110px; overflow: hidden; color: var(--text); font-size: 12px; font-weight: 700; line-height: 1; text-align: right; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }',
-    canvasCss(values.canvas, { assetUrl, editing, entrances }),
+    canvasCss(values.canvas, { assetUrl, editing, entrances, tokenNames }),
     canvasPlacementRules(values, editing),
     ''
   );

@@ -265,21 +265,31 @@ test('a texture is its own layer, above the background and below the text', () =
   }
 });
 
-test('an icon shape replaces the border and the radius rather than fighting them', () => {
-  for (const [name, clip] of Object.entries(schema.ICON_SHAPES)) {
-    const css = buildCustomPresetCss({ iconShape: name, iconBorder: 4, iconGlow: 60 });
-    const rule = css.split('\n').find((line) => line.startsWith('.ach .icon img'));
+test('every icon shape keeps a border and a glow, drawn where its outline cannot cut them off', () => {
+  assert.ok(schema.ICON_SHAPES.square, 'there is a plain square shape');
+  for (const [name, shape] of Object.entries(schema.ICON_SHAPES)) {
+    const lines = buildCustomPresetCss({ iconShape: name, iconBorder: 4, iconGlow: 60 }).split('\n');
+    const rule = lines.find((line) => line.startsWith('.ach .icon img'));
     assert.ok(rule, `${name}: no icon rule`);
-    if (!clip) {
-      assert.match(rule, /border: var\(--icon-border\)/, 'the rounded shape keeps its border');
-      assert.match(rule, /box-shadow: 0 0 calc\(var\(--icon-glow\)/, 'the rounded shape keeps its glow');
+    if (!shape.clip) {
+      assert.ok(rule.includes(`border-radius: ${shape.radius};`), `${name}: the shape does not reach the CSS`);
+      assert.match(rule, /border: var\(--icon-border\)/, `${name}: the border is lost`);
+      assert.match(rule, /box-shadow: 0 0 calc\(var\(--icon-glow\)/, `${name}: the glow is lost`);
       continue;
     }
-    assert.ok(rule.includes(`clip-path: ${clip};`), `${name}: the shape does not reach the CSS`);
-    // A clipped element loses a box-shadow with the corners, so the glow becomes a drop-shadow.
-    assert.doesNotMatch(rule, /box-shadow/, `${name}: a box-shadow would be clipped away`);
-    assert.match(rule, /filter: drop-shadow\(0 0 calc\(var\(--icon-glow\)/, `${name}: the glow is lost`);
-    assert.doesNotMatch(rule, /border:/, `${name}: a border would be clipped away`);
+    // A clip cuts off its own element's border and shadows: the picture is clipped inside its
+    // padding, the ring is a copy of the outline behind it, and the glow sits on the wrapper.
+    assert.ok(rule.includes(`clip-path: ${shape.clip} content-box;`), `${name}: the shape does not reach the CSS`);
+    assert.match(rule, /padding: var\(--icon-border\)/, `${name}: the picture does not leave room for the ring`);
+    assert.doesNotMatch(rule, /box-shadow|border:/, `${name}: a border or a box-shadow would be clipped away`);
+    const ring = lines.find((line) => line.startsWith('.ach .icon::before'));
+    assert.ok(ring && ring.includes(`clip-path: ${shape.clip};`) && ring.includes('background: var(--accent)'), `${name}: no ring`);
+    assert.ok(
+      lines.some((line) => line.startsWith('.ach .icon {') && /filter: drop-shadow\(0 0 calc\(var\(--icon-glow\)/.test(line)),
+      `${name}: the glow is lost`
+    );
+    const bare = buildCustomPresetCss({ iconShape: name, iconBorder: 0 }).split('\n');
+    assert.ok(!bare.some((line) => line.startsWith('.ach .icon::before')), `${name}: a ring is drawn with no border`);
   }
 });
 

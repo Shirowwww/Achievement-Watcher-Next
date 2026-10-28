@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "全部復原",
             "addText": "文字",
+            "addRarity": "稀有度",
             "addImage": "圖片或 GIF",
             "addRect": "矩形",
             "addEllipse": "圓形",
             "addLine": "線條",
             "hint": "點一下預覽中的某個部分，即可移動、縮放或旋轉。",
             "cardHint": "拖曳卡片邊緣即可調整大小。這裡的所有設定只會影響卡片。",
+            "fixedHint": "匯入的 SAN 主題會保留自己的卡片。點擊其中的元素即可開啟該元素的設定，也可以拖曳來移動它。還可以在上方新增文字、圖片或形狀。",
             "fullscreen": "編輯器",
             "general": "所有設定",
             "done": "完成",
@@ -701,6 +703,7 @@
             "summaryNone": "尚未移動或新增任何內容",
             "summaryMoved": "已移動的部分：{count}",
             "summaryItems": "已新增的項目：{count}",
+            "heightFloor": "卡片不能比其內容更矮：縮小圖示或文字才能再降低高度。",
             "imageRefused": "無法使用這張圖片。請使用不超過 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 圖片。",
             "tier": {
               "edit": "編輯：",
@@ -714,7 +717,9 @@
               "text": "文字區塊",
               "title": "標題",
               "detail": "說明",
-              "meta": "遊戲名稱",
+              "meta": "遊戲列",
+              "game": "遊戲名稱",
+              "rarity": "稀有度",
               "progress": "進度列",
               "mark": "品牌標誌",
               "cardBefore": "卡片裝飾 1",
@@ -778,7 +783,14 @@
               "cut": "鏤空透明",
               "loop": "循環",
               "alignGroup": "彼此對齊",
-              "insert": "插入"
+              "insert": "插入",
+              "insertHint": "新增一個由彈出視窗自動填入的詞：遊戲、成就、描述、稀有度或等級。",
+              "duration": "時長 (ms)",
+              "back": "背景",
+              "pad": "內邊距",
+              "strokeColor": "輪廓顏色",
+              "track": "進度條底色",
+              "thickness": "粗細"
             },
             "axis": {
               "w": "寬",
@@ -809,7 +821,22 @@
               "left": "從左側",
               "right": "從右側",
               "zoom": "放大",
-              "pop": "彈出"
+              "pop": "彈出",
+              "shake": "抖動",
+              "burst": "閃光",
+              "type": "打字機",
+              "count": "計數遞增",
+              "countFill": "計數並填滿"
+            },
+            "tl": {
+              "title": "時間軸",
+              "play": "播放",
+              "pause": "暫停",
+              "playhead": "目前顯示的時刻",
+              "start": "開始",
+              "length": "時長",
+              "add": "點擊此列，為其設定專屬進場",
+              "cardFixed": "卡片的進場方式由其預設集決定"
             },
             "token": {
               "game": "遊戲",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "圖層",
-                "body": "卡片上的所有內容，最上層的排在最前。眼睛圖示用來隱藏元素，掛鎖圖示用來鎖定位置。"
+                "body": "卡片上的所有內容，最上層的排在最前。眼睛圖示用來隱藏元素，掛鎖圖示用來鎖定你新增的元素的位置。"
               },
               "help": {
                 "title": "快速鍵",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "強調色",
             "accentBar": "強調色橫條",
+            "accentBarPlace": "強調色橫條位置",
             "accentBarSize": "橫條粗細",
             "align": "對齊方式",
             "animIn": "進場方向",
@@ -1122,6 +1150,7 @@
             "smooth": "平滑",
             "snap": "急停",
             "solid": "純色",
+            "square": "方形",
             "squircle": "圓角方形",
             "text": "文字顏色",
             "textOnly": "僅文字",
@@ -1130,7 +1159,8 @@
             "topRight": "右上",
             "transparent": "透明",
             "uppercase": "全部大寫",
-            "zoom": "縮放"
+            "zoom": "縮放",
+            "auto": "自動"
           },
           "san": {
             "tierPictures": "獎盃圖片",

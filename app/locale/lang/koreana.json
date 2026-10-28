@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "모두 제자리로",
             "addText": "글자",
+            "addRarity": "희귀도",
             "addImage": "이미지 또는 GIF",
             "addRect": "사각형",
             "addEllipse": "원",
             "addLine": "선",
             "hint": "미리보기의 한 부분을 클릭해 이동하거나 크기를 바꾸거나 회전하세요.",
             "cardHint": "카드의 가장자리를 드래그해 크기를 조절하세요. 여기의 모든 설정은 카드에만 적용됩니다.",
+            "fixedHint": "가져온 SAN 테마는 자체 카드를 유지합니다. 요소를 클릭하면 설정이 열리고, 끌어서 옮길 수도 있습니다. 그 위에 텍스트, 사진, 도형을 추가할 수도 있습니다.",
             "fullscreen": "편집기",
             "general": "모든 설정",
             "done": "완료",
@@ -701,6 +703,7 @@
             "summaryNone": "아직 옮기거나 추가한 것이 없습니다",
             "summaryMoved": "옮긴 부분: {count}",
             "summaryItems": "추가한 항목: {count}",
+            "heightFloor": "카드는 내용물보다 낮아질 수 없습니다. 더 낮추려면 아이콘이나 텍스트를 줄이세요.",
             "imageRefused": "이 이미지는 사용할 수 없습니다. 5 MB 이하의 PNG, JPEG, GIF, WebP 또는 BMP 이미지를 사용하세요.",
             "tier": {
               "edit": "편집:",
@@ -714,7 +717,9 @@
               "text": "글자 블록",
               "title": "제목",
               "detail": "설명",
-              "meta": "게임 이름",
+              "meta": "게임 줄",
+              "game": "게임 이름",
+              "rarity": "희귀도",
               "progress": "진행도 막대",
               "mark": "브랜드 로고",
               "cardBefore": "카드 장식 1",
@@ -778,7 +783,14 @@
               "cut": "투명 처리",
               "loop": "반복",
               "alignGroup": "서로 맞춰 정렬",
-              "insert": "삽입"
+              "insert": "삽입",
+              "insertHint": "팝업이 채워 넣는 단어를 추가합니다. 게임, 도전 과제, 설명, 희귀도, 단계 중 하나입니다.",
+              "duration": "길이 (ms)",
+              "back": "배경",
+              "pad": "안쪽 여백",
+              "strokeColor": "윤곽선 색",
+              "track": "막대 배경색",
+              "thickness": "두께"
             },
             "axis": {
               "w": "너",
@@ -809,7 +821,22 @@
               "left": "왼쪽에서",
               "right": "오른쪽에서",
               "zoom": "확대",
-              "pop": "팝"
+              "pop": "팝",
+              "shake": "흔들림",
+              "burst": "번쩍임",
+              "type": "타자기",
+              "count": "카운트 업",
+              "countFill": "카운트 업과 채우기"
+            },
+            "tl": {
+              "title": "타임라인",
+              "play": "재생",
+              "pause": "일시 정지",
+              "playhead": "표시 중인 시점",
+              "start": "시작",
+              "length": "길이",
+              "add": "줄을 클릭하면 고유한 등장 효과를 줄 수 있습니다",
+              "cardFixed": "카드는 프리셋에 정해진 대로 등장합니다"
             },
             "token": {
               "game": "게임",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "레이어",
-                "body": "카드 위의 모든 것을 맨 위 항목부터 보여 줍니다. 눈 아이콘은 요소를 숨기고, 자물쇠는 제자리에 고정합니다."
+                "body": "카드 위의 모든 것을 맨 위 항목부터 보여 줍니다. 눈 아이콘은 요소를 숨기고, 자물쇠는 직접 추가한 요소를 제자리에 고정합니다."
               },
               "help": {
                 "title": "단축키",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "강조색",
             "accentBar": "강조 막대",
+            "accentBarPlace": "강조 막대 위치",
             "accentBarSize": "막대 두께",
             "align": "정렬",
             "animIn": "등장 방향",
@@ -1122,6 +1150,7 @@
             "smooth": "부드럽게",
             "snap": "급격하게",
             "solid": "단색",
+            "square": "사각형",
             "squircle": "둥근 사각형",
             "text": "글자 색",
             "textOnly": "글자만",
@@ -1130,7 +1159,8 @@
             "topRight": "오른쪽 위",
             "transparent": "투명",
             "uppercase": "대문자",
-            "zoom": "확대"
+            "zoom": "확대",
+            "auto": "자동"
           },
           "san": {
             "tierPictures": "트로피 이미지",

@@ -89,6 +89,10 @@ function createHistory(limit = 80) {
       future.length = 0;
       return true;
     },
+    // What the current step turned out to be once late values arrived: no new step, nothing undone.
+    amend(state) {
+      if (state != null) current = state;
+    },
     undo() {
       if (!past.length) return null;
       future.push(current);

@@ -49,8 +49,8 @@ test('every string the two buttons show is bound from the locale', () => {
 });
 
 test('Export writes the design on screen, never some other preset', () => {
-  const settings = read('ui', 'settings.js');
-  const handler = /\$\('#btn-export-preset'\)\.click\([\s\S]*?\n    \}\);/.exec(settings);
+  const designerJs = read('ui', 'presetDesigner.js');
+  const handler = /\$\('#btn-export-preset'\)\.click\([\s\S]*?\n  \}\);/.exec(designerJs);
   assert.ok(handler, 'the export handler is gone');
 
   // Export must use the builder's current design, not the active notification preset, or the
@@ -75,23 +75,23 @@ test('the main process can export an unsaved builder design', () => {
 });
 
 test('importing loads the preset into the builder controls', () => {
-  const settings = read('ui', 'settings.js');
+  const designerJs = read('ui', 'presetDesigner.js');
   // Selecting the preset in code fires no change event, so the controls kept the previous draft and
   // the builder looked like the import had not happened.
-  assert.match(settings, /async function loadPresetIntoBuilder\(name\)/, 'the shared loader is gone');
-  const handler = /\$\('#btn-import-preset'\)\.click\([\s\S]*?\n    \}\);/.exec(settings);
+  assert.match(designerJs, /async function loadPresetIntoBuilder\(name\)/, 'the shared loader is gone');
+  const handler = /\$\('#btn-import-preset'\)\.click\([\s\S]*?\n  \}\);/.exec(designerJs);
   assert.ok(handler, 'the import handler is gone');
   assert.match(handler[0], /await loadPresetIntoBuilder\(res\.name\);/, 'an import does not load the preset into the controls');
   // The picker keeps using the same loader, so the two paths cannot drift apart.
-  const picker = /\$\('#pd-load'\)\.on\('change'[\s\S]*?\n    \}\);/.exec(settings);
+  const picker = /\$\('#pd-load'\)\.on\('change'[\s\S]*?\n  \}\);/.exec(designerJs);
   assert.ok(picker && /await loadPresetIntoBuilder\(name\)/.test(picker[0]), 'the picker no longer shares the loader');
 });
 
 test('a name clash asks the user instead of overwriting or failing silently', () => {
-  const settings = read('ui', 'settings.js');
-  assert.match(settings, /res\.error === 'duplicate'/, 'the duplicate answer is not handled');
+  const designerJs = read('ui', 'presetDesigner.js');
+  assert.match(designerJs, /res\.error === 'duplicate'/, 'the duplicate answer is not handled');
   // The second call reuses the file the user already picked rather than reopening the dialog.
-  assert.match(settings, /invoke\('import-preset', \{ file: res\.file, duplicate: choice === 1 \? 'replace' : 'rename' \}\)/);
+  assert.match(designerJs, /invoke\('import-preset', \{ file: res\.file, duplicate: choice === 1 \? 'replace' : 'rename' \}\)/);
 });
 
 test('the main process installs only into the userData preset storage', () => {
@@ -129,14 +129,18 @@ test('an imported preset does not load meaningless slider values or arm an overw
   const reader = /ipcMain\.handle\('read-custom-preset'[\s\S]*?\n\}\);/.exec(init);
   assert.ok(reader, 'the read handler is gone');
   assert.match(reader[0], /return \{ name: safe, editable: true, \.\.\.customPresetNumbers\(parsed\) \};/);
-  assert.match(reader[0], /return \{ name: safe, editable: false \};/);
+  // One installed on the shared card says so: the builder opens it as the base of a new layer.
+  assert.match(reader[0], /return \{ name: safe, editable: false, base: layerBaseFolder\(safe\) === path\.join\(usersPresetsDir\(\), safe\) \};/);
   assert.match(reader[0], /if \(!safe \|\| !managedPresetMarker\(safe\)\) return null;/);
 
-  const settings = read('ui', 'settings.js');
-  assert.match(settings, /if \(opts\.editable === false\) \{/, 'the builder still loads defaults over an imported preset');
+  const designerJs = read('ui', 'presetDesigner.js');
+  assert.match(designerJs, /if \(opts\.editable === false && opts\.base\) \{[\s\S]*?return \(await beginLayer\(name\)\) \? 'layer' : 'failed';/);
+  // The Name field then names the new layer: Rename would give its name to the gallery preset.
+  assert.match(designerJs, /\$\('#btn-rename-preset'\)\.toggle\(managed && !\(layerMode && layerMode\.base === loaded\)\);/);
+  assert.match(designerJs, /if \(opts\.editable === false\) \{/, 'the builder still loads defaults over an imported preset');
   // The name field is cleared, so Create makes a new preset instead of replacing the artwork.
-  assert.match(settings, /if \(opts\.editable === false\) \{\s*exitLayerMode\(\);\s*\$\('#pd-name'\)\.val\(''\);/);
-  assert.match(settings, /attr\('data-imported-only'\)/, 'nothing explains why the controls did not move');
+  assert.match(designerJs, /if \(opts\.editable === false\) \{\s*exitLayerMode\(\);\s*\$\('#pd-name'\)\.val\(''\);/);
+  assert.match(designerJs, /attr\('data-imported-only'\)/, 'nothing explains why the controls did not move');
 
   const english = JSON.parse(read('locale', 'lang', 'english.json'));
   assert.ok(String(english.settings.notification.option.designer.importedOnly || '').trim());
@@ -144,27 +148,27 @@ test('an imported preset does not load meaningless slider values or arm an overw
 });
 
 test('deleting a preset never moves the user onto an unrelated one', () => {
-  const settings = read('ui', 'settings.js');
-  const helper = /async function refreshOverlayPresetMenu[\s\S]*?\n    \}/.exec(settings);
+  const designerJs = read('ui', 'presetDesigner.js');
+  const helper = /async function refreshOverlayPresetMenu[\s\S]*?\n  \}/.exec(designerJs);
   assert.ok(helper, 'the preset menu helper is gone');
 
   // Deleting the active preset must not silently fall through to whatever preset sorts first
   // ("ArmsofGod"), which would look like the setting failed to save.
   assert.match(helper[0], /\[preferred, previous, DEFAULT_PRESET_NAME\]\.find\(\(n\) => n && names\.includes\(n\)\)/);
-  assert.match(settings, /const DEFAULT_PRESET_NAME = 'AW Next';/);
+  assert.match(designerJs, /const DEFAULT_PRESET_NAME = 'AW Next';/);
 
   // Every rebuild of the menu goes through the helper, so the fallback cannot differ between them.
   for (const handler of ['btn-delete-preset', 'btn-rename-preset', 'btn-create-preset', 'btn-import-preset', 'btn-import-san']) {
-    const block = new RegExp(`\\$\\('#${handler}'\\)\\.click\\([\\s\\S]*?\\n    \\}\\);`).exec(settings);
+    const block = new RegExp(`\\$\\('#${handler}'\\)\\.click\\([\\s\\S]*?\\n  \\}\\);`).exec(designerJs);
     assert.ok(block, `${handler} handler not found`);
     assert.doesNotMatch(block[0], /\$\('#option_overlayPreset'\)\.empty\(\)|sel\.empty\(\)/, `${handler} still rebuilds the menu by hand`);
   }
-  assert.equal((settings.match(/refreshOverlayPresetMenu\(/g) || []).length, 6, 'expected the definition plus five call sites');
+  assert.equal((designerJs.match(/refreshOverlayPresetMenu\(/g) || []).length, 6, 'expected the definition plus five call sites');
 });
 
 test('a refresh rebuilds the per-type preset menus, not just the main one', () => {
-  const settings = read('ui', 'settings.js');
-  const helper = /async function refreshOverlayPresetMenu[\s\S]*?\n    \}/.exec(settings);
+  const designerJs = read('ui', 'presetDesigner.js');
+  const helper = /async function refreshOverlayPresetMenu[\s\S]*?\n  \}/.exec(designerJs);
   assert.ok(helper, 'the preset menu helper is gone');
 
   /*
@@ -177,7 +181,7 @@ test('a refresh rebuilds the per-type preset menus, not just the main one', () =
   assert.match(helper[0], /if \(next !== kept\) typeSel\.change\(\);/, 'a stale override is not persisted after a reset');
 
   // The list must cover exactly the overrides the settings form and options.ini carry.
-  const ids = /const OVERLAY_PRESET_TYPE_IDS = \[([\s\S]*?)\];/.exec(settings);
+  const ids = /const OVERLAY_PRESET_TYPE_IDS = \[([\s\S]*?)\];/.exec(designerJs);
   assert.ok(ids, 'the per-type id list is gone');
   const document = htmlParser.parse(read('view', 'app.html'));
   const inForm = document
@@ -191,14 +195,15 @@ test('a refresh rebuilds the per-type preset menus, not just the main one', () =
 });
 
 test('Preview shows the imported preset, not the unrelated slider draft', () => {
-  const settings = read('ui', 'settings.js');
-  const handler = /\$\('#btn-preview-preset'\)\.click\([\s\S]*?\n    \}\);/.exec(settings);
+  const designerJs = read('ui', 'presetDesigner.js');
+  const handler = /\$\('#btn-preview-preset'\)\.click\([\s\S]*?\n  \}\);/.exec(designerJs);
   assert.ok(handler, 'the preview handler is gone');
 
   // An imported preset has no builder options, so the scratch preset built from the controls
   // previewed a default dark card instead of the preset the user had just picked.
   assert.match(handler[0], /const loaded = String\(\$\('#pd-load'\)\.val\(\) \|\| ''\);/);
-  assert.match(handler[0], /if \(loaded && !isEditablePreset\(loaded\)\) \{/);
+  // Opened as the base of a layer, the picker still names the base, and the layer is what is previewed.
+  assert.match(handler[0], /if \(loaded && !isEditablePreset\(loaded\) && !layerMode\) \{/);
   assert.match(handler[0], /overlayTestData\(kind, loaded, loaded[,)]/, 'the preview does not render the selected preset');
   // The popup on screen shows the state the designer is previewing, so a rare or completion design
   // can be judged at full size and not only as a normal unlock.
@@ -216,11 +221,11 @@ test('the builder never offers to "Update" a preset it cannot rebuild', () => {
   // Both markers make a preset manageable, but only the builder's options file makes it editable.
   assert.match(list[0], /editable: marker === PRESET_OPTIONS_FILE \|\| marker === presetLayer\.LAYER_FILE/);
 
-  const settings = read('ui', 'settings.js');
-  assert.match(settings, /const known = Boolean\(name\) && isEditablePreset\(name\);/, 'Update is still offered for an imported preset');
-  assert.match(settings, /preset\.editable && preset\.name\.toLowerCase\(\)/);
+  const designerJs = read('ui', 'presetDesigner.js');
+  assert.match(designerJs, /const known = Boolean\(name\) && isEditablePreset\(name\);/, 'Update is still offered for an imported preset');
+  assert.match(designerJs, /preset\.editable && preset\.name\.toLowerCase\(\)/);
   // Listing and deleting still cover every managed preset, editable or not.
-  assert.match(settings, /managedPresetNames\(\)\.includes\(loaded\)/);
+  assert.match(designerJs, /managedPresetNames\(\)\.includes\(loaded\)/);
 });
 
 test('an import cannot silently shadow a bundled preset', () => {

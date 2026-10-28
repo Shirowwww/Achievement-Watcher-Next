@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Palauta kaikki paikoilleen",
             "addText": "Teksti",
+            "addRarity": "Harvinaisuus",
             "addImage": "Kuva tai GIF",
             "addRect": "Suorakulmio",
             "addEllipse": "Ympyrä",
             "addLine": "Viiva",
             "hint": "Napsauta esikatselun osaa, jos haluat siirtää, skaalata tai kiertää sitä.",
             "cardHint": "Muuta kortin kokoa vetämällä sen reunoista. Kaikki tämän alueen asetukset koskevat vain korttia.",
+            "fixedHint": "Tuotu SAN-teema säilyttää oman korttinsa. Napsauta jotakin sen elementeistä avataksesi sen asetukset tai vedä elementti toiseen paikkaan. Voit myös lisätä päälle tekstin, kuvan tai muodon.",
             "fullscreen": "Editori",
             "general": "Kaikki asetukset",
             "done": "Valmis",
@@ -701,6 +703,7 @@
             "summaryNone": "Mitään ei ole vielä siirretty tai lisätty",
             "summaryMoved": "Siirretyt osat: {count}",
             "summaryItems": "Lisätyt kohteet: {count}",
+            "heightFloor": "Kortti ei voi olla matalampi kuin sen sisältö: pienennä kuvaketta tai tekstiä, niin pääset alemmas.",
             "imageRefused": "Kuvaa ei voi käyttää. Käytä enintään 5 Mt:n PNG-, JPEG-, GIF-, WebP- tai BMP-kuvaa.",
             "tier": {
               "edit": "Muokkaa:",
@@ -714,7 +717,9 @@
               "text": "Tekstilohko",
               "title": "Otsikko",
               "detail": "Kuvaus",
-              "meta": "Pelin nimi",
+              "meta": "Pelin rivi",
+              "game": "Pelin nimi",
+              "rarity": "Harvinaisuus",
               "progress": "Edistymispalkki",
               "mark": "Tuotemerkin logo",
               "cardBefore": "Kortin koriste 1",
@@ -778,7 +783,14 @@
               "cut": "Läpinäkyvä",
               "loop": "Silmukka",
               "alignGroup": "Tasaa keskenään",
-              "insert": "Lisää"
+              "insert": "Lisää",
+              "insertHint": "Lisää sanan, jonka ponnahdusikkuna täyttää: pelin, saavutuksen, sen kuvauksen, harvinaisuuden tai tason.",
+              "duration": "Kesto (ms)",
+              "back": "Tausta",
+              "pad": "Sisämarginaali",
+              "strokeColor": "Ääriviivan väri",
+              "track": "Palkin taustaväri",
+              "thickness": "Paksuus"
             },
             "axis": {
               "w": "L",
@@ -809,7 +821,22 @@
               "left": "Vasemmalta",
               "right": "Oikealta",
               "zoom": "Zoomaus sisään",
-              "pop": "Poksahdus"
+              "pop": "Poksahdus",
+              "shake": "Tärinä",
+              "burst": "Välähdys",
+              "type": "Kirjoituskone",
+              "count": "Laskeminen",
+              "countFill": "Laskeminen ja täyttö"
+            },
+            "tl": {
+              "title": "Aikajana",
+              "play": "Toista",
+              "pause": "Tauko",
+              "playhead": "Näytetty hetki",
+              "start": "Alku",
+              "length": "Kesto",
+              "add": "Napsauta riviä antaaksesi sille oman sisääntulon",
+              "cardFixed": "Kortti tulee sisään esiasetuksensa mukaisesti"
             },
             "token": {
               "game": "Peli",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Tasot",
-                "body": "Kaikki kortilla oleva, ylin ensin. Silmä piilottaa elementin, riippulukko pitää sen paikallaan."
+                "body": "Kaikki kortilla oleva, ylin ensin. Silmä piilottaa elementin; riippulukko, lisäämilläsi elementeillä, pitää sen paikallaan."
               },
               "help": {
                 "title": "Pikanäppäimet",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Korostus",
             "accentBar": "Korostuspalkki",
+            "accentBarPlace": "Korostuspalkin sijainti",
             "accentBarSize": "Palkin paksuus",
             "align": "Tasaus",
             "animIn": "Saapuu suunnasta",
@@ -1122,6 +1150,7 @@
             "smooth": "Pehmeä",
             "snap": "Jyrkkä",
             "solid": "Yksivärinen",
+            "square": "Neliö",
             "squircle": "Pyöristetty neliö",
             "text": "Tekstin väri",
             "textOnly": "Vain teksti",
@@ -1130,7 +1159,8 @@
             "topRight": "Oikea yläkulma",
             "transparent": "Läpinäkyvä",
             "uppercase": "SUURAAKKOSET",
-            "zoom": "Zoomaus"
+            "zoom": "Zoomaus",
+            "auto": "Automaattinen"
           },
           "san": {
             "tierPictures": "Pokaalin kuva",

@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Her şeyi yerine koy",
             "addText": "Metin",
+            "addRarity": "Nadirlik",
             "addImage": "Görsel veya GIF",
             "addRect": "Dikdörtgen",
             "addEllipse": "Daire",
             "addLine": "Çizgi",
             "hint": "Önizlemenin bir parçasına tıklayarak onu taşıyabilir, yeniden boyutlandırabilir veya döndürebilirsin.",
             "cardHint": "Kartın kenarlarını sürükleyerek yeniden boyutlandırabilirsin. Buradaki her şey yalnızca kartı etkiler.",
+            "fixedHint": "İçe aktarılan bir SAN teması kendi kartını korur. Ayarlarını açmak için öğelerinden birine tıkla ya da taşımak için sürükle. Üstüne bir metin, resim ya da şekil de ekleyebilirsin.",
             "fullscreen": "Düzenleyici",
             "general": "Tüm ayarlar",
             "done": "Bitti",
@@ -701,6 +703,7 @@
             "summaryNone": "Henüz hiçbir şey taşınmadı veya eklenmedi",
             "summaryMoved": "Taşınan parçalar: {count}",
             "summaryItems": "Eklenen öğeler: {count}",
+            "heightFloor": "Kart içeriğinden daha kısa olamaz: daha da alçaltmak için simgeyi veya metni küçült.",
             "imageRefused": "Bu görsel kullanılamaz. En fazla 5 MB boyutunda bir PNG, JPEG, GIF, WebP veya BMP görseli kullan.",
             "tier": {
               "edit": "Düzenle:",
@@ -714,7 +717,9 @@
               "text": "Metin bloğu",
               "title": "Başlık",
               "detail": "Açıklama",
-              "meta": "Oyun adı",
+              "meta": "Oyun satırı",
+              "game": "Oyun adı",
+              "rarity": "Nadirlik",
               "progress": "İlerleme çubuğu",
               "mark": "Marka logosu",
               "cardBefore": "Kart dekoru 1",
@@ -778,7 +783,14 @@
               "cut": "Saydam",
               "loop": "Döngü",
               "alignGroup": "Birbirine göre hizala",
-              "insert": "Ekle"
+              "insert": "Ekle",
+              "insertHint": "Açılır pencerenin doldurduğu bir sözcük ekler: oyun, başarım, açıklama, nadirlik veya seviye.",
+              "duration": "Süre (ms)",
+              "back": "Arka plan",
+              "pad": "İç boşluk",
+              "strokeColor": "Anahat rengi",
+              "track": "Çubuk arka plan rengi",
+              "thickness": "Kalınlık"
             },
             "axis": {
               "w": "G",
@@ -809,7 +821,22 @@
               "left": "Soldan",
               "right": "Sağdan",
               "zoom": "Yakınlaşarak gir",
-              "pop": "Zıplayarak gir"
+              "pop": "Zıplayarak gir",
+              "shake": "Sarsıntı",
+              "burst": "Parlama",
+              "type": "Daktilo",
+              "count": "Yukarı say",
+              "countFill": "Yukarı say ve doldur"
+            },
+            "tl": {
+              "title": "Zaman çizelgesi",
+              "play": "Oynat",
+              "pause": "Duraklat",
+              "playhead": "Gösterilen an",
+              "start": "Başlangıç",
+              "length": "Süre",
+              "add": "Satıra tıklayarak ona kendi girişini ver",
+              "cardFixed": "Kart, ön ayarının belirlediği gibi girer"
             },
             "token": {
               "game": "Oyun",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Katmanlar",
-                "body": "Karttaki her şey, en üsttekiler önce. Göz bir öğeyi gizler, asma kilit yerinde tutar."
+                "body": "Karttaki her şey, en üsttekiler önce. Göz bir öğeyi gizler; asma kilit, eklediğiniz öğelerde onu yerinde tutar."
               },
               "help": {
                 "title": "Kısayollar",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Vurgu",
             "accentBar": "Vurgu çubuğu",
+            "accentBarPlace": "Vurgu çubuğunun konumu",
             "accentBarSize": "Çubuk kalınlığı",
             "align": "Hizalama",
             "animIn": "Giriş yönü",
@@ -1122,6 +1150,7 @@
             "smooth": "Yumuşak",
             "snap": "Sert",
             "solid": "Düz",
+            "square": "Kare",
             "squircle": "Yuvarlatılmış kare",
             "text": "Metin rengi",
             "textOnly": "Yalnızca metin",
@@ -1130,7 +1159,8 @@
             "topRight": "Sağ üst",
             "transparent": "Saydam",
             "uppercase": "BÜYÜK HARF",
-            "zoom": "Yakınlaştırma"
+            "zoom": "Yakınlaştırma",
+            "auto": "Otomatik"
           },
           "san": {
             "tierPictures": "Kupa görseli",

@@ -20,6 +20,7 @@ const schema = require(path.join(appRoot, 'util', 'presetSchema.js'));
 const document = parse(fs.readFileSync(path.join(appRoot, 'view', 'app.html'), 'utf8'));
 const designer = document.querySelector('#options-notify-designer');
 const settings = fs.readFileSync(path.join(appRoot, 'ui', 'settings.js'), 'utf8');
+const designerJs = fs.readFileSync(path.join(appRoot, 'ui', 'presetDesigner.js'), 'utf8');
 const localeDir = path.join(appRoot, 'locale', 'lang');
 
 const valueAt = (object, dotted) => dotted.split('.').reduce((node, key) => (node == null ? node : node[key]), object);
@@ -248,9 +249,9 @@ test('the control panel can be searched and stepped back', () => {
 
   // Both mechanics live in one module, driven against this markup by the browser test rather than
   // written inline where only a source match could check them.
-  assert.match(settings, /require\(path\.join\(appPath, 'util\/presetPanel\.js'\)\)/);
-  assert.match(settings, /presetPanel\.filterFields\(\$, '#options-notify-designer', query\)/);
-  assert.match(settings, /presetPanel\.createHistory\(/);
+  assert.match(designerJs, /require\(path\.join\(appPath, 'util\/presetPanel\.js'\)\)/);
+  assert.match(designerJs, /presetPanel\.filterFields\(\$, '#options-notify-designer', query\)/);
+  assert.match(designerJs, /presetPanel\.createHistory\(/);
   const panel = fs.readFileSync(path.join(appRoot, 'util', 'presetPanel.js'), 'utf8');
   assert.match(panel, /field\.toggleClass\('pd-filtered', !hit\)/);
   assert.doesNotMatch(panel, /\.(?:remove|detach|appendTo|insertBefore)\(/, 'the filter must never restructure the panel');
@@ -258,11 +259,11 @@ test('the control panel can be searched and stepped back', () => {
   assert.match(css, /#settings \.pd-field\.pd-filtered,\s*\n#settings \.pd-group\.pd-filtered \{\s*\n\s*display: none;/);
 
   // Undo starts again on a load, so a step can never carry across two designs.
-  assert.match(settings, /function resetPresetHistory\(/);
-  assert.match(settings, /resetPresetHistory\(\);/);
+  assert.match(designerJs, /function resetPresetHistory\(/);
+  assert.match(designerJs, /resetPresetHistory\(\);/);
   // The full-screen editor's own pair presses the same history.
-  assert.match(settings, /\$\('#btn-preset-undo, #pd-cv-undo'\)\.click\(\(\) => stepPresetHistory\(true\)\)/);
-  assert.match(settings, /\$\('#btn-preset-redo, #pd-cv-redo'\)\.click\(\(\) => stepPresetHistory\(false\)\)/);
+  assert.match(designerJs, /\$\('#btn-preset-undo, #pd-cv-undo'\)\.click\(\(\) => stepPresetHistory\(true\)\)/);
+  assert.match(designerJs, /\$\('#btn-preset-redo, #pd-cv-redo'\)\.click\(\(\) => stepPresetHistory\(false\)\)/);
 });
 
 test('undo and redo step through whole designs rather than through edits', () => {
@@ -298,7 +299,14 @@ test('undo and redo step through whole designs rather than through edits', () =>
   // A load is a new history, not a step in the old one.
   history.reset('x');
   assert.equal(history.canUndo(), false);
-  assert.equal(history.canRedo(), false);
+
+  // Late values (a sound menu filled after the load) amend the step instead of adding one.
+  history.amend('x+sound');
+  assert.equal(history.canUndo(), false);
+  assert.equal(history.current(), 'x+sound');
+  history.record('y');
+  assert.equal(history.undo(), 'x+sound');
+  assert.equal(history.canUndo(), false, 'the amended load is still the first step');
 });
 
 test('renaming a preset moves the folder and the settings that pointed at it', () => {
@@ -316,7 +324,7 @@ test('renaming a preset moves the folder and the settings that pointed at it', (
   assert.match(body, /fs\.renameSync\(source, target\)/);
 
   // The renderer follows the menus over, or a renamed preset silently falls back to the default.
-  const rename = settings.slice(settings.indexOf("$('#btn-rename-preset').click("));
+  const rename = designerJs.slice(designerJs.indexOf("$('#btn-rename-preset').click("));
   assert.match(rename, /invoke\('rename-custom-preset', \{ from, to \}\)/);
   assert.match(rename, /refreshOverlayPresetMenu\(wasMain \? res\.name : undefined\)/);
   assert.match(rename, /for \(const id of OVERLAY_PRESET_TYPE_IDS\)/);
@@ -325,14 +333,14 @@ test('renaming a preset moves the folder and the settings that pointed at it', (
 test('the designer reads and writes its controls from the schema rather than by hand', () => {
   // One loop over the schema, not 45 hand-written lookups: that is what keeps a new property from
   // being editable in the UI but ignored on save.
-  assert.match(settings, /for \(const property of presetSchema\.PRESET_PROPERTIES\)[\s\S]{0,400}\$\('#pd-' \+ property\.key\)/);
-  assert.match(settings, /return presetSchema\.normalizeOptions\(options\);/, 'the designer does not clamp what it reads');
+  assert.match(designerJs, /for \(const property of presetSchema\.PRESET_PROPERTIES\)[\s\S]{0,400}\$\('#pd-' \+ property\.key\)/);
+  assert.match(designerJs, /return presetSchema\.normalizeOptions\(options\);/, 'the designer does not clamp what it reads');
   // Create, Export and both previews all go through that one reader.
   for (const call of ['create-custom-preset', 'preview-custom-preset']) {
-    assert.ok(settings.includes(call), `${call} is no longer wired up`);
+    assert.ok(designerJs.includes(call), `${call} is no longer wired up`);
   }
-  assert.match(settings, /invoke\('create-custom-preset', Object\.assign\(\{ name \}, readPresetOptions\(\)\)\)/);
-  assert.match(settings, /options: readPresetOptions\(\)/, 'export does not send the design in the controls');
+  assert.match(designerJs, /invoke\('create-custom-preset', Object\.assign\(\{ name \}, readPresetOptions\(\)\)\)/);
+  assert.match(designerJs, /options: readPresetOptions\(\)/, 'export does not send the design in the controls');
 });
 
 test('saving a design never writes over a preset that is not the builder own', () => {
@@ -347,15 +355,18 @@ test('saving a design never writes over a preset that is not the builder own', (
 test('the live preview swaps only the stylesheet, and never reloads on every keystroke', () => {
   // Rebuilding the document on each input would restart the animation under the user's cursor and
   // make dragging a slider feel broken; the stylesheet is the only thing that has to change.
-  assert.match(settings, /const previewCss = \(values, editing = editingLayout\(\)\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing \}\);/);
+  // The entrances stay out of the held card, except while the timeline plays or holds a moment.
+  assert.match(designerJs, /const previewCss = \(values, editing = editingLayout\(\)\) =>\s+presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing, entrances: !editing \|\| previewMotion, tokenNames: tokenNames\(\) \}\);/);
   // One function picks the stylesheet: the generated one, or a bundled preset's own plus a layer.
-  assert.match(settings, /styleEl\.textContent = stylesheetFor\(values\);/);
-  assert.match(settings, /const stylesheetFor = \(values, editing = editingLayout\(\)\) => \(layerMode \? layerStylesheet\(values, editing\) : previewCss\(values, editing\)\);/);
-  assert.match(settings, /getElementById\('aw-preview-css'\)/);
-  assert.match(settings, /previewPending = setTimeout/, 'preview updates are not batched');
+  // A SAN preset's card is its own page, or a picture of it, so only the items drawn over it have a
+  // stylesheet.
+  assert.match(designerJs, /styleEl\.textContent = sanLive \? sanItemsStyle\(frame\.contentDocument, values\) : presetSnapshot \? sanItemsCss\(values\) : stylesheetFor\(values\);/);
+  assert.match(designerJs, /const stylesheetFor = \(values, editing = editingLayout\(\)\) => \(layerMode \? layerStylesheet\(values, editing\) : previewCss\(values, editing\)\);/);
+  assert.match(designerJs, /getElementById\('aw-preview-css'\)/);
+  assert.match(designerJs, /previewPending = setTimeout/, 'preview updates are not batched');
   // …and the preview is fed the same payload shape the notification window sends.
   for (const field of ['notificationType', 'rarityPercent', 'isPlatinum', 'progress', 'iconPath', 'imagePath']) {
-    assert.ok(settings.includes(field), `the preview payload is missing ${field}`);
+    assert.ok(designerJs.includes(field), `the preview payload is missing ${field}`);
   }
 });
 
@@ -366,7 +377,7 @@ test('the preview mirrors the notification position instead of inventing a secon
     .map((option) => option.getAttribute('value'))
     .filter((value) => value !== 'custom');
   assert.deepEqual(anchors.slice().sort(), positions.slice().sort(), 'the anchor grid and the position setting disagree');
-  assert.match(settings, /\$\('#option_overlayPosition'\)\.val\(String\(\$\(this\)\.attr\('data-pos'\)\)\)\.change\(\)/);
+  assert.match(designerJs, /\$\('#option_overlayPosition'\)\.val\(String\(\$\(this\)\.attr\('data-pos'\)\)\)\.change\(\)/);
 });
 
 test('the Advanced disclosure actually hides something', () => {
@@ -404,26 +415,26 @@ test('every state can be compared side by side', () => {
   assert.deepEqual(rows.map((row) => row.getAttribute('data-state')), states);
   for (const row of rows) {
     // The frame itself is created on first use, so what the markup has to carry is the wrapper it
-    // is created into (the assertion on settings.js below covers the other half).
+    // is created into (the assertion on presetDesigner.js below covers the other half).
     assert.ok(row.querySelector('.pd-compare-frame'), 'a compare row has nothing to render into');
     assert.ok(row.querySelector('.pd-compare-label[data-lang]'), 'a compare row is unlabelled');
   }
-  assert.match(settings, /function renderComparePreviews\(values\)/, 'the compare view is not rendered');
+  assert.match(designerJs, /function renderComparePreviews\(values\)/, 'the compare view is not rendered');
   assert.match(
-    settings,
+    designerJs,
     /const frame = ensureFrame\(wrap, \{ title: String\(row\.getAttribute\('data-state'\)/,
     'a compare row never gets a frame to render into'
   );
   // Editing has to reach the compare frames, and cheaply: the stylesheet is swapped, not reloaded.
-  assert.match(settings, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
-  assert.match(settings, /style\.textContent = stylesheetFor\(values, false\)/, 'compared states show the real popup, without designer-only parts');
+  assert.match(designerJs, /if \(previewView === 'compare'\) renderComparePreviews\(values\);/);
+  assert.match(designerJs, /style\.textContent = stylesheetFor\(values, false\)/, 'compared states show the real popup, without designer-only parts');
 
   /*
     And the state switch keeps meaning something while Compare is open: it marks the row it names
     rather than swapping the whole view to it, which is what it does in the other two views.
   */
-  assert.match(settings, /function markCurrentCompareRow\(\)/, 'nothing marks the selected row');
-  assert.match(settings, /if \(previewView === 'compare'\) markCurrentCompareRow\(\);/);
+  assert.match(designerJs, /function markCurrentCompareRow\(\)/, 'nothing marks the selected row');
+  assert.match(designerJs, /if \(previewView === 'compare'\) markCurrentCompareRow\(\);/);
   const compareCss = fs.readFileSync(path.join(appRoot, 'resources', 'css', 'app.css'), 'utf8');
   assert.match(compareCss, /#settings \.pd-compare-row\.is-current \{/, 'the marked row looks no different');
 });
@@ -433,8 +444,8 @@ test('scale and position are mirrored from the app settings, never duplicated', 
   const appScales = document.querySelectorAll('#option_overlayScale option').map((option) => option.getAttribute('value'));
   assert.deepEqual(scales, appScales, 'the designer offers a different set of scales than the setting it writes');
   // Writing goes to the one setting, and the mirror follows it back when it changes elsewhere.
-  assert.match(settings, /\$\('#option_overlayScale'\)\.val\(String\(\$\(this\)\.val\(\)\)\)\.change\(\)/);
-  assert.match(settings, /if \(\$\('#pd-scale'\)\.val\(\) !== scale\) \$\('#pd-scale'\)\.val\(scale\)/);
+  assert.match(designerJs, /\$\('#option_overlayScale'\)\.val\(String\(\$\(this\)\.val\(\)\)\)\.change\(\)/);
+  assert.match(designerJs, /if \(\$\('#pd-scale'\)\.val\(\) !== scale\) \$\('#pd-scale'\)\.val\(scale\)/);
 });
 
 test('the tab disappears when notifications are Windows toasts', () => {
@@ -455,9 +466,11 @@ test('the tab disappears when notifications are Windows toasts', () => {
 test('the preview borrows real game artwork instead of shipping a picture', () => {
   // A notification is seen over a game, so that is what the preview is judged against - taken from
   // the covers the app already downloaded, which also keeps copyrighted art out of the repository.
-  assert.match(settings, /path\.join\(userData, 'covers'\)/, 'the preview does not use the library artwork');
-  assert.match(settings, /function imageDimensions\(file\)/, 'landscape art is not preferred');
-  assert.match(settings, /const artwork = backdrop === 'artwork' \? previewArtwork\(\) : '';/);
+  assert.match(designerJs, /path\.join\(userData, 'covers'\)/, 'the preview does not use the library artwork');
+  assert.match(designerJs, /function imageDimensions\(file\)/, 'landscape art is not preferred');
+  // A library hero has no logo to fight the card's text; the header is the fallback.
+  assert.match(designerJs, /const artwork = backdrop === 'artwork' \? previewBackdrop\(\) : '';/);
+  assert.match(designerJs, /return previewHero \|\| previewArtwork\(\);/);
   // An empty library must still get something to judge contrast against.
   const css = fs.readFileSync(path.join(appRoot, 'resources', 'css', 'app.css'), 'utf8');
   assert.match(css, /pd-stage\[data-backdrop='artwork'\] \{[^}]*radial-gradient/, 'no painted fallback scene');
@@ -506,7 +519,7 @@ test('the starting points are a row of the designer card, not a card of their ow
   assert.ok(rows[0].querySelector('#pd-templates'), 'the template gallery is gone');
   assert.ok(rows[1].querySelector('#pd-frame-wrap'), 'the designer is gone');
   // The gallery is wired through the card that now holds it.
-  assert.match(settings, /\$\('#options-notify-designer'\)\.on\('click', '\.pd-template'/);
+  assert.match(designerJs, /\$\('#options-notify-designer'\)\.on\('click', '\.pd-template'/);
 });
 
 // The designer reports what it just did through one element, #pd-status, reading each message off
@@ -514,10 +527,9 @@ test('the starting points are a row of the designer card, not a card of their ow
 // an unbound message resolves to '' and the status still renders - picking "Slate" once printed a
 // bare green "Slate" with no explanation, and "Surprise me" reported nothing at all.
 test('every #pd-status message the designer reads is bound by the locale loader', () => {
-  const settingsJs = fs.readFileSync(path.join(appRoot, 'ui', 'settings.js'), 'utf8');
   const loaderJs = fs.readFileSync(path.join(appRoot, 'locale', 'loader.js'), 'utf8');
 
-  const read = new Set([...settingsJs.matchAll(/\$\('#pd-status'\)\s*\.attr\('(data-[\w-]+)'/g)].map((m) => m[1]));
+  const read = new Set([...designerJs.matchAll(/\$\('#pd-status'\)\s*\.attr\('(data-[\w-]+)'/g)].map((m) => m[1]));
   const statusBinding = loaderJs.slice(loaderJs.indexOf("$('#pd-status')"));
   const bound = new Set([...statusBinding.slice(0, statusBinding.indexOf(';')).matchAll(/\.attr\('(data-[\w-]+)'/g)].map((m) => m[1]));
 

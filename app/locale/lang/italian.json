@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Rimetti tutto a posto",
             "addText": "Testo",
+            "addRarity": "Rarità",
             "addImage": "Immagine o GIF",
             "addRect": "Rettangolo",
             "addEllipse": "Cerchio",
             "addLine": "Linea",
             "hint": "Clicca su una parte dell’anteprima per spostarla, ridimensionarla o ruotarla.",
             "cardHint": "Trascina i bordi della scheda per ridimensionarla. Tutto ciò che trovi qui riguarda solo la scheda.",
+            "fixedHint": "Un tema SAN importato mantiene la propria scheda. Fai clic su uno dei suoi elementi per aprirne le impostazioni, oppure trascinalo per spostarlo. Puoi anche aggiungere sopra un testo, un’immagine o una forma.",
             "fullscreen": "Editor",
             "general": "Tutte le impostazioni",
             "done": "Fatto",
@@ -701,6 +703,7 @@
             "summaryNone": "Ancora niente di spostato o aggiunto",
             "summaryMoved": "Parti spostate: {count}",
             "summaryItems": "Elementi aggiunti: {count}",
+            "heightFloor": "La scheda non può diventare più bassa del suo contenuto: riduci l’icona o il testo per scendere ancora.",
             "imageRefused": "Questa immagine non può essere usata. Usa un’immagine PNG, JPEG, GIF, WebP o BMP di 5 MB al massimo.",
             "tier": {
               "edit": "Modifica:",
@@ -714,7 +717,9 @@
               "text": "Blocco di testo",
               "title": "Titolo",
               "detail": "Descrizione",
-              "meta": "Nome del gioco",
+              "meta": "Riga del gioco",
+              "game": "Nome del gioco",
+              "rarity": "Rarità",
               "progress": "Barra di avanzamento",
               "mark": "Logo del marchio",
               "cardBefore": "Decorazione della scheda 1",
@@ -778,7 +783,14 @@
               "cut": "Trasparente",
               "loop": "Ciclo",
               "alignGroup": "Allinea tra loro",
-              "insert": "Inserisci"
+              "insert": "Inserisci",
+              "insertHint": "Aggiunge una parola che il popup compila: il gioco, l’obiettivo, la descrizione, la rarità o il livello.",
+              "duration": "Durata (ms)",
+              "back": "Sfondo",
+              "pad": "Margine interno",
+              "strokeColor": "Colore del contorno",
+              "track": "Colore dello sfondo della barra",
+              "thickness": "Spessore"
             },
             "axis": {
               "w": "L",
@@ -809,7 +821,22 @@
               "left": "Da sinistra",
               "right": "Da destra",
               "zoom": "Ingrandimento",
-              "pop": "Comparsa"
+              "pop": "Comparsa",
+              "shake": "Scossa",
+              "burst": "Lampo",
+              "type": "Macchina da scrivere",
+              "count": "Conteggio",
+              "countFill": "Conteggio e riempimento"
+            },
+            "tl": {
+              "title": "Linea temporale",
+              "play": "Riproduci",
+              "pause": "Pausa",
+              "playhead": "Momento mostrato",
+              "start": "Inizio",
+              "length": "Durata",
+              "add": "Fai clic nella riga per darle un’entrata tutta sua",
+              "cardFixed": "La scheda entra come previsto dalla sua preimpostazione"
             },
             "token": {
               "game": "Gioco",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Livelli",
-                "body": "Tutto ciò che c’è sulla scheda, quello in alto per primo. L’occhio nasconde un elemento, il lucchetto lo blocca sul posto."
+                "body": "Tutto ciò che c’è sulla scheda, quello in alto per primo. L’occhio nasconde un elemento; il lucchetto, sugli elementi che aggiungi, lo blocca sul posto."
               },
               "help": {
                 "title": "Scorciatoie",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Accento",
             "accentBar": "Barra d’accento",
+            "accentBarPlace": "Posizione della barra d’accento",
             "accentBarSize": "Spessore della barra",
             "align": "Allineamento",
             "animIn": "Entra da",
@@ -1122,6 +1150,7 @@
             "smooth": "Fluido",
             "snap": "Brusco",
             "solid": "Tinta unita",
+            "square": "Quadrato",
             "squircle": "Quadrato arrotondato",
             "text": "Colore del testo",
             "textOnly": "Solo testo",
@@ -1130,7 +1159,8 @@
             "topRight": "In alto a destra",
             "transparent": "Trasparente",
             "uppercase": "MAIUSCOLO",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Immagine del trofeo",

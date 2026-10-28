@@ -118,8 +118,8 @@ function foldHidden(out, before, after, state, alone) {
   The stored layout once `state` shows `after` where it showed `before`. `sourceOf` gives the stored
   index each edited item came from, undefined for one added since; a stored item it never gives is
   gone. `seedOf` gives the stored item an added copy was made from, with what each state changes on
-  it; a copy made for one state alone is a new item there. The stacking order is shared, so it is
-  taken as it is.
+  it; a copy made for one state alone is a new item there. The stacking order and how the parts
+  come in are shared, so they are taken as they are.
 */
 function foldEdit(layout, before, after, { state, alone, sourceOf, seedOf = () => undefined }) {
   const out = clone(layout);
@@ -133,6 +133,7 @@ function foldEdit(layout, before, after, { state, alone, sourceOf, seedOf = () =
     return seed ? foldItem(seed, canvasItemIn(seed, state), item, state, alone) : newItem(item, state, alone);
   });
   put(out, 'order', after.order && clone(after.order));
+  put(out, 'motion', after.motion && clone(after.motion));
   return normalizeCanvas(out);
 }
 

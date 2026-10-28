@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Alles terugzetten",
             "addText": "Tekst",
+            "addRarity": "Zeldzaamheid",
             "addImage": "Afbeelding of GIF",
             "addRect": "Rechthoek",
             "addEllipse": "Cirkel",
             "addLine": "Lijn",
             "hint": "Klik op een onderdeel van het voorbeeld om het te verplaatsen, het formaat te wijzigen of het te draaien.",
             "cardHint": "Sleep aan de randen van de kaart om het formaat te wijzigen. Alles hier geldt alleen voor de kaart.",
+            "fixedHint": "Een geïmporteerd SAN-thema behoudt zijn eigen kaart. Klik op een van de elementen om de instellingen ervan te openen, of sleep het om het te verplaatsen. Je kunt er ook een tekst, een afbeelding of een vorm bovenop toevoegen.",
             "fullscreen": "Editor",
             "general": "Alle instellingen",
             "done": "Klaar",
@@ -701,6 +703,7 @@
             "summaryNone": "Nog niets verplaatst of toegevoegd",
             "summaryMoved": "Verplaatste onderdelen: {count}",
             "summaryItems": "Toegevoegde items: {count}",
+            "heightFloor": "De kaart kan niet lager worden dan wat erin zit: maak het pictogram of de tekst kleiner om lager te gaan.",
             "imageRefused": "Deze afbeelding kan niet worden gebruikt. Gebruik een PNG-, JPEG-, GIF-, WebP- of BMP-afbeelding van maximaal 5 MB.",
             "tier": {
               "edit": "Bewerken:",
@@ -714,7 +717,9 @@
               "text": "Tekstblok",
               "title": "Titel",
               "detail": "Beschrijving",
-              "meta": "Naam van de game",
+              "meta": "Gameregel",
+              "game": "Naam van de game",
+              "rarity": "Zeldzaamheid",
               "progress": "Voortgangsbalk",
               "mark": "Merklogo",
               "cardBefore": "Kaartdecoratie 1",
@@ -778,7 +783,14 @@
               "cut": "Doorzichtig",
               "loop": "Herhalen",
               "alignGroup": "Onderling uitlijnen",
-              "insert": "Invoegen"
+              "insert": "Invoegen",
+              "insertHint": "Voegt een woord toe dat de pop-up invult: de game, de prestatie, de beschrijving, de zeldzaamheid of het niveau.",
+              "duration": "Duur (ms)",
+              "back": "Achtergrond",
+              "pad": "Binnenmarge",
+              "strokeColor": "Kleur van de omlijning",
+              "track": "Kleur van de balkachtergrond",
+              "thickness": "Dikte"
             },
             "axis": {
               "w": "B",
@@ -809,7 +821,22 @@
               "left": "Van links",
               "right": "Van rechts",
               "zoom": "Inzoomen",
-              "pop": "Verschijnen"
+              "pop": "Verschijnen",
+              "shake": "Schudden",
+              "burst": "Flits",
+              "type": "Typemachine",
+              "count": "Optellen",
+              "countFill": "Optellen en vullen"
+            },
+            "tl": {
+              "title": "Tijdlijn",
+              "play": "Afspelen",
+              "pause": "Pauzeren",
+              "playhead": "Getoond moment",
+              "start": "Begin",
+              "length": "Duur",
+              "add": "Klik in de rij om er een eigen intrede aan te geven",
+              "cardFixed": "De kaart komt binnen zoals zijn preset bepaalt"
             },
             "token": {
               "game": "Game",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Lagen",
-                "body": "Alles op de kaart, de bovenste eerst. Het oog verbergt een element, het hangslot zet het vast."
+                "body": "Alles op de kaart, de bovenste eerst. Het oog verbergt een element; het hangslot, bij elementen die je toevoegt, zet het vast."
               },
               "help": {
                 "title": "Sneltoetsen",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Accent",
             "accentBar": "Accentbalk",
+            "accentBarPlace": "Plaats van de accentbalk",
             "accentBarSize": "Dikte van de balk",
             "align": "Uitlijning",
             "animIn": "Komt binnen vanaf",
@@ -1122,6 +1150,7 @@
             "smooth": "Vloeiend",
             "snap": "Bruusk",
             "solid": "Effen",
+            "square": "Vierkant",
             "squircle": "Afgerond vierkant",
             "text": "Tekstkleur",
             "textOnly": "Alleen tekst",
@@ -1130,7 +1159,8 @@
             "topRight": "Rechtsboven",
             "transparent": "Transparant",
             "uppercase": "HOOFDLETTERS",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Trofeeafbeelding",

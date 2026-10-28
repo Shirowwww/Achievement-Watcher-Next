@@ -134,8 +134,8 @@ test('placement is offered only where it changes the picture', (t) =>
     await session.close();
 
     // And the renderer is what un-hides it, on the one view it applies to.
-    const settings = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
-    assert.match(settings, /\$\('#pd-placement'\)\.prop\('hidden', previewView !== 'screen'\)/);
+    const designerJs = fs.readFileSync(path.join(appDir, 'ui', 'presetDesigner.js'), 'utf8');
+    assert.match(designerJs, /\$\('#pd-placement'\)\.prop\('hidden', previewView !== 'screen'\)/);
   }));
 
 /*

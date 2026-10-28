@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Lägg allt tillbaka på plats",
             "addText": "Text",
+            "addRarity": "Sällsynthet",
             "addImage": "Bild eller GIF",
             "addRect": "Rektangel",
             "addEllipse": "Cirkel",
             "addLine": "Linje",
             "hint": "Klicka på en del av förhandsvisningen för att flytta, ändra storlek på eller rotera den.",
             "cardHint": "Dra i kortets kanter för att ändra storleken. Allt här påverkar bara kortet.",
+            "fixedHint": "Ett importerat SAN-tema behåller sitt eget kort. Klicka på ett av dess element för att öppna dess inställningar, eller dra det för att flytta det. Du kan också lägga till en text, en bild eller en form ovanpå det.",
             "fullscreen": "Redigerare",
             "general": "Alla inställningar",
             "done": "Klar",
@@ -701,6 +703,7 @@
             "summaryNone": "Inget har flyttats eller lagts till ännu",
             "summaryMoved": "Flyttade delar: {count}",
             "summaryItems": "Tillagda objekt: {count}",
+            "heightFloor": "Kortet kan inte bli lägre än vad det innehåller: gör ikonen eller texten mindre för att gå lägre.",
             "imageRefused": "Bilden kan inte användas. Använd en PNG-, JPEG-, GIF-, WebP- eller BMP-bild på högst 5 MB.",
             "tier": {
               "edit": "Redigera:",
@@ -714,7 +717,9 @@
               "text": "Textblock",
               "title": "Titel",
               "detail": "Beskrivning",
-              "meta": "Spelets namn",
+              "meta": "Spelrad",
+              "game": "Spelets namn",
+              "rarity": "Sällsynthet",
               "progress": "Framstegsindikator",
               "mark": "Varumärkeslogotyp",
               "cardBefore": "Kortdekoration 1",
@@ -778,7 +783,14 @@
               "cut": "Genomskinlig",
               "loop": "Upprepa",
               "alignGroup": "Justera mot varandra",
-              "insert": "Infoga"
+              "insert": "Infoga",
+              "insertHint": "Lägger till ett ord som popup-fönstret fyller i: spelet, prestationen, beskrivningen, sällsyntheten eller nivån.",
+              "duration": "Längd (ms)",
+              "back": "Bakgrund",
+              "pad": "Inre marginal",
+              "strokeColor": "Konturfärg",
+              "track": "Färg på fältets bakgrund",
+              "thickness": "Tjocklek"
             },
             "axis": {
               "w": "B",
@@ -809,7 +821,22 @@
               "left": "Från vänster",
               "right": "Från höger",
               "zoom": "Zooma in",
-              "pop": "Poppa"
+              "pop": "Poppa",
+              "shake": "Skaka",
+              "burst": "Blixt",
+              "type": "Skrivmaskin",
+              "count": "Räkna upp",
+              "countFill": "Räkna upp och fyll"
+            },
+            "tl": {
+              "title": "Tidslinje",
+              "play": "Spela upp",
+              "pause": "Paus",
+              "playhead": "Visat ögonblick",
+              "start": "Start",
+              "length": "Längd",
+              "add": "Klicka i raden för att ge den ett eget intåg",
+              "cardFixed": "Kortet kommer in som dess förinställning anger"
             },
             "token": {
               "game": "Spel",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Lager",
-                "body": "Allt på kortet, det översta först. Ögat döljer ett element, hänglåset håller det på plats."
+                "body": "Allt på kortet, det översta först. Ögat döljer ett element; hänglåset, på de element du lägger till, håller det på plats."
               },
               "help": {
                 "title": "Genvägar",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Accent",
             "accentBar": "Accentlist",
+            "accentBarPlace": "Placering av accentlisten",
             "accentBarSize": "Listens tjocklek",
             "align": "Justering",
             "animIn": "Kommer in från",
@@ -1122,6 +1150,7 @@
             "smooth": "Mjuk",
             "snap": "Tvär",
             "solid": "Enfärgad",
+            "square": "Kvadrat",
             "squircle": "Rundad kvadrat",
             "text": "Textfärg",
             "textOnly": "Endast text",
@@ -1130,7 +1159,8 @@
             "topRight": "Uppe till höger",
             "transparent": "Genomskinlig",
             "uppercase": "VERSALER",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Trofébild",

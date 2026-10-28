@@ -8,7 +8,7 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-Wgen1gfUiRYalQa+BAiNXnRAX5nwQUWtusOwsrvmK5s='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-T81P/eRaTw2Feh06Z177WDur5L2LIpkKfO8U3XjQKhU='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
@@ -2498,19 +2498,27 @@
                 <ul id="options-notify-designer">
                   <!-- Shortcuts sit on the heading line, not their own row, so the swatches below
                        read as one uninterrupted row. -->
+                  <!-- The heading folds the sentence and the swatches away; the two shortcuts stay. -->
                   <li class="pd-row" id="pd-templates-row">
                     <div class="left pd-start-head">
-                      <i class="fas fa-swatchbook"></i>
                       <div class="pd-start-topline">
-                        <span class="pd-start-title" data-lang="templates.title"></span>
+                        <button type="button" class="pd-start-toggle" id="pd-start-toggle" aria-expanded="true" aria-controls="pd-start-body">
+                          <i class="fas fa-chevron-down pd-start-chevron" aria-hidden="true"></i>
+                          <i class="fas fa-swatchbook pd-start-icon" aria-hidden="true"></i>
+                          <span class="pd-start-title" data-lang="templates.title"></span>
+                        </button>
                         <div class="right action-right pd-actions pd-start-actions">
                           <button type="button" id="btn-random-preset" class="inline-action-btn secondary"><i class="fas fa-dice"></i> <span data-lang="templates.random"></span></button>
                           <button type="button" id="btn-duplicate-preset" class="inline-action-btn secondary"><i class="fas fa-clone"></i> <span data-lang="templates.duplicate"></span></button>
                         </div>
                       </div>
-                      <p class="pd-start-intro" data-lang="templates.intro"></p>
+                      <div class="pd-start-body" id="pd-start-body">
+                        <div class="pd-start-fold">
+                          <p class="pd-start-intro" data-lang="templates.intro"></p>
+                          <div class="pd-templates" id="pd-templates"></div>
+                        </div>
+                      </div>
                     </div>
-                    <div class="pd-templates" id="pd-templates"></div>
                   </li>
                   <li class="pd-row">
                     <div class="pd-bar">
@@ -2549,12 +2557,6 @@
                             <button type="button" data-state="completion" data-lang="preview.completion"></button>
                             <button type="button" data-state="progress" data-lang="preview.progress"></button>
                           </div>
-                          <select autocomplete="off" id="pd-resolution" class="pd-res">
-                            <option value="1280">720p</option>
-                            <option value="1920" selected>1080p</option>
-                            <option value="2560">1440p</option>
-                            <option value="3840">4K</option>
-                          </select>
                           <button type="button" id="pd-play" class="inline-action-btn secondary"><i class="fas fa-play"></i> <span data-lang="preview.play"></span></button>
                         </div>
                         <!-- The free-layout tools: add an item, act on the selection, go full screen.
@@ -2568,6 +2570,7 @@
                           </div>
                           <div class="pd-cv-add">
                             <button type="button" class="pd-cv-btn" data-cv-add="text"><i class="fas fa-font" aria-hidden="true"></i> <span data-lang="canvas.addText"></span></button>
+                            <button type="button" class="pd-cv-btn" data-cv-add="rarity"><i class="fas fa-gem" aria-hidden="true"></i> <span data-lang="canvas.addRarity"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="image"><i class="far fa-image" aria-hidden="true"></i> <span data-lang="canvas.addImage"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="rect"><i class="far fa-square" aria-hidden="true"></i> <span data-lang="canvas.addRect"></span></button>
                             <button type="button" class="pd-cv-btn" data-cv-add="ellipse"><i class="far fa-circle" aria-hidden="true"></i> <span data-lang="canvas.addEllipse"></span></button>
@@ -2591,7 +2594,10 @@
                           <span data-cv="part.title" data-lang="canvas.part.title"></span>
                           <span data-cv="part.detail" data-lang="canvas.part.detail"></span>
                           <span data-cv="part.meta" data-lang="canvas.part.meta"></span>
+                          <span data-cv="part.game" data-lang="canvas.part.game"></span>
+                          <span data-cv="part.rarity" data-lang="canvas.part.rarity"></span>
                           <span data-cv="part.progress" data-lang="canvas.part.progress"></span>
+                          <span data-cv="heightFloor" data-lang="canvas.heightFloor"></span>
                           <span data-cv="part.mark" data-lang="canvas.part.mark"></span>
                           <span data-cv="part.cardBefore" data-lang="canvas.part.cardBefore"></span>
                           <span data-cv="part.cardAfter" data-lang="canvas.part.cardAfter"></span>
@@ -2631,6 +2637,7 @@
                           <span data-cv="cardHint" data-lang="canvas.cardHint"></span>
                           <span data-cv="general" data-lang="canvas.general"></span>
                           <span data-cv="generalHint" data-lang="canvas.hint"></span>
+                          <span data-cv="fixedHint" data-lang="canvas.fixedHint"></span>
                           <span data-cv="prop.shape" data-lang="canvas.prop.shape"></span>
                           <span data-cv="shape.triangle" data-lang="canvas.shape.triangle"></span>
                           <span data-cv="shape.diamond" data-lang="canvas.shape.diamond"></span>
@@ -2743,6 +2750,25 @@
                           <span data-cv="enter.right" data-lang="canvas.enter.right"></span>
                           <span data-cv="enter.zoom" data-lang="canvas.enter.zoom"></span>
                           <span data-cv="enter.pop" data-lang="canvas.enter.pop"></span>
+                          <span data-cv="enter.shake" data-lang="canvas.enter.shake"></span>
+                          <span data-cv="enter.burst" data-lang="canvas.enter.burst"></span>
+                          <span data-cv="enter.type" data-lang="canvas.enter.type"></span>
+                          <span data-cv="enter.count" data-lang="canvas.enter.count"></span>
+                          <span data-cv="enter.countFill" data-lang="canvas.enter.countFill"></span>
+                          <span data-cv="prop.duration" data-lang="canvas.prop.duration"></span>
+                          <span data-cv="prop.back" data-lang="canvas.prop.back"></span>
+                          <span data-cv="prop.pad" data-lang="canvas.prop.pad"></span>
+                          <span data-cv="prop.strokeColor" data-lang="canvas.prop.strokeColor"></span>
+                          <span data-cv="prop.track" data-lang="canvas.prop.track"></span>
+                          <span data-cv="prop.thickness" data-lang="canvas.prop.thickness"></span>
+                          <span data-cv="tl.title" data-lang="canvas.tl.title"></span>
+                          <span data-cv="tl.play" data-lang="canvas.tl.play"></span>
+                          <span data-cv="tl.pause" data-lang="canvas.tl.pause"></span>
+                          <span data-cv="tl.playhead" data-lang="canvas.tl.playhead"></span>
+                          <span data-cv="tl.start" data-lang="canvas.tl.start"></span>
+                          <span data-cv="tl.length" data-lang="canvas.tl.length"></span>
+                          <span data-cv="tl.add" data-lang="canvas.tl.add"></span>
+                          <span data-cv="tl.cardFixed" data-lang="canvas.tl.cardFixed"></span>
                           <span data-cv="motionHint" data-lang="canvas.motionHint"></span>
                           <span data-cv="fill.radial" data-lang="canvas.fillRadial"></span>
                           <span data-cv="prop.points" data-lang="canvas.prop.points"></span>
@@ -2780,6 +2806,7 @@
                           <span data-cv="help.selectAll" data-lang="canvas.help.selectAll"></span>
                           <span data-cv="maxItems" data-lang="canvas.maxItems"></span>
                           <span data-cv="prop.insert" data-lang="canvas.prop.insert"></span>
+                          <span data-cv="prop.insertHint" data-lang="canvas.prop.insertHint"></span>
                           <span data-cv="token.game" data-lang="canvas.token.game"></span>
                           <span data-cv="token.title" data-lang="canvas.token.title"></span>
                           <span data-cv="token.detail" data-lang="canvas.token.detail"></span>
@@ -2819,6 +2846,8 @@
                             </div>
                           </div>
                         </div>
+                        <!-- Full screen: when each element comes in, drawn by ui/presetTimeline.js. -->
+                        <div class="pd-tl" id="pd-timeline" hidden></div>
                         <!-- Position and scale only affect the "Screen" view (layoutPreview applies
                              the user scale there alone), so elsewhere they hide like the resolution
                              picker beside them, rather than sit there inert. -->
@@ -2878,38 +2907,120 @@
                           <!-- The only way into the layout editor: the normal view previews, full screen edits. -->
                           <button type="button" class="inline-action-btn primary pd-cv-full" id="pd-cv-full"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> <span data-lang="canvas.fullscreen"></span></button>
                         </div>
-                        <!-- An imported SAN theme has no controls behind it: what AW Next can still
-                             change is which trophy picture it shows and which theme draws each tier. -->
-                        <div class="pd-san" id="pd-san" hidden>
-                          <div class="pd-san-head"><i class="fas fa-trophy" aria-hidden="true"></i> <b data-lang="san.title"></b></div>
-                          <div class="pd-san-row">
-                            <span class="pd-foot-label" data-lang="san.tierPictures"></span>
-                            <div class="pd-seg" id="pd-san-tier">
-                              <button type="button" data-tier="auto" data-lang="san.tierAuto"></button>
-                              <button type="button" data-tier="bronze" data-lang="preview.bronze"></button>
-                              <button type="button" data-tier="silver" data-lang="preview.silver"></button>
-                              <button type="button" data-tier="gold" data-lang="preview.gold"></button>
-                            </div>
-                          </div>
-                          <p class="pd-san-hint" data-lang="san.tierHint"></p>
-                          <div class="pd-san-row pd-san-states-head">
-                            <span class="pd-foot-label" data-lang="san.states"></span>
-                          </div>
-                          <p class="pd-san-hint" data-lang="san.statesHint"></p>
-                          <div class="pd-san-states" id="pd-san-states">
-                            <label data-state="normal"><span data-lang="preview.normal"></span><select autocomplete="off"></select></label>
-                            <label data-state="bronze"><span data-lang="preview.bronze"></span><select autocomplete="off"></select></label>
-                            <label data-state="silver"><span data-lang="preview.silver"></span><select autocomplete="off"></select></label>
-                            <label data-state="gold"><span data-lang="preview.gold"></span><select autocomplete="off"></select></label>
-                            <label data-state="platinum"><span data-lang="preview.completion"></span><select autocomplete="off"></select></label>
-                          </div>
-                          <span id="pd-san-own" data-lang="san.own" hidden></span>
-                          <span id="pd-san-loaded" data-lang="san.loaded" hidden></span>
-                          <span id="pd-san-saved" data-lang="san.saved" hidden></span>
-                        </div>
                       </div>
 
                       <div class="pd-controls">
+                        <!-- The settings of an imported SAN theme, for the tier the preview shows;
+                             shown instead of the controls below (ui/sanLookPanel.js). -->
+                        <div class="pd-san-look" id="pd-san-look" hidden></div>
+                        <span id="pd-san-loaded" data-lang="san.loaded" hidden></span>
+                        <span id="pd-san-saved" data-lang="san.saved" hidden></span>
+                        <span id="pd-san-look-text" hidden>
+                          <span data-sl="restore" data-lang="sanLook.restore"></span>
+                          <span data-sl="editing" data-lang="sanLook.editing"></span>
+                          <span data-sl="look" data-lang="sanLook.look"></span>
+                          <span data-sl="single" data-lang="sanLook.single"></span>
+                          <span data-sl="shared" data-lang="sanLook.shared"></span>
+                          <span data-sl="drawnBy" data-lang="sanLook.drawnBy"></span>
+                          <span data-sl="fromOther" data-lang="sanLook.fromOther"></span>
+                          <span data-sl="own" data-lang="san.own"></span>
+                          <span data-sl="tierPictures" data-lang="san.tierPictures"></span>
+                          <span data-sl="tierAuto" data-lang="san.tierAuto"></span>
+                          <span data-sl="tierHint" data-lang="san.tierHint"></span>
+                          <span data-sl="bronze" data-lang="preview.bronze"></span>
+                          <span data-sl="silver" data-lang="preview.silver"></span>
+                          <span data-sl="gold" data-lang="preview.gold"></span>
+                          <span data-sl="type.main" data-lang="sanLook.type.main"></span>
+                          <span data-sl="type.semi" data-lang="sanLook.type.semi"></span>
+                          <span data-sl="type.rare" data-lang="sanLook.type.rare"></span>
+                          <span data-sl="type.plat" data-lang="sanLook.type.plat"></span>
+                          <span data-sl="group.card" data-lang="sanLook.group.card"></span>
+                          <span data-sl="group.background" data-lang="sanLook.group.background"></span>
+                          <span data-sl="group.text" data-lang="sanLook.group.text"></span>
+                          <span data-sl="group.glow" data-lang="sanLook.group.glow"></span>
+                          <span data-sl="group.outline" data-lang="sanLook.group.outline"></span>
+                          <span data-sl="group.icon" data-lang="sanLook.group.icon"></span>
+                          <span data-sl="part.unlockmsg" data-lang="sanLook.field.customtextunlockmsg"></span>
+                          <span data-sl="part.title" data-lang="canvas.part.title"></span>
+                          <span data-sl="part.desc" data-lang="canvas.part.detail"></span>
+                          <span data-sl="part.text" data-lang="canvas.part.text"></span>
+                          <span data-sl="part.icon" data-lang="canvas.part.icon"></span>
+                          <span data-sl="part.logo" data-lang="canvas.part.mark"></span>
+                          <span data-sl="part.background" data-lang="sanLook.group.background"></span>
+                          <span data-sl="part.card" data-lang="sanLook.group.card"></span>
+                          <span data-sl="place" data-lang="canvas.section.place"></span>
+                          <span data-sl="offset" data-lang="canvas.prop.offset"></span>
+                          <span data-sl="visible" data-lang="canvas.prop.visible"></span>
+                          <span data-sl="home" data-lang="canvas.act.home"></span>
+                          <span data-sl="field.preset" data-lang="sanLook.field.preset"></span>
+                          <span data-sl="field.scale" data-lang="sanLook.field.scale"></span>
+                          <span data-sl="field.roundness" data-lang="sanLook.field.roundness"></span>
+                          <span data-sl="field.opacity" data-lang="sanLook.field.opacity"></span>
+                          <span data-sl="field.displaytime" data-lang="sanLook.field.displaytime"></span>
+                          <span data-sl="field.bgstyle" data-lang="sanLook.field.bgstyle"></span>
+                          <span data-sl="field.primarycolor" data-lang="sanLook.field.primarycolor"></span>
+                          <span data-sl="field.secondarycolor" data-lang="sanLook.field.secondarycolor"></span>
+                          <span data-sl="field.tertiarycolor" data-lang="sanLook.field.tertiarycolor"></span>
+                          <span data-sl="field.gradientangle" data-lang="sanLook.field.gradientangle"></span>
+                          <span data-sl="field.brightness" data-lang="sanLook.field.brightness"></span>
+                          <span data-sl="field.blur" data-lang="sanLook.field.blur"></span>
+                          <span data-sl="field.usecustomfontsizes" data-lang="sanLook.field.usecustomfontsizes"></span>
+                          <span data-sl="field.fontsize" data-lang="sanLook.field.fontsize"></span>
+                          <span data-sl="field.unlockmsgfontsize" data-lang="sanLook.field.unlockmsgfontsize"></span>
+                          <span data-sl="field.titlefontsize" data-lang="sanLook.field.titlefontsize"></span>
+                          <span data-sl="field.descfontsize" data-lang="sanLook.field.descfontsize"></span>
+                          <span data-sl="field.usecustomfontcolors" data-lang="sanLook.field.usecustomfontcolors"></span>
+                          <span data-sl="field.fontcolor" data-lang="sanLook.field.fontcolor"></span>
+                          <span data-sl="field.unlockmsgfontcolor" data-lang="sanLook.field.unlockmsgfontcolor"></span>
+                          <span data-sl="field.titlefontcolor" data-lang="sanLook.field.titlefontcolor"></span>
+                          <span data-sl="field.descfontcolor" data-lang="sanLook.field.descfontcolor"></span>
+                          <span data-sl="field.fontoutline" data-lang="sanLook.field.fontoutline"></span>
+                          <span data-sl="field.fontoutlinecolor" data-lang="sanLook.field.fontoutlinecolor"></span>
+                          <span data-sl="field.fontshadow" data-lang="sanLook.field.fontshadow"></span>
+                          <span data-sl="field.fontshadowcolor" data-lang="sanLook.field.fontshadowcolor"></span>
+                          <span data-sl="field.usecustomtext" data-lang="sanLook.field.usecustomtext"></span>
+                          <span data-sl="field.customtextunlockmsg" data-lang="sanLook.field.customtextunlockmsg"></span>
+                          <span data-sl="field.customtexttitle" data-lang="sanLook.field.customtexttitle"></span>
+                          <span data-sl="field.customtextdesc" data-lang="sanLook.field.customtextdesc"></span>
+                          <span data-sl="field.glow" data-lang="sanLook.field.glow"></span>
+                          <span data-sl="field.glowcolor" data-lang="sanLook.field.glowcolor"></span>
+                          <span data-sl="field.glowsize" data-lang="sanLook.field.glowsize"></span>
+                          <span data-sl="field.glowanim" data-lang="sanLook.field.glowanim"></span>
+                          <span data-sl="field.glowspeed" data-lang="sanLook.field.glowspeed"></span>
+                          <span data-sl="field.glowrarity" data-lang="sanLook.field.glowrarity"></span>
+                          <span data-sl="field.glowcolorbronze" data-lang="sanLook.field.glowcolorbronze"></span>
+                          <span data-sl="field.glowcolorsilver" data-lang="sanLook.field.glowcolorsilver"></span>
+                          <span data-sl="field.glowcolorgold" data-lang="sanLook.field.glowcolorgold"></span>
+                          <span data-sl="field.useoutline" data-lang="sanLook.field.useoutline"></span>
+                          <span data-sl="field.outline" data-lang="sanLook.field.outline"></span>
+                          <span data-sl="field.outlinecolor" data-lang="sanLook.field.outlinecolor"></span>
+                          <span data-sl="field.outlinewidth" data-lang="sanLook.field.outlinewidth"></span>
+                          <span data-sl="field.iconroundness" data-lang="sanLook.field.iconroundness"></span>
+                          <span data-sl="field.iconscale" data-lang="sanLook.field.iconscale"></span>
+                          <span data-sl="field.usegameicon" data-lang="sanLook.field.usegameicon"></span>
+                          <span data-sl="value.on" data-lang="sanLook.value.on"></span>
+                          <span data-sl="value.off" data-lang="sanLook.value.off"></span>
+                          <span data-sl="value.default" data-lang="sanLook.value.default"></span>
+                          <span data-sl="value.bgstyle.solid" data-lang="sanLook.value.bgstyle.solid"></span>
+                          <span data-sl="value.bgstyle.gradient" data-lang="sanLook.value.bgstyle.gradient"></span>
+                          <span data-sl="value.bgstyle.gameart" data-lang="sanLook.value.bgstyle.gameart"></span>
+                          <span data-sl="value.bgstyle.bgimg" data-lang="sanLook.value.bgstyle.bgimg"></span>
+                          <span data-sl="value.glowanim.off" data-lang="sanLook.value.glowanim.off"></span>
+                          <span data-sl="value.glowanim.pulse" data-lang="sanLook.value.glowanim.pulse"></span>
+                          <span data-sl="value.glowanim.double" data-lang="sanLook.value.glowanim.double"></span>
+                          <span data-sl="value.glowanim.focus" data-lang="sanLook.value.glowanim.focus"></span>
+                          <span data-sl="value.glowanim.orbit" data-lang="sanLook.value.glowanim.orbit"></span>
+                          <span data-sl="value.glowanim.fluorescent" data-lang="sanLook.value.glowanim.fluorescent"></span>
+                          <span data-sl="value.glowanim.rainbow" data-lang="sanLook.value.glowanim.rainbow"></span>
+                          <span data-sl="value.outline.solid" data-lang="sanLook.value.outline.solid"></span>
+                          <span data-sl="value.outline.dashed" data-lang="sanLook.value.outline.dashed"></span>
+                          <span data-sl="value.outline.dotted" data-lang="sanLook.value.outline.dotted"></span>
+                          <span data-sl="value.outline.double" data-lang="sanLook.value.outline.double"></span>
+                          <span data-sl="value.outline.groove" data-lang="sanLook.value.outline.groove"></span>
+                          <span data-sl="value.outline.ridge" data-lang="sanLook.value.outline.ridge"></span>
+                          <span data-sl="value.outline.inset" data-lang="sanLook.value.outline.inset"></span>
+                          <span data-sl="value.outline.outset" data-lang="sanLook.value.outline.outset"></span>
+                        </span>
                         <!-- Nine groups, sixty-odd properties: filtered by label or a chip per group.
                              None of it moves a control in the DOM, so nth-child bindings and schema
                              parity stay untouched. -->
@@ -2960,12 +3071,27 @@
                                   <option value="false" data-lang="value.off"></option>
                                 </select>
                               </label>
+                              <label class="pd-field" data-key="showRarity">
+                                <span data-lang="field.showRarity"></span>
+                                <select autocomplete="off" id="pd-showRarity">
+                                  <option value="true" data-lang="value.on"></option>
+                                  <option value="false" data-lang="value.off"></option>
+                                </select>
+                              </label>
+                              <label class="pd-field" data-key="showProgress" data-states="progress">
+                                <span data-lang="field.showProgress"></span>
+                                <select autocomplete="off" id="pd-showProgress">
+                                  <option value="true" data-lang="value.on"></option>
+                                  <option value="false" data-lang="value.off"></option>
+                                </select>
+                              </label>
                               <label class="pd-field" data-key="width">
                                 <span><span data-lang="field.width"></span> <b class="pd-value" id="pd-val-width"></b></span>
                                 <input type="range" id="pd-width" min="280" max="620" step="10" value="420" />
                               </label>
                               <label class="pd-field" data-key="minHeight">
                                 <span><span data-lang="field.minHeight"></span> <b class="pd-value" id="pd-val-minHeight"></b></span>
+                                <span id="pd-word-auto" data-lang="value.auto" hidden></span>
                                 <input type="range" id="pd-minHeight" min="0" max="300" step="2" value="0" />
                               </label>
                               <!-- The free layout is edited on the preview itself (ui/presetCanvasEditor.js);
@@ -2985,12 +3111,16 @@
                                 </label>
                                 <label class="pd-field" data-key="padY">
                                   <span><span data-lang="field.padY"></span> <b class="pd-value" id="pd-val-padY"></b></span>
-                                  <input type="range" id="pd-padY" min="4" max="40" step="1" value="12" />
+                                  <input type="range" id="pd-padY" min="0" max="40" step="1" value="12" />
                                 </label>
                                 <label class="pd-field" data-key="padX">
                                   <span><span data-lang="field.padX"></span> <b class="pd-value" id="pd-val-padX"></b></span>
                                   <input type="range" id="pd-padX" min="4" max="48" step="1" value="18" />
                                 </label>
+                              <label class="pd-field" data-key="progressHeight" data-states="progress">
+                                <span><span data-lang="field.progressHeight"></span> <b class="pd-value" id="pd-val-progressHeight"></b></span>
+                                <input type="range" id="pd-progressHeight" min="3" max="20" step="1" value="8" />
+                              </label>
                             </div>
                           </div>
                         </section>
@@ -3071,6 +3201,13 @@
                               <label class="pd-field" data-key="textStrokeColor">
                                 <span data-lang="field.textStrokeColor"></span>
                                 <input type="color" id="pd-textStrokeColor" value="#000000" />
+                              </label>
+                              <label class="pd-field" data-key="hiddenLock">
+                                <span data-lang="field.hiddenLock"></span>
+                                <select autocomplete="off" id="pd-hiddenLock">
+                                  <option value="true" data-lang="value.on"></option>
+                                  <option value="false" data-lang="value.off"></option>
+                                </select>
                               </label>
                             </div>
                           </div>
@@ -3173,6 +3310,7 @@
                                 <span data-lang="field.iconShape"></span>
                                 <select autocomplete="off" id="pd-iconShape">
                                   <option value="rounded" data-lang="value.rounded"></option>
+                                  <option value="square" data-lang="value.square"></option>
                                   <option value="circle" data-lang="value.circle"></option>
                                   <option value="squircle" data-lang="value.squircle"></option>
                                   <option value="hexagon" data-lang="value.hexagon"></option>
@@ -3237,7 +3375,7 @@
                                 <input type="range" id="pd-radius" min="0" max="40" step="1" value="12" />
                               </label>
                               <label class="pd-field" data-key="accentBar">
-                                <span data-lang="field.accentBar"></span>
+                                <span data-lang="field.accentBarPlace"></span>
                                 <select autocomplete="off" id="pd-accentBar">
                                   <option value="left" data-lang="value.left"></option>
                                   <option value="right" data-lang="value.right"></option>
@@ -3375,61 +3513,36 @@
                           </button>
                           <div class="pd-group-body">
                             <div class="pd-fields">
-                              <label class="pd-field" data-key="rareAccent">
+                              <label class="pd-field" data-key="rareAccent" data-states="bronze,silver,gold">
                                 <span data-lang="field.rareAccent"></span>
                                 <input type="color" id="pd-rareAccent" value="#ffd24e" />
                               </label>
-                              <label class="pd-field" data-key="platinumAccent">
+                              <label class="pd-field" data-key="platinumAccent" data-states="completion">
                                 <span data-lang="field.platinumAccent"></span>
                                 <input type="color" id="pd-platinumAccent" value="#cfe3ff" />
                               </label>
-                              <label class="pd-field" data-key="stateTint">
+                              <label class="pd-field" data-key="stateTint" data-states="bronze,silver,gold,completion">
                                 <span><span data-lang="field.stateTint"></span> <b class="pd-value" id="pd-val-stateTint"></b></span>
                                 <input type="range" id="pd-stateTint" min="0" max="60" step="5" value="0" />
-                              </label>
-                              <label class="pd-field" data-key="showProgress">
-                                <span data-lang="field.showProgress"></span>
-                                <select autocomplete="off" id="pd-showProgress">
-                                  <option value="true" data-lang="value.on"></option>
-                                  <option value="false" data-lang="value.off"></option>
-                                </select>
-                              </label>
-                              <label class="pd-field" data-key="showRarity">
-                                <span data-lang="field.showRarity"></span>
-                                <select autocomplete="off" id="pd-showRarity">
-                                  <option value="true" data-lang="value.on"></option>
-                                  <option value="false" data-lang="value.off"></option>
-                                </select>
                               </label>
                             </div>
                             <button type="button" class="pd-more" data-advanced="1"><i class="fas fa-sliders-h"></i> <span data-lang="advanced"></span></button>
                             <div class="pd-fields pd-adv" data-advanced="1" hidden>
-                                <label class="pd-field" data-key="platinumGlow">
+                                <label class="pd-field" data-key="platinumGlow" data-states="completion">
                                   <span><span data-lang="field.platinumGlow"></span> <b class="pd-value" id="pd-val-platinumGlow"></b></span>
                                   <input type="range" id="pd-platinumGlow" min="0" max="100" step="5" value="70" />
                                 </label>
-                                <label class="pd-field" data-key="rareGlow">
+                                <label class="pd-field" data-key="rareGlow" data-states="bronze,silver,gold">
                                   <span><span data-lang="field.rareGlow"></span> <b class="pd-value" id="pd-val-rareGlow"></b></span>
                                   <input type="range" id="pd-rareGlow" min="0" max="100" step="5" value="55" />
                                 </label>
-                              <label class="pd-field" data-key="progressHeight">
-                                <span><span data-lang="field.progressHeight"></span> <b class="pd-value" id="pd-val-progressHeight"></b></span>
-                                <input type="range" id="pd-progressHeight" min="3" max="20" step="1" value="8" />
-                              </label>
-                              <label class="pd-field" data-key="rareSilver">
+                              <label class="pd-field" data-key="rareSilver" data-states="bronze,silver,gold">
                                 <span data-lang="field.rareSilver"></span>
                                 <input type="color" id="pd-rareSilver" value="#9fb2cc" />
                               </label>
-                              <label class="pd-field" data-key="rareBronze">
+                              <label class="pd-field" data-key="rareBronze" data-states="bronze,silver,gold">
                                 <span data-lang="field.rareBronze"></span>
                                 <input type="color" id="pd-rareBronze" value="#cd7f32" />
-                              </label>
-                              <label class="pd-field" data-key="hiddenLock">
-                                <span data-lang="field.hiddenLock"></span>
-                                <select autocomplete="off" id="pd-hiddenLock">
-                                  <option value="true" data-lang="value.on"></option>
-                                  <option value="false" data-lang="value.off"></option>
-                                </select>
                               </label>
                             </div>
                           </div>

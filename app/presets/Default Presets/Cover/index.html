@@ -140,7 +140,146 @@ window.addEventListener('DOMContentLoaded', function () {
       var key = spans[i].getAttribute('data-tok');
       if (Object.prototype.hasOwnProperty.call(words, key)) spans[i].textContent = words[key];
     }
+    var texts = document.querySelectorAll('.aw-canvas > [data-kind="text"]');
+    for (var j = 0; j < texts.length; j++) texts[j].toggleAttribute('data-empty', saysNothing(texts[j]));
   }
+  // A text made only of words this popup lacks, such as the rarity of a common unlock.
+  function saysNothing(node) {
+    if (node.textContent.trim() || !node.querySelector('[data-tok]')) return false;
+    var tiers = node.querySelectorAll('[data-tok="tier"]');
+    for (var i = 0; i < tiers.length; i++) {
+      if (/^".+"$/.test(getComputedStyle(tiers[i], '::after').content)) return false;
+    }
+    return true;
+  }
+  /*
+    A card line the design rewrote says its own words, the popup's in place of its {tokens}. Its
+    stylesheet carries them encoded in --aw-text; a {tier} span is filled by the stylesheet.
+  */
+  var WORDED_LINES = { title: '.title', detail: '.detail', game: '.game', rarity: '.rarity' };
+  var lineWords = {};
+  function lineTemplate(node) {
+    var raw = getComputedStyle(node).getPropertyValue('--aw-text').trim();
+    if (raw.length < 2 || raw.charAt(0) !== '"') return null;
+    try { return decodeURIComponent(raw.slice(1, -1)); } catch (e) { return null; }
+  }
+  function writeLine(node, template) {
+    node.textContent = '';
+    var pieces = template.split(/\{(game|title|detail|rarity|tier)\}/);
+    for (var i = 0; i < pieces.length; i++) {
+      if (i % 2 === 0) {
+        if (pieces[i]) node.appendChild(document.createTextNode(pieces[i]));
+        continue;
+      }
+      var span = document.createElement('span');
+      span.setAttribute('data-tok', pieces[i]);
+      if (pieces[i] !== 'tier') span.textContent = lineWords[pieces[i]] || '';
+      node.appendChild(span);
+    }
+  }
+  function applyWords(words) {
+    if (words) lineWords = words;
+    applyTokens(lineWords);
+    for (var key in WORDED_LINES) {
+      var node = document.querySelector(WORDED_LINES[key]);
+      if (!node) continue;
+      var template = lineTemplate(node);
+      if (template != null) writeLine(node, template);
+      else if (node.awWritten) node.textContent = lineWords[key] || '';
+      node.awWritten = template != null;
+    }
+  }
+  // The designer swaps the stylesheet or the items in place: the words follow without a new payload.
+  window.awWords = function () { applyWords(); };
+  /*
+    A line the stylesheet marks is typed out (--aw-type) or counted up (--aw-count) as the card comes
+    in. A typed line is cut into one span per letter, which the stylesheet shows each in turn; a
+    counted one has its numbers rewritten from the progress of its own CSS animation. Both keep the
+    timing the design gave them, and stand still with that animation when the designer holds it.
+  */
+  var MOTION_LINES = '.title, .detail, .game, .rarity, .progress_label, .aw-canvas > [data-kind="text"]';
+  var graphemes = window.Intl && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
+  var counted = [];
+  var countFrame = 0;
+  function marked(node, name) {
+    return getComputedStyle(node).getPropertyValue(name).trim() === '1';
+  }
+  function textNodes(node) {
+    var walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    var found = [];
+    while (walker.nextNode()) found.push(walker.currentNode);
+    return found;
+  }
+  function untype(node) {
+    var letters = node.querySelectorAll('.aw-ch');
+    for (var i = 0; i < letters.length; i++) letters[i].replaceWith(letters[i].textContent);
+    node.normalize();
+  }
+  function typeOut(node) {
+    var n = 0;
+    textNodes(node).forEach(function (text) {
+      var pieces = graphemes ? Array.from(graphemes.segment(text.data), function (s) { return s.segment; }) : Array.from(text.data);
+      var run = document.createDocumentFragment();
+      pieces.forEach(function (piece) {
+        var letter = document.createElement('span');
+        letter.className = 'aw-ch';
+        letter.style.setProperty('--aw-i', String(n));
+        letter.textContent = piece;
+        run.appendChild(letter);
+        n += 1;
+      });
+      text.replaceWith(run);
+    });
+    node.style.setProperty('--aw-n', String(Math.max(1, n)));
+  }
+  // Every number counts up from zero but a total after a slash ("3/10"); figure spaces in front keep
+  // the line as wide as it ends.
+  function countedText(text, at) {
+    return text.replace(/(\/\s*)?(\d+)(?:([.,])(\d+))?/g, function (all, total, whole, mark, part) {
+      if (total) return all;
+      var shown = (Number(whole + (part ? '.' + part : '')) * at).toFixed(part ? part.length : 0);
+      var pad = Math.max(0, whole.length - shown.split('.')[0].length);
+      return new Array(pad + 1).join('\u2007') + (mark ? shown.replace('.', mark) : shown);
+    });
+  }
+  // Where its count animation stands, eased; 1 once it has none (reduced motion, or no count).
+  function countAt(line) {
+    var anims = line.getAnimations();
+    for (var i = 0; i < anims.length; i++) {
+      if (anims[i].animationName !== 'aw-cv-count') continue;
+      var p = anims[i].effect.getComputedTiming().progress;
+      return { at: p == null ? 0 : 1 - Math.pow(1 - p, 3), running: anims[i].playState === 'running' };
+    }
+    return { at: 1, running: false };
+  }
+  // Writes the counted lines as their animations stand; true while one of them is still counting.
+  function syncCounts() {
+    var running = false;
+    counted.forEach(function (entry) {
+      var now = countAt(entry.line);
+      running = running || now.running;
+      var text = now.at >= 1 ? entry.data : countedText(entry.data, now.at);
+      if (entry.node.data !== text) entry.node.data = text;
+    });
+    return running;
+  }
+  function tickCounts() {
+    cancelAnimationFrame(countFrame);
+    if (syncCounts()) countFrame = requestAnimationFrame(tickCounts);
+  }
+  function prepareMotion() {
+    counted.forEach(function (entry) { entry.node.data = entry.data; });
+    counted = [];
+    var lines = document.querySelectorAll(MOTION_LINES);
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      untype(line);
+      if (marked(line, '--aw-type')) typeOut(line);
+      else if (marked(line, '--aw-count')) textNodes(line).forEach(function (node) { counted.push({ line: line, node: node, data: node.data }); });
+    }
+  }
+  // The designer holds the card at a moment of its own, then has the counted lines written for it.
+  window.awMotionSync = syncCounts;
   // An animated picture set to replay starts over as it appears: a new address is a new animation,
   // swapped in once loaded so the element never shows a gap. A picture held inline (the
   // designer preview) gets its new address from a parameter of its media type.
@@ -315,7 +454,9 @@ window.addEventListener('DOMContentLoaded', function () {
     applyArtwork(data);
     applyMeta(data);
     applyProgress(data);
-    applyTokens({ game: String(data.gameName || '').trim(), title: titleEl.textContent, detail: detailEl.textContent, rarity: rarityText(data) });
+    var words = { game: String(data.gameName || '').trim(), title: displayName != null ? String(displayName) : lineWords.title || '', detail: description != null ? String(description) : lineWords.detail || '', rarity: rarityText(data) };
+    applyWords(words);
+    prepareMotion();
     var inMs = timing('--ach-in', 520);
     var outMs = timing('--ach-out', 380);
     var marquees = [marqueePlan(titleEl), marqueePlan(detailEl)];
@@ -326,6 +467,7 @@ window.addEventListener('DOMContentLoaded', function () {
     root.classList.remove('active');
     void root.offsetWidth;
     root.classList.add('active');
+    tickCounts();
     recut();
     // A font that lands later moves the lines it sets, and the cuts made in them.
     if (document.fonts && document.fonts.status !== 'loaded') document.fonts.ready.then(recut);

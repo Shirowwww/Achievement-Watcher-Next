@@ -15,7 +15,7 @@ const { parse } = require(path.join(appRoot, 'node_modules', 'node-html-parser')
 
 const read = (...parts) => fs.readFileSync(path.join(appRoot, ...parts), 'utf8');
 const document = parse(read('view', 'app.html'));
-const settings = read('ui', 'settings.js');
+const designerJs = read('ui', 'presetDesigner.js');
 const { mainProcessSource } = require('../helpers/mainProcessSource.js');
 const main = mainProcessSource();
 const localeDir = path.join(appRoot, 'locale', 'lang');
@@ -42,27 +42,27 @@ test('both imports sit with the other preset actions and are labelled in every l
 });
 
 test('the buttons hand the work to the main process and select what it installed', () => {
-  assert.match(settings, /invoke\('import-san-theme', \{\}\)/);
-  assert.match(settings, /invoke\('import-san-setup'\)/);
+  assert.match(designerJs, /invoke\('import-san-theme', \{\}\)/);
+  assert.match(designerJs, /invoke\('import-san-setup'\)/);
   assert.match(main, /ipcMain\.handle\('import-san-theme'/);
   assert.match(main, /ipcMain\.handle\('import-san-setup'/);
 
-  const select = block(settings, /async function showImportedSanPreset\(name\) \{[\s\S]*?\n    \}/, 'the shared selection step');
+  const select = block(designerJs, /async function showImportedSanPreset\(name\) \{[\s\S]*?\n  \}/, 'the shared selection step');
   assert.match(select, /await refreshOverlayPresetMenu\(name\)/);
   assert.match(select, /await refreshGeneratedPresetList\(name\)/);
 
-  const single = block(settings, /\$\('#btn-import-san'\)\.click\([\s\S]*?\n    \}\);/, 'the .san import handler');
+  const single = block(designerJs, /\$\('#btn-import-san'\)\.click\([\s\S]*?\n  \}\);/, 'the .san import handler');
   assert.match(single, /await showImportedSanPreset\(res\.name\)/);
   // A name clash asks, exactly as an .awpreset import does, and changes nothing until it is answered.
   assert.match(single, /res\.error === 'duplicate'/);
   assert.match(single, /duplicate: choice === 1 \? 'replace' : 'rename'/);
 
-  const setup = block(settings, /\$\('#btn-import-san-setup'\)\.click\([\s\S]*?\n    \}\);/, 'the settings import handler');
+  const setup = block(designerJs, /\$\('#btn-import-san-setup'\)\.click\([\s\S]*?\n  \}\);/, 'the settings import handler');
   assert.match(setup, /await showImportedSanPreset\(installed\[0\]\.name\)/);
   assert.match(setup, /res\.error === 'san-not-found'/);
 
   // Nothing outside the importer learns the format.
-  for (const relative of ['app.js', path.join('ui', 'settings.js')]) {
+  for (const relative of ['app.js', path.join('ui', 'settings.js'), path.join('ui', 'presetDesigner.js')]) {
     let source = '';
     try {
       source = fs.readFileSync(path.join(appRoot, relative), 'utf8');
@@ -85,12 +85,12 @@ test('an import can only ever write into the user own folders', () => {
 });
 
 test('every outcome the importer reports has words in the dialog', () => {
-  const detail = block(settings, /function sanReportDetail\(report\)[\s\S]*?\n    \}/, 'the report');
+  const detail = block(designerJs, /function sanReportDetail\(report\)[\s\S]*?\n  \}/, 'the report');
   for (const field of ['report.kept', 'report.layouts', 'report.missing', 'report.unknown', 'report.assets']) {
     assert.ok(detail.includes(field), `the report never reads ${field}`);
   }
   for (const code of ['asset-missing', 'asset-rejected', 'installed']) assert.ok(detail.includes(`'${code}'`), `the report never mentions ${code}`);
-  assert.match(settings, /detail: sanReportDetail\(res\.report\)/);
+  assert.match(designerJs, /detail: sanReportDetail\(res\.report\)/);
 });
 
 test('the whole report reaches the log, not just the outcome', () => {
@@ -136,8 +136,8 @@ test('a preset can carry its own background picture, from a folder the app owns'
     assert.equal(shared.getAttribute('data-shown-for'), 'bgMode:artwork,image', `${key} is not offered for a preset's own picture`);
   }
 
-  assert.match(settings, /invoke\('list-preset-images'\)/);
-  assert.match(settings, /invoke\('import-preset-image'\)/);
+  assert.match(designerJs, /invoke\('list-preset-images'\)/);
+  assert.match(designerJs, /invoke\('import-preset-image'\)/);
   assert.match(main, /ipcMain\.handle\('list-preset-images'/);
   assert.match(main, /ipcMain\.handle\('import-preset-image'/);
   // Writing a preset copies the picture in beside its stylesheet, or the generated url would
@@ -161,9 +161,9 @@ test('the preview resolves a preset picture rather than showing a broken one', (
     document with no preset folder behind it, so the same filename would resolve to nothing and the
     card would preview without the background it was designed around.
   */
-  assert.match(settings, /function presetAssetUrl\(name\)/);
-  assert.match(settings, /const previewCss = \(values, editing = editingLayout\(\)\) => presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing \}\);/);
-  assert.match(settings, /buildPresetPreviewHtml\(values, \{\s*hold,\s*assetUrl: presetAssetUrl,\s*css:/);
+  assert.match(designerJs, /function presetAssetUrl\(name\)/);
+  assert.match(designerJs, /const previewCss = \(values, editing = editingLayout\(\)\) =>\s+presetGenerator\.buildCustomPresetCss\(values, \{ assetUrl: presetAssetUrl, editing, entrances: !editing \|\| previewMotion, tokenNames: tokenNames\(\) \}\);/);
+  assert.match(designerJs, /buildPresetPreviewHtml\(values, \{\s*hold,\s*assetUrl: presetAssetUrl,\s*css:/);
   // Cached: the stylesheet is rebuilt on every slider movement, and a wallpaper is not cheap to encode.
-  assert.match(settings, /presetImageUris\.has\(name\)/);
+  assert.match(designerJs, /presetImageUris\.has\(name\)/);
 });

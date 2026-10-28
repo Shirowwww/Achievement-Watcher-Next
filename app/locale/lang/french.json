@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Tout remettre en place",
             "addText": "Texte",
+            "addRarity": "Rareté",
             "addImage": "Image ou GIF",
             "addRect": "Rectangle",
             "addEllipse": "Cercle",
             "addLine": "Ligne",
             "hint": "Clique sur une partie de l’aperçu pour la déplacer, la redimensionner ou la tourner.",
             "cardHint": "Tire les bords de la carte pour la redimensionner. Ces réglages ne touchent que la carte.",
+            "fixedHint": "Un thème SAN importé garde sa propre carte. Clique sur un de ses éléments pour ouvrir ses réglages, ou fais-le glisser pour le déplacer. Tu peux aussi ajouter un texte, une image ou une forme par-dessus.",
             "fullscreen": "Éditeur",
             "general": "Tous les réglages",
             "done": "Terminé",
@@ -701,6 +703,7 @@
             "summaryNone": "Rien de déplacé ni d’ajouté pour l’instant",
             "summaryMoved": "Parties déplacées : {count}",
             "summaryItems": "Éléments ajoutés : {count}",
+            "heightFloor": "La carte ne peut pas être plus basse que son contenu : réduis l’icône ou le texte pour descendre encore.",
             "imageRefused": "Cette image n’est pas utilisable. Utilise une image PNG, JPEG, GIF, WebP ou BMP de 5 Mo au plus.",
             "tier": {
               "edit": "Modifier :",
@@ -714,7 +717,9 @@
               "text": "Bloc de texte",
               "title": "Titre",
               "detail": "Description",
-              "meta": "Nom du jeu",
+              "meta": "Ligne du jeu",
+              "game": "Nom du jeu",
+              "rarity": "Rareté",
               "progress": "Barre de progression",
               "mark": "Logo de marque",
               "cardBefore": "Décor de la carte 1",
@@ -778,7 +783,14 @@
               "cut": "Transparente",
               "loop": "En boucle",
               "alignGroup": "Aligner entre eux",
-              "insert": "Insérer"
+              "insert": "Insérer",
+              "insertHint": "Ajoute un mot que le popup remplit : le jeu, le succès, sa description, sa rareté ou son palier.",
+              "duration": "Durée (ms)",
+              "back": "Fond",
+              "pad": "Marge intérieure",
+              "strokeColor": "Couleur du contour",
+              "track": "Fond de la barre",
+              "thickness": "Épaisseur"
             },
             "axis": {
               "w": "L",
@@ -809,7 +821,22 @@
               "left": "Depuis la gauche",
               "right": "Depuis la droite",
               "zoom": "Zoom avant",
-              "pop": "Surgissement"
+              "pop": "Surgissement",
+              "shake": "Secousse",
+              "burst": "Éclat",
+              "type": "Machine à écrire",
+              "count": "Compteur",
+              "countFill": "Compteur et remplissage"
+            },
+            "tl": {
+              "title": "Frise",
+              "play": "Lire",
+              "pause": "Pause",
+              "playhead": "Instant affiché",
+              "start": "Début",
+              "length": "Durée",
+              "add": "Clique dans la ligne pour lui donner sa propre entrée",
+              "cardFixed": "La carte entre comme le prévoit son preset"
             },
             "token": {
               "game": "Jeu",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Calques",
-                "body": "Tout ce qui est sur la carte, le plus haut en premier. L’œil masque un élément, le cadenas le verrouille sur place."
+                "body": "Tout ce qui est sur la carte, le plus haut en premier. L’œil masque un élément ; le cadenas, sur les éléments que tu ajoutes, le verrouille sur place."
               },
               "help": {
                 "title": "Raccourcis",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Accent",
             "accentBar": "Barre d’accent",
+            "accentBarPlace": "Emplacement de la barre d’accent",
             "accentBarSize": "Épaisseur de la barre",
             "align": "Alignement",
             "animIn": "Entre par",
@@ -1122,6 +1150,7 @@
             "smooth": "Fluide",
             "snap": "Sèche",
             "solid": "Uni",
+            "square": "Carré",
             "squircle": "Carré arrondi",
             "text": "Couleur du texte",
             "textOnly": "Texte seul",
@@ -1130,7 +1159,8 @@
             "topRight": "Haut droite",
             "transparent": "Transparent",
             "uppercase": "MAJUSCULES",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Image du trophée",

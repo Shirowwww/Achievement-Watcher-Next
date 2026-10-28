@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "全部还原",
             "addText": "文本",
+            "addRarity": "稀有度",
             "addImage": "图片或 GIF",
             "addRect": "矩形",
             "addEllipse": "圆形",
             "addLine": "线条",
             "hint": "点击预览中的某个部分，即可移动、缩放或旋转它。",
             "cardHint": "拖动卡片边缘即可调整其大小。这里的所有设置只影响卡片。",
+            "fixedHint": "导入的 SAN 主题会保留自己的卡片。点击其中的元素即可打开该元素的设置，也可以拖动来移动它。还可以在上方添加文字、图片或形状。",
             "fullscreen": "编辑器",
             "general": "所有设置",
             "done": "完成",
@@ -701,6 +703,7 @@
             "summaryNone": "尚未移动或添加任何内容",
             "summaryMoved": "已移动的部分：{count}",
             "summaryItems": "已添加的元素：{count}",
+            "heightFloor": "卡片不能比其内容更矮：缩小图标或文字才能再降低高度。",
             "imageRefused": "无法使用该图片。请使用不超过 5 MB 的 PNG、JPEG、GIF、WebP 或 BMP 图片。",
             "tier": {
               "edit": "编辑：",
@@ -714,7 +717,9 @@
               "text": "文本块",
               "title": "标题",
               "detail": "描述",
-              "meta": "游戏名称",
+              "meta": "游戏行",
+              "game": "游戏名称",
+              "rarity": "稀有度",
               "progress": "进度条",
               "mark": "品牌标志",
               "cardBefore": "卡片装饰 1",
@@ -778,7 +783,14 @@
               "cut": "镂空透明",
               "loop": "循环",
               "alignGroup": "相互对齐",
-              "insert": "插入"
+              "insert": "插入",
+              "insertHint": "添加一个由弹窗自动填入的词：游戏、成就、描述、稀有度或等级。",
+              "duration": "时长 (ms)",
+              "back": "背景",
+              "pad": "内边距",
+              "strokeColor": "轮廓颜色",
+              "track": "进度条底色",
+              "thickness": "粗细"
             },
             "axis": {
               "w": "宽",
@@ -809,7 +821,22 @@
               "left": "从左侧",
               "right": "从右侧",
               "zoom": "放大",
-              "pop": "弹出"
+              "pop": "弹出",
+              "shake": "抖动",
+              "burst": "闪光",
+              "type": "打字机",
+              "count": "计数递增",
+              "countFill": "计数并填充"
+            },
+            "tl": {
+              "title": "时间轴",
+              "play": "播放",
+              "pause": "暂停",
+              "playhead": "当前显示时刻",
+              "start": "开始",
+              "length": "时长",
+              "add": "点击此行，为其设置专属入场",
+              "cardFixed": "卡片的入场方式由其预设决定"
             },
             "token": {
               "game": "游戏",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "图层",
-                "body": "卡片上的所有内容，最上层的排在最前。眼睛图标用于隐藏元素，挂锁图标用于锁定位置。"
+                "body": "卡片上的所有内容，最上层的排在最前。眼睛图标用于隐藏元素，挂锁图标用于锁定你添加的元素的位置。"
               },
               "help": {
                 "title": "快捷键",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "强调色",
             "accentBar": "强调条",
+            "accentBarPlace": "强调条位置",
             "accentBarSize": "强调条粗细",
             "align": "对齐",
             "animIn": "进入方向",
@@ -1122,6 +1150,7 @@
             "smooth": "平滑",
             "snap": "急停",
             "solid": "纯色",
+            "square": "方形",
             "squircle": "圆角方形",
             "text": "文字颜色",
             "textOnly": "仅文字",
@@ -1130,7 +1159,8 @@
             "topRight": "右上",
             "transparent": "透明",
             "uppercase": "大写",
-            "zoom": "缩放"
+            "zoom": "缩放",
+            "auto": "自动"
           },
           "san": {
             "tierPictures": "奖杯图片",

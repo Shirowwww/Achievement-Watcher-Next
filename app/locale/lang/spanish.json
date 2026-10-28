@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Volver a poner todo en su sitio",
             "addText": "Texto",
+            "addRarity": "Rareza",
             "addImage": "Imagen o GIF",
             "addRect": "Rectángulo",
             "addEllipse": "Círculo",
             "addLine": "Línea",
             "hint": "Haz clic en una parte de la vista previa para moverla, cambiar su tamaño o girarla.",
             "cardHint": "Arrastra los bordes de la tarjeta para cambiar su tamaño. Todo lo de aquí afecta solo a la tarjeta.",
+            "fixedHint": "Un tema SAN importado conserva su propia tarjeta. Haz clic en uno de sus elementos para abrir sus ajustes, o arrástralo para moverlo. También puedes añadir encima un texto, una imagen o una forma.",
             "fullscreen": "Editor",
             "general": "Todos los ajustes",
             "done": "Hecho",
@@ -701,6 +703,7 @@
             "summaryNone": "Aún no se ha movido ni añadido nada",
             "summaryMoved": "Partes movidas: {count}",
             "summaryItems": "Elementos añadidos: {count}",
+            "heightFloor": "La tarjeta no puede ser más baja que su contenido: reduce el icono o el texto para bajar más.",
             "imageRefused": "No se puede usar esa imagen. Usa una imagen PNG, JPEG, GIF, WebP o BMP de 5 MB como máximo.",
             "tier": {
               "edit": "Editar:",
@@ -714,7 +717,9 @@
               "text": "Bloque de texto",
               "title": "Título",
               "detail": "Descripción",
-              "meta": "Nombre del juego",
+              "meta": "Línea del juego",
+              "game": "Nombre del juego",
+              "rarity": "Rareza",
               "progress": "Barra de progreso",
               "mark": "Logo de marca",
               "cardBefore": "Decoración de la tarjeta 1",
@@ -778,7 +783,14 @@
               "cut": "Transparente",
               "loop": "En bucle",
               "alignGroup": "Alinear entre sí",
-              "insert": "Insertar"
+              "insert": "Insertar",
+              "insertHint": "Añade una palabra que el popup rellena: el juego, el logro, su descripción, su rareza o su nivel.",
+              "duration": "Duración (ms)",
+              "back": "Fondo",
+              "pad": "Margen interior",
+              "strokeColor": "Color del contorno",
+              "track": "Color del fondo de la barra",
+              "thickness": "Grosor"
             },
             "axis": {
               "w": "An",
@@ -809,7 +821,22 @@
               "left": "Desde la izquierda",
               "right": "Desde la derecha",
               "zoom": "Acercar",
-              "pop": "Surgir"
+              "pop": "Surgir",
+              "shake": "Sacudida",
+              "burst": "Destello",
+              "type": "Máquina de escribir",
+              "count": "Cuenta ascendente",
+              "countFill": "Cuenta y relleno"
+            },
+            "tl": {
+              "title": "Línea de tiempo",
+              "play": "Reproducir",
+              "pause": "Pausa",
+              "playhead": "Momento mostrado",
+              "start": "Inicio",
+              "length": "Duración",
+              "add": "Haz clic en la fila para darle una entrada propia",
+              "cardFixed": "La tarjeta entra como lo dispone su preajuste"
             },
             "token": {
               "game": "Juego",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Capas",
-                "body": "Todo lo que hay en la tarjeta, el de arriba primero. El ojo oculta un elemento, el candado lo fija en su sitio."
+                "body": "Todo lo que hay en la tarjeta, el de arriba primero. El ojo oculta un elemento; el candado, en los elementos que añades, lo fija en su sitio."
               },
               "help": {
                 "title": "Atajos",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Acento",
             "accentBar": "Barra de acento",
+            "accentBarPlace": "Ubicación de la barra de acento",
             "accentBarSize": "Grosor de la barra",
             "align": "Alineación",
             "animIn": "Entra desde",
@@ -1122,6 +1150,7 @@
             "smooth": "Suave",
             "snap": "Brusca",
             "solid": "Sólido",
+            "square": "Cuadrado",
             "squircle": "Cuadrado redondeado",
             "text": "Color del texto",
             "textOnly": "Solo texto",
@@ -1130,7 +1159,8 @@
             "topRight": "Arriba a la derecha",
             "transparent": "Transparente",
             "uppercase": "MAYÚSCULAS",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Imagen del trofeo",

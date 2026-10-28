@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Sett alt tilbake på plass",
             "addText": "Tekst",
+            "addRarity": "Sjeldenhet",
             "addImage": "Bilde eller GIF",
             "addRect": "Rektangel",
             "addEllipse": "Sirkel",
             "addLine": "Linje",
             "hint": "Klikk på en del av forhåndsvisningen for å flytte, endre størrelse på eller rotere den.",
             "cardHint": "Dra i kantene på kortet for å endre størrelsen. Alt her påvirker bare kortet.",
+            "fixedHint": "Et importert SAN-tema beholder sitt eget kort. Klikk på et av elementene for å åpne innstillingene, eller dra det for å flytte det. Du kan også legge til en tekst, et bilde eller en form oppå det.",
             "fullscreen": "Editor",
             "general": "Alle innstillinger",
             "done": "Ferdig",
@@ -701,6 +703,7 @@
             "summaryNone": "Ingenting er flyttet eller lagt til ennå",
             "summaryMoved": "Flyttede deler: {count}",
             "summaryItems": "Elementer lagt til: {count}",
+            "heightFloor": "Kortet kan ikke bli lavere enn det det inneholder: gjør ikonet eller teksten mindre for å gå lavere.",
             "imageRefused": "Bildet kan ikke brukes. Bruk et PNG-, JPEG-, GIF-, WebP- eller BMP-bilde på maks 5 MB.",
             "tier": {
               "edit": "Rediger:",
@@ -714,7 +717,9 @@
               "text": "Tekstblokk",
               "title": "Tittel",
               "detail": "Beskrivelse",
-              "meta": "Spillnavn",
+              "meta": "Spilllinje",
+              "game": "Spillnavn",
+              "rarity": "Sjeldenhet",
               "progress": "Fremgangsstripe",
               "mark": "Merkelogo",
               "cardBefore": "Kortdekorasjon 1",
@@ -778,7 +783,14 @@
               "cut": "Gjennomsiktig",
               "loop": "Gjenta",
               "alignGroup": "Juster mot hverandre",
-              "insert": "Sett inn"
+              "insert": "Sett inn",
+              "insertHint": "Legger til et ord som popup-vinduet fyller ut: spillet, prestasjonen, beskrivelsen, sjeldenheten eller nivået.",
+              "duration": "Varighet (ms)",
+              "back": "Bakgrunn",
+              "pad": "Indre marg",
+              "strokeColor": "Konturfarge",
+              "track": "Bakgrunnsfarge for fremdriftslinjen",
+              "thickness": "Tykkelse"
             },
             "axis": {
               "w": "B",
@@ -809,7 +821,22 @@
               "left": "Fra venstre",
               "right": "Fra høyre",
               "zoom": "Zoome inn",
-              "pop": "Pop"
+              "pop": "Pop",
+              "shake": "Risting",
+              "burst": "Glimt",
+              "type": "Skrivemaskin",
+              "count": "Tell opp",
+              "countFill": "Tell opp og fyll"
+            },
+            "tl": {
+              "title": "Tidslinje",
+              "play": "Spill av",
+              "pause": "Pause",
+              "playhead": "Vist øyeblikk",
+              "start": "Start",
+              "length": "Varighet",
+              "add": "Klikk i raden for å gi den sin egen inntreden",
+              "cardFixed": "Kortet kommer inn slik presetten bestemmer"
             },
             "token": {
               "game": "Spill",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Lag",
-                "body": "Alt på kortet, det øverste først. Øyet skjuler et element, hengelåsen holder det på plass."
+                "body": "Alt på kortet, det øverste først. Øyet skjuler et element; hengelåsen, på elementene du legger til, holder det på plass."
               },
               "help": {
                 "title": "Hurtigtaster",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Aksent",
             "accentBar": "Aksentstripe",
+            "accentBarPlace": "Plassering av aksentstripen",
             "accentBarSize": "Stripetykkelse",
             "align": "Justering",
             "animIn": "Kommer inn fra",
@@ -1122,6 +1150,7 @@
             "smooth": "Myk",
             "snap": "Brå",
             "solid": "Heldekkende",
+            "square": "Firkant",
             "squircle": "Avrundet firkant",
             "text": "Tekstfarge",
             "textOnly": "Bare tekst",
@@ -1130,7 +1159,8 @@
             "topRight": "Øverst til høyre",
             "transparent": "Gjennomsiktig",
             "uppercase": "STORE BOKSTAVER",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Trofébilde",

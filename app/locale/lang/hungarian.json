@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Minden vissza a helyére",
             "addText": "Szöveg",
+            "addRarity": "Ritkaság",
             "addImage": "Kép vagy GIF",
             "addRect": "Téglalap",
             "addEllipse": "Kör",
             "addLine": "Vonal",
             "hint": "Kattints az előnézet egy részére, hogy mozgasd, átméretezd vagy elforgasd.",
             "cardHint": "Húzd a kártya szélét az átméretezéshez. Az itt található beállítások csak a kártyára vonatkoznak.",
+            "fixedHint": "Az importált SAN téma megtartja a saját kártyáját. Kattints valamelyik elemére a beállításai megnyitásához, vagy húzd el az áthelyezéséhez. Fölé szöveget, képet vagy alakzatot is hozzáadhatsz.",
             "fullscreen": "Szerkesztő",
             "general": "Minden beállítás",
             "done": "Kész",
@@ -701,6 +703,7 @@
             "summaryNone": "Még semmi nincs áthelyezve vagy hozzáadva",
             "summaryMoved": "Áthelyezett részek: {count}",
             "summaryItems": "Hozzáadott elemek: {count}",
+            "heightFloor": "A kártya nem lehet alacsonyabb a tartalmánál: kisebbítsd az ikont vagy a szöveget, hogy lejjebb mehess.",
             "imageRefused": "Ez a kép nem használható. Legfeljebb 5 MB méretű PNG, JPEG, GIF, WebP vagy BMP képet használj.",
             "tier": {
               "edit": "Szerkesztés:",
@@ -714,7 +717,9 @@
               "text": "Szövegblokk",
               "title": "Cím",
               "detail": "Leírás",
-              "meta": "Játék neve",
+              "meta": "Játéksor",
+              "game": "Játék neve",
+              "rarity": "Ritkaság",
               "progress": "Folyamatjelző",
               "mark": "Márkalogó",
               "cardBefore": "Kártyadísz 1",
@@ -778,7 +783,14 @@
               "cut": "Átlátszó",
               "loop": "Ismétlés",
               "alignGroup": "Egymáshoz igazítás",
-              "insert": "Beszúrás"
+              "insert": "Beszúrás",
+              "insertHint": "Beszúr egy szót, amelyet a felugró ablak kitölt: a játékot, az eredményt, a leírását, a ritkaságát vagy a szintjét.",
+              "duration": "Időtartam (ms)",
+              "back": "Háttér",
+              "pad": "Belső margó",
+              "strokeColor": "Körvonal színe",
+              "track": "Sáv hátterének színe",
+              "thickness": "Vastagság"
             },
             "axis": {
               "w": "Sz",
@@ -809,7 +821,22 @@
               "left": "Balról",
               "right": "Jobbról",
               "zoom": "Ráközelítés",
-              "pop": "Felpattanás"
+              "pop": "Felpattanás",
+              "shake": "Remegés",
+              "burst": "Felvillanás",
+              "type": "Írógép",
+              "count": "Felszámlálás",
+              "countFill": "Felszámlálás és kitöltés"
+            },
+            "tl": {
+              "title": "Idővonal",
+              "play": "Lejátszás",
+              "pause": "Szünet",
+              "playhead": "Megjelenített pillanat",
+              "start": "Kezdet",
+              "length": "Hossz",
+              "add": "Kattints a sorra, hogy saját belépést adj neki",
+              "cardFixed": "A kártya úgy lép be, ahogy az előbeállítása megadja"
             },
             "token": {
               "game": "Játék",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Rétegek",
-                "body": "Minden, ami a kártyán van, a legfelső elöl. A szem elrejti az elemet, a lakat a helyén tartja."
+                "body": "Minden, ami a kártyán van, a legfelső elöl. A szem elrejti az elemet; a lakat az általad hozzáadott elemeken a helyén tartja."
               },
               "help": {
                 "title": "Billentyűparancsok",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Kiemelés",
             "accentBar": "Kiemelő sáv",
+            "accentBarPlace": "A kiemelő sáv helye",
             "accentBarSize": "Sáv vastagsága",
             "align": "Igazítás",
             "animIn": "Érkezés innen",
@@ -1122,6 +1150,7 @@
             "smooth": "Lágy",
             "snap": "Éles",
             "solid": "Egyszínű",
+            "square": "Négyzet",
             "squircle": "Lekerekített négyzet",
             "text": "Szöveg színe",
             "textOnly": "Csak szöveg",
@@ -1130,7 +1159,8 @@
             "topRight": "Jobbra fent",
             "transparent": "Átlátszó",
             "uppercase": "NAGYBETŰS",
-            "zoom": "Nagyítás"
+            "zoom": "Nagyítás",
+            "auto": "Automatikus"
           },
           "san": {
             "tierPictures": "Trófea képe",

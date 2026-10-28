@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Put everything back",
             "addText": "Text",
+            "addRarity": "Rarity",
             "addImage": "Picture or GIF",
             "addRect": "Rectangle",
             "addEllipse": "Circle",
             "addLine": "Line",
             "hint": "Click a part of the preview to move, resize or rotate it.",
             "cardHint": "Drag the card's edges to resize it. Everything here shapes the card only.",
+            "fixedHint": "An imported SAN theme keeps its own card. Click one of its elements to open its settings, or drag it to move it. You can also add a text, a picture or a shape on top.",
             "fullscreen": "Editor",
             "general": "All settings",
             "done": "Done",
@@ -701,6 +703,7 @@
             "summaryNone": "Nothing moved or added yet",
             "summaryMoved": "Parts moved: {count}",
             "summaryItems": "Items added: {count}",
+            "heightFloor": "The card cannot get shorter than what it holds: make the icon or the text smaller to go lower.",
             "imageRefused": "That picture cannot be used. Use a PNG, JPEG, GIF, WebP or BMP picture of 5 MB at most.",
             "tier": {
               "edit": "Edit:",
@@ -714,7 +717,9 @@
               "text": "Text block",
               "title": "Title",
               "detail": "Description",
-              "meta": "Game name",
+              "meta": "Game line",
+              "game": "Game name",
+              "rarity": "Rarity",
               "progress": "Progress bar",
               "mark": "Brand logo",
               "cardBefore": "Card decoration 1",
@@ -778,7 +783,14 @@
               "cut": "See-through",
               "loop": "Loop",
               "alignGroup": "Line up together",
-              "insert": "Insert"
+              "insert": "Insert",
+              "insertHint": "Adds a word the popup fills in: the game, the achievement, its description, its rarity or its tier.",
+              "duration": "Length (ms)",
+              "back": "Background",
+              "pad": "Padding",
+              "strokeColor": "Outline colour",
+              "track": "Track colour",
+              "thickness": "Thickness"
             },
             "axis": {
               "w": "W",
@@ -809,7 +821,22 @@
               "left": "From the left",
               "right": "From the right",
               "zoom": "Zoom in",
-              "pop": "Pop"
+              "pop": "Pop",
+              "shake": "Shake",
+              "burst": "Flash",
+              "type": "Typewriter",
+              "count": "Count up",
+              "countFill": "Count up and fill"
+            },
+            "tl": {
+              "title": "Timeline",
+              "play": "Play",
+              "pause": "Pause",
+              "playhead": "Moment shown",
+              "start": "Start",
+              "length": "Length",
+              "add": "Click in the row to give it an entrance of its own",
+              "cardFixed": "The card comes in as its preset does"
             },
             "token": {
               "game": "Game",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Layers",
-                "body": "Everything on the card, the top one first. The eye hides an element, the padlock holds it in place."
+                "body": "Everything on the card, the top one first. The eye hides an element; the padlock, on the elements you add, holds it in place."
               },
               "help": {
                 "title": "Shortcuts",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Accent",
             "accentBar": "Accent bar",
+            "accentBarPlace": "Accent bar placement",
             "accentBarSize": "Bar thickness",
             "align": "Alignment",
             "animIn": "Enters from",
@@ -1122,6 +1150,7 @@
             "smooth": "Smooth",
             "snap": "Snap",
             "solid": "Solid",
+            "square": "Square",
             "squircle": "Squircle",
             "text": "Text colour",
             "textOnly": "Text only",
@@ -1130,7 +1159,8 @@
             "topRight": "Top right",
             "transparent": "Transparent",
             "uppercase": "UPPERCASE",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Auto"
           },
           "san": {
             "tierPictures": "Trophy picture",

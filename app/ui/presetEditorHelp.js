@@ -13,8 +13,10 @@ const TOUR_EDGE_PX = 12;
 const TOUR_TITLE_ID = 'pd-cv-tour-title';
 // Each shortcut is one or more key combinations; a lower-case name is a key whose name is translated.
 const NAMED_KEYS = ['ctrl', 'shift', 'alt', 'delete', 'escape'];
+// The four arrows, drawn as one pad of keys rather than four alternatives.
+const ARROWS = ['←', '↑', '→', '↓'];
 const SHORTCUTS = [
-  [[['←'], ['↑'], ['→'], ['↓']], 'help.nudge'],
+  [[ARROWS], 'help.nudge'],
   [[['shift']], 'help.shift'],
   [[['alt']], 'help.alt'],
   [[['shift'], ['ctrl']], 'help.group', { or: true }],
@@ -26,7 +28,7 @@ const SHORTCUTS = [
   [[['escape']], 'help.escape'],
   [[['ctrl']], 'help.zoom'],
   [[], 'help.dblclick'],
-  [[['←'], ['↑'], ['→'], ['↓'], ['+'], ['-']], 'help.crop'],
+  [[ARROWS, ['+'], ['-']], 'help.crop'],
   [[['?']], 'help.sheet'],
 ];
 const TOUR = [
@@ -101,9 +103,10 @@ function createEditorHelp({ root, label }) {
     // One wrapper per combination, so a narrow column breaks between Ctrl+C and Ctrl+V, never inside one.
     for (const [nth, combo] of combos.entries()) {
       if (or && nth) keys.appendChild(el('span', 'pd-cv-help-or', label('help.or')));
-      const group = el('span', 'pd-cv-help-combo');
+      const pad = combo === ARROWS;
+      const group = el('span', pad ? 'pd-cv-help-combo is-pad' : 'pd-cv-help-combo');
       combo.forEach((name, at) => {
-        if (at) group.appendChild(document.createTextNode('+'));
+        if (at && !pad) group.appendChild(document.createTextNode('+'));
         group.appendChild(keyCap(name));
       });
       keys.appendChild(group);
@@ -163,9 +166,22 @@ function createEditorHelp({ root, label }) {
     if (rect) Object.assign(tour.ring.style, { left: `${rect.left - 4}px`, top: `${rect.top - 4}px`, width: `${rect.width + 8}px`, height: `${rect.height + 8}px` });
     const card = tour.card;
     const { width, height } = card.getBoundingClientRect();
-    const below = rect ? rect.bottom + TOUR_GAP_PX : (window.innerHeight - height) / 2;
-    const top = rect && below + height > window.innerHeight - TOUR_EDGE_PX ? Math.max(TOUR_EDGE_PX, rect.top - TOUR_GAP_PX - height) : below;
-    const left = rect ? rect.left + rect.width / 2 - width / 2 : (window.innerWidth - width) / 2;
+    let top = (window.innerHeight - height) / 2;
+    let left = (window.innerWidth - width) / 2;
+    if (rect) {
+      const fitsBelow = rect.bottom + TOUR_GAP_PX + height <= window.innerHeight - TOUR_EDGE_PX;
+      const fitsAbove = rect.top - TOUR_GAP_PX - height >= TOUR_EDGE_PX;
+      if (fitsBelow || fitsAbove) {
+        top = fitsBelow ? rect.bottom + TOUR_GAP_PX : rect.top - TOUR_GAP_PX - height;
+        left = rect.left + rect.width / 2 - width / 2;
+      } else {
+        // A target as tall as the window (the layers column): beside it, where there is room,
+        // rather than over the heading the step is about.
+        const right = rect.right + TOUR_GAP_PX;
+        left = right + width <= window.innerWidth - TOUR_EDGE_PX ? right : rect.left - TOUR_GAP_PX - width;
+        top = rect.top;
+      }
+    }
     card.style.left = `${Math.min(Math.max(TOUR_EDGE_PX, left), window.innerWidth - width - TOUR_EDGE_PX)}px`;
     card.style.top = `${Math.min(Math.max(TOUR_EDGE_PX, top), window.innerHeight - height - TOUR_EDGE_PX)}px`;
   }

@@ -371,8 +371,12 @@ test('the words for {tier} are kept only while a text says {tier}, checked and e
   const canvas = schema.normalizeCanvas({ items: [{ kind: 'text', text: 'Trophy {tier}' }], words });
   assert.deepEqual(canvas.words, { silver: 'x'.repeat(24), gold: 'Or "1" </style>' });
   const css = generator.canvasCss(canvas);
-  assert.ok(css.includes('.ach.tier-gold > .aw-canvas [data-tok="tier"]::after { content: "Or \\22 1\\22  \\3c /style>"; }'), css);
+  // The card's own lines can say {tier} too, so the rule reaches past the added items.
+  assert.ok(css.includes('.ach.tier-gold [data-tok="tier"]::after { content: "Or \\22 1\\22  \\3c /style>"; }'), css);
   assert.doesNotMatch(css, /<\/style>/i, 'a word cannot close the stylesheet');
+  const line = schema.normalizeCanvas({ items: [], style: { title: { text: '{tier}: {title}' } }, words });
+  assert.deepEqual(line.words, { silver: 'x'.repeat(24), gold: 'Or "1" </style>' }, 'a title saying {tier} keeps the words');
+  assert.ok(generator.canvasCss(line).includes('.ach.tier-gold [data-tok="tier"]::after'), 'with no item at all, the words are still drawn');
 });
 
 test('an entrance is stored with its delay, played with the card and left out while editing', () => {
@@ -657,4 +661,38 @@ test('a card that can be cut paints in its layer, to its outer edge, and takes n
   assert.match(after, /\.ach > \.aw-canvas > \.aw-card::before \{ content: ''/, 'the picture paints in the layer');
   assert.doesNotMatch(after, /\.ach > \* \{ position: relative; z-index: 1; \}/);
   assert.deepEqual(generator.presetBoxSize(cut), generator.presetBoxSize(plain), 'a hole far past the card asks for no room');
+});
+
+test('a text keeps a box only once one is set, and an older text keeps its single spelling', () => {
+  const plain = schema.normalizeCanvasItem({ kind: 'text', text: 'Hi' });
+  for (const key of ['fillMode', 'fill', 'radius', 'pad', 'stroke', 'strokeColor']) assert.equal(plain[key], undefined, key);
+  const badge = schema.normalizeCanvasItem({ kind: 'text', text: '{rarity}', fillMode: 'accent', fill: '#123456', radius: 999, pad: -3, stroke: 2, strokeColor: 'accent' });
+  assert.deepEqual(
+    { fillMode: badge.fillMode, fill: badge.fill, radius: badge.radius, pad: badge.pad, stroke: badge.stroke, strokeColor: badge.strokeColor },
+    { fillMode: 'accent', fill: undefined, radius: 200, pad: undefined, stroke: 2, strokeColor: 'accent' }
+  );
+  assert.equal(schema.normalizeCanvasItem({ kind: 'text', stroke: 1, strokeColor: 'red; x' }).strokeColor, '#ffffff', 'an outline colour is a hex or the tier');
+});
+
+test('a card line keeps its own words, box, opacity and shadow, and drops what equals the preset', () => {
+  const canvas = schema.normalizeCanvas({
+    items: [],
+    style: {
+      title: { text: '{title}' },
+      detail: { text: 'Got it: {detail}\n' },
+      rarity: { fillMode: 'none', radius: 0, pad: 0, o: 0.5, shadow: 6, shadowStyle: 'glow' },
+      progress: { fillMode: 'none', track: '#000000', h: 99, pad: 6, radius: 3 },
+      meta: { text: 'not a worded line' },
+    },
+  });
+  assert.equal(canvas.style.title, undefined, 'its own token is the line as it was');
+  assert.equal(canvas.style.detail.text, 'Got it: {detail}');
+  assert.deepEqual(canvas.style.rarity, { fillMode: 'none', radius: 0, pad: 0, o: 0.5, shadow: 6, shadowStyle: 'glow' });
+  assert.deepEqual(canvas.style.progress, { track: '#000000', h: 24, radius: 3 }, 'a bar is always filled and has no room inside');
+  assert.equal(canvas.style.meta, undefined, 'the game line takes no words of its own');
+  const css = generator.canvasCss(canvas);
+  assert.ok(css.includes(`--aw-text: "${encodeURIComponent('Got it: {detail}')}"`), css);
+  assert.match(css, /\.rarity \{[^}]*box-shadow: none !important; background: transparent !important; border-radius: 0px !important; padding: 0px !important;/);
+  assert.match(css, /\.rarity \{ opacity: 0\.5 !important; filter: drop-shadow\(/);
+  assert.match(css, /\.progress_track \{ background: #000000 !important; height: 24px !important; border-radius: 3px !important; \}/);
 });

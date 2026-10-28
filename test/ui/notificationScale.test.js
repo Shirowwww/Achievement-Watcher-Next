@@ -54,10 +54,12 @@ test('a preset never sets a CSS variable nothing reads', () => {
   /*
     Except where the script is not the preset's own. The shared engine publishes the notification's
     artwork to every preset that runs it, because any design MAY paint it - a design that does not
-    (most of them) is declining a capability, not leaving a wire loose. Everything else the engine
+    (most of them) is declining a capability, not leaving a wire loose. The same goes for the place
+    of each letter in a line typed out: set only on a line a layout's stylesheet marked, and read by
+    the rule that stylesheet carries (test/core/presetMotion.test.js). Everything else the engine
     publishes still has to be consumed: --scale and --ach-hold are what scale and time the card.
   */
-  const SHARED_ENGINE_OPTIONAL = new Set(['--artwork']);
+  const SHARED_ENGINE_OPTIONAL = new Set(['--artwork', '--aw-i', '--aw-n']);
 
   for (const preset of readPresets()) {
     const cssPath = path.join(preset.dir, 'style.css');

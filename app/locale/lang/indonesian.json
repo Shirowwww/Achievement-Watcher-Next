@@ -672,12 +672,14 @@
           "canvas": {
             "reset": "Kembalikan semuanya",
             "addText": "Teks",
+            "addRarity": "Kelangkaan",
             "addImage": "Gambar atau GIF",
             "addRect": "Persegi panjang",
             "addEllipse": "Lingkaran",
             "addLine": "Garis",
             "hint": "Klik bagian pratinjau untuk memindahkan, mengubah ukuran, atau memutarnya.",
             "cardHint": "Seret tepi kartu untuk mengubah ukurannya. Semua pengaturan di sini hanya memengaruhi kartu.",
+            "fixedHint": "Tema SAN yang diimpor mempertahankan kartunya sendiri. Klik salah satu elemennya untuk membuka pengaturannya, atau seret untuk memindahkannya. Kamu juga bisa menambahkan teks, gambar, atau bentuk di atasnya.",
             "fullscreen": "Editor",
             "general": "Semua pengaturan",
             "done": "Selesai",
@@ -701,6 +703,7 @@
             "summaryNone": "Belum ada yang dipindahkan atau ditambahkan",
             "summaryMoved": "Bagian dipindahkan: {count}",
             "summaryItems": "Item ditambahkan: {count}",
+            "heightFloor": "Kartu tidak bisa lebih pendek daripada isinya: perkecil ikon atau teks agar bisa lebih rendah lagi.",
             "imageRefused": "Gambar itu tidak dapat digunakan. Gunakan gambar PNG, JPEG, GIF, WebP, atau BMP maksimal 5 MB.",
             "tier": {
               "edit": "Ubah:",
@@ -714,7 +717,9 @@
               "text": "Blok teks",
               "title": "Judul",
               "detail": "Deskripsi",
-              "meta": "Nama game",
+              "meta": "Baris game",
+              "game": "Nama game",
+              "rarity": "Kelangkaan",
               "progress": "Bilah progres",
               "mark": "Logo merek",
               "cardBefore": "Dekorasi kartu 1",
@@ -778,7 +783,14 @@
               "cut": "Tembus pandang",
               "loop": "Berulang",
               "alignGroup": "Ratakan satu sama lain",
-              "insert": "Sisipkan"
+              "insert": "Sisipkan",
+              "insertHint": "Menambahkan kata yang diisi oleh popup: game, pencapaian, deskripsinya, kelangkaannya, atau tingkatnya.",
+              "duration": "Durasi (ms)",
+              "back": "Latar belakang",
+              "pad": "Jarak dalam",
+              "strokeColor": "Warna garis tepi",
+              "track": "Warna latar bilah",
+              "thickness": "Ketebalan"
             },
             "axis": {
               "w": "L",
@@ -809,7 +821,22 @@
               "left": "Dari kiri",
               "right": "Dari kanan",
               "zoom": "Memperbesar",
-              "pop": "Muncul"
+              "pop": "Muncul",
+              "shake": "Getar",
+              "burst": "Kilatan",
+              "type": "Mesin tik",
+              "count": "Hitung naik",
+              "countFill": "Hitung naik dan isi"
+            },
+            "tl": {
+              "title": "Lini masa",
+              "play": "Putar",
+              "pause": "Jeda",
+              "playhead": "Momen yang ditampilkan",
+              "start": "Mulai",
+              "length": "Durasi",
+              "add": "Klik pada baris untuk memberinya animasi masuk sendiri",
+              "cardFixed": "Kartu masuk sesuai ketentuan presetnya"
             },
             "token": {
               "game": "Game",
@@ -911,7 +938,7 @@
               },
               "layers": {
                 "title": "Lapisan",
-                "body": "Semua yang ada di kartu, yang paling atas lebih dulu. Mata menyembunyikan elemen, gembok menahannya di tempat."
+                "body": "Semua yang ada di kartu, yang paling atas lebih dulu. Mata menyembunyikan elemen; gembok, pada elemen yang ditambahkan sendiri, menahannya di tempat."
               },
               "help": {
                 "title": "Pintasan",
@@ -938,6 +965,7 @@
           "field": {
             "accent": "Aksen",
             "accentBar": "Bilah aksen",
+            "accentBarPlace": "Posisi bilah aksen",
             "accentBarSize": "Ketebalan bilah",
             "align": "Perataan",
             "animIn": "Masuk dari",
@@ -1122,6 +1150,7 @@
             "smooth": "Halus",
             "snap": "Tajam",
             "solid": "Solid",
+            "square": "Persegi",
             "squircle": "Persegi membulat",
             "text": "Warna teks",
             "textOnly": "Teks saja",
@@ -1130,7 +1159,8 @@
             "topRight": "Kanan atas",
             "transparent": "Transparan",
             "uppercase": "HURUF BESAR",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "auto": "Otomatis"
           },
           "san": {
             "tierPictures": "Gambar piala",
