@@ -381,6 +381,7 @@ function translateUI(lang, locale, template) {
       $('#library-playtime-help').text(clear(lib.playtime.description));
       $("#option_libraryPlaytimeUnits option[value='auto']").text(clear(lib.playtime.auto));
       $("#option_libraryPlaytimeUnits option[value='hours']").text(clear(lib.playtime.hours));
+      $("#option_libraryPlaytimeUnits option[value='seconds']").text(clear(lib.playtime.seconds));
     }
   }
   // Profile card (Appearance) - bound by stable id, so it shifts no nth-child binding.

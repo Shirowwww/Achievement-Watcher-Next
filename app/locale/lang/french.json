@@ -339,9 +339,10 @@
         },
         "playtime": {
           "name": "Temps de jeu",
-          "description": "Façon dont la bibliothèque écrit un long temps de jeu : en jours et heures, ou en heures seulement.",
+          "description": "Façon dont la bibliothèque écrit un long temps de jeu : en jours et heures, en heures seulement, ou à la seconde près.",
           "auto": "Jours et heures",
-          "hours": "Heures seulement"
+          "hours": "Heures seulement",
+          "seconds": "À la seconde près"
         },
         "showAchievementButton": {
           "name": "Bouton des succès",

@@ -66,6 +66,7 @@
   function stop() {
     if (!active) return;
     cancelAnimationFrame(active.frame);
+    active.el.removeEventListener('mouseleave', stop);
     place(active.el, 0);
     active.el.classList.remove('text-marquee');
     if (active.addedTitle) active.el.removeAttribute('title');
@@ -75,6 +76,8 @@
   function start(el) {
     const distance = overflowOf(el);
     if (distance <= 1) return;
+    // Inside a shadow root the document never hears the pointer leave, the element itself does.
+    el.addEventListener('mouseleave', stop);
     if (reducedMotion && reducedMotion.matches) {
       const addedTitle = !el.hasAttribute('title');
       if (addedTitle) el.title = fullText(el);
@@ -101,8 +104,9 @@
     active = state;
   }
 
+  // The path's first node is the real target, also inside a shadow root (the title bar).
   document.addEventListener('mouseover', (event) => {
-    const el = cutTextAt(event.target);
+    const el = cutTextAt(event.composedPath()[0]);
     if (active && active.el === el) return;
     stop();
     if (el) start(el);

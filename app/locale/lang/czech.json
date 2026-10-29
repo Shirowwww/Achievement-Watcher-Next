@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Doba hraní",
-          "description": "Jak knihovna zapisuje dlouhou dobu hraní: ve dnech a hodinách, nebo jen v hodinách.",
+          "description": "Jak knihovna zapisuje dlouhou dobu hraní: ve dnech a hodinách, jen v hodinách, nebo až na sekundy.",
           "auto": "Dny a hodiny",
-          "hours": "Jen hodiny"
+          "hours": "Jen hodiny",
+          "seconds": "Až na sekundy"
         },
         "showAchievementButton": {
           "name": "Tlačítko úspěchů",

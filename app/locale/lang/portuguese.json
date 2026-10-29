@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Tempo de jogo",
-          "description": "Como a biblioteca apresenta um tempo de jogo longo: em dias e horas, ou apenas em horas.",
+          "description": "Como a biblioteca apresenta um tempo de jogo longo: em dias e horas, apenas em horas ou até ao segundo.",
           "auto": "Dias e horas",
-          "hours": "Apenas horas"
+          "hours": "Apenas horas",
+          "seconds": "Até ao segundo"
         },
         "showAchievementButton": {
           "name": "Botão de proezas",

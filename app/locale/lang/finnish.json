@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Peliaika",
-          "description": "Miten kirjasto kirjoittaa pitkän peliajan: päivinä ja tunteina vai pelkkinä tunteina.",
+          "description": "Miten kirjasto kirjoittaa pitkän peliajan: päivinä ja tunteina, pelkkinä tunteina tai sekuntien tarkkuudella.",
           "auto": "Päivät ja tunnit",
-          "hours": "Vain tunnit"
+          "hours": "Vain tunnit",
+          "seconds": "Sekunnin tarkkuus"
         },
         "showAchievementButton": {
           "name": "Saavutukset-painike",

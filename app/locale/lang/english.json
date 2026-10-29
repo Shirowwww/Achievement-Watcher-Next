@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Playtime",
-          "description": "How the library writes a long playtime: in days and hours, or in hours only.",
+          "description": "How the library writes a long playtime: in days and hours, in hours only, or down to the second.",
           "auto": "Days and hours",
-          "hours": "Hours only"
+          "hours": "Hours only",
+          "seconds": "Down to the second"
         },
         "showAchievementButton": {
           "name": "Achievements button",

@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Czas gry",
-          "description": "Jak biblioteka zapisuje długi czas gry: w dniach i godzinach albo tylko w godzinach.",
+          "description": "Jak biblioteka zapisuje długi czas gry: w dniach i godzinach, tylko w godzinach albo co do sekundy.",
           "auto": "Dni i godziny",
-          "hours": "Tylko godziny"
+          "hours": "Tylko godziny",
+          "seconds": "Co do sekundy"
         },
         "showAchievementButton": {
           "name": "Przycisk osiągnięć",

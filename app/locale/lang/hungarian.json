@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Játékidő",
-          "description": "Hogyan írja a könyvtár a hosszú játékidőt: napokban és órákban, vagy csak órákban.",
+          "description": "Hogyan írja a könyvtár a hosszú játékidőt: napokban és órákban, csak órákban, vagy másodperc pontossággal.",
           "auto": "Napok és órák",
-          "hours": "Csak órák"
+          "hours": "Csak órák",
+          "seconds": "Másodpercre pontos"
         },
         "showAchievementButton": {
           "name": "Teljesítmények gomb",

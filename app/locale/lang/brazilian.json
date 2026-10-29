@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Tempo de jogo",
-          "description": "Como a biblioteca escreve um tempo de jogo longo: em dias e horas, ou somente em horas.",
+          "description": "Como a biblioteca escreve um tempo de jogo longo: em dias e horas, somente em horas ou até os segundos.",
           "auto": "Dias e horas",
-          "hours": "Somente horas"
+          "hours": "Somente horas",
+          "seconds": "Até os segundos"
         },
         "showAchievementButton": {
           "name": "Botão de conquistas",

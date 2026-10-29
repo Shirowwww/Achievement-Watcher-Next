@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Spilletid",
-          "description": "Hvordan biblioteket skriver en lang spilletid: i dage og timer eller kun i timer.",
+          "description": "Hvordan biblioteket skriver en lang spilletid: i dage og timer, kun i timer eller helt ned til sekundet.",
           "auto": "Dage og timer",
-          "hours": "Kun timer"
+          "hours": "Kun timer",
+          "seconds": "Ned til sekundet"
         },
         "showAchievementButton": {
           "name": "Præstationsknap",

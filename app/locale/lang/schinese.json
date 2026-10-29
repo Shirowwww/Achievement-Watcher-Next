@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "游戏时长",
-          "description": "游戏库如何显示较长的游戏时长：按天和小时，或仅按小时。",
+          "description": "游戏库如何显示较长的游戏时长：按天和小时、仅按小时，或精确到秒。",
           "auto": "天和小时",
-          "hours": "仅小时"
+          "hours": "仅小时",
+          "seconds": "精确到秒"
         },
         "showAchievementButton": {
           "name": "成就按钮",

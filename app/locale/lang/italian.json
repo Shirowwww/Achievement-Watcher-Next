@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Tempo di gioco",
-          "description": "Come la libreria scrive un tempo di gioco lungo: in giorni e ore, oppure solo in ore.",
+          "description": "Come la libreria scrive un tempo di gioco lungo: in giorni e ore, solo in ore, oppure fino al secondo.",
           "auto": "Giorni e ore",
-          "hours": "Solo ore"
+          "hours": "Solo ore",
+          "seconds": "Fino al secondo"
         },
         "showAchievementButton": {
           "name": "Pulsante obiettivi",

@@ -158,3 +158,11 @@ test('library playtime reads in hours on request, and keeps days and hours by de
   // Under a minute there is nothing to say in hours.
   assert.equal(libraryChrome.playtimeUnits(30, 'hours'), null);
 });
+
+test('library playtime can show the seconds, and never folds them into days', () => {
+  assert.equal(libraryChrome.normalizePlaytimeUnits('seconds'), 'seconds');
+  const twoDays = 2 * 86400 + 11 * 3600 + 7;
+  assert.deepEqual(libraryChrome.playtimeUnits(twoDays, 'seconds'), ['hours', 'minutes', 'seconds']);
+  assert.deepEqual(libraryChrome.playtimeUnits(90, 'seconds'), ['hours', 'minutes', 'seconds']);
+  assert.equal(libraryChrome.playtimeUnits(30, 'seconds'), null);
+});

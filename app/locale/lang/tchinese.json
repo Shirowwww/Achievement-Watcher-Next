@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "遊玩時數",
-          "description": "收藏庫如何顯示較長的遊玩時數：以天和小時顯示，或僅以小時顯示。",
+          "description": "收藏庫如何顯示較長的遊玩時數：以天和小時顯示、僅以小時顯示，或精確到秒。",
           "auto": "天和小時",
-          "hours": "僅小時"
+          "hours": "僅小時",
+          "seconds": "精確到秒"
         },
         "showAchievementButton": {
           "name": "成就按鈕",

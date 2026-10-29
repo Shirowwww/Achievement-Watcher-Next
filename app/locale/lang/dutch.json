@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Speeltijd",
-          "description": "Hoe de bibliotheek een lange speeltijd weergeeft: in dagen en uren, of alleen in uren.",
+          "description": "Hoe de bibliotheek een lange speeltijd weergeeft: in dagen en uren, alleen in uren of tot op de seconde.",
           "auto": "Dagen en uren",
-          "hours": "Alleen uren"
+          "hours": "Alleen uren",
+          "seconds": "Tot op de seconde"
         },
         "showAchievementButton": {
           "name": "Prestatiesknop",

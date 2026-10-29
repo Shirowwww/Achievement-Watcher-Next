@@ -88,6 +88,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Screenshots and clips are named after the achievement first**, then the date
   (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
   achievement's shots. Files saved earlier keep their name.
+- **Playtime down to the second.** Settings > Appearance > Library tiles > Playtime has a third
+  choice, Down to the second, for the tiles and the game page ("59 hours, 36 minutes, 12 seconds").
+- **Cut text scrolls on hover everywhere.** The status line of the title bar and the names in the
+  in-game overlay now scroll to their end under the pointer, like the tiles and Settings already did.
 - **An achievement's name and description can be selected and copied** from its list, to search
   for how to unlock it. A hidden description stays masked.
 - **Bundled presets are more customizable.** Their card and icon decorations show as layers that can

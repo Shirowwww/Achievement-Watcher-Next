@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Oynama süresi",
-          "description": "Kütüphanenin uzun bir oynama süresini nasıl yazacağı: gün ve saat olarak ya da yalnızca saat olarak.",
+          "description": "Kütüphanenin uzun bir oynama süresini nasıl yazacağı: gün ve saat olarak, yalnızca saat olarak ya da saniyesine kadar.",
           "auto": "Gün ve saat",
-          "hours": "Yalnızca saat"
+          "hours": "Yalnızca saat",
+          "seconds": "Saniyesine kadar"
         },
         "showAchievementButton": {
           "name": "Başarımlar düğmesi",

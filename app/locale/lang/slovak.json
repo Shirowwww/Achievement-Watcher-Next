@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Čas hrania",
-          "description": "Ako knižnica zapisuje dlhý čas hrania: v dňoch a hodinách, alebo len v hodinách.",
+          "description": "Ako knižnica zapisuje dlhý čas hrania: v dňoch a hodinách, len v hodinách, alebo až na sekundy.",
           "auto": "Dni a hodiny",
-          "hours": "Len hodiny"
+          "hours": "Len hodiny",
+          "seconds": "Až na sekundy"
         },
         "showAchievementButton": {
           "name": "Tlačidlo úspechov",

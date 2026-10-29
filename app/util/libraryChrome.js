@@ -87,16 +87,19 @@ function resolve(achievement) {
   };
 }
 
-// How a tile writes its playtime: 'auto' turns a long one into days and hours, 'hours' never does.
-const PLAYTIME_UNITS = Object.freeze(['auto', 'hours']);
+// How a tile writes its playtime: 'auto' turns a long one into days and hours, 'hours' never does,
+// 'seconds' is 'hours' down to the second.
+const PLAYTIME_UNITS = Object.freeze(['auto', 'hours', 'seconds']);
+const UNITS_BY_MODE = Object.freeze({ hours: ['hours', 'minutes'], seconds: ['hours', 'minutes', 'seconds'] });
 
 function normalizePlaytimeUnits(value) {
   return PLAYTIME_UNITS.includes(value) ? value : 'auto';
 }
 
-// The units to write `seconds` with, or null for the shared default.
+// The units to write `seconds` with, or null for the shared default (under a minute: seconds alone).
 function playtimeUnits(seconds, mode) {
-  return normalizePlaytimeUnits(mode) === 'hours' && Number(seconds) >= 60 ? ['hours', 'minutes'] : null;
+  const units = UNITS_BY_MODE[normalizePlaytimeUnits(mode)];
+  return units && Number(seconds) >= 60 ? [...units] : null;
 }
 
 module.exports = {

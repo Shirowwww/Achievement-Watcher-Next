@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Thời gian chơi",
-          "description": "Cách thư viện viết thời gian chơi dài: theo ngày và giờ, hoặc chỉ theo giờ.",
+          "description": "Cách thư viện viết thời gian chơi dài: theo ngày và giờ, chỉ theo giờ, hoặc chính xác đến giây.",
           "auto": "Ngày và giờ",
-          "hours": "Chỉ giờ"
+          "hours": "Chỉ giờ",
+          "seconds": "Chính xác đến giây"
         },
         "showAchievementButton": {
           "name": "Nút thành tựu",

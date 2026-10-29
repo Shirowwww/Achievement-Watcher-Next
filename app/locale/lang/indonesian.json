@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Waktu Bermain",
-          "description": "Cara perpustakaan menulis waktu bermain yang panjang: dalam hari dan jam, atau hanya dalam jam.",
+          "description": "Cara perpustakaan menulis waktu bermain yang panjang: dalam hari dan jam, hanya dalam jam, atau hingga detik.",
           "auto": "Hari dan jam",
-          "hours": "Hanya jam"
+          "hours": "Hanya jam",
+          "seconds": "Hingga detik"
         },
         "showAchievementButton": {
           "name": "Tombol pencapaian",

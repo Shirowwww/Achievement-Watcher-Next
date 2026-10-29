@@ -7598,7 +7598,8 @@ var app = {
           .then(({ playtime, lastplayed }) => {
             if (playtime > 0) {
               // Past a day the exact hours are still the useful number, with the rounded days beside it.
-              const exact = formatPlaytime(playtime, { units: playtime < 60 ? ['seconds'] : ['hours', 'minutes'] });
+              const exactUnits = libraryChrome.playtimeUnits(playtime, libraryPlaytimeMode === 'seconds' ? 'seconds' : 'hours');
+              const exact = formatPlaytime(playtime, { units: exactUnits || ['seconds'] });
               const rounded = playtime >= 86400 ? formatPlaytime(playtime, { units: ['days', 'hours'] }) : '';
               $('#achievement .wrapper > .header .playtime span').text(rounded ? `${exact} (~ ${rounded})` : exact);
               $('#achievement .wrapper > .header .playtime').css('display', 'inline-block');

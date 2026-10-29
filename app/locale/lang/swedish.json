@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Speltid",
-          "description": "Hur biblioteket skriver en lång speltid: i dagar och timmar, eller bara i timmar.",
+          "description": "Hur biblioteket skriver en lång speltid: i dagar och timmar, bara i timmar eller ända ner till sekunden.",
           "auto": "Dagar och timmar",
-          "hours": "Bara timmar"
+          "hours": "Bara timmar",
+          "seconds": "Ner till sekunden"
         },
         "showAchievementButton": {
           "name": "Prestationsknapp",

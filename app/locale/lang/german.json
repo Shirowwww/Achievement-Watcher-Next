@@ -355,9 +355,10 @@
         },
         "playtime": {
           "name": "Spielzeit",
-          "description": "Wie die Bibliothek eine lange Spielzeit schreibt: in Tagen und Stunden oder nur in Stunden.",
+          "description": "Wie die Bibliothek eine lange Spielzeit schreibt: in Tagen und Stunden, nur in Stunden oder bis auf die Sekunde.",
           "auto": "Tage und Stunden",
-          "hours": "Nur Stunden"
+          "hours": "Nur Stunden",
+          "seconds": "Sekundengenau"
         },
         "showAchievementButton": {
           "name": "Erfolge-Schaltfläche",
