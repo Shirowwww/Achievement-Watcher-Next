@@ -37,6 +37,7 @@ const { removeLegacyScreenCapture } = require('../util/legacyScreenCapture.js');
 const { deriveWatchdogState } = require('../util/watchdogState.js');
 const { sweepStaleWatchdog } = require('../util/staleWatchdog.js');
 const links = require('../util/links.js');
+const { isAppFileUrl } = require('../util/externalLink.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 const { createRequestGate, isThrottleStatus } = require('../util/httpThrottle.js');
 const sgdbAssetCache = require('../util/sgdbAssetCache.js');
@@ -4879,7 +4880,7 @@ function createMainWindow() {
     // External open links: only http(s) reaches the OS - forwarding anything else turned in-page
     // navigation into arbitrary protocol launches (ms-msdt:, search-ms:, UNC…).
     const openExternal = function (event, url) {
-      if (url.startsWith('file:///')) return;
+      if (isAppFileUrl(url, app.getAppPath())) return;
       event.preventDefault();
       if (/^https?:\/\//i.test(url)) shell.openExternal(url).catch(() => {});
       else debug.log(`[nav] blocked navigation to a non-http(s) scheme: ${String(url).slice(0, 80)}`);
@@ -5908,6 +5909,8 @@ function presetRequestAllowed(details) {
 function watchPresetWindow(win) {
   const id = win.webContents.id;
   presetWebContentsIds.add(id);
+  // WebRTC never passes through webRequest: without a proxy this policy leaves it no route out.
+  win.webContents.setWebRTCIPHandlingPolicy('disable_non_proxied_udp');
   win.on('closed', () => presetWebContentsIds.delete(id));
 }
 

@@ -4,7 +4,8 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
-const { isSafeExternalUrl, openExternalSafe } = require(path.join(__dirname, '..', '..', 'app', 'util', 'externalLink.js'));
+const { pathToFileURL } = require('node:url');
+const { isAppFileUrl, isSafeExternalUrl, openExternalSafe } = require(path.join(__dirname, '..', '..', 'app', 'util', 'externalLink.js'));
 
 test('web links are accepted', () => {
   for (const url of [
@@ -81,4 +82,17 @@ test('every CrakFiles catalog link in the renderer goes through the guard', () =
     assert.ok(!source.includes(bad), `${bad} must go through openCatalogLink()`);
   }
   assert.ok(source.includes('openCatalogLink(fix.href)'));
+});
+
+test('the main window may only move to a page of the app itself', () => {
+  const root = path.resolve('/AW Next/resources/app.asar');
+  const page = (relative) => pathToFileURL(path.join(root, relative)).href;
+  assert.equal(isAppFileUrl(page('view/app.html'), root), true);
+  assert.equal(isAppFileUrl(`${page('view/app.html')}#settings`, root), true);
+  // A file dropped anywhere else would run with the main window's preload bridge.
+  assert.equal(isAppFileUrl(pathToFileURL(path.resolve('/Users/me/Downloads/evil.html')).href, root), false);
+  assert.equal(isAppFileUrl(pathToFileURL(`${root}.evil/view/app.html`).href, root), false);
+  assert.equal(isAppFileUrl(page('../../evil.html'), root), false);
+  assert.equal(isAppFileUrl('https://example.com/', root), false);
+  assert.equal(isAppFileUrl('not a url', root), false);
 });
