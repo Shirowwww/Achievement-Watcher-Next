@@ -1148,9 +1148,10 @@
                       <div class="previous">
                         <span class="arrow"><i class="fas fa-chevron-left"></i></span>
                       </div>
-                      <select autocomplete="off" id="option_gogOfficial">
-                        <option value="true" selected></option>
-                        <option value="false"></option>
+                      <select autocomplete="off" class="dropdown" id="option_gogOfficial">
+                        <option value="0"></option>
+                        <option value="1"></option>
+                        <option value="2" selected></option>
                       </select>
                       <div class="next">
                         <span class="arrow"><i class="fas fa-chevron-right"></i></span>
@@ -1488,6 +1489,16 @@
                       </div>
                       <div class="help" id="steam-import-family-help">Requires a connected Steam account.</div>
                     </li>
+                  </ul>
+                </div>
+
+                <!-- One row per Steam library folder, built by ui/settings.js from libraryfolders.vdf. A
+                     drive kept connected as storage is switched off here and its games leave the list. -->
+                <div class="arrow-list" id="steam-libraries-card" style="display:none">
+                  <div class="title"><i class="fas fa-hdd"></i> <span id="steam-libraries-title">Steam libraries</span></div>
+                  <ul id="steam-libraries-list"></ul>
+                  <ul>
+                    <li class="actions-row"><div id="steam-libraries-help" class="help"></div></li>
                   </ul>
                 </div>
               </div>
@@ -3788,7 +3799,7 @@
                 </ul>
               </div>
 
-              <!-- Hidden games, next to "Hide games at 0 %". In General rather than Advanced: "Remove from list"
+              <!-- Removed games, next to "Hide games at 0 %". In General rather than Advanced: "Remove from AW Next"
                    is on every game's menu in both modes, so the only way to undo it cannot sit behind a mode
                    Simple never shows. -->
               <div class="arrow-list" id="blacklist-card">
@@ -4954,8 +4965,9 @@
                     <label class="onboarding-source-row">
                       <span class="onboarding-source-name"><i class="brand-icon brand-gog" aria-hidden="true"></i> GOG Galaxy</span>
                       <select id="onboard-src-gogOfficial">
-                        <option value="true"></option>
-                        <option value="false"></option>
+                        <option value="0"></option>
+                        <option value="1"></option>
+                        <option value="2"></option>
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-gogOfficial-hint"></small>
                     </label>

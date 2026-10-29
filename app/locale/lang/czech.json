@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Nevidíte žádná odemčení?",
   "scrollUp": "Nahoru",
   "allGamesBackButton": "Všechny hry",
-  "removeFromList": "Odebrat ze seznamu",
+  "removeFromList": "Odebrat z AW Next",
   "buildIconPrefetchCache": "Uložit ikony úspěchů do mezipaměti",
   "contextMenu": {
     "resetPlaytime": "Resetovat dobu hraní",
@@ -1441,7 +1441,7 @@
       "title": "Zdroje her",
       "officialPlatforms": {
         "title": "Oficiální platformy",
-        "description": "Štít označuje oficiální launchery. Steam, Epic a Xbox nabízejí tři možnosti: Žádné, Nainstalované (hry v tomto počítači) nebo Vlastněné (celá knihovna připojeného účtu). Ostatní se zapínají nebo vypínají."
+        "description": "Štít označuje oficiální launchery. Steam, Epic a Xbox nabízejí tři možnosti: Žádné, Nainstalované (hry v tomto počítači) nebo Vlastněné (celá knihovna připojeného účtu). GOG Galaxy nabízí Žádné, Nainstalované nebo Hrané (všechny hry, k nimž má Galaxy data o hraní). Ostatní se zapínají nebo vypínají."
       },
       "legitSteam": {
         "name": "Zobrazit hry Steam",
@@ -1493,7 +1493,12 @@
         "description": "Data oficiálního klienta Ubisoft Connect"
       },
       "gogOfficial": {
-        "description": "Data oficiálního klienta GOG Galaxy"
+        "description": "Data oficiálního klienta GOG Galaxy. Nainstalované uvádí hry v tomto počítači; Hrané uvádí i ty, které byly odinstalovány, ale k nimž Galaxy stále uchovává data o hraní.",
+        "value": {
+          "none": "Žádné",
+          "installed": "Nainstalované",
+          "played": "Hrané"
+        }
       },
       "epicOfficial": {
         "description": "Data oficiálního klienta Epic Games",
@@ -1714,7 +1719,7 @@
         "Označit jako ručně odemčené (pravé tlačítko na úspěchu) zaznamená odemčení, které žádný zdroj nevidí.",
         "Resetovat úspěchy… umožní hrát hru znovu od nuly a nejprve zálohuje každý soubor. Funguje u emulovaných her, ne u Steamu, Epicu ani Xboxu, jejichž odemčení jsou uložená na vašem účtu.",
         "Doba hraní se sleduje, dokud hra běží; Sledování doby hraní v Nastavení > Oznámení zapíná oznámení o začátku a konci.",
-        "Zapomenout tuto hru… vymaže vše, co AW Next o hře uchovává (uložené pozice se předtím zálohují). Odebrat ze seznamu ji jen skryje.",
+        "Vymazat údaje o hře… vymaže vše, co AW Next o hře uchovává (uložené pozice se předtím zálohují) a příští prohledání ji znovu najde. Odebrat z AW Next ji vyřadí z knihovny, dokud ji nevrátíte v Nastavení > Obecné. Skrýt ze zobrazení ji ponechá sledovanou, v zobrazení Skryté v nabídce Kolekce.",
         "Nastavení hry > Jazyk úspěchů zobrazí úspěchy a oznámení jedné hry v jiném jazyce než u ostatních.",
         "Nastavení > Pokročilé > Záloha profilu: Exportovat profil… uloží nastavení, předvolby, motivy, obaly a dobu hraní do jednoho souboru .awbackup pro přeinstalaci nebo nový PC. Přihlášení se neukládají."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Exportovat profil…",
         "profileRestore": "Obnovit profil…"
       },
-      "blacklistTitle": "Skryté hry",
-      "blacklistButton": "Znovu zobrazit všechny skryté hry",
-      "blacklistInfo": "Klikněte pravým tlačítkem na hru v knihovně a zvolte „Odebrat ze seznamu“, aby se zde skryla.",
-      "blacklistEmpty": "Žádné skryté hry.",
+      "blacklistTitle": "Odebrané hry",
+      "blacklistButton": "Vrátit všechny odebrané hry",
+      "blacklistInfo": "Klikněte pravým tlačítkem na hru v knihovně a zvolte „Odebrat z AW Next“, aby se zde zobrazila.",
+      "blacklistEmpty": "Žádné odebrané hry.",
       "blacklistRestore": "Obnovit tuto hru",
       "mainSteam": {
         "title": "Hlavní účet Steam",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Kolekce",
     "collection-all": "Všechny hry",
+    "collection-hidden": "Skryté",
+    "game-hide": "Skrýt ze zobrazení",
+    "game-unhide": "Zobrazit znovu",
     "collection-new": "Nová kolekce…",
     "collection-edit": "Upravit kolekci…",
     "collection-name": "Název kolekce",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Zapsáno {count} úspěchů do {path}",
     "repair-failed": "Oprava se nezdařila",
     "could-not-write-steam-settings": "Steam_settings se nepodařilo zapsat.",
-    "blacklist-add-failed": "Tuto hru se nepodařilo skrýt",
+    "blacklist-add-failed": "Tuto hru se nepodařilo odebrat",
     "emulator-source": "Zdroj emulátoru",
     "appid-override": "Nastavit AppID ručně…",
     "appid-override-prompt": "AppID služby Steam pro „{name}“ ({folder}). Přepíše odhad AW Next podle názvu - užitečné, když stejný název nese jiná hra.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Generování konfigurací se nezdařilo: {error}",
     "error-generating-configs": "Chyba při generování konfigurací",
     "error-while-auto-finding-folder-s": "Chyba při automatickém hledání složek",
-    "error-while-trying-to-reset-user-blacklist": "Skryté hry se nepodařilo znovu zobrazit",
+    "error-while-trying-to-reset-user-blacklist": "Odebrané hry se nepodařilo vrátit",
     "websocket-connection-error": "Chyba připojení WebSocket",
     "notification-test-failure": "Test oznámení se nezdařil.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Chyba při navazování připojení: net::ERR_CONNECTION_REFUSED\nBěží Watchdog?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Úspěchy a doba hraní",
     "schema-language-menu": "Jazyk úspěchů",
     "schema-language-global": "Stejný jako aplikace ({language})",
-    "forget-game-menu": "Zapomenout tuto hru…",
-    "forget-game-confirm-title": "Zapomenout {game}?",
+    "forget-game-menu": "Vymazat údaje o hře…",
+    "forget-game-confirm-title": "Vymazat údaje o hře {game}?",
     "forget-game-confirm-message": "AW Next vymaže vše, co o této hře uchovává. Příští prohledání ji najde znovu jako novou hru.",
     "forget-game-detail-ach": "• Úspěchy: {count} soubor(ů) uložených pozic, zálohováno a poté vymazáno",
     "forget-game-detail-playtime": "• Doba hraní",
     "forget-game-detail-cache": "• Seznam úspěchů, ikony a odemčení v mezipaměti ({count})",
     "forget-game-detail-config": "• Konfigurace zapsaná AW Next do složky hry ({count})",
     "forget-game-detail-settings": "• Její spustitelný soubor, AppID, zdroj emulátoru, jazyk a nastavení postupu v AW Next",
-    "forget-game-button": "Zapomenout",
-    "forget-game-done-title": "Hra zapomenuta",
+    "forget-game-button": "Vymazat",
+    "forget-game-done-title": "Údaje o hře vymazány",
     "forget-game-done-message": "Knihovna se nyní znovu prohledává.",
     "reset-ach-menu": "Resetovat úspěchy…",
     "reset-ach-restore-menu": "Obnovit zálohu úspěchů",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Hra Xbox ve vaší knihovně",
     "steam-hide-stale": "Skrýt hry, které už nejsou ve vaší knihovně Steam",
     "steam-hide-stale-help": "Vyžaduje připojený účet Steam. Hry nainstalované v tomto počítači a hry sdílené přes Steam Family se nikdy neskrývají.",
+    "steam-libraries-title": "Knihovny Steam",
+    "steam-libraries-help": "Zakažte knihovnu, aby její hry nebyly v žádné kolekci, například disk, který máte připojený jako úložiště. Po opětovném povolení se vrátí.",
     "steam-import-owned": "Přidat hry, které vlastníte",
     "steam-import-owned-help": "Zobrazí celou vaši knihovnu Steam, včetně her, které nikdy nebyly nainstalovány v tomto počítači. Velká knihovna výrazně prodlouží první sken. Postup u her, které se na tomto PC nikdy nehrály, se čte z vašeho profilu Steam, takže podrobnosti o hrách v něm musí být veřejné.",
     "steam-import-family": "Přidat hry sdílené s vámi přes Steam Family",

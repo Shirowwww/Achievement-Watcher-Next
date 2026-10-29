@@ -362,6 +362,14 @@ module.exports.load = () => {
       options.achievement_source.steamAccountFamily = false;
     }
 
+    // Steam library folders whose games stay out of the list (Settings > Sources). Stored as an ini
+    // array; a single value or a missing key reads back as a string or nothing.
+    {
+      const hidden = options.achievement_source.steamHiddenLibraries;
+      const list = Array.isArray(hidden) ? hidden : typeof hidden === 'string' ? [hidden] : [];
+      options.achievement_source.steamHiddenLibraries = list.map((dir) => String(dir).trim()).filter(Boolean);
+    }
+
     if (typeof options.achievement_source.steamEmu !== 'boolean') {
       options.achievement_source.steamEmu = true;
     }
@@ -437,8 +445,17 @@ module.exports.load = () => {
       options.achievement_source.gog = true;
     }
 
-    if (typeof options.achievement_source.gogOfficial !== 'boolean') {
-      options.achievement_source.gogOfficial = true;
+    // Was an on/off switch before it could leave out the games Galaxy keeps after an uninstall. On
+    // listed every played game, which is what "played" (2) is now.
+    if (typeof options.achievement_source.gogOfficial === 'boolean') {
+      options.achievement_source.gogOfficial = options.achievement_source.gogOfficial ? 2 : 0;
+    }
+    if (
+      options.achievement_source.gogOfficial != 0 &&
+      options.achievement_source.gogOfficial != 1 &&
+      options.achievement_source.gogOfficial != 2
+    ) {
+      options.achievement_source.gogOfficial = 2;
     }
 
     if (typeof options.achievement_source.ubisoftOfficial !== 'boolean') {
@@ -756,7 +773,7 @@ module.exports.load = () => {
         lumaPlay: true,
         runeUplay: true,
         gog: true,
-        gogOfficial: true,
+        gogOfficial: 2,
         ubisoftOfficial: true,
         epic: true,
         epicOfficial: 2,

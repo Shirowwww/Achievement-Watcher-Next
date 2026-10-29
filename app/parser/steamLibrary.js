@@ -73,6 +73,28 @@ function libraryAppsDirs(clientDir) {
   return dirs;
 }
 
+// Every library root Steam knows (the folder holding steamapps), the client's own first.
+function libraryRoots(clientDir) {
+  return libraryAppsDirs(clientDir).map((apps) => path.dirname(apps));
+}
+
+// Is `dir` one of `folders` or inside one? A sibling that only shares the prefix (E:\Steam2 for
+// E:\Steam) is not; Windows compares without case.
+function isInsideAnyFolder(dir, folders, platform = process.platform) {
+  if (!dir) return false;
+  const p = platform === 'win32' ? path.win32 : path;
+  const key = (value) => {
+    const resolved = p.resolve(String(value || ''));
+    return platform === 'win32' ? resolved.toLowerCase() : resolved;
+  };
+  const target = key(dir);
+  return (folders || []).some((folder) => {
+    if (!String(folder || '').trim()) return false;
+    const root = key(folder);
+    return target === root || target.startsWith(root.endsWith(p.sep) ? root : root + p.sep);
+  });
+}
+
 // The folder Steam installed `appid` in, or '' when it is not installed here.
 function installDirOf(appid, { clientDir = steamClientDir() } = {}) {
   for (const apps of libraryAppsDirs(clientDir)) {
@@ -190,6 +212,8 @@ module.exports = {
   steamRegistry,
   steamClientPid,
   libraryAppsDirs,
+  libraryRoots,
+  isInsideAnyFolder,
   installDirOf,
   parseBinaryVdf,
   shortcutLaunches,

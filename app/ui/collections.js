@@ -38,7 +38,18 @@
     } catch {
       /* no storage: no remembered filter */
     }
+    if (id === collections.HIDDEN_ID) return state.hidden.length ? id : '';
     return collections.collectionById(state, id) ? id : '';
+  }
+
+  // The Hidden view dressed as a collection, for the toolbar button and the menu row.
+  function hiddenView() {
+    return { id: collections.HIDDEN_ID, name: t('collection-hidden', 'Hidden', 'Masqués'), color: '#a4b0be', icon: 'eye-slash', image: '' };
+  }
+
+  function activeView() {
+    const id = activeId();
+    return id === collections.HIDDEN_ID ? hiddenView() : collections.collectionById(state, id);
   }
 
   function setActive(id) {
@@ -55,6 +66,10 @@
     return collections.memberKeys(state, activeId());
   }
 
+  function activeExcluded() {
+    return collections.excludedKeys(state, activeId());
+  }
+
   function imageUrl(collection) {
     const file = collection && collection.image && store ? store.imagePath(collection.image) : '';
     return file ? pathToFileURL(file).href : '';
@@ -63,7 +78,7 @@
   function paintButton() {
     const button = $('#sort-box .collection-filter');
     if (!button.length) return;
-    const active = collections.collectionById(state, activeId());
+    const active = activeView();
     const title = t('collections', 'Collections', 'Collections');
     button.toggleClass('active', !!active);
     button.attr('title', active ? `${title}: ${active.name}` : title).attr('aria-label', active ? `${title}: ${active.name}` : title);
@@ -76,7 +91,7 @@
   // Stats and the empty state follow the visible tiles, as they do for the installed-only filter.
   function applyFilter({ animateStats = false } = {}) {
     const list = document.querySelector('#game-list ul');
-    if (list) collectionFilter.applyToList(list, activeMembers());
+    if (list) collectionFilter.applyToList(list, activeMembers(), activeExcluded());
     paintButton();
     if (typeof updateInstalledEmptyState === 'function') updateInstalledEmptyState();
     window.refreshProfileStats?.({ animate: animateStats });
@@ -85,12 +100,12 @@
 
   // Called for each tile as it is built, since tiles stream in after the filter was applied.
   function applyToTile(li) {
-    if (li) collectionFilter.applyToTile(li, activeMembers());
+    if (li) collectionFilter.applyToTile(li, activeMembers(), activeExcluded());
   }
 
+  // All games too: the hidden games stay out of its stats.
   function scopeGames(games) {
-    const id = activeId();
-    return id ? collections.filterGames(games, state, id) : games;
+    return collections.filterGames(games, state, activeId());
   }
 
   function refresh() {
@@ -237,6 +252,19 @@
         })
       );
     }
+    // Shown only while it holds a game: an empty Hidden row would be a view of nothing.
+    if (state.hidden.length) {
+      const hidden = hiddenView();
+      panel.append(
+        menuRow({
+          label: hidden.name,
+          count: collections.countGames(gameList, state, hidden.id, { installedOnly }),
+          marker: menuMarker(hidden),
+          selected: current === hidden.id,
+          onPick: () => setActive(hidden.id),
+        })
+      );
+    }
     panel.append('<div class="collection-menu-separator" role="separator"></div>');
     const newMarker = $('<span class="collection-menu-marker is-new" aria-hidden="true"><i class="fas fa-plus"></i></span>');
     panel.append(
@@ -324,6 +352,25 @@
       })
     );
     return new MenuItem({ label: t('collections', 'Collections', 'Collections'), submenu });
+  }
+
+  // "Hide from view" in a game's context menu, or "Show again" once hidden.
+  function hideMenuItem(appid) {
+    const key = collections.normalizeGameKey(appid);
+    if (!key) return null;
+    reload();
+    const hidden = collections.isHidden(state, key);
+    return new (remote().MenuItem)({
+      label: hidden ? t('game-unhide', 'Show again', 'Réafficher') : t('game-hide', 'Hide from view', 'Masquer de l’affichage'),
+      click() {
+        try {
+          state = hidden ? store.unhideGames(key) : store.hideGames(key);
+          applyFilter();
+        } catch (err) {
+          report(err);
+        }
+      },
+    });
   }
 
   function field(labelText) {
@@ -683,7 +730,7 @@
     if (collection) openForm(collection);
   }
 
-  window.awCollections = { applyToTile, scopeGames, gameMenuItem, refresh, activeId };
+  window.awCollections = { applyToTile, scopeGames, gameMenuItem, hideMenuItem, refresh, activeId };
 
   $(function () {
     reload();

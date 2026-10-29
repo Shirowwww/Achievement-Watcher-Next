@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Não vê nenhum desbloqueio?",
   "scrollUp": "Subir",
   "allGamesBackButton": "Todos os jogos",
-  "removeFromList": "Remover da lista",
+  "removeFromList": "Remover do AW Next",
   "buildIconPrefetchCache": "Guardar em cache os ícones das proezas",
   "contextMenu": {
     "resetPlaytime": "Repor tempo de jogo",
@@ -1441,7 +1441,7 @@
       "title": "Fontes de jogos",
       "officialPlatforms": {
         "title": "Plataformas oficiais",
-        "description": "O escudo assinala os lançadores oficiais. Steam, Epic e Xbox oferecem três opções: Nenhum, Instalados (jogos neste PC) ou Na biblioteca (toda a biblioteca de uma conta ligada). Os restantes ativam-se ou desativam-se."
+        "description": "O escudo assinala os lançadores oficiais. Steam, Epic e Xbox oferecem três opções: Nenhum, Instalados (jogos neste PC) ou Na biblioteca (toda a biblioteca de uma conta ligada). O GOG Galaxy oferece Nenhum, Instalados ou Jogados (todos os jogos para os quais o Galaxy tem dados de jogo). Os restantes ativam-se ou desativam-se."
       },
       "legitSteam": {
         "name": "Mostrar jogos Steam",
@@ -1493,7 +1493,12 @@
         "description": "Dados do cliente oficial Ubisoft Connect"
       },
       "gogOfficial": {
-        "description": "Dados do cliente oficial GOG Galaxy"
+        "description": "Dados do cliente oficial GOG Galaxy. Instalados lista os jogos neste PC; Jogados lista também os que foram desinstalados, mas para os quais o Galaxy ainda guarda dados de jogo.",
+        "value": {
+          "none": "Nenhum",
+          "installed": "Instalados",
+          "played": "Jogados"
+        }
       },
       "epicOfficial": {
         "description": "Dados do cliente oficial Epic Games",
@@ -1714,7 +1719,7 @@
         "Marcar como desbloqueado manualmente (botão direito numa proeza) regista um desbloqueio que nenhuma fonte consegue ver.",
         "Repor as proezas… permite jogar de novo a partir do zero e copia primeiro todos os ficheiros. Funciona em jogos emulados, não em Steam, Epic ou Xbox, cujos desbloqueios estão na sua conta.",
         "O tempo de jogo é registado enquanto o jogo corre; Monitorização do tempo de jogo em Definições > Notificação liga as notificações de início e fim.",
-        "Esquecer este jogo… apaga tudo o que o AW Next guarda sobre um jogo (as gravações são copiadas primeiro). Remover da lista apenas o esconde.",
+        "Limpar os dados deste jogo… apaga tudo o que o AW Next guarda sobre um jogo (as gravações são copiadas primeiro), e a próxima análise volta a encontrá-lo. Remover do AW Next retira-o da biblioteca até o repor em Definições > Geral. Ocultar da visualização mantém-no acompanhado, na vista Ocultos do menu Coleções.",
         "Definições do jogo > Idioma das proezas mostra as proezas e as notificações de um jogo noutro idioma que não o do resto.",
         "Definições > Avançado > Cópia de segurança do perfil: Exportar perfil… guarda as suas definições, predefinições, temas, capas e tempo de jogo num ficheiro .awbackup, para uma reinstalação ou um PC novo. As sessões iniciadas não são guardadas."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Exportar perfil…",
         "profileRestore": "Restaurar perfil…"
       },
-      "blacklistTitle": "Jogos ocultos",
-      "blacklistButton": "Mostrar de novo todos os jogos ocultos",
-      "blacklistInfo": "Clique com o botão direito num jogo da biblioteca e escolha “Remover da lista” para o ocultar aqui.",
-      "blacklistEmpty": "Não existem jogos ocultos.",
+      "blacklistTitle": "Jogos removidos",
+      "blacklistButton": "Repor todos os jogos removidos",
+      "blacklistInfo": "Clique com o botão direito num jogo da biblioteca e escolha “Remover do AW Next” para o listar aqui.",
+      "blacklistEmpty": "Não existem jogos removidos.",
       "blacklistRestore": "Restaurar este jogo",
       "mainSteam": {
         "title": "Conta Steam principal",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Coleções",
     "collection-all": "Todos os jogos",
+    "collection-hidden": "Ocultos",
+    "game-hide": "Ocultar da visualização",
+    "game-unhide": "Mostrar novamente",
     "collection-new": "Nova coleção…",
     "collection-edit": "Editar coleção…",
     "collection-name": "Nome da coleção",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Escritas {count} proezas em {path}",
     "repair-failed": "Falha na reparação",
     "could-not-write-steam-settings": "Não foi possível escrever os steam_settings.",
-    "blacklist-add-failed": "Não foi possível ocultar este jogo",
+    "blacklist-add-failed": "Não foi possível remover este jogo",
     "emulator-source": "Origem do emulador",
     "appid-override": "Definir o AppID manualmente…",
     "appid-override-prompt": "Appid do Steam a usar para \"{name}\" ({folder}). Substitui a dedução do AW Next feita pelo nome - útil quando outro jogo tem o mesmo nome desta pasta.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Falha ao gerar as configurações: {error}",
     "error-generating-configs": "Erro ao gerar as configurações",
     "error-while-auto-finding-folder-s": "Erro ao procurar pastas automaticamente",
-    "error-while-trying-to-reset-user-blacklist": "Não foi possível mostrar de novo os jogos ocultos",
+    "error-while-trying-to-reset-user-blacklist": "Não foi possível repor os jogos removidos",
     "websocket-connection-error": "Erro de ligação WebSocket",
     "notification-test-failure": "Falha no teste de notificação.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Erro ao estabelecer a ligação: net::ERR_CONNECTION_REFUSED\nO Watchdog está em execução?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Proezas e tempo de jogo",
     "schema-language-menu": "Idioma das proezas",
     "schema-language-global": "Igual à aplicação ({language})",
-    "forget-game-menu": "Esquecer este jogo…",
-    "forget-game-confirm-title": "Esquecer {game}?",
+    "forget-game-menu": "Limpar os dados deste jogo…",
+    "forget-game-confirm-title": "Limpar os dados de {game}?",
     "forget-game-confirm-message": "O AW Next repõe tudo o que guarda sobre este jogo. A próxima análise volta a encontrá-lo como um jogo novo.",
     "forget-game-detail-ach": "• Proezas: {count} ficheiro(s) de gravação, com cópia de segurança e depois limpos",
     "forget-game-detail-playtime": "• Tempo de jogo",
     "forget-game-detail-cache": "• Lista de proezas, ícones e desbloqueios em cache ({count})",
     "forget-game-detail-config": "• Configuração escrita pelo AW Next na pasta do jogo ({count})",
     "forget-game-detail-settings": "• O executável, o AppID, a origem do emulador, o idioma e as definições de progresso do jogo no AW Next",
-    "forget-game-button": "Esquecer",
-    "forget-game-done-title": "Jogo esquecido",
+    "forget-game-button": "Limpar",
+    "forget-game-done-title": "Dados do jogo limpos",
     "forget-game-done-message": "A biblioteca está a ser analisada novamente.",
     "reset-ach-menu": "Repor as proezas…",
     "reset-ach-restore-menu": "Restaurar uma cópia de segurança de proezas",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Jogo Xbox na sua biblioteca",
     "steam-hide-stale": "Ocultar os jogos que já não estão na sua biblioteca Steam",
     "steam-hide-stale-help": "Requer uma conta Steam ligada. Os jogos instalados neste PC e os partilhados pela Família Steam nunca são ocultados.",
+    "steam-libraries-title": "Bibliotecas Steam",
+    "steam-libraries-help": "Desative uma biblioteca para deixar os respetivos jogos fora de todas as coleções, por exemplo um disco que mantém ligado como armazenamento. Voltam quando a ativar novamente.",
     "steam-import-owned": "Adicionar os jogos que possui",
     "steam-import-owned-help": "Apresenta toda a sua biblioteca Steam, incluindo jogos que nunca foram instalados neste PC. Uma biblioteca grande torna a primeira análise muito mais demorada. O progresso dos jogos nunca jogados neste PC é lido a partir do seu perfil Steam, pelo que os detalhes de jogos têm de ser públicos.",
     "steam-import-family": "Adicionar os jogos partilhados consigo através da Família Steam",

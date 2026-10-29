@@ -139,6 +139,8 @@ function createCollectionStore(userDataPath) {
     imagePath,
     addGames: (id, keys) => mutate((current) => collections.addGames(current, id, keys)),
     removeGames: (id, keys) => mutate((current) => collections.removeGames(current, id, keys)),
+    hideGames: (keys) => mutate((current) => collections.hideGames(current, keys)),
+    unhideGames: (keys) => mutate((current) => collections.unhideGames(current, keys)),
   };
 }
 

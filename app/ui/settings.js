@@ -878,6 +878,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         .catch((err) => debug.log(`startup:get-start-with-windows failed: ${err}`));
 
       for (let option in app.config.achievement_source) {
+        // steamHiddenLibraries is a list of paths, not a select value; a quote in one would break the selector.
+        if (typeof app.config.achievement_source[option] === 'object') continue;
         if ($(`#option_${option} option[value="${app.config.achievement_source[option]}"]`).length > 0) {
           $(`#option_${option}`).val(app.config.achievement_source[option].toString()).change();
         }
@@ -1011,6 +1013,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         .catch(() => {});
 
       populateLegitUsers(app.config.steam.main || '0');
+      populateSteamLibraries(app.config.achievement_source.steamHiddenLibraries);
 
       // Snapshot the settings half now and the folders once they are on screen; a folder list read
       // before it is populated would look empty and make every OK a change.
@@ -1598,6 +1601,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // them. Read by id instead: the pair belongs next to the account that makes them work.
       app.config.achievement_source.steamAccountOwned = $('#option_steamAccountOwned').val() === 'true';
       app.config.achievement_source.steamAccountFamily = $('#option_steamAccountFamily').val() === 'true';
+      // Every hidden folder has a row (populateSteamLibraries shows the ones Steam no longer lists),
+      // so reading the rows back cannot drop one.
+      const hiddenLibraries = readHiddenSteamLibraries();
+      if (hiddenLibraries) app.config.achievement_source.steamHiddenLibraries = hiddenLibraries;
 
       // #options-uplay carries the Uplay loader's own settings and was never collected here, so a
       // change to one was read back on the next open and silently reverted.
@@ -1974,6 +1981,17 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#steam-hide-stale option[value="true"]').text(common.enable || 'Enabled');
         $('#steam-hide-stale option[value="false"]').text(common.disable || 'Disabled');
 
+        $('#steam-libraries-title').text(t('steam-libraries-title', 'Steam libraries', 'Bibliothèques Steam'));
+        $('#steam-libraries-help').text(
+          t(
+            'steam-libraries-help',
+            'Switch a library off to leave its games out of every collection, for example a drive you keep connected as storage. They come back when you switch it on again.',
+            'Désactive une bibliothèque pour retirer ses jeux de toutes les collections, par exemple un disque que tu gardes branché pour le stockage. Ils reviennent quand tu la réactives.'
+          )
+        );
+        $('#steam-libraries-list select option[value="true"]').text(common.enable || 'Enabled');
+        $('#steam-libraries-list select option[value="false"]').text(common.disable || 'Disabled');
+
         $('#steam-import-owned-label').text(t('steam-import-owned', 'Add the games you own', 'Ajouter les jeux que tu possèdes'));
         $('#steam-import-owned-help').text(
           t(
@@ -2072,6 +2090,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       // Turning the official Steam source off while Settings is open takes the import rows with it.
       $('#option_legitSteam').off('change.steamLibraryCard').on('change.steamLibraryCard', refresh);
+      $('#option_legitSteam').off('change.steamLibraries').on('change.steamLibraries', toggleSteamLibrariesCard);
 
       refresh();
     })();
@@ -4223,7 +4242,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           remote.dialog.showMessageBoxSync({
             type: 'error',
             title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
-            message: t('error-while-trying-to-reset-user-blacklist', 'Error while trying to reset user blacklist', 'Erreur lors de la réinitialisation de la liste noire'),
+            message: t('error-while-trying-to-reset-user-blacklist', 'Could not bring the removed games back', 'Impossible de remettre les jeux retirés'),
             detail: `${err}`,
           });
         });
@@ -5393,6 +5412,66 @@ function folderEntryFromRow(row) {
     detector: elem.attr('data-detector') || '',
     enabled: elem.attr('data-enabled') !== 'false',
   };
+}
+
+// Every Steam library folder on this PC, plus each hidden one Steam no longer lists (a drive removed
+// from Steam), so that none can be dropped by reading the rows back on save.
+function steamLibraryFolders(hidden) {
+  const steamLibrary = require(path.join(appPath, 'parser/steamLibrary.js'));
+  let roots = [];
+  try {
+    roots = steamLibrary.libraryRoots(steamLibrary.steamClientDir());
+  } catch (err) {
+    debug.log(`[steam] library folders unreadable => ${err}`);
+  }
+  for (const dir of hidden) {
+    // Each folder inside the other: the same folder, whatever its case or trailing separator.
+    if (!roots.some((root) => steamLibrary.isInsideAnyFolder(root, [dir]) && steamLibrary.isInsideAnyFolder(dir, [root]))) roots.push(dir);
+  }
+  return roots.map((dir) => ({ dir, shown: !steamLibrary.isInsideAnyFolder(dir, hidden) }));
+}
+
+function steamLibraryRow({ dir, shown }) {
+  const common = (window.appLocale && window.appLocale.settings && window.appLocale.settings.common) || {};
+  const arrow = (side, icon) => $('<div>').addClass(side).append($('<span class="arrow">').append($('<i>').addClass(`fas ${icon}`)));
+  const select = $('<select autocomplete="off">')
+    .append($('<option value="true">').text(common.enable || 'Enabled'))
+    .append($('<option value="false">').text(common.disable || 'Disabled'))
+    .val(shown ? 'true' : 'false');
+  const step = () => {
+    select.val(select.val() === 'true' ? 'false' : 'true');
+    select[0].dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  return $('<li>')
+    .attr('data-dir', dir)
+    .append($('<div class="left">').append($('<i class="fas fa-folder"></i>'), ' ', $('<span>').text(dir)))
+    .append($('<div class="right">').append(arrow('previous', 'fa-chevron-left').on('click', step), select, arrow('next', 'fa-chevron-right').on('click', step)));
+}
+
+function populateSteamLibraries(hidden) {
+  const list = $('#steam-libraries-list').empty();
+  const folders = steamLibraryFolders(Array.isArray(hidden) ? hidden : []);
+  folders.forEach((folder) => list.append(steamLibraryRow(folder)));
+  // A single library has nothing to choose between unless it is the one that was hidden.
+  list.attr('data-useful', String(folders.length > 1 || folders.some((folder) => !folder.shown)));
+  list.attr('data-rendered', 'true');
+  toggleSteamLibrariesCard();
+}
+
+function toggleSteamLibrariesCard() {
+  const useful = $('#steam-libraries-list').attr('data-useful') === 'true';
+  $('#steam-libraries-card').toggle(useful && $('#option_legitSteam').val() !== '0');
+}
+
+// The folders switched off, or null when the rows were never drawn (the saved list then stands).
+function readHiddenSteamLibraries() {
+  const list = $('#steam-libraries-list');
+  if (list.attr('data-rendered') !== 'true') return null;
+  return list
+    .children('li')
+    .filter((_, row) => $(row).find('select').val() === 'false')
+    .map((_, row) => $(row).attr('data-dir'))
+    .get();
 }
 
 function populateLegitUsers(selected) {

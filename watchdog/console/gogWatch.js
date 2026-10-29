@@ -251,7 +251,8 @@ module.exports.start = async (ctx) => {
   module.exports.stop();
 
   if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.gogOfficial === false) return;
+  // A level now (0 off, 1 installed, 2 played); false is a file written before that.
+  if (ctx.options.achievement_source && (ctx.options.achievement_source.gogOfficial === false || String(ctx.options.achievement_source.gogOfficial) === '0')) return;
   if (ctx.options.notification && ctx.options.notification.notify === false) return;
   if (typeof ctx.notify !== 'function') return;
   if (!DatabaseSync) {

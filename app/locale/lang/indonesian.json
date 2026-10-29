@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Tidak melihat pencapaian yang terbuka?",
   "scrollUp": "Gulir ke atas",
   "allGamesBackButton": "Semua Game",
-  "removeFromList": "Hapus dari daftar",
+  "removeFromList": "Hapus dari AW Next",
   "buildIconPrefetchCache": "Simpan ikon pencapaian ke cache",
   "contextMenu": {
     "resetPlaytime": "Atur ulang waktu bermain",
@@ -1441,7 +1441,7 @@
       "title": "Sumber game",
       "officialPlatforms": {
         "title": "Platform resmi",
-        "description": "Perisai menandai peluncur resmi. Steam, Epic, dan Xbox menawarkan tiga pilihan: Tidak ada, Terpasang (game di PC ini), atau Dimiliki (seluruh pustaka akun yang terhubung). Yang lain hanya aktif atau nonaktif."
+        "description": "Perisai menandai peluncur resmi. Steam, Epic, dan Xbox menawarkan tiga pilihan: Tidak ada, Terpasang (game di PC ini), atau Dimiliki (seluruh pustaka akun yang terhubung). GOG Galaxy menawarkan Tidak ada, Terpasang, atau Dimainkan (semua game yang data permainannya disimpan Galaxy). Yang lain hanya aktif atau nonaktif."
       },
       "legitSteam": {
         "name": "Tampilkan Game Steam",
@@ -1493,7 +1493,12 @@
         "description": "Data resmi klien Ubisoft Connect"
       },
       "gogOfficial": {
-        "description": "Data resmi klien GOG Galaxy"
+        "description": "Data resmi klien GOG Galaxy. Terpasang menampilkan game di PC ini; Dimainkan juga menampilkan game yang sudah dicopot pemasangannya, tetapi data permainannya masih disimpan Galaxy.",
+        "value": {
+          "none": "Tidak ada",
+          "installed": "Terpasang",
+          "played": "Dimainkan"
+        }
       },
       "epicOfficial": {
         "description": "Data resmi klien Epic Games",
@@ -1714,7 +1719,7 @@
         "Tandai terbuka secara manual (klik kanan sebuah pencapaian) mencatat pencapaian yang tidak terlihat oleh sumber mana pun.",
         "Atur ulang pencapaian… memainkan game dari nol lagi dan mencadangkan setiap file terlebih dahulu. Berfungsi untuk game yang diemulasi, bukan untuk Steam, Epic, atau Xbox, yang pencapaiannya tersimpan di akun Anda.",
         "Waktu bermain dilacak selama game berjalan; Pelacakan waktu bermain di Pengaturan > Notifikasi mengaktifkan notifikasi mulai dan selesai.",
-        "Lupakan game ini… menghapus semua yang disimpan AW Next tentang sebuah game (save dicadangkan terlebih dahulu). Hapus dari daftar hanya menyembunyikannya.",
+        "Bersihkan data game ini… menghapus semua yang disimpan AW Next tentang sebuah game (save dicadangkan terlebih dahulu), dan pemindaian berikutnya menemukannya lagi. Hapus dari AW Next mengeluarkannya dari pustaka sampai Anda mengembalikannya dari Pengaturan > Umum. Sembunyikan dari tampilan tetap memantaunya, di tampilan Tersembunyi pada menu Koleksi.",
         "Pengaturan game > Bahasa pencapaian menampilkan pencapaian dan notifikasi satu game dalam bahasa yang berbeda dari yang lain.",
         "Pengaturan > Lanjutan > Cadangan profil: Ekspor profil… menyimpan pengaturan, preset, tema, sampul, dan waktu bermain Anda dalam satu file .awbackup untuk instal ulang atau PC baru. Data masuk akun tidak disimpan."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Ekspor profil…",
         "profileRestore": "Pulihkan profil…"
       },
-      "blacklistTitle": "Game tersembunyi",
-      "blacklistButton": "Tampilkan lagi semua game tersembunyi",
-      "blacklistInfo": "Klik kanan sebuah game di pustaka dan pilih “Hapus dari daftar” untuk menyembunyikannya di sini.",
-      "blacklistEmpty": "Tidak ada game yang disembunyikan.",
+      "blacklistTitle": "Game yang dihapus",
+      "blacklistButton": "Kembalikan semua game yang dihapus",
+      "blacklistInfo": "Klik kanan sebuah game di pustaka dan pilih “Hapus dari AW Next” untuk mencantumkannya di sini.",
+      "blacklistEmpty": "Tidak ada game yang dihapus.",
       "blacklistRestore": "Pulihkan game ini",
       "mainSteam": {
         "title": "Akun Steam Utama",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Koleksi",
     "collection-all": "Semua game",
+    "collection-hidden": "Tersembunyi",
+    "game-hide": "Sembunyikan dari tampilan",
+    "game-unhide": "Tampilkan lagi",
     "collection-new": "Koleksi baru…",
     "collection-edit": "Edit koleksi…",
     "collection-name": "Nama koleksi",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Menulis {count} pencapaian ke {path}",
     "repair-failed": "Perbaikan gagal",
     "could-not-write-steam-settings": "Tidak dapat menulis steam_settings.",
-    "blacklist-add-failed": "Tidak dapat menyembunyikan game ini",
+    "blacklist-add-failed": "Tidak dapat menghapus game ini",
     "emulator-source": "Sumber emulator",
     "appid-override": "Atur AppID secara manual…",
     "appid-override-prompt": "Steam appid untuk \"{name}\" ({folder}). Ini menggantikan tebakan AW Next berdasarkan nama - berguna saat game lain memiliki nama yang sama dengan folder ini.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Pembuatan konfigurasi gagal: {error}",
     "error-generating-configs": "Kesalahan saat membuat konfigurasi",
     "error-while-auto-finding-folder-s": "Kesalahan saat mencari folder secara otomatis",
-    "error-while-trying-to-reset-user-blacklist": "Tidak dapat menampilkan lagi game tersembunyi",
+    "error-while-trying-to-reset-user-blacklist": "Tidak dapat mengembalikan game yang dihapus",
     "websocket-connection-error": "Kesalahan Koneksi WebSocket",
     "notification-test-failure": "Uji notifikasi gagal.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Kesalahan saat membangun koneksi: net::ERR_CONNECTION_REFUSED\nApakah Watchdog berjalan ?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Pencapaian dan waktu bermain",
     "schema-language-menu": "Bahasa pencapaian",
     "schema-language-global": "Sama dengan aplikasi ({language})",
-    "forget-game-menu": "Lupakan game ini…",
-    "forget-game-confirm-title": "Lupakan {game}?",
+    "forget-game-menu": "Bersihkan data game ini…",
+    "forget-game-confirm-title": "Bersihkan data {game}?",
     "forget-game-confirm-message": "AW Next mengatur ulang semua yang disimpannya tentang game ini. Pemindaian berikutnya akan menemukannya lagi sebagai game baru.",
     "forget-game-detail-ach": "• Pencapaian: {count} file save, dicadangkan lalu dikosongkan",
     "forget-game-detail-playtime": "• Waktu bermain",
     "forget-game-detail-cache": "• Daftar pencapaian, ikon, dan buka kunci dalam cache ({count})",
     "forget-game-detail-config": "• Konfigurasi yang ditulis AW Next di folder game ({count})",
     "forget-game-detail-settings": "• File eksekusi, AppID, sumber emulator, bahasa, dan pengaturan progres game ini di AW Next",
-    "forget-game-button": "Lupakan",
-    "forget-game-done-title": "Game dilupakan",
+    "forget-game-button": "Bersihkan",
+    "forget-game-done-title": "Data game dibersihkan",
     "forget-game-done-message": "Perpustakaan sedang dipindai ulang.",
     "reset-ach-menu": "Atur ulang pencapaian…",
     "reset-ach-restore-menu": "Pulihkan cadangan pencapaian",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Game Xbox di perpustakaan Anda",
     "steam-hide-stale": "Sembunyikan gim yang tidak lagi ada di pustaka Steam-mu",
     "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan.",
+    "steam-libraries-title": "Pustaka Steam",
+    "steam-libraries-help": "Nonaktifkan pustaka agar gimnya tidak muncul di koleksi mana pun, misalnya drive yang kamu biarkan terhubung sebagai penyimpanan. Gim itu kembali saat pustaka diaktifkan lagi.",
     "steam-import-owned": "Tambahkan gim yang Anda miliki",
     "steam-import-owned-help": "Menampilkan seluruh pustaka Steam Anda, termasuk gim yang tidak pernah terpasang di PC ini. Pustaka yang besar membuat pemindaian pertama jauh lebih lama. Progres gim yang belum pernah dimainkan di PC ini dibaca dari profil Steam Anda, jadi detail gim harus disetel publik.",
     "steam-import-family": "Tambahkan gim yang dibagikan dengan Anda lewat Steam Family",

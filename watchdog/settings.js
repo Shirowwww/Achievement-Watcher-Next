@@ -305,8 +305,18 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
-    if (typeof options.achievement_source.gogOfficial !== 'boolean') {
-      options.achievement_source.gogOfficial = true;
+    // Was an on/off switch before it could leave out the games Galaxy keeps after an uninstall. On
+    // listed every played game, which is what "played" (2) is now.
+    if (typeof options.achievement_source.gogOfficial === 'boolean') {
+      options.achievement_source.gogOfficial = options.achievement_source.gogOfficial ? 2 : 0;
+      fixFile = true;
+    }
+    if (
+      options.achievement_source.gogOfficial != 0 &&
+      options.achievement_source.gogOfficial != 1 &&
+      options.achievement_source.gogOfficial != 2
+    ) {
+      options.achievement_source.gogOfficial = 2;
       fixFile = true;
     }
 
@@ -634,7 +644,7 @@ module.exports.load = async (cfg_file) => {
         lumaPlay: true,
         runeUplay: true,
         gog: true,
-        gogOfficial: true,
+        gogOfficial: 2,
         ubisoftOfficial: true,
         epic: true,
         epicOfficial: 2,

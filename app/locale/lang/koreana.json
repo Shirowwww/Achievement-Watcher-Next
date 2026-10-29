@@ -56,7 +56,7 @@
   "noneUnlockedHint": "달성 기록이 보이지 않나요?",
   "scrollUp": "위로 스크롤",
   "allGamesBackButton": "모든 게임",
-  "removeFromList": "목록에서 제거",
+  "removeFromList": "AW Next에서 제거",
   "buildIconPrefetchCache": "도전 과제 아이콘 캐시 만들기",
   "contextMenu": {
     "resetPlaytime": "플레이 시간 초기화",
@@ -1441,7 +1441,7 @@
       "title": "게임 소스",
       "officialPlatforms": {
         "title": "공식 플랫폼",
-        "description": "방패는 공식 런처를 표시합니다. Steam, Epic, Xbox는 없음, 설치됨(이 PC의 게임), 보유 중(연결된 계정의 전체 라이브러리)의 세 가지 선택지를 제공합니다. 나머지는 켜거나 끕니다."
+        "description": "방패는 공식 런처를 표시합니다. Steam, Epic, Xbox는 없음, 설치됨(이 PC의 게임), 보유 중(연결된 계정의 전체 라이브러리)의 세 가지 선택지를 제공합니다. GOG Galaxy는 없음, 설치됨, 플레이함(Galaxy에 플레이 데이터가 있는 모든 게임)을 제공합니다. 나머지는 켜거나 끕니다."
       },
       "legitSteam": {
         "name": "Steam 게임 표시",
@@ -1493,7 +1493,12 @@
         "description": "공식 Ubisoft Connect 클라이언트 데이터"
       },
       "gogOfficial": {
-        "description": "공식 GOG Galaxy 클라이언트 데이터"
+        "description": "공식 GOG Galaxy 클라이언트 데이터입니다. 설치됨은 이 PC에 있는 게임을 표시하고, 플레이함은 삭제했더라도 Galaxy에 플레이 데이터가 남아 있는 게임까지 표시합니다.",
+        "value": {
+          "none": "없음",
+          "installed": "설치됨",
+          "played": "플레이함"
+        }
       },
       "epicOfficial": {
         "description": "공식 Epic Games 클라이언트 데이터",
@@ -1714,7 +1719,7 @@
         "수동 달성으로 표시(도전 과제를 마우스 오른쪽 버튼으로 클릭)는 어떤 소스도 볼 수 없는 달성을 기록합니다.",
         "도전 과제 초기화…는 게임을 처음부터 다시 플레이할 수 있게 하며, 먼저 모든 파일을 백업합니다. 에뮬레이터 게임에서는 동작하지만, 달성 내역이 계정에 있는 Steam, Epic, Xbox에서는 동작하지 않습니다.",
         "플레이 시간은 게임이 실행되는 동안 추적됩니다. 설정 > 알림의 플레이 시간 추적에서 시작과 종료 알림을 켤 수 있습니다.",
-        "이 게임 잊기…는 AW Next가 게임에 대해 보관한 모든 것을 지웁니다(저장 파일은 먼저 백업됩니다). 목록에서 제거는 숨기기만 합니다.",
+        "이 게임 데이터 지우기…는 AW Next가 게임에 대해 보관한 모든 것을 지우며(저장 파일은 먼저 백업됩니다), 다음 검색 때 게임이 다시 발견됩니다. AW Next에서 제거는 설정 > 일반에서 되돌릴 때까지 라이브러리에서 게임을 뺍니다. 화면에서 숨기기는 계속 추적하며, 컬렉션 메뉴의 숨김 보기에 표시됩니다.",
         "게임 설정 > 도전 과제 언어에서 한 게임의 도전 과제와 알림을 나머지와 다른 언어로 표시할 수 있습니다.",
         "설정 > 고급 > 프로필 백업: 프로필 내보내기…는 설정, 프리셋, 테마, 커버, 플레이 시간을 .awbackup 파일 하나에 저장해 재설치나 새 PC에 옮길 수 있게 합니다. 로그인 정보는 저장되지 않습니다."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "프로필 내보내기…",
         "profileRestore": "프로필 복원…"
       },
-      "blacklistTitle": "숨긴 게임",
-      "blacklistButton": "숨긴 게임 모두 다시 표시",
-      "blacklistInfo": "라이브러리의 게임을 오른쪽 클릭하고 “목록에서 제거” 항목을 선택하면 여기에 숨길 수 있습니다.",
-      "blacklistEmpty": "숨긴 게임이 없습니다.",
+      "blacklistTitle": "제거한 게임",
+      "blacklistButton": "제거한 게임 모두 되돌리기",
+      "blacklistInfo": "라이브러리의 게임을 오른쪽 클릭하고 “AW Next에서 제거” 항목을 선택하면 여기에 표시됩니다.",
+      "blacklistEmpty": "제거한 게임이 없습니다.",
       "blacklistRestore": "이 게임 복원",
       "mainSteam": {
         "title": "주 Steam 계정",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "컬렉션",
     "collection-all": "모든 게임",
+    "collection-hidden": "숨김",
+    "game-hide": "화면에서 숨기기",
+    "game-unhide": "다시 표시",
     "collection-new": "새 컬렉션…",
     "collection-edit": "컬렉션 편집…",
     "collection-name": "컬렉션 이름",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "도전 과제 {count}개를 {path}에 기록했습니다",
     "repair-failed": "복구 실패",
     "could-not-write-steam-settings": "steam_settings를 기록하지 못했습니다.",
-    "blacklist-add-failed": "이 게임을 숨기지 못했습니다",
+    "blacklist-add-failed": "이 게임을 제거하지 못했습니다",
     "emulator-source": "에뮬레이터 소스",
     "appid-override": "AppID 수동 설정…",
     "appid-override-prompt": "\"{name}\" ({folder})에 사용할 Steam appid입니다. 이름 기반의 AW Next 추측을 덮어씁니다. 다른 게임이 이 폴더와 같은 이름일 때 유용합니다.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "설정 파일 생성 실패: {error}",
     "error-generating-configs": "설정 파일을 생성하는 중 오류가 발생했습니다",
     "error-while-auto-finding-folder-s": "폴더를 자동으로 찾는 중 오류가 발생했습니다",
-    "error-while-trying-to-reset-user-blacklist": "숨긴 게임을 다시 표시하지 못했습니다",
+    "error-while-trying-to-reset-user-blacklist": "제거한 게임을 되돌리지 못했습니다",
     "websocket-connection-error": "WebSocket 연결 오류",
     "notification-test-failure": "알림 테스트에 실패했습니다.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "연결을 맺는 중 오류가 발생했습니다: net::ERR_CONNECTION_REFUSED\nWatchdog이 실행 중인가요?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "도전 과제 및 플레이 시간",
     "schema-language-menu": "도전 과제 언어",
     "schema-language-global": "앱과 동일 ({language})",
-    "forget-game-menu": "이 게임 잊기…",
-    "forget-game-confirm-title": "{game}을(를) 잊으시겠습니까?",
+    "forget-game-menu": "이 게임 데이터 지우기…",
+    "forget-game-confirm-title": "{game}의 데이터를 지우시겠습니까?",
     "forget-game-confirm-message": "AW Next가 이 게임에 대해 보관한 모든 것을 초기화합니다. 다음 스캔에서 새 게임으로 다시 찾습니다.",
     "forget-game-detail-ach": "• 도전 과제: 저장 파일 {count}개, 백업한 뒤 지움",
     "forget-game-detail-playtime": "• 플레이 시간",
     "forget-game-detail-cache": "• 캐시된 도전 과제 목록, 아이콘 및 잠금 해제 기록 ({count})",
     "forget-game-detail-config": "• AW Next가 게임 폴더에 쓴 구성 ({count})",
     "forget-game-detail-settings": "• AW Next의 실행 파일, AppID, 에뮬레이터 소스, 언어 및 진행도 설정",
-    "forget-game-button": "잊기",
-    "forget-game-done-title": "게임을 잊었습니다",
+    "forget-game-button": "지우기",
+    "forget-game-done-title": "게임 데이터를 지웠습니다",
     "forget-game-done-message": "지금 라이브러리를 다시 스캔합니다.",
     "reset-ach-menu": "도전 과제 초기화…",
     "reset-ach-restore-menu": "도전 과제 백업 복원",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "라이브러리에 있는 Xbox 게임",
     "steam-hide-stale": "더 이상 Steam 라이브러리에 없는 게임 숨기기",
     "steam-hide-stale-help": "연결된 Steam 계정이 필요합니다. 이 PC에 설치된 게임과 Steam 가족을 통해 공유된 게임은 절대 숨겨지지 않습니다.",
+    "steam-libraries-title": "Steam 라이브러리",
+    "steam-libraries-help": "라이브러리를 사용 안 함으로 바꾸면 그 라이브러리의 게임이 모든 컬렉션에서 빠집니다. 예를 들어 저장소로 계속 연결해 두는 드라이브가 그렇습니다. 다시 사용함으로 바꾸면 돌아옵니다.",
     "steam-import-owned": "소유한 게임 추가",
     "steam-import-owned-help": "이 PC에 설치된 적이 없는 게임을 포함해 전체 Steam 라이브러리를 표시합니다. 라이브러리가 크면 첫 검사가 훨씬 오래 걸립니다. 이 PC에서 플레이한 적 없는 게임의 진행 상황은 Steam 프로필에서 읽어 오므로 게임 세부 정보가 공개로 설정되어 있어야 합니다.",
     "steam-import-family": "Steam 가족을 통해 공유된 게임 추가",

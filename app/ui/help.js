@@ -193,13 +193,20 @@ function appendChip(container, iconClass, label, value, state) {
   chip.appendTo(container);
 }
 
+// Sources stored as a level (0 off, 1 installed, 2 everything) rather than true/false.
+const LEVEL_SOURCES = new Set(['option_legitSteam', 'option_xboxPc', 'option_epicOfficial', 'option_gogOfficial']);
+
+function sourceIsOn(select) {
+  return select.value === 'true' || (LEVEL_SOURCES.has(select.id) && select.value !== '0');
+}
+
 function countSources($) {
   const rows = $('#settings .source-list li').toArray();
   let enabled = 0;
   for (const row of rows) {
     const select = row.querySelector('select');
     if (!select) continue;
-    const on = select.value === 'true' || (select.id === 'option_legitSteam' && select.value !== '0');
+    const on = sourceIsOn(select);
     if (on) enabled += 1;
   }
   return { enabled, total: rows.length };
@@ -263,7 +270,7 @@ function renderSourceChips($) {
     const labelEl = sourceRow.querySelector('.left span');
     const label = labelEl && labelEl.textContent ? labelEl.textContent.trim() : select.id.replace(/^option_/, '');
     if (!label) continue;
-    const on = select.value === 'true' || (select.id === 'option_legitSteam' && select.value !== '0');
+    const on = sourceIsOn(select);
     appendChip($(row), '', '', label, on ? 'is-on' : 'is-off');
   }
 }

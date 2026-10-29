@@ -65,8 +65,16 @@ function normalizeCollection(raw) {
   return { id, name, color: normalizeColor(raw.color), icon: normalizeIcon(raw.icon), image, games: normalizeGames(raw.games) };
 }
 
+// The view of the hidden games. Not a uuid, so it can never collide with a user collection.
+const HIDDEN_ID = 'hidden';
+
+/*
+  `hidden` holds the games kept out of sight: out of All games and every collection, listed only in
+  the Hidden view. Unlike the blacklist they are still scanned and still notify; a user who keeps
+  the blacklist for tools asked for this.
+*/
 function emptyState() {
-  return { format: FORMAT, collections: [] };
+  return { format: FORMAT, collections: [], hidden: [] };
 }
 
 // Anything unreadable is dropped here, so no caller has to defend against a hand-edited file.
@@ -81,6 +89,7 @@ function normalizeState(raw) {
     state.collections.push(collection);
     if (state.collections.length >= MAX_COLLECTIONS) break;
   }
+  state.hidden = normalizeGames(raw && typeof raw === 'object' ? raw.hidden : []);
   return state;
 }
 
@@ -130,21 +139,42 @@ function removeGames(state, id, keys) {
   return replaceCollection(state, id, { games: current.games.filter((key) => !drop.has(key)) });
 }
 
+function hideGames(state, keys) {
+  return { ...state, hidden: normalizeGames([...(state.hidden || []), ...(Array.isArray(keys) ? keys : [keys])]) };
+}
+
+function unhideGames(state, keys) {
+  const drop = new Set((Array.isArray(keys) ? keys : [keys]).map(normalizeGameKey));
+  return { ...state, hidden: (state.hidden || []).filter((key) => !drop.has(key)) };
+}
+
+function isHidden(state, key) {
+  return (state.hidden || []).includes(normalizeGameKey(key));
+}
+
 function memberKeys(state, id) {
+  if (id === HIDDEN_ID) return new Set(state.hidden || []);
   const current = collectionById(state, id);
   return current ? new Set(current.games) : null;
 }
 
+// The games a view leaves out: the hidden ones everywhere but in their own view.
+function excludedKeys(state, id) {
+  return id === HIDDEN_ID ? null : new Set(state.hidden || []);
+}
+
 // Members that are not in the library right now stay in the collection; they are only not listed.
 function filterGames(games, state, id) {
+  const list = Array.isArray(games) ? games : [];
   const members = memberKeys(state, id);
-  if (!members) return Array.isArray(games) ? games.slice() : [];
-  return (Array.isArray(games) ? games : []).filter((game) => game && members.has(String(game.appid)));
+  const excluded = excludedKeys(state, id);
+  if (!members && !(excluded && excluded.size)) return list.slice();
+  return list.filter((game) => game && (!members || members.has(String(game.appid))) && !(excluded && excluded.has(String(game.appid))));
 }
 
 // What the menu shows next to a collection: the games the library would list for it right now.
 function countGames(games, state, id, { installedOnly = false } = {}) {
-  if (!collectionById(state, id)) return 0;
+  if (id !== HIDDEN_ID && !collectionById(state, id)) return 0;
   const listed = filterGames(games, state, id);
   return installedOnly ? listed.filter((game) => game.installed).length : listed.length;
 }
@@ -159,6 +189,7 @@ module.exports = {
   DEFAULT_COLOR,
   DEFAULT_ICON,
   IMAGE_FILE_PATTERN,
+  HIDDEN_ID,
   normalizeName,
   normalizeColor,
   normalizeIcon,
@@ -171,7 +202,11 @@ module.exports = {
   removeCollection,
   addGames,
   removeGames,
+  hideGames,
+  unhideGames,
+  isHidden,
   memberKeys,
+  excludedKeys,
   filterGames,
   countGames,
 };

@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Nie widzisz żadnych odblokowań?",
   "scrollUp": "Do góry",
   "allGamesBackButton": "Wszystkie gry",
-  "removeFromList": "Usuń z listy",
+  "removeFromList": "Usuń z AW Next",
   "buildIconPrefetchCache": "Buforuj ikony osiągnięć",
   "contextMenu": {
     "resetPlaytime": "Zresetuj czas gry",
@@ -1441,7 +1441,7 @@
       "title": "Źródła gier",
       "officialPlatforms": {
         "title": "Oficjalne platformy",
-        "description": "Tarcza oznacza oficjalne launchery. Steam, Epic i Xbox mają trzy opcje: Brak, Zainstalowane (gry na tym komputerze) lub Posiadane (cała biblioteka połączonego konta). Pozostałe są włączone lub wyłączone."
+        "description": "Tarcza oznacza oficjalne launchery. Steam, Epic i Xbox mają trzy opcje: Brak, Zainstalowane (gry na tym komputerze) lub Posiadane (cała biblioteka połączonego konta). GOG Galaxy ma opcje Brak, Zainstalowane lub Zagrane (wszystkie gry, dla których Galaxy ma dane o grze). Pozostałe są włączone lub wyłączone."
       },
       "legitSteam": {
         "name": "Pokaż gry Steam",
@@ -1493,7 +1493,12 @@
         "description": "Dane oficjalnego klienta Ubisoft Connect"
       },
       "gogOfficial": {
-        "description": "Dane oficjalnego klienta GOG Galaxy"
+        "description": "Dane oficjalnego klienta GOG Galaxy. Zainstalowane wyświetla gry z tego komputera; Zagrane wyświetla też odinstalowane, dla których Galaxy nadal przechowuje dane o grze.",
+        "value": {
+          "none": "Brak",
+          "installed": "Zainstalowane",
+          "played": "Zagrane"
+        }
       },
       "epicOfficial": {
         "description": "Dane oficjalnego klienta Epic Games",
@@ -1714,7 +1719,7 @@
         "Oznacz jako odblokowane ręcznie (prawy przycisk na osiągnięciu) zapisuje odblokowanie, którego żadne źródło nie widzi.",
         "Zresetuj osiągnięcia… pozwala przejść grę od zera i najpierw kopiuje każdy plik. Działa dla gier emulowanych, nie dla Steam, Epic ani Xbox, których odblokowania są na Twoim koncie.",
         "Czas gry jest śledzony, gdy gra działa; Śledzenie czasu gry w Ustawienia > Powiadomienia włącza powiadomienia o starcie i zakończeniu.",
-        "Zapomnij tę grę… usuwa wszystko, co AW Next przechowuje o grze (zapisy są najpierw kopiowane). Usuń z listy tylko ją ukrywa.",
+        "Wyczyść dane tej gry… usuwa wszystko, co AW Next przechowuje o grze (zapisy są najpierw kopiowane), a następne skanowanie znajdzie ją ponownie. Usuń z AW Next wyłącza ją z biblioteki, dopóki nie przywrócisz jej z Ustawienia > Ogólne. Ukryj w widoku zachowuje śledzenie, w widoku Ukryte menu Kolekcje.",
         "Ustawienia gry > Język osiągnięć pokazuje osiągnięcia i powiadomienia jednej gry w innym języku niż reszta.",
         "Ustawienia > Zaawansowane > Kopia zapasowa profilu: Eksportuj profil… zapisuje ustawienia, presety, motywy, okładki i czas gry w jednym pliku .awbackup, na potrzeby reinstalacji lub nowego komputera. Logowania nie są zapisywane."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Eksportuj profil…",
         "profileRestore": "Przywróć profil…"
       },
-      "blacklistTitle": "Ukryte gry",
-      "blacklistButton": "Pokaż ponownie wszystkie ukryte gry",
-      "blacklistInfo": "Kliknij prawym przyciskiem grę w bibliotece i wybierz „Usuń z listy”, aby ukryć ją tutaj.",
-      "blacklistEmpty": "Brak ukrytych gier.",
+      "blacklistTitle": "Usunięte gry",
+      "blacklistButton": "Przywróć wszystkie usunięte gry",
+      "blacklistInfo": "Kliknij prawym przyciskiem grę w bibliotece i wybierz „Usuń z AW Next”, aby wyświetlić ją tutaj.",
+      "blacklistEmpty": "Brak usuniętych gier.",
       "blacklistRestore": "Przywróć tę grę",
       "mainSteam": {
         "title": "Główne konto Steam",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Kolekcje",
     "collection-all": "Wszystkie gry",
+    "collection-hidden": "Ukryte",
+    "game-hide": "Ukryj w widoku",
+    "game-unhide": "Pokaż ponownie",
     "collection-new": "Nowa kolekcja…",
     "collection-edit": "Edytuj kolekcję…",
     "collection-name": "Nazwa kolekcji",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Zapisano {count} osiągnięć do {path}",
     "repair-failed": "Naprawa nie powiodła się",
     "could-not-write-steam-settings": "Nie udało się zapisać steam_settings.",
-    "blacklist-add-failed": "Nie udało się ukryć tej gry",
+    "blacklist-add-failed": "Nie udało się usunąć tej gry",
     "emulator-source": "Źródło emulatora",
     "appid-override": "Ustaw AppID ręcznie…",
     "appid-override-prompt": "Appid Steam dla „{name}” ({folder}). Zastępuje domysł AW Next oparty na nazwie - przydatne, gdy inna gra ma taką samą nazwę jak folder.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Generowanie konfiguracji nie powiodło się: {error}",
     "error-generating-configs": "Błąd podczas generowania konfiguracji",
     "error-while-auto-finding-folder-s": "Błąd podczas automatycznego wyszukiwania folderów",
-    "error-while-trying-to-reset-user-blacklist": "Nie udało się ponownie pokazać ukrytych gier",
+    "error-while-trying-to-reset-user-blacklist": "Nie udało się przywrócić usuniętych gier",
     "websocket-connection-error": "Błąd połączenia WebSocket",
     "notification-test-failure": "Test powiadomienia nie powiódł się.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Błąd podczas nawiązywania połączenia: net::ERR_CONNECTION_REFUSED\nCzy Watchdog działa?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Osiągnięcia i czas gry",
     "schema-language-menu": "Język osiągnięć",
     "schema-language-global": "Taki jak w aplikacji ({language})",
-    "forget-game-menu": "Zapomnij tę grę…",
-    "forget-game-confirm-title": "Zapomnieć {game}?",
+    "forget-game-menu": "Wyczyść dane tej gry…",
+    "forget-game-confirm-title": "Wyczyścić dane gry {game}?",
     "forget-game-confirm-message": "AW Next usuwa wszystko, co przechowuje o tej grze. Następne skanowanie znajdzie ją ponownie jako nową grę.",
     "forget-game-detail-ach": "• Osiągnięcia: pliki zapisu ({count}), zarchiwizowane, a potem wyczyszczone",
     "forget-game-detail-playtime": "• Czas gry",
     "forget-game-detail-cache": "• Lista osiągnięć, ikony i odblokowania w pamięci podręcznej ({count})",
     "forget-game-detail-config": "• Konfiguracja zapisana przez AW Next w folderze gry ({count})",
     "forget-game-detail-settings": "• Jej plik wykonywalny, AppID, źródło emulatora, język i ustawienia postępu w AW Next",
-    "forget-game-button": "Zapomnij",
-    "forget-game-done-title": "Gra zapomniana",
+    "forget-game-button": "Wyczyść",
+    "forget-game-done-title": "Dane gry wyczyszczone",
     "forget-game-done-message": "Biblioteka jest teraz ponownie skanowana.",
     "reset-ach-menu": "Zresetuj osiągnięcia…",
     "reset-ach-restore-menu": "Przywróć kopię zapasową osiągnięć",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Gra Xbox w twojej bibliotece",
     "steam-hide-stale": "Ukryj gry, których nie ma już w twojej bibliotece Steam",
     "steam-hide-stale-help": "Wymaga połączonego konta Steam. Gry zainstalowane na tym komputerze i udostępnione przez Rodzinę Steam nigdy nie są ukrywane.",
+    "steam-libraries-title": "Biblioteki Steam",
+    "steam-libraries-help": "Wyłącz bibliotekę, aby jej gry nie trafiały do żadnej kolekcji, na przykład dysk, który zostawiasz podłączony jako magazyn danych. Wrócą, gdy ponownie ją włączysz.",
     "steam-import-owned": "Dodaj gry, które posiadasz",
     "steam-import-owned-help": "Wyświetla całą twoją bibliotekę Steam, w tym gry, które nigdy nie były zainstalowane na tym komputerze. Duża biblioteka znacznie wydłuża pierwsze skanowanie. Postęp w grach, w które nigdy nie grano na tym komputerze, jest odczytywany z twojego profilu Steam, więc szczegóły gier muszą być w nim publiczne.",
     "steam-import-family": "Dodaj gry udostępnione tobie przez Rodzinę Steam",

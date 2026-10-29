@@ -11,6 +11,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Leave a Steam library out.** Settings > Sources lists every Steam library folder on this PC. Switch
+  one off and its games leave every collection, All games included, so a drive kept connected as
+  storage no longer fills the list. Switch it back on and they return.
+- **Hide a game without removing it.** Right-click a game and pick Hide from view: it leaves All
+  games, every collection and the stats, but stays tracked and still notifies. A Hidden view in the
+  Collections menu lists them and brings each one back.
+- **GOG Galaxy can list installed games only.** Its source now offers None, Installed or Played, like
+  Steam, Epic and Xbox. Galaxy keeps the play data of a game after it is uninstalled, so Played (the
+  previous behaviour) still lists those; Installed leaves them out.
 - **Updates can install themselves.** Turn on Settings > General > Install updates automatically,
   or tick the box in the update window: new versions download and install without asking once no
   game is running, and a notification says so after the restart. A closed window stays closed.
@@ -58,6 +67,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Clearer names for the ways a game leaves the list.** The right-click menu now reads Hide from
+  view, Remove from AW Next (was Remove from list) and Clear this game's data (was Forget this game),
+  and the Settings card of removed games is called Removed games instead of Hidden games.
 - **Gallery presets can be customized.** "Customize a preset" takes a preset installed from the
   gallery as it takes a bundled one, and keeps your changes on top of it. A preset that draws its
   card with code of its own plays in a real popup when you press Play.
@@ -85,6 +97,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Steam set to Installed no longer lists games that are not installed.** A game Windows still
+  marked as installed, with no install left on disk, stayed in the list as not installed.
 - **Settings and saved data survive a locked or damaged file.** A settings file held for a moment by
   an antivirus no longer resets every setting, a damaged list of manual unlocks, custom images or
   per-game presets is kept aside instead of being wiped by the next save, and a crash while saving a

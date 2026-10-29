@@ -56,7 +56,7 @@
   "noneUnlockedHint": "沒有看到任何解鎖紀錄嗎？",
   "scrollUp": "向上捲動",
   "allGamesBackButton": "所有遊戲",
-  "removeFromList": "從清單中移除",
+  "removeFromList": "從 AW Next 中移除",
   "buildIconPrefetchCache": "快取成就圖示",
   "contextMenu": {
     "resetPlaytime": "重設遊玩時數",
@@ -1441,7 +1441,7 @@
       "title": "遊戲來源",
       "officialPlatforms": {
         "title": "官方平台",
-        "description": "盾牌標示官方啟動器。Steam、Epic 與 Xbox 有三種選擇：無、已安裝（此電腦上的遊戲）或已擁有（已連線帳號的整個遊戲庫）。其餘的只能開啟或關閉。"
+        "description": "盾牌標示官方啟動器。Steam、Epic 與 Xbox 有三種選擇：無、已安裝（此電腦上的遊戲）或已擁有（已連線帳號的整個遊戲庫）。GOG Galaxy 的選擇是：無、已安裝或已玩過（Galaxy 有遊玩資料的所有遊戲）。其餘的只能開啟或關閉。"
       },
       "legitSteam": {
         "name": "顯示 Steam 遊戲",
@@ -1493,7 +1493,12 @@
         "description": "Ubisoft Connect 官方用戶端資料"
       },
       "gogOfficial": {
-        "description": "GOG Galaxy 官方用戶端資料"
+        "description": "GOG Galaxy 官方用戶端資料。「已安裝」列出此電腦上的遊戲；「已玩過」還會列出已解除安裝但 Galaxy 仍保留遊玩資料的遊戲。",
+        "value": {
+          "none": "無",
+          "installed": "已安裝",
+          "played": "已玩過"
+        }
       },
       "epicOfficial": {
         "description": "Epic Games 官方用戶端資料",
@@ -1714,7 +1719,7 @@
         "「標記為手動解鎖」（在成就上按右鍵）會記錄任何來源都看不到的解鎖。",
         "「重設成就…」可讓你從零重新玩一個遊戲，並先備份每個檔案。它適用於模擬遊戲，不適用於 Steam、Epic 或 Xbox，因為它們的解鎖儲存在你的帳號上。",
         "遊戲執行時會統計遊玩時數；設定 > 通知 中的「遊玩時數追蹤」可開啟開始和結束通知。",
-        "「忘記這款遊戲…」會清除 AW Next 儲存的關於該遊戲的全部內容（存檔會先備份）。「從清單中移除」只是將它隱藏。",
+        "「清除這款遊戲的資料…」會清除 AW Next 儲存的關於該遊戲的全部內容（存檔會先備份），下次掃描會再次找到它。「從 AW Next 中移除」會把它從遊戲庫中移出，直到你在設定 > 一般中還原。「從顯示中隱藏」會繼續追蹤它，並顯示在「收藏集」選單的「已隱藏」檢視中。",
         "「遊戲設定 > 成就語言」可以讓某一款遊戲的成就和通知使用與其餘遊戲不同的語言。",
         "設定 > 進階 > 設定檔備份：「匯出設定檔…」會把你的設定、預設集、佈景主題、封面和遊玩時數儲存到一個 .awbackup 檔案中，用於重新安裝或更換新電腦。登入資訊不會被儲存。"
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "匯出設定檔…",
         "profileRestore": "還原設定檔…"
       },
-      "blacklistTitle": "隱藏的遊戲",
-      "blacklistButton": "重新顯示所有隱藏的遊戲",
-      "blacklistInfo": "在遊戲庫中的遊戲上按右鍵並選擇「從清單中移除」，即可在此處將其隱藏。",
-      "blacklistEmpty": "沒有隱藏的遊戲。",
+      "blacklistTitle": "已移除的遊戲",
+      "blacklistButton": "還原所有已移除的遊戲",
+      "blacklistInfo": "在遊戲庫中的遊戲上按右鍵並選擇「從 AW Next 中移除」，即可在此處列出。",
+      "blacklistEmpty": "沒有已移除的遊戲。",
       "blacklistRestore": "還原這款遊戲",
       "mainSteam": {
         "title": "主要 Steam 帳戶",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "收藏集",
     "collection-all": "所有遊戲",
+    "collection-hidden": "已隱藏",
+    "game-hide": "從顯示中隱藏",
+    "game-unhide": "重新顯示",
     "collection-new": "新增收藏集…",
     "collection-edit": "編輯收藏集…",
     "collection-name": "收藏集名稱",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "已將 {count} 個成就寫入 {path}",
     "repair-failed": "修復失敗",
     "could-not-write-steam-settings": "無法寫入 steam_settings。",
-    "blacklist-add-failed": "無法隱藏此遊戲",
+    "blacklist-add-failed": "無法移除此遊戲",
     "emulator-source": "模擬器來源",
     "appid-override": "手動設定 AppID…",
     "appid-override-prompt": "用於「{name}」({folder})的 Steam appid。它會覆蓋 AW Next 依名稱所做的猜測,適用於另一款遊戲與此資料夾同名的情況。",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "產生設定檔失敗：{error}",
     "error-generating-configs": "產生設定檔時發生錯誤",
     "error-while-auto-finding-folder-s": "自動尋找資料夾時發生錯誤",
-    "error-while-trying-to-reset-user-blacklist": "無法重新顯示隱藏的遊戲",
+    "error-while-trying-to-reset-user-blacklist": "無法還原已移除的遊戲",
     "websocket-connection-error": "WebSocket 連線錯誤",
     "notification-test-failure": "通知測試失敗。",
     "error-in-connection-establishment-net-err-connection-refused-nis": "建立連線時發生錯誤：net::ERR_CONNECTION_REFUSED\nWatchdog 有在執行嗎？",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "成就與遊玩時數",
     "schema-language-menu": "成就語言",
     "schema-language-global": "與應用程式相同（{language}）",
-    "forget-game-menu": "忘記這款遊戲…",
-    "forget-game-confirm-title": "要忘記 {game} 嗎？",
+    "forget-game-menu": "清除這款遊戲的資料…",
+    "forget-game-confirm-title": "要清除 {game} 的資料嗎？",
     "forget-game-confirm-message": "AW Next 會重設它為這款遊戲保存的所有內容。下次掃描時會將它視為新遊戲重新找到。",
     "forget-game-detail-ach": "• 成就：{count} 個存檔檔案，先備份再清空",
     "forget-game-detail-playtime": "• 遊玩時數",
     "forget-game-detail-cache": "• 快取的成就清單、圖示和解鎖紀錄（{count}）",
     "forget-game-detail-config": "• AW Next 寫入遊戲資料夾的設定（{count}）",
     "forget-game-detail-settings": "• 它在 AW Next 中的執行檔、AppID、模擬器來源、語言和進度設定",
-    "forget-game-button": "忘記",
-    "forget-game-done-title": "已忘記遊戲",
+    "forget-game-button": "清除",
+    "forget-game-done-title": "已清除遊戲資料",
     "forget-game-done-message": "正在重新掃描收藏庫。",
     "reset-ach-menu": "重設成就…",
     "reset-ach-restore-menu": "還原成就備份",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "你收藏庫中的 Xbox 遊戲",
     "steam-hide-stale": "隱藏已不在你的 Steam 收藏庫中的遊戲",
     "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。",
+    "steam-libraries-title": "Steam 收藏庫",
+    "steam-libraries-help": "停用某個收藏庫後，它的遊戲就不會出現在任何收藏集中，例如你一直接著當作儲存空間的磁碟。重新啟用後遊戲就會回來。",
     "steam-import-owned": "新增你擁有的遊戲",
     "steam-import-owned-help": "列出你完整的 Steam 收藏庫，包括從未安裝在這台電腦上的遊戲。收藏庫越大，首次掃描耗時越長。從未在這台電腦上玩過的遊戲，其進度會從你的 Steam 個人檔案讀取，因此遊戲詳細資料必須設為公開。",
     "steam-import-family": "新增透過 Steam 家庭與你共享的遊戲",

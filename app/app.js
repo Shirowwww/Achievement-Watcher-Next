@@ -5335,7 +5335,7 @@ var app = {
                   remote.dialog.showMessageBoxSync({
                     type: 'error',
                     title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
-                    message: t('blacklist-add-failed', 'Failed to add item to user blacklist', 'Échec de l’ajout à la liste noire'),
+                    message: t('blacklist-add-failed', 'Could not remove this game', 'Impossible de retirer ce jeu'),
                     detail: `${err}`,
                   });
                 }
@@ -5643,7 +5643,7 @@ var app = {
             manageItems.push(
               new MenuItem({
                 icon: menuIcon('cross.png'),
-                label: t('forget-game-menu', 'Forget this game…', 'Oublier ce jeu…'),
+                label: t('forget-game-menu', 'Clear this game’s data…', 'Effacer les infos du jeu…'),
                 async click() {
                   self.css('pointer-events', 'none');
                   try {
@@ -7424,6 +7424,8 @@ var app = {
             menu.append(new MenuItem({ type: 'separator' }));
             menu.append(collectionsItem);
           }
+          const hideItem = window.awCollections ? window.awCollections.hideMenuItem(appid) : null;
+          if (hideItem) menu.append(hideItem);
 
           if (manageItems.length) {
             menu.append(new MenuItem({ type: 'separator' }));
@@ -8120,14 +8122,14 @@ var app = {
 
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'warning',
-      title: t('forget-game-confirm-title', 'Forget {game}?', 'Oublier {game} ?', { game: gameTitleOf(game) || appid }),
+      title: t('forget-game-confirm-title', 'Clear the data of {game}?', 'Effacer les infos de {game} ?', { game: gameTitleOf(game) || appid }),
       message: t(
         'forget-game-confirm-message',
         'AW Next resets everything it keeps about this game. The next scan finds it again as a new game.',
         'AW Next efface tout ce qu’il conserve sur ce jeu. Le prochain scan le retrouvera comme un nouveau jeu.'
       ),
       detail: detail.join('\n'),
-      buttons: [t('cancel', 'Cancel', 'Annuler'), t('forget-game-button', 'Forget', 'Oublier')],
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('forget-game-button', 'Clear', 'Effacer')],
       defaultId: 0,
       cancelId: 0,
       noLink: true,
@@ -8165,7 +8167,7 @@ var app = {
 
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: errors.length > 0 ? 'warning' : 'info',
-      title: t('forget-game-done-title', 'Game forgotten', 'Jeu oublié'),
+      title: t('forget-game-done-title', 'Game data cleared', 'Infos du jeu effacées'),
       message: t('forget-game-done-message', 'The library is scanned again now.', 'La bibliothèque est rescannée maintenant.'),
       detail: errors.join('\n'),
       noLink: true,

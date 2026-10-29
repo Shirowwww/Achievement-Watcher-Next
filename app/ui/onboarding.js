@@ -692,7 +692,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'legitSteam', tri: true, fallback: 0 },
     { key: 'xboxPc', tri: true, fallback: 2 },
     { key: 'epicOfficial', tri: true, fallback: 2 },
-    { key: 'gogOfficial', fallback: true },
+    { key: 'gogOfficial', tri: true, fallback: 2 },
     { key: 'ubisoftOfficial', fallback: true },
     { key: 'ea', fallback: true },
     { key: 'steamEmu', fallback: true },
@@ -724,9 +724,11 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
       const entry = settingsSource[row.key] || {};
       $(`#onboard-src-${row.key}-hint`).text(entry.description || '');
       if (row.tri) {
-        $(`#onboard-src-${row.key} option[value='0']`).text(values.none || t.none);
-        $(`#onboard-src-${row.key} option[value='1']`).text(values.installed || t.installed);
-        $(`#onboard-src-${row.key} option[value='2']`).text(values.owned || t.owned);
+        // GOG's widest level is "played", not "owned": it carries its own words.
+        const own = entry.value || {};
+        $(`#onboard-src-${row.key} option[value='0']`).text(own.none || values.none || t.none);
+        $(`#onboard-src-${row.key} option[value='1']`).text(own.installed || values.installed || t.installed);
+        $(`#onboard-src-${row.key} option[value='2']`).text(own.played || values.owned || t.owned);
       } else {
         $(`#onboard-src-${row.key} option[value='true']`).text(t.enabled);
         $(`#onboard-src-${row.key} option[value='false']`).text(t.disabled);

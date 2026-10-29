@@ -883,7 +883,7 @@ function translateUI(lang, locale, template) {
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
   // Every on/off Sources row is bound by id: rows move between the cards, so a position means
   // nothing here. A row whose name is a brand keeps it in app.html and has no `name` key.
-  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'gogOfficial', 'ea', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'x360recomp', 'xenia', 'retroAchievements']) {
+  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'ea', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'x360recomp', 'xenia', 'retroAchievements']) {
     const source = template.settings.source[key];
     if (source && source.name) $(`#source-name-${key}`).text(clear(source.name));
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));
@@ -899,6 +899,17 @@ function translateUI(lang, locale, template) {
     $("#option_epicOfficial option[value='0']").text(clear(template.settings.source.epicOfficial.value.none));
     $("#option_epicOfficial option[value='1']").text(clear(template.settings.source.epicOfficial.value.installed));
     $("#option_epicOfficial option[value='2']").text(clear(template.settings.source.epicOfficial.value.owned));
+  }
+  // GOG Galaxy has three states too, but its widest one is the games Galaxy has play data for rather
+  // than everything the account owns, so it keeps words of its own.
+  if (template.settings.source.gogOfficial) {
+    const gogSource = template.settings.source.gogOfficial;
+    if (gogSource.description) $('#source-help-gogOfficial').text(clear(gogSource.description));
+    if (gogSource.value) {
+      $("#option_gogOfficial option[value='0']").text(clear(gogSource.value.none));
+      $("#option_gogOfficial option[value='1']").text(clear(gogSource.value.installed));
+      $("#option_gogOfficial option[value='2']").text(clear(gogSource.value.played));
+    }
   }
   // Steam and Xbox PC sit in the official launchers card with the same three states, but their names
   // come from the locale; each has words of its own so a row never borrows another row's keys.

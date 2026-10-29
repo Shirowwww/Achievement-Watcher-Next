@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Keine Freischaltungen sichtbar?",
   "scrollUp": "Nach oben",
   "allGamesBackButton": "Alle Spiele",
-  "removeFromList": "Aus der Liste entfernen",
+  "removeFromList": "Aus AW Next entfernen",
   "buildIconPrefetchCache": "Erfolgssymbole zwischenspeichern",
   "contextMenu": {
     "resetPlaytime": "Spielzeit zurücksetzen",
@@ -1441,7 +1441,7 @@
       "title": "Spielquellen",
       "officialPlatforms": {
         "title": "Offizielle Plattformen",
-        "description": "Das Schild kennzeichnet offizielle Launcher. Steam, Epic und Xbox bieten drei Optionen: Keine, Installiert (Spiele auf diesem PC) oder Im Besitz (die ganze Bibliothek eines verbundenen Kontos). Die anderen sind ein- oder ausgeschaltet."
+        "description": "Das Schild kennzeichnet offizielle Launcher. Steam, Epic und Xbox bieten drei Optionen: Keine, Installiert (Spiele auf diesem PC) oder Im Besitz (die ganze Bibliothek eines verbundenen Kontos). GOG Galaxy bietet Keine, Installiert oder Gespielt (alle Spiele, zu denen Galaxy Spieldaten hat). Die anderen sind ein- oder ausgeschaltet."
       },
       "legitSteam": {
         "name": "Steam-Spiele anzeigen",
@@ -1493,7 +1493,12 @@
         "description": "Daten des offiziellen Ubisoft-Connect-Clients"
       },
       "gogOfficial": {
-        "description": "Daten des offiziellen GOG-Galaxy-Clients"
+        "description": "Daten des offiziellen GOG-Galaxy-Clients. Installiert listet die Spiele auf diesem PC auf; Gespielt enthält zusätzlich deinstallierte Spiele, für die Galaxy noch Spieldaten speichert.",
+        "value": {
+          "none": "Keine",
+          "installed": "Installiert",
+          "played": "Gespielt"
+        }
       },
       "epicOfficial": {
         "description": "Daten des offiziellen Epic-Games-Clients",
@@ -1714,7 +1719,7 @@
         "Als manuell freigeschaltet markieren (Rechtsklick auf einen Erfolg) hält eine Freischaltung fest, die keine Quelle sehen kann.",
         "Erfolge zurücksetzen… spielt ein Spiel von vorn und sichert vorher jede Datei. Es funktioniert bei Emulator-Spielen, nicht bei Steam, Epic oder Xbox, deren Freischaltungen auf deinem Konto liegen.",
         "Die Spielzeit wird erfasst, solange das Spiel läuft; Spielzeit-Tracking unter Einstellungen > Benachrichtigung schaltet die Start- und Ende-Benachrichtigungen ein.",
-        "Dieses Spiel vergessen… löscht alles, was AW Next über ein Spiel speichert (Spielstände werden vorher gesichert). Aus der Liste entfernen blendet es nur aus.",
+        "Daten dieses Spiels löschen… löscht alles, was AW Next über ein Spiel speichert (Spielstände werden vorher gesichert), und der nächste Scan findet es wieder. Aus AW Next entfernen nimmt es aus der Bibliothek, bis du es unter Einstellungen > Allgemein zurückholst. Aus der Ansicht ausblenden behält es weiter im Blick, in der Ansicht Ausgeblendet des Menüs Sammlungen.",
         "Spieleinstellungen > Sprache der Erfolge zeigt die Erfolge und Benachrichtigungen eines Spiels in einer anderen Sprache als der Rest.",
         "Einstellungen > Erweitert > Profilsicherung: Profil exportieren… speichert deine Einstellungen, Vorlagen, Designs, Cover und Spielzeit in einer .awbackup-Datei für eine Neuinstallation oder einen neuen PC. Anmeldungen werden nicht gespeichert."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Profil exportieren…",
         "profileRestore": "Profil wiederherstellen…"
       },
-      "blacklistTitle": "Ausgeblendete Spiele",
-      "blacklistButton": "Alle ausgeblendeten Spiele wieder anzeigen",
-      "blacklistInfo": "Rechtsklick auf ein Spiel in der Bibliothek und „Aus der Liste entfernen“ wählen, um es hier auszublenden.",
-      "blacklistEmpty": "Keine ausgeblendeten Spiele.",
+      "blacklistTitle": "Entfernte Spiele",
+      "blacklistButton": "Alle entfernten Spiele zurückholen",
+      "blacklistInfo": "Rechtsklick auf ein Spiel in der Bibliothek und „Aus AW Next entfernen“ wählen, um es hier aufzulisten.",
+      "blacklistEmpty": "Keine entfernten Spiele.",
       "blacklistRestore": "Dieses Spiel wieder anzeigen",
       "mainSteam": {
         "title": "Steam-Hauptkonto",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Sammlungen",
     "collection-all": "Alle Spiele",
+    "collection-hidden": "Ausgeblendet",
+    "game-hide": "Aus der Ansicht ausblenden",
+    "game-unhide": "Wieder anzeigen",
     "collection-new": "Neue Sammlung…",
     "collection-edit": "Sammlung bearbeiten…",
     "collection-name": "Name der Sammlung",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "{count} Erfolge nach {path} geschrieben",
     "repair-failed": "Reparatur fehlgeschlagen",
     "could-not-write-steam-settings": "steam_settings konnte nicht geschrieben werden.",
-    "blacklist-add-failed": "Dieses Spiel konnte nicht ausgeblendet werden",
+    "blacklist-add-failed": "Dieses Spiel konnte nicht entfernt werden",
     "emulator-source": "Emulatorquelle",
     "appid-override": "AppID manuell festlegen…",
     "appid-override-prompt": "Steam-AppID für „{name}“ ({folder}). Ersetzt die namensbasierte Vermutung von AW Next - nützlich, wenn ein anderes Spiel denselben Namen wie der Ordner trägt.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Konfigurationen erzeugen fehlgeschlagen: {error}",
     "error-generating-configs": "Fehler beim Erzeugen der Konfigurationen",
     "error-while-auto-finding-folder-s": "Fehler beim automatischen Suchen von Ordnern",
-    "error-while-trying-to-reset-user-blacklist": "Die ausgeblendeten Spiele konnten nicht wieder angezeigt werden",
+    "error-while-trying-to-reset-user-blacklist": "Die entfernten Spiele konnten nicht zurückgeholt werden",
     "websocket-connection-error": "WebSocket-Verbindungsfehler",
     "notification-test-failure": "Test der Benachrichtigung fehlgeschlagen.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fehler beim Verbindungsaufbau: net::ERR_CONNECTION_REFUSED\nLäuft der Watchdog?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Erfolge und Spielzeit",
     "schema-language-menu": "Sprache der Erfolge",
     "schema-language-global": "Wie die App ({language})",
-    "forget-game-menu": "Dieses Spiel vergessen…",
-    "forget-game-confirm-title": "{game} vergessen?",
+    "forget-game-menu": "Daten dieses Spiels löschen…",
+    "forget-game-confirm-title": "Daten von {game} löschen?",
     "forget-game-confirm-message": "AW Next setzt alles zurück, was es über dieses Spiel speichert. Beim nächsten Scan wird es wieder als neues Spiel erkannt.",
     "forget-game-detail-ach": "• Erfolge: {count} Speicherdatei(en), gesichert und dann geleert",
     "forget-game-detail-playtime": "• Spielzeit",
     "forget-game-detail-cache": "• Zwischengespeicherte Erfolgsliste, Symbole und Freischaltungen ({count})",
     "forget-game-detail-config": "• Von AW Next im Spielordner geschriebene Konfiguration ({count})",
     "forget-game-detail-settings": "• Ausführbare Datei, AppID, Emulatorquelle, Sprache und Fortschrittseinstellungen des Spiels in AW Next",
-    "forget-game-button": "Vergessen",
-    "forget-game-done-title": "Spiel vergessen",
+    "forget-game-button": "Löschen",
+    "forget-game-done-title": "Spieldaten gelöscht",
     "forget-game-done-message": "Die Bibliothek wird jetzt neu gescannt.",
     "reset-ach-menu": "Erfolge zurücksetzen…",
     "reset-ach-restore-menu": "Erfolgs-Backup wiederherstellen",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Xbox-Spiel in deiner Bibliothek",
     "steam-hide-stale": "Spiele ausblenden, die nicht mehr in deiner Steam-Bibliothek sind",
     "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet.",
+    "steam-libraries-title": "Steam-Bibliotheken",
+    "steam-libraries-help": "Deaktiviere eine Bibliothek, damit ihre Spiele in keiner Sammlung erscheinen, zum Beispiel ein Laufwerk, das du als Speicher angeschlossen lässt. Sie kommen zurück, sobald du die Bibliothek wieder aktivierst.",
     "steam-import-owned": "Die Spiele hinzufügen, die dir gehören",
     "steam-import-owned-help": "Zeigt deine gesamte Steam-Bibliothek, einschließlich Spiele, die nie auf diesem PC installiert waren. Eine große Bibliothek macht den ersten Scan deutlich länger. Der Fortschritt von Spielen, die nie auf diesem PC gespielt wurden, wird aus deinem Steam-Profil gelesen, daher müssen dessen Spieldetails öffentlich sein.",
     "steam-import-family": "Die Spiele hinzufügen, die über Steam Family mit dir geteilt werden",

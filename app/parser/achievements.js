@@ -2472,13 +2472,12 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   mark('greenLuma');
 
+  // Games left out because they sit in a Steam library the user hid; the account library must not
+  // bring them back as owned.
+  let steamHiddenAppids = new Set();
   if (!scope && source.legitSteam > 0) {
     try {
-      const legit = await steam.scanLegit(source.legitSteam, steamAccFilter);
-      // Attach the authoritative install folder from Steam's own library manifests so the Play button /
-      // launch panel can auto-detect the exe. This also corrects scanLegit's per-app registry
-      // "Installed" flag, which can go stale (a folder deleted outside Steam, or a manifest left
-      // pointing at a common\<installdir> that no longer exists) and would otherwise keep an uninstalled game "installed".
+      let legit = await steam.scanLegit(source.legitSteam, steamAccFilter);
       let localInstalls;
       let localInstallsScanned = false;
       try {
@@ -2488,27 +2487,17 @@ async function discoverInScope(source, steamAccFilter, scope) {
         debug.log(`[steam] local install scan failed => ${err}`);
       }
       if (localInstallsScanned) {
-        let attached = 0;
-        let corrected = 0;
-        for (const rec of legit) {
-          const local = localInstalls.get(String(rec.appid));
-          rec.data = rec.data || {};
-          if (local && local.gameDir && fs.existsSync(local.gameDir)) {
-            // A live appmanifest is stronger proof than the registry flag: the folder exists.
-            rec.data.gameDir = local.gameDir;
-            rec.data.installed = true;
-            attached++;
-          } else if (rec.data.installed) {
-            // The registry says installed but Steam's own manifest disagrees (missing entirely, or
-            // its installdir isn't on disk) - trust the manifest over the stale registry flag.
-            rec.data.installed = false;
-            corrected++;
-          }
-        }
+        const reconciled = steam.reconcileLocalInstalls(legit, localInstalls, { installedOnly: source.legitSteam == 1 });
+        const { attached, corrected } = reconciled;
+        if (corrected > 0 && reconciled.records.length < legit.length) debug.log(`[steam] left out ${legit.length - reconciled.records.length} game(s) the registry calls installed but Steam has no install for`);
+        legit = reconciled.records;
         if (attached > 0) debug.log(`[steam] linked ${attached} installed game(s) to their Steam install folders`);
         if (corrected > 0) debug.log(`[steam] corrected ${corrected} stale "installed" registry flag(s) with no matching on-disk install`);
       }
-      data = data.concat(legit);
+      const { kept, hidden } = steam.dropHiddenLibraryGames(legit, localInstalls, source.steamHiddenLibraries);
+      if (hidden.size > 0) debug.log(`[steam] left out ${hidden.size} game(s) installed in a hidden Steam library`);
+      steamHiddenAppids = hidden;
+      data = data.concat(kept);
     } catch (err) {
       debug.error(err);
     }
@@ -2528,7 +2517,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
           await steam.scanAccountLibrary(loaded.library, {
             includeOwned: source.steamAccountOwned === true,
             includeFamily: source.steamAccountFamily === true,
-            known: data.map((record) => record && record.appid),
+            known: [...data.map((record) => record && record.appid), ...steamHiddenAppids],
             steamid: loaded.steamid,
             steamAccFilter,
           })
@@ -2576,7 +2565,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   // Read once: gog.scan skips these ids, and they are added after gogOfficial's records below.
   let universeLanRepaired = [];
-  if (!scope && source.gogOfficial) {
+  if (!scope && source.gogOfficial > 0) {
     try {
       universeLanRepaired = gogUniverseLan.scan({ userDataPath: _userDataPath || userDataDir() });
     } catch (err) {
@@ -2595,9 +2584,11 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('gog');
 
   //GOG Galaxy official (legit client data - schema, unlocks and rarity read from Galaxy's SQLite)
-  if (!scope && source.gogOfficial) {
+  // 1 = installed on this PC, 2 = every game Galaxy has play data for, installed or not.
+  if (!scope && source.gogOfficial > 0) {
     try {
-      data = data.concat(await gogOfficial.scan());
+      const galaxy = await gogOfficial.scan();
+      data = data.concat(source.gogOfficial == 1 ? gogOfficial.keepInstalled(galaxy) : galaxy);
     } catch (err) {
       debug.error(err);
     }

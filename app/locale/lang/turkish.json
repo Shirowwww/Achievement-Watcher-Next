@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Hiç açılan görmüyor musun?",
   "scrollUp": "Yukarı çık",
   "allGamesBackButton": "Tüm oyunlar",
-  "removeFromList": "Listeden kaldır",
+  "removeFromList": "AW Next’ten kaldır",
   "buildIconPrefetchCache": "Başarım simgelerini önbelleğe al",
   "contextMenu": {
     "resetPlaytime": "Oynama süresini sıfırla",
@@ -1441,7 +1441,7 @@
       "title": "Oyun kaynakları",
       "officialPlatforms": {
         "title": "Resmî platformlar",
-        "description": "Kalkan resmî başlatıcıları işaretler. Steam, Epic ve Xbox üç seçenek sunar: Hiçbiri, Yüklü (bu bilgisayardaki oyunlar) veya Sahip olunan (bağlı bir hesabın tüm kitaplığı). Diğerleri açık ya da kapalıdır."
+        "description": "Kalkan resmî başlatıcıları işaretler. Steam, Epic ve Xbox üç seçenek sunar: Hiçbiri, Yüklü (bu bilgisayardaki oyunlar) veya Sahip olunan (bağlı bir hesabın tüm kitaplığı). GOG Galaxy için seçenekler Hiçbiri, Yüklü veya Oynanan (oyun verisi Galaxy tarafından saklanan tüm oyunlar) şeklindedir. Diğerleri açık ya da kapalıdır."
       },
       "legitSteam": {
         "name": "Steam oyunlarını göster",
@@ -1493,7 +1493,12 @@
         "description": "Resmî Ubisoft Connect istemcisi verileri"
       },
       "gogOfficial": {
-        "description": "Resmî GOG Galaxy istemcisi verileri"
+        "description": "Resmî GOG Galaxy istemcisi verileri. Yüklü, bu bilgisayardaki oyunları listeler; Oynanan, kaldırılmış olsa bile oyun verileri Galaxy tarafından hâlâ saklanan oyunları da listeler.",
+        "value": {
+          "none": "Hiçbiri",
+          "installed": "Yüklü",
+          "played": "Oynanan"
+        }
       },
       "epicOfficial": {
         "description": "Resmî Epic Games istemcisi verileri",
@@ -1714,7 +1719,7 @@
         "Manuel açılmış olarak işaretle (bir başarıma sağ tıklayın) hiçbir kaynağın göremediği bir kilit açmayı kaydeder.",
         "Başarımları sıfırla… bir oyunu sıfırdan yeniden oynatır ve önce her dosyayı yedekler. Emüle edilen oyunlar için çalışır; kilit açmaları hesabınızda duran Steam, Epic veya Xbox için çalışmaz.",
         "Oynama süresi oyun çalışırken takip edilir; Ayarlar > Bildirim içindeki Oynama süresi takibi başlangıç ve bitiş bildirimlerini açar.",
-        "Bu oyunu unut… AW Next’in bir oyun hakkında tuttuğu her şeyi siler (kayıtlar önce yedeklenir). Listeden kaldır yalnızca gizler.",
+        "Bu oyunun verilerini temizle… AW Next’in bir oyun hakkında tuttuğu her şeyi siler (kayıtlar önce yedeklenir) ve bir sonraki tarama oyunu yeniden bulur. AW Next’ten kaldır oyunu, Ayarlar > Genel bölümünden geri getirene kadar kütüphaneden çıkarır. Görünümden gizle oyunu takipte tutar, Koleksiyonlar menüsünün Gizli görünümünde.",
         "Oyun ayarları > Başarım dili bir oyunun başarımlarını ve bildirimlerini diğerlerinden farklı bir dilde gösterir.",
         "Ayarlar > Gelişmiş > Profil yedeği: Profili dışa aktar… ayarlarınızı, ön ayarlarınızı, temalarınızı, kapaklarınızı ve oynama sürenizi yeniden kurulum veya yeni bir bilgisayar için tek bir .awbackup dosyasında saklar. Oturum açma bilgileri kaydedilmez."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Profili dışa aktar…",
         "profileRestore": "Profili geri yükle…"
       },
-      "blacklistTitle": "Gizli oyunlar",
-      "blacklistButton": "Gizli oyunların hepsini yeniden göster",
-      "blacklistInfo": "Kütüphanedeki bir oyuna sağ tıklayıp “Listeden kaldır” seçeneğini seçerek onu buradan gizle.",
-      "blacklistEmpty": "Gizli oyun yok.",
+      "blacklistTitle": "Kaldırılan oyunlar",
+      "blacklistButton": "Kaldırılan tüm oyunları geri getir",
+      "blacklistInfo": "Kütüphanedeki bir oyuna sağ tıklayıp “AW Next’ten kaldır” seçeneğini seçerek onu buraya listele.",
+      "blacklistEmpty": "Kaldırılan oyun yok.",
       "blacklistRestore": "Bu oyunu geri yükle",
       "mainSteam": {
         "title": "Ana Steam hesabı",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Koleksiyonlar",
     "collection-all": "Tüm oyunlar",
+    "collection-hidden": "Gizli",
+    "game-hide": "Görünümden gizle",
+    "game-unhide": "Yeniden göster",
     "collection-new": "Yeni koleksiyon…",
     "collection-edit": "Koleksiyonu düzenle…",
     "collection-name": "Koleksiyon adı",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "{count} başarım {path} konumuna yazıldı",
     "repair-failed": "Onarım başarısız",
     "could-not-write-steam-settings": "steam_settings yazılamadı.",
-    "blacklist-add-failed": "Bu oyun gizlenemedi",
+    "blacklist-add-failed": "Bu oyun kaldırılamadı",
     "emulator-source": "Emülatör kaynağı",
     "appid-override": "AppID’yi elle ayarla…",
     "appid-override-prompt": "\"{name}\" ({folder}) için kullanılacak Steam appid. AW Next’in ada dayalı tahminini geçersiz kılar - başka bir oyun bu klasörle aynı ada sahipse işe yarar.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Yapılandırmalar oluşturulamadı: {error}",
     "error-generating-configs": "Yapılandırmalar oluşturulurken hata",
     "error-while-auto-finding-folder-s": "Klasörler otomatik aranırken hata",
-    "error-while-trying-to-reset-user-blacklist": "Gizli oyunlar yeniden gösterilemedi",
+    "error-while-trying-to-reset-user-blacklist": "Kaldırılan oyunlar geri getirilemedi",
     "websocket-connection-error": "WebSocket bağlantı hatası",
     "notification-test-failure": "Bildirim testi başarısız.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Bağlantı kurulurken hata: net::ERR_CONNECTION_REFUSED\nWatchdog çalışıyor mu?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Başarımlar ve oynama süresi",
     "schema-language-menu": "Başarım dili",
     "schema-language-global": "Uygulamayla aynı ({language})",
-    "forget-game-menu": "Bu oyunu unut…",
-    "forget-game-confirm-title": "{game} unutulsun mu?",
+    "forget-game-menu": "Bu oyunun verilerini temizle…",
+    "forget-game-confirm-title": "{game} verileri temizlensin mi?",
     "forget-game-confirm-message": "AW Next bu oyun hakkında sakladığı her şeyi sıfırlar. Sonraki tarama onu yeni bir oyun olarak yeniden bulur.",
     "forget-game-detail-ach": "• Başarımlar: {count} kayıt dosyası, yedeklenip temizlenir",
     "forget-game-detail-playtime": "• Oynama süresi",
     "forget-game-detail-cache": "• Önbelleğe alınmış başarım listesi, simgeler ve açılan başarımlar ({count})",
     "forget-game-detail-config": "• AW Next’in oyun klasörüne yazdığı yapılandırma ({count})",
     "forget-game-detail-settings": "• AW Next’teki çalıştırılabilir dosyası, AppID’si, emülatör kaynağı, dili ve ilerleme ayarları",
-    "forget-game-button": "Unut",
-    "forget-game-done-title": "Oyun unutuldu",
+    "forget-game-button": "Temizle",
+    "forget-game-done-title": "Oyun verileri temizlendi",
     "forget-game-done-message": "Kütüphane şimdi yeniden taranıyor.",
     "reset-ach-menu": "Başarımları sıfırla…",
     "reset-ach-restore-menu": "Bir başarım yedeğini geri yükle",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Kitaplığındaki Xbox oyunu",
     "steam-hide-stale": "Steam kütüphanende artık bulunmayan oyunları gizle",
     "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez.",
+    "steam-libraries-title": "Steam kütüphaneleri",
+    "steam-libraries-help": "Bir kütüphaneyi devre dışı bırak, oyunları hiçbir koleksiyonda görünmesin; örneğin depolama olarak bağlı tuttuğun bir sürücü. Tekrar etkinleştirdiğinde oyunlar geri gelir.",
     "steam-import-owned": "Sahip olduğun oyunları ekle",
     "steam-import-owned-help": "Bu bilgisayara hiç yüklenmemiş oyunlar da dahil olmak üzere tüm Steam kütüphaneni listeler. Büyük bir kütüphane ilk taramayı çok daha uzun sürdürür. Bu bilgisayarda hiç oynanmamış oyunların ilerlemesi Steam profilinden okunur, bu yüzden profilin oyun ayrıntıları herkese açık olmalıdır.",
     "steam-import-family": "Steam Ailesi üzerinden seninle paylaşılan oyunları ekle",

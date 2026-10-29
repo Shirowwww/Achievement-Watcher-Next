@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Non vedi alcuno sblocco?",
   "scrollUp": "Torna su",
   "allGamesBackButton": "Tutti i giochi",
-  "removeFromList": "Rimuovi dalla lista",
+  "removeFromList": "Rimuovi da AW Next",
   "buildIconPrefetchCache": "Memorizza le icone degli obiettivi",
   "contextMenu": {
     "resetPlaytime": "Reimposta il tempo di gioco",
@@ -1441,7 +1441,7 @@
       "title": "Sorgenti di gioco",
       "officialPlatforms": {
         "title": "Piattaforme ufficiali",
-        "description": "Lo scudo indica i launcher ufficiali. Steam, Epic e Xbox offrono tre scelte: Nessuno, Installati (giochi su questo PC) o Posseduti (l’intera libreria di un account collegato). Gli altri sono attivi o disattivati."
+        "description": "Lo scudo indica i launcher ufficiali. Steam, Epic e Xbox offrono tre scelte: Nessuno, Installati (giochi su questo PC) o Posseduti (l’intera libreria di un account collegato). GOG Galaxy offre Nessuno, Installati o Giocati (tutti i giochi per cui Galaxy ha dati di gioco). Gli altri sono attivi o disattivati."
       },
       "legitSteam": {
         "name": "Mostra i giochi Steam",
@@ -1493,7 +1493,12 @@
         "description": "Dati del client ufficiale Ubisoft Connect"
       },
       "gogOfficial": {
-        "description": "Dati del client ufficiale GOG Galaxy"
+        "description": "Dati del client ufficiale GOG Galaxy. Installati elenca i giochi presenti su questo PC; Giocati elenca anche quelli disinstallati per cui Galaxy conserva ancora i dati di gioco.",
+        "value": {
+          "none": "Nessuno",
+          "installed": "Installati",
+          "played": "Giocati"
+        }
       },
       "epicOfficial": {
         "description": "Dati del client ufficiale Epic Games",
@@ -1714,7 +1719,7 @@
         "Segna come sbloccato manualmente (clic destro su un obiettivo) registra uno sblocco che nessuna sorgente riesce a vedere.",
         "Reimposta i successi… fa rigiocare un gioco da zero e salva prima in un backup ogni file. Funziona per i giochi emulati, non per Steam, Epic o Xbox, i cui sblocchi stanno nel tuo account.",
         "Il tempo di gioco viene monitorato mentre il gioco è in esecuzione; Monitoraggio tempo di gioco in Impostazioni > Notifiche attiva le notifiche di inizio e fine.",
-        "Dimentica questo gioco… cancella tutto ciò che AW Next conserva su un gioco (i salvataggi vengono prima salvati in un backup). Rimuovi dalla lista lo nasconde soltanto.",
+        "Cancella i dati di questo gioco… cancella tutto ciò che AW Next conserva su un gioco (i salvataggi vengono prima salvati in un backup) e la prossima scansione lo ritrova. Rimuovi da AW Next lo toglie dalla libreria finché non lo ripristini da Impostazioni > Generale. Nascondi dalla vista lo mantiene monitorato, nella vista Nascosti del menu Raccolte.",
         "Impostazioni di gioco > Lingua degli obiettivi mostra gli obiettivi e le notifiche di un gioco in una lingua diversa dal resto.",
         "Impostazioni > Avanzate > Backup del profilo: Esporta profilo… salva impostazioni, preimpostazioni, temi, copertine e tempo di gioco in un solo file .awbackup per una reinstallazione o un nuovo PC. Gli accessi non vengono salvati."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Esporta profilo…",
         "profileRestore": "Ripristina profilo…"
       },
-      "blacklistTitle": "Giochi nascosti",
-      "blacklistButton": "Mostra di nuovo tutti i giochi nascosti",
-      "blacklistInfo": "Clic destro su un gioco della libreria e scegli «Rimuovi dalla lista» per nasconderlo qui.",
-      "blacklistEmpty": "Nessun gioco nascosto.",
+      "blacklistTitle": "Giochi rimossi",
+      "blacklistButton": "Ripristina tutti i giochi rimossi",
+      "blacklistInfo": "Clic destro su un gioco della libreria e scegli «Rimuovi da AW Next» per elencarlo qui.",
+      "blacklistEmpty": "Nessun gioco rimosso.",
       "blacklistRestore": "Ripristina questo gioco",
       "mainSteam": {
         "title": "Account Steam principale",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Raccolte",
     "collection-all": "Tutti i giochi",
+    "collection-hidden": "Nascosti",
+    "game-hide": "Nascondi dalla vista",
+    "game-unhide": "Mostra di nuovo",
     "collection-new": "Nuova raccolta…",
     "collection-edit": "Modifica raccolta…",
     "collection-name": "Nome della raccolta",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Scritti {count} obiettivi in {path}",
     "repair-failed": "Riparazione non riuscita",
     "could-not-write-steam-settings": "Impossibile scrivere steam_settings.",
-    "blacklist-add-failed": "Impossibile nascondere questo gioco",
+    "blacklist-add-failed": "Impossibile rimuovere questo gioco",
     "emulator-source": "Origine emulatore",
     "appid-override": "Imposta AppID manualmente…",
     "appid-override-prompt": "Appid Steam da usare per \"{name}\" ({folder}). Sostituisce la deduzione di AW Next basata sul nome - utile quando un altro gioco ha lo stesso nome di questa cartella.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Generazione configurazioni non riuscita: {error}",
     "error-generating-configs": "Errore durante la generazione delle configurazioni",
     "error-while-auto-finding-folder-s": "Errore durante la ricerca automatica delle cartelle",
-    "error-while-trying-to-reset-user-blacklist": "Impossibile mostrare di nuovo i giochi nascosti",
+    "error-while-trying-to-reset-user-blacklist": "Impossibile ripristinare i giochi rimossi",
     "websocket-connection-error": "Errore di connessione WebSocket",
     "notification-test-failure": "Test notifica non riuscito.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Errore durante la connessione: net::ERR_CONNECTION_REFUSED\nIl Watchdog è in esecuzione?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Obiettivi e tempo di gioco",
     "schema-language-menu": "Lingua degli obiettivi",
     "schema-language-global": "Come l’app ({language})",
-    "forget-game-menu": "Dimentica questo gioco…",
-    "forget-game-confirm-title": "Dimenticare {game}?",
+    "forget-game-menu": "Cancella i dati di questo gioco…",
+    "forget-game-confirm-title": "Cancellare i dati di {game}?",
     "forget-game-confirm-message": "AW Next azzera tutto ciò che conserva su questo gioco. La prossima scansione lo ritroverà come un gioco nuovo.",
     "forget-game-detail-ach": "• Obiettivi: {count} file di salvataggio, copiati in backup e poi svuotati",
     "forget-game-detail-playtime": "• Tempo di gioco",
     "forget-game-detail-cache": "• Elenco degli obiettivi, icone e sblocchi in cache ({count})",
     "forget-game-detail-config": "• Configurazione scritta da AW Next nella cartella del gioco ({count})",
     "forget-game-detail-settings": "• Eseguibile, AppID, origine emulatore, lingua e impostazioni di avanzamento del gioco in AW Next",
-    "forget-game-button": "Dimentica",
-    "forget-game-done-title": "Gioco dimenticato",
+    "forget-game-button": "Cancella",
+    "forget-game-done-title": "Dati del gioco cancellati",
     "forget-game-done-message": "La libreria viene ora scansionata di nuovo.",
     "reset-ach-menu": "Reimposta i successi…",
     "reset-ach-restore-menu": "Ripristina un backup dei successi",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Gioco Xbox nella tua libreria",
     "steam-hide-stale": "Nascondi i giochi che non sono più nella tua libreria Steam",
     "steam-hide-stale-help": "Richiede un account Steam collegato. I giochi installati su questo PC e quelli condivisi tramite Steam Family non vengono mai nascosti.",
+    "steam-libraries-title": "Librerie Steam",
+    "steam-libraries-help": "Disattiva una libreria per escludere i suoi giochi da tutte le raccolte, per esempio un disco che tieni collegato come archiviazione. Tornano quando la riattivi.",
     "steam-import-owned": "Aggiungi i giochi che possiedi",
     "steam-import-owned-help": "Elenca l'intera libreria Steam, inclusi i giochi mai installati su questo PC. Una libreria grande allunga molto la prima scansione. I progressi dei giochi mai giocati su questo PC vengono letti dal tuo profilo Steam, quindi i dettagli dei giochi devono essere pubblici.",
     "steam-import-family": "Aggiungi i giochi condivisi con te tramite Steam Family",

@@ -25,7 +25,13 @@ These read the launcher's own local data and carry a shield in Settings.
 
 **Steam**, **Epic Games** and **Xbox PC** each have three settings: **None**, **Installed** (games on
 this PC) or **Owned** (the whole library the account owns). **Owned** lists games that are not
-installed here and needs the account connection below.
+installed here and needs the account connection below. **GOG Galaxy** offers **None**, **Installed**
+or **Played**: Galaxy keeps the play data of a game after it is uninstalled, and **Played** still
+lists those games.
+
+**Steam libraries**, under the Steam account card, lists every Steam library folder on this PC. Switch
+one off and its games leave the list, All games included, for example a drive you keep connected as
+storage. They come back when you switch it on again.
 
 > [!NOTE]
 > Steam unlocks are read from the stats Steam keeps on this PC. A private profile, or private **Game

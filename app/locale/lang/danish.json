@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Kan du ikke se nogen oplåsninger?",
   "scrollUp": "Rul op",
   "allGamesBackButton": "Alle spil",
-  "removeFromList": "Fjern fra listen",
+  "removeFromList": "Fjern fra AW Next",
   "buildIconPrefetchCache": "Gem præstationsikoner i cache",
   "contextMenu": {
     "resetPlaytime": "Nulstil spilletid",
@@ -1441,7 +1441,7 @@
       "title": "Spilkilder",
       "officialPlatforms": {
         "title": "Officielle platforme",
-        "description": "Skjoldet markerer officielle launchere. Steam, Epic og Xbox har tre valg: Ingen, Installerede (spil på denne pc) eller Ejede (hele biblioteket på en tilsluttet konto). De øvrige er enten til eller fra."
+        "description": "Skjoldet markerer officielle launchere. Steam, Epic og Xbox har tre valg: Ingen, Installerede (spil på denne pc) eller Ejede (hele biblioteket på en tilsluttet konto). GOG Galaxy har Ingen, Installerede eller Spillede (alle spil, som Galaxy har spildata for). De øvrige er enten til eller fra."
       },
       "legitSteam": {
         "name": "Vis Steam-spil",
@@ -1493,7 +1493,12 @@
         "description": "Officielle data fra Ubisoft Connect-klienten"
       },
       "gogOfficial": {
-        "description": "Officielle data fra GOG Galaxy-klienten"
+        "description": "Officielle data fra GOG Galaxy-klienten. Installerede viser spillene på denne pc; Spillede viser også dem, der er afinstalleret, men som Galaxy stadig gemmer spildata for.",
+        "value": {
+          "none": "Ingen",
+          "installed": "Installerede",
+          "played": "Spillede"
+        }
       },
       "epicOfficial": {
         "description": "Officielle data fra Epic Games-klienten",
@@ -1714,7 +1719,7 @@
         "Markér som manuelt låst op (højreklik på en præstation) registrerer en oplåsning, ingen kilde kan se.",
         "Nulstil præstationer… lader dig spille et spil forfra og sikkerhedskopierer først hver fil. Det virker for emulerede spil, ikke for Steam, Epic eller Xbox, hvis oplåsninger ligger på din konto.",
         "Spilletid spores, mens spillet kører; Sporing af spilletid under Indstillinger > Notifikation slår notifikationerne ved start og slut til.",
-        "Glem dette spil… rydder alt, hvad AW Next gemmer om et spil (gemte spil bliver først sikkerhedskopieret). Fjern fra listen skjuler det kun.",
+        "Ryd dette spils data… rydder alt, hvad AW Next gemmer om et spil (gemte spil bliver først sikkerhedskopieret), og næste scanning finder det igen. Fjern fra AW Next tager det ud af biblioteket, indtil du henter det tilbage under Indstillinger > Generelt. Skjul fra visning holder det sporet, i visningen Skjulte i menuen Samlinger.",
         "Spillets indstillinger > Sprog for præstationer viser ét spils præstationer og notifikationer på et andet sprog end resten.",
         "Indstillinger > Avanceret > Profilsikkerhedskopi: Eksportér profil… gemmer dine indstillinger, presets, temaer, covers og spilletid i én .awbackup-fil til en nyinstallation eller en ny pc. Logins bliver ikke gemt."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Eksportér profil…",
         "profileRestore": "Gendan profil…"
       },
-      "blacklistTitle": "Skjulte spil",
-      "blacklistButton": "Vis alle skjulte spil igen",
-      "blacklistInfo": "Højreklik på et spil i biblioteket og vælg »Fjern fra listen« for at skjule det her.",
-      "blacklistEmpty": "Ingen skjulte spil.",
+      "blacklistTitle": "Fjernede spil",
+      "blacklistButton": "Bring alle fjernede spil tilbage",
+      "blacklistInfo": "Højreklik på et spil i biblioteket og vælg »Fjern fra AW Next« for at vise det her.",
+      "blacklistEmpty": "Ingen fjernede spil.",
       "blacklistRestore": "Gendan dette spil",
       "mainSteam": {
         "title": "Primær Steam-konto",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Samlinger",
     "collection-all": "Alle spil",
+    "collection-hidden": "Skjulte",
+    "game-hide": "Skjul fra visning",
+    "game-unhide": "Vis igen",
     "collection-new": "Ny samling…",
     "collection-edit": "Rediger samling…",
     "collection-name": "Samlingens navn",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Skrev {count} præstationer til {path}",
     "repair-failed": "Reparationen mislykkedes",
     "could-not-write-steam-settings": "steam_settings kunne ikke skrives.",
-    "blacklist-add-failed": "Dette spil kunne ikke skjules",
+    "blacklist-add-failed": "Dette spil kunne ikke fjernes",
     "emulator-source": "Emulatorkilde",
     "appid-override": "Indstil AppID manuelt…",
     "appid-override-prompt": "Steam-appid, der skal bruges til \"{name}\" ({folder}). Det erstatter AW Nexts gæt ud fra navnet - nyttigt, når et andet spil har samme navn som mappen.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Konfigurationerne kunne ikke genereres: {error}",
     "error-generating-configs": "Fejl under generering af konfigurationer",
     "error-while-auto-finding-folder-s": "Fejl under automatisk søgning efter mappe(r)",
-    "error-while-trying-to-reset-user-blacklist": "De skjulte spil kunne ikke vises igen",
+    "error-while-trying-to-reset-user-blacklist": "De fjernede spil kunne ikke bringes tilbage",
     "websocket-connection-error": "Fejl i WebSocket-forbindelsen",
     "notification-test-failure": "Notifikationstesten mislykkedes.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fejl under oprettelse af forbindelse: net::ERR_CONNECTION_REFUSED\nKører Watchdog ?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Præstationer og spilletid",
     "schema-language-menu": "Sprog for præstationer",
     "schema-language-global": "Samme som appen ({language})",
-    "forget-game-menu": "Glem dette spil…",
-    "forget-game-confirm-title": "Glem {game}?",
+    "forget-game-menu": "Ryd dette spils data…",
+    "forget-game-confirm-title": "Ryd data for {game}?",
     "forget-game-confirm-message": "AW Next nulstiller alt, hvad det gemmer om dette spil. Den næste scanning finder det igen som et nyt spil.",
     "forget-game-detail-ach": "• Præstationer: {count} gemmefil(er), sikkerhedskopieret og derefter ryddet",
     "forget-game-detail-playtime": "• Spilletid",
     "forget-game-detail-cache": "• Cachelagret præstationsliste, ikoner og oplåsninger ({count})",
     "forget-game-detail-config": "• Konfiguration, som AW Next har skrevet i spilmappen ({count})",
     "forget-game-detail-settings": "• Spillets programfil, AppID, emulatorkilde, sprog og indstillinger for fremskridt i AW Next",
-    "forget-game-button": "Glem",
-    "forget-game-done-title": "Spillet er glemt",
+    "forget-game-button": "Ryd",
+    "forget-game-done-title": "Spildata ryddet",
     "forget-game-done-message": "Biblioteket scannes igen nu.",
     "reset-ach-menu": "Nulstil præstationer…",
     "reset-ach-restore-menu": "Gendan en sikkerhedskopi af præstationer",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Xbox-spil i dit bibliotek",
     "steam-hide-stale": "Skjul spil, der ikke længere er i dit Steam-bibliotek",
     "steam-hide-stale-help": "Kræver en forbundet Steam-konto. Spil installeret på denne pc og spil delt via Steam Family skjules aldrig.",
+    "steam-libraries-title": "Steam-biblioteker",
+    "steam-libraries-help": "Deaktiver et bibliotek for at holde dets spil ude af alle samlinger, for eksempel et drev, du har tilsluttet som lager. De kommer tilbage, når du aktiverer det igen.",
     "steam-import-owned": "Tilføj de spil, du ejer",
     "steam-import-owned-help": "Viser hele dit Steam-bibliotek, inklusive spil, der aldrig har været installeret på denne pc. Et stort bibliotek gør den første scanning meget længere. Fremskridt i spil, der aldrig er spillet på denne pc, læses fra din Steam-profil, så dens spildetaljer skal være offentlige.",
     "steam-import-family": "Tilføj de spil, der deles med dig via Steam Family",

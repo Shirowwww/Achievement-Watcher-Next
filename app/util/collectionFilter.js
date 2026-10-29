@@ -13,17 +13,19 @@ function tileKey(li) {
   return box ? String(box.getAttribute('data-appid') || '') : '';
 }
 
-// `members` is a Set of tile keys, or null for "no collection selected". Returns how many tiles remain.
-function applyToTile(li, members) {
-  const show = !members || members.has(tileKey(li));
+// `members` is a Set of tile keys, or null for "no collection selected"; `excluded` the hidden games
+// the view leaves out, or null. Returns whether the tile stays.
+function applyToTile(li, members, excluded = null) {
+  const key = tileKey(li);
+  const show = (!members || members.has(key)) && !(excluded && excluded.has(key));
   li.classList.toggle(HIDDEN_CLASS, !show);
   return show;
 }
 
-function applyToList(list, members) {
+function applyToList(list, members, excluded = null) {
   let shown = 0;
   for (const li of list.children) {
-    if (li.tagName === 'LI' && applyToTile(li, members)) shown += 1;
+    if (li.tagName === 'LI' && applyToTile(li, members, excluded)) shown += 1;
   }
   return shown;
 }

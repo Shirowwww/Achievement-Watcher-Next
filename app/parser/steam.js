@@ -1145,7 +1145,50 @@ const getSteamPath = (module.exports.getSteamPath = async () => {
 
 // A Steam install's folder is authoritative: appmanifest_<appid>.acf names the installdir, and
 // libraryfolders.vdf names every library root - powers exe detection for the launch panel.
-const { unescapeSteamVdf, parseSteamLibraryFoldersVdf, parseSteamAppManifestAcf } = require(path.join(__dirname, 'steamLibrary.js'));
+const { unescapeSteamVdf, parseSteamLibraryFoldersVdf, parseSteamAppManifestAcf, isInsideAnyFolder } = require(path.join(__dirname, 'steamLibrary.js'));
+
+/*
+  Steam's own library manifests against scanLegit's per-app registry "Installed" flag, which goes
+  stale (a folder deleted outside Steam, a manifest pointing at a common\<installdir> that is gone).
+  A manifest whose folder exists attaches that folder for exe detection. Under "installed",
+  scanLegit kept games on the flag alone, so one the manifests prove missing leaves the list.
+*/
+module.exports.reconcileLocalInstalls = (records, localInstalls, { installedOnly = false, exists = fs.existsSync } = {}) => {
+  let attached = 0;
+  let corrected = 0;
+  for (const rec of records) {
+    const local = localInstalls.get(String(rec.appid));
+    rec.data = rec.data || {};
+    if (local && local.gameDir && exists(local.gameDir)) {
+      rec.data.gameDir = local.gameDir;
+      rec.data.installed = true;
+      attached++;
+    } else if (rec.data.installed) {
+      rec.data.installed = false;
+      corrected++;
+    }
+  }
+  const kept = installedOnly ? records.filter((rec) => rec.data.installed === true) : records;
+  return { records: kept, attached, corrected };
+};
+
+/*
+  A library the user keeps connected but does not want listed (an external drive used as storage,
+  Settings > Sources). Its games leave the list whatever the listing mode; `hidden` lets the account
+  library skip them too, or it would add them back as owned. What counts is a Steam manifest found
+  there, folder on disk or not: an unplugged drive lists none, so its games stay as before.
+*/
+module.exports.dropHiddenLibraryGames = (records, localInstalls, hiddenFolders) => {
+  const hidden = new Set();
+  if (!hiddenFolders || hiddenFolders.length === 0) return { kept: records, hidden };
+  const kept = records.filter((rec) => {
+    const local = localInstalls && localInstalls.get(String(rec.appid));
+    if (!local || !isInsideAnyFolder(local.gameDir, hiddenFolders)) return true;
+    hidden.add(String(rec.appid));
+    return false;
+  });
+  return { kept, hidden };
+};
 
 // Map of appid -> { name, gameDir } for every app with an appmanifest on disk. Rebuilt on each
 // scan (a handful of small ACF files) so newly installed Steam games are picked up immediately.

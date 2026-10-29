@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Zie je geen ontgrendelingen?",
   "scrollUp": "Omhoog scrollen",
   "allGamesBackButton": "Alle games",
-  "removeFromList": "Uit lijst verwijderen",
+  "removeFromList": "Verwijderen uit AW Next",
   "buildIconPrefetchCache": "Prestatiepictogrammen cachen",
   "contextMenu": {
     "resetPlaytime": "Speeltijd resetten",
@@ -1441,7 +1441,7 @@
       "title": "Gamebronnen",
       "officialPlatforms": {
         "title": "Officiële platformen",
-        "description": "Het schild markeert officiële launchers. Steam, Epic en Xbox bieden drie keuzes: Geen, Geïnstalleerd (games op deze pc) of In bezit (de hele bibliotheek van een verbonden account). De rest staat aan of uit."
+        "description": "Het schild markeert officiële launchers. Steam, Epic en Xbox bieden drie keuzes: Geen, Geïnstalleerd (games op deze pc) of In bezit (de hele bibliotheek van een verbonden account). GOG Galaxy biedt Geen, Geïnstalleerd of Gespeeld (alle games waarvoor Galaxy speelgegevens heeft). De rest staat aan of uit."
       },
       "legitSteam": {
         "name": "Steam-games tonen",
@@ -1493,7 +1493,12 @@
         "description": "Officiële gegevens van de Ubisoft Connect-client"
       },
       "gogOfficial": {
-        "description": "Officiële gegevens van de GOG Galaxy-client"
+        "description": "Officiële gegevens van de GOG Galaxy-client. Geïnstalleerd toont de games op deze pc; Gespeeld toont ook de games die zijn verwijderd maar waarvan Galaxy nog speelgegevens bewaart.",
+        "value": {
+          "none": "Geen",
+          "installed": "Geïnstalleerd",
+          "played": "Gespeeld"
+        }
       },
       "epicOfficial": {
         "description": "Officiële gegevens van de Epic Games-client",
@@ -1714,7 +1719,7 @@
         "Handmatig als ontgrendeld markeren (rechtermuisknop op een prestatie) legt een ontgrendeling vast die geen enkele bron ziet.",
         "Prestaties resetten… laat je een game opnieuw vanaf nul spelen en maakt eerst een back-up van elk bestand. Het werkt voor geëmuleerde games, niet voor Steam, Epic of Xbox, waarvan de ontgrendelingen op je account staan.",
         "Speeltijd wordt bijgehouden terwijl de game draait; Speeltijd bijhouden bij Instellingen > Meldingen schakelt de start- en eindmeldingen in.",
-        "Deze game vergeten… wist alles wat AW Next over een game bewaart (saves krijgen eerst een back-up). Uit lijst verwijderen verbergt hem alleen.",
+        "Gegevens van deze game wissen… wist alles wat AW Next over een game bewaart (saves krijgen eerst een back-up), en de volgende scan vindt hem weer. Verwijderen uit AW Next haalt hem uit de bibliotheek tot je hem terugzet via Instellingen > Algemeen. Bij Uit de weergave verbergen blijft hij gevolgd, in de weergave Verborgen van het menu Collecties.",
         "Game-instellingen > Taal van prestaties toont de prestaties en meldingen van één game in een andere taal dan de rest.",
         "Instellingen > Geavanceerd > Profielback-up: Profiel exporteren… bewaart je instellingen, presets, thema's, covers en speeltijd in één .awbackup-bestand voor een herinstallatie of een nieuwe pc. Aanmeldingen worden niet bewaard."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Profiel exporteren…",
         "profileRestore": "Profiel herstellen…"
       },
-      "blacklistTitle": "Verborgen games",
-      "blacklistButton": "Alle verborgen games weer tonen",
-      "blacklistInfo": "Klik met rechts op een game in de bibliotheek en kies “Uit lijst verwijderen” om hem hier te verbergen.",
-      "blacklistEmpty": "Geen verborgen games.",
+      "blacklistTitle": "Verwijderde games",
+      "blacklistButton": "Alle verwijderde games terugzetten",
+      "blacklistInfo": "Klik met rechts op een game in de bibliotheek en kies “Verwijderen uit AW Next” om hem hier te vermelden.",
+      "blacklistEmpty": "Geen verwijderde games.",
       "blacklistRestore": "Deze game terugzetten",
       "mainSteam": {
         "title": "Hoofdaccount van Steam",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Collecties",
     "collection-all": "Alle games",
+    "collection-hidden": "Verborgen",
+    "game-hide": "Uit de weergave verbergen",
+    "game-unhide": "Weer tonen",
     "collection-new": "Nieuwe collectie…",
     "collection-edit": "Collectie bewerken…",
     "collection-name": "Naam van de collectie",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "{count} prestaties geschreven naar {path}",
     "repair-failed": "Reparatie mislukt",
     "could-not-write-steam-settings": "Kon steam_settings niet schrijven.",
-    "blacklist-add-failed": "Deze game kon niet worden verborgen",
+    "blacklist-add-failed": "Deze game kon niet worden verwijderd",
     "emulator-source": "Emulatorbron",
     "appid-override": "AppID handmatig instellen…",
     "appid-override-prompt": "Steam-appid voor \"{name}\" ({folder}). Dit vervangt de op naam gebaseerde gok van AW Next - handig als een ander spel dezelfde naam als deze map heeft.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Genereren van de configuraties mislukt: {error}",
     "error-generating-configs": "Fout bij het genereren van de configuraties",
     "error-while-auto-finding-folder-s": "Fout tijdens het automatisch zoeken naar map(pen)",
-    "error-while-trying-to-reset-user-blacklist": "De verborgen games konden niet weer worden getoond",
+    "error-while-trying-to-reset-user-blacklist": "De verwijderde games konden niet worden teruggezet",
     "websocket-connection-error": "Fout in de WebSocket-verbinding",
     "notification-test-failure": "Meldingstest mislukt.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Fout bij het opzetten van de verbinding: net::ERR_CONNECTION_REFUSED\nDraait Watchdog wel?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Prestaties en speeltijd",
     "schema-language-menu": "Taal van prestaties",
     "schema-language-global": "Zelfde als de app ({language})",
-    "forget-game-menu": "Deze game vergeten…",
-    "forget-game-confirm-title": "{game} vergeten?",
+    "forget-game-menu": "Gegevens van deze game wissen…",
+    "forget-game-confirm-title": "Gegevens van {game} wissen?",
     "forget-game-confirm-message": "AW Next wist alles wat het over deze game bewaart. Bij de volgende scan wordt hij weer als nieuwe game gevonden.",
     "forget-game-detail-ach": "• Prestaties: {count} savebestand(en), eerst geback-upt en daarna gewist",
     "forget-game-detail-playtime": "• Speeltijd",
     "forget-game-detail-cache": "• Gecachte prestatielijst, pictogrammen en ontgrendelingen ({count})",
     "forget-game-detail-config": "• Configuratie die AW Next in de gamemap heeft geschreven ({count})",
     "forget-game-detail-settings": "• Het uitvoerbare bestand, de AppID, de emulatorbron, de taal en de voortgangsinstellingen in AW Next",
-    "forget-game-button": "Vergeten",
-    "forget-game-done-title": "Game vergeten",
+    "forget-game-button": "Wissen",
+    "forget-game-done-title": "Gamegegevens gewist",
     "forget-game-done-message": "De bibliotheek wordt nu opnieuw gescand.",
     "reset-ach-menu": "Prestaties resetten…",
     "reset-ach-restore-menu": "Een prestatieback-up terugzetten",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Xbox-game in je bibliotheek",
     "steam-hide-stale": "Verberg spellen die niet meer in je Steam-bibliotheek staan",
     "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen.",
+    "steam-libraries-title": "Steam-bibliotheken",
+    "steam-libraries-help": "Schakel een bibliotheek uit om de games ervan uit alle collecties te houden, bijvoorbeeld een schijf die je als opslag aangesloten laat. Ze komen terug zodra je de bibliotheek weer inschakelt.",
     "steam-import-owned": "Voeg de games toe die je bezit",
     "steam-import-owned-help": "Toont je hele Steam-bibliotheek, inclusief games die nooit op deze pc geïnstalleerd zijn geweest. Een grote bibliotheek maakt de eerste scan veel langer. De voortgang van games die nooit op deze pc zijn gespeeld, wordt uit je Steam-profiel gelezen, dus de gamegegevens daarvan moeten openbaar zijn.",
     "steam-import-family": "Voeg de games toe die met je gedeeld zijn via Steam Family",

@@ -56,7 +56,7 @@
   "noneUnlockedHint": "解除が表示されませんか？",
   "scrollUp": "上へスクロール",
   "allGamesBackButton": "すべてのゲーム",
-  "removeFromList": "リストから削除",
+  "removeFromList": "AW Next から削除",
   "buildIconPrefetchCache": "実績アイコンをキャッシュ",
   "contextMenu": {
     "resetPlaytime": "プレイ時間をリセット",
@@ -1441,7 +1441,7 @@
       "title": "ゲームソース",
       "officialPlatforms": {
         "title": "公式プラットフォーム",
-        "description": "盾マークは公式ランチャーを示します。Steam、Epic、Xbox には、なし、インストール済み（この PC のゲーム）、所有（接続したアカウントのライブラリ全体）の3つの選択肢があります。ほかはオンかオフです。"
+        "description": "盾マークは公式ランチャーを示します。Steam、Epic、Xbox には、なし、インストール済み（この PC のゲーム）、所有（接続したアカウントのライブラリ全体）の3つの選択肢があります。GOG Galaxy には、なし、インストール済み、プレイ済み（Galaxy にプレイデータがあるすべてのゲーム）があります。ほかはオンかオフです。"
       },
       "legitSteam": {
         "name": "Steam ゲームを表示",
@@ -1493,7 +1493,12 @@
         "description": "Ubisoft Connect 公式クライアントのデータ"
       },
       "gogOfficial": {
-        "description": "GOG Galaxy 公式クライアントのデータ"
+        "description": "GOG Galaxy 公式クライアントのデータ。インストール済みはこの PC にあるゲームを表示し、プレイ済みはアンインストール済みでも Galaxy がプレイデータを保持しているゲームも表示します。",
+        "value": {
+          "none": "なし",
+          "installed": "インストール済み",
+          "played": "プレイ済み"
+        }
       },
       "epicOfficial": {
         "description": "Epic Games 公式クライアントのデータ",
@@ -1714,7 +1719,7 @@
         "［手動解除としてマーク］（実績を右クリック）で、どのソースにも見えない解除を記録できます。",
         "［実績をリセット…］は、ゲームを最初からやり直せるようにし、先にすべてのファイルをバックアップします。エミュレーターのゲームで使えますが、解除状況がアカウントにある Steam、Epic、Xbox では使えません。",
         "プレイ時間はゲームの実行中に追跡されます。［設定］>［通知］の［プレイ時間の追跡］で、開始と終了の通知をオンにできます。",
-        "［このゲームを忘れる…］は、AW Next が保持しているそのゲームに関するすべてを消去します（セーブデータは先にバックアップされます）。［リストから削除］は非表示にするだけです。",
+        "［このゲームのデータを消去…］は、AW Next が保持しているそのゲームに関するすべてを消去します（セーブデータは先にバックアップされます）。次回のスキャンで再び見つかります。［AW Next から削除］は、［設定］>［一般］から戻すまでライブラリから外します。［表示から隠す］は追跡したまま、［コレクション］メニューの［非表示］ビューに表示します。",
         "［ゲーム設定］>［実績の言語］で、1 つのゲームの実績と通知を、ほかとは別の言語で表示できます。",
         "［設定］>［詳細］>［プロファイルのバックアップ］：［プロファイルをエクスポート…］で、設定、プリセット、テーマ、カバー、プレイ時間を 1 つの .awbackup ファイルに保存し、再インストールや新しい PC に引き継げます。サインイン情報は保存されません。"
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "プロファイルをエクスポート…",
         "profileRestore": "プロファイルを復元…"
       },
-      "blacklistTitle": "非表示のゲーム",
-      "blacklistButton": "非表示のゲームをすべて再表示",
-      "blacklistInfo": "ライブラリのゲームを右クリックして「リストから削除」を選ぶと、ここに非表示にできます。",
-      "blacklistEmpty": "非表示のゲームはありません。",
+      "blacklistTitle": "削除したゲーム",
+      "blacklistButton": "削除したゲームをすべて元に戻す",
+      "blacklistInfo": "ライブラリのゲームを右クリックして「AW Next から削除」を選ぶと、ここに一覧表示されます。",
+      "blacklistEmpty": "削除したゲームはありません。",
       "blacklistRestore": "このゲームを再表示",
       "mainSteam": {
         "title": "メイン Steam アカウント",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "コレクション",
     "collection-all": "すべてのゲーム",
+    "collection-hidden": "非表示",
+    "game-hide": "表示から隠す",
+    "game-unhide": "再表示する",
     "collection-new": "新しいコレクション…",
     "collection-edit": "コレクションを編集…",
     "collection-name": "コレクション名",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "{count} 件の実績を {path} に書き込みました",
     "repair-failed": "修正に失敗しました",
     "could-not-write-steam-settings": "steam_settings を書き込めませんでした。",
-    "blacklist-add-failed": "このゲームを非表示にできませんでした",
+    "blacklist-add-failed": "このゲームを削除できませんでした",
     "emulator-source": "エミュレータのソース",
     "appid-override": "AppID を手動で設定…",
     "appid-override-prompt": "\"{name}\" ({folder}) に使う Steam の appid。名前に基づく AW Next の推測を上書きします。別のゲームがこのフォルダーと同じ名前のときに便利です。",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "設定の生成に失敗しました：{error}",
     "error-generating-configs": "設定の生成中にエラーが発生しました",
     "error-while-auto-finding-folder-s": "フォルダの自動検索中にエラーが発生しました",
-    "error-while-trying-to-reset-user-blacklist": "非表示のゲームを再表示できませんでした",
+    "error-while-trying-to-reset-user-blacklist": "削除したゲームを元に戻せませんでした",
     "websocket-connection-error": "WebSocket 接続エラー",
     "notification-test-failure": "通知テストに失敗しました。",
     "error-in-connection-establishment-net-err-connection-refused-nis": "接続の確立中にエラーが発生しました：net::ERR_CONNECTION_REFUSED\nWatchdog は実行中ですか？",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "実績とプレイ時間",
     "schema-language-menu": "実績の言語",
     "schema-language-global": "アプリと同じ ({language})",
-    "forget-game-menu": "このゲームを忘れる…",
-    "forget-game-confirm-title": "{game} を忘れますか？",
+    "forget-game-menu": "このゲームのデータを消去…",
+    "forget-game-confirm-title": "{game} のデータを消去しますか？",
     "forget-game-confirm-message": "AW Next はこのゲームについて保持しているすべてをリセットします。次回のスキャンで新しいゲームとして再検出されます。",
     "forget-game-detail-ach": "• 実績: {count} 個のセーブファイルをバックアップしてから消去",
     "forget-game-detail-playtime": "• プレイ時間",
     "forget-game-detail-cache": "• キャッシュされた実績リスト、アイコン、解除状況 ({count})",
     "forget-game-detail-config": "• AW Next がゲームフォルダーに書き込んだ設定 ({count})",
     "forget-game-detail-settings": "• AW Next 内の実行ファイル、AppID、エミュレータのソース、言語、進捗の設定",
-    "forget-game-button": "忘れる",
-    "forget-game-done-title": "ゲームを忘れました",
+    "forget-game-button": "消去",
+    "forget-game-done-title": "ゲームのデータを消去しました",
     "forget-game-done-message": "ライブラリを再スキャンしています。",
     "reset-ach-menu": "実績をリセット…",
     "reset-ach-restore-menu": "実績のバックアップを復元",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "ライブラリにある Xbox のゲーム",
     "steam-hide-stale": "Steam ライブラリにもうないゲームを隠す",
     "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。",
+    "steam-libraries-title": "Steam ライブラリ",
+    "steam-libraries-help": "ライブラリを無効にすると、そのゲームはすべてのコレクションから除外されます。たとえば、ストレージとして接続したままにしているドライブなどです。再び有効にすると元に戻ります。",
     "steam-import-owned": "所有しているゲームを追加",
     "steam-import-owned-help": "この PC に一度もインストールされていないゲームを含め、Steam ライブラリ全体を表示します。ライブラリが大きいと初回スキャンが大幅に長くなります。この PC でプレイしたことのないゲームの進行状況は Steam プロフィールから読み取るため、ゲームの詳細を公開にする必要があります。",
     "steam-import-family": "Steam ファミリーで共有されているゲームを追加",

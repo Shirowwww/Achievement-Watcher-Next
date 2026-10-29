@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Không thấy thành tựu nào được mở khóa?",
   "scrollUp": "Cuộn lên",
   "allGamesBackButton": "Tất cả trò chơi",
-  "removeFromList": "Xóa khỏi danh sách",
+  "removeFromList": "Gỡ khỏi AW Next",
   "buildIconPrefetchCache": "Lưu đệm biểu tượng thành tựu",
   "contextMenu": {
     "resetPlaytime": "Đặt lại thời gian chơi",
@@ -1441,7 +1441,7 @@
       "title": "Nguồn trò chơi",
       "officialPlatforms": {
         "title": "Nền tảng chính thức",
-        "description": "Biểu tượng khiên đánh dấu các trình khởi chạy chính thức. Steam, Epic và Xbox có ba lựa chọn: Không, Đã cài đặt (game trên PC này) hoặc Đang sở hữu (toàn bộ thư viện của tài khoản đã kết nối). Các nguồn còn lại chỉ bật hoặc tắt."
+        "description": "Biểu tượng khiên đánh dấu các trình khởi chạy chính thức. Steam, Epic và Xbox có ba lựa chọn: Không, Đã cài đặt (game trên PC này) hoặc Đang sở hữu (toàn bộ thư viện của tài khoản đã kết nối). GOG Galaxy có Không, Đã cài đặt hoặc Đã chơi (mọi game mà Galaxy có dữ liệu chơi). Các nguồn còn lại chỉ bật hoặc tắt."
       },
       "legitSteam": {
         "name": "Hiện trò chơi Steam",
@@ -1493,7 +1493,12 @@
         "description": "Dữ liệu chính thức của ứng dụng Ubisoft Connect"
       },
       "gogOfficial": {
-        "description": "Dữ liệu chính thức của ứng dụng GOG Galaxy"
+        "description": "Dữ liệu chính thức của ứng dụng GOG Galaxy. Đã cài đặt liệt kê các game trên PC này; Đã chơi liệt kê cả những game đã gỡ cài đặt mà Galaxy vẫn giữ dữ liệu chơi.",
+        "value": {
+          "none": "Không",
+          "installed": "Đã cài đặt",
+          "played": "Đã chơi"
+        }
       },
       "epicOfficial": {
         "description": "Dữ liệu chính thức của ứng dụng Epic Games",
@@ -1714,7 +1719,7 @@
         "Đánh dấu là mở khóa thủ công (nhấp chuột phải vào một thành tựu) ghi lại một lượt mở khóa mà không nguồn nào thấy được.",
         "Đặt lại thành tựu… cho chơi lại một trò chơi từ đầu và sao lưu mọi tệp trước. Nó dùng được cho trò chơi giả lập, không dùng cho Steam, Epic hay Xbox, nơi lượt mở khóa nằm trên tài khoản của bạn.",
         "Thời gian chơi được theo dõi khi trò chơi đang chạy; Theo dõi thời gian chơi trong Cài đặt > Thông báo bật thông báo bắt đầu và kết thúc.",
-        "Quên trò chơi này… xóa mọi thứ AW Next lưu về một trò chơi (các bản lưu được sao lưu trước). Xóa khỏi danh sách chỉ ẩn nó đi.",
+        "Xóa sạch dữ liệu của trò chơi này… xóa mọi thứ AW Next lưu về một trò chơi (các bản lưu được sao lưu trước), và lần quét tiếp theo sẽ tìm lại nó. Gỡ khỏi AW Next đưa nó ra khỏi thư viện cho đến khi bạn khôi phục từ Cài đặt > Chung. Ẩn khỏi chế độ xem vẫn theo dõi nó, trong chế độ xem Đã ẩn của menu Bộ sưu tập.",
         "Cài đặt trò chơi > Ngôn ngữ thành tựu hiển thị thành tựu và thông báo của một trò chơi bằng ngôn ngữ khác với phần còn lại.",
         "Cài đặt > Nâng cao > Sao lưu hồ sơ: Xuất hồ sơ… lưu cài đặt, mẫu, chủ đề, ảnh bìa và thời gian chơi của bạn vào một tệp .awbackup để cài lại hoặc dùng máy mới. Thông tin đăng nhập không được lưu."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Xuất hồ sơ…",
         "profileRestore": "Khôi phục hồ sơ…"
       },
-      "blacklistTitle": "Game đã ẩn",
-      "blacklistButton": "Hiện lại tất cả game đã ẩn",
-      "blacklistInfo": "Nhấn chuột phải vào một game trong thư viện và chọn “Xóa khỏi danh sách” để ẩn nó ở đây.",
-      "blacklistEmpty": "Không có trò chơi nào bị ẩn.",
+      "blacklistTitle": "Game đã gỡ",
+      "blacklistButton": "Khôi phục tất cả game đã gỡ",
+      "blacklistInfo": "Nhấn chuột phải vào một game trong thư viện và chọn “Gỡ khỏi AW Next” để liệt kê nó ở đây.",
+      "blacklistEmpty": "Không có game nào đã gỡ.",
       "blacklistRestore": "Khôi phục trò chơi này",
       "mainSteam": {
         "title": "Tài khoản Steam chính",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Bộ sưu tập",
     "collection-all": "Tất cả trò chơi",
+    "collection-hidden": "Đã ẩn",
+    "game-hide": "Ẩn khỏi chế độ xem",
+    "game-unhide": "Hiện lại",
     "collection-new": "Bộ sưu tập mới…",
     "collection-edit": "Chỉnh sửa bộ sưu tập…",
     "collection-name": "Tên bộ sưu tập",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Đã ghi {count} thành tựu vào {path}",
     "repair-failed": "Sửa thất bại",
     "could-not-write-steam-settings": "Không thể ghi steam_settings.",
-    "blacklist-add-failed": "Không ẩn được game này",
+    "blacklist-add-failed": "Không gỡ được game này",
     "emulator-source": "Nguồn giả lập",
     "appid-override": "Đặt AppID thủ công…",
     "appid-override-prompt": "Steam appid dùng cho \"{name}\" ({folder}). Giá trị này thay cho phỏng đoán theo tên của AW Next - hữu ích khi một game khác trùng tên với thư mục này.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Tạo cấu hình thất bại: {error}",
     "error-generating-configs": "Lỗi khi tạo cấu hình",
     "error-while-auto-finding-folder-s": "Lỗi khi tự động tìm thư mục",
-    "error-while-trying-to-reset-user-blacklist": "Không hiện lại được các game đã ẩn",
+    "error-while-trying-to-reset-user-blacklist": "Không khôi phục được các game đã gỡ",
     "websocket-connection-error": "Lỗi kết nối WebSocket",
     "notification-test-failure": "Thử thông báo thất bại.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Lỗi khi thiết lập kết nối: net::ERR_CONNECTION_REFUSED\nWatchdog có đang chạy không ?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Thành tựu và thời gian chơi",
     "schema-language-menu": "Ngôn ngữ thành tựu",
     "schema-language-global": "Giống ứng dụng ({language})",
-    "forget-game-menu": "Quên trò chơi này…",
-    "forget-game-confirm-title": "Quên {game}?",
+    "forget-game-menu": "Xóa sạch dữ liệu của trò chơi này…",
+    "forget-game-confirm-title": "Xóa sạch dữ liệu của {game}?",
     "forget-game-confirm-message": "AW Next đặt lại mọi thứ nó lưu về trò chơi này. Lần quét tiếp theo sẽ tìm thấy nó như một trò chơi mới.",
     "forget-game-detail-ach": "• Thành tựu: {count} tệp lưu, đã sao lưu rồi xóa sạch",
     "forget-game-detail-playtime": "• Thời gian chơi",
     "forget-game-detail-cache": "• Danh sách thành tựu, biểu tượng và lượt mở khóa trong bộ nhớ đệm ({count})",
     "forget-game-detail-config": "• Cấu hình AW Next đã ghi vào thư mục trò chơi ({count})",
     "forget-game-detail-settings": "• Tệp thực thi, AppID, nguồn giả lập, ngôn ngữ và cài đặt tiến độ của trò chơi trong AW Next",
-    "forget-game-button": "Quên",
-    "forget-game-done-title": "Đã quên trò chơi",
+    "forget-game-button": "Xóa sạch",
+    "forget-game-done-title": "Đã xóa sạch dữ liệu trò chơi",
     "forget-game-done-message": "Thư viện đang được quét lại.",
     "reset-ach-menu": "Đặt lại thành tựu…",
     "reset-ach-restore-menu": "Khôi phục một bản sao lưu thành tựu",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Game Xbox trong thư viện của bạn",
     "steam-hide-stale": "Ẩn các trò chơi không còn trong thư viện Steam của bạn",
     "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn.",
+    "steam-libraries-title": "Thư viện Steam",
+    "steam-libraries-help": "Tắt một thư viện để loại các trò chơi của nó khỏi mọi bộ sưu tập, ví dụ một ổ đĩa bạn để cắm sẵn làm nơi lưu trữ. Chúng sẽ trở lại khi bạn bật lại thư viện.",
     "steam-import-owned": "Thêm những trò chơi bạn sở hữu",
     "steam-import-owned-help": "Liệt kê toàn bộ thư viện Steam của bạn, kể cả những trò chơi chưa từng được cài trên PC này. Thư viện lớn sẽ khiến lần quét đầu tiên lâu hơn nhiều. Tiến độ của các trò chơi chưa từng chơi trên máy này được đọc từ hồ sơ Steam của bạn, vì vậy chi tiết trò chơi phải để công khai.",
     "steam-import-family": "Thêm những trò chơi được chia sẻ với bạn qua Steam Family",

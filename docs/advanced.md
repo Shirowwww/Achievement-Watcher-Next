@@ -109,13 +109,15 @@ GreenLuma and LumaPlay on Windows, and the console saves of RPCS3, ShadPS4, Xeni
 360 ports and XLLN. SmartSteamEmu (`stats.bin`) and SKIDROW (`achieve.dat`) saves are not edited one
 achievement at a time, as their layout is not documented; use **Reset achievements** for those.
 
-## Forget a game
+## Hide, remove or clear a game
 
-**Forget this game...**, in the right-click menu, clears everything AW Next keeps about a game: its
-achievement saves (backed up first, as a reset does), play time, cached achievement list and icons,
-per-game settings, and the emulator configuration AW Next wrote into its folder. The confirmation
-lists each part first. The next scan finds the game again as a new one. **Remove from list** only
-hides a game.
+A game's right-click menu has three ways to make it go away, from the lightest to the strongest:
+
+| Entry | What happens | How to undo it |
+|---|---|---|
+| **Hide from view** | The game leaves All games, every collection and the stats, but is still tracked and still notifies. | The Collections menu shows a **Hidden** view while a game is hidden; right-click it there and pick **Show again**. |
+| **Remove from AW Next** | The scan skips the game: it leaves the library. Meant for tools and other things that are not games. | **Settings → General → Removed games**. |
+| **Clear this game's data...** | Everything AW Next keeps about the game is erased: its achievement saves (backed up first, as a reset does), play time, cached achievement list and icons, per-game settings, and the emulator configuration AW Next wrote into its folder. The confirmation lists each part first. | Nothing to undo: the next scan finds the game again as a new one. |
 
 ## Renaming a game
 

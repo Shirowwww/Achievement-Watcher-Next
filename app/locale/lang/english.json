@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Not seeing any unlocks?",
   "scrollUp": "Scroll up",
   "allGamesBackButton": "All Games",
-  "removeFromList": "Remove from list",
+  "removeFromList": "Remove from AW Next",
   "buildIconPrefetchCache": "Cache achievement icons",
   "contextMenu": {
     "resetPlaytime": "Reset playtime",
@@ -1441,7 +1441,7 @@
       "title": "Game sources",
       "officialPlatforms": {
         "title": "Official platforms",
-        "description": "The shield marks official launchers. Steam, Epic and Xbox offer three choices: None, Installed (games on this PC) or Owned (the whole library of a connected account). The others are on or off."
+        "description": "The shield marks official launchers. Steam, Epic and Xbox offer three choices: None, Installed (games on this PC) or Owned (the whole library of a connected account). GOG Galaxy offers None, Installed or Played (every game Galaxy has play data for). The others are on or off."
       },
       "legitSteam": {
         "name": "Display Steam Games",
@@ -1493,7 +1493,12 @@
         "description": "Official Ubisoft Connect client data"
       },
       "gogOfficial": {
-        "description": "Official GOG Galaxy client data"
+        "description": "Official GOG Galaxy client data. Installed lists the games on this PC; Played also lists the ones you uninstalled that Galaxy still keeps play data for.",
+        "value": {
+          "none": "None",
+          "installed": "Installed",
+          "played": "Played"
+        }
       },
       "epicOfficial": {
         "description": "Official Epic Games client data",
@@ -1714,7 +1719,7 @@
         "Mark as manually unlocked (right-click an achievement) records an unlock no source can see.",
         "Reset achievements… plays a game again from zero and backs up every file first. It works for emulated games, not for Steam, Epic or Xbox, whose unlocks live on your account.",
         "Playtime is tracked while the game runs; Playtime tracking in Settings > Notification turns on the start and end notifications.",
-        "Forget this game… clears everything AW Next keeps about a game (saves are backed up first). Remove from list only hides it.",
+        "Clear this game’s data… erases everything AW Next keeps about a game (saves are backed up first), and the next scan finds it again. Remove from AW Next takes it out of the library until you bring it back from Settings > General. Hide from view keeps it tracked, in the Hidden view of the Collections menu.",
         "Game settings > Achievement language shows one game’s achievements and notifications in another language than the rest.",
         "Settings > Advanced > Profile backup: Export profile… saves your settings, presets, themes, covers and playtime in one .awbackup file for a reinstall or a new PC. Sign-ins are not saved."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Export profile…",
         "profileRestore": "Restore profile…"
       },
-      "blacklistTitle": "Hidden games",
-      "blacklistButton": "Show all hidden games",
-      "blacklistInfo": "Right-click a game in the library and choose “Remove from list” to hide it here.",
-      "blacklistEmpty": "No hidden games.",
+      "blacklistTitle": "Removed games",
+      "blacklistButton": "Bring back all removed games",
+      "blacklistInfo": "Right-click a game in the library and choose “Remove from AW Next” to list it here.",
+      "blacklistEmpty": "No removed games.",
       "blacklistRestore": "Restore this game",
       "mainSteam": {
         "title": "Main Steam Account",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Collections",
     "collection-all": "All games",
+    "collection-hidden": "Hidden",
+    "game-hide": "Hide from view",
+    "game-unhide": "Show again",
     "collection-new": "New collection…",
     "collection-edit": "Edit collection…",
     "collection-name": "Collection name",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Wrote {count} achievements to {path}",
     "repair-failed": "Repair failed",
     "could-not-write-steam-settings": "Could not write steam_settings.",
-    "blacklist-add-failed": "Could not hide this game",
+    "blacklist-add-failed": "Could not remove this game",
     "emulator-source": "Emulator source",
     "appid-override": "Set AppID manually…",
     "appid-override-prompt": "Steam appid to use for \"{name}\" ({folder}). This overrides AW Next's own name-based guess - useful when another game shares this folder's name.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Generate configs failed: {error}",
     "error-generating-configs": "Error generating configs",
     "error-while-auto-finding-folder-s": "Error while auto-finding folder(s)",
-    "error-while-trying-to-reset-user-blacklist": "Could not show the hidden games again",
+    "error-while-trying-to-reset-user-blacklist": "Could not bring the removed games back",
     "websocket-connection-error": "WebSocket Connection Error",
     "notification-test-failure": "Notification Test Failure.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Error in connection establishment: net::ERR_CONNECTION_REFUSED\nIs Watchdog Running ?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Achievements & playtime",
     "schema-language-menu": "Achievement language",
     "schema-language-global": "Same as the app ({language})",
-    "forget-game-menu": "Forget this game…",
-    "forget-game-confirm-title": "Forget {game}?",
+    "forget-game-menu": "Clear this game’s data…",
+    "forget-game-confirm-title": "Clear the data of {game}?",
     "forget-game-confirm-message": "AW Next resets everything it keeps about this game. The next scan finds it again as a new game.",
     "forget-game-detail-ach": "• Achievements: {count} save file(s), backed up then cleared",
     "forget-game-detail-playtime": "• Playtime",
     "forget-game-detail-cache": "• Cached achievement list, icons and unlocks ({count})",
     "forget-game-detail-config": "• Configuration AW Next wrote in the game folder ({count})",
     "forget-game-detail-settings": "• Its executable, AppID, emulator source, language and progress settings in AW Next",
-    "forget-game-button": "Forget",
-    "forget-game-done-title": "Game forgotten",
+    "forget-game-button": "Clear",
+    "forget-game-done-title": "Game data cleared",
     "forget-game-done-message": "The library is scanned again now.",
     "reset-ach-menu": "Reset achievements…",
     "reset-ach-restore-menu": "Restore an achievement backup",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Xbox game in your library",
     "steam-hide-stale": "Hide games no longer in your Steam library",
     "steam-hide-stale-help": "Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden.",
+    "steam-libraries-title": "Steam libraries",
+    "steam-libraries-help": "Switch a library off to leave its games out of every collection, for example a drive you keep connected as storage. They come back when you switch it on again.",
     "steam-import-owned": "Add the games you own",
     "steam-import-owned-help": "Lists your whole Steam library, including games that were never installed on this PC. A large library makes the first scan much longer. Progress of games never played on this PC is read from your Steam profile, so its game details must be public.",
     "steam-import-family": "Add the games shared with you through Steam Family",

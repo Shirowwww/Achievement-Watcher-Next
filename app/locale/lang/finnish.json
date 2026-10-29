@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Eikö avauksia näy?",
   "scrollUp": "Vieritä ylös",
   "allGamesBackButton": "Kaikki pelit",
-  "removeFromList": "Poista luettelosta",
+  "removeFromList": "Poista AW Nextistä",
   "buildIconPrefetchCache": "Tallenna saavutuskuvakkeet välimuistiin",
   "contextMenu": {
     "resetPlaytime": "Nollaa peliaika",
@@ -1441,7 +1441,7 @@
       "title": "Pelien lähteet",
       "officialPlatforms": {
         "title": "Viralliset alustat",
-        "description": "Kilpi merkitsee viralliset käynnistysohjelmat. Steamissa, Epicissä ja Xboxissa on kolme vaihtoehtoa: Ei mitään, Asennetut (tämän tietokoneen pelit) tai Omistetut (yhdistetyn tilin koko kirjasto). Muut ovat päällä tai pois."
+        "description": "Kilpi merkitsee viralliset käynnistysohjelmat. Steamissa, Epicissä ja Xboxissa on kolme vaihtoehtoa: Ei mitään, Asennetut (tämän tietokoneen pelit) tai Omistetut (yhdistetyn tilin koko kirjasto). GOG Galaxyssa on vaihtoehdot Ei mitään, Asennetut tai Pelatut (kaikki pelit, joista Galaxylla on pelitietoja). Muut ovat päällä tai pois."
       },
       "legitSteam": {
         "name": "Näytä Steam-pelit",
@@ -1493,7 +1493,12 @@
         "description": "Ubisoft Connect -asiakasohjelman viralliset tiedot"
       },
       "gogOfficial": {
-        "description": "GOG Galaxy -asiakasohjelman viralliset tiedot"
+        "description": "GOG Galaxy -asiakasohjelman viralliset tiedot. Asennetut luettelee tämän tietokoneen pelit; Pelatut luettelee myös poistetut pelit, joiden pelitietoja Galaxy vielä säilyttää.",
+        "value": {
+          "none": "Ei mitään",
+          "installed": "Asennetut",
+          "played": "Pelatut"
+        }
       },
       "epicOfficial": {
         "description": "Epic Games -asiakasohjelman viralliset tiedot",
@@ -1714,7 +1719,7 @@
         "Merkitse avatuksi käsin (napsauta saavutusta hiiren kakkospainikkeella) tallentaa avauksen, jota mikään lähde ei näe.",
         "Nollaa saavutukset… antaa pelata pelin uudelleen alusta ja ottaa ensin varmuuskopion jokaisesta tiedostosta. Se toimii emuloiduille peleille, ei Steamille, Epicille tai Xboxille, joiden avaukset ovat tililläsi.",
         "Peliaika seurataan pelin ollessa käynnissä; Peliajan seuranta kohdassa Asetukset > Ilmoitukset ottaa käyttöön aloitus- ja lopetusilmoitukset.",
-        "Unohda tämä peli… tyhjentää kaiken, mitä AW Next säilyttää pelistä (tallennuksista otetaan ensin varmuuskopio). Poista luettelosta vain piilottaa sen.",
+        "Tyhjennä pelin tiedot… tyhjentää kaiken, mitä AW Next säilyttää pelistä (tallennuksista otetaan ensin varmuuskopio), ja seuraava skannaus löytää sen uudelleen. Poista AW Nextistä poistaa sen kirjastosta, kunnes palautat sen kohdassa Asetukset > Yleiset. Piilota näkymästä pitää sen seurattuna, Piilotetut-näkymässä Kokoelmat-valikossa.",
         "Pelin asetukset > Saavutusten kieli näyttää yhden pelin saavutukset ja ilmoitukset eri kielellä kuin muut.",
         "Asetukset > Lisäasetukset > Profiilin varmuuskopio: Vie profiili… tallentaa asetuksesi, esiasetuksesi, teemasi, kansikuvasi ja peliaikasi yhteen .awbackup-tiedostoon uudelleenasennusta tai uutta konetta varten. Kirjautumisia ei tallenneta."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Vie profiili…",
         "profileRestore": "Palauta profiili…"
       },
-      "blacklistTitle": "Piilotetut pelit",
-      "blacklistButton": "Näytä kaikki piilotetut pelit uudelleen",
-      "blacklistInfo": "Napsauta kirjaston peliä hiiren kakkospainikkeella ja valitse ”Poista luettelosta”, niin se piilotetaan tänne.",
-      "blacklistEmpty": "Ei piilotettuja pelejä.",
+      "blacklistTitle": "Poistetut pelit",
+      "blacklistButton": "Palauta kaikki poistetut pelit",
+      "blacklistInfo": "Napsauta kirjaston peliä hiiren kakkospainikkeella ja valitse ”Poista AW Nextistä”, niin se listataan tänne.",
+      "blacklistEmpty": "Ei poistettuja pelejä.",
       "blacklistRestore": "Palauta tämä peli",
       "mainSteam": {
         "title": "Steamin päätili",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Kokoelmat",
     "collection-all": "Kaikki pelit",
+    "collection-hidden": "Piilotetut",
+    "game-hide": "Piilota näkymästä",
+    "game-unhide": "Näytä uudelleen",
     "collection-new": "Uusi kokoelma…",
     "collection-edit": "Muokkaa kokoelmaa…",
     "collection-name": "Kokoelman nimi",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "Kirjoitettiin {count} saavutusta kohteeseen {path}",
     "repair-failed": "Korjaus epäonnistui",
     "could-not-write-steam-settings": "steam_settings-tiedostoa ei voitu kirjoittaa.",
-    "blacklist-add-failed": "Tämän pelin piilottaminen epäonnistui",
+    "blacklist-add-failed": "Tämän pelin poistaminen epäonnistui",
     "emulator-source": "Emulaattorin lähde",
     "appid-override": "Aseta AppID käsin…",
     "appid-override-prompt": "Käytettävä Steam-appid pelille \"{name}\" ({folder}). Korvaa AW Nextin nimeen perustuvan arvauksen - hyödyllinen, kun toisella pelillä on sama nimi kuin kansiolla.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "Asetustiedostojen luonti epäonnistui: {error}",
     "error-generating-configs": "Virhe asetustiedostoja luotaessa",
     "error-while-auto-finding-folder-s": "Virhe kansioiden automaattisessa etsinnässä",
-    "error-while-trying-to-reset-user-blacklist": "Piilotettujen pelien näyttäminen uudelleen epäonnistui",
+    "error-while-trying-to-reset-user-blacklist": "Poistettujen pelien palauttaminen epäonnistui",
     "websocket-connection-error": "WebSocket-yhteysvirhe",
     "notification-test-failure": "Ilmoituksen testaus epäonnistui.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Virhe yhteyden muodostuksessa: net::ERR_CONNECTION_REFUSED\nOnko Watchdog käynnissä?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Saavutukset ja peliaika",
     "schema-language-menu": "Saavutusten kieli",
     "schema-language-global": "Sama kuin sovelluksessa ({language})",
-    "forget-game-menu": "Unohda tämä peli…",
-    "forget-game-confirm-title": "Unohdetaanko {game}?",
+    "forget-game-menu": "Tyhjennä pelin tiedot…",
+    "forget-game-confirm-title": "Tyhjennetäänkö pelin {game} tiedot?",
     "forget-game-confirm-message": "AW Next nollaa kaiken, mitä se säilyttää tästä pelistä. Seuraava tarkistus löytää sen uudelleen uutena pelinä.",
     "forget-game-detail-ach": "• Saavutukset: {count} tallennustiedosto(a), varmuuskopioitu ja sitten tyhjennetty",
     "forget-game-detail-playtime": "• Peliaika",
     "forget-game-detail-cache": "• Välimuistissa oleva saavutuslista, kuvakkeet ja avaukset ({count})",
     "forget-game-detail-config": "• AW Nextin pelikansioon kirjoittama määritys ({count})",
     "forget-game-detail-settings": "• Pelin ohjelmatiedosto, AppID, emulaattorin lähde, kieli ja edistymisasetukset AW Nextissä",
-    "forget-game-button": "Unohda",
-    "forget-game-done-title": "Peli unohdettu",
+    "forget-game-button": "Tyhjennä",
+    "forget-game-done-title": "Pelin tiedot tyhjennetty",
     "forget-game-done-message": "Kirjasto tarkistetaan nyt uudelleen.",
     "reset-ach-menu": "Nollaa saavutukset…",
     "reset-ach-restore-menu": "Palauta saavutusten varmuuskopio",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Xbox-peli kirjastossasi",
     "steam-hide-stale": "Piilota pelit, joita ei enää ole Steam-kirjastossasi",
     "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan.",
+    "steam-libraries-title": "Steam-kirjastot",
+    "steam-libraries-help": "Poista kirjasto käytöstä, niin sen pelit jäävät pois kaikista kokoelmista, esimerkiksi tallennustilaksi kytkettynä pitämäsi levy. Ne palaavat, kun otat kirjaston uudelleen käyttöön.",
     "steam-import-owned": "Lisää pelit, jotka omistat",
     "steam-import-owned-help": "Näyttää koko Steam-kirjastosi, myös pelit, joita ei ole koskaan asennettu tälle tietokoneelle. Suuri kirjasto pidentää ensimmäistä hakua huomattavasti. Tällä tietokoneella koskaan pelaamattomien pelien edistyminen luetaan Steam-profiilistasi, joten sen pelitietojen on oltava julkisia.",
     "steam-import-family": "Lisää pelit, jotka on jaettu kanssasi Steam Familyn kautta",

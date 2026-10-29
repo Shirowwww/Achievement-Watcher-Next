@@ -56,7 +56,7 @@
   "noneUnlockedHint": "Nem látsz feloldásokat?",
   "scrollUp": "Fel",
   "allGamesBackButton": "Összes játék",
-  "removeFromList": "Eltávolítás a listából",
+  "removeFromList": "Eltávolítás az AW Nextből",
   "buildIconPrefetchCache": "Teljesítményikonok gyorsítótárazása",
   "contextMenu": {
     "resetPlaytime": "Játékidő visszaállítása",
@@ -1441,7 +1441,7 @@
       "title": "Játékforrások",
       "officialPlatforms": {
         "title": "Hivatalos platformok",
-        "description": "A pajzs a hivatalos indítókat jelöli. A Steam, az Epic és az Xbox három lehetőséget kínál: Nincs, Telepített (a gépen lévő játékok) vagy Birtokolt (egy csatlakoztatott fiók teljes könyvtára). A többi be- vagy kikapcsolható."
+        "description": "A pajzs a hivatalos indítókat jelöli. A Steam, az Epic és az Xbox három lehetőséget kínál: Nincs, Telepített (a gépen lévő játékok) vagy Birtokolt (egy csatlakoztatott fiók teljes könyvtára). A GOG Galaxy a Nincs, Telepített vagy Játszott lehetőséget kínálja (minden játék, amelyről a Galaxy játékadatot tárol). A többi be- vagy kikapcsolható."
       },
       "legitSteam": {
         "name": "Steam játékok megjelenítése",
@@ -1493,7 +1493,12 @@
         "description": "A hivatalos Ubisoft Connect kliens adatai"
       },
       "gogOfficial": {
-        "description": "A hivatalos GOG Galaxy kliens adatai"
+        "description": "A hivatalos GOG Galaxy kliens adatai. A Telepített a gépen lévő játékokat listázza; a Játszott azokat is, amelyeket eltávolítottak, de a Galaxy még őriz hozzájuk játékadatokat.",
+        "value": {
+          "none": "Nincs",
+          "installed": "Telepített",
+          "played": "Játszott"
+        }
       },
       "epicOfficial": {
         "description": "A hivatalos Epic Games kliens adatai",
@@ -1714,7 +1719,7 @@
         "A „Megjelölés kézzel feloldottként” (jobb gombbal egy teljesítményre) rögzít egy olyan feloldást, amelyet egyetlen forrás sem lát.",
         "A „Teljesítmények visszaállítása…” lehetővé teszi, hogy egy játékot nulláról újra végigjátsszon, és előbb minden fájlról mentést készít. Emulált játékoknál működik, Steamnél, Epicnél és Xboxnál nem, mert azok feloldásai a fiókján vannak.",
         "A játékidőt a játék futása közben követi; a „Játékidő követése” a Beállítások > Értesítés alatt bekapcsolja az indítási és befejezési értesítéseket.",
-        "A „A játék elfelejtése…” töröl mindent, amit az AW Next egy játékról tárol (a mentésekről előbb mentés készül). Az „Eltávolítás a listából” csak elrejti.",
+        "A „A játék adatainak törlése…” töröl mindent, amit az AW Next egy játékról tárol (a mentésekről előbb mentés készül), és a következő vizsgálat újra megtalálja. Az „Eltávolítás az AW Nextből” kiveszi a könyvtárból, amíg vissza nem hozod a Beállítások > Általános részből. Az „Elrejtés a nézetből” követve tartja, a Gyűjtemények menü Rejtett nézetében.",
         "A „Játék beállításai > Teljesítmények nyelve” egy játék teljesítményeit és értesítéseit a többitől eltérő nyelven mutatja.",
         "Beállítások > Speciális > Profilmentés: a „Profil exportálása…” a beállításait, előbeállításait, témáit, borítóit és játékidejét egyetlen .awbackup fájlba menti újratelepítéshez vagy új számítógéphez. A bejelentkezések nem kerülnek mentésre."
       ]
@@ -1746,10 +1751,10 @@
         "profileExport": "Profil exportálása…",
         "profileRestore": "Profil visszaállítása…"
       },
-      "blacklistTitle": "Rejtett játékok",
-      "blacklistButton": "Az összes rejtett játék újra megjelenítése",
-      "blacklistInfo": "Kattints jobb gombbal egy játékra a könyvtárban, és válaszd az „Eltávolítás a listából” lehetőséget, hogy itt elrejtsd.",
-      "blacklistEmpty": "Nincsenek rejtett játékok.",
+      "blacklistTitle": "Eltávolított játékok",
+      "blacklistButton": "Az összes eltávolított játék visszahozása",
+      "blacklistInfo": "Kattints jobb gombbal egy játékra a könyvtárban, és válaszd az „Eltávolítás az AW Nextből” lehetőséget, hogy itt megjelenjen.",
+      "blacklistEmpty": "Nincsenek eltávolított játékok.",
       "blacklistRestore": "Játék visszaállítása",
       "mainSteam": {
         "title": "Fő Steam fiók",
@@ -1967,6 +1972,9 @@
   "dialogs": {
     "collections": "Gyűjtemények",
     "collection-all": "Minden játék",
+    "collection-hidden": "Rejtett",
+    "game-hide": "Elrejtés a nézetből",
+    "game-unhide": "Megjelenítés újra",
     "collection-new": "Új gyűjtemény…",
     "collection-edit": "Gyűjtemény szerkesztése…",
     "collection-name": "Gyűjtemény neve",
@@ -2165,7 +2173,7 @@
     "repair-complete-message": "{count} teljesítmény írva ide: {path}",
     "repair-failed": "A javítás nem sikerült",
     "could-not-write-steam-settings": "A steam_settings írása nem sikerült.",
-    "blacklist-add-failed": "Nem sikerült elrejteni ezt a játékot",
+    "blacklist-add-failed": "Nem sikerült eltávolítani ezt a játékot",
     "emulator-source": "Emulátor forrása",
     "appid-override": "AppID kézi megadása…",
     "appid-override-prompt": "A(z) \"{name}\" ({folder}) Steam appid-ja. Felülírja az AW Next név alapú tippjét - hasznos, ha másik játéknak ugyanaz a neve, mint a mappának.",
@@ -2596,7 +2604,7 @@
     "generate-configs-failed-x": "A konfigurációk generálása nem sikerült: {error}",
     "error-generating-configs": "Hiba a konfigurációk generálásakor",
     "error-while-auto-finding-folder-s": "Hiba a mappák automatikus keresésekor",
-    "error-while-trying-to-reset-user-blacklist": "Nem sikerült újra megjeleníteni a rejtett játékokat",
+    "error-while-trying-to-reset-user-blacklist": "Nem sikerült visszahozni az eltávolított játékokat",
     "websocket-connection-error": "WebSocket-kapcsolati hiba",
     "notification-test-failure": "Az értesítési teszt nem sikerült.",
     "error-in-connection-establishment-net-err-connection-refused-nis": "Hiba a kapcsolat létrehozásakor: net::ERR_CONNECTION_REFUSED\nFut a Watchdog?",
@@ -2787,16 +2795,16 @@
     "ctx-group-progress": "Teljesítmények és játékidő",
     "schema-language-menu": "Teljesítmények nyelve",
     "schema-language-global": "Ugyanaz, mint az alkalmazásé ({language})",
-    "forget-game-menu": "A játék elfelejtése…",
-    "forget-game-confirm-title": "{game} elfelejtése?",
+    "forget-game-menu": "A játék adatainak törlése…",
+    "forget-game-confirm-title": "{game} adatainak törlése?",
     "forget-game-confirm-message": "Az AW Next mindent alaphelyzetbe állít, amit erről a játékról tárol. A következő keresés új játékként találja meg újra.",
     "forget-game-detail-ach": "• Teljesítmények: {count} mentésfájl, biztonsági mentés után törölve",
     "forget-game-detail-playtime": "• Játékidő",
     "forget-game-detail-cache": "• Gyorsítótárazott teljesítménylista, ikonok és feloldások ({count})",
     "forget-game-detail-config": "• Az AW Next által a játék mappájába írt konfiguráció ({count})",
     "forget-game-detail-settings": "• A játék futtatható fájlja, AppID-ja, emulátorforrása, nyelve és haladási beállításai az AW Nextben",
-    "forget-game-button": "Elfelejtés",
-    "forget-game-done-title": "Játék elfelejtve",
+    "forget-game-button": "Törlés",
+    "forget-game-done-title": "Játékadatok törölve",
     "forget-game-done-message": "A könyvtár újraolvasása most elindul.",
     "reset-ach-menu": "Teljesítmények visszaállítása…",
     "reset-ach-restore-menu": "Teljesítmény-mentés visszatöltése",
@@ -3034,6 +3042,8 @@
     "purchased-badge-xbox": "Xbox-játék a könyvtáradban",
     "steam-hide-stale": "A Steam-könyvtáradban már nem szereplő játékok elrejtése",
     "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve.",
+    "steam-libraries-title": "Steam-könyvtárak",
+    "steam-libraries-help": "Kapcsolj ki egy könyvtárat, hogy a játékai ne szerepeljenek egyetlen gyűjteményben sem, például egy tárhelyként csatlakoztatva tartott meghajtót. Visszatérnek, amint újra bekapcsolod.",
     "steam-import-owned": "A birtokolt játékok hozzáadása",
     "steam-import-owned-help": "Megjeleníti a teljes Steam könyvtáradat, beleértve azokat a játékokat is, amelyeket sosem telepítettél erre a gépre. Egy nagy könyvtár jelentősen meghosszabbítja az első vizsgálatot. Az ezen a gépen soha nem játszott játékok előrehaladását a Steam-profilodból olvassuk ki, ezért a játékrészleteknek nyilvánosnak kell lenniük.",
     "steam-import-family": "A Steam Family révén veled megosztott játékok hozzáadása",

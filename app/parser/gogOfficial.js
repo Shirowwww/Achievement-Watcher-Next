@@ -426,6 +426,10 @@ module.exports.scan = async () => {
   return Array.from(byProduct.values());
 };
 
+// The "installed" level of the source: Galaxy keeps a played game's gameplay.db after uninstall, and
+// scan() sets gameDir only when the install folder is on disk.
+module.exports.keepInstalled = (records) => records.filter((record) => record && record.data && record.data.gameDir);
+
 module.exports.getGameData = async (appid) => {
   const data = appid.data || {};
   const gameplay = readGogGameplayDb(data.gameplayDbPath);
