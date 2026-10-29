@@ -11,7 +11,9 @@ const path = require('path');
 const lib = require('./psnLibrary.js');
 
 // Public profiles with the most trophy lists; one going private only shrinks the catalog.
-const PUBLIC_HUNTERS = ['ikemenzi', 'dav1d_123', 'RobThanatos', 'yalkanderi2007'];
+// Measured 2026-10-29 against the catalog of the first three: the last three add about 1,900 lists,
+// 1,000 of them PS5; further hunters from the leaderboard added fewer than 200 each.
+const PUBLIC_HUNTERS = ['ikemenzi', 'dav1d_123', 'RobThanatos', 'caro3c-gabber9', 'timpurnat', 'ginko765'];
 const ACCOUNT_ID_RE = /^\d{1,20}$/;
 const ACCOUNTS_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 // Like the rest of the app's remote data: looked at again every three days.
@@ -154,6 +156,15 @@ async function publicPlayers(ctx) {
   return ids;
 }
 
+/*
+  The hunters worth asking about a list the catalog lacks: one whose library it holds in full does
+  not have it, short of a game played since the last refresh (three days at most).
+*/
+async function huntersNotInCatalog(ctx) {
+  const walked = new Set(storedCatalog().walked || []);
+  return (await publicAccounts(ctx)).filter((hunter) => !walked.has(hunter));
+}
+
 // The store's title ids for a game of exactly this name (PS4 CUSA..., PS5 PPSA...).
 async function storeTitleIds(ctx, name) {
   const wanted = lib.normalizedName(name);
@@ -172,7 +183,7 @@ async function listsFromStore(appCtx, name) {
   const ctx = { ...appCtx, locale: CATALOG_LOCALE };
   const titleIds = (await storeTitleIds(ctx, name)).slice(0, TITLE_IDS_PER_ASK);
   if (!titleIds.length) return [];
-  const owners = ['me', ...(await publicAccounts(ctx)), ...(await publicPlayers(ctx))];
+  const owners = ['me', ...(await huntersNotInCatalog(ctx)), ...(await publicPlayers(ctx))];
   for (const [index, owner] of owners.entries()) {
     if (index > 0) await new Promise((resolve) => setTimeout(resolve, STORE_PAUSE_MS));
     const answer = await lib.psnRequest(ctx, `${lib.API_ROOT}/trophy/v1/users/${owner}/titles/trophyTitles?npTitleIds=${titleIds.join(',')}`).catch(unlessAccessError(null));
@@ -256,21 +267,40 @@ function removeGame(listId) {
   Official rates for a list the signed-in account never played, from a hunter who did: an RPCS3 or
   shadPS4 game then shows Sony's own figures instead of Exophase's.
 */
+/*
+  Who answered for a list off the catalog, or '' when nobody did: asking all of them costs up to
+  sixteen requests, so a game page opened again asks one, or none.
+  shortcut: kept for the session only, a disk cache if the misses show up in rate limits.
+*/
+const rateHolders = new Map();
+
 async function publicRates({ npCommId, service } = {}, options = {}) {
   const id = lib.normalizeListId(npCommId);
   if (!id) return { ok: false, error: 'psn-list-invalid' };
-  const ctx = await lib.createContext(options);
-  // A game page must not wait for the whole catalog: without one at hand, every hunter is asked.
+  // A game page must not wait for the whole catalog: without one at hand, the hunters are asked,
+  // then their friends, who own the big releases hunters skip.
   const entry = storedCatalog().lists.find((candidate) => candidate.id === id);
-  const holders = entry ? [entry.holder] : await publicAccounts(ctx);
+  if (!entry && rateHolders.get(id) === '') return { ok: false, error: 'psn-not-on-account' };
+  const ctx = await lib.createContext(options);
+  const holders = entry ? [entry.holder] : rateHolders.has(id) ? [rateHolders.get(id)] : [...(await huntersNotInCatalog(ctx)), ...(await publicPlayers(ctx))];
   const npService = service === 'trophy2' ? 'trophy2' : (entry && entry.service) || 'trophy';
+  // A network or server failure is no answer; a private profile (403) or a list it lacks (404) is.
+  let failed = false;
+  const noAnswer = (err) => {
+    if (!err || !err.code || String(err.code).startsWith('psn-http-5')) failed = true;
+    return unlessAccessError(null)(err);
+  };
   for (const holder of holders) {
-    const body = await lib.psnRequest(ctx, `${lib.API_ROOT}/trophy/v1/users/${holder}/npCommunicationIds/${id}/trophyGroups/all/trophies?npServiceName=${npService}`).catch(unlessAccessError(null));
+    const body = await lib.psnRequest(ctx, `${lib.API_ROOT}/trophy/v1/users/${holder}/npCommunicationIds/${id}/trophyGroups/all/trophies?npServiceName=${npService}`).catch(noAnswer);
     const entries = ((body && body.trophies) || [])
       .map((trophy) => ({ name: String(trophy.trophyId), percent: Number.parseFloat(trophy.trophyEarnedRate) }))
       .filter((rate) => /^\d+$/.test(rate.name) && Number.isFinite(rate.percent) && rate.percent >= 0 && rate.percent <= 100);
-    if (entries.length) return { ok: true, entries };
+    if (entries.length) {
+      if (!entry) rateHolders.set(id, holder);
+      return { ok: true, entries };
+    }
   }
+  if (!entry && !failed) rateHolders.set(id, '');
   return { ok: false, error: 'psn-not-on-account' };
 }
 

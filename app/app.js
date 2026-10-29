@@ -582,19 +582,33 @@ function psnPlatinumRow(game) {
   return { html, achieved };
 }
 
-// Sony's share of players for a linked game's platinum, when one can be had.
-async function paintLinkedPlatinumRate(game) {
-  const link = psnLinkOf(game);
-  const platinum = linkedPlatinumOf(game);
-  // Only Sony's own list ids have rates: a link made from Exophase (`exophase:<slug>`) has none.
-  if (!link || !/^NPWR\d{5}_\d{2}$/.test(String(link.listId)) || !platinum || platinum.id == null) return;
+// Sony's share of players for a linked list, or null. Only Sony's own list ids have one.
+async function sonyPlatinumRate(link, platinum) {
+  if (!/^NPWR\d{5}_\d{2}$/.test(String(link.listId)) || platinum.id == null) return null;
   const service = link.service || (link.platform === 'PS5' ? 'trophy2' : 'trophy');
   const answer = await ipcRenderer.invoke('psn:trophy-rates', { npCommId: link.listId, service }).catch(() => null);
   const entry = answer && answer.ok && Array.isArray(answer.entries) ? answer.entries.find((candidate) => candidate.name === platinum.id) : null;
-  if (!entry || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
-  const percent = Math.round(entry.percent * 10) / 10;
+  return entry ? entry.percent : null;
+}
+
+/*
+  A linked game's platinum rate: Sony's, else Exophase's, which counts only its own members and so
+  wears Exophase's name and a plain trophy instead of the PlayStation logo.
+*/
+async function paintLinkedPlatinumRate(game) {
+  const link = psnLinkOf(game);
+  const platinum = linkedPlatinumOf(game);
+  if (!link || !platinum) return;
+  let percent = await sonyPlatinumRate(link, platinum);
+  const fromSony = percent !== null;
+  // Kept on disk a week by the parser, so a page opened again does not reach Exophase.
+  if (!fromSony) percent = await require(path.join(appPath, 'parser/psnPublicLink.js')).exophasePlatinumRate(link, gameTitleOf(game));
+  if (percent === null || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
+  percent = Math.round(percent * 10) / 10;
   const text = formatPercentValue(percent, 1) || String(percent);
-  $('#achievement .achievement.psn-platinum .stats .community .data').attr('data-percent', percent).text(`${trophyLabels().platinum} · ${text}`);
+  const community = $('#achievement .achievement.psn-platinum .stats .community');
+  community.find('.data').attr('data-percent', percent).text(`${trophyLabels().platinum} · ${text}`);
+  if (!fromSony) community.attr('title', 'Exophase').find('i').attr('class', 'fas fa-trophy');
 }
 
 function requestPsnTrophyLinks(list) {

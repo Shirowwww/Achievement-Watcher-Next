@@ -102,6 +102,9 @@ renamed in 3.9.0 and the history is kept under one file.
   PlayStation, the 100% popup now uses the real platinum's name, description and icon even with no
   account connected, from a public archive of PS3 and PS4 trophy lists and from Exophase for PS5.
   Turning the platinum popup off also stops these lookups.
+- **The PlayStation platinum of more games shows its rarity.** When your account lacks the game,
+  Sony's share of players now also comes from more public players (Palworld: 1.9%). When Sony has
+  none, Exophase's own figure shows instead, with a trophy icon and an "Exophase" tooltip.
 - **Game Health spots a crack whose steam_api.dll was replaced.** A mod or an online patch that puts
   its own steam_api.dll over a CODEX-style crack (Transformers: Fall of Cybertron's fan servers)
   records no achievement; the panel now names that file and says to put the original back, instead

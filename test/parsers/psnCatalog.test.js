@@ -172,6 +172,57 @@ test('official rates for a list off the account come from a public player who ha
   assert.deepEqual(await catalog.publicRates({ npCommId: 'NPWR99999_00', service: 'trophy' }, options(fetchImpl)), { ok: false, error: 'psn-not-on-account' });
 });
 
+test('rates no hunter has come from a hunter friend, asked first next time, and a miss is not asked again', async () => {
+  const FRIEND = '5550001';
+  const { fetchImpl, calls } = sony({
+    [`/users/${HUNTER}/friends?`]: { friends: [FRIEND] },
+    [`/users/${FRIEND}/npCommunicationIds/NPWR44056_00/`]: { trophies: [{ trophyId: 0, trophyEarnedRate: '1.9' }] },
+  });
+  const palworld = { npCommId: 'NPWR44056_00', service: 'trophy2' };
+  assert.deepEqual(await catalog.publicRates(palworld, options(fetchImpl)), { ok: true, entries: [{ name: '0', percent: 1.9 }] });
+
+  calls.length = 0;
+  await catalog.publicRates(palworld, options(fetchImpl));
+  assert.deepEqual(calls.filter((url) => url.includes('/npCommunicationIds/')), [`https://m.np.playstation.com/api/trophy/v1/users/${FRIEND}/npCommunicationIds/NPWR44056_00/trophyGroups/all/trophies?npServiceName=trophy2`]);
+
+  const nobody = { npCommId: 'NPWR99999_00', service: 'trophy' };
+  assert.deepEqual(await catalog.publicRates(nobody, options(fetchImpl)), { ok: false, error: 'psn-not-on-account' });
+  calls.length = 0;
+  assert.deepEqual(await catalog.publicRates(nobody, options(fetchImpl)), { ok: false, error: 'psn-not-on-account' });
+  assert.equal(calls.filter((url) => url.includes('/npCommunicationIds/')).length, 0);
+});
+
+test('a Sony failure while asking for rates is not remembered as nobody having the list', async () => {
+  let down = true;
+  const { fetchImpl } = sony({
+    [`/users/${HUNTER}/friends?`]: { friends: [] },
+    [`/users/${HUNTER}/npCommunicationIds/NPWR44056_00/`]: () => (down ? json({}, 503) : { trophies: [{ trophyId: 0, trophyEarnedRate: '1.9' }] }),
+  });
+  const palworld = { npCommId: 'NPWR44056_00', service: 'trophy2' };
+  assert.deepEqual(await catalog.publicRates(palworld, options(fetchImpl)), { ok: false, error: 'psn-not-on-account' });
+  down = false;
+  assert.deepEqual(await catalog.publicRates(palworld, options(fetchImpl)), { ok: true, entries: [{ name: '0', percent: 1.9 }] });
+});
+
+test('a hunter the catalog holds in full is not asked about a list it lacks, his friends are', async () => {
+  const FRIEND = '5550001';
+  const { fetchImpl, calls } = sony({
+    '/universalSearch': (body) =>
+      body.includes('MobileGames')
+        ? { domainResponses: [{ results: [{ conceptMetadata: { name: 'Palworld', titleIds: ['PPSA17000_00'] } }] }] }
+        : { domainResponses: [{ results: [{ socialMetadata: { onlineId: 'ikemenzi', accountId: HUNTER } }] }] },
+    [`/users/${HUNTER}/friends?`]: { friends: [FRIEND] },
+    [`/users/${FRIEND}/titles/trophyTitles?`]: { titles: [{ trophyTitles: [{ npCommunicationId: 'NPWR44056_00', npServiceName: 'trophy2', trophyTitleName: 'Palworld', trophyTitlePlatform: 'PS5' }] }] },
+    [`/users/${FRIEND}/npCommunicationIds/NPWR44056_00/`]: { trophies: [{ trophyId: 0, trophyEarnedRate: '1.9' }] },
+  });
+  await catalog.refreshInBackground(options(fetchImpl));
+  calls.length = 0;
+  const ctx = await lib.createContext(options(fetchImpl));
+  assert.deepEqual((await catalog.listsFromStore(ctx, 'Palworld')).map((entry) => entry.id), ['NPWR44056_00']);
+  assert.deepEqual(await catalog.publicRates({ npCommId: 'NPWR44056_00', service: 'trophy2' }, options(fetchImpl)), { ok: true, entries: [{ name: '0', percent: 1.9 }] });
+  assert.equal(calls.filter((url) => url.includes(`/users/${HUNTER}/titles/`) || url.includes(`/users/${HUNTER}/npCommunicationIds/`)).length, 0);
+});
+
 test('an added list can be removed, the account own lists cannot', async () => {
   const { fetchImpl } = sony();
   await catalog.refreshInBackground(options(fetchImpl));

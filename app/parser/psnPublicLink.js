@@ -25,7 +25,12 @@ const EXOPHASE_LOOKUPS_PER_DAY = 15;
 const EXOPHASE_PAGES_PER_GAME = 2;
 const GRADE_TYPE = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
 
+// A platinum's Exophase rate moves slowly; a game with none may get a page any day.
+const EXOPHASE_RATE_MAX_AGE_MS = 7 * DAY_MS;
+const EXOPHASE_MISS_MAX_AGE_MS = DAY_MS;
+
 const indexFile = () => path.join(lib.cacheRoot(), 'public-index.json');
+const platinumRatesFile = () => path.join(lib.cacheRoot(), 'exophase-platinum.json');
 const quotaFile = () => path.join(lib.cacheRoot(), 'public-lookups.json');
 const validNames = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 
@@ -122,6 +127,53 @@ async function exophaseCandidates(exophase, name, state) {
 }
 
 /*
+  A linked platinum's rate among Exophase's own members, for a list no account at hand has: not
+  Sony's figure (hunters weigh in, so it runs higher), which the caller must say. The link's own
+  Exophase page, else the pages named like the game, the link's console first; null when none says.
+*/
+// Read again at the write: another game's page may have saved its rate while this one waited.
+function rememberPlatinumRate(listId, record) {
+  const stored = lib.readJson(platinumRatesFile());
+  lib.writeJson(platinumRatesFile(), { ...(validNames(stored) ? stored : {}), [listId]: record });
+}
+
+async function exophasePlatinumRate(link, name, { exophase = require('./exophase.js'), now = Date.now() } = {}) {
+  const listId = String((link && link.listId) || '');
+  if (!listId) return null;
+  const stored = lib.readJson(platinumRatesFile());
+  const rates = validNames(stored) ? stored : {};
+  const known = validNames(rates[listId]) ? rates[listId] : null;
+  const age = known ? now - Number(known.at) : Infinity;
+  if (known && age >= 0 && age < (known.percent == null ? EXOPHASE_MISS_MAX_AGE_MS : EXOPHASE_RATE_MAX_AGE_MS)) return known.percent ?? null;
+
+  const console_ = link.service === 'trophy2' ? 'ps5' : 'ps4';
+  const state = {};
+  const remembered = known && known.slug ? [{ slug: known.slug, exophasePlatform: known.exophasePlatform, baseUrl: known.baseUrl }] : [];
+  // The page found last time, then (only when it no longer answers) a search by name.
+  const searched = async () =>
+    listId.startsWith('exophase:')
+      ? [{ slug: listId.slice('exophase:'.length), exophasePlatform: console_ }]
+      : (await exophaseCandidates(exophase, name, state)).sort((a, b) => Number(b.exophasePlatform === console_) - Number(a.exophasePlatform === console_));
+  for (const candidates of [remembered, null]) {
+    for (const candidate of candidates || (await searched())) {
+      const page = await exophase.fetchExophaseAchievementsMultiLang({ slug: candidate.slug, platform: candidate.exophasePlatform, baseUrl: candidate.baseUrl, langKeys: ['english'] }).catch(() => {
+        state.failed = true;
+        return null;
+      });
+      const platinum = ((page && page.items) || []).find((item) => item && item.grade === 'P');
+      const percent = platinum && platinum.rarityPct != null ? Number(platinum.rarityPct) : NaN;
+      if (Number.isFinite(percent) && percent >= 0 && percent <= 100) {
+        rememberPlatinumRate(listId, { at: now, percent, slug: candidate.slug, exophasePlatform: candidate.exophasePlatform, baseUrl: candidate.baseUrl });
+        return percent;
+      }
+    }
+  }
+  // An unreachable Exophase is no answer: only a page that says nothing is remembered as a miss.
+  if (!state.failed) rememberPlatinumRate(listId, { at: now, percent: null });
+  return null;
+}
+
+/*
   One game: the archive lists named like it, then Exophase. Returns the link, or null when nothing
   matched or the game waits for budget or a reachable host (then nothing is written).
 */
@@ -177,4 +229,4 @@ async function linkGames(games, { lang = 'english', fetchImpl = fetch, exophase 
   return linked;
 }
 
-module.exports = { INDEX_URL, loadIndex, listsInIndex, exophaseTrophies, linkGame, linkGames, ARCHIVE_LISTS_PER_PASS, EXOPHASE_LOOKUPS_PER_PASS, EXOPHASE_LOOKUPS_PER_DAY };
+module.exports = { INDEX_URL, loadIndex, listsInIndex, exophaseTrophies, exophasePlatinumRate, linkGame, linkGames, ARCHIVE_LISTS_PER_PASS, EXOPHASE_LOOKUPS_PER_PASS, EXOPHASE_LOOKUPS_PER_DAY };

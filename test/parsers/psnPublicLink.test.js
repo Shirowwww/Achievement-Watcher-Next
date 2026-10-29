@@ -196,3 +196,62 @@ test('the English achievements come from the Steam schema cache, a .db file', ()
   assert.equal(links.englishAchievementsOf(userData, 'uplay-1'), null, 'only Steam appids have a Steam schema');
   assert.equal(links.englishAchievementsOf(userData, '1'), null);
 });
+
+test("a platinum Sony gives no rate for takes Exophase's, from the link's own page or the game's name", async () => {
+  const rated = [{ ...exoItems[0], rarityPct: 10.54 }, ...exoItems.slice(1)];
+  const exo = fakeExophase();
+  exo.fetchExophaseAchievementsMultiLang = async (options) => (exo.asked.push(['page', options.slug, options.platform]), { items: rated });
+
+  assert.equal(await pub.exophasePlatinumRate({ listId: 'exophase:elden-ring-psn', service: 'trophy2' }, 'ELDEN RING', { exophase: exo }), 10.54);
+  assert.deepEqual(exo.asked, [['page', 'elden-ring-psn', 'ps5']]);
+
+  exo.asked.length = 0;
+  assert.equal(await pub.exophasePlatinumRate({ listId: 'NPWR44056_00', service: 'trophy' }, 'ELDEN RING', { exophase: exo }), 10.54);
+  assert.deepEqual(exo.asked, [['search', 'ELDEN RING'], ['page', 'elden-ring-psn-2', 'ps4']], "the link's platform first");
+});
+
+test('no Exophase rate is null, and an unreachable Exophase is no rate either', async () => {
+  const unrated = { searchExophaseTrophyLists: async () => [], fetchExophaseAchievementsMultiLang: async () => ({ items: exoItems }) };
+  assert.equal(await pub.exophasePlatinumRate({ listId: 'exophase:x', service: 'trophy2' }, 'X', { exophase: unrated }), null);
+  assert.equal(await pub.exophasePlatinumRate({ listId: 'NPWR44056_00', service: 'trophy2' }, 'X', { exophase: unrated }), null);
+  const down = { searchExophaseTrophyLists: async () => { throw new Error('down'); }, fetchExophaseAchievementsMultiLang: async () => { throw new Error('down'); } };
+  assert.equal(await pub.exophasePlatinumRate({ listId: 'exophase:x', service: 'trophy2' }, 'X', { exophase: down }), null);
+  assert.equal(await pub.exophasePlatinumRate({ listId: 'NPWR44056_00', service: 'trophy2' }, 'X', { exophase: down }), null);
+});
+
+test('an Exophase platinum rate is kept on disk for a week, and its page is asked again without a search', async () => {
+  const exo = fakeExophase();
+  let percent = 10.54;
+  exo.fetchExophaseAchievementsMultiLang = async (options) => (exo.asked.push(['page', options.slug]), { items: [{ ...exoItems[0], rarityPct: percent }] });
+  const link = { listId: 'NPWR44056_00', service: 'trophy2' };
+  const day = 24 * 60 * 60 * 1000;
+  const now = Date.UTC(2026, 9, 29);
+
+  assert.equal(await pub.exophasePlatinumRate(link, 'ELDEN RING', { exophase: exo, now }), 10.54);
+  exo.asked.length = 0;
+  percent = 12;
+  assert.equal(await pub.exophasePlatinumRate(link, 'ELDEN RING', { exophase: exo, now: now + 6 * day }), 10.54, 'read from disk');
+  assert.deepEqual(exo.asked, []);
+
+  assert.equal(await pub.exophasePlatinumRate(link, 'ELDEN RING', { exophase: exo, now: now + 8 * day }), 12);
+  assert.deepEqual(exo.asked, [['page', 'elden-ring-psn']], 'the page found before, no search');
+});
+
+test('a game Exophase has no rate for is asked again the next day, an unreachable Exophase at once', async () => {
+  const link = { listId: 'NPWR44056_00', service: 'trophy2' };
+  const day = 24 * 60 * 60 * 1000;
+  const now = Date.UTC(2026, 9, 29);
+  let searches = 0;
+  const down = { searchExophaseTrophyLists: async () => (searches++, Promise.reject(new Error('down'))), fetchExophaseAchievementsMultiLang: async () => ({ items: [] }) };
+  assert.equal(await pub.exophasePlatinumRate(link, 'X', { exophase: down, now }), null);
+  assert.equal(await pub.exophasePlatinumRate(link, 'X', { exophase: down, now }), null);
+  assert.equal(searches, 2, 'a failure is not remembered');
+
+  const none = { searchExophaseTrophyLists: async () => (searches++, []), fetchExophaseAchievementsMultiLang: async () => ({ items: [] }) };
+  searches = 0;
+  await pub.exophasePlatinumRate(link, 'X', { exophase: none, now });
+  await pub.exophasePlatinumRate(link, 'X', { exophase: none, now: now + day / 2 });
+  assert.equal(searches, 1);
+  await pub.exophasePlatinumRate(link, 'X', { exophase: none, now: now + 2 * day });
+  assert.equal(searches, 2);
+});
