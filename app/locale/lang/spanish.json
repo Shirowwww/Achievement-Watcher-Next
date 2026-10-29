@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next no ha registrado ningún desbloqueo ni ha encontrado ninguna partida guardada de logros que borrar.",
     "reset-ach-detail-count": "Se hará una copia de seguridad de {count} archivo(s) de logros y luego se vaciarán:",
     "reset-ach-detail-backup": "Copia de seguridad: {path}",
+    "reset-ach-detail-journal": "Se borrará el registro de desbloqueos de este juego que guarda AW Next. Reinicia también los trofeos en el launcher del port, o el port los notificará de nuevo.",
     "reset-ach-detail-manual": "También se borrarán los desbloqueos manuales de este juego ({count}).",
     "reset-ach-detail-blocked": "Los desbloqueos gestionados por {sources} no se pueden restablecer desde aquí y quedan intactos.",
     "reset-ach-more-files": "…y {count} más",

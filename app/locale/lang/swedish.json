@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next har inte registrerat någon upplåsning för det, och hittade ingen sparad prestationsfil att rensa.",
     "reset-ach-detail-count": "{count} prestationsfiler säkerhetskopieras och rensas sedan:",
     "reset-ach-detail-backup": "Säkerhetskopia: {path}",
+    "reset-ach-detail-journal": "Registret över det här spelets upplåsningar som AW Next för kommer att rensas. Återställ också troféerna i portens launcher, annars rapporterar porten dem igen.",
     "reset-ach-detail-manual": "Manuella upplåsningar för det här spelet rensas också ({count}).",
     "reset-ach-detail-blocked": "Upplåsningar som ligger hos {sources} kan inte nollställas härifrån och lämnas orörda.",
     "reset-ach-more-files": "…och {count} till",

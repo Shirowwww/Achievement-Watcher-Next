@@ -161,6 +161,7 @@ function plan(game, options = {}) {
   const registry = registryPlan(game, options);
   blocked.push(...registry.blocked);
   const consoleBaselines = extras.consoleBaselines(game || {}, userDataPath, readerFiles);
+  const unlockJournals = extras.unlockJournals(game || {}, userDataPath);
 
   const baseline = statSafe(baselineFile(appid)) ? baselineFile(appid) : null;
   const manualEntries = (() => {
@@ -179,10 +180,11 @@ function plan(game, options = {}) {
     blocked,
     baseline,
     consoleBaselines,
+    unlockJournals,
     registry: registry.keys,
     manualEntries,
     // Nothing to act on is not a failure - it is a game that has never recorded an unlock here.
-    supported: files.length > 0 || !!baseline || manualEntries > 0 || registry.keys.length > 0 || consoleBaselines.length > 0,
+    supported: files.length > 0 || !!baseline || manualEntries > 0 || registry.keys.length > 0 || consoleBaselines.length > 0 || unlockJournals.length > 0,
   };
 }
 
@@ -306,6 +308,7 @@ function run(resetPlan, { now = new Date(), registry } = {}) {
   // AW Next's own baselines go through the same backup/restore path as a game save, with no source label.
   const own = resetPlan.baseline ? [{ path: resetPlan.baseline, action: targets.ACTION.DELETE, kind: 'baseline' }] : [];
   for (const file of resetPlan.consoleBaselines || []) own.push({ path: file, action: targets.ACTION.CLEAR_CONSOLE_BASELINE, kind: 'baseline' });
+  for (const file of resetPlan.unlockJournals || []) own.push({ path: file, action: targets.ACTION.DELETE, kind: 'journal' });
   const access = resetPlan.registry && resetPlan.registry.length ? registry || extras.windowsRegistry() : null;
   let cleared = 0;
   let index = 0;

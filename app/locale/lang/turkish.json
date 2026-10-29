@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next hiçbir açılış kaydetmedi ve temizlenecek bir başarım kaydı bulamadı.",
     "reset-ach-detail-count": "{count} başarım dosyası yedeklenip ardından temizlenecek:",
     "reset-ach-detail-backup": "Yedek: {path}",
+    "reset-ach-detail-journal": "AW Next tarafından tutulan bu oyunun açılma kayıtları temizlenecek. Port başlatıcısındaki kupaları da sıfırlayın, aksi halde port bunları yeniden bildirecek.",
     "reset-ach-detail-manual": "Bu oyunun elle açılan başarımları da temizlenecek ({count}).",
     "reset-ach-detail-blocked": "{sources} tarafından yönetilen açılışlar buradan sıfırlanamaz ve dokunulmadan kalır.",
     "reset-ach-more-files": "…ve {count} tane daha",

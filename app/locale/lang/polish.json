@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next nie zapisał żadnego odblokowania i nie znalazł zapisu osiągnięć do wyczyszczenia.",
     "reset-ach-detail-count": "Pliki osiągnięć zostaną zarchiwizowane, a potem wyczyszczone: {count}",
     "reset-ach-detail-backup": "Kopia zapasowa: {path}",
+    "reset-ach-detail-journal": "Rejestr odblokowań tej gry prowadzony przez AW Next zostanie usunięty. Zresetuj też trofea w launcherze portu, inaczej port zgłosi je ponownie.",
     "reset-ach-detail-manual": "Ręczne odblokowania tej gry również zostaną usunięte ({count}).",
     "reset-ach-detail-blocked": "Odblokowań zarządzanych przez {sources} nie da się stąd zresetować i pozostają nietknięte.",
     "reset-ach-more-files": "…i jeszcze {count}",

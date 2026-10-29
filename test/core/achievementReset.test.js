@@ -406,3 +406,23 @@ test('Nemirtingas Epic and Galaxy saves are local and resettable, unlike the sto
   ]);
   assert.deepEqual(resettable.map((entry) => entry.source), ['epic', 'gog']);
 });
+test("a PS4 port's reset clears AW Next's unlock journal and leaves the game's saves alone (#143)", (t) => {
+  const profile = tempProfile();
+  t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
+  const userDir = path.join(profile, 'GodOfWarIIIRemastered-Gow3Pc', 'user');
+  const save = write(path.join(userDir, 'savedata', '1', 'CUSA01623', 'SAVEDATA00', 'sce_sys', 'param.sfo'), 'game progress');
+  const journal = write(path.join(profile, 'cache', 'ps4recomp', 'ps4recomp-NPWR08268_00.json'), '{"unlocked":{"12":1793000000}}');
+  const game = { appid: 'ps4recomp-NPWR08268_00', name: 'God of War III Remastered', source: 'PS4 Recomp', dataPath: userDir };
+
+  const plan = achievementReset.plan(game);
+  assert.equal(plan.supported, true, 'the journal is what keeps an unlock the port itself forgot');
+  assert.deepEqual(plan.files, [], 'nothing in the port folder');
+  assert.deepEqual(plan.unlockJournals, [journal]);
+
+  const result = achievementReset.run(plan);
+  assert.deepEqual(result.errors, []);
+  assert.equal(fs.existsSync(journal), false);
+  assert.equal(fs.readFileSync(save, 'utf8'), 'game progress');
+  achievementReset.restore(game.appid, result.backupId);
+  assert.equal(fs.readFileSync(journal, 'utf8'), '{"unlocked":{"12":1793000000}}');
+});

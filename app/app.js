@@ -7986,14 +7986,28 @@ var app = {
     if (resetPlan.files.length > shown.length) {
       shown.push(t('reset-ach-more-files', '…and {count} more', '…et {count} de plus', { count: resetPlan.files.length - shown.length }));
     }
+    // A PS4 port has no file to clear here, only AW Next's own record of it: no "0 files" line then.
     const detail = [
-      t('reset-ach-detail-count', '{count} achievement file(s) will be backed up, then cleared:', '{count} fichier(s) de succès seront sauvegardés, puis effacés :', {
-        count: resetPlan.files.length,
-      }),
-      ...shown,
-      '',
+      ...(resetPlan.files.length > 0
+        ? [
+            t('reset-ach-detail-count', '{count} achievement file(s) will be backed up, then cleared:', '{count} fichier(s) de succès seront sauvegardés, puis effacés :', {
+              count: resetPlan.files.length,
+            }),
+            ...shown,
+            '',
+          ]
+        : []),
       t('reset-ach-detail-backup', 'Backup: {path}', 'Sauvegarde : {path}', { path: achievementReset.gameBackupRoot(resetPlan.appid) }),
     ];
+    if (resetPlan.unlockJournals.length > 0) {
+      detail.push(
+        t(
+          'reset-ach-detail-journal',
+          'AW Next’s own record of this game’s unlocks will be cleared. Reset the trophies in the port’s launcher too, or the port will report them again.',
+          'Le relevé des déblocages qu’AW Next garde pour ce jeu sera effacé. Réinitialise aussi les trophées dans le lanceur du port, sinon il les signalera de nouveau.'
+        )
+      );
+    }
     if (resetPlan.registry.length > 0) {
       detail.push(t('reset-ach-detail-registry', '{count} registry key(s) will have their values set to 0.', '{count} clé(s) du registre verront leurs valeurs remises à 0.', { count: resetPlan.registry.length }));
     }

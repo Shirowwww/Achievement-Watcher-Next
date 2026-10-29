@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next nezaznamenal žiadne odomknutie a nenašiel žiadnu uloženú pozíciu úspechov na vymazanie.",
     "reset-ach-detail-count": "Súborov úspechov sa zálohuje a potom vymaže: {count}",
     "reset-ach-detail-backup": "Záloha: {path}",
+    "reset-ach-detail-journal": "Záznam odomknutí tejto hry, ktorý vedie AW Next, bude zmazaný. Resetujte aj trofeje v spúšťači portu, inak ich port ohlási znova.",
     "reset-ach-detail-manual": "Ručné odomknutia tejto hry budú tiež zmazané ({count}).",
     "reset-ach-detail-blocked": "Odomknutia spravované {sources} sa odtiaľto resetovať nedajú a zostávajú nedotknuté.",
     "reset-ach-more-files": "…a ďalších {count}",

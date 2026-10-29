@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "Az AW Next nem rögzített feloldást, és nem talált törölhető teljesítmény-mentést.",
     "reset-ach-detail-count": "{count} teljesítményfájlról készül mentés, majd törlődnek:",
     "reset-ach-detail-backup": "Mentés: {path}",
+    "reset-ach-detail-journal": "Az AW Next által vezetett, a játék feloldásait rögzítő napló törlődik. Állítsd vissza a trófeákat a port indítójában is, különben a port újra jelenteni fogja őket.",
     "reset-ach-detail-manual": "A játék kézi feloldásai is törlődnek ({count}).",
     "reset-ach-detail-blocked": "A(z) {sources} által kezelt feloldásokat innen nem lehet visszaállítani, érintetlenek maradnak.",
     "reset-ach-more-files": "…és további {count}",

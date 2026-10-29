@@ -217,12 +217,18 @@ function withoutSuperseded(ports) {
   return ports.filter((port) => !ports.some((other) => other.supersedes === port.port));
 }
 
+// A named port whose launcher no longer ships run.py (SpartanPort 2.8 is one native exe): its art and launcher.
+function launcherOnlyPort(root) {
+  const ports = withoutSuperseded(PORTS.filter((port) => port.launcher && ownsPortFiles(root, port) && hasFileNamed(root, port.launcher)));
+  return ports.length === 1 ? ports[0] : null;
+}
+
 // The port a folder holding run.py is: by its own files, then its launcher's name, then the runner.
 function identifyPort(root) {
   if (!isRealDirectory(root)) return null;
   const runtime = runtimePort(root);
   if (runtime) return runtime;
-  if (!isRegularFile(path.join(root, RUNNER))) return nativePort(root);
+  if (!isRegularFile(path.join(root, RUNNER))) return launcherOnlyPort(root) || nativePort(root);
   const script = readText(path.join(root, RUNNER), MAX_SCRIPT_BYTES);
   if (!script) return null;
   const collection = packages.identifyCollection(script);
@@ -246,10 +252,13 @@ function readSettings(file) {
   }
 }
 
+function launcherSettingsFiles(root, port) {
+  return [...config.localConfigFiles(root), ...(port.settings ? hostSettingsFiles(root, port.settings, port.settingsName) : [])];
+}
+
 // The first launcher settings found, JSON or INI: the port's own, then its launcher folder's.
 function launcherSettings(root, port) {
-  const files = [...config.localConfigFiles(root), ...(port.settings ? hostSettingsFiles(root, port.settings, port.settingsName) : [])];
-  for (const file of files) {
+  for (const file of launcherSettingsFiles(root, port)) {
     const values = isRegularFile(file) ? config.readConfig(file) : {};
     if (Object.keys(values).length > 0) return { file, values };
   }
@@ -571,7 +580,13 @@ function installDirs(install) {
   const script = readText(path.join(install.root, RUNNER), MAX_SCRIPT_BYTES);
   const settings = launcherSettings(install.root, install.port);
   const dirs = resolveDirs(install.root, install.port, settings.values, script);
-  const gameDir = dirs.gameDir || config.gameDirFrom(settings.values, configResolver(install.root)) || findDump(install.root);
+  // A named folder that holds no dump (the runner's default beside a port moved into a launcher's
+  // Apps folder, #143) does not stop the search: every settings file may name the game, since
+  // SpartanPort 2.7 starts a settings.json beside the port while the old one keeps the game folder.
+  const resolve = configResolver(install.root);
+  const fromFiles = launcherSettingsFiles(install.root, install.port).map((file) => config.gameDirFrom(config.readConfig(file), resolve));
+  const named = [dirs.gameDir, ...fromFiles].filter(Boolean);
+  const gameDir = named.find((dir) => isRegularFile(path.join(dir, 'sce_sys', 'param.sfo'))) || findDump(install.root) || named[0] || '';
   return { ...dirs, gameDir, settingsFile: settings.file };
 }
 
@@ -682,20 +697,30 @@ function readUnlocks(data) {
   if (!info.userDir) return { unlocked: new Map(), unstable: false };
   const names = logNames(info);
   const inLogDir = (list) => list.map((name) => path.join(String(info.logDir || info.userDir), name));
-  const own = readLogFiles(info, inLogDir(names.filter((name) => !isRunLog(name))));
   const runLogs = inLogDir(names.filter(isRunLog));
-  const session = readLogFiles(info, [...runLogs, ...progress.sessionLogs(info), ...listed(info.logFiles)]);
-  const unstable = own.unstable || session.unstable;
+  const sessionFiles = [...runLogs, ...progress.sessionLogs(info), ...listed(info.logFiles)];
   if (info.game) {
+    const own = readLogFiles(info, inLogDir(names.filter((name) => !isRunLog(name))));
+    const session = readLogFiles(info, sessionFiles);
     const read = progress.mergeInto(own.unlocked, toEntries(session.unlocked));
-    return { unlocked: info.appid ? rememberUnlocks(info.appid, read) : read, unstable };
+    return { unlocked: info.appid ? rememberUnlocks(info.appid, read) : read, unstable: own.unstable || session.unstable };
   }
   const saved = progress.readProgress(info);
   if (saved.rejected.length > 0) debug.log(`[ps4recomp] ${info.appid}: ignored progress files of another game: ${saved.rejected.join(', ')}`);
+  /*
+    The port's own record is the truth up to when it was written: a log or a journal entry older than
+    it shows an unlock the port has since locked again (SpartanPort's Reset trophies rewrites
+    trophies.dat and leaves last_run.log, #143). A newer log still counts, the record may lag a session.
+  */
+  const newer = (file) => !saved.stateTime || progress.modified(file) > saved.stateTime;
+  const own = readLogFiles(info, inLogDir(names.filter((name) => !isRunLog(name))).filter(newer));
+  const session = readLogFiles(info, sessionFiles.filter(newer));
   progress.mergeInto(own.unlocked, toEntries(saved.unlocked));
   const journaled = info.appid && (runLogs.length > 0 || listed(info.sessionDirs).length > 0 || listed(info.logFiles).length > 0);
-  progress.mergeInto(own.unlocked, toEntries(journaled ? rememberUnlocks(info.appid, session.unlocked) : session.unlocked));
-  return { unlocked: own.unlocked, unstable: unstable || saved.unstable };
+  const remembered = journaled ? rememberUnlocks(info.appid, session.unlocked) : session.unlocked;
+  const current = saved.stateTime ? new Map([...remembered].filter(([id, time]) => session.unlocked.has(id) || time * 1000 > saved.stateTime)) : remembered;
+  progress.mergeInto(own.unlocked, toEntries(current));
+  return { unlocked: own.unlocked, unstable: own.unstable || session.unstable || saved.unstable };
 }
 
 function getAchievements(data) {

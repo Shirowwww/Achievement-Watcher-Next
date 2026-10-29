@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next hat keine Freischaltung dafür aufgezeichnet und keinen Erfolgs-Spielstand zum Löschen gefunden.",
     "reset-ach-detail-count": "{count} Erfolgsdatei(en) werden gesichert und dann geleert:",
     "reset-ach-detail-backup": "Sicherung: {path}",
+    "reset-ach-detail-journal": "Die Aufzeichnung der Freischaltungen dieses Spiels, die AW Next führt, wird gelöscht. Setze die Trophäen auch im Launcher des Ports zurück, sonst meldet der Port sie erneut.",
     "reset-ach-detail-manual": "Manuelle Freischaltungen dieses Spiels werden ebenfalls gelöscht ({count}).",
     "reset-ach-detail-blocked": "Von {sources} verwaltete Freischaltungen lassen sich hier nicht zurücksetzen und bleiben unberührt.",
     "reset-ach-more-files": "…und {count} weitere",

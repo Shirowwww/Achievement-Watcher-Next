@@ -144,18 +144,25 @@ function mergeInto(unlocked, unlocks) {
   return unlocked;
 }
 
+/*
+  `stateTime` is when the newest trophies.dat was written (ms, 0 without one): the record a launcher
+  shows and resets (SpartanPort), so what it does not hold by then is locked. Other records can
+  lag the logs (UFC 3's trophies.json) and give no time.
+*/
 function readProgress(info) {
   const record = info && typeof info === 'object' ? info : {};
   const unlocked = new Map();
   const rejected = [];
   let unstable = false;
+  let stateTime = 0;
   for (const source of progressFiles(record)) {
     const read = readSource(source, record.npcommid);
     if (read.unstable) unstable = true;
     if (read.rejected) rejected.push(source.file);
+    else if (path.basename(source.file) === FLAGS_DAT && exists(source.file)) stateTime = Math.max(stateTime, modified(source.file));
     mergeInto(unlocked, read.unlocks);
   }
-  return { unlocked, unstable, rejected };
+  return { unlocked, unstable, rejected, stateTime };
 }
 
 function modified(file) {
@@ -193,4 +200,4 @@ function isProgressName(name) {
   return LOG_NAMES.test(base) || SNAPSHOT_FILE.test(base) || FLAG_FILE.test(base);
 }
 
-module.exports = { parseSnapshot, parseFlags, parseTrophiesJson, readProgress, sessionLogs, isProgressName, mergeInto };
+module.exports = { parseSnapshot, parseFlags, parseTrophiesJson, readProgress, sessionLogs, isProgressName, mergeInto, modified };

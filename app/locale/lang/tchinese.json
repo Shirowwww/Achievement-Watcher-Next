@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next 沒有記錄到它的任何解鎖，也找不到可以清除的成就存檔。",
     "reset-ach-detail-count": "會先備份 {count} 個成就檔案，然後清空：",
     "reset-ach-detail-backup": "備份：{path}",
+    "reset-ach-detail-journal": "AW Next 保存的這款遊戲解鎖紀錄將被清除。請同時在移植版的啟動器中重設獎盃，否則移植版會再次回報。",
     "reset-ach-detail-manual": "這款遊戲的手動解鎖也會一併清除（{count} 個）。",
     "reset-ach-detail-blocked": "由 {sources} 保管的解鎖無法從這裡重設，會維持不變。",
     "reset-ach-more-files": "…還有 {count} 個",

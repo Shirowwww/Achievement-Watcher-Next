@@ -14,6 +14,19 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **God of War III is found again after updating to SpartanPort 2.7.** Its launcher starts a new
+  settings file next to the game, and AW Next read only that one, missing the game folder the old
+  settings named. Game files kept inside the port's folder are found too, and SpartanPort 2.8,
+  whose launcher is a single program, is recognised.
+- **A trophy reset in SpartanPort's launcher shows in AW Next.** Older session logs and AW Next's own
+  record of the unlocks kept them showing; the port's trophies.dat now wins over anything older.
+  Reset achievements in AW Next also clears that record for a PS4 port, with a backup, and leaves
+  the game's saves alone.
+
 ## 3.12.4 - 2026-10-29
 
 ### Added

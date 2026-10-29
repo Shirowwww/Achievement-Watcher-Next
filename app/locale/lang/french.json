@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next n’a enregistré aucun déblocage et n’a trouvé aucune sauvegarde de succès à effacer.",
     "reset-ach-detail-count": "{count} fichier(s) de succès seront sauvegardés, puis effacés :",
     "reset-ach-detail-backup": "Sauvegarde : {path}",
+    "reset-ach-detail-journal": "Le relevé des déblocages qu’AW Next garde pour ce jeu sera effacé. Réinitialise aussi les trophées dans le lanceur du port, sinon il les signalera de nouveau.",
     "reset-ach-detail-manual": "Les déblocages manuels de ce jeu seront aussi effacés ({count}).",
     "reset-ach-detail-blocked": "Les succès gérés par {sources} ne peuvent pas être réinitialisés ici et restent intacts.",
     "reset-ach-more-files": "…et {count} de plus",

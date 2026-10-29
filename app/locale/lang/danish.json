@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next har ikke registreret en eneste oplåsning for det og har ikke fundet nogen gemte præstationer at rydde.",
     "reset-ach-detail-count": "{count} præstationsfil(er) bliver sikkerhedskopieret og derefter ryddet:",
     "reset-ach-detail-backup": "Sikkerhedskopi: {path}",
+    "reset-ach-detail-journal": "Oversigten over dette spils oplåsninger, som AW Next gemmer, bliver ryddet. Nulstil også trofæerne i portens launcher, ellers rapporterer porten dem igen.",
     "reset-ach-detail-manual": "Manuelle oplåsninger for dette spil bliver også ryddet ({count}).",
     "reset-ach-detail-blocked": "Oplåsninger, der ligger hos {sources}, kan ikke nulstilles herfra og bliver ikke rørt.",
     "reset-ach-more-files": "…og {count} mere",

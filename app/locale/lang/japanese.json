@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next は解除を記録しておらず、消去できる実績のセーブも見つかりませんでした。",
     "reset-ach-detail-count": "{count} 個の実績ファイルをバックアップしてから消去します:",
     "reset-ach-detail-backup": "バックアップ: {path}",
+    "reset-ach-detail-journal": "AW Next が保持しているこのゲームの解除記録は消去されます。ポートのランチャーでもトロフィーをリセットしてください。リセットしないと、ポートが再度報告します。",
     "reset-ach-detail-manual": "このゲームの手動解除も消去されます（{count} 件）。",
     "reset-ach-detail-blocked": "{sources} が管理する解除はここからリセットできず、そのまま残ります。",
     "reset-ach-more-files": "…ほか {count} 件",

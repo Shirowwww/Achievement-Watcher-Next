@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next non ha registrato alcuno sblocco e non ha trovato alcun salvataggio dei successi da cancellare.",
     "reset-ach-detail-count": "{count} file dei successi verranno salvati e poi svuotati:",
     "reset-ach-detail-backup": "Backup: {path}",
+    "reset-ach-detail-journal": "Il registro degli sblocchi di questo gioco tenuto da AW Next verrà cancellato. Reimposta anche i trofei nel launcher del port, altrimenti il port li segnalerà di nuovo.",
     "reset-ach-detail-manual": "Anche gli sblocchi manuali di questo gioco verranno cancellati ({count}).",
     "reset-ach-detail-blocked": "Gli sblocchi gestiti da {sources} non possono essere reimpostati da qui e restano intatti.",
     "reset-ach-more-files": "…e altri {count}",

@@ -103,6 +103,16 @@ function consoleBaselineFile(userDataPath, prefix, key) {
   return path.join(userDataPath || '', 'steam_cache', 'console', `${prefix ? `${prefix}-` : ''}${safeName(key)}.json`);
 }
 
+/*
+  AW Next's own record of a PS4 port's unlocks (ps4Recomp.js journalFile): it keeps what the port's
+  logs once showed, so it outlives a reset in the port's launcher. The port folder is left alone.
+*/
+function unlockJournals(game, userDataPath) {
+  if (!sourcesOf(game).has('ps4 recomp')) return [];
+  const file = path.join(userDataPath || '', 'cache', 'ps4recomp', `${safeName(game.appid)}.json`);
+  return isFile(file) ? [file] : [];
+}
+
 function consoleKeys(game, source) {
   const appid = String(game.appid || '');
   const roots = dataRoots(game, source);
@@ -167,6 +177,7 @@ module.exports = {
   extraSaveFiles,
   consoleBaselineFile,
   consoleBaselines,
+  unlockJournals,
   windowsRegistry,
   registryKeys,
 };

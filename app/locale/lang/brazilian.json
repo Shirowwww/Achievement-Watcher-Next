@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "O AW Next não registrou nenhum desbloqueio e não encontrou nenhum save de conquistas para limpar.",
     "reset-ach-detail-count": "{count} arquivo(s) de conquistas serão salvos em backup e depois limpos:",
     "reset-ach-detail-backup": "Backup: {path}",
+    "reset-ach-detail-journal": "O registro de desbloqueios deste jogo mantido pelo AW Next será apagado. Redefina também os troféus no launcher do port, ou o port os informará novamente.",
     "reset-ach-detail-manual": "Os desbloqueios manuais deste jogo também serão limpos ({count}).",
     "reset-ach-detail-blocked": "Os desbloqueios gerenciados por {sources} não podem ser redefinidos aqui e permanecem intactos.",
     "reset-ach-more-files": "…e mais {count}",

@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next chưa ghi nhận lần mở khóa nào cho nó, và cũng không tìm thấy bản lưu thành tựu nào để xóa.",
     "reset-ach-detail-count": "{count} tệp thành tựu sẽ được sao lưu, rồi xóa sạch:",
     "reset-ach-detail-backup": "Bản sao lưu: {path}",
+    "reset-ach-detail-journal": "Nhật ký mở khóa của trò chơi này mà AW Next lưu giữ sẽ bị xóa. Hãy đặt lại cả cúp trong trình khởi chạy của bản port, nếu không bản port sẽ báo lại chúng.",
     "reset-ach-detail-manual": "Các lần mở khóa thủ công của trò chơi này cũng sẽ bị xóa ({count}).",
     "reset-ach-detail-blocked": "Những lần mở khóa do {sources} nắm giữ không thể đặt lại từ đây và sẽ được giữ nguyên.",
     "reset-ach-more-files": "…và {count} mục nữa",

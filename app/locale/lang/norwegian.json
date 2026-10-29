@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next har ikke registrert noen opplåsing for det, og fant ingen prestasjonslagring å tømme.",
     "reset-ach-detail-count": "{count} prestasjonsfil(er) sikkerhetskopieres og tømmes deretter:",
     "reset-ach-detail-backup": "Sikkerhetskopi: {path}",
+    "reset-ach-detail-journal": "Oversikten over dette spillets opplåsinger som AW Next oppbevarer, fjernes. Tilbakestill også trofeene i portens launcher, ellers rapporterer porten dem på nytt.",
     "reset-ach-detail-manual": "Manuelle opplåsinger for dette spillet fjernes også ({count}).",
     "reset-ach-detail-blocked": "Opplåsinger som eies av {sources}, kan ikke nullstilles herfra og røres ikke.",
     "reset-ach-more-files": "…og {count} til",

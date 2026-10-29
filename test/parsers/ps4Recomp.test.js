@@ -120,6 +120,68 @@ test('SpartanPort, the renamed God of War III port, reads its own settings and S
   assert.equal(record.data.userDir, user);
 });
 
+test('SpartanPort 2.8, whose launcher ships without run.py, is still SpartanPort (#143)', () => {
+  // 2.8 rewrote the launcher as one native exe: no run.py, no scripts, the same art and settings folder.
+  const root = dir('spartan-native', 'Apps', 'GodOfWarIIIRemastered');
+  for (const exe of ['SpartanPort.exe', 'Play SpartanPort.exe', path.join('bin', 'spartanport-probe.exe')]) fixture.write(path.join(root, exe), 'MZ');
+  fixture.write(path.join(root, 'launcher', 'spartanport.png'), 'x');
+  const dump = fixture.makeGameDump(dir('spartan-native', 'Games', 'CUSA01623'), { title: 'God of War III Remastered' });
+  fixture.settingsFile(appData, 'spartanport-launcher', { game_dir: dump });
+  assert.equal(identifyPort(root).port, 'spartanport');
+  const [record] = ps4Recomp.scan(root);
+  assert.equal(record.data.dumpDir, dump);
+  assert.equal(record.data.userDir, path.join(root, 'user'), 'saves sit in user next to SpartanPort.exe');
+
+  const artOnly = dir('spartan-native', 'art only');
+  fixture.write(path.join(artOnly, 'launcher', 'spartanport.png'), 'x');
+  assert.equal(identifyPort(artOnly), null, 'the art alone, without the launcher, is not a port');
+});
+
+test('a dump inside the port is found when the default the runner names does not exist (#143)', () => {
+  // SpartanPort's run.py defaults to PORT.parent / 'CUSA01623': under QuiverLauncher that is Apps\CUSA01623.
+  fs.rmSync(path.join(appData, 'spartanport-launcher'), { recursive: true, force: true });
+  const script = "PORT = Path(__file__).resolve().parent\ngame = Path(env.get('SPARTAN_GAME_DIR', PORT.parent / 'CUSA01623'))\n";
+  const root = fixture.makePort(dir('spartan-inside', 'Apps', 'GodOfWarIIIRemastered-Gow3Pc'), 'spartanport', { script });
+  const dump = fixture.makeGameDump(path.join(root, 'CUSA01623'), { title: 'God of War III Remastered' });
+  const [record] = ps4Recomp.scan(root);
+  assert.ok(record, 'the port is listed');
+  assert.equal(record.data.dumpDir, dump);
+});
+
+test('a settings file beside the port without a game folder does not hide the one under %APPDATA% (#143)', () => {
+  // 2.7 keeps settings.json next to SpartanPort.exe; the game folder may still be only in the old one.
+  const root = fixture.makePort(dir('spartan-split', 'GodOfWarIIIRemastered-Gow3Pc'), 'spartanport');
+  fixture.write(path.join(root, 'settings.json'), JSON.stringify({ ui_language: 'en', ui_scale: 'Auto' }));
+  const dump = fixture.makeGameDump(dir('spartan-split', 'Games', 'CUSA01623'), { title: 'God of War III Remastered' });
+  fixture.settingsFile(appData, 'spartanport-launcher', { game_dir: dump });
+  const [record] = ps4Recomp.scan(root);
+  assert.ok(record, 'the port is listed');
+  assert.equal(record.data.dumpDir, dump);
+});
+
+test("a reset in the port's launcher wins over older logs and the journal (#143)", (t) => {
+  // SpartanPort 2.7's Reset trophies rewrites user/trophies.dat and leaves last_run.log alone.
+  fs.rmSync(path.join(appData, 'spartanport-launcher'), { recursive: true, force: true });
+  const root = fixture.makePort(dir('spartan-reset', 'GodOfWarIIIRemastered-Gow3Pc'), 'spartanport');
+  fixture.makeGameDump(path.join(root, 'CUSA01623'), { title: 'God of War III Remastered' });
+  const [record] = ps4Recomp.scan(root);
+  // The journal is kept per game, and the other tests use the same trophy list.
+  t.after(() => fs.rmSync(ps4Recomp._internal.journalFile(record.appid), { force: true }));
+  const ids = () => ps4Recomp.getAchievements(record.data).map((u) => u.id).sort();
+  const at = (file, seconds) => fs.utimesSync(file, seconds, seconds);
+  const log = fixture.write(path.join(root, 'user', 'last_run.log'), 'Runtime: trophy 12 unlocked\n');
+  at(log, 1793000000);
+  assert.deepEqual(ids(), ['12']);
+
+  const dat = fixture.write(path.join(root, 'user', 'trophies.dat'), Buffer.alloc(16));
+  at(dat, 1793000600);
+  assert.deepEqual(ids(), [], 'the state written after the log says nothing is unlocked');
+
+  fixture.write(log, 'Runtime: trophy 5 unlocked\n');
+  at(log, 1793001200);
+  assert.deepEqual(ids(), ['5'], 'a session after the reset still counts before the state catches up');
+});
+
 test('an install updated to SpartanPort with the old launcher art left behind is SpartanPort', () => {
   const root = fixture.makePort(dir('spartan-update', 'GOW3'), 'spartanport');
   fixture.write(path.join(root, 'God of War III.exe'), 'MZ');

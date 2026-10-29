@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next belum mencatat satu pun pencapaian untuknya, dan tidak menemukan save pencapaian yang bisa dikosongkan.",
     "reset-ach-detail-count": "{count} file pencapaian akan dicadangkan, lalu dikosongkan:",
     "reset-ach-detail-backup": "Cadangan: {path}",
+    "reset-ach-detail-journal": "Catatan pembukaan game ini yang disimpan AW Next akan dihapus. Setel ulang juga trofi di launcher port tersebut, atau port akan melaporkannya lagi.",
     "reset-ach-detail-manual": "Pencapaian manual untuk game ini juga akan dihapus ({count}).",
     "reset-ach-detail-blocked": "Pencapaian yang dipegang oleh {sources} tidak dapat diatur ulang dari sini dan dibiarkan apa adanya.",
     "reset-ach-more-files": "…dan {count} lagi",

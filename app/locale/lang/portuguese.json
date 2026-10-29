@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "O AW Next não registou qualquer desbloqueio nem encontrou uma gravação de proezas para limpar.",
     "reset-ach-detail-count": "Serão guardados {count} ficheiro(s) de proezas e depois limpos:",
     "reset-ach-detail-backup": "Cópia de segurança: {path}",
+    "reset-ach-detail-journal": "O registo de desbloqueios deste jogo mantido pelo AW Next será apagado. Reponha também os troféus no launcher do port, ou o port volta a comunicá-los.",
     "reset-ach-detail-manual": "Os desbloqueios manuais deste jogo também serão limpos ({count}).",
     "reset-ach-detail-blocked": "Os desbloqueios geridos por {sources} não podem ser repostos aqui e ficam intactos.",
     "reset-ach-more-files": "…e mais {count}",

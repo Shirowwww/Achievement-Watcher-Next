@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next heeft er geen enkele ontgrendeling voor vastgelegd en vond geen prestatiesave om te wissen.",
     "reset-ach-detail-count": "Van {count} prestatiebestand(en) wordt eerst een back-up gemaakt en daarna worden ze gewist:",
     "reset-ach-detail-backup": "Back-up: {path}",
+    "reset-ach-detail-journal": "Het overzicht van de ontgrendelingen van deze game dat AW Next bijhoudt, wordt gewist. Reset ook de trofeeën in de launcher van de port, anders meldt de port ze opnieuw.",
     "reset-ach-detail-manual": "Ook de handmatige ontgrendelingen van deze game worden gewist ({count}).",
     "reset-ach-detail-blocked": "Ontgrendelingen die door {sources} worden beheerd, kun je hier niet resetten en blijven ongemoeid.",
     "reset-ach-more-files": "…en nog {count}",

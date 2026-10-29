@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next가 이 게임의 달성 기록을 남긴 적이 없고, 지울 도전 과제 저장 파일도 찾지 못했습니다.",
     "reset-ach-detail-count": "도전 과제 파일 {count}개를 백업한 뒤 지웁니다:",
     "reset-ach-detail-backup": "백업: {path}",
+    "reset-ach-detail-journal": "AW Next가 보관 중인 이 게임의 달성 기록이 지워집니다. 포트의 런처에서도 트로피를 초기화하세요. 그렇지 않으면 포트가 다시 보고합니다.",
     "reset-ach-detail-manual": "이 게임의 수동 달성 기록도 함께 지워집니다({count}개).",
     "reset-ach-detail-blocked": "{sources}이(가) 보관 중인 달성 기록은 여기에서 초기화할 수 없어 그대로 둡니다.",
     "reset-ach-more-files": "…외 {count}개",

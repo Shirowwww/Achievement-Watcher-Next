@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next ei ole kirjannut sille yhtään avausta eikä löytänyt tyhjennettävää saavutustallennusta.",
     "reset-ach-detail-count": "{count} saavutustiedostoa varmuuskopioidaan ja tyhjennetään sen jälkeen:",
     "reset-ach-detail-backup": "Varmuuskopio: {path}",
+    "reset-ach-detail-journal": "AW Nextin tallentama tietue tämän pelin avauksista tyhjennetään. Nollaa pokaalit myös portin käynnistysohjelmassa, muuten portti ilmoittaa ne uudelleen.",
     "reset-ach-detail-manual": "Myös tämän pelin käsin tehdyt avaukset tyhjennetään ({count}).",
     "reset-ach-detail-blocked": "Avauksia, jotka ovat lähteiden {sources} hallussa, ei voi nollata täältä, joten niihin ei kosketa.",
     "reset-ach-more-files": "…ja {count} muuta",

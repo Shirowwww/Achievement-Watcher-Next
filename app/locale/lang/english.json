@@ -2819,6 +2819,7 @@
     "reset-ach-nothing-detail": "AW Next has not recorded any unlock for it, and found no achievement save to clear.",
     "reset-ach-detail-count": "{count} achievement file(s) will be backed up, then cleared:",
     "reset-ach-detail-backup": "Backup: {path}",
+    "reset-ach-detail-journal": "AW Next’s own record of this game’s unlocks will be cleared. Reset the trophies in the port’s launcher too, or the port will report them again.",
     "reset-ach-detail-manual": "Manual unlocks for this game will also be cleared ({count}).",
     "reset-ach-detail-blocked": "Unlocks held by {sources} cannot be reset from here and are left untouched.",
     "reset-ach-more-files": "…and {count} more",
