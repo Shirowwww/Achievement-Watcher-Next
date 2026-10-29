@@ -75,6 +75,67 @@ function detectSteamStub(exePath) {
   }
 }
 
+const MAX_EXPORT_NAME = 128;
+
+/*
+  The file name a DLL was linked under, from its export directory ("steam_api.dll"). A steam_api dll
+  that was built under another name is some other program in its place, such as a mod's own runtime.
+  '' when the file is not a PE, exports nothing, or the name is not plain text (a packed build).
+*/
+function readExportName(dllPath) {
+  let fd;
+  const read = (length, position) => {
+    const buf = Buffer.alloc(length);
+    return fs.readSync(fd, buf, 0, length, position) === length ? buf : null;
+  };
+  try {
+    fd = fs.openSync(dllPath, 'r');
+    const head = read(64, 0);
+    if (!head || head.readUInt16LE(0) !== 0x5a4d) return '';
+    const peOff = head.readUInt32LE(0x3c);
+    const coff = read(24, peOff);
+    if (!coff || coff.readUInt32LE(0) !== 0x00004550) return '';
+    const numSections = coff.readUInt16LE(6);
+    const sizeOptHdr = coff.readUInt16LE(20);
+    if (numSections <= 0 || numSections > 96) return '';
+    const optional = read(sizeOptHdr, peOff + 24);
+    if (!optional || optional.length < 104) return '';
+    const dirOff = optional.readUInt16LE(0) === 0x20b ? 112 : 96;
+    if (optional.length < dirOff + 8) return '';
+    const exportRva = optional.readUInt32LE(dirOff);
+    const table = read(numSections * 40, peOff + 24 + sizeOptHdr);
+    if (!exportRva || !table) return '';
+    const fileOffset = (rva) => {
+      for (let i = 0; i < numSections; i++) {
+        const at = i * 40;
+        const va = table.readUInt32LE(at + 12);
+        const span = Math.max(table.readUInt32LE(at + 8), table.readUInt32LE(at + 16));
+        if (rva >= va && rva < va + span) return rva - va + table.readUInt32LE(at + 20);
+      }
+      return -1;
+    };
+    const dirAt = fileOffset(exportRva);
+    const dir = dirAt >= 0 ? read(16, dirAt) : null;
+    const nameAt = dir ? fileOffset(dir.readUInt32LE(12)) : -1;
+    if (nameAt < 0) return '';
+    const raw = Buffer.alloc(MAX_EXPORT_NAME);
+    const got = fs.readSync(fd, raw, 0, MAX_EXPORT_NAME, nameAt);
+    const end = raw.subarray(0, got).indexOf(0);
+    const name = raw.toString('latin1', 0, end < 0 ? got : end);
+    return /^[\x21-\x7e]+$/.test(name) ? name : '';
+  } catch {
+    return '';
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
 // Read FileDescription / ProductName from a PE's VS_VERSIONINFO resource. Repacks frequently
 // rename the install folder ("Game123", "0xdeadbeef"), so the exe's own metadata is the most
 // reliable display name for an unconfigured install. Pure read-only header/resource parsing,
@@ -370,4 +431,4 @@ function readExeFileVersion(exePath) {
   }
 }
 
-module.exports = { exeArch, detectSteamStub, readExeProductName, readExeFileVersion };
+module.exports = { exeArch, detectSteamStub, readExeProductName, readExeFileVersion, readExportName };

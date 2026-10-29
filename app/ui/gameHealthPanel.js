@@ -373,7 +373,9 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     // the same folder is broken or simply unused.
     // `replaceable` says whether swapping steam_api for GBE Fork would be a complete change: it
     // gates the one action the panel offers over a folder AW cannot otherwise diagnose.
-    crackLoader: foreignLoader ? { name: foreignLoader.name, replaceable: foreignLoader.replaceable === true } : null,
+    crackLoader: foreignLoader
+      ? { name: foreignLoader.name, replaceable: foreignLoader.replaceable === true, ...(foreignLoader.replacedBy ? { replacedBy: foreignLoader.replacedBy } : {}) }
+      : null,
     // A folder set up with the Nemirtingas Epic emulator, and what it still needs before it saves (#112).
     nemirtingasEpic: gameDirExists ? safeNemirtingasDiagnose(gameDir, cfg.args) : null,
     // Console emulators (RPCS3/ShadPS4/Xenia) and the official platform libraries are followed by
@@ -508,6 +510,13 @@ function gameHealthExplanation(report) {
         "This game runs as Spacewar (Steam ID 480), the trick some online fixes use to reach real Steam. Steam then rejects the game's achievements, since they are not in Spacewar's list, so nothing records them anywhere and AW Next has nothing to read. To get achievements, use a version that keeps them, such as an OnlineFix release, or an emulator.",
         "Ce jeu tourne déguisé en Spacewar (identifiant Steam 480), l'astuce de certains correctifs en ligne pour passer par le vrai Steam. Steam refuse alors les succès du jeu, absents de la liste de Spacewar : rien ne les enregistre nulle part et AW Next n'a rien à lire. Pour avoir les succès, utilise une version qui les garde, comme une release OnlineFix, ou un émulateur."
       );
+    case 'crack-runtime-replaced':
+      return t(
+        'gh-why-crack-runtime-replaced',
+        "This game's folder is set up for {servedBy}, but its steam_api.dll has been replaced by another program ({replacedBy}), usually a mod or an online patch. That file does not record achievements, so none are saved while it is there. Put the original steam_api.dll back to get them, and keep the other one aside to switch back.",
+        "Le dossier de ce jeu est configuré pour {servedBy}, mais son steam_api.dll a été remplacé par un autre programme ({replacedBy}), en général un mod ou un patch en ligne. Ce fichier n'enregistre pas les succès : aucun n'est sauvegardé tant qu'il est là. Remets le steam_api.dll d'origine pour les retrouver, et garde l'autre de côté pour revenir en arrière.",
+        p
+      );
     case 'crack-records-nothing':
       return p.canSwitch
         ? t('gh-why-crack-records-nothing', 'This game has run for over an hour with {servedBy} and not one achievement has been recorded. Some cracks never report achievements at all. AW Next can install the supported emulator over it - the current file is kept.', "Ce jeu a tourné plus d'une heure avec {servedBy} sans enregistrer un seul succès. Certains cracks ne signalent jamais les succès. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.", p)
@@ -613,7 +622,7 @@ function gameHealthSimpleCheckValue(entry) {
     case 'uplay':
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
-      if (p.oldSave || p.stalled) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
+      if (p.oldSave || p.stalled || p.replacedBy) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.
@@ -798,6 +807,7 @@ function gameHealthCheckValue(entry, simple) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
         if (p.serverAwarded) return `${servedBy} · ${t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement')}`;
         if (p.spacewar) return `${servedBy} · ${t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès')}`;
+        if (p.replacedBy) return `${servedBy} · ${t('gh-value-runtime-replaced', 'steam_api.dll replaced by {replacedBy}', 'steam_api.dll remplacé par {replacedBy}', { replacedBy: p.replacedBy })}`;
         if (p.oldSave) return `${servedBy} · ${t('gh-value-old-goldberg-save', 'the only save found is an old Goldberg one it never writes', 'la seule sauvegarde trouvée est une ancienne sauvegarde Goldberg qu’il n’écrit jamais')}`;
         return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
       }

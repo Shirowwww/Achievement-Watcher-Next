@@ -345,9 +345,12 @@ function emulatorCheck(signals) {
     // Every save read is a Goldberg one, which this loader never writes: left by another copy of
     // the game, so the card shows that copy's unlocks and none of this one's.
     const oldSave = readsOnlyForeignGoldbergSaves(signals);
-    return check('emulator', oldSave || stalled ? LEVEL.WARN : LEVEL.INFO, {
+    // The crack's ini is still there, its steam_api dll is not: another program answers in its place.
+    const replacedBy = signals.crackLoader.replacedBy ? String(signals.crackLoader.replacedBy) : '';
+    return check('emulator', oldSave || stalled || replacedBy ? LEVEL.WARN : LEVEL.INFO, {
       params: {
         servedBy: signals.crackLoader.name,
+        ...(replacedBy ? { replacedBy } : {}),
         ...(idle ? { idle: true } : {}),
         ...(stalled ? { stalled: true, canSwitch } : {}),
         ...(oldSave ? { oldSave: true } : {}),
@@ -645,6 +648,8 @@ function explain(state, checks, signals) {
   // A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the
   // emulator announces one game and AW Next watches another.
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };
+  // Before "records nothing": the crack is not the one running, so blaming it sends the user wrong.
+  if (emulator && emulator.params && emulator.params.replacedBy) return { reason: 'crack-runtime-replaced', params: emulator.params };
   if (emulator && emulator.params && emulator.params.stalled) return { reason: 'crack-records-nothing', params: emulator.params };
   // The signature case: everything needed is present, nothing has been recorded yet. Say where the
   // fault is likely to be, because "no notifications appeared" is the usual misread.

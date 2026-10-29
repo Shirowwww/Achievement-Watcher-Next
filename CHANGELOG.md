@@ -95,6 +95,10 @@ renamed in 3.9.0 and the history is kept under one file.
   PlayStation, the 100% popup now uses the real platinum's name, description and icon even with no
   account connected, from a public archive of PS3 and PS4 trophy lists and from Exophase for PS5.
   Turning the platinum popup off also stops these lookups.
+- **Game Health spots a crack whose steam_api.dll was replaced.** A mod or an online patch that puts
+  its own steam_api.dll over a CODEX-style crack (Transformers: Fall of Cybertron's fan servers)
+  records no achievement; the panel now names that file and says to put the original back, instead
+  of blaming the crack.
 - **Playtime down to the second.** Settings > Appearance > Library tiles > Playtime has a third
   choice, Down to the second, for the tiles and the game page ("59 hours, 36 minutes, 12 seconds").
 - **Cut text scrolls on hover everywhere.** The status line of the title bar and the names in the

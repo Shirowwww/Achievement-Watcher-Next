@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
+const pe = require('./pe.js');
 
 /*
   Every Goldberg/GSE build reads its configuration from a steam_settings folder and carries that
@@ -114,9 +115,26 @@ function loaderForEntries(entries, dir) {
     if (loader.replaceable && emulatorDllHere) continue;
     const suffixed = (loader.suffixes || []).flatMap((suffix) => [...present].filter((name) => name.endsWith(suffix)));
     const found = [...loader.markers.filter((marker) => present.has(marker)), ...suffixed];
-    if (found.length > 0) return { name: loader.name, replaceable: loader.replaceable === true, dir, markers: found };
+    if (found.length > 0) {
+      const replacedBy = loader.replaceable ? foreignSteamApiName(present, dir) : '';
+      return { name: loader.name, replaceable: loader.replaceable === true, dir, markers: found, ...(replacedBy ? { replacedBy } : {}) };
+    }
   }
   return null;
+}
+
+/*
+  The crack's ini still names it, but the steam_api dll beside it was built as something else: a
+  mod or an online patch put its own runtime there (Fall of Cybertron's fan servers ship
+  foc_wh_steam_api_dll.dll), and that one records no achievement. A packed build names nothing.
+*/
+function foreignSteamApiName(present, dir) {
+  for (const name of STEAM_API_DLLS) {
+    if (!present.has(name)) continue;
+    const built = pe.readExportName(path.join(dir, name));
+    if (built && !/^steam_api(64)?\.dll$/i.test(built)) return built;
+  }
+  return '';
 }
 
 /*
