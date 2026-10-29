@@ -1,6 +1,8 @@
 // Keeps the game's last seconds encoded in memory and writes the stretch around an unlock to MP4.
 // The line protocol with the Watchdog is described in native/hdr-screenshot/README.md.
 mod audio;
+mod codec;
+mod mp4;
 mod mux;
 mod ring;
 mod video;

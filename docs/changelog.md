@@ -136,6 +136,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A video clip keeps its footage when the capture restarts.** When the screen wakes up or the
   game switches display mode during a clip, the part recorded before is kept instead of leaving a
   clip of a single frame.
+- **AV1 video clips save on Windows 10.** They were recorded but never written, on Windows 10 and on
+  Windows 11 before its August 2023 update, because Windows' own MP4 writer cannot hold AV1 there.
+  Clips are now written by the recorder itself, in a few milliseconds instead of a tenth of a second,
+  and start playing before they are fully loaded.
 - **Play time survives a crash or a quit.** It is saved every minute while a game runs, and once
   more when AW Next closes, instead of only when the game exits, so a power cut loses a minute at
   most.

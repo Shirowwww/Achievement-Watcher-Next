@@ -125,9 +125,31 @@ Everything runs on parts of Windows, with no third-party media library:
 - **Sound**: WASAPI process loopback on the game's process tree, or the default output device, at
   48 kHz, encoded by Windows' AAC encoder and timed on the same performance counter as the video.
 - **Saving**: packets live in a ring in memory (`ring.rs`). A clip is cut from the keyframe before its
-  start, its times rebased to zero, and written by the sink writer with the encoders' own output types
-  as input types, so nothing is encoded twice. Unlocks that land before a clip has ended extend it, up
-  to 60 seconds.
+  start, its times rebased to zero, and written to MP4 by the recorder itself (`mp4.rs`, `codec.rs`),
+  so nothing is encoded twice. Unlocks that land before a clip has ended extend it, up to 60 seconds.
+
+## MP4 writing
+
+Windows' own MP4 writer (the sink writer over `mfmp4srcsnk.dll`) is not used. It has no `av01` sample
+entry on Windows 10 or on Windows 11 before the 22H2 update of August 2023 (22621.2215, checked in
+every x64 build listed by Winbindex), so AV1 clips failed there with `MF_E_SINK_HEADERS_NOT_FOUND`
+(issue #151). The recorder's own writer works the same everywhere and takes 2 to 6 ms for a 10-second
+1080p60 clip, where the sink writer took 55 to 110 ms.
+
+- **Layout**: `ftyp`, then `moov`, then one `mdat` with video and audio in half-second chunks, so a
+  clip starts playing before it is read to the end. 64-bit offsets only past 4 GB.
+- **Video**: H.264 and HEVC samples arrive as Annex B. They are rewritten with four-byte lengths, and
+  the access unit delimiters and the parameter sets that the `avcC` or `hvcC` record already holds are
+  left out (`avc1` and `hvc1` keep them in the record). The record is built from the first keyframe's
+  own parameter sets. AV1 samples lose their temporal delimiters, and a keyframe without a sequence
+  header gets one, as AV1-ISOBMFF requires. `av1C` is read from the sequence header OBU. A `colr` box
+  states BT.709 limited range.
+- **Timing**: video at 90 kHz from the recorded times, so a variable frame rate stays exact. Sound
+  that starts a few milliseconds after the first frame is shifted with a `ctts` offset, as the sink
+  writer did: Windows' player ignores an empty edit list.
+
+`cargo test` in this crate checks the records against the ones Windows wrote for the same encoder
+output, reads every sample back through the tables, and has Media Foundation open an AV1 clip.
 
 The Watchdog talks to it over stdin and stdout, one line per message:
 
@@ -142,10 +164,10 @@ all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the firs
 and restarting the recorder. Exit codes 2 (bad arguments), 3 (no Media Foundation) and 4 (no encoder at
 all, after `error no-encoder`) are not restarted.
 
-A clip is written under `<path>.part` and renamed. If writing fails midway, the file is closed so that
-what was written plays, checked by reading its first picture, and kept under the final name with a
-`saved-partial` line when it holds at least a second of video. Otherwise it is deleted. A finished file
-that cannot be renamed stays as `<path>.part`, since it is the only copy.
+A clip is written under `<path>.part` and renamed. If writing fails midway (a full disk), the file is
+written again as the longest clip that fits in the bytes the failed write managed, and kept under the
+final name with a `saved-partial` line when it holds at least a second of video. Otherwise it is
+deleted. A finished file that cannot be renamed stays as `<path>.part`, since it is the only copy.
 
 `writing <path>` comes before each write, which ends with `saved`, `saved-partial` or
 `error write-failed`. In between, the Watchdog does not kill the recorder, neither when it goes silent
