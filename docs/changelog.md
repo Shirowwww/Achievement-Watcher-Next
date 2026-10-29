@@ -95,6 +95,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Screenshots and clips are named after the achievement first**, then the date
   (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
   achievement's shots. Files saved earlier keep their name.
+- **A game's own platinum achievement is the platinum.** When a Steam game has an achievement for
+  earning all the others (Elden Ring, Hades II, Dark Souls...), its unlock now shows as the platinum
+  popup with its own name and icon, instead of a normal popup followed by a second one at 100%.
 - **Playtime down to the second.** Settings > Appearance > Library tiles > Playtime has a third
   choice, Down to the second, for the tiles and the game page ("59 hours, 36 minutes, 12 seconds").
 - **Cut text scrolls on hover everywhere.** The status line of the title bar and the names in the

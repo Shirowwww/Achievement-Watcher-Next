@@ -1,0 +1,591 @@
+{
+  "240": {
+    "game": "Counter-Strike: Source",
+    "achievements": [
+      {
+        "name": "WIN_ROUNDS_LOW",
+        "description": "Win 10 rounds",
+        "displayName": "Newb World Order",
+        "rarityPercent": 61.3
+      },
+      {
+        "name": "GIVE_DAMAGE_LOW",
+        "description": "Inflict 2,500 total points of damage to enemy players",
+        "displayName": "Points in Your Favor",
+        "rarityPercent": 63
+      },
+      {
+        "name": "RESCUE_HOSTAGES_MED",
+        "description": "Rescue 500 hostages",
+        "displayName": "SAR Czar",
+        "rarityPercent": 2.7
+      },
+      {
+        "name": "META_PISTOL",
+        "description": "Unlock all 6 Pistol kill achievements",
+        "displayName": "Pistol Master",
+        "rarityPercent": 5.9
+      },
+      {
+        "name": "META_RIFLE",
+        "description": "Unlock all 10 rifle kill achievements",
+        "displayName": "Rifle Master",
+        "rarityPercent": 3
+      },
+      {
+        "name": "META_SMG",
+        "description": "Unlock all 5 sub-machine gun kill achievements",
+        "displayName": "Sub-Machine Gun Master",
+        "rarityPercent": 3.1
+      },
+      {
+        "name": "META_WEAPONMASTER",
+        "description": "Unlock every weapon kill achievement",
+        "displayName": "Master At Arms",
+        "rarityPercent": 2.8
+      },
+      {
+        "name": "KILL_ENEMY_RELOADING",
+        "description": "Kill an enemy player while they are reloading",
+        "displayName": "Shot With Their Pants Down",
+        "rarityPercent": 62.6
+      },
+      {
+        "name": "WIN_MAP_CS_HAVANA",
+        "description": "Win 100 rounds on the CS_Havana map",
+        "displayName": "Havana Map Veteran",
+        "rarityPercent": 2.8
+      },
+      {
+        "name": "WIN_MAP_DE_TIDES",
+        "description": "Win 100 rounds on the DE_Tides map",
+        "displayName": "Tides Map Veteran",
+        "rarityPercent": 2.9
+      }
+    ]
+  },
+  "265930": {
+    "game": "Goat Simulator",
+    "achievements": [
+      {
+        "name": "ACH_FINALLY",
+        "description": "Become the master of the goat tower.",
+        "displayName": "FINALLY",
+        "rarityPercent": 54.4
+      },
+      {
+        "name": "ACH_ANGELGOAT",
+        "description": "Do no evil.",
+        "displayName": "Angel Goat",
+        "rarityPercent": 52.2
+      },
+      {
+        "name": "ACH_ALL_COLLECTIBLES",
+        "description": "Find all the trophies in Goat Ville!",
+        "displayName": "Try Hard",
+        "rarityPercent": 4.7
+      },
+      {
+        "name": "ACH_GOATFALL",
+        "description": "Finish all wallrun quest",
+        "displayName": "Stand by for Goatfall",
+        "rarityPercent": 50.5
+      },
+      {
+        "name": "ACH_ALL_COLLECTIBLES_LEVEL_2",
+        "description": "Find all the trophies in Goat City Bay.",
+        "displayName": "I freaking love goats",
+        "rarityPercent": 2.9
+      },
+      {
+        "name": "ACH_ALL_COLLECTIBLES_MMO",
+        "description": "Find all the trophies on the MMO Level.",
+        "displayName": "Love or Hate?",
+        "rarityPercent": 2.1
+      },
+      {
+        "name": "ACH_ALL_COLLECTIBLES_ZOMBIE",
+        "description": "Find all the trophies in GoatZ",
+        "displayName": "Hoarder",
+        "rarityPercent": 1.7
+      },
+      {
+        "name": "ACH_ALL_COLLECTIBLE_HEIST",
+        "description": "Find all the trophies on the Payday Level.",
+        "displayName": "The Big Score",
+        "rarityPercent": 1.9
+      },
+      {
+        "name": "ACH_NOT_AFRIGHT",
+        "description": "Destroy all freighters.",
+        "displayName": "Be not afreight",
+        "rarityPercent": 1.4
+      },
+      {
+        "name": "ACH_RULER_OF_SKIES",
+        "description": "Blow up all pirate ships.",
+        "displayName": "Ruler of the seven skies",
+        "rarityPercent": 1.4
+      },
+      {
+        "name": "ACH_BACON_MARAUDER",
+        "description": "Shoot down 30 police ships.",
+        "displayName": "Bacon marauder",
+        "rarityPercent": 1.4
+      },
+      {
+        "name": "ACH_MINER_INCONVENIENCE",
+        "description": "Destroy 100 asteroids.",
+        "displayName": "Miner inconvenience",
+        "rarityPercent": 1.4
+      },
+      {
+        "name": "ACH_NERD",
+        "description": "Find all trophies in Space.",
+        "displayName": "NERD!",
+        "rarityPercent": 1.4
+      }
+    ]
+  },
+  "570940": {
+    "game": "DARK SOULS: REMASTERED",
+    "achievements": [
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_00",
+        "description": "All achievements completed. Congratulations!",
+        "displayName": "The Dark Soul",
+        "rarityPercent": 8.1
+      },
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_03",
+        "description": "Acquire all rare weapons.",
+        "displayName": "Knight's Honor",
+        "rarityPercent": 8.3
+      },
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_06",
+        "description": "Acquire all miracles.",
+        "displayName": "Prayer of a Maiden",
+        "rarityPercent": 8.7
+      },
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_20",
+        "description": "Acquire best weapon through magic reinforcement.",
+        "displayName": "Magic Weapon",
+        "rarityPercent": 9.7
+      },
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_26",
+        "description": "Light bonfire flame.",
+        "displayName": "Enkindle",
+        "rarityPercent": 96.5
+      },
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_27",
+        "description": "Acquire Estus Flask.",
+        "displayName": "Estus Flask",
+        "rarityPercent": 93.9
+      },
+      {
+        "name": "ACHIEVEMENT_FRPG_ACHIEVEMENTS_28",
+        "description": "Arrive in Lordran.",
+        "displayName": "Reach Lordran",
+        "rarityPercent": 91.5
+      }
+    ]
+  },
+  "779340": {
+    "game": "Total War: THREE KINGDOMS",
+    "achievements": [
+      {
+        "name": "TK_ACHIEVEMENT_CAPTURE_A_REGION",
+        "description": "Playing as any faction, capture a region.",
+        "displayName": "First Steps",
+        "rarityPercent": 87.7
+      },
+      {
+        "name": "TK_ACHIEVEMENT_WIN_RANKED_MATCH",
+        "description": "Playing as any faction, win a ranked match in multiplayer mode.",
+        "displayName": "GG No Re!",
+        "rarityPercent": 0.8
+      },
+      {
+        "name": "TK_ACHIEVEMENT_MAKE_X_INCOME_SINGLE_TURN",
+        "description": "Playing as any faction, make 8,888 income in a single turn.",
+        "displayName": "A Land of Milk & Honey",
+        "rarityPercent": 72.2
+      },
+      {
+        "name": "TK_ACHIEVEMENT_CREATE_X_ALLIANCES_YUAN_SHAO",
+        "description": "Playing as Yuan Shao, form 6 alliances.",
+        "displayName": "One Hundred Thousand Troops",
+        "rarityPercent": 0.7
+      },
+      {
+        "name": "TK_ACHIEVEMENT_WIN_X_MULTIPLAYER_BATTLES",
+        "description": "Playing as any faction, win 222 battles in multiplayer mode.",
+        "displayName": "Frenemies",
+        "rarityPercent": 0.5
+      },
+      {
+        "name": "TK_ACHIEVEMENT_FIGHT_BATTLE_WITH_ALL_UNIT_GROUPS",
+        "description": "Playing as any faction, win a single battle with one of each unit type (Melee Cavalry; Shock Cavalry; Melee Infantry; Glaive & Spear Infantry; Ranged).",
+        "displayName": "Way of the Tao",
+        "rarityPercent": 79.8
+      },
+      {
+        "name": "TK_DLC04_ACHIEVEMENT_COLLECT_ALL_TROPHIES",
+        "description": "Playing as Prince Liu Chong, collect all trophies.",
+        "displayName": "Trophy Hunter",
+        "rarityPercent": 1.7
+      },
+      {
+        "name": "TK_DLC05_ACHIEVEMENT_YAN_BAIHU_15_ALLICES",
+        "description": "As Yan Baihu, achieve the highest level of the White Tiger Confederation pooled resource",
+        "displayName": "White Tiger Burning Bright",
+        "rarityPercent": 0.6
+      }
+    ]
+  },
+  "892970": {
+    "game": "Valheim",
+    "achievements": [
+      {
+        "name": "BuildHighWorld",
+        "description": "Build something very high up.",
+        "displayName": "Top of the World",
+        "rarityPercent": 0.1
+      },
+      {
+        "name": "DeathByAllTypes",
+        "description": "Die in every way possible.",
+        "displayName": "Are You Alright?",
+        "rarityPercent": 0.1
+      },
+      {
+        "name": "Arrived",
+        "description": "Enter the tenth world.",
+        "displayName": "I Have Arrived!",
+        "rarityPercent": 19.1
+      },
+      {
+        "name": "FirstDeath",
+        "description": "Meet your end, then prepare to do it all again...",
+        "displayName": "The First of Many",
+        "rarityPercent": 15.1
+      },
+      {
+        "name": "DeathByTreeAll",
+        "description": "Get killed by every kind of tree.",
+        "displayName": "That Can't Be an Accident",
+        "rarityPercent": 0.1
+      },
+      {
+        "name": "KillAllCreatures",
+        "description": "Kill every kind of creature.",
+        "displayName": "The Hunter",
+        "rarityPercent": 0.1
+      },
+      {
+        "name": "FindAllTrophies",
+        "description": "Collect all trophies.",
+        "displayName": "The Trophy Collector",
+        "rarityPercent": 0.1
+      },
+      {
+        "name": "BuildHouse",
+        "description": "Build a house.",
+        "displayName": "The Homesteader",
+        "rarityPercent": 12.4
+      }
+    ]
+  },
+  "1088850": {
+    "game": "Guardians of the Galaxy",
+    "achievements": [
+      {
+        "name": "NEW_ACHIEVEMENT_0",
+        "description": "Win every achievement.",
+        "displayName": "This Is What We Do",
+        "rarityPercent": 2.5
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_1",
+        "description": "Complete Chapter 1.",
+        "displayName": "A Risky Gamble",
+        "rarityPercent": 67
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_18",
+        "description": "Capture the Quarantine Zone monster.",
+        "displayName": "Llama Wrangler",
+        "rarityPercent": 67.3
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_26",
+        "description": "Purchase your first Star-Lord Ability.",
+        "displayName": "Self-Improvement",
+        "rarityPercent": 73.4
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_41",
+        "description": "Defeat 15 Staggered enemies with a Charged Shot.",
+        "displayName": "Set 'em Up, Knock 'em Down",
+        "rarityPercent": 3.8
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_55",
+        "description": "Find and equip all Outfits.",
+        "displayName": "Fashion Passion",
+        "rarityPercent": 2.9
+      },
+      {
+        "name": "NEW_ACHIEVEMENT_56",
+        "description": "Collect 65 % of all Gallactic Compendium entries of each category.",
+        "displayName": "Lore Hoarder",
+        "rarityPercent": 5.8
+      }
+    ]
+  },
+  "1113000": {
+    "game": "Persona 4 Golden",
+    "achievements": [
+      {
+        "name": "ACHIEVEMENT_000",
+        "description": "Earn all achievements",
+        "displayName": "Golden Completed",
+        "rarityPercent": 2.1
+      },
+      {
+        "name": "ACHIEVEMENT_001",
+        "description": "Rescue Yukiko Amagi.",
+        "displayName": "A Prince Appears",
+        "rarityPercent": 60.5
+      },
+      {
+        "name": "ACHIEVEMENT_023",
+        "description": "Defeat Margaret.",
+        "displayName": "One Who Has Proven Their Power",
+        "rarityPercent": 3.1
+      },
+      {
+        "name": "ACHIEVEMENT_034",
+        "description": "Obtain the Persona Izanagi.",
+        "displayName": "The Other Self",
+        "rarityPercent": 77.4
+      },
+      {
+        "name": "ACHIEVEMENT_035",
+        "description": "Create Izanagi-no-Okami.",
+        "displayName": "The Power of Truth",
+        "rarityPercent": 3.7
+      },
+      {
+        "name": "ACHIEVEMENT_037",
+        "description": "Complete the Persona Compendium.",
+        "displayName": "Thorough Bookkeeper",
+        "rarityPercent": 4.2
+      },
+      {
+        "name": "ACHIEVEMENT_047",
+        "description": "Enter a battle with Player Advantage.",
+        "displayName": "Advantage Mine",
+        "rarityPercent": 68.5
+      }
+    ]
+  },
+  "1145350": {
+    "game": "Hades II",
+    "achievements": [
+      {
+        "name": "AchClearErebus",
+        "description": "Clear Erebus",
+        "displayName": "Witch of the Woods",
+        "rarityPercent": 68.6
+      },
+      {
+        "name": "AchClearOceanus",
+        "description": "Clear Oceanus",
+        "displayName": "Witch of the Depths",
+        "rarityPercent": 61.7
+      },
+      {
+        "name": "AchClearFields",
+        "description": "Clear the Fields of Mourning",
+        "displayName": "Witch of the Plains",
+        "rarityPercent": 57.7
+      },
+      {
+        "name": "AchAllRandomStreak",
+        "description": "Fulfill the Prophecy 'Improbable Outcomes'",
+        "displayName": "Improbable Outcomes",
+        "rarityPercent": 5.4
+      },
+      {
+        "name": "AchAllRandomUnderworld",
+        "description": "Clear the 'Great Chaos Below' Trial",
+        "displayName": "Chaos in Hell",
+        "rarityPercent": 4.9
+      },
+      {
+        "name": "AchClearWithAllAspects",
+        "description": "Fulfill the Prophecy 'Bearing Dark Gifts'",
+        "displayName": "Bearing Dark Gifts",
+        "rarityPercent": 6
+      },
+      {
+        "name": "AchAllOtherAch",
+        "description": "Earn all other Achievements",
+        "displayName": "Goddess of Nightmares",
+        "rarityPercent": 4.2
+      }
+    ]
+  },
+  "1245620": {
+    "game": "ELDEN RING",
+    "achievements": [
+      {
+        "name": "ACH00",
+        "description": "Obtained all achievements",
+        "displayName": "Elden Ring",
+        "rarityPercent": 10.5
+      },
+      {
+        "name": "ACH03",
+        "description": "Achieved the \"Lord of Frenzied Flame\" ending",
+        "displayName": "Lord of Frenzied Flame",
+        "rarityPercent": 16.5
+      },
+      {
+        "name": "ACH04",
+        "description": "Defeated Shardbearer Godrick",
+        "displayName": "Shardbearer Godrick",
+        "rarityPercent": 65.1
+      },
+      {
+        "name": "ACH15",
+        "description": "Acquired all legendary ashen remains",
+        "displayName": "Legendary Ashen Remains",
+        "rarityPercent": 17.7
+      },
+      {
+        "name": "ACH16",
+        "description": "Acquired all legendary sorceries and incantations",
+        "displayName": "Legendary Sorceries and Incantations",
+        "rarityPercent": 17.2
+      },
+      {
+        "name": "ACH25",
+        "description": "Defeated Margit, the Fell Omen",
+        "displayName": "Margit, the Fell Omen",
+        "rarityPercent": 70.9
+      },
+      {
+        "name": "ACH39",
+        "description": "Arrived at Roundtable Hold",
+        "displayName": "Roundtable Hold",
+        "rarityPercent": 74.9
+      }
+    ]
+  },
+  "1703340": {
+    "game": "The Stanley Parable: Ultra Deluxe",
+    "achievements": [
+      {
+        "name": "first",
+        "description": "Awarded for getting any of the other achievements as your first.",
+        "displayName": "Get your first achievement",
+        "rarityPercent": 93.6
+      },
+      {
+        "name": "beatgame",
+        "description": "Complete The Stanley Parable.",
+        "displayName": "Beat the game",
+        "rarityPercent": 73.4
+      },
+      {
+        "name": "nojump",
+        "description": "No seriously, we disabled it.",
+        "displayName": "You can't jump",
+        "rarityPercent": 83.9
+      },
+      {
+        "name": "tuesday",
+        "description": "Play The Stanley Parable for the entire duration of a Tuesday.",
+        "displayName": "Commitment",
+        "rarityPercent": 3.1
+      },
+      {
+        "name": "speedrun",
+        "description": "Complete The Stanley Parable in under 4 minutes 22 seconds (not including load times).",
+        "displayName": "Speed run",
+        "rarityPercent": 9.4
+      },
+      {
+        "name": "settingsworldchamp",
+        "description": "Set all settings sliders in the menu to all the available numbers.",
+        "displayName": "Settings World Champion",
+        "rarityPercent": 16.5
+      },
+      {
+        "name": "supergooutside",
+        "description": "Don't play The Stanley Parable for ten years.",
+        "displayName": "Super Go Outside",
+        "rarityPercent": 4.5
+      }
+    ]
+  },
+  "2379780": {
+    "game": "Balatro",
+    "achievements": [
+      {
+        "name": "BAL_01",
+        "description": "Reach Ante 4",
+        "displayName": "Ante Up!",
+        "rarityPercent": 89.8
+      },
+      {
+        "name": "BAL_02",
+        "description": "Reach Ante 8",
+        "displayName": "Ante Upper!",
+        "rarityPercent": 74.5
+      },
+      {
+        "name": "BAL_10",
+        "description": "Play a Flush with 5 Wild Cards",
+        "displayName": "Flushed",
+        "rarityPercent": 3.9
+      },
+      {
+        "name": "BAL_16",
+        "description": "Score 10,000 Chips in a single hand",
+        "displayName": "10K",
+        "rarityPercent": 84.4
+      },
+      {
+        "name": "BAL_23",
+        "description": "Complete every challenge run",
+        "displayName": "Rule Breaker",
+        "rarityPercent": 2.2
+      },
+      {
+        "name": "BAL_29",
+        "description": "Discover 100% of your collection",
+        "displayName": "Completionist",
+        "rarityPercent": 4.3
+      },
+      {
+        "name": "BAL_30",
+        "description": "Win with every deck on Gold Stake difficulty",
+        "displayName": "Completionist+",
+        "rarityPercent": 1.7
+      },
+      {
+        "name": "BAL_31",
+        "description": "Earn a Gold Sticker on every Joker",
+        "displayName": "Completionist++",
+        "rarityPercent": 0.9
+      }
+    ]
+  }
+}

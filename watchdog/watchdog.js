@@ -113,6 +113,7 @@ const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
 const psnTrophyLink = require('./util/psnTrophyLink.js');
 const { withCompletionPopup } = require('./util/completionPopup.js');
+const { platinumLikeForGame } = require('./util/platinumLike.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
@@ -1329,6 +1330,11 @@ var app = {
             let platinumNewUnlock = false;
             let platinumIcon = null;
             const psnLink = psnTrophyLink.readLink(game.appid);
+            // The game's own "every achievement" one, popped as the platinum in place of the 100% one.
+            if (game.__platinumLike === undefined) game.__platinumLike = platinumLikeForGame(game, self.options.achievement.lang, rarityMap);
+            const platinumLike = self.options.notification.platinum !== false ? game.__platinumLike : null;
+            let platinumLikeShown = false;
+            const platinumTitle = notifyStrings.forLang(self.options.achievement.lang).platinumTitle;
 
             let j = 0;
             // Shown once the scan is done: a shared stat moves several achievements at once.
@@ -1429,7 +1435,9 @@ var app = {
                         notifyStrings.forLang(self.options.achievement.lang).rare,
                         { percent: rounded }
                       );
-                      const attribution = isRare ? `${game.name} · ${rarityLabel}` : game.name;
+                      const isPlatinumLike = ach.name === platinumLike;
+                      if (isPlatinumLike) debug.log(`Platinum (own achievement): ${game.name} - ${ach.displayName}`);
+                      const attribution = isPlatinumLike ? `${game.name} · ${platinumTitle}` : isRare ? `${game.name} · ${rarityLabel}` : game.name;
 
                       await notify(
                         {
@@ -1450,6 +1458,7 @@ var app = {
                           trophyGrade: psnTrophyLink.linkedGrade(self.options, psnLink, ach.name),
                           time: achievements[i].UnlockTime,
                           delay: j,
+                          ...(isPlatinumLike ? { notificationType: 'platinum', realPlatinum: true } : {}),
                         },
                         {
                           notify: self.options.notification.notify,
@@ -1475,6 +1484,7 @@ var app = {
                       );
 
                       j += 1;
+                      if (isPlatinumLike) platinumLikeShown = true;
                       platinumNewUnlock = true;
                       platinumIcon = notificationAchievementIcon(game, ach, true);
                     } else {
@@ -1572,7 +1582,9 @@ var app = {
               platinumTotal > 0 &&
               platinumPrevUnlocked < platinumTotal &&
               platinumNowUnlocked >= platinumTotal &&
-              self.options.notification.platinum !== false
+              self.options.notification.platinum !== false &&
+              // Its own platinum achievement popped as the platinum, now or on an earlier read.
+              !(platinumLikeShown || Boolean(platinumLike && previousIndex.byName.get(platinumLike)?.Achieved))
             ) {
               debug.log(`Platinum (100%): ${game.name}`);
               const wdStrings = notifyStrings.forLang(self.options.achievement.lang);
