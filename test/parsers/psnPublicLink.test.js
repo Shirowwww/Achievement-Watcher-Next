@@ -65,7 +65,7 @@ test('without an account a game is tied to its archive list and its real platinu
   assert.equal(link.locale, 'fr-FR');
   assert.deepEqual(link.platinum, { id: '0', name: 'Maître', description: 'Tous les trophées', icon: 'https://img/0.png' }, 'the platinum reads in the app language');
   assert.deepEqual(link.trophies, { A1: { type: 'B' }, A2: { type: 'G' }, A3: { type: 'S' } }, 'English names matched through the English list');
-  assert.ok(!net.calls.some((url) => url.includes('playstation.com')), 'no Sony request without a token');
+  assert.ok(!net.calls.some((url) => /(^|\.)playstation\.com$/.test(new URL(url).hostname)), 'no Sony request without a token');
 });
 
 test('the index is downloaded once a week, and a failed download keeps the cached copy', async () => {

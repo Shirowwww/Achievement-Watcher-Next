@@ -61,7 +61,7 @@
     loadedCss[id] = new Promise(function (resolve) {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'layout-' + id + '.css';
+      link.href = 'layout-' + encodeURIComponent(id) + '.css';
       link.onload = link.onerror = function () {
         // Loaded after another layout's card was drawn: it waits for its own card.
         if (link.sheet && currentLayout !== null) link.sheet.disabled = currentLayout !== id;

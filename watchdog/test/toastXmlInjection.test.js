@@ -32,9 +32,24 @@ const count = (xml, pattern) => (xml.replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '').ma
 
 // What a reader of the document sees as the content of each <text>: its CDATA sections, joined.
 function textsOf(xml) {
-  return [...xml.matchAll(/<text(?: [^>]*)?>((?:<!\[CDATA\[[\s\S]*?\]\]>)+)<\/text>/g)].map((match) =>
-    [...match[1].matchAll(/<!\[CDATA\[([\s\S]*?)\]\]>/g)].map((part) => part[1]).join('')
-  );
+  const texts = [];
+  const open = /<text(?: [^>]*)?>/g;
+  const section = /<!\[CDATA\[([\s\S]*?)\]\]>/y;
+  while (open.exec(xml)) {
+    const parts = [];
+    let at = open.lastIndex;
+    for (section.lastIndex = at; ; section.lastIndex = at) {
+      const part = section.exec(xml);
+      if (!part) break;
+      parts.push(part[1]);
+      at = section.lastIndex;
+    }
+    if (parts.length && xml.startsWith('</text>', at)) {
+      texts.push(parts.join(''));
+      open.lastIndex = at + '</text>'.length;
+    }
+  }
+  return texts;
 }
 
 test('a description carrying a CDATA terminator stays text and adds no element', async () => {

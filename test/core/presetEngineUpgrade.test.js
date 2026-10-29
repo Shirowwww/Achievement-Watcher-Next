@@ -32,7 +32,7 @@ test('a page with an older engine gets the current one, and nothing else of it c
   const upgraded = customPreset.upgradeEngineHtml(OLD_PAGE);
   assert.ok(upgraded, 'the 3.9.2 page was not recognised');
   assert.ok(layerTool.isLayerableHtml(upgraded), 'the upgraded page is not a base');
-  const outside = (html) => html.replace(/<script>[\s\S]*<\/script>/, '<script></script>');
+  const outside = (html) => html.replace(/<script>[\s\S]*<\/script\s*>/i, '<script></script>');
   assert.equal(outside(upgraded), outside(OLD_PAGE));
   assert.equal(customPreset.upgradeEngineHtml(upgraded), null, 'an upgraded page is upgraded once');
   // Saved with Windows line endings, it is the same script.
@@ -40,7 +40,7 @@ test('a page with an older engine gets the current one, and nothing else of it c
 });
 
 test('a page that runs anything but one of our engines is never touched', () => {
-  const script = /<script>([\s\S]*)<\/script>/.exec(OLD_PAGE)[1];
+  const script = /<script>([\s\S]*)<\/script\s*>/i.exec(OLD_PAGE)[1];
   const cases = {
     'a changed engine': OLD_PAGE.replace(script, `${script}\nfetch('https://example.com');`),
     'a second script': OLD_PAGE.replace('</body>', '<script>alert(1)</script></body>'),
