@@ -105,15 +105,27 @@ function storeQuota(saved, now) {
   return { since: sameDay ? Number(saved.since) : now, used: sameDay ? Number(saved.used) || 0 : 0, pausedUntil: Number(saved && saved.pausedUntil) || 0 };
 }
 
-function englishAchievements(lib, appid) {
-  if (!/^\d+$/.test(appid)) return null;
-  const schema = lib.readJson(path.join(userData, 'steam_cache', 'schema', 'english', `${appid}.json`));
-  const list = schema && schema.achievement && schema.achievement.list;
-  return Array.isArray(list) ? list.map(cleanAchievement) : null;
+function englishAchievements(links, appid) {
+  const list = links.englishAchievementsOf(userData, appid);
+  return list ? list.map(cleanAchievement) : null;
 }
 
-async function linkPsnGames(games) {
-  if (!(await psnAuth().status({ userDataDir: userData })).connected) return;
+// No account: the public archive and Exophase stand in for Sony, on their own daily budget.
+async function linkPsnGamesWithoutAccount(games) {
+  const lib = require(path.join(__dirname, '../parser/psnLibrary.js'));
+  const links = require(path.join(__dirname, '../parser/psnTrophyLink.js'));
+  lib.setUserDataPath(userData);
+  const linked = await require(path.join(__dirname, '../parser/psnPublicLink.js')).linkGames(games, {
+    lang: psnCatalogOptions().lang,
+    english: (appid) => englishAchievements(links, appid),
+  });
+  debug.log(`[psn] public trophy links: ${linked} new game(s) tied to their PlayStation list`);
+  const win = getMainWindow();
+  if (linked > 0 && win && !win.isDestroyed()) win.webContents.send('psn:links-changed');
+}
+
+async function linkPsnGames(games, { withoutAccount = true } = {}) {
+  if (!(await psnAuth().status({ userDataDir: userData })).connected) return withoutAccount ? linkPsnGamesWithoutAccount(games) : undefined;
   await psnCatalog().refreshInBackground(psnCatalogOptions());
   const lib = require(path.join(__dirname, '../parser/psnLibrary.js'));
   const links = require(path.join(__dirname, '../parser/psnTrophyLink.js'));
@@ -127,7 +139,7 @@ async function linkPsnGames(games) {
   try {
     for (const game of games) {
       if (links.isFresh(game.appid, ctx.locale)) continue;
-      if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(lib, game.appid), budget })) linked += 1;
+      if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(links, game.appid), budget })) linked += 1;
     }
   } catch (err) {
     if (err && err.code === 'psn-rate-limited') quota.pausedUntil = Date.now() + RATE_LIMIT_PAUSE_MS;
@@ -140,10 +152,10 @@ async function linkPsnGames(games) {
   if (linked > 0 && win && !win.isDestroyed()) win.webContents.send('psn:links-changed');
 }
 
-ipcMain.handle('psn:link-games', (_event, games) => {
+ipcMain.handle('psn:link-games', (_event, games, request) => {
   if (psnLinking || !Array.isArray(games)) return { ok: true, started: false };
   const cleaned = games.slice(0, MAX_LINKED_GAMES).map(cleanLinkGame).filter(Boolean);
-  psnLinking = linkPsnGames(cleaned)
+  psnLinking = linkPsnGames(cleaned, { withoutAccount: !(request && request.withoutAccount === false) })
     .catch((err) => debug.log(`[psn] trophy links stopped: ${errorCode(err)}`))
     .finally(() => {
       psnLinking = null;

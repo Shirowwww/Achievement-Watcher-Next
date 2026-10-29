@@ -486,8 +486,10 @@ async function fetchExophaseAchievementsMultiLang(options = {}) {
     let baseHtml = '';
     let firstErr = null;
     const deadline = Number(options.deadline) || Date.now() + LOOKUP_DEADLINE_MS;
+    // A page found by the search is asked for as is, without guessing its address again.
+    const exactPages = options.baseUrl ? [String(options.baseUrl)] : null;
     outer: for (const slug of slugCandidates) {
-      for (const candidateBase of buildBaseUrlCandidates(slug, platform)) {
+      for (const candidateBase of exactPages || buildBaseUrlCandidates(slug, platform)) {
         if (Date.now() >= deadline) {
           firstErr = firstErr || new Error('Exophase lookup ran out of time');
           break outer;
@@ -745,6 +747,32 @@ async function searchExophaseTitles(query, platform) {
     .filter(Boolean);
 }
 
+const TROPHY_PAGE_RE = /^https:\/\/www\.exophase\.com\/game\/([a-z0-9-]+)\/trophies\/$/;
+
+/*
+  [{ title, slug, platform, baseUrl }] for a name among Exophase's PlayStation lists (PS4 and PS5
+  in one search); `platform` is 'ps4' or 'ps5', `baseUrl` the trophy page found.
+*/
+async function searchExophaseTrophyLists(query, { requestImpl = request } = {}) {
+  // An unreachable host is a failure, not an empty answer: the caller would record "no list" for days.
+  if (circuit.unavailable()) throw new Error('Exophase is unreachable; not retried for the rest of the cooldown');
+  if (!String(query || '').trim()) return [];
+  const { body } = await requestImpl(`${EXOPHASE_SEARCH_URL}psn?q=${encodeURIComponent(query)}`, {
+    timeout: STATIC_TIMEOUT_MS,
+    headers: { 'User-Agent': DEFAULT_UA, Accept: 'application/json' },
+  });
+  const parsed = typeof body === 'string' ? JSON.parse(body) : body;
+  const list = (parsed && parsed.games && Array.isArray(parsed.games.list) && parsed.games.list) || [];
+  return list
+    .map((game) => {
+      const page = String((game && game.endpoint_awards) || '').match(TROPHY_PAGE_RE);
+      const consoles = ((game && Array.isArray(game.platforms) && game.platforms) || []).map((entry) => String((entry && entry.slug) || '').toLowerCase());
+      const platform = ['ps5', 'ps4'].find((name) => consoles.includes(name));
+      return page && platform ? { title: String(game.title || ''), slug: page[1], platform, baseUrl: page[0] } : null;
+    })
+    .filter(Boolean);
+}
+
 // Rarity from one known page slug rather than slugs guessed from a name.
 async function fetchExophaseRarityBySlug({ slug, platform, achievements = [] } = {}) {
   const exo = await fetchExophaseAchievementsMultiLang({ slug, platform: mapExophasePlatform(platform), langKeys: ['english'], langMap: EXOPHASE_LANG_MAP });
@@ -797,4 +825,5 @@ module.exports.buildExophaseRaritySlugCandidates = buildExophaseRaritySlugCandid
 module.exports.matchExophaseRarityToAchievements = matchExophaseRarityToAchievements;
 module.exports.fetchExophaseRarity = fetchExophaseRarity;
 module.exports.searchExophaseTitles = searchExophaseTitles;
+module.exports.searchExophaseTrophyLists = searchExophaseTrophyLists;
 module.exports.fetchExophaseRarityBySlug = fetchExophaseRarityBySlug;

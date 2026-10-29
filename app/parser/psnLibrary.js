@@ -338,11 +338,12 @@ const unlessAccessError = (fallback) => (err) => {
 };
 
 // A list's trophies and DLC groups in the context's language, whoever played it.
+// Without a token (no account connected) Sony is not asked at all: the archive answers alone.
 async function fetchDefinitions(ctx, title, { withGroups = Number(title.trophyGroupCount) > 1 } = {}) {
   const listId = normalizeListId(title.npCommunicationId);
   const query = `npServiceName=${trophyService(title)}`;
-  let definitions = await psnRequest(ctx, `${API_ROOT}/trophy/v1/npCommunicationIds/${listId}/trophyGroups/all/trophies?${query}`).catch(unlessAccessError(null));
-  let groups = withGroups ? await psnRequest(ctx, `${API_ROOT}/trophy/v1/npCommunicationIds/${listId}/trophyGroups?${query}`).catch(unlessAccessError(null)) : null;
+  let definitions = ctx.token ? await psnRequest(ctx, `${API_ROOT}/trophy/v1/npCommunicationIds/${listId}/trophyGroups/all/trophies?${query}`).catch(unlessAccessError(null)) : null;
+  let groups = ctx.token && withGroups ? await psnRequest(ctx, `${API_ROOT}/trophy/v1/npCommunicationIds/${listId}/trophyGroups?${query}`).catch(unlessAccessError(null)) : null;
   if (!definitions || !Array.isArray(definitions.trophies)) {
     const archived = await fetchArchivedList(ctx, listId);
     definitions = archived;
@@ -456,13 +457,17 @@ async function addOtherList(ctx, title, holderAccountId) {
   return writeGame({ title, name, img, ...trophies, earned: rates }, { added: true, locale: ctx.locale });
 }
 
+const localeFor = (options) => options.locale || PSN_LOCALES[String(options.lang || '').toLowerCase()] || require('./xboxPc.js').xboxLocaleForLang(options.lang);
+
 async function createContext(options = {}) {
   const auth = options.auth || require('../util/psnAuth.js');
   const token = await auth.accessToken(options.authOptions);
   if (!token) throw apiError('psn-not-connected');
-  const locale = options.locale || PSN_LOCALES[String(options.lang || '').toLowerCase()] || require('./xboxPc.js').xboxLocaleForLang(options.lang);
-  return { token, locale, fetchImpl: options.fetchImpl || fetch };
+  return { token, locale: localeFor(options), fetchImpl: options.fetchImpl || fetch };
 }
+
+// No account: only the public archive can be read through it.
+const publicContext = (options = {}) => ({ token: null, locale: localeFor(options), fetchImpl: options.fetchImpl || fetch });
 
 /*
   Every trophy list of the account, most recently played first. A list whose last update has not
@@ -590,6 +595,8 @@ module.exports = {
   readJson,
   writeJson,
   createContext,
+  publicContext,
+  fetchArchivedList,
   psnRequest,
   apiError,
   unlessAccessError,

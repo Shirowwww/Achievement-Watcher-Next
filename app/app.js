@@ -573,7 +573,8 @@ function psnPlatinumRow(game) {
 async function paintLinkedPlatinumRate(game) {
   const link = psnLinkOf(game);
   const platinum = linkedPlatinumOf(game);
-  if (!link || !link.listId || !platinum || platinum.id == null) return;
+  // Only Sony's own list ids have rates: a link made from Exophase (`exophase:<slug>`) has none.
+  if (!link || !/^NPWR\d{5}_\d{2}$/.test(String(link.listId)) || !platinum || platinum.id == null) return;
   const service = link.service || (link.platform === 'PS5' ? 'trophy2' : 'trophy');
   const answer = await ipcRenderer.invoke('psn:trophy-rates', { npCommId: link.listId, service }).catch(() => null);
   const entry = answer && answer.ok && Array.isArray(answer.entries) ? answer.entries.find((candidate) => candidate.name === platinum.id) : null;
@@ -592,7 +593,9 @@ function requestPsnTrophyLinks(list) {
       name: game.name,
       achievements: game.achievement.list.map(({ name, displayName, description }) => ({ name, displayName, description })),
     }));
-  if (games.length) ipcRenderer.invoke('psn:link-games', games).catch((err) => debug.log(`[psn] trophy links not started: ${err.message || err}`));
+  // Without an account the links only serve the platinum popup, so they follow its setting.
+  const withoutAccount = !(app.config && app.config.notification && app.config.notification.platinum === false);
+  if (games.length) ipcRenderer.invoke('psn:link-games', games, { withoutAccount }).catch((err) => debug.log(`[psn] trophy links not started: ${err.message || err}`));
 }
 
 ipcRenderer.on('psn:links-changed', () => psnTrophyLinks.clear());

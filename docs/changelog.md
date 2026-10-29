@@ -98,6 +98,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A game's own platinum achievement is the platinum.** When a Steam game has an achievement for
   earning all the others (Elden Ring, Hades II, Dark Souls...), its unlock now shows as the platinum
   popup with its own name and icon, instead of a normal popup followed by a second one at 100%.
+- **The real PlayStation platinum without a PSN account.** For games that also came out on
+  PlayStation, the 100% popup now uses the real platinum's name, description and icon even with no
+  account connected, from a public archive of PS3 and PS4 trophy lists and from Exophase for PS5.
+  Turning the platinum popup off also stops these lookups.
 - **Playtime down to the second.** Settings > Appearance > Library tiles > Playtime has a third
   choice, Down to the second, for the tiles and the game page ("59 hours, 36 minutes, 12 seconds").
 - **Cut text scrolls on hover everywhere.** The status line of the title bar and the names in the

@@ -128,19 +128,30 @@ function buildLink(candidate, definitions, groups, matched, locale) {
   Without that copy the game's own texts are tried against the English trophies: a store with no
   translation (LEGO Batman: Legacy of the Dark Knight) answers in English whatever was asked.
 */
-async function linkGame(ctx, game, { englishCtx = null, english = null, budget = null } = {}) {
-  const { lists, settled } = await findCandidates(ctx, game.name, budget);
-  if (!settled) return null;
+const sonyLoader = (ctx, englishCtx) => (candidate) => {
+  const title = { npCommunicationId: candidate.id, npServiceName: candidate.service };
+  return {
+    definitions: () => lib.fetchDefinitions(ctx, title, { withGroups: true }),
+    english: englishCtx ? async () => (await lib.fetchDefinitions(englishCtx, title, { withGroups: false })).definitions : null,
+  };
+};
+
+/*
+  The candidate list whose trophies match the most achievements, above MIN_MATCHED and MIN_SHARE, or
+  null. `load(candidate)` gives { definitions(), english() }: the list in the link's language, and
+  the same trophies in English (same trophyId) for a second chance, or no `english` at all.
+*/
+async function bestCandidate(game, lists, load, english) {
   const englishTexts = Array.isArray(english) ? english : game.achievements;
   let best = null;
   for (const candidate of lists) {
-    const title = { npCommunicationId: candidate.id, npServiceName: candidate.service };
-    const { definitions, groups } = await lib.fetchDefinitions(ctx, title, { withGroups: true });
+    const source = load(candidate);
+    const { definitions, groups } = await source.definitions();
     const trophies = (definitions && definitions.trophies) || [];
     const { matched, size } = matchTrophies(game.achievements, trophies);
     const comparable = Math.min(game.achievements.length, size);
-    if (englishCtx && matched.size < comparable) {
-      const englishDefs = (await lib.fetchDefinitions(englishCtx, title, { withGroups: false })).definitions;
+    if (source.english && matched.size < comparable) {
+      const englishDefs = await source.english();
       const byId = new Map(trophies.map((trophy) => [trophy.trophyId, trophy]));
       const englishMatched = matchTrophies(englishTexts, (englishDefs && englishDefs.trophies) || []).matched;
       for (const [name, trophy] of englishMatched) if (!matched.has(name) && byId.has(trophy.trophyId)) matched.set(name, byId.get(trophy.trophyId));
@@ -148,9 +159,32 @@ async function linkGame(ctx, game, { englishCtx = null, english = null, budget =
     const needed = Math.max(MIN_MATCHED, Math.ceil(MIN_SHARE * comparable));
     if (matched.size >= needed && (!best || matched.size > best.matched.size)) best = { candidate, definitions, groups, matched };
   }
-  const link = best ? buildLink(best.candidate, best.definitions, best.groups, best.matched, ctx.locale) : { version: LINK_VERSION, checkedAt: Date.now(), locale: ctx.locale, listId: null };
-  lib.writeJson(linkFile(game.appid), link);
+  return best;
+}
+
+// The link of `best`, or a miss remembered for MISS_MAX_AGE_MS; null when nothing matched.
+function saveLink(appid, best, locale) {
+  const link = best ? buildLink(best.candidate, best.definitions, best.groups, best.matched, locale) : { version: LINK_VERSION, checkedAt: Date.now(), locale, listId: null };
+  lib.writeJson(linkFile(appid), link);
   return link.listId ? link : null;
 }
 
-module.exports = { readLink, isFresh, candidatesFor, matchTrophies, linkGame, linkFile };
+async function linkGame(ctx, game, { englishCtx = null, english = null, budget = null } = {}) {
+  const { lists, settled } = await findCandidates(ctx, game.name, budget);
+  if (!settled) return null;
+  return saveLink(game.appid, await bestCandidate(game, lists, sonyLoader(ctx, englishCtx), english), ctx.locale);
+}
+
+/*
+  The game's achievements in English, from the Steam schema cache (`<appid>.db`, JSON inside), for
+  the second chance against English trophies. Only Steam appids have one.
+*/
+function englishAchievementsOf(userDataDir, appid) {
+  if (!/^\d+$/.test(String(appid || ''))) return null;
+  const schema = lib.readJson(path.join(userDataDir, 'steam_cache', 'schema', 'english', `${appid}.db`));
+  const list = schema && schema.achievement && schema.achievement.list;
+  if (!Array.isArray(list)) return null;
+  return list.map((entry) => ({ name: String((entry && entry.name) || ''), displayName: String((entry && entry.displayName) || ''), description: String((entry && entry.description) || '') }));
+}
+
+module.exports = { readLink, isFresh, candidatesFor, bareName, matchTrophies, bestCandidate, saveLink, linkGame, linkFile, englishAchievementsOf, MAX_CANDIDATES };
