@@ -119,6 +119,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Installed Ubisoft Connect games show up before their first achievement.** A game with nothing
+  unlocked yet was missing from the library, since Ubisoft Connect writes its progress file only at
+  the first unlock. It is now listed at 0, and that first unlock is notified.
 - **Steam set to Installed no longer lists games that are not installed.** A game Windows still
   marked as installed, with no install left on disk, stayed in the list as not installed.
 - **Settings and saved data survive a locked or damaged file.** A settings file held for a moment by

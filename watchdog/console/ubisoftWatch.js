@@ -312,18 +312,28 @@ function indexedUplayName(uplayId, files = [
   return '';
 }
 
-function discover() {
-  const targets = [];
-  const spoolRoot = defaultSpoolRoot();
-  let userDirs = [];
+// One folder per Ubisoft account. Each is watched even when it holds no spool yet, since an
+// installed game gets its spool only at its first unlock.
+function spoolUserDirs(spoolRoot = defaultSpoolRoot()) {
   try {
-    userDirs = fs.readdirSync(spoolRoot, { withFileTypes: true });
+    return fs
+      .readdirSync(spoolRoot, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(spoolRoot, entry.name));
   } catch {
-    return targets;
+    return [];
   }
-  for (const userDir of userDirs) {
-    if (!userDir.isDirectory()) continue;
-    const dir = path.join(spoolRoot, userDir.name);
+}
+
+// The target a spool file name stands for, or null for any other file.
+function spoolTarget(name, spoolDir) {
+  const match = path.basename(String(name || '')).match(/^(\d+)\.spool$/i);
+  return match ? { appid: match[1], spoolDir, spoolFilePath: path.join(spoolDir, match[0]) } : null;
+}
+
+function discover(spoolRoot) {
+  const targets = [];
+  for (const dir of spoolUserDirs(spoolRoot)) {
     let files = [];
     try {
       files = fs.readdirSync(dir);
@@ -331,9 +341,8 @@ function discover() {
       continue;
     }
     for (const file of files) {
-      const match = file.match(/^(\d+)\.spool$/i);
-      if (!match) continue;
-      targets.push({ appid: match[1], spoolDir: dir, spoolFilePath: path.join(dir, file) });
+      const target = spoolTarget(file, dir);
+      if (target) targets.push(target);
     }
   }
   return targets;
@@ -349,11 +358,10 @@ async function handleChange(target, ctx) {
     const records = readSpool(target.spoolFilePath);
     if (!records.length) return;
 
-    const cache = cacheLoad(target.appid);
-    const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
+    const known = baselineFor(target, cacheLoad(target.appid), records);
 
-    if (!isFirstObservation) {
-      const prev = new Set(cache.unlocked);
+    if (known) {
+      const prev = new Set(known);
       // schema loaded lazily, only when there is something new to toast
       let schema = null;
       let delay = 0;
@@ -424,16 +432,19 @@ module.exports.start = async (ctx) => {
     debug.warn(`[ubisoft] discovery failed: ${err}`);
     return;
   }
-  if (targets.length === 0) return;
+  const spoolDirs = spoolUserDirs();
+  if (spoolDirs.length === 0) return;
 
   const titles = readTitles();
-  const watchedDirs = new Set();
+  // resolve a display name: archive spec title match is complex - configurations titles are keyed
+  // by spec, so best effort: gameIndex (the app's resolved identity) first, then any title whose
+  // spec starts with the product id, else a generic label. Never "Steam"/"Ubisoft Connect".
+  const nameFor = (appid) => {
+    const titleKey = Array.from(titles.keys()).find((k) => k.startsWith(`${appid}_`));
+    return indexedUplayName(appid) || (titleKey && titles.get(titleKey)) || `Ubisoft ${appid}`;
+  };
   for (const target of targets) {
-    // resolve a display name: archive spec title match is complex - configurations titles are keyed
-    // by spec, so best effort: gameIndex (the app's resolved identity) first, then any title whose
-    // spec starts with the product id, else a generic label. Never "Steam"/"Ubisoft Connect".
-    const titleKey = Array.from(titles.keys()).find((k) => k.startsWith(`${target.appid}_`));
-    target.name = indexedUplayName(target.appid) || (titleKey && titles.get(titleKey)) || `Ubisoft ${target.appid}`;
+    target.name = nameFor(target.appid);
 
     // Seed the baseline up front so we never replay a back-catalogue of unlocks on launch.
     if (!cacheLoad(target.appid)) {
@@ -446,23 +457,44 @@ module.exports.start = async (ctx) => {
   }
 
   // one watcher per user dir (several spools share it)
-  for (const target of targets) {
-    if (watchedDirs.has(target.spoolDir)) continue;
-    watchedDirs.add(target.spoolDir);
-    const dirTargets = targets.filter((t) => t.spoolDir === target.spoolDir);
+  const startedAt = moment().unix();
+  for (const spoolDir of spoolDirs) {
+    const dirTargets = targets.filter((t) => t.spoolDir === spoolDir);
     try {
-      const w = watch(target.spoolDir, { recursive: false, filter: /\.spool$/i }, (evt, name) => {
+      const w = watch(spoolDir, { recursive: false, filter: /\.spool$/i }, (evt, name) => {
         if (evt !== 'update' || !name) return;
-        const hit = dirTargets.find((t) => path.basename(String(name)).toLowerCase() === path.basename(t.spoolFilePath).toLowerCase());
-        if (hit) changes.run(hit.appid, () => handleChange(hit, ctx));
+        const hit = matchSpoolTarget(dirTargets, name, spoolDir, startedAt);
+        if (!hit) return;
+        if (!hit.name) hit.name = nameFor(hit.appid);
+        changes.run(hit.appid, () => handleChange(hit, ctx));
       });
-      watchers.push(guardWatcher(w, `'${target.spoolDir}'`, debug));
-      debug.log(`[ubisoft] watching ${dirTargets.length} spool(s) in ${target.spoolDir}`);
+      watchers.push(guardWatcher(w, `'${spoolDir}'`, debug));
+      debug.log(`[ubisoft] watching ${dirTargets.length} spool(s) in ${spoolDir}`);
     } catch (err) {
-      debug.warn(`[ubisoft] failed to watch ${target.spoolDir}: ${err}`);
+      debug.warn(`[ubisoft] failed to watch ${spoolDir}: ${err}`);
     }
   }
 };
+
+// The watched target a changed file belongs to. A spool that appeared after the watch started is
+// a game's first unlock: it joins the list, flagged so its records from now on are toasted.
+function matchSpoolTarget(dirTargets, name, spoolDir, startedAt) {
+  const target = spoolTarget(name, spoolDir);
+  if (!target) return null;
+  const known = dirTargets.find((t) => path.basename(t.spoolFilePath).toLowerCase() === path.basename(target.spoolFilePath).toLowerCase());
+  if (known) return known;
+  target.firstSeenAfter = startedAt;
+  dirTargets.push(target);
+  return target;
+}
+
+// Without a stored baseline, the records already earned before a new spool was seen; null when the
+// spool existed at startup, whose records are a back-catalogue never to be replayed.
+function baselineFor(target, cache, records) {
+  if (cache && Array.isArray(cache.unlocked)) return cache.unlocked;
+  if (!target.firstSeenAfter) return null;
+  return records.filter((r) => r.time && r.time < target.firstSeenAfter).map((r) => r.id);
+}
 
 module.exports.stop = () => {
   changes.clear();
@@ -481,6 +513,9 @@ module.exports._internal = {
   parseLocTxt,
   loadSchema,
   discover,
+  spoolUserDirs,
+  matchSpoolTarget,
+  baselineFor,
   readTitles,
   indexedUplayName,
   cleanConfigTitle,

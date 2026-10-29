@@ -905,15 +905,22 @@ let _installedUbisoftProducts = null;
 function isUbisoftProductInstalled(productId) {
   const id = String(productId || '').trim();
   if (!/^\d+$/.test(id)) return false;
-  if (!_installedUbisoftProducts) {
-    _installedUbisoftProducts = new Set(
-      ubisoftRegistry
-        .installs()
-        .filter(({ dir }) => fs.existsSync(dir))
-        .map((install) => install.id)
-    );
-  }
+  if (!_installedUbisoftProducts) _installedUbisoftProducts = new Set(installedUbisoftProducts().map((install) => install.id));
   return _installedUbisoftProducts.has(id);
+}
+
+// Registry installs whose folder still exists, one per product id. Not memoized: a game installed
+// since the last scan has to show up on the next one.
+function installedUbisoftProducts(installs = ubisoftRegistry.installs()) {
+  const seen = new Set();
+  const found = [];
+  for (const install of installs) {
+    const id = String(install.id || '').trim();
+    if (!/^\d+$/.test(id) || seen.has(id) || !install.dir || !fs.existsSync(install.dir)) continue;
+    seen.add(id);
+    found.push({ id, dir: install.dir });
+  }
+  return found;
 }
 
 async function resolveIdentity(entry, options = {}) {
@@ -1085,15 +1092,52 @@ function resetIdentityCache() {
   identityCache = new Map();
 }
 
-// One entry per product that has BOTH a spool (unlock state) and a cached achievements archive
-// (schema). Multiple Ubisoft users: latest-written spool wins.
-module.exports.scan = () => {
-  const entries = listSpoolEntries();
+function buildScanEntry(uplayId, archive, spool, install) {
+  const mapping = getUplaySteamMapping().get(uplayId);
+  const gameDir = install ? install.dir : ubisoftInstallDir(uplayId);
+  // Ubisoft product ids are small integers (1843, 6100, …) that overlap Steam's appid space, so
+  // the shared rarity/cover/gameIndex caches would collide with a same-numbered Steam game. Use a
+  // namespaced identity ("uplay-<id>") as the appid and keep the raw id in data for the mapping.
+  return {
+    appid: officialAppId('ubisoftOfficial', uplayId),
+    source: 'Ubisoft Connect',
+    data: {
+      type: 'ubisoftOfficial',
+      uplayId,
+      // Registered install dir (registry InstallDir, verified on disk) - lets the launch panel
+      // auto-detect the executable instead of asking for one by hand.
+      gameDir: gameDir && fs.existsSync(gameDir) ? gameDir : null,
+      // A registered install dir proves the product is really on disk, so "show installed only"
+      // keeps it even when the folder scan couldn't resolve a gameDir/exe (e.g. a launcher-managed
+      // install outside the configured library roots).
+      trustedInstalled: install ? true : isUbisoftProductInstalled(uplayId),
+      // No spool yet: nothing unlocked, so the game's folder stands in for the save folder.
+      path: spool ? path.dirname(spool.spoolFilePath) : install.dir,
+      spoolFilePath: spool ? spool.spoolFilePath : null,
+      userId: spool ? spool.userId : null,
+      archivePath: archive.archivePath,
+      spec: archive.spec || '',
+      configBlock: archive.metadata || null,
+      // Storefronts the product's configuration blocks name (its own `third_party_platform` and
+      // any storefront-only sibling block). Lets the library tell a Ubisoft-store copy from a
+      // Steam purchase that happens to launch Ubisoft Connect.
+      storefronts: archive.metadata?.storefronts || [],
+      title: archive.title || mapping?.uplay_name || mapping?.steam_name || '',
+    },
+  };
+}
+
+// One entry per product that has a cached achievements archive (schema) and either a spool (unlock
+// state) or an install on disk: Ubisoft Connect writes the spool at the first unlock only, and lists
+// an installed game at 0/N before that. Multiple Ubisoft users: latest-written spool wins.
+module.exports.scan = (options = {}) => {
+  const entries = listSpoolEntries(options.spoolRoot);
+  const archiveOptions = options.achievementsRoot ? { achievementsRoot: options.achievementsRoot } : {};
   const byProduct = new Map();
   for (const entry of entries) {
     let archive;
     try {
-      archive = resolveAchievementsArchive(entry.appid);
+      archive = resolveAchievementsArchive(entry.appid, archiveOptions);
     } catch (err) {
       debug.log(
         `[${entry.appid}] Ubisoft spool found but no cached achievements archive (${err}) - open the game's achievements page in Ubisoft Connect once to populate it`
@@ -1109,39 +1153,19 @@ module.exports.scan = () => {
     };
     const prev = byProduct.get(entry.appid);
     if (prev && mtimeOf(prev.data.spoolFilePath) >= mtimeOf(entry.spoolFilePath)) continue;
-    const mapping = getUplaySteamMapping().get(entry.appid);
-    // Ubisoft product ids are small integers (1843, 6100, …) that overlap Steam's appid space, so
-    // the shared rarity/cover/gameIndex caches would collide with a same-numbered Steam game. Use a
-    // namespaced identity ("uplay-<id>") as the appid and keep the raw id in data for the mapping.
-    byProduct.set(entry.appid, {
-      appid: officialAppId('ubisoftOfficial', entry.appid),
-      source: 'Ubisoft Connect',
-      data: {
-        type: 'ubisoftOfficial',
-        uplayId: entry.appid,
-        // Registered install dir (registry InstallDir, verified on disk) - lets the launch panel
-        // auto-detect the executable instead of asking for one by hand.
-        gameDir: (() => {
-          const dir = ubisoftInstallDir(entry.appid);
-          return dir && fs.existsSync(dir) ? dir : null;
-        })(),
-        // A registered install dir proves the product is really on disk, so "show installed only"
-        // keeps it even when the folder scan couldn't resolve a gameDir/exe (e.g. a launcher-managed
-        // install outside the configured library roots).
-        trustedInstalled: isUbisoftProductInstalled(entry.appid),
-        path: path.dirname(entry.spoolFilePath),
-        spoolFilePath: entry.spoolFilePath,
-        userId: entry.userId,
-        archivePath: archive.archivePath,
-        spec: archive.spec || '',
-        configBlock: archive.metadata || null,
-        // Storefronts the product's configuration blocks name (its own `third_party_platform` and
-        // any storefront-only sibling block). Lets the library tell a Ubisoft-store copy from a
-        // Steam purchase that happens to launch Ubisoft Connect.
-        storefronts: archive.metadata?.storefronts || [],
-        title: archive.title || mapping?.uplay_name || mapping?.steam_name || '',
-      },
-    });
+    byProduct.set(entry.appid, buildScanEntry(entry.appid, archive, entry, null));
+  }
+
+  // The registry also lists launcher add-ons and DLC: only a product with an archive is a game here.
+  for (const install of installedUbisoftProducts(options.installs)) {
+    if (byProduct.has(install.id)) continue;
+    let archive;
+    try {
+      archive = resolveAchievementsArchive(install.id, archiveOptions);
+    } catch {
+      continue;
+    }
+    byProduct.set(install.id, buildScanEntry(install.id, archive, null, install));
   }
   return Array.from(byProduct.values());
 };
@@ -1302,6 +1326,7 @@ module.exports.getGameData = async (appid, lang) => {
 };
 
 module.exports.getAchievements = (appid) => {
+  if (!appid.data.spoolFilePath) return {};
   const spool = readUbisoftSpoolFile(appid.data.spoolFilePath);
   return buildUbisoftOfficialSnapshot(spool.records);
 };
