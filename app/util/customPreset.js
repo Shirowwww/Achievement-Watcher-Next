@@ -551,7 +551,7 @@ const engineHash = (source) => crypto.createHash('sha256').update(String(source)
 */
 function upgradeEngineHtml(html) {
   if (typeof html !== 'string' || !html.includes(PRESET_MARKUP)) return null;
-  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi)];
+  const scripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script[^>]*>/gi)];
   if (scripts.length !== 1 || scripts[0][0].slice(0, 8) !== '<script>' || !PAST_ENGINE_HASHES.has(engineHash(scripts[0][1]))) return null;
   return html.replace(scripts[0][0], () => inlineScript(PRESET_ENGINE));
 }

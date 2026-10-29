@@ -326,7 +326,7 @@ test('the designer previews a preset with a page rebuilt from its theme, loading
   assert.deepEqual({ width: page.width, height: page.height }, sanEngine.windowSize(page.theme));
   assert.doesNotMatch(page.html, /window\.evil/);
   assert.match(page.html, new RegExp(`<base href="${require('node:url').pathToFileURL(dir).href}/" />`), 'the stylesheets and pictures are the folder\'s own');
-  const scripts = [...page.html.matchAll(/<script src="([^"]+)"><\/script\s*>/gi)].map((match) => path.basename(new URL(match[1]).pathname));
+  const scripts = [...page.html.matchAll(/<script src="([^"]+)"><\/script[^>]*>/gi)].map((match) => path.basename(new URL(match[1]).pathname));
   assert.deepEqual(scripts, ['preview.js', 'engine.js', 'host.js'], 'the stand-in for the popup bridge comes first');
   assert.doesNotMatch(page.html, /AWSanEngine = factory/, 'the engine is loaded, not inlined');
   // The designer draws the items itself, in a stylesheet of its own.
