@@ -7,181 +7,100 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.4 - 2026-10-29
 
 ### Added
 
-- **Leave a Steam library out.** Settings > Sources lists every Steam library folder on this PC. Switch
-  one off and its games leave every collection, All games included, so a drive kept connected as
-  storage no longer fills the list. Switch it back on and they return.
+- **Much more in the preset editor.** Icons join texts, pictures and shapes; a picture can be an
+  animated GIF of up to 5 MB, shapes get rounded corners, dashed outlines, glows and a see-through
+  mode that lets the desktop show through, and texts can sit in a box of their own. An element can
+  show only on some unlocks or look different on gold, silver or bronze ones. Several elements can
+  be picked to move, line up, copy or delete together, and a short tour shows the editor around.
+- **A timeline in the preset editor.** A bar along the bottom shows when each element comes in and
+  for how long: drag it to move or stretch the entrance, press Play to watch the card. Entrances can
+  shake, flash, type their text out or count up, and an element can keep moving afterwards (pulse,
+  float, swing, spin or shine).
+- **Imported SAN themes can be changed in the designer**, tier by tier: card, background, colours,
+  texts, glow, border, icon, trophy picture, and added texts, pictures or shapes. "Back to the
+  imported theme" puts the original look back.
+- **Pick a preset by its look.** Every preset menu opens a gallery that shows each preset as a
+  picture of its card.
 - **Hide a game without removing it.** Right-click a game and pick Hide from view: it leaves All
   games, every collection and the stats, but stays tracked and still notifies. A Hidden view in the
-  Collections menu lists them and brings each one back.
-- **GOG Galaxy can list installed games only.** Its source now offers None, Installed or Played, like
-  Steam, Epic and Xbox. Galaxy keeps the play data of a game after it is uninstalled, so Played (the
-  previous behaviour) still lists those; Installed leaves them out.
+  Collections menu brings it back. The other choices now read Remove from AW Next and Clear this
+  game's data, and the Settings card for removed games is called Removed games.
+- **Leave a Steam library out.** Settings > Sources lists every Steam library folder on this PC:
+  switch one off and its games leave every collection, so a drive kept as storage no longer fills
+  the list.
 - **Updates can install themselves.** Turn on Settings > General > Install updates automatically,
-  or tick the box in the update window: new versions download and install without asking once no
-  game is running, and a notification says so after the restart. A closed window stays closed.
-- **Pick a preset by its look.** Every preset menu (the main one, the emulators', a game's own, the
-  designer's and the first-start one) opens a gallery that shows each preset as a picture of its
-  card.
-- **More freedom in the preset editor.** Icons join texts, pictures and shapes. An element can be
-  kept to some notifications only (a crown on gold unlocks, say), painted in a tier's colour, hidden
-  or locked from its layer, placed by typing its position and size, lined up with the card, and
-  copied into another preset. A text can show the game, the achievement, its rarity or its tier, and
-  each element can make its own entrance after a delay. The ? key lists the shortcuts, and a short
-  tour shows the editor around the first time it opens.
-- **GIFs, finer shapes and movement in the preset editor.** A picture can be an animated GIF of up
-  to 5 MB, started over with each popup, and cut to a shape. Stars, arrows and triangles have
-  settings of their own, any shape can get rounded corners, a dashed outline or a mirror, and texts,
-  shapes and icons can glow in the tier's colour. An element can keep moving after its entrance
-  (pulse, float, swing, spin or shine). Shift+click, a box drawn round them or Ctrl+A picks several
-  elements, to move, line up, copy or delete together.
-- **A different look per tier in the preset editor.** Every state starts from the same design; with
-  "Gold only" picked above an element's settings, a change applies to gold unlocks alone (colour,
-  size, position, text, visibility, anything), and "Back to base" undoes it. The card's own title,
-  icon and description work the same way.
-- **See-through shapes in the preset editor.** A shape switched to see-through cuts a hole in
-  everything under it, the card included, so the desktop shows through; what sits above it stays.
-- **Imported SAN themes can be changed in the designer.** Pick a tier in the preview to see its
-  look, then change its card, background, colours, texts, glow, border or icon. Click one of the
-  theme's elements to open its settings, drag it or hide it, and add a text, a picture or a shape on
-  top. A tier can also show another trophy picture, or be drawn by another imported SAN theme with
-  its sound. Changes are saved as you go: Undo takes one back, and "Back to the imported theme"
-  puts its whole look back.
-- **A timeline in the preset editor.** A bar along the bottom of the full-screen editor shows when
-  each element comes in and for how long: drag a bar to move or stretch it, press Play to watch the
-  card, or drag along the ruler to stop on one moment. It stays folded until an animation setting
-  changes. Entrances can also shake, flash, type their text out, or count up to the rarity or the
-  progress.
-- **Boxes behind texts in the preset editor.** The title, the description and the game line can be
-  reworded and given a box of their own, with a fill, padding, rounded corners and an outline. A
-  rarity text joins the elements, the progress bar gets a thickness and a track colour, and icons
-  can be square.
+  or tick the box in the update window: new versions install without asking once no game is
+  running, and a notification says so after the restart.
+- **GOG Galaxy can list installed games only.** Its source offers None, Installed or Played, like
+  Steam, Epic and Xbox. Played, the previous behaviour, still lists uninstalled games.
 - **A diagnostics report in the log export.** Settings > Advanced > Export logs (.zip) adds a
-  `diagnostics.txt` beside the logs: how AW Next is installed, the clock against Steam's, which
-  online services answer, the Windows notification settings, the screens, the settings and the
-  storage used. The library's counts and a Game Health report for the games most likely to need one
-  go with it, and Steam account ids and email addresses are masked along with the user name.
+  `diagnostics.txt`: how AW Next is installed, the clock, which online services answer, the
+  notification settings and a Game Health summary, with account ids, emails and the user name
+  masked.
 
 ### Improved
 
-- **Clearer names for the ways a game leaves the list.** The right-click menu now reads Hide from
-  view, Remove from AW Next (was Remove from list) and Clear this game's data (was Forget this game),
-  and the Settings card of removed games is called Removed games instead of Hidden games.
-- **Gallery presets can be customized.** "Customize a preset" takes a preset installed from the
-  gallery as it takes a bundled one, and keeps your changes on top of it. A preset that draws its
-  card with code of its own plays in a real popup when you press Play.
-- **Settings > Sources is easier to read.** Emulators and game fixes share one card and the official
-  platforms another, now with EA Desktop and PlayStation Network, while RPCS3 joins the console
-  emulators. LumaPlay (Uplay R1) and RUNE (Uplay R2) get a switch each, and MarkerPatch,
-  MadnessPatch and the PC ports one switch together. RUNE starts on or off as LumaPlay was.
-- **Clearer settings.** The rarity choice reads "Rare achievements only" or "All, PlayStation
-  style", and three badges under it show the current cut-offs. The AppID blacklist is now "Hidden
-  games", and the Folders tab drops its selected-folders rescan, which did what Refresh does. A
-  custom theme started from a built-in one is named after it ("Steam Blue 2").
-- **Settings say more plainly what they do.** Many labels and help lines are reworded, a folder AW
-  Next already watches on its own says so on its row, and the search ignores accents and plurals and
-  opens the tab that names the setting. In Simple mode the designer has one "Open a preset" button
-  and saves with "Create preset" alone.
+- **The PlayStation platinum, with or without a PSN account.** When a Steam game has its own
+  achievement for earning all the others (Elden Ring, Hades II), that unlock is the platinum popup,
+  instead of a normal popup followed by a second one at 100%. For games also released on
+  PlayStation, the 100% popup uses the real platinum's name, icon and rarity even with no account
+  connected, from public trophy lists and Exophase.
+- **Any preset can be customized.** "Customize a preset" takes gallery presets as well as bundled
+  ones, and the decorations of bundled presets can be hidden, moved and recoloured as layers. The
+  six presets that cannot be customized say why.
+- **Clearer settings.** Settings > Sources groups emulators and game fixes in one card and the
+  official platforms, now with EA Desktop and PlayStation Network, in another. Many labels are
+  reworded, and the search ignores accents and plurals and opens the right tab.
+- **Game Health spots a crack whose steam_api.dll was replaced** by a mod or an online patch, and
+  says to put the original back instead of blaming the crack.
 - **Screenshots and clips are named after the achievement first**, then the date
-  (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups each
-  achievement's shots. Files saved earlier keep their name.
-- **A game's own platinum achievement is the platinum.** When a Steam game has an achievement for
-  earning all the others (Elden Ring, Hades II, Dark Souls...), its unlock now shows as the platinum
-  popup with its own name and icon, instead of a normal popup followed by a second one at 100%.
-- **The real PlayStation platinum without a PSN account.** For games that also came out on
-  PlayStation, the 100% popup now uses the real platinum's name, description and icon even with no
-  account connected, from a public archive of PS3 and PS4 trophy lists and from Exophase for PS5.
-  Turning the platinum popup off also stops these lookups.
-- **The PlayStation platinum of more games shows its rarity.** When your account lacks the game,
-  Sony's share of players now also comes from more public players (Palworld: 1.9%). When Sony has
-  none, Exophase's own figure shows instead, with a trophy icon and an "Exophase" tooltip.
-- **Game Health spots a crack whose steam_api.dll was replaced.** A mod or an online patch that puts
-  its own steam_api.dll over a CODEX-style crack (Transformers: Fall of Cybertron's fan servers)
-  records no achievement; the panel now names that file and says to put the original back, instead
-  of blaming the crack.
-- **Playtime down to the second.** Settings > Appearance > Library tiles > Playtime has a third
-  choice, Down to the second, for the tiles and the game page ("59 hours, 36 minutes, 12 seconds").
-- **Cut text scrolls on hover everywhere.** The status line of the title bar and the names in the
-  in-game overlay now scroll to their end under the pointer, like the tiles and Settings already did.
-- **An achievement's name and description can be selected and copied** from its list, to search
-  for how to unlock it. A hidden description stays masked.
-- **Bundled presets are more customizable.** Their card and icon decorations show as layers that can
-  be hidden, moved and recoloured. The six presets that cannot be customized now say why, and a
-  template, Surprise me or another base asks before replacing unsaved changes (Ctrl+Z undoes it).
-  The full-screen editor has its own Save button, and its help lists the crop keys.
+  (`Ultimate Life Form - 2026-10-25 03-07-45.png`), so a folder sorted by name groups them.
+- **Playtime down to the second**, as a third choice in Settings > Appearance > Library tiles.
+- **Smaller touches.** Cut text in the title bar and the in-game overlay scrolls on hover, and an
+  achievement's name and description can be selected and copied.
 
 ### Fixed
 
-- **Installed Ubisoft Connect games show up before their first achievement.** A game with nothing
-  unlocked yet was missing from the library, since Ubisoft Connect writes its progress file only at
-  the first unlock. It is now listed at 0, and that first unlock is notified.
-- **Steam set to Installed no longer lists games that are not installed.** A game Windows still
-  marked as installed, with no install left on disk, stayed in the list as not installed.
-- **Settings and saved data survive a locked or damaged file.** A settings file held for a moment by
-  an antivirus no longer resets every setting, a damaged list of manual unlocks, custom images or
-  per-game presets is kept aside instead of being wiped by the next save, and a crash while saving a
-  Steam, Epic or PSN sign-in no longer signs you out.
-- **Customized bundled presets show the game and achievement names and replay their GIFs** in the
-  real popup, spinning elements spin, and a group dragged against the edge keeps its shape.
-- **Games added by hand show how many players unlocked each achievement.** A game added from its
-  executable with a Steam AppID now gets the same global percentages as its Steam release, whatever
-  platform was picked for it.
-- **A video clip keeps its footage when the capture restarts.** When the screen wakes up or the
-  game switches display mode during a clip, the part recorded before is kept instead of leaving a
-  clip of a single frame.
-- **AV1 video clips save on Windows 10.** They were recorded but never written, on Windows 10 and on
-  Windows 11 before its August 2023 update, because Windows' own MP4 writer cannot hold AV1 there.
-  Clips are now written by the recorder itself, in a few milliseconds instead of a tenth of a second,
-  and start playing before they are fully loaded.
-- **Play time survives a crash or a quit.** It is saved every minute while a game runs, and once
-  more when AW Next closes, instead of only when the game exits, so a power cut loses a minute at
-  most.
-- **The Ubisoft achievement fix works on EMPRESS and DenuvOwO releases.** AC Odyssey froze at launch
-  after the fix: the EMPRESS settings were left behind and the game waited on an empty chunk list. The fix
-  now carries them over, and copies the EMPRESS game saves to where the new loader reads them.
-- **Two achievements unlocked together are both announced.** The second one waited for the first
-  popup to show, then counted as too old and was skipped, with no popup and no screenshot.
-- **A SAN theme's trophy matches the tier.** Themes that draw a bronze, silver and gold trophy showed
-  the gold one on every rare unlock, and the designer previewed silver and bronze as gold in trophy
-  mode.
-- **Six included presets preview with their icon.** Batman, Onyx, Outline, PS5 Steam, Pantheon and
-  Xbox Series showed a broken picture instead of the sample icon in the designer's preview.
-- **Saving a design never writes over an imported or SAN theme.** A design saved under the name of
-  one is refused, where it used to replace part of the theme's files and leave the rest.
-- **Escape closes an imported theme's preview.** It closed Settings behind it and left the preview
-  on screen.
-- **The settings search hides the account cards that do not match**, and the preset designer's
-  Animation group shows when the card is picked.
-
-- **God of War III is found again after SpartanPort's rename.** The port formerly called gow3_pc now
-  keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next
-  took it for the old port and found no game. Both versions are read, and the platinum is picked up
-  from its log line too.
 - **Websites can no longer read your unlocks from the local broadcast.** Any page open in a browser
-  could connect to `Websocket @localhost:8082` and receive every unlock, or send test commands. The
-  broadcast and the OBS page now answer only this PC's own pages, the app, the Decky plugin and
-  programs that are not browsers.
+  could connect to `localhost:8082`, receive every unlock and send test commands. The broadcast and
+  the OBS page now answer only this PC's own pages, the app, the Decky plugin and non-browser
+  programs.
+- **Two achievements unlocked together are both announced.** The second one was skipped, with no
+  popup and no screenshot.
+- **Settings and saved data survive a locked or damaged file.** A settings file held by an
+  antivirus no longer resets every setting, a damaged list is kept aside instead of being wiped, and
+  a crash while saving a sign-in no longer signs you out.
+- **AV1 video clips save on Windows 10** and early Windows 11, where they were recorded but never
+  written. A clip also keeps its footage when the capture restarts during it.
+- **Play time survives a crash or a quit.** It is saved every minute while a game runs.
+- **Missing and extra games.** Installed Ubisoft Connect games show up before their first
+  achievement, Steam set to Installed no longer lists games that are gone from the disk, and God of
+  War III is found again after SpartanPort's rename.
+- **The Ubisoft achievement fix works on EMPRESS and DenuvOwO releases** (AC Odyssey froze at
+  launch).
+- **Games added by hand with a Steam AppID** show how many players unlocked each achievement.
+- **The platinum has its halo before it is earned**, as gold trophies already did, in the
+  achievement list.
+- **Preset designer fixes.** Saving a design never writes over an imported or SAN theme, a SAN
+  theme shows the trophy of the right tier, customized bundled presets show the names and replay
+  their GIFs in the real popup, six included presets preview with their icon, and Escape closes an
+  imported theme's preview instead of Settings.
 
 ### Performance
 
-- **The window stays smooth while the library is scanned.** The scan used to read every game folder
-  in the window itself, freezing it for seconds at a time (up to 20 seconds on a cold start). It now
-  runs in a process of its own, and so does the tray's background check while the window is closed.
-  Games that did not change keep their tile instead of being redrawn, and the health dots no longer
-  stall the window after a scan.
-- **Scans are about a third faster.** The folders the last scan read are listed all at once instead
-  of one by one, and an emulator dll is no longer read again while it has not changed: on a cold
-  start, the first game shows up in about 3 seconds instead of 5.
+- **The window stays smooth while the library is scanned.** The scan runs in a process of its own
+  instead of freezing the window for seconds (up to 20 on a cold start).
+- **Scans are about a third faster**: on a cold start the first game shows up in about 3 seconds
+  instead of 5.
 
 ### Website & Docs
 
-- **Community preset cards show every kind of popup.** Two arrow buttons on a card's picture step
-  through the popup as an ordinary unlock, bronze, silver, gold, 100% and progress, with the state's
-  name in the corner, and the enlarged picture is the one on show. The render tool draws all of them
-  in one go (`node tools/gallery/render-preview.js <preset> out.png --all`).
+- **Community preset cards show every kind of popup**: arrows on a card's picture step through the
+  ordinary, bronze, silver, gold, 100% and progress popups.
 
 ## 3.12.3 - 2026-10-25
 

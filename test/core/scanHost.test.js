@@ -194,7 +194,8 @@ test('the real scan worker loads the whole parser without Electron and answers i
   const child = forkNode(WORKER_FILE, {
     env: {
       AW_USER_DATA: userData,
-      NODE_OPTIONS: `--require ${path.join(__dirname, '..', 'helpers', 'noElectron.js')}`,
+      // Node 22 flags node:sqlite (the GOG parser) as experimental; Electron's Node 24 does not.
+      NODE_OPTIONS: `--require ${path.join(__dirname, '..', 'helpers', 'noElectron.js')} --disable-warning=ExperimentalWarning`,
     },
     stdio: ['ignore', 'ignore', 'pipe', 'ipc'],
   });

@@ -75,12 +75,12 @@ function formatRarityPercent(percent, lang) {
   like the console's ("Platinum · 7.1% · Very rare") and only gold and platinum keep the halo. A game
   from another store keeps its own rate, so Sony's rarity words would not describe it: grade and rate only.
 */
-// The grade is the trophy's only rarity, with no tier band beside it; an earned platinum or gold wears that frame.
+// The grade is the trophy's only rarity, with no tier band beside it; a platinum or gold wears that frame, earned or not.
 function paintPlayStationTrophy(elem, figure, grade, text) {
   const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
   figure.text(`${grades[grade] || grade} · ${text}`);
   elem.addClass('ps-trophy').attr('data-trophy', grade);
-  if (grade === 'gold' || (grade === 'platinum' && elem.attr('data-achieved') === '1')) elem.addClass(`rare rarity-${grade}`);
+  if (grade === 'gold' || grade === 'platinum') elem.addClass(`rare rarity-${grade}`);
 }
 
 // Paint the global unlock % (rarity) onto the rendered achievement rows. `entries` is the normalized

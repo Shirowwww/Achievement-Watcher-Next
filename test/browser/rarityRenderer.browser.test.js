@@ -137,7 +137,8 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
 
     /*
       A PlayStation trophy keeps its own grade, whatever its rate says and in either mode, and its
-      figure reads grade and share of players only, and an earned platinum wears the platinum frame.
+      figure reads grade and share of players only, and a platinum wears the platinum frame, earned or
+      not, as a gold trophy wears its own.
     */
     const native = await page.evaluate(() => {
       window.rarityGrading = () => ({ mode: 'rare' });
@@ -150,7 +151,7 @@ test('rarity renderer indexes rendered rows without selector injection or duplic
         return el.first();
       };
       const bronze = row('bronze', 'B');
-      const platinum = row('quote"name', 'P').attr('data-achieved', '1');
+      const platinum = row('quote"name', 'P').attr('data-achieved', '0');
       window.applyRarity([
         { name: 'bronze', percent: 2 },
         { name: 'quote"name', percent: 7.1 },

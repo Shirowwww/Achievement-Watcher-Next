@@ -140,6 +140,11 @@ lands the app says it is installing and quits, and the installer shows a compact
 progress) until AW Next starts again. An update held back by a running game can be installed from the
 window anyway.
 
+**Settings → General → Install updates automatically**, or the box of the same name in the update
+window, skips the question: a new version downloads and installs on its own once no game is
+running, and a notification says so after the restart. It is off by default, and the portable build
+always asks.
+
 The window, the chip and the Settings line read the same state. They say "Checking the download"
 once every byte is in, and report a failed download or install as such, not as a failed check. A
 refused signature and a broken download each get a plain sentence of what happened and what to do;

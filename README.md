@@ -32,15 +32,16 @@ local saves and console emulators, shows them in one library, and pops up each u
 <tr>
 <td width="50%" valign="top">
 
-**One library**<br>
-Every source in one list, with rarity, progress achievements, covers and your own collections. Trophy
+**📚 One library**<br>
+Every source in one list, with rarity, progress achievements, covers and your own collections, and
+games you would rather not see hidden without losing their tracking. Trophy
 mode grades each achievement gold, silver or bronze, and a game that also came out on PlayStation
 takes its real trophies and platinum.
 
 </td>
 <td width="50%" valign="top">
 
-**Unlock popups**<br>
+**🔔 Unlock popups**<br>
 In Automatic mode, an unlock shows in game when it can be seen there and as a desktop notification
 otherwise. OBS can draw the same popup on your stream.
 
@@ -49,14 +50,15 @@ otherwise. OBS can draw the same popup on your stream.
 <tr>
 <td valign="top">
 
-**Presets and themes**<br>
-Ten popup presets and a full-screen editor to design your own. Thirteen interface themes. Both share
-as one file, and Steam Achievement Notifier `.san` themes convert.
+**🎨 Presets and themes**<br>
+Ten popup presets and a full-screen editor to design your own, with layers, GIFs, a look per tier
+and a timeline for the entrances. Thirteen interface themes. Both share as one file, and Steam
+Achievement Notifier `.san` themes convert and can be edited.
 
 </td>
 <td valign="top">
 
-**In-game overlay**<br>
+**🎮 In-game overlay**<br>
 `Ctrl+Shift+K` opens the running game's achievement list, with search and filters. A gamepad works
 too.
 
@@ -65,14 +67,14 @@ too.
 <tr>
 <td valign="top">
 
-**Screenshots and clips**<br>
+**📸 Screenshots and clips**<br>
 A screenshot of each unlock (HDR works) and, if you want, a short MP4 recorded by the graphics card
 around it.
 
 </td>
 <td valign="top">
 
-**Game Health**<br>
+**🩺 Game Health**<br>
 Says whether a game is tracked, why not, and which repairs apply. Every repair backs up first.
 
 </td>
@@ -80,14 +82,14 @@ Says whether a game is tracked, why not, and which repairs apply. Every repair b
 <tr>
 <td valign="top">
 
-**Linux** <sup>beta</sup><br>
+**🐧 Linux** <sup>beta</sup><br>
 A native build, not run through Wine. It follows games from Steam and Proton, Wine, Lutris, Heroic and
 Bottles, and runs on the Steam Deck.
 
 </td>
 <td valign="top">
 
-**Local first**<br>
+**🔒 Local first**<br>
 No account to create and no Steam Web API key. The library works offline, and the sign-in tokens it
 keeps are encrypted by Windows or your desktop keyring.
 
@@ -120,7 +122,8 @@ keeps are encrypted by Windows or your desktop keyring.
 | **Guide** | [Getting started](https://shirowwww.github.io/Achievement-Watcher-Next/getting-started.html) | [Linux and Steam Deck](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) |
 
 Follow the first-run guide, run **Settings → Folders → Smart Find**, and leave AW Next in the tray.
-Updates are built in and download only what changed. Upgrading keeps your data, and an older
+Updates are built in, download only what changed, and can install themselves once no game is
+running. Upgrading keeps your data, and an older
 Achievement Watcher folder is imported without being modified.
 
 ## Supported sources

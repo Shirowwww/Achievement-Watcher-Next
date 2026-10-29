@@ -51,11 +51,12 @@ caches and logs are never saved, so you sign in again to Epic, Steam, Xbox, Play
 RetroAchievements afterwards. **Restore profile…** checks the whole file first and applies it at the
 next start. The files it replaces are kept, and a failed restore puts everything back.
 
-## AppID blacklist
+## Removed games
 
-A game removed from the library with **Blacklist** is listed here with the ID it was blacklisted
-under, and can be restored one by one. Use the blacklist for a stray folder that the scan keeps
-finding but that is not a game.
+A game taken out with **Remove from AW Next** is listed in **Settings → General → Removed games**,
+and can be brought back one by one or all at once. Use it for a stray folder that the scan keeps
+finding but that is not a game; to keep a real game out of sight, **Hide from view** is lighter
+(see [Hide, remove or clear a game](#hide-remove-or-clear-a-game)).
 
 ## Reset a game's achievements
 

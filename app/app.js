@@ -570,7 +570,7 @@ function psnPlatinumRow(game) {
     $('#achievement .achievements').data('lang-globalStat') || ''
   )}</span></div>`;
   const html = `<li>
-      <div class="achievement psn-platinum ps-trophy${achieved ? ' rare rarity-platinum' : ''}" data-trophy="platinum" data-index="-1" data-achieved="${achieved ? 1 : 0}">
+      <div class="achievement psn-platinum ps-trophy rare rarity-platinum" data-trophy="platinum" data-index="-1" data-achieved="${achieved ? 1 : 0}">
         <div class="box"><div class="glow mask contain"><div class="glow mask ray"><div class="glow fx"></div></div></div>
           <div class="icon" style="background: ${cssUrl(icon)};"></div></div>
         <div class="content">
