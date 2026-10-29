@@ -11,6 +11,7 @@ const uplayCatalogue = require('./uplayCatalogue.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 const { hostPaths, firstExisting } = require('../util/winHosts.js');
 const ubisoftRegistry = require('../util/ubisoftRegistry.js');
+const { ipcInvoke } = require('../util/ipcInvoke.js');
 
 // The self-heal loop awaits one 30s download per broken game. Offline that is 30s each, in a row,
 // so an unreachable CDN is proved once and the rest of the pass skips it.
@@ -1232,16 +1233,11 @@ module.exports.getGameData = async (appid, lang) => {
     // Modern Steam covers live under a hashed store_item_assets path that cannot be derived from the
     // appid; the guessable URL 404s and the tile stays blank. Recover the real capsule from SteamDB
     // (main-process stealth browser + 30-day disk cache), same as the Steam parser does.
-    try {
-      const { ipcRenderer } = require('electron');
-      const steamdbPortrait = await ipcRenderer.invoke('get-steamdb-cover', steamAppId).catch(() => null);
-      if (steamdbPortrait) portrait = steamdbPortrait;
-      else if (displayTitle) {
-        const sgdbPortrait = await ipcRenderer.invoke('get-steamgriddb-cover', displayTitle).catch(() => null);
-        if (sgdbPortrait) portrait = sgdbPortrait;
-      }
-    } catch (err) {
-      debug.log(`[${appid.appid}] SteamDB cover fallback failed => ${err}`);
+    const steamdbPortrait = await ipcInvoke('get-steamdb-cover', steamAppId);
+    if (steamdbPortrait) portrait = steamdbPortrait;
+    else if (displayTitle) {
+      const sgdbPortrait = await ipcInvoke('get-steamgriddb-cover', displayTitle);
+      if (sgdbPortrait) portrait = sgdbPortrait;
     }
     img = {
       header: `https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/${steamAppId}/header.jpg`,
@@ -1295,13 +1291,8 @@ module.exports.getGameData = async (appid, lang) => {
       }
     }
     if (!img.portrait && displayTitle) {
-      try {
-        const { ipcRenderer } = require('electron');
-        const sgdbPortrait = await ipcRenderer.invoke('get-steamgriddb-cover', displayTitle).catch(() => null);
-        if (sgdbPortrait) img.portrait = sgdbPortrait;
-      } catch (err) {
-        debug.log(`[${appid.appid}] SteamGridDB cover fallback failed => ${err}`);
-      }
+      const sgdbPortrait = await ipcInvoke('get-steamgriddb-cover', displayTitle);
+      if (sgdbPortrait) img.portrait = sgdbPortrait;
     }
   }
 

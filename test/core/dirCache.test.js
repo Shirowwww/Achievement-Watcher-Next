@@ -101,3 +101,58 @@ test('withScope closes the scope even when the work throws', async () => {
   );
   assert.equal(dirCache.isActive(), false);
 });
+
+/*
+  An untracked reader (the executable search, the sources that walk game folders) can be the first
+  to list a folder that the discovery walk then asks for. The walk must still record it: the
+  stored library is only proven current by the folders it recorded, so a missing one goes unwatched.
+*/
+test('a folder listed untracked first is still recorded when a tracked walk asks for it', () => {
+  const root = makeTree();
+  try {
+    dirCache.beginScope();
+    dirCache.readdir(root, { track: false });
+    assert.deepEqual(dirCache.lastVisitedDirs(), []);
+    dirCache.readdir(root);
+    dirCache.readdir(root);
+    assert.deepEqual(dirCache.lastVisitedDirs(), [root], 'recorded once, by the tracked read');
+    dirCache.endScope();
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/*
+  The scan lists the previous scan's folders in parallel before it walks them. A listing read that
+  way must still count as visited when the walk asks for it - the fingerprint the stored library is
+  checked against is built from the visited folders - and must not count before.
+*/
+test('a folder read ahead is served to the walk and recorded as visited only when the walk reads it', async (t) => {
+  const root = makeTree();
+  const other = makeTree();
+  const missing = path.join(root, 'gone');
+  t.after(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(other, { recursive: true, force: true });
+  });
+  assert.equal(await dirCache.prefetch([root]), 0, 'no read-ahead outside a scope');
+
+  dirCache.beginScope();
+  try {
+    assert.equal(await dirCache.prefetch([root, other, root, missing]), 3);
+    fs.writeFileSync(path.join(root, 'second.txt'), 'y');
+    assert.deepEqual(dirCache.lastVisitedDirs(), [], 'reading ahead visits nothing');
+
+    assert.deepEqual(
+      dirCache.readdir(root).map((entry) => entry.name),
+      ['first.txt'],
+      'the walk is served the listing read ahead'
+    );
+    assert.equal(dirCache.readdir(missing), null, 'a folder that could not be read stays unreadable');
+    assert.deepEqual(dirCache.lastVisitedDirs(), [root]);
+    assert.equal(await dirCache.prefetch([root]), 0, 'a folder already read is not read again');
+  } finally {
+    dirCache.endScope();
+  }
+  assert.deepEqual(dirCache.lastVisitedDirs(), [root], 'a folder read ahead but never walked is not part of the scan');
+});

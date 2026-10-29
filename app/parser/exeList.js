@@ -1,19 +1,25 @@
 'use strict';
 
-const { app } = process.type === 'browser' ? require('electron') : require('@electron/remote');
 const path = require('path');
 const { pickBestClaim } = require('../util/claimCollision.js');
+const { knownUserDataDir } = require('../util/userDataPath.js');
 const fs = require('fs');
 
 let debug = { log() {}, error() {}, warn() {} };
 
-const file = path.join(app.getPath('userData'), 'cfg/exeList.db');
+// Read once, when the module loads: the scan host has its folder in the environment by then.
+const userDataRoot = knownUserDataDir();
+
+function listFile() {
+  if (!userDataRoot) throw new Error('exeList: the app data folder is unknown in this process');
+  return path.join(userDataRoot, 'cfg/exeList.db');
+}
 
 module.exports.list = getCurrentList;
 
 async function getCurrentList() {
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'));
+    return JSON.parse(fs.readFileSync(listFile(), 'utf8'));
   } catch (err) {
     if (err.code === 'ENOENT') {
       await module.exports.save([]);
@@ -38,7 +44,7 @@ module.exports.get = async (appid) => {
 
 module.exports.save = async (data) => {
   try {
-    fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(listFile(), JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {
     debug.log(err);
   }

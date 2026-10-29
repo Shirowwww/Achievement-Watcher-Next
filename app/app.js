@@ -85,6 +85,17 @@ if (achievements.setEmulatorFixedHandler) {
     }
   });
 }
+// The library scan reads thousands of folders synchronously, so it runs in a process of its own and
+// this window stays responsive. `achievements` above is its fallback and answers its events.
+const scanHost = require(path.join(appPath, 'util/scanHost.js')).createScanHost({
+  local: achievements,
+  userDataPath: userdatapath,
+  isDev,
+  secret: () => ipcRenderer.sendSync('get-app-secret'),
+  invoke: (channel, ...rest) => ipcRenderer.invoke(channel, ...rest),
+  send: (channel, ...rest) => ipcRenderer.send(channel, ...rest),
+  log: (line) => debug.log(line),
+});
 const blacklist = require(path.join(appPath, 'parser/blacklist.js'));
 const userDir = require(path.join(appPath, 'parser/userDir.js'));
 const libraryDirs = require(path.join(appPath, 'parser/libraryDirs.js'));
@@ -155,6 +166,8 @@ let debug = new (require(path.join(appPath, 'util/logger.js')))({
   console: isDev,
   file: path.join(userdatapath, `logs/${windowSwitch('appName') || ipcRenderer.sendSync('get-app-name-sync')}.log`),
 });
+// Started now, so the scan host's modules load while this window builds itself.
+scanHost.warm();
 
 if (isDev)
   debug.log(
@@ -1234,8 +1247,9 @@ function getAchievementProgressState(achievement) {
 
 // Periodically discover new installs without loading their full data.
 const NEW_GAME_SCAN_INTERVAL_MS = 3 * 60 * 1000; // 3 minutes
-// Most ticks find nothing, and a discovery walk is synchronous on this thread, so a tick first
-// compares folders read last scan; DB/registry sources (Steam, GOG, Ubisoft) still need a full pass.
+// Most ticks find nothing, and a discovery walk reads every library folder (in the scan host now,
+// but still disk work), so a tick first compares the folders the last scan read; DB/registry
+// sources (Steam, GOG, Ubisoft) still need a full pass.
 const FULL_DISCOVERY_EVERY_TICKS = 5; // ~15 minutes
 let newGameScanTicks = 0;
 let newGameScanTimer = null;
@@ -1255,7 +1269,7 @@ function isPersistentlyUnrenderable(appid) {
 }
 
 function seedNewGameScanBaseline(renderedList) {
-  return achievements
+  return scanHost
     .detectInstalledAppids(app.config)
     .then((ids) => {
       knownDiscoveredAppids = new Set(ids.map(String));
@@ -1281,7 +1295,7 @@ async function runNewGameScan() {
     newGameScanTicks += 1;
     if (newGameScanTicks % FULL_DISCOVERY_EVERY_TICKS !== 0) {
       const checkStartedAt = performance.now();
-      if (achievements.discoveryInputsUnchanged()) {
+      if (await scanHost.discoveryInputsUnchanged()) {
         if (isDev)
           debug.log(
             `[new-game-scan] nothing changed in the folders the last scan read (${(performance.now() - checkStartedAt).toFixed(0)}ms) - skipping this tick`
@@ -1289,7 +1303,7 @@ async function runNewGameScan() {
         return;
       }
     }
-    const discovered = (await achievements.detectInstalledAppids(app.config)).map(String);
+    const discovered = (await scanHost.detectInstalledAppids(app.config)).map(String);
     const previous = knownDiscoveredAppids;
     knownDiscoveredAppids = new Set(discovered);
     if (previous === null) return; // no scan has finished yet - this tick only establishes the baseline
@@ -1311,6 +1325,9 @@ function forgetScanCaches() {
   // A manual refresh is the user saying "look again properly", so stop suppressing the appids that
   // previously failed to render.
   unrenderableAppids.clear();
+  // The scan host holds the caches the library scan uses; the ones below serve this window's own
+  // lookups (a game page, a manual add).
+  scanHost.forgetScanCaches();
   try {
     achievements.forgetInstallScanCache();
     steamParser.forgetUnresolved();
@@ -1326,12 +1343,12 @@ function forgetScanCaches() {
 }
 
 // Empty string when the stored library may be served in place of a full scan, otherwise why it may
-// not - see util/libraryReuse.js.
+// not - see util/libraryReuse.js. The file sweep runs in the scan host, so the answer is a promise.
 function libraryReuseRefusal(entry, options) {
   return libraryReuse.refuseReason(entry, options, {
     now: Date.now(),
     appVersion: runningVersion(),
-    inputsUnchanged: (fingerprint) => achievements.scanInputsUnchanged(fingerprint),
+    inputsUnchanged: (fingerprint) => scanHost.scanInputsUnchanged(fingerprint),
   });
 }
 
@@ -4369,6 +4386,8 @@ var app = {
     gameList = [];
     const gameListIndex = new Map();
     const freshRenderedAppids = new Set();
+    // What each tile on screen was built from, so a rescan can leave an unchanged one alone.
+    const tileSignatures = new Map();
     // Reset the list and handlers so onStart() stays idempotent.
     $('#game-list ul').empty();
     $('#game-list .isEmpty').hide();
@@ -4548,10 +4567,18 @@ var app = {
             `;
 
             stopBuild();
+            const existingElement = gameElements.get(appidKey);
+            // A rescan mostly hands back the game already on screen. Rebuilding that tile changed
+            // nothing visible but re-requested its cover, so an identical one keeps its element.
+            const signature = template + JSON.stringify([game.img || null, game.steamappid || '', game.source || '', portrait]);
+            if (existingElement && existingElement.isConnected && existingIndex >= 0 && tileSignatures.get(appidKey) === signature) {
+              gameList[existingIndex] = game;
+              return;
+            }
+            tileSignatures.set(appidKey, signature);
             const stopParse = perfTrace.start('tile:parse');
             const item = $(template);
             stopParse();
-            const existingElement = gameElements.get(appidKey);
             const stopInsert = perfTrace.start('tile:insert');
             if (existingElement && existingElement.closest('li')) $(existingElement.closest('li')).replaceWith(item);
             else replaceSkeletonWith(item);
@@ -4604,14 +4631,15 @@ var app = {
     }
 
     // Whether the stored library is served as-is. Decided one frame later, never in front of the
-    // first paint: the check stats every folder and unlock file the last scan read, and the tiles
-    // above are already on screen waiting for the thread.
+    // first paint; the check stats every folder and unlock file the last scan read, in the scan host.
     let reuseLibrary = false;
+    // What the scan host reports beside the list: the fingerprint and discovery stored with it.
+    let scanResult = null;
 
     const listLoadPromise = new Promise((resolve) => setTimeout(resolve, 0))
-      .then(() => {
+      .then(async () => {
         const reuseCheckStartedAt = performance.now();
-        const reuseRefusal = fastStart && !activeScanScope ? libraryReuseRefusal(knownEntry, options) : 'a refresh always rescans';
+        const reuseRefusal = fastStart && !activeScanScope ? await libraryReuseRefusal(knownEntry, options) : 'a refresh always rescans';
         reuseLibrary = reuseRefusal === '';
         if (reuseLibrary) {
           debug.log(
@@ -4620,12 +4648,13 @@ var app = {
           );
           // The background new-install poll compares against the folders a scan read. Hand it the
           // stored ones, or its very next tick falls back to walking every library folder again.
-          achievements.restoreScanFingerprint(knownEntry.fingerprint);
+          scanHost.restoreScanFingerprint(knownEntry.fingerprint);
           return knownGames;
         }
         debug.log(`[library] full scan: ${reuseRefusal}`);
+        if (knownEntry && knownEntry.fingerprint) scanHost.hintScanFolders(knownEntry.fingerprint);
         if (gameElements.size > 0) showLoadingIndicator();
-        return achievements.makeList(
+        scanResult = await scanHost.makeList(
           scanConfig,
           (percent, total) => {
             // The opening report is 0 of N: it sizes the skeletons, but the Steam ownership call
@@ -4638,6 +4667,7 @@ var app = {
           },
           (game) => renderGame(game)
         );
+        return scanResult.list;
       })
       .then((list) => {
         // Scan finished - release the re-entry guard. If a refresh was requested while this run was in
@@ -4710,8 +4740,8 @@ var app = {
           try {
             librarySnapshot.write(getUserDataPath(), scanConfig, list, {
               appVersion: runningVersion(),
-              fingerprint: achievements.getScanFingerprint(),
-              discoveredAppids: achievements.getDiscoveredAppids(),
+              fingerprint: scanResult ? scanResult.fingerprint : null,
+              discoveredAppids: scanResult ? scanResult.discoveredAppids : null,
             });
           } catch (err) {
             debug.log(`[library-snapshot] save failed: ${err.message || err}`);
@@ -4748,8 +4778,8 @@ var app = {
         // non-Steam games are tracked without waiting for a Watchdog restart.
         ipcRenderer.invoke('watchdog-reload-playtime-index').catch((err) => debug.log(err));
 
-        exeList
-          .reconcile(gameList)
+        scanHost
+          .reconcileExeList(gameList)
           .then(async (n) => {
             if (n > 0) debug.log(`[exeList] reconcile fixed ${n} entr${n === 1 ? 'y' : 'ies'}`);
             // exeList signal for "installed only": a live configured launch exe counts as installed

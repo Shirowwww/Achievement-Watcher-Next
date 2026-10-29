@@ -10,14 +10,34 @@ Electron main process
 ├── creates the tray, windows and IPC handlers
 ├── owns updates, browser-backed lookups and native app integration
 ├── starts the renderer library UI
+│   └── starts the scan host with ELECTRON_RUN_AS_NODE
+│       └── discovers games and loads their achievements, off the window's thread
 └── starts the Watchdog with ELECTRON_RUN_AS_NODE
     ├── watches processes and achievement files
     ├── tracks playtime
     └── dispatches desktop notifications and overlay events
 ```
 
-Electron's bundled Node runs both processes. The installed app ships no second Node or NW.js
+Electron's bundled Node runs every process. The installed app ships no second Node or NW.js
 executable.
+
+### The scan host
+
+A library scan reads thousands of folders and files synchronously, so it does not run in the window
+that shows the library: `app/util/scanHost.js` forks `app/parser/scanWorker.js`, which loads
+`parser/achievements.js` and answers `makeList`, the discovery checks, the launch-executable
+reconcile and the folder walks behind the library's health dots. Games stream back to the window one
+by one. Before discovery walks, the folders the previous scan read are listed in parallel
+(`dirCache.prefetch`), since one synchronous listing at a time was most of a scan's time. The parsers there reach main-process handlers
+through `app/util/ipcInvoke.js`, which relays through the window; scan-time events (an emulator set
+up, a blocked download, the automatic-repair notice) are answered by the handlers registered on the
+window's own `achievements.js`. The main process uses the same client for its background repair
+pass while the window is closed, and stops that host after a minute of quiet. If the host cannot
+start or dies, every call runs in the calling process instead, as before the host existed.
+
+A process started this way has no `electron` module and no `@electron/remote`: code under
+`app/parser` finds the app data folder through `app/util/userDataPath.js` and reaches the main
+process only through `ipcInvoke.js`.
 
 ## Windows and Linux
 

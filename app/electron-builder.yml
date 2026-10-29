@@ -67,6 +67,8 @@ asarUnpack:
   - parser/xex.js
   # Started as a worker thread or a forked process by xex.js, which cannot load it from the asar.
   - parser/xexWorker.js
+  # Forked by util/scanHost.js for the same reason; what it requires stays in the asar.
+  - parser/scanWorker.js
   - parser/x360Ports.js
   - parser/x360Launcher.js
   - parser/reblueBonus.js

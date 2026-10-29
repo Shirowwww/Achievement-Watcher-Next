@@ -7,6 +7,7 @@ const { hostPaths } = require('../util/winHosts.js');
 const glob = lazyRequire('fast-glob');
 const request = lazyRequire('request-zero');
 const epicIdentity = require('../util/epicIdentity.js');
+const { ipcCall, ipcSend } = require('../util/ipcInvoke.js');
 
 let gameList;
 let cacheRoot;
@@ -100,13 +101,6 @@ module.exports.scan = async () => {
     }
   }
 
-  let ipcRenderer = null;
-  if (hasUncachedGame && gameList) {
-    try {
-      ({ ipcRenderer } = require('electron'));
-    } catch {}
-  }
-
   let updateCache = false;
   for (const game of games) {
     let steamid;
@@ -121,9 +115,9 @@ module.exports.scan = async () => {
           entry = { epicid: game.appid };
         } else {
           const title = await getGameTitleFromMapping(gameSlug);
-          // IPC keeps the hidden store lookup off the renderer's synchronous path.
-          if (!ipcRenderer || typeof ipcRenderer.invoke !== 'function') throw new Error('Epic title resolver unavailable');
-          steamid = await ipcRenderer.invoke('get-steam-appid-from-title', { title });
+          // IPC keeps the hidden store lookup off the renderer's synchronous path. Throws when no
+          // channel reaches it, which the catch below turns into a retry rather than a cached miss.
+          steamid = await ipcCall('get-steam-appid-from-title', { title });
           entry = steamid ? { epicid: game.appid, steamid } : { epicid: game.appid };
         }
         cache.push(entry);
@@ -158,7 +152,6 @@ module.exports._internal = {
 module.exports.getCachedData = async () => undefined;
 
 module.exports.getGameData = async (cfg) => {
-  const { ipcRenderer } = require('electron');
   const filePath = path.join(cacheRoot, 'steam_cache', 'schema', cfg.lang, `${cfg.appID}.db`);
   let result;
   try {
@@ -197,7 +190,7 @@ module.exports.getGameData = async (cfg) => {
       title = await getGameTitleFromMapping(gameSlug);
     } catch (err) {
       // The mapping may not contain new or custom ids; fall back to the cached egdata lookup.
-      title = (await ipcRenderer.invoke('get-title-from-epic-id', { appid: cfg.appID })) || 'Unknown game';
+      title = (await ipcCall('get-title-from-epic-id', { appid: cfg.appID })) || 'Unknown game';
     }
   }
   if (!title) return result;
@@ -243,7 +236,7 @@ module.exports.getGameData = async (cfg) => {
       // Hidden or unavailable Epic data: try the Steam schema when possible.
       if (err.code !== 404) debug.log(err);
       if (!cfg.steamappid) return result;
-      const achs = await ipcRenderer.invoke('get-steam-data', { appid: cfg.steamappid, type: 'steamhunters' });
+      const achs = await ipcCall('get-steam-data', { appid: cfg.steamappid, type: 'steamhunters' });
       list = Array.isArray(achs?.achievements) ? achs.achievements : []; //guard: empty scrape must not throw and drop the game
     }
   }
@@ -259,16 +252,16 @@ module.exports.getGameData = async (cfg) => {
   };
   if (!cfg.steamappid) {
     // if its exclusive then use epic images instead of steam's
-    const links = (await ipcRenderer.invoke('get-images-for-game', { name: title })) || {};
+    const links = (await ipcCall('get-images-for-game', { name: title })) || {};
     result.img = {
       header: links.landscape,
       background: links.background,
       portrait: links.portrait,
       icon: links.icon,
     };
-    if (links.background) ipcRenderer.send('stylize-background-for-appid', { background: links.background, appid: cfg.appID });
+    if (links.background) ipcSend('stylize-background-for-appid', { background: links.background, appid: cfg.appID });
   } else {
-    const imgs = (await ipcRenderer.invoke('get-steam-data', { appid: cfg.steamappid, type: 'common' })) || {};
+    const imgs = (await ipcCall('get-steam-data', { appid: cfg.steamappid, type: 'common' })) || {};
     result.img = {
       header: imgs.header || 'header',
       background: imgs.background || 'page_bg_generated_v6b.jpg',

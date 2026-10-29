@@ -187,9 +187,7 @@ function applyAchievementSort(root, mode, direction) {
   const factor = direction === 'asc' ? 1 : -1;
 
   li.detach().sort(function (a, b) {
-    // A game's PlayStation platinum has no rate of its own: it heads its list whatever the order.
-    const pinned = (row) => (row.querySelector('.achievement.psn-platinum') ? 1 : 0);
-    if (pinned(a) !== pinned(b)) return pinned(b) - pinned(a);
+    // A PlayStation platinum sorts like any row; only an unsorted list keeps it first (data-index -1).
     if (mode === 'percent') {
       // The displayed text is localized ("84,5 %"), so the raw value is read from the attribute.
       const rarityValue = (row) => {
@@ -203,7 +201,9 @@ function applyAchievementSort(root, mode, direction) {
       const result = (aPercent - bPercent) * factor;
       if (result !== 0) return result;
     } else if (mode === 'time') {
-      const result = ($(a).find('.achievement .stats .time').data('time') - $(b).find('.achievement .stats .time').data('time')) * factor;
+      // A locked platinum has no date row at all: read it as never unlocked, like a 0 timestamp.
+      const unlockTime = (row) => Number($(row).find('.achievement .stats .time').data('time')) || 0;
+      const result = (unlockTime(a) - unlockTime(b)) * factor;
       if (result !== 0) return result;
     }
     return $(a).find('.achievement').data('index') - $(b).find('.achievement').data('index');

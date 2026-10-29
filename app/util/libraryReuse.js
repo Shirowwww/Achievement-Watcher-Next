@@ -26,9 +26,10 @@ const PROVISIONAL_GRACE_MS = 30 * 60 * 1000;
   entry    - what librarySnapshot.readEntry() returned, or null.
   options  - the onStart() options; a recheck or a cache clear is the user asking for a real scan.
   context  - { now, appVersion, inputsUnchanged } - injected so the decision stays testable and the
-             expensive filesystem sweep runs last, only once everything cheaper has passed.
+             expensive filesystem sweep runs last, only once everything cheaper has passed. The
+             sweep may answer asynchronously: the window asks the scan host, which owns the disk.
 */
-function refuseReason(entry, options = {}, context = {}) {
+async function refuseReason(entry, options = {}, context = {}) {
   if (!entry || !Array.isArray(entry.games) || entry.games.length === 0) return 'nothing stored yet';
   if (options && options.forceAchievementRecheck === true) return 'a recheck was requested';
   if (options && options.preserveExistingOnFailure === true) return 'the caches were just cleared';
@@ -52,7 +53,7 @@ function refuseReason(entry, options = {}, context = {}) {
     return !(Number.isFinite(provisionalAge) && provisionalAge >= PROVISIONAL_GRACE_MS);
   });
   if (blockingProvisional) return 'the last scan left entries undescribed';
-  if (typeof context.inputsUnchanged !== 'function' || !context.inputsUnchanged(entry.fingerprint))
+  if (typeof context.inputsUnchanged !== 'function' || !(await context.inputsUnchanged(entry.fingerprint)))
     return 'a game folder or unlock file changed';
   return '';
 }

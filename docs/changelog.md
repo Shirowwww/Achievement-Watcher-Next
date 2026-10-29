@@ -169,6 +169,17 @@ renamed in 3.9.0 and the history is kept under one file.
   broadcast and the OBS page now answer only this PC's own pages, the app, the Decky plugin and
   programs that are not browsers.
 
+### Performance
+
+- **The window stays smooth while the library is scanned.** The scan used to read every game folder
+  in the window itself, freezing it for seconds at a time (up to 20 seconds on a cold start). It now
+  runs in a process of its own, and so does the tray's background check while the window is closed.
+  Games that did not change keep their tile instead of being redrawn, and the health dots no longer
+  stall the window after a scan.
+- **Scans are about a third faster.** The folders the last scan read are listed all at once instead
+  of one by one, and an emulator dll is no longer read again while it has not changed: on a cold
+  start, the first game shows up in about 3 seconds instead of 5.
+
 ### Website & Docs
 
 - **Community preset cards show every kind of popup.** Two arrow buttons on a card's picture step

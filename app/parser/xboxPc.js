@@ -61,13 +61,7 @@ function setUserDataPath(p) {
 }
 
 function getUserDataPath() {
-  if (userDataPath) return userDataPath;
-  try {
-    const { app } = require('@electron/remote');
-    return app.getPath('userData');
-  } catch {
-    return require('../util/userDataPath.js').userDataDir();
-  }
+  return userDataPath || require('../util/userDataPath.js').userDataDir();
 }
 
 function firstNonEmpty(...values) {

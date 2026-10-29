@@ -72,13 +72,17 @@ const PORTS = [
 ];
 
 let debug = { log() {}, warn() {}, error() {} };
+// The app hands its scan-wide listing memo here (util/dirCache.js); the Watchdog, which loads this
+// file on its own, keeps reading the folders directly.
+let listDirectory = null;
 
-module.exports.initDebug = ({ isDev, userDataPath }) => {
+module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
   schema.setLogger(debug);
+  listDirectory = typeof reader === 'function' ? reader : null;
 };
 
 // Resolved on first use and overridable: the Watchdog locates userData its own way.
@@ -116,6 +120,7 @@ function isRealDirectory(dir) {
 }
 
 function readDirectory(dir) {
+  if (listDirectory) return listDirectory(dir) || [];
   try {
     return fs.readdirSync(dir, { withFileTypes: true });
   } catch {

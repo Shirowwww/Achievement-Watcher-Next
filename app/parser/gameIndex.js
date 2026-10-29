@@ -8,17 +8,25 @@
   the same name, and the folder is what tells them apart when one of them starts.
 */
 
-const { app } = process.type === 'browser' ? require('electron') : require('@electron/remote');
 const path = require('path');
 const { pickBestClaim, isPlaceholderClaim } = require('../util/claimCollision.js');
+const { knownUserDataDir } = require('../util/userDataPath.js');
 const fs = require('fs');
 
+// Read once, when the module loads: the scan host has its folder in the environment by then.
+const userDataRoot = knownUserDataDir();
+
+function userData() {
+  if (!userDataRoot) throw new Error('gameIndex: the app data folder is unknown in this process');
+  return userDataRoot;
+}
+
 function userFile() {
-  return path.join(app.getPath('userData'), 'cfg/gameIndex.json');
+  return path.join(userData(), 'cfg/gameIndex.json');
 }
 
 function exeListFile() {
-  return path.join(app.getPath('userData'), 'cfg/exeList.db');
+  return path.join(userData(), 'cfg/exeList.db');
 }
 
 function normalizePath(value) {

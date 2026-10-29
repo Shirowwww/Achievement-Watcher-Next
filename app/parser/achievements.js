@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const appPath = __dirname;
 const { buildAchievementSchemaIndex, findAchievementInSchema } = require('./achievementSchemaIndex.js');
-const { ipcInvoke } = require('../util/ipcInvoke.js');
+const { ipcInvoke, ipcSend } = require('../util/ipcInvoke.js');
 const gog = require(path.join(appPath, 'gog.js'));
 const gogOfficial = require(path.join(appPath, 'gogOfficial.js'));
 const gogUniverseLan = require(path.join(appPath, 'gogUniverseLan.js'));
@@ -132,13 +132,16 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   uplay.initDebug({ isDev, userDataPath });
   socialclub.initDebug({ isDev, userDataPath });
   ff7.initDebug({ isDev, userDataPath });
-  xlln.initDebug({ isDev, userDataPath });
+  // These walk the same folders as discovery, each with its own readdir: give them the scan's memo.
+  // Untracked, so a game writing into its own folder does not invalidate the stored library.
+  const listDirectory = (dir) => dirCache.readdir(dir, { track: false });
+  xlln.initDebug({ isDev, userDataPath, listDirectory });
   kytyps5.initDebug({ isDev, userDataPath });
-  markerpatch.initDebug({ isDev, userDataPath });
-  madnesspatch.initDebug({ isDev, userDataPath });
-  pcports.initDebug({ isDev, userDataPath });
+  markerpatch.initDebug({ isDev, userDataPath, listDirectory });
+  madnesspatch.initDebug({ isDev, userDataPath, listDirectory });
+  pcports.initDebug({ isDev, userDataPath, listDirectory });
   x360Recomp.initDebug({ isDev, userDataPath });
-  ps4Recomp.initDebug({ isDev, userDataPath });
+  ps4Recomp.initDebug({ isDev, userDataPath, listDirectory });
   blacklist.initDebug({ isDev, userDataPath });
   debug = new (require('../util/logger'))({
     console: isDev || false,
@@ -768,6 +771,10 @@ let _discoverCache = null; // { key, time, appidList, folderIndex, claimedDirs }
 const DISCOVER_TTL_MS = 60000;
 // Timestamps of the folders the last full discovery walked, so the background poll can tell nothing on disk moved without walking them again.
 let _discoverFingerprint = null;
+// The folders the next discovery is expected to read, listed in parallel before it walks them
+// (dirCache.prefetch). Only a read-ahead: a stale list costs a few wasted reads, never a wrong
+// answer, so a manual refresh that forgets the fingerprint keeps this.
+let _readAheadDirs = [];
 // The same folders plus every unlock file the listed games are read from, captured before the games
 // load so anything written mid-scan reads as a change next time. Lets the renderer reuse a library
 // it already has instead of rebuilding an identical one - see util/scanFingerprint.js.
@@ -816,6 +823,7 @@ async function discoverWithCache(option, steamAccFilter) {
   exeCandidateCache.flush();
   // Only a full scan is a usable baseline for the background poll; a scoped one looked at a subset.
   _discoverFingerprint = activeScope ? null : dirFingerprint.capture(dirCache.lastVisitedDirs());
+  if (!activeScope) _readAheadDirs = dirCache.lastVisitedDirs().slice();
   if (perfTrace.isEnabled()) debug.log(`[perf] discover ${Date.now() - discoverStarted}ms - ${perfTrace.summary({ prefix: 'discover:' })}`);
   if (cacheKey)
     _discoverCache = {
@@ -834,6 +842,13 @@ let _emuFixInFlight = new Set();
 
 // Same idea for the SteamDB launch-metadata lookup: it runs detached from the game load, so a second scan starting while the first fetches must not queue the same page again.
 const _steamDbLaunchInFlight = new Set();
+
+// The Ubisoft mapping pass a scan leaves running, not awaited by it.
+let _uplayLearningInFlight = 0;
+
+// True while work a scan started is still writing after makeList returned: the scan host is only
+// stopped for being idle once this is false, never in the middle of an emulator setup.
+module.exports.backgroundWorkPending = () => _emuFixInFlight.size > 0 || _steamDbLaunchInFlight.size > 0 || _uplayLearningInFlight > 0;
 
 // A library entry for a game whose metadata lookup failed or timed out. Discovery found real
 // achievement data on disk; the Steam lookup only decorates it, so a failed lookup must never remove
@@ -1268,6 +1283,17 @@ async function announceAutomaticEmulatorFix() {
 }
 
 module.exports.onAutomaticEmulatorFixStarting = onAutomaticEmulatorFixStarting;
+
+/*
+  The scan host runs this module in another process, where these three moments happen with nobody
+  to tell. It forwards them, and the process that started it answers with the handlers registered
+  here - the once-per-session bookkeeping of the notice stays on the host's side.
+*/
+module.exports.hostEventHandlers = {
+  emulatorFixed: (game) => (_onEmulatorFixed ? _onEmulatorFixed(game) : undefined),
+  packageBlocked: (err) => reportEmulatorPackageBlocked(err),
+  automaticFixStarting: async () => (automaticFixNoticeHandler ? automaticFixNoticeHandler() : true),
+};
 
 // Written only when the repair is allowed to complete the file (goldberg.repair's fillUserDefaults).
 const USER_CONFIG_REPAIR_CODES = new Set(['NO_USER_CONFIG', 'BAD_USER_CONFIG', 'PLACEHOLDER_SAVE_PATH']);
@@ -2309,8 +2335,17 @@ async function previewWatchedFolder(dir, source) {
 module.exports.previewWatchedFolder = previewWatchedFolder;
 
 async function discover(source, steamAccFilter, scope = null) {
-  // One pass reads the same folders from several walkers; serve each directory listing once.
-  return dirCache.withScope(() => discoverInScope(source, steamAccFilter, scope));
+  // One pass reads the same folders from several walkers; serve each directory listing once, and
+  // list the ones the last full pass read in parallel first. A scoped scan reads only part of them.
+  return dirCache.withScope(async () => {
+    if (!scope && _readAheadDirs.length > 0) {
+      const readAheadStarted = Date.now();
+      const listed = await dirCache.prefetch(_readAheadDirs);
+      perfTrace.record('discover:readAhead', Date.now() - readAheadStarted);
+      if (perfTrace.isEnabled()) debug.log(`[perf] read ${listed} folder listing(s) ahead in ${Date.now() - readAheadStarted}ms`);
+    }
+    return discoverInScope(source, steamAccFilter, scope);
+  });
 }
 
 async function discoverInScope(source, steamAccFilter, scope) {
@@ -3381,14 +3416,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       retroAchievements.setUserDataPath(_userDataPath || userDataDir());
       game = await retroAchievements.getGameData(appid.appid);
       // The background is a small raw screenshot: have it blurred and tinted like the Steam and
-      // Epic ones now, so it is ready by the time the game page opens. Renderer only.
-      if (game && game.img.background) {
-        try {
-          require('electron').ipcRenderer?.send('stylize-background-for-appid', { background: game.img.background, appid: appid.appid });
-        } catch {
-          /* not in a renderer: the page paints the plain picture */
-        }
-      }
+      // Epic ones now, so it is ready by the time the game page opens. Where no channel reaches the
+      // main process, the page paints the plain picture.
+      if (game && game.img.background) ipcSend('stylize-background-for-appid', { background: game.img.background, appid: appid.appid });
     } else if (appid.data.type === 'psnLibrary') {
       const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
       psnLibrary.setUserDataPath(_userDataPath || userDataDir());
@@ -4505,7 +4535,14 @@ module.exports.restoreScanFingerprint = (fingerprint) => {
   if (!dirs || dirs.length === 0) return false;
   _discoverFingerprint = dirs.map(([dir, mtimeMs]) => [dir, mtimeMs]);
   _scanFingerprint = { dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]), files: Array.isArray(fingerprint.files) ? fingerprint.files : [] };
+  _readAheadDirs = dirs.map(([dir]) => dir);
   return true;
+};
+
+// A stored library that is about to be rebuilt still says which folders the rebuild will read.
+module.exports.hintScanFolders = (fingerprint) => {
+  const dirs = fingerprint && Array.isArray(fingerprint.dirs) ? fingerprint.dirs : null;
+  if (dirs && dirs.length > 0) _readAheadDirs = dirs.map(([dir]) => dir);
 };
 
 // Manual refresh: forget the memoized install-folder walks so a game patched in place is re-read.
@@ -4784,7 +4821,12 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
     }
     debug.log(`makeList: ${result.length} game(s) in ${((Date.now() - scanStart) / 1000).toFixed(2)}s`);
     // Not awaited: the library is complete without it, and what it learns lands on the next scan.
-    learnUplayProductMappings().catch((err) => debug.log(`[uplay-automap] background pass failed => ${err}`));
+    _uplayLearningInFlight += 1;
+    learnUplayProductMappings()
+      .catch((err) => debug.log(`[uplay-automap] background pass failed => ${err}`))
+      .finally(() => {
+        _uplayLearningInFlight -= 1;
+      });
     callbackProgress(100);
     await new Promise((r) => setTimeout(r, 10));
     return result;

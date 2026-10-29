@@ -17,13 +17,8 @@ function setUserDataPath(p) {
 }
 
 function sidecarFile() {
-  if (userDataPath) return path.join(userDataPath, 'cfg/manual-unlocks.json');
-  try {
-    const { app } = require('@electron/remote');
-    return path.join(app.getPath('userData'), 'cfg/manual-unlocks.json');
-  } catch {
-    return null;
-  }
+  const root = userDataPath || require('../util/userDataPath.js').knownUserDataDir();
+  return root ? path.join(root, 'cfg/manual-unlocks.json') : null;
 }
 
 function gameKey(appid, source) {

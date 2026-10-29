@@ -17,9 +17,21 @@ const pe = require('./pe.js');
 */
 const EMULATOR_DLL_MARKER = Buffer.from('steam_settings', 'ascii');
 
+// One scan asks about the same dll several times (discovery, the repair diagnosis, the health
+// report), and each answer read the whole file. Remembered per path, as long as size and date hold.
+const dllVerdicts = new Map();
+const MAX_DLL_VERDICTS = 4096;
+
 function isEmulatorDll(file) {
   try {
-    return fs.readFileSync(file).includes(EMULATOR_DLL_MARKER);
+    const stat = fs.statSync(file);
+    const signature = `${stat.size}:${stat.mtimeMs}`;
+    const known = dllVerdicts.get(file);
+    if (known && known.signature === signature) return known.emulator;
+    const emulator = fs.readFileSync(file).includes(EMULATOR_DLL_MARKER);
+    if (dllVerdicts.size >= MAX_DLL_VERDICTS) dllVerdicts.clear();
+    dllVerdicts.set(file, { signature, emulator });
+    return emulator;
   } catch {
     return false;
   }

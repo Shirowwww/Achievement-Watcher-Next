@@ -2074,6 +2074,27 @@ function getAchievements() {
   return achievementsJS;
 }
 
+/*
+  The background repair pass scans the whole library from here while the window is closed, and a
+  scan reads thousands of folders synchronously - the tray, the IPC handlers and the notifications
+  all waited behind it. It runs in the scan host instead, stopped again after a minute of quiet so
+  the tray does not keep a second process for a pass that comes every 15 minutes.
+*/
+let scanHost = null;
+function getScanHost() {
+  if (!scanHost) {
+    scanHost = require(path.join(__dirname, '../util/scanHost.js')).createScanHost({
+      local: getAchievements,
+      userDataPath: userData,
+      isDev: app.isDev || false,
+      secret: () => appSecret(),
+      log: (line) => debug.log(line),
+      idleMs: 60 * 1000,
+    });
+  }
+  return scanHost;
+}
+
 async function getCachedData(info) {
   if (!info.source) info.source = 'steam';
   let g = await getAchievements().getGameFromCache(info.appid, info.source, configJS);
@@ -3361,8 +3382,8 @@ async function runBackgroundAutoFix(reason) {
       // Same cheap pre-check as the renderer's poll: stat the folders the last scan read instead of
       // walking them again. A full pass still runs every few hours for the database/registry sources.
       bgAutoFixTicks += 1;
-      if (bgAutoFixTicks % BG_AUTOFIX_FULL_EVERY_TICKS !== 0 && getAchievements().discoveryInputsUnchanged?.()) return;
-      const discovered = await getAchievements().detectInstalledAppids(configJS);
+      if (bgAutoFixTicks % BG_AUTOFIX_FULL_EVERY_TICKS !== 0 && (await getScanHost().discoveryInputsUnchanged())) return;
+      const discovered = await getScanHost().detectInstalledAppids(configJS);
       const fresh = discovered.filter(
         (id) => !bgKnownAppids.has(String(id)) && (bgUnrenderableAppids.get(String(id)) || 0) < BG_UNRENDERABLE_MISS_LIMIT
       );
@@ -3374,9 +3395,9 @@ async function runBackgroundAutoFix(reason) {
     debug.log(`[bg-autofix] running headless scan (${reason})`);
     // makeList drives the same one-shot auto-fix as the UI scan, but per-game emulator setup runs in
     // the background after makeList returns; the toast fires from setEmulatorFixedHandler, not onGame.
-    const scanned = await getAchievements().makeList(configJS, () => {}, () => {});
+    const scanned = (await getScanHost().makeList(configJS, () => {}, () => {})).list;
     try {
-      const all = await getAchievements().detectInstalledAppids(configJS);
+      const all = await getScanHost().detectInstalledAppids(configJS);
       bgKnownAppids = new Set(all.map(String));
       recordBackgroundScanMisses(all, scanned);
     } catch {}

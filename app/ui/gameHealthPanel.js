@@ -215,6 +215,11 @@ function safeNemirtingasDiagnose(gameDir, launchArgs) {
   }
 }
 
+// The scan host's answer for one of its folder walks, or the walk done here when it has none.
+function fromProbe(entry, walkHere) {
+  return entry && !entry.error ? entry.value : walkHere();
+}
+
 // normalizePathKey comes from app.js, through the page's shared scope.
 function isPathInsideDir(value, root) {
   if (!value || !root) return false;
@@ -284,7 +289,11 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
 
   // A folder served by a known crack loader (ALI213, OnlineFix, TENOKE, SmartSteamEmu, ...) supplies
   // its own Steam emulation, so measuring it against Goldberg would misreport "no achievement list".
-  const foreignLoader = gameDirExists ? crackLoaderDetect.detectWorkingCrackLoader(gameDir) : null;
+  // The background dots have the scan host walk the folder (scanHost comes from app.js, through the
+  // page's shared scope): those walks are most of this report's disk reads, and they used to stall
+  // the window right after every scan. The panel the user opens still reads here.
+  const probe = readOnly && gameDirExists ? await scanHost.probeGameFolder(gameDir, cfg.args) : null;
+  const foreignLoader = gameDirExists ? fromProbe(probe && probe.crackLoader, () => crackLoaderDetect.detectWorkingCrackLoader(gameDir)) : null;
 
   // Only diagnose a Goldberg/GBE setup when one is actually there: a steam_settings folder or a
   // replaced steam_api dll on disk, or a save already being read out of GSE/Goldberg.
@@ -292,7 +301,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   let emulated = false;
   if (!isConsole && !isUbisoft && !foreignLoader && gameDirExists) {
     try {
-      const emu = goldberg.detectEmulator(gameDir);
+      const emu = fromProbe(probe && probe.emulator, () => goldberg.detectEmulator(gameDir));
       /*
         A game owned on Steam ships Valve's own steam_api dll, which detectEmulator counts like any
         other: on an official library that alone proved nothing, and Worms W.M.D was reported as
@@ -377,7 +386,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
       ? { name: foreignLoader.name, replaceable: foreignLoader.replaceable === true, ...(foreignLoader.replacedBy ? { replacedBy: foreignLoader.replacedBy } : {}) }
       : null,
     // A folder set up with the Nemirtingas Epic emulator, and what it still needs before it saves (#112).
-    nemirtingasEpic: gameDirExists ? safeNemirtingasDiagnose(gameDir, cfg.args) : null,
+    nemirtingasEpic: gameDirExists ? fromProbe(probe && probe.nemirtingasEpic, () => safeNemirtingasDiagnose(gameDir, cfg.args)) : null,
     // Console emulators (RPCS3/ShadPS4/Xenia) and the official platform libraries are followed by
     // their own watchers, not by the process monitor, so a missing gameIndex entry means nothing
     // for them and must not be reported as a fault.

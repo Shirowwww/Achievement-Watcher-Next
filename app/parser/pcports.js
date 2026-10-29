@@ -57,12 +57,16 @@ const iconDirFor = () => path.join(dataRoot(), 'icon_cache', TYPE, GAME_ID);
 const timesFile = () => path.join(dataRoot(), 'cfg', TIMES_FILE);
 
 let debug = { log() {}, warn() {}, error() {} };
+// The app hands its scan-wide listing memo here (util/dirCache.js); the Watchdog, which loads this
+// file on its own, keeps reading the folders directly.
+let listDirectory = null;
 
-module.exports.initDebug = ({ isDev, userDataPath }) => {
+module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
+  listDirectory = typeof reader === 'function' ? reader : null;
 };
 
 function statOf(target) {
@@ -85,6 +89,7 @@ function isPlainDirectory(target) {
 }
 
 function readDirectory(target) {
+  if (listDirectory) return listDirectory(target) || [];
   try {
     return fs.readdirSync(target, { withFileTypes: true });
   } catch {

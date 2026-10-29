@@ -255,18 +255,12 @@ function inThread(file, { workerFile, timeoutMs }) {
 
 // The app's own executable run as Node, the way the Watchdog is started.
 function inProcess(file, { workerFile, timeoutMs }) {
-  const { fork } = require('child_process');
   return new Promise((resolve, reject) => {
     let child;
     try {
-      child = fork(workerFile, [], {
-        execPath: process.execPath,
-        execArgv: [`--max-old-space-size=${ISOLATED_HEAP_MB}`],
-        env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },
-        serialization: 'advanced',
-        stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
-        windowsHide: true,
-      });
+      // Required here, not at the top: xexWorker.js loads this file from outside the asar too.
+      const { forkNode } = require(path.join(__dirname, '..', 'util', 'nodeProcess.js'));
+      child = forkNode(workerFile, { heapMb: ISOLATED_HEAP_MB });
     } catch (err) {
       reject(err);
       return;

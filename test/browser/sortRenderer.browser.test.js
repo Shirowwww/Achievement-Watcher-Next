@@ -108,6 +108,51 @@ test('installed-only toggle refreshes profile statistics and visible games toget
   });
 });
 
+// A PlayStation platinum row used to stay pinned on top whatever the order; it now sorts like any
+// other row, and only an unsorted list keeps it first (data-index -1).
+test('the PlayStation platinum follows the achievement sort', { concurrency: 1, timeout: 180000 }, async (t) => {
+  await inContext(t, async (context) => {
+    const harnessDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-platinum-sort-harness-'));
+    const harness = path.join(harnessDir, 'platinum-sort.html');
+    fs.writeFileSync(harness, buildHarness());
+
+    try {
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(harness).href);
+      const result = await page.evaluate(() => {
+        const row = (id, index, time, percent, platinum = false) =>
+          '<li data-id="' + id + '"><div class="achievement' + (platinum ? ' psn-platinum' : '') + '" data-index="' + index + '"><div class="stats">' +
+          (time === null ? '' : '<span class="time" data-time="' + time + '"></span>') +
+          '<div class="community"><span class="data"' + (percent === null ? '' : ' data-percent="' + percent + '"') + '>' + (percent === null ? 'Platine' : percent) + '</span></div></div></div></li>';
+        const ids = () => $('#unlock > ul > li').map(function () { return this.dataset.id; }).get();
+        const click = (button) => document.querySelector('#unlock .sort.' + button).click();
+        localStorage.clear();
+        $('#unlock > ul').html(row('a', 0, 10, 50) + row('b', 1, 30, 5) + row('p', -1, 20, 1, true));
+        click('percentage');
+        const rarityAsc = ids();
+        click('percentage');
+        const rarityDesc = ids();
+        click('percentage');
+        const unsorted = ids();
+        click('time');
+        const timeDesc = ids();
+        $('#unlock > ul').html(row('a', 0, 10, 50) + row('b', 1, 30, 5) + row('p', -1, null, null, true));
+        localStorage.clear();
+        click('time');
+        return { rarityAsc, rarityDesc, unsorted, timeDesc, lockedTimeDesc: ids() };
+      });
+
+      assert.deepEqual(result.rarityAsc, ['p', 'b', 'a']);
+      assert.deepEqual(result.rarityDesc, ['a', 'b', 'p']);
+      assert.deepEqual(result.timeDesc, ['b', 'p', 'a']);
+      assert.deepEqual(result.lockedTimeDesc, ['b', 'a', 'p'], 'a locked platinum has no date and goes after the unlocked rows');
+      assert.deepEqual(result.unsorted, ['p', 'a', 'b']);
+    } finally {
+      fs.rmSync(harnessDir, { recursive: true, force: true });
+    }
+  });
+});
+
 // The achievement sort buttons are icon-only: an idle one used to have no name at all, so a screen
 // reader announced "button" and nothing said what clicking it would do.
 test('every achievement sort button is named, active or not', { concurrency: 1, timeout: 180000 }, async (t) => {
