@@ -35,6 +35,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The Ubisoft achievement fix works on EMPRESS and DenuvOwO releases.** AC Odyssey froze at launch
   after the fix: the EMPRESS settings were left behind and the game waited on an empty chunk list. The fix
   now carries them over, and copies the EMPRESS game saves to where the new loader reads them.
+- **Settings are no longer reset when the Watchdog cannot read them.** If `options.ini` was busy
+  while the app saved it, the Watchdog replaced every setting with its defaults. It now keeps the file
+  as it is, runs on defaults until the next read, and logs why.
 - **Two achievements unlocked together are both announced.** The second one waited for the first
   popup to show, then counted as too old and was skipped, with no popup and no screenshot.
 

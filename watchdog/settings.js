@@ -3,6 +3,8 @@
 const ini = require('./util/ini');
 const osLocale = require('./util/osLocale');
 const fs = require('./util/fsAsync');
+const replaceFile = require('./util/replaceFile.js');
+const debug = require('./util/log.js');
 const steamLang = require('./steam.json');
 const { normalizeProgressStep } = require('./util/progressMilestone');
 
@@ -104,6 +106,19 @@ function normalizeSectionObjects(options) {
     }
   }
   return changed;
+}
+
+function errorText(err) {
+  return err && err.message ? err.message : String(err);
+}
+
+// A settings file that cannot be written stays as it was; the session goes on with what was read.
+function writeOptions(cfg_file, options) {
+  try {
+    replaceFile.writeFileAtomicSync(cfg_file, ini.stringify(options));
+  } catch (err) {
+    debug.error(`[settings] could not write ${cfg_file}: ${errorText(err)}`);
+  }
 }
 
 module.exports.load = async (cfg_file) => {
@@ -583,8 +598,12 @@ module.exports.load = async (cfg_file) => {
       fixFile = true;
     }
 
-    if (fixFile) await fs.writeFile(cfg_file, ini.stringify(options), 'utf8').catch(() => {});
+    if (fixFile) writeOptions(cfg_file, options);
   } catch (err) {
+    // Defaults stay in memory unless there is no file at all: rewriting a file locked by an app save
+    // (EBUSY, EPERM), or one a check above tripped on, would erase every setting the user had.
+    const fileMissing = err && err.code === 'ENOENT';
+    if (!fileMissing) debug.error(`[settings] could not load ${cfg_file}, using defaults for now: ${errorText(err)}`);
     options = {
       achievement: {
         thumbnailPortrait: false,
@@ -693,7 +712,7 @@ module.exports.load = async (cfg_file) => {
       options.achievement.lang = 'english';
     }
 
-    await fs.writeFile(cfg_file, ini.stringify(options), 'utf8').catch(() => {});
+    if (fileMissing) writeOptions(cfg_file, options);
   }
 
   return options;
