@@ -15,6 +15,34 @@ function normalizeToastOptions(options) {
   return normalized;
 }
 
+/*
+  powertoast puts text in CDATA and ids, addresses and image paths in attributes unescaped, and
+  they come from outside (a developer's achievement text, a schema icon): a `]]>` or a quote would
+  add elements of its own to the toast. Closed here, before either way of showing a toast.
+*/
+const ATTRIBUTE_ENTITIES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
+const inAttribute = (value) => (typeof value === 'string' ? value.replace(/[&<>"]/g, (char) => ATTRIBUTE_ENTITIES[char]) : value);
+const inCdata = (value) => (typeof value === 'string' ? value.replaceAll(']]>', ']]]]><![CDATA[>') : value);
+
+function xmlSafeToastOptions(options) {
+  const safe = { ...options };
+  for (const key of ['title', 'message', 'attribution']) if (key in safe) safe[key] = inCdata(safe[key]);
+  for (const key of ['icon', 'heroImg', 'inlineImg']) if (key in safe) safe[key] = inAttribute(safe[key]);
+  const activation = (value) => (typeof value === 'string' ? inAttribute(value) : value && { ...value, launch: inAttribute(value.launch) });
+  if ('activation' in safe) safe.activation = activation(safe.activation);
+  if (safe.group && typeof safe.group === 'object') {
+    safe.group = { ...safe.group, id: inAttribute(safe.group.id), ...('activation' in safe.group && { activation: activation(safe.group.activation) }) };
+  }
+  if (Array.isArray(safe.button)) {
+    safe.button = safe.button.map((button) =>
+      button && typeof button === 'object'
+        ? { ...button, ...('activation' in button && { activation: activation(button.activation) }), ...('icon' in button && { icon: inAttribute(button.icon) }) }
+        : button
+    );
+  }
+  return safe;
+}
+
 // Off Windows there is no WinRT toast: the app shows a desktop notification (libnotify / D-Bus)
 // for the Watchdog, which as a plain Node process has no Electron Notification of its own.
 // The game a click should open comes from `uniqueID` ("<appid>" or "<appid>:<achievement>").
@@ -105,7 +133,7 @@ async function toast(
   // powertoast reads `disableWinRT` from the show() options, not from the constructor options.
   // Splitting it here is what actually makes the "use PowerShell" fallback controllable; callers
   // that set `disableWinRT` on the payload were silently ignored before.
-  const { disableWinRT, hideAfterMs, ...toastOptions } = normalizeToastOptions(options);
+  const { disableWinRT, hideAfterMs, ...toastOptions } = xmlSafeToastOptions(normalizeToastOptions(options));
   const { Toast, toXmlString } = await load();
   if (canAppShowToast(toastOptions, { send, connected, appAumid })) {
     return showThroughApp(toXmlString(toastOptions), send, timeoutMs, Number(hideAfterMs) || 0);
