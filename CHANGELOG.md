@@ -135,6 +135,10 @@ renamed in 3.9.0 and the history is kept under one file.
   keeps its launcher settings in `spartanport-launcher` and reads `SPARTAN_` variables, so AW Next
   took it for the old port and found no game. Both versions are read, and the platinum is picked up
   from its log line too.
+- **Websites can no longer read your unlocks from the local broadcast.** Any page open in a browser
+  could connect to `Websocket @localhost:8082` and receive every unlock, or send test commands. The
+  broadcast and the OBS page now answer only this PC's own pages, the app, the Decky plugin and
+  programs that are not browsers.
 
 ### Website & Docs
 

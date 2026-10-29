@@ -59,6 +59,12 @@ module.exports = (option = {}) => {
   */
   const obs = obsSource.createHandler({ auth: options.auth, log: (message) => debug.log(message) });
   server.on('request', (req, res) => {
+    if (!isAllowedHost(req.headers.host, options.host)) {
+      debug.warn(`[obs] refused request for foreign host ${JSON.stringify(req.headers.host)}`);
+      res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });
+      res.end('Forbidden');
+      return;
+    }
     try {
       if (obs(req, res)) return;
     } catch (err) {
@@ -89,6 +95,14 @@ module.exports = (option = {}) => {
   });
 
   server.on('upgrade', function upgrade(request, socket, head) {
+    const refusal = upgradeRefusal(request.headers, options);
+    if (refusal) {
+      debug.warn(`Websocket upgrade refused: ${refusal.reason}`);
+      socket.write(`HTTP/1.1 ${refusal.status} Forbidden\r\n\r\n`);
+      socket.destroy();
+      return;
+    }
+
     if (options.auth) {
       debug.log('Basic http auth is enabled > authenticating ...');
 
@@ -162,7 +176,52 @@ function isDeckyListening(clients = WebSocket ? WebSocket.clients : []) {
   return Array.from(clients).some((client) => client.decky && client.readyState === ws.OPEN);
 }
 
+/*
+  Any website may open a websocket to loopback, and a DNS-rebound name reaches /obs. The Origin must
+  be local (OBS page, the app's file:// Settings) or Steam's CEF (Decky); native clients send none.
+  The Host must name this machine, or the address a caller deliberately bound.
+*/
+const LOOPBACK_NAMES = new Set(['127.0.0.1', 'localhost', '[::1]']);
+const STEAM_CEF_ORIGIN = 'https://steamloopback.host';
+const ELECTRON_FILE_ORIGIN = 'file://';
+
+function hostnameOf(authority) {
+  try {
+    return new URL(`http://${authority}`).hostname;
+  } catch {
+    return null;
+  }
+}
+
+function isAllowedHost(host, configuredHost = LOOPBACK) {
+  if (!host) return true;
+  const name = hostnameOf(host);
+  if (!name) return false;
+  const configured = configuredHost.includes(':') ? `[${configuredHost}]` : configuredHost;
+  return LOOPBACK_NAMES.has(name) || name === hostnameOf(configured);
+}
+
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (origin === STEAM_CEF_ORIGIN || origin === ELECTRON_FILE_ORIGIN) return true;
+  try {
+    const url = new URL(origin);
+    return (url.protocol === 'http:' || url.protocol === 'https:') && LOOPBACK_NAMES.has(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function upgradeRefusal(headers, options) {
+  if (!isAllowedHost(headers.host, options.host)) return { status: 403, reason: `foreign host ${JSON.stringify(headers.host)}` };
+  if (!isAllowedOrigin(headers.origin)) return { status: 403, reason: `foreign origin ${JSON.stringify(headers.origin)}` };
+  return null;
+}
+
 module.exports.resolveOptions = resolveOptions;
+module.exports.isAllowedHost = isAllowedHost;
+module.exports.isAllowedOrigin = isAllowedOrigin;
+module.exports.upgradeRefusal = upgradeRefusal;
 module.exports.isDeckyRequest = isDeckyRequest;
 module.exports.isDeckyListening = isDeckyListening;
 module.exports.LOOPBACK = LOOPBACK;
