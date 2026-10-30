@@ -123,6 +123,7 @@ const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
 const { configuredExecutable } = require('./util/exeList.js');
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
+const steamClock = require('./util/steamClock.js').createSteamClock({ log: (line) => debug.log(line) });
 
 /*
   The square slot of a notification card, best first, and in the same order the app resolves it in:
@@ -1000,7 +1001,10 @@ var app = {
       let i = 1;
       const missingRoots = [];
       const steamClientRoot = steamClientStats.steamClientRoot(self.options);
-      if (steamClientRoot) debug.log(`[steam] Steam client notifications on, following "${steamClientRoot.dir}"`);
+      if (steamClientRoot) {
+        debug.log(`[steam] Steam client notifications on, following "${steamClientRoot.dir}"`);
+        steamClock.offsetSeconds(); // measured now, so the first unlock is not kept waiting for it
+      }
       self.redirectsStamp = fileStamp(cfg_file.saveRedirects);
       const redirectedSaves = saveRedirects.roots(cfg_file.saveRedirects);
       const saveFolders = await monitor.getFolders(cfg_file.userDir, self.options, redirectedSaves);
@@ -1282,6 +1286,8 @@ var app = {
           // is awaited (up to several seconds for an overlay report), and a second unlock written in
           // the same save then aged past the threshold and was dropped as Outatime.
           const readAt = moment();
+          // Steam stamps its unlocks with its own clock, which a PC's can be a minute away from.
+          if (options.steamClient) readAt.add(await steamClock.offsetSeconds(), 'seconds');
           // A repaired setup redirects into GSE Saves, watched without the uplayR2 flag, so the ids
           // have to be re-keyed there too or a Ubisoft unlock is dropped as ACH_NOT_FOUND_IN_SCHEMA.
           if (options.uplayR2 || uplayR2.isUplayR2SteamAppId(appID)) {

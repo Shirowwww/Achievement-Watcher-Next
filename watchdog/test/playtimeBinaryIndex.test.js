@@ -10,6 +10,7 @@ const {
   filterGamesByAchievementSources,
   isInterpreterProcess,
   findGameForInterpreterChild,
+  shouldMuteBinary,
   candidateConfigDirs,
   relatedToFolder,
 } = require('../playtime/monitor.js');
@@ -120,6 +121,21 @@ test('a bundled JRE is attributed to the known game whose install folder contain
   // A JRE outside every known game's folder (a system-wide install) matches nothing here.
   const systemJavaw = path.join('C:', 'Program Files', 'Java', 'bin', 'javaw.exe');
   assert.equal(findGameForInterpreterChild('javaw.exe', systemJavaw, gameIndex), null);
+});
+
+// #154: Steam starts Slay the Spire as <game>\jre\bin\javaw.exe, and the shipped mute list names javaw.exe.
+test('a muted javaw.exe under a known game folder is kept, anywhere else it stays muted', () => {
+  const muted = ['java.exe', 'javaw.exe', 'Updater.exe'];
+  const gameIndex = [{ appid: '646570', name: 'Slay the Spire', exePath: path.join('C:', 'Games', 'SlayTheSpire', 'SlayTheSpire.exe') }];
+  const bundled = path.join('C:', 'Games', 'SlayTheSpire', 'jre', 'bin', 'javaw.exe');
+  const system = path.join('C:', 'Program Files', 'Java', 'bin', 'javaw.exe');
+
+  assert.equal(shouldMuteBinary('javaw.exe', bundled, muted, gameIndex), false);
+  assert.equal(shouldMuteBinary('javaw.exe', system, muted, gameIndex), true);
+  assert.equal(shouldMuteBinary('javaw.exe', '', muted, gameIndex), true);
+  // A native exe in the list stays muted, even from inside a game's folder.
+  assert.equal(shouldMuteBinary('updater.exe', path.join('C:', 'Games', 'SlayTheSpire', 'Updater.exe'), muted, gameIndex), true);
+  assert.equal(shouldMuteBinary('notepad.exe', system, muted, gameIndex), false);
 });
 
 test('candidateConfigDirs climbs above a bundled interpreter but never above an ordinary exe', () => {

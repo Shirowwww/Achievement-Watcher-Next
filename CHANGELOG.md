@@ -17,6 +17,12 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Steam games notify on a PC whose clock is off (#155).** Steam stamps an unlock with its own
+  time and AW Next aged it with the PC's, so a clock a minute fast made every unlock look too old to
+  show. AW Next now reads Steam's time when it starts and every hour, and ages those unlocks on it.
+- **Java games started from Steam are tracked (#154).** Steam starts Slay the Spire through the Java
+  bundled in its folder rather than its own launcher, and AW Next ignored every Java process. A Java
+  process inside a known game's folder now counts as that game.
 - **God of War III is found again after updating to SpartanPort 2.7.** Its launcher starts a new
   settings file next to the game, and AW Next read only that one, missing the game folder the old
   settings named. Game files kept inside the port's folder are found too, and SpartanPort 2.8,

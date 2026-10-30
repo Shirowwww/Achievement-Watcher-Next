@@ -337,6 +337,14 @@ function findGameForInterpreterChild(process, filepath, list = gameIndex) {
   return null;
 }
 
+// The shipped mute list names java.exe and javaw.exe (system-wide noise), yet Steam starts a Java
+// game as <game>\jre\bin\javaw.exe (#154): a muted interpreter a known game's folder claims is kept.
+function shouldMuteBinary(process, filepath, muteFiles, list = gameIndex) {
+  const name = String(process || '').toLowerCase();
+  if (!(muteFiles || []).some((bin) => String(bin).toLowerCase() === name)) return false;
+  return !findGameForInterpreterChild(process, filepath, list);
+}
+
 // How many parent folders to try above a spawned interpreter's own directory when looking for a
 // steam_appid.txt/steam_emu.ini marker. Bounded, and only for an interpreter: climbing for every
 // unmatched process would risk picking up an unrelated marker from a shared parent folder.
@@ -536,7 +544,7 @@ async function init() {
   processMonitor.on('creation', async ([process, pid, filepath]) => {
     const games = getTrackableGameMatches(gameIndexByBinary, process);
     if (isWallpaperEngineProcess(process, filepath) || isSteamClientProcess(process)) return;
-    if (filter.mute.file.some((bin) => bin.toLowerCase() === process.toLowerCase())) return;
+    if (shouldMuteBinary(process, filepath, filter.mute.file)) return;
 
     // A spawned interpreter never matches by binary name; a known game's install folder is a
     // stronger signal than the generic mute-by-path filter below, so it is tried first and is never
@@ -785,6 +793,7 @@ module.exports = {
   isInterpreterProcess,
   isSteamClientProcess,
   findGameForInterpreterChild,
+  shouldMuteBinary,
   candidateConfigDirs,
   relatedToFolder,
 };
