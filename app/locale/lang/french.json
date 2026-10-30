@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Clique sur le bouton outils d’un jeu (en haut à droite de sa vignette), ou fais un clic droit, pour ouvrir l’état du jeu. Il indique s’il est Prêt, À vérifier ou Non suivi.",
         "La phrase sous l’état explique la cause en clair. Les vérifications en dessous montrent quelle partie est en cause : fichiers du jeu, exécutable, données de succès, émulateur, suivi en direct ou notifications.",
-        "Les boutons de réparation n’apparaissent que si AW Next peut vraiment corriger le jeu, comme Localiser le jeu, Réécrire les données de succès, Restaurer le fichier d’émulateur ou Surveiller ce jeu. Chacun annonce ce qu’il modifie, garde une sauvegarde et demande confirmation.",
+        "Les boutons de réparation n’apparaissent que si AW Next peut vraiment corriger le jeu, comme Localiser le jeu, Réécrire les données de succès, Installer le fichier d’émulateur ou Surveiller ce jeu. Chacun annonce ce qu’il modifie, garde une sauvegarde et demande confirmation.",
         "Envoyer une notification de test affiche un popup avec le nom et l’image de ce jeu, livré comme il le serait pour de vrai.",
         "Détails techniques contient les chemins, comptes et codes d’émulateur exacts : appuie sur Copier et colle-le dans un rapport de bug. Le point coloré d’une tuile peut être masqué dans Paramètres > Apparence > Tuiles de la bibliothèque."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Localiser le jeu",
     "gh-action-open-folder": "Ouvrir le dossier du jeu",
     "gh-action-repair-data": "Réécrire les données de succès",
-    "gh-action-install-runtime": "Restaurer le fichier d’émulateur",
+    "gh-action-install-runtime": "Installer le fichier d’émulateur",
     "gh-action-switch-runtime": "Passer à l’émulateur pris en charge",
     "gh-action-undo-switch": "Annuler le changement d’émulateur",
     "gh-confirm-undo-switch-message": "AW Next va remettre les fichiers du crack d’origine et retirer l’émulateur pris en charge.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next va écrire la liste des succès, les icônes et les réglages de l’émulateur de ce jeu.",
     "gh-confirm-repair-detail": "Fichiers écrits dans :\n{target}\n\n{writes}\n\nToute version existante de ces fichiers est d’abord copiée dans {backup}.",
     "gh-confirm-repair-relocate": "Les réglages de {from} ne sont pas à côté du fichier de l’émulateur : le jeu ne les lit jamais. Ils sont donc écrits à côté de celui-ci, et l’ancien dossier reste intact.",
-    "gh-confirm-runtime-title": "Restaurer le fichier d’émulateur ?",
+    "gh-confirm-runtime-title": "Installer le fichier d’émulateur ?",
     "gh-confirm-runtime-message": "AW Next va télécharger la version prise en charge de l’émulateur et l’installer dans le dossier du jeu.",
     "gh-confirm-runtime-detail": "{file} sera installé dans :\n{dirs}\n\nUn fichier existant de ce nom est conservé sous {backup} avant remplacement.",
     "gh-confirm-switch-runtime-title": "Passer à l’émulateur pris en charge ?",

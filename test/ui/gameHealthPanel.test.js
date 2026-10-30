@@ -193,6 +193,22 @@ test('Game Health shows the resolved Steam identity and keeps the fallback reach
   assert.match(uplayAction, /applyUplayR2Repair\(/, 'the button reaches automatic resolution and then the manual fallback');
 });
 
+/*
+  Installing the runtime from Game Health replaced Valve's dll with only a .bak beside it (#153), so
+  "Restore latest GBE/Goldberg backup" had nothing to offer. It takes the right-click fix's restore
+  point, before the first write: the loader markers a switch sets aside included.
+*/
+test('the runtime install takes the same restore point as the right-click fix, before writing', () => {
+  const runner = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.INSTALL_RUNTIME || action === gameHealth.ACTION.SWITCH_RUNTIME) {'));
+  const block = runner.slice(0, runner.indexOf('\n  return false;\n}'));
+  const confirmAt = block.indexOf('confirmed !== 1) return false');
+  const backupAt = block.search(/createAutomaticGbeBackup\(\{/);
+  assert.ok(backupAt > confirmAt, 'nothing is copied aside for a repair the user cancelled');
+  assert.ok(backupAt < block.indexOf('disableLoaderMarkers('), 'the restore point comes before the loader files are renamed');
+  assert.ok(backupAt < block.indexOf('gameHealthRepair.installEmulatorRuntime('), 'and before the dll is replaced');
+  assert.match(appSource, /^function createAutomaticGbeBackup\(/m, 'one shared restore point for both entry points');
+});
+
 test('the repairs delegate to the parsers that own the backup behaviour', () => {
   // A repair that started writing files itself would bypass .aw-backups / .bak entirely.
   const repairSource = fs.readFileSync(path.join(appDir, 'util', 'gameHealthRepair.js'), 'utf8');

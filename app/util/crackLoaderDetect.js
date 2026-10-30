@@ -85,12 +85,14 @@ const KNOWN_CRACK_LOADERS = [
 const STEAM_API_DLLS = ['steam_api.dll', 'steam_api64.dll'];
 
 /*
-  A release can keep Valve's steam_api dll and load a renamed GBE build through a proxy dll of its
-  own (VOICES38: dstorage.dll loads steam_api64.v38). The renamed file counts only when it is an
-  emulator AND a small dll beside it names it, so neither an orphan copy nor RUNE's .rne original does.
+  A release can keep Valve's steam_api dll (Denuvo checks it) and run GBE from another file beside
+  it, found by the GBE marker rather than by any loader's name: a steamclient build a loader points
+  Steam at (coldloader, #153), or a renamed steam_api a small dll beside it names (VOICES38). An
+  unnamed renamed copy is a backup, and RUNE's .rne original is no emulator.
 */
 const RENAMED_RUNTIME = /^steam_api(64)?\.(?!dll$)[a-z0-9]{1,8}$/i;
 const PROXY_MAX_BYTES = 1024 * 1024;
+const STEAMCLIENT_DLLS = ['steamclient64.dll', 'steamclient.dll'];
 
 function proxyLoadedRuntime(dir) {
   let entries;
@@ -99,6 +101,9 @@ function proxyLoadedRuntime(dir) {
   } catch {
     return null;
   }
+  // Steam never loads a steamclient from a game folder on its own: one there is always the loader's.
+  const client = entries.find((entry) => STEAMCLIENT_DLLS.includes(entry.name.toLowerCase()) && isEmulatorDll(path.join(dir, entry.name)));
+  if (client) return { runtime: path.join(dir, client.name), loadedBy: null };
   const runtimes = entries.filter((entry) => RENAMED_RUNTIME.test(entry.name) && isEmulatorDll(path.join(dir, entry.name)));
   if (runtimes.length === 0) return null;
   for (const entry of entries) {
@@ -192,12 +197,22 @@ function sidelinedMarkersIn(dir) {
   }
 }
 
-// The folders disableLoaderMarkers() set aside, i.e. where "Switch to the supported emulator" ran.
+// A GBE dll over a .bak that is not GBE: the release's own dll, kept when the emulator went in.
+function replacedOriginalIn(dir) {
+  return STEAM_API_DLLS.some((dll) => {
+    const live = path.join(dir, dll);
+    const backup = `${live}.bak`;
+    return fs.existsSync(backup) && fs.existsSync(live) && isEmulatorDll(live) && !isEmulatorDll(backup);
+  });
+}
+
+// The folders where the emulator went in over what the release shipped: a switch that set its
+// crack's files aside, or an install that only kept the release's dll as .bak (#153).
 function switchedLoaderDirs(dirs) {
   const found = [];
   for (const dir of Array.isArray(dirs) ? dirs : [dirs]) {
     if (!dir || found.some((known) => path.resolve(known).toLowerCase() === path.resolve(dir).toLowerCase())) continue;
-    if (sidelinedMarkersIn(dir).length > 0) found.push(dir);
+    if (sidelinedMarkersIn(dir).length > 0 || replacedOriginalIn(dir)) found.push(dir);
   }
   return found;
 }
@@ -239,7 +254,6 @@ function restoreSwitchedLoader(dirs) {
   folder and offered it a GBE setup the crack's own dll never opens (reported for Little Nightmares
   Enhanced Edition). RUNE's steamclient layout and a ColdClient folder of its own follow below.
 */
-const STEAMCLIENT_DLLS = ['steamclient64.dll', 'steamclient.dll'];
 
 // RUNE's steamclient builds keep Valve's steam_api and run from Steam\steamclient64.dll with their
 // ini beside it, so the loader lives there and there is no steam_api runtime to replace.

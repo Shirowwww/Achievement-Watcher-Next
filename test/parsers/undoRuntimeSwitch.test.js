@@ -63,6 +63,30 @@ test('a dll AW did not install is never overwritten by the backup', (t) => {
   assert.ok(fs.existsSync(path.join(dir, 'steam_emu.ini')), 'the crack configuration still comes back');
 });
 
+// "Install the emulator file" sidelines nothing, it only keeps the release's dll as .bak (Phantom
+// Blade Zero, #153). That install has to be undoable too, or the original sits on disk with no button.
+test('an emulator installed over the release\'s own dll can be undone', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-undo-install-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const valve = Buffer.from('valve steam api');
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll.bak'), valve);
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll'), GBE_RUNTIME);
+  assert.deepStrictEqual(crackLoaderDetect.switchedLoaderDirs([dir]), [dir]);
+
+  crackLoaderDetect.restoreSwitchedLoader([dir]);
+
+  assert.deepStrictEqual(fs.readFileSync(path.join(dir, 'steam_api64.dll')), valve);
+  assert.deepStrictEqual(crackLoaderDetect.switchedLoaderDirs([dir]), []);
+});
+
+test('a GBE update over an older GBE build offers no undo', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-undo-install-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll.bak'), GBE_RUNTIME);
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll'), GBE_RUNTIME);
+  assert.deepStrictEqual(crackLoaderDetect.switchedLoaderDirs([dir]), []);
+});
+
 test('a marker already back in place keeps its live copy', (t) => {
   const dir = runeFolder(t);
   switchToGbe(dir);

@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Klicka på ett spels verktygsknapp (uppe till höger på rutan), eller högerklicka på det, för att öppna Spelets hälsa. Där står det om spelet är Klart, Behöver åtgärdas eller Spåras inte.",
         "Meningen under tillståndet förklarar orsaken på vanlig svenska. Kontrollerna nedanför visar vilken del som är fel: spelfiler, körbar fil, prestationsdata, emulatoruppsättning, spårning i realtid eller aviseringar.",
-        "Reparationsknappar visas bara när AW Next verkligen kan fixa det spelet, till exempel Hitta spelet, Skriv om prestationsdatan, Återställ emulatorfilen eller Bevaka det här spelet. Var och en berättar vad den ändrar, tar en säkerhetskopia och frågar först.",
+        "Reparationsknappar visas bara när AW Next verkligen kan fixa det spelet, till exempel Hitta spelet, Skriv om prestationsdatan, Installera emulatorfilen eller Bevaka det här spelet. Var och en berättar vad den ändrar, tar en säkerhetskopia och frågar först.",
         "Skicka en testavisering visar ett popup-fönster med det spelets eget namn och omslag, levererat på samma sätt som en riktig avisering.",
         "Tekniska detaljer innehåller exakta sökvägar, antal och emulatorkoder: tryck på Kopiera och klistra in det i en felrapport. Den färgade pricken på en ruta kan döljas under Inställningar > Utseende > Biblioteksrutor."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Hitta spelet",
     "gh-action-open-folder": "Öppna spelmappen",
     "gh-action-repair-data": "Skriv om prestationsdatan",
-    "gh-action-install-runtime": "Återställ emulatorfilen",
+    "gh-action-install-runtime": "Installera emulatorfilen",
     "gh-action-switch-runtime": "Byt till emulatorn som stöds",
     "gh-action-undo-switch": "Ångra emulatorbytet",
     "gh-confirm-undo-switch-message": "AW Next lägger tillbaka crackfilerna som spelet kom med och tar bort den emulator som stöds.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next skriver prestationslistan, ikonerna och emulatorns inställningar för det här spelet.",
     "gh-confirm-repair-detail": "Filer skrivs i:\n{target}\n\n{writes}\n\nEventuella befintliga versioner av de här filerna kopieras först till {backup}.",
     "gh-confirm-repair-relocate": "Inställningarna i {from} ligger inte bredvid emulatorfilen, så spelet läser dem aldrig. De skrivs i stället bredvid den, och den gamla mappen lämnas orörd.",
-    "gh-confirm-runtime-title": "Vill du återställa emulatorfilen?",
+    "gh-confirm-runtime-title": "Vill du installera emulatorfilen?",
     "gh-confirm-runtime-message": "AW Next hämtar det emulatorbygge som stöds och installerar det i spelmappen.",
     "gh-confirm-runtime-detail": "{file} installeras i:\n{dirs}\n\nEn befintlig fil med det namnet sparas som {backup} innan den ersätts.",
     "gh-confirm-switch-runtime-title": "Byta till emulatorn som stöds?",

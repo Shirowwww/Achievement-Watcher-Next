@@ -1174,7 +1174,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
       add(
         'info',
         'NO_STEAM_INTERFACES_PROXIED',
-        `steam_interfaces.txt is missing from ${steamSettings}. This release loads its own emulator (${path.basename(proxied.runtime)} through ${path.basename(proxied.loadedBy)}), which answers with its built-in interface versions.`,
+        `steam_interfaces.txt is missing from ${steamSettings}. This release loads its own emulator (${path.basename(proxied.runtime)}${proxied.loadedBy ? ` through ${path.basename(proxied.loadedBy)}` : ''}), which answers with its built-in interface versions.`,
         { steamSettings, runtime: proxied.runtime }
       );
     } else if (original) {
@@ -1438,9 +1438,9 @@ function userIdentity(options = {}, language, { explicit = false } = {}) {
 }
 
 // Write/merge configs.user.ini with the app's account_name and language, keeping account_steamid
-// unless Settings names one, and every other key. `fillDefaults` (an explicit repair) falls back to
-// the emulator's own defaults, clearing the NO_USER_CONFIG/BAD_USER_CONFIG Game Health checks even
-// with nothing to stamp.
+// unless Settings names one (a Denuvo-bound one always stays), and every other key. `fillDefaults`
+// (an explicit repair) falls back to the emulator's own defaults, clearing the NO_USER_CONFIG and
+// BAD_USER_CONFIG Game Health checks even with nothing to stamp.
 const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
 const DEFAULT_EMU_LANGUAGE = 'english';
 
@@ -1454,10 +1454,15 @@ function writeUserConfig({ steamSettings, accountName, language, accountSteamId,
   const file = path.join(steamSettings, 'configs.user.ini');
   const fileExists = fs.existsSync(file);
   const previous = fileExists ? fs.readFileSync(file, 'utf8') : '';
+  const hasKey = (key) => new RegExp(`^[ \\t]*${key}[ \\t]*=[ \\t]*\\S`, 'im').test(previous);
+  // A Denuvo release binds its account id to a ticket in this file, or to a token when it runs GBE
+  // beside the Valve dll it keeps: replacing that id stops the game from starting (#153).
+  if (updates.account_steamid && hasKey('account_steamid') && (hasKey('ticket') || crackLoaderDetect.proxyLoadedRuntime(path.dirname(steamSettings)))) {
+    delete updates.account_steamid;
+  }
   if (fillDefaults) {
     // Only for a key the file does not already answer: a default must complete a setup, never
     // replace an identity the user (or the repack) deliberately chose.
-    const hasKey = (key) => new RegExp(`^[ \\t]*${key}[ \\t]*=[ \\t]*\\S`, 'im').test(previous);
     if (!updates.account_name && !hasKey('account_name')) updates.account_name = DEFAULT_EMU_ACCOUNT_NAME;
     if (!updates.language && !hasKey('language')) updates.language = DEFAULT_EMU_LANGUAGE;
   }

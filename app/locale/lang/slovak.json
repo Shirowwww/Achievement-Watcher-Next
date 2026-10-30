@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Kliknite na tlačidlo nástrojov hry (vpravo hore na dlaždici) alebo na ňu kliknite pravým tlačidlom a otvorte Stav hry. Povie, či je hra Pripravené, Vyžaduje pozornosť alebo Nesledované.",
         "Veta pod stavom vysvetľuje príčinu jednoducho. Kontroly nižšie ukazujú, ktorá časť zlyháva: súbory hry, spustiteľný súbor, dáta úspechov, nastavenie emulátora, sledovanie v reálnom čase alebo oznámenia.",
-        "Tlačidlá opravy sa objavia, iba keď AW Next dokáže danú hru naozaj opraviť, napríklad Nájsť hru, Prepísať dáta úspechov, Obnoviť súbor emulátora alebo Sledovať túto hru. Každé povie, čo zmení, vytvorí zálohu a najprv sa opýta.",
+        "Tlačidlá opravy sa objavia, iba keď AW Next dokáže danú hru naozaj opraviť, napríklad Nájsť hru, Prepísať dáta úspechov, Nainštalovať súbor emulátora alebo Sledovať túto hru. Každé povie, čo zmení, vytvorí zálohu a najprv sa opýta.",
         "Odoslať skúšobné oznámenie zobrazí okno s názvom a obrázkom danej hry, doručené tak, ako by prišlo naozaj.",
         "Technické podrobnosti obsahujú presné cesty, počty a kódy emulátora: stlačte Kopírovať a vložte to do hlásenia chyby. Farebnú bodku na dlaždici možno skryť v Nastavenia > Vzhľad > Dlaždice knižnice."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Nájsť hru",
     "gh-action-open-folder": "Otvoriť priečinok hry",
     "gh-action-repair-data": "Prepísať dáta úspechov",
-    "gh-action-install-runtime": "Obnoviť súbor emulátora",
+    "gh-action-install-runtime": "Nainštalovať súbor emulátora",
     "gh-action-switch-runtime": "Prepnúť na podporovaný emulátor",
     "gh-action-undo-switch": "Vrátiť zmenu emulátora",
     "gh-confirm-undo-switch-message": "AW Next vráti súbory cracku, s ktorými hra prišla, a odstráni podporovaný emulátor.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next zapíše zoznam úspechov, ikony a nastavenia emulátora pre túto hru.",
     "gh-confirm-repair-detail": "Súbory zapísané do:\n{target}\n\n{writes}\n\nPrípadné existujúce verzie týchto súborov sa najprv skopírujú do {backup}.",
     "gh-confirm-repair-relocate": "Nastavenia v {from} nie sú vedla súboru emulátora, takže ich hra nikdy nenačíta. Namiesto toho sa zapíšu vedla neho a starý priečinok zostane nedotknutý.",
-    "gh-confirm-runtime-title": "Obnoviť súbor emulátora?",
+    "gh-confirm-runtime-title": "Nainštalovať súbor emulátora?",
     "gh-confirm-runtime-message": "AW Next stiahne podporovanú verziu emulátora a nainštaluje ju do priečinka hry.",
     "gh-confirm-runtime-detail": "{file} bude nainštalovaný do:\n{dirs}\n\nExistujúci súbor tohto mena sa pred nahradením uchová ako {backup}.",
     "gh-confirm-switch-runtime-title": "Prepnúť na podporovaný emulátor?",

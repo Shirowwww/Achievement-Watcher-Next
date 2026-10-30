@@ -23,6 +23,14 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Java games started from Steam are tracked (#154).** Steam starts Slay the Spire through the Java
   bundled in its folder rather than its own launcher, and AW Next ignored every Java process. A Java
   process inside a known game's folder now counts as that game.
+- **No fix replaces Steam's dll where the emulator already runs beside it (#153).** Some releases
+  keep Steam's own dll, which Denuvo checks, and run the emulator from another file next to it.
+  Game Health took that dll for a foreign runtime and replaced it, after which Phantom Blade Zero
+  stopped starting. AW Next now spots the emulator file itself, whatever loads it: no fix touches
+  that dll or the account id the game's licence is tied to, and Game Health offers to add the
+  missing achievement list instead. Its emulator fix also takes a restore point first, is now
+  called **Install the emulator file** (it never restored anything), and can be undone from the
+  panel, which puts the game's own dll back.
 - **God of War III is found again after updating to SpartanPort 2.7.** Its launcher starts a new
   settings file next to the game, and AW Next read only that one, missing the game folder the old
   settings named. Game files kept inside the port's folder are found too, and SpartanPort 2.8,

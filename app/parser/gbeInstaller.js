@@ -903,6 +903,20 @@ function nativeTarget(dir, dlls, seedArch) {
   return source ? { name: NATIVE_LIB, buf: fs.readFileSync(source) } : null;
 }
 
+function holdsValveDll(dir) {
+  return crackLoaderDetect.STEAM_API_DLLS.some((name) => fs.existsSync(path.join(dir, name)) && !emulatorDll(path.join(dir, name)));
+}
+
+// The GBE a game already runs from another file beside a Valve dll it keeps on purpose (Denuvo
+// checks it), or null. Replacing any of that game's Valve dlls stopped Phantom Blade Zero (#153).
+function sideLoadedRuntime(dirs) {
+  for (const dir of dirs) {
+    const runtime = crackLoaderDetect.proxyLoadedRuntime(dir);
+    if (runtime && holdsValveDll(dir)) return runtime;
+  }
+  return null;
+}
+
 // Install the cached GBE DLLs into one or more dirs, backing up replaced originals as <name>.bak once.
 // writeIfMissing drops an arch into DLL-less dirs; ensureArch seeds an arch even when only the other one is present.
 // nativeArch does the same for a native Linux game's libsteam_api.so, which is replaced wherever it is found.
@@ -916,9 +930,16 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
     x86: dlls.x86 ? fs.readFileSync(dlls.x86) : null,
   };
   const summary = { installed: 0, backedUp: 0, tag: dlls.tag || null, perDir: [] };
+  // Every fix ends here, so this is where the Valve dlls such a release keeps are protected.
+  const sideLoaded = sideLoadedRuntime(dirs);
 
   for (const dir of dirs) {
     const entry = { dir, wrote: [], backedUp: [] };
+    if (sideLoaded && holdsValveDll(dir)) {
+      log.log(`[gbe] ${dir}: steam_api left as it is, the game already runs GBE through ${path.basename(sideLoaded.runtime)}`);
+      summary.perDir.push({ ...entry, sideLoaded: sideLoaded.runtime });
+      continue;
+    }
     fs.mkdirSync(dir, { recursive: true });
 
     const present = Object.keys(ARCH).filter((key) => fs.existsSync(path.join(dir, ARCH[key].file)));

@@ -899,7 +899,7 @@ function gameHealthActionLabel(action) {
     case gameHealth.ACTION.REMOVE_UPLAY_TICKET:
       return t('gh-action-uplay-ticket-off', 'Turn offline achievements off', 'Désactiver les succès hors connexion');
     case gameHealth.ACTION.INSTALL_RUNTIME:
-      return t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur');
+      return t('gh-action-install-runtime', 'Install the emulator file', 'Installer le fichier d’émulateur');
     case gameHealth.ACTION.SWITCH_RUNTIME:
       return t('gh-action-switch-runtime', 'Switch to the supported emulator', 'Passer à l’émulateur pris en charge');
     case gameHealth.ACTION.UNDO_SWITCH_RUNTIME:
@@ -1648,7 +1648,7 @@ async function runGameHealthAction(appid, action, button) {
     const plan = gameHealthRepair.planRuntimeInstall({ gbeInstaller, gameDir: game.gameDir, exePath: exe || null, steamSettings, arch, native: !!nativeArch });
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
-      title: t('gh-confirm-runtime-title', 'Restore the emulator file?', 'Restaurer le fichier d’émulateur ?'),
+      title: t('gh-confirm-runtime-title', 'Install the emulator file?', 'Installer le fichier d’émulateur ?'),
       message: t('gh-confirm-runtime-message', 'AW Next will download the supported emulator build and install it into the game folder.', 'AW Next va télécharger la version prise en charge de l’émulateur et l’installer dans le dossier du jeu.'),
       detail: t(
         'gh-confirm-runtime-detail',
@@ -1671,7 +1671,7 @@ async function runGameHealthAction(appid, action, button) {
         t('cancel', 'Cancel', 'Annuler'),
         switching
           ? t('gh-action-switch-runtime', 'Switch to the supported emulator', 'Passer à l’émulateur pris en charge')
-          : t('gh-action-install-runtime', 'Restore the emulator file', 'Restaurer le fichier d’émulateur'),
+          : t('gh-action-install-runtime', 'Install the emulator file', 'Installer le fichier d’émulateur'),
       ],
       defaultId: 1,
       cancelId: 0,
@@ -1702,6 +1702,10 @@ async function runGameHealthAction(appid, action, button) {
         return false;
       }
     }
+
+    // The right-click fix's restore point, so "Restore latest GBE/Goldberg backup" can undo this one
+    // too. A failure throws and stops the repair: nothing is written without it.
+    const preFixBackup = createAutomaticGbeBackup({ appid, gameDir: game.gameDir, steamSettings });
 
     /*
       Before the dll goes in, not after: while the other crack's ini is still on disk the folder
@@ -1734,6 +1738,7 @@ async function runGameHealthAction(appid, action, button) {
       }),
       detail: [
         summary.backedUp ? t('diagnosis-dlls-backed-up', 'Existing dll(s) backed up as *.bak', 'Dll(s) existante(s) sauvegardée(s) en .bak') : '',
+        preFixBackup && preFixBackup.backupDir ? t('n-nbackup-before-fix-nx', 'Backup before fix:\n{dir}', 'Sauvegarde avant fix:\n{dir}', { dir: preFixBackup.backupDir }) : '',
         sidelined.length > 0
           ? t(
               'gh-runtime-switched-detail',

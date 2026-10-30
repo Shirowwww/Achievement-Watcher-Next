@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Clique no botão de ferramentas de um jogo (no canto superior direito do cartão), ou clique nele com o botão direito, para abrir o Estado do jogo. Ele diz se o jogo está Pronto, Requer atenção ou Sem acompanhamento.",
         "A frase abaixo do estado explica a causa em palavras simples. As verificações abaixo mostram qual parte está com problema: arquivos do jogo, executável, dados de conquistas, configuração do emulador, acompanhamento ao vivo ou notificações.",
-        "Os botões de reparo só aparecem quando o AW Next realmente consegue corrigir aquele jogo, como Localizar o jogo, Reescrever os dados de conquistas, Restaurar o arquivo do emulador ou Monitorar este jogo. Cada um diz o que vai mudar, guarda um backup e pergunta antes.",
+        "Os botões de reparo só aparecem quando o AW Next realmente consegue corrigir aquele jogo, como Localizar o jogo, Reescrever os dados de conquistas, Instalar o arquivo do emulador ou Monitorar este jogo. Cada um diz o que vai mudar, guarda um backup e pergunta antes.",
         "Enviar uma notificação de teste dispara um pop-up com o nome e a arte do próprio jogo, entregue do jeito que seria de verdade.",
         "Detalhes técnicos traz os caminhos, as contagens e os códigos do emulador exatos: pressione Copiar e cole em um relatório de bug. O ponto colorido de um cartão pode ser ocultado em Configurações > Aparência > Cartões da biblioteca."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Localizar o jogo",
     "gh-action-open-folder": "Abrir a pasta do jogo",
     "gh-action-repair-data": "Reescrever os dados de conquistas",
-    "gh-action-install-runtime": "Restaurar o arquivo do emulador",
+    "gh-action-install-runtime": "Instalar o arquivo do emulador",
     "gh-action-switch-runtime": "Mudar para o emulador compatível",
     "gh-action-undo-switch": "Desfazer a troca de emulador",
     "gh-confirm-undo-switch-message": "O AW Next vai restaurar os arquivos do crack que vieram com o jogo e remover o emulador compatível.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "O AW Next vai gravar a lista de conquistas, os ícones e as configurações do emulador deste jogo.",
     "gh-confirm-repair-detail": "Arquivos gravados em:\n{target}\n\n{writes}\n\nQualquer versão existente desses arquivos é copiada antes para {backup}.",
     "gh-confirm-repair-relocate": "As configurações em {from} não estão ao lado do arquivo do emulador, então o jogo nunca as lê. Elas são gravadas ao lado dele, e a pasta antiga permanece intacta.",
-    "gh-confirm-runtime-title": "Restaurar o arquivo do emulador?",
+    "gh-confirm-runtime-title": "Instalar o arquivo do emulador?",
     "gh-confirm-runtime-message": "O AW Next vai baixar a versão compatível do emulador e instalá-la na pasta do jogo.",
     "gh-confirm-runtime-detail": "{file} será instalado em:\n{dirs}\n\nUm arquivo existente com esse nome é mantido como {backup} antes de ser substituído.",
     "gh-confirm-switch-runtime-title": "Mudar para o emulador compatível?",

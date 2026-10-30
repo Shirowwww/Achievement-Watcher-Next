@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Klik op de gereedschapsknop van een game (rechtsboven op de tegel), of klik met de rechtermuisknop erop, om de Gamestatus te openen. Die zegt of de game Gereed is, Aandacht nodig heeft of Niet gevolgd wordt.",
         "De zin onder de status legt de oorzaak in gewone woorden uit. De controles eronder laten zien welk onderdeel de oorzaak is: gamebestanden, uitvoerbaar bestand, prestatiegegevens, emulatorconfiguratie, live volgen of meldingen.",
-        "Herstelknoppen verschijnen alleen als AW Next die game echt kan repareren, zoals De game opzoeken, De prestatiegegevens opnieuw schrijven, Het emulatorbestand terugzetten of Deze game bewaken. Elke knop zegt wat hij verandert, bewaart een back-up en vraagt eerst toestemming.",
+        "Herstelknoppen verschijnen alleen als AW Next die game echt kan repareren, zoals De game opzoeken, De prestatiegegevens opnieuw schrijven, Het emulatorbestand installeren of Deze game bewaken. Elke knop zegt wat hij verandert, bewaart een back-up en vraagt eerst toestemming.",
         "Een testmelding sturen laat een pop-up verschijnen met de eigen naam en afbeelding van die game, afgeleverd zoals het echt zou gaan.",
         "Technische details bevat de exacte paden, aantallen en emulatorcodes: druk op Kopiëren en plak het in een bugmelding. Het gekleurde bolletje op een tegel kun je verbergen bij Instellingen > Weergave > Bibliotheektegels."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "De game opzoeken",
     "gh-action-open-folder": "De gamemap openen",
     "gh-action-repair-data": "De prestatiegegevens opnieuw schrijven",
-    "gh-action-install-runtime": "Het emulatorbestand terugzetten",
+    "gh-action-install-runtime": "Het emulatorbestand installeren",
     "gh-action-switch-runtime": "Overschakelen naar de ondersteunde emulator",
     "gh-action-undo-switch": "Emulatorwissel ongedaan maken",
     "gh-confirm-undo-switch-message": "AW Next zet de crackbestanden terug waarmee deze game kwam en haalt de ondersteunde emulator weg.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next schrijft de prestatielijst, de pictogrammen en de emulatorinstellingen voor deze game.",
     "gh-confirm-repair-detail": "Bestanden geschreven in:\n{target}\n\n{writes}\n\nVan elke bestaande versie van deze bestanden wordt eerst een kopie in {backup} gezet.",
     "gh-confirm-repair-relocate": "De instellingen in {from} staan niet naast het emulatorbestand, dus de game leest ze nooit. Ze worden in plaats daarvan ernaast geschreven, en de oude map blijft ongewijzigd.",
-    "gh-confirm-runtime-title": "Het emulatorbestand terugzetten?",
+    "gh-confirm-runtime-title": "Het emulatorbestand installeren?",
     "gh-confirm-runtime-message": "AW Next downloadt de ondersteunde emulatorbuild en installeert die in de gamemap.",
     "gh-confirm-runtime-detail": "{file} wordt geïnstalleerd in:\n{dirs}\n\nEen bestaand bestand met die naam blijft als {backup} bewaard voordat het vervangen wordt.",
     "gh-confirm-switch-runtime-title": "Overschakelen naar de ondersteunde emulator?",

@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Fai clic sul pulsante degli strumenti di un gioco (in alto a destra sul suo riquadro), o fai clic destro su di esso, per aprire Stato dei giochi. Indica se il gioco è Pronto, Da verificare o Non monitorato.",
         "La frase sotto lo stato spiega la causa in parole semplici. I controlli sotto mostrano quale parte è in difetto: file del gioco, eseguibile, dati obiettivi, configurazione emulatore, monitoraggio in tempo reale o notifiche.",
-        "I pulsanti di riparazione compaiono solo quando AW Next può davvero correggere quel gioco, come Individua il gioco, Riscrivi i dati degli obiettivi, Ripristina il file dell’emulatore o Monitora questo gioco. Ciascuno dice cosa cambierà, conserva un backup e chiede conferma prima.",
+        "I pulsanti di riparazione compaiono solo quando AW Next può davvero correggere quel gioco, come Individua il gioco, Riscrivi i dati degli obiettivi, Installa il file dell’emulatore o Monitora questo gioco. Ciascuno dice cosa cambierà, conserva un backup e chiede conferma prima.",
         "Invia una notifica di prova fa comparire un popup con il nome e la grafica di quel gioco, consegnato nel modo in cui avverrebbe davvero.",
         "Dettagli tecnici contiene percorsi, conteggi e codici dell’emulatore esatti: premi Copia e incollali in una segnalazione di bug. Il punto colorato su un riquadro può essere nascosto in Impostazioni > Aspetto > Riquadri della libreria."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Individua il gioco",
     "gh-action-open-folder": "Apri la cartella del gioco",
     "gh-action-repair-data": "Riscrivi i dati degli obiettivi",
-    "gh-action-install-runtime": "Ripristina il file dell’emulatore",
+    "gh-action-install-runtime": "Installa il file dell’emulatore",
     "gh-action-switch-runtime": "Passa all’emulatore supportato",
     "gh-action-undo-switch": "Annulla il cambio di emulatore",
     "gh-confirm-undo-switch-message": "AW Next ripristinerà i file del crack con cui è arrivato il gioco e rimuoverà l’emulatore supportato.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next scriverà la lista degli obiettivi, le icone e le impostazioni dell’emulatore per questo gioco.",
     "gh-confirm-repair-detail": "File scritti in:\n{target}\n\n{writes}\n\nOgni versione esistente di questi file viene prima copiata in {backup}.",
     "gh-confirm-repair-relocate": "Le impostazioni in {from} non sono accanto al file dell’emulatore, quindi il gioco non le legge mai. Vengono invece scritte accanto ad esso, e la vecchia cartella resta intatta.",
-    "gh-confirm-runtime-title": "Ripristinare il file dell’emulatore?",
+    "gh-confirm-runtime-title": "Installare il file dell’emulatore?",
     "gh-confirm-runtime-message": "AW Next scaricherà la build supportata dell’emulatore e la installerà nella cartella del gioco.",
     "gh-confirm-runtime-detail": "{file} sarà installato in:\n{dirs}\n\nUn file esistente con quel nome viene conservato come {backup} prima di essere sostituito.",
     "gh-confirm-switch-runtime-title": "Passare all’emulatore supportato?",

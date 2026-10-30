@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Nhấp vào nút công cụ của một trò chơi (góc trên bên phải của thẻ), hoặc nhấp chuột phải vào nó, để mở Tình trạng trò chơi. Nó cho biết trò chơi đang Sẵn sàng, Cần chú ý hay Không theo dõi.",
         "Câu bên dưới trạng thái giải thích nguyên nhân bằng lời đơn giản. Các mục kiểm tra bên dưới cho thấy phần nào có lỗi: tệp trò chơi, tệp thực thi, dữ liệu thành tựu, thiết lập giả lập, theo dõi trực tiếp hoặc thông báo.",
-        "Các nút sửa chữa chỉ xuất hiện khi AW Next thật sự sửa được trò chơi đó, chẳng hạn Tìm vị trí trò chơi, Ghi lại dữ liệu thành tựu, Khôi phục tệp của trình giả lập hoặc Theo dõi trò chơi này. Mỗi nút cho biết nó sẽ thay đổi gì, giữ một bản sao lưu và hỏi trước.",
+        "Các nút sửa chữa chỉ xuất hiện khi AW Next thật sự sửa được trò chơi đó, chẳng hạn Tìm vị trí trò chơi, Ghi lại dữ liệu thành tựu, Cài đặt tệp của trình giả lập hoặc Theo dõi trò chơi này. Mỗi nút cho biết nó sẽ thay đổi gì, giữ một bản sao lưu và hỏi trước.",
         "Gửi một thông báo thử hiện một cửa sổ bật lên với tên và hình của chính trò chơi đó, được gửi đúng như khi thật.",
         "Chi tiết kỹ thuật chứa đường dẫn, số liệu và mã trình giả lập chính xác: bấm Chép rồi dán vào báo cáo lỗi. Chấm màu trên thẻ có thể ẩn trong Cài đặt > Giao diện > Thẻ thư viện."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Tìm vị trí trò chơi",
     "gh-action-open-folder": "Mở thư mục trò chơi",
     "gh-action-repair-data": "Ghi lại dữ liệu thành tựu",
-    "gh-action-install-runtime": "Khôi phục tệp của trình giả lập",
+    "gh-action-install-runtime": "Cài đặt tệp của trình giả lập",
     "gh-action-switch-runtime": "Chuyển sang trình giả lập được hỗ trợ",
     "gh-action-undo-switch": "Hoàn tác đổi trình giả lập",
     "gh-confirm-undo-switch-message": "AW Next sẽ khôi phục các tệp crack đi kèm trò chơi và gỡ trình giả lập được hỗ trợ.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next sẽ ghi danh sách thành tựu, biểu tượng và cài đặt giả lập cho trò chơi này.",
     "gh-confirm-repair-detail": "Các tệp được ghi vào:\n{target}\n\n{writes}\n\nMọi bản hiện có của những tệp này đều được chép sang {backup} trước.",
     "gh-confirm-repair-relocate": "Cài đặt trong {from} không nằm cạnh tệp trình giả lập, nên trò chơi không bao giờ đọc được chúng. Thay vào đó, cài đặt được ghi cạnh tệp đó, và thư mục cũ vẫn được giữ nguyên.",
-    "gh-confirm-runtime-title": "Khôi phục tệp của trình giả lập?",
+    "gh-confirm-runtime-title": "Cài đặt tệp của trình giả lập?",
     "gh-confirm-runtime-message": "AW Next sẽ tải bản dựng giả lập được hỗ trợ và cài nó vào thư mục trò chơi.",
     "gh-confirm-runtime-detail": "{file} sẽ được cài vào:\n{dirs}\n\nTệp cùng tên đang có sẽ được giữ lại thành {backup} trước khi bị thay thế.",
     "gh-confirm-switch-runtime-title": "Chuyển sang trình giả lập được hỗ trợ?",

@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Klik tombol alat sebuah game (kanan atas kartunya), atau klik kanan padanya, untuk membuka Kesehatan game. Di sana tertulis apakah game itu Siap, Perlu perhatian, atau Tidak dilacak.",
         "Kalimat di bawah status menjelaskan penyebabnya dengan bahasa sederhana. Pemeriksaan di bawahnya menunjukkan bagian mana yang bermasalah: file game, file eksekusi, data pencapaian, penyiapan emulator, pelacakan langsung, atau notifikasi.",
-        "Tombol perbaikan hanya muncul saat AW Next benar-benar bisa memperbaiki game tersebut, seperti Temukan game ini, Tulis ulang data pencapaian, Pulihkan file emulator, atau Pantau game ini. Masing-masing menyebutkan apa yang akan diubah, menyimpan cadangan, dan bertanya dulu.",
+        "Tombol perbaikan hanya muncul saat AW Next benar-benar bisa memperbaiki game tersebut, seperti Temukan game ini, Tulis ulang data pencapaian, Instal file emulator, atau Pantau game ini. Masing-masing menyebutkan apa yang akan diubah, menyimpan cadangan, dan bertanya dulu.",
         "Kirim notifikasi uji memunculkan popup dengan nama dan gambar game itu sendiri, dikirim persis seperti yang sebenarnya terjadi.",
         "Detail teknis berisi jalur, jumlah, dan kode emulator yang tepat: tekan Salin dan tempelkan ke laporan bug. Titik berwarna pada kartu bisa disembunyikan di Pengaturan > Tampilan > Kartu perpustakaan."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Temukan game ini",
     "gh-action-open-folder": "Buka folder game",
     "gh-action-repair-data": "Tulis ulang data pencapaian",
-    "gh-action-install-runtime": "Pulihkan file emulator",
+    "gh-action-install-runtime": "Instal file emulator",
     "gh-action-switch-runtime": "Beralih ke emulator yang didukung",
     "gh-action-undo-switch": "Batalkan pergantian emulator",
     "gh-confirm-undo-switch-message": "AW Next akan mengembalikan file crack bawaan game ini dan melepas emulator yang didukung.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next akan menulis daftar pencapaian, ikon, dan pengaturan emulator untuk game ini.",
     "gh-confirm-repair-detail": "File ditulis di:\n{target}\n\n{writes}\n\nVersi file tersebut yang sudah ada akan disalin dahulu ke {backup}.",
     "gh-confirm-repair-relocate": "Pengaturan di {from} tidak berada di samping file emulator, sehingga game tidak pernah membacanya. Sebagai gantinya, pengaturan ditulis di sampingnya, dan folder lama dibiarkan apa adanya.",
-    "gh-confirm-runtime-title": "Pulihkan file emulator?",
+    "gh-confirm-runtime-title": "Instal file emulator?",
     "gh-confirm-runtime-message": "AW Next akan mengunduh build emulator yang didukung dan memasangnya ke folder game.",
     "gh-confirm-runtime-detail": "{file} akan dipasang di:\n{dirs}\n\nFile dengan nama itu yang sudah ada disimpan sebagai {backup} sebelum diganti.",
     "gh-confirm-switch-runtime-title": "Beralih ke emulator yang didukung?",

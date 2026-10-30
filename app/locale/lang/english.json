@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Click the tools button of a game (top right of its tile), or right-click it, to open Game health. It says whether the game is Ready, Needs attention or Not tracking.",
         "The sentence under the state explains the cause in plain words. The checks below show which part is at fault: game files, executable, achievement data, emulator setup, live tracking or notifications.",
-        "Repair buttons only appear when AW Next can really fix that game, such as Locate the game, Rewrite the achievement data, Restore the emulator file or Watch this game. Each one says what it will change, keeps a backup and asks first.",
+        "Repair buttons only appear when AW Next can really fix that game, such as Locate the game, Rewrite the achievement data, Install the emulator file or Watch this game. Each one says what it will change, keeps a backup and asks first.",
         "Send a test notification fires a popup with that game’s own name and artwork, delivered the way it really would be.",
         "Technical details holds the exact paths, counts and emulator codes: press Copy and paste it into a bug report. The coloured dot on a tile can be hidden in Settings > Appearance > Library tiles."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Locate the game",
     "gh-action-open-folder": "Open the game folder",
     "gh-action-repair-data": "Rewrite the achievement data",
-    "gh-action-install-runtime": "Restore the emulator file",
+    "gh-action-install-runtime": "Install the emulator file",
     "gh-action-switch-runtime": "Switch to the supported emulator",
     "gh-action-undo-switch": "Undo the emulator switch",
     "gh-confirm-undo-switch-message": "AW Next will put back the crack files this game came with and take the supported emulator out.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next will write the achievement list, icons and emulator settings for this game.",
     "gh-confirm-repair-detail": "Files written in:\n{target}\n\n{writes}\n\nAny existing version of these files is copied to {backup} first.",
     "gh-confirm-repair-relocate": "The settings in {from} are not beside the emulator file, so the game never reads them. They are written next to it instead, and the old folder is left untouched.",
-    "gh-confirm-runtime-title": "Restore the emulator file?",
+    "gh-confirm-runtime-title": "Install the emulator file?",
     "gh-confirm-runtime-message": "AW Next will download the supported emulator build and install it into the game folder.",
     "gh-confirm-runtime-detail": "{file} will be installed in:\n{dirs}\n\nAn existing file of that name is kept as {backup} before being replaced.",
     "gh-confirm-switch-runtime-title": "Switch to the supported emulator?",

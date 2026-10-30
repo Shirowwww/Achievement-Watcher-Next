@@ -43,7 +43,7 @@ panel says so from the first launch.
 | **Executable** | Which program should be watched while you play? | **Locate the game** |
 | **Game identity** | Which AppID and platform was this game matched to? Simple mode leaves it out. | **Correct the game ID file** or **Set AppID manually** |
 | **Achievement data** | Is there an achievement list, and is it complete? | **Rewrite the achievement data** |
-| **Emulator setup** | Does a game that needs a Steam emulator have one, and which one serves it? For a Ubisoft game this also covers the Uplay loader and whether it ever asked for an achievement. | **Restore the emulator file**, **Switch to the supported emulator**, or **Repair Ubisoft achievement support** |
+| **Emulator setup** | Does a game that needs a Steam emulator have one, and which one serves it? For a Ubisoft game this also covers the Uplay loader and whether it ever asked for an achievement. | **Install the emulator file**, **Switch to the supported emulator**, or **Repair Ubisoft achievement support** |
 | **Progress** | Has any unlock or save been found yet? | Launch the game and unlock something |
 | **Progress counters** | For CODEX/RUNE-style games that track a stat instead of a flat unlock, has AW Next fetched the stat behind each achievement? Shown only for games that use one. | **Fetch progress counters** |
 | **Game launch detection** | Does the background tracker notice when this game starts? On its own it records no unlock: that is the emulator's job. | **Watch this game** |
@@ -59,9 +59,9 @@ previous files are kept. Nothing is rewritten without a backup or a confirmation
 | **Locate the game** | Opens a picker to choose the executable to watch. |
 | **Open the game folder** | Opens the install folder in Explorer. |
 | **Rewrite the achievement data** | Writes the achievement list, icons and emulator settings, copying existing files to a backup first. |
-| **Restore the emulator file** | Downloads the supported emulator build into the game folder, keeping any existing file as a backup. |
+| **Install the emulator file** | Downloads the supported emulator build into the game folder, keeping the file it replaces as `.bak`. |
 | **Switch to the supported emulator** | For a game served by another crack that recorded nothing: installs the supported emulator over it and renames that crack's configuration to `.bak`. |
-| **Undo the emulator switch** | Appears where the switch ran. Puts the crack's own files back and takes the supported emulator out. |
+| **Undo the emulator switch** | Appears wherever one of the two above ran. Puts the game's own files back from their `.bak` copies and takes the supported emulator out. |
 | **Correct the game ID file** | Rewrites `steam_appid.txt` when the emulator announces one game and AW Next matched another. It asks for the right AppID, suggesting AW Next's match, and keeps the previous file. |
 | **Fetch progress counters** | Asks Steam which stat drives each achievement, for CODEX/RUNE-style games. Writes nothing in the game folder. |
 | **Repair Ubisoft achievement support** | For a compatible Ubisoft game, rewrites the loader configuration, schema and save redirection in one transaction, with every touched file backed up. See [Uplay setup](uplay-r2.md). |
@@ -81,7 +81,7 @@ previous files are kept. Nothing is rewritten without a backup or a confirmation
 |---|---|
 | *No achievement list could be found* | The game has no achievements, or its source is switched off. Check **Settings → Sources**. |
 | *This game needs a Steam emulator and none is set up* | Use **Apply emulator fix** from the right-click menu. See [Goldberg / GBE setup](emulator-setup.md). |
-| *The emulator file that reads it is missing* | **Restore the emulator file** puts the matching runtime back. |
+| *The emulator file that reads it is missing* | **Install the emulator file** puts the matching runtime in. |
 | *The achievement list doesn't match what the game will look for* | **Rewrite the achievement data**. This is the usual result of a repack update. |
 | *No achievement progress has been found yet* | Normal for a game you have not played since setting it up. Launch it and unlock something. |
 | *AW Next isn't watching this game while it runs* | **Watch this game** adds it to the tracker. |

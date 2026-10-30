@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Kliknij przycisk narzędzi gry (prawy górny róg kafelka) albo kliknij ją prawym przyciskiem, aby otworzyć Stan gry. Pokazuje, czy gra jest Gotowe, Wymaga uwagi czy Nieśledzone.",
         "Zdanie pod stanem wyjaśnia przyczynę prostymi słowami. Poniższe kontrole pokazują, która część zawodzi: pliki gry, plik wykonywalny, dane osiągnięć, konfiguracja emulatora, śledzenie na żywo lub powiadomienia.",
-        "Przyciski naprawy pojawiają się tylko wtedy, gdy AW Next naprawdę może naprawić daną grę, np. Znajdź grę, Zapisz dane osiągnięć ponownie, Przywróć plik emulatora lub Obserwuj tę grę. Każdy mówi, co zmieni, tworzy kopię zapasową i najpierw pyta.",
+        "Przyciski naprawy pojawiają się tylko wtedy, gdy AW Next naprawdę może naprawić daną grę, np. Znajdź grę, Zapisz dane osiągnięć ponownie, Zainstaluj plik emulatora lub Obserwuj tę grę. Każdy mówi, co zmieni, tworzy kopię zapasową i najpierw pyta.",
         "Wyślij powiadomienie testowe wyświetla powiadomienie z nazwą i grafiką tej gry, dostarczone tak, jak naprawdę by przyszło.",
         "Szczegóły techniczne zawierają dokładne ścieżki, liczby i kody emulatora: naciśnij Kopiuj i wklej to do zgłoszenia błędu. Kolorową kropkę na kafelku można ukryć w Ustawienia > Wygląd > Kafelki biblioteki."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Znajdź grę",
     "gh-action-open-folder": "Otwórz folder gry",
     "gh-action-repair-data": "Zapisz dane osiągnięć ponownie",
-    "gh-action-install-runtime": "Przywróć plik emulatora",
+    "gh-action-install-runtime": "Zainstaluj plik emulatora",
     "gh-action-switch-runtime": "Przełącz na obsługiwany emulator",
     "gh-action-undo-switch": "Cofnij zmianę emulatora",
     "gh-confirm-undo-switch-message": "AW Next przywróci pliki cracka, z którymi przyszła ta gra, i usunie obsługiwany emulator.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next zapisze listę osiągnięć, ikony i ustawienia emulatora dla tej gry.",
     "gh-confirm-repair-detail": "Pliki zapisane w:\n{target}\n\n{writes}\n\nIstniejące wersje tych plików są najpierw kopiowane do {backup}.",
     "gh-confirm-repair-relocate": "Ustawienia w {from} nie znajdują się obok pliku emulatora, więc gra nigdy ich nie odczytuje. Zamiast tego są zapisywane obok niego, a stary folder pozostaje nietknięty.",
-    "gh-confirm-runtime-title": "Przywrócić plik emulatora?",
+    "gh-confirm-runtime-title": "Zainstalować plik emulatora?",
     "gh-confirm-runtime-message": "AW Next pobierze obsługiwaną wersję emulatora i zainstaluje ją w folderze gry.",
     "gh-confirm-runtime-detail": "{file} zostanie zainstalowany w:\n{dirs}\n\nIstniejący plik o tej nazwie jest zachowywany jako {backup} przed zastąpieniem.",
     "gh-confirm-switch-runtime-title": "Przełączyć na obsługiwany emulator?",

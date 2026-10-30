@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "点击游戏的工具按钮（磁贴右上角），或右键点击游戏，即可打开“游戏状态”。它会告诉你游戏是“就绪”、“需要检查”还是“未跟踪”。",
         "状态下方的那句话用通俗的语言解释原因。下面的检查项显示是哪一部分出了问题：游戏文件、可执行文件、成就数据、模拟器配置、实时跟踪或通知。",
-        "只有当 AW Next 确实能修复该游戏时才会出现修复按钮，例如“定位游戏”、“重写成就数据”、“恢复模拟器文件”或“监视这款游戏”。每个按钮都会说明它将更改什么，保留备份，并先征求确认。",
+        "只有当 AW Next 确实能修复该游戏时才会出现修复按钮，例如“定位游戏”、“重写成就数据”、“安装模拟器文件”或“监视这款游戏”。每个按钮都会说明它将更改什么，保留备份，并先征求确认。",
         "“发送测试通知”会弹出带有该游戏名称和图片的弹窗，投递方式与真实通知完全一样。",
         "“技术细节”包含确切的路径、数量和模拟器代码：按“复制”后粘贴到错误报告中。磁贴上的彩色圆点可以在 设置 > 外观 > 游戏库磁贴 中隐藏。"
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "定位游戏",
     "gh-action-open-folder": "打开游戏文件夹",
     "gh-action-repair-data": "重写成就数据",
-    "gh-action-install-runtime": "恢复模拟器文件",
+    "gh-action-install-runtime": "安装模拟器文件",
     "gh-action-switch-runtime": "切换到受支持的模拟器",
     "gh-action-undo-switch": "撤销模拟器切换",
     "gh-confirm-undo-switch-message": "AW Next 将恢复游戏自带的破解文件，并移除受支持的模拟器。",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next 将写入此游戏的成就列表、图标和模拟器设置。",
     "gh-confirm-repair-detail": "写入位置：\n{target}\n\n{writes}\n\n这些文件的现有版本会先复制到 {backup}。",
     "gh-confirm-repair-relocate": "{from} 中的设置不在模拟器文件旁边，因此游戏永远不会读取它们。设置会改为写入该文件旁边，旧文件夹保持不变。",
-    "gh-confirm-runtime-title": "要恢复模拟器文件吗？",
+    "gh-confirm-runtime-title": "要安装模拟器文件吗？",
     "gh-confirm-runtime-message": "AW Next 将下载受支持的模拟器版本并安装到游戏文件夹中。",
     "gh-confirm-runtime-detail": "{file} 将安装到：\n{dirs}\n\n同名的现有文件会在替换前保留为 {backup}。",
     "gh-confirm-switch-runtime-title": "要切换到受支持的模拟器吗？",

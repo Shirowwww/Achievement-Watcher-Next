@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Oyun durumu’nu açmak için bir oyunun araçlar düğmesine (kutucuğun sağ üstü) tıklayın ya da oyuna sağ tıklayın. Oyunun Hazır, Kontrol gerekli veya Takip edilmiyor olduğunu söyler.",
         "Durumun altındaki cümle nedeni sade sözlerle açıklar. Aşağıdaki kontroller hangi parçanın sorunlu olduğunu gösterir: oyun dosyaları, çalıştırılabilir dosya, başarım verileri, emülatör kurulumu, canlı takip veya bildirimler.",
-        "Onarım düğmeleri yalnızca AW Next o oyunu gerçekten düzeltebildiğinde görünür; örneğin Oyunu bul, Başarım verilerini yeniden yaz, Emülatör dosyasını geri yükle veya Bu oyunu izle. Her biri neyi değiştireceğini söyler, yedek tutar ve önce sorar.",
+        "Onarım düğmeleri yalnızca AW Next o oyunu gerçekten düzeltebildiğinde görünür; örneğin Oyunu bul, Başarım verilerini yeniden yaz, Emülatör dosyasını kur veya Bu oyunu izle. Her biri neyi değiştireceğini söyler, yedek tutar ve önce sorar.",
         "Test bildirimi gönder, o oyunun kendi adı ve görseliyle, gerçekte nasıl gelecekse öyle iletilen bir açılır pencere gösterir.",
         "Teknik ayrıntılar kesin yolları, sayıları ve emülatör kodlarını içerir: Kopyala’ya basın ve bir hata raporuna yapıştırın. Kutucuktaki renkli nokta Ayarlar > Görünüm > Kütüphane kutucukları içinde gizlenebilir."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Oyunu bul",
     "gh-action-open-folder": "Oyun klasörünü aç",
     "gh-action-repair-data": "Başarım verilerini yeniden yaz",
-    "gh-action-install-runtime": "Emülatör dosyasını geri yükle",
+    "gh-action-install-runtime": "Emülatör dosyasını kur",
     "gh-action-switch-runtime": "Desteklenen emülatöre geç",
     "gh-action-undo-switch": "Emülatör değişikliğini geri al",
     "gh-confirm-undo-switch-message": "AW Next, oyunla birlikte gelen crack dosyalarını geri koyacak ve desteklenen emülatörü kaldıracak.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next bu oyunun başarım listesini, simgelerini ve emülatör ayarlarını yazacak.",
     "gh-confirm-repair-detail": "Dosyaların yazılacağı yer:\n{target}\n\n{writes}\n\nBu dosyaların mevcut sürümleri önce {backup} konumuna kopyalanır.",
     "gh-confirm-repair-relocate": "{from} içindeki ayarlar emülatör dosyasının yanında değil, bu yüzden oyun onları hiçbir zaman okumaz. Bunun yerine ayarlar dosyanın yanına yazılır ve eski klasöre dokunulmaz.",
-    "gh-confirm-runtime-title": "Emülatör dosyası geri yüklensin mi?",
+    "gh-confirm-runtime-title": "Emülatör dosyası kurulsun mu?",
     "gh-confirm-runtime-message": "AW Next desteklenen emülatör sürümünü indirip oyun klasörüne kuracak.",
     "gh-confirm-runtime-detail": "{file} şuraya kurulacak:\n{dirs}\n\nBu adda mevcut bir dosya, değiştirilmeden önce {backup} olarak saklanır.",
     "gh-confirm-switch-runtime-title": "Desteklenen emülatöre geçilsin mi?",

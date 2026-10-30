@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Kattintson egy játék eszközök gombjára (a csempe jobb felső sarkában), vagy kattintson rá jobb gombbal a Játék állapota megnyitásához. Megmondja, hogy a játék Kész, Figyelmet igényel vagy Nem követett.",
         "Az állapot alatti mondat közérthetően elmagyarázza az okot. Az alatta lévő ellenőrzések megmutatják, melyik rész a hibás: játékfájlok, futtatható fájl, teljesítményadatok, emulátor beállítása, élő követés vagy értesítések.",
-        "A javítógombok csak akkor jelennek meg, ha az AW Next valóban meg tudja javítani az adott játékot, például „Játék megkeresése”, „Teljesítményadatok újraírása”, „Emulátorfájl helyreállítása” vagy „Játék figyelése”. Mindegyik megmondja, mit fog módosítani, készít egy mentést, és előbb rákérdez.",
+        "A javítógombok csak akkor jelennek meg, ha az AW Next valóban meg tudja javítani az adott játékot, például „Játék megkeresése”, „Teljesítményadatok újraírása”, „Emulátorfájl telepítése” vagy „Játék figyelése”. Mindegyik megmondja, mit fog módosítani, készít egy mentést, és előbb rákérdez.",
         "A „Tesztértesítés küldése” felugró ablakot indít az adott játék saját nevével és grafikájával, úgy kézbesítve, ahogy valójában történne.",
         "A „Technikai részletek” a pontos elérési utakat, számokat és emulátorkódokat tartalmazza: nyomja meg a Másolás gombot, és illessze be egy hibajelentésbe. A csempén lévő színes pont elrejthető a Beállítások > Megjelenés > Könyvtár csempéi alatt."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Játék megkeresése",
     "gh-action-open-folder": "Játékmappa megnyitása",
     "gh-action-repair-data": "Teljesítményadatok újraírása",
-    "gh-action-install-runtime": "Emulátorfájl helyreállítása",
+    "gh-action-install-runtime": "Emulátorfájl telepítése",
     "gh-action-switch-runtime": "Váltás a támogatott emulátorra",
     "gh-action-undo-switch": "Emulátorváltás visszavonása",
     "gh-confirm-undo-switch-message": "Az AW Next visszateszi a játékkal érkezett crack fájlokat, és eltávolítja a támogatott emulátort.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "Az AW Next kiírja a játék teljesítménylistáját, ikonjait és emulátorbeállításait.",
     "gh-confirm-repair-detail": "Fájlok írási helye:\n{target}\n\n{writes}\n\nE fájlok meglévő változata előbb ide másolódik: {backup}.",
     "gh-confirm-repair-relocate": "A(z) {from} mappában lévő beállítások nincsenek az emulátor fájlja mellett, ezért a játék soha nem olvassa be őket. Ehelyett mellé íródnak, a régi mappa pedig érintetlen marad.",
-    "gh-confirm-runtime-title": "Helyreállítod az emulátorfájlt?",
+    "gh-confirm-runtime-title": "Telepíted az emulátorfájlt?",
     "gh-confirm-runtime-message": "Az AW Next letölti a támogatott emulátorváltozatot, és a játék mappájába telepíti.",
     "gh-confirm-runtime-detail": "A(z) {file} ide települ:\n{dirs}\n\nAz ilyen nevű meglévő fájl a csere előtt {backup} néven megmarad.",
     "gh-confirm-switch-runtime-title": "Váltasz a támogatott emulátorra?",

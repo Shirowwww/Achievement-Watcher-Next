@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "點選遊戲的工具按鈕（卡片右上角），或在遊戲上按右鍵，即可開啟「遊戲健康狀態」。它會告訴你遊戲是「就緒」、「需要注意」還是「未追蹤」。",
         "狀態下方的那句話會用白話解釋原因。下方的檢查項目會顯示是哪個部分出了問題：遊戲檔案、執行檔、成就資料、模擬器設定、即時追蹤或通知。",
-        "只有當 AW Next 確實能修復該遊戲時才會出現修復按鈕，例如「指出遊戲的位置」、「重寫成就資料」、「還原模擬器檔案」或「監看這款遊戲」。每個按鈕都會說明它將變更什麼，保留備份，並先徵求確認。",
+        "只有當 AW Next 確實能修復該遊戲時才會出現修復按鈕，例如「指出遊戲的位置」、「重寫成就資料」、「安裝模擬器檔案」或「監看這款遊戲」。每個按鈕都會說明它將變更什麼，保留備份，並先徵求確認。",
         "「傳送測試通知」會跳出帶有該遊戲名稱和圖片的彈出通知，投遞方式與真實通知完全相同。",
         "「技術細節」包含確切的路徑、數量和模擬器代碼：按「複製」後貼到錯誤回報中。卡片上的彩色圓點可以在 設定 > 外觀 > 收藏庫卡片 中隱藏。"
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "指出遊戲的位置",
     "gh-action-open-folder": "開啟遊戲資料夾",
     "gh-action-repair-data": "重寫成就資料",
-    "gh-action-install-runtime": "還原模擬器檔案",
+    "gh-action-install-runtime": "安裝模擬器檔案",
     "gh-action-switch-runtime": "切換到支援的模擬器",
     "gh-action-undo-switch": "復原模擬器切換",
     "gh-confirm-undo-switch-message": "AW Next 會還原遊戲原本附帶的破解檔案，並移除支援的模擬器。",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next 會為這款遊戲寫入成就清單、圖示與模擬器設定。",
     "gh-confirm-repair-detail": "檔案會寫入：\n{target}\n\n{writes}\n\n這些檔案若已有舊版本，會先複製到 {backup}。",
     "gh-confirm-repair-relocate": "{from} 中的設定不在模擬器檔案旁邊，因此遊戲永遠不會讀取它們。設定會改為寫入該檔案旁邊，舊資料夾則保持不變。",
-    "gh-confirm-runtime-title": "要還原模擬器檔案嗎？",
+    "gh-confirm-runtime-title": "要安裝模擬器檔案嗎？",
     "gh-confirm-runtime-message": "AW Next 會下載支援的模擬器版本，並安裝到遊戲資料夾中。",
     "gh-confirm-runtime-detail": "{file} 會安裝到：\n{dirs}\n\n同名的既有檔案會在被取代前保留為 {backup}。",
     "gh-confirm-switch-runtime-title": "要切換到支援的模擬器嗎？",

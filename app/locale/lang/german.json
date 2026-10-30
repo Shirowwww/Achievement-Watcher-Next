@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Klicke auf die Werkzeug-Schaltfläche eines Spiels (oben rechts auf seiner Kachel) oder mache einen Rechtsklick darauf, um den Spielzustand zu öffnen. Er zeigt, ob das Spiel Bereit ist, Prüfen braucht oder Nicht verfolgt wird.",
         "Der Satz unter dem Status erklärt die Ursache in einfachen Worten. Die Prüfungen darunter zeigen, welcher Teil schuld ist: Spieldateien, Programmdatei, Erfolgsdaten, Emulator-Einrichtung, Live-Überwachung oder Benachrichtigungen.",
-        "Reparatur-Schaltflächen erscheinen nur, wenn AW Next dieses Spiel wirklich reparieren kann, etwa Spiel suchen, Erfolgsdaten neu schreiben, Emulator-Datei wiederherstellen oder Dieses Spiel überwachen. Jede sagt, was sie ändert, legt eine Sicherung an und fragt vorher.",
+        "Reparatur-Schaltflächen erscheinen nur, wenn AW Next dieses Spiel wirklich reparieren kann, etwa Spiel suchen, Erfolgsdaten neu schreiben, Emulator-Datei installieren oder Dieses Spiel überwachen. Jede sagt, was sie ändert, legt eine Sicherung an und fragt vorher.",
         "Testbenachrichtigung senden löst ein Pop-up mit Namen und Artwork des jeweiligen Spiels aus, zugestellt auf dem Weg, den es wirklich nehmen würde.",
         "Technische Details enthält die genauen Pfade, Zahlen und Emulator-Codes: Drücke Kopieren und füge sie in einen Fehlerbericht ein. Der farbige Punkt auf einer Kachel lässt sich unter Einstellungen > Darstellung > Bibliothekskacheln ausblenden."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Spiel suchen",
     "gh-action-open-folder": "Spielordner öffnen",
     "gh-action-repair-data": "Erfolgsdaten neu schreiben",
-    "gh-action-install-runtime": "Emulator-Datei wiederherstellen",
+    "gh-action-install-runtime": "Emulator-Datei installieren",
     "gh-action-switch-runtime": "Zum unterstützten Emulator wechseln",
     "gh-action-undo-switch": "Emulatorwechsel rückgängig machen",
     "gh-confirm-undo-switch-message": "AW Next stellt die Crack-Dateien wieder her, mit denen das Spiel geliefert wurde, und entfernt den unterstützten Emulator.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next schreibt die Erfolgsliste, die Symbole und die Emulator-Einstellungen für dieses Spiel.",
     "gh-confirm-repair-detail": "Dateien werden geschrieben in:\n{target}\n\n{writes}\n\nVorhandene Versionen dieser Dateien werden zuvor nach {backup} kopiert.",
     "gh-confirm-repair-relocate": "Die Einstellungen in {from} befinden sich nicht neben der Emulator-Datei, weshalb das Spiel sie nie liest. Sie werden stattdessen daneben geschrieben, und der alte Ordner bleibt unangetastet.",
-    "gh-confirm-runtime-title": "Emulator-Datei wiederherstellen?",
+    "gh-confirm-runtime-title": "Emulator-Datei installieren?",
     "gh-confirm-runtime-message": "AW Next lädt die unterstützte Emulator-Version herunter und installiert sie in den Spielordner.",
     "gh-confirm-runtime-detail": "{file} wird installiert in:\n{dirs}\n\nEine vorhandene Datei dieses Namens wird vor dem Ersetzen als {backup} gesichert.",
     "gh-confirm-switch-runtime-title": "Zum unterstützten Emulator wechseln?",

@@ -1619,7 +1619,7 @@
       "gameHealth": [
         "Napsauta pelin työkalupainiketta (ruudun oikea yläkulma) tai napsauta peliä hiiren kakkospainikkeella avataksesi Pelin kunto -näkymän. Se kertoo, onko peli tilassa Valmis, Vaatii huomiota vai Ei seurannassa.",
         "Tilan alla oleva lause selittää syyn selkeästi. Alla olevat tarkistukset näyttävät, mikä osa on vialla: pelitiedostot, ohjelmatiedosto, saavutustiedot, emulaattorin asennus, reaaliaikainen seuranta tai ilmoitukset.",
-        "Korjauspainikkeet näkyvät vain, kun AW Next voi todella korjata kyseisen pelin, esimerkiksi Paikanna peli, Kirjoita saavutustiedot uudelleen, Palauta emulaattorin tiedosto tai Seuraa tätä peliä. Jokainen kertoo, mitä se muuttaa, tallentaa varmuuskopion ja kysyy ensin.",
+        "Korjauspainikkeet näkyvät vain, kun AW Next voi todella korjata kyseisen pelin, esimerkiksi Paikanna peli, Kirjoita saavutustiedot uudelleen, Asenna emulaattorin tiedosto tai Seuraa tätä peliä. Jokainen kertoo, mitä se muuttaa, tallentaa varmuuskopion ja kysyy ensin.",
         "Lähetä testi-ilmoitus laukaisee ponnahdusikkunan, jossa on kyseisen pelin oma nimi ja kuva, toimitettuna samalla tavalla kuin oikeasti.",
         "Tekniset tiedot sisältää tarkat polut, määrät ja emulaattorikoodit: paina Kopioi ja liitä ne virheilmoitukseen. Ruudun värillisen pisteen voi piilottaa kohdassa Asetukset > Ulkoasu > Kirjaston ruudut."
       ],
@@ -2744,7 +2744,7 @@
     "gh-action-choose-exe": "Paikanna peli",
     "gh-action-open-folder": "Avaa pelikansio",
     "gh-action-repair-data": "Kirjoita saavutustiedot uudelleen",
-    "gh-action-install-runtime": "Palauta emulaattorin tiedosto",
+    "gh-action-install-runtime": "Asenna emulaattorin tiedosto",
     "gh-action-switch-runtime": "Vaihda tuettuun emulaattoriin",
     "gh-action-undo-switch": "Kumoa emulaattorin vaihto",
     "gh-confirm-undo-switch-message": "AW Next palauttaa pelin mukana tulleet crack-tiedostot ja poistaa tuetun emulaattorin.",
@@ -2917,7 +2917,7 @@
     "gh-confirm-repair-message": "AW Next kirjoittaa tämän pelin saavutusluettelon, kuvakkeet ja emulaattorin asetukset.",
     "gh-confirm-repair-detail": "Tiedostot kirjoitetaan kohteeseen:\n{target}\n\n{writes}\n\nNäiden tiedostojen mahdolliset nykyiset versiot kopioidaan ensin kohteeseen {backup}.",
     "gh-confirm-repair-relocate": "Asetukset kohteessa {from} eivät ole emulaattoritiedoston vieressä, joten peli ei koskaan lue niitä. Ne kirjoitetaan sen sijaan sen viereen, ja vanha kansio jätetään koskemattomaksi.",
-    "gh-confirm-runtime-title": "Palautetaanko emulaattorin tiedosto?",
+    "gh-confirm-runtime-title": "Asennetaanko emulaattorin tiedosto?",
     "gh-confirm-runtime-message": "AW Next lataa tuetun emulaattorikoosteen ja asentaa sen pelikansioon.",
     "gh-confirm-runtime-detail": "{file} asennetaan kohteeseen:\n{dirs}\n\nSamanniminen nykyinen tiedosto säilytetään nimellä {backup} ennen korvaamista.",
     "gh-confirm-switch-runtime-title": "Vaihdetaanko tuettuun emulaattoriin?",
