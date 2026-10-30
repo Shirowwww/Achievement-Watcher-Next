@@ -107,6 +107,7 @@ module.exports = {
   DENSITY,
   TOGGLES,
   PLAYTIME_UNITS,
+  UNITS_BY_MODE,
   normalizeTileScale,
   normalizeDensity,
   normalizePlaytimeUnits,

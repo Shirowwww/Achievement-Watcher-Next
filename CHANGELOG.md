@@ -9,6 +9,12 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Improved
+
+- **Edit playtime follows the Playtime display.** With **Library tiles > Playtime** on Hours only,
+  the dialog has hours and minutes and no days; on Down to the second, it adds a seconds field.
+  Confirming without a change keeps the seconds the fields do not show.
+
 ### Fixed
 
 - **God of War III is found again after updating to SpartanPort 2.7.** Its launcher starts a new

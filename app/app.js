@@ -1816,8 +1816,13 @@ function playtimeField(field, unit, value, { onType, onStep }) {
   return { label, input };
 }
 
-// The "before -> after" line under the fields; the difference is shown once there is one.
-function playtimeDiffLine() {
+// Intl's unit identifier for a field: 'hours' is 'hour'.
+function playtimeUnitOf(field) {
+  return field.slice(0, -1);
+}
+
+// The "before -> after" line under the fields, in their units; the difference is shown once there is one.
+function playtimeDiffLine(units) {
   const line = document.createElement('div');
   line.className = 'aw-playtime-diff';
   line.setAttribute('aria-live', 'polite');
@@ -1825,9 +1830,8 @@ function playtimeDiffLine() {
     '<i class="fas fa-stopwatch" aria-hidden="true"></i><span class="was"></span><i class="fas fa-arrow-right arrow" aria-hidden="true"></i><span class="now"></span><span class="delta"></span>';
   const [was, now, delta] = ['.was', '.now', '.delta'].map((selector) => line.querySelector(selector));
   // The short form ("4 h 40 min") keeps before, after and the difference on one line.
-  const units = ['days', 'hours', 'minutes'];
   const short = (seconds) => intlFormat.formatDuration(seconds, uiLang(), { units, style: 'short' }) || formatPlaytime(seconds, { units });
-  const shortDuration = (seconds) => short(seconds) || `0 ${intlFormat.unitName('minute', uiLang())}`;
+  const shortDuration = (seconds) => short(seconds) || `0 ${intlFormat.unitName(playtimeUnitOf(units[units.length - 1]), uiLang())}`;
   const paint = (original, seconds) => {
     line.classList.toggle('is-invalid', seconds === null);
     if (seconds === null) {
@@ -1890,7 +1894,9 @@ async function savePlaytime(appid, seconds) {
 function editPlaytime(appid, name) {
   return new Promise((resolve) => {
     const game = gameList.find((entry) => String(entry.appid) === String(appid));
-    const original = playtimeInput.splitPlaytime(PlaytimeTracking.readSync(appid).playtime);
+    const fields = playtimeInput.playtimeFields(libraryPlaytimeMode);
+    const stored = PlaytimeTracking.readSync(appid).playtime;
+    const original = playtimeInput.splitPlaytime(stored, fields);
     const originalSeconds = playtimeInput.joinPlaytime(original);
     const title = t('edit-playtime', 'Edit playtime…', 'Modifier le temps de jeu…').replace(/\s*(?:…|\.\.\.)$/, '');
     const overlay = document.createElement('div');
@@ -1903,7 +1909,7 @@ function editPlaytime(appid, name) {
 
     const inputs = {};
     const values = () => Object.fromEntries(Object.entries(inputs).map(([key, input]) => [key, input.value]));
-    const diff = playtimeDiffLine();
+    const diff = playtimeDiffLine(fields);
     const restore = playtimeChip('undo', t('playtime-restore', 'Original value', "Valeur d'origine"));
     const reset = playtimeChip('eraser', t('playtime-reset', 'Reset to zero', 'Remettre à zéro'), 'is-danger');
     const { actions, cancel, save } = playtimeActions();
@@ -1923,17 +1929,17 @@ function editPlaytime(appid, name) {
       }
       refresh();
     };
-    const step = (field, delta, animate) => show(playtimeInput.stepPlaytime(values(), field, delta), delta, animate);
+    const step = (field, delta, animate) => show(playtimeInput.stepPlaytime(values(), field, delta, fields), delta, animate);
 
     const row = document.createElement('div');
     row.className = 'aw-playtime-fields';
-    for (const [field, unit] of [['days', 'day'], ['hours', 'hour'], ['minutes', 'minute']]) {
-      const made = playtimeField(field, unit, original[field], { onType: refresh, onStep: step });
+    for (const field of fields) {
+      const made = playtimeField(field, playtimeUnitOf(field), original[field], { onType: refresh, onStep: step });
       inputs[field] = made.input;
       row.append(made.label);
     }
     restore.onclick = () => show(original, Math.sign(originalSeconds - (playtimeInput.joinPlaytime(values()) ?? 0)), true);
-    reset.onclick = () => show({ days: 0, hours: 0, minutes: 0 }, -1, true);
+    reset.onclick = () => show(playtimeInput.splitPlaytime(0, fields), -1, true);
     const chips = document.createElement('div');
     chips.className = 'aw-chip-row';
     chips.append(restore, reset);
@@ -1957,7 +1963,7 @@ function editPlaytime(appid, name) {
       if (!answered) close();
     };
     save.onclick = () => {
-      const seconds = playtimeInput.joinPlaytime(values());
+      const seconds = playtimeInput.playtimeToSave(stored, values(), fields);
       if (answered || seconds === null) return;
       close();
       savePlaytime(appid, seconds);
