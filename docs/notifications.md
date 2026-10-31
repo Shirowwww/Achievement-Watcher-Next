@@ -245,6 +245,50 @@ Append them to the address, `?first=x&then=y`:
 - If the source stays blank on a real unlock, check that the test buttons work, then that the
   **Websocket** row is on.
 
+## Achievements on Steam's library pages
+
+Steam shows no achievements on a non-Steam shortcut's page. A Steam plugin (Millennium on the
+desktop, Decky in Game Mode) can ask AW Next for that shortcut's achievements on the same local feed,
+`ws://127.0.0.1:8082`, and draw them itself. AW Next answers for one game at a time: the plugin has to
+name it, and the answer carries no folder, account or source name.
+
+AW Next's own Millennium plugin, in the repository's `millennium/` folder, does this for every
+shortcut AW Next recognises: the game's page then shows Steam's own Achievements section, the play
+bar counter, the full list and the Big Picture "Your stuff" tab. A shortcut is matched best when it
+starts the same exe as the game's **Executable** in AW Next. Its README covers the install, what to
+check when a page stays empty, and how it sits next to Steam Cartridges, NativeGameLink and Game
+Data Linker. The request below is for anyone writing another plugin.
+
+The plugin sends:
+
+```json
+{ "cmd": "bridge-game", "id": "r1", "exe": "D:\\Games\\Pinyon Shift\\pinyon_shift.exe", "launchOptions": "", "steamAppId": 0, "name": "Forza Horizon" }
+```
+
+Every field but `cmd` is optional, and each one it adds helps. AW Next tries them in this order: the
+exe the library found for a game, a game folder or ROM named in the launch options (an emulator
+shortcut), a Steam AppID, a launcher in the game folder, the exe's file name, then the exact title.
+When a step fits more than one game, AW Next answers "not found".
+
+The reply:
+
+```json
+{ "cmd": "bridge-game", "id": "r1", "bridge": 1, "found": true,
+  "game": { "id": "x360-4D5309C9", "name": "Forza Horizon", "total": 50, "unlocked": 12,
+    "achievements": [{ "id": "1", "name": "...", "description": "...", "icon": "https://...", "iconLocked": "https://...",
+      "hidden": false, "rarity": 12.5, "unlocked": true, "unlockedAt": 1790000000 }] } }
+```
+
+- `unlockedAt` is in Unix seconds. `rarity`, and `progress` (`{ "current": 6, "max": 50 }` on a
+  locked achievement partly done), are there only when AW Next knows them.
+- An icon stored on this PC comes as an `http://127.0.0.1:8082/bridge/icon/...` address.
+- The list is the library as the last scan saw it, plus the unlocks announced since. Unlocks still
+  arrive on the feed: when one carries the game's `id` in `appID`, ask again to refresh the page.
+- The plugin connects from Steam's own pages (`https://steamloopback.host`) or from a native process;
+  websites are refused. With a websocket password set, it needs the same password.
+- It should not connect as `?client=decky`: that name tells AW Next that Steam shows its
+  notifications, and AW Next then keeps its own popup off.
+
 ## Screenshot souvenirs
 
 **Screenshot on unlock** saves a picture of the screen a moment after an achievement pops, once the

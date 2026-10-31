@@ -181,13 +181,28 @@ feature path. It needs FUSE 2 (`libfuse2`, `libfuse2t64` on Ubuntu 24.04).
 The AppImage is not code-signed: an update is trusted through HTTPS and the SHA-512 in
 `latest-linux.yml`.
 
+### Millennium plugin
+
+The Steam plugin in `millennium/` ships with every release as a zip, under the same name each time
+so the README's link to the latest release stays valid:
+
+```powershell
+Push-Location millennium
+npm ci
+npm run zip
+Pop-Location
+```
+
+Expected file: `millennium/dist/aw-next-millennium.zip`, holding one `aw-next/` folder with
+`plugin.json`, `README.md`, `backend/main.lua` and `.millennium/Dist/index.js`.
+
 ## Push, CI and GitHub release
 
 1. Make sure commits are atomic and the worktree holds no accidental files.
 2. Push `main` to `origin` and wait for `.github/workflows/test.yml` to pass. It runs lint, both
    suites and the dependency audits on Windows (Node 22.22.2 and 24.19.0) and on Linux (Node 24.19.0).
 3. Create the GitHub release only after CI succeeds, uploading the Windows updater assets, the
-   portable archive, and the AppImage with `latest-linux.yml`:
+   portable archive, the AppImage with `latest-linux.yml`, and the Millennium plugin:
 
 ```powershell
 $version = (Get-Content app/package.json | ConvertFrom-Json).version
@@ -199,14 +214,15 @@ gh release create "v$version" `
   "app/dist/latest.yml" `
   "app/dist/Achievement.Watcher.$version.AppImage" `
   "app/dist/latest-linux.yml" `
+  "millennium/dist/aw-next-millennium.zip" `
   --repo Shirowwww/Achievement-Watcher-Next `
   --target $target `
   --title "Achievement Watcher Next $version" `
   --notes-file RELEASE_NOTES.md
 ```
 
-4. Verify the release page exposes the installer, portable ZIP, blockmap, `latest.yml`, the AppImage
-   and `latest-linux.yml`, and that both public manifests download. Once an AppImage has been
+4. Verify the release page exposes the installer, portable ZIP, blockmap, `latest.yml`, the AppImage,
+   `latest-linux.yml` and `aw-next-millennium.zip`, and that both public manifests download. Once an AppImage has been
    published, **every later release must carry `latest-linux.yml`**: without it, each installed
    AppImage reports an error on every update check.
 5. Refresh the version, installer link and VirusTotal hash the site quotes, and commit the result:

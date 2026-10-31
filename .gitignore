@@ -60,3 +60,6 @@ scratch/
 # Misc
 *.tgz
 decky/node_modules/
+millennium/node_modules/
+millennium/.millennium/
+millennium/dist/

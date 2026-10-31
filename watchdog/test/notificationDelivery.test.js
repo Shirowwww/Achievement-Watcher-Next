@@ -49,7 +49,7 @@ function fullscreenKindOf(fullscreen) {
 }
 
 function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, gameDisplay = null, sounds = null, gameSound = '', suppressed = false, urgent = false, showToast = null } = {}) {
-  const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [], shots: [] };
+  const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [], shots: [], bridge: [] };
 
   const stubs = {
     path,
@@ -75,7 +75,11 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     },
     '../util/presetLocator.js': { sourcePlatform: require('../util/presetLocator.js').sourcePlatform },
     '../util/gameSound.js': { SOUND_NONE: '__none__', SOUND_RANDOM: '__random__', soundFor: () => gameSound },
-    '../websocket.js': { broadcast: (payload) => calls.broadcasts.push(payload), isDeckyListening: () => false },
+    '../websocket.js': {
+      broadcast: (payload) => calls.broadcasts.push(payload),
+      isDeckyListening: () => false,
+      noteForSteamBridge: (payload) => calls.bridge.push(payload),
+    },
     '../queryUserNotificationState.js': {
       arePopupsSuppressed: async () => suppressed,
       fullscreenKind: async () => fullscreenKindOf(fullscreen),
@@ -258,6 +262,20 @@ test('nothing is sent at all when notifications are switched off', async () => {
   const { notify, calls } = loadToaster();
   await notify(unlock(), options('auto', { notify: false }));
   assert.deepEqual([calls.overlays.length, calls.toasts.length, calls.broadcasts.length], [0, 0, 0]);
+});
+
+test('the Steam bridge hears of every unlock, shown, broadcast or not', async () => {
+  const { notify, calls } = loadToaster();
+  await notify(unlock(), options('toast'));
+  await notify(unlock({ achievementName: 'ACH_MUTED' }), options('auto', { notify: false }));
+  assert.equal(calls.broadcasts.length, 0, 'the feed is off in Windows notification mode');
+  assert.deepEqual(
+    calls.bridge.map((event) => [event.appID, event.achievement, event.notificationType, event.time]),
+    [
+      ['480', 'ACH_WIN', 'achievement', 1700000000],
+      ['480', 'ACH_MUTED', 'achievement', 1700000000],
+    ]
+  );
 });
 
 test('what delivered the notification is recorded for the game, with why', async () => {

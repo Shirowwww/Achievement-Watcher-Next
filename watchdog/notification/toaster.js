@@ -9,7 +9,7 @@ const { makeSquareIcon } = require('../util/squareIcon.js');
 const notificationSound = require('../util/notificationSound.js');
 const gameSound = require('../util/gameSound.js');
 const { sourcePlatform } = require('../util/presetLocator.js');
-const { broadcast, isDeckyListening } = require('../websocket.js');
+const { broadcast, isDeckyListening, noteForSteamBridge } = require('../websocket.js');
 const { arePopupsSuppressed, fullscreenKind, FULLSCREEN_KIND } = require('../queryUserNotificationState.js');
 const { gameDisplayCenter } = require('../util/gameDisplay.js');
 const transportPolicy = require('./transportPolicy.js');
@@ -174,6 +174,34 @@ function chooseToastSound(message, overlay) {
   return globalSound();
 }
 
+/*
+  Additive only: every field the feed has always carried keeps its name and meaning, since
+  third-party clients are written against it. What is new is what a client needs to paint a
+  card the way the app does - the kind of event, the game artwork beside the achievement
+  icon, and whether the event is meant to be silent (playtime is).
+*/
+function feedPayload(message) {
+  const notification = {
+    appID: message.appid,
+    game: message.gameDisplayName,
+    achievement: message.achievementName,
+    displayName: message.achievementDisplayName,
+    description: message.achievementDescription,
+    rarityPercent: message.rarityPercent,
+    trophyGrade: message.trophyGrade || undefined,
+    icon: message.icon,
+    gameIcon: message.gameIcon,
+    image: message.image,
+    notificationType: message.notificationType || (message.progress ? 'progress' : 'achievement'),
+    source: message.source,
+    silent: message.silent === true,
+    time: message.time,
+  };
+  const progress = normalizeProgress(message.progress);
+  if (progress) notification.progress = progress;
+  return notification;
+}
+
 module.exports = async (message, option = {}) => {
   try {
     applyGameTitle(message, option);
@@ -219,37 +247,14 @@ module.exports = async (message, option = {}) => {
 
     options.toast.soundFile = chooseToastSound(message, option.overlay || defaultOverlay || {});
 
+    // Steam plugins read unlocks from the bridge whether or not this one is shown or broadcast.
+    const feedEvent = feedPayload(message);
+    noteForSteamBridge(feedEvent);
+
     if (options.notify) {
       if (plan.websocket) {
         debug.log('Websocket broadcast');
-
-        /*
-          Additive only: every field the feed has always carried keeps its name and meaning, since
-          third-party clients are written against it. What is new is what a client needs to paint a
-          card the way the app does - the kind of event, the game artwork beside the achievement
-          icon, and whether the event is meant to be silent (playtime is).
-        */
-        let notification = {
-          appID: message.appid,
-          game: message.gameDisplayName,
-          achievement: message.achievementName,
-          displayName: message.achievementDisplayName,
-          description: message.achievementDescription,
-          rarityPercent: message.rarityPercent,
-          trophyGrade: message.trophyGrade || undefined,
-          icon: message.icon,
-          gameIcon: message.gameIcon,
-          image: message.image,
-          notificationType: message.notificationType || (message.progress ? 'progress' : 'achievement'),
-          source: message.source,
-          silent: message.silent === true,
-          time: message.time,
-        };
-
-        const progress = normalizeProgress(message.progress);
-        if (progress) notification.progress = progress;
-
-        broadcast(notification);
+        broadcast(feedEvent);
       }
 
       // Spawn the styled overlay; the main process handles it when already running.

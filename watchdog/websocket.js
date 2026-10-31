@@ -14,8 +14,10 @@ const debug = new (require('./util/logger'))({
 
 const test = require('./notification-test.js');
 const obsSource = require('./notification/obsSource.js');
+const steamBridge = require('./steamBridge.js');
 
 let WebSocket;
+let bridge = null;
 
 /*
   Explicit loopback, not an omitted host: `host: null` binds the unspecified address, making the
@@ -58,6 +60,13 @@ module.exports = (option = {}) => {
     what an http request to this port used to do.
   */
   const obs = obsSource.createHandler({ auth: options.auth, log: (message) => debug.log(message) });
+  // Steam plugins ask here for one shortcut's achievements (steamBridge.js); icons on this machine
+  // are served beside the feed, under the address the plugin already connects to.
+  bridge = steamBridge.createBridge({
+    userData: require('./util/userData.js').userDataDir(),
+    auth: options.auth,
+    iconBase: () => `${options.ssl ? 'https' : 'http'}://${urlHost(options.host)}:${server.address() ? server.address().port : options.port}`,
+  });
   server.on('request', (req, res) => {
     if (!isAllowedHost(req.headers.host, options.host)) {
       debug.warn(`[obs] refused request for foreign host ${JSON.stringify(req.headers.host)}`);
@@ -66,6 +75,7 @@ module.exports = (option = {}) => {
       return;
     }
     try {
+      if (bridge.handleHttp(req, res)) return;
       if (obs(req, res)) return;
     } catch (err) {
       debug.error(`[obs] ${err}`);
@@ -185,6 +195,10 @@ const LOOPBACK_NAMES = new Set(['127.0.0.1', 'localhost', '[::1]']);
 const STEAM_CEF_ORIGIN = 'https://steamloopback.host';
 const ELECTRON_FILE_ORIGIN = 'file://';
 
+function urlHost(host) {
+  return host.includes(':') ? `[${host}]` : host;
+}
+
 function hostnameOf(authority) {
   try {
     return new URL(`http://${authority}`).hostname;
@@ -225,6 +239,14 @@ module.exports.upgradeRefusal = upgradeRefusal;
 module.exports.isDeckyRequest = isDeckyRequest;
 module.exports.isDeckyListening = isDeckyListening;
 module.exports.LOOPBACK = LOOPBACK;
+
+module.exports.noteForSteamBridge = (message) => {
+  try {
+    if (bridge) bridge.noteNotification(message);
+  } catch (err) {
+    debug.error(`[bridge] ${err}`);
+  }
+};
 
 module.exports.broadcast = (message) => {
   try {
@@ -328,6 +350,8 @@ function incoming(message) {
             })
           );
         });
+    } else if (req.cmd === steamBridge.COMMAND) {
+      this.send(JSON.stringify(bridge ? bridge.answer(req) : { cmd: req.cmd, found: false }));
     } else {
       debug.warn(`WS[${this.id}] received unknow command '${req.cmd}'`);
       // Always answer, even on an unknown command: otherwise the renderer's notification-test flow

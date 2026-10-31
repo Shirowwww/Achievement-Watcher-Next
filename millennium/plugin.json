@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/SteamClientHomebrew/Millennium/main/src/sys/plugin-schema.json",
+  "name": "aw-next",
+  "common_name": "AW Next achievements",
+  "description": "Shows the achievements Achievement Watcher Next tracks on your non-Steam games' library pages.",
+  "version": "0.1.0",
+  "author": "Shirowwww",
+  "useBackend": true,
+  "backendType": "lua"
+}

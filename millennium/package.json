@@ -1,0 +1,21 @@
+{
+  "name": "achievement-watcher-millennium",
+  "version": "0.1.0",
+  "description": "Shows Achievement Watcher Next's achievements on non-Steam games' Steam library pages",
+  "private": true,
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "millennium-ttc --build prod",
+    "zip": "npm run build && node zip.js"
+  },
+  "dependencies": {
+    "@steambrew/client": "^5.8.5"
+  },
+  "devDependencies": {
+    "@steambrew/ttc": "^2.8.7",
+    "@types/react": "19.1.1",
+    "@types/react-dom": "19.1.1",
+    "adm-zip": "^0.6.1",
+    "typescript": "^5.9.3"
+  }
+}

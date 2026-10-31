@@ -16,6 +16,17 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Steam plugins can show AW Next's achievements (#156).** A plugin inside Steam can ask AW Next,
+  on its local feed, for the achievements of one non-Steam shortcut, found from its exe, launch
+  options, Steam AppID or title, and draw them on the game's page. Icons stored on this PC are served
+  at the same address. **Notifications** in the guide describes the request.
+- **A Millennium plugin for the Steam library (#156).** With it, a non-Steam shortcut AW Next
+  recognises gets Steam's own Achievements section, play bar counter, full list and Big Picture tab,
+  updated as unlocks come in. It stays out of the way of NativeGameLink and Game Data Linker on the
+  shortcuts they linked. It comes as `aw-next-millennium.zip` on the release page.
+
 ### Improved
 
 - **Edit playtime follows the Playtime display.** With **Library tiles > Playtime** on Hours only,
