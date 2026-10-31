@@ -64,6 +64,10 @@ renamed in 3.9.0 and the history is kept under one file.
   the folder holding its unlock lists added, such as `Gears1\user`, AW Next looked for the game's
   default.xex below it alone and missed `Gears1\game\extracted`, so the list had to come from
   dbox.tools. It now also looks in the folder holding the one you added, and remembers what it finds.
+- **Xbox 360 recompilations load where dbox.tools is cut off (#157).** On a network that drops
+  dbox.tools only after a dozen seconds, every request of a game waited that long again, so a game
+  read from its own executable ran out of time and stayed under its title id. After one failure AW
+  Next leaves dbox.tools alone for a while, and fetches the game's pictures at the same time.
 - **Steam games notify on a PC whose clock is off (#155).** Steam stamps an unlock with its own
   time and AW Next aged it with the PC's, so a clock a minute fast made every unlock look too old to
   show. AW Next now reads Steam's time when it starts and every hour, and ages those unlocks on it.

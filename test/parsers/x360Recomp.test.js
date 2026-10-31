@@ -407,6 +407,51 @@ test('extractions that time out in two different scan hosts are not tried a thir
   assert.equal(fs.existsSync(missing), true, 'the second host knows about the first one');
 });
 
+test('a network that cuts dbox.tools late costs one wait per load, not one per request (#157)', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => x360.setDataRoot(''));
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = x360.scan(path.join(root, 'Games'));
+  const events = [];
+  // The connection is reset only after a while, as on the reporter's network.
+  const fetchImpl = async (url) => {
+    const host = new URL(url).hostname === 'download.xbox.com' ? 'art' : 'dbox';
+    events.push(`${host} asked`);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    events.push(`${host} failed`);
+    throw Object.assign(new Error('read ECONNRESET'), { code: 'ECONNRESET' });
+  };
+
+  const data = await x360.getGameData(record.data, 'english', { fetchImpl });
+  assert.equal(data.achievement.list[0].displayName, 'Bridge');
+  assert.equal(events.filter((event) => event === 'dbox asked').length, 1, 'the first reset says the site is down');
+  assert.ok(events.indexOf('art asked') < events.indexOf('dbox failed'), 'the pictures are asked while dbox.tools is still waited on');
+
+  events.length = 0;
+  await x360.getGameData(record.data, 'english', { fetchImpl });
+  assert.equal(events.includes('dbox asked'), false, 'a site found down is left alone for a while');
+});
+
+test('a dbox.tools that answers with an error is not taken for a site that is down', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(root);
+  t.after(() => x360.setDataRoot(''));
+  let asked = 0;
+  const fetchImpl = async (url) => {
+    if (new URL(url).hostname === 'download.xbox.com') throw new Error('offline');
+    asked += 1;
+    return { ok: false, status: 503, json: async () => ({}) };
+  };
+  await assert.rejects(x360.getGameData({ format: 'toml', titleId: TITLE }, 'english', { fetchImpl }));
+  const first = asked;
+  await assert.rejects(x360.getGameData({ format: 'toml', titleId: TITLE }, 'english', { fetchImpl }));
+  assert.equal(asked, first * 2, 'an answer, even a refusal, is asked for again');
+});
+
 test('a list under Documents finds its executable through the watched folders, and keeps it once read', async (t) => {
   const root = tempDir(t);
   x360.setDataRoot(path.join(root, 'data'));

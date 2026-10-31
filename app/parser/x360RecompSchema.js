@@ -64,10 +64,26 @@ function readSchemaCache(titleId) {
   return cached && Array.isArray(cached.achievements) && cached.achievements.length > 0 ? cached : null;
 }
 
+/*
+  A dbox.tools that could not be reached is left alone for a while, as Xbox Live's image hosts are
+  (xboxLiveIcons.js): a network that resets it after twelve seconds made every request of one load
+  pay that again, and a game read from its own executable missed the load limit (#157).
+*/
+const DBOX_COOLDOWN_MS = 10 * 60 * 1000;
+const dboxDownUntil = new WeakMap();
+
 async function fetchJson(url, fetchImpl) {
-  const resp = await fetchImpl(url, { signal: AbortSignal.timeout(DBOX_TIMEOUT_MS) });
-  if (!resp.ok) throw Object.assign(new Error(`${url} answered ${resp.status}`), { status: resp.status });
-  return resp.json();
+  if ((dboxDownUntil.get(fetchImpl) || 0) > Date.now()) throw new Error(`dbox.tools was unreachable a moment ago, ${url} is not asked`);
+  let resp;
+  try {
+    resp = await fetchImpl(url, { signal: AbortSignal.timeout(DBOX_TIMEOUT_MS) });
+    if (!resp.ok) throw Object.assign(new Error(`${url} answered ${resp.status}`), { status: resp.status });
+    return await resp.json();
+  } catch (err) {
+    // An answer, a refusal or a broken page included, says the site is up.
+    if (!(err && err.status) && !(err instanceof SyntaxError)) dboxDownUntil.set(fetchImpl, Date.now() + DBOX_COOLDOWN_MS);
+    throw err;
+  }
 }
 
 // A 404 is the site saying there is nothing there; any other failure may go better next time.
@@ -549,6 +565,8 @@ async function addDboxToSpaList(titleId, spa, list, lang, fetchImpl) {
 
 async function titleGameData(info, lang, fetchImpl, spaWaitMs = SPA_WAIT_MS) {
   const titleId = String(info.titleId || '').toUpperCase();
+  // Another host than dbox.tools: its pictures need not wait for that site's answers.
+  const art = marketplaceArt(titleId, fetchImpl).catch(() => ({}));
   const reading = loadSpa(titleId, info.xex).catch(() => null);
   let spa = await spaWithin(reading, spaWaitMs);
   let schema = null;
@@ -566,19 +584,19 @@ async function titleGameData(info, lang, fetchImpl, spaWaitMs = SPA_WAIT_MS) {
     }
     const names = await titleNamesFor(titleId, fetchImpl);
     const spaName = spaReader.titleName(spa, lang);
-    return finish(info, titleId, displayTitle(names, spaName, lang), [names.name, names.marketName, spaReader.titleName(spa, 'english')], list, fetchImpl, Date.now());
+    return finish(info, titleId, displayTitle(names, spaName, lang), [names.name, names.marketName, spaReader.titleName(spa, 'english')], list, fetchImpl, Date.now(), art);
   }
 
   schema = schema || (await loadSchema(titleId, fetchImpl));
   const list = listFromDbox(schema, lang);
   await withIcons(titleId, list, fetchImpl);
   const names = await titleNamesFor(titleId, fetchImpl);
-  return finish(info, titleId, displayTitle(names, schema.name, lang), [names.name, names.marketName], list, fetchImpl, Number(schema.fetchedAt) || 0);
+  return finish(info, titleId, displayTitle(names, schema.name, lang), [names.name, names.marketName], list, fetchImpl, Number(schema.fetchedAt) || 0, art);
 }
 
 // `checkedAt` answers Game Health's "when was this list last read": every scan for the executable's
 // own list, the download time for a dbox.tools copy.
-async function finish(info, titleId, schemaName, extraTitles, list, fetchImpl, checkedAt) {
+async function finish(info, titleId, schemaName, extraTitles, list, fetchImpl, checkedAt, art = marketplaceArt(titleId, fetchImpl)) {
   const name = gameName(schemaName, info.folder) || prettyFolderName(info.folder) || titleId;
   const bonus = await reblueBonus.bonusAchievements({ ...info, titleId }, path.join(iconDirFor(titleId), 'reblue'), {
     fetchImpl,
@@ -591,7 +609,7 @@ async function finish(info, titleId, schemaName, extraTitles, list, fetchImpl, c
     appid: appidOf(info),
     system: 'xbox',
     // Never an achievement picture as the header: it would stand in for the game's art.
-    img: await marketplaceArt(titleId, fetchImpl),
+    img: await art,
     // Exophase names some pages after the dashboard's short title ("midnight-club-la").
     rarityTitles: [...new Set([name, ...extraTitles].filter((title) => title && !CJK_RE.test(title)))],
     achievement: { total: all.length, list: all },
