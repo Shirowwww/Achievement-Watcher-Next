@@ -5449,6 +5449,7 @@ async function createOverlayWindow(info) {
     attachOverlayRarity(info.game);
     if (info.game) info.game.rarityGrading = currentRarityGrading();
     attachOverlayLocalIcons(info.game);
+    if (info.game) info.game.steps = achievementStepsStore().stepsForGame(info.game.appid);
 
     // On X11 a window created unfocusable is override-redirect: the window manager cannot put a
     // focused full-screen game above it, so it shows over the game without taking the focus. The
@@ -6538,6 +6539,35 @@ ipcMain.on('overlay-preview', (event, appid) => {
 // that is needed: its 'closed' handler reports the new state to the monitor, whatever triggered it.
 ipcMain.on('overlay-close', () => {
   hideOverlayWindow('close');
+});
+
+/*
+  Steps under an achievement (parser/achievementSteps.js): the main window edits them and the
+  overlay ticks them, each telling the other through here so both show the same list.
+*/
+function achievementStepsStore() {
+  const store = require(path.join(__dirname, '../parser/achievementSteps.js'));
+  store.setUserDataPath(userData);
+  return store;
+}
+
+ipcMain.on('achievement-steps-changed', (event, appid) => {
+  if (typeof appid !== 'string' || !appid || !overlayWindow || overlayWindow.isDestroyed() || !overlayVisible) return;
+  overlayWindow.webContents.send('overlay-steps', { appid, steps: achievementStepsStore().stepsForGame(appid) });
+});
+
+ipcMain.handle('achievement-step-toggle', (event, { appid, name, id, done } = {}) => {
+  if (!overlayWindow || overlayWindow.isDestroyed() || event.sender !== overlayWindow.webContents) return { changed: false };
+  if (typeof appid !== 'string' || typeof name !== 'string' || typeof id !== 'string' || typeof done !== 'boolean') return { changed: false };
+  let result;
+  try {
+    result = achievementStepsStore().saveEdit(appid, name, { op: 'toggle', id, done });
+  } catch (err) {
+    debug.log(`[steps] could not save a step of ${appid}: ${err && err.message ? err.message : err}`);
+    return { changed: false };
+  }
+  if (result.changed && MainWin && !MainWin.isDestroyed()) MainWin.webContents.send('achievement-steps-changed', appid);
+  return { changed: result.changed, steps: result.steps };
 });
 
 function normalizeNotificationProgress(args) {

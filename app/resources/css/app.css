@@ -573,6 +573,8 @@ p {
     .game-notification-field select,
     #settings .blacklist-add-row input,
     #achievement-search input[type='search'],
+    .ach-step-new input,
+    .ach-step-rename,
     #settings .emulator-login input,
     #settings #retroachievements-connect input,
     .aw-prompt-input,
@@ -603,6 +605,8 @@ p {
     .game-notification-field select,
     #settings .blacklist-add-row input,
     #achievement-search input[type='search'],
+    .ach-step-new input,
+    .ach-step-rename,
     #settings .emulator-login input,
     #settings #retroachievements-connect input,
     .aw-prompt-input,
@@ -622,6 +626,8 @@ p {
     .game-notification-field select,
     #settings .blacklist-add-row input,
     #achievement-search input[type='search'],
+    .ach-step-new input,
+    .ach-step-rename,
     #settings .emulator-login input,
     #settings #retroachievements-connect input,
     .aw-prompt-input,
@@ -2827,7 +2833,8 @@ body.is-resizing #game-list {
 /* Reset wipes the game's progress (behind a confirmation and a restorable backup): the shared danger
    button. It stays in the header's flow: the back button is absolutely positioned and its width
    follows its label in every language, so anchoring a second button beside it would collide. */
-#achievement .wrapper > .header .resetAchievements {
+#achievement .wrapper > .header .resetAchievements,
+#achievement .wrapper > .header .achievementSteps {
   margin-left: 10px;
   vertical-align: middle;
 }
@@ -3284,6 +3291,164 @@ body.is-resizing #game-list {
 
 .achievement .progressBar:not([data-max='0']) {
   display: block;
+}
+
+/* Steps the player adds under an achievement (util/achievementStepsView.js). Without any, the
+   toggle keeps its line but shows only on hover or focus, so no row moves when it appears. */
+.achievement .ach-steps {
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+}
+
+.achievement .ach-steps-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 6px 0 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+.achievement .ach-steps-toggle:hover,
+.achievement .ach-steps-toggle:focus-visible {
+  color: var(--text);
+}
+
+.achievement .ach-steps-toggle::after {
+  content: '\f078';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 0.75em;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.achievement .ach-steps.is-open .ach-steps-toggle::after {
+  transform: rotate(180deg);
+}
+
+.achievement .ach-steps-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.achievement .ach-steps.is-empty:not(.is-open) .ach-steps-toggle {
+  opacity: 0;
+}
+
+.achievement:hover .ach-steps.is-empty .ach-steps-toggle,
+.achievement .ach-steps.is-empty .ach-steps-toggle:focus-visible {
+  opacity: 1;
+}
+
+.achievement .ach-steps-list {
+  width: min(52%, 560px);
+  min-width: 320px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Only the opening animates: a tick draws the row again and must not replay it. */
+.achievement .ach-steps.is-opening .ach-steps-list {
+  animation: ach-steps-open 180ms var(--ease-out);
+}
+
+@keyframes ach-steps-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.achievement .ach-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+  color: var(--text);
+}
+
+.achievement .ach-step input[type='checkbox'] {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.achievement .ach-step input[type='checkbox']:disabled {
+  cursor: default;
+}
+
+.achievement .ach-step-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.achievement .ach-step.done .ach-step-text {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.achievement .ach-step-remove {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  opacity: 0;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+.achievement .ach-step:hover .ach-step-remove,
+.achievement .ach-step-remove:focus-visible {
+  opacity: 1;
+}
+
+.achievement .ach-step-remove:hover {
+  color: var(--text);
+}
+
+.achievement .ach-step-new {
+  margin-top: 4px;
+}
+
+.achievement .ach-step-new input,
+.achievement .ach-step-rename {
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  font-size: var(--fs-sm);
+  user-select: text;
+}
+
+.achievement .ach-step-rename {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .achievement .ach-steps.is-opening .ach-steps-list {
+    animation: none;
+  }
+
+  .achievement .ach-steps-toggle,
+  .achievement .ach-steps-toggle::after,
+  .achievement .ach-step-remove {
+    transition: none;
+  }
 }
 
 #unlock .achievement .progressBar {

@@ -264,6 +264,13 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       const manual = row.data('manual') === 1;
       const remote = require('@electron/remote');
       const items = [];
+      if (!achieved && row.find('.ach-steps').hasClass('is-empty')) {
+        const { t } = require(require('path').join(remote.app.getAppPath(), 'locale/t.js'));
+        items.push({
+          label: t('steps-add-menu', 'Add steps', 'Ajouter des étapes'),
+          click: () => window.app?.toggleAchievementSteps?.(row.attr('data-name'), { open: true, focusNew: true }),
+        });
+      }
       if (manual) {
         items.push({
           label: $('#game-list').attr('data-ctx-clearmanualunlock') || '',
@@ -284,6 +291,76 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       if (items.length === 0) return;
       event.preventDefault();
       remote.Menu.buildFromTemplate(items).popup({ window: remote.getCurrentWindow() });
+    });
+
+    // Steps under an achievement (parser/achievementSteps.js): open, tick, add, rename, remove.
+    // Names and step ids are read with attr(): data() would turn "0123" into a number.
+    const stepsList = $('#achievement .achievement-list');
+    const stepTarget = (el) => ({
+      name: $(el).closest('.achievement').attr('data-name'),
+      id: $(el).closest('.ach-step').attr('data-step'),
+    });
+    const focusNewStep = (name) =>
+      $('#achievement .achievement')
+        .filter((index, el) => el.getAttribute('data-name') === name)
+        .find('.ach-step-new input')
+        .trigger('focus');
+    stepsList.on('click', '.ach-steps-toggle', function () {
+      window.app?.toggleAchievementSteps?.(stepTarget(this).name);
+    });
+    stepsList.on('change', '.ach-step input[type=checkbox]', function () {
+      const { name, id } = stepTarget(this);
+      window.app?.achievementStepAction?.(name, { op: 'toggle', id, done: this.checked });
+    });
+    stepsList.on('click', '.ach-step-remove', function () {
+      const { name, id } = stepTarget(this);
+      window.app?.achievementStepAction?.(name, { op: 'remove', id });
+    });
+    stepsList.on('keydown', '.ach-step-new input', function (event) {
+      if (event.key === 'Escape') {
+        this.value = '';
+        this.blur();
+        return;
+      }
+      if (event.key !== 'Enter' || !this.value.trim()) return;
+      const { name } = stepTarget(this);
+      const text = this.value;
+      this.value = '';
+      const result = window.app?.achievementStepAction?.(name, { op: 'add', text });
+      // Not added (the list is full, the file could not be written): the text stays to retry.
+      if (result && result.changed) focusNewStep(name);
+      else this.value = text;
+    });
+    stepsList.on('dblclick', '.ach-step-text[title]', function () {
+      const span = $(this);
+      const { name, id } = stepTarget(this);
+      const input = $('<input type="text" class="ach-step-rename" />').attr('maxlength', 200).val(span.text());
+      let settled = false;
+      const finish = (save) => {
+        if (settled) return;
+        settled = true;
+        const text = input.val();
+        if (save && text.trim() && text !== span.text()) window.app?.achievementStepAction?.(name, { op: 'rename', id, text });
+        else input.replaceWith(span);
+      };
+      input.on('keydown', (event) => {
+        if (event.key === 'Enter') finish(true);
+        else if (event.key === 'Escape') finish(false);
+      });
+      input.on('blur', () => finish(true));
+      span.replaceWith(input);
+      input.trigger('focus').trigger('select');
+    });
+    $('#btn-achievement-steps').on('click', function () {
+      const remote = require('@electron/remote');
+      const { t } = require(require('path').join(remote.app.getAppPath(), 'locale/t.js'));
+      // Under the button, not at the mouse: opened with the keyboard, the mouse can be anywhere.
+      const rect = this.getBoundingClientRect();
+      const zoom = require('electron').webFrame.getZoomFactor();
+      remote.Menu.buildFromTemplate([
+        { label: t('steps-export', 'Export steps', 'Exporter les étapes'), click: () => window.app?.exportAchievementSteps?.() },
+        { label: t('steps-import', 'Import steps', 'Importer des étapes'), click: () => window.app?.importAchievementSteps?.() },
+      ]).popup({ window: remote.getCurrentWindow(), x: Math.round(rect.left * zoom), y: Math.round(rect.bottom * zoom) });
     });
 
     $('#btn-previous').click(function () {

@@ -157,6 +157,10 @@ function translateUI(lang, locale, template) {
     $('#btn-reset-achievements span').text(clear(template.dialogs['reset-ach-menu']).replace(/[….]+$/, ''));
     $('#btn-reset-achievements').attr('title', clear(template.dialogs['reset-ach-confirm-title']));
   }
+  if (template.dialogs && template.dialogs['steps-file-menu']) {
+    $('#btn-achievement-steps span').text(clear(template.dialogs['steps-toggle']));
+    $('#btn-achievement-steps').attr('title', clear(template.dialogs['steps-file-menu']));
+  }
   $('#unlock .header .title span').text(clear(template.unlocked));
   $('#lock .header .title span').text(clear(template.locked));
   $('#achievement .achievements').data('lang-globalStat', clear(template.globalStat));

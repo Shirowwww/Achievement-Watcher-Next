@@ -114,6 +114,9 @@ const gogUniverseLan = require(path.join(appPath, 'parser/gogUniverseLan.js'));
 const steamParser = require(path.join(appPath, 'parser/steam.js'));
 const exeList = require(path.join(appPath, 'parser/exeList.js'));
 const manualUnlock = require(path.join(appPath, 'parser/manualUnlock.js'));
+const achievementSteps = require(path.join(appPath, 'parser/achievementSteps.js'));
+achievementSteps.setUserDataPath(getUserDataPath());
+const achievementStepsView = require(path.join(appPath, 'util/achievementStepsView.js'));
 const manualGames = require(path.join(appPath, 'parser/manualGames.js'));
 manualGames.setUserDataPath(getUserDataPath());
 const exeDetect = require(path.join(appPath, 'parser/exeDetect.js'));
@@ -1396,6 +1399,55 @@ async function reloadUndescribedGames(entry, scanConfig, onGame) {
   } catch (err) {
     debug.log(`[library] could not load the undescribed games again: ${err.message || err}`);
   }
+}
+
+// The step lists the player opened, kept open when their row is drawn again.
+const openStepBlocks = new Set();
+const stepBlockKey = (appid, name) => `${appid}\n${name}`;
+
+function achievementStepLabels() {
+  return {
+    toggle: t('steps-toggle', 'Steps', 'Étapes'),
+    add: t('steps-add', 'Add a step', 'Ajouter une étape'),
+    remove: t('steps-remove', 'Remove this step', 'Supprimer cette étape'),
+    rename: t('steps-rename', 'Double-click to rename', 'Double-cliquer pour renommer'),
+  };
+}
+
+// Draws one row's steps and its bar again, in place, from what is stored.
+function repaintAchievementSteps(game, row) {
+  const achievement = game.achievement.list.find((entry) => entry && String(entry.name) === String(row.attr('data-name')));
+  if (!achievement) return;
+  const steps = achievementSteps.stepsForGame(game.appid)[achievement.name] || [];
+  const achieved = Boolean(achievement.Achieved);
+  const block = achievementStepsView.blockHtml({
+    steps,
+    achieved,
+    expanded: openStepBlocks.has(stepBlockKey(game.appid, achievement.name)),
+    labels: achievementStepLabels(),
+  });
+  // The block is drawn anew, so the keyboard focus goes back to the same step (or the add field).
+  const focused = row.find('.ach-steps :focus');
+  const focusedStep = focused.closest('.ach-step').attr('data-step');
+  const focusedToggle = focused.is('.ach-steps-toggle');
+  row.find('.ach-steps').replaceWith(block);
+  const fresh = row.find('.ach-steps');
+  if (focusedToggle) fresh.find('.ach-steps-toggle').trigger('focus');
+  else if (focusedStep) {
+    const same = fresh.find('.ach-step').filter((index, el) => el.getAttribute('data-step') === focusedStep).find('input');
+    (same.length ? same : fresh.find('.ach-step-new input')).trigger('focus');
+  }
+  const progress = achievementStepsView.barState(getAchievementProgressState(achievement), steps, achieved);
+  row
+    .find('.progressBar')
+    .attr({
+      'data-current': progress.current,
+      'data-max': progress.hasProgress ? progress.max : 0,
+      'data-percent': progress.percent,
+      'data-label': `${formatCount(progress.current)} / ${formatCount(progress.max)}`,
+    })
+    .find('.meter')
+    .css('width', `${progress.hasProgress ? progress.percent : 0}%`);
 }
 
 // Empty when it cannot be read: a library can only be reused by the version that built it, so an
@@ -4107,6 +4159,13 @@ ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {
     refreshProfileStats();
   }
   updateGamePage(game.appid);
+});
+
+// A step was ticked in the in-game overlay: draw that game's steps again if its page is open.
+ipcRenderer.on('achievement-steps-changed', (event, appid) => {
+  if (!appid || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(appid)) return;
+  const game = gameList.find((g) => g && String(g.appid) === String(appid));
+  if (game) $('#achievement .achievement[data-name]').each((index, el) => repaintAchievementSteps(game, $(el)));
 });
 
 // The achievement row to scroll to and flash on the next render of its game view, from a toast's
@@ -7725,6 +7784,8 @@ var app = {
           t('manuallyUnlocked', 'Manually unlocked', 'Débloqué manuellement')
       );
       const loadingIcon = cssUrl(pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href);
+      const stepsByName = achievementSteps.stepsForGame(game.appid);
+      const stepLabels = achievementStepLabels();
       // Rows are collected and inserted in one append per list. jQuery parses the markup and splices
       // it into the live DOM on every call, so appending row by row cost one layout pass per row.
       const unlockRows = [];
@@ -7736,7 +7797,8 @@ var app = {
         const unlockLang = uiLang();
         const unlockAt = intlFormat.formatDateTime(achievement.UnlockTime, unlockLang, { dateStyle: 'short', timeStyle: 'short' });
         const unlockAgo = intlFormat.formatRelativeTime(achievement.UnlockTime, unlockLang);
-        const progress = getAchievementProgressState(achievement);
+        const steps = stepsByName[achievement.name] || [];
+        const progress = achievementStepsView.barState(getAchievementProgressState(achievement), steps, Boolean(achievement.Achieved));
         const progressMax = progress.hasProgress ? progress.max : 0;
         const progressLabel = `${formatCount(progress.current)} / ${formatCount(progress.max)}`;
 
@@ -7781,6 +7843,12 @@ var app = {
           progress.percent
         }" data-label="${progressLabel}">
                                 <span class="meter" style="width:${progress.hasProgress ? progress.percent : 0}%"></span></div>
+                                ${achievementStepsView.blockHtml({
+                                  steps,
+                                  achieved: Boolean(achievement.Achieved),
+                                  expanded: openStepBlocks.has(stepBlockKey(game.appid, achievement.name)),
+                                  labels: stepLabels,
+                                })}
                             </div>
                             <div class="stats">
                               <div class="time" data-time="${achievement.UnlockTime}"><i class="fas fa-clock"></i>
@@ -7991,6 +8059,97 @@ var app = {
     } catch (err) {
       debug.warn(`[manualUnlock] ${err && err.stack ? err.stack : err}`);
       return { changed: false };
+    }
+  },
+  // Opens or closes a row's steps; `focusNew` puts the cursor in the field that adds one.
+  toggleAchievementSteps: function (name, { open, focusNew = false } = {}) {
+    const appid = $('#achievement .wrapper > .header').attr('data-appid');
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    const row = $('#achievement .achievement').filter((index, el) => String($(el).attr('data-name')) === String(name)).first();
+    if (!game || !row.length) return;
+    const key = stepBlockKey(game.appid, name);
+    const opening = typeof open === 'boolean' ? open : !openStepBlocks.has(key);
+    if (opening) openStepBlocks.add(key);
+    else openStepBlocks.delete(key);
+    repaintAchievementSteps(game, row);
+    if (opening) row.find('.ach-steps').addClass('is-opening');
+    if (opening && focusNew) row.find('.ach-step-new input').trigger('focus');
+  },
+  // Adds, ticks, renames or removes one step of the game on screen, then tells the overlay.
+  achievementStepAction: function (name, edit) {
+    const appid = $('#achievement .wrapper > .header').attr('data-appid');
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    if (!game) return { changed: false };
+    let result;
+    try {
+      result = achievementSteps.saveEdit(game.appid, name, edit);
+    } catch (err) {
+      debug.warn(`[steps] could not save a step of ${game.appid}: ${err && err.stack ? err.stack : err}`);
+      return { changed: false };
+    }
+    if (!result.changed) return result;
+    const row = $('#achievement .achievement').filter((index, el) => String($(el).attr('data-name')) === String(name)).first();
+    if (row.length) repaintAchievementSteps(game, row);
+    ipcRenderer.send('achievement-steps-changed', String(game.appid));
+    return result;
+  },
+  // Saves the game's steps as a file to share: the texts, not the ticks.
+  exportAchievementSteps: async function () {
+    const appid = $('#achievement .wrapper > .header').attr('data-appid');
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    if (!game) return;
+    const file = achievementSteps.sidecarFile();
+    const payload = achievementSteps.exportGame(file ? achievementSteps.readMap(file) : {}, game);
+    const win = remote.getCurrentWindow();
+    if (!payload) {
+      remote.dialog.showMessageBoxSync(win, { type: 'info', message: t('steps-export-none', 'This game has no steps to export yet.', "Ce jeu n'a encore aucune étape à exporter.") });
+      return;
+    }
+    const safeName = String(gameTitleOf(game) || game.appid).replace(/[<>:"/\\|?*\u0000-\u001f]+/g, ' ').trim() || String(game.appid);
+    const { canceled, filePath } = await remote.dialog.showSaveDialog(win, {
+      defaultPath: `${safeName} - steps.json`,
+      filters: [{ name: t('steps-file', 'Achievement steps', 'Étapes de succès'), extensions: ['json'] }],
+    });
+    if (canceled || !filePath) return;
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(payload, null, 2), 'utf8');
+    } catch (err) {
+      remote.dialog.showMessageBoxSync(win, { type: 'error', message: t('steps-export-failed', 'Could not save the steps file.', "Impossible d'enregistrer le fichier d'étapes."), detail: `${err}` });
+    }
+  },
+  // Adds the steps of a shared file to the game on screen; the steps already there keep their ticks.
+  importAchievementSteps: async function () {
+    const appid = $('#achievement .wrapper > .header').attr('data-appid');
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    if (!game) return;
+    const win = remote.getCurrentWindow();
+    const { canceled, filePaths } = await remote.dialog.showOpenDialog(win, {
+      properties: ['openFile'],
+      filters: [{ name: t('steps-file', 'Achievement steps', 'Étapes de succès'), extensions: ['json'] }],
+    });
+    if (canceled || !filePaths || !filePaths[0]) return;
+    const refusedMessage = t('steps-import-refused', 'This file is not an AW Next steps file.', "Ce fichier n'est pas un fichier d'étapes d'AW Next.");
+    try {
+      if (fs.statSync(filePaths[0]).size > achievementSteps.MAX_FILE_BYTES) throw Object.assign(new Error('too big'), { code: 'NOT_STEPS_FILE' });
+      const payload = achievementSteps.parseImportText(fs.readFileSync(filePaths[0], 'utf8'));
+      const file = achievementSteps.sidecarFile();
+      const result = achievementSteps.importGame(achievementSteps.readMap(file), game, payload);
+      achievementSteps.writeMap(file, result.map);
+      $('#achievement .achievement[data-name]').each((index, el) => repaintAchievementSteps(game, $(el)));
+      ipcRenderer.send('achievement-steps-changed', String(game.appid));
+      remote.dialog.showMessageBoxSync(win, {
+        type: 'info',
+        message: t('steps-import-done', '{steps} step(s) added to {achievements} achievement(s).', '{steps} étape(s) ajoutée(s) à {achievements} succès.', {
+          steps: result.added,
+          achievements: result.achievements,
+        }),
+      });
+    } catch (err) {
+      const message =
+        err && err.code === 'NO_MATCH'
+          ? t('steps-import-no-match', 'No achievement of this game is in this file.', "Aucun succès de ce jeu n'est dans ce fichier.")
+          : refusedMessage;
+      remote.dialog.showMessageBoxSync(win, { type: 'warning', message });
     }
   },
   // Resets a game's achievements so they can be earned and announced again. Everything is backed up

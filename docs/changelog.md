@@ -26,6 +26,11 @@ renamed in 3.9.0 and the history is kept under one file.
   recognises gets Steam's own Achievements section, play bar counter, full list and Big Picture tab,
   updated as unlocks come in. It stays out of the way of NativeGameLink and Game Data Linker on the
   shortcuts they linked. It comes as `aw-next-millennium.zip` on the release page.
+- **Steps under an achievement.** A long achievement can be split into steps you write yourself
+  (the rare weapons of Knight's Honor, say) and tick off one by one: hover it and open **Steps**, or
+  right-click it and pick **Add steps**. Ticked steps fill its bar but never unlock it, and the
+  in-game overlay shows and ticks them too. **Steps** in the game's header exports the list to a
+  file, or imports one someone shared.
 
 ### Improved
 

@@ -49,6 +49,7 @@ async function run() {
   assert.equal(english.strings.clear, 'Clear');
   assert.equal(english.strings.close, 'Close');
   assert.equal(english.strings.accentCustom, 'Custom');
+  assert.equal(english.strings.steps, 'Steps', 'the steps toggle is named as in the main window');
 
   const french = loadOverlayLocale({ localeDir: repoLocaleDir, lang: 'french' });
   assert.equal(french.lang, 'french');
@@ -89,6 +90,7 @@ async function run() {
   assert.equal(french.strings.clear, 'Effacer');
   assert.equal(french.strings.close, 'Fermer');
   assert.equal(french.strings.accentCustom, 'Personnalisé');
+  assert.equal(french.strings.steps, 'Étapes');
 
   // A missing per-language file degrades to English (same policy as the rest of the UI).
   const missing = loadOverlayLocale({ localeDir: repoLocaleDir, lang: 'klingon' });

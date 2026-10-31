@@ -482,6 +482,99 @@
         transition: width var(--dur-slow) var(--ease-out);
       }
 
+      /* Steps written under an achievement in the main window: shown and ticked here, never edited. */
+      .overlay-steps {
+        margin-top: 5px;
+        font-size: 11px;
+      }
+
+      .overlay-steps-toggle,
+      .overlay-step {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 4px 2px 0;
+        border: 0;
+        border-radius: 6px;
+        background: none;
+        color: var(--muted);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .overlay-steps-toggle:hover,
+      .overlay-step:hover:not(:disabled) {
+        color: var(--text);
+      }
+
+      .overlay-steps-toggle::after {
+        content: '';
+        width: 5px;
+        height: 5px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: translateY(-2px) rotate(45deg);
+        transition: transform var(--dur-fast) var(--ease-out);
+      }
+
+      .overlay-steps.is-open .overlay-steps-toggle::after {
+        transform: translateY(1px) rotate(-135deg);
+      }
+
+      .overlay-steps-count {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .overlay-steps-list {
+        margin: 2px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .overlay-steps.is-opening .overlay-steps-list {
+        animation: overlay-steps-open 180ms var(--ease-out);
+      }
+
+      @keyframes overlay-steps-open {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+
+      .overlay-step {
+        width: 100%;
+        color: var(--text);
+        overflow-wrap: anywhere;
+      }
+
+      .overlay-step::before {
+        content: '';
+        flex: none;
+        box-sizing: border-box;
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid var(--muted);
+        border-radius: 3px;
+      }
+
+      .overlay-step.done {
+        color: var(--muted);
+        text-decoration: line-through;
+      }
+
+      .overlay-step.done::before {
+        border-color: var(--accent);
+        background: var(--accent)
+          url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-4.9' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+          center / 10px no-repeat;
+      }
+
+      .overlay-step:disabled {
+        cursor: default;
+      }
+
       .overlay-status {
         text-align: right;
         min-width: 74px;

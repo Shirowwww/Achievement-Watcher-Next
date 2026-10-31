@@ -179,6 +179,19 @@ An achievement a source cannot see (earned before you set tracking up, or never 
 emulator) can be marked from its right-click menu with **Mark as manually unlocked**. **Clear manual
 unlock** undoes it. Manual unlocks persist across scans and are cleared by a reset.
 
+## Steps under an achievement
+
+A long achievement can be split into steps you write and tick yourself. Hover it on the game's page
+and open **Steps**, or right-click it and choose **Add steps**, then type a step and press Enter.
+Click a box to tick a step, double-click its text to rename it, and use the cross to remove it.
+The game never reports steps, so they only fill the achievement's bar: unlocking still comes from
+the game, and once it does every step shows as done. The in-game overlay shows the same steps and
+ticks them with the mouse or a controller.
+
+**Steps** in the game's header exports the list to a file to share, or imports one. A file carries
+the texts, not the ticks, and its achievements are matched by id, then by name; steps already there
+keep their ticks. The steps live in `cfg/achievement-steps.json` and go into the profile backup.
+
 ## Emulator and repair tools
 
 Diagnosis and repair for Goldberg / GBE Fork setups, the GBE runtime installer, Steamless and the

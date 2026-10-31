@@ -24,7 +24,11 @@ function loadOverlayLocale({ localeDir, lang } = {}) {
   return {
     lang: language,
     // The masked-description label is shared with the main window, so it is read from there.
-    strings: Object.assign({ hiddenDescription: data && data.hiddenDescriptionPlaceholder }, data && data.overlay),
+    // So is the steps toggle's name.
+    strings: Object.assign(
+      { hiddenDescription: data && data.hiddenDescriptionPlaceholder, steps: data && data.dialogs && data.dialogs['steps-toggle'] },
+      data && data.overlay
+    ),
     // Grade names for the overlay's trophy mode, from the same dialogs keys the profile uses.
     trophyLabels: {
       gold: (data && data.dialogs && data.dialogs['trophy-gold']) || 'Gold',

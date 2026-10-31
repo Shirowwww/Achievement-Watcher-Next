@@ -13,6 +13,8 @@
   let query = '';
   // Names of hidden achievements the player has clicked open; cleared whenever the overlay reopens.
   let revealedDescriptions = new Set();
+  // Achievements whose steps the player opened; cleared whenever the overlay reopens.
+  let openSteps = new Set();
   let controllerConfig = {
     layout: 'auto',
     nativeModeToggles: false,
@@ -376,6 +378,111 @@
     renderRows();
   }
 
+  // Steps the player wrote under an achievement in the main window (parser/achievementSteps.js).
+  // The overlay shows and ticks them; adding, renaming and removing stay in the main window.
+  function stepsOf(achievement) {
+    const all = currentGame && currentGame.steps;
+    return all && Array.isArray(all[achievement.name]) ? all[achievement.name] : [];
+  }
+
+  function stepCount(achievement) {
+    const steps = stepsOf(achievement);
+    return { done: achievement.Achieved ? steps.length : steps.filter((step) => step && step.done).length, total: steps.length };
+  }
+
+  // The game's own counter when it has one, else the ticked steps, as in the main window.
+  function rowProgress(achievement) {
+    const progress = ui.progressInfo(achievement);
+    const { done, total } = stepCount(achievement);
+    if (progress.hasProgress || total === 0) return progress;
+    return { current: done, max: total, percent: Math.floor((done / total) * 100), hasProgress: true };
+  }
+
+  function progressHtml(progress) {
+    return progress.hasProgress && progress.max > 1
+      ? `<div class="overlay-progress"><div class="progress-meta"><span>${ui.escapeHtml(overlayStrings.progress)}</span><span>${progress.current} / ${progress.max}</span></div>
+           <div class="progress-track"><div class="progress-fill" style="width:${progress.percent}%"></div></div></div>`
+      : '';
+  }
+
+  function stepsHtml(achievement) {
+    const steps = stepsOf(achievement);
+    if (steps.length === 0) return '';
+    const achieved = !!achievement.Achieved;
+    const open = openSteps.has(achievement.name);
+    const { done, total } = stepCount(achievement);
+    const items = steps
+      .map((step) => {
+        const ticked = achieved || step.done === true;
+        return (
+          `<li><button type="button" class="overlay-step${ticked ? ' done' : ''}" role="checkbox" aria-checked="${ticked}" data-step="${ui.escapeHtml(step.id)}"${achieved ? ' disabled' : ''}>` +
+          `${ui.escapeHtml(step.text)}</button></li>`
+        );
+      })
+      .join('');
+    return (
+      `<div class="overlay-steps${open ? ' is-open' : ''}"><button type="button" class="overlay-steps-toggle" aria-expanded="${open}">` +
+      `${ui.escapeHtml(overlayStrings.steps || 'Steps')} <span class="overlay-steps-count">${done}/${total}</span></button>` +
+      `<ul class="overlay-steps-list"${open ? '' : ' hidden'}>${items}</ul></div>`
+    );
+  }
+
+  // Updates a row's ticks, count and bar in place, so the gamepad keeps the step it is on.
+  function paintSteps(row, achievement) {
+    const block = row.querySelector('.overlay-steps');
+    if (!block) return;
+    const steps = stepsOf(achievement);
+    block.querySelectorAll('.overlay-step').forEach((el) => {
+      const step = steps.find((entry) => entry.id === el.getAttribute('data-step'));
+      const ticked = !!achievement.Achieved || Boolean(step && step.done);
+      el.classList.toggle('done', ticked);
+      el.setAttribute('aria-checked', String(ticked));
+    });
+    const { done, total } = stepCount(achievement);
+    block.querySelector('.overlay-steps-count').textContent = `${done}/${total}`;
+    const bar = row.querySelector('.overlay-progress');
+    const html = progressHtml(rowProgress(achievement));
+    if (bar) bar.outerHTML = html;
+    else if (html) block.insertAdjacentHTML('beforebegin', html);
+  }
+
+  async function tickStep(row, achievement, id) {
+    const step = stepsOf(achievement).find((entry) => entry.id === id);
+    if (!step || !currentGame) return;
+    const appid = currentGame.appid;
+    let result = null;
+    try {
+      result = await window.api.toggleStep(appid, achievement.name, id, !step.done);
+    } catch {
+      result = null;
+    }
+    if (!result || !result.changed || !Array.isArray(result.steps) || !currentGame || currentGame.appid !== appid) return;
+    currentGame.steps = { ...currentGame.steps, [achievement.name]: result.steps };
+    paintSteps(row, achievement);
+  }
+
+  function bindSteps(row, achievement) {
+    const block = row.querySelector('.overlay-steps');
+    if (!block) return;
+    block.addEventListener('click', (event) => {
+      // The row reveals a hidden description on click: a click on the steps is not that.
+      event.stopPropagation();
+      const toggle = event.target.closest('.overlay-steps-toggle');
+      if (toggle) {
+        const open = !openSteps.has(achievement.name);
+        if (open) openSteps.add(achievement.name);
+        else openSteps.delete(achievement.name);
+        block.classList.toggle('is-open', open);
+        block.classList.toggle('is-opening', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        block.querySelector('.overlay-steps-list').hidden = !open;
+        return;
+      }
+      const stepEl = event.target.closest('.overlay-step');
+      if (stepEl && !stepEl.disabled) tickStep(row, achievement, stepEl.getAttribute('data-step'));
+    });
+  }
+
   function renderRows() {
     const container = $('overlayRows');
     const empty = $('overlay-empty');
@@ -411,7 +518,7 @@
         masked ? overlayStrings.hiddenDescription : ui.safeLocalizedText(achievement.description, overlayLang, overlayStrings.hidden)
       );
       const achieved = !!achievement.Achieved;
-      const progress = ui.progressInfo(achievement);
+      const progress = rowProgress(achievement);
       const rarity = ui.rarityPercent(achievement);
 
       const row = document.createElement('div');
@@ -429,11 +536,6 @@
         : rarity === null || rarity === undefined ? '' : `${rarity.toFixed(1)}%`;
       const rarityHtml = tier ? `<span class="rarity-badge ${tier}">★ ${ui.escapeHtml(badgeText)}</span>` : '';
 
-      const progressHtml = progress.hasProgress && progress.max > 1
-        ? `<div class="overlay-progress"><div class="progress-meta"><span>${ui.escapeHtml(overlayStrings.progress)}</span><span>${progress.current} / ${progress.max}</span></div>
-           <div class="progress-track"><div class="progress-fill" style="width:${progress.percent}%"></div></div></div>`
-        : '';
-
       const dateHtml = achieved && achievement.UnlockTime ? `<div class="unlock-date">${ui.escapeHtml(ui.formatTimestamp(achievement.UnlockTime, overlayLang, overlayStrings.na))}</div>` : '';
       const statusHtml = achieved
         ? `<span class="status-pill unlocked">${ui.escapeHtml(overlayStrings.unlocked)}</span>${dateHtml}`
@@ -442,8 +544,9 @@
       row.innerHTML =
         `<div class="overlay-icon"><img alt="" /></div>` +
         `<div class="overlay-info"><div class="overlay-name" title="${displayName}">${displayName}</div>` +
-        `<div class="overlay-desc${masked ? ' masked-desc' : ''}" title="${description}">${description}</div>${progressHtml}${rarityHtml}</div>` +
+        `<div class="overlay-desc${masked ? ' masked-desc' : ''}" title="${description}">${description}</div>${progressHtml(progress)}${stepsHtml(achievement)}${rarityHtml}</div>` +
         `<div class="overlay-status">${statusHtml}</div>`;
+      bindSteps(row, achievement);
 
       if (masked) {
         // The gamepad focuses and clicks the row, not the description, so the row listens.
@@ -663,6 +766,7 @@
   window.api.onOverlay((game) => {
     query = '';
     revealedDescriptions = new Set();
+    openSteps = new Set();
     filter = 'all';
     sortState = unsorted();
     $('overlay-search').value = '';
@@ -680,6 +784,13 @@
     if (currentGame) renderRows();
   });
 
+  // The steps changed in the main window: draw the rows again with the new lists.
+  window.api.onSteps((data) => {
+    if (!currentGame || !data || String(data.appid) !== String(currentGame.appid)) return;
+    currentGame.steps = data.steps || {};
+    renderRows();
+  });
+
   // Native Gamepad API navigation
   // The in-game overlay is a non-focused always-on-top window, so it polls the pad
   // directly (no document focus required). D-pad / left stick move the focus ring,
@@ -692,6 +803,8 @@
       '.filter-pill',
       '.sort-btn',
       '.overlay-row',
+      '.overlay-steps-toggle',
+      '.overlay-step',
       '#overlay-settings-toggle',
       '#overlay-close',
       '#overlay-search',

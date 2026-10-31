@@ -30,4 +30,9 @@ contextBridge.exposeInMainWorld('api', {
   onPadState: (callback) => ipcRenderer.on('overlay-pad-state', (event, data) => callback(data)),
   onOverlayVisibility: (callback) => ipcRenderer.on('overlay-visibility', (event, data) => callback(data)),
   onRefreshAchievementsTable: (callback) => ipcRenderer.on('refresh-achievements-table', (event, data) => callback(data)),
+
+  // Steps under an achievement: the overlay ticks them, the main window edits them.
+  onSteps: (callback) => ipcRenderer.on('overlay-steps', (event, data) => callback(data)),
+  toggleStep: (appid, name, id, done) =>
+    ipcRenderer.invoke('achievement-step-toggle', { appid: String(appid), name: String(name), id: String(id), done: done === true }),
 });
