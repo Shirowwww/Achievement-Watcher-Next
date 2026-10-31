@@ -125,7 +125,7 @@ function snapshotGameSortValues(li, options) {
       if (!options.alpha) value.appid = gameBox.data('appid');
     }
     if (options.percent) value.percent = row.find('.progressBar').data('percent');
-    if (options.alpha) value.title = row.find('.info .title').text();
+    value.title = row.find('.info .title').text();
     values.set(this, value);
   });
   return values;
@@ -163,9 +163,10 @@ function sort(elem, option = {}) {
       if (result != 0) return result;
     }
 
-    if (options.alpha) {
-      return aValue.title.localeCompare(bValue.title, undefined, { sensitivity: 'base' }) * factor;
-    }
+    // Names also break ties of the other criteria, always A to Z, so a series stays together (#158).
+    const byName = aValue.title.localeCompare(bValue.title, undefined, { sensitivity: 'base' });
+    if (options.alpha) return byName * factor;
+    if (byName != 0 && (options.percent || options.time || options.played)) return byName;
     // A manually added game's id is "manual-<hash>", so subtracting reads NaN and leaves the tie in
     // an arbitrary order. Compare as text whenever either id is not a plain number.
     const left = Number(aValue.appid);

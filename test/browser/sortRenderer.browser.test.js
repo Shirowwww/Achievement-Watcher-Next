@@ -76,6 +76,42 @@ test('game sort snapshots DOM values while preserving every ordering rule', { co
   });
 });
 
+// #158: games tied on progress, unlock date or last play used to fall back to AppID order, which
+// scattered a series. Ties now read by name, A to Z whatever the direction.
+test('game sort breaks ties by name so a series stays together', { concurrency: 1, timeout: 180000 }, async (t) => {
+  await inContext(t, async (context) => {
+    const harnessDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-sort-tie-harness-'));
+    const harness = path.join(harnessDir, 'sort-tie.html');
+    fs.writeFileSync(harness, buildHarness());
+
+    try {
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(harness).href);
+      const result = await page.evaluate(() => {
+        window.sortFixture = [
+          { id: 're3', appid: 1, installed: 1, title: 'Resident Evil 3', lastplayed: 7, time: 7, percent: 100 },
+          { id: 'zelda', appid: 2, installed: 1, title: 'Zelda', lastplayed: 7, time: 7, percent: 100 },
+          { id: 're2', appid: 5, installed: 1, title: 'resident evil 2', lastplayed: 7, time: 7, percent: 100 },
+          { id: 'half', appid: 3, installed: 1, title: 'Abzu', lastplayed: 1, time: 1, percent: 50 },
+        ];
+        return {
+          percentDescending: window.runSortFixture({ percent: true, direction: 'desc' }),
+          percentAscending: window.runSortFixture({ percent: true, direction: 'asc' }),
+          timeDescending: window.runSortFixture({ time: true, direction: 'desc' }),
+          playedDescending: window.runSortFixture({ played: true, direction: 'desc' }),
+        };
+      });
+
+      assert.deepEqual(result.percentDescending, ['re2', 're3', 'zelda', 'half']);
+      assert.deepEqual(result.percentAscending, ['half', 're2', 're3', 'zelda']);
+      assert.deepEqual(result.timeDescending, ['re2', 're3', 'zelda', 'half']);
+      assert.deepEqual(result.playedDescending, ['re2', 're3', 'zelda', 'half']);
+    } finally {
+      fs.rmSync(harnessDir, { recursive: true, force: true });
+    }
+  });
+});
+
 test('installed-only toggle refreshes profile statistics and visible games together', { concurrency: 1, timeout: 180000 }, async (t) => {
   await inContext(t, async (context) => {
     const harnessDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-installed-filter-harness-'));

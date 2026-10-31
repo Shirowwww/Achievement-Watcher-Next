@@ -48,6 +48,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Games tied in a sort line up by name (#158).** Sorted by progress, unlock date or last play,
+  games with the same value came in an arbitrary order, so a series finished at 100% was scattered
+  across the list. They now follow each other from A to Z.
 - **One game without its list no longer rescans the whole library (#157).** A game whose
   achievement list did not arrive made AW Next rebuild the library every time it opened. Now only
   that game loads again, in the background. A recompiled Xbox 360 game also stops waiting on its
