@@ -53,6 +53,10 @@ renamed in 3.9.0 and the history is kept under one file.
   that game loads again, in the background. A recompiled Xbox 360 game also stops waiting on its
   executable: when reading it takes too long, the list comes from dbox.tools and the executable's
   own list is used from the next scan.
+- **A recompiled Xbox 360 game added by its user folder finds its executable (#157).** With only
+  the folder holding its unlock lists added, such as `Gears1\user`, AW Next looked for the game's
+  default.xex below it alone and missed `Gears1\game\extracted`, so the list had to come from
+  dbox.tools. It now also looks in the folder holding the one you added, and remembers what it finds.
 - **Steam games notify on a PC whose clock is off (#155).** Steam stamps an unlock with its own
   time and AW Next aged it with the PC's, so a clock a minute fast made every unlock look too old to
   show. AW Next now reads Steam's time when it starts and every hour, and ages those unlocks on it.

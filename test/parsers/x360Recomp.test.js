@@ -429,6 +429,45 @@ test('a list under Documents finds its executable through the watched folders, a
   assert.equal(again.achievement.total, 2, 'the extracted list outlives the executable');
 });
 
+test("a watched folder inside the game finds the game's default.xex beside it, once (#157)", async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  const read = [];
+  x360.setDirectoryReader((dir) => {
+    read.push(dir);
+    return fs.readdirSync(dir, { withFileTypes: true });
+  });
+  t.after(() => {
+    x360.setDataRoot('');
+    x360.setDirectoryReader(null);
+  });
+  const game = path.join(root, 'Collection', 'Gears1');
+  write(path.join(game, 'Gears1.exe'), '');
+  write(path.join(game, 'old', 'default.xex'), buildXex({ spa: gameSpa(0x454108cf), titleId: 0x454108cf }));
+  const xexFile = write(path.join(game, 'game', 'extracted', 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'user', 'achievements', '415608B2.toml'), rexToml([1]));
+
+  const [record] = x360.scan(path.join(game, 'user'));
+  assert.equal(record.data.xex, xexFile, 'the one with this title, not any default.xex nearby');
+  assert.equal(record.data.gameDir, game);
+  const offline = fakeFetch([], { fail: true });
+  const data = await x360.getGameData(record.data, 'english', { fetchImpl: offline.fetchImpl });
+  assert.equal(data.achievement.list[0].displayName, 'Bridge', 'no dbox.tools needed');
+
+  read.length = 0;
+  assert.equal(x360.scan(path.join(game, 'user'))[0].data.gameDir, game, 'the index remembers it');
+  assert.ok(!read.includes(path.join(game, 'old')), 'once found, it is not looked for again');
+});
+
+test('a list under Documents never sends the search above its own folder', (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => x360.setDataRoot(''));
+  write(path.join(root, 'Docs', 'Elsewhere', 'default.xex'), buildXex({ spa: gameSpa(0x454108cf), titleId: 0x454108cf }));
+  write(path.join(root, 'Docs', 'sample_game', 'achievements', `${TITLE}.toml`), rexToml([1]));
+  assert.equal(x360.scanDocuments([path.join(root, 'Docs')])[0].data.xex, undefined, 'Documents is no game folder');
+});
+
 test('a JSON list is tied to its Xbox 360 title only when every id and gamerscore match', async (t) => {
   const root = tempDir(t);
   x360.setDataRoot(path.join(root, 'data'));

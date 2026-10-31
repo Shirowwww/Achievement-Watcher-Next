@@ -25,6 +25,9 @@ const LIST_FORMATS = new Set(['toml', 'tsv', 'json']);
 // Xenia's own program: a dump beside it is the emulator's game, not a recompiled install.
 const EMULATOR_EXE_RE = /^xenia/i;
 const MAX_CACHED_TITLE_IDS = 1000;
+// The folder holding a watched one is only glanced at: a few levels, a few hundred folders.
+const DEPTH_AROUND = 3;
+const MAX_DIRECTORIES_AROUND = 200;
 
 // The unlock lists inside one `achievements` folder.
 function inspectAchievementsDir(dir) {
@@ -245,6 +248,36 @@ function xexTitles(targets) {
   return byTitle;
 }
 
+/*
+  The default.xex files in the folder holding a watched one, for a watched folder inside its game:
+  `<game>\user` keeps the lists while the executable sits in `<game>\game\extracted` (#157).
+  Bounded like discover(); the watched folder, already walked, is skipped.
+*/
+function xexAround(root) {
+  const found = [];
+  const parent = path.dirname(path.resolve(root));
+  if (path.relative(parent, root) === '') return found;
+  const queue = [{ dir: parent, depth: 0 }];
+  let visited = 0;
+  while (queue.length && visited < MAX_DIRECTORIES_AROUND) {
+    const { dir, depth } = queue.shift();
+    visited += 1;
+    for (const entry of readDirectory(dir)) {
+      const full = path.join(dir, entry.name);
+      const lower = entry.name.toLowerCase();
+      if (entry.isFile() && lower === 'default.xex') found.push({ format: 'xex', file: full });
+      else if (entry.isDirectory() && depth < DEPTH_AROUND && !SKIP_DIRECTORIES.has(lower) && path.relative(full, root) !== '') queue.push({ dir: full, depth: depth + 1 });
+    }
+  }
+  return found;
+}
+
+// The titles of lists that have neither an install nor a default.xex the walk or the index knows.
+function unplacedTitles(targets, xexByTitle, index) {
+  const known = (titleId) => xexByTitle.has(titleId) || (index[titleId] && fs.existsSync(index[titleId]));
+  return [...new Set(targets.filter((target) => LIST_FORMATS.has(target.format) && target.titleId && !target.gameDir && !known(target.titleId)).map((target) => target.titleId))];
+}
+
 // The target with its default.xex and, when it has none yet, the install that executable sits in.
 function placeTarget(target, xexByTitle, index) {
   const placed = { ...target };
@@ -368,11 +401,28 @@ function addRecord(games, seen, record, isPort) {
   games[at] = portFirst ? mergeLists(record, kept) : mergeLists(kept, record);
 }
 
-// One record per title: the same game found twice (a copy, another profile) reads both lists.
-function scan(dir) {
+// `walked` with the default.xex found beside the watched folder, when a list has no executable yet.
+function withXexAround(dir, targets, walked, index) {
+  const wanted = unplacedTitles(targets, walked, index);
+  if (!wanted.length) return walked;
+  const around = xexTitles(xexAround(dir));
+  for (const titleId of wanted) {
+    if (around.has(titleId)) debug.log(`[x360recomp] ${titleId}: default.xex found beside the watched folder, at '${around.get(titleId)}'`);
+    else debug.log(`[x360recomp] ${titleId}: no default.xex in '${dir}' or the folder holding it`);
+  }
+  return new Map([...around, ...walked]);
+}
+
+/*
+  One record per title: the same game found twice (a copy, another profile) reads both lists.
+  `lookAround` lets a list without an executable look in the folder holding `dir`.
+*/
+function scanFolder(dir, lookAround) {
   const targets = discover(dir);
-  const xexByTitle = xexTitles(targets);
-  const index = rememberXex(xexByTitle, readXexIndex());
+  const known = readXexIndex();
+  const walked = xexTitles(targets);
+  const xexByTitle = lookAround ? withXexAround(dir, targets, walked, known) : walked;
+  const index = rememberXex(xexByTitle, known);
   const games = [];
   const seen = new Map();
   for (const target of targets) {
@@ -384,6 +434,8 @@ function scan(dir) {
   }
   return games;
 }
+
+const scan = (dir) => scanFolder(dir, true);
 
 /*
   `found` merged into `records` by source and appid: new titles are added, and a port entry still
@@ -444,7 +496,8 @@ function scanDocuments(roots) {
     for (const entry of readDirectory(root)) {
       const gameDir = path.join(root, entry.name);
       if (!entry.isDirectory() || !ports.isDirectory(path.join(gameDir, 'achievements'))) continue;
-      for (const record of scan(gameDir)) {
+      // Documents holds every game's folder, never one game's install.
+      for (const record of scanFolder(gameDir, false)) {
         if (seen.has(record.appid)) continue;
         seen.add(record.appid);
         games.push(record);
