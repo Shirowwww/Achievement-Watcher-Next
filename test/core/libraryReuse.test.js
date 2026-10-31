@@ -65,28 +65,35 @@ test('a clock that moved backwards refuses the reuse instead of extending it', a
   assert.equal(await reason(entry({ savedAt: NOW + 60_000 })), 'the stored library is dated in the future');
 });
 
-test('a scan that left an undescribed game must run again so it retries', async () => {
+const retryRecord = (appid) => ({ appid, source: 'Xbox 360 Recomp', data: { type: 'x360recomp', titleId: '4D5307D5' } });
+
+// #157: one game whose list never arrived used to rebuild the whole library on every opening.
+test('an undescribed game no longer rebuilds the library: it alone is loaded again', async () => {
+  const undescribed = entry();
+  const game = { appid: 'x360-4D5307D5', provisional: true, provisionalAt: NOW - 60_000, retry: retryRecord('x360-4D5307D5') };
+  undescribed.games = [...undescribed.games, game];
+  assert.equal(await reason(undescribed), '');
+  assert.deepEqual(libraryReuse.gamesToReload(undescribed, NOW), [game]);
+});
+
+test('an undescribed game with nothing to load it again from still rebuilds the library', async () => {
   const undescribed = entry();
   undescribed.games = [...undescribed.games, { appid: '20', provisional: true }];
   assert.equal(await reason(undescribed), 'the last scan left entries undescribed');
 });
 
-test('a fresh confirmed-miss provisional game still blocks reuse, so it gets a prompt retry', async () => {
-  const stillFresh = entry();
-  stillFresh.games = [
-    ...stillFresh.games,
-    { appid: '20', provisional: true, provisionalDefinitive: true, provisionalAt: NOW - (libraryReuse.PROVISIONAL_GRACE_MS - 1000) },
-  ];
-  assert.equal(await reason(stillFresh), 'the last scan left entries undescribed');
+test('a fresh confirmed-miss provisional game is retried, one past the grace period is left alone', async () => {
+  const fresh = { appid: '20', provisional: true, provisionalDefinitive: true, provisionalAt: NOW - (libraryReuse.PROVISIONAL_GRACE_MS - 1000), retry: retryRecord('20') };
+  const settled = { appid: '30', provisional: true, provisionalDefinitive: true, provisionalAt: NOW - (libraryReuse.PROVISIONAL_GRACE_MS + 1000) };
+  const stored = entry();
+  stored.games = [...stored.games, fresh, settled];
+  assert.equal(await reason(stored), '');
+  assert.deepEqual(libraryReuse.gamesToReload(stored, NOW), [fresh]);
 });
 
-test('a confirmed-miss provisional game past the grace period no longer blocks reuse of the rest', async () => {
-  const settled = entry();
-  settled.games = [
-    ...settled.games,
-    { appid: '20', provisional: true, provisionalDefinitive: true, provisionalAt: NOW - (libraryReuse.PROVISIONAL_GRACE_MS + 1000) },
-  ];
-  assert.equal(await reason(settled), '');
+test('a described library has nothing to load again', () => {
+  assert.deepEqual(libraryReuse.gamesToReload(entry(), NOW), []);
+  assert.deepEqual(libraryReuse.gamesToReload(null, NOW), []);
 });
 
 test('a library with nothing to prove it is current is rebuilt', async () => {

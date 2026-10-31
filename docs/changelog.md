@@ -32,9 +32,16 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Edit playtime follows the Playtime display.** With **Library tiles > Playtime** on Hours only,
   the dialog has hours and minutes and no days; on Down to the second, it adds a seconds field.
   Confirming without a change keeps the seconds the fields do not show.
+- **Screenshot and clip names use your local time (#155).** The date in a souvenir's file name was
+  in UTC; it now matches the PC's clock.
 
 ### Fixed
 
+- **One game without its list no longer rescans the whole library (#157).** A game whose
+  achievement list did not arrive made AW Next rebuild the library every time it opened. Now only
+  that game loads again, in the background. A recompiled Xbox 360 game also stops waiting on its
+  executable: when reading it takes too long, the list comes from dbox.tools and the executable's
+  own list is used from the next scan.
 - **Steam games notify on a PC whose clock is off (#155).** Steam stamps an unlock with its own
   time and AW Next aged it with the PC's, so a clock a minute fast made every unlock look too old to
   show. AW Next now reads Steam's time when it starts and every hour, and ages those unlocks on it.

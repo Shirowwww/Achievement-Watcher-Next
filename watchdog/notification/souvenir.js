@@ -153,14 +153,20 @@ async function captureImage(file, hdrMode, { platform = process.platform, captur
   return hdrMode === 'auto' ? 'auto' : 'sdr';
 }
 
+// The PC's local time, as its clock shows it: 2026-06-23 23-10-05.
+function localStamp(date = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  return `${day} ${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
+}
+
 // <dir>/<game>/<achievement> - <date><ext>, its folder created. Clips use the same layout.
 // Achievement first so sorting by name groups an achievement's shots; the date still sorts by time.
 function souvenirPath({ game, achievement, dir } = {}, ext = '.png') {
   const baseDir = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
   const gameDir = path.join(baseDir, sanitize(game));
   fs.mkdirSync(gameDir, { recursive: true });
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('T', ' ').slice(0, 19); // e.g. 2026-06-23 23-10-05
-  return uniquePath(gameDir, sanitize(achievement) + ' - ' + ts, ext);
+  return uniquePath(gameDir, sanitize(achievement) + ' - ' + localStamp(), ext);
 }
 
 // Capture the full desktop and write it to <dir>/<game>/<achievement> - <date>.png. Returns the path or null.
@@ -187,6 +193,7 @@ module.exports.followGame = function (game) {
 // Exported for the tests: both decide the path a screenshot is written to.
 module.exports._sanitize = sanitize;
 module.exports._uniquePath = uniquePath;
+module.exports._localStamp = localStamp;
 module.exports._captureNative = captureNative;
 module.exports._captureImage = captureImage;
 module.exports._isPng = isPng;

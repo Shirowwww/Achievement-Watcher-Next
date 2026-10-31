@@ -48,6 +48,19 @@ test('a game whose metadata lookup fails still gets a library entry', () => {
   assert.deepEqual(entry.achievement, { total: 0, unlocked: 0, list: [] });
 });
 
+// #157: a reused library loads such a game again on its own, from this record, not by a full scan.
+test('the entry carries a copy of the discovery record it can be loaded again from', () => {
+  const saveDir = tempDir('retry-save');
+  fs.writeFileSync(path.join(saveDir, '4D5307D5.toml'), '');
+  const record = { appid: 'x360-4D5307D5', source: 'Xbox 360 Recomp', data: { type: 'x360recomp', format: 'toml', titleId: '4D5307D5', file: path.join(saveDir, '4D5307D5.toml'), gameDir: saveDir } };
+
+  const entry = buildProvisionalGame(record);
+
+  assert.deepEqual(entry.retry, record);
+  assert.notEqual(entry.retry.data, record.data, 'a copy: the next load writes into the record it is given');
+  assert.deepEqual(JSON.parse(JSON.stringify(entry.retry)), record, 'it survives the library snapshot');
+});
+
 test('the entry carries the artwork the appid alone can resolve', () => {
   // This is why a card could show the right cover under a numeric title (#34): Steam's CDN paths are
   // built from the appid, so artwork never depended on the lookup that failed.

@@ -1366,6 +1366,38 @@ function libraryReuseRefusal(entry, options) {
   });
 }
 
+/*
+  A reused library still owes a load to the games its last scan left undescribed: those alone load
+  again, in the scan host, instead of the whole library on every opening (#157). The stored library
+  takes them in unless a newer scan has rewritten it meanwhile, and keeps its own date.
+*/
+async function reloadUndescribedGames(entry, scanConfig, onGame) {
+  const pending = libraryReuse.gamesToReload(entry);
+  if (pending.length === 0) return;
+  debug.log(`[library] loading ${pending.length} undescribed game(s) again: ${pending.map((game) => game.appid).join(', ')}`);
+  try {
+    const games = await scanHost.reloadGames(
+      scanConfig,
+      pending.map((game) => game.retry),
+      onGame
+    );
+    const described = games.filter((game) => !game.provisional);
+    debug.log(`[library] ${described.length} of ${pending.length} undescribed game(s) now described`);
+    if (described.length === 0) return;
+    const stored = librarySnapshot.readEntry(getUserDataPath(), scanConfig);
+    if (!stored || stored.savedAt !== entry.savedAt) return;
+    const reloaded = new Map(games.map((game) => [String(game.appid), game]));
+    librarySnapshot.write(
+      getUserDataPath(),
+      scanConfig,
+      entry.games.map((game) => reloaded.get(String(game.appid)) || game),
+      { appVersion: entry.appVersion, fingerprint: entry.fingerprint, discoveredAppids: entry.discoveredAppids, savedAt: entry.savedAt }
+    );
+  } catch (err) {
+    debug.log(`[library] could not load the undescribed games again: ${err.message || err}`);
+  }
+}
+
 // Empty when it cannot be read: a library can only be reused by the version that built it, so an
 // unreadable version has to refuse the reuse rather than assume a match.
 function runningVersion() {
@@ -4766,6 +4798,15 @@ var app = {
           } catch (err) {
             debug.log(`[library-snapshot] save failed: ${err.message || err}`);
           }
+        }
+        if (reuseLibrary) {
+          reloadUndescribedGames(knownEntry, scanConfig, (game) => {
+            // A scan started since then paints the library itself.
+            if (self.listLoadInFlight) return;
+            renderGame(game, { fresh: false });
+            refreshProfileStats();
+            sort($('#game-list ul'), sortOptions());
+          });
         }
         if (isDev) debug.log(`[perf] fresh library scan finished in ${(performance.now() - scanStartedAt).toFixed(1)}ms`);
         requestPsnTrophyLinks(list);

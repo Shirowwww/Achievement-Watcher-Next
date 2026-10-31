@@ -25,7 +25,7 @@ executable.
 
 A library scan reads thousands of folders and files synchronously, so it does not run in the window
 that shows the library: `app/util/scanHost.js` forks `app/parser/scanWorker.js`, which loads
-`parser/achievements.js` and answers `makeList`, the discovery checks, the launch-executable
+`parser/achievements.js` and answers `makeList`, `reloadGames`, the discovery checks, the launch-executable
 reconcile and the folder walks behind the library's health dots. Games stream back to the window one
 by one. Before discovery walks, the folders the previous scan read are listed in parallel
 (`dirCache.prefetch`), since one synchronous listing at a time was most of a scan's time. The parsers there reach main-process handlers
@@ -134,6 +134,9 @@ path to the first frame. Four rules bound its cost:
   timestamps of the folders the last discovery read (`app/util/dirFingerprint.js`) and skips the pass
   when none moved. Database and registry sources are invisible to it, so a full pass still runs on a
   slower cadence.
+- **Retry one game, not the library.** A game whose description never arrived is stored with the
+  discovery record it was found from. When the stored library is reused, only those games load
+  again, in the scan host (`reloadGames`), instead of a full scan on every opening.
 
 Per-game metadata loads through a small worker pool, never a whole-library `Promise.all`. A host
 proven unreachable is not asked again for the rest of the scan (`app/util/networkCircuit.js`), the

@@ -88,6 +88,17 @@ test('what a library may be reused for is stored beside it, and survives the rou
   assert.ok(entry.savedAt > 0);
 });
 
+// Reloading one undescribed game rewrites the library, but must not extend how long it may be reused.
+test('a library rewritten after a partial reload keeps the time of the scan that built it', () => {
+  const userData = makeTempDir('aw-library-snapshot-kept-');
+  const config = { achievement: { lang: 'english' }, achievement_source: {} };
+  const builtAt = Date.now() - 2 * 60 * 60 * 1000;
+
+  snapshot.write(userData, config, [game(10)], { appVersion: '3.12.4', savedAt: builtAt });
+
+  assert.equal(snapshot.readEntry(userData, config).savedAt, builtAt);
+});
+
 test('a library saved without reuse metadata still paints but carries nothing to reuse', () => {
   const userData = makeTempDir('aw-library-snapshot-bare-');
   const config = { achievement: { lang: 'english' }, achievement_source: {} };

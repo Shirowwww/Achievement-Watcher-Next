@@ -54,6 +54,30 @@ test('the games stream in the order the host loads them, and the list comes back
   assert.deepEqual(result.discoveredAppids, ['1', '2']);
 });
 
+test('a reload of a few games streams them like a scan and returns them', async (t) => {
+  const { host } = hostFor(t);
+  const streamed = [];
+
+  const reloaded = await host.reloadGames({}, [{ appid: 'x360-4D5307D5' }], (game) => streamed.push(game.name));
+
+  assert.deepEqual(streamed, ['Reloaded x360-4D5307D5']);
+  assert.deepEqual(
+    reloaded.map((game) => game.appid),
+    ['x360-4D5307D5']
+  );
+});
+
+test('a reload with no host runs here', async (t) => {
+  const local = { reloadGames: async (option, records, onGame) => records.map((record) => (onGame({ appid: record.appid, here: true }), { appid: record.appid, here: true })) };
+  const { host } = hostFor(t, { local, workerFile: path.join(__dirname, 'no-such-worker.js') });
+  const streamed = [];
+
+  const reloaded = await host.reloadGames({}, [{ appid: '20' }], (game) => streamed.push(game));
+
+  assert.equal(reloaded[0].here, true);
+  assert.equal(streamed.length, 1);
+});
+
 test('a parser asking the main process is answered through this one, and a missing route is refused, not left hanging', async (t) => {
   const sent = [];
   const { host } = hostFor(t, {

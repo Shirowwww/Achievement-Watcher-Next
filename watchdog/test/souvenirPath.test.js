@@ -12,7 +12,19 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { _sanitize: sanitize, _uniquePath: uniquePath, souvenirPath } = require('../notification/souvenir.js');
+const { _sanitize: sanitize, _uniquePath: uniquePath, _localStamp: localStamp, souvenirPath } = require('../notification/souvenir.js');
+
+// The date reads like the PC's clock: a player in UTC+9 saw names nine hours off (issue #155).
+test('the date in a souvenir name is local time, not UTC', (t) => {
+  const previous = process.env.TZ;
+  process.env.TZ = 'Asia/Tokyo';
+  t.after(() => {
+    if (previous === undefined) delete process.env.TZ;
+    else process.env.TZ = previous;
+  });
+
+  assert.equal(localStamp(new Date('2026-06-23T14:10:05.678Z')), '2026-06-23 23-10-05');
+});
 
 // Achievement first, so a folder sorted by name groups the shots of one achievement; the date stays
 // in the name for sorting by unlock time (a user request, forum post of 2026-10-26).

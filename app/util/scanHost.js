@@ -234,8 +234,28 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
     }
   }
 
+  // The games a reused library left undescribed, loaded again; resolves to them as they streamed.
+  async function reloadGames(option, records, onGame = () => {}) {
+    const games = [];
+    const collect = (game) => {
+      games.push(game);
+      onGame(game);
+    };
+    try {
+      await remote('reloadGames', [option, records], { onGame: collect });
+      return games;
+    } catch (err) {
+      if (!err || err.code !== 'SCAN_HOST_GONE') throw err;
+      log(`[scan-host] reloadGames runs in this process: ${err.message}`);
+      games.length = 0;
+      await localModule().reloadGames(option, records, collect);
+      return games;
+    }
+  }
+
   return {
     makeList,
+    reloadGames,
     detectInstalledAppids: (option) => withFallback('detectInstalledAppids', [option], (parser) => parser.detectInstalledAppids(option)),
     discoveryInputsUnchanged: () =>
       withFallback('discoveryInputsUnchanged', [], (parser) => {

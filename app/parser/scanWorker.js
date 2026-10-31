@@ -78,6 +78,11 @@ const methods = {
       discoveredAppids: parser().getDiscoveredAppids(),
     };
   },
+  // The few games a reused library left undescribed, streamed the same way.
+  async reloadGames(id, option, records) {
+    const games = await parser().reloadGames(option, records, (game) => post({ type: 'game', id, game }));
+    return { count: games.length };
+  },
   detectInstalledAppids: (id, option) => parser().detectInstalledAppids(option),
   discoveryInputsUnchanged: () => parser().discoveryInputsUnchanged(),
   scanInputsUnchanged: (id, fingerprint) => parser().scanInputsUnchanged(fingerprint),

@@ -40,22 +40,31 @@ async function refuseReason(entry, options = {}, context = {}) {
   const age = Number(context.now || Date.now()) - Number(entry.savedAt || 0);
   if (!Number.isFinite(age) || age < 0) return 'the stored library is dated in the future';
   if (age > REUSE_TTL_MS) return `the last scan is ${(age / 3600000).toFixed(1)}h old`;
-  // A provisional entry is a game whose description never arrived - a network failure, not a fact
-  // about the disk, so the next scan is normally its retry. But one game steam.js has positively
-  // confirmed has no Steam data (provisionalDefinitive, from the negative cache) will not resolve
-  // until that cache entry expires days from now: once it has sat provisional past the grace period
-  // it stops forcing a full network rescan of the WHOLE library on every launch. Anything else
-  // provisional (reason unknown, or just written) still blocks reuse so it gets retried promptly.
-  const blockingProvisional = entry.games.some((game) => {
-    if (!game || !game.provisional) return false;
-    if (!game.provisionalDefinitive) return true;
-    const provisionalAge = Number(context.now || Date.now()) - Number(game.provisionalAt || 0);
-    return !(Number.isFinite(provisionalAge) && provisionalAge >= PROVISIONAL_GRACE_MS);
-  });
-  if (blockingProvisional) return 'the last scan left entries undescribed';
+  // Such a game is loaded again on its own (gamesToReload); only one that carries nothing to load
+  // it from still costs a full scan.
+  if (entry.games.some((game) => owesRetry(game, context.now) && !game.retry)) return 'the last scan left entries undescribed';
   if (typeof context.inputsUnchanged !== 'function' || !(await context.inputsUnchanged(entry.fingerprint)))
     return 'a game folder or unlock file changed';
   return '';
 }
 
-module.exports = { REUSE_TTL_MS, PROVISIONAL_GRACE_MS, refuseReason };
+/*
+  A provisional entry is a game whose description never arrived - a network failure, not a fact
+  about the disk, so it is retried. But one steam.js has positively confirmed has no Steam data
+  (provisionalDefinitive, from the negative cache) will not resolve until that cache entry expires
+  days from now: past the grace period it is left alone.
+*/
+function owesRetry(game, now = Date.now()) {
+  if (!game || !game.provisional) return false;
+  if (!game.provisionalDefinitive) return true;
+  const provisionalAge = Number(now || Date.now()) - Number(game.provisionalAt || 0);
+  return !(Number.isFinite(provisionalAge) && provisionalAge >= PROVISIONAL_GRACE_MS);
+}
+
+// The games of a reused library to load again, each from the discovery record it carries (#157).
+function gamesToReload(entry, now = Date.now()) {
+  if (!entry || !Array.isArray(entry.games)) return [];
+  return entry.games.filter((game) => owesRetry(game, now) && game.retry);
+}
+
+module.exports = { REUSE_TTL_MS, PROVISIONAL_GRACE_MS, refuseReason, gamesToReload };

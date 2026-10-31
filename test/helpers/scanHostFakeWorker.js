@@ -33,6 +33,11 @@ const methods = {
     });
     return { count: games.length, fingerprint: { dirs: [['C:/games', 1]], files: [] }, discoveredAppids: ['1', '2'] };
   },
+  // Each record comes back as the game it describes, streamed like a scan's.
+  reloadGames(id, option, records) {
+    for (const record of records) process.send({ type: 'game', id, game: { appid: record.appid, name: `Reloaded ${record.appid}` } });
+    return { count: records.length };
+  },
   // Answers with this process's pid, so a test can tell a restarted host from the same one, and
   // leaves "background work" running when asked to.
   detectInstalledAppids: (id, option) => {

@@ -75,7 +75,8 @@ function write(userDataPath, config, games, meta = {}) {
       JSON.stringify({
         format: FORMAT,
         configKey: configKey(config),
-        savedAt: Date.now(),
+        // A partial reload keeps the time of the scan that built the list: that time caps its reuse.
+        savedAt: Number(meta.savedAt) > 0 ? Number(meta.savedAt) : Date.now(),
         // Both describe how the list may be reused, never how it is displayed: a library saved by
         // another version, or from folders that have moved since, is repainted but rescanned.
         appVersion: typeof meta.appVersion === 'string' ? meta.appVersion : '',

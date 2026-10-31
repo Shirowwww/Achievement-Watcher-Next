@@ -293,7 +293,7 @@ The reply:
 
 **Screenshot on unlock** saves a picture of the screen a moment after an achievement pops, once the
 popup has finished appearing, so the notification is in the shot. Files land in
-`<folder>\<game>\<achievement> - <date>.png`. **Open folder** in the same row opens it, creating it
+`<folder>\<game>\<achievement> - <date>.png`, the date in the PC's local time. **Open folder** in the same row opens it, creating it
 first if needed. The folder defaults to `Pictures\Achievement Watcher Next` and can be changed.
 
 Achievements unlocking in the same second each keep their own file, and a game whose title Windows

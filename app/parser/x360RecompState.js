@@ -98,10 +98,8 @@ function slug(text) {
 
 const appidOf = (target) => `x360-${target.titleId || slug(target.folder)}`;
 
-// For the life of the process: a default.xex's title id by path|size|mtime, and the SPA extractions
-// that could not run, by the same stamp.
+// For the life of the process: a default.xex's title id by path|size|mtime.
 const titleIdCache = new Map();
-const isolationFailures = new Map();
 
 module.exports = {
   SOURCE,
@@ -127,5 +125,4 @@ module.exports = {
   slug,
   appidOf,
   titleIdCache,
-  isolationFailures,
 };

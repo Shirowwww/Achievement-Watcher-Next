@@ -905,6 +905,8 @@ function buildProvisionalGame(appid, lang) {
     provisional: true,
     provisionalAt: unresolvedSince != null ? unresolvedSince : Date.now(),
     provisionalDefinitive: unresolvedSince != null,
+    // What a reused library loads this game again from, without a scan of the whole disk (#157).
+    retry: copyDiscoveryRecord(appid),
     img,
     achievement: { total: 0, unlocked: 0, list: [] },
   };
@@ -4695,6 +4697,66 @@ async function learnUplayProductMappings() {
 
 module.exports.learnUplayProductMappings = learnUplayProductMappings;
 
+// One game of a scan: its own load, bounded, or the provisional entry its data on disk stands for.
+// Null for an evidenceless cache import, which is never listed.
+async function loadListedGame(option, appid, appidList, discoveryLookup) {
+  const startTime = Date.now();
+  debug.log(`[${appid.appid}] loading data...`);
+  let game;
+  try {
+    game = await withTimeout(
+      module.exports.getSavedAchievementsForAppid(option, appid, appidList, discoveryLookup),
+      GAME_LOAD_TIMEOUT_MS,
+      `[${appid.appid}] timed out after ${GAME_LOAD_TIMEOUT_MS / 1000}s`
+    );
+  } catch (err) {
+    debug.error(`[${appid.appid}] load failed => ${err}`);
+  }
+  const endTime = Date.now();
+  if (!game) {
+    // Do NOT auto-blacklist on a failed load: getGameData() swallows every error (network
+    // hiccup, rate-limit, CDN down) and returns undefined, so a single transient failure must
+    // not permanently hide a real game. Just skip it for this scan and retry next time.
+    // Intentional exclusions (hardcoded bogus list, server list, manual "blacklist" action) keep working untouched.
+    debug.log(`[${appid.appid}] could not load (will retry next scan) - took ${(endTime - startTime) / 1000} seconds.`);
+    // ...but the card must still appear. The achievement data on disk is what proves the game
+    // exists; the lookup that failed only decorates it. Dropping the entry would make the
+    // library depend on network luck - each scan listing a different handful of games, a
+    // missing card indistinguishable from one that was never installed.
+    game = buildProvisionalGame(appid, option.achievement && option.achievement.lang);
+  }
+  // Everything a real source found on this PC belongs in the library, whether or not it has
+  // achievements and whether or not it is installed right now - a game with none renders as
+  // "No achievements", the truth about it. Only an evidenceless cache import is dropped (see
+  // game.evidenceless); a provisional entry stands for on-disk data found but not yet decorated.
+  if (game && !game.evidenceless) {
+    debug.log(`[${game.appid}] ${game.name} took ${(endTime - startTime) / 1000} seconds.`);
+    return game;
+  }
+  return null;
+}
+
+/*
+  Loads again only the games a reused library left undescribed, from the discovery records they
+  carry, and streams each one like a scan does. One game whose list never arrived used to rebuild
+  the whole library on every opening (#157). A game that fails again comes back provisional.
+*/
+module.exports.reloadGames = async (option, records, onGame = () => {}) => {
+  const list = copyDiscoveryList((Array.isArray(records) ? records : []).filter((record) => record && record.appid != null));
+  const games = [];
+  if (list.length === 0) return games;
+  const lookup = buildDiscoveryLookup(list);
+  await gameIndex.withBatch(async () => {
+    for (const record of list) {
+      const game = await loadListedGame(option, record, list, lookup);
+      if (!game) continue;
+      games.push(game);
+      onGame(game);
+    }
+  });
+  return games;
+};
+
 module.exports.makeList = async (option, callbackProgress, onGame = () => {}) => {
   try {
     debug.log('Scanning for games ...');
@@ -4772,43 +4834,12 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
         let cursor = 0;
         const worker = async () => {
           while (cursor < finalList.length) {
-            const appid = finalList[cursor++];
-            const startTime = Date.now();
-            debug.log(`[${appid.appid}] loading data...`);
-            let game;
-            try {
-              game = await withTimeout(
-                this.getSavedAchievementsForAppid(option, appid, appidList, discoveryLookup),
-                GAME_LOAD_TIMEOUT_MS,
-                `[${appid.appid}] timed out after ${GAME_LOAD_TIMEOUT_MS / 1000}s`
-              );
-            } catch (err) {
-              debug.error(`[${appid.appid}] load failed => ${err}`);
-            }
-            const endTime = Date.now();
-            if (!game) {
-            // Do NOT auto-blacklist on a failed load: getGameData() swallows every error (network
-            // hiccup, rate-limit, CDN down) and returns undefined, so a single transient failure must
-            // not permanently hide a real game. Just skip it for this scan and retry next time.
-            // Intentional exclusions (hardcoded bogus list, server list, manual "blacklist" action) keep working untouched.
-            debug.log(`[${appid.appid}] could not load (will retry next scan) - took ${(endTime - startTime) / 1000} seconds.`);
-            // ...but the card must still appear. The achievement data on disk is what proves the game
-            // exists; the lookup that failed only decorates it. Dropping the entry would make the
-            // library depend on network luck - each scan listing a different handful of games, a
-            // missing card indistinguishable from one that was never installed.
-            game = buildProvisionalGame(appid, option.achievement && option.achievement.lang);
-            }
-            // Everything a real source found on this PC belongs in the library, whether or not it has
-            // achievements and whether or not it is installed right now - a game with none renders as
-            // "No achievements", the truth about it. Only an evidenceless cache import is dropped (see
-            // game.evidenceless); a provisional entry stands for on-disk data found but not yet decorated.
-            if (game && !game.evidenceless) {
+            const game = await loadListedGame(option, finalList[cursor++], appidList, discoveryLookup);
+            if (game) {
               result.push(game);
-            // Hand the game straight to the caller, never via requestAnimationFrame: rAF only fires
-            // for a VISIBLE document, and this tray window is usually hidden with backgroundThrottling.
+              // Hand the game straight to the caller, never via requestAnimationFrame: rAF only fires
+              // for a VISIBLE document, and this tray window is usually hidden with backgroundThrottling.
               onGame?.(game);
-
-              debug.log(`[${game.appid}] ${game.name} took ${(endTime - startTime) / 1000} seconds.`);
             }
             count++;
             callbackProgress(Math.floor((count / finalList.length) * 100), finalList.length);

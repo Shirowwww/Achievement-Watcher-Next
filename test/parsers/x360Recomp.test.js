@@ -321,6 +321,92 @@ test('an extraction that could not run is tried again, one that read the file is
   assert.equal(fs.existsSync(missing), true, 'a file read to the end without a list is not read again');
 });
 
+// #157: extractions wait for each other, and one stuck behind three others used to cost the whole
+// game load, leaving a card with no list and its title id as the name.
+test('a slow extraction does not hold the game: dbox.tools answers now, the executable next time', async (t) => {
+  const xex = require('../../app/parser/xex.js');
+  const realRead = xex.readSpaIsolated;
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => {
+    x360.setDataRoot('');
+    xex.readSpaIsolated = realRead;
+  });
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'assets', 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = x360.scan(path.join(root, 'Games'));
+  const host = fakeFetch([dboxEntry(1, { en: 'From dbox' }), dboxEntry(2)]);
+  const spaRead = await realRead(record.data.xex);
+  let finishExtraction;
+  const extracted = new Promise((resolve) => (finishExtraction = resolve));
+  xex.readSpaIsolated = () => extracted.then(() => spaRead);
+
+  const first = await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl, spaWaitMs: 20 });
+  assert.equal(first.achievement.list[0].displayName, 'From dbox', 'the list does not wait for the executable');
+
+  finishExtraction();
+  const spaFile = path.join(root, 'data', 'steam_cache', 'x360recomp', '415608B2.spa');
+  for (let tries = 0; tries < 100 && !fs.existsSync(spaFile); tries++) await new Promise((resolve) => setTimeout(resolve, 20));
+  xex.readSpaIsolated = () => assert.fail('the list read in the background is kept');
+  const next = await x360.getGameData(record.data, 'english', { fetchImpl: host.fetchImpl, spaWaitMs: 20 });
+  assert.equal(next.achievement.list[0].displayName, 'Bridge', "the executable's own list, once it is read");
+});
+
+test('an extraction that cannot finish waits for it when dbox.tools does not answer either', async (t) => {
+  const xex = require('../../app/parser/xex.js');
+  const realRead = xex.readSpaIsolated;
+  const root = tempDir(t);
+  x360.setDataRoot(path.join(root, 'data'));
+  t.after(() => {
+    x360.setDataRoot('');
+    xex.readSpaIsolated = realRead;
+  });
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'assets', 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = x360.scan(path.join(root, 'Games'));
+  xex.readSpaIsolated = (file) => new Promise((resolve) => setTimeout(resolve, 80)).then(() => realRead(file));
+
+  const data = await x360.getGameData(record.data, 'english', { fetchImpl: fakeFetch([], { fail: true }).fetchImpl, spaWaitMs: 20 });
+
+  assert.equal(data.achievement.list[0].displayName, 'Bridge', 'offline, the executable is still the list');
+});
+
+// Each scan host is a new process: an in-memory count of failures never reached two there.
+test('extractions that time out in two different scan hosts are not tried a third time', async (t) => {
+  const xex = require('../../app/parser/xex.js');
+  const realRead = xex.readSpaIsolated;
+  const root = tempDir(t);
+  const freshParser = () => {
+    for (const key of Object.keys(require.cache)) if (/x360Recomp[A-Za-z]*\.js$/.test(key)) delete require.cache[key];
+    const parser = require('../../app/parser/x360Recomp.js');
+    parser.setDataRoot(path.join(root, 'data'));
+    return parser;
+  };
+  t.after(() => {
+    xex.readSpaIsolated = realRead;
+    freshParser().setDataRoot('');
+  });
+  const game = path.join(root, 'Games', 'Sample');
+  write(path.join(game, 'sample.exe'), '');
+  write(path.join(game, 'assets', 'default.xex'), buildXex({ spa: gameSpa(0x415608b2), titleId: 0x415608b2 }));
+  write(path.join(game, 'content', 'achievements', '415608B2.toml'), rexToml([1]));
+  const [record] = freshParser().scan(path.join(root, 'Games'));
+  const missing = path.join(root, 'data', 'steam_cache', 'x360recomp', '415608B2.spa.missing');
+  const host = fakeFetch([dboxEntry(1), dboxEntry(2)]);
+  xex.readSpaIsolated = async () => {
+    throw new Error('XEX: extraction timed out after 30000 ms');
+  };
+
+  await freshParser().getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(fs.existsSync(missing), false);
+  await freshParser().getGameData(record.data, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(fs.existsSync(missing), true, 'the second host knows about the first one');
+});
+
 test('a list under Documents finds its executable through the watched folders, and keeps it once read', async (t) => {
   const root = tempDir(t);
   x360.setDataRoot(path.join(root, 'data'));

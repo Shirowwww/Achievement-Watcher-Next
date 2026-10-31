@@ -27,6 +27,10 @@ const IDENTIFY_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const IDENTIFY_MAX_CANDIDATES = 12;
 const IDENTIFY_MIN_ACHIEVEMENTS = 5;
 const ISOLATION_ATTEMPTS = 2;
+// How long a game load waits for its default.xex to be read before taking dbox.tools' copy of the
+// list. Extractions run one at a time, and one queued behind others used to cost the whole game
+// load (#157); the read goes on, and its list is the one used from the next scan.
+const SPA_WAIT_MS = 8000;
 const CJK_RE = /[\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]/;
 const CJK_LANGS = new Set(['japanese', 'schinese', 'tchinese', 'koreana']);
 
@@ -159,6 +163,20 @@ function xexStamp(file) {
 }
 
 const missFile = (titleId) => `${state.spaCacheFile(titleId)}.missing`;
+const attemptsFile = (titleId) => `${state.spaCacheFile(titleId)}.attempts`;
+
+// The extractions of this exact xex that could not run, this one included. Kept on disk: every scan
+// host is a new process, so a count kept in memory never reached the limit (#157).
+function countIsolationFailure(titleId, stamp) {
+  const [seenStamp, seen] = String(readFileOrNull(attemptsFile(titleId), 'utf8') || '').split('\n');
+  const failures = (seenStamp === stamp ? Number(seen) || 0 : 0) + 1;
+  try {
+    if (stamp) writeAtomic(attemptsFile(titleId), `${stamp}\n${failures}`);
+  } catch {
+    /* only a count */
+  }
+  return failures;
+}
 
 function rememberMiss(titleId, stamp) {
   try {
@@ -199,9 +217,7 @@ async function extractSpa(titleId, xexPath) {
     debug.warn(`[x360recomp] cannot read the achievement list inside '${candidate}': ${err}`);
     // A timeout or a worker that could not start (an antivirus, a busy machine) is tried once
     // more; a file that fails twice would hold the one extraction queue on every scan.
-    const failures = (state.isolationFailures.get(stamp) || 0) + 1;
-    state.isolationFailures.set(stamp, failures);
-    if ((err && err.answered) || failures >= ISOLATION_ATTEMPTS) rememberMiss(titleId, stamp);
+    if ((err && err.answered) || countIsolationFailure(titleId, stamp) >= ISOLATION_ATTEMPTS) rememberMiss(titleId, stamp);
     return null;
   }
 }
@@ -484,15 +500,26 @@ async function jsonGameData(info, lang, fetchImpl) {
   return data;
 }
 
-async function getGameData(data, lang = 'english', { fetchImpl = nodeFetch } = {}) {
+async function getGameData(data, lang = 'english', { fetchImpl = nodeFetch, spaWaitMs = SPA_WAIT_MS } = {}) {
   const info = data && typeof data === 'object' ? data : {};
   if (info.format === 'json' && info.knownTitleId && !fs.existsSync(info.file)) {
     // A known port before its list exists: the title's own list, under the id the list will keep.
-    const known = await titleGameData({ ...info, titleId: info.knownTitleId }, lang, fetchImpl);
+    const known = await titleGameData({ ...info, titleId: info.knownTitleId }, lang, fetchImpl, spaWaitMs);
     return { ...known, appid: appidOf(info) };
   }
   if (info.format === 'json') return jsonGameData(info, lang, fetchImpl);
-  return titleGameData(info, lang, fetchImpl);
+  return titleGameData(info, lang, fetchImpl, spaWaitMs);
+}
+
+const STILL_READING = Symbol('still reading');
+
+// The SPA if it is read within `ms`, STILL_READING otherwise; the read itself goes on either way.
+function spaWithin(reading, ms) {
+  let timer;
+  const waited = new Promise((resolve) => {
+    timer = setTimeout(resolve, ms, STILL_READING);
+  });
+  return Promise.race([reading, waited]).finally(() => clearTimeout(timer));
 }
 
 /*
@@ -520,9 +547,16 @@ async function addDboxToSpaList(titleId, spa, list, lang, fetchImpl) {
   if (extra.length && spa.achievements.every((a) => a.id === a.imageId)) await withIcons(titleId, extra, fetchImpl, { trusted: true });
 }
 
-async function titleGameData(info, lang, fetchImpl) {
+async function titleGameData(info, lang, fetchImpl, spaWaitMs = SPA_WAIT_MS) {
   const titleId = String(info.titleId || '').toUpperCase();
-  const spa = await loadSpa(titleId, info.xex);
+  const reading = loadSpa(titleId, info.xex).catch(() => null);
+  let spa = await spaWithin(reading, spaWaitMs);
+  let schema = null;
+  if (spa === STILL_READING) {
+    schema = await loadSchema(titleId, fetchImpl).catch(() => null);
+    // Offline, the executable is still the only list: wait for it after all.
+    spa = schema ? null : await reading;
+  }
   if (spa && spa.achievements.length > 0) {
     const list = listFromSpa(titleId, spa, lang);
     try {
@@ -535,7 +569,7 @@ async function titleGameData(info, lang, fetchImpl) {
     return finish(info, titleId, displayTitle(names, spaName, lang), [names.name, names.marketName, spaReader.titleName(spa, 'english')], list, fetchImpl, Date.now());
   }
 
-  const schema = await loadSchema(titleId, fetchImpl);
+  schema = schema || (await loadSchema(titleId, fetchImpl));
   const list = listFromDbox(schema, lang);
   await withIcons(titleId, list, fetchImpl);
   const names = await titleNamesFor(titleId, fetchImpl);
