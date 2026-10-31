@@ -3160,6 +3160,7 @@ body.is-resizing #game-list {
 
 #achievement .wrapper > .header[data-system='playstation'] ~ .achievements #lock .achievement .icon,
 #achievement .wrapper > .header[data-system='uplay'] ~ .achievements #lock .achievement .icon,
+#lock .achievement .icon.grey-when-locked,
 #lock .achievement.psn-platinum .icon {
   filter: grayscale(100);
 }

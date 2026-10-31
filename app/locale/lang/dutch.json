@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Gamefixes en ports",
-        "description": "Games die door de community zijn gepatcht of naar pc zijn geporteerd, met eigen prestaties: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) en Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Games die door de community zijn gepatcht of naar pc zijn geporteerd, met eigen prestaties: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), en opnieuw gecompileerde ports zoals Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered en SMS Launcher, los te vinden of via Quiver Launcher."
       },
       "pcports": {
-        "description": "Pc-ports met eigen prestaties: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "Pc-ports met eigen prestaties: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered en SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via de MadnessPatch-mod"

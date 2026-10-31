@@ -96,6 +96,7 @@ const xllnWatch = require('./console/xllnWatch.js');
 const markerpatchWatch = require('./console/markerpatchWatch.js');
 const madnesspatchWatch = require('./console/madnesspatchWatch.js');
 const pcportsWatch = require('./console/pcportsWatch.js');
+const recompPortsWatch = require('./console/recompPortsWatch.js');
 const x360RecompWatch = require('./console/x360RecompWatch.js');
 const ps4RecompWatch = require('./console/ps4RecompWatch.js');
 const eaWatch = require('./console/eaWatch.js');
@@ -199,6 +200,7 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
     markerpatch   Dead Space 2's settings.txt bitflag, through MarkerPatch
     madnesspatch  Alice: Madness Returns' per-profile Achievements.txt bitflag, through MadnessPatch
     pcports  PC ports with their own unlock file (Link's Awakening DX HD)
+    recompports  recompiled ports with their own unlock file (Dusklight, Ghostship, DKR-R...)
     x360recomp  Xbox 360 games recompiled for PC, their own unlock lists
     ps4recomp  PC ports of PS4 games, the trophies.log and last_run.log in each port's user folder
     gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
@@ -216,6 +218,7 @@ const CONSOLE_WATCHERS = [
   { name: 'markerpatch', watcher: markerpatchWatch },
   { name: 'madnesspatch', watcher: madnesspatchWatch },
   { name: 'pcports', watcher: pcportsWatch },
+  { name: 'recompports', watcher: recompPortsWatch },
   { name: 'x360recomp', watcher: x360RecompWatch },
   { name: 'ps4recomp', watcher: ps4RecompWatch },
   { name: 'gog', watcher: gogWatch },

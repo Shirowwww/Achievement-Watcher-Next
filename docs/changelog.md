@@ -31,9 +31,22 @@ renamed in 3.9.0 and the history is kept under one file.
   right-click it and pick **Add steps**. Ticked steps fill its bar but never unlock it, and the
   in-game overlay shows and ticks them too. **Steps** in the game's header exports the list to a
   file, or imports one someone shared.
+- **Recompiled PC ports.** Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy
+  Kong Racing), Super Mario Bros. Remastered and SMS Launcher (Super Mario Sunshine and the Super
+  Mario Eclipse mod) now show their achievements and announce new ones, on Windows and Linux. AW
+  Next finds them from their saves or from the games Quiver Launcher installed, and ships their
+  lists, since these ports keep them inside the game. Achievement pictures come from the port where
+  it has them. **Sources** in the guide says where each one writes.
 
 ### Improved
 
+- **Covers for ports and mods named after their game.** A title ending in brackets, such as
+  "Diddy Kong Racing (DKR-R)", is also looked up on SteamGridDB without them, so it gets the game's
+  cover, background, logo and icon.
+- **An achievement with no picture shows the game's icon** instead of a blank square.
+- **Locked achievements are greyed out** for every source that has a single picture per
+  achievement (Xbox 360 and PS4 recompilations, Xenia, PC ports, EA, Epic and others), as Steam's
+  locked pictures are.
 - **Edit playtime follows the Playtime display.** With **Library tiles > Playtime** on Hours only,
   the dialog has hours and minutes and no days; on Down to the second, it adds a seconds field.
   Confirming without a change keeps the seconds the fields do not show.

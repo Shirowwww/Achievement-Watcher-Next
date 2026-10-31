@@ -50,6 +50,12 @@ asarUnpack:
   - parser/markerpatch.js
   - parser/madnesspatch.js
   - parser/pcports.js
+  - parser/recompPorts.js
+  - parser/recompPortTable.js
+  - parser/recompPortFormats.js
+  - parser/recompPortArt.js
+  - parser/quiver.js
+  - assets/recomp-ports.json
   - parser/runeUplay.js
   - parser/x360Recomp.js
   - parser/x360RecompState.js

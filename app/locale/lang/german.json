@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Spiel-Fixes und Ports",
-        "description": "Von der Community gepatchte oder auf den PC portierte Spiele mit eigenen Erfolgen: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) und Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Von der Community gepatchte oder auf den PC portierte Spiele mit eigenen Erfolgen: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), sowie neu kompilierte Portierungen wie Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered und SMS Launcher, die einzeln oder über den Quiver Launcher zu finden sind."
       },
       "pcports": {
-        "description": "PC-Portierungen mit eigenen Erfolgen: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "PC-Portierungen mit eigenen Erfolgen: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered und SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns über die MadnessPatch-Mod"

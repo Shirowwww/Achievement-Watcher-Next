@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "게임 수정 및 이식",
-        "description": "커뮤니티가 패치하거나 PC로 이식한 게임으로, 자체 도전 과제가 있습니다: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated)."
+        "description": "커뮤니티가 패치하거나 PC로 이식한 게임으로, 자체 도전 과제가 있습니다: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), 그리고 Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered, SMS Launcher 같은 재컴파일 포트가 있으며, 단독으로 또는 Quiver Launcher를 통해 찾을 수 있습니다."
       },
       "pcports": {
-        "description": "자체 도전 과제를 가진 PC 포트: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "자체 도전 과제를 가진 PC 포트: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered, SMS Launcher"
       },
       "madnesspatch": {
         "description": "MadnessPatch 모드를 통한 Alice: Madness Returns"

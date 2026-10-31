@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Bản sửa lỗi và bản port game",
-        "description": "Game được cộng đồng vá hoặc port sang PC, có thành tựu riêng: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) và Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Game được cộng đồng vá hoặc port sang PC, có thành tựu riêng: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), và các bản port biên dịch lại như Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered và SMS Launcher, tìm thấy riêng lẻ hoặc qua Quiver Launcher."
       },
       "pcports": {
-        "description": "Bản port PC có thành tựu riêng: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "Bản port PC có thành tựu riêng: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered và SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns thông qua mod MadnessPatch"

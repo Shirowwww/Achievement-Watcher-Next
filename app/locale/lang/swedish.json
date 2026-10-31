@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Spelfixar och portningar",
-        "description": "Spel som patchats eller portats till PC av communityn, med egna prestationer: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) och Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Spel som patchats eller portats till PC av communityn, med egna prestationer: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), och omkompilerade portar som Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered och SMS Launcher, som hittas på egen hand eller via Quiver Launcher."
       },
       "pcports": {
-        "description": "PC-portar med egna prestationer: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "PC-portar med egna prestationer: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered och SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modden"

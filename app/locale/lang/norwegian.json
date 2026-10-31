@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Spillrettelser og portinger",
-        "description": "Spill rettet eller portet til PC av fellesskapet, med egne prestasjoner: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) og Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Spill rettet eller portet til PC av fellesskapet, med egne prestasjoner: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), og omkompilerte porter som Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered og SMS Launcher, som kan finnes alene eller via Quiver Launcher."
       },
       "pcports": {
-        "description": "PC-porter med egne prestasjoner: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "PC-porter med egne prestasjoner: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered og SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns via MadnessPatch-modden"

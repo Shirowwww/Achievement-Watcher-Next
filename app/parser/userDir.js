@@ -529,6 +529,10 @@ function ownLayoutGames(dir) {
     if (found) games.push({ code: 'pcports', gameRoot: found.root, dataPath: found.root });
   });
   ask(() => {
+    const found = require('./recompPorts.js').detect(dir);
+    if (found) games.push({ code: 'pcports', gameRoot: found.root, dataPath: found.root });
+  });
+  ask(() => {
     for (const target of require('./x360Recomp.js').discover(dir)) {
       // A bare default.xex is a disc dump, not an unlock list.
       if (target.format === 'xex') continue;

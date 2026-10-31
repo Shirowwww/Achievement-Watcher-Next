@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Opravy a porty hier",
-        "description": "Hry opravené alebo portované na PC komunitou, s vlastnými úspechmi: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) a Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Hry opravené alebo portované na PC komunitou, s vlastnými úspechmi: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), a rekompilované porty, napríklad Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered a SMS Launcher, ktoré nájdete samostatne alebo cez Quiver Launcher."
       },
       "pcports": {
-        "description": "PC porty s vlastnými úspechmi: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "PC porty s vlastnými úspechmi: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered a SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns cez mod MadnessPatch"

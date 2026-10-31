@@ -232,3 +232,21 @@ test('the EA Desktop logs are taken from the prefix that has them', LINUX_ONLY, 
     const ea = require(app('parser/ea.js'));
     assert.equal(ea.defaultEaLogsRoot(), logs);
   }));
+
+test('recompiled ports are found in a prefix, in the native data and config folders, and through Quiver', LINUX_ONLY, () =>
+  withWinePrefix(({ home, appData, localAppData, write }) => {
+    const ports = require(app('parser/recompPorts.js'));
+    write(path.join(appData, 'TwilitRealm', 'Dusklight', 'achievements.json'), JSON.stringify({ hero_of_twilight: { progress: 1, unlocked: true } }));
+    write(path.join(home, '.local', 'share', 'SMB1R', 'achievements.sav'), '1');
+    write(path.join(home, '.config', 'sms-launcher', 'achievements.txt'), '1 1761170000\n');
+    write(path.join(home, '.config', 'dkr-port', 'achievements', 'progress-v1.json'), JSON.stringify({ schema: 1, entries: {} }));
+    write(path.join(localAppData, 'QuiverLauncher', 'apps.json'), JSON.stringify({ apps: [{ repository: 'HarbourMasters/Ghostship', folderName: 'SM64' }] }));
+    fs.mkdirSync(path.join(localAppData, 'QuiverLauncher', 'Apps', 'SM64'), { recursive: true });
+
+    const found = Object.fromEntries(ports.knownEntries().map((entry) => [entry.data.port, entry.data.saveFile]));
+    assert.equal(found.dusklight, path.join(appData, 'TwilitRealm', 'Dusklight', 'achievements.json'));
+    assert.equal(found.smb1r, path.join(home, '.local', 'share', 'SMB1R', 'achievements.sav'));
+    assert.equal(found.sms, path.join(home, '.config', 'sms-launcher', 'achievements.txt'));
+    assert.equal(found.dkrr, path.join(home, '.config', 'dkr-port', 'achievements', 'progress-v1.json'));
+    assert.equal(found.ghostship, path.join(localAppData, 'QuiverLauncher', 'Apps', 'SM64', 'saves', 'save_0.json'));
+  }));

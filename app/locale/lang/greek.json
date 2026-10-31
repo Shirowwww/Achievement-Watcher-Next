@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Διορθώσεις και μεταφορές παιχνιδιών",
-        "description": "Παιχνίδια που έχουν διορθωθεί ή μεταφερθεί σε PC από την κοινότητα, με δικά τους επιτεύγματα: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) και Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Παιχνίδια που έχουν διορθωθεί ή μεταφερθεί σε PC από την κοινότητα, με δικά τους επιτεύγματα: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), και επανακομποιημένες μεταφορές όπως Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered και SMS Launcher, που βρίσκονται μόνες τους ή μέσω του Quiver Launcher."
       },
       "pcports": {
-        "description": "Μεταφορές PC με δικά τους επιτεύγματα: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "Μεταφορές PC με δικά τους επιτεύγματα: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered και SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns μέσω του mod MadnessPatch"

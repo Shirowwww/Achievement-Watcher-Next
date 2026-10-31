@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Game fixes and ports",
-        "description": "Games patched or ported to PC by the community, with achievements of their own: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) and Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Games patched or ported to PC by the community, with achievements of their own: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), and recompiled ports such as Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered and SMS Launcher, found on their own or through Quiver Launcher."
       },
       "pcports": {
-        "description": "PC ports with their own achievements: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "PC ports with their own achievements: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered and SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns, through the MadnessPatch mod"

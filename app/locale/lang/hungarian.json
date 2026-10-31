@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Játékjavítások és portok",
-        "description": "A közösség által javított vagy PC-re portolt játékok saját teljesítményekkel: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) és Link's Awakening DX HD (LADXHD Updated)."
+        "description": "A közösség által javított vagy PC-re portolt játékok saját teljesítményekkel: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), valamint újrafordított portok, például Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered és SMS Launcher, amelyek önállóan vagy a Quiver Launcher segítségével találhatók meg."
       },
       "pcports": {
-        "description": "Saját teljesítményekkel rendelkező PC-s portok: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "Saját teljesítményekkel rendelkező PC-s portok: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered és SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns a MadnessPatch mod segítségével"

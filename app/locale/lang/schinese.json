@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "游戏修复与移植",
-        "description": "由社区打补丁或移植到 PC 的游戏，带有自己的成就：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch) 和 Link's Awakening DX HD (LADXHD Updated)。"
+        "description": "由社区打补丁或移植到 PC 的游戏，带有自己的成就：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch)、Link's Awakening DX HD (LADXHD Updated)，以及 Dusklight、Ghostship、DKR-R、Super Mario Bros. Remastered 和 SMS Launcher 等重新编译的移植版，可单独找到，也可通过 Quiver Launcher 找到。"
       },
       "pcports": {
-        "description": "带有自有成就的 PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
+        "description": "带有自有成就的 PC 移植版：Link's Awakening DX HD (LADXHD Updated)、Dusklight、Ghostship、DKR-R、Super Mario Bros. Remastered 和 SMS Launcher"
       },
       "madnesspatch": {
         "description": "通过 MadnessPatch 模组运行的 Alice: Madness Returns"

@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Oyun düzeltmeleri ve portlar",
-        "description": "Topluluk tarafından yamalanan veya PC’ye taşınan, kendi başarımları olan oyunlar: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) ve Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Topluluk tarafından yamalanan veya PC’ye taşınan, kendi başarımları olan oyunlar: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), ve Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered ve SMS Launcher gibi yeniden derlenmiş portlar; bunlar tek başlarına veya Quiver Launcher üzerinden bulunur."
       },
       "pcports": {
-        "description": "Kendi başarımlarına sahip PC portları: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "Kendi başarımlarına sahip PC portları: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered ve SMS Launcher"
       },
       "madnesspatch": {
         "description": "MadnessPatch modu üzerinden Alice: Madness Returns"

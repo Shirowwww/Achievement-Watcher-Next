@@ -2288,6 +2288,8 @@ const SGDB_EDITION_TAIL =
 // A dash-introduced tail that is not an edition is usually a subtitle SteamGridDB does not carry.
 // Tried last, and still only accepted if the strict matcher recognises what comes back.
 const SGDB_SUBTITLE_TAIL = /\s+[-–—]\s+.+$/;
+// A port, a mod or a re-release names the game, then itself in brackets: "Diddy Kong Racing (DKR-R)".
+const SGDB_QUALIFIER_TAIL = /\s*\([^()]*\)\s*$/;
 
 function steamGridDbNameVariants(name) {
   const variants = [];
@@ -2299,7 +2301,8 @@ function steamGridDbNameVariants(name) {
   // Trademark marks are in the store name and never in SteamGridDB's.
   const bare = String(name).replace(/[™®©]/g, '');
   push(bare);
-  let trimmed = bare;
+  let trimmed = bare.replace(SGDB_QUALIFIER_TAIL, '');
+  push(trimmed);
   for (let round = 0; round < 2 && SGDB_EDITION_TAIL.test(trimmed); round += 1) {
     trimmed = trimmed.replace(SGDB_EDITION_TAIL, '');
     push(trimmed);

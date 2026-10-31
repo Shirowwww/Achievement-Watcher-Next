@@ -7784,6 +7784,9 @@ var app = {
           t('manuallyUnlocked', 'Manually unlocked', 'Débloqué manuellement')
       );
       const loadingIcon = cssUrl(pathToFileURL(path.join(appPath, 'resources/img/loading.gif')).href);
+      // A source with no picture of its own for a locked achievement repeats the unlocked one, or has
+      // none: that picture is greyed while locked, as Steam's locked pictures are.
+      const hasNoLockedPicture = (achievement) => !achievement.icongray || achievement.icongray === achievement.icon;
       const stepsByName = achievementSteps.stepsForGame(game.appid);
       const stepLabels = achievementStepLabels();
       // Rows are collected and inserted in one append per list. jQuery parses the markup and splices
@@ -7825,7 +7828,7 @@ var app = {
                                     <div class="glow fx"></div>
                                   </div>
                               </div>
-                              <div class="icon" id="achievement-${iconId}" style="background: ${loadingIcon};"></div>
+                              <div class="icon${hasNoLockedPicture(achievement) ? ' grey-when-locked' : ''}" id="achievement-${iconId}" style="background: ${loadingIcon};"></div>
                             </div>
                             <div class="content">
                                 <div class="title">${
@@ -7921,13 +7924,21 @@ var app = {
         const local = localIcons.achievementIcon(localIconIndex, achievement, !!achievement.Achieved);
         // These emulator sources already store a local path in the schema: nothing to download.
         if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
-          if (!(await setAchievementImage(selector, [hash, local]))) setMissingAchievementImage(selector);
+          if (!(await setAchievementImage(selector, [hash, local])) && !(await setGameIconImage(selector, achievement))) setMissingAchievementImage(selector);
           return;
         }
         if (local && (await setAchievementImage(selector, [local]))) return;
         const downloaded = await cachedIcon(hash).catch(() => null);
-        if (!(await setAchievementImage(selector, [downloaded, local]))) setMissingAchievementImage(selector);
+        if (!(await setAchievementImage(selector, [downloaded, local])) && !(await setGameIconImage(selector, achievement))) setMissingAchievementImage(selector);
       });
+      // An achievement its game gives no picture at all (Dusklight and DKR-R draw theirs as text)
+      // shows the game's own icon rather than the blank trophy.
+      async function setGameIconImage(selector, achievement) {
+        const gameIcon = game.img && game.img.icon;
+        if (achievement.icon || achievement.icongray || !gameIcon) return false;
+        const downloaded = await cachedIcon(gameIcon).catch(() => null);
+        return setAchievementImage(selector, [downloaded, gameIcon]);
+      }
 
       /*
         Deliberately not awaited: every icon paints as it lands instead of holding the achievement

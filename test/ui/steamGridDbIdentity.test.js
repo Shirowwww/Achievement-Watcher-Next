@@ -124,6 +124,22 @@ test('an edition tag is dropped from the query, and a subtitle is not', () => {
   assert.ok(steamGridDbNameVariants('Rustler - Grand Theft Horse').includes('Rustler'));
 });
 
+test('a qualifier in brackets at the end of a name is also searched without it', () => {
+  const { steamGridDbNameVariants } = editionHelpers();
+  // Ports, mods and re-releases name the game, then themselves: SteamGridDB files the game.
+  for (const [name, expected] of [
+    ['The Legend of Zelda: Twilight Princess (Dusklight)', 'The Legend of Zelda: Twilight Princess'],
+    ['Diddy Kong Racing (DKR-R)', 'Diddy Kong Racing'],
+    ['Super Mario Sunshine (SMS Launcher)', 'Super Mario Sunshine'],
+    ['Trine Enchanted Edition (Port)', 'Trine'],
+  ]) {
+    const variants = steamGridDbNameVariants(name);
+    assert.equal(variants[0], name, 'the name as given is always tried first');
+    assert.ok(variants.includes(expected), `${name} must also be searched as "${expected}"`);
+  }
+  assert.deepEqual(steamGridDbNameVariants('Rayman (Classic) Origins'), ['Rayman (Classic) Origins'], 'only a bracket that ends the name');
+});
+
 test('a lookup that found nothing is remembered, and a failed one is not', () => {
   // Without this every coverless game was searched again on every scan, five requests each, on a
   // key shared by every install - which is also how a rate-limited answer became a blank tile.

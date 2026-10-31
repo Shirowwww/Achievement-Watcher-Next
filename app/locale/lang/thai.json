@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "ตัวแก้ไขและพอร์ตเกม",
-        "description": "เกมที่ชุมชนแพตช์หรือพอร์ตมายังพีซี และมีความสำเร็จของตัวเอง: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) และ Link's Awakening DX HD (LADXHD Updated)"
+        "description": "เกมที่ชุมชนแพตช์หรือพอร์ตมายังพีซี และมีความสำเร็จของตัวเอง: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), รวมถึงพอร์ตที่คอมไพล์ใหม่ เช่น Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered และ SMS Launcher ซึ่งพบได้ด้วยตัวเองหรือผ่าน Quiver Launcher"
       },
       "pcports": {
-        "description": "พอร์ต PC ที่มีความสำเร็จของตัวเอง: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "พอร์ต PC ที่มีความสำเร็จของตัวเอง: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered และ SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns ผ่านม็อด MadnessPatch"

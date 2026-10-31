@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "ゲーム修正と移植",
-        "description": "コミュニティがパッチ適用または PC 移植したゲームで、独自の実績があります：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch)、Link's Awakening DX HD (LADXHD Updated)。"
+        "description": "コミュニティがパッチ適用または PC 移植したゲームで、独自の実績があります：Dead Space 2 (MarkerPatch)、Alice: Madness Returns (MadnessPatch)、Link's Awakening DX HD (LADXHD Updated)、さらに Dusklight、Ghostship、DKR-R、Super Mario Bros. Remastered、SMS Launcher などの再コンパイル版移植作品があり、単独でも Quiver Launcher 経由でも見つかります。"
       },
       "pcports": {
-        "description": "独自の実績を持つ PC 移植版：Link's Awakening DX HD (LADXHD Updated)"
+        "description": "独自の実績を持つ PC 移植版：Link's Awakening DX HD (LADXHD Updated)、Dusklight、Ghostship、DKR-R、Super Mario Bros. Remastered、SMS Launcher"
       },
       "madnesspatch": {
         "description": "MadnessPatch MOD 経由の Alice: Madness Returns"

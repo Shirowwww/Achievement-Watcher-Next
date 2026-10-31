@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Pelikorjaukset ja portit",
-        "description": "Yhteisön korjaamat tai PC:lle portatut pelit, joilla on omat saavutuksensa: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) ja Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Yhteisön korjaamat tai PC:lle portatut pelit, joilla on omat saavutuksensa: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), sekä uudelleenkäännetyt portit, kuten Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered ja SMS Launcher, jotka löytyvät sellaisenaan tai Quiver Launcherin kautta."
       },
       "pcports": {
-        "description": "PC-portit, joilla on omat saavutukset: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "PC-portit, joilla on omat saavutukset: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered ja SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns MadnessPatch-modin kautta"

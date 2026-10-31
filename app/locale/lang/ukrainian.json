@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Виправлення та порти ігор",
-        "description": "Ігри, виправлені або портовані на ПК спільнотою, з власними досягненнями: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch) і Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Ігри, виправлені або портовані на ПК спільнотою, з власними досягненнями: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), а також перекомпільовані порти, як-от Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered і SMS Launcher, які можна знайти окремо або через Quiver Launcher."
       },
       "pcports": {
-        "description": "ПК-порти з власними досягненнями: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "ПК-порти з власними досягненнями: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered і SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns через мод MadnessPatch"

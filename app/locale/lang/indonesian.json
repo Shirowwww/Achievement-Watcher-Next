@@ -1541,10 +1541,10 @@
       },
       "markerpatch": {
         "name": "Perbaikan dan port game",
-        "description": "Game yang ditambal atau di-port ke PC oleh komunitas, dengan pencapaian sendiri: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), dan Link's Awakening DX HD (LADXHD Updated)."
+        "description": "Game yang ditambal atau di-port ke PC oleh komunitas, dengan pencapaian sendiri: Dead Space 2 (MarkerPatch), Alice: Madness Returns (MadnessPatch), Link's Awakening DX HD (LADXHD Updated), serta port yang dikompilasi ulang seperti Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered, dan SMS Launcher, yang ditemukan sendiri atau lewat Quiver Launcher."
       },
       "pcports": {
-        "description": "Port PC dengan pencapaian sendiri: Link's Awakening DX HD (LADXHD Updated)"
+        "description": "Port PC dengan pencapaian sendiri: Link's Awakening DX HD (LADXHD Updated), Dusklight, Ghostship, DKR-R, Super Mario Bros. Remastered, dan SMS Launcher"
       },
       "madnesspatch": {
         "description": "Alice: Madness Returns melalui mod MadnessPatch"

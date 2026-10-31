@@ -30,6 +30,7 @@ const xlln = require(path.join(appPath, 'xlln.js'));
 const markerpatch = require(path.join(appPath, 'markerpatch.js'));
 const madnesspatch = require(path.join(appPath, 'madnesspatch.js'));
 const pcports = require(path.join(appPath, 'pcports.js'));
+const recompPorts = require(path.join(appPath, 'recompPorts.js'));
 const x360Recomp = require(path.join(appPath, 'x360Recomp.js'));
 const ps4Recomp = require(path.join(appPath, 'ps4Recomp.js'));
 const libraryDirs = require(path.join(appPath, 'libraryDirs.js'));
@@ -140,6 +141,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   markerpatch.initDebug({ isDev, userDataPath, listDirectory });
   madnesspatch.initDebug({ isDev, userDataPath, listDirectory });
   pcports.initDebug({ isDev, userDataPath, listDirectory });
+  recompPorts.initDebug({ isDev, userDataPath, listDirectory });
   x360Recomp.initDebug({ isDev, userDataPath });
   ps4Recomp.initDebug({ isDev, userDataPath, listDirectory });
   blacklist.initDebug({ isDev, userDataPath });
@@ -2277,6 +2279,7 @@ async function claimFolder(dir, source, kytyOptions) {
   if (scanned.length === 0 && source.markerpatch) scanned = markerpatch.scan(dir);
   if (scanned.length === 0 && source.madnesspatch) scanned = madnesspatch.scan(dir);
   if (scanned.length === 0 && source.pcports) scanned = pcports.scan(dir);
+  if (scanned.length === 0 && source.pcports) scanned = recompPorts.scan(dir);
   if (scanned.length > 0) {
     debug.log(`-> emulator data added (${scanned[0].source || scanned[0].data?.type || 'unknown'})`);
     return { games: scanned, appidRoot: false };
@@ -2425,6 +2428,22 @@ async function discoverInScope(source, steamAccFilter, scope) {
   }
 
   mark('ff7');
+
+  //Recompiled ports keep their unlocks in the user's profile, and Quiver records where it put them.
+  if (!scope && source.pcports) {
+    try {
+      const have = new Set(data.map((g) => `${g.source}:${g.appid}`));
+      const extra = recompPorts.knownEntries().filter((g) => !have.has(`${g.source}:${g.appid}`));
+      if (extra.length > 0) {
+        data = data.concat(extra);
+        debug.log(`-> recompiled ports (profile, Quiver) data added (${extra.length})`);
+      }
+    } catch (err) {
+      debug.log(err);
+    }
+  }
+
+  mark('recompPorts');
 
   //ReXGlue recompilations write Documents\<game>\achievements\<titleid>.toml unless the game moves it.
   if (!scope && source.x360recomp !== false) {
@@ -3128,7 +3147,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
   } else if (dataType === 'madnesspatch') {
     return madnesspatch.getAchievements(appid.data);
   } else if (dataType === 'pcports') {
-    return pcports.getAchievements(appid.data);
+    // A recompiled port names its entry in recompPorts.js; Link's Awakening DX HD has none.
+    return appid.data.port ? recompPorts.getAchievements(appid.data) : pcports.getAchievements(appid.data);
   } else if (dataType === 'xenia') {
     return await xenia.getAchievements(appid.data.path);
   } else if (dataType === 'x360recomp') {
@@ -3324,7 +3344,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     } else if (appid.data.type === 'madnesspatch') {
       game = await madnesspatch.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'pcports') {
-      game = await pcports.getGameData(appid.data, option.achievement.lang);
+      game = appid.data.port ? await recompPorts.getGameData(appid.data) : await pcports.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'xenia') {
       game = await xenia.getGameData(appid.data.path);
     } else if (appid.data.type === 'x360recomp') {
