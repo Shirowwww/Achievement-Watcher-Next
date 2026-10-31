@@ -14,7 +14,8 @@
     node tools/aw-page.js wait  --page "AW Next" --selector ".game-tile" [--timeout 20]
 
   --page matches a window's title or URL (case-insensitive substring). Without --out, a capture
-  goes to ../preuves/<--subject or "gui-probe">/ when that workspace folder exists, else here.
+  goes to ../outils/preuves/<--subject or "gui-probe">/ (or ../preuves/) when that workspace folder
+  exists, else here.
 */
 
 const fs = require('fs');
@@ -37,8 +38,9 @@ function parseArgs(argv) {
 }
 
 function defaultOut(subject) {
-  const preuves = path.join(__dirname, '..', '..', 'preuves');
-  const dir = fs.existsSync(preuves) ? path.join(preuves, subject || 'gui-probe') : process.cwd();
+  const workspace = path.join(__dirname, '..', '..');
+  const preuves = [path.join(workspace, 'outils', 'preuves'), path.join(workspace, 'preuves')].find((dir) => fs.existsSync(dir));
+  const dir = preuves ? path.join(preuves, subject || 'gui-probe') : process.cwd();
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
   return path.join(dir, `page-${stamp}.png`);
 }

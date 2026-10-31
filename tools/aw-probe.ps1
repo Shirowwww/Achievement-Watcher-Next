@@ -43,7 +43,7 @@ param(
   [int]$Notches = -3,
   # Chromium debug port opened by Start, for tools/aw-page.js; 0 starts without one.
   [int]$DebugPort = 9333,
-  # Captures without -Out go to ..\preuves\<Subject>\ when that workspace folder exists.
+  # Captures without -Out go to ..\outils\preuves\<Subject>\ (or ..\preuves\) when that workspace folder exists.
   [string]$Subject = 'gui-probe',
   # Tray: hover for the tooltip instead of clicking.
   [switch]$HoverOnly,
@@ -174,8 +174,9 @@ function Format-Windows($list) {
 }
 
 function Get-DefaultOut([string]$name) {
-  $preuves = Join-Path (Split-Path -Parent $RepoRoot) 'preuves'
-  $dir = if (Test-Path $preuves) { Join-Path $preuves $Subject } else { (Get-Location).Path }
+  $workspace = Split-Path -Parent $RepoRoot
+  $preuves = @((Join-Path $workspace 'outils\preuves'), (Join-Path $workspace 'preuves')) | Where-Object { Test-Path $_ } | Select-Object -First 1
+  $dir = if ($preuves) { Join-Path $preuves $Subject } else { (Get-Location).Path }
   New-Item -ItemType Directory -Force $dir | Out-Null
   Join-Path $dir ('{0}-{1:yyyyMMdd-HHmmss}.png' -f $name, (Get-Date))
 }

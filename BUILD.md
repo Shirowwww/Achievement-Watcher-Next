@@ -153,7 +153,7 @@ The notification area and Windows toasts are outside the app's windows:
 with the notes of the two latest real releases, so the notification, the tray dot and the update
 window can be checked without publishing. Accepting it fails at the download. The update toast stays
 on screen and stacks over the hidden-icons flyout: close it before `Tray`. Without `-Out`, captures
-go to `..\preuves\<Subject>\` when that workspace folder exists (`-Subject`, default `gui-probe`;
+go to `..\outils\preuves\<Subject>\` (or `..\preuves\`) when that workspace folder exists (`-Subject`, default `gui-probe`;
 `aw-page.js` takes `--subject`), else to the current folder.
 
 Never send a key without `-FocusMatch` from a tool that runs inside another app: it reaches whatever
