@@ -63,3 +63,8 @@ decky/node_modules/
 millennium/node_modules/
 millennium/.millennium/
 millennium/dist/
+playnite/bin/
+playnite/obj/
+playnite/build/
+playnite/Tests/bin/
+playnite/Tests/obj/

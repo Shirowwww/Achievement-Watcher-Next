@@ -1,0 +1,10 @@
+Id: AwNextAchievements_4ae86d6e-6590-497f-adf9-0d373068627d
+Name: AW Next achievements
+Author: Shirowwww
+Version: 1.0.0
+Module: AwNextAchievements.dll
+Type: GenericPlugin
+Icon: icon.png
+Links:
+  - Name: GitHub
+    Url: https://github.com/Shirowwww/Achievement-Watcher-Next

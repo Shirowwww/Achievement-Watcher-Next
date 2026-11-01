@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>AwNextAchievements</AssemblyName>
+    <RootNamespace>AwNext.Playnite</RootNamespace>
+    <UseWPF>true</UseWPF>
+    <LangVersion>7.3</LangVersion>
+    <Version>1.0.0</Version>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Provided by Playnite at run time, so it is not copied beside the extension. -->
+    <PackageReference Include="PlayniteSDK" Version="6.17.0">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="AwNextAchievements.Tests" />
+    <Compile Remove="Tests\**" />
+    <None Remove="Tests\**" />
+    <Page Remove="Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="extension.yaml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Localization\*.xaml" CopyToOutputDirectory="PreserveNewest" />
+    <Page Remove="Localization\*.xaml" />
+  </ItemGroup>
+
+</Project>

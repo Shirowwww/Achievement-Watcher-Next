@@ -60,6 +60,20 @@ function bridgeModuleOn(platform) {
   }
 }
 
+test('a Steam icon on the old community host is handed out on the host that has every game', (t) => {
+  const dir = withDir(t);
+  const list = [achievement('A1', {
+    icon: 'https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/4113940/abc.jpg',
+    icongray: 'https://cdn.example/gray.jpg',
+  })];
+  writeUserData(dir, { games: [game('4113940', 'Sovereign Tower', {}, list)] });
+
+  const shown = ask(bridgeFor(dir), { name: 'Sovereign Tower' }).game.achievements[0];
+
+  assert.equal(shown.icon, 'https://shared.fastly.steamstatic.com/community_assets/images/apps/4113940/abc.jpg');
+  assert.equal(shown.iconLocked, 'https://cdn.example/gray.jpg');
+});
+
 test('a path spelled in another case is the same program on Windows, another one on Linux', (t) => {
   const dir = withDir(t);
   writeUserData(dir, { games: [game('1478500', 'Big Walk', { exe: 'C:\\Jeux\\Big Walk\\Big Walk.exe', exeConfident: true })] });

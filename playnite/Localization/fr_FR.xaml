@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCAwNextMenu">Succès AW Next</sys:String>
+    <sys:String x:Key="LOCAwNextWindowTitle">{0} - succès AW Next</sys:String>
+    <sys:String x:Key="LOCAwNextSummary">{0} / {1} succès ({2} %)</sys:String>
+    <sys:String x:Key="LOCAwNextUnlockedOn">Débloqué le {0}</sys:String>
+    <sys:String x:Key="LOCAwNextRarity">{0:0.#} % des joueurs</sys:String>
+    <sys:String x:Key="LOCAwNextHidden">Succès caché</sys:String>
+    <sys:String x:Key="LOCAwNextReveal">Cliquer pour le révéler, cliquer à nouveau pour le cacher</sys:String>
+    <sys:String x:Key="LOCAwNextLoading">Interrogation d'AW Next...</sys:String>
+    <sys:String x:Key="LOCAwNextOffline">AW Next n'est pas lancé, ou son flux websocket est coupé (AW Next : Paramètres, Notification, Websocket).</sys:String>
+    <sys:String x:Key="LOCAwNextNotFound">AW Next n'a pas de succès pour ce jeu. Choisis le même exécutable des deux côtés : le champ « Exécutable » du jeu dans AW Next et son action de lancement ici.</sys:String>
+    <sys:String x:Key="LOCAwNextShowAll">Tout afficher</sys:String>
+    <sys:String x:Key="LOCAwNextSettingsIntro">Les succès viennent d'AW Next lancé sur ce PC, par son flux websocket local.</sys:String>
+    <sys:String x:Key="LOCAwNextPort">Port du websocket</sys:String>
+    <sys:String x:Key="LOCAwNextLogin">Identifiant du websocket</sys:String>
+    <sys:String x:Key="LOCAwNextLoginHint">Seulement si un mot de passe websocket est défini dans AW Next, sous la forme utilisateur:mot de passe.</sys:String>
+    <sys:String x:Key="LOCAwNextPortInvalid">Le port doit être compris entre 1 et 65535.</sys:String>
+</ResourceDictionary>

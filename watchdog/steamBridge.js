@@ -227,6 +227,11 @@ function localPath(value) {
   return path.isAbsolute(candidate) ? path.normalize(candidate) : '';
 }
 
+// The schema still spells icons on Steam's old community host, which no longer has newer games
+// (404 for Sovereign Tower, 4113940); the community_assets host serves the same files for all of them.
+const LEGACY_ICON_HOST = /^https?:\/\/steamcdn-a\.akamaihd\.net\/steamcommunity\/public\/images\/apps\//i;
+const ICON_HOST = 'https://shared.fastly.steamstatic.com/community_assets/images/apps/';
+
 // Tokens are keyed per run, so a web page cannot work one out from a path it guesses and probe it.
 function createIconRegistry(iconBase) {
   const files = new Map();
@@ -234,7 +239,7 @@ function createIconRegistry(iconBase) {
   function urlFor(value) {
     const raw = typeof value === 'string' ? value.trim() : '';
     if (!raw || raw.length > MAX_TEXT * 2) return '';
-    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^https?:\/\//i.test(raw)) return raw.replace(LEGACY_ICON_HOST, ICON_HOST);
     const file = localPath(raw);
     if (!file || !isImagePath(file)) return '';
     const token = crypto.createHmac('sha256', key).update(pathCase(file)).digest('hex').slice(0, 24);

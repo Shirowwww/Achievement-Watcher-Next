@@ -196,13 +196,29 @@ Pop-Location
 Expected file: `millennium/dist/aw-next-millennium.zip`, holding one `aw-next/` folder with
 `plugin.json`, `README.md`, `backend/main.lua` and `.millennium/Dist/index.js`.
 
+### Playnite extension
+
+The extension in `playnite/` ships as a `.pext`, packed by the `Toolbox.exe` that comes with
+Playnite. Raise `Version` in `playnite/extension.yaml` and `playnite/AwNextAchievements.csproj`
+together when the extension changes; the file name carries it.
+
+```powershell
+Push-Location playnite
+dotnet test Tests
+dotnet build -c Release -o build
+& "<Playnite folder>\Toolbox.exe" pack build dist
+Pop-Location
+```
+
+Expected file: `playnite/dist/AwNextAchievements_4ae86d6e-6590-497f-adf9-0d373068627d_<version>.pext`.
+
 ## Push, CI and GitHub release
 
 1. Make sure commits are atomic and the worktree holds no accidental files.
 2. Push `main` to `origin` and wait for `.github/workflows/test.yml` to pass. It runs lint, both
    suites and the dependency audits on Windows (Node 22.22.2 and 24.19.0) and on Linux (Node 24.19.0).
 3. Create the GitHub release only after CI succeeds, uploading the Windows updater assets, the
-   portable archive, the AppImage with `latest-linux.yml`, and the Millennium plugin:
+   portable archive, the AppImage with `latest-linux.yml`, the Millennium plugin and the Playnite extension:
 
 ```powershell
 $version = (Get-Content app/package.json | ConvertFrom-Json).version
@@ -215,6 +231,7 @@ gh release create "v$version" `
   "app/dist/Achievement.Watcher.$version.AppImage" `
   "app/dist/latest-linux.yml" `
   "millennium/dist/aw-next-millennium.zip" `
+  (Get-Item "playnite/dist/*.pext").FullName `
   --repo Shirowwww/Achievement-Watcher-Next `
   --target $target `
   --title "Achievement Watcher Next $version" `
@@ -222,7 +239,7 @@ gh release create "v$version" `
 ```
 
 4. Verify the release page exposes the installer, portable ZIP, blockmap, `latest.yml`, the AppImage,
-   `latest-linux.yml` and `aw-next-millennium.zip`, and that both public manifests download. Once an AppImage has been
+   `latest-linux.yml`, `aw-next-millennium.zip` and the `.pext`, and that both public manifests download. Once an AppImage has been
    published, **every later release must carry `latest-linux.yml`**: without it, each installed
    AppImage reports an error on every update check.
 5. Refresh the version, installer link and VirusTotal hash the site quotes, and commit the result:

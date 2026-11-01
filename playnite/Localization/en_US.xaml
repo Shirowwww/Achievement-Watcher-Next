@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="LOCAwNextMenu">AW Next achievements</sys:String>
+    <sys:String x:Key="LOCAwNextWindowTitle">{0} - AW Next achievements</sys:String>
+    <sys:String x:Key="LOCAwNextSummary">{0} / {1} achievements ({2}%)</sys:String>
+    <sys:String x:Key="LOCAwNextUnlockedOn">Unlocked {0}</sys:String>
+    <sys:String x:Key="LOCAwNextRarity">{0:0.#}% of players</sys:String>
+    <sys:String x:Key="LOCAwNextHidden">Hidden achievement</sys:String>
+    <sys:String x:Key="LOCAwNextReveal">Click to reveal it, click again to hide it</sys:String>
+    <sys:String x:Key="LOCAwNextLoading">Asking AW Next...</sys:String>
+    <sys:String x:Key="LOCAwNextOffline">AW Next is not running, or its websocket feed is off (AW Next: Settings, Notification, Websocket).</sys:String>
+    <sys:String x:Key="LOCAwNextNotFound">AW Next has no achievements for this game. Pick the same executable in both apps: the game's Executable in AW Next and its play action here.</sys:String>
+    <sys:String x:Key="LOCAwNextShowAll">Show all</sys:String>
+    <sys:String x:Key="LOCAwNextSettingsIntro">Achievements come from AW Next running on this PC, over its local websocket feed.</sys:String>
+    <sys:String x:Key="LOCAwNextPort">Websocket port</sys:String>
+    <sys:String x:Key="LOCAwNextLogin">Websocket login</sys:String>
+    <sys:String x:Key="LOCAwNextLoginHint">Only when a websocket password is set in AW Next, as user:password.</sys:String>
+    <sys:String x:Key="LOCAwNextPortInvalid">The port must be between 1 and 65535.</sys:String>
+</ResourceDictionary>

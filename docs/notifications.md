@@ -257,7 +257,9 @@ shortcut AW Next recognises: the game's page then shows Steam's own Achievements
 bar counter, the full list and the Big Picture "Your stuff" tab. A shortcut is matched best when it
 starts the same exe as the game's **Executable** in AW Next. Its README covers the install, what to
 check when a page stays empty, and how it sits next to Steam Cartridges, NativeGameLink and Game
-Data Linker. The request below is for anyone writing another plugin.
+Data Linker. The Playnite extension in `playnite/` asks the same way, for any game in a Playnite
+library, and its README covers the install and the panels a theme can place. The request below is
+for anyone writing another plugin.
 
 The plugin sends:
 
