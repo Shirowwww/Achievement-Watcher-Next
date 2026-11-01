@@ -40,6 +40,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Ignore a Game Health warning (#160).** A row that flags a game that works can be ignored with
+  the eye beside it, for that game and that exact finding: if the row later finds something else,
+  it shows again. The same eye brings it back.
 - **Covers for ports and mods named after their game.** A title ending in brackets, such as
   "Diddy Kong Racing (DKR-R)", is also looked up on SteamGridDB without them, so it gets the game's
   cover, background, logo and icon.

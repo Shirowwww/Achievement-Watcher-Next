@@ -760,10 +760,28 @@ function buildTechnical(signals) {
   };
 }
 
+/*
+  What one row says, as a key the player can ignore (#160). It holds the level and the params, so
+  ignoring "these icons are missing" never also hides a different fault the same row raises later.
+*/
+function checkSignature(entry) {
+  return `${entry.id}:${entry.level}:${JSON.stringify(entry.params || {})}`;
+}
+
+// A row the player ignored reads as fine and offers nothing, and keeps what it said for the panel.
+function applyIgnored(checks, ignored) {
+  const keys = new Set(Array.isArray(ignored) ? ignored : []);
+  if (keys.size === 0) return checks;
+  return checks.map((entry) => {
+    if ((entry.level !== LEVEL.FAIL && entry.level !== LEVEL.WARN) || !keys.has(checkSignature(entry))) return entry;
+    return { ...entry, level: LEVEL.OK, ignored: true, ignoredLevel: entry.level, blocking: false, actions: [] };
+  });
+}
+
 // signals: see buildTechnical() for the full accepted shape. Every field is optional; a game the
 // app knows almost nothing about still produces a usable report.
 function deriveHealth(signals = {}) {
-  const checks = buildChecks(signals);
+  const checks = applyIgnored(buildChecks(signals), signals.ignored);
   const state = deriveState(checks, signals);
   const { reason, params } = explain(state, checks, signals);
 
@@ -835,6 +853,7 @@ function needsFullReport(game) {
 
 module.exports = {
   deriveHealth,
+  checkSignature,
   issueTopics,
   hasDot,
   scannedState,

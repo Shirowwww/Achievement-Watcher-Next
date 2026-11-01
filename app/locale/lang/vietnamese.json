@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Cài đặt tệp của trình giả lập",
     "gh-action-switch-runtime": "Chuyển sang trình giả lập được hỗ trợ",
     "gh-action-undo-switch": "Hoàn tác đổi trình giả lập",
+    "gh-ignore": "Bỏ qua",
+    "gh-unignore": "Hiện lại",
     "gh-confirm-undo-switch-message": "AW Next sẽ khôi phục các tệp crack đi kèm trò chơi và gỡ trình giả lập được hỗ trợ.",
     "gh-undo-switch-done": "Đã khôi phục {count} tệp.",
     "gh-action-start-tracking": "Theo dõi trò chơi này",

@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Installer emulatorfilen",
     "gh-action-switch-runtime": "Skift til den understøttede emulator",
     "gh-action-undo-switch": "Fortryd emulatorskiftet",
+    "gh-ignore": "Ignorer",
+    "gh-unignore": "Vis igen",
     "gh-confirm-undo-switch-message": "AW Next lægger de crack-filer tilbage, som spillet kom med, og fjerner den understøttede emulator.",
     "gh-undo-switch-done": "{count} fil(er) lagt tilbage.",
     "gh-action-start-tracking": "Hold øje med dette spil",

@@ -6286,6 +6286,33 @@ body.is-resizing #game-list {
   white-space: nowrap;
 }
 
+/* Bare, like the toolbar icons: the tooltip names it. Shown on the row a pointer or focus is on. */
+.gh-checks .gh-ignore {
+  flex: 0 0 auto;
+  align-self: center;
+  padding: 0 2px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.gh-checks li:hover .gh-ignore,
+.gh-checks .gh-ignore:focus-visible,
+.gh-checks li[data-ignored] .gh-ignore {
+  opacity: 1;
+}
+.gh-checks .gh-ignore:hover {
+  color: var(--text);
+}
+.gh-checks li[data-ignored] > i,
+.gh-checks li[data-ignored] .gh-check-value {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
 .gh-checks .gh-check-value.is-scrolling {
   text-overflow: clip;
 }
@@ -17944,6 +17971,13 @@ html:not([data-platform='linux']) [data-linux-only] {
 }
 #game-config .gh-checks li[data-level='fail'] > i {
   background: color-mix(in srgb, var(--danger) 14%, transparent);
+}
+#game-config .gh-checks li:has(.gh-ignore) {
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+}
+#game-config .gh-checks .gh-ignore {
+  grid-column: 3;
+  grid-row: 1 / span 2;
 }
 #game-config .gh-checks .gh-check-label {
   font-size: var(--fs-sm);

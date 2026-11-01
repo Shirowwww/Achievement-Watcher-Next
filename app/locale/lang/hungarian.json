@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Emulátorfájl telepítése",
     "gh-action-switch-runtime": "Váltás a támogatott emulátorra",
     "gh-action-undo-switch": "Emulátorváltás visszavonása",
+    "gh-ignore": "Mellőzés",
+    "gh-unignore": "Újra megjelenítés",
     "gh-confirm-undo-switch-message": "Az AW Next visszateszi a játékkal érkezett crack fájlokat, és eltávolítja a támogatott emulátort.",
     "gh-undo-switch-done": "{count} fájl visszaállítva.",
     "gh-action-start-tracking": "Játék figyelése",

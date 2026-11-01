@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Zainstaluj plik emulatora",
     "gh-action-switch-runtime": "Przełącz na obsługiwany emulator",
     "gh-action-undo-switch": "Cofnij zmianę emulatora",
+    "gh-ignore": "Ignoruj",
+    "gh-unignore": "Pokaż ponownie",
     "gh-confirm-undo-switch-message": "AW Next przywróci pliki cracka, z którymi przyszła ta gra, i usunie obsługiwany emulator.",
     "gh-undo-switch-done": "Przywrócono pliki: {count}.",
     "gh-action-start-tracking": "Obserwuj tę grę",

@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "安裝模擬器檔案",
     "gh-action-switch-runtime": "切換到支援的模擬器",
     "gh-action-undo-switch": "復原模擬器切換",
+    "gh-ignore": "忽略",
+    "gh-unignore": "重新顯示",
     "gh-confirm-undo-switch-message": "AW Next 會還原遊戲原本附帶的破解檔案，並移除支援的模擬器。",
     "gh-undo-switch-done": "已還原 {count} 個檔案。",
     "gh-action-start-tracking": "監看這款遊戲",

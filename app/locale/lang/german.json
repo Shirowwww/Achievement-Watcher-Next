@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Emulator-Datei installieren",
     "gh-action-switch-runtime": "Zum unterstützten Emulator wechseln",
     "gh-action-undo-switch": "Emulatorwechsel rückgängig machen",
+    "gh-ignore": "Ignorieren",
+    "gh-unignore": "Wieder anzeigen",
     "gh-confirm-undo-switch-message": "AW Next stellt die Crack-Dateien wieder her, mit denen das Spiel geliefert wurde, und entfernt den unterstützten Emulator.",
     "gh-undo-switch-done": "{count} Datei(en) wiederhergestellt.",
     "gh-action-start-tracking": "Dieses Spiel überwachen",

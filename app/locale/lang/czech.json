@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Nainstalovat soubor emulátoru",
     "gh-action-switch-runtime": "Přepnout na podporovaný emulátor",
     "gh-action-undo-switch": "Vrátit změnu emulátoru",
+    "gh-ignore": "Ignorovat",
+    "gh-unignore": "Zobrazit znovu",
     "gh-confirm-undo-switch-message": "AW Next vrátí soubory cracku, se kterými hra přišla, a odebere podporovaný emulátor.",
     "gh-undo-switch-done": "Obnoveno souborů: {count}.",
     "gh-action-start-tracking": "Sledovat tuto hru",

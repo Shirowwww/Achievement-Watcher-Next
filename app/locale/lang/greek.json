@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Εγκατάσταση του αρχείου του εξομοιωτή",
     "gh-action-switch-runtime": "Μετάβαση στον υποστηριζόμενο εξομοιωτή",
     "gh-action-undo-switch": "Αναίρεση αλλαγής εξομοιωτή",
+    "gh-ignore": "Παράβλεψη",
+    "gh-unignore": "Εμφάνιση ξανά",
     "gh-confirm-undo-switch-message": "Το AW Next θα επαναφέρει τα αρχεία crack με τα οποία ήρθε το παιχνίδι και θα αφαιρέσει τον υποστηριζόμενο εξομοιωτή.",
     "gh-undo-switch-done": "Επαναφέρθηκαν {count} αρχεία.",
     "gh-action-start-tracking": "Παρακολούθηση αυτού του παιχνιδιού",

@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "Встановити файл емулятора",
     "gh-action-switch-runtime": "Перейти на підтримуваний емулятор",
     "gh-action-undo-switch": "Скасувати зміну емулятора",
+    "gh-ignore": "Ігнорувати",
+    "gh-unignore": "Показати знову",
     "gh-confirm-undo-switch-message": "AW Next поверне файли кряку, з якими постачалася гра, і прибере підтримуваний емулятор.",
     "gh-undo-switch-done": "Відновлено файлів: {count}.",
     "gh-action-start-tracking": "Відстежувати цю гру",

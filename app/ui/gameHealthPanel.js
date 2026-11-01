@@ -13,6 +13,7 @@
 // game list, config, userData paths); every state/explanation/action decision is in util/gameHealth.js so it can be tested headless.
 const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
+const { createHealthIgnoreStore } = require(path.join(appPath, 'util/healthIgnoreStore.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
 // so none of the process-tracking or Steam-emulator reasoning applies to them.
 const { isOfficialPlatformSource } = require(path.join(appPath, 'util/achievementResetTargets.js'));
@@ -355,6 +356,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
 
   return {
     appid,
+    ignored: healthIgnores().get(appid),
     steamappid: game.steamappid || '',
     name: game.name || '',
     source,
@@ -922,6 +924,21 @@ function gameHealthActionLabel(action) {
 const GAME_HEALTH_ICON = { ok: 'fa-check-circle', warn: 'fa-exclamation-triangle', fail: 'fa-times-circle', info: 'fa-info-circle' };
 const GAME_HEALTH_STATE_ICON = { ready: 'fa-check-circle', attention: 'fa-exclamation-triangle', 'not-tracking': 'fa-times-circle' };
 
+// A false alarm on a game that works can be dismissed for good, and brought back (#160).
+function gameHealthIgnoreButton(entry) {
+  const flagged = entry.level === gameHealth.LEVEL.FAIL || entry.level === gameHealth.LEVEL.WARN;
+  if (!flagged && !entry.ignored) return '';
+  const label = entry.ignored ? t('gh-unignore', 'Show again', 'Réafficher') : t('gh-ignore', 'Ignore', 'Ignorer');
+  const signature = gameHealth.checkSignature(entry.ignored ? { ...entry, level: entry.ignoredLevel } : entry);
+  return `<button type="button" class="gh-ignore" data-gh-ignore="${escapeHtml(signature)}" data-gh-ignored="${entry.ignored ? '1' : ''}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}"><i class="fas ${
+    entry.ignored ? 'fa-eye' : 'fa-eye-slash'
+  }"></i></button>`;
+}
+
+function healthIgnores() {
+  return createHealthIgnoreStore(getUserDataPath());
+}
+
 function paintGameHealth(report) {
   const root = $('#game-health');
   // Kept for the repairs that need a value out of the report they were offered by (the appid fix
@@ -943,12 +960,15 @@ function paintGameHealth(report) {
     // filtered out of the DISPLAY only - the report they came from is unchanged, so the state, the
     // explanation and the offered repairs are identical in both modes.
     .filter((entry) => gameHealthInterfaceMode.isCheckVisible(entry.id, mode))
-    .map((entry) => {
+    .map((row) => {
+      // An ignored row still says what it found, under its own muted look.
+      const entry = row.ignored ? { ...row, level: row.ignoredLevel } : row;
       const value = gameHealthCheckValue(entry, simple);
-      return `<li data-level="${escapeHtml(entry.level)}" data-check="${escapeHtml(entry.id)}">
+      return `<li data-level="${escapeHtml(entry.level)}" data-check="${escapeHtml(entry.id)}"${row.ignored ? ' data-ignored="1"' : ''}>
         <i class="fas ${GAME_HEALTH_ICON[entry.level] || GAME_HEALTH_ICON.info}"></i>
         <span class="gh-check-label">${escapeHtml(gameHealthCheckLabel(entry.id, simple))}</span>
         <span class="gh-check-value" title="${escapeHtml(value)}"><span class="gh-check-text">${escapeHtml(value)}</span></span>
+        ${gameHealthIgnoreButton(row)}
       </li>`;
     })
     .join('');

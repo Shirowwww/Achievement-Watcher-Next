@@ -8926,6 +8926,22 @@ var app = {
       setTimeout(() => row.removeClass('gh-jump-flash'), 2000);
     });
 
+    $('#game-health').on('click', '[data-gh-ignore]', async function () {
+      const button = $(this);
+      const appid = $('#game-health').attr('data-appid');
+      if (!appid || button.prop('disabled')) return;
+      button.prop('disabled', true);
+      try {
+        const signature = button.attr('data-gh-ignore');
+        if (button.attr('data-gh-ignored') === '1') healthIgnores().unignore(appid, signature);
+        else healthIgnores().ignore(appid, signature);
+        await renderGameHealth(appid);
+      } catch (err) {
+        debug.error(`[health] ignore failed for ${appid} => ${formatErr(err)}`);
+        button.prop('disabled', false);
+      }
+    });
+
     $('#game-health').on('click', '[data-gh-action]', async function () {
       const button = $(this);
       const action = button.attr('data-gh-action');

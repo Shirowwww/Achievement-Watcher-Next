@@ -2747,6 +2747,8 @@
     "gh-action-install-runtime": "ติดตั้งไฟล์อีมูเลเตอร์",
     "gh-action-switch-runtime": "เปลี่ยนไปใช้อีมูเลเตอร์ที่รองรับ",
     "gh-action-undo-switch": "เลิกทำการเปลี่ยนอีมูเลเตอร์",
+    "gh-ignore": "ละเว้น",
+    "gh-unignore": "แสดงอีกครั้ง",
     "gh-confirm-undo-switch-message": "AW Next จะนำไฟล์แครกเดิมที่มากับเกมกลับมา และนำอีมูเลเตอร์ที่รองรับออก",
     "gh-undo-switch-done": "นำไฟล์กลับมา {count} ไฟล์",
     "gh-action-start-tracking": "เฝ้าดูเกมนี้",
