@@ -243,4 +243,18 @@ function steamLibraryImage(appid, options = {}) {
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
 }
 
-module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon };
+/*
+  Puts the picked icon on a notification whatever source built it (#159: playtime and the console
+  watchers resolved their own artwork and never asked). The game slot is gameIcon; a playtime card
+  has no achievement, so its icon slot is the game too.
+*/
+function applyCustomGameIcon(message, options = {}) {
+  if (!message) return message;
+  const picked = customGameIcon(message.appid, options) || customGameIcon(message.steamappid, options);
+  if (!picked) return message;
+  message.gameIcon = picked;
+  if (message.notificationType === 'playtime') message.icon = picked;
+  return message;
+}
+
+module.exports = { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, applyCustomGameIcon, executableIcon, highResExecutableIcon };

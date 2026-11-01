@@ -325,6 +325,20 @@ function fakePe(arch, text = '') {
     for (const [file, bytes] of snapshot.inis) fs.writeFileSync(file, bytes);
     console.log('PASS: diagnose rejects only the schema keys this loader build cannot rebuild');
 
+    // #160: a loader left on its own save folder is only worth a warning while nothing is read from
+    // there. Once AW reads its unlocks, the redirect is a preference, and the player may want the
+    // game kept under Ubisoft rather than moved to GSE Saves.
+    for (const [file, bytes] of snapshot.inis) fs.writeFileSync(file, String(bytes).replace(/AchSaveType\s*=\s*1/, 'AchSaveType=0'));
+    const unredirected = () => uplayR2.diagnose({ gameDir, appid: 'UPLAY4' });
+    assert.ok(unredirected().issues.some((i) => i.code === 'BAD_SAVE_REDIRECT'), 'nothing read yet: the redirect is still the advice');
+    const ownSaveDir = unredirected().saveDirs.find((dir) => !/GSE Saves/i.test(dir));
+    fs.mkdirSync(ownSaveDir, { recursive: true });
+    fs.writeFileSync(path.join(ownSaveDir, uplayR2.ACH_SAVE_FILE), JSON.stringify({ Ach_Prologue_1: { earned: 1 } }));
+    assert.ok(!unredirected().issues.some((i) => i.code === 'BAD_SAVE_REDIRECT'), `unlocks read from ${ownSaveDir} need no redirect`);
+    fs.rmSync(ownSaveDir, { recursive: true, force: true });
+    for (const [file, bytes] of snapshot.inis) fs.writeFileSync(file, bytes);
+    console.log('PASS: an unredirected loader whose own save is read is not flagged');
+
     // The package cache is validated, not trusted by filename. A non-PE or a 32-bit image wearing a
     // 64-bit loader name is never eligible for installation.
     const cacheDir = path.join(temp, 'cache', 'uplayR2');

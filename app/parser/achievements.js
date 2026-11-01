@@ -1727,7 +1727,7 @@ async function writeRuntimeConfigs({ appid, steamSettings, option, exePresent })
     // Steamworks title report achievement progress at all, so it follows automatic repair itself.
     if (exePresent()) {
       const main = goldberg.writeMainConfig({ steamSettings, backupDir });
-      if (main && main.changed) debug.log(`[${appid}] updated configs.main.ini (new_app_ticket=1, gc_token=1)`);
+      if (main && main.changed) debug.log(`[${appid}] updated configs.main.ini (new_app_ticket=1, gc_token=1, allow_unknown_stats=1)`);
     }
     // The identity follows its own switch; a save folder chosen in Settings applies on its own.
     const identity = goldberg.userIdentity(option, schemaLanguage.get(appid) || (option.achievement && option.achievement.lang));

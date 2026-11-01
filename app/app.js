@@ -3100,7 +3100,7 @@ const SOURCE_BADGE = {
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
   socialclub: /^goldberg socialclub$/,
-  ea: /^ea$/,
+  ea: /^(?:ea|anadius \(ea\))$/,
   retroachievements: /^retroachievements$/,
   pcport: /^pc port$/,
 };

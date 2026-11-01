@@ -1817,6 +1817,7 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   }
 
   const expectedSavePath = redirectTarget(mapping.steam_appid, dir).configured;
+  let notRedirected = false;
   report.iniFile = iniFile;
   if (!iniFile) {
     add('warning', 'NO_INI', `No ${flavour.iniNames.join('/')} found beside the loader dll.`);
@@ -1826,9 +1827,7 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
     }
     if (caps.supportsAchRedirect) {
       const configured = String(settings.achsavepath || '').trim();
-      if (String(settings.achsavetype || '').trim() !== '1' || path.normalize(configured.toLowerCase()) !== path.normalize(expectedSavePath.toLowerCase())) {
-        add('warning', 'BAD_SAVE_REDIRECT', `AchSaveType/AchSavePath is not redirected to ${expectedSavePath}.`);
-      }
+      notRedirected = String(settings.achsavetype || '').trim() !== '1' || path.normalize(configured.toLowerCase()) !== path.normalize(expectedSavePath.toLowerCase());
     }
   }
 
@@ -1843,6 +1842,11 @@ function diagnose({ gameDir, appid, name, loaderPaths = null, mapping: suppliedM
   });
   report.saveDirs = saveDirs;
   const emuSave = readAchievementSave(saveDirs);
+  // Unlocks already read from wherever the loader saves make the redirect a preference, and some
+  // players keep the emulator's own folder so the game stays a Ubisoft one (#160).
+  if (notRedirected && !emuSave) {
+    add('warning', 'BAD_SAVE_REDIRECT', `AchSaveType/AchSavePath is not redirected to ${expectedSavePath}.`);
+  }
   report.save = goldberg.inspectSaveState(mapping.steam_appid);
   if (emuSave) {
     const total = Object.keys(emuSave.entries).length;

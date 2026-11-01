@@ -48,6 +48,17 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Counter achievements unlock under GBE Fork (#161).** For a game whose stats AW Next could not
+  list, the emulator refused every stat the game wrote, so achievements such as "parry 100 times"
+  never moved. The emulator fix now lets it keep them, and Game Health offers the fix to games set up
+  before.
+- **The playtime notification uses the icon you picked (#159).** So do PlayStation, shadPS4 port and
+  RetroAchievements notifications, which also drew their own artwork.
+- **EA games cracked with anadius' emulator are shown as EA (#160)**, not as Steam games.
+- **Fewer false alarms in Game Health (#160).** A Ubisoft game whose unlocks AW Next already reads
+  from the emulator's own folder is no longer told to move them, and a game whose unlocks a mod
+  writes, with no emulator in its folder (Red Dead Redemption), is no longer reported as an
+  unfinished Goldberg setup.
 - **Games tied in a sort line up by name (#158).** Sorted by progress, unlock date or last play,
   games with the same value came in an arbitrary order, so a series finished at 100% was scattered
   across the list. They now follow each other from A to Z.

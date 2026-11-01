@@ -12,6 +12,7 @@ const { sourcePlatform } = require('../util/presetLocator.js');
 const { broadcast, isDeckyListening, noteForSteamBridge } = require('../websocket.js');
 const { arePopupsSuppressed, fullscreenKind, FULLSCREEN_KIND } = require('../queryUserNotificationState.js');
 const { gameDisplayCenter } = require('../util/gameDisplay.js');
+const { applyCustomGameIcon } = require('../util/steamArtwork.js');
 const transportPolicy = require('./transportPolicy.js');
 const transportMemory = require('../util/transportMemory.js');
 const overlayAck = require('./overlayAck.js');
@@ -205,6 +206,7 @@ function feedPayload(message) {
 module.exports = async (message, option = {}) => {
   try {
     applyGameTitle(message, option);
+    applyCustomGameIcon(message);
     // Playtime uses the game title, not an achievement label.
     if (message.notificationType === 'playtime' && message.gameDisplayName) {
       message.achievementDisplayName = message.gameDisplayName;

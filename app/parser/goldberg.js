@@ -504,6 +504,31 @@ function withProgress(achievementsJson, progress) {
   });
 }
 
+/*
+  A GSE-style save with no emulator in the folder: a mod writes it (Red Dead Redemption, #160). It
+  counts only when written after every steam_api dll there, since a game update that wiped a real
+  setup leaves the opposite: an old save and the freshly restored Valve dll.
+*/
+function writtenWithoutEmulator(save, dlls) {
+  if (!save || !save.exists || save.seeded || !save.file || dlls.length === 0) return false;
+  if (dlls.some((dll) => crackLoaderDetect.isEmulatorDll(dll))) return false;
+  try {
+    const savedAt = fs.statSync(save.file).mtimeMs;
+    return dlls.every((dll) => fs.statSync(dll).mtimeMs < savedAt);
+  } catch {
+    return false;
+  }
+}
+
+function hasDeclaredStats(steamSettings) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'stats.json'), 'utf8'));
+    return Array.isArray(parsed) && parsed.some((s) => s && s.name);
+  } catch {
+    return false;
+  }
+}
+
 // Add the stats a game declares to stats.json, keeping every entry already there. Returns how many
 // were added.
 function mergeStatsJson(steamSettings, stats) {
@@ -975,6 +1000,11 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   };
   if (!steamSettings) {
     if (servingLoader) return servedByLoader();
+    if (writtenWithoutEmulator(report.save, emu.dll)) {
+      add('info', 'SAVE_WITHOUT_EMULATOR', `${report.save.file} is written by something other than a Steam emulator (a mod or a tool of its own). Nothing to set up here.`);
+      report.ok = true;
+      return report;
+    }
     add('error', 'NO_STEAM_SETTINGS', 'No steam_settings folder found beside the emulator - Goldberg/GBE is likely not set up.');
     return report;
   }
@@ -1115,6 +1145,11 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     }
     if (!/^\s*\[main::general\][\s\S]*?^\s*gc_token\s*=\s*1\s*$/im.test(mainConfig)) {
       add('warning', 'NO_GC_TOKEN', 'configs.main.ini does not enable [main::general] gc_token=1.');
+    }
+    // GBE refuses SetStat on a stat stats.json does not declare, so with none declared every counter
+    // achievement ("do X 100 times") stays locked (#161).
+    if (!hasDeclaredStats(steamSettings) && !/^\s*\[main::stats\][^[]*?^\s*allow_unknown_stats\s*=\s*1\s*$/im.test(mainConfig)) {
+      add('warning', 'UNKNOWN_STATS_REJECTED', 'stats.json declares no stat and configs.main.ini does not set [main::stats] allow_unknown_stats=1, so the game cannot record any stat.');
     }
   }
   const userConfigFile = path.join(steamSettings, 'configs.user.ini');
@@ -1344,7 +1379,8 @@ function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true, forceUnloc
 
 // Write/merge configs.main.ini with the modern GBE switches newer Steamworks/PSPC titles need
 // (newer auth ticket + Game Coordinator token). achievements_bypass is left at the user's value:
-// forcing SetAchievement() true is a workaround, not a default.
+// forcing SetAchievement() true is a workaround, not a default. allow_unknown_stats is set because AW
+// can only declare the stats a public list knows, and a stat GBE refuses is a counter that never moves.
 function writeMainConfig({ steamSettings, backupDir = null } = {}) {
   if (!steamSettings) throw new Error('writeMainConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.main.ini');
@@ -1362,7 +1398,11 @@ function writeMainConfig({ steamSettings, backupDir = null } = {}) {
     stats = { key: 'main::stats', header: '[main::stats]', body: [] };
     doc.sections.push(stats);
   }
-  stats.body = upsertIniKeys(stats.body, { stat_achievement_progress_functionality: '1', save_only_higher_stat_achievement_progress: '1' });
+  stats.body = upsertIniKeys(stats.body, {
+    stat_achievement_progress_functionality: '1',
+    save_only_higher_stat_achievement_progress: '1',
+    allow_unknown_stats: '1',
+  });
 
   fs.mkdirSync(steamSettings, { recursive: true });
   const next = stringifyIni(doc);

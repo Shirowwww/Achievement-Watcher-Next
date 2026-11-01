@@ -55,6 +55,8 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'NO_MAIN_CONFIG',
   'NO_NEW_APP_TICKET',
   'NO_GC_TOKEN',
+  // writeMainConfig() sets [main::stats] allow_unknown_stats=1.
+  'UNKNOWN_STATS_REJECTED',
   'NO_USER_CONFIG',
   // writeUserConfig() blanks GBE's example value whenever it rewrites configs.user.ini.
   'PLACEHOLDER_SAVE_PATH',
@@ -103,6 +105,7 @@ const ISSUE_TOPIC = {
   NO_MAIN_CONFIG: 'compat',
   NO_NEW_APP_TICKET: 'compat',
   NO_GC_TOKEN: 'compat',
+  UNKNOWN_STATS_REJECTED: 'compat',
   NO_INI: 'compat',
   NO_USER_CONFIG: 'account',
   BAD_USER_CONFIG: 'account',
@@ -361,6 +364,10 @@ function emulatorCheck(signals) {
   if (!signals.emulated || !goldberg) return null;
 
   const dllCount = num(goldberg.dllCount);
+  // Unlocks a mod writes with no emulator in the folder (goldberg.diagnose): nothing to set up.
+  if ((goldberg.issues || []).some((issue) => issue && issue.code === 'SAVE_WITHOUT_EMULATOR')) {
+    return check('emulator', LEVEL.OK, { params: { emulator: 'none' } });
+  }
   if (!goldberg.steamSettings && dllCount === 0) {
     // Nothing is set up at all. The full setup chain lives in the right-click menu; offering a
     // partial copy of it here would fork that flow, so this check explains and stops.

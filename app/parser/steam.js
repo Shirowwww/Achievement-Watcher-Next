@@ -184,6 +184,9 @@ async function scanAppidRoots(roots) {
       game.source = 'Reloaded - 3DM';
     } else if (dirKeyLower.includes('creamapi')) {
       game.source = 'CreamAPI';
+    } else if (dirKeyLower.includes('anadius/lsx emu')) {
+      // anadius' EA crack: the folder is named after the Steam appid, but the game is an EA one (#160).
+      game.source = 'anadius (EA)';
     } else if (dirKeyLower.includes('steam')) {
       game.source = 'Steam';
     } else {

@@ -86,6 +86,8 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
       FULLSCREEN_KIND: require('../queryUserNotificationState.js').FULLSCREEN_KIND,
     },
     '../util/gameDisplay.js': { gameDisplayCenter: () => gameDisplay },
+    // No icon picked: the payloads below stay what their callers built (customGameIcon.test.js).
+    '../util/steamArtwork.js': { applyCustomGameIcon: (message) => message },
     './transportPolicy.js': policy,
     '../util/transportMemory.js': transportMemory,
     // The real registry, with a wait short enough that the "no answer at all" case does not make the
