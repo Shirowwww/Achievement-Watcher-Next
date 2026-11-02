@@ -41,6 +41,18 @@ renamed in 3.9.0 and the history is kept under one file.
   Next finds them from their saves or from the games Quiver Launcher installed, and ships their
   lists, since these ports keep them inside the game. Achievement pictures come from the port where
   it has them. **Sources** in the guide says where each one writes.
+- **PS3Recomp ports.** PlayStation 3 games recompiled for PC with PS3Recomp show their trophies and
+  announce new ones. AW Next finds a port in a folder you added from its `launch.txt`, its
+  `ps3recomp.toml` or, for a port built from its repository, its `CMakeLists.txt`. It reads the
+  list from the game's own `TROPHY.TRP` and the unlocks from the port's save, and takes the rarity
+  from PlayStation's own figures. **Settings > Sources > PS3 Recomp** turns it off.
+- **Trophies from a PS3 or PS4 over FTP (#160).** For a jailbroken console, when signing in to PSN
+  is not an option: **Import from a PS3 or PS4** under the PlayStation account in **Settings >
+  Sources** reads the console's trophy files over FTP on your home network and adds them like the
+  PSN library does. Nothing is written to the console.
+- **Several achievements at once.** Ctrl+click or Shift+click achievements in a game, then
+  right-click one of them to mark them all unlocked, clear their manual unlocks or re-lock them,
+  with one confirmation and one backup.
 
 ### Improved
 
@@ -66,6 +78,30 @@ renamed in 3.9.0 and the history is kept under one file.
   list, the emulator refused every stat the game wrote, so achievements such as "parry 100 times"
   never moved. The emulator fix now lets it keep them, and Game Health offers the fix to games set up
   before.
+- **A scan no longer swaps a cracked Ubisoft game's own loader (#166).** With automatic repairs on,
+  a game such as Assassin's Creed Valhalla from an EMPRESS release had its Uplay loader replaced by
+  AW Next's during a scan, and the game then looped on "Ubisoft services are unavailable". A scan now
+  leaves a release's own loader alone; Game Health still offers the fix, with its backup. A game AW
+  Next already repaired still gets its setup back after a repack update.
+- **The emulator fix lands where a game behind a launcher loads it.** A game shipped as a launcher
+  folder beside its own (Metal Gear Solid 4) was set up in the launcher's folder: the launcher's
+  dlls were replaced and never the game's. Once you pick the game's executable, Game Health and the
+  right-click fixes work on the folder it sits in.
+- **Rarity and descriptions from Exophase come from the right game.** A page found from the game's
+  name could belong to another game with the same words in its title, and its rates landed on
+  whichever achievements shared a title. A page is now used only when most of its achievements
+  match the game's list.
+- **An unlock from an emulator or a port shows in the library at once.** PS3 and PS4 ports, shadPS4,
+  RPCS3, Xenia, GOG, Ubisoft and the other live sources announced an unlock while the game's tile
+  and page kept the old count until the next scan. They now move with the notification.
+- **Right-clicking a PlayStation platinum opens its menu.** A trophy numbered 0, the platinum of
+  every PlayStation list, opened nothing, and an achievement whose name starts with zeros kept its
+  manual unlock under another name.
+- **Resetting or re-locking a PS3Recomp port works.** The reset said it was done without touching
+  the port's unlock file, and a re-lock said no save held the trophy. Both now edit the file the
+  port reads when the game starts, with a backup.
+- **A PlayStation import says when the PlayStation source is off.** The games it added never showed
+  in the library, and nothing said why.
 - **The playtime notification uses the icon you picked (#159).** So do PlayStation, shadPS4 port and
   RetroAchievements notifications, which also drew their own artwork.
 - **EA games cracked with anadius' emulator are shown as EA (#160)**, not as Steam games.

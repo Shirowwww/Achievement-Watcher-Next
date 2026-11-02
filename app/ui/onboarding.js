@@ -620,7 +620,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     try {
       const res = (await ipcRenderer.invoke('psn:import')) || {};
       if (!res.ok) return setAccountStatus(key, messages.psnImportErrorText(res.error), 'error');
-      const summary = messages.psnImportText(res.result);
+      const summary = messages.psnImportText(res.result, { sourceOff: $('#onboard-src-psnLibrary').val() === 'false' });
       setAccountStatus(key, summary.text, summary.kind);
       if (!$('#onboarding').is(':visible')) app.onStart();
     } catch (err) {
@@ -706,6 +706,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'shadps4', fallback: true },
     { key: 'kytyps5', fallback: true },
     { key: 'ps4recomp', fallback: true },
+    { key: 'ps3recomp', fallback: true },
     { key: 'x360recomp', fallback: true },
     { key: 'xenia', fallback: true },
     { key: 'xlln', fallback: true },

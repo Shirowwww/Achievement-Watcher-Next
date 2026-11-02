@@ -2249,7 +2249,10 @@ async function GetMissingData(data, showHidden, lang, steamSettings, { forceRech
           });
           const norm = (s) => String(s || '').trim().toLowerCase();
           const byTitle = new Map();
-          for (const item of res.items) {
+          // A page found by title alone can be a namesake; its descriptions would land on shared titles.
+          const items = exophase.exophasePageAgrees(data.achievement.list, res.items) ? res.items : [];
+          if (items.length === 0 && res.items.length > 0) debug.log(`[${data.appid}] exophase description fallback: the page found is another game's`);
+          for (const item of items) {
             const desc = item.descriptions[langKey] || item.descriptions.english;
             if (!desc || String(desc).trim() === '') continue;
             for (const title of [item.titles[langKey], item.titles.english]) {

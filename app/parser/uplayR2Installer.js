@@ -660,6 +660,22 @@ function canAdoptInstall({ gameDir, loaderPaths = [], exePath = '' } = {}) {
 }
 
 /*
+  May a scan, with nobody watching, swap the loader this folder runs? Only when the release ships none
+  or AW Next repaired the folder before (its .aw-backups snapshot), so a repack update that wiped the
+  setup gets it back. A release's own loader is left to the confirmed repair: EMPRESS's Valhalla
+  looped on "Ubisoft services are unavailable" once a scan had replaced it (#166).
+*/
+function mayReplaceLoaderUnattended({ gameDir, loaderPaths = [] } = {}) {
+  if (!loaderPaths || loaderPaths.length === 0) return true;
+  if (!gameDir) return false;
+  try {
+    return uplayR2.listConfigBackups(gameDir).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/*
   Which emulator generation this install needs: the one it already runs, else the one its executables
   import. A game only ever loads the generation it was linked against, so installing the other one
   would drop a DLL nothing opens - which is exactly how an R1 title ends up looking "repaired" while
@@ -995,6 +1011,7 @@ module.exports = {
   scanFileForLiterals,
   isRegisteredUbisoftInstall,
   canAdoptInstall,
+  mayReplaceLoaderUnattended,
   detectInstallFlavour,
   PACKAGES,
   packageFor,

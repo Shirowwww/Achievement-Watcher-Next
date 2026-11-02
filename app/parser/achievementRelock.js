@@ -18,6 +18,7 @@ const manualUnlock = require(path.join(__dirname, 'manualUnlock.js'));
 const lazy = (file) => require(path.join(__dirname, file));
 
 const X360_SOURCE = 'xbox 360 recomp';
+const PS3_SOURCE = 'ps3 recomp';
 // Their saves are found by their own reader; the record's folder is the game install, never walked.
 const READER_SOURCES = new Set(['xlivelessness', 'ff7 (2013)', 'rune uplay', 'madnesspatch', 'markerpatch']);
 const REFUSED_SOURCES = { 'ps4 recomp': 'ps4-recomp', 'pc port': 'pc-port' };
@@ -62,6 +63,7 @@ function x360Format(name) {
 function formatFor(fileName, source = '') {
   const name = String(fileName || '').toLowerCase();
   if (String(source).trim().toLowerCase() === X360_SOURCE) return x360Format(name);
+  if (String(source).trim().toLowerCase() === PS3_SOURCE) return /^npwr\d{5}\.json$/.test(name) ? 'ps3recomp-json' : null;
   if (REFUSED_FILES[name]) return `refuse:${REFUSED_FILES[name]}`;
   if (name === 'stats.json') return 'stats-json';
   if (INI_FILES.has(name)) return 'ini';
@@ -96,6 +98,7 @@ const EDITORS = {
   'x360-earned-ini': (ctx) => eachTextId(ctx.x360Ids, text.relockEarnedIni),
   'ach-data': (ctx) => eachId(ctx.x360Ids, binary.relockAchData),
   'x360-json': (ctx) => eachId(ctx.x360Ids, (buffer, id) => cleared(lazy('x360RecompFormats.js').clearJsonBuffer(buffer, id))),
+  'ps3recomp-json': (ctx) => ctx.number != null && viaUtf8((source) => lazy('ps3Recomp.js').relockUnlocks(source, ctx.number)),
   xlln: (ctx) => ctx.number != null && ((buffer) => binary.relockXlln(buffer, ctx.number)),
   ff7: (ctx) => ctx.ff7Bit != null && ((buffer) => binary.relockBit(buffer, ctx.ff7Bit)),
   'rune-uplay': (ctx) => viaText((source) => text.relockKeyValues(source, ctx.name)),
@@ -377,6 +380,59 @@ function plan(game, achievement, { gameRunning = null, platform = process.platfo
   }
 }
 
+// Refusals about the game rather than one achievement: any of them stops the whole batch.
+const BATCH_SKIPPED = new Set(['nothing']);
+
+// Edits of several plans, one per file: each file's steps run in turn on the same buffer.
+function mergeEdits(plans) {
+  const byPath = new Map();
+  for (const edit of plans.flatMap((p) => p.edits)) {
+    const key = edit.path.toLowerCase();
+    const known = byPath.get(key);
+    if (known) known.steps.push(...edit.steps);
+    else byPath.set(key, { ...edit, steps: [...edit.steps] });
+  }
+  return [...byPath.values()];
+}
+
+/*
+  One plan for several achievements of a game, so the user confirms once and one backup covers
+  them all. An achievement no save records as unlocked is skipped; any other refusal (a running
+  game, an official platform, a format that cannot relock one entry) refuses the batch.
+*/
+function planMany(game, achievements, options = {}) {
+  const names = [...new Set((Array.isArray(achievements) ? achievements : [achievements]).filter((name) => name != null && name !== '').map(String))];
+  const plans = [];
+  const skipped = [];
+  for (const name of names) {
+    const one = plan(game, name, options);
+    if (one.refusal && BATCH_SKIPPED.has(one.refusal.reason)) skipped.push(name);
+    else if (one.refusal) return { ...one, achievements: [], skipped };
+    else plans.push(one);
+  }
+  if (plans.length === 0) return { ...plan(game, names[0], options), achievements: [], skipped };
+  if (plans.length === 1) {
+    const [only] = plans;
+    return { ...only, achievements: [only.achievement], skipped, stats: only.stat ? [only.stat] : [], manual: [].concat(only.manual || []) };
+  }
+  const registry = [];
+  for (const op of plans.flatMap((p) => p.registry)) {
+    if (!registry.some((known) => known.key === op.key && known.name === op.name)) registry.push(op);
+  }
+  const stats = [...new Set(plans.map((p) => p.stat).filter(Boolean))];
+  return {
+    ...plans[0],
+    achievements: plans.map((p) => p.achievement),
+    skipped,
+    edits: mergeEdits(plans),
+    registry,
+    stat: stats.length === 1 ? stats[0] : null,
+    stats,
+    statUnknown: plans.some((p) => p.statUnknown),
+    manual: plans.map((p) => p.manual).filter(Boolean),
+  };
+}
+
 // Reads and edits one file, backs up and lists the original, then writes. False on the first failure.
 function applyEdit(edit, index, dir, manifest, errors) {
   const fail = (stage, err) => {
@@ -430,8 +486,14 @@ function clearManual(relockPlan, dir, manifest, errors) {
     const key = manualUnlock.gameKey(relockPlan.appid, relockPlan.source);
     manifest.manualUnlocks = { source: relockPlan.source, entries: { ...map[key] } };
     reset.writeManifest(dir, manifest);
-    const result = manualUnlock.update(map, relockPlan.appid, relockPlan.source, relockPlan.manual, 'clear-manual');
-    if (result.changed) manualUnlock.writeMap(sidecar, result.map);
+    let changed = false;
+    let current = map;
+    for (const name of [].concat(relockPlan.manual)) {
+      const result = manualUnlock.update(current, relockPlan.appid, relockPlan.source, name, 'clear-manual');
+      current = result.map;
+      changed = changed || result.changed;
+    }
+    if (changed) manualUnlock.writeMap(sidecar, current);
     return true;
   } catch (err) {
     errors.push({ path: sidecar, stage: 'manual-unlocks', message: err.message || String(err) });
@@ -448,7 +510,18 @@ function run(relockPlan, { now = new Date(), registry = null, gameRunning = null
   if (gameRunning !== false) return { ok: false, refusal: { reason: gameRunning ? 'running' : 'running-unknown' }, errors: [] };
   const { backupId, dir } = reset.freshBackupDir(relockPlan.appid, now);
   fs.mkdirSync(path.join(dir, 'files'), { recursive: true });
-  const manifest = { kind: 'relock', appid: relockPlan.appid, name: relockPlan.name, source: relockPlan.source, achievement: relockPlan.achievement, at: now.toISOString(), files: [], manualUnlocks: null, registry: [] };
+  const manifest = {
+    kind: 'relock',
+    appid: relockPlan.appid,
+    name: relockPlan.name,
+    source: relockPlan.source,
+    achievement: relockPlan.achievement,
+    achievements: relockPlan.achievements || [relockPlan.achievement],
+    at: now.toISOString(),
+    files: [],
+    manualUnlocks: null,
+    registry: [],
+  };
   reset.writeManifest(dir, manifest);
   const errors = [];
   const access = relockPlan.registry.length ? registry || extras.windowsRegistry() : null;
@@ -458,9 +531,9 @@ function run(relockPlan, { now = new Date(), registry = null, gameRunning = null
     editAll(relockPlan.edits.filter((edit) => edit.kind !== 'state')) &&
     (!access || relockRegistry(relockPlan.registry, access, dir, manifest, errors)) &&
     editAll(relockPlan.edits.filter((edit) => edit.kind === 'state')) &&
-    (!relockPlan.manual || clearManual(relockPlan, dir, manifest, errors));
+    ([].concat(relockPlan.manual || []).length === 0 || clearManual(relockPlan, dir, manifest, errors));
   if (!done) return reset.rollBack(relockPlan.appid, backupId, dir, manifest, errors, access);
   return { ok: true, backupId, backupDir: dir, files: manifest.files.length, registry: manifest.registry.length, errors };
 }
 
-module.exports = { plan, run, formatFor, _internal: { contextFor } };
+module.exports = { plan, planMany, run, formatFor, _internal: { contextFor } };

@@ -418,6 +418,7 @@ function excludedFor(root, options = {}) {
 const OTHER_SOURCE_FINDERS = [
   ['x360Recomp.js', (source, dir) => source.discover(dir).map((target) => target.gameDir)],
   ['ps4Recomp.js', (source, dir) => source.findInstallations(dir).map((install) => install.root)],
+  ['ps3Recomp.js', (source, dir) => source.discover(dir).map((target) => target.installRoot)],
   ['pcports.js', (source, dir) => [(source.discover(dir) || {}).root]],
 ];
 

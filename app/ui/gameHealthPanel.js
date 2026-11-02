@@ -221,14 +221,6 @@ function fromProbe(entry, walkHere) {
   return entry && !entry.error ? entry.value : walkHere();
 }
 
-// normalizePathKey comes from app.js, through the page's shared scope.
-function isPathInsideDir(value, root) {
-  if (!value || !root) return false;
-  const childKey = normalizePathKey(value);
-  const rootKey = normalizePathKey(root);
-  return childKey === rootKey || childKey.startsWith(rootKey + path.sep);
-}
-
 async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const game = gameList.find((g) => g.appid == appid) || {};
   let cfg = { exe: '', args: '' };
@@ -251,14 +243,15 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   */
   let gameDir = game.gameDir || '';
   let gameDirExists = !!gameDir && fs.existsSync(gameDir);
-  if (exeExists && (!gameDirExists || isPathInsideDir(exe, gameDir))) {
+  if (exeExists) {
     const derived = await resolveGameDirFromExe(exe);
     /*
-      Also taken when it is a separate install nested in the scanned folder: a repack shipping the
-      base game with an Enhanced Edition inside it has two emulator setups, and the one that matters
-      is the one the configured executable loads. A derived folder outside gameDir is ignored.
+      Also taken when it is a separate install nested in the scanned folder (a repack shipping the
+      base game with an Enhanced Edition inside it), or a sibling of it (a launcher folder beside the
+      game's, MGS4): the setup that matters is the one the configured executable loads.
     */
-    if (derived && (!gameDirExists || (normalizePathKey(derived) !== normalizePathKey(gameDir) && isPathInsideDir(derived, gameDir)))) {
+    const chosen = exeDetect.installDirForConfiguredExe({ gameDir, gameDirExists, derived });
+    if (chosen && chosen !== gameDir) {
       gameDir = derived;
       gameDirExists = true;
       // Carried into the in-memory game as well: the repairs offered by this report, "Open the game

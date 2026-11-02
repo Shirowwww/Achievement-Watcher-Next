@@ -1305,6 +1305,23 @@
                   </li>
 
                   <li class="hasHelper">
+                    <div class="left"><i class="fab fa-playstation"></i> <span>PS3 Recomp</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_ps3recomp">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-ps3recomp"></div>
+                  </li>
+
+                  <li class="hasHelper">
                     <div class="left"><i class="fab fa-xbox"></i> <span>Xbox 360 Recomp</span></div>
                     <div class="right">
                       <div class="previous">
@@ -1623,6 +1640,43 @@
                   </div>
                   <p id="psn-add-status" class="psn-add-status" aria-live="polite"></p>
                   <ul id="psn-add-results" class="psn-add-results"></ul>
+                </div>
+              </div>
+
+              <!-- PlayStation console over FTP: a jailbroken PS3 or PS4 on the home network, no PSN sign-in. -->
+              <div id="psn-ftp" class="settings-card">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="fas fa-network-wired"></i> <span id="psn-ftp-title">Import from a PS3 or PS4</span></div>
+                </div>
+                <p id="psn-ftp-desc">
+                  For a jailbroken console on your home network, when you cannot sign in to PSN. Reads the trophy files over FTP and
+                  never writes anything to the console. The FTP port is 21 on a PS3 and 2121 on a PS4 unless you changed it.
+                </p>
+                <div class="psn-ftp-fields">
+                  <label for="psn-ftp-host"><span id="psn-ftp-host-label">Console IP address</span></label>
+                  <div class="psn-add-field">
+                    <input id="psn-ftp-host" type="text" maxlength="253" autocomplete="off" spellcheck="false" placeholder="192.168.1.50" />
+                  </div>
+                  <label for="psn-ftp-console"><span id="psn-ftp-console-label">Console</span></label>
+                  <select id="psn-ftp-console" autocomplete="off">
+                    <option value="auto" id="psn-ftp-console-auto">Detect automatically</option>
+                    <option value="ps3">PS3</option>
+                    <option value="ps4">PS4</option>
+                  </select>
+                  <label for="psn-ftp-port"><span id="psn-ftp-port-label">FTP port</span></label>
+                  <div class="psn-add-field">
+                    <input id="psn-ftp-port" type="text" inputmode="numeric" maxlength="5" autocomplete="off" spellcheck="false" placeholder="21 / 2121" />
+                  </div>
+                </div>
+                <div class="emulator-login-actions">
+                  <button type="button" id="psn-ftp-btn" class="btn">
+                    <span class="emulator-test-icon"><i class="fas fa-download"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="psn-ftp-btn-label">Import trophies</strong>
+                      <small id="psn-ftp-btn-hint">reads the trophy files over FTP</small>
+                    </span>
+                  </button>
+                  <span id="psn-ftp-status" aria-live="polite"></span>
                 </div>
               </div>
             </section>
@@ -5085,6 +5139,14 @@
                         <option value="false"></option>
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-ps4recomp-hint"></small>
+                    </label>
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fab fa-playstation" aria-hidden="true"></i> PS3 Recomp</span>
+                      <select id="onboard-src-ps3recomp">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-ps3recomp-hint"></small>
                     </label>
                     <label class="onboarding-source-row">
                       <span class="onboarding-source-name"><i class="fab fa-xbox" aria-hidden="true"></i> Xbox 360 Recomp</span>

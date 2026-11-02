@@ -33,6 +33,7 @@ const pcports = require(path.join(appPath, 'pcports.js'));
 const recompPorts = require(path.join(appPath, 'recompPorts.js'));
 const x360Recomp = require(path.join(appPath, 'x360Recomp.js'));
 const ps4Recomp = require(path.join(appPath, 'ps4Recomp.js'));
+const ps3Recomp = require(path.join(appPath, 'ps3Recomp.js'));
 const libraryDirs = require(path.join(appPath, 'libraryDirs.js'));
 const saveRoots = require(path.join(appPath, 'saveRoots.js'));
 const launcherDetect = require(path.join(appPath, 'launcherDetect.js'));
@@ -144,6 +145,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   recompPorts.initDebug({ isDev, userDataPath, listDirectory });
   x360Recomp.initDebug({ isDev, userDataPath });
   ps4Recomp.initDebug({ isDev, userDataPath, listDirectory });
+  ps3Recomp.initDebug({ isDev, userDataPath, listDirectory });
   blacklist.initDebug({ isDev, userDataPath });
   debug = new (require('../util/logger'))({
     console: isDev || false,
@@ -2107,7 +2109,7 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     if (isKnownNonGameToolInstall(dir)) return;
     if (launcherDetect.isOfficialLauncherInstall(dir)) return; // legit launcher game - never "Unconfigured"
     // A PS4 port with trophies is listed by its own source; one without its game yet is not a game.
-    if (ps4Recomp.isPortFolder(dir)) return;
+    if (ps4Recomp.isPortFolder(dir) || ps3Recomp.isPortFolder(dir)) return;
     if (isLinkedSubtree(dir)) return; // this folder already hosts a real-appid game (avoid duplicate)
     // A launcher above an install the appid scan already found (MW4's cod.exe over its GBE sp26
     // folder) is that same game, not a second one to name-match.
@@ -2328,6 +2330,13 @@ async function scanWatchedFolder(dir, source, kytyOptions = kytyps5.excludingOth
       debug.log(`[userdir] ${dir} could not be scanned for PS4 ports: ${scanError(err)}`);
     }
   }
+  if (source.ps3recomp !== false) {
+    try {
+      games.push(...ps3Recomp.scan(dir).filter((g) => !games.some((known) => known.appid === g.appid)));
+    } catch (err) {
+      debug.log(`[userdir] ${dir} could not be scanned for PS3 ports: ${scanError(err)}`);
+    }
+  }
   return { games, appidRoot: claimed.appidRoot };
 }
 
@@ -2384,7 +2393,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
       }
       const { games, appidRoot } = await scanWatchedFolder(dir.path, source, kytyOptions);
       if (appidRoot) additionalSearch.push(dir.path);
-      data = data.concat(games.filter((g) => g.data?.type !== 'ps4recomp' || !data.some((known) => known.appid === g.appid)));
+      data = data.concat(games.filter((g) => !['ps4recomp', 'ps3recomp'].includes(g.data?.type) || !data.some((known) => known.appid === g.appid)));
     }
   } catch (err) {
     debug.log(err);
@@ -2484,6 +2493,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
     if (g.data && g.data.type === 'x360recomp' && g.data.gameDir) _claimedDirs.add(path.resolve(g.data.gameDir).toLowerCase());
     if (g.data && g.data.type === 'ps4recomp') {
       for (const dir of [g.data.installRoot, g.data.dumpDir]) if (dir) _claimedDirs.add(path.resolve(dir).toLowerCase());
+    }
+    if (g.data && g.data.type === 'ps3recomp') {
+      for (const dir of [g.data.installRoot, g.data.gameRoot]) if (dir) _claimedDirs.add(path.resolve(dir).toLowerCase());
     }
   }
 
@@ -3155,6 +3167,8 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return x360Recomp.getAchievements(appid.data);
   } else if (dataType === 'ps4recomp') {
     return ps4Recomp.getAchievements(appid.data);
+  } else if (dataType === 'ps3recomp') {
+    return ps3Recomp.getAchievements(appid.data);
   } else if (dataType === 'socialclub') {
     return await socialclub.getAchievements(appid);
   } else if (dataType === 'lumaplay') {
@@ -3351,6 +3365,8 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       game = await x360Recomp.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'ps4recomp') {
       game = await ps4Recomp.getGameData(appid.data, option.achievement.lang);
+    } else if (appid.data.type === 'ps3recomp') {
+      game = await ps3Recomp.getGameData(appid.data, option.achievement.lang);
     } else if (appid.data.type === 'socialclub') {
       game = await socialclub.getGameData(appid, option.achievement.lang, option);
     } else if (appid.data.type === 'uplay' || appid.data.type === 'lumaplay') {
@@ -3471,7 +3487,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'xlln', 'x360recomp', 'ps4recomp', 'manual', 'unconfigured', 'psnLibrary'].includes(appid.data.type);
+    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'xlln', 'x360recomp', 'ps4recomp', 'ps3recomp', 'manual', 'unconfigured', 'psnLibrary'].includes(appid.data.type);
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*
@@ -3750,9 +3766,18 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           broken && report.mapping
             ? uplayR2.resolveObjectiveKeying({ achievementList: game.achievement.list, uplayId: report.mapping.uplay_id })
             : null;
+        const releaseLoaderKept = (() => {
+          if (!broken || !prefixInfo) return false;
+          const paths = report.dll || [];
+          const inspected = report.loader || uplayR2.inspectInstalledLoaders(paths);
+          const swap = paths.length === 0 || !inspected.supportsAchievements || !inspected.architectureValid;
+          return swap && !uplayR2Installer.mayReplaceLoaderUnattended({ gameDir: resolvedGameDir, loaderPaths: paths });
+        })();
         // Files are about to be written into a game folder with nothing on screen. Said once, before
         // anything is copied - including into AW Next's own loader cache - and it can answer no.
-        if (broken && prefixInfo && !(await announceAutomaticEmulatorFix())) {
+        if (releaseLoaderKept) {
+          debug.log(`[${appid.appid}] the release's own Uplay loader is left as it is: the fix is offered in Game Health, never applied by a scan`);
+        } else if (broken && prefixInfo && !(await announceAutomaticEmulatorFix())) {
           debug.log(`[${appid.appid}] automatic Uplay repair stopped: automatic repair was switched off`);
         } else if (broken && prefixInfo) {
           const loaderPaths = report.dll || [];

@@ -47,6 +47,8 @@ function sanitizeAppIdForPlatform(value, type) {
     case 'ps4recomp':
       // Always namespaced by the parser, so it never meets a Steam appid or a ShadPS4 NPWR id.
       return /^ps4recomp-[A-Z0-9_-]{1,40}$/i.test(raw) ? raw : '';
+    case 'ps3recomp':
+      return /^ps3recomp-NPWR\d{5}_\d{2}$/i.test(raw) ? raw : '';
     case 'xenia':
       return /^(?:0x)?[0-9a-f]+$/i.test(raw) ? raw.replace(/^0x/i, '') : '';
     case 'steam':

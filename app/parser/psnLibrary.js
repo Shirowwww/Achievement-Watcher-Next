@@ -315,6 +315,21 @@ function writeGame(record, meta) {
 }
 
 /*
+  A list read from a console's own files (parser/psnConsoleFtp.js): no pictures, no icons, no rates.
+  A list a PSN import or the catalog saved keeps its richer schema and only gains the unlocks.
+*/
+function writeConsoleList(record) {
+  const { schema, state } = buildGameRecord(record);
+  if (!schema.listId || schema.achievement.list.length === 0) return null;
+  const previous = readSchema(schema.listId);
+  if (previous && !(previous.meta && previous.meta.console)) {
+    writeJson(stateFile(schema.listId), mergeState(readState(schema.listId), state, previous.achievement.list));
+    return { schema: previous, created: false };
+  }
+  return writeGame(record, { console: record.console || true });
+}
+
+/*
   The same list as Sony serves it, from the public trophy-list archive on GitHub: used when Sony
   refuses a list's contents. The archive holds a few languages per list, so English is the fallback.
 */
@@ -608,6 +623,7 @@ module.exports = {
   cleanTitleName,
   platformLabel,
   addOtherList,
+  writeConsoleList,
   readSchema,
   displayNames,
   importLibrary,

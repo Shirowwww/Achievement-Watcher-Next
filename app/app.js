@@ -1009,6 +1009,7 @@ const PROFILE_STATS_CONSOLE_BY_SOURCE = {
   'rpcs3 emulator': 'playstation-3',
   'shadps4 emulator': 'playstation-4',
   'ps4 recomp': 'playstation-4',
+  'ps3 recomp': 'playstation-3',
   'kytyps5 emulator': 'playstation-5',
   'xenia emulator': 'xbox-360',
   'xbox 360 recomp': 'xbox-360',
@@ -2264,10 +2265,11 @@ function repaintGameAfterReset(appid, game) {
   repaintGameView(appid);
 }
 
-function repaintGameAfterRelock(appid, game, name) {
+function repaintGameAfterRelock(appid, game, names) {
   const list = game && game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list : [];
+  const relocked = new Set([].concat(names).map((name) => String(name).toUpperCase()));
   for (const achievement of list) {
-    if (achievement && String(achievement.name).toUpperCase() === String(name).toUpperCase()) lockAchievementEntry(achievement);
+    if (achievement && relocked.has(String(achievement.name).toUpperCase())) lockAchievementEntry(achievement);
   }
   if (game && game.achievement) game.achievement.unlocked = list.filter((achievement) => achievement && achievement.Achieved).length;
   repaintGameView(appid);
@@ -2339,12 +2341,83 @@ function relockConfirmDetail(relockPlan) {
   return detail.join('\n');
 }
 
-function showRelockDone(result) {
+function relockManyConfirmDetail(relockPlan) {
+  const detail = [relockConfirmDetail({ ...relockPlan, stat: null, manual: null })];
+  if (relockPlan.stats.length > 0) {
+    detail.unshift(t('relock-many-detail-stats', 'Their counters go back to 0 too ({stats}); other achievements counted by them may show less progress.', 'Leurs compteurs repassent aussi à 0 ({stats}) ; d’autres succès comptés par eux peuvent afficher moins de progression.', { stats: relockPlan.stats.join(', ') }));
+  }
+  if (relockPlan.manual.length > 0) detail.unshift(t('relock-many-detail-manual', 'Their manual unlocks will be cleared too.', 'Leurs déblocages manuels seront aussi effacés.'));
+  if (relockPlan.skipped.length > 0) {
+    detail.unshift(t('relock-many-detail-skipped', '{count} of them are not unlocked in any save and are left as they are.', '{count} d’entre eux ne sont débloqués dans aucune sauvegarde et restent tels quels.', { count: relockPlan.skipped.length }));
+  }
+  return detail.join('\n');
+}
+
+async function relockManyAchievements(game, appid, names) {
+  const title = t('relock-many-title', 'Re-lock achievements', 'Reverrouiller des succès');
+  let relockPlan;
+  try {
+    relockPlan = achievementRelock.planMany(game, names, { gameRunning: await isAnyGameRunning() });
+  } catch (err) {
+    debug.error(`[relock] planning failed for ${appid} (${names.length} achievements) => ${formatErr(err)}`);
+    showRelockFailure(err);
+    return false;
+  }
+  if (relockPlan.refusal) {
+    const [message, detail] =
+      relockPlan.refusal.reason === 'nothing'
+        ? [t('relock-many-nothing', 'AW Next found no save that records these achievements as unlocked.', 'AW Next n’a trouvé aucune sauvegarde où ces succès sont débloqués.'), '']
+        : relockRefusalText(relockPlan.refusal);
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), { type: 'info', title, message, detail });
+    return false;
+  }
+  const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'warning',
+    title: t('relock-many-confirm-title', 'Re-lock these achievements?', 'Reverrouiller ces succès ?'),
+    message: t('relock-many-confirm-message', '{count} achievements go back to locked in {game}, so the game can unlock them again.', '{count} succès repassent en verrouillé dans {game}, pour que le jeu puisse les débloquer à nouveau.', {
+      count: relockPlan.achievements.length,
+      game: game.name || relockPlan.appid,
+    }),
+    detail: relockManyConfirmDetail(relockPlan),
+    buttons: [t('cancel', 'Cancel', 'Annuler'), t('relock-ach-confirm-button', 'Re-lock', 'Reverrouiller')],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (confirmed !== 1) return false;
+  let result;
+  try {
+    result = achievementRelock.run(relockPlan, { gameRunning: await isAnyGameRunning() });
+  } catch (err) {
+    debug.error(`[relock] failed for ${appid} (${relockPlan.achievements.length} achievements) => ${formatErr(err)}`);
+    showRelockFailure(err);
+    return false;
+  }
+  if (result.refusal) {
+    const [message, detail] = relockRefusalText(result.refusal);
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), { type: 'info', title, message, detail });
+    return false;
+  }
+  if (!result.ok) {
+    debug.error(`[relock] rolled back for ${appid}: ${result.errors.map((entry) => `${entry.stage} ${entry.message}`).join('; ')}`);
+    showRelockFailure(runFailureText(result));
+    return false;
+  }
+  await relockWatchdogBaseline([...new Set([game.appid, game.steamappid].filter((id) => id != null && id !== '').map(String))], relockPlan.achievements);
+  repaintGameAfterRelock(appid, game, relockPlan.achievements);
+  showRelockDone(result, relockPlan.achievements.length);
+  return true;
+}
+
+function showRelockDone(result, count = 1) {
   const backup = t('reset-ach-done-detail', 'Backup: {path}', 'Sauvegarde : {path}', { path: result.backupDir });
   const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
     type: result.errors.length > 0 ? 'warning' : 'info',
-    title: t('relock-ach-done-title', 'Achievement re-locked', 'Succès reverrouillé'),
-    message: t('relock-ach-done-message', 'Unlock it again in game and it will be announced as new.', 'Débloque-le à nouveau en jeu et il sera annoncé comme neuf.'),
+    title: count > 1 ? t('relock-many-done-title', 'Achievements re-locked', 'Succès reverrouillés') : t('relock-ach-done-title', 'Achievement re-locked', 'Succès reverrouillé'),
+    message:
+      count > 1
+        ? t('relock-many-done-message', 'Unlock them again in game and they will be announced as new.', 'Débloque-les à nouveau en jeu et ils seront annoncés comme neufs.')
+        : t('relock-ach-done-message', 'Unlock it again in game and it will be announced as new.', 'Débloque-le à nouveau en jeu et il sera annoncé comme neuf.'),
     detail: [backup, ...result.errors.map((entry) => `• ${entry.path} - ${entry.message}`)].join('\n'),
     buttons: [t('ok', 'OK', 'OK'), t('open-backup-folder', 'Open backup folder', 'Ouvrir la sauvegarde')],
     defaultId: 0,
@@ -2835,6 +2908,7 @@ const EMU_LOCAL_ICON_SOURCES = new Set([
   'XLiveLessNess',
   'Xbox 360 Recomp',
   'PS4 Recomp',
+  'PS3 Recomp',
   'MarkerPatch',
   'MadnessPatch',
   'PC Port',
@@ -3095,7 +3169,7 @@ function isLegitSteamLibraryGame(game) {
 // An unrecognised label falls silently through to the Steam badge, so every `source:` literal in
 // app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
 const SOURCE_BADGE = {
-  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator|ps4 recomp|playstation network)$/,
+  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator|ps4 recomp|ps3 recomp|playstation network)$/,
   xbox: /^(?:xenia emulator|xlivelessness|xbox 360 recomp|xbox pc)$/,
   epic: /^epic(?:-official)?$/,
   gog: /^(?:gog|gog galaxy)$/,
@@ -3562,6 +3636,16 @@ function ownershipBadgeFor(game) {
         'ps4-recomp-badge',
         "PlayStation 4 game ported to run natively on PC. Its trophies are read from the original game and the port's own logs.",
         "Jeu PlayStation 4 porté pour tourner nativement sur PC. Ses trophées sont lus depuis le jeu d'origine et les journaux du portage."
+      ),
+    };
+  }
+  if (!label && game && game.source === 'PS3 Recomp') {
+    return {
+      state: 'recomp',
+      label: t(
+        'ps3-recomp-badge',
+        "PlayStation 3 game recompiled to run natively on PC. Its trophies are read from the original game and the port's own save.",
+        "Jeu PlayStation 3 recompilé pour tourner nativement sur PC. Ses trophées sont lus depuis le jeu d'origine et la sauvegarde du portage."
       ),
     };
   }
@@ -4290,6 +4374,21 @@ async function resolveGameDirFromExe(exePath) {
   }
   const derived = exeDetect.gameDirForExe(exePath, { blockedRoots });
   return derived && fs.existsSync(derived) ? derived : '';
+}
+
+// The folder the emulator fix writes into, by the same rule Game Health reports on: the user's
+// configured executable wins when it sits in a nested or sibling folder of the scanned one.
+async function installDirForConfiguredExe(appid, gameDir) {
+  let cfg = null;
+  try {
+    cfg = await exeList.get(appid);
+  } catch (err) {
+    debug.log(`[emu-fix] exeList lookup failed for ${appid} => ${formatErr(err)}`);
+    return gameDir;
+  }
+  if (!cfg || !cfg.exe || !fs.existsSync(cfg.exe)) return gameDir;
+  const derived = await resolveGameDirFromExe(cfg.exe);
+  return exeDetect.installDirForConfiguredExe({ gameDir, gameDirExists: !!gameDir && fs.existsSync(gameDir), derived }) || gameDir;
 }
 
 /*
@@ -5924,6 +6023,7 @@ var app = {
                     // Reuse the install folder discover() already found instead of asking the
                     // user to re-browse to it; only prompt when it's genuinely unknown.
                     let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                    if (gameDir) gameDir = await installDirForConfiguredExe(appid, gameDir);
                     if (!gameDir) {
                       const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                         title: t('select-install-folder-emulator-dll', "Select the game's install folder (where the emulator .dll is)", "Sélectionne le dossier d'installation du jeu (où se trouve la .dll de l'émulateur)"),
@@ -6169,6 +6269,7 @@ var app = {
                       // it's genuinely unknown (e.g. a manually-added custom-dir game).
                       const game = list.find((g) => g.appid == appid);
                       let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                      if (gameDir) gameDir = await installDirForConfiguredExe(appid, gameDir);
                       if (!gameDir) {
                         const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                           title: t('select-install-folder-steam-api', "Select the game's install folder (where steam_api(64).dll should go)", "Sélectionne le dossier d'installation du jeu (où doit aller steam_api(64).dll)"),
@@ -6534,6 +6635,7 @@ var app = {
                     try {
                       const game = list.find((g) => g.appid == appid);
                       let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                      if (gameDir) gameDir = await installDirForConfiguredExe(appid, gameDir);
                       if (!gameDir) {
                         const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                           title: t('select-game-install-folder', "Select the game's install folder", "Choisir le dossier d'installation du jeu"),
@@ -6661,6 +6763,7 @@ var app = {
                     try {
                       const game = list.find((g) => g.appid == appid);
                       let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                      if (gameDir) gameDir = await installDirForConfiguredExe(appid, gameDir);
                       if (!gameDir) {
                         const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                           title: t('select-install-folder-uplay-r2-loader', "Select the game's install folder (where the Uplay R1/R2 loader .dll should go)", "Sélectionne le dossier d'installation du jeu (où doit aller la .dll du loader Uplay R1/R2)"),
@@ -6699,6 +6802,7 @@ var app = {
                     try {
                       const game = list.find((g) => g.appid == appid);
                       let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                      if (gameDir) gameDir = await installDirForConfiguredExe(appid, gameDir);
                       if (!gameDir) {
                         const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                           title: t('select-install-folder-uplay-r2-loader-diagnose', "Select the game's install folder (where the Uplay R1/R2 loader .dll is)", "Sélectionne le dossier d'installation du jeu (où se trouve la .dll du loader Uplay R1/R2)"),
@@ -6724,6 +6828,7 @@ var app = {
                     try {
                       const game = list.find((g) => g.appid == appid);
                       let gameDir = game?.gameDir && fs.existsSync(game.gameDir) ? game.gameDir : null;
+                      if (gameDir) gameDir = await installDirForConfiguredExe(appid, gameDir);
                       if (!gameDir) {
                         const picked = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
                           title: t('select-game-install-folder', "Select the game's install folder", "Choisir le dossier d'installation du jeu"),
@@ -7087,7 +7192,7 @@ var app = {
                 })
               );
               addPcgw('PCGamingWiki');
-            } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower === 'ps4 recomp' || sourceLower.includes('xenia')) {
+            } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower === 'ps4 recomp' || sourceLower === 'ps3 recomp' || sourceLower.includes('xenia')) {
               addPcgw('PCGamingWiki');
             } else if (sourceLower.includes('uplay') || sourceLower === 'lumaplay' || sourceLower.includes('ubisoft')) {
               linkMenu.append(
@@ -8072,6 +8177,26 @@ var app = {
       return { changed: false };
     }
   },
+  // The same override for every row picked in the game view, saved together and repainted once.
+  manualUnlockManyAction: async function (appid, source, names, action) {
+    let changed = false;
+    try {
+      const file = manualUnlock.sidecarFile();
+      if (!file) return { changed: false };
+      let map = manualUnlock.readMap(file);
+      for (const name of names || []) {
+        const result = manualUnlock.update(map, appid, source, name, action);
+        map = result.map;
+        changed = changed || result.changed;
+      }
+      if (changed) manualUnlock.writeMap(file, map);
+    } catch (err) {
+      debug.warn(`[manualUnlock] ${err && err.stack ? err.stack : err}`);
+      return { changed: false };
+    }
+    if (changed) repaintGameView(appid);
+    return { changed };
+  },
   // Opens or closes a row's steps; `focusNew` puts the cursor in the field that adds one.
   toggleAchievementSteps: function (name, { open, focusNew = false } = {}) {
     const appid = $('#achievement .wrapper > .header').attr('data-appid');
@@ -8303,9 +8428,11 @@ var app = {
   },
   // Re-locks one achievement so the game can unlock it again and AW Next announces it as new. Same
   // safety as the reset: the user approves the file list, and everything touched is backed up first.
+  // `name` can be a list of rows picked together: one plan, one confirmation, one backup.
   relockAchievementAction: async function (appid, name) {
     const game = gameList.find((g) => g && String(g.appid) === String(appid));
     if (!game) return false;
+    if (Array.isArray(name)) return relockManyAchievements(game, appid, name);
     let relockPlan;
     try {
       relockPlan = achievementRelock.plan(game, name, { gameRunning: await isAnyGameRunning() });
@@ -9042,7 +9169,7 @@ var app = {
       // (util/manualGameDetect.js), so the dialog says whether its achievements will follow.
       const manualGameDetect = require(path.join(appPath, 'util/manualGameDetect.js'));
       const manualSteam = require(path.join(appPath, 'parser/steam.js'));
-      const MANUAL_DETECT_SOURCES = { steamEmu: true, rpcs3: true, shadps4: true, kytyps5: true, xenia: true, xlln: true, markerpatch: true, madnesspatch: true, pcports: true, socialClub: true, ps4recomp: true };
+      const MANUAL_DETECT_SOURCES = { steamEmu: true, rpcs3: true, shadps4: true, kytyps5: true, xenia: true, xlln: true, markerpatch: true, madnesspatch: true, pcports: true, socialClub: true, ps4recomp: true, ps3recomp: true };
       const manualDialog = $('#manual-game');
       const manualPicker = $('#manual-game-pick-exe');
       let manualExe = '';

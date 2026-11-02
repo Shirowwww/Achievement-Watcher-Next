@@ -72,7 +72,7 @@ function legacyPresetAlias(name) {
 const EMULATOR_PLATFORM_BY_SOURCE = {
   // A recompiled game follows the preset chosen for its console.
   xenia: ['xenia', 'xenia emulator', 'xbox 360 recomp'],
-  rpcs3: ['rpcs3', 'rpcs3 emulator'],
+  rpcs3: ['rpcs3', 'rpcs3 emulator', 'ps3 recomp'],
   shadps4: ['shadps4', 'shadps4 emulator', 'ps4 recomp'],
   kytyps5: ['kyty', 'kytyps5', 'kytyps5 emulator'],
 };

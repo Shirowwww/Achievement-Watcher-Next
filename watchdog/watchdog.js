@@ -99,6 +99,7 @@ const pcportsWatch = require('./console/pcportsWatch.js');
 const recompPortsWatch = require('./console/recompPortsWatch.js');
 const x360RecompWatch = require('./console/x360RecompWatch.js');
 const ps4RecompWatch = require('./console/ps4RecompWatch.js');
+const ps3RecompWatch = require('./console/ps3RecompWatch.js');
 const eaWatch = require('./console/eaWatch.js');
 const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
@@ -114,6 +115,7 @@ const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
 const psnTrophyLink = require('./util/psnTrophyLink.js');
 const { withCompletionPopup } = require('./util/completionPopup.js');
+const { withLibraryReport } = require('./util/libraryUnlockReport.js');
 const { platinumLikeForGame } = require('./util/platinumLike.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
@@ -203,6 +205,7 @@ const NEW_FOLDER_NOTIFY_MAX = 10;
     recompports  recompiled ports with their own unlock file (Dusklight, Ghostship, DKR-R...)
     x360recomp  Xbox 360 games recompiled for PC, their own unlock lists
     ps4recomp  PC ports of PS4 games, the trophies.log and last_run.log in each port's user folder
+    ps3recomp  PS3Recomp ports of PS3 games, the gamedata/trophies/<NPWR>.json their runtime rewrites
     gog      GOG Galaxy's gameplay.db, rewritten the moment an achievement pops
     ubisoft  Ubisoft Connect's spool files, protobuf unlock records appended on the spot
     rune-uplay  RUNE's Ubisoft emulator, one achievements.cfg per user and product under Documents
@@ -221,6 +224,7 @@ const CONSOLE_WATCHERS = [
   { name: 'recompports', watcher: recompPortsWatch },
   { name: 'x360recomp', watcher: x360RecompWatch },
   { name: 'ps4recomp', watcher: ps4RecompWatch },
+  { name: 'ps3recomp', watcher: ps3RecompWatch },
   { name: 'gog', watcher: gogWatch },
   { name: 'ubisoft', watcher: ubisoftWatch },
   { name: 'rune-uplay', watcher: runeUplayWatch },
@@ -1037,7 +1041,10 @@ var app = {
       */
       const souvenirNotify = withSouvenir(notify, () => self.options);
       const completionNotify = withCompletionPopup(souvenirNotify, () => self.options);
-      const watcherNotify = (payload, opts) => completionNotify(psnTrophyLink.withLinkedTrophy(self.options, payload), opts);
+      const watcherNotify = withLibraryReport(
+        (payload, opts) => completionNotify(psnTrophyLink.withLinkedTrophy(self.options, payload), opts),
+        reportUnlockToApp
+      );
       for (const entry of CONSOLE_WATCHERS) {
         try {
           await entry.watcher.start({

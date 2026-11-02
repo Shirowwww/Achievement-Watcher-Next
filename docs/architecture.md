@@ -190,7 +190,8 @@ A source with its own identity (a store, a console emulator) is a parser of its 
 Current integrations: Steam (client and emulator saves), Goldberg/GBE-compatible saves, Goldberg
 SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, RetroAchievements, PlayStation Network
 (the signed-in account's trophy lists), GreenLuma, LumaPlay, SmartSteamEmu, RPCS3, ShadPS4, KytyPS5,
-Xenia, Xbox 360 recompilations, PC ports of PS4 games (`ps4Recomp*.js`), recompiled PC ports with
+Xenia, Xbox 360 recompilations, PC ports of PS4 games (`ps4Recomp*.js`), PS3Recomp ports of PS3 games
+(`ps3Recomp.js`: the disc's `TROPDIR` TRP, the runtime's `gamedata/trophies/<NPWR>.json`), recompiled PC ports with
 their own unlock files (`recompPorts.js`, its table and formats, with Quiver Launcher's library read
 by `quiver.js`), XLiveLessNess (Games for Windows LIVE) and FINAL FANTASY VII (2013). Some platforms have both a legacy mapped-save parser and
 a newer official or local one.

@@ -543,6 +543,9 @@ function ownLayoutGames(dir) {
     // A PC port of a PS4 game: its install folder, the unlock logs being in its user folder.
     for (const install of require('./ps4Recomp.js').findInstallations(dir)) games.push({ code: 'recompilation', gameRoot: install.root, dataPath: install.root });
   });
+  ask(() => {
+    for (const target of require('./ps3Recomp.js').discover(dir)) games.push({ code: 'recompilation', gameRoot: target.installRoot, dataPath: target.trophiesDir });
+  });
   return games;
 }
 

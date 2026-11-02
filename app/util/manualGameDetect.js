@@ -43,6 +43,7 @@ const FOLDER_TYPES = {
   xenia: { kind: 'console-emulator', name: 'Xenia', platform: 'Xbox' },
   x360recomp: { kind: 'recomp', name: 'Xbox 360 Recomp', platform: 'PC' },
   ps4recomp: { kind: 'recomp', name: 'PS4 Recomp', platform: 'PC' },
+  ps3recomp: { kind: 'recomp', name: 'PS3 Recomp', platform: 'PC' },
   pcports: { kind: 'recomp', name: 'PC Port', platform: 'PC' },
   xlln: { kind: 'patch', name: 'XLiveLessNess', platform: 'PC' },
   markerpatch: { kind: 'patch', name: 'MarkerPatch', platform: 'PC' },

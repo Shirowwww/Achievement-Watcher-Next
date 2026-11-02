@@ -650,12 +650,9 @@ function indexExophaseAwards(items) {
   return index;
 }
 
-// Match fetched Exophase awards (titled items with rarityPct) against the game's achievement list
-// and return [{ name, percent }] keyed by the schema's own achievement ids.
-function matchExophaseRarityToAchievements(achievements, items) {
+// Schema id -> Exophase award, by title and description in any language the page was read in.
+function matchAwardsByText(list, items) {
   const { keyMap, keyDupes, titleMap, titleDupes, descriptionMap, descriptionDupes } = indexExophaseAwards(items);
-
-  const list = Array.isArray(achievements) ? achievements : [];
   const descriptionCount = new Map();
   for (const ach of list) {
     const key = normalizeExophaseMatchText(getSchemaLocalizedTextForRarity(ach && ach.description));
@@ -688,7 +685,40 @@ function matchExophaseRarityToAchievements(achievements, items) {
     }
     if (match) byName.set(String(ach.name), match);
   }
+  return byName;
+}
 
+// Titles a list uses for an award it does not show yet; they say nothing about which game it is.
+const PLACEHOLDER_TITLE_RE = /^(?:(?:trophy|achievement|ach)(?: \d+)?|(?:hidden|secret|unknown|locked)(?: (?:trophy|achievement))?(?: \d+)?)$/;
+const AGREEMENT_RATIO = 0.7;
+const AGREEMENT_MIN_MATCHES = 3;
+
+/*
+  Whether an Exophase page lists this game's awards. A slug guessed from a name can open another
+  game filed under the same words, and its rates then landed on whichever titles coincided. Most of
+  the comparable awards must match by text, or the whole list by console order and grade; a list
+  with no real title to compare by is not judged.
+*/
+function exophasePageAgrees(achievements, items) {
+  const list = (Array.isArray(achievements) ? achievements : []).filter((ach) => ach && ach.name != null);
+  const references = list.filter((ach) => {
+    const title = normalizeExophaseMatchText(getSchemaLocalizedTextForRarity(ach.displayName));
+    return title && !PLACEHOLDER_TITLE_RE.test(title);
+  });
+  if (references.length === 0) return true;
+  const awards = Array.isArray(items) ? items : [];
+  if (awards.length === 0) return false;
+  if (matchByTrophyOrder(list, awards)) return true;
+  const matched = matchAwardsByText(references, awards).size;
+  const compared = Math.min(references.length, awards.length);
+  return matched >= Math.min(AGREEMENT_MIN_MATCHES, compared) && matched / compared >= AGREEMENT_RATIO;
+}
+
+// Match fetched Exophase awards (titled items with rarityPct) against the game's achievement list
+// and return [{ name, percent }] keyed by the schema's own achievement ids.
+function matchExophaseRarityToAchievements(achievements, items) {
+  const list = Array.isArray(achievements) ? achievements : [];
+  const byName = matchAwardsByText(list, items);
   const byOrder = matchByTrophyOrder(list, items);
   const agrees = byOrder && [...byName].every(([name, item]) => byOrder.get(name) === item);
   const matches = agrees ? byOrder : byName;
@@ -777,6 +807,10 @@ async function searchExophaseTrophyLists(query, { requestImpl = request } = {}) 
 async function fetchExophaseRarityBySlug({ slug, platform, achievements = [] } = {}) {
   const exo = await fetchExophaseAchievementsMultiLang({ slug, platform: mapExophasePlatform(platform), langKeys: ['english'], langMap: EXOPHASE_LANG_MAP });
   if (!exo || !exo.items || !exo.items.length) return [];
+  if (!exophasePageAgrees(achievements, exo.items)) {
+    debug.log(`[exophase] ${slug}: the page lists another game's awards, not used`);
+    return [];
+  }
   return matchExophaseRarityToAchievements(achievements, exo.items);
 }
 
@@ -798,9 +832,13 @@ async function fetchExophaseRarity({ gameName = '', platform = 'rpcs3', achievem
         langMap: EXOPHASE_LANG_MAP,
         deadline,
       });
-      if (result && result.items && result.items.length) {
+      if (result && result.items && result.items.length && exophasePageAgrees(achievements, result.items)) {
         exo = result;
         break;
+      }
+      if (result && result.items && result.items.length) {
+        debug.log(`[exophase] ${slug}: the page lists another game's awards, trying the next one`);
+        firstErr = firstErr || new Error(`Exophase page ${slug} does not match the local achievement list`);
       }
     } catch (err) {
       firstErr = firstErr || err;
@@ -823,6 +861,7 @@ module.exports.downloadExophaseIcon = downloadExophaseIcon;
 module.exports.normalizeExophaseRarityPct = normalizeExophaseRarityPct;
 module.exports.buildExophaseRaritySlugCandidates = buildExophaseRaritySlugCandidates;
 module.exports.matchExophaseRarityToAchievements = matchExophaseRarityToAchievements;
+module.exports.exophasePageAgrees = exophasePageAgrees;
 module.exports.fetchExophaseRarity = fetchExophaseRarity;
 module.exports.searchExophaseTitles = searchExophaseTitles;
 module.exports.searchExophaseTrophyLists = searchExophaseTrophyLists;

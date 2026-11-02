@@ -398,6 +398,10 @@ module.exports.load = () => {
       options.achievement_source.ps4recomp = true;
     }
 
+    if (typeof options.achievement_source.ps3recomp !== 'boolean') {
+      options.achievement_source.ps3recomp = true;
+    }
+
     if (typeof options.achievement_source.xenia !== 'boolean') {
       options.achievement_source.xenia = true;
     }
@@ -762,6 +766,7 @@ module.exports.load = () => {
         shadps4: true,
         kytyps5: true,
         ps4recomp: true,
+        ps3recomp: true,
         x360recomp: true,
         xenia: true,
         xlln: true,

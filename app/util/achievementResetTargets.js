@@ -24,6 +24,8 @@ const ACTION = {
 
 const X360_RECOMP_SOURCE = 'xbox 360 recomp';
 const PS4_RECOMP_SOURCE = 'ps4 recomp';
+const PS3_RECOMP_SOURCE = 'ps3 recomp';
+const PS3_RECOMP_UNLOCKS = /^npwr\d{5}\.json$/;
 
 /*
   Emulator save files, mirroring the list watchdog/monitor.js watches (keep both in sync). Matched
@@ -79,6 +81,8 @@ function resetActionFor(fileName, source = '') {
   }
   // A PS4 port's user folder also holds the game's own saves; its unlock logs are not reset from here.
   if (String(source || '').trim().toLowerCase() === PS4_RECOMP_SOURCE) return null;
+  // A PS3 port's gamedata/trophies holds its unlock files only, and a missing one reads as none.
+  if (String(source || '').trim().toLowerCase() === PS3_RECOMP_SOURCE) return PS3_RECOMP_UNLOCKS.test(name) ? ACTION.DELETE : null;
   if (SAVE_FILES.has(name)) return ACTION.DELETE;
   // RAZOR1911's `achievement` only in its own root: the name alone is too common to delete elsewhere.
   if (name === 'achievement') return String(source || '').trim().toLowerCase() === 'razor1911' ? ACTION.DELETE : null;

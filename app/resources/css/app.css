@@ -7472,6 +7472,28 @@ body.is-resizing #game-list {
 #settings .psn-add-status.error {
   color: color-mix(in srgb, var(--danger) 78%, var(--text));
 }
+/* PlayStation console card: three labelled fields in a plain two-column form. */
+#settings .psn-ftp-fields {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 320px);
+  gap: 10px 14px;
+  align-items: center;
+  margin: 12px 0 14px;
+}
+#settings .psn-ftp-fields > label {
+  color: var(--set-title);
+  font-family: var(--font-strong);
+  font-size: var(--fs-md);
+}
+#settings .psn-ftp-fields select {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--set-control-border);
+  border-radius: var(--radius-sm);
+  background: var(--set-control-bg);
+  color: var(--text);
+  font-size: var(--fs-base);
+}
 #settings .psn-add-results {
   display: grid;
   gap: 4px;
@@ -15588,6 +15610,12 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   content: " ✓";
   color: var(--warning);
   font-weight: 700;
+}
+
+/* Rows picked with Ctrl or Shift for one right-click action on all of them. */
+#achievement .achievement-list .achievement.is-picked {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 /* Custom theme editor (Settings > General > Theme > Custom…) */

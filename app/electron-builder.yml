@@ -70,6 +70,8 @@ asarUnpack:
   - parser/ps4RecompPackages.js
   - parser/ps4RecompPyInstaller.js
   - parser/ps4RecompSchema.js
+  - parser/ps3Recomp.js
+  - util/elf.js
   - parser/xex.js
   # Started as a worker thread or a forked process by xex.js, which cannot load it from the asar.
   - parser/xexWorker.js

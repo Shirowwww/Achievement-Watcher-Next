@@ -480,7 +480,30 @@ function gameDirForExe(exePath, { blockedRoots = [] } = {}) {
   return isGameCollectionFolder(dir, blockedRoots) ? '' : dir;
 }
 
+const dirKey = (p) => {
+  const resolved = path.resolve(String(p));
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+};
+
+/*
+  The install folder to report on once the user picked an executable whose folder (`derived`, from
+  gameDirForExe) differs from the scanned one. A nested install is the one that exe loads, and so is
+  a sibling: a launcher in <root>/Launcher with the game in <root>/MGS4. Anything further away is
+  some other program and leaves the scanned folder alone.
+*/
+function installDirForConfiguredExe({ gameDir = '', gameDirExists = false, derived = '' } = {}) {
+  if (!derived) return gameDir;
+  if (!gameDir || !gameDirExists) return derived;
+  const own = dirKey(gameDir);
+  const other = dirKey(derived);
+  if (other === own) return gameDir;
+  if (other.startsWith(own + path.sep)) return derived;
+  const parent = path.dirname(own);
+  return parent !== own && path.dirname(other) === parent ? derived : gameDir;
+}
+
 module.exports = {
+  installDirForConfiguredExe,
   detect,
   detectConfident,
   shallowGameExe,

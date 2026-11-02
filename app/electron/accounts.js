@@ -795,6 +795,37 @@ ipcMain.handle('psn:import', async (event, opts = {}) => {
   }
 });
 
+/*
+  Trophies read from a jailbroken PS3 or PS4 over FTP, for those who cannot sign in to PSN. Anonymous
+  login only, home-network addresses only; the lists join the PSN library's cache.
+*/
+let consoleImport = null;
+ipcMain.handle('psn:console-import', async (_event, request = {}) => {
+  if (consoleImport) return { ok: false, error: 'ftp-busy' };
+  const psnLibrary = require(path.join(__dirname, '../parser/psnLibrary.js'));
+  psnLibrary.setUserDataPath(userData);
+  consoleImport = require(path.join(__dirname, '../parser/psnConsoleFtp.js'))
+    .importFromConsole({
+      host: String(request.host || '').slice(0, 300),
+      console: String(request.console || 'auto'),
+      port: String(request.port ?? '').slice(0, 10),
+      tmpRoot: path.join(userData, 'cache', 'console-ftp'),
+      log: (line) => debug.log(line),
+    })
+    .finally(() => {
+      consoleImport = null;
+    });
+  try {
+    const result = await consoleImport;
+    const win = getMainWindow();
+    if (result.created + result.updated > 0 && win && !win.isDestroyed()) win.webContents.send('psn:library-changed');
+    return { ok: true, result };
+  } catch (err) {
+    debug.log(`[psn-ftp] import failed: ${errorCode(err)}`);
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
 let psnLoginWindow = null;
 ipcMain.handle('psn:login', async () => {
   if (psnLoginWindow && !psnLoginWindow.isDestroyed()) {

@@ -2477,7 +2477,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
             setStatus(psnImportErrorText(res.error), 'error');
             return;
           }
-          const summary = psnImportText(res.result);
+          const summary = psnImportText(res.result, { sourceOff: $('#option_psnLibrary').val() === 'false' });
           setStatus(summary.text, summary.kind);
           if ((res.result.created || 0) + (res.result.updated || 0) > 0) app.onStart(); // show the new and updated games
         } catch (err) {
@@ -2601,6 +2601,58 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
       window.addEventListener('aw-accounts-changed', refresh);
       refresh();
+    })();
+
+    // PlayStation console card (Settings > Sources): trophies of a jailbroken PS3 or PS4 over FTP.
+    (function () {
+      const status = $('#psn-ftp-status');
+      const button = $('#psn-ftp-btn');
+      const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      const { psnConsoleErrorText, psnImportText } = require(path.join(appPath, 'util/psnMessages.js'));
+
+      registerLocaleRefresh(function applyPsnConsoleLabels() {
+        $('#psn-ftp-title').text(t('psn-ftp-title', 'Import from a PS3 or PS4', 'Importer depuis une PS3 ou PS4'));
+        $('#psn-ftp-desc').text(
+          t(
+            'psn-ftp-desc',
+            'For a jailbroken console on your home network, when you cannot sign in to PSN. Reads the trophy files over FTP and never writes anything to the console. The FTP port is 21 on a PS3 and 2121 on a PS4 unless you changed it.',
+            'Pour une console débridée de ton réseau local, quand tu ne peux pas te connecter au PSN. Lit les fichiers de trophées en FTP et n’écrit rien sur la console. Le port FTP est 21 sur PS3 et 2121 sur PS4, sauf si tu l’as changé.'
+          )
+        );
+        $('#psn-ftp-host-label').text(t('psn-ftp-host-label', 'Console IP address', 'Adresse IP de la console'));
+        $('#psn-ftp-console-label').text(t('psn-ftp-console-label', 'Console', 'Console'));
+        $('#psn-ftp-console-auto').text(t('psn-ftp-console-auto', 'Detect automatically', 'Détecter automatiquement'));
+        $('#psn-ftp-port-label').text(t('psn-ftp-port-label', 'FTP port', 'Port FTP'));
+        $('#psn-ftp-btn-label').text(t('psn-ftp-btn-label', 'Import trophies', 'Importer les trophées'));
+        $('#psn-ftp-btn-hint').text(t('psn-ftp-btn-hint', 'reads the trophy files over FTP', 'lit les fichiers de trophées en FTP'));
+      });
+
+      async function runConsoleImport() {
+        button.addClass('disabled').css('pointer-events', 'none');
+        setStatus(t('psn-ftp-running', 'Reading the trophies of the console…', 'Lecture des trophées de la console…'), 'running');
+        try {
+          const res =
+            (await ipcRenderer.invoke('psn:console-import', {
+              host: String($('#psn-ftp-host').val() || '').trim(),
+              console: String($('#psn-ftp-console').val() || 'auto'),
+              port: String($('#psn-ftp-port').val() || '').trim(),
+            })) || {};
+          if (!res.ok) {
+            setStatus(psnConsoleErrorText(res.error), 'error');
+            return;
+          }
+          const summary = psnImportText(res.result, { sourceOff: $('#option_psnLibrary').val() === 'false' });
+          setStatus(summary.text, summary.kind);
+        } catch (err) {
+          setStatus(psnConsoleErrorText(err.message || String(err)), 'error');
+        } finally {
+          button.removeClass('disabled').css('pointer-events', '');
+        }
+      }
+
+      button.off('click').on('click', function () {
+        if (!button.hasClass('disabled')) runConsoleImport();
+      });
     })();
 
     // Bind on the controls themselves as well as using a bubbling event above. This keeps the

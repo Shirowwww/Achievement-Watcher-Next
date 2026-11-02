@@ -16,6 +16,8 @@ const RETAIL_TROPHY_KEY = '21F41A6BAD8A1D3ECA7AD586C101B7A9';
 
 const TRP_MAGIC = 0xdca24d00;
 const TRP_HEADER_SIZE = 0x60;
+// A PS3 TROPHY.TRP has the same entry table after a shorter header.
+const PS3_TRP_HEADER_SIZE = 0x40;
 const TRP_ENTRY_MIN = 0x40;
 const TRP_ENTRY_MAX = 0x1000;
 const TRP_MAX_ENTRIES = 4096;
@@ -74,15 +76,16 @@ function entryName(buffer, at) {
 }
 
 // The named entries of a trophy container, or null when it is not one; an entry out of bounds voids it.
-function readTrp(buffer) {
-  if (!Buffer.isBuffer(buffer) || buffer.length < TRP_HEADER_SIZE || buffer.readUInt32BE(0) !== TRP_MAGIC) return null;
+function readTrp(buffer, headerSize = TRP_HEADER_SIZE) {
+  if (headerSize !== TRP_HEADER_SIZE && headerSize !== PS3_TRP_HEADER_SIZE) return null;
+  if (!Buffer.isBuffer(buffer) || buffer.length < headerSize || buffer.readUInt32BE(0) !== TRP_MAGIC) return null;
   const count = buffer.readUInt32BE(16);
   const stride = buffer.readUInt32BE(20);
   if (count > TRP_MAX_ENTRIES || stride < TRP_ENTRY_MIN || stride > TRP_ENTRY_MAX) return null;
-  if (TRP_HEADER_SIZE + count * stride > buffer.length) return null;
+  if (headerSize + count * stride > buffer.length) return null;
   const files = new Map();
   for (let index = 0; index < count; index++) {
-    const at = TRP_HEADER_SIZE + index * stride;
+    const at = headerSize + index * stride;
     const offset = Number(buffer.readBigUInt64BE(at + 32));
     const size = Number(buffer.readBigUInt64BE(at + 40));
     if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(size) || size > MAX_ENTRY_BYTES || offset + size > buffer.length) return null;
@@ -395,6 +398,7 @@ function readKeyFile(file) {
 module.exports = {
   RETAIL_TROPHY_KEY,
   MAX_TRP_BYTES,
+  PS3_TRP_HEADER_SIZE,
   MAX_SMALL_BYTES,
   LANGUAGE_BY_CODE,
   readBounded,

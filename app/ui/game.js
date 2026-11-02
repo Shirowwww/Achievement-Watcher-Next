@@ -252,13 +252,93 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       }
     });
 
+    /*
+      Ctrl+click picks a row, Shift+click the visible rows from the last one picked: a right-click on
+      a picked row then acts on all of them, with one confirmation. A plain click or Escape drops the
+      pick. Names are read with attr(): data() would turn "0123" into a number.
+    */
+    const pickableRows = () => $('#achievement .achievement-list ul > li:not(.search-hidden) .achievement[data-name]');
+    const pickedRows = () => $('#achievement .achievement-list .achievement.is-picked');
+    let pickAnchor = null;
+    const clearPicks = () => {
+      pickedRows().removeClass('is-picked');
+      pickAnchor = null;
+    };
+    $('#achievement .achievement-list').on('click', '.achievement', function (event) {
+      if ($(event.target).closest('a, button, input, label, .ach-steps').length) return;
+      if (event.shiftKey && pickAnchor && document.contains(pickAnchor)) {
+        const rows = pickableRows().toArray();
+        const [from, to] = [rows.indexOf(pickAnchor), rows.indexOf(this)].sort((a, b) => a - b);
+        if (from >= 0) $(rows.slice(from, to + 1)).addClass('is-picked');
+        return;
+      }
+      if (event.ctrlKey || event.metaKey) {
+        $(this).toggleClass('is-picked');
+        pickAnchor = this;
+        return;
+      }
+      if (pickedRows().length) clearPicks();
+    });
+    $(document).on('keydown', (event) => {
+      if (event.key === 'Escape' && pickedRows().length) clearPicks();
+    });
+
+    const pickedMenu = (rows, appid, source) => {
+      const remote = require('@electron/remote');
+      const { t } = require(require('path').join(remote.app.getAppPath(), 'locale/t.js'));
+      const names = (filter) => rows.filter(filter).map((index, el) => el.getAttribute('data-name')).get();
+      const manual = names((index, el) => $(el).data('manual') === 1);
+      const locked = names((index, el) => $(el).data('manual') !== 1 && $(el).data('achieved') !== 1);
+      const achieved = names((index, el) => $(el).data('manual') !== 1 && $(el).data('achieved') === 1);
+      const done = (promise) => Promise.resolve(promise).finally(clearPicks);
+      const items = [];
+      // A batch can hold a single row of one kind: "Mark 1 as unlocked" needs its own words in many languages.
+      if (locked.length) {
+        items.push({
+          label:
+            locked.length === 1
+              ? t('ach-picked-unlock-one', 'Mark 1 as unlocked', 'Marquer 1 comme débloqué')
+              : t('ach-picked-unlock', 'Mark {count} as unlocked', 'Marquer {count} comme débloqués', { count: locked.length }),
+          click: () => done(window.app?.manualUnlockManyAction?.(appid, source, locked, 'mark-unlocked')),
+        });
+      }
+      if (manual.length) {
+        items.push({
+          label:
+            manual.length === 1
+              ? t('ach-picked-clear-manual-one', 'Clear 1 manual unlock', 'Effacer 1 déblocage manuel')
+              : t('ach-picked-clear-manual', 'Clear {count} manual unlocks', 'Effacer {count} déblocages manuels', { count: manual.length }),
+          click: () => done(window.app?.manualUnlockManyAction?.(appid, source, manual, 'clear-manual')),
+        });
+      }
+      if (achieved.length) {
+        items.push({
+          label:
+            achieved.length === 1
+              ? t('ach-picked-relock-one', 'Re-lock 1 achievement', 'Reverrouiller 1 succès')
+              : t('ach-picked-relock', 'Re-lock {count} achievements', 'Reverrouiller {count} succès', { count: achieved.length }),
+          click: () => done(window.app?.relockAchievementAction?.(appid, achieved.length === 1 ? achieved[0] : achieved)),
+        });
+      }
+      return items;
+    };
+
     // Right-click an achievement row to mark it as manually unlocked (or clear the override).
     $('#achievement .achievement-list').on('contextmenu', '.achievement', function (event) {
       const row = $(this);
-      const name = row.data('name');
+      const name = row.attr('data-name');
       const appid = $('#achievement .wrapper > .header').attr('data-appid');
       const source = $('#achievement .wrapper > .header').attr('data-source') || '';
       if (!name || !appid) return;
+      if (row.hasClass('is-picked') && pickedRows().length > 1) {
+        const batch = pickedMenu(pickedRows(), appid, source);
+        if (batch.length === 0) return;
+        event.preventDefault();
+        const remote = require('@electron/remote');
+        remote.Menu.buildFromTemplate(batch).popup({ window: remote.getCurrentWindow() });
+        return;
+      }
+      clearPicks();
 
       const achieved = row.data('achieved') === 1;
       const manual = row.data('manual') === 1;

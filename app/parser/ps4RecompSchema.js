@@ -198,6 +198,11 @@ async function getGameData(data, lang, iconDirFor) {
   const info = data && typeof data === 'object' ? data : {};
   const container = loadTrophySet(info);
   if (!container) throw new Error(`PS4 Recomp: no readable trophy list for ${info.appid} (set ${info.slot}) under '${info.dumpDir}'`);
+  return gameDataOf(info, container, lang, iconDirFor, (iconDir) => gameArt(info, container, iconDir));
+}
+
+// The library's game data of a read trophy container; `artFor(iconDir)` gives the game's own art.
+function gameDataOf(info, container, lang, iconDirFor, artFor) {
   const documents = container.documents;
   const base = documents.get('') || documents.get('english') || documents.values().next().value;
   const local = documents.get(String(lang || '').toLowerCase()) || base;
@@ -209,7 +214,7 @@ async function getGameData(data, lang, iconDirFor) {
   } catch {
     /* the trophies still list, just without their art */
   }
-  const img = gameArt(info, container, iconDir);
+  const img = artFor(iconDir);
   const localTexts = textsById(local);
   const englishTexts = textsById(english);
   const list = base.trophies.map((trophy) => {
@@ -227,4 +232,4 @@ async function getGameData(data, lang, iconDirFor) {
   };
 }
 
-module.exports = { setLogger, trophySets, dumpIdentity, readTrophyList, trophyKey, recoveredNpcommid, setTitle, getGameData };
+module.exports = { setLogger, trophySets, dumpIdentity, readTrophyList, trophyKey, recoveredNpcommid, setTitle, getGameData, gameDataOf, writeIcon, toFileUrl };
