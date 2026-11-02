@@ -3670,7 +3670,9 @@ function statusBadgeFor(game) {
   if (String((game && game.source) || '') === 'PlayStation Network') {
     const label = game.psnAdded
       ? t('psn-badge-added', 'PlayStation list added from the catalog: not on your account', 'Liste PlayStation ajoutée depuis le catalogue : pas sur ton compte')
-      : t('psn-badge', 'Trophies from your PlayStation account', 'Trophées de ton compte PlayStation');
+      : game.psnConsole
+        ? t('psn-badge-console', 'Trophies read from your console over FTP', 'Trophées lus sur ta console en FTP')
+        : t('psn-badge', 'Trophies from your PlayStation account', 'Trophées de ton compte PlayStation');
     return { kind: 'info', state: 'account', label };
   }
   // No dot at all for a game that is not installed or has no achievements.
@@ -5838,6 +5840,35 @@ var app = {
                     progressMute.toggle(appid);
                   } catch (err) {
                     debug.error(err);
+                  }
+                },
+              })
+            );
+          }
+
+          // A PlayStation list read over FTP: this game alone, from the console it came from.
+          if (ctxGame && ctxGame.psnConsole) {
+            progressMenu.append(
+              new MenuItem({
+                label: t('psn-ftp-update-menu', 'Update from the console', 'Mettre à jour depuis la console'),
+                async click() {
+                  self.css('pointer-events', 'none');
+                  try {
+                    const res = (await ipcRenderer.invoke('psn:console-update', appid)) || {};
+                    const { psnConsoleErrorText, psnImportText } = require(path.join(appPath, 'util/psnMessages.js'));
+                    if (!res.ok) {
+                      await remote.dialog.showMessageBox(remote.getCurrentWindow(), { type: 'warning', message: psnConsoleErrorText(res.error) });
+                    } else if (!res.result.total) {
+                      const text = t('psn-ftp-update-missing', 'This list is no longer on the console account.', 'Cette liste n’est plus sur le compte de la console.');
+                      await remote.dialog.showMessageBox(remote.getCurrentWindow(), { type: 'info', message: text });
+                    } else if (res.result.failed) {
+                      // The console answered but the list could not be read or saved; the log says why.
+                      await remote.dialog.showMessageBox(remote.getCurrentWindow(), { type: 'warning', message: psnImportText(res.result).text });
+                    }
+                  } catch (err) {
+                    debug.error(err);
+                  } finally {
+                    self.css('pointer-events', 'initial');
                   }
                 },
               })

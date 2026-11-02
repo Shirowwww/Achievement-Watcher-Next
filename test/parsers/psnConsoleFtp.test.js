@@ -84,14 +84,28 @@ function ps3Server(extra = {}) {
   });
 }
 
-const importOptions = (server, extra = {}) => ({ host: '127.0.0.1', port: server.port, tmpRoot, timeoutMs: 1500, ...extra });
+// No archive answers unless a test brings one: the suite never reaches the network.
+const offline = async () => ({ ok: false, status: 404, json: async () => null });
+const importOptions = (server, extra = {}) => ({ host: '127.0.0.1', port: server.port, tmpRoot, timeoutMs: 1500, fetchImpl: offline, ...extra });
 
 test('a PS3 import writes the lists with the PSN library shape and keeps a broken file from stopping the rest', async () => {
   const server = await ps3Server();
   try {
     const progress = [];
     const result = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', onProgress: (p) => progress.push(p) }));
-    assert.deepEqual(result, { total: 2, created: 1, updated: 0, unchanged: 0, skipped: 0, failed: 1, rateLimited: false, console: 'ps3' });
+    assert.deepEqual(result, {
+      total: 2,
+      created: 1,
+      updated: 0,
+      unchanged: 0,
+      skipped: 0,
+      failed: 1,
+      rateLimited: false,
+      console: 'ps3',
+      removed: 0,
+      port: server.port,
+      profile: '00000001',
+    });
     assert.ok(progress.length >= 1);
 
     const game = psnLibrary.getGameData('psn-NPWR00001_00');
@@ -241,6 +255,34 @@ test('a PS4 import reads trophy_local.db, with large row ids, and detects the co
   }
 });
 
+test('a PS4 unlock time only kept in time_unlocked_uc is read there, and a skipped title is named in the log', async () => {
+  const file = path.join(makeTempDir('aw-ps4-uc-'), 'trophy_local.db');
+  const db = new DatabaseSync(file);
+  db.exec(`
+    CREATE TABLE tbl_trophy_title (id INTEGER PRIMARY KEY, trophy_title_id TEXT, title TEXT);
+    CREATE TABLE tbl_trophy_flag (title_id INTEGER, trophyid INTEGER, grade INTEGER, unlocked INTEGER, title TEXT, description TEXT, time_unlocked TEXT, time_unlocked_uc TEXT);
+    INSERT INTO tbl_trophy_title VALUES (1, 'NPWR09518_00', 'Manhunt');
+    INSERT INTO tbl_trophy_flag VALUES
+      (1, 0, 1, 1, 'Psychopath', 'Unlock all trophies.', '0001-01-01T00:00:00.00Z', '2026-07-04T02:09:43.35Z'),
+      (1, 1, 4, 1, 'Seen', 'Execution', '2026-06-28T19:58:21.65Z', '2026-06-28T19:58:21.65Z'),
+      (7, 0, 4, 1, 'Lost', 'No title row', '2026-06-28T19:58:21.65Z', NULL);
+  `);
+  db.close();
+  const server = await ps4Server(fs.readFileSync(file));
+  try {
+    const lines = [];
+    const result = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps4', log: (line) => lines.push(line) }));
+    assert.equal(result.created, 1);
+    assert.deepEqual(
+      psnLibrary.getGameData('psn-NPWR09518_00').achievement.list.map((t) => t.UnlockTime),
+      [Math.floor(Date.parse('2026-07-04T02:09:43.35Z') / 1000), Math.floor(Date.parse('2026-06-28T19:58:21.65Z') / 1000)]
+    );
+    assert.ok(lines.some((line) => line.includes('without a valid list id') && line.includes('row 7')), lines.join('\n'));
+  } finally {
+    await server.close();
+  }
+});
+
 test('a PS4 database that is not a database is skipped without throwing', async () => {
   const server = await ps4Server(Buffer.from('this is not sqlite'));
   try {
@@ -273,6 +315,194 @@ test('a console that stops answering is reported as unreachable, not as having n
     close: async () => {},
   });
   await assert.rejects(consoleFtp.importFromConsole({ host: '127.0.0.1', console: 'ps3', tmpRoot, ftpFactory }), (err) => err.code === 'ftp-timeout');
+});
+
+// ---- Accounts ---------------------------------------------------------------------------------
+
+const SHARED = [
+  { id: 0, type: 'B', name: 'Mine', detail: 'Only the first account', time: SECONDS_2025 },
+  { id: 1, type: 'B', name: 'Theirs', detail: 'Only the second account', time: 0 },
+];
+
+function twoAccountServer() {
+  const home = (id) => `${HOME_PS3}/${id}/trophy`;
+  return startFakeFtp({
+    dirs: {
+      [HOME_PS3]: ['00000001', '00000002'],
+      [home('00000001')]: ['NPWR00001_00'],
+      [home('00000002')]: ['NPWR00001_00', 'NPWR00005_00'],
+    },
+    files: {
+      [`${HOME_PS3}/00000001/localusername`]: Buffer.from('Victor\u0000\n'),
+      [`${HOME_PS3}/00000002/localusername`]: Buffer.from('Sister'),
+      [`${home('00000001')}/NPWR00001_00/TROPCONF.SFM`]: conf('NPWR00001_00', 'Shared', SHARED),
+      [`${home('00000001')}/NPWR00001_00/TROPUSR.DAT`]: userData(SHARED),
+      [`${home('00000002')}/NPWR00001_00/TROPCONF.SFM`]: conf('NPWR00001_00', 'Shared', SHARED),
+      [`${home('00000002')}/NPWR00001_00/TROPUSR.DAT`]: userData(SHARED.map((t) => ({ ...t, time: t.id === 1 ? SECONDS_2025 : 0 }))),
+      [`${home('00000002')}/NPWR00005_00/TROPCONF.SFM`]: conf('NPWR00005_00', 'Only hers', ASTRO),
+      [`${home('00000002')}/NPWR00005_00/TROPUSR.DAT`]: userData(ASTRO),
+    },
+  });
+}
+
+test('the accounts of a console are listed with their names, and two are never imported together', async () => {
+  const server = await twoAccountServer();
+  try {
+    const found = await consoleFtp.listConsoleProfiles(importOptions(server, { console: 'ps3' }));
+    assert.equal(found.console, 'ps3');
+    assert.deepEqual(found.profiles, [
+      { id: '00000001', name: 'Victor' },
+      { id: '00000002', name: 'Sister' },
+    ]);
+    await assert.rejects(consoleFtp.importFromConsole(importOptions(server, { console: 'ps3' })), (err) => err.code === 'ftp-profile-needed');
+    await assert.rejects(consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', profile: '00000009' })), (err) => err.code === 'ftp-profile-missing');
+    assert.deepEqual(psnLibrary.listCachedTitles(), []);
+
+    const result = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', profile: '00000001' }));
+    assert.equal(result.created, 1);
+    assert.deepEqual(psnLibrary.listCachedTitles(), ['psn-NPWR00001_00']);
+    assert.deepEqual(Object.keys(psnLibrary.getAchievements('psn-NPWR00001_00')), ['0']);
+    const asked = server.log.filter((line) => line.startsWith('RETR') && line.includes('/trophy/')).join('\n');
+    assert.doesNotMatch(asked, /00000002/);
+  } finally {
+    await server.close();
+  }
+});
+
+test("a list re-read from the console takes the account's unlocks as they are, and an unchanged one is counted as such", async () => {
+  const server = await twoAccountServer();
+  try {
+    const options = importOptions(server, { console: 'ps3', profile: '00000001' });
+    await consoleFtp.importFromConsole(options);
+    const again = await consoleFtp.importFromConsole(options);
+    assert.equal(again.unchanged, 1);
+    assert.equal(again.updated, 0);
+
+    // The second account's import replaces the unlocks rather than adding them to the first one's.
+    const hers = await consoleFtp.importFromConsole({ ...options, profile: '00000002' });
+    assert.equal(hers.updated, 1);
+    assert.deepEqual(Object.keys(psnLibrary.getAchievements('psn-NPWR00001_00')), ['1']);
+  } finally {
+    await server.close();
+  }
+});
+
+test('lists an import saved from every account at once are forgotten, those named on an account are kept', async () => {
+  const server = await twoAccountServer();
+  try {
+    const seed = (listId, meta) =>
+      psnLibrary.writeJson(path.join(psnLibrary.cacheRoot(), listId, 'schema.json'), {
+        listId,
+        name: listId,
+        platform: 'PS3',
+        source: psnLibrary.SOURCE,
+        img: {},
+        achievement: { total: 1, list: [{ name: '0', displayName: 'T', description: '', hidden: 0, type: 'B' }] },
+        meta,
+      });
+    seed('NPWR00005_00', { console: 'ps3' });
+    seed('NPWR00006_00', { console: 'ps3', profile: '00000002' });
+    seed('NPWR00007_00', { console: 'ps4' });
+    seed('NPWR00008_00', { lastUpdated: 'x' });
+    const result = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', profile: '00000001' }));
+    assert.equal(result.removed, 1);
+    assert.deepEqual(psnLibrary.listCachedTitles(), ['psn-NPWR00001_00', 'psn-NPWR00006_00', 'psn-NPWR00007_00', 'psn-NPWR00008_00']);
+
+    // A single game's update never forgets the others.
+    seed('NPWR00005_00', { console: 'ps3' });
+    const one = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', profile: '00000001', only: 'NPWR00001_00' }));
+    assert.equal(one.removed, 0);
+    assert.ok(psnLibrary.listCachedTitles().includes('psn-NPWR00005_00'));
+  } finally {
+    await server.close();
+  }
+});
+
+test("one game's update reads that list only", async () => {
+  const server = await twoAccountServer();
+  try {
+    const result = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', profile: '00000002', only: 'npwr00005_00' }));
+    assert.equal(result.total, 1);
+    assert.deepEqual(psnLibrary.listCachedTitles(), ['psn-NPWR00005_00']);
+    const asked = server.log.filter((line) => line.startsWith('RETR') && line.includes('/trophy/')).join('\n');
+    assert.doesNotMatch(asked, /NPWR00001_00/);
+    await assert.rejects(consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', profile: '00000002', only: '../x' })), (err) => err.code === 'ftp-list-invalid');
+  } finally {
+    await server.close();
+  }
+});
+
+// ---- Archive ----------------------------------------------------------------------------------
+
+function archiveFetch(lists) {
+  const asked = [];
+  const fetchImpl = async (url) => {
+    asked.push(url);
+    const match = String(url).match(/\/trophies\/([a-z-]+)\/(NPWR\d{5}_\d{2})\.json$/);
+    const body = match && lists[`${match[1]}/${match[2]}`];
+    return body ? { ok: true, json: async () => body } : { ok: false, status: 404, json: async () => null };
+  };
+  return { fetchImpl, asked };
+}
+
+const archivedAstro = (overrides = {}) => ({
+  npCommunicationId: 'NPWR00001_00',
+  trophyTitleName: 'Trophies for Astro Bot',
+  trophyTitleIconUrl: 'https://image.api.playstation.com/trophy/np/astro.png',
+  trophyGroups: [{ trophyGroupId: 'default', trophyGroupName: 'Astro Bot' }],
+  trophies: [0, 1, 2].map((id) => ({
+    trophyId: id,
+    trophyHidden: false,
+    trophyType: ['platinum', 'gold', 'bronze'][id],
+    trophyName: `Archive ${id}`,
+    trophyDetail: `Detail ${id}`,
+    trophyIconUrl: `https://image.api.playstation.com/trophy/np/${id}.png`,
+    trophyGroupId: 'default',
+  })),
+  ...overrides,
+});
+
+test("the archive's list in the app's language gives the texts, icons and the game's name, the console its unlocks", async () => {
+  const server = await ps3Server();
+  try {
+    const archive = archiveFetch({ 'fr/NPWR00001_00': archivedAstro() });
+    await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', lang: 'french', fetchImpl: archive.fetchImpl }));
+    const game = psnLibrary.getGameData('psn-NPWR00001_00');
+    assert.equal(game.name, 'Astro Bot');
+    assert.equal(game.img.icon, 'https://image.api.playstation.com/trophy/np/astro.png');
+    assert.equal(game.psnConsole, 'ps3');
+    assert.deepEqual(
+      game.achievement.list.map((t) => [t.name, t.displayName, t.icon, t.Achieved]),
+      [
+        ['0', 'Archive 0', 'https://image.api.playstation.com/trophy/np/0.png', true],
+        ['1', 'Archive 1', 'https://image.api.playstation.com/trophy/np/1.png', false],
+        ['2', 'Archive 2', 'https://image.api.playstation.com/trophy/np/2.png', true],
+      ]
+    );
+    assert.ok(archive.asked.some((url) => url.includes('/fr/NPWR00001_00.json')));
+  } finally {
+    await server.close();
+  }
+});
+
+test('an archived list with other trophies, or an archive that cannot be reached, leaves the console texts', async () => {
+  const server = await ps3Server();
+  try {
+    const shorter = archivedAstro({ trophies: archivedAstro().trophies.slice(0, 2) });
+    await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', fetchImpl: archiveFetch({ 'en/NPWR00001_00': shorter }).fetchImpl }));
+    assert.equal(psnLibrary.getGameData('psn-NPWR00001_00').achievement.list[0].displayName, 'Platinum');
+
+    let calls = 0;
+    const down = async () => {
+      calls += 1;
+      throw new Error('ENOTFOUND');
+    };
+    await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', fetchImpl: down }));
+    assert.equal(psnLibrary.getGameData('psn-NPWR00001_00').achievement.list[0].displayName, 'Platinum');
+    assert.ok(calls <= 3, `the archive was asked ${calls} times while unreachable`);
+  } finally {
+    await server.close();
+  }
 });
 
 // ---- Input ------------------------------------------------------------------------------------

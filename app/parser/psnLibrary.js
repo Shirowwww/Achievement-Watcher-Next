@@ -210,11 +210,12 @@ function platformLabel(platform) {
   return PLATFORM_LABEL[main] || main;
 }
 
-// Sony names some lists "<Game> Trophies" or "Trophées <Game>"; the tile wants the game's name.
+// Sony names some lists "<Game> Trophies", "Trophies for <Game>" or "Trophées de <Game>"; the tile
+// and the cover search want the game's name.
 function cleanTitleName(value) {
   return String(value || '')
     .replace(/\s+(trophies|trophy set)$/i, '')
-    .replace(/^troph[ée]es\s+/i, '')
+    .replace(/^(trophies|troph[ée]es|trofeos|trof[ée]us)\s+((for|of|de|du|des|do|da)\s+|d['’]\s*)?/i, '')
     .trim();
 }
 
@@ -302,7 +303,7 @@ function mergeState(previous, fresh, schemaList) {
   return merged;
 }
 
-function writeGame(record, meta) {
+function writeGame(record, meta, { replaceState = false } = {}) {
   const { schema, state } = buildGameRecord(record);
   if (!schema.listId || schema.achievement.list.length === 0) return null;
   const previous = readSchema(schema.listId);
@@ -310,23 +311,59 @@ function writeGame(record, meta) {
   if (previous && previous.img) schema.img = { ...previous.img, ...schema.img };
   schema.meta = { ...meta, fetchedAt: Date.now() };
   writeJson(schemaFile(schema.listId), schema);
-  writeJson(stateFile(schema.listId), mergeState(readState(schema.listId), state, schema.achievement.list));
+  writeJson(stateFile(schema.listId), replaceState ? state : mergeState(readState(schema.listId), state, schema.achievement.list));
   return { schema, created: !previous };
 }
 
+const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+// What a console list would be rewritten with, against what is saved: nothing to do when equal.
+function sameConsoleList(previous, schema, meta) {
+  const kept = previous.meta || {};
+  return (
+    kept.console === meta.console &&
+    kept.profile === meta.profile &&
+    previous.name === schema.name &&
+    sameJson(previous.img, { ...previous.img, ...schema.img }) &&
+    sameJson(previous.achievement, schema.achievement)
+  );
+}
+
 /*
-  A list read from a console's own files (parser/psnConsoleFtp.js): no pictures, no icons, no rates.
-  A list a PSN import or the catalog saved keeps its richer schema and only gains the unlocks.
+  A list read from a console's own files (parser/psnConsoleFtp.js), with the archive's texts and
+  icons when it has the list. Its unlocks are the console account's as they are now, so they replace
+  the saved ones. A list a PSN import or the catalog saved keeps its schema and only gains the unlocks.
 */
 function writeConsoleList(record) {
   const { schema, state } = buildGameRecord(record);
   if (!schema.listId || schema.achievement.list.length === 0) return null;
   const previous = readSchema(schema.listId);
+  const saved = readState(schema.listId);
   if (previous && !(previous.meta && previous.meta.console)) {
-    writeJson(stateFile(schema.listId), mergeState(readState(schema.listId), state, previous.achievement.list));
+    const merged = mergeState(saved, state, previous.achievement.list);
+    if (sameJson(merged, saved)) return { schema: previous, created: false, unchanged: true };
+    writeJson(stateFile(schema.listId), merged);
     return { schema: previous, created: false };
   }
-  return writeGame(record, { console: record.console || true });
+  const meta = { console: record.console || true, ...(record.profile ? { profile: String(record.profile) } : {}) };
+  if (previous && sameConsoleList(previous, schema, meta) && sameJson(saved, state)) return { schema: previous, created: false, unchanged: true };
+  return writeGame(record, meta, { replaceState: true });
+}
+
+/*
+  The lists of one console that no account is named on and this import did not find: the
+  3.13.0-beta.1 import read every account of the console at once. Returns how many were removed.
+*/
+function forgetConsoleLists(consoleKind, keep) {
+  let removed = 0;
+  for (const appid of listCachedTitles()) {
+    const listId = normalizeListId(appid);
+    const meta = (readSchema(listId) || {}).meta || {};
+    if (meta.console !== consoleKind || meta.profile || keep.has(listId)) continue;
+    fs.rmSync(path.join(cacheRoot(), listId), { recursive: true, force: true });
+    removed += 1;
+  }
+  return removed;
 }
 
 /*
@@ -566,6 +603,8 @@ function getGameData(appid) {
     system: 'playstation',
     npCommId: listId,
     ...(schema.meta && schema.meta.added ? { psnAdded: true } : {}),
+    // Read over FTP from a PS3 or PS4: no rates are saved, and the game can be updated from it.
+    ...(schema.meta && schema.meta.console ? { psnConsole: String(schema.meta.console) } : {}),
     platform: schema.platform || '',
     // A PS3 or Vita list may have no store picture: its trophy-list icon stands in until one is found.
     img: {
@@ -624,6 +663,7 @@ module.exports = {
   platformLabel,
   addOtherList,
   writeConsoleList,
+  forgetConsoleLists,
   readSchema,
   displayNames,
   importLibrary,

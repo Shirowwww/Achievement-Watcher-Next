@@ -265,6 +265,20 @@ test('a list whose earned trophy has no match on the card stays apart', () => {
   assert.equal(psnLibrary.sameGameLists(['psn-NPWR06221_00', 'psn-NPWR21647_00']).size, 0);
 });
 
+test("a list's name loses the trophy wording around the game's name", () => {
+  const cases = {
+    'Trophies for Mortal Kombat 11': 'Mortal Kombat 11',
+    'Trophies of Uncharted': 'Uncharted',
+    'THE EYE OF JUDGMENT™ Trophies': 'THE EYE OF JUDGMENT™',
+    'Trophées de GTA IV': 'GTA IV',
+    'Trophées d’Assassin’s Creed': 'Assassin’s Creed',
+    'Trofeos de Bloodborne': 'Bloodborne',
+    'Troféus do God of War': 'God of War',
+    'Trophy Hunter Saga': 'Trophy Hunter Saga',
+  };
+  for (const [raw, clean] of Object.entries(cases)) assert.equal(psnLibrary.cleanTitleName(raw), clean, raw);
+});
+
 test('only well-formed trophy list ids are accepted', () => {
   assert.equal(psnLibrary.normalizeListId('psn-npwr12345_00'), 'NPWR12345_00');
   assert.equal(psnLibrary.normalizeListId('NPWR12345_00/../x'), '');

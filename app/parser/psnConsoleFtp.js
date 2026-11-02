@@ -20,13 +20,18 @@ const DEFAULT_PORTS = { ps3: 21, ps4: 2121 };
 const PS3_HOME = '/dev_hdd0/home';
 // The payload exposes /user/home; some FTP servers show the sandbox mount instead.
 const PS4_HOMES = ['/user/home', '/mnt/sandbox/NPXS20001_000/user/home'];
-const PS3_PROFILE_RE = /^\d{8}$/;
-const PS4_PROFILE_RE = /^[0-9a-f]{8}$/i;
+const PROFILE_RE = { ps3: /^\d{8}$/, ps4: /^[0-9a-f]{8}$/i };
+// The account's own name, beside its folder.
+const PROFILE_NAME_FILE = { ps3: 'localusername', ps4: 'username.dat' };
+const MAX_NAME_BYTES = 4096;
+const MAX_NAME_CHARS = 64;
 const LIST_ID_RE = /^NPWR\d{5}_\d{2}$/;
 const MAX_PROFILES = 16;
 const MAX_SETS = 3000;
 const MAX_SMALL_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_IMPORT_MS = 10 * 60 * 1000;
+// Past this many unreachable answers the archive is left alone for the rest of the import.
+const MAX_ARCHIVE_FAILURES = 3;
 const TROPHY_TYPE = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
 const GRADE_TYPE = { 1: 'platinum', 2: 'gold', 3: 'silver', 4: 'bronze' };
 const MIN_PLAUSIBLE_MS = Date.UTC(2005, 0, 1);
@@ -34,6 +39,16 @@ const PS4_TABLES = { flag: 'tbl_trophy_flag', title: 'tbl_trophy_title' };
 const PS4_REQUIRED = ['title_id', 'trophyid', 'grade', 'unlocked', 'title', 'description', 'time_unlocked'];
 
 const noop = () => {};
+
+// Not an FtpError on purpose: the console answered, so trying the other console's layout is pointless.
+const choiceError = (code) => Object.assign(new Error(code), { code });
+
+// A name read from the console, fit for a log line or a dropdown.
+const printable = (value) =>
+  String(value || '')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+    .slice(0, MAX_NAME_CHARS);
 
 // ---- Session ----------------------------------------------------------------------------------
 
@@ -69,27 +84,97 @@ function makeSession(factory, address, port, timeoutMs) {
   };
 }
 
+// ---- Accounts ---------------------------------------------------------------------------------
+
+// The home folder and the account folders in it, or null when this console layout is not there.
+async function findHome(session, kind) {
+  for (const home of kind === 'ps3' ? [PS3_HOME] : PS4_HOMES) {
+    const ids = (await session.list(home)).filter((name) => PROFILE_RE[kind].test(name)).sort();
+    if (ids.length) return { home, ids: ids.slice(0, MAX_PROFILES) };
+  }
+  return null;
+}
+
+async function readProfileName(session, home, id, kind) {
+  try {
+    return printable((await session.fetch(`${home}/${id}/${PROFILE_NAME_FILE[kind]}`, MAX_NAME_BYTES)).toString('utf8'));
+  } catch (err) {
+    if (!(err instanceof FtpError)) throw err;
+    return '';
+  }
+}
+
+/*
+  The account to import: the one asked for, else the only one. Two accounts are never imported
+  together, since both write the same lists and the second would overwrite the first one's unlocks.
+*/
+function pickProfile(ids, wanted) {
+  if (wanted) {
+    if (!ids.includes(wanted)) throw choiceError('ftp-profile-missing');
+    return wanted;
+  }
+  if (ids.length > 1) throw choiceError('ftp-profile-needed');
+  return ids[0];
+}
+
 // ---- Records ----------------------------------------------------------------------------------
 
-function titleRecord(listId, platform, name) {
+function titleRecord(listId, platform, name, iconUrl) {
   return {
     npCommunicationId: listId,
     npServiceName: 'trophy',
     trophyTitleName: name,
     trophyTitlePlatform: platform,
     trophyGroupCount: 1,
+    ...(iconUrl ? { trophyTitleIconUrl: iconUrl } : {}),
   };
 }
 
-function writeList({ listId, platform, name, trophies, consoleKind }) {
-  const definitions = {
+// The archived list only replaces the console's texts when it holds exactly the same trophies.
+function sameTrophies(archived, trophies) {
+  const ids = (list, key) => list.map((t) => String(t[key])).sort().join(',');
+  return Array.isArray(archived.trophies) && archived.trophies.length === trophies.length && ids(archived.trophies, 'trophyId') === ids(trophies, 'id');
+}
+
+function writeList({ listId, platform, name, trophies, consoleKind }, { profile, archived } = {}) {
+  const online = archived && sameTrophies(archived, trophies) ? archived : null;
+  const definitions = online || {
     trophies: trophies.map((t) => ({ trophyId: t.id, trophyType: t.type, trophyName: t.name, trophyDetail: t.detail, trophyHidden: t.hidden })),
   };
   const earned = {
     trophies: trophies.filter((t) => t.earned).map((t) => ({ trophyId: t.id, earned: true, earnedDateTime: t.earnedAt ? new Date(t.earnedAt * 1000).toISOString() : '' })),
   };
-  const title = psnLibrary.cleanTitleName(name) || listId;
-  return psnLibrary.writeConsoleList({ title: titleRecord(listId, platform, title), name: title, img: {}, definitions, groups: null, earned, console: consoleKind });
+  const title = psnLibrary.cleanTitleName((online && online.trophyTitleName) || name) || listId;
+  return psnLibrary.writeConsoleList({
+    title: titleRecord(listId, platform, title, online && online.trophyTitleIconUrl),
+    name: title,
+    img: {},
+    definitions,
+    groups: online,
+    earned,
+    console: consoleKind,
+    profile,
+  });
+}
+
+/*
+  The same list in the app's language, with its icons and DLC groups, from the public archive the
+  PSN library already falls back on. Offline or refused, the console's own texts stay.
+*/
+function makeArchive(options) {
+  if (options.archive === false) return async () => null;
+  const realFetch = options.fetchImpl || fetch;
+  let failures = 0;
+  const fetchImpl = async (...args) => {
+    try {
+      return await realFetch(...args);
+    } catch (err) {
+      failures += 1;
+      throw err;
+    }
+  };
+  const ctx = psnLibrary.publicContext({ lang: options.lang, locale: options.locale, fetchImpl });
+  return async (listId) => (failures >= MAX_ARCHIVE_FAILURES ? null : psnLibrary.fetchArchivedList(ctx, listId).catch(() => null));
 }
 
 // ---- PS3 --------------------------------------------------------------------------------------
@@ -127,21 +212,17 @@ async function parsePs3Set(dir, listId, sfm, usr) {
 }
 
 async function collectPs3(session, ctx) {
-  const profiles = (await session.list(PS3_HOME)).filter((name) => PS3_PROFILE_RE.test(name));
-  if (profiles.length === 0) return null;
-  const sets = [];
-  for (const profile of profiles.slice(0, MAX_PROFILES)) {
-    const trophyDir = `${PS3_HOME}/${profile}/trophy`;
-    for (const name of await session.list(trophyDir)) {
-      if (LIST_ID_RE.test(name) && sets.length < MAX_SETS) sets.push({ profile, listId: name, trophyDir });
-    }
-  }
-  return sets.map((set) => async () => {
-    const remote = `${set.trophyDir}/${set.listId}`;
-    const sfm = await session.fetch(`${remote}/TROPCONF.SFM`, ctx.smallFileBytes);
-    const usr = await session.fetch(`${remote}/TROPUSR.DAT`, ctx.smallFileBytes);
-    return [await parsePs3Set(path.join(ctx.workDir, 'ps3', set.profile, set.listId), set.listId, sfm, usr)];
-  });
+  const trophyDir = `${ctx.home}/${ctx.profile}/trophy`;
+  const listIds = (await session.list(trophyDir)).filter((name) => LIST_ID_RE.test(name) && (!ctx.only || name === ctx.only)).slice(0, MAX_SETS);
+  return listIds.map((listId) => ({
+    listId,
+    async run() {
+      const remote = `${trophyDir}/${listId}`;
+      const sfm = await session.fetch(`${remote}/TROPCONF.SFM`, ctx.smallFileBytes);
+      const usr = await session.fetch(`${remote}/TROPUSR.DAT`, ctx.smallFileBytes);
+      return [await parsePs3Set(path.join(ctx.workDir, 'ps3', ctx.profile, listId), listId, sfm, usr)];
+    },
+  }));
 }
 
 // ---- PS4 --------------------------------------------------------------------------------------
@@ -172,9 +253,11 @@ function readPs4Database(file) {
       for (const row of query(`SELECT id, trophy_title_id AS npwr, ${nameColumn} AS name FROM ${PS4_TABLES.title}`)) titles.set(String(row.id), row);
     }
     const hiddenColumn = flagColumns.has('hidden') ? 'hidden' : '0';
+    // Some games leave time_unlocked at its year-0001 placeholder and only fill this one.
+    const altTimeColumn = flagColumns.has('time_unlocked_uc') ? 'time_unlocked_uc' : 'NULL';
     const order = flagColumns.has('groupid') ? 'groupid, trophyid' : 'trophyid';
     const rows = query(
-      `SELECT title_id, trophyid, grade, unlocked, title, description, time_unlocked, ${hiddenColumn} AS hidden FROM ${PS4_TABLES.flag} ORDER BY title_id, ${order}`
+      `SELECT title_id, trophyid, grade, unlocked, title, description, time_unlocked, ${altTimeColumn} AS time_alt, ${hiddenColumn} AS hidden FROM ${PS4_TABLES.flag} ORDER BY title_id, ${order}`
     );
     const byTitle = new Map();
     for (const row of rows) {
@@ -188,12 +271,12 @@ function readPs4Database(file) {
         detail: String(row.description ?? ''),
         hidden: Number(row.hidden) !== 0,
         earned,
-        earnedAt: earned ? ps4Seconds(row.time_unlocked) : 0,
+        earnedAt: earned ? ps4Seconds(row.time_unlocked) || ps4Seconds(row.time_alt) : 0,
       });
     }
     return [...byTitle].map(([key, trophies]) => {
       const meta = titles.get(key) || {};
-      return { listId: String(meta.npwr || '').toUpperCase(), platform: 'PS4', name: String(meta.name || ''), trophies, consoleKind: 'ps4' };
+      return { listId: String(meta.npwr || '').toUpperCase(), platform: 'PS4', name: String(meta.name || ''), titleKey: key, trophies, consoleKind: 'ps4' };
     });
   } finally {
     db.close();
@@ -201,19 +284,10 @@ function readPs4Database(file) {
 }
 
 async function collectPs4(session, ctx) {
-  let home = '';
-  let profiles = [];
-  for (const candidate of PS4_HOMES) {
-    profiles = (await session.list(candidate)).filter((name) => PS4_PROFILE_RE.test(name));
-    if (profiles.length) {
-      home = candidate;
-      break;
-    }
-  }
-  if (!home) return null;
-  return profiles.slice(0, MAX_PROFILES).map((profile) => async () => {
-    const remote = `${home}/${profile}/trophy/db/trophy_local.db`;
-    const dir = path.join(ctx.workDir, 'ps4', profile);
+  // One file holds every list: when it fails, nothing is known of any of them.
+  const run = async () => {
+    const remote = `${ctx.home}/${ctx.profile}/trophy/db/trophy_local.db`;
+    const dir = path.join(ctx.workDir, 'ps4', ctx.profile);
     fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, 'trophy_local.db');
     fs.writeFileSync(file, await session.fetch(remote, DEFAULT_MAX_FILE_BYTES));
@@ -223,11 +297,13 @@ async function collectPs4(session, ctx) {
     } catch (err) {
       if (!(err instanceof FtpError)) throw err;
     }
-    return readPs4Database(file);
-  });
+    const lists = readPs4Database(file);
+    return ctx.only ? lists.filter((list) => list.listId === ctx.only) : lists;
+  };
+  return [{ listId: '', run }];
 }
 
-// ---- Import -----------------------------------------------------------------------------------
+// ---- Connection -------------------------------------------------------------------------------
 
 function plansFor(kind, port) {
   const plan = (which, chosen) => ({ kind: which, port: parsePort(chosen, DEFAULT_PORTS[which]) });
@@ -237,57 +313,92 @@ function plansFor(kind, port) {
 }
 
 /*
-  `kind` is 'ps3', 'ps4' or 'auto'; `port` empty means the console's default. Resolves to the same
-  counts as the PSN library import, and rejects with an FtpError code the Settings card can word.
+  Connects to the console and hands `work` the first layout that has accounts. `kind` is 'ps3',
+  'ps4' or 'auto'; `port` empty means the console's default. Rejects with an FtpError code the
+  Settings card can word.
 */
-async function importFromConsole(options = {}) {
+async function withConsole(options, work) {
   const kind = options.console ?? 'auto';
   if (!['ps3', 'ps4', 'auto'].includes(kind)) throw new FtpError('ftp-console-invalid');
   const timeoutMs = options.timeoutMs || DEFAULT_TIMEOUT_MS;
-  const log = options.log || noop;
   const address = await resolveLocalHost(options.host, { allowPublic: options.allowPublic === true, lookup: options.lookup, timeoutMs });
   const plans = plansFor(kind, options.port);
   const factory = options.ftpFactory || ((opts) => new FtpClient(opts));
+  let lastError = null;
+  for (const plan of plans) {
+    const session = makeSession(factory, address, plan.port, timeoutMs);
+    try {
+      await session.ensure();
+      const found = await findHome(session, plan.kind);
+      if (found) return await work(session, plan, found);
+    } catch (err) {
+      if (!(err instanceof FtpError)) throw err;
+      lastError = err;
+    } finally {
+      await session.close();
+    }
+  }
+  throw lastError || new FtpError('ftp-nothing-found');
+}
+
+// The console's accounts, for the Settings card to offer: [{ id, name }] with the console and port.
+async function listConsoleProfiles(options = {}) {
+  return withConsole(options, async (session, plan, found) => {
+    const profiles = [];
+    for (const id of found.ids) profiles.push({ id, name: await readProfileName(session, found.home, id, plan.kind) });
+    return { console: plan.kind, port: plan.port, profiles };
+  });
+}
+
+/*
+  One account's trophies; `only` limits the import to one list (a game's own update). Resolves to
+  the same counts as the PSN library import plus the console, port and account it read.
+*/
+async function importFromConsole(options = {}) {
+  const only = options.only ? String(options.only).toUpperCase() : '';
+  if (only && !LIST_ID_RE.test(only)) throw choiceError('ftp-list-invalid');
+  const wanted = options.profile ? String(options.profile) : '';
   const root = options.tmpRoot || path.join(os.tmpdir(), 'aw-console-ftp');
   fs.mkdirSync(root, { recursive: true });
   const workDir = fs.mkdtempSync(path.join(root, 'run-'));
-  const ctx = { workDir, smallFileBytes: options.maxSmallFileBytes || MAX_SMALL_FILE_BYTES };
-  const deadline = Date.now() + MAX_IMPORT_MS;
-  let lastError = null;
   try {
-    for (const plan of plans) {
-      const session = makeSession(factory, address, plan.port, timeoutMs);
-      try {
-        await session.ensure();
-        const jobs = await (plan.kind === 'ps3' ? collectPs3 : collectPs4)(session, ctx);
-        if (!jobs || jobs.length === 0) continue;
-        return await runJobs(jobs, plan.kind, { ...options, log, deadline });
-      } catch (err) {
-        if (!(err instanceof FtpError)) throw err;
-        lastError = err;
-      } finally {
-        await session.close();
-      }
-    }
-    throw lastError || new FtpError('ftp-nothing-found');
+    return await withConsole(options, async (session, plan, found) => {
+      const profile = pickProfile(found.ids, wanted);
+      const ctx = { workDir, home: found.home, profile, only, smallFileBytes: options.maxSmallFileBytes || MAX_SMALL_FILE_BYTES };
+      const jobs = await (plan.kind === 'ps3' ? collectPs3 : collectPs4)(session, ctx);
+      const { seen, stopped, ...result } = await runJobs(jobs, plan.kind, {
+        ...options,
+        log: options.log || noop,
+        deadline: Date.now() + MAX_IMPORT_MS,
+        profile,
+        archive: makeArchive(options),
+      });
+      // Lists the 3.13.0-beta.1 import saved from every account at once, which this account lacks.
+      const removed = only || stopped ? 0 : psnLibrary.forgetConsoleLists(plan.kind, seen);
+      return { ...result, removed, port: plan.port, profile };
+    });
   } finally {
     fs.rmSync(workDir, { recursive: true, force: true });
   }
 }
 
-async function runJobs(jobs, consoleKind, { onProgress, log, deadline }) {
-  const result = { total: 0, created: 0, updated: 0, unchanged: 0, skipped: 0, failed: 0, rateLimited: false, console: consoleKind };
+async function runJobs(jobs, consoleKind, { onProgress, log, deadline, profile, archive }) {
+  const result = { total: 0, created: 0, updated: 0, unchanged: 0, skipped: 0, failed: 0, rateLimited: false, console: consoleKind, seen: new Set(), stopped: false };
   for (let index = 0; index < jobs.length; index += 1) {
     if (Date.now() > deadline) {
       log('[psn-ftp] time limit reached, the import stops here');
+      result.stopped = true;
       break;
     }
     let lists = [];
     try {
-      lists = await jobs[index]();
+      lists = await jobs[index].run();
     } catch (err) {
       result.total += 1;
       result.failed += 1;
+      // A list that could not be read is still on the console: it must not be forgotten.
+      if (jobs[index].listId) result.seen.add(jobs[index].listId);
+      else result.stopped = true;
       log(`[psn-ftp] a ${consoleKind} entry was skipped: ${err && (err.code || err.message || err)}`);
       continue;
     }
@@ -296,12 +407,14 @@ async function runJobs(jobs, consoleKind, { onProgress, log, deadline }) {
       onProgress?.({ current: index + 1, total: jobs.length, detail: list.name || list.listId });
       if (!LIST_ID_RE.test(list.listId)) {
         result.failed += 1;
-        log(`[psn-ftp] a ${consoleKind} title without a valid list id was skipped`);
+        log(`[psn-ftp] a ${consoleKind} title without a valid list id was skipped: "${printable(list.name)}" (row ${printable(list.titleKey)}, id "${printable(list.listId)}")`);
         continue;
       }
+      result.seen.add(list.listId);
       try {
-        const written = writeList(list);
+        const written = writeList(list, { profile, archived: await archive(list.listId) });
         if (!written) result.skipped += 1;
+        else if (written.unchanged) result.unchanged += 1;
         else result[written.created ? 'created' : 'updated'] += 1;
       } catch (err) {
         result.failed += 1;
@@ -312,4 +425,4 @@ async function runJobs(jobs, consoleKind, { onProgress, log, deadline }) {
   return result;
 }
 
-module.exports = { importFromConsole, readPs4Database, DEFAULT_PORTS };
+module.exports = { importFromConsole, listConsoleProfiles, readPs4Database, DEFAULT_PORTS };

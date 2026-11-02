@@ -1667,8 +1667,19 @@
                   <div class="psn-add-field">
                     <input id="psn-ftp-port" type="text" inputmode="numeric" maxlength="5" autocomplete="off" spellcheck="false" placeholder="21 / 2121" />
                   </div>
+                  <label for="psn-ftp-profile"><span id="psn-ftp-profile-label">Account</span></label>
+                  <select id="psn-ftp-profile" autocomplete="off" disabled>
+                    <option value="" id="psn-ftp-profile-none">Find the accounts first</option>
+                  </select>
                 </div>
                 <div class="emulator-login-actions">
+                  <button type="button" id="psn-ftp-find-btn" class="btn secondary">
+                    <span class="emulator-test-icon"><i class="fas fa-users"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="psn-ftp-find-label">Find accounts</strong>
+                      <small id="psn-ftp-find-hint">tests the connection</small>
+                    </span>
+                  </button>
                   <button type="button" id="psn-ftp-btn" class="btn">
                     <span class="emulator-test-icon"><i class="fas fa-download"></i></span>
                     <span class="emulator-test-copy">

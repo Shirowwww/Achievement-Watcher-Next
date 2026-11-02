@@ -2625,33 +2625,97 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#psn-ftp-port-label').text(t('psn-ftp-port-label', 'FTP port', 'Port FTP'));
         $('#psn-ftp-btn-label').text(t('psn-ftp-btn-label', 'Import trophies', 'Importer les trophées'));
         $('#psn-ftp-btn-hint').text(t('psn-ftp-btn-hint', 'reads the trophy files over FTP', 'lit les fichiers de trophées en FTP'));
+        $('#psn-ftp-profile-label').text(t('psn-ftp-profile-label', 'Account', 'Compte'));
+        $('#psn-ftp-profile-none').text(t('psn-ftp-profile-none', 'Find the accounts first', 'Recherche d’abord les comptes'));
+        $('#psn-ftp-find-label').text(t('psn-ftp-find-label', 'Find accounts', 'Trouver les comptes'));
+        $('#psn-ftp-find-hint').text(t('psn-ftp-find-hint', 'tests the connection', 'teste la connexion'));
       });
 
-      async function runConsoleImport() {
-        button.addClass('disabled').css('pointer-events', 'none');
-        setStatus(t('psn-ftp-running', 'Reading the trophies of the console…', 'Lecture des trophées de la console…'), 'running');
+      const findButton = $('#psn-ftp-find-btn');
+      const profileSelect = $('#psn-ftp-profile');
+      const buttons = button.add(findButton);
+      const connection = () => ({
+        host: String($('#psn-ftp-host').val() || '').trim(),
+        console: String($('#psn-ftp-console').val() || 'auto'),
+        port: String($('#psn-ftp-port').val() || '').trim(),
+      });
+
+      // The names come from the console: set as text, never as markup.
+      function showProfiles(profiles, chosen = '') {
+        profileSelect.find('option:not(#psn-ftp-profile-none)').remove();
+        for (const profile of profiles) {
+          const option = $('<option>').val(profile.id).text(profile.name ? `${profile.name} (${profile.id})` : profile.id);
+          profileSelect.append(option);
+        }
+        $('#psn-ftp-profile-none').prop('hidden', profiles.length > 0);
+        profileSelect.prop('disabled', profiles.length === 0).val(profiles.length ? chosen || profiles[0].id : '');
+      }
+
+      async function withButtons(work) {
+        buttons.addClass('disabled').css('pointer-events', 'none');
         try {
-          const res =
-            (await ipcRenderer.invoke('psn:console-import', {
-              host: String($('#psn-ftp-host').val() || '').trim(),
-              console: String($('#psn-ftp-console').val() || 'auto'),
-              port: String($('#psn-ftp-port').val() || '').trim(),
-            })) || {};
-          if (!res.ok) {
-            setStatus(psnConsoleErrorText(res.error), 'error');
-            return;
-          }
-          const summary = psnImportText(res.result, { sourceOff: $('#option_psnLibrary').val() === 'false' });
-          setStatus(summary.text, summary.kind);
+          await work();
         } catch (err) {
           setStatus(psnConsoleErrorText(err.message || String(err)), 'error');
         } finally {
-          button.removeClass('disabled').css('pointer-events', '');
+          buttons.removeClass('disabled').css('pointer-events', '');
         }
       }
 
+      // Fills the account list; true when there is exactly one account or one is already chosen.
+      async function findProfiles() {
+        setStatus(t('psn-ftp-finding', 'Looking for the accounts of the console…', 'Recherche des comptes de la console…'), 'running');
+        const res = (await ipcRenderer.invoke('psn:console-profiles', connection())) || {};
+        if (!res.ok) {
+          setStatus(psnConsoleErrorText(res.error), 'error');
+          return false;
+        }
+        const { profiles, console: kind, port } = res.result;
+        showProfiles(profiles);
+        $('#psn-ftp-console').val(kind);
+        if (!$('#psn-ftp-port').val()) $('#psn-ftp-port').val(String(port));
+        if (profiles.length > 1) {
+          setStatus(psnConsoleErrorText('ftp-profile-needed'), 'success');
+          return false;
+        }
+        setStatus(t('psn-ftp-found', 'Connected: {count} account found.', 'Connecté : {count} compte trouvé.', { count: profiles.length }), 'success');
+        return true;
+      }
+
+      async function runConsoleImport() {
+        if (!profileSelect.val() && !(await findProfiles())) return;
+        setStatus(t('psn-ftp-running', 'Reading the trophies of the console…', 'Lecture des trophées de la console…'), 'running');
+        const res = (await ipcRenderer.invoke('psn:console-import', { ...connection(), profile: String(profileSelect.val() || '') })) || {};
+        if (!res.ok) {
+          setStatus(psnConsoleErrorText(res.error), 'error');
+          return;
+        }
+        const summary = psnImportText(res.result, { sourceOff: $('#option_psnLibrary').val() === 'false' });
+        setStatus(summary.text, summary.kind);
+      }
+
+      // Another console or address: the accounts found are not its own.
+      $('#psn-ftp-host, #psn-ftp-port, #psn-ftp-console').on('change', () => showProfiles([]));
+
+      // The last console imported from fills the card, so an update needs no typing.
+      ipcRenderer
+        .invoke('psn:console-saved')
+        .then((saved) => {
+          const consoles = Object.entries(saved || {}).filter(([, entry]) => entry && entry.host);
+          const [kind, last] = consoles.sort(([, a], [, b]) => Number(b.savedAt || 0) - Number(a.savedAt || 0))[0] || [];
+          if (!kind || $('#psn-ftp-host').val()) return;
+          $('#psn-ftp-host').val(last.host);
+          $('#psn-ftp-console').val(kind);
+          $('#psn-ftp-port').val(last.port || '');
+          if (last.profile) showProfiles([{ id: last.profile, name: '' }], last.profile);
+        })
+        .catch((err) => debug.log(`[psn-ftp] saved console not read: ${err.message || err}`));
+
       button.off('click').on('click', function () {
-        if (!button.hasClass('disabled')) runConsoleImport();
+        if (!button.hasClass('disabled')) withButtons(runConsoleImport);
+      });
+      findButton.off('click').on('click', function () {
+        if (!findButton.hasClass('disabled')) withButtons(findProfiles);
       });
     })();
 

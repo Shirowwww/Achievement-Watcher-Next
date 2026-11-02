@@ -143,6 +143,13 @@ test('resolveGameRarityContext reconciles every source to the right rarity path'
   // Native Steam game → direct Steam percentages.
   assert.deepEqual(rarity.resolveGameRarityContext(base({ appid: '440' })), { kind: 'steam', appid: '440' });
 
+  // A PlayStation list read from a console has no saved rates and asks Exophase; a PSN one keeps its own.
+  const psn = (extra) => base({ appid: 'psn-NPWR00001_00', source: 'PlayStation Network', system: 'playstation', ...extra });
+  assert.deepEqual(rarity.resolveGameRarityContext(psn({ psnConsole: 'ps3' })), { kind: 'emulator', source: 'RPCS3 Emulator' });
+  assert.deepEqual(rarity.resolveGameRarityContext(psn({ psnConsole: 'ps4' })), { kind: 'emulator', source: 'ShadPS4 Emulator' });
+  assert.equal(rarity.resolveGameRarityContext(psn({ psnConsole: 'ps4', achievement: { list: [{ name: '0', rarityPct: 12 }] } })).kind, 'xbox');
+  assert.equal(rarity.resolveGameRarityContext(psn({})).kind, 'xbox');
+
   // Goldberg Uplay R2 keeps the Steam AppID and Steam API names → direct Steam percentages.
   assert.deepEqual(
     rarity.resolveGameRarityContext(base({ appid: '3159330', source: 'Uplay R2', system: 'uplay' })),

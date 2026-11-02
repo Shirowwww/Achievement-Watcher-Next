@@ -33,6 +33,18 @@ function psnConsoleErrorText(code) {
       return t('psn-ftp-error-connect', 'Cannot reach the console. Check the IP address, the port, and that its FTP server is running.', 'Impossible de joindre la console. Vérifie l’adresse IP, le port et que son serveur FTP est lancé.');
     case 'ftp-nothing-found':
       return t('psn-ftp-error-nothing', 'No trophy folder was found on this console.', 'Aucun dossier de trophées trouvé sur cette console.');
+    case 'ftp-profile-needed':
+      return t('psn-ftp-error-profile', 'This console has several accounts: choose the one to import.', 'Cette console a plusieurs comptes : choisis celui à importer.');
+    case 'ftp-profile-missing':
+      return t('psn-ftp-error-profile-gone', 'This account is no longer on the console. Find the accounts again.', 'Ce compte n’est plus sur la console. Recherche à nouveau les comptes.');
+    case 'ftp-console-unknown':
+      return t(
+        'psn-ftp-error-unknown',
+        'Import from this console once in Settings > Sources first, so AW Next knows its address.',
+        'Importe d’abord une fois depuis cette console dans Réglages > Sources, pour qu’AW Next connaisse son adresse.'
+      );
+    case 'ftp-busy':
+      return t('psn-ftp-error-busy', 'An import from a console is already running.', 'Un import depuis une console est déjà en cours.');
     default:
       return `${t('psn-ftp-error', 'Import from the console failed', 'Échec de l’import depuis la console')}${code ? ': ' + code : ''}`;
   }

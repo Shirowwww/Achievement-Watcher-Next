@@ -800,28 +800,94 @@ ipcMain.handle('psn:import', async (event, opts = {}) => {
   login only, home-network addresses only; the lists join the PSN library's cache.
 */
 let consoleImport = null;
-ipcMain.handle('psn:console-import', async (_event, request = {}) => {
-  if (consoleImport) return { ok: false, error: 'ftp-busy' };
+const consoleFtp = () => require(path.join(__dirname, '../parser/psnConsoleFtp.js'));
+const consolesFile = () => path.join(userData, 'cfg', 'psnConsoles.json');
+
+// The console last imported from, per kind ('ps3', 'ps4'): what a game's own update connects to.
+function savedConsoles() {
+  try {
+    const saved = JSON.parse(require('fs').readFileSync(consolesFile(), 'utf8'));
+    return saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {};
+  } catch {
+    return {};
+  }
+}
+
+// The import itself succeeded: a console address that cannot be saved only costs the next update.
+function saveConsole(kind, entry) {
+  try {
+    require(path.join(__dirname, '../util/replaceFile.js')).writeFileAtomicSync(consolesFile(), JSON.stringify({ ...savedConsoles(), [kind]: entry }, null, 2));
+  } catch (err) {
+    debug.log(`[psn-ftp] console address not saved: ${errorCode(err)}`);
+  }
+}
+
+const consoleRequest = (request = {}) => ({
+  host: String(request.host || '').slice(0, 300),
+  console: String(request.console || 'auto'),
+  port: String(request.port ?? '').slice(0, 10),
+  profile: String(request.profile || '').slice(0, 16),
+});
+
+// One FTP job at a time, whether a whole import or one game's update.
+async function runConsoleImport(options) {
+  if (consoleImport) throw Object.assign(new Error('ftp-busy'), { code: 'ftp-busy' });
   const psnLibrary = require(path.join(__dirname, '../parser/psnLibrary.js'));
   psnLibrary.setUserDataPath(userData);
-  consoleImport = require(path.join(__dirname, '../parser/psnConsoleFtp.js'))
+  consoleImport = consoleFtp()
     .importFromConsole({
-      host: String(request.host || '').slice(0, 300),
-      console: String(request.console || 'auto'),
-      port: String(request.port ?? '').slice(0, 10),
+      ...options,
+      lang: getConfig()?.achievement?.lang || 'english',
       tmpRoot: path.join(userData, 'cache', 'console-ftp'),
       log: (line) => debug.log(line),
     })
     .finally(() => {
       consoleImport = null;
     });
+  const result = await consoleImport;
+  const win = getMainWindow();
+  if (result.created + result.updated + result.removed > 0 && win && !win.isDestroyed()) win.webContents.send('psn:library-changed');
+  return result;
+}
+
+ipcMain.handle('psn:console-import', async (_event, request = {}) => {
+  const asked = consoleRequest(request);
   try {
-    const result = await consoleImport;
-    const win = getMainWindow();
-    if (result.created + result.updated > 0 && win && !win.isDestroyed()) win.webContents.send('psn:library-changed');
+    const result = await runConsoleImport(asked);
+    saveConsole(result.console, { host: asked.host, port: String(result.port), profile: result.profile, savedAt: Date.now() });
     return { ok: true, result };
   } catch (err) {
     debug.log(`[psn-ftp] import failed: ${errorCode(err)}`);
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+ipcMain.handle('psn:console-profiles', async (_event, request = {}) => {
+  try {
+    const { profile: _ignored, ...asked } = consoleRequest(request);
+    return { ok: true, result: await consoleFtp().listConsoleProfiles(asked) };
+  } catch (err) {
+    debug.log(`[psn-ftp] account lookup failed: ${errorCode(err)}`);
+    return { ok: false, error: errorCode(err) };
+  }
+});
+
+// The last console of each kind, for the Settings card to fill its fields with.
+ipcMain.handle('psn:console-saved', () => savedConsoles());
+
+// One game read again from the console it came from, through that console's saved address.
+ipcMain.handle('psn:console-update', async (_event, appid) => {
+  const psnLibrary = require(path.join(__dirname, '../parser/psnLibrary.js'));
+  psnLibrary.setUserDataPath(userData);
+  const listId = psnLibrary.normalizeListId(String(appid || ''));
+  const meta = (listId && (psnLibrary.readSchema(listId) || {}).meta) || {};
+  const saved = savedConsoles()[meta.console];
+  if (!meta.console || !saved || !saved.host) return { ok: false, error: 'ftp-console-unknown' };
+  try {
+    const result = await runConsoleImport({ host: saved.host, console: meta.console, port: saved.port, profile: meta.profile || saved.profile, only: listId });
+    return { ok: true, result };
+  } catch (err) {
+    debug.log(`[psn-ftp] ${listId} update failed: ${errorCode(err)}`);
     return { ok: false, error: errorCode(err) };
   }
 });

@@ -313,6 +313,10 @@ function resolveGameRarityContext(game, options = {}) {
   const emulatorSources = options.emulatorSources || new Set();
 
   if (source === 'Xbox PC') return { kind: 'xbox' };
+  // A list read from a console over FTP saved no rates: Exophase is asked, as for the emulators.
+  if (source === 'PlayStation Network' && game.psnConsole && !game.achievement.list.some((a) => a && a.rarityPct != null)) {
+    return { kind: 'emulator', source: game.psnConsole === 'ps3' ? 'RPCS3 Emulator' : 'ShadPS4 Emulator' };
+  }
   // Same shape as Xbox: each rate was stored on its schema entry at import time.
   if (source === 'RetroAchievements' || source === 'PlayStation Network') return { kind: 'xbox', source };
   if (emulatorSources.has(source)) return { kind: 'emulator', source };

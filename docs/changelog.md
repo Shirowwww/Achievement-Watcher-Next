@@ -49,7 +49,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Trophies from a PS3 or PS4 over FTP (#160).** For a jailbroken console, when signing in to PSN
   is not an option: **Import from a PS3 or PS4** under the PlayStation account in **Settings >
   Sources** reads the console's trophy files over FTP on your home network and adds them like the
-  PSN library does. Nothing is written to the console.
+  PSN library does. Nothing is written to the console. **Find accounts** lists the console's users
+  so you import your own, and the texts, icons and game names come in your language from the public
+  trophy archive when it has the list, with rarity from Exophase. Right-click a game and pick
+  **Update from the console** to read that one again.
 - **Several achievements at once.** Ctrl+click or Shift+click achievements in a game, then
   right-click one of them to mark them all unlocked, clear their manual unlocks or re-lock them,
   with one confirmation and one backup.
