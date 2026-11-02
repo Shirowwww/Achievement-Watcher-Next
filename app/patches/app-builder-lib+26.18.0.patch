@@ -16,13 +16,13 @@ index b7f4752..5cd20ba 100644
    !ifmacrodef customWelcomePage
      !insertmacro customWelcomePage
 diff --git a/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh b/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh
-index f5470bf..5f78d31 100644
+index f5470bf..eafed2f 100644
 --- a/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh
 +++ b/node_modules/app-builder-lib/templates/nsis/include/extractAppPackage.nsh
 @@ -5,6 +5,11 @@
  
    Var /GLOBAL packageArch
- 
+   
 +  # Achievement Watcher: progress hook (build/installer.nsh), before the package is unpacked.
 +  !ifmacrodef customProgressPhase
 +    !insertmacro customProgressPhase "extracting"
