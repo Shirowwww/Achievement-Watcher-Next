@@ -24,11 +24,11 @@
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "electron": "^44.9.3",
-    "electron-builder": "^26.15.3",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0",
     "electron-context-menu": "^5.1.0",
     "fast-xml-parser": "^5.11.2",
-    "oxlint": "^1.89.0",
+    "oxlint": "^1.90.0",
     "patch-package": "^8.0.1"
   },
   "dependencies": {
