@@ -406,7 +406,8 @@ async function runJobs(jobs, consoleKind, { onProgress, log, deadline, profile, 
       result.total += 1;
       onProgress?.({ current: index + 1, total: jobs.length, detail: list.name || list.listId });
       if (!LIST_ID_RE.test(list.listId)) {
-        result.failed += 1;
+        // No list id at all: trophy rows a deleted title left behind, which the console no longer shows.
+        result[list.listId ? 'failed' : 'skipped'] += 1;
         log(`[psn-ftp] a ${consoleKind} title without a valid list id was skipped: "${printable(list.name)}" (row ${printable(list.titleKey)}, id "${printable(list.listId)}")`);
         continue;
       }

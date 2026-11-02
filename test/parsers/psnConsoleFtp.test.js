@@ -273,6 +273,9 @@ test('a PS4 unlock time only kept in time_unlocked_uc is read there, and a skipp
     const lines = [];
     const result = await consoleFtp.importFromConsole(importOptions(server, { console: 'ps4', log: (line) => lines.push(line) }));
     assert.equal(result.created, 1);
+    // Rows left behind by a title the console deleted (RE6 in #160) are no failure.
+    assert.equal(result.skipped, 1);
+    assert.equal(result.failed, 0);
     assert.deepEqual(
       psnLibrary.getGameData('psn-NPWR09518_00').achievement.list.map((t) => t.UnlockTime),
       [Math.floor(Date.parse('2026-07-04T02:09:43.35Z') / 1000), Math.floor(Date.parse('2026-06-28T19:58:21.65Z') / 1000)]
