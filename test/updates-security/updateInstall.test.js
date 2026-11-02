@@ -17,6 +17,12 @@ const test = require('node:test');
 const yaml = require(path.join(__dirname, '..', '..', 'app', 'node_modules', 'js-yaml'));
 
 const appRoot = path.join(__dirname, '..', '..', 'app');
+// patch-package names the file after the version it patches, so a bump renames it.
+const builderPatch = () => {
+  const name = fs.readdirSync(path.join(appRoot, 'patches')).find((file) => /^app-builder-lib\+[\d.]+\.patch$/.test(file));
+  assert.ok(name, 'app/patches holds the app-builder-lib patch');
+  return fs.readFileSync(path.join(appRoot, 'patches', name), 'utf8');
+};
 const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
 const installerNsh = fs.readFileSync(path.join(appRoot, 'build', 'installer.nsh'), 'utf8');
 
@@ -295,7 +301,7 @@ test('the "delete my data" checkbox is honoured, not overwritten before it is re
 });
 
 test('the patched template takes the page list and the progress hooks, and spares the legacy 1.6.8 folder', () => {
-  const patch = fs.readFileSync(path.join(appRoot, 'patches', 'app-builder-lib+26.15.3.patch'), 'utf8');
+  const patch = builderPatch();
   for (const hook of ['customPages', 'customProgressPhase', 'customExtract7z', 'customMoveExtractedFiles']) {
     assert.match(patch, new RegExp(`^\\+\\s*!ifmacrodef ${hook}$`, 'm'), `the template must offer the ${hook} hook`);
   }
@@ -310,7 +316,7 @@ test('the patched template takes the page list and the progress hooks, and spare
 test('an all-users uninstall waits for its elevated copy outside the folder it removes', () => {
   // un.onInit makes $INSTDIR the working directory; the unelevated uninstaller kept it while the
   // elevated one deleted the files, and C:\Program Files\<app> was left behind, empty.
-  const patch = fs.readFileSync(path.join(appRoot, 'patches', 'app-builder-lib+26.15.3.patch'), 'utf8');
+  const patch = builderPatch();
   const multiUser = patch.slice(patch.indexOf('templates/nsis/multiUser.nsh'));
   assert.match(multiUser, /^\+\s*SetOutPath \$TEMP\n\s+!insertmacro UAC_RunElevated$/m);
 });
