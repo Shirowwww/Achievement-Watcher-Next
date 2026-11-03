@@ -907,12 +907,40 @@ function holdsValveDll(dir) {
   return crackLoaderDetect.STEAM_API_DLLS.some((name) => fs.existsSync(path.join(dir, name)) && !emulatorDll(path.join(dir, name)));
 }
 
+const UNITY_PLUGIN_DIR = /^(?:plugins|x86|x86_64)$/i;
+const UNITY_DATA_DIR = /_data$/i;
+
+/*
+  Where else the same game can run GBE while `dir` keeps Valve's dll (#167): a Unity build's exe
+  folder above <Game>_Data/Plugins, or an Unreal build's root and <Project>/Binaries/Win64 above
+  the engine's Steamworks folder. Structural only, so the climb never leaves the game.
+*/
+function runtimeDirsOfSameGame(dir) {
+  if (unrealLayout.isSteamworksDllDir(dir)) {
+    const root = path.resolve(dir, '..', '..', '..', '..', '..', '..');
+    let projects = [];
+    try {
+      projects = fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory());
+    } catch {
+      /* unreadable root: only the root itself is checked */
+    }
+    return [root, ...projects.map((entry) => path.join(root, entry.name, 'Binaries', 'Win64'))];
+  }
+  let current = path.resolve(dir);
+  while (UNITY_PLUGIN_DIR.test(path.basename(current))) current = path.dirname(current);
+  return UNITY_DATA_DIR.test(path.basename(current)) && current !== path.resolve(dir) ? [path.dirname(current)] : [];
+}
+
 // The GBE a game already runs from another file beside a Valve dll it keeps on purpose (Denuvo
-// checks it), or null. Replacing any of that game's Valve dlls stopped Phantom Blade Zero (#153).
+// checks it), or from another folder of the same game, or null. Replacing any of that game's
+// Valve dlls stopped Phantom Blade Zero (#153).
 function sideLoadedRuntime(dirs) {
   for (const dir of dirs) {
-    const runtime = crackLoaderDetect.proxyLoadedRuntime(dir);
-    if (runtime && holdsValveDll(dir)) return runtime;
+    if (!holdsValveDll(dir)) continue;
+    for (const candidate of [dir, ...runtimeDirsOfSameGame(dir)]) {
+      const runtime = crackLoaderDetect.proxyLoadedRuntime(candidate);
+      if (runtime) return runtime;
+    }
   }
   return null;
 }

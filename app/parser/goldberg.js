@@ -127,7 +127,9 @@ function hasEmuDllBeside(dir) {
 function runtimeDllsIn(dir) {
   const names = (dirCache.readdirNames(dir) || []).filter((entry) => EMU_DLL_NAMES.includes(String(entry).toLowerCase()));
   const dlls = names.map((name) => path.join(dir, name));
-  const proxied = dlls.length > 0 ? crackLoaderDetect.proxyLoadedRuntime(dir) : null;
+  // No steam_api here is not "no runtime": a Denuvo release can run GBE's steamclient from the exe
+  // folder while Valve's dll stays in the engine's own (#167).
+  const proxied = crackLoaderDetect.proxyLoadedRuntime(dir);
   return { dlls, emulated: dlls.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) || !!proxied, proxied };
 }
 
@@ -163,6 +165,8 @@ function findSteamSettings(gameDir, maxDepth = 6) {
       which is then reported as a missing schema and repaired in place.
     */
     if (unrealLayout.isSteamworksDllDir(parent)) score += 200;
+    // A GBE build already running beside it settles the question, even against the engine folder (#167).
+    if (crackLoaderDetect.proxyLoadedRuntime(parent)) score += 400;
     try {
       const entries = (dirCache.readdirNames(dir) || []).map((e) => e.toLowerCase());
       if (entries.includes('achievements.json')) score += 100;
@@ -1030,7 +1034,10 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     dll folders so the repair can write into the one the emulator does read (see hasEmuDllBeside).
   */
   const settingsParent = path.dirname(steamSettings);
-  report.settingsBesideDll = dllDirs.length === 0 ? null : dllDirs.some((dir) => sameDir(dir, settingsParent));
+  // GBE's steamclient (or a renamed build a proxy loads) beside the folder reads it, wherever Valve's
+  // steam_api sits. A Denuvo release keeps that dll untouched on purpose (#167).
+  const runsBesideSettings = !!crackLoaderDetect.proxyLoadedRuntime(settingsParent);
+  report.settingsBesideDll = runsBesideSettings || (dllDirs.length > 0 ? dllDirs.some((dir) => sameDir(dir, settingsParent)) : null);
   if (report.settingsBesideDll === false) {
     add(
       'warning',
@@ -1049,7 +1056,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   const engineUnconfigured = report.engineDllDirs.filter(
     (dir) => !sameDir(dir, settingsParent) && !fs.existsSync(path.join(dir, 'steam_settings'))
   );
-  if (report.engineDllDirs.length > 0 && engineUnconfigured.length === report.engineDllDirs.length) {
+  if (!runsBesideSettings && report.engineDllDirs.length > 0 && engineUnconfigured.length === report.engineDllDirs.length) {
     add(
       'warning',
       'UNREAL_ENGINE_DLL_UNCONFIGURED',
@@ -1069,7 +1076,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   const servedDirs = [settingsParent, ...report.engineDllDirs.filter((dir) => fs.existsSync(path.join(dir, 'steam_settings')))].filter(
     (dir, index, all) => all.findIndex((other) => sameDir(other, dir)) === index
   );
-  const servedRuntimes = servedDirs.map((dir) => ({ dir, ...runtimeDllsIn(dir) })).filter((entry) => entry.dlls.length > 0);
+  const servedRuntimes = servedDirs.map((dir) => ({ dir, ...runtimeDllsIn(dir) })).filter((entry) => entry.dlls.length > 0 || entry.proxied);
   const inertDirs = servedRuntimes.filter((entry) => !entry.emulated).map((entry) => entry.dir);
   report.foreignRuntimeDirs = inertDirs;
   report.proxiedRuntimes = servedRuntimes.filter((entry) => entry.proxied).map((entry) => entry.proxied);

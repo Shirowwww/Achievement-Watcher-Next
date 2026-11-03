@@ -135,6 +135,11 @@ renamed in 3.9.0 and the history is kept under one file.
   missing achievement list instead. Its emulator fix also takes a restore point first, is now
   called **Install the emulator file** (it never restored anything), and can be undone from the
   panel, which puts the game's own dll back.
+- **The emulator next to a Unity or Unreal game's exe is read where it runs (#167).** Denuvo
+  releases such as Two Point Museum or Sonic Racing CrossWorlds run the emulator from the exe's
+  folder and leave Steam's dll untouched in the engine's own folder. Game Health said that setup
+  was never read and offered to move it next to Steam's dll, which stops these games from starting.
+  It now reads the setup where it is and leaves both folders alone.
 - **God of War III is found again after updating to SpartanPort 2.7.** Its launcher starts a new
   settings file next to the game, and AW Next read only that one, missing the game folder the old
   settings named. Game files kept inside the port's folder are found too, and SpartanPort 2.8,
