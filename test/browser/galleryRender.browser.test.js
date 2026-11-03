@@ -16,6 +16,8 @@ const { serveOnOpenPort } = require('../helpers/openPort');
 const { start } = require(path.join(__dirname, '..', '..', 'tools', 'site', 'serve.js'));
 
 const API_HOST = 'aw-gallery.shirow.dedyn.io';
+// The site's analytics beacon reports to Cloudflare, which refuses a local origin with a CORS error.
+const ANALYTICS_HOST = 'static.cloudflareinsights.com';
 
 // The host, not a substring: a URL can carry the gallery name in its path and still point elsewhere.
 function hostOf(url) {
@@ -37,7 +39,8 @@ async function openGallery(browser, url) {
 
   await page.setRequestInterception(true);
   page.on('request', (request) => {
-    if (hostOf(request.url()) === API_HOST) request.abort('failed');
+    const host = hostOf(request.url());
+    if (host === API_HOST || host === ANALYTICS_HOST) request.abort('failed');
     else request.continue();
   });
 
