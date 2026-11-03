@@ -1,4 +1,6 @@
 {
+  "about.label": "Achievement Watcher Next 是什么",
+  "about.lead": "Achievement Watcher Next 是一款适用于 Windows 和 Linux 的免费开源成就追踪器。它读取 Steam、GOG、Epic、Ubisoft、Xbox PC、RetroAchievements 以及 Goldberg、GBE Fork 等 Steam 模拟器的成就，并在成就解锁时在游戏上方弹出提示。它延续了 <a href=\"https://github.com/xan105/Achievement-Watcher\">Xan105 的 Achievement Watcher</a>，无需 Steam API 密钥，也无需账户。",
   "docs.all": "全部指南",
   "docs.controller": "手柄",
   "docs.faq": "常见问题",

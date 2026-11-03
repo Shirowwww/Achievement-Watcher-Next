@@ -1,4 +1,6 @@
 {
+  "about.label": "Что такое Achievement Watcher Next",
+  "about.lead": "Achievement Watcher Next является бесплатным трекером достижений с открытым исходным кодом для Windows и Linux. Он читает достижения из Steam, GOG, Epic, Ubisoft, Xbox PC, RetroAchievements и эмуляторов Steam, таких как Goldberg и GBE Fork, и показывает уведомление поверх игры, когда достижение открыто. Он продолжает <a href=\"https://github.com/xan105/Achievement-Watcher\">Achievement Watcher от Xan105</a> и не требует ни ключа Steam API, ни учётной записи.",
   "docs.all": "Все руководства",
   "docs.controller": "Геймпад",
   "docs.faq": "Частые вопросы",

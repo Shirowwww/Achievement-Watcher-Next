@@ -1,4 +1,4 @@
-# FAQ
+# Achievement tracker FAQ
 
 Short answers to the usual questions. Each links to the guide that covers it.
 
@@ -178,6 +178,22 @@ version is out, and extracting the new archive over the old folder keeps your da
 Closing the window keeps AW Next in the system tray so tracking continues. Use the tray menu to exit.
 
 ## The project
+
+### Does it work with Goldberg, GBE Fork and CODEX games?
+Yes. AW Next reads the achievement files that Goldberg, GBE Fork, CODEX, RUNE and CPY write, and it can
+install and repair the GBE Fork runtime for a game. See [Compatible sources](sources.md) and
+[Goldberg and GBE Fork setup](emulator-setup.md).
+
+### Is this the same app as Xan105's Achievement Watcher?
+No, it is a continuation. AW Next continues Xan105's Achievement Watcher and darktakayanagi's 2.x
+branch, on a current Electron runtime, with Linux support, more sources and a per-game health report
+with guided repairs. See the [Comparison](comparison.md).
+
+### Is it safe to use with cracked games?
+Reading achievements is read-only. The repair tools write to a game folder only after a confirmation and
+with a backup, and automatic repair is off by default. Use them only with games you own. An antivirus
+may flag an emulator file as a false positive. See
+[Troubleshooting → Antivirus](troubleshooting.md#antivirus-or-smartscreen-warning).
 
 ### How does this differ from Achievement Watcher 2.x?
 AW Next continues it with a modern runtime and a large pass on compatibility, reliability and

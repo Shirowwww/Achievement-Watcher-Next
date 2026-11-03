@@ -1,8 +1,17 @@
-# Goldberg and GBE Fork setup
+# Goldberg and GBE Fork achievements setup
 
 AW Next reads the achievement saves that Goldberg, GBE Fork and compatible Steam-emulator layouts
 produce. It can also diagnose and repair a game's local emulator configuration when the schema, the
 AppID or the runtime files are incomplete.
+
+## How do I get achievement notifications with Goldberg or GBE Fork?
+
+Goldberg and GBE Fork are Steam emulators: they stand in for the Steam library and record unlocks in a
+save file, `achievements.json`, under `%APPDATA%\GSE Saves\<appid>`. A second file with the same name,
+in the game's `steam_settings` folder, only describes the achievements. AW Next reads both and shows
+the unlock popup over the game. Add the game folder under **Settings → Folders**, run **Smart Find**,
+and right-click the game and choose **Diagnose emulator** if it stays at 0%. Nothing is written to the
+game folder until you ask for a repair.
 
 > [!WARNING]
 > The repair tools are optional. They modify files inside the selected game folder, so use them only

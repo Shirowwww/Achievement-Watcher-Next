@@ -829,9 +829,11 @@ body.aw-guide {
   text-decoration: none;
 }
 
-.aw-guides a[aria-current="page"] {
+/* Body text on the soft accent: the accent itself is 4.4:1 there in the light palette, under AA. */
+.aw-guides a[aria-current="page"],
+.aw-guides li a[aria-current="page"]:hover {
   background: var(--aw-accent-soft);
-  color: var(--aw-accent);
+  color: var(--aw-text);
   font-weight: 700;
 }
 

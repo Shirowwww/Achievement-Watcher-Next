@@ -1,0 +1,17 @@
+{%- comment -%}
+  Breadcrumb trail for the guides: Home > Documentation > this guide. The last item has no `item`
+  on purpose, Google accepts that for the page being read. The 404 page and the hub itself stop short.
+{%- endcomment -%}
+{% if page.layout == 'default' and page.url != '/' and page.name != '404.html' %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Achievement Watcher Next", "item": {{ '/' | absolute_url | jsonify }} },
+    { "@type": "ListItem", "position": 2, "name": "Documentation", "item": {{ '/README.html' | absolute_url | jsonify }} }{% unless page.name == 'README.md' %},
+    { "@type": "ListItem", "position": 3, "name": {{ page.title | jsonify }} }{% endunless %}
+  ]
+}
+</script>
+{% endif %}

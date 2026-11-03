@@ -72,7 +72,7 @@ defaults:
   - scope:
       path: notifications.md
     values:
-      title: Notifications
+      title: Achievement notifications and popups
       description: Overlay popups or Windows notifications - delivery modes, Automatic, sounds, position, trophy mode, OBS, screenshot souvenirs and video clips.
   - scope:
       path: presets.md
@@ -82,7 +82,7 @@ defaults:
   - scope:
       path: overlay.md
     values:
-      title: In-game overlay
+      title: In-game achievement list (overlay)
       description: The in-game achievement list opened with Ctrl+Shift+K - search, filters, rarity, hidden descriptions and customization.
   - scope:
       path: controller.md
@@ -102,12 +102,12 @@ defaults:
   - scope:
       path: faq.md
     values:
-      title: FAQ
+      title: Achievement tracker FAQ
       description: Short answers about accounts, sources, notifications, safety, backups and supported platforms for Achievement Watcher Next.
   - scope:
       path: linux.md
     values:
-      title: Linux and the Steam Deck
+      title: Achievement tracker for Linux and Steam Deck
       description: Install the AppImage and keep it updated, bind the overlay to a key on GNOME or KDE, and run games through Steam, Proton, Lutris, Heroic or Bottles.
   - scope:
       path: advanced.md
@@ -117,7 +117,7 @@ defaults:
   - scope:
       path: emulator-setup.md
     values:
-      title: Goldberg and GBE Fork setup
+      title: Goldberg and GBE Fork achievements setup
       description: Diagnose or repair an emulated Steam game with Goldberg or GBE Fork, with a backup and a confirmation before every write.
   - scope:
       path: uplay-r2.md
@@ -148,26 +148,29 @@ defaults:
       path: architecture.md
     values:
       title: Architecture
+      robots: noindex
       description: The app, renderer and Watchdog boundaries and the parser contract of Achievement Watcher Next, for contributors.
   - scope:
       path: goldberg-gbe.md
     values:
-      title: Goldberg and GBE Fork reference
+      title: Goldberg and GBE Fork file formats (reference)
       description: Goldberg and GBE Fork file formats, detection rules and the repair invariants Achievement Watcher Next keeps.
   - scope:
       path: uplay-reference.md
     values:
-      title: Uplay R1 and R2 reference
+      title: Goldberg Uplay R1 and R2 file formats (reference)
       description: How Achievement Watcher Next identifies, repairs and reads Uplay R1 and R2 games - file layouts and invariants.
   - scope:
       path: RELEASE_WORKFLOW.md
     values:
       title: Commit and release workflow
+      robots: noindex
       description: How Achievement Watcher Next releases are versioned, built, signed, published and validated for auto-update.
   - scope:
       path: INSTALLER_AND_UPDATES.md
     values:
       title: Installer, uninstaller and updates
+      robots: noindex
       description: The installer, uninstaller and updater of Achievement Watcher Next, and why they diverge from the electron-builder defaults.
 
 # The repository is a monorepo for a desktop app; only this folder is published, but be explicit so

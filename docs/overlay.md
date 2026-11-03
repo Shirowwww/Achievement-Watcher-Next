@@ -1,4 +1,4 @@
-# In-game overlay list
+# In-game achievement list (overlay)
 
 The in-game overlay (`Ctrl+Shift+K` by default while a supported game runs) shows the achievement
 list of the running game without leaving it: names, descriptions, lock state, unlock dates and
@@ -10,6 +10,22 @@ to a key instead, as [Overlay shortcut](linux.md#overlay-shortcut) shows.
 <picture><source srcset="assets/shot/overlay.webp 569w" sizes="(max-width: 700px) 100vw, 360px"><img src="screenshot/overlay.png" width="360" height="633" alt="In-game overlay achievement list"></picture><br>
 <sub>Status, rarity and date columns, with search and filters</sub>
 </div>
+
+## How do I open the achievement list in a game?
+
+Press `Ctrl+Shift+K` while a supported game runs. That is the default hotkey. The overlay lists every
+achievement of that game with its status, unlock date, rarity and progress, and you can search it.
+Press the hotkey again to close it. On a controller, the default is **Back + Start + LB**.
+
+On Linux under Wayland, a game running as a native Wayland window never passes the key to AW Next.
+Bind `~/.local/bin/achievement-watcher --toggle-overlay` to a key in your desktop's keyboard
+settings instead. See [Overlay shortcut](linux.md#overlay-shortcut).
+
+## Is the overlay the same as the unlock popup?
+
+No. The popup is a one-shot notification that appears when something unlocks, styled by a preset (see
+[Notifications](notifications.md)). The overlay is the full list of one game, opened by you, and
+stays until you close it.
 
 ## What it shows
 

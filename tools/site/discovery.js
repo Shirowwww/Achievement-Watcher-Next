@@ -8,6 +8,7 @@
 */
 
 const fs = require('node:fs');
+const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 
 const root = path.join(__dirname, '..', '..');
@@ -17,6 +18,7 @@ const BASE = 'https://shirowwww.github.io/Achievement-Watcher-Next/';
 const REPOSITORY = 'https://github.com/Shirowwww/Achievement-Watcher-Next';
 const SITEMAP = path.join(DOCS, 'sitemap.xml');
 const FEED = path.join(DOCS, 'releases.xml');
+const PAGE_DATES = path.join(DOCS, '_data', 'pagedates.json');
 
 function xml(value) {
   return String(value)
@@ -37,17 +39,48 @@ function publicPages() {
   return ['', 'gallery/', 'gallery/themes/', ...guides];
 }
 
-// Every page is as current as the latest release: the guides are written for the version that is out.
-function lastModified() {
-  const entries = releases();
-  return entries.length ? entries[0].date : null;
+// Author date of the last commit that touched any of the files, as YYYY-MM-DD; null when git has none.
+function lastCommitDate(files) {
+  const args = ['log', '-1', '--format=%as', '--', ...files.map((file) => path.relative(root, file))];
+  try {
+    return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+// The files that make up a page; the galleries also render their index.json.
+function sourcesOf(page) {
+  if (page === '') return [path.join(DOCS, 'index.html')];
+  if (page.endsWith('/')) return ['index.html', 'index.json'].map((name) => path.join(DOCS, page, name));
+  return [path.join(DOCS, `${page.slice(0, -5)}.md`)];
+}
+
+function pageDates() {
+  const dates = {};
+  for (const page of publicPages()) {
+    const date = lastCommitDate(sourcesOf(page));
+    if (date) dates[page] = date;
+  }
+  return dates;
 }
 
 function sitemapContent() {
-  const modified = lastModified();
-  const stamp = modified ? `<lastmod>${modified}</lastmod>` : '';
-  const urls = publicPages().map((page) => `  <url><loc>${xml(BASE + page)}</loc>${stamp}</url>`).join('\n');
+  const dates = pageDates();
+  const urls = publicPages()
+    .map((page) => `  <url><loc>${xml(BASE + page)}</loc>${dates[page] ? `<lastmod>${dates[page]}</lastmod>` : ''}</url>`)
+    .join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
+// Read by the guide footer as site.data.pagedates[page.name]: the Pages build has no git history.
+function pageDatesContent() {
+  const dates = pageDates();
+  const byName = {};
+  for (const page of publicPages()) {
+    if (page.endsWith('.html') && dates[page]) byName[`${page.slice(0, -5)}.md`] = dates[page];
+  }
+  return `${JSON.stringify(byName, null, 2)}\n`;
 }
 
 function releases() {
@@ -93,17 +126,24 @@ function feedContent() {
   ].join('\n');
 }
 
+// shortcut: a page date comes from a commit that cannot exist before the file is committed, and a
+// shallow CI clone has none, so --check compares everything but the dates. Regenerate after committing.
+function withoutDates(text) {
+  return text.replace(/<lastmod>[^<]*<\/lastmod>/g, '').replace(/"(\d{4}-\d{2}-\d{2})"/g, '"DATE"');
+}
+
 function run({ check = false } = {}) {
   const outputs = [
     [SITEMAP, sitemapContent()],
     [FEED, feedContent()],
+    [PAGE_DATES, pageDatesContent()],
   ];
 
   let current = true;
   for (const [file, wanted] of outputs) {
     if (check) {
       const present = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : '';
-      if (present !== wanted) {
+      if (withoutDates(present) !== withoutDates(wanted)) {
         console.error(`${path.relative(root, file).replace(/\\/g, '/')} is stale. Run: node tools/site/discovery.js`);
         current = false;
       }

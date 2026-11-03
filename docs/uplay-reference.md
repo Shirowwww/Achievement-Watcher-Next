@@ -1,7 +1,8 @@
-# Uplay R1/R2 reference
+# Goldberg Uplay R1 and R2 file formats (reference)
 
 How AW Next identifies, repairs and reads Ubisoft games running the Goldberg Uplay emulator. For
-contributors and for debugging a setup. The user guide is [Uplay setup](uplay-r2.md).
+contributors and for debugging a setup. To fix a game, follow the
+[Uplay setup guide](uplay-r2.md#repair-a-game) instead.
 
 ## The two generations
 

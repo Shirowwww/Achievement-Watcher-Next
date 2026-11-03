@@ -1,4 +1,4 @@
-# Notifications
+# Achievement notifications and popups
 
 AW Next announces an unlock with a native Windows notification (toast), an in-game overlay popup, or
 both. Choose how under **Settings → Notification**.

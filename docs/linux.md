@@ -1,4 +1,4 @@
-# Linux and the Steam Deck
+# Achievement tracker for Linux and Steam Deck
 
 AW Next runs on Linux (x64) as a native app, never through Wine. It follows games run through Steam
 and Proton, Wine, Lutris, Heroic or Bottles, native Linux games and the supported emulators, with the

@@ -91,7 +91,9 @@
           <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/docs/{{ page.name }}">Improve this page on GitHub</a>
           {% endif %}
           {% endif %}
+          {%- assign updated = site.data.pagedates[page.name] -%}
           <span>Achievement Watcher Next, LGPL-3.0. Windows and Linux.</span>
+          <span>Maintained by Shirowwww.{% if updated %} Last updated <time datetime="{{ updated }}">{{ updated | date: '%-d %B %Y' }}</time>.{% endif %}</span>
         </footer>
       </main>
 
@@ -104,5 +106,6 @@
     </div>
 
     <script src="{{ '/assets/js/guide.js' | relative_url }}" defer></script>
+    <script src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "0f90552e27d745eba9e93f0d31908b25"}' defer></script>
   </body>
 </html>

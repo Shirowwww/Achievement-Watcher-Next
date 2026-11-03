@@ -1,17 +1,17 @@
-# Goldberg and GBE Fork technical reference
+# Goldberg and GBE Fork file formats (reference)
 
-How AW Next discovers, reads and repairs Goldberg/GBE-compatible achievement data. For setup steps,
-use the [user guide](emulator-setup.md).
+The file formats, detection rules and repair invariants behind AW Next's Goldberg and GBE Fork
+support. For setup steps and the table of where each file lives, use the
+[setup guide](emulator-setup.md#schema-and-save-files-are-different).
 
 ## Data model
 
-The schema and the runtime state are two files with the same name:
+The schema and the runtime state are two files with the same name, told apart in the setup guide. They
+differ in shape and in which code reads them:
 
 | | Local schema | Runtime save |
 |---|---|---|
-| Path | `<game>\steam_settings\achievements.json` | `%APPDATA%\GSE Saves\<appid>\achievements.json` or `%APPDATA%\Goldberg SteamEmu Saves\<appid>\achievements.json` |
 | JSON shape | Array of achievement definitions | Object keyed by achievement API name |
-| Purpose | Names, descriptions, hidden state and icon paths | Earned state and unlock time |
 | Main reader | `app/parser/goldberg.js` | `app/parser/steam.js` and `app/parser/achievements.js` |
 
 The schema follows the GBE example shape:

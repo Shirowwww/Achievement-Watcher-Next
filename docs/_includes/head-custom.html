@@ -15,7 +15,8 @@
   the app and for this site is docs/localization.md.
 -->
 <meta http-equiv="content-language" content="{{ site.lang | default: 'en' }}" />
-<link rel="alternate" hreflang="{{ site.lang | default: 'en' }}" href="{{ page.url | absolute_url }}" />
+<!-- jekyll-seo-tag writes no robots tag; the contributor pages set `robots: noindex` in _config.yml. -->
+{% if page.robots %}<meta name="robots" content="{{ page.robots }}" />{% endif %}
 <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="{{ '/releases.xml' | relative_url }}" />
 
 <!--
@@ -39,4 +40,5 @@
 <script type="speculationrules">
   { "prefetch": [{ "where": { "href_matches": "{{ '/*' | relative_url }}" }, "eagerness": "moderate" }] }
 </script>
+{% include breadcrumb-jsonld.html %}
 {% if page.name == 'faq.md' %}{% include faq-jsonld.html %}{% endif %}

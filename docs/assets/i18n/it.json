@@ -1,4 +1,6 @@
 {
+  "about.label": "Che cos'è Achievement Watcher Next",
+  "about.lead": "Achievement Watcher Next è un tracker di obiettivi gratuito e open source per Windows e Linux. Legge gli obiettivi da Steam, GOG, Epic, Ubisoft, Xbox PC, RetroAchievements e dagli emulatori di Steam come Goldberg e GBE Fork, poi mostra un popup sopra il gioco quando ne sblocchi uno. Prosegue <a href=\"https://github.com/xan105/Achievement-Watcher\">Achievement Watcher di Xan105</a> e non richiede né una chiave API di Steam né un account.",
   "docs.all": "Tutte le guide",
   "docs.controller": "Controller",
   "docs.faq": "Domande frequenti",

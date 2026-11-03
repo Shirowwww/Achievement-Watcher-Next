@@ -1,5 +1,10 @@
 # How AW Next compares
 
+Achievement Watcher Next is an alternative to, and the successor of, Xan105's Achievement Watcher. It
+runs on Windows and Linux, reads Steam, GOG, Epic, Ubisoft, Xbox PC and Steam-emulator saves, repairs a
+Goldberg or GBE Fork setup from the app, and chooses its own notification transport. Achievements by
+PSerban93 is the other actively developed Windows tracker, and Sentinel is Linux only.
+
 AW Next continues [Xan105's original Achievement Watcher](https://github.com/xan105/Achievement-Watcher)
 and [darktakayanagi's 2.x branch](https://github.com/darktakayanagi/Achievement-Watcher). This page sets
 it beside that lineage, beside [Achievements](https://github.com/PSerban93/Achievements), the other
@@ -102,6 +107,19 @@ not documented on the current public branch. Competitor columns were compared ag
 READMEs, GitHub metadata and package manifests on 22 October 2026. The AW Next column reflects version
 3.12.2 and the unreleased changes of October 2026. A ❌ in another column usually means undocumented
 rather than impossible, and all of these projects move fast.</sub>
+
+## Hydra and Steam Achievement Manager
+
+Two other tools come up in the same searches, and they do a different job.
+
+- [Hydra](https://hydralauncher.gg/) describes itself as a game launcher that lets you download games
+  and track achievements. AW Next does not download games.
+- [Steam Achievement Manager](https://github.com/gibbed/SteamAchievementManager) describes itself as a
+  lightweight, portable application used to manage achievements and statistics on Steam. It needs the
+  Steam client, a Steam account and network access. AW Next shows and tracks achievements and needs no
+  Steam account.
+
+Neither is in the tables above, which compare the trackers that read local and emulator saves.
 
 ## In short
 

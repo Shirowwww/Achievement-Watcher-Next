@@ -69,7 +69,7 @@ test('the guides publish as pages only, with a layout, an image and a 404 page',
   assert.match(notFound, /^---\n[\s\S]*permalink: \/404\.html/);
 });
 
-test('the layout gives every guide one h1, a skip link, a main landmark and no outside script', () => {
+test('the layout gives every guide one h1, a skip link, a main landmark and no outside script but the page counter', () => {
   const layout = fs.readFileSync(path.join(DOCS, '_layouts', 'default.html'), 'utf8');
   const head = fs.readFileSync(path.join(DOCS, '_includes', 'head-custom.html'), 'utf8');
   const header = fs.readFileSync(path.join(DOCS, '_includes', 'site-header.html'), 'utf8');
@@ -81,7 +81,12 @@ test('the layout gives every guide one h1, a skip link, a main landmark and no o
   assert.match(layout, /theme-color/);
 
   for (const text of [layout, head, header]) {
-    assert.doesNotMatch(text, /<script[^>]+src="https?:/, 'a guide loads a script from another host');
+    // Cloudflare Web Analytics is the one outside script: a cookieless page counter.
+    assert.doesNotMatch(
+      text,
+      /<script[^>]+src="https?:\/\/(?!static\.cloudflareinsights\.com\/beacon\.min\.js")/,
+      'a guide loads a script from another host'
+    );
     assert.doesNotMatch(text, /<link[^>]+href="https?:\/\/(?!github\.com)[^"]*\.css/, 'a guide loads a stylesheet from another host');
   }
 

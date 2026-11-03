@@ -487,6 +487,13 @@
   }
 }
 
+/* --- about ------------------------------------------------------------------------------------ */
+
+/* A paragraph, not a tagline: the 40ch of .lead would stack it into a tall column. */
+.about-section .lead {
+  max-width: 68ch;
+}
+
 /* --- figures ---------------------------------------------------------------------------------- */
 
 .strip {

@@ -7,7 +7,7 @@ of `%APPDATA%\Achievement Watcher Next`.
 
 ## Install
 
-| | Windows 10 and 11 | Linux (x64, beta) |
+| Step | Windows 10 and 11 | Linux (x64, beta) |
 |---|---|---|
 | **Get it** | From the [latest release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest): `Achievement.Watcher.Setup.<version>.exe`, or `Achievement.Watcher.Portable.<version>.zip` to keep its data beside the app | From the same release: `Achievement.Watcher.<version>.AppImage` |
 | **Start it** | Run the installer, choose a folder, then open AW Next from the Start menu | `chmod +x`, then run it. It needs FUSE 2: `libfuse2t64` on Ubuntu 24.04 |

@@ -4,6 +4,10 @@ A **source** is one place AW Next reads achievements from: a launcher's local da
 save file, or a console emulator's trophy file. Each source has its own switch in **Settings →
 Sources**.
 
+AW Next reads Steam, GOG Galaxy, Ubisoft Connect, Epic Games, Xbox PC, EA Desktop's local achievement
+log, RetroAchievements, console emulators, and the save files of Steam emulators such as Goldberg, GBE
+Fork, CODEX, RUNE and CPY. It needs no Steam Web API key and no account.
+
 <div align="center">
 <picture><source srcset="assets/shot/sources-panel-800.webp 800w, assets/shot/sources-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/sources-panel.png" width="720" height="529" alt="Settings - Game sources"></picture><br>
 <sub>Each source is a separate switch; the shield marks the official desktop libraries</sub>

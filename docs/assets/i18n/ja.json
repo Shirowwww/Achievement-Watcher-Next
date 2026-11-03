@@ -1,4 +1,6 @@
 {
+  "about.label": "Achievement Watcher Next とは",
+  "about.lead": "Achievement Watcher Next は、Windows と Linux 向けの無料のオープンソース実績トラッカーです。Steam、GOG、Epic、Ubisoft、Xbox PC、RetroAchievements と、Goldberg や GBE Fork などの Steam エミュレーターから実績を読み取り、解除されるとゲームの上にポップアップを表示します。<a href=\"https://github.com/xan105/Achievement-Watcher\">Xan105 の Achievement Watcher</a> を引き継ぐもので、Steam API キーもアカウントも不要です。",
   "docs.all": "すべてのガイド",
   "docs.controller": "コントローラー",
   "docs.faq": "よくある質問",
