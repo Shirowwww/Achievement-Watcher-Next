@@ -488,11 +488,31 @@ test("the archive's list in the app's language gives the texts, icons and the ga
   }
 });
 
-test('an archived list with other trophies, or an archive that cannot be reached, leaves the console texts', async () => {
+test("another version of the list in the archive lends the texts of the trophies both share, the console keeps its own count", async () => {
   const server = await ps3Server();
   try {
-    const shorter = archivedAstro({ trophies: archivedAstro().trophies.slice(0, 2) });
-    await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', fetchImpl: archiveFetch({ 'en/NPWR00001_00': shorter }).fetchImpl }));
+    // The console holds three trophies, the archive two of them plus one the console does not have.
+    const other = archivedAstro({ trophies: [...archivedAstro().trophies.slice(0, 2), { ...archivedAstro().trophies[0], trophyId: 9, trophyName: 'Archive 9' }] });
+    await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', fetchImpl: archiveFetch({ 'en/NPWR00001_00': other }).fetchImpl }));
+    const game = psnLibrary.getGameData('psn-NPWR00001_00');
+    assert.deepEqual(
+      game.achievement.list.map((t) => [t.name, t.displayName]),
+      [
+        ['0', 'Archive 0'],
+        ['1', 'Archive 1'],
+        ['2', 'First steps'],
+      ]
+    );
+  } finally {
+    await server.close();
+  }
+});
+
+test('an archived list with other grades, or an archive that cannot be reached, leaves the console texts', async () => {
+  const server = await ps3Server();
+  try {
+    const regraded = archivedAstro({ trophies: archivedAstro().trophies.map((t) => ({ ...t, trophyType: 'bronze' })) });
+    await consoleFtp.importFromConsole(importOptions(server, { console: 'ps3', fetchImpl: archiveFetch({ 'en/NPWR00001_00': regraded }).fetchImpl }));
     assert.equal(psnLibrary.getGameData('psn-NPWR00001_00').achievement.list[0].displayName, 'Platinum');
 
     let calls = 0;

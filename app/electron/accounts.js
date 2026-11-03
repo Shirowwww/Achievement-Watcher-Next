@@ -850,11 +850,15 @@ async function runConsoleImport(options) {
   return result;
 }
 
+// The accounts last found, kept with the console once it is imported from so the list reopens filled.
+let foundProfiles = { host: '', profiles: [] };
+
 ipcMain.handle('psn:console-import', async (_event, request = {}) => {
   const asked = consoleRequest(request);
   try {
     const result = await runConsoleImport(asked);
-    saveConsole(result.console, { host: asked.host, port: String(result.port), profile: result.profile, savedAt: Date.now() });
+    const profiles = foundProfiles.host === asked.host ? foundProfiles.profiles : [];
+    saveConsole(result.console, { host: asked.host, port: String(result.port), profile: result.profile, profiles, savedAt: Date.now() });
     return { ok: true, result };
   } catch (err) {
     debug.log(`[psn-ftp] import failed: ${errorCode(err)}`);
@@ -865,7 +869,9 @@ ipcMain.handle('psn:console-import', async (_event, request = {}) => {
 ipcMain.handle('psn:console-profiles', async (_event, request = {}) => {
   try {
     const { profile: _ignored, ...asked } = consoleRequest(request);
-    return { ok: true, result: await consoleFtp().listConsoleProfiles(asked) };
+    const result = await consoleFtp().listConsoleProfiles(asked);
+    foundProfiles = { host: asked.host, profiles: result.profiles };
+    return { ok: true, result };
   } catch (err) {
     debug.log(`[psn-ftp] account lookup failed: ${errorCode(err)}`);
     return { ok: false, error: errorCode(err) };

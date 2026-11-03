@@ -381,3 +381,31 @@ test('when no title names a page, Exophase search finds it, and the page that kn
     Object.assign(exophase, { fetchExophaseRarity: real.byName, searchExophaseTitles: real.search, fetchExophaseRarityBySlug: real.bySlug });
   }
 });
+
+test("a PS4 list Exophase files under another address (alan-wake-remastered-psn-4) is found through its trophy search, never the PS5 one", async () => {
+  const exophase = require('../../app/parser/exophase.js');
+  const real = { byName: exophase.fetchExophaseRarity, lists: exophase.searchExophaseTrophyLists, bySlug: exophase.fetchExophaseRarityBySlug };
+  exophase.fetchExophaseRarity = async () => {
+    throw new Error('No working Exophase URL');
+  };
+  exophase.searchExophaseTrophyLists = async () => [
+    { title: 'Alan Wake Remastered', slug: 'alan-wake-remastered-psn', platform: 'ps5' },
+    { title: 'Alan Wake Remastered', slug: 'alan-wake-remastered-psn-4', platform: 'ps4' },
+  ];
+  const visited = [];
+  exophase.fetchExophaseRarityBySlug = async ({ slug, achievements }) => {
+    visited.push(slug);
+    return achievements.map((a) => ({ name: a.name, percent: 15 }));
+  };
+  try {
+    const entries = await rarity.getRarityEntries('psn-NPWR21999_00', 'ShadPS4 Emulator', {
+      gameName: 'Alan Wake Remastered',
+      achievements: [{ name: '0', displayName: 'Platinum Trophy', type: 'P' }],
+      forceRefresh: true,
+    });
+    assert.equal(entries.length, 1);
+    assert.deepEqual(visited, ['alan-wake-remastered-psn-4']);
+  } finally {
+    Object.assign(exophase, { fetchExophaseRarity: real.byName, searchExophaseTrophyLists: real.lists, fetchExophaseRarityBySlug: real.bySlug });
+  }
+});

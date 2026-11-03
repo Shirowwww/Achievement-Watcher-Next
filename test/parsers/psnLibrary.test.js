@@ -269,7 +269,9 @@ test("a list's name loses the trophy wording around the game's name", () => {
   const cases = {
     'Trophies for Mortal Kombat 11': 'Mortal Kombat 11',
     'Trophies of Uncharted': 'Uncharted',
-    'THE EYE OF JUDGMENT™ Trophies': 'THE EYE OF JUDGMENT™',
+    'THE EYE OF JUDGMENT™ Trophies': 'THE EYE OF JUDGMENT',
+    'The Last of Us™ Part II': 'The Last of Us Part II',
+    'Marvel’s Spider-Man® Remastered': 'Marvel’s Spider-Man Remastered',
     'Trophées de GTA IV': 'GTA IV',
     'Trophées d’Assassin’s Creed': 'Assassin’s Creed',
     'Trofeos de Bloodborne': 'Bloodborne',

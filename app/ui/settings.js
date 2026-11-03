@@ -2707,7 +2707,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           $('#psn-ftp-host').val(last.host);
           $('#psn-ftp-console').val(kind);
           $('#psn-ftp-port').val(last.port || '');
-          if (last.profile) showProfiles([{ id: last.profile, name: '' }], last.profile);
+          const known = Array.isArray(last.profiles) ? last.profiles.filter((p) => p && typeof p.id === 'string') : [];
+          if (last.profile) showProfiles(known.some((p) => p.id === last.profile) ? known : [{ id: last.profile, name: '' }], last.profile);
         })
         .catch((err) => debug.log(`[psn-ftp] saved console not read: ${err.message || err}`));
 

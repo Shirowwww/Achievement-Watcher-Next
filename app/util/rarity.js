@@ -187,6 +187,12 @@ async function fetchExophaseByTitles(platform, options) {
       lastError = err;
     }
   }
+  // A PS4 or PS5 list sits at a trophy page ("alan-wake-remastered-psn-4"), which only the trophy
+  // search knows; the other platforms' search answers with achievement pages.
+  const trophyConsole = ['ps4', 'ps5'].find((key) => key === exophase.mapExophasePlatform(platform));
+  const search = trophyConsole
+    ? async (gameName) => (await exophase.searchExophaseTrophyLists(gameName)).filter((hit) => hit.platform === trophyConsole)
+    : (gameName) => exophase.searchExophaseTitles(gameName, platform);
   if (typeof exophase.searchExophaseTitles === 'function') {
     const wanted = new Set(titles.map(searchKey));
     const tried = new Set();
@@ -194,7 +200,7 @@ async function fetchExophaseByTitles(platform, options) {
     for (const gameName of titles) {
       let found = [];
       try {
-        found = await exophase.searchExophaseTitles(gameName, platform);
+        found = await search(gameName);
       } catch (err) {
         lastError = err;
         continue;

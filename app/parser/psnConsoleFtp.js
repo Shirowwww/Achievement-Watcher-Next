@@ -130,17 +130,24 @@ function titleRecord(listId, platform, name, iconUrl) {
   };
 }
 
-// The archived list only replaces the console's texts when it holds exactly the same trophies.
-function sameTrophies(archived, trophies) {
-  const ids = (list, key) => list.map((t) => String(t[key])).sort().join(',');
-  return Array.isArray(archived.trophies) && archived.trophies.length === trophies.length && ids(archived.trophies, 'trophyId') === ids(trophies, 'id');
+const consoleDefinition = (t) => ({ trophyId: t.id, trophyType: t.type, trophyName: t.name, trophyDetail: t.detail, trophyHidden: t.hidden });
+
+/*
+  The console's trophies with the archive's text and icon for each one the archive also lists. The
+  console may hold an older or newer version of the list (26 trophies against 28), so ids are matched
+  one by one; a grade that differs, or fewer than half shared, means another list and none is used.
+*/
+function withArchive(archived, trophies) {
+  if (!archived || !Array.isArray(archived.trophies)) return null;
+  const byId = new Map(archived.trophies.map((t) => [String(t.trophyId), t]));
+  const shared = trophies.filter((t) => byId.has(String(t.id)));
+  if (shared.length * 2 < trophies.length || shared.some((t) => byId.get(String(t.id)).trophyType !== t.type)) return null;
+  return { ...archived, trophies: trophies.map((t) => byId.get(String(t.id)) || consoleDefinition(t)) };
 }
 
 function writeList({ listId, platform, name, trophies, consoleKind }, { profile, archived } = {}) {
-  const online = archived && sameTrophies(archived, trophies) ? archived : null;
-  const definitions = online || {
-    trophies: trophies.map((t) => ({ trophyId: t.id, trophyType: t.type, trophyName: t.name, trophyDetail: t.detail, trophyHidden: t.hidden })),
-  };
+  const online = withArchive(archived, trophies);
+  const definitions = online || { trophies: trophies.map(consoleDefinition) };
   const earned = {
     trophies: trophies.filter((t) => t.earned).map((t) => ({ trophyId: t.id, earned: true, earnedDateTime: t.earnedAt ? new Date(t.earnedAt * 1000).toISOString() : '' })),
   };

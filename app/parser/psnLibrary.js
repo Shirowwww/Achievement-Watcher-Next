@@ -211,9 +211,10 @@ function platformLabel(platform) {
 }
 
 // Sony names some lists "<Game> Trophies", "Trophies for <Game>" or "Trophées de <Game>"; the tile
-// and the cover search want the game's name.
+// and the cover search want the game's name, without the ™ and ® Sony leaves in many of them.
 function cleanTitleName(value) {
   return String(value || '')
+    .replace(/[™®©]/g, '')
     .replace(/\s+(trophies|trophy set)$/i, '')
     .replace(/^(trophies|troph[ée]es|trofeos|trof[ée]us)\s+((for|of|de|du|des|do|da)\s+|d['’]\s*)?/i, '')
     .trim();
