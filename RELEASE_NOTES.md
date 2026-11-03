@@ -1,37 +1,39 @@
-# Achievement Watcher Next 3.12.4
+# Achievement Watcher Next 3.12.5
 
-A much bigger preset editor, the real PlayStation platinum without a PSN account, hidden games, updates that install themselves, and a window that stays smooth while the library is scanned.
+Your achievements inside Steam and Playnite, recompiled PC ports and PS3Recomp games as new sources, trophies read straight from a jailbroken PS3 or PS4, and steps you can tick off under a long achievement.
 
-## The preset editor
+## Steam and Playnite
 
-- **Build any popup you like.** Add texts, pictures, shapes and icons (trophy, medal, crown, star...), and animated GIFs of up to 5 MB. Shapes get rounded corners, dashed outlines, glows and a see-through mode that lets the desktop show through. The title, the description and the game line can be reworded and put in a box of their own.
-- **A different look per tier.** Any element can change on gold, silver or bronze unlocks, or show only on some of them: a crown on gold unlocks is one switch.
-- **A timeline for the entrances.** A bar along the bottom shows when each element comes in. Drag it to retime the entrance, press Play to watch, and let elements keep pulsing, floating, swinging or spinning afterwards. Entrances can also shake, flash, type their text out or count up.
-- **Pick and edit faster.** Every preset menu opens a gallery of pictures, presets from the community gallery can be customized like the bundled ones, imported SAN themes can be edited tier by tier, and several elements can be moved, lined up or copied together.
+- **A Millennium plugin for the Steam library.** A non-Steam shortcut AW Next recognises gets Steam's own Achievements section, play bar counter, full list and Big Picture tab, updated as unlocks come in. Download `aw-next-millennium.zip` below.
+- **A Playnite extension.** Right-click a game in Playnite and open AW Next achievements, or use a theme that places AW Next's panels in the game's details. Download the `.pext` below.
 
-## The platinum
+## New sources
 
-- **A game's own platinum counts.** When a Steam game has an achievement for earning all the others (Elden Ring, Hades II), that unlock is the platinum popup, instead of a normal popup followed by a second one at 100%.
-- **The real PlayStation platinum, no PSN account needed.** Games also released on PlayStation use the real platinum's name, icon and rarity, from public trophy lists and Exophase. In the achievement list, the platinum wears its halo before it is earned, like gold trophies.
+- **Recompiled PC ports:** Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered and SMS Launcher (Super Mario Sunshine and Super Mario Eclipse), on Windows and Linux.
+- **PS3Recomp ports** show their trophies, with PlayStation's own rarity.
+- **Trophies from a PS3 or PS4 over FTP**, for a jailbroken console when signing in to PSN is not an option. Nothing is written to the console.
 
 ## Also new
 
-- **Hide a game without removing it.** Right-click it and pick Hide from view: it leaves your collections and stats but stays tracked and still notifies. A whole Steam library folder can also be left out from Settings > Sources.
-- **Updates can install themselves** once no game is running (Settings > General > Install updates automatically).
-- **A smoother, faster scan.** The library scan runs in its own process instead of freezing the window, and is about a third faster.
-- **Fixes:** websites can no longer read your unlocks from the local broadcast, two achievements unlocked together are both announced, settings survive a locked or damaged file, AV1 clips save on Windows 10, and play time survives a crash.
+- **Steps under an achievement.** Split a long achievement into steps you write yourself and tick off, in the app and in the in-game overlay, and share the list as a file.
+- **Several achievements at once.** Ctrl+click or Shift+click achievements, then unlock, clear or re-lock them together.
+- **Ignore a Game Health warning** for one game and one finding.
+- **Locked achievements are greyed out** for every source with a single picture per achievement, and an achievement with no picture shows the game's icon.
+- **Fixes:** counter achievements unlock under GBE Fork, a scan no longer swaps a cracked Ubisoft game's own loader, Game Health leaves Denuvo games' Steam dll alone, one game without its list no longer rescans the whole library, Steam unlocks notify on a PC whose clock is off, and games tied in a sort line up by name.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3124---2026-10-29) for the complete list.
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3125---2026-11-03) for the complete list.
 
 ## Install
 
 | File | What it is |
 |---|---|
-| `Achievement.Watcher.Setup.3.12.4.exe` | The Windows installer. An installed copy also updates itself. |
-| `Achievement.Watcher.Portable.3.12.4.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
-| `Achievement.Watcher.3.12.4.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
+| `Achievement.Watcher.Setup.3.12.5.exe` | The Windows installer. An installed copy also updates itself. |
+| `Achievement.Watcher.Portable.3.12.5.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
+| `Achievement.Watcher.3.12.5.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
+| `aw-next-millennium.zip` | The Steam plugin for Millennium: extract it into `<Steam>\millennium\plugins\`. |
+| `AwNextAchievements_*.pext` | The Playnite extension: open it and Playnite installs it. |
 | `.blockmap`, `latest.yml` and `latest-linux.yml` | Used by automatic updates, nothing to download by hand. |
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3124---2026-10-29) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3125---2026-11-03) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)

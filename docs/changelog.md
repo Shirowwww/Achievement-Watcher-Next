@@ -14,7 +14,7 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.5 - 2026-11-03
 
 ### Added
 
@@ -117,17 +117,10 @@ renamed in 3.9.0 and the history is kept under one file.
   across the list. They now follow each other from A to Z.
 - **One game without its list no longer rescans the whole library (#157).** A game whose
   achievement list did not arrive made AW Next rebuild the library every time it opened. Now only
-  that game loads again, in the background. A recompiled Xbox 360 game also stops waiting on its
-  executable: when reading it takes too long, the list comes from dbox.tools and the executable's
-  own list is used from the next scan.
-- **A recompiled Xbox 360 game added by its user folder finds its executable (#157).** With only
-  the folder holding its unlock lists added, such as `Gears1\user`, AW Next looked for the game's
-  default.xex below it alone and missed `Gears1\game\extracted`, so the list had to come from
-  dbox.tools. It now also looks in the folder holding the one you added, and remembers what it finds.
-- **Xbox 360 recompilations load where dbox.tools is cut off (#157).** On a network that drops
-  dbox.tools only after a dozen seconds, every request of a game waited that long again, so a game
-  read from its own executable ran out of time and stayed under its title id. After one failure AW
-  Next leaves dbox.tools alone for a while, and fetches the game's pictures at the same time.
+  that game loads again, in the background.
+- **Recompiled Xbox 360 games load reliably (#157).** A game added by its user folder, such as
+  `Gears1\user`, now finds its executable next to it, a slow executable no longer holds the list
+  back, and a network that cuts dbox.tools off is given up on quickly instead of on every request.
 - **Steam games notify on a PC whose clock is off (#155).** Steam stamps an unlock with its own
   time and AW Next aged it with the PC's, so a clock a minute fast made every unlock look too old to
   show. AW Next now reads Steam's time when it starts and every hour, and ages those unlocks on it.
@@ -136,25 +129,18 @@ renamed in 3.9.0 and the history is kept under one file.
   process inside a known game's folder now counts as that game.
 - **No fix replaces Steam's dll where the emulator already runs beside it (#153).** Some releases
   keep Steam's own dll, which Denuvo checks, and run the emulator from another file next to it.
-  Game Health took that dll for a foreign runtime and replaced it, after which Phantom Blade Zero
-  stopped starting. AW Next now spots the emulator file itself, whatever loads it: no fix touches
-  that dll or the account id the game's licence is tied to, and Game Health offers to add the
-  missing achievement list instead. Its emulator fix also takes a restore point first, is now
-  called **Install the emulator file** (it never restored anything), and can be undone from the
-  panel, which puts the game's own dll back.
+  Game Health replaced that dll, after which Phantom Blade Zero stopped starting. It now leaves it
+  alone and offers to add the missing achievement list instead. Its emulator fix, now called
+  **Install the emulator file**, takes a restore point first and can be undone from the panel.
 - **The emulator next to a Unity or Unreal game's exe is read where it runs (#167).** Denuvo
   releases such as Two Point Museum or Sonic Racing CrossWorlds run the emulator from the exe's
   folder and leave Steam's dll untouched in the engine's own folder. Game Health said that setup
   was never read and offered to move it next to Steam's dll, which stops these games from starting.
   It now reads the setup where it is and leaves both folders alone.
-- **God of War III is found again after updating to SpartanPort 2.7.** Its launcher starts a new
-  settings file next to the game, and AW Next read only that one, missing the game folder the old
-  settings named. Game files kept inside the port's folder are found too, and SpartanPort 2.8,
-  whose launcher is a single program, is recognised.
-- **A trophy reset in SpartanPort's launcher shows in AW Next.** Older session logs and AW Next's own
-  record of the unlocks kept them showing; the port's trophies.dat now wins over anything older.
-  Reset achievements in AW Next also clears that record for a PS4 port, with a backup, and leaves
-  the game's saves alone.
+- **SpartanPort's God of War III is found again and follows its launcher.** After updating to
+  SpartanPort 2.7 or 2.8 the game was no longer found, and a trophy reset in the port's launcher
+  kept showing the old unlocks. Both now follow the port, and Reset achievements in AW Next clears
+  a PS4 port's unlocks too, with a backup, leaving the game's saves alone.
 
 ## 3.12.4 - 2026-10-29
 

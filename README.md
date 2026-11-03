@@ -36,7 +36,8 @@ local saves and console emulators, shows them in one library, and pops up each u
 Every source in one list, with rarity, progress achievements, covers and your own collections, and
 games you would rather not see hidden without losing their tracking. Trophy
 mode grades each achievement gold, silver or bronze, and a game that also came out on PlayStation
-takes its real trophies and platinum.
+takes its real trophies and platinum. A long achievement can be split into steps you tick off, and
+a Millennium plugin and a Playnite extension show the list inside Steam and Playnite.
 
 </td>
 <td width="50%" valign="top">
