@@ -103,13 +103,20 @@ test('every way the fetch can go wrong means no translation, not an error', asyn
 
 test('a slow site does not hold the update offer', async () => {
   const started = Date.now();
-  const notes = await fetchLocalizedNotes('french', {
-    timeoutMs: 50,
-    fetchImpl: (url, { signal }) =>
-      new Promise((resolve, reject) => {
-        signal.addEventListener('abort', () => reject(new Error('aborted')));
-      }),
-  });
-  assert.equal(notes, null);
-  assert.ok(Date.now() - started < 2000);
+  // AbortSignal.timeout() does not keep the event loop alive, so on its own the runner can see an
+  // empty loop and cancel the test (Node 22 on CI); this timer holds it open until the abort lands.
+  const keepAlive = setTimeout(() => {}, 5000);
+  try {
+    const notes = await fetchLocalizedNotes('french', {
+      timeoutMs: 50,
+      fetchImpl: (url, { signal }) =>
+        new Promise((resolve, reject) => {
+          signal.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    });
+    assert.equal(notes, null);
+    assert.ok(Date.now() - started < 2000);
+  } finally {
+    clearTimeout(keepAlive);
+  }
 });
