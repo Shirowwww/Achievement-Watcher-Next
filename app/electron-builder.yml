@@ -108,6 +108,8 @@ asarUnpack:
   - util/replaceFile.js
   # The save folders a GBE install redirects to, written by the library scan.
   - util/saveRedirects.js
+  # The shortcut ids the library scan tied to their games (GSE Saves\<shortcut id>).
+  - util/shortcutSaveIds.js
 
 publish:
   provider: github

@@ -48,8 +48,8 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   // Steamworks folder, which is the only one a packaged Unreal build ever reads.
   'UNREAL_ENGINE_DLL_UNCONFIGURED',
   'NO_APPID_TXT',
-  // repair() writes steam_appid.txt beside the exe a Steam shortcut starts (report.launchDirs).
-  'STEAM_SHORTCUT_NO_APPID',
+  // repair() removes the steam_appid.txt files an older AW Next wrote for a Steam shortcut.
+  'AW_LAUNCH_APPID',
   'MISSING_ICONS',
   'NO_DLC_CONFIG',
   'NO_MAIN_CONFIG',
@@ -100,7 +100,7 @@ const ISSUE_TOPIC = {
   NO_LOADER_LOG: 'schema',
   MISSING_ICONS: 'icons',
   NO_APPID_TXT: 'appid',
-  STEAM_SHORTCUT_NO_APPID: 'appid',
+  AW_LAUNCH_APPID: 'appid',
   APPID_MISMATCH: 'appid',
   NO_DLC_CONFIG: 'dlc',
   BAD_DLC_CONFIG: 'dlc',

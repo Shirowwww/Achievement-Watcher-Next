@@ -18,6 +18,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Games started from a Steam shortcut keep their play time and their achievements.** Starting a
+  game from a non-Steam shortcut (added for Steam Input) saves its unlocks under the shortcut's own
+  id. AW Next now reads and watches that folder as part of the game, merged with the game's own, and
+  no longer writes a `steam_appid.txt` for it, which made Steam stop counting the play time. Game
+  Health offers to remove the files an earlier version wrote.
 - **Uninstall never offers a personal folder.** A RetroAchievements ROM saved in Downloads made
   **Uninstall** offer to move the whole Downloads folder to the Recycle Bin on a non-English Windows,
   where that folder has another name. Every folder directly in your user folder is now refused, and

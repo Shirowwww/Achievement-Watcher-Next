@@ -46,8 +46,8 @@ function isCreatedByAw(steamSettings) {
 }
 
 /*
-  steam_appid.txt files AW Next wrote beside a game's executable (goldberg.writeLaunchAppIds) live
-  outside steam_settings, so they are listed in it. Taking AW back out removes each one only while
+  steam_appid.txt files an earlier AW Next wrote beside a game's executable for a Steam shortcut
+  live outside steam_settings, so they are listed in it (nothing writes them any more). Taking AW back out removes each one only while
   it still holds the value written.
 */
 const LAUNCH_APPID_RECORD = '.aw-next-launch-appid.json';
@@ -59,12 +59,6 @@ function readLaunchAppIds(steamSettings) {
   } catch {
     return [];
   }
-}
-
-function recordLaunchAppId(steamSettings, file, appid) {
-  const entries = readLaunchAppIds(steamSettings).filter((entry) => entry.file.toLowerCase() !== String(file).toLowerCase());
-  entries.push({ file: String(file), appid: String(appid) });
-  fs.writeFileSync(path.join(steamSettings, LAUNCH_APPID_RECORD), JSON.stringify(entries, null, 2));
 }
 
 function stripLaunchAppIds(steamSettings, { dryRun = false } = {}) {
@@ -287,6 +281,5 @@ module.exports = {
   stripDlcSection,
   stripMainKeys,
   stripUserIdentity,
-  recordLaunchAppId,
   stripLaunchAppIds,
 };

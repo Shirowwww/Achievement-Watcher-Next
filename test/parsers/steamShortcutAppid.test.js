@@ -76,17 +76,34 @@ test('the file goes in the shortcut start folder, not beside the exe', () => {
   assert.deepEqual(goldberg.shortcutLaunchDirs(game.gameDir, () => [{ exe, startDir: 'D:\\Elsewhere' }]), [], 'never writes outside the game');
 });
 
-test('a Steam shortcut with no steam_appid.txt beside its exe is a repairable warning', () => {
+// The unlocks of a shortcut-started game go to GSE Saves\<shortcut id>, which AW reads (shortcutSaveIds),
+// so a shortcut with no steam_appid.txt is no longer a fault: that file made Steam lose the play time.
+test('a Steam shortcut with no steam_appid.txt beside its exe is nothing to report', () => {
   const game = gbeGame('Dawnwalker');
   const report = goldberg.diagnose({ gameDir: game.gameDir, appid: '3751260', schema: SCHEMA, shortcutExes: () => [game.exe, 'D:\\Elsewhere\\Other.exe'] });
-  const issue = report.issues.find((entry) => entry.code === 'STEAM_SHORTCUT_NO_APPID');
-  assert.ok(issue, 'the missing file is reported');
-  assert.equal(issue.level, 'warning');
+  assert.equal(report.issues.some((entry) => entry.code === 'STEAM_SHORTCUT_NO_APPID' || entry.code === 'AW_LAUNCH_APPID'), false);
   assert.deepEqual(report.launchDirs, [game.gameDir], 'only shortcuts into this game count');
-  assert.ok(gameHealth.REPAIRABLE_GOLDBERG_CODES.has('STEAM_SHORTCUT_NO_APPID'), 'the repair button covers it');
+});
 
-  const quiet = goldberg.diagnose({ gameDir: game.gameDir, appid: '3751260', schema: SCHEMA, shortcutExes: () => [] });
-  assert.equal(quiet.issues.some((entry) => entry.code === 'STEAM_SHORTCUT_NO_APPID'), false, 'no shortcut, nothing to say');
+test('a steam_appid.txt an older AW Next wrote is offered for removal, a foreign one never', async () => {
+  const game = gbeGame('Older');
+  const written = path.join(game.gameDir, 'steam_appid.txt');
+  fs.writeFileSync(written, '3751260');
+  const launcher = path.join(game.gameDir, 'Launcher');
+  fs.mkdirSync(launcher);
+  fs.writeFileSync(path.join(launcher, 'steam_appid.txt'), '999');
+  fs.writeFileSync(path.join(game.steamSettings, awManagedConfig.LAUNCH_APPID_RECORD), JSON.stringify([{ file: written, appid: '3751260' }, { file: path.join(launcher, 'steam_appid.txt'), appid: '111' }]));
+
+  const report = goldberg.diagnose({ gameDir: game.gameDir, appid: '3751260', schema: SCHEMA, shortcutExes: () => [game.exe] });
+  const issue = report.issues.find((entry) => entry.code === 'AW_LAUNCH_APPID');
+  assert.ok(issue && issue.level === 'warning');
+  assert.ok(gameHealth.REPAIRABLE_GOLDBERG_CODES.has('AW_LAUNCH_APPID'), 'the repair button covers it');
+
+  const summary = await goldberg.repair({ steamSettings: game.steamSettings, appid: '3751260', schema: SCHEMA, writeDlc: false, writeMain: false });
+  assert.deepEqual(summary.removedLaunchAppIds, [written]);
+  assert.equal(fs.existsSync(written), false, 'the file AW wrote is gone');
+  assert.equal(fs.readFileSync(path.join(launcher, 'steam_appid.txt'), 'utf8'), '999', 'a file whose value changed is not AW\'s any more');
+  assert.equal(fs.existsSync(path.join(game.steamSettings, awManagedConfig.LAUNCH_APPID_RECORD)), false);
 });
 
 test('a steam_appid.txt beside the shortcut exe naming another game is an appid mismatch', () => {
@@ -104,21 +121,18 @@ test('a steam_appid.txt beside the shortcut exe naming another game is an appid 
   assert.ok(fixed.backupDir && fs.readdirSync(fixed.backupDir).length === 1, 'the old value is kept');
 });
 
-test('repair writes steam_appid.txt where Steam reads it, never over an existing one, and can take it back', async () => {
+test('repair no longer writes a steam_appid.txt for a shortcut, and taking AW out still removes an old one', async () => {
   const game = gbeGame('Fresh');
-  const launcher = path.join(game.gameDir, 'Launcher');
-  fs.mkdirSync(launcher);
-  fs.writeFileSync(path.join(launcher, 'steam_appid.txt'), '999');
+  const summary = await goldberg.repair({ steamSettings: game.steamSettings, appid: '3751260', schema: SCHEMA, writeDlc: false, writeMain: false });
+  assert.equal(summary.launchAppIds, undefined);
+  assert.equal(fs.existsSync(path.join(game.gameDir, 'steam_appid.txt')), false, 'Steam keeps counting the play time');
 
-  const summary = await goldberg.repair({ steamSettings: game.steamSettings, appid: '3751260', schema: SCHEMA, writeDlc: false, writeMain: false, launchDirs: [game.gameDir, launcher] });
-  assert.deepEqual(summary.launchAppIds, [path.join(game.gameDir, 'steam_appid.txt')]);
-  assert.equal(fs.readFileSync(path.join(game.gameDir, 'steam_appid.txt'), 'utf8'), '3751260');
-  assert.equal(fs.readFileSync(path.join(launcher, 'steam_appid.txt'), 'utf8'), '999', "somebody else's file is left alone");
-
+  const old = path.join(game.gameDir, 'steam_appid.txt');
+  fs.writeFileSync(old, '3751260');
+  fs.writeFileSync(path.join(game.steamSettings, awManagedConfig.LAUNCH_APPID_RECORD), JSON.stringify([{ file: old, appid: '3751260' }]));
   const cleaned = awManagedConfig.strip(game.steamSettings, { includeIdentity: false });
-  assert.ok(cleaned.removed.some((entry) => entry.file === path.join(game.gameDir, 'steam_appid.txt')));
-  assert.equal(fs.existsSync(path.join(game.gameDir, 'steam_appid.txt')), false, 'taking AW back out removes what it wrote');
-  assert.equal(fs.existsSync(path.join(launcher, 'steam_appid.txt')), true);
+  assert.ok(cleaned.removed.some((entry) => entry.file === old));
+  assert.equal(fs.existsSync(old), false);
 });
 
 test('a dll folder without an exe gets no extra file', async () => {
@@ -127,6 +141,6 @@ test('a dll folder without an exe gets no extra file', async () => {
   fs.mkdirSync(path.join(engine, 'steam_settings'), { recursive: true });
   fs.writeFileSync(path.join(engine, 'steam_api64.dll'), 'emu');
   const summary = await goldberg.repair({ steamSettings: path.join(engine, 'steam_settings'), appid: '3751260', schema: SCHEMA, writeDlc: false, writeMain: false });
-  assert.deepEqual(summary.launchAppIds, []);
+  assert.deepEqual(summary.removedLaunchAppIds, []);
   assert.equal(fs.existsSync(path.join(engine, 'steam_appid.txt')), false);
 });

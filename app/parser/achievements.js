@@ -68,6 +68,7 @@ const genEmuConfig = require(path.join(appPath, 'genEmuConfig.js'));
 const gameIndex = require(path.join(appPath, 'gameIndex.js'));
 const { userDataDir } = require(path.join(appPath, '..', 'util', 'userDataPath.js'));
 const saveRedirects = require(path.join(appPath, '..', 'util', 'saveRedirects.js'));
+const shortcutSaveIds = require(path.join(appPath, '..', 'util', 'shortcutSaveIds.js'));
 const { resolveAchievementDataPath, achievementDataPaths } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
@@ -1317,7 +1318,6 @@ const BLOCKING_REPAIR_CODES = new Set([
   'SETTINGS_NOT_BESIDE_DLL',
   'UNREAL_ENGINE_DLL_UNCONFIGURED',
   'NO_APPID_TXT',
-  'STEAM_SHORTCUT_NO_APPID',
 ]);
 
 /*
@@ -1341,7 +1341,6 @@ function diagnoseForAutomaticFix({ appid, gameDir, steamSettings, schema }) {
     codes: (report.issues || []).map((issue) => String((issue && issue.code) || '')).filter(Boolean),
     steamSettings: report.steamSettings || steamSettings || '',
     dllDirs: report.dllDirs || [],
-    launchDirs: report.launchDirs || [],
   };
   if (version) {
     // A plain cap, not an LRU: this only exists to spare repeated walks within a session.
@@ -1381,7 +1380,6 @@ async function repairHealthFindings({ appid, gameDir, diagnosis, schema, option,
     appid,
     schema,
     downloadIcon,
-    launchDirs: diagnosis.launchDirs,
     fetchDlc: (id) => steam.getDLCList(id),
     fetchStats: (id) => fetchCommunityStats(id, { cacheDir: _userDataPath || userDataDir() }),
     // The same two opt-ins the silent schema repair has always had: an automatic repair must not
@@ -1820,6 +1818,36 @@ function recordSaveRedirects(found) {
   }
 }
 
+/*
+  A game started from a non-Steam shortcut saves under the shortcut's own id (GSE Saves\<id>). Ties
+  each such id to the game it starts, drops the stray "game" that folder would otherwise be, tells the
+  Watchdog (cfg/shortcutSaveIds.json) and returns the extra save folders to read with the game's own.
+*/
+function foldShortcutSaves(found, data) {
+  const none = { links: new Map(), aliasPaths: new Map() };
+  try {
+    const entries = require(path.join(appPath, 'steamLibrary.js'))
+      .shortcutEntries()
+      .filter((entry) => entry.id);
+    if (entries.length === 0) return none;
+    const games = found.filter((g) => g.gameDir && g.appid && /^[0-9]+$/.test(String(g.appid))).map((g) => ({ ...g, appid: String(g.appid) }));
+    const result = shortcutSaveIds.foldAliasSaves({
+      data,
+      games,
+      entries,
+      folderFor: (id, game) => {
+        const steamSettings = game.steamSettings || path.join(game.gameDir, 'steam_settings');
+        return goldberg.redirectedSaveDir({ steamSettings, appid: id }) || goldbergSaveFolder(game.emulator === 'goldberg' ? 'goldberg' : 'gbe', id, game.gameDir);
+      },
+    });
+    shortcutSaveIds.update(shortcutSaveIds.idsFile(userDataDir()), result.links, new Set(entries.map((entry) => entry.id)));
+    return result;
+  } catch (err) {
+    debug.log(`[goldberg-scan] could not tie shortcut save folders to their games => ${err}`);
+    return none;
+  }
+}
+
 // Find installed Goldberg/GBE games and flag known entries that need schema repair.
 async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
   const additions = [];
@@ -1832,6 +1860,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
       onSkip: (gameDir, steamAppid) => debug.log(`[goldberg-scan] skipped Steam library install (appid ${steamAppid}): ${gameDir}`),
     });
     recordSaveRedirects(found);
+    const aliasSaves = foldShortcutSaves(found, data);
     for (const g of found) {
       if (g.gameDir && isKnownNonGameToolInstall(g.gameDir)) {
         if (g.appid) {
@@ -1983,6 +2012,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
         if (existing.data) {
           if (!existing.data.steamSettings && steamSettings) existing.data.steamSettings = steamSettings;
           if (!existing.data.gameDir && g.gameDir) existing.data.gameDir = g.gameDir;
+          if (aliasSaves.aliasPaths.has(appid)) existing.data.aliasSavePaths = aliasSaves.aliasPaths.get(appid);
           if (detectedExe && !existing.data.exe) existing.data.exe = detectedExe.full;
           if (detectedEmu && detectedEmu.dll.length > 0) existing.data.hasSteamApiDll = true;
           // The record found earlier (from a %APPDATA% save folder the emulator created once and
@@ -2013,6 +2043,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
           exe: detectedExe && detectedExe.full,
           hasSteamApiDll: !!(detectedEmu && detectedEmu.dll.length > 0),
           needsSchema: !hasSchema, // schema achievements.json missing/empty -> repair it lazily
+          ...(aliasSaves.aliasPaths.has(appid) ? { aliasSavePaths: aliasSaves.aliasPaths.get(appid) } : {}),
         },
       };
       byAppid.set(appid, item);
@@ -3118,7 +3149,15 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
       }
       return NO_RECORD_TO_READ;
     }
-    let fromFile = await steam.getAchievementsFromFile(appid.data.path);
+    // Saves under a shortcut's own id (see foldShortcutSaves) are the same game's: merged by name.
+    const aliasPaths = Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths.filter((dir) => typeof dir === 'string' && dir) : [];
+    let fromFile =
+      aliasPaths.length > 0
+        ? await shortcutSaveIds.readMergedSaves(steam.getAchievementsFromFile, [appid.data.path, ...aliasPaths], {
+            isEarned: (entry) => normalizeSaveEntry(entry, appid.source).Achieved,
+            timeOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).UnlockTime) || 0,
+          })
+        : await steam.getAchievementsFromFile(appid.data.path);
     // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
     // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
     // bare objective id means nothing to the Steam reader.

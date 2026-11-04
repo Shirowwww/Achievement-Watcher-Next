@@ -172,13 +172,13 @@ const unquote = (value) => String(value || '').trim().replace(/^"|"$/g, '').repl
   starts in. Steam reads steam_appid.txt from that start folder only (checked against Steam's
   client, 2026-10-04), so an empty StartDir falls back to the exe's folder as Steam itself does.
 */
-function shortcutLaunches({ clientDir = steamClientDir() } = {}) {
-  const launches = [];
+function shortcutEntries({ clientDir = steamClientDir() } = {}) {
+  const entries = [];
   let accounts = [];
   try {
     accounts = fs.readdirSync(path.join(clientDir, 'userdata'), { withFileTypes: true }).filter((entry) => entry.isDirectory());
   } catch {
-    return launches;
+    return entries;
   }
   for (const account of accounts) {
     try {
@@ -187,12 +187,22 @@ function shortcutLaunches({ clientDir = steamClientDir() } = {}) {
         const exe = unquote(field(shortcut, 'exe'));
         if (!exe) continue;
         const startDir = unquote(field(shortcut, 'startdir')) || path.dirname(exe);
-        const same = (known) => known.exe.toLowerCase() === exe.toLowerCase() && known.startDir.toLowerCase() === startDir.toLowerCase();
-        if (!launches.some(same)) launches.push({ exe, startDir });
+        // Stored as a signed int32; the emulator names its save folder with the unsigned number.
+        const rawId = field(shortcut, 'appid');
+        entries.push({ id: Number.isInteger(rawId) ? String(rawId >>> 0) : '', exe, startDir });
       }
     } catch {
       /* no shortcuts for this account, or a file Steam is rewriting */
     }
+  }
+  return entries;
+}
+
+function shortcutLaunches(options) {
+  const launches = [];
+  for (const { exe, startDir } of shortcutEntries(options)) {
+    const same = (known) => known.exe.toLowerCase() === exe.toLowerCase() && known.startDir.toLowerCase() === startDir.toLowerCase();
+    if (!launches.some(same)) launches.push({ exe, startDir });
   }
   return launches;
 }
@@ -216,6 +226,7 @@ module.exports = {
   isInsideAnyFolder,
   installDirOf,
   parseBinaryVdf,
+  shortcutEntries,
   shortcutLaunches,
   shortcutExecutables,
 };

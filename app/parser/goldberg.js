@@ -1146,17 +1146,20 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
 
   /*
     A non-Steam shortcut (for Steam Input) hands the game SteamAppId/SteamGameId, which gbe_fork
-    reads before its own steam_appid.txt. Steam takes those from a steam_appid.txt in the folder the
-    shortcut starts in; with none there, the unlocks go to the shortcut's own id and never show up.
+    reads before its own steam_appid.txt. With no steam_appid.txt in the folder the shortcut starts
+    in, the unlocks go to GSE Saves\<the shortcut's id>, which AW reads as part of the game (see
+    util/shortcutSaveIds.js). A file there naming another game is a real mismatch; one AW Next wrote
+    itself in an earlier version is offered for removal, since Steam then stops counting play time.
   */
   report.launchDirs = shortcutLaunchDirs(gameDir, shortcutExes);
   const expectedAppid = report.appid || readAppIdFile(appidTxt);
+  if (awManagedConfig.stripLaunchAppIds(steamSettings, { dryRun: true }).length > 0) {
+    add('warning', 'AW_LAUNCH_APPID', 'AW Next once wrote a steam_appid.txt for a Steam shortcut. Steam then no longer sees the game as running, so its play time is lost; AW Next reads the shortcut\'s own save folder without it.');
+  }
   for (const dir of report.launchDirs) {
     const file = path.join(dir, 'steam_appid.txt');
     const onDisk = readAppIdFile(file);
-    if (!fs.existsSync(file)) {
-      add('warning', 'STEAM_SHORTCUT_NO_APPID', `A Steam shortcut starts the game from ${dir}, with no steam_appid.txt there to give Steam the game's id.`, { file });
-    } else if (expectedAppid && onDisk && onDisk !== expectedAppid) {
+    if (fs.existsSync(file) && expectedAppid && onDisk && onDisk !== expectedAppid) {
       add('warning', 'APPID_MISMATCH', `steam_appid.txt in the folder a Steam shortcut starts in (${onDisk}) does not match the detected appid (${expectedAppid}).`, {
         onDisk,
         expected: String(expectedAppid),
@@ -1615,36 +1618,6 @@ function readArtworkMarker(steamSettings, imagePrefix = 'images') {
   return { checkedAt, stale: Date.now() - checkedAt >= ARTWORK_RECHECK_MS };
 }
 
-/*
-  steam_appid.txt beside the exe Steam starts, so a non-Steam shortcut passes the real appid to
-  gbe_fork (see diagnose). Written only where missing: beside every shortcut target, and beside the
-  dll when an exe sits there too. Each file is recorded so AW's setup can be taken back out.
-*/
-function writeLaunchAppIds({ steamSettings, appid, launchDirs = [] }) {
-  const dllDir = path.dirname(path.resolve(steamSettings));
-  let dllDirHasExe = false;
-  try {
-    dllDirHasExe = fs.readdirSync(dllDir).some((name) => /\.exe$/i.test(name));
-  } catch {
-    /* unreadable: only the shortcut targets are written */
-  }
-  const dirs = [...(dllDirHasExe ? [dllDir] : []), ...launchDirs.map((dir) => path.resolve(dir))];
-  const written = [];
-  const unique = dirs.filter((candidate, index) => dirs.findIndex((other) => other.toLowerCase() === candidate.toLowerCase()) === index);
-  for (const dir of unique) {
-    const file = path.join(dir, 'steam_appid.txt');
-    if (fs.existsSync(file)) continue;
-    try {
-      fs.writeFileSync(file, String(appid));
-      awManagedConfig.recordLaunchAppId(steamSettings, file, appid);
-      written.push(file);
-    } catch {
-      /* a read-only game folder keeps working as it did */
-    }
-  }
-  return written;
-}
-
 async function repair({
   steamSettings,
   appid,
@@ -1669,8 +1642,6 @@ async function repair({
   fetchStats = null,
   // Where the game's saves live, to read the stats it wrote; found from steamSettings when absent.
   savesRoots = null,
-  // Folders of the exes Steam shortcuts start (diagnose's report.launchDirs).
-  launchDirs = [],
   // Optional progress sink: ({phase, done, total}), phase one of 'backup'|'icons'|'schema'|'config'|'done'.
   // Icons report per file since they dominate the wall clock. Purely observational.
   onProgress = null,
@@ -1834,8 +1805,15 @@ async function repair({
       fs.writeFileSync(appidTxt, String(appid));
       summary.wroteAppId = true;
     }
-    summary.launchAppIds = writeLaunchAppIds({ steamSettings, appid, launchDirs });
   }
+  // A steam_appid.txt an older AW Next wrote for a shortcut made Steam stop counting play time.
+  let removedLaunch = [];
+  try {
+    removedLaunch = awManagedConfig.stripLaunchAppIds(steamSettings);
+  } catch {
+    /* a locked launch file must not stop the rest of the repair; diagnose still reports it */
+  }
+  summary.removedLaunchAppIds = removedLaunch.map((entry) => entry.file);
 
   // Enable all DLCs (configs.app.ini). Resolve the list from the injected fetcher when one wasn't
   // passed in; a failed/absent fetch still writes unlock_all=1, which alone covers the common
@@ -2101,7 +2079,6 @@ module.exports = {
   needsArtworkRecheck,
   writeSteamAppId,
   shortcutLaunchDirs,
-  writeLaunchAppIds,
   detectEmulator,
   buildAchievementsJson,
   backupSetup,

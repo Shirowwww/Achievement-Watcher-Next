@@ -1598,7 +1598,6 @@ async function runGameHealthAction(appid, action, button) {
         plan,
         appid: writableAppid,
         schema: game,
-        launchDirs: goldberg.shortcutLaunchDirs(game.gameDir),
         onProgress: pushProgress,
         downloadIcon: async (url, dir) => {
           const resolved = (await steamParser.resolveWorkingIconUrl(writableAppid, url)) || url;

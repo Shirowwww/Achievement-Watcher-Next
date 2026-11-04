@@ -123,6 +123,7 @@ const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const { rareCutoff } = require('./util/rareCutoff.js');
 const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
+const shortcutSaveIds = require(sharedAppModulePath('util/shortcutSaveIds.js'));
 const { configuredExecutable } = require('./util/exeList.js');
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
@@ -243,7 +244,28 @@ const cfg_file = {
   option: path.join(userDataDir(), 'cfg', 'options.ini'),
   userDir: path.join(userDataDir(), 'cfg', 'userdir.db'),
   saveRedirects: saveRedirects.redirectsFile(userDataDir()),
+  shortcutSaveIds: shortcutSaveIds.idsFile(userDataDir()),
 };
+
+// The same-named save file in each twin folder of the game (its own appid and its shortcut ids) that has one.
+function twinSaveFiles(file) {
+  const parsed = path.parse(file);
+  return shortcutSaveIds
+    .twinFolders(shortcutSaveIds.read(cfg_file.shortcutSaveIds), parsed.dir)
+    .map((dir) => path.join(dir, parsed.base))
+    .filter((twin) => fs.existsSync(twin));
+}
+
+// The save file as monitor.parse reads it, merged with its twins' when the game has any.
+async function parseWithTwins(file, twinFiles) {
+  const own = await monitor.parse(file);
+  if (twinFiles.length === 0) return own;
+  const others = await Promise.all(twinFiles.map((twin) => monitor.parse(twin).catch((err) => {
+        debug.warn(`Twin save "${twin}" skipped: ${err.message || err}`);
+        return [];
+      })));
+  return shortcutSaveIds.mergeParsedLists([own, ...others]);
+}
 
 /*
   The GOG/Epic -> Steam appid maps the library scan writes (steam_cache/gog.db, epic.db). Read the
@@ -1214,6 +1236,15 @@ var app = {
             const nested = nestedAppIds(filePath.dir);
             if (nested) appID = uplayR2.steamAppIdForUplayId(nested.inner) || nested.outer;
           }
+          // A game started from a non-Steam shortcut saves under the shortcut's own id; the library
+          // scan recorded which game that is (cfg/shortcutSaveIds.json).
+          if (!options.appid && !options.socialClub) {
+            const linked = shortcutSaveIds.appidFor(shortcutSaveIds.read(cfg_file.shortcutSaveIds), appID);
+            if (linked) {
+              debug.log(`[shortcut] save folder ${appID} belongs to the game that shortcut starts: ${linked}`);
+              appID = linked;
+            }
+          }
         }
 
         // The UniverseLAN root is keyed by GOG product id, like NemirtingasGalaxyEmu.
@@ -1286,7 +1317,9 @@ var app = {
           // awaitWriteFinish). parseWithRetry below still guards the residual race.
           await waitForFileStable(name);
 
-          const parseSave = options.steamClient ? async () => steamClientStats.readSteamClientUnlocks(name) : () => monitor.parse(name);
+          // The game's other save folders (its own appid and its shortcut ids) are one save: parsed together.
+          const twinFiles = options.steamClient || options.appid ? [] : twinSaveFiles(name);
+          const parseSave = options.steamClient ? async () => steamClientStats.readSteamClientUnlocks(name) : () => parseWithTwins(name, twinFiles);
           let achievements = await parseWithRetry(parseSave, {
             onError: (err, attempt) => {
               debug.warn(`Achievement parse attempt ${attempt + 1} failed for "${name}": ${err.message || err}`);
