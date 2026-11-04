@@ -58,6 +58,7 @@ const instance = new (require('single-instance'))('Achievement Watchdog 3.0');
 const { spawn } = require('child_process');
 const path = require('path');
 const watch = require('./util/nodeWatch.js');
+const overlayTarget = require('./util/overlayTarget.js').createOverlayTarget();
 const tasklist = require('./util/tasklist');
 const moment = require('moment');
 const websocket = require('./websocket.js');
@@ -524,9 +525,9 @@ function toggleOverlayForRunningGame(fromController = false) {
     debug.log('[controller] sending Escape to the game on overlay open');
     sendEscapeToFocusedWindow();
   }
-  // With a game running, the overlay follows it. Without one, the main process resolves the
-  // currently open (or first) game so the hotkey still toggles the overlay from anywhere.
-  const appid = runningAppid || '0';
+  // With a game running, the overlay follows it; an emulator game is known by its latest live
+  // unlock. Without either, the main process resolves the open (or first) game.
+  const appid = overlayTarget.appidFor(runningAppid);
   SpawnOverlayNotification([`--wintype=overlay`, `--appid=${appid}`, `--description=${opening ? 'open' : 'close'}`]);
   overlayOpened = !overlayOpened;
   overlayControllerService?.notifyOverlayPresentationChanged(overlayOpened, 'overlay-toggled');
@@ -945,7 +946,7 @@ var app = {
           await entry.watcher.start({
             options: self.options,
             getToastID: () => self.toastID,
-            notify: watcherNotify,
+            notify: overlayTarget.wrapNotify(watcherNotify),
             reportUnlock: reportUnlockToApp,
           });
           subsystemHealth.report(entry.name, true);

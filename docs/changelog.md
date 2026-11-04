@@ -44,6 +44,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The overlay shortcut opens the emulator game you are playing.** With RPCS3, Xenia, shadPS4 or
+  another emulator, Ctrl+Shift+K opened the game shown in the main window, or the first one of the
+  library, because AW Next cannot tell which game runs inside the emulator. It now opens the game
+  that unlocked something in the last two hours, and a game AW Next tracks by its process still
+  comes first.
 - **The Playnite achievements window closes in Fullscreen mode.** In a controller theme such as
   Selene it had no close button you could reach. B or Back on the controller, Escape or Backspace on
   the keyboard now close it.
