@@ -90,9 +90,11 @@ function htmlBlocks(source) {
   return blocks;
 }
 
-function bodyBlocks(source) {
+function bodyBlocks(source, { markdown = false } = {}) {
   const text = typeof source === 'string' ? source : '';
-  const blocks = /<[a-zA-Z!/]/.test(text) ? htmlBlocks(text) : markdownBlocks(text);
+  // The release body arrives as HTML; RELEASE_NOTES.md itself is Markdown even when a "<Steam>"
+  // placeholder in its install table looks like a tag, so a caller that knows says so.
+  const blocks = !markdown && /<[a-zA-Z!/]/.test(text) ? htmlBlocks(text) : markdownBlocks(text);
   // A body opening on "Achievement Watcher Next 3.12.0" repeats the window's own title.
   if (blocks[0] && blocks[0].kind === 'heading' && /\d+\.\d+/.test(blocks[0].text)) blocks.shift();
   // A closing "Install" heading whose download table was dropped would head nothing.
@@ -100,23 +102,54 @@ function bodyBlocks(source) {
   return blocks;
 }
 
+const TRANSLATED_KINDS = new Set(['heading', 'item', 'text']);
+
+/*
+  The blocks of one release in the reader's language, from the site's notes file (a list of
+  { kind, text } as bodyBlocks returns them). Anything that is not exactly that shape is ignored,
+  and the release falls back to the English body: the file is not covered by the update signature.
+*/
+function translatedBlocks(translations, version) {
+  const list = translations && Object.prototype.hasOwnProperty.call(translations, version) ? translations[version] : null;
+  if (!Array.isArray(list)) return null;
+  const blocks = list.filter((block) => block && TRANSLATED_KINDS.has(block.kind) && typeof block.text === 'string' && block.text.trim());
+  return blocks.length && blocks.length === list.length ? blocks.map((block) => ({ kind: block.kind, text: block.text })) : null;
+}
+
 /*
   fullChangelog hands over one entry per release the user is behind, newest first. Several releases
   each get a version line; a single one needs none, the window's title already names it.
+  `translations` maps a version to its blocks in the reader's language; a release without an entry
+  keeps its English text, so a half-translated file never hides a release.
 */
-function allBlocks(notes) {
-  if (!Array.isArray(notes)) return bodyBlocks(notes);
-  const releases = notes.map((entry) => ({ version: String((entry && entry.version) || ''), blocks: bodyBlocks(entry && entry.note) })).filter((release) => release.blocks.length);
+function allBlocks(notes, translations, version) {
+  if (!Array.isArray(notes)) return translatedBlocks(translations, String(version || '')) || bodyBlocks(notes);
+  const releases = notes
+    .map((entry) => {
+      const id = String((entry && entry.version) || '');
+      return { version: id, blocks: translatedBlocks(translations, id) || bodyBlocks(entry && entry.note) };
+    })
+    .filter((release) => release.blocks.length);
   if (releases.length === 1) return releases[0].blocks;
   return releases.flatMap((release) => [{ kind: 'version', text: release.version }, ...release.blocks]);
 }
 
-/** @returns {{ kind: 'version' | 'heading' | 'item' | 'text', text: string }[]} */
-function releaseNoteBlocks(notes) {
-  return allBlocks(notes).slice(0, MAX_BLOCKS).map((block) => ({
+/**
+ * @param {string | { version: string, note: string }[]} notes what electron-updater hands over
+ * @param {{ translations?: Record<string, unknown>, version?: string }} [options] the notes file of
+ *   the interface language, and the offered version (the key of a single body, which has none)
+ * @returns {{ kind: 'version' | 'heading' | 'item' | 'text', text: string }[]}
+ */
+function releaseNoteBlocks(notes, options = {}) {
+  return allBlocks(notes, options.translations, options.version).slice(0, MAX_BLOCKS).map((block) => ({
     kind: block.kind,
     text: block.text.length > MAX_TEXT ? `${block.text.slice(0, MAX_TEXT - 1)}…` : block.text,
   }));
 }
 
-module.exports = { releaseNoteBlocks };
+/** The blocks of a Markdown release body (RELEASE_NOTES.md), the source the translations follow. */
+function markdownNoteBlocks(source) {
+  return bodyBlocks(source, { markdown: true }).slice(0, MAX_BLOCKS);
+}
+
+module.exports = { markdownNoteBlocks, releaseNoteBlocks };

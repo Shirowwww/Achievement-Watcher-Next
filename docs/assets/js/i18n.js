@@ -19,8 +19,9 @@
   language, and picking English again gives back exactly the markup that was served. This relies on
   no data-i18n element containing another one - test/site/pages.test.js enforces that.
 
-  The documentation pages are Markdown and are not covered by this: see docs/localization.md for
-  why they are published in English only.
+  The documentation pages are Markdown and are not covered by this: each language has its own
+  copy of them under docs/<code>/ (see docs/localization.md), and this script only points the
+  links to them at the right copy.
 */
 (function () {
   'use strict';
@@ -87,6 +88,28 @@
     return 'en';
   }
 
+  /*
+    The guides are translated into every language this picker offers, each in docs/<code>/. A link
+    to a guide (getting-started.html, ../README.html) follows the page's language; the English
+    address is kept per node and put back on a switch to English. The guides listed here stay in
+    English (docs/_data/guides.yml, `translated: false`; test/site/translations.test.js keeps the
+    two in step).
+  */
+  var ENGLISH_ONLY_GUIDES = ['changelog', 'architecture', 'goldberg-gbe', 'uplay-reference', 'awtheme-format', 'localization', 'RELEASE_WORKFLOW', 'INSTALLER_AND_UPDATES'];
+  var GUIDE_HREF = /^((?:\.\.\/)*)([A-Za-z0-9_-]+)\.html(#.*)?$/;
+  var originalHref = new WeakMap();
+
+  function localizeGuideLinks(code) {
+    document.querySelectorAll('a[href]').forEach(function (link) {
+      if (!originalHref.has(link)) originalHref.set(link, link.getAttribute('href'));
+      var english = originalHref.get(link);
+      var match = GUIDE_HREF.exec(english);
+      var translated = match && match[2] !== 'index' && ENGLISH_ONLY_GUIDES.indexOf(match[2]) < 0;
+      var wanted = translated && code !== 'en' ? match[1] + code + '/' + match[2] + '.html' + (match[3] || '') : english;
+      if (link.getAttribute('href') !== wanted) link.setAttribute('href', wanted);
+    });
+  }
+
   function apply(strings, code) {
     dictionary = strings || {};
     current = code || 'en';
@@ -124,6 +147,8 @@
           else node.setAttribute(name, saved[name]);
         });
     });
+
+    localizeGuideLinks(current);
 
     document.documentElement.setAttribute('lang', current);
     var contentLanguage = document.querySelector('meta[http-equiv="content-language"]');

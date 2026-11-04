@@ -35,11 +35,60 @@ const DOCS = {
   communityGalleries: 'community-galleries',
 };
 
-// A page of the documentation site, by the keys above. Unknown names fall back to its home page
-// rather than to a 404.
-function docs(page = 'home') {
+/*
+  The guides are translated into the site's own languages, each in a folder named by its code
+  (docs/fr/getting-started.md is served at /fr/getting-started.html). App locale id -> folder; an
+  app language with no entry reads the English guides. Portuguese (Portugal) and Latin American
+  Spanish read the closest translation rather than English. docs/_data/ui/ has one file per code.
+*/
+const DOC_LANGUAGES = {
+  french: 'fr',
+  german: 'de',
+  spanish: 'es',
+  latam: 'es',
+  italian: 'it',
+  portuguese: 'pt-br',
+  brazilian: 'pt-br',
+  polish: 'pl',
+  russian: 'ru',
+  japanese: 'ja',
+  schinese: 'zh-cn',
+};
+
+// The contributor guides stay in English; every other DOCS slug has a translation in each folder.
+const ENGLISH_ONLY = new Set(['architecture', 'goldbergGbe']);
+
+// data-aw-link keys that name a guide, and the DOCS key each one stands for.
+const GUIDE_LINKS = {
+  documentation: 'home',
+  gettingStarted: 'gettingStarted',
+  troubleshooting: 'troubleshooting',
+  presets: 'presets',
+  notifications: 'notifications',
+  overlay: 'overlay',
+  controller: 'controller',
+  sources: 'sources',
+  gameHealth: 'gameHealth',
+  faq: 'faq',
+  presetGalleryGuide: 'communityGalleries',
+};
+
+// A page of the documentation site, by the keys above, in the reader's language when the guides
+// are translated into it. Unknown names fall back to its home page rather than to a 404.
+function docs(page = 'home', appLanguage) {
   const slug = Object.prototype.hasOwnProperty.call(DOCS, page) ? DOCS[page] : DOCS.home;
-  return slug ? `${SITE}/${slug}.html` : `${SITE}/`;
+  const translated = Object.prototype.hasOwnProperty.call(DOC_LANGUAGES, appLanguage) && !ENGLISH_ONLY.has(page);
+  return slug ? `${SITE}/${translated ? `${DOC_LANGUAGES[appLanguage]}/` : ''}${slug}.html` : `${SITE}/`;
+}
+
+// The address behind a data-aw-link key for this app language: a guide in its translation, anything
+// else as registered. Undefined when the registry has no such key.
+function resolve(key, appLanguage) {
+  if (Object.prototype.hasOwnProperty.call(GUIDE_LINKS, key)) return docs(GUIDE_LINKS[key], appLanguage);
+  const value = String(key)
+    .split('.')
+    .reduce((node, part) => (node && typeof node === 'object' ? node[part] : undefined), links);
+  return typeof value === 'string' && value ? value : undefined;
 }
 
 // A tracked file at the repository root, for the documents the site does not publish.
@@ -61,7 +110,9 @@ const links = {
   REPO,
   SITE,
   DOCS,
+  DOC_LANGUAGES,
   docs,
+  resolve,
   repoFile,
   releaseTag,
 

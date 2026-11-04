@@ -1,7 +1,8 @@
 'use strict';
 
 /*
-  Writes docs/data/search.json: the guides cut into sections, for the search box beside them.
+  Writes docs/data/search.json: the guides cut into sections, for the search box beside them, and
+  search-<code>.json for each translated language (its own guides, no changelog).
 
   Each ## and ### heading starts a section, and its anchor is the id Jekyll gives that heading
   (kramdown's GFM rule), so a result lands on the heading itself. GitHub Pages builds the site
@@ -18,6 +19,7 @@ const root = path.join(__dirname, '..', '..');
 const DOCS = path.join(root, 'docs');
 const OUT = path.join(DOCS, 'data', 'search.json');
 const yaml = require(path.join(root, 'app', 'node_modules', 'js-yaml'));
+const site = require('./languages.js');
 
 // Enough of a section to match on and to quote from; the changelog is long and only needs its
 // version headings and a start.
@@ -84,7 +86,21 @@ function headingId(text, seen) {
   return count ? `${base}-${count}` : base;
 }
 
-function guides() {
+// A translated heading keeps the address of its English original with an explicit {#id}.
+function explicitId(text) {
+  const match = /\s*\{#([^\s}]+)\}\s*$/.exec(text);
+  return match ? { text: text.slice(0, match.index), id: match[1] } : { text, id: null };
+}
+
+function outFor(lang) {
+  return lang ? path.join(DOCS, 'data', `search-${lang}.json`) : OUT;
+}
+
+function guides(lang) {
+  if (lang) {
+    const labels = site.uiStrings(lang).labels;
+    return site.translatedGuides().map((file) => ({ file, lang, title: labels[file] || site.uiStrings(lang).guides }));
+  }
   const groups = yaml.load(fs.readFileSync(path.join(DOCS, '_data', 'guides.yml'), 'utf8'));
   const config = yaml.load(fs.readFileSync(path.join(DOCS, '_config.yml'), 'utf8'));
   const titles = new Map();
@@ -99,7 +115,8 @@ function guides() {
 }
 
 function sectionsOf(guide) {
-  let source = fs.readFileSync(path.join(DOCS, `${guide.file}.md`), 'utf8').replace(/\r\n/g, '\n');
+  const folder = guide.lang ? path.join(DOCS, guide.lang) : DOCS;
+  let source = fs.readFileSync(path.join(folder, `${guide.file}.md`), 'utf8').replace(/\r\n/g, '\n');
   // A generated page carries front matter, which is not part of what the reader sees.
   const front = /^---\n([\s\S]*?)\n---\n/.exec(source);
   let title = guide.title;
@@ -127,8 +144,9 @@ function sectionsOf(guide) {
       if (!fenced) current.body.push(line);
       continue;
     }
-    const text = plain(match[2], { inline: true });
-    const anchor = headingId(text, seen);
+    const explicit = explicitId(match[2]);
+    const text = plain(explicit.text, { inline: true });
+    const anchor = explicit.id || headingId(text, seen);
     if (match[1].length === 2 || match[1].length === 3) {
       flush();
       current = { heading: text, anchor, body: [] };
@@ -140,10 +158,10 @@ function sectionsOf(guide) {
   return { title, sections };
 }
 
-function content() {
+function content(lang) {
   const pages = [];
   const sections = [];
-  for (const guide of guides()) {
+  for (const guide of guides(lang)) {
     const { title, sections: found } = sectionsOf(guide);
     const index = pages.length;
     pages.push({ u: `${guide.file}.html`, t: title });
@@ -153,23 +171,28 @@ function content() {
 }
 
 function run({ check = false } = {}) {
-  const wanted = content();
-  const count = JSON.parse(wanted).sections.length;
-  if (check) {
-    const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, 'utf8') : '';
-    if (current !== wanted) {
-      console.error('docs/data/search.json is stale. Run: node tools/site/search-index.js');
-      process.exitCode = 1;
-      return false;
+  let current = true;
+  for (const lang of [null, ...site.languages()]) {
+    const wanted = content(lang);
+    const out = outFor(lang);
+    const name = path.relative(root, out).replace(/\\/g, '/');
+    const count = JSON.parse(wanted).sections.length;
+    if (check) {
+      const present = fs.existsSync(out) ? fs.readFileSync(out, 'utf8') : '';
+      if (present !== wanted) {
+        console.error(`${name} is stale. Run: node tools/site/search-index.js`);
+        process.exitCode = 1;
+        current = false;
+      }
+    } else {
+      fs.writeFileSync(out, wanted, 'utf8');
+      console.log(`site search: ${name} generated (${count} sections, ${Math.round(wanted.length / 1024)} KB)`);
     }
-    console.log(`site search: current (${count} sections)`);
-    return true;
   }
-  fs.writeFileSync(OUT, wanted, 'utf8');
-  console.log(`site search: generated (${count} sections, ${Math.round(wanted.length / 1024)} KB)`);
-  return true;
+  if (check && current) console.log('site search: current');
+  return current;
 }
 
 if (require.main === module) run({ check: process.argv.includes('--check') });
 
-module.exports = { OUT, content, headingId, plain, run };
+module.exports = { OUT, content, explicitId, headingId, outFor, plain, run };

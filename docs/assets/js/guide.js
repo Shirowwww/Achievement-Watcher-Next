@@ -28,6 +28,26 @@
     searchMany: '{n} results',
   };
 
+  /*
+    A translated guide carries its words as JSON (the layout writes #aw-strings from
+    _data/ui/<lang>.yml); anything missing keeps the English above.
+  */
+  (function loadStrings() {
+    var holder = document.getElementById('aw-strings');
+    var words;
+    try {
+      words = holder ? JSON.parse(holder.textContent) : null;
+    } catch (err) {
+      return;
+    }
+    if (!words) return;
+    Object.keys(words).forEach(function (key) {
+      var alert = /^alert([A-Z])(.*)$/.exec(key);
+      if (alert) STRINGS.alerts[(alert[1] + alert[2]).toUpperCase()] = words[key];
+      else if (typeof STRINGS[key] === 'string') STRINGS[key] = words[key];
+    });
+  })();
+
   var root = document.documentElement;
   var article = document.getElementById('article');
 

@@ -173,6 +173,57 @@ defaults:
       robots: noindex
       description: The installer, uninstaller and updater of Achievement Watcher Next, and why they diverge from the electron-builder defaults.
 
+  # The translated guides: docs/<code>/ holds one copy of each public guide, with its own title and
+  # description in front matter (the English ones above have no front matter). `lang` picks the
+  # words the layout says (_data/ui/<code>.yml) and the <html lang>; `locale` is for the link preview.
+  # Adding a language is a folder, a ui file, a line here and a line in assets/i18n/languages.json;
+  # test/site/translations.test.js checks they agree.
+  - scope:
+      path: fr
+    values:
+      lang: fr
+      locale: fr_FR
+  - scope:
+      path: de
+    values:
+      lang: de
+      locale: de_DE
+  - scope:
+      path: es
+    values:
+      lang: es
+      locale: es_ES
+  - scope:
+      path: it
+    values:
+      lang: it
+      locale: it_IT
+  - scope:
+      path: pt-br
+    values:
+      lang: pt-br
+      locale: pt_BR
+  - scope:
+      path: pl
+    values:
+      lang: pl
+      locale: pl_PL
+  - scope:
+      path: ru
+    values:
+      lang: ru
+      locale: ru_RU
+  - scope:
+      path: ja
+    values:
+      lang: ja
+      locale: ja_JP
+  - scope:
+      path: zh-cn
+    values:
+      lang: zh-cn
+      locale: zh_CN
+
 # The repository is a monorepo for a desktop app; only this folder is published, but be explicit so
 # a stray file added here later is not served by accident.
 exclude:

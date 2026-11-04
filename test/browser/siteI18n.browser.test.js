@@ -59,7 +59,9 @@ async function untranslated(page, code, prefix) {
         const key = node.getAttribute('data-i18n');
         const wanted = dictionary[key];
         if (typeof wanted !== 'string' || !wanted) return;
-        const got = wanted.indexOf('<') > -1 ? node.innerHTML : node.textContent;
+        // The page script points a link to a guide at the copy in the page's language
+        // (linux.html -> fr/linux.html); the dictionary text is written with the English address.
+        const got = wanted.indexOf('<') > -1 ? node.innerHTML.split('href="' + args.code + '/').join('href="') : node.textContent;
         if (got !== wanted) missed.push(key);
       });
       return missed;

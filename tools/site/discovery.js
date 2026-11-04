@@ -19,6 +19,7 @@ const REPOSITORY = 'https://github.com/Shirowwww/Achievement-Watcher-Next';
 const SITEMAP = path.join(DOCS, 'sitemap.xml');
 const FEED = path.join(DOCS, 'releases.xml');
 const PAGE_DATES = path.join(DOCS, '_data', 'pagedates.json');
+const site = require('./languages.js');
 
 function xml(value) {
   return String(value)
@@ -36,7 +37,9 @@ function publicPages() {
     .map((entry) => `${entry.name.slice(0, -3)}.html`)
     .sort((left, right) => left.localeCompare(right));
 
-  return ['', 'gallery/', 'gallery/themes/', ...guides];
+  // Each translated language has a copy of the public guides in its own folder.
+  const translated = site.languages().flatMap((code) => site.translatedGuides().map((guide) => `${code}/${guide}.html`));
+  return ['', 'gallery/', 'gallery/themes/', ...guides, ...translated];
 }
 
 // Author date of the last commit that touched any of the files, as YYYY-MM-DD; null when git has none.

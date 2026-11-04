@@ -9,7 +9,7 @@
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Achievement Watcher Next", "item": {{ '/' | absolute_url | jsonify }} },
-    { "@type": "ListItem", "position": 2, "name": "Documentation", "item": {{ '/README.html' | absolute_url | jsonify }} }{% unless page.name == 'README.md' %},
+    { "@type": "ListItem", "position": 2, "name": {{ ui.guides | jsonify }}, "item": {{ '/' | append: pre | append: 'README.html' | absolute_url | jsonify }} }{% unless page.name == 'README.md' %},
     { "@type": "ListItem", "position": 3, "name": {{ page.title | jsonify }} }{% endunless %}
   ]
 }

@@ -13,7 +13,8 @@ How AW Next is translated, what stays in English, and what a contributor has to 
 | | |
 |---|---|
 | Application interface | 28 bundled languages, full key parity, enforced by tests |
-| Website: the guides | English only, with the language declared so browser translation works |
+| Website: the guides | English at the root, and a full copy in 9 languages under `docs/<code>/` (the contributor guides and the changelog stay English) |
+| Release notes in the update window | The language of the app, from `docs/data/notes/<locale>.json`, English when a version has none |
 | Website: home page and the two galleries | 9 languages, as an overlay over the English markup |
 | Dates, times, durations, numbers | Not translated: `Intl` produces them from the selected language |
 | Logs, file names, protocol values, source ids | Not translated |
@@ -89,18 +90,62 @@ The site has two parts, localized differently.
 
 ### The guides
 
-The guides are English only, by decision. They are the same Markdown files GitHub renders in the
-repository; the site adds a shared layout (`docs/_layouts/default.html`) with the header, contents
-list and guide list, and leaves the Markdown alone. Twenty-eight forked copies would drift apart at
-different speeds, and a translation two releases behind serves a reader worse than current English.
+The English guides are the Markdown files in `docs/`, the source of truth. Each of the 9 site
+languages has a full copy of the public guides in its own folder (`docs/fr/getting-started.md` is
+served at `/fr/getting-started.html`), with the same file names. The contributor guides
+(`architecture`, the format references, the release workflow) and the changelog stay English: the
+sidebar of a translated page links to the English ones. `translated: false` in
+`docs/_data/guides.yml` is what marks them.
 
-Each page declares its language (`site.lang`: the `<html lang>` attribute, `content-language` and a
-self `hreflang`, from `docs/_layouts/default.html` and `docs/_includes/head-custom.html`), which is
-what browser translation and screen readers read.
+What a translated page needs beyond its Markdown:
 
-The in-app Help tab is the localized documentation: translated into all 28 languages, tailored to
-the reader's configuration, and what the app points at first. Its links lead here for the long form.
-A maintained translation of the guides would go in a sibling directory with its own `hreflang`.
+| | |
+|---|---|
+| The words around it | `docs/_data/ui/<code>.yml`: header, sidebar names, search, footer, and the strings of `guide.js`. The files in that folder are also the list of languages. |
+| Its folder defaults | an entry in `docs/_config.yml` giving the folder its `lang` and `locale` |
+| Title and description | front matter in the translated file itself (the English guides get theirs from `_config.yml`) |
+| Search | `docs/data/search-<code>.json`, built by `node tools/site/search-index.js` |
+| Search engines | the layout writes the `hreflang` alternates; `node tools/site/discovery.js` lists the pages in the sitemap |
+
+The home page and the galleries keep their own overlay (below) and point their links at the copy in
+the reader's language. The app does the same: `app/util/links.js` sends the Documentation, FAQ and
+Troubleshooting buttons to the copy for the interface language, and to English when there is none.
+
+### Translating a guide
+
+A copy keeps the English structure exactly and changes only the prose:
+
+- Start from the English file. Add front matter with a `title` and a `description` (60 to 200
+  characters, 20 for Japanese and Chinese), quoted, in the language.
+- Every heading of level 2 and below ends with the English heading's address, `## Mon titre {#the-english-id}`.
+  Links from other pages and search results keep working because the address does not change.
+- Relative links and images gain one `../` (`../screenshot/x.png`, `../architecture.md`), except
+  links to another translated guide (`sources.md`), which stay as they are.
+- Code blocks, commands, paths, file names, setting names as shown in the app, source names and
+  numbers stay as they are. Name a setting the way the app's own translation does.
+- No em or en dash anywhere; use a hyphen, a comma or a new sentence.
+- Same headings, tables, list items, HTML tags and links in the same order. Nothing added, nothing dropped.
+
+Run `node tools/site/translation-check.js fr` for a language (without a code, for all of them). It
+reports what departs from the English structure; `test/site/translations.test.js` runs the same
+check on every language in `npm test`. A green check proves the structure, not the quality: a
+native read of a few pages is still worth asking for.
+
+When an English guide changes, the same change updates the copies, or says in the pull request
+that they are behind. A copy that lags is better than none, but the sidebar does not say so.
+
+### Release notes in the update window
+
+The update window shows the release notes in the app's language. GitHub's release body is English
+and travels with the update, so the translations are published with the site instead:
+`docs/data/notes/<locale>.json` (one file per app locale, `french`, `schinese`, ...) maps a version
+to the same blocks the window draws. The app fetches its language's file when an update is offered
+and shows any version it lacks in English, so a missing translation never hides a release.
+
+At release time, `node tools/site/release-notes.js` turns `RELEASE_NOTES.md` into
+`docs/data/notes/english.json` (the latest 10 versions are kept); the other 27 files get the same
+version translated block for block. `node tools/site/release-notes.js --check` lists what is still
+missing and is part of `npm test`. The blocks are plain text: no Markdown, no links.
 
 ### The home page and the two galleries
 

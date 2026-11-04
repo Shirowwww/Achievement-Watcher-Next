@@ -169,7 +169,7 @@ test('help links point at this project, not the upstream wiki', () => {
   // app/util/links.js now, so the notice is checked against the registry rather than against a
   // literal that would have to be corrected in two places.
   const links = require(path.join(__dirname, '..', '..', 'app', 'util', 'links.js'));
-  assert.match(appJs, /href="\$\{links\.troubleshooting\}"/, 'the notice must take its address from the link registry');
+  assert.match(appJs, /href="\$\{links\.docs\('troubleshooting', uiLang\(\)\)\}"/, 'the notice must take its address from the link registry');
   assert.match(
     links.troubleshooting,
     /shirowwww\.github\.io\/Achievement-Watcher-Next\/troubleshooting\.html/,

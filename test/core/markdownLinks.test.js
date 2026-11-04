@@ -34,7 +34,11 @@ function githubAnchors(source) {
   for (const line of source.split(/\r?\n/)) {
     const match = /^ {0,3}#{1,6}\s+(.+?)\s*#*\s*$/.exec(line);
     if (!match) continue;
-    const base = stripHtmlTags(match[1])
+    // A translated guide ends a heading with the address of its English original, {#id}: Jekyll
+    // serves that id, so links to it resolve (GitHub shows the braces as text and keeps its own).
+    const explicit = /\s*\{#([^\s}]+)\}$/.exec(match[1]);
+    if (explicit) anchors.add(explicit[1]);
+    const base = stripHtmlTags(explicit ? match[1].slice(0, explicit.index) : match[1])
       .replace(/[`*_~]/g, '')
       .trim()
       .toLowerCase()

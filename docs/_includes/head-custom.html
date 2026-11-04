@@ -14,7 +14,7 @@
   what browser translation, screen readers and link previews read; the localization strategy for
   the app and for this site is docs/localization.md.
 -->
-<meta http-equiv="content-language" content="{{ site.lang | default: 'en' }}" />
+<meta http-equiv="content-language" content="{{ page.lang | default: site.lang | default: 'en' }}" />
 <!-- jekyll-seo-tag writes no robots tag; the contributor pages set `robots: noindex` in _config.yml. -->
 {% if page.robots %}<meta name="robots" content="{{ page.robots }}" />{% endif %}
 <link rel="alternate" type="application/rss+xml" title="Achievement Watcher Next releases" href="{{ '/releases.xml' | relative_url }}" />
@@ -41,4 +41,15 @@
   { "prefetch": [{ "where": { "href_matches": "{{ '/*' | relative_url }}" }, "eagerness": "moderate" }] }
 </script>
 {% include breadcrumb-jsonld.html %}
-{% if page.name == 'faq.md' %}{% include faq-jsonld.html %}{% endif %}
+{% if page.name == 'faq.md' and lang == 'en' %}{% include faq-jsonld.html %}{% endif %}
+{%- comment -%}
+  A guide with copies says so to search engines: one alternate per language, each the same guide,
+  plus x-default for the English page. The languages are the files in _data/ui/.
+{%- endcomment -%}
+{%- if translatable %}
+{%- for entry in site.data.ui %}
+{%- if entry[0] == 'en' %}{% assign alternate = '/' | append: stem | append: '.html' %}{% else %}{% assign alternate = '/' | append: entry[0] | append: '/' | append: stem | append: '.html' %}{% endif %}
+<link rel="alternate" hreflang="{{ entry[0] }}" href="{{ alternate | absolute_url }}" />
+{%- endfor %}
+<link rel="alternate" hreflang="x-default" href="{{ '/' | append: stem | append: '.html' | absolute_url }}" />
+{%- endif %}

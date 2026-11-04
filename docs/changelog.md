@@ -16,6 +16,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Improved
+
+- **Update notes in your language.** The window that offers an update shows what's new in the
+  language chosen in the app, in all 27 languages, and falls back to English for a version that has
+  no translation yet. The Documentation, FAQ and Troubleshooting buttons open the guide in your
+  language when the site has it.
+
 ### Fixed
 
 - **Uninstall never offers a personal folder.** A RetroAchievements ROM saved in Downloads made
@@ -32,6 +39,14 @@ renamed in 3.9.0 and the history is kept under one file.
   games whose achievements did not change since the last one.
 - **Notification preset gallery.** The bundled presets ship with their pictures, shown at once on
   the first opening; the rest are drawn three at a time, and an app update no longer redraws them.
+
+### Website & Docs
+
+- **The guides in nine languages.** French, German, Spanish, Italian, Brazilian Portuguese,
+  Polish, Russian, Japanese and Simplified Chinese each have the public guides in their own folder
+  of the site, with their own search, a language list in the header and the right language
+  declared to search engines. The home page and the galleries link to the copy in the chosen
+  language. The contributor guides and this changelog stay in English.
 
 ## 3.12.5 - 2026-11-03
 

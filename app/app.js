@@ -1676,8 +1676,9 @@ function applyExternalLinks(root) {
     .addBack('[data-aw-link]')
     .each(function () {
       const key = String($(this).attr('data-aw-link') || '');
-      const url = key.split('.').reduce((value, part) => (value && typeof value === 'object' ? value[part] : undefined), links);
-      if (typeof url === 'string' && url) $(this).attr('href', url);
+      // A guide opens in the interface language when the site has it translated.
+      const url = links.resolve(key, uiLang());
+      if (url) $(this).attr('href', url);
       else debug.warn(`[links] no address for data-aw-link="${key}"`);
     });
 }
@@ -3999,6 +4000,7 @@ ipcRenderer.on('reset-watchdog-status', () => {
 // <span> instead of <label> (i18n is positional, markup can't change). Re-run on every language change.
 window.refreshAccessibleNames = () => {
   document.documentElement.lang = intlFormat.toBcp47(uiLang()) || 'en';
+  applyExternalLinks();
   const searchLabel = t('search-games', 'Search games…', 'Rechercher un jeu…');
   // The field collapses to its magnifier, so the name has to be reachable on hover too.
   $('#search-bar input[type=search]').attr({ 'aria-label': searchLabel, title: searchLabel });
@@ -8168,7 +8170,7 @@ var app = {
               <li>
                 <div class="notice">
                   <p>${$('#unlock').data('lang-noneUnlocked')}</p>
-                  <p class="notice-aside">${$('#unlock').data('lang-noneUnlockedHint')} <a href="${links.troubleshooting}" target="_blank">${$('#unlock').data('lang-troubleshoot')} ↗</a></p>
+                  <p class="notice-aside">${$('#unlock').data('lang-noneUnlockedHint')} <a href="${links.docs('troubleshooting', uiLang())}" target="_blank">${$('#unlock').data('lang-troubleshoot')} ↗</a></p>
                   </div>
               </li>`;
         unlock.append(template);

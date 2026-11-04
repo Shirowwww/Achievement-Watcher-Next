@@ -33,7 +33,17 @@ drift from `CHANGELOG.md`:
 node tools/site/changelog.js
 node tools/site/discovery.js
 node tools/site/search-index.js
+node tools/site/release-notes.js
 ```
+
+`release-notes.js` copies `RELEASE_NOTES.md` into `docs/data/notes/english.json`. The update window
+shows those notes in the app's language, so the new version then has to be translated block for
+block into the other 27 files of that folder (the `locale-translator` agent does it);
+`node tools/site/release-notes.js --check` lists what is missing and `npm test` fails on it. A
+version without a translation still shows, in English, so a late translation only delays the
+language, never the release. The same goes for the guides: a change to an English guide updates its
+copy in each `docs/<code>/` folder, or says that the copies are behind
+(`node tools/site/translation-check.js` for the structure, `docs/localization.md` for the rules).
 
 Before each release, also check the docs: the README's "What it does" for a new capability,
 `docs/comparison.md` for a behaviour this release changed, and every path, file name or link the

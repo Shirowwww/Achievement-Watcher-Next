@@ -1,8 +1,11 @@
 # The guide list in the sidebar of every guide, in reading order.
 # `file` is the Markdown file without its extension; `label` is the short name shown in the list.
 # test/site/guides.test.js fails when a guide is missing from here or listed twice.
+# `translated: false` (on a group or a guide) keeps it English only: the translated sidebars link to the
+# English page. Every other guide has a copy in each docs/<code>/ folder (docs/_data/ui/ lists them).
 
 - title: Start here
+  ui: group_start
   items:
     - { file: getting-started, label: Getting started }
     - { file: sources, label: Compatible sources }
@@ -14,6 +17,7 @@
     - { file: troubleshooting, label: Troubleshooting }
 
 - title: When you need it
+  ui: group_need
   items:
     - { file: faq, label: FAQ }
     - { file: linux, label: Linux and Steam Deck }
@@ -22,9 +26,11 @@
     - { file: uplay-r2, label: Uplay setup }
     - { file: comparison, label: Compared to other trackers }
     - { file: community-galleries, label: Community galleries }
-    - { file: changelog, label: Changelog }
+    - { file: changelog, label: Changelog, translated: false }
 
 - title: For contributors
+  ui: group_contrib
+  translated: false
   items:
     - { file: architecture, label: Architecture }
     - { file: goldberg-gbe, label: Goldberg and GBE reference }

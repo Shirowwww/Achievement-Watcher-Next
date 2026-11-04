@@ -7,7 +7,8 @@ still complete.
 Installed: `fr`, `de`, `es`, `it`, `pt-br`, `pl`, `ru`, `ja`, `zh-cn`. Every one of them is complete: the
 check below reports nothing falling back to English.
 
-The documentation guides are a separate decision and stay English only. The reasoning is in
+The documentation guides are not translated here: each language has its own copy under
+`docs/<code>/`, and a new language here needs one there too. See
 [localization.md](../../localization.md).
 
 ## Adding a language

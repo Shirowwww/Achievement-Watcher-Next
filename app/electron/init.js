@@ -181,6 +181,7 @@ const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaun
 const { clearUpdaterCacheDir: clearCacheDirForHelper } = require(path.join(__dirname, '../util/updateCacheClear.js'));
 const { pruneInstalledPendingUpdate } = require(path.join(__dirname, '../util/updateCacheHousekeeping.js'));
 const { releaseNoteBlocks } = require(path.join(__dirname, '../util/releaseNotes.js'));
+const { fetchLocalizedNotes } = require(path.join(__dirname, '../util/localizedNotes.js'));
 const { buildUpdateWindowView } = require(path.join(__dirname, '../util/updateWindowView.js'));
 const { createUpdateWindow } = require(path.join(__dirname, 'updateWindow.js'));
 const { clearSafeCaches } = require(path.join(__dirname, '../util/clearableCaches.js'));
@@ -7795,7 +7796,9 @@ try {
         }
         // The release notes travel with the offer, so reading them no longer means leaving the
         // question for a browser and coming back to it.
-        const offer = { version: info.version, currentVersion: app.getVersion(), size: updateDownloadSize(info), notes: releaseNoteBlocks(info.releaseNotes) };
+        const translations = await fetchLocalizedNotes(String((configJS && configJS.achievement && configJS.achievement.lang) || 'english'));
+        const notes = releaseNoteBlocks(info.releaseNotes, { translations, version: info.version });
+        const offer = { version: info.version, currentVersion: app.getVersion(), size: updateDownloadSize(info), notes };
         if (isPortableBuild) {
           await offerPortableUpdate(offer, manual);
           return;

@@ -1,5 +1,29 @@
+{%- comment -%}
+  Which language this page is in comes from the folder it sits in (defaults in _config.yml set
+  lang for docs/fr/ and the rest); the English guides at the root set none. ui holds every word
+  the layout and the header say, from _data/ui/<lang>.yml, pre is the folder prefix of the links
+  that stay inside the guides, and translatable says whether the page has copies to switch to.
+{%- endcomment -%}
+{%- assign lang = page.lang | default: 'en' -%}
+{%- assign ui = site.data.ui[lang] -%}
+{%- if lang == 'en' -%}
+  {%- assign pre = '' -%}{%- assign home_query = '' -%}{%- assign search_suffix = '' -%}
+{%- else -%}
+  {%- assign pre = lang | append: '/' -%}{%- assign home_query = '?lang=' | append: lang -%}{%- assign search_suffix = '-' | append: lang -%}
+{%- endif -%}
+{%- assign stem = page.name | remove: '.md' -%}
+{%- assign translatable = false -%}
+{%- if stem == 'README' -%}
+  {%- assign translatable = true -%}
+{%- else -%}
+  {%- for group in site.data.guides -%}
+    {%- for item in group.items -%}
+      {%- if item.file == stem and group.translated != false and item.translated != false -%}{%- assign translatable = true -%}{%- endif -%}
+    {%- endfor -%}
+  {%- endfor -%}
+{%- endif -%}
 <!DOCTYPE html>
-<html lang="{{ site.lang | default: 'en' }}" class="no-js">
+<html lang="{{ lang }}" class="no-js">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,7 +34,7 @@
     {% include head-custom.html %}
   </head>
   <body class="aw-guide">
-    <a class="aw-skip" href="#content">Skip to content</a>
+    <a class="aw-skip" href="#content">{{ ui.skip }}</a>
     {% include site-header.html %}
 
     {%- comment -%}
@@ -36,34 +60,40 @@
     <div class="aw-shell">
       <!--
         The guide list. Written here with Liquid because the Markdown files must stay what GitHub
-        shows; the order and the short labels are in _data/guides.yml.
+        shows; the order and the short labels are in _data/guides.yml, their translations in
+        _data/ui/. A guide kept in English links to the English page whatever language is read.
       -->
-      <aside class="aw-guides" id="aw-guides" aria-label="Guides">
-        <nav class="aw-drawer-links" aria-label="Site">
-          <a href="{{ '/' | relative_url }}">Home</a>
-          <a href="{{ '/gallery/' | relative_url }}">Presets</a>
-          <a href="{{ '/gallery/themes/' | relative_url }}">Themes</a>
+      <aside class="aw-guides" id="aw-guides" aria-label="{{ ui.guides }}">
+        <nav class="aw-drawer-links" aria-label="{{ ui.site_nav }}">
+          <a href="{{ '/' | append: home_query | relative_url }}">{{ ui.home }}</a>
+          <a href="{{ '/gallery/' | append: home_query | relative_url }}">{{ ui.presets }}</a>
+          <a href="{{ '/gallery/themes/' | append: home_query | relative_url }}">{{ ui.themes }}</a>
           <a href="https://github.com/Shirowwww/Achievement-Watcher-Next">GitHub</a>
         </nav>
         <!--
-          Search over docs/data/search.json (tools/site/search-index.js), loaded on first use. With
-          scripting off the box is hidden rather than left doing nothing.
+          Search over docs/data/search.json, or search-<code>.json in a translated folder
+          (tools/site/search-index.js), loaded on first use. With scripting off the box is hidden
+          rather than left doing nothing.
         -->
         <div class="aw-search" role="search">
-          <label class="aw-search-label" for="aw-search-input">Search the guides</label>
-          <input class="aw-search-input" id="aw-search-input" type="search" placeholder="Search the guides" autocomplete="off" spellcheck="false" aria-controls="aw-search-results" aria-describedby="aw-search-status" data-search-index="{{ '/data/search.json' | relative_url }}" data-search-base="{{ '/' | relative_url }}">
+          <label class="aw-search-label" for="aw-search-input">{{ ui.search_label }}</label>
+          <input class="aw-search-input" id="aw-search-input" type="search" placeholder="{{ ui.search_placeholder }}" autocomplete="off" spellcheck="false" aria-controls="aw-search-results" aria-describedby="aw-search-status" data-search-index="{{ '/data/search' | append: search_suffix | append: '.json' | relative_url }}" data-search-base="{{ '/' | append: pre | relative_url }}">
           <kbd class="aw-search-key" aria-hidden="true">/</kbd>
           <p class="aw-search-status" id="aw-search-status" aria-live="polite"></p>
           <ul class="aw-search-results" id="aw-search-results"></ul>
         </div>
-        <a class="aw-guides-all" href="{{ '/README.html' | relative_url }}"{% if page.name == 'README.md' %} aria-current="page"{% endif %}>All guides</a>
+        <a class="aw-guides-all" href="{{ '/' | append: pre | append: 'README.html' | relative_url }}"{% if page.name == 'README.md' %} aria-current="page"{% endif %}>{{ ui.all_guides }}</a>
         {% for group in site.data.guides %}
         <section class="aw-guides-group">
-          <p class="aw-guides-title">{{ group.title }}</p>
+          <p class="aw-guides-title">{{ ui[group.ui] | default: group.title }}</p>
           <ul>
             {% for item in group.items %}
             {% assign source = item.file | append: '.md' %}
-            <li><a href="{{ item.file | append: '.html' | relative_url }}"{% if page.name == source %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+            {% if group.translated == false or item.translated == false %}
+            <li><a href="{{ item.file | append: '.html' | relative_url }}"{% if page.name == source and lang == 'en' %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+            {% else %}
+            <li><a href="{{ '/' | append: pre | append: item.file | append: '.html' | relative_url }}"{% if page.name == source %} aria-current="page"{% endif %}>{{ ui.labels[item.file] | default: item.label }}</a></li>
+            {% endif %}
             {% endfor %}
           </ul>
         </section>
@@ -74,7 +104,7 @@
         <article class="markdown-body" id="article">
           {%- if toc_count >= 3 -%}
             {%- capture toc_inline -%}
-              <details class="aw-toc-inline"><summary>On this page</summary><ul>{{ toc_items }}</ul></details>
+              <details class="aw-toc-inline"><summary>{{ ui.on_this_page }}</summary><ul>{{ toc_items }}</ul></details>
             {%- endcapture -%}
             {%- assign first_section = toc_inline | append: '<h2 ' -%}
             {{ content | replace_first: '<h2 ', first_section }}
@@ -86,25 +116,27 @@
         <footer class="aw-foot">
           {% if page.name %}
           {% if page.name == 'changelog.md' %}
-          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/CHANGELOG.md">Improve this page on GitHub</a>
+          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/CHANGELOG.md">{{ ui.improve }}</a>
           {% else %}
-          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/docs/{{ page.name }}">Improve this page on GitHub</a>
+          <a href="https://github.com/Shirowwww/Achievement-Watcher-Next/edit/main/docs/{{ pre }}{{ page.name }}">{{ ui.improve }}</a>
           {% endif %}
           {% endif %}
-          {%- assign updated = site.data.pagedates[page.name] -%}
-          <span>Achievement Watcher Next, LGPL-3.0. Windows and Linux.</span>
-          <span>Maintained by Shirowwww.{% if updated %} Last updated <time datetime="{{ updated }}">{{ updated | date: '%-d %B %Y' }}</time>.{% endif %}</span>
+          {%- assign date_key = pre | append: page.name -%}
+          {%- assign updated = site.data.pagedates[date_key] -%}
+          <span>{{ ui.license }}</span>
+          <span>{{ ui.maintained }}{% if updated %} {{ ui.updated }} <time datetime="{{ updated }}">{% if lang == 'en' %}{{ updated | date: '%-d %B %Y' }}{% else %}{{ updated }}{% endif %}</time>.{% endif %}</span>
         </footer>
       </main>
 
       {%- if toc_count >= 3 -%}
-      <nav class="aw-toc" aria-label="On this page">
-        <p class="aw-toc-title">On this page</p>
+      <nav class="aw-toc" aria-label="{{ ui.on_this_page }}">
+        <p class="aw-toc-title">{{ ui.on_this_page }}</p>
         <ul>{{ toc_items }}</ul>
       </nav>
       {%- endif -%}
     </div>
 
+    <script id="aw-strings" type="application/json">{{ ui.js | jsonify }}</script>
     <script src="{{ '/assets/js/guide.js' | relative_url }}" defer></script>
     <script src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "0f90552e27d745eba9e93f0d31908b25"}' defer></script>
   </body>

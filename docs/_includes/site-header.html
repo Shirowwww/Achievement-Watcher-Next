@@ -4,26 +4,40 @@
   actions. It is drawn here rather than written into every Markdown file, so browsing those files on
   github.com is unaffected. On a phone the links and the guide list move into one menu, opened by
   the button at the left; with scripting off the button does nothing and the links stay in view.
+  The words come from _data/ui/<lang>.yml through the variables _layouts/default.html sets. The
+  language list is those same files, so a new docs/<code>/ folder with its file appears here; it
+  only shows on a guide that has copies, and each entry is the same guide in that language.
 -->
 <header class="aw-site-bar">
   <div class="aw-site-bar-inner">
-    <button class="aw-menu-toggle" type="button" aria-expanded="false" aria-controls="aw-guides" aria-label="Menu">
+    <button class="aw-menu-toggle" type="button" aria-expanded="false" aria-controls="aw-guides" aria-label="{{ ui.menu }}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z" /></svg>
     </button>
-    <a class="aw-site-brand" href="{{ '/' | relative_url }}" aria-label="Achievement Watcher Next">
+    <a class="aw-site-brand" href="{{ '/' | append: home_query | relative_url }}" aria-label="Achievement Watcher Next">
       <span class="aw-site-mark" aria-hidden="true"></span>
       <span class="aw-site-brand-word">Achievement Watcher <em>Next</em></span>
     </a>
-    <nav class="aw-site-links" aria-label="Site">
-      <a href="{{ '/' | relative_url }}">Home</a>
-      <a href="{{ '/README.html' | relative_url }}" aria-current="{% if page.name == 'README.md' %}page{% else %}false{% endif %}">Guides</a>
-      <a href="{{ '/gallery/' | relative_url }}">Presets</a>
-      <a href="{{ '/gallery/themes/' | relative_url }}">Themes</a>
+    <nav class="aw-site-links" aria-label="{{ ui.site_nav }}">
+      <a href="{{ '/' | append: home_query | relative_url }}">{{ ui.home }}</a>
+      <a href="{{ '/' | append: pre | append: 'README.html' | relative_url }}" aria-current="{% if page.name == 'README.md' %}page{% else %}false{% endif %}">{{ ui.guides }}</a>
+      <a href="{{ '/gallery/' | append: home_query | relative_url }}">{{ ui.presets }}</a>
+      <a href="{{ '/gallery/themes/' | append: home_query | relative_url }}">{{ ui.themes }}</a>
       <a href="https://github.com/Shirowwww/Achievement-Watcher-Next">GitHub</a>
     </nav>
     <div class="aw-site-actions">
-      <button class="aw-theme-toggle" type="button" aria-label="Switch theme" data-theme-toggle></button>
-      <a class="aw-site-cta" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest">Download</a>
+      {%- if translatable %}
+      <details class="aw-lang">
+        <summary aria-label="{{ ui.language }}">{{ ui.name }}</summary>
+        <ul>
+          {%- for entry in site.data.ui %}
+          {%- if entry[0] == 'en' %}{% assign target = '/' | append: stem | append: '.html' %}{% else %}{% assign target = '/' | append: entry[0] | append: '/' | append: stem | append: '.html' %}{% endif %}
+          <li><a href="{{ target | relative_url }}" lang="{{ entry[0] }}" hreflang="{{ entry[0] }}"{% if entry[0] == lang %} aria-current="true"{% endif %}>{{ entry[1].name }}</a></li>
+          {%- endfor %}
+        </ul>
+      </details>
+      {%- endif %}
+      <button class="aw-theme-toggle" type="button" aria-label="{{ ui.switch_theme }}" data-theme-toggle></button>
+      <a class="aw-site-cta" href="https://github.com/Shirowwww/Achievement-Watcher-Next/releases/latest">{{ ui.download }}</a>
     </div>
   </div>
 </header>

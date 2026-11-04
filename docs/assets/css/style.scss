@@ -608,6 +608,69 @@ body.aw-guide {
   fill: currentColor;
 }
 
+/*
+  The language list: a native <details>, so it opens with scripting off and closes with Escape in
+  the browsers that support it. The panel hangs under the button and never past the viewport edge.
+*/
+.aw-lang {
+  position: relative;
+}
+
+.aw-lang summary {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: var(--aw-radius);
+  background: var(--aw-surface);
+  color: var(--aw-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+}
+
+.aw-lang summary::-webkit-details-marker {
+  display: none;
+}
+
+.aw-lang summary:hover,
+.aw-lang[open] summary {
+  color: var(--aw-accent);
+}
+
+.aw-lang ul {
+  position: absolute;
+  right: 0;
+  z-index: 30;
+  min-width: 170px;
+  max-height: 70vh;
+  margin: 6px 0 0;
+  padding: 6px;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--aw-border);
+  border-radius: var(--aw-radius);
+  background: var(--aw-bg);
+  box-shadow: 0 12px 30px var(--aw-shadow);
+}
+
+.aw-lang li a {
+  display: block;
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: var(--aw-text);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.aw-lang li a:hover,
+.aw-lang li a[aria-current="true"] {
+  background: var(--aw-accent-soft);
+  color: var(--aw-accent);
+}
+
 /* Only a phone has a menu, and only a page with scripting can open one. */
 .aw-menu-toggle {
   display: none;
