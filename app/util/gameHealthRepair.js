@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
+const crackLoaderDetect = require('./crackLoaderDetect.js');
 
 function sameDir(a, b) {
   if (!a || !b) return false;
@@ -31,6 +32,9 @@ function sameDir(a, b) {
 function settingsTarget({ current, dllDirs = [], exePath = null, gameDir = '' }) {
   const dirs = (dllDirs || []).filter(Boolean);
   const currentParent = current ? path.dirname(current) : '';
+  // A GBE runtime that a proxy dll loads (version.dll -> steamclient64.dll) is read from this folder
+  // while Valve's steam_api stays elsewhere: the settings are already where the game looks (#169).
+  if (currentParent && crackLoaderDetect.proxyLoadedRuntime(currentParent)) return current;
   /*
     A packaged Unreal build loads steam_api by explicit path from Engine/Binaries/ThirdParty/
     Steamworks, so that folder outranks every other candidate - including a folder that already has
