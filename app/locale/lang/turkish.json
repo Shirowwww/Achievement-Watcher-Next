@@ -1364,6 +1364,14 @@
           "name": "Yerel yayın (port 8082)",
           "description": "Her kilit açmayı bu bilgisayarda çalışan araçlara, örneğin OBS kaynağına gönderir. Emin değilseniz açık bırakın."
         },
+        "updateMillennium": {
+          "name": "Millennium eklentisini güncel tut",
+          "description": "AW Next eklentisi Steam'de kuruluysa onu en son sürümün sürümüyle değiştirir. Yüklenmesi için Steam'i yeniden başlatın. Eklentiyi sizin yerinize hiçbir zaman kurmaz."
+        },
+        "updatePlaynite": {
+          "name": "Playnite uzantısını güncel tut",
+          "description": "AW Next uzantısı Playnite'ta kuruluysa onu en son sürümün sürümüyle değiştirir. İşlemin tamamlanması için Playnite'ı kapatın, sonra yeniden açın. Uzantıyı sizin yerinize hiçbir zaman kurmaz."
+        },
         "obsSource": {
           "name": "OBS tarayıcı kaynağı",
           "description": "Yayında açılmaları göster. OBS'de bir Tarayıcı kaynağı ekle ve bu adresi yapıştır. Oyun içi yer paylaşımıyla aynı açılır pencereyi gösterir ve açılmalar arasında boş kalır.",

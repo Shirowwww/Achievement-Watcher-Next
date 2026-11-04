@@ -82,6 +82,15 @@ test('both installed extensions are replaced by the newer release files', async 
   assert.deepEqual(fs.readdirSync(path.dirname(extension)), [PLAYNITE_ID]);
 });
 
+test('an extension switched off in the settings is left alone, the other still follows', async () => {
+  const { env, plugin, extension } = setup();
+  const release = releaseOf({ 'aw-next-millennium.zip': millenniumZip('0.2.0'), [`${PLAYNITE_ID}_1_1_0.pext`]: pext('1.1.0') });
+  const { results } = await run(env, release, { enabled: { millennium: false } });
+  assert.deepEqual(results.map((r) => r.id), ['playnite']);
+  assert.equal(fs.readFileSync(path.join(plugin, '.millennium', 'Dist', 'index.js'), 'utf8'), '// 0.1.0');
+  assert.equal(fs.readFileSync(path.join(extension, 'AwNextAchievements.dll'), 'utf8'), 'dll 1.1.0');
+});
+
 test('nothing is fetched when neither extension is installed', async () => {
   const root = makeTempDir('aw-ext-update-none-');
   let asked = false;

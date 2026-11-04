@@ -625,6 +625,16 @@ function translateUI(lang, locale, template) {
   selector.find("li:nth-child(1) .right select option[value='false']").text(clear(template.settings.common.disable));
   selector.find('li:nth-child(1) .left span').text(clear(template.settings.notification.option.useWS.name));
   selector.find('li:nth-child(1) .help').text(clear(template.settings.notification.option.useWS.description));
+  // The extension rows come after the websocket one and are bound by id, so a new row never shifts them.
+  for (const [id, key] of [['option_updateMillennium', 'updateMillennium'], ['option_updatePlaynite', 'updatePlaynite']]) {
+    const text = template.settings.notification.option[key];
+    const row = $('#' + id).closest('li');
+    if (!text) continue;
+    row.find('select option[value="true"]').text(clear(template.settings.common.enable));
+    row.find('select option[value="false"]').text(clear(template.settings.common.disable));
+    row.find('.left span').text(clear(text.name));
+    row.find('.help').text(clear(text.description));
+  }
   selector = $('#options-notify-test');
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.test));
   $('#notify-test-hint').text(clear(template.settings.notification.testHint));

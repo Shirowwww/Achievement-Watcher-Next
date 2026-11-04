@@ -1364,6 +1364,14 @@
           "name": "Phát cục bộ (port 8082)",
           "description": "Gửi mỗi lần mở khóa tới các công cụ chạy trên PC này, như nguồn OBS. Cứ để bật nếu bạn không chắc."
         },
+        "updateMillennium": {
+          "name": "Luôn cập nhật plugin Millennium",
+          "description": "Khi plugin AW Next đã được cài trong Steam, sẽ thay nó bằng phiên bản của bản phát hành mới nhất. Hãy khởi động lại Steam để tải plugin. Nó không bao giờ tự cài plugin cho bạn."
+        },
+        "updatePlaynite": {
+          "name": "Luôn cập nhật tiện ích mở rộng Playnite",
+          "description": "Khi tiện ích mở rộng AW Next đã được cài trong Playnite, sẽ thay nó bằng phiên bản của bản phát hành mới nhất. Hãy đóng Playnite để việc thay thế hoàn tất, rồi mở lại. Nó không bao giờ tự cài tiện ích mở rộng cho bạn."
+        },
         "obsSource": {
           "name": "Nguồn trình duyệt OBS",
           "description": "Hiển thị các lượt mở khóa khi phát trực tiếp. Thêm một Nguồn trình duyệt trong OBS và dán địa chỉ này vào. Trang hiển thị đúng khung thông báo giống như lớp phủ trong trò chơi, và để trống giữa các lượt mở khóa.",

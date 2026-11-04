@@ -1364,6 +1364,14 @@
           "name": "로컬 방송 (port 8082)",
           "description": "달성할 때마다 OBS 소스처럼 이 PC에서 실행 중인 도구로 전송합니다. 잘 모르겠으면 켜 두세요."
         },
+        "updateMillennium": {
+          "name": "Millennium 플러그인을 최신 상태로 유지",
+          "description": "Steam에 AW Next 플러그인이 설치되어 있으면 최신 릴리스의 버전으로 교체합니다. 적용하려면 Steam을 다시 시작하세요. 플러그인을 대신 설치하지는 않습니다."
+        },
+        "updatePlaynite": {
+          "name": "Playnite 확장 기능을 최신 상태로 유지",
+          "description": "Playnite에 AW Next 확장 기능이 설치되어 있으면 최신 릴리스의 버전으로 교체합니다. 교체가 되려면 Playnite를 닫았다가 다시 여세요. 확장 기능을 대신 설치하지는 않습니다."
+        },
         "obsSource": {
           "name": "OBS 브라우저 소스",
           "description": "스트림에 도전 과제 달성을 표시합니다. OBS에 브라우저 소스를 추가하고 이 주소를 붙여넣으세요. 게임 내 오버레이와 같은 팝업을 표시하며, 달성이 없을 때는 비어 있습니다.",

@@ -1364,6 +1364,14 @@
           "name": "Local broadcast (port 8082)",
           "description": "Sends each unlock to tools running on this PC, such as the OBS source. Leave it on if unsure."
         },
+        "updateMillennium": {
+          "name": "Keep the Millennium plugin up to date",
+          "description": "When the AW Next plugin is installed in Steam, replaces it with the latest release's version. Restart Steam to load it. It never installs the plugin for you."
+        },
+        "updatePlaynite": {
+          "name": "Keep the Playnite extension up to date",
+          "description": "When the AW Next extension is installed in Playnite, replaces it with the latest release's version. Close Playnite for it to go through, then reopen it. It never installs the extension for you."
+        },
         "obsSource": {
           "name": "OBS browser source",
           "description": "Show unlocks on stream. Add a Browser source in OBS and paste this address. It draws the same popup as the in-game one, and stays empty between unlocks.",

@@ -1364,6 +1364,14 @@
           "name": "Místní vysílání (port 8082)",
           "description": "Posílá každé odemčení nástrojům spuštěným v tomto počítači, například zdroji OBS. Pokud si nejste jistí, nechte zapnuté."
         },
+        "updateMillennium": {
+          "name": "Udržovat plugin Millennium aktuální",
+          "description": "Když je plugin AW Next nainstalován ve Steamu, nahradí ho verzí z nejnovějšího vydání. Restartujte Steam, aby se načetl. Plugin za vás nikdy neinstaluje."
+        },
+        "updatePlaynite": {
+          "name": "Udržovat rozšíření Playnite aktuální",
+          "description": "Když je rozšíření AW Next nainstalováno v Playnite, nahradí ho verzí z nejnovějšího vydání. Aby se změna provedla, zavřete Playnite a poté ho znovu otevřete. Rozšíření za vás nikdy neinstaluje."
+        },
         "obsSource": {
           "name": "Zdroj prohlížeče OBS",
           "description": "Zobrazuje odemčení při streamování. Přidejte zdroj prohlížeče v OBS a vložte tuto adresu. Zobrazuje stejné vyskakovací okno jako overlay ve hře, a mezi odemčeními zůstává prázdná.",

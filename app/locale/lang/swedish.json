@@ -1364,6 +1364,14 @@
           "name": "Lokal sändning (port 8082)",
           "description": "Skickar varje upplåsning till verktyg som körs på den här datorn, till exempel OBS-källan. Låt den vara på om du är osäker."
         },
+        "updateMillennium": {
+          "name": "Håll Millennium-tillägget uppdaterat",
+          "description": "När AW Next-tillägget är installerat i Steam ersätts det med versionen från den senaste utgåvan. Starta om Steam för att läsa in det. Det installerar aldrig tillägget åt dig."
+        },
+        "updatePlaynite": {
+          "name": "Håll Playnite-tillägget uppdaterat",
+          "description": "När AW Next-tillägget är installerat i Playnite ersätts det med versionen från den senaste utgåvan. Stäng Playnite så att bytet går igenom och öppna det sedan igen. Det installerar aldrig tillägget åt dig."
+        },
         "obsSource": {
           "name": "OBS-webbläsarkälla",
           "description": "Visar upplåsningar under sändningen. Lägg till en webbläsarkälla i OBS och klistra in den här adressen. Den visar samma popup som overlayen i spelet, och förblir tom mellan upplåsningar.",

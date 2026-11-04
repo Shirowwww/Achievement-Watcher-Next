@@ -17,7 +17,8 @@ for a portable copy).
 
 AW Next keeps it current on its own: a few minutes after it starts, and at most once a day, it reads
 the latest release and, when the `.pext` holds a newer version of an extension you already installed,
-replaces its folder. Close Playnite for that to go through (a folder Playnite holds open is retried at
+replaces its folder (**Keep the Playnite extension up to date** in AW Next's Notifications settings
+turns it off). Close Playnite for that to go through (a folder Playnite holds open is retried at
 the next start) and reopen it to load the new version. Playnite's add-on database is closed to new
 entries, so it cannot do this for a copy installed from the release page.
 

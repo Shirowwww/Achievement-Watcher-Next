@@ -190,6 +190,7 @@ async function updateOne(spec, target, release, { fetchBuffer, log }) {
  * @param {() => number} [options.readCheckedAt] when the release was last read, in ms
  * @param {(time: number) => void} [options.writeCheckedAt]
  * @param {boolean} [options.force] ignore the once-a-day throttle
+ * @param {{ millennium?: boolean, playnite?: boolean }} [options.enabled] an extension set to false is left alone
  * @returns {Promise<{ id: string, status: string, from?: string, to?: string }[]>}
  */
 async function updateExtensions({
@@ -200,9 +201,12 @@ async function updateExtensions({
   writeCheckedAt = () => {},
   now = Date.now,
   force = false,
+  enabled = {},
   log = () => {},
 }) {
-  const installed = SPECS.map((spec) => ({ spec, target: spec.locate(env || {}) })).filter((item) => item.target);
+  const installed = SPECS.filter((spec) => enabled[spec.id] !== false)
+    .map((spec) => ({ spec, target: spec.locate(env || {}) }))
+    .filter((item) => item.target);
   if (installed.length === 0) return [];
   if (!force && now() - readCheckedAt() < RECHECK_MS) return [];
 

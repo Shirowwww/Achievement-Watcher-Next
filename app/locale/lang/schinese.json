@@ -1364,6 +1364,14 @@
           "name": "本地广播 (port 8082)",
           "description": "把每次解锁发送给此电脑上运行的工具，例如 OBS 来源。不确定时请保持开启。"
         },
+        "updateMillennium": {
+          "name": "保持 Millennium 插件为最新版本",
+          "description": "当 Steam 中已安装 AW Next 插件时，会用最新发行版的版本替换它。请重启 Steam 以加载。它不会替你安装插件。"
+        },
+        "updatePlaynite": {
+          "name": "保持 Playnite 扩展为最新版本",
+          "description": "当 Playnite 中已安装 AW Next 扩展时，会用最新发行版的版本替换它。请先关闭 Playnite 才能完成更新，之后再重新打开。它不会替你安装扩展。"
+        },
         "obsSource": {
           "name": "OBS 浏览器源",
           "description": "在直播中显示解锁。在 OBS 中添加浏览器源并粘贴这个网址。它显示与游戏内叠加层相同的弹窗，在没有解锁时保持空白。",

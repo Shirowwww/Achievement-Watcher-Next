@@ -1364,6 +1364,14 @@
           "name": "Diffusion locale (port 8082)",
           "description": "Envoie chaque succès aux outils qui tournent sur ce PC, comme la source OBS. Laisse activé dans le doute."
         },
+        "updateMillennium": {
+          "name": "Garder le plugin Millennium à jour",
+          "description": "Quand le plugin AW Next est installé dans Steam, le remplace par la version de la dernière publication. Redémarre Steam pour le charger. Il n'installe jamais le plugin à ta place."
+        },
+        "updatePlaynite": {
+          "name": "Garder l'extension Playnite à jour",
+          "description": "Quand l'extension AW Next est installée dans Playnite, la remplace par la version de la dernière publication. Ferme Playnite pour que le remplacement passe, puis rouvre-le. Il n'installe jamais l'extension à ta place."
+        },
         "obsSource": {
           "name": "Source navigateur OBS",
           "description": "Affiche les déblocages en direct. Ajoute une source navigateur dans OBS et colle cette adresse. Elle affiche la même fenêtre de notification que celle en jeu, et reste vide entre les déblocages.",

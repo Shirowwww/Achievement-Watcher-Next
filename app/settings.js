@@ -617,6 +617,11 @@ module.exports.load = () => {
       options.notification_transport.websocket = true;
     }
 
+    // Keep the installed Millennium plugin / Playnite extension current (util/extensionUpdate.js).
+    for (const key of ['updateMillennium', 'updatePlaynite']) {
+      if (typeof options.notification_transport[key] !== 'boolean') options.notification_transport[key] = true;
+    }
+
     // Delivery mode: 'auto' (Watchdog picks per event, see watchdog/notification/transportPolicy.js),
     // 'toast', 'overlay', or 'both'. A saved choice is never rewritten, only unset/corrupt defaults to 'auto'.
     if (!['auto', 'toast', 'overlay', 'both'].includes(options.notification_transport.mode)) {
@@ -834,6 +839,8 @@ module.exports.load = () => {
         winRT: true,
         balloon: true,
         websocket: true,
+        updateMillennium: true,
+        updatePlaynite: true,
         mode: 'auto',
       },
       notification_advanced: {

@@ -1364,6 +1364,14 @@
           "name": "Helyi közvetítés (port 8082)",
           "description": "Minden feloldást elküld az ezen a gépen futó eszközöknek, például az OBS-forrásnak. Ha bizonytalan vagy, hagyd bekapcsolva."
         },
+        "updateMillennium": {
+          "name": "A Millennium bővítmény naprakészen tartása",
+          "description": "Ha az AW Next bővítmény telepítve van a Steamben, lecseréli a legújabb kiadás verziójára. A betöltéshez indítsd újra a Steamet. A bővítményt soha nem telepíti helyetted."
+        },
+        "updatePlaynite": {
+          "name": "A Playnite kiegészítő naprakészen tartása",
+          "description": "Ha az AW Next kiegészítő telepítve van a Playnite-ban, lecseréli a legújabb kiadás verziójára. A csere végrehajtásához zárd be a Playnite-ot, majd nyisd meg újra. A kiegészítőt soha nem telepíti helyetted."
+        },
         "obsSource": {
           "name": "OBS böngészőforrás",
           "description": "Megjeleníti a feloldásokat közvetítés közben. Adj hozzá egy böngészőforrást az OBS-ben, és illeszd be ezt a címet. Ugyanazt a felugró ablakot jeleníti meg, mint a játékon belüli overlay, és üres marad a feloldások között.",

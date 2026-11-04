@@ -3452,7 +3452,9 @@ function scheduleExtensionUpdate() {
       const steamPath = await require(path.join(__dirname, '../parser/steam.js'))
         .getSteamPath()
         .catch(() => '');
+      const transport = ((await require(path.join(__dirname, '../settings.js')).load()) || {}).notification_transport || {};
       await extensionUpdate.updateExtensions({
+        enabled: { millennium: transport.updateMillennium !== false, playnite: transport.updatePlaynite !== false },
         env: { steamPath, playniteExtensionsDir: path.join(app.getPath('appData'), 'Playnite', 'Extensions') },
         ...extensionUpdate.defaultFetchers,
         readCheckedAt: () => {

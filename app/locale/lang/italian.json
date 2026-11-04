@@ -1364,6 +1364,14 @@
           "name": "Trasmissione locale (port 8082)",
           "description": "Invia ogni sblocco agli strumenti in esecuzione su questo PC, come la sorgente OBS. Lascialo attivo se non sei sicuro."
         },
+        "updateMillennium": {
+          "name": "Mantieni aggiornato il plugin Millennium",
+          "description": "Quando il plugin di AW Next è installato in Steam, lo sostituisce con la versione dell'ultima release. Riavvia Steam per caricarlo. Non installa mai il plugin al posto tuo."
+        },
+        "updatePlaynite": {
+          "name": "Mantieni aggiornata l'estensione Playnite",
+          "description": "Quando l'estensione di AW Next è installata in Playnite, la sostituisce con la versione dell'ultima release. Chiudi Playnite perché la sostituzione vada a buon fine, poi riaprilo. Non installa mai l'estensione al posto tuo."
+        },
         "obsSource": {
           "name": "Sorgente browser OBS",
           "description": "Mostra gli sblocchi in streaming. Aggiungi una sorgente browser in OBS e incolla questo indirizzo. Mostra lo stesso popup dell’overlay di gioco, e resta vuota tra uno sblocco e l’altro.",

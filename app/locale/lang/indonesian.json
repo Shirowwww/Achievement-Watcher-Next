@@ -1364,6 +1364,14 @@
           "name": "Siaran lokal (port 8082)",
           "description": "Mengirim setiap pembukaan ke alat yang berjalan di PC ini, seperti sumber OBS. Biarkan aktif jika ragu."
         },
+        "updateMillennium": {
+          "name": "Selalu perbarui plugin Millennium",
+          "description": "Jika plugin AW Next terpasang di Steam, plugin itu diganti dengan versi dari rilis terbaru. Mulai ulang Steam untuk memuatnya. Plugin tidak akan pernah dipasang untuk Anda."
+        },
+        "updatePlaynite": {
+          "name": "Selalu perbarui ekstensi Playnite",
+          "description": "Jika ekstensi AW Next terpasang di Playnite, ekstensi itu diganti dengan versi dari rilis terbaru. Tutup Playnite agar penggantian berhasil, lalu buka lagi. Ekstensi tidak akan pernah dipasang untuk Anda."
+        },
         "obsSource": {
           "name": "Sumber browser OBS",
           "description": "Tampilkan pencapaian yang terbuka saat streaming. Tambahkan Sumber browser di OBS dan tempelkan alamat ini. Halaman ini menampilkan pop-up yang sama seperti overlay dalam game, dan tetap kosong di antara pencapaian yang terbuka.",

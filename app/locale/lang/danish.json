@@ -1364,6 +1364,14 @@
           "name": "Lokal udsendelse (port 8082)",
           "description": "Sender hver oplåsning til værktøjer, der kører på denne pc, f.eks. OBS-kilden. Lad den være slået til, hvis du er i tvivl."
         },
+        "updateMillennium": {
+          "name": "Hold Millennium-pluginet opdateret",
+          "description": "Når AW Next-pluginet er installeret i Steam, erstatter det med versionen fra den nyeste udgivelse. Genstart Steam for at indlæse det. Det installerer aldrig pluginet for dig."
+        },
+        "updatePlaynite": {
+          "name": "Hold Playnite-udvidelsen opdateret",
+          "description": "Når AW Next-udvidelsen er installeret i Playnite, erstatter det den med versionen fra den nyeste udgivelse. Luk Playnite, så det kan gå igennem, og åbn det igen bagefter. Det installerer aldrig udvidelsen for dig."
+        },
         "obsSource": {
           "name": "OBS-browserkilde",
           "description": "Vis oplåsninger på stream. Tilføj en browserkilde i OBS og indsæt denne adresse. Den viser det samme pop op-vindue som overlayet i spillet, og forbliver tom mellem oplåsninger.",

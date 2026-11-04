@@ -1364,6 +1364,14 @@
           "name": "Paikallinen lähetys (port 8082)",
           "description": "Lähettää jokaisen avauksen tällä tietokoneella toimiville työkaluille, kuten OBS-lähteelle. Jätä päälle, jos olet epävarma."
         },
+        "updateMillennium": {
+          "name": "Pidä Millennium-lisäosa ajan tasalla",
+          "description": "Kun AW Next -lisäosa on asennettu Steamiin, korvaa sen uusimman julkaisun versiolla. Käynnistä Steam uudelleen, jotta lisäosa latautuu. Se ei koskaan asenna lisäosaa puolestasi."
+        },
+        "updatePlaynite": {
+          "name": "Pidä Playnite-laajennus ajan tasalla",
+          "description": "Kun AW Next -laajennus on asennettu Playniteen, korvaa sen uusimman julkaisun versiolla. Sulje Playnite, jotta vaihto onnistuu, ja avaa se sen jälkeen uudelleen. Se ei koskaan asenna laajennusta puolestasi."
+        },
         "obsSource": {
           "name": "OBS-selainlähde",
           "description": "Näytä avaukset striimillä. Lisää selainlähde OBS:ään ja liitä tämä osoite. Se näyttää saman ponnahdusilmoituksen kuin pelin sisällä, ja pysyy tyhjänä avausten välillä.",

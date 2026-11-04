@@ -1364,6 +1364,14 @@
           "name": "Lokale uitzending (port 8082)",
           "description": "Stuurt elke ontgrendeling naar tools die op deze pc draaien, zoals de OBS-bron. Laat het aan als je het niet zeker weet."
         },
+        "updateMillennium": {
+          "name": "Millennium-plug-in up-to-date houden",
+          "description": "Als de AW Next-plug-in in Steam is geïnstalleerd, wordt die vervangen door de versie van de nieuwste release. Start Steam opnieuw op om hem te laden. De plug-in wordt nooit voor je geïnstalleerd."
+        },
+        "updatePlaynite": {
+          "name": "Playnite-extensie up-to-date houden",
+          "description": "Als de AW Next-extensie in Playnite is geïnstalleerd, wordt die vervangen door de versie van de nieuwste release. Sluit Playnite zodat de vervanging doorgaat en open het daarna weer. De extensie wordt nooit voor je geïnstalleerd."
+        },
         "obsSource": {
           "name": "OBS-browserbron",
           "description": "Toon ontgrendelingen tijdens het streamen. Voeg een Browserbron toe in OBS en plak dit adres. Deze toont dezelfde pop-up als de in-game overlay, en blijft leeg tussen ontgrendelingen.",

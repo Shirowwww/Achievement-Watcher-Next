@@ -1364,6 +1364,14 @@
           "name": "本機廣播 (port 8082)",
           "description": "把每次解鎖傳送給此電腦上執行的工具，例如 OBS 來源。不確定時請保持開啟。"
         },
+        "updateMillennium": {
+          "name": "保持 Millennium 外掛程式為最新版本",
+          "description": "當 Steam 中已安裝 AW Next 外掛程式時，會以最新發行版的版本取代它。請重新啟動 Steam 以載入。它不會替你安裝外掛程式。"
+        },
+        "updatePlaynite": {
+          "name": "保持 Playnite 擴充功能為最新版本",
+          "description": "當 Playnite 中已安裝 AW Next 擴充功能時，會以最新發行版的版本取代它。請先關閉 Playnite 才能完成更新，之後再重新開啟。它不會替你安裝擴充功能。"
+        },
         "obsSource": {
           "name": "OBS 瀏覽器來源",
           "description": "在直播中顯示解鎖畫面。在 OBS 中新增瀏覽器來源，並貼上這個網址。它會顯示和遊戲內嵌介面相同的彈出通知，在沒有解鎖時保持空白。",

@@ -1364,6 +1364,14 @@
           "name": "Transmisión local (port 8082)",
           "description": "Envía cada desbloqueo a las herramientas que se ejecutan en esta PC, como la fuente de OBS. Déjalo activado si tienes dudas."
         },
+        "updateMillennium": {
+          "name": "Mantener actualizado el plugin de Millennium",
+          "description": "Cuando el plugin de AW Next está instalado en Steam, lo reemplaza por la versión de la última versión publicada. Reinicia Steam para cargarlo. Nunca instala el plugin por ti."
+        },
+        "updatePlaynite": {
+          "name": "Mantener actualizada la extensión de Playnite",
+          "description": "Cuando la extensión de AW Next está instalada en Playnite, la reemplaza por la versión de la última versión publicada. Cierra Playnite para que el cambio se aplique y vuelve a abrirlo. Nunca instala la extensión por ti."
+        },
         "obsSource": {
           "name": "Fuente de navegador de OBS",
           "description": "Muestra los desbloqueos en la transmisión en vivo. Agrega una fuente de navegador en OBS y pega esta dirección. Muestra el mismo popup que el overlay en el juego, y permanece vacía entre desbloqueos.",

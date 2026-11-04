@@ -15,7 +15,8 @@ renamed in 3.9.0 and the history is kept under one file.
   installed either one, AW Next reads the latest release a few minutes after it starts (once a day at
   most), checks the file against GitHub's SHA-256 and replaces the installed folder when the release
   holds a newer version. Steam or Playnite holding the folder open only delays it to the next start;
-  restart them to load the new version.
+  restart them to load the new version. Two switches in **Settings > Notifications** (on by
+  default) turn it off for either one.
 - **Update notes in your language.** The window that offers an update shows what's new in the
   language chosen in the app, in all 27 languages, and falls back to English for a version that has
   no translation yet. The Documentation, FAQ and Troubleshooting buttons open the guide in your

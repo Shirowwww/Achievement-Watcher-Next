@@ -1364,6 +1364,14 @@
           "name": "Lokale Übertragung (port 8082)",
           "description": "Sendet jede Freischaltung an Tools, die auf diesem PC laufen, etwa die OBS-Quelle. Lass es eingeschaltet, wenn du unsicher bist."
         },
+        "updateMillennium": {
+          "name": "Millennium-Plugin aktuell halten",
+          "description": "Ist das AW-Next-Plugin in Steam installiert, ersetzt es durch die Version des neuesten Release. Starte Steam neu, um es zu laden. Das Plugin wird nie für dich installiert."
+        },
+        "updatePlaynite": {
+          "name": "Playnite-Erweiterung aktuell halten",
+          "description": "Ist die AW-Next-Erweiterung in Playnite installiert, ersetzt es durch die Version des neuesten Release. Schließe Playnite, damit der Austausch durchgeht, und öffne es danach wieder. Die Erweiterung wird nie für dich installiert."
+        },
         "obsSource": {
           "name": "OBS-Browserquelle",
           "description": "Zeigt Freischaltungen im Stream. Füge eine Browserquelle in OBS hinzu und füge diese Adresse ein. Sie zeigt dasselbe Popup wie das In-Game-Overlay, und bleibt zwischen Freischaltungen leer.",

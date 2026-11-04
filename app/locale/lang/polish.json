@@ -1364,6 +1364,14 @@
           "name": "Lokalna transmisja (port 8082)",
           "description": "Wysyła każde odblokowanie do narzędzi działających na tym komputerze, na przykład źródła OBS. Zostaw włączone, jeśli nie masz pewności."
         },
+        "updateMillennium": {
+          "name": "Utrzymuj wtyczkę Millennium w aktualnej wersji",
+          "description": "Gdy wtyczka AW Next jest zainstalowana w Steamie, zastępuje ją wersją z najnowszego wydania. Uruchom Steam ponownie, aby ją wczytać. Nigdy sam nie instaluje wtyczki."
+        },
+        "updatePlaynite": {
+          "name": "Utrzymuj rozszerzenie Playnite w aktualnej wersji",
+          "description": "Gdy rozszerzenie AW Next jest zainstalowane w Playnite, zastępuje je wersją z najnowszego wydania. Zamknij Playnite, aby zmiana mogła zostać wprowadzona, a potem otwórz go ponownie. Nigdy sam nie instaluje rozszerzenia."
+        },
         "obsSource": {
           "name": "Źródło przeglądarki OBS",
           "description": "Pokazuje odblokowania na streamie. Dodaj Źródło przeglądarki w OBS i wklej ten adres. Pokazuje to samo okienko co nakładka w grze, i pozostaje puste między odblokowaniami.",
