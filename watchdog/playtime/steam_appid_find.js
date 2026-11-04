@@ -6,7 +6,7 @@ const fs = require('../util/fsAsync');
 const glob = require('../util/lazyRequire.js').lazyRequire('fast-glob');
 const ini = require('../util/ini');
 
-async function findByReadingContentOfKnownConfigfilesIn(dirPath) {
+async function findByReadingContentOfKnownConfigfilesIn(dirPath, exeDir) {
   const files = [
     'steam_appid.txt', //generic
     'steam_emu.ini', //Codex, ...
@@ -27,11 +27,14 @@ async function findByReadingContentOfKnownConfigfilesIn(dirPath) {
     { cwd: dirPath, onlyFiles: true, absolute: true }
   );
 
-  let appid = null;
+  // Every marker found, not the first: a folder that holds several games (a Downloads folder) answers
+  // with several appids, and none of them stands for the exe that was run from there.
+  const found = [];
 
   for (const file of list) {
     try {
       const content = await fs.readFile(file, 'utf8');
+      let appid;
       if (path.parse(file).ext === '.txt') {
         appid = content.toString().trim();
       } else {
@@ -46,14 +49,39 @@ async function findByReadingContentOfKnownConfigfilesIn(dirPath) {
         else if (data.SteamClient) appid = data.SteamClient.AppId;
         else throw 'ERROR_UNEXPECTED_CONTENT';
       }
-      break;
+      appid = String(appid || '').trim();
+      if (appid) found.push({ appid, dir: key(path.dirname(file)) });
     } catch (err) {
       /*Do Nothing; Try next file if any*/
     }
   }
 
-  if (appid) return appid;
-  else throw 'ERROR_NOT_FOUND';
+  return pickMarker(found, key(dirPath), key(exeDir || dirPath));
 }
 
-module.exports = { findByReadingContentOfKnownConfigfilesIn };
+function key(dir) {
+  return path.resolve(dir).toLowerCase();
+}
+
+function isInside(dir, root) {
+  return dir === root || dir.startsWith(root + path.sep);
+}
+
+/*
+  Which marker stands for the exe. `searched` is the folder globbed, `exeDir` the exe's own folder
+  (the same, or a descendant when the search climbed to a game root).
+  - a marker beside the exe, or on the path from the exe up to the searched folder: the nearest wins,
+    other markers in the tree (an embedded tool, a DLC) do not matter;
+  - otherwise one distinct appid below: trusted when the search climbed (the exe lives in that tree),
+    `nested` when it did not (the caller must corroborate: it may be a game next to an installer);
+  - several distinct appids below: a folder of many games, no answer.
+*/
+function pickMarker(found, searched, exeDir) {
+  if (found.length === 0) throw 'ERROR_NOT_FOUND';
+  const onPath = found.filter((m) => isInside(exeDir, m.dir)).sort((a, b) => b.dir.length - a.dir.length);
+  if (onPath.length > 0) return { appid: onPath[0].appid, nested: false };
+  if (new Set(found.map((m) => m.appid)).size > 1) throw 'ERROR_AMBIGUOUS';
+  return { appid: found[0].appid, nested: searched === exeDir };
+}
+
+module.exports = { findByReadingContentOfKnownConfigfilesIn, pickMarker };

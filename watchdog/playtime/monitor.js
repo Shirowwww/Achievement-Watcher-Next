@@ -382,20 +382,29 @@ async function findAppidInConfigFiles(process, filepath) {
   // an ancestor of javaw's own directory, never inside it.
   for (const dir of candidateConfigDirs(path.dirname(filepath), process)) {
     if (isTooBroadToSearch(dir)) break;
-    const dirKey = dir.toLowerCase();
-    let appid;
+    const exeDir = path.dirname(filepath);
+    const dirKey = `${dir.toLowerCase()}|${exeDir.toLowerCase()}`;
+    let marker;
     if (appidByDirCache.has(dirKey)) {
-      appid = appidByDirCache.get(dirKey);
+      marker = appidByDirCache.get(dirKey);
     } else {
       // findByReadingContentOfKnownConfigfilesIn() globs the whole game tree, so cache the miss too:
       // otherwise every relaunch of the same non-game binary re-walks it.
       debug.log(`Try to find appid from a cfg file in "${dir}"`);
-      appid = await findByReadingContentOfKnownConfigfilesIn(dir).catch(() => null);
-      rememberAppidForDir(dirKey, appid);
+      marker = await findByReadingContentOfKnownConfigfilesIn(dir, exeDir).catch(() => null);
+      rememberAppidForDir(dirKey, marker);
     }
-    if (appid) return appid;
+    if (marker) return marker;
   }
   return null;
+}
+
+// A marker found in a sub-folder (a launcher at the root of an Unreal game, the marker in
+// Binaries\Win64) is kept only when the game's name matches the exe's folder or the exe's own name.
+// Otherwise the exe is a stranger that merely sits beside the game (an installer in a shared folder).
+// shortcut: a launcher whose folder and file name share no word with the title is not tracked by this route.
+function nestedMarkerFitsExe(gameName, filepath) {
+  return relatedToFolder(gameName, filepath) || relatedNames(gameName, path.basename(String(filepath || '')).replace(/\.[^.]+$/, ''));
 }
 
 function isObservedProcess(process) {
@@ -438,7 +447,10 @@ function tokenizeForSimilarity(value) {
 }
 
 function relatedToFolder(name, filepath) {
-  const folder = path.basename(path.dirname(String(filepath || '')));
+  return relatedNames(name, path.basename(path.dirname(String(filepath || ''))));
+}
+
+function relatedNames(name, folder) {
   const a = normalizeForSimilarity(name);
   const b = normalizeForSimilarity(folder);
   if (!a || !b) return false;
@@ -588,7 +600,9 @@ async function init() {
       if (!filepath) return;
       try {
         // A launch appid outside the index is an official Steam game: only taken when that source is on.
-        const appid = (officialSteamTracked && launchAppid) || (await findAppidInConfigFiles(process, filepath));
+        const fromLaunch = officialSteamTracked && launchAppid;
+        const marker = fromLaunch ? null : await findAppidInConfigFiles(process, filepath);
+        const appid = fromLaunch || (marker && marker.appid);
         if (!appid) return;
         debug.log(`Found appid: ${appid}`);
         if (isIgnoredAppid(appid)) {
@@ -601,6 +615,7 @@ async function init() {
         }
         //double check that the appid is not on gameIndex:
         game = gameIndex.find((g) => normalizeAppid(g.appid) === normalizeAppid(appid));
+        let created = false;
         if (!game) {
           const settings = require('../settings.js');
           const options = await settings.load(path.join(userDataDir(), 'cfg', 'options.ini'));
@@ -612,8 +627,14 @@ async function init() {
           // Record where it ran from: another game can ship the same executable name, and the folder
           // is what the next match uses to tell them apart.
           game = { appid, binary: process, icon: iconHash, name: d.name, exePath: filepath };
-          addToGameIndex(game).catch((err) => debug.warn(`[Playtime] could not save ${game.name} to gameIndex.json: ${err.message}`));
+          created = true;
         }
+        if (marker && marker.nested && !nestedMarkerFitsExe(game.name, filepath)) {
+          debug.log(`"${process}" sits above ${game.name}(${appid})'s marker but nothing ties it to that game; ignoring`);
+          return;
+        }
+        // Saved only after the check above: a refused exe must not become a binary of that game.
+        if (created) addToGameIndex(game).catch((err) => debug.warn(`[Playtime] could not save ${game.name} to gameIndex.json: ${err.message}`));
         // The lookups above take time: a launcher can be gone already, and a session holding a dead
         // pid would never see its exit.
         if (game && !(await tasklist.isProcessRunning(pid))) {
@@ -796,4 +817,5 @@ module.exports = {
   shouldMuteBinary,
   candidateConfigDirs,
   relatedToFolder,
+  nestedMarkerFitsExe,
 };

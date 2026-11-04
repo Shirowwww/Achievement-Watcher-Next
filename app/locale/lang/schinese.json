@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "叠加层无法显示",
     "gh-notif-reason-remembered": "此游戏此前有效的方式",
     "gh-why-not-watched": "所需的一切都已就位，但 AW Next 在游戏运行时并未监视它，因此不会有游戏时长和实时解锁通知。",
+    "gh-tracking-hint": "AW Next 会自行选择要监视的可执行文件，但并不总能判断哪一个才是正确的。如果它监视了错误的文件，或没有发现游戏，请手动选择可执行文件。",
     "gh-why-progress-muted": "此游戏配置正确。它的进度通知已静音，因此只会提示完整解锁。",
     "gh-why-nothing-unlocked-yet": "此游戏配置正确，AW Next 正在监视它。目前尚未解锁任何内容，这只是一款你还没有推进的游戏。",
     "gh-confirm-repair-title": "要重写成就数据吗？",

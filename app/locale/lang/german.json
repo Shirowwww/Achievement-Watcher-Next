@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "das Overlay konnte nicht angezeigt werden",
     "gh-notif-reason-remembered": "was für dieses Spiel funktioniert hat",
     "gh-why-not-watched": "Alles Nötige ist vorhanden, aber AW Next überwacht dieses Spiel während des Laufens nicht - Spielzeit und Live-Benachrichtigungen bleiben daher aus.",
+    "gh-tracking-hint": "AW Next wählt die zu überwachende ausführbare Datei selbst aus und kann nicht immer wissen, welche die richtige ist. Wenn es die falsche Datei überwacht oder das Spiel verpasst, wähle die ausführbare Datei von Hand aus.",
     "gh-why-progress-muted": "Dieses Spiel ist korrekt eingerichtet. Fortschrittsbenachrichtigungen sind dafür stummgeschaltet, es werden also nur vollständige Freischaltungen gemeldet.",
     "gh-why-nothing-unlocked-yet": "Dieses Spiel ist korrekt eingerichtet und AW Next überwacht es. Es wurde noch nichts freigeschaltet - ein Spiel, in dem du einfach noch keinen Fortschritt gemacht hast.",
     "gh-confirm-repair-title": "Erfolgsdaten neu schreiben?",

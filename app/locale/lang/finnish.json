@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "peittokuvaa ei voitu näyttää",
     "gh-notif-reason-remembered": "tälle pelille toiminut tapa",
     "gh-why-not-watched": "Kaikki tarvittava on paikallaan, mutta AW Next ei seuraa tätä peliä sen ollessa käynnissä, joten peliaikaa ei kerry eikä avauksista tule ilmoituksia.",
+    "gh-tracking-hint": "AW Next valitsee seurattavan ohjelmatiedoston itse eikä aina voi tietää, mikä niistä on oikea. Jos se seuraa väärää tiedostoa tai ei huomaa peliä, valitse ohjelmatiedosto itse.",
     "gh-why-progress-muted": "Tämä peli on määritetty oikein. Edistymisilmoitukset on mykistetty sen osalta, joten vain täydet avaukset ilmoitetaan.",
     "gh-why-nothing-unlocked-yet": "Tämä peli on määritetty oikein ja AW Next seuraa sitä. Mitään ei ole vielä avattu, eli kyse on yksinkertaisesti pelistä, jossa et ole vielä edennyt.",
     "gh-confirm-repair-title": "Kirjoitetaanko saavutustiedot uudelleen?",

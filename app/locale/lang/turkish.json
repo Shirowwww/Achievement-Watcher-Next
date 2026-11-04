@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "yer paylaşımı görüntülenemedi",
     "gh-notif-reason-remembered": "bu oyunda işe yarayan yöntem",
     "gh-why-not-watched": "Gereken her şey hazır, ancak AW Next bu oyunu çalışırken izlemiyor; bu yüzden oynama süresi ve anlık bildirimler oluşmaz.",
+    "gh-tracking-hint": "AW Next izlenecek çalıştırılabilir dosyayı kendi seçer ve hangisinin doğru olduğunu her zaman bilemez. Yanlış dosyayı izliyorsa veya oyunu kaçırıyorsa, çalıştırılabilir dosyayı elle seç.",
     "gh-why-progress-muted": "Bu oyun doğru şekilde kurulmuş. İlerleme bildirimleri onun için sessizde, bu yüzden yalnızca tam açılışlar duyurulur.",
     "gh-why-nothing-unlocked-yet": "Bu oyun doğru kurulmuş ve AW Next izliyor. Henüz hiçbir şey açılmadı - bu sadece ilerleme kaydetmediğin bir oyun.",
     "gh-confirm-repair-title": "Başarım verileri yeniden yazılsın mı?",

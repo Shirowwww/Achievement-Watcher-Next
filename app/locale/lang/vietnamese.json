@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "lớp phủ không hiển thị được",
     "gh-notif-reason-remembered": "cách đã hiệu quả với trò chơi này",
     "gh-why-not-watched": "Mọi thứ cần thiết đều đã sẵn sàng, nhưng AW Next không theo dõi trò chơi này khi nó chạy, nên sẽ không có thời gian chơi và thông báo mở khóa tức thời.",
+    "gh-tracking-hint": "AW Next tự chọn tệp thực thi để theo dõi và không phải lúc nào cũng biết tệp nào là đúng. Nếu nó theo dõi nhầm tệp, hoặc bỏ sót trò chơi, hãy chọn tệp thực thi theo cách thủ công.",
     "gh-why-progress-muted": "Trò chơi này được thiết lập đúng. Thông báo tiến độ đang bị tắt cho nó, nên chỉ những lần mở khóa hoàn chỉnh mới được báo.",
     "gh-why-nothing-unlocked-yet": "Trò chơi này được thiết lập đúng và AW Next đang theo dõi nó. Chưa có gì được mở khóa, đơn giản là bạn chưa có tiến triển trong trò chơi này.",
     "gh-confirm-repair-title": "Ghi lại dữ liệu thành tựu?",

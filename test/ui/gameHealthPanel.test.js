@@ -428,9 +428,22 @@ test('choosing an executable re-runs the report instead of leaving the old one o
 
   // Returning true from the action is what makes the click handler re-render the report.
   const action = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.CHOOSE_EXE) {'));
-  assert.match(action.slice(0, action.indexOf('\n  }')), /return !!\(await pickGameExecutable\(appid\)\)/);
+  const chooseBody = action.slice(0, action.indexOf('\n  }'));
+  assert.match(chooseBody, /const chosen = await pickGameExecutable\(appid\)/);
+  assert.match(chooseBody, /return !!chosen/);
+  // A game already watched keeps its old binary in the Watchdog's index unless the choice reaches it.
+  assert.match(chooseBody, /gameIndex\.upsert\(\{[^}]*binary: path\.basename\(chosen\)/);
   const handler = appSource.slice(appSource.indexOf("$('#game-health').on('click', '[data-gh-action]'"));
   assert.match(handler.slice(0, handler.indexOf('\n    });')), /await renderGameHealth\(appid\)/);
+});
+
+test('the report says the executable is picked automatically, only where a tracking row exists', () => {
+  const body = appSource.slice(appSource.indexOf('function gameHealthExplanation(report)'));
+  const fn = body.slice(0, body.indexOf('\n}\n'));
+  assert.match(fn, /'gh-tracking-hint'/);
+  assert.match(fn, /entry\.id === 'tracking'/, 'a console game has no tracking row and must not be told this');
+  const reasons = appSource.slice(appSource.indexOf('const GAME_HEALTH_TRACKING_HINT_REASONS'));
+  assert.match(reasons.slice(0, reasons.indexOf(';')), /'ready'.*'not-watched'/);
 });
 
 /*

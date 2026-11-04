@@ -459,8 +459,22 @@ function gameHealthStateLabel(state) {
   return t('gh-state-attention', 'Needs attention', 'À vérifier');
 }
 
-// The one sentence that has to make the state make sense on its own, in the user's words.
+// Said wherever the report talks about watching the game: the executable is picked automatically.
+const GAME_HEALTH_TRACKING_HINT_REASONS = new Set(['ready', 'not-watched', 'nothing-unlocked-yet']);
+
 function gameHealthExplanation(report) {
+  const text = gameHealthExplanationText(report);
+  const hasTrackingRow = (report.checks || []).some((entry) => entry.id === 'tracking');
+  if (!hasTrackingRow || !GAME_HEALTH_TRACKING_HINT_REASONS.has(report.reason)) return text;
+  return `${text} ${t(
+    'gh-tracking-hint',
+    "AW Next picks the executable to watch by itself and can't always tell which one is the right one. If it watches the wrong file, or misses the game, choose the executable by hand.",
+    "AW Next choisit tout seul l'exécutable à surveiller et ne peut pas toujours savoir lequel est le bon. S'il surveille le mauvais fichier, ou rate le jeu, choisis l'exécutable à la main."
+  )}`;
+}
+
+// The one sentence that has to make the state make sense on its own, in the user's words.
+function gameHealthExplanationText(report) {
   const p = report.params || {};
   switch (report.reason) {
     case 'not-installed':
@@ -1220,7 +1234,14 @@ async function runGameHealthAction(appid, action, button) {
     with the executable - and the install folder derived from it - in place.
   */
   if (action === gameHealth.ACTION.CHOOSE_EXE) {
-    return !!(await pickGameExecutable(appid));
+    const chosen = await pickGameExecutable(appid);
+    // Already watched: the Watchdog matches processes by the index's binary, so a new choice has to reach it.
+    const report = $('#game-health').data('report');
+    const watched = report && report.checks.some((entry) => entry.id === 'tracking' && entry.params && entry.params.binary);
+    if (chosen && watched) {
+      gameIndex.upsert({ appid, name: game.name || '', binary: path.basename(chosen), exePath: chosen, icon: game.img?.icon || '', source: game.source || '' });
+    }
+    return !!chosen;
   }
 
   if (action === gameHealth.ACTION.OPEN_FOLDER) {

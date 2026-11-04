@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "the overlay could not display",
     "gh-notif-reason-remembered": "what worked for this game",
     "gh-why-not-watched": "Everything needed is in place, but AW Next isn’t watching this game while it runs, so playtime and live unlock notifications won’t happen.",
+    "gh-tracking-hint": "AW Next picks the executable to watch by itself and can’t always tell which one is the right one. If it watches the wrong file, or misses the game, choose the executable by hand.",
     "gh-why-progress-muted": "This game is set up correctly. Progress notifications are muted for it, so only full unlocks will be announced.",
     "gh-why-nothing-unlocked-yet": "This game is set up correctly and AW Next is watching it. Nothing has been unlocked yet, which is simply a game you haven’t made progress in.",
     "gh-confirm-repair-title": "Rewrite the achievement data?",

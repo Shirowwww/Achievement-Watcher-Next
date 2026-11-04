@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "오버레이를 표시하지 못함",
     "gh-notif-reason-remembered": "이 게임에서 잘 작동했던 방식",
     "gh-why-not-watched": "필요한 것은 모두 갖춰졌지만, AW Next가 이 게임이 실행되는 동안 감시하지 않아 플레이 시간과 실시간 달성 알림이 동작하지 않습니다.",
+    "gh-tracking-hint": "AW Next는 감시할 실행 파일을 스스로 고르지만, 어느 것이 맞는지 항상 알 수는 없습니다. 엉뚱한 파일을 감시하거나 게임을 놓치면 실행 파일을 직접 선택해 주세요.",
     "gh-why-progress-muted": "이 게임은 올바르게 설정되어 있습니다. 진행도 알림이 음소거되어 있어 완전한 달성만 알려 드립니다.",
     "gh-why-nothing-unlocked-yet": "이 게임은 올바르게 설정되어 있고 AW Next가 감시하고 있습니다. 아직 달성한 것이 없을 뿐이며, 그저 진행하지 않은 게임이라는 뜻입니다.",
     "gh-confirm-repair-title": "도전 과제 데이터를 다시 기록할까요?",

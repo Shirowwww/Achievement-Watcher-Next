@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "內嵌介面無法顯示",
     "gh-notif-reason-remembered": "這款遊戲上次可行的方式",
     "gh-why-not-watched": "該有的都齊了，但 AW Next 在這款遊戲執行時並沒有監看它，所以不會有遊玩時數與即時解鎖通知。",
+    "gh-tracking-hint": "AW Next 會自行選擇要監看的執行檔，但並不一定能判斷哪一個才是正確的。如果它監看了錯誤的檔案，或沒有偵測到遊戲，請手動選擇執行檔。",
     "gh-why-progress-muted": "這款遊戲設定正確。它的進度通知已關閉，因此只有完整解鎖才會通知。",
     "gh-why-nothing-unlocked-yet": "這款遊戲設定正確，AW Next 也正在監看。目前還沒有解鎖任何成就，單純是這款遊戲你還沒有進度而已。",
     "gh-confirm-repair-title": "要重寫成就資料嗎？",

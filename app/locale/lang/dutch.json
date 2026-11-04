@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "de overlay kon niets tonen",
     "gh-notif-reason-remembered": "wat voor deze game werkte",
     "gh-why-not-watched": "Alles wat nodig is staat klaar, maar AW Next bewaakt deze game niet terwijl hij draait, dus speeltijd en live meldingen bij ontgrendelingen blijven uit.",
+    "gh-tracking-hint": "AW Next kiest zelf het uitvoerbare bestand dat het bewaakt en kan niet altijd weten welk bestand het juiste is. Bewaakt het het verkeerde bestand, of mist het de game, kies dan zelf het uitvoerbare bestand.",
     "gh-why-progress-muted": "Deze game is goed ingesteld. Voortgangsmeldingen zijn ervoor gedempt, dus alleen volledige ontgrendelingen worden aangekondigd.",
     "gh-why-nothing-unlocked-yet": "Deze game is goed ingesteld en AW Next bewaakt hem. Er is nog niets ontgrendeld, wat simpelweg betekent dat je er nog geen voortgang in hebt geboekt.",
     "gh-confirm-repair-title": "De prestatiegegevens opnieuw schrijven?",

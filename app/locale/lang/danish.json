@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "overlayet kunne ikke vises",
     "gh-notif-reason-remembered": "det, der virkede for dette spil",
     "gh-why-not-watched": "Alt det nødvendige er på plads, men AW Next holder ikke øje med dette spil, mens det kører, så der kommer hverken spilletid eller notifikationer om oplåsninger undervejs.",
+    "gh-tracking-hint": "AW Next vælger selv, hvilken programfil der holdes øje med, og kan ikke altid vide, hvilken der er den rigtige. Hvis den holder øje med den forkerte fil eller overser spillet, så vælg programfilen manuelt.",
     "gh-why-progress-muted": "Dette spil er sat rigtigt op. Fremskridtsnotifikationer er slået fra for det, så kun fuldt oplåste præstationer bliver annonceret.",
     "gh-why-nothing-unlocked-yet": "Dette spil er sat rigtigt op, og AW Next holder øje med det. Der er bare ikke låst noget op endnu, fordi du ikke er kommet videre i spillet.",
     "gh-confirm-repair-title": "Vil du skrive præstationsdataene om?",

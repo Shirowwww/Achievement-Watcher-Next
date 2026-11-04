@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "overlay se nepodařilo zobrazit",
     "gh-notif-reason-remembered": "co u této hry fungovalo",
     "gh-why-not-watched": "Vše potřebné je připraveno, ale AW Next tuto hru za běhu nesleduje, takže nebude ani doba hraní, ani živá oznámení.",
+    "gh-tracking-hint": "AW Next si spustitelný soubor ke sledování vybírá sám a nemůže vždy poznat, který je ten správný. Pokud sleduje špatný soubor nebo hru přehlédne, vyber spustitelný soubor ručně.",
     "gh-why-progress-muted": "Tato hra je nastavena správně. Oznámení o postupu jsou pro ni ztlumena, takže se ohlásí jen úplná odemčení.",
     "gh-why-nothing-unlocked-yet": "Tato hra je nastavena správně a AW Next ji sleduje. Zatím nebylo nic odemčeno - jde prostě o hru, ve které jsi ještě nepostoupil.",
     "gh-confirm-repair-title": "Přepsat data úspěchů?",

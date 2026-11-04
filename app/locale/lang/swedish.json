@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "overlayen kunde inte visas",
     "gh-notif-reason-remembered": "det som fungerade för det här spelet",
     "gh-why-not-watched": "Allt som behövs finns på plats, men AW Next bevakar inte det här spelet medan det körs, så speltid och aviseringar i realtid uteblir.",
+    "gh-tracking-hint": "AW Next väljer själv vilken körbar fil som bevakas och kan inte alltid veta vilken som är rätt. Om den bevakar fel fil eller missar spelet, välj den körbara filen manuellt.",
     "gh-why-progress-muted": "Spelet är korrekt uppsatt. Framstegsaviseringar är tystade för det, så bara hela upplåsningar aviseras.",
     "gh-why-nothing-unlocked-yet": "Spelet är korrekt uppsatt och AW Next bevakar det. Ingenting har låsts upp än, vilket helt enkelt betyder att du inte har kommit någon vart i spelet.",
     "gh-confirm-repair-title": "Vill du skriva om prestationsdatan?",

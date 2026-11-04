@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "az overlay nem tudott megjelenni",
     "gh-notif-reason-remembered": "ami ennél a játéknál működött",
     "gh-why-not-watched": "Minden szükséges adott, de az AW Next futás közben nem figyeli ezt a játékot, így nem lesz játékidő és élő értesítés sem.",
+    "gh-tracking-hint": "Az AW Next maga választja ki a figyelendő futtatható fájlt, és nem mindig tudja, melyik a helyes. Ha rossz fájlt figyel, vagy nem veszi észre a játékot, válaszd ki a futtatható fájlt kézzel.",
     "gh-why-progress-muted": "Ez a játék helyesen van beállítva. A haladásértesítések némítva vannak nála, így csak a teljes feloldások jelennek meg.",
     "gh-why-nothing-unlocked-yet": "Ez a játék helyesen van beállítva, és az AW Next figyeli. Még semmi nem oldódott fel - egyszerűen egy játék, amelyben még nem haladtál.",
     "gh-confirm-repair-title": "Újraírod a teljesítményadatokat?",

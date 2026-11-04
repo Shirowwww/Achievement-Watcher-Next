@@ -55,8 +55,27 @@ test('a fully configured, played game is Ready with nothing to repair', () => {
     !report.checks.some((entry) => entry.level === LEVEL.FAIL || entry.level === LEVEL.WARN),
     'a Ready game must raise no failing or warning check'
   );
-  // The only offer left is a notification test, which repairs nothing.
-  assert.deepEqual(report.actions, [ACTION.TEST_NOTIFICATION]);
+  // Only optional offers are left: a notification test, then the manual executable choice.
+  assert.deepEqual(report.actions, [ACTION.TEST_NOTIFICATION, ACTION.CHOOSE_EXE]);
+});
+
+test('a watched game stays OK but can still have its executable changed by hand, without leading', () => {
+  const tracking = checkFor(deriveHealth(healthyGame()), 'tracking');
+  assert.equal(tracking.level, LEVEL.OK);
+  assert.deepEqual(tracking.actions, [ACTION.CHOOSE_EXE]);
+
+  // Another row's offer keeps the first button; the optional choice comes after it.
+  const muted = deriveHealth(healthyGame({ notifications: { transport: 'both', progressMuted: true } }));
+  assert.equal(muted.actions[0], ACTION.UNMUTE_PROGRESS);
+  assert.equal(muted.actions[muted.actions.length - 1], ACTION.CHOOSE_EXE);
+});
+
+test('an unwatched game keeps its own offer, and a console game gets no executable choice', () => {
+  const unwatched = checkFor(deriveHealth(healthyGame({ tracking: { indexed: false, binary: '' } })), 'tracking');
+  assert.equal(unwatched.level, LEVEL.WARN);
+  assert.deepEqual(unwatched.actions, [ACTION.START_TRACKING]);
+  const consoleReport = deriveHealth(healthyGame({ system: 'playstation', source: 'RPCS3 Emulator', emulated: false, goldberg: null, processTracking: false }));
+  assert.ok(!consoleReport.actions.includes(ACTION.CHOOSE_EXE));
 });
 
 test('a game with no achievement list at all is Not tracking, not merely incomplete', () => {
@@ -132,6 +151,18 @@ test('a schema present with no emulator dll offers the runtime repair and nothin
   assert.equal(report.reason, 'emulator-runtime-missing');
   assert.ok(report.actions.includes(ACTION.INSTALL_RUNTIME));
   assert.ok(!report.actions.includes(ACTION.REPAIR_DATA), 'the schema is fine - only the runtime is missing');
+});
+
+test('a runtime loaded by a proxy dll beside steam_settings is not a missing runtime (#167)', () => {
+  // Sonic Racing CrossWorlds: Valve's steam_api64 stays in the engine folder (no dll counted), while
+  // version.dll loads GBE's steamclient64 from the exe folder that holds steam_settings.
+  const proxied = { runtime: 'D:/Games/Sonic/UNION/Binaries/Win64/steamclient64.dll', loadedBy: 'D:/Games/Sonic/UNION/Binaries/Win64/version.dll' };
+  const report = deriveHealth(healthyGame({ goldberg: { ...healthyGame().goldberg, dllCount: 0, proxiedRuntimes: [proxied] } }));
+  assert.notEqual(report.reason, 'emulator-runtime-missing');
+  assert.notEqual(report.state, STATE.NOT_TRACKING);
+  assert.ok(!report.actions.includes(ACTION.INSTALL_RUNTIME), 'never offers to replace the Valve dll this release depends on');
+  assert.equal(checkFor(report, 'emulator').level, LEVEL.OK);
+  assert.deepEqual(report.technical.goldberg.proxiedRuntimes, [proxied], 'the export names what runs the emulator');
 });
 
 test('no emulator at all explains the problem without offering a repair AW Next cannot do here', () => {
@@ -859,4 +890,25 @@ test('with "Steam client games" off, the notification row says AW Next shows not
 test('the Steam notification setting means nothing for an emulated game', () => {
   const report = deriveHealth(healthyGame({ notifications: { transport: 'toast', progressMuted: false, steamClient: false } }));
   assert.equal(checkFor(report, 'notifications').level, LEVEL.OK);
+});
+test('a RUNE save folder proves a loader serves the game even when no loader file is found', () => {
+  // Borderlands 4: RUNE keeps its saves in Public Documents, AW's earlier GBE attempt left an empty GSE Saves folder.
+  const report = deriveHealth(
+    healthyGame({
+      appid: 'manual-1ce8c1277363',
+      steamAppid: '1285190',
+      source: 'Manual',
+      achievements: { total: 63, unlocked: 0 },
+      goldberg: { emulator: 'none', steamSettings: '', dllCount: 0, issues: [{ level: 'error', code: 'NO_STEAM_SETTINGS', message: 'x' }], ok: false },
+      crackLoader: null,
+      saveSources: [
+        { source: 'Manual', path: 'C:/Users/Public/Documents/Steam/RUNE/1285190' },
+        { source: 'Goldberg', path: 'C:/Users/me/AppData/Roaming/GSE Saves/1285190' },
+      ],
+    })
+  );
+  const emulator = checkFor(report, 'emulator');
+  assert.notEqual(report.reason, 'emulator-missing');
+  assert.notEqual(emulator.level, LEVEL.FAIL);
+  assert.equal(emulator.params.servedBy, 'RUNE');
 });

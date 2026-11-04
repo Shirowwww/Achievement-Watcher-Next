@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "overlay tidak dapat ditampilkan",
     "gh-notif-reason-remembered": "yang berhasil untuk game ini",
     "gh-why-not-watched": "Semua yang dibutuhkan sudah tersedia, tetapi AW Next tidak memantau game ini saat berjalan, jadi waktu bermain dan notifikasi langsung tidak akan muncul.",
+    "gh-tracking-hint": "AW Next memilih sendiri file eksekusi yang dipantau dan tidak selalu bisa tahu mana yang benar. Jika AW Next memantau file yang salah, atau tidak mendeteksi game, pilih file eksekusi secara manual.",
     "gh-why-progress-muted": "Game ini sudah disiapkan dengan benar. Notifikasi progres dibisukan untuknya, jadi hanya pencapaian penuh yang diumumkan.",
     "gh-why-nothing-unlocked-yet": "Game ini sudah disiapkan dengan benar dan AW Next memantaunya. Belum ada yang terbuka, yang berarti Anda memang belum membuat kemajuan di game ini.",
     "gh-confirm-repair-title": "Tulis ulang data pencapaian?",

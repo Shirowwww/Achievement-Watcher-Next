@@ -2979,6 +2979,7 @@
     "gh-notif-reason-overlay-failing": "nakładka nie mogła się wyświetlić",
     "gh-notif-reason-remembered": "to, co zadziałało w tej grze",
     "gh-why-not-watched": "Wszystko, co potrzebne, jest na miejscu, ale AW Next nie obserwuje tej gry podczas działania, więc nie będzie czasu gry ani powiadomień na żywo.",
+    "gh-tracking-hint": "AW Next sam wybiera plik wykonywalny do obserwowania i nie zawsze wie, który jest właściwy. Jeśli obserwuje zły plik albo nie zauważa gry, wskaż plik wykonywalny ręcznie.",
     "gh-why-progress-muted": "Ta gra jest poprawnie skonfigurowana. Powiadomienia o postępie są dla niej wyciszone, więc ogłaszane będą tylko pełne odblokowania.",
     "gh-why-nothing-unlocked-yet": "Ta gra jest poprawnie skonfigurowana, a AW Next ją obserwuje. Nic jeszcze nie odblokowano - to po prostu gra, w której nie zrobiono postępów.",
     "gh-confirm-repair-title": "Zapisać dane osiągnięć ponownie?",

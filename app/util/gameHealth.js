@@ -310,7 +310,27 @@ function serverAwardedOffline(signals) {
   return !loader && signals.emulated ? 'Goldberg' : null;
 }
 
-function emulatorCheck(signals) {
+/*
+  A scene emulator's own save folder (Steam/RUNE/<appid>) only exists once its loader ran, so it
+  names the loader when the game folder shows none: RUNE puts its files beside the Unreal shipping
+  exe, where the folder scan does not look (Borderlands 4). Without this, a save being read and
+  notified was reported as "emulator missing" beside AW's own empty GSE Saves folder.
+*/
+const SCENE_SAVE_LOADERS = [
+  [/[\\/]steam[\\/]rune[\\/]\d+[\\/]?$/i, 'RUNE'],
+  [/[\\/]steam[\\/]codex[\\/]\d+[\\/]?$/i, 'CODEX'],
+];
+
+function loaderFromSceneSaves(signals) {
+  for (const entry of Array.isArray(signals.saveSources) ? signals.saveSources : []) {
+    const found = SCENE_SAVE_LOADERS.find(([pattern]) => pattern.test(String((entry && entry.path) || '')));
+    if (found) return { name: found[1], replaceable: false, fromSave: true };
+  }
+  return null;
+}
+
+function emulatorCheck(rawSignals) {
+  const signals = rawSignals.crackLoader && rawSignals.crackLoader.name ? rawSignals : { ...rawSignals, crackLoader: loaderFromSceneSaves(rawSignals) };
   // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
   // Diagnosing it anyway turned an inert folder into a list of faults on a game that is fine.
   if (hasNoAchievements(signals)) return null;
@@ -335,14 +355,14 @@ function emulatorCheck(signals) {
     from somewhere unexpected, so name the loader instead. Informational: AW cannot inspect that
     runtime, and a crack that works is not a fault.
   */
-  if ((!signals.emulated || !goldberg) && signals.crackLoader && signals.crackLoader.name) {
+  if ((!signals.emulated || !goldberg || signals.crackLoader?.fromSave) && signals.crackLoader && signals.crackLoader.name) {
     // Launched at least once and still nothing recorded: some scene builds simply never call the
     // achievement API. Swapping their runtime for GBE Fork is the only thing that changes that, so
     // offer it here - never automatically, and never over a crack that is demonstrably working.
     const playedSeconds = num(signals.playtime && signals.playtime.total);
     const idle = playedSeconds > 0 && num(signals.achievements && signals.achievements.unlocked) === 0;
     // An hour in with nothing recorded is no longer "early": the crack most likely never reports.
-    const stalled = idle && playedSeconds >= STALLED_CRACK_SECONDS;
+    const stalled = idle && playedSeconds >= STALLED_CRACK_SECONDS && !signals.crackLoader.fromSave;
     // ...and only where that runtime IS the steam_api dll: see crackLoaderDetect's `replaceable`.
     const canSwitch = idle && signals.crackLoader.replaceable === true;
     // Every save read is a Goldberg one, which this loader never writes: left by another copy of
@@ -363,7 +383,10 @@ function emulatorCheck(signals) {
   }
   if (!signals.emulated || !goldberg) return null;
 
-  const dllCount = num(goldberg.dllCount);
+  // A GBE runtime a proxy dll loads beside steam_settings (version.dll -> steamclient64.dll) is a
+  // runtime too, even when Valve's untouched steam_api sits elsewhere and counts as none (#167).
+  const proxiedRuntimes = Array.isArray(goldberg.proxiedRuntimes) ? goldberg.proxiedRuntimes : [];
+  const dllCount = num(goldberg.dllCount) + proxiedRuntimes.length;
   // Unlocks a mod writes with no emulator in the folder (goldberg.diagnose): nothing to set up.
   if ((goldberg.issues || []).some((issue) => issue && issue.code === 'SAVE_WITHOUT_EMULATOR')) {
     return check('emulator', LEVEL.OK, { params: { emulator: 'none' } });
@@ -548,7 +571,11 @@ function trackingCheck(signals) {
   if (hasNoAchievements(signals)) return null;
   if (signals.processTracking === false) return null;
   const tracking = signals.tracking || {};
-  if (tracking.indexed && tracking.binary) return check('tracking', LEVEL.OK, { params: { binary: tracking.binary } });
+  // AW Next picks the executable by itself and cannot always tell which is right, so a game that is
+  // watched can still be watched on the wrong file: the manual picker stays reachable, but last.
+  if (tracking.indexed && tracking.binary) {
+    return { ...check('tracking', LEVEL.OK, { params: { binary: tracking.binary }, actions: [ACTION.CHOOSE_EXE] }), trailing: true };
+  }
   if (signals.exe && signals.exeExists) return check('tracking', LEVEL.WARN, { actions: [ACTION.START_TRACKING] });
   return check('tracking', LEVEL.WARN, { actions: [ACTION.CHOOSE_EXE] });
 }
@@ -728,6 +755,8 @@ function buildTechnical(signals) {
           // Packaged Unreal builds only: the folder the engine loads steam_api from, which is not
           // under the game folder at all when the library anchored the game on its project folder.
           engineDllDirs: Array.isArray(goldberg.engineDllDirs) ? goldberg.engineDllDirs : [],
+          // The renamed GBE build a proxy dll loads while Valve's steam_api stays untouched.
+          proxiedRuntimes: Array.isArray(goldberg.proxiedRuntimes) ? goldberg.proxiedRuntimes : [],
           // One entry per steam_api dll on disk, saying which build it is (gbeInstaller
           // .describeRuntimeDlls). "awBuild: false" on the engine's own copy is the whole answer
           // when a repaired game still records nothing, and no other field can carry it.
@@ -787,8 +816,9 @@ function deriveHealth(signals = {}) {
 
   // Offer each action once, in the order the checks raised it, so the primary fix for the reported
   // problem is always the first button.
+  // A `trailing` row only offers an optional change, so what it offers never leads the buttons.
   const actions = [];
-  for (const entry of checks) {
+  for (const entry of checks.filter((row) => !row.trailing).concat(checks.filter((row) => row.trailing))) {
     for (const action of entry.actions) if (!actions.includes(action)) actions.push(action);
   }
 
