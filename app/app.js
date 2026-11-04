@@ -7246,8 +7246,10 @@ var app = {
           if (app.config?.general?.uninstallContextMenu !== false) {
             const uninstallCtx = $('#game-list');
             const uninstallGame = list.find((g) => g.appid == appid);
+            // A ROM's folder is wherever the file was saved, Downloads often: only the file itself goes.
+            const uninstallRom = uninstallGame && uninstallGame.romPath ? uninstallGame.romPath : null;
             const uninstallDir =
-              uninstallGame && uninstallGame.gameDir && fs.existsSync(uninstallGame.gameDir)
+              !uninstallRom && uninstallGame && uninstallGame.gameDir && fs.existsSync(uninstallGame.gameDir)
                 ? path.resolve(uninstallGame.gameDir)
                 : null;
             const uninstallMenu = new Menu();
@@ -7518,6 +7520,48 @@ var app = {
                 );
                 uninstallEntries++;
               }
+            }
+
+            if (uninstallRom && uninstall.isSafeRomTarget(uninstallRom)) {
+              uninstallMenu.append(
+                new MenuItem({
+                  icon: menuIcon('file-text.png'),
+                  label: t('move-rom-to-recycle-bin', 'Move the ROM to the Recycle Bin…', 'Mettre la ROM à la Corbeille…'),
+                  async click() {
+                    const gameName = list.find((g) => g.appid == appid)?.name || String(appid);
+                    const confirm = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+                      type: 'warning',
+                      title: t('move-rom-to-recycle-bin', 'Move the ROM to the Recycle Bin…', 'Mettre la ROM à la Corbeille…'),
+                      message: t('move-x-rom-to-the-recycle-bin', 'Move the ROM of "{name}" to the Recycle Bin?', 'Mettre la ROM de « {name} » à la Corbeille ?', { name: gameName }),
+                      detail:
+                        uninstallRom +
+                        '\n\n' +
+                        t(
+                          'rom-trash-detail',
+                          'Only this file is moved, nothing else in its folder. It can be restored from the Recycle Bin. Your RetroAchievements progress stays on your account.',
+                          'Seul ce fichier est déplacé, rien d’autre dans son dossier. Il pourra être restauré depuis la Corbeille. Ta progression RetroAchievements reste sur ton compte.'
+                        ),
+                      buttons: [t('cancel', 'Cancel', 'Annuler'), t('delete', 'Delete', 'Supprimer')],
+                      defaultId: 0,
+                      cancelId: 0,
+                      noLink: true,
+                    });
+                    if (confirm.response !== 1) return;
+                    const removal = await ipcRenderer.invoke('trash-rom-file', { file: uninstallRom });
+                    if (!removal || !removal.ok) {
+                      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+                        type: 'error',
+                        title: t('delete-failed', 'Delete failed', 'Échec de la suppression'),
+                        message: t('could-not-move-the-rom-to-the-recycle-bin', 'Could not move the ROM to the Recycle Bin.', 'Impossible de mettre la ROM à la Corbeille.'),
+                        detail: [uninstallRom, '', (removal && removal.error) || ''].join('\n'),
+                      });
+                      return;
+                    }
+                    app.onStart();
+                  },
+                })
+              );
+              uninstallEntries++;
             }
 
             if (uninstallEntries > 0) {

@@ -1993,23 +1993,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         $('#steam-libraries-list select option[value="false"]').text(common.disable || 'Disabled');
 
         $('#steam-import-owned-label').text(t('steam-import-owned', 'Add the games you own', 'Ajouter les jeux que tu possèdes'));
-        $('#steam-import-owned-help').text(
-          t(
-            'steam-import-owned-help',
-            'Lists your whole Steam library, including games that were never installed on this PC. A large library makes the first scan much longer.',
-            'Liste toute ta bibliothèque Steam, y compris les jeux jamais installés sur ce PC. Avec une grosse bibliothèque, le premier scan est nettement plus long.'
-          )
-        );
         $('#steam-import-family-label').text(
           t('steam-import-family', 'Add the games shared with you through Steam Family', 'Ajouter les jeux partagés avec toi via la famille Steam')
         );
-        $('#steam-import-family-help').text(
-          t(
-            'steam-import-family-help',
-            'Games another member of your Steam Family owns and shares with you. They carry the Steam Family badge.',
-            'Les jeux qu’un autre membre de ta famille Steam possède et partage avec toi. Ils portent le badge famille Steam.'
-          )
-        );
+        // The two help lines depend on the Steam source too: paintLibraryImportRows() writes them.
+        paintLibraryImportRows($('#option_legitSteam').val() === '2');
         for (const id of ['#option_steamAccountOwned', '#option_steamAccountFamily']) {
           $(`${id} option[value="true"]`).text(common.enable || 'Enabled');
           $(`${id} option[value="false"]`).text(common.disable || 'Disabled');
@@ -2040,13 +2028,46 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         status.data('stateText', status.text());
       }
 
+      function paintLibraryImportRows(available) {
+        const needsOwned = t(
+          'steam-import-needs-owned',
+          'Available when the Steam source above lists the games you own.',
+          'Disponible quand la source Steam ci-dessus liste les jeux que tu possèdes.'
+        );
+        const rows = [
+          [
+            '#option_steamAccountOwned',
+            '#steam-import-owned-help',
+            t(
+              'steam-import-owned-help',
+              'Lists your whole Steam library, including games that were never installed on this PC. A large library makes the first scan much longer.',
+              'Liste toute ta bibliothèque Steam, y compris les jeux jamais installés sur ce PC. Avec une grosse bibliothèque, le premier scan est nettement plus long.'
+            ),
+          ],
+          [
+            '#option_steamAccountFamily',
+            '#steam-import-family-help',
+            t(
+              'steam-import-family-help',
+              'Games another member of your Steam Family owns and shares with you. They carry the Steam Family badge.',
+              'Les jeux qu’un autre membre de ta famille Steam possède et partage avec toi. Ils portent le badge famille Steam.'
+            ),
+          ],
+        ];
+        for (const [select, help, text] of rows) {
+          $(select).prop('disabled', !available).closest('li').toggleClass('is-unavailable', !available);
+          $(help).text(available ? text : needsOwned);
+        }
+      }
+
       function paintStatus(s) {
         // With no account connected nothing can be a ghost entry, so the row would promise nothing.
         $('#steam-stale-card').toggle(!!s.connected);
-        // The library import also needs the official Steam source on: the games it adds are Steam
-        // games, and discovery skips it unless that source lists owned games. Hidden rather than
-        // shown doing nothing.
-        $('#steam-library-card').toggle(!!s.connected && $('#option_legitSteam').val() === '2');
+        // The library import also needs the official Steam source to list owned games: discovery skips
+        // it otherwise. The rows stay put and greyed, with the reason, so switching that source
+        // between installed and owned games no longer makes them appear and vanish.
+        $('#steam-library-card').toggle(!!s.connected);
+        paintLibraryImportRows($('#option_legitSteam').val() === '2');
         if (s.connected) {
           badge.toggle(!s.needsReconnect);
           disconnectBtn.show();

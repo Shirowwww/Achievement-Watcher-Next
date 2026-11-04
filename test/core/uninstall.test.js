@@ -139,6 +139,50 @@ test('trash-target safety gate rejects roots, files, save folders and missing pa
   }
 });
 
+test('ROM gate accepts one regular file, never a program, a save, a folder or a relative path', () => {
+  const dir = tempDir();
+  try {
+    assert.strictEqual(uninstall.isSafeRomTarget(write(dir, 'Sonic.md')), true);
+    assert.strictEqual(uninstall.isSafeRomTarget(write(dir, 'Game (USA).chd')), true);
+    assert.strictEqual(uninstall.isSafeRomTarget(write(dir, 'setup.exe')), false);
+    assert.strictEqual(uninstall.isSafeRomTarget(write(dir, 'Sonic.srm')), false);
+    assert.strictEqual(uninstall.isSafeRomTarget(dir), false);
+    assert.strictEqual(uninstall.isSafeRomTarget(path.join(dir, 'missing.nes')), false);
+    assert.strictEqual(uninstall.isSafeRomTarget('Sonic.md'), false);
+    assert.strictEqual(uninstall.isSafeRomTarget(null), false);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('trash-target gate refuses the personal folders under a home, whatever their language', () => {
+  const home = tempDir();
+  try {
+    // A French Windows keeps Downloads as "Telechargements": the English names alone let it through.
+    for (const name of ['Telechargements', 'Téléchargements', 'Bureau', 'Descargas', 'OneDrive', 'Anything']) {
+      const folder = path.join(home, name);
+      fs.mkdirSync(folder);
+      assert.strictEqual(uninstall.isSafeTrashTarget(folder, process.platform, home), false, name);
+    }
+    const oneDriveDocs = path.join(home, 'OneDrive - Work', 'Documents');
+    fs.mkdirSync(oneDriveDocs, { recursive: true });
+    assert.strictEqual(uninstall.isSafeTrashTarget(oneDriveDocs, process.platform, home), false);
+    assert.strictEqual(uninstall.isSafeTrashTarget(path.dirname(home), process.platform, home), false);
+
+    const game = path.join(home, 'Games', 'Some Game');
+    fs.mkdirSync(game, { recursive: true });
+    assert.strictEqual(uninstall.isSafeTrashTarget(game, process.platform, home), true);
+    // A redirected Downloads folder on another drive keeps its localized name.
+    const elsewhere = tempDir();
+    const redirected = path.join(elsewhere, 'Téléchargements');
+    fs.mkdirSync(redirected);
+    assert.strictEqual(uninstall.isSafeTrashTarget(redirected, process.platform, home), false);
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
 test('on Linux the gate also refuses system folders, a home above, and a Wine prefix or its inside', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
   const dir = tempDir();
   try {

@@ -10878,6 +10878,25 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   background: transparent;
   border-top: 1px solid var(--set-hairline-soft);
 }
+/* The libraries list keeps its name as a plain subheading: the filled bar every standalone list
+   wears read as a second card opening inside the account one. */
+#settings #steam-connect .arrow-list > .title {
+  margin: 0 0 2px;
+  padding: 2px 0 6px;
+  position: static;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+/* The library import only works with the Steam source set to owned games: its rows stay where they
+   are, greyed, rather than appearing and vanishing as that choice changes. */
+#settings #steam-library-card li.is-unavailable .left,
+#settings #steam-library-card li.is-unavailable .right {
+  opacity: 0.45;
+  pointer-events: none;
+}
 
 /* Switching tabs animates one panel as a unit instead of re-running an animation on every card. */
 @keyframes settings-view-reveal {

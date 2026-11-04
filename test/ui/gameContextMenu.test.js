@@ -90,3 +90,10 @@ test('manual games retain the guarded uninstall submenu', () => {
   assert.match(source, /uninstall\.findLocalUninstaller\(uninstallDir\)/);
   assert.match(source, /uninstall\.isSafeTrashTarget\(uninstallDir\)/);
 });
+
+test('a ROM game offers only its file to the Recycle Bin, never its folder', () => {
+  // The ROM's folder is often Downloads: neither its uninstallers nor the folder removal may see it.
+  assert.match(source, /!uninstallRom && uninstallGame && uninstallGame\.gameDir/);
+  assert.match(source, /uninstall\.isSafeRomTarget\(uninstallRom\)/);
+  assert.match(source, /ipcRenderer\.invoke\('trash-rom-file', \{ file: uninstallRom \}\)/);
+});

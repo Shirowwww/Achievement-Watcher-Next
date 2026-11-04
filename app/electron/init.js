@@ -2601,6 +2601,25 @@ ipcMain.handle('delete-game-folder', async (event, { dir, permanent = false } = 
   }
 });
 
+// A RetroAchievements game's ROM, the one file the renderer names: never its folder.
+ipcMain.handle('trash-rom-file', async (event, { file } = {}) => {
+  const uninstall = require(path.join(__dirname, '..', 'util', 'uninstall.js'));
+  const target = typeof file === 'string' && file ? path.resolve(file) : '';
+  if (!target || !uninstall.isSafeRomTarget(target)) {
+    debug.warn(`[uninstall] refused to recycle ROM ${target || '(empty path)'}: not a safe target`);
+    return { ok: false, error: 'This file is not a safe removal target.' };
+  }
+  try {
+    await shell.trashItem(target);
+    debug.log(`[uninstall] recycled ROM ${target}`);
+    return { ok: true };
+  } catch (err) {
+    const reason = err && err.message ? err.message : String(err);
+    debug.warn(`[uninstall] could not recycle ROM ${target} => ${reason}`);
+    return { ok: false, error: reason };
+  }
+});
+
 /* Settings > Advanced > Diagnostics: zip every log file. Hand-copying is not enough, several
    processes keep their log streams open and appending, so read each once here for a consistent
    snapshot without stopping anything. */

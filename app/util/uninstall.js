@@ -76,7 +76,36 @@ const BLOCKED_BASE = new Set([
   'public',
   'gse saves',
   'goldberg steamemu saves',
+  // The same personal folders as other Windows languages name them, for one redirected off the home.
+  'telechargements',
+  'téléchargements',
+  'bureau',
+  'mes documents',
+  'images',
+  'musique',
+  'vidéos',
+  'descargas',
+  'escritorio',
+  'documentos',
+  'scaricati',
+  'transferências',
+  'onedrive',
 ]);
+
+/*
+  Every folder directly in the home is a personal one (Downloads, Desktop, OneDrive...) under
+  whatever name the Windows language gives it, so it is refused by position rather than by name.
+  The same holds one level into a OneDrive, which mirrors those folders.
+*/
+function isPersonalFolder(resolved, home) {
+  if (!home) return false;
+  const homeDir = path.resolve(home).toLowerCase();
+  const target = resolved.toLowerCase();
+  if (target === homeDir || homeDir.startsWith(target + path.sep)) return true;
+  const parent = path.dirname(target);
+  if (parent === homeDir) return true;
+  return path.dirname(parent) === homeDir && /^onedrive(?:\s|$)/.test(path.basename(parent));
+}
 
 // The same rule for Unix: system folders, the folders a home is made of, and the inside of a Wine or
 // Proton prefix, which holds every game installed in it (Program Files and users are already above).
@@ -287,14 +316,14 @@ function getSteamUninstallInfo(appid) {
  * Safety gate for the "move folder to Recycle Bin" fallback: must be an existing
  * directory, not a drive root or a known save-folder, and never a system path.
  */
-function isSafeTrashTarget(gameDir, platform = process.platform) {
+function isSafeTrashTarget(gameDir, platform = process.platform, home = os.homedir()) {
   if (!gameDir || typeof gameDir !== 'string') return false;
   try {
     const resolved = path.resolve(gameDir);
     const parsed = path.parse(resolved);
     if (parsed.root === resolved) return false; // drive root (C:\)
     if (resolved.length <= 3) return false;
-    if (os.homedir && path.resolve(os.homedir()) === resolved) return false;
+    if (isPersonalFolder(resolved, home)) return false;
     if (!fs.existsSync(resolved) || !fs.statSync(resolved).isDirectory()) return false;
     const base = parsed.base.toLowerCase();
     if (BLOCKED_BASE.has(base)) return false;
@@ -308,7 +337,24 @@ function isSafeTrashTarget(gameDir, platform = process.platform) {
   }
 }
 
+// Program and system files: a ROM path that points at one came from a broken or hostile playlist.
+const NOT_A_ROM_EXT = new Set(['.exe', '.dll', '.sys', '.bat', '.cmd', '.com', '.lnk', '.msi', '.ps1', '.vbs', '.js', '.scr', '.ini', '.cfg', '.lpl', '.json', '.sav', '.srm', '.state']);
+
+/** Gate for "move the ROM to the Recycle Bin": one existing regular file that is not a program or a save. */
+function isSafeRomTarget(file) {
+  if (!file || typeof file !== 'string' || !path.isAbsolute(file)) return false;
+  try {
+    const resolved = path.resolve(file);
+    if (NOT_A_ROM_EXT.has(path.extname(resolved).toLowerCase())) return false;
+    if (SAVE_FOLDER_RE.test(resolved)) return false;
+    return fs.lstatSync(resolved).isFile();
+  } catch {
+    return false;
+  }
+}
+
 module.exports = {
+  isSafeRomTarget,
   findUninstallers,
   findLocalUninstaller,
   cleanupUninstallerLeftovers,
