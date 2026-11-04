@@ -14,6 +14,25 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Fixed
+
+- **Uninstall never offers a personal folder.** A RetroAchievements ROM saved in Downloads made
+  **Uninstall** offer to move the whole Downloads folder to the Recycle Bin on a non-English Windows,
+  where that folder has another name. Every folder directly in your user folder is now refused, and
+  a ROM game offers **Move the ROM to the Recycle Bin**, which moves that one file only.
+- **The Steam account card reads as one panel.** **Steam libraries** is a plain subheading again, and
+  **Add the games you own** and the Steam Family row stay in place, greyed with the reason, while
+  the Steam source lists installed games only.
+
+### Performance
+
+- **PlayStation and Xbox imports.** Four games are imported at once, and an Xbox import skips the
+  games whose achievements did not change since the last one.
+- **Notification preset gallery.** The bundled presets ship with their pictures, shown at once on
+  the first opening; the rest are drawn three at a time, and an app update no longer redraws them.
+
 ## 3.12.5 - 2026-11-03
 
 ### Added

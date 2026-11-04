@@ -11,6 +11,7 @@ const path = require('path');
 const { execFile } = require('child_process');
 const { parseUnlockTimeSeconds } = require('../util/unlockTime.js');
 const { writeFileAtomicSync } = require('../util/replaceFile.js');
+const { mapLimit } = require('../util/onboardingDetect.js');
 
 const XBOX_PC_SOURCE = 'Xbox PC';
 const XBOX_PC_CLIENT_ID =
@@ -21,6 +22,8 @@ const XBOX_PC_RELYING_PARTY = 'http://xboxlive.com';
 const XBOX_ACHIEVEMENTS_URL = 'https://achievements.xboxlive.com';
 const XBOX_TITLEHUB_URL = 'https://titlehub.xboxlive.com';
 const XBOX_ACHIEVEMENTS_CONTRACT_VERSION = '4';
+const IMPORT_CONCURRENCY = 4;
+const XBOX_SCHEMA_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const XBOX_SCHEMA_LANGUAGE_LOCALES = Object.freeze({
   arabic: 'ar-SA',
@@ -712,6 +715,28 @@ function resolveXboxTitleArtwork(title = {}) {
   return { coverUrl, headerUrl };
 }
 
+/*
+  What the title history says about a title's state, so an import can skip a title that has not
+  moved: unlocks, gamerscore, last play and the schema language. Empty when the history carries no
+  achievement counters (a locally found title, the bare fallback history): that title is always fetched.
+*/
+function xboxTitleMarker(title, lang) {
+  const achievement = title?.achievement;
+  if (!achievement || !Number.isFinite(Number(achievement.currentAchievements))) return '';
+  const played = title?.titleHistory?.lastTimePlayed ?? title?.lastTimePlayed ?? '';
+  const parts = [achievement.currentAchievements, achievement.totalAchievements, achievement.currentGamerscore, played, xboxLocaleForLang(lang)];
+  return parts.map((part) => String(part ?? '')).join('|');
+}
+
+// Rarity moves without any unlock, so a saved title is also fetched again once a week.
+function isXboxTitleUnchanged(titleId, marker) {
+  if (!marker) return false;
+  const schema = readJson(schemaCacheFile(titleId));
+  if (!schema?.achievement?.list || schema.meta?.marker !== marker) return false;
+  if (Date.now() - Number(schema.meta.fetchedAt || 0) >= XBOX_SCHEMA_MAX_AGE_MS) return false;
+  return readJson(stateCacheFile(titleId)) !== null;
+}
+
 async function importLibrary(options = {}) {
   const lang = String(options.lang || 'english').trim() || 'english';
   const auth = await ensureXboxDirectSession(options);
@@ -745,37 +770,45 @@ async function importLibrary(options = {}) {
     pcTitles: pcTitles.size,
     created: 0,
     updated: 0,
+    unchanged: 0,
     skipped: 0,
     failed: 0,
   };
   const titles = [...pcTitles.values()];
-  let index = 0;
-  for (const title of titles) {
-    index += 1;
+  const marks = new Map(titles.map((title) => [title, xboxTitleMarker(title, lang)]));
+  let started = 0;
+  await mapLimit(titles, IMPORT_CONCURRENCY, async (title) => {
+    started += 1;
     const titleId = normalizeTitleId(title?.titleId ?? title?.id);
     const titleName = firstNonEmpty(title?.name, title?.titleName, title?.displayName, `Xbox ${titleId}`);
     options.onProgress?.({
-      current: index,
+      current: started,
       total: titles.length,
-      percent: Math.round((index / Math.max(1, titles.length)) * 100),
+      percent: Math.round((started / Math.max(1, titles.length)) * 100),
       detail: titleName,
       appid: titleId,
     });
     if (!titleId) {
       result.skipped += 1;
-      continue;
+      return;
     }
     try {
+      const marker = marks.get(title);
+      if (!options.force && isXboxTitleUnchanged(titleId, marker)) {
+        result.unchanged += 1;
+        return;
+      }
       const localized = await fetchXboxLocalizedTitleAchievements(account.xuid, titleId, lang, { ...options, auth });
       if (!localized.achievements.length) {
         result.skipped += 1;
-        continue;
+        return;
       }
       const artwork = resolveXboxTitleArtwork(title);
       const schema = {
         titleId,
         name: titleName,
         source: XBOX_PC_SOURCE,
+        meta: { marker, fetchedAt: Date.now() },
         img: {
           header: artwork.headerUrl || '',
           portrait: artwork.coverUrl || '',
@@ -807,7 +840,7 @@ async function importLibrary(options = {}) {
     } catch (error) {
       result.failed += 1;
     }
-  }
+  });
   return result;
 }
 

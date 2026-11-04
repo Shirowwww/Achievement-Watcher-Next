@@ -82,3 +82,60 @@ test('a preset menu opens the gallery and takes the picked preset', { concurrenc
     await closeBrowser(browser, userDataDir);
   }
 });
+
+// The main process answers a bundled preset with its shipped stand-in, then draws the user's own.
+function buildWarmHarness() {
+  return `<!doctype html><html><head><meta charset="utf-8"></head><body>
+    <script>
+      const module = { exports: {} };
+      ${fs.readFileSync(path.join(appDir, 'ui', 'presetGallery.js'), 'utf8')}
+      window.asks = [];
+      let release;
+      window.held = new Promise((resolve) => (release = resolve));
+      window.release = release;
+      const snapshot = (name, state, { ahead, standIn }) => {
+        window.asks.push({ name, ahead, standIn });
+        const shot = standIn && name === 'AW Next' ? { image: 'data:image/png;base64,c3RhbmQ=', standIn: true } : { image: 'data:image/png;base64,b3du' };
+        return window.held.then(() => shot);
+      };
+      window.gallery = module.exports.createPresetGallery({ label: (key) => key, snapshot });
+    </script>
+  </body></html>`;
+}
+
+test('warm asks for every picture at once, and a stand-in gives way to the own picture', { concurrency: 1, timeout: 120000 }, async (t) => {
+  const { browser, userDataDir, failures } = await launchBrowser();
+  if (!browser) {
+    t.skip(skipReason(failures));
+    return;
+  }
+  const harness = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gallery-')), 'harness.html');
+  fs.writeFileSync(harness, buildWarmHarness());
+  try {
+    const page = await browser.newPage();
+    await page.goto('file://' + harness.replace(/\\/g, '/'));
+    await page.evaluate(() => {
+      window.warmed = window.gallery.warm(['AW Next', 'Mine']);
+    });
+    // Both asked before either came back: the main process, not this page, limits the renders.
+    assert.deepStrictEqual(await page.evaluate(() => window.asks), [
+      { name: 'AW Next', ahead: true, standIn: true },
+      { name: 'Mine', ahead: true, standIn: true },
+    ]);
+    await page.evaluate(() => (window.release(), window.warmed));
+
+    await page.evaluate(() => window.gallery.show({ groups: [{ title: '', names: ['AW Next', 'Mine'] }], current: 'Mine', onPick: () => {} }));
+    await page.waitForFunction(() => {
+      const img = document.querySelector('.pg-tile[data-name="AW Next"] img');
+      return img && img.src.endsWith('b3du');
+    });
+    const asks = await page.evaluate(() => window.asks.slice(2));
+    // The stand-in was not kept from warm(): the open gallery asked again, then for the own picture.
+    assert.deepStrictEqual(asks, [
+      { name: 'AW Next', ahead: false, standIn: true },
+      { name: 'AW Next', ahead: true, standIn: false },
+    ]);
+  } finally {
+    await closeBrowser(browser, userDataDir);
+  }
+});

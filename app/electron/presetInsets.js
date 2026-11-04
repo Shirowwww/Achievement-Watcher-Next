@@ -11,6 +11,8 @@ const fs = require('fs');
 const path = require('path');
 const { BrowserWindow } = require('electron');
 const { paintedInsets, mergeInsets } = require('../util/notificationInsets.js');
+const { contentSignature } = require('../util/presetSignature.js');
+const { createRenderQueue } = require('../util/renderQueue.js');
 
 // Bumped when the measurement itself changes, so every stored profile is taken again.
 const MEASURE_VERSION = 5;
@@ -48,24 +50,13 @@ function samplePayloads(imageUrl, position) {
   ];
 }
 
-function filesSignature(dirs) {
-  const parts = [String(MEASURE_VERSION)];
-  for (const dir of dirs.filter(Boolean)) {
-    let names = [];
-    try {
-      names = fs.readdirSync(dir).sort();
-    } catch {
-      parts.push(`${dir}:missing`);
-      continue;
-    }
-    for (const name of names) {
-      try {
-        const stat = fs.statSync(path.join(dir, name));
-        parts.push(`${name}:${stat.size}:${Math.round(stat.mtimeMs)}`);
-      } catch {}
-    }
-  }
-  return parts.join('|');
+const filesSignature = (dirs) => `${MEASURE_VERSION}|${contentSignature(dirs)}`;
+// The app's own folder: a preset under it is a bundled one, named by its path from there.
+const APP_ROOT = path.join(__dirname, '..');
+
+function bundledName(folder) {
+  const relative = path.relative(APP_ROOT, String(folder || ''));
+  return !relative || relative.startsWith('..') || path.isAbsolute(relative) ? null : relative.split(path.sep).join('/');
 }
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -92,6 +83,8 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
   // Measured or tried this session: a preset that fails is not measured again until the next start.
   const attempted = new Set();
   let queue = Promise.resolve();
+  // Snapshots only: a popup's own measurement never waits behind the gallery.
+  const renders = createRenderQueue();
   const imageUrl = 'file:///' + String(imagePath).replace(/\\/g, '/');
 
   function readCache() {
@@ -219,15 +212,23 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
       return mergeInsets(samples.map((sample) => sample.room)) || profile.insets;
     },
     /*
-      A picture of the preset once it has settled (PNG data URL, or null), for a preset the designer
-      cannot rebuild from its controls (an imported SAN theme). Waits as long as the stored profile
-      says the card takes to settle, else as long as the slowest bundled preset.
+      A settled picture of the preset (PNG data URL, or null). `ahead` waits behind the pictures asked
+      from the screen; `standIn` gives a bundled preset with no picture of the user's own the shipped
+      one at once (marked standIn) while the user's is drawn behind everything else.
     */
-    async snapshot(folder, layer, payload, { cached = false } = {}) {
+    async snapshot(folder, layer, payload, { cached = false, ahead = false, standIn = false } = {}) {
       // The gallery's pictures are kept on disk: drawn once per preset version, shown at once after.
       const key = cached && pictures ? pictures.keyOf(`${folder}|${(layer && layer.dir) || ''}`, filesSignature([folder, layer && layer.dir]), payload) : null;
       const kept = key ? pictures.get(key) : null;
       if (kept) return kept;
+      const draw = (later) => renders.run(key, () => this.renderAndKeep(folder, layer, payload, key), { ahead: later });
+      const name = key && standIn && !layer ? bundledName(folder) : null;
+      const shipped = name ? pictures.shipped(name, contentSignature([folder])) : null;
+      if (!shipped) return draw(ahead);
+      draw(true).catch(() => null);
+      return { ...shipped, standIn: true };
+    },
+    async renderAndKeep(folder, layer, payload, key) {
       const shot = await this.render(folder, layer, payload);
       if (key && shot) {
         try {
@@ -252,4 +253,4 @@ function createPresetInsets({ cacheFile, preloadPath, imagePath, dimensions, pre
   };
 }
 
-module.exports = { createPresetInsets };
+module.exports = { createPresetInsets, bundledName };

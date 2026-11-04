@@ -586,18 +586,19 @@ function createPresetDesigner({
   // from the designer's own menu. A plain unlock, so the pictures compare like for like.
   const presetGallery = require(path.join(appPath, 'ui/presetGallery.js')).createPresetGallery({
     label: (key) => $(`#pd-gallery-text [data-pg="${key}"]`).text() || key,
-    snapshot: (name, state) => {
+    snapshot: (name, state, { ahead = false, standIn = true } = {}) => {
       const payload = snapshotPayload(previewPayload(state));
       const art = galleryArtFile();
       if (payload.imagePath) payload.imagePath = art;
       if (payload.gameIconPath) payload.gameIconPath = art;
-      return ipcRenderer.invoke('preset-snapshot', { preset: name, payload, cached: true });
+      // The shipped stand-ins show a plain unlock only.
+      return ipcRenderer.invoke('preset-snapshot', { preset: name, payload, cached: true, ahead, standIn: standIn && state === 'normal' });
     },
     // Every state the designer's preview has, named as it names them.
     states: () =>
       ['normal', 'bronze', 'silver', 'gold', 'completion', 'progress'].map((key) => ({ key, label: $(`#pd-state button[data-state="${key}"]`).text().trim() || key })),
   });
-  // Opening Settings draws the pictures not kept yet, one at a time, before the gallery is opened.
+  // Opening Settings draws the pictures not kept yet, before the gallery is opened.
   // Asked for, not read from the menu: on the first opening the menu is still being filled.
   $('title-bar').one('open-settings', async () => {
     const names = await ipcRenderer.invoke('list-presets').catch(() => []);

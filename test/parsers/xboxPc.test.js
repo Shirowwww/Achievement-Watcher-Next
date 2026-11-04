@@ -111,6 +111,79 @@ test('every Xbox Network request carries a contract version the service can read
   for (const contractVersion of seen) assert.match(String(contractVersion), /^\d+$/);
 });
 
+// A fake Xbox Network: the history lists `titles`, each title's achievements answer after a short wait.
+function fakeXbox(titles) {
+  const stats = { fetched: [], inFlight: 0, maxInFlight: 0 };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const text = String(url);
+    if (text.includes('titleHistory')) return { ok: true, status: 200, json: async () => ({ titles }) };
+    const titleId = new URL(text).searchParams.get('titleId');
+    stats.fetched.push(titleId);
+    stats.inFlight += 1;
+    stats.maxInFlight = Math.max(stats.maxInFlight, stats.inFlight);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    stats.inFlight -= 1;
+    const achievements = [{ id: '1', name: `A${titleId}`, progression: { state: 'NotStarted' } }];
+    return { ok: true, status: 200, json: async () => ({ achievements }) };
+  };
+  return { stats, restore: () => (globalThis.fetch = realFetch) };
+}
+
+const XBOX_AUTH = { xuid: '2535000000000000', uhs: '1234567890', xstsToken: 'token', xstsExpiresAt: Date.now() + 3600000 };
+const pcTitle = (titleId, unlocked = 1, lastTimePlayed = '2026-10-01T10:00:00Z') => ({
+  titleId: String(titleId),
+  name: `Game ${titleId}`,
+  devices: ['PC'],
+  achievement: { currentAchievements: unlocked, totalAchievements: 10, currentGamerscore: unlocked * 10 },
+  titleHistory: { lastTimePlayed },
+});
+
+test('Xbox titles import a few at a time, and a title that did not move is not fetched again', async () => {
+  const dir = makeTempDir('aw-xbox-skip-');
+  xboxPc.setUserDataPath(dir);
+  const titles = Array.from({ length: 8 }, (_, index) => pcTitle(1000 + index));
+  const progress = [];
+  let net = fakeXbox(titles);
+  try {
+    const first = await xboxPc.importLibrary({ auth: XBOX_AUTH, onProgress: (p) => progress.push(p.current) });
+    assert.deepEqual([first.created, first.updated, first.unchanged, first.failed], [8, 0, 0, 0]);
+    assert.deepEqual(progress, [1, 2, 3, 4, 5, 6, 7, 8]);
+    assert.ok(net.stats.maxInFlight > 1 && net.stats.maxInFlight <= 4, `in flight: ${net.stats.maxInFlight}`);
+    net.restore();
+
+    // One title unlocked something, one was played again: only those two are asked about.
+    net = fakeXbox(titles.map((t, i) => (i === 0 ? pcTitle(t.titleId, 2) : i === 1 ? pcTitle(t.titleId, 1, '2026-10-02T10:00:00Z') : t)));
+    const second = await xboxPc.importLibrary({ auth: XBOX_AUTH });
+    assert.deepEqual([second.created, second.updated, second.unchanged], [0, 2, 6]);
+    assert.deepEqual(net.stats.fetched.sort(), ['1000', '1001']);
+    net.restore();
+
+    net = fakeXbox(titles);
+    const forced = await xboxPc.importLibrary({ auth: XBOX_AUTH, force: true });
+    assert.deepEqual([forced.updated, forced.unchanged], [8, 0]);
+    assert.equal(net.stats.fetched.length, 8);
+  } finally {
+    net.restore();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a title whose history carries no achievement counters is always fetched', async () => {
+  const dir = makeTempDir('aw-xbox-nomark-');
+  xboxPc.setUserDataPath(dir);
+  const bare = [{ titleId: '2000', name: 'Bare', devices: ['PC'] }];
+  const net = fakeXbox(bare);
+  try {
+    await xboxPc.importLibrary({ auth: XBOX_AUTH });
+    const again = await xboxPc.importLibrary({ auth: XBOX_AUTH });
+    assert.deepEqual([again.updated, again.unchanged], [1, 0]);
+  } finally {
+    net.restore();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('title artwork is served over https, and a re-import keeps a picture the history dropped', () => {
   // Xbox hands its store artwork out over plain http, which the window's img-src refuses.
   const artwork = xboxPc.resolveXboxTitleArtwork({

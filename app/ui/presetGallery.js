@@ -49,22 +49,36 @@ function createPresetGallery({ label, snapshot, states = () => [] }) {
   let shownState = DEFAULT_STATE;
   const keyOf = (name, state) => `${state}\n${name}`;
 
-  // A failed picture is not kept: the next opening asks again rather than showing a gap for good.
-  function picture(name, state = DEFAULT_STATE) {
+  /*
+    A failed picture or a shipped stand-in is not kept: the next ask gets the real one rather than a
+    gap or a stand-in for good. A tile in view asks again for a picture only warm() asked for, so
+    the main process moves it up its queue.
+  */
+  function picture(name, state = DEFAULT_STATE, { ahead = false, standIn = true } = {}) {
     const key = keyOf(name, state);
-    if (!pictures.has(key)) {
-      const pending = Promise.resolve()
-        .then(() => snapshot(name, state))
-        .catch(() => null)
-        .then((shot) => {
-          if (pictures.get(key) !== pending) return shot;
-          if (!shot || !shot.image) pictures.delete(key);
-          else ready.set(key, shot);
-          return shot;
-        });
-      pictures.set(key, pending);
-    }
-    return pictures.get(key);
+    const known = pictures.get(key);
+    if (known && !(known.ahead && !ahead)) return known.pending;
+    const entry = { ahead };
+    entry.pending = Promise.resolve()
+      .then(() => snapshot(name, state, { ahead, standIn }))
+      .catch(() => null)
+      .then((shot) => {
+        if (pictures.get(key) !== entry) return shot;
+        if (!shot || !shot.image || shot.standIn) pictures.delete(key);
+        else ready.set(key, shot);
+        return shot;
+      });
+    pictures.set(key, entry);
+    return entry.pending;
+  }
+
+  // A stand-in is shown at once, then replaced by the user's own picture once drawn.
+  function showWithStandIn(tile, state, shot, current) {
+    showPicture(tile, shot);
+    if (!shot || !shot.standIn) return;
+    picture(tile.dataset.name, state, { ahead: true, standIn: false }).then((own) => {
+      if (current() && own && own.image && !own.standIn) showPicture(tile, own);
+    });
   }
 
   function showPicture(tile, shot) {
@@ -94,7 +108,7 @@ function createPresetGallery({ label, snapshot, states = () => [] }) {
         const tile = queue.shift();
         running += 1;
         picture(tile.dataset.name, state)
-          .then((shot) => current() && showPicture(tile, shot))
+          .then((shot) => current() && showWithStandIn(tile, state, shot, current))
           .finally(() => {
             running -= 1;
             pump();
@@ -350,18 +364,17 @@ function createPresetGallery({ label, snapshot, states = () => [] }) {
     });
   }
 
-  // Draws the pictures of `names` ahead of time, one after another, so as not to compete with an
-  // open gallery; a picture kept on disk comes back at once.
+  // Asks for the pictures of `names` ahead of time, all at once: the main process draws a few at a
+  // time, behind any asked by an open gallery. A picture kept on disk comes back at once.
   let warming = null;
   function warm(names) {
     if (warming) return warming;
-    warming = (async () => {
-      for (const name of names) {
-        if (!ready.has(keyOf(name, DEFAULT_STATE))) await picture(name, DEFAULT_STATE);
-      }
-    })().finally(() => {
-      warming = null;
-    });
+    const missing = names.filter((name) => !ready.has(keyOf(name, DEFAULT_STATE)));
+    warming = Promise.all(missing.map((name) => picture(name, DEFAULT_STATE, { ahead: true })))
+      .then(() => undefined)
+      .finally(() => {
+        warming = null;
+      });
     return warming;
   }
 

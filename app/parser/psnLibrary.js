@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeFileAtomicSync } = require('../util/replaceFile.js');
+const { mapLimit } = require('../util/onboardingDetect.js');
 
 const SOURCE = 'PlayStation Network';
 const DATA_TYPE = 'psnLibrary';
@@ -27,6 +28,8 @@ const TITLE_ID_BATCH = 5;
 const TIMEOUT_MS = 20000;
 const SCHEMA_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const IMPORT_DELAY_MS = 150;
+// Requests in flight at once, for the title id lookups and for the lists of an import.
+const IMPORT_CONCURRENCY = 4;
 // Where Sony's language codes differ from Xbox's (es-MX and zh-CN come back in English).
 const PSN_LOCALES = { latam: 'es-419', schinese: 'zh-Hans', tchinese: 'zh-Hant' };
 const TYPE_LETTER = { platinum: 'P', gold: 'G', silver: 'S', bronze: 'B' };
@@ -161,15 +164,28 @@ function pickArt(images) {
 async function mapTitleIds(ctx, titleIds) {
   const known = readJson(titleIdsFile()) || {};
   const missing = titleIds.filter((id) => !(id in known));
-  for (let i = 0; i < missing.length; i += TITLE_ID_BATCH) {
-    const batch = missing.slice(i, i + TITLE_ID_BATCH);
-    const answer = await psnRequest(ctx, `${API_ROOT}/trophy/v1/users/me/titles/trophyTitles?npTitleIds=${batch.join(',')}`);
-    for (const id of batch) known[id] = '';
-    for (const entry of (answer && answer.titles) || []) {
-      const listId = normalizeListId(entry && entry.trophyTitles && entry.trophyTitles[0] && entry.trophyTitles[0].npCommunicationId);
-      if (entry && entry.npTitleId in known && listId) known[entry.npTitleId] = listId;
-    }
-  }
+  const batches = [];
+  for (let i = 0; i < missing.length; i += TITLE_ID_BATCH) batches.push(missing.slice(i, i + TITLE_ID_BATCH));
+  // The first refusal stops new batches and is rethrown; nothing is saved then, as before.
+  let failure = null;
+  await mapLimit(
+    batches,
+    IMPORT_CONCURRENCY,
+    async (batch) => {
+      try {
+        const answer = await psnRequest(ctx, `${API_ROOT}/trophy/v1/users/me/titles/trophyTitles?npTitleIds=${batch.join(',')}`);
+        for (const id of batch) known[id] = '';
+        for (const entry of (answer && answer.titles) || []) {
+          const listId = normalizeListId(entry && entry.trophyTitles && entry.trophyTitles[0] && entry.trophyTitles[0].npCommunicationId);
+          if (entry && entry.npTitleId in known && listId) known[entry.npTitleId] = listId;
+        }
+      } catch (err) {
+        failure = failure || err;
+      }
+    },
+    () => failure !== null
+  );
+  if (failure) throw failure;
   if (missing.length) writeJson(titleIdsFile(), known);
   return known;
 }
@@ -534,32 +550,45 @@ async function importLibrary(options = {}) {
   const storeInfo = await collectStoreInfo(ctx);
   const names = displayNames(titles, storeInfo);
   const result = { total: titles.length, created: 0, updated: 0, unchanged: 0, skipped: 0, failed: 0, rateLimited: false };
-  for (let index = 0; index < titles.length; index += 1) {
-    const title = titles[index];
-    const name = names.get(title.npCommunicationId);
-    options.onProgress?.({ current: index + 1, total: titles.length, detail: name, appid: toAppid(normalizeListId(title.npCommunicationId)) });
-    const listId = normalizeListId(title.npCommunicationId);
-    const cached = readSchema(listId);
-    if (!options.force && isFresh(cached, title, ctx.locale)) {
-      // A better tile name needs no trip to Sony: only the name is rewritten.
-      if (name && cached.name !== name) writeJson(schemaFile(listId), { ...cached, name });
-      result.unchanged += 1;
-      continue;
-    }
-    try {
-      const written = await importOne(ctx, title, name, storeInfo);
-      if (!written) result.skipped += 1;
-      else result[written.created ? 'created' : 'updated'] += 1;
-    } catch (err) {
-      if (err && err.code === 'psn-not-connected') throw err;
-      if (err && err.code === 'psn-rate-limited') {
-        result.rateLimited = true;
-        break;
+  // Titles start in order, a few at a time. A refused token or a rate limit starts no new title;
+  // the ones already running finish.
+  let started = 0;
+  let notConnected = null;
+  await mapLimit(
+    titles,
+    IMPORT_CONCURRENCY,
+    async (title) => {
+      started += 1;
+      const name = names.get(title.npCommunicationId);
+      options.onProgress?.({ current: started, total: titles.length, detail: name, appid: toAppid(normalizeListId(title.npCommunicationId)) });
+      const listId = normalizeListId(title.npCommunicationId);
+      const cached = readSchema(listId);
+      if (!options.force && isFresh(cached, title, ctx.locale)) {
+        // A better tile name needs no trip to Sony: only the name is rewritten.
+        if (name && cached.name !== name) writeJson(schemaFile(listId), { ...cached, name });
+        result.unchanged += 1;
+        return;
       }
-      result.failed += 1;
-    }
-    if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
-  }
+      try {
+        const written = await importOne(ctx, title, name, storeInfo);
+        if (!written) result.skipped += 1;
+        else result[written.created ? 'created' : 'updated'] += 1;
+      } catch (err) {
+        if (err && err.code === 'psn-not-connected') {
+          notConnected = notConnected || err;
+          return;
+        }
+        if (err && err.code === 'psn-rate-limited') {
+          result.rateLimited = true;
+          return;
+        }
+        result.failed += 1;
+      }
+      if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs));
+    },
+    () => notConnected !== null || result.rateLimited
+  );
+  if (notConnected) throw notConnected;
   return result;
 }
 

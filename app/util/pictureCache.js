@@ -4,6 +4,8 @@
   Pictures of presets kept on disk, so the gallery shows them at once instead of rendering each one
   offscreen again in every session. A picture is keyed by the preset's name, the signature of its
   files and the sample it was drawn with: a changed preset or sample is a miss and is drawn again.
+  The bundled presets also ship one picture each (tools/presets/build-pictures.js), shown while
+  the user's own is drawn.
 */
 
 const crypto = require('crypto');
@@ -13,8 +15,19 @@ const path = require('path');
 // About two hundred kilobytes each: a few hundred presets at most, many more than ship.
 const DEFAULT_MAX = 300;
 const KEY = /^[0-9a-f]{40}$/;
+const SHIPPED_DIR = path.join(__dirname, '..', 'resources', 'presetPictures');
+const SHIPPED_FILE = /^[a-z0-9-]+\.png$/;
 
-function createPictureCache({ dir, max = DEFAULT_MAX }) {
+function readManifest(shippedDir) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(shippedDir, 'manifest.json'), 'utf8'));
+    return parsed && parsed.pictures && typeof parsed.pictures === 'object' ? parsed.pictures : {};
+  } catch {
+    return {};
+  }
+}
+
+function createPictureCache({ dir, max = DEFAULT_MAX, shippedDir = SHIPPED_DIR }) {
   const fileOf = (key) => (KEY.test(String(key)) ? path.join(dir, `${key}.json`) : null);
 
   function keyOf(name, signature, payload) {
@@ -65,7 +78,22 @@ function createPictureCache({ dir, max = DEFAULT_MAX }) {
     prune();
   }
 
-  return { keyOf, get, set };
+  let manifest = null;
+  // The picture shipped for a bundled preset (its folder relative to the app), while its files are
+  // still the ones it was drawn from; null otherwise.
+  function shipped(name, signature) {
+    if (!manifest) manifest = readManifest(shippedDir);
+    const entry = Object.prototype.hasOwnProperty.call(manifest, name) ? manifest[name] : null;
+    if (!entry || entry.signature !== signature || !SHIPPED_FILE.test(String(entry.file))) return null;
+    try {
+      const image = `data:image/png;base64,${fs.readFileSync(path.join(shippedDir, entry.file)).toString('base64')}`;
+      return { image, card: entry.card || null, width: entry.width, height: entry.height };
+    } catch {
+      return null;
+    }
+  }
+
+  return { keyOf, get, set, shipped };
 }
 
-module.exports = { createPictureCache };
+module.exports = { createPictureCache, SHIPPED_DIR };

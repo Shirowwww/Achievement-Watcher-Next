@@ -6078,11 +6078,12 @@ function withTextInsets(data) {
 
 // The designer's picture of a preset it cannot rebuild from its controls (an imported SAN theme or
 // .awpreset), rendered offscreen with the designer's sample text and artwork.
-ipcMain.handle('preset-snapshot', async (event, { preset, payload, cached = false } = {}) => {
+ipcMain.handle('preset-snapshot', async (event, { preset, payload, cached = false, ahead = false, standIn = false } = {}) => {
   const resolved = resolveNotificationPreset([String(preset || '')]);
   if (!resolved.folder || resolved.name !== String(preset || '')) return null;
   const layer = notificationPresetLayers.get(resolved.name) || null;
-  return presetInsets.snapshot(resolved.folder, layer, notificationPagePayload(payload || {}), { cached: cached === true });
+  const options = { cached: cached === true, ahead: ahead === true, standIn: standIn === true };
+  return presetInsets.snapshot(resolved.folder, layer, notificationPagePayload(payload || {}), options);
 });
 
 // The same payload for the designer's live pages, so a preview is worded and graded as the popup is.

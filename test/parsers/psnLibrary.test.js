@@ -178,6 +178,68 @@ test('a rate limit stops the import with what was done, a refused token stops it
   await assert.rejects(psnLibrary.importLibrary({ auth: { accessToken: async () => '' }, fetchImpl: refused.fetchImpl }), { code: 'psn-not-connected' });
 });
 
+// `count` bare lists, each with one trophy. `trophyReply(index)` may answer the earned-trophies
+// request with something other than the default; `inFlight` tracks the overlap of those requests.
+function manyLists(count, { trophyReply } = {}) {
+  const stats = { inFlight: 0, maxInFlight: 0, asked: new Set() };
+  const id = (index) => `NPWR${String(30000 + index)}_00`;
+  const titles = Array.from({ length: count }, (_, index) => ({
+    npCommunicationId: id(index),
+    npServiceName: 'trophy',
+    trophyTitleName: `Game ${index}`,
+    trophyTitlePlatform: 'PS4',
+    trophyGroupCount: 1,
+    lastUpdatedDateTime: '2026-10-01T10:00:00Z',
+  }));
+  const fetchImpl = async (url) => {
+    const text = String(url);
+    if (text.includes('npTitleIds')) return json({ titles: [] });
+    if (text.includes('/gamelist/v2/')) return json({ titles: [] });
+    if (text.includes('/universalSearch')) return json({});
+    if (text.includes('/trophyTitles?')) return json({ trophyTitles: titles });
+    const index = Number(/NPWR(\d{5})_00/.exec(text)[1]) - 30000;
+    if (text.includes('/users/me/npCommunicationIds/')) {
+      stats.asked.add(index);
+      const reply = trophyReply && trophyReply(index);
+      if (reply) return reply;
+    }
+    stats.inFlight += 1;
+    stats.maxInFlight = Math.max(stats.maxInFlight, stats.inFlight);
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    stats.inFlight -= 1;
+    return json({ trophies: [{ trophyId: 0, trophyType: 'bronze', trophyName: 'T', trophyIconUrl: 'https://img/t.png', earned: false }] });
+  };
+  return { fetchImpl, stats };
+}
+
+test('titles import a few at a time, with every counter and the progress still right', async () => {
+  const { fetchImpl, stats } = manyLists(10);
+  const progress = [];
+  const result = await run(fetchImpl, { onProgress: (p) => progress.push(p.current) });
+
+  assert.deepEqual(result, { total: 10, created: 10, updated: 0, unchanged: 0, skipped: 0, failed: 0, rateLimited: false });
+  assert.deepEqual(progress, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.ok(stats.maxInFlight > 1 && stats.maxInFlight <= 4, `in flight: ${stats.maxInFlight}`);
+  assert.equal(psnLibrary.listCachedTitles().length, 10);
+});
+
+test('a rate limit starts no new title while the ones running finish', async () => {
+  const { fetchImpl, stats } = manyLists(12, { trophyReply: (index) => (index === 0 ? json({}, 429) : null) });
+  const progress = [];
+  const result = await run(fetchImpl, { onProgress: (p) => progress.push(p.current) });
+
+  assert.equal(result.rateLimited, true);
+  assert.equal(progress.length, 4, 'only the first four titles were started');
+  assert.equal(result.created, 3, 'the three running beside the limited one finished');
+  assert.deepEqual([...stats.asked].sort((a, b) => a - b), [0, 1, 2, 3]);
+});
+
+test('a refused token in the middle of an import aborts it and starts nothing more', async () => {
+  const { fetchImpl, stats } = manyLists(12, { trophyReply: (index) => (index === 1 ? json({}, 401) : null) });
+  await assert.rejects(run(fetchImpl), { code: 'psn-not-connected' });
+  assert.ok(stats.asked.size <= 4, `asked about ${stats.asked.size} lists`);
+});
+
 test('one game with lists on two consoles gets the console in each tile name', () => {
   const titles = [
     { npCommunicationId: 'NPWR00001_00', trophyTitleName: 'Same Game', trophyTitlePlatform: 'PS4' },

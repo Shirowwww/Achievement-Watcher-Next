@@ -2132,7 +2132,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           imported: (r) =>
             // An import that wrote nothing used to report three zeroes, which says the same thing
             // whether the account has no PC game or the history never arrived. Say which it was.
-            (r?.created || 0) + (r?.updated || 0) === 0
+            (r?.created || 0) + (r?.updated || 0) + (r?.unchanged || 0) === 0
               ? t(
                   'xbox-imported-none',
                   'Nothing to import: {titles} PC titles found, {skipped} without achievements, {failed} failed.',
