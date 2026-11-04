@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Thành tựu của bạn ngay trong Steam và Playnite, các bản port PC được biên dịch lại và game PS3Recomp là nguồn mới, cúp được đọc trực tiếp từ PS3 hoặc PS4 đã jailbreak, và các bước bạn có thể đánh dấu bên dưới một thành tựu dài."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam và Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Một plugin Millennium cho thư viện Steam. Lối tắt không thuộc Steam mà AW Next nhận ra sẽ có phần Thành tựu riêng của Steam, bộ đếm trên thanh chơi, danh sách đầy đủ và tab Big Picture, cập nhật khi có lượt mở khóa mới. Tải aw-next-millennium.zip bên dưới."
+    },
+    {
+      "kind": "item",
+      "text": "Một tiện ích mở rộng cho Playnite. Nhấp chuột phải vào một game trong Playnite rồi mở thành tựu AW Next, hoặc dùng giao diện đặt các bảng của AW Next trong phần chi tiết của game. Tải tệp .pext bên dưới."
+    },
+    {
+      "kind": "heading",
+      "text": "Nguồn mới"
+    },
+    {
+      "kind": "item",
+      "text": "Các bản port PC được biên dịch lại: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered và SMS Launcher (Super Mario Sunshine và Super Mario Eclipse), trên Windows và Linux."
+    },
+    {
+      "kind": "item",
+      "text": "Các bản port PS3Recomp hiển thị cúp của chúng, kèm độ hiếm riêng của PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Cúp từ PS3 hoặc PS4 qua FTP, dành cho máy đã jailbreak khi không thể đăng nhập PSN. Không có gì được ghi vào máy."
+    },
+    {
+      "kind": "heading",
+      "text": "Cũng mới"
+    },
+    {
+      "kind": "item",
+      "text": "Các bước bên dưới một thành tựu. Chia một thành tựu dài thành các bước do bạn tự viết và đánh dấu, trong ứng dụng và trong lớp phủ trong game, rồi chia sẻ danh sách dưới dạng tệp."
+    },
+    {
+      "kind": "item",
+      "text": "Nhiều thành tựu cùng lúc. Ctrl+nhấp hoặc Shift+nhấp vào các thành tựu, rồi mở khóa, xóa hoặc khóa lại chúng cùng nhau."
+    },
+    {
+      "kind": "item",
+      "text": "Bỏ qua cảnh báo Tình trạng trò chơi cho một game và một phát hiện."
+    },
+    {
+      "kind": "item",
+      "text": "Thành tựu đang khóa được làm xám với mọi nguồn chỉ có một ảnh cho mỗi thành tựu, và thành tựu không có ảnh sẽ hiện biểu tượng của game."
+    },
+    {
+      "kind": "item",
+      "text": "Sửa lỗi: thành tựu dạng bộ đếm mở khóa được trong GBE Fork, quá trình quét không còn thay trình nạp riêng của một game Ubisoft đã crack, Tình trạng trò chơi không đụng đến dll Steam của game Denuvo, một game thiếu danh sách không còn khiến quét lại cả thư viện, lượt mở khóa Steam vẫn báo trên PC có đồng hồ sai, và các game bằng nhau khi sắp xếp được xếp theo tên."
+    },
+    {
+      "kind": "text",
+      "text": "Xem nhật ký thay đổi để biết danh sách đầy đủ."
+    }
+  ]
+}

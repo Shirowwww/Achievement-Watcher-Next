@@ -54,6 +54,8 @@ pids/
 
 # Local notes / scratch (never publish)
 notes/
+# The published update notes per language are data of the site, not scratch.
+!docs/data/notes/
 scratch/
 *.local
 

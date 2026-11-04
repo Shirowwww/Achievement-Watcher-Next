@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Tes succès dans Steam et Playnite, des portages PC recompilés et des jeux PS3Recomp comme nouvelles sources, des trophées lus directement sur une PS3 ou une PS4 jailbreakée, et des étapes à cocher sous un long succès."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam et Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Un plugin Millennium pour la bibliothèque Steam. Un raccourci hors Steam qu'AW Next reconnaît obtient la propre section Succès de Steam, le compteur de la barre de jeu, la liste complète et l'onglet Big Picture, mis à jour au fil des déblocages. Télécharge aw-next-millennium.zip ci-dessous."
+    },
+    {
+      "kind": "item",
+      "text": "Une extension Playnite. Fais un clic droit sur un jeu dans Playnite et ouvre AW Next achievements, ou utilise un thème qui place les panneaux d'AW Next dans les détails du jeu. Télécharge le .pext ci-dessous."
+    },
+    {
+      "kind": "heading",
+      "text": "Nouvelles sources"
+    },
+    {
+      "kind": "item",
+      "text": "Portages PC recompilés : Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered et SMS Launcher (Super Mario Sunshine et Super Mario Eclipse), sous Windows et Linux."
+    },
+    {
+      "kind": "item",
+      "text": "Les portages PS3Recomp affichent leurs trophées, avec la rareté propre à PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Les trophées d'une PS3 ou d'une PS4 via FTP, pour une console jailbreakée quand la connexion à PSN n'est pas possible. Rien n'est écrit sur la console."
+    },
+    {
+      "kind": "heading",
+      "text": "Autres nouveautés"
+    },
+    {
+      "kind": "item",
+      "text": "Des étapes sous un succès. Découpe un long succès en étapes que tu écris et coches toi-même, dans l'application et dans l'overlay en jeu, et partage la liste sous forme de fichier."
+    },
+    {
+      "kind": "item",
+      "text": "Plusieurs succès à la fois. Ctrl+clic ou Maj+clic sur des succès, puis débloque-les, efface-les ou reverrouille-les ensemble."
+    },
+    {
+      "kind": "item",
+      "text": "Ignore un avertissement d'État du jeu pour un seul jeu et un seul constat."
+    },
+    {
+      "kind": "item",
+      "text": "Les succès verrouillés sont grisés pour toutes les sources qui n'ont qu'une image par succès, et un succès sans image affiche l'icône du jeu."
+    },
+    {
+      "kind": "item",
+      "text": "Corrections : les succès à compteur se débloquent sous GBE Fork, un scan n'échange plus le chargeur propre d'un jeu Ubisoft piraté, État du jeu laisse tranquille la dll Steam des jeux Denuvo, un jeu sans sa liste ne relance plus le scan de toute la bibliothèque, les déblocages Steam notifient sur un PC dont l'horloge est déréglée, et les jeux à égalité dans un tri se rangent par nom."
+    },
+    {
+      "kind": "text",
+      "text": "Consulte le journal des modifications complet pour la liste détaillée."
+    }
+  ]
+}

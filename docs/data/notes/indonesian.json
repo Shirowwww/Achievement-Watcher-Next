@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Pencapaian Anda langsung di dalam Steam dan Playnite, port PC hasil kompilasi ulang dan game PS3Recomp sebagai sumber baru, trofi yang dibaca langsung dari PS3 atau PS4 yang sudah di-jailbreak, serta langkah-langkah yang bisa Anda centang di bawah pencapaian yang panjang."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam dan Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Plugin Millennium untuk pustaka Steam. Pintasan non-Steam yang dikenali AW Next mendapat bagian Pencapaian milik Steam sendiri, penghitung di bilah permainan, daftar lengkap, dan tab Big Picture, yang diperbarui saat pembukaan masuk. Unduh aw-next-millennium.zip di bawah."
+    },
+    {
+      "kind": "item",
+      "text": "Ekstensi Playnite. Klik kanan sebuah game di Playnite dan buka pencapaian AW Next, atau gunakan tema yang menempatkan panel AW Next di detail game. Unduh file .pext di bawah."
+    },
+    {
+      "kind": "heading",
+      "text": "Sumber baru"
+    },
+    {
+      "kind": "item",
+      "text": "Port PC hasil kompilasi ulang: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered, dan SMS Launcher (Super Mario Sunshine dan Super Mario Eclipse), di Windows dan Linux."
+    },
+    {
+      "kind": "item",
+      "text": "Port PS3Recomp menampilkan trofinya, dengan kelangkaan dari PlayStation sendiri."
+    },
+    {
+      "kind": "item",
+      "text": "Trofi dari PS3 atau PS4 lewat FTP, untuk konsol yang sudah di-jailbreak saat masuk ke PSN bukan pilihan. Tidak ada yang ditulis ke konsol."
+    },
+    {
+      "kind": "heading",
+      "text": "Juga baru"
+    },
+    {
+      "kind": "item",
+      "text": "Langkah di bawah pencapaian. Bagi pencapaian yang panjang menjadi langkah-langkah yang Anda tulis dan centang sendiri, di aplikasi dan di overlay dalam game, lalu bagikan daftarnya sebagai file."
+    },
+    {
+      "kind": "item",
+      "text": "Beberapa pencapaian sekaligus. Ctrl+klik atau Shift+klik pencapaian, lalu buka, hapus, atau kunci ulang semuanya bersama-sama."
+    },
+    {
+      "kind": "item",
+      "text": "Abaikan peringatan Kesehatan game untuk satu game dan satu temuan."
+    },
+    {
+      "kind": "item",
+      "text": "Pencapaian yang terkunci diberi warna abu-abu untuk setiap sumber yang punya satu gambar per pencapaian, dan pencapaian tanpa gambar menampilkan ikon game."
+    },
+    {
+      "kind": "item",
+      "text": "Perbaikan: pencapaian berpenghitung terbuka di bawah GBE Fork, pemindaian tidak lagi menukar loader milik game Ubisoft yang di-crack, Kesehatan game membiarkan dll Steam pada game Denuvo, satu game tanpa daftar tidak lagi memicu pemindaian ulang seluruh pustaka, pembukaan Steam diberi notifikasi di PC dengan jam yang salah, dan game yang seri dalam pengurutan diurutkan menurut nama."
+    },
+    {
+      "kind": "text",
+      "text": "Lihat catatan perubahan lengkap untuk daftar selengkapnya."
+    }
+  ]
+}

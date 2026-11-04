@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "I tuoi successi dentro Steam e Playnite, port per PC ricompilati e giochi PS3Recomp come nuove sorgenti, trofei letti direttamente da una PS3 o PS4 con jailbreak e passaggi da spuntare sotto un successo lungo."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam e Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Un plugin Millennium per la libreria di Steam. Un collegamento non Steam che AW Next riconosce ottiene la sezione Successi propria di Steam, il contatore della barra di gioco, l'elenco completo e la scheda Big Picture, aggiornati man mano che arrivano gli sblocchi. Scarica aw-next-millennium.zip qui sotto."
+    },
+    {
+      "kind": "item",
+      "text": "Un'estensione per Playnite. Fai clic con il tasto destro su un gioco in Playnite e apri AW Next achievements, oppure usa un tema che inserisce i pannelli di AW Next nei dettagli del gioco. Scarica il .pext qui sotto."
+    },
+    {
+      "kind": "heading",
+      "text": "Nuove sorgenti"
+    },
+    {
+      "kind": "item",
+      "text": "Port per PC ricompilati: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered e SMS Launcher (Super Mario Sunshine e Super Mario Eclipse), su Windows e Linux."
+    },
+    {
+      "kind": "item",
+      "text": "I port PS3Recomp mostrano i loro trofei, con la rarità propria di PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Trofei da una PS3 o PS4 tramite FTP, per una console con jailbreak quando l'accesso a PSN non è possibile. Sulla console non viene scritto nulla."
+    },
+    {
+      "kind": "heading",
+      "text": "Altre novità"
+    },
+    {
+      "kind": "item",
+      "text": "Passaggi sotto un successo. Dividi un successo lungo in passaggi che scrivi e spunti tu, nell'app e nell'overlay di gioco, e condividi l'elenco come file."
+    },
+    {
+      "kind": "item",
+      "text": "Più successi alla volta. Ctrl+clic o Maiusc+clic sui successi, poi sbloccali, cancellali o bloccali di nuovo insieme."
+    },
+    {
+      "kind": "item",
+      "text": "Ignora un avviso di Stato dei giochi per un solo gioco e un solo rilievo."
+    },
+    {
+      "kind": "item",
+      "text": "I successi bloccati sono in grigio per ogni sorgente con una sola immagine per successo, e un successo senza immagine mostra l'icona del gioco."
+    },
+    {
+      "kind": "item",
+      "text": "Correzioni: i successi a contatore si sbloccano con GBE Fork, una scansione non sostituisce più il loader proprio di un gioco Ubisoft craccato, Stato dei giochi lascia in pace la dll Steam dei giochi Denuvo, un gioco senza il suo elenco non fa più riscansionare l'intera libreria, gli sblocchi Steam notificano su un PC con l'orologio sballato, e i giochi in parità in un ordinamento si dispongono per nome."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta il changelog completo per l'elenco completo."
+    }
+  ]
+}

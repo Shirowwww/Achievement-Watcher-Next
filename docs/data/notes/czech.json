@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Vaše úspěchy přímo ve Steamu a Playnite, překompilované porty pro PC a hry PS3Recomp jako nové zdroje, trofeje čtené přímo z jailbreaknuté konzole PS3 nebo PS4 a kroky, které můžete odškrtávat pod dlouhým úspěchem."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam a Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Plugin Millennium pro knihovnu Steam. Zástupce mimo Steam, který AW Next pozná, dostane vlastní sekci Úspěchy ze Steamu, počítadlo na liště hry, úplný seznam a kartu v Big Picture, aktualizované průběžně s odemykáním. Stáhněte aw-next-millennium.zip níže."
+    },
+    {
+      "kind": "item",
+      "text": "Rozšíření pro Playnite. Klikněte v Playnite pravým tlačítkem na hru a otevřete úspěchy AW Next, nebo použijte motiv, který umístí panely AW Next do podrobností hry. Stáhněte soubor .pext níže."
+    },
+    {
+      "kind": "heading",
+      "text": "Nové zdroje"
+    },
+    {
+      "kind": "item",
+      "text": "Překompilované porty pro PC: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered a SMS Launcher (Super Mario Sunshine a Super Mario Eclipse), ve Windows i Linuxu."
+    },
+    {
+      "kind": "item",
+      "text": "Porty PS3Recomp zobrazují své trofeje se vzácností udávanou přímo PlayStationem."
+    },
+    {
+      "kind": "item",
+      "text": "Trofeje z PS3 nebo PS4 přes FTP, pro jailbreaknutou konzoli, když přihlášení do PSN nepřichází v úvahu. Do konzole se nic nezapisuje."
+    },
+    {
+      "kind": "heading",
+      "text": "Také nové"
+    },
+    {
+      "kind": "item",
+      "text": "Kroky pod úspěchem. Rozdělte dlouhý úspěch na kroky, které si sami napíšete a odškrtáváte, v aplikaci i v překryvu ve hře, a seznam můžete sdílet jako soubor."
+    },
+    {
+      "kind": "item",
+      "text": "Více úspěchů najednou. Klikněte na úspěchy s klávesou Ctrl nebo Shift a poté je společně odemkněte, vymažte nebo znovu zamkněte."
+    },
+    {
+      "kind": "item",
+      "text": "Ignorování varování Stavu hry pro jednu hru a jeden nález."
+    },
+    {
+      "kind": "item",
+      "text": "Zamčené úspěchy jsou zešedlé u každého zdroje s jedním obrázkem na úspěch a úspěch bez obrázku zobrazí ikonu hry."
+    },
+    {
+      "kind": "item",
+      "text": "Opravy: počítadlové úspěchy se odemykají pod GBE Fork, skenování už nevyměňuje vlastní loader crackované hry Ubisoftu, Stav hry nechává na pokoji dll Steamu ve hrách s Denuvo, jedna hra bez seznamu už nespouští nové skenování celé knihovny, odemknutí ve Steamu se oznamují na počítači s chybným časem a hry se stejným pořadím v řazení se řadí podle názvu."
+    },
+    {
+      "kind": "text",
+      "text": "Úplný seznam najdete v úplném seznamu změn."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "A teljesítményeid közvetlenül a Steamen és a Playnite-ban, újrafordított PC-s portok és PS3Recomp játékok új forrásként, trófeák közvetlenül egy jailbreakelt PS3-ról vagy PS4-ről olvasva, valamint hosszú teljesítmények alatt kipipálható lépések."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam és Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Millennium bővítmény a Steam-könyvtárhoz. Az a nem Steames parancsikon, amelyet az AW Next felismer, megkapja a Steam saját Teljesítmények szakaszát, a játéksáv számlálóját, a teljes listát és egy Big Picture lapot, a feloldásokkal együtt frissítve. Az aw-next-millennium.zip fájlt lent töltheted le."
+    },
+    {
+      "kind": "item",
+      "text": "Playnite-bővítmény. Kattints jobb gombbal egy játékra a Playnite-ban, és nyisd meg az AW Next teljesítményeit, vagy használj olyan témát, amely az AW Next paneleit a játék részletei közé helyezi. A .pext fájlt lent töltheted le."
+    },
+    {
+      "kind": "heading",
+      "text": "Új források"
+    },
+    {
+      "kind": "item",
+      "text": "Újrafordított PC-s portok: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered és SMS Launcher (Super Mario Sunshine és Super Mario Eclipse), Windowson és Linuxon."
+    },
+    {
+      "kind": "item",
+      "text": "A PS3Recomp portok megmutatják a trófeáikat, a PlayStation saját ritkaságával."
+    },
+    {
+      "kind": "item",
+      "text": "Trófeák PS3-ról vagy PS4-ről FTP-n keresztül, jailbreakelt konzolhoz, amikor a PSN-be bejelentkezés nem megoldás. A konzolra semmi nem íródik."
+    },
+    {
+      "kind": "heading",
+      "text": "További újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "Lépések egy teljesítmény alatt. Oszd fel a hosszú teljesítményt általad írt és kipipálható lépésekre, az alkalmazásban és a játékon belüli overlayben, a listát pedig fájlként megoszthatod."
+    },
+    {
+      "kind": "item",
+      "text": "Több teljesítmény egyszerre. Ctrl+kattintással vagy Shift+kattintással jelölj ki teljesítményeket, majd oldd fel, töröld vagy zárold újra őket együtt."
+    },
+    {
+      "kind": "item",
+      "text": "A Játék állapota figyelmeztetésének mellőzése egy játékra és egy észlelésre."
+    },
+    {
+      "kind": "item",
+      "text": "A zárolt teljesítmények szürkék minden olyan forrásnál, amelynél teljesítményenként egyetlen kép van, a kép nélküli teljesítmény pedig a játék ikonját mutatja."
+    },
+    {
+      "kind": "item",
+      "text": "Javítások: a számlálós teljesítmények feloldódnak a GBE Fork alatt, egy vizsgálat már nem cseréli le egy crackelt Ubisoft-játék saját betöltőjét, a Játék állapota békén hagyja a Denuvós játékok Steam dll-jét, egy lista nélküli játék már nem indít újravizsgálatot az egész könyvtáron, a Steam-feloldások értesítést adnak egy rossz órájú gépen is, és a rendezésben holtversenyben lévő játékok név szerint sorakoznak."
+    },
+    {
+      "kind": "text",
+      "text": "A teljes listát a teljes változásnaplóban találod."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Prestasjonene dine rett i Steam og Playnite, omkompilerte PC-porter og PS3Recomp-spill som nye kilder, troféer lest rett fra en jailbreaket PS3 eller PS4, og trinn du kan krysse av under en lang prestasjon."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam og Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Et Millennium-tillegg for Steam-biblioteket. En snarvei utenfor Steam som AW Next kjenner igjen, får Steams egen Prestasjoner-seksjon, telleren i spillfeltet, hele listen og en fane i Big Picture, oppdatert etter hvert som opplåsinger kommer inn. Last ned aw-next-millennium.zip nedenfor."
+    },
+    {
+      "kind": "item",
+      "text": "En Playnite-utvidelse. Høyreklikk på et spill i Playnite og åpne AW Next-prestasjoner, eller bruk et tema som plasserer AW Nexts paneler i spillets detaljer. Last ned .pext-filen nedenfor."
+    },
+    {
+      "kind": "heading",
+      "text": "Nye kilder"
+    },
+    {
+      "kind": "item",
+      "text": "Omkompilerte PC-porter: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered og SMS Launcher (Super Mario Sunshine og Super Mario Eclipse), på Windows og Linux."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp-porter viser trofeene sine, med PlayStations egen sjeldenhet."
+    },
+    {
+      "kind": "item",
+      "text": "Troféer fra en PS3 eller PS4 via FTP, for en jailbreaket konsoll når det ikke er aktuelt å logge på PSN. Ingenting skrives til konsollen."
+    },
+    {
+      "kind": "heading",
+      "text": "Også nytt"
+    },
+    {
+      "kind": "item",
+      "text": "Trinn under en prestasjon. Del en lang prestasjon opp i trinn som du selv skriver og krysser av, i appen og i overlayet i spillet, og del listen som en fil."
+    },
+    {
+      "kind": "item",
+      "text": "Flere prestasjoner samtidig. Ctrl+klikk eller Shift+klikk på prestasjoner, og lås dem deretter opp, fjern dem eller lås dem igjen sammen."
+    },
+    {
+      "kind": "item",
+      "text": "Ignorer en advarsel i Spilltilstand for ett spill og ett funn."
+    },
+    {
+      "kind": "item",
+      "text": "Låste prestasjoner er nedtonet for alle kilder med ett enkelt bilde per prestasjon, og en prestasjon uten bilde viser spillets ikon."
+    },
+    {
+      "kind": "item",
+      "text": "Rettinger: teller-prestasjoner låses opp under GBE Fork, en skanning bytter ikke lenger ut et crackket Ubisoft-spills egen loader, Spilltilstand lar Steams dll i Denuvo-spill være i fred, ett spill uten liste starter ikke lenger en ny skanning av hele biblioteket, Steam-opplåsinger varsles på en datamaskin med feil klokke, og spill som står likt i en sortering ordnes etter navn."
+    },
+    {
+      "kind": "text",
+      "text": "Se hele endringsloggen for den fullstendige listen."
+    }
+  ]
+}

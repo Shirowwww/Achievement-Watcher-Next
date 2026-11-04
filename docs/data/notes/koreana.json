@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Steam과 Playnite 안에서 도전 과제를 확인하고, 다시 컴파일된 PC 포트와 PS3Recomp 게임이 새 소스로 추가되며, 탈옥한 PS3나 PS4에서 트로피를 바로 읽고, 긴 도전 과제 아래에 체크할 수 있는 단계를 추가할 수 있습니다."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam과 Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Steam 라이브러리용 Millennium 플러그인. AW Next가 인식하는 비 Steam 바로가기에 Steam 고유의 도전 과제 섹션, 플레이 바 카운터, 전체 목록, Big Picture 탭이 표시되며 새 달성이 들어오면 갱신됩니다. 아래에서 aw-next-millennium.zip을 내려받으세요."
+    },
+    {
+      "kind": "item",
+      "text": "Playnite 확장 기능. Playnite에서 게임을 마우스 오른쪽 버튼으로 클릭해 AW Next 도전 과제를 열거나, 게임 세부 정보에 AW Next 패널을 배치하는 테마를 사용하세요. 아래에서 .pext를 내려받으세요."
+    },
+    {
+      "kind": "heading",
+      "text": "새 소스"
+    },
+    {
+      "kind": "item",
+      "text": "다시 컴파일된 PC 포트: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered, SMS Launcher (Super Mario Sunshine 및 Super Mario Eclipse). Windows와 Linux에서 지원됩니다."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp 포트가 PlayStation 고유의 희귀도와 함께 트로피를 표시합니다."
+    },
+    {
+      "kind": "item",
+      "text": "PSN 로그인이 어려운 탈옥 콘솔을 위해 FTP로 PS3나 PS4의 트로피를 가져옵니다. 콘솔에는 아무것도 기록되지 않습니다."
+    },
+    {
+      "kind": "heading",
+      "text": "그 밖의 새로운 점"
+    },
+    {
+      "kind": "item",
+      "text": "도전 과제 아래의 단계. 긴 도전 과제를 직접 작성하고 체크하는 단계로 나눌 수 있으며, 앱과 게임 내 오버레이에서 모두 쓸 수 있고 목록을 파일로 공유할 수 있습니다."
+    },
+    {
+      "kind": "item",
+      "text": "여러 도전 과제를 한꺼번에. 도전 과제를 Ctrl+클릭 또는 Shift+클릭한 뒤 함께 달성 처리하거나 지우거나 다시 잠글 수 있습니다."
+    },
+    {
+      "kind": "item",
+      "text": "게임 하나와 항목 하나에 대해 게임 상태 경고를 무시할 수 있습니다."
+    },
+    {
+      "kind": "item",
+      "text": "도전 과제마다 그림이 하나뿐인 모든 소스에서 잠긴 도전 과제가 회색으로 표시되고, 그림이 없는 도전 과제에는 게임 아이콘이 표시됩니다."
+    },
+    {
+      "kind": "item",
+      "text": "수정: 카운터형 도전 과제가 GBE Fork에서 달성됩니다. 스캔이 크랙된 Ubisoft 게임의 자체 로더를 더 이상 교체하지 않습니다. 게임 상태가 Denuvo 게임의 Steam dll을 건드리지 않습니다. 목록이 없는 게임 하나 때문에 라이브러리 전체를 다시 스캔하지 않습니다. 시계가 어긋난 PC에서도 Steam 달성이 알림으로 표시됩니다. 정렬에서 동률인 게임은 이름순으로 정렬됩니다."
+    },
+    {
+      "kind": "text",
+      "text": "전체 목록은 변경 내역을 참고하세요."
+    }
+  ]
+}

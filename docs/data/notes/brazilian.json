@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Suas conquistas dentro do Steam e do Playnite, ports de PC recompilados e jogos PS3Recomp como novas fontes, troféus lidos direto de um PS3 ou PS4 com jailbreak e etapas que você pode marcar sob uma conquista longa."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam e Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Um plugin Millennium para a biblioteca do Steam. Um atalho fora do Steam que o AW Next reconhece ganha a própria seção Conquistas do Steam, o contador da barra de jogo, a lista completa e a aba do Big Picture, atualizados conforme os desbloqueios chegam. Baixe aw-next-millennium.zip abaixo."
+    },
+    {
+      "kind": "item",
+      "text": "Uma extensão do Playnite. Clique com o botão direito em um jogo no Playnite e abra AW Next achievements, ou use um tema que coloque os painéis do AW Next nos detalhes do jogo. Baixe o .pext abaixo."
+    },
+    {
+      "kind": "heading",
+      "text": "Novas fontes"
+    },
+    {
+      "kind": "item",
+      "text": "Ports de PC recompilados: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered e SMS Launcher (Super Mario Sunshine e Super Mario Eclipse), no Windows e no Linux."
+    },
+    {
+      "kind": "item",
+      "text": "Os ports PS3Recomp mostram seus troféus, com a raridade própria da PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Troféus de um PS3 ou PS4 por FTP, para um console com jailbreak quando entrar na PSN não é uma opção. Nada é gravado no console."
+    },
+    {
+      "kind": "heading",
+      "text": "Também novo"
+    },
+    {
+      "kind": "item",
+      "text": "Etapas sob uma conquista. Divida uma conquista longa em etapas que você mesmo escreve e marca, no app e no overlay no jogo, e compartilhe a lista como arquivo."
+    },
+    {
+      "kind": "item",
+      "text": "Várias conquistas de uma vez. Ctrl+clique ou Shift+clique nas conquistas e depois destrave, limpe ou bloqueie novamente todas juntas."
+    },
+    {
+      "kind": "item",
+      "text": "Ignore um aviso do Estado do jogo para um só jogo e uma só constatação."
+    },
+    {
+      "kind": "item",
+      "text": "As conquistas bloqueadas ficam cinza em toda fonte com uma única imagem por conquista, e uma conquista sem imagem mostra o ícone do jogo."
+    },
+    {
+      "kind": "item",
+      "text": "Correções: conquistas com contador são destravadas no GBE Fork, uma verificação não troca mais o loader próprio de um jogo Ubisoft crackeado, o Estado do jogo deixa em paz a dll do Steam dos jogos com Denuvo, um jogo sem a sua lista não refaz mais a verificação da biblioteca inteira, os desbloqueios do Steam notificam em um PC com o relógio errado, e jogos empatados em uma ordenação se alinham por nome."
+    },
+    {
+      "kind": "text",
+      "text": "Veja o changelog completo para a lista inteira."
+    }
+  ]
+}

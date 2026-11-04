@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Başarımlarınız doğrudan Steam ve Playnite içinde, yeniden derlenmiş PC portları ve PS3Recomp oyunları yeni kaynaklar olarak, jailbreak'li bir PS3 veya PS4'ten doğrudan okunan kupalar ve uzun bir başarımın altında işaretleyebileceğiniz adımlar."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam ve Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Steam kitaplığı için bir Millennium eklentisi. AW Next'in tanıdığı Steam dışı bir kısayol, Steam'in kendi Başarımlar bölümünü, oyun çubuğu sayacını, tam listeyi ve Big Picture sekmesini alır; yeni kilit açmalar geldikçe güncellenir. Aşağıdan aw-next-millennium.zip dosyasını indirin."
+    },
+    {
+      "kind": "item",
+      "text": "Bir Playnite uzantısı. Playnite'ta bir oyuna sağ tıklayıp AW Next başarımlarını açın veya AW Next panellerini oyunun ayrıntılarına yerleştiren bir tema kullanın. Aşağıdan .pext dosyasını indirin."
+    },
+    {
+      "kind": "heading",
+      "text": "Yeni kaynaklar"
+    },
+    {
+      "kind": "item",
+      "text": "Yeniden derlenmiş PC portları: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered ve SMS Launcher (Super Mario Sunshine ve Super Mario Eclipse), Windows ve Linux'ta."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp portları kupalarını PlayStation'ın kendi nadirlik değerleriyle gösterir."
+    },
+    {
+      "kind": "item",
+      "text": "PSN'e giriş yapmanın mümkün olmadığı, jailbreak'li bir konsol için FTP üzerinden PS3 veya PS4 kupaları. Konsola hiçbir şey yazılmaz."
+    },
+    {
+      "kind": "heading",
+      "text": "Ayrıca yeni"
+    },
+    {
+      "kind": "item",
+      "text": "Başarımın altında adımlar. Uzun bir başarımı, kendinizin yazıp işaretlediği adımlara bölün; uygulamada ve oyun içi katmanda, ve listeyi dosya olarak paylaşın."
+    },
+    {
+      "kind": "item",
+      "text": "Aynı anda birden fazla başarım. Başarımlara Ctrl+tıklayın veya Shift+tıklayın, ardından hepsinin kilidini birlikte açın, temizleyin veya yeniden kilitleyin."
+    },
+    {
+      "kind": "item",
+      "text": "Bir oyun ve bir bulgu için Oyun durumu uyarısını yok sayabilirsiniz."
+    },
+    {
+      "kind": "item",
+      "text": "Başarım başına tek resmi olan her kaynakta kilitli başarımlar grileştirilir ve resmi olmayan bir başarım oyunun simgesini gösterir."
+    },
+    {
+      "kind": "item",
+      "text": "Düzeltmeler: sayaç başarımları GBE Fork altında açılır, bir tarama artık kırılmış bir Ubisoft oyununun kendi yükleyicisini değiştirmez, Oyun durumu Denuvo oyunlarının Steam dll'sine dokunmaz, listesi olmayan tek bir oyun artık tüm kitaplığı yeniden taratmaz, Steam kilit açmaları saati yanlış olan bir PC'de bildirim verir ve sıralamada eşit çıkan oyunlar ada göre dizilir."
+    },
+    {
+      "kind": "text",
+      "text": "Tam liste için değişiklik günlüğüne bakın."
+    }
+  ]
+}

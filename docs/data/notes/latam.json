@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Tus logros dentro de Steam y Playnite, ports de PC recompilados y juegos de PS3Recomp como fuentes nuevas, trofeos leídos directamente de una PS3 o PS4 con jailbreak, y pasos que puedes ir marcando debajo de un logro largo."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam y Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Un plugin de Millennium para la biblioteca de Steam. Un acceso directo que no es de Steam y que AW Next reconoce obtiene la sección Logros propia de Steam, el contador de la barra de juego, la lista completa y la pestaña de Big Picture, actualizados a medida que llegan los desbloqueos. Descarga aw-next-millennium.zip más abajo."
+    },
+    {
+      "kind": "item",
+      "text": "Una extensión de Playnite. Haz clic derecho en un juego en Playnite y abre AW Next achievements, o usa un tema que ponga los paneles de AW Next en los detalles del juego. Descarga el .pext más abajo."
+    },
+    {
+      "kind": "heading",
+      "text": "Fuentes nuevas"
+    },
+    {
+      "kind": "item",
+      "text": "Ports de PC recompilados: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered y SMS Launcher (Super Mario Sunshine y Super Mario Eclipse), en Windows y Linux."
+    },
+    {
+      "kind": "item",
+      "text": "Los ports de PS3Recomp muestran sus trofeos, con la rareza propia de PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Trofeos de una PS3 o PS4 mediante FTP, para una consola con jailbreak cuando iniciar sesión en PSN no es una opción. No se escribe nada en la consola."
+    },
+    {
+      "kind": "heading",
+      "text": "También nuevo"
+    },
+    {
+      "kind": "item",
+      "text": "Pasos debajo de un logro. Divide un logro largo en pasos que escribes y marcas tú mismo, en la aplicación y en el overlay en el juego, y comparte la lista como archivo."
+    },
+    {
+      "kind": "item",
+      "text": "Varios logros a la vez. Ctrl+clic o Mayús+clic en los logros y luego desbloquéalos, bórralos o vuelve a bloquearlos todos juntos."
+    },
+    {
+      "kind": "item",
+      "text": "Ignora una advertencia de Estado del juego para un solo juego y un solo hallazgo."
+    },
+    {
+      "kind": "item",
+      "text": "Los logros bloqueados se muestran en gris en todas las fuentes que tienen una sola imagen por logro, y un logro sin imagen muestra el ícono del juego."
+    },
+    {
+      "kind": "item",
+      "text": "Correcciones: los logros con contador se desbloquean con GBE Fork, un escaneo ya no cambia el cargador propio de un juego de Ubisoft crackeado, Estado del juego deja en paz la dll de Steam de los juegos con Denuvo, un juego sin su lista ya no vuelve a escanear toda la biblioteca, los desbloqueos de Steam notifican en una PC con el reloj mal configurado, y los juegos empatados en un orden se acomodan por nombre."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta el registro de cambios completo para ver la lista entera."
+    }
+  ]
+}

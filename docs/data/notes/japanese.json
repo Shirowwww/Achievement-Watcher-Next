@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Steam と Playnite の中で実績を確認でき、再コンパイルされた PC ポートと PS3Recomp のゲームが新しいソースになり、脱獄した PS3 や PS4 からトロフィーを直接読み取り、長い実績の下にチェックできるステップを追加できます。"
+    },
+    {
+      "kind": "heading",
+      "text": "Steam と Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Steam ライブラリ向けの Millennium プラグイン。AW Next が認識する非 Steam ショートカットに、Steam 本来の実績セクション、プレイバーのカウンター、完全なリスト、Big Picture のタブが表示され、解除が入るたびに更新されます。下の aw-next-millennium.zip をダウンロードしてください。"
+    },
+    {
+      "kind": "item",
+      "text": "Playnite の拡張機能。Playnite でゲームを右クリックして AW Next の実績を開くか、ゲームの詳細に AW Next のパネルを配置するテーマを使います。下の .pext をダウンロードしてください。"
+    },
+    {
+      "kind": "heading",
+      "text": "新しいソース"
+    },
+    {
+      "kind": "item",
+      "text": "再コンパイルされた PC ポート：Dusklight (Twilight Princess)、Ghostship (Super Mario 64)、DKR-R (Diddy Kong Racing)、Super Mario Bros. Remastered、SMS Launcher (Super Mario Sunshine と Super Mario Eclipse)。Windows と Linux に対応します。"
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp のポートでトロフィーを表示し、PlayStation 自身のレア度も反映されます。"
+    },
+    {
+      "kind": "item",
+      "text": "PSN へのサインインができない脱獄済みコンソール向けに、FTP 経由で PS3 や PS4 のトロフィーを取得します。コンソールには何も書き込まれません。"
+    },
+    {
+      "kind": "heading",
+      "text": "その他の新機能"
+    },
+    {
+      "kind": "item",
+      "text": "実績の下のステップ。長い実績を、自分で書いてチェックするステップに分けられます。アプリでもゲーム内オーバーレイでも使え、リストをファイルとして共有できます。"
+    },
+    {
+      "kind": "item",
+      "text": "複数の実績をまとめて操作。Ctrl+クリックや Shift+クリックで実績を選び、まとめて解除、クリア、再ロックできます。"
+    },
+    {
+      "kind": "item",
+      "text": "ゲームの状態の警告を、1 つのゲームの 1 つの項目に限って無視できます。"
+    },
+    {
+      "kind": "item",
+      "text": "実績ごとに画像が 1 つしかないすべてのソースで、ロック中の実績がグレーアウトされ、画像のない実績にはゲームのアイコンが表示されます。"
+    },
+    {
+      "kind": "item",
+      "text": "修正：カウンター型の実績が GBE Fork で解除される、スキャンがクラック版 Ubisoft ゲームの独自ローダーを入れ替えない、ゲームの状態が Denuvo ゲームの Steam dll に触れない、リストのない 1 つのゲームのせいでライブラリ全体が再スキャンされない、PC の時計がずれていても Steam の解除が通知される、並べ替えで同順位のゲームが名前順に並ぶ。"
+    },
+    {
+      "kind": "text",
+      "text": "完全な一覧は変更履歴をご覧ください。"
+    }
+  ]
+}

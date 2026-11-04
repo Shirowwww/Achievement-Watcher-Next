@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Dina prestationer direkt i Steam och Playnite, omkompilerade PC-portar och PS3Recomp-spel som nya källor, troféer som läses direkt från en jailbreakad PS3 eller PS4, och steg som du kan bocka av under en lång prestation."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam och Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Ett Millennium-tillägg för Steam-biblioteket. En genväg utanför Steam som AW Next känner igen får Steams egen sektion Prestationer, räknaren i spelfältet, hela listan och en flik i Big Picture, uppdaterade när upplåsningar kommer in. Ladda ner aw-next-millennium.zip nedan."
+    },
+    {
+      "kind": "item",
+      "text": "Ett Playnite-tillägg. Högerklicka på ett spel i Playnite och öppna AW Next-prestationer, eller använd ett tema som placerar AW Nexts paneler i spelets detaljer. Ladda ner .pext-filen nedan."
+    },
+    {
+      "kind": "heading",
+      "text": "Nya källor"
+    },
+    {
+      "kind": "item",
+      "text": "Omkompilerade PC-portar: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered och SMS Launcher (Super Mario Sunshine och Super Mario Eclipse), i Windows och Linux."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp-portar visar sina troféer, med PlayStations egen sällsynthet."
+    },
+    {
+      "kind": "item",
+      "text": "Troféer från en PS3 eller PS4 via FTP, för en jailbreakad konsol när det inte går att logga in på PSN. Ingenting skrivs till konsolen."
+    },
+    {
+      "kind": "heading",
+      "text": "Även nytt"
+    },
+    {
+      "kind": "item",
+      "text": "Steg under en prestation. Dela upp en lång prestation i steg som du själv skriver och bockar av, i appen och i overlayen i spelet, och dela listan som en fil."
+    },
+    {
+      "kind": "item",
+      "text": "Flera prestationer på en gång. Ctrl+klicka eller Skift+klicka på prestationer och lås sedan upp, rensa eller lås dem igen tillsammans."
+    },
+    {
+      "kind": "item",
+      "text": "Ignorera en varning i Spelets hälsa för ett spel och ett fynd."
+    },
+    {
+      "kind": "item",
+      "text": "Låsta prestationer är gråtonade för varje källa med en enda bild per prestation, och en prestation utan bild visar spelets ikon."
+    },
+    {
+      "kind": "item",
+      "text": "Rättningar: räknarprestationer låses upp under GBE Fork, en skanning byter inte längre ut ett crackat Ubisoft-spels egen loader, Spelets hälsa låter Steams dll i Denuvo-spel vara, ett spel utan lista startar inte längre en ny skanning av hela biblioteket, Steam-upplåsningar aviseras på en dator med fel klocka och spel som delar plats i en sortering ordnas efter namn."
+    },
+    {
+      "kind": "text",
+      "text": "Se hela ändringsloggen för den fullständiga listan."
+    }
+  ]
+}

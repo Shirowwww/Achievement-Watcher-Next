@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Je prestaties binnen Steam en Playnite, gerecompileerde pc-ports en PS3Recomp-games als nieuwe bronnen, trofeeën rechtstreeks gelezen van een gejailbreakte PS3 of PS4, en stappen die je kunt afvinken onder een lange prestatie."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam en Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Een Millennium-plug-in voor de Steam-bibliotheek. Een niet-Steam-snelkoppeling die AW Next herkent krijgt Steams eigen sectie Prestaties, de teller in de spelbalk, de volledige lijst en het tabblad in Big Picture, bijgewerkt zodra er ontgrendelingen binnenkomen. Download hieronder aw-next-millennium.zip."
+    },
+    {
+      "kind": "item",
+      "text": "Een Playnite-extensie. Klik met de rechtermuisknop op een game in Playnite en open AW Next achievements, of gebruik een thema dat de panelen van AW Next in de details van de game plaatst. Download hieronder de .pext."
+    },
+    {
+      "kind": "heading",
+      "text": "Nieuwe bronnen"
+    },
+    {
+      "kind": "item",
+      "text": "Gerecompileerde pc-ports: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered en SMS Launcher (Super Mario Sunshine en Super Mario Eclipse), op Windows en Linux."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp-ports tonen hun trofeeën, met de eigen zeldzaamheid van PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Trofeeën van een PS3 of PS4 via FTP, voor een gejailbreakte console als aanmelden bij PSN geen optie is. Er wordt niets naar de console geschreven."
+    },
+    {
+      "kind": "heading",
+      "text": "Ook nieuw"
+    },
+    {
+      "kind": "item",
+      "text": "Stappen onder een prestatie. Splits een lange prestatie in stappen die je zelf schrijft en afvinkt, in de app en in de in-game overlay, en deel de lijst als bestand."
+    },
+    {
+      "kind": "item",
+      "text": "Meerdere prestaties tegelijk. Ctrl+klik of Shift+klik op prestaties en ontgrendel, wis of vergrendel ze daarna opnieuw samen."
+    },
+    {
+      "kind": "item",
+      "text": "Negeer een waarschuwing van Gamestatus voor één game en één bevinding."
+    },
+    {
+      "kind": "item",
+      "text": "Vergrendelde prestaties worden grijs weergegeven voor elke bron met één afbeelding per prestatie, en een prestatie zonder afbeelding toont het pictogram van de game."
+    },
+    {
+      "kind": "item",
+      "text": "Verbeteringen: prestaties met een teller worden ontgrendeld onder GBE Fork, een scan verwisselt de eigen loader van een gekraakte Ubisoft-game niet meer, Gamestatus laat de Steam-dll van Denuvo-games met rust, één game zonder lijst laat niet meer de hele bibliotheek opnieuw scannen, Steam-ontgrendelingen melden zich op een pc met een verkeerde klok, en games die gelijk staan in een sortering komen op naam te staan."
+    },
+    {
+      "kind": "text",
+      "text": "Bekijk het volledige changelog voor de complete lijst."
+    }
+  ]
+}

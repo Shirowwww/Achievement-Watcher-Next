@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Twoje osiągnięcia w Steam i Playnite, zrekompilowane porty na PC i gry PS3Recomp jako nowe źródła, trofea odczytywane prosto z konsoli PS3 lub PS4 po jailbreaku oraz kroki, które możesz odznaczać pod długim osiągnięciem."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam i Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Wtyczka Millennium dla biblioteki Steam. Skrót spoza Steam, który AW Next rozpoznaje, dostaje własną sekcję Osiągnięcia ze Steam, licznik na pasku gry, pełną listę i kartę w Big Picture, aktualizowane na bieżąco wraz z odblokowaniami. Pobierz aw-next-millennium.zip poniżej."
+    },
+    {
+      "kind": "item",
+      "text": "Rozszerzenie Playnite. Kliknij grę w Playnite prawym przyciskiem i otwórz osiągnięcia AW Next albo użyj motywu, który umieszcza panele AW Next w szczegółach gry. Pobierz plik .pext poniżej."
+    },
+    {
+      "kind": "heading",
+      "text": "Nowe źródła"
+    },
+    {
+      "kind": "item",
+      "text": "Zrekompilowane porty na PC: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered i SMS Launcher (Super Mario Sunshine oraz Super Mario Eclipse), w Windows i Linuksie."
+    },
+    {
+      "kind": "item",
+      "text": "Porty PS3Recomp pokazują swoje trofea, z rzadkością podaną przez PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Trofea z PS3 lub PS4 przez FTP, dla konsoli po jailbreaku, gdy logowanie do PSN nie wchodzi w grę. Na konsoli nic nie jest zapisywane."
+    },
+    {
+      "kind": "heading",
+      "text": "Także nowe"
+    },
+    {
+      "kind": "item",
+      "text": "Kroki pod osiągnięciem. Podziel długie osiągnięcie na kroki, które sam wpisujesz i odznaczasz, w aplikacji i w nakładce w grze, a listę możesz udostępnić jako plik."
+    },
+    {
+      "kind": "item",
+      "text": "Kilka osiągnięć naraz. Kliknij osiągnięcia z klawiszem Ctrl lub Shift, a potem odblokuj je, wyczyść lub zablokuj ponownie wszystkie razem."
+    },
+    {
+      "kind": "item",
+      "text": "Ignorowanie ostrzeżenia Stanu gry dla jednej gry i jednego znaleziska."
+    },
+    {
+      "kind": "item",
+      "text": "Zablokowane osiągnięcia są wyszarzone w każdym źródle z jednym obrazem na osiągnięcie, a osiągnięcie bez obrazu pokazuje ikonę gry."
+    },
+    {
+      "kind": "item",
+      "text": "Poprawki: osiągnięcia licznikowe odblokowują się w GBE Fork, skanowanie nie podmienia już własnego loadera gry Ubisoftu z crackiem, Stan gry zostawia w spokoju bibliotekę dll Steam w grach z Denuvo, jedna gra bez listy nie powoduje już ponownego skanowania całej biblioteki, odblokowania Steam są ogłaszane na komputerze z błędnym zegarem, a gry remisujące w sortowaniu ustawiają się według nazwy."
+    },
+    {
+      "kind": "text",
+      "text": "Pełną listę znajdziesz w pełnej liście zmian."
+    }
+  ]
+}

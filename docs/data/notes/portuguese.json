@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "As tuas proezas dentro do Steam e do Playnite, ports de PC recompilados e jogos PS3Recomp como novas fontes, troféus lidos diretamente de uma PS3 ou PS4 com jailbreak e passos que podes assinalar sob uma proeza longa."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam e Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Um plugin Millennium para a biblioteca do Steam. Um atalho fora do Steam que o AW Next reconhece recebe a secção Proezas do próprio Steam, o contador da barra de jogo, a lista completa e o separador do Big Picture, atualizados à medida que chegam os desbloqueios. Descarrega aw-next-millennium.zip abaixo."
+    },
+    {
+      "kind": "item",
+      "text": "Uma extensão do Playnite. Clica com o botão direito num jogo no Playnite e abre AW Next achievements, ou usa um tema que coloque os painéis do AW Next nos detalhes do jogo. Descarrega o .pext abaixo."
+    },
+    {
+      "kind": "heading",
+      "text": "Novas fontes"
+    },
+    {
+      "kind": "item",
+      "text": "Ports de PC recompilados: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered e SMS Launcher (Super Mario Sunshine e Super Mario Eclipse), no Windows e no Linux."
+    },
+    {
+      "kind": "item",
+      "text": "Os ports PS3Recomp mostram os seus troféus, com a raridade própria da PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Troféus de uma PS3 ou PS4 por FTP, para uma consola com jailbreak quando iniciar sessão na PSN não é opção. Nada é escrito na consola."
+    },
+    {
+      "kind": "heading",
+      "text": "Também novo"
+    },
+    {
+      "kind": "item",
+      "text": "Passos sob uma proeza. Divide uma proeza longa em passos que escreves e assinalas tu, na aplicação e no overlay no jogo, e partilha a lista como ficheiro."
+    },
+    {
+      "kind": "item",
+      "text": "Várias proezas de uma só vez. Ctrl+clique ou Shift+clique nas proezas e depois desbloqueia-as, limpa-as ou volta a bloqueá-las em conjunto."
+    },
+    {
+      "kind": "item",
+      "text": "Ignora um aviso do Estado do jogo para um só jogo e uma só deteção."
+    },
+    {
+      "kind": "item",
+      "text": "As proezas bloqueadas ficam a cinzento em todas as fontes com uma única imagem por proeza, e uma proeza sem imagem mostra o ícone do jogo."
+    },
+    {
+      "kind": "item",
+      "text": "Correções: as proezas com contador desbloqueiam-se no GBE Fork, uma verificação já não troca o loader próprio de um jogo Ubisoft crackado, o Estado do jogo deixa em paz a dll do Steam dos jogos com Denuvo, um jogo sem a sua lista já não volta a verificar toda a biblioteca, os desbloqueios do Steam notificam num PC com o relógio errado, e os jogos empatados numa ordenação alinham-se por nome."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta o registo de alterações completo para ver a lista inteira."
+    }
+  ]
+}

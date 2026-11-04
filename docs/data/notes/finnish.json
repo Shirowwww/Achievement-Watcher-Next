@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Saavutuksesi suoraan Steamissä ja Playnitessa, uudelleenkäännetyt PC-portit ja PS3Recomp-pelit uusina lähteinä, pokaalit luettuna suoraan jailbreakatusta PS3:sta tai PS4:stä sekä vaiheet, jotka voit merkitä tehdyiksi pitkän saavutuksen alla."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam ja Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Millennium-lisäosa Steam-kirjastolle. Steamin ulkopuolinen pikakuvake, jonka AW Next tunnistaa, saa Steamin oman Saavutukset-osion, pelipalkin laskurin, koko luettelon ja Big Picture -välilehden, jotka päivittyvät avausten tullessa. Lataa aw-next-millennium.zip alta."
+    },
+    {
+      "kind": "item",
+      "text": "Playnite-laajennus. Napsauta peliä hiiren kakkospainikkeella Playnitessa ja avaa AW Nextin saavutukset tai käytä teemaa, joka sijoittaa AW Nextin paneelit pelin tietoihin. Lataa .pext-tiedosto alta."
+    },
+    {
+      "kind": "heading",
+      "text": "Uudet lähteet"
+    },
+    {
+      "kind": "item",
+      "text": "Uudelleenkäännetyt PC-portit: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered ja SMS Launcher (Super Mario Sunshine ja Super Mario Eclipse), Windowsissa ja Linuxissa."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp-portit näyttävät pokaalinsa PlayStationin omalla harvinaisuudella."
+    },
+    {
+      "kind": "item",
+      "text": "Pokaalit PS3:sta tai PS4:stä FTP:n kautta jailbreakattua konsolia varten, kun PSN:ään kirjautuminen ei ole vaihtoehto. Konsoliin ei kirjoiteta mitään."
+    },
+    {
+      "kind": "heading",
+      "text": "Myös uutta"
+    },
+    {
+      "kind": "item",
+      "text": "Vaiheet saavutuksen alla. Jaa pitkä saavutus vaiheisiin, jotka kirjoitat ja merkitset itse, sovelluksessa ja pelinsisäisessä overlayssa, ja jaa luettelo tiedostona."
+    },
+    {
+      "kind": "item",
+      "text": "Useita saavutuksia kerralla. Ctrl+napsauta tai Shift+napsauta saavutuksia ja avaa, tyhjennä tai lukitse ne sitten uudelleen yhdessä."
+    },
+    {
+      "kind": "item",
+      "text": "Ohita Pelin kunto -varoitus yhden pelin ja yhden havainnon osalta."
+    },
+    {
+      "kind": "item",
+      "text": "Lukitut saavutukset harmaannutetaan jokaisessa lähteessä, jossa on yksi kuva saavutusta kohden, ja saavutus ilman kuvaa näyttää pelin kuvakkeen."
+    },
+    {
+      "kind": "item",
+      "text": "Korjaukset: laskurisaavutukset aukeavat GBE Forkin alla, skannaus ei enää vaihda murretun Ubisoft-pelin omaa latainta, Pelin kunto jättää Denuvo-pelien Steam-dll:n rauhaan, yksi peli ilman luetteloa ei enää käynnistä koko kirjaston uutta skannausta, Steam-avaukset ilmoitetaan tietokoneella, jonka kello on väärässä, ja lajittelussa tasapisteessä olevat pelit järjestyvät nimen mukaan."
+    },
+    {
+      "kind": "text",
+      "text": "Koko luettelo on koko muutoslokissa."
+    }
+  ]
+}

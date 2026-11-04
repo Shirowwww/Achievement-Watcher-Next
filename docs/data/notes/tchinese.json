@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "在 Steam 和 Playnite 中查看你的成就，重新編譯的 PC 移植版和 PS3Recomp 遊戲成為新來源，可直接從已越獄的 PS3 或 PS4 讀取獎盃，還能在較長的成就下加入可勾選的步驟。"
+    },
+    {
+      "kind": "heading",
+      "text": "Steam 和 Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "適用於 Steam 遊戲庫的 Millennium 外掛程式。AW Next 辨識的非 Steam 捷徑會取得 Steam 原生的成就區段、遊玩列計數器、完整清單和 Big Picture 分頁，並隨新的解鎖而更新。請在下方下載 aw-next-millennium.zip。"
+    },
+    {
+      "kind": "item",
+      "text": "Playnite 擴充功能。在 Playnite 中以滑鼠右鍵按一下遊戲並開啟 AW Next 成就，或使用將 AW Next 面板放入遊戲詳細資料的佈景主題。請在下方下載 .pext。"
+    },
+    {
+      "kind": "heading",
+      "text": "新來源"
+    },
+    {
+      "kind": "item",
+      "text": "重新編譯的 PC 移植版：Dusklight (Twilight Princess)、Ghostship (Super Mario 64)、DKR-R (Diddy Kong Racing)、Super Mario Bros. Remastered 和 SMS Launcher (Super Mario Sunshine 與 Super Mario Eclipse)，支援 Windows 和 Linux。"
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp 移植版會顯示其獎盃，並附上 PlayStation 本身的稀有度。"
+    },
+    {
+      "kind": "item",
+      "text": "透過 FTP 取得 PS3 或 PS4 的獎盃，適用於無法登入 PSN 的已越獄主機。不會對主機寫入任何內容。"
+    },
+    {
+      "kind": "heading",
+      "text": "其他新功能"
+    },
+    {
+      "kind": "item",
+      "text": "成就下的步驟。將較長的成就拆成你自己撰寫並勾選的步驟，應用程式和遊戲內覆蓋層都能使用，還可將清單分享為檔案。"
+    },
+    {
+      "kind": "item",
+      "text": "一次操作多個成就。按住 Ctrl 或 Shift 點選成就，然後一起解鎖、清除或重新鎖定。"
+    },
+    {
+      "kind": "item",
+      "text": "可針對單一遊戲的單一檢查結果忽略遊戲健康狀態警告。"
+    },
+    {
+      "kind": "item",
+      "text": "對於每個成就只有一張圖片的所有來源，已鎖定的成就會變灰，沒有圖片的成就則顯示遊戲圖示。"
+    },
+    {
+      "kind": "item",
+      "text": "修正：計數型成就可在 GBE Fork 下解鎖，掃描不再替換已破解 Ubisoft 遊戲自帶的載入器，遊戲健康狀態不再動 Denuvo 遊戲的 Steam dll，單一缺少清單的遊戲不再造成整個遊戲庫重新掃描，電腦時鐘不準時 Steam 解鎖仍會通知，排序中並列的遊戲依名稱排列。"
+    },
+    {
+      "kind": "text",
+      "text": "完整清單請參閱更新日誌。"
+    }
+  ]
+}

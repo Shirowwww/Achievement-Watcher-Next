@@ -1,0 +1,64 @@
+{
+  "3.12.5": [
+    {
+      "kind": "text",
+      "text": "Deine Erfolge in Steam und Playnite, rekompilierte PC-Portierungen und PS3Recomp-Spiele als neue Quellen, Trophäen direkt von einer gejailbreakten PS3 oder PS4 gelesen und Schritte zum Abhaken unter einem langen Erfolg."
+    },
+    {
+      "kind": "heading",
+      "text": "Steam und Playnite"
+    },
+    {
+      "kind": "item",
+      "text": "Ein Millennium-Plugin für die Steam-Bibliothek. Eine Nicht-Steam-Verknüpfung, die AW Next erkennt, erhält den eigenen Bereich Erfolge von Steam, den Zähler in der Spielleiste, die vollständige Liste und den Reiter in Big Picture, aktualisiert, sobald Freischaltungen eintreffen. Lade unten aw-next-millennium.zip herunter."
+    },
+    {
+      "kind": "item",
+      "text": "Eine Playnite-Erweiterung. Klicke in Playnite mit der rechten Maustaste auf ein Spiel und öffne AW Next achievements, oder nutze ein Theme, das die Bereiche von AW Next in den Details des Spiels platziert. Lade unten die .pext herunter."
+    },
+    {
+      "kind": "heading",
+      "text": "Neue Quellen"
+    },
+    {
+      "kind": "item",
+      "text": "Rekompilierte PC-Portierungen: Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered und SMS Launcher (Super Mario Sunshine und Super Mario Eclipse), unter Windows und Linux."
+    },
+    {
+      "kind": "item",
+      "text": "PS3Recomp-Portierungen zeigen ihre Trophäen, mit der eigenen Seltenheit von PlayStation."
+    },
+    {
+      "kind": "item",
+      "text": "Trophäen von einer PS3 oder PS4 über FTP, für eine gejailbreakte Konsole, wenn die Anmeldung bei PSN keine Option ist. Auf die Konsole wird nichts geschrieben."
+    },
+    {
+      "kind": "heading",
+      "text": "Außerdem neu"
+    },
+    {
+      "kind": "item",
+      "text": "Schritte unter einem Erfolg. Teile einen langen Erfolg in Schritte auf, die du selbst schreibst und abhakst, in der App und im In-Game-Overlay, und teile die Liste als Datei."
+    },
+    {
+      "kind": "item",
+      "text": "Mehrere Erfolge auf einmal. Strg+Klick oder Umschalt+Klick auf Erfolge, dann gemeinsam freischalten, löschen oder erneut sperren."
+    },
+    {
+      "kind": "item",
+      "text": "Eine Warnung von Spielzustand für ein Spiel und einen Befund ignorieren."
+    },
+    {
+      "kind": "item",
+      "text": "Gesperrte Erfolge werden bei jeder Quelle mit einem einzigen Bild pro Erfolg ausgegraut, und ein Erfolg ohne Bild zeigt das Symbol des Spiels."
+    },
+    {
+      "kind": "item",
+      "text": "Korrekturen: Zähler-Erfolge schalten unter GBE Fork frei, ein Scan tauscht den eigenen Loader eines gecrackten Ubisoft-Spiels nicht mehr aus, Spielzustand lässt die Steam-dll von Denuvo-Spielen in Ruhe, ein Spiel ohne seine Liste löst keinen Neuscan der ganzen Bibliothek mehr aus, Steam-Freischaltungen melden sich auf einem PC mit falscher Uhr, und bei Gleichstand in einer Sortierung stehen Spiele nach Name geordnet."
+    },
+    {
+      "kind": "text",
+      "text": "Die vollständige Liste steht im vollständigen Änderungsprotokoll."
+    }
+  ]
+}
