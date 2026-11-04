@@ -524,6 +524,40 @@ function writtenWithoutEmulator(save, dlls) {
   }
 }
 
+// The stats GBE has stored for a game: one file per stat, named after it, in <save folder>/stats.
+function savedStatNames(saveFolders) {
+  const names = new Set();
+  for (const folder of saveFolders || []) {
+    if (!folder) continue;
+    try {
+      for (const entry of fs.readdirSync(path.join(folder, 'stats'), { withFileTypes: true })) if (entry.isFile()) names.add(entry.name);
+    } catch {
+      /* no stats written yet */
+    }
+  }
+  return [...names];
+}
+
+// Counter achievements of the schema that achievements.json (the emulator's copy) does not yet tie to
+// a stat, with the link the stats already written allow (#168).
+function inferredStatLinks({ steamSettings, schemaList, saveFolders }) {
+  const counters = (Array.isArray(schemaList) ? schemaList : []).filter((a) => a && a.counter);
+  if (counters.length === 0) return [];
+  const tied = new Set();
+  try {
+    for (const entry of JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'))) {
+      if (entry && entry.name && entry.progress && entry.progress.value && entry.progress.value.operand1) tied.add(String(entry.name).toUpperCase());
+    }
+  } catch {
+    /* an unreadable file is reported on its own */
+  }
+  return require(path.join(__dirname, 'statProgress.js')).inferStatLinks({
+    achievements: counters.filter((a) => !tied.has(String(a.name).toUpperCase())),
+    allNames: schemaList.filter((a) => a && a.name).map((a) => a.name),
+    statNames: savedStatNames(saveFolders),
+  });
+}
+
 function hasDeclaredStats(steamSettings) {
   try {
     const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'stats.json'), 'utf8'));
@@ -1159,6 +1193,14 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
       add('warning', 'UNKNOWN_STATS_REJECTED', 'stats.json declares no stat and configs.main.ini does not set [main::stats] allow_unknown_stats=1, so the game cannot record any stat.');
     }
   }
+  // Steam unlocks a counter achievement itself; GBE only does it for a stat achievements.json ties to
+  // it. A game missing from the public stats list has no tie, so the counter moves and nothing unlocks.
+  if (report.save && report.save.file) {
+    const links = inferredStatLinks({ steamSettings, schemaList: schema && schema.achievement && schema.achievement.list, saveFolders: [path.dirname(report.save.file)] });
+    if (links.length > 0) {
+      add('warning', 'STAT_LINK_MISSING', `${links.length} counter achievement(s) are not tied to the stat the game writes for them (${links.map((l) => l.name).join(', ')}), so GBE never unlocks them.`, { names: links.map((l) => l.name) });
+    }
+  }
   const userConfigFile = path.join(steamSettings, 'configs.user.ini');
   if (!fs.existsSync(userConfigFile)) {
     add('warning', 'NO_USER_CONFIG', 'configs.user.ini is missing - account name and language are not configured.');
@@ -1625,6 +1667,8 @@ async function repair({
   fillUserDefaults = false,
   // Optional async (appid) => { stats, progress } - see statProgress.fetchCommunityStats.
   fetchStats = null,
+  // Where the game's saves live, to read the stats it wrote; found from steamSettings when absent.
+  savesRoots = null,
   // Folders of the exes Steam shortcuts start (diagnose's report.launchDirs).
   launchDirs = [],
   // Optional progress sink: ({phase, done, total}), phase one of 'backup'|'icons'|'schema'|'config'|'done'.
@@ -1654,7 +1698,15 @@ async function repair({
       /* offline: the schema repair still stands on its own */
     }
   }
-  const achievementsJson = withProgress(buildAchievementsJson(schema, imagePrefix), community.progress);
+  // Counters the public list does not tie to a stat (a game it lacks) take the link from the stats
+  // the game wrote; what the list does know is given last, so it wins.
+  const roots = savesRoots || writableSavesRoots(steamSettings, appid);
+  const inferred = inferredStatLinks({
+    steamSettings,
+    schemaList: schema && schema.achievement && schema.achievement.list,
+    saveFolders: [resolveLocalSaveDir({ steamSettings, appid }), ...roots.map(({ root }) => path.join(root, String(appid)))],
+  });
+  const achievementsJson = withProgress(buildAchievementsJson(schema, imagePrefix), [...inferred, ...(community.progress || [])]);
   const preserveRichSchema = hasRichProgressSchema(steamSettings, schema);
   const stats = Array.isArray(community.stats) ? community.stats : [];
   const summary = { steamSettings, achievementsJson, preservedRichSchema: preserveRichSchema, wroteAppId: false, backupDir: null, icons: { downloaded: 0, failed: 0, skipped: 0 }, dlc: null, main: null, user: null, stats: 0 };

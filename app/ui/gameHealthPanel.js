@@ -306,6 +306,11 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
         : emu.type !== 'none' || !!emu.steamSettings || emu.dll.length > 0;
       if (hasSetupOnDisk || (readsGoldbergSave && !usesUplayLayer)) {
         emulated = true;
+        // The panel the user opens asks Steam once (cached a week) for the counters an older cached schema lacks.
+        if (!readOnly) await require(path.join(appPath, 'parser/statProgress.js')).attachOfficialCounters(game, writableAppid, { cacheDir: getUserDataPath() }).catch((err) => {
+          debug.log(`[health] official counters failed for ${writableAppid} => ${formatErr(err)}`);
+          return 0;
+        });
         const report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
         /*
           Which build sits in each folder the emulator could be loaded from. A count of dlls and a

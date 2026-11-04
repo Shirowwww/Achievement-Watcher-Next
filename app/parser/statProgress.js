@@ -178,6 +178,39 @@ async function fetchCommunityStats(appid, { cacheDir, getJson } = {}) {
 }
 
 /*
+  Counter achievements (schema entries carrying `counter: {min, max}`, from Steam's own list) that
+  nothing ties to a stat yet, matched with the stats the game wrote. Steam names the goal but not
+  the stat, and a game missing from games-infos-datas has no other source. A stat belongs to an
+  achievement when it is that achievement's name or ends with `_<name>` (rmostat_rank_rmo_ach_19 for
+  ACH_19); a stat or an achievement with two candidates is skipped, a wrong link being worse than none.
+  Returns entries in the GBE `progress` shape, like communityProgressEntries.
+*/
+function inferStatLinks({ achievements = [], statNames = [], allNames = null } = {}) {
+  const counters = (Array.isArray(achievements) ? achievements : []).filter(
+    (a) => a && a.name && a.counter && Number(a.counter.max) > 0 && !(a.progress && a.progress.value && a.progress.value.operand1)
+  );
+  const stats = [...new Set((Array.isArray(statNames) ? statNames : []).map(String).filter(Boolean))];
+  const owns = (stat, name) => {
+    const s = stat.toLowerCase();
+    const n = String(name).toLowerCase();
+    return s === n || s.endsWith(`_${n}`);
+  };
+  // Every achievement of the game counts for ambiguity, not only the counters still untied.
+  const everyName = Array.isArray(allNames) ? allNames.map(String) : counters.map((a) => String(a.name));
+  const links = [];
+  for (const achievement of counters) {
+    const candidates = stats.filter((stat) => owns(stat, achievement.name));
+    if (candidates.length !== 1) continue;
+    if (everyName.filter((name) => owns(candidates[0], name)).length !== 1) continue;
+    links.push({
+      name: String(achievement.name),
+      progress: { min_val: Number(achievement.counter.min) || 0, max_val: Number(achievement.counter.max), value: { operation: 'statvalue', operand1: candidates[0] } },
+    });
+  }
+  return links;
+}
+
+/*
   Where the stat -> achievement table for a game comes from, without writing anything:
   - 'game'  the emulator's own steam_settings schema
   - 'steam' the Steam client's appcache
@@ -254,6 +287,7 @@ function countOfficialProgress(response) {
 }
 
 const OFFICIAL_PROGRESS_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const COUNTERS_FETCH_TIMEOUT_MS = 8000;
 
 // The count above for one appid, cached for a week beside the tables. null when Steam could not be
 // asked, which is not the same answer as 0.
@@ -283,7 +317,56 @@ async function officialProgressCount(appid, { cacheDir, fetchImpl = globalThis.f
   }
 }
 
+/*
+  A schema cached before AW kept `counter` (see steamSchemaFetch.mapOfficialAchievements) has none,
+  and is never refetched. Complete it in place from Steam's list, asked once a week at most, so
+  inferStatLinks has the goals. Returns how many entries now carry one; a failed ask changes nothing.
+*/
+async function attachOfficialCounters(game, appid, { cacheDir, fetchImpl = globalThis.fetch } = {}) {
+  const list = game && game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list : null;
+  if (!list || !/^[0-9]+$/.test(String(appid || ''))) return 0;
+  if (list.some((a) => a && a.counter)) return list.filter((a) => a && a.counter).length;
+  const file = cacheDir ? path.join(cacheDir, 'steam_cache', 'progress', `${appid}.counters.json`) : null;
+  let counters = null;
+  try {
+    if (file && Date.now() - fs.statSync(file).mtimeMs < OFFICIAL_PROGRESS_TTL_MS) counters = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    /* not cached yet */
+  }
+  if (!Array.isArray(counters)) {
+    try {
+      const response = await fetchImpl(`https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?appid=${appid}&language=english`, {
+        signal: AbortSignal.timeout(COUNTERS_FETCH_TIMEOUT_MS),
+      });
+      if (!response || !response.ok) return 0;
+      const answer = (await response.json()).response;
+      if (!answer || !Array.isArray(answer.achievements)) return 0;
+      counters = require('../util/steamSchemaFetch.js')
+        .mapOfficialAchievements(answer, appid)
+        .filter((a) => a.counter)
+        .map((a) => ({ name: a.name, counter: a.counter }));
+      if (file) {
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, JSON.stringify(counters));
+      }
+    } catch {
+      return 0;
+    }
+  }
+  const byName = new Map(counters.map((c) => [String(c.name).toUpperCase(), c.counter]));
+  let attached = 0;
+  for (const a of list) {
+    const counter = a && a.name ? byName.get(String(a.name).toUpperCase()) : null;
+    if (counter) {
+      a.counter = counter;
+      attached++;
+    }
+  }
+  return attached;
+}
+
 module.exports = {
+  attachOfficialCounters,
   countOfficialProgress,
   officialProgressCount,
   applyLocalStatProgress,
@@ -295,6 +378,7 @@ module.exports = {
   communityProgressEntries,
   fetchCommunityProgressSchema,
   fetchCommunityStats,
+  inferStatLinks,
   progressEntries,
   countSaveStats,
 };

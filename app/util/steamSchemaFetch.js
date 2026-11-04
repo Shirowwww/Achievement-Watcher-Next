@@ -47,8 +47,16 @@ function mapOfficialAchievements(response, appid) {
       rarityPercent: toRarityPercent(a.player_percent_unlocked),
       archived: !!(a.archived || (group && group.archived)),
       ...(category ? { category } : {}),
+      ...counterBounds(a),
     };
   });
+}
+
+// An achievement Steam unlocks when a stat reaches a goal. The answer gives the goal, never the stat.
+function counterBounds(a) {
+  const max = Number(a.max_progress_int ?? a.max_progress_float);
+  if (!(Number(a.progress_type) > 0) || !(max > 0)) return {};
+  return { counter: { min: Number(a.min_progress_int ?? a.min_progress_float) || 0, max } };
 }
 
 // internal_key -> { name, maxProgress } from the same response, for IPlayerService/GetUserAchievements,

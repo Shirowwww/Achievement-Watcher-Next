@@ -5459,6 +5459,7 @@ var app = {
             });
           };
           const diagnoseGoldbergSetup = async ({ game, gameDir, autoRepair = false, showDialog = true }) => {
+            await require(path.join(appPath, 'parser/statProgress.js')).attachOfficialCounters(game, writableAppid, { cacheDir: getUserDataPath() }).catch(() => 0);
             let report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
             let repaired = null;
             let repairError = null;

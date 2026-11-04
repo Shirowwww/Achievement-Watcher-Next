@@ -57,6 +57,8 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'NO_GC_TOKEN',
   // writeMainConfig() sets [main::stats] allow_unknown_stats=1.
   'UNKNOWN_STATS_REJECTED',
+  // repair() ties a counter achievement to the stat the game wrote for it (statProgress.inferStatLinks).
+  'STAT_LINK_MISSING',
   'NO_USER_CONFIG',
   // writeUserConfig() blanks GBE's example value whenever it rewrites configs.user.ini.
   'PLACEHOLDER_SAVE_PATH',
@@ -106,6 +108,7 @@ const ISSUE_TOPIC = {
   NO_NEW_APP_TICKET: 'compat',
   NO_GC_TOKEN: 'compat',
   UNKNOWN_STATS_REJECTED: 'compat',
+  STAT_LINK_MISSING: 'compat',
   NO_INI: 'compat',
   NO_USER_CONFIG: 'account',
   BAD_USER_CONFIG: 'account',
