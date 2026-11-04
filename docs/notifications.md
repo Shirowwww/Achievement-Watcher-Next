@@ -258,8 +258,9 @@ bar counter, the full list and the Big Picture "Your stuff" tab. A shortcut is m
 starts the same exe as the game's **Executable** in AW Next. Its README covers the install, what to
 check when a page stays empty, and how it sits next to Steam Cartridges, NativeGameLink and Game
 Data Linker. The Playnite extension in `playnite/` asks the same way, for any game in a Playnite
-library, and its README covers the install and the panels a theme can place. The request below is
-for anyone writing another plugin.
+library, and its README covers the install and the panels a theme can place. On Windows AW Next
+brings both up to the latest release's version on its own, once you have installed them. The request
+below is for anyone writing another plugin.
 
 The plugin sends:
 

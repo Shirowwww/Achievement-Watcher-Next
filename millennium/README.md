@@ -43,7 +43,11 @@ It needs AW Next running with its websocket feed on (the default) and no websock
    `<Steam>\millennium\plugins\aw-next\plugin.json`.
 3. Enable **AW Next achievements** in Millennium's plugin list and restart Steam.
 
-To update, extract the new release's zip over the old folder and restart Steam.
+On Windows, AW Next keeps the installed plugin current: a few minutes after it starts, and at most once
+a day, it reads the latest release and, when the zip holds a newer plugin version, replaces the
+`aw-next` folder with it. Restart Steam to load it. It never installs the plugin for you, and a
+folder Steam is holding open is retried at the next start. Elsewhere, extract the new release's zip
+over the old folder and restart Steam.
 
 ## Build
 

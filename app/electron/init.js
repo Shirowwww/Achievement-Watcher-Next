@@ -3440,6 +3440,37 @@ function scheduleBackgroundAutoFix() {
   bgAutoFixTimer = setInterval(() => runBackgroundAutoFix('interval'), BG_AUTOFIX_INTERVAL_MS);
 }
 
+// Millennium plugin and Playnite extension, when the user installed them: brought to the latest
+// release's version (util/extensionUpdate.js). Windows only, where both paths are known.
+const EXTENSION_UPDATE_DELAY_MS = 3 * 60 * 1000;
+function scheduleExtensionUpdate() {
+  if (process.platform !== 'win32' || !app.isPackaged) return;
+  setTimeout(async () => {
+    const stateFile = path.join(app.getPath('userData'), 'extension-updates.json');
+    try {
+      const extensionUpdate = require(path.join(__dirname, '../util/extensionUpdate.js'));
+      const steamPath = await require(path.join(__dirname, '../parser/steam.js'))
+        .getSteamPath()
+        .catch(() => '');
+      await extensionUpdate.updateExtensions({
+        env: { steamPath, playniteExtensionsDir: path.join(app.getPath('appData'), 'Playnite', 'Extensions') },
+        ...extensionUpdate.defaultFetchers,
+        readCheckedAt: () => {
+          try {
+            return Number(JSON.parse(fs.readFileSync(stateFile, 'utf8')).checkedAt) || 0;
+          } catch {
+            return 0;
+          }
+        },
+        writeCheckedAt: (time) => fs.writeFileSync(stateFile, JSON.stringify({ checkedAt: time })),
+        log: (line) => debug.log(line),
+      });
+    } catch (err) {
+      debug.log(`[extensions] update skipped: ${err.message || err}`);
+    }
+  }, EXTENSION_UPDATE_DELAY_MS);
+}
+
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -8143,6 +8174,7 @@ try {
         }
         launchWatchdog();
         scheduleBackgroundAutoFix(); // headless emulator auto-fix while the window stays closed
+        scheduleExtensionUpdate();
       }
       bootMark('monitor');
       debug.log(`[perf][boot] ${bootTimeline()}`);

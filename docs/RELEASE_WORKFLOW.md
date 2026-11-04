@@ -127,6 +127,11 @@ Push-Location millennium; npm ci; npm run check; npm run zip; Pop-Location
 Expected file: `millennium/dist/aw-next-millennium.zip`, one `aw-next/` folder holding
 `plugin.json`, `README.md`, `backend/main.lua` and `.millennium/Dist/index.js`.
 
+The app updates installed copies of this zip and of the Playnite `.pext` from the latest release
+(`app/util/extensionUpdate.js`). It looks the assets up by name (`aw-next-millennium.zip`,
+`AwNextAchievements_*.pext`) and swaps a folder only when the packaged `version` is higher, so a
+changed plugin needs its version raised or no installed copy follows.
+
 ### Playnite extension
 
 Packed by the `Toolbox.exe` that comes with Playnite. When the extension changes, raise `Version` in

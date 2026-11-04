@@ -15,6 +15,12 @@ install it, then to restart. To install by hand, unzip it into
 `%AppData%\Playnite\Extensions\AwNextAchievements\` (or `Extensions\` next to `Playnite.DesktopApp.exe`
 for a portable copy).
 
+AW Next keeps it current on its own: a few minutes after it starts, and at most once a day, it reads
+the latest release and, when the `.pext` holds a newer version of an extension you already installed,
+replaces its folder. Close Playnite for that to go through (a folder Playnite holds open is retried at
+the next start) and reopen it to load the new version. Playnite's add-on database is closed to new
+entries, so it cannot do this for a copy installed from the release page.
+
 Right-click a game and pick **AW Next achievements** to open its list. With a websocket password set
 in AW Next, enter the same `user:password` under Playnite's **Add-ons > Extension settings > AW Next
 achievements**; the port can be changed there too.
