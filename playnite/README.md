@@ -39,6 +39,19 @@ The extension also offers two panels a theme can place in a game's details:
 its bar, the first eight achievements and a **Show all** link to the full window. A theme usually
 picks one of them.
 
+A theme that draws its own achievements block can bind the selected game's counts instead:
+
+```xml
+<TextBlock Text="{PluginSettings Plugin=AwNext, Path=Unlocked, FallbackValue='-'}" />
+<ProgressBar Value="{PluginSettings Plugin=AwNext, Path=Percent, FallbackValue=0}" Maximum="100" />
+```
+
+`HasData` (the game has achievements in AW Next), `Unlocked`, `Locked`, `Total`, `Percent` (0 to 100,
+rounded) and `IsCompleted` (also `Is100Percent`) follow the selection and the unlocks. They are named
+like those of SuccessStory and of Playnite Achievements, so a block written for either works with
+`Plugin=AwNext`. Without this extension the bindings fall back to their `FallbackValue`, so the
+block can stay in the theme.
+
 ## When a game shows nothing
 
 - The surest match is the same exe on both sides: the game's play action in Playnite and its

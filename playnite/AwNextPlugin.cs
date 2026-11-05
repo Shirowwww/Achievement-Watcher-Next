@@ -28,12 +28,17 @@ namespace AwNext.Playnite
 
         private readonly AwNextSettingsViewModel settings;
         private readonly ConcurrentDictionary<Guid, string> awIds = new ConcurrentDictionary<Guid, string>();
+        private Window openWindow;
         private BridgeClient client;
+        private Game themeGame;
 
         public override Guid Id { get; } = Guid.Parse("4ae86d6e-6590-497f-adf9-0d373068627d");
 
         /// <summary>Raised on the UI thread when AW Next announces an unlock for a game shown here.</summary>
         public event Action<Game> GameUpdated;
+
+        /// <summary>The selected game's counts, bound by themes as {PluginSettings Plugin=AwNext, Path=...}.</summary>
+        public ThemeData ThemeData { get; } = new ThemeData();
 
         public AwNextPlugin(IPlayniteAPI api) : base(api)
         {
@@ -44,6 +49,20 @@ namespace AwNext.Playnite
                 SourceName = "AwNext",
                 ElementList = new List<string> { "Achievements", "Progress" },
             });
+            AddSettingsSupport(new AddSettingsSupportArgs { SourceName = "AwNext", SettingsRoot = nameof(ThemeData) });
+            GameUpdated += game =>
+            {
+                if (themeGame != null && game != null && game.Id == themeGame.Id)
+                {
+                    _ = FillThemeAsync(themeGame);
+                }
+            };
+        }
+
+        public override void OnGameSelected(OnGameSelectedEventArgs args)
+        {
+            themeGame = args.NewValue != null && args.NewValue.Count == 1 ? args.NewValue[0] : null;
+            _ = FillThemeAsync(themeGame);
         }
 
         public override void OnApplicationStarted(OnApplicationStartedEventArgs args) => Connect();
@@ -108,6 +127,36 @@ namespace AwNext.Playnite
                 return;
             }
 
+            var reply = await AskAsync(current, game).ConfigureAwait(true);
+            if (!model.IsCurrent(asked))
+            {
+                return;
+            }
+
+            model.Show(reply, current.IsOpen, CultureInfo.CurrentCulture);
+            _ = model.LoadIconsAsync(settings.Settings.Login);
+        }
+
+        /// <summary>Same question for the theme counts; cleared first so the last game's numbers never linger.</summary>
+        private async Task FillThemeAsync(Game game)
+        {
+            var asked = ThemeData.NextQuestion();
+            ThemeData.Show(null);
+            var current = client;
+            if (game == null || current == null || !current.IsOpen)
+            {
+                return;
+            }
+
+            var reply = await AskAsync(current, game).ConfigureAwait(true);
+            if (ThemeData.IsCurrent(asked))
+            {
+                ThemeData.Show(reply);
+            }
+        }
+
+        private async Task<BridgeReply> AskAsync(BridgeClient current, Game game)
+        {
             BridgeReply reply = null;
             try
             {
@@ -123,13 +172,7 @@ namespace AwNext.Playnite
                 awIds[game.Id] = reply.Game.Id;
             }
 
-            if (!model.IsCurrent(asked))
-            {
-                return;
-            }
-
-            model.Show(reply, current.IsOpen, CultureInfo.CurrentCulture);
-            _ = model.LoadIconsAsync(settings.Settings.Login);
+            return reply;
         }
 
         public void OpenWindow(Game game)
@@ -161,9 +204,31 @@ namespace AwNext.Playnite
                 }
             };
             GameUpdated += refresh;
-            window.Closed += (s, e) => GameUpdated -= refresh;
+            window.PreviewKeyDown += (s, e) =>
+            {
+                if (WindowClose.ByKey(e.Key))
+                {
+                    e.Handled = true;
+                    window.Close();
+                }
+            };
+            window.Closed += (s, e) =>
+            {
+                GameUpdated -= refresh;
+                openWindow = null;
+            };
+            openWindow = window;
             _ = FillAsync(model, game);
             window.ShowDialog();
+        }
+
+        public override void OnControllerButtonStateChanged(OnControllerButtonStateChangedArgs args)
+        {
+            var window = openWindow;
+            if (window != null && args != null && WindowClose.ByController(args.Button, args.State))
+            {
+                window.Dispatcher.BeginInvoke(new Action(window.Close));
+            }
         }
 
         private void OnAwGameChanged(string awId)

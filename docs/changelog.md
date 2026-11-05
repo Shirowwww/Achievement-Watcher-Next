@@ -24,6 +24,10 @@ renamed in 3.9.0 and the history is kept under one file.
   holds a newer version. Steam or Playnite holding the folder open only delays it to the next start;
   restart them to load the new version. Two switches in **Settings > Notifications** (on by
   default) turn it off for either one.
+- **Playnite themes can show AW Next's counts.** The Playnite extension (1.1.0) publishes the
+  selected game's unlocked, locked and total achievements and its percentage, under the same names
+  as SuccessStory and Playnite Achievements. A theme such as Harmony or Selene only has to copy its
+  existing bindings with `Plugin=AwNext`; `playnite/README.md` shows how.
 - **Update notes in your language.** The window that offers an update shows what's new in the
   language chosen in the app, in all 27 languages, and falls back to English for a version that has
   no translation yet. The Documentation, FAQ and Troubleshooting buttons open the guide in your
@@ -35,6 +39,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The Playnite achievements window closes in Fullscreen mode.** In a controller theme such as
+  Selene it had no close button you could reach. B or Back on the controller, Escape or Backspace on
+  the keyboard now close it.
 - **Notification sounds play with the popup.** The PlayStation 5, PlayStation 5 Platinum and
   PlayStation sounds started with up to a second of silence, so they were heard well after the
   popup appeared. That silence is gone, along with a shorter one in Epic Games and GOG Galaxy.
