@@ -5,10 +5,24 @@
   behaviour chosen by the arguments of each call instead of a real library on disk.
 */
 
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+
 let nextId = 0;
 const pending = new Map();
 let busy = false;
-let fingerprint = null;
+// The folders the cheap check compares against, and what the "disk" says now. The disk is a file
+// the test names, so a restarted host sees the same one.
+let discovered = null;
+const DISK = process.env.AW_SCANHOST_FAKE_DISK || path.join(os.tmpdir(), `aw-scanhost-fake-disk-${process.ppid}`);
+const diskNow = () => {
+  try {
+    return Number(fs.readFileSync(DISK, 'utf8')) || 1;
+  } catch {
+    return 1;
+  }
+};
 
 function request(type, fields) {
   const id = ++nextId;
@@ -42,15 +56,23 @@ const methods = {
   // leaves "background work" running when asked to.
   detectInstalledAppids: (id, option) => {
     busy = Boolean(option && option.busy);
+    if (option && option.diskNow) fs.writeFileSync(DISK, String(option.diskNow));
+    if (option && option.crash) process.exit(3);
+    discovered = [['C:/games', diskNow()]];
     return [String(process.pid)];
   },
-  // True once a fingerprint was handed over: what the real check needs before it can say anything.
-  discoveryInputsUnchanged: () => fingerprint !== null,
+  // True when the folders handed over still read what the disk says now.
+  discoveryInputsUnchanged: () => discovered !== null && discovered[0][1] === diskNow(),
+  getDiscoverFingerprint: () => discovered,
+  restoreDiscoverFingerprint: (id, dirs) => {
+    discovered = dirs;
+    return true;
+  },
   scanInputsUnchanged: () => {
     throw Object.assign(new Error('the scan itself failed'), { code: 'SCAN_BROKE' });
   },
   restoreScanFingerprint: (id, stored) => {
-    fingerprint = stored;
+    discovered = stored.dirs;
     return true;
   },
   backgroundWorkPending: () => busy,

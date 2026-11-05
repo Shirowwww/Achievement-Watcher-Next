@@ -1128,8 +1128,7 @@ body.is-resizing #game-list {
 .simple-modal > .overlay {
   position: absolute;
   inset: 0;
-  background: color-mix(in srgb, var(--bg-base) 78%, transparent);
-  backdrop-filter: blur(5px);
+  background: color-mix(in srgb, var(--bg-base) 88%, transparent);
 }
 
 .simple-modal > .box {
@@ -2611,8 +2610,7 @@ body.is-resizing #game-list {
   top: 40%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.78);
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--surface-sunken) 90%, transparent);
   border: none;
   border-radius: 50%;
   color: var(--text);
@@ -2629,8 +2627,7 @@ body.is-resizing #game-list {
   top: 1%;
   left: 1%;
   transform: none;
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--surface-sunken) 90%, transparent);
   border: none;
   border-radius: 50%;
   color: var(--text);
@@ -2646,8 +2643,7 @@ body.is-resizing #game-list {
   top: 1%;
   right: 1%;
   transform: none;
-  background: color-mix(in srgb, var(--surface-sunken) 72%, transparent);
-  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--surface-sunken) 90%, transparent);
   border: none;
   border-radius: 50%;
   color: var(--text);
@@ -2987,8 +2983,7 @@ body.is-resizing #game-list {
   padding: 3px;
   border: 1px solid color-mix(in srgb, var(--border) 16%, transparent);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--surface-sunken) 60%, transparent);
-  backdrop-filter: blur(10px);
+  background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
 }
 
 .achievement-list > .header .sort-ach:not(:has(.sort.show)) {
@@ -4108,8 +4103,7 @@ body.is-resizing #game-list {
      end meets the scrollbar, so only the left corner is rounded. */
   border-top-left-radius: calc(var(--radius-md) - 1px);
   pointer-events: none;
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
+  background: var(--set-panel);
   -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 38%, transparent 100%);
   mask-image: linear-gradient(180deg, #000 0%, #000 38%, transparent 100%);
   /* At the top of a tab there is nothing scrolling out yet, so a band there is just a haze over
@@ -7028,14 +7022,22 @@ body.is-resizing #game-list {
   position: relative;
   overflow: hidden;
 }
-#game-list .game-box .header.cover-fit-contain::before {
+/* A blurred copy under the whole picture. A plain filter is rasterised once; the backdrop-filter it
+   replaces was re-sampled for every "whole" tile on every scrolled frame. */
+#game-list .game-box .header.cover-fit-contain::before,
+#game-list .game-box .header.cover-fit-contain::after {
   content: '';
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: var(--cover-url) center / contain no-repeat;
-  backdrop-filter: blur(14px) brightness(0.62);
   pointer-events: none;
+}
+#game-list .game-box .header.cover-fit-contain::before {
+  inset: -14px;
+  background: var(--cover-url) center / cover no-repeat;
+  filter: blur(14px) brightness(0.62);
+}
+#game-list .game-box .header.cover-fit-contain::after {
+  inset: 0;
+  background: var(--cover-url) center / contain no-repeat;
 }
 
 #game-list .game-box .loading-overlay {
@@ -7589,7 +7591,6 @@ body.is-resizing #game-list {
   place-items: center;
   padding: 24px;
   background: var(--set-scrim);
-  backdrop-filter: blur(8px) saturate(0.78);
   animation: aw-prompt-fade var(--dur-fast) var(--ease-out);
 }
 .aw-prompt {
@@ -8238,15 +8239,20 @@ body.is-resizing #game-list {
   background-size: 100% 100%;
 }
 /* Same layer as the library's "whole" tile, so the preview cannot promise something else. */
-.aw-cover-preview-art.is-contain::before {
+.aw-cover-preview-art.is-contain::before,
+.aw-cover-preview-art.is-contain::after {
   content: '';
   position: absolute;
-  inset: 0;
-  /* A backdrop-filtered layer is not clipped by its parent's rounded overflow: round it itself. */
-  border-radius: inherit;
-  background: var(--cover-url) center / contain no-repeat;
-  backdrop-filter: blur(14px) brightness(0.62);
   animation: aw-prompt-fade 0.16s var(--ease-out) both;
+}
+.aw-cover-preview-art.is-contain::before {
+  inset: -14px;
+  background: var(--cover-url) center / cover no-repeat;
+  filter: blur(14px) brightness(0.62);
+}
+.aw-cover-preview-art.is-contain::after {
+  inset: 0;
+  background: var(--cover-url) center / contain no-repeat;
 }
 .aw-cover-preview-info {
   padding: 11px 10px 13px;
@@ -8410,12 +8416,11 @@ body {
   --library-cover-height: calc(117px * var(--library-scale));
   width: var(--library-panel-width);
   padding: 18px clamp(14px, 2vw, 26px);
-  background: color-mix(in srgb, var(--bg-panel) 62%, transparent);
+  background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
   border-color: color-mix(in srgb, var(--border) 15%, transparent);
   border-radius: var(--radius-lg);
   border-bottom-color: color-mix(in srgb, var(--border) 7%, transparent);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 26px rgba(3, 9, 17, calc(0.1 * var(--shadow-scale)));
-  backdrop-filter: blur(14px) saturate(1.06);
 }
 
 /*
@@ -8440,7 +8445,7 @@ body {
   border-radius: var(--radius-md);
   /* No backdrop-filter here: a blur per tile is re-sampled for every tile on every scrolled frame,
      and traced on a 84-tile library it cost about a third of the frames the compositor presents.
-     The panel behind already blurs the page, so a slightly more opaque fill reads the same. */
+     The panel behind is nearly opaque already, so the tile's own fill is enough. */
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border-color: color-mix(in srgb, var(--border) 20%, transparent);
   box-shadow: 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.045);
@@ -8723,10 +8728,9 @@ body {
   display: grid;
   place-items: center;
   padding: 0;
-  background: color-mix(in srgb, var(--surface-sunken) 56%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 86%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.17);
   box-shadow: 0 8px 20px rgba(0, 0, 0, calc(0.28 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(10px);
 }
 
 .play-button i {
@@ -8743,10 +8747,9 @@ body {
   place-items: center;
   padding: 0;
   font-size: var(--fs-lg);
-  background: color-mix(in srgb, var(--surface-sunken) 62%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 88%, transparent);
   border: 1px solid rgba(255, 255, 255, 0.13);
   opacity: 0.86;
-  backdrop-filter: blur(9px);
 }
 
 .game-box .achievement-button {
@@ -9200,10 +9203,9 @@ body {
 #search-bar .library-layout-control,
 #search-bar .library-add-button,
 #search-bar input[type='search'] {
-  background-color: color-mix(in srgb, var(--surface) 66%, transparent);
+  background-color: color-mix(in srgb, var(--surface) 90%, transparent);
   border-color: color-mix(in srgb, var(--border) 20%, transparent);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 8px 20px rgba(0, 0, 0, calc(0.12 * var(--shadow-scale)));
-  backdrop-filter: blur(12px);
 }
 
 /* The search field keeps its own transition: it also animates its width when it opens. */
@@ -9249,11 +9251,10 @@ body {
 #achievement .wrapper > .header .trophy,
 #achievement .wrapper > .header .playtime,
 #achievement .wrapper > .header .lastplayed {
-  background: color-mix(in srgb, var(--surface-sunken) 68%, transparent);
+  background: color-mix(in srgb, var(--surface-sunken) 90%, transparent);
   border-color: color-mix(in srgb, var(--border) 14%, transparent);
   border-radius: var(--radius-sm);
   box-shadow: 0 8px 24px rgba(0, 0, 0, calc(0.16 * var(--shadow-scale)));
-  backdrop-filter: blur(10px);
 }
 
 #achievement .achievements .achievement-list {
@@ -9304,7 +9305,6 @@ body {
 #settings .overlay,
 #game-config .overlay {
   background-color: var(--set-scrim);
-  backdrop-filter: blur(8px) saturate(0.78);
 }
 
 #settings .box,
@@ -9319,7 +9319,6 @@ body {
     hand behaves exactly as it did.
   */
   width: min(max(1040px, 68vw), 1280px, calc(100vw - 64px));
-  backdrop-filter: blur(20px) saturate(1.08);
 }
 
 /* Settings opens with a short compositor-only transition. This replaces jQuery's 400 ms opacity
@@ -10740,14 +10739,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
      header. Compositing it over the modal surface first gives the header a colour of its own
      instead of one borrowed from whatever is passing behind it. */
   background: color-mix(in srgb, var(--set-panel) 100%, var(--set-modal-top));
-  /* Frosted pane. Fully opaque, the pinned header cut the row passing under it off mid-sentence with
-     a hard edge; fully translucent it printed two lines of text on top of each other. Both are
-     avoided by keeping the same colour at 84% and blurring what is behind it: the row scrolling
-     under reads as an out-of-focus wash, and the heading stays the only legible text on the line. */
-  background-color: color-mix(in srgb, color-mix(in srgb, var(--set-surface) 60%, var(--set-modal-top)) 84%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  /* The blur has to end somewhere: a short downward shade under the existing hairline is what makes
+  /* Nearly opaque, with no backdrop blur (it was re-sampled on every scrolled frame): the row passing
+     under barely shows, and the heading stays the only legible text on the line. */
+  background-color: color-mix(in srgb, color-mix(in srgb, var(--set-surface) 60%, var(--set-modal-top)) 97%, transparent);
+  /* The header has to end somewhere: a short downward shade under the existing hairline is what makes
      the pinned header read as floating over the list rather than clipped out of it. */
   box-shadow: 0 10px 14px -12px rgba(0, 0, 0, 0.55);
 }
@@ -12046,8 +12041,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
     the Settings pane already draws at its own edges.
   */
   background: var(--set-panel);
-  backdrop-filter: blur(14px) saturate(1.2);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
   box-shadow: 0 10px 16px -14px rgba(0, 0, 0, 0.8);
 }
 
@@ -16263,7 +16256,6 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   inset: 0;
   z-index: 9;
   background: var(--set-scrim);
-  backdrop-filter: blur(8px) saturate(0.78);
 }
 
 /*
@@ -17920,8 +17912,7 @@ html:not([data-platform='linux']) [data-linux-only] {
   margin: 0;
   padding: 6px 14px;
   font-size: var(--fs-md);
-  backdrop-filter: blur(10px);
-  background: color-mix(in srgb, var(--chip-state, var(--control-bg)) 22%, rgba(8, 14, 24, 0.62));
+  background: color-mix(in srgb, var(--chip-state, var(--control-bg)) 22%, rgba(8, 14, 24, 0.86));
 }
 #game-config:not([data-gc-view='health']) #game-config-state {
   display: none;
@@ -18467,4 +18458,39 @@ html:not([data-platform='linux']) [data-linux-only] {
 
 #settings .pd-cv-quick:hover {
   border-color: var(--accent);
+}
+
+/* Motion pass. A bar fills from its start when it first appears: a scale on the compositor, so a
+   whole library of them costs no layout, unlike a width transition. */
+@keyframes aw-meter-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+#game-list.is-streaming .game-box:not(.skeleton) .info .progressBar > .meter,
+#achievement .achievement .progressBar > .meter,
+#user-info .info .completion-dist .fill {
+  transform-origin: left center;
+  animation: aw-meter-fill 520ms var(--ease-out) 80ms both;
+}
+
+/* A tile answers the press: it sinks back a little under the pointer, then lifts again. */
+#game-list ul > li .game-box:active {
+  transform: translateY(-2px) scale(0.985);
+  transition-duration: 90ms;
+}
+
+/* One net for every animation above and before: under reduced motion nothing travels, spins or
+   grows; states still change, at once. The interface ends its animations on timers, not events. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
 }

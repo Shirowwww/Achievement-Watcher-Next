@@ -193,6 +193,42 @@ test('a host started after a stored library was reused is handed that library\'s
   assert.equal(host.restoreScanFingerprint({ dirs: [] }), false);
 });
 
+/*
+  The main process stops its idle host after a minute, so every background tick starts a new one.
+  A game saving into a watched folder made the next full tick walk again; a host restarted after it
+  was still handed the older scan's folders, never matched again, and walked every library each tick.
+*/
+function fakeDisk(t) {
+  const disk = path.join(makeTempDir('aw-scanhost-disk-'), 'disk');
+  process.env.AW_SCANHOST_FAKE_DISK = disk;
+  t.after(() => delete process.env.AW_SCANHOST_FAKE_DISK);
+  return disk;
+}
+
+test('a host restarted after a discovery compares against that discovery, not the older scan', async (t) => {
+  fakeDisk(t);
+  const { host } = hostFor(t);
+  host.restoreScanFingerprint({ dirs: [['C:/games', 1]], files: [] });
+  assert.equal(await host.discoveryInputsUnchanged(), true);
+
+  await host.detectInstalledAppids({ diskNow: 2 });
+  assert.equal(await host.discoveryInputsUnchanged(), true, 'the live host compares against the walk it just did');
+
+  host.dispose();
+  assert.equal(await host.discoveryInputsUnchanged(), true, 'a restarted host fell back to the older fingerprint');
+});
+
+test('a discovery that ran here after the host died keeps the folders it read here', async (t) => {
+  fakeDisk(t);
+  const local = {
+    detectInstalledAppids: () => ['local'],
+    getDiscoverFingerprint: () => [['C:/games', 3]],
+  };
+  const { host } = hostFor(t, { local });
+  assert.deepEqual(await host.detectInstalledAppids({ diskNow: 3, crash: true }), ['local']);
+  assert.equal(await host.discoveryInputsUnchanged(), true, 'the next host was handed the folders the local walk read');
+});
+
 test('an idle host is stopped, but never while the work a scan started is still running', async (t) => {
   const { host } = hostFor(t, { idleMs: 150 });
 

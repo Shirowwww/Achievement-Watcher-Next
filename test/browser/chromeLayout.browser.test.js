@@ -124,10 +124,11 @@ test('window chrome: the title bar reaches the window edges and pinned headers a
     assert.ok(header.rowMoved > 40, 'the rows really scrolled');
     assert.ok(header.titleMoved <= 2, `the pinned header must stay put while they do (moved ${header.titleMoved}px)`);
     assert.ok(header.rowIsUnderTitle, 'the scrolled row ends up behind the heading');
-    assert.match(header.backdropFilter, /blur\(14px\)/, 'what passes behind it is blurred, not printed through it');
-    // Opaque enough that the heading always wins, translucent enough for the blur to be visible.
+    // No backdrop blur (it re-sampled the panel on every scrolled frame): the fill alone must hide
+    // the rows that pass behind it.
+    assert.match(header.backdropFilter || 'none', /^none$/, 'the pinned header carries no backdrop blur');
     const alpha = Number(header.alpha);
-    assert.ok(alpha >= 0.75 && alpha < 1, `pinned header alpha should be frosted, got ${alpha}`);
+    assert.ok(alpha >= 0.9, `pinned header must be nearly opaque to read over the rows, got ${alpha}`);
 
     // The band above the pinned header. Its box is a pseudo-element, so its geometry is measured
     // through a probe element copying the same computed rules onto the same place in the flow.
@@ -158,6 +159,7 @@ test('window chrome: the title bar reaches the window edges and pinned headers a
       probe.remove();
       return {
         filter: style.backdropFilter || style.webkitBackdropFilter,
+        background: style.backgroundColor,
         mask: style.maskImage || style.webkitMaskImage,
         pointerEvents: style.pointerEvents,
         zIndex: style.zIndex,
@@ -185,7 +187,10 @@ test('window chrome: the title bar reaches the window edges and pinned headers a
       Math.abs(flow.cardOffset - flow.expected) <= 1,
       `the band takes no room in the flow (first card at ${flow.cardOffset}px, expected ${flow.expected}px)`
     );
-    assert.match(band.filter, /blur\(/, 'the band blurs what scrolls under it');
+    // A solid band in the pane's colour veils what scrolls under it; a backdrop blur there was
+    // re-sampled on every scrolled frame.
+    assert.match(band.filter || 'none', /^none$/, 'the band carries no backdrop blur');
+    assert.doesNotMatch(band.background, /rgba\(0, 0, 0, 0\)|transparent/, 'the band is painted in the pane colour');
     assert.match(band.mask, /linear-gradient/, 'and fades out downward instead of ending on a line');
     assert.equal(band.pointerEvents, 'none', 'it must never swallow a click meant for a row');
     assert.ok(

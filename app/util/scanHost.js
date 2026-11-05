@@ -49,6 +49,9 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
   // Handed to every new host (and to the local fallback), so a restart does not cost the
   // background poll its cheap check.
   let fingerprint = null;
+  // The folders the latest discovery read, newer than the scan's: what the background poll's cheap
+  // check must compare against once a full tick has walked them again.
+  let discoverDirs = null;
 
   function reply(proc, id, work) {
     Promise.resolve()
@@ -163,6 +166,7 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
       });
     }
     if (fingerprint) proc.send({ type: 'call', id: ++nextId, method: 'restoreScanFingerprint', args: [fingerprint] });
+    if (discoverDirs) proc.send({ type: 'call', id: ++nextId, method: 'restoreDiscoverFingerprint', args: [discoverDirs] });
     return proc;
   }
 
@@ -223,6 +227,7 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
       });
       if (result.count !== list.length) log(`[scan-host] makeList reported ${result.count} game(s) but streamed ${list.length}`);
       fingerprint = result.fingerprint || null;
+      discoverDirs = null;
       return { list, fingerprint: result.fingerprint, discoveredAppids: result.discoveredAppids };
     } catch (err) {
       if (!err || err.code !== 'SCAN_HOST_GONE') throw err;
@@ -230,6 +235,7 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
       const parser = localModule();
       const localList = await parser.makeList(option, onProgress, onGame);
       fingerprint = parser.getScanFingerprint();
+      discoverDirs = null;
       return { list: localList, fingerprint, discoveredAppids: parser.getDiscoveredAppids() };
     }
   }
@@ -256,10 +262,23 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
   return {
     makeList,
     reloadGames,
-    detectInstalledAppids: (option) => withFallback('detectInstalledAppids', [option], (parser) => parser.detectInstalledAppids(option)),
+    async detectInstalledAppids(option) {
+      let ranHere = false;
+      const ids = await withFallback('detectInstalledAppids', [option], (parser) => {
+        ranHere = true;
+        return parser.detectInstalledAppids(option);
+      });
+      // Asked of whoever walked: a host started now would only know the folders it was handed.
+      const dirs = ranHere
+        ? localModule().getDiscoverFingerprint?.()
+        : await withFallback('getDiscoverFingerprint', [], (parser) => parser.getDiscoverFingerprint()).catch(() => null);
+      if (Array.isArray(dirs) && dirs.length > 0) discoverDirs = dirs;
+      return ids;
+    },
     discoveryInputsUnchanged: () =>
       withFallback('discoveryInputsUnchanged', [], (parser) => {
         if (fingerprint) parser.restoreScanFingerprint(fingerprint);
+        if (discoverDirs) parser.restoreDiscoverFingerprint(discoverDirs);
         return parser.discoveryInputsUnchanged();
       }),
     scanInputsUnchanged: (stored) => withFallback('scanInputsUnchanged', [stored], (parser) => parser.scanInputsUnchanged(stored)),
@@ -292,6 +311,7 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
     },
     forgetScanCaches() {
       fingerprint = null;
+      discoverDirs = null;
       if (child) remote('forgetScanCaches', []).catch((err) => log(`[scan-host] forgetScanCaches failed => ${err.message}`));
     },
     // Starts the host ahead of the first call, so its module loading overlaps the caller's own.

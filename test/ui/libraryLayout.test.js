@@ -118,6 +118,9 @@ test('all layouts reuse one game card and details handle missing unlocks', () =>
   // language, so no wording for them lives in the locale files.
   assert.match(appSource, /function libraryRelativeTime[\s\S]*?intlFormat\.formatRelativeTime\(seconds, lang\)/);
   assert.match(appSource, /function startLibraryTextScroll[\s\S]*?text\.scrollWidth - container\.clientWidth/);
+  // forEach hands its index over as the second argument, which replaced the default text element
+  // with a number: "text.animate is not a function" on every hovered profile row.
+  assert.doesNotMatch(appSource, /forEach\(startLibraryTextScroll\)/);
   assert.match(appSource, /prefers-reduced-motion: reduce/);
   assert.match(appSource, /mouseenter\.awLibrary', '\.library-scroll-text'[\s\S]*?startLibraryTextScroll/);
   assert.match(appSource, /class="title library-scroll-text"/);

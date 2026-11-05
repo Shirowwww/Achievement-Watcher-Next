@@ -24,7 +24,8 @@ async function findByReadingContentOfKnownConfigfilesIn(dirPath, exeDir) {
 
   const list = await glob(
     files.map((file) => '**/' + file),
-    { cwd: dirPath, onlyFiles: true, absolute: true }
+    // No emulator config lives in a dependency tree, and one can hold tens of thousands of files.
+    { cwd: dirPath, onlyFiles: true, absolute: true, ignore: ['**/node_modules/**'] }
   );
 
   // Every marker found, not the first: a folder that holds several games (a Downloads folder) answers

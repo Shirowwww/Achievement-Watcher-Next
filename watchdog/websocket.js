@@ -253,7 +253,8 @@ module.exports.broadcast = (message) => {
     // Artwork that lives on this machine has to be allow-listed before the browser source can ask
     // for it; a card announced now may only be painted a moment later.
     obsSource.rememberArtwork(message);
-    if (WebSocket.clients.size > 0) {
+    // A notification can come before the server was ever started: nothing listens yet.
+    if (WebSocket && WebSocket.clients.size > 0) {
       let json = JSON.stringify(message);
 
       WebSocket.clients.forEach((client) => {

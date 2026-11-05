@@ -149,6 +149,27 @@ test('Linux: games in a Steam library, a Wine prefix or the home folder are not 
   }
 });
 
+test('a tool shipped in a node_modules folder is muted, wherever the project lives', () => {
+  const { mutedDirs } = require('../playtime/monitor.js');
+  assert.equal(isMutedByPath('D:\\Code\\site\\node_modules\\@esbuild\\win32-x64\\esbuild.exe', mutedDirs), true);
+  assert.equal(isMutedByPath('/home/me/code/node_modules/.bin/esbuild', mutedDirs), true);
+  assert.equal(isMutedByPath('D:\\Games\\Node Modules Tycoon\\game.exe', mutedDirs), false);
+});
+
+// A compiler started under an 8.3 name (C:\PROGRA~1\...) used to slip past the Program Files mute.
+test('a short 8.3 process path is read in its long form', { skip: process.platform !== 'win32' ? 'Windows-only' : false }, (t) => {
+  const { longProcessPath } = require('../playtime/monitor.js');
+  const programFiles = process.env.ProgramFiles;
+  const shortName = require('node:child_process')
+    .execFileSync('cmd.exe', ['/d', '/c', `for %I in ("${programFiles}") do @echo %~sI`], { encoding: 'utf8', windowsVerbatimArguments: true })
+    .trim();
+  if (!shortName.includes('~')) return t.skip('this volume keeps no 8.3 names');
+  assert.equal(longProcessPath(`${shortName}\\Common Files`).toLowerCase(), `${programFiles}\\Common Files`.toLowerCase());
+  assert.equal(longProcessPath('C:\\Games\\game.exe'), 'C:\\Games\\game.exe');
+  assert.equal(longProcessPath('C:\\NO~1\\missing.exe'), 'C:\\NO~1\\missing.exe');
+  assert.equal(longProcessPath(''), '');
+});
+
 test('Linux: a process the index claims by name in a system folder stays muted', () => {
   const preloader = '/usr/lib/wine/wine64-preloader';
   assert.equal(shouldMuteProcessPath(preloader, linuxRoots, []), true);

@@ -4587,6 +4587,14 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 // sources, so a caller must still run a real discovery for the ones in a database or the registry.
 module.exports.discoveryInputsUnchanged = () => dirFingerprint.matches(_discoverFingerprint);
 
+// The folders the latest discovery read, for a host started later to compare against.
+module.exports.getDiscoverFingerprint = () => (_discoverFingerprint ? _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]) : null);
+module.exports.restoreDiscoverFingerprint = (dirs) => {
+  if (!Array.isArray(dirs) || dirs.length === 0) return false;
+  _discoverFingerprint = dirs.map(([dir, mtimeMs]) => [dir, mtimeMs]);
+  return true;
+};
+
 // Every file the listed games' unlock state is read from. A record's own data path covers the
 // emulator and crack sources; a legit Steam entry has no path of its own, but Steam rewrites one
 // stats file per game per user, and that file is the only local proof one of them unlocked.
@@ -4625,7 +4633,7 @@ module.exports.scanInputsUnchanged = (fingerprint) => scanFingerprint.matches(fi
 module.exports.restoreScanFingerprint = (fingerprint) => {
   const dirs = fingerprint && Array.isArray(fingerprint.dirs) ? fingerprint.dirs : null;
   if (!dirs || dirs.length === 0) return false;
-  _discoverFingerprint = dirs.map(([dir, mtimeMs]) => [dir, mtimeMs]);
+  module.exports.restoreDiscoverFingerprint(dirs);
   _scanFingerprint = { dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]), files: Array.isArray(fingerprint.files) ? fingerprint.files : [] };
   _readAheadDirs = dirs.map(([dir]) => dir);
   return true;

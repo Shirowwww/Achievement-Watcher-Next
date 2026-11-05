@@ -87,6 +87,8 @@ const methods = {
   discoveryInputsUnchanged: () => parser().discoveryInputsUnchanged(),
   scanInputsUnchanged: (id, fingerprint) => parser().scanInputsUnchanged(fingerprint),
   restoreScanFingerprint: (id, fingerprint) => parser().restoreScanFingerprint(fingerprint),
+  getDiscoverFingerprint: () => parser().getDiscoverFingerprint(),
+  restoreDiscoverFingerprint: (id, dirs) => parser().restoreDiscoverFingerprint(dirs),
   hintScanFolders: (id, fingerprint) => parser().hintScanFolders(fingerprint),
   backgroundWorkPending: () => Boolean(achievements && achievements.backgroundWorkPending()),
   // The folder walks behind a game's health dot, the slowest part of that report. Read-only; each

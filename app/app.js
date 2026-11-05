@@ -344,8 +344,10 @@ function renderProfileStats(stats, { animate = false } = {}) {
   if (gamesLabel && gamesText && gamesLabel.textContent !== gamesText) gamesLabel.textContent = gamesText;
   let changed = false;
   nodes.data.each(function (index) {
-    if (this.textContent === values[index]) return;
-    this.textContent = values[index];
+    // Compared with where the number is going, not with the one shown mid-roll.
+    if ((this.dataset.countTarget ?? this.textContent) === values[index]) return;
+    this.dataset.countTarget = values[index];
+    window.awCountUp.countTo(this, values[index]);
     changed = true;
   });
 
@@ -9219,7 +9221,7 @@ var app = {
       $('#profile-stats')
         // Hovered with the mouse or selected with the pad or the keyboard, a row scrolls its long names.
         .on('mouseenter focusin', '.profile-stats-trophy-list li, #profile-stats-all-list li', function () {
-          this.querySelectorAll('.library-scroll-text').forEach(startLibraryTextScroll);
+          this.querySelectorAll('.library-scroll-text').forEach((container) => startLibraryTextScroll(container));
         })
         .on('mouseleave focusout', '.profile-stats-trophy-list li, #profile-stats-all-list li', function () {
           this.querySelectorAll('.library-scroll-text').forEach(stopLibraryTextScroll);

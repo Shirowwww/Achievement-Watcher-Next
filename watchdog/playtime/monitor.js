@@ -82,6 +82,9 @@ const filter = {
       envPath('SystemRoot', 'System32'),
       envPath('SystemRoot', 'SysWOW64'),
       envPath('SystemRoot'),
+      // Build tools a project installs (esbuild, electron...): never a game, and the search for an
+      // emulator config below one walks the whole dependency tree.
+      /\/node_modules\//,
       ...(process.platform === 'linux' ? linuxMutedDirs() : []),
     ],
     file: blacklist.mute,
@@ -121,6 +124,16 @@ function linuxMutedDirs() {
 
 function normalizeAppid(appid) {
   return String(appid || '').trim();
+}
+
+// The long form of an 8.3 path (C:\PROGRA~1\...), which the folder filters and the game index spell.
+function longProcessPath(filepath) {
+  if (process.platform !== 'win32' || !filepath || !String(filepath).includes('~')) return filepath;
+  try {
+    return fs.realpathSync.native(filepath);
+  } catch {
+    return filepath;
+  }
 }
 
 // Ignore process paths listed in the optional mute filter: a folder and everything below it, or a
@@ -553,7 +566,8 @@ async function init() {
     );
   }
 
-  processMonitor.on('creation', async ([process, pid, filepath]) => {
+  processMonitor.on('creation', async ([process, pid, reportedPath]) => {
+    const filepath = longProcessPath(reportedPath);
     const games = getTrackableGameMatches(gameIndexByBinary, process);
     if (isWallpaperEngineProcess(process, filepath) || isSteamClientProcess(process)) return;
     if (shouldMuteBinary(process, filepath, filter.mute.file)) return;
@@ -799,6 +813,8 @@ async function getGameIndex() {
 module.exports = {
   init,
   isMutedByPath,
+  longProcessPath,
+  mutedDirs: filter.mute.dir,
   linuxMutedDirs,
   shouldMuteProcessPath,
   getTrackableGameMatches,
