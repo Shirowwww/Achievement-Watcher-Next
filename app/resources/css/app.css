@@ -18481,7 +18481,9 @@ html:not([data-platform='linux']) [data-linux-only] {
 }
 
 /* One net for every animation above and before: under reduced motion nothing travels, spins or
-   grows; states still change, at once. The interface ends its animations on timers, not events. */
+   grows; states still change, at once. The interface ends its animations on timers, not events.
+   Transitions get 0s, not 1ms: every element's default is `all 0s`, so 1ms made each one transition
+   every property, and a resize left the page wider than the window for a frame. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -18489,7 +18491,7 @@ html:not([data-platform='linux']) [data-linux-only] {
     animation-duration: 1ms !important;
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
+    transition-duration: 0s !important;
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
