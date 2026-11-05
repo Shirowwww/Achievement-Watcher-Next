@@ -6,6 +6,7 @@ const fs = require('fs');
 const appPath = __dirname;
 const { buildAchievementSchemaIndex, findAchievementInSchema } = require('./achievementSchemaIndex.js');
 const { ipcInvoke, ipcSend } = require('../util/ipcInvoke.js');
+const { mapLimit } = require('../util/onboardingDetect.js');
 const gog = require(path.join(appPath, 'gog.js'));
 const gogOfficial = require(path.join(appPath, 'gogOfficial.js'));
 const gogUniverseLan = require(path.join(appPath, 'gogUniverseLan.js'));
@@ -786,6 +787,8 @@ let _readAheadDirs = [];
 let _scanFingerprint = null;
 let _lastDiscoveredAppids = null;
 const GAME_LOAD_TIMEOUT_MS = 30000;
+const GAME_LOAD_CONCURRENCY = 8;
+const WATCHED_FOLDER_CONCURRENCY = 4;
 
 async function buildDiscoverCacheKey(option) {
   try {
@@ -2422,7 +2425,11 @@ async function discoverInScope(source, steamAccFilter, scope) {
       } catch (err) {
         debug.log(`[userdir] ${dir.path} could not be checked for RUNE Uplay: ${scanError(err)}`);
       }
-      const { games, appidRoot } = await scanWatchedFolder(dir.path, source, kytyOptions);
+    }
+    // The folders are walked a few at a time, then merged in Settings order: the first one wins a duplicate.
+    const scannedFolders = await mapLimit(userDirs, WATCHED_FOLDER_CONCURRENCY, (dir) => scanWatchedFolder(dir.path, source, kytyOptions));
+    for (const [index, dir] of userDirs.entries()) {
+      const { games, appidRoot } = scannedFolders[index];
       if (appidRoot) additionalSearch.push(dir.path);
       data = data.concat(games.filter((g) => !['ps4recomp', 'ps3recomp'].includes(g.data?.type) || !data.some((known) => known.appid === g.appid)));
     }
@@ -2436,8 +2443,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
   //other known emulator roots, even when the user never added it to Settings.
   if (!scope && source.socialClub) {
     try {
-      const scanned = [];
-      for (const root of socialclub.defaultRoots()) scanned.push(...(await socialclub.scan(root)));
+      const scanned = (await Promise.all(socialclub.defaultRoots().map((root) => socialclub.scan(root)))).flat();
       const extra = entriesNotIn(data, scanned);
       if (extra.length > 0) {
         data = data.concat(extra);
@@ -2538,8 +2544,8 @@ async function discoverInScope(source, steamAccFilter, scope) {
   //installs that keep game_data next to the binary).
   if (!scope && source.shadps4) {
     try {
-      const known = [];
-      for (const dir of new Set([...hostPaths('APPDATA', 'shadPS4'), ...xdgAppDirs('shadps4')])) known.push(...(await shadps4.scan(dir)));
+      const roots = [...new Set([...hostPaths('APPDATA', 'shadPS4'), ...xdgAppDirs('shadps4')])];
+      const known = (await Promise.all(roots.map((dir) => shadps4.scan(dir)))).flat();
       const extra = entriesNotIn(data, known);
       if (extra.length > 0) {
         data = data.concat(extra);
@@ -4830,13 +4836,14 @@ module.exports.reloadGames = async (option, records, onGame = () => {}) => {
   const games = [];
   if (list.length === 0) return games;
   const lookup = buildDiscoveryLookup(list);
+  // Same bounded pool as makeList: each game streams out as it resolves, the list keeps record order.
   await gameIndex.withBatch(async () => {
-    for (const record of list) {
+    const loaded = await mapLimit(list, GAME_LOAD_CONCURRENCY, async (record) => {
       const game = await loadListedGame(option, record, list, lookup);
-      if (!game) continue;
-      games.push(game);
-      onGame(game);
-    }
+      if (game) onGame(game);
+      return game;
+    });
+    games.push(...loaded.filter(Boolean));
   });
   return games;
 };
@@ -4914,7 +4921,6 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
         // stream into the UI via onGame as each one resolves. The keyless schema path is plain HTTP
         // now, so this pool no longer needs to stay small to protect a Puppeteer browser - browser
         // fallbacks (SteamDB covers, top-owners) already serialize on their own queues.
-        const CONCURRENCY = 8;
         let cursor = 0;
         const worker = async () => {
           while (cursor < finalList.length) {
@@ -4929,7 +4935,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
             callbackProgress(Math.floor((count / finalList.length) * 100), finalList.length);
           }
         };
-        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, finalList.length) }, () => worker()));
+        await Promise.all(Array.from({ length: Math.min(GAME_LOAD_CONCURRENCY, finalList.length) }, () => worker()));
       } finally {
         gameIndex.endBatch();
       }

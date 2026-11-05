@@ -628,8 +628,7 @@ module.exports.getGameData = async (cfg) => {
       // it, so only give up when the fetch comes back empty AND the id was never listed.
       let inAppList = false;
       try {
-        inAppList = await findInAppList(+cfg.appID);
-        result = await getSteamDataFromSRV(cfg.appID, cfg.lang);
+        [inAppList, result] = await Promise.all([findInAppList(+cfg.appID), getSteamDataFromSRV(cfg.appID, cfg.lang)]);
       } catch (err) {
         // Offline, every one of these lookups throws. This is a re-check of an entry we already
         // have, so a throw must not be able to lose it - otherwise one offline scan drops every

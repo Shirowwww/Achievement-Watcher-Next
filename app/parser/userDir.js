@@ -4,6 +4,7 @@ const path = require('path');
 const appPath = path.join(__dirname, '../');
 const ini = require('../util/ini');
 const parentFind = require('../util/findUp');
+const { mapLimit } = require('../util/onboardingDetect.js');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const fs = require('fs');
@@ -53,6 +54,7 @@ const PORTABLE_SCENE_SAVE_DIRS = [
 
 // The unlock-state files steam.getAchievementsFromFile() knows how to read. Used to tell a real save
 // folder from a folder that merely happens to be named right.
+const SCAN_BELOW_CONCURRENCY = 6;
 const SCENE_SAVE_FILES = ['achievements.ini', 'achievements.json', 'Achievements.ini', 'stats.ini', 'achiev.ini', 'user_stats.ini'];
 
 function hasSceneSaveFile(dir) {
@@ -696,7 +698,7 @@ async function scanBelow(dir) {
     deep: 4,
     suppressErrors: true,
   });
-  const result = [];
+  const cfgDirs = [];
   const seen = new Set([path.resolve(dir).toLowerCase()]);
   for (const filepath of nested) {
     // fast-glob returns posix separators even on Windows, and this path is handed on as the game
@@ -705,9 +707,11 @@ async function scanBelow(dir) {
     const key = cfgDir.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    result.push(...(await module.exports.scan(cfgDir)));
+    cfgDirs.push(cfgDir);
   }
-  return result;
+  // A library root holds one config per game: scan them a few at a time, results kept in glob order.
+  const scanned = await mapLimit(cfgDirs, SCAN_BELOW_CONCURRENCY, (cfgDir) => module.exports.scan(cfgDir));
+  return scanned.flat();
 }
 
 module.exports.scan = async (dir) => {

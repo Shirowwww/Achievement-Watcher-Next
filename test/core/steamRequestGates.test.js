@@ -105,7 +105,7 @@ test('a lookup nothing answered is reported as an outage, not as a nameless game
     from there, so a busy scan blacklisted the games it could not reach (issue #55). The main process
     has to say which of the two it was.
   */
-  const at = source.indexOf('const store = await fetchStoreAppDetails(appid);');
+  const at = source.indexOf('const [store, productInfo] = await Promise.all([');
   assert.notEqual(at, -1, 'the metadata block moved; update this test');
   const block = source.slice(at, at + 2600);
 

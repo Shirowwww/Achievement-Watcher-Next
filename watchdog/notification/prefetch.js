@@ -21,17 +21,22 @@ const cdnProviders = [
   'https://steamcdn-a.akamaihd.net/steam/apps/',
   'https://media.steampowered.com/steam/apps/',
 ];
+async function answersWithContent(url) {
+  try {
+    const res = await request(url, { method: 'HEAD' });
+    return res.code === 200 && Boolean(res.headers['content-type']);
+  } catch {
+    return false;
+  }
+}
+
+// Every CDN is probed at once, but the first one in list order that answers still wins.
 async function findWorkingLink(appid, basename) {
   for (const ext of ['.jpg', '.png']) {
-    for (const cdn of cdnProviders) {
-      const url = `${cdn}${appid}/${basename}${ext}`;
-      try {
-        const res = await request(url, { method: 'HEAD' });
-        if (res.code === 200) {
-          const contentType = res.headers['content-type'];
-          if (contentType) return url;
-        }
-      } catch (e) {}
+    const urls = cdnProviders.map((cdn) => `${cdn}${appid}/${basename}${ext}`);
+    const probes = urls.map(answersWithContent);
+    for (const [index, url] of urls.entries()) {
+      if (await probes[index]) return url;
     }
   }
   return null;

@@ -258,12 +258,14 @@ function twinSaveFiles(file) {
 
 // The save file as monitor.parse reads it, merged with its twins' when the game has any.
 async function parseWithTwins(file, twinFiles) {
-  const own = await monitor.parse(file);
-  if (twinFiles.length === 0) return own;
-  const others = await Promise.all(twinFiles.map((twin) => monitor.parse(twin).catch((err) => {
+  if (twinFiles.length === 0) return monitor.parse(file);
+  const [own, ...others] = await Promise.all([
+    monitor.parse(file),
+    ...twinFiles.map((twin) => monitor.parse(twin).catch((err) => {
         debug.warn(`Twin save "${twin}" skipped: ${err.message || err}`);
         return [];
-      })));
+      })),
+  ]);
   return shortcutSaveIds.mergeParsedLists([own, ...others]);
 }
 

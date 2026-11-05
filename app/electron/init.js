@@ -1782,13 +1782,18 @@ async function resolveSteamData(request) {
     // Best-effort: the anonymous session is only needed by getProductInfo, which has a breaker of
     // its own, while the store and the SteamHunters fallback below need no session at all. Letting a
     // login timeout throw here cost every game its name for the rest of the scan.
-    try {
-      await clientLogOn();
-    } catch (err) {
-      debug.log(`[${appid}] Steam anonymous login unavailable (${err.message || err}); continuing with the keyless sources`);
-    }
-    const store = await fetchStoreAppDetails(appid);
-    const productInfo = await fetchSteamProductInfo(appid);
+    // The store needs no session, so it is asked while the login and product info are in flight.
+    const [store, productInfo] = await Promise.all([
+      fetchStoreAppDetails(appid),
+      (async () => {
+        try {
+          await clientLogOn();
+        } catch (err) {
+          debug.log(`[${appid}] Steam anonymous login unavailable (${err.message || err}); continuing with the keyless sources`);
+        }
+        return fetchSteamProductInfo(appid);
+      })(),
+    ]);
     const apps = productInfo?.apps || {};
     const appInfo = apps[appid]?.appinfo || apps[0]?.appinfo;
     const metadata = resolveSteamMetadata({

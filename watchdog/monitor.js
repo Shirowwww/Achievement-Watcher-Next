@@ -233,17 +233,21 @@ function documentsFor(dirPath, hosts, docsByHost) {
   return docsByHost.get(winHosts.hostsFor(dirPath, hosts)[0]) || null;
 }
 
-module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves = []) => {
-  let configuredDirs = [];
+// The folders saved in Settings; a missing or unreadable file means none.
+async function readConfiguredDirs(userDir_file) {
   try {
     const parsed = JSON.parse(await fs.readFile(userDir_file, 'utf8'));
-    if (Array.isArray(parsed)) configuredDirs = parsed;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    configuredDirs = [];
+    return [];
   }
+}
 
-  let nativeDocs = null;
-  if (process.platform === 'win32') nativeDocs = await windowsDocuments().catch(() => null);
+module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves = []) => {
+  const [configuredDirs, nativeDocs] = await Promise.all([
+    readConfiguredDirs(userDir_file),
+    process.platform === 'win32' ? windowsDocuments().catch(() => null) : null,
+  ]);
   const hosts = winHosts.listHosts({ nativeDocuments: () => nativeDocs });
   let steamEmu = hosts.flatMap(builtinRoots);
 
