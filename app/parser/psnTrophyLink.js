@@ -169,10 +169,16 @@ function saveLink(appid, best, locale) {
   return link.listId ? link : null;
 }
 
-async function linkGame(ctx, game, { englishCtx = null, english = null, budget = null } = {}) {
+// `onMiss(game)` takes a game no list matched instead of remembering the miss, for another source.
+async function linkGame(ctx, game, { englishCtx = null, english = null, budget = null, onMiss = null } = {}) {
   const { lists, settled } = await findCandidates(ctx, game.name, budget);
   if (!settled) return null;
-  return saveLink(game.appid, await bestCandidate(game, lists, sonyLoader(ctx, englishCtx), english), ctx.locale);
+  const best = await bestCandidate(game, lists, sonyLoader(ctx, englishCtx), english);
+  if (!best && onMiss) {
+    onMiss(game);
+    return null;
+  }
+  return saveLink(game.appid, best, ctx.locale);
 }
 
 /*

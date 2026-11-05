@@ -561,6 +561,7 @@ function openCoverPicker(game, appid, coverCacheAppid) {
       // Only a real Steam release should hit the CDN probe - a non-Steam numeric id (GOG/Xbox)
       // would just 404 on every asset path.
       steamAppid: steamCoverId,
+      platform: game.platform || '',
     });
 
     let fastFailed = false;

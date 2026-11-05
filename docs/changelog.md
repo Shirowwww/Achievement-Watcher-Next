@@ -35,6 +35,16 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **PlayStation trophy grades reach more PC games when a PSN account is connected (#160).** With
+  an account, a game the account's sources did not know (Ace Combat 7, Elden Ring Nightreign,
+  Ninja Gaiden Sigma) was marked as having no PlayStation list. It now goes on to the public trophy
+  archive and Exophase, as it does without an account, and gets its platinum and grades.
+- **Trophy lists imported from a console get their icons when the archive does not have them
+  (#160).** A list too new for the public archive (God of War Ragnarok) takes its icons from the
+  game's Exophase page, only when its trophies and grades line up; the console's texts stay.
+- **A PlayStation game gets the artwork of its own release (#160).** When two games share a name,
+  like God of War from 2005 and from 2018, a PS4 or PS5 list now takes the one released for that
+  console instead of the older game.
 - **Games started from a Steam shortcut keep their play time and their achievements.** Starting a
   game from a non-Steam shortcut (added for Steam Input) saves its unlocks under the shortcut's own
   id. AW Next now reads and watches that folder as part of the game, merged with the game's own, and

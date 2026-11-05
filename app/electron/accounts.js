@@ -136,10 +136,11 @@ async function linkPsnGames(games, { withoutAccount = true } = {}) {
   const quota = storeQuota(lib.readJson(quotaFile), Date.now());
   const allowed = Date.now() < quota.pausedUntil ? 0 : Math.max(0, Math.min(STORE_LOOKUPS_PER_PASS, STORE_LOOKUPS_PER_DAY - quota.used));
   const budget = { store: allowed };
+  const missed = [];
   try {
     for (const game of games) {
       if (links.isFresh(game.appid, ctx.locale)) continue;
-      if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(links, game.appid), budget })) linked += 1;
+      if (await links.linkGame(ctx, game, { englishCtx, english: englishAchievements(links, game.appid), budget, onMiss: (entry) => missed.push(entry) })) linked += 1;
     }
   } catch (err) {
     if (err && err.code === 'psn-rate-limited') quota.pausedUntil = Date.now() + RATE_LIMIT_PAUSE_MS;
@@ -150,6 +151,22 @@ async function linkPsnGames(games, { withoutAccount = true } = {}) {
   debug.log(`[psn] trophy links: ${linked} new game(s) tied to their PlayStation list`);
   const win = getMainWindow();
   if (linked > 0 && win && !win.isDestroyed()) win.webContents.send('psn:links-changed');
+  await linkMissedPublicly(missed, links, ctx.locale);
+}
+
+/*
+  The hunters' catalog and the store miss lists the public archive or Exophase hold (Ace Combat 7,
+  #160): those try the games the account found nothing for. Not gated by the platinum popup like
+  the no-account pass: with an account the links also give the trophy grades. One they leave unsettled, out of budget
+  or unreachable, is remembered as a miss, so the store is not asked about it again on every pass.
+*/
+async function linkMissedPublicly(missed, links, locale) {
+  if (!missed.length) return;
+  try {
+    await linkPsnGamesWithoutAccount(missed);
+  } finally {
+    for (const game of missed) if (!links.isFresh(game.appid, locale)) links.saveLink(game.appid, null, locale);
+  }
 }
 
 ipcMain.handle('psn:link-games', (_event, games, request) => {

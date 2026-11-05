@@ -45,6 +45,8 @@ function readCached(userDataDir, name, platform, gameId) {
     const age = Date.now() - fs.statSync(file).mtimeMs;
     const cached = JSON.parse(fs.readFileSync(file, 'utf8'));
     if (cached && cached.notFound === true) return age < MISS_TTL_MS ? null : undefined;
+    // A console game's artwork picked before the console's launch year counted is asked once more.
+    if (consoleLaunchYear(platform) && !(cached && cached.byLaunchYear)) return undefined;
     if (cached && typeof cached === 'object' && age < HIT_TTL_MS) return cached;
   } catch {
     /* absent or corrupt - ask again */
@@ -52,4 +54,14 @@ function readCached(userDataDir, name, platform, gameId) {
   return undefined;
 }
 
-module.exports = { assetKey, cacheFile, readCached, HIT_TTL_MS, MISS_TTL_MS };
+/*
+  The year a console came out, for a name two games share: God of War is a 2005 game and a 2018 one,
+  and a PS4 list can only be the second (#160). Platforms as the PlayStation lists name them.
+*/
+const CONSOLE_LAUNCH_YEAR = { PS3: 2006, 'PS VITA': 2011, PSVITA: 2011, PS4: 2013, PS5: 2020 };
+
+function consoleLaunchYear(platform) {
+  return CONSOLE_LAUNCH_YEAR[String(platform || '').trim().toUpperCase()] || 0;
+}
+
+module.exports = { assetKey, cacheFile, readCached, consoleLaunchYear, HIT_TTL_MS, MISS_TTL_MS };

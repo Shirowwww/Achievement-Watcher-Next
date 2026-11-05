@@ -32,6 +32,7 @@ const MAX_SMALL_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_IMPORT_MS = 10 * 60 * 1000;
 // Past this many unreachable answers the archive is left alone for the rest of the import.
 const MAX_ARCHIVE_FAILURES = 3;
+const MAX_EXOPHASE_LOOKUPS = 30;
 const TROPHY_TYPE = { P: 'platinum', G: 'gold', S: 'silver', B: 'bronze' };
 const GRADE_TYPE = { 1: 'platinum', 2: 'gold', 3: 'silver', 4: 'bronze' };
 const MIN_PLAUSIBLE_MS = Date.UTC(2005, 0, 1);
@@ -181,7 +182,45 @@ function makeArchive(options) {
     }
   };
   const ctx = psnLibrary.publicContext({ lang: options.lang, locale: options.locale, fetchImpl });
-  return async (listId) => (failures >= MAX_ARCHIVE_FAILURES ? null : psnLibrary.fetchArchivedList(ctx, listId).catch(() => null));
+  const icons = exophaseIcons(options);
+  return async (list) => {
+    if (failures >= MAX_ARCHIVE_FAILURES) return null;
+    const archived = await psnLibrary.fetchArchivedList(ctx, list.listId).catch(() => null);
+    return archived || (failures >= MAX_ARCHIVE_FAILURES ? null : icons(list));
+  };
+}
+
+/*
+  A list too new for the archive (God of War Ragnarok, #160) takes its icons from the game's Exophase
+  page, the PS4 or PS5 one named like it. The console's texts stay, and withArchive() still refuses a
+  page whose grades disagree. Each lookup is a search and a page, so an import makes at most
+  MAX_EXOPHASE_LOOKUPS of them. Console lists are PS3 or PS4; Exophase's trophy search covers PS4.
+*/
+function exophaseIcons(options) {
+  const exophase = options.exophase || require('./exophase.js');
+  let left = MAX_EXOPHASE_LOOKUPS;
+  return async (list) => {
+    const console_ = String(list.platform || '').toLowerCase();
+    const wanted = psnLibrary.normalizedName(psnLibrary.cleanTitleName(list.name));
+    if (console_ !== 'ps4' || !wanted || left <= 0) return null;
+    left -= 1;
+    try {
+      const hit = (await exophase.searchExophaseTrophyLists(psnLibrary.cleanTitleName(list.name))).find((entry) => entry.platform === console_ && psnLibrary.normalizedName(entry.title) === wanted);
+      if (!hit) return null;
+      const page = await exophase.fetchExophaseAchievementsMultiLang({ slug: hit.slug, platform: hit.platform, baseUrl: hit.baseUrl, langKeys: ['english'] });
+      const awards = require('./psnPublicLink.js').exophaseTrophies(page && page.items, 'english');
+      if (!awards) return null;
+      const own = new Map(list.trophies.map((t) => [String(t.id), t]));
+      return {
+        trophies: awards.map((award) => {
+          const mine = own.get(String(award.trophyId));
+          return mine ? { ...award, trophyName: mine.name, trophyDetail: mine.detail, trophyHidden: mine.hidden } : award;
+        }),
+      };
+    } catch {
+      return null;
+    }
+  };
 }
 
 // ---- PS3 --------------------------------------------------------------------------------------
@@ -420,7 +459,7 @@ async function runJobs(jobs, consoleKind, { onProgress, log, deadline, profile, 
       }
       result.seen.add(list.listId);
       try {
-        const written = writeList(list, { profile, archived: await archive(list.listId) });
+        const written = writeList(list, { profile, archived: await archive(list) });
         if (!written) result.skipped += 1;
         else if (written.unchanged) result.unchanged += 1;
         else result[written.created ? 'created' : 'updated'] += 1;

@@ -74,11 +74,15 @@ function archiveLoader(ctx, englishCtx, state) {
   });
 }
 
-// Exophase awards in the shape of Sony's trophies; null for a page with no trophy grades.
+/*
+  Exophase awards in the shape of Sony's trophies; null for a page with no trophy grades. The page
+  lists them in the console's order but counts from 1 (the platinum of God of War Ragnarok is 1,
+  Sony's 0), so a trophy's id is its place in that order.
+*/
 function exophaseTrophies(items, langKey) {
   if (!Array.isArray(items) || !items.some((item) => item && GRADE_TYPE[item.grade])) return null;
-  return items.map((item) => ({
-    trophyId: Number(item.index),
+  return [...items].sort((a, b) => Number(a && a.index) - Number(b && b.index)).map((item, position) => ({
+    trophyId: position,
     trophyType: GRADE_TYPE[item.grade] || 'bronze',
     trophyName: (item.titles && (item.titles[langKey] || item.titles.english)) || '',
     trophyDetail: (item.descriptions && (item.descriptions[langKey] || item.descriptions.english)) || '',

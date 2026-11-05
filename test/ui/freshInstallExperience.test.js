@@ -67,7 +67,7 @@ test('artwork fallbacks fill missing assets without replacing existing ones', ()
   assert.match(main, /sgdbAssetCache\.readCached\(/);
   assert.match(parser, /sgdbAssetCache\.readCached\(/, 'the window reads it without a round trip per game');
   // The strict matcher decides, never the first search result - now once per name variant tried.
-  assert.match(main, /pickSteamGridDbGame\(searchData\?\.data, variant\)/);
+  assert.match(main, /pickSteamGridDbGame\(searchData\?\.data, variant, \{ launchYear \}\)/);
   assert.doesNotMatch(main, /if \(list\.length === 1\) return list\[0\]/);
 });
 

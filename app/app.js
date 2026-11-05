@@ -2968,7 +2968,7 @@ async function recoverLibraryCover(game, orientation, { force = false } = {}) {
 
       if (!networkUnavailable) {
         const gridResult = await ipcRenderer
-          .invoke('get-steamgriddb-cover-status', game.name || '', steamAppid, orientation)
+          .invoke('get-steamgriddb-cover-status', game.name || '', steamAppid, orientation, game.platform || '')
           .catch(() => ({ url: null, networkError: true }));
         failure = failure || gridResult.networkError === true;
         const gridUrl = gridResult.url;

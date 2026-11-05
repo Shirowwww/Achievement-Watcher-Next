@@ -139,7 +139,7 @@ test('a game missing from the index is tied to its Exophase list, PS5 first, wit
   assert.equal(link.listId, 'exophase:elden-ring-psn', 'another game with a longer name is left out');
   assert.equal(link.platform, 'PS5');
   assert.equal(link.service, 'trophy2');
-  assert.deepEqual(link.platinum, { id: '1', name: 'Seigneur', description: 'Tous les trophées', icon: 'https://m.exophase.com/p.png' });
+  assert.deepEqual(link.platinum, { id: '0', name: 'Seigneur', description: 'Tous les trophées', icon: 'https://m.exophase.com/p.png' });
   assert.deepEqual(link.trophies, { TUTO: { type: 'B' }, BOSS: { type: 'G' }, MAP: { type: 'S' } });
   assert.deepEqual(exo.asked[1], ['page', 'https://www.exophase.com/game/elden-ring-psn/trophies/', ['english', 'french']]);
   const pages = exo.asked.filter(([kind]) => kind === 'page').map(([, url]) => url);
@@ -149,7 +149,7 @@ test('a game missing from the index is tied to its Exophase list, PS5 first, wit
 
 test('Exophase awards become Sony-shaped trophies, and a page without grades is no list', () => {
   const trophies = pub.exophaseTrophies(exoItems, 'french');
-  assert.deepEqual(trophies[0], { trophyId: 1, trophyType: 'platinum', trophyName: 'Seigneur', trophyDetail: 'Tous les trophées', trophyIconUrl: 'https://m.exophase.com/p.png', trophyGroupId: 'default' });
+  assert.deepEqual(trophies[0], { trophyId: 0, trophyType: 'platinum', trophyName: 'Seigneur', trophyDetail: 'Tous les trophées', trophyIconUrl: 'https://m.exophase.com/p.png', trophyGroupId: 'default' });
   assert.equal(trophies[1].trophyName, 'Tutorial', 'an untranslated award keeps its English text');
   assert.equal(pub.exophaseTrophies([{ index: 1, grade: '', titles: { english: 'x' } }], 'english'), null);
   const small = pub.exophaseTrophies([{ index: 1, grade: 'P', titles: { english: 'x' }, icon_url: 'https://m.exophase.com/psn/awards/s/3gd61d7.png?v=1' }], 'english');

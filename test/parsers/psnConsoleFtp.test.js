@@ -86,7 +86,8 @@ function ps3Server(extra = {}) {
 
 // No archive answers unless a test brings one: the suite never reaches the network.
 const offline = async () => ({ ok: false, status: 404, json: async () => null });
-const importOptions = (server, extra = {}) => ({ host: '127.0.0.1', port: server.port, tmpRoot, timeoutMs: 1500, fetchImpl: offline, ...extra });
+const noExophase = { searchExophaseTrophyLists: async () => [], fetchExophaseAchievementsMultiLang: async () => ({ items: [] }) };
+const importOptions = (server, extra = {}) => ({ host: '127.0.0.1', port: server.port, tmpRoot, timeoutMs: 1500, fetchImpl: offline, exophase: noExophase, ...extra });
 
 test('a PS3 import writes the lists with the PSN library shape and keeps a broken file from stopping the rest', async () => {
   const server = await ps3Server();
@@ -506,6 +507,31 @@ test("another version of the list in the archive lends the texts of the trophies
   } finally {
     await server.close();
   }
+});
+
+test('a PS4 list the archive lacks takes its icons from the Exophase page named like it, never its texts (#160)', async () => {
+  const icon = (n) => `https://m.exophase.com/psn/awards/s/b${n}.png`;
+  // Exophase counts from 1 where the console counts from 0.
+  const page = (grades) => ({ items: grades.map((grade, at) => ({ index: at + 1, grade, titles: { english: `Exophase ${at}` }, icon_url: icon(at) })) });
+  const exophase = (grades, title = 'Bloodborne') => ({
+    searchExophaseTrophyLists: async () => [{ title: 'Bloodborne', platform: 'ps5', slug: 'other' }, { title, platform: 'ps4', slug: 'bloodborne-psn' }],
+    fetchExophaseAchievementsMultiLang: async ({ slug }) => (slug === 'bloodborne-psn' ? page(grades) : { items: [] }),
+  });
+  const imported = async (stub) => {
+    const server = await ps4Server(ps4Database(path.join(makeTempDir('aw-ps4-exo-'), 'trophy_local.db')));
+    try {
+      await consoleFtp.importFromConsole(importOptions(server, { console: 'ps4', exophase: stub }));
+      return psnLibrary.getGameData('psn-NPWR10000_00').achievement.list;
+    } finally {
+      await server.close();
+    }
+  };
+
+  const list = await imported(exophase(['P', 'G', 'B']));
+  assert.deepEqual(list.map((t) => t.icon), [0, 1, 2].map((n) => icon(n).replace('/awards/s/', '/awards/l/')));
+  assert.ok(list.every((t) => !t.displayName.startsWith('Exophase')), 'the console keeps its own texts');
+  assert.equal((await imported(exophase(['P', 'B', 'B'])))[0].icon, '', 'a page with other grades is another list');
+  assert.equal((await imported(exophase(['P', 'G', 'B'], 'Bloodborne 2')))[0].icon, '', 'and so is a page named otherwise');
 });
 
 test('an archived list with other grades, or an archive that cannot be reached, leaves the console texts', async () => {

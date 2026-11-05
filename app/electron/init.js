@@ -2335,6 +2335,7 @@ async function resolveImagesForGame(arg) {
   const cacheFile = sgdbAssetCache.cacheFile(userData, gameName, arg.platform, arg.gameId);
   const cached = sgdbAssetCache.readCached(userData, gameName, arg.platform, arg.gameId);
   if (cached !== undefined) return cached;
+  const launchYear = sgdbAssetCache.consoleLaunchYear(arg.platform);
   if (steamGridDbUnavailable()) return null;
   const apiKey = getSteamGridDbApiKey();
   // Time-box artwork requests so network failures return quickly.
@@ -2363,7 +2364,7 @@ async function resolveImagesForGame(arg) {
       // Error payloads may omit data.
       const searchData = await searchRes.json();
       if (searchRes.ok && searchData?.success !== false && Array.isArray(searchData?.data)) answered = true;
-      game = pickSteamGridDbGame(searchData?.data, variant);
+      game = pickSteamGridDbGame(searchData?.data, variant, { launchYear });
       if (game) {
         matchedName = variant;
         break;
@@ -2376,7 +2377,7 @@ async function resolveImagesForGame(arg) {
       const shortest = variants[variants.length - 1];
       const searchRes = await sgdb(`${BASE_URL}/search/autocomplete/${encodeURIComponent(shortest)}`);
       const searchData = await searchRes.json();
-      game = pickSteamGridDbGame(searchData?.data, shortest, { relaxed: true });
+      game = pickSteamGridDbGame(searchData?.data, shortest, { relaxed: true, launchYear });
       if (game) matchedName = `${shortest} (relaxed)`;
     }
     if (!game) {
@@ -2412,6 +2413,7 @@ async function resolveImagesForGame(arg) {
       portrait: portrait?.url,
       landscape: landscape?.url,
       logo: logo?.url,
+      ...(launchYear ? { byLaunchYear: true } : {}),
     };
     try {
       fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
@@ -3928,12 +3930,18 @@ function steamGridDbTokens(value) {
     .map((token) => SGDB_ROMAN[token] || token);
 }
 
-function pickSteamGridDbGame(games, name, { relaxed = false } = {}) {
+/*
+  `launchYear` is the year the game's console came out, when it is a console: of two games named
+  alike, the one released before it cannot be this one. When that leaves none, the first stays.
+*/
+function pickSteamGridDbGame(games, name, { relaxed = false, launchYear = 0 } = {}) {
   const list = Array.isArray(games) ? games : [];
   const queryTokens = steamGridDbTokens(name);
   const tokensOf = (g) => steamGridDbTokens((g && g.name) || '');
-  const exact = list.find((g) => tokensOf(g).join(' ') === queryTokens.join(' '));
-  if (exact) return exact;
+  const exacts = list.filter((g) => tokensOf(g).join(' ') === queryTokens.join(' '));
+  const releasedYear = (g) => (Number(g.release_date) > 0 ? new Date(Number(g.release_date) * 1000).getUTCFullYear() : 0);
+  const onConsole = launchYear > 0 && exacts.length > 1 ? exacts.find((g) => releasedYear(g) >= launchYear) : null;
+  if (onConsole || exacts.length) return onConsole || exacts[0];
   if (!queryTokens.length) return null;
   const carriesQuery = (g) => {
     const tokens = tokensOf(g);
@@ -3987,7 +3995,7 @@ function steamGridDbFetch(url) {
   Identity first: a Steam appid names the game outright, so no title has to be matched at all. Only
   a game with no appid (Ubisoft, GOG, Epic, manual) falls back to the strict title matcher.
 */
-async function resolveSteamGridDbGameId(name, steamAppid, context) {
+async function resolveSteamGridDbGameId(name, steamAppid, context, launchYear = 0) {
   const byAppidResult = await fetchSteamGridDbGameIdBySteamAppid(steamAppid, { withStatus: true });
   const networkError = byAppidResult.networkError;
   if (byAppidResult.value && byAppidResult.value.gameId) return { gameId: byAppidResult.value.gameId, networkError };
@@ -4004,14 +4012,14 @@ async function resolveSteamGridDbGameId(name, steamAppid, context) {
   }
   if (!searchRes.ok) return { gameId: 0, networkError };
   const search = await searchRes.json().catch(() => null);
-  const match = pickSteamGridDbGame(search && search.data, name);
+  const match = pickSteamGridDbGame(search && search.data, name, { launchYear });
   return { gameId: match && match.id ? Number(match.id) : 0, networkError };
 }
 
-async function fetchSteamGridDbGrids(name, orientation, steamAppid = '') {
+async function fetchSteamGridDbGrids(name, orientation, steamAppid = '', launchYear = 0) {
   const sgdb = steamGridDbFetch;
 
-  const resolved = await resolveSteamGridDbGameId(name, steamAppid, 'cover');
+  const resolved = await resolveSteamGridDbGameId(name, steamAppid, 'cover', launchYear);
   let networkError = resolved.networkError;
   if (!resolved.gameId) return { grids: [], networkError };
   const game = { id: resolved.gameId };
@@ -4061,9 +4069,12 @@ async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orient
   // With an appid the name is decoration; without one it is the only handle there is.
   if (!name && !appid) return empty();
   const orient = String(orientation || 'portrait').toLowerCase() === 'landscape' ? 'landscape' : 'portrait';
+  const launchYear = sgdbAssetCache.consoleLaunchYear(options && options.platform);
   // The appid belongs in the key: the same title resolved by identity and by search can legitimately
-  // land on different SteamGridDB games, and one must not serve the other's cached grids.
-  const key = require('crypto').createHash('sha1').update(`${appid}\0${name.toLowerCase()}\0${orient}`).digest('hex');
+  // land on different SteamGridDB games, and one must not serve the other's cached grids. So does
+  // a console's launch year, which can pick the other of two games named alike.
+  const keyText = `${appid}\0${name.toLowerCase()}\0${orient}${launchYear ? `\0${launchYear}` : ''}`;
+  const key = require('crypto').createHash('sha1').update(keyText).digest('hex');
   const cacheFile = path.join(steamgriddbCoversDir, `${key}.json`);
   try {
     if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < SGDB_COVERS_TTL) {
@@ -4083,7 +4094,7 @@ async function fetchSteamGridDbCovers(gameName, limit = SGDB_COVER_LIMIT, orient
 
   const pending = (async () => {
     try {
-      const result = await fetchSteamGridDbGrids(name, orient, appid);
+      const result = await fetchSteamGridDbGrids(name, orient, appid, launchYear);
       const grids = result.grids;
       if (grids.length && generation === artworkCacheGeneration) {
         try {
@@ -4404,20 +4415,20 @@ ipcMain.handle('forget-square-logo', async (event, { appid, name } = {}) => {
 ipcMain.handle('get-steamgriddb-cover', async (event, gameName, steamAppid, orientation) => {
   return await fetchSteamGridDbCover(gameName, steamAppid, orientation);
 });
-ipcMain.handle('get-steamgriddb-cover-status', async (event, gameName, steamAppid, orientation) => {
-  const result = await fetchSteamGridDbCovers(gameName, 1, orientation, steamAppid, { withStatus: true });
+ipcMain.handle('get-steamgriddb-cover-status', async (event, gameName, steamAppid, orientation, platform) => {
+  const result = await fetchSteamGridDbCovers(gameName, 1, orientation, steamAppid, { withStatus: true, platform });
   return { url: (result.covers[0] && result.covers[0].url) || null, networkError: result.networkError === true };
 });
 
 // Cover picker options: the two instant sources only (Steam CDN HEAD probe + SteamGridDB JSON).
 // SteamDB is deliberately absent, it costs a stealth-browser launch and would stall the dialog.
-ipcMain.handle('get-cover-options', async (event, { name, orientation, steamAppid } = {}) => {
+ipcMain.handle('get-cover-options', async (event, { name, orientation, steamAppid, platform } = {}) => {
   const gameName = String(name || '').trim();
   const orient = String(orientation || 'portrait').toLowerCase() === 'landscape' ? 'landscape' : 'portrait';
   const id = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
   const [steam, grids] = await Promise.all([
     id ? fetchSteamCdnCoversDetailed(id, orient) : Promise.resolve({ urls: [], networkError: false }),
-    gameName || id ? fetchSteamGridDbCovers(gameName, SGDB_COVER_LIMIT, orient, id, { withStatus: true }) : Promise.resolve({ covers: [], networkError: false }),
+    gameName || id ? fetchSteamGridDbCovers(gameName, SGDB_COVER_LIMIT, orient, id, { withStatus: true, platform }) : Promise.resolve({ covers: [], networkError: false }),
   ]);
   return {
     steam: Array.isArray(steam.urls) ? steam.urls : [],

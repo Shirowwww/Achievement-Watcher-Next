@@ -36,7 +36,7 @@ test('the strict title matcher is unchanged - no prefix or subset rule crept in'
   assert.doesNotMatch(picker, /startsWith|includes\(name\)|indexOf\(name\)/, 'a prefix rule would mismatch sequels and subtitled releases');
   // The wider rule is a last resort a caller has to ask for, and it refuses to choose between two
   // candidates - which is what stops it from handing a sequel's cover to the game before it.
-  assert.match(picker, /\{ relaxed = false \} = \{\}/, 'strict is what a caller gets by default');
+  assert.match(picker, /\{ relaxed = false, launchYear = 0 \} = \{\}/, 'strict is what a caller gets by default');
   assert.match(picker, /if \(close \|\| !relaxed\) return close \|\| null;/);
   assert.match(picker, /candidates\.length === 1 \? candidates\[0\] : null/);
 });
@@ -54,7 +54,7 @@ test('a network failure never poisons the appid cache', () => {
 
 test('the covers cache is keyed on the appid as well as the title', () => {
   // The same title resolved by identity and by search can legitimately be different games.
-  const expected = 'update(`${appid}' + String.fromCharCode(92) + '0${name.toLowerCase()}' + String.fromCharCode(92) + '0${orient}`)';
+  const expected = 'keyText = `${appid}' + String.fromCharCode(92) + '0${name.toLowerCase()}' + String.fromCharCode(92) + '0${orient}';
   assert.ok(source.includes(expected), 'the appid must be part of the covers cache key');
 });
 
@@ -177,6 +177,23 @@ test('a sequel numbered differently and an accent are the same name', () => {
   assert.equal(pickSteamGridDbGame([{ id: 8, name: 'Pâquerette Down the Bunburrows' }], 'Paquerette Down the Bunburrows')?.id, 8);
   // Folding numerals must not merge two different games.
   assert.equal(pickSteamGridDbGame([{ id: 9, name: 'Ghostrunner' }], 'Ghostrunner 2'), null);
+});
+
+test('of two games with one name, a console list takes the one released after the console came out (#160)', () => {
+  const { pickSteamGridDbGame } = editionHelpers();
+  const year = (y) => Date.UTC(y, 5, 1) / 1000;
+  const godOfWar = [
+    { id: 36454, name: 'God of War', release_date: year(2005) },
+    { id: 5254321, name: 'God of War', release_date: year(2018) },
+  ];
+  assert.equal(pickSteamGridDbGame(godOfWar, 'God of War', { launchYear: 2013 })?.id, 5254321);
+  assert.equal(pickSteamGridDbGame(godOfWar, 'God of War')?.id, 36454, 'without a console, the first stays');
+  const portOnly = [{ id: 1, name: 'Okami', release_date: year(2006) }];
+  assert.equal(pickSteamGridDbGame(portOnly, 'Okami', { launchYear: 2013 })?.id, 1, 'a sole match is never refused');
+  const sgdbAssetCache = require(path.join(__dirname, '..', '..', 'app', 'util', 'sgdbAssetCache.js'));
+  assert.equal(sgdbAssetCache.consoleLaunchYear('PS4'), 2013);
+  assert.equal(sgdbAssetCache.consoleLaunchYear('PS Vita'), 2011);
+  assert.equal(sgdbAssetCache.consoleLaunchYear('PC'), 0);
 });
 
 test('an unreachable SteamGridDB changes nothing on disk, and asks again next time', () => {

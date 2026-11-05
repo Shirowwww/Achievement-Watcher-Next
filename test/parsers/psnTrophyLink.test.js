@@ -116,6 +116,16 @@ test('a game with no PlayStation list is remembered without asking Sony', async 
   assert.equal(links.isFresh('42', 'fr-FR'), true);
 });
 
+test('a miss on the account is handed to the next source instead of being written (#160)', async () => {
+  seedCatalog();
+  const psn = sony();
+  const missed = [];
+  const game = { appid: '43', name: 'Another PC Game', achievements };
+  assert.equal(await links.linkGame(await psn.ctx(), game, { onMiss: (entry) => missed.push(entry.appid) }), null);
+  assert.deepEqual(missed, ['43']);
+  assert.equal(links.isFresh('43', 'fr-FR'), false, 'nothing is remembered yet: the public archive and Exophase still get their turn');
+});
+
 test('an edition name finds the plain list, and English names give a second chance', async () => {
   seedCatalog();
   const psn = sony();
