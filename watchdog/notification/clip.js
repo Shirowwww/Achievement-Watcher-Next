@@ -11,7 +11,7 @@ const os = require('os');
 const readline = require('readline');
 const { spawn } = require('child_process');
 const debug = require('../util/log.js');
-const { normalize, recorderArgs } = require('./clipProfile.js');
+const { normalize, split, recorderArgs } = require('./clipProfile.js');
 const { souvenirPath } = require('./souvenir.js');
 const gsrClip = require('./gsrClip.js');
 const clipPart = require('./clipPart.js');
@@ -270,7 +270,7 @@ function windowsRecorder(souvenir, pid, deps) {
 // Null when the chosen engine cannot run here; the reason is logged once per settings change.
 function linuxRecorder(souvenir, deps) {
   const clip = normalize(souvenir);
-  const afterMs = Math.round((clip.clipSeconds * 1000) / 2);
+  const { afterMs } = split(clip);
   if (clip.clipEngine === 'software') {
     return { engine: 'software', key: `software ${JSON.stringify(clip)}`, clip, args: [], ext: '.webm', afterMs };
   }

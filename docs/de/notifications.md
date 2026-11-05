@@ -322,13 +322,14 @@ Benachrichtigung verloren gehen.
 **Videoclip beim Freischalten** funktioniert wie das Trophäenvideo einer Konsole. Solange ein von AW Next verfolgtes Spiel läuft,
 werden die letzten Sekunden des Spiels im Speicher gehalten, bereits vom Videoencoder der Grafikkarte komprimiert.
 Erscheint ein Erfolg, wird die Spanne um ihn herum als MP4 in
-`<folder>\<game>\<achievement> - <date>.mp4` gespeichert, mit dem Popup in der Mitte. Der Ordner ist
+`<folder>\<game>\<achievement> - <date>.mp4` gespeichert, mit dem Popup in der Mitte, sofern du es nicht verschiebst. Der Ordner ist
 `Videos\Achievement Watcher Next`, sofern du keinen anderen wählst. Erfolge, die kurz nacheinander freigeschaltet werden,
 teilen sich einen Clip.
 
 | Einstellung | Auswahl | Standard |
 |---|---|---|
-| Clip-Länge | 10 bis 30 Sekunden, eine Hälfte vor der Freischaltung und eine danach | 20 s |
+| Clip-Länge | 10 bis 60 Sekunden | 20 s |
+| Vor der Freischaltung | Von 0 Sekunden bis zum ganzen Clip. Erhöhen, wenn Benachrichtigungen in anspruchsvollen Spielen verspätet erscheinen | Die Hälfte des Clips |
 | Format | H.264, HEVC oder AV1, als MP4 gespeichert | H.264 |
 | Auflösung | Bildschirm, 2160p, 1440p, 1080p oder 720p, nie über dem Bildschirm | 1080p |
 | Bildrate | 30 FPS, 60 FPS oder Unbegrenzt, was deinem Bildschirm folgt (120, 144, 240 Hz) | 30 FPS |

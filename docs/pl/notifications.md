@@ -328,7 +328,8 @@ współdzielą jeden klip.
 
 | Ustawienie | Wybory | Domyślnie |
 |---|---|---|
-| Długość klipu | Od 10 do 30 sekund, połowa przed odblokowaniem i połowa po | 20 s |
+| Długość klipu | Od 10 do 60 sekund | 20 s |
+| Przed odblokowaniem | Od 0 sekund do całego klipu. Zwiększ, gdy powiadomienia spóźniają się w wymagających grach | Połowa klipu |
 | Format | H.264, HEVC lub AV1, zapisywane jako MP4 | H.264 |
 | Rozdzielczość | Ekran, 2160p, 1440p, 1080p lub 720p, nigdy powyżej ekranu | 1080p |
 | Liczba klatek | 30 FPS, 60 FPS lub Bez limitu, co podąża za twoim ekranem (120, 144, 240 Hz) | 30 FPS |

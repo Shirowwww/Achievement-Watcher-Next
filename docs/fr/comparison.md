@@ -79,7 +79,7 @@ Tous les suiveurs peuvent vous dire qu'un jeu est bloqué à 0 %. AW Next essaie
 | Presets par émulateur | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Sons | ✅ Choix aléatoire, FLAC/M4A/AAC | ✅ | ⚠️ Fichier personnalisé | ✅ Sons personnalisés |
 | Captures d'écran | ✅ Capture compatible HDR sous Windows (mappage de tons BT.2408), aussi sous Linux avec X11 et Wayland | ✅ Capture HDR | ✅ | ❌ |
-| Clips vidéo d'un déblocage | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, mappage de tons HDR ; sous Linux, gpu-screen-recorder ou l'enregistreur WebM intégré | ✅ 10-30 s, 30/60 FPS | ⚠️ Via OBS | ❌ |
+| Clips vidéo d'un déblocage | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, mappage de tons HDR ; sous Linux, gpu-screen-recorder ou l'enregistreur WebM intégré | ✅ 10-30 s, 30/60 FPS | ⚠️ Via OBS | ❌ |
 | Notifications de temps de jeu et de progression | ✅ Coupure de la progression par jeu | ✅ Coupure de la progression par jeu | ✅ Temps de jeu | ✅ Progression, en plusieurs étapes |
 | Apparence de notification propre à chaque jeu | ✅ Chaque jeu peut remplacer le preset, la position, le son et l'échelle | ❌ | ❌ | ❌ |
 

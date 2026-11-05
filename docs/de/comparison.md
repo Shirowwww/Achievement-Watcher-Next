@@ -79,7 +79,7 @@ Jeder Tracker kann dir sagen, dass ein Spiel bei 0 % hängt. AW Next versucht es
 | Presets pro Emulator | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Töne | ✅ Zufallsauswahl, FLAC/M4A/AAC | ✅ | ⚠️ Eigene Datei | ✅ Eigene Töne |
 | Screenshots | ✅ HDR-fähige Aufnahme unter Windows (BT.2408 per Tone-Mapping), auch unter Linux mit X11 und Wayland | ✅ HDR-Aufnahme | ✅ | ❌ |
-| Videoclips einer Freischaltung | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, HDR per Tone-Mapping; unter Linux gpu-screen-recorder oder der eingebaute WebM-Recorder | ✅ 10-30 s, 30/60 FPS | ⚠️ Über OBS | ❌ |
+| Videoclips einer Freischaltung | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, HDR per Tone-Mapping; unter Linux gpu-screen-recorder oder der eingebaute WebM-Recorder | ✅ 10-30 s, 30/60 FPS | ⚠️ Über OBS | ❌ |
 | Spielzeit- und Fortschrittsbenachrichtigungen | ✅ Fortschritt pro Spiel stummschalten | ✅ Fortschritt pro Spiel stummschalten | ✅ Spielzeit | ✅ Fortschritt, mehrstufig |
 | Eigenes Benachrichtigungsaussehen pro Spiel | ✅ Jedes Spiel kann Preset, Position, Ton und Größe überschreiben | ❌ | ❌ | ❌ |
 

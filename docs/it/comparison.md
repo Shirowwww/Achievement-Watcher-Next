@@ -79,7 +79,7 @@ Ogni tracker può dirti che un gioco è fermo allo 0%. AW Next prova anche a sis
 | Preset per emulatore | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Suoni | ✅ Scelta casuale, FLAC/M4A/AAC | ✅ | ⚠️ File personalizzato | ✅ Suoni personalizzati |
 | Screenshot | ✅ Cattura compatibile con HDR su Windows (tone mapping BT.2408), anche su Linux sotto X11 e Wayland | ✅ Cattura HDR | ✅ | ❌ |
-| Clip video di uno sblocco | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, tone mapping HDR; su Linux, gpu-screen-recorder o il registratore WebM integrato | ✅ 10-30 s, 30/60 FPS | ⚠️ Tramite OBS | ❌ |
+| Clip video di uno sblocco | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, tone mapping HDR; su Linux, gpu-screen-recorder o il registratore WebM integrato | ✅ 10-30 s, 30/60 FPS | ⚠️ Tramite OBS | ❌ |
 | Notifiche di tempo di gioco e avanzamento | ✅ Silenziamento dell'avanzamento per singolo gioco | ✅ Silenziamento dell'avanzamento per singolo gioco | ✅ Tempo di gioco | ✅ Avanzamento, a più passaggi |
 | Aspetto delle notifiche proprio per ogni gioco | ✅ Ogni gioco può sostituire preset, posizione, suono e scala | ❌ | ❌ | ❌ |
 

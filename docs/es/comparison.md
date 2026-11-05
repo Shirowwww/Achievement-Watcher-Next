@@ -79,7 +79,7 @@ Todos los rastreadores pueden decirte que un juego está atascado en 0 %. AW Nex
 | Presets por emulador | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Sonidos | ✅ Elección aleatoria, FLAC/M4A/AAC | ✅ | ⚠️ Archivo personalizado | ✅ Sonidos personalizados |
 | Capturas de pantalla | ✅ Captura con soporte HDR en Windows (mapeo de tonos BT.2408), también en Linux con X11 y Wayland | ✅ Captura HDR | ✅ | ❌ |
-| Videoclips de un desbloqueo | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, mapeo de tonos HDR; en Linux, gpu-screen-recorder o el grabador WebM integrado | ✅ 10-30 s, 30/60 FPS | ⚠️ Mediante OBS | ❌ |
+| Videoclips de un desbloqueo | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, mapeo de tonos HDR; en Linux, gpu-screen-recorder o el grabador WebM integrado | ✅ 10-30 s, 30/60 FPS | ⚠️ Mediante OBS | ❌ |
 | Notificaciones de tiempo de juego y de progreso | ✅ Silenciar el progreso por juego | ✅ Silenciar el progreso por juego | ✅ Tiempo de juego | ✅ Progreso, en varios pasos |
 | Aspecto de notificación propio por juego | ✅ Cada juego puede sustituir el preset, la posición, el sonido y la escala | ❌ | ❌ | ❌ |
 

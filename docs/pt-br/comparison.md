@@ -79,7 +79,7 @@ Todo rastreador pode dizer que um jogo está parado em 0%. O AW Next também ten
 | Presets por emulador | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Sons | ✅ Escolha aleatória, FLAC/M4A/AAC | ✅ | ⚠️ Arquivo personalizado | ✅ Sons personalizados |
 | Capturas de tela | ✅ Captura com suporte a HDR no Windows (tone mapping BT.2408), também no Linux sob X11 e Wayland | ✅ Captura HDR | ✅ | ❌ |
-| Videoclipes de um desbloqueio | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, tone mapping HDR; no Linux, gpu-screen-recorder ou o gravador WebM integrado | ✅ 10-30 s, 30/60 FPS | ⚠️ Pelo OBS | ❌ |
+| Videoclipes de um desbloqueio | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, tone mapping HDR; no Linux, gpu-screen-recorder ou o gravador WebM integrado | ✅ 10-30 s, 30/60 FPS | ⚠️ Pelo OBS | ❌ |
 | Notificações de tempo de jogo e progresso | ✅ Silenciamento de progresso por jogo | ✅ Silenciamento de progresso por jogo | ✅ Tempo de jogo | ✅ Progresso, em várias etapas |
 | Visual de notificação próprio por jogo | ✅ Cada jogo pode substituir preset, posição, som e escala | ❌ | ❌ | ❌ |
 

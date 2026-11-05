@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { createWebmRing } = require('../util/webmRing.js');
-const { fixedFps } = require('../util/clipProfile.js');
+const { fixedFps, normalize, split } = require('../util/clipProfile.js');
 
 /*
   The software clip recorder for Linux, chosen in Settings when gpu-screen-recorder is not wanted or
@@ -129,18 +129,17 @@ function createClipRecorder({ BrowserWindow, session, desktopCapturer, screen, p
       log(`[clip] unlock joined the clip ${pending.target}`);
       return pending.target;
     }
-    const half = Math.round((clip.clipSeconds * 1000) / 2);
+    const { beforeMs, afterMs } = split(clip);
     const at = streamNow();
-    pending = { target, fromMs: at - half, toMs: at + half, deadline: Date.now() + half + DELIVERY_SLACK_MS, timer: null };
-    pending.timer = setTimeout(finishPending, half);
+    pending = { target, fromMs: at - beforeMs, toMs: at + afterMs, deadline: Date.now() + afterMs + DELIVERY_SLACK_MS, timer: null };
+    pending.timer = setTimeout(finishPending, afterMs);
     return target;
   }
 
   function start(settings, app) {
     stop();
-    clip = settings;
-    const half = Math.round((clip.clipSeconds * 1000) / 2);
-    ring = createWebmRing({ keepMs: half + 2 * KEYFRAME_MS });
+    clip = normalize(settings);
+    ring = createWebmRing({ keepMs: split(clip).beforeMs + 2 * KEYFRAME_MS });
     const recorderSession = session.fromPartition('aw-clip-recorder');
     recorderSession.setDisplayMediaRequestHandler(async (_request, callback) => {
       try {

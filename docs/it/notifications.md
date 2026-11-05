@@ -328,7 +328,8 @@ condividono una sola clip.
 
 | Impostazione | Scelte | Predefinito |
 |---|---|---|
-| Durata della clip | Da 10 a 30 secondi, metà prima dello sblocco e metà dopo | 20 s |
+| Durata della clip | Da 10 a 60 secondi | 20 s |
+| Prima dello sblocco | Da 0 secondi all'intera clip. Alzalo se le notifiche arrivano in ritardo nei giochi pesanti | Metà della clip |
 | Formato | H.264, HEVC o AV1, salvato come MP4 | H.264 |
 | Risoluzione | Schermo, 2160p, 1440p, 1080p o 720p, mai oltre lo schermo | 1080p |
 | Frequenza fotogrammi | 30 FPS, 60 FPS o Sbloccata, che segue il tuo schermo (120, 144, 240 Hz) | 30 FPS |

@@ -328,7 +328,8 @@ compartilham um só clipe.
 
 | Configuração | Opções | Padrão |
 |---|---|---|
-| Duração do clipe | De 10 a 30 segundos, metade antes do desbloqueio e metade depois | 20 s |
+| Duração do clipe | De 10 a 60 segundos | 20 s |
+| Antes do desbloqueio | De 0 segundo ao clipe inteiro. Aumente quando as notificações chegam atrasadas em jogos pesados | Metade do clipe |
 | Formato | H.264, HEVC ou AV1, salvo como MP4 | H.264 |
 | Resolução | Tela, 2160p, 1440p, 1080p ou 720p, nunca acima da tela | 1080p |
 | Taxa de quadros | 30 FPS, 60 FPS ou Ilimitada, que acompanha a sua tela (120, 144, 240 Hz) | 30 FPS |

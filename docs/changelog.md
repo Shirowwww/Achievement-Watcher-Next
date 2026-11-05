@@ -28,6 +28,10 @@ renamed in 3.9.0 and the history is kept under one file.
   language chosen in the app, in all 27 languages, and falls back to English for a version that has
   no translation yet. The Documentation, FAQ and Troubleshooting buttons open the guide in your
   language when the site has it.
+- **Video clips last up to 60 seconds, and you choose how much comes before the unlock (#170).**
+  A new **Before the unlock** slider sets the seconds kept before the achievement pops, from none
+  to the whole clip; it starts at half, as before. In a heavy game where the notification arrives
+  a few seconds late, keep most of the clip before it and the moment itself stays in.
 
 ### Fixed
 

@@ -79,7 +79,7 @@ Każdy tracker potrafi powiedzieć, że gra tkwi na 0%. AW Next próbuje to tak�
 | Presety dla poszczególnych emulatorów | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Dźwięki | ✅ Losowy wybór, FLAC/M4A/AAC | ✅ | ⚠️ Własny plik | ✅ Własne dźwięki |
 | Zrzuty ekranu | ✅ Przechwytywanie z obsługą HDR w Windows (mapowanie tonalne BT.2408), także w Linuksie pod X11 i Wayland | ✅ Przechwytywanie HDR | ✅ | ❌ |
-| Klipy wideo z odblokowania | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, mapowanie tonalne HDR; w Linuksie gpu-screen-recorder lub wbudowany rejestrator WebM | ✅ 10-30 s, 30/60 FPS | ⚠️ Przez OBS | ❌ |
+| Klipy wideo z odblokowania | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, mapowanie tonalne HDR; w Linuksie gpu-screen-recorder lub wbudowany rejestrator WebM | ✅ 10-30 s, 30/60 FPS | ⚠️ Przez OBS | ❌ |
 | Powiadomienia o czasie gry i postępie | ✅ Wyciszanie postępu dla poszczególnych gier | ✅ Wyciszanie postępu dla poszczególnych gier | ✅ Czas gry | ✅ Postęp, wieloetapowy |
 | Własny wygląd powiadomień dla każdej gry | ✅ Każda gra może nadpisać preset, położenie, dźwięk i skalę | ❌ | ❌ | ❌ |
 

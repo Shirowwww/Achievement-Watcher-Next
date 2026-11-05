@@ -322,13 +322,14 @@ notification ne sont pas perdus.
 **Clip vidéo au déblocage** fonctionne comme la vidéo de trophée d'une console. Pendant qu'un jeu suivi par AW Next tourne,
 les dernières secondes de jeu sont gardées en mémoire, déjà compressées par l'encodeur vidéo de la carte graphique.
 Quand un succès apparaît, la séquence qui l'entoure est enregistrée en MP4 dans
-`<folder>\<game>\<achievement> - <date>.mp4`, avec la popup au milieu. Le dossier est
+`<folder>\<game>\<achievement> - <date>.mp4`, avec la popup au milieu, sauf si vous la déplacez. Le dossier est
 `Videos\Achievement Watcher Next` sauf si vous en choisissez un autre. Les succès débloqués à peu d'intervalle
 partagent un même clip.
 
 | Réglage | Choix | Par défaut |
 |---|---|---|
-| Durée du clip | 10 à 30 secondes, moitié avant le déblocage et moitié après | 20 s |
+| Durée du clip | 10 à 60 secondes | 20 s |
+| Avant le succès | De 0 seconde à tout le clip. À monter quand les notifications arrivent en retard dans les jeux lourds | La moitié du clip |
 | Format | H.264, HEVC ou AV1, enregistré en MP4 | H.264 |
 | Résolution | Écran, 2160p, 1440p, 1080p ou 720p, jamais au-dessus de l'écran | 1080p |
 | Images par seconde | 30 FPS, 60 FPS ou Illimitées, qui suit votre écran (120, 144, 240 Hz) | 30 FPS |

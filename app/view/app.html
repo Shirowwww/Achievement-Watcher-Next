@@ -2507,8 +2507,17 @@
                     <li class="hasHelper">
                       <div class="left"><i class="fas fa-stopwatch"></i> <span id="lbl-clipSeconds"></span></div>
                       <div class="right volume-slider">
-                        <input type="range" id="option_clipSeconds" min="10" max="30" step="1" value="20" />
+                        <input type="range" id="option_clipSeconds" min="10" max="60" step="1" value="20" />
                         <span id="clipSeconds-value" class="volume-value">20</span>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-backward"></i> <span id="lbl-clipBefore"></span></div>
+                      <div class="right volume-slider">
+                        <input type="range" id="option_clipBefore" min="0" max="20" step="1" value="10" />
+                        <span id="clipBefore-value" class="volume-value">10</span>
                       </div>
                       <div class="help"></div>
                     </li>

@@ -26,7 +26,11 @@ test('the clip card offers the choices of a replay buffer', () => {
   const seconds = list.querySelector('#option_clipSeconds');
   assert.equal(seconds.getAttribute('type'), 'range');
   assert.equal(seconds.getAttribute('min'), '10');
-  assert.equal(seconds.getAttribute('max'), '30');
+  assert.equal(seconds.getAttribute('max'), '60');
+  const before = list.querySelector('#option_clipBefore');
+  assert.equal(before.getAttribute('type'), 'range');
+  assert.equal(before.getAttribute('min'), '0');
+  assert.match(settingsUi, /\$\('#option_clipBefore'\)\.attr\('max', String\(clip\.clipSeconds\)\)/, 'its slider ends at the clip length');
   assert.deepEqual(values(list, 'option_clipCodec'), ['h264', 'hevc', 'av1']);
   assert.deepEqual(values(list, 'option_clipResolution'), ['native', '2160', '1440', '1080', '720']);
   assert.deepEqual(values(list, 'option_clipFps'), ['30', '60', 'unlocked']);
@@ -74,13 +78,13 @@ test('the clip card has its own save folder, laid out like the screenshot one', 
 });
 
 test('every clip label is translated and every control is saved', () => {
-  for (const id of ['clip', 'clipSeconds', 'clipCodec', 'clipResolution', 'clipFps', 'clipQuality', 'clipAudio', 'clipEstimate']) {
+  for (const id of ['clip', 'clipSeconds', 'clipBefore', 'clipCodec', 'clipResolution', 'clipFps', 'clipQuality', 'clipAudio', 'clipEstimate']) {
     assert.match(loader, new RegExp(`row\\('#lbl-${id}', '${id}'`), `${id} needs its label bound`);
   }
   // stripTags would erase the <folder>\<game> placeholders of the folder help.
   assert.doesNotMatch(loader, /clear\(opt\.souvenirDirHelp\)/);
   assert.match(settingsUi, /Object\.assign\(app\.config\.souvenir, readClipSettings\(\)\)/);
-  assert.match(settingsUi, /\$\('#option_clipSeconds'\)\.on\('change', autosaveNotifications\)/);
+  assert.match(settingsUi, /\$\('#option_clipSeconds, #option_clipBefore'\)\.on\('change', autosaveNotifications\)/);
 
   const keys = Object.keys(JSON.parse(fs.readFileSync(path.join(localeDir, 'english.json'), 'utf8')).settings.notification.option).filter((key) => key.startsWith('clip'));
   assert.ok(keys.length >= 20);

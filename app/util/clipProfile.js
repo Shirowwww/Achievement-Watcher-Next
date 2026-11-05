@@ -3,7 +3,8 @@
 // Clip settings for the Settings page and the Watchdog, which run in separate packages: this file
 // exists twice, in app/util and watchdog/notification, and test/core/clipProfile.test.js compares them.
 
-const SECONDS = { min: 10, max: 30, fallback: 20 };
+// 60 s is also the longest clip aw-next-clip joins unlocks into (LONGEST_CLIP in main.rs).
+const SECONDS = { min: 10, max: 60, fallback: 20 };
 const CODECS = ['h264', 'hevc', 'av1'];
 const RESOLUTIONS = ['native', '2160', '1440', '1080', '720'];
 // 'unlocked' follows the refresh rate of the screen being recorded (120, 144, 240 Hz...).
@@ -26,11 +27,19 @@ function pick(value, allowed, fallback) {
 }
 
 // Settings saved from the page arrive as strings, so every field is read by value.
+// The seconds kept before the unlock: half the clip until the user chooses, never more than all of it.
+function secondsBefore(value, clipSeconds) {
+  const before = value === '' || value == null ? NaN : Math.round(Number(value));
+  return Number.isFinite(before) ? Math.min(clipSeconds, Math.max(0, before)) : Math.round(clipSeconds / 2);
+}
+
 function normalize(souvenir = {}) {
-  const seconds = Math.round(Number(souvenir.clipSeconds));
+  const read = Math.round(Number(souvenir.clipSeconds));
+  const seconds = Number.isFinite(read) ? Math.min(SECONDS.max, Math.max(SECONDS.min, read)) : SECONDS.fallback;
   return {
     clip: souvenir.clip === true || souvenir.clip === 'true',
-    clipSeconds: Number.isFinite(seconds) ? Math.min(SECONDS.max, Math.max(SECONDS.min, seconds)) : SECONDS.fallback,
+    clipSeconds: seconds,
+    clipBefore: secondsBefore(souvenir.clipBefore, seconds),
     clipCodec: pick(souvenir.clipCodec, CODECS, 'h264'),
     clipResolution: pick(souvenir.clipResolution, RESOLUTIONS, '1080'),
     clipFps: pick(souvenir.clipFps, FRAME_RATES, 30),
@@ -47,18 +56,22 @@ function fixedFps(clip) {
   return clip.clipFps === 'unlocked' ? LINUX_UNLOCKED_FPS : clip.clipFps;
 }
 
-// The unlock sits in the middle of the clip: half before it, half after.
+// The milliseconds recorded before and after the unlock.
+function split(clip) {
+  return { beforeMs: clip.clipBefore * 1000, afterMs: (clip.clipSeconds - clip.clipBefore) * 1000 };
+}
+
 function recorderArgs(souvenir = {}, pid = 0) {
   const clip = normalize(souvenir);
-  const half = String(Math.round((clip.clipSeconds * 1000) / 2));
+  const { beforeMs, afterMs } = split(clip);
   return [
     '--pid', String(Number(pid) || 0),
     '--codec', clip.clipCodec,
     '--height', clip.clipResolution === 'native' ? '0' : clip.clipResolution,
     '--fps', String(clip.clipFps),
     '--quality', clip.clipQuality,
-    '--before', half,
-    '--after', half,
+    '--before', String(beforeMs),
+    '--after', String(afterMs),
     '--audio', clip.clipAudio,
     '--hdr', souvenir.hdr === 'off' ? 'off' : 'auto',
   ];
@@ -81,4 +94,4 @@ function estimateMegabytes(souvenir = {}, screen = { width: 1920, height: 1080 }
   return ((bits + AUDIO_BITS) * clip.clipSeconds) / 8 / 1e6;
 }
 
-module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, normalize, recorderArgs, estimateMegabytes, fixedFps };
+module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, normalize, split, recorderArgs, estimateMegabytes, fixedFps };

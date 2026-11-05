@@ -767,6 +767,7 @@ function translateUI(lang, locale, template) {
     $("#option_clip option[value='true']").text(clear(template.settings.common.enable));
     $("#option_clip option[value='false']").text(clear(template.settings.common.disable));
     row('#lbl-clipSeconds', 'clipSeconds', 'clipSecondsDesc');
+    row('#lbl-clipBefore', 'clipBefore', 'clipBeforeDesc');
     row('#lbl-clipCodec', 'clipCodec', 'clipCodecDesc');
     row('#lbl-clipResolution', 'clipResolution', 'clipResolutionDesc');
     $("#option_clipResolution option[value='native']").text(clear(opt.clipResolutionNative));

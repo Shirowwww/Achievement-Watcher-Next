@@ -318,13 +318,14 @@ notification are not lost.
 **Video clip on unlock** works like a console's trophy video. While a game AW Next tracks is running,
 the last seconds of play are kept in memory, already compressed by the graphics card's video encoder.
 When an achievement pops, the stretch around it is saved as an MP4 in
-`<folder>\<game>\<achievement> - <date>.mp4`, with the popup in the middle of it. The folder is
+`<folder>\<game>\<achievement> - <date>.mp4`, with the popup in the middle of it unless you move it. The folder is
 `Videos\Achievement Watcher Next` unless you pick another. Achievements unlocking close together
 share one clip.
 
 | Setting | Choices | Default |
 |---|---|---|
-| Clip length | 10 to 30 seconds, half before the unlock and half after | 20 s |
+| Clip length | 10 to 60 seconds | 20 s |
+| Before the unlock | From 0 seconds to the whole clip. Raise it when notifications show up late in heavy games | Half the clip |
 | Format | H.264, HEVC or AV1, saved as MP4 | H.264 |
 | Resolution | Screen, 2160p, 1440p, 1080p or 720p, never above the screen | 1080p |
 | Frame rate | 30 FPS, 60 FPS or Unlocked, which follows your screen (120, 144, 240 Hz) | 30 FPS |

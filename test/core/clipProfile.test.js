@@ -19,6 +19,7 @@ test('settings saved as text are read by value, and anything unknown falls back'
   assert.deepEqual(profile.normalize({}), {
     clip: false,
     clipSeconds: 20,
+    clipBefore: 10,
     clipCodec: 'h264',
     clipResolution: '1080',
     clipFps: 30,
@@ -30,9 +31,9 @@ test('settings saved as text are read by value, and anything unknown falls back'
   assert.equal(profile.normalize({ clipEngine: 'software' }).clipEngine, 'software');
   assert.equal(profile.normalize({ clipEngine: 'obs' }).clipEngine, 'gpu');
   assert.equal(profile.normalize({ clipDir: '  D:\\Clips ' }).clipDir, 'D:\\Clips');
-  const read = profile.normalize({ clip: 'true', clipSeconds: '45', clipFps: '60', clipCodec: 'av1', clipResolution: 'native', clipAudio: 'all' });
+  const read = profile.normalize({ clip: 'true', clipSeconds: '75', clipFps: '60', clipCodec: 'av1', clipResolution: 'native', clipAudio: 'all' });
   assert.equal(read.clip, true);
-  assert.equal(read.clipSeconds, 30, 'clips are capped at 30 s');
+  assert.equal(read.clipSeconds, 60, 'clips are capped at 60 s, the longest clip the recorder joins');
   assert.equal(profile.normalize({ clipSeconds: '4' }).clipSeconds, 10, 'and last at least 10 s');
   assert.equal(read.clipFps, 60);
   assert.equal(read.clipCodec, 'av1');
@@ -41,14 +42,26 @@ test('settings saved as text are read by value, and anything unknown falls back'
   assert.equal(profile.normalize({ clipCodec: 'vp9', clipFps: 144, clipQuality: 'ultra' }).clipCodec, 'h264');
 });
 
-test('the unlock sits in the middle of the clip', () => {
-  const args = profile.recorderArgs({ clipSeconds: 15, clipResolution: 'native', hdr: 'off' }, 99);
+test('the unlock sits in the middle of the clip until the user moves it', () => {
+  const args = profile.recorderArgs({ clipSeconds: 16, clipResolution: 'native', hdr: 'off' }, 99);
   const value = (name) => args[args.indexOf(name) + 1];
-  assert.equal(value('--before'), '7500');
-  assert.equal(value('--after'), '7500');
+  assert.equal(value('--before'), '8000');
+  assert.equal(value('--after'), '8000');
   assert.equal(value('--height'), '0', 'native resolution is left to the recorder');
   assert.equal(value('--pid'), '99');
   assert.equal(value('--hdr'), 'off');
+});
+
+test('a clip can keep most of its seconds before a late notification', () => {
+  const args = profile.recorderArgs({ clipSeconds: '30', clipBefore: '25' });
+  const value = (name) => args[args.indexOf(name) + 1];
+  assert.equal(value('--before'), '25000');
+  assert.equal(value('--after'), '5000');
+  assert.deepEqual(profile.split(profile.normalize({ clipSeconds: 30, clipBefore: 25 })), { beforeMs: 25000, afterMs: 5000 });
+  assert.equal(profile.normalize({ clipSeconds: 20, clipBefore: 45 }).clipBefore, 20, 'never more than the whole clip');
+  assert.equal(profile.normalize({ clipSeconds: 20, clipBefore: -3 }).clipBefore, 0);
+  assert.equal(profile.normalize({ clipSeconds: 20, clipBefore: '' }).clipBefore, 10, 'unset is the middle');
+  assert.equal(profile.normalize({ clipSeconds: 15, clipBefore: 'x' }).clipBefore, 8);
 });
 
 test('the size estimate follows the resolution, frame rate, codec and length', () => {

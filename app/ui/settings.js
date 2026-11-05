@@ -945,6 +945,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       const cfgClip = clipProfile.normalize(cfgSouvenir);
       $('#option_clip').val(String(cfgClip.clip)).change();
       $('#option_clipSeconds').val(String(cfgClip.clipSeconds));
+      $('#option_clipBefore').attr('max', String(cfgClip.clipSeconds)).val(String(cfgClip.clipBefore));
       $('#option_clipCodec').val(cfgClip.clipCodec).change();
       $('#option_clipResolution').val(cfgClip.clipResolution).change();
       $('#option_clipFps').val(String(cfgClip.clipFps)).change();
@@ -4859,8 +4860,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     }
     // The clip length slider saves on release like the volume one; the delegated auto-save above
     // only covers the volume slider by id.
-    $('#option_clipSeconds').on('input', updateClipReadouts);
-    $('#option_clipSeconds').on('change', autosaveNotifications);
+    $('#option_clipSeconds, #option_clipBefore').on('input', updateClipReadouts);
+    $('#option_clipSeconds, #option_clipBefore').on('change', autosaveNotifications);
     $('#options-notify-clip').on('change', 'select', updateClipReadouts);
     $('#option_overlayVolume').on('input', updateOverlayVolumeLabel);
     $('#option_overlayVolume').on('change', function () {
@@ -5235,6 +5236,7 @@ function readClipSettings() {
   return clipProfile.normalize({
     clip: $('#option_clip').val(),
     clipSeconds: $('#option_clipSeconds').val(),
+    clipBefore: $('#option_clipBefore').val(),
     clipCodec: $('#option_clipCodec').val(),
     clipResolution: $('#option_clipResolution').val(),
     clipFps: $('#option_clipFps').val(),
@@ -5257,6 +5259,9 @@ function updateClipReadouts() {
   $('#options-notify-clip').attr('data-clip-engine', linuxEngine);
   const recorded = linuxEngine === 'gpu' ? { ...clip, clipResolution: 'native' } : clip;
   $('#clipSeconds-value').text(localeText('settings.notification.option.clipSecondsValue', { seconds: clip.clipSeconds }) || `${clip.clipSeconds} s`);
+  // The part before the unlock can never outgrow the clip: its slider ends at the clip length.
+  $('#option_clipBefore').attr('max', String(clip.clipSeconds)).val(String(clip.clipBefore));
+  $('#clipBefore-value').text(localeText('settings.notification.option.clipSecondsValue', { seconds: clip.clipBefore }) || `${clip.clipBefore} s`);
   const ratio = window.devicePixelRatio || 1;
   const screen = { width: Math.round(window.screen.width * ratio), height: Math.round(window.screen.height * ratio) };
   const native = localeText('settings.notification.option.clipResolutionNative');

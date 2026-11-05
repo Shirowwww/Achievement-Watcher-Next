@@ -74,7 +74,7 @@ Every tracker can tell you a game is stuck at 0%. AW Next also tries to fix it.
 | Per-emulator presets | ✅ Xenia · RPCS3 · ShadPS4 | ✅ | ❌ | ❌ |
 | Sounds | ✅ Random pick, FLAC/M4A/AAC | ✅ | ⚠️ Custom file | ✅ Custom sounds |
 | Screenshots | ✅ HDR-aware capture on Windows (BT.2408 tone mapped), also on Linux under X11 and Wayland | ✅ HDR capture | ✅ | ❌ |
-| Video clips of an unlock | ✅ 10-30 s, 30/60 FPS, H.264 · HEVC · AV1, HDR tone mapped; on Linux, gpu-screen-recorder or the built-in WebM recorder | ✅ 10-30 s, 30/60 FPS | ⚠️ Via OBS | ❌ |
+| Video clips of an unlock | ✅ 10-60 s, 30/60 FPS, H.264 · HEVC · AV1, HDR tone mapped; on Linux, gpu-screen-recorder or the built-in WebM recorder | ✅ 10-30 s, 30/60 FPS | ⚠️ Via OBS | ❌ |
 | Playtime and progress notifications | ✅ Per-game progress mute | ✅ Per-game progress mute | ✅ Playtime | ✅ Progress, multi-step |
 | Own notification look per game | ✅ Each game can override the preset, position, sound and scale | ❌ | ❌ | ❌ |
 
