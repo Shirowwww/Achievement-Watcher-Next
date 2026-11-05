@@ -351,6 +351,7 @@ function startXboxPolling(game) {
             achievementDisplayName: (ach && ach.displayName) || id,
             achievementDescription: (ach && ach.description) || '',
             rarityPercent: rounded !== null && rounded >= 0 && rounded <= rareCutoff(app.options) ? rounded : null,
+            unlockRate: rounded !== null && rounded >= 0 && rounded <= 100 ? rounded : null,
             icon: (ach && ach.icon) || '',
             gameIcon: (schema && schema.img && schema.img.portrait) || '',
             image: (schema && schema.img && schema.img.header) || '',

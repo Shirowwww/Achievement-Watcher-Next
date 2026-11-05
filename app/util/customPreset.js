@@ -129,7 +129,8 @@ const PRESET_ENGINE = [
   '    and the whole row disappears when both do, so it never reserves an empty line.',
   '  */',
   '  function rarityText(data) {',
-  '    var percent = data && data.rarityPercent;',
+  '    // The rate of every unlock, common ones included; rarityPercent alone stops at the rare cut-off.',
+  '    var percent = data && (data.unlockRate != null ? data.unlockRate : data.rarityPercent);',
   "    if (percent == null || percent === '' || !isFinite(Number(percent))) return '';",
   "    return (Math.round(Number(percent) * 10) / 10) + '%';",
   '  }',
@@ -156,7 +157,7 @@ const PRESET_ENGINE = [
   "    var texts = document.querySelectorAll('.aw-canvas > [data-kind=\"text\"]');",
   "    for (var j = 0; j < texts.length; j++) texts[j].toggleAttribute('data-empty', saysNothing(texts[j]));",
   '  }',
-  '  // A text made only of words this popup lacks, such as the rarity of a common unlock.',
+  '  // A text made only of words this popup lacks, such as the rarity of an unlock with no known rate.',
   '  function saysNothing(node) {',
   "    if (node.textContent.trim() || !node.querySelector('[data-tok]')) return false;",
   "    var tiers = node.querySelectorAll('[data-tok=\"tier\"]');",
@@ -528,6 +529,7 @@ const PRESET_MARKUP = [
   the list; test/core/presetEngineUpgrade.test.js pins the current one so that is not forgotten.
 */
 const PAST_ENGINE_HASHES = new Set([
+  'cd3c7e7d758ebc881ab9381ce3b1bd342b6c6cc36e543861e8c8fec4e73bb319', // 2026-11-05
   '9f39ca91bfb36fec7ede2a7ebdf17a4fcf23173eeb7e0ffe95462a2fa790fb66', // 2026-10-27
   '0bf7dc63d35232989dc966ef0bb24f4359d4ea7f50f4a5bee036b8c343a698da', // 2026-10-27
   'a979e46b0cfb4fece4bdce077867c83339f98b289219946e9d72eb0dc9383cf2', // 2026-10-27

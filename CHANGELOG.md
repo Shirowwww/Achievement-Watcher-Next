@@ -31,6 +31,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Notification sounds play with the popup.** The PlayStation 5, PlayStation 5 Platinum and
   PlayStation sounds started with up to a second of silence, so they were heard well after the
   popup appeared. That silence is gone, along with a shorter one in Epic Games and GOG Galaxy.
+- **The rarity badge shows on every unlock with a known rate.** Turned on in a preset, it only
+  appeared for rare achievements and stayed empty on common ones. Xbox PC and RetroAchievements
+  unlocks now send their rate too.
 - **PlayStation trophy grades reach more PC games when a PSN account is connected (#160).** With
   an account, a game the account's sources did not know (Ace Combat 7, Elden Ring Nightreign,
   Ninja Gaiden Sigma) was marked as having no PlayStation list. It now goes on to the public trophy

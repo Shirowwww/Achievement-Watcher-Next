@@ -117,7 +117,8 @@ window.addEventListener('DOMContentLoaded', function () {
     and the whole row disappears when both do, so it never reserves an empty line.
   */
   function rarityText(data) {
-    var percent = data && data.rarityPercent;
+    // The rate of every unlock, common ones included; rarityPercent alone stops at the rare cut-off.
+    var percent = data && (data.unlockRate != null ? data.unlockRate : data.rarityPercent);
     if (percent == null || percent === '' || !isFinite(Number(percent))) return '';
     return (Math.round(Number(percent) * 10) / 10) + '%';
   }
@@ -144,7 +145,7 @@ window.addEventListener('DOMContentLoaded', function () {
     var texts = document.querySelectorAll('.aw-canvas > [data-kind="text"]');
     for (var j = 0; j < texts.length; j++) texts[j].toggleAttribute('data-empty', saysNothing(texts[j]));
   }
-  // A text made only of words this popup lacks, such as the rarity of a common unlock.
+  // A text made only of words this popup lacks, such as the rarity of an unlock with no known rate.
   function saysNothing(node) {
     if (node.textContent.trim() || !node.querySelector('[data-tok]')) return false;
     var tiers = node.querySelectorAll('[data-tok="tier"]');

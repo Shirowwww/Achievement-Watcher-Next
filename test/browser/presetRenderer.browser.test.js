@@ -32,6 +32,8 @@ const payloadFor = (state) => {
   if (state === 'platinum') return { ...base, notificationType: 'platinum', isPlatinum: true };
   // What an ordinary unlock actually carries: the app sends null when it knows no rarity.
   if (state === 'no-rarity') return { ...base, notificationType: 'achievement', rarityPercent: null };
+  // A common unlock: no rare percentage, but the watchdog still sends its rate.
+  if (state === 'common') return { ...base, notificationType: 'achievement', rarityPercent: null, unlockRate: 45.2 };
   if (state === 'empty-rarity') return { ...base, notificationType: 'achievement', rarityPercent: '' };
   if (state === 'playtime') return { ...base, notificationType: 'playtime', rarityPercent: null };
   if (state === 'progress') return { ...base, notificationType: 'progress', progress: { current: 3, max: 10, percent: 30 } };
@@ -441,6 +443,11 @@ test('a designed preset renders every property it was given', { concurrency: 1, 
       assert.equal(ordinary.rarityHidden, true, 'the badge stays for a notification with no rarity');
       assert.equal(ordinary.gameHidden, false, 'the game name should still be printed');
       assert.equal(ordinary.metaHidden, false);
+
+      // A common unlock with a known rate shows it too, without becoming a rare card.
+      const common = await renderPreset(page, design, 'common');
+      assert.equal(common.rarityText, '45.2%', 'the badge is empty for a common unlock whose rate is known');
+      assert.equal(common.rarityHidden, false);
 
       // Neither: the whole row disappears instead of reserving a blank line at the top of the card.
       const bare = await renderPreset(page, design, 'bare');

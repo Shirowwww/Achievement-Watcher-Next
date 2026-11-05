@@ -17,7 +17,7 @@ const layerTool = require(path.join(appRoot, 'util', 'presetLayer.js'));
 const BUNDLED = path.join(appRoot, 'presets', 'Default Presets');
 // Ticket as the gallery serves it: the shared card, with the engine of 2026-08-22 (AW Next 3.9.2).
 const OLD_PAGE = fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'presets', 'ticket-3.9.2.html'), 'utf8');
-const CURRENT_ENGINE_HASH = 'cd3c7e7d758ebc881ab9381ce3b1bd342b6c6cc36e543861e8c8fec4e73bb319';
+const CURRENT_ENGINE_HASH = '3ec4a7b5ac168d4736c241af70f6207d2fb736e29821caed717e2ae256b3adb1';
 
 test('the current engine is pinned, so a change to it records the version it replaces', () => {
   assert.equal(

@@ -85,12 +85,18 @@ function findEmulator(processes, probe = hasIntegrationDll) {
   return integrated ? integrated.process : '';
 }
 
-function rarityOf(schema, achievementId, options) {
+// The unlock rate rounded to a tenth, whatever its tier; null when unknown.
+function unlockRateOf(schema, achievementId) {
   const entry = schema && schema.achievement.list.find((achievement) => String(achievement.name) === String(achievementId));
   const percent = entry && entry.rarityPct != null ? Number(entry.rarityPct) : NaN;
   if (!Number.isFinite(percent)) return null;
   const rounded = Math.round(percent * 10) / 10;
-  return rounded >= 0 && rounded <= rareCutoff(options) ? rounded : null;
+  return rounded >= 0 && rounded <= 100 ? rounded : null;
+}
+
+function rarityOf(schema, achievementId, options) {
+  const rounded = unlockRateOf(schema, achievementId);
+  return rounded !== null && rounded <= rareCutoff(options) ? rounded : null;
 }
 
 async function announce(ctx, unlock, schema, delay) {
@@ -104,6 +110,7 @@ async function announce(ctx, unlock, schema, delay) {
       achievementDisplayName: unlock.title,
       achievementDescription: unlock.description,
       rarityPercent: rarityOf(schema, unlock.achievementId, options),
+      unlockRate: unlockRateOf(schema, unlock.achievementId),
       icon: unlock.icon || undefined,
       gameIcon: (schema && schema.img && schema.img.icon) || unlock.gameIcon || '',
       image: (schema && schema.img && schema.img.header) || '',
