@@ -12,15 +12,16 @@ const assert = require('node:assert/strict');
 
 require(path.join(__dirname, '..', 'util', 'userData.js')).resetCache();
 const gameSound = require(path.join(__dirname, '..', 'util', 'gameSound.js'));
+const STORE = path.join(USER_DATA, 'cfg', 'gamePreset.json');
 
 function writeStore(value) {
-  fs.mkdirSync(path.dirname(gameSound.file()), { recursive: true });
-  fs.writeFileSync(gameSound.file(), typeof value === 'string' ? value : JSON.stringify(value), 'utf8');
+  fs.mkdirSync(path.dirname(STORE), { recursive: true });
+  fs.writeFileSync(STORE, typeof value === 'string' ? value : JSON.stringify(value), 'utf8');
 }
 
 beforeEach(() => {
   gameSound._reset();
-  fs.rmSync(gameSound.file(), { force: true });
+  fs.rmSync(STORE, { force: true });
 });
 
 after(() => fs.rmSync(USER_DATA, { recursive: true, force: true }));
@@ -33,8 +34,8 @@ test('reads the sound the app saved for a game, whatever kind of id the game has
   });
   assert.equal(gameSound.soundFor('480'), 'Xbox Classic.wav');
   assert.equal(gameSound.soundFor(480), 'Xbox Classic.wav');
-  assert.equal(gameSound.soundFor('ra-1446'), gameSound.SOUND_NONE);
-  assert.equal(gameSound.soundFor('xlln-4D5307E6'), gameSound.SOUND_RANDOM);
+  assert.equal(gameSound.soundFor('ra-1446'), '__none__');
+  assert.equal(gameSound.soundFor('xlln-4D5307E6'), '__random__');
 });
 
 test('a game with only a preset or position override has no sound of its own', () => {

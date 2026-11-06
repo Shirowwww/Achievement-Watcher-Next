@@ -12,6 +12,7 @@ const path = require('path');
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const linuxLaunchers = require(path.join(__dirname, '..', 'util', 'linuxLaunchers.js'));
 const { pathKey } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { hasEmulatorEvidence } = require(path.join(__dirname, 'uplayR2Loader.js'));
 
 const GOG_GAME_FILE = /^goggame-\d+\.(?:info|id)$/i;
 const STEAM_API_DLL = /^steam_api(?:64)?\.dll$/i;
@@ -153,7 +154,7 @@ function isOfficialLauncherInstall(gameDir) {
     names.has('uplay_install.state') || names.has('uplay_install.manifest') || names.has('upc.cfg');
   if (hasUplayMarker) {
     try {
-      if (require('./uplayR2.js').hasEmulatorEvidence(gameDir)) return false;
+      if (hasEmulatorEvidence(gameDir)) return false;
     } catch {
       /* if evidence detection fails, treat it as legit rather than risk a false positive */
     }

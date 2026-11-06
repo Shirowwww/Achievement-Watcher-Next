@@ -9,7 +9,8 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { isSteamRarityId } = require('../util/rarity.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { isSteamRarityId } = require(sharedAppModulePath('util/rarity.js'));
 
 test('a Steam appid is asked about', () => {
   assert.equal(isSteamRarityId('480', ''), true);

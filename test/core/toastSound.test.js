@@ -10,7 +10,8 @@ const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
 
-const { createSoundPlayer, soundUrl, clampVolume } = require('../../app/electron/soundPlayer.js');
+const { createSoundPlayer, soundUrl } = require('../../app/electron/soundPlayer.js');
+const { clampVolume } = require('../../app/util/notificationSounds.js');
 
 const SOUNDS = path.join(os.tmpdir(), 'aw-sounds');
 

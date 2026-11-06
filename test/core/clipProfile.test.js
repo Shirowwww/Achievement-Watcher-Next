@@ -6,14 +6,9 @@ const path = require('node:path');
 const { test } = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
-const appCopy = path.join(root, 'app', 'util', 'clipProfile.js');
-const watchdogCopy = path.join(root, 'watchdog', 'notification', 'clipProfile.js');
 const recorderSource = fs.readFileSync(path.join(root, 'native', 'hdr-screenshot', 'src', 'bin', 'aw-next-clip', 'video.rs'), 'utf8');
-const profile = require(appCopy);
-
-test('the Settings page and the Watchdog read clip settings with the same code', () => {
-  assert.equal(fs.readFileSync(appCopy, 'utf8'), fs.readFileSync(watchdogCopy, 'utf8'));
-});
+const profileFile = path.join(root, 'app', 'util', 'clipProfile.js');
+const profile = require(profileFile);
 
 test('settings saved as text are read by value, and anything unknown falls back', () => {
   assert.deepEqual(profile.normalize({}), {
@@ -92,7 +87,7 @@ test('the screen rate is a third choice next to 30 and 60', () => {
 
 test('the estimate steps the bitrate up with the frame rate the way the recorder does', () => {
   assert.match(recorderSource, /bits \*= if fps > 60 \{\s*2\.0\s*\} else if fps > 30 \{\s*1\.5\s*\} else \{\s*1\.0\s*\};/);
-  const source = fs.readFileSync(appCopy, 'utf8');
+  const source = fs.readFileSync(profileFile, 'utf8');
   assert.match(source, /if \(clip\.clipFps === 'unlocked'\) bits \*= 2;\s*else if \(clip\.clipFps > 30\) bits \*= 1\.5;/);
 });
 
@@ -104,6 +99,6 @@ test('the estimate uses the bitrates the recorder encodes with', () => {
   ]) {
     assert.match(recorderSource, new RegExp(`"?${quality}"? => ${bits.replace('.', '\\.')},`), `${quality} must be ${bits} in video.rs`);
   }
-  const source = fs.readFileSync(appCopy, 'utf8');
+  const source = fs.readFileSync(profileFile, 'utf8');
   assert.match(source, /low: 0\.08, medium: 0\.13, high: 0\.22/);
 });

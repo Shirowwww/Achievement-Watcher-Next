@@ -1,14 +1,13 @@
 'use strict';
 
-// Mirrors app/util/notificationSounds.js for the standalone Watchdog process: resolves the
-// notification sound the user picked in Settings > Notifications (Son / Son aléatoire) so
-// Windows toasts play the same file (and honor the same volume) as the in-game overlay.
+// Where the Watchdog finds notification sounds, so Windows toasts play the same file (and honor the
+// same volume) as the in-game overlay. Which sound plays is the app's rule (util/notificationSounds.js).
 
 const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('./userData.js');
-
-const SOUND_EXT_RE = /\.(?:wav|mp3|ogg|flac|m4a|aac)$/i;
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const sounds = require(sharedAppModulePath('util/notificationSounds.js'));
 
 function bundledSoundsDir() {
   if (process.env.AW_SOUNDS_DIR) {
@@ -34,21 +33,10 @@ function userSoundsDir() {
   return path.join(userDataDir(), 'sounds');
 }
 
-/*
-  Bundled sounds renamed in 3.9.3 for a consistent dropdown. Mirrors RENAMED_SOUNDS in
-  app/util/notificationSounds.js: a settings file written before the rename still names the old file.
-*/
-const RENAMED_SOUNDS = {
-  'Playstation.wav': 'PlayStation.wav',
-  'Playstation5.wav': 'PlayStation 5.wav',
-  'Playstation5 Platinum.wav': 'PlayStation 5 Platinum.wav',
-  'Xbox.v1.wav': 'Xbox Classic.wav',
-  'Steam.wav': 'Steam Original.wav',
-};
-
+// A user-imported file shadows a bundled one of the same name, as in the app.
 function resolveSoundFile(name) {
   if (!name) return '';
-  for (const candidate of [name, RENAMED_SOUNDS[String(name)]]) {
+  for (const candidate of [name, sounds.renamedSound(name)]) {
     if (!candidate) continue;
     for (const dir of [userSoundsDir(), bundledSoundsDir()]) {
       try {
@@ -62,56 +50,25 @@ function resolveSoundFile(name) {
   return '';
 }
 
-function listSoundFiles() {
-  const byName = new Map();
-  for (const dir of [userSoundsDir(), bundledSoundsDir()]) {
-    let entries = [];
-    try {
-      entries = fs.readdirSync(dir);
-    } catch {
-      continue;
-    }
-    for (const name of entries) {
-      if (!SOUND_EXT_RE.test(name)) continue;
-      byName.set(name, path.join(dir, name));
-    }
-  }
-  return [...byName.entries()]
-    .sort((a, b) => String(a[0]).localeCompare(String(b[0])))
-    .map(([name, file]) => ({ name, file }));
-}
+const soundDirs = () => [bundledSoundsDir(), userSoundsDir()];
+const listSoundFiles = () => sounds.listSoundFiles(soundDirs());
+const pickRandomSound = () => sounds.pickRandomSound(soundDirs());
 
-function pickRandomSound() {
-  const list = listSoundFiles();
-  if (list.length === 0) return '';
-  return list[Math.floor(Math.random() * list.length)].file;
-}
-
-// Mirrors tierSound() in app/util/notificationSounds.js: the rare, 100% or progress sound, '' for
-// "same as unlocks", NO_SOUND for silent.
-const NO_SOUND = '__none__';
-
-function tierSound(overlay, { notificationType = '', rarityPercent = null } = {}) {
+// The main sound, or a random one when Settings asks for it (test buttons, the OBS source).
+function mainSound(overlay) {
   const ov = overlay || {};
-  const type = String(notificationType || '').toLowerCase();
-  if (type === 'platinum') return String(ov.notificationSoundPlatinum || '');
-  if (type === 'progress') return String(ov.notificationSoundProgress || '');
-  if (type === 'playtime') return '';
-  const rare = rarityPercent != null && rarityPercent !== '' && Number.isFinite(Number(rarityPercent));
-  return rare ? String(ov.notificationSoundRare || '') : '';
+  return sounds.chooseSound({ random: ov.randomSound === true, mainSound: ov.notificationSound }, { resolve: resolveSoundFile, pickRandom: pickRandomSound });
 }
 
-// Mirrors emulatorSound() in app/util/notificationSounds.js: '' for "same as the main sound".
-const EMULATOR_SOUND_KEYS = {
-  xenia: 'notificationSoundXenia',
-  rpcs3: 'notificationSoundRpcs3',
-  shadps4: 'notificationSoundShadps4',
-  kytyps5: 'notificationSoundKytyps5',
+module.exports = {
+  bundledSoundsDir,
+  userSoundsDir,
+  resolveSoundFile,
+  listSoundFiles,
+  pickRandomSound,
+  mainSound,
+  NO_SOUND: sounds.NO_SOUND,
+  tierSound: sounds.tierSound,
+  emulatorSound: sounds.emulatorSound,
+  chooseSound: (choice) => sounds.chooseSound(choice, { resolve: resolveSoundFile, pickRandom: pickRandomSound }),
 };
-
-function emulatorSound(overlay, platform) {
-  const key = EMULATOR_SOUND_KEYS[String(platform || '')];
-  return key ? String((overlay || {})[key] || '') : '';
-}
-
-module.exports = { bundledSoundsDir, userSoundsDir, resolveSoundFile, listSoundFiles, pickRandomSound, NO_SOUND, tierSound, emulatorSound };

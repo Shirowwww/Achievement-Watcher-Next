@@ -240,6 +240,25 @@ function validAchievements(parsed) {
   return [...byId.values()];
 }
 
+// One GPD as the library reads it, for the Watchdog's live notifications as well.
+function readGpd(raw, filePath) {
+  const parsed = parseGpdBuffer(raw, filePath);
+  const list = validAchievements(parsed).map((a) => {
+    const earned = (a.flags & ACHIEVEMENT_EARNED_FLAG) !== 0;
+    const id = String(a.achievementId);
+    return {
+      id,
+      displayName: txt(a.name) || id,
+      description: txt(a.unlockedDescription) || txt(a.lockedDescription),
+      gamerscore: a.gamerscore,
+      imageId: String(a.imageId),
+      achieved: earned,
+      time: earned ? Math.floor(normalizeUnlockTime(a.unlockRaw) / 1000) : 0, // ms -> unix seconds
+    };
+  });
+  return { title: parsed.title, list, imagesById: parsed.imagesById };
+}
+
 /*
   Two on-disk layouts. Older builds keep one folder per title: <XUID>/<titleID>/00000001/<titleID>.gpd.
   Canary since its profile rework keeps every title GPD inside the profile package instead:
@@ -416,17 +435,11 @@ module.exports.getGameData = async (gpdPath, { fetchImpl } = {}) => {
 };
 
 module.exports.getAchievements = async (gpdPath) => {
-  const raw = await fsp.readFile(gpdPath);
-  const parsed = parseGpdBuffer(raw, gpdPath);
-  return validAchievements(parsed).map((a) => {
-    const earned = (a.flags & ACHIEVEMENT_EARNED_FLAG) !== 0;
-    return {
-      id: String(a.achievementId),
-      achieved: earned,
-      earned_time: earned ? Math.floor(normalizeUnlockTime(a.unlockRaw) / 1000) : 0, // ms -> unix seconds
-    };
-  });
+  const { list } = readGpd(await fsp.readFile(gpdPath), gpdPath);
+  return list.map(({ id, achieved, time }) => ({ id, achieved, earned_time: time }));
 };
+
+module.exports.readGpd = readGpd;
 
 /*
   Relock every achievement in a GPD in place: deleting the file would lose the whole achievement list

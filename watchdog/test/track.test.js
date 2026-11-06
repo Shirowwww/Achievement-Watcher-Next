@@ -1,12 +1,13 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const track = require('../track.js');
-const fsAsync = require('../util/fsAsync.js');
+const fsAsync = require(sharedAppModulePath('util/fsAsync.js'));
 
 function tempDir(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-track-'));

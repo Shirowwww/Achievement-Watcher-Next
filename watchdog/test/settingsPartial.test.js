@@ -1,13 +1,14 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const settings = require('../settings.js');
-const ini = require('../util/ini.js');
-const fsAsync = require('../util/fsAsync.js');
+const ini = require(sharedAppModulePath('util/ini.js'));
+const fsAsync = require(sharedAppModulePath('util/fsAsync.js'));
 
 test('a partial options.ini is completed without replacing valid or unknown sections', async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-partial-settings-'));

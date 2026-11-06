@@ -37,7 +37,7 @@ test('the Linux target is an AppImage published to the same release feed as Wind
   const build = read('app', 'build', 'build-linux.js');
   assert.match(build, /`Achievement\.Watcher\.\$\{version\}\.AppImage`/);
   assert.match(build, /latest-linux\.yml/);
-  assert.match(read('watchdog', 'watchdog.js'), /'achievement-watcher'/, 'the Watchdog fallback spawn names the Linux executable');
+  assert.match(read('watchdog', 'notification', 'spawnOverlay.js'), /'achievement-watcher'/, 'the Watchdog fallback spawn names the Linux executable');
 });
 
 test('afterPack strips Windows helpers from the Linux package and keeps what loads there', (t) => {

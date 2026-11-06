@@ -9,24 +9,20 @@
 const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
-const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders } = kit;
 
 const x360 = require(sharedAppModulePath('parser/x360Recomp.js'));
 const { isDirectory } = require(sharedAppModulePath('parser/x360Ports.js'));
 const { pathKey } = require(sharedAppModulePath('util/winHosts.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // Same schema and icon caches as the app, so whatever either side fetched serves both.
 x360.setDataRoot(userDataDir());
 
@@ -45,13 +41,12 @@ const NEW_LIST_SETTLE_MS = 3000;
 // Longer than the runtime's delete-then-rename, short enough to follow a reset.
 const LIST_GONE_MS = 1500;
 const RECENT_UNLOCK_S = 15 * 60;
-const DUPLICATE_UNLOCK_MS = 15000;
 // The lists themselves (achievements\<TITLEID>.toml, a TSV profile, the JSON, ACH-DATA, per-profile
 // lists) and the files whose arrival names a port's folders: reNut's renut.cfg, Lost Odyssey's
 // game-path.txt and friends. Anything else in an achievements folder is never read.
 const LIST_PATH_RE = /[\\/]achievements(?:[\\/][0-9a-f]{8}(?:\.toml|[\\/][^\\/]+\.tsv)?)?$|[\\/]savedata[\\/]achievements\.json$|[\\/]save[\\/](?:ach-data|sonicnextachievementdata\.bin)$|[\\/]profiles?[\\/](?:[^\\/]+[\\/])?achievements\.(?:ini|json)$|[\\/](?:renut\.cfg|game-path\.txt|saves\.path|gow2\.toml|gow2_game_path\.txt)$/i;
 
-let watchers = [];
+const watchers = kit.createWatcherList('x360recomp', debug);
 let lifecycle = 0; // bumped by stop(), so an in-flight rediscover() can tell it was cancelled
 let rediscoverTimer = null;
 let documentsTimer = null;
@@ -61,22 +56,9 @@ const changes = createChangeCoalescer();
 // awaited, and the list folders it follows.
 const watched = new Map();
 
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // The user's folders first, then Documents, one target per title; a known port still waiting for
 // its list gives way to that title's list found elsewhere.
-function discover(configFile = userDirFile, documentsRoots = undefined) {
+function discover(configFile = kit.userDirFile(), documentsRoots = undefined) {
   let targets = [];
   const add = (records) => {
     targets = x360.mergeRecords(targets, records).records;
@@ -151,15 +133,7 @@ const baseline = createBaselineCache({ prefix: 'x360recomp', tag: 'x360recomp', 
 const { load: cacheLoad, save: cacheSave } = baseline;
 
 // The runtime writes a temp file then renames it, which can fire twice for one unlock.
-const recentUnlocks = new Map();
-function isDuplicateUnlock(appid, achievementId) {
-  const key = `${appid}:${achievementId}`;
-  const now = Date.now();
-  for (const [seen, at] of recentUnlocks) if (now - at > DUPLICATE_UNLOCK_MS) recentUnlocks.delete(seen);
-  const last = recentUnlocks.get(key);
-  recentUnlocks.set(key, now);
-  return last != null && now - last < DUPLICATE_UNLOCK_MS;
-}
+const isDuplicateUnlock = kit.createDuplicateGuard();
 
 /*
   ReXGlue deletes the list before renaming its replacement in: read in between, it looks empty, and
@@ -173,28 +147,6 @@ async function settledGoneList(record, changedFile) {
   await new Promise((resolve) => setTimeout(resolve, LIST_GONE_MS));
   if (!fs.existsSync(listFile)) cacheSave(record.appid, x360.getAchievements(record.data).map((entry) => entry.id));
   return true;
-}
-
-function toastOptions(ctx, described) {
-  return {
-    notify: ctx.options.notification.notify,
-    transport: {
-      mode: ctx.options.notification_transport.mode,
-      websocket: ctx.options.notification_transport.websocket,
-    },
-    toast: {
-      appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-      winrt: ctx.options.notification_transport.winRT,
-      balloonFallback: ctx.options.notification_transport.balloon,
-      customAudio: ctx.options.notification_toast.customToastAudio,
-      volume: notificationVolumePercent(ctx.options),
-      imageIntegration: '0',
-      group: ctx.options.notification_toast.groupToast,
-      attribution: described.gamerscore > 0 ? `${described.gamerscore} G` : notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-    },
-    prefetch: false, // the icons are already local files
-    rumble: ctx.options.notification.rumble,
-  };
 }
 
 function unlockEvent(record, entry, described, game) {
@@ -234,7 +186,8 @@ async function announceUnlocks(record, fresh, unlocked, ctx) {
       continue;
     }
     debug.log(`[x360recomp] Unlocked: ${name} - ${described.displayName}`);
-    await ctx.notify(unlockEvent(record, entry, described, { name, completion, delay }), toastOptions(ctx, described));
+    const toast = kit.unlockToastOptions(ctx, { attribution: kit.gamerscoreAttribution(ctx, described.gamerscore) });
+    await ctx.notify(unlockEvent(record, entry, described, { name, completion, delay }), toast);
     delay += 1;
   }
   return true;
@@ -313,17 +266,11 @@ function onEvent(spec, record, ctx, evt, name) {
 }
 
 function openWatch(spec, record, ctx) {
-  try {
-    const watcher = watch(longPath(spec.dir), { recursive: false }, (evt, name) => onEvent(spec, record, ctx, evt, name));
-    guardWatcher(watcher, `'${spec.dir}'`, debug);
-    watchers.push(watcher);
-    if (spec.waitingFor) debug.log(`[x360recomp] ${record.appid}: unlock source pending, waiting for '${spec.waitingFor}' from '${spec.dir}'`);
-    else debug.log(`[x360recomp] watching achievements for ${record.appid} in '${spec.dir}'`);
-    return watcher;
-  } catch (err) {
-    debug.warn(`[x360recomp] failed to watch ${spec.dir}: ${err}`);
-    return null;
-  }
+  const watcher = watchers.open(spec.dir, { recursive: false }, (evt, name) => onEvent(spec, record, ctx, evt, name));
+  if (!watcher) return null;
+  if (spec.waitingFor) debug.log(`[x360recomp] ${record.appid}: unlock source pending, waiting for '${spec.waitingFor}' from '${spec.dir}'`);
+  else debug.log(`[x360recomp] watching achievements for ${record.appid} in '${spec.dir}'`);
+  return watcher;
 }
 
 function attach(record, ctx) {
@@ -338,19 +285,10 @@ function attach(record, ctx) {
   }
 }
 
-function closeWatcher(watcher) {
-  try {
-    watcher.close();
-  } catch {
-    /* already closed */
-  }
-}
-
 function detach(appid) {
   const entry = watched.get(appid);
   if (!entry) return;
-  for (const watcher of entry.watchers) closeWatcher(watcher);
-  watchers = watchers.filter((watcher) => !entry.watchers.includes(watcher));
+  for (const watcher of entry.watchers) watchers.close(watcher);
   watched.delete(appid);
 }
 
@@ -382,7 +320,7 @@ async function rediscover(ctx, found = discover, { full = found === discover } =
 }
 
 // The user's folders to follow for new games, each once, compared the way the platform compares paths.
-function watchRoots(configFile = userDirFile) {
+function watchRoots(configFile = kit.userDirFile()) {
   const seen = new Set();
   return watchedFolders(configFile).filter((dir) => {
     const key = pathKey(dir);
@@ -392,15 +330,9 @@ function watchRoots(configFile = userDirFile) {
   });
 }
 
-function watchForNewLists(ctx, configFile = userDirFile) {
+function watchForNewLists(ctx, configFile = kit.userDirFile()) {
   for (const dir of watchRoots(configFile)) {
-    try {
-      const watcher = watch(longPath(dir), { recursive: true, filter: wakesDiscovery }, () => scheduleRediscover(ctx));
-      guardWatcher(watcher, `'${dir}'`, debug);
-      watchers.push(watcher);
-    } catch (err) {
-      debug.warn(`[x360recomp] cannot follow '${dir}' for new games: ${err}`);
-    }
+    watchers.open(dir, { recursive: true, filter: wakesDiscovery }, () => scheduleRediscover(ctx));
   }
 }
 
@@ -409,10 +341,7 @@ function watchForNewLists(ctx, configFile = userDirFile) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (!x360.isEnabled(ctx.options.achievement_source)) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, x360.isEnabled)) return;
 
   let targets;
   try {
@@ -443,8 +372,7 @@ module.exports.stop = () => {
   if (documentsTimer) clearInterval(documentsTimer);
   documentsTimer = null;
   changes.clear();
-  for (const watcher of watchers) closeWatcher(watcher);
-  watchers = [];
+  watchers.closeAll();
   watched.clear();
 };
 

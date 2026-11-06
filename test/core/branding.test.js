@@ -61,8 +61,8 @@ test('identifiers an existing install depends on are unchanged', () => {
   assert.match(read('watchdog', 'playtime', 'track.js'), /Software\/Achievement Watcher Next\/Playtime\/Steam\//, 'playtime writer namespace');
   assert.match(read('app', 'parser', 'playtime.js'), /Software\/Achievement Watcher Next\/Playtime\/Steam\//, 'playtime reader namespace');
 
-  const watchdog = read('watchdog', 'watchdog.js');
-  assert.match(watchdog, /'Achievement Watcher\.exe'/, 'the Watchdog spawns the app by its real executable name');
+  const spawnOverlay = read('watchdog', 'notification', 'spawnOverlay.js');
+  assert.match(spawnOverlay, /'Achievement Watcher\.exe'/, 'the Watchdog spawns the app by its real executable name');
 
   const toastIdentity = read('watchdog', 'util', 'toastIdentity.js');
   assert.match(toastIdentity, /ACHIEVEMENT_WATCHER_AUMID = 'io\.github\.shirowwww\.achievement\.watcher'/, 'toasts are delivered under the registered AppUserModelID');

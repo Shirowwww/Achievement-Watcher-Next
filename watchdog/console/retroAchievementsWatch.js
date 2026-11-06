@@ -1,5 +1,6 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 /*
   Live RetroAchievements unlocks. There is no local file to watch: the emulator reports each unlock
   to retroachievements.org, so this asks the Web API for the account's recent unlocks - every few
@@ -14,10 +15,9 @@ const fs = require('fs');
 const path = require('path');
 const debug = require('../util/log.js');
 const tasklist = require('../util/tasklist.js');
-const aes = require('../util/aes.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
+const aes = require(sharedAppModulePath('util/aes.js'));
 const { userDataDir } = require('../util/userData.js');
-const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
 
 const ra = require(sharedAppModulePath('parser/retroAchievements.js'));
 const { rareCutoff } = require('../util/rareCutoff.js');
@@ -118,24 +118,9 @@ async function announce(ctx, unlock, schema, delay) {
       delay,
     },
     {
-      notify: options.notification.notify,
+      // The toast carries the game's header (imageIntegration 1); the icons are RA urls.
+      ...kit.unlockToastOptions(ctx, { attribution: ra.SOURCE, prefetch: kit.iconPrefetch(ctx), imageIntegration: '1' }),
       lang: options.achievement.lang,
-      transport: {
-        mode: options.notification_transport.mode,
-        websocket: options.notification_transport.websocket,
-      },
-      toast: {
-        appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-        winrt: options.notification_transport.winRT,
-        balloonFallback: options.notification_transport.balloon,
-        customAudio: options.notification_toast.customToastAudio,
-        volume: notificationVolumePercent(options),
-        imageIntegration: '1',
-        group: options.notification_toast.groupToast,
-        attribution: ra.SOURCE,
-      },
-      prefetch: options.notification_advanced ? options.notification_advanced.iconPrefetch : true,
-      rumble: options.notification.rumble,
     }
   );
 }
@@ -269,10 +254,7 @@ async function tick(ctx) {
 // notify switch; the account itself is read when an emulator starts, so connecting later needs no restart.
 module.exports.start = async (ctx) => {
   module.exports.stop();
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.retroAchievements === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'retroAchievements')) return;
 
   timer = setInterval(() => tick(ctx), CHECK_INTERVAL_MS);
   tick(ctx);

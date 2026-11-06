@@ -3,229 +3,25 @@
 // Watch EA Desktop's verbose log and notify on achievements seen after the baseline.
 
 const fs = require('fs');
-const path = require('path');
-const watch = require('../util/nodeWatch.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
+const kit = require('./watcherKit.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
-const { hostPaths, firstExisting } = require(sharedAppModulePath('util/winHosts.js'));
+const ea = require(sharedAppModulePath('parser/ea.js'));
 
-// EA Desktop is installed once, in whichever host holds it (a Wine prefix on Linux).
-function eaLogsRoot() {
-  return firstExisting(hostPaths('LOCALAPPDATA', 'Electronic Arts', 'EA Desktop', 'Logs'));
-}
-const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
-const EA_VERBOSE_BAK_NAME = 'EADesktopVerbose.bak';
-const EA_ICON_BASE = 'https://achievements.gameservices.ea.com/achievements/icons';
-
-let watchers = [];
+const watchers = kit.createWatcherList('ea', debug);
 const changes = createChangeCoalescer();
-let cached = { key: '', parsed: null };
 
-function decodeXml(value) {
-  return String(value || '')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-}
-
-function parseAttrs(fragment) {
-  const out = {};
-  const re = /([A-Za-z0-9_:-]+)="([^"]*)"/g;
-  let m;
-  while ((m = re.exec(String(fragment || '')))) out[m[1]] = decodeXml(m[2]);
-  return out;
-}
-
-function normalizeEpochSeconds(value) {
-  const n = Number(value || 0);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  return n > 10_000_000_000 ? Math.floor(n / 1000) : Math.floor(n);
-}
-
-function parseGrantSeconds(value) {
-  const raw = String(value || '').trim();
-  if (!raw || /^0{4}-0{2}-0{2}t0{2}:0{2}:0{2}$/i.test(raw)) return 0;
-  const ms = Date.parse(raw);
-  return Number.isFinite(ms) && ms > 0 ? Math.floor(ms / 1000) : 0;
-}
-
-function normalizeImageId(value) {
-  return String(value || '').trim().replace(/^achieve:/i, '');
-}
-
-function parseImageId(value) {
-  const raw = normalizeImageId(value);
-  const m = raw.match(/^(.+)-(\d+)$/);
-  if (!m) return { achievementSet: '', achievementId: '' };
-  return { achievementSet: String(m[1] || '').trim(), achievementId: String(m[2] || '').trim() };
-}
-
-function parseContentIdFromSet(setName) {
-  const raw = String(setName || '').trim();
-  const strict = raw.match(/^\d+_(\d+)_\d+$/);
-  if (strict && strict[1]) return strict[1];
-  const parts = raw.split('_').filter(Boolean);
-  return parts.length >= 2 && /^\d+$/.test(parts[1]) ? parts[1] : '';
-}
-
-function unescapeLoggedPath(value) {
-  return String(value || '').replace(/\\"/g, '"').replace(/\\\\/g, '\\').trim();
-}
-
-function isEarned(attrs) {
-  const count = Number(attrs.Count || 0);
-  const progress = Number(attrs.Progress || 0);
-  const total = Number(attrs.Total || 0);
-  return count > 0 || (total > 0 && progress >= total);
-}
-
-function normalizeAchievement(attrs) {
-  const imageId = normalizeImageId(attrs.ImageId || '');
-  const imageInfo = parseImageId(imageId);
-  const id = String(attrs.Id || imageInfo.achievementId || '').trim();
-  if (!id) return null;
-  return {
-    id,
-    name: String(attrs.Name || '').trim(),
-    description: String(attrs.Description || attrs.HowTo || '').trim(),
-    imageId,
-    achievementSet: String(imageInfo.achievementSet || '').trim(),
-    earned: isEarned(attrs),
-    earnedTime: parseGrantSeconds(attrs.GrantDate),
-  };
-}
-
-function logFiles(logsRoot = eaLogsRoot()) {
-  const out = [];
-  if (!logsRoot) return out;
-  const bak = path.join(logsRoot, EA_VERBOSE_BAK_NAME);
-  const current = path.join(logsRoot, EA_VERBOSE_LOG_NAME);
-  if (fs.existsSync(bak)) out.push(bak);
-  if (fs.existsSync(current)) out.push(current);
-  return out;
-}
-
-function gameInfoFromLog(text) {
-  const byContentId = new Map();
-  const merge = (contentId, patch) => {
-    if (!contentId) return;
-    const current = byContentId.get(contentId) || {};
-    byContentId.set(contentId, { ...current, ...Object.fromEntries(Object.entries(patch).filter(([, v]) => v)) });
-  };
-
-  for (const line of text.split(/\r?\n/)) {
-    let m = line.match(/Processing launch request:\s+offerId\[([^\]]+)\]\s+contentId\[(\d+)\]\s+exe\[([^\]]+)\]\s+cwd\[([^\]]*)\]/i);
-    if (m) merge(String(m[2]).trim(), { offerId: String(m[1]).trim(), exePath: unescapeLoggedPath(m[3]), processName: path.basename(unescapeLoggedPath(m[3])) });
-
-    m = line.match(/Launched game details:\s+titleName\[([^\]]+)\]\s+offerId\[([^\]]+)\]\s+masterTitleId\[(\d+)\]/i);
-    if (m) merge(String(m[3]).trim(), { gameName: String(m[1]).trim(), offerId: String(m[2]).trim() });
-
-    m = line.match(/Connection Details:\s+idIsOffer\[true\]\s+contentId\[([^\]]+)\]\s+masterTitleId\[(\d+)\]\s+titleName\[([^\]]+)\]\s+offerId\[([^\]]+)\]/i);
-    if (m) merge(String(m[2]).trim(), { gameName: String(m[3]).trim(), offerId: String(m[4]).trim() });
-
-    m = line.match(/<Game\b[^>]*displayName="([^"]+)"[^>]*contentID="([^"]+)"/i);
-    if (m) {
-      const offerId = String(m[2] || '').trim();
-      const idMatch = offerId.match(/(\d+)\s*$/);
-      if (idMatch) merge(idMatch[1], { gameName: String(m[1]).trim(), offerId });
-    }
-  }
-
-  return byContentId;
-}
-
-function parseLog(logsRoot = eaLogsRoot()) {
-  const files = logFiles(logsRoot);
-  if (files.length === 0) return { entries: [], snapshots: new Map() };
-
-  const key = files
-    .map((file) => {
-      try {
-        const st = fs.statSync(file);
-        return `${file.toLowerCase()}:${st.mtimeMs}:${st.size}`;
-      } catch {
-        return `${file.toLowerCase()}:missing`;
-      }
-    })
-    .join('|');
-  if (cached.key === key && cached.parsed) return cached.parsed;
-
-  const text = files.map((file) => {
-    try {
-      return fs.readFileSync(file, 'utf8').replace(/\0/g, '');
-    } catch {
-      return '';
-    }
-  }).join('\n');
-
-  const games = gameInfoFromLog(text);
-  const entries = [];
-  const setRe = /<AchievementSet\b([^>]*)>([\s\S]*?)<\/AchievementSet>/gi;
-  let setMatch;
-  while ((setMatch = setRe.exec(text))) {
-    const attrs = parseAttrs(setMatch[1]);
-    const achievementSet = String(attrs.Name || '').trim();
-    if (!achievementSet) continue;
-    const appid = parseContentIdFromSet(achievementSet);
-    const info = games.get(appid) || {};
-    const achievements = [];
-    const achRe = /<Achievement\b([^>]*)\/>/gi;
-    let achMatch;
-    while ((achMatch = achRe.exec(setMatch[2]))) {
-      const achievement = normalizeAchievement(parseAttrs(achMatch[1]));
-      if (achievement) achievements.push(achievement);
-    }
-    if (!appid || achievements.length === 0) continue;
-    entries.push({
-      appid,
-      achievementSet,
-      name: String(attrs.GameName || info.gameName || appid).trim(),
-      processName: info.processName || '',
-      achievements,
-      order: setMatch.index,
-    });
-  }
-
-  const events = new Map();
-  const respRe = /<Response\b[^>]*>\s*<Achievement\b([^>]*?)\/>\s*<\/Response>/gis;
-  let respMatch;
-  while ((respMatch = respRe.exec(text))) {
-    const achievement = normalizeAchievement(parseAttrs(respMatch[1]));
-    if (!achievement || !achievement.achievementSet || !achievement.earned) continue;
-    const list = events.get(achievement.achievementSet) || [];
-    list.push({ id: achievement.id, time: achievement.earnedTime, order: respMatch.index });
-    events.set(achievement.achievementSet, list);
-  }
-
-  const snapshots = new Map();
-  for (const entry of entries) {
-    const state = new Map();
-    for (const achievement of entry.achievements) {
-      if (achievement.earned) state.set(achievement.id, achievement.earnedTime || 0);
-    }
-    for (const event of events.get(entry.achievementSet) || []) {
-      if (event.order <= entry.order) continue;
-      const prev = state.get(event.id);
-      if (!prev || (event.time && event.time < prev)) state.set(event.id, event.time || 0);
-    }
-    snapshots.set(cacheKey(entry), state);
-  }
-
-  // Cached for as long as the Watchdog runs: the copy gives each value its own string, where a regex
-  // match would keep the whole log text (tens of MB) alive.
-  const parsed = structuredClone({ entries, snapshots });
-  cached = { key, parsed };
-  return parsed;
+// The library's reader of the log; the library counts times in ms, notifications in seconds.
+function readStates(logsRoot = ea.defaultEaLogsRoot()) {
+  return ea.readEaAchievementStates(logsRoot).map(({ entry, snapshot }) => ({
+    entry: { ...entry, name: entry.gameName || entry.appid },
+    unlocked: new Map(Object.entries(snapshot).map(([id, state]) => [id, Math.floor((state.earned_time || 0) / 1000)])),
+  }));
 }
 
 function cacheKey(entry) {
@@ -237,18 +33,31 @@ const baseline = createBaselineCache({ prefix: 'ea', tag: 'ea', debug });
 const cacheLoad = (entry) => baseline.load(cacheKey(entry));
 const cacheSave = (entry, unlocked) => baseline.save(cacheKey(entry), unlocked);
 
+function unlockEvent(entry, achievement, time, delay, completion) {
+  return {
+    source: 'EA Desktop',
+    appid: entry.appid,
+    gameDisplayName: entry.name,
+    achievementName: achievement.id,
+    achievementDisplayName: achievement.name || achievement.id,
+    achievementDescription: achievement.description || achievement.howTo,
+    icon: achievement.imageId ? `${ea.EA_ICON_BASE}/${ea.normalizeEaImageId(achievement.imageId)}-208.png` : undefined,
+    time: time || moment().unix(),
+    delay,
+    completion,
+  };
+}
+
 async function handleChange(changedFile, ctx) {
   try {
     if (changedFile) await waitForFileStable(changedFile);
-    const { entries, snapshots } = parseLog();
     let delay = 0;
 
-    for (const entry of entries) {
-      const snapshot = snapshots.get(cacheKey(entry)) || new Map();
+    for (const { entry, unlocked } of readStates()) {
       const cache = cacheLoad(entry);
       const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
       const prev = new Set(isFirstObservation ? [] : cache.unlocked.map(String));
-      const unlockedNow = new Set(Array.from(snapshot.keys()).map(String));
+      const unlockedNow = new Set(Array.from(unlocked.keys()).map(String));
       const completion = { unlocked: entry.achievements.filter((a) => unlockedNow.has(String(a.id))).length, total: entry.achievements.length };
 
       if (!isFirstObservation) {
@@ -257,39 +66,10 @@ async function handleChange(changedFile, ctx) {
           const achievement = entry.achievements.find((a) => a.id === achId);
           if (!achievement) continue;
           debug.log(`[ea] Unlocked: ${entry.name} - ${achievement.name || achId}`);
+          // The icons are EA CDN urls, fetched ahead only when the user asked for it.
           await ctx.notify(
-            {
-              source: 'EA Desktop',
-              appid: entry.appid,
-              gameDisplayName: entry.name,
-              achievementName: achievement.id,
-              achievementDisplayName: achievement.name || achievement.id,
-              achievementDescription: achievement.description,
-              icon: achievement.imageId ? `${EA_ICON_BASE}/${normalizeImageId(achievement.imageId)}-208.png` : undefined,
-              time: normalizeEpochSeconds(snapshot.get(achId)) || moment().unix(),
-              delay,
-              completion,
-            },
-            {
-              notify: ctx.options.notification.notify,
-              transport: {
-                mode: ctx.options.notification_transport.mode,
-                websocket: ctx.options.notification_transport.websocket,
-              },
-              toast: {
-                appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-                winrt: ctx.options.notification_transport.winRT,
-                balloonFallback: ctx.options.notification_transport.balloon,
-                customAudio: ctx.options.notification_toast.customToastAudio,
-                volume: notificationVolumePercent(ctx.options),
-                imageIntegration: '0',
-                group: ctx.options.notification_toast.groupToast,
-                attribution: notifyStrings.forLang(ctx.options.achievement.lang).eaAchievement,
-              },
-              prefetch: ctx.options.notification_advanced.iconPrefetch,
-              rumble: ctx.options.notification.rumble,
-              souvenir: ctx.options.souvenir || null,
-            }
+            unlockEvent(entry, achievement, unlocked.get(achId), delay, completion),
+            kit.unlockToastOptions(ctx, { attribution: kit.localized(ctx, 'eaAchievement'), prefetch: kit.iconPrefetch(ctx) })
           );
           delay += 1;
         }
@@ -305,35 +85,22 @@ async function handleChange(changedFile, ctx) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.ea === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
-  const logsRoot = eaLogsRoot();
+  if (!kit.canStart(ctx, 'ea')) return;
+  const logsRoot = ea.defaultEaLogsRoot();
   if (!logsRoot || !fs.existsSync(logsRoot)) return;
 
   await handleChange(null, ctx);
 
-  try {
-    const w = watch(logsRoot, { recursive: false, filter: /EADesktopVerbose\.(log|bak)$/i }, (evt, name) => {
-      if (evt !== 'update') return;
-      changes.run('ea-log', () => handleChange(name, ctx));
-    });
-    watchers.push(guardWatcher(w, 'the EA Desktop logs', debug));
-    debug.log(`[ea] watching ${logsRoot}`);
-  } catch (err) {
-    debug.warn(`[ea] failed to watch ${logsRoot}: ${err}`);
-  }
+  const w = watchers.open(logsRoot, { recursive: false, filter: /EADesktopVerbose\.(log|bak)$/i }, (evt, name) => {
+    if (evt !== 'update') return;
+    changes.run('ea-log', () => handleChange(name, ctx));
+  });
+  if (w) debug.log(`[ea] watching ${logsRoot}`);
 };
 
 module.exports.stop = () => {
   changes.clear();
-  for (const w of watchers) {
-    try {
-      w.close();
-    } catch {}
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
-module.exports._internal = { parseAttrs, parseLog, normalizeAchievement, parseContentIdFromSet };
+module.exports._internal = { readStates, cacheKey };

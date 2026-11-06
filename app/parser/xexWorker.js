@@ -6,7 +6,10 @@
 */
 
 const path = require('path');
-const { readSpa } = require(path.join(__dirname, 'xex.js'));
+
+// This file ships unpacked from the asar; what it loads stays inside it (as in scanWorker.js).
+const parserDir = path.join(__dirname, path.sep).replace(`${path.sep}app.asar.unpacked${path.sep}`, `${path.sep}app.asar${path.sep}`);
+const { readSpa } = require(path.join(parserDir, 'xex.js'));
 
 function extract(file) {
   try {

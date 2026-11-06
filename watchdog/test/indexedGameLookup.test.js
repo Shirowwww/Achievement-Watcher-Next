@@ -2,7 +2,8 @@
 
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { createIndexedGameLookup } = require('../util/indexedGameLookup.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { createIndexedGameLookup } = require(sharedAppModulePath('util/indexedGameLookup.js'));
 
 function errorWithCode(message, code) {
   const error = new Error(message);

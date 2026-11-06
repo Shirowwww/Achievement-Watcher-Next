@@ -258,7 +258,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-ready-copy').text(t.readyCopy);
     $('#onboard-features-title').text(t.featuresTitle);
     $('#onboard-feat-overlay-title').text(t.overlayTitle);
-    $('#onboard-feat-overlay-copy').text(fill(t.overlayCopy, { hotkey: app.config.overlay?.hotkey || 'Ctrl+Shift+K' }));
+    $('#onboard-feat-overlay-copy').text(fill(t.overlayCopy, { hotkey: app.config.overlay?.hotkey || settings.DEFAULT_HOTKEY }));
     $('#onboard-feat-collections-title').text(t.collectionsTitle);
     $('#onboard-feat-collections-copy').text(t.collectionsCopy);
     $('#onboard-feat-trophy-title').text(t.trophyTitle);

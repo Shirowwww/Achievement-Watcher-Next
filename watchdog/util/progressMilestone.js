@@ -1,7 +1,8 @@
 'use strict';
 
-// Percent steps offered in Settings; 0 shows every progress update. Kept in sync with app/settings.js.
-const PROGRESS_STEPS = [0, 10, 25, 50];
+// Percent steps offered in Settings; 0 shows every progress update.
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { PROGRESS_STEPS } = require(sharedAppModulePath('settings.js'));
 
 // Absorbs float noise such as 7/70*100 landing a hair under 10.
 const EPSILON = 1e-9;

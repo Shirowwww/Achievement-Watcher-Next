@@ -1,315 +1,27 @@
 'use strict';
 
 // Watch Ubisoft spool files and notify from the cached achievement archive.
-// This module is standalone because the packaged watchdog cannot require app/*.
+// The file readers are the app's own (parser/ubisoftFiles.js), so both sides read the same way.
 
 const fs = require('fs');
 const path = require('path');
-const zlib = require('zlib');
-const watch = require('../util/nodeWatch.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
+const kit = require('./watcherKit.js');
+const { loadSchema, readTitles, indexedUplayName, gameNameFor } = require('./ubisoftArchive.js');
 
-const { userDataDir } = require('../util/userData.js');
-const iconCacheRoot = path.join(userDataDir(), 'steam_cache/ubisoftOfficial');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
-const { hostPaths, firstExisting } = require(sharedAppModulePath('util/winHosts.js'));
+const { readUbisoftSpoolFile, readZipEntries, parseLocalizationText, cleanTitle, defaultSpoolRoot } = require(sharedAppModulePath('parser/ubisoftFiles.js'));
 
-// The launcher is installed once, in whichever host holds it (a Wine prefix on Linux).
-const defaultSpoolRoot = () => firstExisting(hostPaths('LOCALAPPDATA', 'Ubisoft Game Launcher', 'spool'));
-const defaultConfigurationsPath = () => firstExisting(hostPaths('LOCALAPPDATA', 'Ubisoft Game Launcher', 'cache', 'configuration', 'configurations'));
-
-// Where an archive can sit: the launcher's own cache on any host, or the copy the app fetched itself.
-function achievementsRoots() {
-  return [
-    ...hostPaths('PROGRAMDATA', 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements'),
-    ...hostPaths('PROGRAMFILES_X86', 'Ubisoft', 'Ubisoft Game Launcher', 'cache', 'achievements'),
-    path.join(userDataDir(), 'cache', 'ubisoftAchievements'),
-  ];
-}
-
-let watchers = [];
+const watchers = kit.createWatcherList('ubisoft', debug);
 const changes = createChangeCoalescer();
 
-// Spool protobuf reader (subset of app/parser/ubisoftOfficial.js).
-
-function readVarint(buffer, offset, end = buffer.length) {
-  let value = 0;
-  let shift = 0;
-  let cursor = offset;
-  while (cursor < end) {
-    const byte = buffer[cursor];
-    value += (byte & 0x7f) * 2 ** shift;
-    cursor += 1;
-    if ((byte & 0x80) === 0) return { value, nextOffset: cursor };
-    shift += 7;
-    if (shift > 49) throw 'varint too large';
-  }
-  throw 'truncated varint';
-}
-
-function skipProtoField(buffer, offset, wireType, end = buffer.length) {
-  if (wireType === 0) return readVarint(buffer, offset, end).nextOffset;
-  if (wireType === 1) return offset + 8;
-  if (wireType === 2) {
-    const lenInfo = readVarint(buffer, offset, end);
-    return lenInfo.nextOffset + lenInfo.value;
-  }
-  if (wireType === 5) return offset + 4;
-  throw `unsupported wire type ${wireType}`;
-}
-
-function findFirstProtoVarint(buffer, targetField, start, end, depth = 0) {
-  let offset = start;
-  while (offset < end) {
-    const tagInfo = readVarint(buffer, offset, end);
-    const fieldNumber = tagInfo.value >> 3;
-    const wireType = tagInfo.value & 0x07;
-    offset = tagInfo.nextOffset;
-    if (wireType === 0) {
-      const valueInfo = readVarint(buffer, offset, end);
-      if (fieldNumber === targetField) return valueInfo.value;
-      offset = valueInfo.nextOffset;
-      continue;
-    }
-    if (wireType === 2) {
-      const lenInfo = readVarint(buffer, offset, end);
-      const payloadStart = lenInfo.nextOffset;
-      const payloadEnd = payloadStart + lenInfo.value;
-      if (depth < 4) {
-        const nested = findFirstProtoVarint(buffer, targetField, payloadStart, payloadEnd, depth + 1);
-        if (nested != null) return nested;
-      }
-      offset = payloadEnd;
-      continue;
-    }
-    offset = skipProtoField(buffer, offset, wireType, end);
-  }
-  return null;
-}
-
-// [{id, time(unix s)}] - deduped, sorted by time
+// [{id, time(unix s)}] - deduped, sorted by time; the library's own spool reader, reshaped.
 function readSpool(filePath) {
-  const buffer = fs.readFileSync(filePath);
-  const records = [];
-  const seen = new Set();
-  let offset = 0;
-  while (offset < buffer.length) {
-    const tagInfo = readVarint(buffer, offset, buffer.length);
-    const fieldNumber = tagInfo.value >> 3;
-    const wireType = tagInfo.value & 0x07;
-    offset = tagInfo.nextOffset;
-    if (fieldNumber === 1 && wireType === 2) {
-      const lenInfo = readVarint(buffer, offset, buffer.length);
-      const payloadStart = lenInfo.nextOffset;
-      const payloadEnd = payloadStart + lenInfo.value;
-      const id = findFirstProtoVarint(buffer, 1, payloadStart, payloadEnd);
-      const rawTime = findFirstProtoVarint(buffer, 2, payloadStart, payloadEnd);
-      if (Number(id) > 0 && Number(rawTime) > 0) {
-        const time = Number(rawTime) >= 10_000_000_000 ? Math.floor(Number(rawTime) / 1000) : Number(rawTime);
-        const key = `${id}:${time}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          records.push({ id: String(id), time });
-        }
-      }
-      offset = payloadEnd;
-      continue;
-    }
-    offset = skipProtoField(buffer, offset, wireType, buffer.length);
-  }
-  records.sort((a, b) => a.time - b.time);
-  return records;
-}
-
-// Schema archive reader (subset).
-
-function readZipEntries(zipPath) {
-  const buffer = fs.readFileSync(zipPath);
-  let eocdOffset = -1;
-  const minOffset = Math.max(0, buffer.length - 0xffff - 22);
-  for (let offset = buffer.length - 22; offset >= minOffset; offset -= 1) {
-    if (buffer.readUInt32LE(offset) === 0x06054b50) {
-      eocdOffset = offset;
-      break;
-    }
-  }
-  if (eocdOffset < 0) throw 'zip EOCD not found';
-  const centralDirectorySize = buffer.readUInt32LE(eocdOffset + 12);
-  const centralDirectoryOffset = buffer.readUInt32LE(eocdOffset + 16);
-  const centralEnd = centralDirectoryOffset + centralDirectorySize;
-  const entries = new Map();
-  let offset = centralDirectoryOffset;
-  while (offset < centralEnd) {
-    if (buffer.readUInt32LE(offset) !== 0x02014b50) throw 'invalid zip central entry';
-    const compressionMethod = buffer.readUInt16LE(offset + 10);
-    const compressedSize = buffer.readUInt32LE(offset + 20);
-    const fileNameLength = buffer.readUInt16LE(offset + 28);
-    const extraFieldLength = buffer.readUInt16LE(offset + 30);
-    const fileCommentLength = buffer.readUInt16LE(offset + 32);
-    const localHeaderOffset = buffer.readUInt32LE(offset + 42);
-    const fileName = buffer.toString('utf8', offset + 46, offset + 46 + fileNameLength);
-    entries.set(fileName, { compressionMethod, compressedSize, localHeaderOffset });
-    offset += 46 + fileNameLength + extraFieldLength + fileCommentLength;
-  }
-  const readEntry = (entryName) => {
-    const entry = entries.get(entryName);
-    if (!entry) return null;
-    const localOffset = entry.localHeaderOffset;
-    if (buffer.readUInt32LE(localOffset) !== 0x04034b50) throw 'invalid zip local entry';
-    const localNameLength = buffer.readUInt16LE(localOffset + 26);
-    const localExtraLength = buffer.readUInt16LE(localOffset + 28);
-    const dataStart = localOffset + 30 + localNameLength + localExtraLength;
-    const compressed = buffer.subarray(dataStart, dataStart + entry.compressedSize);
-    if (entry.compressionMethod === 0) return Buffer.from(compressed);
-    if (entry.compressionMethod === 8) return zlib.inflateRawSync(compressed);
-    throw `unsupported zip compression ${entry.compressionMethod}`;
-  };
-  return { entries, readEntry };
-}
-
-function parseLocTxt(buffer) {
-  const out = new Map();
-  for (const line of buffer.toString('utf8').replace(/^﻿/, '').split(/\r?\n/)) {
-    const parts = String(line || '').trim().split('\t');
-    if (parts.length < 3) continue;
-    const rawId = String(parts[0] || '').trim();
-    if (!/^\d+$/.test(rawId)) continue;
-    out.set(rawId.replace(/^0+(?=\d)/, ''), {
-      displayName: String(parts[1] || '').trim(),
-      description: parts.slice(2).join('\t').trim(),
-    });
-  }
-  return out;
-}
-
-// Load {texts: Map(id→{displayName,description}), iconFor(id)→localPath|undefined} for a product.
-// Locale preference: the app language's Ubisoft locale, then en-US, then any.
-function loadSchema(appid, lang) {
-  const prefix = `${appid}_`;
-  const candidates = [];
-  for (const root of achievementsRoots()) {
-    try {
-      for (const e of fs.readdirSync(root, { withFileTypes: true })) {
-        if (e.isFile() && e.name.startsWith(prefix)) candidates.push(path.join(root, e.name));
-      }
-    } catch {
-      /* an absent root must not hide the others */
-    }
-  }
-  if (!candidates.length) return null;
-  const archivePath = candidates.sort((a, b) => {
-    try {
-      return fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs;
-    } catch {
-      return 0;
-    }
-  })[0];
-
-  let zip;
-  try {
-    zip = readZipEntries(archivePath);
-  } catch (err) {
-    debug.warn(`[ubisoft] unreadable achievements archive for ${appid}: ${err}`);
-    return null;
-  }
-
-  // steam-api lang name → ubisoft locale prefix ("french" → fr)
-  const LANG_PREFIX = { english: 'en', french: 'fr', german: 'de', italian: 'it', spanish: 'es', portuguese: 'pt', brazilian: 'pt-br', russian: 'ru', polish: 'pl', japanese: 'ja', koreana: 'ko', schinese: 'zh-cn', tchinese: 'zh-tw', dutch: 'nl', danish: 'da', finnish: 'fi', swedish: 'sv', norwegian: 'nb', czech: 'cs', slovak: 'sk', hungarian: 'hu', romanian: 'ro', turkish: 'tr', ukrainian: 'uk', greek: 'el', thai: 'th', vietnamese: 'vi', arabic: 'ar', bulgarian: 'bg', indonesian: 'id', latam: 'es-mx' };
-  const wantedPrefix = LANG_PREFIX[String(lang || '').toLowerCase()] || 'en';
-  const locNames = Array.from(zip.entries.keys()).filter((n) => /_loc\.txt$/i.test(n));
-  const pick =
-    locNames.find((n) => n.toLowerCase().startsWith(wantedPrefix)) ||
-    locNames.find((n) => n.toLowerCase().startsWith('en')) ||
-    locNames[0];
-  const texts = pick ? parseLocTxt(zip.readEntry(pick)) : new Map();
-
-  const iconDir = path.join(iconCacheRoot, String(appid), 'img');
-  const iconFor = (id) => {
-    const entryName = Array.from(zip.entries.keys()).find((n) => n.toLowerCase() === `${id}.png` || n.toLowerCase() === `${String(id).padStart(2, '0')}.png`);
-    if (!entryName) return undefined;
-    const iconPath = path.join(iconDir, `${id}.png`);
-    try {
-      if (!fs.existsSync(iconPath)) {
-        fs.mkdirSync(iconDir, { recursive: true });
-        fs.writeFileSync(iconPath, zip.readEntry(entryName));
-      }
-      return iconPath;
-    } catch {
-      return undefined;
-    }
-  };
-
-  return { texts, iconFor };
-}
-
-// The configurations index mixes the launcher's own name ("Steam", "Ubisoft Connect", …) into each
-// game block. Treat those as "no title" so a live toast never shows the launcher instead of the
-// game (same rule as app/parser/ubisoftOfficial.js, kept here because the watchdog is standalone).
-const LAUNCHER_TITLES = new Set([
-  'steam', 'uplay', 'ubisoft', 'ubisoft connect', 'epic', 'epic games', 'epic games launcher',
-  'ea', 'ea app', 'ea desktop', 'origin', 'rockstar', 'rockstar games', 'rockstar games launcher',
-  'rockstar launcher', 'social club', 'gog', 'galaxy',
-]);
-
-function cleanConfigTitle(value) {
-  const raw = String(value || '').trim().replace(/^['"]+|['"]+$/g, '').trim();
-  if (!raw) return '';
-  const key = raw.toLowerCase().replace(/[™®©]/g, '');
-  return LAUNCHER_TITLES.has(key) ? '' : raw;
-}
-
-// Product titles from the configurations index (best effort). Path injectable for tests.
-function readTitles(configurationsPath = defaultConfigurationsPath()) {
-  const out = new Map(); // normalizedSpec is not needed here - map by product id prefix of archives
-  let text = '';
-  try {
-    text = fs.readFileSync(configurationsPath).toString('latin1').replace(/\0/g, '');
-  } catch {
-    return out;
-  }
-  const blockRegex = /version:\s*[^\r\n]+\r?\nroot:\s*[\s\S]*?(?=(?:version:\s*[^\r\n]+\r?\nroot:)|$)/g;
-  let match = null;
-  while ((match = blockRegex.exec(text))) {
-    const block = String(match[0] || '');
-    const spec = (block.match(/^\s*achievements:\s*([^\r\n]+)/m)?.[1] || '').trim().replace(/^['"]+|['"]+$/g, '');
-    if (!spec) continue;
-    const title = (
-      block.match(/installer:\s*\r?\n\s+name:\s*([^\r\n]+)/m)?.[1] ||
-      block.match(/^\s*game_identifier:\s*([^\r\n]+)/m)?.[1] ||
-      block.match(/^\s*display_name:\s*([^\r\n]+)/m)?.[1] ||
-      ''
-    );
-    const cleaned = cleanConfigTitle(title);
-    if (cleaned) out.set(spec.toLowerCase(), cleaned);
-  }
-  return out;
-}
-
-// The app records the resolved game name (and Steam release) in gameIndex with the Ubisoft product
-// id; prefer that over the raw configurations block when it exists. Files injectable for tests.
-function indexedUplayName(uplayId, files = [
-  path.join(userDataDir(), 'steam_cache', 'schema', 'gameIndex.json'),
-  path.join(userDataDir(), 'cfg', 'gameIndex.json'),
-]) {
-  const key = String(uplayId || '');
-  if (!key) return '';
-  for (const file of files) {
-    try {
-      const list = JSON.parse(fs.readFileSync(file, 'utf8'));
-      if (!Array.isArray(list)) continue;
-      const found = list.find((g) => g && String(g.uplayId || '') === key);
-      if (found && found.name) return String(found.name);
-    } catch {
-      /* game index files are optional */
-    }
-  }
-  return '';
+  return readUbisoftSpoolFile(filePath).records.map((r) => ({ id: String(r.achievementId), time: r.earned_time }));
 }
 
 // One folder per Ubisoft account. Each is watched even when it holds no spool yet, since an
@@ -385,25 +97,7 @@ async function handleChange(target, ctx) {
             delay,
             completion,
           },
-          {
-            notify: ctx.options.notification.notify,
-            transport: {
-              mode: ctx.options.notification_transport.mode,
-              websocket: ctx.options.notification_transport.websocket,
-            },
-            toast: {
-              appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-              winrt: ctx.options.notification_transport.winRT,
-              balloonFallback: ctx.options.notification_transport.balloon,
-              customAudio: ctx.options.notification_toast.customToastAudio,
-              volume: notificationVolumePercent(ctx.options),
-              imageIntegration: '0',
-              group: ctx.options.notification_toast.groupToast,
-              attribution: target.name,
-            },
-            prefetch: false, // icons are extracted to local files
-            rumble: ctx.options.notification.rumble,
-          }
+          kit.unlockToastOptions(ctx, { attribution: target.name }) // icons are extracted to local files
         );
         delay += 1;
       }
@@ -420,10 +114,7 @@ async function handleChange(target, ctx) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.ubisoftOfficial === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'ubisoftOfficial')) return;
 
   let targets;
   try {
@@ -436,13 +127,7 @@ module.exports.start = async (ctx) => {
   if (spoolDirs.length === 0) return;
 
   const titles = readTitles();
-  // resolve a display name: archive spec title match is complex - configurations titles are keyed
-  // by spec, so best effort: gameIndex (the app's resolved identity) first, then any title whose
-  // spec starts with the product id, else a generic label. Never "Steam"/"Ubisoft Connect".
-  const nameFor = (appid) => {
-    const titleKey = Array.from(titles.keys()).find((k) => k.startsWith(`${appid}_`));
-    return indexedUplayName(appid) || (titleKey && titles.get(titleKey)) || `Ubisoft ${appid}`;
-  };
+  const nameFor = (appid) => gameNameFor(appid, titles);
   for (const target of targets) {
     target.name = nameFor(target.appid);
 
@@ -460,19 +145,14 @@ module.exports.start = async (ctx) => {
   const startedAt = moment().unix();
   for (const spoolDir of spoolDirs) {
     const dirTargets = targets.filter((t) => t.spoolDir === spoolDir);
-    try {
-      const w = watch(spoolDir, { recursive: false, filter: /\.spool$/i }, (evt, name) => {
-        if (evt !== 'update' || !name) return;
-        const hit = matchSpoolTarget(dirTargets, name, spoolDir, startedAt);
-        if (!hit) return;
-        if (!hit.name) hit.name = nameFor(hit.appid);
-        changes.run(hit.appid, () => handleChange(hit, ctx));
-      });
-      watchers.push(guardWatcher(w, `'${spoolDir}'`, debug));
-      debug.log(`[ubisoft] watching ${dirTargets.length} spool(s) in ${spoolDir}`);
-    } catch (err) {
-      debug.warn(`[ubisoft] failed to watch ${spoolDir}: ${err}`);
-    }
+    const w = watchers.open(spoolDir, { recursive: false, filter: /\.spool$/i }, (evt, name) => {
+      if (evt !== 'update' || !name) return;
+      const hit = matchSpoolTarget(dirTargets, name, spoolDir, startedAt);
+      if (!hit) return;
+      if (!hit.name) hit.name = nameFor(hit.appid);
+      changes.run(hit.appid, () => handleChange(hit, ctx));
+    });
+    if (w) debug.log(`[ubisoft] watching ${dirTargets.length} spool(s) in ${spoolDir}`);
   }
 };
 
@@ -498,19 +178,14 @@ function baselineFor(target, cache, records) {
 
 module.exports.stop = () => {
   changes.clear();
-  for (const w of watchers) {
-    try {
-      w.close();
-    } catch {}
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 // Exposed for unit testing the pure readers.
 module.exports._internal = {
   readSpool,
   readZipEntries,
-  parseLocTxt,
+  parseLocTxt: parseLocalizationText,
   loadSchema,
   discover,
   spoolUserDirs,
@@ -518,5 +193,5 @@ module.exports._internal = {
   baselineFor,
   readTitles,
   indexedUplayName,
-  cleanConfigTitle,
+  cleanConfigTitle: cleanTitle,
 };

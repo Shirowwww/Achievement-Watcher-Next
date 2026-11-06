@@ -37,8 +37,14 @@ const ECHO_SOUNDS = {
   resolveSoundFile: (name) => (name ? `resolved:${name}` : ''),
   tierSound: () => '',
   emulatorSound: require(path.join(__dirname, '..', 'util', 'notificationSound.js')).emulatorSound,
-  NO_SOUND: '__none__',
 };
+
+// The app's real rule for which sound plays, over the stubs' files.
+const appSounds = require(path.join(__dirname, '..', '..', 'app', 'util', 'notificationSounds.js'));
+const withChoice = (stub) => ({
+  ...stub,
+  chooseSound: (choice) => appSounds.chooseSound(choice, { resolve: stub.resolveSoundFile, pickRandom: stub.pickRandomSound }),
+});
 
 // `fullscreen`: false (no game), true (a game with fullscreen optimizations), null (unreadable), or
 // a FULLSCREEN_KIND string. `gameDisplay` is the centre of the game's display, given with several.
@@ -66,15 +72,16 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     },
     './prefetch.js': async (url) => url,
     '../util/squareIcon.js': { makeSquareIcon: async () => '' },
-    '../util/notificationSound.js': sounds || {
-      pickRandomSound: () => '',
-      resolveSoundFile: () => '',
-      tierSound: () => '',
-      emulatorSound: () => '',
-      NO_SOUND: '__none__',
-    },
+    '../util/notificationSound.js': withChoice(
+      sounds || {
+        pickRandomSound: () => '',
+        resolveSoundFile: () => '',
+        tierSound: () => '',
+        emulatorSound: () => '',
+      }
+    ),
     '../util/presetLocator.js': { sourcePlatform: require('../util/presetLocator.js').sourcePlatform },
-    '../util/gameSound.js': { SOUND_NONE: '__none__', SOUND_RANDOM: '__random__', soundFor: () => gameSound },
+    '../util/gameSound.js': { soundFor: () => gameSound },
     '../websocket.js': {
       broadcast: (payload) => calls.broadcasts.push(payload),
       isDeckyListening: () => false,
@@ -95,7 +102,7 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     './overlayAck.js': { ...overlayAck, wait: (id) => overlayAck.wait(id, 50) },
     '../util/log.js': { log: () => {}, warn: () => {}, error: () => {} },
     '../util/regodit.js': require('../util/regodit.js'),
-    '../watchdog.js': {
+    './spawnOverlay.js': {
       SpawnOverlayNotification: (args) => {
         calls.overlays.push(args);
         const id = (args.find((arg) => String(arg).startsWith('--notifyId=')) || '').split('=')[1];

@@ -1,5 +1,6 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
@@ -12,12 +13,11 @@ const { loadSteamData } = require('../steam.js');
 const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, mergeGameIndexes, pickGameForProcess, snapshotActiveGames } = require('./seed.js');
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
-const { configuredExecutable } = require('../util/exeList.js');
+const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
 const watchdogSettings = require('../settings.js');
-const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { loadRegodit } = require('../util/regodit.js');
 
-const debug = new (require('../util/logger'))({
+const debug = new (require(sharedAppModulePath('util/logger.js')))({
   console: true,
   file: path.join(userDataDir(), 'logs/playtime.log'),
 });

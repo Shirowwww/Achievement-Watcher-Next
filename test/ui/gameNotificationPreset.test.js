@@ -166,8 +166,7 @@ test('live unlocks resolve the per-game override from memory', () => {
   assert.match(enqueue, /game: gameSettings\.preset/);
   assert.match(enqueue, /game: gameSettings,\s*global: \{\s*position: ov\.notificationPosition,\s*scale: ov\.notificationScale,/);
   assert.match(enqueue, /position: placement\.position,\s*scale: placement\.scale,/);
-  assert.match(enqueue, /gameSettings\.sound === gamePreset\.SOUND_NONE/);
-  assert.match(enqueue, /gameSettings\.sound === gamePreset\.SOUND_RANDOM/);
+  assert.match(enqueue, /gameSound: gameSettings\.sound/);
 
   const lookup = functionBody(initSource, 'function findNotificationPresetFolder(name)');
   assert.match(lookup, /notificationPresetFolders \|\| refreshNotificationPresetFolders\(\)/);

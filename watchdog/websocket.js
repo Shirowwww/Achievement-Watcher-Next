@@ -1,5 +1,6 @@
 'use strict';
 
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -7,7 +8,7 @@ const https = require('https');
 const { EventEmitter } = require('events');
 const ws = require('ws');
 const moment = require('moment');
-const debug = new (require('./util/logger'))({
+const debug = new (require(sharedAppModulePath('util/logger.js')))({
   console: true,
   file: path.join(require('./util/userData.js').userDataDir(), 'logs/websocket.log'),
 });

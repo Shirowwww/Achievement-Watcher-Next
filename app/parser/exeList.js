@@ -2,7 +2,8 @@
 
 const path = require('path');
 const { pickBestClaim } = require('../util/claimCollision.js');
-const { knownUserDataDir } = require('../util/userDataPath.js');
+const { knownUserDataDir, userDataDir } = require('../util/userDataPath.js');
+const { createIndexedGameLookup } = require('../util/indexedGameLookup.js');
 const fs = require('fs');
 
 let debug = { log() {}, error() {}, warn() {} };
@@ -16,6 +17,42 @@ function listFile() {
 }
 
 module.exports.list = getCurrentList;
+
+/*
+  Synchronous reads for the Watchdog and the main process, which hold an appid and want the path the
+  library resolved. One parse per change of the file (stamped), never a write, and an unknown data
+  folder falls back to the default one instead of throwing: a read here must never break a toast.
+*/
+const lookups = new Map();
+
+function lookupFor(file) {
+  let lookup = lookups.get(file);
+  if (!lookup) {
+    lookup = createIndexedGameLookup({ getFiles: () => [file] });
+    lookups.set(file, lookup);
+  }
+  return lookup;
+}
+
+function configuredExecutable(appid, { file = path.join(userDataDir(), 'cfg', 'exeList.db') } = {}) {
+  const id = String(appid == null ? '' : appid).trim();
+  if (!id) return '';
+  const entry = lookupFor(file)(id);
+  return entry && entry.exe ? String(entry.exe) : '';
+}
+
+// The main process knows a game under several ids (Steam, library); the first with a path that still
+// exists on disk wins, since it points a notification at the install folder.
+function firstExistingExecutable(appids, options) {
+  for (const appid of appids) {
+    const exe = configuredExecutable(appid, options);
+    if (exe && fs.existsSync(exe)) return exe;
+  }
+  return '';
+}
+
+module.exports.configuredExecutable = configuredExecutable;
+module.exports.firstExistingExecutable = firstExistingExecutable;
 
 async function getCurrentList() {
   try {

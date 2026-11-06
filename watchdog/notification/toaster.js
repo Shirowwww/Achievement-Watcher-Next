@@ -16,6 +16,7 @@ const { applyCustomGameIcon } = require('../util/steamArtwork.js');
 const transportPolicy = require('./transportPolicy.js');
 const transportMemory = require('../util/transportMemory.js');
 const overlayAck = require('./overlayAck.js');
+const { SpawnOverlayNotification } = require('./spawnOverlay.js');
 
 // Long enough for a Windows toast to slide in before the screenshot is taken.
 const SOUVENIR_TOAST_DELAY_MS = 800;
@@ -147,32 +148,20 @@ function applyGameTitle(message, option) {
   }
 }
 
-/*
-  Same order as the overlay popup in the app (enqueueNotificationFromArgs): a silent event never
-  rings, then the game's own panel, a rare/100% sound, the emulator's sound, then the global one.
-  The progress sound is the exception: it is about the kind of popup, so it wins over a game's own
-  unlock sound. Playtime cards are the silent ones.
-*/
+// The overlay popup picks its sound with the same rule (enqueueNotificationFromArgs in the app).
 function chooseToastSound(message, overlay) {
-  if (message.silent) return '';
-  const globalSound = () => notificationSound.resolveSoundFile(overlay.notificationSound);
-  const ownSound = gameSound.soundFor(message.appid);
-  if (ownSound === gameSound.SOUND_NONE) return '';
-
-  const tierSound = notificationSound.tierSound(overlay, {
-    notificationType: message.progress ? 'progress' : message.notificationType,
-    rarityPercent: message.rarityPercent,
+  return notificationSound.chooseSound({
+    silent: message.silent,
+    gameSound: gameSound.soundFor(message.appid),
+    tier: notificationSound.tierSound(overlay, {
+      notificationType: message.progress ? 'progress' : message.notificationType,
+      rarityPercent: message.rarityPercent,
+    }),
+    emulator: notificationSound.emulatorSound(overlay, sourcePlatform(message.source)),
+    random: overlay.randomSound === true,
+    mainSound: overlay.notificationSound,
+    progress: Boolean(message.progress),
   });
-  const tierWins = !ownSound || Boolean(message.progress);
-  if (tierWins && tierSound === notificationSound.NO_SOUND) return '';
-  if (tierWins && tierSound) return notificationSound.resolveSoundFile(tierSound) || globalSound();
-  if (ownSound === gameSound.SOUND_RANDOM) return notificationSound.pickRandomSound() || globalSound();
-  if (ownSound) return notificationSound.resolveSoundFile(ownSound) || globalSound();
-  const emulatorSound = notificationSound.emulatorSound(overlay, sourcePlatform(message.source));
-  if (emulatorSound === notificationSound.NO_SOUND) return '';
-  if (emulatorSound) return notificationSound.resolveSoundFile(emulatorSound) || globalSound();
-  if (overlay.randomSound === true) return notificationSound.pickRandomSound() || globalSound();
-  return globalSound();
 }
 
 /*
@@ -268,7 +257,6 @@ module.exports = async (message, option = {}) => {
       if (plan.overlay) {
         debug.log(`Overlay notification (spawn) - ${plan.reason}`);
         try {
-          const watchdog = require('../watchdog.js');
           const progress = normalizeProgress(message.progress);
           const notificationType = message.notificationType || (progress ? 'progress' : 'achievement');
           const overlayArgs = [
@@ -318,7 +306,7 @@ module.exports = async (message, option = {}) => {
               paintReady = overlayAck.whenPainted(trackedId);
             }
           }
-          watchdog.SpawnOverlayNotification(overlayArgs);
+          SpawnOverlayNotification(overlayArgs);
         } catch (err) {
           debug.error(err);
           // The request never left this process, so the overlay definitely showed nothing.

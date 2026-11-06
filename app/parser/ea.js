@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { hostPaths, firstExisting } = require('../util/winHosts.js');
+const { decodeXmlEntities } = require('../util/xmlText.js');
 
 let debug = { log() {}, warn() {}, error() {} };
 
@@ -24,15 +25,6 @@ function defaultEaLogsRoot() {
 const EA_VERBOSE_LOG_NAME = 'EADesktopVerbose.log';
 const EA_VERBOSE_LOG_BAK_NAME = 'EADesktopVerbose.bak';
 const EA_ICON_BASE = 'https://achievements.gameservices.ea.com/achievements/icons';
-
-function decodeXmlEntities(value) {
-  return String(value || '')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-}
 
 function parseXmlAttributes(fragment) {
   const out = {};
@@ -425,6 +417,18 @@ function listEaOfficialAchievementSets(rootPath) {
   return out;
 }
 
+// Every logged set that names a game and has achievements, with its unlock state (ms) as of the end
+// of the log. Reads the .bak too, so it also works when only the rotated file is left.
+function readEaAchievementStates(logsRoot) {
+  const parsed = readEaDesktopVerboseLog(logsRoot);
+  const out = [];
+  for (const entry of parsed.achievementSets.values()) {
+    if (!entry.appid || entry.achievements.length === 0) continue;
+    out.push({ entry, snapshot: buildEaOfficialSnapshot(entry, parsed) });
+  }
+  return out;
+}
+
 function resolveSetForAppid(appid, data = {}) {
   const target = String(appid || '').trim();
   if (!/^\d+$/.test(target)) return null;
@@ -578,5 +582,8 @@ module.exports.listEaOfficialAchievementSets = listEaOfficialAchievementSets;
 module.exports.resolveEaOfficialLogsRoots = resolveEaOfficialLogsRoots;
 module.exports.resolveEaOfficialVerboseLogPath = resolveEaOfficialVerboseLogPath;
 module.exports.buildEaOfficialSnapshot = buildEaOfficialSnapshot;
+module.exports.readEaAchievementStates = readEaAchievementStates;
+module.exports.normalizeEaImageId = normalizeEaImageId;
+module.exports.EA_ICON_BASE = EA_ICON_BASE;
 module.exports.defaultEaLogsRoot = defaultEaLogsRoot;
 module.exports.EA_VERBOSE_LOG_NAME = EA_VERBOSE_LOG_NAME;

@@ -84,14 +84,50 @@ function emulatorSound(overlay, platform) {
   return key ? String((overlay || {})[key] || '') : '';
 }
 
+// A game's own panel can ask for a fresh random pick on each unlock.
+const RANDOM_SOUND = '__random__';
+
+/*
+  Which sound one notification plays, for the overlay popup (app) and the Windows toast (Watchdog),
+  which find files in their own folders (`resolve`, `pickRandom`). A silent event, then the game's own
+  choice, a rare/100%/progress sound, then the main one: the emulator's, a random one, the preset's
+  own (the popup only knows its preset) or the main sound. A named file that is gone falls back to
+  the main one; NO_SOUND anywhere on the way means silence.
+*/
+function chooseSound(
+  { silent = false, gameSound = '', tier = '', emulator = '', random = false, presetSound = '', mainSound = '', progress = false },
+  { resolve, pickRandom }
+) {
+  if (silent || gameSound === NO_SOUND) return '';
+  const main = emulator ? (emulator === NO_SOUND ? [] : [emulator, mainSound]) : random ? [RANDOM_SOUND, mainSound] : [presetSound || mainSound];
+  const tierWins = !gameSound || progress;
+  if (tierWins && tier === NO_SOUND) return '';
+  const candidates = tierWins && tier ? [tier, ...main] : gameSound ? [gameSound, ...main] : main;
+  for (const name of candidates) {
+    if (!name) continue;
+    const file = name === RANDOM_SOUND ? pickRandom() : resolve(name);
+    if (file) return file;
+  }
+  return '';
+}
+
+// Playback volume between 0 and 1, the middle when the value is unusable.
+function clampVolume(volume) {
+  const n = Number(volume);
+  return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
+}
+
 module.exports = {
   SOUND_EXT_RE,
   RENAMED_SOUNDS,
   NO_SOUND,
+  RANDOM_SOUND,
   EMULATOR_SOUND_KEYS,
   renamedSound,
   listSoundFiles,
   pickRandomSound,
   tierSound,
   emulatorSound,
+  chooseSound,
+  clampVolume,
 };

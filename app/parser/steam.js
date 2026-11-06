@@ -4,7 +4,6 @@ const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const ini = require('../util/ini');
-const omit = require('lodash.omit');
 const moment = require('moment');
 const request = lazyRequire('request-zero');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
@@ -32,13 +31,13 @@ const steamID = require(path.join(appPath, 'util/steamID.js'));
 const fuzzyAppid = require(path.join(appPath, 'util/fuzzyAppid.js'));
 const { ipcInvoke, ipcAvailable } = require(path.join(appPath, 'util/ipcInvoke.js'));
 const steamLanguages = require(path.join(appPath, 'locale/steam.json'));
-const sse = require(path.join(appPath, 'parser/sse.js'));
+const { isUnambiguousRldBlob, decodeRldBlob } = require('../util/rldBlob.js');
+const emuSave = require(path.join(appPath, 'parser/emuSave.js'));
 const ff7 = require(path.join(appPath, 'parser/ff7.js'));
 const fs = require('fs');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const uplayR2 = require(path.join(appPath, 'parser/uplayR2.js'));
 const uplayCatalogue = require(path.join(appPath, 'parser/uplayCatalogue.js'));
-const emuIni = require(path.join(appPath, 'util/emuIni.js'));
 const steamAssets = require(path.join(appPath, 'util/steamAssets.js'));
 const { isImageBuffer, usableCachedImage } = require(path.join(appPath, 'util/imageSniff.js'));
 const { userDataDir } = require(path.join(appPath, 'util/userDataPath.js'));
@@ -747,32 +746,65 @@ module.exports.getGameData = async (cfg) => {
   }
 };
 
-// An RLD! value is a 5-byte hex blob (little-endian uint32 + a discarded trailing byte). Convert only
-// a value that CANNOT also be a decimal timestamp - guessing wrong on an all-digit blob would move a
-// real unlock to the 1990s.
-const RLD_BLOB = /^[0-9a-fA-F]{10}$/;
+module.exports._internal = Object.assign({}, module.exports._internal, {
+  isUnambiguousRldBlob,
+  decodeRldBlob,
+  parseRazorAchievementFile: emuSave.parseRazorAchievementFile,
+});
 
-function isUnambiguousRldBlob(value) {
-  const s = String(value);
-  return RLD_BLOB.test(s) && /[a-fA-F]/.test(s);
-}
+// The save file names a save folder is probed for, first found wins. The formats themselves are
+// read by parser/emuSave.js, the decoder the Watchdog shares.
+const SAVE_FOLDER_FILES = [
+  'achievements.ini',
+  'achievements.json',
+  'stats.json',
+  'achiev.ini',
+  'stats.ini',
+  'Achievements.Bin',
+  'achieve.dat',
+  'Achievements.ini',
+  'stats/achievements.ini',
+  'stats.bin',
+  'stats/CreamAPI.Achievements.cfg',
+  'SteamEmu/UserStats/achiev.ini',
+  'user_stats.ini',
+  'achievement',
+];
 
-function decodeRldBlob(value) {
-  return new DataView(new Uint8Array(Buffer.from(String(value), 'hex')).buffer).getUint32(0, true);
-}
-
-// RAZOR1911 (%APPDATA%\.1911\<appid>\achievement): plain text, one line per achievement,
-// "<apiname> <0|1> <epoch seconds>". Lines that do not match are ignored.
-function parseRazorAchievementFile(text) {
-  const result = {};
-  for (const line of String(text).split(/\r?\n/)) {
-    const m = /^(\S+)\s+([01])\s+(\d+)\s*$/.exec(line.trim());
-    if (m) result[m[1]] = { Achieved: m[2], UnlockTime: Number(m[3]) };
+// The first save file of the folder that parses, as { local, matchedFile }.
+function readFirstSaveFile(filePath) {
+  // Most candidates do not exist in a given folder, so a missing file is not worth reporting. A file
+  // that IS there and could not be read is: the failure then says "locked" or "corrupt" instead.
+  let lastReadError = null;
+  for (const file of SAVE_FOLDER_FILES) {
+    try {
+      return { local: emuSave.parseSaveFile(file, fs.readFileSync(path.join(filePath, file))), matchedFile: file };
+    } catch (e) {
+      if (e && e.code !== 'ENOENT' && e.code !== 'ENOTDIR') lastReadError = { file, error: e };
+    }
   }
-  return result;
+  if (lastReadError) {
+    throw `No readable achievement file in '${filePath}': ${lastReadError.file} => ${lastReadError.error.message || lastReadError.error}`;
+  }
+  throw `No achievement file found in '${filePath}'`;
 }
 
-module.exports._internal = Object.assign({}, module.exports._internal, { isUnambiguousRldBlob, decodeRldBlob, parseRazorAchievementFile });
+// Raw stat values from the sibling Stats.ini, kept so statProgress.js can resolve progress-type
+// achievements via operand1. Tagged non-enumerable so they are stripped from `root` afterward
+// rather than matched against a schema entry named "stat_1".
+function mergeSiblingStats(result, statsDir) {
+  // Stat names come lower-cased while achievement keys keep their casing: compare case-insensitively.
+  const resultKeys = new Set(Object.keys(result).map((k) => String(k).toUpperCase()));
+  const rawStatKeys = [];
+  for (const [name, num] of Object.entries(emuSave.readSiblingStats(statsDir))) {
+    if (resultKeys.has(String(name).toUpperCase())) continue; // never shadow a real achievement entry
+    result[name] = num;
+    rawStatKeys.push(name);
+  }
+  if (rawStatKeys.length > 0) {
+    Object.defineProperty(result, '__rawStatKeys', { value: rawStatKeys, enumerable: false, configurable: true });
+  }
+}
 
 module.exports.getAchievementsFromFile = async (filePath) => {
   // Said plainly rather than as the "path must be of type string" thrown by the first candidate
@@ -784,195 +816,9 @@ module.exports.getAchievementsFromFile = async (filePath) => {
   const ff7State = ff7.getAchievementsFromFile(filePath);
   if (ff7State) return ff7State;
 
-  const files = [
-    'achievements.ini',
-    'achievements.json',
-    'stats.json',
-    'achiev.ini',
-    'stats.ini',
-    'Achievements.Bin',
-    'achieve.dat',
-    'Achievements.ini',
-    'stats/achievements.ini',
-    'stats.bin',
-    'stats/CreamAPI.Achievements.cfg',
-    'SteamEmu/UserStats/achiev.ini',
-    'user_stats.ini',
-    'achievement',
-  ];
-
-  const filter = ['SteamAchievements', 'Steam64', 'Steam'];
-
-  let local;
-  let matchedFile;
-  // Most candidates simply do not exist in a given save folder, so a missing file is not worth
-  // reporting. A file that IS there and could not be read is: keeping that error means the failure
-  // says "locked by another process" or "corrupt" instead of the misleading "no achievement file".
-  let lastReadError = null;
-  for (let file of files) {
-    try {
-      if (path.parse(file).ext == '.json') {
-        // Tools that export the file from PowerShell or Playnite write a UTF-8 BOM, which JSON.parse rejects.
-        const text = fs.readFileSync(path.join(filePath, file), 'utf8');
-        local = JSON.parse(text.charCodeAt(0) === 0xfeff ? text.slice(1) : text);
-      } else if (file === 'stats.bin') {
-        local = sse.parse(fs.readFileSync(path.join(filePath, file)));
-      } else if (file === 'achievement') {
-        local = parseRazorAchievementFile(fs.readFileSync(path.join(filePath, file), 'utf8'));
-      } else {
-        local = ini.parse(fs.readFileSync(path.join(filePath, file), 'utf8'));
-      }
-      matchedFile = file;
-      break;
-    } catch (e) {
-      if (e && e.code !== 'ENOENT' && e.code !== 'ENOTDIR') lastReadError = { file, error: e };
-    }
-  }
-  if (!local) {
-    if (lastReadError) {
-      throw `No readable achievement file in '${filePath}': ${lastReadError.file} => ${lastReadError.error.message || lastReadError.error}`;
-    }
-    throw `No achievement file found in '${filePath}'`;
-  }
-
-  let result = {};
-
-  if (local.AchievementsUnlockTimes && local.Achievements) {
-    //hoodlum DARKSiDERS
-
-    for (let i in local.Achievements) {
-      if (Object.prototype.hasOwnProperty.call(local.Achievements, i)) {
-        if (local.Achievements[i] == 1) {
-          result[`${i}`] = { Achieved: '1', UnlockTime: local.AchievementsUnlockTimes[i] || null };
-        }
-      }
-    }
-  } else if (local.State && local.Time) {
-    //3DM
-
-    for (let i in local.State) {
-      if (Object.prototype.hasOwnProperty.call(local.State, i)) {
-        if (local.State[i] == '0101') {
-          // A State key with no matching Time entry, or a blob too short to hold a uint32, must cost
-          // this one achievement its date - not the whole save file, which is what it used to do.
-          let unlockTime = null;
-          try {
-            unlockTime = decodeRldBlob(local.Time[i]) || null;
-          } catch {
-            /* unreadable timestamp - the unlock itself still counts */
-          }
-          result[i] = { Achieved: '1', UnlockTime: unlockTime };
-        }
-      }
-    }
-  } else if (local.ACHIEVEMENTS) {
-    // TENOKE: cross-reference the sibling [STATS] section (raw stat values) by the achievement's own
-    // key, since achievements.js can't see it once this function returns. Section casing varies, so
-    // match it case-insensitively.
-    const statsSectionKey = Object.keys(local).find((k) => String(k).toLowerCase() === 'stats');
-    const statsSection = statsSectionKey && typeof local[statsSectionKey] === 'object' ? local[statsSectionKey] : {};
-    const tenokeStatValues = {};
-    for (let s in statsSection) {
-      if (!Object.prototype.hasOwnProperty.call(statsSection, s)) continue;
-      const statKey = s.replace(/^"|"$/g, '');
-      const statNum = Number(String(statsSection[s]).replace(/,\s*$/, ''));
-      if (statKey && Number.isFinite(statNum)) tenokeStatValues[statKey] = statNum;
-    }
-
-    for (let i in local.ACHIEVEMENTS) {
-      if (!Object.prototype.hasOwnProperty.call(local.ACHIEVEMENTS, i)) continue;
-      const key = i.replace(/^"|"$/g, '');
-      const raw = local.ACHIEVEMENTS[i]; // e.g. "{unlocked=true, time=1712253396}"
-      const unlockedMatch = /unlocked\s*=\s*(true|false)/i.exec(raw);
-      const timeMatch = /time\s*=\s*(\d+)/i.exec(raw);
-      // Older Tenoke saves can store progress inline on the achievement entry itself. Only trust
-      // the value when it is a finite number (a malformed tail like "12.5.3" must not become NaN
-      // in the baseline - it would poison progress notifications for the rest of the session).
-      const progressMatch = /(?:progress|value)\s*=\s*([\d.]+)/i.exec(raw);
-      const progressNum = progressMatch ? Number(progressMatch[1]) : NaN;
-
-      const unlocked = unlockedMatch ? unlockedMatch[1].toLowerCase() === 'true' : false;
-      const time = timeMatch ? Number(timeMatch[1]) : 0;
-
-      result[key] = {
-        Achieved: unlocked ? '1' : '0',
-        UnlockTime: time,
-      };
-      if (Number.isFinite(progressNum)) {
-        result[key].CurProgress = progressNum;
-      } else if (key in tenokeStatValues) {
-        result[key].CurProgress = tenokeStatValues[key];
-      }
-    }
-  } else {
-    result = omit(local.ACHIEVE_DATA || local, filter);
-  }
-
-  for (let i in result) {
-    if (Object.prototype.hasOwnProperty.call(result, i)) {
-      if (result[i].State) {
-        //RLD!
-        try {
-          //uint32 little endian
-          result[i].State = decodeRldBlob(result[i].State);
-          result[i].CurProgress = decodeRldBlob(result[i].CurProgress);
-          result[i].MaxProgress = decodeRldBlob(result[i].MaxProgress);
-          result[i].Time = decodeRldBlob(result[i].Time);
-        } catch (e) {}
-      } else if (result[i] && typeof result[i] === 'object' && isUnambiguousRldBlob(result[i].Time)) {
-        // RLD! build that writes no State key: the unlock is carried by Time alone, and
-        // achievements.js turns a non-zero Time into Achieved (a locked entry is written Time=0).
-        // Without decoding it here that timestamp reaches the normalizer as raw hex.
-        try {
-          result[i].Time = decodeRldBlob(result[i].Time);
-          if (isUnambiguousRldBlob(result[i].CurProgress)) result[i].CurProgress = decodeRldBlob(result[i].CurProgress);
-          if (isUnambiguousRldBlob(result[i].MaxProgress)) result[i].MaxProgress = decodeRldBlob(result[i].MaxProgress);
-        } catch (e) {}
-      } else if (result[i].unlocktime && result[i].unlocktime.length === 7) {
-        //creamAPI
-        result[i].unlocktime = +result[i].unlocktime * 1000; //cf: https://cs.rin.ru/forum/viewtopic.php?p=2074273#p2074273 | timestamp is invalid/incomplete
-      }
-    }
-  }
-
-  // Merge sibling Stats.ini values for progress-type achievements.
-  if (matchedFile && /achievements\.ini$/i.test(matchedFile)) {
-    for (const statsName of ['Stats.ini', 'stats.ini']) {
-      const statsPath = path.join(filePath, path.dirname(matchedFile), statsName);
-      let statsSize = -1;
-      try {
-        statsSize = fs.statSync(statsPath).size;
-      } catch {
-        continue; // doesn't exist under this casing - try the next candidate
-      }
-      if (statsSize === 0) break; // present but empty: nothing to merge, not an error
-      try {
-        const doc = emuIni.parseIni(fs.readFileSync(statsPath, 'utf8'));
-        // OnlineFix writes [Stats]; CODEX and RUNE write [UserStats].
-        const values = { ...emuIni.readIniSectionValues(doc, 'UserStats'), ...emuIni.readIniSectionValues(doc, 'Stats') };
-        const resultKeys = new Set(Object.keys(result).map((k) => String(k).toUpperCase()));
-        const rawStatKeys = [];
-        for (const [name, raw] of Object.entries(values)) {
-          // readIniSectionValues lower-cases stat names while achievement keys keep the repack's
-          // original casing, so the shadow guard must be case-insensitive.
-          if (resultKeys.has(String(name).toUpperCase())) continue; // never shadow a real achievement entry
-          const num = Number(raw);
-          if (Number.isFinite(num)) {
-            result[name] = num;
-            rawStatKeys.push(name);
-          }
-        }
-        // These are raw stat values, not achievement records, kept so statProgress.js can resolve
-        // progress-type achievements via operand1. Tagged non-enumerable so they're stripped from
-        // `root` afterward rather than matched against a schema entry named "stat_1".
-        if (rawStatKeys.length > 0) {
-          Object.defineProperty(result, '__rawStatKeys', { value: rawStatKeys, enumerable: false, configurable: true });
-        }
-      } catch (e) {}
-      break;
-    }
-  }
-
+  const { local, matchedFile } = readFirstSaveFile(filePath);
+  const result = emuSave.decodeSaveEntries(local);
+  if (/achievements\.ini$/i.test(matchedFile)) mergeSiblingStats(result, path.join(filePath, path.dirname(matchedFile)));
   return result;
 };
 

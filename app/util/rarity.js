@@ -447,7 +447,40 @@ async function getRarityEntries(appid, source = 'steam', options = {}) {
   return cached ? cached.entries : [];
 }
 
+/*
+  The Watchdog's entry point: a Map<achievementName, percent> for the toast, from the same sidecar
+  and fetchers as the library. The Watchdog runs for every unlock of every platform, so it is
+  stricter than the library about the network: an id that is not a plain Steam appid (a namespaced
+  one, or a source whose ids are not Steam's) is read from the sidecar only. 'epic', 'gog' and
+  'ubisoft' are in that group too, because the library seeds their sidecars itself (it holds the
+  tokens) and a toast must not start a second lookup.
+*/
+const LIVE_CACHE_ONLY_SOURCES = new Set([...CACHE_ONLY_SOURCES, 'epic', 'gog', 'ubisoft']);
+
+function isSteamRarityId(appid, source) {
+  if (source && LIVE_CACHE_ONLY_SOURCES.has(String(source))) return false;
+  return /^[0-9]+$/.test(String(appid == null ? '' : appid).trim());
+}
+
+function rarityMapOf(entries) {
+  const map = new Map();
+  for (const row of Array.isArray(entries) ? entries : []) {
+    const name = row && row.name != null ? String(row.name).trim() : '';
+    const percent = normalizeRarityPercent(row && row.percent);
+    if (name && percent !== null) map.set(name, percent);
+  }
+  return map;
+}
+
+async function getRarityMap(appid, { ttlMs, source = '' } = {}) {
+  if (!isSteamRarityId(appid, source)) return rarityMapOf(readRarityCacheEntries(appid));
+  return rarityMapOf(await getRarityEntries(appid, source, { ttlMs }));
+}
+
 module.exports = {
+  LIVE_CACHE_ONLY_SOURCES,
+  isSteamRarityId,
+  getRarityMap,
   RARITY_SOURCES,
   normalizeRarityPercent,
   normalizeSteamBridgeName,

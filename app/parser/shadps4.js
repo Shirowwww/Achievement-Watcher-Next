@@ -279,6 +279,11 @@ module.exports.scan = async (dir) => {
 
 module.exports._internal = { configArray, configFileCandidates, gameDataRootCandidates, userRootCandidates, installedGames, readConfig };
 
+// The trophy file rules the Watchdog's live reader shares.
+module.exports.LANG_FILE = LANG_FILE;
+module.exports.toUnixSeconds = toUnixSeconds;
+module.exports.trophyType = ttype;
+
 async function listXml(xmlDir) {
   const files = await glob('TROP*.{XML,xml}', { cwd: xmlDir, onlyFiles: true });
   // Stable order so a deterministic "base" language file is chosen.

@@ -17,7 +17,6 @@ const fs = require('node:fs');
 const { makeTempDir } = require('../helpers/tempDir');
 
 const aes = require('../../app/util/aes.js');
-const watchdogAes = require('../../watchdog/util/aes.js');
 const appSecret = require('../../app/util/appSecret.js');
 
 // safeStorage as Electron presents it, backed by a key this test holds - stands in for DPAPI.
@@ -74,29 +73,41 @@ test('a value encrypted with the installation key round-trips, and needs that ke
   const original = process.env.AW_SECRET;
   process.env.AW_SECRET = secret;
   try {
-    const blob = watchdogAes.encrypt('hunter2');
+    const blob = aes.encrypt('hunter2');
     assert.match(blob, /^v2:/);
-    assert.equal(watchdogAes.decrypt(blob), 'hunter2');
+    assert.equal(aes.decrypt(blob), 'hunter2');
 
     // The published constant cannot open it.
     delete process.env.AW_SECRET;
-    assert.throws(() => watchdogAes.decrypt(blob));
+    assert.throws(() => aes.decrypt(blob));
 
     // Nor can a different installation's key.
     process.env.AW_SECRET = crypto.randomBytes(32).toString('hex');
-    assert.throws(() => watchdogAes.decrypt(blob));
+    assert.throws(() => aes.decrypt(blob));
   } finally {
     if (original === undefined) delete process.env.AW_SECRET;
     else process.env.AW_SECRET = original;
   }
 });
 
-test('values written under the old constant are still readable, and the two copies agree', () => {
-  // No AW_SECRET in this process, so both modules produce the legacy format.
+test('a key handed over after the first lookup is used, as the Watchdog receives it from the app', () => {
+  const original = process.env.AW_SECRET;
+  delete process.env.AW_SECRET;
+  aes.resetKeyCache();
+  try {
+    assert.equal(aes.encrypt('before the key').startsWith('v2:'), false);
+    process.env.AW_SECRET = crypto.randomBytes(32).toString('hex');
+    assert.match(aes.encrypt('after the key'), /^v2:/);
+  } finally {
+    if (original === undefined) delete process.env.AW_SECRET;
+    else process.env.AW_SECRET = original;
+    aes.resetKeyCache();
+  }
+});
+
+test('values written under the old constant are still readable', () => {
+  // No AW_SECRET in this process, so the legacy format is produced.
   const legacy = aes.encrypt('previously saved password');
   assert.equal(legacy.startsWith('v2:'), false);
   assert.equal(aes.decrypt(legacy), 'previously saved password');
-  // The Watchdog reads what the app wrote and vice versa - the Xbox auth file crosses that boundary.
-  assert.equal(watchdogAes.decrypt(legacy), 'previously saved password');
-  assert.equal(aes.decrypt(watchdogAes.encrypt('written by the watchdog')), 'written by the watchdog');
 });

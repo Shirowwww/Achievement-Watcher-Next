@@ -15,28 +15,8 @@ const path = require('path');
 const { userDataDir } = require('./userData.js');
 const { sharedAppModulePath } = require('./sharedAppModule.js');
 
-/*
-  Legacy preset names and the default are the app's rules, not a second set: reuse the module the
-  overlay resolves with (listed in electron-builder.yml's asarUnpack so this require works packaged).
-
-  Guarded, because of what depends on it. websocket.js loads this at start and toaster.js loads
-  websocket.js on every notification, so a packaging slip that left the shared file inside the asar
-  would take every notification down along with the browser source. The fallback loses only the
-  renamed-preset aliases: the browser source then shows the default preset rather than the one a
-  removed bundled name stands in for, and notifications keep working.
-*/
-let presetRules;
-try {
-  presetRules = require(sharedAppModulePath('util/notificationPreset.js'));
-} catch {
-  presetRules = {
-    DEFAULT_PRESET: 'AW Next',
-    resolveAvailablePresetName: (names, isAvailable) =>
-      (Array.isArray(names) ? names : []).find((name) => isAvailable(name)) || 'AW Next',
-    sourcePlatform: () => null,
-  };
-}
-const { DEFAULT_PRESET, resolveAvailablePresetName, sourcePlatform } = presetRules;
+// Legacy preset names and the default are the app's rules, not a second set.
+const { DEFAULT_PRESET, resolveAvailablePresetName, sourcePlatform } = require(sharedAppModulePath('util/notificationPreset.js'));
 
 /*
   The bundled preset library on disk. Resolved here rather than through sharedAppModulePath(), which

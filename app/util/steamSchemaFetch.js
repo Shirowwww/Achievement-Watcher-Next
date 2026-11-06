@@ -1,8 +1,5 @@
 'use strict';
 
-const path = require('path');
-const { createRequire } = require('module');
-
 /*
   Pure mapping/parsing helpers for the keyless Steam schema chain: official GetGameAchievements
   (no API key needed) -> SteamHunters public JSON API -> SteamCommunity achievements page (HTML).
@@ -205,13 +202,7 @@ function parseSteamCommunityRows(html) {
   try {
     htmlParser = require('node-html-parser');
   } catch {
-    // The packaged Watchdog loads this module from resources/app.asar.unpacked, outside the
-    // watchdog's own node_modules chain; anchor the lookup at the watchdog package (its cwd).
-    try {
-      htmlParser = createRequire(path.join(process.cwd(), 'package.json'))('node-html-parser');
-    } catch {
-      htmlParser = null;
-    }
+    htmlParser = null;
   }
 
   if (htmlParser) {

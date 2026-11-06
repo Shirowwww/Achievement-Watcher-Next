@@ -122,7 +122,6 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   ubisoftOfficial.initDebug({ isDev, userDataPath });
   runeUplayGame.initDebug({ isDev, userDataPath });
   require(path.join(appPath, 'steamOfficial.js')).initDebug({ isDev, userDataPath });
-  // Shared with the Watchdog, so it cannot require a logger of its own - see steamAppInfo.js.
   require(path.join(appPath, 'steamAppInfo.js')).initDebug({
     logger: new (require('../util/logger'))({
       console: isDev || false,
@@ -156,77 +155,9 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   });
 };
 
-function isTruthyFlag(v) {
-  if (v === true || v === 1) return true;
-  if (typeof v === 'string') {
-    const s = v.trim().toLowerCase();
-    return s === '1' || s === 'true';
-  }
-  return false;
-}
-
-// Reduce one raw save-file entry to {Achieved, CurProgress, MaxProgress?, UnlockTime}. Every local
-// save format (Goldberg/GSE, RLD!, RUNE/Codex, 3DM, TENOKE, CreamAPI, UniverseLAN) funnels through
-// here, hence the long key aliases - each emulator picked its own spelling for the same two facts. Pure, exported through _internal so a format's quirks can be pinned by a test.
-function normalizeSaveEntry(entry, source) {
-  // Does this entry carry an explicit unlocked/locked flag? Newer emu save formats (e.g. UniverseLAN
-  // for GOG) write every achievement with Unlocked=true/false, so trust that flag rather than assume "present == unlocked".
-  const hasExplicitState =
-    entry != null &&
-    typeof entry === 'object' &&
-    ['Achieved', 'achieved', 'State', 'HaveAchieved', 'Unlocked', 'unlocked', 'earned'].some((k) => k in entry);
-
-  // A non-object entry (e.g. the bare '1' some saves write) has no fields to read; guard the property access rather than special-case it in every alias chain below.
-  const fields = entry != null && typeof entry === 'object' ? entry : {};
-
-  // Leave MaxProgress unset (not defaulted to 0) when the save file has none: Object.assign at the
-  // call site would otherwise stamp achievement.MaxProgress = 0 and permanently hide the schema's own max_progress (app.js reads `MaxProgress ?? max_progress`, and 0 isn't nullish, so the fallback never kicks in once a 0 is written).
-  const rawMaxProgress = fields.MaxProgress || fields.max_progress;
-  const parsed = {
-    Achieved: Boolean(
-      isTruthyFlag(fields.Achieved) ||
-        isTruthyFlag(fields.achieved) ||
-        fields.State == 1 ||
-        isTruthyFlag(fields.HaveAchieved) ||
-        isTruthyFlag(fields.Unlocked) ||
-        isTruthyFlag(fields.unlocked) ||
-        isTruthyFlag(fields.earned) ||
-        entry === '1'
-    ),
-    CurProgress: fields.CurProgress || fields.progress || 0,
-    ...(rawMaxProgress ? { MaxProgress: rawMaxProgress } : {}),
-    UnlockTime:
-      fields.UnlockTime ||
-      fields.unlocktime ||
-      fields.HaveAchievedTime ||
-      fields.HaveHaveAchievedTime ||
-      fields.Time ||
-      fields.earned_time ||
-      fields.unlock_time ||
-      fields.timestamp ||
-      0,
-  };
-
-  //CODEX Gears5 (09/2019) && Gears tactics (05/2020): progress maxed out but the
-  //Achieved flag was never written -> treat a fully completed progress bar as unlocked.
-  if (!parsed.Achieved && parsed.MaxProgress != 0 && parsed.CurProgress != 0 && parsed.MaxProgress == parsed.CurProgress) {
-    parsed.Achieved = true;
-  }
-
-  //RLD! writes no achieved flag: an entry carries only timestamps, and a locked achievement has
-  //Time=0 - without this every achievement from such a save reads as locked. Restricted to entries with no explicit flag, so a format saying Unlocked=false is never overridden by a stray timestamp.
-  if (!parsed.Achieved && !hasExplicitState && Number(parsed.UnlockTime) > 0) {
-    parsed.Achieved = true;
-  }
-
-  //Legacy GOG/Epic emu saves list ONLY unlocked achievements with no explicit flag, so a bare entry
-  //means "unlocked" - but formats that DO carry an explicit Unlocked=true/false (e.g. UniverseLAN) must be trusted instead of blanket-unlocking everything.
-  if ((source === 'gog' || source === 'epic') && !hasExplicitState) {
-    parsed.Achieved = true;
-  }
-
-  return parsed;
-}
+// One raw save entry reduced to { Achieved, CurProgress, MaxProgress?, UnlockTime }, by the rule the
+// Watchdog shares (parser/emuSave.js).
+const { normalizeSaveEntry } = require(path.join(appPath, 'emuSave.js'));
 
 // Steam shows an archived achievement only to players who earned it; it no longer counts for others.
 function withoutUnearnedArchived(achievement) {

@@ -7,7 +7,6 @@ const fs = require('fs');
 const { lazyRequire } = require('./util/lazyRequire.js');
 // Network and scraping only: an idle daemon never reaches either.
 const request = lazyRequire('request-zero');
-const steamLang = require('./steam.json');
 const htmlParser = lazyRequire('node-html-parser');
 const { userDataDir } = require('./util/userData.js');
 
@@ -16,6 +15,7 @@ const { userDataDir } = require('./util/userData.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 
 const steamSchemaFetch = require(sharedAppModulePath('util/steamSchemaFetch.js'));
+const steamLang = require(sharedAppModulePath('locale/steam.json'));
 const { mergeTranslatedAchievements } = require(sharedAppModulePath('parser/achievementTranslations.js'));
 
 // Plain-HTTP fetches for the keyless schema chain (official Steam endpoint, then SteamHunters'

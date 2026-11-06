@@ -9,7 +9,6 @@
 
 const fs = require('fs');
 const path = require('path');
-// Unpacked beside this file for the Watchdog (electron-builder.yml asarUnpack).
 const { fillMissingIcons, nodeFetch, marketplaceArtUrl, downloadImage } = require(path.join(__dirname, '..', 'util', 'xboxLiveIcons.js'));
 const xex = require(path.join(__dirname, 'xex.js'));
 const spaReader = require(path.join(__dirname, 'xllnSpa.js'));

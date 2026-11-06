@@ -183,11 +183,7 @@ async function runTest(kind, { rumble = true, game = null } = {}) {
   toastOptions.toast.lang = options.achievement && options.achievement.lang ? options.achievement.lang : 'english';
   // Test toasts honor the configured overlay sound (Son / Son aléatoire), like real ones.
   if (!message.silent) {
-    const ov = options.overlay || {};
-    toastOptions.toast.soundFile =
-      ov.randomSound === true
-        ? notificationSound.pickRandomSound() || notificationSound.resolveSoundFile(ov.notificationSound)
-        : notificationSound.resolveSoundFile(ov.notificationSound);
+    toastOptions.toast.soundFile = notificationSound.mainSound(options.overlay);
   }
   // The test runs in the Watchdog process but reloads options itself, so it has to apply the
   // urgency preference too - otherwise the button would not exercise what a real unlock does.

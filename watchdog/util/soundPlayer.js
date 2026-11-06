@@ -1,11 +1,8 @@
 'use strict';
 
 const { execFile } = require('child_process');
-
-function clampVolume(volume) {
-  const n = Number(volume);
-  return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
-}
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { clampVolume } = require(sharedAppModulePath('util/notificationSounds.js'));
 
 // On Windows the app plays the file, as it plays the popup's: a Watchdog starting PowerShell to do
 // it is what antivirus engines block.

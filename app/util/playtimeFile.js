@@ -2,7 +2,6 @@
 
 const fs = require('fs');
 const path = require('path');
-// Joined onto __dirname: the Watchdog loads this file from app.asar.unpacked (see asarUnpack).
 const { writeFileAtomicSync } = require(path.join(__dirname, 'replaceFile.js'));
 
 /*

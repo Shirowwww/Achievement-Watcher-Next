@@ -1,14 +1,15 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const settings = require('../settings.js');
-const ini = require('../util/ini.js');
-const fsAsync = require('../util/fsAsync.js');
-const replaceFile = require('../util/replaceFile.js');
+const ini = require(sharedAppModulePath('util/ini.js'));
+const fsAsync = require(sharedAppModulePath('util/fsAsync.js'));
+const replaceFile = require(sharedAppModulePath('util/replaceFile.js'));
 const debug = require('../util/log.js');
 
 const USER_FILE = ['[achievement]', 'lang = french', 'showHidden = true', '', '[notification]', 'notify = false', ''].join('\n');
@@ -63,7 +64,9 @@ test('a missing options.ini still receives the defaults', async (t) => {
 
   const loaded = await settings.load(file);
 
-  assert.equal(ini.parse(fs.readFileSync(file, 'utf8')).notification.notify, true);
+  const persisted = ini.parse(fs.readFileSync(file, 'utf8'));
+  assert.equal(persisted.notification.notify, true);
+  assert.equal(persisted.general.onboardingCompleted, false, 'a Watchdog that writes the file first must not skip the first-run guide');
   assert.equal(loaded.notification.notify, true);
   assert.equal(errors.length, 0, 'a first start is not an error');
 });

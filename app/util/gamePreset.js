@@ -10,6 +10,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeFileAtomicSync, quarantineCorruptFile } = require('./replaceFile.js');
+const { NO_SOUND, RANDOM_SOUND } = require('./notificationSounds.js');
 
 const POSITIONS = [
   'center-bottom',
@@ -23,8 +24,8 @@ const POSITIONS = [
   'custom',
 ];
 const SCALES = [0.5, 0.75, 1, 1.25, 1.5, 2];
-const SOUND_NONE = '__none__';
-const SOUND_RANDOM = '__random__';
+const SOUND_NONE = NO_SOUND;
+const SOUND_RANDOM = RANDOM_SOUND;
 
 let cfgDir = null;
 let cache = null;

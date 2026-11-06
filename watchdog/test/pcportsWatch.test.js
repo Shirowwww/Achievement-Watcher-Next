@@ -157,7 +157,7 @@ test('a copied-in file with many unlocks is a baseline, not a burst of notificat
 test('the watch target is the folder, or the nearest folder above it', () => {
   const base = path.join(temp, 'target');
   fs.mkdirSync(base, { recursive: true });
-  assert.deepEqual(resolveWatchTarget(base), { ready: true });
+  assert.deepEqual(resolveWatchTarget(base), { ready: true, dir: base });
   assert.deepEqual(resolveWatchTarget(path.join(base, 'Zelda_LA')), { ready: false, watchDir: base, nextExpected: 'Zelda_LA' });
 });
 

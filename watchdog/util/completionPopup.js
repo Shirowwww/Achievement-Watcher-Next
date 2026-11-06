@@ -8,7 +8,8 @@
 */
 
 const notifyStrings = require('./notifyStrings.js');
-const psnTrophyLink = require('./psnTrophyLink.js');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
 
 const isComplete = (completion) =>
   Boolean(completion) && Number(completion.total) > 0 && Number(completion.unlocked) >= Number(completion.total);

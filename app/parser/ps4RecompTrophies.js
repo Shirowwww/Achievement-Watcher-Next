@@ -10,6 +10,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { decodeXmlEntities } = require('../util/xmlText.js');
 
 // The public retail trophy key (psdevwiki, "Trophy00.trp"); a trophy.key beside the port replaces it.
 const RETAIL_TROPHY_KEY = '21F41A6BAD8A1D3ECA7AD586C101B7A9';
@@ -232,19 +233,7 @@ function unwrapCdata(text) {
 }
 
 function decodeXml(text) {
-  return unwrapCdata(String(text || ''))
-    .replace(/&#x([0-9a-f]{1,6});/gi, (_, hex) => safeCodePoint(parseInt(hex, 16)))
-    .replace(/&#(\d{1,7});/g, (_, dec) => safeCodePoint(parseInt(dec, 10)))
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .trim();
-}
-
-function safeCodePoint(value) {
-  return value > 0 && value <= 0x10ffff ? String.fromCodePoint(value) : '';
+  return decodeXmlEntities(unwrapCdata(String(text || ''))).trim();
 }
 
 function attribute(attrs, name) {

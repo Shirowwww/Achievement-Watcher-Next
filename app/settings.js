@@ -16,6 +16,12 @@ const notificationPlacement = require(path.join(appPath, 'util/notificationPlace
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 
 const PROGRESS_STEPS = [0, 10, 25, 50];
+const DEFAULT_HOTKEY = 'Ctrl+Shift+K';
+const DEFAULT_CONTROLLER_BINDINGS = Object.freeze({
+  toggleBinding: 'BACK+START+LEFT_SHOULDER',
+  uiModeBinding: 'LEFT_SHOULDER+X',
+  controlModeBinding: 'LEFT_SHOULDER+RIGHT_SHOULDER',
+});
 
 function normalizeControllerBindingSetting(value, allowedButtons, fallback) {
   const parsed = controllerLabels.normalizeControllerBinding(value, {
@@ -87,589 +93,794 @@ function writeOptionsFile(options) {
   }
 }
 
+/*
+  Fill in and clean up a parsed options.ini, in place. The app's load() and the Watchdog's
+  (watchdog/settings.js) both go through it, so the two processes agree on every default.
+*/
+function normalize(parsed) {
+  const options = ensureSections(parsed);
+
+  // Steam schemas are fully keyless now. Do not keep a removed credential alive in memory or
+  // write it back the next time another setting is saved.
+  delete options.steam.apiKey;
+
+  if (!uiLanguages.has(options.achievement.lang)) options.achievement.lang = systemLanguage();
+
+  if (typeof options.username !== 'string' && typeof options.general.username !== 'string') {
+    options.general.username = options.username || options.general.username || os.userInfo().username || 'User';
+  }
+
+  if (typeof options.general.skippedVersion !== 'string') {
+    options.general.skippedVersion = 'none';
+  }
+
+  // Postpone stores version + deadline, so it expires on its own and never hides a newer release.
+  if (typeof options.general.updatePostponedVersion !== 'string') {
+    options.general.updatePostponedVersion = '';
+  }
+  if (typeof options.general.updatePostponedUntil !== 'number' || !Number.isFinite(options.general.updatePostponedUntil)) {
+    options.general.updatePostponedUntil = Number(options.general.updatePostponedUntil) || 0;
+  }
+  if (typeof options.general.autoUpdate !== 'boolean') {
+    options.general.autoUpdate = false;
+  }
+
+  if (typeof options.general.onboardingCompleted !== 'boolean') {
+    // Reaching this branch means a settings file already existed. Treat it as an upgraded
+    // profile; only the missing-file defaults below should launch first-run onboarding.
+    options.general.onboardingCompleted = true;
+  }
+  // interfaceMode controls UI scope only (util/interfaceMode.js). Upgraded profiles default to
+  // 'advanced' so existing tabs don't vanish; profiles still onboarding get '' to force a choice.
+  if (options.general.interfaceMode !== 'simple' && options.general.interfaceMode !== 'advanced') {
+    options.general.interfaceMode = options.general.onboardingCompleted === true ? 'advanced' : '';
+  }
+  if (typeof options.general.startWithWindows !== 'boolean') {
+    options.general.startWithWindows = true;
+  }
+  if (typeof options.general.disableHardwareAccel !== 'boolean') {
+    options.general.disableHardwareAccel = false;
+  }
+  if (typeof options.general.closeToTray !== 'boolean') {
+    options.general.closeToTray = true;
+  }
+  // Right-click uninstall menu on game tiles (Settings > General). Default ON: discoverable out
+  // of the box, and every action still asks for confirmation.
+  if (typeof options.general.uninstallContextMenu !== 'boolean') {
+    options.general.uninstallContextMenu = true;
+  }
+  // Theme values: built-in ids, 'custom', 'user:<name>' or 'pack:<name>' (all must validate here,
+  // or an imported/pack theme silently reverts on reload). Not disk-checked: this runs on every
+  // load, and the theme layer already falls back safely on a bad value.
+  if (
+    typeof options.general.theme !== 'string' ||
+    (!Object.keys(themeLayers.BUILTIN_COLORS).includes(options.general.theme) &&
+      options.general.theme !== 'custom' &&
+      !/^user:.+$/i.test(options.general.theme) &&
+      !/^pack:.+$/i.test(options.general.theme))
+  ) {
+    options.general.theme = 'default';
+  }
+
+  // overlay = the in-game achievement overlay (Ctrl+Shift+K). Configs saved under the old
+  // buggy default (Ctrl+Shift+O) are migrated back to K here.
+  if (typeof options.overlay.hotkey !== 'string') {
+    options.overlay.hotkey = DEFAULT_HOTKEY;
+  } else if (options.overlay.hotkey === 'Ctrl+Shift+O') {
+    options.overlay.hotkey = DEFAULT_HOTKEY;
+  }
+  // Overlay notification preset. A saved name that no longer matches one is NOT rewritten here:
+  // resolvePresetFolder() remaps a removed bundled preset only after checking for a user preset.
+  if (typeof options.overlay.notificationPreset !== 'string') {
+    options.overlay.notificationPreset = 'AW Next';
+  }
+  // Optional per-type preset overrides ('' = use notificationPreset): rare unlocks (≤10%) and
+  // the platinum/100% popup can each render with their own preset (e.g. Xbox Series Rare/Platinum).
+  if (typeof options.overlay.notificationPresetXenia !== 'string') {
+    options.overlay.notificationPresetXenia = '';
+  }
+  if (typeof options.overlay.notificationPresetRpcs3 !== 'string') {
+    options.overlay.notificationPresetRpcs3 = '';
+  }
+  if (typeof options.overlay.notificationPresetShadps4 !== 'string') {
+    options.overlay.notificationPresetShadps4 = '';
+  }
+  if (typeof options.overlay.notificationPresetKytyps5 !== 'string') {
+    options.overlay.notificationPresetKytyps5 = '';
+  }
+  if (typeof options.overlay.notificationPosition !== 'string') {
+    options.overlay.notificationPosition = 'center-bottom';
+  }
+  // INI values come back as strings (only booleans are type-coerced), so numbers must go through
+  // Number() before validating, or a typeof check would reset a valid value on every reload.
+  {
+    const scl = Number(options.overlay.notificationScale);
+    options.overlay.notificationScale = Number.isFinite(scl) && scl > 0 ? scl : 1;
+    const opacity = Number(options.overlay.notificationOpacity);
+    options.overlay.notificationOpacity = Number.isInteger(opacity) && opacity >= 30 && opacity <= 100 ? opacity : 100;
+  }
+  // Counter progress popups: '' follows the unlock placement. These are new keys on purpose: the
+  // progressPosition deleted below belonged to the removed per-type windows and used other values.
+  options.overlay.notificationProgressPosition = notificationPlacement.normalizeProgressPosition(
+    options.overlay.notificationProgressPosition
+  );
+  options.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale(options.overlay.notificationProgressScale);
+  options.overlay.notificationEdgeGap = notificationPlacement.normalizeEdgeGap(options.overlay.notificationEdgeGap);
+  if (typeof options.overlay.notificationSound !== 'string') {
+    options.overlay.notificationSound = '';
+  }
+  // Rare, 100% and progress sounds: '' follows the unlock sound. Per-emulator sounds: '' follows the main one.
+  for (const key of [
+    'notificationSoundRare',
+    'notificationSoundPlatinum',
+    'notificationSoundProgress',
+    'notificationSoundXenia',
+    'notificationSoundRpcs3',
+    'notificationSoundShadps4',
+    'notificationSoundKytyps5',
+  ]) {
+    if (typeof options.overlay[key] !== 'string') options.overlay[key] = '';
+  }
+  // Randomize the overlay notification sound from the merged bundled+user sound list.
+  if (typeof options.overlay.randomSound !== 'boolean') {
+    options.overlay.randomSound = false;
+  }
+  // Notification sound volume (percent, 0–200). Overlay audio can boost above 100%; the
+  // PowerShell player used for custom toast sounds clamps that part to 100%.
+  {
+    const vol = Number(options.overlay.notificationVolume);
+    options.overlay.notificationVolume = Number.isFinite(vol) ? Math.max(0, Math.min(200, vol)) : 100;
+  }
+  // Overlay-notification on-screen duration: 'auto' (preset self-closes) or a number of seconds (force-close cap).
+  {
+    const dur = Number(options.overlay.notificationDuration);
+    options.overlay.notificationDuration = Number.isFinite(dur) && dur > 0 ? dur : 'auto';
+  }
+  delete options.overlay.position;
+  delete options.overlay.progressPosition;
+  delete options.overlay.playtimePosition;
+  delete options.overlay.preset;
+  delete options.overlay.scale;
+  delete options.overlay.duration;
+
+  // Native controller → overlay control (Tier 4). Opt-in: loads the koffi/HID stack in the Watchdog
+  // only when enabled. Bindings are stored as "BUTTON+BUTTON+BUTTON" strings the watchdog parses.
+  if (!options.controller || typeof options.controller !== 'object') options.controller = {};
+  if (typeof options.controller.enabled !== 'boolean') {
+    options.controller.enabled = false;
+  }
+  if (typeof options.controller.appNavigation !== 'boolean') {
+    options.controller.appNavigation = true;
+  }
+  if (!['auto', 'xinput', 'gameinput'].includes(options.controller.backend)) {
+    options.controller.backend = 'auto';
+  }
+  options.controller.layout = controllerLabels.normalizeControllerLayout(options.controller.layout);
+  options.controller.toggleBinding = normalizeControllerBindingSetting(
+    options.controller.toggleBinding,
+    controllerLabels.TOGGLE_ALLOWED,
+    DEFAULT_CONTROLLER_BINDINGS.toggleBinding
+  );
+  options.controller.uiModeBinding = normalizeControllerBindingSetting(
+    options.controller.uiModeBinding,
+    controllerLabels.MODE_ALLOWED,
+    DEFAULT_CONTROLLER_BINDINGS.uiModeBinding
+  );
+  options.controller.controlModeBinding = normalizeControllerBindingSetting(
+    options.controller.controlModeBinding,
+    controllerLabels.MODE_ALLOWED,
+    DEFAULT_CONTROLLER_BINDINGS.controlModeBinding
+  );
+  delete options.controller.windowModeBinding;
+  if (typeof options.controller.focusOverlay !== 'boolean') {
+    options.controller.focusOverlay = false;
+  }
+  if (typeof options.controller.sendEscapeOnControllerOpen !== 'boolean') {
+    options.controller.sendEscapeOnControllerOpen = false;
+  }
+  if (typeof options.controller.debugLogging !== 'boolean') {
+    options.controller.debugLogging = false;
+  }
+
+  options.achievement.libraryLayout = libraryLayout.normalize(
+    options.achievement.libraryLayout,
+    options.achievement.thumbnailPortrait === true
+  );
+  // Keep the legacy flag synchronized for cover selection paths shared with older configs.
+  options.achievement.thumbnailPortrait = libraryLayout.isPortrait(options.achievement.libraryLayout);
+
+  /*
+    Library customization (issue #56): how big a tile is, how tight the grid around it is, and
+    which pieces of chrome on it are drawn. Clamped rather than rejected, so a
+    hand-edited options.ini can only ever be out of range, never break the layout.
+  */
+  options.achievement.libraryTileScale = libraryChrome.normalizeTileScale(options.achievement.libraryTileScale);
+  options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
+  for (const toggle of libraryChrome.TOGGLES) {
+    if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
+  }
+  options.achievement.libraryPlaytimeUnits = libraryChrome.normalizePlaytimeUnits(options.achievement.libraryPlaytimeUnits);
+
+  if (typeof options.achievement.showHidden !== 'boolean') {
+    options.achievement.showHidden = false;
+  }
+
+  if (typeof options.achievement.profileCompact !== 'boolean') options.achievement.profileCompact = false;
+
+  if (typeof options.achievement.mergeDuplicate !== 'boolean') {
+    options.achievement.mergeDuplicate = true;
+  }
+
+  if (typeof options.achievement.timeMergeRecentFirst !== 'boolean') {
+    options.achievement.timeMergeRecentFirst = false;
+  }
+
+  if (typeof options.achievement.hideZero !== 'boolean') {
+    options.achievement.hideZero = false;
+  }
+  // Steam's own title in the achievement language instead of the English one. On by default.
+  if (typeof options.achievement.localizedGameTitles !== 'boolean') {
+    options.achievement.localizedGameTitles = true;
+  }
+  // Trophy showcase under the profile name (Settings > General). On by default.
+  if (typeof options.achievement.showTrophies !== 'boolean') {
+    options.achievement.showTrophies = true;
+  }
+  // Rarity display: 'rare' tiers only the rarest unlocks, 'trophy' grades every achievement. The
+  // two trophy bounds travel as a pair (INI values are strings; a bad pair resets to 20 / 50).
+  options.achievement.rarityMode = rarityTiers.normalizeMode(options.achievement.rarityMode);
+  {
+    const bounds = rarityTiers.normalizeThresholds({
+      goldBelow: options.achievement.trophyGoldBelow,
+      silverBelow: options.achievement.trophySilverBelow,
+    });
+    options.achievement.trophyGoldBelow = bounds.goldBelow;
+    options.achievement.trophySilverBelow = bounds.silverBelow;
+    Object.assign(options.achievement, rarityTiers.normalizeRareBounds(options.achievement));
+  }
+  if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
+    options.achievement.goldbergDownloadIcons = false;
+  }
+
+  // Opt-in: stop the periodic steam_cache self-repair (blank-field backfill, achievement-list
+  // reconciliation, empty-schema re-check) that otherwise runs every few days regardless of
+  // fastStart. Off by default; a manual "force recheck" from Settings > Advanced still works.
+  if (typeof options.achievement.disableAutoRefresh !== 'boolean') {
+    options.achievement.disableAutoRefresh = false;
+  }
+
+  if (options.achievement_source.legitSteam != 0 && options.achievement_source.legitSteam != 1 && options.achievement_source.legitSteam != 2) {
+    options.achievement_source.legitSteam = 0;
+  }
+
+  // Listing the connected account's whole library, not just what this PC has touched. Both off by
+  // default: they need a connected Steam account, and each one adds hundreds of games that have to
+  // resolve their schema and artwork the first time they are seen.
+  if (typeof options.achievement_source.steamAccountOwned !== 'boolean') {
+    options.achievement_source.steamAccountOwned = false;
+  }
+  if (typeof options.achievement_source.steamAccountFamily !== 'boolean') {
+    options.achievement_source.steamAccountFamily = false;
+  }
+
+  // Steam library folders whose games stay out of the list (Settings > Sources). Stored as an ini
+  // array; a single value or a missing key reads back as a string or nothing.
+  {
+    const hidden = options.achievement_source.steamHiddenLibraries;
+    const list = Array.isArray(hidden) ? hidden : typeof hidden === 'string' ? [hidden] : [];
+    options.achievement_source.steamHiddenLibraries = list.map((dir) => String(dir).trim()).filter(Boolean);
+  }
+
+  if (typeof options.achievement_source.steamEmu !== 'boolean') {
+    options.achievement_source.steamEmu = true;
+  }
+
+  if (typeof options.achievement_source.socialClub !== 'boolean') {
+    options.achievement_source.socialClub = true;
+  }
+
+  if (typeof options.achievement_source.greenLuma !== 'boolean') {
+    options.achievement_source.greenLuma = true;
+  }
+
+  if (typeof options.achievement_source.rpcs3 !== 'boolean') {
+    options.achievement_source.rpcs3 = true;
+  }
+
+  if (typeof options.achievement_source.shadps4 !== 'boolean') {
+    options.achievement_source.shadps4 = true;
+  }
+
+  if (typeof options.achievement_source.kytyps5 !== 'boolean') {
+    options.achievement_source.kytyps5 = true;
+  }
+
+  if (typeof options.achievement_source.ps4recomp !== 'boolean') {
+    options.achievement_source.ps4recomp = true;
+  }
+
+  if (typeof options.achievement_source.ps3recomp !== 'boolean') {
+    options.achievement_source.ps3recomp = true;
+  }
+
+  if (typeof options.achievement_source.xenia !== 'boolean') {
+    options.achievement_source.xenia = true;
+  }
+
+  // Unset until Sources shows it: it then takes what the Xenia switch said, which used to cover it.
+  if (typeof options.achievement_source.x360recomp !== 'boolean') {
+    options.achievement_source.x360recomp = options.achievement_source.xenia !== false;
+  }
+
+  if (typeof options.achievement_source.xlln !== 'boolean') {
+    options.achievement_source.xlln = true;
+  }
+
+  if (typeof options.achievement_source.retroAchievements !== 'boolean') {
+    options.achievement_source.retroAchievements = true;
+  }
+
+  if (typeof options.achievement_source.psnLibrary !== 'boolean') {
+    options.achievement_source.psnLibrary = true;
+  }
+
+  if (typeof options.achievement_source.markerpatch !== 'boolean') {
+    options.achievement_source.markerpatch = true;
+  }
+
+  if (typeof options.achievement_source.madnesspatch !== 'boolean') {
+    options.achievement_source.madnesspatch = true;
+  }
+
+  if (typeof options.achievement_source.pcports !== 'boolean') {
+    options.achievement_source.pcports = true;
+  }
+
+  if (typeof options.achievement_source.lumaPlay !== 'boolean') {
+    options.achievement_source.lumaPlay = true;
+  }
+
+  // RUNE's Ubisoft emulator followed the LumaPlay switch until it got its own, so a profile from
+  // before the split keeps whatever LumaPlay was set to.
+  if (typeof options.achievement_source.runeUplay !== 'boolean') {
+    options.achievement_source.runeUplay = options.achievement_source.lumaPlay;
+  }
+
+  if (typeof options.achievement_source.gog !== 'boolean') {
+    options.achievement_source.gog = true;
+  }
+
+  // Was an on/off switch before it could leave out the games Galaxy keeps after an uninstall. On
+  // listed every played game, which is what "played" (2) is now.
+  if (typeof options.achievement_source.gogOfficial === 'boolean') {
+    options.achievement_source.gogOfficial = options.achievement_source.gogOfficial ? 2 : 0;
+  }
+  if (
+    options.achievement_source.gogOfficial != 0 &&
+    options.achievement_source.gogOfficial != 1 &&
+    options.achievement_source.gogOfficial != 2
+  ) {
+    options.achievement_source.gogOfficial = 2;
+  }
+
+  if (typeof options.achievement_source.ubisoftOfficial !== 'boolean') {
+    options.achievement_source.ubisoftOfficial = true;
+  }
+
+  if (typeof options.achievement_source.epic !== 'boolean') {
+    options.achievement_source.epic = true;
+  }
+
+  // Was an on/off switch before it could tell an installed game from one the account owns. On
+  // meant every installed Epic game, which is what "installed" is now.
+  if (typeof options.achievement_source.epicOfficial === 'boolean') {
+    options.achievement_source.epicOfficial = options.achievement_source.epicOfficial ? 2 : 0;
+  }
+  if (
+    options.achievement_source.epicOfficial != 0 &&
+    options.achievement_source.epicOfficial != 1 &&
+    options.achievement_source.epicOfficial != 2
+  ) {
+    options.achievement_source.epicOfficial = 2;
+  }
+
+  if (typeof options.achievement_source.ea !== 'boolean') {
+    options.achievement_source.ea = true;
+  }
+
+  // Was an on/off switch before it could tell an installed game from one the account merely owns.
+  // On meant everything that was imported, which is what "owned" is now.
+  if (typeof options.achievement_source.xboxPc === 'boolean') {
+    options.achievement_source.xboxPc = options.achievement_source.xboxPc ? 2 : 0;
+  }
+  if (options.achievement_source.xboxPc != 0 && options.achievement_source.xboxPc != 1 && options.achievement_source.xboxPc != 2) {
+    options.achievement_source.xboxPc = 2;
+  }
+
+  if (typeof options.achievement_source.importCache !== 'boolean') {
+    options.achievement_source.importCache = true;
+  }
+
+  //Emulator (GBE Fork setup) - new section, may be absent in older configs.
+  if (!options.emulator || typeof options.emulator !== 'object') options.emulator = {};
+  if (typeof options.emulator.autoApplyNewGames !== 'boolean') {
+    // Migrate the short-lived General-tab key; installs without either key default to OFF - the
+    // automatic full setup (DLL swap) is opt-in, so AW never touches game files unprompted.
+    options.emulator.autoApplyNewGames =
+      typeof options.achievement.autoApplyNewGames === 'boolean' ? options.achievement.autoApplyNewGames : false;
+  }
+  // ColdClient was removed: AW always applies the emulator standalone (DLL swap). Normalize any
+  // stale stored 'coldclient' value back to the single supported mode.
+  options.emulator.mode = 'regular';
+  // DLC ownership and the account identity are separate decisions from "repair my achievements":
+  // both rewrite files the user may curate by hand (a central emulator config, a deliberately
+  // absent configs.user.ini), so each is opt-in even when automatic repair is on.
+  if (typeof options.emulator.manageDlc !== 'boolean') options.emulator.manageDlc = false;
+  if (typeof options.emulator.stampIdentity !== 'boolean') options.emulator.stampIdentity = false;
+  if (typeof options.emulator.steamlessAutoUnpack !== 'boolean') options.emulator.steamlessAutoUnpack = false;
+  if (typeof options.emulator.steamlessExperimental !== 'boolean') options.emulator.steamlessExperimental = false;
+  if (typeof options.emulator.autoApplyCrackFix !== 'boolean') options.emulator.autoApplyCrackFix = false;
+  // Whether the antivirus notice for automatic repair has been given. Absent means it has not:
+  // configs that turned the setting on before the notice existed get it once, from the scan.
+  if (typeof options.emulator.autoApplyNotice !== 'boolean') options.emulator.autoApplyNotice = false;
+  if (options.emulator.steamSettingsMode !== 'simple' && options.emulator.steamSettingsMode !== 'advanced') options.emulator.steamSettingsMode = 'simple';
+  // Anything but the explicit 'runtime' choice means the targeted repair: a stored value nobody
+  // recognises must never be the one that swaps dlls.
+  options.emulator.autoApplyMode = options.emulator.autoApplyMode === 'runtime' ? 'runtime' : 'repair';
+  // GBE identity (issue #123): a Steam ID that is not a real one and a relative folder would be
+  // written into every game a fix touches, so they read as empty instead.
+  for (const key of ['accountName', 'accountSteamId', 'savePath']) {
+    options.emulator[key] = typeof options.emulator[key] === 'string' ? options.emulator[key].trim() : '';
+  }
+  if (!isSteamId64(options.emulator.accountSteamId)) options.emulator.accountSteamId = '';
+  if (!path.isAbsolute(options.emulator.savePath)) options.emulator.savePath = '';
+  if (typeof options.emulator.createLaunchBat !== 'boolean') options.emulator.createLaunchBat = true;
+  if (typeof options.emulator.apiCheckBypass !== 'boolean') options.emulator.apiCheckBypass = false;
+  if (typeof options.emulator.checkUpdates !== 'boolean') options.emulator.checkUpdates = true;
+  if (options.emulator.login !== 'anonymous' && options.emulator.login !== 'steam') options.emulator.login = 'anonymous';
+  if (typeof options.emulator.loginAccountName !== 'string') options.emulator.loginAccountName = '';
+  if (typeof options.emulator.loginPassword !== 'string') options.emulator.loginPassword = '';
+  if (typeof options.emulator.steamId !== 'string') options.emulator.steamId = '';
+  if (typeof options.emulator.uplayUsername !== 'string') options.emulator.uplayUsername = '';
+  const uplayLanguages = new Set([
+    'auto', 'en-US', 'fr-FR', 'de-DE', 'es-ES', 'es-MX', 'it-IT', 'pt-BR', 'pt-PT', 'pl-PL',
+    'ru-RU', 'ja-JP', 'zh-CN', 'zh-TW', 'ko-KR', 'th-TH',
+  ]);
+  if (!uplayLanguages.has(options.emulator.uplayLanguage)) options.emulator.uplayLanguage = 'auto';
+  if (typeof options.emulator.uplayLogging !== 'boolean') options.emulator.uplayLogging = true;
+
+  if (typeof options.notification.notify !== 'boolean') {
+    options.notification.notify = true;
+  }
+
+  if (typeof options.notification.rumble !== 'boolean') {
+    options.notification.rumble = true;
+  }
+
+  // Off by default: Steam shows its own pop-up for the games it runs.
+  if (typeof options.notification.steamClient !== 'boolean') {
+    options.notification.steamClient = false;
+  }
+
+  if (typeof options.notification.notifyOnProgress !== 'boolean') {
+    options.notification.notifyOnProgress = true;
+  }
+  // Progress popups only when a counter crosses this percentage of its goal; 0 is every step.
+  {
+    const step = Number(options.notification.progressStep);
+    options.notification.progressStep = PROGRESS_STEPS.includes(step) ? step : 0;
+  }
+
+  if (typeof options.notification.playtime !== 'boolean') {
+    // Enable playtime on a new profile without changing the preference of upgraded profiles.
+    options.notification.playtime = options.general.onboardingCompleted !== true;
+  }
+
+  if (typeof options.notification.platinum !== 'boolean') {
+    options.notification.platinum = true;
+  }
+
+  if (
+    options.notification_toast.customToastAudio != '0' &&
+    options.notification_toast.customToastAudio != '1' &&
+    options.notification_toast.customToastAudio != '2'
+  ) {
+    options.notification_toast.customToastAudio = '1';
+  }
+  delete options.notification_toast.toastSouvenir; // souvenir feature removed
+
+  if (typeof options.notification_toast.groupToast !== 'boolean') {
+    options.notification_toast.groupToast = false;
+  }
+
+  if (typeof options.notification_toast.urgent !== 'boolean') {
+    options.notification_toast.urgent = false;
+  }
+
+  // Drop legacy display-transport flags. `mode` is intentionally NOT dropped: it is the
+  // notification delivery mode, persisted and validated a few lines below.
+  delete options.notification_transport.chromium;
+  delete options.notification_transport.toast;
+  delete options.notification_transport.gntp;
+
+  // WinRT (faster native toast) and balloon (toast fallback) are internal auto-details of the
+  // toast path - not surfaced in the UI but still honored by the toaster.
+  if (typeof options.notification_transport.winRT !== 'boolean') {
+    options.notification_transport.winRT = true;
+  }
+
+  if (typeof options.notification_transport.balloon !== 'boolean') {
+    options.notification_transport.balloon = true;
+  }
+
+  // Websocket broadcast to external clients - independent of the chosen display mode.
+  if (typeof options.notification_transport.websocket !== 'boolean') {
+    options.notification_transport.websocket = true;
+  }
+
+  // Keep the installed Millennium plugin / Playnite extension current (util/extensionUpdate.js).
+  for (const key of ['updateMillennium', 'updatePlaynite']) {
+    if (typeof options.notification_transport[key] !== 'boolean') options.notification_transport[key] = true;
+  }
+
+  // Delivery mode: 'auto' (Watchdog picks per event, see watchdog/notification/transportPolicy.js),
+  // 'toast', 'overlay', or 'both'. A saved choice is never rewritten, only unset/corrupt defaults to 'auto'.
+  if (!['auto', 'toast', 'overlay', 'both'].includes(options.notification_transport.mode)) {
+    options.notification_transport.mode = 'auto';
+  }
+  delete options.notification_transport.overlay;
+
+  if (isNaN(options.notification_advanced.timeTreshold)) {
+    options.notification_advanced.timeTreshold = 10;
+  }
+
+  if (isNaN(options.notification_advanced.tick)) {
+    options.notification_advanced.tick = 600;
+  }
+
+  if (typeof options.notification_advanced.checkIfProcessIsRunning !== 'boolean') {
+    options.notification_advanced.checkIfProcessIsRunning = true;
+  }
+
+  if (typeof options.notification_advanced.iconPrefetch !== 'boolean') {
+    options.notification_advanced.iconPrefetch = true;
+  }
+
+  if (typeof options.steam.main !== 'string') {
+    options.steam.main = '0';
+  }
+
+  //Souvenir - drop the stale flat keys (OBS video stays removed); keep the simple screenshot section.
+  delete options.souvenir_screenshot;
+  delete options.souvenir_video;
+  if (!options.souvenir || typeof options.souvenir !== 'object') options.souvenir = {};
+  if (typeof options.souvenir.screenshot !== 'boolean') options.souvenir.screenshot = false;
+  if (typeof options.souvenir.dir !== 'string') options.souvenir.dir = '';
+  if (options.souvenir.hdr !== 'auto' && options.souvenir.hdr !== 'off') options.souvenir.hdr = 'auto';
+  delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
+  Object.assign(options.souvenir, require('./util/clipProfile.js').normalize(options.souvenir));
+
+  if (typeof options.action.target !== 'string') {
+    options.action.target = '';
+  }
+
+  if (typeof options.action.cwd !== 'string') {
+    options.action.cwd = '';
+  }
+
+  if (typeof options.action.hide !== 'boolean') {
+    options.action.hide = true;
+  }
+  return options;
+}
+
+// The UI language closest to the system's, 'english' when none fits. Node has `navigator` too.
+function systemLanguage() {
+  try {
+    return uiLanguages.bestForLocale(navigator.language || navigator.userLanguage || 'en').api;
+  } catch {
+    return 'english';
+  }
+}
+
+// A fresh profile: what a first start writes, and what replaces a file that cannot be read.
+function defaults() {
+  const options = {
+    general: {
+      username: os.userInfo().username || 'User',
+      skippedVersion: 'none',
+      updatePostponedVersion: '',
+      updatePostponedUntil: 0,
+      autoUpdate: false,
+      onboardingCompleted: false,
+      interfaceMode: '', // '' until onboarding asks; 'simple' | 'advanced' afterwards
+      startWithWindows: true,
+      disableHardwareAccel: false,
+      closeToTray: true,
+      uninstallContextMenu: true,
+      theme: 'default',
+    },
+    overlay: {
+      hotkey: DEFAULT_HOTKEY,
+      notificationPreset: 'AW Next',
+      notificationPresetXenia: '',
+      notificationPresetRpcs3: '',
+      notificationPresetShadps4: '',
+      notificationPresetKytyps5: '',
+      notificationPosition: 'center-bottom',
+      notificationScale: 1,
+      notificationOpacity: 100, // percent, 30-100
+      notificationProgressPosition: '',
+      notificationProgressScale: '',
+      notificationEdgeGap: 0, // px between an edge-anchored card and the screen edge
+      notificationSound: '',
+      notificationSoundRare: '',
+      notificationSoundPlatinum: '',
+      notificationSoundProgress: '',
+      notificationSoundXenia: '',
+      notificationSoundRpcs3: '',
+      notificationSoundShadps4: '',
+      notificationSoundKytyps5: '',
+      randomSound: false,
+      notificationVolume: 100,
+      notificationDuration: 'auto',
+    },
+    achievement: {
+      libraryLayout: 'default',
+      libraryTileScale: 1,
+      libraryDensity: 1,
+      libraryShowTitle: true,
+      libraryShowProgress: true,
+      libraryShowEmptyProgress: false,
+      profileCompact: false, // issue #123: the profile band folded into one row
+      libraryShowSource: true,
+      libraryShowHealth: true,
+      libraryPlaytimeUnits: 'auto', // 'hours' keeps a long playtime in hours, never days
+      libraryShowAchievementButton: true,
+      libraryShowConfigButton: true,
+      thumbnailPortrait: false,
+      showHidden: false,
+      mergeDuplicate: true,
+      timeMergeRecentFirst: false,
+      hideZero: false,
+      localizedGameTitles: true,
+      showTrophies: true,
+      rarityMode: 'rare',
+      trophyGoldBelow: 20,
+      trophySilverBelow: 50,
+      rareGoldMax: 5,
+      rareSilverMax: 10,
+      rareMax: 15,
+      showPlayButton: true,
+      goldbergDownloadIcons: false,
+      disableAutoRefresh: false, // opt-in: skip the periodic steam_cache self-repair, for a hand-curated cache
+    },
+    achievement_source: {
+      legitSteam: 0,
+      steamAccountOwned: false,
+      steamAccountFamily: false,
+      steamEmu: true,
+      socialClub: true,
+      greenLuma: true,
+      rpcs3: true,
+      shadps4: true,
+      kytyps5: true,
+      ps4recomp: true,
+      ps3recomp: true,
+      x360recomp: true,
+      xenia: true,
+      xlln: true,
+      retroAchievements: true,
+      psnLibrary: true,
+      markerpatch: true,
+      madnesspatch: true,
+      pcports: true,
+      lumaPlay: true,
+      runeUplay: true,
+      gog: true,
+      gogOfficial: 2,
+      ubisoftOfficial: true,
+      epic: true,
+      epicOfficial: 2,
+      ea: true,
+      xboxPc: 2,
+      importCache: true,
+    },
+    emulator: {
+      autoApplyNewGames: false, // opt-in: one-shot full setup for newly detected unconfigured emulated games (off = never touch game files unprompted)
+      mode: 'regular', // standalone DLL swap - the only mode (ColdClient was removed)
+      manageDlc: false, // opt-in: write configs.app.ini (unlock_all + the DLC list). Unrelated to achievements, and a game the user wants stock must stay stock
+      stampIdentity: false, // opt-in: write account_name/language into configs.user.ini. Off keeps a hand-managed or deliberately absent user config untouched
+      steamlessAutoUnpack: false, // run Steamless on the game exe before patching
+      steamlessExperimental: false, // pass --realign for heavily-protected exes
+      autoApplyCrackFix: false, // opt-in: try a confident CrakFiles community-crack match (confident name only, backed-up, idempotent) - off by default since it downloads/overwrites game files
+      autoApplyNotice: false, // whether the antivirus notice for automatic repair has been given
+      // What the automatic repair does to a game Game Health flags: 'repair' rewrites the files
+      // the emulator reads and installs a runtime only when none is there, 'runtime' re-applies
+      // the whole GBE Fork setup every time. See util/autoFixPlan.js.
+      autoApplyMode: 'repair',
+      steamSettingsMode: 'simple', // 'simple' (AW fetch: DLC + achievements) | 'advanced' (generate_emu_config: + depots/languages)
+      createLaunchBat: true, // legacy, unused (ColdClient removed) - kept so saved configs round-trip
+      apiCheckBypass: false, // opt-in: drop SteamAutoCrack's Steam API ownership-check bypass proxy (winmm.dll) for games that re-check the original DLL/exe after the swap
+      checkUpdates: true, // force a same-day GBE Fork release re-check before applying
+      login: 'anonymous', // 'anonymous' | 'steam' (generate_emu_config richer data)
+      loginAccountName: '', // optional Steam login username
+      accountName: '', // GBE identity (issue #123): empty = the AW profile name
+      accountSteamId: '', // empty = keep each game's own account_steamid
+      savePath: '', // absolute GBE save folder; empty = %APPDATA%\GSE Saves
+      loginPassword: '', // optional Steam login password - AES-encrypted on disk
+      steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
+      uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
+      uplayLanguage: 'auto', // 'auto' follows the achievement language, otherwise a loader locale code
+      // On by default: the loader's log is the only record of which objective a game asked to
+      // unlock, which Game health needs. It grows fast (17 KB/s measured), so repair() caps the file.
+      uplayLogging: true,
+    },
+    notification: {
+      notify: true,
+      rumble: true,
+      notifyOnProgress: true,
+      progressStep: 0,
+      playtime: true,
+      platinum: true,
+      steamClient: false,
+    },
+    notification_toast: {
+      customToastAudio: '1',
+      groupToast: false,
+      urgent: false,
+    },
+    notification_transport: {
+      winRT: true,
+      balloon: true,
+      websocket: true,
+      updateMillennium: true,
+      updatePlaynite: true,
+      mode: 'auto',
+    },
+    notification_advanced: {
+      timeTreshold: 10,
+      tick: 600,
+      checkIfProcessIsRunning: true,
+      iconPrefetch: true,
+    },
+    controller: {
+      enabled: false,
+      appNavigation: true,
+      backend: 'auto',
+      layout: 'auto',
+      ...DEFAULT_CONTROLLER_BINDINGS,
+      focusOverlay: false,
+      sendEscapeOnControllerOpen: false,
+      debugLogging: false,
+    },
+    souvenir: {
+      screenshot: false,
+      dir: '',
+      hdr: 'auto',
+      ...require('./util/clipProfile.js').normalize({}),
+    },
+    action: {
+      target: '',
+      cwd: '',
+      hide: true,
+    },
+    steam: { main: '0' },
+  };
+  options.achievement.lang = systemLanguage();
+  return options;
+}
+
+module.exports.normalize = normalize;
+module.exports.defaults = defaults;
+module.exports.PROGRESS_STEPS = PROGRESS_STEPS;
+module.exports.DEFAULT_HOTKEY = DEFAULT_HOTKEY;
+module.exports.DEFAULT_CONTROLLER_BINDINGS = DEFAULT_CONTROLLER_BINDINGS;
+
 module.exports.load = () => {
   let options;
   try {
-    options = ensureSections(ini.parse(fs.readFileSync(filename, 'utf8')));
-
-    // Steam schemas are fully keyless now. Do not keep a removed credential alive in memory or
-    // write it back the next time another setting is saved.
-    delete options.steam.apiKey;
-
-    if (!uiLanguages.has(options.achievement.lang)) {
-      try {
-        let locale = navigator.language || navigator.userLanguage || 'en';
-        options.achievement.lang = uiLanguages.bestForLocale(locale).api;
-      } catch (err) {
-        options.achievement.lang = 'english';
-      }
-    }
-
-    if (typeof options.username !== 'string' && typeof options.general.username !== 'string') {
-      options.general.username = options.username || options.general.username || os.userInfo().username || 'User';
-    }
-
-    if (typeof options.general.skippedVersion !== 'string') {
-      options.general.skippedVersion = 'none';
-    }
-
-    // Postpone stores version + deadline, so it expires on its own and never hides a newer release.
-    if (typeof options.general.updatePostponedVersion !== 'string') {
-      options.general.updatePostponedVersion = '';
-    }
-    if (typeof options.general.updatePostponedUntil !== 'number' || !Number.isFinite(options.general.updatePostponedUntil)) {
-      options.general.updatePostponedUntil = Number(options.general.updatePostponedUntil) || 0;
-    }
-    if (typeof options.general.autoUpdate !== 'boolean') {
-      options.general.autoUpdate = false;
-    }
-
-    if (typeof options.general.onboardingCompleted !== 'boolean') {
-      // Reaching this branch means a settings file already existed. Treat it as an upgraded
-      // profile; only the missing-file defaults below should launch first-run onboarding.
-      options.general.onboardingCompleted = true;
-    }
-    // interfaceMode controls UI scope only (util/interfaceMode.js). Upgraded profiles default to
-    // 'advanced' so existing tabs don't vanish; profiles still onboarding get '' to force a choice.
-    if (options.general.interfaceMode !== 'simple' && options.general.interfaceMode !== 'advanced') {
-      options.general.interfaceMode = options.general.onboardingCompleted === true ? 'advanced' : '';
-    }
-    if (typeof options.general.startWithWindows !== 'boolean') {
-      options.general.startWithWindows = true;
-    }
-    if (typeof options.general.disableHardwareAccel !== 'boolean') {
-      options.general.disableHardwareAccel = false;
-    }
-    if (typeof options.general.closeToTray !== 'boolean') {
-      options.general.closeToTray = true;
-    }
-    // Right-click uninstall menu on game tiles (Settings > General). Default ON: discoverable out
-    // of the box, and every action still asks for confirmation.
-    if (typeof options.general.uninstallContextMenu !== 'boolean') {
-      options.general.uninstallContextMenu = true;
-    }
-    // Theme values: built-in ids, 'custom', 'user:<name>' or 'pack:<name>' (all must validate here,
-    // or an imported/pack theme silently reverts on reload). Not disk-checked: this runs on every
-    // load, and the theme layer already falls back safely on a bad value.
-    if (
-      typeof options.general.theme !== 'string' ||
-      (!Object.keys(themeLayers.BUILTIN_COLORS).includes(options.general.theme) &&
-        options.general.theme !== 'custom' &&
-        !/^user:.+$/i.test(options.general.theme) &&
-        !/^pack:.+$/i.test(options.general.theme))
-    ) {
-      options.general.theme = 'default';
-    }
-
-    // overlay = the in-game achievement overlay (Ctrl+Shift+K). Configs saved under the old
-    // buggy default (Ctrl+Shift+O) are migrated back to K here.
-    if (typeof options.overlay.hotkey !== 'string') {
-      options.overlay.hotkey = 'Ctrl+Shift+K';
-    } else if (options.overlay.hotkey === 'Ctrl+Shift+O') {
-      options.overlay.hotkey = 'Ctrl+Shift+K';
-    }
-    // Overlay notification preset. A saved name that no longer matches one is NOT rewritten here:
-    // resolvePresetFolder() remaps a removed bundled preset only after checking for a user preset.
-    if (typeof options.overlay.notificationPreset !== 'string') {
-      options.overlay.notificationPreset = 'AW Next';
-    }
-    // Optional per-type preset overrides ('' = use notificationPreset): rare unlocks (≤10%) and
-    // the platinum/100% popup can each render with their own preset (e.g. Xbox Series Rare/Platinum).
-    if (typeof options.overlay.notificationPresetXenia !== 'string') {
-      options.overlay.notificationPresetXenia = '';
-    }
-    if (typeof options.overlay.notificationPresetRpcs3 !== 'string') {
-      options.overlay.notificationPresetRpcs3 = '';
-    }
-    if (typeof options.overlay.notificationPresetShadps4 !== 'string') {
-      options.overlay.notificationPresetShadps4 = '';
-    }
-    if (typeof options.overlay.notificationPresetKytyps5 !== 'string') {
-      options.overlay.notificationPresetKytyps5 = '';
-    }
-    if (typeof options.overlay.notificationPosition !== 'string') {
-      options.overlay.notificationPosition = 'center-bottom';
-    }
-    // INI values come back as strings (only booleans are type-coerced), so numbers must go through
-    // Number() before validating, or a typeof check would reset a valid value on every reload.
-    {
-      const scl = Number(options.overlay.notificationScale);
-      options.overlay.notificationScale = Number.isFinite(scl) && scl > 0 ? scl : 1;
-      const opacity = Number(options.overlay.notificationOpacity);
-      options.overlay.notificationOpacity = Number.isInteger(opacity) && opacity >= 30 && opacity <= 100 ? opacity : 100;
-    }
-    // Counter progress popups: '' follows the unlock placement. These are new keys on purpose: the
-    // progressPosition deleted below belonged to the removed per-type windows and used other values.
-    options.overlay.notificationProgressPosition = notificationPlacement.normalizeProgressPosition(
-      options.overlay.notificationProgressPosition
-    );
-    options.overlay.notificationProgressScale = notificationPlacement.normalizeProgressScale(options.overlay.notificationProgressScale);
-    options.overlay.notificationEdgeGap = notificationPlacement.normalizeEdgeGap(options.overlay.notificationEdgeGap);
-    if (typeof options.overlay.notificationSound !== 'string') {
-      options.overlay.notificationSound = '';
-    }
-    // Rare, 100% and progress sounds: '' follows the unlock sound. Per-emulator sounds: '' follows the main one.
-    for (const key of [
-      'notificationSoundRare',
-      'notificationSoundPlatinum',
-      'notificationSoundProgress',
-      'notificationSoundXenia',
-      'notificationSoundRpcs3',
-      'notificationSoundShadps4',
-      'notificationSoundKytyps5',
-    ]) {
-      if (typeof options.overlay[key] !== 'string') options.overlay[key] = '';
-    }
-    // Randomize the overlay notification sound from the merged bundled+user sound list.
-    if (typeof options.overlay.randomSound !== 'boolean') {
-      options.overlay.randomSound = false;
-    }
-    // Notification sound volume (percent, 0–200). Overlay audio can boost above 100%; the
-    // PowerShell player used for custom toast sounds clamps that part to 100%.
-    {
-      const vol = Number(options.overlay.notificationVolume);
-      options.overlay.notificationVolume = Number.isFinite(vol) ? Math.max(0, Math.min(200, vol)) : 100;
-    }
-    // Overlay-notification on-screen duration: 'auto' (preset self-closes) or a number of seconds (force-close cap).
-    {
-      const dur = Number(options.overlay.notificationDuration);
-      options.overlay.notificationDuration = Number.isFinite(dur) && dur > 0 ? dur : 'auto';
-    }
-    delete options.overlay.position;
-    delete options.overlay.progressPosition;
-    delete options.overlay.playtimePosition;
-    delete options.overlay.preset;
-    delete options.overlay.scale;
-    delete options.overlay.duration;
-
-    // Native controller → overlay control (Tier 4). Opt-in: loads the koffi/HID stack in the Watchdog
-    // only when enabled. Bindings are stored as "BUTTON+BUTTON+BUTTON" strings the watchdog parses.
-    if (!options.controller || typeof options.controller !== 'object') options.controller = {};
-    if (typeof options.controller.enabled !== 'boolean') {
-      options.controller.enabled = false;
-    }
-    if (typeof options.controller.appNavigation !== 'boolean') {
-      options.controller.appNavigation = true;
-    }
-    if (!['auto', 'xinput', 'gameinput'].includes(options.controller.backend)) {
-      options.controller.backend = 'auto';
-    }
-    options.controller.layout = controllerLabels.normalizeControllerLayout(options.controller.layout);
-    options.controller.toggleBinding = normalizeControllerBindingSetting(
-      options.controller.toggleBinding,
-      controllerLabels.TOGGLE_ALLOWED,
-      'BACK+START+LEFT_SHOULDER'
-    );
-    options.controller.uiModeBinding = normalizeControllerBindingSetting(
-      options.controller.uiModeBinding,
-      controllerLabels.MODE_ALLOWED,
-      'LEFT_SHOULDER+X'
-    );
-    options.controller.controlModeBinding = normalizeControllerBindingSetting(
-      options.controller.controlModeBinding,
-      controllerLabels.MODE_ALLOWED,
-      'LEFT_SHOULDER+RIGHT_SHOULDER'
-    );
-    delete options.controller.windowModeBinding;
-    if (typeof options.controller.focusOverlay !== 'boolean') {
-      options.controller.focusOverlay = false;
-    }
-    if (typeof options.controller.sendEscapeOnControllerOpen !== 'boolean') {
-      options.controller.sendEscapeOnControllerOpen = false;
-    }
-    if (typeof options.controller.debugLogging !== 'boolean') {
-      options.controller.debugLogging = false;
-    }
-
-    options.achievement.libraryLayout = libraryLayout.normalize(
-      options.achievement.libraryLayout,
-      options.achievement.thumbnailPortrait === true
-    );
-    // Keep the legacy flag synchronized for cover selection paths shared with older configs.
-    options.achievement.thumbnailPortrait = libraryLayout.isPortrait(options.achievement.libraryLayout);
-
-    /*
-      Library customization (issue #56): how big a tile is, how tight the grid around it is, and
-      which pieces of chrome on it are drawn. Clamped rather than rejected, so a
-      hand-edited options.ini can only ever be out of range, never break the layout.
-    */
-    options.achievement.libraryTileScale = libraryChrome.normalizeTileScale(options.achievement.libraryTileScale);
-    options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
-    for (const toggle of libraryChrome.TOGGLES) {
-      if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
-    }
-    options.achievement.libraryPlaytimeUnits = libraryChrome.normalizePlaytimeUnits(options.achievement.libraryPlaytimeUnits);
-
-    if (typeof options.achievement.showHidden !== 'boolean') {
-      options.achievement.showHidden = false;
-    }
-
-    if (typeof options.achievement.profileCompact !== 'boolean') options.achievement.profileCompact = false;
-
-    if (typeof options.achievement.mergeDuplicate !== 'boolean') {
-      options.achievement.mergeDuplicate = true;
-    }
-
-    if (typeof options.achievement.timeMergeRecentFirst !== 'boolean') {
-      options.achievement.timeMergeRecentFirst = false;
-    }
-
-    if (typeof options.achievement.hideZero !== 'boolean') {
-      options.achievement.hideZero = false;
-    }
-    // Steam's own title in the achievement language instead of the English one. On by default.
-    if (typeof options.achievement.localizedGameTitles !== 'boolean') {
-      options.achievement.localizedGameTitles = true;
-    }
-    // Trophy showcase under the profile name (Settings > General). On by default.
-    if (typeof options.achievement.showTrophies !== 'boolean') {
-      options.achievement.showTrophies = true;
-    }
-    // Rarity display: 'rare' tiers only the rarest unlocks, 'trophy' grades every achievement. The
-    // two trophy bounds travel as a pair (INI values are strings; a bad pair resets to 20 / 50).
-    options.achievement.rarityMode = rarityTiers.normalizeMode(options.achievement.rarityMode);
-    {
-      const bounds = rarityTiers.normalizeThresholds({
-        goldBelow: options.achievement.trophyGoldBelow,
-        silverBelow: options.achievement.trophySilverBelow,
-      });
-      options.achievement.trophyGoldBelow = bounds.goldBelow;
-      options.achievement.trophySilverBelow = bounds.silverBelow;
-      Object.assign(options.achievement, rarityTiers.normalizeRareBounds(options.achievement));
-    }
-    if (typeof options.achievement.goldbergDownloadIcons !== 'boolean') {
-      options.achievement.goldbergDownloadIcons = false;
-    }
-
-    // Opt-in: stop the periodic steam_cache self-repair (blank-field backfill, achievement-list
-    // reconciliation, empty-schema re-check) that otherwise runs every few days regardless of
-    // fastStart. Off by default; a manual "force recheck" from Settings > Advanced still works.
-    if (typeof options.achievement.disableAutoRefresh !== 'boolean') {
-      options.achievement.disableAutoRefresh = false;
-    }
-
-    if (options.achievement_source.legitSteam != 0 && options.achievement_source.legitSteam != 1 && options.achievement_source.legitSteam != 2) {
-      options.achievement_source.legitSteam = 0;
-    }
-
-    // Listing the connected account's whole library, not just what this PC has touched. Both off by
-    // default: they need a connected Steam account, and each one adds hundreds of games that have to
-    // resolve their schema and artwork the first time they are seen.
-    if (typeof options.achievement_source.steamAccountOwned !== 'boolean') {
-      options.achievement_source.steamAccountOwned = false;
-    }
-    if (typeof options.achievement_source.steamAccountFamily !== 'boolean') {
-      options.achievement_source.steamAccountFamily = false;
-    }
-
-    // Steam library folders whose games stay out of the list (Settings > Sources). Stored as an ini
-    // array; a single value or a missing key reads back as a string or nothing.
-    {
-      const hidden = options.achievement_source.steamHiddenLibraries;
-      const list = Array.isArray(hidden) ? hidden : typeof hidden === 'string' ? [hidden] : [];
-      options.achievement_source.steamHiddenLibraries = list.map((dir) => String(dir).trim()).filter(Boolean);
-    }
-
-    if (typeof options.achievement_source.steamEmu !== 'boolean') {
-      options.achievement_source.steamEmu = true;
-    }
-
-    if (typeof options.achievement_source.socialClub !== 'boolean') {
-      options.achievement_source.socialClub = true;
-    }
-
-    if (typeof options.achievement_source.greenLuma !== 'boolean') {
-      options.achievement_source.greenLuma = true;
-    }
-
-    if (typeof options.achievement_source.rpcs3 !== 'boolean') {
-      options.achievement_source.rpcs3 = true;
-    }
-
-    if (typeof options.achievement_source.shadps4 !== 'boolean') {
-      options.achievement_source.shadps4 = true;
-    }
-
-    if (typeof options.achievement_source.kytyps5 !== 'boolean') {
-      options.achievement_source.kytyps5 = true;
-    }
-
-    if (typeof options.achievement_source.ps4recomp !== 'boolean') {
-      options.achievement_source.ps4recomp = true;
-    }
-
-    if (typeof options.achievement_source.ps3recomp !== 'boolean') {
-      options.achievement_source.ps3recomp = true;
-    }
-
-    if (typeof options.achievement_source.xenia !== 'boolean') {
-      options.achievement_source.xenia = true;
-    }
-
-    // Unset until Sources shows it: it then takes what the Xenia switch said, which used to cover it.
-    if (typeof options.achievement_source.x360recomp !== 'boolean') {
-      options.achievement_source.x360recomp = options.achievement_source.xenia !== false;
-    }
-
-    if (typeof options.achievement_source.xlln !== 'boolean') {
-      options.achievement_source.xlln = true;
-    }
-
-    if (typeof options.achievement_source.retroAchievements !== 'boolean') {
-      options.achievement_source.retroAchievements = true;
-    }
-
-    if (typeof options.achievement_source.psnLibrary !== 'boolean') {
-      options.achievement_source.psnLibrary = true;
-    }
-
-    if (typeof options.achievement_source.markerpatch !== 'boolean') {
-      options.achievement_source.markerpatch = true;
-    }
-
-    if (typeof options.achievement_source.madnesspatch !== 'boolean') {
-      options.achievement_source.madnesspatch = true;
-    }
-
-    if (typeof options.achievement_source.pcports !== 'boolean') {
-      options.achievement_source.pcports = true;
-    }
-
-    if (typeof options.achievement_source.lumaPlay !== 'boolean') {
-      options.achievement_source.lumaPlay = true;
-    }
-
-    // RUNE's Ubisoft emulator followed the LumaPlay switch until it got its own, so a profile from
-    // before the split keeps whatever LumaPlay was set to.
-    if (typeof options.achievement_source.runeUplay !== 'boolean') {
-      options.achievement_source.runeUplay = options.achievement_source.lumaPlay;
-    }
-
-    if (typeof options.achievement_source.gog !== 'boolean') {
-      options.achievement_source.gog = true;
-    }
-
-    // Was an on/off switch before it could leave out the games Galaxy keeps after an uninstall. On
-    // listed every played game, which is what "played" (2) is now.
-    if (typeof options.achievement_source.gogOfficial === 'boolean') {
-      options.achievement_source.gogOfficial = options.achievement_source.gogOfficial ? 2 : 0;
-    }
-    if (
-      options.achievement_source.gogOfficial != 0 &&
-      options.achievement_source.gogOfficial != 1 &&
-      options.achievement_source.gogOfficial != 2
-    ) {
-      options.achievement_source.gogOfficial = 2;
-    }
-
-    if (typeof options.achievement_source.ubisoftOfficial !== 'boolean') {
-      options.achievement_source.ubisoftOfficial = true;
-    }
-
-    if (typeof options.achievement_source.epic !== 'boolean') {
-      options.achievement_source.epic = true;
-    }
-
-    // Was an on/off switch before it could tell an installed game from one the account owns. On
-    // meant every installed Epic game, which is what "installed" is now.
-    if (typeof options.achievement_source.epicOfficial === 'boolean') {
-      options.achievement_source.epicOfficial = options.achievement_source.epicOfficial ? 2 : 0;
-    }
-    if (
-      options.achievement_source.epicOfficial != 0 &&
-      options.achievement_source.epicOfficial != 1 &&
-      options.achievement_source.epicOfficial != 2
-    ) {
-      options.achievement_source.epicOfficial = 2;
-    }
-
-    if (typeof options.achievement_source.ea !== 'boolean') {
-      options.achievement_source.ea = true;
-    }
-
-    // Was an on/off switch before it could tell an installed game from one the account merely owns.
-    // On meant everything that was imported, which is what "owned" is now.
-    if (typeof options.achievement_source.xboxPc === 'boolean') {
-      options.achievement_source.xboxPc = options.achievement_source.xboxPc ? 2 : 0;
-    }
-    if (options.achievement_source.xboxPc != 0 && options.achievement_source.xboxPc != 1 && options.achievement_source.xboxPc != 2) {
-      options.achievement_source.xboxPc = 2;
-    }
-
-    if (typeof options.achievement_source.importCache !== 'boolean') {
-      options.achievement_source.importCache = true;
-    }
-
-    //Emulator (GBE Fork setup) - new section, may be absent in older configs.
-    if (!options.emulator || typeof options.emulator !== 'object') options.emulator = {};
-    if (typeof options.emulator.autoApplyNewGames !== 'boolean') {
-      // Migrate the short-lived General-tab key; installs without either key default to OFF - the
-      // automatic full setup (DLL swap) is opt-in, so AW never touches game files unprompted.
-      options.emulator.autoApplyNewGames =
-        typeof options.achievement.autoApplyNewGames === 'boolean' ? options.achievement.autoApplyNewGames : false;
-    }
-    // ColdClient was removed: AW always applies the emulator standalone (DLL swap). Normalize any
-    // stale stored 'coldclient' value back to the single supported mode.
-    options.emulator.mode = 'regular';
-    // DLC ownership and the account identity are separate decisions from "repair my achievements":
-    // both rewrite files the user may curate by hand (a central emulator config, a deliberately
-    // absent configs.user.ini), so each is opt-in even when automatic repair is on.
-    if (typeof options.emulator.manageDlc !== 'boolean') options.emulator.manageDlc = false;
-    if (typeof options.emulator.stampIdentity !== 'boolean') options.emulator.stampIdentity = false;
-    if (typeof options.emulator.steamlessAutoUnpack !== 'boolean') options.emulator.steamlessAutoUnpack = false;
-    if (typeof options.emulator.steamlessExperimental !== 'boolean') options.emulator.steamlessExperimental = false;
-    if (typeof options.emulator.autoApplyCrackFix !== 'boolean') options.emulator.autoApplyCrackFix = false;
-    // Whether the antivirus notice for automatic repair has been given. Absent means it has not:
-    // configs that turned the setting on before the notice existed get it once, from the scan.
-    if (typeof options.emulator.autoApplyNotice !== 'boolean') options.emulator.autoApplyNotice = false;
-    if (options.emulator.steamSettingsMode !== 'simple' && options.emulator.steamSettingsMode !== 'advanced') options.emulator.steamSettingsMode = 'simple';
-    // Anything but the explicit 'runtime' choice means the targeted repair: a stored value nobody
-    // recognises must never be the one that swaps dlls.
-    options.emulator.autoApplyMode = options.emulator.autoApplyMode === 'runtime' ? 'runtime' : 'repair';
-    // GBE identity (issue #123): a Steam ID that is not a real one and a relative folder would be
-    // written into every game a fix touches, so they read as empty instead.
-    for (const key of ['accountName', 'accountSteamId', 'savePath']) {
-      options.emulator[key] = typeof options.emulator[key] === 'string' ? options.emulator[key].trim() : '';
-    }
-    if (!isSteamId64(options.emulator.accountSteamId)) options.emulator.accountSteamId = '';
-    if (!path.isAbsolute(options.emulator.savePath)) options.emulator.savePath = '';
-    if (typeof options.emulator.createLaunchBat !== 'boolean') options.emulator.createLaunchBat = true;
-    if (typeof options.emulator.apiCheckBypass !== 'boolean') options.emulator.apiCheckBypass = false;
-    if (typeof options.emulator.checkUpdates !== 'boolean') options.emulator.checkUpdates = true;
-    if (options.emulator.login !== 'anonymous' && options.emulator.login !== 'steam') options.emulator.login = 'anonymous';
-    if (typeof options.emulator.loginAccountName !== 'string') options.emulator.loginAccountName = '';
-    if (typeof options.emulator.loginPassword !== 'string') options.emulator.loginPassword = '';
-    if (typeof options.emulator.steamId !== 'string') options.emulator.steamId = '';
-    if (typeof options.emulator.uplayUsername !== 'string') options.emulator.uplayUsername = '';
-    const uplayLanguages = new Set([
-      'auto', 'en-US', 'fr-FR', 'de-DE', 'es-ES', 'es-MX', 'it-IT', 'pt-BR', 'pt-PT', 'pl-PL',
-      'ru-RU', 'ja-JP', 'zh-CN', 'zh-TW', 'ko-KR', 'th-TH',
-    ]);
-    if (!uplayLanguages.has(options.emulator.uplayLanguage)) options.emulator.uplayLanguage = 'auto';
-    if (typeof options.emulator.uplayLogging !== 'boolean') options.emulator.uplayLogging = true;
-
-    if (typeof options.notification.notify !== 'boolean') {
-      options.notification.notify = true;
-    }
-
-    if (typeof options.notification.rumble !== 'boolean') {
-      options.notification.rumble = true;
-    }
-
-    // Off by default: Steam shows its own pop-up for the games it runs.
-    if (typeof options.notification.steamClient !== 'boolean') {
-      options.notification.steamClient = false;
-    }
-
-    if (typeof options.notification.notifyOnProgress !== 'boolean') {
-      options.notification.notifyOnProgress = true;
-    }
-    // Progress popups only when a counter crosses this percentage of its goal; 0 is every step.
-    {
-      const step = Number(options.notification.progressStep);
-      options.notification.progressStep = PROGRESS_STEPS.includes(step) ? step : 0;
-    }
-
-    if (typeof options.notification.playtime !== 'boolean') {
-      // Enable playtime on a new profile without changing the preference of upgraded profiles.
-      options.notification.playtime = options.general.onboardingCompleted !== true;
-    }
-
-    if (typeof options.notification.platinum !== 'boolean') {
-      options.notification.platinum = true;
-    }
-
-    if (
-      options.notification_toast.customToastAudio != '0' &&
-      options.notification_toast.customToastAudio != '1' &&
-      options.notification_toast.customToastAudio != '2'
-    ) {
-      options.notification_toast.customToastAudio = '1';
-    }
-    delete options.notification_toast.toastSouvenir; // souvenir feature removed
-
-    if (typeof options.notification_toast.groupToast !== 'boolean') {
-      options.notification_toast.groupToast = false;
-    }
-
-    if (typeof options.notification_toast.urgent !== 'boolean') {
-      options.notification_toast.urgent = false;
-    }
-
-    // Drop legacy display-transport flags. `mode` is intentionally NOT dropped: it is the
-    // notification delivery mode, persisted and validated a few lines below.
-    delete options.notification_transport.chromium;
-    delete options.notification_transport.toast;
-    delete options.notification_transport.gntp;
-
-    // WinRT (faster native toast) and balloon (toast fallback) are internal auto-details of the
-    // toast path - not surfaced in the UI but still honored by the toaster.
-    if (typeof options.notification_transport.winRT !== 'boolean') {
-      options.notification_transport.winRT = true;
-    }
-
-    if (typeof options.notification_transport.balloon !== 'boolean') {
-      options.notification_transport.balloon = true;
-    }
-
-    // Websocket broadcast to external clients - independent of the chosen display mode.
-    if (typeof options.notification_transport.websocket !== 'boolean') {
-      options.notification_transport.websocket = true;
-    }
-
-    // Keep the installed Millennium plugin / Playnite extension current (util/extensionUpdate.js).
-    for (const key of ['updateMillennium', 'updatePlaynite']) {
-      if (typeof options.notification_transport[key] !== 'boolean') options.notification_transport[key] = true;
-    }
-
-    // Delivery mode: 'auto' (Watchdog picks per event, see watchdog/notification/transportPolicy.js),
-    // 'toast', 'overlay', or 'both'. A saved choice is never rewritten, only unset/corrupt defaults to 'auto'.
-    if (!['auto', 'toast', 'overlay', 'both'].includes(options.notification_transport.mode)) {
-      options.notification_transport.mode = 'auto';
-    }
-    delete options.notification_transport.overlay;
-
-    if (isNaN(options.notification_advanced.timeTreshold)) {
-      options.notification_advanced.timeTreshold = 10;
-    }
-
-    if (isNaN(options.notification_advanced.tick)) {
-      options.notification_advanced.tick = 600;
-    }
-
-    if (typeof options.notification_advanced.checkIfProcessIsRunning !== 'boolean') {
-      options.notification_advanced.checkIfProcessIsRunning = true;
-    }
-
-    if (typeof options.notification_advanced.iconPrefetch !== 'boolean') {
-      options.notification_advanced.iconPrefetch = true;
-    }
-
-    if (typeof options.steam.main !== 'string') {
-      options.steam.main = '0';
-    }
-
-    //Souvenir - drop the stale flat keys (OBS video stays removed); keep the simple screenshot section.
-    delete options.souvenir_screenshot;
-    delete options.souvenir_video;
-    if (!options.souvenir || typeof options.souvenir !== 'object') options.souvenir = {};
-    if (typeof options.souvenir.screenshot !== 'boolean') options.souvenir.screenshot = false;
-    if (typeof options.souvenir.dir !== 'string') options.souvenir.dir = '';
-    if (options.souvenir.hdr !== 'auto' && options.souvenir.hdr !== 'off') options.souvenir.hdr = 'auto';
-    delete options.souvenir.combineNotif; // simplified: capture always includes whatever is on screen
-    Object.assign(options.souvenir, require('./util/clipProfile.js').normalize(options.souvenir));
-
-    if (typeof options.action.target !== 'string') {
-      options.action.target = '';
-    }
-
-    if (typeof options.action.cwd !== 'string') {
-      options.action.cwd = '';
-    }
-
-    if (typeof options.action.hide !== 'boolean') {
-      options.action.hide = true;
-    }
+    options = normalize(ini.parse(fs.readFileSync(filename, 'utf8')));
 
     // Emulator Steam-login password - AES-encrypted on disk.
     if (options.emulator && typeof options.emulator.loginPassword === 'string' && options.emulator.loginPassword.includes(':')) {
@@ -679,7 +890,6 @@ module.exports.load = () => {
         options.emulator.loginPassword = '';
       }
     }
-
   } catch (err) {
     console.log(`failed to load settings: ${err}`);
     // Everything below replaces the user's whole configuration with defaults. Keep whatever was
@@ -690,197 +900,7 @@ module.exports.load = () => {
     } catch (backupErr) {
       console.log(`could not keep ${filename}.bak before resetting settings: ${backupErr}`);
     }
-    options = {
-      general: {
-        username: os.userInfo().username || 'User',
-        skippedVersion: 'none',
-        updatePostponedVersion: '',
-        updatePostponedUntil: 0,
-        autoUpdate: false,
-        onboardingCompleted: false,
-        interfaceMode: '', // '' until onboarding asks; 'simple' | 'advanced' afterwards
-        startWithWindows: true,
-        disableHardwareAccel: false,
-        closeToTray: true,
-        uninstallContextMenu: true,
-        theme: 'default',
-      },
-      overlay: {
-        hotkey: 'Ctrl+Shift+K',
-        notificationPreset: 'AW Next',
-        notificationPresetXenia: '',
-        notificationPresetRpcs3: '',
-        notificationPresetShadps4: '',
-        notificationPresetKytyps5: '',
-        notificationPosition: 'center-bottom',
-        notificationScale: 1,
-        notificationOpacity: 100, // percent, 30-100
-        notificationProgressPosition: '',
-        notificationProgressScale: '',
-        notificationEdgeGap: 0, // px between an edge-anchored card and the screen edge
-        notificationSound: '',
-        notificationSoundRare: '',
-        notificationSoundPlatinum: '',
-        notificationSoundProgress: '',
-        notificationSoundXenia: '',
-        notificationSoundRpcs3: '',
-        notificationSoundShadps4: '',
-        notificationSoundKytyps5: '',
-        randomSound: false,
-        notificationVolume: 100,
-        notificationDuration: 'auto',
-      },
-      achievement: {
-        libraryLayout: 'default',
-        libraryTileScale: 1,
-        libraryDensity: 1,
-        libraryShowTitle: true,
-        libraryShowProgress: true,
-        libraryShowEmptyProgress: false,
-        profileCompact: false, // issue #123: the profile band folded into one row
-        libraryShowSource: true,
-        libraryShowHealth: true,
-        libraryPlaytimeUnits: 'auto', // 'hours' keeps a long playtime in hours, never days
-        libraryShowAchievementButton: true,
-        libraryShowConfigButton: true,
-        thumbnailPortrait: false,
-        showHidden: false,
-        mergeDuplicate: true,
-        timeMergeRecentFirst: false,
-        hideZero: false,
-        localizedGameTitles: true,
-        showTrophies: true,
-        rarityMode: 'rare',
-        trophyGoldBelow: 20,
-        trophySilverBelow: 50,
-        rareGoldMax: 5,
-        rareSilverMax: 10,
-        rareMax: 15,
-        showPlayButton: true,
-        goldbergDownloadIcons: false,
-        disableAutoRefresh: false, // opt-in: skip the periodic steam_cache self-repair, for a hand-curated cache
-      },
-      achievement_source: {
-        legitSteam: 0,
-        steamAccountOwned: false,
-        steamAccountFamily: false,
-        steamEmu: true,
-        socialClub: true,
-        greenLuma: true,
-        rpcs3: true,
-        shadps4: true,
-        kytyps5: true,
-        ps4recomp: true,
-        ps3recomp: true,
-        x360recomp: true,
-        xenia: true,
-        xlln: true,
-        retroAchievements: true,
-        psnLibrary: true,
-        markerpatch: true,
-        madnesspatch: true,
-        pcports: true,
-        lumaPlay: true,
-        runeUplay: true,
-        gog: true,
-        gogOfficial: 2,
-        ubisoftOfficial: true,
-        epic: true,
-        epicOfficial: 2,
-        ea: true,
-        xboxPc: 2,
-        importCache: true,
-      },
-      emulator: {
-        autoApplyNewGames: false, // opt-in: one-shot full setup for newly detected unconfigured emulated games (off = never touch game files unprompted)
-        mode: 'regular', // standalone DLL swap - the only mode (ColdClient was removed)
-        manageDlc: false, // opt-in: write configs.app.ini (unlock_all + the DLC list). Unrelated to achievements, and a game the user wants stock must stay stock
-        stampIdentity: false, // opt-in: write account_name/language into configs.user.ini. Off keeps a hand-managed or deliberately absent user config untouched
-        steamlessAutoUnpack: false, // run Steamless on the game exe before patching
-        steamlessExperimental: false, // pass --realign for heavily-protected exes
-        autoApplyCrackFix: false, // opt-in: try a confident CrakFiles community-crack match (confident name only, backed-up, idempotent) - off by default since it downloads/overwrites game files
-        autoApplyNotice: false, // whether the antivirus notice for automatic repair has been given
-        // What the automatic repair does to a game Game Health flags: 'repair' rewrites the files
-        // the emulator reads and installs a runtime only when none is there, 'runtime' re-applies
-        // the whole GBE Fork setup every time. See util/autoFixPlan.js.
-        autoApplyMode: 'repair',
-        steamSettingsMode: 'simple', // 'simple' (AW fetch: DLC + achievements) | 'advanced' (generate_emu_config: + depots/languages)
-        createLaunchBat: true, // legacy, unused (ColdClient removed) - kept so saved configs round-trip
-        apiCheckBypass: false, // opt-in: drop SteamAutoCrack's Steam API ownership-check bypass proxy (winmm.dll) for games that re-check the original DLL/exe after the swap
-        checkUpdates: true, // force a same-day GBE Fork release re-check before applying
-        login: 'anonymous', // 'anonymous' | 'steam' (generate_emu_config richer data)
-        loginAccountName: '', // optional Steam login username
-        accountName: '', // GBE identity (issue #123): empty = the AW profile name
-        accountSteamId: '', // empty = keep each game's own account_steamid
-        savePath: '', // absolute GBE save folder; empty = %APPDATA%\GSE Saves
-        loginPassword: '', // optional Steam login password - AES-encrypted on disk
-        steamId: '', // optional account_steamid override for configs.user.ini ('' = let GBE pick)
-        uplayUsername: '', // optional Uplay R2 Username override ('' = use the general username)
-        uplayLanguage: 'auto', // 'auto' follows the achievement language, otherwise a loader locale code
-        // On by default: the loader's log is the only record of which objective a game asked to
-        // unlock, which Game health needs. It grows fast (17 KB/s measured), so repair() caps the file.
-        uplayLogging: true,
-      },
-      notification: {
-        notify: true,
-        rumble: true,
-        notifyOnProgress: true,
-        progressStep: 0,
-        playtime: true,
-        platinum: true,
-        steamClient: false,
-      },
-      notification_toast: {
-        customToastAudio: '1',
-        groupToast: false,
-        urgent: false,
-      },
-      notification_transport: {
-        winRT: true,
-        balloon: true,
-        websocket: true,
-        updateMillennium: true,
-        updatePlaynite: true,
-        mode: 'auto',
-      },
-      notification_advanced: {
-        timeTreshold: 10,
-        tick: 600,
-        checkIfProcessIsRunning: true,
-        iconPrefetch: true,
-      },
-      controller: {
-        enabled: false,
-        appNavigation: true,
-        backend: 'auto',
-        layout: 'auto',
-        toggleBinding: 'BACK+START+LEFT_SHOULDER',
-        uiModeBinding: 'LEFT_SHOULDER+X',
-        controlModeBinding: 'LEFT_SHOULDER+RIGHT_SHOULDER',
-        focusOverlay: false,
-        sendEscapeOnControllerOpen: false,
-        debugLogging: false,
-      },
-      souvenir: {
-        screenshot: false,
-        dir: '',
-        hdr: 'auto',
-        ...require('./util/clipProfile.js').normalize({}),
-      },
-      action: {
-        target: '',
-        cwd: '',
-        hide: true,
-      },
-      steam: { main: '0' },
-    };
-
-    try {
-      let locale = navigator.language || navigator.userLanguage || 'en';
-      options.achievement.lang = uiLanguages.bestForLocale(locale).api;
-    } catch (err) {
-      options.achievement.lang = 'english';
-    }
+    options = defaults();
     writeOptionsFile(options);
   }
 

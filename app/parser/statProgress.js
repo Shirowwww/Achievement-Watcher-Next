@@ -21,20 +21,67 @@ function numericStatValue(entry) {
   return null;
 }
 
+// Each schema achievement tied to a stat the save holds, with the stat value capped at its goal.
+// `rawFor(statName)` gives the save's entry for that stat; a generator, so a caller that adds entries
+// as it goes sees them in the next lookup.
+function* statProgressPairs(localSchema, rawFor) {
+  for (const achievement of localSchema) {
+    const statName = achievement && achievement.progress && achievement.progress.value && achievement.progress.value.operand1;
+    if (!achievement || !achievement.name || !statName) continue;
+    const raw = numericStatValue(rawFor(statName));
+    if (raw == null) continue;
+    const max = Number(achievement.progress.max_val || achievement.progress.max || achievement.progress.maxProgress || 0) || 0;
+    // A stat keeps counting past the goal (BG3 reports 14 for a 10-step achievement).
+    yield { achievement, statName, max, value: max > 0 ? Math.min(raw, max) : raw };
+  }
+}
+
+/*
+  The Watchdog's form of the same mapping: its parsed save is an array of { name, Achieved,
+  CurProgress, ... }, not a keyed object, so a missing achievement is appended, the larger progress
+  wins, a reached goal marks it unlocked, and the consumed raw stat entries are removed so a stat
+  hash is never announced as an achievement.
+*/
+function mapStatProgressEntries(entries, localSchema) {
+  if (!Array.isArray(entries) || !Array.isArray(localSchema) || localSchema.length === 0) return 0;
+  const byName = new Map();
+  for (const entry of entries) if (entry && entry.name != null) byName.set(String(entry.name).toUpperCase(), entry);
+  const consumedStats = new Set();
+  const achievementNames = new Set();
+  for (const a of localSchema) {
+    if (a && a.name && a.progress && a.progress.value && a.progress.value.operand1) achievementNames.add(String(a.name).toUpperCase());
+  }
+  let applied = 0;
+  for (const { achievement, statName, max, value } of statProgressPairs(localSchema, (stat) => byName.get(String(stat).toUpperCase()))) {
+    const key = String(achievement.name).toUpperCase();
+    let target = byName.get(key);
+    if (!target) {
+      target = { name: achievement.name, Achieved: false, CurProgress: 0, MaxProgress: 0, UnlockTime: 0 };
+      entries.push(target);
+      byName.set(key, target);
+    }
+    if (!target.CurProgress || value > Number(target.CurProgress || 0)) target.CurProgress = value;
+    if (!(Number(target.MaxProgress) > 0) && max) target.MaxProgress = max;
+    if (!target.Achieved && max > 0 && value >= max) target.Achieved = true;
+    consumedStats.add(String(statName).toUpperCase());
+    applied++;
+  }
+  for (let i = entries.length - 1; i >= 0 && consumedStats.size > 0; i--) {
+    const name = entries[i] && entries[i].name != null ? String(entries[i].name).toUpperCase() : '';
+    if (consumedStats.has(name) && !achievementNames.has(name)) entries.splice(i, 1);
+  }
+  return applied;
+}
+
 function applyLocalStatProgress(root, localSchema) {
   if (!root || typeof root !== 'object' || !Array.isArray(localSchema) || localSchema.length === 0) return 0;
   const byKey = new Map(Object.keys(root).map((key) => [String(key).toUpperCase(), key]));
   let applied = 0;
-  for (const achievement of localSchema) {
-    const statName = achievement && achievement.progress && achievement.progress.value && achievement.progress.value.operand1;
-    if (!achievement || !achievement.name || !statName) continue;
+  const rawFor = (statName) => {
     const statKey = byKey.get(String(statName).toUpperCase());
-    if (!statKey) continue;
-    const raw = numericStatValue(root[statKey]);
-    if (raw == null) continue;
-    const max = Number(achievement.progress.max_val || achievement.progress.max || achievement.progress.maxProgress || 0) || 0;
-    // A stat keeps counting past the goal (BG3 reports 14 for a 10-step achievement).
-    const value = max > 0 ? Math.min(raw, max) : raw;
+    return statKey ? root[statKey] : undefined;
+  };
+  for (const { achievement, max, value } of statProgressPairs(localSchema, rawFor)) {
     if (root[achievement.name] && typeof root[achievement.name] === 'object') {
       // CODEX writes CurProgress=0 and MaxProgress=0 for every entry: a string '0' is not a value.
       const entry = root[achievement.name];
@@ -370,6 +417,7 @@ module.exports = {
   countOfficialProgress,
   officialProgressCount,
   applyLocalStatProgress,
+  mapStatProgressEntries,
   numericStatValue,
   appcacheProgressSchema,
   findProgressSchema,

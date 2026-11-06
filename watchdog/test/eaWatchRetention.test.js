@@ -13,14 +13,17 @@ const vm = require('vm');
 v8.setFlagsFromString('--expose-gc');
 const gc = vm.runInNewContext('gc');
 
-const { parseLog } = require('../console/eaWatch.js')._internal;
+const { readStates } = require('../console/eaWatch.js')._internal;
 
 const SET = '196716_1234567_50844';
 const PADDING_MB = 4;
 
 test('the cached parse of the EA log does not keep the log text in memory', (t) => {
-  const logs = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ea-watch-'));
-  t.after(() => fs.rmSync(logs, { recursive: true, force: true }));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-ea-watch-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  // The shared reader only accepts EA Desktop's own folder layout.
+  const logs = path.join(root, 'Electronic Arts', 'EA Desktop', 'Logs');
+  fs.mkdirSync(logs, { recursive: true });
   // A character outside Latin-1 makes V8 hold the text two bytes per character, as a real log does.
   const filler = `${'VERB ł padding line '.repeat(5)}\n`;
   const lines = [
@@ -32,13 +35,13 @@ test('the cached parse of the EA log does not keep the log text in memory', (t) 
   gc();
   const before = process.memoryUsage().heapUsed;
 
-  const parsed = parseLog(logs);
+  const states = readStates(logs);
   /(?:)/.exec(''); // RegExp.input keeps the last subject alive until the next match anywhere
   gc();
   const retainedMb = (process.memoryUsage().heapUsed - before) / 1048576;
 
-  assert.equal(parsed.entries.length, 1);
-  assert.equal(parsed.entries[0].name, 'Synthetic Game');
-  assert.equal(parsed.snapshots.get(`1234567-${SET}`).has('1'), true);
+  assert.equal(states.length, 1);
+  assert.equal(states[0].entry.name, 'Synthetic Game');
+  assert.equal(states[0].unlocked.get('1'), 1788256800);
   assert.ok(retainedMb < 2, `the parse retains ${retainedMb.toFixed(1)} MB for a ${PADDING_MB} MB log`);
 });

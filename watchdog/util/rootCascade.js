@@ -1,5 +1,6 @@
 'use strict';
 
+const { sharedAppModulePath } = require('./sharedAppModule.js');
 /*
  * Root detection cascade for the Watchdog: classify a folder from file signatures and return
  * monitor-style watch entries. Discovery only - it never generates configs or writes preferences.
@@ -8,7 +9,7 @@
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
-const ini = require('./ini');
+const ini = require(sharedAppModulePath('util/ini.js'));
 
 const ACHIEVEMENT_FILES = [
   'achievements.ini',

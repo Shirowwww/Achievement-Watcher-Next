@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const xboxPc = require('../xboxPc.js');
+const xboxPc = require('../../app/parser/xboxPcCore.js');
 const { makeTempDir } = require('../../test/helpers/tempDir');
 
 test('normalize helpers accept decimal and hex ids', () => {
@@ -18,8 +18,9 @@ test('buildSnapshot maps achievements to {id: state}', () => {
     { id: 'a', progression: { state: 'Achieved', timeUnlocked: '2023-11-14T22:13:20.0000000Z' } },
     { id: 'b', progression: { state: 'NotStarted' }, rarity: { currentPercentage: 4.2 } },
   ]);
-  assert.deepEqual(snapshot.a, { earned: true, earned_time: 1700000000 });
-  assert.deepEqual(snapshot.b, { earned: false });
+  // Same shape the library import writes: the counters are always present, 0 when Xbox sends none.
+  assert.deepEqual(snapshot.a, { earned: true, earned_time: 1700000000, progress: 0, max_progress: 0 });
+  assert.deepEqual(snapshot.b, { earned: false, progress: 0, max_progress: 0 });
 });
 
 test('diffSnapshots reports only new unlocks and change flags', () => {

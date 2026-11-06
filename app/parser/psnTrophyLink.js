@@ -9,6 +9,7 @@
 const path = require('path');
 const lib = require('./psnLibrary.js');
 const catalog = require('./psnCatalog.js');
+const read = require('./psnTrophyLinkRead.js');
 
 // A grade never changes once found; a game with no PlayStation release is looked at again later.
 const LINK_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -22,16 +23,11 @@ const MIN_SHARE = 0.5;
 // "Definitive Edition" on one store is often the plain name on the other.
 const EDITION_SUFFIX = /\s*[-:]?\s*(game of the year|goty|definitive|complete|deluxe|remastered|enhanced|ultimate|gold|director s cut)( edition)?$/;
 
-const linksDir = () => path.join(lib.cacheRoot(), 'links');
-const safeKey = (appid) => String(appid || '').replace(/[^\w.-]/g, '_');
-const linkFile = (appid) => path.join(linksDir(), `${safeKey(appid)}.json`);
+const linkFile = (appid) => read.linkFile(appid, lib.cacheRoot());
 
-const readRawLink = (appid) => (safeKey(appid) ? lib.readJson(linkFile(appid)) : null);
+const readRawLink = (appid) => (read.safeKey(appid) ? lib.readJson(linkFile(appid)) : null);
 
-function readLink(appid) {
-  const link = readRawLink(appid);
-  return link && link.listId && link.trophies && typeof link.trophies === 'object' ? link : null;
-}
+const readLink = (appid) => read.readLink(appid, lib.cacheRoot());
 
 function isFresh(appid, locale) {
   const link = readRawLink(appid);

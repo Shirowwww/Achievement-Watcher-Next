@@ -12,8 +12,8 @@
   `glob(pattern, options)` and `request.getJson(url)`. Use it for a dependency a scan needs, never for
   one the module uses at load time - the indirection is only worth it for what may go untouched.
 
-  The Watchdog has its own copy (watchdog/util/lazyRequire.js): the two processes ship separate
-  dependency trees, and neither may require across that boundary.
+  The Watchdog has its own copy (watchdog/util/lazyRequire.js): `require` resolves a package from the
+  folder of the file that calls it, and the two processes ship separate node_modules.
 */
 function lazyRequire(id) {
   let loaded;

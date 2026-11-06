@@ -9,57 +9,28 @@
 const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
-const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders, resolveWatchTarget } = kit;
 
 const pcports = require(sharedAppModulePath('parser/pcports.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 pcports.setDataRoot(userDataDir());
 
-// A file first seen with more unlocks than this was copied in, not played.
-const NEW_FILE_NOTIFY_MAX = 10;
-const RESET_CONFIRM_MS = 1000;
-
-let watchers = [];
+const watchers = kit.createWatcherList('pcports', debug);
 const changes = createChangeCoalescer();
 const baseline = createBaselineCache({ prefix: 'pcports', tag: 'pcports', debug });
 const cacheLoad = () => baseline.load(pcports.APPID);
 const cacheSave = (unlocked) => baseline.save(pcports.APPID, unlocked);
 
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // One title here: the first watched folder that holds the install wins.
-function discoverGame(configFile = userDirFile) {
+function discoverGame(configFile = kit.userDirFile()) {
   for (const dir of watchedFolders(configFile)) {
     try {
       const found = pcports.discover(dir);
@@ -69,28 +40,6 @@ function discoverGame(configFile = userDirFile) {
     }
   }
   return null;
-}
-
-function toastOptions(ctx) {
-  return {
-    notify: ctx.options.notification.notify,
-    transport: {
-      mode: ctx.options.notification_transport.mode,
-      websocket: ctx.options.notification_transport.websocket,
-    },
-    toast: {
-      appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-      winrt: ctx.options.notification_transport.winRT,
-      balloonFallback: ctx.options.notification_transport.balloon,
-      customAudio: ctx.options.notification_toast.customToastAudio,
-      volume: notificationVolumePercent(ctx.options),
-      imageIntegration: '0',
-      group: ctx.options.notification_toast.groupToast,
-      attribution: notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-    },
-    prefetch: false, // the icons are already local files
-    rumble: ctx.options.notification.rumble,
-  };
 }
 
 // False when the schema could not be read: the baseline then stays, and the unlocks are retried.
@@ -125,7 +74,7 @@ async function announce(game, fresh, ctx, earned = fresh) {
         delay,
         completion,
       },
-      toastOptions(ctx)
+      kit.unlockToastOptions(ctx)
     );
     delay += 1;
   }
@@ -139,12 +88,9 @@ async function announce(game, fresh, ctx, earned = fresh) {
 */
 async function handleChange(game, file, ctx, removed = false) {
   try {
-    if (removed) {
-      await new Promise((resolve) => setTimeout(resolve, RESET_CONFIRM_MS));
-      if (!fs.existsSync(file)) {
-        cacheSave([]);
-        return;
-      }
+    if (removed && (await kit.stillGone([file]))) {
+      cacheSave([]);
+      return;
     }
     await waitForFileStable(file);
     // Locked or half written: keeping that as the baseline would replay everything on the next write.
@@ -154,7 +100,7 @@ async function handleChange(game, file, ctx, removed = false) {
     const hasBaseline = !!(cache && Array.isArray(cache.unlocked));
     const previous = new Set(hasBaseline ? cache.unlocked.map(String) : []);
     // An empty baseline, the start or a reset, then a full file at once: a save copied back in.
-    const copiedIn = previous.size === 0 && unlocked.length > NEW_FILE_NOTIFY_MAX;
+    const copiedIn = previous.size === 0 && unlocked.length > kit.COPIED_IN_UNLOCKS;
     const fresh = copiedIn ? [] : unlocked.filter((id) => !previous.has(id));
     if (fresh.length > 0 && !(await announce(game, fresh, ctx, unlocked))) return;
     cacheSave(unlocked);
@@ -184,26 +130,11 @@ function seedBaseline(file) {
 function watchFile(game, ctx) {
   const dir = path.dirname(game.progressFile);
   const name = path.basename(game.progressFile).toLowerCase();
-  const watcher = watch(longPath(dir), { recursive: false }, (evt, changed) => {
+  const watcher = watchers.open(dir, { recursive: false }, (evt, changed) => {
     if (path.basename(String(changed || '')).toLowerCase() !== name) return;
     changes.run(pcports.APPID, () => handleChange(game, game.progressFile, ctx, evt === 'remove'));
   });
-  watchers.push(guardWatcher(watcher, `'${dir}'`, debug));
-  debug.log(`[pcports] watching '${game.progressFile}'`);
-}
-
-// Pure: the folder is there, or the nearest folder above it that is, and the segment it must grow next.
-function resolveWatchTarget(dir) {
-  if (isDirectory(dir)) return { ready: true };
-  let probe = dir;
-  const missing = [];
-  while (probe && !isDirectory(probe)) {
-    missing.unshift(path.basename(probe));
-    const parent = path.dirname(probe);
-    if (parent === probe) break;
-    probe = parent;
-  }
-  return isDirectory(probe) ? { ready: false, watchDir: probe, nextExpected: missing[0] } : { ready: false, watchDir: '', nextExpected: '' };
+  if (watcher) debug.log(`[pcports] watching '${game.progressFile}'`);
 }
 
 /*
@@ -219,26 +150,8 @@ function attach(game, ctx) {
     return;
   }
   if (!target.watchDir) return;
-  try {
-    const advance = () => {
-      if (!watchers.includes(watcher) || !fs.existsSync(path.join(target.watchDir, target.nextExpected))) return;
-      try {
-        watcher.close();
-      } catch {
-        /* already closed */
-      }
-      watchers = watchers.filter((entry) => entry !== watcher);
-      attach(game, ctx);
-    };
-    const watcher = watch(longPath(target.watchDir), { recursive: false }, (evt, name) => {
-      if (path.basename(String(name || '')).toLowerCase() === String(target.nextExpected).toLowerCase()) advance();
-    });
-    // node-watch listens from 'ready' on, a tick later on Linux: what appeared before sends no event.
-    watcher.on('ready', advance);
-    watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
+  if (kit.awaitSegment(watchers, target, () => attach(game, ctx))) {
     debug.log(`[pcports] '${game.progressFile}' does not exist yet - waiting under '${target.watchDir}'`);
-  } catch (err) {
-    debug.warn(`[pcports] failed to watch '${target.watchDir}': ${err}`);
   }
 }
 
@@ -247,10 +160,7 @@ function attach(game, ctx) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.pcports === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'pcports')) return;
 
   let game;
   try {
@@ -267,14 +177,7 @@ module.exports.start = async (ctx) => {
 
 module.exports.stop = () => {
   changes.clear();
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 module.exports._internal = { watchedFolders, discoverGame, handleChange, seedBaseline, resolveWatchTarget, attach };

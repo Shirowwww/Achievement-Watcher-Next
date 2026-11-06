@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const settings = require('../../watchdog/settings.js');
-const ini = require('../../watchdog/util/ini.js');
+const ini = require('../../app/util/ini.js');
 const controllerLabels = require('../../app/util/controllerLabels.js');
 
 // The loader falls back to a full default config if any section is missing, so start from a complete

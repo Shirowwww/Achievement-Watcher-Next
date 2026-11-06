@@ -5,6 +5,7 @@ const path = require('path');
 const listDrive = require(path.join(__dirname, '..', 'util', 'listDrive.js'));
 const { hostPath, hostFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { appHosts } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
+const { SAVE_ROOTS, rowDir } = require(path.join(__dirname, 'emuSaveRoots.js'));
 
 // Same folder once: case-insensitively on Windows, exactly on case-sensitive Linux filesystems.
 function addUnique(out, candidate) {
@@ -61,40 +62,20 @@ function defaultSteamEmuSaveRoots({ existingOnly = false, expandProgramDataSteam
   return existingOnly ? roots.filter((p) => fs.existsSync(p)) : roots;
 }
 
-// One host's emulator save roots: this machine on Windows, each Wine prefix and the XDG data folder
-// on Linux (see util/winHosts.js).
-function addHostRoots(roots, host, { expandProgramDataSteam }) {
-  const envPath = (envName, ...segments) => hostPath(host, envName, ...segments);
-  [
-    envPath('PUBLIC', 'Documents', 'OnlineFix'),
-    envPath('PUBLIC', 'Documents', 'Steam', 'RUNE'),
-    envPath('PUBLIC', 'Documents', 'Steam', 'CODEX'),
-    // CPY releases run CODEX's emulator and keep its tree under their own name.
-    envPath('PUBLIC', 'Documents', 'Steam', 'CPY'),
-    envPath('PUBLIC', 'Documents', 'Steam', 'RLD!'),
-    envPath('PUBLIC', 'Documents', 'EMPRESS'),
-    envPath('APPDATA', 'Goldberg SteamEmu Saves'),
-    envPath('APPDATA', 'Goldberg UplayEmu Saves'),
-    // The R1 loader's own default root. Its R2 sibling was listed here from the start; leaving this
-    // one out meant an unredirected R1 install was invisible to discovery even though the Watchdog
-    // watched the folder live.
-    envPath('APPDATA', 'R1 UplayEmu Saves'),
-    envPath('APPDATA', 'Goldberg SocialClub Emu Saves'),
-    envPath('APPDATA', 'GSE Saves'),
-    envPath('APPDATA', 'EMPRESS'),
-    // EMPRESS also writes %APPDATA%\EMPRESS\remote\<appid> with no appid level above it.
-    envPath('APPDATA', 'EMPRESS', 'remote'),
-    // RAZOR1911 (post-2023 releases): plain-text `achievement` file per appid.
-    envPath('APPDATA', '.1911'),
-    envPath('APPDATA', 'Steam', 'CODEX'),
-    envPath('APPDATA', 'Steam', 'RUNE'),
-    envPath('APPDATA', 'Steam', 'RLD!'),
-    envPath('APPDATA', 'SmartSteamEmu'),
-    envPath('APPDATA', 'CreamAPI'),
-    envPath('LOCALAPPDATA', 'SKIDROW'),
-    envPath('LOCALAPPDATA', 'anadius', 'LSX emu', 'achievement_watcher'),
-  ].forEach((p) => addUnique(roots, p));
+// The library side of one row expanded to its child folders (ProgramData\Steam).
+function addChildFolders(roots, dir) {
+  try {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ent.isDirectory()) addUnique(roots, path.join(dir, ent.name));
+    }
+  } catch {
+    /* the layout is optional */
+  }
+}
 
+// One host's emulator save roots, from the table the Watchdog reads too (emuSaveRoots.js): this
+// machine on Windows, each Wine prefix and the XDG data folder on Linux (see util/winHosts.js).
+function addHostRoots(roots, host, { expandProgramDataSteam }) {
   // A redirected or unreadable Documents folder means "we do not know where it is", never a failed
   // scan: this feeds the save-root list every emulator source walks.
   let docs = null;
@@ -103,28 +84,11 @@ function addHostRoots(roots, host, { expandProgramDataSteam }) {
   } catch {
     docs = null;
   }
-  if (docs) {
-    // The Watchdog spells it SKIDROW: the same folder on NTFS (kept once), another one on Linux.
-    addUnique(roots, path.join(docs, 'SkidRow'));
-    addUnique(roots, path.join(docs, 'SKIDROW'));
-    // DARKSiDERS writes its per-appid tree under Documents rather than beside the game whenever the
-    // release is not portable; the emulator ini in the game folder points here (see userDir.scan).
-    addUnique(roots, path.join(docs, 'DARKSiDERS'));
-  }
-
-  const programDataSteam = envPath('PROGRAMDATA', 'Steam');
-  if (programDataSteam) {
-    if (expandProgramDataSteam) {
-      try {
-        for (const ent of fs.readdirSync(programDataSteam, { withFileTypes: true })) {
-          if (ent.isDirectory()) addUnique(roots, path.join(programDataSteam, ent.name));
-        }
-      } catch {
-        /* ProgramData Steam layout is optional. */
-      }
-    } else {
-      addUnique(roots, programDataSteam);
-    }
+  for (const row of SAVE_ROOTS) {
+    if (row.library === false) continue;
+    const dir = rowDir(row, host, docs);
+    if (dir && row.expandForLibrary && expandProgramDataSteam) addChildFolders(roots, dir);
+    else addUnique(roots, dir);
   }
 }
 

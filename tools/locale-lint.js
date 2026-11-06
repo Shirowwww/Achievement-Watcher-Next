@@ -456,8 +456,7 @@ const LANGUAGE_MAPS = [
   { file: 'app/parser/exophase.js', map: 'EXOPHASE_LANG_MAP', side: 'key' },
   { file: 'app/parser/epicOfficial.js', map: 'EPIC_LOCALE_MAP', side: 'key' },
   { file: 'app/parser/xboxPc.js', map: 'XBOX_SCHEMA_LANGUAGE_LOCALES', side: 'key' },
-  { file: 'app/parser/ubisoftOfficial.js', map: 'UBISOFT_LOCALE_MAP', side: 'value' },
-  { file: 'watchdog/console/ubisoftWatch.js', map: 'LANG_PREFIX', side: 'key' },
+  { file: 'app/parser/ubisoftFiles.js', map: 'UBISOFT_LOCALE_MAP', side: 'value' },
   { file: 'watchdog/util/notifyStrings.js', map: 'HUMANIZE_LOCALES', side: 'key' },
   // English is the base table these two fall back to, so it is absent from them on purpose.
   { file: 'app/util/controllerLabels.js', map: 'LOCALIZED_BUTTON_LABELS', side: 'key', skip: ['english'] },

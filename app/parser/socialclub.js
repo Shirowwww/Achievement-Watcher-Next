@@ -8,6 +8,14 @@ const fs = require('fs');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const { hostPaths } = require('../util/winHosts.js');
 const glob = lazyRequire('fast-glob');
+const {
+  ROOT_NAME_RE,
+  ACHIEVEMENT_FILE_GLOB,
+  isProfileFolderName,
+  isUnderSocialClubRoot,
+  normalizeNameKey,
+  socialClubAppId,
+} = require('./socialclubNames.js');
 
 const appPath = __dirname;
 const steam = require(path.join(appPath, 'steam.js'));
@@ -20,34 +28,6 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     file: path.join(userDataPath, 'logs/parser.log'),
   });
 };
-
-const ROOT_NAME_RE = /^goldberg\s*social\s*club\s*emu\s*saves$/i;
-// Profile folders are emulator-generated hex ids (e.g. 0F74F4C4). Cap the length and exclude
-// long all-digit ids (SteamID64 / appid-like folders) so the SocialClub check never claims an
-// unrelated numeric save root.
-const HEX_PROFILE_RE = /^[0-9a-fA-F]{6,12}$/;
-
-// Achievement file names shared with the Steam emulator pipeline (steam.getAchievementsFromFile).
-const ACHIEVEMENT_FILE_GLOB = [
-  'achievements.ini',
-  'achievements.json',
-  'achiev.ini',
-  'stats.ini',
-  'Achievements.Bin',
-  'achieve.dat',
-  'achievement.dat',
-  'achievements.dat',
-  'accomplishments.json',
-  'accomplishments.dat',
-  'awards.json',
-  'awards.dat',
-  'Achievements.ini',
-  'stats.bin',
-  'user_stats.ini',
-  'stats.json',
-  'stats/achievements.ini',
-  'SteamEmu/UserStats/achiev.ini',
-];
 
 // Files the Goldberg SocialClub Emulator writes into each profile folder: the settings blob and the
 // game's Rockstar save files. Their presence identifies the folder before any achievement file exists.
@@ -101,24 +81,10 @@ function safeReaddir(dir) {
   }
 }
 
-function normalizeNameKey(name) {
-  return String(name || '')
-    .toLowerCase()
-    .replace(/[™®©]/g, '')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 function cleanGameName(name) {
   const value = String(name || '').trim();
   if (!value || value.startsWith('.')) return '';
   return value;
-}
-
-function socialClubAppId(gameName) {
-  const slug = normalizeNameKey(gameName).replace(/\s+/g, '-');
-  return `socialclub-${slug || 'unknown'}`;
 }
 
 async function resolveSteamAppId(gameName) {
@@ -173,8 +139,7 @@ function folderHasRockstarProfileData(gameDir) {
 }
 
 function looksLikeProfileDir(dir) {
-  const base = path.basename(String(dir || ''));
-  return HEX_PROFILE_RE.test(base) && !/^\d{12,}$/.test(base);
+  return isProfileFolderName(path.basename(String(dir || '')));
 }
 
 // A hex-named profile folder that holds nothing at all is not evidence of a real SocialClub game -
@@ -215,8 +180,7 @@ function hasAchievementFileDirect(dir) {
 function isSocialClubPath(dir) {
   if (!dir) return false;
   const resolved = path.resolve(String(dir));
-  const underRoot = resolved.split(/[\\/]+/).some((part) => ROOT_NAME_RE.test(part));
-  if (underRoot) {
+  if (isUnderSocialClubRoot(resolved)) {
     try {
       return fs.statSync(resolved).isDirectory();
     } catch {

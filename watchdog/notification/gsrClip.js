@@ -1,5 +1,6 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 // Linux clips through gpu-screen-recorder, when the user has it: it keeps the last seconds in a
 // replay buffer and saves them on SIGUSR1, printing the saved file's path on stdout. AW bundles
 // nothing; the tool is found on PATH or as its Flathub package.
@@ -9,7 +10,7 @@ const fs = require('fs');
 const os = require('os');
 const readline = require('readline');
 const { execFileSync } = require('child_process');
-const { fixedFps } = require('./clipProfile.js');
+const { fixedFps } = require(sharedAppModulePath('util/clipProfile.js'));
 
 const BINARY = 'gpu-screen-recorder';
 const FLATPAK_ID = 'com.dec05eba.gpu_screen_recorder';

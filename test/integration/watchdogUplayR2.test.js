@@ -7,7 +7,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const monitor = require('../../watchdog/monitor.js');
-const uplayR2 = require('../../watchdog/util/uplayR2.js');
+const uplayR2 = require('../../app/parser/uplayR2Live.js');
 
 /*
   A Goldberg Uplay R2 unlock has to survive two translations before the watchdog can notify on it:

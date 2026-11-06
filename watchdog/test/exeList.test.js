@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { configuredExecutable } = require('../util/exeList.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
 const { makeTempDir } = require('../../test/helpers/tempDir');
 
 test('the configured launch executable is read per appid and follows the file', () => {

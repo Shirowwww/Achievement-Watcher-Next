@@ -34,6 +34,16 @@ test('both Xenia layouts are watched, dashboard GPDs are not', () => {
   assert.deepEqual(targets.map((t) => t.titleId).sort(), ['4D5307E6', 'ABCD1234']);
 });
 
+// The monitor and every other watcher leave a folder set not to notify alone; Xenia read it anyway.
+test('a saved folder set not to notify is not watched', () => {
+  const root = makeTempDir('aw-xenia-watch-');
+  tree(root, [path.join('content', '0009041500000000', 'ABCD1234', '00000001', 'ABCD1234.gpd')]);
+  const file = path.join(root, 'userdir.db');
+  fs.writeFileSync(file, JSON.stringify([{ path: root, enabled: true, notify: false }]));
+
+  assert.deepEqual(discover(file), []);
+});
+
 test('the profile folder holding the .gpd files can be the saved folder', () => {
   const root = makeTempDir('aw-xenia-watch-');
   const profile = path.join(root, 'E0300000DEADBEEF');

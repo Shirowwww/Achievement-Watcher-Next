@@ -32,16 +32,18 @@ function keyFromSecret(secret) {
 
 /*
   Where the installation key comes from, in the order a process can have one:
-    - AW_SECRET, set by the app on the Watchdog child it spawns (see launchWatchdog);
+    - AW_SECRET, set by the app on the child processes it spawns, and again by the Watchdog when the
+      app hands it over later (watchdog.js, `appSecret` message), so it is read on every call;
     - safeStorage, in the Electron main process;
     - a sync IPC answer, in a renderer (which already runs with Node integration, so this hands it
       nothing it could not read for itself).
   Anything else - a test, a plain `node` run - gets null and stays on the legacy format.
 */
 function installationKey() {
+  const fromEnv = keyFromSecret(process.env.AW_SECRET);
+  if (fromEnv) return fromEnv;
   if (resolvedKey !== undefined) return resolvedKey;
-  resolvedKey = keyFromSecret(process.env.AW_SECRET);
-  if (resolvedKey) return resolvedKey;
+  resolvedKey = null;
   try {
     const electron = require('electron');
     if (electron && electron.safeStorage && electron.app) {

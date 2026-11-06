@@ -1,11 +1,12 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const test = require('node:test');
-const Logger = require('../util/logger');
+const Logger = require(sharedAppModulePath('util/logger.js'));
 
 test('legacy settings dumps are redacted without deleting surrounding diagnostics', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-log-privacy-'));

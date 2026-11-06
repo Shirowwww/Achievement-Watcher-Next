@@ -102,10 +102,11 @@ module.exports.getGameData = async (dir) => {
   return result;
 };
 
-module.exports.getAchievements = async (dir) => {
-  let result = [];
+module.exports.getAchievements = async (dir) => readUserData(await ffs.readFile(path.join(dir, files.userData)));
 
-  const buffer = await ffs.readFile(path.join(dir, files.userData));
+// TROPUSR.DAT, the per-user unlock state; the Watchdog reads it through this too.
+function readUserData(buffer) {
+  const result = [];
 
   const header = buffer.slice(0, magic.header.length);
   if (!header.equals(magic.header)) throw 'ERR_UNEXPECTED_FILE_FORMAT';
@@ -138,7 +139,9 @@ module.exports.getAchievements = async (dir) => {
   }
 
   return result;
-};
+}
+
+module.exports.readUserData = readUserData;
 
 /*
   The unlock time lives in the state record (TROPUSREntry6), not the trophy record: after the

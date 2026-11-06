@@ -54,7 +54,8 @@ function utf16be(str, terminate = true) {
   return terminate ? Buffer.concat([be, Buffer.from([0, 0])]) : be;
 }
 
-function makeGpdBuffer() {
+// An achievement struct is followed by its name, the text shown once earned, and the text shown before.
+function makeGpdBuffer({ strings = ['Test Ach', 'Shown once earned', 'Shown before'] } = {}) {
   const EARNED = 0x20000;
   const fixed = Buffer.alloc(0x1c);
   fixed.writeUInt32BE(0x1c, 0x00); // structSize
@@ -63,7 +64,7 @@ function makeGpdBuffer() {
   fixed.writeInt32BE(20, 0x0c); // gamerscore
   fixed.writeUInt32BE(EARNED | 0x8, 0x10); // flags: earned + visible (0x8 set => not hidden)
   fixed.writeBigInt64BE(133444736000000000n, 0x14); // FILETIME for 1700000000000 ms (2023-11-14)
-  const achPayload = Buffer.concat([fixed, utf16be('Test Ach'), utf16be('Locked desc'), utf16be('Unlocked desc')]);
+  const achPayload = Buffer.concat([fixed, ...strings.map((text) => utf16be(text))]);
 
   const imgPayload = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]); // PNG signature
   const titlePayload = utf16be('My Xbox Game', false);
@@ -202,6 +203,16 @@ function makeGpdBuffer() {
       { id: '1', name: 'Test Ach', achieved: true, time: 1700000000 }
     );
     assert.ok(parsed.imagesById.get('1001').equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])));
+  });
+
+  await test('xenia live watcher sees an achievement with no text before it is earned, and toasts the earned text', async () => {
+    const tmp = mkTmp('xenia-watch-empty-text');
+    const gpd = path.join(tmp, 'TEST.gpd');
+    fs.writeFileSync(gpd, makeGpdBuffer({ strings: ['Test Ach', 'Shown once earned', ''] }));
+    const library = await xenia.getAchievements(gpd);
+    const watched = xeniaWatch._internal.read(gpd).list;
+    assert.deepStrictEqual(watched.map((a) => a.id), library.map((a) => a.id));
+    assert.strictEqual(watched[0].description, 'Shown once earned');
   });
 
   await test('xenia live watcher discovers only each title own GPD', async () => {

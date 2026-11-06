@@ -16,7 +16,7 @@
   SPA: every language, the real image ids, the icons themselves); dbox.tools, which lists every Xbox
   360 achievement by title id, stands in when no default.xex has been found.
 
-  The Watchdog loads this facade too, so every x360Recomp*.js module is in asarUnpack.
+  The Watchdog loads this facade too.
 */
 
 const path = require('path');

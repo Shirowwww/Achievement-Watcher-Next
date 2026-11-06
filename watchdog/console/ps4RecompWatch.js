@@ -6,56 +6,35 @@
   before the first session: its nearest existing parent is watched until it does.
 */
 
-const fs = require('fs');
 const path = require('path');
-const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
-const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { trophyGradeOf, platinumFields } = require('../util/trophyGrade.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders, isDirectory } = kit;
+const { trophyGradeOf, platinumFields } = require(sharedAppModulePath('parser/trophyGrade.js'));
+const { pathKey } = require(sharedAppModulePath('util/winHosts.js'));
 
 const ps4 = require(sharedAppModulePath('parser/ps4Recomp.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // The same icon cache and unlock journal as the app, so whatever either side wrote serves both.
 ps4.setDataRoot(userDataDir());
 
-// A first log carrying more than this at once is a copied-in profile, not a play session.
-const NEW_LOG_NOTIFY_MAX = 10;
 // A log replaced mid-read is read again a little later, a few times at most.
-const UNSTABLE_RETRY_MS = 400;
 const UNSTABLE_RETRIES = 5;
 // How far up a missing user folder is followed: data/user, then the port folder.
 const MAX_PARENT_LEVELS = 3;
 
-let watchers = [];
+const watchers = kit.createWatcherList('ps4recomp', debug);
+const retries = kit.createRetrier({ delayMs: 400, attempts: UNSTABLE_RETRIES });
 let lifecycle = 0;
-const timers = new Set();
 const baselines = new Map();
 const changes = createChangeCoalescer();
 
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // One record per game across the user's folders, grouped by the user folder their logs are in.
-function discover(configFile = userDirFile) {
+function discover(configFile = kit.userDirFile()) {
   const records = new Map();
   for (const dir of watchedFolders(configFile)) {
     try {
@@ -66,40 +45,14 @@ function discover(configFile = userDirFile) {
   }
   const groups = new Map();
   for (const record of records.values()) {
-    const resolved = path.resolve(record.data.userDir);
-    const key = process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+    const key = pathKey(record.data.userDir);
     if (!groups.has(key)) groups.set(key, { userDir: record.data.userDir, records: [] });
     groups.get(key).records.push(record);
   }
   return [...groups.values()];
 }
 
-function toastOptions(ctx) {
-  return {
-    notify: ctx.options.notification.notify,
-    transport: {
-      mode: ctx.options.notification_transport.mode,
-      websocket: ctx.options.notification_transport.websocket,
-    },
-    toast: {
-      appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-      winrt: ctx.options.notification_transport.winRT,
-      balloonFallback: ctx.options.notification_transport.balloon,
-      customAudio: ctx.options.notification_toast.customToastAudio,
-      volume: notificationVolumePercent(ctx.options),
-      imageIntegration: '0',
-      group: ctx.options.notification_toast.groupToast,
-      attribution: notifyStrings.forLang(ctx.options.achievement.lang).trophy,
-    },
-    prefetch: false, // the icons are already local files
-    rumble: ctx.options.notification.rumble,
-  };
-}
-
 function payloadFor(record, schema, described, time, delay) {
-  const icon = iconPathOf(described);
-  const gameIcon = iconPathOf(schema.img);
-  const image = iconPathOf({ icon: schema.img && schema.img.header });
   return {
     source: ps4.SOURCE,
     appid: record.appid,
@@ -107,9 +60,8 @@ function payloadFor(record, schema, described, time, delay) {
     achievementName: String(described.name),
     achievementDisplayName: described.displayName,
     achievementDescription: described.description,
-    icon: icon && fs.existsSync(icon) ? icon : undefined,
-    gameIcon: gameIcon || undefined,
-    image: image || undefined,
+    icon: kit.existingIcon(described),
+    ...kit.gameArt(schema),
     trophyGrade: trophyGradeOf(described.type),
     time: time || moment().unix(),
     delay,
@@ -134,21 +86,11 @@ async function announce(record, fresh, ctx) {
       continue;
     }
     debug.log(`[ps4recomp] Unlocked: ${schema.name} - ${described.displayName}`);
-    await ctx.notify({ ...payloadFor(record, schema, described, time, delay), ...platinumFields(described.type, ctx.options) }, toastOptions(ctx));
+    const toast = kit.unlockToastOptions(ctx, { attribution: kit.localized(ctx, 'trophy') });
+    await ctx.notify({ ...payloadFor(record, schema, described, time, delay), ...platinumFields(described.type, ctx.options) }, toast);
     delay += 1;
   }
   return true;
-}
-
-function retryLater(record, ctx, attempt) {
-  if (attempt >= UNSTABLE_RETRIES) return;
-  const generation = lifecycle;
-  const timer = setTimeout(() => {
-    timers.delete(timer);
-    if (generation === lifecycle) changes.run(record.appid, () => handleChange(record, ctx, attempt + 1));
-  }, UNSTABLE_RETRY_MS);
-  timer.unref();
-  timers.add(timer);
 }
 
 /*
@@ -159,12 +101,12 @@ async function handleChange(record, ctx, attempt = 0) {
   try {
     const read = ps4.readUnlocks(record.data);
     if (read.unstable) {
-      retryLater(record, ctx, attempt);
+      retries.later(attempt, (next) => changes.run(record.appid, () => handleChange(record, ctx, next)));
       return;
     }
     const previous = baselines.get(record.appid) || new Set();
     const fresh = [...read.unlocked].filter(([id]) => !previous.has(id));
-    const copiedIn = previous.size === 0 && fresh.length > NEW_LOG_NOTIFY_MAX;
+    const copiedIn = previous.size === 0 && fresh.length > kit.COPIED_IN_UNLOCKS;
     if (fresh.length > 0 && !copiedIn && !(await announce(record, fresh, ctx))) return;
     baselines.set(record.appid, new Set(read.unlocked.keys()));
   } catch (err) {
@@ -184,30 +126,7 @@ function seedBaseline(record) {
   }
 }
 
-function isDirectory(dir) {
-  try {
-    return fs.statSync(dir).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-function nearestExisting(dir) {
-  let current = path.dirname(dir);
-  for (let level = 0; level < MAX_PARENT_LEVELS; level++, current = path.dirname(current)) {
-    if (isDirectory(current)) return current;
-  }
-  return '';
-}
-
-function closeWatcher(watcher) {
-  try {
-    watcher.close();
-  } catch {
-    /* already closed */
-  }
-  watchers = watchers.filter((entry) => entry !== watcher);
-}
+const nearestExisting = (dir) => kit.nearestExistingParent(dir, MAX_PARENT_LEVELS);
 
 function checkGroup(group, ctx) {
   for (const record of group.records) changes.run(record.appid, () => handleChange(record, ctx));
@@ -225,7 +144,7 @@ function foldersOf(group) {
   const add = (dir, recursive = false) => {
     if (!dir) return;
     const resolved = path.resolve(String(dir));
-    const key = process.platform === 'win32' ? resolved.toLowerCase() : resolved;
+    const key = pathKey(resolved);
     found.set(key, { dir: resolved, recursive: recursive || (found.has(key) && found.get(key).recursive) });
   };
   for (const { data } of group.records) {
@@ -242,11 +161,10 @@ function foldersOf(group) {
 }
 
 function attachLogs(folder, group, ctx) {
-  const watcher = watch(longPath(folder.dir), { recursive: folder.recursive }, (evt, name) => {
+  const watcher = watchers.open(folder.dir, { recursive: folder.recursive }, (evt, name) => {
     if (ps4.isProgressName(name)) checkGroup(group, ctx);
   });
-  watchers.push(guardWatcher(watcher, `'${folder.dir}'`, debug));
-  debug.log(`[ps4recomp] watching the unlock records in '${folder.dir}'`);
+  if (watcher) debug.log(`[ps4recomp] watching the unlock records in '${folder.dir}'`);
 }
 
 /*
@@ -256,51 +174,37 @@ function attachLogs(folder, group, ctx) {
 function awaitFolders(parent, folders, group, ctx) {
   const generation = lifecycle;
   let waiting = folders;
-  const pending = watch(longPath(parent), { recursive: false }, () => {
+  const pending = watchers.open(parent, { recursive: false }, () => {
     if (generation !== lifecycle) return;
     const moved = waiting.filter((folder) => isDirectory(folder.dir) || nearestExisting(folder.dir) !== parent);
     if (moved.length === 0) return;
     waiting = waiting.filter((folder) => !moved.includes(folder));
-    if (waiting.length === 0) closeWatcher(pending);
+    if (waiting.length === 0) watchers.close(pending);
     attach(moved, group, ctx);
     if (moved.some((folder) => isDirectory(folder.dir))) checkGroup(group, ctx);
   });
-  watchers.push(guardWatcher(pending, `'${parent}'`, debug));
-  debug.log(`[ps4recomp] waiting for ${folders.length} folder(s) from '${parent}'`);
+  if (pending) debug.log(`[ps4recomp] waiting for ${folders.length} folder(s) from '${parent}'`);
 }
 
 function attach(folders, group, ctx) {
   const waiting = new Map();
   for (const folder of folders) {
-    try {
-      if (isDirectory(folder.dir)) {
-        attachLogs(folder, group, ctx);
-        continue;
-      }
-      const parent = nearestExisting(folder.dir);
-      if (parent) waiting.set(parent, [...(waiting.get(parent) || []), folder]);
-      else debug.log(`[ps4recomp] '${folder.dir}' and its parents are missing, not watched`);
-    } catch (err) {
-      debug.warn(`[ps4recomp] failed to watch ${folder.dir}: ${err}`);
+    if (isDirectory(folder.dir)) {
+      attachLogs(folder, group, ctx);
+      continue;
     }
+    const parent = nearestExisting(folder.dir);
+    if (parent) waiting.set(parent, [...(waiting.get(parent) || []), folder]);
+    else debug.log(`[ps4recomp] '${folder.dir}' and its parents are missing, not watched`);
   }
-  for (const [parent, list] of waiting) {
-    try {
-      awaitFolders(parent, list, group, ctx);
-    } catch (err) {
-      debug.warn(`[ps4recomp] failed to watch ${parent}: ${err}`);
-    }
-  }
+  for (const [parent, list] of waiting) awaitFolders(parent, list, group, ctx);
 }
 
 // Tear down and restart from the current options. Gated by the PS4 Recomp source and the master notify switch.
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.ps4recomp === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'ps4recomp')) return;
 
   let groups;
   try {
@@ -318,10 +222,8 @@ module.exports.start = async (ctx) => {
 module.exports.stop = () => {
   lifecycle += 1;
   changes.clear();
-  for (const timer of timers) clearTimeout(timer);
-  timers.clear();
-  for (const watcher of watchers.slice()) closeWatcher(watcher);
-  watchers = [];
+  retries.cancel();
+  watchers.closeAll();
   baselines.clear();
 };
 

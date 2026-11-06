@@ -1,54 +1,23 @@
 'use strict';
 
-const path = require('path');
-const ini = require('./util/ini');
-const parentFind = require('./util/findUp');
-const omit = require('lodash.omit');
-const fs = require('./util/fsAsync');
-const sse = require('./sse.js');
-const { scanRootOnce } = require('./util/rootCascade.js');
-const { SOCIALCLUB_ACHIEVEMENT_FILES } = require('./util/socialClub.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
-// Shared with the app so the bit-to-api-name table lives in exactly one place (see the asarUnpack
-// list in app/electron-builder.yml). Only its pure readers are used here.
+const path = require('path');
+const ini = require(sharedAppModulePath('util/ini.js'));
+const parentFind = require(sharedAppModulePath('util/findUp.js'));
+const fs = require(sharedAppModulePath('util/fsAsync.js'));
+const { scanRootOnce } = require('./util/rootCascade.js');
+const { SOCIALCLUB_ACHIEVEMENT_FILES, isUnderSocialClubRoot } = require(sharedAppModulePath('parser/socialclubNames.js'));
+// The library's own save decoder and root table, so a format or a folder is described once.
+const { readSaveFile, normalizeSaveEntry } = require(sharedAppModulePath('parser/emuSave.js'));
+const { SAVE_ROOTS, GSE_WATCH, rowDir, watchOptions } = require(sharedAppModulePath('parser/emuSaveRoots.js'));
+// Shared with the app so the bit-to-api-name table lives in exactly one place. Only its pure readers
+// are used here.
 const ff7 = require(sharedAppModulePath('parser/ff7.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
-const { hostPath } = winHosts;
-
-// A folder belongs to Goldberg SocialClub when the SocialClub root is on its path, not by its
-// shape: a numeric Steam AppID like "1546990" is also valid hex and would pick the wrong parser.
-const SOCIALCLUB_ROOT_RE = /^goldberg\s*social\s*club\s*emu\s*saves$/i;
-function isSocialClubWatchPath(dirPath) {
-  return String(dirPath || '')
-    .split(/[\\/]+/)
-    .some((segment) => SOCIALCLUB_ROOT_RE.test(segment));
-}
 
 // regodit is ESM-only; load lazily via dynamic import. Uses the sync API deliberately: under
 // koffi 3.x the async DWORD write segfaults (0xC0000005) and kills the Watchdog.
 const { loadRegodit: loadRegedit } = require('./util/regodit.js');
-
-// RLD! hex blobs: exactly 10 hex digits including at least one a-f, so an all-digit unix timestamp
-// is never misread (same rule as app/parser/steam.js).
-const RLD_BLOB = /^[0-9a-fA-F]{10}$/;
-function isUnambiguousRldBlob(value) {
-  const s = String(value);
-  return RLD_BLOB.test(s) && /[a-fA-F]/.test(s);
-}
-function decodeRldBlob(value) {
-  return new DataView(new Uint8Array(Buffer.from(String(value), 'hex')).buffer).getUint32(0, true);
-}
-
-// A bare `earned` field can be a bool, a number, or a string - and a raw truthy check reads the
-// string "0" (non-empty) as achieved. Same rule as app/parser/achievements.js's isTruthyFlag.
-function isTruthyFlag(v) {
-  if (v === true || v === 1) return true;
-  if (typeof v === 'string') {
-    const s = v.trim().toLowerCase();
-    return s === '1' || s === 'true';
-  }
-  return false;
-}
 
 const files = {
   achievement: [
@@ -70,157 +39,20 @@ const files = {
 // missed builds using the other spelling, so unlocks never fired until the next refresh.
 const ALI213_ACHIEVEMENT_FILES = [files.achievement[4], files.achievement[6]];
 
-const GSE_SAVES_OPTIONS = { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1], files.achievement[9], files.achievement[0]] }; //keeping "achievements.ini" [0] for backward compatibility with custom goldberg emu build
-
-// The emulator save roots of one host (see app/util/winHosts.js); a root whose base folder the host
-// does not have is left out.
-function builtinRoots(host) {
-  const at = (envName, ...segments) => hostPath(host, envName, ...segments);
-  return [
-    {
-      dir: at('PUBLIC', 'Documents/Steam/CODEX'),
-      // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
-    },
-    {
-      dir: at('PUBLIC', 'Documents/Steam/RUNE'),
-      // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
-    },
-    {
-      // CPY releases run CODEX's emulator and keep its tree under their own name.
-      dir: at('PUBLIC', 'Documents/Steam/CPY'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
-    },
-    {
-      dir: at('PUBLIC', 'Documents/Steam/RLD!'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[2], files.achievement[4], files.achievement[6]] },
-    },
-    {
-      dir: at('PUBLIC', 'Documents/OnlineFix'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
-    },
-    {
-      dir: at('APPDATA', 'Steam/CODEX'),
-      // stats.ini changes alone when only a counter moves; statsSibling reads achievements.ini for it.
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], files.achievement[3]], statsSibling: true },
-    },
-    {
-      dir: at('APPDATA', 'Steam/RLD!'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[2], files.achievement[4], files.achievement[6]] },
-    },
-    {
-      dir: at('APPDATA', 'Goldberg SteamEmu Saves'),
-      options: { ...GSE_SAVES_OPTIONS },
-    },
-    {
-      dir: at('APPDATA', 'GSE Saves'),
-      options: { ...GSE_SAVES_OPTIONS },
-    },
-    {
-      // GOG UniverseLAN, one folder per GOG product id: %LOCALAPPDATA%\UniverseLAN\<gogAppId>\
-      // UniverseLANData\Achievements.ini. Same folder-per-appid shape as GSE Saves above, and
-      // Achievements.ini's own [ApiName]/Unlocked/UnlockTime sections already read correctly
-      // through the generic ini-per-achievement path (see normalizeSaveEntry in achievements.js) -
-      // no source-specific parsing needed here, only the watch root. Independent of the
-      // GameSettings.AppID-keyed UniverseLAN.ini handling further below, which targets a different,
-      // user-configured-folder layout.
-      dir: at('LOCALAPPDATA', 'UniverseLAN'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[6]] },
-    },
-    {
-      // Goldberg SocialClub Emu Saves: <GameName>\<hex profile>\... watchdog.js resolves the game
-      // name back to the app's SocialClub entry through the game index (options.socialClub).
-      dir: at('APPDATA', 'Goldberg SocialClub Emu Saves'),
-      // Unlike Steam roots, the filter must accept game-name folders too since a numeric-AppID
-      // filter never matches here; `file` excludes Rockstar's own unreadable blobs to avoid noise.
-      options: { recursive: true, filter: () => true, file: SOCIALCLUB_ACHIEVEMENT_FILES, socialClub: true },
-    },
-    {
-      // Goldberg Uplay R2: folders are named with the Ubisoft product id, not a Steam AppID, so
-      // watchdog.js maps it through gameIndex's uplayId before loading and re-keying api-names.
-      dir: at('APPDATA', 'Goldberg UplayEmu Saves'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
-    },
-    {
-      // R1 generation of the same emulator: same folder-per-product layout and achievements.json,
-      // its own default root, needed since pre-R2 titles never load an R2 loader.
-      dir: at('APPDATA', 'R1 UplayEmu Saves'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]], uplayR2: true },
-    },
-    {
-      dir: at('APPDATA', 'EMPRESS'),
-      // Matches both shapes: <appid>\remote\<appid> and the flat remote\<appid>.
-      options: { recursive: true, filter: /remote[\\/]([0-9]+)/, file: [files.achievement[1]] },
-    },
-    {
-      dir: at('APPDATA', 'CreamAPI'),
-      // CreamAPI writes <appid>\stats\CreamAPI.Achievements.cfg; achievements.ini is kept for older builds.
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0], 'CreamAPI.Achievements.cfg'] },
-    },
-    {
-      dir: at('PUBLIC', 'Documents/EMPRESS'),
-      options: { recursive: true, filter: /remote[\\/]([0-9]+)/, file: [files.achievement[1]] },
-    },
-    {
-      dir: at('PROGRAMDATA', 'Steam'),
-      options: {
-        disableCheckIfProcessIsRunning: true,
-        disableCheckTimestamp: true,
-        recursive: true,
-        filter: /([0-9]+)[\\/]stats/,
-        file: [files.achievement[0]],
-      },
-    },
-    {
-      dir: at('LOCALAPPDATA', 'SKIDROW'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
-    },
-    {
-      dir: at('APPDATA', 'SmartSteamEmu'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[7]] },
-    },
-    {
-      // No path filter: epic ids can be non-numeric. Both roots used to carry a '*/*/' glob
-      // that never exists on disk, so neither was ever watched.
-      dir: at('APPDATA', 'NemirtingasEpicEmu'),
-      options: { recursive: true, file: [files.achievement[1]] },
-    },
-    {
-      dir: at('APPDATA', 'NemirtingasGalaxyEmu'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[1]] },
-    },
-    {
-      // RAZOR1911: plain-text `achievement` file, "<apiname> <0|1> <epoch>" per line.
-      dir: at('APPDATA', '.1911'),
-      options: { recursive: true, filter: /([0-9]+)/, file: ['achievement'] },
-    },
-    {
-      dir: at('LOCALAPPDATA', 'anadius', 'LSX emu', 'achievement_watcher'),
-      options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[0]] },
-    },
-  ].filter((entry) => entry.dir);
+// The emulator save roots of one host (see app/util/winHosts.js), from the table the library reads
+// too; a root whose base folder the host does not have is left out.
+function builtinRoots(host, documents) {
+  return SAVE_ROOTS.filter((row) => row.watch)
+    .map((row) => ({ dir: rowDir(row, host, documents), options: watchOptions(row.watch) }))
+    .filter((entry) => entry.dir);
 }
 
-// The app lists this folder as SkidRow and the Watchdog as SKIDROW: one folder on NTFS, two on a
-// case-sensitive Linux filesystem, where both are watched.
-const SKIDROW_DOCUMENTS_NAMES = process.platform === 'win32' ? ['SKIDROW'] : ['SKIDROW', 'SkidRow'];
-
+// FINAL FANTASY VII (2013) rewrites achievement.dat beside its saves. The folder is watched
+// only once it proves it is that game, since an 8-byte achievement.dat is far too generic.
 function documentsRoots(mydocs) {
-  const roots = SKIDROW_DOCUMENTS_NAMES.map((name) => ({
-    dir: path.join(mydocs, name),
-    options: { recursive: true, filter: /([0-9]+)/, file: [files.achievement[5]] },
-  }));
-  // FINAL FANTASY VII (2013) rewrites achievement.dat beside its saves. The folder is watched
-  // only once it proves it is that game, since an 8-byte achievement.dat is far too generic.
   const ff7Root = path.join(mydocs, 'FINAL FANTASY VII');
-  if (ff7.detect(ff7Root).detected) {
-    roots.push({
-      dir: ff7Root,
-      options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] },
-    });
-  }
-  return roots;
+  if (!ff7.detect(ff7Root).detected) return [];
+  return [{ dir: ff7Root, options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] } }];
 }
 
 async function windowsDocuments() {
@@ -249,20 +81,18 @@ module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves =
     process.platform === 'win32' ? windowsDocuments().catch(() => null) : null,
   ]);
   const hosts = winHosts.listHosts({ nativeDocuments: () => nativeDocs });
-  let steamEmu = hosts.flatMap(builtinRoots);
+  const docsByHost = new Map(hosts.map((host) => [host, host.documents()]));
+  let steamEmu = hosts.flatMap((host) => builtinRoots(host, docsByHost.get(host)));
 
   // The GBE save folder chosen in Settings (issue #123) has the GSE Saves shape: one folder per appid,
   // and so has GBE's GseSavePath when the session sets it for every game.
   // A per-game local_save_path keeps the same shape under its own folder (cfg/saveRedirects.json).
   const customSaves = [(options && options.emulator && options.emulator.savePath) || '', process.env.GseSavePath || '', ...redirectedSaves];
   for (const dir of new Set(customSaves.map((value) => String(value).trim()))) {
-    if (dir && path.isAbsolute(dir)) steamEmu.push({ dir, options: { ...GSE_SAVES_OPTIONS } });
+    if (dir && path.isAbsolute(dir)) steamEmu.push({ dir, options: watchOptions(GSE_WATCH) });
   }
 
-  const docsByHost = new Map();
-  for (const host of hosts) {
-    const docs = host.documents();
-    docsByHost.set(host, docs);
+  for (const docs of docsByHost.values()) {
     if (docs) steamEmu = steamEmu.concat(documentsRoots(docs));
   }
 
@@ -434,7 +264,7 @@ module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves =
               dir: path.resolve(dir.path),
               options: { appid: ff7.APPID, recursive: false, file: [ff7.STATE_FILE] },
             });
-          } else if (isSocialClubWatchPath(dir.path)) {
+          } else if (isUnderSocialClubRoot(dir.path)) {
             steamEmu.push({
               dir: dir.path,
               options: { recursive: true, filter: () => true, file: SOCIALCLUB_ACHIEVEMENT_FILES, socialClub: true },
@@ -484,157 +314,27 @@ module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves =
   });
 };
 
+// One decoded entry in the shape the notification path reads, judged by the library's own rule.
+function watchdogEntry(key, entry) {
+  const parsed = normalizeSaveEntry(entry);
+  const result = {
+    name: entry.id || entry.apiname || entry.name || entry.AchievementId || key,
+    Achieved: parsed.Achieved,
+    // A raw stat (GBE stats.json) carries its count as `value`, which statProgress.js maps.
+    CurProgress: parsed.CurProgress || entry.value || entry.Value || 0,
+    MaxProgress: parsed.MaxProgress || 0,
+    UnlockTime: parsed.UnlockTime,
+  };
+  if (entry.crc) result.crc = entry.crc;
+  return result;
+}
+
 module.exports.parse = async (filePath) => {
-  const filter = ['SteamAchievements', 'Steam64', 'Steam'];
-
-  let local;
-  let file = path.parse(filePath);
-  // NTFS and the watcher's filter are case-insensitive, so casing here is whatever's on disk, not
-  // what a root declared; exact matching silently sent Stats.bin/Achievement into ini.parse.
-  const base = file.base.toLowerCase();
-  if (file.ext.toLowerCase() == '.json') {
-    local = JSON.parse(await fs.readFile(filePath, 'utf8'));
-  } else if (base == 'stats.bin') {
-    local = sse.parse(await fs.readFile(filePath));
-  } else if (base == ff7.STATE_FILE) {
-    //FINAL FANTASY VII (2013): an 8-byte bitfield, only read for a folder that identifies itself
-    //as that game. Nothing else about it says which achievements it holds.
-    local = ff7.getAchievementsFromFile(file.dir);
-    if (!local) throw `'${filePath}' is not FINAL FANTASY VII (2013) achievement data`;
-  } else if (base == 'achievement') {
-    //RAZOR1911: plain text, "<apiname> <0|1> <epoch seconds>" per line
-    local = {};
-    for (const line of (await fs.readFile(filePath, 'utf8')).split(/\r?\n/)) {
-      const m = /^(\S+)\s+([01])\s+(\d+)\s*$/.exec(line.trim());
-      if (m) local[m[1]] = { Achieved: m[2], UnlockTime: Number(m[3]) };
-    }
-  } else {
-    local = ini.parse(await fs.readFile(filePath, 'utf8'));
+  const local = await readSaveFile(filePath);
+  const achievements = [];
+  for (const [key, entry] of Object.entries(local)) {
+    if (entry != null) achievements.push(watchdogEntry(key, entry));
   }
-
-  if (local.AchievementsUnlockTimes && local.Achievements) {
-    //hoodlum
-    let convert = {};
-    for (let i in local.Achievements) {
-      if (Object.prototype.hasOwnProperty.call(local.Achievements, i)) {
-        if (local.Achievements[i] == 1) {
-          convert[`${i}`] = { Achieved: '1', UnlockTime: local.AchievementsUnlockTimes[i] || null };
-        }
-      }
-    }
-    local = convert;
-  } else if (local.State && local.Time) {
-    //3DM
-    let convert = {};
-    for (let i in local.State) {
-      if (Object.prototype.hasOwnProperty.call(local.State, i)) {
-        if (local.State[i] == '0101') {
-          convert[`${i}`] = {
-            Achieved: '1',
-            UnlockTime: new DataView(new Uint8Array(Buffer.from(local.Time[i].toString(), 'hex')).buffer).getUint32(0, true) || null,
-          };
-        }
-      }
-    }
-    local = convert;
-  } else if (local.ACHIEVEMENTS) {
-    //TENOKE
-    let convert = {};
-    for (let i in local.ACHIEVEMENTS) {
-      if (!Object.prototype.hasOwnProperty.call(local.ACHIEVEMENTS, i)) continue;
-      const key = i.replace(/^"|"$/g, '');
-      const raw = local.ACHIEVEMENTS[i]; // e.g. "{unlocked=true, time=1712253396}"
-      const unlockedMatch = /unlocked\s*=\s*(true|false)/i.exec(raw);
-      const timeMatch = /time\s*=\s*(\d+)/i.exec(raw);
-
-      const unlocked = unlockedMatch ? unlockedMatch[1].toLowerCase() === 'true' : false;
-      const time = timeMatch ? Number(timeMatch[1]) : 0;
-
-      convert[`${key}`] = {
-        Achieved: unlocked ? '1' : '0',
-        UnlockTime: time,
-      };
-    }
-    local = convert;
-  } else {
-    local = omit(local.ACHIEVE_DATA || local, filter);
-  }
-
-  let achievements = [];
-
-  for (let achievement in local) {
-    if (Object.prototype.hasOwnProperty.call(local, achievement)) {
-      try {
-        if (local[achievement].State) {
-          //RLD!, uint32 little endian
-          local[achievement].State = new DataView(new Uint8Array(Buffer.from(local[achievement].State.toString(), 'hex')).buffer).getUint32(
-            0,
-            true
-          );
-          local[achievement].CurProgress = new DataView(
-            new Uint8Array(Buffer.from(local[achievement].CurProgress.toString(), 'hex')).buffer
-          ).getUint32(0, true);
-          local[achievement].MaxProgress = new DataView(
-            new Uint8Array(Buffer.from(local[achievement].MaxProgress.toString(), 'hex')).buffer
-          ).getUint32(0, true);
-          local[achievement].Time = new DataView(new Uint8Array(Buffer.from(local[achievement].Time.toString(), 'hex')).buffer).getUint32(0, true);
-        } else if (isUnambiguousRldBlob(local[achievement].Time)) {
-          //RLD! build that writes no State key: the unlock is carried by Time alone. Without
-          //decoding, the raw hex reached the toast as a bogus unlock date (app side: steam.js).
-          local[achievement].Time = decodeRldBlob(local[achievement].Time);
-          if (isUnambiguousRldBlob(local[achievement].CurProgress)) local[achievement].CurProgress = decodeRldBlob(local[achievement].CurProgress);
-          if (isUnambiguousRldBlob(local[achievement].MaxProgress)) local[achievement].MaxProgress = decodeRldBlob(local[achievement].MaxProgress);
-        } else if (local[achievement].unlocktime && local[achievement].unlocktime.length === 7) {
-          //CreamAPI writes truncated 7-digit timestamps (cf. steam.js) - scale to epoch millis.
-          local[achievement].unlocktime = +local[achievement].unlocktime * 1000;
-        }
-
-        let result = {
-          name: local[achievement].id || local[achievement].apiname || local[achievement].name || local[achievement].AchievementId || achievement,
-          Achieved: Boolean(
-            local[achievement].Achieved == 1 ||
-              local[achievement].achieved == 1 ||
-              local[achievement].State == 1 ||
-              local[achievement].HaveAchieved == 1 ||
-              local[achievement].Unlocked == 1 ||
-              local[achievement].unlocked == 1 ||
-              isTruthyFlag(local[achievement].earned) ||
-              local[achievement] === '1'
-          ),
-          CurProgress: local[achievement].CurProgress || local[achievement].progress || local[achievement].value || local[achievement].Value || 0,
-          MaxProgress: local[achievement].MaxProgress || local[achievement].max_progress || 0,
-          UnlockTime:
-            local[achievement].UnlockTime ||
-            local[achievement].unlocktime ||
-            local[achievement].unlock_time ||
-            local[achievement].HaveAchievedTime ||
-            local[achievement].HaveHaveAchievedTime ||
-            local[achievement].Time ||
-            local[achievement].earned_time ||
-            0,
-        };
-
-        if (
-          (!result.Achieved && result.MaxProgress != 0 && result.CurProgress != 0 && result.MaxProgress == result.CurProgress) ||
-          // `+x !== '0'` compared a number to a string (always true), so a locked entry whose
-          // save writes Time as the string "0" read as unlocked.
-          Number(result.UnlockTime) > 0
-        ) {
-          result.Achieved = true;
-        }
-
-        if (local[achievement].crc) {
-          result.crc = local[achievement].crc;
-        }
-
-        achievements.push(result);
-      } catch (e) {}
-    }
-  }
-
-  achievements.sort((a, b) => {
-    return b.UnlockTime - a.UnlockTime;
-  });
-
+  achievements.sort((a, b) => b.UnlockTime - a.UnlockTime);
   return achievements;
 };

@@ -444,13 +444,12 @@ test('presetSound reads what a preset asks for, and never becomes a reason for s
   }
 });
 
-test('the notification path prefers the preset sound and keeps random sound on top', () => {
+// Which of the preset, random and main sounds wins is the shared rule (test/core/chooseSound.test.js).
+test('the notification path hands the preset sound to the shared sound rule', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   // An imported SAN theme answers first, with the sound of the state it paints.
   assert.match(init, /const presetOwnSound = sanSound != null \? sanSound : customPreset\.presetSound\(presetFolder\);/, 'the preset folder is never asked for its sound');
-  assert.match(init, /resolveNotificationSound\(presetOwnSound \|\| ov\.notificationSound\)/, 'the preset sound does not win over the app setting');
-  // "Random sound" is an explicit choice for every popup and still overrides both.
-  assert.match(init, /randomSound\s*\n?\s*\?\s*notificationSounds\.pickRandomSound/);
+  assert.match(init, /notificationSounds\.chooseSound\([\s\S]{0,400}presetSound: presetOwnSound,/, 'the preset sound never reaches the sound choice');
 });
 
 test('init.js reserves the preview preset name and hides it from the preset list', () => {

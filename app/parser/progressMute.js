@@ -2,14 +2,20 @@
 
 // Per-game progress-notification mute store. A small JSON array of appids living next to options.ini
 // (<userData>/cfg/progressMute.json). The renderer toggles it from the game context menu; the Watchdog
-// reads the same file (watchdog/util/progressMute.js) when deciding whether to fire a progress toast.
+// asks it on every progress event, so a read is reused for 2 s and a toggle shows within that.
 
 const fs = require('fs');
 const path = require('path');
 
+const CACHE_MS = 2000;
+
 let cfgDir = null;
+let cache = { at: 0, set: new Set() };
+
 module.exports.setUserDataPath = (p) => {
-  if (p) cfgDir = path.join(p, 'cfg');
+  if (!p) return;
+  cfgDir = path.join(p, 'cfg');
+  cache = { at: 0, set: new Set() };
 };
 
 function file() {
@@ -25,7 +31,13 @@ function read() {
   }
 }
 
-module.exports.isMuted = (appid) => read().has(String(appid));
+function muted() {
+  const now = Date.now();
+  if (now - cache.at > CACHE_MS) cache = { at: now, set: read() };
+  return cache.set;
+}
+
+module.exports.isMuted = (appid) => Boolean(appid) && muted().has(String(appid));
 
 module.exports.toggle = (appid) => {
   const set = read();
@@ -38,5 +50,6 @@ module.exports.toggle = (appid) => {
   } catch {
     /* best-effort: a failed write just leaves the previous state */
   }
+  cache = { at: Date.now(), set: read() };
   return set.has(key);
 };

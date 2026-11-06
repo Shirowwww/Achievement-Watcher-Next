@@ -16,60 +16,35 @@
   it appears - the same idea markerpatchWatch uses for settings.txt.
 */
 
-const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders, resolveWatchTarget } = kit;
 
 const madnesspatch = require(sharedAppModulePath('parser/madnesspatch.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 madnesspatch.setIconRoot(path.join(userDataDir(), 'icon_cache', 'madnesspatch'));
 
-let watchers = [];
+const watchers = kit.createWatcherList('madnesspatch', debug);
 let currentGame = null;
 let currentCtx = null;
 const changes = createChangeCoalescer();
 const baseline = createBaselineCache({ prefix: 'madnesspatch', tag: 'madnesspatch', debug });
 // A profile created mid-session whose first write carries more unlocks than this was copied in.
-const NEW_PROFILE_NOTIFY_MAX = 10;
+const NEW_PROFILE_NOTIFY_MAX = kit.COPIED_IN_UNLOCKS;
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // There is only one title here, so the first watched folder that carries it wins; Steam's own
 // install is looked at last, so nobody has to add the folder.
-function discoverGame(configFile = userDirFile, knownRoots = () => madnesspatch.knownInstallRoots()) {
+function discoverGame(configFile = kit.userDirFile(), knownRoots = () => madnesspatch.knownInstallRoots()) {
   for (const dir of [...watchedFolders(configFile), ...knownRoots()]) {
     let found;
     try {
@@ -149,25 +124,7 @@ async function handleChange(profile, file, ctx) {
             delay,
             completion,
           },
-          {
-            notify: ctx.options.notification.notify,
-            transport: {
-              mode: ctx.options.notification_transport.mode,
-              websocket: ctx.options.notification_transport.websocket,
-            },
-            toast: {
-              appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-              winrt: ctx.options.notification_transport.winRT,
-              balloonFallback: ctx.options.notification_transport.balloon,
-              customAudio: ctx.options.notification_toast.customToastAudio,
-              volume: notificationVolumePercent(ctx.options),
-              imageIntegration: '0',
-              group: ctx.options.notification_toast.groupToast,
-              attribution: notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-            },
-            prefetch: false, // the icons are already local files
-            rumble: ctx.options.notification.rumble,
-          }
+          kit.unlockToastOptions(ctx)
         );
         delay += 1;
       }
@@ -180,70 +137,31 @@ async function handleChange(profile, file, ctx) {
 }
 
 function watchCheckpointRoot(root) {
-  try {
-    const watcher = watch(root, { recursive: true }, (evt, name) => {
-      if (evt !== 'update') return;
-      const filePath = String(name || '');
-      if (path.basename(filePath).toLowerCase() !== madnesspatch.STATE_FILE.toLowerCase()) return;
-      const profile = path.basename(path.dirname(filePath));
-      changes.run(profile, () => handleChange(profile, filePath, currentCtx));
-    });
-    watchers.push(guardWatcher(watcher, `'${root}'`, debug));
-    debug.log(`[madnesspatch] watching achievements under '${root}'`);
-  } catch (err) {
-    debug.warn(`[madnesspatch] failed to watch '${root}': ${err}`);
-  }
+  const watcher = watchers.open(root, { recursive: true }, (evt, name) => {
+    if (evt !== 'update') return;
+    const filePath = String(name || '');
+    if (path.basename(filePath).toLowerCase() !== madnesspatch.STATE_FILE.toLowerCase()) return;
+    const profile = path.basename(path.dirname(filePath));
+    changes.run(profile, () => handleChange(profile, filePath, currentCtx));
+  });
+  if (watcher) debug.log(`[madnesspatch] watching achievements under '${root}'`);
 }
 
 /*
-  Watch for the CheckPoint folder to exist. Walks up from the target to the nearest existing
-  ancestor (at worst Documents itself) and watches only that single level - never a deep recursive
-  watch over a folder that has not been created yet - for the next path segment to appear, then
-  retries from the top.
+  Watch for the CheckPoint folder to exist: only its nearest existing ancestor (at worst Documents
+  itself), one level, for the next path segment - never a deep recursive watch over a folder that
+  has not been created yet - then retry from the top.
 */
-// Pure: given the CheckPoint folder, say whether it already exists or which existing ancestor to
-// watch meanwhile, and for what next path segment. Walking stops at worst at Documents itself.
-function resolveWatchTarget(root) {
-  if (isDirectory(root)) return { ready: true, dir: root };
-
-  let probe = root;
-  const missing = [];
-  while (probe && !isDirectory(probe)) {
-    missing.unshift(path.basename(probe));
-    const parent = path.dirname(probe);
-    if (parent === probe) break;
-    probe = parent;
-  }
-  if (!isDirectory(probe)) return { ready: false, watchDir: '', nextExpected: '' };
-  return { ready: false, watchDir: probe, nextExpected: missing[0] };
-}
-
 function attach(root) {
   if (!root) return;
   const target = resolveWatchTarget(root);
-
   if (target.ready) {
     watchCheckpointRoot(target.dir);
     return;
   }
   if (!target.watchDir) return;
-
-  try {
-    const watcher = watch(target.watchDir, { recursive: false }, (evt, name) => {
-      if (evt !== 'update') return;
-      if (String(path.basename(name || '')).toLowerCase() !== String(target.nextExpected || '').toLowerCase()) return;
-      try {
-        watcher.close();
-      } catch {
-        /* already closed */
-      }
-      watchers = watchers.filter((entry) => entry !== watcher);
-      attach(root);
-    });
-    watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
+  if (kit.awaitSegment(watchers, target, () => attach(root))) {
     debug.log(`[madnesspatch] '${root}' does not exist yet - waiting under '${target.watchDir}'`);
-  } catch (err) {
-    debug.warn(`[madnesspatch] failed to watch '${target.watchDir}': ${err}`);
   }
 }
 
@@ -253,10 +171,7 @@ function attach(root) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.madnesspatch === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'madnesspatch')) return;
 
   let game;
   try {
@@ -293,14 +208,7 @@ module.exports.stop = () => {
   changes.clear();
   currentGame = null;
   currentCtx = null;
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 module.exports._internal = { discoverGame, watchedFolders, iconPathOf, attach, bitsOf, resolveWatchTarget };

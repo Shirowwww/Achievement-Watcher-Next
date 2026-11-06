@@ -10,7 +10,9 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const appSse = require('../../app/parser/sse.js');
-const watchdogSse = require('../../watchdog/sse.js');
+const { sharedAppModulePath } = require('../../watchdog/util/sharedAppModule.js');
+// The Watchdog reads this file through the app module, so it is loaded the way the Watchdog loads it.
+const watchdogSse = require(sharedAppModulePath('parser/sse.js'));
 
 // One header (the entry count) followed by 24-byte entries: crc, achieved flag, unlock time.
 function buildSaveFile(entries) {

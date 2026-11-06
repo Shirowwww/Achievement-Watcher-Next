@@ -1,10 +1,11 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const path = require('path');
-const fs = require('../util/fsAsync');
+const fs = require(sharedAppModulePath('util/fsAsync.js'));
 // Only used when an unrecognised process needs its directory searched for an emulator config.
 const glob = require('../util/lazyRequire.js').lazyRequire('fast-glob');
-const ini = require('../util/ini');
+const ini = require(sharedAppModulePath('util/ini.js'));
 
 async function findByReadingContentOfKnownConfigfilesIn(dirPath, exeDir) {
   const files = [

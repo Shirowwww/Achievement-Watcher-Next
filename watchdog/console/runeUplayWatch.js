@@ -9,36 +9,22 @@
   A root that does not exist yet is waited for from its nearest existing ancestor.
 */
 
-const fs = require('fs');
 const path = require('path');
-const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
-const { userDataDir } = require('../util/userData.js');
-const ubisoftWatch = require('./ubisoftWatch.js');
+const kit = require('./watcherKit.js');
+const ubisoftArchive = require('./ubisoftArchive.js');
 
 const runeUplay = require(sharedAppModulePath('parser/runeUplay.js'));
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
+const { pathKey } = require(sharedAppModulePath('util/winHosts.js'));
 
-let watchers = [];
+const watchers = kit.createWatcherList('rune-uplay', debug);
 const changes = createChangeCoalescer();
 const baseline = createBaselineCache({ prefix: 'rune-uplay', tag: 'rune-uplay', debug });
-// A save first seen mid-session with more unlocks than this was copied in, not earned.
-const NEW_SAVE_NOTIFY_MAX = 10;
-
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 // <achievements>\<user>\<product>\achievements.cfg -> { userId, uplayId }, or null for anything else.
 function identify(file) {
@@ -55,15 +41,9 @@ const earnedIds = (snapshot) =>
     .sort((a, b) => a[1].earned_time - b[1].earned_time)
     .map(([id]) => id);
 
-function gameNameFor(uplayId) {
-  const titles = ubisoftWatch._internal.readTitles();
-  const titleKey = [...titles.keys()].find((key) => key.startsWith(`${uplayId}_`));
-  return ubisoftWatch._internal.indexedUplayName(uplayId) || (titleKey && titles.get(titleKey)) || `Ubisoft ${uplayId}`;
-}
-
 async function notifyUnlocks(identity, fresh, snapshot, ctx) {
-  const schema = ubisoftWatch._internal.loadSchema(identity.uplayId, ctx.options.achievement.lang) || { texts: new Map(), iconFor: () => undefined };
-  const gameName = gameNameFor(identity.uplayId);
+  const schema = ubisoftArchive.loadSchema(identity.uplayId, ctx.options.achievement.lang) || { texts: new Map(), iconFor: () => undefined };
+  const gameName = ubisoftArchive.gameNameFor(identity.uplayId);
   // The cfg may list only the touched achievements, so the total is the archive's text list.
   const completion = { unlocked: earnedIds(snapshot).filter((id) => schema.texts.has(id)).length, total: schema.texts.size };
   let delay = 0;
@@ -83,25 +63,7 @@ async function notifyUnlocks(identity, fresh, snapshot, ctx) {
         delay,
         completion,
       },
-      {
-        notify: ctx.options.notification.notify,
-        transport: {
-          mode: ctx.options.notification_transport.mode,
-          websocket: ctx.options.notification_transport.websocket,
-        },
-        toast: {
-          appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-          winrt: ctx.options.notification_transport.winRT,
-          balloonFallback: ctx.options.notification_transport.balloon,
-          customAudio: ctx.options.notification_toast.customToastAudio,
-          volume: notificationVolumePercent(ctx.options),
-          imageIntegration: '0',
-          group: ctx.options.notification_toast.groupToast,
-          attribution: gameName,
-        },
-        prefetch: false,
-        rumble: ctx.options.notification.rumble,
-      }
+      kit.unlockToastOptions(ctx, { attribution: gameName })
     );
     delay += 1;
   }
@@ -124,7 +86,8 @@ async function handleChange(file, ctx) {
     const cache = baseline.load(key);
     const isNewSave = !cache || !Array.isArray(cache.unlocked);
 
-    if (isNewSave && earned.length > NEW_SAVE_NOTIFY_MAX) {
+    // A save first seen mid-session with that many unlocks was copied in, not earned.
+    if (isNewSave && earned.length > kit.COPIED_IN_UNLOCKS) {
       baseline.save(key, earned);
       return;
     }
@@ -137,59 +100,25 @@ async function handleChange(file, ctx) {
   }
 }
 
-// Pure: the folder to watch now, or the nearest existing ancestor and the segment it waits for.
-function resolveWatchTarget(root) {
-  if (isDirectory(root)) return { ready: true, dir: root };
-  let probe = root;
-  const missing = [];
-  while (probe && !isDirectory(probe)) {
-    missing.unshift(path.basename(probe));
-    const parent = path.dirname(probe);
-    if (parent === probe) break;
-    probe = parent;
-  }
-  if (!isDirectory(probe)) return { ready: false, watchDir: '', nextExpected: '' };
-  return { ready: false, watchDir: probe, nextExpected: missing[0] };
-}
-
 function watchAchievements(root, ctx) {
-  try {
-    const watcher = watch(root, { recursive: true }, (evt, name) => {
-      if (evt !== 'update') return;
-      const file = String(name || '');
-      if (!identify(file)) return;
-      changes.run(file, () => handleChange(file, ctx));
-    });
-    watchers.push(guardWatcher(watcher, `'${root}'`, debug));
-    debug.log(`[rune-uplay] watching '${root}'`);
-  } catch (err) {
-    debug.warn(`[rune-uplay] failed to watch '${root}': ${err}`);
-  }
+  const watcher = watchers.open(root, { recursive: true }, (evt, name) => {
+    if (evt !== 'update') return;
+    const file = String(name || '');
+    if (!identify(file)) return;
+    changes.run(file, () => handleChange(file, ctx));
+  });
+  if (watcher) debug.log(`[rune-uplay] watching '${root}'`);
 }
 
 function attach(root, ctx) {
-  const target = resolveWatchTarget(root);
+  const target = kit.resolveWatchTarget(root);
   if (target.ready) {
     watchAchievements(target.dir, ctx);
     return;
   }
   if (!target.watchDir) return;
-  try {
-    const watcher = watch(target.watchDir, { recursive: false }, (evt, name) => {
-      if (evt !== 'update') return;
-      if (path.basename(String(name || '')).toLowerCase() !== target.nextExpected.toLowerCase()) return;
-      try {
-        watcher.close();
-      } catch {
-        /* already closed */
-      }
-      watchers = watchers.filter((entry) => entry !== watcher);
-      attach(root, ctx);
-    });
-    watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
+  if (kit.awaitSegment(watchers, target, () => attach(root, ctx))) {
     debug.log(`[rune-uplay] '${root}' does not exist yet - waiting under '${target.watchDir}'`);
-  } catch (err) {
-    debug.warn(`[rune-uplay] failed to watch '${target.watchDir}': ${err}`);
   }
 }
 
@@ -203,17 +132,8 @@ function seedBaselines(roots) {
 }
 
 // Folders the user added under Settings > Folders that are, or hold, a RUNE Ubisoft Connect tree.
-function addedRoots(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter((dir) => typeof dir === 'string' && runeUplay.resolveAchievementsRoot(dir));
-  } catch {
-    return [];
-  }
+function addedRoots(configFile = kit.userDirFile()) {
+  return kit.watchedFolders(configFile).filter((dir) => typeof dir === 'string' && runeUplay.resolveAchievementsRoot(dir));
 }
 
 // The same folder reached twice (default root, added root, its achievements child) is one watch.
@@ -222,8 +142,8 @@ function uniqueAchievementsRoots(roots) {
   const out = [];
   for (const root of roots) {
     const resolved = runeUplay.resolveAchievementsRoot(root);
-    if (!resolved || seen.has(resolved.toLowerCase())) continue;
-    seen.add(resolved.toLowerCase());
+    if (!resolved || seen.has(pathKey(resolved))) continue;
+    seen.add(pathKey(resolved));
     out.push(resolved);
   }
   return out;
@@ -234,10 +154,7 @@ function uniqueAchievementsRoots(roots) {
 module.exports.start = async (ctx, roots = [...runeUplay.defaultRoots(), ...addedRoots()]) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.runeUplay === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'runeUplay')) return;
 
   const achievementsRoots = uniqueAchievementsRoots(roots);
   try {
@@ -250,14 +167,16 @@ module.exports.start = async (ctx, roots = [...runeUplay.defaultRoots(), ...adde
 
 module.exports.stop = () => {
   changes.clear();
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
-module.exports._internal = { addedRoots, uniqueAchievementsRoots, identify, earnedIds, resolveWatchTarget, handleChange, seedBaselines, baseline };
+module.exports._internal = {
+  addedRoots,
+  uniqueAchievementsRoots,
+  identify,
+  earnedIds,
+  resolveWatchTarget: kit.resolveWatchTarget,
+  handleChange,
+  seedBaselines,
+  baseline,
+};

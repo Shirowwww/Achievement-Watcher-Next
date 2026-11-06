@@ -12,6 +12,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { decompress } = require(path.join(__dirname, '..', 'util', 'lzx.js'));
+const { forkNode } = require(path.join(__dirname, '..', 'util', 'nodeProcess.js'));
 
 const HEADER_BASE_FILE_FORMAT = 0x000003ff;
 const HEADER_RESOURCE_INFO = 0x000002ff;
@@ -258,8 +259,6 @@ function inProcess(file, { workerFile, timeoutMs }) {
   return new Promise((resolve, reject) => {
     let child;
     try {
-      // Required here, not at the top: xexWorker.js loads this file from outside the asar too.
-      const { forkNode } = require(path.join(__dirname, '..', 'util', 'nodeProcess.js'));
       child = forkNode(workerFile, { heapMb: ISOLATED_HEAP_MB });
     } catch (err) {
       reject(err);

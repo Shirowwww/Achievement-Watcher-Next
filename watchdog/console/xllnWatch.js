@@ -12,42 +12,26 @@
 const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders } = kit;
 
 const xlln = require(sharedAppModulePath('parser/xlln.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // The same icon cache the app parser extracts into, so an icon written by either side serves both.
 xlln.setIconRoot(path.join(userDataDir(), 'icon_cache', 'xlln'));
 
-let watchers = [];
+const watchers = kit.createWatcherList('xlln', debug);
 const changes = createChangeCoalescer();
 
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // Every XLiveLessNess game below the user's folders, deduplicated by title.
-function discover(configFile = userDirFile) {
+function discover(configFile = kit.userDirFile()) {
   const targets = [];
   const seen = new Set();
   for (const dir of watchedFolders(configFile)) {
@@ -90,17 +74,8 @@ const baseline = createBaselineCache({ prefix: 'xlln', tag: 'xlln', debug });
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
-// The runtime can touch the same state file several times per unlock; the baseline diff already
-// blocks true re-toasts, this only covers the burst while that baseline write races the next event.
-const recentUnlocks = new Map();
-function isDuplicateUnlock(titleId, achievementId) {
-  const key = `${titleId}:${achievementId}`;
-  const now = Date.now();
-  for (const [seen, at] of recentUnlocks) if (now - at > 15000) recentUnlocks.delete(seen);
-  const last = recentUnlocks.get(key);
-  recentUnlocks.set(key, now);
-  return last != null && now - last < 15000;
-}
+// The runtime can touch the same state file several times per unlock.
+const isDuplicateUnlock = kit.createDuplicateGuard();
 
 async function handleChange(game, stateFile, ctx) {
   try {
@@ -151,26 +126,7 @@ async function handleChange(game, stateFile, ctx) {
               delay,
               completion,
             },
-            {
-              notify: ctx.options.notification.notify,
-              transport: {
-                mode: ctx.options.notification_transport.mode,
-                websocket: ctx.options.notification_transport.websocket,
-              },
-              toast: {
-                appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-                winrt: ctx.options.notification_transport.winRT,
-                balloonFallback: ctx.options.notification_transport.balloon,
-                customAudio: ctx.options.notification_toast.customToastAudio,
-                volume: notificationVolumePercent(ctx.options),
-                imageIntegration: '0',
-                group: ctx.options.notification_toast.groupToast,
-                attribution:
-                  described.gamerscore > 0 ? `${described.gamerscore} G` : notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-              },
-              prefetch: false, // the icons are already local files
-              rumble: ctx.options.notification.rumble,
-            }
+            kit.unlockToastOptions(ctx, { attribution: kit.gamerscoreAttribution(ctx, described.gamerscore) })
           );
           delay += 1;
         }
@@ -188,10 +144,7 @@ async function handleChange(game, stateFile, ctx) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.xlln === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'xlln')) return;
 
   let targets;
   try {
@@ -225,51 +178,29 @@ module.exports.start = async (ctx) => {
 function attach(game, ctx) {
   const root = watchRootFor(game);
   if (root) {
-    try {
-      const watcher = watch(root, { recursive: true }, (evt, name) => {
-        if (evt !== 'update') return;
-        if (String(path.basename(name || '')).toLowerCase() !== xlln.STATE_FILE) return;
-        // The storage root can hold several titles; only this one's own tree is ours.
-        if (!String(name || '').toUpperCase().includes(`${path.sep}${game.titleId}${path.sep}`)) return;
-        changes.run(game.titleId, () => handleChange(game, name, ctx));
-      });
-      watchers.push(guardWatcher(watcher, `'${root}'`, debug));
-      debug.log(`[xlln] watching achievements for ${game.titleId} under '${root}'`);
-    } catch (err) {
-      debug.warn(`[xlln] failed to watch ${root}: ${err}`);
-    }
+    const watcher = watchers.open(root, { recursive: true }, (evt, name) => {
+      if (evt !== 'update') return;
+      if (String(path.basename(name || '')).toLowerCase() !== xlln.STATE_FILE) return;
+      // The storage root can hold several titles; only this one's own tree is ours.
+      if (!String(name || '').toUpperCase().includes(`${path.sep}${game.titleId}${path.sep}`)) return;
+      changes.run(game.titleId, () => handleChange(game, name, ctx));
+    });
+    if (watcher) debug.log(`[xlln] watching achievements for ${game.titleId} under '${root}'`);
     return;
   }
 
-  try {
-    const pending = watch(game.gameDir, { recursive: false }, () => {
-      if (!watchRootFor(game)) return; // still nothing: some other file in the game folder moved
-      try {
-        pending.close();
-      } catch {
-        /* already closed */
-      }
-      watchers = watchers.filter((entry) => entry !== pending);
-      attach(game, ctx);
-      changes.run(game.titleId, () => handleChange(game, '', ctx));
-    });
-    watchers.push(guardWatcher(pending, `'${game.gameDir}'`, debug));
-    debug.log(`[xlln] ${game.titleId} has no profile folder yet - waiting for one in '${game.gameDir}'`);
-  } catch (err) {
-    debug.warn(`[xlln] failed to watch ${game.gameDir}: ${err}`);
-  }
+  const pending = watchers.open(game.gameDir, { recursive: false }, () => {
+    if (!watchRootFor(game)) return; // still nothing: some other file in the game folder moved
+    watchers.close(pending);
+    attach(game, ctx);
+    changes.run(game.titleId, () => handleChange(game, '', ctx));
+  });
+  if (pending) debug.log(`[xlln] ${game.titleId} has no profile folder yet - waiting for one in '${game.gameDir}'`);
 }
 
 module.exports.stop = () => {
   changes.clear();
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 module.exports._internal = { discover, watchRootFor, watchedFolders, iconPathOf, attach };

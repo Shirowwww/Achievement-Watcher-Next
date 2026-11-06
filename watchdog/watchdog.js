@@ -72,20 +72,15 @@ const waitForFileStable = require('./util/waitForFileStable.js');
 const { createChangeCoalescer } = require('./util/changeCoalescer.js');
 const { catchUpFiles, unlockedSince } = require('./util/rootCatchUp.js');
 const { fileStamp, sameStamp } = require('./util/fileStamp.js');
-const uplayR2 = require('./util/uplayR2.js');
 const notificationDedup = require('./util/notificationDedup.js');
-const progressMute = require('./util/progressMute.js');
 const { reachesProgressMilestone, onePopupPerStat } = require('./util/progressMilestone.js');
-const rarity = require('./util/rarity.js');
 const steam = require('./steam.js');
 const track = require('./track.js');
-const { mapStatProgressEntries } = require('./util/statProgress.js');
 const { notificationVolumePercent } = require('./util/notificationVolume.js');
 const { safeEnv } = require('./util/safeEnv.js');
 const subsystemHealth = require('./util/subsystemHealth.js');
 const playtimeMonitor = require('./playtime/monitor.js');
 const { describeActiveGames } = require('./playtime/seed.js');
-const xboxPc = require('./xboxPc.js');
 const notify = require('./notification/toaster.js');
 const { withSouvenir } = require('./notification/withSouvenir.js');
 const shadps4Watch = require('./console/shadps4Watch.js');
@@ -113,18 +108,26 @@ const { resolvePowerShell } = require('./util/powershell.js');
 const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js');
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
-const psnTrophyLink = require('./util/psnTrophyLink.js');
 const { withCompletionPopup } = require('./util/completionPopup.js');
 const { withLibraryReport } = require('./util/libraryUnlockReport.js');
 const { platinumLikeForGame } = require('./util/platinumLike.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
+const { DEFAULT_HOTKEY } = require(sharedAppModulePath('settings.js'));
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const { rareCutoff } = require('./util/rareCutoff.js');
 const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
 const shortcutSaveIds = require(sharedAppModulePath('util/shortcutSaveIds.js'));
-const { configuredExecutable } = require('./util/exeList.js');
+const xboxPc = require(sharedAppModulePath('parser/xboxPcCore.js'));
+const progressMute = require(sharedAppModulePath('parser/progressMute.js'));
+progressMute.setUserDataPath(userDataDir());
+const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
+const { mapStatProgressEntries } = require(sharedAppModulePath('parser/statProgress.js'));
+const { readSiblingStats } = require(sharedAppModulePath('parser/emuSave.js'));
+const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
+const rarity = require(sharedAppModulePath('util/rarity.js'));
+const uplayR2 = require(sharedAppModulePath('parser/uplayR2Live.js'));
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
 const steamClock = require('./util/steamClock.js').createSteamClock({ log: (line) => debug.log(line) });
@@ -178,6 +181,7 @@ const { resolvePlaytimeArtwork } = require('./util/playtimeArtwork.js');
 const { findIndexedSocialClubGame } = require('./util/socialClub.js');
 const notifyStrings = require('./util/notifyStrings.js');
 const { spawnDetached } = require('./util/spawnDetached.js');
+const { SpawnOverlayNotification } = require('./notification/spawnOverlay.js');
 const {
   buildSchemaIndex,
   findSchemaAchievement,
@@ -186,7 +190,7 @@ const {
   requiredCount,
   requiredUnlockedCount,
 } = require('./util/achievementIndex.js');
-const { createIndexedGameLookup } = require('./util/indexedGameLookup.js');
+const { createIndexedGameLookup } = require(sharedAppModulePath('util/indexedGameLookup.js'));
 const { runXboxPoll, matchesActiveXboxPoll } = require('./util/xboxPolling.js');
 
 // A brand-new save folder whose first write carries more unlocks than this is a copied-in save.
@@ -297,9 +301,6 @@ function writeMappingCache(cacheFile, entries) {
 }
 
 
-const appRoot = path.join(__dirname, '../');
-
-let isDev = process.env.NODE_ENV === 'development';
 let runningAppid;
 let overlayOpened = false;
 // The playtime monitor instance once init() resolves; used to reload the game index on request.
@@ -529,31 +530,12 @@ function appendSiblingStats(achievements, filePath, progressSchema) {
     progressSchema.map((a) => a && a.progress && a.progress.value && a.progress.value.operand1).filter(Boolean).map((n) => String(n).toUpperCase())
   );
   const present = new Set(achievements.map((a) => String((a && a.name) || '').toUpperCase()));
-  let text = null;
-  for (const name of ['stats.ini', 'Stats.ini']) {
-    try {
-      text = fs.readFileSync(path.join(path.dirname(filePath), name), 'utf8');
-      break;
-    } catch {
-      /* try the other casing */
-    }
-  }
-  if (!text) return 0;
-  let section = '';
   let added = 0;
-  for (const line of text.split(/\r?\n/)) {
-    const header = line.match(/^\s*\[([^\]]+)\]\s*$/);
-    if (header) {
-      section = header[1].trim().toLowerCase();
-      continue;
-    }
-    if (section !== 'userstats' && section !== 'stats') continue;
-    const m = line.match(/^\s*([A-Za-z0-9_.-]+)\s*=\s*(-?[\d.]+)\s*$/);
-    if (!m || !wanted.has(m[1].toUpperCase()) || present.has(m[1].toUpperCase())) continue;
-    const value = Number(m[2]);
-    if (!Number.isFinite(value)) continue;
-    achievements.push({ name: m[1], Achieved: false, CurProgress: value, MaxProgress: 0, UnlockTime: 0 });
-    present.add(m[1].toUpperCase());
+  // The library's reader (emuSave.js): its names come lower-cased, matched here case-insensitively.
+  for (const [name, value] of Object.entries(readSiblingStats(path.dirname(filePath)))) {
+    if (!wanted.has(name.toUpperCase()) || present.has(name.toUpperCase())) continue;
+    achievements.push({ name, Achieved: false, CurProgress: value, MaxProgress: 0, UnlockTime: 0 });
+    present.add(name.toUpperCase());
     added++;
   }
   return added;
@@ -769,46 +751,6 @@ function syncOverlayController() {
   }
 }
 
-function SpawnOverlayNotification(args) {
-  // Use the main process when IPC is available; standalone runs use a detached child.
-  if (typeof process.send === 'function' && process.connected) {
-    try {
-      process.send({ argv: args });
-      return;
-    } catch (err) {
-      debug.error(`[overlay] IPC send failed, falling back to spawn: ${err}`);
-    }
-  }
-  debug.log('Spawning achievement notification...');
-  if (isDev) {
-    const electronPath = require(path.join(appRoot, '../app/node_modules/electron'));
-    spawnDetached(
-      spawn,
-      electronPath,
-      ['.', ...args],
-      {
-        cwd: path.join(appRoot, '../app'),
-        detached: true,
-        stdio: 'ignore',
-      },
-      (err) => debug.error(`[overlay] Failed to start Electron: ${err && err.message ? err.message : err}`)
-    );
-  } else {
-    const execPath = path.join(appRoot, process.platform === 'win32' ? 'Achievement Watcher.exe' : 'achievement-watcher');
-    spawnDetached(
-      spawn,
-      execPath,
-      args,
-      {
-        detached: true,
-        stdio: ['ignore', process.stdout, process.stderr],
-      },
-      (err) => debug.error(`[overlay] Failed to start "${execPath}": ${err && err.message ? err.message : err}`)
-    );
-    debug.log(execPath);
-  }
-}
-module.exports = { SpawnOverlayNotification };
 
 // The app reports every overlay window's actual open/close event (not just button presses), so
 // `overlayOpened` can't drift from what's on screen; self-caused transitions are dropped below.
@@ -1010,11 +952,10 @@ var app = {
     // Whether an unlock may be marked urgent, i.e. allowed on screen while Do Not Disturb is on.
     // Refreshed on every settings reload, like the sound options above.
       require('./notification/transport/toast.js').setUrgentUnlocks(self.options.notification_toast?.urgent === true);
-      self.cfgOptionPath = cfg_file.option; // used to locate the per-game progress-mute store
       debug.log('Options loaded');
       syncClipRecorder();
 
-      RegisterOverlayHotkey((self.options.overlay && self.options.overlay.hotkey) || 'Ctrl+Shift+K');
+      RegisterOverlayHotkey(self.options.overlay.hotkey || DEFAULT_HOTKEY);
       syncOverlayController();
 
       if (process.platform !== 'win32') debug.log('[Toast] will use the desktop notification service (through the app)');
@@ -1554,7 +1495,7 @@ var app = {
                     if (
                       !seedOnly &&
                       self.options.notification.notifyOnProgress &&
-                      !progressMute.isMuted(game.appid, self.cfgOptionPath) &&
+                      !progressMute.isMuted(game.appid) &&
                       reachesProgressMilestone(
                         previous.CurProgress,
                         achievements[i].CurProgress,

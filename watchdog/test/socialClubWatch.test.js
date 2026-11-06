@@ -6,7 +6,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { findIndexedSocialClubGame, gameFolderName, socialClubSlug, SOCIALCLUB_ACHIEVEMENT_FILES } = require('../util/socialClub.js');
+const { findIndexedSocialClubGame } = require('../util/socialClub.js');
+const { gameFolderName, socialClubAppId, SOCIALCLUB_ACHIEVEMENT_FILES } = require('../../app/parser/socialclubNames.js');
 
 function indexFile(dir, entries) {
   const file = path.join(dir, 'gameIndex.json');
@@ -66,12 +67,12 @@ test('the game folder is resolved whether the root or a single game folder is wa
   assert.equal(gameFolderName('D:\\x', 'D:\\Backups\\Goldberg SocialClub Emu Saves\\Bully\\0A1B2C\\stats.json'), 'Bully');
 });
 
-test('the slug matches the app-side socialClubAppId for the same folder name', () => {
-  // Both sides derive the id from the folder name; if these ever drift, live unlocks stop resolving.
+test('the app parser and the Watchdog derive the appid with the same function', () => {
+  // If the two ever used different ids, live unlocks would stop resolving to the library entry.
   const { _internal } = require('../../app/parser/socialclub.js');
-  for (const name of ['GTA V', 'Red Dead Redemption 2', 'L.A. Noire', 'Grand Theft Auto: Vice City - Definitive Edition']) {
-    assert.equal(socialClubSlug(name), _internal.socialClubAppId(name), `slug mismatch for "${name}"`);
-  }
+  assert.equal(_internal.socialClubAppId, socialClubAppId);
+  assert.equal(socialClubAppId('L.A. Noire'), 'socialclub-l-a-noire');
+  assert.equal(socialClubAppId('Grand Theft Auto: Vice City - Definitive Edition'), 'socialclub-grand-theft-auto-vice-city-definitive-edition');
 });
 
 test('only decodable achievement files are watched', () => {

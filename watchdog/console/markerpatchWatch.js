@@ -15,27 +15,23 @@
   folder until its profile tree appears", generalised to a two-segment path.
 */
 
-const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders, resolveWatchTarget } = kit;
 
 const markerpatch = require(sharedAppModulePath('parser/markerpatch.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 markerpatch.setIconRoot(path.join(userDataDir(), 'icon_cache', 'markerpatch'));
 
-let watchers = [];
+const watchers = kit.createWatcherList('markerpatch', debug);
 let currentGame = null;
 let currentCtx = null;
 const changes = createChangeCoalescer();
@@ -43,30 +39,9 @@ const baseline = createBaselineCache({ prefix: 'markerpatch', tag: 'markerpatch'
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
 
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // There is only one title here, so the first watched folder that carries it wins; Steam's own
 // install is looked at last, so nobody has to add the folder.
-function discoverGame(configFile = userDirFile, knownRoots = () => markerpatch.knownInstallRoots()) {
+function discoverGame(configFile = kit.userDirFile(), knownRoots = () => markerpatch.knownInstallRoots()) {
   for (const dir of [...watchedFolders(configFile), ...knownRoots()]) {
     let found;
     try {
@@ -132,25 +107,7 @@ async function handleChange(ctx) {
               delay,
               completion,
             },
-            {
-              notify: ctx.options.notification.notify,
-              transport: {
-                mode: ctx.options.notification_transport.mode,
-                websocket: ctx.options.notification_transport.websocket,
-              },
-              toast: {
-                appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-                winrt: ctx.options.notification_transport.winRT,
-                balloonFallback: ctx.options.notification_transport.balloon,
-                customAudio: ctx.options.notification_toast.customToastAudio,
-                volume: notificationVolumePercent(ctx.options),
-                imageIntegration: '0',
-                group: ctx.options.notification_toast.groupToast,
-                attribution: notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-              },
-              prefetch: false, // the icons are already local files
-              rumble: ctx.options.notification.rumble,
-            }
+            kit.unlockToastOptions(ctx)
           );
           delay += 1;
         }
@@ -164,68 +121,27 @@ async function handleChange(ctx) {
 }
 
 function watchStateDir(dir) {
-  try {
-    const watcher = watch(dir, { recursive: false }, (evt, name) => {
-      if (evt !== 'update') return;
-      if (String(path.basename(name || '')).toLowerCase() !== 'settings.txt') return;
-      changes.run('markerpatch', () => handleChange(currentCtx));
-    });
-    watchers.push(guardWatcher(watcher, `'${dir}'`, debug));
-    debug.log(`[markerpatch] watching achievements under '${dir}'`);
-  } catch (err) {
-    debug.warn(`[markerpatch] failed to watch '${dir}': ${err}`);
-  }
-}
-
-/*
-  Pure: given the folder that should eventually hold settings.txt, say whether it already exists or
-  which existing ancestor to watch meanwhile, and for what next path segment. Walking stops at worst
-  at %LOCALAPPDATA% itself, which always exists.
-*/
-function resolveWatchTarget(finalDir) {
-  if (isDirectory(finalDir)) return { ready: true, dir: finalDir };
-
-  let probe = finalDir;
-  const missing = [];
-  while (probe && !isDirectory(probe)) {
-    missing.unshift(path.basename(probe));
-    const parent = path.dirname(probe);
-    if (parent === probe) break;
-    probe = parent;
-  }
-  if (!isDirectory(probe)) return { ready: false, watchDir: '', nextExpected: '' };
-  return { ready: false, watchDir: probe, nextExpected: missing[0] };
+  const watcher = watchers.open(dir, { recursive: false }, (evt, name) => {
+    if (evt !== 'update') return;
+    if (String(path.basename(name || '')).toLowerCase() !== 'settings.txt') return;
+    changes.run('markerpatch', () => handleChange(currentCtx));
+  });
+  if (watcher) debug.log(`[markerpatch] watching achievements under '${dir}'`);
 }
 
 // Watch for the settings.txt folder to exist - only ever one level at a time, never a deep
-// recursive watch over a system folder.
+// recursive watch over a system folder. The walk stops at worst at %LOCALAPPDATA% itself.
 function attach(stateFile) {
   if (!stateFile) return;
   const finalDir = path.dirname(stateFile);
   const target = resolveWatchTarget(finalDir);
-
   if (target.ready) {
     watchStateDir(target.dir);
     return;
   }
   if (!target.watchDir) return;
-
-  try {
-    const watcher = watch(target.watchDir, { recursive: false }, (evt, name) => {
-      if (evt !== 'update') return;
-      if (String(path.basename(name || '')).toLowerCase() !== String(target.nextExpected || '').toLowerCase()) return;
-      try {
-        watcher.close();
-      } catch {
-        /* already closed */
-      }
-      watchers = watchers.filter((entry) => entry !== watcher);
-      attach(stateFile);
-    });
-    watchers.push(guardWatcher(watcher, `'${target.watchDir}'`, debug));
+  if (kit.awaitSegment(watchers, target, () => attach(stateFile))) {
     debug.log(`[markerpatch] '${finalDir}' does not exist yet - waiting under '${target.watchDir}'`);
-  } catch (err) {
-    debug.warn(`[markerpatch] failed to watch '${target.watchDir}': ${err}`);
   }
 }
 
@@ -235,10 +151,7 @@ function attach(stateFile) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.markerpatch === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'markerpatch')) return;
 
   let game;
   try {
@@ -273,14 +186,7 @@ module.exports.stop = () => {
   changes.clear();
   currentGame = null;
   currentCtx = null;
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 module.exports._internal = { discoverGame, watchedFolders, iconPathOf, attach, resolveWatchTarget };

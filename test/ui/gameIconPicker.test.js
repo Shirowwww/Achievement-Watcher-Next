@@ -23,7 +23,6 @@ const appSource = rendererSource();
 const init = fs.readFileSync(path.join(root, 'app', 'electron', 'init.js'), 'utf8');
 const watchdog = fs.readFileSync(path.join(root, 'watchdog', 'watchdog.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'app', 'resources', 'css', 'app.css'), 'utf8');
-const builder = fs.readFileSync(path.join(root, 'app', 'electron-builder.yml'), 'utf8');
 
 function sliceFunction(source, signature, end = '\n}') {
   const start = source.indexOf(signature);
@@ -175,10 +174,8 @@ test('notification cards fall back to the game folder when nothing else answers'
   assert.match(watchdog, /icon: notificationAchievementIcon\(game, ach, false\)/);
 });
 
-test('the Watchdog reaches the shared module the packaged way, and the build ships it', () => {
+test('the Watchdog reaches the shared module the packaged way', () => {
   assert.match(watchdog, /require\(sharedAppModulePath\('util\/localIcons\.js'\)\)/);
-  // Anything loaded that way has to be outside app.asar, or the packaged Watchdog cannot read it.
-  assert.match(builder, /asarUnpack:[\s\S]*?- util\/localIcons\.js/);
 });
 
 test('Re-download forgets both halves of what was cached about a logo', () => {

@@ -8,8 +8,7 @@ const path = require('path');
 
 let debug = { log() {}, warn() {}, error() {} };
 
-// Logger handed in, not required: the Watchdog loads this file outside the asar via
-// sharedAppModule.js, where a relative require can't reach siblings (test/core/sharedAppModules.test.js).
+// Logger handed in: the app logs this to parser.log, the Watchdog to its own file.
 module.exports.initDebug = ({ logger }) => {
   if (logger) debug = logger;
 };
@@ -19,10 +18,7 @@ const MAGIC_V28 = 0x07564428;
 const MAGIC_V29 = 0x07564429;
 
 /*
-  The binary KV reader below looks like the one in parser/steamOfficial.js, and
-  sharing them has been tried: it cannot be done. The Watchdog loads this module from outside the
-  asar through util/sharedAppModule.js, where a relative require cannot resolve, so a shared module
-  has to stay dependency-free (test/core/sharedAppModules.test.js enforces it). The two also read
+  The binary KV reader below looks like the one in parser/steamOfficial.js, but the two read
   different documents - this one needs the v29 string table and a per-record bound, the other needs
   repeated keys folded into an array and each value's on-disk type.
 */

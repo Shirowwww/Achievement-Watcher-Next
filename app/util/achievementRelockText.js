@@ -12,8 +12,7 @@ const PROGRESS_KEYS = new Set(['curprogress', 'progress', 'value']);
 
 const SECTION_RE = /^\s*\[([^\]]+)\]\s*$/;
 const KEY_VALUE_RE = /^(\s*)([^=;#[\s][^=]*?)(\s*=\s*)(.*?)(\s*)$/;
-// RLD! hex blobs: a little-endian uint32 plus a trailing byte, read back by length.
-const RLD_BLOB_RE = /^[0-9a-fA-F]{8,10}$/;
+const { RLD_BLOB_RE, isUnambiguousRldBlob } = require('./rldBlob.js');
 
 const unquote = (value) => String(value == null ? '' : value).trim().replace(/^(["'])(.*)\1$/, '$2');
 const sameName = (left, right) => unquote(left).toUpperCase() === String(right == null ? '' : right).toUpperCase();
@@ -86,7 +85,7 @@ function isRldSection(lines, section) {
     if (!match) continue;
     const key = unquote(match[2]).toLowerCase();
     const value = unquote(match[4]);
-    if ((key === 'state' && RLD_BLOB_RE.test(value)) || (key === 'time' && /^[0-9a-fA-F]{10}$/.test(value) && /[a-fA-F]/.test(value))) return true;
+    if ((key === 'state' && RLD_BLOB_RE.test(value)) || (key === 'time' && isUnambiguousRldBlob(value))) return true;
   }
   return false;
 }

@@ -1,13 +1,10 @@
 'use strict';
 
 /*
-  Modules the Watchdog shares with the app rather than duplicating.
-
-  The Watchdog runs from the install directory as its own process, so it cannot reach app code by a
-  package name. In a packaged build the app lives inside resources/app.asar and the shared files are
-  unpacked beside it at resources/app.asar.unpacked (see the `asarUnpack` list in
-  electron-builder.yml - a module required through here MUST be in it); in a dev checkout the plain
-  app folder simply sits next to the watchdog folder.
+  Where the Watchdog finds app code. The Watchdog runs from the install directory as its own process,
+  so it cannot reach app code by a package name. It runs under Electron's Node like the scan host
+  (app/parser/scanWorker.js), which reads modules straight from resources/app.asar, siblings and
+  app/node_modules included; in a dev checkout the app folder sits next to the watchdog folder.
 */
 
 const fs = require('fs');
@@ -15,8 +12,8 @@ const path = require('path');
 
 function sharedAppModulePath(rel) {
   const resources = process.resourcesPath;
-  const unpacked = resources ? path.join(resources, 'app.asar.unpacked', rel) : '';
-  if (unpacked && fs.existsSync(unpacked)) return unpacked;
+  const archive = resources ? path.join(resources, 'app.asar') : '';
+  if (archive && fs.existsSync(archive)) return path.join(archive, rel);
   return path.join(__dirname, '..', '..', 'app', rel);
 }
 

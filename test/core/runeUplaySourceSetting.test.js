@@ -37,8 +37,27 @@ test('the scan and the Watchdog read RUNE from its own switch', () => {
   assert.match(parser, /if \(source\.runeUplay && runeUplay\.resolveAchievementsRoot\(dir\.path\)\)/);
   const lumaBlock = parser.slice(parser.indexOf('if (!scope && source.lumaPlay) {'), parser.indexOf('if (!scope && source.runeUplay) {'));
   assert.doesNotMatch(lumaBlock, /runeUplay\.scan/, 'switching LumaPlay off must leave RUNE games alone');
-  const watcher = fs.readFileSync(path.join(root, 'watchdog', 'console', 'runeUplayWatch.js'), 'utf8');
-  assert.match(watcher, /achievement_source\.runeUplay === false\) return;/);
-  const watchdogSettings = fs.readFileSync(path.join(root, 'watchdog', 'settings.js'), 'utf8');
-  assert.match(watchdogSettings, /options\.achievement_source\.runeUplay = options\.achievement_source\.lumaPlay;/);
+});
+
+test('the Watchdog watcher stops at the RUNE switch, whatever LumaPlay says', async () => {
+  const runeUplayWatch = require('../../watchdog/console/runeUplayWatch.js');
+  let pastGate = false;
+  const options = {
+    achievement_source: { runeUplay: false, lumaPlay: true },
+    get notification() {
+      pastGate = true;
+      return { notify: false };
+    },
+  };
+  await runeUplayWatch.start({ options, notify: () => {} }, []);
+  runeUplayWatch.stop();
+  assert.equal(pastGate, false);
+});
+
+test('the Watchdog moves the RUNE switch over from LumaPlay like the app', async () => {
+  const dir = makeTempDir('aw-rune-watchdog-');
+  const file = path.join(dir, 'options.ini');
+  fs.writeFileSync(file, '[achievement]\nlang=english\n[achievement_source]\nlumaPlay=false\n', 'utf8');
+  const sources = (await require('../../watchdog/settings.js').load(file)).achievement_source;
+  assert.equal(sources.runeUplay, false);
 });

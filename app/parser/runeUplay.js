@@ -6,8 +6,7 @@
     <Documents>\RUNE\Ubisoft Connect\achievements\<userId>\<uplayAppId>\achievements.cfg
 
   with one block per numeric Ubisoft achievement id holding `earned` and `time`. This module only
-  reads that layout. It is shared with the Watchdog (see watchdog/console/runeUplayWatch.js), so it
-  requires nothing from app/ beyond util/reg.js, which is unpacked for the same reason.
+  reads that layout. It is shared with the Watchdog (see watchdog/console/runeUplayWatch.js).
 */
 
 const fs = require('fs');

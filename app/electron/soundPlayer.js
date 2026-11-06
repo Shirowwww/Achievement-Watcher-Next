@@ -2,6 +2,7 @@
 
 const path = require('path');
 const { pathToFileURL } = require('url');
+const { clampVolume } = require('../util/notificationSounds.js');
 
 /*
   The Watchdog's toast sounds on Windows play here, through Chromium like the popup's own sound: a
@@ -15,10 +16,6 @@ const MAX_SOUND_MS = 30000;
 // Each sound is a renderer: a burst of unlocks plays the first few, not one window per unlock.
 const MAX_PLAYING = 3;
 
-function clampVolume(volume) {
-  const n = Number(volume);
-  return Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0.5;
-}
 
 // Bundled sounds live under app.asar.unpacked in packaged builds.
 function soundUrl(file) {
@@ -71,4 +68,4 @@ function createSoundPlayer({ BrowserWindow, log = () => {}, page = PAGE, maxMs =
   return { play };
 }
 
-module.exports = { createSoundPlayer, soundUrl, clampVolume };
+module.exports = { createSoundPlayer, soundUrl };

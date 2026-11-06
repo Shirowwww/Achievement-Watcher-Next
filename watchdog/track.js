@@ -1,7 +1,8 @@
 'use strict';
 
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const path = require('path');
-const fs = require('./util/fsAsync');
+const fs = require(sharedAppModulePath('util/fsAsync.js'));
 
 let cacheDir = path.join(require('./util/userData.js').userDataDir(), 'steam_cache', 'data');
 

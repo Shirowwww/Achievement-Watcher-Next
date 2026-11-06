@@ -6696,26 +6696,14 @@ const localIcons = require('../util/localIcons.js');
 
   The main process has no game object - a notification carries an appid and a name - but it does
   have the same file the Play button launches from, and that path is what points localIcons at the
-  install folder. Read on demand rather than cached: the file changes whenever a scan re-links a
-  game, and this runs at most once per notification.
+  install folder. The reader is the one the Watchdog uses (parser/exeList.js), which re-reads the
+  file whenever a scan re-links a game.
 
   Several ids are accepted because callers here hold the Steam appid while exeList.db is keyed on
   the library one, and for a namespaced game (SocialClub, Uplay R2) those are not the same value.
 */
 function configuredExecutable(...appids) {
-  const ids = appids.map((value) => String(value == null ? '' : value).trim()).filter(Boolean);
-  if (ids.length === 0) return '';
-  try {
-    const list = JSON.parse(fs.readFileSync(path.join(userData, 'cfg', 'exeList.db'), 'utf8'));
-    if (!Array.isArray(list)) return '';
-    for (const id of ids) {
-      const entry = list.find((row) => row && String(row.appid) === id);
-      if (entry && entry.exe && fs.existsSync(entry.exe)) return String(entry.exe);
-    }
-    return '';
-  } catch {
-    return '';
-  }
+  return require('../parser/exeList.js').firstExistingExecutable(appids, { file: path.join(userData, 'cfg', 'exeList.db') });
 }
 
 /*
@@ -7016,32 +7004,22 @@ async function enqueueNotificationFromArgs(args) {
   const sanTier = describeNotificationTier({ notificationType, unlockRate, rarityPercent: args.rarityPercent, trophyGrade: args.trophyGrade });
   const sanSound = sanEngine.presetSound(presetFolder, { notificationType, rarityTier: sanTier.tier, rarityMode: sanTier.mode, unlockRate });
   const presetOwnSound = sanSound != null ? sanSound : customPreset.presetSound(presetFolder);
-  // A sound picked for this game's emulator replaces the main one, ahead of random and preset sounds.
-  const emulatorSound = notificationSounds.emulatorSound(ov, sourcePlatform(args.source));
-  const globalSound = () =>
-    emulatorSound
-      ? emulatorSound === notificationSounds.NO_SOUND
-        ? ''
-        : resolveNotificationSound(emulatorSound) || resolveNotificationSound(ov.notificationSound)
-      : randomSound
-        ? notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) ||
-          resolveNotificationSound(ov.notificationSound)
-        : resolveNotificationSound(presetOwnSound || ov.notificationSound);
-  // A rare unlock or a 100% completion can have its own sound; a game's own choice still wins. The
-  // progress sound is about the kind of popup, so it wins over a game's own unlock sound.
-  const tierSound = notificationSounds.tierSound(ov, { notificationType, rarityPercent: args.rarityPercent });
-  const tierWins = !gameSettings.sound || notificationType === 'progress';
-  let chosenSound = '';
-  if (!silent) {
-    if (gameSettings.sound === gamePreset.SOUND_NONE) chosenSound = '';
-    else if (tierWins && tierSound === notificationSounds.NO_SOUND) chosenSound = '';
-    else if (tierWins && tierSound) chosenSound = resolveNotificationSound(tierSound) || globalSound();
-    else if (gameSettings.sound === gamePreset.SOUND_RANDOM) {
-      chosenSound =
-        notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]) || globalSound();
-    } else if (gameSettings.sound) chosenSound = resolveNotificationSound(gameSettings.sound) || globalSound();
-    else chosenSound = globalSound();
-  }
+  const chosenSound = notificationSounds.chooseSound(
+    {
+      silent,
+      gameSound: gameSettings.sound,
+      tier: notificationSounds.tierSound(ov, { notificationType, rarityPercent: args.rarityPercent }),
+      emulator: notificationSounds.emulatorSound(ov, sourcePlatform(args.source)),
+      random: randomSound,
+      presetSound: presetOwnSound,
+      mainSound: ov.notificationSound,
+      progress: notificationType === 'progress',
+    },
+    {
+      resolve: resolveNotificationSound,
+      pickRandom: () => notificationSounds.pickRandomSound([path.join(__dirname, '../sounds'), userSoundsDir()]),
+    }
+  );
   if (!gameSettings.sound && presetOwnSound && !silent && !randomSound)
     debug.log(`[overlay-notif] preset "${preset}" brings its own sound: ${presetOwnSound}`);
   const displayName =

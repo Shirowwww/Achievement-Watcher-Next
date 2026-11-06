@@ -159,27 +159,25 @@ When adding a source:
 ### Wiring a save-file emulator
 
 An emulator that writes one save folder per Steam appid under a user profile (the Goldberg family) is
-read twice: by the app for the library and by the Watchdog for live notifications. Each side has its
-own list, so a new one touches both:
+read by the app for the library and by the Watchdog for live notifications. Both read the same two
+modules, which the Watchdog loads through `watchdog/util/sharedAppModule.js`, so a new emulator is:
 
-1. **The reader.** A small module of its own in `app/parser/` that requires nothing from the rest of
-   the app, so the Watchdog can load it. List it in `asarUnpack` in `app/electron-builder.yml`;
-   `test/core/sharedAppModules.test.js` fails otherwise.
-2. **Library roots.** Add the folder to `addHostRoots` in `app/parser/saveRoots.js` as
-   `envPath('APPDATA', '<Folder>')`. It is then probed on every host.
-3. **Library label and file.** `steam.scan()` in `app/parser/steam.js` names the source from the
-   folder path (an unrecognised folder shows as `Steam-emulator`). `getAchievementsFromFile()` in the
-   same file lists the save file names it reads and turns each format into shared
-   `{ Achieved, UnlockTime }` entries.
-4. **Watchdog roots.** Add an entry to `builtinRoots(host)` in `watchdog/monitor.js`:
-   `{ dir: at('APPDATA', '<Folder>'), options: { recursive, filter, file } }`. `filter` is a regular
-   expression the changed path must match (usually the numeric appid folder), `file` lists the file
-   names that count, and the appid comes from the folder name. `statsSibling` reads `achievements.ini`
-   when only `stats.ini` changed; `disableCheckIfProcessIsRunning` notifies even when the game's
-   process is not seen.
-5. **Watchdog reader.** `parse()` in `watchdog/monitor.js` picks the reader by file name; add the new
-   name there.
-6. **Tests.** A reader test that runs on both systems, a Watchdog test that the root is built for
+1. **One row in the root table.** `SAVE_ROOTS` in `app/parser/emuSaveRoots.js`:
+   `{ env: 'APPDATA', dir: ['<Folder>'], watch: { filter, file } }`. `env` is the host folder
+   variable (or `DOCUMENTS`), so the row is built on every host. `saveRoots.addHostRoots` takes it for
+   the library and `builtinRoots` in `watchdog/monitor.js` for the Watchdog. In `watch`, `filter` is
+   a regular expression the changed path must match (usually the numeric appid folder, the appid comes
+   from it), `file` lists the file names that count, `statsSibling` reads `achievements.ini` when only
+   `stats.ini` changed and `disableCheckIfProcessIsRunning` notifies even when the game's process is
+   not seen. `watch: null` keeps a folder for the library only, `library: false` for the Watchdog
+   only (a folder whose library side is a source of its own).
+2. **The decoder, if the format is new.** `app/parser/emuSave.js` reads a save file by its name
+   (`parseSaveFile`), turns each emulator's layout into `{ <api name>: entry }` (`decodeSaveEntries`)
+   and judges an entry (`normalizeSaveEntry`: unlocked, when, progress). `steam.getAchievementsFromFile()`
+   lists the file names a save folder is probed for; `monitor.parse()` reads the one file that changed.
+3. **The library label.** `steam.scan()` in `app/parser/steam.js` names the source from the folder
+   path (an unrecognised folder shows as `Steam-emulator`).
+4. **Tests.** A reader test that runs on both systems, a Watchdog test that the root is built for
    every host, and a Linux test that finds a save inside a fake Wine prefix (`withWinePrefix`, see
    [test/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/test/README.md#windows-and-linux)).
 
@@ -274,10 +272,12 @@ bundled JSON file, and the loader falls back to English at runtime.
 
 ## Packaging boundaries
 
-`app/electron-builder.yml` packages the desktop app and copies the Watchdog beside it. Presets,
-sounds and shared Steam-schema mapper modules are unpacked from ASAR because overlay windows and the
-external Watchdog load them from disk. A module the Watchdog loads from the app (the host layer, the
-Linux Steam reader, the presence pipe name, the playtime store) must be listed in `asarUnpack` too.
+`app/electron-builder.yml` packages the desktop app and copies the Watchdog beside it. Presets and
+sounds are unpacked from ASAR because notification windows and Windows toasts load them from disk.
+The Watchdog loads app modules from inside `app.asar`, as the scan host does: Electron's Node reads the
+archive like a folder (`watchdog/util/sharedAppModule.js`). Only a file started as a process or a
+worker thread (`scanWorker.js`, `xexWorker.js`) is unpacked, and it loads everything else from the
+archive.
 On Linux, `app/build/afterPack.js` removes the Windows helpers and other platforms' binaries from the
 AppImage and keeps `7za` executable.
 

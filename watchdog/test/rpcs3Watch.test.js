@@ -102,6 +102,37 @@ test('discover finds trophy sets under a saved RPCS3 folder', () => {
   }
 });
 
+// The monitor and every other watcher leave a folder set not to notify alone; RPCS3 read it anyway.
+test('discover skips a saved folder set not to notify', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3quiet-'));
+  try {
+    const emuDir = path.join(tmp, 'rpcs3');
+    const trophyDir = path.join(emuDir, 'dev_hdd0', 'home', '00000001', 'trophy', 'NPWR12345_00');
+    fs.mkdirSync(trophyDir, { recursive: true });
+    fs.writeFileSync(path.join(emuDir, 'rpcs3.exe'), 'x');
+    fs.writeFileSync(path.join(trophyDir, 'TROPCONF.SFM'), SCHEMA, 'utf8');
+    fs.writeFileSync(path.join(trophyDir, 'TROPUSR.DAT'), buildUserData([{ id: 0, time: 0, achieved: false }]));
+    const config = path.join(tmp, 'userdir.db');
+    fs.writeFileSync(config, JSON.stringify([{ path: emuDir, enabled: true, notify: false }]));
+
+    assert.deepEqual(rpcs3Watch._internal.discover(config, []), []);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+// A trophy name written with a character reference was toasted with the reference itself.
+test('read decodes numeric character references in trophy texts', () => {
+  const dir = makeTrophyDir();
+  try {
+    fs.writeFileSync(path.join(dir, 'TROPCONF.SFM'), SCHEMA.replace('Gold One', 'Gold&#x2019;s &#233;dition'), 'utf8');
+    const gold = rpcs3Watch._internal.read(dir).list.find((t) => t.id === 1);
+    assert.equal(gold.displayName, 'Gold’s édition');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('discover finds a saved native RPCS3 folder with no rpcs3.exe, its dev_hdd0 moved by vfs.yml', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3native-'));
   try {

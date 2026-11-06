@@ -10,10 +10,11 @@ const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-wd-psn-link-'));
 process.env.AW_USER_DATA = temp;
 after(() => fs.rmSync(temp, { recursive: true, force: true }));
 
-const { resetCache } = require('../util/userData.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { resetCache } = require(sharedAppModulePath('util/userDataPath.js'));
 resetCache();
-const psnTrophyLink = require('../util/psnTrophyLink.js');
-const { platinumFields } = require('../util/trophyGrade.js');
+const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
+const { platinumFields } = require(sharedAppModulePath('parser/trophyGrade.js'));
 
 const dir = path.join(temp, 'steam_cache', 'psn', 'links');
 fs.mkdirSync(dir, { recursive: true });

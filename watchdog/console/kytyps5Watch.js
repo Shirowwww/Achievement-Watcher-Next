@@ -11,31 +11,27 @@
 const fs = require('fs');
 const path = require('path');
 const { iconPathOf } = require('../util/iconPath.js');
-const watch = require('../util/nodeWatch.js');
-const { longPath } = require('../util/longPath.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { trophyGradeOf, platinumFields } = require('../util/trophyGrade.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const kit = require('./watcherKit.js');
+const { watchedFolders } = kit;
+const { trophyGradeOf, platinumFields } = require(sharedAppModulePath('parser/trophyGrade.js'));
+const { pathKey } = require(sharedAppModulePath('util/winHosts.js'));
 
 const kyty = require(sharedAppModulePath('parser/kytyps5.js'));
 
-const userDirFile = path.join(userDataDir(), 'cfg', 'userdir.db');
 // The same icon cache the app parser extracts into, so an icon written by either side serves both.
 kyty.setIconRoot(path.join(userDataDir(), 'icon_cache', 'kytyps5'));
 
-
 // A title's first unlock file carrying more than this is a copied-in save, not a play session.
-const NEW_TITLE_NOTIFY_MAX = 10;
+const NEW_TITLE_NOTIFY_MAX = kit.COPIED_IN_UNLOCKS;
 
-let watchers = [];
+const watchers = kit.createWatcherList('kytyps5', debug);
 const changes = createChangeCoalescer();
 /*
   The user each title was last read for, and when. Kyty.ini is not watched, so a switch of user is
@@ -58,36 +54,23 @@ function titleIdsOnDisk(root) {
   }
 }
 
-function watchedFolders(configFile = userDirFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
-}
-
 // The other sources' install folders, looked up once per discovery pass and only when needed.
-let kytyOptions = kyty.excludingOtherSources(() => watchedFolders(userDirFile));
+let kytyOptions = kyty.excludingOtherSources(() => watchedFolders());
 
 // Each emulator folder below the user's folders once, with the titles it already has unlocks for.
-function discover(configFile = userDirFile) {
+function discover(configFile = kit.userDirFile()) {
   const roots = new Map();
   kytyOptions = kyty.excludingOtherSources(() => watchedFolders(configFile));
   for (const dir of watchedFolders(configFile)) {
     const root = kyty.emulatorRoot(dir);
-    if (!root || roots.has(root.toLowerCase())) continue;
+    if (!root || roots.has(pathKey(root))) continue;
     let titles = [];
     try {
       titles = kyty.discover(root, kytyOptions);
     } catch (err) {
       debug.warn(`[kytyps5] discovery failed under "${root}": ${err}`);
     }
-    roots.set(root.toLowerCase(), { root, titles });
+    roots.set(pathKey(root), { root, titles });
   }
   return [...roots.values()];
 }
@@ -95,28 +78,6 @@ function discover(configFile = userDirFile) {
 const baseline = createBaselineCache({ prefix: 'kytyps5', tag: 'kytyps5', debug });
 const cacheLoad = (key) => baseline.load(key);
 const cacheSave = (key, unlocked) => baseline.save(key, unlocked);
-
-function toastOptions(ctx) {
-  return {
-    notify: ctx.options.notification.notify,
-    transport: {
-      mode: ctx.options.notification_transport.mode,
-      websocket: ctx.options.notification_transport.websocket,
-    },
-    toast: {
-      appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-      winrt: ctx.options.notification_transport.winRT,
-      balloonFallback: ctx.options.notification_transport.balloon,
-      customAudio: ctx.options.notification_toast.customToastAudio,
-      volume: notificationVolumePercent(ctx.options),
-      imageIntegration: '0',
-      group: ctx.options.notification_toast.groupToast,
-      attribution: notifyStrings.forLang(ctx.options.achievement.lang).trophy,
-    },
-    prefetch: false, // the icons are already local files
-    rumble: ctx.options.notification.rumble,
-  };
-}
 
 async function announce(title, fresh, ctx) {
   let schema = null;
@@ -128,15 +89,11 @@ async function announce(title, fresh, ctx) {
   }
   const byId = new Map(schema.achievement.list.map((entry) => [String(entry.name), entry]));
   const gameName = schema.name || title.titleId;
-  // The game's own square icon and key art, for presets that paint the game beside the trophy.
-  const gameIcon = iconPathOf(schema.img);
-  const image = iconPathOf({ icon: schema.img && schema.img.header });
   let delay = 0;
   for (const entry of fresh) {
     const described = byId.get(String(entry.id));
     if (!described) continue;
     debug.log(`[kytyps5] Unlocked: ${gameName} - ${described.displayName}`);
-    const icon = iconPathOf(described);
     await ctx.notify(
       {
         source: kyty.SOURCE,
@@ -145,15 +102,14 @@ async function announce(title, fresh, ctx) {
         achievementName: String(entry.id),
         achievementDisplayName: described.displayName,
         achievementDescription: described.description,
-        icon: icon && fs.existsSync(icon) ? icon : undefined,
-        gameIcon: gameIcon || undefined,
-        image: image || undefined,
+        icon: kit.existingIcon(described),
+        ...kit.gameArt(schema),
         trophyGrade: trophyGradeOf(described.type),
         ...platinumFields(described.type, ctx.options),
         time: entry.earned_time || moment().unix(),
         delay,
       },
-      toastOptions(ctx)
+      kit.unlockToastOptions(ctx, { attribution: kit.localized(ctx, 'trophy') })
     );
     delay += 1;
   }
@@ -224,14 +180,13 @@ function titleFor(target, file) {
 
 function attachTrophies(target, ctx, knownAtStart) {
   const trophies = path.join(target.root, kyty.TROPHY_DIR);
-  const watcher = watch(longPath(trophies), { recursive: true }, (evt, name) => {
+  const watcher = watchers.open(trophies, { recursive: true }, (evt, name) => {
     if (!kyty.UNLOCKS_FILE.test(path.basename(name || ''))) return;
     const title = titleFor(target, name);
     // A removed file is a reset: the baseline follows it down, so re-earning a trophy announces it.
     if (title) changes.run(title.titleId, () => handleChange(title, evt === 'remove' ? '' : name, ctx, knownAtStart));
   });
-  watchers.push(guardWatcher(watcher, `'${trophies}'`, debug));
-  debug.log(`[kytyps5] watching trophies under '${trophies}'`);
+  if (watcher) debug.log(`[kytyps5] watching trophies under '${trophies}'`);
   return watcher;
 }
 
@@ -264,30 +219,22 @@ function catchUp(target, ctx, knownAtStart) {
   is watched for it, and the real watcher takes over the moment it appears.
 */
 function attach(target, ctx, knownAtStart) {
-  try {
-    if (fs.existsSync(path.join(target.root, kyty.TROPHY_DIR))) {
-      attachTrophies(target, ctx, knownAtStart);
-      return;
-    }
-    const takeOver = () => {
-      if (!watchers.includes(pending) || !fs.existsSync(path.join(target.root, kyty.TROPHY_DIR))) return;
-      try {
-        pending.close();
-      } catch {
-        /* already closed */
-      }
-      watchers = watchers.filter((entry) => entry !== pending);
-      attachTrophies(target, ctx, knownAtStart).on('ready', () => catchUp(target, ctx, knownAtStart));
-      catchUp(target, ctx, knownAtStart);
-    };
-    const pending = watch(longPath(target.root), { recursive: false }, takeOver);
-    // node-watch listens from 'ready' on, a tick later on Linux: what appeared before sends no event.
-    pending.on('ready', takeOver);
-    watchers.push(guardWatcher(pending, `'${target.root}'`, debug));
-    debug.log(`[kytyps5] no trophies yet - waiting for one in '${target.root}'`);
-  } catch (err) {
-    debug.warn(`[kytyps5] failed to watch ${target.root}: ${err}`);
+  if (fs.existsSync(path.join(target.root, kyty.TROPHY_DIR))) {
+    attachTrophies(target, ctx, knownAtStart);
+    return;
   }
+  const takeOver = () => {
+    if (!watchers.includes(pending) || !fs.existsSync(path.join(target.root, kyty.TROPHY_DIR))) return;
+    watchers.close(pending);
+    const trophies = attachTrophies(target, ctx, knownAtStart);
+    if (trophies) trophies.on('ready', () => catchUp(target, ctx, knownAtStart));
+    catchUp(target, ctx, knownAtStart);
+  };
+  const pending = watchers.open(target.root, { recursive: false }, takeOver);
+  if (!pending) return;
+  // node-watch listens from 'ready' on, a tick later on Linux: what appeared before sends no event.
+  pending.on('ready', takeOver);
+  debug.log(`[kytyps5] no trophies yet - waiting for one in '${target.root}'`);
 }
 
 // Tear down any existing watchers and (re)start from the current options. Safe to call on every
@@ -295,10 +242,7 @@ function attach(target, ctx, knownAtStart) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.kytyps5 === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'kytyps5')) return;
 
   let targets;
   try {
@@ -319,14 +263,7 @@ module.exports.start = async (ctx) => {
 
 module.exports.stop = () => {
   changes.clear();
-  for (const watcher of watchers) {
-    try {
-      watcher.close();
-    } catch {
-      /* already closed */
-    }
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 module.exports._internal = { catchUp, usersSeen, discover, watchedFolders, iconPathOf, handleChange, titleFor, titleIdsOnDisk, seedBaseline };

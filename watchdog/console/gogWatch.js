@@ -5,14 +5,11 @@
 
 const fs = require('fs');
 const path = require('path');
-const watch = require('../util/nodeWatch.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { guardWatcher } = require('../util/watchGuard.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
+const kit = require('./watcherKit.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { listHosts, hostPath } = require(sharedAppModulePath('util/winHosts.js'));
@@ -35,7 +32,7 @@ try {
   DatabaseSync = null;
 }
 
-let watchers = [];
+const watchers = kit.createWatcherList('gog', debug);
 const changes = createChangeCoalescer();
 let lastDiscoveryError = '';
 
@@ -215,25 +212,7 @@ async function handleChange(target, ctx) {
             delay,
             completion: { unlocked: achievedNow.length, total: list.length },
           },
-          {
-            notify: ctx.options.notification.notify,
-            transport: {
-              mode: ctx.options.notification_transport.mode,
-              websocket: ctx.options.notification_transport.websocket,
-            },
-            toast: {
-              appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-              winrt: ctx.options.notification_transport.winRT,
-              balloonFallback: ctx.options.notification_transport.balloon,
-              customAudio: ctx.options.notification_toast.customToastAudio,
-              volume: notificationVolumePercent(ctx.options),
-              imageIntegration: '0',
-              group: ctx.options.notification_toast.groupToast,
-              attribution: notifyStrings.forLang(ctx.options.achievement.lang).achievement,
-            },
-            prefetch: true, // icons are GOG CDN URLs
-            rumble: ctx.options.notification.rumble,
-          }
+          kit.unlockToastOptions(ctx, { prefetch: true }) // icons are GOG CDN URLs
         );
         delay += 1;
       }
@@ -250,11 +229,8 @@ async function handleChange(target, ctx) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  // A level now (0 off, 1 installed, 2 played); false is a file written before that.
-  if (ctx.options.achievement_source && (ctx.options.achievement_source.gogOfficial === false || String(ctx.options.achievement_source.gogOfficial) === '0')) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  // A level (0 off, 1 installed, 2 played): any level but 0 notifies.
+  if (!kit.canStart(ctx, 'gogOfficial')) return;
   if (!DatabaseSync) {
     debug.warn('[gog] node:sqlite unavailable - GOG official live toasts disabled');
     return;
@@ -285,28 +261,18 @@ module.exports.start = async (ctx) => {
         debug.warn(`[gog] baseline read failed for ${target.appid}: ${err}`);
       }
     }
-    try {
-      // WAL mode: an unlock may only touch gameplay.db-wal, so watch every gameplay.db* sibling.
-      const w = watch(target.gameplayDir, { recursive: false, filter: /gameplay\.db/i }, (evt) => {
-        if (evt !== 'update') return;
-        changes.run(target.appid, () => handleChange(target, ctx));
-      });
-      watchers.push(guardWatcher(w, `'${target.gameplayDir}'`, debug));
-      debug.log(`[gog] watching achievements for ${target.name} (${target.appid})`);
-    } catch (err) {
-      debug.warn(`[gog] failed to watch ${target.gameplayDir}: ${err}`);
-    }
+    // WAL mode: an unlock may only touch gameplay.db-wal, so watch every gameplay.db* sibling.
+    const w = watchers.open(target.gameplayDir, { recursive: false, filter: /gameplay\.db/i }, (evt) => {
+      if (evt !== 'update') return;
+      changes.run(target.appid, () => handleChange(target, ctx));
+    });
+    if (w) debug.log(`[gog] watching achievements for ${target.name} (${target.appid})`);
   }
 };
 
 module.exports.stop = () => {
   changes.clear();
-  for (const w of watchers) {
-    try {
-      w.close();
-    } catch {}
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 // Exposed for unit testing the pure readers.

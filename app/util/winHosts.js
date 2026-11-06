@@ -3,7 +3,6 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-// Joined onto __dirname: the Watchdog loads this file from app.asar.unpacked (see asarUnpack).
 const { discoverPrefixes } = require(path.join(__dirname, 'winePrefixes.js'));
 const wineRegistry = require(path.join(__dirname, 'wineRegistry.js'));
 

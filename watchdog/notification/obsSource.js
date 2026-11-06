@@ -1,5 +1,6 @@
 'use strict';
 
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 /*
   The OBS browser source.
 
@@ -20,7 +21,7 @@
 const fs = require('fs');
 const path = require('path');
 const { fileURLToPath } = require('url');
-const ini = require('../util/ini.js');
+const ini = require(sharedAppModulePath('util/ini.js'));
 const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const presetLocator = require('../util/presetLocator.js');
@@ -630,10 +631,7 @@ function createHandler(options = {}) {
 
   function soundFor(res) {
     const { overlay } = readSettings(optionsFile);
-    const file =
-      overlay.randomSound === true
-        ? notificationSound.pickRandomSound() || notificationSound.resolveSoundFile(overlay.notificationSound)
-        : notificationSound.resolveSoundFile(overlay.notificationSound);
+    const file = notificationSound.mainSound(overlay);
     if (!file || !AUDIO_EXTENSIONS.has(path.extname(file).toLowerCase())) {
       send(res, 404, 'text/plain; charset=utf-8', 'No notification sound is configured.');
       return;

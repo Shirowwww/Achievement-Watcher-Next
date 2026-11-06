@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const monitor = require('../../watchdog/monitor.js');
-const { mapStatProgressEntries } = require('../../watchdog/util/statProgress.js');
+const { mapStatProgressEntries } = require('../../app/parser/statProgress.js');
 
 (async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-watchdog-stat-'));

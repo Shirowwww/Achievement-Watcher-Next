@@ -5,50 +5,22 @@
 
 const fs = require('fs');
 const path = require('path');
-const watch = require('../util/nodeWatch.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const { createBaselineCache } = require('../util/baselineCache.js');
 const moment = require('moment');
 const debug = require('../util/log.js');
-const { trophyGradeOf, platinumFields } = require('../util/trophyGrade.js');
-const { guardWatcher } = require('../util/watchGuard.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
-const notifyStrings = require('../util/notifyStrings.js');
+const kit = require('./watcherKit.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { trophyGradeOf, platinumFields } = require(sharedAppModulePath('parser/trophyGrade.js'));
 const { hostPaths } = require(sharedAppModulePath('util/winHosts.js'));
 const { xdgAppDirs } = require(sharedAppModulePath('util/xdgAppDirs.js'));
+const { decodeXmlEntities: decodeXml } = require(sharedAppModulePath('util/xmlText.js'));
+const { LANG_FILE, toUnixSeconds, trophyType: ttype } = require(sharedAppModulePath('parser/shadps4.js'));
 
-// Best-effort language → TROP_NN.XML suffix (Sony index). english/default is the suffix-less TROP.XML.
-const LANG_FILE = { japanese: '00', english: '01', french: '02', spanish: '03', german: '04', italian: '05', russian: '08', koreana: '09', schinese: '11', polish: '16', brazilian: '17', turkish: '19' };
-
-
-let watchers = [];
+const watchers = kit.createWatcherList('shadps4', debug);
 const changes = createChangeCoalescer();
-
-function decodeXml(s) {
-  return String(s || '')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&#0?39;/g, "'")
-    .replace(/&amp;/g, '&');
-}
-
-function ttype(t) {
-  const c = String(t || '').trim().toUpperCase();
-  return ['P', 'G', 'S', 'B'].includes(c) ? c : 'B';
-}
-
-function toUnixSeconds(raw) {
-  let n = Number(raw);
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  if (n > 1e12) n = Math.floor(n / 1000000);
-  else if (n > 1e11) n = Math.floor(n / 1000);
-  return n;
-}
 
 // Parse one TROP*.XML string into { title, trophies:[{id, ttype, hidden, displayName, description, unlockstate, timestamp}] }.
 function parseXml(xml) {
@@ -231,25 +203,7 @@ async function handleChange(target, changedFile, ctx) {
             time: t.time || moment().unix(),
             delay,
           },
-          {
-            notify: ctx.options.notification.notify,
-            transport: {
-              mode: ctx.options.notification_transport.mode,
-              websocket: ctx.options.notification_transport.websocket,
-            },
-            toast: {
-              appid: typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID,
-              winrt: ctx.options.notification_transport.winRT,
-              balloonFallback: ctx.options.notification_transport.balloon,
-              customAudio: ctx.options.notification_toast.customToastAudio,
-              volume: notificationVolumePercent(ctx.options),
-              imageIntegration: '0',
-              group: ctx.options.notification_toast.groupToast,
-              attribution: notifyStrings.forLang(ctx.options.achievement.lang).trophy,
-            },
-            prefetch: false, // icons are already local files
-            rumble: ctx.options.notification.rumble,
-          }
+          kit.unlockToastOptions(ctx, { attribution: kit.localized(ctx, 'trophy') })
         );
         delay += 1;
       }
@@ -266,10 +220,7 @@ async function handleChange(target, changedFile, ctx) {
 module.exports.start = async (ctx) => {
   module.exports.stop();
 
-  if (!ctx || !ctx.options) return;
-  if (ctx.options.achievement_source && ctx.options.achievement_source.shadps4 === false) return;
-  if (ctx.options.notification && ctx.options.notification.notify === false) return;
-  if (typeof ctx.notify !== 'function') return;
+  if (!kit.canStart(ctx, 'shadps4')) return;
 
   let targets;
   try {
@@ -288,27 +239,17 @@ module.exports.start = async (ctx) => {
     }
     const watched = target.statePath ? path.dirname(target.statePath) : target.xmlDir;
     const filter = target.statePath ? (name) => path.basename(name) === path.basename(target.statePath) : /trop(_\d{2})?\.xml$/i;
-    try {
-      const w = watch(watched, { recursive: false, filter }, (evt, name) => {
-        if (evt !== 'update') return;
-        changes.run(target.appid, () => handleChange(target, name, ctx));
-      });
-      watchers.push(guardWatcher(w, `'${watched}'`, debug));
-      debug.log(`[shadps4] watching trophies for ${target.appid}`);
-    } catch (err) {
-      debug.warn(`[shadps4] failed to watch ${watched}: ${err}`);
-    }
+    const w = watchers.open(watched, { recursive: false, filter }, (evt, name) => {
+      if (evt !== 'update') return;
+      changes.run(target.appid, () => handleChange(target, name, ctx));
+    });
+    if (w) debug.log(`[shadps4] watching trophies for ${target.appid}`);
   }
 };
 
 module.exports.stop = () => {
   changes.clear();
-  for (const w of watchers) {
-    try {
-      w.close();
-    } catch {}
-  }
-  watchers = [];
+  watchers.closeAll();
 };
 
 // Exposed for unit testing the pure reader.
