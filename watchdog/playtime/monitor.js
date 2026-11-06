@@ -14,7 +14,7 @@ const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, mergeGameIndexe
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
 const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
-const { gameIndexFile, gameIndexCatalogueFile } = require(sharedAppModulePath('util/dataLayout.js'));
+const { gameIndexFile, gameIndexCatalogueFile, optionsFile } = require(sharedAppModulePath('util/dataLayout.js'));
 const { writeFileAtomicSync } = require(sharedAppModulePath('util/replaceFile.js'));
 const watchdogSettings = require('../settings.js');
 const { loadRegodit } = require('../util/regodit.js');
@@ -34,7 +34,7 @@ try {
 if (!blacklist || typeof blacklist !== 'object') blacklist = {};
 if (!Array.isArray(blacklist.ignore)) blacklist.ignore = [];
 if (!Array.isArray(blacklist.mute)) blacklist.mute = [];
-let gameIndex;
+let gameIndex = [];
 let gameIndexByBinary;
 let disabledOfficialSteamAppids = new Set();
 // Whether official Steam games are a source: a game Steam launched that the index does not know is one.
@@ -262,7 +262,7 @@ function filterGamesByAchievementSources(games, options) {
 
 async function loadWatchdogOptions() {
   try {
-    return await watchdogSettings.load(path.join(userDataDir(), 'cfg', 'options.ini'));
+    return await watchdogSettings.load(optionsFile(userDataDir()));
   } catch (err) {
     // The safe fallback is the default source setting: official Steam games are not tracked.
     debug.warn(`[Playtime] could not load source settings; official Steam tracking disabled: ${err.message || err}`);
@@ -621,7 +621,7 @@ async function init() {
         let created = false;
         if (!game) {
           const settings = require('../settings.js');
-          const options = await settings.load(path.join(userDataDir(), 'cfg', 'options.ini'));
+          const options = await settings.load(optionsFile(userDataDir()));
           const lang = options.achievement.lang;
           let d = await loadSteamData(appid, lang, process);
           // Not every app has a Steam "clienticon" (e.g. brand-new releases) - d.img.icon can be
@@ -823,4 +823,6 @@ module.exports = {
   candidateConfigDirs,
   relatedToFolder,
   nestedMarkerFitsExe,
+  // Exported for the test suite: it writes the user's own index, which it may only ever extend.
+  addToGameIndex,
 };

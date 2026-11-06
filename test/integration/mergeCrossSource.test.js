@@ -125,7 +125,7 @@ test('a GOG game keeps a genuinely installed Steam copy', () => {
 test('a GOG UniverseLAN repair dedupes a same-name Steam save phantom too, both orderings', () => {
   const universelan = {
     appid: '1423049311',
-    source: 'GOG Galaxy',
+    source: 'gog',
     data: { type: 'gogUniverseLan', title: 'Cyberpunk 2077', gogAppId: '1423049311', gameDir: 'C:\\Jeux\\Cyberpunk 2077' },
   };
   const steamPhantom = {
@@ -155,7 +155,7 @@ test('consolidateDiscoveryList keeps gogOfficial as the tile identity over a Uni
   };
   const universelan = {
     appid: '1423049311',
-    source: 'GOG Galaxy',
+    source: 'gog',
     data: { type: 'gogUniverseLan', title: 'Cyberpunk 2077', gogAppId: '1423049311', gameDir: 'C:\\Jeux\\Cyberpunk 2077' },
   };
   const clone = (record) => JSON.parse(JSON.stringify(record));
@@ -167,6 +167,7 @@ test('consolidateDiscoveryList keeps gogOfficial as the tile identity over a Uni
     const result = achievements._internal.consolidateDiscoveryList(list.map(clone));
     assert.equal(result.length, 1, `${label}: exactly one tile`);
     assert.equal(result[0].data.type, 'gogOfficial', `${label}: gogOfficial wins the tile identity`);
+    assert.equal(result[0].source, 'GOG Galaxy', `${label}: and its label, the one that says the copy is owned`);
     // The UniverseLAN-only field still rides along on the merged record's sources, so a repair
     // detail is never silently lost just because the native source won the tile.
     const sources = result[0]._sources || [];

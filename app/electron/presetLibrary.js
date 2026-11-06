@@ -24,7 +24,7 @@ const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js')
 const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require('../util/presetSchema.js');
 const { PREVIEW_PRESET_NAME } = require('../util/notificationPreset.js');
-const { gameIndexFile } = require('../util/dataLayout.js');
+const { gameIndexFile, iconCacheDir } = require('../util/dataLayout.js');
 const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
 const sanEngine = lazyRequire(path.join(__dirname, '../util/sanEngine/index.js'));
 const RarityTiers = require('../util/rarityTiers.js');
@@ -465,7 +465,7 @@ ipcMain.handle('notification-sample-art', async () => {
     // square-logo resolver rather than handing the raw 2:3 cover over: this sample feeds BOTH the
     // overlay preview and the Windows-notification test, so resolving it here is what keeps either
     // of them from framing artwork no real notification would show.
-    const header = path.join(userData, 'steam_cache', 'icon', appid, 'header.jpg');
+    const header = path.join(iconCacheDir(userData, appid), 'header.jpg');
     const image = fs.existsSync(header) ? header : cover;
     const icon = (await resolveSquareGameLogo(appid, pick.name || '', [cover, image]).catch(() => '')) || cover;
     return { appid, name: pick.name || '', icon, image };

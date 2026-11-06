@@ -11,7 +11,7 @@ const path = require('path');
 const debug = require('../util/log.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
-const { gameIndexFiles } = require(sharedAppModulePath('util/dataLayout.js'));
+const { gameIndexFiles, ubisoftIconDir } = require(sharedAppModulePath('util/dataLayout.js'));
 const {
   mergeConfigBlocks,
   readConfigurationBlocks,
@@ -20,9 +20,6 @@ const {
   defaultConfigurationsPath,
   achievementsRoots,
 } = require(sharedAppModulePath('parser/ubisoftFiles.js'));
-
-// Where the icons pulled out of an archive are kept; existing installs already hold files there.
-const iconCacheRoot = path.join(userDataDir(), 'steam_cache/ubisoftOfficial');
 
 function newestArchive(appid) {
   const prefix = `${appid}_`;
@@ -46,7 +43,7 @@ function newestArchive(appid) {
 }
 
 function iconWriter(appid, schema) {
-  const iconDir = path.join(iconCacheRoot, String(appid), 'img');
+  const iconDir = ubisoftIconDir(userDataDir(), appid);
   return (id) => {
     const image = schema.imageBuffers.get(String(id));
     if (!image) return undefined;

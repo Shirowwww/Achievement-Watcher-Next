@@ -5,7 +5,7 @@ const { TOOL_CACHE_DIRS } = require('./toolCaches.js');
 const os = require('os');
 const path = require('path');
 const { legacyUserDataDir, aw3UserDataDir } = require('./userDataPath.js');
-const { PLAYTIME_REGISTRY_ROOT } = require('./dataLayout.js');
+const { PLAYTIME_REGISTRY_ROOT, captureDir, optionsFile } = require('./dataLayout.js');
 
 const MARKER_REL = path.join('cfg', 'migrated-from-legacy.json');
 const AW3_MARKER_REL = path.join('cfg', 'migrated-from-aw3.json');
@@ -13,8 +13,6 @@ const SOUVENIR_MARKER_REL = path.join('cfg', 'migrated-souvenirs.json');
 // Screenshot souvenirs never carried a version in their folder name, so the pre-rename default is
 // just "Achievement Watcher" under Pictures.
 const AW3_SOUVENIR_DIR_NAME = 'Achievement Watcher';
-const SOUVENIR_DIR_NAME = 'Achievement Watcher Next';
-const SETTINGS_REL = path.join('cfg', 'options.ini');
 const LEGACY_PLAYTIME_ROOT = 'Software/Achievement Watcher/Playtime/Steam';
 const AW3_PLAYTIME_ROOT = 'Software/Achievement Watcher 3.0/Playtime/Steam';
 const PLAYTIME_ROOT = PLAYTIME_REGISTRY_ROOT;
@@ -155,7 +153,7 @@ function migratePlaytimeRegistry(fromRoot = LEGACY_PLAYTIME_ROOT) {
 // `<userData>\logs` as soon as they write a line. So "already initialized" must mean "has AW
 // configuration or a migration marker", never "is non-empty", or a stray log file blocks the import.
 function isAlreadyInitialized(target) {
-  return fs.existsSync(path.join(target, MARKER_REL)) || fs.existsSync(path.join(target, SETTINGS_REL));
+  return fs.existsSync(path.join(target, MARKER_REL)) || fs.existsSync(optionsFile(target));
 }
 
 // One import hop. Never deletes the source, never overwrites a file that already exists in the
@@ -292,7 +290,7 @@ function retargetBackupIndex(userDataDir, options = {}) {
 // the whole settings module out of the first few lines of the main process, where this runs.
 function configuredSouvenirDir(userDataDir) {
   try {
-    const text = fs.readFileSync(path.join(userDataDir, SETTINGS_REL), 'utf8');
+    const text = fs.readFileSync(optionsFile(userDataDir), 'utf8');
     const section = text.split(/^\[/m).find((part) => part.startsWith('souvenir]'));
     if (!section) return '';
     const line = section.split(/\r?\n/).find((l) => /^\s*dir\s*=/.test(l));
@@ -314,7 +312,7 @@ function migrateSouvenirFolder(userDataDir, options = {}) {
   if (configuredSouvenirDir(userDataDir)) return null; // user-chosen path: leave it alone
 
   const from = options.fromDir || path.join(home, 'Pictures', AW3_SOUVENIR_DIR_NAME);
-  const to = options.toDir || path.join(home, 'Pictures', SOUVENIR_DIR_NAME);
+  const to = options.toDir || captureDir('pictures', home);
   const marker = path.join(userDataDir, SOUVENIR_MARKER_REL);
 
   try {
@@ -339,7 +337,6 @@ module.exports = {
   migrateSouvenirFolder,
   retargetBackupIndex,
   configuredSouvenirDir,
-  SOUVENIR_DIR_NAME,
   AW3_SOUVENIR_DIR_NAME,
   SOUVENIR_MARKER_REL,
   migratePlaytimeRegistry,

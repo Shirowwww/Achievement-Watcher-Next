@@ -17,7 +17,9 @@ let xinputPromise = null;
 const loadXinput = () => xinputPromise || (xinputPromise = import('xinput-ffi').catch(() => null));
 const loadRumble = () => (process.platform === 'win32' ? loadXinput() : Promise.resolve(require('./util/evdevRumble.js')));
 
-const cfg_file = path.join(require('./util/userData.js').userDataDir(), 'cfg', 'options.ini');
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
+const { optionsFile } = require(sharedAppModulePath('util/dataLayout.js'));
+const cfg_file = optionsFile(require('./util/userData.js').userDataDir());
 
 const TEST_APPID = 367520;
 const TEST_GAME = 'Hollow Knight';

@@ -1295,7 +1295,7 @@ let achievementsJS = null;
 // Read the GPU preference before app.ready; disabling it is opt-in.
 let userDisableGpu = false;
 try {
-  const parsed = require('../util/ini').parse(fs.readFileSync(path.join(userData, 'cfg/options.ini'), 'utf8'));
+  const parsed = require('../util/ini').parse(fs.readFileSync(dataLayout.optionsFile(userData), 'utf8'));
   const v = parsed && parsed.general && parsed.general.disableHardwareAccel;
   userDisableGpu = v === true || v === 'true';
 } catch {
@@ -3569,7 +3569,6 @@ async function blockHeavyResources(page, { keepImages = false } = {}) {
 // Modern Steam covers live under a hashed path that cannot be derived from the appid; SteamDB's
 // app-info page lists the real links (stealth browser, it 403s plain requests), cached 30 days and
 // serialized through one queue so a cold scan never opens N parallel browser pages.
-const steamdbCoversDir = path.join(userData, 'steam_cache', 'steamdb_covers');
 const steamdbCoversInFlight = new Map();
 let steamdbCoversQueue = Promise.resolve();
 let artworkCacheGeneration = 0;
@@ -3604,7 +3603,7 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
   const id = String(appid || '').trim();
   if (!/^\d+$/.test(id)) return empty;
   const generation = artworkCacheGeneration;
-  const cacheFile = path.join(steamdbCoversDir, `${id}.json`);
+  const cacheFile = dataLayout.steamDbCoversFile(userData, id);
   // Asynchronous on purpose: the library scan asks this once per game, and existsSync + readFileSync
   // + statSync are three blocking calls each on the same thread that is painting the window.
   try {
@@ -4193,7 +4192,7 @@ async function fetchExecutableIcon(exePath, appid) {
   const native = !/\.exe$/i.test(source);
   if (!source || (native && process.platform === 'win32')) return null;
   try {
-    const dir = path.join(userData, 'steam_cache', 'icon', String(appid || 'unknown'));
+    const dir = dataLayout.iconCacheDir(userData, appid || 'unknown');
     const target = path.join(dir, EXECUTABLE_ICON_NAME);
     /* Reuse what was extracted last time: this runs on the default path, asked for on every
        notification and page open, so re-reading a 100 MB PE resource section each time is real cost. */
@@ -4317,7 +4316,7 @@ ipcMain.handle('forget-square-logo', async (event, { appid, name } = {}) => {
     /* nothing cached is the normal case */
   }
   try {
-    const iconDir = path.join(userData, 'steam_cache', 'icon', id);
+    const iconDir = dataLayout.iconCacheDir(userData, id);
     for (const entry of fs.readdirSync(iconDir)) {
       if (/-logo\.png$/i.test(entry) || entry.toLowerCase() === 'executable-icon.png') fs.rmSync(path.join(iconDir, entry), { force: true });
     }
@@ -8002,7 +8001,7 @@ try {
       setTimeout(() => {
         try {
           const { pruneIconCache } = require(path.join(__dirname, '../util/iconCache.js'));
-          const r = pruneIconCache(path.join(userData, 'steam_cache', 'icon'));
+          const r = pruneIconCache(dataLayout.iconCacheRoot(userData));
           if (r.count > 0)
             debug.log(`[iconCache] pruned ${r.count} folder(s), freed ${(r.freed / 1048576).toFixed(0)}MB (was ${(r.before / 1048576).toFixed(0)}MB)`);
         } catch (err) {

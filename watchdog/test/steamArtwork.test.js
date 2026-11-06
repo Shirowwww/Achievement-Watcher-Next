@@ -45,46 +45,28 @@ test('resolved schema artwork wins over legacy Steam CDN URLs', () => {
   }
 });
 
-test('SteamDB cover cache supplies a portrait when the schema has none', () => {
+// The app's SteamDB fetch (init.js) writes { urls } for each appid; the portrait is picked from it.
+test('the SteamDB covers the app cached supply a portrait when the schema has none', () => {
   const root = fixture();
   try {
-    writeJson(root, 'steam_cache/steamdb_cover/3751950.json', {
-      appid: '3751950',
-      url: 'https://cdn.example/3751950/hash/library_capsule.jpg',
+    writeJson(root, 'steam_cache/steamdb_covers/3751950.json', {
+      urls: [
+        'https://cdn.example/3751950/hash/capsule_616x353.jpg',
+        'https://cdn.example/3751950/hash/library_capsule.jpg',
+        'https://cdn.example/3751950/hash/library_600x900.jpg',
+      ],
     });
 
     assert.equal(
       steamLibraryImage('3751950', { userDataRoot: root }),
-      'https://cdn.example/3751950/hash/library_capsule.jpg'
+      'https://cdn.example/3751950/hash/library_600x900.jpg'
     );
   } finally {
     cleanup(root);
   }
 });
 
-test('store cache header is used and the guessable portrait.png placeholder is ignored', () => {
-  const root = fixture();
-  try {
-    writeJson(root, 'steam_cache/store/3751950.json', {
-      header: 'https://cdn.example/3751950/hash/capsule_616x353.jpg',
-      portrait: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/3751950/portrait.png',
-    });
-
-    assert.equal(
-      steamHeaderImage('3751950', { userDataRoot: root }),
-      'https://cdn.example/3751950/hash/capsule_616x353.jpg'
-    );
-    assert.equal(
-      steamLibraryImage('3751950', { userDataRoot: root }),
-      'https://cdn.example/3751950/hash/capsule_616x353.jpg',
-      'a guessable placeholder must not be treated as resolved artwork; the hashed header is the better fallback'
-    );
-  } finally {
-    cleanup(root);
-  }
-});
-
-test('a resolved hashed URL wins over a stale predictable URL in the schema', () => {
+test('a SteamDB portrait wins over a stale predictable URL in the schema', () => {
   const root = fixture();
   try {
     writeJson(root, 'steam_cache/schema/english/999999.db', {
@@ -93,18 +75,13 @@ test('a resolved hashed URL wins over a stale predictable URL in the schema', ()
         portrait: 'https://cdn.akamai.steamstatic.com/steam/apps/999999/library_600x900.jpg',
       },
     });
-    writeJson(root, 'steam_cache/store/999999.json', {
-      header: 'https://cdn.example/999999/hash/header.jpg',
-      portrait: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/999999/portrait.png',
-    });
-    writeJson(root, 'steam_cache/steamdb_cover/999999.json', {
-      appid: '999999',
-      url: 'https://cdn.example/999999/hash/library_capsule.jpg',
+    writeJson(root, 'steam_cache/steamdb_covers/999999.json', {
+      urls: ['https://cdn.example/999999/hash/library_capsule.jpg'],
     });
 
     assert.equal(
       steamHeaderImage('999999', { userDataRoot: root }),
-      'https://cdn.example/999999/hash/header.jpg'
+      'https://cdn.akamai.steamstatic.com/steam/apps/999999/header.jpg'
     );
     assert.equal(
       steamLibraryImage('999999', { userDataRoot: root }),
@@ -124,9 +101,8 @@ test('a custom schema portrait is preserved even when SteamDB has a default', ()
         portrait: 'https://cdn2.steamgriddb.com/custom.jpg',
       },
     });
-    writeJson(root, 'steam_cache/steamdb_cover/777777.json', {
-      appid: '777777',
-      url: 'https://cdn.example/777777/hash/library_capsule.jpg',
+    writeJson(root, 'steam_cache/steamdb_covers/777777.json', {
+      urls: ['https://cdn.example/777777/hash/library_capsule.jpg'],
     });
 
     assert.equal(steamLibraryImage('777777', { userDataRoot: root }), 'https://cdn2.steamgriddb.com/custom.jpg');
@@ -151,16 +127,14 @@ test('legacy URLs remain the fallback when no cache exists', () => {
   }
 });
 
-test('store and SteamDB cover json are read from disk once per file, then served from cache', () => {
+test('schema and SteamDB cover json are read from disk once per file, then served from cache', () => {
   const root = fixture();
   try {
-    writeJson(root, 'steam_cache/store/3751950.json', {
-      header: 'https://cdn.example/3751950/hash/capsule_616x353.jpg',
-      portrait: 'https://cdn.example/3751950/hash/library_capsule.jpg',
+    writeJson(root, 'steam_cache/schema/english/3751950.db', {
+      img: { header: 'https://cdn.example/3751950/hash/capsule_616x353.jpg' },
     });
-    writeJson(root, 'steam_cache/steamdb_cover/3751950.json', {
-      appid: '3751950',
-      url: 'https://cdn.example/3751950/hash/library_600x900.jpg',
+    writeJson(root, 'steam_cache/steamdb_covers/3751950.json', {
+      urls: ['https://cdn.example/3751950/hash/library_600x900.jpg'],
     });
 
     const original = fs.readFileSync;
@@ -170,8 +144,8 @@ test('store and SteamDB cover json are read from disk once per file, then served
       return original.apply(fs, args);
     };
     try {
-      // Each call touches both header (store) and portrait (store + steamdb cover) lookups; a
-      // second unlock notification for the same game must not re-parse either json file.
+      // Each call reads the schema, and the portrait the SteamDB covers too; a second unlock
+      // notification for the same game must not re-parse either json file.
       steamHeaderImage('3751950', { userDataRoot: root });
       steamLibraryImage('3751950', { userDataRoot: root });
       const readsAfterFirstPass = reads;

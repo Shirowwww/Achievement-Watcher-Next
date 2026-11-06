@@ -32,6 +32,7 @@ const fuzzyAppid = require(path.join(appPath, 'util/fuzzyAppid.js'));
 const { ipcInvoke, ipcAvailable } = require(path.join(appPath, 'util/ipcInvoke.js'));
 const steamLanguages = require(path.join(appPath, 'locale/steam.json'));
 const { isUnambiguousRldBlob, decodeRldBlob } = require('../util/rldBlob.js');
+const { iconCacheDir } = require('../util/dataLayout.js');
 const emuSave = require(path.join(appPath, 'parser/emuSave.js'));
 const ff7 = require(path.join(appPath, 'parser/ff7.js'));
 const fs = require('fs');
@@ -2206,7 +2207,7 @@ module.exports.fetchIcon = async (url, appID) => {
   let validUrl;
   let filePath;
   try {
-    const cache = path.join(userDataDir(), `steam_cache/icon/${appID}`);
+    const cache = iconCacheDir(userDataDir(), appID);
     let filename = iconCacheFilename(url, appID);
     filePath = path.join(cache, filename);
     if (usableCachedImage(filePath)) return filePath;

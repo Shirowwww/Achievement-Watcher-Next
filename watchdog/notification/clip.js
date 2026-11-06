@@ -1,6 +1,5 @@
 'use strict';
 
-const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 // Video souvenir: a recorder runs only while a tracked game does, and each unlock shown on screen
 // is saved with the unlock in the middle, in a folder of its own. Windows records with
 // aw-next-clip.exe; Linux with gpu-screen-recorder, or with the app's software recorder when the
@@ -9,10 +8,12 @@ const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const readline = require('readline');
 const { spawn } = require('child_process');
 const debug = require('../util/log.js');
 const { normalize, split, recorderArgs } = require(sharedAppModulePath('util/clipProfile.js'));
+const { captureDir } = require(sharedAppModulePath('util/dataLayout.js'));
 const { souvenirPath } = require('./souvenir.js');
 const gsrClip = require('./gsrClip.js');
 const clipPart = require('./clipPart.js');
@@ -45,9 +46,9 @@ const state = {
   unsupportedKey: null,
 };
 
-// Kept in sync with clipDefaultDir() in app/ui/settings.js, which shows this folder.
+// Settings shows this same folder (clipDefaultDir() in app/ui/settings.js).
 function defaultDir() {
-  return path.join(os.homedir(), 'Videos', 'Achievement Watcher Next');
+  return captureDir('videos');
 }
 
 function resolveHelper() {

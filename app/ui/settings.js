@@ -34,6 +34,7 @@ const notificationPlacement = require(path.join(appPath, 'util/notificationPlace
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
 const clipProfile = require(path.join(appPath, 'util/clipProfile.js'));
 const { prefixFolder } = require(path.join(appPath, 'util/prefixFolder.js'));
+const { captureDir: settingsCaptureDir } = require(path.join(appPath, 'util/dataLayout.js'));
 // Named for settings.js: every classic script shares one global scope (see the note on settingsFs).
 const { WATCHDOG_PORT: settingsWatchdogPort } = require(path.join(appPath, 'util/watchdogPipe.js'));
 // Where OBS points a Browser source. The Watchdog serves the selected preset at /obs on its own
@@ -5085,23 +5086,14 @@ function boolifyValue(v) {
   return v === 'true' ? true : v === 'false' ? false : v;
 }
 
-// Mirrors defaultDir() in watchdog/notification/souvenir.js (the Watchdog writes the file), so the
-// two must agree or the UI would show a folder nothing is saved to.
+// The folder the Watchdog saves shots to when none is chosen (souvenir.js defaultDir()).
 function souvenirDefaultDir() {
-  try {
-    return path.join(remote.app.getPath('pictures'), 'Achievement Watcher Next');
-  } catch (e) {
-    return 'Pictures\\Achievement Watcher Next';
-  }
+  return settingsCaptureDir('pictures');
 }
 
-// Mirrors defaultDir() in watchdog/notification/clip.js, for the same reason.
+// Same for clips (clip.js defaultDir()).
 function clipDefaultDir() {
-  try {
-    return path.join(remote.app.getPath('videos'), 'Achievement Watcher Next');
-  } catch (e) {
-    return 'Videos\\Achievement Watcher Next';
-  }
+  return settingsCaptureDir('videos');
 }
 
 // Resolve a notification sound name to an absolute path. User-imported sounds (in <userData>/sounds)

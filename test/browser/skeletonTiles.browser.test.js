@@ -43,6 +43,8 @@ test('placeholder tiles track the real game count and never outlive the stream',
       const real = () => window.$('#game-list .game-box').not('.skeleton').length;
 
       const out = {};
+      // sort.js supplies the installed-only state in the real page; off until the part that tests it.
+      window.installedOnlyEnabled = () => false;
 
       // A small library: the first scan of a session seeds the default block before the count is known.
       window.$('#game-list ul').empty();

@@ -1,29 +1,9 @@
 'use strict';
 
 const assert = require('node:assert/strict');
-const { sanitizeAppIdForPlatform, officialAppId, rawAppId, normalizeType } = require('../../app/util/platformId.js');
+const { officialAppId, rawAppId, normalizeType } = require('../../app/util/platformId.js');
 
 (() => {
-  // sanitizeAppIdForPlatform: per-platform id shape validation.
-  assert.equal(sanitizeAppIdForPlatform('440', 'steam'), '440');
-  assert.equal(sanitizeAppIdForPlatform('1423049311', 'gogOfficial'), '1423049311');
-  assert.equal(sanitizeAppIdForPlatform('1843', 'ubisoftOfficial'), '1843');
-  assert.equal(sanitizeAppIdForPlatform('9773aa1aa54f4f7b80e44bef04986cea', 'epicOfficial'), '9773aa1aa54f4f7b80e44bef04986cea');
-  assert.equal(sanitizeAppIdForPlatform('CUSA03173', 'shadps4'), 'CUSA03173');
-  assert.equal(sanitizeAppIdForPlatform('PPSA01325', 'kytyps5'), 'PPSA01325');
-  assert.equal(sanitizeAppIdForPlatform('../PPSA01325', 'kytyps5'), '', 'a title id never carries a path');
-  assert.equal(sanitizeAppIdForPlatform('pcports-ladxhd', 'pcports'), 'pcports-ladxhd');
-  assert.equal(sanitizeAppIdForPlatform('ladxhd', 'pcports'), '', 'a PC port id is always namespaced');
-  assert.equal(sanitizeAppIdForPlatform('ps4recomp-NPWR07999_00', 'ps4recomp'), 'ps4recomp-NPWR07999_00');
-  assert.equal(sanitizeAppIdForPlatform('NPWR07999_00', 'ps4recomp'), '', 'a PS4 port id is always namespaced');
-  assert.equal(sanitizeAppIdForPlatform('ps4recomp-../x', 'ps4recomp'), '', 'and never carries a path');
-  assert.equal(sanitizeAppIdForPlatform('NPWR12345_00', 'rpcs3'), 'NPWR12345_00');
-  assert.equal(sanitizeAppIdForPlatform('0x4D5307E6', 'xenia'), '4D5307E6'); // 0x stripped
-  // rejects malformed ids
-  assert.equal(sanitizeAppIdForPlatform('not!valid', 'steam'), '');
-  assert.equal(sanitizeAppIdForPlatform('CUSA03173', 'rpcs3'), ''); // wrong platform shape
-  assert.equal(sanitizeAppIdForPlatform('', 'steam'), '');
-
   // officialAppId: namespaces the collision-prone native-id sources.
   // Ubisoft small ints overlap Steam appids → must be namespaced
   assert.equal(officialAppId('ubisoftOfficial', '1843'), 'uplay-1843');

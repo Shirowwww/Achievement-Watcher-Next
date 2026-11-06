@@ -1,7 +1,7 @@
 'use strict';
 
-// Validate appids and namespace native ids before they enter shared caches.
-// This prevents official GOG/Ubisoft entries from colliding with Steam appids.
+// Namespace native ids before they enter shared caches, so official GOG/Ubisoft entries never
+// collide with Steam appids.
 
 // Map an internal parser `data.type` / source to a stable short platform tag.
 const SOURCE_TO_PLATFORM = {
@@ -24,43 +24,6 @@ const PLATFORM_PREFIX = {
 
 function normalizeType(type) {
   return SOURCE_TO_PLATFORM[type] || String(type || '').trim().toLowerCase();
-}
-
-// Validate/normalize a raw appid for a platform. Returns '' when it doesn't match the expected
-// shape, so callers can reject a malformed id before it becomes a cache filename.
-function sanitizeAppIdForPlatform(value, type) {
-  const raw = String(value || '').trim();
-  if (!raw) return '';
-  const platform = normalizeType(type);
-  switch (platform) {
-    case 'epic-official':
-      // Epic namespace / catalog id: alphanumeric + a few separators.
-      return /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(raw) ? raw : '';
-    case 'rpcs3':
-      return /^NP[A-Z0-9_]+$/i.test(raw) ? raw : '';
-    case 'shadps4':
-      return /^CUSA[0-9]+$/i.test(raw) || /^NP[A-Z0-9_]+$/i.test(raw) ? raw : '';
-    case 'kytyps5':
-      return /^[A-Z0-9_-]{1,32}$/i.test(raw) ? raw : '';
-    case 'pcports':
-      return /^pcports-[a-z0-9]{1,32}$/.test(raw) ? raw : '';
-    case 'ps4recomp':
-      // Always namespaced by the parser, so it never meets a Steam appid or a ShadPS4 NPWR id.
-      return /^ps4recomp-[A-Z0-9_-]{1,40}$/i.test(raw) ? raw : '';
-    case 'ps3recomp':
-      return /^ps3recomp-NPWR\d{5}_\d{2}$/i.test(raw) ? raw : '';
-    case 'xenia':
-      return /^(?:0x)?[0-9a-f]+$/i.test(raw) ? raw.replace(/^0x/i, '') : '';
-    case 'steam':
-    case 'steam-official':
-    case 'gog':
-    case 'gog-official':
-    case 'ubisoft-official':
-    case 'uplay':
-    default:
-      // Numeric id space (Steam/GOG/Ubisoft/emulated). Hex is tolerated for legacy callers.
-      return /^[0-9a-fA-F]+$/.test(raw) ? raw : '';
-  }
 }
 
 // Collision-safe cache key for a source's appid. Native-id official sources get a `<prefix>-<id>`
@@ -98,7 +61,6 @@ function steamAppidOf(game) {
 
 module.exports = {
   normalizeType,
-  sanitizeAppIdForPlatform,
   officialAppId,
   rawAppId,
   steamAppidOf,

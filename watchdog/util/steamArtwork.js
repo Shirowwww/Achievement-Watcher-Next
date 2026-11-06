@@ -10,7 +10,7 @@ const path = require('path');
 const { userDataDir } = require('./userData.js');
 const { sharedAppModulePath } = require('./sharedAppModule.js');
 const { gameIconsFile } = require(sharedAppModulePath('util/gameIconStore.js'));
-const { iconCacheDir } = require(sharedAppModulePath('util/dataLayout.js'));
+const { iconCacheDir, steamDbCoversFile } = require(sharedAppModulePath('util/dataLayout.js'));
 
 function readJson(filePath) {
   try {
@@ -94,25 +94,16 @@ function cachedSchemaArt(appid, root) {
   return data && typeof data.img === 'object' && data.img ? data.img : null;
 }
 
-function cachedStoreArt(appid, root) {
-  return readJsonCached(path.join(root, 'steam_cache', 'store', `${appid}.json`));
-}
-
 function cachedSteamDbPortrait(appid, root) {
-  const single = readJsonCached(path.join(root, 'steam_cache', 'steamdb_cover', `${appid}.json`));
-  if (single && isImageUrl(single.url)) return single.url;
-
-  const list = readJsonCached(path.join(root, 'steam_cache', 'steamdb_covers', `${appid}.json`));
-  if (list && Array.isArray(list.urls)) {
-    const urls = list.urls.filter(isImageUrl);
-    return (
-      urls.find((url) => /library_600x900/i.test(url)) ||
-      urls.find((url) => /library_capsule/i.test(url)) ||
-      urls[0] ||
-      null
-    );
-  }
-  return null;
+  const list = readJsonCached(steamDbCoversFile(root, appid));
+  if (!list || !Array.isArray(list.urls)) return null;
+  const urls = list.urls.filter(isImageUrl);
+  return (
+    urls.find((url) => /library_600x900/i.test(url)) ||
+    urls.find((url) => /library_capsule/i.test(url)) ||
+    urls[0] ||
+    null
+  );
 }
 
 // The square game logo the app resolved from SteamGridDB's icon set, if it has one for this game.
@@ -211,13 +202,7 @@ function steamHeaderImage(appid, options = {}) {
   const root = options.userDataRoot || userDataDir();
 
   const schemaImg = cachedSchemaArt(id, root);
-  const schemaHeader = schemaImg && isUsableArt(schemaImg.header) ? schemaImg.header : null;
-  if (schemaHeader && isResolvedArt(schemaHeader)) return schemaHeader;
-
-  const store = cachedStoreArt(id, root);
-  if (store && isResolvedArt(store.header)) return store.header;
-  if (schemaHeader) return schemaHeader;
-  if (store && isUsableArt(store.header)) return store.header;
+  if (schemaImg && isUsableArt(schemaImg.header)) return schemaImg.header;
 
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/header.jpg`;
 }
@@ -234,13 +219,6 @@ function steamLibraryImage(appid, options = {}) {
   const steamdb = cachedSteamDbPortrait(id, root);
   if (steamdb) return steamdb;
   if (schemaPortrait) return schemaPortrait;
-
-  const store = cachedStoreArt(id, root);
-  if (store && isResolvedArt(store.portrait)) return store.portrait;
-
-  // Modern titles put their real (hashed) store assets under store_item_assets. When no portrait
-  // has been resolved yet, the landscape header is still far sharper than Steam's 32×32 clienticon.
-  if (store && isResolvedArt(store.header)) return store.header;
 
   return `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`;
 }

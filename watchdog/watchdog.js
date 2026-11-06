@@ -112,7 +112,7 @@ const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const { DEFAULT_HOTKEY, DEFAULT_CONTROLLER_BINDINGS } = require(sharedAppModulePath('settings.js'));
 const { userDirFile } = require(sharedAppModulePath('parser/userDirEntries.js'));
 const { SOURCE_LABEL } = require(sharedAppModulePath('util/sourceIdentity.js'));
-const { gameIndexFiles } = require(sharedAppModulePath('util/dataLayout.js'));
+const { gameIndexFiles, optionsFile } = require(sharedAppModulePath('util/dataLayout.js'));
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
@@ -248,7 +248,7 @@ const OPTIONS_RELOAD_DEBOUNCE_MS = 1500;
 const NEW_ROOT_POLL_MS = 5 * 1000;
 
 const cfg_file = {
-  option: path.join(userDataDir(), 'cfg', 'options.ini'),
+  option: optionsFile(userDataDir()),
   userDir: userDirFile(userDataDir()),
   saveRedirects: saveRedirects.redirectsFile(userDataDir()),
   shortcutSaveIds: shortcutSaveIds.idsFile(userDataDir()),

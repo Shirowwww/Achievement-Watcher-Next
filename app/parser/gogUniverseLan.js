@@ -543,7 +543,9 @@ function scan({ userDataPath, localAppData = null }) {
     if (!found) continue;
     out.push({
       appid: entry.gogAppId,
-      source: 'GOG Galaxy',
+      // gog.js's label for every other UniverseLAN save: a GOG game, but not a Galaxy-owned copy,
+      // so no purchase badge and the local save can be reset.
+      source: 'gog',
       name: readGogGameTitle(entry.gameDir, entry.gogAppId),
       data: {
         type: 'gogUniverseLan',

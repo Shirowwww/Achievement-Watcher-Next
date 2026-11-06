@@ -20,12 +20,12 @@
 
 const fs = require('fs');
 const path = require('path');
+const { iconCacheRoot } = require('./dataLayout.js');
 
 // v2: blurred only, the page draws the tint; the new name keeps tinted v1 files from being read.
 const STYLIZED_ROOT = ['steam_cache', 'stylized-v2'];
 const OLD_STYLIZED_ROOT = ['steam_cache', 'stylized'];
 const XBOX_CACHE_ROOT = ['steam_cache', 'xbox'];
-const ICON_CACHE_ROOT = ['steam_cache', 'icon'];
 const PURGE_MARKER = ['cfg', 'purged-tinted-covers.json'];
 
 // The appid names a folder, so it stays a plain id, exactly like every other cache path here.
@@ -88,7 +88,7 @@ function purgeTintedXboxCovers(userDataPath, { force = false } = {}) {
   const removed = [];
   try {
     const xboxRoot = path.join(userDataPath, ...XBOX_CACHE_ROOT);
-    const iconRoot = path.join(userDataPath, ...ICON_CACHE_ROOT);
+    const iconRoot = iconCacheRoot(userDataPath);
     for (const entry of fs.readdirSync(xboxRoot, { withFileTypes: true })) {
       if (!entry.isDirectory()) continue;
       const target = path.join(iconRoot, entry.name);

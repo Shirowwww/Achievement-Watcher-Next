@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const aes = require(path.join(appPath, 'util/aes.js'));
 const { writeFileAtomicSync } = require(path.join(appPath, 'util/replaceFile.js'));
+const { optionsFile } = require(path.join(appPath, 'util/dataLayout.js'));
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
@@ -40,7 +41,7 @@ function normalizeControllerBindingSetting(value, allowedButtons, fallback) {
 
 let filename;
 module.exports.setUserDataPath = (p) => {
-  if (p) filename = path.join(p, 'cfg/options.ini');
+  if (p) filename = optionsFile(p);
 };
 
 /*

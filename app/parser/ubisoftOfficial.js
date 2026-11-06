@@ -28,6 +28,7 @@ const { officialAppId } = require('../util/platformId.js');
 const uplayCatalogue = require('./uplayCatalogue.js');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 const ubisoftRegistry = require('../util/ubisoftRegistry.js');
+const { ubisoftIconDir } = require('../util/dataLayout.js');
 const { ipcInvoke } = require('../util/ipcInvoke.js');
 
 // The self-heal loop awaits one 30s download per broken game. Offline that is 30s each, in a row,
@@ -745,7 +746,7 @@ module.exports.getGameData = async (appid, lang) => {
   if (!schema.ids.length) throw `Empty Ubisoft achievements archive for ${appid.appid}`;
 
   // extract icons once - the renderer displays local paths directly (no network)
-  const imgDir = path.join(cacheRoot || '', 'steam_cache', 'ubisoftOfficial', String(appid.appid), 'img');
+  const imgDir = ubisoftIconDir(cacheRoot || '', appid.appid);
   fs.mkdirSync(imgDir, { recursive: true });
   const iconPathFor = (id) => {
     if (!schema.imageBuffers.has(id)) return '';
@@ -813,7 +814,7 @@ module.exports.getGameData = async (appid, lang) => {
       const gamesRoot = uplayPath ? path.join(uplayPath, 'data/games') : '';
       const meta = data.configBlock || {};
       if (assetsRoot) {
-        const imgDir = path.join(cacheRoot || '', 'steam_cache', 'ubisoftOfficial', String(appid.appid), 'img');
+        const imgDir = ubisoftIconDir(cacheRoot || '', appid.appid);
         fs.mkdirSync(imgDir, { recursive: true });
         const copyAsset = (name, sourceRoot, key) => {
           if (!name) return '';

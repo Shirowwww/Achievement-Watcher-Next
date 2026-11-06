@@ -40,6 +40,25 @@ test('a souvenir is named after its achievement, then its date', () => {
   }
 });
 
+// Shots stay where every version saved them, under <home>/Pictures, even when OneDrive has moved
+// the system Pictures folder: the user asked for that (2026-11-06).
+test('without a folder of its own, a souvenir goes under <home>/Pictures', (t) => {
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-home-'));
+  const saved = { USERPROFILE: process.env.USERPROFILE, HOME: process.env.HOME };
+  process.env.USERPROFILE = home;
+  process.env.HOME = home;
+  t.after(() => {
+    for (const [name, value] of Object.entries(saved)) {
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+    }
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  const file = souvenirPath({ game: 'G', achievement: 'A', dir: '' });
+  assert.equal(path.dirname(file), path.join(home, 'Pictures', 'Achievement Watcher Next', 'G'));
+});
+
 test('names Windows would refuse are made safe instead of lost', () => {
   // Reserved device names are rejected whatever the extension.
   for (const reserved of ['NUL', 'CON', 'PRN', 'AUX', 'COM1', 'LPT9', 'nul', 'Com1']) {

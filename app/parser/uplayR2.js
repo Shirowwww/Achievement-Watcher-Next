@@ -1774,7 +1774,6 @@ module.exports = {
   INI_NAMES,
   ALL_INI_NAMES,
   UPLAY_INSTALL_MARKERS,
-  UPLAY_SAVE_ROOT_NAME: FLAVOURS.r2.saveRoot,
   FLAVOURS,
   FLAVOUR_LIST,
   flavourForDll,

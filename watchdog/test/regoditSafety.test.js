@@ -58,7 +58,8 @@ test(
   'regodit sync registry read works on Windows',
   { skip: process.platform !== 'win32' ? 'Windows-only' : false },
   async () => {
-    const regedit = await import('regodit');
+    // Through the helper, which pins the Go DLL: loaded bare, this test process itself could crash on exit.
+    const regedit = await require(HELPER).loadRegodit();
     let value;
     try {
       value = regedit.regQueryIntegerValue('HKCU', 'Control Panel/Accessibility', 'MessageDuration');

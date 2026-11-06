@@ -1,6 +1,5 @@
 'use strict';
 
-const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 /*
   The OBS browser source.
 
@@ -21,7 +20,9 @@ const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const fs = require('fs');
 const path = require('path');
 const { fileURLToPath } = require('url');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const ini = require(sharedAppModulePath('util/ini.js'));
+const dataLayout = require(sharedAppModulePath('util/dataLayout.js'));
 const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const presetLocator = require('../util/presetLocator.js');
@@ -138,7 +139,7 @@ function _resetArtwork() {
 const NO_SETTINGS = { overlay: {}, lang: 'english' };
 let cachedSettings = { value: NO_SETTINGS, stamp: '' };
 function readSettings(optionsFile) {
-  const file = optionsFile || path.join(userDataDir(), 'cfg', 'options.ini');
+  const file = optionsFile || dataLayout.optionsFile(userDataDir());
   let stamp = '';
   try {
     const stat = fs.statSync(file);

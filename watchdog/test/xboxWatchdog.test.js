@@ -49,6 +49,33 @@ test('auth file round-trips through the shared AES cipher', () => {
   }
 });
 
+// Xbox can answer with stale state while a title syncs: an unlock seen once stays, and is announced once.
+test('a stale poll reply keeps an unlock already seen, so it is never announced twice', () => {
+  const achieved = { id: '1', progressState: 'Achieved', progression: { timeUnlocked: '2026-09-01T10:00:00Z' } };
+  const first = xboxPc.nextSnapshot({}, [achieved]);
+  assert.deepEqual(first.newUnlocked, ['1']);
+
+  const stale = xboxPc.nextSnapshot(first.snapshot, [{ id: '1', progressState: 'NotStarted' }]);
+  assert.equal(stale.snapshot['1'].earned, true);
+  assert.deepEqual(stale.newUnlocked, []);
+
+  assert.deepEqual(xboxPc.nextSnapshot(stale.snapshot, [achieved]).newUnlocked, []);
+});
+
+test('writing the poll state keeps an unlock the library import stored', () => {
+  const dir = makeTempDir('aw-xstate-merge-');
+  const original = process.env['APPDATA'];
+  process.env['APPDATA'] = dir;
+  try {
+    xboxPc.writeState('2477', { a: { earned: true, earned_time: 1788256800 } });
+    xboxPc.writeState('2477', { a: { earned: false }, b: { earned: false } });
+    assert.deepEqual(xboxPc.readState('2477'), { a: { earned: true, earned_time: 1788256800 }, b: { earned: false } });
+  } finally {
+    if (original === undefined) delete process.env['APPDATA'];
+    else process.env['APPDATA'] = original;
+  }
+});
+
 test('state cache read/write round-trips', () => {
   const dir = makeTempDir('aw-xstate-');
   const original = process.env['APPDATA'];

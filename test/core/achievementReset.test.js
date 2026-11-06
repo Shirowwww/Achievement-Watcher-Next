@@ -394,6 +394,16 @@ test('a JSON list that does not parse is left alone rather than rewritten', () =
   assert.throws(() => x360.clearJsonBuffer(Buffer.from('{"achievements": [')));
 });
 
+// Every label of a store-owned copy, the older 'Uplay' spelling of Ubisoft Connect included.
+test('a store-owned copy or an account list is reset on the platform, not here', () => {
+  for (const label of ['Steam (Player)', 'GOG Galaxy', 'epic-official', 'ea', 'Ubisoft Connect', 'Uplay', 'Xbox PC', 'RetroAchievements', 'PlayStation Network']) {
+    assert.equal(targets.isOfficialPlatformSource(label), true, label);
+  }
+  for (const label of ['Goldberg', 'gog', 'epic', 'Xbox 360 Recomp', 'RUNE Uplay', 'Lumaplay', '']) {
+    assert.equal(targets.isOfficialPlatformSource(label), false, label);
+  }
+});
+
 // The Nemirtingas emulators borrow the store names as labels, but their saves are local files.
 test('Nemirtingas Epic and Galaxy saves are local and resettable, unlike the stores', () => {
   assert.equal(targets.isOfficialPlatformSource('epic'), false);

@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const { imageSize } = require('./imageSize.js');
+const { iconCacheDir } = require('./dataLayout.js');
 
 // Big enough that a 68px slot at 200% display scaling is still sharp, small enough that the file
 // stays a few tens of KB.
@@ -62,7 +63,7 @@ const MAX_STEM = 64;
 function squareIconFile(root, appid, sourcePath) {
   let stem = path.basename(String(sourcePath || 'art')).replace(/\.[^.]+$/, '');
   if (stem.length > MAX_STEM) stem = `${stem.slice(0, 40)}-${require('crypto').createHash('sha1').update(stem).digest('hex').slice(0, 12)}`;
-  return path.join(String(root || ''), 'steam_cache', 'icon', String(appid || 'unknown'), `${stem}-logo.png`);
+  return path.join(iconCacheDir(String(root || ''), appid || 'unknown'), `${stem}-logo.png`);
 }
 
 function loadNativeImage() {

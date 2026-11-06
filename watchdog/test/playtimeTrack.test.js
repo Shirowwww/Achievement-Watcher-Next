@@ -55,7 +55,7 @@ test('a clock change during a session cannot produce a negative duration', () =>
 });
 
 test('a finished session is added to the registry total, and stamps `last`', { skip: windowsOnly }, async (t) => {
-  const regedit = await import('regodit');
+  const regedit = await require('../util/regodit.js').loadRegodit();
   const read = (name) => +regedit.regQueryIntegerValue('HKCU', KEY, name) || 0;
   const cleanup = () => {
     try {

@@ -42,6 +42,7 @@ const appToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
 const { focusAchievementRow } = require(path.join(appPath, 'util/achievementFocus.js'));
 const { applyUpdateChip } = require(path.join(appPath, 'util/updateChipView.js'));
 const { splitLaunchArgs } = require(path.join(appPath, 'util/launchArgs.js'));
+const { iconCacheDir: appIconCacheDir } = require(path.join(appPath, 'util/dataLayout.js'));
 const windowsShellLaunch = require(path.join(appPath, 'util/windowsShellLaunch.js'));
 const linuxGameLaunch = require(path.join(appPath, 'util/linuxGameLaunch.js'));
 const { openExternalSafe } = require(path.join(appPath, 'util/externalLink.js'));
@@ -2120,12 +2121,8 @@ function skeletonBudget(cap) {
 // Is this tile one the installed-only filter will hide? From the filter state and the tile's own
 // flag, not its computed style, so the answer doesn't depend on layout having happened yet.
 function tileHiddenByInstalledFilter(item) {
-  try {
-    if (!installedOnlyEnabled()) return false;
-    return item.find('.game-box').attr('data-installed') === '0';
-  } catch {
-    return false;
-  }
+  if (!installedOnlyEnabled()) return false;
+  return item.find('.game-box').attr('data-installed') === '0';
 }
 
 function appendSkeletonTiles(count) {
@@ -5935,7 +5932,7 @@ var app = {
                     self.addClass('wait');
                     try {
                       const request = require('request-zero');
-                      const cache = path.join(remote.app.getPath('userData'), `steam_cache/icon/${appid}`);
+                      const cache = appIconCacheDir(remote.app.getPath('userData'), appid);
 
                       for (let achievement of list.find((game) => game.appid == appid).achievement.list) {
                         await Promise.all([request.download(achievement.icon, cache), request.download(achievement.icongray, cache)]).catch(() => {});
@@ -7076,7 +7073,7 @@ var app = {
                 icon: menuIcon('folder-open.png'),
                 label: $('#game-list').attr('data-ctx-iconcache') || '',
                 click() {
-                  remote.shell.openPath(path.join(getUserDataPath(), 'steam_cache', 'icon', catalogAppid || `${appid}`));
+                  remote.shell.openPath(appIconCacheDir(getUserDataPath(), catalogAppid || appid));
                 },
               })
             );
@@ -7626,7 +7623,7 @@ var app = {
                     // Purge the cached art so fetch-icon actually re-downloads instead of returning the stale file.
                     try {
                       for (const id of new Set([String(appid), coverCacheAppid])) {
-                        fs.rmSync(path.join(getUserDataPath(), 'steam_cache', 'icon', id), { recursive: true, force: true });
+                        fs.rmSync(appIconCacheDir(getUserDataPath(), id), { recursive: true, force: true });
                       }
                     } catch {}
                     await refetchDefaultCover();

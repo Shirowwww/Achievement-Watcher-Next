@@ -261,7 +261,7 @@ test('scan lists only recorded installs whose game folder and save both still ex
   const found = gogUniverseLan.scan({ userDataPath, localAppData });
   assert.equal(found.length, 1);
   assert.equal(found[0].appid, '111');
-  assert.equal(found[0].source, 'GOG Galaxy');
+  assert.equal(found[0].source, 'gog', 'a repaired install is labelled like any UniverseLAN save, not as a Galaxy-owned copy');
   assert.equal(found[0].data.type, 'gogUniverseLan');
   assert.equal(found[0].data.gameDir, liveDir);
 });

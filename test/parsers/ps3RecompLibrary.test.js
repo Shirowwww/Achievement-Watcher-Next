@@ -51,11 +51,7 @@ test('PS3 Recomp rarity asks Sony for the NP id under the PS3 trophy service fir
   assert.deepEqual(entries, [{ name: '1', percent: 42.5 }]);
 });
 
-test('PS3 Recomp follows the PS3 notification preset, and its id is always namespaced', () => {
+test('PS3 Recomp follows the PS3 notification preset', () => {
   const { sourcePlatform } = require('../../app/util/notificationPreset.js');
   assert.equal(sourcePlatform('PS3 Recomp'), 'rpcs3');
-  const { sanitizeAppIdForPlatform } = require('../../app/util/platformId.js');
-  assert.equal(sanitizeAppIdForPlatform('ps3recomp-NPWR00104_00', 'ps3recomp'), 'ps3recomp-NPWR00104_00');
-  assert.equal(sanitizeAppIdForPlatform('NPWR00104_00', 'ps3recomp'), '');
-  assert.equal(sanitizeAppIdForPlatform('ps3recomp-../x', 'ps3recomp'), '');
 });

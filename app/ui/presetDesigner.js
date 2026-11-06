@@ -15,6 +15,7 @@ const settingsFs = require('fs');
 
 const appPath = remote.app.getAppPath();
 const settingsRarityTiers = require('../util/rarityTiers.js');
+const { iconCacheRoot } = require('../util/dataLayout.js');
 const notificationInsets = require('../util/notificationInsets.js');
 
 // What it needs from the settings page: its jQuery, the app state and logger, and a few helpers.
@@ -224,7 +225,7 @@ function createPresetDesigner({
     if (previewHero === null) {
       previewHero = '';
       try {
-        const icons = path.join(ipcRenderer.sendSync('get-user-data-path-sync'), 'steam_cache', 'icon');
+        const icons = iconCacheRoot(ipcRenderer.sendSync('get-user-data-path-sync'));
         const heroes = (settingsFs.existsSync(icons) ? settingsFs.readdirSync(icons) : [])
           .map((dir) => path.join(icons, dir, 'library_hero.jpg'))
           .filter((file) => settingsFs.existsSync(file));

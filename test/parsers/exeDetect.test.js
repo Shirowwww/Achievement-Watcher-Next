@@ -9,12 +9,32 @@ const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'gold
 const exeDetect = require(path.join(__dirname, '..', '..', 'app', 'parser', 'exeDetect.js'));
 
 const ROOT = process.argv[2] || 'C:\\Jeux';
+let fail = 0;
 
-// This is a standalone validation against a real game-install library. When that
-// library isn't present (e.g. a clean CI runner), skip cleanly instead of failing.
+// Pure checks first: they need no install, so they run everywhere, CI and Linux included.
+// Collision tie-break: who keeps 007FirstLight.exe when several appids claim it?
+const simFor007 = exeDetect.nameSimilarity('007 First Light', '007FirstLight');
+const simForForza = exeDetect.nameSimilarity('Forza Horizon 6', '007FirstLight');
+console.log(`Tie-break for 007FirstLight.exe: 007=${simFor007.toFixed(2)} forza=${simForForza.toFixed(2)}`);
+if (!(simFor007 > simForForza)) {
+  console.log('FAIL: collision tie-break would keep the wrong game.');
+  fail++;
+}
+for (const name of ['firefox.exe', 'chrome.exe', 'msedge.exe', 'notepad.exe', 'winword.exe', 'Docker Desktop.exe', 'Cheat Engine.exe', 'epicgameslauncher.exe', 'R.exe', 'streaming_client.exe', 'DiskSpd64.exe', 'dolphin.exe']) {
+  const ok = exeDetect.isKnownNonGameExe(name);
+  console.log(`known non-game exe ${name} -> ${ok ? 'OK' : 'FAIL'}`);
+  if (!ok) fail++;
+}
+for (const name of ['Game.exe', 'ACBlackFlag.exe', 'portal2.exe']) {
+  const ok = !exeDetect.isKnownNonGameExe(name);
+  console.log(`real game exe ${name} not blocked -> ${ok ? 'OK' : 'FAIL'}`);
+  if (!ok) fail++;
+}
+
+// The rest validates against a real game-install library; without one only the checks above run.
 if (!fs.existsSync(ROOT)) {
-  console.log(`exeDetect.test.js: ${ROOT} not present - skipping standalone validation.`);
-  process.exit(0);
+  console.log(`exeDetect.test.js: ${ROOT} not present - install checks skipped.`);
+  process.exit(fail === 0 ? 0 : 1);
 }
 
 const found = goldberg.findCompatibleGames([ROOT]);
@@ -35,7 +55,6 @@ for (const r of rows) {
 }
 
 // Assertions
-let fail = 0;
 const exes = rows.map((r) => r.full).filter(Boolean);
 const dupes = exes.filter((e, i) => exes.indexOf(e) !== i);
 if (dupes.length) {
@@ -50,14 +69,6 @@ for (const r of rows) {
 }
 console.log(fail === 0 ? '\nPASS: no collisions, no parasite exes.' : `\n${fail} failure(s).`);
 
-// Collision tie-break: who keeps 007FirstLight.exe when several appids claim it?
-const simFor007 = exeDetect.nameSimilarity('007 First Light', '007FirstLight');
-const simForForza = exeDetect.nameSimilarity('Forza Horizon 6', '007FirstLight');
-console.log(`\nTie-break for 007FirstLight.exe: 007=${simFor007.toFixed(2)} forza=${simForForza.toFixed(2)}`);
-if (!(simFor007 > simForForza)) {
-  console.log('FAIL: collision tie-break would keep the wrong game.');
-  fail++;
-}
 
 // Anti-collision: if forzahorizon6.exe is already taken, Forza must not return it again.
 const forza = found.find((g) => /forza/i.test(g.gameDir));
@@ -133,17 +144,6 @@ if (!f5ok) fail++;
 const bogus = exeDetect.bestFolderMatch('Totally Unrelated Game 9000', folders);
 console.log(`No-false-match for bogus name -> ${bogus || '(none)'} ${bogus ? 'FAIL' : 'OK'}`);
 if (bogus) fail++;
-
-for (const name of ['firefox.exe', 'chrome.exe', 'msedge.exe', 'notepad.exe', 'winword.exe', 'Docker Desktop.exe', 'Cheat Engine.exe', 'epicgameslauncher.exe', 'R.exe', 'streaming_client.exe', 'DiskSpd64.exe', 'dolphin.exe']) {
-  const ok = exeDetect.isKnownNonGameExe(name);
-  console.log(`known non-game exe ${name} -> ${ok ? 'OK' : 'FAIL'}`);
-  if (!ok) fail++;
-}
-for (const name of ['Game.exe', 'ACBlackFlag.exe', 'portal2.exe']) {
-  const ok = !exeDetect.isKnownNonGameExe(name);
-  console.log(`real game exe ${name} not blocked -> ${ok ? 'OK' : 'FAIL'}`);
-  if (!ok) fail++;
-}
 
 console.log(fail === 0 ? '\nALL CHECKS PASS.' : `\n${fail} failure(s).`);
 process.exit(fail === 0 ? 0 : 1);

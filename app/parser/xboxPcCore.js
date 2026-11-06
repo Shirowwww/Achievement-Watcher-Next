@@ -381,10 +381,15 @@ function diffSnapshots(previous = {}, next = {}) {
   return { changed, newUnlocked };
 }
 
-async function pollOnce({ auth, titleId, previousSnapshot = {} }) {
-  const rows = await fetchXboxTitleAchievements(auth.xuid, titleId, { auth });
-  const snapshot = buildSnapshot(rows);
+// Merged like the library import: a stale reply while a title syncs must not drop an unlock seen
+// before, or the next poll would announce it a second time.
+function nextSnapshot(previousSnapshot, rows) {
+  const snapshot = mergeXboxStateSnapshots(previousSnapshot, buildSnapshot(rows));
   return { snapshot, ...diffSnapshots(previousSnapshot, snapshot) };
+}
+
+async function pollOnce({ auth, titleId, previousSnapshot = {} }) {
+  return nextSnapshot(previousSnapshot, await fetchXboxTitleAchievements(auth.xuid, titleId, { auth }));
 }
 
 function readState(titleId) {
@@ -392,9 +397,10 @@ function readState(titleId) {
   return parsed && typeof parsed === 'object' ? parsed : {};
 }
 
+// The library import writes this file too; merging keeps what either side has seen.
 function writeState(titleId, snapshot) {
   try {
-    writeJson(stateCacheFile(titleId), snapshot);
+    writeJson(stateCacheFile(titleId), mergeXboxStateSnapshots(readState(titleId), snapshot));
   } catch (err) {
     // A snapshot that is not written makes the next start announce these unlocks again.
     console.warn(`[xbox-pc] could not store the unlock snapshot of ${titleId} (${err.message || err})`);
@@ -431,6 +437,7 @@ module.exports = {
   ensureSession,
   buildSnapshot,
   diffSnapshots,
+  nextSnapshot,
   pollOnce,
   readState,
   writeState,

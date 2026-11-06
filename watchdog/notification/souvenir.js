@@ -7,9 +7,10 @@
 
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
 const { execFile } = require('child_process');
 const debug = require('../util/log.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { captureDir } = require(sharedAppModulePath('util/dataLayout.js'));
 
 // One native helper takes every screenshot: compiling a C# grabber into %TEMP% at run time (the old
 // SDR path) is what antivirus behaviour engines flagged.
@@ -45,10 +46,10 @@ function uniquePath(dir, base, ext = '.png') {
   return file;
 }
 
-// Kept in sync with souvenirDefaultDir() in app/ui/settings.js and SOUVENIR_DIR_NAME in
-// app/util/migrateUserData.js, which links shots from the pre-rename folder into this one.
+// Settings shows this same folder (souvenirDefaultDir() in app/ui/settings.js), and the souvenir
+// migration links shots from the pre-rename folder into it.
 function defaultDir() {
-  return path.join(os.homedir(), 'Pictures', 'Achievement Watcher Next');
+  return captureDir('pictures');
 }
 
 function resolveHdrHelper() {

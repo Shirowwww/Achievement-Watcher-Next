@@ -31,8 +31,4 @@ module.exports = {
       return {}; //a real answer: that account is not valid or doesnt exist
     }
   },
-  isPublic: async function (steamID64) {
-    let user = await this.whoIs(steamID64);
-    return user.privacyState === 'public';
-  },
 };

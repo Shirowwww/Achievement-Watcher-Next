@@ -419,11 +419,14 @@ function listEaOfficialAchievementSets(rootPath) {
 
 // Every logged set that names a game and has achievements, with its unlock state (ms) as of the end
 // of the log. Reads the .bak too, so it also works when only the rotated file is left.
+// The live watcher keeps the sets the library scan keeps (official installs skipped), so a toast
+// never names a game the library hides.
 function readEaAchievementStates(logsRoot) {
   const parsed = readEaDesktopVerboseLog(logsRoot);
   const out = [];
   for (const entry of parsed.achievementSets.values()) {
     if (!entry.appid || entry.achievements.length === 0) continue;
+    if (isLikelyOfficialEaInstall(entry.installPath)) continue;
     out.push({ entry, snapshot: buildEaOfficialSnapshot(entry, parsed) });
   }
   return out;

@@ -24,7 +24,7 @@ const ACTION = {
 
 const path = require('path');
 const { SAVE_ROOTS, SAVE_FILE_NAMES, RAZOR1911_FILE } = require(path.join(__dirname, '..', 'parser', 'emuSaveRoots.js'));
-const { SOURCE_LABEL } = require(path.join(__dirname, 'sourceIdentity.js'));
+const { SOURCE_LABEL, purchasedPlatformOf, isLaunchable } = require(path.join(__dirname, 'sourceIdentity.js'));
 
 const PS3_RECOMP_UNLOCKS = /^npwr\d{5}\.json$/;
 
@@ -47,13 +47,11 @@ const SAVE_FILES = new Set(
 // Schema files that live in the same folders and must survive every reset.
 const PROTECTED_FILES = new Set(['tropconf.sfm', 'trophy.trp', 'appid.txt', 'steam_appid.txt']);
 
-// Steam/GOG Galaxy/Ubisoft Connect/EA/Epic/Xbox/RetroAchievements/PlayStation Network unlocks live on the platform
-// account, not a local file: a reset here would just get overwritten by the next sync. Saying so
-// beats offering a button that looks like it works but does not.
-const OFFICIAL_PLATFORM_SOURCES = /^(?:steam\s*\(|gog galaxy|epic-official$|ea$|ubisoft connect|xbox(?! 360 recomp$)|retroachievements$|playstation network$)/i;
-
+// A copy bought on a store, or an account list (RetroAchievements, PlayStation Network), keeps its
+// unlocks on the platform account, not a local file: a reset here would just get overwritten by
+// the next sync. Saying so beats offering a button that looks like it works but does not.
 function isOfficialPlatformSource(source) {
-  return OFFICIAL_PLATFORM_SOURCES.test(String(source || '').trim());
+  return purchasedPlatformOf(source) !== '' || !isLaunchable(source);
 }
 
 // The app's own manual-unlock overrides are not a save file; they are cleared separately.
@@ -115,7 +113,6 @@ module.exports = {
   ACTION,
   SAVE_FILES,
   PROTECTED_FILES,
-  OFFICIAL_PLATFORM_SOURCES,
   isOfficialPlatformSource,
   isManualSource,
   resetActionFor,
