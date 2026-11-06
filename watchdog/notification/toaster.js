@@ -416,7 +416,7 @@ module.exports = async (message, option = {}) => {
               let notification = {
                 title: message.achievementDisplayName,
                 message: message.achievementDescription || fallbackStrings.achievementUnlocked || 'Achievement unlocked !', //description can not be empty for a balloon
-                ico: path.resolve('./notification/icon/icon.ico'),
+                ico: path.join(__dirname, 'icon', 'icon.ico'),
               };
 
               const progress = normalizeProgress(message.progress);

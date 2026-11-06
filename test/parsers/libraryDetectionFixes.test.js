@@ -24,26 +24,18 @@ function tempDir(prefix) {
 // 1. The EA badge.
 
 test('the EA badge is earned by the EA label alone, not by any label containing "ea"', () => {
-  const { SOURCE_BADGE } = badgeTables();
-  assert.ok(SOURCE_BADGE.ea.test('ea'), 'the EA parser emits exactly "ea"');
+  assert.equal(sourceIdentity.libraryBadgeOf('ea'), 'ea', 'the EA parser emits exactly "ea"');
 
   // The labels a substring test used to swallow: "ea" hides inside "St(ea)m" in every one of them.
   for (const label of ['SmartSteamEmu', 'Goldberg SteamEmu', 'Steam (Shirow)']) {
     assert.ok(label.toLowerCase().includes('ea'), `${label} would have matched the old test`);
-    assert.ok(!SOURCE_BADGE.ea.test(label.toLowerCase()), `${label} must not be treated as EA`);
-  }
-
-  // No pattern in the table may be an unanchored substring test again.
-  for (const [name, pattern] of Object.entries(SOURCE_BADGE)) {
-    assert.match(pattern.source, /^\^/, `${name} must be anchored at the start`);
-    assert.match(pattern.source, /\$$/, `${name} must be anchored at the end`);
+    assert.notEqual(sourceIdentity.libraryBadgeOf(label), 'ea', `${label} must not be treated as EA`);
   }
 });
 
 test('EA has a source icon of its own instead of the unknown-source placeholder', () => {
   assert.ok(fs.existsSync(path.join(appDir, 'Source', 'ea.svg')), 'app/Source/ea.svg must ship');
-  const init = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
-  assert.match(init, /case 'ea':\s*\n\s*event\.returnValue = path\.join\(userData, 'Source', 'ea\.svg'\)/);
+  assert.equal(sourceIdentity.sourceIconFile('ea'), 'ea.svg');
   const appSource = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
   assert.doesNotMatch(
     appSource,
@@ -52,17 +44,10 @@ test('EA has a source icon of its own instead of the unknown-source placeholder'
   );
 });
 
-// Lift the shipped tables out of app.js so these check the real code, not a copy of it.
-function badgeTables() {
-  const source = fs.readFileSync(path.join(appDir, 'app.js'), 'utf8');
-  const literal = (name, opener) => {
-    const from = source.slice(source.indexOf(`const ${name} =`));
-    const body = from.slice(from.indexOf(opener), from.indexOf(opener === '{' ? '};' : ';') + 1);
-    // oxlint-disable-next-line no-eval -- the point is to evaluate the shipped literal from app.js rather than copy it here.
-    return eval(`(${opener === '{' ? body : body.replace(/;$/, '')})`);
-  };
-  return { SOURCE_BADGE: literal('SOURCE_BADGE', '{'), STEAM_BADGE_SOURCES: literal('STEAM_BADGE_SOURCES', '/') };
-}
+// The shipped table itself, so these check the real code, not a copy of it.
+const sourceIdentity = require(path.join(appDir, 'util', 'sourceIdentity.js'));
+const badgeOf = (label) => sourceIdentity.libraryBadgeOf(label) || null;
+const isSteamBadged = (label) => sourceIdentity.isClassifiedSource(label) && !sourceIdentity.libraryBadgeOf(label);
 
 // Every source label the parsers emit, gathered the same way a reviewer would. A label written once
 // as a constant and used as `source: NAME` is emitted just like a literal - reading only the
@@ -83,9 +68,6 @@ function emittedSourceLabels() {
 }
 
 test('every official platform label is recognised, in both spellings the parsers emit', () => {
-  const { SOURCE_BADGE } = badgeTables();
-  const badgeOf = (label) => Object.keys(SOURCE_BADGE).find((k) => SOURCE_BADGE[k].test(label.toLowerCase())) || null;
-
   // A label matching none of these falls through to the Steam badge, which is how an official GOG
   // copy of Cyberpunk 2077 ended up presented as a Steam game.
   for (const [label, expected] of [
@@ -115,48 +97,45 @@ test('no source label the parsers emit can go unclassified', () => {
   // that reaches it must be there deliberately: either a platform pattern claims it, or it is
   // listed as a Steam-badged source, or Ubisoft detection owns it. Anything else fails here rather
   // than shipping a plausible wrong badge.
-  const { SOURCE_BADGE, STEAM_BADGE_SOURCES } = badgeTables();
   const uplayR2 = require(path.join(appDir, 'parser', 'uplayR2.js'));
 
   const unclassified = emittedSourceLabels().filter((label) => {
-    const lower = label.toLowerCase();
-    if (Object.values(SOURCE_BADGE).some((re) => re.test(lower))) return false;
-    if (STEAM_BADGE_SOURCES.test(lower)) return false;
+    if (sourceIdentity.isClassifiedSource(label)) return false;
     if (uplayR2.isUbisoftGame({ source: label }, null)) return false;
-    if (/^steam\s*\(/.test(lower)) return false; // the user's own Steam library, badge hidden
+    if (/^steam\s*\(/.test(label.toLowerCase())) return false; // the user's own Steam library, badge hidden
     return true;
   });
 
   assert.deepEqual(
     unclassified,
     [],
-    `classify these in SOURCE_BADGE or STEAM_BADGE_SOURCES (app/app.js), or they become Steam-badged silently: ${unclassified.join(', ')}`
+    `classify these in SOURCE_ROWS (app/util/sourceIdentity.js), or they become Steam-badged silently: ${unclassified.join(', ')}`
   );
 });
 
 test('the Steam-badged list stays a list of real emulators, not a catch-all', () => {
-  const { SOURCE_BADGE, STEAM_BADGE_SOURCES } = badgeTables();
   // It must not swallow a platform label - that would defeat the coverage test above.
   for (const label of ['gog', 'gog galaxy', 'epic', 'epic-official', 'ea', 'goldberg socialclub', 'xenia emulator']) {
-    assert.ok(!STEAM_BADGE_SOURCES.test(label), `${label} belongs to a platform, not to the Steam fallback list`);
+    assert.ok(!isSteamBadged(label), `${label} belongs to a platform, not to the Steam fallback list`);
   }
-  // And the platform patterns must not claim an emulator.
+  // And the platform rows must not claim an emulator.
   for (const label of ['codex', 'rune', 'onlinefix', 'smartsteamemu', 'tenoke', 'hoodlum']) {
-    assert.ok(!Object.values(SOURCE_BADGE).some((re) => re.test(label)), `${label} is a Steam emulator`);
+    assert.ok(isSteamBadged(label), `${label} is a Steam emulator`);
   }
 });
 
 test('the icon handler answers to both spellings too', () => {
+  for (const [label, file] of [
+    ['GOG Galaxy', 'gog.svg'],
+    ['gog', 'gog.svg'],
+    ['epic-official', 'epic.svg'],
+    ['epic', 'epic.svg'],
+  ]) {
+    assert.equal(sourceIdentity.sourceIconFile(label), file, label);
+  }
   const init = fs.readFileSync(path.join(appDir, 'electron', 'init.js'), 'utf8');
   const handler = init.slice(init.indexOf("ipcMain.on('fetch-source-img'"));
-  const body = handler.slice(0, handler.indexOf('\n});'));
-  for (const [label, file] of [
-    ["case 'GOG Galaxy':", 'gog.svg'],
-    ["case 'epic-official':", 'epic.svg'],
-  ]) {
-    assert.ok(body.includes(label), `${label} must be handled`);
-    assert.ok(body.includes(file));
-  }
+  assert.match(handler.slice(0, handler.indexOf('\n});')), /sourceIdentity\.sourceIconFile\(arg\)/, 'the handler reads the shared table');
 });
 
 // 2. The Cyberpunk duplicate.

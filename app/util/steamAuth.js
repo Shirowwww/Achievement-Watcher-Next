@@ -10,6 +10,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const { writeFileAtomicSync } = require('./replaceFile.js');
+const { isSteamId64 } = require('./steamId64.js');
 const crypto = require('node:crypto');
 
 const DEFAULT_TOKEN_SECRET = 'steam_default_passphrase';
@@ -38,8 +39,8 @@ function resolveSteamSessionFile(userDataDir = '', explicitPath = '') {
 // The cookie value is "<steamid64>||<secret>", sometimes percent-encoded.
 function steamIdFromLoginCookie(value) {
   const raw = decodeURIComponent(String(value || ''));
-  const match = raw.match(/^(7656119[0-9]{10})/);
-  return match ? match[1] : '';
+  const id = raw.slice(0, 17);
+  return isSteamId64(id) ? id : '';
 }
 
 // Expiry in milliseconds, read from the payload. The signature is never verified: this token

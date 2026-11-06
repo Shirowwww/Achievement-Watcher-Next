@@ -7,8 +7,14 @@ const fs = require('fs');
 // no archive and the path is already the real one.
 function resolveUnpackedBinary(binPath) {
   const normalized = String(binPath || '');
-  const unpacked = normalized.replace(/app\.asar([\\/])/,'app.asar.unpacked$1');
+  const unpacked = unpackedPath(normalized);
   return fs.existsSync(unpacked) ? unpacked : normalized;
+}
+
+// The path of a file inside the archive, spelled as the same file beside it. The reverse
+// (scanWorker.js, xexWorker.js) stays inlined there: those files run unpacked and cannot load this one.
+function unpackedPath(file) {
+  return String(file).replace(/app\.asar([\\/])/, 'app.asar.unpacked$1');
 }
 
 // Off Windows a file runs only with its exec bit, which `npm ci` and archive extraction can drop.
@@ -29,4 +35,4 @@ function sevenZipBin() {
   return bin;
 }
 
-module.exports = { resolveUnpackedBinary, ensureExecutable, sevenZipBin };
+module.exports = { resolveUnpackedBinary, unpackedPath, ensureExecutable, sevenZipBin };

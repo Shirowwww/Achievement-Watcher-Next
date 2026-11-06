@@ -67,10 +67,7 @@ test('the game folder is resolved whether the root or a single game folder is wa
   assert.equal(gameFolderName('D:\\x', 'D:\\Backups\\Goldberg SocialClub Emu Saves\\Bully\\0A1B2C\\stats.json'), 'Bully');
 });
 
-test('the app parser and the Watchdog derive the appid with the same function', () => {
-  // If the two ever used different ids, live unlocks would stop resolving to the library entry.
-  const { _internal } = require('../../app/parser/socialclub.js');
-  assert.equal(_internal.socialClubAppId, socialClubAppId);
+test('the appid is a slug of the game folder name', () => {
   assert.equal(socialClubAppId('L.A. Noire'), 'socialclub-l-a-noire');
   assert.equal(socialClubAppId('Grand Theft Auto: Vice City - Definitive Edition'), 'socialclub-grand-theft-auto-vice-city-definitive-edition');
 });

@@ -9,7 +9,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { allowedFromConfig } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { isDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
+const { allowedFromConfig, expandKnownVariables } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const UNLEASHED_FLATPAK = 'io.github.hedge_dev.unleashedrecomp';
 const MARATHON_FLATPAK = 'io.github.sonicnext_dev.marathonrecomp';
@@ -183,14 +184,6 @@ function entriesOf(dir, read = readAll) {
 
 const subfolders = (dir, read) => (dir ? entriesOf(dir, read).filter((entry) => entry.isDirectory()).map((entry) => path.join(dir, entry.name)) : []);
 
-function isDirectory(dir) {
-  try {
-    return fs.statSync(dir).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
 // `name` inside `dir` as the disk spells it: Linux folders are case-sensitive.
 function childPath(dir, name, wantDirectory, read) {
   const lower = name.toLowerCase();
@@ -317,17 +310,6 @@ function rexUserFolder(install, ctx) {
   return ctx.documentsFor(install) || '';
 }
 
-// A %VARIABLE% this host does not define makes the whole value unknown: null.
-function expandVariables(text, envVar) {
-  let missing = false;
-  const expanded = text.replace(/%([^%]+)%/g, (whole, name) => {
-    const value = envVar(name);
-    if (!value) missing = true;
-    return value || whole;
-  });
-  return missing ? null : expanded;
-}
-
 // The game runs from <release>/resources/runtime and its launcher, in the release root, shares its name.
 function releaseUserFolder(install, read) {
   if (path.basename(install).toLowerCase() === 'runtime') return '../userdata';
@@ -340,7 +322,7 @@ function settingRoot(port, install, ctx) {
   const file = childPath(install, fileName, false, ctx.readDirectory);
   const value = file ? readTomlString(file, key) : '';
   if (!value) return null;
-  const expanded = expandVariables(value, ctx.envVar);
+  const expanded = expandKnownVariables(value, ctx.envVar);
   if (expanded === null) {
     ctx.log(`${port.name}: ${key} names a variable unknown here; its default save folder is watched`);
     return null;

@@ -8,8 +8,10 @@
   transaction directly.
 */
 
+const uplayRepairToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
+
 async function ensureUplayR2Package({ interactive = true, forceImport = false } = {}) {
-  const cacheDir = path.join(getUserDataPath(), 'cache/uplayR2');
+  const cacheDir = uplayRepairToolCaches.toolCacheDir(getUserDataPath(), 'uplayR2');
   let bundledError = null;
   if (!forceImport) {
     try {

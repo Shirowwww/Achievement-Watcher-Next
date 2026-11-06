@@ -2,10 +2,12 @@
 
 /*
   Numbers that roll to their new value instead of jumping (the profile band). Only the digits of a
-  text move; a text whose shape changed, reduced motion, or a hidden window just writes the value.
+  text move; a text whose shape changed or reduced motion just writes the value. Steps run on a
+  timer, like app.js countTo: a frame callback never runs in a hidden window, so the value would wait.
 */
 (function (root) {
   const DEFAULT_DURATION_MS = 450;
+  const STEP_MS = 16;
   const running = new WeakMap();
 
   // Fast start, soft landing, no overshoot.
@@ -34,9 +36,9 @@
     const {
       duration = DEFAULT_DURATION_MS,
       reducedMotion = prefersReducedMotion(),
-      requestFrame = root.requestAnimationFrame ? root.requestAnimationFrame.bind(root) : null,
-      cancelFrame = root.cancelAnimationFrame ? root.cancelAnimationFrame.bind(root) : () => {},
       now = () => (root.performance ? root.performance.now() : Date.now()),
+      requestFrame = (step) => setTimeout(() => step(now()), STEP_MS),
+      cancelFrame = (frame) => clearTimeout(frame),
     } = options;
     if (!element) return;
     const target = String(toText);

@@ -10,10 +10,9 @@ const fs = require('fs');
 const net = require('net');
 const path = require('path');
 const { execFile } = require('child_process');
-const { watchdogPipePath } = require('./watchdogPipe.js');
+const { watchdogPipePath, WATCHDOG_PORT } = require('./watchdogPipe.js');
 
 const WATCHDOG_PIPE = watchdogPipePath();
-const WATCHDOG_PORT = 8082;
 const PROBE_TIMEOUT_MS = 1000;
 
 function answers(target, { connect = net.createConnection, timeoutMs = PROBE_TIMEOUT_MS } = {}) {

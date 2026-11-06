@@ -10,6 +10,7 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { readText } = require('../util/fsProbe.js');
 const { sevenZipBin, ensureExecutable } = require('../util/unpacked.js');
 const { unwrapTarball } = require('../util/tarball.js');
 const { firstUnsafeEntry } = require('../util/archiveEntry.js');
@@ -26,14 +27,6 @@ const IS_WINDOWS = process.platform === 'win32';
 const TOOL_NAME = IS_WINDOWS ? 'generate_emu_config.exe' : 'generate_emu_config';
 const REFRESH_TOKENS = 'refresh_tokens.json';
 
-
-function readText(file) {
-  try {
-    return fs.readFileSync(file, 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
 
 function isInsideDir(parentDir, candidate) {
   const rel = path.relative(parentDir, candidate);

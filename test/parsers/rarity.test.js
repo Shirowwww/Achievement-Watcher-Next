@@ -137,7 +137,6 @@ test('non-Steam sources never hit the Steam endpoint through getRarityEntries', 
 });
 
 test('resolveGameRarityContext reconciles every source to the right rarity path', () => {
-  const emulatorSources = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'Xenia Emulator']);
   const base = (extra) => ({ appid: '0', source: 'Steam', achievement: { list: [{ name: 'a' }] }, ...extra });
 
   // Native Steam game → direct Steam percentages.
@@ -205,7 +204,7 @@ test('resolveGameRarityContext reconciles every source to the right rarity path'
   assert.equal(rarity.resolveGameRarityContext(base({ appid: '1423049311', source: 'gog' })).kind, 'native');
 
   // Console emulators and Xbox keep their own paths.
-  assert.equal(rarity.resolveGameRarityContext(base({ appid: 'NPUA12345', source: 'RPCS3 Emulator', system: 'playstation' }), { emulatorSources }).kind, 'emulator');
+  assert.equal(rarity.resolveGameRarityContext(base({ appid: 'NPUA12345', source: 'RPCS3 Emulator', system: 'playstation' })).kind, 'emulator');
   assert.equal(rarity.resolveGameRarityContext(base({ source: 'Xbox PC' })).kind, 'xbox');
 
   // EA has no percentage source → hidden.

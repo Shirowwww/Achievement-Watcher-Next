@@ -127,6 +127,17 @@ function expandWindowsVars(value, vars) {
   });
 }
 
+// A %VARIABLE% that `lookup` cannot answer makes the whole value unknown: null.
+function expandKnownVariables(text, lookup) {
+  let missing = false;
+  const expanded = String(text).replace(/%([^%]+)%/g, (whole, name) => {
+    const value = lookup(name);
+    if (!value) missing = true;
+    return value || whole;
+  });
+  return missing ? null : expanded;
+}
+
 // What %VAR% means inside a prefix, for the expandable strings its registry holds.
 function prefixWindowsVars(user) {
   const profile = `C:\\users\\${user}`;
@@ -292,4 +303,4 @@ function allowedFromConfig(candidate, origin) {
   return !host || host === networkHostOf(origin);
 }
 
-module.exports = { listHosts, pathKey, hostPath, hostPaths, hostsFor, hostFor, firstExisting, winToUnix, allowedFromConfig, SHELL_FOLDERS_KEY };
+module.exports = { listHosts, pathKey, hostPath, hostPaths, hostsFor, hostFor, firstExisting, winToUnix, allowedFromConfig, expandKnownVariables, SHELL_FOLDERS_KEY };

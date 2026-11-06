@@ -119,14 +119,15 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
   };
 
   const module = { exports: {} };
-  new Function('require', 'module', 'exports', 'process', TOASTER)(
+  new Function('require', 'module', 'exports', 'process', '__dirname', TOASTER)(
     (request) => {
       if (!(request in stubs)) throw new Error(`Unexpected module request: ${request}`);
       return stubs[request];
     },
     module,
     module.exports,
-    { ...process, send: overlayHost === 'ipc' ? () => true : undefined, connected: overlayHost === 'ipc' }
+    { ...process, send: overlayHost === 'ipc' ? () => true : undefined, connected: overlayHost === 'ipc' },
+    path.join(__dirname, '..', 'notification')
   );
 
   return { notify: module.exports, calls };
@@ -463,6 +464,8 @@ test('a toast Windows refused is recorded failed, and the balloon rescues it whe
   withBalloon.toast = { ...withBalloon.toast, balloonFallback: true };
   await asWindowsChild({ ok: false, reason: 'disabled' }, () => rescued.notify(unlock(), withBalloon));
   assert.equal(rescued.calls.balloons.length, 1);
+  // The icon is found from the toaster's own folder, whatever folder the Watchdog was started in.
+  assert.ok(fs.existsSync(rescued.calls.balloons[0].ico), 'the balloon points at an icon that exists');
   assert.equal(transportMemory.entryForGame('480').outcome, 'fallback');
 });
 

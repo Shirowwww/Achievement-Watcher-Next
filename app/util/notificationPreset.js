@@ -8,6 +8,8 @@
   with itself.
 */
 
+const { emulatorPlatformOf } = require('./sourceIdentity.js');
+
 // The preset a fresh install uses, and the one every fallback lands on.
 const DEFAULT_PRESET = 'AW Next';
 
@@ -69,22 +71,8 @@ function legacyPresetAlias(name) {
   return Object.prototype.hasOwnProperty.call(LEGACY_PRESET_ALIASES, raw) ? LEGACY_PRESET_ALIASES[raw] : '';
 }
 
-const EMULATOR_PLATFORM_BY_SOURCE = {
-  // A recompiled game follows the preset chosen for its console.
-  xenia: ['xenia', 'xenia emulator', 'xbox 360 recomp'],
-  rpcs3: ['rpcs3', 'rpcs3 emulator', 'ps3 recomp'],
-  shadps4: ['shadps4', 'shadps4 emulator', 'ps4 recomp'],
-  kytyps5: ['kyty', 'kytyps5', 'kytyps5 emulator'],
-};
-
-function sourcePlatform(source) {
-  const key = String(source || '').trim().toLowerCase();
-  if (!key) return null;
-  for (const [platform, aliases] of Object.entries(EMULATOR_PLATFORM_BY_SOURCE)) {
-    if (aliases.includes(key)) return platform;
-  }
-  return null;
-}
+// The emulator whose preset and sound a source follows; a recompiled game follows its console's.
+const sourcePlatform = emulatorPlatformOf;
 
 /*
   Every preset this notification may use, most specific first.

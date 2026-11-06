@@ -11,7 +11,9 @@
 */
 
 const fs = require('fs');
+const { TOOL_CACHE_DIRS } = require('./toolCaches.js');
 const path = require('path');
+const { PLAYTIME_RELATIVE } = require('./playtimeFile.js');
 
 const CONFIG_EXTENSIONS = ['.json', '.db', '.ini', '.txt'];
 
@@ -31,8 +33,8 @@ const RULES = [
   { path: 'steam_cache/xbox', include: true, mode: 'replace', why: 'imported Xbox library, no public source to refetch it' },
   { path: 'steam_cache/retroachievements', include: true, mode: 'replace', why: 'imported RetroAchievements library' },
   { path: 'steam_cache/psn', include: true, mode: 'replace', why: 'imported PlayStation Network library' },
-  { path: 'cache/uplayR2', include: true, mode: 'replace', why: 'user-seeded Uplay R2 loader, no download source' },
-  { path: 'cache/gse_fork/custom', include: true, mode: 'replace', why: 'user-imported emulator dll, no download source' },
+  { path: TOOL_CACHE_DIRS.uplayR2, include: true, mode: 'replace', why: 'user-seeded Uplay R2 loader, no download source' },
+  { path: `${TOOL_CACHE_DIRS.gbeFork}/custom`, include: true, mode: 'replace', why: 'user-imported emulator dll, no download source' },
 
   // Excluded because it is a secret or tied to this Windows account or machine.
   { path: 'epic_tokens.enc', include: false, why: 'secret: Epic sign-in (DPAPI, machine-bound)' },
@@ -47,7 +49,7 @@ const RULES = [
   { path: 'cfg/notificationHealth.json', include: false, why: 'delivery health of this machine' },
   { path: 'cfg/userdir.db', include: false, why: 'emulator save folders found on this machine, rediscovered by a scan' },
   { path: 'cfg/steamdb.json', include: false, why: 'name cache' },
-  { path: 'cfg/playtime.json', include: false, why: 'playtime counters without a registry, carried in the manifest and merged with max()' },
+  { path: PLAYTIME_RELATIVE, include: false, why: 'playtime counters without a registry, carried in the manifest and merged with max()' },
 
   // Excluded because it is regenerated.
   { path: 'steam_cache', include: false, why: 'schema, icon and cover cache' },

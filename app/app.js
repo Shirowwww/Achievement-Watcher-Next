@@ -38,6 +38,7 @@ const fs = require('fs');
 const { pathToFileURL } = require('url');
 const args_split = require('argv-split');
 const { cssUrl, cssUrlValue } = require(path.join(appPath, 'util/cssUrl.js'));
+const appToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
 const { focusAchievementRow } = require(path.join(appPath, 'util/achievementFocus.js'));
 const { applyUpdateChip } = require(path.join(appPath, 'util/updateChipView.js'));
 const { splitLaunchArgs } = require(path.join(appPath, 'util/launchArgs.js'));
@@ -145,6 +146,7 @@ const l10n = require(path.join(appPath, 'locale/loader.js'));
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
 const coverFit = require(path.join(appPath, 'util/coverFit.js'));
 const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
+const sourceIdentity = require(path.join(appPath, 'util/sourceIdentity.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
 const backgroundStore = require(path.join(appPath, 'util/backgroundStore.js'));
 const localIcons = require(path.join(appPath, 'util/localIcons.js'));
@@ -413,7 +415,7 @@ function hasBeenLaunched(game) {
 }
 
 function trophyRarityContext(game) {
-  const context = resolveGameRarityContext(game, { emulatorSources: EMU_LOCAL_ICON_SOURCES });
+  const context = resolveGameRarityContext(game);
   if (!context || context.kind === 'xbox') return context;
   const cacheId = context.kind === 'steam-bridge' ? context.cacheId : context.kind === 'emulator' ? game.appid : context.appid;
   return cacheId ? { ...context, cacheId: String(cacheId) } : null;
@@ -868,7 +870,7 @@ async function paintAchievementIcon(box, game, achievement, isCurrent) {
   const candidates = [];
   try {
     const local = localIcons.achievementIcon(localIcons.readIndex(game), achievement, true);
-    if (EMU_LOCAL_ICON_SOURCES.has(game.source)) candidates.push(achievement.icon, local);
+    if (sourceIdentity.readsEmulatorData(game.source)) candidates.push(achievement.icon, local);
     else candidates.push(local);
   } catch {
     /* no local artwork: fall through to the download */
@@ -882,7 +884,7 @@ async function paintAchievementIcon(box, game, achievement, isCurrent) {
     return false;
   };
   if (await tryPaint(candidates)) return;
-  if (EMU_LOCAL_ICON_SOURCES.has(game.source) || !achievement.icon) return;
+  if (sourceIdentity.readsEmulatorData(game.source) || !achievement.icon) return;
   const downloaded = await ipcRenderer.invoke('fetch-icon', achievement.icon, game.steamappid || game.appid).catch(() => null);
   if (isCurrent()) await tryPaint([downloaded]);
 }
@@ -1008,16 +1010,6 @@ const PROFILE_STATS_PLATFORMS = {
   pcport: { label: 'PC Port', img: 'PC Port' },
 };
 
-const PROFILE_STATS_CONSOLE_BY_SOURCE = {
-  'rpcs3 emulator': 'playstation-3',
-  'shadps4 emulator': 'playstation-4',
-  'ps4 recomp': 'playstation-4',
-  'ps3 recomp': 'playstation-3',
-  'kytyps5 emulator': 'playstation-5',
-  'xenia emulator': 'xbox-360',
-  'xbox 360 recomp': 'xbox-360',
-};
-
 function profileStatsGroupOf(game) {
   let kind = '';
   try {
@@ -1026,7 +1018,7 @@ function profileStatsGroupOf(game) {
     kind = '';
   }
   // A console family splits by console when the source names one; a manual entry stays generic.
-  const consoleKey = kind === 'playstation' || kind === 'xbox' ? PROFILE_STATS_CONSOLE_BY_SOURCE[String(game.source || '').toLowerCase()] : '';
+  const consoleKey = kind === 'playstation' || kind === 'xbox' ? sourceIdentity.consoleGroupOf(game.source) : '';
   if (consoleKey) kind = consoleKey;
   const known = PROFILE_STATS_PLATFORMS[kind] || PROFILE_STATS_PLATFORMS.steam;
   return { key: kind === 'steam-owned' ? 'steam' : kind || 'steam', label: known.label, img: known.img };
@@ -2670,14 +2662,11 @@ function localGameIconUrls(game) {
   }
 }
 
-const XBOX_SOURCES = new Set(['Xenia Emulator', 'XLiveLessNess', 'Xbox 360 Recomp']);
-
 // The console a game comes from, whose logo its header icon shows while it has no icon of its own.
 function gameBrand(game) {
   if (!game) return '';
   if (game.system === 'playstation') return 'playstation';
-  if (XBOX_SOURCES.has(game.source)) return 'xbox';
-  return '';
+  return sourceIdentity.consoleBrandOf(game.source);
 }
 
 // Paints the square logo, in order: user's own pick, host notification square logo (community set
@@ -2903,21 +2892,6 @@ function promptText(message, defaultValue = '', type = 'text', { allowEmpty = fa
 // Share the modal with the Steam-login test and emulator setup prompts.
 window.awPromptText = promptText;
 
-// These emulator sources already provide local artwork paths.
-const EMU_LOCAL_ICON_SOURCES = new Set([
-  'RPCS3 Emulator',
-  'ShadPS4 Emulator',
-  'KytyPS5 Emulator',
-  'Xenia Emulator',
-  'XLiveLessNess',
-  'Xbox 360 Recomp',
-  'PS4 Recomp',
-  'PS3 Recomp',
-  'MarkerPatch',
-  'MadnessPatch',
-  'PC Port',
-]);
-
 async function downloadLibraryCover(url, cacheAppid) {
   if (!url) return { path: null, source: null, reason: 'missing' };
   try {
@@ -3080,7 +3054,7 @@ function scheduleLibraryCover(game, headerEl, portrait) {
         return;
       }
     }
-    if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
+    if (sourceIdentity.readsEmulatorData(game.source)) {
       await loadLocalSourceCover(game, headerEl, portrait, force, generation, () => load(true));
       return;
     }
@@ -3170,47 +3144,14 @@ function isLegitSteamLibraryGame(game) {
   return String((game && game.source) || '').startsWith('Steam (');
 }
 
-// An unrecognised label falls silently through to the Steam badge, so every `source:` literal in
-// app/parser/*.js must appear here or in STEAM_BADGE_SOURCES (Ubisoft is separate); test enforces it.
-const SOURCE_BADGE = {
-  playstation: /^(?:rpcs3 emulator|shadps4 emulator|kytyps5 emulator|ps4 recomp|ps3 recomp|playstation network)$/,
-  xbox: /^(?:xenia emulator|xlivelessness|xbox 360 recomp|xbox pc)$/,
-  epic: /^epic(?:-official)?$/,
-  gog: /^(?:gog|gog galaxy)$/,
-  socialclub: /^goldberg socialclub$/,
-  ea: /^(?:ea|anadius \(ea\))$/,
-  retroachievements: /^retroachievements$/,
-  pcport: /^pc port$/,
-};
-
-// Labels that legitimately end on the Steam badge: Steam via emulator/crack, plus placeholders.
-// Listed explicitly so the coverage test can't be satisfied by unclassified labels falling through.
-// oxlint-disable-next-line no-unused-vars -- a contract table, not dead code: libraryDetectionFixes.test.js reads it out of this file to prove every parser `source:` label is classified somewhere.
-const STEAM_BADGE_SOURCES =
-  /^(?:achievement watcher : watchdog|ali213|catherine|codex|creamapi|empress|gbe fork|ff7 \(2013\)|goldberg(?: steamemu| \(empress\))?|greenluma|hoodlum|madnesspatch|manual|markerpatch|onlinefix|razor1911|reloaded - 3dm|rld!|rune|skidrow|smartsteamemu|steam|steam-emulator|tenoke|unconfigured|universelan)$/;
-
-// The "legitimately owned" badge: same dot as Steam Family, but for an official store install
-// rather than an emulator save. Nemirtingas ('gog','epic') and crack labels must never match here.
-const PURCHASED_SOURCE = {
-  steam: /^steam \(/,
-  gog: /^gog galaxy$/,
-  ubisoft: /^(?:ubisoft connect|uplay)$/,
-  epic: /^epic-official$/,
-  ea: /^ea$/,
-  // The imported Xbox library only. Anchored so the two Xbox emulators, which say nothing about
-  // owning anything, never earn it: 'Xenia Emulator', 'XLiveLessNess' and 'Xbox 360 Recomp'.
-  xbox: /^xbox pc$/,
-};
-
 function purchasedPlatformFor(game) {
   const source = String((game && game.source) || '').toLowerCase();
   if (isLegitSteamLibraryGame(game) || (game && game.ownership === 'owned')) return 'steam';
-  return Object.keys(PURCHASED_SOURCE).find((name) => PURCHASED_SOURCE[name].test(source)) || '';
+  return sourceIdentity.purchasedPlatformOf(source);
 }
 
 function sourcePresentationFor(game) {
   const source = game && game.source;
-  const sourceLower = String(source || '').toLowerCase();
   const system = String((game && game.system) || '').toLowerCase();
   const isUbisoft = uplayR2.isUbisoftGame(game, game && game.appid);
 
@@ -3248,7 +3189,7 @@ function sourcePresentationFor(game) {
   const kind =
     system === 'playstation' || system === 'xbox' || system === 'ea'
       ? system
-      : Object.keys(SOURCE_BADGE).find((name) => SOURCE_BADGE[name].test(sourceLower)) || (isUbisoft ? 'ubisoft' : '');
+      : sourceIdentity.libraryBadgeOf(source) || (isUbisoft ? 'ubisoft' : '');
 
   switch (kind) {
     case 'playstation':
@@ -3566,9 +3507,8 @@ achievements.onAutomaticEmulatorFixStarting(async () => {
 
 // A RetroAchievements game is a ROM played in an emulator, a PlayStation Network one a console game:
 // there is no PC executable to launch or pick, and no Steam emulator to set up, so the tile offers neither.
-const ACCOUNT_ONLY_SOURCES = new Set(['RetroAchievements', 'PlayStation Network']);
 function isLaunchable(game) {
-  return !ACCOUNT_ONLY_SOURCES.has(String((game && game.source) || ''));
+  return sourceIdentity.isLaunchable(game && game.source);
 }
 
 const healthStateByAppid = new Map();
@@ -5220,7 +5160,7 @@ var app = {
                       remote.dialog.showMessageBoxSync({ type: 'info', title: t('crakfiles', 'CrakFiles'), message: t('unknown-game-name', 'Unknown game name.', 'Nom de jeu inconnu.') });
                       return;
                     }
-                    const cacheDir = path.join(getUserDataPath(), 'cache/crackfiles');
+                    const cacheDir = appToolCaches.toolCacheDir(getUserDataPath(), 'crackfiles');
                     setGameBoxBusy(self, t('searching-fixes', 'Searching fixes…', 'Recherche de fixes…'));
                     const cfList = await crackFix.fetchList({ cacheDir, log: debug });
                     clearGameBoxBusy(self);
@@ -6392,7 +6332,7 @@ var app = {
                           const gameNameCandidates = [game?.name, path.basename(gameDir || ''), exeDetect.exeBaseName(path.basename((exe0 && (exe0.full || exe0.name)) || ''))].filter(Boolean);
                           setGameBoxBusy(self, t('checking-community-crack', 'Checking community crack…', 'Recherche d’un crack communautaire…'));
                           const cf = await crackFix.applyBestFix({
-                            cacheDir: path.join(getUserDataPath(), 'cache/crackfiles'),
+                            cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'crackfiles'),
                             gameName: game?.name || '',
                             gameNames: gameNameCandidates,
                             gameDir,
@@ -6488,7 +6428,7 @@ var app = {
                           setGameBoxBusy(self, t('advanced-data-generate-emu-config', 'Advanced data (generate_emu_config)…', 'Données avancées (generate_emu_config)…'));
                           const genEmu = require(path.join(appPath, 'parser/genEmuConfig.js'));
                           const tool = await genEmu.ensureGenerateEmuConfig({
-                            cacheDir: path.join(getUserDataPath(), 'cache/gse_emu_config'),
+                            cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'emuConfig'),
                             preferredTag: dlls && dlls.tag ? dlls.tag : null,
                             log: debug,
                           });
@@ -6551,7 +6491,7 @@ var app = {
                           let stripped = false;
                           let reason = '';
                           try {
-                            const cli = await steamlessMod.ensureSteamless({ cacheDir: path.join(getUserDataPath(), 'cache/steamless'), log: debug });
+                            const cli = await steamlessMod.ensureSteamless({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'steamless'), log: debug });
                             setGameBoxBusy(self, t('removing-drm', 'Removing DRM…', 'Retrait du DRM…'));
                             const r = await steamlessMod.stripDrm({ steamless: cli, exePath: detectedRuntimeExe.full, experimental: !!emuCfg.steamlessExperimental, log: debug });
                             stripped = !!(r && r.stripped);
@@ -6576,7 +6516,7 @@ var app = {
 
                       // Download/cache the GBE Fork build (steam_api DLLs).
                       setGameBoxBusy(self, t('downloading-gbe-fork', 'Downloading GBE Fork…', 'Téléchargement de GBE Fork…'));
-                      const cacheDir = path.join(getUserDataPath(), 'cache/gse_fork');
+                      const cacheDir = appToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork');
                       const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, force: forceUpdate, log: debug });
 
                       // GBE/GSE setup requires steam_interfaces.txt generated from the original game
@@ -6617,7 +6557,7 @@ var app = {
                         if (emuCfg.apiCheckBypass && hasSteamStub && detectedRuntimeExe && detectedRuntimeExe.full) {
                           try {
                             setGameBoxBusy(self, t('steam-api-check-bypass', 'Steam API check bypass…', 'Contournement du contrôle API Steam…'));
-                            const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: path.join(getUserDataPath(), 'cache/api_check_bypass'), log: debug });
+                            const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'apiCheckBypass'), log: debug });
                             const rb = apiCheckBypass.applyBypass({ gameDir, exePath: detectedRuntimeExe.full, dlls: bypassDlls, log: debug });
                             debug.log(`[${writableAppid}] Steam API check bypass: ${rb.applied ? `applied (${rb.dll})` : `skipped (${rb.reason})`}`);
                           } catch (e) {
@@ -6770,7 +6710,7 @@ var app = {
 
                       setGameBoxBusy(self, t('downloading-steamless', 'Downloading Steamless…', 'Téléchargement de Steamless…'));
                       const steamlessMod = require(path.join(appPath, 'parser/steamless.js'));
-                      const cli = await steamlessMod.ensureSteamless({ cacheDir: path.join(getUserDataPath(), 'cache/steamless'), log: debug });
+                      const cli = await steamlessMod.ensureSteamless({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'steamless'), log: debug });
                       setGameBoxBusy(self, t('removing-drm', 'Removing DRM…', 'Retrait du DRM…'));
                       const result = await steamlessMod.stripDrm({ steamless: cli, exePath, log: debug });
 
@@ -7017,7 +6957,7 @@ var app = {
                       setGameBoxBusy(self, t('applying-universelan-fix', 'Applying the UniverseLAN fix…', 'Application du correctif UniverseLAN…'));
                       try {
                         const installer = require(path.join(appPath, 'parser/gogUniverseLanInstaller.js'));
-                        const cacheDir = path.join(getUserDataPath(), 'cache/gog_universelan');
+                        const cacheDir = appToolCaches.toolCacheDir(getUserDataPath(), 'gogUniverseLan');
                         // UniverseLAN reads %LOCALAPPDATA% of the host the game runs in (its Wine prefix on Linux).
                         const gameHost = winHosts.hostsFor(universeLanGameDir).find((host) => host.windowsPath(winHosts.hostPath(host, 'LOCALAPPDATA')));
                         const localAppData = gameHost ? winHosts.hostPath(gameHost, 'LOCALAPPDATA') : '';
@@ -7670,7 +7610,7 @@ var app = {
                 : img.header || img.landscape || img.portrait || null;
             };
             const refetchDefaultCover = async () => {
-              if (EMU_LOCAL_ICON_SOURCES.has(coverGame.source)) {
+              if (sourceIdentity.readsEmulatorData(coverGame.source)) {
                 applyCoverBackground(appid, (coverGame.img && coverGame.img.header) || 'none');
                 return;
               }
@@ -8161,7 +8101,7 @@ var app = {
         const hash = achievement.Achieved ? achievement.icon : achievement.icongray;
         const local = localIcons.achievementIcon(localIconIndex, achievement, !!achievement.Achieved);
         // These emulator sources already store a local path in the schema: nothing to download.
-        if (EMU_LOCAL_ICON_SOURCES.has(game.source)) {
+        if (sourceIdentity.readsEmulatorData(game.source)) {
           if (!(await setAchievementImage(selector, [hash, local])) && !(await setGameIconImage(selector, achievement))) setMissingAchievementImage(selector);
           return;
         }
@@ -8243,7 +8183,7 @@ var app = {
 
       // Reconciled rarity: sources that map to Steam (Uplay R1/R2, Ubisoft id bridge, Epic-with-Steam)
       // get the same Steam column; console emulators use Exophase, Xbox PC its import cache, EA hides it.
-      const rarityContext = resolveGameRarityContext(game, { emulatorSources: EMU_LOCAL_ICON_SOURCES });
+      const rarityContext = resolveGameRarityContext(game);
       if (!rarityContext) {
         $('.achievement:not(.psn-platinum) .stats .community').hide();
       } else {
@@ -9679,7 +9619,7 @@ var app = {
         uplayPackageCheck = (async () => {
           try {
             const cache = await uplayR2Installer.ensureBundledEmulatorDlls({
-              cacheDir: path.join(getUserDataPath(), 'cache/uplayR2'),
+              cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'uplayR2'),
               log: debug,
             });
             if (!cache.complete) throw new Error('The integrated Uplay R1/R2 repair package is incomplete');
@@ -9727,7 +9667,7 @@ var app = {
         if (picked.canceled || !picked.filePaths || picked.filePaths.length === 0) return;
         button.prop('disabled', true);
         try {
-          const cacheDir = path.join(getUserDataPath(), 'cache/uplayR2');
+          const cacheDir = appToolCaches.toolCacheDir(getUserDataPath(), 'uplayR2');
           for (const packagePath of picked.filePaths) {
             await uplayR2Installer.importPackage({ packagePath, cacheDir, log: debug });
           }
@@ -9748,7 +9688,7 @@ var app = {
         const button = $(this).prop('disabled', true);
         try {
           await uplayR2Installer.ensureBundledEmulatorDlls({
-            cacheDir: path.join(getUserDataPath(), 'cache/uplayR2'),
+            cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'uplayR2'),
             log: debug,
             replaceExisting: true,
           });
@@ -9774,7 +9714,7 @@ var app = {
           Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
         );
       };
-      const gbeCacheDir = () => path.join(getUserDataPath(), 'cache/gse_fork');
+      const gbeCacheDir = () => appToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork');
       const refreshGbeDllStatus = () => {
         let state = 'error';
         let text = gbeSettingsText('attention', 'Needs attention');

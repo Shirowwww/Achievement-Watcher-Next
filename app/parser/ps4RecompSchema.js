@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { readDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
 
 const SET_FILE = /^trophy(\d{2})(\.trp)?$/i;
@@ -23,14 +24,6 @@ function isRegularFile(file) {
     return stat.isFile() && !stat.isSymbolicLink();
   } catch {
     return false;
-  }
-}
-
-function readDirectory(dir) {
-  try {
-    return fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return [];
   }
 }
 

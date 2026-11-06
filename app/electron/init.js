@@ -175,6 +175,7 @@ let pendingInstallPrompt = null;
 
 const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
+const sourceIdentity = require(path.join(__dirname, '../util/sourceIdentity.js'));
 const { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaunch.js'));
@@ -1855,9 +1856,6 @@ async function resolveSteamData(request) {
   }
 }
 
-// Sources whose artwork and rarity come from local emulator data.
-const OVERLAY_EMULATOR_RARITY_SOURCES = new Set(['RPCS3 Emulator', 'ShadPS4 Emulator', 'KytyPS5 Emulator', 'PS4 Recomp', 'Xenia Emulator']);
-
   // Apply cached rarity so the overlay can render immediately without network access.
 function attachOverlayRarity(game) {
   try {
@@ -1870,7 +1868,7 @@ function attachOverlayRarity(game) {
       }
       return;
     }
-    const context = rarity.resolveGameRarityContext(game, { emulatorSources: OVERLAY_EMULATOR_RARITY_SOURCES });
+    const context = rarity.resolveGameRarityContext(game);
     if (!context) return;
     const cacheId = context.kind === 'steam-bridge' ? context.cacheId : context.kind === 'emulator' ? game.appid : context.appid;
     if (!cacheId) return;
@@ -2503,52 +2501,12 @@ ipcMain.on('stylize-background-for-appid', async (event, arg) => {
   }
 });
 
-ipcMain.on('fetch-source-img', async (event, arg) => {
-  switch (arg) {
-    // Both labels each platform emits map to the same icon, so a caller passing the raw source
-    // label gets the right art instead of silently falling through to the Steam default.
-    case 'epic':
-    case 'epic-official':
-      event.returnValue = path.join(userData, 'Source', 'epic.svg');
-      break;
-    case 'gog':
-    case 'GOG Galaxy':
-      event.returnValue = path.join(userData, 'Source', 'gog.svg');
-      break;
-    case 'Goldberg SocialClub':
-      event.returnValue = path.join(userData, 'Source', 'socialclub.svg');
-      break;
-    case 'ubisoft':
-      event.returnValue = path.join(userData, 'Source', 'ubisoft.svg');
-      break;
-    case 'ea':
-      event.returnValue = path.join(userData, 'Source', 'ea.svg');
-      break;
-    case 'RPCS3 Emulator':
-    case 'ShadPS4 Emulator':
-    case 'KytyPS5 Emulator':
-    case 'PS4 Recomp':
-    case 'PlayStation Network':
-      event.returnValue = path.join(userData, 'Source', 'playstation.svg');
-      break;
-    case 'Xenia Emulator':
-      event.returnValue = path.join(userData, 'Source', 'xbox.svg');
-      break;
-    case 'RetroAchievements':
-      event.returnValue = path.join(userData, 'Source', 'retroachievements.svg');
-      break;
-    case 'PC Port':
-      event.returnValue = path.join(userData, 'Source', 'pcport.svg');
-      break;
-    case 'Unconfigured':
-      // Use a generic icon for entries without a Steam appid.
-      event.returnValue = path.join(__dirname, '../resources/img/file-text.png');
-      break;
-    case 'steam':
-    default:
-      event.returnValue = path.join(userData, 'Source', 'steam.svg');
-      break;
-  }
+// Every label a platform emits maps to its icon (sourceIdentity.js), so a raw source label gets the
+// right art; an unknown one gets Steam's.
+ipcMain.on('fetch-source-img', (event, arg) => {
+  // Use a generic icon for entries without a Steam appid.
+  if (arg === 'Unconfigured') event.returnValue = path.join(__dirname, '../resources/img/file-text.png');
+  else event.returnValue = path.join(userData, 'Source', sourceIdentity.sourceIconFile(arg) || 'steam.svg');
 });
 
 // ShellExecute (Start-Process), not spawn(): a detached Node child has no console handle, which
@@ -5093,7 +5051,8 @@ function createMainWindow() {
       MainWin.focus();
       logWindowGeometry('shown');
       const net = require('net');
-      const PIPE_NAME = '\\\\.\\pipe\\AchievementWatchdogPipe';
+      // The same path the Watchdog listens on: a named pipe on Windows, a Unix socket elsewhere.
+      const PIPE_NAME = require(path.join(__dirname, '../util/watchdogPipe.js')).watchdogPipePath();
       function checkWatchdogStatus(callback) {
         const client = net.createConnection(PIPE_NAME);
 
@@ -6370,7 +6329,7 @@ function createNotificationWindow(data = {}) {
     // caps at 1.0), falling back to clamped Audio.volume if WebAudio is unavailable.
     if (data.soundPath) {
       // In packaged builds the sound lives under app.asar.unpacked (see electron-builder asarUnpack).
-      const u = String(data.soundPath).replace(/\\/g, '/').replace('app.asar/', 'app.asar.unpacked/');
+      const u = require(path.join(__dirname, '../util/unpacked.js')).unpackedPath(String(data.soundPath).replace(/\\/g, '/'));
       const src = u.startsWith('file://') ? u : 'file:///' + u;
       const gain = volumePercent / 100;
       notif.webContents

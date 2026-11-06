@@ -1,6 +1,7 @@
 'use strict';
 
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
+const { WATCHDOG_PORT } = require(sharedAppModulePath('util/watchdogPipe.js'));
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
@@ -31,7 +32,7 @@ const LOOPBACK = '127.0.0.1';
 // Split out so the default can be asserted without starting a server (watchdog/test/websocketBind).
 function resolveOptions(option = {}) {
   return {
-    port: Number.isInteger(option.port) ? option.port : 8082,
+    port: Number.isInteger(option.port) ? option.port : WATCHDOG_PORT,
     host: option.host || LOOPBACK,
     ipv6Only: option.ipv6Only || false,
     timeout: Number.isInteger(option.timeout) ? option.timeout : 30000,
@@ -294,12 +295,8 @@ function incoming(message) {
         time: moment().valueOf(),
       };
 
-      if (req.broadcast === true) {
-        broadcast(dummy);
-      } else {
-        debug.log(`WS[${this.id}] Sending notification`);
-        this.send(JSON.stringify(dummy));
-      }
+      debug.log(`WS[${this.id}] Sending notification`);
+      this.send(JSON.stringify(dummy));
     } else if (req.cmd === 'broadcast-test') {
       /*
         Put a sample unlock on the feed and nothing else. Settings renders its overlay preview in

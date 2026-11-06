@@ -14,6 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isFile, isDirectory, readDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { hostPath, hostsFor, pathKey } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { withArchive } = require(path.join(__dirname, '..', 'util', 'zarchive.js'));
 
@@ -83,30 +84,6 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     file: path.join(userDataPath, 'logs/parser.log'),
   });
 };
-
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-function isFile(target) {
-  try {
-    return fs.statSync(target).isFile();
-  } catch {
-    return false;
-  }
-}
-
-function readDirectory(target) {
-  try {
-    return fs.readdirSync(target, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
 
 function readJsonFile(file, maxBytes) {
   try {

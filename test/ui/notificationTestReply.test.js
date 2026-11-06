@@ -36,7 +36,13 @@ function runTest(cmd, replies) {
   }
   const remote = { dialog: { showMessageBoxSync: (options) => dialogs.push(options) } };
   const t = (_key, english) => english;
-  const run = new Function('WebSocket', 'remote', 't', `${extractNested('runNotificationTest')}\nreturn runNotificationTest;`)(FakeSocket, remote, t);
+  const { WATCHDOG_PORT } = require('../../app/util/watchdogPipe.js');
+  const run = new Function('WebSocket', 'remote', 't', 'settingsWatchdogPort', `${extractNested('runNotificationTest')}\nreturn runNotificationTest;`)(
+    FakeSocket,
+    remote,
+    t,
+    WATCHDOG_PORT
+  );
   return { done: run(cmd), dialogs };
 }
 

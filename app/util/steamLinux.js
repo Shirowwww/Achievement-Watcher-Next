@@ -12,6 +12,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { steamRoots } = require(path.join(__dirname, 'winePrefixes.js'));
+const { isDirectory: isDir } = require(path.join(__dirname, 'fsProbe.js'));
 
 const FLATPAK_HOME = ['.var', 'app', 'com.valvesoftware.Steam'];
 const SNAP_HOME = ['snap', 'steam', 'common'];
@@ -50,14 +51,6 @@ function child(node, name) {
   if (!node || typeof node !== 'object') return undefined;
   const key = Object.keys(node).find((candidate) => candidate.toLowerCase() === String(name).toLowerCase());
   return key === undefined ? undefined : node[key];
-}
-
-function isDir(p) {
-  try {
-    return fs.statSync(p).isDirectory();
-  } catch {
-    return false;
-  }
 }
 
 // What the bootstrapper unpacks into every install, native, Flatpak or Snap alike.

@@ -9,6 +9,7 @@
 */
 
 const intlFormat = require('../util/intlFormat.js');
+const { el } = require('./domEl.js');
 
 // The window shows a little past the last entrance, on whole half seconds, never less than this.
 const MIN_SPAN_MS = 1500;
@@ -30,12 +31,6 @@ const FOLLOW_LEAD = 0.25;
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const toStep = (value, step) => Math.round(value / step) * step;
 
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
 function icon(name) {
   const node = el('i', `fas ${name}`);
   node.setAttribute('aria-hidden', 'true');

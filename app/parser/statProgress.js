@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const gamesInfosDatas = require('../util/gamesInfosDatas.js');
+const { toolCacheDir } = require('../util/toolCaches.js');
 
 function numericStatValue(entry) {
   if (entry == null) return null;
@@ -275,7 +276,7 @@ function findProgressSchema({ appid, localSchema, steamStatsDir, cacheDir } = {}
   const saved = cached ? progressEntries(readJsonArray(cached)) : [];
   if (saved.length > 0) return { schema: saved, origin: 'saved' };
   // What an earlier generate_emu_config run left under its own tool folder.
-  const toolRoot = cacheDir ? path.join(cacheDir, 'cache', 'gse_emu_config') : null;
+  const toolRoot = cacheDir ? toolCacheDir(cacheDir, 'emuConfig') : null;
   try {
     for (const tag of toolRoot ? fs.readdirSync(toolRoot, { withFileTypes: true }) : []) {
       if (!tag.isDirectory()) continue;

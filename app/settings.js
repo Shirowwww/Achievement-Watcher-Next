@@ -6,6 +6,7 @@ const ini = require('./util/ini');
 const fs = require('fs');
 const os = require('os');
 const aes = require(path.join(appPath, 'util/aes.js'));
+const { writeFileAtomicSync } = require(path.join(appPath, 'util/replaceFile.js'));
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
@@ -75,22 +76,12 @@ function ensureSections(options) {
 }
 
 /*
-  Same temp-then-rename as util/librarySnapshot.js. A crash or a full disk during a plain
-  writeFileSync leaves a truncated options.ini behind, which is exactly the missing-section file
-  ensureSections() has to cope with on the next launch; renaming a complete file into place cannot
-  produce one.
+  A crash or a full disk during a plain writeFileSync leaves a truncated options.ini behind, which
+  is exactly the missing-section file ensureSections() has to cope with on the next launch; a
+  complete file moved into place cannot produce one (replaceFile.js, read-only files included).
 */
 function writeOptionsFile(options) {
-  fs.mkdirSync(path.dirname(filename), { recursive: true });
-  const temporary = `${filename}.${process.pid}.tmp`;
-  try {
-    fs.writeFileSync(temporary, ini.stringify(options), 'utf8');
-    fs.renameSync(temporary, filename);
-  } finally {
-    try {
-      if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
-    } catch {}
-  }
+  writeFileAtomicSync(filename, ini.stringify(options));
 }
 
 /*

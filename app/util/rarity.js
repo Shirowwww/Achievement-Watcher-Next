@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { resolveEpicArtifactIdentity } = require('./epicIdentity.js');
 const { userDataDir } = require('./userDataPath.js');
+const sourceIdentity = require('./sourceIdentity.js');
 
 const CACHE_DIR = path.join(userDataDir(), 'steam_cache', 'rarity');
 const DEFAULT_TTL_MS = 6 * 60 * 60 * 1000; // 6h - global unlock % drifts slowly, no need to refetch per view
@@ -20,24 +21,10 @@ const RARITY_SOURCES = Object.freeze({
   psn: 'psn-official-trophy-rates',
 });
 
-// Sources whose native id is NOT a Steam AppID and whose rarity sidecar is seeded locally
-// (Ubisoft official bridge, GOG/Epic official, Lumaplay, EA). They must never be handed to the
-// Steam global-percentages endpoint: a namespaced or native id would just burn a failing request
-// and the caller keeps whatever its own sidecar already knows.
-const CACHE_ONLY_SOURCES = new Set([
-  'epic-official',
-  'gog-official',
-  'GOG Galaxy',
-  'Ubisoft Connect',
-  'uplay',
-  'uPlay',
-  'Lumaplay',
-  'RUNE Uplay',
-  'ea',
-  'Xbox PC',
-  'RetroAchievements',
-  'PlayStation Network',
-]);
+// A source whose native id is not a Steam AppID and whose rarity sidecar is seeded locally (its row
+// in sourceIdentity.js says 'cache-only') is never handed to the Steam global-percentages endpoint:
+// a namespaced or native id would just burn a failing request.
+const isCacheOnlySource = (source) => sourceIdentity.rarityPolicyOf(source) === 'cache-only';
 
 // Clamp anything the APIs hand back to a sane 0–100 number, tolerating "12,3" style decimals.
 function normalizeRarityPercent(value) {
@@ -151,18 +138,9 @@ async function fetchGogGlobalAchievementPercentages(productId, options = {}) {
   return out;
 }
 
+// The emulator platform whose Exophase list (and Sony's rates) a source's rarity comes from, or ''.
 function platformFromSource(source) {
-  const s = String(source || '').toLowerCase();
-  if (s.includes('rpcs3')) return 'rpcs3';
-  if (s.includes('shadps4')) return 'shadps4';
-  if (s.includes('kytyps5')) return 'kytyps5';
-  // PC ports of PS4 games are the PS4 titles Exophase lists, under the PS4 emulator's platform.
-  if (s === 'ps4 recomp') return 'shadps4';
-  // PS3Recomp ports likewise: Exophase's PS3 list, and the account's official rates by NP id.
-  if (s === 'ps3 recomp') return 'rpcs3';
-  // Recompiled Xbox 360 games are the same titles Exophase lists under the emulator's platform.
-  if (s.includes('xenia') || s === 'xbox 360 recomp') return 'xenia';
-  return '';
+  return sourceIdentity.emulatorPlatformOf(source) || '';
 }
 
 // Exophase matches by English title; a source that knows the English text of a localized list
@@ -224,16 +202,13 @@ async function fetchExophaseByTitles(platform, options) {
 
 const searchKey = (title) => String(title || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
 
-// The trophy service each console's lists live under in Sony's trophy API.
-const PSN_SERVICES = { rpcs3: 'trophy', shadps4: 'trophy', kytyps5: 'trophy2' };
-
 /*
   Sony's own rates, when a PlayStation account is connected and the list is on it; [] otherwise, so
   the caller goes on to Exophase. `officialTrophyRates` is the caller's way to ask the main process,
   which holds the token; a rate for a trophy the game does not list is dropped.
 */
 async function officialTrophyRates(source, options) {
-  const service = PSN_SERVICES[platformFromSource(source)];
+  const service = sourceIdentity.trophyServiceOf(source);
   if (!service || !options.npCommId || typeof options.officialTrophyRates !== 'function') return [];
   try {
     const answer = await options.officialTrophyRates({ npCommId: options.npCommId, service });
@@ -254,7 +229,7 @@ function fetchForSource(appid, source, options) {
   }
   if (source === 'epic') return fetchEpicRarityByArtifactId(appid, options);
   if (source === 'gog') return fetchGogGlobalAchievementPercentages(appid, options);
-  if (CACHE_ONLY_SOURCES.has(source)) return Promise.resolve([]);
+  if (isCacheOnlySource(source)) return Promise.resolve([]);
   return fetchSteamGlobalAchievementPercentages(appid, options);
 }
 
@@ -310,13 +285,12 @@ async function getSteamBridgeRarity(cacheId, steamAppId, names, options = {}) {
 }
 
 // Resolve the rarity source for a game's detail view.
-function resolveGameRarityContext(game, options = {}) {
+function resolveGameRarityContext(game) {
   if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return null;
   const system = String(game.system || '').toLowerCase();
   const appid = String(game.appid == null ? '' : game.appid);
   const steamappid = String(game.steamappid == null ? '' : game.steamappid);
   const source = String(game.source || '');
-  const emulatorSources = options.emulatorSources || new Set();
 
   if (source === 'Xbox PC') return { kind: 'xbox' };
   // A list read from a console over FTP saved no rates: Exophase is asked, as for the emulators.
@@ -325,7 +299,7 @@ function resolveGameRarityContext(game, options = {}) {
   }
   // Same shape as Xbox: each rate was stored on its schema entry at import time.
   if (source === 'RetroAchievements' || source === 'PlayStation Network') return { kind: 'xbox', source };
-  if (emulatorSources.has(source)) return { kind: 'emulator', source };
+  if (sourceIdentity.readsEmulatorData(source)) return { kind: 'emulator', source };
 
   // Goldberg SocialClub: namespaced appid, Steam schema loaded through the resolved release.
   if (source === 'Goldberg SocialClub' && /^\d+$/.test(steamappid)) {
@@ -455,10 +429,8 @@ async function getRarityEntries(appid, source = 'steam', options = {}) {
   'ubisoft' are in that group too, because the library seeds their sidecars itself (it holds the
   tokens) and a toast must not start a second lookup.
 */
-const LIVE_CACHE_ONLY_SOURCES = new Set([...CACHE_ONLY_SOURCES, 'epic', 'gog', 'ubisoft']);
-
 function isSteamRarityId(appid, source) {
-  if (source && LIVE_CACHE_ONLY_SOURCES.has(String(source))) return false;
+  if (source && sourceIdentity.rarityPolicyOf(source)) return false;
   return /^[0-9]+$/.test(String(appid == null ? '' : appid).trim());
 }
 
@@ -478,7 +450,6 @@ async function getRarityMap(appid, { ttlMs, source = '' } = {}) {
 }
 
 module.exports = {
-  LIVE_CACHE_ONLY_SOURCES,
   isSteamRarityId,
   getRarityMap,
   RARITY_SOURCES,

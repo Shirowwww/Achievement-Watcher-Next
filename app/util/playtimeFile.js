@@ -10,8 +10,11 @@ const { writeFileAtomicSync } = require(path.join(__dirname, 'replaceFile.js'));
   the app and the Watchdog write it, so every change re-reads the file and replaces it whole.
 */
 
+// Relative to the user data folder, '/'-separated like the profile backup's rules.
+const PLAYTIME_RELATIVE = 'cfg/playtime.json';
+
 function playtimeFile(userData) {
-  return path.join(userData, 'cfg', 'playtime.json');
+  return path.join(userData, ...PLAYTIME_RELATIVE.split('/'));
 }
 
 // ENOENT is an empty store; any other failure is thrown so a locked file is never saved over.
@@ -67,4 +70,4 @@ function mergeMax(file, rows) {
   return rows.length;
 }
 
-module.exports = { playtimeFile, read, write, addSession, list, mergeMax };
+module.exports = { playtimeFile, PLAYTIME_RELATIVE, read, write, addSession, list, mergeMax };

@@ -38,6 +38,7 @@ const {
 } = require('../util/presetSchema.js');
 const { createEditorHelp } = require('./presetEditorHelp.js');
 const { createTimeline } = require('./presetTimeline.js');
+const { el } = require('./domEl.js');
 const { clone, drawnOnlyIn, foldEdit, itemOwns, partOwns, resetItem, resetPart } = require('./presetCanvasTiers.js');
 const { CANVAS_EDIT_ROOM, CANVAS_PART_SELECTORS, CANVAS_STYLE_SELECTORS, canvasIconMask } = require('../util/customPreset.js');
 
@@ -111,12 +112,6 @@ const isLine = (item) => item.kind === 'shape' && item.shape === 'line';
 function rotVec(x, y, deg) {
   const rad = (deg * Math.PI) / 180;
   return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
-}
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
 }
 function icon(name) {
   const node = el('i', `fas ${name}`);

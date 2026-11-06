@@ -95,3 +95,13 @@ test('the settings file is replaced atomically, never truncated in place', async
   const leftovers = fs.readdirSync(path.join(userData, 'cfg')).filter((name) => name.endsWith('.tmp'));
   assert.deepEqual(leftovers, []);
 });
+
+// A copied profile or a backup tool can leave options.ini read-only; Windows then refuses the rename.
+test('a read-only settings file is still saved', async () => {
+  const { file } = withConfig(COMPLETE);
+  const options = settings.load();
+  fs.chmodSync(file, 0o444);
+  options.achievement.showHidden = !options.achievement.showHidden;
+  await settings.save(options);
+  assert.equal(settings.load().achievement.showHidden, options.achievement.showHidden);
+});

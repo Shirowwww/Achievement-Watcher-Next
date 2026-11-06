@@ -123,7 +123,7 @@ const xboxPc = require(sharedAppModulePath('parser/xboxPcCore.js'));
 const progressMute = require(sharedAppModulePath('parser/progressMute.js'));
 progressMute.setUserDataPath(userDataDir());
 const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
-const { mapStatProgressEntries } = require(sharedAppModulePath('parser/statProgress.js'));
+const { mapStatProgressEntries, findProgressSchema } = require(sharedAppModulePath('parser/statProgress.js'));
 const { readSiblingStats } = require(sharedAppModulePath('parser/emuSave.js'));
 const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
 const rarity = require(sharedAppModulePath('util/rarity.js'));
@@ -481,44 +481,22 @@ function readProgressSchemaFile(file) {
   }
 }
 
-function findGeneratedProgressSchema(appID) {
-  const root = path.join(userDataDir(), 'Cache', 'gse_emu_config');
-  try {
-    for (const tag of fs.readdirSync(root, { withFileTypes: true })) {
-      if (!tag.isDirectory()) continue;
-      const file = path.join(root, tag.name, 'generate_emu_config', '_OUTPUT', String(appID), 'steam_settings', 'achievements.json');
-      const schema = readProgressSchemaFile(file);
-      if (schema.length > 0) return schema;
-    }
-  } catch {
-    /* cache folder is optional */
-  }
-  return [];
-}
-
+/*
+  The stat -> achievement table for a live update: the game's own steam_settings, else what the app
+  saved or generated (statProgress.findProgressSchema, the library's own lookup). A miss is not
+  remembered: the app may write the table while the Watchdog runs.
+*/
 function findLocalProgressSchema(appID, game) {
   const key = `${appID}:${game && game.gameDir ? game.gameDir : ''}`;
   if (localProgressSchemaCache.has(key)) return localProgressSchemaCache.get(key);
 
-  const candidates = [];
-  if (game && game.steamSettings) candidates.push(path.join(game.steamSettings, 'achievements.json'));
-  if (game && game.gameDir) candidates.push(path.join(game.gameDir, 'steam_settings', 'achievements.json'));
-  candidates.push(path.join(userDataDir(), 'Cache', 'gse_emu_config', 'latest', 'generate_emu_config', '_OUTPUT', String(appID), 'steam_settings', 'achievements.json'));
-  // Written by the app from the Steam client's schema, for a CODEX/RUNE save with no steam_settings.
-  candidates.push(path.join(userDataDir(), 'steam_cache', 'progress', `${appID}.json`));
-
-  for (const file of candidates) {
-    const schema = readProgressSchemaFile(file);
-    if (schema.length > 0) {
-      localProgressSchemaCache.set(key, schema);
-      return schema;
-    }
-  }
-
-  // A miss is not remembered: the app may write the table above while the Watchdog runs.
-  const generated = findGeneratedProgressSchema(appID);
-  if (generated.length > 0) localProgressSchemaCache.set(key, generated);
-  return generated;
+  const ownFiles = [];
+  if (game && game.steamSettings) ownFiles.push(path.join(game.steamSettings, 'achievements.json'));
+  if (game && game.gameDir) ownFiles.push(path.join(game.gameDir, 'steam_settings', 'achievements.json'));
+  const localSchema = ownFiles.map(readProgressSchemaFile).find((schema) => schema.length > 0);
+  const { schema } = findProgressSchema({ appid: appID, localSchema, cacheDir: userDataDir() });
+  if (schema.length > 0) localProgressSchemaCache.set(key, schema);
+  return schema;
 }
 
 // CODEX and RUNE keep stats in a stats.ini beside achievements.ini ([UserStats]; OnlineFix: [Stats]).

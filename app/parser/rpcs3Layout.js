@@ -18,6 +18,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 
 const DEV_HDD0_KEY = '/dev_hdd0/';
 const EMULATOR_DIR_KEY = '$(EmulatorDir)';
@@ -33,14 +34,6 @@ function normalize(value) {
   }
   const root = path.parse(resolved).root;
   return resolved === root ? resolved : resolved.replace(/[\\/]+$/, '');
-}
-
-function isDirectory(dir) {
-  try {
-    return !!dir && fs.statSync(dir).isDirectory();
-  } catch {
-    return false;
-  }
 }
 
 // Strip a YAML comment, but only when the '#' starts a token - a '#' inside a path is part of it.

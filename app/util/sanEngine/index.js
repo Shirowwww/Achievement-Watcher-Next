@@ -11,6 +11,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const engine = require('./engine.js');
 const sanTheme = require('../sanTheme.js');
+const { escapeHtml } = require('../escapeHtml.js');
 const { PRESET_PACKAGE_FILE, canvasCss, canvasMarkup } = require('../customPreset.js');
 const { normalizeOptions, normalizeCanvas, canvasFiles, canvasFonts } = require('../presetSchema.js');
 
@@ -80,10 +81,6 @@ function windowSize(theme) {
 // run, so only `<` matters).
 function scriptJson(value) {
   return JSON.stringify(value).replace(/</g, '\\u003c');
-}
-
-function escapeHtml(value) {
-  return String(value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 }
 
 // fonts.css as family -> file, one @font-face per line.

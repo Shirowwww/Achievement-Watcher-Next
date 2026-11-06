@@ -9,6 +9,7 @@
 const fs = require('fs');
 const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { readText } = require('../util/fsProbe.js');
 const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
 const { sevenZipBin } = require('../util/unpacked.js');
@@ -25,14 +26,6 @@ const MAX_ARCHIVE_BYTES = 512 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRIES = 8192;
 
 const noopLog = { log() {}, error() {} };
-
-function readText(file) {
-  try {
-    return fs.readFileSync(file, 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
 
 // A build folder counts as usable once it has at least one of the two Galaxy dlls.
 function isExtractedBuild(dir) {

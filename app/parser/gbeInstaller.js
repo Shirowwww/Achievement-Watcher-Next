@@ -9,6 +9,7 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { readText } = require('../util/fsProbe.js');
 const request = lazyRequire('request-zero');
 const pe = require('../util/pe.js');
 const { sevenZipBin, ensureExecutable } = require('../util/unpacked.js');
@@ -60,14 +61,6 @@ const CUSTOM_MANIFEST = 'import.json';
 // rather than breaking every repaired game at once (see crackLoaderDetect.isEmulatorDll).
 const MAX_IMPORT_ENTRIES = 4096;
 
-
-function readText(file) {
-  try {
-    return fs.readFileSync(file, 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
 
 // A cached build is "usable" once at least one of the two arch DLLs is present for that tag.
 function cachedDlls(cacheDir, tag) {

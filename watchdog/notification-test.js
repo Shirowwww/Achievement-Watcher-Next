@@ -215,7 +215,7 @@ async function runTest(kind, { rumble = true, game = null } = {}) {
       await balloon({
         title: notification.title,
         message: notification.message || notifyStrings.forLang(options.achievement.lang).achievementUnlocked || 'Achievement unlocked !',
-        ico: './notification/icon/icon.ico',
+        ico: path.join(__dirname, 'notification', 'icon', 'icon.ico'),
       });
     } else {
       throw err;

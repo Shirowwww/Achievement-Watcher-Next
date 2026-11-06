@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isFile, isDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 
 const APPID = 'madnesspatch-19680';
 const EXECUTABLE = 'AliceMadnessReturns.exe';
@@ -53,22 +54,6 @@ module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   });
   listDirectory = typeof reader === 'function' ? reader : null;
 };
-
-function isFile(target) {
-  try {
-    return fs.statSync(target).isFile();
-  } catch {
-    return false;
-  }
-}
-
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 function readDirectory(target) {
   if (listDirectory) return listDirectory(target) || [];

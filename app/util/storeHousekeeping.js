@@ -7,6 +7,7 @@ const { DERIVED_NAME } = require('./themeImages.js');
 const { themeImagesDir } = require('./themeLayers.js');
 const { recompressArtwork } = require('./artworkRecompress.js');
 const { pruneGeneratedOutputs } = require('../parser/genEmuConfig.js');
+const { toolCacheDir } = require('./toolCaches.js');
 
 /*
   Once per start, off the startup path: give back the space the write-once stores waste.
@@ -21,7 +22,7 @@ async function tidyUserDataStores(userDataPath, { log, nativeImage }) {
   const backups = await dedupeTree(backupRoot(userDataPath), { log });
   // Only the imported pictures: the blur and veil copies are regenerated in place.
   const themes = await dedupeTree(themeImagesDir(userDataPath), { accept: (file) => !DERIVED_NAME.test(file), log });
-  const outputs = pruneGeneratedOutputs(path.join(userDataPath, 'cache', 'gse_emu_config'));
+  const outputs = pruneGeneratedOutputs(toolCacheDir(userDataPath, 'emuConfig'));
   const artwork = await recompressArtwork(path.join(userDataPath, 'steam_cache', 'icon'), nativeImage);
 
   const freedMb = Math.round((backups.savedBytes + themes.savedBytes + artwork.savedBytes) / 1048576);

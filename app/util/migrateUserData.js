@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const { TOOL_CACHE_DIRS } = require('./toolCaches.js');
 const os = require('os');
 const path = require('path');
 const { legacyUserDataDir, aw3UserDataDir } = require('./userDataPath.js');
@@ -30,12 +31,12 @@ const MIGRATION_PLAN = [
   { rel: 'backups', mode: 'link' }, // GBE restore points, indexed by cfg/gbe-backups.db
   // AW's own tool caches. NOTE: on Windows `cache` and Chromium's `Cache` are the SAME directory
   // (case-insensitive), so these have to be named one by one instead of taking the folder whole.
-  { rel: 'cache/gse_fork', mode: 'link' },
-  { rel: 'cache/gse_emu_config', mode: 'link' },
-  { rel: 'cache/steamless', mode: 'link' },
-  { rel: 'cache/crackfiles', mode: 'link' },
-  { rel: 'cache/api_check_bypass', mode: 'link' },
-  { rel: 'cache/uplayR2', mode: 'link' }, // user-seeded: no public download source, cannot be refetched
+  { rel: TOOL_CACHE_DIRS.gbeFork, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.emuConfig, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.steamless, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.crackfiles, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.apiCheckBypass, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.uplayR2, mode: 'link' }, // user-seeded: no public download source, cannot be refetched
 ];
 
 // Loose files at the root of the legacy directory that hold real state.
@@ -62,12 +63,12 @@ const AW3_MIGRATION_PLAN = [
   { rel: 'uplay_cache', mode: 'link' },
   { rel: 'backups', mode: 'link' },
   { rel: 'logs', mode: 'link' }, // keeps diagnostic history across the rename
-  { rel: 'cache/gse_fork', mode: 'link' },
-  { rel: 'cache/gse_emu_config', mode: 'link' },
-  { rel: 'cache/steamless', mode: 'link' },
-  { rel: 'cache/crackfiles', mode: 'link' },
-  { rel: 'cache/api_check_bypass', mode: 'link' },
-  { rel: 'cache/uplayR2', mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.gbeFork, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.emuConfig, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.steamless, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.crackfiles, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.apiCheckBypass, mode: 'link' },
+  { rel: TOOL_CACHE_DIRS.uplayR2, mode: 'link' },
 ];
 
 const AW3_MIGRATION_FILES = [

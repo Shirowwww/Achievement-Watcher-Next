@@ -16,6 +16,8 @@ const { iconPathOf } = require('../util/iconPath.js');
 const { notificationVolumePercent } = require('../util/notificationVolume.js');
 const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { isDirectory } = require(sharedAppModulePath('util/fsProbe.js'));
 
 // A save, profile or unlock file first seen with more unlocks than this was copied in, not played.
 const COPIED_IN_UNLOCKS = 10;
@@ -162,14 +164,6 @@ function createWatcherList(tag, debug) {
       return list.length;
     },
   };
-}
-
-function isDirectory(dir) {
-  try {
-    return fs.statSync(dir).isDirectory();
-  } catch {
-    return false;
-  }
 }
 
 // Pure: the folder is there, or the nearest folder above it that is and the segment it must grow next.

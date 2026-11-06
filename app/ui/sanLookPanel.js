@@ -9,6 +9,7 @@
 
 const { layoutOf } = require('../util/sanEngine/engine.js');
 const { SAN_MOVABLE: MOVABLE, PART_SHIFT } = require('../util/sanTheme.js');
+const { el } = require('./domEl.js');
 
 // The card's elements a hand may move or hide, kept in the look's `awparts`, and how far: the
 // limits saving applies, so the panel never offers a place it would refuse.
@@ -134,12 +135,6 @@ const LAYOUT_NAMES = {
 const TIERS = ['auto', 'bronze', 'silver', 'gold'];
 const SAVE_DELAY_MS = 350;
 
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
 
 function option(value, text) {
   const node = el('option', '', text);

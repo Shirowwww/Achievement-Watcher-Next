@@ -3,9 +3,8 @@
 /*
   The address Settings hands out has to be the one the Watchdog actually answers on.
 
-  Settings writes it out as a literal rather than asking the Watchdog for it: the renderer cannot
-  require watchdog modules, and a second setting for a port nobody changes would be one more thing
-  to get wrong. That is only safe while something checks the two agree, which is this - the port
+  Settings builds it from the port constant in app/util/watchdogPipe.js (the renderer cannot require
+  watchdog modules). Something has to check it agrees with the listener, which is this - the port
   comes from websocket.js's own defaults and the path from the browser source module itself.
 */
 
@@ -18,12 +17,18 @@ const { rendererSource } = require('../helpers/rendererSource.js');
 const watchdogDir = path.join(__dirname, '..', '..', 'watchdog');
 const websocket = require(path.join(watchdogDir, 'websocket.js'));
 const obsSource = require(path.join(watchdogDir, 'notification', 'obsSource.js'));
+const { WATCHDOG_PORT } = require(path.join(__dirname, '..', '..', 'app', 'util', 'watchdogPipe.js'));
+
+// Settings builds the address from the shared port constant; resolve it the way the renderer does.
+function settingsObsUrl(source) {
+  const found = source.match(/const OBS_SOURCE_URL = `([^`]+)`/);
+  assert.ok(found, 'Settings must name the browser source address somewhere the user can copy it');
+  assert.match(source, /WATCHDOG_PORT: settingsWatchdogPort \} = require\(path\.join\(appPath, 'util\/watchdogPipe\.js'\)\)/);
+  return found[1].replace('${settingsWatchdogPort}', String(WATCHDOG_PORT));
+}
 
 test('the browser source URL in Settings is the one the Watchdog serves', () => {
-  const found = rendererSource().match(/const OBS_SOURCE_URL = '([^']+)'/);
-  assert.ok(found, 'Settings must name the browser source address somewhere the user can copy it');
-
-  const url = new URL(found[1]);
+  const url = new URL(settingsObsUrl(rendererSource()));
   const options = websocket.resolveOptions();
   assert.equal(url.hostname, websocket.LOOPBACK, 'the feed is bound to loopback, so the address must be too');
   assert.equal(Number(url.port), options.port);
@@ -53,7 +58,7 @@ test('Preview opens the browser source itself, in the mode that shows a sample u
   const found = source.match(/#btn-preview-obs-url'\)\.attr\('href', `\$\{OBS_SOURCE_URL\}([^`]*)`\)/);
   assert.ok(found, 'Preview must build its address from OBS_SOURCE_URL');
 
-  const base = source.match(/const OBS_SOURCE_URL = '([^']+)'/)[1];
+  const base = settingsObsUrl(source);
   const preview = new URL(`${base}${found[1]}`);
   assert.equal(preview.pathname, `${obsSource.ROUTE}/`, 'a preset loads its files relative to the directory URL');
   assert.equal(preview.searchParams.get('test'), '1');

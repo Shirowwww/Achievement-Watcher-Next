@@ -14,12 +14,19 @@ const { launchBrowser, closeBrowser, skipReason } = require('../helpers/chromium
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 
+// The page has no require(): the gallery's one dependency (ui/domEl.js) is inlined as a module.
+function gallerySource() {
+  const domEl = fs.readFileSync(path.join(appDir, 'ui', 'domEl.js'), 'utf8');
+  const gallery = fs.readFileSync(path.join(appDir, 'ui', 'presetGallery.js'), 'utf8');
+  return `const require = () => { const module = { exports: {} }; ${domEl}\n return module.exports; };\n${gallery}`;
+}
+
 function buildHarness() {
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <select id="preset"><option value="">Same as main</option><option value="Mine">Mine</option><option value="AW Next">AW Next</option></select>
     <script>
       const module = { exports: {} };
-      ${fs.readFileSync(path.join(appDir, 'ui', 'presetGallery.js'), 'utf8')}
+      ${gallerySource()}
       window.gallery = module.exports.createPresetGallery({ label: (key) => key, snapshot: () => Promise.resolve(null) });
       window.changes = [];
       const select = document.getElementById('preset');
@@ -88,7 +95,7 @@ function buildWarmHarness() {
   return `<!doctype html><html><head><meta charset="utf-8"></head><body>
     <script>
       const module = { exports: {} };
-      ${fs.readFileSync(path.join(appDir, 'ui', 'presetGallery.js'), 'utf8')}
+      ${gallerySource()}
       window.asks = [];
       let release;
       window.held = new Promise((resolve) => (release = resolve));

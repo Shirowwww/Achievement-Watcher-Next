@@ -10,6 +10,8 @@
 */
 
 const path = require('path');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { unpackedPath } = require(sharedAppModulePath('util/unpacked.js'));
 
 const GET_MODULE_HANDLE_EX_FLAG_PIN = 0x1;
 
@@ -18,7 +20,7 @@ let regoditPromise = null;
 function regoditDllPath() {
   const entry = require.resolve('regodit');
   const arch = { ia32: 'x86' }[process.arch] || process.arch;
-  return path.join(path.dirname(entry), '..', 'dist', `regodit.${arch}.dll`).replace('app.asar', 'app.asar.unpacked');
+  return unpackedPath(path.join(path.dirname(entry), '..', 'dist', `regodit.${arch}.dll`));
 }
 
 function pinModule(file) {

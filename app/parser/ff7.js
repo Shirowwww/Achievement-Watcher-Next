@@ -17,6 +17,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isFile } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 
 const APPID = '39140';
 const STATE_FILE = 'achievement.dat';
@@ -37,14 +38,6 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
     file: path.join(userDataPath, 'logs/parser.log'),
   });
 };
-
-function isFile(target) {
-  try {
-    return fs.statSync(target).isFile();
-  } catch {
-    return false;
-  }
-}
 
 function readAppidFile(dir) {
   try {

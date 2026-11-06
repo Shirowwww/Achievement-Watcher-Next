@@ -66,3 +66,12 @@ test('a count reaches its exact target on its last frame', () => {
   assert.equal(el.textContent, '250');
   assert.equal(frames.length, 0, 'no frame is asked for once the target is shown');
 });
+
+// The profile band lives in a window that is often hidden, where frame callbacks never run.
+test('by default the count steps on timers and lands on its target', async () => {
+  const el = fakeElement('10');
+  countTo(el, '20', { duration: 40, reducedMotion: false });
+  assert.notEqual(el.textContent, '20', 'the count rolls rather than jumping');
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  assert.equal(el.textContent, '20');
+});

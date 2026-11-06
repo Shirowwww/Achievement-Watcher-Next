@@ -8,10 +8,12 @@ const { mapLimit } = require('../util/onboardingDetect.js');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const glob = lazyRequire('fast-glob');
 const fs = require('fs');
+const { writeFileAtomicSync, quarantineCorruptFile } = require('../util/replaceFile.js');
 const saveRoots = require(path.join(appPath, 'parser/saveRoots.js'));
 const { appHosts, documentsFolders, documentsFor } = require(path.join(appPath, 'util/appHosts.js'));
-const { hostPath, hostFor, pathKey } = require(path.join(appPath, 'util/winHosts.js'));
+const { hostPath, hostFor, pathKey, expandKnownVariables } = require(path.join(appPath, 'util/winHosts.js'));
 const { xdgAppDirs } = require(path.join(appPath, 'util/xdgAppDirs.js'));
+const { isDirectory } = require(path.join(appPath, 'util/fsProbe.js'));
 
 let file;
 
@@ -110,14 +112,6 @@ function sceneSourceOf(root) {
   return /^rune$/i.test(name) ? 'Rune' : /^(codex|cpy)$/i.test(name) ? 'Codex' : 'Steam-emulator';
 }
 
-function isDirectory(dir) {
-  try {
-    return fs.statSync(dir).isDirectory();
-  } catch {
-    return false;
-  }
-}
-
 // CODEX and RUNE head steam_emu.ini with "### Game data is stored at %SystemDrive%\Users\Public\
 // Documents\Steam\RUNE\<appid>". Returns that folder with its variables expanded, or null.
 function readSceneSaveNote(configFile, appid) {
@@ -133,13 +127,8 @@ function readSceneSaveNote(configFile, appid) {
   // The line ends in the appid itself or in a placeholder such as <appid>; either way the folder
   // above it is the source root the game's own folder goes under. It is a Windows path on Linux too.
   const root = /^\d+$|[<{%]/.test(path.win32.basename(noted)) ? path.win32.dirname(noted) : noted;
-  let unresolved = false;
-  const expanded = root.replace(/%([^%]+)%/g, (whole, name) => {
-    const value = process.env[name];
-    if (!value) unresolved = true;
-    return value || whole;
-  });
-  const local = unresolved ? null : sceneNoteLocalPath(expanded, configFile);
+  const expanded = expandKnownVariables(root, (name) => process.env[name]);
+  const local = expanded === null ? null : sceneNoteLocalPath(expanded, configFile);
   return local ? path.join(local, String(appid)) : null;
 }
 
@@ -324,18 +313,6 @@ function isProbableAppIdFolderName(name) {
   return true;
 }
 
-// Quarantine a corrupted config file (rename to <file>.corrupt-<timestamp>) so its raw bytes are
-// preserved for manual recovery while a clean default is written in its place.
-function quarantineCorruptConfig(f, err) {
-  try {
-    const backup = `${f}.corrupt-${Date.now()}`;
-    fs.renameSync(f, backup);
-    console.warn(`[userDir] corrupt config ${f} (${err.message}); quarantined to ${backup}, resetting`);
-  } catch (e) {
-    try { fs.unlinkSync(f); } catch {}
-    console.warn(`[userDir] corrupt config ${f} (${err.message}); could not quarantine (${e.message}), overwriting`);
-  }
-}
 
 module.exports.get = async () => {
   return (await module.exports.getEntries()).filter((entry) => entry.enabled !== false);
@@ -363,8 +340,13 @@ module.exports.getEntries = async () => {
       // Genuine corruption (e.g. a write interrupted by a crash/power loss). A transient I/O lock
       // throws before JSON.parse and is handled by the outer catch - so we never quarantine a good
       // file just because antivirus/the indexer held it open for a moment.
-      quarantineCorruptConfig(file, parseErr);
-      try { await this.save([]); } catch {}
+      // Its bytes are kept as <file>.corrupt-<time> before a clean list replaces it. A file that
+      // cannot be moved aside stays as it is: it is the only copy of the user's folders.
+      const backup = quarantineCorruptFile(file);
+      console.warn(`[userDir] corrupt config ${file} (${parseErr.message}); ${backup ? `kept as ${backup}, resetting` : 'could not move it aside, left as it is'}`);
+      if (backup) {
+        try { await this.save([]); } catch {}
+      }
       return [];
     }
   } catch (err) {
@@ -375,8 +357,7 @@ module.exports.getEntries = async () => {
 };
 
 module.exports.save = async (data) => {
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf8');
+  writeFileAtomicSync(file, JSON.stringify(data, null, 2));
 };
 
 module.exports.find = async () => {
@@ -434,13 +415,6 @@ module.exports.findEntries = async () => {
   consoleDirs.push(...xdgAppDirs('rpcs3'), ...xdgAppDirs('shadps4'), ...xdgAppDirs('xenia'));
   // Xenia without portable.txt keeps its profiles and content under Documents\Xenia.
   consoleDirs.push(...documentsFolders().map((docs) => path.join(docs, 'Xenia')));
-  const isDirectory = (dir) => {
-    try {
-      return !!dir && fs.statSync(dir).isDirectory();
-    } catch {
-      return false;
-    }
-  };
   for (const dir of [...consoleDirs, process.env.RPCS3_CONFIG_DIR]) {
     if (isDirectory(dir)) addDetected(dir, 'Known emulator data location');
   }

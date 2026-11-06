@@ -11,16 +11,9 @@
 
 const path = require('path');
 const fs = require('fs');
+const { isFile: exists } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 
 const MAX_DESCRIPTOR_BYTES = 64 * 1024;
-
-const exists = (file) => {
-  try {
-    return fs.statSync(file).isFile();
-  } catch {
-    return false;
-  }
-};
 
 // Borealis' data_location.json ({ version: 1, mode, customPath }), or null.
 function readDescriptor(file) {

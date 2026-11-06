@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const { TOOL_CACHE_DIRS } = require('./toolCaches.js');
 const fs = require('fs');
 const coverStore = require('./coverStore.js');
 const gameIconStore = require('./gameIconStore.js');
@@ -17,16 +18,16 @@ const gameIconStore = require('./gameIconStore.js');
   steam_cache/retroachievements and steam_cache/psn are the RetroAchievements and PlayStation
   libraries in the same way.
 */
-const PRESERVED_CACHE_CHILDREN = { 'cache/gse_fork': ['custom'], steam_cache: ['xbox', 'retroachievements', 'psn'] };
+const PRESERVED_CACHE_CHILDREN = { [TOOL_CACHE_DIRS.gbeFork]: ['custom'], steam_cache: ['xbox', 'retroachievements', 'psn'] };
 
 const SAFE_CACHE_DIRS = [
   'steam_cache', // Steam/GOG/Epic/SteamDB/SteamGridDB schema, icon, cover and rarity cache
   'uplay_cache', // Ubisoft Connect schema + icon cache
-  'cache/gse_fork', // downloaded GBE Fork (Detanup01/gbe_fork) steam_api dlls
-  'cache/gse_emu_config', // downloaded generate_emu_config tool (alex47exe/gse_fork_tools)
-  'cache/steamless', // downloaded Steamless (atom0s/Steamless)
-  'cache/crackfiles', // downloaded crackfiles.json (KoriaPolis/CrakFiles)
-  'cache/api_check_bypass', // downloaded Steam-API-Check-Bypass proxy dlls
+  TOOL_CACHE_DIRS.gbeFork, // downloaded GBE Fork (Detanup01/gbe_fork) steam_api dlls
+  TOOL_CACHE_DIRS.emuConfig, // downloaded generate_emu_config tool (alex47exe/gse_fork_tools)
+  TOOL_CACHE_DIRS.steamless, // downloaded Steamless (atom0s/Steamless)
+  TOOL_CACHE_DIRS.crackfiles, // downloaded crackfiles.json (KoriaPolis/CrakFiles)
+  TOOL_CACHE_DIRS.apiCheckBypass, // downloaded Steam-API-Check-Bypass proxy dlls
   'cache/library_snapshot', // derived last-complete library used only for fast first paint
   'cache/discovery', // memoized install-folder walks; rebuilt by the next scan
 ];

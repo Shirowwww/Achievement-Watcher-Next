@@ -14,12 +14,7 @@ const SNAPSHOTS_AT_ONCE = 3;
 const AHEAD_PX = 240;
 const DEFAULT_STATE = 'normal';
 
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
+const { el } = require('./domEl.js');
 
 function icon(name) {
   const node = el('i', `fas ${name}`);

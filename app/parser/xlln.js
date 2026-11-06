@@ -11,6 +11,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { isDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const spa = require(path.join(__dirname, 'xllnSpa.js'));
 const { hostPath, hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
@@ -65,14 +66,6 @@ module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   });
   listDirectory = typeof reader === 'function' ? reader : null;
 };
-
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 function readDirectory(target) {
   if (listDirectory) return listDirectory(target) || [];

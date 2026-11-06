@@ -9,6 +9,7 @@ const os = require('os');
 const path = require('path');
 const { execFile } = require('child_process');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { readText } = require('../util/fsProbe.js');
 const { sevenZipBin } = require('../util/unpacked.js');
 const { firstUnsafeEntry } = require('../util/archiveEntry.js');
 const request = lazyRequire('request-zero');
@@ -20,14 +21,6 @@ const USER_AGENT = 'Achievement-Watcher';
 
 const noopLog = { log() {}, error() {} };
 
-
-function readText(file) {
-  try {
-    return fs.readFileSync(file, 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
 
 // Find Steamless.CLI.exe inside a cached tag dir (it may sit at the root or one folder deep).
 function findCli(dir) {

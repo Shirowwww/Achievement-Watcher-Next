@@ -5,8 +5,8 @@
   baselines must go too, or the Watchdog would take the next unlock as already seen.
 */
 
-const fs = require('fs');
 const path = require('path');
+const { isFile } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 
 const lazy = (file) => require(path.join(__dirname, file));
 
@@ -21,14 +21,6 @@ const CONSOLE_PREFIXES = {
   'kytyps5 emulator': 'kytyps5',
   xlivelessness: 'xlln',
   'xbox 360 recomp': 'x360recomp',
-};
-
-const isFile = (file) => {
-  try {
-    return fs.statSync(file).isFile();
-  } catch {
-    return false;
-  }
 };
 
 function sourcesOf(game) {

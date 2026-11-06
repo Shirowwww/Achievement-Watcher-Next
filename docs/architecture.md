@@ -181,9 +181,20 @@ modules, which the Watchdog loads through `watchdog/util/sharedAppModule.js`, so
    every host, and a Linux test that finds a save inside a fake Wine prefix (`withWinePrefix`, see
    [test/README.md](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/test/README.md#windows-and-linux)).
 
-A source with its own identity (a store, a console emulator) is a parser of its own registered in
-`app/parser/achievements.js`, with a watcher in `watchdog/console/` or `watchdog.js`. `xlln.js`,
-`rpcs3.js`, `shadps4.js` and their watchers are the models.
+A source with its own identity (a store, a console emulator) is a parser of its own, with a watcher
+in `watchdog/console/` or `watchdog.js`. `xlln.js`, `rpcs3.js`, `shadps4.js` and their watchers are
+the models. Besides its discovery, it is wired in two tables:
+
+1. **Its reader.** One entry in `SOURCE_READERS` in `app/parser/achievements.js`, keyed by the
+   record's `data.type`: `schema(record, { option, lang, appids })` builds the game,
+   `unlocks(record, { game, option, helpers })` reads its unlock state, and `fullArtFallback` asks
+   SteamGridDB for the whole art set. A module wanting other arguments gets an adapter in the entry.
+2. **Its label.** One row per `source` label in `SOURCE_ROWS` in `app/util/sourceIdentity.js`: the
+   library badge family and icon, the store that owns it, the console the profile panel splits it
+   under, the emulator platform (per-emulator preset and sound, Exophase, Sony's trophy service),
+   whether its artwork and rarity come from the emulator's own data, its rarity policy, and whether it
+   can be launched. The app, the main process and the Watchdog all read this table; a label without a
+   row wears the Steam badge, which `test/parsers/libraryDetectionFixes.test.js` refuses.
 
 Current integrations: Steam (client and emulator saves), Goldberg/GBE-compatible saves, Goldberg
 SocialClub, Uplay R2, GOG, Epic, Ubisoft, EA Desktop, Xbox PC, RetroAchievements, PlayStation Network

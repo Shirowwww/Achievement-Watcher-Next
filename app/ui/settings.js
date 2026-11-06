@@ -8,6 +8,7 @@ const settingsFs = require('fs');
 
 const appPath = remote.app.getAppPath();
 const { escapeHtml } = require(path.join(appPath, 'util/escapeHtml.js'));
+const settingsToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
 const userThemes = require(path.join(appPath, 'util/userThemes.js'));
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const themeMock = require(path.join(appPath, 'util/themeMock.js'));
@@ -33,10 +34,11 @@ const notificationPlacement = require(path.join(appPath, 'util/notificationPlace
 const { describeFolderDiagnosis } = require(path.join(appPath, 'util/folderDiagnosis.js'));
 const clipProfile = require(path.join(appPath, 'util/clipProfile.js'));
 const { prefixFolder } = require(path.join(appPath, 'util/prefixFolder.js'));
+// Named for settings.js: every classic script shares one global scope (see the note on settingsFs).
+const { WATCHDOG_PORT: settingsWatchdogPort } = require(path.join(appPath, 'util/watchdogPipe.js'));
 // Where OBS points a Browser source. The Watchdog serves the selected preset at /obs on its own
-// websocket listener, whose port is fixed in watchdog/websocket.js - the two are kept in step by
-// test/core/obsSourceUrl.test.js rather than by a second setting nobody would ever change.
-const OBS_SOURCE_URL = 'http://127.0.0.1:8082/obs';
+// websocket listener; test/core/obsSourceUrl.test.js checks the path and the port against it.
+const OBS_SOURCE_URL = `http://127.0.0.1:${settingsWatchdogPort}/obs`;
 
 /*
   Switching automatic repair on is the moment to mention the antivirus, and the only one.
@@ -1810,9 +1812,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         const userData = ipcRenderer.sendSync('get-user-data-path-sync');
         const genEmu = require(path.join(appPath, 'parser/genEmuConfig.js'));
         let preferredTag = null;
-        try { preferredTag = settingsFs.readFileSync(path.join(userData, 'cache/gse_fork/latest.txt'), 'utf8').trim() || null; } catch {}
+        try { preferredTag = settingsFs.readFileSync(path.join(settingsToolCaches.toolCacheDir(userData, 'gbeFork'), 'latest.txt'), 'utf8').trim() || null; } catch {}
         const tool = await genEmu.ensureGenerateEmuConfig({
-          cacheDir: path.join(userData, 'cache/gse_emu_config'),
+          cacheDir: settingsToolCaches.toolCacheDir(userData, 'emuConfig'),
           preferredTag,
           log: debug,
         });
@@ -4506,7 +4508,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     */
     function broadcastNotificationTest(kind, game) {
       try {
-        const ws = new WebSocket('ws://localhost:8082');
+        const ws = new WebSocket(`ws://localhost:${settingsWatchdogPort}`);
         const close = () => {
           try {
             ws.close();
@@ -4523,7 +4525,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     function runNotificationTest(cmd, btn, game) {
       return new Promise((resolve, reject) => setTimeout(() => {
-        const ws = new WebSocket('ws://localhost:8082');
+        const ws = new WebSocket(`ws://localhost:${settingsWatchdogPort}`);
         let settled = false;
         const finish = (err) => {
           if (settled) return;

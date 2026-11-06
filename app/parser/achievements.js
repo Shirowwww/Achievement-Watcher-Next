@@ -1,6 +1,7 @@
 'use strict';
 
 const { crc32 } = require('../util/crc32.js');
+const { toolCacheDir } = require('../util/toolCaches.js');
 const path = require('path');
 const fs = require('fs');
 const appPath = __dirname;
@@ -1117,7 +1118,7 @@ async function tryApplyCrackFix({ gameDir, gameName, appid, detectedExe, proxyFa
     const arch = (detectedExe && detectedExe.full && pe.exeArch(detectedExe.full)) || null;
     const gameNames = crackFixNameCandidates({ gameDir, gameName, detectedExe });
     const cf = await crackFix.applyBestFix({
-      cacheDir: path.join(_userDataPath, 'cache/crackfiles'),
+      cacheDir: toolCacheDir(_userDataPath, 'crackfiles'),
       gameName: gameName || '',
       gameNames,
       gameDir,
@@ -1382,7 +1383,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     let stripped = false;
     let reason = '';
     try {
-      const cli = await steamless.ensureSteamless({ cacheDir: path.join(_userDataPath, 'cache/steamless'), log: debug });
+      const cli = await steamless.ensureSteamless({ cacheDir: toolCacheDir(_userDataPath, 'steamless'), log: debug });
       const r = await steamless.stripDrm({ steamless: cli, exePath: detectedExe.full, experimental: !!cfg.steamlessExperimental, log: debug });
       stripped = !!(r && r.stripped);
       reason = (r && r.reason) || '';
@@ -1397,7 +1398,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     }
   }
 
-  const cacheDir = path.join(_userDataPath, 'cache/gse_fork');
+  const cacheDir = toolCacheDir(_userDataPath, 'gbeFork');
   // Automatic discovery must never force a full release download for every new game. The cache
   // helper already performs the configured daily update check; `force` is reserved for the explicit
   // right-click action. Forcing here could leave the final worker stuck at 98% on a large .7z.
@@ -1479,7 +1480,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   // Optionally apply SteamAutoCrack's ownership-check bypass.
   if (cfg.apiCheckBypass && detectedExe && detectedExe.full) {
     try {
-      const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: path.join(_userDataPath, 'cache/api_check_bypass'), log: debug });
+      const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: toolCacheDir(_userDataPath, 'apiCheckBypass'), log: debug });
       const r = apiCheckBypass.applyBypass({ gameDir, exePath: detectedExe.full, dlls: bypassDlls, log: debug });
       debug.log(`[${appid}] Steam API check bypass: ${r.applied ? `applied (${r.dll}, ${r.arch})` : `skipped (${r.reason})`}`);
     } catch (e) {
@@ -1491,7 +1492,7 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   if (cfg.steamSettingsMode === 'advanced' && !skipAdvanced) {
     try {
       const tool = await genEmuConfig.ensureGenerateEmuConfig({
-        cacheDir: path.join(_userDataPath, 'cache/gse_emu_config'),
+        cacheDir: toolCacheDir(_userDataPath, 'emuConfig'),
         preferredTag: dlls.tag || null,
         log: debug,
       });
@@ -3105,11 +3106,9 @@ module.exports.getAchievementsForAppid = async (option, requestedAppid) => {
 };
 
 /*
-  Reading one discovery record's unlock state. Eighteen sources answer here, and while this lived
-  inline in getSavedAchievementsForAppid nothing showed which of them were still reachable - two dead
-  branches sat in it unnoticed for a long time. `dataType` is the PRIMARY record's type, because a
-  merged game reads every one of its records the way its main record is read; an account library is
-  the exception and is dispatched on its own type first.
+  Reading one discovery record's unlock state through its SOURCE_READERS entry. `dataType` is the
+  PRIMARY record's type, because a merged game reads every one of its records the way its main
+  record is read; an account library is the exception and is dispatched on its own type first.
 
   Answers the raw unlock map the callers merge into the schema, or NO_RECORD_TO_READ when the record
   carries nothing to read at all.
@@ -3117,7 +3116,6 @@ module.exports.getAchievementsForAppid = async (option, requestedAppid) => {
 const NO_RECORD_TO_READ = Symbol('no record to read');
 
 async function readRecordUnlocks(dataType, appid, game, option, helpers) {
-  const { readUplayR2Save, warnEmptyAchievementFileOnce } = helpers;
   // The Steam account's record and a save folder under the same appid each need their own reader:
   // read the Steam one as a folder and its unlocks vanished behind an empty OnlineFix folder.
   const ownType = appid.data && appid.data.type;
@@ -3125,140 +3123,341 @@ async function readRecordUnlocks(dataType, appid, game, option, helpers) {
     return readRecordUnlocks(ownType, appid, game, option, helpers);
   }
   if (appid.data && ACCOUNT_LIBRARY_TYPES.has(appid.data.type) && dataType !== appid.data.type) {
-    if (appid.data.type === 'xboxPc') {
-      const xboxPc = require(path.join(appPath, 'xboxPc.js'));
-      xboxPc.setUserDataPath(_userDataPath || userDataDir());
-      return xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
-    } else {
-      return await epicOfficial.unlocksForSchema(appid, game.achievement.list, option.achievement.lang, {
-        forceRecheck: option.forceAchievementRecheck === true,
-      });
-    }
-  } else if (dataType === 'file' || dataType === 'manual') {
-    // A merged game reads every one of its records with the primary record's reader, and a
-    // record from another source can carry no save folder at all (a Ubisoft loader entry
-    // beside a Steam-emulator save). Reading nothing is the right answer there; going in
-    // anyway reported a save folder literally named "undefined" on every scan.
-    // A manual entry is read the same way: it holds no save itself, but the emulator folders it
-    // took over at discovery do, and they are plain Steam-emulator saves.
-    if (!appid.data || typeof appid.data.path !== 'string' || !appid.data.path) {
-      // The manual record itself never has one, so saying so on every scan would only be noise.
-      if (!appid.data || appid.data.type !== 'manual') {
-        debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
-      }
-      return NO_RECORD_TO_READ;
-    }
-    // Saves under a shortcut's own id (see foldShortcutSaves) are the same game's: merged by name.
-    const aliasPaths = Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths.filter((dir) => typeof dir === 'string' && dir) : [];
-    let fromFile =
-      aliasPaths.length > 0
-        ? await shortcutSaveIds.readMergedSaves(steam.getAchievementsFromFile, [appid.data.path, ...aliasPaths], {
-            isEarned: (entry) => normalizeSaveEntry(entry, appid.source).Achieved,
-            timeOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).UnlockTime) || 0,
-          })
-        : await steam.getAchievementsFromFile(appid.data.path);
-    // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
-    // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
-    // bare objective id means nothing to the Steam reader.
-    if (appid.data.uplayR2) fromFile = { ...fromFile, ...readUplayR2Save(appid, game) };
-    // Same redirect, but the loader was not detected this scan - bare digit keys against a
-    // single-prefixed schema still translate on their own (see remapBareObjectiveKeys).
-    else fromFile = remapBareObjectiveKeys(fromFile, game.achievement && game.achievement.list, appid.appid);
-    // An empty file is a 0% game, not an error - warn instead of throwing.
-    if (fromFile.constructor === Object && Object.entries(fromFile).length === 0) warnEmptyAchievementFileOnce(appid.appid, appid.data.path);
-    return fromFile;
-  } else if (dataType === 'uplayR2') {
-    // Goldberg Uplay R2. Unlike the Steam emus there is no single well-known folder: the loader
-    // resolves its save dir from its own ini (SaveType/SavePath, plus AchSavePath on
-    // redirect-capable builds), and a game update that re-extracts the repack's ini moves it
-    // without warning. Ask uplayR2 for every plausible location, then translate the emulator's
-    // Ubisoft objective ids onto Steam api-names.
-    return readUplayR2Save(appid, game);
-  } else if (dataType === 'reg') {
-    return await greenluma.getAchievements(appid.data.root, appid.data.path, appid.data.host);
-  } else if (dataType === 'steamAPI') {
-    return await steam.getAchievementsFromAPI({
-      appID: appid.appid,
-      user: appid.data.userID,
-      path: appid.data.cachePath,
-      // Lets the reader fall back to what Steam holds for a game this PC has never run.
-      account: _steamSession,
-    });
-  } else if (dataType === 'rpcs3') {
-    return await rpcs3.getAchievements(appid.data.path, game.achievement.total);
-  } else if (dataType === 'shadps4') {
-    return await shadps4.getAchievements(appid.data.path, appid.data.statePath);
-  } else if (dataType === 'kytyps5') {
-    return kytyps5.getAchievements(appid.data);
-  } else if (dataType === 'xlln') {
-    return xlln.getAchievements(appid.data);
-  } else if (dataType === 'markerpatch') {
-    return markerpatch.getAchievements(appid.data);
-  } else if (dataType === 'madnesspatch') {
-    return madnesspatch.getAchievements(appid.data);
-  } else if (dataType === 'pcports') {
-    // A recompiled port names its entry in recompPorts.js; Link's Awakening DX HD has none.
-    return appid.data.port ? recompPorts.getAchievements(appid.data) : pcports.getAchievements(appid.data);
-  } else if (dataType === 'xenia') {
-    return await xenia.getAchievements(appid.data.path);
-  } else if (dataType === 'x360recomp') {
-    return x360Recomp.getAchievements(appid.data);
-  } else if (dataType === 'ps4recomp') {
-    return ps4Recomp.getAchievements(appid.data);
-  } else if (dataType === 'ps3recomp') {
-    return ps3Recomp.getAchievements(appid.data);
-  } else if (dataType === 'socialclub') {
-    return await socialclub.getAchievements(appid);
-  } else if (dataType === 'lumaplay') {
-    return uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path, appid.data.host);
-  } else if (dataType === 'ea') {
-    return await ea.getAchievements(appid);
-  } else if (dataType === 'gogOfficial') {
-    return gogOfficial.getAchievements(appid);
-  } else if (dataType === 'gogUniverseLan') {
-    // GOG install repaired with the UniverseLAN emulator fix (no real Galaxy client data): unlock
-    // state comes from the Achievements.ini UniverseLAN itself writes under %LocalAppData%.
-    return gogUniverseLan.readAchievements({ localAppData: appid.data.localAppData, gogAppId: appid.data.gogAppId }) || {};
-  } else if (dataType === 'ubisoftOfficial') {
-    return ubisoftOfficial.getAchievements(appid);
-  } else if (dataType === 'runeUplay') {
-    return runeUplay.getAchievements(appid.data);
-  } else if (dataType === 'epicOfficial') {
-    return await epicOfficial.getAchievements(appid, {
+    if (appid.data.type === 'xboxPc') return SOURCE_READERS.xboxPc.unlocks(appid, { game });
+    return await epicOfficial.unlocksForSchema(appid, game.achievement.list, option.achievement.lang, {
       forceRecheck: option.forceAchievementRecheck === true,
-      lang: option.achievement.lang,
     });
-  } else if (dataType === 'cached') {
-    return await watchdog.getAchievements(appid.appid);
-  } else if (dataType === 'xboxPc') {
-    // Xbox Network unlock state is not a local save, it comes with the imported schema. Asked
-    // for it against the schema being built, it lands on the right achievements even when
-    // that schema is the Steam one of a game merged with its Xbox entry.
-    const xboxPc = require(path.join(appPath, 'xboxPc.js'));
-    xboxPc.setUserDataPath(_userDataPath || userDataDir());
-    return xboxPc.unlocksForSchema(appid.appid, game.achievement.list);
-  } else if (dataType === 'retroAchievements') {
-    const retroAchievements = require(path.join(appPath, 'retroAchievements.js'));
-    retroAchievements.setUserDataPath(_userDataPath || userDataDir());
-    return retroAchievements.getAchievements(appid.appid);
-  } else if (dataType === 'psnLibrary') {
-    const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
-    psnLibrary.setUserDataPath(_userDataPath || userDataDir());
-    // The same game's list on another console numbers its trophies its own way.
-    if (game.appid && String(appid.appid) !== String(game.appid)) return psnLibrary.unlocksForSchema(appid.appid, game.achievement.list);
-    return psnLibrary.getAchievements(appid.appid);
-  } else if (dataType === 'uplay') {
-    // Legit Ubisoft Connect exposes no local unlock-state file the way the Steam emus do, so
-    // only the schema is available (already loaded into `game`). Show the game with everything
-    // locked instead of throwing a misleading "Not yet implemented" FAIL on every scan.
-    return {};
-  } else if (!dataType) {
-    // No discovery record (e.g. the overlay was opened for an appid that is not in the
-    // library): there is no local save to read, so the schema-only game still loads.
-    return {};
-  } else {
-    throw `Unsupported achievement source type "${dataType}" for appid ${appid.appid}`;
   }
+  // No discovery record (e.g. the overlay was opened for an appid that is not in the library):
+  // there is no local save to read, so the schema-only game still loads.
+  if (!dataType) return {};
+  const reader = Object.hasOwn(SOURCE_READERS, dataType) ? SOURCE_READERS[dataType].unlocks : null;
+  if (!reader) throw `Unsupported achievement source type "${dataType}" for appid ${appid.appid}`;
+  return await reader(appid, { game, option, helpers });
+}
+
+/*
+  A save folder's unlocks. A merged game reads every one of its records with the primary record's
+  reader, and a record from another source can carry no save folder at all (a Ubisoft loader entry
+  beside a Steam-emulator save): reading nothing is the right answer there. A manual entry holds no
+  save itself, but the emulator folders it took over at discovery are plain Steam-emulator saves.
+*/
+async function readSaveFolderUnlocks(appid, { game, helpers }) {
+  const { readUplayR2Save, warnEmptyAchievementFileOnce } = helpers;
+  if (!appid.data || typeof appid.data.path !== 'string' || !appid.data.path) {
+    // The manual record itself never has one, so saying so on every scan would only be noise.
+    if (!appid.data || appid.data.type !== 'manual') {
+      debug.log(`[${appid.appid}] no save folder on the ${describeRecord(appid)} record - nothing to read from it`);
+    }
+    return NO_RECORD_TO_READ;
+  }
+  // Saves under a shortcut's own id (see foldShortcutSaves) are the same game's: merged by name.
+  const aliasPaths = Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths.filter((dir) => typeof dir === 'string' && dir) : [];
+  let fromFile =
+    aliasPaths.length > 0
+      ? await shortcutSaveIds.readMergedSaves(steam.getAchievementsFromFile, [appid.data.path, ...aliasPaths], {
+          isEarned: (entry) => normalizeSaveEntry(entry, appid.source).Achieved,
+          timeOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).UnlockTime) || 0,
+        })
+      : await steam.getAchievementsFromFile(appid.data.path);
+  // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target
+  // ("AchSavePath = GSE Saves\<steamAppid>"). Keys the Uplay side can translate win, since a
+  // bare objective id means nothing to the Steam reader.
+  if (appid.data.uplayR2) fromFile = { ...fromFile, ...readUplayR2Save(appid, game) };
+  // Same redirect, but the loader was not detected this scan - bare digit keys against a
+  // single-prefixed schema still translate on their own (see remapBareObjectiveKeys).
+  else fromFile = remapBareObjectiveKeys(fromFile, game.achievement && game.achievement.list, appid.appid);
+  // An empty file is a 0% game, not an error - warn instead of throwing.
+  if (fromFile.constructor === Object && Object.entries(fromFile).length === 0) warnEmptyAchievementFileOnce(appid.appid, appid.data.path);
+  return fromFile;
+}
+
+// An account library's module, pointed at this profile's data folder. Loaded on first use only.
+function accountLibrary(file) {
+  const library = require(path.join(appPath, file));
+  library.setUserDataPath(_userDataPath || userDataDir());
+  return library;
+}
+
+// Steam's own capsule fills a header the source has none of; the name resolves against the app list.
+function borrowSteamHeader(game, sid) {
+  const borrowed = steamCdnImages(sid);
+  game.img.header = borrowed.header;
+  game.img.background = game.img.background || borrowed.background;
+  game.img.portrait = game.img.portrait || borrowed.portrait;
+}
+
+async function readManualSchema(appid, { option }) {
+  const requestedTitle = appid.name || path.basename(appid.data.exe || '', path.extname(appid.data.exe || ''));
+  let steamappid = /^\d+$/.test(String(appid.data.storeAppId || '')) ? String(appid.data.storeAppId) : '';
+  // Same answer discovery already settled on, so the schema and the save folders it took over
+  // can never end up describing two different games.
+  if (!steamappid) steamappid = await manualSteamAppid(requestedTitle);
+  let game;
+  if (steamappid) {
+    try {
+      game = await steam.getGameData({
+        appID: steamappid,
+        lang: option.achievement.lang,
+        showHidden: !!option.achievement.showHidden,
+        fastStart: option.fastStart === true,
+        disableAutoRefresh: option.achievement.disableAutoRefresh === true,
+      });
+    } catch {
+      /* no Steam schema: the entry below is built from community art */
+    }
+  }
+  if (!game) game = await manualPlaceholderGame(appid, requestedTitle);
+  game.appid = appid.appid;
+  game.steamappid = steamappid || undefined;
+  game.name = game.name || requestedTitle;
+  game.manual = true;
+  game.installed = fs.existsSync(appid.data.exe);
+  game.gameDir = path.dirname(appid.data.exe);
+  game.exe = appid.data.exe;
+  game.exeConfident = true;
+  const platform = String(appid.data.platform || '').toLowerCase();
+  if (/playstation/.test(platform)) game.system = 'playstation';
+  else if (/xbox/.test(platform)) game.system = 'xbox';
+  else if (/nintendo|switch/.test(platform)) game.system = 'nintendo';
+  return game;
+}
+
+async function manualPlaceholderGame(appid, requestedTitle) {
+  let links = {};
+  try {
+    links = (await ipcInvoke('get-images-for-game', {
+      name: requestedTitle,
+      platform: appid.data.platform,
+      gameId: appid.data.storeAppId,
+    })) || {};
+  } catch {
+    /* no community art - empty tile */
+  }
+  return {
+    name: links.title || requestedTitle,
+    appid: appid.appid,
+    img: {
+      header: links.landscape || '',
+      background: links.background || '',
+      portrait: links.portrait || '',
+      icon: links.icon || links.logo || '',
+      logo: links.logo || '',
+    },
+    achievement: { total: 0, unlocked: 0, list: [] },
+  };
+}
+
+/*
+  Uplay's configuration YAML carries no image file names for newer titles: Steam store art looked up
+  by name stands in, as for unconfigured installs. The app list is in memory, so the cost is a find().
+*/
+async function readUplaySchema(appid, { lang }) {
+  const game = await uplay.getGameData(appid.appid, lang);
+  if (game && game.name && game.img && !game.img.header) {
+    try {
+      const sid = await steam.findAppidByName(game.name);
+      if (sid) {
+        game.steamappid = game.steamappid || sid;
+        borrowSteamHeader(game, sid);
+      }
+    } catch {
+      /* no Steam counterpart - Uplay's own picture stands */
+    }
+  }
+  return game;
+}
+
+// EA ships no artwork, and its numeric id is not a Steam appid: borrow the Steam release's art.
+async function readEaSchema(appid, { lang }) {
+  const game = await ea.getGameData(appid, lang);
+  if (game && game.img && !game.img.header) {
+    const sid = await ea.resolveSteamAppid(
+      { gameDir: appid.data.gameDir, name: game.name },
+      { scanLocalInstalls: steam.scanLocalInstalls, findAppidByName: steam.findAppidByName }
+    );
+    if (sid) {
+      game.steamappid = sid;
+      borrowSteamHeader(game, sid);
+    }
+  }
+  return game;
+}
+
+/*
+  Epic's catalog publishes a portrait for effectively every game and a landscape for almost none, so
+  a game also on Steam takes Steam's capsule, which is the right shape; a game with no Steam release
+  matches nothing and keeps Epic's own art.
+*/
+async function readEpicOfficialSchema(appid, { lang }) {
+  const game = await epicOfficial.getGameData(appid, lang);
+  if (game && game.name && game.img && !game.img.header) {
+    try {
+      const sid = await steam.findAppidByName(game.name);
+      if (sid) borrowSteamHeader(game, sid);
+    } catch {
+      /* no Steam counterpart - Epic's own picture stands */
+    }
+  }
+  return game;
+}
+
+async function readXboxPcSchema(appid, { lang }) {
+  const xboxPc = accountLibrary('xboxPc.js');
+  return (
+    (await xboxPc.getGameData(appid.appid, lang)) || {
+      appid: appid.appid,
+      name: appid.name || `Xbox ${appid.appid}`,
+      source: xboxPc.XBOX_PC_SOURCE,
+      img: {},
+      achievement: { total: 0, unlocked: 0, list: [] },
+      installed: true,
+      xboxPc: true,
+    }
+  );
+}
+
+async function readRetroAchievementsSchema(appid) {
+  const game = await accountLibrary('retroAchievements.js').getGameData(appid.appid);
+  // The background is a small raw screenshot: have it blurred and tinted like the Steam and Epic
+  // ones, so it is ready by the time the game page opens. Where no channel reaches the main
+  // process, the page paints the plain picture.
+  if (game && game.img.background) ipcSend('stylize-background-for-appid', { background: game.img.background, appid: appid.appid });
+  return game;
+}
+
+// No Steam art borrowed by name: console exclusives match unrelated PC games ("SingStar" found
+// "Star Singularity"), so a list without a store picture keeps its own trophy icon.
+function readPsnSchema(appid, { appids }) {
+  const psnLibrary = accountLibrary('psnLibrary.js');
+  const game = psnLibrary.getGameData(appid.appid);
+  // A card holding the game's lists from several consoles is named for the game alone.
+  if (game && appids.filter((record) => record && record.data && record.data.type === 'psnLibrary').length > 1) {
+    game.name = psnLibrary.cachedGameName(appid.appid) || game.name;
+  }
+  return game;
+}
+
+function readPsnUnlocks(appid, { game }) {
+  const psnLibrary = accountLibrary('psnLibrary.js');
+  // The same game's list on another console numbers its trophies its own way.
+  if (game.appid && String(appid.appid) !== String(game.appid)) return psnLibrary.unlocksForSchema(appid.appid, game.achievement.list);
+  return psnLibrary.getAchievements(appid.appid);
+}
+
+async function readSteamSchema(appid, { option }) {
+  const game = await steam.getGameData({
+    appID: appid.appid,
+    lang: option.achievement.lang,
+    showHidden: !!(option.achievement && option.achievement.showHidden),
+    fastStart: option.fastStart === true,
+    forceRecheck: option.forceAchievementRecheck === true,
+    disableAutoRefresh: option.achievement.disableAutoRefresh === true,
+    // Known emulator config dir (Goldberg discover) - lets the schema fetch resolve cover art
+    // from the local app_product_info.json dump before hitting the network.
+    steamSettings: (appid.data && appid.data.steamSettings) || null,
+  });
+  if (game) await adoptHubEdition(game, appid, option.achievement.lang);
+  return game;
+}
+
+const readNemirtingasEpicSchema = (appid, { lang }) => epic.getGameData({ appID: appid.appid, steamappid: appid.steamappid, lang });
+// The shape most console and recompilation parsers share: both readers take the record's data.
+const sameModule = (parser) => ({
+  schema: (appid, { lang }) => parser.getGameData(appid.data, lang),
+  unlocks: (appid) => parser.getAchievements(appid.data),
+});
+
+/*
+  How each discovery record type is read, one entry per type: `schema` builds the game (its list,
+  names and art), `unlocks` reads one record's unlock state. Both take (record, ctx), ctx holding
+  { option, lang, appids } for a schema and { game, option, helpers } for unlocks; a module wanting
+  another argument gets it from its adapter here. A type without `schema` is read as a Steam game;
+  `fullArtFallback` asks SteamGridDB for the whole art set, the source's own being thin.
+*/
+const SOURCE_READERS = {
+  manual: { schema: readManualSchema, unlocks: readSaveFolderUnlocks, fullArtFallback: true },
+  file: { unlocks: readSaveFolderUnlocks },
+  // Goldberg Uplay R2 resolves its save dir from its own ini, which a game update can move: uplayR2
+  // looks in every plausible place and translates the objective ids onto Steam api-names.
+  uplayR2: { unlocks: (appid, { game, helpers }) => helpers.readUplayR2Save(appid, game) },
+  reg: { unlocks: (appid) => greenluma.getAchievements(appid.data.root, appid.data.path, appid.data.host) },
+  steamAPI: {
+    unlocks: (appid) =>
+      steam.getAchievementsFromAPI({
+        appID: appid.appid,
+        user: appid.data.userID,
+        path: appid.data.cachePath,
+        // Lets the reader fall back to what Steam holds for a game this PC has never run.
+        account: _steamSession,
+      }),
+  },
+  rpcs3: {
+    schema: (appid) => rpcs3.getGameData(appid.data.path),
+    unlocks: (appid, { game }) => rpcs3.getAchievements(appid.data.path, game.achievement.total),
+    fullArtFallback: true,
+  },
+  shadps4: {
+    schema: (appid, { lang }) => shadps4.getGameData(appid.data.path, lang),
+    unlocks: (appid) => shadps4.getAchievements(appid.data.path, appid.data.statePath),
+    fullArtFallback: true,
+  },
+  kytyps5: { ...sameModule(kytyps5), fullArtFallback: true },
+  xlln: { ...sameModule(xlln), fullArtFallback: true },
+  markerpatch: sameModule(markerpatch),
+  madnesspatch: sameModule(madnesspatch),
+  // A recompiled port names its entry in recompPorts.js; Link's Awakening DX HD has none.
+  pcports: {
+    schema: (appid, { lang }) => (appid.data.port ? recompPorts.getGameData(appid.data) : pcports.getGameData(appid.data, lang)),
+    unlocks: (appid) => (appid.data.port ? recompPorts.getAchievements(appid.data) : pcports.getAchievements(appid.data)),
+  },
+  xenia: {
+    schema: (appid) => xenia.getGameData(appid.data.path),
+    unlocks: (appid) => xenia.getAchievements(appid.data.path),
+    fullArtFallback: true,
+  },
+  x360recomp: { ...sameModule(x360Recomp), fullArtFallback: true },
+  ps4recomp: { ...sameModule(ps4Recomp), fullArtFallback: true },
+  ps3recomp: { ...sameModule(ps3Recomp), fullArtFallback: true },
+  socialclub: {
+    schema: (appid, { lang, option }) => socialclub.getGameData(appid, lang, option),
+    unlocks: (appid) => socialclub.getAchievements(appid),
+  },
+  // Legit Ubisoft Connect has no local unlock-state file: the game shows with everything locked
+  // instead of a misleading "Not yet implemented" FAIL on every scan.
+  uplay: { schema: readUplaySchema, unlocks: () => ({}) },
+  lumaplay: { schema: readUplaySchema, unlocks: (appid) => uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path, appid.data.host) },
+  ea: { schema: readEaSchema, unlocks: (appid) => ea.getAchievements(appid) },
+  gogOfficial: { schema: (appid) => gogOfficial.getGameData(appid), unlocks: (appid) => gogOfficial.getAchievements(appid) },
+  // A GOG install repaired with UniverseLAN: unlock state is the Achievements.ini it writes itself.
+  gogUniverseLan: {
+    schema: (appid) => gogUniverseLan.getGameData(appid),
+    unlocks: (appid) => gogUniverseLan.readAchievements({ localAppData: appid.data.localAppData, gogAppId: appid.data.gogAppId }) || {},
+  },
+  ubisoftOfficial: {
+    schema: (appid, { lang }) => ubisoftOfficial.getGameData(appid, lang),
+    unlocks: (appid) => ubisoftOfficial.getAchievements(appid),
+  },
+  runeUplay: { schema: (appid, { lang }) => runeUplayGame.getGameData(appid, lang), unlocks: (appid) => runeUplay.getAchievements(appid.data) },
+  epicOfficial: {
+    schema: readEpicOfficialSchema,
+    unlocks: (appid, { option }) =>
+      epicOfficial.getAchievements(appid, { forceRecheck: option.forceAchievementRecheck === true, lang: option.achievement.lang }),
+  },
+  cached: { unlocks: (appid) => watchdog.getAchievements(appid.appid) },
+  // Xbox Network unlock state comes with the imported schema: asked against the schema being built,
+  // it lands on the right achievements even when that schema is a merged Steam game's.
+  xboxPc: { schema: readXboxPcSchema, unlocks: (appid, { game }) => accountLibrary('xboxPc.js').unlocksForSchema(appid.appid, game.achievement.list) },
+  retroAchievements: { schema: readRetroAchievementsSchema, unlocks: (appid) => accountLibrary('retroAchievements.js').getAchievements(appid.appid) },
+  psnLibrary: { schema: readPsnSchema, unlocks: readPsnUnlocks, fullArtFallback: true },
+};
+
+function schemaReaderFor(appid) {
+  const type = appid.data.type;
+  const own = Object.hasOwn(SOURCE_READERS, type) ? SOURCE_READERS[type].schema : null;
+  if (own) return own;
+  // A Nemirtingas Epic save is a save-folder record told apart by its label alone.
+  return appid.source === 'epic' ? readNemirtingasEpicSchema : readSteamSchema;
 }
 
 module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cachedList, cachedLookup) => {
@@ -3332,200 +3531,14 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       };
     }
 
-    if (appid.data.type === 'manual') {
-      const requestedTitle = appid.name || path.basename(appid.data.exe || '', path.extname(appid.data.exe || ''));
-      let steamappid = /^\d+$/.test(String(appid.data.storeAppId || '')) ? String(appid.data.storeAppId) : '';
-      // Same answer discovery already settled on, so the schema and the save folders it took over
-      // can never end up describing two different games.
-      if (!steamappid) steamappid = await manualSteamAppid(requestedTitle);
-      if (steamappid) {
-        try {
-          game = await steam.getGameData({
-            appID: steamappid,
-            lang: option.achievement.lang,
-            showHidden: !!option.achievement.showHidden,
-            fastStart: option.fastStart === true,
-            disableAutoRefresh: option.achievement.disableAutoRefresh === true,
-          });
-        } catch {}
-      }
-      if (!game) {
-        let links = {};
-        try {
-          links = (await ipcInvoke('get-images-for-game', {
-            name: requestedTitle,
-            platform: appid.data.platform,
-            gameId: appid.data.storeAppId,
-          })) || {};
-        } catch {}
-        game = {
-          name: links.title || requestedTitle,
-          appid: appid.appid,
-          img: {
-            header: links.landscape || '',
-            background: links.background || '',
-            portrait: links.portrait || '',
-            icon: links.icon || links.logo || '',
-            logo: links.logo || '',
-          },
-          achievement: { total: 0, unlocked: 0, list: [] },
-        };
-      }
-      game.appid = appid.appid;
-      game.steamappid = steamappid || undefined;
-      game.name = game.name || requestedTitle;
-      game.manual = true;
-      game.installed = fs.existsSync(appid.data.exe);
-      game.gameDir = path.dirname(appid.data.exe);
-      game.exe = appid.data.exe;
-      game.exeConfident = true;
-      const platform = String(appid.data.platform || '').toLowerCase();
-      if (/playstation/.test(platform)) game.system = 'playstation';
-      else if (/xbox/.test(platform)) game.system = 'xbox';
-      else if (/nintendo|switch/.test(platform)) game.system = 'nintendo';
-    } else if (appid.data.type === 'rpcs3') {
-      game = await rpcs3.getGameData(appid.data.path);
-    } else if (appid.data.type === 'shadps4') {
-      game = await shadps4.getGameData(appid.data.path, option.achievement.lang);
-    } else if (appid.data.type === 'kytyps5') {
-      game = await kytyps5.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'xlln') {
-      game = await xlln.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'markerpatch') {
-      game = await markerpatch.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'madnesspatch') {
-      game = await madnesspatch.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'pcports') {
-      game = appid.data.port ? await recompPorts.getGameData(appid.data) : await pcports.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'xenia') {
-      game = await xenia.getGameData(appid.data.path);
-    } else if (appid.data.type === 'x360recomp') {
-      game = await x360Recomp.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'ps4recomp') {
-      game = await ps4Recomp.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'ps3recomp') {
-      game = await ps3Recomp.getGameData(appid.data, option.achievement.lang);
-    } else if (appid.data.type === 'socialclub') {
-      game = await socialclub.getGameData(appid, option.achievement.lang, option);
-    } else if (appid.data.type === 'uplay' || appid.data.type === 'lumaplay') {
-      game = await uplay.getGameData(appid.appid, option.achievement.lang);
-      // If local image extraction yielded no header (e.g. Uplay configurations YAML doesn't carry
-      // image filenames for newer titles), fall back to Steam store art looked up by game name -
-      // same pattern used for unconfigured installs. Uses the in-memory appList (no extra request
-      // when already loaded) so the cost is a single find() on the cached array.
-      if (game && game.name && game.img && !game.img.header) {
-        try {
-          const sid = await steam.findAppidByName(game.name);
-          if (sid) {
-            game.steamappid = game.steamappid || sid;
-            const borrowed = steamCdnImages(sid);
-            game.img.header = borrowed.header;
-            game.img.background = game.img.background || borrowed.background;
-            game.img.portrait = game.img.portrait || borrowed.portrait;
-          }
-        } catch {}
-      }
-    } else if (appid.data.type === 'ea') {
-      game = await ea.getGameData(appid, option.achievement.lang);
-      // EA ships no artwork, and its numeric id is not a Steam appid: borrow the Steam release's art.
-      if (game && game.img && !game.img.header) {
-        const sid = await ea.resolveSteamAppid(
-          { gameDir: appid.data.gameDir, name: game.name },
-          { scanLocalInstalls: steam.scanLocalInstalls, findAppidByName: steam.findAppidByName }
-        );
-        if (sid) {
-          game.steamappid = sid;
-          const borrowed = steamCdnImages(sid);
-          game.img.header = borrowed.header;
-          game.img.background = game.img.background || borrowed.background;
-          game.img.portrait = game.img.portrait || borrowed.portrait;
-        }
-      }
-    } else if (appid.data.type === 'gogOfficial') {
-      game = await gogOfficial.getGameData(appid);
-    } else if (appid.data.type === 'gogUniverseLan') {
-      game = gogUniverseLan.getGameData(appid);
-    } else if (appid.data.type === 'ubisoftOfficial') {
-      game = await ubisoftOfficial.getGameData(appid, option.achievement.lang);
-    } else if (appid.data.type === 'runeUplay') {
-      game = await runeUplayGame.getGameData(appid, option.achievement.lang);
-    } else if (appid.data.type === 'epicOfficial') {
-      game = await epicOfficial.getGameData(appid, option.achievement.lang);
-      /*
-        Epic's catalog publishes a portrait for effectively every game and a landscape for almost
-        none, so the landscape grid had nothing of its own shape to show for a game that is also on
-        Steam - Disco Elysium, Trine 4, Bendy and the Ink Machine all fell back to their portrait.
-        Steam's own capsule is the right shape and the better picture, and the name resolves against
-        the app list already in memory. Same borrowing the Uplay and unconfigured paths do; a game
-        with no Steam release matches nothing and keeps Epic's own art.
-      */
-      if (game && game.name && game.img && !game.img.header) {
-        try {
-          const sid = await steam.findAppidByName(game.name);
-          if (sid) {
-            const borrowed = steamCdnImages(sid);
-            game.img.header = borrowed.header;
-            game.img.background = game.img.background || borrowed.background;
-            game.img.portrait = game.img.portrait || borrowed.portrait;
-          }
-        } catch {
-          /* no Steam counterpart - Epic's own picture stands */
-        }
-      }
-    } else if (appid.source === 'epic') {
-      game = await epic.getGameData({ appID: appid.appid, steamappid: appid.steamappid, lang: option.achievement.lang });
-    } else if (appid.data.type === 'xboxPc') {
-      const xboxPc = require(path.join(appPath, 'xboxPc.js'));
-      xboxPc.setUserDataPath(_userDataPath || userDataDir());
-      game =
-        (await xboxPc.getGameData(appid.appid, option.achievement.lang)) || {
-          appid: appid.appid,
-          name: appid.name || `Xbox ${appid.appid}`,
-          source: xboxPc.XBOX_PC_SOURCE,
-          img: {},
-          achievement: { total: 0, unlocked: 0, list: [] },
-          installed: true,
-          xboxPc: true,
-        };
-    } else if (appid.data.type === 'retroAchievements') {
-      const retroAchievements = require(path.join(appPath, 'retroAchievements.js'));
-      retroAchievements.setUserDataPath(_userDataPath || userDataDir());
-      game = await retroAchievements.getGameData(appid.appid);
-      // The background is a small raw screenshot: have it blurred and tinted like the Steam and
-      // Epic ones now, so it is ready by the time the game page opens. Where no channel reaches the
-      // main process, the page paints the plain picture.
-      if (game && game.img.background) ipcSend('stylize-background-for-appid', { background: game.img.background, appid: appid.appid });
-    } else if (appid.data.type === 'psnLibrary') {
-      const psnLibrary = require(path.join(appPath, 'psnLibrary.js'));
-      psnLibrary.setUserDataPath(_userDataPath || userDataDir());
-      // No Steam art borrowed by name: console exclusives match unrelated PC games ("SingStar" found
-      // "Star Singularity"), so a list without a store picture keeps its own trophy icon.
-      game = psnLibrary.getGameData(appid.appid);
-      // A card holding the game's lists from several consoles is named for the game alone.
-      if (game && appids.filter((record) => record && record.data && record.data.type === 'psnLibrary').length > 1) {
-        game.name = psnLibrary.cachedGameName(appid.appid) || game.name;
-      }
-    } else {
-      game = await steam.getGameData({
-        appID: appid.appid,
-        lang: option.achievement.lang,
-        showHidden: !!(option.achievement && option.achievement.showHidden),
-        fastStart: option.fastStart === true,
-        forceRecheck: option.forceAchievementRecheck === true,
-        disableAutoRefresh: option.achievement.disableAutoRefresh === true,
-        // Known emulator config dir (Goldberg discover) - lets the schema fetch resolve cover art
-        // from the local app_product_info.json dump before hitting the network.
-        steamSettings: (appid.data && appid.data.steamSettings) || null,
-      });
-      if (game) await adoptHubEdition(game, appid, option.achievement.lang);
-    }
+    game = await schemaReaderFor(appid)(appid, { option, lang: option.achievement.lang, appids });
     if (!game) return;
 
     // Fill gaps only. SteamGridDB returns the full asset set in one cached lookup, which is useful
     // for emulator/manual entries where the native provider often has a title but no library art.
     game.img = game.img && typeof game.img === 'object' ? game.img : {};
     const needsPrimaryArt = !game.img.header && !game.img.portrait;
-    const benefitsFromFullFallback = ['rpcs3', 'shadps4', 'kytyps5', 'xenia', 'xlln', 'x360recomp', 'ps4recomp', 'ps3recomp', 'manual', 'unconfigured', 'psnLibrary'].includes(appid.data.type);
+    const benefitsFromFullFallback = Object.hasOwn(SOURCE_READERS, appid.data.type) && SOURCE_READERS[appid.data.type].fullArtFallback === true;
     if (game.name && (needsPrimaryArt || benefitsFromFullFallback)) {
       try {
         /*
@@ -3922,7 +3935,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         });
         // Every target folder has to hold the supported build, not just the first one that does -
         // see gbeInstaller.runtimeDllState for what that guards against on a packaged Unreal build.
-        const cacheDir = _userDataPath ? path.join(_userDataPath, 'cache/gse_fork') : null;
+        const cacheDir = _userDataPath ? toolCacheDir(_userDataPath, 'gbeFork') : null;
         const runtime = gbeInstaller.runtimeDllState({ dllDirs: runtimeDirs, arch, cacheDir });
         needsRuntimeFix = !!wanted && !!appid.data.steamSettings && !runtime.ready;
         runtimeFixReason = needsRuntimeFix ? (runtime.stale ? `refresh-${wanted}` : `missing-${wanted}`) : '';
@@ -4966,6 +4979,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
 
 // Exposed for unit tests.
 module.exports._internal = {
+  SOURCE_READERS,
   normalizeSaveEntry,
   withoutUnearnedArchived,
   removeInertGoldbergSettings,

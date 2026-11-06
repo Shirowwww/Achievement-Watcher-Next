@@ -262,7 +262,7 @@ function readRegistryString(hive, key, valueName) {
 
   if (!val || (val.type !== 'REG_SZ' && val.type !== 'REG_EXPAND_SZ')) return null;
   if (val.type === 'REG_EXPAND_SZ') {
-    return val.data.replace(/%([^%]+)%/g, (_, name) => process.env[name] || `%${name}%`);
+    return expandEnvVariables(val.data);
   }
   return val.data;
 }

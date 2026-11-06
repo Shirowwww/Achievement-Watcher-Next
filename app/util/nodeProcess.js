@@ -1,6 +1,8 @@
 'use strict';
 
-const path = require('path');
+// A forked process cannot start from a file inside the asar, so its entry point ships unpacked
+// (electron-builder.yml asarUnpack, see unpackedPath). What it requires can stay in the asar.
+const { unpackedPath } = require('./unpacked.js');
 
 /*
   The app's own executable run as Node (ELECTRON_RUN_AS_NODE), the way the Watchdog is started: no
@@ -17,12 +19,6 @@ function forkNode(file, { heapMb = 0, env = {}, stdio = ['ignore', 'ignore', 'ig
     stdio,
     windowsHide: true,
   });
-}
-
-// A forked process cannot start from a file inside the asar, so its entry point ships unpacked
-// (electron-builder.yml asarUnpack). What it requires can stay in the asar.
-function unpackedPath(file) {
-  return file.replace(`${path.sep}app.asar${path.sep}`, `${path.sep}app.asar.unpacked${path.sep}`);
 }
 
 module.exports = { forkNode, unpackedPath };

@@ -66,6 +66,16 @@ test('the Watchdog reads every variable the app spawns it with, and only those',
   }
 });
 
+// Off Windows the presence pipe is a Unix socket: a side that spells the Windows name never finds it.
+test('the app looks for the Watchdog pipe where the Watchdog listens', () => {
+  const pipeName = 'AchievementWatchdogPipe';
+  for (const parts of [['app', 'electron', 'init.js'], ['watchdog', 'watchdog.js'], ['app', 'util', 'staleWatchdog.js']]) {
+    const source = read(...parts);
+    assert.match(source, /watchdogPipePath\(\)/, `${parts.join('/')} must ask watchdogPipe.js for the pipe path`);
+    assert.doesNotMatch(source, new RegExp(pipeName), `${parts.join('/')} spells the Windows pipe name itself`);
+  }
+});
+
 test('every message the app sends to the Watchdog has a handler there', () => {
   const sent = sentKeys(read('app', 'electron', 'init.js'), 'monitorProc\\.send');
   assert.ok(sent.size >= 5, 'the app sends messages to the Watchdog');

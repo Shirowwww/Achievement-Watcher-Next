@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { lazyRequire } = require('../util/lazyRequire.js');
+const { readText } = require('../util/fsProbe.js');
 const request = lazyRequire('request-zero');
 const pe = require(path.join(__dirname, '..', 'util', 'pe.js'));
 
@@ -26,14 +27,6 @@ const STEAM_SETTINGS_FILES = [
 ];
 
 const noopLog = { log() {}, error() {} };
-
-function readText(file) {
-  try {
-    return fs.readFileSync(file, 'utf8').trim();
-  } catch {
-    return '';
-  }
-}
 
 // Cached pair for a tag (under <cacheDir>/<tag>/), or null if not both present.
 function cachedDlls(cacheDir, tag) {

@@ -3,20 +3,13 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { isDirectory: isDir } = require(path.join(__dirname, 'fsProbe.js'));
 
 /*
   Where Windows games keep their files on Linux: one Wine prefix per launcher setup. Each source
   below only lists candidates; a candidate counts once it holds `drive_c` and `user.reg`, and two
   spellings of one folder (a symlinked Steam root, say) are kept once.
 */
-
-function isDir(p) {
-  try {
-    return fs.statSync(p).isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 function listDirs(p) {
   try {

@@ -39,12 +39,7 @@ const TOUR = [
   { target: '#pd-cv-help', key: 'tour.help' },
 ];
 
-function el(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text != null) node.textContent = text;
-  return node;
-}
+const { el } = require('./domEl.js');
 
 function button(className, text, onClick) {
   const node = el('button', className, text);

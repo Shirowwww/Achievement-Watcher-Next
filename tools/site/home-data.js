@@ -31,6 +31,7 @@ const CHIPS_END = '<!-- /generated:theme-chips -->';
 // The order the palette is written in on a chip, and the one assets/js/site.js reads it in.
 const SLOTS = ['bg', 'header', 'panel', 'card', 'text', 'muted', 'border', 'accent'];
 
+// Leaves ' alone on purpose: the page is checked in, and its chips hold apostrophes inside double-quoted attributes.
 function escapeHtml(value) {
   return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

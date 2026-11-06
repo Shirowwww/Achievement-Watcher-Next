@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isFile, isDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { hostPaths, firstExisting } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const APPID = 'markerpatch-47780';
@@ -52,22 +53,6 @@ module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   });
   listDirectory = typeof reader === 'function' ? reader : null;
 };
-
-function isFile(target) {
-  try {
-    return fs.statSync(target).isFile();
-  } catch {
-    return false;
-  }
-}
-
-function isDirectory(target) {
-  try {
-    return fs.statSync(target).isDirectory();
-  } catch {
-    return false;
-  }
-}
 
 function readDirectory(target) {
   if (listDirectory) return listDirectory(target) || [];

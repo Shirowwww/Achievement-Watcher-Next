@@ -9,7 +9,7 @@ const app = (rel) => path.join(__dirname, '..', '..', 'app', rel);
 
 test('the shared Watchdog modules load without the scan, Steam or the Xbox auth library', () => {
   const before = new Set(Object.keys(require.cache));
-  for (const rel of ['parser/xboxPcCore.js', 'parser/socialclubNames.js', 'parser/sse.js', 'util/rldBlob.js', 'parser/emuSave.js', 'parser/emuSaveRoots.js']) {
+  for (const rel of ['parser/xboxPcCore.js', 'parser/socialclubNames.js', 'parser/sse.js', 'util/rldBlob.js', 'parser/emuSave.js', 'parser/emuSaveRoots.js', 'util/notificationPreset.js', 'util/sourceIdentity.js']) {
     require(app(rel));
   }
   const loaded = Object.keys(require.cache).filter((file) => !before.has(file));

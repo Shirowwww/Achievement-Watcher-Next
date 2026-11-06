@@ -3,6 +3,7 @@
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { clampVolume } = require('../util/notificationSounds.js');
+const { unpackedPath } = require('../util/unpacked.js');
 
 /*
   The Watchdog's toast sounds on Windows play here, through Chromium like the popup's own sound: a
@@ -19,7 +20,7 @@ const MAX_PLAYING = 3;
 
 // Bundled sounds live under app.asar.unpacked in packaged builds.
 function soundUrl(file) {
-  return pathToFileURL(String(file).replace(/app\.asar([\\/])/, 'app.asar.unpacked$1')).href;
+  return pathToFileURL(unpackedPath(file)).href;
 }
 
 // Resolves with 'ended' or the reason the sound did not play; it never rejects.

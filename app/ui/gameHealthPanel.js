@@ -12,6 +12,7 @@
 // The per-game report behind the tools button. Signal collection lives here (needs the renderer's
 // game list, config, userData paths); every state/explanation/action decision is in util/gameHealth.js so it can be tested headless.
 const gameHealth = require(path.join(appPath, 'util/gameHealth.js'));
+const healthToolCaches = require(path.join(appPath, 'util/toolCaches.js'));
 const gameHealthRepair = require(path.join(appPath, 'util/gameHealthRepair.js'));
 const { createHealthIgnoreStore } = require(path.join(appPath, 'util/healthIgnoreStore.js'));
 // Libraries whose unlocks come from the platform itself. Their watchdog watcher polls the account,
@@ -319,7 +320,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
         */
         const runtimeDlls = gbeInstaller.describeRuntimeDlls({
           dllDirs: [...(report.engineDllDirs || []), ...(report.dllDirs || [])],
-          cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
+          cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
         });
         goldbergReport = { ...report, dllCount: emu.dll.length, runtimeDlls, setupAt: emulatorSetupAt(emu) };
       }
@@ -1548,7 +1549,7 @@ async function runGameHealthAction(appid, action, button) {
     let generated = null;
     try {
       setGameHealthProgress({ phase: 'fetch' });
-      const tool = await genEmu.ensureGenerateEmuConfig({ cacheDir: path.join(getUserDataPath(), 'cache/gse_emu_config'), log: debug });
+      const tool = await genEmu.ensureGenerateEmuConfig({ cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'emuConfig'), log: debug });
       setGameHealthProgress(null);
       let login = {};
       if (!genEmu.hasSavedSignIn(tool)) {
@@ -1901,7 +1902,7 @@ async function runGameHealthAction(appid, action, button) {
       setGameHealthProgress({ phase: 'runtime' });
       let readiness;
       try {
-        readiness = await gameHealthRepair.switchInterfacesReady({ gbeInstaller, plan, cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'), steamSettings, log: debug });
+        readiness = await gameHealthRepair.switchInterfacesReady({ gbeInstaller, plan, cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'), steamSettings, log: debug });
       } finally {
         setGameHealthProgress(null);
       }
@@ -1941,7 +1942,7 @@ async function runGameHealthAction(appid, action, button) {
         return gameHealthRepair.installEmulatorRuntime({
           gbeInstaller,
           plan,
-          cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
+          cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
           steamSettings,
           log: debug,
         });
