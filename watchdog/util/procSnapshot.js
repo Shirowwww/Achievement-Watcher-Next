@@ -152,4 +152,4 @@ function pidsWithLaunchAppid(appid) {
   return pidsInProc().filter((pid) => getLaunchAppid(pid) === wanted);
 }
 
-module.exports = { isAvailable, listSync, getProcessPath, environ, prefixOf, launchAppid, getLaunchAppid, pidsWithLaunchAppid };
+module.exports = { isAvailable, listSync, getProcessPath, environ, launchAppid, getLaunchAppid, pidsWithLaunchAppid };

@@ -40,18 +40,6 @@ module.exports = async (appID) => {
   return { playtime: current, lastplayed: last };
 };
 
-// Synchronous "last played" unix timestamp (0 if untracked). Used when building the game list so a
-// "recently played" sort has its value available on the tile at creation time. Registry reads are
-// in-process (registry-js) and cheap; guarded so a missing key can never break the list build.
-module.exports.lastPlayedSync = (appID) => {
-  try {
-    if (!useRegistry()) return readCounters(appID).last;
-    return +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'last') || 0;
-  } catch {
-    return 0;
-  }
-};
-
 // One registry pass for library rows that show both total playtime and the last session.
 module.exports.readSync = (appID) => {
   try {

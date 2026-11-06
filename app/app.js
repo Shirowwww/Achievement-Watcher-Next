@@ -143,6 +143,7 @@ const schemaLanguage = require(path.join(appPath, 'parser/schemaLanguage.js'));
 const steamLanguageList = require(path.join(appPath, 'locale/steam.json'));
 schemaLanguage.setUserDataPath(getUserDataPath());
 const l10n = require(path.join(appPath, 'locale/loader.js'));
+const appInterpolate = require(path.join(appPath, 'locale/t.js')).interpolate;
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
 const coverFit = require(path.join(appPath, 'util/coverFit.js'));
 const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
@@ -372,7 +373,7 @@ function libraryScopeGames() {
 }
 
 function refreshProfileStats({ animate = false } = {}) {
-  const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
+  const installedOnly = installedOnlyEnabled();
   renderProfileStats(calculateLibraryStats(libraryScopeGames(), { installedOnly, isStarted: hasBeenLaunched }), { animate });
   renderProfileTrophies(installedOnly);
 }
@@ -921,7 +922,7 @@ function allAchievementRow({ game, achievement, percent, tier, unlockedAt }, ind
 }
 
 function renderAllAchievements() {
-  const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
+  const installedOnly = installedOnlyEnabled();
   const token = ++allAchievementsToken;
   allAchievementEntries = listUnlockedByRarity(libraryScopeGames(), {
     installedOnly,
@@ -1119,7 +1120,7 @@ function renderProfileStatsGroups(groups, animate) {
 }
 
 function renderProfileStatsPanel({ animate = false } = {}) {
-  const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
+  const installedOnly = installedOnlyEnabled();
   const scoped = libraryScopeGames();
   const games = installedOnly ? scoped.filter((game) => game && game.installed) : scoped.slice();
   const stats = calculateDetailedLibraryStats(games, { installedOnly, groupOf: profileStatsGroupOf, isStarted: hasBeenLaunched });
@@ -2120,7 +2121,7 @@ function skeletonBudget(cap) {
 // flag, not its computed style, so the answer doesn't depend on layout having happened yet.
 function tileHiddenByInstalledFilter(item) {
   try {
-    if (!(typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled())) return false;
+    if (!installedOnlyEnabled()) return false;
     return item.find('.game-box').attr('data-installed') === '0';
   } catch {
     return false;
@@ -2277,7 +2278,7 @@ function repaintGameView(appid) {
       return String($(this).data('appid')) === String(appid);
     })
     .first();
-  if (box.length && typeof app.onGameBoxClick === 'function') app.onGameBoxClick(box, gameList);
+  if (box.length) app.onGameBoxClick(box, gameList);
   refreshLibraryProgressFor(appid, gameList);
 }
 
@@ -4252,7 +4253,7 @@ function openGameFromLibrary(appid, achievement) {
       return String(this.dataset.appid) === String(appid);
     })
     .first();
-  if (el.length && typeof app.onGameBoxClick === 'function') {
+  if (el.length) {
     debug.log(`[open-game] opening ${appid}${achievement ? ` (${achievement})` : ''}`);
     setAchievementFocus(appid, achievement);
     // Triggered rather than calling onGameBoxClick directly, so the toast path runs the same code as
@@ -8121,7 +8122,7 @@ var app = {
         if (failed.length) debug.warn(`[achievements] ${failed.length} icon(s) failed to paint => ${failed[0].reason}`);
       });
 
-      if (typeof window.restoreAchievementSorts === 'function') window.restoreAchievementSorts();
+      restoreAchievementSorts();
 
       let count_unlocked = game.achievement.list.filter(
         (elem) => elem.Achieved
@@ -8213,7 +8214,7 @@ var app = {
 
         // The rarity pass handing out `.rare` runs before this fade while every row measures zero,
         // so this fade-in callback is the first moment the on-screen halos can be picked (see refreshRareGlow).
-        if (typeof window.scheduleRareGlowRefresh === 'function') window.scheduleRareGlowRefresh(0);
+        scheduleRareGlowRefresh(0);
 
         self.css('pointer-events', 'initial');
       });
@@ -8230,7 +8231,7 @@ var app = {
           return String($(this).data('appid')) === String(appid);
         })
         .first();
-      if (box.length && typeof this.onGameBoxClick === 'function') {
+      if (box.length) {
         // Re-rendering the detail view re-applies the overrides to the in-memory game, so the tile
         // and header counters refresh from it, instead of showing the percentage from the last full scan.
         this.onGameBoxClick(box, gameList);
@@ -8691,7 +8692,7 @@ var app = {
           return String($(this).data('appid')) === String(appid);
         })
         .first();
-      if (box.length && typeof this.onGameBoxClick === 'function') this.onGameBoxClick(box, gameList);
+      if (box.length) this.onGameBoxClick(box, gameList);
     }
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: result.errors.length > 0 ? 'warning' : 'info',
@@ -9591,10 +9592,7 @@ var app = {
       let uplayBatchRunning = false;
       const uplaySettingsText = (key, fallback, params = {}) => {
         const localized = window.appLocale && window.appLocale.settings && window.appLocale.settings.emulator && window.appLocale.settings.emulator.uplay;
-        const value = (localized && localized[key]) || fallback;
-        return String(value).replace(/\{(\w+)\}/g, (match, name) =>
-          Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
-        );
+        return String(appInterpolate((localized && localized[key]) || fallback, params));
       };
       const setUplayPackageStatus = (state, text) => {
         const status = $('#uplay-r2-package-status');
@@ -9700,10 +9698,7 @@ var app = {
       */
       const gbeSettingsText = (key, fallback, params = {}) => {
         const localized = window.appLocale && window.appLocale.settings && window.appLocale.settings.emulator && window.appLocale.settings.emulator.gbe;
-        const value = (localized && localized[key]) || fallback;
-        return String(value).replace(/\{(\w+)\}/g, (match, name) =>
-          Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
-        );
+        return String(appInterpolate((localized && localized[key]) || fallback, params));
       };
       const gbeCacheDir = () => appToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork');
       const refreshGbeDllStatus = () => {

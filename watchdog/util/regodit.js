@@ -45,4 +45,4 @@ function loadRegodit() {
   return regoditPromise;
 }
 
-module.exports = { loadRegodit, regoditDllPath, pinModule };
+module.exports = { loadRegodit };

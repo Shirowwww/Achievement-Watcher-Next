@@ -292,7 +292,7 @@ function resolveGameRarityContext(game) {
   const steamappid = String(game.steamappid == null ? '' : game.steamappid);
   const source = String(game.source || '');
 
-  if (source === 'Xbox PC') return { kind: 'xbox' };
+  if (source === sourceIdentity.SOURCE_LABEL.XBOX_PC) return { kind: 'xbox' };
   // A list read from a console over FTP saved no rates: Exophase is asked, as for the emulators.
   if (source === 'PlayStation Network' && game.psnConsole && !game.achievement.list.some((a) => a && a.rarityPct != null)) {
     return { kind: 'emulator', source: game.psnConsole === 'ps3' ? 'RPCS3 Emulator' : 'ShadPS4 Emulator' };

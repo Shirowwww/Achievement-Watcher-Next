@@ -107,6 +107,22 @@ test('every channel the main process answers is called from a renderer', () => {
   assert.deepEqual(uncalled, [], 'nothing outside app/electron/ names these channels');
 });
 
+// A handle answers invoke and an on listener answers send/sendSync. A channel with both was how five
+// dead sendSync twins hid behind the live invoke of the same name.
+test('every ipcMain.on listener is reached by a send or sendSync', () => {
+  const mainFiles = new Set(MAIN.map((file) => path.resolve(file)));
+  const others = appSources()
+    .filter((file) => !mainFiles.has(path.resolve(file)))
+    .map(read)
+    .join('\n');
+  const listened = new Set();
+  for (const file of MAIN) {
+    for (const match of read(file).matchAll(/ipcMain\.(?:on|once)\(\s*'([^']+)'/g)) listened.add(match[1]);
+  }
+  const unsent = [...listened].filter((channel) => !new RegExp(`(?:\\.send|\\.sendSync|ipcSend)\\(\\s*'${channel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`).test(others));
+  assert.deepEqual(unsent, [], 'nothing sends on these channels with send or sendSync');
+});
+
 test('every channel a renderer listens on is sent by the main process', () => {
   const listened = new Set();
   for (const file of RENDERERS) {

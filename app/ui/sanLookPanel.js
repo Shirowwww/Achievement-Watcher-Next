@@ -10,6 +10,7 @@
 const { layoutOf } = require('../util/sanEngine/engine.js');
 const { SAN_MOVABLE: MOVABLE, PART_SHIFT } = require('../util/sanTheme.js');
 const { el } = require('./domEl.js');
+const { interpolate } = require('../locale/t.js');
 
 // The card's elements a hand may move or hide, kept in the look's `awparts`, and how far: the
 // limits saving applies, so the panel never offers a place it would refuse.
@@ -143,7 +144,7 @@ function option(value, text) {
 }
 
 function fill(text, values) {
-  return String(text).replace(/\{(\w+)\}/g, (all, key) => (Object.prototype.hasOwnProperty.call(values, key) ? values[key] : all));
+  return String(interpolate(String(text), values));
 }
 
 // #rrggbbaa keeps its alpha: the colour input only edits the #rrggbb part.

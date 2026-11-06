@@ -33,4 +33,4 @@ function watchdogSharedModules() {
   return { requested: [...requested].sort(), unread };
 }
 
-module.exports = { watchdogSharedModules };
+module.exports = { watchdogSharedModules, watchdogSources };

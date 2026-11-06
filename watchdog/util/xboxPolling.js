@@ -1,5 +1,8 @@
 'use strict';
 
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { SOURCE_LABEL } = require(sharedAppModulePath('util/sourceIdentity.js'));
+
 // Run one Xbox poll at a time for a state object. The current-state callback makes a poll
 // cancellable when the running game changes while an API request or a notification is pending.
 async function runXboxPoll({
@@ -50,7 +53,7 @@ async function runXboxPoll({
 
 function matchesActiveXboxPoll(state, exitedGame, normalizeTitleId) {
   if (!exitedGame) return true;
-  if (!state || String(exitedGame.source || '') !== 'Xbox PC') return false;
+  if (!state || String(exitedGame.source || '') !== SOURCE_LABEL.XBOX_PC) return false;
   return normalizeTitleId(exitedGame.appid) === state.appid;
 }
 

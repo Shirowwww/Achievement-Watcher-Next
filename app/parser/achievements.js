@@ -3089,22 +3089,6 @@ module.exports.saveGameToCache = async (info, lang) => {
   }
 };
 
-module.exports.getAchievementsForAppid = async (option, requestedAppid) => {
-  option = schemaLanguage.optionFor(option, requestedAppid);
-  try {
-    let game;
-    if (/^[0-9]+$/.test(requestedAppid)) {
-      game = await steam.getGameData({ appID: requestedAppid, lang: option.achievement.lang });
-    } else {
-      game = await epic.getGameData({ appID: requestedAppid });
-    }
-    return game;
-  } catch (err) {
-    debug.log(err);
-    return {};
-  }
-};
-
 /*
   Reading one discovery record's unlock state through its SOURCE_READERS entry. `dataType` is the
   PRIMARY record's type, because a merged game reads every one of its records the way its main

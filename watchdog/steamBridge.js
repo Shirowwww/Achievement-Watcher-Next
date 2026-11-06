@@ -354,4 +354,4 @@ function createBridge({ userData, iconBase, auth = null } = {}) {
   return { answer, noteNotification, handleHttp };
 }
 
-module.exports = { createBridge, COMMAND, VERSION, findGame, cleanRequest };
+module.exports = { createBridge, COMMAND, VERSION };

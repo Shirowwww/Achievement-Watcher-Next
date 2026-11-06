@@ -35,7 +35,7 @@ const cacheSave = (entry, unlocked) => baseline.save(cacheKey(entry), unlocked);
 
 function unlockEvent(entry, achievement, time, delay, completion) {
   return {
-    source: 'EA Desktop',
+    source: 'ea',
     appid: entry.appid,
     gameDisplayName: entry.name,
     achievementName: achievement.id,

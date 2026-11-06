@@ -8,6 +8,7 @@ const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 const onboardingInterfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
 const onboardingFolderDiagnosis = require(path.join(appPath, 'util/folderDiagnosis.js')).describeFolderDiagnosis;
 const onboardingT = require(path.join(appPath, 'locale/t.js')).t;
+const onboardingInterpolate = require(path.join(appPath, 'locale/t.js')).interpolate;
 const onboardingLocale = require(path.join(appPath, 'locale/loader.js'));
 const onboardingPlatformText = require(path.join(appPath, 'locale/platformText.js')).withPlatformText;
 const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'));
@@ -111,7 +112,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
   }
 
   function fill(template, params) {
-    return String(template || '').replace(/\{(\w+)\}/g, (match, name) => (Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match));
+    return String(onboardingInterpolate(String(template || ''), params));
   }
 
   // The step that holds `selector`, found by markup so inserting a step never moves a gate or a
@@ -1309,17 +1310,9 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
   }
 
   window.openAchievementWatcherOnboarding = show;
-  window.addEventListener('aw-open-onboarding', (event) => {
-    window.__awPendingOnboardingOpen = false;
-    show(event.detail && event.detail.force !== false);
-  });
 
   $(function () {
     applyText();
-    if (window.__awPendingOnboardingOpen) {
-      window.__awPendingOnboardingOpen = false;
-      setTimeout(() => show(true), 0);
-    }
     $('#onboarding-prev').on('click', () => showStep(step - 1));
     $('#onboarding-next').on('click', () => {
       if (step === STEP_COUNT - 1) finish();

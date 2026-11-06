@@ -1,6 +1,8 @@
 'use strict';
 
 const path = require('path');
+const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { SOURCE_LABEL } = require(sharedAppModulePath('util/sourceIdentity.js'));
 
 // Seed already-running games so their playtime is recorded on exit.
 
@@ -135,7 +137,7 @@ function describeActiveGames(sessions) {
   return {
     games,
     overlayGame: games.length > 0 ? games[games.length - 1] : null,
-    xboxGame: games.findLast((game) => String(game.source || '') === 'Xbox PC') || null,
+    xboxGame: games.findLast((game) => String(game.source || '') === SOURCE_LABEL.XBOX_PC) || null,
   };
 }
 

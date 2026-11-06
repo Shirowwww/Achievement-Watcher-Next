@@ -35,7 +35,7 @@ test('achievement rows try the game\'s own images before asking the CDN for them
   // Search the end marker forward from the start one: ui/sort.js and ui/game.js load before app.js
   // and mention restoreAchievementSorts too, so a plain indexOf would end the slice before it began.
   const preloadStart = appSource.indexOf('const localIconIndex = localIcons.readIndex(game);');
-  const preload = appSource.slice(preloadStart, appSource.indexOf('if (typeof window.restoreAchievementSorts', preloadStart));
+  const preload = appSource.slice(preloadStart, appSource.indexOf('restoreAchievementSorts();', preloadStart));
   assert.notEqual(preload.length, 0, 'the icon preload pass must build a local index');
   const localFirst = preload.indexOf('if (local && (await setAchievementImage(selector, [local]))) return;');
   const download = preload.indexOf("cachedIcon(hash)");

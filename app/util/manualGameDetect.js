@@ -9,6 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { interpolate } = require('../locale/t.js');
 
 /*
   Console emulators by executable name. `reader` says how their achievements reach AW Next: a
@@ -284,7 +285,7 @@ function verdictFor(found, t) {
   manual one beside it would be the same game twice.
 */
 function describeDetection(found, { t, watched = false, inLibrary = false } = {}) {
-  const translate = typeof t === 'function' ? t : (key, english, french, params = {}) => english.replace(/\{(\w+)\}/g, (match, name) => (name in params ? String(params[name]) : match));
+  const translate = typeof t === 'function' ? t : (key, english, french, params = {}) => String(interpolate(english, params));
   const route = found.achievements === 'folder' && found.folder ? 'folder' : 'manual';
   const playtime =
     route === 'folder'

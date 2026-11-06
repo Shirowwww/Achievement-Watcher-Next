@@ -27,4 +27,4 @@ function shouldNotify(parts, now = Date.now()) {
   return true;
 }
 
-module.exports = { shouldNotify, buildKey, DEDUPE_MS };
+module.exports = { shouldNotify };

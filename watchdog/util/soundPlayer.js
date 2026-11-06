@@ -52,4 +52,4 @@ function play(filePath, { delayMs = 0, volume = 0.5 } = {}) {
   });
 }
 
-module.exports = { play, playThroughApp, LINUX_PLAYERS };
+module.exports = { play, playThroughApp };

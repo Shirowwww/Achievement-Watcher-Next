@@ -16,6 +16,7 @@ const read = (...parts) => fs.readFileSync(path.join(appDir, ...parts), 'utf8');
 const REAL_MODULES = {
   'APP/util/interfaceMode.js': read('util', 'interfaceMode.js'),
   'APP/util/onboardingDetect.js': read('util', 'onboardingDetect.js'),
+  'APP/locale/t.js': read('locale', 't.js'),
   deepmerge: fs.readFileSync(path.join(appDir, 'node_modules', 'deepmerge', 'dist', 'cjs.js'), 'utf8'),
 };
 
@@ -51,7 +52,8 @@ function installWorld(world) {
     ];
     return { all: () => languages, has: (api) => languages.some((entry) => entry.api === api) };
   })();
-  modules['APP/locale/t.js'] = { t: (key, english) => english };
+  // The real interpolate, with t answering in English whatever the locale.
+  modules['APP/locale/t.js'] = { ...modules['APP/locale/t.js'], t: (key, english) => english };
   modules['APP/locale/loader.js'] = { load: async (lang) => calls.push(['locale', lang]) };
   modules['APP/locale/platformText.js'] = { withPlatformText: ({ platform, ...text }) => text };
   modules['APP/util/folderDiagnosis.js'] = { describeFolderDiagnosis: () => '' };

@@ -14,6 +14,8 @@ const SOURCE_LABEL = Object.freeze({
   PS4_RECOMP: 'ps4 recomp',
   X360_RECOMP: 'xbox 360 recomp',
   PC_PORT: 'pc port',
+  // Exact case: the Xbox PC code compares it as written, the table below lowercases it.
+  XBOX_PC: 'Xbox PC',
 });
 
 // A platform's badge and icon, shared by every label of it.
@@ -41,7 +43,7 @@ const SOURCE_ROWS = {
   'xenia emulator': { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
   [SOURCE_LABEL.X360_RECOMP]: { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
   xlivelessness: { ...XBOX_CONSOLE, emulatorData: true },
-  'xbox pc': { family: 'xbox', icon: 'xbox.svg', purchased: 'xbox', rarity: 'cache-only' },
+  [SOURCE_LABEL.XBOX_PC.toLowerCase()]: { family: 'xbox', icon: 'xbox.svg', purchased: 'xbox', rarity: 'cache-only' },
   // Short spellings the Watchdog and older index entries carry; they only name the platform.
   rpcs3: { platform: 'rpcs3' },
   shadps4: { platform: 'shadps4' },

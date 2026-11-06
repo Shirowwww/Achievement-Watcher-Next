@@ -35,8 +35,9 @@ const {
   buildXboxStateSnapshot,
   mergeXboxStateSnapshots,
 } = require('./xboxPcCore.js');
+const { SOURCE_LABEL } = require('../util/sourceIdentity.js');
 
-const XBOX_PC_SOURCE = 'Xbox PC';
+const XBOX_PC_SOURCE = SOURCE_LABEL.XBOX_PC;
 const XBOX_PC_REDIRECT_URI = 'http://localhost:8080/auth/callback';
 const XBOX_TITLEHUB_URL = 'https://titlehub.xboxlive.com';
 const IMPORT_CONCURRENCY = 4;

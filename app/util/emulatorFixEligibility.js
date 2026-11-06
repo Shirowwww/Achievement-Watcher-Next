@@ -123,4 +123,4 @@ function inspect({ gameDir, gameName = '', source = '', system = '', isUbisoft =
   return { eligible: true, reason: 'unconfigured' };
 }
 
-module.exports = { findExistingFix, hasSteamApiDll, inspect, isEligible: (game) => inspect(game).eligible };
+module.exports = { findExistingFix, hasSteamApiDll, inspect };

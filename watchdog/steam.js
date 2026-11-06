@@ -2,7 +2,6 @@
 
 const path = require('path');
 const debug = require('./util/log.js');
-const urlParser = require('url');
 const fs = require('fs');
 const { lazyRequire } = require('./util/lazyRequire.js');
 // Network and scraping only: an idle daemon never reaches either.
@@ -73,24 +72,6 @@ module.exports.loadSteamData = async (appID, lang, binary = null) => {
     return result;
   } catch (err) {
     throw `Could not load Steam data for ${appID} - ${lang}: ${err}`;
-  }
-};
-
-module.exports.fetchIcon = async (url, appID) => {
-  try {
-    const cache = path.join(userDataDir(), `steam_cache/icon/${appID}`);
-
-    const filename = path.parse(urlParser.parse(url).pathname).base;
-
-    let filePath = path.join(cache, filename);
-
-    if (fs.existsSync(filePath)) {
-      return filePath;
-    } else {
-      return (await request.download(url, cache)).path;
-    }
-  } catch (err) {
-    return url;
   }
 };
 

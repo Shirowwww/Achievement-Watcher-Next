@@ -143,7 +143,7 @@ test('a qualifier in brackets at the end of a name is also searched without it',
 test('a lookup that found nothing is remembered, and a failed one is not', () => {
   // Without this every coverless game was searched again on every scan, five requests each, on a
   // key shared by every install - which is also how a rate-limited answer became a blank tile.
-  const resolver = source.slice(source.indexOf('async function resolveImagesForGame'), source.indexOf("ipcMain.on('get-images-for-game'"));
+  const resolver = source.slice(source.indexOf('async function resolveImagesForGame'), source.indexOf("ipcMain.handle('get-images-for-game'"));
   assert.match(resolver, /rememberMiss\(\);\s*\n\s*return null;/, 'a "no entry" answer must be cached');
   // Reading it back belongs to the module both processes share, so the window can serve a cached
   // answer without a round trip per game.
@@ -199,7 +199,7 @@ test('of two games with one name, a console list takes the one released after th
 test('an unreachable SteamGridDB changes nothing on disk, and asks again next time', () => {
   // Offline, every lookup fails the same way. None of it may be mistaken for an answer: no cached
   // "no artwork", and no wider retry either, since there was nothing to widen against.
-  const resolver = source.slice(source.indexOf('async function resolveImagesForGame'), source.indexOf("ipcMain.on('get-images-for-game'"));
+  const resolver = source.slice(source.indexOf('async function resolveImagesForGame'), source.indexOf("ipcMain.handle('get-images-for-game'"));
   assert.match(resolver, /if \(steamGridDbUnavailable\(\)\) return null;/, 'the breaker short-circuits before any request');
   assert.match(resolver, /if \(!game && answered\) \{/, 'the last-resort pass needs an answer to widen from');
   assert.match(resolver, /if \(answered\) rememberMiss\(\);/);

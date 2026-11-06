@@ -142,13 +142,6 @@ ipcMain.on('get-steam-user-list', async (event) => {
     .catch(() => (event.returnValue = null));
 });
 
-ipcMain.on('fetch-icon', async (event, url, appid) => {
-  try {
-    event.returnValue = iconResultToFileUrl(await useSteamParser().fetchIcon(url, appid));
-  } catch {
-    event.returnValue = null;
-  }
-});
 ipcMain.handle('fetch-icon', async (event, url, appid) => {
   try {
     return iconResultToFileUrl(await useSteamParser().fetchIcon(url, appid));

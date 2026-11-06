@@ -145,7 +145,6 @@ toast.isWinRTAvailable = async () => process.platform === 'win32' && Boolean((aw
 
 module.exports = toast;
 module.exports.normalizeToastOptions = normalizeToastOptions;
-module.exports.desktopNotificationPayload = desktopNotificationPayload;
 module.exports.canAppShowToast = canAppShowToast;
 module.exports.reportAppToast = reportAppToast;
 module.exports.withoutReminder = withoutReminder;

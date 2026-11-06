@@ -10,6 +10,7 @@
 */
 
 const { formatNumber, formatPercent } = require('./intlFormat.js');
+const { interpolate } = require('../locale/t.js');
 
 const UNITS = ['B', 'KB', 'MB', 'GB'];
 
@@ -26,7 +27,7 @@ function formatBytes(bytes, lang) {
 }
 
 function fill(template, params) {
-  return String(template || '').replace(/\{(\w+)\}/g, (match, name) => (Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match));
+  return String(interpolate(String(template || ''), params));
 }
 
 const action = (id, label, kind) => ({ id, label, kind });

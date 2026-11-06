@@ -111,6 +111,7 @@ const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, ex
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const { DEFAULT_HOTKEY, DEFAULT_CONTROLLER_BINDINGS } = require(sharedAppModulePath('settings.js'));
 const { userDirFile } = require(sharedAppModulePath('parser/userDirEntries.js'));
+const { SOURCE_LABEL } = require(sharedAppModulePath('util/sourceIdentity.js'));
 const { gameIndexFiles } = require(sharedAppModulePath('util/dataLayout.js'));
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
@@ -320,7 +321,7 @@ function startXboxPolling(game) {
         const rows = Object.values(state.snapshot || {});
         await xboxNotify(
           {
-            source: 'Xbox PC',
+            source: SOURCE_LABEL.XBOX_PC,
             completion: { unlocked: rows.filter((row) => row && row.earned).length, total: rows.length },
             appid: titleId,
             gameDisplayName: game.name || titleId,
@@ -1615,7 +1616,7 @@ var app = {
             stopXboxPolling(game);
           } else {
             runningGames.push(game);
-            if (String(game.source || '') === 'Xbox PC') startXboxPolling(game);
+            if (String(game.source || '') === SOURCE_LABEL.XBOX_PC) startXboxPolling(game);
             requestArtworkPrefetch(game);
             loadRarityMap(game, String(game.appid));
           }

@@ -929,14 +929,10 @@ const notificationInsets = require(path.join(__dirname, '../util/notificationIns
 const { insertSegoeFallback } = require(path.join(__dirname, '../util/segoeFallback.js'));
 
 // Resolve main-process strings from the selected locale, with English/French fallback.
+const { interpolate: localeInterpolate } = require(path.join(__dirname, '../locale/t.js'));
 let mainLocaleCache = null;
 function t(key, english, french, params) {
-  const interpolate = (value) =>
-    params && typeof params === 'object'
-      ? String(value).replace(/\{(\w+)\}/g, (match, name) =>
-          Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
-        )
-      : value;
+  const interpolate = (value) => localeInterpolate(value, params);
   try {
     const lang = String((configJS && configJS.achievement && configJS.achievement.lang) || 'english');
     if (!mainLocaleCache || mainLocaleCache.lang !== lang) {
@@ -1863,7 +1859,7 @@ function attachOverlayRarity(game) {
     if (!game || !game.achievement || !Array.isArray(game.achievement.list)) return;
     const rarity = require(path.join(__dirname, '../util/rarity.js'));
     // Xbox PC caches rarity directly on each schema entry at import time (no sidecar file for it).
-    if (String(game.source || '') === 'Xbox PC') {
+    if (String(game.source || '') === sourceIdentity.SOURCE_LABEL.XBOX_PC) {
       for (const a of game.achievement.list) {
         if (a && a.rarityPct != null && Number.isFinite(Number(a.rarityPct))) a.rarityPercent = Number(a.rarityPct);
       }
@@ -2142,11 +2138,6 @@ ipcMain.on('emulator-fixed-notify', async (event, game) => {
   notifyEmulatorFixed(game);
 });
 
-ipcMain.on('get-steam-data', async (event, arg) => {
-  const appid = +arg.appid;
-  event.returnValue = await getSteamData({ appid, type: arg.type, user: arg.user, lang: arg.lang });
-});
-
 // Reload the main-process config after the renderer saves settings.
 ipcMain.on('config-saved', async () => {
   try {
@@ -2159,7 +2150,6 @@ ipcMain.on('config-saved', async () => {
   }
 });
 
-// Async twin of the legacy handler; keep long scrapes off the renderer thread.
 ipcMain.handle('get-steam-data', async (event, arg) => {
   const appid = +arg.appid;
   return await getSteamData({ appid, type: arg.type, user: arg.user, lang: arg.lang });
@@ -2253,13 +2243,6 @@ async function resolveSteamAppidFromTitle(arg) {
   return possibleMatch;
 }
 
-ipcMain.on('get-steam-appid-from-title', async (event, arg) => {
-  try {
-    event.returnValue = await resolveSteamAppidFromTitle(arg);
-  } catch {
-    event.returnValue = undefined;
-  }
-});
 ipcMain.handle('get-steam-appid-from-title', (event, arg) => resolveSteamAppidFromTitle(arg));
 
 async function resolveTitleFromEpicId(arg) {
@@ -2267,13 +2250,6 @@ async function resolveTitleFromEpicId(arg) {
   return (await require('../util/epicTitle.js').resolveEpicTitle(arg && arg.appid, { cacheFile })) || undefined;
 }
 
-ipcMain.on('get-title-from-epic-id', async (event, arg) => {
-  try {
-    event.returnValue = await resolveTitleFromEpicId(arg);
-  } catch {
-    event.returnValue = undefined;
-  }
-});
 ipcMain.handle('get-title-from-epic-id', (event, arg) => resolveTitleFromEpicId(arg));
 
 /*
@@ -2433,14 +2409,6 @@ async function resolveImagesForGame(arg) {
   });
 }
 
-ipcMain.on('get-images-for-game', async (event, arg) => {
-  // Always set returnValue for legacy sendSync callers.
-  try {
-    event.returnValue = await resolveImagesForGame(arg);
-  } catch {
-    event.returnValue = null;
-  }
-});
 ipcMain.handle('get-images-for-game', (event, arg) => resolveImagesForGame(arg));
 
 // Store artwork hosts, the only places this handler is ever pointed at.
@@ -6786,6 +6754,9 @@ function resolvePrimaryNotificationIcon({ notificationType, iconPath, gameIconPa
 // the notification respects them. The icon is passed as a URL and resolved from the on-disk cache the
 // Watchdog already prefetched into; a short race guards against a slow/offline fetch hanging the
 // transient process (it would otherwise never reach window-all-closed and quit).
+// How long a notification popup waits for its artwork before it shows without it.
+const NOTIFICATION_ART_WAIT_MS = 4000;
+
 async function enqueueNotificationFromArgs(args) {
   let cfg = configJS;
   if (!cfg) {
@@ -6832,36 +6803,18 @@ async function enqueueNotificationFromArgs(args) {
   }
   reportNotificationOutcome(notifyId, 'accepted', true, preset);
 
-  let iconPath = '';
-  if (args.icon) {
+  // Every picture is optional: one that fails or is still downloading after the wait is left out,
+  // and the three are fetched together so a slow network delays the popup once, not three times.
+  const artwork = async (url) => {
+    if (!url) return '';
     try {
-      iconPath =
-        (await Promise.race([fetchSteamIcon(String(args.icon), args.appid), new Promise((resolve) => setTimeout(() => resolve(''), 4000))])) || '';
+      const wait = new Promise((resolve) => setTimeout(() => resolve(''), NOTIFICATION_ART_WAIT_MS));
+      return (await Promise.race([fetchSteamIcon(String(url), args.appid), wait])) || '';
     } catch {
-      /* icon is optional */
+      return '';
     }
-  }
-
-  let gameIconPath = '';
-  if (args.gameIcon) {
-    try {
-      gameIconPath =
-        (await Promise.race([fetchSteamIcon(String(args.gameIcon), args.appid), new Promise((resolve) => setTimeout(() => resolve(''), 4000))])) ||
-        '';
-    } catch {
-      /* game art is optional */
-    }
-  }
-
-  let imagePath = '';
-  if (args.image) {
-    try {
-      imagePath =
-        (await Promise.race([fetchSteamIcon(String(args.image), args.appid), new Promise((resolve) => setTimeout(() => resolve(''), 4000))])) || '';
-    } catch {
-      /* header art is optional */
-    }
-  }
+  };
+  const [iconPath, gameIconPath, imagePath] = await Promise.all([artwork(args.icon), artwork(args.gameIcon), artwork(args.image)]);
 
   const primaryIconPath = resolvePrimaryNotificationIcon({ notificationType, iconPath, gameIconPath, imagePath, progress });
 

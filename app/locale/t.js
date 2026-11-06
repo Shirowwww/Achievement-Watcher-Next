@@ -14,6 +14,7 @@ function currentLanguage() {
   }
 }
 
+// {name} placeholders filled from params; a name params lacks stays as written.
 function interpolate(value, params) {
   if (!params || typeof params !== 'object') return value;
   return String(value).replace(/\{(\w+)\}/g, (match, name) =>
@@ -62,4 +63,4 @@ function localeText(dottedPath, params) {
   return typeof value === 'string' ? interpolate(value, params) : '';
 }
 
-module.exports = { t, localeText };
+module.exports = { t, localeText, interpolate };

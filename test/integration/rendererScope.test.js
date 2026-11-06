@@ -28,7 +28,8 @@ function topLevelDeclarations(file) {
   // just like plain `const x` (this regressed with `pathToFileURL` in settings.js).
   for (const match of source.matchAll(/^(?:const|let|var)\s*\{\s*([^}]+?)\s*\}\s*=/gm)) {
     for (const part of match[1].split(',')) {
-      const id = /^([A-Za-z_$][\w$]*)/.exec(part.trim());
+      // `{ key: alias }` declares the alias, not the key.
+      const id = /^(?:[A-Za-z_$][\w$]*\s*:\s*)?([A-Za-z_$][\w$]*)/.exec(part.trim());
       if (id) names.add(id[1]);
     }
   }

@@ -240,9 +240,6 @@ module.exports.upsert = (entry) => {
   }
 };
 
-// Back-compat alias.
-module.exports.add = module.exports.upsert;
-
 module.exports.remove = (appid) => {
   try {
     const key = String(appid);

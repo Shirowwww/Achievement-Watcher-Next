@@ -239,7 +239,7 @@
     const panel = $('<div class="select-menu collection-menu" role="menu"></div>').attr('aria-label', t('collections', 'Collections', 'Collections'));
     const allMarker = $('<span class="collection-menu-marker is-all" aria-hidden="true"><i class="fas fa-layer-group"></i></span>');
     panel.append(menuRow({ label: t('collection-all', 'All games', 'Tous les jeux'), marker: allMarker, selected: !current, onPick: () => setActive('') }));
-    const installedOnly = typeof window.installedOnlyEnabled === 'function' && window.installedOnlyEnabled();
+    const installedOnly = installedOnlyEnabled();
     for (const collection of state.collections) {
       panel.append(
         menuRow({

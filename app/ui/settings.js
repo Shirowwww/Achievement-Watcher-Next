@@ -425,56 +425,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       transientStatusTimers.set(node, fadeTimer);
     }
 
-    function forceShowOnboardingDom() {
-      $('#settings .box').hide();
-      $('#settings').hide();
-      if ($('title-bar')[0]) $('title-bar')[0].inSettings = false;
-      try {
-        const langs = require(path.join(appPath, 'locale/uiLanguages.js'));
-        const current = app.config?.achievement?.lang || 'english';
-        const selector = $('#onboard-language');
-        if (selector.length && selector.children().length === 0) {
-          for (const language of langs.all()) {
-            selector.append(
-              $('<option>')
-                .attr('value', language.api)
-                .attr('title', language.displayName)
-                .text(language.native || language.displayName)
-            );
-          }
-        }
-        if (selector.length) selector.val(langs.has(current) ? current : 'english');
-      } catch (err) {
-        debug.log(`fallback onboarding language fill failed: ${err}`);
-      }
-      $('#onboarding').attr('aria-hidden', 'false').show();
-      $('.onboarding-step').removeClass('active');
-      $(".onboarding-step[data-step='0']").addClass('active');
-      $('.onboarding-steps button').removeClass('active');
-      $(".onboarding-steps button[data-step='0']").addClass('active');
-      $('#onboarding-prev').prop('disabled', true);
-    }
-
+    // onboarding.js loads before Settings can be clicked. This button once did nothing because a
+    // name clash aborted that script at load (3.0.5); rendererScope.test.js now catches the clash.
     function requestOnboardingOpen() {
-      window.__awPendingOnboardingOpen = true;
-      if (typeof window.openAchievementWatcherOnboarding === 'function') {
-        window.__awPendingOnboardingOpen = false;
-        window.openAchievementWatcherOnboarding(true);
-        setTimeout(() => {
-          if (!$('#onboarding').is(':visible')) forceShowOnboardingDom();
-        }, 0);
-        return;
-      }
-      window.dispatchEvent(new CustomEvent('aw-open-onboarding', { detail: { force: true } }));
-      setTimeout(() => {
-        if (typeof window.openAchievementWatcherOnboarding === 'function') {
-          window.__awPendingOnboardingOpen = false;
-          window.openAchievementWatcherOnboarding(true);
-        } else {
-          debug.log('onboarding open requested before onboarding module was ready');
-        }
-        if (!$('#onboarding').is(':visible')) forceShowOnboardingDom();
-      }, 80);
+      window.openAchievementWatcherOnboarding(true);
     }
 
     function normalizeKey(e) {

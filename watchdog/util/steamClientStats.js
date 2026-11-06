@@ -59,4 +59,4 @@ function readSteamClientUnlocks(file, { readStats } = {}) {
   }));
 }
 
-module.exports = { USER_STATS_FILE, statsFileIds, steamClientRoot, readSteamClientUnlocks };
+module.exports = { statsFileIds, steamClientRoot, readSteamClientUnlocks };
