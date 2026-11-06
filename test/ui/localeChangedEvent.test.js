@@ -15,7 +15,8 @@ const appDir = path.join(__dirname, '..', '..', 'app');
 
 function appScripts(dir = appDir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.name === 'node_modules' || entry.name === 'lib') return [];
+    // dist holds whatever build was made last, not the sources under test.
+    if (entry.name === 'node_modules' || entry.name === 'lib' || entry.name === 'dist') return [];
     const target = path.join(dir, entry.name);
     if (entry.isDirectory()) return appScripts(target);
     return entry.name.endsWith('.js') ? [target] : [];

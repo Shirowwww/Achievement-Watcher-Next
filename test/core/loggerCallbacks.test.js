@@ -15,7 +15,8 @@ const BARE_METHOD = /(?:[:=,(]|=>)\s*(?!console\b)([A-Za-z_$][\w$]*)\.(?:log|inf
 function sources(directory) {
   return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const target = path.join(directory, entry.name);
-    if (entry.isDirectory()) return entry.name === 'node_modules' ? [] : sources(target);
+    // dist holds whatever build was made last, not the sources under test.
+    if (entry.isDirectory()) return entry.name === 'node_modules' || entry.name === 'dist' ? [] : sources(target);
     return entry.name.endsWith('.js') ? [target] : [];
   });
 }

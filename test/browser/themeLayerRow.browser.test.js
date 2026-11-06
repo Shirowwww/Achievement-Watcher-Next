@@ -40,13 +40,19 @@ function row(name, hint) {
       </div>
       <div class="theme-layer-controls">
         <label class="theme-layer-alpha-group">
+          <span class="theme-layer-alpha-label">Opacité</span>
           <input type="range" class="theme-layer-alpha" min="0" max="100" value="100" />
           <span class="theme-layer-alpha-value">100%</span>
         </label>
         <label class="theme-layer-effect-toggle theme-layer-gradient-toggle">
           <input type="checkbox" /><span>Dégradé</span>
         </label>
-        <button type="button" class="theme-layer-image">Image…</button>
+        <button type="button" class="theme-layer-image btn">Image…</button>
+        <span class="theme-layer-filename"></span>
+        <button type="button" class="theme-layer-clear-image" disabled>×</button>
+        <select class="theme-layer-fit" disabled>
+          <option>Couvrir</option><option>Contenir</option><option>Répéter</option><option>Étirer</option>
+        </select>
         <label class="theme-layer-effect-toggle">
           <input type="checkbox" /><span>Effet</span>
         </label>
@@ -64,21 +70,26 @@ const ROWS = [
   ['Fenêtre de réglages', 'La fenêtre que tu lis actuellement'],
 ];
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><style>
+function pageAt(width) {
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
   ${css}
   /* The panel the customizer sits in, at the width Settings gives it. */
   body { margin: 0; }
-  /*
-    620px, not the widest the panel gets: this is where the old rule broke two of the five rows and
-    left the other three alone, which is the shape of the report. A test at a comfortable width
-    passed either way and said nothing.
-  */
-  #theme-customizer { width: 620px; }
+  #theme-customizer { width: ${width}px; }
 </style></head><body>
   <div id="theme-customizer"><div id="theme-customizer-layers">
     ${ROWS.map(([name, hint]) => row(name, hint)).join('')}
   </div></div>
 </body></html>`;
+}
+
+/*
+  The controls take about 460px, so they sit beside the label only in a pane of some 760px or more
+  (a large window). 800px is such a pane: there a name's length must not change a row's shape. This
+  was tested at 620px with a fixture missing the fit select and the clear button, where the real
+  row could never keep its controls beside the label.
+*/
+const PAGE = pageAt(800);
 
 test('every layer row keeps its controls beside the label, however long the name is', async (t) => {
   await inContext(t, async (context) => {
@@ -137,9 +148,50 @@ test('a name with no room left still wraps rather than widening the row', async 
 
     assert.equal(first.wrapped, false, 'the controls stay beside a name that does not fit');
     assert.ok(first.lines >= 2, 'the name is what takes the extra line');
-    assert.ok(first.rowWidth <= 620, 'and the row itself never grows past its panel');
+    assert.ok(first.rowWidth <= 800, 'and the row itself never grows past its panel');
   });
 });
+
+/*
+  Between about 580 and 700px of pane (a 940px window gives about 600) the controls fitted beside
+  the label by leaving it 30 to 120px, and "Fond de la fenêtre" was read one word a line (bench
+  capture, 2026-11-06). The controls move under the label instead, on every row alike.
+*/
+test('in a narrow pane the controls move under the label rather than fold the name', async (t) => {
+  await inContext(t, async (context) => {
+    const page = await context.newPage();
+    await page.setViewport({ width: 1100, height: 900 });
+    for (const width of [560, 620, 680]) {
+      await page.setContent(pageAt(width), { waitUntil: 'domcontentloaded' });
+      await assertNoFoldedName(page, width);
+    }
+  });
+});
+
+async function assertNoFoldedName(page, width) {
+  const measured = await page.evaluate(() =>
+    Array.prototype.map.call(document.querySelectorAll('.theme-layer-row'), (element) => {
+      const label = element.querySelector('.theme-layer-label').getBoundingClientRect();
+      const controls = element.querySelector('.theme-layer-controls').getBoundingClientRect();
+      const name = element.querySelector('.theme-layer-name');
+      return {
+        name: name.textContent,
+        lines: Math.round(name.getBoundingClientRect().height / parseFloat(getComputedStyle(name).lineHeight)),
+        wrapped: controls.top >= label.bottom,
+        controlsRight: Math.round(controls.right),
+        overflows: controls.right > element.getBoundingClientRect().right + 1,
+      };
+    })
+  );
+
+  for (const line of measured) {
+    // Two lines is a name that wraps; five was the column of single words.
+    assert.ok(line.lines <= 2, `${width}px: "${line.name}" folded onto ${line.lines} lines`);
+    assert.equal(line.overflows, false, `${width}px: "${line.name}" pushed its controls out of the row`);
+  }
+  assert.equal(new Set(measured.map((line) => line.wrapped)).size, 1, `${width}px: every row takes the same shape`);
+  assert.equal(new Set(measured.map((line) => line.controlsRight)).size, 1, `${width}px: the controls still end on one edge`);
+}
 
 /*
   What a layer paints, said in full.

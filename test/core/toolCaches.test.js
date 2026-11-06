@@ -12,7 +12,8 @@ const { TOOL_CACHE_DIRS, toolCacheDir } = require(path.join(appDir, 'util', 'too
 function sources(dir) {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name === 'test') continue;
+    // dist holds whatever build was made last, not the sources under test.
+    if (entry.name === 'node_modules' || entry.name === 'test' || entry.name === 'dist') continue;
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) out.push(...sources(full));
     else if (entry.name.endsWith('.js')) out.push(full);

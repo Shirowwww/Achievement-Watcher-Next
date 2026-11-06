@@ -98,8 +98,13 @@ function gbeRoots({ settingsDirs = [], runtimeDirs = [], files = [], saveFolders
   ];
 }
 
+// Names sort in creation order, which is what undo relies on: the millisecond, then a counter for
+// the repairs that fall in the same one (a random suffix alone sorted those by chance).
+let stampSequence = 0;
 function stamp() {
-  return `${new Date().toISOString().replace(/[:.]/g, '-')}-${process.pid}-${Math.random().toString(36).slice(2, 6)}`;
+  stampSequence += 1;
+  const time = new Date().toISOString().replace(/[:.]/g, '-');
+  return `${time}-${String(stampSequence).padStart(6, '0')}-${process.pid}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
 /*
@@ -192,10 +197,12 @@ function diff(handle, after) {
   for (const [file, meta] of after.files) {
     const was = handle.before.files.get(file);
     if (!was) changes.push({ file, kind: 'created', after: metaOf(meta) });
-    else if (!was.onlyCreated && (was.size !== meta.size || was.mtimeMs !== meta.mtimeMs)) changes.push({ file, kind: 'changed', after: metaOf(meta), copy: handle.kept.get(file) || null });
+    else if (!was.onlyCreated && (was.size !== meta.size || was.mtimeMs !== meta.mtimeMs)) {
+      changes.push({ file, kind: 'changed', before: metaOf(was), after: metaOf(meta), copy: handle.kept.get(file) || null });
+    }
   }
   for (const [file, was] of handle.before.files) {
-    if (!was.onlyCreated && !after.files.has(file)) changes.push({ file, kind: 'deleted', copy: handle.kept.get(file) || null });
+    if (!was.onlyCreated && !after.files.has(file)) changes.push({ file, kind: 'deleted', before: metaOf(was), copy: handle.kept.get(file) || null });
   }
   return changes;
 }
@@ -286,16 +293,23 @@ function latest({ userDataPath, appid }) {
   }
 }
 
+// To the millisecond: a time put back by putBack reads back a few hundred nanoseconds off on Linux.
 function unchangedSince(file, meta) {
   const now = statOrNull(file);
-  return !!now && now.isFile() && now.size === meta.size && now.mtimeMs === meta.mtimeMs;
+  return !!now && now.isFile() && now.size === meta.size && Math.abs(now.mtimeMs - meta.mtimeMs) < 1;
 }
 
-function putBack(copy, file) {
+/*
+  The file gets back the time it had before the repair. Windows' copy keeps it on its own, Linux's
+  does not: without it, undoing the repair before this one took the restored file for one changed
+  since, and left it alone.
+*/
+function putBack(copy, file, before) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const temporary = `${file}.aw-undo-${process.pid}`;
   fs.copyFileSync(copy, temporary);
   replaceFileSync(temporary, file);
+  if (before && Number.isFinite(before.mtimeMs)) fs.utimesSync(file, before.mtimeMs / 1000, before.mtimeMs / 1000);
 }
 
 // Where the content to put back comes from: the journal's own copy, or the original the repair
@@ -342,7 +356,7 @@ function undo({ userDataPath, appid, dryRun = false }) {
       continue;
     }
     try {
-      if (plan === 'restore') putBack(sourceOf(change, dir), change.file);
+      if (plan === 'restore') putBack(sourceOf(change, dir), change.file, change.before);
       else if (!unlinkForce(change.file)) throw new Error('locked');
       (plan === 'restore' ? result.restored : result.removed).push(change.file);
     } catch (err) {

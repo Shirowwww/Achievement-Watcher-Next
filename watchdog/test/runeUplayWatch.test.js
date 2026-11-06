@@ -60,9 +60,12 @@ const options = {
     const added = runeUplayWatch._internal.addedRoots(configFile);
     assert.deepStrictEqual(added, [base, path.join(base, 'achievements'), path.join(temp, 'Muted', 'RUNE', 'Ubisoft Connect')]);
     assert.deepStrictEqual(runeUplayWatch._internal.addedRoots(path.join(temp, 'absent.db')), []);
+    // Windows spells one folder either way; on Linux the lower-case name is another folder.
+    const watchedOnce = [path.join(base, 'achievements')];
+    if (process.platform !== 'win32') watchedOnce.push(path.join(base.toLowerCase(), 'achievements'));
     assert.deepStrictEqual(
       runeUplayWatch._internal.uniqueAchievementsRoots([base, base.toLowerCase(), path.join(base, 'achievements'), path.join(temp, 'Games')]),
-      [path.join(base, 'achievements')],
+      watchedOnce,
       'the same tree is watched once, whichever way it was named'
     );
 

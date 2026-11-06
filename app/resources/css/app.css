@@ -10036,6 +10036,27 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 }
 
 /*
+  Those buttons leave a narrow pane's label column about 180px, and the description under the label
+  became a ten-line ribbon. Below 680px of list the description runs under the whole row instead.
+  A container query: the pane's width depends on the nav column and the window, not the viewport.
+*/
+#settings #options-notify-souvenir,
+#settings #options-notify-clip {
+  container-type: inline-size;
+}
+@container (max-width: 680px) {
+  #settings #options-notify-souvenir > li.hasHelper:has(> .right.action-right) > .right,
+  #settings #options-notify-clip > li.hasHelper:has(> .right.action-right) > .right {
+    grid-row: 1;
+    align-self: center;
+  }
+  #settings #options-notify-souvenir > li.hasHelper:has(> .right.action-right) > .help,
+  #settings #options-notify-clip > li.hasHelper:has(> .right.action-right) > .help {
+    grid-column: 1 / -1;
+  }
+}
+
+/*
   OBS browser source row: two buttons of equal weight, side by side. Without the extra room they
   fall onto two lines in the 212px column every one-button row uses, which reads as two settings
   rather than one row with a copy and a check.
@@ -15572,24 +15593,9 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   }
 }
 
-/* Theme editor + cover picker: at narrow widths stack every layer row on two clean
-   lines (preview + label on top, controls right-aligned below) so all rows behave
-   exactly the same, and shrink the cover grid so it never overflows. */
+/* Cover picker: shrink the grid at narrow widths so it never overflows. (The theme layer rows wrap
+   on their own, from the label's minimum width.) */
 @media (max-width: 980px) {
-  #theme-customizer .theme-layer-row {
-    align-items: flex-start;
-    gap: 6px 12px;
-  }
-
-  #theme-customizer .theme-layer-label {
-    flex-basis: calc(100% - 70px);
-  }
-
-  #theme-customizer .theme-layer-controls {
-    flex-basis: 100%;
-    justify-content: flex-end;
-  }
-
   .aw-cover-picker-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 12px;
@@ -15839,9 +15845,13 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
     its text wants. With auto, a long layer name made the row too wide to fit on one flex line and
     the controls dropped underneath - so a row was laid out differently depending on how long its
     name happened to be in the current language.
+
+    The minimum is a width, not the text's: in a narrow pane the controls drop to the next line
+    when the label would get less, the same for every row and language, instead of the label
+    shrinking to one word a line ("Fond / de / la / fenêtre").
   */
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 10em;
 }
 
 #theme-customizer .theme-layer-label > i {

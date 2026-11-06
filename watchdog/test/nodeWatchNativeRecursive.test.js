@@ -14,8 +14,10 @@ const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
+const NATIVE_RECURSIVE = process.platform === 'win32' || process.platform === 'linux';
+
 test('the save of a brand-new appid folder is seen even when the Watchdog starts busy', async (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows watcher behaviour');
+  if (!NATIVE_RECURSIVE) return t.skip('Windows and Linux watcher behaviour');
   const watch = require('../util/nodeWatch.js');
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-native-recursive-'));
   const events = [];
@@ -41,8 +43,8 @@ test('the save of a brand-new appid folder is seen even when the Watchdog starts
   }
 });
 
-test('Windows is answered up front, not probed against a timer', (t) => {
-  if (process.platform !== 'win32') return t.skip('Windows watcher behaviour');
+test('Windows and Linux are answered up front, not probed against a timer', (t) => {
+  if (!NATIVE_RECURSIVE) return t.skip('Windows and Linux watcher behaviour');
   require('../util/nodeWatch.js');
   let answer;
   require('node-watch/lib/has-native-recursive')((has) => {

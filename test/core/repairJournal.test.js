@@ -18,6 +18,10 @@ function setup() {
   fs.mkdirSync(settings, { recursive: true });
   fs.writeFileSync(path.join(settings, 'configs.main.ini'), '[main::connectivity]\noffline=1\n');
   fs.writeFileSync(path.join(settings, 'steam_appid.txt'), '111');
+  // A game's files were written long before a repair. Linux stamps writes within one timer tick
+  // (up to 10 ms) with the same time, so a same-size rewrite right after setup would look untouched.
+  const longAgo = new Date(Date.UTC(2025, 0, 1));
+  for (const name of ['configs.main.ini', 'steam_appid.txt']) fs.utimesSync(path.join(settings, name), longAgo, longAgo);
   return { base, userDataPath, settings, gameDir: path.dirname(settings) };
 }
 
@@ -110,10 +114,16 @@ test('repairs are undone newest first, and only a few are kept per game', async 
   const s = setup();
   const main = path.join(s.settings, 'configs.main.ini');
   for (let i = 1; i <= repairJournal.MAX_PER_GAME + 2; i++) {
-    await repairJournal.record(options(s), () => fs.writeFileSync(main, `step ${i}`));
+    // Each step its own time, as repairs made apart would have (see setup).
+    await repairJournal.record(options(s), () => {
+      fs.writeFileSync(main, `step ${i}`);
+      const when = new Date(Date.UTC(2026, 0, 1) + i * 1000);
+      fs.utimesSync(main, when, when);
+    });
   }
   repairJournal.undo({ userDataPath: s.userDataPath, appid: '4115450' });
   assert.equal(read(main), `step ${repairJournal.MAX_PER_GAME + 1}`);
+  // The file the first undo restored is not mistaken for one changed since the repair before it.
   repairJournal.undo({ userDataPath: s.userDataPath, appid: '4115450' });
   assert.equal(read(main), `step ${repairJournal.MAX_PER_GAME}`);
   const left = fs.readdirSync(path.join(s.userDataPath, 'repair-undo', '4115450')).length;

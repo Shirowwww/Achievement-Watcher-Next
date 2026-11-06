@@ -41,7 +41,9 @@ test('a 12-digit numeric folder is not a SocialClub profile on either side', () 
   const { isProfileFolderName, gameFolderName } = require(app('parser/socialclubNames.js'));
   assert.equal(isProfileFolderName('0F74F4C4'), true);
   assert.equal(isProfileFolderName('123456789012'), false);
-  assert.equal(gameFolderName('D:\\saves', 'D:\\saves\\123456789012\\x.ini'), '123456789012');
+  // Paths of this system: on Linux, D:\saves would be one relative name, not a folder.
+  const root = path.resolve('saves');
+  assert.equal(gameFolderName(root, path.join(root, '123456789012', 'x.ini')), '123456789012');
 });
 
 test('the SSE reader keeps locked entries, which the Watchdog now sees like the library', () => {
