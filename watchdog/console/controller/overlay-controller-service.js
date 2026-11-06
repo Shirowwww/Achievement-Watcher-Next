@@ -18,42 +18,20 @@ function bindingRequiresSystemButtons(binding) {
   return Array.isArray(binding) && binding.includes("GUIDE");
 }
 
-function createOverlayControllerService(options = {}) {
-  const logger = options.logger || console;
-  const isSupportEnabled =
-    typeof options.isSupportEnabled === "function"
-      ? options.isSupportEnabled
-      : () => false;
-  const getPreferredBackend =
-    typeof options.getPreferredBackend === "function"
-      ? options.getPreferredBackend
-      : () => "auto";
-  const isDebugLoggingEnabled =
-    typeof options.isDebugLoggingEnabled === "function"
-      ? options.isDebugLoggingEnabled
-      : () => false;
-  const getOverlayToggleBinding =
-    typeof options.getOverlayToggleBinding === "function"
-      ? options.getOverlayToggleBinding
-      : () => [];
-  const getOverlayControlModeBinding =
-    typeof options.getOverlayControlModeBinding === "function"
-      ? options.getOverlayControlModeBinding
-      : () => [];
-  const getOverlayUiModeBinding =
-    typeof options.getOverlayUiModeBinding === "function"
-      ? options.getOverlayUiModeBinding
-      : () => [];
-  const canEnterOverlayControlMode =
-    typeof options.canEnterOverlayControlMode === "function"
-      ? options.canEnterOverlayControlMode
-      : () => false;
-  const isOverlayPresented =
-    typeof options.isOverlayPresented === "function"
-      ? options.isOverlayPresented
-      : () => false;
-  const onAction =
-    typeof options.onAction === "function" ? options.onAction : () => {};
+// Every callback is required: the Watchdog, the one caller, passes them all.
+function createOverlayControllerService({
+  logger,
+  isSupportEnabled,
+  getPreferredBackend,
+  isDebugLoggingEnabled,
+  getOverlayToggleBinding,
+  getOverlayControlModeBinding,
+  getOverlayUiModeBinding,
+  canEnterOverlayControlMode,
+  isOverlayPresented,
+  onAction,
+  onPadState,
+}) {
 
   let manager = null;
   let managerBackendPreference = "auto";
@@ -89,7 +67,7 @@ function createOverlayControllerService(options = {}) {
       canEnterOverlayControlMode,
       isOverlayPresented,
       onAction,
-      onPadState: options.onPadState,
+      onPadState,
       debugLoggingEnabled,
       getPreferredBackend: () => preferredBackend,
       getOverlayToggleBinding: () => getOverlayToggleBinding(),
@@ -138,7 +116,6 @@ function createOverlayControllerService(options = {}) {
     sync,
     shutdown,
     notifyOverlayPresentationChanged,
-    hasManager: () => !!manager,
   };
 }
 

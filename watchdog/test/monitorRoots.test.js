@@ -137,3 +137,46 @@ test('an ALI213 game is watched for both spellings of its achievement file', asy
     fs.rmSync(game, { recursive: true, force: true });
   }
 });
+
+/*
+  Settings writes every row with notify: true and shows no switch for it, and the library reads a row
+  without it (or a bare path string) as a folder to scan. The Watchdog dropped both, so such a folder
+  was in the library but never notified.
+*/
+test('a saved folder without notify, or saved as a bare path, is watched like the library reads it', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-monitor-notify-'));
+  try {
+    const plain = path.join(tmp, 'plain');
+    const bare = path.join(tmp, 'bare');
+    for (const game of [plain, bare]) {
+      fs.mkdirSync(game, { recursive: true });
+      fs.writeFileSync(path.join(game, 'tenoke.ini'), '[TENOKE]\nid = 1234 # game\n');
+    }
+    const config = path.join(tmp, 'userdir.db');
+    fs.writeFileSync(config, JSON.stringify([{ path: plain, enabled: true }, bare]), 'utf8');
+    const dirs = (await monitor.getFolders(config)).map((entry) => path.resolve(String(entry.dir || '')).toLowerCase());
+    assert.ok(dirs.includes(path.join(plain, 'SteamData').toLowerCase()), 'a row without notify is watched');
+    assert.ok(dirs.includes(path.join(bare, 'SteamData').toLowerCase()), 'a bare path row is watched');
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test('a saved folder whose emulator config cannot be read into a watch is logged with its path', async (t) => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-monitor-broken-'));
+  const log = require('../util/log.js');
+  const warnings = [];
+  t.mock.method(log, 'warn', (line) => warnings.push(String(line)));
+  try {
+    const game = path.join(tmp, 'game');
+    fs.mkdirSync(game, { recursive: true });
+    // A tenoke.ini with no [TENOKE] section names no appid.
+    fs.writeFileSync(path.join(game, 'tenoke.ini'), '[Other]\nid = 1\n');
+    const config = path.join(tmp, 'userdir.db');
+    fs.writeFileSync(config, JSON.stringify([{ path: game, notify: true, enabled: true }]), 'utf8');
+    await monitor.getFolders(config);
+    assert.ok(warnings.some((line) => line.includes(game)), `a warning names the folder (got ${JSON.stringify(warnings)})`);
+  } finally {
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+});

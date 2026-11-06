@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { lazyRequire } = require('../util/lazyRequire.js');
 const { hostPaths } = require('../util/winHosts.js');
+const { writeFileAtomicSync } = require('../util/replaceFile.js');
 const glob = lazyRequire('fast-glob');
 const request = lazyRequire('request-zero');
 
@@ -21,6 +22,9 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
 };
+
+// The GOG id -> Steam appid map, written by the scan and by the Watchdog's GOG unlock path.
+const mappingFile = () => path.join(cacheRoot, 'steam_cache', 'gog.db');
 
 // A broken optional cache must not block the GOG scan.
 function readGogMappingCache(cacheFile) {
@@ -41,9 +45,35 @@ function mappingByGogId(cache) {
   return byGogId;
 }
 
+// The Steam release gamesdb.gog.com lists for a GOG id; undefined for a GOG-only title.
+async function fetchSteamIdForGogId(gogId) {
+  const gameinfo = await request.getJson(`https://gamesdb.gog.com/platforms/gog/external_releases/${gogId}`);
+  const releases = Array.isArray(gameinfo?.game?.releases) ? gameinfo.game.releases : [];
+  const steamRelease = releases.find((release) => String(release?.platform_id || '').toLowerCase() === 'steam');
+  return steamRelease?.external_id;
+}
+
+/*
+  One GOG id from the map, asking gamesdb only when the map lacks it and remembering the answer:
+  without that every GOG unlock hit the network, and an offline moment cost the notification.
+  A failed write only costs the same lookup next time, so it is logged, not thrown.
+*/
+module.exports.steamIdForGogId = async (gogId) => {
+  const cache = readGogMappingCache(mappingFile());
+  const cached = mappingByGogId(cache).get(String(gogId));
+  if (cached) return cached.steamid;
+  const steamid = await fetchSteamIdForGogId(gogId);
+  if (!steamid) return undefined;
+  try {
+    writeFileAtomicSync(mappingFile(), JSON.stringify([...cache, { gogid: String(gogId), steamid }], null, 2));
+  } catch (err) {
+    debug.log(`[gog] could not write gog.db: ${err.message || err}`);
+  }
+  return steamid;
+};
+
 module.exports.getCachedData = async (cfg) => {
-  const cacheFile = path.join(cacheRoot, 'steam_cache', 'gog.db');
-  const cache = readGogMappingCache(cacheFile);
+  const cache = readGogMappingCache(mappingFile());
   const cached = mappingByGogId(cache).get(String(cfg.appID));
   if (!cached) return;
 
@@ -81,7 +111,7 @@ async function gogIdSaves(skipUniverseLanIds) {
 }
 
 module.exports.scan = async ({ skipUniverseLanIds = [] } = {}) => {
-  const cacheFile = path.join(cacheRoot, 'steam_cache', 'gog.db');
+  const cacheFile = mappingFile();
   const data = [];
   const cache = readGogMappingCache(cacheFile);
   let updateCache = false;
@@ -102,11 +132,7 @@ module.exports.scan = async ({ skipUniverseLanIds = [] } = {}) => {
       steamid = cached.steamid;
     } else {
       try {
-        const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${game.appid}`;
-        const gameinfo = await request.getJson(url);
-        const releases = Array.isArray(gameinfo?.game?.releases) ? gameinfo.game.releases : [];
-        const steamRelease = releases.find((release) => String(release?.platform_id || '').toLowerCase() === 'steam');
-        steamid = steamRelease?.external_id;
+        steamid = await fetchSteamIdForGogId(game.appid);
         if (steamid) {
           const entry = { gogid: game.appid, steamid };
           cache.push(entry);
@@ -127,8 +153,7 @@ module.exports.scan = async ({ skipUniverseLanIds = [] } = {}) => {
     }
   }
   fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-  if (updateCache) fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
+  // Atomic: the Watchdog reads this map while a game runs, and half a file would cost every mapping.
+  if (updateCache) writeFileAtomicSync(cacheFile, JSON.stringify(cache, null, 2));
   return data;
 };
-
-module.exports._internal = { readGogMappingCache, mappingByGogId };

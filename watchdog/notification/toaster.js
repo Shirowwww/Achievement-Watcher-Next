@@ -193,6 +193,9 @@ function feedPayload(message) {
 }
 
 module.exports = async (message, option = {}) => {
+  // Read from the registry at most once per notification: the breakthrough toast and the rumble both need it.
+  let durationRead = null;
+  const toastSeconds = () => durationRead || (durationRead = toastDurationSeconds());
   try {
     applyGameTitle(message, option);
     applyCustomGameIcon(message);
@@ -229,7 +232,7 @@ module.exports = async (message, option = {}) => {
         group: option.toast.group || false,
         attribution: option.toast.attribution || null,
         breakthrough: plan.breakthrough,
-        durationSeconds: plan.breakthrough ? await toastDurationSeconds() : DEFAULT_TOAST_SECONDS,
+        durationSeconds: plan.breakthrough ? await toastSeconds() : DEFAULT_TOAST_SECONDS,
       },
       prefetch: option.prefetch != null ? option.prefetch : true,
       rumble: option.rumble != null ? option.rumble : true,
@@ -466,14 +469,15 @@ module.exports = async (message, option = {}) => {
       if (options.rumble) {
         const xinput = process.platform === 'win32' ? await loadXinput() : require('../util/evdevRumble.js');
         if (xinput) {
-          if (!deliverToast) message.delay = 0;
-          const duration = await toastDurationSeconds();
+          // A queued toast rumbles when its turn comes; with no toast there is no queue to wait for.
+          const queuePosition = deliverToast ? Number(message.delay) || 0 : 0;
+          const duration = queuePosition > 0 ? await toastSeconds() : 0;
           setTimeout(function () {
             debug.log('XInput Rumble');
             xinput.rumble({ forceStateWhileRumble: true }).catch((err) => {
               debug.warn(err);
             });
-          }, duration * 1000 * message.delay || 0);
+          }, duration * 1000 * queuePosition);
         }
       }
     }

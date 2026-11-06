@@ -31,9 +31,10 @@ const options = (overrides = {}) => ({
 });
 
 test('a source is off only at false or level 0, as normalize leaves it in options.ini', () => {
-  for (const off of [false, 0, '0']) assert.equal(kit.sourceSwitchOn({ s: off }, 's'), false, String(off));
-  for (const on of [true, 1, 2, '2', undefined]) assert.equal(kit.sourceSwitchOn({ s: on }, 's'), true, String(on));
-  assert.equal(kit.sourceSwitchOn(undefined, 's'), true, 'a missing section keeps the source on');
+  const starts = (sources) => kit.canStart({ options: options({ achievement_source: sources }), notify: () => {} }, 's');
+  for (const off of [false, 0, '0']) assert.equal(starts({ s: off }), false, String(off));
+  for (const on of [true, 1, 2, '2', undefined]) assert.equal(starts({ s: on }), true, String(on));
+  assert.equal(starts(undefined), true, 'a missing section keeps the source on');
 });
 
 test('a watcher starts only with options, its source on, the master switch on and a notify function', () => {
@@ -52,6 +53,8 @@ test('the notification options carry the transport, the toast and the volume fro
   const ctx = { options: options(), getToastID: () => 'Some.AUMID' };
   assert.deepEqual(kit.unlockToastOptions(ctx, { attribution: 'Trophy' }), {
     notify: true,
+    // Without it the balloon fallback speaks English whatever the setting.
+    lang: 'english',
     transport: { mode: 'auto', websocket: false },
     toast: {
       appid: 'Some.AUMID',
@@ -66,20 +69,20 @@ test('the notification options carry the transport, the toast and the volume fro
     prefetch: false,
     rumble: false,
   });
-  assert.equal(kit.unlockToastOptions({ options: options(), toastID: 'Fixed' }).toast.appid, 'Fixed', 'a fixed toast id still works');
   assert.equal(typeof kit.unlockToastOptions(ctx).toast.attribution, 'string', 'the generic word by default');
   assert.equal(kit.gamerscoreAttribution(ctx, 20), '20 G');
   assert.equal(kit.iconPrefetch({ options: { notification_advanced: undefined } }), true);
 });
 
-test('the user folders are the ones on and allowed to notify', (t) => {
+// Settings writes notify: true on every row and shows no switch for it: only a folder turned off is left out.
+test('the user folders are the ones turned on, whatever their notify field says', (t) => {
   const dir = tempDir(t);
   const file = path.join(dir, 'userdir.db');
   fs.writeFileSync(
     file,
     JSON.stringify(['C:/legacy', { path: 'C:/on', enabled: true, notify: true }, { path: 'C:/off', enabled: false }, { path: 'C:/quiet', notify: false }, { enabled: true }])
   );
-  assert.deepEqual(kit.watchedFolders(file), ['C:/legacy', 'C:/on']);
+  assert.deepEqual(kit.watchedFolders(file), ['C:/legacy', 'C:/on', 'C:/quiet'].map((folder) => path.resolve(folder)));
   assert.deepEqual(kit.watchedFolders(path.join(dir, 'missing.db')), []);
   fs.writeFileSync(file, '{"not":"a list"}');
   assert.deepEqual(kit.watchedFolders(file), []);

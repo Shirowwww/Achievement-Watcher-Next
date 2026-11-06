@@ -23,6 +23,7 @@ const themeBlur = require('../util/themeBlur.js');
 const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js'));
 const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require('../util/presetSchema.js');
+const { PREVIEW_PRESET_NAME } = require('../util/notificationPreset.js');
 const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
 const sanEngine = lazyRequire(path.join(__dirname, '../util/sanEngine/index.js'));
 const RarityTiers = require('../util/rarityTiers.js');
@@ -47,7 +48,6 @@ let findPresetFolder = () => null;
 let invalidateNotificationPresetFolders = () => {};
 let resolveSquareGameLogo = async () => null;
 let writeCustomPreset = () => '';
-let PREVIEW_PRESET_NAME = '__aw-preview__';
 
 /*
   Called once from init.js, before any window exists. The handlers below are registered when this
@@ -73,7 +73,6 @@ function register(context) {
     invalidateNotificationPresetFolders,
     resolveSquareGameLogo,
     writeCustomPreset,
-    PREVIEW_PRESET_NAME,
   } = context);
 }
 
@@ -643,9 +642,6 @@ ipcMain.handle('save-custom-theme', async (event, request) => {
   themeLayers.saveCustomTheme(userData, clean); // persist generated blur paths, keeping the name
   return { ...themeLayers.themePayload(userData, 'custom', clean, ''), customName: themeLayers.loadCustomThemeName(userData) };
 });
-
-// What the Custom theme is called, so the editor's name field opens on it.
-ipcMain.handle('get-custom-theme-name', async () => themeLayers.loadCustomThemeName(userData));
 
 /*
   The stylesheet for a theme that is being edited but not saved.

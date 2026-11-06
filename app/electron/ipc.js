@@ -126,13 +126,6 @@ ipcMain.handle('apicheckbypass-extract-rar', async (_event, { rarPath, destDir }
   }
 });
 
-ipcMain.handle('get-app-name', () => {
-  return app.getName();
-});
-ipcMain.handle('get-user-data-path', () => {
-  return app.getPath('userData');
-});
-
 ipcMain.on('get-app-name-sync', (event) => {
   event.returnValue = app.getName();
 });
@@ -214,11 +207,6 @@ module.exports.window = () => {
   ipcMain.handle('win-isMaximizable', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender);
     return win.maximizable;
-  });
-
-  ipcMain.handle('win-isFrameless', async (event) => {
-    const win = BrowserWindow.fromWebContents(event.sender);
-    return win.isFrameless;
   });
 
   ipcMain.on('win-isDev', (event) => {

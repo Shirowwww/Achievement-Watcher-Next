@@ -2,27 +2,19 @@
 
 const { sharedAppModulePath } = require('./sharedAppModule.js');
 /*
- * Root detection cascade for the Watchdog: classify a folder from file signatures and return
- * monitor-style watch entries. Discovery only - it never generates configs or writes preferences.
+ * The watches monitor.js adds for a configured folder no emulator config describes: a GOG .info game
+ * or a UniverseLAN one. The signatures checked before each are the ones that claim the folder for
+ * another reader (a console emulator, an official client, numeric appid folders), in which case the
+ * folder keeps monitor.js's generic watch. Discovery only - it never writes anything.
  */
 
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const ini = require(sharedAppModulePath('util/ini.js'));
+const { SAVE_FILE_NAMES } = require(sharedAppModulePath('parser/emuSaveRoots.js'));
 
-const ACHIEVEMENT_FILES = [
-  'achievements.ini',
-  'achievements.json',
-  'achiev.ini',
-  'stats.ini',
-  'Achievements.Bin',
-  'achieve.dat',
-  'Achievements.ini',
-  'stats.bin',
-  'user_stats.ini',
-  'stats.json',
-];
+const MAX_DEPTH = 6;
 
 const STRICT_ROOT_PROFILES = [
   { key: 'steam-codex', suffix: ['steam', 'codex'] },
@@ -98,33 +90,10 @@ function normalizeRoot(inputRoot) {
   return root;
 }
 
-function createTimeSlicer(sliceMs = 0) {
-  let lastYieldAt = Date.now();
-  return async () => {
-    if (!sliceMs || sliceMs <= 0) return;
-    const now = Date.now();
-    if (now - lastYieldAt >= sliceMs) {
-      lastYieldAt = now;
-      await new Promise((resolve) => setImmediate(resolve));
-    }
-  };
-}
-
-async function walkTree(root, visitor, options = {}) {
-  const maxDepth = Math.max(0, Number(options.maxDepth) || 0);
-  const shouldSkipPath =
-    typeof options.shouldSkipPath === 'function'
-      ? options.shouldSkipPath
-      : () => false;
-  const yieldIfNeeded =
-    typeof options.yieldIfNeeded === 'function'
-      ? options.yieldIfNeeded
-      : async () => {};
-
+async function walkTree(root, visitor, { maxDepth = MAX_DEPTH } = {}) {
   const stack = [{ dir: root, depth: 0 }];
   while (stack.length) {
     const current = stack.pop();
-    if (!current || shouldSkipPath(current.dir)) continue;
     let entries;
     try {
       entries = await fsp.readdir(current.dir, { withFileTypes: true });
@@ -133,71 +102,32 @@ async function walkTree(root, visitor, options = {}) {
     }
     for (const ent of entries) {
       const full = path.join(current.dir, ent.name);
-      if (shouldSkipPath(full)) continue;
       const isDir = ent.isDirectory();
       const keep = await visitor(full, ent, current.depth, isDir);
       if (keep === false) continue;
-      if (isDir && current.depth < maxDepth) {
-        stack.push({ dir: full, depth: current.depth + 1 });
-      }
-      await yieldIfNeeded();
+      if (isDir && current.depth < maxDepth) stack.push({ dir: full, depth: current.depth + 1 });
     }
   }
 }
 
-async function discoverAppIdsUnder(root, options = {}) {
+async function discoverAppIdsUnder(root) {
   const out = new Map();
-  await walkTree(
-    root,
-    (full, ent, depth, isDir) => {
-      if (!isDir) return false;
-      if (!isAppIdName(ent.name) || shouldIgnoreDiscoveredId(ent.name)) {
-        return depth < (Number(options.maxDepth) || 6);
-      }
-      out.set(ent.name, full);
-      // Keep descending like the source: an AppID folder can contain
-      // additional AppID folders (for example nested emulator saves).
-      return true;
-    },
-    options,
-  );
+  await walkTree(root, (full, ent, depth, isDir) => {
+    if (!isDir) return false;
+    if (!isAppIdName(ent.name) || shouldIgnoreDiscoveredId(ent.name)) return depth < MAX_DEPTH;
+    out.set(ent.name, full);
+    // An AppID folder can contain further AppID folders (nested emulator saves).
+    return true;
+  });
   return out;
 }
 
-async function discoverImmediateAppIdsUnder(root, options = {}) {
-  const out = new Map();
-  if (typeof options.shouldSkipPath === 'function' && options.shouldSkipPath(root)) {
-    return out;
-  }
-  let entries;
-  try {
-    entries = await fsp.readdir(root, { withFileTypes: true });
-  } catch {
-    return out;
-  }
-  for (const ent of entries) {
-    if (!ent.isDirectory()) continue;
-    const candidate = path.join(root, ent.name);
-    if (typeof options.shouldSkipPath === 'function' && options.shouldSkipPath(candidate)) {
-      continue;
-    }
-    if (!isAppIdName(ent.name) || shouldIgnoreDiscoveredId(ent.name)) continue;
-    out.set(ent.name, candidate);
-    if (typeof options.yieldIfNeeded === 'function') await options.yieldIfNeeded();
-  }
-  return out;
-}
-
-async function discoverGpdFilesUnder(root, options = {}) {
-  const found = [];
-  await walkTree(
-    root,
-    (full) => {
-      if (String(full).toLowerCase().endsWith('.gpd')) found.push(full);
-      return true;
-    },
-    options,
-  );
+async function hasGpdFile(root) {
+  let found = false;
+  await walkTree(root, (full) => {
+    if (String(full).toLowerCase().endsWith('.gpd')) found = true;
+    return true;
+  });
   return found;
 }
 
@@ -215,630 +145,218 @@ async function discoverRpcs3TrophyDirsUnder(root, options = {}) {
           return true;
         }
       }
-      if (
-        fs.existsSync(path.join(full, 'TROPCONF.SFM')) &&
-        fs.existsSync(path.join(full, 'TROPUSR.DAT'))
-      ) {
+      if (fs.existsSync(path.join(full, 'TROPCONF.SFM')) && fs.existsSync(path.join(full, 'TROPUSR.DAT'))) {
         found.push(full);
         return false;
       }
       return true;
     },
-    options,
+    options
   );
   return found;
 }
 
-async function discoverPs4TrophyDirsUnder(root, options = {}) {
-  const found = [];
-  await walkTree(
-    root,
-    (full, ent, depth, isDir) => {
-      if (!isDir) return true;
-      if (String(ent.name).toLowerCase() === 'trophy00') {
-        const parent = path.dirname(full);
-        if (
-          path.basename(parent).toLowerCase() === 'trophyfiles' &&
-          fs.existsSync(path.join(full, 'Xml', 'TROP.XML'))
-        ) {
-          found.push(full);
-          return false;
-        }
-      }
-      return true;
-    },
-    options,
-  );
+async function hasPs4TrophyDir(root) {
+  let found = false;
+  await walkTree(root, (full, ent, depth, isDir) => {
+    if (!isDir) return true;
+    if (
+      String(ent.name).toLowerCase() === 'trophy00' &&
+      path.basename(path.dirname(full)).toLowerCase() === 'trophyfiles' &&
+      fs.existsSync(path.join(full, 'Xml', 'TROP.XML'))
+    ) {
+      found = true;
+      return false;
+    }
+    return true;
+  });
   return found;
 }
 
-async function discoverModernPs4TrophySetsUnder(root) {
-  const out = [];
+async function hasModernPs4TrophySet(root) {
   const trophyRoot = path.join(root, 'trophy');
   let entries;
   try {
     entries = await fsp.readdir(trophyRoot, { withFileTypes: true });
   } catch {
-    return out;
+    return false;
   }
-  for (const ent of entries) {
-    if (!ent.isDirectory()) continue;
-    if (!/^NP[A-Z0-9_]+$/i.test(ent.name)) continue;
-    const schemaDir = path.join(trophyRoot, ent.name);
-    if (!fs.existsSync(path.join(schemaDir, 'Xml', 'TROP.XML'))) continue;
-    out.push({
-      npcommid: ent.name,
-      schemaDir,
-      root,
-    });
-  }
-  return out;
+  return entries.some(
+    (ent) => ent.isDirectory() && /^NP[A-Z0-9_]+$/i.test(ent.name) && fs.existsSync(path.join(trophyRoot, ent.name, 'Xml', 'TROP.XML'))
+  );
 }
 
-async function findGogInfoAppId(root, options = {}) {
-  const pattern = /^goggame-(\d+)\.info$/i;
-  const found = [];
-  await walkTree(
-    root,
-    (full, ent) => {
-      if (ent.isFile() && pattern.test(ent.name)) found.push(full);
-      return true;
-    },
-    options,
-  );
+const GOG_INFO_FILE = /^goggame-(\d+)\.info$/i;
+const HEX_ID = /^[0-9a-fA-F]+$/;
 
-  const pickLaunchMetadata = (parsed, baseDir) => {
-    const tasks = Array.isArray(parsed && parsed.playTasks) ? parsed.playTasks : [];
-    const ranked = tasks
-      .map((task, index) => {
-        const taskPath = String((task && task.path) || '').trim();
-        if (!taskPath || !/\.exe$/i.test(taskPath)) return null;
-        let score = 100;
-        if (task.isPrimary === true) score += 50;
-        if (String(task.category || '').toLowerCase() === 'game') score += 25;
-        if (String(task.type || '').toLowerCase() === 'filetask') score += 10;
-        return { task, index, score };
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.score - a.score || a.index - b.index);
-    const selected = ranked[0] && ranked[0].task;
-    const taskPath = String((selected && selected.path) || '').trim();
-    if (!taskPath) return null;
-    return {
-      executable: path.isAbsolute(taskPath) ? taskPath : path.join(baseDir, taskPath),
-      arguments: '',
-      process_name: path.win32.basename(taskPath.replace(/\//g, '\\')),
-    };
-  };
-
-  const entries = [];
-  for (const file of found) {
-    try {
-      const match = path.basename(file).match(pattern);
-      const fromName = match && match[1] ? match[1] : '';
-      const raw = await fsp.readFile(file, 'utf8');
-      const parsed = JSON.parse(raw);
-      const fromJson =
-        parsed.gameId ??
-        parsed.gameID ??
-        parsed.game_id ??
-        parsed.GameId ??
-        parsed.GameID;
-      const rootFromJson =
-        parsed.rootGameId ??
-        parsed.rootgameid ??
-        parsed.root_game_id ??
-        parsed.RootGameId ??
-        parsed.RootGameID ??
-        parsed.Rootgameid;
-      const gameId = /^[0-9a-fA-F]+$/.test(String(fromJson || ''))
-        ? String(fromJson)
-        : fromName;
-      const rootGameId = /^[0-9a-fA-F]+$/.test(String(rootFromJson || ''))
-        ? String(rootFromJson)
-        : '';
-      if (gameId && /^[0-9a-fA-F]+$/.test(gameId)) {
-        entries.push({
-          gameId,
-          rootGameId: rootGameId || gameId,
-          name: String(parsed.name || '').trim(),
-          file,
-          launchMetadata: pickLaunchMetadata(parsed, path.dirname(file)),
-        });
-      }
-    } catch {
-      /* ignore unparsable gog .info */
-    }
+// The game a goggame-<id>.info file describes: { gameId, rootGameId, file }, or null.
+async function readGogInfo(file) {
+  try {
+    const parsed = JSON.parse(await fsp.readFile(file, 'utf8'));
+    const fromJson = parsed.gameId ?? parsed.gameID ?? parsed.game_id ?? parsed.GameId ?? parsed.GameID;
+    const rootFromJson = parsed.rootGameId ?? parsed.rootgameid ?? parsed.root_game_id ?? parsed.RootGameId ?? parsed.RootGameID ?? parsed.Rootgameid;
+    const gameId = HEX_ID.test(String(fromJson || '')) ? String(fromJson) : path.basename(file).match(GOG_INFO_FILE)[1];
+    const rootGameId = HEX_ID.test(String(rootFromJson || '')) ? String(rootFromJson) : '';
+    return { gameId, rootGameId: rootGameId || gameId, file };
+  } catch {
+    return null; // an unparsable .info names no game
   }
+}
+
+async function findGogInfoAppId(root) {
+  const found = [];
+  await walkTree(root, (full, ent) => {
+    if (ent.isFile() && GOG_INFO_FILE.test(ent.name)) found.push(full);
+    return true;
+  });
+  const entries = (await Promise.all(found.map(readGogInfo))).filter(Boolean);
   if (!entries.length) return null;
-  const baseEntry =
-    entries.find((entry) => entry.rootGameId === entry.gameId) ||
-    entries.find((entry) => !!entry.rootGameId) ||
-    entries[0];
-  return {
-    appid: baseEntry.rootGameId || baseEntry.gameId,
-    baseDir: path.dirname(baseEntry.file),
-    name: baseEntry.name || null,
-    launchMetadata: baseEntry.launchMetadata || null,
-  };
+  const base = entries.find((entry) => entry.rootGameId === entry.gameId) || entries[0];
+  return { appid: base.rootGameId, baseDir: path.dirname(base.file) };
 }
 
-async function findUniverseLanAppId(root, options = {}) {
-  const iniName = 'UniverseLAN.ini';
+async function findNamedFiles(root, lowerName) {
   const found = [];
-  await walkTree(
-    root,
-    (full, ent) => {
-      if (ent.isFile() && ent.name.toLowerCase() === iniName.toLowerCase()) {
-        found.push(full);
-      }
-      return true;
-    },
-    options,
-  );
-  for (const file of found) {
+  await walkTree(root, (full, ent) => {
+    if (ent.isFile() && ent.name.toLowerCase() === lowerName) found.push(full);
+    return true;
+  });
+  return found;
+}
+
+function universeLanAppId(text) {
+  try {
+    const parsed = ini.parse(text);
+    const value = String((parsed && parsed.GameSettings && parsed.GameSettings.AppID) || '').trim();
+    return /^\d+$/.test(value) ? value : '';
+  } catch {
+    return '';
+  }
+}
+
+async function findUniverseLanAppId(root) {
+  for (const file of await findNamedFiles(root, 'universelan.ini')) {
     try {
       const buf = await fsp.readFile(file);
-      const tryParse = (str) => {
-        try {
-          const parsed = ini.parse(str);
-          const val = String(parsed && parsed.GameSettings && parsed.GameSettings.AppID || '').trim();
-          return /^\d+$/.test(val) ? val : '';
-        } catch {
-          return '';
-        }
-      };
-      const appid =
-        tryParse(buf.toString('utf8')) || tryParse(buf.toString('utf16le'));
+      const appid = universeLanAppId(buf.toString('utf8')) || universeLanAppId(buf.toString('utf16le'));
       if (appid) return { appid, baseDir: path.dirname(file) };
     } catch {
-      /* ignore */
+      /* unreadable: try the next one */
     }
   }
   return null;
 }
 
-async function findTenokeAppId(root, options = {}) {
-  const found = [];
-  await walkTree(
-    root,
-    (full, ent) => {
-      if (ent.isFile() && ent.name.toLowerCase() === 'tenoke.ini') {
-        found.push(full);
-      }
-      return true;
-    },
-    options,
-  );
-  for (const file of found) {
+async function hasTenokeConfig(root) {
+  for (const file of await findNamedFiles(root, 'tenoke.ini')) {
     try {
-      const raw = await fsp.readFile(file, 'utf8');
-      const match = raw.match(/^\s*id\s*=\s*(\d+)/im);
-      if (match && match[1]) return { appid: match[1], baseDir: path.dirname(file) };
+      if (/^\s*id\s*=\s*\d+/im.test(await fsp.readFile(file, 'utf8'))) return true;
     } catch {
-      /* ignore */
+      /* unreadable: try the next one */
     }
   }
-  return null;
+  return false;
 }
 
-async function discoverNemirtingasEpicAppIds(root, options = {}) {
-  const info = (() => {
-    const normalized = String(root).replace(/[\\/]+/g, path.sep);
-    const lower = normalized.toLowerCase();
-    const parts = lower.split(path.sep);
-    const idx = parts.lastIndexOf('nemirtingasepicemu');
-    if (idx === -1) return null;
-    const rawParts = normalized.split(path.sep);
-    return {
-      base: rawParts.slice(0, idx + 1).join(path.sep),
-      sub: rawParts.slice(idx + 1),
-    };
-  })();
-  if (!info) return null;
-  const out = new Map();
-  const scanUserDir = async (userDir) => {
-    if (typeof options.shouldSkipPath === 'function' && options.shouldSkipPath(userDir)) return;
-    let entries;
+async function hasNemirtingasEpicAppIds(root) {
+  const normalized = String(root).replace(/[\\/]+/g, path.sep);
+  const idx = normalized.toLowerCase().split(path.sep).lastIndexOf('nemirtingasepicemu');
+  if (idx === -1) return false;
+  const rawParts = normalized.split(path.sep);
+  const base = rawParts.slice(0, idx + 1).join(path.sep);
+  const sub = rawParts.slice(idx + 1);
+  const listDirs = async (dir) => {
     try {
-      entries = await fsp.readdir(userDir, { withFileTypes: true });
+      return (await fsp.readdir(dir, { withFileTypes: true })).filter((ent) => ent.isDirectory()).map((ent) => ent.name);
     } catch {
-      return;
-    }
-    for (const ent of entries) {
-      if (!ent.isDirectory()) continue;
-      if (!isAppIdName(ent.name) || shouldIgnoreDiscoveredId(ent.name)) continue;
-      const candidate = path.join(userDir, ent.name);
-      if (typeof options.shouldSkipPath === 'function' && options.shouldSkipPath(candidate)) {
-        continue;
-      }
-      out.set(ent.name, candidate);
+      return [];
     }
   };
-  if (!info.sub.length) {
-    let userDirs;
-    try {
-      userDirs = await fsp.readdir(info.base, { withFileTypes: true });
-    } catch {
-      return out;
-    }
-    for (const ent of userDirs) {
-      if (ent.isDirectory()) await scanUserDir(path.join(info.base, ent.name));
-    }
-    return out;
+  const userDirs = sub.length ? [sub[0]] : await listDirs(base);
+  for (const user of userDirs) {
+    if ((await listDirs(path.join(base, user))).some((name) => isAppIdName(name) && !shouldIgnoreDiscoveredId(name))) return true;
   }
-  await scanUserDir(path.join(info.base, info.sub[0]));
-  return out;
+  return false;
 }
 
-function listSchemaBins(dir) {
+function hasSchemaBins(dir) {
   try {
-    return fs
-      .readdirSync(dir, { withFileTypes: true })
-      .filter(
-        (ent) => ent.isFile() && /^UserGameStatsSchema_\d+\.bin$/i.test(ent.name),
-      )
-      .map((ent) => path.join(dir, ent.name));
+    return fs.readdirSync(dir, { withFileTypes: true }).some((ent) => ent.isFile() && /^UserGameStatsSchema_\d+\.bin$/i.test(ent.name));
+  } catch {
+    return false;
+  }
+}
+
+function steamStatsRootOf(scanBase) {
+  if (matchesPathSuffix(splitPathLower(scanBase), ['steam', 'appcache', 'stats'])) return scanBase;
+  const nested = path.join(scanBase, 'appcache', 'stats');
+  return splitPathLower(scanBase).includes('steam') && fs.existsSync(nested) ? nested : scanBase;
+}
+
+function hasEaVerboseLogs(root) {
+  return fs.existsSync(path.join(root, 'EADesktopVerbose.log')) || fs.existsSync(path.join(root, 'EADesktopVerbose.bak'));
+}
+
+function listDirents(dir) {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true });
   } catch {
     return [];
   }
 }
 
-function isSteamStatsRoot(dir) {
-  const parts = splitPathLower(dir);
-  return matchesPathSuffix(parts, ['steam', 'appcache', 'stats']);
-}
-
-function hasEaVerboseLogs(root) {
-  try {
-    return (
-      fs.existsSync(path.join(root, 'EADesktopVerbose.log')) ||
-      fs.existsSync(path.join(root, 'EADesktopVerbose.bak'))
-    );
-  } catch {
-    return false;
-  }
-}
-
 function hasUbisoftSpoolFiles(root) {
-  try {
-    return fs
-      .readdirSync(root, { withFileTypes: true })
-      .some(
-        (ent) =>
-          ent.isDirectory() &&
-          fs
-            .readdirSync(path.join(root, ent.name), { withFileTypes: true })
-            .some((file) => file.isFile() && /^\d+\.spool$/i.test(file.name)),
-      );
-  } catch {
-    return false;
-  }
+  return listDirents(root).some(
+    (ent) => ent.isDirectory() && listDirents(path.join(root, ent.name)).some((file) => file.isFile() && /^\d+\.spool$/i.test(file.name))
+  );
 }
 
 function hasGogGameplayDbs(root) {
-  try {
-    return fs
-      .readdirSync(root, { withFileTypes: true })
-      .some((ent) => {
-        if (!ent.isDirectory()) return false;
-        const gameplay = path.join(root, ent.name, 'Gameplay');
-        try {
-          return fs
-            .readdirSync(gameplay, { withFileTypes: true })
-            .some(
-              (user) =>
-                user.isDirectory() &&
-                fs.existsSync(path.join(gameplay, user.name, 'gameplay.db')),
-            );
-        } catch {
-          return false;
-        }
-      });
-  } catch {
-    return false;
-  }
+  return listDirents(root).some((ent) => {
+    if (!ent.isDirectory()) return false;
+    const gameplay = path.join(root, ent.name, 'Gameplay');
+    return listDirents(gameplay).some((user) => user.isDirectory() && fs.existsSync(path.join(gameplay, user.name, 'gameplay.db')));
+  });
 }
 
-// Returns { platform, mode, entries, signals }; entries are monitor-style watch entries:
-// { dir, options: { recursive, filter, file, appid, emu, ... } }.
-async function scanRootOnce(rootPath, opts = {}) {
-  if (!rootPath || !fs.existsSync(rootPath)) {
-    return { platform: null, mode: 'missing', entries: [], signals: [] };
-  }
-  const shouldSkipPath =
-    typeof opts.shouldSkipPath === 'function' ? opts.shouldSkipPath : () => false;
-  const yieldIfNeeded =
-    typeof opts.yieldIfNeeded === 'function'
-      ? opts.yieldIfNeeded
-      : createTimeSlicer(opts.timeSliceMs || 0);
-  const maxDepth = Math.max(0, Number(opts.maxDepth) || 6);
-  const scanBase = normalizeRoot(rootPath);
-  const strictRootProfile = getStrictRootProfile(scanBase);
-  const walkOptions = { maxDepth, shouldSkipPath, yieldIfNeeded };
-
-  const signals = [];
-  if (strictRootProfile) {
-    const discovered = await discoverImmediateAppIdsUnder(scanBase, {
-      shouldSkipPath,
-      yieldIfNeeded,
-    });
-    const entries = Array.from(discovered.entries()).map(([appid, dir]) => ({
-      dir,
-      options: {
-        appid,
-        recursive: false,
-        file: ACHIEVEMENT_FILES,
-        source: strictRootProfile.key,
-      },
-    }));
-    return {
-      platform: 'steam-emu',
-      mode: 'strict',
-      entries,
-      signals: entries.length ? ['strict-appids'] : [],
-    };
-  }
-
-  // 1. Xenia .gpd
-  const gpdFiles = await discoverGpdFilesUnder(scanBase, walkOptions);
-  if (gpdFiles.length) {
-    return {
-      platform: 'xenia',
-      mode: 'cascade',
-      signals: ['xenia-gpd'],
-      entries: gpdFiles.map((gpdPath) => ({
-        dir: path.dirname(gpdPath),
-        options: {
-          appid: path.basename(gpdPath, path.extname(gpdPath)),
-          recursive: false,
-          file: [path.basename(gpdPath)],
-          emu: 'xenia',
-        },
-      })),
-    };
-  }
-
-  // 2. RPCS3 trophy dirs
-  const rpcs3TrophyDirs = await discoverRpcs3TrophyDirsUnder(scanBase, walkOptions);
-  if (rpcs3TrophyDirs.length) {
-    return {
-      platform: 'rpcs3',
-      mode: 'cascade',
-      signals: ['rpcs3-trophy'],
-      entries: rpcs3TrophyDirs.map((trophyDir) => ({
-        dir: trophyDir,
-        options: {
-          appid: path.basename(trophyDir),
-          recursive: false,
-          file: ['TROPUSR.DAT', 'TROPCONF.SFM'],
-          emu: 'rpcs3',
-        },
-      })),
-    };
-  }
-
-  // 3. shadPS4 modern trophy sets (the console watcher already handles these;
-  // this pass only classifies the root so the UI can flag it).
-  const modernPs4Sets = await discoverModernPs4TrophySetsUnder(scanBase);
-  if (modernPs4Sets.length) {
-    return {
-      platform: 'shadps4',
-      mode: 'cascade',
-      signals: ['ps4-trophy'],
-      entries: modernPs4Sets.map((set) => ({
-        dir: set.schemaDir,
-        options: { emu: 'shadps4', npcommid: set.npcommid, recursive: false },
-      })),
-    };
-  }
-
-  // 4. shadPS4 legacy layout
-  const ps4TrophyDirs = await discoverPs4TrophyDirsUnder(scanBase, walkOptions);
-  if (ps4TrophyDirs.length) {
-    return {
-      platform: 'shadps4',
-      mode: 'cascade',
-      signals: ['ps4-trophy'],
-      entries: ps4TrophyDirs.map((trophyDir) => ({
-        dir: trophyDir,
-        options: {
-          appid: path.basename(path.dirname(path.dirname(trophyDir))),
-          recursive: false,
-          file: ['TROP.XML'],
-          emu: 'shadps4',
-        },
-      })),
-    };
-  }
-
-  // 5. Steam official appcache stats
-  let steamStatsRoot = scanBase;
-  if (!isSteamStatsRoot(scanBase)) {
-    const parts = splitPathLower(scanBase);
-    if (
-      parts.includes('steam') &&
-      fs.existsSync(path.join(scanBase, 'appcache', 'stats'))
-    ) {
-      steamStatsRoot = path.join(scanBase, 'appcache', 'stats');
-    }
-  }
-  const schemaBins = listSchemaBins(steamStatsRoot);
-  if (schemaBins.length) {
-    return {
-      platform: 'steam-official',
-      mode: 'cascade',
-      signals: ['steam-official-bin'],
-      entries: schemaBins.map((binPath) => {
-        const match = path.basename(binPath).match(/^UserGameStatsSchema_(\d+)\.bin$/i);
-        return {
-          dir: steamStatsRoot,
-          options: {
-            appid: match && match[1] ? match[1] : '',
-            recursive: false,
-            file: ['UserGameStatsSchema_' + (match && match[1] ? match[1] : '') + '.bin'],
-            emu: 'steam-official',
-          },
-        };
-      }),
-    };
-  }
-
-  // 6. EA Desktop verbose log (console/eaWatch.js owns the live parsing)
-  if (hasEaVerboseLogs(scanBase)) {
-    return {
-      platform: 'ea-official',
-      mode: 'cascade',
-      signals: ['ea-verbose-log'],
-      entries: [],
-    };
-  }
-
-  // 7. Ubisoft Connect spool (console/ubisoftWatch.js owns the live parsing)
-  if (hasUbisoftSpoolFiles(scanBase)) {
-    return {
-      platform: 'ubisoft-official',
-      mode: 'cascade',
-      signals: ['ubisoft-spool'],
-      entries: [],
-    };
-  }
-
-  // 8. GOG Galaxy Applications (console/gogWatch.js owns the live parsing)
-  if (hasGogGameplayDbs(scanBase)) {
-    return {
-      platform: 'gog-official',
-      mode: 'cascade',
-      signals: ['gog-gameplay-db'],
-      entries: [],
-    };
-  }
-
-  // 9. GOG classic .info
-  const gogInfo = await findGogInfoAppId(scanBase, walkOptions).catch(() => null);
-  if (gogInfo) {
-    return {
-      platform: 'gog',
-      mode: 'cascade',
-      signals: ['gog-info'],
-      entries: [
-        {
-          dir: gogInfo.baseDir,
-          options: {
-            appid: gogInfo.appid,
-            recursive: false,
-            file: ACHIEVEMENT_FILES,
-            emu: 'gog',
-            name: gogInfo.name || undefined,
-            launchMetadata: gogInfo.launchMetadata || undefined,
-          },
-        },
-      ],
-    };
-  }
-
-  // 10. Nemirtingas Epic Emu
-  const nemirtingas = await discoverNemirtingasEpicAppIds(scanBase, walkOptions);
-  if (nemirtingas && nemirtingas.size) {
-    return {
-      platform: 'epic-emu',
-      mode: 'cascade',
-      signals: ['nemirtingas-epic'],
-      entries: Array.from(nemirtingas.entries()).map(([appid, dir]) => ({
-        dir,
-        options: {
-          appid,
-          recursive: true,
-          file: ['achievements.json'],
-          emu: 'nemirtingas-epic',
-        },
-      })),
-    };
-  }
-
-  // 11. Generic numeric AppID folders
-  const discovered = await discoverAppIdsUnder(scanBase, walkOptions);
-  const discoveredIds = Array.from(discovered.keys()).filter(
-    (id) => !shouldIgnoreDiscoveredId(id),
+// Signatures checked before GOG .info, in order: each claims the folder for its own reader.
+async function claimedBeforeGog(scanBase) {
+  return (
+    (await hasGpdFile(scanBase)) ||
+    (await discoverRpcs3TrophyDirsUnder(scanBase)).length > 0 ||
+    (await hasModernPs4TrophySet(scanBase)) ||
+    (await hasPs4TrophyDir(scanBase)) ||
+    hasSchemaBins(steamStatsRootOf(scanBase)) ||
+    hasEaVerboseLogs(scanBase) ||
+    hasUbisoftSpoolFiles(scanBase) ||
+    hasGogGameplayDbs(scanBase)
   );
-  if (discoveredIds.length) {
-    return {
-      platform: 'steam-emu',
-      mode: 'cascade',
-      signals: ['numeric-appids'],
-      entries: discoveredIds.map((appid) => ({
-        dir: discovered.get(appid),
-        options: {
-          appid,
-          recursive: false,
-          file: ACHIEVEMENT_FILES,
-        },
-      })),
-    };
-  }
+}
 
-  // 12. Tenoke
-  const tenoke = await findTenokeAppId(scanBase, walkOptions).catch(() => null);
-  if (tenoke) {
-    return {
-      platform: 'tenoke',
-      mode: 'cascade',
-      signals: ['tenoke-ini'],
-      entries: [
-        {
-          dir: tenoke.baseDir,
-          options: {
-            appid: tenoke.appid,
-            recursive: true,
-            file: ['user_stats.ini'],
-            emu: 'tenoke',
-          },
-        },
-      ],
-    };
-  }
+// Then, before UniverseLAN: Nemirtingas, numeric appid folders and TENOKE.
+async function claimedBeforeUniverseLan(scanBase) {
+  return (await hasNemirtingasEpicAppIds(scanBase)) || (await discoverAppIdsUnder(scanBase)).size > 0 || (await hasTenokeConfig(scanBase));
+}
 
-  // 13. UniverseLAN
-  const universeLan = await findUniverseLanAppId(scanBase, walkOptions).catch(() => null);
-  if (universeLan) {
-    return {
-      platform: 'universe-lan',
-      mode: 'cascade',
-      signals: ['universe-lan'],
-      entries: [
-        {
-          dir: path.join(universeLan.baseDir, 'UniverseLANData'),
-          options: {
-            appid: universeLan.appid,
-            recursive: false,
-            file: ['Achievements.ini'],
-            emu: 'universe-lan',
-          },
-        },
-      ],
-    };
-  }
+// Monitor-style watch entries ({ dir, options }) for a GOG .info or UniverseLAN folder, else [].
+async function signatureWatchEntries(rootPath) {
+  if (!rootPath || !fs.existsSync(rootPath)) return [];
+  const scanBase = normalizeRoot(rootPath);
+  if (getStrictRootProfile(scanBase) || (await claimedBeforeGog(scanBase))) return [];
 
-  return { platform: null, mode: 'none', entries: [], signals };
+  const gogInfo = await findGogInfoAppId(scanBase);
+  if (gogInfo) return [{ dir: gogInfo.baseDir, options: { appid: gogInfo.appid, recursive: false, file: [...SAVE_FILE_NAMES] } }];
+  if (await claimedBeforeUniverseLan(scanBase)) return [];
+
+  const universeLan = await findUniverseLanAppId(scanBase);
+  if (!universeLan) return [];
+  return [{ dir: path.join(universeLan.baseDir, 'UniverseLANData'), options: { appid: universeLan.appid, recursive: false, file: ['Achievements.ini'] } }];
 }
 
 module.exports = {
-  ACHIEVEMENT_FILES,
-  STRICT_ROOT_PROFILES,
-  createTimeSlicer,
-  discoverAppIdsUnder,
-  discoverGpdFilesUnder,
-  discoverImmediateAppIdsUnder,
-  discoverModernPs4TrophySetsUnder,
-  discoverNemirtingasEpicAppIds,
-  discoverPs4TrophyDirsUnder,
   discoverRpcs3TrophyDirsUnder,
-  findGogInfoAppId,
-  findTenokeAppId,
-  findUniverseLanAppId,
   getStrictRootProfile,
   isAppIdName,
-  normalizeRoot,
-  scanRootOnce,
+  signatureWatchEntries,
   shouldIgnoreDiscoveredId,
 };

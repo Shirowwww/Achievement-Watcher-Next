@@ -51,7 +51,6 @@ function resolveSoundFile(name) {
 }
 
 const soundDirs = () => [bundledSoundsDir(), userSoundsDir()];
-const listSoundFiles = () => sounds.listSoundFiles(soundDirs());
 const pickRandomSound = () => sounds.pickRandomSound(soundDirs());
 
 // The main sound, or a random one when Settings asks for it (test buttons, the OBS source).
@@ -62,10 +61,6 @@ function mainSound(overlay) {
 
 module.exports = {
   bundledSoundsDir,
-  userSoundsDir,
-  resolveSoundFile,
-  listSoundFiles,
-  pickRandomSound,
   mainSound,
   NO_SOUND: sounds.NO_SOUND,
   tierSound: sounds.tierSound,

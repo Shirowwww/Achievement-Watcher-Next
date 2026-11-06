@@ -108,7 +108,6 @@ module.exports = {
   normalizeMode,
   recordOverlayFailure,
   recordOverlaySuccess,
-  isOverlayCoolingDown,
   MODES,
   DEFAULT_MODE,
   REASON,

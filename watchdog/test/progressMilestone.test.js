@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const settings = require('../settings.js');
-const { PROGRESS_STEPS, normalizeProgressStep, reachesProgressMilestone, onePopupPerStat } = require('../util/progressMilestone.js');
+const { normalizeProgressStep, reachesProgressMilestone, onePopupPerStat } = require('../util/progressMilestone.js');
 
 // Eggplant: one playtime stat went 0 -> 2 minutes and drove 26 "Play for N minutes" achievements,
 // which used to queue 26 progress popups, one every few seconds for three minutes.
@@ -54,7 +54,8 @@ test('a counter without a usable goal is never silenced', () => {
 });
 
 test('saved steps are normalized, INI strings included', () => {
-  assert.deepEqual(PROGRESS_STEPS, [0, 10, 25, 50]);
+  // The steps Settings offers (app/settings.js PROGRESS_STEPS) are kept as they are.
+  for (const step of [0, 10, 25, 50]) assert.equal(normalizeProgressStep(step), step);
   assert.equal(normalizeProgressStep('25'), 25);
   for (const value of [undefined, '', '33', -10, 'abc']) assert.equal(normalizeProgressStep(value), 0);
 });

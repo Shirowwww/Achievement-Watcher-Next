@@ -113,4 +113,4 @@ function _reset() {
   sequence = 0;
 }
 
-module.exports = { nextId, track, wait, report, onResult, whenPainted, RESULT, DEFAULT_TIMEOUT_MS, ENTRY_TTL_MS, PAINT_TIMEOUT_MS, _reset };
+module.exports = { nextId, track, wait, report, onResult, whenPainted, RESULT, DEFAULT_TIMEOUT_MS, _reset };

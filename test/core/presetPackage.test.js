@@ -639,16 +639,29 @@ test('every designed property survives the round trip, not just the eight the bu
   // later is covered here the day it exists.
   const design = {};
   for (const property of schema.PRESET_PROPERTIES) {
-    if (property.type === 'number') design[property.key] = property.key === 'opacity' ? 0.4 : property.min + Math.round((property.max - property.min) / 3 / (property.step || 1)) * (property.step || 1);
+    if (property.type === 'number') {
+      const step = property.step || 1;
+      const at = (share) => property.min + Math.round(((property.max - property.min) * share) / step) * step;
+      design[property.key] = property.key === 'opacity' ? 0.4 : at(1 / 3) !== property.def ? at(1 / 3) : at(2 / 3);
+    }
     else if (property.type === 'select') design[property.key] = property.values[property.values.length - 1];
     else if (property.type === 'toggle') design[property.key] = !property.def;
     else if (property.type === 'color') design[property.key] = '#123456';
     else if (property.type === 'sound') design[property.key] = 'fanfare.wav';
     else if (property.type === 'canvas') design[property.key] = { move: { icon: { x: 12, y: 0, r: 0, s: 1 } }, items: [{ kind: 'shape', fill: '#123456' }] };
+    // Files the preset folder ships (writeSourcePreset puts icon.png there; face.ttf is added below).
+    else if (property.type === 'font') design[property.key] = 'face.ttf';
+    else if (property.type === 'asset' || property.type === 'logo') design[property.key] = 'icon.png';
   }
   const expected = schema.normalizeOptions(design);
+  // The expectation comes from normalizeOptions: a design it reset to the defaults would make the round
+  // trip below pass without carrying anything, so every property must still be off its default here.
+  for (const property of schema.PRESET_PROPERTIES) {
+    assert.notDeepEqual(expected[property.key], property.def, `${property.key} is back at its default before the round trip`);
+  }
 
   writeSourcePreset(dirs.source, { options: { name: 'Everything', ...expected } });
+  fs.copyFileSync(path.join(dirs.source, 'fonts', 'face.ttf'), path.join(dirs.source, 'face.ttf'));
   const out = presetPackage.exportPreset({
     presetDir: dirs.source,
     name: 'Everything',

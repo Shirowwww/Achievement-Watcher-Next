@@ -13,8 +13,11 @@ const builtinExclude = [
   228980, //Steamworks Common Redistributables
   431960, //Wallpaper Engine (background utility; subprocesses should never count as game time)
 ];
+// The ids the user hid, a plain JSON array; the Watchdog's playtime monitor reads it too.
+const exclusionFileIn = (userDataPath) => path.join(userDataPath, 'cfg', 'exclusion.db');
+
 module.exports.initDebug = ({ isDev, userDataPath }) => {
-  exclusionFile = path.join(userDataPath, 'cfg/exclusion.db');
+  exclusionFile = exclusionFileIn(userDataPath);
   debug = new (require('../util/logger'))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/blacklist.log'),
@@ -288,3 +291,4 @@ module.exports.add = async (appid, name) => {
 };
 
 module.exports.builtin = builtinExclude.slice();
+module.exports.exclusionFileIn = exclusionFileIn;

@@ -15,6 +15,12 @@ const APPID_FOLDER = /([0-9]+)/;
 // EMPRESS keeps both <appid>\remote\<appid> and the flat remote\<appid>.
 const EMPRESS_REMOTE = /remote[\\/]([0-9]+)/;
 
+// What a save-file emulator writes in a folder of its own, whichever it is: the Watchdog's watch on a
+// configured folder no emulator config describes, and the files a reset deletes.
+const SAVE_FILE_NAMES = ['achievements.ini', 'achievements.json', 'achiev.ini', 'stats.ini', 'Achievements.Bin', 'achieve.dat', 'Achievements.ini', 'stats.bin', 'user_stats.ini', 'stats.json'];
+// RAZOR1911's save: a name too common to mean a save outside its own root.
+const RAZOR1911_FILE = 'achievement';
+
 const CODEX_FILES = ['achievements.ini', 'stats.ini'];
 const RLD_FILES = ['achiev.ini', 'Achievements.Bin', 'Achievements.ini'];
 // achievements.ini is kept for custom Goldberg builds that still write it.
@@ -53,7 +59,7 @@ const SAVE_ROOTS = [
   // The flat remote\<appid> shape for the library; the Watchdog's EMPRESS row above covers it.
   { env: 'APPDATA', dir: ['EMPRESS', 'remote'], watch: null },
   // RAZOR1911 (post-2023 releases): plain-text `achievement` file per appid.
-  { env: 'APPDATA', dir: ['.1911'], watch: { filter: APPID_FOLDER, file: ['achievement'] } },
+  { env: 'APPDATA', dir: ['.1911'], watch: { filter: APPID_FOLDER, file: [RAZOR1911_FILE] } },
   { env: 'APPDATA', dir: ['Steam', 'CODEX'], watch: CODEX_WATCH },
   { env: 'APPDATA', dir: ['Steam', 'RUNE'], watch: CODEX_WATCH },
   { env: 'APPDATA', dir: ['Steam', 'RLD!'], watch: RLD_WATCH },
@@ -92,4 +98,4 @@ function watchOptions(watch) {
   return { recursive: true, ...watch, file: [...watch.file] };
 }
 
-module.exports = { SAVE_ROOTS, GSE_WATCH, rowDir, watchOptions };
+module.exports = { SAVE_ROOTS, SAVE_FILE_NAMES, RAZOR1911_FILE, GSE_WATCH, rowDir, watchOptions };

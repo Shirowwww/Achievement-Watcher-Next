@@ -8,6 +8,7 @@ const glob = lazyRequire('fast-glob');
 const request = lazyRequire('request-zero');
 const epicIdentity = require('../util/epicIdentity.js');
 const { ipcCall, ipcSend } = require('../util/ipcInvoke.js');
+const { writeFileAtomicSync } = require('../util/replaceFile.js');
 
 let gameList;
 let cacheRoot;
@@ -23,6 +24,9 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 module.exports.setUserDataPath = (p) => {
   cacheRoot = p;
 };
+
+// The Epic id -> Steam appid map the scan writes; the Watchdog reads it on an Epic unlock.
+const mappingFile = () => path.join(cacheRoot, 'steam_cache', 'epic.db');
 
 // A broken mapping cache must not block the library scan.
 function readEpicMappingCache(cacheFile) {
@@ -59,9 +63,14 @@ async function getGameTitleFromMapping(slug) {
   return product?.productName;
 }
 
+// The Steam appid mapped to an Epic id; undefined when unknown or Epic-only.
+module.exports.steamIdForEpicId = (epicId) => {
+  const entry = mappingByEpicId(readEpicMappingCache(mappingFile())).get(String(epicId));
+  return entry ? entry.steamid : undefined;
+};
+
 module.exports.isExclusive = (appid) => {
-  const cacheFile = path.join(cacheRoot, 'steam_cache', 'epic.db');
-  const cache = readEpicMappingCache(cacheFile);
+  const cache = readEpicMappingCache(mappingFile());
   const key = String(appid);
   const cached = cache.find((game) => String(game?.epicid) === key || String(game?.steamid) === key);
   if (cached) return cached.steamid === undefined;
@@ -70,7 +79,7 @@ module.exports.isExclusive = (appid) => {
 };
 
 module.exports.scan = async () => {
-  const cacheFile = path.join(cacheRoot, 'steam_cache', 'epic.db');
+  const cacheFile = mappingFile();
   const data = [];
   const cache = readEpicMappingCache(cacheFile);
   const cachedByEpicId = mappingByEpicId(cache);
@@ -132,10 +141,7 @@ module.exports.scan = async () => {
     game.steamappid = steamid;
     data.push(game);
   }
-  if (updateCache) {
-    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-    fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
-  }
+  if (updateCache) writeFileAtomicSync(cacheFile, JSON.stringify(cache, null, 2));
   return data;
 };
 
@@ -143,11 +149,7 @@ function resetProductMappingCache() {
   gameList = undefined;
 }
 
-module.exports._internal = {
-  readEpicMappingCache,
-  mappingByEpicId,
-  resetProductMappingCache,
-};
+module.exports._internal = { resetProductMappingCache };
 
 module.exports.getCachedData = async () => undefined;
 

@@ -41,4 +41,4 @@ function onePopupPerStat(updates) {
   return updates.filter((update) => shown.has(update));
 }
 
-module.exports = { PROGRESS_STEPS, normalizeProgressStep, reachesProgressMilestone, onePopupPerStat };
+module.exports = { normalizeProgressStep, reachesProgressMilestone, onePopupPerStat };

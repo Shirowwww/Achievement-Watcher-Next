@@ -8,6 +8,14 @@
   Loaded by the renderer, the main process and the Watchdog: it requires nothing.
 */
 
+// Labels code branches on by name; every other label is only ever looked up in the table below.
+const SOURCE_LABEL = Object.freeze({
+  PS3_RECOMP: 'ps3 recomp',
+  PS4_RECOMP: 'ps4 recomp',
+  X360_RECOMP: 'xbox 360 recomp',
+  PC_PORT: 'pc port',
+});
+
 // A platform's badge and icon, shared by every label of it.
 const PLAYSTATION = { family: 'playstation', icon: 'playstation.svg' };
 const XBOX_CONSOLE = { family: 'xbox', icon: 'xbox.svg', brand: 'xbox' };
@@ -24,14 +32,14 @@ const STEAM = { family: 'steam' };
 */
 const SOURCE_ROWS = {
   'rpcs3 emulator': { ...PLAYSTATION, console: 'playstation-3', platform: 'rpcs3', emulatorData: true },
-  'ps3 recomp': { ...PLAYSTATION, console: 'playstation-3', platform: 'rpcs3', emulatorData: true },
+  [SOURCE_LABEL.PS3_RECOMP]: { ...PLAYSTATION, console: 'playstation-3', platform: 'rpcs3', emulatorData: true },
   'shadps4 emulator': { ...PLAYSTATION, console: 'playstation-4', platform: 'shadps4', emulatorData: true },
   // PC ports of PS4 games are the PS4 titles Exophase lists, under the PS4 emulator's platform.
-  'ps4 recomp': { ...PLAYSTATION, console: 'playstation-4', platform: 'shadps4', emulatorData: true },
+  [SOURCE_LABEL.PS4_RECOMP]: { ...PLAYSTATION, console: 'playstation-4', platform: 'shadps4', emulatorData: true },
   'kytyps5 emulator': { ...PLAYSTATION, console: 'playstation-5', platform: 'kytyps5', emulatorData: true },
   'playstation network': { ...PLAYSTATION, rarity: 'cache-only', launchable: false },
   'xenia emulator': { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
-  'xbox 360 recomp': { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
+  [SOURCE_LABEL.X360_RECOMP]: { ...XBOX_CONSOLE, console: 'xbox-360', platform: 'xenia', emulatorData: true },
   xlivelessness: { ...XBOX_CONSOLE, emulatorData: true },
   'xbox pc': { family: 'xbox', icon: 'xbox.svg', purchased: 'xbox', rarity: 'cache-only' },
   // Short spellings the Watchdog and older index entries carry; they only name the platform.
@@ -49,7 +57,7 @@ const SOURCE_ROWS = {
   ea: { family: 'ea', icon: 'ea.svg', purchased: 'ea', rarity: 'cache-only' },
   'anadius (ea)': { family: 'ea', icon: 'ea.svg' },
   retroachievements: { family: 'retroachievements', icon: 'retroachievements.svg', rarity: 'cache-only', launchable: false },
-  'pc port': { family: 'pcport', icon: 'pcport.svg', emulatorData: true },
+  [SOURCE_LABEL.PC_PORT]: { family: 'pcport', icon: 'pcport.svg', emulatorData: true },
   'ubisoft connect': { ...UBISOFT, purchased: 'ubisoft', rarity: 'cache-only' },
   uplay: { ...UBISOFT, purchased: 'ubisoft', rarity: 'cache-only' },
   lumaplay: { ...UBISOFT, rarity: 'cache-only' },
@@ -110,6 +118,7 @@ const consoleBrandOf = (label) => rowOf(label).brand || '';
 const isLaunchable = (label) => rowOf(label).launchable !== false;
 
 module.exports = {
+  SOURCE_LABEL,
   isClassifiedSource,
   libraryBadgeOf,
   sourceIconFile,

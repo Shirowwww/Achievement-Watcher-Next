@@ -2017,7 +2017,7 @@ async function startEngines() {
     settingsJS = require(path.join(__dirname, '../settings.js'));
     settingsJS.setUserDataPath(userData);
   }
-  configJS = await settingsJS.load();
+  configJS = settingsJS.load();
   // Not awaited: a registry lookup and a folder watch have no business delaying the window.
   syncSteamAppcacheWatch();
   try {
@@ -2703,10 +2703,6 @@ require('./profileBackupIpc.js').register({
   setQuitting: () => {
     app.isQuiting = true;
   },
-});
-
-ipcMain.handle('get-achievements', async (event, appid) => {
-  return await getSteamData({ appid, type: 'steamhunters' });
 });
 
 // Manual update checks reuse the automatic prompt and notification flow.
@@ -3793,16 +3789,9 @@ async function fetchSteamCdnCoversDetailed(appid, orientation = 'portrait') {
   return pending;
 }
 
-async function fetchSteamCdnCovers(appid, orientation = 'portrait') {
-  return (await fetchSteamCdnCoversDetailed(appid, orientation)).urls;
-}
-
 // The library asks for this list only when its schema artwork is missing or unusable. Returning the
 // probed Steam assets separately lets the renderer try their actual download before falling back to
 // SteamGridDB, instead of paying for both providers for every visible tile.
-ipcMain.handle('get-steam-cdn-covers', async (event, appid, orientation) => {
-  return await fetchSteamCdnCovers(appid, orientation);
-});
 ipcMain.handle('get-steam-cdn-covers-status', async (event, appid, orientation) => {
   return await fetchSteamCdnCoversDetailed(appid, orientation);
 });
@@ -4181,11 +4170,6 @@ async function fetchSteamGridDbIcon(gameName, steamAppid = '') {
   return icon;
 }
 
-ipcMain.handle('get-steamgriddb-icon', async (event, gameName, steamAppid) => {
-  const icon = await fetchSteamGridDbIcon(gameName, steamAppid);
-  return (icon && icon.url) || null;
-});
-
 // How many community icons the picker offers. The list is a gallery, not an automatic choice, so
 // it keeps everything usable rather than the single best one fetchSteamGridDbIcon() picks.
 const SGDB_ICON_PICKER_LIMIT = 36;
@@ -4409,74 +4393,6 @@ ipcMain.handle('get-cover-options-steamdb', async (event, { orientation, steamAp
   if (!id) return [];
   const urls = await fetchSteamDbCovers(id, orient);
   return Array.isArray(urls) ? urls : [];
-});
-
-// Top-owners SteamID pool. Last-resort seed for the keyless schema/rarity scrape: when no SteamHunters
-// owner 100%'d a game, these prolific collectors' public profiles are tried instead. Scraped from
-// SteamLadder through the stealth browser (it challenges plain requests) and disk-cached for 7 days.
-let topOwnersInFlight = null;
-// A failed scrape writes no cache, so without this every game in a scan would scrape again.
-const TOP_OWNERS_RETRY_MS = 60 * 60 * 1000;
-let lastTopOwnersScrapeAt = 0;
-async function fetchTopOwners() {
-  const cacheFile = path.join(userData, 'steam_cache', 'topOwners.json');
-  const TTL = 7 * 24 * 60 * 60 * 1000;
-  try {
-    if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < TTL) {
-      const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-      if (Array.isArray(cached) && cached.length) return cached;
-    }
-  } catch {
-    /* stale/corrupt -> refetch */
-  }
-  if (topOwnersInFlight) return topOwnersInFlight;
-  if (Date.now() - lastTopOwnersScrapeAt < TOP_OWNERS_RETRY_MS) return [];
-  lastTopOwnersScrapeAt = Date.now();
-
-  topOwnersInFlight = (async () => {
-    const topOwners = require(path.join(app.getAppPath(), 'parser/topOwners.js'));
-    let page = null;
-    const releasePage = await acquirePuppeteerSlot();
-    try {
-      await startPuppeteer(true, false);
-      page = await puppeteerWindow.context.newPage();
-      await blockHeavyResources(page);
-      await page.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123 Safari/537.36'
-      );
-      await page.goto(topOwners.DEFAULT_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await page.waitForSelector('a[href^="/profile/"]', { timeout: 12000 }).catch(() => {});
-      const html = await page.content();
-      const ids = topOwners.extractSteamIdsFromHtml(html, 250);
-      if (ids.length >= 10) {
-        try {
-          fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-          fs.writeFileSync(cacheFile, JSON.stringify(ids, null, 0));
-        } catch {
-          /* cache write failure is non-fatal */
-        }
-        debug.log(`[top-owners] scraped ${ids.length} SteamIDs`);
-        return ids;
-      }
-      debug.log(`[top-owners] not enough SteamIDs found (${ids.length})`);
-      return [];
-    } catch (err) {
-      debug.log(`[top-owners] fetch failed: ${err.message || err}`);
-      return [];
-    } finally {
-      if (page) await page.close().catch(() => {});
-      releasePage();
-    }
-  })();
-  try {
-    return await topOwnersInFlight;
-  } finally {
-    topOwnersInFlight = null;
-  }
-}
-
-ipcMain.handle('get-top-owners', async () => {
-  return await fetchTopOwners();
 });
 
 // Launch-metadata fallback: when local exe detection fails, learn the process name so the watchdog
@@ -4905,7 +4821,6 @@ function createMainWindow() {
     });
     MainWin.webContents.on('did-finish-load', () => sendMainWindowVisibility(MainWin.isVisible()));
 
-    if (options.frame === false) MainWin.isFrameless = true;
 
     if (manifest.config.debug) {
       if (openDevTools) MainWin.webContents.openDevTools({ mode: 'undocked' });
@@ -5687,7 +5602,7 @@ function openGameFromLaunchArgs(args) {
 
 // Overlay notification (optional transport): spawns a frameless click-through window rendering a
 // preset via window.api. Resolves presets from the bundled library, falling back to the default.
-const { DEFAULT_PRESET, presetPriority, resolveAvailablePresetName, sourcePlatform } = require(path.join(__dirname, '../util/notificationPreset.js'));
+const { DEFAULT_PRESET, PREVIEW_PRESET_NAME, presetPriority, resolveAvailablePresetName, sourcePlatform } = require(path.join(__dirname, '../util/notificationPreset.js'));
 const gamePreset = require(path.join(__dirname, '../util/gamePreset.js'));
 const notificationPlacement = require(path.join(__dirname, '../util/notificationPlacement.js'));
 const notificationDisplay = require(path.join(__dirname, '../util/notificationDisplay.js'));
@@ -6873,9 +6788,9 @@ async function enqueueNotificationFromArgs(args) {
   let cfg = configJS;
   if (!cfg) {
     try {
-      // settings.load() is async and must be awaited, or the overlay preset/position/scale/sound are
-      // silently ignored (falling back to 'Default', which can be unresolvable → no window).
-      cfg = await require(path.join(__dirname, '../settings.js')).load();
+      // Without the saved options the overlay preset/position/scale/sound would fall back to the
+      // defaults, and a preset name that cannot resolve means no window at all.
+      cfg = require(path.join(__dirname, '../settings.js')).load();
     } catch {
       cfg = {};
     }
@@ -7064,11 +6979,6 @@ function resolveNotificationSound(name) {
   }
   return '';
 }
-
-// Scratch preset the builder's Preview button renders through. It is a real preset folder (so the
-// preview goes through the exact same notification path as a saved one) but a reserved name, hidden
-// from every list so it can never be picked, exported or left behind as a "preset" the user made.
-const PREVIEW_PRESET_NAME = '__aw-preview__';
 
 // List available preset names (Default Presets + Users Presets) for the settings dropdown.
 ipcMain.handle('list-presets', async () => {
@@ -7465,7 +7375,6 @@ require('./presetLibrary.js').register({
   invalidateNotificationPresetFolders,
   resolveSquareGameLogo,
   writeCustomPreset,
-  PREVIEW_PRESET_NAME,
 });
 
 // NOTE: overlay notifications are no longer rendered from an app-side WebSocket bridge. The Watchdog

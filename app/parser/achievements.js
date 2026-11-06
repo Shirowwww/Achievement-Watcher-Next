@@ -4940,7 +4940,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
         // all together. A small worker pool caps how many games load in parallel while they still
         // stream into the UI via onGame as each one resolves. The keyless schema path is plain HTTP
         // now, so this pool no longer needs to stay small to protect a Puppeteer browser - browser
-        // fallbacks (SteamDB covers, top-owners) already serialize on their own queues.
+        // fallbacks (SteamDB covers) already serialize on their own queue.
         let cursor = 0;
         const worker = async () => {
           while (cursor < finalList.length) {

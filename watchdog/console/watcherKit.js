@@ -13,11 +13,12 @@ const watch = require('../util/nodeWatch.js');
 const { longPath } = require('../util/longPath.js');
 const { guardWatcher } = require('../util/watchGuard.js');
 const { iconPathOf } = require('../util/iconPath.js');
-const { notificationVolumePercent } = require('../util/notificationVolume.js');
+const { notifyOptions } = require('../notification/notifyOptions.js');
 const notifyStrings = require('../util/notifyStrings.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { isDirectory } = require(sharedAppModulePath('util/fsProbe.js'));
+const userDirEntries = require(sharedAppModulePath('parser/userDirEntries.js'));
 
 // A save, profile or unlock file first seen with more unlocks than this was copied in, not played.
 const COPIED_IN_UNLOCKS = 10;
@@ -25,7 +26,7 @@ const COPIED_IN_UNLOCKS = 10;
 const RESET_CONFIRM_MS = 1000;
 const DUPLICATE_UNLOCK_MS = 15000;
 
-const userDirFile = () => path.join(userDataDir(), 'cfg', 'userdir.db');
+const userDirFile = () => userDirEntries.userDirFile(userDataDir());
 
 // A switch is a boolean and a level is 0, 1 or 2 (a string when read back from options.ini): off is false or 0.
 function sourceSwitchOn(sources, key) {
@@ -41,10 +42,6 @@ function canStart(ctx, sourceSwitch) {
   if (!on) return false;
   if (ctx.options.notification && ctx.options.notification.notify === false) return false;
   return typeof ctx.notify === 'function';
-}
-
-function toastId(ctx) {
-  return typeof ctx.getToastID === 'function' ? ctx.getToastID() : ctx.toastID;
 }
 
 // A string from the Watchdog's locale mirror: 'achievement', 'trophy', 'eaAchievement'.
@@ -63,26 +60,8 @@ function iconPrefetch(ctx) {
 
 // The second argument of ctx.notify. `prefetch` stays false for icons that are already local files.
 function unlockToastOptions(ctx, { attribution = localized(ctx, 'achievement'), prefetch = false, imageIntegration = '0' } = {}) {
-  const options = ctx.options;
-  return {
-    notify: options.notification.notify,
-    transport: {
-      mode: options.notification_transport.mode,
-      websocket: options.notification_transport.websocket,
-    },
-    toast: {
-      appid: toastId(ctx),
-      winrt: options.notification_transport.winRT,
-      balloonFallback: options.notification_transport.balloon,
-      customAudio: options.notification_toast.customToastAudio,
-      volume: notificationVolumePercent(options),
-      imageIntegration,
-      group: options.notification_toast.groupToast,
-      attribution,
-    },
-    prefetch,
-    rumble: options.notification.rumble,
-  };
+  const toastId = typeof ctx.getToastID === 'function' ? ctx.getToastID() : undefined;
+  return notifyOptions(ctx.options, { toastId, attribution, prefetch, imageIntegration });
 }
 
 // An unlock's own icon when the parser extracted it to a file that is there.
@@ -97,18 +76,12 @@ function gameArt(schema) {
   return { gameIcon: iconPathOf(img) || undefined, image: iconPathOf({ icon: img && img.header }) || undefined };
 }
 
-// The folders of Settings > Folders that are on and allowed to notify, as the monitor reads them.
+// The folders of Settings > Folders that are on, read as the library and the monitor read them.
 function watchedFolders(configFile = userDirFile()) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(configFile, 'utf8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((entry) => typeof entry === 'string' || (entry && entry.enabled !== false && entry.notify !== false))
-      .map((entry) => (typeof entry === 'string' ? entry : entry.path))
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
+  return userDirEntries
+    .readUserDirEntries(configFile)
+    .filter((entry) => entry.enabled)
+    .map((entry) => entry.path);
 }
 
 // A runtime can rewrite one file several times per unlock; the baseline diff blocks true re-toasts,
@@ -239,9 +212,7 @@ function createRetrier({ delayMs, attempts }) {
 
 module.exports = {
   COPIED_IN_UNLOCKS,
-  RESET_CONFIRM_MS,
   userDirFile,
-  sourceSwitchOn,
   canStart,
   localized,
   gamerscoreAttribution,

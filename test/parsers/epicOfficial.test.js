@@ -69,20 +69,22 @@ const epicOfficial = require('../../app/parser/epicOfficial.js');
 
     console.log('PASS: epicOfficial auth + discovery (offline)');
 
-    // Live: public sandbox schema, no auth. Network-gated, so a failure here warns instead of failing the suite.
+    // Live: public sandbox schema, no auth. Only the network call may be skipped: an answer that
+    // arrives is checked, so a broken parse fails the suite instead of reading as "offline".
     epicOfficial.setUserDataPath(path.join(tmp, 'ud'));
+    let schema = null;
     try {
-      const schema = await epicOfficial._internal.resolveSchema('9773aa1aa54f4f7b80e44bef04986cea', 'french');
-      if (schema && schema.list.length) {
-        assert.ok(schema.list.length > 10, `expected many achievements, got ${schema.list.length}`);
-        assert.ok(schema.list.some((a) => a.rarity != null), 'expected rarity on at least one');
-        assert.ok(schema.list.every((a) => typeof a.name === 'string'), 'names present');
-        console.log(`PASS(live): Epic public schema returned ${schema.list.length} achievements (Rocket League, fr)`);
-      } else {
-        console.log('SKIP(live): Epic public schema returned nothing (offline or endpoint change)');
-      }
+      schema = await epicOfficial._internal.resolveSchema('9773aa1aa54f4f7b80e44bef04986cea', 'french');
     } catch (err) {
       console.log(`SKIP(live): Epic public schema unreachable (${err && err.message ? err.message : err})`);
+    }
+    if (schema && schema.list.length) {
+      assert.ok(schema.list.length > 10, `expected many achievements, got ${schema.list.length}`);
+      assert.ok(schema.list.some((a) => a.rarity != null), 'expected rarity on at least one');
+      assert.ok(schema.list.every((a) => typeof a.name === 'string'), 'names present');
+      console.log(`PASS(live): Epic public schema returned ${schema.list.length} achievements (Rocket League, fr)`);
+    } else {
+      console.log('SKIP(live): Epic public schema returned nothing (offline or endpoint change)');
     }
   } finally {
     try {

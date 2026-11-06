@@ -13,6 +13,11 @@ const { emulatorPlatformOf } = require('./sourceIdentity.js');
 // The preset a fresh install uses, and the one every fallback lands on.
 const DEFAULT_PRESET = 'AW Next';
 
+// Scratch preset the builder's Preview button renders through. It is a real preset folder (so the
+// preview goes through the exact same notification path as a saved one) but a reserved name, hidden
+// from every list so it can never be picked, exported or left behind as a "preset" the user made.
+const PREVIEW_PRESET_NAME = '__aw-preview__';
+
 /*
   Bundled presets that no longer ship, mapped to the redesigned preset carrying the same idea.
   This is a FALLBACK, never a rewrite: resolvePresetFolder() looks the saved name up across every
@@ -115,6 +120,7 @@ function resolveAvailablePreset(args, isAvailable) {
 
 module.exports = {
   DEFAULT_PRESET,
+  PREVIEW_PRESET_NAME,
   LEGACY_PRESET_ALIASES,
   legacyPresetAlias,
   sourcePlatform,

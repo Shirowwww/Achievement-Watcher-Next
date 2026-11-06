@@ -202,7 +202,6 @@ function pruneForLinux(appOutDir, watchdogModules) {
     // The video and HDR screenshot helpers are Windows executables, with their licence notices.
     ['watchdog/native', path.join(appOutDir, 'watchdog', 'native')],
     ['watchdog regodit DLLs', path.join(watchdogModules, 'regodit', 'dist')],
-    ['watchdog wql-process-monitor DLLs', path.join(watchdogModules, 'wql-process-monitor', 'lib', 'dist')],
     ...['vendor', 'doc'].map((d) => [`watchdog koffi/${d}`, path.join(watchdogModules, 'koffi', d)]),
     ...['min', 'src', 'dist'].map((d) => [`watchdog moment/${d}`, path.join(watchdogModules, 'moment', d)]),
     ['watchdog nan', path.join(watchdogModules, 'nan')],

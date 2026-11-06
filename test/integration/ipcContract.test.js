@@ -75,6 +75,48 @@ test('every channel a renderer speaks on is answered by the main process', () =>
   assert.deepEqual(unanswered, [], 'these channels have no handler in app/electron/');
 });
 
+/*
+  The other direction: a handler nobody calls, or a listener nothing sends to, is dead code that still
+  reads like a working feature. A channel counts as used when its name is quoted on the other side,
+  since some renderer code reaches the main process through a small wrapper (parser/steam.js does).
+*/
+function appSources() {
+  const out = [];
+  (function walk(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if (entry.name !== 'node_modules' && entry.name !== 'lib') walk(full);
+      } else if (/\.(js|html)$/.test(entry.name)) out.push(full);
+    }
+  })(app());
+  return out;
+}
+
+function quotedIn(source, channel) {
+  return source.includes(`'${channel}'`) || source.includes(`"${channel}"`);
+}
+
+test('every channel the main process answers is called from a renderer', () => {
+  const mainFiles = new Set(MAIN.map((file) => path.resolve(file)));
+  const others = appSources()
+    .filter((file) => !mainFiles.has(path.resolve(file)))
+    .map(read)
+    .join('\n');
+  const uncalled = [...handledChannels()].filter((channel) => !quotedIn(others, channel));
+  assert.deepEqual(uncalled, [], 'nothing outside app/electron/ names these channels');
+});
+
+test('every channel a renderer listens on is sent by the main process', () => {
+  const listened = new Set();
+  for (const file of RENDERERS) {
+    for (const match of read(file).matchAll(/ipcRenderer\.(?:on|once)\(\s*'([^']+)'/g)) listened.add(match[1]);
+  }
+  const main = MAIN.map(read).join('\n');
+  const unsent = [...listened].filter((channel) => !quotedIn(main, channel));
+  assert.deepEqual(unsent, [], 'no main-process file names these channels');
+});
+
 // Every preset calls window.api.notificationRenderReady(), and screenshot souvenirs are timed on it.
 test('the popup render-ready call is answered and its preset bridge stays', () => {
   assert.ok(handledChannels().has('notification-render-ready'));

@@ -86,4 +86,4 @@ function pickMarker(found, searched, exeDir) {
   return { appid: found[0].appid, nested: searched === exeDir };
 }
 
-module.exports = { findByReadingContentOfKnownConfigfilesIn, pickMarker };
+module.exports = { findByReadingContentOfKnownConfigfilesIn };

@@ -64,7 +64,6 @@ const websocket = require('./websocket.js');
 const processPriority = require('./util/priority.js');
 const fs = require('fs');
 // Only reached when an unknown appid needs its Steam name resolved (see loadSteamData below).
-const request = require('./util/lazyRequire.js').lazyRequire('request-zero');
 const settings = require('./settings.js');
 const monitor = require('./monitor.js');
 const parseWithRetry = require('./util/parseWithRetry.js');
@@ -76,13 +75,12 @@ const notificationDedup = require('./util/notificationDedup.js');
 const { reachesProgressMilestone, onePopupPerStat } = require('./util/progressMilestone.js');
 const steam = require('./steam.js');
 const track = require('./track.js');
-const { notificationVolumePercent } = require('./util/notificationVolume.js');
 const { safeEnv } = require('./util/safeEnv.js');
 const subsystemHealth = require('./util/subsystemHealth.js');
 const playtimeMonitor = require('./playtime/monitor.js');
 const { describeActiveGames } = require('./playtime/seed.js');
 const notify = require('./notification/toaster.js');
-const { withSouvenir } = require('./notification/withSouvenir.js');
+const { notifyOptions, unlockRarity, createUnlockNotify } = require('./notification/notifyOptions.js');
 const shadps4Watch = require('./console/shadps4Watch.js');
 const rpcs3Watch = require('./console/rpcs3Watch.js');
 const kytyps5Watch = require('./console/kytyps5Watch.js');
@@ -108,15 +106,13 @@ const { resolvePowerShell } = require('./util/powershell.js');
 const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js');
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
-const { withCompletionPopup } = require('./util/completionPopup.js');
-const { withLibraryReport } = require('./util/libraryUnlockReport.js');
 const { platinumLikeForGame } = require('./util/platinumLike.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const { DEFAULT_HOTKEY, DEFAULT_CONTROLLER_BINDINGS } = require(sharedAppModulePath('settings.js'));
+const { userDirFile } = require(sharedAppModulePath('parser/userDirEntries.js'));
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
-const { rareCutoff } = require('./util/rareCutoff.js');
 const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
 const shortcutSaveIds = require(sharedAppModulePath('util/shortcutSaveIds.js'));
 const xboxPc = require(sharedAppModulePath('parser/xboxPcCore.js'));
@@ -126,6 +122,11 @@ const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'
 const { mapStatProgressEntries, findProgressSchema } = require(sharedAppModulePath('parser/statProgress.js'));
 const { readSiblingStats } = require(sharedAppModulePath('parser/emuSave.js'));
 const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
+// The GOG/Epic -> Steam appid maps (steam_cache/gog.db, epic.db), read and written by their parsers.
+const gogMapping = require(sharedAppModulePath('parser/gog.js'));
+const epicMapping = require(sharedAppModulePath('parser/epic.js'));
+gogMapping.setUserDataPath(userDataDir());
+epicMapping.setUserDataPath(userDataDir());
 const rarity = require(sharedAppModulePath('util/rarity.js'));
 const uplayR2 = require(sharedAppModulePath('parser/uplayR2Live.js'));
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
@@ -246,7 +247,7 @@ const NEW_ROOT_POLL_MS = 5 * 1000;
 
 const cfg_file = {
   option: path.join(userDataDir(), 'cfg', 'options.ini'),
-  userDir: path.join(userDataDir(), 'cfg', 'userdir.db'),
+  userDir: userDirFile(userDataDir()),
   saveRedirects: saveRedirects.redirectsFile(userDataDir()),
   shortcutSaveIds: shortcutSaveIds.idsFile(userDataDir()),
 };
@@ -273,33 +274,6 @@ async function parseWithTwins(file, twinFiles) {
   return shortcutSaveIds.mergeParsedLists([own, ...others]);
 }
 
-/*
-  The GOG/Epic -> Steam appid maps the library scan writes (steam_cache/gog.db, epic.db). Read the
-  same way the app reads them: a file that is missing, truncated or not an array is "no mapping
-  known", never a crash on the unlock path - a bare JSON.parse here took the notification with it.
-*/
-function readMappingCache(cacheFile) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(cacheFile, { encoding: 'utf8' }));
-    return Array.isArray(parsed) ? parsed.filter((entry) => entry && typeof entry === 'object') : [];
-  } catch {
-    return [];
-  }
-}
-
-// Temp file then rename: the library scan reads these while a game is running, and half a file
-// there would cost it every mapping it holds.
-function writeMappingCache(cacheFile, entries) {
-  try {
-    const temporary = `${cacheFile}.${process.pid}.tmp`;
-    fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
-    fs.writeFileSync(temporary, JSON.stringify(entries), 'utf8');
-    fs.renameSync(temporary, cacheFile);
-  } catch (err) {
-    debug.log(`[cache] could not write ${path.basename(cacheFile)}: ${err.message || err}`);
-  }
-}
-
 
 let runningAppid;
 let overlayOpened = false;
@@ -307,7 +281,8 @@ let overlayOpened = false;
 let playtimeMonitorEmitter = null;
 let playtimeIndexReloadQueued = false;
 let xboxPollState = null;
-const xboxNotify = withCompletionPopup(notify, () => app.options);
+// The same notify as the live watchers below: souvenir, library report, linked trophy, 100% popup.
+const xboxNotify = createUnlockNotify(notify, { getOptions: () => app.options, report: reportUnlockToApp });
 const XBOX_POLL_INTERVAL_MS = 30000;
 
 function startXboxPolling(game) {
@@ -341,11 +316,9 @@ function startXboxPolling(game) {
       },
       notifyUnlock: async (id) => {
         const ach = schemaList.find((a) => a && String(a.name) === id);
-        const rarityPercent = ach && ach.rarityPct != null ? Number(ach.rarityPct) : null;
-        const rounded = Number.isFinite(rarityPercent) ? Math.round(rarityPercent * 10) / 10 : null;
         const rows = Object.values(state.snapshot || {});
         await xboxNotify(
-          psnTrophyLink.withLinkedTrophy(app.options, {
+          {
             source: 'Xbox PC',
             completion: { unlocked: rows.filter((row) => row && row.earned).length, total: rows.length },
             appid: titleId,
@@ -353,32 +326,14 @@ function startXboxPolling(game) {
             achievementName: id,
             achievementDisplayName: (ach && ach.displayName) || id,
             achievementDescription: (ach && ach.description) || '',
-            rarityPercent: rounded !== null && rounded >= 0 && rounded <= rareCutoff(app.options) ? rounded : null,
-            unlockRate: rounded !== null && rounded >= 0 && rounded <= 100 ? rounded : null,
+            ...unlockRarity(ach ? ach.rarityPct : null, app.options),
             icon: (ach && ach.icon) || '',
             gameIcon: (schema && schema.img && schema.img.portrait) || '',
             image: (schema && schema.img && schema.img.header) || '',
             time: Math.floor(Date.now() / 1000),
-          }),
-          {
-            notify: app.options.notification.notify,
-            lang: app.options.achievement.lang,
-            transport: {
-              mode: app.options.notification_transport.mode,
-              websocket: app.options.notification_transport.websocket,
-            },
-            toast: {
-              appid: app.toastID,
-              winrt: app.options.notification_transport.winRT,
-              balloonFallback: app.options.notification_transport.balloon,
-              customAudio: '0',
-              imageIntegration: '1',
-              group: app.options.notification_toast.groupToast,
-              attribution: 'AW Next',
-            },
-            prefetch: app.options.notification_advanced.iconPrefetch,
-            rumble: false,
-          }
+          },
+          // No toast sound and no rumble, as before: Game Bar may already announce an Xbox PC unlock.
+          notifyOptions(app.options, { toastId: app.toastID, attribution: 'AW Next', imageIntegration: '1', sound: false, rumble: false })
         );
       },
       onError: (err) => {
@@ -985,12 +940,7 @@ var app = {
         same try/catch is how a fix ends up in only one of them. A watcher that cannot start is a
         degraded monitor, not a dead one, so its failure is recorded and the rest still run.
       */
-      const souvenirNotify = withSouvenir(notify, () => self.options);
-      const completionNotify = withCompletionPopup(souvenirNotify, () => self.options);
-      const watcherNotify = withLibraryReport(
-        (payload, opts) => completionNotify(psnTrophyLink.withLinkedTrophy(self.options, payload), opts),
-        reportUnlockToApp
-      );
+      const watcherNotify = createUnlockNotify(notify, { getOptions: () => self.options, report: reportUnlockToApp });
       for (const entry of CONSOLE_WATCHERS) {
         try {
           await entry.watcher.start({
@@ -1174,11 +1124,11 @@ var app = {
         // The UniverseLAN root is keyed by GOG product id, like NemirtingasGalaxyEmu.
         const isUniverseLanRoot = winHosts.hostPaths('LOCALAPPDATA', 'UniverseLAN').some((root) => winHosts.pathKey(root) === winHosts.pathKey(dir));
         if (dir.includes('NemirtingasGalaxyEmu') || (isUniverseLanRoot && !options.appid)) {
-          const mapped = await self.steamAppIdForGogId(appID);
+          const mapped = await gogMapping.steamIdForGogId(appID);
           if (!mapped) throw `Unknown GOG id ${appID} - run a library refresh so AW Next can map it`;
           appID = mapped;
         } else if (dir.includes('NemirtingasEpicEmu')) {
-          const mapped = await self.steamAppIdForEpicId(appID);
+          const mapped = epicMapping.steamIdForEpicId(appID);
           if (mapped) appID = mapped;
           else if (steam.hasCachedSchema(appID, self.options.achievement.lang)) {
             // An Epic exclusive has no Steam release; the library scan cached its Epic schema under
@@ -1400,13 +1350,11 @@ var app = {
 
                       // Use the same one-decimal rounding and rare cutoff as the achievement menu,
                       // then forward the percentage so overlay presets can apply the matching tier.
-                      const rarePct = rarityMap.get(ach.name);
-                      const rounded = Math.round(rarePct * 10) / 10;
-                      const knownRate = Number.isFinite(rounded) && rounded >= 0;
-                      const isRare = knownRate && rounded <= rareCutoff(self.options);
+                      const { unlockRate, rarityPercent } = unlockRarity(rarityMap.get(ach.name), self.options);
+                      const isRare = rarityPercent !== null;
                       const rarityLabel = notifyStrings.interpolate(
                         notifyStrings.forLang(self.options.achievement.lang).rare,
-                        { percent: rounded }
+                        { percent: rarityPercent }
                       );
                       const isPlatinumLike = ach.name === platinumLike;
                       if (isPlatinumLike) debug.log(`Platinum (own achievement): ${game.name} - ${ach.displayName}`);
@@ -1420,10 +1368,10 @@ var app = {
                           achievementName: ach.name,
                           achievementDisplayName: ach.displayName,
                           achievementDescription: ach.description,
-                          rarityPercent: isRare ? rounded : null,
+                          rarityPercent,
                           // The rate whatever its tier, and whether the schema hides the achievement:
                           // an imported SAN theme picks its state and draws its padlock from them.
-                          unlockRate: knownRate ? rounded : null,
+                          unlockRate,
                           hidden: String(ach.hidden) === '1' || ach.hidden === true,
                           icon: notificationAchievementIcon(game, ach, true),
                           gameIcon: notificationGameIcon(game),
@@ -1433,27 +1381,7 @@ var app = {
                           delay: j,
                           ...(isPlatinumLike ? { notificationType: 'platinum', realPlatinum: true } : {}),
                         },
-                        {
-                          notify: self.options.notification.notify,
-                          lang: self.options.achievement.lang,
-                          transport: {
-                            mode: app.options.notification_transport.mode,
-                            websocket: app.options.notification_transport.websocket,
-                          },
-                          toast: {
-                            appid: self.toastID,
-                            winrt: self.options.notification_transport.winRT,
-                            balloonFallback: self.options.notification_transport.balloon,
-                            customAudio: self.options.notification_toast.customToastAudio,
-                            volume: notificationVolumePercent(self.options),
-                            imageIntegration: '0',
-                            group: self.options.notification_toast.groupToast,
-                            attribution: attribution,
-                          },
-                          prefetch: self.options.notification_advanced.iconPrefetch,
-                          rumble: self.options.notification.rumble,
-                          souvenir: self.options.souvenir || null,
-                        }
+                        { ...notifyOptions(self.options, { toastId: self.toastID, attribution }), souvenir: self.options.souvenir || null }
                       );
 
                       j += 1;
@@ -1505,26 +1433,7 @@ var app = {
                                 max: Math.round(Number(achievements[i].MaxProgress) * 100) / 100,
                               },
                             },
-                            {
-                              notify: self.options.notification.notify,
-                              lang: self.options.achievement.lang,
-                              transport: {
-                                mode: app.options.notification_transport.mode,
-                                websocket: app.options.notification_transport.websocket,
-                              },
-                              toast: {
-                                appid: self.toastID,
-                                winrt: self.options.notification_transport.winRT,
-                                balloonFallback: self.options.notification_transport.balloon,
-                                customAudio: '0',
-                                volume: notificationVolumePercent(self.options),
-                                imageIntegration: '0',
-                                group: self.options.notification_toast.groupToast,
-                                attribution: game.name,
-                              },
-                              prefetch: self.options.notification_advanced.iconPrefetch,
-                              rumble: false,
-                            }
+                            notifyOptions(self.options, { toastId: self.toastID, attribution: game.name, sound: false, rumble: false })
                           ),
                       });
                   }
@@ -1578,26 +1487,7 @@ var app = {
                   image: steamHeaderImage(game.steamappid || game.appid),
                   time: moment().unix(),
                 },
-                {
-                  notify: self.options.notification.notify,
-                  lang: self.options.achievement.lang,
-                  transport: {
-                    mode: app.options.notification_transport.mode,
-                    websocket: app.options.notification_transport.websocket,
-                  },
-                  toast: {
-                    appid: self.toastID,
-                    winrt: self.options.notification_transport.winRT,
-                    balloonFallback: self.options.notification_transport.balloon,
-                    customAudio: self.options.notification_toast.customToastAudio,
-                    volume: notificationVolumePercent(self.options),
-                    imageIntegration: '1',
-                    group: self.options.notification_toast.groupToast,
-                    attribution: `${game.name} · ${platinumLabel}`,
-                  },
-                  prefetch: self.options.notification_advanced.iconPrefetch,
-                  rumble: self.options.notification.rumble,
-                }
+                notifyOptions(self.options, { toastId: self.toastID, attribution: `${game.name} · ${platinumLabel}`, imageIntegration: '1' })
               );
             }
           }
@@ -1658,31 +1548,6 @@ var app = {
     }
 
     return mergeIndexedGameMetadata(game, appID);
-  },
-  steamAppIdForGogId: async function (appID) {
-    const cacheFile = path.join(userDataDir(), 'steam_cache', 'gog.db');
-    const cache = readMappingCache(cacheFile);
-
-    const cached = cache.find((g) => String(g.gogid) === String(appID));
-    if (cached) return cached.steamid;
-    const url = `https://gamesdb.gog.com/platforms/gog/external_releases/${appID}`;
-    const gameinfo = await request.getJson(url);
-    // Same guards as the app's parser/gog.js: a GOG-only title has no Steam release at all, and
-    // .find() on a missing releases array threw a TypeError that lost the unlock entirely.
-    const releases = Array.isArray(gameinfo?.game?.releases) ? gameinfo.game.releases : [];
-    const steamRelease = releases.find((release) => String(release?.platform_id || '').toLowerCase() === 'steam');
-    const steamid = steamRelease?.external_id;
-    if (!steamid) return undefined;
-    // Remember it: without this every GOG unlock hit gamesdb.gog.com again, and an offline moment
-    // then cost the notification that the answer was already known.
-    cache.push({ gogid: String(appID), steamid });
-    writeMappingCache(cacheFile, cache);
-    return steamid;
-  },
-  steamAppIdForEpicId: async function (appID) {
-    const cacheFile = path.join(userDataDir(), 'steam_cache', 'epic.db');
-    const cached = readMappingCache(cacheFile).find((g) => String(g.epicid) === String(appID));
-    if (cached) return cached.steamid;
   },
 };
 
@@ -1789,25 +1654,7 @@ var app = {
                 image: artwork.image,
                 silent: true, // playtime overlay notifications never play a sound
               },
-              {
-                notify: app.options.notification.notify,
-                lang: app.options.achievement.lang,
-                transport: {
-                  mode: app.options.notification_transport.mode,
-                  websocket: app.options.notification_transport.websocket,
-                },
-                toast: {
-                  appid: app.toastID,
-                  winrt: app.options.notification_transport.winRT,
-                  balloonFallback: app.options.notification_transport.balloon,
-                  customAudio: '0',
-                  imageIntegration: '1',
-                  group: app.options.notification_toast.groupToast,
-                  attribution: 'AW Next',
-                },
-                prefetch: app.options.notification_advanced.iconPrefetch,
-                rumble: false,
-              }
+              notifyOptions(app.options, { toastId: app.toastID, attribution: 'AW Next', imageIntegration: '1', sound: false, rumble: false })
             );
           }
         });

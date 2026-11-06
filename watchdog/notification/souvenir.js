@@ -196,5 +196,4 @@ module.exports._uniquePath = uniquePath;
 module.exports._localStamp = localStamp;
 module.exports._captureNative = captureNative;
 module.exports._captureImage = captureImage;
-module.exports._isPng = isPng;
 module.exports._resolveHdrHelper = resolveHdrHelper;

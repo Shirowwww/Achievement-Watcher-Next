@@ -43,8 +43,9 @@ function bodyAfter(source, marker) {
   return source.slice(start, end > start ? end : undefined);
 }
 
-// Read by the Watchdog without the app setting them: switches for a manual or test run.
-const WATCHDOG_ONLY_ENV = new Set(['AW_PROCESS_MONITOR']);
+// Read by the Watchdog without the app setting them: switches for a manual or test run. None today:
+// one added here is a variable nothing in production sets, so it needs a reason to exist.
+const WATCHDOG_ONLY_ENV = new Set();
 
 function envReadIn(sources) {
   const keys = new Set();

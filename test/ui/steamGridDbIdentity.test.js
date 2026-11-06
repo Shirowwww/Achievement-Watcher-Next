@@ -23,7 +23,7 @@ test('a Steam appid is resolved by identity, before any title is matched', () =>
   assert.match(resolver, /if \(!name\) return \{ gameId: 0/, 'the title search must be the fallback, not the default');
   // Both asset lists must go through it rather than matching titles on their own.
   const grids = source.slice(source.indexOf('async function fetchSteamGridDbGrids'), source.indexOf('async function fetchSteamGridDbCovers'));
-  const icons = source.slice(source.indexOf('async function fetchSteamGridDbIcon'), source.indexOf("ipcMain.handle('get-steamgriddb-icon'"));
+  const icons = source.slice(source.indexOf('async function fetchSteamGridDbIcon'), source.indexOf('const SGDB_ICON_PICKER_LIMIT'));
   assert.match(grids, /resolveSteamGridDbGameId\(/);
   assert.match(icons, /resolveSteamGridDbGameId\(/);
   assert.doesNotMatch(grids + icons, /search\/autocomplete/, 'title matching belongs to the shared resolver only');

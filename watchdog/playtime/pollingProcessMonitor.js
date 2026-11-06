@@ -95,4 +95,4 @@ function createPollingProcessMonitor({
   });
 }
 
-module.exports = { createPollingProcessMonitor, indexProcesses, normalizeProcess };
+module.exports = { createPollingProcessMonitor, indexProcesses };

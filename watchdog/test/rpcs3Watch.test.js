@@ -102,8 +102,8 @@ test('discover finds trophy sets under a saved RPCS3 folder', () => {
   }
 });
 
-// The monitor and every other watcher leave a folder set not to notify alone; RPCS3 read it anyway.
-test('discover skips a saved folder set not to notify', () => {
+// Every watcher reads the saved folders through userDirEntries.js; RPCS3 once read a disabled one anyway.
+test('discover skips a saved folder that is turned off', () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-rpcs3quiet-'));
   try {
     const emuDir = path.join(tmp, 'rpcs3');
@@ -113,7 +113,7 @@ test('discover skips a saved folder set not to notify', () => {
     fs.writeFileSync(path.join(trophyDir, 'TROPCONF.SFM'), SCHEMA, 'utf8');
     fs.writeFileSync(path.join(trophyDir, 'TROPUSR.DAT'), buildUserData([{ id: 0, time: 0, achieved: false }]));
     const config = path.join(tmp, 'userdir.db');
-    fs.writeFileSync(config, JSON.stringify([{ path: emuDir, enabled: true, notify: false }]));
+    fs.writeFileSync(config, JSON.stringify([{ path: emuDir, enabled: false, notify: true }]));
 
     assert.deepEqual(rpcs3Watch._internal.discover(config, []), []);
   } finally {

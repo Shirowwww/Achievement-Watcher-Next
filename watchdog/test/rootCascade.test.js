@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const {
-  scanRootOnce,
+  signatureWatchEntries,
   getStrictRootProfile,
   isAppIdName,
   shouldIgnoreDiscoveredId,
@@ -21,79 +21,71 @@ function cleanup(dir) {
   fs.rmSync(dir, { recursive: true, force: true });
 }
 
-test('numeric appid folder is discovered as a generic Steam-emu root', async () => {
+function writeGogInfo(dir) {
+  fs.writeFileSync(
+    path.join(dir, 'goggame-1421404671.info'),
+    JSON.stringify({ gameId: 1421404671, rootGameId: 1421404671, name: 'My GOG Game', playTasks: [{ path: 'bin/game.exe', isPrimary: true }] })
+  );
+}
+
+test('a goggame .info folder is watched at the .info folder under its root game id', async (t) => {
   const dir = fixture();
-  try {
-    fs.mkdirSync(path.join(dir, '12345'), { recursive: true });
-    const result = await scanRootOnce(dir);
-    assert.equal(result.platform, 'steam-emu');
-    assert.equal(result.entries.length, 1);
-    assert.equal(result.entries[0].options.appid, '12345');
-  } finally {
-    cleanup(dir);
-  }
+  t.after(() => cleanup(dir));
+  writeGogInfo(dir);
+  const [entry, ...rest] = await signatureWatchEntries(dir);
+  assert.equal(rest.length, 0);
+  assert.equal(entry.dir, fs.realpathSync(dir));
+  assert.equal(entry.options.appid, '1421404671');
+  assert.ok(entry.options.file.includes('achievements.json'), 'the generic save names are watched there');
 });
 
-test('goggame .info is detected with appid and launch metadata', async () => {
+test('a DLC .info points at the root game, not at itself', async (t) => {
   const dir = fixture();
-  try {
-    fs.writeFileSync(
-      path.join(dir, 'goggame-1421404671.info'),
-      JSON.stringify({
-        gameId: 1421404671,
-        rootGameId: 1421404671,
-        name: 'My GOG Game',
-        playTasks: [{ path: 'bin/game.exe', isPrimary: true, category: 'game', type: 'filetask' }],
-      }),
-    );
-    const result = await scanRootOnce(dir);
-    assert.equal(result.platform, 'gog');
-    assert.equal(result.entries[0].options.appid, '1421404671');
-    assert.equal(
-      result.entries[0].options.launchMetadata.executable,
-      path.join(dir, 'bin', 'game.exe'),
-    );
-  } finally {
-    cleanup(dir);
-  }
+  t.after(() => cleanup(dir));
+  fs.writeFileSync(path.join(dir, 'goggame-2000.info'), JSON.stringify({ gameId: '2000', rootGameId: '1000' }));
+  const [entry] = await signatureWatchEntries(dir);
+  assert.equal(entry.options.appid, '1000');
 });
 
-test('tenoke.ini is detected when there is no numeric appid folder', async () => {
+test('UniverseLAN.ini is watched in its UniverseLANData folder with the appid from GameSettings', async (t) => {
   const dir = fixture();
-  try {
-    fs.writeFileSync(path.join(dir, 'tenoke.ini'), '[TENOKE]\nid = 98765\n');
-    const result = await scanRootOnce(dir);
-    assert.equal(result.platform, 'tenoke');
-    assert.equal(result.entries[0].options.appid, '98765');
-  } finally {
-    cleanup(dir);
-  }
+  t.after(() => cleanup(dir));
+  fs.writeFileSync(path.join(dir, 'UniverseLAN.ini'), '[GameSettings]\nAppID = 4242\n');
+  const [entry] = await signatureWatchEntries(dir);
+  assert.equal(entry.options.appid, '4242');
+  assert.equal(path.basename(entry.dir), 'UniverseLANData');
 });
 
-test('UniverseLAN.ini is detected with the appid from GameSettings', async () => {
+test('a folder claimed by an earlier signature gets no GOG or UniverseLAN watch', async (t) => {
   const dir = fixture();
-  try {
-    fs.writeFileSync(path.join(dir, 'UniverseLAN.ini'), '[GameSettings]\nAppID = 4242\n');
-    const result = await scanRootOnce(dir);
-    assert.equal(result.platform, 'universe-lan');
-    assert.equal(result.entries[0].options.appid, '4242');
-  } finally {
-    cleanup(dir);
-  }
+  t.after(() => cleanup(dir));
+  // Numeric appid folders come before UniverseLAN; a Steam stats root before GOG.
+  fs.mkdirSync(path.join(dir, 'ulan', '12345'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'ulan', 'UniverseLAN.ini'), '[GameSettings]\nAppID = 4242\n');
+  assert.deepEqual(await signatureWatchEntries(path.join(dir, 'ulan')), []);
+
+  const stats = path.join(dir, 'Steam', 'appcache', 'stats');
+  fs.mkdirSync(stats, { recursive: true });
+  fs.writeFileSync(path.join(stats, 'UserGameStatsSchema_480.bin'), 'x');
+  writeGogInfo(stats);
+  assert.deepEqual(await signatureWatchEntries(stats), []);
+
+  // TENOKE comes before UniverseLAN too.
+  const tenoke = path.join(dir, 'tenoke');
+  fs.mkdirSync(tenoke);
+  fs.writeFileSync(path.join(tenoke, 'tenoke.ini'), '[TENOKE]\nid = 98765\n');
+  fs.writeFileSync(path.join(tenoke, 'UniverseLAN.ini'), '[GameSettings]\nAppID = 4242\n');
+  assert.deepEqual(await signatureWatchEntries(tenoke), []);
 });
 
-test('Steam appcache stats root is detected with schema bins', async () => {
+test('a missing folder and a strict emulator save root get nothing', async (t) => {
   const dir = fixture();
-  try {
-    const stats = path.join(dir, 'Steam', 'appcache', 'stats');
-    fs.mkdirSync(stats, { recursive: true });
-    fs.writeFileSync(path.join(stats, 'UserGameStatsSchema_480.bin'), 'x');
-    const result = await scanRootOnce(stats);
-    assert.equal(result.platform, 'steam-official');
-    assert.equal(result.entries[0].options.appid, '480');
-  } finally {
-    cleanup(dir);
-  }
+  t.after(() => cleanup(dir));
+  assert.deepEqual(await signatureWatchEntries(path.join(dir, 'missing')), []);
+  const codex = path.join(dir, 'Steam', 'CODEX');
+  fs.mkdirSync(codex, { recursive: true });
+  writeGogInfo(codex);
+  assert.deepEqual(await signatureWatchEntries(codex), []);
 });
 
 test('strict root profile matches RLD! and CODEX save roots', () => {

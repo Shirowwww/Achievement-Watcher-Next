@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { SOURCE_LABEL } = require('./sourceIdentity.js');
 
 const CUSTOM_FILE = path.join('cfg', 'gameTitles.json');
 const LOCALIZED_FILE = path.join('steam_cache', 'localizedTitles.json');
@@ -85,7 +86,7 @@ function titleFamily(game) {
   if (source === 'gog galaxy' || source === 'gog') return 'gog';
   if (source === 'ea') return 'ea';
   if (source === 'retroachievements') return 'retroachievements';
-  if (source.startsWith('xbox') && source !== 'xbox 360 recomp') return 'xbox';
+  if (source.startsWith('xbox') && source !== SOURCE_LABEL.X360_RECOMP) return 'xbox';
   if (system && system !== 'uplay') return system;
   return 'steam';
 }

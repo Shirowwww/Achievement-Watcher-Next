@@ -22,30 +22,26 @@ const ACTION = {
   CLEAR_CONSOLE_BASELINE: 'clear-console-baseline',
 };
 
-const X360_RECOMP_SOURCE = 'xbox 360 recomp';
-const PS4_RECOMP_SOURCE = 'ps4 recomp';
-const PS3_RECOMP_SOURCE = 'ps3 recomp';
+const path = require('path');
+const { SAVE_ROOTS, SAVE_FILE_NAMES, RAZOR1911_FILE } = require(path.join(__dirname, '..', 'parser', 'emuSaveRoots.js'));
+const { SOURCE_LABEL } = require(path.join(__dirname, 'sourceIdentity.js'));
+
 const PS3_RECOMP_UNLOCKS = /^npwr\d{5}\.json$/;
 
 /*
-  Emulator save files, mirroring the list watchdog/monitor.js watches (keep both in sync). Matched
-  case-insensitively. Stats count too: a maxed counter would re-fire or block a progressive unlock.
+  Emulator save files: the names the Watchdog watches, from the same table. SocialClub's are left
+  out (its folders mix in Rockstar's own files) and RAZOR1911's has a rule of its own below. Stats
+  count too: a maxed counter would re-fire or block a progressive unlock. Matched case-insensitively.
 */
 const SAVE_FILES = new Set(
   [
-    'achievements.ini',
-    'achievements.json',
-    'achiev.ini',
-    'stats.ini',
-    'achievements.bin',
-    'achieve.dat',
-    'stats.bin',
-    'user_stats.ini',
-    'stats.json',
-    'creamapi.achievements.cfg',
+    ...SAVE_FILE_NAMES,
+    ...SAVE_ROOTS.filter((row) => row.watch && !row.watch.socialClub).flatMap((row) => row.watch.file),
     // RPCS3 keeps unlock state apart from the schema, so this one is safe to remove outright.
     'tropusr.dat',
-  ].map((name) => name.toLowerCase())
+  ]
+    .map((name) => name.toLowerCase())
+    .filter((name) => name !== RAZOR1911_FILE)
 );
 
 // Schema files that live in the same folders and must survive every reset.
@@ -70,7 +66,8 @@ function isManualSource(source) {
 function resetActionFor(fileName, source = '') {
   const name = String(fileName || '').trim().toLowerCase();
   if (!name || PROTECTED_FILES.has(name)) return null;
-  if (String(source || '').trim().toLowerCase() === X360_RECOMP_SOURCE) {
+  const label = String(source || '').trim().toLowerCase();
+  if (label === SOURCE_LABEL.X360_RECOMP) {
     // ReXGlue's .toml and the per-profile .tsv hold unlocks only, and a missing one reads as none.
     // The JSON shape also carries the list itself, so only its flags are cleared.
     if (/^[0-9a-f]{8}\.toml$/.test(name) || name.endsWith('.tsv')) return ACTION.DELETE;
@@ -80,12 +77,12 @@ function resetActionFor(fileName, source = '') {
     return null;
   }
   // A PS4 port's user folder also holds the game's own saves; its unlock logs are not reset from here.
-  if (String(source || '').trim().toLowerCase() === PS4_RECOMP_SOURCE) return null;
+  if (label === SOURCE_LABEL.PS4_RECOMP) return null;
   // A PS3 port's gamedata/trophies holds its unlock files only, and a missing one reads as none.
-  if (String(source || '').trim().toLowerCase() === PS3_RECOMP_SOURCE) return PS3_RECOMP_UNLOCKS.test(name) ? ACTION.DELETE : null;
+  if (label === SOURCE_LABEL.PS3_RECOMP) return PS3_RECOMP_UNLOCKS.test(name) ? ACTION.DELETE : null;
   if (SAVE_FILES.has(name)) return ACTION.DELETE;
   // RAZOR1911's `achievement` only in its own root: the name alone is too common to delete elsewhere.
-  if (name === 'achievement') return String(source || '').trim().toLowerCase() === 'razor1911' ? ACTION.DELETE : null;
+  if (name === RAZOR1911_FILE) return label === 'razor1911' ? ACTION.DELETE : null;
   // KytyPS5 keeps one unlock list per user and trophy set, apart from the list in the game's package.
   if (/^trophies_\d+_\d+\.json$/.test(name)) return ACTION.DELETE;
   // ShadPS4 ships one file per language (TROP.XML, TROP_01.XML, …); all of them carry the state.

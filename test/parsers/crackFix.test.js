@@ -310,7 +310,9 @@ eq(crackFix.pickBestFix({}), null, 'missing fixes array → null');
   // must go through node-unrar-js). Uses a small committed .rar fixture with a nested folder structure.
   {
     const rarFixture = path.join(__dirname, '..', 'fixtures', 'sample.rar');
-    if (fs.existsSync(rarFixture)) {
+    // The fixture is committed: a missing one is a broken checkout, not a reason to skip the RAR path.
+    ok(fs.existsSync(rarFixture), 'fixtures/sample.rar is missing');
+    {
       const gameDir = tmp('aw-crackfix-rargame-');
       // Pre-place one of the archive's files so we also exercise the backup path.
       fs.mkdirSync(path.join(gameDir, 'Folder1', 'Folder Space'), { recursive: true });
@@ -322,8 +324,6 @@ eq(crackFix.pickBestFix({}), null, 'missing fixes array → null');
       ok(fs.statSync(path.join(gameDir, 'Folder1', 'Folder Space', 'long.txt')).size > 3, 'RAR: file was actually written from the archive, not the OLD stub');
       eq(res.backedUp, 1, 'RAR: the pre-existing file was backed up');
       ok(res.backupDir && fs.readFileSync(path.join(res.backupDir, 'Folder1', 'Folder Space', 'long.txt'), 'utf8') === 'OLD', 'RAR: backup kept the original bytes');
-    } else {
-      console.warn('  (skipped RAR test - fixtures/sample.rar missing)');
     }
   }
 

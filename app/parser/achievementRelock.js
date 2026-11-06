@@ -14,14 +14,15 @@ const { writeFileAtomicSync } = require(path.join(__dirname, '..', 'util', 'repl
 const reset = require(path.join(__dirname, 'achievementReset.js'));
 const extras = require(path.join(__dirname, 'achievementSaveExtras.js'));
 const manualUnlock = require(path.join(__dirname, 'manualUnlock.js'));
+const { SOURCE_LABEL } = require(path.join(__dirname, '..', 'util', 'sourceIdentity.js'));
 
 const lazy = (file) => require(path.join(__dirname, file));
 
-const X360_SOURCE = 'xbox 360 recomp';
-const PS3_SOURCE = 'ps3 recomp';
+const X360_SOURCE = SOURCE_LABEL.X360_RECOMP;
+const PS3_SOURCE = SOURCE_LABEL.PS3_RECOMP;
 // Their saves are found by their own reader; the record's folder is the game install, never walked.
 const READER_SOURCES = new Set(['xlivelessness', 'ff7 (2013)', 'rune uplay', 'madnesspatch', 'markerpatch']);
-const REFUSED_SOURCES = { 'ps4 recomp': 'ps4-recomp', 'pc port': 'pc-port' };
+const REFUSED_SOURCES = { [SOURCE_LABEL.PS4_RECOMP]: 'ps4-recomp', [SOURCE_LABEL.PC_PORT]: 'pc-port' };
 const REFUSED_FILES = { 'stats.bin': 'smartsteamemu', 'achieve.dat': 'skidrow' };
 const INI_FILES = new Set(['achievements.ini', 'achiev.ini', 'achievements.bin', 'creamapi.achievements.cfg', 'stats.ini']);
 const STAT_FORMATS = new Set(['ini', 'tenoke', 'json', 'razor']);

@@ -2,16 +2,12 @@
 
 // Minimal sandbox-safe preload for the overlay window: requires only electron (the old preload pulled
 // app modules that failed in this context). Game data arrives via show-overlay from the main process.
-const { contextBridge, ipcRenderer, webFrame } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('customApi', {
   // Header x button. The overlay is a frameless always-on-top window, so it has no system
   // title bar to close it with.
   closeOverlay: () => ipcRenderer.send('overlay-close'),
-});
-
-ipcRenderer.on('set-window-scale', (event, scale) => {
-  webFrame.setZoomFactor(scale);
 });
 
 contextBridge.exposeInMainWorld('api', {

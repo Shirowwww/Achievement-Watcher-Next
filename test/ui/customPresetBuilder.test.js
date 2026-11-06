@@ -454,8 +454,8 @@ test('the notification path hands the preset sound to the shared sound rule', ()
 
 test('init.js reserves the preview preset name and hides it from the preset list', () => {
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
-  const reserved = /const PREVIEW_PRESET_NAME = '([^']+)';/.exec(init);
-  assert.ok(reserved, 'no reserved preview preset name');
+  const { PREVIEW_PRESET_NAME } = require(path.join(appRoot, 'util', 'notificationPreset.js'));
+  assert.ok(PREVIEW_PRESET_NAME, 'no reserved preview preset name');
   // The scratch preset the Preview button writes must never be offered as a real preset...
   assert.match(init, /filter\(\(name\) => name !== PREVIEW_PRESET_NAME\)/, 'list-presets does not skip the preview preset');
   assert.match(init, /name !== PREVIEW_PRESET_NAME/, 'list-custom-presets does not skip the preview preset');

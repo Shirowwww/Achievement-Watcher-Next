@@ -7,6 +7,7 @@
 
 const path = require('path');
 const { isFile } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
+const { SOURCE_LABEL } = require(path.join(__dirname, '..', 'util', 'sourceIdentity.js'));
 
 const lazy = (file) => require(path.join(__dirname, file));
 
@@ -20,7 +21,7 @@ const CONSOLE_PREFIXES = {
   'xenia emulator': 'xenia',
   'kytyps5 emulator': 'kytyps5',
   xlivelessness: 'xlln',
-  'xbox 360 recomp': 'x360recomp',
+  [SOURCE_LABEL.X360_RECOMP]: 'x360recomp',
 };
 
 function sourcesOf(game) {
@@ -100,7 +101,7 @@ function consoleBaselineFile(userDataPath, prefix, key) {
   logs once showed, so it outlives a reset in the port's launcher. The port folder is left alone.
 */
 function unlockJournals(game, userDataPath) {
-  if (!sourcesOf(game).has('ps4 recomp')) return [];
+  if (!sourcesOf(game).has(SOURCE_LABEL.PS4_RECOMP)) return [];
   const file = path.join(userDataPath || '', 'cache', 'ps4recomp', `${safeName(game.appid)}.json`);
   return isFile(file) ? [file] : [];
 }

@@ -157,7 +157,7 @@ test('library artwork recovers both orientations in view and falls back through 
   assert.ok(recoveryCall < crossShapePass, 'and only settles for the wrong shape once recovery has failed');
   const recovery = appSource.slice(appSource.indexOf('async function recoverLibraryCover'), appSource.indexOf('function scheduleLibraryCover'));
   assert.ok(recovery.indexOf('get-steam-cdn-covers') < recovery.indexOf('get-steamgriddb-cover'));
-  assert.match(mainSource, /ipcMain\.handle\('get-steam-cdn-covers'/);
+  assert.match(mainSource, /ipcMain\.handle\('get-steam-cdn-covers-status'/);
   assert.match(mainSource, /fetchSteamGridDbCover\(gameName, steamAppid = '', orientation = 'portrait'\)/);
   assert.match(appSource, /image\.portrait = recovered/);
   assert.match(appSource, /image\.header = recovered/);

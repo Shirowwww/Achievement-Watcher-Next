@@ -15,10 +15,12 @@ const { hostPath, hostFor, pathKey, expandKnownVariables } = require(path.join(a
 const { xdgAppDirs } = require(path.join(appPath, 'util/xdgAppDirs.js'));
 const { isDirectory } = require(path.join(appPath, 'util/fsProbe.js'));
 
+const { userDirFile, parseUserDirEntries } = require('./userDirEntries.js');
+
 let file;
 
 module.exports.setUserDataPath = async (p) => {
-  file = path.join(p, 'cfg/userdir.db');
+  file = userDirFile(p);
 };
 
 const steam_emu_cfg_file_supported = [
@@ -326,16 +328,7 @@ module.exports.getEntries = async () => {
     }
     const raw = fs.readFileSync(file, 'utf8');
     try {
-      const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed
-        .map((entry) => (typeof entry === 'string' ? { path: entry, notify: true, origin: 'manual', enabled: true } : { ...entry, notify: true }))
-        .map((entry) => ({ ...entry, origin: entry.origin === 'auto' ? 'auto' : 'manual', enabled: entry.enabled !== false }))
-        .filter((entry) => entry.path)
-        // A path written with the wrong slash style (a fixed fast-glob bug, or a hand-typed entry)
-        // never matches the native-separator paths the rest of the scan compares against - resolve it
-        // back so an install already on disk self-heals instead of staying duplicated forever.
-        .map((entry) => ({ ...entry, path: path.resolve(entry.path) }));
+      return parseUserDirEntries(JSON.parse(raw));
     } catch (parseErr) {
       // Genuine corruption (e.g. a write interrupted by a crash/power loss). A transient I/O lock
       // throws before JSON.parse and is handled by the outer catch - so we never quarantine a good

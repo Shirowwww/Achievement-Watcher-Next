@@ -20,7 +20,7 @@ const { userDataDir } = require('../util/userData.js');
 const kit = require('./watcherKit.js');
 
 const ra = require(sharedAppModulePath('parser/retroAchievements.js'));
-const { rareCutoff } = require('../util/rareCutoff.js');
+const { unlockRarity } = require('../notification/notifyOptions.js');
 ra.setUserDataPath(userDataDir());
 ra.setCipher(aes);
 
@@ -85,18 +85,10 @@ function findEmulator(processes, probe = hasIntegrationDll) {
   return integrated ? integrated.process : '';
 }
 
-// The unlock rate rounded to a tenth, whatever its tier; null when unknown.
-function unlockRateOf(schema, achievementId) {
+// The schema's unlock rate of one achievement, raw: unlockRarity rounds it and picks the tier.
+function unlockPercentOf(schema, achievementId) {
   const entry = schema && schema.achievement.list.find((achievement) => String(achievement.name) === String(achievementId));
-  const percent = entry && entry.rarityPct != null ? Number(entry.rarityPct) : NaN;
-  if (!Number.isFinite(percent)) return null;
-  const rounded = Math.round(percent * 10) / 10;
-  return rounded >= 0 && rounded <= 100 ? rounded : null;
-}
-
-function rarityOf(schema, achievementId, options) {
-  const rounded = unlockRateOf(schema, achievementId);
-  return rounded !== null && rounded <= rareCutoff(options) ? rounded : null;
+  return entry ? entry.rarityPct : null;
 }
 
 async function announce(ctx, unlock, schema, delay) {
@@ -109,19 +101,15 @@ async function announce(ctx, unlock, schema, delay) {
       achievementName: unlock.achievementId,
       achievementDisplayName: unlock.title,
       achievementDescription: unlock.description,
-      rarityPercent: rarityOf(schema, unlock.achievementId, options),
-      unlockRate: unlockRateOf(schema, unlock.achievementId),
+      ...unlockRarity(unlockPercentOf(schema, unlock.achievementId), options),
       icon: unlock.icon || undefined,
       gameIcon: (schema && schema.img && schema.img.icon) || unlock.gameIcon || '',
       image: (schema && schema.img && schema.img.header) || '',
       time: unlock.time || Math.floor(Date.now() / 1000),
       delay,
     },
-    {
-      // The toast carries the game's header (imageIntegration 1); the icons are RA urls.
-      ...kit.unlockToastOptions(ctx, { attribution: ra.SOURCE, prefetch: kit.iconPrefetch(ctx), imageIntegration: '1' }),
-      lang: options.achievement.lang,
-    }
+    // The toast carries the game's header (imageIntegration 1); the icons are RA urls.
+    kit.unlockToastOptions(ctx, { attribution: ra.SOURCE, prefetch: kit.iconPrefetch(ctx), imageIntegration: '1' })
   );
 }
 
@@ -266,4 +254,4 @@ module.exports.stop = () => {
   session = null;
 };
 
-module.exports._internal = { findEmulator, handleGame, poll, tick, rarityOf, EMULATOR_PROCESS, seen };
+module.exports._internal = { findEmulator, handleGame, poll, tick, EMULATOR_PROCESS, seen };

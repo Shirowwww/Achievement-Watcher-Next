@@ -333,4 +333,4 @@ function trigger({ game, achievement, dir } = {}) {
   }
 }
 
-module.exports = { sync, stop, trigger, defaultDir, restartDelay, _state: state };
+module.exports = { sync, stop, trigger, defaultDir, restartDelay };

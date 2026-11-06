@@ -29,7 +29,10 @@ function sharedRequests() {
   const found = new Set();
   for (const file of watchdogSources(path.join(root, 'watchdog'))) {
     const source = fs.readFileSync(file, 'utf8');
-    for (const match of source.matchAll(/sharedAppModulePath\(\s*'([^']+)'\s*\)/g)) found.add(match[1]);
+    for (const match of source.matchAll(/sharedAppModulePath\(\s*(['"`])([^'"`$]+)\1\s*\)/g)) found.add(match[2]);
+    // A path this scan cannot read (a variable, an interpolated template) is a module it never checks.
+    const unread = [...source.matchAll(/sharedAppModulePath\(\s*([^'"`\s)])/g)].filter((match) => !/^function\b/.test(source.slice(match.index - 9, match.index)));
+    assert.deepEqual(unread.map((match) => `${path.relative(root, file)}: ${match[0]}`), [], 'shared app modules must be named by a literal path');
   }
   return [...found].sort();
 }

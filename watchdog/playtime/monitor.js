@@ -51,14 +51,10 @@ function rememberAppidForDir(dirKey, appid) {
 let ignoredAppidsCache = { mtimeMs: null, set: new Set() };
 
 const systemTempDir = os.tmpdir() || process.env['TEMP'] || process.env['TMP'];
-const userExclusionFile = path.join(userDataDir(), 'cfg/exclusion.db');
-const builtinIgnoredAppids = new Set([
-  '480', // Space War
-  '753', // Steam Config
-  '250820', // SteamVR
-  '228980', // Steamworks Common Redistributables
-  '431960', // Wallpaper Engine
-]);
+// The library's blacklist (built-in utility appids and the ids the user hid) also stops playtime.
+const exclusions = require(sharedAppModulePath('parser/blacklist.js'));
+const userExclusionFile = exclusions.exclusionFileIn(userDataDir());
+const builtinIgnoredAppids = new Set(exclusions.builtin.map(String));
 const wallpaperProcessNames = new Set(['wallpaperui.exe', 'wallpaper32.exe', 'wallpaper64.exe', 'wallpaperservice32.exe', 'winrtutil32.exe', 'winrtutil64.exe']);
 
 // Joins a path under an environment root, tolerating an unset variable: the mute list is built at
@@ -69,7 +65,7 @@ function envPath(variable, ...segments) {
 }
 
 const filter = {
-  ignore: blacklist.ignore, //WMI WQL FILTER
+  ignore: blacklist.ignore, // process names the polling monitor never reports
   mute: {
     dir: [
       systemTempDir,
@@ -544,27 +540,18 @@ async function init() {
     debug.log(`[Process trail] tracking already-running ${playing.name}(${playing.appid}) pid=${[...playing.pids].join(',')}`);
   }
 
-  let processMonitor;
-  if (process.env.AW_PROCESS_MONITOR === 'wql') {
-    const WQL = await import('wql-process-monitor');
-    processMonitor = await WQL.subscribe({
-      bin: { filter: filter.ignore, whitelist: false },
-    });
-    debug.log('[Process trail] using native WQL monitor');
-  } else {
-    processMonitor = createPollingProcessMonitor({
-      list: tasklist.list,
-      initialProcesses: snapshot,
-      // Resolved per creation event only: without it the polling monitor has no image path, so the
-      // "shared binary" disambiguation and the mute-by-directory filter below could never fire.
-      resolvePath: tasklist.getProcessPath,
-      onError: (err) => debug.warn(`[Process trail] process poll failed => ${err}`),
-      shouldObserve: ({ process }) => isObservedProcess(process),
-    });
-    debug.log(
-      `[Process trail] using polling monitor over ${tasklist.usingNativeSnapshot() ? 'the native process snapshot' : 'tasklist.exe (native snapshot unavailable)'}`
-    );
-  }
+  const processMonitor = createPollingProcessMonitor({
+    list: tasklist.list,
+    initialProcesses: snapshot,
+    // Resolved per creation event only: without it the polling monitor has no image path, so the
+    // "shared binary" disambiguation and the mute-by-directory filter below could never fire.
+    resolvePath: tasklist.getProcessPath,
+    onError: (err) => debug.warn(`[Process trail] process poll failed => ${err}`),
+    shouldObserve: ({ process }) => isObservedProcess(process),
+  });
+  debug.log(
+    `[Process trail] using polling monitor over ${tasklist.usingNativeSnapshot() ? 'the native process snapshot' : 'tasklist.exe (native snapshot unavailable)'}`
+  );
 
   processMonitor.on('creation', async ([process, pid, reportedPath]) => {
     const filepath = longProcessPath(reportedPath);
