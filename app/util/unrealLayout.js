@@ -99,12 +99,32 @@ function buildRootFor(dir, { maxClimb = 4 } = {}) {
 }
 
 /*
+  A build whose executable sits in a launcher folder of its own, through folders that look like
+  nothing UE (Phantom Blade Zero runs platform/steam/PBZ.exe with -basedir into the build). Only
+  the Steamworks lookup uses it, so the game folder itself never moves; a library root never holds
+  Engine/Binaries, so the two-level climb cannot take one for a build.
+*/
+const LAUNCHER_FOLDER_CLIMB = 2;
+
+function launcherBuildRootFor(dir) {
+  if (!dir) return '';
+  let current = path.resolve(dir);
+  for (let i = 0; i < LAUNCHER_FOLDER_CLIMB; i++) {
+    const parent = path.dirname(current);
+    if (!parent || parent === current) return '';
+    current = parent;
+    if (isBuildRoot(current)) return current;
+  }
+  return '';
+}
+
+/*
   The Win64/Win32 folders under Engine/Binaries/ThirdParty/Steamworks of the packaged build at or
   above `dir`, newest SDK first so the folder the engine most likely loads leads the list. Empty
   when `dir` is not a packaged Unreal build.
 */
 function steamworksDllDirs(dir) {
-  const root = buildRootFor(dir);
+  const root = buildRootFor(dir) || launcherBuildRootFor(dir);
   if (!root) return [];
   const parent = resolveChain(root, STEAMWORKS_PARENT);
   if (!parent) return [];

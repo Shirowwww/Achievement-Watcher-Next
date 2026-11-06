@@ -14,7 +14,7 @@ const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
 const { isSharedSaveRoot } = require(path.join(__dirname, 'saveRoots.js'));
 const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
-const { parseIni, stringifyIni, getIniSection, upsertIniSection, upsertIniKeys, sanitizeIniValue } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
+const { parseIni, stringifyIni, getIniSection, readIniSectionValues, upsertIniSection, upsertIniKeys, sanitizeIniValue, INI_TRUE } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedConfig.js'));
 const { isSteamId64 } = require(path.join(__dirname, '..', 'util', 'steamId64.js'));
 
@@ -845,6 +845,15 @@ function setupSavesRoots(steamSettings, appid, types) {
   return [...new Set(types.length > 0 ? types : ['gbe'])].map((type) => ({ type, root: redirected }));
 }
 
+// The folders seedRuntimeSave() writes into, so an undo record can watch them for what it creates.
+function runtimeSaveFolders({ steamSettings, appid, types = ['gbe'] } = {}) {
+  if (appid == null) return [];
+  const wanted = new Set(types);
+  return setupSavesRoots(steamSettings, String(appid), types)
+    .filter((entry) => entry && entry.root && (wanted.size === 0 || wanted.has(entry.type || 'gbe')))
+    .map((entry) => path.join(entry.root, String(appid)));
+}
+
 function seedRuntimeSave({ appid, schema, steamSettings, savesRoots = null, types = ['gbe'] } = {}) {
   const summary = { appid: appid != null ? String(appid) : null, entries: 0, roots: [], created: [], skipped: [] };
   if (summary.appid == null) return summary;
@@ -1195,6 +1204,20 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     if (!hasDeclaredStats(steamSettings) && !/^\s*\[main::stats\][^[]*?^\s*allow_unknown_stats\s*=\s*1\s*$/im.test(mainConfig)) {
       add('warning', 'UNKNOWN_STATS_REJECTED', 'stats.json declares no stat and configs.main.ini does not set [main::stats] allow_unknown_stats=1, so the game cannot record any stat.');
     }
+    /*
+      offline=1 changes one thing in GBE: it answers "not logged on" (BLoggedOn, BConnected,
+      GetLogonState). A game that waits for a Steam login before recording anything (Unreal's online
+      subsystem: Phantom Blade Zero under ARTIFACT) then drops every unlock. Raised only while the
+      save holds none: one recorded unlock proves the setting does not stop this game.
+    */
+    if (offlineModeOn(mainConfig) && !(report.save && report.save.earned > 0)) {
+      add(
+        'warning',
+        'EMULATOR_OFFLINE',
+        'configs.main.ini sets [main::connectivity] offline=1, so the emulator tells the game Steam is not logged on. A game that waits for a Steam login before recording achievements (Unreal Engine games among them) then records none.',
+        { file: mainConfigFile }
+      );
+    }
   }
   // Steam unlocks a counter achievement itself; GBE only does it for a stat achievements.json ties to
   // it. A game missing from the public stats list has no tie, so the counter moves and nothing unlocks.
@@ -1429,11 +1452,17 @@ function writeDlcConfig({ steamSettings, dlcs = [], unlockAll = true, forceUnloc
   return { file, count: map.size, unlockAll: !!unlockAll };
 }
 
+function offlineModeOn(text) {
+  return INI_TRUE.test(readIniSectionValues(parseIni(text), 'main::connectivity').offline || '');
+}
+
 // Write/merge configs.main.ini with the modern GBE switches newer Steamworks/PSPC titles need
 // (newer auth ticket + Game Coordinator token). achievements_bypass is left at the user's value:
 // forcing SetAchievement() true is a workaround, not a default. allow_unknown_stats is set because AW
 // can only declare the stats a public list knows, and a stat GBE refuses is a counter that never moves.
-function writeMainConfig({ steamSettings, backupDir = null } = {}) {
+// `online` turns an existing offline=1 off; only a repair of EMULATOR_OFFLINE asks for it, since a
+// release may set it on purpose and it is harmless to every game that records unlocks anyway.
+function writeMainConfig({ steamSettings, backupDir = null, online = false } = {}) {
   if (!steamSettings) throw new Error('writeMainConfig: steamSettings path is required');
   const file = path.join(steamSettings, 'configs.main.ini');
   const previous = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
@@ -1456,12 +1485,42 @@ function writeMainConfig({ steamSettings, backupDir = null } = {}) {
     allow_unknown_stats: '1',
   });
 
+  const wentOnline = online && offlineModeOn(previous);
+  if (wentOnline) {
+    const connectivity = getIniSection(doc, 'main::connectivity');
+    connectivity.body = awManagedConfig.markOfflineOff(connectivity.body);
+  }
+
   fs.mkdirSync(steamSettings, { recursive: true });
   const next = stringifyIni(doc);
   const changed = previous !== next;
   if (changed) keepOriginal(file, backupDir);
   if (changed) fs.writeFileSync(file, next);
-  return { file, changed, newAppTicket: true, gcToken: true };
+  return { file, changed, newAppTicket: true, gcToken: true, wentOnline };
+}
+
+function offlineModeIn(steamSettings) {
+  const file = steamSettings ? path.join(steamSettings, 'configs.main.ini') : '';
+  return !!file && fs.existsSync(file) && offlineModeOn(fs.readFileSync(file, 'utf8'));
+}
+
+/*
+  Turn offline=1 off and touch nothing else: the action for a setup AW Next does not otherwise
+  rewrite (ColdClient). The file is copied to .aw-backups first, like a repair, and the mark it
+  leaves lets restoreOfflineMode() put the value back.
+*/
+function turnOfflineModeOff({ steamSettings } = {}) {
+  if (!offlineModeIn(steamSettings)) return { changed: false };
+  const file = path.join(steamSettings, 'configs.main.ini');
+  const backupDir = path.join(steamSettings, '.aw-backups', backupTimestamp());
+  fs.mkdirSync(backupDir, { recursive: true });
+  fs.copyFileSync(file, path.join(backupDir, 'configs.main.ini'));
+  fs.writeFileSync(file, awManagedConfig.markOfflineOffText(fs.readFileSync(file, 'utf8')));
+  return { changed: true, file, backupDir };
+}
+
+function restoreOfflineMode({ steamSettings } = {}) {
+  return !!awManagedConfig.restoreOffline(steamSettings);
 }
 
 // Append a language to supported_languages.txt only when the file already exists and lacks it. GBE
@@ -1638,6 +1697,10 @@ async function repair({
   // An explicit repair completes configs.user.ini even with nothing to stamp into it - see
   // writeUserConfig's fillDefaults. Off by default so the silent auto-repair keeps its old reach.
   fillUserDefaults = false,
+  // Turn an existing offline=1 off (see writeMainConfig). Passed only where EMULATOR_OFFLINE was
+  // diagnosed (Game Health, the right-click repair, the automatic fix of Game Health findings); the
+  // fix-all pass and the scan's own schema repair never change it.
+  online = false,
   // Optional async (appid) => { stats, progress } - see statProgress.fetchCommunityStats.
   fetchStats = null,
   // Where the game's saves live, to read the stats it wrote; found from steamSettings when absent.
@@ -1838,7 +1901,7 @@ async function repair({
 
   if (writeMain) {
     try {
-      summary.main = writeMainConfig({ steamSettings });
+      summary.main = writeMainConfig({ steamSettings, online });
     } catch {
       summary.main = null;
     }
@@ -2091,6 +2154,10 @@ module.exports = {
   writeDlcConfig,
   dlcConfigMode,
   writeMainConfig,
+  runtimeSaveFolders,
+  offlineModeIn,
+  turnOfflineModeOff,
+  restoreOfflineMode,
   writeUserConfig,
   diagnose,
   inspectSaveState,

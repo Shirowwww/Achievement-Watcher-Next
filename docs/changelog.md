@@ -36,6 +36,11 @@ renamed in 3.9.0 and the history is kept under one file.
   A new **Before the unlock** slider sets the seconds kept before the achievement pops, from none
   to the whole clip; it starts at half, as before. In a heavy game where the notification arrives
   a few seconds late, keep most of the clip before it and the moment itself stays in.
+- **Every repair to a game's files can be undone.** Game Health shows **Undo the last repair**
+  after any repair AW Next made to a game: its own buttons, the right-click repair, **Apply
+  emulator fix**, **Fix all games** and the automatic repair. It puts back each file the repair changed,
+  removes the ones it created, and lists any file that changed again since instead of overwriting
+  it. Click it again to undo the repair before that, up to the last ten per game.
 
 ### Fixed
 
@@ -70,6 +75,16 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The Steam account card reads as one panel.** **Steam libraries** is a plain subheading again, and
   **Add the games you own** and the Steam Family row stay in place, greyed with the reason, while
   the Steam source lists installed games only.
+- **Phantom Blade Zero can record achievements under ARTIFACT's release.** Its emulator settings
+  ship with offline mode on (`offline=1`), so the game thinks Steam is not connected and drops every
+  unlock. Game Health now says so for any game that has recorded nothing with that setting, and
+  **Rewrite the achievement data** turns it off, keeping a copy of the file. A game run by ColdClient
+  gets **Turn off offline mode** instead, which changes that line only, and **Put offline mode back**
+  at the bottom of the panel undoes either one. AW Next also finds the
+  engine folder of an Unreal game started from a launcher folder of its own, such as
+  `platform\steam`.
+- **The automatic repair respects Manage DLC ownership.** With the setting off, repairing what Game
+  Health found no longer rewrites `configs.app.ini`.
 
 ### Performance
 

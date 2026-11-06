@@ -58,6 +58,7 @@ const crackLoaderDetect = require(path.join(appPath, '..', 'util', 'crackLoaderD
 const unrealLayout = require(path.join(appPath, '..', 'util', 'unrealLayout.js'));
 const emulatorFixEligibility = require(path.join(appPath, '..', 'util', 'emulatorFixEligibility.js'));
 const gameHealthRepair = require(path.join(appPath, '..', 'util', 'gameHealthRepair.js'));
+const repairJournal = require(path.join(appPath, '..', 'util', 'repairJournal.js'));
 const autoFixPlan = require(path.join(appPath, '..', 'util', 'autoFixPlan.js'));
 const gbeBackup = require(path.join(appPath, '..', 'util', 'gbeBackup.js'));
 const editionTitle = require(path.join(appPath, '..', 'util', 'editionTitle.js'));
@@ -1390,6 +1391,7 @@ async function repairHealthFindings({ appid, gameDir, diagnosis, schema, option,
     // findings is what it is being repaired for.
     writeDlc: option.emulator.manageDlc === true,
     fillUserDefaults: codes.some((code) => USER_CONFIG_REPAIR_CODES.has(code)),
+    online: codes.includes('EMULATOR_OFFLINE'),
     ...goldberg.userIdentity(option, schemaLanguage.get(appid) || (option.achievement && option.achievement.lang)),
   });
   // The folder this repair just completed must not sit behind a remembered "not here".
@@ -1706,7 +1708,18 @@ function emulatorReadsSettings(steamSettings) {
 
 // The runtime GSE configs (see runtimeConfigAllowed): DLC ownership and identity each behind their own
 // switch, configs.main.ini with automatic repair itself.
-async function writeRuntimeConfigs({ appid, steamSettings, option, exePresent }) {
+/*
+  Runs on every scan where automatic repair is on, so it records only the three files it writes: a
+  scan that changes nothing leaves no undo entry. `record: false` inside a flow that keeps its own.
+*/
+function writeRuntimeConfigs({ appid, steamSettings, option, exePresent, record = true }) {
+  const run = () => writeRuntimeConfigsNow({ appid, steamSettings, option, exePresent });
+  if (!record) return run();
+  const files = ['configs.app.ini', 'configs.main.ini', 'configs.user.ini'].map((name) => path.join(steamSettings, name));
+  return recordRepair(appid, 'automatic-config', repairJournal.gbeRoots({ files }), run);
+}
+
+async function writeRuntimeConfigsNow({ appid, steamSettings, option, exePresent }) {
   // Originals a write below would change, kept before the repair further down backs up its own.
   const backupDir = goldberg.backupDirFor(steamSettings);
   try {
@@ -1780,6 +1793,55 @@ function emulatorFixSaveFolder(appid, emulatorCfg, gameDir) {
   return goldbergSaveFolder('gbe', appid, gameDir);
 }
 module.exports.emulatorFixSaveFolder = emulatorFixSaveFolder;
+
+/*
+  Everything an emulator fix or repair may write for one game, known before it decides anything:
+  the game folder, every folder a steam_api dll or the runtime exe sits in, their steam_settings, the
+  steam_appid.txt beside a Steam shortcut, and the save folders a placeholder may be created in.
+  Shared by the right-click fix, the bulk pass and the automatic fix, so one undo covers each.
+*/
+function gbeFixRoots({ gameDir, gameName = '', steamSettings = '', writableAppid = null, exePath = '', option = {} } = {}) {
+  const emu = goldberg.detectEmulator(gameDir);
+  const exe = exeDetect.detectConfident(gameDir, gameName, { dllPaths: emu.dll });
+  const dllDirs = gbeInstaller.runtimeDllDirs({ gameDir, dllPaths: emu.dll, exePath: exe && exe.full, steamSettings: emu.steamSettings, fallbackDir: gameDir });
+  const exeDirs = [exe && exe.full, exePath].filter(Boolean).map((file) => path.dirname(file));
+  const runtimeDirs = [gameDir, ...dllDirs, ...emu.dll.map((dll) => path.dirname(dll)), ...exeDirs];
+  const settingsDirs = [emu.steamSettings, steamSettings, ...runtimeDirs.map((dir) => path.join(dir, 'steam_settings'))].filter(Boolean);
+  const saveFolders = settingsDirs.flatMap((dir) => goldberg.runtimeSaveFolders({ steamSettings: dir, appid: writableAppid }));
+  try {
+    saveFolders.push(emulatorFixSaveFolder(writableAppid, (option && option.emulator) || {}, gameDir));
+  } catch {
+    /* no save folder to watch: the fix still runs */
+  }
+  const launchFiles = goldberg.shortcutLaunchDirs(gameDir).map((dir) => path.join(dir, 'steam_appid.txt'));
+  return repairJournal.gbeRoots({ runtimeDirs, settingsDirs, saveFolders, files: launchFiles });
+}
+module.exports.gbeFixRoots = gbeFixRoots;
+
+// The scan's own writes into a game's files, recorded so Game Health can undo them.
+function recordRepair(appid, label, roots, work) {
+  return repairJournal.record({ userDataPath: _userDataPath, appid, label, roots, log: (line) => debug.log(line) }, work);
+}
+
+// The begin/commit pair, for the automatic fix whose writes span a whole background pass.
+function beginRecord(appid, label, roots) {
+  if (!_userDataPath) return null;
+  try {
+    return repairJournal.begin({ userDataPath: _userDataPath, appid, label, roots });
+  } catch (err) {
+    debug.log(`[undo] ${appid}: no undo record for ${label} => ${err}`);
+    return null;
+  }
+}
+
+function endRecord(handle) {
+  if (!handle) return;
+  try {
+    repairJournal.commit(handle);
+  } catch (err) {
+    debug.log(`[undo] ${handle.appid}: could not keep the undo record => ${err}`);
+  }
+}
 
 function isKnownNonGameToolInstall(gameDir) {
   if (!gameDir) return false;
@@ -4033,7 +4095,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             list: game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list.map((a) => ({ ...a })) : [],
           },
         };
+        // One undo record for everything this pass writes into the game, kept even if it fails half way.
+        let autoRecord = null;
         (async () => {
+          autoRecord = beginRecord(bgAppid, 'automatic-fix', () => gbeFixRoots({ gameDir: bgGameDir, gameName: bgGameName, steamSettings: bgSteamSettings, writableAppid: bgAppid, exePath: bgExe && bgExe.full, option }));
           let fixedSteamSettingsDirs = [];
           let fixApplied = false;
           let healthRepaired = false;
@@ -4111,7 +4176,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                 );
                 // The scan's own pass skipped these while no emulator was there to read them.
                 for (const dir of fixedSteamSettingsDirs) {
-                  if (dir) await writeRuntimeConfigs({ appid: bgAppid, steamSettings: dir, option, exePresent: () => !!(bgExe && bgExe.full && fs.existsSync(bgExe.full)) });
+                  if (dir) await writeRuntimeConfigs({ appid: bgAppid, steamSettings: dir, option, exePresent: () => !!(bgExe && bgExe.full && fs.existsSync(bgExe.full)), record: false });
                 }
               }
             } catch (err) {
@@ -4247,7 +4312,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           }
         })()
           .catch((err) => debug.log(`[${bgAppid}] background emulator setup error => ${err}`))
-          .finally(() => _emuFixInFlight.delete(fixKey));
+          .finally(() => {
+            endRecord(autoRecord);
+            _emuFixInFlight.delete(fixKey);
+          });
       }
     }
 

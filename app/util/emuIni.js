@@ -88,6 +88,9 @@ function readIniSectionValues(doc, name) {
   return values;
 }
 
+// A value GBE reads as a SimpleIni boolean: 1, true, yes and on all switch a key on.
+const INI_TRUE = /^(1|true|yes|on)$/i;
+
 // INI values can't span lines and both emulators split on the first '='; strip CR/LF so a stray
 // newline in a fetched name can't corrupt the file or smuggle in extra keys.
 function sanitizeIniValue(value) {
@@ -102,4 +105,5 @@ module.exports = {
   upsertIniSection,
   upsertIniKeys,
   sanitizeIniValue,
+  INI_TRUE,
 };

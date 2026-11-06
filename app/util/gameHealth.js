@@ -30,6 +30,15 @@ const ACTION = {
   FETCH_PROGRESS: 'fetch-progress', // anonymous generate_emu_config, kept in AW's cache only
   TEST_NOTIFICATION: 'test-notification', // the watchdog websocket test the Settings panel uses
   FIX_APPID: 'fix-appid', //          goldberg.writeSteamAppId() - one file, previous value kept
+  // goldberg.turnOfflineModeOff() - the one offline= line, file kept, for a setup no repair rewrites
+  // (ColdClient). A GBE setup gets the same change through REPAIR_DATA.
+  SET_ONLINE: 'set-online',
+  // goldberg.restoreOfflineMode() - puts back an offline=1 AW Next turned off. Never in a report's
+  // actions: the panel offers it as a footer link wherever AW's mark is in configs.main.ini.
+  UNDO_ONLINE: 'undo-online',
+  // repairJournal.undo() - the newest repair AW Next made to this game's files, whichever path made
+  // it. A footer link like the two above, shown while an undo record exists.
+  UNDO_REPAIR: 'undo-repair',
   SET_EPIC_ARGS: 'set-epic-args', //  exeList launch arguments built from the Nemirtingas config
 };
 
@@ -57,6 +66,8 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'NO_GC_TOKEN',
   // writeMainConfig() sets [main::stats] allow_unknown_stats=1.
   'UNKNOWN_STATS_REJECTED',
+  // writeMainConfig({ online: true }) sets [main::connectivity] offline=0; only these repairs pass it.
+  'EMULATOR_OFFLINE',
   // repair() ties a counter achievement to the stat the game wrote for it (statProgress.inferStatLinks).
   'STAT_LINK_MISSING',
   'NO_USER_CONFIG',
@@ -108,6 +119,7 @@ const ISSUE_TOPIC = {
   NO_NEW_APP_TICKET: 'compat',
   NO_GC_TOKEN: 'compat',
   UNKNOWN_STATS_REJECTED: 'compat',
+  EMULATOR_OFFLINE: 'offline',
   STAT_LINK_MISSING: 'compat',
   NO_INI: 'compat',
   NO_USER_CONFIG: 'account',
@@ -230,6 +242,10 @@ function hasNoAchievements(signals) {
   return !!(signals.achievements && signals.achievements.none);
 }
 
+// Repairable by the same button, but about what the emulator tells the game rather than the list:
+// marking the data row for it made the panel say the achievement list did not match the game.
+const NOT_ABOUT_THE_LIST = new Set(['EMULATOR_OFFLINE']);
+
 function achievementDataCheck(signals) {
   const total = num(signals.achievements && signals.achievements.total);
   const goldberg = signals.goldberg;
@@ -250,7 +266,7 @@ function achievementDataCheck(signals) {
     const missingIcons = (goldberg.achievements && goldberg.achievements.missingIcons) || [];
     const repairable = issuesAtLevel(goldberg, 'error')
       .concat(issuesAtLevel(goldberg, 'warning'))
-      .some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code));
+      .some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code) && !NOT_ABOUT_THE_LIST.has(issue.code));
     if (missing.length > 0) {
       return check('achievement-data', LEVEL.FAIL, {
         params: { total, missing: missing.length },
@@ -373,15 +389,19 @@ function emulatorCheck(rawSignals) {
     const oldSave = readsOnlyForeignGoldbergSaves(signals);
     // The crack's ini is still there, its steam_api dll is not: another program answers in its place.
     const replacedBy = signals.crackLoader.replacedBy ? String(signals.crackLoader.replacedBy) : '';
-    return check('emulator', oldSave || stalled || replacedBy ? LEVEL.WARN : LEVEL.INFO, {
+    // A loader that is GBE underneath (ColdClient) with offline=1, and nothing recorded: the same
+    // cause as EMULATOR_OFFLINE, fixed by changing that one line rather than by any repair.
+    const offline = signals.crackLoader.offline === true && num(signals.achievements && signals.achievements.unlocked) === 0;
+    return check('emulator', oldSave || stalled || replacedBy || offline ? LEVEL.WARN : LEVEL.INFO, {
       params: {
         servedBy: signals.crackLoader.name,
         ...(replacedBy ? { replacedBy } : {}),
         ...(idle ? { idle: true } : {}),
         ...(stalled ? { stalled: true, canSwitch } : {}),
         ...(oldSave ? { oldSave: true } : {}),
+        ...(offline ? { offline: true } : {}),
       },
-      actions: canSwitch ? [ACTION.SWITCH_RUNTIME] : [],
+      actions: [...(offline ? [ACTION.SET_ONLINE] : []), ...(canSwitch ? [ACTION.SWITCH_RUNTIME] : [])],
     });
   }
   if (!signals.emulated || !goldberg) return null;
@@ -432,8 +452,10 @@ function emulatorCheck(rawSignals) {
   const errors = issuesAtLevel(goldberg, 'error');
   if (errors.length > 0) {
     const actions = errors.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : [];
+    // The same repair also turns the offline mode off, so the row names it beside the errors.
+    const offlineWarnings = issuesAtLevel(goldberg, 'warning').filter((issue) => issue.code === 'EMULATOR_OFFLINE');
     return check('emulator', LEVEL.FAIL, {
-      params: { emulator: goldberg.emulator || 'none', topics: issueTopics(errors), ...appidParams },
+      params: { emulator: goldberg.emulator || 'none', topics: issueTopics([...errors, ...offlineWarnings]), ...appidParams },
       // Nothing this setup holds will ever be read while a foreign runtime serves the folder.
       blocking: foreignRuntime,
       actions: withAppidFix(actions),
@@ -443,8 +465,9 @@ function emulatorCheck(rawSignals) {
   const warnings = issuesAtLevel(goldberg, 'warning');
   if (warnings.length > 0) {
     const actions = warnings.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : [];
+    const offlineParams = codes.has('EMULATOR_OFFLINE') ? { offline: true } : {};
     return check('emulator', LEVEL.WARN, {
-      params: { emulator: goldberg.emulator || 'none', topics: issueTopics(warnings), ...appidParams },
+      params: { emulator: goldberg.emulator || 'none', topics: issueTopics(warnings), ...appidParams, ...offlineParams },
       actions: withAppidFix(actions),
     });
   }
@@ -687,6 +710,8 @@ function explain(state, checks, signals) {
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };
   // Before "records nothing": the crack is not the one running, so blaming it sends the user wrong.
   if (emulator && emulator.params && emulator.params.replacedBy) return { reason: 'crack-runtime-replaced', params: emulator.params };
+  // A named cause for "nothing recorded", so it outranks the vaguer sentences below.
+  if (emulator && emulator.params && emulator.params.offline) return { reason: 'emulator-offline', params: emulator.params };
   if (emulator && emulator.params && emulator.params.stalled) return { reason: 'crack-records-nothing', params: emulator.params };
   // The signature case: everything needed is present, nothing has been recorded yet. Say where the
   // fault is likely to be, because "no notifications appeared" is the usual misread.

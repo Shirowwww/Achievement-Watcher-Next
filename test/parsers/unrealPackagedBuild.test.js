@@ -242,6 +242,66 @@ test('steam_interfaces.txt is never generated from a dll that is itself an emula
   assert.deepEqual(gbe.interfaceSourceFor(path.join(dir, 'missing', 'steam_api64.dll')), { file: '', reason: 'missing-dll' });
 });
 
+/*
+  Phantom Blade Zero's layout: the executable the library indexes sits in a launcher folder of its
+  own (platform\steam\PBZ.exe, started with -basedir into the build), two plain folders below the
+  build root. ARTIFACT's release keeps Valve's dll in both places and runs GBE as a steamclient
+  that coldloader.dll points Steam at, beside the steam_settings in platform\steam.
+*/
+function launcherFolderBuild(prefix, { artifact = false } = {}) {
+  const root = path.join(tmpdir(prefix), 'PBZ');
+  const steamworks = path.join(root, 'Engine', 'Binaries', 'ThirdParty', 'Steamworks', 'Steamv165', 'Win64');
+  write(path.join(steamworks, 'steam_api64.dll'), 'valve-original-x64');
+  write(path.join(root, 'ProjectPBZ', 'Binaries', 'Win64', 'placeholder.txt'), '');
+  fs.mkdirSync(path.join(root, 'ProjectPBZ', 'Content'), { recursive: true });
+  const launchDir = path.join(root, 'platform', 'steam');
+  const exe = write(path.join(launchDir, 'PBZ.exe'), 'game');
+  write(path.join(launchDir, 'steam_api64.dll'), 'valve-original-x64');
+  if (artifact) {
+    write(path.join(launchDir, 'steamclient64.dll'), 'gbe steam_settings marker GSE Saves');
+    write(path.join(launchDir, 'coldloader.dll'), 'loader');
+    writeSettings(path.join(launchDir, 'steam_settings'));
+  }
+  return { root, steamworks, launchDir, exe };
+}
+
+test('an executable kept in a launcher folder of its own still reaches the engine dll', () => {
+  const build = launcherFolderBuild('aw-ue-launcher-');
+
+  assert.deepEqual(unrealLayout.steamworksDllDirs(build.launchDir), [build.steamworks]);
+  // Only the Steamworks lookup climbs out of that folder: the game folder itself stays where it was.
+  assert.equal(exeDetect.gameDirForExe(build.exe), build.launchDir);
+});
+
+test('a plain game two folders below a library is never given an engine folder', () => {
+  const library = tmpdir('aw-ue-library-');
+  const gameDir = path.join(library, 'Some Game', 'bin');
+  write(path.join(gameDir, 'game.exe'), 'game');
+  fs.mkdirSync(path.join(library, 'Other Game', 'Content'), { recursive: true });
+
+  assert.deepEqual(unrealLayout.steamworksDllDirs(gameDir), []);
+});
+
+test("ARTIFACT's steamclient setup stays quiet, keeps its settings and keeps Valve's dlls", () => {
+  const build = launcherFolderBuild('aw-ue-artifact-', { artifact: true });
+  const settings = path.join(build.launchDir, 'steam_settings');
+
+  const report = goldberg.diagnose({ gameDir: build.launchDir, appid: '4115450', schema: SCHEMA, savesRoots: [] });
+  assert.deepEqual(report.engineDllDirs, [build.steamworks], 'the dll the engine loads is now in view');
+  assert.ok(!report.issues.some((entry) => entry.code === 'UNREAL_ENGINE_DLL_UNCONFIGURED'));
+  assert.equal(goldberg.findSteamSettings(build.launchDir), settings);
+  assert.equal(planAchievementDataRepair({ steamSettings: settings, gameDir: build.launchDir, dllDirs: [build.steamworks] }).target, settings);
+
+  // Replacing either Valve dll stops the game (#153), whichever folders a fix is handed.
+  const cache = tmpdir('aw-ue-artifact-cache-');
+  const dlls = { tag: 'test-build', x64: write(path.join(cache, 'steam_api64.dll'), 'gbe-x64'), x86: null };
+  const dirs = gbe.runtimeDllDirs({ gameDir: build.launchDir, dllPaths: goldberg.detectEmulator(build.launchDir).dll, exePath: build.exe, steamSettings: settings });
+  gbe.installDlls({ dllDirs: dirs, dlls, writeIfMissing: 'x64' });
+  for (const dir of [build.steamworks, build.launchDir]) {
+    assert.equal(fs.readFileSync(path.join(dir, 'steam_api64.dll'), 'utf8'), 'valve-original-x64', `${dir} keeps Valve's dll`);
+  }
+});
+
 test('the fix gate sees the engine dll and an engine-side setup it must not overwrite', () => {
   const build = packagedBuild('aw-ue-gate-');
 

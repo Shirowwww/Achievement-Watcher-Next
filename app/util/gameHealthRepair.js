@@ -104,6 +104,11 @@ async function repairAchievementData({
   // Complete configs.user.ini even when the app has no name or language to stamp into it - the two
   // user-config warnings are listed as repairable, so the repair has to be able to clear them.
   fillUserDefaults = false,
+  // Turns the emulator's offline=1 off: set only when the diagnosis raised EMULATOR_OFFLINE.
+  online = false,
+  // The automatic fix passes the manageDlc setting; dropping it here made every repair write
+  // configs.app.ini. The panel's explicit repair passes nothing and keeps writing it, as before.
+  writeDlc = true,
   // Passed straight to goldberg.repair(); see its onProgress for the phases and their counts.
   onProgress = null,
 } = {}) {
@@ -120,6 +125,8 @@ async function repairAchievementData({
     accountSteamId,
     localSavePath,
     fillUserDefaults,
+    online,
+    writeDlc,
     onProgress,
   });
 }

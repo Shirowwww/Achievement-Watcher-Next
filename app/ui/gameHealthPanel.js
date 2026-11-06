@@ -383,7 +383,12 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     // `replaceable` says whether swapping steam_api for GBE Fork would be a complete change: it
     // gates the one action the panel offers over a folder AW cannot otherwise diagnose.
     crackLoader: foreignLoader
-      ? { name: foreignLoader.name, replaceable: foreignLoader.replaceable === true, ...(foreignLoader.replacedBy ? { replacedBy: foreignLoader.replacedBy } : {}) }
+      ? {
+          name: foreignLoader.name,
+          replaceable: foreignLoader.replaceable === true,
+          ...(foreignLoader.replacedBy ? { replacedBy: foreignLoader.replacedBy } : {}),
+          ...(goldberg.offlineModeIn(loaderSteamSettings(foreignLoader)) ? { offline: true } : {}),
+        }
       : null,
     // A folder set up with the Nemirtingas Epic emulator, and what it still needs before it saves (#112).
     nemirtingasEpic: gameDirExists ? fromProbe(probe && probe.nemirtingasEpic, () => safeNemirtingasDiagnose(gameDir, cfg.args)) : null,
@@ -506,6 +511,21 @@ function gameHealthExplanationText(report) {
       return t('gh-why-achievement-data-incomplete', "The achievement list AW Next has for this game doesn't match what the game will look for, so some unlocks would be missed. This can be rewritten from the official data.", "La liste de succès dont dispose AW Next ne correspond pas à ce que le jeu va chercher : certains déblocages seraient manqués. Elle peut être réécrite à partir des données officielles.", p);
     case 'achievement-icons-missing':
       return t('gh-why-achievement-icons-missing', 'The achievement list is complete, so every unlock will be seen. Only some of its icons are not downloaded yet, and repairing the achievement data fetches them.', "La liste de succès est complète : chaque déblocage sera vu. Il ne manque que des icônes, et réparer les données de succès les télécharge.");
+    case 'emulator-offline':
+      // Served by a loader no repair rewrites: the fix is its own button, which changes that line only.
+      if (p.servedBy) {
+        return t(
+          'gh-why-emulator-offline-loader',
+          '{servedBy} runs this game with the emulator set to offline mode, so the game is told Steam is not connected. Some games, Unreal Engine ones among them, then record no achievement at all. Turning it off changes only that line, and the current file is kept.',
+          '{servedBy} lance ce jeu avec l’émulateur réglé en mode hors ligne : le jeu croit que Steam n’est pas connecté. Certains jeux, dont ceux sous Unreal Engine, n’enregistrent alors aucun succès. Le désactiver ne change que cette ligne, et le fichier actuel est conservé.',
+          p
+        );
+      }
+      return t(
+        'gh-why-emulator-offline',
+        'The emulator in this game’s folder is set to offline mode, so the game is told Steam is not connected. Some games, Unreal Engine ones among them, then record no achievement at all. Rewriting the achievement data turns that mode off, and the current file is kept.',
+        'L’émulateur du dossier de ce jeu est réglé en mode hors ligne : le jeu croit que Steam n’est pas connecté. Certains jeux, dont ceux sous Unreal Engine, n’enregistrent alors aucun succès. Réécrire les données de succès désactive ce mode, et le fichier actuel est conservé.'
+      );
     case 'no-progress-yet':
       return t('gh-why-no-progress-yet', 'The game is detected and achievement data is available, but no achievement progress has been found yet. The likely issue is the game or emulator configuration rather than notifications.', "Le jeu est détecté et les données de succès sont disponibles, mais aucune progression n'a encore été trouvée. Le problème vient probablement de la configuration du jeu ou de l'émulateur, pas des notifications.");
     case 'install-unknown':
@@ -645,7 +665,7 @@ function gameHealthSimpleCheckValue(entry) {
     case 'uplay':
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
-      if (p.oldSave || p.stalled || p.replacedBy) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
+      if (p.oldSave || p.stalled || p.replacedBy || p.offline) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.
@@ -786,6 +806,8 @@ function gameHealthIssueTopicLabel(topic) {
       return t('gh-issue-dlc', 'DLC access', 'accès aux DLC');
     case 'compat':
       return t('gh-issue-compat', 'Steam compatibility settings', 'réglages de compatibilité Steam');
+    case 'offline':
+      return t('gh-issue-offline', 'the emulator’s offline mode', 'mode hors ligne de l’émulateur');
     case 'account':
       return t('gh-issue-account', 'account name and language', 'nom de compte et langue');
     case 'savepath':
@@ -799,6 +821,16 @@ function gameHealthIssueTopicLabel(topic) {
     default:
       return t('gh-issue-mapping', 'matching Steam release', 'version Steam correspondante');
   }
+}
+
+// Said before Game Health's repair and after the right-click and install repairs (app.js), which
+// share this page's scope: every path that turns offline=1 off names it in the same words.
+function gameHealthOfflineTurnedOffLine() {
+  return t(
+    'gh-confirm-repair-online',
+    'The emulator’s offline mode is also turned off (offline=0 in configs.main.ini), so the game sees a Steam login.',
+    'Le mode hors ligne de l’émulateur est aussi désactivé (offline=0 dans configs.main.ini) : le jeu voit une connexion à Steam.'
+  );
 }
 
 // Values stay concrete: real paths, real counts. Only the connecting words are translated.
@@ -830,6 +862,7 @@ function gameHealthCheckValue(entry, simple) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
         if (p.serverAwarded) return `${servedBy} · ${t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement')}`;
         if (p.spacewar) return `${servedBy} · ${t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès')}`;
+        if (p.offline) return `${servedBy} · ${gameHealthIssueTopicLabel('offline')}`;
         if (p.replacedBy) return `${servedBy} · ${t('gh-value-runtime-replaced', 'steam_api.dll replaced by {replacedBy}', 'steam_api.dll remplacé par {replacedBy}', { replacedBy: p.replacedBy })}`;
         if (p.oldSave) return `${servedBy} · ${t('gh-value-old-goldberg-save', 'the only save found is an old Goldberg one it never writes', 'la seule sauvegarde trouvée est une ancienne sauvegarde Goldberg qu’il n’écrit jamais')}`;
         return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
@@ -924,6 +957,12 @@ function gameHealthActionLabel(action) {
       return t('gh-action-unmute-progress', 'Unmute progress notifications', 'Réactiver les notifications de progression');
     case gameHealth.ACTION.FIX_APPID:
       return t('gh-action-fix-appid', 'Correct the game ID file', 'Corriger le fichier d’identification');
+    case gameHealth.ACTION.SET_ONLINE:
+      return t('gh-action-set-online', 'Turn off offline mode', 'Désactiver le mode hors ligne');
+    case gameHealth.ACTION.UNDO_ONLINE:
+      return t('gh-action-undo-online', 'Put offline mode back', 'Remettre le mode hors ligne');
+    case gameHealth.ACTION.UNDO_REPAIR:
+      return t('gh-action-undo-repair', 'Undo the last repair', 'Annuler la dernière réparation');
     case gameHealth.ACTION.FETCH_PROGRESS:
       return t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression');
     case gameHealth.ACTION.SET_EPIC_ARGS:
@@ -997,12 +1036,138 @@ function paintGameHealth(report) {
     .join('');
   root.find('.gh-actions').html(actions);
   paintUndoSwitch(root, gameList.find((g) => g.appid == reportAppid));
+  paintUndoOffline(root, gameList.find((g) => g.appid == reportAppid), report);
+  paintUndoRepair(root, gameList.find((g) => g.appid == reportAppid));
 
   root.find('.gh-technical-label').text(t('gh-technical', 'Technical details', 'Détails techniques'));
   root.find('.gh-copy').html(`<i class="fas fa-copy"></i> ${escapeHtml(t('gh-copy', 'Copy', 'Copier'))}`);
   root.find('.gh-technical-dump').text(JSON.stringify(report.technical, null, 2));
   paintGameHealthVerified(root, report);
   mirrorGameHealthState();
+}
+
+// ColdClient is GBE underneath and reads the steam_settings beside its loader (goldberg.diagnose);
+// no other crack loader reads one, so they have no offline setting AW Next could change.
+function loaderSteamSettings(loader) {
+  return loader && loader.name === 'ColdClient' && loader.dir ? path.join(loader.dir, 'steam_settings') : '';
+}
+
+// The steam_settings folders whose offline=1 AW Next turned off and can put back: the one the report
+// diagnosed, the game's own, or a ColdClient loader's.
+function offlineUndoDirs(game, report) {
+  if (!game || !game.gameDir || !fs.existsSync(game.gameDir)) return [];
+  const technical = (report && report.technical) || {};
+  const candidates = [technical.goldberg && technical.goldberg.steamSettings, game.steamSettings, loaderSteamSettings(crackLoaderDetect.detectWorkingCrackLoader(game.gameDir))];
+  return [...new Set(candidates.filter(Boolean))].filter((dir) => awManagedConfig.offlineTurnedOffByAw(dir));
+}
+
+// The offline link is for a change no undo record covers (made before records existed): while one
+// exists, "Undo the last repair" is the single way back, so the two never compete.
+function paintUndoOffline(root, game, report) {
+  const link = root.find('.gh-undo-online');
+  link.text(gameHealthActionLabel(gameHealth.ACTION.UNDO_ONLINE));
+  const recorded = !!(game && repairJournal.latest({ userDataPath: getUserDataPath(), appid: game.appid }));
+  if (!recorded && offlineUndoDirs(game, report).length > 0) link.removeAttr('hidden');
+  else link.attr('hidden', 'hidden');
+}
+
+function paintUndoRepair(root, game) {
+  const link = root.find('.gh-undo-repair');
+  link.text(gameHealthActionLabel(gameHealth.ACTION.UNDO_REPAIR));
+  if (game && repairJournal.latest({ userDataPath: getUserDataPath(), appid: game.appid })) link.removeAttr('hidden');
+  else link.attr('hidden', 'hidden');
+}
+
+// At most this many paths in the confirmation; the rest is counted.
+const UNDO_PREVIEW_LINES = 25;
+
+function undoPreviewLines(preview) {
+  const lines = [...preview.restored.map((file) => `[+] ${file}`), ...preview.removed.map((file) => `[-] ${file}`), ...preview.skipped.map((entry) => `[=] ${entry.file}`)];
+  return lines.length > UNDO_PREVIEW_LINES ? [...lines.slice(0, UNDO_PREVIEW_LINES), `... (+${lines.length - UNDO_PREVIEW_LINES})`] : lines;
+}
+
+// UNDO_REPAIR: the newest undo record for this game, after a confirmation that lists every file.
+function undoLastRepair(appid, game) {
+  const userDataPath = getUserDataPath();
+  const preview = repairJournal.undo({ userDataPath, appid: game.appid || appid, dryRun: true });
+  if (!preview) return true;
+  const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'question',
+    title: gameHealthActionLabel(gameHealth.ACTION.UNDO_REPAIR),
+    message: t(
+      'gh-confirm-undo-repair-message',
+      'AW Next will put back the files the repair of {when} changed ([+]) and remove the ones it created ([-]).',
+      'AW Next va remettre les fichiers modifiés par la réparation du {when} ([+]) et supprimer ceux qu’elle a créés ([-]).',
+      { when: new Date(preview.createdAt).toLocaleString() }
+    ),
+    detail: undoPreviewLines(preview).join('\n'),
+    buttons: [t('cancel', 'Cancel', 'Annuler'), t('restore', 'Restore', 'Restaurer')],
+    defaultId: 1,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (confirmed !== 1) return false;
+  const result = repairJournal.undo({ userDataPath, appid: game.appid || appid });
+  debug.log(`[health] ${appid} undid the repair of ${result.createdAt}: ${result.restored.length} put back, ${result.removed.length} removed, ${result.skipped.length} left`);
+  if (result.skipped.length > 0) {
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'info',
+      title: gameHealthActionLabel(gameHealth.ACTION.UNDO_REPAIR),
+      message: t(
+        'gh-undo-repair-skipped',
+        'These files were left as they are, because they changed after the repair or could not be written:',
+        'Ces fichiers ont été laissés tels quels, car ils ont changé depuis la réparation ou n’ont pas pu être écrits :'
+      ),
+      detail: result.skipped.map((entry) => entry.file).join('\n'),
+      noLink: true,
+    });
+  }
+  return true;
+}
+
+// SET_ONLINE: the one offline= line of a ColdClient loader's settings, after a confirmation.
+async function turnEmulatorOfflineModeOff(appid, game) {
+  const settings = loaderSteamSettings(crackLoaderDetect.detectWorkingCrackLoader(game.gameDir));
+  if (!goldberg.offlineModeIn(settings)) return true;
+  const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'question',
+    title: gameHealthActionLabel(gameHealth.ACTION.SET_ONLINE),
+    message: t(
+      'gh-confirm-set-online-message',
+      'AW Next will change offline=1 to offline=0 in configs.main.ini and nothing else. The current file is kept, and the link at the bottom of this panel puts it back.',
+      'AW Next va remplacer offline=1 par offline=0 dans configs.main.ini, et rien d’autre. Le fichier actuel est conservé, et le lien en bas de ce panneau le remet.'
+    ),
+    detail: path.join(settings, 'configs.main.ini'),
+    buttons: [t('cancel', 'Cancel', 'Annuler'), gameHealthActionLabel(gameHealth.ACTION.SET_ONLINE)],
+    defaultId: 1,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (confirmed !== 1) return false;
+  const roots = repairJournal.gbeRoots({ files: [path.join(settings, 'configs.main.ini')] });
+  const result = await journaledRepair(appid, gameHealth.ACTION.SET_ONLINE, roots, () => goldberg.turnOfflineModeOff({ steamSettings: settings }));
+  debug.log(`[health] ${appid} offline mode turned off in ${settings} (copy in ${result.backupDir || 'none'})`);
+  return true;
+}
+
+// UNDO_ONLINE: every offline=1 AW Next turned off for this game, put back after a confirmation.
+function putEmulatorOfflineModeBack(appid, game) {
+  const dirs = offlineUndoDirs(game, $('#game-health').data('report'));
+  if (dirs.length === 0) return true;
+  const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'question',
+    title: gameHealthActionLabel(gameHealth.ACTION.UNDO_ONLINE),
+    message: t('gh-confirm-undo-online-message', 'AW Next will set offline=1 back in configs.main.ini, as it was before.', 'AW Next va remettre offline=1 dans configs.main.ini, comme avant.'),
+    detail: dirs.map((dir) => path.join(dir, 'configs.main.ini')).join('\n'),
+    buttons: [t('cancel', 'Cancel', 'Annuler'), t('restore', 'Restore', 'Restaurer')],
+    defaultId: 1,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (confirmed !== 1) return false;
+  for (const dir of dirs) goldberg.restoreOfflineMode({ steamSettings: dir });
+  debug.log(`[health] ${appid} offline mode put back in ${dirs.join(', ')}`);
+  return true;
 }
 
 // Where a runtime switch can have set a crack's files aside: the game root and every steam_api dll folder.
@@ -1136,6 +1301,7 @@ const GAME_HEALTH_ACTIONS_NEEDING_RESCAN = new Set([
   gameHealth.ACTION.INSTALL_RUNTIME,
   gameHealth.ACTION.SWITCH_RUNTIME,
   gameHealth.ACTION.UNDO_SWITCH_RUNTIME,
+  gameHealth.ACTION.UNDO_REPAIR,
   gameHealth.ACTION.FIX_APPID,
   gameHealth.ACTION.FETCH_PROGRESS,
 ]);
@@ -1316,7 +1482,9 @@ async function runGameHealthAction(appid, action, button) {
     }
 
     try {
-      const result = goldberg.writeSteamAppId({ steamSettings, appid: typed, launchDirs: goldberg.shortcutLaunchDirs(game.gameDir) });
+      const launchDirs = goldberg.shortcutLaunchDirs(game.gameDir);
+      const roots = repairJournal.gbeRoots({ files: [path.join(steamSettings, 'steam_appid.txt'), ...launchDirs.map((dir) => path.join(dir, 'steam_appid.txt'))] });
+      const result = await journaledRepair(appid, action, roots, () => goldberg.writeSteamAppId({ steamSettings, appid: typed, launchDirs }));
       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
         type: 'info',
         title: t('gh-appid-done-title', 'Game ID file corrected', 'Fichier d’identification corrigé'),
@@ -1541,6 +1709,9 @@ async function runGameHealthAction(appid, action, button) {
       dllDirs: (diagnosedGoldberg && diagnosedGoldberg.dllDirs) || [],
       exePath: (diagnosed && diagnosed.technical && diagnosed.technical.exe) || game.exe || '',
     });
+    // The one write that changes what the game is told rather than what it reads, so it is named
+    // before the click, like a relocation.
+    const goesOnline = !!(diagnosedGoldberg && (diagnosedGoldberg.issues || []).some((issue) => issue && issue.code === 'EMULATOR_OFFLINE'));
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: t('gh-confirm-repair-title', 'Rewrite the achievement data?', 'Réécrire les données de succès ?'),
@@ -1556,6 +1727,7 @@ async function runGameHealthAction(appid, action, button) {
               { from: plan.relocatedFrom }
             ) + '\n\n'
           : '') +
+        (goesOnline ? gameHealthOfflineTurnedOffLine() + '\n\n' : '') +
         t(
           'gh-confirm-repair-detail',
           'Files written in:\n{target}\n\n{writes}\n\nAny existing version of these files is copied to {backup} first.',
@@ -1593,25 +1765,29 @@ async function runGameHealthAction(appid, action, button) {
     // otherwise the panel is left showing progress for something that already stopped.
     let summary;
     try {
-      summary = await gameHealthRepair.repairAchievementData({
-        goldberg,
-        plan,
-        appid: writableAppid,
-        schema: game,
-        onProgress: pushProgress,
-        downloadIcon: async (url, dir) => {
-          const resolved = (await steamParser.resolveWorkingIconUrl(writableAppid, url)) || url;
-          const r = await request.download(resolved, dir);
-          return r && r.path;
-        },
-        fetchDlc: (id) => steamParser.getDLCList(id),
-        fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
-        ...goldberg.userIdentity(app.config, app.config?.achievement?.lang, { explicit: true }),
-        // An explicit repair must be able to clear NO_USER_CONFIG / BAD_USER_CONFIG. Without this
-        // the file was only written when the app had a username or language to stamp into it, so on
-        // a default install the repair skipped it entirely and both warnings survived every run.
-        fillUserDefaults: true,
-      });
+      const roots = () => repairJournal.gbeRoots({ settingsDirs: [plan.target], files: launchAppIdFiles(game.gameDir) });
+      summary = await journaledRepair(appid, action, roots, () =>
+        gameHealthRepair.repairAchievementData({
+          goldberg,
+          plan,
+          appid: writableAppid,
+          schema: game,
+          onProgress: pushProgress,
+          downloadIcon: async (url, dir) => {
+            const resolved = (await steamParser.resolveWorkingIconUrl(writableAppid, url)) || url;
+            const r = await request.download(resolved, dir);
+            return r && r.path;
+          },
+          fetchDlc: (id) => steamParser.getDLCList(id),
+          fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
+          ...goldberg.userIdentity(app.config, app.config?.achievement?.lang, { explicit: true }),
+          // An explicit repair must be able to clear NO_USER_CONFIG / BAD_USER_CONFIG. Without this
+          // the file was only written when the app had a username or language to stamp into it, so on
+          // a default install the repair skipped it entirely and both warnings survived every run.
+          fillUserDefaults: true,
+          online: goesOnline,
+        })
+      );
     } finally {
       setGameHealthProgress(null);
     }
@@ -1634,6 +1810,10 @@ async function runGameHealthAction(appid, action, button) {
     });
     return true;
   }
+
+  if (action === gameHealth.ACTION.SET_ONLINE) return turnEmulatorOfflineModeOff(appid, game);
+  if (action === gameHealth.ACTION.UNDO_ONLINE) return putEmulatorOfflineModeBack(appid, game);
+  if (action === gameHealth.ACTION.UNDO_REPAIR) return undoLastRepair(appid, game);
 
   if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {
     const dirs = switchedRuntimeDirs(game);
@@ -1751,18 +1931,20 @@ async function runGameHealthAction(appid, action, button) {
       panel's own diagnosis, the achievement-data repair - deliberately skips such a folder. The
       swap would otherwise install a runtime nothing would ever configure.
     */
-    const sidelined = switching ? crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]) : [];
-    if (sidelined.length > 0) debug.log(`[health] set aside ${sidelined.length} loader config file(s): ${sidelined.join(', ')}`);
-
     setGameHealthProgress({ phase: 'runtime' });
     let summary;
     try {
-      summary = await gameHealthRepair.installEmulatorRuntime({
-        gbeInstaller,
-        plan,
-        cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
-        steamSettings,
-        log: debug,
+      const roots = repairJournal.gbeRoots({ runtimeDirs: [game.gameDir, ...plan.dirs], settingsDirs: [steamSettings] });
+      summary = await journaledRepair(appid, action, roots, () => {
+        const sidelined = switching ? crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]) : [];
+        if (sidelined.length > 0) debug.log(`[health] set aside ${sidelined.length} loader config file(s): ${sidelined.join(', ')}`);
+        return gameHealthRepair.installEmulatorRuntime({
+          gbeInstaller,
+          plan,
+          cacheDir: path.join(getUserDataPath(), 'cache/gse_fork'),
+          steamSettings,
+          log: debug,
+        });
       });
     } finally {
       setGameHealthProgress(null);

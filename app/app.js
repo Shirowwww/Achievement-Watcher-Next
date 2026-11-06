@@ -103,6 +103,7 @@ const goldberg = require(path.join(appPath, 'parser/goldberg.js'));
 const winHosts = require(path.join(appPath, 'util/winHosts.js'));
 const awManagedConfig = require(path.join(appPath, 'util/awManagedConfig.js'));
 const gbeBackup = require(path.join(appPath, 'util/gbeBackup.js'));
+const repairJournal = require(path.join(appPath, 'util/repairJournal.js'));
 // oxlint-disable-next-line no-unused-vars -- read by ui/gameHealthPanel.js through the renderer's shared global scope; removing it breaks the Game Health panel.
 const crackLoaderDetect = require(path.join(appPath, 'util/crackLoaderDetect.js'));
 const gbeInstaller = require(path.join(appPath, 'parser/gbeInstaller.js'));
@@ -3813,6 +3814,42 @@ function readGbeBackupIndex() {
   return gbeBackup.readIndex(getUserDataPath());
 }
 
+// Every repair that writes into a game's files runs through here, so Game Health can undo it.
+// `roots` comes from repairJournal.gbeRoots(); `appid` is the library's, the one the panel shows.
+function journaledRepair(appid, label, roots, work) {
+  return repairJournal.record({ userDataPath: getUserDataPath(), appid, label, roots, log: (line) => debug.log(line) }, work);
+}
+
+// The steam_appid.txt files a repair may write or remove beside a Steam shortcut's start folder.
+function launchAppIdFiles(gameDir) {
+  return gameDir ? goldberg.shortcutLaunchDirs(gameDir).map((dir) => path.join(dir, 'steam_appid.txt')) : [];
+}
+
+// The begin/commit pair, for a flow too long to hand over as one function (the emulator fix).
+function startRepairRecord(appid, label, roots) {
+  try {
+    return repairJournal.begin({ userDataPath: getUserDataPath(), appid, label, roots });
+  } catch (err) {
+    debug.log(`[undo] ${appid}: no undo record for ${label} => ${err}`);
+    return null;
+  }
+}
+
+function endRepairRecord(handle) {
+  if (!handle) return;
+  try {
+    repairJournal.commit(handle);
+  } catch (err) {
+    debug.log(`[undo] ${handle.appid}: could not keep the undo record => ${err}`);
+  }
+}
+
+// What the emulator fix may write (achievements.gbeFixRoots). A community crack writes elsewhere
+// too, and is noted separately (repairJournal.note). `exePath` adds an exe the caller picked.
+function emulatorFixRoots({ gameDir, game, writableAppid, exePath = '' }) {
+  return achievements.gbeFixRoots({ gameDir, gameName: game?.name || '', steamSettings: game?.steamSettings || '', writableAppid, exePath, option: app.config });
+}
+
 function backupManifestFor(backupDir) {
   const manifest = readJsonFile(path.join(backupDir || '', 'backup.json'), null);
   if (!manifest || !Array.isArray(manifest.files) || !manifest.gameDir) return null;
@@ -5425,7 +5462,7 @@ var app = {
             }
             return lines;
           };
-          const repairGoldbergSetup = async ({ report, gameDir, game }) => {
+          const repairGoldbergSetup = async ({ report, gameDir, game, journal = true }) => {
             const request = require('request-zero');
             // Same target resolution as Game Health, and for the same reason: rewriting a
             // steam_settings that has no dll beside it reports success and leaves the game
@@ -5445,19 +5482,24 @@ var app = {
             };
             // Also enable all DLCs (configs.app.ini) and stamp the app's username/language into
             // configs.user.ini - the full GBE setup, not just achievements.json.
-            return goldberg.repair({
-              steamSettings: target,
-              appid: writableAppid,
-              schema: game,
-              downloadIcon,
-              fetchDlc: (id) => steamParser.getDLCList(id),
-              fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
-              // A repair fixes achievements. Enabling every DLC and stamping an account name are
-              // separate decisions with their own settings, and a setting that says "leave my DLC
-              // alone" has to hold here too, or it just moves the surprise to another button.
-              writeDlc: app.config?.emulator?.manageDlc === true,
-              ...goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
-            });
+            const run = () =>
+              goldberg.repair({
+                steamSettings: target,
+                appid: writableAppid,
+                schema: game,
+                downloadIcon,
+                fetchDlc: (id) => steamParser.getDLCList(id),
+                fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
+                // A repair fixes achievements. Enabling every DLC and stamping an account name are
+                // separate decisions with their own settings, and a setting that says "leave my DLC
+                // alone" has to hold here too, or it just moves the surprise to another button.
+                writeDlc: app.config?.emulator?.manageDlc === true,
+                online: report.issues.some((issue) => issue.code === 'EMULATOR_OFFLINE'),
+                ...goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
+              });
+            // Inside the emulator fix, that flow's own record already covers these files.
+            if (!journal) return run();
+            return journaledRepair(game?.appid ?? appid, 'repair', () => repairJournal.gbeRoots({ settingsDirs: [target], files: launchAppIdFiles(gameDir) }), run);
           };
           const diagnoseGoldbergSetup = async ({ game, gameDir, autoRepair = false, showDialog = true }) => {
             await require(path.join(appPath, 'parser/statProgress.js')).attachOfficialCounters(game, writableAppid, { cacheDir: getUserDataPath() }).catch(() => 0);
@@ -5468,7 +5510,7 @@ var app = {
 
             if (autoRepair && canRepair) {
               try {
-                repaired = await repairGoldbergSetup({ report, gameDir, game });
+                repaired = await repairGoldbergSetup({ report, gameDir, game, journal: false });
                 report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
               } catch (err) {
                 repairError = err;
@@ -5499,6 +5541,7 @@ var app = {
                 if (repaired.main && repaired.main.changed) {
                   lines.push(t('diagnosis-configs-main-updated', 'configs.main.ini updated (new_app_ticket + gc_token)', 'configs.main.ini mis à jour (new_app_ticket + gc_token)'));
                 }
+                if (repaired.main && repaired.main.wentOnline) lines.push(gameHealthOfflineTurnedOffLine());
                 if (repaired.dlc) {
                   lines.push(
                     t('diagnosis-configs-app-updated', 'configs.app.ini updated ({count} DLC entries, unlock_all={unlockAll})', 'configs.app.ini mis à jour ({count} entrées DLC, unlock_all={unlockAll})', {
@@ -5554,6 +5597,7 @@ var app = {
                       (summary.icons.unavailable ? '\n' + t('diagnosis-icons-unavailable', 'Steam has no achievement artwork for this game yet, so no icon could be downloaded. The achievement list itself is complete; run the repair again once the artwork is published.', "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relancez la réparation une fois les illustrations publiées.") : '') +
                       (summary.wroteAppId ? '\n' + t('diagnosis-steam-appid-created', 'steam_appid.txt created', 'steam_appid.txt créé') : '') +
                       (summary.main && summary.main.changed ? '\n' + t('diagnosis-configs-main-updated', 'configs.main.ini updated (new_app_ticket + gc_token)', 'configs.main.ini mis à jour (new_app_ticket + gc_token)') : '') +
+                      (summary.main && summary.main.wentOnline ? '\n' + gameHealthOfflineTurnedOffLine() : '') +
                       (summary.dlc
                         ? '\n' +
                           t('diagnosis-configs-app-updated', 'configs.app.ini updated ({count} DLC entries, unlock_all={unlockAll})', 'configs.app.ini mis à jour ({count} entrées DLC, unlock_all={unlockAll})', {
@@ -6281,6 +6325,7 @@ var app = {
                       : $('#game-list').attr('data-ctx-installgbe')) || '',
                   async click(menuItem) {
                     if (menuItem) gbeInstallItem = menuItem;
+                    let fixRecord = null;
                     try {
                       // Re-applying overwrites a setup that is already there, so it asks first and
                       // names what was found. The write path below backs everything up either way.
@@ -6315,6 +6360,8 @@ var app = {
                         gameDir = picked.filePaths[0];
                       }
                       if (!confirmOnlineFixReplace(gameDir)) return;
+                      // Every write below goes into one undo record, which Game Health can take back.
+                      fixRecord = startRepairRecord(appid, 'emulator-fix', () => emulatorFixRoots({ gameDir, game, writableAppid }));
 
                       // 1a - Create a portable restore point before any write step, so the pre-fix
                       // steam_settings + steam_api(64).dll state can be undone from "Restore latest GBE/Goldberg backup".
@@ -6355,6 +6402,11 @@ var app = {
                           });
                           if (cf && cf.applied) {
                             crackApplied = true;
+                            // Written anywhere in the game, with its own copy of each file it overwrote.
+                            repairJournal.note(
+                              fixRecord,
+                              (cf.files || []).map((rel) => ({ file: path.join(gameDir, rel), original: cf.backupDir ? path.join(cf.backupDir, rel) : null }))
+                            );
                             crackNote = t(
                               'ncommunity-crack-x-applied-x-file-s',
                               '\nCommunity crack: "{name}" applied ({count} file(s))',
@@ -6579,6 +6631,7 @@ var app = {
                         for (const dir of dllDirs) {
                           const result = await diagnoseGoldbergSetup({ game, gameDir: dir, autoRepair: true, showDialog: false });
                           if (result.repaired) repairedDirs++;
+                          if (result.repaired && result.repaired.main && result.repaired.main.wentOnline) diagnosisLines.push(gameHealthOfflineTurnedOffLine());
                           if (result.repairError) repairErrors.push(`${dir}: ${result.repairError.message || result.repairError}`);
                           diagnosisLines.push(
                             t('diagnosis-dir-status-line', '{dir}: {status}', '{dir} : {status}', {
@@ -6654,6 +6707,7 @@ var app = {
                         });
                       }
                     } finally {
+                      endRepairRecord(fixRecord);
                       clearGameBoxBusy(self);
                     }
                   },
@@ -9914,6 +9968,8 @@ var app = {
         for (let i = 0; i < targets.length; i++) {
           const game = targets[i];
           result.text((t('fixing', 'Fixing', 'Réparation')) + ` ${i + 1} / ${targets.length} - ${game.name}`);
+          // One undo record per game, so Game Health can take this game's part of the pass back.
+          let bulkRecord = null;
           try {
             if (uplayR2.isUplayR2Game(game, game.appid)) {
               const summary = await applyUplayR2Repair({
@@ -9932,6 +9988,7 @@ var app = {
             }
             const detectedEmu = goldberg.detectEmulator(game.gameDir);
             const detectedExe = exeDetect.detect(game.gameDir, game.name || '', { dllPaths: detectedEmu.dll });
+            bulkRecord = startRepairRecord(game.appid, 'fix-all', () => emulatorFixRoots({ gameDir: game.gameDir, game, writableAppid: game.appid, exePath: detectedExe && detectedExe.full }));
             createAutomaticGbeBackup({
               appid: game.appid,
               gameDir: game.gameDir,
@@ -10010,6 +10067,8 @@ var app = {
               await reportEmulatorPackageBlocked(err);
               break;
             }
+          } finally {
+            endRepairRecord(bulkRecord);
           }
         }
         const skipped = targets.length - fixed - failed;

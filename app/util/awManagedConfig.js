@@ -15,7 +15,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { parseIni, stringifyIni, getIniSection } = require('./emuIni.js');
+const { parseIni, stringifyIni, getIniSection, INI_TRUE } = require('./emuIni.js');
 
 const AW_MARKER = 'Managed by AW Next';
 
@@ -108,6 +108,8 @@ function inspect(steamSettings) {
     }
   }
 
+  if (offlineTurnedOffByAw(steamSettings)) found.push({ file: 'configs.main.ini', reason: 'main::connectivity.offline' });
+
   return { managed: found.length > 0, files: found };
 }
 
@@ -182,6 +184,93 @@ function stripMainKeys(steamSettings, { dryRun = false } = {}) {
 }
 
 /*
+  An offline=1 AW Next turned off (Game Health's EMULATOR_OFFLINE repair). The comment left above
+  the line is the record that lets the panel put the value back in one click and lets this cleanup
+  restore it; GBE skips comment lines. Text in, text out, so the callers keep their own backups.
+*/
+const OFFLINE_MARK = '; AW Next turned offline mode off here (it was offline=1)';
+const OFFLINE_LINE = /^(\s*offline\s*=\s*)(.*)$/i;
+
+function markOfflineOff(body) {
+  const out = [];
+  for (const line of body) {
+    const m = line.match(OFFLINE_LINE);
+    if (!m) {
+      out.push(line);
+      continue;
+    }
+    if (!out.length || out[out.length - 1].trim() !== OFFLINE_MARK) out.push(OFFLINE_MARK);
+    out.push(`${m[1]}0`);
+  }
+  return out;
+}
+
+// The marked lines put back to offline=1, and the marks dropped. Null when there is no mark.
+function unmarkOfflineOff(body) {
+  if (!body.some((line) => line.trim() === OFFLINE_MARK)) return null;
+  const out = [];
+  for (let i = 0; i < body.length; i++) {
+    if (body[i].trim() !== OFFLINE_MARK) {
+      out.push(body[i]);
+      continue;
+    }
+    const m = i + 1 < body.length ? body[i + 1].match(OFFLINE_LINE) : null;
+    if (m) {
+      out.push(`${m[1]}1`);
+      i++;
+    }
+  }
+  return out;
+}
+
+/*
+  Applies `edit` to the body of [main::connectivity] at the line level, so a file AW Next changes one
+  line of keeps the rest as it was (parseIni/stringifyIni re-space the blocks). A file that mixes
+  line endings comes back with CRLF throughout. Null when there is no such section or nothing changes.
+*/
+function editConnectivity(text, edit) {
+  const eol = /\r\n/.test(text) ? '\r\n' : '\n';
+  const lines = text.split(/\r?\n/);
+  let start = -1;
+  let end = lines.length;
+  for (let i = 0; i < lines.length; i++) {
+    const header = lines[i].match(/^\s*\[([^\]]+)\]\s*$/);
+    if (!header) continue;
+    if (start >= 0) {
+      end = i;
+      break;
+    }
+    if (header[1].trim().toLowerCase() === 'main::connectivity') start = i;
+  }
+  const body = start < 0 ? null : edit(lines.slice(start + 1, end));
+  return body ? [...lines.slice(0, start + 1), ...body, ...lines.slice(end)].join(eol) : null;
+}
+
+const markOfflineOffText = (text) => editConnectivity(text, markOfflineOff);
+
+// True while a line AW Next turned off still reads off: a value set back by hand has nothing to undo.
+function offlineTurnedOffByAw(steamSettings) {
+  const text = steamSettings ? readText(path.join(steamSettings, 'configs.main.ini')) : null;
+  const section = text === null ? null : getIniSection(parseIni(text), 'main::connectivity');
+  if (!section) return false;
+  return section.body.some((line, i) => {
+    const next = section.body[i + 1] || '';
+    const m = next.match(OFFLINE_LINE);
+    return line.trim() === OFFLINE_MARK && !!m && !INI_TRUE.test(m[2].trim());
+  });
+}
+
+function restoreOffline(steamSettings, { dryRun = false } = {}) {
+  const file = path.join(steamSettings, 'configs.main.ini');
+  const text = readText(file);
+  if (text === null || !offlineTurnedOffByAw(steamSettings)) return null;
+  const next = editConnectivity(text, unmarkOfflineOff);
+  if (next === null) return null;
+  if (!dryRun) fs.writeFileSync(file, next);
+  return { file, removed: 'keys' };
+}
+
+/*
   configs.user.ini is the one to be most careful with. AW stamps account_name and language into it,
   but so does every repack, and account_steamid is often the only thing making a save chain work.
   We delete the file only when it holds nothing beyond the two keys we write - the case the user who
@@ -253,7 +342,7 @@ function strip(steamSettings, { dryRun = false, includeIdentity = true } = {}) {
     return { steamSettings, removed: [...launchFiles, { file: steamSettings, removed: 'folder' }], changed: true };
   }
   const removed = [...launchFiles];
-  for (const step of [stripDlcSection, stripMainKeys]) {
+  for (const step of [stripDlcSection, stripMainKeys, restoreOffline]) {
     const result = step(steamSettings, { dryRun });
     if (result) removed.push(result);
   }
@@ -282,4 +371,8 @@ module.exports = {
   stripMainKeys,
   stripUserIdentity,
   stripLaunchAppIds,
+  markOfflineOff,
+  markOfflineOffText,
+  offlineTurnedOffByAw,
+  restoreOffline,
 };

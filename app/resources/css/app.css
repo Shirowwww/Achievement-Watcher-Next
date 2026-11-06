@@ -6420,7 +6420,9 @@ body.is-resizing #game-list {
 
 /* A link, not a button: it navigates to the control in Settings, it does not perform the check. */
 .gh-verified,
-.gh-undo-switch {
+.gh-undo-repair,
+.gh-undo-switch,
+.gh-undo-online {
   flex: 0 0 auto;
   background: none;
   border: 0;
@@ -6437,14 +6439,20 @@ body.is-resizing #game-list {
 
 .gh-verified:hover,
 .gh-verified:focus-visible,
+.gh-undo-repair:hover,
+.gh-undo-repair:focus-visible,
 .gh-undo-switch:hover,
-.gh-undo-switch:focus-visible {
+.gh-undo-switch:focus-visible,
+.gh-undo-online:hover,
+.gh-undo-online:focus-visible {
   color: var(--text);
   opacity: 1;
 }
 
 .gh-verified[hidden],
-.gh-undo-switch[hidden] {
+.gh-undo-repair[hidden],
+.gh-undo-switch[hidden],
+.gh-undo-online[hidden] {
   display: none;
 }
 
