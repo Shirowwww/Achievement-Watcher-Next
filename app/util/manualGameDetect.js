@@ -217,7 +217,7 @@ function defaultReaders({ folderGames, blockedRoots = [] } = {}) {
       const loader = crackLoaderDetect.detectWorkingCrackLoader(dir);
       return loader ? { ...loader, name: loaderName(loader), appid: loaderAppid(loader) } : null;
     },
-    uplayEmulator: (dir) => require('../parser/uplayR2.js').hasEmulatorEvidence(dir),
+    uplayEmulator: (dir) => require('../parser/uplayR2Loader.js').hasEmulatorEvidence(dir),
     steamAppid: (dir) => launcherDetect.steamLibraryAppid(dir),
     launcherInstall: (dir) => launcherDetect.isOfficialLauncherInstall(dir),
   };
@@ -307,4 +307,4 @@ function describeDetection(found, { t, watched = false, inLibrary = false } = {}
   };
 }
 
-module.exports = { detectManualGame, describeDetection, defaultReaders, consoleEmulatorFor, CONSOLE_EMULATORS, FOLDER_TYPES };
+module.exports = { detectManualGame, describeDetection, defaultReaders, consoleEmulatorFor };

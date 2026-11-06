@@ -176,6 +176,7 @@ let pendingInstallPrompt = null;
 const updateGate = require(path.join(__dirname, '../util/updateGate.js'));
 const { resolveSteamMetadata } = require(path.join(__dirname, '../util/steamMetadata.js'));
 const sourceIdentity = require(path.join(__dirname, '../util/sourceIdentity.js'));
+const dataLayout = require(path.join(__dirname, '../util/dataLayout.js'));
 const { isChecksumMismatchError, isMissingLinuxFeed, summarizeUpdaterError } = require(path.join(__dirname, '../util/updateChecksum.js'));
 const { verifyPendingInstaller } = require(path.join(__dirname, '../util/pendingInstallerGuard.js'));
 const { launchAfterExit } = require(path.join(__dirname, '../util/appImageRelaunch.js'));
@@ -1472,7 +1473,7 @@ async function fetchSteamHuntersJson(appid) {
 // Icon-hash -> real apiName lookup, one small file per appid (steam_cache, so "Clear caches" wipes
 // it too). Feeds the degraded SteamCommunity-only fallback below when every apiName source fails.
 function apiNameIndexPath(appid) {
-  return path.join(userData, 'steam_cache/apinames', `${appid}.json`);
+  return dataLayout.apiNamesFile(userData, appid);
 }
 
 function loadApiNameIndex(appid) {
@@ -6577,7 +6578,8 @@ const localIcons = require('../util/localIcons.js');
   the library one, and for a namespaced game (SocialClub, Uplay R2) those are not the same value.
 */
 function configuredExecutable(...appids) {
-  return require('../parser/exeList.js').firstExistingExecutable(appids, { file: path.join(userData, 'cfg', 'exeList.db') });
+  const exeList = require('../parser/exeList.js');
+  return exeList.firstExistingExecutable(appids, { file: exeList.exeListFile(userData) });
 }
 
 /*

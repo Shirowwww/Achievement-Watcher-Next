@@ -562,7 +562,7 @@ module.exports.diagnose = async (dirpath) => {
     // A CUSA folder inside, not merely a folder named game_data: a game_data sibling belonging to
     // another emulator install must not make an unrelated game folder look watchable.
     // Since 0.19 the trophies are in trophy/<NPWR…> instead.
-    const shadps4 = require('./shadps4.js')._internal;
+    const shadps4 = require('./shadps4.js');
     const hasDir = (dir, pattern) => {
       try {
         return fs.readdirSync(dir, { withFileTypes: true }).some((entry) => entry.isDirectory() && pattern.test(entry.name));

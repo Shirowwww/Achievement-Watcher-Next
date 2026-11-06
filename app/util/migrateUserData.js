@@ -5,6 +5,7 @@ const { TOOL_CACHE_DIRS } = require('./toolCaches.js');
 const os = require('os');
 const path = require('path');
 const { legacyUserDataDir, aw3UserDataDir } = require('./userDataPath.js');
+const { PLAYTIME_REGISTRY_ROOT } = require('./dataLayout.js');
 
 const MARKER_REL = path.join('cfg', 'migrated-from-legacy.json');
 const AW3_MARKER_REL = path.join('cfg', 'migrated-from-aw3.json');
@@ -16,7 +17,7 @@ const SOUVENIR_DIR_NAME = 'Achievement Watcher Next';
 const SETTINGS_REL = path.join('cfg', 'options.ini');
 const LEGACY_PLAYTIME_ROOT = 'Software/Achievement Watcher/Playtime/Steam';
 const AW3_PLAYTIME_ROOT = 'Software/Achievement Watcher 3.0/Playtime/Steam';
-const PLAYTIME_ROOT = 'Software/Achievement Watcher Next/Playtime/Steam';
+const PLAYTIME_ROOT = PLAYTIME_REGISTRY_ROOT;
 
 // Import AW data without copying Chromium's profile.
 // Mutable files are copied; large write-once caches use hard links when possible.

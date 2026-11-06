@@ -15,6 +15,7 @@ const { userDataDir } = require('./util/userData.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 
 const steamSchemaFetch = require(sharedAppModulePath('util/steamSchemaFetch.js'));
+const { apiNamesFile } = require(sharedAppModulePath('util/dataLayout.js'));
 const steamLang = require(sharedAppModulePath('locale/steam.json'));
 const { mergeTranslatedAchievements } = require(sharedAppModulePath('parser/achievementTranslations.js'));
 
@@ -152,7 +153,7 @@ async function getSteamCommunityRows(appID, lang) {
 // Same icon-hash -> apiName index as app/electron/init.js, shared on disk (both use the same
 // steam_cache/apinames/<appID>.json), so whichever side resolves first helps the other's fallback.
 function apiNameIndexPath(appID) {
-  return path.join(userDataDir(), 'steam_cache/apinames', `${appID}.json`);
+  return apiNamesFile(userDataDir(), appID);
 }
 
 function loadApiNameIndex(appID) {

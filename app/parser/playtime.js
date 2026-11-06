@@ -3,12 +3,13 @@
 const { readRegistryInteger, readRegistryIntegers, writeRegistryDword } = require('../util/reg');
 const playtimeFile = require('../util/playtimeFile.js');
 const { userDataDir } = require('../util/userDataPath.js');
+const { PLAYTIME_REGISTRY_ROOT } = require('../util/dataLayout.js');
 
 // Read side of the playtime counters the Watchdog writes in watchdog/playtime/track.js - the two
 // must name the same registry key. Counters recorded under the older "Achievement Watcher" and
 // "Achievement Watcher 3.0" namespaces are copied here once by migratePlaytimeRegistry().
 // Without a registry (Linux) both sides use cfg/playtime.json instead.
-const PLAYTIME_KEY = 'Software/Achievement Watcher Next/Playtime/Steam/';
+const PLAYTIME_KEY = `${PLAYTIME_REGISTRY_ROOT}/`;
 const useRegistry = () => process.platform === 'win32';
 
 function readCounters(appID) {

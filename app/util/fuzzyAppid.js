@@ -306,7 +306,6 @@ function sameTitleAppid(query, appsOrIndex) {
 module.exports = {
   cleanGameName,
   normAlnum,
-  diceCoefficient,
   rankAppidCandidates,
   bestConfidentAppid,
   sameTitle,

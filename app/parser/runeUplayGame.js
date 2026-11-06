@@ -29,12 +29,9 @@ function savedIds(data) {
   return [...ids].sort((a, b) => Number(a) - Number(b));
 }
 
+// The launcher's cached archive first, else Ubisoft's CDN; '' when neither has one.
 async function findArchive(uplayId) {
-  try {
-    return ubisoftOfficial._internal.resolveAchievementsArchive(uplayId).archivePath;
-  } catch {
-    return (await ubisoftOfficial.ensureAchievementsArchive(uplayId)) || '';
-  }
+  return (await ubisoftOfficial.ensureAchievementsArchive(uplayId)) || '';
 }
 
 // Only the ids the save names: the title is all the table can say about a product with no archive.

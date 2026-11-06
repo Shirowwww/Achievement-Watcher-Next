@@ -214,7 +214,5 @@ module.exports = {
   fetchLibrary,
   loadLibrary,
   fetchPlayerAchievements,
-  LIBRARY_TTL_MS,
   LIBRARY_CACHE_VERSION,
-  _internal: { idSet },
 };

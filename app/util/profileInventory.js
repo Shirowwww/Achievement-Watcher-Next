@@ -14,6 +14,9 @@ const fs = require('fs');
 const { TOOL_CACHE_DIRS } = require('./toolCaches.js');
 const path = require('path');
 const { PLAYTIME_RELATIVE } = require('./playtimeFile.js');
+const { BASELINE_DIR } = require('../parser/watchdog.js');
+const { USER_DIR_FILE } = require('../parser/userDirEntries.js');
+const { NOTIFICATION_HEALTH_FILE } = require('../parser/notificationHealth.js');
 
 const CONFIG_EXTENSIONS = ['.json', '.db', '.ini', '.txt'];
 
@@ -29,7 +32,7 @@ const RULES = [
   { path: 'sounds', include: true, mode: 'replace', why: 'imported notification sounds' },
   { path: 'presets', include: true, mode: 'replace', why: 'generated and imported notification presets' },
   { path: 'backups', include: true, mode: 'replace', why: 'GBE restore points and achievement reset backups' },
-  { path: 'steam_cache/data', include: true, mode: 'replace', why: 'achievement reset baselines' },
+  { path: BASELINE_DIR, include: true, mode: 'replace', why: 'achievement reset baselines' },
   { path: 'steam_cache/xbox', include: true, mode: 'replace', why: 'imported Xbox library, no public source to refetch it' },
   { path: 'steam_cache/retroachievements', include: true, mode: 'replace', why: 'imported RetroAchievements library' },
   { path: 'steam_cache/psn', include: true, mode: 'replace', why: 'imported PlayStation Network library' },
@@ -46,8 +49,8 @@ const RULES = [
   { path: '.updaterId', include: false, why: 'machine identity' },
   { path: 'cfg/mainWindowState.json', include: false, why: 'window bounds of this monitor layout' },
   { path: 'cfg/overlayBounds.json', include: false, why: 'overlay bounds of this monitor layout' },
-  { path: 'cfg/notificationHealth.json', include: false, why: 'delivery health of this machine' },
-  { path: 'cfg/userdir.db', include: false, why: 'emulator save folders found on this machine, rediscovered by a scan' },
+  { path: NOTIFICATION_HEALTH_FILE, include: false, why: 'delivery health of this machine' },
+  { path: USER_DIR_FILE, include: false, why: 'emulator save folders found on this machine, rediscovered by a scan' },
   { path: 'cfg/steamdb.json', include: false, why: 'name cache' },
   { path: PLAYTIME_RELATIVE, include: false, why: 'playtime counters without a registry, carried in the manifest and merged with max()' },
 
@@ -177,7 +180,6 @@ module.exports = {
   MAX_FILE_BYTES,
   MAX_TOTAL_BYTES,
   isSafeRelativePath,
-  isSecretFile,
   classify,
   unitFor,
   listProfileFiles,

@@ -11,6 +11,7 @@ const path = require('path');
 const debug = require('../util/log.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { gameIndexFiles } = require(sharedAppModulePath('util/dataLayout.js'));
 const {
   mergeConfigBlocks,
   readConfigurationBlocks,
@@ -102,10 +103,7 @@ function readTitles(configurationsPath = defaultConfigurationsPath()) {
 
 // The app records the resolved game name (and Steam release) in gameIndex with the Ubisoft product
 // id; prefer that over the raw configurations block when it exists. Files injectable for tests.
-function indexedUplayName(uplayId, files = [
-  path.join(userDataDir(), 'steam_cache', 'schema', 'gameIndex.json'),
-  path.join(userDataDir(), 'cfg', 'gameIndex.json'),
-]) {
+function indexedUplayName(uplayId, files = gameIndexFiles(userDataDir())) {
   const key = String(uplayId || '');
   if (!key) return '';
   for (const file of files) {

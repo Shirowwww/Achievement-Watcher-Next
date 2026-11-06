@@ -9,6 +9,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const fsProbe = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { hostPath, hostsFor, allowedFromConfig } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { writeFileAtomicSync } = require(path.join(__dirname, '..', 'util', 'replaceFile.js'));
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
@@ -74,7 +75,7 @@ const PORTS = [
 let debug = { log() {}, warn() {}, error() {} };
 // The app hands its scan-wide listing memo here (util/dirCache.js); the Watchdog, which loads this
 // file on its own, keeps reading the folders directly.
-let listDirectory = null;
+let readDirectory = fsProbe.readDirectory;
 
 module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
@@ -82,7 +83,7 @@ module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
     file: path.join(userDataPath, 'logs/parser.log'),
   });
   schema.setLogger(debug);
-  listDirectory = typeof reader === 'function' ? reader : null;
+  readDirectory = fsProbe.directoryLister(reader);
 };
 
 // Resolved on first use and overridable: the Watchdog locates userData its own way.
@@ -116,15 +117,6 @@ function isRealDirectory(dir) {
     return stat.isDirectory() && !stat.isSymbolicLink();
   } catch {
     return false;
-  }
-}
-
-function readDirectory(dir) {
-  if (listDirectory) return listDirectory(dir) || [];
-  try {
-    return fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return [];
   }
 }
 

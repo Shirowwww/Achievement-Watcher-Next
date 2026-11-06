@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const targets = require(path.join(__dirname, '..', 'util', 'achievementResetTargets.js'));
 const manualUnlock = require(path.join(__dirname, 'manualUnlock.js'));
+const watchdogBaseline = require(path.join(__dirname, 'watchdog.js'));
 const shadps4 = require(path.join(__dirname, 'shadps4.js'));
 const xenia = require(path.join(__dirname, 'xenia.js'));
 const x360Recomp = require(path.join(__dirname, 'x360Recomp.js'));
@@ -41,7 +42,7 @@ function gameBackupRoot(appid) {
 }
 
 function baselineFile(appid) {
-  return path.join(userDataPath || '', 'steam_cache', 'data', `${appid}.db`);
+  return watchdogBaseline.baselineFile(userDataPath, appid);
 }
 
 function statSafe(target) {
@@ -442,5 +443,7 @@ module.exports = {
   writeManifest,
   rollBack,
   zeroRegistryValue,
-  _internal: { collectTargets, backupIdFor, backupNameFor },
+  // The reset's own walk of a save folder, which a relock reuses with its own classifier.
+  collectTargets,
+  _internal: { backupIdFor, backupNameFor },
 };

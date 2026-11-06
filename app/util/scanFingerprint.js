@@ -119,4 +119,4 @@ function size(fingerprint) {
   return (fingerprint.dirs || []).length + (fingerprint.files || []).length;
 }
 
-module.exports = { MISSING, capture, captureDirs, captureFiles, matches, size };
+module.exports = { MISSING, capture, captureFiles, matches, size };

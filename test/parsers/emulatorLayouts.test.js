@@ -24,7 +24,7 @@ function tmpdir(prefix) {
 
 test('shadPS4 climbs out of its own trophy tree, from whichever level was added', () => {
   const emulator = path.resolve('D:', 'Emulators', 'shadPS4');
-  const candidates = shadps4._internal.gameDataRootCandidates(path.join(emulator, 'user'));
+  const candidates = shadps4.gameDataRootCandidates(path.join(emulator, 'user'));
 
   // Most specific first: the level the user actually pointed at.
   assert.equal(candidates[0], path.join(emulator, 'user', 'game_data'));
@@ -32,7 +32,7 @@ test('shadPS4 climbs out of its own trophy tree, from whichever level was added'
   assert.equal(new Set(candidates).size, candidates.length, 'candidates must not repeat');
 
   // A guide names the CUSA folder more often than the root, and that is four levels deep.
-  const deep = shadps4._internal.gameDataRootCandidates(path.join(emulator, 'game_data', 'CUSA12345', 'TrophyFiles', 'trophy00'));
+  const deep = shadps4.gameDataRootCandidates(path.join(emulator, 'game_data', 'CUSA12345', 'TrophyFiles', 'trophy00'));
   assert.ok(deep.includes(path.join(emulator, 'game_data')));
 });
 
@@ -41,7 +41,7 @@ test('a folder that is not part of the tree does not borrow the trophies above i
   // %APPDATA%\shadPS4\log - and every other sibling of game_data - report the emulator's games.
   const emulator = path.resolve('D:', 'Emulators', 'shadPS4');
   for (const sibling of ['log', 'savedata', 'shader', 'Some Game']) {
-    const candidates = shadps4._internal.gameDataRootCandidates(path.join(emulator, sibling));
+    const candidates = shadps4.gameDataRootCandidates(path.join(emulator, sibling));
     assert.ok(
       !candidates.some((candidate) => candidate === path.join(emulator, 'game_data')),
       `${sibling} must not resolve to the emulator's game_data`
@@ -53,7 +53,7 @@ test('a folder that is not part of the tree does not borrow the trophies above i
 
 test('shadPS4 accepts the game_data folder itself, which is what people copy out of a guide', () => {
   const gameData = path.resolve('C:', 'shadPS4', 'user', 'game_data');
-  assert.equal(shadps4._internal.gameDataRootCandidates(gameData)[0], gameData);
+  assert.equal(shadps4.gameDataRootCandidates(gameData)[0], gameData);
 });
 
 test('shadPS4 finds config.toml beside the binary or under user/', () => {
@@ -238,7 +238,7 @@ test('shadPS4 0.19 trophies are found from the user home folder people add', asy
 
 test('a numbered folder outside the shadPS4 home does not climb', () => {
   const games = path.resolve('D:', 'Games', '1000');
-  assert.deepEqual(shadps4._internal.userRootCandidates(games), [games, path.join(games, 'user')]);
+  assert.deepEqual(shadps4.userRootCandidates(games), [games, path.join(games, 'user')]);
 });
 
 test('a game moved to the 0.19 layout is listed once, from the new layout', async () => {

@@ -10,6 +10,14 @@
   guessed back into a URL that could resolve to somebody else's artwork.
 */
 
+const path = require('path');
 const { createImageOverrideStore } = require('./imageOverrideStore.js');
 
-module.exports = createImageOverrideStore({ fileName: 'gameIcons.db', folder: 'gameIcons' });
+const FILE_NAME = 'gameIcons.db';
+
+// The map file the Watchdog reads straight from disk for a notification's icon.
+function gameIconsFile(userDataPath) {
+  return path.join(userDataPath, 'cfg', FILE_NAME);
+}
+
+module.exports = { ...createImageOverrideStore({ fileName: FILE_NAME, folder: 'gameIcons' }), gameIconsFile };

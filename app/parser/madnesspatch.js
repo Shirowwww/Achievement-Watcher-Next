@@ -12,7 +12,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { isFile, isDirectory } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
+const fsProbe = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
+const { isFile, isDirectory } = fsProbe;
 
 const APPID = 'madnesspatch-19680';
 const EXECUTABLE = 'AliceMadnessReturns.exe';
@@ -45,24 +46,15 @@ module.exports.setIconRoot = (dir) => {
 let debug = { log() {}, warn() {}, error() {} };
 // The app hands its scan-wide listing memo here (util/dirCache.js); the Watchdog, which loads this
 // file on its own, keeps reading the folders directly.
-let listDirectory = null;
+let readDirectory = fsProbe.readDirectory;
 
 module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
-  listDirectory = typeof reader === 'function' ? reader : null;
+  readDirectory = fsProbe.directoryLister(reader);
 };
-
-function readDirectory(target) {
-  if (listDirectory) return listDirectory(target) || [];
-  try {
-    return fs.readdirSync(target, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
 
 function decodeTextBuffer(buffer) {
   if (!Buffer.isBuffer(buffer)) return String(buffer || '');

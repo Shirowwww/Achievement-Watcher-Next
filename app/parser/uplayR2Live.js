@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('../util/userDataPath.js');
 const { createIndexedGameLookup } = require('../util/indexedGameLookup.js');
+const { gameIndexFiles: gameIndexFilesOf } = require('../util/dataLayout.js');
 const uplaySteamTable = require('./uplaySteamTable.js');
 
 const OBJECTIVE_MAP_FILE = 'uplay-objectives.json';
@@ -148,8 +149,7 @@ function siblingUplayIdsFor(steamAppid) {
 }
 
 function gameIndexFiles() {
-  const root = userDataDir();
-  return [path.join(root, 'steam_cache', 'schema', 'gameIndex.json'), path.join(root, 'cfg', 'gameIndex.json')];
+  return gameIndexFilesOf(userDataDir());
 }
 
 function objectiveMapFile() {

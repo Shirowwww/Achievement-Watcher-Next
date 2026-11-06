@@ -24,6 +24,7 @@ const themePackage = lazyRequire(path.join(__dirname, '../util/themePackage.js')
 const presetPackage = lazyRequire(path.join(__dirname, '../util/presetPackage.js'));
 const presetSchema = require('../util/presetSchema.js');
 const { PREVIEW_PRESET_NAME } = require('../util/notificationPreset.js');
+const { gameIndexFile } = require('../util/dataLayout.js');
 const sanImport = lazyRequire(path.join(__dirname, '../util/sanImport.js'));
 const sanEngine = lazyRequire(path.join(__dirname, '../util/sanEngine/index.js'));
 const RarityTiers = require('../util/rarityTiers.js');
@@ -450,7 +451,7 @@ ipcMain.handle('notification-sample-art', async () => {
     */
     let named = [];
     try {
-      const index = JSON.parse(fs.readFileSync(path.join(userData, 'cfg', 'gameIndex.json'), 'utf8'));
+      const index = JSON.parse(fs.readFileSync(gameIndexFile(userData), 'utf8'));
       named = Object.values(index).filter((game) => game && game.appid && game.name && covers.has(String(game.appid)));
     } catch {}
 

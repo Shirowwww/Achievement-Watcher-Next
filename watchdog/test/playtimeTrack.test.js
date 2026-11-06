@@ -81,8 +81,7 @@ test('a finished session is added to the registry total, and stamps `last`', { s
 });
 
 test('the playtime key is namespaced to AW Next so a predecessor uninstall cannot wipe it', () => {
-  const fs = require('node:fs');
-  const source = fs.readFileSync(path.join(__dirname, '..', 'playtime', 'track.js'), 'utf8');
+  const { PLAYTIME_REGISTRY_ROOT } = require(path.join(__dirname, '..', '..', 'app', 'util', 'dataLayout.js'));
   // issue #6: both predecessors' uninstallers remove their own "Achievement Watcher" tree.
-  assert.match(source, /Software\/Achievement Watcher Next\/Playtime\/Steam\//);
+  assert.equal(`${PLAYTIME_REGISTRY_ROOT}/`, KEY.slice(0, -APPID.length));
 });

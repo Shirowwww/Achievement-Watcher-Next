@@ -10,7 +10,7 @@ const crackLoaderDetect = require('./crackLoaderDetect.js');
 const unrealLayout = require('./unrealLayout.js');
 const exeDetect = require('../parser/exeDetect.js');
 const launcherDetect = require('../parser/launcherDetect.js');
-const uplayR2 = require('../parser/uplayR2.js');
+const uplayR2Loader = require('../parser/uplayR2Loader.js');
 
 const ALLOWED_SYSTEMS = new Set(['', 'pc', 'windows', 'steam']);
 const NON_GBE_SOURCES = /^(?:gog|epic|ea|xbox|playstation|rpcs3|shadps4|kytyps5|ps4\s*recomp|xenia|ubisoft|uplay|social\s*club)/i;
@@ -109,7 +109,7 @@ function inspect({ gameDir, gameName = '', source = '', system = '', isUbisoft =
   */
   const existingFix = findExistingFix(gameDir);
   if (existingFix) return { eligible: false, reason: 'existing-fix', existingFix };
-  if (uplayR2.detectEmulator(gameDir).type !== 'none') return { eligible: false, reason: 'uplay-r2' };
+  if (uplayR2Loader.detectEmulator(gameDir).type !== 'none') return { eligible: false, reason: 'uplay-r2' };
   /*
     Nothing trustworthy to hang the runtime on. With no steam_api dll already in the tree, the only
     thing deciding where the setup lands is the detected executable - and an ambiguous match is a

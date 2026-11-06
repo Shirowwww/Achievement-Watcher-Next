@@ -3,8 +3,10 @@
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const path = require('path');
 const fs = require(sharedAppModulePath('util/fsAsync.js'));
+const { writeFileAtomicSync } = require(sharedAppModulePath('util/replaceFile.js'));
+const { baselineDir, baselineName } = require(sharedAppModulePath('parser/watchdog.js'));
 
-let cacheDir = path.join(require('./util/userData.js').userDataDir(), 'steam_cache', 'data');
+let cacheDir = baselineDir(require('./util/userData.js').userDataDir());
 
 // Keep an in-memory baseline when disk persistence fails.
 const memoryCache = new Map();
@@ -17,7 +19,7 @@ function cacheKey(appID) {
 }
 
 function cacheFilePath(appID) {
-  return path.join(cacheDir, `${cacheKey(appID)}.db`);
+  return path.join(cacheDir, baselineName(cacheKey(appID)));
 }
 
 // Test hook for an isolated cache.
@@ -97,42 +99,7 @@ function snapshotOf(entries) {
   return entries.map((entry) => ({ ...entry }));
 }
 
-// Temp sibling + rename, so a crash can never leave a half-written baseline behind.
-async function persist(filePath, achievements) {
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-
-  const data = JSON.stringify(achievements);
-  const tmpPath = `${filePath}.tmp`;
-
-  try {
-    await fs.writeFile(tmpPath, data, 'utf8');
-  } catch (err) {
-    await fs.unlink(tmpPath).catch(() => {});
-    throw err;
-  }
-
-  // Retry Windows rename races, then fall back to an in-place write.
-  try {
-    await renameWithRetry(tmpPath, filePath);
-  } catch {
-    try {
-      await fs.writeFile(filePath, data, 'utf8');
-    } finally {
-      await fs.unlink(tmpPath).catch(() => {});
-    }
-  }
-}
-
-async function renameWithRetry(tmpPath, filePath, attempts = 3, delayMs = 25) {
-  let lastError;
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    try {
-      await fs.rename(tmpPath, filePath);
-      return;
-    } catch (err) {
-      lastError = err;
-      if (attempt < attempts - 1) await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-  }
-  throw lastError;
+// A crash can never leave a half-written baseline behind; the app reads these files too.
+function persist(filePath, achievements) {
+  writeFileAtomicSync(filePath, JSON.stringify(achievements));
 }

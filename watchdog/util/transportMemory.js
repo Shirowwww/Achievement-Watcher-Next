@@ -6,8 +6,10 @@
 // pruned record per game that Automatic consults only as a tie-breaker (see transportPolicy.js).
 
 const fs = require('fs');
-const path = require('path');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
 const { userDataDir } = require('./userData.js');
+const { notificationHealthFile } = require(sharedAppModulePath('parser/notificationHealth.js'));
+const { writeFileAtomicSync } = require(sharedAppModulePath('util/replaceFile.js'));
 
 const MAX_ENTRIES = 200;
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -17,7 +19,7 @@ const REWRITE_AFTER_MS = 60 * 1000;
 let cache = { at: 0, games: null };
 
 function file() {
-  return path.join(userDataDir(), 'cfg', 'notificationHealth.json');
+  return notificationHealthFile(userDataDir());
 }
 
 function read() {
@@ -83,8 +85,8 @@ function remember(appid, { transport, reason = '', outcome = 'delivered', now = 
   games[key] = { transport, reason, outcome, at: now };
   prune(games, now);
   try {
-    fs.mkdirSync(path.dirname(file()), { recursive: true });
-    fs.writeFileSync(file(), JSON.stringify({ updated: now, games }), 'utf8');
+    // Atomic: the app reads this file while the Watchdog writes it.
+    writeFileAtomicSync(file(), JSON.stringify({ updated: now, games }));
     return true;
   } catch {
     // Best effort: the in-memory map stays correct for this session either way.

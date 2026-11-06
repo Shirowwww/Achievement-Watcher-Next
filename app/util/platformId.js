@@ -97,7 +97,6 @@ function steamAppidOf(game) {
 }
 
 module.exports = {
-  SOURCE_TO_PLATFORM,
   normalizeType,
   sanitizeAppIdForPlatform,
   officialAppId,

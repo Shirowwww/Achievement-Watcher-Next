@@ -14,6 +14,8 @@ const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, mergeGameIndexe
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
 const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
+const { gameIndexFile, gameIndexCatalogueFile } = require(sharedAppModulePath('util/dataLayout.js'));
+const { writeFileAtomicSync } = require(sharedAppModulePath('util/replaceFile.js'));
 const watchdogSettings = require('../settings.js');
 const { loadRegodit } = require('../util/regodit.js');
 
@@ -727,7 +729,7 @@ async function addToGameIndex(game) {
   if (isIgnoredAppid(game.appid) || disabledOfficialSteamAppids.has(normalizeAppid(game.appid))) return;
   let userOverride;
   try {
-    userOverride = JSON.parse(fs.readFileSync(path.join(userDataDir(), 'cfg', 'gameIndex.json'), 'utf8'));
+    userOverride = JSON.parse(fs.readFileSync(gameIndexFile(userDataDir()), 'utf8'));
   } catch (err) {
     // A locked or half-written file is left alone: rewriting it from scratch would drop the
     // user's other entries; the caller still tracks this run, and the next launch retries.
@@ -739,7 +741,7 @@ async function addToGameIndex(game) {
   }
   if (userOverride.find((g) => normalizeAppid(g.appid) === normalizeAppid(game.appid))) return;
   userOverride.push(game);
-  fs.writeFileSync(path.join(userDataDir(), 'cfg', 'gameIndex.json'), JSON.stringify(userOverride), 'utf8');
+  writeFileAtomicSync(gameIndexFile(userDataDir()), JSON.stringify(userOverride));
   gameIndex.push(game);
   gameIndexByBinary = buildBinaryIndex(gameIndex);
   debug.log(`Added ${game.name} to GameIndex.json`);
@@ -747,8 +749,8 @@ async function addToGameIndex(game) {
 
 async function getGameIndex() {
   const filePath = {
-    cache: path.join(userDataDir(), 'steam_cache/schema', 'gameIndex.json'),
-    user: path.join(userDataDir(), 'cfg', 'gameIndex.json'),
+    cache: gameIndexCatalogueFile(userDataDir()),
+    user: gameIndexFile(userDataDir()),
   };
 
   let cached = [],

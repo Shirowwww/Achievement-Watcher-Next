@@ -3,6 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('./userData.js');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { writeFileAtomicSync } = require(sharedAppModulePath('util/replaceFile.js'));
+const { consoleBaselineDir, baselineFileName } = require(sharedAppModulePath('util/dataLayout.js'));
 
 /*
   The unlock baseline each live watcher diffs against, in one place.
@@ -16,18 +19,14 @@ const { userDataDir } = require('./userData.js');
   disk reads back as "this game has nothing unlocked yet", and every achievement already earned is
   then announced again.
 */
-const CACHE_DIR = path.join(userDataDir(), 'steam_cache/console');
-
-function safeName(key) {
-  return String(key == null ? '' : key).replace(/[^\w.-]/g, '_');
-}
+const CACHE_DIR = consoleBaselineDir(userDataDir());
 
 /*
   `prefix` keeps one watcher's files apart from another's in the shared folder. ShadPS4 passes none,
   because its files were written without one before this existed and are still read.
 */
 function createBaselineCache({ prefix = '', tag = prefix || 'watch', dir = CACHE_DIR, debug } = {}) {
-  const fileFor = (key) => path.join(dir, `${prefix ? `${prefix}-` : ''}${safeName(key)}.json`);
+  const fileFor = (key) => path.join(dir, baselineFileName(prefix, key));
 
   return {
     file: fileFor,
@@ -42,19 +41,10 @@ function createBaselineCache({ prefix = '', tag = prefix || 'watch', dir = CACHE
     },
 
     save(key, unlocked) {
-      const file = fileFor(key);
-      const temporary = `${file}.${process.pid}.tmp`;
       try {
-        fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(temporary, JSON.stringify({ unlocked: Array.from(unlocked || []) }), 'utf8');
-        fs.renameSync(temporary, file);
+        writeFileAtomicSync(fileFor(key), JSON.stringify({ unlocked: Array.from(unlocked || []) }));
       } catch (err) {
         debug?.warn?.(`[${tag}] cache save failed for ${key}: ${err}`);
-        try {
-          if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
-        } catch {
-          /* the rename already consumed it, or the folder is gone */
-        }
       }
     },
   };

@@ -41,4 +41,29 @@ function readText(file) {
   }
 }
 
-module.exports = { isFile, isDirectory, readDirectory, readText };
+// readDirectory, or the listing a test injects through a parser's initDebug({ listDirectory }).
+function directoryLister(listDirectory) {
+  if (typeof listDirectory !== 'function') return readDirectory;
+  return (target) => listDirectory(target) || [];
+}
+
+/*
+  A text file inside a user-writable game folder: a real file (never a link, which could point
+  anywhere), at most `maxBytes`, strict UTF-8 without its BOM. null for anything else.
+*/
+function readStrictText(file, maxBytes) {
+  let stat;
+  try {
+    stat = fs.lstatSync(file);
+  } catch {
+    return null;
+  }
+  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > maxBytes) return null;
+  try {
+    return new TextDecoder('utf-8', { fatal: true }).decode(fs.readFileSync(file)).replace(/^﻿/, '');
+  } catch {
+    return null;
+  }
+}
+
+module.exports = { isFile, isDirectory, readDirectory, readText, directoryLister, readStrictText };

@@ -247,4 +247,4 @@ const defaultFetchers = {
   fetchBuffer: async (url) => Buffer.from(await (await fetchWithTimeout(url, 'application/octet-stream')).arrayBuffer()),
 };
 
-module.exports = { updateExtensions, defaultFetchers, isNewer, SPECS, RECHECK_MS };
+module.exports = { updateExtensions, defaultFetchers, isNewer };

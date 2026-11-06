@@ -5,13 +5,19 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 
+const { watchdogSharedModules } = require('../helpers/watchdogShared.js');
+
 const app = (rel) => path.join(__dirname, '..', '..', 'app', rel);
 
 test('the shared Watchdog modules load without the scan, Steam or the Xbox auth library', () => {
+  // As in production, where the app always hands the Watchdog its data folder: without it a module
+  // that resolves the folder at load (exeList.js) falls back to asking Electron.
+  process.env.AW_USER_DATA = process.env.AW_USER_DATA || require('node:os').tmpdir();
   const before = new Set(Object.keys(require.cache));
-  for (const rel of ['parser/xboxPcCore.js', 'parser/socialclubNames.js', 'parser/sse.js', 'util/rldBlob.js', 'parser/emuSave.js', 'parser/emuSaveRoots.js', 'util/notificationPreset.js', 'util/sourceIdentity.js']) {
-    require(app(rel));
-  }
+  // Every module the Watchdog names, read from its sources, so a newly shared one is weighed too.
+  const { requested } = watchdogSharedModules();
+  assert.ok(requested.includes('parser/userDirEntries.js'), 'the scan no longer finds what the Watchdog loads');
+  for (const rel of requested) require(app(rel));
   const loaded = Object.keys(require.cache).filter((file) => !before.has(file));
   // Whole file names for the scan modules: ff7.js loads ff7-achievements.json, which is not achievements.js.
   for (const heavy of ['steam.js', 'achievements.js']) {

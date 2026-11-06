@@ -9,7 +9,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { TextDecoder } = require('util');
+const fsProbe = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { hostPath, hostsFor, firstExisting } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 
 const SOURCE = 'PC Port';
@@ -59,14 +59,14 @@ const timesFile = () => path.join(dataRoot(), 'cfg', TIMES_FILE);
 let debug = { log() {}, warn() {}, error() {} };
 // The app hands its scan-wide listing memo here (util/dirCache.js); the Watchdog, which loads this
 // file on its own, keeps reading the folders directly.
-let listDirectory = null;
+let readDirectory = fsProbe.readDirectory;
 
 module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
-  listDirectory = typeof reader === 'function' ? reader : null;
+  readDirectory = fsProbe.directoryLister(reader);
 };
 
 function statOf(target) {
@@ -88,25 +88,7 @@ function isPlainDirectory(target) {
   return !!stat && stat.isDirectory() && !stat.isSymbolicLink();
 }
 
-function readDirectory(target) {
-  if (listDirectory) return listDirectory(target) || [];
-  try {
-    return fs.readdirSync(target, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
-
-// Strict UTF-8, bounded, no links; null for anything else.
-function readText(file) {
-  const stat = statOf(file);
-  if (!stat || !stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_TEXT_BYTES) return null;
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(fs.readFileSync(file)).replace(/^\uFEFF/, '');
-  } catch {
-    return null;
-  }
-}
+const readText = (file) => fsProbe.readStrictText(file, MAX_TEXT_BYTES);
 
 // The folder holding the exe is the install; null when this is not one.
 function detect(dir) {

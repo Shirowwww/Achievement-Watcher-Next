@@ -161,8 +161,17 @@ test('a chosen icon is resolved for every surface, not only the page it was chos
   // The Watchdog paints Windows toasts without going through that resolver, so it reads the same
   // file itself rather than being left with the artwork chain alone.
   assert.match(watchdog, /customGameIcon\(game\.appid\) \|\|/);
-  const artwork = fs.readFileSync(path.join(root, 'watchdog', 'util', 'steamArtwork.js'), 'utf8');
-  assert.match(artwork, /path\.join\(root, 'cfg', 'gameIcons\.db'\)/);
+});
+
+test('the Watchdog reads the icon picks from the file the app store writes', (t) => {
+  const store = require(path.join(root, 'app', 'util', 'gameIconStore.js'));
+  const { customGameIcon } = require(path.join(root, 'watchdog', 'util', 'steamArtwork.js'));
+  const profile = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'aw-icon-file-'));
+  t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
+  store.setStoreFile(store.gameIconsFile(profile));
+  t.after(() => store.setStoreFile(null));
+  store.writeAll({ 480: 'https://cdn.example/icon.png' });
+  assert.equal(customGameIcon('480', { userDataRoot: profile }), 'https://cdn.example/icon.png');
 });
 
 test('notification cards fall back to the game folder when nothing else answers', () => {

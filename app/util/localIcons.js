@@ -276,9 +276,6 @@ function gameIconCandidates(game, { limit = 24 } = {}) {
 }
 
 module.exports = {
-  IMAGE_DIR_NAMES,
-  settingsRoots,
-  imageDirs,
   iconToken,
   readIndex,
   clearCache,

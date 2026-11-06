@@ -14,13 +14,22 @@
 const fs = require('fs');
 const path = require('path');
 
-let cfgDir = null;
+const NOTIFICATION_HEALTH_FILE = 'cfg/notificationHealth.json';
+
+function notificationHealthFile(userDataPath) {
+  return path.join(userDataPath || '', NOTIFICATION_HEALTH_FILE);
+}
+
+module.exports.NOTIFICATION_HEALTH_FILE = NOTIFICATION_HEALTH_FILE;
+module.exports.notificationHealthFile = notificationHealthFile;
+
+let userData = null;
 module.exports.setUserDataPath = (p) => {
-  if (p) cfgDir = path.join(p, 'cfg');
+  if (p) userData = p;
 };
 
 function file() {
-  return path.join(cfgDir || '', 'notificationHealth.json');
+  return notificationHealthFile(userData);
 }
 
 function read() {

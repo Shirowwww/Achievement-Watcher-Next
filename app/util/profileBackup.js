@@ -11,8 +11,9 @@ const path = require('path');
 const inventory = require('./profileInventory.js');
 const archive = require('./profileArchive.js');
 const playtimeFile = require('./playtimeFile.js');
+const { PLAYTIME_REGISTRY_ROOT } = require('./dataLayout.js');
 
-const PLAYTIME_KEY = 'Software/Achievement Watcher Next/Playtime/Steam';
+const PLAYTIME_KEY = PLAYTIME_REGISTRY_ROOT;
 const OPTIONS_REL = 'cfg/options.ini';
 const SIGN_IN_FILES = [
   ['epic', 'epic_tokens.enc'],

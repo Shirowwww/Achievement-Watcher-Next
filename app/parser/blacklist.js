@@ -3,6 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const { crc32 } = require('../util/crc32.js');
+const { gameIndexFile } = require('../util/dataLayout.js');
 
 let debug;
 let exclusionFile;
@@ -76,9 +77,9 @@ module.exports.reset = async () => {
 // The app's own index of every game it has seen (cfg/gameIndex.json). This is the only local source
 // that covers non-Steam ids - `local-…`, Uplay, Xbox - which is exactly what the blacklist is full
 // of, and it already carries the display name the library showed.
-function lookupGameIndexName(cfgDir, id) {
+function lookupGameIndexName(userDataRoot, id) {
   try {
-    const rows = JSON.parse(fs.readFileSync(path.join(cfgDir, 'gameIndex.json'), 'utf8'));
+    const rows = JSON.parse(fs.readFileSync(gameIndexFile(userDataRoot), 'utf8'));
     if (!Array.isArray(rows)) return '';
     const hit = rows.find((row) => row && String(row.appid ?? '').trim() === id && String(row.name ?? '').trim());
     return hit ? String(hit.name).trim() : '';
@@ -176,7 +177,7 @@ function resolveNameOffline(appid) {
   const cfgDir = path.dirname(exclusionFile);
   const userDataDir = path.join(cfgDir, '..');
   try {
-    const indexed = lookupGameIndexName(cfgDir, id);
+    const indexed = lookupGameIndexName(userDataDir, id);
     if (indexed) return indexed;
     const cached = lookupSchemaCacheName(userDataDir, id);
     if (cached) return cached;

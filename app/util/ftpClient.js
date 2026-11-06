@@ -314,4 +314,4 @@ function parseListing(text) {
   return names;
 }
 
-module.exports = { FtpClient, FtpError, isLocalAddress, normalizeHost, resolveLocalHost, parsePort, parseListing, DEFAULT_MAX_FILE_BYTES, DEFAULT_TIMEOUT_MS };
+module.exports = { FtpClient, FtpError, isLocalAddress, resolveLocalHost, parsePort, DEFAULT_MAX_FILE_BYTES, DEFAULT_TIMEOUT_MS };

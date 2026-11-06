@@ -6,6 +6,7 @@ const fs = require('fs');
 const request = require('../util/lazyRequire.js').lazyRequire('request-zero');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { isImageBuffer, usableCachedImage } = require(sharedAppModulePath('util/imageSniff.js'));
+const { iconCacheDir } = require(sharedAppModulePath('util/dataLayout.js'));
 
 
 const cdnProviders = [
@@ -55,7 +56,7 @@ module.exports = async (url, appID) => {
         if (fs.existsSync(localPath)) return localPath;
       } catch {}
     }
-    const cache = path.join(require('../util/userData.js').userDataDir(), `steam_cache/icon/${appID}`);
+    const cache = iconCacheDir(require('../util/userData.js').userDataDir(), appID);
     let filename = path.parse(url).base;
     filePath = path.join(cache, filename);
     if (usableCachedImage(filePath)) return filePath;

@@ -54,12 +54,15 @@ test('identifiers an existing install depends on are unchanged', () => {
   assert.match(userDataPath, /AW3_DATA_DIR_NAME = 'Achievement Watcher 3\.0'/, 'the 3.x import must still find its source');
   assert.match(userDataPath, /LEGACY_DATA_DIR_NAME = 'Achievement Watcher'/, 'the one-time legacy import must still find the 1.6.8 folder');
 
-  // The app and the Watchdog resolve the same folder independently; a mismatch means the monitor
-  // writes unlock state the UI never reads.
-  assert.match(read('watchdog', 'util', 'userData.js'), /APP_DATA_DIR_NAME = 'Achievement Watcher Next'/, 'the Watchdog must agree on the data folder');
+  // A Watchdog resolving its own folder would write unlock state the UI never reads.
+  const watchdogUserData = require(path.join(__dirname, '..', '..', 'watchdog', 'util', 'userData.js'));
+  assert.equal(watchdogUserData.userDataDir, require(path.join(__dirname, '..', '..', 'app', 'util', 'userDataPath.js')).userDataDir, 'the Watchdog must use the app resolver');
   // Playtime is written by the Watchdog and read by the app: both must name one registry key.
-  assert.match(read('watchdog', 'playtime', 'track.js'), /Software\/Achievement Watcher Next\/Playtime\/Steam\//, 'playtime writer namespace');
-  assert.match(read('app', 'parser', 'playtime.js'), /Software\/Achievement Watcher Next\/Playtime\/Steam\//, 'playtime reader namespace');
+  assert.equal(require(path.join(__dirname, '..', '..', 'app', 'util', 'dataLayout.js')).PLAYTIME_REGISTRY_ROOT, 'Software/Achievement Watcher Next/Playtime/Steam', 'playtime namespace');
+  for (const file of [['watchdog', 'playtime', 'track.js'], ['app', 'parser', 'playtime.js'], ['app', 'util', 'migrateUserData.js'], ['app', 'util', 'profileBackup.js']]) {
+    assert.match(read(...file), /PLAYTIME_REGISTRY_ROOT/, `${file.join('/')} takes the playtime key from dataLayout.js`);
+    assert.doesNotMatch(read(...file), /Software\/Achievement Watcher Next\/Playtime/, `${file.join('/')} must not spell the key again`);
+  }
 
   const spawnOverlay = read('watchdog', 'notification', 'spawnOverlay.js');
   assert.match(spawnOverlay, /'Achievement Watcher\.exe'/, 'the Watchdog spawns the app by its real executable name');

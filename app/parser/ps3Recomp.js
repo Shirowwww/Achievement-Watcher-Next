@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const fsProbe = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { isElf } = require(path.join(__dirname, '..', 'util', 'elf.js'));
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
@@ -45,14 +46,14 @@ const MAX_CACHED_LISTS = 64;
 
 let debug = { log() {}, warn() {}, error() {} };
 // The scan's shared directory listing (achievements.js); the Watchdog reads the folders directly.
-let listDirectory = null;
+let readDirectory = fsProbe.readDirectory;
 
 module.exports.initDebug = ({ isDev, userDataPath, listDirectory: reader }) => {
   debug = new (require(path.join(__dirname, '..', 'util', 'logger.js')))({
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
-  listDirectory = typeof reader === 'function' ? reader : null;
+  readDirectory = fsProbe.directoryLister(reader);
 };
 
 // Resolved on first use and overridable: the Watchdog locates userData its own way.
@@ -86,15 +87,6 @@ function isRealDirectory(dir) {
     return stat.isDirectory() && !stat.isSymbolicLink();
   } catch {
     return false;
-  }
-}
-
-function readDirectory(dir) {
-  if (listDirectory) return listDirectory(dir) || [];
-  try {
-    return fs.readdirSync(dir, { withFileTypes: true });
-  } catch {
-    return [];
   }
 }
 

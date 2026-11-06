@@ -1,10 +1,10 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 const { userDataDir } = require('./userData.js');
 const { sharedAppModulePath } = require('./sharedAppModule.js');
 const { gameFolderName, socialClubAppId } = require(sharedAppModulePath('parser/socialclubNames.js'));
+const { gameIndexFiles } = require(sharedAppModulePath('util/dataLayout.js'));
 
 // Locate the Goldberg SocialClub entry of the library for a changed save path.
 function findIndexedSocialClubGame(rootDir, changedDir, options = {}) {
@@ -16,7 +16,7 @@ function findIndexedSocialClubGame(rootDir, changedDir, options = {}) {
 
   const files = Array.isArray(options.files)
     ? options.files
-    : [path.join(userDataDir(), 'steam_cache', 'schema', 'gameIndex.json'), path.join(userDataDir(), 'cfg', 'gameIndex.json')];
+    : gameIndexFiles(userDataDir());
   for (const file of files) {
     try {
       const list = JSON.parse(fs.readFileSync(file, 'utf8'));

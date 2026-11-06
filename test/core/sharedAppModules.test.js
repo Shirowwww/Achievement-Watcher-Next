@@ -15,27 +15,7 @@ const test = require('node:test');
 
 const root = path.join(__dirname, '..', '..');
 const { sharedAppModulePath } = require(path.join(root, 'watchdog', 'util', 'sharedAppModule.js'));
-
-function watchdogSources(dir) {
-  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    if (entry.name === 'node_modules' || entry.name === 'test') return [];
-    const target = path.join(dir, entry.name);
-    if (entry.isDirectory()) return watchdogSources(target);
-    return entry.isFile() && entry.name.endsWith('.js') ? [target] : [];
-  });
-}
-
-function sharedRequests() {
-  const found = new Set();
-  for (const file of watchdogSources(path.join(root, 'watchdog'))) {
-    const source = fs.readFileSync(file, 'utf8');
-    for (const match of source.matchAll(/sharedAppModulePath\(\s*(['"`])([^'"`$]+)\1\s*\)/g)) found.add(match[2]);
-    // A path this scan cannot read (a variable, an interpolated template) is a module it never checks.
-    const unread = [...source.matchAll(/sharedAppModulePath\(\s*([^'"`\s)])/g)].filter((match) => !/^function\b/.test(source.slice(match.index - 9, match.index)));
-    assert.deepEqual(unread.map((match) => `${path.relative(root, file)}: ${match[0]}`), [], 'shared app modules must be named by a literal path');
-  }
-  return [...found].sort();
-}
+const { watchdogSharedModules } = require('../helpers/watchdogShared.js');
 
 function withResourcesPath(value, fn) {
   const had = Object.prototype.hasOwnProperty.call(process, 'resourcesPath');
@@ -50,7 +30,9 @@ function withResourcesPath(value, fn) {
 }
 
 test('every app module the Watchdog loads exists in app/', () => {
-  const requested = sharedRequests();
+  const { requested, unread } = watchdogSharedModules();
+  // A path the scan cannot read (a variable, an interpolated template) is a module it never checks.
+  assert.deepEqual(unread, [], 'shared app modules must be named by a literal path');
   assert.ok(requested.length > 0, 'the Watchdog still shares app modules');
   const missing = requested.filter((rel) => !fs.existsSync(path.join(root, 'app', rel)));
   assert.deepEqual(missing, []);

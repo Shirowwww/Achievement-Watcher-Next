@@ -5,6 +5,7 @@
 const { loadRegodit: loadRegedit } = require('../util/regodit.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { userDataDir } = require('../util/userData.js');
+const { PLAYTIME_REGISTRY_ROOT } = require(sharedAppModulePath('util/dataLayout.js'));
 
 module.exports = async (appID, time) => {
   if (process.platform !== 'win32') {
@@ -16,7 +17,7 @@ module.exports = async (appID, time) => {
   // AW Next uses its own registry namespace so neither predecessor's uninstaller can wipe playtime
   // data. Counters from the older namespaces are copied forward once, on first launch, by
   // migratePlaytimeRegistry() in app/util/migrateUserData.js.
-  const key = 'Software/Achievement Watcher Next/Playtime/Steam/' + appID;
+  const key = `${PLAYTIME_REGISTRY_ROOT}/${appID}`;
 
   // The counter is an unsigned DWORD: a negative or absurd duration would not raise an error, it
   // would wrap the stored total, so the addition is clamped rather than trusted.

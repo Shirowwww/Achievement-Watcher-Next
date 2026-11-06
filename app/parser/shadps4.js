@@ -277,7 +277,10 @@ module.exports.scan = async (dir) => {
   return data;
 };
 
-module.exports._internal = { configArray, configFileCandidates, gameDataRootCandidates, userRootCandidates, installedGames, readConfig };
+module.exports._internal = { configArray, configFileCandidates, installedGames, readConfig };
+// The folders a shadPS4 data root may be, which userDir.js asks when a folder is added.
+module.exports.gameDataRootCandidates = gameDataRootCandidates;
+module.exports.userRootCandidates = userRootCandidates;
 
 // The trophy file rules the Watchdog's live reader shares.
 module.exports.LANG_FILE = LANG_FILE;

@@ -28,11 +28,14 @@ const previousAw = process.env.AW_USER_DATA;
     assert.equal(watchdogPaths.userDataDir(), path.join(tmp, 'Achievement Watcher Next'));
 
     // The Watchdog trusts the path the main process passes through AW_USER_DATA.
+    // One resolver: a reset on either side is seen by both.
     process.env.AW_USER_DATA = path.join(tmp, 'Custom Dir');
     appPaths.resetCache();
-    watchdogPaths.resetCache();
     assert.equal(appPaths.userDataDir(), path.join(tmp, 'Custom Dir'));
     assert.equal(watchdogPaths.userDataDir(), path.join(tmp, 'Custom Dir'));
+    process.env.AW_USER_DATA = path.join(tmp, 'Other Dir');
+    watchdogPaths.resetCache();
+    assert.equal(appPaths.userDataDir(), path.join(tmp, 'Other Dir'));
 
     console.log('PASS: userDataPath helpers');
   } finally {

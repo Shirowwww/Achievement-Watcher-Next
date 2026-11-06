@@ -1,13 +1,11 @@
 'use strict';
 
-const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const track = require('../track.js');
-const fsAsync = require(sharedAppModulePath('util/fsAsync.js'));
 
 function tempDir(t) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-track-'));
@@ -93,68 +91,41 @@ test('falls back to an in-place write when the atomic rename fails (Windows open
   const root = tempDir(t);
   track.setCacheDir(path.join(root, 'data'));
 
-  const originalRename = fsAsync.rename;
-  fsAsync.rename = async () => {
-    const err = new Error('simulated EPERM: destination is open');
-    err.code = 'EPERM';
-    throw err;
-  };
-  t.after(() => {
-    fsAsync.rename = originalRename;
+  await track.save('2592160', [{ name: 'Old', Achieved: 1 }]);
+  t.mock.method(fs, 'renameSync', () => {
+    throw Object.assign(new Error('simulated EPERM: destination is open'), { code: 'EPERM' });
   });
 
   const achievements = [{ name: 'Burning Chrome', Achieved: 1, UnlockTime: 1000 }];
   await track.save('2592160', achievements); // must not throw
+  t.mock.restoreAll();
 
   assert.deepEqual(await track.load('2592160'), achievements);
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(root, 'data', '2592160.db'), 'utf8')), achievements);
-  assert.equal(fs.existsSync(path.join(root, 'data', '2592160.db.tmp')), false, 'temp file should be cleaned up after the fallback');
+  assert.deepEqual(fs.readdirSync(path.join(root, 'data')), ['2592160.db'], 'temp file should be cleaned up after the fallback');
 });
 
-test('cleans the temporary file when the fallback write fails', async (t) => {
+// A destination nothing can replace (held open, read-only, disk full): the save fails, the old
+// baseline stays whole and no temporary file is left beside it.
+test('a save that cannot replace the baseline leaves the old file and no temporary behind', async (t) => {
   const root = tempDir(t);
   const dataDir = path.join(root, 'data');
   track.setCacheDir(dataDir);
+  await track.save('2592160', [{ name: 'Old', Achieved: 1 }]);
+  const before = fs.readFileSync(path.join(dataDir, '2592160.db'), 'utf8');
 
-  const originalRename = fsAsync.rename;
-  const originalWriteFile = fsAsync.writeFile;
-  fsAsync.rename = async () => {
-    const err = new Error('simulated EPERM: destination is open');
-    err.code = 'EPERM';
-    throw err;
-  };
-  fsAsync.writeFile = async (filePath, ...args) => {
-    if (filePath.endsWith('.db')) throw new Error('simulated disk-full fallback failure');
-    return originalWriteFile(filePath, ...args);
-  };
-  t.after(() => {
-    fsAsync.rename = originalRename;
-    fsAsync.writeFile = originalWriteFile;
+  const refused = () => Object.assign(new Error('simulated EPERM: destination is open'), { code: 'EPERM' });
+  t.mock.method(fs, 'renameSync', () => {
+    throw refused();
+  });
+  t.mock.method(fs, 'copyFileSync', () => {
+    throw refused();
   });
 
-  await assert.rejects(track.save('2592160', [{ name: 'Burning Chrome', Achieved: 1 }]));
-  assert.equal(fs.existsSync(path.join(dataDir, '2592160.db.tmp')), false);
-});
-
-test('cleans a partially created temporary file when its initial write rejects', async (t) => {
-  const root = tempDir(t);
-  const dataDir = path.join(root, 'data');
-  track.setCacheDir(dataDir);
-
-  const originalWriteFile = fsAsync.writeFile;
-  fsAsync.writeFile = async (filePath, ...args) => {
-    if (filePath.endsWith('.tmp')) {
-      await originalWriteFile(filePath, ...args);
-      throw new Error('simulated interrupted temporary write');
-    }
-    return originalWriteFile(filePath, ...args);
-  };
-  t.after(() => {
-    fsAsync.writeFile = originalWriteFile;
-  });
-
-  await assert.rejects(track.save('2592160', [{ name: 'Burning Chrome', Achieved: 1 }]));
-  assert.equal(fs.existsSync(path.join(dataDir, '2592160.db.tmp')), false);
+  await assert.rejects(track.save('2592160', [{ name: 'New', Achieved: 1 }]));
+  t.mock.restoreAll();
+  assert.equal(fs.readFileSync(path.join(dataDir, '2592160.db'), 'utf8'), before);
+  assert.deepEqual(fs.readdirSync(dataDir), ['2592160.db']);
 });
 
 test('numeric and string appids share one in-memory baseline and write queue', async (t) => {

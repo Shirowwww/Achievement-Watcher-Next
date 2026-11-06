@@ -23,4 +23,4 @@ function isInstalled({ dataType, hasResolvedExe, hasExeListExe, trustedInstalled
   return !!hasResolvedExe || !!hasExeListExe;
 }
 
-module.exports = { isInstalled, TRUSTED_TYPES };
+module.exports = { isInstalled };

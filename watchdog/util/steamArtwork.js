@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const { userDataDir } = require('./userData.js');
 const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { gameIconsFile } = require(sharedAppModulePath('util/gameIconStore.js'));
+const { iconCacheDir } = require(sharedAppModulePath('util/dataLayout.js'));
 
 function readJson(filePath) {
   try {
@@ -142,7 +144,7 @@ function executableIcon(appid, options = {}) {
   const id = String(appid == null ? '' : appid).trim();
   if (!id) return null;
   const root = options.userDataRoot || userDataDir();
-  const file = path.join(root, 'steam_cache', 'icon', id, 'executable-icon.png');
+  const file = path.join(iconCacheDir(root, id), 'executable-icon.png');
   try {
     return fs.statSync(file).isFile() ? file : null;
   } catch {
@@ -185,7 +187,7 @@ function customGameIcon(appid, options = {}) {
   const id = String(appid == null ? '' : appid).trim();
   if (!id) return null;
   const root = options.userDataRoot || userDataDir();
-  const map = readJsonCached(path.join(root, 'cfg', 'gameIcons.db'));
+  const map = readJsonCached(gameIconsFile(root));
   const value = map && typeof map === 'object' ? map[id] : null;
   if (!value || typeof value !== 'string') return null;
   if (isImageUrl(value)) return value;

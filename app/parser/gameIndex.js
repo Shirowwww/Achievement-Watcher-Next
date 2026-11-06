@@ -11,22 +11,23 @@
 const path = require('path');
 const { pickBestClaim, isPlaceholderClaim } = require('../util/claimCollision.js');
 const { knownUserDataDir } = require('../util/userDataPath.js');
+const { gameIndexFile } = require('../util/dataLayout.js');
+const { writeFileAtomicSync } = require('../util/replaceFile.js');
 const fs = require('fs');
 
-// Read once, when the module loads: the scan host has its folder in the environment by then.
-const userDataRoot = knownUserDataDir();
-
+// Resolved on each use (knownUserDataDir caches): a require before AW_USER_DATA is set still works.
 function userData() {
-  if (!userDataRoot) throw new Error('gameIndex: the app data folder is unknown in this process');
-  return userDataRoot;
+  const root = knownUserDataDir();
+  if (!root) throw new Error('gameIndex: the app data folder is unknown in this process');
+  return root;
 }
 
 function userFile() {
-  return path.join(userData(), 'cfg/gameIndex.json');
+  return gameIndexFile(userData());
 }
 
 function exeListFile() {
-  return path.join(userData(), 'cfg/exeList.db');
+  return require('./exeList.js').exeListFile(userData());
 }
 
 function normalizePath(value) {
@@ -130,8 +131,7 @@ function writeList() {
     return;
   }
   const file = userFile();
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(cachedList, null, 2), 'utf8');
+  writeFileAtomicSync(file, JSON.stringify(cachedList, null, 2));
   cachedSignature = fileSignature(file);
   batchDirty = false;
 }

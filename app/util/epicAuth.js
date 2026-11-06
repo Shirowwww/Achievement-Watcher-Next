@@ -239,17 +239,12 @@ async function getEpicAuthStatus(options = {}) {
 }
 
 module.exports = {
-  DEFAULT_EPIC_TOKEN_SECRET,
-  DEFAULT_EPIC_REDIRECT_URI,
   encryptTokens,
   decryptTokens,
   getEpicAuthConfig,
   buildEpicLoginUrl,
   buildEpicAuthCodeUrl,
-  resolveEpicTokensFile,
   normalizeEpicAccountId,
-  normalizeTokenLifetimes,
-  loadEpicTokensEncrypted,
   saveEpicTokensEncrypted,
   clearEpicTokens,
   authenticateEpicWithCode,

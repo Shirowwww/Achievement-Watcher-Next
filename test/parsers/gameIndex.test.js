@@ -4,23 +4,15 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const Module = require('node:module');
 const { makeTempDir } = require('../helpers/tempDir');
 
 const tmp = makeTempDir('aw-gameindex-');
 const userData = path.join(tmp, 'userData');
 fs.mkdirSync(path.join(userData, 'cfg'), { recursive: true });
 
-const originalLoad = Module._load;
-Module._load = function patchedLoad(request, _parent, _isMain) {
-  if (request === '@electron/remote') {
-    return { app: { getPath: () => userData } };
-  }
-  return originalLoad.apply(this, arguments);
-};
-
+// Required before the data folder is known on purpose: the folder is resolved on each use.
 const gameIndex = require('../../app/parser/gameIndex.js');
-Module._load = originalLoad;
+process.env.AW_USER_DATA = userData;
 const { clearSafeCaches } = require('../../app/util/clearableCaches.js');
 
 function readRows() {
@@ -90,12 +82,7 @@ test('an offline restart reads the persisted identity without metadata caches', 
 
   const modulePath = require.resolve('../../app/parser/gameIndex.js');
   delete require.cache[modulePath];
-  Module._load = function patchedLoad(request, _parent, _isMain) {
-    if (request === '@electron/remote') return { app: { getPath: () => userData } };
-    return originalLoad.apply(this, arguments);
-  };
   const restartedGameIndex = require(modulePath);
-  Module._load = originalLoad;
 
   assert.equal(restartedGameIndex.getName('620'), 'Portal 2');
 });
@@ -143,7 +130,8 @@ test('a scan batch persists many changed rows with one whole-index write', () =>
   const originalWrite = fs.writeFileSync;
   let indexWrites = 0;
   fs.writeFileSync = function countedWrite(file) {
-    if (path.basename(String(file)) === 'gameIndex.json') indexWrites += 1;
+    // The index is written whole to a temporary beside it, then renamed over it.
+    if (path.basename(String(file)).startsWith('gameIndex.json')) indexWrites += 1;
     return originalWrite.apply(this, arguments);
   };
   try {
@@ -281,4 +269,23 @@ test('configuredExe reads the launch executable recorded for an appid, and follo
   fs.utimesSync(file, later, later);
   assert.equal(gameIndex.configuredExe('c4763f23'), 'D:\\Moved\\AlanWake2.exe');
   fs.rmSync(file, { force: true });
+});
+
+test('a write that dies half way leaves the index as it was, with no temporary behind', () => {
+  gameIndex.upsert({ appid: 'atomic-1', name: 'Atomic One', binary: 'atomic1.exe' });
+  const file = path.join(userData, 'cfg', 'gameIndex.json');
+  const before = fs.readFileSync(file, 'utf8');
+
+  const originalRename = fs.renameSync;
+  fs.renameSync = () => {
+    throw Object.assign(new Error('disk gone'), { code: 'EIO' });
+  };
+  try {
+    gameIndex.upsert({ appid: 'atomic-2', name: 'Atomic Two', binary: 'atomic2.exe' });
+  } finally {
+    fs.renameSync = originalRename;
+  }
+
+  assert.equal(fs.readFileSync(file, 'utf8'), before, 'the previous index is untouched');
+  assert.deepEqual(fs.readdirSync(path.dirname(file)).filter((name) => name.endsWith('.tmp')), []);
 });

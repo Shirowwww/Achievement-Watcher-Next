@@ -88,4 +88,4 @@ function needsRescan(before, after) {
   return before !== after;
 }
 
-module.exports = { ACHIEVEMENT_KEYS, signature, needsRescan, normalizeFolders };
+module.exports = { signature, needsRescan };

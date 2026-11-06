@@ -8,6 +8,8 @@ const fs = require('fs');
 const path = require('path');
 const { fileURLToPath } = require('url');
 const { userDataDir } = require('./userData.js');
+const { sharedAppModulePath } = require('./sharedAppModule.js');
+const { iconCacheDir } = require(sharedAppModulePath('util/dataLayout.js'));
 
 function localImagePath(source) {
   if (!source || typeof source !== 'string') return null;
@@ -23,7 +25,7 @@ function localImagePath(source) {
 }
 
 function squareOutputPath(appid, sourcePath, userDataRoot) {
-  const dir = path.join(userDataRoot || userDataDir(), 'steam_cache', 'icon', String(appid || 'unknown'));
+  const dir = iconCacheDir(userDataRoot || userDataDir(), appid || 'unknown');
   const base = path.basename(sourcePath).replace(/\.[^.]+$/, '');
   return path.join(dir, `${base}-square.png`);
 }

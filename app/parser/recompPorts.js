@@ -10,7 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { TextDecoder } = require('util');
+const fsProbe = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { listHosts, hostPath, hostsFor } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const formats = require(path.join(__dirname, 'recompPortFormats.js'));
 const art = require(path.join(__dirname, 'recompPortArt.js'));
@@ -35,7 +35,7 @@ const portById = (id) => PORTS.find((port) => port.id === id) || null;
 
 let _dataRoot = '';
 let debug = { log() {}, warn() {}, error() {} };
-let listDirectory = null;
+let readDirectory = fsProbe.readDirectory;
 
 function dataRoot() {
   if (!_dataRoot) _dataRoot = require(path.join(__dirname, '..', 'util', 'userDataPath.js')).userDataDir();
@@ -52,7 +52,7 @@ function initDebug({ isDev, userDataPath, listDirectory: reader }) {
     console: isDev || false,
     file: path.join(userDataPath, 'logs/parser.log'),
   });
-  listDirectory = typeof reader === 'function' ? reader : null;
+  readDirectory = fsProbe.directoryLister(reader);
 }
 
 function statOf(target) {
@@ -73,25 +73,7 @@ const isPlainDirectory = (target) => {
   return !!stat && stat.isDirectory() && !stat.isSymbolicLink();
 };
 
-function readDirectory(target) {
-  if (listDirectory) return listDirectory(target) || [];
-  try {
-    return fs.readdirSync(target, { withFileTypes: true });
-  } catch {
-    return [];
-  }
-}
-
-// Strict UTF-8, bounded, no links; null for anything else.
-function readText(file) {
-  const stat = statOf(file);
-  if (!stat || !stat.isFile() || stat.isSymbolicLink() || stat.size > MAX_SAVE_BYTES) return null;
-  try {
-    return new TextDecoder('utf-8', { fatal: true }).decode(fs.readFileSync(file)).replace(/^﻿/, '');
-  } catch {
-    return null;
-  }
-}
+const readText = (file) => fsProbe.readStrictText(file, MAX_SAVE_BYTES);
 
 // [{ port, root }] for every port whose executable `dir` holds (one launcher can run two games).
 function detectAll(dir) {

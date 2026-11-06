@@ -8,13 +8,18 @@
 const path = require('path');
 const { isFile } = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
 const { SOURCE_LABEL } = require(path.join(__dirname, '..', 'util', 'sourceIdentity.js'));
+const { consoleBaselineDir, baselineFileName, baselineSafeName } = require(path.join(__dirname, '..', 'util', 'dataLayout.js'));
 
 const lazy = (file) => require(path.join(__dirname, file));
 
 const GREENLUMA_KEYS = ['GLR', 'GL2020', 'GL2024', 'GL2025'];
 const REGISTRY_SOURCE_RE = /^(greenluma |lumaplay$)/i;
 
-// Mirrors watchdog/util/baselineCache.js; keep both in sync.
+// Baseline prefix of each watcher in watchdog/console/ that the sources reach by label. The
+// extras below reach three more by their own key; test/core/baselinePrefixCoverage.test.js makes
+// every prefix a watcher uses land in one of the two or in its exemption list.
+const EXTRA_BASELINE_KINDS = Object.freeze({ RUNE_UPLAY: 'rune-uplay', MADNESSPATCH: 'madnesspatch', MARKERPATCH: 'markerpatch' });
+
 const CONSOLE_PREFIXES = {
   'rpcs3 emulator': 'rpcs3',
   'shadps4 emulator': '',
@@ -67,14 +72,14 @@ function readerFiles(game, sources) {
   if (sources.has('rune uplay')) {
     const uplayId = uplayIdOf(game);
     for (const entry of lazy('runeUplay.js').discoverFiles()) {
-      if (uplayId && entry.uplayId === uplayId) found.push({ path: entry.file, kind: 'rune-uplay', source: 'RUNE Uplay', key: `${entry.userId}_${entry.uplayId}` });
+      if (uplayId && entry.uplayId === uplayId) found.push({ path: entry.file, kind: EXTRA_BASELINE_KINDS.RUNE_UPLAY, source: 'RUNE Uplay', key: `${entry.userId}_${entry.uplayId}` });
     }
   }
   if (sources.has('madnesspatch')) {
-    for (const profile of lazy('madnesspatch.js').listProfiles()) found.push({ path: profile.file, kind: 'madnesspatch', source: 'MadnessPatch', key: profile.profile });
+    for (const profile of lazy('madnesspatch.js').listProfiles()) found.push({ path: profile.file, kind: EXTRA_BASELINE_KINDS.MADNESSPATCH, source: 'MadnessPatch', key: profile.profile });
   }
   if (sources.has('markerpatch')) {
-    for (const file of lazy('markerpatch.js').stateFilePaths()) if (isFile(file)) found.push({ path: file, kind: 'markerpatch', source: 'MarkerPatch', key: 'markerpatch' });
+    for (const file of lazy('markerpatch.js').stateFilePaths()) if (isFile(file)) found.push({ path: file, kind: EXTRA_BASELINE_KINDS.MARKERPATCH, source: 'MarkerPatch', key: 'markerpatch' });
   }
   return found;
 }
@@ -90,10 +95,8 @@ function extraSaveFiles(game) {
   });
 }
 
-const safeName = (key) => String(key == null ? '' : key).replace(/[^\w.-]/g, '_');
-
 function consoleBaselineFile(userDataPath, prefix, key) {
-  return path.join(userDataPath || '', 'steam_cache', 'console', `${prefix ? `${prefix}-` : ''}${safeName(key)}.json`);
+  return path.join(consoleBaselineDir(userDataPath || ''), baselineFileName(prefix, key));
 }
 
 /*
@@ -102,7 +105,7 @@ function consoleBaselineFile(userDataPath, prefix, key) {
 */
 function unlockJournals(game, userDataPath) {
   if (!sourcesOf(game).has(SOURCE_LABEL.PS4_RECOMP)) return [];
-  const file = path.join(userDataPath || '', 'cache', 'ps4recomp', `${safeName(game.appid)}.json`);
+  const file = path.join(userDataPath || '', 'cache', 'ps4recomp', `${baselineSafeName(game.appid)}.json`);
   return isFile(file) ? [file] : [];
 }
 
@@ -162,6 +165,8 @@ function registryKeys(game, registry) {
 }
 
 module.exports = {
+  CONSOLE_PREFIXES,
+  EXTRA_BASELINE_KINDS,
   sourcesOf,
   dataPathsOf,
   dataRoots,

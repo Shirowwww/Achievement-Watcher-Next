@@ -199,7 +199,6 @@ function storeLocalizedTitles(names, now = Date.now()) {
 module.exports = {
   setUserDataPath,
   configure,
-  titleFamily,
   titleKey,
   cleanTitle,
   customTitle,

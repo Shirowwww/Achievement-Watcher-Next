@@ -111,6 +111,7 @@ const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, ex
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const { DEFAULT_HOTKEY, DEFAULT_CONTROLLER_BINDINGS } = require(sharedAppModulePath('settings.js'));
 const { userDirFile } = require(sharedAppModulePath('parser/userDirEntries.js'));
+const { gameIndexFiles } = require(sharedAppModulePath('util/dataLayout.js'));
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const saveRedirects = require(sharedAppModulePath('util/saveRedirects.js'));
@@ -475,10 +476,7 @@ function appendSiblingStats(achievements, filePath, progressSchema) {
 }
 
 const indexedGameLookup = createIndexedGameLookup({
-  getFiles: () => [
-    path.join(userDataDir(), 'steam_cache', 'schema', 'gameIndex.json'),
-    path.join(userDataDir(), 'cfg', 'gameIndex.json'),
-  ],
+  getFiles: () => gameIndexFiles(userDataDir()),
 });
 
 function findIndexedGame(appID) {

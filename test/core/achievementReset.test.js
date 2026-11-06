@@ -229,7 +229,7 @@ test('the folder walk is bounded in depth and in count', (t) => {
   const deep = path.join(profile, 'a', 'b', 'c', 'd', 'e', 'f');
   write(path.join(deep, 'achievements.json'), '{}');
   write(path.join(profile, 'a', 'achievements.json'), '{}');
-  const found = achievementReset._internal.collectTargets(path.join(profile, 'a'), 'Goldberg', []);
+  const found = achievementReset.collectTargets(path.join(profile, 'a'), 'Goldberg', []);
   assert.equal(found.length, 1, 'only the file within the depth bound is reachable');
 });
 

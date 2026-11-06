@@ -5,6 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const { fileURLToPath } = require('url');
 const { fileStamp, sameStamp } = require('./util/fileStamp.js');
+const { sharedAppModulePath } = require('./util/sharedAppModule.js');
+const { snapshotFile } = require(sharedAppModulePath('util/librarySnapshot.js'));
+const { exeListFile } = require(sharedAppModulePath('parser/exeList.js'));
+const { gameIndexFile } = require(sharedAppModulePath('util/dataLayout.js'));
 
 /*
   The Steam bridge. A plugin inside Steam (Millennium on the desktop, Decky in Game Mode) names one
@@ -301,9 +305,9 @@ function sendIcon(req, res, file) {
 }
 
 function createBridge({ userData, iconBase, auth = null } = {}) {
-  const snapshot = cachedJson(path.join(userData, 'cache', 'library_snapshot', 'library.json'));
-  const index = cachedJson(path.join(userData, 'cfg', 'gameIndex.json'));
-  const exeList = cachedJson(path.join(userData, 'cfg', 'exeList.db'));
+  const snapshot = cachedJson(snapshotFile(userData));
+  const index = cachedJson(gameIndexFile(userData));
+  const exeList = cachedJson(exeListFile(userData));
   const icons = createIconRegistry(iconBase);
   const live = new Map();
 

@@ -8,12 +8,20 @@ const fs = require('fs');
 
 let debug = { log() {}, error() {}, warn() {} };
 
-// Read once, when the module loads: the scan host has its folder in the environment by then.
-const userDataRoot = knownUserDataDir();
+// The launch executable per appid; read by the library, the Watchdog and the main process.
+const EXE_LIST_FILE = 'cfg/exeList.db';
 
+function exeListFile(userDataPath) {
+  return path.join(userDataPath, EXE_LIST_FILE);
+}
+
+module.exports.exeListFile = exeListFile;
+
+// Resolved on each use (knownUserDataDir caches): a require before AW_USER_DATA is set still works.
 function listFile() {
+  const userDataRoot = knownUserDataDir();
   if (!userDataRoot) throw new Error('exeList: the app data folder is unknown in this process');
-  return path.join(userDataRoot, 'cfg/exeList.db');
+  return exeListFile(userDataRoot);
 }
 
 module.exports.list = getCurrentList;
@@ -34,7 +42,7 @@ function lookupFor(file) {
   return lookup;
 }
 
-function configuredExecutable(appid, { file = path.join(userDataDir(), 'cfg', 'exeList.db') } = {}) {
+function configuredExecutable(appid, { file = exeListFile(userDataDir()) } = {}) {
   const id = String(appid == null ? '' : appid).trim();
   if (!id) return '';
   const entry = lookupFor(file)(id);

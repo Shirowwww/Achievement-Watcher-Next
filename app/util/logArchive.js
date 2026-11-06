@@ -106,4 +106,4 @@ function suggestedArchiveName(appVersion = '', now = new Date()) {
   return `AW-logs-${appVersion ? `${appVersion}-` : ''}${stamp}.zip`;
 }
 
-module.exports = { exportLogs, suggestedArchiveName, buildManifest, isLogFile };
+module.exports = { exportLogs, suggestedArchiveName, isLogFile };

@@ -213,7 +213,7 @@ function walkSaves(ctx, resettable, collector) {
   let refusal = null;
   for (const entry of resettable) {
     if (READER_SOURCES.has(String(entry.source || '').trim().toLowerCase())) continue;
-    for (const target of reset._internal.collectTargets(entry.path, entry.source, [], 0, formatFor)) {
+    for (const target of reset.collectTargets(entry.path, entry.source, [], 0, formatFor)) {
       const format = target.action;
       if (format.startsWith('refuse:') || (format === 'stats-json' && !readsBefore(target.path))) {
         refusal = refusal || { format: format.replace(/^refuse:/, ''), file: target.path };
