@@ -87,6 +87,7 @@
     '#e84393': '232, 67, 147',
     '#fd9644': '253, 150, 68',
   };
+  // A copy of app/settings.js's defaults (this sandboxed page cannot require it); a test keeps them equal.
   const DEFAULT_CONTROLLER_BINDINGS = {
     toggle: ['BACK', 'START', 'LEFT_SHOULDER'],
     ui: ['LEFT_SHOULDER', 'X'],

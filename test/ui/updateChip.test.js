@@ -129,7 +129,7 @@ test('an error clears itself instead of sitting in the title bar until the next 
 test('a language change repaints the chip from the last known state', () => {
   // The chip is only pushed on an updater event, so switching language mid-download would otherwise
   // leave the old language on screen until the next percent.
-  assert.match(appJs, /window\.refreshWatchdogStatusText = \(\) => \{[\s\S]*renderUpdateStatus\(lastUpdateStatus\)/);
+  assert.match(appJs, /document\.addEventListener\('locale-labels-changed', \(\) => \{\n[^\n]*renderWatchdogStatus\(lastWatchdogState\);\n[^\n]*renderUpdateStatus\(lastUpdateStatus\)/);
 });
 
 test('the chip never renders a raw string the locale layer has not seen', () => {

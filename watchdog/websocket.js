@@ -2,11 +2,8 @@
 
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const { WATCHDOG_PORT } = require(sharedAppModulePath('util/watchdogPipe.js'));
-const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const https = require('https');
-const { EventEmitter } = require('events');
 const ws = require('ws');
 const moment = require('moment');
 const debug = new (require(sharedAppModulePath('util/logger.js')))({
@@ -34,9 +31,7 @@ function resolveOptions(option = {}) {
   return {
     port: Number.isInteger(option.port) ? option.port : WATCHDOG_PORT,
     host: option.host || LOOPBACK,
-    ipv6Only: option.ipv6Only || false,
     timeout: Number.isInteger(option.timeout) ? option.timeout : 30000,
-    ssl: option.ssl || false,
     auth: option.auth || null, //username:password
   };
 }
@@ -44,16 +39,8 @@ function resolveOptions(option = {}) {
 module.exports = (option = {}) => {
   const options = resolveOptions(option);
 
-  // A custom http(s) server, so basic auth can wrap both the http/https layer and the websocket upgrade.
-  let server;
-  if (options.ssl) {
-    server = https.createServer({
-      cert: fs.readFileSync('./ssl/cert.pem'),
-      key: fs.readFileSync('./ssl/key.pem'),
-    });
-  } else {
-    server = http.createServer();
-  }
+  // A custom http server, so basic auth can wrap both the http layer and the websocket upgrade.
+  const server = http.createServer();
   /*
     The same listener also answers /obs - the OBS browser source (see notification/obsSource.js).
     It shares this server rather than opening a second one: the page is driven by the very feed
@@ -67,7 +54,7 @@ module.exports = (option = {}) => {
   bridge = steamBridge.createBridge({
     userData: require('./util/userData.js').userDataDir(),
     auth: options.auth,
-    iconBase: () => `${options.ssl ? 'https' : 'http'}://${urlHost(options.host)}:${server.address() ? server.address().port : options.port}`,
+    iconBase: () => `http://${urlHost(options.host)}:${server.address() ? server.address().port : options.port}`,
   });
   server.on('request', (req, res) => {
     if (!isAllowedHost(req.headers.host, options.host)) {
@@ -89,7 +76,7 @@ module.exports = (option = {}) => {
     res.end('Not found');
   });
 
-  server.listen({ port: options.port, host: options.host, ipv6Only: options.ipv6Only });
+  server.listen({ port: options.port, host: options.host });
   test.prepare().catch((err) => debug.warn(`[Toast] background preparation failed: ${err && (err.message || err)}`));
 
   WebSocket = new ws.Server({ noServer: true });
@@ -136,8 +123,6 @@ module.exports = (option = {}) => {
     });
   });
 
-  const emitter = new EventEmitter();
-
   WebSocket.on('connection', (client, req) => {
     client.id = req.headers['sec-websocket-key'];
     client.ip = req.connection.remoteAddress;
@@ -175,8 +160,6 @@ module.exports = (option = {}) => {
       client.ping(() => {});
     });
   }, options.timeout);
-
-  return emitter;
 };
 
 // The Decky plugin (decky/) connects as ?client=decky and shows each notification as a Steam toast.
@@ -236,7 +219,6 @@ function upgradeRefusal(headers, options) {
 
 module.exports.resolveOptions = resolveOptions;
 module.exports.isAllowedHost = isAllowedHost;
-module.exports.isAllowedOrigin = isAllowedOrigin;
 module.exports.upgradeRefusal = upgradeRefusal;
 module.exports.isDeckyRequest = isDeckyRequest;
 module.exports.isDeckyListening = isDeckyListening;

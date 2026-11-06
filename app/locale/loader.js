@@ -13,6 +13,9 @@ const { withPlatformText } = require('./platformText.js');
 const langDir = path.join(appPath, 'locale/lang');
 const uiLanguages = require(path.join(appPath, 'locale/uiLanguages.js'));
 
+// Fired on document after every load: the first one and each language change or library refresh.
+const LOCALE_CHANGED = 'locale-labels-changed';
+
 module.exports.load = async (lang = 'english') => {
   if (!uiLanguages.has(lang)) lang = 'english';
 
@@ -40,22 +43,14 @@ module.exports.load = async (lang = 'english') => {
     translateUI(lang, locale, template);
     // Expose the merged locale so imperative strings (dialogs, menus) can be translated via locale/t.js.
     window.appLocale = template;
-    // Help panel, Watchdog status and Settings account cards write their own text outside the DOM
-    // walk below, so each repaint here is optional and its failure is contained.
-    const repaint = [
-      () => window.AchievementHelp.render($),
-      () => window.refreshWatchdogStatusText(),
-      () => window.refreshSettingsLocaleText(),
-      () => window.refreshAccessibleNames(),
-      () => window.refreshLibraryLabels(),
-      () => window.refreshProfileBandLabels(),
-    ];
-    for (const render of repaint) {
-      try {
-        render();
-      } catch (err) {
-        console.warn(err);
-      }
+    // Text written outside the DOM walk listens for this event (native listeners, so one that throws
+    // is logged and the others still run). Accessible names are derived from all of those labels, so
+    // they are computed once every listener has written its own.
+    document.dispatchEvent(new Event(LOCALE_CHANGED));
+    try {
+      window.refreshAccessibleNames();
+    } catch (err) {
+      console.warn(err);
     }
   } else {
     throw 'Unexpected Error';
@@ -847,7 +842,6 @@ function translateUI(lang, locale, template) {
       .attr('data-template', clear(c.templates.applied))
       .attr('data-randomized', clear(c.templates.randomized))
       .attr('data-duplicated', clear(c.templates.duplicated));
-    $(document).trigger('locale-labels-changed');
   }
   $("#option_overlayPosition option[value='center-bottom']").text(clear(template.settings.notification.option.position.centerBottom));
   $("#option_overlayPosition option[value='center-top']").text(clear(template.settings.notification.option.position.centerTop));

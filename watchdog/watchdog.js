@@ -113,7 +113,7 @@ const { withLibraryReport } = require('./util/libraryUnlockReport.js');
 const { platinumLikeForGame } = require('./util/platinumLike.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
-const { DEFAULT_HOTKEY } = require(sharedAppModulePath('settings.js'));
+const { DEFAULT_HOTKEY, DEFAULT_CONTROLLER_BINDINGS } = require(sharedAppModulePath('settings.js'));
 const localIcons = require(sharedAppModulePath('util/localIcons.js'));
 const winHosts = require(sharedAppModulePath('util/winHosts.js'));
 const { rareCutoff } = require('./util/rareCutoff.js');
@@ -582,12 +582,17 @@ function toggleOverlayForRunningGame(fromController = false) {
 let overlayControllerService = null;
 
 // Parse a stored "BACK+START" binding string into the button-name array the manager expects.
-function parseControllerBinding(value, fallback) {
-  const parts = String(value || '')
+function splitControllerBinding(value) {
+  return String(value || '')
     .split('+')
     .map((p) => p.trim().toUpperCase())
     .filter(Boolean);
-  return parts.length ? parts : fallback;
+}
+
+// The saved binding for `key`, or the app's default one when the setting is empty.
+function controllerBinding(key) {
+  const parts = splitControllerBinding(controllerOptions()[key]);
+  return parts.length ? parts : splitControllerBinding(DEFAULT_CONTROLLER_BINDINGS[key]);
 }
 
 function controllerOptions() {
@@ -709,12 +714,9 @@ function syncOverlayController() {
       isSupportEnabled: () => controllerOptions().enabled === true,
       getPreferredBackend: () => controllerOptions().backend || 'auto',
       isDebugLoggingEnabled: () => controllerOptions().debugLogging === true,
-      getOverlayToggleBinding: () =>
-        parseControllerBinding(controllerOptions().toggleBinding, ['BACK', 'START', 'LEFT_SHOULDER']),
-      getOverlayControlModeBinding: () =>
-        parseControllerBinding(controllerOptions().controlModeBinding, ['LEFT_SHOULDER', 'RIGHT_SHOULDER']),
-      getOverlayUiModeBinding: () =>
-        parseControllerBinding(controllerOptions().uiModeBinding, ['LEFT_SHOULDER', 'X']),
+      getOverlayToggleBinding: () => controllerBinding('toggleBinding'),
+      getOverlayControlModeBinding: () => controllerBinding('controlModeBinding'),
+      getOverlayUiModeBinding: () => controllerBinding('uiModeBinding'),
       canEnterOverlayControlMode: () => overlayOpened === true,
       isOverlayPresented: () => overlayOpened === true,
       onAction: handleControllerAction,

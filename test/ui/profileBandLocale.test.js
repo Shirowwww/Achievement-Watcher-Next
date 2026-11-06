@@ -65,7 +65,7 @@ test('the fold button keeps describing what a click does after the repaint', () 
 });
 
 test('the locale loader repaints the profile band with the other out-of-DOM text', () => {
-  assert.match(loaderSource, /\(\) => window\.refreshProfileBandLabels\(\),/);
-  assert.match(appSource, /window\.refreshProfileBandLabels = refreshProfileBandLabels;/);
+  assert.match(loaderSource, /document\.dispatchEvent\(new Event\(LOCALE_CHANGED\)\)/);
+  assert.match(appSource, /document\.addEventListener\('locale-labels-changed', refreshProfileBandLabels\);/);
   assert.match(extractFunction(appSource, 'applyProfileCompact'), /refreshProfileBandLabels\(\);/);
 });

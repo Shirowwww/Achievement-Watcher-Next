@@ -93,7 +93,7 @@
     const list = document.querySelector('#game-list ul');
     if (list) collectionFilter.applyToList(list, activeMembers(), activeExcluded());
     paintButton();
-    if (typeof updateInstalledEmptyState === 'function') updateInstalledEmptyState();
+    updateInstalledEmptyState();
     window.refreshProfileStats?.({ animate: animateStats });
     window.refreshProfileStatsPanel?.();
   }

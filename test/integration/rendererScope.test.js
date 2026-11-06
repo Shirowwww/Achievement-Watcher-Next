@@ -19,6 +19,11 @@ function topLevelDeclarations(file) {
   for (const match of source.matchAll(/^(const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/gm)) {
     names.add(match[2]);
   }
+  // A top-level function declared again in a later script raises nothing: the later one silently
+  // replaces the first for every caller, whichever file they are in.
+  for (const match of source.matchAll(/^(?:async\s+)?function\s*\*?\s*([A-Za-z_$][\w$]*)\s*\(/gm)) {
+    names.add(match[1]);
+  }
   // Destructured top-level bindings share the same global lexical scope and can collide
   // just like plain `const x` (this regressed with `pathToFileURL` in settings.js).
   for (const match of source.matchAll(/^(?:const|let|var)\s*\{\s*([^}]+?)\s*\}\s*=/gm)) {

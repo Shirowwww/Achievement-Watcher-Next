@@ -2958,7 +2958,7 @@ function createPresetDesigner({
   }
   // The locale loader can run after this file wired the picker up (and again on a language
   // change), so re-render the runtime-worded controls whenever it publishes new labels.
-  $(document).on('locale-labels-changed', function () {
+  document.addEventListener('locale-labels-changed', function () {
     refreshGeneratedPresetList(String($('#pd-load').val() || '')).catch((err) => debug.log(err));
     refreshPresetSounds();
     refreshPresetImages();

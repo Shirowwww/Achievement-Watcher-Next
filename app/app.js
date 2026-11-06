@@ -1537,7 +1537,7 @@ function applyProfileCompact(compact) {
 
 window.applyProfileCompact = applyProfileCompact;
 
-// Names the band's two buttons; the locale loader runs it again after a language change. The fold
+// Names the band's two buttons, again on every locale load. The fold
 // button says what a click does, so its name follows the band's current state.
 function refreshProfileBandLabels() {
   const statsLabel = t('profile-stats-open', 'See the detailed breakdown', 'Voir le détail');
@@ -1548,7 +1548,7 @@ function refreshProfileBandLabels() {
   $('#profile-compact-toggle').attr({ title: foldLabel, 'aria-label': foldLabel });
 }
 
-window.refreshProfileBandLabels = refreshProfileBandLabels;
+document.addEventListener('locale-labels-changed', refreshProfileBandLabels);
 
 /*
   Switch the library view on the tiles that are already there. Portrait and landscape use different
@@ -3560,40 +3560,33 @@ function ownershipBadgeFor(game) {
     ea: () => t('purchased-badge-ea', 'EA game in your library', 'Jeu EA dans ta bibliothèque'),
     xbox: () => t('purchased-badge-xbox', 'Xbox game in your library', 'Jeu Xbox dans ta bibliothèque'),
   };
-  const platform = purchasedPlatformFor(game);
-  const label = platform && purchased[platform] ? purchased[platform]() : '';
-  if (!label && game && game.source === 'Xbox 360 Recomp') {
-    // Nothing to own on a platform here: the badge says what the game is and where its list comes from.
-    return {
-      state: 'recomp',
-      label: t(
+  // Nothing to own on a platform for a recompiled console game: the badge says what the game is and
+  // where its list comes from.
+  const recomp = {
+    'Xbox 360 Recomp': () =>
+      t(
         'xbox360-recomp-badge',
         'Xbox 360 game recompiled to run natively on PC. Its achievements are read from the game itself.',
         'Jeu Xbox 360 recompilé pour tourner nativement sur PC. Ses succès sont lus depuis le jeu lui-même.'
       ),
-    };
-  }
-  if (!label && game && game.source === 'PS4 Recomp') {
-    return {
-      state: 'recomp',
-      label: t(
+    'PS4 Recomp': () =>
+      t(
         'ps4-recomp-badge',
         "PlayStation 4 game ported to run natively on PC. Its trophies are read from the original game and the port's own logs.",
         "Jeu PlayStation 4 porté pour tourner nativement sur PC. Ses trophées sont lus depuis le jeu d'origine et les journaux du portage."
       ),
-    };
-  }
-  if (!label && game && game.source === 'PS3 Recomp') {
-    return {
-      state: 'recomp',
-      label: t(
+    'PS3 Recomp': () =>
+      t(
         'ps3-recomp-badge',
         "PlayStation 3 game recompiled to run natively on PC. Its trophies are read from the original game and the port's own save.",
         "Jeu PlayStation 3 recompilé pour tourner nativement sur PC. Ses trophées sont lus depuis le jeu d'origine et la sauvegarde du portage."
       ),
-    };
-  }
-  return { state: label ? 'purchased' : '', label };
+  };
+  const platform = purchasedPlatformFor(game);
+  const label = platform && purchased[platform] ? purchased[platform]() : '';
+  if (label) return { state: 'purchased', label };
+  const recompLabel = game && Object.hasOwn(recomp, game.source) ? recomp[game.source]() : '';
+  return { state: recompLabel ? 'recomp' : '', label: recompLabel };
 }
 
 /*
@@ -3636,10 +3629,10 @@ function statusBadgeHtml(game) {
   A reused library is on screen a few hundred milliseconds after launch - ahead of the locale file
   those tiles read their captions from, and localeText() answers '' until it lands. The result was a
   library whose cells had no caption at all, and whose empty ones said nothing rather than "never
-  played". The locale loader calls this the moment the strings exist; tiles painted after that
+  played". Run on every locale load, the moment the strings exist; tiles painted after that
   already carry them.
 */
-window.refreshLibraryLabels = function () {
+document.addEventListener('locale-labels-changed', function refreshLibraryLabels() {
   const captions = [
     ['.library-achievement-summary', localeText('achievements')],
     ['.library-recent-unlock', localeText('latestAchievementEarned')],
@@ -3660,7 +3653,7 @@ window.refreshLibraryLabels = function () {
   };
   fillEmpty('.library-recent-unlock .library-recent-name', localeText('noneUnlocked'));
   fillEmpty('.library-last-played.is-empty', localeText('neverPlayed'));
-};
+});
 
 // A full report is the better answer, so it replaces the scanned guess on the tile already on
 // screen rather than waiting for the next scan to redraw it. Called from ui/gameHealthPanel.js
@@ -4179,10 +4172,10 @@ ipcRenderer
     /* an older main process without the channel simply leaves the chip hidden */
   });
 
-window.refreshWatchdogStatusText = () => {
+document.addEventListener('locale-labels-changed', () => {
   if (lastWatchdogState !== null) renderWatchdogStatus(lastWatchdogState);
   if (lastUpdateStatus !== null) renderUpdateStatus(lastUpdateStatus);
-};
+});
 
 // The library entry a live Watchdog report names, or nothing when it is not in the current view.
 // The Watchdog may name the game by the appid of the save folder it watched, which is the Steam one -
@@ -5757,8 +5750,7 @@ var app = {
                 debug.error(err);
                 return;
               }
-              if (typeof resetUI === 'function') resetUI();
-              else app.onStart();
+              resetUI();
             };
             languageMenu.append(
               new MenuItem({
@@ -8651,8 +8643,7 @@ var app = {
       detail: errors.join('\n'),
       noLink: true,
     });
-    if (typeof resetUI === 'function') resetUI();
-    else app.onStart();
+    resetUI();
     return true;
   },
   // Put a backup back exactly where it came from, including the unlock baseline, so restored

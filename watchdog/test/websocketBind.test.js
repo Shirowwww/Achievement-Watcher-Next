@@ -35,7 +35,7 @@ test('listening with the resolved default binds the loopback address, not the un
     // Port 0 so the test never fights the running app for 8082; the host is what is under test.
     await new Promise((resolve, reject) => {
       server.once('error', reject);
-      server.listen({ port: 0, host: options.host, ipv6Only: options.ipv6Only }, resolve);
+      server.listen({ port: 0, host: options.host }, resolve);
     });
     const address = server.address();
     assert.equal(address.address, '127.0.0.1', 'binding must not fall through to 0.0.0.0 or ::');

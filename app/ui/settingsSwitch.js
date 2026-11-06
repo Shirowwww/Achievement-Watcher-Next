@@ -93,12 +93,10 @@
     window.setTimeout(refresh, 0);
   }
 
-  window.refreshSettingSwitches = refresh;
-
   $(function () {
     refresh();
     $(document).on('change click', '#settings', refreshSoon);
-    $(document).on('locale-labels-changed', refreshSoon);
+    document.addEventListener('locale-labels-changed', refreshSoon);
     const settings = document.getElementById('settings');
     if (settings) new MutationObserver(refreshSoon).observe(settings, { attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
   });

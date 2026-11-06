@@ -279,6 +279,10 @@ function hideStaleEnabled() {
   if (typeof localStorage.showStaleSteamGames === 'undefined') return true;
   return localStorage.showStaleSteamGames !== 'true';
 }
+function setHideStale(hidden) {
+  localStorage.showStaleSteamGames = hidden ? 'false' : 'true';
+  applyStaleFilter();
+}
 
 // This toggle lives in Settings > Advanced, not the sort bar: it only makes sense with a connected
 // Steam account, and the sort bar has no way to display that condition.
@@ -293,6 +297,7 @@ window.installedOnlyEnabled = installedOnlyEnabled;
 window.toggleInstalledOnly = toggleInstalledOnly;
 window.applyStaleFilter = applyStaleFilter;
 window.hideStaleEnabled = hideStaleEnabled;
+window.setHideStale = setHideStale;
 
 (function ($) {
   $(function () {

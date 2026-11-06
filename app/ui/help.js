@@ -22,6 +22,7 @@ const HELP_LISTS = {
   'help-troubleshoot-list': 'troubleshoot',
 };
 
+// Copies of app/settings.js's defaults (this file is loaded without require); a test keeps them equal.
 const DEFAULT_TOGGLE = 'BACK+START+LEFT_SHOULDER';
 const DEFAULT_UI_MODE = 'LEFT_SHOULDER+X';
 const DEFAULT_MOVE = 'LEFT_SHOULDER+RIGHT_SHOULDER';

@@ -171,10 +171,9 @@ function ensureFrame(wrap, { id = '', title = '' } = {}) {
   return frame;
 }
 
-// Labels set imperatively (outside loader.js's DOM walk) register here so a language change replays them.
-const localeRefreshers = [];
+// Labels set imperatively (outside loader.js's DOM walk): painted now, then on every locale load.
 function registerLocaleRefresh(apply) {
-  localeRefreshers.push(apply);
+  document.addEventListener('locale-labels-changed', () => apply());
   apply();
 }
 // Repaints an account card's state labels after a language change. The locale also reloads on every
@@ -185,16 +184,6 @@ function repaintAccountState(status, paint) {
   status.data('stateText', status.text());
   if (message) status.attr('class', message.cls).text(message.text);
 }
-
-window.refreshSettingsLocaleText = () => {
-  for (const apply of localeRefreshers) {
-    try {
-      apply();
-    } catch (err) {
-      debug.log(`settings i18n refresh failed: ${err}`);
-    }
-  }
-};
 
 let listeningHotkey = false;
 // What had the keyboard focus before Settings opened, so closing it puts the user back there.
@@ -737,7 +726,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     window.addEventListener('gamepadconnected', populateControllerBindingOptions);
     window.addEventListener('gamepaddisconnected', populateControllerBindingOptions);
-    $(document).on('locale-labels-changed', populateControllerBindingOptions);
+    document.addEventListener('locale-labels-changed', populateControllerBindingOptions);
+    // The Help tab writes its text itself, whether or not Settings is open.
+    document.addEventListener('locale-labels-changed', () => window.AchievementHelp.render($));
 
     $('#btn-onboarding-open')
       .off('click.awOnboardingOpen')
@@ -825,9 +816,9 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       void settingsModal[0].offsetWidth;
       settingsModal.addClass('is-opening');
       // Reopening starts from the full list, not from whatever was typed last time.
-      if (typeof window.resetSettingsSearch === 'function') window.resetSettingsSearch();
+      resetSettingsSearch();
       // Idempotent: sections already wired keep their key and are skipped.
-      if (typeof window.initCollapsibleSections === 'function') window.initCollapsibleSections();
+      initCollapsibleSections();
       // Rows are built lazily, so the derived control names and icon roles are applied per open too.
       if (typeof window.refreshAccessibleNames === 'function') window.refreshAccessibleNames();
       renderBlacklistManager().catch((err) => debug.log(err));
@@ -2011,15 +2002,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
       });
 
-      // Hiding ghost games is on by default; hideStaleEnabled() carries that default, this select
-      // only reflects and then writes it.
+      // sort.js owns the setting and its default (on); this select only shows and changes it.
       const staleSelect = $('#steam-hide-stale');
-      // Read from localStorage rather than window.hideStaleEnabled: sort.js may not be loaded yet
-      // here, and a select left at its default would look uninitialized.
-      staleSelect.val(localStorage.showStaleSteamGames === 'true' ? 'false' : 'true');
+      staleSelect.val(String(hideStaleEnabled()));
       staleSelect.off('change').on('change', function () {
-        localStorage.showStaleSteamGames = $(this).val() === 'true' ? 'false' : 'true';
-        window.applyStaleFilter?.();
+        setHideStale($(this).val() === 'true');
         window.refreshProfileStats?.({ animate: true });
       });
 
@@ -3161,7 +3148,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
 
     // The hint under the field comes from the locale, and the language can change with the editor
     // open, so it is re-read whenever the loader publishes new labels.
-    $(document).on('locale-labels-changed', refreshThemeNameState);
+    document.addEventListener('locale-labels-changed', refreshThemeNameState);
 
     function updateEffectPanel(row) {
       const enabled = row.find('.theme-layer-effect-enabled').is(':checked');
@@ -3886,7 +3873,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       writeCollapsedSections(collapsed);
     }
 
-    window.initCollapsibleSections = initCollapsibleSections;
     initCollapsibleSections();
 
     $('#settings').on('click', '.settings-section-header', function () {
@@ -3985,10 +3971,10 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
     });
 
     // Reopening Settings should start from a clean slate rather than the last search.
-    window.resetSettingsSearch = function () {
+    function resetSettingsSearch() {
       $('#settings-search-input').val('');
       clearSettingsSearch();
-    };
+    }
 
     // Tell the user what a freshly added save/config folder actually contains: run the real scan on
     // it and report the game count, so "added but nothing shows up" stops being a mystery.
@@ -4338,7 +4324,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         }
       }
     }
-    window.renderBlacklistManager = renderBlacklistManager;
 
     $('#blacklist-add-btn').click(async function () {
       const input = $('#blacklist-add-input');

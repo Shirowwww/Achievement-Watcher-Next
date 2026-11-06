@@ -136,7 +136,7 @@ test('the preview frame is a document, not a place a theme can run something', (
   assert.match(settings, /frame\.srcdoc = themeMock\.buildThemeMock\(/, 'the frame must be filled by the shared mock builder');
   // Non-vacuous version of the old "the frame has no src attribute" check: the element is built in
   // JS now, so the thing to pin is that its builder never gives it one and nothing assigns one later.
-  const builder = settings.slice(settings.indexOf('function ensureFrame('), settings.indexOf('const localeRefreshers'));
+  const builder = settings.slice(settings.indexOf('function ensureFrame('), settings.indexOf('function registerLocaleRefresh('));
   assert.ok(!/\.src\s*=/.test(builder), 'the frame builder must never point a frame at a file');
   assert.ok(!/theme-preview-frame'\)\.src\s*=|frame\.src\s*=/.test(settings), 'nothing may set a src on the preview frame');
   const csp = document.querySelector('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');

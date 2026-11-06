@@ -35,6 +35,6 @@ function resetUI() {
   if (app.args.name) app.args.name = null;
   // An explicit refresh is the user asking for a clean retry, so drop the caches that remember
   // which appids failed to resolve (see app.js).
-  if (typeof forgetScanCaches === 'function') forgetScanCaches();
+  forgetScanCaches();
   app.onStart();
 }
