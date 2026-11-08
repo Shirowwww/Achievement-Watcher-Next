@@ -12,6 +12,7 @@ const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
 const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
+const unityLayout = require(path.join(__dirname, '..', 'util', 'unityLayout.js'));
 const { isSharedSaveRoot } = require(path.join(__dirname, 'saveRoots.js'));
 const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
 const { parseIni, stringifyIni, getIniSection, readIniSectionValues, upsertIniSection, upsertIniKeys, sanitizeIniValue, INI_TRUE } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
@@ -141,16 +142,24 @@ function runtimeDllsIn(dir) {
 */
 function unityPluginsNotEmulated(gameDir, sideLoaded) {
   if (sideLoaded || crackLoaderDetect.proxyLoadedRuntime(gameDir)) return [];
-  const dataDirs = (dirCache.readdir(gameDir) || []).filter((entry) => entry.isDirectory() && /_data$/i.test(entry.name));
-  const runtimes = [];
-  for (const data of dataDirs) {
-    const plugins = path.join(gameDir, data.name, 'Plugins');
-    for (const dir of [path.join(plugins, 'x86_64'), path.join(plugins, 'x86'), plugins]) {
-      const runtime = runtimeDllsIn(dir);
-      if (runtime.dlls.length > 0 || runtime.proxied) runtimes.push({ dir, ...runtime });
-    }
-  }
+  const runtimes = loadedRuntimes(unityLayout.pluginDllDirs(gameDir));
   return runtimes.length > 0 && runtimes.every((entry) => !entry.emulated) ? runtimes.map((entry) => entry.dir) : [];
+}
+
+// The folders among `dirs` that hold a steam_api dll (or a proxy-loaded runtime), with their verdict.
+function loadedRuntimes(dirs) {
+  return dirs.map((dir) => ({ dir, ...runtimeDllsIn(dir) })).filter((entry) => entry.dlls.length > 0 || entry.proxied);
+}
+
+/*
+  Whether the dll the game really loads is GBE. An engine that loads steam_api from a folder of its
+  own (Unreal's Steamworks, Unity's Plugins) runs whatever sits there, so a GBE dll elsewhere is a
+  leftover of an earlier fix; any other game runs a GBE dll wherever it was found.
+*/
+function gbeIsLoaded(gameDir, emu) {
+  const engine = loadedRuntimes(crackLoaderDetect.engineDllDirs(gameDir));
+  if (engine.length === 0) return emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll));
+  return engine.some((entry) => entry.emulated);
 }
 
 // Locate the steam_settings folder for a game. GBE Fork keeps it next to the emu .dll, which may be
@@ -1054,8 +1063,8 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   report.steamSettings = steamSettings;
   // OnlineFix, CODEX, TENOKE... emulate Steam on their own and never read steam_settings. Their
   // folder was reported as "Goldberg not set up", with a repair that writes files nothing loads.
-  // Unless a GBE dll was just installed over it: that one does read steam_settings.
-  const servingLoader = emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) ? null : crackLoaderDetect.detectWorkingCrackLoader(gameDir);
+  // Unless the dll the game loads is GBE: that one does read steam_settings.
+  const servingLoader = gbeIsLoaded(gameDir, emu) ? null : crackLoaderDetect.detectWorkingCrackLoader(gameDir);
   // ColdClient is GBE underneath: it does read the steam_settings beside its loader, and only that one.
   const readsOwnSettings = servingLoader && servingLoader.name === 'ColdClient';
   const servedByLoader = () => {
@@ -1075,10 +1084,10 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     add('error', 'NO_STEAM_SETTINGS', 'No steam_settings folder found beside the emulator - Goldberg/GBE is likely not set up.');
     return report;
   }
-  // A loader that is not the steam_api dll (OnlineFix proxies through its own) never opens this
-  // folder, whoever wrote it, so validating it produced a page of faults on a working game. A scene
-  // runtime that IS the dll stays on the path below: installing GBE over it is a real fix there.
-  if (servingLoader && !servingLoader.replaceable) {
+  // A working crack never opens this folder, whoever wrote it, so validating it produced a page of
+  // faults on a working game. Swapping a crack that IS the dll (TENOKE, RUNE) for GBE stays a choice
+  // Game Health offers, never an error: the crack may be what unlocks the game's DLC.
+  if (servingLoader) {
     servedByLoader();
     if (readsOwnSettings && sameDir(path.dirname(steamSettings), servingLoader.dir)) return report;
     const awCreated = awManagedConfig.isCreatedByAw(steamSettings);

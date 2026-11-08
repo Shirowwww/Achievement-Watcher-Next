@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
+const unityLayout = require('./unityLayout.js');
 const pe = require('./pe.js');
 
 /*
@@ -245,15 +246,29 @@ function restoreSwitchedLoader(dirs) {
 
 /*
   Returns { name } for the first known crack loader whose markers exist directly in `gameDir`, or in
-  the Steamworks folder a packaged Unreal build loads its dll from, or null.
+  a folder an engine loads its dll from (a packaged Unreal build's Steamworks folder, a Unity
+  build's <Game>_Data/Plugins), or null.
 
-  Two levels only, both of them drop points: a marker nested anywhere else isn't the loader's and
+  Drop points only: a marker nested anywhere else isn't the loader's and
   would false-positive on a game that merely references the string in an asset. The Unreal one
   matters because a scene crack (RUNE, CODEX) puts its steam_emu.ini beside the dll it replaced,
   six levels down, where the game root sees nothing - AW then read the install as an unclaimed
   folder and offered it a GBE setup the crack's own dll never opens (reported for Little Nightmares
   Enhanced Edition). RUNE's steamclient layout and a ColdClient folder of its own follow below.
 */
+
+// The folders an engine loads steam_api from instead of the exe's: Unreal's Steamworks, and the Unity
+// Plugins folders that do hold a steam_api dll (any other file there is the game's own, not a crack).
+function engineDllDirs(gameDir) {
+  const unity = unityLayout.pluginDllDirs(gameDir).filter((dir) => {
+    try {
+      return fs.readdirSync(dir).some((name) => STEAM_API_DLLS.includes(name.toLowerCase()));
+    } catch {
+      return false;
+    }
+  });
+  return [...unrealLayout.steamworksDllDirs(gameDir), ...unity];
+}
 
 // RUNE's steamclient builds keep Valve's steam_api and run from Steam\steamclient64.dll with their
 // ini beside it, so the loader lives there and there is no steam_api runtime to replace.
@@ -320,7 +335,7 @@ function detectWorkingCrackLoader(gameDir, { subfolders = true } = {}) {
   if (atRoot) return atRoot;
   const steamclient = steamclientLoader(gameDir);
   if (steamclient) return steamclient;
-  const engineDirs = unrealLayout.steamworksDllDirs(gameDir);
+  const engineDirs = engineDllDirs(gameDir);
   for (const dllDir of engineDirs) {
     let engineEntries;
     try {
@@ -377,4 +392,4 @@ function runsAsSpacewar(dirs) {
   return false;
 }
 
-module.exports = { runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+module.exports = { runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

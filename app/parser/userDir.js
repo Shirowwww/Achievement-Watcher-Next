@@ -607,7 +607,7 @@ module.exports.diagnose = async (dirpath) => {
   // Some GOG/UniverseLAN and repack layouts keep the config below the selected game root
   // (for example <Game>/Engine/Binaries/.../UniverseLAN.ini). Accept that root, then scan()
   // will resolve the real config folder at low depth.
-  const nestedConfigs = await glob(steam_emu_cfg_file_supported.map((name) => `**/${name}`), { cwd: dirpath, onlyFiles: true, deep: 4, suppressErrors: true });
+  const nestedConfigs = await findNestedConfigs(dirpath);
   if (nestedConfigs.length > 0) return { accepted: true, code: 'emulator-config-nested', evidence: { ...evidence, config: nestedConfigs[0] } };
 
   // No config anywhere: the save tree itself is a better anchor than the emulator ini, since it
@@ -655,16 +655,36 @@ module.exports.check = async (dirpath) => {
   return (await module.exports.diagnose(dirpath)).accepted;
 };
 
+/*
+  A crack keeps its config beside the dll the engine loads: Unity's <Game>_Data/Plugins/<arch> and a
+  packaged Unreal build's Steamworks/<sdk>/<arch>, one level deeper than the walk below reaches from
+  a library root. Fixed paths, for a game folder and for each game of a library, so no extra depth
+  is walked through anything else.
+*/
+const ENGINE_CONFIG_DIRS = ['*_Data/Plugins/x86_64', '*_Data/Plugins/x86', '*_Data/Plugins', 'Engine/Binaries/ThirdParty/Steamworks/*/Win64', 'Engine/Binaries/ThirdParty/Steamworks/*/Win32'];
+
+// Emulator configs below `dir`, absolute: the bounded walk, then the engine folders it cannot reach.
+async function findNestedConfigs(dir) {
+  const options = { cwd: dir, onlyFiles: true, absolute: true, suppressErrors: true };
+  const names = steam_emu_cfg_file_supported;
+  const engine = ['', '*/'].flatMap((game) => ENGINE_CONFIG_DIRS.flatMap((sub) => names.map((name) => `${game}${sub}/${name}`)));
+  const [walked, engineFound] = await Promise.all([
+    glob(names.map((name) => `**/${name}`), { ...options, deep: 4 }),
+    glob(engine, { ...options, caseSensitiveMatch: false }),
+  ]);
+  const seen = new Set();
+  return [...walked, ...engineFound].filter((config) => {
+    const key = path.resolve(config).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 // Emulator configs kept below the selected folder: one per game under a library root, or a repack
 // that buries its config a few levels down. Each is scanned as if the user picked it directly.
 async function scanBelow(dir) {
-  const nested = await glob(steam_emu_cfg_file_supported.map((name) => `**/${name}`), {
-    cwd: dir,
-    onlyFiles: true,
-    absolute: true,
-    deep: 4,
-    suppressErrors: true,
-  });
+  const nested = await findNestedConfigs(dir);
   const cfgDirs = [];
   const seen = new Set([path.resolve(dir).toLowerCase()]);
   for (const filepath of nested) {

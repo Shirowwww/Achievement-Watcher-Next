@@ -37,6 +37,13 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A crack that works keeps the game, wherever the engine loads it from.** TENOKE, RUNE, CODEX,
+  ALI213 and the other known cracks are found beside the dll a Unity game loads from
+  `<Game>_Data\Plugins`, as they already were in a packaged Unreal build, and the library reads
+  their saves there from a library folder too. A crack the game really runs is no longer an error
+  because a GBE dll or an old AW Next configuration sits elsewhere in the folder: Game Health says
+  the game is served by it and names the unused configuration. Switching to GBE Fork stays a
+  choice, since the crack may be what unlocks the game's DLC.
 - **Game Health checks the dll a Unity game really loads.** A Unity game loads steam_api from
   `<Game>_Data\Plugins`, so a GBE dll beside the exe with another dll left in Plugins records
   nothing, yet the diagnosis said "Setup looks valid". It now reports that the dll in Plugins is

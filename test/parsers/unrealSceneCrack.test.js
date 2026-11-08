@@ -140,16 +140,17 @@ test('a loader that emulates from a side channel is named but never offered a ru
   assert.equal(loader.replaceable, false, 'replacing steam_api leaves half of an OnlineFix setup behind');
 });
 
-test('a steam_settings beside a dll that reads no settings is reported, not counted as a setup', () => {
+test('a steam_settings beside a working crack is named as unused, not counted as a GBE setup', () => {
   const ue = build({ runtime: 'rune', loaderIni: 'steam_emu.ini' });
   settings(path.join(ue.steamworks, 'steam_settings'));
 
   const report = goldberg.diagnose({ gameDir: ue.root, appid: '2149010', schema: SCHEMA });
   const codes = report.issues.map((issue) => issue.code);
-  assert.ok(codes.includes('RUNTIME_DLL_NOT_EMULATOR'), 'a complete schema no dll will ever open is the false green this fixes');
-  assert.equal(report.issues.find((issue) => issue.code === 'RUNTIME_DLL_NOT_EMULATOR').level, 'error');
-  assert.deepEqual(report.foreignRuntimeDirs, [ue.steamworks]);
-  assert.equal(report.achievements.found, 1, 'the schema itself is genuinely complete - that was never the problem');
+  // The crack keeps its own saves and may be what unlocks the DLC: it serves the game, and
+  // switching to GBE stays a choice Game Health offers, never an error.
+  assert.deepEqual(codes, ['SERVED_BY_LOADER', 'UNUSED_STEAM_SETTINGS']);
+  assert.match(report.loader, /RUNE/);
+  assert.equal(report.issues.find((issue) => issue.code === 'UNUSED_STEAM_SETTINGS').data.dir, path.join(ue.steamworks, 'steam_settings'));
 });
 
 test('the same setup over a real GBE runtime raises nothing', () => {

@@ -568,7 +568,11 @@ function progressCheck(signals) {
   if (!(save && save.exists) && setupAt > 0 && lastPlayedMs <= setupAt) return check('progress', LEVEL.INFO, {});
   // Only warn when the save location is actually known and empty. Without a diagnosed setup there
   // is nowhere to have looked, so "no progress" is just a game with no progress.
-  if (signals.emulated && signals.goldberg && signals.goldberg.steamSettings) return check('progress', LEVEL.WARN, {});
+  // A crack that serves the game keeps its own saves, so an empty GBE save says nothing about it.
+  // ColdClient is GBE underneath and does write one.
+  const servedByCrack =
+    signals.goldberg && signals.goldberg.loader !== 'ColdClient' && (signals.goldberg.issues || []).some((issue) => issue && issue.code === 'SERVED_BY_LOADER');
+  if (signals.emulated && signals.goldberg && signals.goldberg.steamSettings && !servedByCrack) return check('progress', LEVEL.WARN, {});
   return check('progress', LEVEL.INFO, {});
 }
 
