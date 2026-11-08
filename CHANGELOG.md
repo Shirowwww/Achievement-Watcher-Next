@@ -37,6 +37,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Game Health checks the dll a Unity game really loads.** A Unity game loads steam_api from
+  `<Game>_Data\Plugins`, so a GBE dll beside the exe with another dll left in Plugins records
+  nothing, yet the diagnosis said "Setup looks valid". It now reports that the dll in Plugins is
+  not the emulator. A Denuvo release that runs GBE's steamclient beside the exe stays green.
 - **The overlay shortcut opens the emulator game you are playing.** With RPCS3, Xenia, shadPS4 or
   another emulator, Ctrl+Shift+K opened the game shown in the main window, or the first one of the
   library, because AW Next cannot tell which game runs inside the emulator. It now opens the game

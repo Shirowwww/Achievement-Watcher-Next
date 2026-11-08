@@ -133,6 +133,26 @@ function runtimeDllsIn(dir) {
   return { dlls, emulated: dlls.some((dll) => crackLoaderDetect.isEmulatorDll(dll)) || !!proxied, proxied };
 }
 
+/*
+  A Unity player loads steam_api from <Game>_Data/Plugins (or its x86_64 / x86 subfolder) before
+  anything beside the exe. When every steam_api there is someone else's, an emulator elsewhere in
+  the folder is never loaded. A GBE steamclient side-loaded beside the exe (#167) does run, so that
+  setup is left alone. Returns the Plugins folders at fault, empty when none is.
+*/
+function unityPluginsNotEmulated(gameDir, sideLoaded) {
+  if (sideLoaded || crackLoaderDetect.proxyLoadedRuntime(gameDir)) return [];
+  const dataDirs = (dirCache.readdir(gameDir) || []).filter((entry) => entry.isDirectory() && /_data$/i.test(entry.name));
+  const runtimes = [];
+  for (const data of dataDirs) {
+    const plugins = path.join(gameDir, data.name, 'Plugins');
+    for (const dir of [path.join(plugins, 'x86_64'), path.join(plugins, 'x86'), plugins]) {
+      const runtime = runtimeDllsIn(dir);
+      if (runtime.dlls.length > 0 || runtime.proxied) runtimes.push({ dir, ...runtime });
+    }
+  }
+  return runtimes.length > 0 && runtimes.every((entry) => !entry.emulated) ? runtimes.map((entry) => entry.dir) : [];
+}
+
 // Locate the steam_settings folder for a game. GBE Fork keeps it next to the emu .dll, which may be
 // at the game root or nested under engine subfolders (e.g. Unreal's <Name>/Binaries/Win64). Returns
 // the best-scoring match (shallowest on a tie), or null.
@@ -1124,12 +1144,22 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   report.foreignRuntimeDirs = inertDirs;
   report.proxiedRuntimes = servedRuntimes.filter((entry) => entry.proxied).map((entry) => entry.proxied);
   // Only when NO served folder has a real runtime: one good dll is enough for the setup to work.
-  if (inertDirs.length > 0 && inertDirs.length === servedRuntimes.length) {
+  const allInert = inertDirs.length > 0 && inertDirs.length === servedRuntimes.length;
+  const unityInert = allInert ? [] : unityPluginsNotEmulated(gameDir, runsBesideSettings);
+  if (allInert) {
     add(
       'error',
       'RUNTIME_DLL_NOT_EMULATOR',
       `The steam_api dll in ${inertDirs.join(', ')} is not a Goldberg/GBE runtime${report.loader ? ` (${report.loader})` : ''}, so the steam_settings beside it is never read and none of these settings apply.`,
       { dllDirs: inertDirs, loader: report.loader || '' }
+    );
+  } else if (unityInert.length > 0) {
+    report.foreignRuntimeDirs = [...inertDirs, ...unityInert];
+    add(
+      'error',
+      'RUNTIME_DLL_NOT_EMULATOR',
+      `This Unity game loads the steam_api dll in ${unityInert.join(', ')}, which is not a Goldberg/GBE runtime${report.loader ? ` (${report.loader})` : ''}, so the emulator elsewhere in the folder is never loaded and nothing is saved.`,
+      { dllDirs: unityInert, loader: report.loader || '' }
     );
   }
 
