@@ -14,14 +14,12 @@ const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js')
 const isComplete = (completion) =>
   Boolean(completion) && Number(completion.total) > 0 && Number(completion.unlocked) >= Number(completion.total);
 
-// A list whose own achievement is the platinum already popped it with that unlock.
-const hasPlatinumTwin = (link) => Boolean(link) && Object.values(link.trophies).some((trophy) => trophy && trophy.type === 'P');
-
 function platinumPopup(options, unlock) {
   if (!unlock || unlock.notificationType === 'platinum' || !isComplete(unlock.completion)) return null;
   if (options && options.notification && options.notification.platinum === false) return null;
   const link = psnTrophyLink.readLink(unlock.appid);
-  if (hasPlatinumTwin(link)) return null;
+  // A list whose own achievement is the platinum already popped it with that unlock.
+  if (psnTrophyLink.platinumTwinName(link)) return null;
   const real = psnTrophyLink.linkedPlatinum(link);
   const strings = notifyStrings.forLang(options && options.achievement && options.achievement.lang);
   return {

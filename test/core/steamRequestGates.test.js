@@ -114,7 +114,7 @@ test('a lookup nothing answered is reported as an outage, not as a nameless game
   assert.match(block, /if \(!answered && !metadata\.name\) \{[\s\S]*?metadata\.networkError = true;/, 'an unanswered lookup must report itself');
 
   // And the store fetcher has to be able to tell "no page for this id" from "never got a reply".
-  const store = source.slice(source.indexOf('async function fetchStoreAppDetails(appid)'));
+  const store = source.slice(source.indexOf('async function fetchStoreAppDetails(appid'));
   assert.match(store.slice(0, 1800), /const unanswered = \{ data: null, answered: false \};/);
   assert.match(store.slice(0, 1800), /return \{ data: \(json\[appid\] && json\[appid\]\.data\) \|\| null, answered: true \};/);
 });

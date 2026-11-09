@@ -19,7 +19,9 @@ const RDATA_VA = 0x2000;
 const RDATA_RAW = 0x400;
 const FILETIME = '134329715212621157';
 
-const picture = (label) => Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), Buffer.from(`icon ${label}`)]);
+// A PNG signature, a label to tell pictures apart, and the IEND chunk a whole PNG ends with.
+const picture = (label) =>
+  Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), Buffer.from(`icon ${label}`), Buffer.from('0000000049454e44ae426082', 'hex')]);
 const assetName = (id) => `achievements/0x${id.toString(16)}.png`;
 
 // A 64-bit executable whose .rdata holds the names, the records and the files, as re:Blue's does.

@@ -65,3 +65,70 @@ test('an empty image string never matches a schema entry whose icons are missing
   assert.equal(noIcon.description, 'Real text');
   assert.equal(withIcon.displayName, undefined);
 });
+
+// The current community page names every achievement: its rows are matched by that name, and a
+// shared icon can no longer hand one achievement's translation to another.
+test('rows that carry an apiName are matched by it, whatever their icon', () => {
+  const first = { name: 'ACH_A', icon: 'https://cdn.example/same.jpg' };
+  const second = { name: 'ACH_B', icon: 'https://cdn.example/same.jpg' };
+
+  mergeTranslatedAchievements(
+    [first, second],
+    [
+      { apiName: 'ACH_B', img: 'same', title: 'Deuxième', description: 'B' },
+      { apiName: 'ACH_A', img: 'same', title: 'Premier', description: 'A' },
+    ]
+  );
+
+  assert.equal(first.displayName, 'Premier');
+  assert.equal(second.displayName, 'Deuxième');
+});
+
+test('an answer naming one achievement twice, or rows without a name beside named ones, are left out', () => {
+  const a = { name: 'ACH_A', icon: 'https://cdn.example/a.jpg' };
+  const b = { name: 'ACH_B', icon: 'https://cdn.example/b.jpg' };
+
+  mergeTranslatedAchievements(
+    [a, b],
+    [
+      { apiName: 'ACH_A', img: 'a', title: 'Un', description: '' },
+      { apiName: 'ACH_A', img: 'a', title: 'Autre', description: '' },
+      { apiName: '', img: 'b', title: 'Sans nom', description: '' },
+    ]
+  );
+
+  assert.equal(a.displayName, undefined, 'two rows for one name: neither is trusted');
+  assert.equal(b.displayName, undefined, 'a row without a name in a named answer is dropped');
+});
+
+test('an icon shared by several achievements matches none of them by icon', () => {
+  const first = { name: 'ONE', icon: 'https://cdn.example/generic.jpg' };
+  const second = { name: 'TWO', icon: 'https://cdn.example/generic.jpg' };
+  const own = { name: 'THREE', icon: 'https://cdn.example/own.jpg' };
+
+  mergeTranslatedAchievements(
+    [first, second, own],
+    [
+      { img: 'generic', title: 'Ambigu', description: '' },
+      { img: 'own', title: 'Propre', description: '' },
+    ]
+  );
+
+  assert.equal(first.displayName, undefined);
+  assert.equal(second.displayName, undefined);
+  assert.equal(own.displayName, 'Propre');
+});
+
+test('an apiName in another case still finds its achievement', () => {
+  const achievement = { name: 'ACH_Foo', icon: 'https://cdn.example/foo.jpg' };
+  mergeTranslatedAchievements([achievement], [{ apiName: 'ach_foo', img: 'foo', title: 'Truc', description: '' }]);
+  assert.equal(achievement.displayName, 'Truc');
+});
+
+test('a locked icon shared by several achievements matches none of them by icon', () => {
+  const a = { name: 'A', icon: 'https://cdn.example/a.jpg', icongray: 'https://cdn.example/gray.jpg' };
+  const b = { name: 'B', icon: 'https://cdn.example/b.jpg', icongray: 'https://cdn.example/gray.jpg' };
+  mergeTranslatedAchievements([a, b], [{ img: 'gray', title: 'Ambigu', description: '' }]);
+  assert.equal(a.displayName, undefined);
+  assert.equal(b.displayName, undefined);
+});

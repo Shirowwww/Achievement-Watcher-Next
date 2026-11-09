@@ -9,7 +9,19 @@ const {
   launchViaWindowsShell,
   isElevationLikeError,
   isElevationDeclinedError,
+  isBatchScript,
 } = require('../../app/util/windowsShellLaunch.js');
+
+// Node refuses to spawn a .bat or .cmd without a shell (EINVAL since the 2024 batch-file fix), so
+// those launches must go through the Windows shell from the start.
+test('a .bat or .cmd game is recognised as a batch script, whatever its case', () => {
+  assert.equal(isBatchScript('C:\\Games\\g\\start.bat'), true);
+  assert.equal(isBatchScript('C:\\Games\\g\\Launch.CMD'), true);
+  assert.equal(isBatchScript('C:\\Games\\g\\game.exe'), false);
+  assert.equal(isBatchScript('C:\\Games\\g.bat\\game.exe'), false);
+  assert.equal(isBatchScript(''), false);
+  assert.equal(isBatchScript(undefined), false);
+});
 
 // Start-Process is Windows-only, and drive-letter paths are only absolute to path.resolve on Windows.
 const WINDOWS_ONLY = process.platform !== 'win32' && 'Windows-only';

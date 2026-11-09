@@ -49,13 +49,42 @@ test.after(async () => {
 
 const cached = (appid, name) => path.join(USER_DATA, 'steam_cache', 'icon', appid, name);
 
+const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1, 0x11, 0x22, 0xff, 0xd9]);
+const WEBP = Buffer.concat([Buffer.from('RIFF\x0c\x00\x00\x00WEBPVP8 ', 'latin1'), Buffer.alloc(4)]);
+const GIF = Buffer.from('GIF89a\x01\x00\x01\x00\x00\x00\x00\x3b', 'latin1');
+
 test('every picture format the caches hold is recognised, and text is not', () => {
   assert.equal(isImageBuffer(PNG), true);
-  assert.equal(isImageBuffer(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1])), true);
-  assert.equal(isImageBuffer(Buffer.from('RIFF\x10\x00\x00\x00WEBPVP8 ', 'latin1')), true);
-  assert.equal(isImageBuffer(Buffer.from('GIF89a\x01\x00\x01\x00\x00\x00', 'latin1')), true);
+  assert.equal(isImageBuffer(JPEG), true);
+  assert.equal(isImageBuffer(WEBP), true);
+  assert.equal(isImageBuffer(GIF), true);
   assert.equal(isImageBuffer(PORTAL), false);
   assert.equal(isImageBuffer(Buffer.alloc(0)), false);
+});
+
+// A dropped connection leaves the start of a picture: the header alone must not pass.
+test('a picture cut short is refused, in memory and on disk', () => {
+  for (const [name, whole] of Object.entries({ PNG, JPEG, WEBP, GIF })) {
+    assert.equal(isImageBuffer(whole.subarray(0, whole.length - 2)), false, `${name} cut short`);
+  }
+  assert.equal(isImageBuffer(Buffer.concat([JPEG, Buffer.alloc(8)])), true, 'padding after the end marker is kept');
+  assert.equal(isImageBuffer(Buffer.concat([JPEG, Buffer.alloc(300, 0x41)])), true, 'metadata after the end marker is kept');
+
+  // One 4-byte picture listed at offset 22, right after the directory.
+  const ico = Buffer.alloc(26);
+  ico.writeUInt16LE(1, 2);
+  ico.writeUInt16LE(1, 4);
+  ico.writeUInt32LE(4, 6 + 8);
+  ico.writeUInt32LE(22, 6 + 12);
+  assert.equal(isImageBuffer(ico), true, 'a whole icon file');
+  assert.equal(isImageBuffer(ico.subarray(0, 24)), false, 'an icon file cut inside its picture');
+
+  const file = cached('9005', 'icon.png');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, PNG.subarray(0, PNG.length - 6));
+  assert.equal(isImageFile(file), false);
+  assert.equal(usableCachedImage(file), false);
+  assert.equal(fs.existsSync(file), false, 'the half file is removed so it is fetched again');
 });
 
 test('a page answered in place of an icon is not cached, and the address is handed back', async () => {

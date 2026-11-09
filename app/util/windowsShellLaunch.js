@@ -89,4 +89,16 @@ function isElevationDeclinedError(error) {
   return /operation was canceled by the user|canceled by the user|annulée par l|1223/i.test(String((error && error.message) || error || ''));
 }
 
-module.exports = { START_PROCESS_SCRIPT, powershellPath, launchViaWindowsShell, isElevationLikeError, isElevationDeclinedError };
+// Node refuses to spawn a .bat or .cmd without a shell (EINVAL), so such a game starts through ShellExecute.
+function isBatchScript(file) {
+  return /\.(bat|cmd)$/i.test(String(file || ''));
+}
+
+module.exports = {
+  START_PROCESS_SCRIPT,
+  powershellPath,
+  launchViaWindowsShell,
+  isElevationLikeError,
+  isElevationDeclinedError,
+  isBatchScript,
+};

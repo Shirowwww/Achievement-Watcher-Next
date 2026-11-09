@@ -176,7 +176,7 @@ async function getAchievementsKeyless(appID, lang) {
   if (sh !== null) {
     if (sh.length === 0) return [];
     // SteamHunters titles are English-only: icons/hidden come from the English rows (title match),
-    // then the localized rows are overlaid by icon hash for non-English languages.
+    // then the localized rows are overlaid by apiName, else by icon, for non-English languages.
     const englishRows = lang === 'english' ? rows : await getSteamCommunityRows(appID, 'english');
     const merged = englishRows
       ? steamSchemaFetch.mergeSteamHuntersWithCommunity(sh, englishRows)

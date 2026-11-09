@@ -36,7 +36,47 @@ function isGameTileControl(element) {
   return !!element.closest('#game-list .game-box') && !element.matches('#game-list .game-box');
 }
 
-if (typeof module !== 'undefined' && module.exports) module.exports = { chooseDirectionalCandidate, isGameTileControl };
+const STICK_DEADZONE = 0.55;
+
+function padKey(pad) {
+  return `${pad.index}:${pad.id}`;
+}
+
+function isNeutralPad(pad) {
+  const buttonHeld = Array.from(pad.buttons || []).some((button) => button && button.pressed);
+  return !buttonHeld && Math.abs(pad.axes[0] || 0) < STICK_DEADZONE && Math.abs(pad.axes[1] || 0) < STICK_DEADZONE;
+}
+
+function inputSignature(pad) {
+  const buttons = Array.from(pad.buttons || []).map((button) => (button && button.pressed ? '1' : '0')).join('');
+  const stick = [0, 1].map((axis) => (Math.abs(pad.axes[axis] || 0) >= STICK_DEADZONE ? Math.sign(pad.axes[axis]) : 0)).join(',');
+  return `${buttons}|${stick}`;
+}
+
+// Only pads with the standard layout are read: a wheel's button 0 is not A. The pad pressed last
+// takes over, so a virtual pad listed first, idle or with a button stuck down, cannot hold the app.
+function createPadPicker() {
+  const seen = new Map();
+  let inUse = null;
+  return function pick(pads) {
+    const usable = Array.from(pads || []).filter((pad) => pad && pad.connected !== false && pad.mapping === 'standard');
+    let pressedElsewhere = null;
+    for (const pad of usable) {
+      const key = padKey(pad);
+      const signature = inputSignature(pad);
+      const before = seen.get(key);
+      seen.set(key, signature);
+      if (!pressedElsewhere && key !== inUse && before !== undefined && before !== signature && !isNeutralPad(pad)) pressedElsewhere = pad;
+    }
+    for (const key of seen.keys()) if (!usable.some((pad) => padKey(pad) === key)) seen.delete(key);
+    const current = usable.find((pad) => padKey(pad) === inUse);
+    const chosen = pressedElsewhere || current || usable.find((pad) => !isNeutralPad(pad)) || usable[0] || null;
+    inUse = chosen ? padKey(chosen) : null;
+    return chosen;
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { chooseDirectionalCandidate, isGameTileControl, createPadPicker, isNeutralPad };
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   (() => {
@@ -79,6 +119,15 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     // process supplies the authoritative tray-window state once this renderer has loaded.
     let mainWindowVisible = false;
     let padConnected = false;
+    let padInUse = null;
+    const pickGamepad = createPadPicker();
+    // Disarmed until the pad is at rest, so a button still held when focus comes back does nothing.
+    let armed = false;
+
+    function disarm() {
+      armed = false;
+      held.clear();
+    }
 
     function isVisible(element) {
       if (!element || !element.isConnected || element.hidden || element.disabled) return false;
@@ -108,6 +157,8 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       // The colour picker is appended to body, over whatever dialog opened it.
       const picker = openColorPicker();
       if (picker) return picker;
+      const viewer = document.querySelector('.capture-viewer:not(.is-closing)');
+      if (isContainerVisible(viewer)) return viewer;
       const prompt = document.querySelector('.aw-prompt-overlay');
       if (isContainerVisible(prompt)) return prompt;
       // The library stats and manual-game dialogs sit over #home but outside it, so they come first.
@@ -212,6 +263,11 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         setTimeout(() => ensureSelected(), 140);
         return;
       }
+      if (window.CaptureViewer?.isOpen()) {
+        window.CaptureViewer.close();
+        setTimeout(() => ensureSelected(), 160);
+        return;
+      }
       const promptCancel = promptCancelButton();
       if (promptCancel) return promptCancel.click();
       if (isContainerVisible(document.querySelector('#onboarding'))) {
@@ -220,7 +276,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         return (isVisible(previous) && !previous.disabled ? previous : close)?.click();
       }
       // In the stats panel, B leaves the full achievement list first, then closes the panel.
-      for (const selector of ['#profile-stats-back', '#profile-stats-close', '#manual-game-cancel', '#btn-game-config-cancel', '#btn-settings-cancel', '#btn-previous']) {
+      for (const selector of ['#profile-stats-back', '#profile-stats-close', '#manual-game-cancel', '#btn-game-config-cancel', '#btn-settings-cancel', '#btn-overview', '#game-overview .game-overview-back', '#btn-previous']) {
         const button = document.querySelector(selector);
         if (isVisible(button)) return button.click();
       }
@@ -295,10 +351,17 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       // This is renderer-only navigation. The Watchdog handles global controller input, so polling
       // a hidden tray window only wastes CPU and can keep Chromium from settling into its idle state.
       if (!canPoll()) return;
-      const gamepad = Array.from(navigator.getGamepads?.() || []).find(Boolean);
-      if (gamepad && document.hasFocus()) {
-        const axisX = Math.abs(gamepad.axes[0] || 0) >= 0.55 ? Math.sign(gamepad.axes[0]) : 0;
-        const axisY = Math.abs(gamepad.axes[1] || 0) >= 0.55 ? Math.sign(gamepad.axes[1]) : 0;
+      const gamepad = document.hasFocus() ? pickGamepad(navigator.getGamepads?.()) : null;
+      const key = gamepad ? padKey(gamepad) : null;
+      if (key !== padInUse) {
+        padInUse = key;
+        disarm();
+      }
+      if (gamepad && !armed && isNeutralPad(gamepad)) armed = true;
+      if (!gamepad) disarm();
+      if (gamepad && armed) {
+        const axisX = Math.abs(gamepad.axes[0] || 0) >= STICK_DEADZONE ? Math.sign(gamepad.axes[0]) : 0;
+        const axisY = Math.abs(gamepad.axes[1] || 0) >= STICK_DEADZONE ? Math.sign(gamepad.axes[1]) : 0;
         const up = pressed(gamepad, BUTTON.UP) || axisY < 0;
         const down = pressed(gamepad, BUTTON.DOWN) || axisY > 0;
         const left = pressed(gamepad, BUTTON.LEFT) || axisX < 0;
@@ -364,7 +427,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       }
       if (pollFrame !== null) cancelAnimationFrame(pollFrame);
       pollFrame = null;
-      held.clear();
+      disarm();
       leaveControllerMode();
     }
 
@@ -374,7 +437,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     });
     window.addEventListener('gamepaddisconnected', () => {
       padConnected = Array.from(navigator.getGamepads?.() || []).some(Boolean);
-      held.clear();
+      disarm();
       leaveControllerMode();
       updatePollingState();
     });

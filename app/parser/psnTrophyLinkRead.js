@@ -39,6 +39,13 @@ function linkedGrade(options, link, achievementName) {
   return trophy ? trophyGradeOf(trophy.type) : undefined;
 }
 
+// The game's achievement tied to the PlayStation platinum trophy, when the list has one.
+function platinumTwinName(link) {
+  if (!link) return null;
+  const entry = Object.entries(link.trophies).find(([, trophy]) => trophy && trophy.type === 'P');
+  return entry ? entry[0] : null;
+}
+
 function linkedPlatinum(link) {
   return link && link.platinum && link.platinum.name ? link.platinum : null;
 }
@@ -56,4 +63,4 @@ function withLinkedTrophy(options, payload) {
   return { ...platinumFields(trophy.type, options), ...(grade ? { trophyGrade: grade } : {}), ...payload };
 }
 
-module.exports = { safeKey, linkFile, usableLink, readLink, linkedGrade, linkedPlatinum, withLinkedTrophy };
+module.exports = { safeKey, linkFile, usableLink, readLink, linkedGrade, platinumTwinName, linkedPlatinum, withLinkedTrophy };

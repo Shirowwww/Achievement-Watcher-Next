@@ -95,6 +95,13 @@ exports.default = async function afterPack(context) {
   const count = fs.readdirSync(dest).length;
   console.log(`[afterPack] Copied watchdog/node_modules (${count} entries) -> ${dest}`);
 
+  const { compareBundledAssets, BUNDLED_FOLDERS } = require('./verifyBundledAssets.js');
+  const assetProblems = compareBundledAssets(packager.projectDir, path.join(appOutDir, 'resources', 'app.asar.unpacked'));
+  if (assetProblems.length) {
+    throw new Error(`[afterPack] the bundled presets and sounds do not match the sources:\n  ${assetProblems.join('\n  ')}`);
+  }
+  console.log(`[afterPack] Verified the bundled ${BUNDLED_FOLDERS.join(' and ')} against the sources`);
+
   // Prune dead weight.
   let saved = 0;
 

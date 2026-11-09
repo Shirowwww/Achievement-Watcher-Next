@@ -278,7 +278,7 @@ function rowsCarryApiNames(rows) {
 // Merges SteamHunters JSON (apiName + English descriptions) with SteamCommunity rows (icons +
 // hidden status), matched case-insensitively by title. A same-position row is used only for the
 // icon, never hidden/description, so a misordered page can't mislabel an achievement. Localized
-// text comes separately from achievementTranslations.mergeTranslatedAchievements (matched by icon hash).
+// text comes separately from achievementTranslations.mergeTranslatedAchievements (by apiName, else icon).
 function mergeSteamHuntersWithCommunity(shList, rows) {
   const mapped = mapSteamHuntersJson(shList);
   if (!Array.isArray(rows) || rows.length === 0) return mapped;
