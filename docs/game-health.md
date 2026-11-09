@@ -83,6 +83,8 @@ previous files are kept. Nothing is rewritten without a backup or a confirmation
 | *This game needs a Steam emulator and none is set up* | Use **Apply emulator fix** from the right-click menu. See [Goldberg / GBE setup](emulator-setup.md). |
 | *The emulator file that reads it is missing* | **Install the emulator file** puts the matching runtime in. |
 | *The achievement list doesn't match what the game will look for* | **Rewrite the achievement data**. This is the usual result of a repack update. |
+| *ColdClient serves this game, but…* | `ColdClientLoader.ini` beside the loader starts a missing file or another program, names another game, or has no loader for the game's 32 or 64 bits. Fix that file; AW Next only reads it. Once it is right, **Play through the ColdClient loader** makes Play start the loader. |
+| *The Epic emulator still has the sample AppId* | `NemirtingasEpicEmu.json` holds the AppId made of zeros, or Epic's own EOSSDK file is still in place, so the emulator never loads. Put the game's Epic id in the file. |
 | *No achievement progress has been found yet* | Normal for a game you have not played since setting it up. Launch it and unlock something. |
 | *AW Next isn't watching this game while it runs* | **Watch this game** adds it to the tracker. |
 | *The last notification could not be sent* | Send a test notification, then see [Notifications](notifications.md#if-a-test-or-unlock-does-not-appear). |

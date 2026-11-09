@@ -5,7 +5,7 @@
   space... an option to hide the progress bar, the platform, the game health and the game name, each
   one independently").
 
-  Two multipliers and five flags, shared by the settings normalizer (which writes options.ini) and
+  Two multipliers and a set of flags, shared by the settings normalizer (which writes options.ini) and
   the renderer (which turns them into CSS custom properties and classes on #game-list), so a value
   can never be clamped one way when saved and another way when applied.
 
@@ -33,6 +33,39 @@ const TOGGLES = Object.freeze([
   // rather than gaining a library prefix: renaming it would silently reset everyone's choice.
   Object.freeze({ key: 'showPlayButton', hiddenClass: 'hide-play-button' }),
 ]);
+
+// The hover depth of ui/libraryDepth.js: the tile's lean and the cover behind the library. On
+// unless switched off, like the toggles, but kept apart from them because they hide nothing.
+const EFFECTS = Object.freeze([
+  Object.freeze({ key: 'libraryTilt', offClass: 'no-tile-tilt' }),
+  Object.freeze({ key: 'libraryAmbient', offClass: 'no-library-ambient' }),
+]);
+
+// How strong each effect is. options.ini keeps true for Normal, so a file written before the levels
+// existed reads as it did; false stays "off" and is handled by EFFECTS above.
+const EFFECT_LEVELS = Object.freeze(['subtle', 'normal', 'strong']);
+const TILT_DEG = Object.freeze({ subtle: 3, normal: 5, strong: 8 });
+// veil: how much of the theme lies over the cover; panel: how opaque the grid's own fill stays.
+const AMBIENT_MIX = Object.freeze({
+  subtle: Object.freeze({ veil: 0.84, panel: 76 }),
+  normal: Object.freeze({ veil: 0.7, panel: 62 }),
+  strong: Object.freeze({ veil: 0.5, panel: 44 }),
+});
+
+function effectLevel(value) {
+  return EFFECT_LEVELS.includes(value) ? value : 'normal';
+}
+
+// The Settings dropdown and options.ini: false is off, true is Normal, the other two keep their name.
+function effectFromSelect(value) {
+  if (value === 'false') return false;
+  return value === 'subtle' || value === 'strong' ? value : true;
+}
+
+function effectToSelect(value) {
+  if (value === false || value === 'false') return 'false';
+  return value === 'subtle' || value === 'strong' ? value : 'true';
+}
 
 // A value out of range is clamped, not rejected: options.ini is hand-editable, and a 5 there should
 // mean "as big as it goes", not "reset everything I chose".
@@ -84,6 +117,10 @@ function resolve(achievement) {
     // Every class this module owns, so the renderer can clear them before applying the current set
     // without knowing which ones it added last time.
     allClasses: TOGGLES.map((toggle) => toggle.hiddenClass),
+    offEffects: EFFECTS.filter((effect) => settings[effect.key] === false).map((effect) => effect.offClass),
+    allEffects: EFFECTS.map((effect) => effect.offClass),
+    tiltDeg: TILT_DEG[effectLevel(settings.libraryTilt)],
+    ambientMix: AMBIENT_MIX[effectLevel(settings.libraryAmbient)],
   };
 }
 
@@ -106,6 +143,12 @@ module.exports = {
   TILE_SCALE,
   DENSITY,
   TOGGLES,
+  EFFECTS,
+  EFFECT_LEVELS,
+  TILT_DEG,
+  AMBIENT_MIX,
+  effectFromSelect,
+  effectToSelect,
   PLAYTIME_UNITS,
   UNITS_BY_MODE,
   normalizeTileScale,

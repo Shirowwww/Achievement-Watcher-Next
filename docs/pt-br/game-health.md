@@ -87,6 +87,8 @@ arquivos anteriores ficam guardados. Nada é reescrito sem um backup ou uma conf
 | *Nenhuma lista de conquistas foi encontrada* | O jogo não tem conquistas, ou a fonte dele está desativada. Verifique **Configurações → Fonte**. |
 | *Este jogo precisa de um emulador da Steam e nenhum está configurado* | Use **Aplicar correção de emulador** no menu de botão direito. Veja [Configuração do Goldberg / GBE](emulator-setup.md). |
 | *O arquivo do emulador que o lê está ausente* | **Instalar o arquivo do emulador** coloca o runtime correspondente. |
+| *O ColdClient atende este jogo, mas…* | O `ColdClientLoader.ini` ao lado do loader inicia um arquivo ausente ou outro programa, cita outro jogo ou não tem loader para os 32 ou 64 bits do jogo. Corrija esse arquivo; o AW Next apenas o lê. Quando estiver certo, **Iniciar pelo loader ColdClient** faz o Jogar iniciar o loader. |
+| *O emulador da Epic ainda tem o AppID de exemplo* | O `NemirtingasEpicEmu.json` traz o AppID feito de zeros, ou o próprio arquivo EOSSDK da Epic continua no lugar, então o emulador nunca é carregado. Coloque no arquivo o id da Epic do jogo. |
 | *A lista de conquistas não corresponde ao que o jogo vai procurar* | **Reescrever os dados de conquistas**. É o resultado habitual de uma atualização de repack. |
 | *Nenhum progresso de conquistas foi encontrado ainda* | Normal para um jogo que você não jogou desde que o configurou. Inicie-o e desbloqueie algo. |
 | *O AW Next não está observando este jogo enquanto ele roda* | **Monitorar este jogo** o adiciona ao rastreador. |

@@ -120,9 +120,13 @@ const manualUnlock = require(path.join(appPath, 'parser/manualUnlock.js'));
 const achievementSteps = require(path.join(appPath, 'parser/achievementSteps.js'));
 achievementSteps.setUserDataPath(getUserDataPath());
 const achievementStepsView = require(path.join(appPath, 'util/achievementStepsView.js'));
+const achievementPins = require(path.join(appPath, 'parser/achievementPins.js'));
+achievementPins.setUserDataPath(getUserDataPath());
 const manualGames = require(path.join(appPath, 'parser/manualGames.js'));
 manualGames.setUserDataPath(getUserDataPath());
 const exeDetect = require(path.join(appPath, 'parser/exeDetect.js'));
+const exeHints = require(path.join(appPath, 'parser/exeHints.js'));
+const exeDiskSearch = require(path.join(appPath, 'parser/exeDiskSearch.js'));
 const gameIndex = require(path.join(appPath, 'parser/gameIndex.js'));
 const PlaytimeTracking = require(path.join(appPath, 'parser/playtime.js'));
 const playtimeInput = require(path.join(appPath, 'util/playtimeInput.js'));
@@ -148,6 +152,7 @@ const appInterpolate = require(path.join(appPath, 'locale/t.js')).interpolate;
 const coverStore = require(path.join(appPath, 'util/coverStore.js'));
 const coverFit = require(path.join(appPath, 'util/coverFit.js'));
 const { steamAppidOf } = require(path.join(appPath, 'util/platformId.js'));
+const { helpLinks } = require(path.join(appPath, 'util/gameLinks.js'));
 const sourceIdentity = require(path.join(appPath, 'util/sourceIdentity.js'));
 const gameIconStore = require(path.join(appPath, 'util/gameIconStore.js'));
 const backgroundStore = require(path.join(appPath, 'util/backgroundStore.js'));
@@ -158,6 +163,7 @@ const { calculateLibraryStats, calculateDetailedLibraryStats } = require(path.jo
 const rarityCache = require(path.join(appPath, 'util/rarity.js'));
 const { resolveGameRarityContext } = rarityCache;
 const { calculateTrophyStats, listUnlockedByRarity, platinumEarnedAt } = require(path.join(appPath, 'util/trophyStats.js'));
+const { derivedPlatinumRate } = require(path.join(appPath, 'util/platinumRate.js'));
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
@@ -201,6 +207,12 @@ window.addEventListener('error', (e) => {
   } catch {}
 });
 
+// A link from util/gameLinks.js: the Steam pages go through the client when it runs.
+function openHelpLink(link) {
+  if (link.steam) return openSteamTarget(link.steam === 'hub' ? steamClientLinks.steamGameHubUrl : steamClientLinks.steamStoreUrl, link.appid);
+  if (link.url) remote.shell.openExternal(link.url);
+}
+
 // Opens the Steam target in the client if running, else the web page. Checked fresh on every
 // click, never cached: Steam can start or quit while the app stays open.
 async function openSteamTarget(build, appid) {
@@ -214,12 +226,19 @@ async function openSteamTarget(build, appid) {
   if (url) remote.shell.openExternal(url);
 }
 
+// Settings > General, off by default: once a game is started from here the window goes to the tray,
+// and stays there when the game ends.
+function hideToTrayAfterLaunch() {
+  if (app.config && app.config.general && app.config.general.minimizeToTrayOnPlay === true) ipcRenderer.send('main-window-hide-to-tray');
+}
+
 // Hands a Linux launcher URI (steam://, lutris:, heroic://) to the desktop; it fails when that
 // launcher is not installed, which is worth saying rather than leaving the click unanswered.
 async function openLinuxLaunchUri(plan) {
   debug.log(`[launch] ${plan.launcher}: ${plan.url}`);
   try {
     await linuxGameLaunch.openUri(plan.url);
+    hideToTrayAfterLaunch();
   } catch (err) {
     debug.warn(`[launch] ${plan.url} => ${formatErr(err)}`);
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
@@ -602,24 +621,64 @@ async function sonyPlatinumRate(link, platinum) {
 }
 
 /*
-  A linked game's platinum rate: Sony's, else Exophase's, which counts only its own members and so
-  wears Exophase's name and a plain trophy instead of the PlayStation logo.
+  From the rates the game's other trophies show, so the platinum never reads commoner than its rarest
+  one. DLC is what the list itself files under a set (Steam's sets, SteamHunters' groups), else the
+  linked trophy's PSN group: the same label the achievement rows show.
+*/
+function derivedLinkedPlatinumRate(game, link) {
+  const rates = trophyRarityOf(game);
+  if (!rates || rates.size === 0) return null;
+  const categories = new Map(game.achievement.list.map((achievement) => [String(achievement.name), achievement.category]));
+  const isDlc = (name) => Boolean(categories.get(name) || (link.trophies[name] && link.trophies[name].group));
+  return derivedPlatinumRate(rates, { isDlc, seed: game.appid });
+}
+
+let platinumGameShown = null;
+
+/*
+  A linked game's platinum rate: derived from the game's own rates when it has some, else Sony's,
+  else Exophase's, which counts only its own members and so wears Exophase's name and a plain trophy
+  instead of the PlayStation logo.
 */
 async function paintLinkedPlatinumRate(game) {
   const link = psnLinkOf(game);
   const platinum = linkedPlatinumOf(game);
   if (!link || !platinum) return;
-  let percent = await sonyPlatinumRate(link, platinum);
-  const fromSony = percent !== null;
-  // Kept on disk a week by the parser, so a page opened again does not reach Exophase.
-  if (!fromSony) percent = await require(path.join(appPath, 'parser/psnPublicLink.js')).exophasePlatinumRate(link, gameTitleOf(game));
+  platinumGameShown = game;
+  let source = 'derived';
+  let percent = derivedLinkedPlatinumRate(game, link);
+  if (percent === null) {
+    source = 'sony';
+    percent = await sonyPlatinumRate(link, platinum);
+    // Kept on disk a week by the parser, so a page opened again does not reach Exophase.
+    if (percent === null) {
+      source = 'exophase';
+      percent = await require(path.join(appPath, 'parser/psnPublicLink.js')).exophasePlatinumRate(link, gameTitleOf(game));
+    }
+    // The game's own rates may have landed meanwhile; they win.
+    const derived = derivedLinkedPlatinumRate(game, link);
+    if (derived !== null) [source, percent] = ['derived', derived];
+  }
   if (percent === null || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(game.appid)) return;
-  percent = Math.round(percent * 10) / 10;
-  const text = formatPercentValue(percent, 1) || String(percent);
+  const digits = percent > 0 && percent < 0.1 ? 2 : 1;
+  percent = Math.round(percent * 10 ** digits) / 10 ** digits;
+  const text = formatPercentValue(percent, digits) || String(percent);
   const community = $('#achievement .achievement.psn-platinum .stats .community');
   community.find('.data').attr('data-percent', percent).text(`${trophyLabels().platinum} · ${text}`);
-  if (!fromSony) community.attr('title', 'Exophase').find('i').attr('class', 'fas fa-trophy');
+  if (source === 'exophase') community.attr('title', 'Exophase').find('i').attr('class', 'fas fa-trophy');
+  else if (source === 'derived') {
+    const rowIcon = $('#achievement .achievement:not(.psn-platinum) .stats .community i').first().attr('class');
+    community.removeAttr('title');
+    if (rowIcon) community.find('i').attr('class', rowIcon);
+  }
 }
+
+// The game's rates arrived after the page was drawn: paint the platinum from them.
+window.repaintLinkedPlatinum = () => {
+  const game = platinumGameShown;
+  if (!game || !$('#achievement .achievement.psn-platinum').length) return;
+  paintLinkedPlatinumRate(game).catch((err) => debug.log(`[psn] platinum rate not painted: ${err.message || err}`));
+};
 
 function requestPsnTrophyLinks(list) {
   if (!Array.isArray(list)) return;
@@ -1500,8 +1559,12 @@ function applyLibraryChrome(achievement) {
   list
     .css('--library-scale', String(chrome.tileScale))
     .css('--library-gap-scale', String(chrome.density))
-    .removeClass(chrome.allClasses.join(' '));
-  if (chrome.hiddenClasses.length) list.addClass(chrome.hiddenClasses.join(' '));
+    .attr('data-tilt-deg', String(chrome.tiltDeg))
+    .removeClass([...chrome.allClasses, ...chrome.allEffects].join(' '));
+  // The ambient layer is a sibling of the list, so its strength sits on the home view.
+  $('#home').css('--ambient-veil', String(chrome.ambientMix.veil)).css('--ambient-panel', `${chrome.ambientMix.panel}%`);
+  const classes = [...chrome.hiddenClasses, ...chrome.offEffects];
+  if (classes.length) list.addClass(classes.join(' '));
   setLibraryPlaytimeMode(achievement && achievement.libraryPlaytimeUnits);
   return chrome;
 }
@@ -2621,7 +2684,8 @@ function imageDisplayUrl(value) {
   return path.isAbsolute(text) ? pathToFileURL(text).href : text;
 }
 
-const HEADER_ICON_SELECTOR = '#achievement .wrapper > .header .title .icon';
+// The list header's icon and the overview's, painted and given their right-click menu together.
+const HEADER_ICON_SELECTOR = '#achievement .wrapper > .header .title .icon, #game-overview .game-overview-icon';
 
 // The artwork the square logo can be cut from, best first.
 function headerIconSourcesFor(game) {
@@ -2670,14 +2734,15 @@ function gameBrand(game) {
 // Paints the square logo, in order: user's own pick, host notification square logo (community set
 // or cropped artwork), then artwork shipped in the game folder (offline last resort).
 async function paintGameHeaderIcon(game) {
-  const iconEl = $(HEADER_ICON_SELECTOR);
   // The element is shared across game pages; another can open while this resolves, so the header's
   // own appid is the freshness check for every branch.
   const stillOnScreen = () => String($('#achievement .wrapper > .header').attr('data-appid')) === String(game.appid);
   // With no artwork at all, go back to the neutral CSS surface, or the previous game's icon stays
-  // behind and reads as if this page belonged to another game.
+  // behind and reads as if this page belonged to another game. Looked up when painting: the
+  // overview's icon may be built while this resolves.
   const paint = (value) => {
     if (!stillOnScreen()) return;
+    const iconEl = $(HEADER_ICON_SELECTOR);
     iconEl.css('background', value ? cssUrl(value) : '');
     // A console game shows its platform's logo only while it has no icon of its own.
     iconEl.toggleClass('has-game-icon', !!value);
@@ -4226,6 +4291,52 @@ ipcRenderer.on('achievement-steps-changed', (event, appid) => {
   if (game) $('#achievement .achievement[data-name]').each((index, el) => repaintAchievementSteps(game, $(el)));
 });
 
+// The game's pins, without those of achievements its list now shows unlocked.
+function pinsAfterUnlocks(game) {
+  const list = (game && game.achievement && game.achievement.list) || [];
+  try {
+    return achievementPins.dropUnlocked(String(game.appid), list.filter((a) => a && a.Achieved).map((a) => a.name)).pins;
+  } catch (err) {
+    debug.warn(`[pins] could not read the pins of ${game && game.appid}: ${err && err.message ? err.message : err}`);
+    return [];
+  }
+}
+
+// Marks the rows of the game on screen after a pin changed here or in the overlay, then puts the
+// pinned rows back on top of the locked list in its current order.
+function paintAchievementPins(pins) {
+  const pinned = new Set(pins);
+  const label = escapeHtml(t('ach-pinned', 'Pinned', 'Épinglé'));
+  const rows = $('#lock > ul > li').get();
+  const before = new Map(rows.map((li) => [li, li.getBoundingClientRect().top]));
+  $('#lock .achievement[data-name]').each((index, el) => {
+    const row = $(el);
+    const on = pinned.has(String(row.attr('data-name')));
+    if (on === row.hasClass('is-pinned')) return;
+    row.toggleClass('is-pinned', on).attr('data-pinned', on ? 1 : 0);
+    if (on) row.find('.content .title').append(` <i class="fas fa-thumbtack ach-pin" title="${label}" aria-label="${label}"></i>`);
+    else row.find('.content .title .ach-pin').remove();
+  });
+  if (typeof window.reorderAchievementRows === 'function') window.reorderAchievementRows();
+  slideRowsFrom(before);
+}
+
+// Rows that moved glide from where they were (transform only), unless the system asks for less motion.
+function slideRowsFrom(before) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (const [li, top] of before) {
+    const delta = top - li.getBoundingClientRect().top;
+    if (Math.abs(delta) < 1 || typeof li.animate !== 'function') continue;
+    li.animate([{ transform: `translateY(${delta}px)` }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
+  }
+}
+
+// A pin set or removed in the overlay: repaint the game's rows if its page is open.
+ipcRenderer.on('achievement-pins-changed', (event, appid) => {
+  if (!appid || String($('#achievement .wrapper > .header').attr('data-appid')) !== String(appid)) return;
+  paintAchievementPins(achievementPins.pinsForGame(String(appid)));
+});
+
 // The achievement row to scroll to and flash on the next render of its game view, from a toast's
 // activation URI. Consumed exactly once, or every later game view would hunt for a stale row.
 let pendingAchievementFocus = null;
@@ -4266,6 +4377,128 @@ ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
   if (!appid) return;
   openGameFromLibrary(appid, achievement);
 });
+
+/*
+  The game page opens on its overview (ui/gameOverview.js) and the achievements list is one button
+  away. #achievement[data-view] says which one is on screen; a refresh of the open game keeps it, and
+  a game opened on one achievement (a toast click) goes straight to the list.
+*/
+function setGameView(view, { animate = true } = {}) {
+  const page = $('#achievement');
+  if (page.attr('data-view') === view) return;
+  page.attr('data-view', view);
+  page.scrollTop(0);
+  window.GameOverview?.sync();
+  if (!animate) return;
+  const entering = view === 'overview' ? document.getElementById('game-overview') : page.find('.wrapper > .header')[0];
+  if (entering) window.GameOverview?.enter(entering);
+  if (view === 'list') scheduleRareGlowRefresh(0);
+}
+
+// The Steam appid the store and wiki links use: a Ubisoft game's mapped Steam id, else its own.
+function catalogAppidOf(game) {
+  const appid = game.appid;
+  const forced = emulatorSourceOverride.get(appid);
+  const isUbisoft = forced === 'ubisoft' ? true : forced === 'steam' ? false : uplayR2.isUbisoftGame(game, appid);
+  const tools = isUbisoft ? uplayR2.getGameToolPaths(game, appid) : null;
+  return String((tools && tools.steamAppid) || game.steamappid || steamAppidOf(game));
+}
+
+/*
+  Screenshots and clips of the game on screen, by achievement (electron/achievementCaptures.js).
+  The row titles let captures older than the index be found by their file name. Shared by the
+  overview and the achievement right-click menu (ui/game.js).
+*/
+async function capturesOfOpenGame(appid) {
+  const titles = {};
+  $('#achievement .achievement[data-name]').each(function () {
+    titles[this.getAttribute('data-name')] = $(this).find('.content .title').first().text().trim();
+  });
+  const byAchievement = await ipcRenderer.invoke('achievement-captures', { appid, gameTitles: app.captureGameTitles(appid) || [], titles }).catch(() => ({}));
+  return { byAchievement: byAchievement || {}, titles };
+}
+
+function captureViewerStrings() {
+  return {
+    close: t('capture-viewer-close', 'Close', 'Fermer'),
+    previous: t('capture-viewer-previous', 'Previous', 'Précédent'),
+    next: t('capture-viewer-next', 'Next', 'Suivant'),
+    count: t('capture-viewer-count', '{current} of {total}', '{current} sur {total}'),
+    unavailable: t('capture-viewer-unavailable', 'This file can no longer be opened.', 'Ce fichier ne peut plus être ouvert.'),
+    reveal: t('capture-viewer-folder', 'Show in folder', 'Afficher dans le dossier'),
+  };
+}
+
+// Every capture of the game, newest first, for the overview's souvenirs and its viewer.
+async function souvenirsOf(appid) {
+  const { byAchievement, titles } = await capturesOfOpenGame(appid);
+  const items = [];
+  for (const [name, list] of Object.entries(byAchievement || {})) {
+    for (const item of Array.isArray(list) ? list : []) items.push({ ...item, name: titles[name] || name, local: true });
+  }
+  return items.sort((a, b) => (Number(b.at) || 0) - (Number(a.at) || 0));
+}
+
+function formatReleaseDate(value) {
+  const iso = /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? Date.parse(`${value}T12:00:00Z`) : NaN;
+  return Number.isFinite(iso) ? intlFormat.formatDate(iso, uiLang(), { dateStyle: 'long' }) : String(value || '');
+}
+
+function showGameOverview(box, game) {
+  const root = document.getElementById('game-overview');
+  if (!root || !window.GameOverview) return;
+  const refresh = window.GameOverview.current() === game.appid && $('#achievement').attr('data-view');
+  const unlocked = Math.max(0, Math.floor(finiteNumber(game.achievement.unlocked, 0)));
+  const total = Math.max(Math.floor(finiteNumber(game.achievement.total, 0)), unlocked);
+  const catalogAppid = catalogAppidOf(game);
+  const viewer = captureViewerStrings();
+  window.GameOverview.show(
+    root,
+    {
+      appid: game.appid,
+      title: gameDisplayTitle(game),
+      launchable: isLaunchable(game),
+      progress: { unlocked, total, percent: percentFromProgress(unlocked, total) },
+      links: helpLinks({ catalogAppid, name: game.name, source: game.source, manual: !!game.manual || game.source === 'Manual' }),
+    },
+    {
+      t,
+      allGamesLabel: window.appLocale?.allGamesBackButton || 'All Games',
+      viewerStrings: viewer,
+      formatDate: (at) => intlFormat.formatDateTime(at, uiLang()),
+      formatRelease: formatReleaseDate,
+      actions: {
+        play: () => app.onPlayButtonClick(box),
+        achievements: () => setGameView('list'),
+        cover: () => openCoverPicker(game, game.appid, catalogAppid || String(game.steamappid || game.appid)),
+        health: () => app.onConfigButtonClick(box),
+        settings: () => box.trigger('contextmenu'),
+        back: () => $('#btn-previous').trigger('click'),
+      },
+      loadDetails: () =>
+        ipcRenderer
+          .invoke('get-game-details', { game: { appid: game.appid, source: game.source, system: game.system, steamappid: game.steamappid, name: game.name }, lang: uiLang() })
+          .then((answer) => (answer && answer.details) || null),
+      loadSouvenirs: () => souvenirsOf(game.appid),
+      // The overview's icon joins the list header's: same picture, same right-click menu.
+      mountIcon: () => {
+        paintGameHeaderIcon(game);
+        bindGameHeaderIconMenu(game);
+      },
+      // Steam's library hero, else SteamGridDB's: wide art made for the top of a page.
+      loadHeroArt: async () => {
+        const art = await bandHeroArt(game, game.appid);
+        return art ? imageDisplayUrl(art) : null;
+      },
+      openLink: openHelpLink,
+      openExternal: (url) => remote.shell.openExternal(url),
+      revealCapture: (item) => ipcRenderer.invoke('achievement-capture-reveal', item.url).catch(() => {}),
+    }
+  );
+  $('#btn-overview').text(t('game-page-overview', 'Overview', "Vue d'ensemble"));
+  if (pendingAchievementFocus && pendingAchievementFocus.appid === String(game.appid)) setGameView('list', { animate: false });
+  else if (!refresh) setGameView('overview', { animate: false });
+}
 
 function updateGamePage(appid) {
   // Refresh details only when this game is already open.
@@ -4316,17 +4549,115 @@ async function addDetectedGameFolders() {
   return savesMerge.added + librariesMerge.added;
 }
 
-function autodetectGameExe(gameDir, gameName, taken) {
-  if (!gameDir) return null;
+// The evidence exeDetect weighs for one game: the emulator dlls, what the store declares, and the
+// exes other games already own.
+function exeDetectOptions(game, taken) {
+  const emu = goldberg.detectEmulator(game.gameDir);
+  return { dllPaths: emu.dll, taken, ...exeHints.exeHintsFor(game) };
+}
+
+function autodetectGameExe(game, taken) {
+  if (!game || !game.gameDir) return null;
   try {
-    const emu = goldberg.detectEmulator(gameDir);
     // Require strong evidence; otherwise let the user choose the executable.
-    const exeInfo = exeDetect.detectConfident(gameDir, gameName || '', { dllPaths: emu.dll, taken });
+    const exeInfo = exeDetect.detectConfident(game.gameDir, game.name || '', exeDetectOptions(game, taken));
     if (exeInfo?.full && fs.existsSync(exeInfo.full)) return exeInfo.full;
   } catch (err) {
     debug.log(err);
   }
   return null;
+}
+
+/*
+  "Find all" for executables (Settings > Folders, and once after the first-run guide's search):
+  every game with a folder goes through the same rules as each scan (exeList.reconcile), then the
+  games with no folder are looked for across the drives by the exe names Steam declares, names
+  only. Answers { found, missing, truncated } over the games that had no working exe.
+*/
+async function findAllGameExecutables() {
+  const hasWorkingExe = (entries, game) => {
+    const entry = entries.find((e) => String(e.appid) === String(game.appid));
+    return !!(entry && entry.exe && fs.existsSync(entry.exe));
+  };
+  const before = await exeList.list();
+  const pending = gameList.filter((game) => game && !hasWorkingExe(before, game));
+  await scanHost.reconcileExeList(gameList);
+  const afterReconcile = await exeList.list();
+  const taken = new Set(afterReconcile.filter((e) => e.exe).map((e) => e.exe));
+  const folderless = pending.filter((game) => !hasWorkingExe(afterReconcile, game) && !(game.gameDir && fs.existsSync(game.gameDir)));
+  const blockedRoots = [...((await libraryDirs.get()) || []), ...((await userDir.get()) || []).map((entry) => entry && entry.path)];
+  const { assigned, truncated } = await exeDiskSearch.findForFolderlessGames(folderless, {
+    hintsFor: (game) => exeHints.exeHintsFor(game).hints,
+    isGeneric: exeDetect.isGenericExeName,
+    confirm: async (game, exePath) => {
+      const gameDir = exeDetect.gameDirForExe(exePath, { blockedRoots });
+      if (!gameDir) return '';
+      // The check below is synchronous: let the window paint and take input between two of them.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      // A small budget: a stray match in a huge folder must not hold the window for long.
+      const budget = { maxDirectories: 2000, timeLimitMs: 2000 };
+      const sure = exeDetect.detectConfident(gameDir, game.name || '', { ...exeDetectOptions({ ...game, gameDir }, taken), ...budget });
+      return sure && sure.full.toLowerCase() === exePath.toLowerCase() ? gameDir : '';
+    },
+  });
+  for (const { game, exe, gameDir } of assigned) {
+    const recorded = await exeList.fillIfUnchanged({ appid: String(game.appid), exe });
+    if (recorded !== exe) continue;
+    game.exe = exe;
+    game.exeConfident = true;
+    game.gameDir = gameDir;
+  }
+  const after = await exeList.list();
+  const found = pending.filter((game) => hasWorkingExe(after, game)).length;
+  // Only an installed game can still be missing one: a folderless game not found may not be on this PC at all.
+  const missing = pending.filter((game) => !hasWorkingExe(after, game) && game.gameDir && fs.existsSync(game.gameDir)).length;
+  debug.log(`[exe] find all: ${found} found, ${missing} to choose${truncated ? ', drive search cut short' : ''}`);
+  return { found, missing, truncated };
+}
+
+const MAX_EXE_CHOICES = 5;
+
+/*
+  When no executable is sure, the likely ones are offered before the file dialog, as Windows command
+  links (name, then where it sits in the game folder). Answers the chosen path, 'browse' for the file
+  dialog, or '' when the user cancelled.
+*/
+async function chooseAmongExeCandidates(game, taken) {
+  if (!game || !game.gameDir || !fs.existsSync(game.gameDir)) return 'browse';
+  let ranked;
+  try {
+    ranked = exeDetect.rank(game.gameDir, game.name || '', exeDetectOptions(game, taken));
+  } catch (err) {
+    debug.log(err);
+    return 'browse';
+  }
+  const choices = ranked.candidates.slice(0, MAX_EXE_CHOICES);
+  if (choices.length === 0) return 'browse';
+  const buttons = [
+    // Two lines make a Windows command link; elsewhere the dialog keeps one line per button.
+    ...choices.map((choice) => {
+      const where = path.relative(game.gameDir, choice.full);
+      return process.platform === 'win32' ? `${choice.name}\n${where}` : where;
+    }),
+    t('exe-choice-browse', 'Browse…', 'Parcourir…'),
+    t('cancel', 'Cancel', 'Annuler'),
+  ];
+  const cancelId = buttons.length - 1;
+  const { response } = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+    type: 'question',
+    title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
+    message: t('exe-choice-message', 'Which file starts {game}?', 'Quel fichier lance {game} ?', { game: game.name || '' }),
+    detail: ranked.truncated
+      ? t('exe-choice-truncated', 'The game folder is too large to be searched completely, so this list may be missing the right file.', 'Le dossier du jeu est trop grand pour être fouillé en entier : le bon fichier peut manquer à cette liste.')
+      : '',
+    buttons,
+    defaultId: 0,
+    cancelId,
+    noLink: false,
+  });
+  if (response === cancelId) return '';
+  if (response === choices.length) return 'browse';
+  return choices[response].full;
 }
 
 /*
@@ -4376,14 +4707,19 @@ async function pickGameExecutable(appid) {
   // Start where the game lives when the recorded exe is gone (moved or renamed folder).
   const known = gameList.find((g) => g.appid == appid);
   const startDir = known && known.gameDir && fs.existsSync(known.gameDir) ? known.gameDir : undefined;
-  const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
-    title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
-    buttonLabel: t('select', 'Select', 'Sélectionner'),
-    defaultPath: cfg.exe && fs.existsSync(cfg.exe) ? cfg.exe : startDir,
-    filters: [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat'] }],
-    properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
-  });
-  const filePath = (dialog.filePaths || []).find((entry) => entry && entry.length > 0) || '';
+  const hasWorkingExe = !!cfg.exe && fs.existsSync(cfg.exe);
+  // A game with a working executable is being changed on purpose: straight to the file dialog.
+  let filePath = hasWorkingExe ? 'browse' : await chooseAmongExeCandidates(known, await takenExePaths(appid));
+  if (filePath === 'browse') {
+    const dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
+      title: t('choose-the-game-executable', 'Choose the game executable', "Choisir l'exécutable du jeu"),
+      buttonLabel: t('select', 'Select', 'Sélectionner'),
+      defaultPath: hasWorkingExe ? cfg.exe : startDir,
+      filters: [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat', 'cmd'] }],
+      properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
+    });
+    filePath = (dialog.filePaths || []).find((entry) => entry && entry.length > 0) || '';
+  }
   if (!filePath) return '';
 
   cfg.exe = filePath;
@@ -4975,6 +5311,10 @@ var app = {
           .reconcileExeList(gameList)
           .then(async (n) => {
             if (n > 0) debug.log(`[exeList] reconcile fixed ${n} entr${n === 1 ? 'y' : 'ies'}`);
+            if (window.awFindExecutablesAfterScan) {
+              window.awFindExecutablesAfterScan = false;
+              findAllGameExecutables().catch((err) => debug.log(err));
+            }
             // exeList signal for "installed only": a live configured launch exe counts as installed
             // even if discovery found no folder. reconcile just dropped dead paths, so any exe here exists on disk.
             try {
@@ -7098,135 +7438,25 @@ var app = {
           }
 
           // Catalog links use the mapped Steam appid for Ubisoft records (including namespaced
-          // uplay-<productId> official entries). Never emit broken URLs with a local/native id.
-          if (/^[0-9]+$/.test(catalogAppid)) {
-            linkMenu.append(
-              new MenuItem({
-                icon: menuIcon('globe.png'),
-                label: 'Steam',
-                click() {
-                  openSteamTarget(steamClientLinks.steamStoreUrl, catalogAppid);
-                },
-              })
-            );
-            linkMenu.append(
-              new MenuItem({
-                icon: menuIcon('globe.png'),
-                label: 'SteamDB',
-                click() {
-                  remote.shell.openExternal(`https://steamdb.info/app/${catalogAppid}/`);
-                },
-              })
-            );
-            linkMenu.append(
-              new MenuItem({
-                icon: menuIcon('globe.png'),
-                label: 'PCGamingWiki',
-                click() {
-                  remote.shell.openExternal(`https://pcgamingwiki.com/api/appid.php?appid=${catalogAppid}`);
-                },
-              })
-            );
-            linkMenu.append(
-              new MenuItem({
-                icon: menuIcon('globe.png'),
-                label: 'SteamHunters',
-                click() {
-                  remote.shell.openExternal(`https://steamhunters.com/apps/${catalogAppid}/achievements`);
-                },
-              })
-            );
-            linkMenu.append(
-              new MenuItem({
-                icon: menuIcon('globe.png'),
-                label: 'Steam Community',
-                click() {
-                  openSteamTarget(steamClientLinks.steamGameHubUrl, catalogAppid);
-                },
-              })
-            );
-          }
-
-          // Platform metadata links: non-Steam sources get a
-          // store/search page plus PCGamingWiki instead of Steam-only links.
+          // uplay-<productId> official entries); util/gameLinks.js never emits a URL with a local id.
+          // The game page's "Help and links" shows the same list.
           const linkGame = list.find((g) => g.appid == appid);
-          const linkName = encodeURIComponent((linkGame && linkGame.name) || '');
-          const sourceLower = String((linkGame && linkGame.source) || '').toLowerCase();
-          const globeIcon = () => menuIcon('globe.png');
-          const hasLink = (label) => linkMenu.items.some((item) => item.label === label);
-          const addPcgw = (label) => {
-            if (hasLink(label)) return;
+          let guidesStarted = false;
+          for (const link of helpLinks({ catalogAppid, name: linkGame && linkGame.name, source: linkGame && linkGame.source, manual: isManualGame })) {
+            // Guides sit below the store and wiki pages, set apart by a line.
+            if (link.kind === 'guide' && !guidesStarted) {
+              guidesStarted = true;
+              if (linkMenu.items.length) linkMenu.append(new MenuItem({ type: 'separator' }));
+            }
             linkMenu.append(
               new MenuItem({
-                icon: globeIcon(),
-                label,
+                icon: menuIcon('globe.png'),
+                label: link.label,
                 click() {
-                  remote.shell.openExternal(`https://pcgamingwiki.com/w/index.php?search=${linkName}`);
+                  openHelpLink(link);
                 },
               })
             );
-          };
-          if (linkName) {
-            if (sourceLower.startsWith('epic')) {
-              linkMenu.append(
-                new MenuItem({
-                  icon: globeIcon(),
-                  label: 'Epic Games Store',
-                  click() {
-                    remote.shell.openExternal(`https://store.epicgames.com/search?q=${linkName}`);
-                  },
-                })
-              );
-              addPcgw('PCGamingWiki');
-            } else if (sourceLower.startsWith('gog')) {
-              linkMenu.append(
-                new MenuItem({
-                  icon: globeIcon(),
-                  label: 'GOG',
-                  click() {
-                    remote.shell.openExternal(`https://www.gog.com/games?search=${linkName}`);
-                  },
-                })
-              );
-              addPcgw('PCGamingWiki');
-            } else if (sourceLower === 'ea') {
-              linkMenu.append(
-                new MenuItem({
-                  icon: globeIcon(),
-                  label: 'EA',
-                  click() {
-                    remote.shell.openExternal(`https://www.ea.com/search?q=${linkName}`);
-                  },
-                })
-              );
-              addPcgw('PCGamingWiki');
-            } else if (sourceLower.includes('rpcs3')) {
-              linkMenu.append(
-                new MenuItem({
-                  icon: globeIcon(),
-                  label: 'RPCS3 Wiki',
-                  click() {
-                    remote.shell.openExternal(`https://wiki.rpcs3.net/index.php?search=${linkName}`);
-                  },
-                })
-              );
-              addPcgw('PCGamingWiki');
-            } else if (sourceLower.includes('shadps4') || sourceLower.includes('kytyps5') || sourceLower === 'ps4 recomp' || sourceLower === 'ps3 recomp' || sourceLower.includes('xenia')) {
-              addPcgw('PCGamingWiki');
-            } else if (sourceLower.includes('uplay') || sourceLower === 'lumaplay' || sourceLower.includes('ubisoft')) {
-              linkMenu.append(
-                new MenuItem({
-                  icon: globeIcon(),
-                  label: 'Ubisoft Store',
-                  click() {
-                    remote.shell.openExternal(`https://store.ubi.com/us/search?q=${linkName}`);
-                  },
-                })
-              );
-              addPcgw('PCGamingWiki');
-            } else if (isManualGame) {
-              addPcgw('PCGamingWiki');
-            }
           }
 
           // Uninstall (opt-in via Settings > General): Steam only when the client confirms the AppID,
@@ -7956,11 +8186,14 @@ var app = {
       // none: that picture is greyed while locked, as Steam's locked pictures are.
       const hasNoLockedPicture = (achievement) => !achievement.icongray || achievement.icongray === achievement.icon;
       const stepsByName = achievementSteps.stepsForGame(game.appid);
+      const pinnedNames = new Set(pinsAfterUnlocks(game));
+      const pinLabel = escapeHtml(t('ach-pinned', 'Pinned', 'Épinglé'));
       const stepLabels = achievementStepLabels();
       // Rows are collected and inserted in one append per list. jQuery parses the markup and splices
       // it into the live DOM on every call, so appending row by row cost one layout pass per row.
       const unlockRows = [];
       const lockRows = [];
+      const pinnedRows = [];
 
       let i = 0;
       for (let achievement of game.achievement.list) {
@@ -7984,10 +8217,11 @@ var app = {
           ? `<div class="description masked-desc" role="button" tabindex="0" data-desc="${escapeHtml(realDesc)}">${escapeHtml(hiddenDescLabel)}</div>`
           : `<div class="description">${escapeHtml(realDesc)}</div>`;
 
+        const pinned = !achievement.Achieved && pinnedNames.has(achievement.name);
         let template = `
                 <li>
 
-                         <div class="achievement${achievement.manual ? ' manual' : ''}" data-name="${escapeHtml(achievement.name)}" data-index="${i}" data-achieved="${
+                         <div class="achievement${achievement.manual ? ' manual' : ''}${pinned ? ' is-pinned' : ''}" data-name="${escapeHtml(achievement.name)}" data-index="${i}" data-pinned="${pinned ? 1 : 0}" data-achieved="${
           achievement.Achieved ? 1 : 0
         }" data-manual="${achievement.manual ? 1 : 0}" title="${achievement.manual ? manualTitle : ''}">
                             <div class="box">
@@ -8003,7 +8237,7 @@ var app = {
                                   game.system === 'playstation' || trophyType
                                     ? `<i class="fas fa-trophy" data-type="${escapeHtml(trophyType)}"></i> ${escapeHtml(achievement.displayName)}`
                                     : `${escapeHtml(achievement.displayName)}`
-                                }</div>
+                                }${pinned ? ` <i class="fas fa-thumbtack ach-pin" title="${pinLabel}" aria-label="${pinLabel}"></i>` : ''}</div>
                                 ${
                                   category
                                     ? `<div class="ach-category">${escapeHtml(category)}</div>`
@@ -8037,6 +8271,8 @@ var app = {
         // inline in the locked list like any other (with their description masked, click to reveal).
         if (achievement.Achieved) {
           unlockRows.push(template);
+        } else if (pinned) {
+          pinnedRows.push(template);
         } else {
           lockRows.push(template);
         }
@@ -8045,6 +8281,8 @@ var app = {
 
       const platinumRow = psnPlatinumRow(game);
       if (platinumRow) (platinumRow.achieved ? unlockRows : lockRows).unshift(platinumRow.html);
+      // Pinned rows lead the locked list, ahead of the PlayStation platinum.
+      lockRows.unshift(...pinnedRows);
       if (unlockRows.length) unlock.append(unlockRows.join(''));
       if (lockRows.length) lock.append(lockRows.join(''));
       if (platinumRow) paintLinkedPlatinumRate(game).catch((err) => debug.log(`[psn] platinum rate not painted: ${err.message || err}`));
@@ -8199,6 +8437,8 @@ var app = {
         }
       }
 
+      showGameOverview(self, game);
+
       $('#achievement').fadeIn(260, function () {
         // Focus is requested per open (setAchievementFocus), not read from app.args on every render:
         // launch args never change, so the old check re-fired every time and threw on an empty `.offset()`, stranding the clicked tile.
@@ -8259,6 +8499,22 @@ var app = {
     }
     if (changed) repaintGameView(appid);
     return { changed };
+  },
+  // Pins or unpins a locked achievement of the game on screen, then tells the overlay.
+  setAchievementPinned: function (name, pinned) {
+    const appid = $('#achievement .wrapper > .header').attr('data-appid');
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    if (!game) return;
+    let result;
+    try {
+      result = achievementPins.setPinned(String(game.appid), String(name), pinned);
+    } catch (err) {
+      debug.warn(`[pins] could not save a pin of ${game.appid}: ${err && err.stack ? err.stack : err}`);
+      return;
+    }
+    if (!result.changed) return;
+    paintAchievementPins(result.pins);
+    ipcRenderer.send('achievement-pins-changed', String(game.appid));
   },
   // Opens or closes a row's steps; `focusNew` puts the cursor in the field that adds one.
   toggleAchievementSteps: function (name, { open, focusNew = false } = {}) {
@@ -8489,6 +8745,13 @@ var app = {
     if (answer === 1) remote.shell.openPath(result.backupDir);
     return true;
   },
+  // The names a game's capture folder may carry: the title shown now, then the one before a rename.
+  captureGameTitles: function (appid) {
+    const game = gameList.find((g) => g && String(g.appid) === String(appid));
+    return game ? [...new Set([gameTitleOf(game), game.name].filter(Boolean).map(String))] : [];
+  },
+  capturesOfOpenGame: (appid) => capturesOfOpenGame(appid),
+  captureViewerStrings: () => captureViewerStrings(),
   // Re-locks one achievement so the game can unlock it again and AW Next announces it as new. Same
   // safety as the reset: the user approves the file list, and everything touched is backed up first.
   // `name` can be a list of rows picked together: one plan, one confirmation, one backup.
@@ -8731,18 +8994,23 @@ var app = {
       }
     }
     let cfg = await exeList.get(appid);
+    let choice = 'browse';
     if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
       const game = gameList.find((g) => g.appid == appid);
-      let detected =
-        game && game.exe && game.exeConfident && fs.existsSync(game.exe)
-          ? game.exe
-          : autodetectGameExe(game?.gameDir, game?.name, await takenExePaths(appid));
+      const taken = await takenExePaths(appid);
+      let detected = game && game.exe && game.exeConfident && fs.existsSync(game.exe) ? game.exe : autodetectGameExe(game, taken);
       if (detected) {
-        cfg.exe = detected;
-        await exeList.add(cfg);
+        cfg.exe = (await exeList.fillIfUnchanged({ appid: cfg.appid, exe: detected }, cfg.exe)) || detected;
+      } else {
+        choice = await chooseAmongExeCandidates(game, taken);
+        if (!choice) return;
+        if (choice !== 'browse') {
+          cfg.exe = choice;
+          await exeList.add(cfg);
+        }
       }
     }
-    if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
+    if (choice === 'browse' && (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe))) {
       let dialog = await remote.dialog.showOpenDialog(remote.getCurrentWindow(), {
         title: t('choose-the-game-executable', 'Choose the game executable', 'Choisir l\'exécutable du jeu'),
         buttonLabel: t('select', 'Select', 'Sélectionner'),
@@ -8752,9 +9020,9 @@ var app = {
           process.platform === 'linux'
             ? [
                 { name: t('dialog-filter-all-files', 'All files', 'Tous les fichiers'), extensions: ['*'] },
-                { name: t('dialog-filter-windows-programs', 'Windows programs', 'Programmes Windows'), extensions: ['exe', 'bat'] },
+                { name: t('dialog-filter-windows-programs', 'Windows programs', 'Programmes Windows'), extensions: ['exe', 'bat', 'cmd'] },
               ]
-            : [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat'] }],
+            : [{ name: t('dialog-filter-executables', 'Executables', 'Exécutables'), extensions: ['exe', 'bat', 'cmd'] }],
         properties: ['openFile', 'showHiddenFiles', 'dontAddToRecent'],
       });
 
@@ -8806,6 +9074,7 @@ var app = {
         const viaShell = await shellLaunch(false);
         if (viaShell && viaShell.ok) {
           clearGameBoxBusy(gameBox);
+          hideToTrayAfterLaunch();
           return;
         }
         if (viaShell && viaShell.declined) {
@@ -8838,6 +9107,7 @@ var app = {
         const elevated = await shellLaunch(true);
         if (elevated && elevated.ok) {
           clearGameBoxBusy(gameBox);
+          hideToTrayAfterLaunch();
           return;
         }
         if (elevated && elevated.declined) {
@@ -8859,10 +9129,11 @@ var app = {
             const failure = await remote.shell.openPath(cfg.exe);
             if (failure) throw new Error(failure);
             clearGameBoxBusy(gameBox);
+            hideToTrayAfterLaunch();
             return;
           }
         }
-        if (process.platform === 'win32' && gameRecord && gameRecord.manual) {
+        if (process.platform === 'win32' && ((gameRecord && gameRecord.manual) || windowsShellLaunch.isBatchScript(cfg.exe))) {
           // ShellExecute gives GUI/.NET programs a normal Windows launch environment. Ryujinx
           // crashes in Console.Title when started as a detached child with ignored stdio handles.
           const result = await shellLaunch(false);
@@ -8874,16 +9145,25 @@ var app = {
             throw new Error((result && result.error) || 'Windows shell launch failed');
           }
           clearGameBoxBusy(gameBox);
+          hideToTrayAfterLaunch();
           return;
         }
         // args_split (argv-split) strips its own grouping quotes; the old hand-rolled regex kept
         // them, so spawn() (no shell) re-quoted the token and a game got literal quotes in a path like -savedir "D:\My Games\Save".
-        let game = spawn(cfg.exe, splitLaunchArgs(cfg.args, (m) => debug.log(m)), {
-          cwd: path.dirname(cfg.exe),
+        // Game Health's "Play through the ColdClient loader", checked again now: it passes the args on to the exe.
+        // Required here: gameHealthPanel.js shares this page's scope and already declares `coldClient`.
+        const loaderWanted = process.platform === 'win32' && !!cfg.loader;
+        const viaLoader = loaderWanted ? require(path.join(appPath, 'util/coldClient.js')).launchCommand({ loader: cfg.loader, exe: cfg.exe }) : null;
+        if (loaderWanted && !viaLoader) debug.warn(`[${appid}] the ColdClient loader no longer starts ${cfg.exe} - starting the exe itself`);
+        let game = spawn(viaLoader ? viaLoader.file : cfg.exe, splitLaunchArgs(cfg.args, (m) => debug.log(m)), {
+          cwd: viaLoader ? viaLoader.cwd : path.dirname(cfg.exe),
           detached: true,
           stdio: 'ignore',
         });
-        game.once('spawn', () => setTimeout(() => clearGameBoxBusy(gameBox), 350));
+        game.once('spawn', () => {
+          setTimeout(() => clearGameBoxBusy(gameBox), 350);
+          hideToTrayAfterLaunch();
+        });
         // 'error' fires after the click has already returned, so the recovery has to own its own
         // failures: an unhandled rejection here would leave the tile spinning with nothing said.
         game.on('error', (error) => {
@@ -8925,12 +9205,9 @@ var app = {
     if (!cfg?.exe || cfg.exe === '' || !fs.existsSync(cfg.exe)) {
       const game = gameList.find((g) => g.appid == appid);
       let detected =
-        game && game.exe && game.exeConfident && fs.existsSync(game.exe)
-          ? game.exe
-          : autodetectGameExe(game?.gameDir, game?.name, await takenExePaths(appid));
+        game && game.exe && game.exeConfident && fs.existsSync(game.exe) ? game.exe : autodetectGameExe(game, await takenExePaths(appid));
       if (detected) {
-        cfg.exe = detected;
-        await exeList.add(cfg);
+        cfg.exe = (await exeList.fillIfUnchanged({ appid: cfg.appid, exe: detected }, cfg.exe)) || detected;
       }
     }
     renderGameHealth(appid);

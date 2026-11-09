@@ -366,6 +366,17 @@ trabalha com taxa de bits constante e uma cena calma resulta num arquivo menor.
 - **O que é capturado.** O monitor que mostra o jogo, notificações incluídas. Um jogo muito antigo em tela cheia
   exclusiva pode gravar quadros pretos.
 
+## Rever uma lembrança {#seeing-a-souvenir-again}
+
+Clique com o botão direito em uma conquista desbloqueada no app e escolha **Ver captura** ou **Ver clipe** para
+abri-la em um visualizador, com os outros arquivos da mesma conquista a um clique e **Mostrar na pasta** para
+achar o arquivo. No overlay dentro do jogo, os botões pequenos sob **Desbloqueado** abrem o mesmo visualizador;
+com um controle, esquerda e direita navegam, A reproduz um clipe e B o fecha.
+
+O AW Next anota qual arquivo pertence a qual conquista quando o recebe, então renomear o jogo ou mudar o idioma do
+app não perde o vínculo. As capturas e os clipes feitos antes desta versão são encontrados pelo nome do arquivo,
+nas pastas definidas acima.
+
 ## Se um teste ou desbloqueio não aparecer {#if-a-test-or-unlock-does-not-appear}
 
 1. Confirme que as notificações estão ativadas e leia a linha Notificações do painel

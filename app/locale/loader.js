@@ -239,6 +239,12 @@ function translateUI(lang, locale, template) {
     $("#option_closeToTray option[value='true']").text(clear(template.settings.common.enable));
     $("#option_closeToTray option[value='false']").text(clear(template.settings.common.disable));
   }
+  if (template.settings.general.playTray) {
+    $('#play-tray-settings-label').text(clear(template.settings.general.playTray.name));
+    $('#play-tray-settings-help').text(clear(template.settings.general.playTray.description));
+    $("#option_minimizeToTrayOnPlay option[value='true']").text(clear(template.settings.common.enable));
+    $("#option_minimizeToTrayOnPlay option[value='false']").text(clear(template.settings.common.disable));
+  }
   if (template.settings.general.onboarding) {
     $('#onboarding-settings-label').text(clear(template.settings.general.onboarding.name));
     $('#btn-onboarding-open span').text(clear(template.settings.general.onboarding.button));
@@ -366,14 +372,28 @@ function translateUI(lang, locale, template) {
       // locale files (settings.general.playButton), so no locale had to be re-translated for the move.
       ['#play-button-settings-label', '#play-button-settings-help', '#option_showPlayButton', template.settings.general.playButton],
     ];
-    for (const [label, help, select, entry] of rows) {
+    // The two hover effects have a strength: Disabled, then the three levels (true is Normal).
+    for (const [label, help, select, entry] of [
+      ['#library-tilt-label', '#library-tilt-help', '#option_libraryTilt', lib.tilt],
+      ['#library-ambient-label', '#library-ambient-help', '#option_libraryAmbient', lib.ambient],
+    ]) {
+      if (!entry) continue;
+      $(label).text(clear(entry.name));
+      $(help).text(clear(entry.description));
+      $(`${select} option[value='false']`).text(clear(template.settings.common.disable));
+      if (!lib.levels) continue;
+      $(`${select} option[value='subtle']`).text(clear(lib.levels.subtle));
+      $(`${select} option[value='true']`).text(clear(lib.levels.normal));
+      $(`${select} option[value='strong']`).text(clear(lib.levels.strong));
+    }
+    for (const [label, help, select, entry, on = 'show', off = 'hide'] of rows) {
       // A locale bundled before one of these rows existed simply leaves that row's shipped English in
       // place, rather than blanking a label the user can see.
       if (!entry) continue;
       $(label).text(clear(entry.name));
       $(help).text(clear(entry.description));
-      $(`${select} option[value='true']`).text(clear(template.settings.common.show));
-      $(`${select} option[value='false']`).text(clear(template.settings.common.hide));
+      $(`${select} option[value='true']`).text(clear(template.settings.common[on]));
+      $(`${select} option[value='false']`).text(clear(template.settings.common[off]));
     }
     if (lib.playtime) {
       $('#library-playtime-label').text(clear(lib.playtime.name));
@@ -872,6 +892,8 @@ function translateUI(lang, locale, template) {
   $('#addCustomDir span').text(clear(template.settings.folder.add));
   if (template.settings.folder.smartFind) $('#smartFind-label').text(clear(template.settings.folder.smartFind));
   if (template.settings.folder.smartFindHelp) $('#smartFind-help').text(clear(template.settings.folder.smartFindHelp));
+  $('#findAllExe-label').text(clear(template.settings.folder.findAll));
+  $('#findAllExe-help').text(clear(template.settings.folder.findAllHelp));
   // Only the first line is shown: the rest listed emulator .ini file names, which Smart Find and
   // the library scan already locate on their own.
   {

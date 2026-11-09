@@ -366,6 +366,17 @@ pracuje ze stałą przepływnością, a spokojna scena daje mniejszy plik.
 - **Co jest przechwytywane.** Monitor pokazujący grę, wraz z powiadomieniami. Bardzo stara gra w wyłącznym
   pełnym ekranie może nagrać czarne klatki.
 
+## Ponowne oglądanie pamiątki {#seeing-a-souvenir-again}
+
+Kliknij prawym przyciskiem odblokowane osiągnięcie w aplikacji i wybierz **Pokaż zrzut** albo **Pokaż klip**, aby
+otworzyć je w przeglądarce, z innymi plikami tego samego osiągnięcia o jedno kliknięcie dalej i opcją **Pokaż w
+folderze**, by znaleźć plik. W nakładce w grze małe przyciski pod **Odblokowane** otwierają tę samą przeglądarkę;
+na kontrolerze lewo i prawo przełączają pliki, A odtwarza klip, a B go zamyka.
+
+AW Next zapisuje, który plik należy do którego osiągnięcia, w chwili jego przejęcia, więc zmiana nazwy gry lub
+języka aplikacji nie zrywa tego powiązania. Zrzuty ekranu i klipy zrobione przed tą wersją są odnajdywane po nazwie
+pliku, w folderach ustawionych wyżej.
+
 ## Jeśli test lub odblokowanie się nie pojawia {#if-a-test-or-unlock-does-not-appear}
 
 1. Upewnij się, że powiadomienia są włączone, i przeczytaj wiersz Powiadomienia w panelu

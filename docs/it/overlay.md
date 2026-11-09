@@ -40,6 +40,8 @@ resta finché non lo chiudi.
 - Un badge di rarità (`★ 12.3%`) per ogni obiettivo con una percentuale di sblocco nota. Gli obiettivi comuni usano
   un badge grigio scuro; quelli rari usano oro, argento e bronzo con un morbido alone, al 5%, 10% e 15% per
   impostazione predefinita. **Impostazioni → Generale → Visualizzazione della rarità** cambia i livelli o passa ai gradi dei trofei.
+- Prima gli obiettivi fissati, qualunque sia l'ordinamento. Il piccolo pin su una riga bloccata la fissa o la libera, come **Fissa in alto** nella finestra principale; il pin sparisce quando l'obiettivo viene sbloccato.
+- Sotto **Sbloccato**, un pulsante per lo screenshot e uno per la clip catturati a quello sblocco, quando ci sono. Sinistra e destra li scorrono con un controller, **A** riproduce una clip, **B** chiude.
 
 ## Obiettivi nascosti {#hidden-achievements}
 
@@ -81,16 +83,18 @@ e l'avvertenza di Windows sul fatto che il gioco continua a vedere la pressione 
 
 Il pulsante **⚙** nell'intestazione dell'overlay apre le opzioni:
 
-- **Accento**: cinque preset di colore, un selettore di colore personalizzato oppure **Usa il tema dell'app** per seguire il tema
-  della finestra principale (usato per l'avanzamento, i filtri attivi, gli anelli di selezione e il bagliore delle righe sbloccate).
+- **Accento**: cinque preset di colore, un colore a scelta oppure **Usa il tema dell'app** per seguire il tema
+  della finestra principale (usato per l'avanzamento, i filtri attivi, gli anelli di selezione e il bagliore delle righe sbloccate). Il chip
+  dopo i preset mostra il tuo colore e il suo codice; apre un selettore dentro l'overlay con un'area delle tonalità, un cursore della
+  tinta, un campo per il codice e i tuoi ultimi tre colori.
 - **Densità**: spaziatura delle righe Compatto, Accogliente o Spazioso.
 - **Dimensione icone**: Piccola, Media o Grande.
 - **Zoom**: dall'80% al 125% della dimensione del pannello.
-- **Opacità**: dal 40% al 100% dello sfondo del pannello.
+- **Opacità**: un cursore dal 20% al 100% dello sfondo del pannello, applicato mentre lo sposti.
 - **Interruttori di visualizzazione** per la barra delle statistiche, le barre di avanzamento, i badge di rarità e le descrizioni.
 
 Le modifiche si applicano subito e vengono salvate in locale. **Ripristina** riporta l'aspetto originale. Le
-opzioni funzionano da tastiera: i menu di zoom e opacità mostrano un anello di selezione, gli interruttori si attivano con
+opzioni funzionano da tastiera: il menu dello zoom e il cursore dell'opacità mostrano un anello di selezione, gli interruttori si attivano con
 Tab e Spazio, e le animazioni seguono l'impostazione di riduzione del movimento del sistema.
 
 ## Scorciatoie da tastiera (overlay aperto) {#keyboard-shortcuts-overlay-open}

@@ -87,6 +87,8 @@ i file precedenti. Nulla viene riscritto senza un backup o una conferma.
 | *Impossibile trovare un elenco degli obiettivi* | Il gioco non ha obiettivi, oppure la sua sorgente è disattivata. Controlla **Impostazioni → Sorgente**. |
 | *Questo gioco richiede un emulatore Steam e non ne è configurato nessuno* | Usa **Applica correzione emulatore** dal menu del tasto destro. Vedi [Configurazione Goldberg / GBE](emulator-setup.md). |
 | *Manca il file dell'emulatore che lo legge* | **Installa il file dell'emulatore** inserisce il runtime corrispondente. |
+| *ColdClient gestisce questo gioco, ma…* | `ColdClientLoader.ini` accanto al loader avvia un file mancante o un altro programma, nomina un altro gioco o non ha un loader per i 32 o 64 bit del gioco. Correggi quel file; AW Next si limita a leggerlo. Una volta corretto, **Avvia tramite il loader ColdClient** fa sì che Gioca avvii il loader. |
+| *L'emulatore Epic ha ancora l'AppID di esempio* | `NemirtingasEpicEmu.json` contiene l'AppID fatto di zeri, oppure il file EOSSDK di Epic è ancora al suo posto, quindi l'emulatore non si carica mai. Inserisci nel file l'id Epic del gioco. |
 | *L'elenco degli obiettivi non corrisponde a ciò che il gioco cercherà* | **Riscrivi i dati degli obiettivi**. È il risultato abituale di un aggiornamento di un repack. |
 | *Non è ancora stato trovato alcun avanzamento degli obiettivi* | Normale per un gioco a cui non hai giocato dopo averlo configurato. Avvialo e sblocca qualcosa. |
 | *AW Next non sta osservando questo gioco mentre è in esecuzione* | **Monitora questo gioco** lo aggiunge al tracker. |

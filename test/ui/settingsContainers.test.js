@@ -72,7 +72,7 @@ test('every Sources select sits in a swept source list, directly under .right', 
 const MOVED_GENERAL = {
   // The five rarity thresholds are sliders since the selects' fixed steps were replaced: see below.
   'options-ui-trophies': ['option_showTrophies', 'option_rarityMode'],
-  'options-ui-app': ['option_startWithWindows', 'option_closeToTray', 'option_uninstallContextMenu', 'option_autoUpdate', 'option_disableHardwareAccel'],
+  'options-ui-app': ['option_startWithWindows', 'option_closeToTray', 'option_minimizeToTrayOnPlay', 'option_uninstallContextMenu', 'option_autoUpdate', 'option_disableHardwareAccel'],
 };
 // Emulators and fixes share the first card; EA Desktop and PlayStation Network sit with the official
 // launchers, RPCS3 with the consoles.

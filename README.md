@@ -37,7 +37,8 @@ Every source in one list, with rarity, progress achievements, covers and your ow
 games you would rather not see hidden without losing their tracking. Trophy
 mode grades each achievement gold, silver or bronze, and a game that also came out on PlayStation
 takes its real trophies and platinum. A long achievement can be split into steps you tick off, and
-a Millennium plugin and a Playnite extension show the list inside Steam and Playnite.
+a Millennium plugin and a Playnite extension show the list inside Steam and Playnite. Each game
+opens on its own page: trailer, store text in your language, ratings, guides and your captures.
 
 </td>
 <td width="50%" valign="top">
@@ -60,8 +61,8 @@ Achievement Notifier `.san` themes convert and can be edited.
 <td valign="top">
 
 **🎮 In-game overlay**<br>
-`Ctrl+Shift+K` opens the running game's achievement list, with search and filters. A gamepad works
-too.
+`Ctrl+Shift+K` opens the running game's achievement list, with search, filters and the achievements
+you pinned on top. A gamepad works too.
 
 </td>
 </tr>
@@ -70,7 +71,7 @@ too.
 
 **📸 Screenshots and clips**<br>
 A screenshot of each unlock (HDR works) and, if you want, a short MP4 recorded by the graphics card
-around it.
+around it. Both open from their achievement, in the app or the overlay.
 
 </td>
 <td valign="top">

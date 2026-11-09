@@ -366,6 +366,17 @@ lavora a bitrate costante e una scena tranquilla produce un file più piccolo.
 - **Che cosa viene catturato.** Il monitor che mostra il gioco, notifiche comprese. Un gioco molto vecchio a schermo
   intero esclusivo può registrare fotogrammi neri.
 
+## Rivedere un ricordo {#seeing-a-souvenir-again}
+
+Fai clic con il tasto destro su un obiettivo sbloccato nell'app e scegli **Mostra screenshot** o **Mostra clip**
+per aprirlo in un visualizzatore, con gli altri file dello stesso obiettivo a portata di clic e **Mostra nella
+cartella** per trovare il file. Nell'overlay in gioco, i piccoli pulsanti sotto **Sbloccato** aprono lo stesso
+visualizzatore; con un controller, sinistra e destra scorrono, A riproduce una clip e B la chiude.
+
+AW Next annota quale file appartiene a quale obiettivo nel momento in cui lo prende in carico, quindi rinominare il
+gioco o cambiare la lingua dell'app non fa perdere il collegamento. Gli screenshot e le clip fatti prima di questa
+versione si trovano dal nome del file, nelle cartelle impostate sopra.
+
 ## Se una prova o uno sblocco non compare {#if-a-test-or-unlock-does-not-appear}
 
 1. Conferma che le notifiche siano attive e leggi la riga Notifiche del pannello

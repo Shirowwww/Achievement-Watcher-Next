@@ -35,6 +35,10 @@ stays until you close it.
 - A rarity badge (`★ 12.3%`) for every achievement with a known unlock rate. Common achievements use
   a dark-gray badge; rare ones use gold, silver and bronze with a soft halo, at 5%, 10% and 15% by
   default. **Settings → General → Rarity display** changes the tiers or switches to trophy grades.
+- Pinned achievements first, whatever the sort. The small pin on a locked row pins or unpins it, as
+  **Pin to the top** does in the main window; a pin goes away once the achievement unlocks.
+- Under **Unlocked**, a button for the screenshot and one for the clip taken at that unlock, when
+  there is one. Left and right browse them on a controller, **A** plays a clip, **B** closes.
 
 ## Hidden achievements
 
@@ -76,16 +80,18 @@ and the Windows caveat about the game still seeing your button presses.
 
 The **⚙** button in the overlay header opens the options:
 
-- **Accent**: five color presets, a custom color picker, or **Use app theme** to follow the main
-  window's theme (used for progress, active filters, focus rings and unlocked-row glow).
+- **Accent**: five color presets, your own color, or **Use app theme** to follow the main window's
+  theme (used for progress, active filters, focus rings and unlocked-row glow). The chip after the
+  presets shows your color and its code; it opens a picker inside the overlay with a shade pad, a
+  hue slider, a field for the code and your last three colors.
 - **Density**: Compact, Cozy or Spacious row spacing.
 - **Icon size**: Small, Medium or Large.
 - **Zoom**: 80% to 125% of the panel size.
-- **Opacity**: 40% to 100% of the panel's background.
+- **Opacity**: a slider from 20% to 100% of the panel's background, applied as you move it.
 - **Show/hide toggles** for the stats bar, progress bars, rarity badges and descriptions.
 
 Changes apply at once and are saved locally. **Reset defaults** restores the original look. The
-options work from the keyboard: the zoom and opacity menus show a focus ring, switches toggle with
+options work from the keyboard: the zoom menu and the opacity slider show a focus ring, switches toggle with
 Tab and Space, and animations follow the system's reduced-motion setting.
 
 ## Keyboard shortcuts (overlay open)

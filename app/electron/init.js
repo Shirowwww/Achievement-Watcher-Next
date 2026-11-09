@@ -1143,10 +1143,10 @@ const storeAppDetailsCircuit = createNetworkCircuit({ failureLimit: 2, cooldownM
   from "the store never told us": both produce no data, but only the first is a fact about the game,
   and the caller writes a three-day negative cache entry on facts (issue #55).
 */
-async function fetchStoreAppDetails(appid) {
+async function fetchStoreAppDetails(appid, lang = 'english') {
   const unanswered = { data: null, answered: false };
   if (storeAppDetailsCircuit.unavailable()) return unanswered;
-  const url = `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&l=en`;
+  const url = `https://store.steampowered.com/api/appdetails?appids=${appid}&cc=us&l=${encodeURIComponent(lang)}`;
   const res = await steamGates.store.run(() => fetch(url, { signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) }), { label: String(appid) });
   // The gate gave up queueing this one, so nothing was asked and nothing was refused: no breaker
   // failure to record, and the caller falls back to product info exactly as it does for a miss.
@@ -1612,7 +1612,7 @@ async function getAchievementsKeyless(appid, lang) {
   if (sh.ok) {
     if (sh.list.length === 0) return { achievements: [], source: 'steamhunters' };
     // SteamHunters titles are English-only, so icons/hidden come from the English SteamCommunity
-    // rows (title match); localized rows are then overlaid by icon hash (language-independent).
+    // rows (title match); localized rows are then overlaid by apiName, else by icon.
     const englishRows =
       language === 'english' ? rows : await fetchSteamCommunityAchievements(steamSchemaFetch.steamCommunityAchievementsUrl(appid, 'english'));
     const merged = englishRows.length
@@ -1792,6 +1792,7 @@ async function resolveSteamData(request) {
         return fetchSteamProductInfo(appid);
       })(),
     ]);
+    if (store.data) gameDetailsService().rememberSteamStore(appid, store.data);
     const apps = productInfo?.apps || {};
     const appInfo = apps[appid]?.appinfo || apps[0]?.appinfo;
     const metadata = resolveSteamMetadata({
@@ -2845,6 +2846,14 @@ function linuxSouvenirs() {
       electron: require('electron'),
       userData: app.getPath('userData'),
       log: (message) => debug.log(message),
+      reply: (message) => {
+        if (!monitorProc || monitorProc.exitCode !== null || monitorProc.killed || !monitorProc.connected) return;
+        try {
+          monitorProc.send(message);
+        } catch (err) {
+          debug.log(`[clip] could not answer the monitor: ${err.message || err}`);
+        }
+      },
     });
   }
   return cachedLinuxSouvenirs;
@@ -4335,6 +4344,44 @@ ipcMain.handle('get-steamgriddb-cover-status', async (event, gameName, steamAppi
   return { url: (result.covers[0] && result.covers[0].url) || null, networkError: result.networkError === true };
 });
 
+// GamesDB and Epic's store content answer public JSON; a status other than 2xx is thrown with it.
+const GAME_DETAILS_MAX_BYTES = 8 * 1024 * 1024;
+async function fetchGameDetailsJson(url) {
+  const res = await fetch(url, { headers: { 'User-Agent': STEAM_FETCH_UA, Accept: 'application/json' }, signal: AbortSignal.timeout(STEAM_KEYLESS_TIMEOUT_MS) });
+  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { status: res.status });
+  if (Number(res.headers.get('content-length')) > GAME_DETAILS_MAX_BYTES) throw new Error('answer too large');
+  // Counted while it streams: a chunked answer has no length to check up front.
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of res.body || []) {
+    size += chunk.byteLength;
+    if (size > GAME_DETAILS_MAX_BYTES) throw new Error('answer too large');
+    chunks.push(chunk);
+  }
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
+let gameDetailsServiceInstance;
+function gameDetailsService() {
+  if (!gameDetailsServiceInstance) {
+    gameDetailsServiceInstance = require('../util/gameDetailsService.js').createGameDetailsService({
+      // Under steam_cache, so "Clear caches" empties it with the rest of the store answers.
+      cacheDir: path.join(userData, 'steam_cache', 'game_details'),
+      getJson: fetchGameDetailsJson,
+      fetchSteamStore: fetchStoreAppDetails,
+      log: (message) => debug.log(`[game details] ${message}`),
+    });
+  }
+  return gameDetailsServiceInstance;
+}
+
+// The game page asks when it opens: { game: { appid, source, system, steamappid, name }, lang, force }.
+ipcMain.handle('get-game-details', (event, arg) => {
+  if (!MainWin || MainWin.isDestroyed() || event.sender !== MainWin.webContents) return { details: null };
+  const { game, lang, force } = arg && typeof arg === 'object' ? arg : {};
+  return gameDetailsService().get(game, { lang, force });
+});
+
 // Cover picker options: the two instant sources only (Steam CDN HEAD probe + SteamGridDB JSON).
 // SteamDB is deliberately absent, it costs a stealth-browser launch and would stall the dialog.
 ipcMain.handle('get-cover-options', async (event, { name, orientation, steamAppid, platform } = {}) => {
@@ -5012,19 +5059,7 @@ function createMainWindow() {
       clearInterval(watchdogStatusInterval);
       watchdogStatusInterval = null;
       closePuppeteer().catch(() => {});
-      if (process.platform !== 'linux') {
-        MainWin.hide();
-        return;
-      }
-      const win = MainWin;
-      const trayHost = require('../util/linuxTrayHost.js');
-      trayHost.hasStatusNotifierHost().then(async (visible) => {
-        if (win.isDestroyed()) return;
-        if (visible) return win.hide();
-        // No tray host on this desktop: nothing would show a window hidden to the tray.
-        debug.log('[MainWindow] no StatusNotifier host -> minimizing instead of hiding to tray');
-        if ((await trayHost.minimizeOrHide(win)) === 'hidden') debug.log('[MainWindow] minimize ignored by the window manager -> hidden');
-      });
+      hideMainWindowToTray(MainWin);
     });
 
     MainWin.on('closed', () => {
@@ -5364,6 +5399,7 @@ async function createOverlayWindow(info) {
     if (info.game) info.game.rarityGrading = currentRarityGrading();
     attachOverlayLocalIcons(info.game);
     if (info.game) info.game.steps = achievementStepsStore().stepsForGame(info.game.appid);
+    if (info.game) info.game.pins = achievementPinsStore().pinsForGame(String(info.game.appid));
 
     // On X11 a window created unfocusable is override-redirect: the window manager cannot put a
     // focused full-screen game above it, so it shows over the game without taking the focus. The
@@ -6471,6 +6507,30 @@ ipcMain.on('achievement-steps-changed', (event, appid) => {
   overlayWindow.webContents.send('overlay-steps', { appid, steps: achievementStepsStore().stepsForGame(appid) });
 });
 
+// Screenshots and clips of a game, by achievement, for the viewer in the main window and the overlay.
+ipcMain.handle('achievement-captures', async (event, request) => {
+  const fromMain = MainWin && !MainWin.isDestroyed() && event.sender === MainWin.webContents;
+  const fromOverlay = overlayWindow && !overlayWindow.isDestroyed() && event.sender === overlayWindow.webContents;
+  if (!fromMain && !fromOverlay) return {};
+  try {
+    return await require('./achievementCaptures.js').listCaptures(request, { userData });
+  } catch (err) {
+    debug.log(`[souvenir] could not list captures: ${err && err.message ? err.message : err}`);
+    return {};
+  }
+});
+
+// "Show in folder" from either viewer, for a file the lookup above would list and nothing else.
+ipcMain.handle('achievement-capture-reveal', (event, url) => {
+  const fromMain = MainWin && !MainWin.isDestroyed() && event.sender === MainWin.webContents;
+  const fromOverlay = overlayWindow && !overlayWindow.isDestroyed() && event.sender === overlayWindow.webContents;
+  if (!fromMain && !fromOverlay) return false;
+  const file = require('./achievementCaptures.js').knownCapture(url, { userData });
+  if (!file) return false;
+  shell.showItemInFolder(file);
+  return true;
+});
+
 ipcMain.handle('achievement-step-toggle', (event, { appid, name, id, done } = {}) => {
   if (!overlayWindow || overlayWindow.isDestroyed() || event.sender !== overlayWindow.webContents) return { changed: false };
   if (typeof appid !== 'string' || typeof name !== 'string' || typeof id !== 'string' || typeof done !== 'boolean') return { changed: false };
@@ -6483,6 +6543,55 @@ ipcMain.handle('achievement-step-toggle', (event, { appid, name, id, done } = {}
   }
   if (result.changed && MainWin && !MainWin.isDestroyed()) MainWin.webContents.send('achievement-steps-changed', appid);
   return { changed: result.changed, steps: result.steps };
+});
+
+function hideMainWindowToTray(win) {
+  if (!win || win.isDestroyed()) return;
+  if (process.platform !== 'linux') {
+    win.hide();
+    return;
+  }
+  const trayHost = require('../util/linuxTrayHost.js');
+  trayHost.hasStatusNotifierHost().then(async (visible) => {
+    if (win.isDestroyed()) return;
+    if (visible) return win.hide();
+    // No tray host on this desktop: nothing would show a window hidden to the tray.
+    debug.log('[MainWindow] no StatusNotifier host -> minimizing instead of hiding to tray');
+    if ((await trayHost.minimizeOrHide(win)) === 'hidden') debug.log('[MainWindow] minimize ignored by the window manager -> hidden');
+  });
+}
+
+// A game the window started is running and the user asked for the window to step aside.
+ipcMain.on('main-window-hide-to-tray', (event) => {
+  if (!MainWin || MainWin.isDestroyed() || event.sender !== MainWin.webContents) return;
+  debug.log('[MainWindow] game started -> hiding to tray');
+  hideMainWindowToTray(MainWin);
+});
+
+// Pinned achievements (parser/achievementPins.js): set in the window or in the overlay, shown in both.
+function achievementPinsStore() {
+  const store = require(path.join(__dirname, '../parser/achievementPins.js'));
+  store.setUserDataPath(userData);
+  return store;
+}
+
+ipcMain.on('achievement-pins-changed', (event, appid) => {
+  if (typeof appid !== 'string' || !appid || !overlayWindow || overlayWindow.isDestroyed() || !overlayVisible) return;
+  overlayWindow.webContents.send('overlay-pins', { appid, pins: achievementPinsStore().pinsForGame(appid) });
+});
+
+ipcMain.handle('achievement-pin-set', (event, { appid, name, pinned } = {}) => {
+  if (!overlayWindow || overlayWindow.isDestroyed() || event.sender !== overlayWindow.webContents) return { changed: false };
+  if (typeof appid !== 'string' || typeof name !== 'string' || typeof pinned !== 'boolean') return { changed: false };
+  let result;
+  try {
+    result = achievementPinsStore().setPinned(appid, name, pinned);
+  } catch (err) {
+    debug.log(`[pins] could not save a pin of ${appid}: ${err && err.message ? err.message : err}`);
+    return { changed: false };
+  }
+  if (result.changed && MainWin && !MainWin.isDestroyed()) MainWin.webContents.send('achievement-pins-changed', appid);
+  return { changed: result.changed, pins: result.pins };
 });
 
 function normalizeNotificationProgress(args) {
@@ -8051,6 +8160,8 @@ try {
       // instead of leaking a background process. app.isQuiting also disables the respawn supervisor.
       app.isQuiting = true;
       clearTimeout(monitorRespawnTimer);
+      // A software clip still waiting for its last seconds is written from what it holds (Linux).
+      if (cachedLinuxSouvenirs) cachedLinuxSouvenirs.stop();
       // Hand the overlay shortcut back to the system: nothing is left to act on it, and holding it
       // would deny the combination to whatever the user opens next.
       unregisterOverlayHotkey();

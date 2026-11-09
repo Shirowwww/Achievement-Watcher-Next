@@ -87,6 +87,8 @@ fichiers précédents sont conservés. Rien n'est réécrit sans sauvegarde ni c
 | *Aucune liste de succès n'a été trouvée* | Le jeu n'a pas de succès, ou sa source est désactivée. Vérifiez **Paramètres → Sources**. |
 | *Ce jeu a besoin d'un émulateur Steam et aucun n'est installé* | Utilisez **Appliquer le fix émulateur** dans le menu du clic droit. Voir [Configuration Goldberg / GBE](emulator-setup.md). |
 | *Le fichier d'émulateur qui la lit est absent* | **Installer le fichier d'émulateur** remet en place l'environnement d'exécution correspondant. |
+| *ColdClient prend en charge ce jeu, mais…* | `ColdClientLoader.ini`, à côté du loader, lance un fichier absent ou un autre programme, désigne un autre jeu, ou n'a pas de loader pour les 32 ou 64 bits du jeu. Corrigez ce fichier ; AW Next ne fait que le lire. Une fois qu'il est correct, **Jouer par le loader ColdClient** fait que Jouer lance le loader. |
+| *L'émulateur Epic a encore l'AppID d'exemple* | `NemirtingasEpicEmu.json` contient l'AppID fait de zéros, ou le fichier EOSSDK d'Epic est toujours en place, donc l'émulateur ne se charge jamais. Mettez l'id Epic du jeu dans le fichier. |
 | *La liste de succès ne correspond pas à ce que le jeu va chercher* | **Réécrire les données de succès**. C'est le résultat habituel d'une mise à jour de repack. |
 | *Aucune progression de succès n'a encore été trouvée* | Normal pour un jeu auquel vous n'avez pas joué depuis sa configuration. Lancez-le et débloquez quelque chose. |
 | *AW Next ne surveille pas ce jeu pendant qu'il tourne* | **Surveiller ce jeu** l'ajoute au suiveur. |

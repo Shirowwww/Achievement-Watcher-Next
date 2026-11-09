@@ -366,6 +366,18 @@ läuft mit konstanter Bitrate, und eine ruhige Szene wird kleiner.
 - **Was aufgenommen wird.** Der Monitor, der das Spiel zeigt, samt Benachrichtigungen. Ein sehr altes Spiel im exklusiven Vollbild
   nimmt unter Umständen schwarze Bilder auf.
 
+## Eine Erinnerung wieder ansehen {#seeing-a-souvenir-again}
+
+Klicke in der App mit der rechten Maustaste auf einen freigeschalteten Erfolg und wähle **Screenshot anzeigen**
+oder **Videoclip anzeigen**, um ihn in einem Viewer zu öffnen. Die anderen Dateien desselben Erfolgs sind einen
+Klick entfernt, und **Im Ordner anzeigen** zeigt dir, wo die Datei liegt. Im Overlay im Spiel öffnen die kleinen
+Schaltflächen unter **Entsperrt** denselben Viewer; mit einem Controller blättern links und rechts, A spielt einen
+Clip ab und B schließt ihn.
+
+AW Next merkt sich, welche Datei zu welchem Erfolg gehört, sobald es sie übernimmt. Wird das Spiel umbenannt oder
+die Sprache der App geändert, geht die Verbindung also nicht verloren. Screenshots und Clips, die vor dieser
+Version entstanden sind, werden anhand ihres Dateinamens in den oben festgelegten Ordnern gefunden.
+
 ## Wenn ein Test oder eine Freischaltung nicht erscheint {#if-a-test-or-unlock-does-not-appear}
 
 1. Prüfe, ob Benachrichtigungen aktiviert sind, und lies die Zeile Benachrichtigungen im

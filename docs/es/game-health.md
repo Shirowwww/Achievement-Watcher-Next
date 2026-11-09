@@ -87,6 +87,8 @@ guardan los archivos anteriores. No se reescribe nada sin copia de seguridad o c
 | *No se encontró ninguna lista de logros* | El juego no tiene logros, o su fuente está desactivada. Revisa **Ajustes → Fuentes**. |
 | *Este juego necesita un emulador de Steam y no hay ninguno configurado* | Usa **Aplicar arreglo de emulador** en el menú de clic derecho. Consulta [Configuración de Goldberg / GBE](emulator-setup.md). |
 | *Falta el archivo del emulador que la lee* | **Instalar el archivo del emulador** pone el entorno de ejecución correspondiente. |
+| *ColdClient sirve este juego, pero…* | `ColdClientLoader.ini`, junto al loader, arranca un archivo que falta u otro programa, nombra otro juego o no tiene loader para los 32 o 64 bits del juego. Corrige ese archivo; AW Next solo lo lee. Cuando esté bien, **Iniciar mediante el loader ColdClient** hace que Jugar arranque el loader. |
+| *El emulador de Epic aún tiene el AppID de ejemplo* | `NemirtingasEpicEmu.json` contiene el AppID formado por ceros, o el propio archivo EOSSDK de Epic sigue en su sitio, así que el emulador nunca se carga. Pon el id de Epic del juego en el archivo. |
 | *La lista de logros no coincide con lo que buscará el juego* | **Reescribir los datos de logros**. Es el resultado habitual de una actualización de un repack. |
 | *Aún no se ha encontrado progreso de logros* | Normal en un juego al que no has jugado desde que lo configuraste. Inícialo y desbloquea algo. |
 | *AW Next no vigila este juego mientras se ejecuta* | **Vigilar este juego** lo añade al rastreador. |

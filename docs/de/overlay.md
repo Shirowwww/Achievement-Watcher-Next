@@ -40,6 +40,8 @@ bleibt, bis du es schließt.
 - Ein Seltenheits-Abzeichen (`★ 12.3%`) für jeden Erfolg mit bekannter Freischaltungsquote. Gewöhnliche Erfolge nutzen
   ein dunkelgraues Abzeichen; seltene nutzen Gold, Silber und Bronze mit einem weichen Schein, standardmäßig bei 5 %, 10 % und 15 %.
   **Einstellungen → Allgemein → Seltenheitsanzeige** ändert die Stufen oder wechselt zu Trophäenstufen.
+- Angeheftete Erfolge zuerst, egal wie sortiert wird. Die kleine Nadel in einer gesperrten Zeile heftet sie an oder löst sie, wie **Oben anheften** im Hauptfenster; die Nadel verschwindet, sobald der Erfolg freigeschaltet ist.
+- Unter **Freigeschaltet** je eine Schaltfläche für den Screenshot und für den Clip, die bei dieser Freischaltung aufgenommen wurden, sofern vorhanden. Links und rechts blättern auf einem Controller durch sie, **A** spielt einen Clip ab, **B** schließt.
 
 ## Versteckte Erfolge {#hidden-achievements}
 
@@ -81,16 +83,18 @@ und den Windows-Vorbehalt, dass das Spiel deine Tastendrücke weiterhin sieht.
 
 Die Schaltfläche **⚙** in der Kopfzeile des Overlays öffnet die Optionen:
 
-- **Akzent**: fünf Farbvorlagen, ein freier Farbwähler oder **App-Design verwenden**, um dem Design des Hauptfensters
-  zu folgen (genutzt für Fortschritt, aktive Filter, Fokusringe und das Leuchten freigeschalteter Zeilen).
+- **Akzent**: fünf Farbvorlagen, eine eigene Farbe oder **App-Design verwenden**, um dem Design des Hauptfensters
+  zu folgen (genutzt für Fortschritt, aktive Filter, Fokusringe und das Leuchten freigeschalteter Zeilen). Der Chip nach den
+  Vorlagen zeigt deine Farbe und ihren Code; er öffnet im Overlay einen Farbwähler mit Farbfläche, Farbtonregler, einem Feld
+  für den Code und deinen letzten drei Farben.
 - **Dichte**: Zeilenabstand Kompakt, Gemütlich oder Geräumig.
 - **Symbolgröße**: Klein, Mittel oder Groß.
 - **Zoom**: 80 % bis 125 % der Fenstergröße.
-- **Deckkraft**: 40 % bis 100 % des Hintergrunds des Fensters.
+- **Deckkraft**: ein Regler von 20 % bis 100 % des Hintergrunds des Fensters, der beim Ziehen sofort wirkt.
 - **Ein-/Ausblenden** für die Statistikleiste, Fortschrittsbalken, Seltenheits-Abzeichen und Beschreibungen.
 
 Änderungen gelten sofort und werden lokal gespeichert. **Zurücksetzen** stellt das ursprüngliche Aussehen wieder her. Die
-Optionen lassen sich per Tastatur bedienen: Die Menüs für Zoom und Deckkraft zeigen einen Fokusring, Schalter werden mit
+Optionen lassen sich per Tastatur bedienen: Das Zoom-Menü und der Deckkraft-Regler zeigen einen Fokusring, Schalter werden mit
 Tab und Leertaste umgeschaltet, und Animationen folgen der Systemeinstellung für reduzierte Bewegung.
 
 ## Tastenkürzel (Overlay geöffnet) {#keyboard-shortcuts-overlay-open}

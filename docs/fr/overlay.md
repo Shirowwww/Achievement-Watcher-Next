@@ -40,6 +40,8 @@ reste jusqu'à ce que vous la fermiez.
 - Un badge de rareté (`★ 12.3%`) pour chaque succès dont le taux de déblocage est connu. Les succès communs utilisent
   un badge gris foncé ; les rares utilisent l'or, l'argent et le bronze avec un halo doux, à 5 %, 10 % et 15 %
   par défaut. **Paramètres → Général → Affichage de la rareté** change les paliers ou bascule vers les niveaux de trophées.
+- Les succès épinglés d'abord, quel que soit le tri. La petite épingle d'une ligne verrouillée l'épingle ou la détache, comme **Épingler en haut** dans la fenêtre principale ; l'épingle disparaît une fois le succès débloqué.
+- Sous **Débloqué**, un bouton pour la capture d'écran et un pour le clip pris à ce déblocage, quand il y en a. Gauche et droite les parcourent à la manette, **A** lit un clip, **B** ferme.
 
 ## Succès masqués {#hidden-achievements}
 
@@ -81,16 +83,18 @@ et la réserve de Windows : le jeu voit toujours vos appuis sur les boutons.
 
 Le bouton **⚙** dans l'en-tête de l'overlay ouvre les options :
 
-- **Accent** : cinq couleurs prédéfinies, un sélecteur de couleur libre, ou **Utiliser le thème de l'application** pour suivre le thème
-  de la fenêtre principale (utilisé pour la progression, les filtres actifs, les anneaux de focus et la lueur des lignes débloquées).
+- **Accent** : cinq couleurs prédéfinies, votre propre couleur ou **Utiliser le thème de l'application** pour suivre le thème
+  de la fenêtre principale (utilisé pour la progression, les filtres actifs, les anneaux de focus et la lueur des lignes débloquées). La puce
+  après les couleurs prédéfinies affiche votre couleur et son code ; elle ouvre dans l'overlay un sélecteur avec un nuancier, un curseur
+  de teinte, un champ pour le code et vos trois dernières couleurs.
 - **Densité** : espacement des lignes Compact, Confortable ou Aéré.
 - **Taille des icônes** : Petite, Moyenne ou Grande.
 - **Zoom** : de 80 % à 125 % de la taille du panneau.
-- **Opacité** : de 40 % à 100 % du fond du panneau.
+- **Opacité** : un curseur de 20 % à 100 % du fond du panneau, appliqué pendant que vous le déplacez.
 - **Interrupteurs d'affichage** pour la barre de statistiques, les barres de progression, les badges de rareté et les descriptions.
 
 Les changements s'appliquent aussitôt et sont enregistrés en local. **Réinitialiser** rétablit l'apparence d'origine. Les
-options se règlent au clavier : les menus de zoom et d'opacité montrent un anneau de focus, les interrupteurs se basculent avec
+options se règlent au clavier : le menu de zoom et le curseur d'opacité montrent un anneau de focus, les interrupteurs se basculent avec
 Tab et Espace, et les animations suivent le réglage de réduction des animations du système.
 
 ## Raccourcis clavier (overlay ouvert) {#keyboard-shortcuts-overlay-open}

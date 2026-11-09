@@ -8,12 +8,13 @@
          util/customPreset.js (PREVIEW_SCRIPT_HASHES); a test fails if they drift. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-/Pg9yAhu99F9+CXDNOL3ZPi0VyIntAS7poyTB1kgtvE='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self'; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
+      content="default-src 'none'; script-src 'self' 'sha256-6hoK2v7NMQ9BztWRLpqwEtRRPqb93qf3AkDWdgjdGyg=' 'sha256-Je35Ely70/P1H6O6qWZNS9gTkodHCRiUd87eGa46sh0=' 'sha256-/Pg9yAhu99F9+CXDNOL3ZPi0VyIntAS7poyTB1kgtvE='; style-src 'self' 'unsafe-inline';  font-src 'self' data:; media-src 'self' https://*.steamstatic.com https://media-cdn.epicgames.com; img-src 'self' data: https://*; connect-src 'self' https://api.steampowered.com https://api.epicgames.dev https://launcher.store.epicgames.com https://launcher-public-service-prod06.ol.epicgames.com https://catalog-public-service-prod06.ol.epicgames.com ws://localhost:8082"
     />
     <link rel="stylesheet" href="../resources/css/normalize.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/fontawesome.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/app.css" type="text/css" />
     <link rel="stylesheet" href="../resources/css/colorPicker.css" type="text/css" />
+    <link rel="stylesheet" href="../resources/css/captureViewer.css" type="text/css" />
 
     <link rel="stylesheet" href="../locale/override.css" type="text/css" />
   </head>
@@ -22,6 +23,8 @@
 
     <main id="main">
       <section id="home">
+        <!-- The hovered game's cover behind the library (ui/libraryDepth.js): two layers that take turns. -->
+        <div id="library-ambient" aria-hidden="true"><canvas></canvas><canvas></canvas></div>
         <!-- Profile and library controls share one grid row, not absolute overlays on the profile
              band, so a narrow window can't slide them under the avatar. -->
         <div id="home-header">
@@ -141,8 +144,11 @@
             <div class="lastplayed"><i class="fas fa-calendar-alt"></i> <span></span></div>
             <div class="achievementSteps btn" id="btn-achievement-steps" role="button" tabindex="0" aria-haspopup="menu"><i class="fas fa-tasks"></i> <span></span></div>
             <div class="resetAchievements btn danger" id="btn-reset-achievements" role="button" tabindex="0"><i class="fas fa-undo"></i> <span></span></div>
+            <div class="backButton btn" id="btn-overview" role="button" tabindex="0"></div>
             <div class="backButton btn" id="btn-previous" role="button" tabindex="0"></div>
           </div>
+
+          <div id="game-overview" class="game-overview"></div>
 
           <div class="achievements">
             <div id="achievement-search">
@@ -1708,6 +1714,9 @@
                     </li>
                     <li>
                       <div id="smartFind" class="btn" role="button" tabindex="0"><i class="fas fa-search-plus fa-flip-horizontal"></i> <span id="smartFind-label">Smart Find</span><small id="smartFind-help">finds saves/configs + libraries</small></div>
+                    </li>
+                    <li>
+                      <div id="findAllExe" class="btn" role="button" tabindex="0"><i class="fas fa-crosshairs"></i> <span id="findAllExe-label">Find all</span><small id="findAllExe-help">folders + every game's executable</small></div>
                     </li>
                   </ul>
                 </div>
@@ -3968,6 +3977,23 @@
                   </li>
 
                   <li class="hasHelper">
+                    <div class="left"><i class="fas fa-gamepad"></i> <span id="play-tray-settings-label">Hide to the tray when a game starts</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_minimizeToTrayOnPlay">
+                        <option value="true">Enabled</option>
+                        <option value="false" selected>Disabled</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="play-tray-settings-help">When you start a game from AW Next, the window goes to the tray and stays there after the game ends.</div>
+                  </li>
+
+                  <li class="hasHelper">
                     <div class="left"><i class="fas fa-trash-alt"></i> <span id="uninstall-settings-label">Uninstall from the game list</span></div>
                     <div class="right">
                       <div class="previous">
@@ -4322,6 +4348,34 @@
                       <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                     </div>
                     <div class="help" id="play-button-settings-help">Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-cube"></i> <span id="library-tilt-label">3D hover effect</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryTilt">
+                        <option value="false">Disabled</option>
+                        <option value="subtle">Subtle</option>
+                        <option value="true" selected>Normal</option>
+                        <option value="strong">Strong</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-tilt-help">The tile under the mouse leans toward the pointer, a little or a lot. The List and Details views stay flat, and it is off when your system asks for less motion.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-image"></i> <span id="library-ambient-label">Background from the hovered game</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryAmbient">
+                        <option value="false">Disabled</option>
+                        <option value="subtle">Subtle</option>
+                        <option value="true" selected>Normal</option>
+                        <option value="strong">Strong</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-ambient-help">Behind the library, the window takes on the colours of the cover under the mouse or the controller. Subtle keeps them faint, Strong lets the cover show through.</div>
                   </li>
                 </ul>
               </div>
@@ -4944,7 +4998,7 @@
                 <!-- Simple keeps the search alone: the two manual pickers and their lists wait behind
                      the link below (`is-folders-open`), since detection already found what it could. -->
                 <div class="onboarding-folder-actions">
-                  <button type="button" id="onboard-smart-find" class="inline-action-btn is-recommended"><i class="fas fa-search-plus"></i> <span>Smart find folders</span><small id="onboard-smart-find-hint">saves + libraries</small></button>
+                  <button type="button" id="onboard-smart-find" class="inline-action-btn is-recommended"><i class="fas fa-crosshairs"></i> <span>Find all</span><small id="onboard-smart-find-hint">saves, libraries, executables</small></button>
                   <button type="button" id="onboard-add-save-dir" class="inline-action-btn onboarding-folder-manual"><i class="fas fa-folder-plus"></i> <span>Save/config folder</span><small id="onboard-add-save-dir-hint">one emulator/source</small></button>
                   <button type="button" id="onboard-add-library-dir" class="inline-action-btn onboarding-folder-manual"><i class="fas fa-folder-open"></i> <span>Game library folder</span><small id="onboard-add-library-dir-hint">many installed games</small></button>
                   <button type="button" id="onboard-add-folder-more" class="onboarding-link"><i class="fas fa-plus" aria-hidden="true"></i> <span>Something missing? Add a folder</span></button>
@@ -5457,9 +5511,12 @@
     <script src="../ui/colorPicker.js" type="text/javascript"></script>
     <script src="../ui/textMarquee.js" type="text/javascript"></script>
     <script src="../ui/countUp.js" type="text/javascript"></script>
+    <script src="../ui/libraryDepth.js" type="text/javascript"></script>
     <script src="../ui/sort.js" type="text/javascript"></script>
     <script src="../ui/search.js" type="text/javascript"></script>
     <script src="../ui/collections.js" type="text/javascript"></script>
+    <script src="../ui/captureViewer.js" type="text/javascript"></script>
+    <script src="../ui/gameOverview.js" type="text/javascript"></script>
     <script src="../ui/game.js" type="text/javascript"></script>
     <script src="../ui/refresh.js" type="text/javascript"></script>
     <script src="../util/controllerLabels.js" type="text/javascript"></script>

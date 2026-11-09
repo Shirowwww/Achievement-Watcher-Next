@@ -9,8 +9,71 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ## Unreleased
 
+### Added
+
+- **Every game has its own page.** Clicking a game now opens an overview: its trailer plays muted
+  behind the title, and **Play**, **Achievements**, the cover, Game Health and the game's settings
+  are one click away. Below sit the store's description, a strip of trailers and screenshots that
+  open full size, the help links from the right-click menu, your souvenirs, the ratings and the
+  details (genres, developer, publisher, release date), with the ratings of the press and the players
+  (Steam reviews, Metacritic, GOG and the stores), each one opening its page, and guides for the
+  game. The text comes from Steam, the Microsoft Store, Epic, GOG or
+  GamesDB (Xbox 360 and RetroAchievements games included), in your language where the store has it,
+  loaded when the page opens and kept for two weeks. The trailer only plays while it is
+  on screen, and stays a still picture when Windows asks for less animation.
+- **See an achievement's screenshot and clip from the app and the in-game overlay.** Right-click
+  an unlocked achievement and pick **Show screenshot** or **Show clip**; in the overlay, the two
+  small buttons under **Unlocked** do the same, and the controller works too (left and right to
+  browse, A to play, B to close). The viewer opens at the picture's or the clip's own size. AW Next
+  now notes which file belongs to which achievement as it takes it, so a renamed game or achievement
+  still finds its files; older captures are found by their file name.
+- **Pin an achievement to the top of its list.** Right-click a locked achievement and choose **Pin
+  to the top**: it stays first in the list whatever the sort, in the app and in the in-game overlay,
+  where a small pin on the row does the same. The pin goes away when you remove it or once the
+  achievement unlocks.
+- **Hide to the tray when a game starts.** A new switch in **Settings > General**, off by default:
+  once a game starts from AW Next, the window goes to the tray and stays there after the game ends.
+
 ### Improved
 
+- **AW Next finds a game's executable more often, and picks the wrong one less.** It skips `.exe`
+  files that are not real Windows programs, never looks in a Crack or backup folder, and stops
+  choosing on its own when a `steam_appid.txt` or `ColdClientLoader.ini` beside the file names
+  another game. The file Steam launches for a game counts as strong evidence. When no file is sure,
+  **Play** and the Executable tab list the likely ones before opening the file browser. **Find all**
+  in **Settings > Folders** runs Smart Find, then looks for the executable of every game without
+  one; a game with no known folder is searched for across your drives by file name only. The
+  first-run guide's main button is now **Find all** too, and does the same once the first scan is
+  done. A search cut short by its time limit never counts as found. Smart Find also reads the
+  install folder chosen in Ubisoft Connect.
+- **Library tiles have depth.** The tile under the mouse leans slightly toward the pointer, and the
+  window behind the library takes on the colours of the hovered game's cover (it follows the
+  keyboard and the controller too). Both are on by default, and **Settings > Appearance > Library
+  tiles** sets each one to Disabled, Subtle, Normal or Strong. The List and Details views stay flat,
+  and the lean stops when the system asks for less motion.
+- **Game Health checks games served by ColdClient.** It used to stop at "served by ColdClient".
+  It now reads the loader's `ColdClientLoader.ini` and says when it starts a missing file or a
+  program outside the game folder, announces another game ID, or has no loader for the game's 32
+  or 64 bits. The `steam_settings` beside the loader gets the same checks and the same **Rewrite
+  the achievement data** repair as a GBE folder. When the setup is right, **Play through the
+  ColdClient loader** makes the Play button start the loader instead of the exe: play time still
+  follows the game itself, and **Play the game file directly** takes it back.
+- **More Epic emulator checks.** Game Health now says when `NemirtingasEpicEmu.json` still holds
+  the sample AppId made of zeros, and when Epic's own EOSSDK file is still in place, so the
+  emulator never loads.
+- **VOICES38 releases keep their Steam file.** These releases need the Valve `steam_api64.dll`
+  they ship, and replacing it crashes the game. Game Health no longer offers to install the
+  emulator over it, and no fix replaces it.
+- **More Xbox and PC games get their PlayStation platinum.** A name with a subtitle or a platform
+  after it, such as Grand Theft Auto V Enhanced (PC) on Xbox or Sea of Thieves: 2026 Edition, found
+  no PlayStation list. AW Next now tries again without that last part, and keeps the list only when
+  at least four achievements in five tie to its trophies, so a sequel such as Hollow Knight:
+  Silksong never gets the platinum of the first game.
+- **Finer opacity for the in-game overlay.** The five fixed steps are now a slider from 20% to 100%,
+  and the panel changes while you move it.
+- **A custom overlay colour is picked inside the overlay.** The rainbow dot opened the Windows colour
+  dialog over the game. It is now a chip showing the colour and its code, which opens a small picker
+  in the overlay: a shade pad, a hue slider, a field for the code and your last three colours.
 - **GOG, Ubisoft, Epic and EA games show which achievements come from a DLC.** Those stores do
   not say it, so AW Next takes the labels from the same game on Steam, once most of the two lists
   match. Cyberpunk 2077 on GOG, for example, now marks its Phantom Liberty achievements.
@@ -40,6 +103,34 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A clip could show a later frame in place of the right one when the graphics card was busy.**
+  The Windows recorder now waits until the encoder has let go of a picture before drawing the next
+  frame into it.
+- **On Linux, gpu-screen-recorder no longer keeps recording after AW Next quits**, and a software
+  clip still waiting for its last seconds is saved from what it holds instead of being lost.
+- **A game whose executable is a `.bat` or `.cmd` script starts again.** Windows refused to run the
+  script directly and the play button only showed "Launch failed". Such a game now starts through
+  the Windows shell, as manually added games already did, and the file picker accepts `.cmd` too.
+- **The controller no longer reads a wheel, and a button held when the window gets focus back does
+  nothing.** Only pads with the standard layout drive the app; when several are plugged in, the one
+  you press takes over, so an idle virtual pad listed first no longer blocks the real one. After
+  focus comes back, the pad must be released once before a press counts.
+- **The platinum's share of players no longer beats its own trophies.** Next to a game's Steam rates,
+  the PlayStation platinum showed Sony's or Exophase's figure, which counts other players and often
+  read higher than the rarest trophy. It now sits just under the rarest trophy of the base game, DLC
+  left out.
+- **A single platinum banner when a save file completes a game tied to a PlayStation list.** When
+  the last achievement read from a save was the one tied to the PlayStation platinum, AW Next showed
+  it and then the 100% popup. It now pops once as the platinum, as live unlocks already did.
+- **A picture cut short by a dropped connection is fetched again.** AW Next only looked at the start
+  of a downloaded icon, so half a file was kept and shown as a broken picture until the cache was
+  cleared. It now checks the end of the file too.
+- **Steam translations land on the right achievement.** Names and descriptions in your language are
+  matched by the achievement's own id when Steam gives it, rather than by its icon, so two
+  achievements sharing an icon no longer swap or lose their text. An answer that names the same
+  achievement twice is ignored.
+- **The Onyx preset's icon slides in on time at any notification duration.** Its slide waited for
+  the length of the default 7.5 seconds instead of following the duration you set.
 - **Dead Space 2 with MarkerPatch 3.1.0 or later lists its achievements again (#171).** The mod
   added the 8 Severed achievements, and AW Next only accepted the 51 of the base game, so the game
   showed as `markerpatch-47780` with 0 achievements. The list now follows the mod's own files, and a

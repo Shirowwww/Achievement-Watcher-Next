@@ -366,6 +366,17 @@ trabaja a tasa de bits constante y una escena tranquila sale más pequeña.
 - **Qué se captura.** El monitor que muestra el juego, notificaciones incluidas. Un juego muy antiguo en pantalla completa
   exclusiva puede grabar fotogramas negros.
 
+## Volver a ver un recuerdo {#seeing-a-souvenir-again}
+
+Haz clic derecho en un logro desbloqueado en la app y elige **Ver captura** o **Ver videoclip** para abrirlo en
+un visor, con los demás archivos del mismo logro a un clic y **Mostrar en la carpeta** para localizar el archivo.
+En el overlay dentro del juego, los botones pequeños bajo **Desbloqueado** abren el mismo visor; con un mando,
+izquierda y derecha navegan, A reproduce un clip y B lo cierra.
+
+AW Next anota qué archivo pertenece a qué logro cuando lo recoge, así que cambiar el nombre del juego o el idioma
+de la app no pierde el vínculo. Las capturas y los clips hechos antes de esta versión se encuentran por su nombre
+de archivo, en las carpetas configuradas más arriba.
+
 ## Si una prueba o un desbloqueo no aparece {#if-a-test-or-unlock-does-not-appear}
 
 1. Confirma que las notificaciones están activadas y lee la fila Notificaciones del panel

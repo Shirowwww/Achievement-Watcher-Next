@@ -366,6 +366,17 @@ fonctionne à débit constant et une scène calme donne un fichier plus petit.
 - **Ce qui est capturé.** Le moniteur qui affiche le jeu, notifications comprises. Un très vieux jeu en plein écran
   exclusif peut enregistrer des images noires.
 
+## Revoir un souvenir {#seeing-a-souvenir-again}
+
+Faites un clic droit sur un succès débloqué dans l'application et choisissez **Voir la capture** ou **Voir le clip**
+pour l'ouvrir dans une visionneuse, avec les autres fichiers du même succès à un clic et **Afficher dans le dossier**
+pour retrouver le fichier. Dans l'overlay en jeu, les petits boutons sous **Débloqué** ouvrent la même visionneuse ;
+à la manette, gauche et droite font défiler, A lance un clip et B le ferme.
+
+AW Next note quel fichier appartient à quel succès au moment où il le prend en charge, donc renommer le jeu ou
+changer la langue de l'application ne fait pas perdre le lien. Les captures et les clips faits avant cette version
+sont retrouvés par leur nom de fichier, dans les dossiers réglés plus haut.
+
 ## Si un test ou un déblocage n'apparaît pas {#if-a-test-or-unlock-does-not-appear}
 
 1. Vérifiez que les notifications sont activées, et lisez la ligne Notifications du panneau

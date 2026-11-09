@@ -87,6 +87,8 @@ poprzednie pliki. Nic nie jest zapisywane od nowa bez kopii zapasowej lub potwie
 | *Nie udało się znaleźć listy osiągnięć* | Gra nie ma osiągnięć albo jej źródło jest wyłączone. Sprawdź **Ustawienia → Źródło**. |
 | *Ta gra wymaga emulatora Steam, a żaden nie jest skonfigurowany* | Użyj **Zastosuj poprawkę emulatora** z menu prawego przycisku. Zobacz [Konfiguracja Goldberg / GBE](emulator-setup.md). |
 | *Brakuje pliku emulatora, który ją odczytuje* | **Zainstaluj plik emulatora** wkłada pasujące środowisko uruchomieniowe. |
+| *ColdClient obsługuje tę grę, ale…* | `ColdClientLoader.ini` obok loadera uruchamia brakujący plik lub inny program, wskazuje inną grę albo nie ma loadera dla 32 lub 64 bitów gry. Popraw ten plik; AW Next tylko go odczytuje. Gdy będzie poprawny, **Uruchom przez loader ColdClient** sprawia, że Graj uruchamia loader. |
+| *Emulator Epic nadal ma przykładowy AppID* | `NemirtingasEpicEmu.json` zawiera AppID złożony z samych zer albo oryginalny plik EOSSDK od Epic nadal leży na miejscu, więc emulator nigdy się nie ładuje. Wpisz do pliku identyfikator Epic gry. |
 | *Lista osiągnięć nie zgadza się z tym, czego będzie szukać gra* | **Zapisz dane osiągnięć ponownie**. To zwykły skutek aktualizacji repacka. |
 | *Nie znaleziono jeszcze żadnego postępu osiągnięć* | Normalne dla gry, w którą nie grałeś od jej skonfigurowania. Uruchom ją i odblokuj coś. |
 | *AW Next nie obserwuje tej gry, gdy działa* | **Obserwuj tę grę** dodaje ją do trackera. |

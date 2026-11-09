@@ -101,7 +101,8 @@ test('the store and hub links ask whether Steam is running, and say so in the op
 
   // Both menu entries go through it: passing an option the module ignores sent every link to the
   // browser, which is exactly what "Steam link does nothing useful" looked like.
-  assert.match(appSource, /openSteamTarget\(steamClientLinks\.steamStoreUrl, catalogAppid\)/);
-  assert.match(appSource, /openSteamTarget\(steamClientLinks\.steamGameHubUrl, catalogAppid\)/);
+  // The menu and the game page open them through openHelpLink (util/gameLinks.js gives `steam`).
+  assert.match(appSource, /openSteamTarget\(link\.steam === 'hub' \? steamClientLinks\.steamGameHubUrl : steamClientLinks\.steamStoreUrl, link\.appid\)/);
+  assert.match(appSource, /openHelpLink\(link\);/);
   assert.ok(!/hasClient/.test(appSource), 'no caller may still pass the old option name');
 });

@@ -40,6 +40,8 @@ fica até você fechá-lo.
 - Um selo de raridade (`★ 12.3%`) para toda conquista com taxa de desbloqueio conhecida. As conquistas comuns usam
   um selo cinza-escuro; as raras usam ouro, prata e bronze com um halo suave, em 5%, 10% e 15% por
   padrão. **Configurações → Geral → Exibição da raridade** muda os níveis ou passa para as classificações de troféus.
+- Conquistas fixadas primeiro, seja qual for a ordenação. O pequeno alfinete de uma linha bloqueada a fixa ou desafixa, como **Fixar no topo** na janela principal; o alfinete some quando a conquista é desbloqueada.
+- Abaixo de **Desbloqueado**, um botão para a captura de tela e outro para o clipe feitos naquele desbloqueio, quando existem. Esquerda e direita navegam entre eles no controle, **A** reproduz um clipe e **B** fecha.
 
 ## Conquistas ocultas {#hidden-achievements}
 
@@ -81,16 +83,18 @@ e a ressalva do Windows sobre o jogo continuar vendo os botões que você pressi
 
 O botão **⚙** no cabeçalho do overlay abre as opções:
 
-- **Destaque**: cinco predefinições de cor, um seletor de cor personalizada ou **Usar o tema do aplicativo** para seguir o tema da
-  janela principal (usado em progresso, filtros ativos, anéis de foco e no brilho das linhas desbloqueadas).
+- **Destaque**: cinco predefinições de cor, uma cor sua ou **Usar o tema do aplicativo** para seguir o tema da
+  janela principal (usado em progresso, filtros ativos, anéis de foco e no brilho das linhas desbloqueadas). O chip depois das
+  predefinições mostra sua cor e o código dela; ele abre dentro do overlay um seletor com uma paleta de tons, um controle de matiz,
+  um campo para o código e suas três últimas cores.
 - **Densidade**: espaçamento de linhas Compacto, Confortável ou Espaçoso.
 - **Tamanho dos ícones**: Pequeno, Médio ou Grande.
 - **Zoom**: de 80% a 125% do tamanho do painel.
-- **Opacidade**: de 40% a 100% do fundo do painel.
+- **Opacidade**: um controle deslizante de 20% a 100% do fundo do painel, aplicado enquanto você o move.
 - **Interruptores de exibição** para a barra de estatísticas, as barras de progresso, os selos de raridade e as descrições.
 
 As mudanças são aplicadas na hora e salvas localmente. **Restaurar padrões** devolve o visual original. As
-opções funcionam pelo teclado: os menus de zoom e opacidade mostram um anel de foco, os interruptores alternam com
+opções funcionam pelo teclado: o menu de zoom e o controle deslizante de opacidade mostram um anel de foco, os interruptores alternam com
 Tab e Espaço, e as animações seguem a configuração de movimento reduzido do sistema.
 
 ## Atalhos de teclado (overlay aberto) {#keyboard-shortcuts-overlay-open}

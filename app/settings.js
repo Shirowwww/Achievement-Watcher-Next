@@ -136,6 +136,9 @@ function normalize(parsed) {
   if (typeof options.general.closeToTray !== 'boolean') {
     options.general.closeToTray = true;
   }
+  if (typeof options.general.minimizeToTrayOnPlay !== 'boolean') {
+    options.general.minimizeToTrayOnPlay = false;
+  }
   // Right-click uninstall menu on game tiles (Settings > General). Default ON: discoverable out
   // of the box, and every action still asks for confirmation.
   if (typeof options.general.uninstallContextMenu !== 'boolean') {
@@ -290,6 +293,10 @@ function normalize(parsed) {
   options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
   for (const toggle of libraryChrome.TOGGLES) {
     if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
+  }
+  for (const effect of libraryChrome.EFFECTS) {
+    // false, true (Normal), 'subtle' or 'strong'; anything else is Normal.
+    options.achievement[effect.key] = libraryChrome.effectFromSelect(libraryChrome.effectToSelect(options.achievement[effect.key]));
   }
   options.achievement.libraryPlaytimeUnits = libraryChrome.normalizePlaytimeUnits(options.achievement.libraryPlaytimeUnits);
 
@@ -689,6 +696,7 @@ function defaults() {
       startWithWindows: true,
       disableHardwareAccel: false,
       closeToTray: true,
+      minimizeToTrayOnPlay: false,
       uninstallContextMenu: true,
       theme: 'default',
     },
@@ -730,6 +738,8 @@ function defaults() {
       libraryPlaytimeUnits: 'auto', // 'hours' keeps a long playtime in hours, never days
       libraryShowAchievementButton: true,
       libraryShowConfigButton: true,
+      libraryTilt: true,
+      libraryAmbient: true,
       thumbnailPortrait: false,
       showHidden: false,
       mergeDuplicate: true,

@@ -40,6 +40,8 @@ zostaje, dopóki jej nie zamkniesz.
 - Odznakę rzadkości (`★ 12.3%`) dla każdego osiągnięcia ze znanym odsetkiem odblokowań. Zwykłe osiągnięcia używają
   ciemnoszarej odznaki; rzadkie używają złota, srebra i brązu z miękką poświatą, domyślnie przy 5%, 10% i 15%.
   **Ustawienia → Ogólne → Wyświetlanie rzadkości** zmienia stopnie lub przełącza na stopnie trofeów.
+- Przypięte osiągnięcia na początku, niezależnie od sortowania. Mała pinezka w zablokowanym wierszu przypina go lub odpina, tak jak **Przypnij na górze** w oknie głównym; pinezka znika po odblokowaniu osiągnięcia.
+- Pod **Odblokowane** przycisk zrzutu ekranu i przycisk klipu zrobionych przy tym odblokowaniu, jeśli istnieją. Lewo i prawo przeglądają je na kontrolerze, **A** odtwarza klip, **B** zamyka.
 
 ## Ukryte osiągnięcia {#hidden-achievements}
 
@@ -81,16 +83,18 @@ i zastrzeżenie dotyczące Windows, że gra nadal widzi naciśnięcia twoich prz
 
 Przycisk **⚙** w nagłówku nakładki otwiera opcje:
 
-- **Akcent**: pięć gotowych kolorów, własny próbnik koloru albo **Użyj motywu aplikacji**, aby podążać za motywem
-  okna głównego (używany dla postępu, aktywnych filtrów, pierścieni fokusu i poświaty odblokowanych wierszy).
+- **Akcent**: pięć gotowych kolorów, własny kolor albo **Użyj motywu aplikacji**, aby podążać za motywem
+  okna głównego (używany dla postępu, aktywnych filtrów, pierścieni fokusu i poświaty odblokowanych wierszy). Znacznik po gotowych
+  kolorach pokazuje twój kolor i jego kod; otwiera w nakładce próbnik z polem odcieni, suwakiem barwy, polem na kod i trzema
+  ostatnimi kolorami.
 - **Gęstość**: odstępy wierszy Kompaktowy, Przytulny lub Przestronny.
 - **Rozmiar ikon**: Mały, Średni lub Duży.
 - **Powiększenie**: od 80% do 125% rozmiaru panelu.
-- **Nieprzezroczystość**: od 40% do 100% tła panelu.
+- **Nieprzezroczystość**: suwak od 20% do 100% tła panelu, działający na bieżąco podczas przesuwania.
 - **Przełączniki widoczności** paska statystyk, pasków postępu, odznak rzadkości i opisów.
 
 Zmiany są stosowane od razu i zapisywane lokalnie. **Przywróć domyślne** przywraca pierwotny wygląd. Opcje
-działają z klawiatury: menu powiększenia i nieprzezroczystości pokazują pierścień fokusu, przełączniki działają za pomocą
+działają z klawiatury: menu powiększenia i suwak nieprzezroczystości pokazują pierścień fokusu, przełączniki działają za pomocą
 Tab i Spacji, a animacje podążają za systemowym ustawieniem ograniczenia ruchu.
 
 ## Skróty klawiszowe (nakładka otwarta) {#keyboard-shortcuts-overlay-open}

@@ -2224,7 +2224,7 @@ body.is-resizing #game-list {
   border: var(--library-card-border) solid color-mix(in srgb, var(--border) 10%, transparent);
   box-shadow: 0 14px 28px rgba(0, 0, 0, calc(0.22 * var(--shadow-scale))), 0 3px 8px rgba(0, 0, 0, calc(0.25 * var(--shadow-scale)));
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition: transform 0.18s ease;
   position: relative;
   /* Off-screen tiles are skipped by the compositor: their cover images stay undecoded until
      scrolled into view, which keeps the renderer and GPU processes from caching every cover at once. */
@@ -2235,8 +2235,63 @@ body.is-resizing #game-list {
 /* Hover "lift": the card rises and its shadow deepens, making the grid feel tactile. */
 #game-list ul > li .game-box:hover {
   transform: translateY(-4px);
-  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
-  box-shadow: 0 18px 34px rgba(0, 0, 0, calc(0.42 * var(--shadow-scale))), 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+/*
+  The deeper shadow and the accent edge of a hovered tile are two layers of their own whose opacity
+  fades, so hovering never repaints a tile: a tweened box-shadow or border colour redraws the tile,
+  its cover included, on every frame. The shadow sits on the grid cell, under the tile and outside
+  its clipping, and rises with it; the edge sits inside the tile and leans with it.
+*/
+#game-list ul > li {
+  position: relative;
+}
+
+/* How far each view lifts a hovered tile, for the layers and the lean that follow it. */
+#game-list > ul {
+  --tile-hover-lift: -4px;
+  --tile-hover-scale: 1;
+}
+
+#game-list.view-portrait > ul {
+  --tile-hover-scale: 1.05;
+}
+
+#game-list.view-list > ul,
+#game-list.view-details > ul {
+  --tile-hover-lift: -2px;
+}
+
+#game-list ul > li::before {
+  content: '';
+  position: absolute;
+  inset: var(--library-item-padding);
+  border-radius: var(--radius-md);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, calc(0.32 * var(--shadow-scale)));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+#game-list ul > li:has(> .game-box:hover:not(.skeleton))::before {
+  opacity: 1;
+  transform: translateY(var(--tile-hover-lift)) scale(var(--tile-hover-scale));
+}
+
+#game-list ul > li .game-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  border-radius: calc(var(--radius-md) - var(--library-card-border));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 38%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+#game-list ul > li .game-box:hover::before {
+  opacity: 1;
 }
 
 /* Skeleton tiles shown while the library scan streams real games in. They keep the grid from
@@ -3180,6 +3235,14 @@ body.is-resizing #game-list {
   white-space: nowrap;
   min-width: 0;
   overflow-x: clip;
+}
+
+/* A pinned locked achievement: a small accent pin after its name (the accent edge means "picked"). */
+.achievement .content .title .ach-pin {
+  margin-left: 4px;
+  font-size: 0.8em;
+  color: var(--accent);
+  transform: rotate(30deg);
 }
 
 /* DLC/update tag from SteamHunters achievement groups (absent when the game has none). */
@@ -6931,7 +6994,7 @@ body.is-resizing #game-list {
 }
 #game-list.view-portrait ul > li .game-box {
   width: var(--library-card-width);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  transition: transform 0.22s ease;
 }
 #game-list.view-portrait ul > li .game-box:hover {
   transform: translateY(-4px) scale(1.05);
@@ -8525,6 +8588,86 @@ body {
 
 #game-list .game-box:hover .header.glow:not(.artwork-error):not(.artwork-missing):after {
   transform: rotateZ(200deg) translateX(20%) translateY(var(--gloss-offset-hover));
+}
+
+/*
+  Hover depth (ui/libraryDepth.js). The tile keeps its usual lift and leans by --tilt-x/--tilt-y,
+  set on that one tile only. Following the pointer is a short transition, so each new angle picks up
+  from the current one; leaving falls back to the tile's own transition. Grid views, mouse only.
+  Registered as not inherited, so a new angle restyles the tile alone, not everything inside it.
+*/
+@property --tilt-x {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --tilt-y {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  #game-list:not(.view-list):not(.view-details) ul > li .game-box.is-tilting {
+    transform: perspective(900px) translateY(var(--tile-hover-lift)) scale(var(--tile-hover-scale)) rotateX(var(--tilt-x, 0deg))
+      rotateY(var(--tilt-y, 0deg));
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-out);
+  }
+}
+
+/*
+  The hovered game's cover behind the library, under the same veil as a game page so the header
+  stays readable. z-index -1 puts it under everything in #home and above the window's own
+  background, like a game page's picture. The panel thins a little while it shows, or the cover
+  would only reach the header.
+*/
+#library-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+#library-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--game-backdrop-veil);
+  /* A game page draws its title straight on the picture; the library only has the profile band.
+     Settings > Appearance sets the strength (--ambient-veil and --ambient-panel on #home). */
+  opacity: var(--ambient-veil, 0.7);
+}
+
+#library-ambient canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+#library-ambient canvas.is-shown,
+#home.has-ambient #library-ambient {
+  opacity: 1;
+}
+
+/* The panel's fill changes in one step, never tweened: a tweened fill repaints the whole grid on
+   every frame of it, and with nothing behind it yet the two fills are within a shade of each other.
+   Coming back waits for the cover to fade out first. */
+#game-list {
+  transition: opacity 0.18s ease, background-color 0s linear var(--dur-slow);
+}
+
+#home.has-ambient #game-list {
+  background-color: color-mix(in srgb, var(--bg-panel) var(--ambient-panel, 62%), transparent);
+  transition: opacity 0.18s ease, background-color 0s;
 }
 
 #game-list .game-box .info {
@@ -17634,14 +17777,14 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
   outline: none;
   opacity: 0;
   /* A short slide, no scale: scaling blurs the text for the length of the animation. */
-  transform: translateY(-4px);
+  transform: translateY(-8px);
   transition:
-    opacity 120ms var(--ease-out),
-    transform 160ms var(--ease-out);
+    opacity 160ms var(--ease-out),
+    transform 220ms var(--ease-out);
 }
 
 .select-menu.is-above {
-  transform: translateY(4px);
+  transform: translateY(8px);
 }
 
 .select-menu.is-open {
@@ -17652,9 +17795,10 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
 /* Leaving is quicker than arriving, and nothing in it can be clicked any more. */
 .select-menu.is-closing {
   pointer-events: none;
+  /* Within PANEL_CLOSE_MS (ui/selectMenu.js), which removes the panel after 110 ms. */
   transition:
-    opacity 90ms ease-in,
-    transform 90ms ease-in;
+    opacity 105ms ease-out,
+    transform 105ms ease-out;
 }
 
 .select-menu-option {
@@ -18512,5 +18656,423 @@ html:not([data-platform='linux']) [data-linux-only] {
     transition-duration: 0s !important;
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Game page overview (ui/gameOverview.js). #achievement[data-view] picks the overview or the list;
+   without it (before the first open) the page is the list, as it always was. */
+#achievement:not([data-view='overview']) #game-overview,
+#achievement[data-view='overview'] .wrapper > .header,
+#achievement[data-view='overview'] .achievements,
+#achievement:not([data-view='list']) #btn-overview,
+#achievement[data-view='list'] #btn-previous {
+  display: none;
+}
+
+.game-overview {
+  --overview-hero-h: 440px;
+  padding-bottom: 40px;
+}
+.game-overview-hero {
+  position: relative;
+  height: var(--overview-hero-h);
+  margin: 0 calc(50% - 50vw);
+  overflow: hidden;
+  /* The hero spans the window; its content lines up with the page column below (.wrapper). */
+  --overview-gutter: calc((100% - min(92%, 1180px)) / 2);
+}
+/* The page picture stays behind (body::before); the banner art, then the trailer, fade in over it. */
+.game-overview-hero-art,
+.game-overview-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+.game-overview-hero-art.is-ready,
+.game-overview-hero-video.is-ready {
+  opacity: 1;
+}
+.game-overview-title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.game-overview-title-row .game-overview-name {
+  min-width: 0;
+}
+/* The game's square icon, painted by the host like the list header's: the inline `background`
+   shorthand it sets would reset size and repeat, hence the !important, as on that header. */
+.game-overview-icon {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+  background-position: center !important;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
+  /* Right-click changes it, as everywhere the icon shows. */
+  cursor: context-menu;
+}
+.game-overview-icon:not(.has-game-icon) {
+  display: none;
+}
+.game-overview-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Darkest behind the title, then fading out with the picture, so the banner melts into the page
+     backdrop below instead of ending on a line. */
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--bg-base) 10%, transparent) 20%, color-mix(in srgb, var(--bg-base) 45%, transparent) 70%, transparent 100%),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-base) 80%, transparent), transparent 60%);
+  mask-image: linear-gradient(#000 60%, transparent 100%);
+}
+.game-overview-hero-art,
+.game-overview-hero-video {
+  mask-image: linear-gradient(#000 35%, transparent 100%);
+}
+.game-overview-name {
+  text-shadow: 0 2px 12px rgb(0 0 0 / 45%);
+}
+.game-overview-back {
+  position: absolute;
+  z-index: 1;
+  top: 25px;
+  right: var(--overview-gutter);
+}
+.game-overview-heading {
+  position: absolute;
+  z-index: 1;
+  left: var(--overview-gutter);
+  right: var(--overview-gutter);
+  bottom: 24px;
+}
+.game-overview-name {
+  margin: 0 0 4px;
+  font-family: var(--font-strong);
+  font-size: 42px;
+  line-height: 1.08;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.game-overview-meta {
+  min-height: 1.4em;
+  color: var(--text-muted);
+}
+.game-overview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 16px;
+}
+.game-overview-actions .btn {
+  min-height: 44px;
+}
+.game-overview-actions .btn[hidden] {
+  display: none;
+}
+.game-overview-actions .is-play,
+.game-overview-actions .is-achievements {
+  border-color: transparent;
+  font-family: var(--font-strong);
+  padding: 0 20px;
+}
+.game-overview-actions .is-play {
+  color: #0b1f16;
+  background: var(--success);
+}
+.game-overview-actions .is-play:hover {
+  background: color-mix(in srgb, var(--success) 88%, white 12%);
+}
+.game-overview-actions .is-achievements {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+.game-overview-actions .is-achievements:hover {
+  background: var(--accent-strong);
+}
+.game-overview-actions .is-icon {
+  width: 44px;
+  padding: 0;
+}
+.game-overview-sep {
+  width: 1px;
+  margin: 6px 4px;
+  background: color-mix(in srgb, var(--border) 70%, transparent);
+}
+.game-overview-progress {
+  width: 84px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--on-accent) 22%, transparent);
+  overflow: hidden;
+}
+.game-overview-progress > i {
+  display: block;
+  width: var(--p);
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+}
+
+.game-overview-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 28px;
+}
+.game-overview-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 26px 0 10px;
+  font-family: var(--font-strong);
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+.game-overview-about {
+  margin: 0;
+  max-width: 70ch;
+  font-size: var(--fs-lg);
+  line-height: 1.6;
+  white-space: pre-line;
+  color: var(--text);
+}
+.game-overview-skeleton {
+  display: grid;
+  gap: 10px;
+}
+.game-overview-skeleton > span {
+  height: 14px;
+  border-radius: var(--radius-xs);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  animation: game-overview-pulse 1.2s ease-in-out infinite alternate;
+}
+.game-overview-skeleton > span:last-child {
+  width: 60%;
+}
+@keyframes game-overview-pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+
+/* The strip of trailers and screenshots: one page per arrow, snapped on its tiles. */
+.game-overview-navs {
+  display: flex;
+  gap: 6px;
+}
+.game-overview-nav.btn {
+  width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 50%;
+}
+.game-overview-nav.btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
+}
+.game-overview-rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 3 * 8px) / 4);
+  gap: 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  overscroll-behavior-x: contain;
+  padding-bottom: 8px;
+}
+/* The same slim bar as the page's own (#achievement), turned on its side and only lit on hover. */
+.game-overview-rail::-webkit-scrollbar {
+  height: 9px;
+}
+.game-overview-rail::-webkit-scrollbar-track {
+  background: transparent;
+}
+.game-overview-rail::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 18%, transparent);
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.game-overview-rail:hover::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  background-clip: padding-box;
+}
+.game-overview-rail::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  background-clip: padding-box;
+}
+.game-overview-thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-sunken);
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.game-overview-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.game-overview-thumb img:not([src]) {
+  visibility: hidden;
+}
+@media (hover: hover) and (pointer: fine) {
+  .game-overview-thumb:hover {
+    transform: translateY(-2px);
+  }
+}
+.game-overview-thumb:active {
+  transform: scale(0.98);
+}
+.game-overview-thumb:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.game-overview-thumb-play {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.22);
+}
+.game-overview-thumb-play > i {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+}
+
+.game-overview-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.game-overview-chip.btn {
+  min-height: 36px;
+  border-radius: var(--radius-pill);
+}
+.game-overview-souvenir-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.game-overview-empty {
+  grid-column: 1 / -1;
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 22px;
+  text-align: center;
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+}
+
+.game-overview-rows {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--bg-panel-translucent);
+}
+.game-overview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 14px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  color: var(--text);
+}
+.game-overview-row:first-child {
+  border-top: 0;
+}
+/* A rating with a page of its own: the whole row opens it. */
+.game-overview-row.is-link {
+  width: 100%;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.game-overview-row.is-link:first-child {
+  border-top: 0;
+}
+.game-overview-row.is-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .game-overview-row.is-link:hover {
+    background: color-mix(in srgb, var(--text) 6%, transparent);
+  }
+}
+.game-overview-row > :last-child {
+  text-align: right;
+}
+.game-overview-row-label {
+  color: var(--text-muted);
+}
+.game-overview-score.is-metacritic {
+  display: inline-grid;
+  place-items: center;
+  min-width: 34px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: #0d1726;
+  background: #66cc33;
+  font-family: var(--font-strong);
+}
+/* A players rating: the score, and under it how many rated, quieter. */
+.game-overview-rating {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.game-overview-rating-count {
+  color: var(--text-muted);
+  font-size: 0.85em;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-overview-skeleton > span {
+    animation: none;
+  }
+  .game-overview-rail {
+    scroll-behavior: auto;
+  }
+  .game-overview-hero-art,
+  .game-overview-hero-video {
+    transition: none;
   }
 }

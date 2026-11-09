@@ -792,6 +792,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_disableHardwareAccel').val(String(app.config.general.disableHardwareAccel === true)).change();
       $('#option_disableAutoRefresh').val(String(app.config.achievement.disableAutoRefresh === true)).change();
       $('#option_closeToTray').val(String(app.config.general.closeToTray !== false)).change();
+      $('#option_minimizeToTrayOnPlay').val(String(app.config.general.minimizeToTrayOnPlay === true)).change();
       $('#option_uninstallContextMenu').val(String(app.config.general.uninstallContextMenu !== false)).change();
       $('#option_autoUpdate').val(String(app.config.general.autoUpdate === true)).change();
       if (!app.config.controller) app.config.controller = {};
@@ -1361,6 +1362,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       Both scales are stored as a multiplier (1 = the shipped layout) and shown as a percentage.
     */
     const LIBRARY_TOGGLES = settingsLibraryChrome.TOGGLES.map((toggle) => toggle.key);
+    // The hover effects have a strength as well as on and off.
+    const LIBRARY_EFFECTS = settingsLibraryChrome.EFFECTS.map((effect) => effect.key);
 
     // What the controls currently say, in the shape app.config.achievement stores. Normalized here
     // so the preview, the save and the settings file can never disagree about a value.
@@ -1370,6 +1373,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         libraryDensity: settingsLibraryChrome.normalizeDensity(Number($('#option_libraryDensity').val()) / 100),
       };
       for (const key of LIBRARY_TOGGLES) chrome[key] = $(`#option_${key}`).val() !== 'false';
+      for (const key of LIBRARY_EFFECTS) chrome[key] = settingsLibraryChrome.effectFromSelect($(`#option_${key}`).val());
       chrome.libraryPlaytimeUnits = settingsLibraryChrome.normalizePlaytimeUnits($('#option_libraryPlaytimeUnits').val());
       return chrome;
     }
@@ -1388,12 +1392,13 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_libraryTileScale').val(Math.round(settingsLibraryChrome.normalizeTileScale(settings.libraryTileScale) * 100));
       $('#option_libraryDensity').val(Math.round(settingsLibraryChrome.normalizeDensity(settings.libraryDensity) * 100));
       for (const key of LIBRARY_TOGGLES) $(`#option_${key}`).val(String(settings[key] !== false)).change();
+      for (const key of LIBRARY_EFFECTS) $(`#option_${key}`).val(settingsLibraryChrome.effectToSelect(settings[key])).change();
       $('#option_libraryPlaytimeUnits').val(settingsLibraryChrome.normalizePlaytimeUnits(settings.libraryPlaytimeUnits)).change();
       previewLibraryChrome();
     }
 
     $('#option_libraryTileScale, #option_libraryDensity').on('input change', previewLibraryChrome);
-    $([...LIBRARY_TOGGLES, 'libraryPlaytimeUnits'].map((key) => `#option_${key}`).join(', ')).on('change', previewLibraryChrome);
+    $([...LIBRARY_TOGGLES, ...LIBRARY_EFFECTS, 'libraryPlaytimeUnits'].map((key) => `#option_${key}`).join(', ')).on('change', previewLibraryChrome);
 
     // Escape closes the topmost panel like Cancel does. Anything with its own Escape (a prompt, the
     // cover picker, a search field, a hotkey being recorded) gets the key first and is left alone.
@@ -1485,6 +1490,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
               $(this)[0].id === 'option_startWithWindows' ||
               $(this)[0].id === 'option_disableHardwareAccel' ||
               $(this)[0].id === 'option_closeToTray' ||
+              $(this)[0].id === 'option_minimizeToTrayOnPlay' ||
               $(this)[0].id === 'option_uninstallContextMenu' ||
               $(this)[0].id === 'option_autoUpdate' ||
               $(this)[0].id === 'option_theme' ||
@@ -1517,6 +1523,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       app.config.general.disableHardwareAccel = $('#option_disableHardwareAccel').val() === 'true';
       app.config.achievement.disableAutoRefresh = $('#option_disableAutoRefresh').val() === 'true';
       app.config.general.closeToTray = $('#option_closeToTray').val() !== 'false';
+      app.config.general.minimizeToTrayOnPlay = $('#option_minimizeToTrayOnPlay').val() === 'true';
       app.config.general.uninstallContextMenu = $('#option_uninstallContextMenu').val() !== 'false';
       app.config.general.autoUpdate = $('#option_autoUpdate').val() === 'true';
       app.config.general.theme = $('#option_theme').val() || 'default';
@@ -4140,42 +4147,54 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (settingsReady) $('#option_madnesspatch, #option_pcports').val($(this).val());
     });
 
-    $('#smartFind').click(async function () {
-      let self = $(this);
-      self.css('pointer-events', 'none');
-      $('#wrap-dirlist .loading-overlay').show();
-      $('#addCustomDir').css('pointer-events', 'none');
-      $('#btn-settings-save').css('pointer-events', 'none');
-
+    // Fills the folder lists with what Smart Find detects and answers how many it added; the user's Save keeps them.
+    async function smartFindFolders() {
       debug.log('auto-finding folder(s) ...');
-      const result = $('#folder-action-result');
-      result.text(result.attr('data-running') || '');
       // Diff the lists before/after so the summary reports what Smart Find actually added.
       const before = $('#settings #dirlist > li').length + $('#settings #libdirlist > li').length;
-
-      try {
-        const detectedSaveDirs = userDir.findEntries ? await userDir.findEntries() : (await userDir.find()).map((path) => ({ path }));
-        for (const entry of detectedSaveDirs) {
+      const detectedSaveDirs = userDir.findEntries ? await userDir.findEntries() : (await userDir.find()).map((path) => ({ path }));
+      for (const entry of detectedSaveDirs) {
+        const dir = entry.path || entry;
+        debug.log(`Found folder: ${dir}`);
+        if (await userDir.check(dir)) {
+          populateUserDirList({ ...entry, dir, origin: 'auto' });
+        } else {
+          debug.log('-> Invalid folder');
+        }
+      }
+      if (libraryDirs.find) {
+        const detectedLibraries = libraryDirs.findEntries ? await libraryDirs.findEntries() : (await libraryDirs.find()).map((path) => ({ path }));
+        for (const entry of detectedLibraries) {
           const dir = entry.path || entry;
-          debug.log(`Found folder: ${dir}`);
-          if (await userDir.check(dir)) {
-            populateUserDirList({ ...entry, dir, origin: 'auto' });
-          } else {
-            debug.log('-> Invalid folder');
-          }
+          debug.log(`Found library folder: ${dir}`);
+          populateLibraryDirList({ ...entry, dir, origin: 'auto' });
         }
-        if (libraryDirs.find) {
-          const detectedLibraries = libraryDirs.findEntries ? await libraryDirs.findEntries() : (await libraryDirs.find()).map((path) => ({ path }));
-          for (const entry of detectedLibraries) {
-            const dir = entry.path || entry;
-            debug.log(`Found library folder: ${dir}`);
-            populateLibraryDirList({ ...entry, dir, origin: 'auto' });
-          }
-        }
-        const added = Math.max(0, $('#settings #dirlist > li').length + $('#settings #libdirlist > li').length - before);
-        result.text(`${result.attr('data-done') || ''} (${added})`);
+      }
+      return Math.max(0, $('#settings #dirlist > li').length + $('#settings #libdirlist > li').length - before);
+    }
+
+    // The result line eases in on each new message (--dur-base, --ease-out); reduced motion keeps the fade alone.
+    function showFolderResult(message) {
+      const result = $('#folder-action-result').text(message || '');
+      const line = result[0];
+      if (!message || !line || typeof line.animate !== 'function') return;
+      const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      line.animate(still ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: 'translateY(3px)' }, { opacity: 1, transform: 'none' }], {
+        duration: 200,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      });
+    }
+
+    // Smart Find and Find all share the busy state, the result line and the error dialog.
+    async function runFolderAction(work) {
+      const controls = $('#smartFind, #findAllExe, #addCustomDir, #btn-settings-save');
+      controls.css('pointer-events', 'none');
+      $('#wrap-dirlist .loading-overlay').show();
+      showFolderResult($('#folder-action-result').attr('data-running') || '');
+      try {
+        showFolderResult(await work());
       } catch (err) {
-        result.text('');
+        showFolderResult('');
         remote.dialog.showMessageBoxSync({
           type: 'error',
           title: t('unexpected-error', 'Unexpected Error', 'Erreur inattendue'),
@@ -4183,11 +4202,31 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
           detail: `${err}`,
         });
       }
-
-      self.css('pointer-events', 'initial');
+      controls.css('pointer-events', 'initial');
       $('#wrap-dirlist .loading-overlay').hide();
-      $('#addCustomDir').css('pointer-events', 'initial');
-      $('#btn-settings-save').css('pointer-events', 'initial');
+    }
+
+    $('#smartFind').click(function () {
+      const result = $('#folder-action-result');
+      return runFolderAction(async () => `${result.attr('data-done') || ''} (${await smartFindFolders()})`);
+    });
+
+    // Find all: the folders Smart Find detects, then the executable of every game that has none.
+    $('#findAllExe').click(function () {
+      return runFolderAction(async () => {
+        const folders = await smartFindFolders();
+        const exes = await findAllGameExecutables();
+        const summary = t(
+          'find-all-exe-result',
+          'New folders: {folders}. Executables found: {found}. Still to choose: {missing}.',
+          'Nouveaux dossiers : {folders}. Exécutables trouvés : {found}. Encore à choisir : {missing}.',
+          { folders, found: exes.found, missing: exes.missing }
+        );
+        const cut = exes.truncated
+          ? ` ${t('find-all-exe-truncated', 'The drive search stopped before the end, so nothing it saw was taken as sure.', "La recherche sur les disques s'est arrêtée avant la fin : rien de ce qu'elle a vu n'a été retenu comme sûr.")}`
+          : '';
+        return summary + cut;
+      });
     });
 
     const blacklistLabel = t('blacklist-add-placeholder', 'Steam App ID', 'ID d’app Steam');

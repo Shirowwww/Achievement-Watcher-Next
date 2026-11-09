@@ -87,6 +87,8 @@ vorherigen Dateien aufbewahrt werden. Nichts wird ohne Sicherung oder Bestätigu
 | *Es wurde keine Erfolgsliste gefunden* | Das Spiel hat keine Erfolge, oder seine Quelle ist abgeschaltet. Prüfe **Einstellungen → Quellen**. |
 | *Dieses Spiel braucht einen Steam-Emulator, und es ist keiner eingerichtet* | Nutze **Emulator-Fix anwenden** im Rechtsklickmenü. Siehe [Goldberg / GBE einrichten](emulator-setup.md). |
 | *Die Emulator-Datei, die sie liest, fehlt* | **Emulator-Datei installieren** bringt die passende Laufzeit hinein. |
+| *ColdClient bedient dieses Spiel, aber…* | `ColdClientLoader.ini` neben dem Loader startet eine fehlende Datei oder ein anderes Programm, nennt ein anderes Spiel oder hat keinen Loader für die 32 oder 64 Bit des Spiels. Korrigiere diese Datei; AW Next liest sie nur. Wenn sie stimmt, sorgt **Über den ColdClient-Loader starten** dafür, dass Spielen den Loader startet. |
+| *Der Epic-Emulator hat noch die Beispiel-AppID* | `NemirtingasEpicEmu.json` enthält die AppID aus lauter Nullen, oder Epics eigene EOSSDK-Datei liegt noch dort, sodass der Emulator nie geladen wird. Trage die Epic-ID des Spiels in die Datei ein. |
 | *Die Erfolgsliste passt nicht zu dem, wonach das Spiel suchen wird* | **Erfolgsdaten neu schreiben**. Das ist das übliche Ergebnis eines Repack-Updates. |
 | *Es wurde noch kein Erfolgsfortschritt gefunden* | Normal bei einem Spiel, das du seit der Einrichtung nicht gespielt hast. Starte es und schalte etwas frei. |
 | *AW Next überwacht dieses Spiel nicht, während es läuft* | **Dieses Spiel überwachen** fügt es dem Tracker hinzu. |

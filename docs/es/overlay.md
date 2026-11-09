@@ -40,6 +40,8 @@ permanece hasta que lo cierras.
 - Una insignia de rareza (`★ 12.3%`) para cada logro con tasa de desbloqueo conocida. Los logros comunes usan
   una insignia gris oscuro; los raros usan oro, plata y bronce con un halo suave, al 5 %, 10 % y 15 %
   por defecto. **Ajustes → General → Visualización de la rareza** cambia los niveles o pasa a los grados de trofeo.
+- Los logros fijados primero, sea cual sea el orden. El pequeño pin de una fila bloqueada la fija o la suelta, como **Fijar arriba** en la ventana principal; el pin desaparece cuando el logro se desbloquea.
+- Bajo **Desbloqueado**, un botón para la captura de pantalla y otro para el clip tomados en ese desbloqueo, cuando los hay. Izquierda y derecha los recorren con un mando, **A** reproduce un clip y **B** cierra.
 
 ## Logros ocultos {#hidden-achievements}
 
@@ -81,16 +83,18 @@ y la salvedad de Windows sobre que el juego sigue viendo tus pulsaciones de boto
 
 El botón **⚙** de la cabecera del overlay abre las opciones:
 
-- **Acento**: cinco colores predefinidos, un selector de color libre, o **Usar el tema de la app** para seguir el tema de la
-  ventana principal (se usa para el progreso, los filtros activos, los anillos de foco y el brillo de las filas desbloqueadas).
+- **Acento**: cinco colores predefinidos, un color propio o **Usar el tema de la app** para seguir el tema de la
+  ventana principal (se usa para el progreso, los filtros activos, los anillos de foco y el brillo de las filas desbloqueadas). El chip
+  tras los colores predefinidos muestra tu color y su código; abre un selector dentro del overlay con una paleta de tonos, un control
+  de matiz, un campo para el código y tus tres últimos colores.
 - **Densidad**: espaciado de filas Compacto, Cómodo o Espacioso.
 - **Tamaño de iconos**: Pequeño, Mediano o Grande.
 - **Zoom**: del 80 % al 125 % del tamaño del panel.
-- **Opacidad**: del 40 % al 100 % del fondo del panel.
+- **Opacidad**: un control deslizante del 20 % al 100 % del fondo del panel, que se aplica mientras lo mueves.
 - **Interruptores de mostrar/ocultar** para la barra de estadísticas, las barras de progreso, las insignias de rareza y las descripciones.
 
 Los cambios se aplican al instante y se guardan en local. **Restablecer** devuelve el aspecto original. Las
-opciones funcionan con el teclado: los menús de zoom y opacidad muestran un anillo de foco, los interruptores se activan con
+opciones funcionan con el teclado: el menú de zoom y el control deslizante de opacidad muestran un anillo de foco, los interruptores se activan con
 Tab y Espacio, y las animaciones siguen el ajuste de movimiento reducido del sistema.
 
 ## Atajos de teclado (overlay abierto) {#keyboard-shortcuts-overlay-open}
