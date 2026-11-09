@@ -22,6 +22,12 @@ function buildHarness() {
     <script>${inline('ui/gameOverview.js')}</script>
     <script>
       window.calls = [];
+      // A trailer that cannot load takes its video away, and a fast network failure can do it before
+      // the test looks: record each hero video as it is mounted instead.
+      window.heroSources = [];
+      const heroVideos = (node) => (node.matches && node.matches('.game-overview-hero-video') ? [node] : [...(node.querySelectorAll ? node.querySelectorAll('.game-overview-hero-video') : [])]);
+      new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((node) => heroVideos(node).forEach((video) => window.heroSources.push(video.dataset.src)))))
+        .observe(document.getElementById('root'), { childList: true, subtree: true });
       const fill = (text, params) => String(text).replace(/\\{(\\w+)\\}/g, (m, k) => (params && k in params ? params[k] : m));
       window.host = (overrides = {}) => ({
         t: (key, english, french, params) => fill(english, params),
@@ -88,10 +94,13 @@ test('the overview shows the store page, keeps store text as text and drops what
 
   try {
     const page = await browser.newPage();
+    // The hero trailer stays off under reduced motion, which Windows runners report.
+    await page.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
     await page.goto(pathToFileURL(harness).href);
 
     const full = await page.evaluate(async (details) => {
       const root = document.getElementById('root');
+      window.heroSources = [];
       window.GameOverview.show(root, window.game(), window.host({ loadDetails: () => Promise.resolve(details) }));
       await window.settle();
       const sections = [...root.querySelectorAll('.game-overview-title')].map((node) => node.firstChild.textContent);
@@ -105,7 +114,7 @@ test('the overview shows the store page, keeps store text as text and drops what
         trailerHidden: root.querySelector('.game-overview-actions .btn:not(.is-play):not(.is-achievements):not(.is-icon)').hidden,
         rows: [...root.querySelectorAll('.game-overview-row')].map((row) => row.textContent),
         count: root.querySelector('.game-overview-count').textContent,
-        heroVideo: !!root.querySelector('.game-overview-hero-video'),
+        heroVideo: window.heroSources.includes(details.videos[0].hls),
         health: [...root.querySelectorAll('.game-overview-actions .btn')].map((b) => b.textContent.trim()).find((label) => /health/i.test(label)),
       };
     }, DETAILS);
@@ -161,6 +170,7 @@ test('the overview shows the store page, keeps store text as text and drops what
     const bare = await page.evaluate(async () => {
       window.GameOverview.reset();
       const root = document.getElementById('root');
+      window.heroSources = [];
       window.GameOverview.show(root, window.game({ appid: '200', launchable: false, links: [] }), window.host({ loadDetails: () => Promise.reject(new Error('offline')) }));
       await window.settle();
       return {
@@ -168,7 +178,7 @@ test('the overview shows the store page, keeps store text as text and drops what
         about: root.querySelector('.game-overview-about').textContent,
         play: !!root.querySelector('.is-play'),
         empty: !!root.querySelector('.game-overview-empty'),
-        heroVideo: !!root.querySelector('.game-overview-hero-video'),
+        heroVideo: window.heroSources.length > 0,
       };
     });
     // A silent trailer moves behind the title but is never offered to watch.
@@ -176,10 +186,11 @@ test('the overview shows the store page, keeps store text as text and drops what
       window.GameOverview.reset();
       const root = document.getElementById('root');
       const details = { description: 'x', videos: [{ name: '', thumbnail: '', file: 'https://media-cdn.example/high.webm', silent: true }] };
+      window.heroSources = [];
       window.GameOverview.show(root, window.game({ appid: '300' }), window.host({ loadDetails: () => Promise.resolve(details) }));
       await window.settle();
       return {
-        backdrop: (root.querySelector('.game-overview-hero-video') || {}).dataset?.src || '',
+        backdrop: window.heroSources[0] || '',
         thumbs: root.querySelectorAll('.game-overview-rail .game-overview-thumb').length,
         trailerHidden: root.querySelector('.game-overview-actions .btn:not(.is-play):not(.is-achievements):not(.is-icon)').hidden,
       };
