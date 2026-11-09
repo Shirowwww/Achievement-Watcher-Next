@@ -98,6 +98,24 @@ function writeIni(name, content) {
     'a disabled install reports nothing, even with unlocks already on disk'
   );
 
+  // #171: MarkerPatch 3.1.0 added 8 Severed achievements (indices 51-58) to the same flag. The
+  // list length comes from the mod's English file, and a translation left at the old length falls
+  // back to English instead of dropping the game.
+  const severedRows = Array.from({ length: 59 }, (_, index) => `Achievement ${index}|Description ${index}`);
+  const severed = makeInstall(temp, 'Severed', { rows: severedRows, total: 59 });
+  fs.writeFileSync(path.join(severed, 'achievements', 'txt', 'fr.txt'), severedRows.slice(0, TOTAL).map((row) => `FR ${row}`).join('\n'));
+  const severedSchema = await markerpatch.getGameData({ root: severed }, 'french');
+  assert.strictEqual(severedSchema.achievement.total, 59, 'the Severed achievements are listed');
+  assert.strictEqual(severedSchema.achievement.list[58].displayName, 'Achievement 58', 'an outdated translation falls back to English');
+  fs.writeFileSync(markerpatch.stateFilePath(), settingsText(1, 1 << 26));
+  assert.deepStrictEqual(
+    markerpatch.getAchievements({ root: severed, ini: path.join(severed, 'MarkerPatch.ini') }).map((entry) => entry.id),
+    ['MARKERPATCH_0', 'MARKERPATCH_58'],
+    'bit 58 (high half, bit 26) is a Severed unlock'
+  );
+  const tooMany = makeInstall(temp, 'TooMany', { rows: Array.from({ length: 65 }, (_, index) => `A ${index}|D ${index}`), total: 65 });
+  await assert.rejects(() => markerpatch.getGameData({ root: tooMany }), 'more rows than the 64-bit flag can hold is malformed');
+
   fs.writeFileSync(markerpatch.stateFilePath(), 'Controls.AcL.X = 1\n');
   assert.deepStrictEqual(markerpatch.getAchievements({ root: installDir, ini: path.join(installDir, 'MarkerPatch.ini') }), [], 'a half-written settings.txt is not read as a partial unlock');
 

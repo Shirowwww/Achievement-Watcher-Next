@@ -2,7 +2,7 @@
 
 // Dead Space 2 MarkerPatch (github.com/Wemino/MarkerPatch) adds achievement tracking to the PC
 // port. The mod ships its own resources beside the game - <root>\achievements\txt\<lang>.txt (one
-// "Name|Description" line per achievement, 51 lines) and <root>\achievements\img\<n>.png (0..50) -
+// "Name|Description" line per achievement) and <root>\achievements\img\<n>.png, one per line -
 // so the schema is built entirely from the install the user points at, no network involved. Unlock
 // state lives outside the install, in %LOCALAPPDATA%\EA Games\Dead Space 2\settings.txt, as two
 // 32-bit values (Controls.AcL.X low, Controls.AcL.Y high) that together form one 64-bit bitflag.
@@ -18,7 +18,10 @@ const APPID = 'markerpatch-47780';
 const EXECUTABLE = 'deadspace2.exe';
 const INI_FILE = 'MarkerPatch.ini';
 const ACHIEVEMENTS_DIR = 'achievements';
+// The base game's count. MarkerPatch 3.1.0 added the 8 Severed achievements (51-58, #171), so the
+// real length is read from the mod's English file, up to the 64 bits the unlock flag holds.
 const TOTAL = 51;
+const FLAG_BITS = 64;
 const STATE_RELATIVE_PATH = path.join('EA Games', 'Dead Space 2', 'settings.txt');
 const LANGUAGE_FILES = { english: 'en.txt', german: 'de.txt', spanish: 'es.txt', french: 'fr.txt', italian: 'it.txt' };
 
@@ -205,7 +208,7 @@ function knownInstallRoots({ installDirOf = (appid) => require(path.join(__dirna
   }
 }
 
-function parseLanguageFile(filePath) {
+function parseLanguageFile(filePath, expected = null) {
   let text;
   try {
     text = decodeTextBuffer(fs.readFileSync(filePath));
@@ -221,7 +224,8 @@ function parseLanguageFile(filePath) {
       if (separator <= 0) return null;
       return { displayName: line.slice(0, separator).trim(), description: line.slice(separator + 1).trim() };
     });
-  return rows.length === TOTAL && rows.every(Boolean) ? rows : null;
+  if (rows.length === 0 || rows.length > FLAG_BITS || !rows.every(Boolean)) return null;
+  return expected === null || rows.length === expected ? rows : null;
 }
 
 function iconDirFor() {
@@ -241,7 +245,7 @@ async function getGameData(data, lang = 'english') {
   const english = parseLanguageFile(path.join(found.paths.textDir, LANGUAGE_FILES.english));
   if (!english) throw new Error(`MarkerPatch: '${found.paths.textDir}' English achievement text is missing or malformed`);
   const wanted = LANGUAGE_FILES[lang] ? path.join(found.paths.textDir, LANGUAGE_FILES[lang]) : null;
-  const rows = (wanted && parseLanguageFile(wanted)) || english;
+  const rows = (wanted && parseLanguageFile(wanted, english.length)) || english;
 
   const dir = iconDirFor();
   let iconsWritten = false;
@@ -253,7 +257,7 @@ async function getGameData(data, lang = 'english') {
   }
 
   const list = [];
-  for (let index = 0; index < TOTAL; index += 1) {
+  for (let index = 0; index < rows.length; index += 1) {
     let icon = '';
     const source = path.join(found.paths.imagesDir, `${index}.png`);
     if (iconsWritten && isFile(source)) {
@@ -283,7 +287,8 @@ async function getGameData(data, lang = 'english') {
   };
 }
 
-// Unlock state only, decoded from the one 64-bit flag. Locked entries are simply absent.
+// Unlock state only, decoded from the one 64-bit flag. Locked entries are simply absent, and a bit
+// the installed resources do not describe is dropped by the caller's schema lookup.
 function getAchievements(data) {
   const info = data && typeof data === 'object' ? data : {};
   const iniPath = info.ini || (info.root ? path.join(info.root, INI_FILE) : '');
@@ -293,7 +298,7 @@ function getAchievements(data) {
   if (flag === null) return [];
 
   const list = [];
-  for (let index = 0; index < TOTAL; index += 1) {
+  for (let index = 0; index < FLAG_BITS; index += 1) {
     if ((flag & (1n << BigInt(index))) !== 0n) list.push({ id: `MARKERPATCH_${index}`, achieved: true, earned_time: 0 });
   }
   return list;
