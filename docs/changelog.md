@@ -18,6 +18,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **GOG, Ubisoft, Epic and EA games show which achievements come from a DLC.** Those stores do
+  not say it, so AW Next takes the labels from the same game on Steam, once most of the two lists
+  match. Cyberpunk 2077 on GOG, for example, now marks its Phantom Liberty achievements.
 - **The Millennium plugin and the Playnite extension update themselves.** On Windows, once you have
   installed either one, AW Next reads the latest release a few minutes after it starts (once a day at
   most), checks the file against GitHub's SHA-256 and replaces the installed folder when the release

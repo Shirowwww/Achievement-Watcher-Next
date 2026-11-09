@@ -49,6 +49,7 @@ const uplaySteamTable = require(path.join(appPath, 'uplaySteamTable.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
+const steamCategoryBorrow = require('../util/steamCategoryBorrow.js');
 const { hostPaths } = require('../util/winHosts.js');
 const { xdgAppDirs } = require('../util/xdgAppDirs.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
@@ -3171,6 +3172,31 @@ function borrowSteamHeader(game, sid) {
   game.img.portrait = game.img.portrait || borrowed.portrait;
 }
 
+// Stores that publish no DLC grouping of their own: their labels come from the same game on Steam.
+const CATEGORY_BORROWERS = new Set(['gogOfficial', 'gogUniverseLan', 'ubisoftOfficial', 'uplay', 'lumaplay', 'runeUplay', 'epicOfficial', 'ea']);
+
+async function borrowSteamCategories(game, appid, option) {
+  const list = game.achievement && game.achievement.list;
+  const borrows = CATEGORY_BORROWERS.has(appid.data && appid.data.type) || appid.source === 'epic';
+  if (!borrows || !Array.isArray(list) || list.length === 0 || list.some((entry) => entry && entry.category)) return;
+  try {
+    const sid = /^\d+$/.test(String(game.steamappid || '')) ? String(game.steamappid) : await steam.findAppidByName(game.name);
+    if (!sid) return;
+    const steamGame = await steam.getGameData({
+      appID: sid,
+      lang: option.achievement.lang,
+      fastStart: option.fastStart === true,
+      disableAutoRefresh: option.achievement.disableAutoRefresh === true,
+    });
+    const borrowed = steamCategoryBorrow.borrowCategories(list, steamGame && steamGame.achievement && steamGame.achievement.list);
+    if (!borrowed) return;
+    game.achievement.list = borrowed;
+    debug.log(`[${appid.appid}] DLC labels borrowed from Steam ${sid} (${borrowed.filter((entry) => entry && entry.category).length} achievement(s))`);
+  } catch (err) {
+    debug.log(`[${appid.appid}] no DLC labels from Steam: ${err.message || err}`);
+  }
+}
+
 async function readManualSchema(appid, { option }) {
   const requestedTitle = appid.name || path.basename(appid.data.exe || '', path.extname(appid.data.exe || ''));
   let steamappid = /^\d+$/.test(String(appid.data.storeAppId || '')) ? String(appid.data.storeAppId) : '';
@@ -3517,6 +3543,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 
     game = await schemaReaderFor(appid)(appid, { option, lang: option.achievement.lang, appids });
     if (!game) return;
+    await borrowSteamCategories(game, appid, option);
 
     // Fill gaps only. SteamGridDB returns the full asset set in one cached lookup, which is useful
     // for emulator/manual entries where the native provider often has a title but no library art.
@@ -4964,6 +4991,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
 // Exposed for unit tests.
 module.exports._internal = {
   SOURCE_READERS,
+  borrowSteamCategories,
   normalizeSaveEntry,
   withoutUnearnedArchived,
   removeInertGoldbergSettings,
