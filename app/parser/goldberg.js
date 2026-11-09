@@ -10,6 +10,7 @@ const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
 const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const launcherDetect = require(path.join(__dirname, 'launcherDetect.js'));
 const crackLoaderDetect = require(path.join(__dirname, '..', 'util', 'crackLoaderDetect.js'));
+const coldClient = require(path.join(__dirname, '..', 'util', 'coldClient.js'));
 const winHosts = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
 const unityLayout = require(path.join(__dirname, '..', 'util', 'unityLayout.js'));
@@ -1070,7 +1071,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   const servedByLoader = () => {
     report.loader = servingLoader.name;
     const how = readsOwnSettings ? 'reads the steam_settings beside its loader' : 'keeps its own achievement saves and does not use steam_settings';
-    add('info', 'SERVED_BY_LOADER', `This game is served by ${servingLoader.name}, which ${how}. Nothing to repair here.`);
+    add('info', 'SERVED_BY_LOADER', `This game is served by ${servingLoader.name}, which ${how}.${readsOwnSettings ? '' : ' Nothing to repair here.'}`);
     report.ok = true;
     return report;
   };
@@ -1087,9 +1088,13 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   // A working crack never opens this folder, whoever wrote it, so validating it produced a page of
   // faults on a working game. Swapping a crack that IS the dll (TENOKE, RUNE) for GBE stays a choice
   // Game Health offers, never an error: the crack may be what unlocks the game's DLC.
+  // ColdClient's own steam_settings is read by GBE's steamclient, so it gets the file checks below.
+  const loaderSettings = !!servingLoader && readsOwnSettings && sameDir(path.dirname(steamSettings), servingLoader.dir);
   if (servingLoader) {
     servedByLoader();
-    if (readsOwnSettings && sameDir(path.dirname(steamSettings), servingLoader.dir)) return report;
+    if (loaderSettings) report.dllDirs = [servingLoader.dir];
+  }
+  if (servingLoader && !loaderSettings) {
     const awCreated = awManagedConfig.isCreatedByAw(steamSettings);
     add(
       'info',
@@ -1109,7 +1114,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   // GBE's steamclient (or a renamed build a proxy loads) beside the folder reads it, wherever Valve's
   // steam_api sits. A Denuvo release keeps that dll untouched on purpose (#167).
   const runsBesideSettings = !!crackLoaderDetect.proxyLoadedRuntime(settingsParent);
-  report.settingsBesideDll = runsBesideSettings || (dllDirs.length > 0 ? dllDirs.some((dir) => sameDir(dir, settingsParent)) : null);
+  report.settingsBesideDll = loaderSettings || runsBesideSettings || (dllDirs.length > 0 ? dllDirs.some((dir) => sameDir(dir, settingsParent)) : null);
   if (report.settingsBesideDll === false) {
     add(
       'warning',
@@ -1128,7 +1133,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   const engineUnconfigured = report.engineDllDirs.filter(
     (dir) => !sameDir(dir, settingsParent) && !fs.existsSync(path.join(dir, 'steam_settings'))
   );
-  if (!runsBesideSettings && report.engineDllDirs.length > 0 && engineUnconfigured.length === report.engineDllDirs.length) {
+  if (!loaderSettings && !runsBesideSettings && report.engineDllDirs.length > 0 && engineUnconfigured.length === report.engineDllDirs.length) {
     add(
       'warning',
       'UNREAL_ENGINE_DLL_UNCONFIGURED',
@@ -1153,14 +1158,16 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   report.foreignRuntimeDirs = inertDirs;
   report.proxiedRuntimes = servedRuntimes.filter((entry) => entry.proxied).map((entry) => entry.proxied);
   // Only when NO served folder has a real runtime: one good dll is enough for the setup to work.
-  const allInert = inertDirs.length > 0 && inertDirs.length === servedRuntimes.length;
-  const unityInert = allInert ? [] : unityPluginsNotEmulated(gameDir, runsBesideSettings);
+  const allInert = !loaderSettings && inertDirs.length > 0 && inertDirs.length === servedRuntimes.length;
+  const unityInert = allInert || loaderSettings ? [] : unityPluginsNotEmulated(gameDir, runsBesideSettings);
   if (allInert) {
+    // VOICES38 needs the Valve dll it ships: no runtime is ever swapped in there.
+    const keptBy = inertDirs.map(crackLoaderDetect.steamApiKeptBy).find(Boolean) || '';
     add(
       'error',
       'RUNTIME_DLL_NOT_EMULATOR',
-      `The steam_api dll in ${inertDirs.join(', ')} is not a Goldberg/GBE runtime${report.loader ? ` (${report.loader})` : ''}, so the steam_settings beside it is never read and none of these settings apply.`,
-      { dllDirs: inertDirs, loader: report.loader || '' }
+      `The steam_api dll in ${inertDirs.join(', ')} is not a Goldberg/GBE runtime${report.loader ? ` (${report.loader})` : ''}, so the steam_settings beside it is never read and none of these settings apply.${keptBy ? ` ${keptBy} needs that dll: replacing it crashes the game.` : ''}`,
+      { dllDirs: inertDirs, loader: report.loader || '', ...(keptBy ? { keptBy } : {}) }
     );
   } else if (unityInert.length > 0) {
     report.foreignRuntimeDirs = [...inertDirs, ...unityInert];
@@ -1176,9 +1183,13 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   report.localSaveDir = localSaveDir || null;
   if (localSaveDir) report.save = inspectSaveState(appid, savesRoots, localSaveDir);
 
-  // steam_appid.txt (GBE reads the appid from here or the dll name)
+  // steam_appid.txt (GBE reads the appid from here or the dll name). A ColdClient loader with its own
+  // AppId= never reads it, and coldClient.diagnose() checks that id instead.
   const appidTxt = path.join(steamSettings, 'steam_appid.txt');
-  if (fs.existsSync(appidTxt)) {
+  const loaderConfig = loaderSettings ? coldClient.readConfig(servingLoader.dir) : null;
+  // The loader names the game itself.
+  const loaderNamesAppid = Boolean(loaderConfig && loaderConfig.appIdFromIni);
+  if (!loaderNamesAppid && fs.existsSync(appidTxt)) {
     const onDisk = fs.readFileSync(appidTxt, 'utf8').trim();
     if (report.appid && onDisk && onDisk !== report.appid) {
       add(
@@ -1188,7 +1199,7 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
         { onDisk, expected: String(report.appid), file: appidTxt }
       );
     }
-  } else {
+  } else if (!loaderNamesAppid) {
     add('warning', 'NO_APPID_TXT', 'steam_appid.txt is missing in steam_settings.');
   }
 
@@ -1315,7 +1326,8 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     level in both cases: this is the one part of a complete-looking setup a repair cannot always
     supply, and painting every working repack orange over it would say nothing useful.
   */
-  if (!fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
+  // ColdClient's steamclient answers each interface by the name the game asks for: no list needed.
+  if (!loaderSettings && !fs.existsSync(path.join(steamSettings, 'steam_interfaces.txt'))) {
     const original = originalSteamApiDll([...dllDirs, ...report.engineDllDirs, settingsParent]);
     const proxied = report.proxiedRuntimes[0];
     if (proxied) {

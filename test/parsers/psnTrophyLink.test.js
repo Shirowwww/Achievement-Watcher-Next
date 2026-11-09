@@ -187,3 +187,49 @@ test('a rate limit stops the linking instead of passing for a game with no list'
   await assert.rejects(links.linkGame(ctx, { appid: '1029690', name: 'Sniper Elite 5', achievements }), { code: 'psn-rate-limited' });
   assert.equal(links.isFresh('1029690', 'fr-FR'), false);
 });
+
+test('a name loses its last subtitle or qualifier, never more, and nothing when it has none', () => {
+  assert.equal(links.withoutSubtitle('Sea of Thieves: 2026 Edition'), 'Sea of Thieves');
+  assert.equal(links.withoutSubtitle('Grand Theft Auto V Enhanced (PC)'), 'Grand Theft Auto V Enhanced');
+  assert.equal(links.withoutSubtitle('Cities: Skylines II - PC Edition'), 'Cities: Skylines II', 'only the last part goes');
+  assert.equal(links.withoutSubtitle('Hollow Knight: Silksong'), 'Hollow Knight');
+  assert.equal(links.withoutSubtitle('Grand Theft Auto: Vice City \u2013 The Definitive Edition'), 'Grand Theft Auto: Vice City');
+  assert.equal(links.withoutSubtitle('Forza Horizon 5'), '');
+  assert.equal(links.withoutSubtitle('Sniper Elite 5: Deluxe Edition'), '', 'an edition alone is already dropped by the first try');
+  assert.equal(links.withoutSubtitle(': Nothing'), '');
+});
+
+// A series: its first game on PlayStation, and games of the series named after it.
+const steps = Array.from({ length: 10 }, (_, at) => trophy(at + 1, 'bronze', `Step ${at + 1}`, ''));
+function seedSeries() {
+  lib.writeJson(path.join(lib.cacheRoot(), 'catalog.json'), {
+    version: 2,
+    builtAt: Date.now(),
+    lists: [{ id: 'NPWR30000_00', name: 'Hollow Story', platform: 'PS4', service: 'trophy', icon: '', holder: '1' }],
+  });
+  const fetchImpl = async (url) => (String(url).includes('NPWR30000_00') && !String(url).includes('/trophyGroups?') ? json({ trophies: [trophy(0, 'platinum', 'All', ''), ...steps] }) : json({}, 404));
+  return lib.createContext({ auth, fetchImpl, locale: 'fr-FR' });
+}
+const stepsOf = (count) => Array.from({ length: count }, (_, at) => ({ name: `S${at}`, displayName: `Step ${at + 1}`, description: '' }));
+// Six names of ten in common: enough for a list that bears the game's own name.
+const sequel = () => [...stepsOf(6), ...Array.from({ length: 4 }, (_, at) => ({ name: `N${at}`, displayName: `New ${at}`, description: '' }))];
+
+test('without its subtitle a game finds the list of the same game under its plain name', async () => {
+  const ctx = await seedSeries();
+  const link = await links.linkGame(ctx, { appid: '1717113201', name: 'Hollow Story: 2026 Edition', achievements: stepsOf(10) });
+  assert.equal(link && link.listId, 'NPWR30000_00');
+  assert.equal(Object.keys(link.trophies).length, 10);
+});
+
+test('a sequel is not tied to the first game of its series, even sharing more than half of its names', async () => {
+  const ctx = await seedSeries();
+  assert.equal(await links.linkGame(ctx, { appid: '1668241504', name: 'Hollow Story: Silk', achievements: sequel() }), null);
+  assert.equal(links.readLink('1668241504'), null);
+  assert.equal(links.isFresh('1668241504', 'fr-FR'), true, 'the miss is remembered');
+});
+
+test('a game that bears the plain name keeps the plain rule', async () => {
+  const ctx = await seedSeries();
+  const link = await links.linkGame(ctx, { appid: '44', name: 'Hollow Story', achievements: sequel() });
+  assert.equal(link && link.listId, 'NPWR30000_00', 'links that work today stay as they are');
+});

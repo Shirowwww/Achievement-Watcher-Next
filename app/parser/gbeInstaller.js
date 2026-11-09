@@ -961,6 +961,12 @@ function installDlls({ dllDirs, dlls, writeIfMissing = null, ensureArch = null, 
       summary.perDir.push({ ...entry, sideLoaded: sideLoaded.runtime });
       continue;
     }
+    const keptBy = crackLoaderDetect.steamApiKeptBy(dir);
+    if (keptBy) {
+      log.log(`[gbe] ${dir}: steam_api left as it is, ${keptBy} needs the one it ships`);
+      summary.perDir.push({ ...entry, keptBy });
+      continue;
+    }
     fs.mkdirSync(dir, { recursive: true });
 
     const present = Object.keys(ARCH).filter((key) => fs.existsSync(path.join(dir, ARCH[key].file)));

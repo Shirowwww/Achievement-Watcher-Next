@@ -79,7 +79,10 @@ test('a ColdClient at the game root reads the steam_settings beside it', () => {
 
   const report = goldberg.diagnose({ gameDir: dir, appid: '1392860', schema });
   assert.equal(report.loader, 'ColdClient');
-  assert.deepEqual(report.issues.map((i) => i.code), ['SERVED_BY_LOADER']);
+  const codes = report.issues.map((i) => i.code);
+  assert.equal(codes[0], 'SERVED_BY_LOADER');
+  assert.ok(codes.includes('NO_MAIN_CONFIG'), `GBE underneath: its steam_settings gets the file checks (got ${codes.join(' ')})`);
+  assert.ok(!codes.includes('NO_APPID_TXT'), 'AppId= in the loader ini names the game, no steam_appid.txt needed');
 });
 
 test('a ColdClient folder of its own is named, and its steam_settings is not called unused', () => {
@@ -94,6 +97,12 @@ test('a ColdClient folder of its own is named, and its steam_settings is not cal
   const report = goldberg.diagnose({ gameDir: dir, appid: '1392860', schema });
   assert.equal(report.loader, 'ColdClient');
   assert.equal(report.ok, true);
-  assert.deepEqual(report.issues.map((i) => i.code), ['SERVED_BY_LOADER']);
+  const codes = report.issues.map((i) => i.code);
+  assert.equal(codes[0], 'SERVED_BY_LOADER');
   assert.match(report.issues[0].message, /reads the steam_settings beside its loader/);
+  assert.ok(codes.includes('NO_DLC_CONFIG'), `the loader's own settings are checked (got ${codes.join(' ')})`);
+  for (const code of ['UNUSED_STEAM_SETTINGS', 'SETTINGS_NOT_BESIDE_DLL', 'RUNTIME_DLL_NOT_EMULATOR', 'NO_STEAM_INTERFACES', 'NO_STEAM_INTERFACES_UNRECOVERABLE']) {
+    assert.ok(!codes.includes(code), `${code} is about a steam_api runtime, which ColdClient does not use`);
+  }
+  assert.deepEqual(report.dllDirs, [loaderDir], 'a repair writes beside the loader, the folder its steamclient reads');
 });

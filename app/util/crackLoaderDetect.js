@@ -123,6 +123,24 @@ function proxyLoadedRuntime(dir) {
   return null;
 }
 
+/*
+  VOICES38 runs GBE beside the Valve steam_api it keeps, and swapping that dll crashes the game
+  (#123): its folder is never offered a runtime swap, even when its proxy names no runtime AW Next
+  can find. Names only, as Achievement Enabler recognises the family.
+*/
+const KEEPS_STEAM_API = [{ name: 'VOICES38', markers: ['voices38.v38', 'voices38.dll'] }];
+
+function steamApiKeptBy(dir) {
+  let names;
+  try {
+    names = fs.readdirSync(dir).map((name) => name.toLowerCase());
+  } catch {
+    return '';
+  }
+  const family = KEEPS_STEAM_API.find((entry) => entry.markers.some((marker) => names.includes(marker)));
+  return family ? family.name : '';
+}
+
 function loaderForEntries(entries, dir) {
   const present = new Set(entries.map((e) => e.toLowerCase()));
   // A replaceable loader IS its steam_api dll. Once GBE sits in that dll's place, the loader's ini is
@@ -392,4 +410,4 @@ function runsAsSpacewar(dirs) {
   return false;
 }
 
-module.exports = { runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };
+module.exports = { steamApiKeptBy, runsAsSpacewar, detectWorkingCrackLoader, hasWorkingCrackLoader, servesOnlinePlay, disableLoaderMarkers, switchedLoaderDirs, restoreSwitchedLoader, isEmulatorDll, leavesStatsToSteam, proxyLoadedRuntime, engineDllDirs, EMULATOR_DLL_MARKER, STEAM_API_DLLS };

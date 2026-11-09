@@ -40,6 +40,9 @@ const ACTION = {
   // it. A footer link like the two above, shown while an undo record exists.
   UNDO_REPAIR: 'undo-repair',
   SET_EPIC_ARGS: 'set-epic-args', //  exeList launch arguments built from the Nemirtingas config
+  // exeList.setLoader(): Play starts the ColdClient loader, which starts the configured exe.
+  LAUNCH_VIA_LOADER: 'launch-via-loader',
+  LAUNCH_DIRECT: 'launch-direct', //  exeList.setLoader(appid, '') - Play starts the exe again
 };
 
 // goldberg.diagnose() issue codes that goldberg.repair() actually rewrites. Mirrors the list the
@@ -348,6 +351,39 @@ function loaderFromSceneSaves(signals) {
   return null;
 }
 
+/*
+  A ColdClient loader is checked like the GBE setup it is: its own ini (coldClient.diagnose: the exe it
+  starts, the id it announces, a loader of the exe's architecture) and the steam_settings beside it.
+  Launching through the loader is offered, never applied alone: it is the only way ColdClient
+  serves the game, and the play time still follows the game's own process.
+*/
+function coldClientFindings(signals, goldberg) {
+  const none = { warn: false, params: {}, actions: [] };
+  const coldClient = signals.crackLoader && signals.crackLoader.name === 'ColdClient' ? signals.crackLoader.coldClient : null;
+  if (!coldClient) return none;
+  const settings = goldberg && goldberg.loader === 'ColdClient' ? goldberg : null;
+  // Offline mode has its own one-line fix above, so it is not repeated as a settings topic.
+  const issues = settings ? [...issuesAtLevel(settings, 'error'), ...issuesAtLevel(settings, 'warning')].filter((issue) => issue.code !== 'EMULATOR_OFFLINE') : [];
+  const mismatch = settings ? appidMismatch(settings) : null;
+  const topics = issueTopics(issues);
+  const actions = [];
+  if (issues.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code))) actions.push(ACTION.REPAIR_DATA);
+  if (mismatch) actions.push(ACTION.FIX_APPID);
+  if (coldClient.viaLoader) actions.push(ACTION.LAUNCH_DIRECT);
+  else if (coldClient.launchable) actions.push(ACTION.LAUNCH_VIA_LOADER);
+  return {
+    warn: !!coldClient.problem || topics.length > 0,
+    params: {
+      ...(coldClient.problem ? { coldClient: coldClient.problem } : {}),
+      ...(topics.length > 0 ? { topics } : {}),
+      ...(mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {}),
+      // Said only while it still holds: Play falls back to the exe once the loader no longer starts it.
+      ...(coldClient.viaLoader && coldClient.launchable ? { viaLoader: true } : {}),
+    },
+    actions,
+  };
+}
+
 function emulatorCheck(rawSignals) {
   const signals = rawSignals.crackLoader && rawSignals.crackLoader.name ? rawSignals : { ...rawSignals, crackLoader: loaderFromSceneSaves(rawSignals) };
   // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
@@ -392,7 +428,8 @@ function emulatorCheck(rawSignals) {
     // A loader that is GBE underneath (ColdClient) with offline=1, and nothing recorded: the same
     // cause as EMULATOR_OFFLINE, fixed by changing that one line rather than by any repair.
     const offline = signals.crackLoader.offline === true && num(signals.achievements && signals.achievements.unlocked) === 0;
-    return check('emulator', oldSave || stalled || replacedBy || offline ? LEVEL.WARN : LEVEL.INFO, {
+    const loader = coldClientFindings(signals, goldberg);
+    return check('emulator', oldSave || stalled || replacedBy || offline || loader.warn ? LEVEL.WARN : LEVEL.INFO, {
       params: {
         servedBy: signals.crackLoader.name,
         ...(replacedBy ? { replacedBy } : {}),
@@ -400,8 +437,9 @@ function emulatorCheck(rawSignals) {
         ...(stalled ? { stalled: true, canSwitch } : {}),
         ...(oldSave ? { oldSave: true } : {}),
         ...(offline ? { offline: true } : {}),
+        ...loader.params,
       },
-      actions: [...(offline ? [ACTION.SET_ONLINE] : []), ...(canSwitch ? [ACTION.SWITCH_RUNTIME] : [])],
+      actions: [...(offline ? [ACTION.SET_ONLINE] : []), ...(canSwitch ? [ACTION.SWITCH_RUNTIME] : []), ...loader.actions],
     });
   }
   if (!signals.emulated || !goldberg) return null;
@@ -442,12 +480,18 @@ function emulatorCheck(rawSignals) {
     build over it is the fix, and the same one-file install as above.
   */
   const foreignRuntime = codes.has('RUNTIME_DLL_NOT_EMULATOR');
-  const needsRuntime = engineUnconfigured || foreignRuntime;
+  // A family that needs the Valve dll it ships (VOICES38): swapping it crashes the game.
+  const keptBy = (goldberg.issues || []).map((issue) => issue && issue.code === 'RUNTIME_DLL_NOT_EMULATOR' && issue.data && issue.data.keptBy).find(Boolean) || '';
+  const needsRuntime = (engineUnconfigured || foreignRuntime) && !keptBy;
   const withAppidFix = (actions) => {
     const withRuntime = needsRuntime && !actions.includes(ACTION.INSTALL_RUNTIME) ? [...actions, ACTION.INSTALL_RUNTIME] : actions;
     return mismatch ? [...withRuntime, ACTION.FIX_APPID] : withRuntime;
   };
-  const appidParams = { ...(mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {}), ...(foreignRuntime ? { foreignRuntime: true } : {}) };
+  const appidParams = {
+    ...(mismatch ? { appidOnDisk: mismatch.onDisk, appidExpected: mismatch.expected } : {}),
+    ...(foreignRuntime ? { foreignRuntime: true } : {}),
+    ...(keptBy ? { keptBy } : {}),
+  };
 
   const errors = issuesAtLevel(goldberg, 'error');
   if (errors.length > 0) {
@@ -709,6 +753,8 @@ function explain(state, checks, signals) {
   if (data && data.level === LEVEL.FAIL) return { reason: 'achievement-data-incomplete', params: data.params };
   const nemirtingas = byId(checks, 'nemirtingas');
   if (nemirtingas && nemirtingas.level === LEVEL.WARN) return { reason: 'nemirtingas-setup', params: nemirtingas.params };
+  // The loader would start nothing, the wrong program, or announce another game: before any file topic.
+  if (emulator && emulator.params && emulator.params.coldClient) return { reason: 'coldclient-setup', params: emulator.params };
   // A wrong appid outranks "nothing unlocked yet" below, since it's the actual reason: the
   // emulator announces one game and AW Next watches another.
   if (emulator && emulator.params && emulator.params.appidExpected) return { reason: 'appid-mismatch', params: emulator.params };
@@ -814,6 +860,7 @@ function buildTechnical(signals) {
           issues: (uplay.issues || []).map((issue) => ({ level: issue.level, code: issue.code, message: issue.message })),
         }
       : null,
+    coldClient: signals.crackLoader && signals.crackLoader.coldClient ? { ...signals.crackLoader.coldClient } : null,
     tracking: signals.tracking || { indexed: false, binary: '' },
     counters: signals.counters || null,
     notifications: signals.notifications || {},

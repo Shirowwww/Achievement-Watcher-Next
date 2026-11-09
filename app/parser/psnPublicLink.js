@@ -116,18 +116,27 @@ function exophaseLoader(exophase, lang, state) {
   };
 }
 
-// Exophase pages filed under the game's name, the PS5 list first. No NPWR id: `exophase:<slug>`.
-async function exophaseCandidates(exophase, name, state) {
+const pagesNamed = (hits, name) => {
   const wanted = new Set([lib.normalizedName(name), links.bareName(name)]);
+  return hits
+    .filter((hit) => wanted.has(lib.normalizedName(hit.title)))
+    .sort((a, b) => Number(b.platform === 'ps5') - Number(a.platform === 'ps5'))
+    .map((hit) => ({ id: `exophase:${hit.slug}`, platform: hit.platform.toUpperCase(), service: hit.platform === 'ps5' ? 'trophy2' : 'trophy', slug: hit.slug, exophasePlatform: hit.platform, baseUrl: hit.baseUrl }));
+};
+
+/*
+  Exophase pages filed under the game's name, the PS5 list first, and in `loose` those under its name
+  without the subtitle, within the same page budget. No NPWR id: `exophase:<slug>`.
+*/
+async function exophaseCandidates(exophase, name, state) {
   const hits = await exophase.searchExophaseTrophyLists(name).catch(() => {
     state.failed = true;
     return [];
   });
-  return hits
-    .filter((hit) => wanted.has(lib.normalizedName(hit.title)))
-    .sort((a, b) => Number(b.platform === 'ps5') - Number(a.platform === 'ps5'))
-    .slice(0, EXOPHASE_PAGES_PER_GAME)
-    .map((hit) => ({ id: `exophase:${hit.slug}`, platform: hit.platform.toUpperCase(), service: hit.platform === 'ps5' ? 'trophy2' : 'trophy', slug: hit.slug, exophasePlatform: hit.platform, baseUrl: hit.baseUrl }));
+  const exact = pagesNamed(hits, name).slice(0, EXOPHASE_PAGES_PER_GAME);
+  const short = links.withoutSubtitle(name);
+  const loose = short ? pagesNamed(hits, short).filter((page) => !exact.some((other) => other.id === page.id)) : [];
+  return { exact, loose: loose.slice(0, EXOPHASE_PAGES_PER_GAME - exact.length) };
 }
 
 /*
@@ -157,7 +166,7 @@ async function exophasePlatinumRate(link, name, { exophase = require('./exophase
   const searched = async () =>
     listId.startsWith('exophase:')
       ? [{ slug: listId.slice('exophase:'.length), exophasePlatform: console_ }]
-      : (await exophaseCandidates(exophase, name, state)).sort((a, b) => Number(b.exophasePlatform === console_) - Number(a.exophasePlatform === console_));
+      : (await exophaseCandidates(exophase, name, state)).exact.sort((a, b) => Number(b.exophasePlatform === console_) - Number(a.exophasePlatform === console_));
   for (const candidates of [remembered, null]) {
     for (const candidate of candidates || (await searched())) {
       const page = await exophase.fetchExophaseAchievementsMultiLang({ slug: candidate.slug, platform: candidate.exophasePlatform, baseUrl: candidate.baseUrl, langKeys: ['english'] }).catch(() => {
@@ -178,23 +187,33 @@ async function exophasePlatinumRate(link, name, { exophase = require('./exophase
 }
 
 /*
-  One game: the archive lists named like it, then Exophase. Returns the link, or null when nothing
-  matched or the game waits for budget or a reachable host (then nothing is written).
+  One game: the archive lists named like it, then Exophase, each by the game's name and then by its
+  name without the subtitle. Returns the link, or null when nothing matched or the game waits for
+  budget or a reachable host (then nothing is written).
 */
 async function linkGame(ctx, game, { englishCtx = null, english = null, names = {}, budget, exophase, lang = 'english' }) {
   const state = { failed: false };
-  const lists = listsInIndex(names, game.name);
+  const exact = listsInIndex(names, game.name);
+  const short = links.withoutSubtitle(game.name);
+  const loose = short ? listsInIndex(names, short).filter((list) => !exact.some((other) => other.id === list.id)) : [];
+  // Both names or none: a list read now and the second name left for lack of budget is read again.
+  if (budget.archive < exact.length + loose.length) return null;
+  const archive = archiveLoader(ctx, englishCtx, state);
   let best = null;
-  if (lists.length) {
-    if (budget.archive < lists.length) return null;
+  for (const [lists, rule] of [
+    [exact, undefined],
+    [loose, links.LOOSE_MATCH],
+  ]) {
+    if (best || !lists.length) continue;
     budget.archive -= lists.length;
-    best = await links.bestCandidate(game, lists, archiveLoader(ctx, englishCtx, state), english);
+    best = await links.bestCandidate(game, lists, archive, english, rule);
   }
   if (!best) {
     if (budget.exophase <= 0) return null;
     budget.exophase -= 1;
-    const candidates = await exophaseCandidates(exophase, game.name, state);
-    best = await links.bestCandidate(game, candidates, exophaseLoader(exophase, lang, state), english);
+    const pages = await exophaseCandidates(exophase, game.name, state);
+    const load = exophaseLoader(exophase, lang, state);
+    best = (await links.bestCandidate(game, pages.exact, load, english)) || (await links.bestCandidate(game, pages.loose, load, english, links.LOOSE_MATCH));
   }
   if (!best && state.failed) return null;
   return links.saveLink(game.appid, best, ctx.locale);

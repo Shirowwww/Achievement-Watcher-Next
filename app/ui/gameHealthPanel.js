@@ -19,6 +19,7 @@ const { createHealthIgnoreStore } = require(path.join(appPath, 'util/healthIgnor
 // so none of the process-tracking or Steam-emulator reasoning applies to them.
 const { isOfficialPlatformSource } = require(path.join(appPath, 'util/achievementResetTargets.js'));
 const nemirtingasEpic = require(path.join(appPath, 'util/nemirtingasEpic.js'));
+const coldClient = require(path.join(appPath, 'util/coldClient.js'));
 
 // Tab labels re-applied on every open, not once at startup: the panel outlives a language change,
 // and locale/loader.js doesn't know about these tabs, so a one-shot binding would freeze them.
@@ -217,6 +218,29 @@ function safeNemirtingasDiagnose(gameDir, launchArgs) {
   }
 }
 
+/*
+  What the ColdClient row needs: the loader's own problem, whether Play could start it instead of the
+  exe (Windows only, and only for the exe Play starts today) and whether it already does.
+*/
+function coldClientSignal(loader, { gameDir, appid, exe, launchLoader }) {
+  let report = null;
+  try {
+    report = coldClient.diagnose({ loaderDir: loader.dir, gameDir, appid });
+  } catch (err) {
+    debug.log(`[health] ColdClient check failed for ${loader.dir} => ${formatErr(err)}`);
+  }
+  if (!report) return { problem: '', launchable: false, viaLoader: false };
+  return {
+    problem: report.problem,
+    exe: report.exe,
+    exeArch: report.exeArch,
+    appId: report.appId,
+    loader: report.loader,
+    launchable: process.platform === 'win32' && coldClient.startsExe(report, exe),
+    viaLoader: !!launchLoader && process.platform === 'win32',
+  };
+}
+
 // The scan host's answer for one of its folder walks, or the walk done here when it has none.
 function fromProbe(entry, walkHere) {
   return entry && !entry.error ? entry.value : walkHere();
@@ -294,7 +318,9 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   // replaced steam_api dll on disk, or a save already being read out of GSE/Goldberg.
   let goldbergReport = null;
   let emulated = false;
-  if (!isConsole && !isUbisoft && !foreignLoader && gameDirExists) {
+  // ColdClient is GBE underneath: its own steam_settings is diagnosed, the game stays loader-served.
+  const coldClientServed = !!foreignLoader && foreignLoader.name === 'ColdClient';
+  if (!isConsole && !isUbisoft && (!foreignLoader || coldClientServed) && gameDirExists) {
     try {
       const emu = fromProbe(probe && probe.emulator, () => goldberg.detectEmulator(gameDir));
       /*
@@ -305,8 +331,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
       const hasSetupOnDisk = isOfficialPlatformSource(source)
         ? !!emu.steamSettings || emu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll))
         : emu.type !== 'none' || !!emu.steamSettings || emu.dll.length > 0;
-      if (hasSetupOnDisk || (readsGoldbergSave && !usesUplayLayer)) {
-        emulated = true;
+      if (coldClientServed || hasSetupOnDisk || (readsGoldbergSave && !usesUplayLayer)) {
+        emulated = !coldClientServed;
         // The panel the user opens asks Steam once (cached a week) for the counters an older cached schema lacks.
         if (!readOnly) await require(path.join(appPath, 'parser/statProgress.js')).attachOfficialCounters(game, writableAppid, { cacheDir: getUserDataPath() }).catch((err) => {
           debug.log(`[health] official counters failed for ${writableAppid} => ${formatErr(err)}`);
@@ -389,6 +415,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
           replaceable: foreignLoader.replaceable === true,
           ...(foreignLoader.replacedBy ? { replacedBy: foreignLoader.replacedBy } : {}),
           ...(goldberg.offlineModeIn(loaderSteamSettings(foreignLoader)) ? { offline: true } : {}),
+          // cfg.exe, not the detected one: the loader action writes beside that exeList entry.
+          ...(coldClientServed ? { coldClient: coldClientSignal(foreignLoader, { gameDir, appid: writableAppid, exe: cfg.exe, launchLoader: cfg.loader }) } : {}),
         }
       : null,
     // A folder set up with the Nemirtingas Epic emulator, and what it still needs before it saves (#112).
@@ -505,6 +533,14 @@ function gameHealthExplanationText(report) {
     case 'emulator-runtime-missing':
       return t('gh-why-emulator-runtime-missing', 'The achievement data is in place, but the emulator file that reads it is missing from the game folder, so nothing will ever be recorded. AW Next can put it back.', "Les données de succès sont en place, mais le fichier d'émulateur qui les lit est absent du dossier du jeu : rien ne sera jamais enregistré. AW Next peut le remettre.");
     case 'emulator-runtime-foreign':
+      if (p.keptBy) {
+        return t(
+          'gh-why-emulator-runtime-kept',
+          'The achievement data is in place, but this {keptBy} release does not load the emulator files AW Next found, and it needs the Steam file it ships: replacing that file crashes the game, so nothing is swapped here. Check that the release still has all of its own files.',
+          "Les données de succès sont en place, mais cette version {keptBy} ne charge pas les fichiers d'émulateur trouvés par AW Next, et elle a besoin du fichier Steam qu'elle fournit : le remplacer fait planter le jeu, donc rien n'est échangé ici. Vérifie que la version a encore tous ses fichiers.",
+          p
+        );
+      }
       return t('gh-why-emulator-runtime-foreign', 'The achievement data is in place, but the Steam file this game loads comes from another crack and never reads it, so nothing will ever be recorded there. AW Next can install the supported emulator over it - the current file is kept.', "Les données de succès sont en place, mais le fichier Steam chargé par ce jeu vient d'un autre crack et ne les lit jamais : rien n'y sera jamais enregistré. AW Next peut installer l'émulateur pris en charge par-dessus, le fichier actuel étant conservé.");
     case 'uplay-broken':
       return t('gh-why-uplay-broken', 'The Ubisoft emulator setup for this game is incomplete, so unlocks are not being recorded. Use the Uplay R1/R2 repair button below.', "La configuration de l'émulateur Ubisoft de ce jeu est incomplète : les déblocages ne sont pas enregistrés. Utilise le bouton de réparation Uplay R1/R2 ci-dessous.", p);
@@ -538,6 +574,13 @@ function gameHealthExplanationText(report) {
         'gh-why-nemirtingas-setup',
         'This game uses the Nemirtingas Epic emulator, which records achievements only once it is set up as the Epic emulator row below says.',
         "Ce jeu utilise l'émulateur Epic de Nemirtingas, qui n'enregistre les succès qu'une fois configuré comme l'indique la ligne Émulateur Epic ci-dessous."
+      );
+    case 'coldclient-setup':
+      return t(
+        'gh-why-coldclient-setup',
+        'ColdClient serves this game, but {problem}, so the achievements it records cannot reach this game. Correct ColdClientLoader.ini beside the loader: AW Next only reads it.',
+        "ColdClient prend ce jeu en charge, mais {problem} : les succès qu'il enregistre ne peuvent pas arriver à ce jeu. Corrige ColdClientLoader.ini à côté du loader : AW Next se contente de le lire.",
+        { problem: gameHealthColdClientProblem(p.coldClient) }
       );
     case 'appid-mismatch':
       return t('gh-why-appid-mismatch', 'The emulator in this game’s folder announces game ID {appidOnDisk}, but AW Next matched this game to {appidExpected}. Achievements unlocked under the wrong ID are recorded against another game. Correct the file if {appidExpected} is the right game - the current value is kept.', 'L’émulateur du dossier de ce jeu annonce l’identifiant {appidOnDisk}, alors qu’AW Next a associé ce jeu à {appidExpected}. Les succès débloqués sous le mauvais identifiant sont enregistrés sur un autre jeu. Corrige le fichier si {appidExpected} est le bon jeu - la valeur actuelle est conservée.', p);
@@ -666,7 +709,7 @@ function gameHealthSimpleCheckValue(entry) {
     case 'uplay':
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
-      if (p.oldSave || p.stalled || p.replacedBy || p.offline) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
+      if (p.oldSave || p.stalled || p.replacedBy || p.offline || p.coldClient || (p.servedBy && p.topics)) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
       if (p.servedBy) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.
@@ -863,7 +906,10 @@ function gameHealthCheckValue(entry, simple) {
         const servedBy = t('gh-value-served-by', 'served by {emulator}', 'pris en charge par {emulator}', { emulator: p.servedBy });
         if (p.serverAwarded) return `${servedBy} · ${t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement')}`;
         if (p.spacewar) return `${servedBy} · ${t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès')}`;
+        if (p.coldClient) return `${servedBy} · ${gameHealthColdClientProblem(p.coldClient)}`;
         if (p.offline) return `${servedBy} · ${gameHealthIssueTopicLabel('offline')}`;
+        if (p.topics && p.topics.length) return [servedBy, ...p.topics.map(gameHealthIssueTopicLabel)].join(' · ');
+        if (p.viaLoader) return `${servedBy} · ${t('gh-value-coldclient-via-loader', 'Play starts it through its loader', 'Jouer le lance par son loader')}`;
         if (p.replacedBy) return `${servedBy} · ${t('gh-value-runtime-replaced', 'steam_api.dll replaced by {replacedBy}', 'steam_api.dll remplacé par {replacedBy}', { replacedBy: p.replacedBy })}`;
         if (p.oldSave) return `${servedBy} · ${t('gh-value-old-goldberg-save', 'the only save found is an old Goldberg one it never writes', 'la seule sauvegarde trouvée est une ancienne sauvegarde Goldberg qu’il n’écrit jamais')}`;
         return p.idle ? `${servedBy} · ${t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant')}` : servedBy;
@@ -914,9 +960,29 @@ function gameHealthCheckValue(entry, simple) {
   }
 }
 
+// What stops a ColdClient loader from serving the game, as coldClient.diagnose() names it.
+function gameHealthColdClientProblem(problem) {
+  switch (problem) {
+    case 'exe-missing':
+      return t('gh-value-coldclient-exe-missing', 'the game file its loader starts is missing', 'le fichier du jeu que lance son loader est introuvable');
+    case 'exe-outside':
+      return t('gh-value-coldclient-exe-outside', 'its loader starts a program outside this game folder', 'son loader lance un programme hors du dossier de ce jeu');
+    case 'arch-mismatch':
+      return t('gh-value-coldclient-arch', 'no loader matches the game (32 or 64 bits)', 'aucun loader ne correspond au jeu (32 ou 64 bits)');
+    default:
+      return t('gh-value-coldclient-appid', 'its loader announces another game ID', 'son loader annonce un autre identifiant de jeu');
+  }
+}
+
 // The same words in Simple and Advanced: a save path AW Next cannot read, else an optional hint.
 function gameHealthNemirtingasValue(entry) {
   const p = entry.params || {};
+  if (p.problem === 'dll-not-emulator') {
+    return t('gh-value-nemirtingas-epic-dll', "Epic's own EOSSDK file is still in place, so the emulator never loads", 'le fichier EOSSDK d’Epic est toujours en place : l’émulateur ne se charge jamais');
+  }
+  if (p.problem === 'appid-placeholder') {
+    return t('gh-value-nemirtingas-appid', 'AppId in NemirtingasEpicEmu.json is still the sample value of zeros - set it to the game’s Epic ID', 'AppId dans NemirtingasEpicEmu.json est encore la valeur d’exemple faite de zéros : mets l’identifiant Epic du jeu');
+  }
   if (p.problem === 'save-path') {
     return t('gh-value-nemirtingas-save-path', 'saves are not written to AppData - set SavePath to "appdata" in NemirtingasEpicEmu.json', 'les sauvegardes ne vont pas dans AppData : mets SavePath sur "appdata" dans NemirtingasEpicEmu.json');
   }
@@ -968,6 +1034,10 @@ function gameHealthActionLabel(action) {
       return t('gh-action-fetch-progress', 'Fetch progress counters', 'Récupérer les compteurs de progression');
     case gameHealth.ACTION.SET_EPIC_ARGS:
       return t('gh-action-epic-args', 'Add the Epic launch arguments', 'Ajouter les arguments de lancement Epic');
+    case gameHealth.ACTION.LAUNCH_VIA_LOADER:
+      return t('gh-action-launch-via-loader', 'Play through the ColdClient loader', 'Jouer par le loader ColdClient');
+    case gameHealth.ACTION.LAUNCH_DIRECT:
+      return t('gh-action-launch-direct', 'Play the game file directly', 'Lancer directement le fichier du jeu');
     default:
       return t('gh-action-test-notification', 'Send a test notification', 'Envoyer une notification de test');
   }
@@ -1440,6 +1510,23 @@ async function runGameHealthAction(appid, action, button) {
     return true;
   }
 
+  /*
+    Play starts the ColdClient loader, which starts the configured exe. The game is put in the
+    Watchdog's index first: the play time follows the game's own process, and an unindexed game
+    would have the loader recorded as its executable instead.
+  */
+  if (action === gameHealth.ACTION.LAUNCH_VIA_LOADER || action === gameHealth.ACTION.LAUNCH_DIRECT) {
+    if (action === gameHealth.ACTION.LAUNCH_DIRECT) return exeList.setLoader(appid, '');
+    const cfg = await exeList.get(appid);
+    const loader = game.gameDir ? crackLoaderDetect.detectWorkingCrackLoader(game.gameDir) : null;
+    const report = loader && loader.name === 'ColdClient' ? coldClient.diagnose({ loaderDir: loader.dir, gameDir: game.gameDir, appid: writableAppid }) : null;
+    if (!cfg || !coldClient.startsExe(report, cfg.exe)) return false;
+    if (!gameIndex.get(appid)) {
+      gameIndex.upsert({ appid, name: game.name || '', binary: path.basename(cfg.exe), exePath: cfg.exe, icon: game.img?.icon || '', source: game.source || '' });
+    }
+    return exeList.setLoader(appid, report.loader);
+  }
+
   if (action === gameHealth.ACTION.START_TRACKING) {
     const cfg = await exeList.get(appid);
     const exe = (cfg && cfg.exe) || game.exe || '';
@@ -1457,7 +1544,9 @@ async function runGameHealthAction(appid, action, button) {
   if (action === gameHealth.ACTION.FIX_APPID) {
     const report = $('#game-health').data('report');
     const params = (report && report.checks.find((entry) => entry.id === 'emulator')?.params) || {};
-    const steamSettings = game.steamSettings || (game.gameDir ? path.join(game.gameDir, 'steam_settings') : '');
+    // A ColdClient loader reads the steam_settings beside it, the one its diagnosis named.
+    const loaderSettings = report && report.technical && report.technical.coldClient && report.technical.goldberg ? report.technical.goldberg.steamSettings : '';
+    const steamSettings = loaderSettings || game.steamSettings || (game.gameDir ? path.join(game.gameDir, 'steam_settings') : '');
     if (!params.appidExpected || !steamSettings) return false;
 
     // AW Next's guess is only the starting value: another game can share this one's name, so the

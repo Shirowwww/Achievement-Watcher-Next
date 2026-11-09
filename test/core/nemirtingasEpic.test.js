@@ -76,6 +76,27 @@ test('only a save path outside AppData is a fault', () => {
   assert.equal(placeholder.hint, '', 'no arguments can be built without a real namespace, so none are offered');
 });
 
+test('the sample AppId of 32 zeros is a fault, and no arguments are built from it', () => {
+  const zeros = nemirtingas.diagnose({ gameDir: gameWith('Zeros', config({ appId: '0'.repeat(32) })), appData: emptyAppData });
+  assert.equal(zeros.problem, 'appid-placeholder', 'saves would go under no real game');
+  assert.equal(zeros.appId, '');
+  assert.equal(zeros.suggestedArgs, '');
+  assert.equal(zeros.hint, '');
+});
+
+test('Epic’s own EOSSDK left in place outranks every other finding', () => {
+  const gameDir = gameWith('Original Dll', config({ appId: '0'.repeat(32), savePath: 'saves' }));
+  const report = nemirtingas.diagnose({ gameDir, appData: emptyAppData, signedByEpic: (file) => file.endsWith('EOSSDK-Win64-Shipping.dll') });
+  assert.equal(report.problem, 'dll-not-emulator', 'the emulator never loads while that dll is in place');
+  assert.equal(nemirtingas.diagnose({ gameDir, appData: emptyAppData }).problem, 'appid-placeholder', 'an unsigned build is the emulator');
+});
+
+test('a file that is not signed by Epic is never taken for Epic’s library', () => {
+  // node.exe is a real signed program, signed by somebody else.
+  assert.equal(nemirtingas.isEpicLibrary(process.execPath), false);
+  assert.equal(nemirtingas.isEpicLibrary(path.join(root, 'missing.dll')), false);
+});
+
 test('the older flat config is read too, and an unknown save path raises nothing', () => {
   const flat = nemirtingas.diagnose({ gameDir: gameWith('Flat', { appid: 'CrabTest', username: 'Shirow', savepath: 'appdata', enable_overlay: true }), appData: emptyAppData });
   assert.equal(flat.problem, '');

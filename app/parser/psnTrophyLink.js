@@ -22,6 +22,9 @@ const LINK_VERSION = 3;
 const MIN_SHARE = 0.5;
 // "Definitive Edition" on one store is often the plain name on the other.
 const EDITION_SUFFIX = /\s*[-:]?\s*(game of the year|goty|definitive|complete|deluxe|remastered|enhanced|ultimate|gold|director s cut)( edition)?$/;
+const SUBTITLE_SEPARATORS = [':', ' - ', ' \u2013 ', ' \u2014 ', ' ('];
+// A list found under the name without its subtitle: a game of the same series shares a few names.
+const LOOSE_MATCH = { share: 0.8 };
 
 const linkFile = (appid) => read.linkFile(appid, lib.cacheRoot());
 
@@ -44,6 +47,24 @@ function candidatesFor(name) {
 }
 
 const bareName = (name) => lib.normalizedName(name).replace(EDITION_SUFFIX, '');
+
+/*
+  The name before its last subtitle or qualifier, for a second try: "Sea of Thieves: 2026 Edition",
+  "Grand Theft Auto V Enhanced (PC)". Empty when that changes nothing the first try did not.
+*/
+function withoutSubtitle(name) {
+  const cleaned = lib.cleanTitleName(name);
+  const at = Math.max(...SUBTITLE_SEPARATORS.map((separator) => cleaned.lastIndexOf(separator)));
+  const cut = at > 0 ? cleaned.slice(0, at).trim() : '';
+  return cut && bareName(cut) && bareName(cut) !== bareName(cleaned) ? cut : '';
+}
+
+// The cut part may be a real subtitle (Hollow Knight: Silksong), so most achievements must tie.
+function looseCandidates(name, tried) {
+  const short = withoutSubtitle(name);
+  const seen = new Set(tried.map((list) => list.id));
+  return short ? candidatesFor(short).filter((list) => !seen.has(list.id)) : [];
+}
 
 /*
   The catalog first, then the store for a game no public hunter played. `budget.store` caps the store
@@ -133,11 +154,11 @@ const sonyLoader = (ctx, englishCtx) => (candidate) => {
 };
 
 /*
-  The candidate list whose trophies match the most achievements, above MIN_MATCHED and MIN_SHARE, or
-  null. `load(candidate)` gives { definitions(), english() }: the list in the link's language, and
-  the same trophies in English (same trophyId) for a second chance, or no `english` at all.
+  The candidate list whose trophies match the most achievements, above MIN_MATCHED and `share` of the
+  smaller list, or null. `load(candidate)` gives { definitions(), english() }: the list in the link's
+  language, and the same trophies in English (same trophyId) for a second chance, or no `english`.
 */
-async function bestCandidate(game, lists, load, english) {
+async function bestCandidate(game, lists, load, english, { share = MIN_SHARE } = {}) {
   const englishTexts = Array.isArray(english) ? english : game.achievements;
   let best = null;
   for (const candidate of lists) {
@@ -152,7 +173,7 @@ async function bestCandidate(game, lists, load, english) {
       const englishMatched = matchTrophies(englishTexts, (englishDefs && englishDefs.trophies) || []).matched;
       for (const [name, trophy] of englishMatched) if (!matched.has(name) && byId.has(trophy.trophyId)) matched.set(name, byId.get(trophy.trophyId));
     }
-    const needed = Math.max(MIN_MATCHED, Math.ceil(MIN_SHARE * comparable));
+    const needed = Math.max(MIN_MATCHED, Math.ceil(share * comparable));
     if (matched.size >= needed && (!best || matched.size > best.matched.size)) best = { candidate, definitions, groups, matched };
   }
   return best;
@@ -169,7 +190,8 @@ function saveLink(appid, best, locale) {
 async function linkGame(ctx, game, { englishCtx = null, english = null, budget = null, onMiss = null } = {}) {
   const { lists, settled } = await findCandidates(ctx, game.name, budget);
   if (!settled) return null;
-  const best = await bestCandidate(game, lists, sonyLoader(ctx, englishCtx), english);
+  const load = sonyLoader(ctx, englishCtx);
+  const best = (await bestCandidate(game, lists, load, english)) || (await bestCandidate(game, looseCandidates(game.name, lists), load, english, LOOSE_MATCH));
   if (!best && onMiss) {
     onMiss(game);
     return null;
@@ -189,4 +211,4 @@ function englishAchievementsOf(userDataDir, appid) {
   return list.map((entry) => ({ name: String((entry && entry.name) || ''), displayName: String((entry && entry.displayName) || ''), description: String((entry && entry.description) || '') }));
 }
 
-module.exports = { readLink, isFresh, candidatesFor, bareName, matchTrophies, bestCandidate, saveLink, linkGame, linkFile, englishAchievementsOf, MAX_CANDIDATES };
+module.exports = { readLink, isFresh, candidatesFor, bareName, withoutSubtitle, matchTrophies, bestCandidate, saveLink, linkGame, linkFile, englishAchievementsOf, MAX_CANDIDATES, LOOSE_MATCH };

@@ -26,10 +26,11 @@ Module._load = function patchedLoad(request, parent, isMain) {
 const achievements = require('../../app/parser/achievements.js');
 const libraryDirs = require('../../app/parser/libraryDirs.js');
 const steam = require('../../app/parser/steam.js');
+const { peBytes } = require('../helpers/fakePe.js');
 
 function writeBytes(file, size) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, Buffer.alloc(size, 1));
+  fs.writeFileSync(file, /\.exe$/i.test(file) ? peBytes(size) : Buffer.alloc(size, 1));
 }
 
 test('Goldberg install with steam_settings but no appid resolves by game name, bare exe folders do not', async (t) => {

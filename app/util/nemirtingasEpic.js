@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const { hostPath, hostPaths, hostsFor } = require(path.join(__dirname, 'winHosts.js'));
+const authenticode = require(path.join(__dirname, 'authenticode.js'));
 
 const CONFIG_DIR = 'nepice_settings';
 const CONFIG_FILE = 'NemirtingasEpicEmu.json';
@@ -27,11 +28,17 @@ const MAX_DIRS = 1500;
 // The password value the emulator expects in place of a real exchange code (any 32 hex chars).
 const AUTH_PASSWORD = 'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd';
 const PLACEHOLDER = /^<.*>$|^$/;
+// The emulator's sample config ships AppId as 32 zeros: a value nobody set, like an empty one.
+const ZERO_APPID = /^0+$/;
 // The library the emulator replaces: EOSSDK-Win64-Shipping.dll, EOSSDK-Win32-Shipping.dll.
 const EOS_LIBRARY = /^eossdk-win(32|64)-shipping\.dll$/i;
+// Epic signs its own EOSSDK; no emulator build can carry that signature (checked on a real one).
+const EPIC_SIGNER = /(^|,\s*)O=Epic Games Inc\.(,|$)/;
 
-function findConfig(gameDir) {
-  if (!gameDir) return '';
+// The config file and the EOS libraries beside its folder, '' and [] when there is none.
+function findSetup(gameDir) {
+  const none = { configFile: '', libraries: [] };
+  if (!gameDir) return none;
   const queue = [{ dir: gameDir, depth: 0 }];
   let seen = 0;
   while (queue.length > 0 && seen < MAX_DIRS) {
@@ -48,13 +55,35 @@ function findConfig(gameDir) {
       const child = path.join(dir, entry.name);
       if (entry.name.toLowerCase() === CONFIG_DIR) {
         const file = path.join(child, CONFIG_FILE);
-        if (fs.existsSync(file) && entries.some((sibling) => EOS_LIBRARY.test(sibling.name))) return file;
+        const libraries = entries.filter((sibling) => sibling.isFile() && EOS_LIBRARY.test(sibling.name)).map((sibling) => path.join(dir, sibling.name));
+        if (fs.existsSync(file) && libraries.length > 0) return { configFile: file, libraries };
       } else if (depth < MAX_DEPTH) {
         queue.push({ dir: child, depth: depth + 1 });
       }
     }
   }
-  return '';
+  return none;
+}
+
+// Each verdict reads and hashes a 20 MB file, so it is kept while the file's size and date hold.
+const epicVerdicts = new Map();
+const MAX_EPIC_VERDICTS = 256;
+
+// Epic's own EOSSDK left in place: the emulator never loads, whatever its config says.
+function isEpicLibrary(file) {
+  try {
+    const stat = fs.statSync(file);
+    const stamp = `${stat.size}:${stat.mtimeMs}`;
+    const known = epicVerdicts.get(file);
+    if (known && known.stamp === stamp) return known.epic;
+    const signature = authenticode.inspectSignature(fs.readFileSync(file));
+    const epic = signature.Status === 'Valid' && EPIC_SIGNER.test((signature.SignerCertificate && signature.SignerCertificate.Subject) || '');
+    if (epicVerdicts.size >= MAX_EPIC_VERDICTS) epicVerdicts.clear();
+    epicVerdicts.set(file, { stamp, epic });
+    return epic;
+  } catch {
+    return false;
+  }
 }
 
 function text(value) {
@@ -90,7 +119,7 @@ function readSettings(raw) {
 }
 
 function hasAppId(settings) {
-  return !PLACEHOLDER.test(settings.appId);
+  return !PLACEHOLDER.test(settings.appId) && !ZERO_APPID.test(settings.appId);
 }
 
 // The arguments an Epic launcher would pass, built from the emulator's own config.
@@ -146,13 +175,15 @@ function hasSavedFor(appId, appData = hostPaths('APPDATA')) {
 }
 
 /*
-  The report Game Health shows. `problem` is set only for a save path AW Next cannot read.
-  `hint` is 'launch-args' while nothing was saved for the game and no Epic arguments are set; the
-  overlay flag reminds that the plugin crashed the reporter's game. A config that cannot be parsed
-  right now (the emulator may be rewriting it) reports nothing rather than a guess.
+  The report Game Health shows. `problem` names what keeps the unlocks from AW Next, first cause
+  first: 'dll-not-emulator' (Epic's own EOSSDK is still the library loaded), 'appid-placeholder'
+  (the sample's AppId of zeros, so saves go under no real game) or 'save-path' (saves outside
+  AppData). `hint` is 'launch-args' while nothing was saved for the game and no Epic arguments are
+  set; the overlay flag reminds that the plugin crashed the reporter's game. A config that cannot
+  be parsed right now (the emulator may be rewriting it) reports nothing rather than a guess.
 */
-function diagnose({ gameDir, launchArgs = '', appData = appDataFolders(gameDir) } = {}) {
-  const configFile = findConfig(gameDir);
+function diagnose({ gameDir, launchArgs = '', appData = appDataFolders(gameDir), signedByEpic = isEpicLibrary } = {}) {
+  const { configFile, libraries } = findSetup(gameDir);
   if (!configFile) return null;
   let settings;
   try {
@@ -161,7 +192,9 @@ function diagnose({ gameDir, launchArgs = '', appData = appDataFolders(gameDir) 
     return null;
   }
   const savesInAppData = settings.savePath === null ? null : settings.savePath.toLowerCase() === 'appdata';
-  const problem = savesInAppData === false ? 'save-path' : '';
+  let problem = savesInAppData === false ? 'save-path' : '';
+  if (ZERO_APPID.test(settings.appId)) problem = 'appid-placeholder';
+  if (libraries.every(signedByEpic)) problem = 'dll-not-emulator';
   const suggestedArgs = launchArguments(settings);
   const hint =
     !problem && suggestedArgs && !hasEpicArguments(launchArgs) && !hasSavedFor(settings.appId, appData) ? 'launch-args' : '';
@@ -175,4 +208,4 @@ function diagnose({ gameDir, launchArgs = '', appData = appDataFolders(gameDir) 
   };
 }
 
-module.exports = { CONFIG_FILE, findConfig, readSettings, launchArguments, hasEpicArguments, hasSavedFor, diagnose };
+module.exports = { CONFIG_FILE, readSettings, launchArguments, hasEpicArguments, hasSavedFor, isEpicLibrary, diagnose };

@@ -179,6 +179,47 @@ test('an unreachable Exophase or archive is not taken for a game with no list', 
   assert.equal(links.isFresh('100', 'en-US'), false);
 });
 
+test('without its subtitle a game finds its archive list, or its Exophase page from the same search', async () => {
+  const edition = { ...englishGame, appid: '102', name: 'Sniper Story: 2026 Edition' };
+  assert.equal(await pub.linkGames([edition], { fetchImpl: network().fetchImpl, exophase: noExophase }), 1);
+  assert.equal(links.readLink('102').listId, 'NPWR10000_00');
+
+  const exo = fakeExophase();
+  assert.equal(await pub.linkGames([{ ...eldenRing, appid: '103', name: 'ELDEN RING (PC)' }], { fetchImpl: network().fetchImpl, exophase: exo }), 1);
+  assert.equal(links.readLink('103').listId, 'exophase:elden-ring-psn');
+  assert.deepEqual(exo.asked.filter(([kind]) => kind === 'search'), [['search', 'ELDEN RING (PC)']], 'one search serves both names');
+  assert.equal(exo.asked.filter(([kind]) => kind === 'page').length, 2, 'no more pages than for a game found under its own name');
+});
+
+test('a game waits for budget enough for both of its names before any archive list is read', async () => {
+  const calls = [];
+  const fetchImpl = async (url) => {
+    calls.push(String(url));
+    if (String(url).includes('NPWR10000_00')) return json(archived.en);
+    return json({ npCommunicationId: 'NPWR20000_00', trophies: [trophy(0, 'platinum', 'Other', ''), trophy(1, 'bronze', 'Elsewhere', '')] });
+  };
+  const ctx = lib.publicContext({ fetchImpl });
+  const names = { 'sniper story ghost': [{ id: 'NPWR20000_00', platform: 'PS4' }], 'sniper story': [{ id: 'NPWR10000_00', platform: 'PS4' }] };
+  const game = { ...englishGame, appid: '106', name: 'Sniper Story: Ghost' };
+  const short = { archive: 1, exophase: 1 };
+  assert.equal(await pub.linkGame(ctx, game, { names, budget: short, exophase: noExophase }), null);
+  assert.deepEqual([calls.length, short.archive], [0, 1], 'nothing read, nothing spent');
+  const link = await pub.linkGame(ctx, game, { names, budget: { archive: 2, exophase: 1 }, exophase: noExophase });
+  assert.equal(link && link.listId, 'NPWR10000_00');
+});
+
+test('a sequel is not tied to the Exophase page of the first game of its series', async () => {
+  const steps = Array.from({ length: 5 }, (_, at) => ({ index: at + 2, grade: 'B', titles: { english: `Step ${at}` }, descriptions: { english: '' }, icon_url: 'https://m.exophase.com/s.png' }));
+  const exo = {
+    searchExophaseTrophyLists: async () => [{ title: 'Hollow Story', slug: 'hollow-story-psn', platform: 'ps4', baseUrl: 'https://www.exophase.com/game/hollow-story-psn/trophies/' }],
+    fetchExophaseAchievementsMultiLang: async () => ({ items: [exoItems[0], ...steps] }),
+  };
+  // Three names of five: enough for a page that bears the game's own name.
+  const achievements = [0, 1, 2].map((at) => ({ name: `S${at}`, displayName: `Step ${at}`, description: '' })).concat([{ name: 'N1', displayName: 'New', description: '' }, { name: 'N2', displayName: 'Other', description: '' }]);
+  assert.equal(await pub.linkGames([{ appid: '104', name: 'Hollow Story: Silk', achievements }], { fetchImpl: network().fetchImpl, exophase: exo }), 0);
+  assert.equal(await pub.linkGames([{ appid: '105', name: 'Hollow Story', achievements }], { fetchImpl: network().fetchImpl, exophase: exo }), 1);
+});
+
 test('a game already linked is not looked up again', async () => {
   const net = network();
   await pub.linkGames([englishGame], { fetchImpl: net.fetchImpl, exophase: noExophase });

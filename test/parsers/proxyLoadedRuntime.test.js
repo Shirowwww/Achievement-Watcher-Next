@@ -90,6 +90,25 @@ function codesOf(report) {
   eq(crackLoaderDetect.proxyLoadedRuntime(dir), null, 'a GBE file nothing loads is not a runtime');
   const report = goldberg.diagnose({ gameDir: dir, appid: '3357650', schema: null, savesRoots: [] });
   ok(codesOf(report).includes('RUNTIME_DLL_NOT_EMULATOR'), 'an orphan renamed GBE copy still leaves the folder foreign');
+
+  // ...but a VOICES38 folder keeps its Valve dll whatever AW Next can see: swapping it crashes the game.
+  eq(crackLoaderDetect.steamApiKeptBy(dir), 'VOICES38');
+  const issue = report.issues.find((entry) => entry.code === 'RUNTIME_DLL_NOT_EMULATOR');
+  eq(issue.data.keptBy, 'VOICES38', 'the diagnosis names the family that needs its dll');
+  const health = gameHealth.deriveHealth({ gameDir: dir, gameDirExists: true, emulated: true, goldberg: { ...report, dllCount: 1 }, achievements: { total: 1, unlocked: 0 } });
+  ok(!health.actions.includes(gameHealth.ACTION.INSTALL_RUNTIME), 'no runtime swap is offered over VOICES38');
+  eq(health.reason, 'emulator-runtime-foreign');
+  const cached = tmp('aw-voices-cache-');
+  fs.writeFileSync(path.join(cached, 'steam_api64.dll'), GBE_DLL);
+  const summary = gbeInstaller.installDlls({ dllDirs: [dir], dlls: { x64: path.join(cached, 'steam_api64.dll') } });
+  eq(summary.installed, 0, 'and the installer refuses it too');
+  ok(fs.readFileSync(path.join(dir, 'steam_api64.dll')).equals(VALVE_DLL), 'Valve\'s dll is still the one on disk');
+}
+
+{
+  const dir = tmp('aw-plain-valve-');
+  fs.writeFileSync(path.join(dir, 'steam_api64.dll'), VALVE_DLL);
+  eq(crackLoaderDetect.steamApiKeptBy(dir), '', 'a plain Valve dll belongs to no family that needs it');
 }
 
 {

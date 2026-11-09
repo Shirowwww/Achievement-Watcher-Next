@@ -59,3 +59,11 @@ test('an emulator platinum trophy uses the platinum popup unless it is turned of
   assert.deepEqual(platinumFields('G', {}), {});
   assert.deepEqual(platinumFields('P', { notification: { platinum: false } }), {});
 });
+
+// A save read from a file must know which achievement is the platinum itself, or it pops that unlock
+// and then the 100% popup: two platinum banners.
+test('the achievement tied to the PlayStation platinum is named from the link', () => {
+  assert.equal(psnTrophyLink.platinumTwinName(psnTrophyLink.readLink('4D5307E6')), '9');
+  assert.equal(psnTrophyLink.platinumTwinName(psnTrophyLink.readLink('1029690')), null, 'no trophy of type P');
+  assert.equal(psnTrophyLink.platinumTwinName(null), null);
+});
