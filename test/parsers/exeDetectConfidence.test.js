@@ -7,6 +7,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
+const { peBytes } = require('../helpers/fakePe.js');
 
 const created = [];
 test.after(() => {
@@ -31,7 +32,7 @@ function tmpGameNamed(name) {
 
 function writeBytes(file, size = 128) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, Buffer.alloc(size, 1));
+  fs.writeFileSync(file, peBytes(size));
 }
 
 test('a single plausible exe is always confident', () => {

@@ -9,6 +9,7 @@ const test = require('node:test');
 const { makeTempDir } = require('../helpers/tempDir');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
+const { writePe } = require('../helpers/fakePe.js');
 
 const linuxOnly = { skip: process.platform !== 'linux' && 'Linux-only' };
 const ELF_HEADER = Buffer.from([0x7f, 0x45, 0x4c, 0x46, 2, 1, 1, 0]);
@@ -70,7 +71,7 @@ test('on Windows only .exe files are candidates, as before', { skip: process.pla
   const dir = gameDir('win');
   writeElf(path.join(dir, 'awtestgame'));
   assert.equal(exeDetect.detect(dir, 'AW Test Game'), null);
-  writeElf(path.join(dir, 'AWTestGame.exe'));
+  writePe(path.join(dir, 'AWTestGame.exe'));
   assert.equal(exeDetect.detect(dir, 'AW Test Game').name, 'AWTestGame.exe');
 });
 

@@ -7,11 +7,12 @@ const path = require('node:path');
 const test = require('node:test');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
+const { peBytes } = require('../helpers/fakePe.js');
 const exeCandidateCache = require('../../app/util/exeCandidateCache.js');
 
 function writeBytes(file, size) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, Buffer.alloc(size, 1));
+  fs.writeFileSync(file, peBytes(size));
 }
 
 function install(name) {

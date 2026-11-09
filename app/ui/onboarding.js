@@ -94,6 +94,13 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     return localizedText() || {};
   }
 
+  // The guide's search is Settings' Find all (folders, then every game's executable after the first
+  // scan), so it carries that button's name in every language.
+  function findAllLabel(t) {
+    const folder = window.appLocale && window.appLocale.settings && window.appLocale.settings.folder;
+    return (folder && folder.findAll) || t.smartFind;
+  }
+
   function boolValue(v) {
     return v === 'true';
   }
@@ -218,7 +225,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-folders-copy').text(t.foldersCopy);
     $('#onboard-detect-title').text(t.detectTitle);
     $('#onboard-add-save-dir span').text(t.addSave);
-    $('#onboard-smart-find span').text(t.smartFind);
+    $('#onboard-smart-find span').text(findAllLabel(t));
     $('#onboard-add-library-dir span').text(t.addLibrary);
     $('#onboard-smart-find-hint').text(t.smartFindHint);
     $('#onboard-add-save-dir-hint').text(t.addSaveHint);
@@ -794,9 +801,9 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         const automatic = entry.origin === 'auto';
         const origin = $('<small>')
           .addClass(`folder-origin ${automatic ? 'auto' : 'manual'}`)
-          .attr('title', automatic ? t.smartFind : t.manualSource)
+          .attr('title', automatic ? findAllLabel(t) : t.manualSource)
           .attr('role', 'img')
-          .attr('aria-label', automatic ? t.smartFind : t.manualSource)
+          .attr('aria-label', automatic ? findAllLabel(t) : t.manualSource)
           .append($('<i>').addClass(`fas ${automatic ? 'fa-magic' : 'fa-hand-pointer'}`).attr('aria-hidden', 'true'));
         item.append(origin);
         item.append(
@@ -1061,6 +1068,8 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
       }
       const added = Math.max(0, addedSaveDirs.length + addedLibraryDirs.length - before);
       setFolderStatus(added > 0 ? fill(text().smartFound, { count: added }) : text().smartNone, added > 0 ? 'success' : '');
+      // The games are only known after the first scan: app.js runs Find all for their executables then.
+      window.awFindExecutablesAfterScan = true;
     } catch (err) {
       setFolderStatus(`${err}`, 'error');
       debug.log(err);

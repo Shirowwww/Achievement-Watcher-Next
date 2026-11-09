@@ -6,6 +6,7 @@ const dirCache = require(path.join(__dirname, '..', 'util', 'dirCache.js'));
 const exeCandidateCache = require(path.join(__dirname, '..', 'util', 'exeCandidateCache.js'));
 const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js'));
 const { isElf } = require(path.join(__dirname, '..', 'util', 'elf.js'));
+const { isExecutableImage } = require(path.join(__dirname, '..', 'util', 'pe.js'));
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
@@ -113,6 +114,12 @@ function isExecutableFile(dir, entry) {
   return entry.isFile() && (entry.name.toLowerCase().endsWith('.exe') || isNativeExecutable(dir, entry.name));
 }
 
+// A `.exe` candidate must be a real Windows program: not empty, not a renamed DLL, not plain bytes.
+// One that cannot be read right now (an antivirus holding it) keeps the benefit of the doubt.
+function isRunnablePe(dir, entry) {
+  return !entry.name.toLowerCase().endsWith('.exe') || isExecutableImage(path.join(dir, entry.name)) !== false;
+}
+
 // Soft-penalty: usually-not-the-game helpers that occasionally are. Penalize, don't exclude.
 const SOFT_PENALTY = [
   /loader/i,
@@ -129,11 +136,31 @@ const SOFT_PENALTY = [
 // Directories never worth descending into.
 const META_DIRS = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|prerequisites|prereq|Installers)$/i;
 
+// Patched or backed-up copies of the game ("Crack", "_Cracked Files", "Original Files", "NoDVD"):
+// the same program again at best, and never the copy a launch should start.
+const COPY_DIRS = /^[\s_.-]*(?:cracks?|cracked|original[\s_.-]*files?|bin[\s_.-]*plus|no[\s_.-]?dvd)(?:[\s_.-].*)?$/i;
+
 // Engine payload folders (Godot's `data_<product>_<platform>_<arch>`, Unity's `<Game>_Data` and
 // `MonoBleedingEdge`): the game's data plus a bundled runtime, never the binary a user launches.
 const ENGINE_DATA_DIRS = /^(?:data_.+_(?:windows|win|linux|linuxbsd|macos|osx|web)_.*|MonoBleedingEdge|.+_Data)$/i;
 
 const MAX_DEPTH = 5;
+
+/*
+  A walk that runs out of budget answers with what it saw, flagged `truncated`: the exe it missed may
+  be the right one, so such an answer is never auto-assigned and never memoized. The depth cap above
+  is a rule, not a cut, and does not count.
+*/
+const MAX_DIRECTORIES = 10000;
+const TIME_LIMIT_MS = 10000;
+
+// Bumped when a check that is not one of the rules below changes (the PE check, the declared appid),
+// so the memo drops answers made under the old rules.
+const CANDIDATE_FORMAT = 2;
+
+// Spacewar, the appid many emulator setups ship by default: it names no game.
+const PLACEHOLDER_APPID = '480';
+const MAX_MARKER_BYTES = 64 * 1024;
 
 // Salt the candidate memo with the filter rules themselves, so editing a rule invalidates every
 // cached answer instead of relying on a hand-bumped number nobody remembers to bump.
@@ -144,9 +171,11 @@ exeCandidateCache.setRulesSalt(() =>
         EXE_EXCLUDE.map(String),
         SOFT_PENALTY.map(String),
         String(META_DIRS),
+        String(COPY_DIRS),
         String(ENGINE_DATA_DIRS),
         [...KNOWN_NON_GAME_EXE].sort(),
         MAX_DEPTH,
+        CANDIDATE_FORMAT,
       ])
     )
     .toString(16)
@@ -162,6 +191,10 @@ const BONUS_ROOT_EXE_WITH_NESTED_DLL = 18; // root exe + nested steam_api belong
 const PENALTY_SOFT = 30;
 const PENALTY_DEPTH = 2;
 const PENALTY_SHADOWED_L_SUFFIX = 5; // foo-l.exe next to foo.exe is usually a launcher/helper variant
+const BONUS_DECLARED = 70; // the store names this exe as the one it launches
+
+// Names too common to identify a game on their own, even when a store declares them.
+const GENERIC_EXE = /^(?:game|launcher|main|start|shipping|client|play|run|bootstrapper|start_protected_game)(?:[-_](?:win)?(?:x?64|x?32|x86|shipping))*\.exe$/i;
 
 // Confidence thresholds for auto-filling the launch panel: an authoritative exe, a single plausible
 // exe, a strong name/folder match, a decent match beside the emulator dll, or a clear margin win.
@@ -208,22 +241,61 @@ function nameSimilarity(gameName, exeBase) {
   return 0.6 * (hits / Math.max(gameTokens.size, exeTokens.length));
 }
 
-function collectCandidates(gameDir) {
+function readSmallText(file) {
+  try {
+    if (fs.statSync(file).size > MAX_MARKER_BYTES) return '';
+    return fs.readFileSync(file, 'utf8').replace(/^﻿/, '');
+  } catch {
+    return '';
+  }
+}
+
+// A placeholder that no store appid can equal: two markers in one folder naming different games.
+const CONFLICTING_APPIDS = 'conflict';
+
+// The Steam appid a folder declares for the exes below it, from steam_appid.txt and ColdClient's AppId.
+function declaredAppidIn(dir, entries) {
+  const ids = new Set();
+  for (const e of entries) {
+    if (!e.isFile()) continue;
+    const name = e.name.toLowerCase();
+    let id = '';
+    if (name === 'steam_appid.txt') id = readSmallText(path.join(dir, e.name)).trim();
+    else if (name === 'coldclientloader.ini') id = (/^\s*AppId\s*=\s*(\d+)\s*$/im.exec(readSmallText(path.join(dir, e.name))) || [])[1] || '';
+    if (/^\d+$/.test(id) && id !== PLACEHOLDER_APPID) ids.add(id);
+  }
+  if (ids.size > 1) return CONFLICTING_APPIDS;
+  return ids.size === 1 ? [...ids][0] : '';
+}
+
+function collectCandidates(gameDir, limits = {}) {
+  const maxDirectories = limits.maxDirectories || MAX_DIRECTORIES;
+  const deadline = Date.now() + (limits.timeLimitMs || TIME_LIMIT_MS);
   const candidates = [];
-  const walk = (dir, depth) => {
-    if (depth > MAX_DEPTH) return;
+  let visited = 0;
+  let truncated = false;
+  const walk = (dir, depth, inheritedAppid) => {
+    if (depth > MAX_DEPTH || truncated) return;
+    if (visited >= maxDirectories || Date.now() > deadline) {
+      truncated = true;
+      return;
+    }
+    visited++;
     // Untracked: a game tree can hold tens of thousands of folders, and none of them decide whether
     // a new game appeared (see dirCache.readdir).
     const entries = dirCache.readdir(dir, { track: false });
     if (!entries) return;
+    const declaredAppid = declaredAppidIn(dir, entries) || inheritedAppid;
     for (const e of entries) {
       if (e.isDirectory()) {
         if (e.name.toLowerCase() === 'steam_settings') continue;
-        if (META_DIRS.test(e.name) || ENGINE_DATA_DIRS.test(e.name)) continue;
-        walk(path.join(dir, e.name), depth + 1);
+        if (META_DIRS.test(e.name) || ENGINE_DATA_DIRS.test(e.name) || COPY_DIRS.test(e.name)) continue;
+        walk(path.join(dir, e.name), depth + 1, declaredAppid);
       } else if (isExecutableFile(dir, e)) {
         if (EXE_EXCLUDE.some((r) => r.test(e.name))) continue;
         if (isKnownNonGameExe(e.name)) continue;
+        // Last, as it is the only check that opens the file.
+        if (!isRunnablePe(dir, e)) continue;
         const full = path.join(dir, e.name);
         let size;
         try {
@@ -231,20 +303,20 @@ function collectCandidates(gameDir) {
         } catch {
           continue;
         }
-        candidates.push({ name: e.name, full, size, depth, dir });
+        candidates.push({ name: e.name, full, size, depth, dir, declaredAppid });
       }
     }
   };
-  walk(gameDir, 0);
-  return candidates;
+  walk(gameDir, 0, '');
+  return { candidates, truncated };
 }
 
-function collectCandidatesCached(gameDir) {
+function collectCandidatesCached(gameDir, limits) {
   const cached = exeCandidateCache.read(gameDir);
-  if (cached) return { candidates: cached, fromCache: true };
-  const candidates = collectCandidates(gameDir);
-  exeCandidateCache.write(gameDir, candidates);
-  return { candidates, fromCache: false };
+  if (cached) return { candidates: cached, fromCache: true, truncated: false };
+  const { candidates, truncated } = collectCandidates(gameDir, limits);
+  if (!truncated) exeCandidateCache.write(gameDir, candidates);
+  return { candidates, fromCache: false, truncated };
 }
 
 // Decide whether `best` is safe to auto-assign. `candidates` is the sorted, filtered list from
@@ -252,6 +324,9 @@ function collectCandidatesCached(gameDir) {
 // manifests and for library-root scans, so an exe matching the folder is strong evidence too).
 function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
   if (opts.authoritative) return { confident: true, reason: 'authoritative' };
+  if (opts.truncated) return { confident: false, reason: 'truncated' };
+  if (best._foreign) return { confident: false, reason: 'appid-mismatch' };
+  if (best._declared && !GENERIC_EXE.test(best.name)) return { confident: true, reason: 'store-declared' };
 
   const base = exeBaseName(best.name);
   const gameSim = nameSimilarity(gameName || '', base);
@@ -282,8 +357,8 @@ function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
   const nonUtility = candidates.filter((c) => !SOFT_PENALTY.some((r) => r.test(c.name)));
   if (nonUtility.length === 1 && nonUtility[0] === best) return { confident: true, reason: 'sole-non-utility-candidate' };
 
-  // A repack keeps its patched copy in a side folder ("Crack", "NoDVD") under the same filename -
-  // one program, not two candidates.
+  // A repack can keep a second copy in a side folder under the same filename - one program, not two
+  // candidates. (Crack and backup folders are not walked at all, see COPY_DIRS.)
   const sameName = (c) => c.name.toLowerCase() === best.name.toLowerCase();
   if (nonUtility.every((c) => c === best || sameName(c))) return { confident: true, reason: 'sole-non-utility-name' };
 
@@ -300,16 +375,20 @@ function confidenceFor(best, candidates, gameDir, gameName, opts = {}) {
   return { confident: false, reason: 'ambiguous' };
 }
 
-// Find the most likely game executable inside gameDir. opts.taken avoids reusing exes assigned to
-// other games; opts.takenGameDirs avoids a second exe from an already-claimed folder.
-function detect(gameDir, gameName, opts = {}) {
+/*
+  Every candidate of gameDir, scored and sorted best first, or null when the folder is missing or
+  already claimed. opts: dllPaths (emulator dlls), takenGameDirs, steamAppId (an exe whose folder
+  declares another appid is flagged `_foreign`), hints (exe names the store declares),
+  maxDirectories / timeLimitMs (walk budget).
+*/
+function scoredCandidates(gameDir, gameName, opts = {}) {
   if (!gameDir || !fs.existsSync(gameDir)) return null;
 
-  // Lowercased for case-insensitive (Windows) collision checks.
-  const taken = new Set([...(opts.taken || [])].map((p) => String(p).toLowerCase()));
   const rootDir = path.resolve(gameDir).toLowerCase();
   const takenGameDirs = new Set([...(opts.takenGameDirs || [])].map((p) => path.resolve(String(p)).toLowerCase()));
   if (takenGameDirs.has(rootDir)) return null;
+  const hints = new Set((opts.hints || []).map((name) => String(name).toLowerCase()).filter(Boolean));
+  const steamAppId = String(opts.steamAppId || '').trim();
   const dllDirs = new Set();
   for (const dll of opts.dllPaths || []) {
     try {
@@ -319,9 +398,8 @@ function detect(gameDir, gameName, opts = {}) {
     }
   }
 
-  const collected = collectCandidatesCached(gameDir);
+  const collected = collectCandidatesCached(gameDir, opts);
   const candidates = collected.candidates;
-  if (candidates.length === 0) return null;
 
   // Some repacks keep the real game's exe and steam_api64.dll at the install root, while helper
   // tools/sub-builds below it also carry their own steam_api.dll. In that layout the nested dlls are
@@ -352,35 +430,73 @@ function detect(gameDir, gameName, opts = {}) {
     if (!hasRootDll && hasNestedDll && candidateDir === rootDir) {
       dllBonus = Math.max(dllBonus, BONUS_ROOT_EXE_WITH_NESTED_DLL);
     }
-    c.score = sim * W_NAME + sizeFactor * W_SIZE + dllBonus - soft - c.depth * PENALTY_DEPTH;
+    const declared = hints.has(c.name.toLowerCase());
+    c.score = sim * W_NAME + sizeFactor * W_SIZE + dllBonus + (declared ? BONUS_DECLARED : 0) - soft - c.depth * PENALTY_DEPTH;
     c._sim = sim;
     c._dllBonus = dllBonus;
     c._softHit = softHit;
+    c._declared = declared;
+    c._foreign = !!(steamAppId && c.declaredAppid && c.declaredAppid !== steamAppId);
   }
   // A loader/launcher/helper is only picked when nothing else is available: a size/DLL bonus could
-  // otherwise outscore the real game exe. Non-utility candidates are always tried first; score only breaks ties within a tier.
-  candidates.sort((a, b) => a._softHit - b._softHit || b.score - a.score || a.depth - b.depth || b.size - a.size);
+  // otherwise outscore the real game exe. Non-utility candidates are always tried first; score only
+  // breaks ties within a tier. An exe that belongs to another appid comes after all of them.
+  candidates.sort(
+    (a, b) => a._foreign - b._foreign || a._softHit - b._softHit || b.score - a.score || a.depth - b.depth || b.size - a.size
+  );
+  return { candidates, fromCache: collected.fromCache, truncated: collected.truncated };
+}
 
+function publicCandidate(c, confidence, truncated) {
+  return {
+    name: c.name,
+    full: c.full,
+    size: c.size,
+    score: c.score,
+    confident: confidence.confident,
+    confidence: confidence.reason,
+    truncated,
+  };
+}
+
+// Normalised for case-insensitive (Windows) collision checks.
+const takenSet = (taken) => new Set([...(taken || [])].map((p) => String(p).toLowerCase()));
+
+// Find the most likely game executable inside gameDir. opts.taken avoids reusing exes assigned to
+// other games; the other options are scoredCandidates()'s.
+function detect(gameDir, gameName, opts = {}) {
+  const scored = scoredCandidates(gameDir, gameName, opts);
+  if (!scored) return null;
+  const { candidates, fromCache, truncated } = scored;
+  const taken = takenSet(opts.taken);
+  // An exe that belongs to another appid is no rival to one that does not.
+  const rivals = candidates.filter((c) => !c._foreign);
   for (const c of candidates) {
-    if (!taken.has(c.full.toLowerCase())) {
-      // The memo can outlive the file it names (a game patched without touching its root folder).
-      // Drop it and walk once, rather than handing back an executable that is no longer there.
-      if (collected.fromCache && !fs.existsSync(c.full)) {
-        exeCandidateCache.forget(gameDir);
-        return detect(gameDir, gameName, opts);
-      }
-      const confidence = confidenceFor(c, candidates, gameDir, gameName, opts);
-      return {
-        name: c.name,
-        full: c.full,
-        size: c.size,
-        score: c.score,
-        confident: confidence.confident,
-        confidence: confidence.reason,
-      };
+    if (taken.has(c.full.toLowerCase())) continue;
+    // The memo can outlive the file it names (a game patched without touching its root folder).
+    // Drop it and walk once, rather than handing back an executable that is no longer there.
+    if (fromCache && !fs.existsSync(c.full)) {
+      exeCandidateCache.forget(gameDir);
+      return detect(gameDir, gameName, opts);
     }
+    const confidence = confidenceFor(c, c._foreign ? candidates : rivals, gameDir, gameName, { ...opts, truncated });
+    return publicCandidate(c, confidence, truncated);
   }
   return null;
+}
+
+// Every untaken candidate, best first, for a user to choose from when detect() is not confident.
+function rank(gameDir, gameName, opts = {}) {
+  const scored = scoredCandidates(gameDir, gameName, opts);
+  if (!scored) return { candidates: [], truncated: false };
+  const taken = takenSet(opts.taken);
+  const unconfident = { confident: false, reason: 'choice' };
+  return {
+    candidates: scored.candidates
+      .filter((c) => !taken.has(c.full.toLowerCase()) && fs.existsSync(c.full))
+      .map((c) => publicCandidate(c, unconfident, scored.truncated)),
+    truncated: scored.truncated,
+  };
 }
 
 // Convenience wrapper for callers that must NOT guess: returns the best candidate only when the
@@ -506,6 +622,9 @@ module.exports = {
   installDirForConfiguredExe,
   detect,
   detectConfident,
+  rank,
+  isGenericExeName: (name) => GENERIC_EXE.test(String(name || '')),
+  COPY_DIRS,
   shallowGameExe,
   gameDirForExe,
   nameSimilarity,

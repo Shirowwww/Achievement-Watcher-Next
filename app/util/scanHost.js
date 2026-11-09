@@ -290,6 +290,10 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
         gameDir: game && game.gameDir,
         exe: game && game.exe,
         exeConfident: game && game.exeConfident,
+        // What steamAppidOf() reads, for the store hints exeList passes to exeDetect.
+        source: game && game.source,
+        system: game && game.system,
+        steamappid: game && game.steamappid,
       }));
       return withFallback('reconcileExeList', [slim], () => require('../parser/exeList.js').reconcile(slim));
     },

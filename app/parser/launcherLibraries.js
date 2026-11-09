@@ -186,6 +186,47 @@ function ubisoftInstallLocations(hosts = appHosts()) {
   return ubisoftRegistry.installs(hosts).map((install) => install.dir);
 }
 
+// One YAML scalar as Ubisoft Connect writes it: bare, 'single-quoted' ('' escapes a quote) or "JSON".
+function yamlScalar(raw) {
+  const value = String(raw || '').trim();
+  if (value.startsWith('"')) {
+    try {
+      return String(JSON.parse(value));
+    } catch {
+      return '';
+    }
+  }
+  if (value.startsWith("'")) {
+    const match = /^'(.*)'$/.exec(value);
+    return match ? match[1].replace(/''/g, "'") : '';
+  }
+  // A comment needs a space before its #, so a bare path keeps a # of its own.
+  return value.replace(/\s+#.*$/, '');
+}
+
+/*
+  The default install folder picked in Ubisoft Connect's settings (settings.yaml,
+  game_installation_path). Like .GamingRoot it names the library itself, so it is contributed as is;
+  the registry above only knows the games already installed there.
+*/
+function ubisoftSettingsLibraries(hosts = appHosts()) {
+  const libraries = [];
+  for (const host of hosts) {
+    const file = hostPath(host, 'LOCALAPPDATA', 'Ubisoft Game Launcher', 'settings.yaml');
+    if (!file) continue;
+    let text;
+    try {
+      text = fs.readFileSync(file, 'utf8');
+    } catch {
+      continue;
+    }
+    const match = /^\s*game_installation_path:[ \t]*(.*?)\s*$/m.exec(text);
+    const value = match ? yamlScalar(match[1]) : '';
+    if (value) libraries.push(normalizeDir(host.localPath(value) || value));
+  }
+  return libraries.filter(Boolean);
+}
+
 /*
   <drive>:\.GamingRoot is the pointer Windows writes when the user picks a drive for Microsoft Store
   / Xbox games: a 4-byte "RGBX" magic followed by a NUL-terminated UTF-16LE path relative to that
@@ -253,6 +294,7 @@ function discoverLauncherLibraryRoots(options = {}) {
   fromInstalls(epicHostLocations(hosts), 'Epic Games library');
   fromInstalls(gogInstallLocations(hosts), 'GOG Galaxy library');
   fromInstalls(ubisoftInstallLocations(hosts), 'Ubisoft Connect library');
+  for (const root of ubisoftSettingsLibraries(hosts)) add(root, 'Ubisoft Connect library');
   for (const root of xboxGamingRoots(drives)) add(root, 'Xbox games folder');
   if (process.platform !== 'win32') {
     for (const entry of linuxLaunchers.listInstalls(options.linux)) fromInstalls([entry.installPath], LINUX_DETECTORS[entry.launcher]);
@@ -269,5 +311,6 @@ module.exports = {
   libraryRootFromInstallDir,
   parseGamingRoot,
   ubisoftInstallLocations,
+  ubisoftSettingsLibraries,
   xboxGamingRoots,
 };

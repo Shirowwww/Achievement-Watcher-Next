@@ -19,10 +19,11 @@ Module._load = function patchedLoad(request, parent, isMain) {
 };
 
 const exeList = require('../../app/parser/exeList.js');
+const { peBytes } = require('../helpers/fakePe.js');
 
 function writeBytes(file, size = 128) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, Buffer.alloc(size, 1));
+  fs.writeFileSync(file, peBytes(size));
 }
 
 function tmpGame(name) {
@@ -83,4 +84,55 @@ test('reconcile never overwrites a manually configured exe', async () => {
   assert.ok(entry);
   assert.strictEqual(entry.exe, manualExe);
   assert.strictEqual(entry.args, '-windowed');
+});
+
+test('two additions started together both reach the file', async () => {
+  const first = path.join(tmpGame('together-a'), 'A.exe');
+  const second = path.join(tmpGame('together-b'), 'B.exe');
+  await Promise.all([exeList.add({ appid: '4001', exe: first, args: '' }), exeList.add({ appid: '4002', exe: second, args: '' })]);
+  const list = await exeList.list();
+  assert.equal(list.find((e) => String(e.appid) === '4001').exe, first);
+  assert.equal(list.find((e) => String(e.appid) === '4002').exe, second);
+});
+
+test('a detected exe never replaces one recorded in the meantime', async () => {
+  const chosen = path.join(tmpGame('chosen'), 'Chosen.exe');
+  const detected = path.join(tmpGame('late'), 'Detected.exe');
+  await exeList.add({ appid: '5001', exe: chosen, args: '-x' });
+  assert.equal(await exeList.fillIfUnchanged({ appid: '5001', exe: detected }), chosen);
+  assert.equal(await exeList.fillIfUnchanged({ appid: '5002', exe: detected }), detected);
+  const list = await exeList.list();
+  assert.equal(list.find((e) => String(e.appid) === '5001').args, '-x');
+  assert.equal(list.find((e) => String(e.appid) === '5002').exe, detected);
+});
+
+test('a detected exe replaces the vanished path the caller read', async () => {
+  const vanished = path.join(tmpGame('vanished'), 'Gone.exe');
+  const detected = path.join(tmpGame('found'), 'Found.exe');
+  await exeList.add({ appid: '5003', exe: vanished, args: '-y' });
+  assert.equal(await exeList.fillIfUnchanged({ appid: '5003', exe: detected }, vanished), detected);
+  const entry = (await exeList.list()).find((e) => String(e.appid) === '5003');
+  assert.deepEqual([entry.exe, entry.args], [detected, '-y']);
+});
+
+test('a corrupt list is left alone rather than overwritten', async () => {
+  const file = exeList.exeListFile(userData);
+  const before = fs.readFileSync(file, 'utf8');
+  fs.writeFileSync(file, '{broken');
+  await exeList.add({ appid: '6001', exe: path.join(tmpGame('corrupt'), 'X.exe'), args: '' });
+  assert.equal(fs.readFileSync(file, 'utf8'), '{broken');
+  fs.writeFileSync(file, before);
+});
+
+test('reconcile picks the exe Steam declares over a bigger unrelated one', async () => {
+  const gameDir = tmpGame('declared');
+  writeBytes(path.join(gameDir, 'Editor.exe'), 64 * 1024);
+  writeBytes(path.join(gameDir, 'bin', 'cdx_win64.exe'));
+  const cache = path.join(userData, 'steam_cache', 'steamdb_launch', '7001.json');
+  fs.mkdirSync(path.dirname(cache), { recursive: true });
+  fs.writeFileSync(cache, JSON.stringify({ process_name: 'cdx_win64.exe', best_process_name: 'cdx_win64.exe' }));
+
+  await exeList.reconcile([{ appid: '7001', name: 'Codename', gameDir }]);
+  const list = await exeList.list();
+  assert.equal(list.find((e) => String(e.appid) === '7001').exe, path.join(gameDir, 'bin', 'cdx_win64.exe'));
 });

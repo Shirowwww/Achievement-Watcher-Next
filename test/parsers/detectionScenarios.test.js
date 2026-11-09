@@ -19,10 +19,11 @@ Module._load = function patchedLoad(request, parent, isMain) {
 
 const achievements = require('../../app/parser/achievements.js');
 const libraryDirs = require('../../app/parser/libraryDirs.js');
+const { peBytes } = require('../helpers/fakePe.js');
 
 function writeBytes(file, size = 1024) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, Buffer.alloc(size, 1));
+  fs.writeFileSync(file, /\.exe$/i.test(file) ? peBytes(size) : Buffer.alloc(size, 1));
 }
 
 async function detectIn({ build, persistSmartFind = false } = {}) {

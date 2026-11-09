@@ -107,7 +107,7 @@ test('the inventory never includes a secret, a cache or an unlisted path', () =>
   ]) {
     assert.equal(inventory.classify(rel).include, false, rel);
   }
-  for (const rel of ['cfg/options.ini', 'cfg/gameIndex.json', 'covers/1.png', 'steam_cache/xbox/1/schema.json', 'cache/uplayR2/loader.dll', 'cache/gse_fork/custom/x.dll', 'presets/Users Presets/a/preset.json']) {
+  for (const rel of ['cfg/options.ini', 'cfg/gameIndex.json', 'cfg/captureIndex.json', 'covers/1.png', 'steam_cache/xbox/1/schema.json', 'cache/uplayR2/loader.dll', 'cache/gse_fork/custom/x.dll', 'presets/Users Presets/a/preset.json']) {
     assert.equal(inventory.classify(rel).include, true, rel);
   }
 });

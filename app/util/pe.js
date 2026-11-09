@@ -1,8 +1,8 @@
 'use strict';
 
 /*
-  Tiny read-only PE helpers: exeArch() → 'x64'|'x86'|null, detectSteamStub() → boolean. Pure header
-  reads shared by the background auto-fix and the right-click fix.
+  Tiny read-only PE helpers: exeArch() → 'x64'|'x86'|null, isExecutableImage() and detectSteamStub()
+  → boolean. Pure header reads shared by the auto-fix, the right-click fix and exe detection.
 */
 
 const fs = require('fs');
@@ -26,6 +26,36 @@ function exeArch(exePath) {
     return null;
   } catch {
     return null;
+  } finally {
+    if (fd !== undefined) {
+      try {
+        fs.closeSync(fd);
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+}
+
+const IMAGE_FILE_EXECUTABLE_IMAGE = 0x0002;
+const IMAGE_FILE_DLL = 0x2000;
+
+// True only for a Windows program: a `.exe` that is empty, a renamed DLL or plain bytes is not one.
+// null when the file exists but cannot be read right now (locked, no access): nothing is known.
+function isExecutableImage(exePath) {
+  let fd;
+  try {
+    fd = fs.openSync(exePath, 'r');
+    const head = Buffer.alloc(64);
+    if (fs.readSync(fd, head, 0, 64, 0) !== 64 || head.readUInt16LE(0) !== 0x5a4d) return false;
+    const peOff = head.readUInt32LE(0x3c);
+    if (peOff < 64 || peOff > 1024 * 1024) return false;
+    const coff = Buffer.alloc(24);
+    if (fs.readSync(fd, coff, 0, 24, peOff) !== 24 || coff.readUInt32LE(0) !== 0x00004550) return false;
+    const characteristics = coff.readUInt16LE(22);
+    return (characteristics & IMAGE_FILE_EXECUTABLE_IMAGE) !== 0 && (characteristics & IMAGE_FILE_DLL) === 0;
+  } catch (err) {
+    return err && err.code !== 'ENOENT' && err.code !== 'EISDIR' ? null : false;
   } finally {
     if (fd !== undefined) {
       try {
@@ -431,4 +461,4 @@ function readExeFileVersion(exePath) {
   }
 }
 
-module.exports = { exeArch, detectSteamStub, readExeProductName, readExeFileVersion, readExportName };
+module.exports = { exeArch, isExecutableImage, detectSteamStub, readExeProductName, readExeFileVersion, readExportName };

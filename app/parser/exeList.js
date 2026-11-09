@@ -4,6 +4,8 @@ const path = require('path');
 const { pickBestClaim } = require('../util/claimCollision.js');
 const { knownUserDataDir, userDataDir } = require('../util/userDataPath.js');
 const { createIndexedGameLookup } = require('../util/indexedGameLookup.js');
+const { writeFileAtomicSync } = require('../util/replaceFile.js');
+const { exeHintsFor } = require('./exeHints.js');
 const fs = require('fs');
 
 let debug = { log() {}, error() {}, warn() {} };
@@ -87,42 +89,101 @@ module.exports.get = async (appid) => {
   }
 };
 
+// Atomic, so a reader (the Watchdog, a crash mid-write) never sees half a list.
+function writeListSync(data) {
+  writeFileAtomicSync(listFile(), JSON.stringify(data, null, 2));
+}
+
 module.exports.save = async (data) => {
   try {
-    fs.writeFileSync(listFile(), JSON.stringify(data, null, 2), 'utf8');
+    writeListSync(data);
   } catch (err) {
     debug.log(err);
   }
 };
 
+/*
+  Read, change and write in one synchronous step: with an await in between, two changes started
+  together each wrote back the list they had read and one of them was lost. An unreadable list
+  throws before anything is written, so it is never replaced by a list missing its entries.
+*/
+function readListSync() {
+  try {
+    return JSON.parse(fs.readFileSync(listFile(), 'utf8'));
+  } catch (err) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
+}
+
+function updateEntry(appid, change) {
+  const list = readListSync();
+  let entry = list.find((ap) => String(ap.appid) === String(appid));
+  if (!entry) {
+    entry = { appid, exe: '', args: '' };
+    list.push(entry);
+  }
+  if (change(entry) === false) return entry;
+  writeListSync(list);
+  return entry;
+}
+
 module.exports.add = async (app) => {
   try {
     debug.log(`Adding ${app.appid} to exeList ...`);
-    let currentList = await getCurrentList();
     // No collision guard here on purpose - `add` also serves the manual file-picker, and the
     // user is allowed to choose any exe. Auto-detection avoids duplicates by passing `taken` to
     // exeDetect, and reconcile() repairs duplicates left over from corrupt/old data at scan time.
-    let existingEntry = currentList.find((ap) => String(ap.appid) === String(app.appid));
-    if (existingEntry) {
-      existingEntry.exe = app.exe;
-      existingEntry.args = app.args;
-      debug.log(`${app.appid} already on the list, updating path and launch args ...`);
-    } else {
-      currentList.push(app);
-    }
-    await this.save(currentList);
+    updateEntry(app.appid, (entry) => {
+      entry.exe = app.exe;
+      entry.args = app.args;
+    });
     debug.log('Done.');
   } catch (err) {
     debug.log(err);
   }
 };
 
+/*
+  Records a detected exe in place of `previous` (what the caller read: '' or a path that vanished),
+  unless something else was recorded meanwhile. Answers the exe now on file.
+*/
+module.exports.fillIfUnchanged = async (app, previous = '') => {
+  try {
+    const entry = updateEntry(app.appid, (current) => {
+      if (current.exe && current.exe !== previous) return false;
+      current.exe = app.exe;
+      if (current.args == null) current.args = '';
+    });
+    return entry.exe;
+  } catch (err) {
+    debug.log(err);
+    return '';
+  }
+};
+
+// The ColdClient loader Play starts instead of the exe ('' to start the exe again). False when the game has no entry.
+module.exports.setLoader = async (appid, loader) => {
+  try {
+    const list = readListSync();
+    const entry = list.find((app) => String(app.appid) === String(appid));
+    if (!entry) return false;
+    if (loader) entry.loader = String(loader);
+    else delete entry.loader;
+    writeListSync(list);
+    return true;
+  } catch (err) {
+    debug.log(err);
+    return false;
+  }
+};
+
 module.exports.remove = async (appid) => {
   try {
-    const currentList = await getCurrentList();
+    const currentList = readListSync();
     const next = currentList.filter((entry) => String(entry.appid) !== String(appid));
     if (next.length === currentList.length) return false;
-    await module.exports.save(next);
+    writeListSync(next);
     return true;
   } catch (err) {
     debug.log(err);
@@ -140,7 +201,8 @@ module.exports.reconcile = async (games) => {
   const exeDetect = require(path.join(__dirname, 'exeDetect.js'));
   let changed = 0;
   try {
-    const list = await getCurrentList();
+    // Read here, with no await before the save below, for the same reason as updateEntry().
+    const list = readListSync();
 
     const byAppid = new Map((games || []).map((g) => [String(g.appid), g]));
 
@@ -284,7 +346,7 @@ module.exports.reconcile = async (games) => {
       const gameDirKey = path.resolve(g.gameDir).toLowerCase();
       if (takenGameDirs.has(gameDirKey)) continue;
       const emu = goldberg.detectEmulator(g.gameDir);
-      const res = exeDetect.detectConfident(g.gameDir, g.name, { dllPaths: emu.dll, taken, takenGameDirs });
+      const res = exeDetect.detectConfident(g.gameDir, g.name, { dllPaths: emu.dll, taken, takenGameDirs, ...exeHintsFor(g) });
       if (res && !taken.has(res.full.toLowerCase())) {
         e.exe = res.full;
         taken.add(res.full.toLowerCase());

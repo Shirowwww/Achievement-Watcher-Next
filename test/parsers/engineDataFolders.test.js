@@ -12,6 +12,7 @@ const test = require('node:test');
 const { makeTempDir } = require('../helpers/tempDir');
 
 const exeDetect = require('../../app/parser/exeDetect.js');
+const { peBytes } = require('../helpers/fakePe.js');
 
 const appDir = path.join(__dirname, '..', '..', 'app');
 
@@ -21,7 +22,7 @@ function tmpGame(name) {
 
 function writeBytes(file, size) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, Buffer.alloc(size, 1));
+  fs.writeFileSync(file, peBytes(size));
 }
 
 // A Godot 4 C# export: the launcher and its pack at the root, the whole .NET runtime below.

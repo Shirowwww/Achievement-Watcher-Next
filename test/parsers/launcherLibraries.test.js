@@ -154,6 +154,28 @@ test('discovery deduplicates roots and tags each with the launcher that named it
   assert.deepEqual(found, [{ path: library, detector: 'Epic Games library' }]);
 });
 
+test('the install folder chosen in Ubisoft Connect settings.yaml is a library root', { skip: WINDOWS_PATHS }, () => {
+  const tmp = tmpdir('aw-ubisoft-settings-');
+  const library = makeLibrary(path.join(tmp, "Ubi's Games"), ['Far Cry 3']);
+  const localAppData = path.join(tmp, 'Local');
+  const settings = path.join(localAppData, 'Ubisoft Game Launcher', 'settings.yaml');
+  fs.mkdirSync(path.dirname(settings), { recursive: true });
+  const quoted = `'${library.replace(/'/g, "''")}'`;
+  fs.writeFileSync(settings, `overlay:\n  enabled: true\nmisc:\n  game_installation_path: ${quoted}\n`, 'utf8');
+  const host = fakeHost({ LOCALAPPDATA: localAppData });
+
+  assert.deepEqual(launcherLibraries.ubisoftSettingsLibraries([host]), [library]);
+  const found = launcherLibraries.discoverLauncherLibraryRoots({ hosts: [host], drives: [] });
+  assert.deepEqual(found, [{ path: library, detector: 'Ubisoft Connect library' }]);
+
+  fs.writeFileSync(settings, `misc:\n  game_installation_path: ${JSON.stringify(library)}\n`, 'utf8');
+  assert.deepEqual(launcherLibraries.ubisoftSettingsLibraries([host]), [library]);
+  fs.writeFileSync(settings, `misc:\n  game_installation_path: ${library} # chosen in Settings\n`, 'utf8');
+  assert.deepEqual(launcherLibraries.ubisoftSettingsLibraries([host]), [library]);
+  fs.writeFileSync(settings, 'misc:\n  game_installation_path:\n', 'utf8');
+  assert.deepEqual(launcherLibraries.ubisoftSettingsLibraries([host]), []);
+});
+
 test('on Linux, the folders Heroic and Lutris install into are library roots', { skip: process.platform === 'win32' && 'Linux-only' }, () => {
   const home = tmpdir('aw-linux-launchers-');
   const config = path.join(home, '.config');

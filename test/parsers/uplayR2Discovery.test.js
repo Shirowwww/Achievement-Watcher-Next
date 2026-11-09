@@ -24,6 +24,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
 const achievements = require('../../app/parser/achievements.js');
 const libraryDirs = require('../../app/parser/libraryDirs.js');
 const steam = require('../../app/parser/steam.js');
+const { peBytes } = require('../helpers/fakePe.js');
 
 test('Ubisoft install without Steam markers is promoted through the Uplay R2 mapping', async (t) => {
   const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-uplayr2-discovery-user-'));
@@ -43,7 +44,7 @@ test('Ubisoft install without Steam markers is promoted through the Uplay R2 map
   process.env.PROGRAMDATA = path.join(envRoot, 'ProgramData');
 
   fs.mkdirSync(gameDir, { recursive: true });
-  fs.writeFileSync(path.join(gameDir, 'ACBlackFlag.exe'), Buffer.alloc(1024, 1));
+  fs.writeFileSync(path.join(gameDir, 'ACBlackFlag.exe'), peBytes(1024));
   fs.writeFileSync(path.join(gameDir, 'uplay_install.manifest'), '{}');
   fs.writeFileSync(
     path.join(gameDir, 'uplay_install.state'),
@@ -63,7 +64,7 @@ test('Ubisoft install without Steam markers is promoted through the Uplay R2 map
 
   const catalogGameDir = path.join(root, 'Catalog Only Ubisoft Game');
   fs.mkdirSync(catalogGameDir, { recursive: true });
-  fs.writeFileSync(path.join(catalogGameDir, 'CatalogGame.exe'), Buffer.alloc(1024, 1));
+  fs.writeFileSync(path.join(catalogGameDir, 'CatalogGame.exe'), peBytes(1024));
   fs.writeFileSync(path.join(catalogGameDir, 'uplay_install.manifest'), '{}');
   fs.writeFileSync(path.join(catalogGameDir, 'upc_r2_loader64.dll'), Buffer.alloc(1024, 2));
   fs.writeFileSync(path.join(catalogGameDir, 'upc_r2.ini'), '[Settings]\nAchievements = 0\n');

@@ -17,12 +17,14 @@ const { PLAYTIME_RELATIVE } = require('./playtimeFile.js');
 const { BASELINE_DIR } = require('../parser/watchdog.js');
 const { USER_DIR_FILE } = require('../parser/userDirEntries.js');
 const { NOTIFICATION_HEALTH_FILE } = require('../parser/notificationHealth.js');
+const { INDEX_FILE: CAPTURE_INDEX_FILE } = require('./captureIndex.js');
 
 const CONFIG_EXTENSIONS = ['.json', '.db', '.ini', '.txt'];
 
 const RULES = [
   // Included: choices the user made and data nothing can fetch again.
   { path: 'cfg', include: true, mode: 'merge', rebase: true, extensions: CONFIG_EXTENSIONS, why: 'settings, library choices, overrides, blacklist, manual games, GBE restore index' },
+  { path: CAPTURE_INDEX_FILE, include: true, mode: 'merge', rebase: true, extensions: ['.json'], why: 'which screenshot or clip belongs to which achievement; the files stay in Pictures and Videos' },
   { path: 'cfg/collection-images', include: true, mode: 'replace', why: 'pictures the user chose for collections' },
   { path: 'covers', include: true, mode: 'replace', why: 'cover art the user picked' },
   { path: 'gameIcons', include: true, mode: 'replace', why: 'square logos the user picked' },
