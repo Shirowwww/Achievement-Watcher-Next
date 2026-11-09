@@ -24,7 +24,7 @@
   },
   "license": "LGPL-3.0-only",
   "devDependencies": {
-    "electron": "^45.2.2",
+    "electron": "^45.2.3",
     "electron-builder": "^26.18.0",
     "electron-context-menu": "^5.1.0",
     "fast-xml-parser": "^5.11.2",
