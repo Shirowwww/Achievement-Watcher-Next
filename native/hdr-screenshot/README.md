@@ -157,7 +157,7 @@ The Watchdog talks to it over stdin and stdout, one line per message:
 |---|---|
 | in | `clip <age-ms> <path>`: an unlock shown `<age-ms>` ago, its clip to be written to `<path>` |
 | in | `quit`, or stdin closing: finish the pending clips, then exit |
-| out | `ready ...`, `writing <path>`, `saved <path>`, `saved-partial <frames>/<total> <path>`, `merged <path>`, `fallback fps ...`, `fallback encoder ...`, `error <code> <detail>`, `log <text>`, `stats ...` |
+| out | `ready ...`, `writing <path>`, `saved <path>`, `saved-partial <frames>/<total> <path>`, `merged <joined path><tab><requested path>`, `fallback fps ...`, `fallback encoder ...`, `error <code> <detail>`, `log <text>`, `stats ...` |
 
 `stats` doubles as the heartbeat. It prints every five seconds while the capture loop turns and not at
 all when it hangs, which is what the Watchdog waits for (15 s, 30 s for the first one) before killing

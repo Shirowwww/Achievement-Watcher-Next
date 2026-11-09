@@ -104,9 +104,13 @@
     return rarityTiers.tierFor(percent, mode, thresholds);
   }
 
-  function sortAchievements(list, sortState, getTitle) {
+  // `isPinned` keeps the pinned rows on top whatever the sort.
+  function sortAchievements(list, sortState, getTitle, isPinned) {
     const titleOf = typeof getTitle === 'function' ? getTitle : (a) => String((a && a.displayName) || '');
+    const pinnedOf = typeof isPinned === 'function' ? (a) => (isPinned(a) ? 1 : 0) : () => 0;
     return (list || []).slice().sort((a, b) => {
+      const pinnedFirst = pinnedOf(b) - pinnedOf(a);
+      if (pinnedFirst !== 0) return pinnedFirst;
       if (sortState && sortState.status) {
         const aStatus = a && a.Achieved ? 1 : 0;
         const bStatus = b && b.Achieved ? 1 : 0;
@@ -161,7 +165,53 @@
     };
   }
 
+  // The custom accent picker: a code typed by hand, the hue slider and the shade pad all land on '#rrggbb'.
+  function normalizeHex(value) {
+    const text = String(value == null ? '' : value).trim().replace(/^#/, '').toLowerCase();
+    if (/^[0-9a-f]{3}$/.test(text)) return `#${text.split('').map((c) => c + c).join('')}`;
+    return /^[0-9a-f]{6}$/.test(text) ? `#${text}` : null;
+  }
+
+  function hexToHsv(hex) {
+    const code = normalizeHex(hex) || '#000000';
+    const [r, g, b] = [1, 3, 5].map((at) => parseInt(code.slice(at, at + 2), 16) / 255);
+    const max = Math.max(r, g, b);
+    const delta = max - Math.min(r, g, b);
+    let h = 0;
+    if (delta) {
+      if (max === r) h = ((g - b) / delta) % 6;
+      else if (max === g) h = (b - r) / delta + 2;
+      else h = (r - g) / delta + 4;
+    }
+    return { h: (h * 60 + 360) % 360, s: max ? delta / max : 0, v: max };
+  }
+
+  function hsvToHex({ h, s, v }) {
+    const unit = (value) => Math.min(1, Math.max(0, Number(value) || 0));
+    const hue = ((Number.isFinite(Number(h)) ? Number(h) : 0) % 360 + 360) % 360;
+    const sat = unit(s);
+    const val = unit(v);
+    const channel = (n) => {
+      const k = (n + hue / 60) % 6;
+      return val - val * sat * Math.max(0, Math.min(k, 4 - k, 1));
+    };
+    return `#${[5, 3, 1].map((n) => Math.round(channel(n) * 255).toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  const RECENT_ACCENTS = 3;
+
+  // The last custom colours, newest first, without repeats or anything that is not a colour code.
+  function rememberAccent(list, hex) {
+    const kept = (Array.isArray(list) ? list : []).map(normalizeHex).filter(Boolean);
+    const chosen = normalizeHex(hex);
+    return [...new Set(chosen ? [chosen, ...kept] : kept)].slice(0, RECENT_ACCENTS);
+  }
+
   return {
+    normalizeHex,
+    hexToHsv,
+    hsvToHex,
+    rememberAccent,
     escapeHtml,
     safeLocalizedText,
     toBcp47,

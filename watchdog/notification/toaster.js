@@ -17,6 +17,7 @@ const transportPolicy = require('./transportPolicy.js');
 const transportMemory = require('../util/transportMemory.js');
 const overlayAck = require('./overlayAck.js');
 const { SpawnOverlayNotification } = require('./spawnOverlay.js');
+const captureLinks = require('./captureLinks.js');
 
 // Long enough for a Windows toast to slide in before the screenshot is taken.
 const SOUVENIR_TOAST_DELAY_MS = 800;
@@ -333,17 +334,19 @@ module.exports = async (message, option = {}) => {
               hdr: options.souvenir.hdr,
             });
           })
+          .then((file) => captureLinks.remember(message, 'screenshot', file))
           .catch(() => {});
       }
 
       // Video souvenir: the clip is centred on this moment, so the toast or overlay popup that is
       // appearing now sits in the middle of it.
       if (options.souvenir && !message.silent && !message.progress) {
-        require('./clip.js').trigger({
+        const clipFile = require('./clip.js').trigger({
           game: message.gameDisplayName,
           achievement: message.achievementDisplayName,
           dir: options.souvenir.clipDir,
         });
+        captureLinks.remember(message, 'clip', clipFile);
       }
 
       if (options.prefetch) {

@@ -1,7 +1,8 @@
 // Desktop duplication of the game's monitor, tone-mapped by a shader when it is HDR, scaled to NV12
 // by the video processor and encoded by the GPU's own encoder. Packets go into the shared ring.
 use std::mem::ManuallyDrop;
-use std::sync::atomic::Ordering;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use aw_next_hdr_screenshot::display::{path_for_device, path_hdr_enabled, path_sdr_white_scale};
@@ -619,6 +620,28 @@ fn open_encoder(manager: &IMFDXGIDeviceManager, luid: LUID, config: &Config, siz
     Err(Error::new(E_FAIL, "no-encoder"))
 }
 
+// Counts the encoder's samples still holding a pooled picture. Media Foundation calls back once a
+// sample is released, and only then may that picture be drawn over.
+#[implement(IMFAsyncCallback)]
+struct Released(Arc<AtomicUsize>);
+
+impl IMFAsyncCallback_Impl for Released_Impl {
+    fn GetParameters(&self, _flags: *mut u32, _queue: *mut u32) -> Result<()> {
+        Err(E_NOTIMPL.into())
+    }
+
+    fn Invoke(&self, _result: Ref<IMFAsyncResult>) -> Result<()> {
+        self.0.fetch_sub(1, Ordering::AcqRel);
+        Ok(())
+    }
+}
+
+// The next picture to draw into: not the one being repeated, and none the encoder still reads.
+// None means every picture is in use, and the new frame is dropped.
+fn free_slot(held: &[usize], start: usize, filled: Option<usize>) -> Option<usize> {
+    (0..held.len()).map(|step| (start + step) % held.len()).find(|&slot| Some(slot) != filled && held[slot] == 0)
+}
+
 // A readable copy of the NV12 pictures, for the software encoder, which cannot take GPU textures.
 fn staging_texture(device: &ID3D11Device, width: u32, height: u32) -> Result<ID3D11Texture2D> {
     let desc = D3D11_TEXTURE2D_DESC {
@@ -650,6 +673,8 @@ struct Session {
     processor: ID3D11VideoProcessor,
     input: ID3D11VideoProcessorInputView,
     pool: Vec<(ID3D11Texture2D, ID3D11VideoProcessorOutputView)>,
+    // Samples the encoder still holds, per picture of the pool.
+    held: Vec<Arc<AtomicUsize>>,
     monitor: HMONITOR,
     _manager: IMFDXGIDeviceManager,
     device: ID3D11Device,
@@ -792,6 +817,7 @@ impl Session {
                 processor,
                 input: input.unwrap(),
                 pool,
+                held: (0..POOL).map(|_| Arc::new(AtomicUsize::new(0))).collect(),
                 encoder,
                 monitor,
                 _manager: manager,
@@ -836,13 +862,25 @@ impl Session {
     }
 
     // The picture in `slot` as a sample: the GPU texture itself, or its bytes for the software encoder.
+    // A GPU sample is tracked: the encoder may read its texture after ProcessInput returns.
     fn sample(&self, slot: usize, time: i64, duration: i64) -> Result<IMFSample> {
         unsafe {
-            let sample = MFCreateSample()?;
-            match &self.staging {
-                Some(staging) => sample.AddBuffer(&self.read_back(staging, slot)?)?,
-                None => sample.AddBuffer(&MFCreateDXGISurfaceBuffer(&ID3D11Texture2D::IID, &self.pool[slot].0, 0, false)?)?,
-            }
+            let sample = match &self.staging {
+                Some(staging) => {
+                    let sample = MFCreateSample()?;
+                    sample.AddBuffer(&self.read_back(staging, slot)?)?;
+                    sample
+                }
+                None => {
+                    let tracked = MFCreateTrackedSample()?;
+                    let released: IMFAsyncCallback = Released(Arc::clone(&self.held[slot])).into();
+                    tracked.SetAllocator(&released, None)?;
+                    self.held[slot].fetch_add(1, Ordering::AcqRel);
+                    let sample: IMFSample = tracked.cast()?;
+                    sample.AddBuffer(&MFCreateDXGISurfaceBuffer(&ID3D11Texture2D::IID, &self.pool[slot].0, 0, false)?)?;
+                    sample
+                }
+            };
             sample.SetSampleTime(time)?;
             sample.SetSampleDuration(duration)?;
             Ok(sample)
@@ -902,12 +940,23 @@ impl Session {
                     Ok(()) => {
                         // Zero means only the pointer moved.
                         let changed = info.LastPresentTime != 0;
-                        let converted = if changed { self.convert(resource.unwrap(), slot) } else { Ok(()) };
+                        let target = if changed {
+                            let held: Vec<usize> = self.held.iter().map(|count| count.load(Ordering::Acquire)).collect();
+                            free_slot(&held, slot, filled)
+                        } else {
+                            None
+                        };
+                        let converted = match target {
+                            Some(target) => self.convert(resource.unwrap(), target),
+                            None => Ok(()),
+                        };
                         self.duplication.ReleaseFrame()?;
                         converted?;
-                        if changed {
-                            filled = Some(slot);
-                            slot = (slot + 1) % POOL;
+                        if let Some(target) = target {
+                            filled = Some(target);
+                            slot = (target + 1) % POOL;
+                        } else if changed {
+                            shared.dropped.fetch_add(1, Ordering::Relaxed);
                         }
                     }
                     Err(error) if error.code() == DXGI_ERROR_WAIT_TIMEOUT => {}
@@ -991,6 +1040,14 @@ pub fn run(config: &Config, shared: &Shared) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_picture_the_encoder_still_reads_is_never_drawn_over() {
+        assert_eq!(free_slot(&[0, 0, 0], 0, None), Some(0));
+        assert_eq!(free_slot(&[1, 0, 0], 0, None), Some(1));
+        assert_eq!(free_slot(&[0, 0, 0], 2, Some(2)), Some(0));
+        assert_eq!(free_slot(&[2, 1, 0], 1, Some(2)), None);
+    }
 
     #[test]
     fn a_refused_rate_steps_down_to_60_then_30() {

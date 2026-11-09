@@ -60,7 +60,9 @@ test('the Watchdog keeps the recorder in step with games and settings, and unloc
   assert.equal(watchdogSource.match(/forwardGameActivity\(\);\n\s+syncClipRecorder\(\);/g).length, 3);
   // ...and after every settings reload.
   assert.match(watchdogSource, /debug\.log\('Options loaded'\);\n\s+syncClipRecorder\(\);/);
-  assert.match(toasterSource, /!message\.silent && !message\.progress\) \{\n\s+require\('\.\/clip\.js'\)\.trigger\(/);
+  assert.match(toasterSource, /!message\.silent && !message\.progress\) \{\n\s+const clipFile = require\('\.\/clip\.js'\)\.trigger\(/);
+  // ...and the clip it asked for is tied to the achievement.
+  assert.match(toasterSource, /captureLinks\.remember\(message, 'clip', clipFile\)/);
 });
 
 test('nothing runs while clips are off, without a recorder program, or without a game', () => {
@@ -336,6 +338,48 @@ test('a recorder that dies while writing a clip has that file settled, not the o
   await say(child, 'writing C:\\Clips\\Game\\b.mp4');
   child.emit('exit', null);
   assert.deepEqual(parts.calls.settled, ['C:\\Clips\\Game\\b.mp4.part']);
+});
+
+test('an unlock the recorder folded into a clip already recording points at that clip', async (t) => {
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-clip-index-'));
+  const previous = process.env.AW_USER_DATA;
+  process.env.AW_USER_DATA = userData;
+  const { resetCache } = require('../util/userData.js');
+  resetCache();
+  t.after(() => {
+    if (previous === undefined) delete process.env.AW_USER_DATA;
+    else process.env.AW_USER_DATA = previous;
+    resetCache();
+    fs.rmSync(userData, { recursive: true, force: true });
+  });
+  const captureIndex = require('../../app/util/captureIndex.js');
+  const first = path.join(userData, 'Clips', 'First.mp4');
+  const second = path.join(userData, 'Clips', 'Second.mp4');
+  captureIndex.record(userData, { appid: '440', name: 'B', kind: 'clip', file: second });
+
+  const spawner = fakeSpawner();
+  clip.sync(enabled, game, deps(spawner));
+  await say(spawner.children[0], `merged ${first}\t${second}`);
+
+  assert.equal(captureIndex.readIndex(userData).games['440'].B[0].file, first);
+});
+
+test('when the Watchdog exits, gpu-screen-recorder is stopped at once rather than left recording', () => {
+  const spawner = fakeSpawner();
+  const signals = [];
+  const recorder = clip.sync({ ...enabled }, game, {
+    platform: 'linux',
+    run: spawner.run,
+    locate: () => ({ command: 'gpu-screen-recorder', prefix: [] }),
+    replayDir: os.tmpdir(),
+    env: {},
+    kill: (pid, signal) => signals.push(signal),
+  });
+  assert.equal(recorder.engine, 'gpu-screen-recorder');
+
+  clip.shutdown();
+
+  assert.ok(signals.includes('SIGINT'));
 });
 
 test('quitting waits for the clip being written, unless its writing hung', async (t) => {

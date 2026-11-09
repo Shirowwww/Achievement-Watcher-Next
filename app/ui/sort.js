@@ -188,6 +188,9 @@ function applyAchievementSort(root, mode, direction) {
   const factor = direction === 'asc' ? 1 : -1;
 
   li.detach().sort(function (a, b) {
+    // Pinned rows stay on top whatever the sort.
+    const pinnedFirst = Number($(b).find('.achievement').attr('data-pinned') === '1') - Number($(a).find('.achievement').attr('data-pinned') === '1');
+    if (pinnedFirst !== 0) return pinnedFirst;
     // A PlayStation platinum sorts like any row; only an unsorted list keeps it first (data-index -1).
     if (mode === 'percent') {
       // The displayed text is localized ("84,5 %"), so the raw value is read from the attribute.
@@ -241,6 +244,17 @@ function restoreAchievementSort(root) {
 window.restoreAchievementSorts = function () {
   $('.achievement-list').each(function () {
     restoreAchievementSort($(this));
+  });
+};
+
+// After a pin changed: the chosen sort again, or the list's own order, with pinned rows on top.
+window.reorderAchievementRows = function () {
+  $('.achievement-list').each(function () {
+    const root = $(this);
+    const mode = localStorage[achievementStorageKey(root, 'mode')];
+    const direction = localStorage[achievementStorageKey(root, 'direction')];
+    if (['percent', 'time'].includes(mode) && ['asc', 'desc'].includes(direction)) applyAchievementSort(root, mode, direction);
+    else applyAchievementSort(root, null, 'asc');
   });
 };
 

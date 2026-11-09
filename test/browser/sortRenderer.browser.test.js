@@ -189,6 +189,45 @@ test('the PlayStation platinum follows the achievement sort', { concurrency: 1, 
   });
 });
 
+// A pinned achievement stays on top of its list whatever the sort, and a pin set later moves it there.
+test('pinned achievements lead the list in every sort', { concurrency: 1, timeout: 180000 }, async (t) => {
+  await inContext(t, async (context) => {
+    const harnessDir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-pin-sort-harness-'));
+    const harness = path.join(harnessDir, 'pin-sort.html');
+    fs.writeFileSync(harness, buildHarness());
+
+    try {
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(harness).href);
+      const result = await page.evaluate(() => {
+        const row = (id, index, percent, pinned) =>
+          '<li data-id="' + id + '"><div class="achievement" data-index="' + index + '" data-pinned="' + (pinned ? 1 : 0) + '"><div class="stats">' +
+          '<span class="time" data-time="0"></span><div class="community"><span class="data" data-percent="' + percent + '">' + percent + '</span></div></div></div></li>';
+        const ids = () => $('#unlock > ul > li').map(function () { return this.dataset.id; }).get();
+        const click = (button) => document.querySelector('#unlock .sort.' + button).click();
+        localStorage.clear();
+        $('#unlock > ul').html(row('a', 0, 50, false) + row('b', 1, 5, false) + row('c', 2, 20, true));
+        click('percentage');
+        const rarityAsc = ids();
+        click('percentage');
+        const rarityDesc = ids();
+        click('percentage');
+        const unsorted = ids();
+        $('#unlock .achievement[data-index="0"]').attr('data-pinned', '1');
+        window.reorderAchievementRows();
+        return { rarityAsc, rarityDesc, unsorted, afterPin: ids() };
+      });
+
+      assert.deepEqual(result.rarityAsc, ['c', 'b', 'a']);
+      assert.deepEqual(result.rarityDesc, ['c', 'a', 'b']);
+      assert.deepEqual(result.unsorted, ['c', 'a', 'b']);
+      assert.deepEqual(result.afterPin, ['a', 'c', 'b'], 'two pinned rows keep the list order between them');
+    } finally {
+      fs.rmSync(harnessDir, { recursive: true, force: true });
+    }
+  });
+});
+
 // The achievement sort buttons are icon-only: an idle one used to have no name at all, so a screen
 // reader announced "button" and nothing said what clicking it would do.
 test('every achievement sort button is named, active or not', { concurrency: 1, timeout: 180000 }, async (t) => {

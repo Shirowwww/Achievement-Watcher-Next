@@ -186,6 +186,7 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       applyRarity(entries);
       // The profile's trophy counts rank unlocks by these same rates.
       if (typeof window.forgetTrophyRates === 'function') window.forgetTrophyRates(appid);
+      if (typeof window.repaintLinkedPlatinum === 'function') window.repaintLinkedPlatinum();
     })
     .catch(() => {})
     .finally(settle);
@@ -242,7 +243,8 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
         if ($('#settings').is(':visible')) {
           $('#btn-settings-cancel').trigger('click');
         } else if ($('#achievement').is(':visible')) {
-          $('#btn-previous').trigger('click');
+          // One level at a time: the achievements list goes back to the overview first.
+          $($('#achievement').attr('data-view') === 'list' ? '#btn-overview' : '#btn-previous').trigger('click');
         }
       } else if (e.which === 5) {
         const box = window.__awMouseNavGameBox;
@@ -323,6 +325,35 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       return items;
     };
 
+    // The lookup and the viewer's strings are app.js's, shared with the game page's souvenirs.
+    const capturesOfOpenGame = (appid) =>
+      Promise.resolve(window.app?.capturesOfOpenGame?.(appid))
+        .then((found) => (found && found.byAchievement) || {})
+        .catch(() => ({}));
+    const openCaptureViewer = (row, items) => {
+      const remote = require('@electron/remote');
+      const path = require('path');
+      const intl = require(path.join(remote.app.getAppPath(), 'util/intlFormat.js'));
+      const lang = String(window.app?.config?.achievement?.lang || 'english');
+      window.CaptureViewer?.open({
+        title: row.find('.content .title').first().text().trim(),
+        subtitle: $('#achievement .wrapper > .header .title > span').first().text().trim(),
+        items,
+        inset: 30,
+        strings: window.app?.captureViewerStrings?.() || {},
+        formatDate: (at) => intl.formatDateTime(at, lang),
+        onReveal: (item) => require('electron').ipcRenderer.invoke('achievement-capture-reveal', item.url).catch(() => {}),
+      });
+    };
+    const captureMenuItems = (row, list, t) =>
+      [
+        ['screenshot', t('capture-show-screenshot', 'Show screenshot', 'Voir la capture')],
+        ['clip', t('capture-show-clip', 'Show clip', 'Voir le clip')],
+      ]
+        .map(([kind, label]) => [label, (list || []).filter((item) => item.kind === kind)])
+        .filter(([, items]) => items.length > 0)
+        .map(([label, items]) => ({ label, click: () => openCaptureViewer(row, items) }));
+
     // Right-click an achievement row to mark it as manually unlocked (or clear the override).
     $('#achievement .achievement-list').on('contextmenu', '.achievement', function (event) {
       const row = $(this);
@@ -351,6 +382,14 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
           click: () => window.app?.toggleAchievementSteps?.(row.attr('data-name'), { open: true, focusNew: true }),
         });
       }
+      if (!achieved && !manual) {
+        const { t } = require(require('path').join(remote.app.getAppPath(), 'locale/t.js'));
+        const pinned = row.attr('data-pinned') === '1';
+        items.push({
+          label: pinned ? t('ach-unpin-menu', 'Unpin', 'Désépingler') : t('ach-pin-menu', 'Pin to the top', 'Épingler en haut'),
+          click: () => window.app?.setAchievementPinned?.(name, !pinned),
+        });
+      }
       if (manual) {
         items.push({
           label: $('#game-list').attr('data-ctx-clearmanualunlock') || '',
@@ -367,6 +406,22 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
           label: t('relock-ach-menu', 'Re-lock this achievement', 'Reverrouiller ce succès'),
           click: () => window.app?.relockAchievementAction?.(appid, name),
         });
+        // An unlocked row offers its screenshot and clip first, when there are any. The menu opens
+        // where the click was, and without them if the lookup fails.
+        event.preventDefault();
+        const zoom = require('electron').webFrame.getZoomFactor();
+        const at = { x: Math.round(event.clientX * zoom), y: Math.round(event.clientY * zoom) };
+        const popup = (menu) => remote.Menu.buildFromTemplate(menu).popup({ window: remote.getCurrentWindow(), ...at });
+        capturesOfOpenGame(appid)
+          .then((captures) => {
+            if ($('#achievement .wrapper > .header').attr('data-appid') !== appid) return;
+            // Own entries only, so an achievement named "constructor" reads no Object method.
+            const own = Object.prototype.hasOwnProperty.call(captures, name) ? captures[name] : null;
+            const shown = captureMenuItems(row, Array.isArray(own) ? own : [], t);
+            popup(shown.length ? [...shown, { type: 'separator' }, ...items] : items);
+          })
+          .catch(() => popup(items));
+        return;
       }
       if (items.length === 0) return;
       event.preventDefault();
@@ -443,6 +498,13 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       ]).popup({ window: remote.getCurrentWindow(), x: Math.round(rect.left * zoom), y: Math.round(rect.bottom * zoom) });
     });
 
+    // From the achievements list back to the game's overview (app.js, setGameView).
+    $('#btn-overview').on('click keydown', function (event) {
+      if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      window.setGameView?.('overview');
+    });
+
     $('#btn-previous').click(function () {
       let self = $(this);
       self.css('pointer-events', 'none');
@@ -461,7 +523,8 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       $('#achievement')
         .addClass('is-leaving')
         .fadeOut(200, function () {
-          $(this).removeClass('is-leaving').scrollTop(0);
+          $(this).removeClass('is-leaving').scrollTop(0).removeAttr('data-view');
+          window.GameOverview?.reset();
           $('body').removeAttr('style').removeClass('is-leaving-game');
           $('.achievement-list > .header .sort-ach .sort').removeClass('show active');
           $('#home').addClass('is-returning');

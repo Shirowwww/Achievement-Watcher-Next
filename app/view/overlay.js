@@ -73,11 +73,27 @@
     accentMagenta: 'Magenta',
     accentOrange: 'Orange',
     accentCustom: 'Custom',
+    accentShade: 'Shade',
+    accentHue: 'Hue',
+    accentCode: 'Colour code',
     controller: 'Controller',
     controllerOpen: 'Open',
     controllerUi: 'Overlay control',
     controllerMove: 'Move/scroll',
+    pin: 'Pin to the top',
+    unpin: 'Unpin',
+    captureScreenshot: 'Show screenshot',
+    captureClip: 'Show clip',
+    captureClose: 'Close',
+    capturePrevious: 'Previous',
+    captureNext: 'Next',
+    captureCount: '{current} of {total}',
+    captureUnavailable: 'This file can no longer be opened.',
+    captureFolder: 'Show in folder',
   };
+  // Screenshots and clips of the game shown, by achievement name; filled once the overlay opens.
+  let captures = {};
+  let capturesRequest = 0;
 
   const SETTINGS_KEY = 'aw-overlay-settings-v1';
   const ACCENT_PRESETS = {
@@ -161,9 +177,19 @@
     showRarity: true,
     showDescriptions: true,
     useAppTheme: false,
+    recentAccents: [],
+  };
+
+  // Below a fifth the panel can no longer be read over a bright game.
+  const OPACITY_MIN = 0.2;
+  const clampOpacity = (value) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.min(1, Math.max(OPACITY_MIN, Math.round(number * 100) / 100)) : DEFAULT_SETTINGS.opacity;
   };
 
   let settings = loadSettings();
+  // The custom accent picker's position. Declared here, before anything can call applySettings().
+  let pickerHsv = ui.hexToHsv(settings.accent);
   let themePayload = null;
   let themeStyleEl = null;
 
@@ -200,6 +226,9 @@
       const stored = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
       Object.assign(base, stored);
     } catch {}
+    base.opacity = clampOpacity(base.opacity);
+    base.accent = ui.normalizeHex(base.accent) || DEFAULT_SETTINGS.accent;
+    base.recentAccents = ui.rememberAccent(base.recentAccents);
     return base;
   }
 
@@ -215,6 +244,36 @@
     const n = parseInt(full, 16);
     if (!Number.isFinite(n)) return ACCENT_PRESETS['#4aa3ff'];
     return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
+  }
+
+  // Draws the picker from pickerHsv; the code field is left alone while it is being typed in.
+  function paintAccentPicker() {
+    const picker = $('accent-picker');
+    if (!picker) return;
+    picker.style.setProperty('--picker-hue', String(Math.round(pickerHsv.h)));
+    const thumb = $('accent-shade-thumb');
+    thumb.style.left = `${pickerHsv.s * 100}%`;
+    thumb.style.top = `${(1 - pickerHsv.v) * 100}%`;
+    thumb.style.background = ui.hsvToHex(pickerHsv);
+    $('accent-shade').setAttribute('aria-valuenow', String(Math.round(pickerHsv.s * 100)));
+    $('accent-shade').setAttribute('aria-valuetext', ui.hsvToHex(pickerHsv).toUpperCase());
+    $('accent-hue').value = String(Math.round(pickerHsv.h));
+    const code = $('accent-code');
+    if (document.activeElement !== code) {
+      code.value = settings.accent.toUpperCase();
+      code.removeAttribute('aria-invalid');
+    }
+    const recent = $('accent-recent');
+    recent.textContent = '';
+    for (const hex of settings.recentAccents) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.dataset.accent = hex;
+      button.style.background = hex;
+      button.title = hex.toUpperCase();
+      button.setAttribute('aria-label', hex.toUpperCase());
+      recent.appendChild(button);
+    }
   }
 
   function applySettings() {
@@ -234,19 +293,22 @@
     document.body.classList.toggle('hide-descriptions', !settings.showDescriptions);
 
     $('zoom-select').value = String(settings.zoom);
-    $('opacity-select').value = String(settings.opacity);
+    $('opacity-range').value = String(Math.round(settings.opacity * 100));
+    $('opacity-value').textContent = `${Math.round(settings.opacity * 100)}%`;
     $('toggle-stats').checked = settings.showStats;
     $('toggle-progress').checked = settings.showProgress;
     $('toggle-rarity').checked = settings.showRarity;
     $('toggle-descriptions').checked = settings.showDescriptions;
     $('toggle-use-theme').checked = settings.useAppTheme;
-    $('accent-custom').value = settings.accent;
 
     document.querySelectorAll('#density-seg button').forEach((b) => b.classList.toggle('active', b.dataset.density === settings.density));
     document.querySelectorAll('#iconsize-seg button').forEach((b) => b.classList.toggle('active', Number(b.dataset.iconsize) === settings.iconSize));
     document.querySelectorAll('.swatch[data-accent]').forEach((b) => b.classList.toggle('active', b.dataset.accent === settings.accent));
-    $('swatch-custom').classList.toggle('active', !ACCENT_PRESETS[settings.accent]);
+    const custom = !ACCENT_PRESETS[settings.accent];
+    $('swatch-custom').classList.toggle('active', custom);
     $('swatch-custom').style.setProperty('--custom-accent', settings.accent);
+    $('accent-custom-label').textContent = custom ? settings.accent.toUpperCase() : overlayStrings.accentCustom;
+    paintAccentPicker();
 
     updateStats();
     renderRows();
@@ -299,6 +361,9 @@
       swatch.title = accentTitles[swatch.dataset.accent] || overlayStrings.accentCustom;
     });
     $('swatch-custom').title = overlayStrings.accentCustom;
+    $('accent-shade').setAttribute('aria-label', overlayStrings.accentShade);
+    $('accent-hue').setAttribute('aria-label', overlayStrings.accentHue);
+    $('accent-code').setAttribute('aria-label', overlayStrings.accentCode);
 
     const pills = document.querySelectorAll('.filter-pill');
     const labels = { all: overlayStrings.filterAll, unlocked: overlayStrings.filterUnlocked, locked: overlayStrings.filterLocked, progress: overlayStrings.filterProgress };
@@ -376,7 +441,75 @@
 
   function loadTableData(game) {
     currentGame = game;
+    captures = {};
     renderRows();
+    loadCaptures(game);
+  }
+
+  // The titles shown here also find captures older than the index, by their file name.
+  function loadCaptures(game) {
+    const request = ++capturesRequest;
+    if (!game || !window.api.achievementCaptures) return;
+    const titles = {};
+    const list = game.achievements || (game.achievement && game.achievement.list) || [];
+    for (const achievement of list) {
+      if (achievement && achievement.name) titles[achievement.name] = ui.safeLocalizedText(achievement.displayName, overlayLang, '');
+    }
+    const gameTitles = [game.displayName, game.name].filter((title) => typeof title === 'string' && title);
+    window.api
+      .achievementCaptures({ appid: String(game.appid), gameTitles, titles })
+      .then((found) => {
+        if (request !== capturesRequest || currentGame !== game || !found || !Object.keys(found).length) return;
+        captures = found;
+        // The buttons fade in when they arrive, not on every later redraw of the list.
+        document.documentElement.classList.add('captures-arriving');
+        renderRows();
+        setTimeout(() => document.documentElement.classList.remove('captures-arriving'), 200);
+      })
+      .catch(() => {});
+  }
+
+  function capturesOf(achievement, kind) {
+    // Own entries only: an achievement named "constructor" would otherwise read Object's method.
+    const own = Object.prototype.hasOwnProperty.call(captures, achievement.name) ? captures[achievement.name] : null;
+    return (Array.isArray(own) ? own : []).filter((item) => item.kind === kind);
+  }
+
+  function openCaptures(achievement, kind) {
+    const items = capturesOf(achievement, kind);
+    if (!items.length || !window.CaptureViewer) return;
+    window.CaptureViewer.open({
+      title: ui.safeLocalizedText(achievement.displayName, overlayLang, ''),
+      subtitle: (currentGame && (currentGame.displayName || currentGame.name)) || '',
+      items,
+      strings: {
+        close: overlayStrings.captureClose,
+        previous: overlayStrings.capturePrevious,
+        next: overlayStrings.captureNext,
+        count: overlayStrings.captureCount,
+        unavailable: overlayStrings.captureUnavailable,
+        reveal: overlayStrings.captureFolder,
+      },
+      formatDate: (at) => ui.formatTimestamp(at, overlayLang, ''),
+      onReveal: window.api.revealCapture ? (item) => window.api.revealCapture(item.url).catch(() => {}) : null,
+    });
+  }
+
+  const CAPTURE_ICONS = {
+    screenshot:
+      '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 3.5 6.4 2h3.2l.9 1.5H13A1.5 1.5 0 0 1 14.5 5v7a1.5 1.5 0 0 1-1.5 1.5H3A1.5 1.5 0 0 1 1.5 12V5A1.5 1.5 0 0 1 3 3.5h2.5Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
+    clip: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="3.5" width="9" height="9" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="m10.5 7 4-2.2v6.4l-4-2.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+  };
+
+  // One small button per kind the achievement has, under its status.
+  function captureButtonsHtml(achievement) {
+    return ['screenshot', 'clip']
+      .filter((kind) => capturesOf(achievement, kind).length > 0)
+      .map((kind) => {
+        const label = ui.escapeHtml(kind === 'clip' ? overlayStrings.captureClip : overlayStrings.captureScreenshot);
+        return `<button type="button" class="overlay-capture-btn" data-capture="${kind}" aria-label="${label}" title="${label}">${CAPTURE_ICONS[kind]}</button>`;
+      })
+      .join('');
   }
 
   // Steps the player wrote under an achievement in the main window (parser/achievementSteps.js).
@@ -484,6 +617,49 @@
     });
   }
 
+  const PIN_ICON =
+    '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M5.5 2.5h5M6.5 2.5v4L4.5 9.5h7l-2-3v-4M8 9.5v4"/></svg>';
+
+  function pinButtonHtml(pinned) {
+    const label = ui.escapeHtml(pinned ? overlayStrings.unpin : overlayStrings.pin);
+    return `<button type="button" class="overlay-pin${pinned ? ' is-on' : ''}" aria-pressed="${pinned}" title="${label}" aria-label="${label}">${PIN_ICON}</button>`;
+  }
+
+  // A pin set here is saved by the main process, which tells the main window.
+  function bindPin(row, achievement) {
+    const button = row.querySelector('.overlay-pin');
+    if (!button) return;
+    button.addEventListener('click', async (event) => {
+      // The row reveals a hidden description on click: a click on the pin is not that.
+      event.stopPropagation();
+      if (!currentGame) return;
+      const appid = currentGame.appid;
+      const pinned = !button.classList.contains('is-on');
+      let result = null;
+      try {
+        result = await window.api.setPinned(appid, achievement.name, pinned);
+      } catch {
+        result = null;
+      }
+      if (!result || !result.changed || !Array.isArray(result.pins) || !currentGame || currentGame.appid !== appid) return;
+      currentGame.pins = result.pins;
+      renderRowsGliding();
+    });
+  }
+
+  // The list drawn again with each row gliding from where it was (transform only).
+  function renderRowsGliding() {
+    const rowsByName = () => new Map([...document.querySelectorAll('#overlayRows .overlay-row')].map((row) => [row.dataset.name, row]));
+    const before = new Map([...rowsByName()].map(([name, row]) => [name, row.getBoundingClientRect().top]));
+    renderRows();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    for (const [name, row] of rowsByName()) {
+      const delta = before.has(name) ? before.get(name) - row.getBoundingClientRect().top : 0;
+      if (Math.abs(delta) >= 1) row.animate([{ transform: `translateY(${delta}px)` }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(0.2, 0, 0, 1)' });
+    }
+  }
+
   function renderRows() {
     const container = $('overlayRows');
     const empty = $('overlay-empty');
@@ -496,7 +672,9 @@
     }
 
     const achievements = filteredAchievements();
-    const sorted = ui.sortAchievements(achievements, sortState, (a) => ui.safeLocalizedText(a && a.displayName, overlayLang, ''));
+    const pins = new Set(currentGame.pins || []);
+    const isPinned = (a) => Boolean(a && !a.Achieved && pins.has(a.name));
+    const sorted = ui.sortAchievements(achievements, sortState, (a) => ui.safeLocalizedText(a && a.displayName, overlayLang, ''), isPinned);
     container.innerHTML = '';
     updateStats();
     updateSortIndicators();
@@ -538,9 +716,13 @@
       const rarityHtml = tier ? `<span class="rarity-badge ${tier}">★ ${ui.escapeHtml(badgeText)}</span>` : '';
 
       const dateHtml = achieved && achievement.UnlockTime ? `<div class="unlock-date">${ui.escapeHtml(ui.formatTimestamp(achievement.UnlockTime, overlayLang, overlayStrings.na))}</div>` : '';
+      const pinned = isPinned(achievement);
+      const captureHtml = achieved ? captureButtonsHtml(achievement) : '';
       const statusHtml = achieved
-        ? `<span class="status-pill unlocked">${ui.escapeHtml(overlayStrings.unlocked)}</span>${dateHtml}`
-        : `<span class="status-pill locked">${ui.escapeHtml(overlayStrings.locked)}</span>`;
+        ? `<span class="status-pill unlocked">${ui.escapeHtml(overlayStrings.unlocked)}</span>${dateHtml}${captureHtml ? `<div class="overlay-captures">${captureHtml}</div>` : ''}`
+        : `${pinButtonHtml(pinned)}<span class="status-pill locked">${ui.escapeHtml(overlayStrings.locked)}</span>`;
+      if (pinned) row.classList.add('is-pinned');
+      row.dataset.name = achievement.name;
 
       row.innerHTML =
         `<div class="overlay-icon"><img alt="" /></div>` +
@@ -548,6 +730,20 @@
         `<div class="overlay-desc${masked ? ' masked-desc' : ''}" title="${description}">${description}</div>${progressHtml(progress)}${stepsHtml(achievement)}${rarityHtml}</div>` +
         `<div class="overlay-status">${statusHtml}</div>`;
       bindSteps(row, achievement);
+      bindPin(row, achievement);
+      if (captureHtml) {
+        row.querySelectorAll('.overlay-capture-btn').forEach((button) => {
+          button.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openCaptures(achievement, button.getAttribute('data-capture'));
+          });
+        });
+        // Right-click opens the screenshot, or the clip when there is no screenshot.
+        row.addEventListener('contextmenu', (event) => {
+          event.preventDefault();
+          openCaptures(achievement, capturesOf(achievement, 'screenshot').length ? 'screenshot' : 'clip');
+        });
+      }
 
       if (masked) {
         // The gamepad focuses and clicks the row, not the description, so the row listens.
@@ -663,14 +859,82 @@
   document.querySelectorAll('.swatch[data-accent]').forEach((swatch) => {
     swatch.addEventListener('click', () => {
       settings.accent = swatch.dataset.accent;
+      setAccentPickerOpen(false);
       applySettings();
       saveSettings();
     });
   });
-  $('accent-custom').addEventListener('input', (e) => {
-    settings.accent = e.target.value;
+
+  function setAccentPickerOpen(open) {
+    $('accent-picker').classList.toggle('is-open', open);
+    $('swatch-custom').setAttribute('aria-expanded', String(open));
+  }
+
+  // A drag shows each colour at once; the colour is kept (and remembered) when the gesture ends.
+  function setCustomAccent(hex, { keep = true, fromPicker = false } = {}) {
+    const code = ui.normalizeHex(hex);
+    if (!code) return;
+    if (!fromPicker) pickerHsv = ui.hexToHsv(code);
+    settings.accent = code;
+    if (keep) settings.recentAccents = ui.rememberAccent(settings.recentAccents, code);
     applySettings();
-    saveSettings();
+    if (keep) saveSettings();
+  }
+
+  $('swatch-custom').addEventListener('click', () => {
+    const open = !$('accent-picker').classList.contains('is-open');
+    if (open) pickerHsv = ui.hexToHsv(settings.accent);
+    setAccentPickerOpen(open);
+    paintAccentPicker();
+  });
+
+  const shade = $('accent-shade');
+  const shadeAt = (event, keep) => {
+    const box = shade.getBoundingClientRect();
+    if (!box.width || !box.height) return;
+    const unit = (value) => Math.min(1, Math.max(0, value));
+    pickerHsv = { h: pickerHsv.h, s: unit((event.clientX - box.left) / box.width), v: unit(1 - (event.clientY - box.top) / box.height) };
+    setCustomAccent(ui.hsvToHex(pickerHsv), { keep, fromPicker: true });
+  };
+  shade.addEventListener('pointerdown', (event) => {
+    shade.setPointerCapture(event.pointerId);
+    shadeAt(event, false);
+  });
+  shade.addEventListener('pointermove', (event) => {
+    if (shade.hasPointerCapture(event.pointerId)) shadeAt(event, false);
+  });
+  shade.addEventListener('pointerup', (event) => {
+    if (shade.hasPointerCapture(event.pointerId)) shadeAt(event, true);
+  });
+  shade.addEventListener('keydown', (event) => {
+    const STEP = event.shiftKey ? 0.1 : 0.02;
+    const moves = { ArrowLeft: ['s', -STEP], ArrowRight: ['s', STEP], ArrowDown: ['v', -STEP], ArrowUp: ['v', STEP] };
+    const move = moves[event.key];
+    if (!move) return;
+    event.preventDefault();
+    pickerHsv = { ...pickerHsv, [move[0]]: Math.min(1, Math.max(0, pickerHsv[move[0]] + move[1])) };
+    setCustomAccent(ui.hsvToHex(pickerHsv), { fromPicker: true });
+  });
+
+  $('accent-hue').addEventListener('input', (event) => {
+    pickerHsv = { ...pickerHsv, h: Number(event.target.value) || 0 };
+    setCustomAccent(ui.hsvToHex(pickerHsv), { keep: false, fromPicker: true });
+  });
+  $('accent-hue').addEventListener('change', () => setCustomAccent(ui.hsvToHex(pickerHsv), { fromPicker: true }));
+
+  $('accent-code').addEventListener('input', (event) => {
+    const code = ui.normalizeHex(event.target.value);
+    event.target.setAttribute('aria-invalid', String(!code));
+    if (code && /^#?[0-9a-f]{6}$/i.test(event.target.value.trim())) setCustomAccent(code);
+  });
+  // Enter or leaving the field takes a short code too (#abc), which typing alone waits past.
+  $('accent-code').addEventListener('change', (event) => setCustomAccent(event.target.value));
+  // Leaving the field puts back the colour in use, so a half-typed code never stays on screen.
+  $('accent-code').addEventListener('blur', paintAccentPicker);
+
+  $('accent-recent').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-accent]');
+    if (button) setCustomAccent(button.dataset.accent);
   });
 
   document.querySelectorAll('#density-seg button').forEach((btn) => {
@@ -695,8 +959,9 @@
     saveSettings();
   });
 
-  $('opacity-select').addEventListener('change', (e) => {
-    settings.opacity = Number(e.target.value);
+  // Applied while the slider moves, so the overlay itself is the preview. The pad steps it too.
+  $('opacity-range').addEventListener('input', (e) => {
+    settings.opacity = clampOpacity(Number(e.target.value) / 100);
     applySettings();
     saveSettings();
   });
@@ -729,6 +994,8 @@
 
   $('settings-reset').addEventListener('click', () => {
     settings = Object.assign({}, DEFAULT_SETTINGS);
+    pickerHsv = ui.hexToHsv(settings.accent);
+    setAccentPickerOpen(false);
     applySettings();
     saveSettings();
   });
@@ -765,6 +1032,7 @@
   });
 
   window.api.onOverlay((game) => {
+    if (window.CaptureViewer) window.CaptureViewer.close();
     query = '';
     revealedDescriptions = new Set();
     openSteps = new Set();
@@ -792,6 +1060,13 @@
     renderRows();
   });
 
+  // A pin changed in the main window.
+  window.api.onPins((data) => {
+    if (!currentGame || !data || String(data.appid) !== String(currentGame.appid)) return;
+    currentGame.pins = Array.isArray(data.pins) ? data.pins : [];
+    renderRowsGliding();
+  });
+
   // Native Gamepad API navigation
   // The in-game overlay is a non-focused always-on-top window, so it polls the pad
   // directly (no document focus required). D-pad / left stick move the focus ring,
@@ -804,6 +1079,8 @@
       '.filter-pill',
       '.sort-btn',
       '.overlay-row',
+      '.overlay-pin',
+      '.overlay-capture-btn',
       '.overlay-steps-toggle',
       '.overlay-step',
       '#overlay-settings-toggle',
@@ -814,8 +1091,11 @@
       '#density-seg button',
       '#iconsize-seg button',
       '.swatch',
+      '.swatch-chip',
+      '#accent-hue',
+      '.accent-recent button',
       '#zoom-select',
-      '#opacity-select',
+      '#opacity-range',
       '#settings-close',
       '#settings-reset',
     ].join(',');
@@ -1150,7 +1430,17 @@
           const right = dpadRight || axisX > 0;
           const anyInput = up || down || left || right || a || b || (x && !uiCombo) || y;
           if (anyInput && !active) showFocus();
-          if (active) {
+          const viewer = window.CaptureViewer && window.CaptureViewer.isOpen() ? window.CaptureViewer : null;
+          if (active && viewer) {
+            // The viewer takes the pad while it is open: left and right browse, A plays, B closes.
+            repeat('left', left, () => viewer.command('prev'), true);
+            repeat('right', right, () => viewer.command('next'), true);
+            repeat('a', a, () => viewer.command('toggle'));
+            repeat('b', b, () => {
+              viewer.command('close');
+              setTimeout(() => ensureSelected(), 160);
+            });
+          } else if (active) {
             repeat('up', up, () => move(0, -1), true);
             repeat('down', down, () => move(0, 1), true);
             repeat('left', left, () => move(-1, 0), true);

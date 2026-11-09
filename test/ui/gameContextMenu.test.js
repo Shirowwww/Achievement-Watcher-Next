@@ -65,7 +65,8 @@ test('playtime can be edited and reset on every game, console ones included', ()
 });
 
 test('console games get the folders and links submenus, but not the Steam caches', () => {
-  for (const marker of ["attr('data-ctx-installloc')", "label: t('achievement-data-folders'", "label: 'RPCS3 Wiki'"]) {
+  // The links themselves (RPCS3 Wiki for a PS3 game) come from util/gameLinks.js, tested on its own.
+  for (const marker of ["attr('data-ctx-installloc')", "label: t('achievement-data-folders'", 'for (const link of helpLinks({']) {
     const chain = enclosingBlocks(marker);
     assert.ok(!chain.some((line) => line.includes('isConsoleSystem')), `${marker} is hidden from console games: ${chain.slice(0, 3).join(' <- ')}`);
   }

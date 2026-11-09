@@ -11,6 +11,7 @@
     />
     <title>Achievements Overlay</title>
     <link rel="stylesheet" href="../resources/css/colorPicker.css" type="text/css" />
+    <link rel="stylesheet" href="../resources/css/captureViewer.css" type="text/css" />
     <style>
       @font-face {
         font-family: "Open Sans";
@@ -575,9 +576,102 @@
         cursor: default;
       }
 
+      /* Shown on the row being pointed at or focused, and always once pinned. */
+      .overlay-pin {
+        display: inline-grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        margin-right: 6px;
+        padding: 0;
+        vertical-align: middle;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+      }
+
+      .overlay-pin svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .overlay-row:hover .overlay-pin,
+      .overlay-row:focus-within .overlay-pin,
+      .overlay-pin.controller-focus,
+      .overlay-pin.is-on {
+        opacity: 1;
+      }
+
+      .overlay-pin:hover,
+      .overlay-pin.controller-focus {
+        background: var(--bg-soft);
+        color: var(--text);
+      }
+
+      .overlay-pin.is-on {
+        color: var(--accent);
+      }
+
+      .overlay-row.is-pinned {
+        box-shadow: inset 2px 0 0 var(--accent);
+      }
+
       .overlay-status {
         text-align: right;
         min-width: 74px;
+      }
+
+      .overlay-captures {
+        display: flex;
+        justify-content: flex-end;
+        gap: 4px;
+        margin-top: 5px;
+      }
+
+      .overlay-capture-btn {
+        display: grid;
+        place-items: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--muted);
+        background: var(--bg-soft);
+        cursor: pointer;
+        transition: color var(--dur-fast) ease, background-color var(--dur-fast) ease;
+      }
+
+      .captures-arriving .overlay-captures {
+        animation: overlay-captures-in 160ms var(--ease-out);
+      }
+
+      @keyframes overlay-captures-in {
+        from {
+          opacity: 0;
+        }
+      }
+
+      .overlay-capture-btn svg {
+        width: 15px;
+        height: 15px;
+      }
+
+      .overlay-capture-btn:hover,
+      .overlay-capture-btn.controller-focus,
+      .overlay-capture-btn:focus-visible {
+        color: var(--text);
+        background: var(--bg-hover);
+      }
+
+      .overlay-capture-btn.controller-focus,
+      .overlay-capture-btn:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
       }
 
       .status-pill {
@@ -716,7 +810,8 @@
         margin-bottom: 10px;
       }
 
-      .settings-section > label:not(.settings-toggle) {
+      .settings-section > label:not(.settings-toggle),
+      .settings-range-head > label {
         display: block;
         margin-bottom: 5px;
         font-size: 11.5px;
@@ -754,6 +849,7 @@
 
       .settings-swatches {
         display: flex;
+        flex-wrap: wrap;
         gap: 6px;
         align-items: center;
       }
@@ -775,25 +871,171 @@
         border-color: var(--text);
       }
 
-      .swatch-custom {
-        position: relative;
-        overflow: hidden;
-      }
-
-      /* A chosen custom colour shows itself, ringed by the rainbow that says "pick your own". */
-      .swatch-custom.active {
-        background: radial-gradient(circle closest-side, var(--custom-accent) 0 calc(100% - 3px), transparent calc(100% - 2.5px)),
-          conic-gradient(#f33, #ff3, #3f3, #3ff, #33f, #f3f, #f33) !important;
-      }
-
-      .swatch-custom input {
-        position: absolute;
-        inset: -4px;
-        width: 28px;
-        height: 28px;
-        border: 0;
+      /* The custom colour: a chip that shows the colour and its code, and opens the picker below. */
+      .swatch-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        height: 22px;
+        padding: 0 8px 0 4px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--bg-soft);
+        color: var(--muted);
+        font: 11px Consolas, 'Cascadia Mono', monospace;
         cursor: pointer;
-        opacity: 0;
+        transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+      }
+
+      .swatch-chip:hover {
+        background: var(--bg-hover);
+        color: var(--text);
+      }
+
+      .swatch-chip.active,
+      .swatch-chip[aria-expanded='true'] {
+        border-color: var(--text);
+        color: var(--text);
+      }
+
+      .swatch-chip-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        flex: none;
+        background: conic-gradient(
+          oklch(72% 0.13 20),
+          oklch(78% 0.12 90),
+          oklch(76% 0.12 150),
+          oklch(74% 0.11 220),
+          oklch(70% 0.13 290),
+          oklch(72% 0.13 20)
+        );
+      }
+
+      .swatch-chip.active .swatch-chip-dot {
+        background: var(--custom-accent);
+      }
+
+      .accent-picker {
+        display: none;
+        gap: 7px;
+        margin-top: 8px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: var(--bg-soft);
+      }
+
+      .accent-picker.is-open {
+        display: grid;
+        animation: accent-picker-in 160ms var(--ease-out);
+      }
+
+      @keyframes accent-picker-in {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+
+      /* Saturation runs left to right, brightness bottom to top, over the hue the slider sets. */
+      .accent-shade {
+        position: relative;
+        height: 72px;
+        border-radius: 5px;
+        background: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(var(--picker-hue, 210) 100% 50%));
+        cursor: crosshair;
+        touch-action: none;
+      }
+
+      .accent-shade-thumb {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        box-sizing: border-box;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+
+      .accent-hue {
+        appearance: none;
+        width: 100%;
+        height: 10px;
+        margin: 0;
+        border-radius: 5px;
+        background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+        cursor: pointer;
+      }
+
+      .accent-hue::-webkit-slider-thumb {
+        appearance: none;
+        width: 14px;
+        height: 14px;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        background: hsl(var(--picker-hue, 210) 100% 50%);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45);
+      }
+
+      .accent-picker-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .accent-code {
+        flex: 1;
+        min-width: 0;
+        height: 24px;
+        padding: 0 6px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--text);
+        font: 11px Consolas, 'Cascadia Mono', monospace;
+        text-transform: uppercase;
+      }
+
+      .accent-code[aria-invalid='true'] {
+        border-color: var(--red);
+      }
+
+      .accent-recent {
+        display: flex;
+        gap: 5px;
+      }
+
+      .accent-recent button {
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: transform var(--dur-fast) var(--ease-out);
+      }
+
+      .accent-recent button:hover {
+        transform: scale(1.12);
+      }
+
+      .accent-shade:focus-visible,
+      .accent-hue:focus-visible,
+      .accent-code:focus-visible,
+      .accent-recent button:focus-visible,
+      .swatch-chip:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .accent-picker.is-open {
+          animation: none;
+        }
       }
 
       .settings-select {
@@ -811,6 +1053,35 @@
       .settings-select:focus-visible {
         border-color: var(--accent);
         box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.35);
+      }
+
+      .settings-range-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+      }
+
+      .settings-range-head output {
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+        color: var(--muted);
+      }
+
+      /* The panel behind the slider changes as it moves: the preview is the overlay itself. */
+      .settings-range {
+        width: 100%;
+        height: 26px;
+        margin: 0;
+        accent-color: var(--accent);
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .settings-range:focus-visible,
+      .settings-range.controller-focus {
+        outline: 2px solid rgba(var(--accent-rgb), 0.55);
+        outline-offset: 2px;
+        border-radius: var(--radius-sm);
       }
 
       .settings-toggle {
@@ -1073,9 +1344,20 @@
             <button type="button" class="swatch" data-accent="#f1c40f" style="background:#f1c40f" title="Gold"></button>
             <button type="button" class="swatch" data-accent="#e84393" style="background:#e84393" title="Magenta"></button>
             <button type="button" class="swatch" data-accent="#fd9644" style="background:#fd9644" title="Orange"></button>
-            <button type="button" class="swatch swatch-custom" id="swatch-custom" style="background:conic-gradient(#f33,#ff3,#3f3,#3ff,#33f,#f3f,#f33)" title="Custom">
-              <input type="color" id="accent-custom" value="#4aa3ff" />
+            <button type="button" class="swatch-chip" id="swatch-custom" title="Custom" aria-expanded="false" aria-controls="accent-picker">
+              <span class="swatch-chip-dot" aria-hidden="true"></span><span id="accent-custom-label">Custom</span>
             </button>
+          </div>
+          <!-- Picked inside the overlay: the system colour dialog would open behind or over the game. -->
+          <div class="accent-picker" id="accent-picker">
+            <div class="accent-shade" id="accent-shade" role="slider" tabindex="0" aria-label="Shade" aria-valuemin="0" aria-valuemax="100">
+              <span class="accent-shade-thumb" id="accent-shade-thumb"></span>
+            </div>
+            <input type="range" class="accent-hue" id="accent-hue" min="0" max="359" step="1" value="210" aria-label="Hue" />
+            <div class="accent-picker-row">
+              <input type="text" class="accent-code" id="accent-code" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Colour code" />
+              <div class="accent-recent" id="accent-recent"></div>
+            </div>
           </div>
         </div>
 
@@ -1109,14 +1391,11 @@
         </div>
 
         <div class="settings-section">
-          <label id="settings-opacity-label" for="opacity-select">Opacity</label>
-          <select class="settings-select" id="opacity-select">
-            <option value="0.4">40%</option>
-            <option value="0.55">55%</option>
-            <option value="0.7">70%</option>
-            <option value="0.85">85%</option>
-            <option value="1">100%</option>
-          </select>
+          <div class="settings-range-head">
+            <label id="settings-opacity-label" for="opacity-range">Opacity</label>
+            <output id="opacity-value" for="opacity-range">85%</output>
+          </div>
+          <input class="settings-range" id="opacity-range" type="range" min="20" max="100" step="5" value="85" />
         </div>
 
         <div class="settings-section">
@@ -1143,6 +1422,7 @@
     <script src="../util/controllerLabels.js"></script>
     <script src="../ui/colorPicker.js"></script>
     <script src="../ui/textMarquee.js"></script>
+    <script src="../ui/captureViewer.js"></script>
     <script src="./overlay.js"></script>
   </body>
 </html>

@@ -362,6 +362,17 @@ runs at a constant bitrate and a quiet scene comes out smaller.
 - **What is captured.** The monitor showing the game, notifications included. A very old game in
   exclusive fullscreen may record black frames.
 
+## Seeing a souvenir again
+
+Right-click an unlocked achievement in the app and pick **Show screenshot** or **Show clip** to open
+it in a viewer, with the other files of the same achievement a click away and **Show in folder** to
+find the file. In the in-game overlay, the small buttons under **Unlocked** open the same viewer; with
+a controller, left and right browse, A plays a clip and B closes it.
+
+AW Next notes which file belongs to which achievement when it takes it, so renaming the game or
+changing the app's language does not lose the link. Screenshots and clips taken before this version
+are found by their file name, in the folders set above.
+
 ## If a test or unlock does not appear
 
 1. Confirm notifications are enabled, and read the Notifications row of the game's

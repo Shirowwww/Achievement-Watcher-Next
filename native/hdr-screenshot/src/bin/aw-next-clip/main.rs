@@ -310,8 +310,10 @@ fn main() {
     loop {
         match commands.recv_timeout(Duration::from_millis(100)) {
             Ok(Command::Clip { age, path }) => {
+                // The requested path follows a tab, so the Watchdog can point that unlock at the clip it joined.
+                let requested = path.clone();
                 if let Some(joined) = schedule.add(now() - age, config.before, config.after, path) {
-                    emit(&format!("merged {joined}"));
+                    emit(&format!("merged {joined}\t{requested}"));
                 }
             }
             Ok(Command::Quit) => {

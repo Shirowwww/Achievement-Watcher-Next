@@ -35,7 +35,7 @@ function findGsr({ env = process.env, flatpakApps = ['/var/lib/flatpak/app', pat
   return flatpakApps.some((dir) => fs.existsSync(path.join(dir, GSR_FLATPAK))) ? 'flatpak' : null;
 }
 
-function createSouvenirService({ electron, userData, log }) {
+function createSouvenirService({ electron, userData, log, reply = () => {} }) {
   const { app, BrowserWindow, session, desktopCapturer, screen } = electron;
   const costFile = path.join(userData, COST_FILE);
   const recorder = createClipRecorder({
@@ -58,7 +58,12 @@ function createSouvenirService({ electron, userData, log }) {
     const { action, settings, file } = msg.clipRecorder || {};
     if (action === 'start' && settings) recorder.start(settings, app);
     else if (action === 'stop') recorder.stop();
-    else if (action === 'trigger') recorder.trigger(String(file || ''));
+    else if (action === 'trigger') {
+      // An unlock that joined the clip still recording: the Watchdog points it at that clip.
+      const requested = String(file || '');
+      const joined = recorder.trigger(requested);
+      if (joined && joined !== requested) reply({ clipJoined: { requested, joined } });
+    }
   }
 
   function status() {

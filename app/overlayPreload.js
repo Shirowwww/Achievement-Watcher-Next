@@ -27,8 +27,17 @@ contextBridge.exposeInMainWorld('api', {
   onOverlayVisibility: (callback) => ipcRenderer.on('overlay-visibility', (event, data) => callback(data)),
   onRefreshAchievementsTable: (callback) => ipcRenderer.on('refresh-achievements-table', (event, data) => callback(data)),
 
+  // Screenshots and clips of the game, by achievement; the titles find captures older than the index.
+  achievementCaptures: (request) => ipcRenderer.invoke('achievement-captures', request),
+  revealCapture: (url) => ipcRenderer.invoke('achievement-capture-reveal', String(url)),
+
   // Steps under an achievement: the overlay ticks them, the main window edits them.
   onSteps: (callback) => ipcRenderer.on('overlay-steps', (event, data) => callback(data)),
   toggleStep: (appid, name, id, done) =>
     ipcRenderer.invoke('achievement-step-toggle', { appid: String(appid), name: String(name), id: String(id), done: done === true }),
+
+  // Pinned achievements: set in either window, shown at the top of both lists.
+  onPins: (callback) => ipcRenderer.on('overlay-pins', (event, data) => callback(data)),
+  setPinned: (appid, name, pinned) =>
+    ipcRenderer.invoke('achievement-pin-set', { appid: String(appid), name: String(name), pinned: pinned === true }),
 });

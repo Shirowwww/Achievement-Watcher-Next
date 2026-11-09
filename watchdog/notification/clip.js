@@ -17,6 +17,7 @@ const { captureDir } = require(sharedAppModulePath('util/dataLayout.js'));
 const { souvenirPath } = require('./souvenir.js');
 const gsrClip = require('./gsrClip.js');
 const clipPart = require('./clipPart.js');
+const captureLinks = require('./captureLinks.js');
 
 const HELPER_NAME = 'aw-next-clip.exe';
 const MAX_RESTARTS = 5;
@@ -100,7 +101,12 @@ function handleLine(line, recorder) {
   } else if (kind === 'writing') recorder.writing = { file: line.slice('writing '.length), since: now };
   else if (kind === 'saved') debug.log(`[clip] saved ${line.slice(6)}`);
   else if (kind === 'saved-partial') debug.warn(`[clip] clip cut short, kept what plays: ${line.slice(14)}`);
-  else if (kind === 'merged') debug.log(`[clip] unlock joined the clip ${line.slice(7)}`);
+  else if (kind === 'merged') {
+    // "merged <joined>\t<requested>"; a tab cannot be part of a path.
+    const [joined, requested] = line.slice(7).split('\t');
+    debug.log(`[clip] unlock joined the clip ${joined}`);
+    if (requested) captureLinks.relink(requested, joined);
+  }
   else if (kind === 'fallback') debug.warn(`[clip] ${line}`);
   else if (kind === 'error') {
     debug.warn(`[clip] ${line.slice(6)}`);
@@ -264,6 +270,24 @@ function stop() {
   child.once('exit', () => clearTimeout(killer));
 }
 
+/*
+  This process is exiting. aw-next-clip.exe finishes its pending clips on its own once its input
+  closes, but gpu-screen-recorder would go on recording with nobody left to ask it for a clip, so it
+  is told to stop now. The app saves what the software recorder holds when it quits.
+*/
+function shutdown() {
+  const recorder = state.recorder;
+  const child = recorder && recorder.child;
+  stop();
+  // stop() would hold the SIGINT while an unlock waits for its replay, but this process is gone
+  // within seconds, so the wait could never end: the signal goes now.
+  if (!child || recorder.engine !== 'gpu-screen-recorder') return;
+  const kill = recorder.deps.kill || ((pid, signal) => process.kill(pid, signal));
+  try {
+    kill(child.pid, 'SIGINT');
+  } catch {}
+}
+
 function windowsRecorder(souvenir, pid, deps) {
   const args = recorderArgs(souvenir, pid);
   return { engine: 'aw-next-clip', key: args.join(' '), command: deps.helper === undefined ? resolveHelper() : deps.helper, args, ext: '.mp4' };
@@ -334,4 +358,4 @@ function trigger({ game, achievement, dir } = {}) {
   }
 }
 
-module.exports = { sync, stop, trigger, defaultDir, restartDelay };
+module.exports = { sync, stop, shutdown, trigger, defaultDir, restartDelay };

@@ -55,7 +55,7 @@ function fullscreenKindOf(fullscreen) {
 }
 
 function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = false, gameDisplay = null, sounds = null, gameSound = '', suppressed = false, urgent = false, showToast = null } = {}) {
-  const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [], shots: [], bridge: [] };
+  const calls = { overlays: [], toasts: [], balloons: [], broadcasts: [], shots: [], bridge: [], links: [] };
 
   const stubs = {
     path,
@@ -113,9 +113,11 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     './souvenir.js': {
       capture: async (request) => {
         calls.shots.push({ ...request, at: Date.now() });
+        return `C:\\Shots\\${request.achievement}.png`;
       },
     },
-    './clip.js': { trigger: () => {} },
+    './clip.js': { trigger: (request) => `C:\\Clips\\${request.achievement}.mp4` },
+    './captureLinks.js': { remember: (message, kind, file) => calls.links.push({ name: message.achievementName, kind, file }) },
   };
 
   const module = { exports: {} };
@@ -495,6 +497,22 @@ test('a souvenir waits until the popup reports its text on screen', async () => 
   await sleep(10);
   assert.equal(calls.shots.length, 1);
   assert.equal(calls.shots[0].achievement, 'First blood');
+});
+
+test('the screenshot and the clip taken for an unlock are tied to that achievement', async () => {
+  const { notify, calls } = loadToaster();
+  const message = unlock();
+  await notify(message, options('overlay', SHOT));
+  overlayAck.report(requestId(calls.overlays[0]), { stage: 'painted', ok: true, reason: 'preset:settled' });
+  await sleep(10);
+
+  assert.deepEqual(
+    calls.links.map((link) => [link.name, link.kind]).sort(),
+    [
+      [message.achievementName, 'clip'],
+      [message.achievementName, 'screenshot'],
+    ]
+  );
 });
 
 // Both plans its toast and authorizes no fallback, so the id here exists for the souvenir alone.

@@ -44,6 +44,9 @@ require('./util/exitWithParent.js').exitWithParent(process, {
 
 // Quitting the app while a game runs used to drop the session; a stuck write never holds the exit.
 function exitAfterSavingPlaytime() {
+  try {
+    require('./notification/clip.js').shutdown();
+  } catch {}
   let save = Promise.resolve();
   try {
     save = playtimeMonitorEmitter?.saveActiveSessions?.() ?? save;
@@ -709,6 +712,11 @@ process.on('message', (msg) => {
     require('./notification/overlayAck.js').report(String(msg.notificationResult.id), msg.notificationResult);
     return;
   }
+  // The app's software recorder folded an unlock into the clip it was already recording (Linux).
+  if (msg.clipJoined && typeof msg.clipJoined.requested === 'string' && typeof msg.clipJoined.joined === 'string') {
+    require('./notification/captureLinks.js').relink(msg.clipJoined.requested, msg.clipJoined.joined);
+    return;
+  }
   // Whether Windows took a toast the app posted for this process (util/powertoast.js).
   if (msg.windowsToastResult && msg.windowsToastResult.id) {
     require('./util/powertoast.js').reportAppToast(msg.windowsToastResult);
@@ -1255,7 +1263,10 @@ var app = {
             const psnLink = psnTrophyLink.readLink(game.appid);
             // The game's own "every achievement" one, popped as the platinum in place of the 100% one.
             if (game.__platinumLike === undefined) game.__platinumLike = platinumLikeForGame(game, self.options.achievement.lang, rarityMap);
-            const platinumLike = self.options.notification.platinum !== false ? game.__platinumLike : null;
+            const platinumOn = self.options.notification.platinum !== false;
+            const platinumLike = platinumOn ? game.__platinumLike : null;
+            // The achievement tied to the PlayStation platinum pops as the platinum, as on the live paths.
+            const platinumTwin = platinumOn ? psnTrophyLink.platinumTwinName(psnLink) : null;
             let platinumLikeShown = false;
             const platinumTitle = notifyStrings.forLang(self.options.achievement.lang).platinumTitle;
 
@@ -1356,7 +1367,7 @@ var app = {
                         notifyStrings.forLang(self.options.achievement.lang).rare,
                         { percent: rarityPercent }
                       );
-                      const isPlatinumLike = ach.name === platinumLike;
+                      const isPlatinumLike = ach.name === platinumLike || ach.name === platinumTwin;
                       if (isPlatinumLike) debug.log(`Platinum (own achievement): ${game.name} - ${ach.displayName}`);
                       const attribution = isPlatinumLike ? `${game.name} · ${platinumTitle}` : isRare ? `${game.name} · ${rarityLabel}` : game.name;
 
@@ -1466,7 +1477,7 @@ var app = {
               platinumNowUnlocked >= platinumTotal &&
               self.options.notification.platinum !== false &&
               // Its own platinum achievement popped as the platinum, now or on an earlier read.
-              !(platinumLikeShown || Boolean(platinumLike && previousIndex.byName.get(platinumLike)?.Achieved))
+              !(platinumLikeShown || [platinumLike, platinumTwin].some((name) => name && previousIndex.byName.get(name)?.Achieved))
             ) {
               debug.log(`Platinum (100%): ${game.name}`);
               const wdStrings = notifyStrings.forLang(self.options.achievement.lang);

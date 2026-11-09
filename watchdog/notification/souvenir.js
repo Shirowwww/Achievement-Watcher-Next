@@ -11,6 +11,8 @@ const { execFile } = require('child_process');
 const debug = require('../util/log.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { captureDir } = require(sharedAppModulePath('util/dataLayout.js'));
+// The viewer finds older captures by this same name, so both sides share one sanitizer.
+const { sanitizeName: sanitize } = require(sharedAppModulePath('util/captureIndex.js'));
 
 // One native helper takes every screenshot: compiling a C# grabber into %TEMP% at run time (the old
 // SDR path) is what antivirus behaviour engines flagged.
@@ -18,25 +20,6 @@ const HDR_HELPER_NAME = 'aw-next-hdr-screenshot.exe';
 // A shot took 4.9 s on a busy machine while a game ran; at 5 s such a shot was silently lost.
 const HDR_TIMEOUT_MS = 10000;
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-
-// Names Windows refuses whatever the extension, so a game called "NUL" or "COM1" would lose its
-// screenshots entirely.
-const RESERVED_NAME = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$/i;
-
-// Strips characters illegal in Windows names, keeps spaces, caps length. Trailing dots/spaces matter
-// too: Windows silently drops them from the name it actually creates, so a title ending in one
-// ("Mr. Do.", "Sam & Max ") would have the write land somewhere other than the path returned here.
-function sanitize(s) {
-  const cleaned = String(s || '')
-    .replace(/[<>:"/\\|?*]/g, '')
-    .replace(/\p{Cc}/gu, '') // control characters are illegal in a Windows name too
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 100)
-    .replace(/[. ]+$/, '');
-  if (!cleaned) return 'Unknown';
-  return RESERVED_NAME.test(cleaned) ? cleaned + '_' : cleaned;
-}
 
 // Never overwrite an earlier souvenir: several achievements can unlock within the same second, and
 // the same one can be unlocked again after a reset.

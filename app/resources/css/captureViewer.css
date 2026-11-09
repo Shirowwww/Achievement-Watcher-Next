@@ -1,0 +1,275 @@
+/* The screenshot and clip viewer (ui/captureViewer.js), in the main window and the overlay. It takes
+   each page's own tokens, with the overlay's values as the fallback. Only opacity and transform
+   move, so it stays light above a running game. */
+.capture-viewer {
+  --cv-text: var(--text, #eef2f7);
+  --cv-muted: var(--text-muted, var(--muted, #8b96a5));
+  --cv-accent: var(--accent, #4aa3ff);
+  --cv-card: var(--dialog-bg, rgb(14 18 25 / 0.97));
+  --cv-border: var(--dialog-border, 1px solid rgb(255 255 255 / 0.08));
+  --cv-radius: var(--dialog-radius, var(--radius, 14px));
+  --cv-shadow: var(--dialog-shadow, 0 30px 80px rgb(0 0 0 / 0.5));
+  --cv-scrim: var(--set-scrim, rgb(4 6 10 / 0.74));
+  --cv-soft: color-mix(in srgb, var(--cv-text) 8%, transparent);
+  --cv-soft-strong: color-mix(in srgb, var(--cv-text) 15%, transparent);
+  --cv-ease: var(--ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+  --cv-gap: 14px;
+  position: fixed;
+  inset: var(--capture-viewer-inset, 0px) 0 0;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--cv-scrim);
+  color: var(--cv-text);
+  font-family: var(--font-body, 'Segoe UI', system-ui, sans-serif);
+  animation: capture-viewer-fade 160ms var(--cv-ease);
+}
+/* Leaves the way it came, a little faster. */
+.capture-viewer.is-closing {
+  pointer-events: none;
+  animation: capture-viewer-fade-out 140ms var(--cv-ease) both;
+}
+.capture-viewer.is-closing .capture-viewer-card {
+  animation: capture-viewer-out 140ms var(--cv-ease) both;
+}
+.capture-viewer-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: var(--cv-gap);
+  /* The card takes the size of the file it shows, down to a width the header still fits in. */
+  width: fit-content;
+  min-width: min(440px, 100%);
+  max-width: 100%;
+  max-height: 100%;
+  box-sizing: border-box;
+  /* The stage's corners follow the card's: outer radius = inner radius + padding. */
+  padding: var(--cv-gap);
+  border: var(--cv-border);
+  border-radius: calc(var(--cv-radius) + 4px);
+  background: var(--cv-card);
+  box-shadow: var(--cv-shadow);
+  animation: capture-viewer-in 200ms var(--cv-ease);
+}
+
+.capture-viewer-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  padding-left: 4px;
+}
+.capture-viewer-titles {
+  flex: 1;
+  min-width: 0;
+}
+.capture-viewer-title {
+  overflow: hidden;
+  font-family: var(--font-strong, inherit);
+  font-size: var(--fs-lg, 16px);
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.capture-viewer-subtitle {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--cv-muted);
+  font-size: var(--fs-sm, 12px);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.capture-viewer-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+}
+.capture-viewer-count {
+  margin-right: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: var(--cv-muted);
+  background: var(--cv-soft);
+  font-size: var(--fs-sm, 12px);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.capture-viewer-count[hidden] {
+  display: none;
+}
+
+.capture-viewer-frame {
+  position: relative;
+  display: grid;
+  min-height: 0;
+}
+/* As wide as the file, centred: a narrow one (a phone capture) leaves the card's own surface at
+   its sides rather than black bands. */
+.capture-viewer-stage {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  min-width: 120px;
+  min-height: 120px;
+  overflow: hidden;
+  border-radius: var(--cv-radius);
+  background: #000;
+}
+/* Each file is a new element: a short fade keeps the picture from snapping when browsing. */
+/* Its own size, shrunk to the window: the card around it is sized by it, so the width limit is
+   the window's (less the viewer's and the card's padding and border) rather than a percentage. */
+.capture-viewer-media {
+  display: block;
+  max-width: calc(100vw - 40px - 2 * var(--cv-gap) - 2px);
+  max-height: calc(100vh - var(--capture-viewer-inset, 0px) - 170px);
+  object-fit: contain;
+  animation: capture-viewer-fade 120ms var(--cv-ease);
+}
+/* 16:9 at the largest size that fits both ways (a trailer is 1080p at most). */
+.capture-viewer-media.is-sizing {
+  width: min(1920px, calc(100vw - 40px - 2 * var(--cv-gap) - 2px), calc((100vh - var(--capture-viewer-inset, 0px) - 170px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+}
+.capture-viewer-stage.is-broken .capture-viewer-media {
+  visibility: hidden;
+}
+
+.capture-viewer-button {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--cv-text);
+  background: var(--cv-soft);
+  cursor: pointer;
+  transition: background-color 120ms ease, opacity 160ms ease, transform 100ms var(--cv-ease);
+}
+.capture-viewer-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.capture-viewer-button:active {
+  transform: scale(0.94);
+}
+.capture-viewer-button:focus-visible,
+.capture-viewer-button.controller-focus {
+  outline: 2px solid var(--cv-accent);
+  outline-offset: 2px;
+}
+.capture-viewer-button[hidden] {
+  display: none;
+}
+
+/* The arrows float over the picture's edges, so the picture keeps the whole width. They stay
+   readable on any image, and come forward when the pointer is over the picture. */
+.capture-viewer-button.is-prev,
+.capture-viewer-button.is-next {
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin-top: -22px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  color: #fff;
+  background: rgb(10 12 16 / 0.55);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  opacity: 0.8;
+}
+.capture-viewer-button.is-prev .capture-viewer-icon,
+.capture-viewer-button.is-next .capture-viewer-icon {
+  width: 22px;
+  height: 22px;
+}
+.capture-viewer-button.is-prev {
+  left: 12px;
+}
+.capture-viewer-button.is-next {
+  right: 12px;
+}
+.capture-viewer-button.is-prev:focus-visible,
+.capture-viewer-button.is-next:focus-visible,
+.capture-viewer-button.is-prev.controller-focus,
+.capture-viewer-button.is-next.controller-focus {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .capture-viewer-button:hover {
+    background: var(--cv-soft-strong);
+  }
+  .capture-viewer-frame:hover .capture-viewer-button.is-prev,
+  .capture-viewer-frame:hover .capture-viewer-button.is-next {
+    opacity: 1;
+  }
+  .capture-viewer-button.is-prev:hover,
+  .capture-viewer-button.is-next:hover {
+    background: rgb(10 12 16 / 0.78);
+  }
+}
+
+.capture-viewer-foot {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 4px 2px;
+  color: var(--cv-muted);
+  font-size: var(--fs-sm, 12px);
+}
+.capture-viewer-caption {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.capture-viewer-status:not(:empty) {
+  flex: none;
+  color: var(--red, #e74c3c);
+}
+
+@keyframes capture-viewer-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes capture-viewer-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes capture-viewer-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@keyframes capture-viewer-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.985);
+  }
+}
+/* Fades stay, movement goes. */
+@media (prefers-reduced-motion: reduce) {
+  .capture-viewer-card {
+    animation-name: capture-viewer-fade;
+  }
+  .capture-viewer.is-closing .capture-viewer-card {
+    animation-name: capture-viewer-fade-out;
+  }
+  .capture-viewer-button:active {
+    transform: none;
+  }
+}
