@@ -8916,10 +8916,21 @@ body {
    The list view keeps its always-visible cluster at the end of the row. */
 #game-list:not(.view-list) .game-box .achievement-button,
 #game-list:not(.view-list) .game-box .config-button {
+  /* A little off the edge and casting a shadow like the play button, so they float over the cover. */
+  top: 10px;
   opacity: 0;
   pointer-events: none;
   transform: scale(0.7);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, calc(0.34 * var(--shadow-scale))), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   transition: opacity 0.32s ease, transform 0.4s var(--ease-out), background 0.2s ease;
+}
+
+#game-list:not(.view-list) .game-box .achievement-button {
+  left: 10px;
+}
+
+#game-list:not(.view-list):not(.view-details) .game-box .config-button {
+  right: 10px;
 }
 
 #game-list:not(.view-list) .game-box:hover .achievement-button,
@@ -8934,11 +8945,24 @@ body {
 #game-list:not(.view-list) .game-box .achievement-button:hover,
 #game-list:not(.view-list) .game-box .config-button:hover {
   background: color-mix(in srgb, var(--accent) 22%, var(--surface-sunken));
+  transform: scale(1.1);
 }
 
 #game-list:not(.view-list) .game-box .achievement-button:active,
 #game-list:not(.view-list) .game-box .config-button:active {
   transform: scale(0.9);
+}
+
+/* The play button answers its own hover the same way: it grows a little more and takes the accent. */
+.game-box .header .play-button:hover,
+.game-box .header .play-button:focus-visible {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1.1);
+  background: color-mix(in srgb, var(--accent) 26%, var(--surface-sunken));
+}
+
+.game-box .header .play-button:active {
+  transform: translate(-50%, -50%) scale(0.92);
 }
 
 #game-list .library-details {
@@ -18738,9 +18762,19 @@ html:not([data-platform='linux']) [data-linux-only] {
     linear-gradient(90deg, color-mix(in srgb, var(--bg-base) 80%, transparent), transparent 60%);
   mask-image: linear-gradient(#000 60%, transparent 100%);
 }
+/* The banner and the page picture are often two different images: an eased fade over the lower
+   half, over a veil that quiets the page picture behind it, lets one dissolve into the other. */
 .game-overview-hero-art,
 .game-overview-hero-video {
-  mask-image: linear-gradient(#000 35%, transparent 100%);
+  mask-image: linear-gradient(#000 22%, rgb(0 0 0 / 88%) 36%, rgb(0 0 0 / 66%) 50%, rgb(0 0 0 / 42%) 64%, rgb(0 0 0 / 20%) 78%, rgb(0 0 0 / 6%) 91%, transparent 100%);
+}
+/* It adds to the page's own veil, so it must be gone by the bottom edge or a seam shows there. */
+.game-overview-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg-base) 88%, transparent) 35%, color-mix(in srgb, var(--bg-base) 50%, transparent) 70%, color-mix(in srgb, var(--bg-base) 16%, transparent) 90%, transparent 100%);
 }
 .game-overview-name {
   text-shadow: 0 2px 12px rgb(0 0 0 / 45%);

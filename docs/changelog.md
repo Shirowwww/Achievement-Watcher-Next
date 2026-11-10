@@ -27,7 +27,8 @@ renamed in 3.9.0 and the history is kept under one file.
   game. The text comes from Steam, the Microsoft Store, Epic, GOG or
   GamesDB (Xbox 360 and RetroAchievements games included), in your language where the store has it,
   loaded when the page opens and kept for two weeks. The trailers only play while they are
-  on screen, and stays a still picture when Windows asks for less animation.
+  on screen, and stays a still picture when Windows asks for less animation. The page and the
+  achievements list slide into each other, and a game with no achievements says so.
 - **See an achievement's screenshot and clip from the app and the in-game overlay.** Right-click
   an unlocked achievement and pick **Show screenshot** or **Show clip**; in the overlay, the two
   small buttons under **Unlocked** do the same, and the controller works too (left and right to
@@ -69,7 +70,8 @@ renamed in 3.9.0 and the history is kept under one file.
   window behind the library takes on the colours of the hovered game's cover (it follows the
   keyboard and the controller too). Both are on by default, and **Settings > Appearance > Library
   tiles** sets each one to Disabled, Subtle, Normal or Strong. The List and Details views stay flat,
-  and the lean stops when the system asks for less motion.
+  and the lean stops when the system asks for less motion. The Play button and the two corner
+  buttons now answer the mouse too, and the corner ones float over the cover with a soft shadow.
 - **Game Health checks games served by ColdClient.** It used to stop at "served by ColdClient".
   It now reads the loader's `ColdClientLoader.ini` and says when it starts a missing file or a
   program outside the game folder, announces another game ID, or has no loader for the game's 32

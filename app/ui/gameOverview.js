@@ -285,8 +285,14 @@
     const node = state.achievementsButton;
     const { progress } = state.game;
     const { t } = state.host;
-    node.querySelector('.game-overview-count').textContent = t('game-page-achievements', 'Achievements {unlocked} / {total}', 'Succès {unlocked} / {total}', progress);
-    node.querySelector('.game-overview-progress').style.setProperty('--p', `${progress.percent}%`);
+    // A game with no achievements at all says so rather than counting "0 / 0".
+    const none = !(progress.total > 0);
+    node.querySelector('.game-overview-count').textContent = none
+      ? t('game-page-no-achievements', 'No achievements', 'Aucun succès')
+      : t('game-page-achievements', 'Achievements {unlocked} / {total}', 'Succès {unlocked} / {total}', progress);
+    const bar = node.querySelector('.game-overview-progress');
+    bar.hidden = none;
+    bar.style.setProperty('--p', `${progress.percent}%`);
   }
 
   function heroSection() {
@@ -432,14 +438,19 @@
     state = null;
   }
 
-  // A view entering: fades up a few pixels, shorter than the page's own entrance.
-  function enter(node) {
-    if (REDUCED.matches) return node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'ease-out' });
-    return node.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: EASE_OUT });
+  // A view entering rises into place; the one leaving fades out first, faster, so the two never overlap.
+  function enter(node, delay = 0) {
+    if (REDUCED.matches) return node.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 150, easing: 'ease-out', fill: 'backwards' });
+    return node.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 280, delay, easing: EASE_OUT, fill: 'backwards' });
+  }
+
+  function leave(node) {
+    if (REDUCED.matches) return node.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 100, easing: 'ease-in', fill: 'forwards' });
+    return node.animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(-8px)' }], { duration: 140, easing: 'ease-in', fill: 'forwards' });
   }
 
   document.addEventListener('visibilitychange', syncHero);
   REDUCED.addEventListener('change', syncHero);
 
-  window.GameOverview = { show, reset, enter, sync: syncHero, current: () => (state ? state.game.appid : null) };
+  window.GameOverview = { show, reset, enter, leave, sync: syncHero, current: () => (state ? state.game.appid : null) };
 })();

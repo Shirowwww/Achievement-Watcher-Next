@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "แสดงในโฟลเดอร์",
     "game-page-play": "เล่น",
     "game-page-achievements": "ความสำเร็จ {unlocked} / {total}",
+    "game-page-no-achievements": "ไม่มีความสำเร็จ",
     "game-page-trailer": "ตัวอย่างเกม",
     "game-page-captures": "ภาพหน้าจอและวิดีโอคลิป",
     "game-page-cover": "ปก",

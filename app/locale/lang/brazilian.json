@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Mostrar na pasta",
     "game-page-play": "Jogar",
     "game-page-achievements": "Conquistas {unlocked} / {total}",
+    "game-page-no-achievements": "Sem conquistas",
     "game-page-trailer": "Trailer",
     "game-page-captures": "Capturas e clipes",
     "game-page-cover": "Capa",

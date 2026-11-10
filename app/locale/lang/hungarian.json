@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Megjelenítés a mappában",
     "game-page-play": "Játék",
     "game-page-achievements": "Teljesítmények {unlocked} / {total}",
+    "game-page-no-achievements": "Nincs teljesítmény",
     "game-page-trailer": "Előzetes",
     "game-page-captures": "Képernyőképek és videóklipek",
     "game-page-cover": "Borító",

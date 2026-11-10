@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Näytä kansiossa",
     "game-page-play": "Pelaa",
     "game-page-achievements": "Saavutukset {unlocked} / {total}",
+    "game-page-no-achievements": "Ei saavutuksia",
     "game-page-trailer": "Traileri",
     "game-page-captures": "Kuvakaappaukset ja videoklipit",
     "game-page-cover": "Kansikuva",

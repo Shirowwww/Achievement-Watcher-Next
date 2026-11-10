@@ -197,6 +197,34 @@ test('the overview shows the store page, keeps store text as text and drops what
     });
     assert.deepEqual(silent, { backdrop: 'https://media-cdn.example/high.webm', thumbs: 0, trailerHidden: true });
 
+    // Several trailers play one after the other behind the title, then start over at the first.
+    const playlist = await page.evaluate(async () => {
+      window.GameOverview.reset();
+      const root = document.getElementById('root');
+      const details = { description: 'x', videos: [{ name: 'A', file: 'https://cdn.example/a.webm' }, { name: 'B', file: 'https://cdn.example/b.webm' }] };
+      window.GameOverview.show(root, window.game({ appid: '400' }), window.host({ loadDetails: () => Promise.resolve(details) }));
+      await window.settle();
+      const video = root.querySelector('.game-overview-hero-video');
+      if (!video) return { mounted: false };
+      const order = [video.dataset.src];
+      video.dispatchEvent(new Event('ended'));
+      order.push(video.dataset.src);
+      video.dispatchEvent(new Event('ended'));
+      order.push(video.dataset.src);
+      return { mounted: true, loop: video.loop, order };
+    });
+    assert.deepEqual(playlist, { mounted: true, loop: false, order: ['https://cdn.example/a.webm', 'https://cdn.example/b.webm', 'https://cdn.example/a.webm'] });
+
+    // A game with no achievements says so instead of counting 0 / 0, and shows no progress bar.
+    const none = await page.evaluate(async () => {
+      window.GameOverview.reset();
+      const root = document.getElementById('root');
+      window.GameOverview.show(root, window.game({ appid: '500', progress: { unlocked: 0, total: 0, percent: 0 } }), window.host());
+      await window.settle();
+      return { count: root.querySelector('.game-overview-count').textContent, barHidden: root.querySelector('.game-overview-progress').hidden };
+    });
+    assert.deepEqual(none, { count: 'No achievements', barHidden: true });
+
     // The game's icon sits by its name for the host to paint and give its menu; the top of the page
     // shows the host's banner art, else the store background, never an empty band.
     const art = await page.evaluate(async () => {

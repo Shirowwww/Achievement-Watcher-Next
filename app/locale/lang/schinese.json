@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "在文件夹中显示",
     "game-page-play": "开始游戏",
     "game-page-achievements": "成就 {unlocked} / {total}",
+    "game-page-no-achievements": "暂无成就",
     "game-page-trailer": "预告片",
     "game-page-captures": "截图和视频",
     "game-page-cover": "封面",

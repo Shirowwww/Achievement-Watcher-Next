@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Visa i mappen",
     "game-page-play": "Spela",
     "game-page-achievements": "Prestationer {unlocked} / {total}",
+    "game-page-no-achievements": "Inga prestationer",
     "game-page-trailer": "Trailer",
     "game-page-captures": "Skärmbilder och videoklipp",
     "game-page-cover": "Omslag",

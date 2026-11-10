@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Afficher dans le dossier",
     "game-page-play": "Jouer",
     "game-page-achievements": "Succès {unlocked} / {total}",
+    "game-page-no-achievements": "Aucun succès",
     "game-page-trailer": "Bande-annonce",
     "game-page-captures": "Captures et clips",
     "game-page-cover": "Jaquette",

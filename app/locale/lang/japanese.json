@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "フォルダーで表示",
     "game-page-play": "プレイ",
     "game-page-achievements": "実績 {unlocked} / {total}",
+    "game-page-no-achievements": "実績なし",
     "game-page-trailer": "トレーラー",
     "game-page-captures": "スクリーンショットとクリップ",
     "game-page-cover": "カバー",

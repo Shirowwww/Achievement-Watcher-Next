@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Mostrar en la carpeta",
     "game-page-play": "Jugar",
     "game-page-achievements": "Logros {unlocked} / {total}",
+    "game-page-no-achievements": "Sin logros",
     "game-page-trailer": "Tráiler",
     "game-page-captures": "Capturas y videoclips",
     "game-page-cover": "Carátula",

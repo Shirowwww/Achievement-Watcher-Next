@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Mostra nella cartella",
     "game-page-play": "Gioca",
     "game-page-achievements": "Obiettivi {unlocked} / {total}",
+    "game-page-no-achievements": "Nessun obiettivo",
     "game-page-trailer": "Trailer",
     "game-page-captures": "Screenshot e clip",
     "game-page-cover": "Copertina",

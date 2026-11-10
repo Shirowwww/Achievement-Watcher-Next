@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "폴더에서 보기",
     "game-page-play": "플레이",
     "game-page-achievements": "도전 과제 {unlocked} / {total}",
+    "game-page-no-achievements": "도전 과제 없음",
     "game-page-trailer": "트레일러",
     "game-page-captures": "스크린샷 및 클립",
     "game-page-cover": "커버",

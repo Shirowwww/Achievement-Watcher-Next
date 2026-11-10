@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Klasörde göster",
     "game-page-play": "Oyna",
     "game-page-achievements": "Başarımlar {unlocked} / {total}",
+    "game-page-no-achievements": "Başarım yok",
     "game-page-trailer": "Fragman",
     "game-page-captures": "Ekran görüntüleri ve klipler",
     "game-page-cover": "Kapak",

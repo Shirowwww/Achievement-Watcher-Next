@@ -2946,6 +2946,7 @@
     "capture-viewer-folder": "Vis i mappen",
     "game-page-play": "Spil",
     "game-page-achievements": "Præstationer {unlocked} / {total}",
+    "game-page-no-achievements": "Ingen præstationer",
     "game-page-trailer": "Trailer",
     "game-page-captures": "Skærmbilleder og videoklip",
     "game-page-cover": "Omslag",

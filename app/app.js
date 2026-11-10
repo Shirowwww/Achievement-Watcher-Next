@@ -4383,16 +4383,30 @@ ipcRenderer.on('open-game', (event, { appid, achievement } = {}) => {
   away. #achievement[data-view] says which one is on screen; a refresh of the open game keeps it, and
   a game opened on one achievement (a toast click) goes straight to the list.
 */
-function setGameView(view, { animate = true } = {}) {
+let gameViewSwitch = 0;
+
+// What each view puts on screen: the overview, or the list's header and its achievements.
+function gameViewNodes(page, view) {
+  return view === 'overview' ? [document.getElementById('game-overview')].filter(Boolean) : page.find('.wrapper > .header, .wrapper > .achievements').toArray();
+}
+
+async function setGameView(view, { animate = true } = {}) {
   const page = $('#achievement');
-  if (page.attr('data-view') === view) return;
+  const current = page.attr('data-view');
+  if (current === view) return;
+  const turn = ++gameViewSwitch;
+  const overview = window.GameOverview;
+  const leaving = animate && overview && current ? gameViewNodes(page, current).map((node) => overview.leave(node)) : [];
+  // The old view fades out first; a second click meanwhile wins and this one stops here.
+  await Promise.all(leaving.map((run) => run.finished.catch(() => {})));
+  leaving.forEach((run) => run.cancel());
+  if (turn !== gameViewSwitch) return;
   page.attr('data-view', view);
   page.scrollTop(0);
-  window.GameOverview?.sync();
-  if (!animate) return;
-  const entering = view === 'overview' ? document.getElementById('game-overview') : page.find('.wrapper > .header')[0];
-  if (entering) window.GameOverview?.enter(entering);
+  overview?.sync();
   if (view === 'list') scheduleRareGlowRefresh(0);
+  if (!animate || !overview) return;
+  gameViewNodes(page, view).forEach((node, index) => overview.enter(node, index * 50));
 }
 
 // The Steam appid the store and wiki links use: a Ubisoft game's mapped Steam id, else its own.
