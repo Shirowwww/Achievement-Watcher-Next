@@ -157,6 +157,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The Playnite achievements window closes in Fullscreen mode.** In a controller theme such as
   Selene it had no close button you could reach. B or Back on the controller, Escape or Backspace on
   the keyboard now close it.
+- **The Playnite achievements window scrolls with a controller and loads all its pictures.** In
+  Fullscreen mode the list could not be scrolled: the D-pad and the sticks now move it, LB and RB
+  move a page, and so do the arrow and Page keys. Pictures load several at a time, so one that is
+  slow or fails no longer leaves the ones after it empty (extension 1.1.1).
 - **Notification sounds play with the popup.** The PlayStation 5, PlayStation 5 Platinum and
   PlayStation sounds started with up to a second of silence, so they were heard well after the
   popup appeared. That silence is gone, along with a shorter one in Epic Games and GOG Galaxy.
@@ -202,6 +206,8 @@ renamed in 3.9.0 and the history is kept under one file.
   games whose achievements did not change since the last one.
 - **Notification preset gallery.** The bundled presets ship with their pictures, shown at once on
   the first opening; the rest are drawn three at a time, and an app update no longer redraws them.
+- **Library scan.** The executables of Steam library games are remembered between starts instead
+  of being searched again each time, and the search for PS4 ports reads far less of each folder.
 
 ### Website & Docs
 

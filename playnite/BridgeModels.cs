@@ -141,7 +141,9 @@ namespace AwNext.Playnite
         private static BridgeReply ReadReply(IDictionary<string, object> message)
         {
             var id = Number(message, "id");
-            var reply = new BridgeReply { Id = id.HasValue ? (int?)Convert.ToInt32(id.Value) : null, Found = Flag(message, "found") };
+            // Our ids are small whole numbers; anything else is not an answer to a question asked here.
+            var ours = id.HasValue && id.Value >= 0 && id.Value <= int.MaxValue && Math.Floor(id.Value) == id.Value;
+            var reply = new BridgeReply { Id = ours ? (int?)Convert.ToInt32(id.Value) : null, Found = Flag(message, "found") };
             if (reply.Found && Get(message, "game") is IDictionary<string, object> game)
             {
                 reply.Game = new BridgeGame

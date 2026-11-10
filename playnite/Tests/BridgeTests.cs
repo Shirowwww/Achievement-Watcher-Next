@@ -78,6 +78,18 @@ namespace AwNext.Playnite.Tests
             Assert.Equal(50, message.Reply.Game.Achievements[1].Progress.Max);
         }
 
+        [Theory]
+        [InlineData("1790000000000")]
+        [InlineData("-5000000000")]
+        [InlineData("1.5e300")]
+        public void ReplyWithAnIdThatIsNotOurs_IsReadWithoutAnId_NotAnError(string id)
+        {
+            var message = BridgeProtocol.Read("{\"cmd\":\"bridge-game\",\"id\":" + id + ",\"found\":false}");
+
+            Assert.NotNull(message.Reply);
+            Assert.Null(message.Reply.Id);
+        }
+
         [Fact]
         public void UnlockAnnouncement_NamesTheGame_WhateverTheIdType()
         {

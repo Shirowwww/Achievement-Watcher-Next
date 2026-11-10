@@ -189,12 +189,13 @@ namespace AwNext.Playnite
             window.Height = 720;
             window.Owner = PlayniteApi.Dialogs.GetCurrentAppWindow();
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
-            window.Content = new ScrollViewer
+            var scroller = new ScrollViewer
             {
                 Padding = new Thickness(16),
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 Content = new AchievementsList { DataContext = model },
             };
+            window.Content = scroller;
 
             Action<Game> refresh = updated =>
             {
@@ -210,6 +211,14 @@ namespace AwNext.Playnite
                 {
                     e.Handled = true;
                     window.Close();
+                    return;
+                }
+
+                var by = WindowScroll.ByKey(e.Key, scroller.ViewportHeight);
+                if (by != 0)
+                {
+                    e.Handled = true;
+                    scroller.ScrollToVerticalOffset(scroller.VerticalOffset + by);
                 }
             };
             window.Closed += (s, e) =>
@@ -225,9 +234,27 @@ namespace AwNext.Playnite
         public override void OnControllerButtonStateChanged(OnControllerButtonStateChangedArgs args)
         {
             var window = openWindow;
-            if (window != null && args != null && WindowClose.ByController(args.Button, args.State))
+            if (window == null || args == null)
+            {
+                return;
+            }
+
+            if (WindowClose.ByController(args.Button, args.State))
             {
                 window.Dispatcher.BeginInvoke(new Action(window.Close));
+            }
+            else
+            {
+                // The window's content and its ViewportHeight belong to the UI thread.
+                window.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var scroller = window.Content as ScrollViewer;
+                    var by = scroller == null ? 0 : WindowScroll.ByController(args.Button, args.State, scroller.ViewportHeight);
+                    if (by != 0)
+                    {
+                        scroller.ScrollToVerticalOffset(scroller.VerticalOffset + by);
+                    }
+                }));
             }
         }
 

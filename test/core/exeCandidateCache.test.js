@@ -159,3 +159,13 @@ test('a rules fingerprint given as a function is computed on first use, once, an
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+// Ten Steam-library folders were walked again on every start: their candidates are found while the
+// games load, after the only flush of the scan, so they never reached the disk.
+test('the scan saves the memo again once every game has loaded', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'parser', 'achievements.js'), 'utf8');
+  const gamesLoaded = source.indexOf('gameIndex.endBatch();');
+  const scanDone = source.indexOf('callbackProgress(100);', gamesLoaded);
+  assert.ok(gamesLoaded > 0 && scanDone > gamesLoaded, 'the end of makeList is where it is expected');
+  assert.ok(source.slice(gamesLoaded, scanDone).includes('exeCandidateCache.flush();'));
+});

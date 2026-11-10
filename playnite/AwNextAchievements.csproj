@@ -6,7 +6,7 @@
     <RootNamespace>AwNext.Playnite</RootNamespace>
     <UseWPF>true</UseWPF>
     <LangVersion>7.3</LangVersion>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 

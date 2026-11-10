@@ -66,7 +66,9 @@ namespace AwNext.Playnite
                     }
                 }
             }
-            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException || e is IOException || e is NotSupportedException || e is FormatException)
+            // Whatever the cause (network, a picture WPF cannot decode), one picture is missing and the
+            // list goes on: an escaped error here used to end the loading of every picture after it.
+            catch (Exception e)
             {
                 logger.Debug($"Icon not loaded ({uri.Host}): {e.Message}");
                 return null;

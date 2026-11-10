@@ -114,6 +114,11 @@ namespace AwNext.Playnite
                             logger.Info($"AW Next feed closed: {e.Message}");
                         }
                     }
+                    catch (Exception e)
+                    {
+                        // Anything else must not end this loop: nothing would ever reconnect.
+                        logger.Error(e, "AW Next feed stopped on an unexpected error; reconnecting");
+                    }
                     finally
                     {
                         socket = null;

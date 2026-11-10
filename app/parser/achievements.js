@@ -4971,6 +4971,8 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
         gameIndex.endBatch();
       }
     }
+    // Loading a game walks install folders discovery never looked at; without this their memo is lost.
+    exeCandidateCache.flush();
     debug.log(`makeList: ${result.length} game(s) in ${((Date.now() - scanStart) / 1000).toFixed(2)}s`);
     // Not awaited: the library is complete without it, and what it learns lands on the next scan.
     _uplayLearningInFlight += 1;

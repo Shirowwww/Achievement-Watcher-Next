@@ -130,11 +130,17 @@ function hasFileNamed(dir, name) {
   return readDirectory(dir).some((entry) => entry.isFile() && entry.name.toLowerCase() === wanted);
 }
 
+// The launcher folder is listed once per folder: asking the disk for each port's five names cost
+// fifty lookups in every folder searched, a third of a warm scan on a large library.
+function launcherFiles(root) {
+  const names = readDirectory(path.join(root, 'launcher')).filter((entry) => entry.isFile()).map((entry) => entry.name.toLowerCase());
+  return new Set(names);
+}
+
 // Files only a given port ships: its launcher art and launcher scripts.
-function ownsPortFiles(root, port) {
-  const launcher = path.join(root, 'launcher');
+function ownsPortFiles(files, port) {
   const names = [`${port.marker}.png`, `${port.marker}.ico`, `${port.marker}_launcher.py`, `${port.marker}_launcher_win.py`, `${port.marker}_launcher_windows.py`];
-  return names.some((name) => isRegularFile(path.join(launcher, name)));
+  return names.some((name) => files.has(name.toLowerCase()));
 }
 
 // Where a launcher keeps its settings: under each host's APPDATA, and ~/.config for a native Linux build.
@@ -211,7 +217,9 @@ function withoutSuperseded(ports) {
 
 // A named port whose launcher no longer ships run.py (SpartanPort 2.8 is one native exe): its art and launcher.
 function launcherOnlyPort(root) {
-  const ports = withoutSuperseded(PORTS.filter((port) => port.launcher && ownsPortFiles(root, port) && hasFileNamed(root, port.launcher)));
+  const files = launcherFiles(root);
+  if (files.size === 0) return null;
+  const ports = withoutSuperseded(PORTS.filter((port) => port.launcher && ownsPortFiles(files, port) && hasFileNamed(root, port.launcher)));
   return ports.length === 1 ? ports[0] : null;
 }
 
@@ -225,7 +233,8 @@ function identifyPort(root) {
   if (!script) return null;
   const collection = packages.identifyCollection(script);
   if (collection) return collection;
-  const owned = withoutSuperseded(PORTS.filter((port) => ownsPortFiles(root, port)));
+  const files = launcherFiles(root);
+  const owned = withoutSuperseded(PORTS.filter((port) => ownsPortFiles(files, port)));
   if (owned.length === 1) return owned[0];
   const candidates = owned.length > 1 ? owned : PORTS;
   const launched = withoutSuperseded(candidates.filter((port) => hasFileNamed(root, port.launcher)));

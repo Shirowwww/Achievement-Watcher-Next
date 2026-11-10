@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Playnite.SDK;
 
@@ -60,6 +61,8 @@ namespace AwNext.Playnite
     /// <summary>One game's achievements as the panel and the window show them.</summary>
     public class AchievementsViewModel : ObservableObject
     {
+        private const int IconsAtOnce = 6;
+
         private PanelState state = PanelState.Loading;
         private string summary = string.Empty;
         private double percent;
@@ -122,22 +125,40 @@ namespace AwNext.Playnite
             State = PanelState.Ready;
         }
 
-        /// <summary>Pictures arrive one by one; a list replaced meanwhile stops getting them.</summary>
-        public async Task LoadIconsAsync(string login)
+        public Task LoadIconsAsync(string login) =>
+            LoadIconsAsync(login, async (url, user) => await IconLoader.LoadAsync(url, user).ConfigureAwait(false));
+
+        /// <summary>
+        /// A few pictures at a time, so one that is slow or never answers does not hold the ones after
+        /// it. A list replaced meanwhile stops getting them.
+        /// </summary>
+        public async Task LoadIconsAsync(string login, Func<string, string, Task<object>> load)
         {
             var list = Items;
-            foreach (var item in IconLimit > 0 ? list.Take(IconLimit) : list)
+            var wanted = (IconLimit > 0 ? list.Take(IconLimit) : list).ToList();
+            using (var gate = new SemaphoreSlim(IconsAtOnce))
             {
-                if (!ReferenceEquals(list, Items))
+                await Task.WhenAll(wanted.Select(async item =>
                 {
-                    return;
-                }
+                    await gate.WaitAsync().ConfigureAwait(false);
+                    try
+                    {
+                        if (!ReferenceEquals(list, Items))
+                        {
+                            return;
+                        }
 
-                var image = await IconLoader.LoadAsync(item.IconUrl, login).ConfigureAwait(false);
-                if (image != null)
-                {
-                    item.Icon = image;
-                }
+                        var image = await load(item.IconUrl, login).ConfigureAwait(false);
+                        if (image != null)
+                        {
+                            item.Icon = image;
+                        }
+                    }
+                    finally
+                    {
+                        gate.Release();
+                    }
+                })).ConfigureAwait(false);
             }
         }
 
