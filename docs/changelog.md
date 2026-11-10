@@ -142,6 +142,9 @@ renamed in 3.9.0 and the history is kept under one file.
   added the 8 Severed achievements, and AW Next only accepted the 51 of the base game, so the game
   showed as `markerpatch-47780` with 0 achievements. The list now follows the mod's own files, and a
   translation the mod has not updated yet falls back to English.
+- **The Steam scan no longer stops on a registry value it cannot read.** On some machines one value
+  under Steam's registry key made the search for the games Steam installed fail at every scan, with
+  an error in `parser.log`. That value is now skipped.
 - **A crack that works keeps the game, wherever the engine loads it from.** TENOKE, RUNE, CODEX,
   ALI213 and the other known cracks are found beside the dll a Unity game loads from
   `<Game>_Data\Plugins`, as they already were in a packaged Unreal build, and the library reads

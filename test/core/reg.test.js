@@ -163,3 +163,30 @@ test('off Windows a read finds nothing and a write is refused, with no reg.exe s
     childProcess.execSync = originalExecSync;
   }
 });
+
+// registry-js leaves a hole for a value whose type it does not decode (REG_BINARY among them), so
+// one such value in a key made every lookup in it throw on `.name` (Steam's ActiveProcess, 3.12.5).
+test('a value registry-js cannot decode does not break the other reads of its key', (t) => {
+  if (process.platform !== 'win32') return t.skip('Windows-only');
+  const nativePath = require.resolve('registry-js', { paths: [appDir] });
+  const original = require.cache[nativePath];
+  const values = [undefined, { name: 'pid', type: 'REG_DWORD', data: 42 }, null, { name: 'SteamPath', type: 'REG_SZ', data: 'c:/steam' }];
+  require.cache[nativePath] = {
+    id: nativePath,
+    filename: nativePath,
+    loaded: true,
+    exports: { HKEY: { HKEY_CURRENT_USER: 'HKCU' }, enumerateValuesSafe: () => values, enumerateKeysSafe: () => [] },
+  };
+  try {
+    const reg = loadReg({ breakNative: false });
+    const key = 'Software/Valve/Steam/ActiveProcess';
+    assert.equal(reg.readRegistryInteger('HKCU', key, 'pid'), 42);
+    assert.equal(reg.readRegistryInteger('HKCU', key, 'missing'), null);
+    assert.equal(reg.readRegistryString('HKCU', key, 'SteamPath'), 'c:/steam');
+    assert.deepEqual(reg.ListRegistryAllValues('HKCU', key), ['pid', 'SteamPath']);
+  } finally {
+    if (original) require.cache[nativePath] = original;
+    else delete require.cache[nativePath];
+    delete require.cache[require.resolve(regPath)];
+  }
+});

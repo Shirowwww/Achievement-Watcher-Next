@@ -143,7 +143,9 @@ function enumerateValuesCompat(hive, key) {
   const { enumerateValuesSafe } = registryJs;
   const hiveEnum = hkeyFromString(hive);
   if (!hiveEnum) throw new Error(`Unsupported hive: ${hive}`);
-  return enumerateValuesSafe(hiveEnum, key.replace(/\//g, '\\'));
+  // The addon leaves an empty slot for a value whose type it does not decode: drop those, or one
+  // such value makes every lookup in its key throw.
+  return enumerateValuesSafe(hiveEnum, key.replace(/\//g, '\\')).filter(Boolean);
 }
 
 function enumerateKeysCompat(hive, key) {
