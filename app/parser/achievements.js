@@ -51,6 +51,7 @@ const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
 const steamCategoryBorrow = require('../util/steamCategoryBorrow.js');
 const { hostPaths } = require('../util/winHosts.js');
+const portFinder = require(path.join(appPath, 'portFinder.js'));
 const { xdgAppDirs } = require('../util/xdgAppDirs.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
 const gbeInstaller = require(path.join(appPath, 'gbeInstaller.js'));
@@ -2341,9 +2342,15 @@ async function scanWatchedFolder(dir, source, kytyOptions = kytyps5.excludingOth
   } catch (err) {
     debug.log(`[userdir] ${dir} could not be scanned: ${scanError(err)}`);
   }
-  const games = claimed.games.slice();
-  // Recompiled games sit among ordinary ones in a library folder, so they add to the scans above;
-  // a PS4 port another reader already listed is left to it.
+  return { games: recompGamesIn(dir, source, claimed.games), appidRoot: claimed.appidRoot };
+}
+
+/*
+  `listed` plus the recompiled games a folder holds. They sit among ordinary ones in a library
+  folder, so they add to the other scans; a PS4 or PS3 port another reader already listed is left to it.
+*/
+function recompGamesIn(dir, source, listed = []) {
+  const games = listed.slice();
   // settings.js fills x360recomp from the Xenia switch while it is unset (x360Recomp.isEnabled).
   if (source.x360recomp !== false) {
     try {
@@ -2366,7 +2373,29 @@ async function scanWatchedFolder(dir, source, kytyOptions = kytyps5.excludingOth
       debug.log(`[userdir] ${dir} could not be scanned for PS3 ports: ${scanError(err)}`);
     }
   }
-  return { games, appidRoot: claimed.appidRoot };
+  return games;
+}
+
+/*
+  A recompiled port set straight in a game library is read at every scan, not only once Smart Find
+  added its folder: one listing of each game folder's top (portFinder.js), its reader deciding.
+*/
+async function libraryPortGames(source, watchedDirs, scope) {
+  const all = await libraryDirs.get();
+  const roots = scope ? scanScope.filterSelectedDirectories(all, scope.libraryDirs) : all;
+  const isWatched = (dir) => portFinder.isUnder(dir, watchedDirs);
+  // A game folder's own listing is not part of what tells the library changed: its root is.
+  const readdir = (dir) => dirCache.readdir(dir, { track: roots.includes(dir) });
+  const games = [];
+  for (const dir of portFinder.libraryPorts(roots, readdir, isWatched)) {
+    try {
+      const pcPorts = source.pcports ? recompPorts.scan(dir) : [];
+      games.push(...recompGamesIn(dir, source, pcPorts));
+    } catch (err) {
+      debug.log(`[library] ${dir} could not be scanned for recompiled ports: ${scanError(err)}`);
+    }
+  }
+  return games;
 }
 
 // The games the library will find in one folder, appid-named save folders included: the guide's count.
@@ -2428,6 +2457,9 @@ async function discoverInScope(source, steamAccFilter, scope) {
       if (appidRoot) additionalSearch.push(dir.path);
       data = data.concat(games.filter((g) => !['ps4recomp', 'ps3recomp'].includes(g.data?.type) || !data.some((known) => known.appid === g.appid)));
     }
+    const libraryPorts = entriesNotIn(data, await libraryPortGames(source, configuredDirs.map((dir) => dir.path), scope));
+    if (libraryPorts.length > 0) debug.log(`-> recompiled ports in game libraries added (${libraryPorts.length})`);
+    data = data.concat(libraryPorts);
   } catch (err) {
     debug.log(err);
   }
@@ -4993,6 +5025,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
 // Exposed for unit tests.
 module.exports._internal = {
   SOURCE_READERS,
+  libraryPortGames,
   borrowSteamCategories,
   normalizeSaveEntry,
   withoutUnearnedArchived,

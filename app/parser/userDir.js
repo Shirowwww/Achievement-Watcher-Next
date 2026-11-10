@@ -14,6 +14,7 @@ const { appHosts, documentsFolders, documentsFor } = require(path.join(appPath, 
 const { hostPath, hostFor, pathKey, expandKnownVariables } = require(path.join(appPath, 'util/winHosts.js'));
 const { xdgAppDirs } = require(path.join(appPath, 'util/xdgAppDirs.js'));
 const { isDirectory } = require(path.join(appPath, 'util/fsProbe.js'));
+const portFinder = require(path.join(appPath, 'parser/portFinder.js'));
 
 const { userDirFile, parseUserDirEntries } = require('./userDirEntries.js');
 
@@ -364,13 +365,14 @@ const OWN_LAYOUT_GLOBS = ['**/MarkerPatch.ini', '**/MadnessPatch.ini', '**/SaveD
 const NAMED_FILE_DEPTH = 3;
 
 /*
-  One walk of a game library answers the three searches Smart Find makes there, each kept to the
-  depth and spelling rules it had as a walk of its own: a library was read three times before.
+  One walk of a game library answers the searches Smart Find makes there, each kept to the depth and
+  spelling rules it had as a walk of its own: a library was read three times before. The files of
+  recompiled ports (portFinder.js) come from the same walk.
 */
 async function walkLibrary(root) {
-  const patterns = [...EMULATOR_BINARIES, ...IN_FOLDER_EMULATOR_CONFIGS].map((name) => `**/${name}`).concat(OWN_LAYOUT_GLOBS);
+  const patterns = [...EMULATOR_BINARIES, ...IN_FOLDER_EMULATOR_CONFIGS].map((name) => `**/${name}`).concat(OWN_LAYOUT_GLOBS, portFinder.GLOBS);
   const found = await glob(patterns, { cwd: root, deep: 4, onlyFiles: true, suppressErrors: true, caseSensitiveMatch: false });
-  const walk = { emulator: [], inFolder: [], ownLayout: [] };
+  const walk = { emulator: [], inFolder: [], ownLayout: [], ports: portFinder.portFolders(root, found) };
   for (const relative of found) {
     const name = path.posix.basename(relative);
     const shallow = relative.split('/').length <= NAMED_FILE_DEPTH;
@@ -449,6 +451,14 @@ module.exports.findEntries = async () => {
     const game = ownLayoutGames(candidate)[0];
     if (game) addDetected(game.gameRoot || candidate, 'Achievement mod or recompiled game');
   }
+  // Recompiled ports by their own files, before they have saved anything, and those Quiver installed.
+  const quiverFolders = require('./quiver.js')
+    .installedFolders()
+    .map((install) => install.dir);
+  for (const folder of [...walks.flatMap((walk) => walk.ports), ...quiverFolders]) {
+    const game = ownLayoutGames(folder)[0];
+    if (game) addDetected(game.gameRoot || folder, 'Recompiled port');
+  }
   // A patched Steam copy: Steam's own record says where it is.
   for (const reader of [require('./markerpatch.js'), require('./madnesspatch.js')]) {
     for (const root of reader.knownInstallRoots()) {
@@ -513,7 +523,11 @@ function ownLayoutGames(dir) {
     for (const install of require('./ps4Recomp.js').findInstallations(dir)) games.push({ code: 'recompilation', gameRoot: install.root, dataPath: install.root });
   });
   ask(() => {
-    for (const target of require('./ps3Recomp.js').discover(dir)) games.push({ code: 'recompilation', gameRoot: target.installRoot, dataPath: target.trophiesDir });
+    const ps3Recomp = require('./ps3Recomp.js');
+    const targets = ps3Recomp.discover(dir);
+    for (const target of targets) games.push({ code: 'recompilation', gameRoot: target.installRoot, dataPath: target.trophiesDir });
+    // Like a PS4 port, a port whose trophy list cannot be read yet is still its folder.
+    if (targets.length === 0 && ps3Recomp.isPortFolder(dir)) games.push({ code: 'recompilation', gameRoot: dir, dataPath: dir });
   });
   return games;
 }

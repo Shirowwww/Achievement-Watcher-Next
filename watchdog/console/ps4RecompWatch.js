@@ -33,10 +33,10 @@ let lifecycle = 0;
 const baselines = new Map();
 const changes = createChangeCoalescer();
 
-// One record per game across the user's folders, grouped by the user folder their logs are in.
+// One record per game across the user's folders and the ports in game libraries, grouped by the user folder their logs are in.
 function discover(configFile = kit.userDirFile()) {
   const records = new Map();
-  for (const dir of watchedFolders(configFile)) {
+  for (const dir of kit.portWatchFolders(configFile)) {
     try {
       for (const record of ps4.scan(dir)) if (!records.has(record.appid)) records.set(record.appid, record);
     } catch (err) {

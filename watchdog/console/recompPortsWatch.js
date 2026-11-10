@@ -27,10 +27,10 @@ const watchers = kit.createWatcherList('recompports', debug);
 const changes = createChangeCoalescer();
 const baseline = createBaselineCache({ prefix: 'recompports', tag: 'recompports', debug });
 
-// Every port to watch, once: those under the user's Folders first, then Quiver's and the saves found.
+// Every port to watch, once: those under the user's Folders first, then the game libraries', Quiver's and the saves found.
 function discoverGames() {
   const games = new Map();
-  for (const dir of kit.watchedFolders()) {
+  for (const dir of kit.portWatchFolders()) {
     try {
       for (const entry of ports.scan(dir, { waiting: true })) if (!games.has(entry.data.port)) games.set(entry.data.port, entry);
     } catch (err) {

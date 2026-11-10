@@ -141,3 +141,25 @@ test('a retry runs a little later, never after cancel, and never past its attemp
   await new Promise((resolve) => setTimeout(resolve, 40));
   assert.deepEqual(runs, [1]);
 });
+
+test('the port watchers follow a recompiled port set straight in a game library, besides the Folders', (t) => {
+  const root = tempDir(t);
+  const cfg = path.join(root, 'cfg');
+  const watched = path.join(root, 'Watched');
+  const games = path.join(root, 'Games');
+  const write = (file, text = '') => {
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, text);
+  };
+  write(path.join(games, 'ReCasted', 'rcps4-probe.exe'), 'MZ');
+  write(path.join(games, 'Regular', 'Regular.exe'), 'MZ');
+  write(path.join(games, 'Off', 'rcps4-probe.exe'), 'MZ');
+  fs.mkdirSync(watched, { recursive: true });
+  write(path.join(cfg, 'userdir.db'), JSON.stringify([{ path: watched, enabled: true }]));
+  write(path.join(cfg, 'librarydirs.db'), JSON.stringify([{ path: games, enabled: true }, { path: path.join(root, 'Disabled'), enabled: false }]));
+
+  const [first, ...fromLibrary] = kit.portWatchFolders(path.join(cfg, 'userdir.db'));
+  assert.equal(first, watched, 'the Folders come first');
+  assert.deepEqual(fromLibrary.sort(), [path.join(games, 'Off'), path.join(games, 'ReCasted')], 'what looks like a port, its reader deciding later');
+  assert.deepEqual(kit.portWatchFolders(path.join(root, 'absent', 'userdir.db')), [], 'no settings, nothing');
+});

@@ -41,6 +41,10 @@ renamed in 3.9.0 and the history is kept under one file.
   executable, among them TMNT Turtles in Time Re-Shelled, El Chavo Kart, Marvel Ultimate Alliance 1
   and 2, Eternal Sonata, X-Men Destiny, the Trials and Angry Birds collections, Crash: Mind over
   Mutant and The Bourne Conspiracy. Games installed with Quiver Launcher 4 are found as well.
+- **Recompiled ports are found on their own.** A PS4, PS3, Xbox 360 or PC port set in one of your
+  game libraries is read at every scan and announced live, from its own files and before it has
+  saved anything; Smart find also suggests it, and the ones Quiver Launcher installed anywhere
+  else. A port kept outside your game libraries is still added under **Settings → Folders**.
 
 ### Improved
 

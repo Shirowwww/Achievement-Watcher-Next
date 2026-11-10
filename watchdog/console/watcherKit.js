@@ -19,6 +19,7 @@ const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
 const { isDirectory } = require(sharedAppModulePath('util/fsProbe.js'));
 const userDirEntries = require(sharedAppModulePath('parser/userDirEntries.js'));
+const portFinder = require(sharedAppModulePath('parser/portFinder.js'));
 
 // A save, profile or unlock file first seen with more unlocks than this was copied in, not played.
 const COPIED_IN_UNLOCKS = 10;
@@ -82,6 +83,37 @@ function watchedFolders(configFile = userDirFile()) {
     .readUserDirEntries(configFile)
     .filter((entry) => entry.enabled)
     .map((entry) => entry.path);
+}
+
+// The game libraries of Settings that are on: cfg/librarydirs.db beside the folder list, as the app writes it.
+function libraryFolders(configFile = userDirFile()) {
+  try {
+    const entries = JSON.parse(fs.readFileSync(path.join(path.dirname(configFile), 'librarydirs.db'), 'utf8'));
+    if (!Array.isArray(entries)) return [];
+    return entries
+      .map((entry) => (typeof entry === 'string' ? { path: entry, enabled: true } : entry || {}))
+      .filter((entry) => entry.enabled !== false && typeof entry.path === 'string' && entry.path.trim())
+      .map((entry) => entry.path.trim());
+  } catch {
+    return [];
+  }
+}
+
+const listing = (dir) => {
+  try {
+    return fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return null;
+  }
+};
+
+/*
+  Where the recompiled-port watchers look: the Folders, then the ports set straight in a game
+  library, which the library reads at every scan too (portFinder.js), each game folder listed once.
+*/
+function portWatchFolders(configFile = userDirFile()) {
+  const watched = watchedFolders(configFile);
+  return [...watched, ...portFinder.libraryPorts(libraryFolders(configFile), listing, (dir) => portFinder.isUnder(dir, watched))];
 }
 
 // A runtime can rewrite one file several times per unlock; the baseline diff blocks true re-toasts,
@@ -221,6 +253,7 @@ module.exports = {
   existingIcon,
   gameArt,
   watchedFolders,
+  portWatchFolders,
   createDuplicateGuard,
   createWatcherList,
   isDirectory,

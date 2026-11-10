@@ -37,7 +37,7 @@ const changes = createChangeCoalescer();
 // One record per game across the user's folders.
 function discover(configFile = kit.userDirFile()) {
   const records = new Map();
-  for (const dir of watchedFolders(configFile)) {
+  for (const dir of kit.portWatchFolders(configFile)) {
     try {
       for (const record of ps3.scan(dir)) if (!records.has(record.appid)) records.set(record.appid, record);
     } catch (err) {

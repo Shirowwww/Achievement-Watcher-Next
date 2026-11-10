@@ -63,7 +63,7 @@ function discover(configFile = kit.userDirFile(), documentsRoots = undefined) {
   const add = (records) => {
     targets = x360.mergeRecords(targets, records).records;
   };
-  for (const dir of watchedFolders(configFile)) {
+  for (const dir of kit.portWatchFolders(configFile)) {
     try {
       add(x360.scan(dir));
     } catch (err) {
@@ -319,10 +319,10 @@ async function rediscover(ctx, found = discover, { full = found === discover } =
   }
 }
 
-// The user's folders to follow for new games, each once, compared the way the platform compares paths.
+// The user's folders and the ports in game libraries to follow for new games, each once, compared the way the platform compares paths.
 function watchRoots(configFile = kit.userDirFile()) {
   const seen = new Set();
-  return watchedFolders(configFile).filter((dir) => {
+  return kit.portWatchFolders(configFile).filter((dir) => {
     const key = pathKey(dir);
     if (seen.has(key) || !isDirectory(dir)) return false;
     seen.add(key);
