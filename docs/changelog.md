@@ -18,15 +18,15 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
-- **Every game has its own page.** Clicking a game now opens an overview: its trailer plays muted
-  behind the title, and **Play**, **Achievements**, the cover, Game Health and the game's settings
+- **Every game has its own page.** Clicking a game now opens an overview: its trailers play muted
+  behind the title, one after the other, and **Play**, **Achievements**, the cover, Game Health and the game's settings
   are one click away. Below sit the store's description, a strip of trailers and screenshots that
   open full size, the help links from the right-click menu, your souvenirs, the ratings and the
   details (genres, developer, publisher, release date), with the ratings of the press and the players
   (Steam reviews, Metacritic, GOG and the stores), each one opening its page, and guides for the
   game. The text comes from Steam, the Microsoft Store, Epic, GOG or
   GamesDB (Xbox 360 and RetroAchievements games included), in your language where the store has it,
-  loaded when the page opens and kept for two weeks. The trailer only plays while it is
+  loaded when the page opens and kept for two weeks. The trailers only play while they are
   on screen, and stays a still picture when Windows asks for less animation.
 - **See an achievement's screenshot and clip from the app and the in-game overlay.** Right-click
   an unlocked achievement and pick **Show screenshot** or **Show clip**; in the overlay, the two

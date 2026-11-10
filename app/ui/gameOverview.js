@@ -59,13 +59,29 @@
     state.hero.prepend(image);
   }
 
-  function mountHeroVideo(hero, stream) {
-    const video = el('video', 'game-overview-hero-video', { muted: '', loop: '', playsinline: '', preload: 'none', 'aria-hidden': 'true' });
+  // Plays every trailer in turn, then starts over at the first; a single one simply loops.
+  function mountHeroVideo(hero, streams) {
+    const video = el('video', 'game-overview-hero-video', { muted: '', playsinline: '', preload: 'none', 'aria-hidden': 'true' });
     video.muted = true;
-    video.dataset.src = stream;
-    video.addEventListener('playing', () => video.classList.add('is-ready'), { once: true });
+    video.loop = streams.length === 1;
+    let index = 0;
+    video.dataset.src = streams[0];
+    // The banner under it would show through the shared fade: it steps aside once the trailer plays.
+    video.addEventListener('playing', () => {
+      video.classList.add('is-ready');
+      hero.classList.add('has-video');
+    });
+    video.addEventListener('ended', () => {
+      index = (index + 1) % streams.length;
+      video.src = video.dataset.src = streams[index];
+      syncHero();
+    });
     // A stream that fails leaves the page picture behind it, as if there were no trailer.
-    video.addEventListener('error', () => video.remove(), { once: true });
+    video.addEventListener('error', () => {
+      hero.classList.remove('has-video');
+      video.remove();
+      if (state && state.heroVideo === video) state.heroVideo = null;
+    }, { once: true });
     hero.prepend(video);
     state.heroVideo = video;
     state.heroObserver = new IntersectionObserver(([entry]) => {
@@ -337,8 +353,9 @@
       state.trailerButton.hidden = false;
     }
     // The backdrop is muted anyway, so a trailer without its sound serves there too.
-    const backdrop = firstClip ? firstClip.url : silentTrailer(details);
-    if (backdrop && !REDUCED.matches) mountHeroVideo(state.hero, backdrop);
+    const clips = items.filter((item) => item.kind === 'clip').map((item) => item.url);
+    const backdrops = clips.length ? clips : [silentTrailer(details)].filter(Boolean);
+    if (backdrops.length && !REDUCED.matches) mountHeroVideo(state.hero, backdrops);
   }
 
   const silentTrailer = (details) => ((details && details.videos) || []).filter((video) => video.silent).map((video) => https(video.file))[0] || '';

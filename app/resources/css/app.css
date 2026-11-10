@@ -18697,6 +18697,9 @@ html:not([data-platform='linux']) [data-linux-only] {
 .game-overview-hero-video.is-ready {
   opacity: 1;
 }
+.game-overview-hero.has-video .game-overview-hero-art {
+  opacity: 0;
+}
 .game-overview-title-row {
   display: flex;
   align-items: center;
