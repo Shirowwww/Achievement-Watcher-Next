@@ -201,6 +201,7 @@ const PLATFORMS_BY_CONSOLE = {
   'genesis/mega drive': ['segag'],
   dreamcast: ['dc'],
   saturn: ['saturn'],
+  gamecube: ['ncube'],
 };
 
 // RetroAchievements titles end with their console, "Spyro the Dragon (PlayStation)": not part of the name.
@@ -213,12 +214,21 @@ function consoleOf(game) {
 
 function preferredPlatforms(game) {
   const family = sourceIdentity.libraryBadgeOf(game?.source);
-  if (family === 'retroachievements') return PLATFORMS_BY_CONSOLE[consoleOf(game).toLowerCase()] || [];
+  // A PC port is the console game it ports: its table names that console.
+  if (family === 'retroachievements' || family === 'pcport') return PLATFORMS_BY_CONSOLE[consoleOf(game).toLowerCase()] || [];
   return PLATFORMS_BY_FAMILY[family] || [];
 }
 
+// A PC port names the game, then itself in brackets: "F-Zero X (G-Diffuser)". The stores know the game.
+const PORT_QUALIFIER = /\s*\([^()]*\)\s*$/;
+
 function ownTitle(game) {
   const name = String(game?.name || '');
+  if (sourceIdentity.libraryBadgeOf(game?.source) === 'pcport') {
+    // A mod or fan game no store lists names the game it is closest to.
+    const closest = String(game?.detailsTitle || '').trim();
+    return closest || name.replace(PORT_QUALIFIER, '').trim() || name;
+  }
   const consoleName = consoleOf(game);
   const suffix = ` (${consoleName})`;
   return consoleName && name.endsWith(suffix) ? name.slice(0, -suffix.length).trim() : name;
@@ -245,10 +255,16 @@ const releasePlatforms = (item) =>
   (Array.isArray(item?.releases) ? item.releases : []).map((release) => String(release?.platform_id || '')).filter((platform) => platform && platform !== 'generic' && platform !== 'test');
 
 /*
+  A PC port names the console game it ports, which GamesDB sometimes keeps twice under one title:
+  there the first of its records on that console is taken (`decide`), rather than no page at all.
+*/
+const decidesTies = (game) => sourceIdentity.libraryBadgeOf(game?.source) === 'pcport';
+
+/*
   A name is not an id, so the search is careful: only one game with exactly that title, on the game's
   own store when several stores carry it. Two candidates left is no answer, never a guess.
 */
-function chooseTitleMatch(items, title, preferred = []) {
+function chooseTitleMatch(items, title, preferred = [], { decide = false } = {}) {
   const key = titleKey(title);
   if (!key) return null;
   const exact = new Map();
@@ -263,7 +279,8 @@ function chooseTitleMatch(items, title, preferred = []) {
   // GamesDB keeps some retro games twice (a re-release record beside the full one): the full one
   // has far more releases on the console. Close counts are two games, never a guess.
   const ranked = native.length ? [...native].sort((a, b) => nativeCount(b) - nativeCount(a)) : [];
-  return ranked.length > 1 && nativeCount(ranked[0]) > 2 * nativeCount(ranked[1]) ? ranked[0] : null;
+  if (ranked.length > 1 && nativeCount(ranked[0]) > 2 * nativeCount(ranked[1])) return ranked[0];
+  return decide && pool.length ? pool[0] : null;
 }
 
 module.exports = {
@@ -283,4 +300,5 @@ module.exports = {
   searchTitle,
   titleKey,
   chooseTitleMatch,
+  decidesTies,
 };

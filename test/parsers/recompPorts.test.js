@@ -280,3 +280,171 @@ test('an unlock with no date in the file takes the moment it was first seen, onc
   const [unlock] = ports.getAchievements({ port: 'smb1r', saveFile: file });
   assert.deepEqual(unlock, { id: 'SMB1_CLEAR', achieved: true, earned_time: 1700000000 });
 });
+
+// The four ports below keep their unlocks beside the game or in their own folder: laid out as each
+// port's source writes them (commits pinned in recompPortTable.js).
+const { hostPath } = require('../../app/util/winHosts.js');
+const nativeLinux = { kind: 'linux', env: { APPDATA: '/home/u/.local/share', LOCALAPPDATA: '/home/u/.local/share', USERPROFILE: '/home/u' } };
+const unix = (year, month, day, hour = 0, minute = 0, second = 0) => Math.floor(new Date(year, month - 1, day, hour, minute, second).getTime() / 1000);
+const savesOn = (ports, id, host, root = '') => ports.portById(id).saves({ root, host, hostPath });
+
+test('Super Mario All-Stars reads achievements.ini beside the exe: local dates, a day-only date, bit-mask and count progress', (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-smas-');
+  write(path.join(install, 'SuperMarioAllStars.exe'), '');
+  write(
+    path.join(install, 'achievements.ini'),
+    [
+      '; Super Mario All-Stars PC port: achievements earned',
+      '[notice]',
+      'shown=1',
+      '[unlocked]',
+      'smb1_toad=2026-11-06 14:58:01',
+      'll_toad=2026-10-02',
+      'not_in_the_list=2026-10-02 10:00:00',
+      '[progress]',
+      'smb1_castles=22',
+      'smb1_enemies=37',
+      'smb1_toad=1',
+      '',
+    ].join('\r\n')
+  );
+
+  const [entry] = ports.scan(install);
+  assert.equal(entry.appid, 'pcports-smas');
+  assert.equal(entry.data.saveFile, path.join(install, 'achievements.ini'));
+  const unlocks = Object.fromEntries(ports.getAchievements(entry.data).map((u) => [u.id, u]));
+  assert.equal(unlocks.smb1_toad.earned_time, unix(2026, 11, 6, 14, 58, 1), 'the game writes local time');
+  assert.equal(unlocks.ll_toad.earned_time, unix(2026, 10, 2), 'an older day-only date is midnight');
+  assert.equal(unlocks.smb1_castles.achieved, false);
+  assert.equal(unlocks.smb1_castles.progress, 3, 'a set keeps a bit mask: 22 is three bits');
+  assert.equal(unlocks.smb1_enemies.progress, 37);
+  assert.equal(unlocks.smb1_toad.progress, undefined, 'only an achievement with a target shows a bar');
+  assert.equal(unlocks.not_in_the_list, undefined);
+});
+
+test('Super Mario All-Stars lists 82 achievements, and on Linux the file is in the XDG data folder', async (t) => {
+  const { ports } = profile(t);
+  const game = await ports.getGameData({ port: 'smas', saveFile: '' });
+  assert.equal(game.achievement.total, 82);
+  assert.equal(game.achievement.list.find((entry) => entry.name === 'smb1_castles').max_progress, 8);
+  assert.equal(game.achievement.list.find((entry) => entry.name === 'smb1_speed').hidden, 1);
+  assert.deepEqual(savesOn(ports, 'smas', nativeLinux), [path.join('/home/u/.local/share', 'SuperMarioAllStars', 'achievements.ini')]);
+  assert.deepEqual(savesOn(ports, 'smas', { kind: 'native', env: {} }), [], 'on Windows it is beside the exe, which a save alone cannot give');
+  assert.ok(ports.portById('smas').exe.test('SuperMarioAllStars-Linux-x86_64.AppImage'));
+});
+
+test('Super Mario All-Stars reads a file caught half written as nothing', (t) => {
+  const { ports } = profile(t);
+  const file = path.join(makeTempDir('aw-recomp-smas-'), 'achievements.ini');
+  for (const text of ['[unlocked]\nsmb1_toad=2026-11-06 14:5', '[unlocked]\nsmb1_to', '[unloc', '[progress]\nsmb1_enemies=abc\n']) {
+    write(file, text);
+    assert.equal(ports.readUnlocks('smas', file), null, JSON.stringify(text));
+  }
+});
+
+test('Road Rash 64 reads one RetroAchievements id per line, from LOCALAPPDATA or beside the exe with portable.txt', (t) => {
+  const { ports, local } = profile(t);
+  const file = path.join(local, 'RoadRash64Recompiled', 'achievements.txt');
+  write(file, '# Road Rash 64 Recompiled local achievements v1\n157994\n158004\n999999\n');
+  const entry = ports.knownEntries().find((candidate) => candidate.data.port === 'rr64');
+  assert.equal(entry.data.saveFile, file);
+  assert.deepEqual(ports.earnedIds('rr64', file), ['157994', '158004'], 'an id the list does not have is dropped');
+  assert.deepEqual(
+    ports.getAchievements(entry.data).map((u) => u.earned_time),
+    [0, 0],
+    'the file keeps no date'
+  );
+
+  const install = makeTempDir('aw-recomp-rr64-');
+  write(path.join(install, 'RoadRash64Recompiled.exe'), '');
+  assert.equal(ports.scan(install)[0].data.saveFile, file, 'no portable.txt: the profile folder');
+  write(path.join(install, 'portable.txt'), '');
+  assert.equal(ports.scan(install)[0].data.saveFile, path.join(install, 'achievements.txt'));
+  assert.deepEqual(savesOn(ports, 'rr64', nativeLinux), [path.join('/home/u', '.config', 'RoadRash64Recompiled', 'achievements.txt')]);
+});
+
+test('Road Rash 64 takes a truncated or header-less file for unreadable, never for everything locked', (t) => {
+  const { ports } = profile(t);
+  const file = path.join(makeTempDir('aw-recomp-rr64-'), 'achievements.txt');
+  for (const text of ['', '# Road Rash 64 Recompiled local achievements v1\n15799', '# Road Rash 64 Recompiled local achievements v1\n157994\nx\n']) {
+    write(file, text);
+    assert.equal(ports.readUnlocks('rr64', file), null, JSON.stringify(text));
+  }
+  write(file, '# Road Rash 64 Recompiled local achievements v1\n');
+  assert.deepEqual(ports.earnedIds('rr64', file), [], 'a whole file with no unlock is just empty');
+});
+
+test("Road Rash 64's list has its 52 achievements and the pictures come from the repository at the pinned commit", async (t) => {
+  const { ports } = profile(t);
+  const urls = stubFetch(t, () => png(64, 64));
+  const game = await ports.getGameData({ port: 'rr64', saveFile: '' });
+  assert.equal(game.achievement.total, 52);
+  assert.ok(urls.includes('https://raw.githubusercontent.com/linkssy2/RoadRash64Recompiled/37e33d4f832857a60a34f1369b83b32afe00d25d/native/assets/achievements/157994.png'));
+  assert.match(game.achievement.list[0].icon, /[\\/]recompports[\\/]rr64[\\/]157994\.png$/);
+});
+
+test('G-Diffuser reads unlock=<id> <unix time> from saves/achievements.txt and ignores the playtime line', (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-gdx-');
+  write(path.join(install, 'G-Diffuser.exe'), '');
+  write(path.join(install, 'saves', 'achievements.txt'), 'version=1\nplaytime_seconds=4021\nunlock=gp.jack.clear 1762400000\nunlock=playtime.1h 1762403600\nunlock=gone.from.game 1762403601\n');
+
+  const [entry] = ports.scan(install);
+  assert.equal(entry.appid, 'pcports-gdiffuser');
+  assert.equal(entry.data.saveFile, path.join(install, 'saves', 'achievements.txt'));
+  assert.deepEqual(
+    ports.getAchievements(entry.data).map(({ id, achieved, earned_time }) => [id, achieved, earned_time]),
+    [
+      ['gp.jack.clear', true, 1762400000],
+      ['playtime.1h', true, 1762403600],
+    ]
+  );
+  assert.ok(ports.portById('gdiffuser').exe.test('G-Diffuser'), 'the Linux build has no extension');
+  assert.equal(ports.portById('gdiffuser').exe.test('G-Diffuser-Companion.exe'), false);
+});
+
+test('G-Diffuser reads a file with no version line, no final newline or a bad unlock as unreadable', (t) => {
+  const { ports } = profile(t);
+  const file = path.join(makeTempDir('aw-recomp-gdx-'), 'achievements.txt');
+  const halves = ['', 'playtime_seconds=1\n', 'version=1\nplaytime_seconds=12', 'version=1\nunlock=gp.jack.clear 17624\nunlock=gp.queen.cl', 'version=1\nunlock=gp.jack.clear\n', 'version=2\n'];
+  for (const text of halves) {
+    write(file, text);
+    assert.equal(ports.readUnlocks('gdiffuser', file), null, JSON.stringify(text));
+  }
+  write(file, 'version=1\nplaytime_seconds=12\n');
+  assert.deepEqual(ports.earnedIds('gdiffuser', file), []);
+});
+
+test('Open Nectar keeps Pikmin 1 and Pikmin 2 apart, each with its own file beside its exe and no dates', (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-nectar-');
+  write(path.join(install, 'nectar.exe'), '');
+  write(path.join(install, 'pikmin_achievements.txt'), '# Open Nectar achievements (unlocked ids)\r\n0\r\n33\r\n43\r\n99\r\n');
+  write(path.join(install, 'pikmin2', 'pikmin2_pc.exe'), '');
+  write(path.join(install, 'pikmin2', 'pikmin2_achievements.txt'), '# Nectar (Pikmin 2) achievements (unlocked ids)\n5\n');
+
+  // The install folder alone gives both: Pikmin 2 sits in the pikmin2 folder Open Nectar ships.
+  const [pikmin1, pikmin2, ...others] = ports.scan(install);
+  const [alone, ...more] = ports.scan(path.join(install, 'pikmin2'));
+  assert.deepEqual([pikmin1.data.port, pikmin2.data.port, alone.data.port, others.length, more.length], ['nectar', 'nectar2', 'nectar2', 0, 0]);
+  assert.equal(pikmin1.data.saveFile, path.join(install, 'pikmin_achievements.txt'));
+  assert.equal(pikmin2.data.saveFile, path.join(install, 'pikmin2', 'pikmin2_achievements.txt'));
+  assert.deepEqual(ports.earnedIdsFor(pikmin1.data), ['0', '33', '43'], 'id 99 is not in the list');
+  assert.deepEqual(ports.earnedIdsFor(pikmin2.data), ['5']);
+  assert.deepEqual(ports.getAchievements(pikmin2.data), [{ id: '5', achieved: true, earned_time: 0 }]);
+});
+
+test('Open Nectar lists 44 and 17 achievements, matches only its own exes, and reads a half-written file as nothing', async (t) => {
+  const { ports } = profile(t);
+  assert.equal((await ports.getGameData({ port: 'nectar', saveFile: '' })).achievement.total, 44);
+  assert.equal((await ports.getGameData({ port: 'nectar2', saveFile: '' })).achievement.total, 17);
+  const file = path.join(makeTempDir('aw-recomp-nectar-'), 'pikmin_achievements.txt');
+  for (const text of ['# Open Nectar achiev', '# Open Nectar achievements (unlocked ids)\n0\n3', '']) {
+    write(file, text);
+    assert.equal(ports.readUnlocks('nectar', file), null, JSON.stringify(text));
+  }
+  for (const [exe, expected] of [['nectar.exe', ['nectar']], ['nectar-pal', ['nectar']], ['nectar-launcher.exe', []], ['nectar2.exe', ['nectar2']], ['pikmin2_pc-usa', ['nectar2']]]) {
+    assert.deepEqual(['nectar', 'nectar2'].filter((id) => ports.portById(id).exe.test(exe)), expected, exe);
+  }
+});

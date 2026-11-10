@@ -125,6 +125,30 @@ const PORTS = Object.freeze([
   { name: 'The Darkness', titleIds: ['545407EE'], exes: ['thedarknessrecomp.exe'], layout: 'documents' },
   // A Linux-only port.
   { name: 'Guitar Hero II (reGH2)', titleIds: ['415607E7'], exes: [], native: ['gh2'], layout: 'documents', app: 'gh2' },
+  // saulob's ports keep user_data beside the program (an AppImage: beside the file) and move ReXGlue's Documents folder into it.
+  // dbox.tools names it "Turtles In Time RS": `title` replaces that name, so covers and the game page find it.
+  { name: 'TMNT: Turtles in Time Re-Shelled', title: 'Teenage Mutant Ninja Turtles: Turtles in Time Re-Shelled', titleIds: ['584109D2'], exes: ['tmnt_turtles_in_time_reshelled.exe'], native: ['tmnt_turtles_in_time_reshelled'], appImages: ['turtlesintimereshelledrecompiled'], layout: 'user', userFolder: 'user_data', legacy: 'tmnt_turtles_in_time_reshelled' },
+  { name: 'El Chavo Kart', titleIds: ['475807D7'], exes: ['el_chavo_kart.exe'], native: ['el_chavo_kart'], appImages: ['elchavokart'], layout: 'user', userFolder: 'user_data', legacy: 'el_chavo_kart' },
+  // The bundle's three programs share one folder; Gold Edition plays the same title as the first game.
+  { name: 'Marvel Ultimate Alliance', titleIds: ['415607DA'], exes: ['marvel_ultimate_alliance_mua1.exe'], layout: 'user', userFolder: 'user_data/mua1', xexFolders: ['game/mua1'], bundle: true },
+  { name: 'Marvel Ultimate Alliance: Gold Edition', titleIds: ['415607DA'], exes: ['marvel_ultimate_alliance_mua1_gold.exe'], layout: 'user', userFolder: 'user_data/mua1_gold', xexFolders: ['game/mua1-gold'], bundle: true },
+  { name: 'Marvel Ultimate Alliance 2', titleIds: ['4156082F'], exes: ['marvel_ultimate_alliance_mua2.exe'], layout: 'user', userFolder: 'user_data/mua2', xexFolders: ['game/mua2'], bundle: true },
+  // user_data_root in eternalsonata.toml moves the saves, portable.txt keeps them in <install>/user; the guest image is the PAL one.
+  { name: 'Eternal Sonata: Reprise', titleIds: ['4E4D07E2'], exes: ['eternalsonata.exe'], native: ['eternalsonata'], layout: 'documents', app: 'eternalsonata', portable: ['portable.txt', 'user'], saveSetting: ['eternalsonata.toml', 'user_data_root'] },
+  // The launcher starts xmd.exe with --user_data_root <launcher folder>\user_data.
+  { name: 'X-Men Destiny', titleIds: ['415608AA'], exes: ['xmd.exe'], layout: 'user', userFolder: 'user_data' },
+  // Its own record (user/saves/achievements.toml) sits in the game folder: the parent of program/ once installed.
+  { name: 'Crash: Mind over Mutant', titleIds: ['565507FA'], exes: ['crash_mom.exe'], native: ['crash_mom'], layout: 'record' },
+  { name: 'The Bourne Conspiracy', titleIds: ['565507D4'], exes: ['tbc.exe'], layout: 'documents', app: 'tbc' },
+  // TekRantGaming's collections: one folder per game (<launcher>/games/<id>), saves in Documents\<id>.
+  { name: 'Sneak King', titleIds: ['4D538802'], exes: ['sneak_king.exe'], layout: 'documents' },
+  { name: "Big Bumpin'", titleIds: ['4D538801'], exes: ['big_bumpin.exe'], layout: 'documents' },
+  { name: 'PocketBike Racer', titleIds: ['4D538803'], exes: ['pocketbike_racer.exe'], layout: 'documents' },
+  { name: 'Trials HD', titleIds: ['5841095A'], exes: ['trials_hd.exe'], layout: 'documents' },
+  { name: 'Trials Evolution', titleIds: ['58410AAD'], exes: ['trials_evolution.exe'], layout: 'documents' },
+  { name: 'Trials Fusion', titleIds: ['58411401'], exes: ['trials_fusion.exe'], layout: 'documents' },
+  { name: 'Angry Birds Trilogy', titleIds: ['415608E4'], exes: ['ab_trilogy.exe'], layout: 'documents' },
+  { name: 'Angry Birds Star Wars', titleIds: ['41560901'], exes: ['ab_starwars.exe'], layout: 'documents' },
 ]);
 
 const HOLLOW = Object.freeze({ name: 'Gears of War 2 (Hollow)', titleId: '4D53082D' });
@@ -146,6 +170,13 @@ const isNativePortExe = (name) => {
   const lower = String(name).toLowerCase();
   return NATIVE_EXES.has(lower) || isAppImageOf(APPIMAGE_PREFIXES, lower);
 };
+
+// The programs of a bundle (one folder, several games) each form an install of their own; the rest stay together.
+function splitBundle(exeNames) {
+  const bundled = (name) => PORTS.some((port) => port.bundle && port.exes.includes(name.toLowerCase()));
+  const rest = exeNames.filter((name) => !bundled(name));
+  return [...exeNames.filter(bundled).map((name) => [name]), ...(rest.length ? [rest] : [])];
+}
 
 // How `lower` runs the port: 'windows', 'native', 'appimage', or '' when it is not one of its programs.
 function exeKind(port, lower) {
@@ -503,7 +534,13 @@ function extraLists(port, titleId, install, ctx, userRoot) {
   return files;
 }
 
+function recordTarget(choice, install) {
+  const root = path.basename(install).toLowerCase() === 'program' ? path.dirname(install) : install;
+  return { format: 'toml', file: path.join(root, 'user', 'saves', 'achievements.toml'), pendingRoot: root };
+}
+
 const LAYOUTS = Object.freeze({
+  record: recordTarget,
   profiles: profilesTarget,
   unleashed: unleashedTarget,
   renut: renutTarget,
@@ -591,10 +628,19 @@ function hollowTarget(install, gearGame, read) {
   return { format: 'json', file, knownTitleId: HOLLOW.titleId, port: HOLLOW.name, pendingRoot: install, pending: !fs.existsSync(file) };
 }
 
+// The name a port's row gives its title in place of dbox.tools' one, '' for every other title.
+function ownTitleFor(titleId) {
+  const wanted = String(titleId || '').toUpperCase();
+  const row = PORTS.find((port) => port.title && port.titleIds.includes(wanted));
+  return row ? row.title : '';
+}
+
 module.exports = {
   PORTS,
+  ownTitleFor,
   isPortExe,
   isNativePortExe,
+  splitBundle,
   isProgram,
   isNativeProgram,
   isHollowInstall,

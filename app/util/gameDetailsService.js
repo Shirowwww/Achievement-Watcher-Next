@@ -42,7 +42,7 @@ function gameRequest(game) {
   const appid = String(game.appid || '');
   if (!isSafeSegment(appid)) return null;
   const text = (value, max) => (typeof value === 'string' ? value.slice(0, max) : '');
-  return { appid, source: text(game.source, 80), system: text(game.system, 80), steamappid: text(game.steamappid, 20), name: text(game.name, 240) };
+  return { appid, source: text(game.source, 80), system: text(game.system, 80), steamappid: text(game.steamappid, 20), name: text(game.name, 240), console: text(game.console, 60), detailsTitle: text(game.detailsTitle, 240) };
 }
 
 const cacheFile = (ctx, key) => path.join(ctx.cacheDir, `${crypto.createHash('sha1').update(key).digest('hex')}.json`);
@@ -271,10 +271,11 @@ async function titlePart(ctx, game, force) {
   const title = details.searchTitle(details.ownTitle(game));
   if (!title) return { value: null };
   const preferred = details.preferredPlatforms(game);
-  const match = await cached(ctx, `search:${details.titleKey(title)}:${preferred.join(',')}`, force, async () => {
+  const decide = details.decidesTies(game);
+  const match = await cached(ctx, `search:${details.titleKey(title)}:${preferred.join(',')}${decide ? ':decide' : ''}`, force, async () => {
     const answer = await gamesDbJson(ctx, `${GAMESDB}/games?title=${encodeURIComponent(title)}`);
     if (!answer) return answer;
-    const chosen = details.chooseTitleMatch(answer.items, title, preferred);
+    const chosen = details.chooseTitleMatch(answer.items, title, preferred, { decide });
     return chosen ? { id: String(chosen.id) } : null;
   });
   if (!match.value) return match;

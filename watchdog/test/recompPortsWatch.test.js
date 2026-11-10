@@ -175,6 +175,26 @@ test("a notification carries the achievement's picture when the port has one", a
   assert.equal(sent['3'], undefined, 'no picture, no icon field');
 });
 
+test('an Open Nectar id list found under a Folders entry announces a new id, and a cut write nothing', async () => {
+  scene();
+  const install = path.join(temp, 'Games', 'OpenNectar');
+  const file = path.join(install, 'pikmin_achievements.txt');
+  write(path.join(install, 'nectar.exe'), '');
+  write(file, '# Open Nectar achievements (unlocked ids)\n0\n');
+  write(userDirFile, JSON.stringify([{ path: path.join(temp, 'Games'), enabled: true }]));
+  const game = gameOf('nectar');
+  const ctx = context();
+  seedBaseline(game);
+
+  write(file, '# Open Nectar achievements (unlocked ids)\n0\n1');
+  await handleChange(game, ctx, file);
+  assert.equal(ctx.sent.length, 0, 'the last line is cut');
+
+  write(file, '# Open Nectar achievements (unlocked ids)\n0\n1\n');
+  await handleChange(game, ctx, file);
+  assert.deepEqual(ctx.sent.map((sent) => [sent.achievementName, sent.appid]), [['1', 'pcports-nectar']]);
+});
+
 test('the PC port source switched off starts nothing', async () => {
   scene();
   write(duskFile, dusk(['hero_of_twilight']));

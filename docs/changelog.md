@@ -40,6 +40,14 @@ renamed in 3.9.0 and the history is kept under one file.
   achievement unlocks.
 - **Hide to the tray when a game starts.** A new switch in **Settings > General**, off by default:
   once a game starts from AW Next, the window goes to the tray and stays there after the game ends.
+- **More recompiled ports show their achievements.** ReCasted (Ratchet & Clank on PS4, #182) is
+  read from the `trophies` folder beside it, its platinum granted once the 46 other trophies are in.
+  Odin Sphere Leifthrasir and 13 Sentinels: Aegis Rim join the PS4 ports. Super Mario All-Stars,
+  Road Rash 64 Recompiled, F-Zero X (G-Diffuser) and Pikmin 1 and 2 (Open Nectar) join the
+  recompiled PC ports, with their lists. Twenty-five more Xbox 360 ports are known from their
+  executable, among them TMNT Turtles in Time Re-Shelled, El Chavo Kart, Marvel Ultimate Alliance 1
+  and 2, Eternal Sonata, X-Men Destiny, the Trials and Angry Birds collections, Crash: Mind over
+  Mutant and The Bourne Conspiracy. Games installed with Quiver Launcher 4 are found as well.
 
 ### Improved
 
@@ -110,6 +118,11 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The game page of a recompiled PC port stays filled.** Super Mario 64 (Ghostship), Diddy Kong
+  Racing, Super Mario Sunshine and the new ports showed no description, date or studio, since their
+  name carries the port's in brackets. The page now looks up the game itself, on its own console;
+  the Super Mario Eclipse mod and Super Mario Bros. Remastered show the game they build on, and
+  TMNT Turtles in Time Re-Shelled is found under its full name.
 - **A clip could show a later frame in place of the right one when the graphics card was busy.**
   The Windows recorder now waits until the encoder has let go of a picture before drawing the next
   frame into it.

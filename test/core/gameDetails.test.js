@@ -189,6 +189,17 @@ test('a retro game listed twice on its console is the record with far more relea
   assert.equal(details.chooseTitleMatch([item('2', ['psx', 'psx', 'psx']), main], 'Spyro the Dragon', ['psx']), null, 'close counts stay ambiguous');
 });
 
+test("a PC port's game, listed twice alike, is the record GamesDB gives first, on its console first", () => {
+  const item = (id, platforms) => ({ id, title: 'The Legend of Zelda: Twilight Princess', releases: platforms.map((platform_id) => ({ platform_id, external_id: id })) });
+  const both = [item('wii', ['nwii']), item('1', ['ncube', 'nwii']), item('2', ['nwii', 'ncube'])];
+
+  assert.equal(details.chooseTitleMatch(both, 'The Legend of Zelda: Twilight Princess', ['ncube']), null, 'other games stay strict');
+  assert.equal(details.chooseTitleMatch(both, 'The Legend of Zelda: Twilight Princess', ['ncube'], { decide: true })?.id, '1');
+  assert.equal(details.chooseTitleMatch([item('a', ['psp'])], 'Other', ['ncube'], { decide: true }), null, 'never a game of another name');
+  assert.equal(details.decidesTies({ source: 'PC Port' }), true);
+  assert.equal(details.decidesTies({ source: 'Steam' }), false);
+});
+
 test('the title to search drops marks and refuses ids posing as names', () => {
   assert.equal(details.searchTitle('  Hollow Knight™ '), 'Hollow Knight');
   assert.equal(details.searchTitle('1091500'), '');
@@ -233,4 +244,16 @@ test('a RetroAchievements game is searched without its console and on that conso
   assert.equal(details.ownTitle(unsent), 'Spyro the Dragon', 'the page does not send the console: the name ending gives it');
   assert.deepEqual(details.preferredPlatforms(unsent), ['psx']);
   assert.equal(details.ownTitle({ name: 'Halo 3 (Xbox 360)', console: '' }), 'Halo 3 (Xbox 360)');
+});
+
+test('a PC port is searched as the game it ports, without the port named in brackets', () => {
+  assert.equal(details.ownTitle({ source: 'PC Port', name: 'The Legend of Zelda: Twilight Princess (Dusklight)' }), 'The Legend of Zelda: Twilight Princess');
+  assert.equal(details.ownTitle({ source: 'PC Port', name: 'F-Zero X (G-Diffuser)' }), 'F-Zero X');
+  assert.equal(details.ownTitle({ source: 'PC Port', name: 'Super Mario Bros. Remastered' }), 'Super Mario Bros. Remastered');
+  assert.equal(details.ownTitle({ source: 'Steam', name: 'Hitman (2016)' }), 'Hitman (2016)', 'another source keeps its brackets');
+});
+
+test('a mod or fan game no store lists takes the page of the game it is closest to', () => {
+  assert.equal(details.ownTitle({ source: 'PC Port', name: 'Super Mario Eclipse (SMS Launcher)', detailsTitle: 'Super Mario Sunshine' }), 'Super Mario Sunshine');
+  assert.equal(details.ownTitle({ source: 'Steam', name: 'Portal', detailsTitle: 'Half-Life' }), 'Portal', 'only a PC port borrows a page');
 });

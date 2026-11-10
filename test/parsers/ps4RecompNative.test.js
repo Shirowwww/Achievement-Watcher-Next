@@ -222,3 +222,48 @@ test('a PORTHEON package gives each UFC port it declares, the moved one included
   assert.deepEqual(unlocks(byId.get('ps4recomp-NPWR17171_00')), [['1', 0]], 'the data folder logs');
   assert.equal(ps4Recomp.scan(path.join(pkg, 'games', 'UFC3')).length, 1, 'one port of the package added alone');
 });
+
+// run.bat, src/launcher/config.cpp, src/runtime/runtime_services.c and src/common/trophy_db.cpp of AndyALRLabs/ReCasted (#182).
+test('ReCasted: the dump its launcher names, trophies/trophies.log in the install, the platinum it never logs', async () => {
+  const root = dir('recasted', 'ReCasted');
+  const dump = fixture.makeGameDump(dir('recasted', 'Dumps', 'Ratchet'), { titleId: 'CUSA01073', title: 'Ratchet & Clank', sets: [{ slot: 0, npcommid: 'NPWR08590_00', title: 'Ratchet & Clank' }] });
+  fixture.write(path.join(root, 'trophy.key'), fixture.TEST_KEY);
+  fixture.write(path.join(root, 'recasted-launcher.exe'), 'MZ');
+  fixture.write(path.join(root, 'rcps4-probe.exe'), 'MZ');
+  fixture.write(path.join(root, 'gamecore.so'), 'ELF');
+  fixture.write(path.join(root, 'recasted_config.json'), JSON.stringify({ version: 1, game_path: dump, preset: '1080p_60', language: 1, user_dir: '' }));
+  const log = path.join(root, 'trophies', 'trophies.log');
+  fixture.write(log, '14 1794321715\r\n');
+  fixture.write(path.join(root, 'user', 'trophies.log'), '15 1794321000\n');
+
+  assert.equal(identifyPort(root).port, 'recasted');
+  const [record, ...others] = ps4Recomp.scan(dir('recasted'));
+  assert.equal(others.length, 0);
+  assert.equal(record.appid, 'ps4recomp-NPWR08590_00');
+  assert.equal(record.data.dumpDir, dump);
+  assert.equal(record.data.userDir, path.join(root, 'trophies'));
+  assert.ok(record.data.logFiles.includes(path.join(root, 'user', 'trophies.log')), 'the runtime falls back to <user>/trophies.log');
+  assert.deepEqual(unlocks(record), [['14', 1794321715], ['15', 1794321000]]);
+  assert.equal((await ps4Recomp.getGameData(record.data)).name, 'Ratchet & Clank');
+
+  const lines = Array.from({ length: 46 }, (_, index) => `${index + 1} ${1794330000 + index}`).join('\n');
+  fs.writeFileSync(log, `${lines}\n`);
+  assert.equal(new Map(unlocks(record)).get('0'), 1794330045, 'the platinum comes with trophies 1-46, dated by the last of them');
+});
+
+test('ReCasted without a launcher setting takes the dump run.bat would, and a lone runtime is no port', () => {
+  const root = dir('recasted-bat', 'ReCasted');
+  fixture.makeGameDump(path.join(root, 'game', 'CUSA01047'), { titleId: 'CUSA01047', title: 'Ratchet & Clank', sets: [{ slot: 0, npcommid: 'NPWR08591_00', title: 'Ratchet & Clank' }] });
+  fixture.write(path.join(root, 'trophy.key'), fixture.TEST_KEY);
+  fixture.write(path.join(root, 'rcps4-probe.exe'), 'MZ');
+  fixture.write(path.join(root, 'gamecore.so'), 'ELF');
+  fixture.write(path.join(root, 'trophies', 'trophies.log'), '3 1794321715\n');
+
+  const [record] = ps4Recomp.scan(root);
+  assert.equal(record.data.dumpDir, path.join(root, 'game', 'CUSA01047'));
+  assert.deepEqual(unlocks(record), [['3', 1794321715]], 'no platinum before every other trophy');
+
+  const lone = dir('recasted-lone');
+  fixture.write(path.join(lone, 'rcps4-probe.exe'), 'MZ');
+  assert.equal(identifyPort(lone), null);
+});

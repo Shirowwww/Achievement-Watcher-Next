@@ -178,6 +178,16 @@ test('profiles/<name>/achievements.json lists merge into one game, and a bare JS
   assert.deepEqual(x360.getAchievements(found[0].data).map((a) => a.id), ['1', '3']);
 });
 
+test('a port whose dbox.tools name is an abbreviation shows the name the table gives it', async (t) => {
+  const root = tempDir(t);
+  x360.setDataRoot(root);
+  t.after(() => x360.setDataRoot(''));
+
+  const host = fakeFetch([dboxEntry(1)], { name: 'Turtles In Time RS' });
+  const game = await x360.getGameData({ format: 'toml', titleId: '584109D2' }, 'english', { fetchImpl: host.fetchImpl });
+  assert.equal(game.name, 'Teenage Mutant Ninja Turtles: Turtles in Time Re-Shelled');
+});
+
 test('the schema comes from dbox.tools in the chosen language, with icons only where ids line up', async (t) => {
   const root = tempDir(t);
   x360.setDataRoot(root);

@@ -33,6 +33,25 @@ function filetimeToUnixSeconds(value) {
   return plausibleUnix(seconds);
 }
 
+// A TOML table's body: from `start` up to the next [header].
+function sectionBody(source, start) {
+  const rest = source.slice(start);
+  const next = rest.search(/^\s*\[/m);
+  return next === -1 ? rest : rest.slice(0, next);
+}
+
+// Mind over Recomp's own record: one `[unlocked]` table of `<id> = <ISO date or unix seconds>` lines.
+function readFlatUnlocked(source, unlocked) {
+  const head = /^\s*\[unlocked\]\s*$/m.exec(source);
+  if (!head) return;
+  for (const line of sectionBody(source, head.index + head[0].length).split(/\r?\n/)) {
+    const entry = /^\s*(\d+)\s*=\s*([0-9][0-9T:.+-]*Z?)/.exec(line);
+    if (!entry) continue;
+    const when = /^\d+$/.test(entry[2]) ? Number(entry[2]) : Date.parse(entry[2]) / 1000;
+    unlocked.set(Number(entry[1]), plausibleUnix(when));
+  }
+}
+
 // id -> unix seconds. The runtime's older `unlocked = [1, 2]` form carries no time at all.
 function parseToml(text) {
   const unlocked = new Map();
@@ -40,12 +59,11 @@ function parseToml(text) {
   const table = /^\s*\[unlocked\.(\d+)\]\s*$/gm;
   let match;
   while ((match = table.exec(source))) {
-    const rest = source.slice(table.lastIndex);
-    const next = rest.search(/^\s*\[/m);
-    const body = next === -1 ? rest : rest.slice(0, next);
+    const body = sectionBody(source, table.lastIndex);
     const time = /^\s*filetime\s*=\s*(\d+)\s*$/m.exec(body);
     unlocked.set(Number(match[1]), time ? filetimeToUnixSeconds(time[1]) : 0);
   }
+  readFlatUnlocked(source, unlocked);
   const legacy = /^\s*unlocked\s*=\s*\[([\d\s,]*)\]/m.exec(source);
   if (legacy) {
     for (const id of legacy[1].split(',').map((v) => Number(v.trim())).filter((v) => v > 0)) {

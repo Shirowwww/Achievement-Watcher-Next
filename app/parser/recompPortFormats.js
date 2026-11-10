@@ -95,7 +95,100 @@ function catalogueEntries(text, schema) {
   return unlocks;
 }
 
+const INI_DATE = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2}))?$/;
+const MAX_MASK_BITS = 31;
+
+// Seconds of a local "YYYY-MM-DD[ HH:MM:SS]" (the game writes local time, a day alone is midnight).
+function localSeconds(text) {
+  const match = INI_DATE.exec(text);
+  if (!match) throw new Error(`not a date: ${text}`);
+  const [year, month, day, hour, minute, second] = match.slice(1).map((part) => Number(part || 0));
+  const date = new Date(year, month - 1, day, hour, minute, second);
+  if (date.getMonth() !== month - 1 || date.getDate() !== day) throw new Error(`not a date: ${text}`);
+  return Math.floor(date.getTime() / 1000);
+}
+
+const countBits = (value) => Array.from({ length: MAX_MASK_BITS }, (_, bit) => (value >>> bit) & 1).reduce((sum, bit) => sum + bit, 0);
+
+/*
+  Super Mario All-Stars: achievements.ini with [unlocked] id=date and [progress] id=int, [notice]
+  ignored. An entry with `mask` keeps a bit mask of what is done: its progress is the bits set.
+*/
+function iniUnlocked(text, schema) {
+  const known = new Map(schema.achievements.map((entry) => [String(entry.name), { goal: Number(entry.goal) > 0 ? Number(entry.goal) : 0, mask: entry.mask === true }]));
+  const unlocks = new Map();
+  const counts = new Map();
+  let section = '';
+  for (const raw of String(text).split(/\r?\n/)) {
+    if (!raw.trim() || raw.startsWith(';')) continue;
+    const header = /^\[(\w+)\]$/.exec(raw);
+    if (header) {
+      section = header[1];
+      continue;
+    }
+    const pair = /^([^=[\]\s]+)=(.*)$/.exec(raw);
+    if (!pair) throw new Error('not a section, a key=value line or a comment');
+    const [, key, value] = pair;
+    if (section === 'unlocked') {
+      const time = localSeconds(value);
+      if (known.has(key) && !unlocks.has(key)) unlocks.set(key, { achieved: true, time, progress: 0 });
+    } else if (section === 'progress') {
+      if (!/^-?\d{1,10}$/.test(value)) throw new Error(`not a number: ${value}`);
+      if (known.has(key)) counts.set(key, Number(value));
+    }
+  }
+  for (const [key, count] of counts) {
+    const { goal, mask } = known.get(key);
+    const progress = goal > 0 ? Math.min(mask ? countBits(count) : count, goal) : 0;
+    const state = unlocks.get(key);
+    if (state) state.progress = goal > 0 ? goal : 0;
+    else if (progress > 0) unlocks.set(key, { achieved: false, time: 0, progress });
+  }
+  return unlocks;
+}
+
+/*
+  Road Rash 64 and Open Nectar: a "#" header line, then one achievement number per line, no dates.
+  The header and the closing newline are always written: a file without either was caught mid-write.
+*/
+function idList(text, schema) {
+  const body = String(text);
+  if (!body.startsWith('#') || !body.endsWith('\n')) throw new Error('no header, or the last line is cut');
+  const known = new Set(schema.achievements.map((entry) => String(entry.name)));
+  const unlocks = new Map();
+  for (const raw of body.split(/\r?\n/)) {
+    if (!raw.trim() || raw.startsWith('#')) continue;
+    if (!/^\d{1,9}$/.test(raw.trim())) throw new Error('not an achievement number');
+    const id = String(Number(raw.trim()));
+    if (known.has(id) && !unlocks.has(id)) unlocks.set(id, { achieved: true, time: 0, progress: 0 });
+  }
+  return unlocks;
+}
+
+/*
+  G-Diffuser: "version=1", "playtime_seconds=<n>", then "unlock=<id> <unix seconds>" per unlock. The
+  game skips lines it does not know; so does this, as long as they are "name=value".
+*/
+function unlockPairs(text, schema) {
+  const body = String(text);
+  const lines = body.split(/\r?\n/);
+  if (lines[0] !== 'version=1' || !body.endsWith('\n')) throw new Error('not a version 1 file, or the last line is cut');
+  const known = new Set(schema.achievements.map((entry) => String(entry.name)));
+  const unlocks = new Map();
+  for (const line of lines.slice(1)) {
+    if (!line) continue;
+    const unlock = /^unlock=(\S{1,64}) (\d{1,12})$/.exec(line);
+    if (unlock) {
+      if (known.has(unlock[1]) && !unlocks.has(unlock[1])) unlocks.set(unlock[1], { achieved: true, time: Number(unlock[2]), progress: 0 });
+    } else if (!/^[a-z_]+=[^\s]*$/.test(line) || line.startsWith('unlock=')) throw new Error('not a "name=value" line');
+  }
+  return unlocks;
+}
+
 module.exports = {
+  iniUnlocked,
+  idList,
+  unlockPairs,
   indexBits,
   keyedProgress,
   shipSlot,

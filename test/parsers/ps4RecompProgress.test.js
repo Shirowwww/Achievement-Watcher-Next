@@ -38,6 +38,15 @@ test('a progress snapshot gives its rows only under its own header and NP id', (
   assert.equal(progress.parseSnapshot(snapshot(['unlocked 3 1792512020']), '').valid, true, 'an unknown NP id accepts the header');
 });
 
+// src/trophies/trophy_store.cpp of saulob's Odin Sphere Leifthrasir and 13 Sentinels ports: the same store, its own tag.
+test('the sibling ports of the same template are read under their own header', () => {
+  for (const header of ['OSL-TROPHIES 1', 'TSR-TROPHIES 1']) {
+    const text = [header, `npcommid ${NPWR}`, 'unlocked 4 1792512020', ''].join('\n');
+    assert.deepEqual(progress.parseSnapshot(text, NPWR).unlocks, [{ id: '4', time: 1792512020 }], header);
+  }
+  assert.equal(progress.parseSnapshot([`DCP-TROPHIES 2`, `npcommid ${NPWR}`, 'unlocked 4 1'].join('\n'), NPWR).valid, false, 'another version of the store is refused');
+});
+
 test('a flag file gives one unlock per set bit, little-endian words, and nothing for another size', () => {
   assert.deepEqual(progress.parseFlags(flags([0, 5, 33, 127])).map((u) => u.id), ['0', '5', '33', '127']);
   assert.ok(progress.parseFlags(flags([5])).every((u) => u.time === 0), 'no date is kept: unknown');

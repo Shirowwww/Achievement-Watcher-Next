@@ -2,7 +2,7 @@
 
 /*
   The unlock records a PS4 port keeps besides its unlock logs: <user>/trophy/<NP id>/progress_user<N>.txt
-  ("DCP-TROPHIES 1" snapshots), <user>/trophies/<title id>-user<N>.bin and <user>/trophies.dat (16
+  ("<TAG>-TROPHIES 1" snapshots), <user>/trophies/<title id>-user<N>.bin and <user>/trophies.dat (16
   bytes, one bit per trophy, no dates), <user>/trophies.json, and the dated session logs a launcher
   keeps. Every profile found is merged. Synchronous and dependency-free: the Watchdog loads this file
   through sharedAppModule.
@@ -12,7 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
 
-const SNAPSHOT_HEADER = 'DCP-TROPHIES 1';
+// saulob's ports share one store, each tagged with its game: DCP-, OSL- (Odin Sphere), TSR- (13 Sentinels).
+const SNAPSHOT_HEADER = /^[A-Z0-9]{2,8}-TROPHIES 1$/;
 const SNAPSHOT_FILE = /^progress_user\d{1,3}\.txt$/i;
 const SNAPSHOT_ROW = /^unlocked (\d{1,4}) (\d{1,13})$/;
 const FLAG_FILE = /^(CUSA\d{5})-user\d{1,3}\.bin$/i;
@@ -50,7 +51,7 @@ function unixSeconds(raw) {
 function parseSnapshot(text, npcommid) {
   const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/);
   const named = /^npcommid (NPWR\d{5}_\d{2})$/.exec(lines[1] || '');
-  if (lines[0] !== SNAPSHOT_HEADER || !named || (npcommid && named[1] !== npcommid)) return { valid: false, unlocks: [] };
+  if (!SNAPSHOT_HEADER.test(lines[0]) || !named || (npcommid && named[1] !== npcommid)) return { valid: false, unlocks: [] };
   const unlocks = [];
   for (const line of lines.slice(2)) {
     const row = SNAPSHOT_ROW.exec(line.trim());

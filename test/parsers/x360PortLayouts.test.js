@@ -309,6 +309,21 @@ const NEW_PORTS = [
   ['Pinyon Shift', 'out/build/win-amd64-release/pinyon_shift.exe', '4D5309C9', (dir) => path.join(dir, '.local', 'preview', 'user')],
   ['The Darkness (Estacado)', 'TheDarkness.exe', '545407EE', (dir) => path.join(dir, 'runtime_data', 'content')],
   ['The Darkness (recomp)', 'thedarknessrecomp.exe', '545407EE', (dir, f) => path.join(f.documents, 'thedarknessrecomp')],
+  ['TMNT Turtles in Time', 'tmnt_turtles_in_time_reshelled.exe', '584109D2', (dir) => path.join(dir, 'user_data')],
+  ['El Chavo Kart', 'el_chavo_kart.exe', '475807D7', (dir) => path.join(dir, 'user_data')],
+  ['MUA', 'marvel_ultimate_alliance_mua1.exe', '415607DA', (dir) => path.join(dir, 'user_data', 'mua1')],
+  ['MUA Gold', 'marvel_ultimate_alliance_mua1_gold.exe', '415607DA', (dir) => path.join(dir, 'user_data', 'mua1_gold')],
+  ['MUA 2', 'marvel_ultimate_alliance_mua2.exe', '4156082F', (dir) => path.join(dir, 'user_data', 'mua2')],
+  ['Eternal Sonata', 'eternalsonata.exe', '4E4D07E2', (dir, f) => path.join(f.documents, 'eternalsonata')],
+  ['X-Men Destiny', 'xmd.exe', '415608AA', (dir) => path.join(dir, 'user_data')],
+  ['Sneak King', 'games/sneak_king/sneak_king.exe', '4D538802', (dir, f) => path.join(f.documents, 'sneak_king')],
+  ['Big Bumpin', 'games/big_bumpin/big_bumpin.exe', '4D538801', (dir, f) => path.join(f.documents, 'big_bumpin')],
+  ['PocketBike Racer', 'games/pocketbike_racer/pocketbike_racer.exe', '4D538803', (dir, f) => path.join(f.documents, 'pocketbike_racer')],
+  ['Trials HD', 'games/trials_hd/trials_hd.exe', '5841095A', (dir, f) => path.join(f.documents, 'trials_hd')],
+  ['Trials Evolution', 'games/trials_evolution/trials_evolution.exe', '58410AAD', (dir, f) => path.join(f.documents, 'trials_evolution')],
+  ['Trials Fusion', 'games/trials_fusion/trials_fusion.exe', '58411401', (dir, f) => path.join(f.documents, 'trials_fusion')],
+  ['Angry Birds Trilogy', 'games/ab_trilogy/ab_trilogy.exe', '415608E4', (dir, f) => path.join(f.documents, 'ab_trilogy')],
+  ['Angry Birds Star Wars', 'games/ab_starwars/ab_starwars.exe', '41560901', (dir, f) => path.join(f.documents, 'ab_starwars')],
 ];
 
 test('every newly confirmed port resolves to its title and the folder its list will appear in', (t) => {
@@ -455,4 +470,78 @@ test('Linux: the Outpost Kaloki X AppImage and the reGH2 binary save in XDG data
   const games = x360.scan(folders.library);
   assert.equal(only(games, 'x360-584107DB')[0].data.file, path.join(xdgData, 'outpost_kaloki_x', 'achievements', '584107DB.toml'));
   assert.equal(only(games, 'x360-415607E7')[0].data.file, path.join(xdgData, 'gh2', 'achievements', '415607E7.toml'));
+});
+
+test('Marvel Ultimate Alliance: three programs in one folder are three games, each with its own user_data folder', (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'MUA bundle', ['marvel_ultimate_alliance_mua1.exe', 'marvel_ultimate_alliance_mua2.exe', 'marvel_ultimate_alliance_bundle.exe']);
+  write(path.join(dir, 'game', 'mua2', 'default.xex'), xexOf('4156082F'));
+  let games = x360.scan(folders.library);
+  const [first] = only(games, 'x360-415607DA');
+  const [second] = only(games, 'x360-4156082F');
+  assert.equal(first.data.exe, path.join(dir, 'marvel_ultimate_alliance_mua1.exe'));
+  assert.equal(first.data.file, path.join(dir, 'user_data', 'mua1', 'achievements', '415607DA.toml'));
+  assert.equal(second.data.file, path.join(dir, 'user_data', 'mua2', 'achievements', '4156082F.toml'));
+  assert.equal(second.data.xex, path.join(dir, 'game', 'mua2', 'default.xex'));
+
+  const unlocked = write(path.join(dir, 'user_data', 'mua2', 'achievements', '4156082F.toml'), unlockedToml(7));
+  games = x360.scan(folders.library);
+  assert.deepEqual(ids(only(games, 'x360-4156082F')[0]), ['7']);
+  assert.equal(only(games, 'x360-4156082F')[0].data.file, unlocked);
+  assert.deepEqual(ids(only(games, 'x360-415607DA')[0]), [], 'the other game is not given its unlocks');
+});
+
+test("Mind over Recomp keeps one record in the game folder's user/saves, whether its program sits in program/ or alone", (t) => {
+  const folders = setup(t);
+  const game = path.join(folders.library, 'Crash MOM');
+  write(path.join(game, 'program', 'crash_mom.exe'), 'MZ');
+  const record = path.join(game, 'user', 'saves', 'achievements.toml');
+  let [found] = only(x360.scan(folders.library), 'x360-565507FA');
+  assert.equal(found.data.file, record);
+  assert.equal(found.data.pending, true);
+
+  write(record, '# comment\n[unlocked]\n3 = 2026-10-10T12:00:00Z  # Jack\n7 = 2026-10-11T08:30:00Z\n\n[other]\n9 = 2026-10-12T00:00:00Z\n');
+  [found] = only(x360.scan(folders.library), 'x360-565507FA');
+  assert.equal(found.data.pending, false);
+  assert.deepEqual(x360.getAchievements(found.data).map((a) => [a.id, a.earned_time]), [['3', Date.UTC(2026, 9, 10, 12) / 1000], ['7', Date.UTC(2026, 9, 11, 8, 30) / 1000]]);
+
+  const loose = path.join(folders.library, 'Loose');
+  write(path.join(loose, 'crash_mom.exe'), 'MZ');
+  assert.equal(only(x360.scan(loose), 'x360-565507FA')[0].data.file, path.join(loose, 'user', 'saves', 'achievements.toml'));
+});
+
+test('The Bourne Conspiracy waits in the Documents folder of tbc', (t) => {
+  const folders = setup(t);
+  install(folders, 'Bourne', ['tbc.exe']);
+  assert.equal(only(x360.scan(folders.library), 'x360-565507D4')[0].data.file, path.join(folders.documents, 'tbc', 'achievements', '565507D4.toml'));
+});
+
+test('Eternal Sonata follows portable.txt and the user_data_root of eternalsonata.toml', (t) => {
+  const folders = setup(t);
+  const dir = install(folders, 'Reprise', ['eternalsonata.exe']);
+  const fileIn = (root) => path.join(root, 'achievements', '4E4D07E2.toml');
+  const listed = () => only(x360.scan(folders.library), 'x360-4E4D07E2')[0].data.file;
+  assert.equal(listed(), fileIn(path.join(folders.documents, 'eternalsonata')));
+
+  write(path.join(dir, 'eternalsonata.toml'), '# user_data_root = "x"\nuser_data_root = ""\ngame_data_root = "assets"\n');
+  assert.equal(listed(), fileIn(path.join(folders.documents, 'eternalsonata')), 'an empty root keeps the default');
+
+  write(path.join(dir, 'eternalsonata.toml'), 'user_data_root = "saves"\n');
+  assert.equal(listed(), fileIn(path.join(dir, 'saves')));
+
+  write(path.join(dir, 'portable.txt'), '');
+  assert.equal(listed(), fileIn(path.join(dir, 'user')), 'portable.txt wins');
+});
+
+test('Linux: the AppImage builds that keep user_data beside themselves, and the Eternal Sonata binary in XDG data', (t) => {
+  const folders = setup(t, { platform: 'linux' });
+  const xdgData = path.join(folders.home, '.local', 'share');
+  const tmnt = install(folders, 'TMNT', ['TurtlesInTimeReshelledRecompiled-v0.1.0-x86_64.AppImage'], ELF);
+  const chavo = install(folders, 'Chavo', ['ElChavoKart-v0.1.0-x86_64.AppImage'], ELF);
+  install(folders, 'ES', ['eternalsonata'], ELF);
+  const games = x360.scan(folders.library);
+  const listIn = (root, titleId) => path.join(root, 'achievements', `${titleId}.toml`);
+  assert.deepEqual(only(games, 'x360-584109D2')[0].data.profileFiles, [listIn(path.join(tmnt, 'user_data'), '584109D2'), listIn(path.join(xdgData, 'tmnt_turtles_in_time_reshelled'), '584109D2')]);
+  assert.deepEqual(only(games, 'x360-475807D7')[0].data.profileFiles, [listIn(path.join(chavo, 'user_data'), '475807D7'), listIn(path.join(xdgData, 'el_chavo_kart'), '475807D7')]);
+  assert.equal(only(games, 'x360-4E4D07E2')[0].data.file, listIn(path.join(xdgData, 'eternalsonata'), '4E4D07E2'));
 });

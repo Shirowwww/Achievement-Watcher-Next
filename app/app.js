@@ -4477,7 +4477,7 @@ function showGameOverview(box, game) {
       },
       loadDetails: () =>
         ipcRenderer
-          .invoke('get-game-details', { game: { appid: game.appid, source: game.source, system: game.system, steamappid: game.steamappid, name: game.name }, lang: uiLang() })
+          .invoke('get-game-details', { game: { appid: game.appid, source: game.source, system: game.system, steamappid: game.steamappid, name: game.name, console: game.console, detailsTitle: game.detailsTitle }, lang: uiLang() })
           .then((answer) => (answer && answer.details) || null),
       loadSouvenirs: () => souvenirsOf(game.appid),
       // The overview's icon joins the list header's: same picture, same right-click menu.

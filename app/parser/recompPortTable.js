@@ -6,7 +6,9 @@
   hostPath })` the unlock files in the order the game picks them, a portable install first, and
   `format` the reader in recompPortFormats.js. Every path comes from the port's own source code.
   `icons` says where recompPortArt.js finds the achievement pictures (none for a port that draws
-  them in code).
+  them in code). `console` is the console of the game ported, for the game page, and `detailsTitle`
+  the game whose page a mod or fan game borrows. `nested` names folders of an install holding
+  another port (Pikmin 2 in Open Nectar).
 */
 
 const path = require('path');
@@ -69,9 +71,23 @@ function dkrFolders({ root, host, hostPath }) {
   return folder ? [folder] : [];
 }
 
+// Pictures of Road Rash 64, at the commit its list was read from (native/assets/achievements/<id>.png).
+const RR64_ICONS = 'https://raw.githubusercontent.com/linkssy2/RoadRash64Recompiled/37e33d4f832857a60a34f1369b83b32afe00d25d/native/assets/achievements/';
+
+// RecompFrontend's get_app_folder_path(): the exe folder with portable.txt, else %LOCALAPPDATA%\<id>, or ~/.config/<id>.
+function rr64Folders({ root, host, hostPath }) {
+  if (root && exists(path.join(root, 'portable.txt'))) return [root];
+  const folder = host.kind === 'linux' ? hostPath(host, 'USERPROFILE', '.config', 'RoadRash64Recompiled') : hostPath(host, 'LOCALAPPDATA', 'RoadRash64Recompiled');
+  return folder ? [folder] : [];
+}
+
+// The game's folder is its working directory (the launcher chdirs there), so its files sit beside the exe.
+const besideExe = (name) => ({ root }) => (root ? [path.join(root, name)] : []);
+
 module.exports = [
   {
     id: 'dusklight',
+    console: 'GameCube',
     title: 'The Legend of Zelda: Twilight Princess (Dusklight)',
     exe: /^dusklight(?:\.exe)?$/i,
     repos: ['twilitrealm/dusklight'],
@@ -81,6 +97,7 @@ module.exports = [
   {
     // libultraship built portable: saves sit beside the game, one file per slot A to D.
     id: 'ghostship',
+    console: 'Nintendo 64',
     icons: { from: 'files', url: GHOSTSHIP_ICONS },
     title: 'Super Mario 64 (Ghostship)',
     exe: /^Ghostship(?:\.exe|\.appimage)?$/i,
@@ -91,6 +108,7 @@ module.exports = [
   },
   {
     id: 'sms',
+    console: 'GameCube',
     icons: { from: 'launcher', folder: ['achievement-icons'] },
     title: 'Super Mario Sunshine (SMS Launcher)',
     exe: SMS_LAUNCHER,
@@ -102,6 +120,8 @@ module.exports = [
     // The Super Mario Eclipse mod, launched from the same launcher with its own list. The launcher
     // alone does not say the mod is installed: listed once it has saved an unlock (`ifSaved`).
     id: 'smseclipse',
+    console: 'GameCube',
+    detailsTitle: 'Super Mario Sunshine',
     icons: { from: 'launcher', folder: ['achievement-icons', 'eclipse'] },
     title: 'Super Mario Eclipse (SMS Launcher)',
     exe: SMS_LAUNCHER,
@@ -113,6 +133,8 @@ module.exports = [
   {
     // Godot: user:// is %APPDATA%\SMB1R (config/name, use_custom_user_dir), or <exe>\config with portable.txt.
     id: 'smb1r',
+    console: 'NES/Famicom',
+    detailsTitle: 'Super Mario Bros.',
     icons: { from: 'sheet', url: SMB1R_ICON_SHEET, cell: 32 },
     title: 'Super Mario Bros. Remastered',
     exe: /^(?:SMB1R|SuperMarioBrosRemastered)\.(?:exe|x86_64|arm64)$/i,
@@ -123,10 +145,70 @@ module.exports = [
   },
   {
     id: 'dkrr',
+    console: 'Nintendo 64',
     title: 'Diddy Kong Racing (DKR-R)',
     exe: /^DKR-R(?:\.exe|-.+\.appimage)$/i,
     repos: ['thatguymcd/dkr-r'],
     format: 'catalogueEntries',
     saves: (where) => dkrFolders(where).map((folder) => path.join(folder, 'achievements', 'progress-v1.json')),
+  },
+  {
+    // Darhkfox/SuperMarioAllStars @ 0c49e5e: src/app/achstore.cpp (local-time dates), src/game/achievements.cpp,
+    // app_win.cpp (exe folder), platform/linux/app_linux.cpp dataDir ($XDG_DATA_HOME/SuperMarioAllStars).
+    id: 'smas',
+    console: 'SNES/Super Famicom',
+    title: 'Super Mario All-Stars (PC port)',
+    exe: /^SuperMarioAllStars(?:\.exe|-.+\.appimage)?$/i,
+    repos: ['darhkfox/supermarioallstars'],
+    format: 'iniUnlocked',
+    saves: ({ root, host, hostPath }) =>
+      host.kind === 'linux' ? [hostPath(host, 'APPDATA', 'SuperMarioAllStars', 'achievements.ini')].filter(Boolean) : besideExe('achievements.ini')({ root }),
+  },
+  {
+    // linkssy2/RoadRash64Recompiled @ 37e33d4: native/src/rr64_achievements.cpp; folder from RecompFrontend
+    // @ b1a1477 (recompui/src/util/file.cpp), program id "RoadRash64Recompiled" (native/src/main.cpp).
+    id: 'rr64',
+    console: 'Nintendo 64',
+    icons: { from: 'files', url: RR64_ICONS },
+    // The game, then the port in brackets: covers and the game page look the game up without it.
+    title: 'Road Rash 64 (Recompiled)',
+    exe: /^RoadRash64Recompiled(?:\.exe|-.+\.appimage)?$/i,
+    repos: ['linkssy2/roadrash64recompiled'],
+    format: 'idList',
+    saves: (where) => rr64Folders(where).map((folder) => path.join(folder, 'achievements.txt')),
+  },
+  {
+    // Zorkats/G-Diffuser @ 257c93b: port/gdx_achievements.cpp. saves/ is beside the exe on Windows and in the
+    // working directory elsewhere (assumed to be the exe folder).
+    id: 'gdiffuser',
+    console: 'Nintendo 64',
+    title: 'F-Zero X (G-Diffuser)',
+    exe: /^G-Diffuser(?:-JP)?(?:\.exe|\.appimage)?$/i,
+    repos: ['zorkats/g-diffuser'],
+    format: 'unlockPairs',
+    saves: ({ root }) => (root ? [path.join(root, 'saves', 'achievements.txt')] : []),
+  },
+  {
+    // SSunnKing/Open-Nectar---Pikmin-Native-PC-Port @ ae283b5: games/pikmin1/pc_port/pc_achievements.cpp, the file
+    // in the working directory; launcher_main.cpp starts nectar in the install folder (nectar-pal is the PAL build).
+    id: 'nectar',
+    console: 'GameCube',
+    title: 'Pikmin (Open Nectar)',
+    exe: /^nectar(?:-pal)?(?:\.exe)?$/i,
+    nested: ['pikmin2'],
+    repos: ['ssunnking/open-nectar---pikmin-native-pc-port'],
+    format: 'idList',
+    saves: besideExe('pikmin_achievements.txt'),
+  },
+  {
+    // Same repository and commit: games/pikmin2/pc_port/pc_achievements.cpp. Pikmin 2 lives in <install>\pikmin2,
+    // its exe is pikmin2_pc (EU) or pikmin2_pc-usa once packaged, nectar2 / nectar2-pal in a build tree.
+    id: 'nectar2',
+    console: 'GameCube',
+    title: 'Pikmin 2 (Open Nectar)',
+    exe: /^(?:nectar2(?:-pal)?|pikmin2_pc(?:-usa)?)(?:\.exe)?$/i,
+    repos: [],
+    format: 'idList',
+    saves: besideExe('pikmin2_achievements.txt'),
   },
 ];

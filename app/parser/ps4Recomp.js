@@ -10,7 +10,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const fsProbe = require(path.join(__dirname, '..', 'util', 'fsProbe.js'));
-const { hostPath, hostsFor, allowedFromConfig } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
+const { hostPath, hostsFor, allowedFromConfig, pathKey } = require(path.join(__dirname, '..', 'util', 'winHosts.js'));
 const { writeFileAtomicSync } = require(path.join(__dirname, '..', 'util', 'replaceFile.js'));
 const formats = require(path.join(__dirname, 'ps4RecompTrophies.js'));
 const logs = require(path.join(__dirname, 'ps4RecompLogs.js'));
@@ -59,6 +59,19 @@ const UNCHARTED_GAMES = [
   { game: 'u3', title: "Uncharted 3: Drake's Deception Remastered", slot: 3 },
 ];
 const PROBE_SCRIPT = /^probe_([a-z0-9_]{1,40})\.py$/i;
+
+/*
+  ReCasted (gitlab.com/AndyALRLabs/ReCasted, Ratchet & Clank): the runtime appends "<id> <unix time>"
+  to trophies/trophies.log in its working folder, the install, else under <user>. One of its two
+  unlock paths never logs the platinum, which its launcher grants once trophies 1-46 are all in.
+*/
+const RECASTED_RUNTIMES = ['rcps4-probe.exe', 'rcps4-gpu'];
+const RECASTED_MARKERS = ['recasted-launcher.exe', 'recasted-launcher', 'recasted_config.json', 'gamecore.so'];
+const RECASTED_CONFIG = 'recasted_config.json';
+// run.bat and run.sh look for the EU then the US dump at these places.
+const RECASTED_DUMPS = ['CUSA01073', 'CUSA01047'].flatMap((id) => [[id], ['..', id], ['game', id], ['..', 'game', id]]);
+const RECASTED_PLATINUM = { id: '0', after: 46 };
+const RECASTED_PORT = { port: 'recasted', launcher: 'recasted-launcher.exe', settings: '', env: '', marker: '', recasted: true };
 
 // `env` is the prefix of the runner's <PREFIX>_GAME_DIR / _DATA_DIR / _USER_DIR variables.
 const PORTS = [
@@ -210,6 +223,24 @@ function runtimePort(root) {
   return null;
 }
 
+function recastedPort(root) {
+  const has = (name) => hasFileNamed(root, name);
+  return RECASTED_RUNTIMES.some(has) && RECASTED_MARKERS.some(has) ? RECASTED_PORT : null;
+}
+
+// The dump its launcher names (game_path), else the first one run.bat would take; the logs it reads besides trophies/.
+function recastedDirs(root) {
+  const resolve = configResolver(root);
+  const values = config.readConfig(path.join(root, RECASTED_CONFIG));
+  const isDump = (dir) => !!dir && isRegularFile(path.join(dir, 'sce_sys', 'param.sfo'));
+  const gameDir = config.gameDirFrom(values, resolve) || RECASTED_DUMPS.map((parts) => resolve(path.join(...parts))).find(isDump) || findDump(root);
+  const custom = typeof values.user_dir === 'string' ? resolve(values.user_dir) : '';
+  const others = [path.join(root, 'user'), path.join(root, 'user', 'trophies'), root, custom, custom && path.join(custom, 'trophies'), gameDir && path.join(gameDir, 'trophies'), gameDir && path.join(path.dirname(gameDir), 'trophies')];
+  const userDir = path.join(root, 'trophies');
+  const logFiles = [...new Set(others.filter((dir) => dir && pathKey(dir) !== pathKey(userDir)).map((dir) => path.join(dir, TROPHIES_LOG)))];
+  return { gameDir, dataDir: root, userDir, logFiles };
+}
+
 // A renamed port found beside what its former name left behind is the renamed one.
 function withoutSuperseded(ports) {
   return ports.filter((port) => !ports.some((other) => other.supersedes === port.port));
@@ -226,7 +257,7 @@ function launcherOnlyPort(root) {
 // The port a folder holding run.py is: by its own files, then its launcher's name, then the runner.
 function identifyPort(root) {
   if (!isRealDirectory(root)) return null;
-  const runtime = runtimePort(root);
+  const runtime = runtimePort(root) || recastedPort(root);
   if (runtime) return runtime;
   if (!isRegularFile(path.join(root, RUNNER))) return launcherOnlyPort(root) || nativePort(root);
   const script = readText(path.join(root, RUNNER), MAX_SCRIPT_BYTES);
@@ -458,7 +489,7 @@ function recordSources(install, dirs, identity) {
     titleId: identity.titleId,
     progressDirs: [...new Set([dirs.userDir, path.join(root, 'bin', 'user')].filter(Boolean))],
     sessionDirs: port.packaged ? packaged : [...new Set(own.filter(Boolean))],
-    logFiles: declared.files,
+    logFiles: [...declared.files, ...listed(dirs.logFiles)],
     logDir: port.logsInRoot ? root : '',
     initial: port.initialGameKey && dirs.settingsFile ? { file: dirs.settingsFile, key: port.initialGameKey } : null,
   };
@@ -484,7 +515,8 @@ function gameTargets(install, dirs, identity, sets) {
   const npcommid = identity.bindings.get(slot) || '';
   const id = npcommid || identity.titleId;
   if (!id) return [];
-  return [{ appid: appidOf(id), ...base, game: '', title: identity.title, slot, npcommid, exe, logs: RUNNER_LOGS.slice() }];
+  const platinum = port.recasted ? { impliedPlatinum: RECASTED_PLATINUM } : {};
+  return [{ appid: appidOf(id), ...base, game: '', title: identity.title, slot, npcommid, exe, logs: RUNNER_LOGS.slice(), ...platinum }];
 }
 
 // One game per trophies.tsv the port wrote: its title folder is the user folder watched.
@@ -578,6 +610,7 @@ function installDirs(install) {
   if (install.port.runtime) return runtimeDirs(install.root, install.port.runtime);
   if (install.port.packaged) return packagedDirs(install);
   if (install.port.native) return nativeDirs(install.root);
+  if (install.port.recasted) return recastedDirs(install.root);
   const script = readText(path.join(install.root, RUNNER), MAX_SCRIPT_BYTES);
   const settings = launcherSettings(install.root, install.port);
   const dirs = resolveDirs(install.root, install.port, settings.values, script);
@@ -721,7 +754,15 @@ function readUnlocks(data) {
   const remembered = journaled ? rememberUnlocks(info.appid, session.unlocked) : session.unlocked;
   const current = saved.stateTime ? new Map([...remembered].filter(([id, time]) => session.unlocked.has(id) || time * 1000 > saved.stateTime)) : remembered;
   progress.mergeInto(own.unlocked, toEntries(current));
-  return { unlocked: own.unlocked, unstable: own.unstable || session.unstable || saved.unstable };
+  return { unlocked: withImpliedPlatinum(own.unlocked, info.impliedPlatinum), unstable: own.unstable || session.unstable || saved.unstable };
+}
+
+// A platinum the runtime never records, earned with trophies 1..after, dated by the last of them.
+function withImpliedPlatinum(unlocked, rule) {
+  if (!rule || unlocked.has(rule.id)) return unlocked;
+  const base = Array.from({ length: rule.after }, (_, index) => unlocked.get(String(index + 1)));
+  if (base.some((time) => time === undefined)) return unlocked;
+  return new Map([...unlocked, [rule.id, Math.max(0, ...base)]]);
 }
 
 function getAchievements(data) {

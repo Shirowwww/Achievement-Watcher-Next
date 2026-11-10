@@ -365,6 +365,25 @@ test('a RetroAchievements game is searched by its title alone, on its own consol
   assert.equal(details.description, 'From GamesDB.');
 });
 
+test("a PC port is searched as the game it ports, on that game's console", async (t) => {
+  const network = fakeNetwork({
+    'https://gamesdb.gog.com/games?title=Pikmin': {
+      items: [
+        { id: '1', title: 'Pikmin', releases: [{ platform_id: 'ncube', external_id: 'a' }] },
+        { id: '2', title: 'Pikmin', releases: [{ platform_id: 'nswitch', external_id: 'b' }] },
+      ],
+    },
+    'https://gamesdb.gog.com/games/1': { id: '1', ...GAMESDB_RELEASE, ...GAMESDB_RELEASE.game },
+  });
+  const service = createGameDetailsService({ cacheDir: tempDir(t), getJson: network.getJson, fetchSteamStore: steamStore(null) });
+
+  const { details } = await service.get({ appid: 'recompports-nectar', source: 'PC Port', name: 'Pikmin (Open Nectar)', console: 'GameCube' });
+  const borrowed = await service.get({ appid: 'recompports-mod', source: 'PC Port', name: 'Pikmin Mod (Launcher)', console: 'GameCube', detailsTitle: 'Pikmin' });
+
+  assert.equal(details.description, 'From GamesDB.');
+  assert.equal(borrowed.details.description, 'From GamesDB.', 'a mod takes the page of the game it is closest to');
+});
+
 test('a GOG catalogue that did not answer leaves the GOG page shown and its rating asked again', async (t) => {
   const cacheDir = tempDir(t);
   const catalog = 'https://catalog.gog.com/v1/catalog?query=like:The%20Witcher&limit=20';

@@ -99,6 +99,9 @@ function discover(dir) {
     const installs = detectAll(directory);
     if (installs.length > 0) {
       for (const install of installs) if (!found.has(install.port)) found.set(install.port, install);
+      // A port that ships another game in a folder of its own (`nested`) is searched there too.
+      const nested = installs.flatMap((install) => portById(install.port).nested || []);
+      for (const name of nested) queue.push({ directory: path.join(directory, name), depth: depth + 1 });
       continue;
     }
     if (depth >= MAX_DEPTH) continue;
@@ -208,7 +211,7 @@ async function getGameData(data) {
       icongray: icon,
     };
   });
-  return { name: schema.title || port.title, appid: appidOf(port), img: { header: '', icon: '' }, achievement: { total: list.length, list } };
+  return { name: schema.title || port.title, appid: appidOf(port), console: port.console || '', ...(port.detailsTitle ? { detailsTitle: port.detailsTitle } : {}), img: { header: '', icon: '' }, achievement: { total: list.length, list } };
 }
 
 // { id -> { achieved, time, progress } } from a port's unlock file, or null when it cannot be read whole.

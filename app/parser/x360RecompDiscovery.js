@@ -90,7 +90,7 @@ function mainExe(gameDir) {
 */
 function portTargetsIn(dir, entries, depth, folder, root) {
   const exeNames = entries.filter((entry) => entry.isFile() && ports.isPortExe(entry.name) && ports.isProgram(path.join(dir, entry.name))).map((entry) => entry.name);
-  if (exeNames.length) return [{ format: 'port', dir, gameDir: dir, exeNames, folder: path.basename(dir) }];
+  if (exeNames.length) return ports.splitBundle(exeNames).map((names) => ({ format: 'port', dir, gameDir: dir, exeNames: names, folder: path.basename(dir) }));
   // A Linux build only means something to the Linux app: Windows keeps its old behaviour.
   const nativeNames = state.onLinux() ? entries.filter((entry) => entry.isFile() && ports.isNativePortExe(entry.name) && ports.isNativeProgram(path.join(dir, entry.name))).map((entry) => entry.name) : [];
   if (nativeNames.length) return [{ format: 'port', native: true, dir, gameDir: dir, exeNames: nativeNames, folder: path.basename(dir) }];

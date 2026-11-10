@@ -16,6 +16,7 @@ const reblueBonus = require(path.join(__dirname, 'reblueBonus.js'));
 const state = require(path.join(__dirname, 'x360RecompState.js'));
 const formats = require(path.join(__dirname, 'x360RecompFormats.js'));
 const { readXexIndex } = require(path.join(__dirname, 'x360RecompDiscovery.js'));
+const { ownTitleFor } = require(path.join(__dirname, 'x360Ports.js'));
 
 const { debug, writeAtomic, iconDirFor, appidOf } = state;
 
@@ -351,6 +352,8 @@ async function marketplaceArt(titleId, fetchImpl) {
 
 // { name, marketName }: dbox.tools' title name and the Xbox 360 marketplace's English one.
 async function titleNamesFor(titleId, fetchImpl) {
+  const own = ownTitleFor(titleId);
+  if (own) return { name: own, marketName: own };
   const cached = readJsonOrNull(state.titleCacheFile(titleId));
   if (cached && cached.name) return cached;
   const names = { name: '', marketName: '' };
