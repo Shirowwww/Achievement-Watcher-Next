@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Cada jogo tem agora uma página própria, uma proeza desbloqueada abre a captura de ecrã e o clipe feitos com ela, e qualquer reparação que o Estado do jogo fez a um jogo pode ser anulada."
+    },
+    {
+      "kind": "heading",
+      "text": "Destaques"
+    },
+    {
+      "kind": "item",
+      "text": "Uma página para cada jogo. Clicar num jogo abre uma vista geral com os trailers a passar atrás do título, Jogar e Proezas a um clique, a descrição da loja, capturas de ecrã, avaliações, guias e as tuas recordações, no teu idioma quando a loja o tem."
+    },
+    {
+      "kind": "item",
+      "text": "Capturas de ecrã e clipes junto a cada proeza. Clica com o botão direito numa proeza desbloqueada, ou usa os dois botões do overlay no jogo, para ver a imagem ou reproduzir o clipe feito quando foi desbloqueada."
+    },
+    {
+      "kind": "item",
+      "text": "Fixa uma proeza no topo da lista, na aplicação e no overlay, até ser desbloqueada."
+    },
+    {
+      "kind": "item",
+      "text": "Mais ports recompilados, encontrados sozinhos. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 e 2 e mais 25 ports de Xbox 360. Um port numa das tuas bibliotecas de jogos é detetado em cada verificação, antes de ter guardado seja o que for."
+    },
+    {
+      "kind": "item",
+      "text": "Anular a última reparação. O Estado do jogo repõe os ficheiros que uma reparação alterou e remove os que criou, até às dez últimas reparações por jogo."
+    },
+    {
+      "kind": "heading",
+      "text": "Também novo"
+    },
+    {
+      "kind": "item",
+      "text": "Os cartões da biblioteca inclinam-se para o ponteiro e a janela adota as cores da capa sobre a qual está o cursor. Definições > Aparência > Cartões da biblioteca ajusta ambos."
+    },
+    {
+      "kind": "item",
+      "text": "O executável certo, com mais frequência. O AW Next ignora ficheiros que não são programas a sério e pastas como Crack, e Encontrar tudo em Definições > Pastas procura todos os que faltam."
+    },
+    {
+      "kind": "item",
+      "text": "O Estado do jogo lê configurações ColdClient e pode iniciar o jogo através do loader. Também deteta o AppId de exemplo do emulador Epic e deixa em paz o ficheiro Steam das versões VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "O plugin Millennium e a extensão Playnite atualizam-se sozinhos, e temas do Playnite como Harmony ou Selene podem mostrar os contadores do AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Clipes até 60 segundos, com um controlo deslizante para o tempo guardado antes do desbloqueio (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Notas de atualização no teu idioma, uma opacidade do overlay mais fina e um seletor de cores dentro do overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Minimizar para a bandeja do sistema ao iniciar um jogo, uma nova opção em Definições > Geral."
+    },
+    {
+      "kind": "item",
+      "text": "Correções: um crack da comunidade só é aplicado ao jogo para o qual foi feito, os cracks que os jogos Unity carregam da pasta Plugins são lidos aí, os jogos iniciados a partir de um atalho do Steam mantêm o tempo de jogo, os jogos .bat e .cmd voltam a arrancar, o Dead Space 2 com MarkerPatch lista as suas proezas (#171), os sons de notificação tocam com o pop-up e a janela do Playnite funciona no modo Fullscreen."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta o changelog completo para a lista completa."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

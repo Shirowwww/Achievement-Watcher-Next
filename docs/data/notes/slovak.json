@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Každá hra má teraz vlastnú stránku, odomknutý úspech otvorí snímku obrazovky a klip nasnímané s ním a každú opravu, ktorú Stav hry na hre vykonal, možno vrátiť späť."
+    },
+    {
+      "kind": "heading",
+      "text": "Hlavné novinky"
+    },
+    {
+      "kind": "item",
+      "text": "Stránka pre každú hru. Kliknutie na hru otvorí prehľad s trailermi prehrávanými za názvom, Hrať a Úspechy na jedno kliknutie, popisom z obchodu, snímkami obrazovky, hodnoteniami, návodmi a vašimi spomienkami, vo vašom jazyku, ak ho obchod má."
+    },
+    {
+      "kind": "item",
+      "text": "Snímky obrazovky a klipy vedľa každého úspechu. Kliknite pravým tlačidlom na odomknutý úspech alebo použite dve tlačidlá v overlayi v hre a zobrazíte obrázok alebo prehráte klip nasnímaný pri odomknutí."
+    },
+    {
+      "kind": "item",
+      "text": "Pripnite úspech na začiatok jeho zoznamu, v aplikácii aj v overlayi, kým sa neodomkne."
+    },
+    {
+      "kind": "item",
+      "text": "Ďalšie prekompilované porty, nájdené samy. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 a 2 a ďalších 25 portov pre Xbox 360. Port v niektorej z vašich herných knižníc sa zachytí pri každom skenovaní, ešte predtým, než čokoľvek uloží."
+    },
+    {
+      "kind": "item",
+      "text": "Vrátenie poslednej opravy. Stav hry vráti súbory, ktoré oprava zmenila, a odstráni tie, ktoré vytvorila, až pri desiatich posledných opravách na hru."
+    },
+    {
+      "kind": "heading",
+      "text": "Ďalšie novinky"
+    },
+    {
+      "kind": "item",
+      "text": "Dlaždice knižnice sa nakláňajú k ukazovateľu a okno preberá farby obalu, nad ktorým je kurzor. Nastavenia > Vzhľad > Dlaždice knižnice nastavuje oboje."
+    },
+    {
+      "kind": "item",
+      "text": "Správny spustiteľný súbor, častejšie. AW Next preskakuje súbory, ktoré nie sú skutočné programy, a priečinky ako Crack, a Nájsť všetko v Nastavenia > Priečinky hľadá všetky chýbajúce."
+    },
+    {
+      "kind": "item",
+      "text": "Stav hry číta nastavenia ColdClient a vie spustiť hru cez loader. Tiež spozná ukážkové AppId emulátora Epic a necháva na pokoji súbor Steam pri vydaniach VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "Plugin Millennium a rozšírenie Playnite sa aktualizujú samy a motívy Playnite, napríklad Harmony alebo Selene, môžu zobrazovať počty z AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Klipy do 60 sekúnd s posuvníkom pre to, koľko sa uchová pred odomknutím (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Poznámky k aktualizácii vo vašom jazyku, jemnejšia priehľadnosť overlaya a výber farby priamo v overlayi."
+    },
+    {
+      "kind": "item",
+      "text": "Minimalizovať do oznamovacej oblasti pri spustení hry, nový prepínač v Nastavenia > Všeobecné."
+    },
+    {
+      "kind": "item",
+      "text": "Opravy: komunitný crack sa použije len na hru, pre ktorú vznikol, cracky, ktoré hry Unity načítavajú z priečinka Plugins, sa čítajú odtiaľ, hry spustené zo zástupcu Steamu si zachovajú herný čas, hry .bat a .cmd sa opäť spúšťajú, Dead Space 2 s MarkerPatch uvádza svoje úspechy (#171), zvuky oznámení sa prehrajú s vyskakovacím oknom a okno Playnite funguje v režime Fullscreen."
+    },
+    {
+      "kind": "text",
+      "text": "Úplný zoznam nájdete v úplnom zozname zmien."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

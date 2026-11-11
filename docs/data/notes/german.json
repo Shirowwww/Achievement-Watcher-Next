@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Jedes Spiel hat jetzt eine eigene Seite, ein freigeschalteter Erfolg öffnet den dazu aufgenommenen Screenshot und Clip, und jede Reparatur, die Spielzustand an einem Spiel vorgenommen hat, lässt sich rückgängig machen."
+    },
+    {
+      "kind": "heading",
+      "text": "Highlights"
+    },
+    {
+      "kind": "item",
+      "text": "Eine Seite für jedes Spiel. Ein Klick auf ein Spiel öffnet eine Übersicht mit den Trailern, die hinter dem Titel laufen, Spielen und Erfolgen nur einen Klick entfernt, der Beschreibung des Stores, Screenshots, Bewertungen, Guides und deinen Souvenirs, in deiner Sprache, wenn der Store sie hat."
+    },
+    {
+      "kind": "item",
+      "text": "Screenshots und Clips neben jedem Erfolg. Klicke mit der rechten Maustaste auf einen freigeschalteten Erfolg oder nutze die beiden Schaltflächen im In-Game-Overlay, um das Bild zu sehen oder den Clip abzuspielen, der beim Freischalten aufgenommen wurde."
+    },
+    {
+      "kind": "item",
+      "text": "Hefte einen Erfolg an den Anfang seiner Liste, in der App und im Overlay, bis er freigeschaltet ist."
+    },
+    {
+      "kind": "item",
+      "text": "Mehr rekompilierte Portierungen, die von selbst gefunden werden. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 und 2 und 25 weitere Xbox-360-Portierungen. Eine Portierung in einer deiner Spielebibliotheken wird bei jedem Scan erkannt, noch bevor sie etwas gespeichert hat."
+    },
+    {
+      "kind": "item",
+      "text": "Die letzte Reparatur rückgängig machen. Spielzustand stellt die Dateien wieder her, die eine Reparatur geändert hat, und entfernt die, die sie erstellt hat, bis zu den letzten zehn Reparaturen pro Spiel."
+    },
+    {
+      "kind": "heading",
+      "text": "Außerdem neu"
+    },
+    {
+      "kind": "item",
+      "text": "Bibliothekskacheln neigen sich zum Mauszeiger, und das Fenster nimmt die Farben des Covers unter dem Zeiger an. Einstellungen > Darstellung > Bibliothekskacheln stellt beides ein."
+    },
+    {
+      "kind": "item",
+      "text": "Öfter die richtige ausführbare Datei. AW Next überspringt Dateien, die keine echten Programme sind, und Ordner wie Crack, und Alles finden in Einstellungen > Ordner sucht nach allen fehlenden."
+    },
+    {
+      "kind": "item",
+      "text": "Spielzustand liest ColdClient-Setups und kann das Spiel über den Loader starten. Außerdem erkennt es die Beispiel-AppId des Epic-Emulators und lässt die Steam-Datei von VOICES38-Releases in Ruhe."
+    },
+    {
+      "kind": "item",
+      "text": "Das Millennium-Plugin und die Playnite-Erweiterung aktualisieren sich selbst, und Playnite-Themes wie Harmony oder Selene können die Zähler von AW Next anzeigen."
+    },
+    {
+      "kind": "item",
+      "text": "Clips bis zu 60 Sekunden, mit einem Schieberegler dafür, wie viel vor dem Freischalten aufbewahrt wird (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Update-Hinweise in deiner Sprache, eine feinere Overlay-Deckkraft und eine Farbauswahl im Overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Beim Spielstart in den Infobereich minimieren, ein neuer Schalter in Einstellungen > Allgemein."
+    },
+    {
+      "kind": "item",
+      "text": "Korrekturen: Ein Community-Crack wird nur auf das Spiel angewendet, für das er gemacht wurde, Cracks, die Unity-Spiele aus ihrem Plugins-Ordner laden, werden dort gelesen, über eine Steam-Verknüpfung gestartete Spiele behalten ihre Spielzeit, .bat- und .cmd-Spiele starten wieder, Dead Space 2 mit MarkerPatch listet seine Erfolge auf (#171), Benachrichtigungstöne spielen mit dem Popup ab, und das Playnite-Fenster funktioniert im Fullscreen-Modus."
+    },
+    {
+      "kind": "text",
+      "text": "Die vollständige Liste findest du im vollständigen Changelog."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

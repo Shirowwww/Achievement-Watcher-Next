@@ -77,7 +77,8 @@ around it. Both open from their achievement, in the app or the overlay.
 <td valign="top">
 
 **🩺 Game Health**<br>
-Says whether a game is tracked, why not, and which repairs apply. Every repair backs up first.
+Says whether a game is tracked, why not, and which repairs apply. Every repair backs up first and
+can be undone.
 
 </td>
 </tr>

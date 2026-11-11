@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Jokaisella pelillä on nyt oma sivunsa, avattu saavutus avaa sen kanssa otetun kuvakaappauksen ja klipin, ja jokaisen Pelin kunto -korjauksen voi perua."
+    },
+    {
+      "kind": "heading",
+      "text": "Kohokohdat"
+    },
+    {
+      "kind": "item",
+      "text": "Sivu jokaiselle pelille. Pelin napsauttaminen avaa yleiskatsauksen, jossa trailerit pyörivät nimen takana, Pelaa ja Saavutukset ovat yhden napsautuksen päässä, mukana kaupan kuvaus, kuvakaappaukset, arvostelut, oppaat ja muistosi, omalla kielelläsi, kun kauppa tarjoaa sen."
+    },
+    {
+      "kind": "item",
+      "text": "Kuvakaappaukset ja klipit jokaisen saavutuksen vieressä. Napsauta avattua saavutusta hiiren oikealla painikkeella tai käytä pelinsisäisen overlayn kahta painiketta nähdäksesi kuvan tai toistaaksesi klipin, joka otettiin avaushetkellä."
+    },
+    {
+      "kind": "item",
+      "text": "Kiinnitä saavutus listansa alkuun sovelluksessa ja overlayssa, kunnes se aukeaa."
+    },
+    {
+      "kind": "item",
+      "text": "Lisää uudelleenkäännettyjä portteja, jotka löytyvät itsestään. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 ja 2 sekä 25 muuta Xbox 360 -porttia. Pelikirjastosi portti poimitaan jokaisessa skannauksessa, ennen kuin se on tallentanut mitään."
+    },
+    {
+      "kind": "item",
+      "text": "Peru viimeisin korjaus. Pelin kunto palauttaa tiedostot, joita korjaus muutti, ja poistaa ne, jotka se loi, aina kymmeneen viimeisimpään korjaukseen peliä kohden."
+    },
+    {
+      "kind": "heading",
+      "text": "Myös uutta"
+    },
+    {
+      "kind": "item",
+      "text": "Kirjaston ruudut kallistuvat osoittimeen päin ja ikkuna ottaa väriensä pohjaksi osoitetun kansikuvan värit. Asetukset > Ulkoasu > Kirjaston ruudut säätää molempia."
+    },
+    {
+      "kind": "item",
+      "text": "Oikea suoritettava tiedosto useammin. AW Next ohittaa tiedostot, jotka eivät ole oikeita ohjelmia, ja kansiot kuten Crack, ja Etsi kaikki kohdassa Asetukset > Kansiot etsii kaikki puuttuvat."
+    },
+    {
+      "kind": "item",
+      "text": "Pelin kunto lukee ColdClient-asetukset ja voi käynnistää pelin latainta käyttäen. Se myös havaitsee Epic-emulaattorin esimerkki-AppId:n ja jättää VOICES38-julkaisujen Steam-tiedoston rauhaan."
+    },
+    {
+      "kind": "item",
+      "text": "Millennium-lisäosa ja Playnite-laajennus päivittävät itsensä, ja Playnite-teemat kuten Harmony tai Selene voivat näyttää AW Nextin laskurit."
+    },
+    {
+      "kind": "item",
+      "text": "Klipit jopa 60 sekunnin mittaisina, ja liukusäädin määrää, kuinka paljon säilytetään ennen avautumista (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Päivitysmuistiinpanot omalla kielelläsi, hienojakoisempi overlayn läpinäkyvyys ja värinvalitsin overlayn sisällä."
+    },
+    {
+      "kind": "item",
+      "text": "Piilota ilmaisinalueelle pelin käynnistyessä, uusi kytkin kohdassa Asetukset > Yleiset."
+    },
+    {
+      "kind": "item",
+      "text": "Korjaukset: yhteisön crack otetaan käyttöön vain sille pelille, jolle se tehtiin, crackit, joita Unity-pelit lataavat Plugins-kansiostaan, luetaan sieltä, Steam-pikakuvakkeesta käynnistetyt pelit säilyttävät peliaikansa, .bat- ja .cmd-pelit käynnistyvät taas, Dead Space 2 MarkerPatchin kanssa listaa saavutuksensa (#171), ilmoitusäänet soivat ponnahdusikkunan mukana ja Playnite-ikkuna toimii Fullscreen-tilassa."
+    },
+    {
+      "kind": "text",
+      "text": "Koko muutosloki sisältää täydellisen luettelon."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

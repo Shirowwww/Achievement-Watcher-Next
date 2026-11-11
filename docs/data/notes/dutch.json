@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Elke game heeft nu een eigen pagina, een ontgrendelde prestatie opent de screenshot en de clip die ermee zijn gemaakt, en elke reparatie die Gamestatus aan een game deed, kan ongedaan worden gemaakt."
+    },
+    {
+      "kind": "heading",
+      "text": "Hoogtepunten"
+    },
+    {
+      "kind": "item",
+      "text": "Een pagina voor elke game. Klikken op een game opent een overzicht met de trailers die achter de titel spelen, Spelen en Prestaties op één klik, de beschrijving van de winkel, screenshots, beoordelingen, gidsen en je souvenirs, in je eigen taal als de winkel die heeft."
+    },
+    {
+      "kind": "item",
+      "text": "Screenshots en clips naast elke prestatie. Klik met de rechtermuisknop op een ontgrendelde prestatie, of gebruik de twee knoppen in de in-game overlay, om de afbeelding te zien of de clip af te spelen die bij het ontgrendelen is gemaakt."
+    },
+    {
+      "kind": "item",
+      "text": "Zet een prestatie bovenaan zijn lijst vast, in de app en in de overlay, totdat hij is ontgrendeld."
+    },
+    {
+      "kind": "item",
+      "text": "Meer gerecompileerde ports, die vanzelf worden gevonden. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 en 2 en nog 25 Xbox 360-ports. Een port in een van je gamebibliotheken wordt bij elke scan opgepikt, nog voordat hij iets heeft opgeslagen."
+    },
+    {
+      "kind": "item",
+      "text": "De laatste reparatie ongedaan maken. Gamestatus zet de bestanden terug die een reparatie heeft gewijzigd en verwijdert de bestanden die hij heeft gemaakt, tot de laatste tien reparaties per game."
+    },
+    {
+      "kind": "heading",
+      "text": "Ook nieuw"
+    },
+    {
+      "kind": "item",
+      "text": "Bibliotheektegels kantelen naar de aanwijzer en het venster neemt de kleuren van de cover onder de muis over. Instellingen > Weergave > Bibliotheektegels regelt beide."
+    },
+    {
+      "kind": "item",
+      "text": "Vaker het juiste uitvoerbare bestand. AW Next slaat bestanden over die geen echte programma's zijn en mappen zoals Crack, en Alles zoeken in Instellingen > Mappen zoekt naar elk ontbrekend exemplaar."
+    },
+    {
+      "kind": "item",
+      "text": "Gamestatus leest ColdClient-opstellingen en kan de game via de loader starten. Hij herkent ook de voorbeeld-AppId van de Epic-emulator en laat het Steam-bestand van VOICES38-releases met rust."
+    },
+    {
+      "kind": "item",
+      "text": "De Millennium-plug-in en de Playnite-extensie updaten zichzelf, en Playnite-thema's zoals Harmony of Selene kunnen de tellers van AW Next tonen."
+    },
+    {
+      "kind": "item",
+      "text": "Clips tot 60 seconden, met een schuifregelaar voor hoeveel er vóór het ontgrendelen wordt bewaard (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Updatenotities in je eigen taal, een fijnere overlay-dekking en een kleurkiezer in de overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Naar het systeemvak verbergen als een game start, een nieuwe schakelaar in Instellingen > Algemeen."
+    },
+    {
+      "kind": "item",
+      "text": "Verbeteringen: een community-crack wordt alleen toegepast op de game waarvoor hij is gemaakt, cracks die Unity-games uit hun Plugins-map laden worden daar gelezen, games gestart vanaf een Steam-snelkoppeling houden hun speeltijd, .bat- en .cmd-games starten weer, Dead Space 2 met MarkerPatch toont zijn prestaties (#171), meldingsgeluiden spelen samen met de pop-up en het Playnite-venster werkt in Fullscreen-modus."
+    },
+    {
+      "kind": "text",
+      "text": "Zie de volledige changelog voor de volledige lijst."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

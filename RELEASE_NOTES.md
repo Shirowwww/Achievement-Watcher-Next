@@ -1,39 +1,39 @@
-# Achievement Watcher Next 3.12.5
+# Achievement Watcher Next 3.12.6
 
-Your achievements inside Steam and Playnite, recompiled PC ports and PS3Recomp games as new sources, trophies read straight from a jailbroken PS3 or PS4, and steps you can tick off under a long achievement.
+Every game now has a page of its own, an unlocked achievement opens the screenshot and clip taken with it, and any repair Game Health made to a game can be undone.
 
-## Steam and Playnite
+## Highlights
 
-- **A Millennium plugin for the Steam library.** A non-Steam shortcut AW Next recognises gets Steam's own Achievements section, play bar counter, full list and Big Picture tab, updated as unlocks come in. Download `aw-next-millennium.zip` below.
-- **A Playnite extension.** Right-click a game in Playnite and open AW Next achievements, or use a theme that places AW Next's panels in the game's details. Download the `.pext` below.
-
-## New sources
-
-- **Recompiled PC ports:** Dusklight (Twilight Princess), Ghostship (Super Mario 64), DKR-R (Diddy Kong Racing), Super Mario Bros. Remastered and SMS Launcher (Super Mario Sunshine and Super Mario Eclipse), on Windows and Linux.
-- **PS3Recomp ports** show their trophies, with PlayStation's own rarity.
-- **Trophies from a PS3 or PS4 over FTP**, for a jailbroken console when signing in to PSN is not an option. Nothing is written to the console.
+- **A page for every game.** Clicking a game opens an overview with its trailers playing behind the title, Play and Achievements one click away, the store's description, screenshots, ratings, guides and your souvenirs, in your language where the store has it.
+- **Screenshots and clips beside each achievement.** Right-click an unlocked achievement, or use the two buttons in the in-game overlay, to see the picture or play the clip taken when it unlocked.
+- **Pin an achievement to the top of its list**, in the app and in the overlay, until it unlocks.
+- **More recompiled ports, found on their own.** ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 and 2 and 25 more Xbox 360 ports. A port in one of your game libraries is picked up at every scan, before it has saved anything.
+- **Undo the last repair.** Game Health puts back the files a repair changed and removes the ones it created, up to the last ten repairs per game.
 
 ## Also new
 
-- **Steps under an achievement.** Split a long achievement into steps you write yourself and tick off, in the app and in the in-game overlay, and share the list as a file.
-- **Several achievements at once.** Ctrl+click or Shift+click achievements, then unlock, clear or re-lock them together.
-- **Ignore a Game Health warning** for one game and one finding.
-- **Locked achievements are greyed out** for every source with a single picture per achievement, and an achievement with no picture shows the game's icon.
-- **Fixes:** counter achievements unlock under GBE Fork, a scan no longer swaps a cracked Ubisoft game's own loader, Game Health leaves Denuvo games' Steam dll alone, one game without its list no longer rescans the whole library, Steam unlocks notify on a PC whose clock is off, and games tied in a sort line up by name.
+- **Library tiles lean toward the pointer** and the window takes on the hovered cover's colours. Settings > Appearance > Library tiles sets both.
+- **The right executable, more often.** AW Next skips files that are not real programs and folders such as Crack, and **Find all** in Settings > Folders looks for every missing one.
+- **Game Health reads ColdClient setups** and can start the game through the loader. It also spots the Epic emulator's sample AppId and leaves the Steam file of VOICES38 releases alone.
+- **The Millennium plugin and the Playnite extension update themselves**, and Playnite themes such as Harmony or Selene can show AW Next's counts.
+- **Clips up to 60 seconds**, with a slider for how much is kept before the unlock (#170).
+- **Update notes in your language**, a finer overlay opacity, and a colour picker inside the overlay.
+- **Hide to the tray when a game starts**, a new switch in Settings > General.
+- **Fixes:** a community crack is applied only to the game it was made for, cracks that Unity games load from their Plugins folder are read there, games started from a Steam shortcut keep their play time, `.bat` and `.cmd` games start again, Dead Space 2 with MarkerPatch lists its achievements (#171), notification sounds play with the popup, and the Playnite window works in Fullscreen mode.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3125---2026-11-03) for the complete list.
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3126---2026-11-11) for the complete list.
 
 ## Install
 
 | File | What it is |
 |---|---|
-| `Achievement.Watcher.Setup.3.12.5.exe` | The Windows installer. An installed copy also updates itself. |
-| `Achievement.Watcher.Portable.3.12.5.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
-| `Achievement.Watcher.3.12.5.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
+| `Achievement.Watcher.Setup.3.12.6.exe` | The Windows installer. An installed copy also updates itself. |
+| `Achievement.Watcher.Portable.3.12.6.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
+| `Achievement.Watcher.3.12.6.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
 | `aw-next-millennium.zip` | The Steam plugin for Millennium: extract it into `<Steam>\millennium\plugins\`. |
 | `AwNextAchievements_*.pext` | The Playnite extension: open it and Playnite installs it. |
 | `.blockmap`, `latest.yml` and `latest-linux.yml` | Used by automatic updates, nothing to download by hand. |
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3125---2026-11-03) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3126---2026-11-11) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)

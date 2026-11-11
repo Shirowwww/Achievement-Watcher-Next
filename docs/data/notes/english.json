@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Every game now has a page of its own, an unlocked achievement opens the screenshot and clip taken with it, and any repair Game Health made to a game can be undone."
+    },
+    {
+      "kind": "heading",
+      "text": "Highlights"
+    },
+    {
+      "kind": "item",
+      "text": "A page for every game. Clicking a game opens an overview with its trailers playing behind the title, Play and Achievements one click away, the store's description, screenshots, ratings, guides and your souvenirs, in your language where the store has it."
+    },
+    {
+      "kind": "item",
+      "text": "Screenshots and clips beside each achievement. Right-click an unlocked achievement, or use the two buttons in the in-game overlay, to see the picture or play the clip taken when it unlocked."
+    },
+    {
+      "kind": "item",
+      "text": "Pin an achievement to the top of its list, in the app and in the overlay, until it unlocks."
+    },
+    {
+      "kind": "item",
+      "text": "More recompiled ports, found on their own. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 and 2 and 25 more Xbox 360 ports. A port in one of your game libraries is picked up at every scan, before it has saved anything."
+    },
+    {
+      "kind": "item",
+      "text": "Undo the last repair. Game Health puts back the files a repair changed and removes the ones it created, up to the last ten repairs per game."
+    },
+    {
+      "kind": "heading",
+      "text": "Also new"
+    },
+    {
+      "kind": "item",
+      "text": "Library tiles lean toward the pointer and the window takes on the hovered cover's colours. Settings > Appearance > Library tiles sets both."
+    },
+    {
+      "kind": "item",
+      "text": "The right executable, more often. AW Next skips files that are not real programs and folders such as Crack, and Find all in Settings > Folders looks for every missing one."
+    },
+    {
+      "kind": "item",
+      "text": "Game Health reads ColdClient setups and can start the game through the loader. It also spots the Epic emulator's sample AppId and leaves the Steam file of VOICES38 releases alone."
+    },
+    {
+      "kind": "item",
+      "text": "The Millennium plugin and the Playnite extension update themselves, and Playnite themes such as Harmony or Selene can show AW Next's counts."
+    },
+    {
+      "kind": "item",
+      "text": "Clips up to 60 seconds, with a slider for how much is kept before the unlock (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Update notes in your language, a finer overlay opacity, and a colour picker inside the overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Hide to the tray when a game starts, a new switch in Settings > General."
+    },
+    {
+      "kind": "item",
+      "text": "Fixes: a community crack is applied only to the game it was made for, cracks that Unity games load from their Plugins folder are read there, games started from a Steam shortcut keep their play time, .bat and .cmd games start again, Dead Space 2 with MarkerPatch lists its achievements (#171), notification sounds play with the popup, and the Playnite window works in Fullscreen mode."
+    },
+    {
+      "kind": "text",
+      "text": "See the full changelog for the complete list."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

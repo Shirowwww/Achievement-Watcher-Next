@@ -14,113 +14,87 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.6 - 2026-11-11
 
 ### Added
 
-- **Every game has its own page.** Clicking a game now opens an overview: its trailers play muted
-  behind the title, one after the other, and **Play**, **Achievements**, the cover, Game Health and the game's settings
-  are one click away. Below sit the store's description, a strip of trailers and screenshots that
-  open full size, the help links from the right-click menu, your souvenirs, the ratings and the
-  details (genres, developer, publisher, release date), with the ratings of the press and the players
-  (Steam reviews, Metacritic, GOG and the stores), each one opening its page, and guides for the
-  game. The text comes from Steam, the Microsoft Store, Epic, GOG or
-  GamesDB (Xbox 360 and RetroAchievements games included), in your language where the store has it,
-  loaded when the page opens and kept for two weeks. The trailers only play while they are
-  on screen, and stays a still picture when Windows asks for less animation. The page and the
-  achievements list slide into each other, and a game with no achievements says so.
+- **Every game has its own page.** Clicking a game opens an overview: its trailers play muted
+  behind the title, with **Play**, **Achievements**, the cover, Game Health and the game's settings
+  one click away. Below come the store's description, trailers and screenshots that open full size,
+  the help links, your souvenirs, the details (genres, developer, publisher, release date), the
+  press and player ratings, each opening its page, and guides for the game. The text comes from
+  Steam, the Microsoft Store, Epic, GOG or GamesDB, in your language where the store has it. The
+  trailers only play while they are on screen, and stay still when Windows asks for less animation.
 - **See an achievement's screenshot and clip from the app and the in-game overlay.** Right-click
-  an unlocked achievement and pick **Show screenshot** or **Show clip**; in the overlay, the two
-  small buttons under **Unlocked** do the same, and the controller works too (left and right to
-  browse, A to play, B to close). The viewer opens at the picture's or the clip's own size. AW Next
-  now notes which file belongs to which achievement as it takes it, so a renamed game or achievement
-  still finds its files; older captures are found by their file name.
+  an unlocked achievement and pick **Show screenshot** or **Show clip**, or use the two small
+  buttons under **Unlocked** in the overlay, where the controller works too. AW Next now notes
+  which file belongs to which achievement as it takes it, so a renamed game or achievement still
+  finds its files; older captures are found by their file name.
 - **Pin an achievement to the top of its list.** Right-click a locked achievement and choose **Pin
   to the top**: it stays first in the list whatever the sort, in the app and in the in-game overlay,
   where a small pin on the row does the same. The pin goes away when you remove it or once the
   achievement unlocks.
 - **Hide to the tray when a game starts.** A new switch in **Settings > General**, off by default:
   once a game starts from AW Next, the window goes to the tray and stays there after the game ends.
-- **More recompiled ports show their achievements.** ReCasted (Ratchet & Clank on PS4, #182) is
-  read from the `trophies` folder beside it, its platinum granted once the 46 other trophies are in.
-  Odin Sphere Leifthrasir and 13 Sentinels: Aegis Rim join the PS4 ports. Super Mario All-Stars,
-  Road Rash 64 Recompiled, F-Zero X (G-Diffuser) and Pikmin 1 and 2 (Open Nectar) join the
-  recompiled PC ports, with their lists. Twenty-five more Xbox 360 ports are known from their
-  executable, among them TMNT Turtles in Time Re-Shelled, El Chavo Kart, Marvel Ultimate Alliance 1
-  and 2, Eternal Sonata, X-Men Destiny, the Trials and Angry Birds collections, Crash: Mind over
-  Mutant and The Bourne Conspiracy. Games installed with Quiver Launcher 4 are found as well.
-- **Recompiled ports are found on their own.** A PS4, PS3, Xbox 360 or PC port set in one of your
-  game libraries is read at every scan and announced live, from its own files and before it has
-  saved anything; Smart find also suggests it, and the ones Quiver Launcher installed anywhere
-  else. A port kept outside your game libraries is still added under **Settings → Folders**.
+- **More recompiled ports, found on their own.** ReCasted (Ratchet & Clank on PS4, #182) is read
+  from the `trophies` folder beside it. Odin Sphere Leifthrasir and 13 Sentinels: Aegis Rim join the
+  PS4 ports; Super Mario All-Stars, Road Rash 64 Recompiled, F-Zero X (G-Diffuser) and Pikmin 1 and
+  2 (Open Nectar) the PC ports; 25 more Xbox 360 ports are known from their executable, such as
+  TMNT Turtles in Time Re-Shelled and Marvel Ultimate Alliance 1 and 2. A port set in one of your
+  game libraries is now read at every scan and announced live, before it has saved anything, and
+  Smart Find suggests it, along with the ones Quiver Launcher (version 4 included) installed.
 
 ### Improved
 
-- **AW Next finds a game's executable more often, and picks the wrong one less.** It skips `.exe`
-  files that are not real Windows programs, never looks in a Crack or backup folder, and stops
-  choosing on its own when a `steam_appid.txt` or `ColdClientLoader.ini` beside the file names
-  another game. The file Steam launches for a game counts as strong evidence. When no file is sure,
-  **Play** and the Executable tab list the likely ones before opening the file browser. **Find all**
-  in **Settings > Folders** runs Smart Find, then looks for the executable of every game without
-  one; a game with no known folder is searched for across your drives by file name only. The
-  first-run guide's main button is now **Find all** too, and does the same once the first scan is
-  done. A search cut short by its time limit never counts as found. Smart Find also reads the
-  install folder chosen in Ubisoft Connect.
-- **Library tiles have depth.** The tile under the mouse leans slightly toward the pointer, and the
-  window behind the library takes on the colours of the hovered game's cover (it follows the
-  keyboard and the controller too). Both are on by default, and **Settings > Appearance > Library
-  tiles** sets each one to Disabled, Subtle, Normal or Strong. The List and Details views stay flat,
-  and the lean stops when the system asks for less motion. The Play button and the two corner
-  buttons now answer the mouse too, and the corner ones float over the cover with a soft shadow.
-- **Game Health checks games served by ColdClient.** It used to stop at "served by ColdClient".
-  It now reads the loader's `ColdClientLoader.ini` and says when it starts a missing file or a
-  program outside the game folder, announces another game ID, or has no loader for the game's 32
-  or 64 bits. The `steam_settings` beside the loader gets the same checks and the same **Rewrite
-  the achievement data** repair as a GBE folder. When the setup is right, **Play through the
-  ColdClient loader** makes the Play button start the loader instead of the exe: play time still
-  follows the game itself, and **Play the game file directly** takes it back.
-- **More Epic emulator checks.** Game Health now says when `NemirtingasEpicEmu.json` still holds
-  the sample AppId made of zeros, and when Epic's own EOSSDK file is still in place, so the
-  emulator never loads.
-- **VOICES38 releases keep their Steam file.** These releases need the Valve `steam_api64.dll`
-  they ship, and replacing it crashes the game. Game Health no longer offers to install the
-  emulator over it, and no fix replaces it.
+- **AW Next finds a game's executable more often, and picks the wrong one less.** It skips files
+  that are not real Windows programs, Crack and backup folders, and any file whose
+  `steam_appid.txt` or `ColdClientLoader.ini` names another game. When no file is sure, **Play** and
+  the Executable tab list the likely ones before opening the file browser. **Find all** in
+  **Settings > Folders**, also the first-run guide's main button, runs Smart Find and then looks for
+  the executable of every game without one. Smart Find also reads Ubisoft Connect's install folder.
+- **Library tiles have depth.** The tile under the mouse leans toward the pointer, and the window
+  takes on the colours of the hovered game's cover, with the keyboard and the controller too.
+  **Settings > Appearance > Library tiles** sets each effect from Disabled to Strong, and the lean
+  stops when the system asks for less motion. The Play and corner buttons now answer the mouse too.
+- **Game Health checks games served by ColdClient.** It reads `ColdClientLoader.ini` and says when
+  it starts a missing file or a program outside the game folder, names another game ID, or has no
+  loader for the game's 32 or 64 bits, and it checks the `steam_settings` beside it like a GBE
+  folder. When the setup is right, **Play through the ColdClient loader** makes the Play button
+  start the loader; play time still follows the game.
+- **Game Health knows two more release setups.** It says when `NemirtingasEpicEmu.json` still holds
+  the sample AppId made of zeros, or when Epic's own EOSSDK file is still in place, so the emulator
+  never loads. VOICES38 releases keep the Valve `steam_api64.dll` they need: no fix replaces it any
+  more, since the game crashes without it.
 - **More Xbox and PC games get their PlayStation platinum.** A name with a subtitle or a platform
-  after it, such as Grand Theft Auto V Enhanced (PC) on Xbox or Sea of Thieves: 2026 Edition, found
-  no PlayStation list. AW Next now tries again without that last part, and keeps the list only when
-  at least four achievements in five tie to its trophies, so a sequel such as Hollow Knight:
-  Silksong never gets the platinum of the first game.
-- **Finer opacity for the in-game overlay.** The five fixed steps are now a slider from 20% to 100%,
-  and the panel changes while you move it.
-- **A custom overlay colour is picked inside the overlay.** The rainbow dot opened the Windows colour
-  dialog over the game. It is now a chip showing the colour and its code, which opens a small picker
-  in the overlay: a shade pad, a hue slider, a field for the code and your last three colours.
+  after it, such as Grand Theft Auto V Enhanced (PC) or Sea of Thieves: 2026 Edition, is tried again
+  without it, and the list is kept only when four achievements in five tie to its trophies, so
+  Hollow Knight: Silksong never gets the first game's platinum.
+- **The in-game overlay's opacity and colour.** Opacity is a slider from 20% to 100% instead of five
+  steps, and a custom colour is picked inside the overlay (a shade pad, a hue slider, a field for
+  the code and your last three colours) instead of the Windows dialog over the game.
 - **GOG, Ubisoft, Epic and EA games show which achievements come from a DLC.** Those stores do
   not say it, so AW Next takes the labels from the same game on Steam, once most of the two lists
   match. Cyberpunk 2077 on GOG, for example, now marks its Phantom Liberty achievements.
-- **The Millennium plugin and the Playnite extension update themselves.** On Windows, once you have
-  installed either one, AW Next reads the latest release a few minutes after it starts (once a day at
-  most), checks the file against GitHub's SHA-256 and replaces the installed folder when the release
-  holds a newer version. Steam or Playnite holding the folder open only delays it to the next start;
-  restart them to load the new version. Two switches in **Settings > Notifications** (on by
-  default) turn it off for either one.
-- **Playnite themes can show AW Next's counts.** The Playnite extension (1.1.0) publishes the
-  selected game's unlocked, locked and total achievements and its percentage, under the same names
-  as SuccessStory and Playnite Achievements. A theme such as Harmony or Selene only has to copy its
-  existing bindings with `Plugin=AwNext`; `playnite/README.md` shows how.
+- **The Millennium plugin and the Playnite extension update themselves.** On Windows, once either
+  one is installed, AW Next checks the latest release once a day at most and replaces it when the
+  release holds a newer version, after checking the file against GitHub's SHA-256. Restart Steam or
+  Playnite to load it. Two switches in **Settings > Notifications** turn it off.
+- **Playnite themes can show AW Next's counts.** The Playnite extension publishes the selected
+  game's unlocked, locked and total achievements and its percentage under the same names as
+  SuccessStory and Playnite Achievements, so a theme such as Harmony or Selene only has to copy its
+  bindings with `Plugin=AwNext`; `playnite/README.md` shows how.
 - **Update notes in your language.** The window that offers an update shows what's new in the
-  language chosen in the app, in all 27 languages, and falls back to English for a version that has
-  no translation yet. The Documentation, FAQ and Troubleshooting buttons open the guide in your
-  language when the site has it.
+  language chosen in the app, and falls back to English for a version not translated yet. The
+  Documentation, FAQ and Troubleshooting buttons open the guide in your language when the site has
+  it.
 - **Video clips last up to 60 seconds, and you choose how much comes before the unlock (#170).**
-  A new **Before the unlock** slider sets the seconds kept before the achievement pops, from none
-  to the whole clip; it starts at half, as before. In a heavy game where the notification arrives
-  a few seconds late, keep most of the clip before it and the moment itself stays in.
-- **Every repair to a game's files can be undone.** Game Health shows **Undo the last repair**
-  after any repair AW Next made to a game: its own buttons, the right-click repair, **Apply
-  emulator fix**, **Fix all games** and the automatic repair. It puts back each file the repair changed,
-  removes the ones it created, and lists any file that changed again since instead of overwriting
-  it. Click it again to undo the repair before that, up to the last ten per game.
+  A new **Before the unlock** slider sets the seconds kept before the achievement pops, from none to
+  the whole clip; it starts at half, as before. In a heavy game where the notification arrives a
+  few seconds late, keep most of the clip before it and the moment itself stays in.
+- **Every repair to a game's files can be undone.** Game Health shows **Undo the last repair** after
+  any repair AW Next made to a game, automatic ones included. It puts back each file the repair
+  changed, removes the ones it created, and lists any file that changed again since instead of
+  overwriting it, up to the last ten repairs per game.
 
 ### Fixed
 
@@ -128,105 +102,70 @@ renamed in 3.9.0 and the history is kept under one file.
   of God of War Ragnarök because the names looked alike. The automatic fix now needs the same title,
   and refuses any crack whose own files name another game's AppID, before copying anything. The same
   rule stops a game from taking a sequel's AppID (Hollow Knight is no longer Silksong).
-- **The game page of a recompiled PC port stays filled.** Super Mario 64 (Ghostship), Diddy Kong
-  Racing, Super Mario Sunshine and the new ports showed no description, date or studio, since their
-  name carries the port's in brackets. The page now looks up the game itself, on its own console;
-  the Super Mario Eclipse mod and Super Mario Bros. Remastered show the game they build on, and
-  TMNT Turtles in Time Re-Shelled is found under its full name.
-- **A clip could show a later frame in place of the right one when the graphics card was busy.**
-  The Windows recorder now waits until the encoder has let go of a picture before drawing the next
-  frame into it.
-- **On Linux, gpu-screen-recorder no longer keeps recording after AW Next quits**, and a software
-  clip still waiting for its last seconds is saved from what it holds instead of being lost.
-- **A game whose executable is a `.bat` or `.cmd` script starts again.** Windows refused to run the
-  script directly and the play button only showed "Launch failed". Such a game now starts through
-  the Windows shell, as manually added games already did, and the file picker accepts `.cmd` too.
+- **Clips show the right frame and stop with AW Next.** On Windows, a clip could show a later frame
+  in place of the right one when the graphics card was busy. On Linux, gpu-screen-recorder kept
+  recording after AW Next quit, and a software clip still waiting for its last seconds was lost.
+- **A game whose executable is a `.bat` or `.cmd` script starts again.** The play button only
+  showed "Launch failed". Such a game now starts through the Windows shell, as manually added games
+  already did, and the file picker accepts `.cmd` too.
 - **The controller no longer reads a wheel, and a button held when the window gets focus back does
-  nothing.** Only pads with the standard layout drive the app; when several are plugged in, the one
-  you press takes over, so an idle virtual pad listed first no longer blocks the real one. After
-  focus comes back, the pad must be released once before a press counts.
-- **The platinum's share of players no longer beats its own trophies.** Next to a game's Steam rates,
-  the PlayStation platinum showed Sony's or Exophase's figure, which counts other players and often
-  read higher than the rarest trophy. It now sits just under the rarest trophy of the base game, DLC
-  left out.
-- **A single platinum banner when a save file completes a game tied to a PlayStation list.** When
-  the last achievement read from a save was the one tied to the PlayStation platinum, AW Next showed
-  it and then the 100% popup. It now pops once as the platinum, as live unlocks already did.
-- **A picture cut short by a dropped connection is fetched again.** AW Next only looked at the start
-  of a downloaded icon, so half a file was kept and shown as a broken picture until the cache was
-  cleared. It now checks the end of the file too.
+  nothing.** Only pads with the standard layout drive the app, and when several are plugged in, the
+  one you press takes over, so an idle virtual pad listed first no longer blocks the real one.
+- **The PlayStation platinum reads right.** Its share of players, next to a game's Steam rates,
+  showed Sony's or Exophase's figure, often higher than the rarest trophy; it now sits just under
+  the rarest trophy of the base game. A save that completes a game tied to a PlayStation list pops
+  once as the platinum, instead of the platinum and then the 100% popup.
+- **PlayStation trophies reach more PC games (#160).** With a PSN account connected, a game the
+  account did not know (Ace Combat 7, Elden Ring Nightreign) now goes on to the public trophy
+  archive and Exophase for its platinum and grades. A list imported from a console that the archive
+  does not have yet takes its icons from Exophase when the trophies line up, and a PS4 or PS5 list
+  takes the artwork of its own release (God of War from 2018, not 2005).
+- **A picture cut short by a dropped connection is fetched again** instead of showing as a broken
+  picture until the cache was cleared.
 - **Steam translations land on the right achievement.** Names and descriptions in your language are
-  matched by the achievement's own id when Steam gives it, rather than by its icon, so two
-  achievements sharing an icon no longer swap or lose their text. An answer that names the same
-  achievement twice is ignored.
-- **The Onyx preset's icon slides in on time at any notification duration.** Its slide waited for
-  the length of the default 7.5 seconds instead of following the duration you set.
-- **Dead Space 2 with MarkerPatch 3.1.0 or later lists its achievements again (#171).** The mod
-  added the 8 Severed achievements, and AW Next only accepted the 51 of the base game, so the game
-  showed as `markerpatch-47780` with 0 achievements. The list now follows the mod's own files, and a
-  translation the mod has not updated yet falls back to English.
+  matched by the achievement's own id when Steam gives it, so two achievements sharing an icon no
+  longer swap or lose their text.
+- **The Onyx preset's icon slides in on time at any notification duration**, not only at the
+  default 7.5 seconds.
+- **Dead Space 2 with MarkerPatch 3.1.0 or later lists its achievements again (#171).** It showed
+  as `markerpatch-47780` with 0 achievements, since AW Next only accepted the 51 of the base game.
+  The list now follows the mod's own files, the 8 Severed achievements included.
 - **The Steam scan no longer stops on a registry value it cannot read.** On some machines one value
-  under Steam's registry key made the search for the games Steam installed fail at every scan, with
-  an error in `parser.log`. That value is now skipped.
-- **A crack that works keeps the game, wherever the engine loads it from.** TENOKE, RUNE, CODEX,
-  ALI213 and the other known cracks are found beside the dll a Unity game loads from
-  `<Game>_Data\Plugins`, as they already were in a packaged Unreal build, and the library reads
-  their saves there from a library folder too. A crack the game really runs is no longer an error
-  because a GBE dll or an old AW Next configuration sits elsewhere in the folder: Game Health says
-  the game is served by it and names the unused configuration. Switching to GBE Fork stays a
-  choice, since the crack may be what unlocks the game's DLC.
-- **Game Health checks the dll a Unity game really loads.** A Unity game loads steam_api from
-  `<Game>_Data\Plugins`, so a GBE dll beside the exe with another dll left in Plugins records
-  nothing, yet the diagnosis said "Setup looks valid". It now reports that the dll in Plugins is
-  not the emulator. A Denuvo release that runs GBE's steamclient beside the exe stays green.
+  under Steam's registry key made the search for the games Steam installed fail at every scan.
+- **Cracks and emulators a Unity game loads from `<Game>_Data\Plugins` are read there.** TENOKE,
+  RUNE, CODEX, ALI213 and the other known cracks are found beside that dll, as in a packaged Unreal
+  build, and a crack the game really runs is no longer an error because a GBE dll or an old AW Next
+  configuration sits elsewhere in the folder. A GBE dll beside the exe that the game never loads is
+  now reported, where Game Health used to say "Setup looks valid".
 - **The overlay shortcut opens the emulator game you are playing.** With RPCS3, Xenia, shadPS4 or
-  another emulator, Ctrl+Shift+K opened the game shown in the main window, or the first one of the
-  library, because AW Next cannot tell which game runs inside the emulator. It now opens the game
-  that unlocked something in the last two hours, and a game AW Next tracks by its process still
-  comes first.
-- **The Playnite achievements window closes in Fullscreen mode.** In a controller theme such as
-  Selene it had no close button you could reach. B or Back on the controller, Escape or Backspace on
-  the keyboard now close it.
-- **The Playnite achievements window scrolls with a controller and loads all its pictures.** In
-  Fullscreen mode the list could not be scrolled: the D-pad and the sticks now move it, LB and RB
-  move a page, and so do the arrow and Page keys. Pictures load several at a time, so one that is
-  slow or fails no longer leaves the ones after it empty (extension 1.1.1).
+  another emulator, Ctrl+Shift+K opened the game shown in the main window. It now opens the game
+  that unlocked something in the last two hours, after a game AW Next tracks by its process.
+- **The Playnite achievements window works in Fullscreen mode** (extension 1.1.1). B, Back, Escape
+  or Backspace close it, the D-pad, the sticks, LB and RB and the arrow and Page keys scroll it, and
+  its pictures load several at a time, so a slow one no longer leaves the others empty.
 - **Notification sounds play with the popup.** The PlayStation 5, PlayStation 5 Platinum and
-  PlayStation sounds started with up to a second of silence, so they were heard well after the
-  popup appeared. That silence is gone, along with a shorter one in Epic Games and GOG Galaxy.
+  PlayStation sounds started with up to a second of silence; that silence is gone, along with a
+  shorter one in Epic Games and GOG Galaxy.
 - **The rarity badge shows on every unlock with a known rate.** Turned on in a preset, it only
-  appeared for rare achievements and stayed empty on common ones. Xbox PC and RetroAchievements
-  unlocks now send their rate too.
-- **PlayStation trophy grades reach more PC games when a PSN account is connected (#160).** With
-  an account, a game the account's sources did not know (Ace Combat 7, Elden Ring Nightreign,
-  Ninja Gaiden Sigma) was marked as having no PlayStation list. It now goes on to the public trophy
-  archive and Exophase, as it does without an account, and gets its platinum and grades.
-- **Trophy lists imported from a console get their icons when the archive does not have them
-  (#160).** A list too new for the public archive (God of War Ragnarok) takes its icons from the
-  game's Exophase page, only when its trophies and grades line up; the console's texts stay.
-- **A PlayStation game gets the artwork of its own release (#160).** When two games share a name,
-  like God of War from 2005 and from 2018, a PS4 or PS5 list now takes the one released for that
-  console instead of the older game.
-- **Games started from a Steam shortcut keep their play time and their achievements.** Starting a
-  game from a non-Steam shortcut (added for Steam Input) saves its unlocks under the shortcut's own
-  id. AW Next now reads and watches that folder as part of the game, merged with the game's own, and
-  no longer writes a `steam_appid.txt` for it, which made Steam stop counting the play time. Game
-  Health offers to remove the files an earlier version wrote.
+  appeared for rare achievements. Xbox PC and RetroAchievements unlocks now send their rate too.
+- **Games started from a Steam shortcut keep their play time and their achievements.** A game
+  started from a non-Steam shortcut (added for Steam Input) saves its unlocks under the shortcut's
+  own id: AW Next now reads that folder as part of the game, and no longer writes a
+  `steam_appid.txt` for it, which made Steam stop counting the play time. Game Health offers to
+  remove the files an earlier version wrote.
 - **Uninstall never offers a personal folder.** A RetroAchievements ROM saved in Downloads made
-  **Uninstall** offer to move the whole Downloads folder to the Recycle Bin on a non-English Windows,
-  where that folder has another name. Every folder directly in your user folder is now refused, and
-  a ROM game offers **Move the ROM to the Recycle Bin**, which moves that one file only.
-- **The Steam account card reads as one panel.** **Steam libraries** is a plain subheading again, and
-  **Add the games you own** and the Steam Family row stay in place, greyed with the reason, while
-  the Steam source lists installed games only.
-- **Phantom Blade Zero can record achievements under ARTIFACT's release.** Its emulator settings
-  ship with offline mode on (`offline=1`), so the game thinks Steam is not connected and drops every
-  unlock. Game Health now says so for any game that has recorded nothing with that setting, and
-  **Rewrite the achievement data** turns it off, keeping a copy of the file. A game run by ColdClient
-  gets **Turn off offline mode** instead, which changes that line only, and **Put offline mode back**
-  at the bottom of the panel undoes either one. AW Next also finds the
-  engine folder of an Unreal game started from a launcher folder of its own, such as
-  `platform\steam`.
+  **Uninstall** offer the whole Downloads folder on a non-English Windows. Every folder directly in
+  your user folder is now refused, and a ROM game offers **Move the ROM to the Recycle Bin**, which
+  moves that one file only.
+- **The Steam account card reads as one panel.** **Steam libraries** is a plain subheading again,
+  and **Add the games you own** and the Steam Family row stay in place, greyed with the reason,
+  while the Steam source lists installed games only.
+- **Games shipped with the emulator's offline mode on record their achievements.** Phantom Blade
+  Zero under ARTIFACT's release ships with `offline=1`, so the game drops every unlock. Game Health
+  now says so for any game that has recorded nothing with that setting: **Rewrite the achievement
+  data**, or **Turn off offline mode** for a ColdClient game, turns it off, and **Put offline mode
+  back** undoes it. AW Next also finds the engine folder of an Unreal game started from a launcher
+  folder of its own, such as `platform\steam`.
 - **The automatic repair respects Manage DLC ownership.** With the setting off, repairing what Game
   Health found no longer rewrites `configs.app.ini`.
 

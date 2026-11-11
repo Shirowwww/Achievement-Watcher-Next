@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Chaque jeu a désormais sa propre page, un succès débloqué ouvre la capture d'écran et le clip pris avec lui, et toute réparation faite par État du jeu sur un jeu peut être annulée."
+    },
+    {
+      "kind": "heading",
+      "text": "Points forts"
+    },
+    {
+      "kind": "item",
+      "text": "Une page pour chaque jeu. Un clic sur un jeu ouvre une vue d'ensemble avec ses bandes-annonces en fond derrière le titre, Jouer et Succès à un clic, la description de la boutique, des captures d'écran, des notes, des guides et tes souvenirs, dans ta langue quand la boutique la propose."
+    },
+    {
+      "kind": "item",
+      "text": "Captures et clips à côté de chaque succès. Fais un clic droit sur un succès débloqué, ou utilise les deux boutons de l'overlay en jeu, pour voir l'image ou lire le clip pris au moment du déblocage."
+    },
+    {
+      "kind": "item",
+      "text": "Épingle un succès en haut de sa liste, dans l'application et dans l'overlay, jusqu'à son déblocage."
+    },
+    {
+      "kind": "item",
+      "text": "Plus de portages recompilés, trouvés tout seuls. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 et 2 et 25 autres portages Xbox 360. Un portage présent dans l'une de tes bibliothèques de jeux est repéré à chaque scan, avant d'avoir enregistré quoi que ce soit."
+    },
+    {
+      "kind": "item",
+      "text": "Annuler la dernière réparation. État du jeu remet les fichiers qu'une réparation a modifiés et supprime ceux qu'elle a créés, jusqu'aux dix dernières réparations par jeu."
+    },
+    {
+      "kind": "heading",
+      "text": "Autres nouveautés"
+    },
+    {
+      "kind": "item",
+      "text": "Les tuiles de la bibliothèque s'inclinent vers le pointeur et la fenêtre prend les couleurs de la jaquette survolée. Paramètres > Apparence > Tuiles de la bibliothèque règle les deux."
+    },
+    {
+      "kind": "item",
+      "text": "Le bon exécutable, plus souvent. AW Next ignore les fichiers qui ne sont pas de vrais programmes et les dossiers comme Crack, et Tout trouver dans Paramètres > Dossiers cherche tous ceux qui manquent."
+    },
+    {
+      "kind": "item",
+      "text": "État du jeu lit les configurations ColdClient et peut lancer le jeu via le loader. Il repère aussi l'AppId d'exemple de l'émulateur Epic et laisse tranquille le fichier Steam des versions VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "Le plugin Millennium et l'extension Playnite se mettent à jour tout seuls, et les thèmes Playnite comme Harmony ou Selene peuvent afficher les compteurs d'AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Des clips jusqu'à 60 secondes, avec un curseur pour la durée conservée avant le déblocage (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Les notes de mise à jour dans ta langue, une opacité de l'overlay plus fine et un sélecteur de couleur dans l'overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Masquer dans la zone de notification au lancement d'un jeu, un nouvel interrupteur dans Paramètres > Général."
+    },
+    {
+      "kind": "item",
+      "text": "Corrections : un crack communautaire n'est appliqué qu'au jeu pour lequel il a été fait, les cracks que les jeux Unity chargent depuis leur dossier Plugins sont lus à cet endroit, les jeux lancés depuis un raccourci Steam gardent leur temps de jeu, les jeux .bat et .cmd se lancent de nouveau, Dead Space 2 avec MarkerPatch liste ses succès (#171), les sons de notification se jouent avec la fenêtre et la fenêtre Playnite fonctionne en mode Plein écran."
+    },
+    {
+      "kind": "text",
+      "text": "Consulte le journal des modifications complet pour la liste complète."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

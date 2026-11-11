@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Setiap game kini punya halaman sendiri, pencapaian yang terbuka membuka tangkapan layar dan klip yang diambil bersamanya, dan setiap perbaikan yang dilakukan Kesehatan game pada sebuah game bisa dibatalkan."
+    },
+    {
+      "kind": "heading",
+      "text": "Sorotan"
+    },
+    {
+      "kind": "item",
+      "text": "Halaman untuk setiap game. Mengeklik sebuah game membuka ringkasan dengan trailer yang diputar di belakang judul, Main dan Pencapaian hanya satu klik, deskripsi dari toko, tangkapan layar, penilaian, panduan, dan suvenir Anda, dalam bahasa Anda jika toko menyediakannya."
+    },
+    {
+      "kind": "item",
+      "text": "Tangkapan layar dan klip di samping setiap pencapaian. Klik kanan pencapaian yang terbuka, atau gunakan dua tombol di overlay dalam game, untuk melihat gambar atau memutar klip yang diambil saat pencapaian itu terbuka."
+    },
+    {
+      "kind": "item",
+      "text": "Sematkan pencapaian di bagian atas daftarnya, di aplikasi dan di overlay, sampai pencapaian itu terbuka."
+    },
+    {
+      "kind": "item",
+      "text": "Lebih banyak port hasil kompilasi ulang, ditemukan secara otomatis. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 dan 2, dan 25 port Xbox 360 lainnya. Port di salah satu pustaka game Anda terdeteksi pada setiap pemindaian, sebelum sempat menyimpan apa pun."
+    },
+    {
+      "kind": "item",
+      "text": "Batalkan perbaikan terakhir. Kesehatan game mengembalikan file yang diubah oleh sebuah perbaikan dan menghapus file yang dibuatnya, hingga sepuluh perbaikan terakhir per game."
+    },
+    {
+      "kind": "heading",
+      "text": "Juga baru"
+    },
+    {
+      "kind": "item",
+      "text": "Kartu perpustakaan miring ke arah penunjuk dan jendela mengambil warna sampul yang sedang disorot. Pengaturan > Tampilan > Kartu perpustakaan mengatur keduanya."
+    },
+    {
+      "kind": "item",
+      "text": "File yang dapat dijalankan yang tepat, lebih sering. AW Next melewati file yang bukan program sungguhan dan folder seperti Crack, dan Temukan semua di Pengaturan > Folder mencari semua yang hilang."
+    },
+    {
+      "kind": "item",
+      "text": "Kesehatan game membaca pengaturan ColdClient dan bisa memulai game lewat loader. Ia juga mengenali AppId contoh milik emulator Epic dan tidak menyentuh file Steam pada rilis VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "Plugin Millennium dan ekstensi Playnite memperbarui dirinya sendiri, dan tema Playnite seperti Harmony atau Selene dapat menampilkan hitungan AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Klip hingga 60 detik, dengan penggeser untuk berapa lama bagian sebelum pembukaan disimpan (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Catatan pembaruan dalam bahasa Anda, opasitas overlay yang lebih halus, dan pemilih warna di dalam overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Sembunyikan ke Baki Sistem saat game dimulai, sakelar baru di Pengaturan > Umum."
+    },
+    {
+      "kind": "item",
+      "text": "Perbaikan: crack komunitas hanya diterapkan pada game yang dibuatkan untuknya, crack yang dimuat game Unity dari folder Plugins dibaca di sana, game yang dimulai dari pintasan Steam mempertahankan waktu bermainnya, game .bat dan .cmd kembali bisa dimulai, Dead Space 2 dengan MarkerPatch menampilkan daftar pencapaiannya (#171), suara notifikasi diputar bersama popup, dan jendela Playnite berfungsi dalam mode Fullscreen."
+    },
+    {
+      "kind": "text",
+      "text": "Lihat changelog lengkap untuk daftar selengkapnya."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

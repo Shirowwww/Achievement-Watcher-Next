@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Minden játéknak saját oldala van, egy feloldott teljesítmény megnyitja a vele készült képernyőképet és klipet, és a Játék állapota által egy játékon végzett bármely javítás visszavonható."
+    },
+    {
+      "kind": "heading",
+      "text": "Fő újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "Oldal minden játékhoz. A játékra kattintva áttekintés nyílik, a háttérben a címet kísérő előzetesekkel, a Játék és a Teljesítmények egy kattintásra, az áruház leírásával, képernyőképekkel, értékelésekkel, útmutatókkal és az emlékeiddel, a te nyelveden, ha az áruház kínálja."
+    },
+    {
+      "kind": "item",
+      "text": "Képernyőképek és klipek minden teljesítmény mellett. Kattints jobb gombbal egy feloldott teljesítményre, vagy használd a játékon belüli overlay két gombját, hogy megnézd a képet vagy lejátszd a feloldáskor készült klipet."
+    },
+    {
+      "kind": "item",
+      "text": "Tűzz ki egy teljesítményt a listája elejére, az alkalmazásban és az overlayben, amíg fel nem oldódik."
+    },
+    {
+      "kind": "item",
+      "text": "További újrafordított portok, amelyeket a program magától talál meg. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 és 2, valamint 25 további Xbox 360-port. A játékkönyvtáraid egyikében lévő portot minden vizsgálat felismeri, még mielőtt bármit mentett volna."
+    },
+    {
+      "kind": "item",
+      "text": "Az utolsó javítás visszavonása. A Játék állapota visszaállítja a javítás által módosított fájlokat, és eltávolítja a létrehozottakat, játékonként az utolsó tíz javításig."
+    },
+    {
+      "kind": "heading",
+      "text": "További újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "A könyvtár csempéi a mutató felé dőlnek, az ablak pedig átveszi az éppen érintett borító színeit. Beállítások > Megjelenés > Könyvtár csempéi mindkettőt beállítja."
+    },
+    {
+      "kind": "item",
+      "text": "Gyakrabban a megfelelő futtatható fájl. Az AW Next kihagyja azokat a fájlokat, amelyek nem valódi programok, és az olyan mappákat, mint a Crack, a Beállítások > Mappák alatti Mindent keres pedig minden hiányzót megkeres."
+    },
+    {
+      "kind": "item",
+      "text": "A Játék állapota beolvassa a ColdClient-beállításokat, és a betöltőn keresztül el tudja indítani a játékot. Felismeri az Epic emulátor példa AppId-jét is, és békén hagyja a VOICES38-kiadások Steam-fájlját."
+    },
+    {
+      "kind": "item",
+      "text": "A Millennium bővítmény és a Playnite-kiegészítő magától frissül, a Playnite-témák, például a Harmony vagy a Selene, pedig megjeleníthetik az AW Next számlálóit."
+    },
+    {
+      "kind": "item",
+      "text": "Akár 60 másodperces klipek, csúszkával arra, mennyi marad meg a feloldás előttről (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Frissítési jegyzetek a te nyelveden, finomabb overlay-átlátszóság és színválasztó az overlayben."
+    },
+    {
+      "kind": "item",
+      "text": "Tálcára kicsinyítés játékindításkor, új kapcsoló a Beállítások > Általános alatt."
+    },
+    {
+      "kind": "item",
+      "text": "Javítások: a közösségi crack csak arra a játékra érvényes, amelyhez készült, a Unity-játékok által a Plugins mappából betöltött crackeket onnan olvassa be, a Steam-parancsikonról indított játékok megtartják a játékidejüket, a .bat és .cmd játékok ismét elindulnak, a MarkerPatch-csel futó Dead Space 2 listázza a teljesítményeit (#171), az értesítési hangok a felugró ablakkal együtt szólnak, és a Playnite ablak Fullscreen módban is működik."
+    },
+    {
+      "kind": "text",
+      "text": "A teljes listát a teljes változásnaplóban találod."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

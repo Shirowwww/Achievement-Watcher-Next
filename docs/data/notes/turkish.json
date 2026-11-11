@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Her oyunun artık kendi sayfası var, kilidi açılmış bir başarım onunla alınan ekran görüntüsünü ve klibi açar ve Oyun durumu'nun bir oyunda yaptığı her onarım geri alınabilir."
+    },
+    {
+      "kind": "heading",
+      "text": "Öne çıkanlar"
+    },
+    {
+      "kind": "item",
+      "text": "Her oyun için bir sayfa. Bir oyuna tıklamak, başlığın arkasında oynayan fragmanların, tek tıkla Oyna ve Başarımlar'ın, mağazanın açıklamasının, ekran görüntülerinin, puanların, rehberlerin ve anılarınızın yer aldığı bir genel bakışı açar, mağazada varsa kendi dilinizde."
+    },
+    {
+      "kind": "item",
+      "text": "Her başarımın yanında ekran görüntüleri ve klipler. Kilidi açılmış bir başarıma sağ tıklayın veya oyun içi katmandaki iki düğmeyi kullanın, kilit açıldığında alınan resmi görün ya da klibi oynatın."
+    },
+    {
+      "kind": "item",
+      "text": "Bir başarımı listesinin en üstüne, uygulamada ve katmanda, kilidi açılana kadar sabitleyin."
+    },
+    {
+      "kind": "item",
+      "text": "Kendiliğinden bulunan daha fazla yeniden derlenmiş port. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 ve 2 ve 25 Xbox 360 portu daha. Oyun kitaplıklarınızdan birindeki bir port, henüz hiçbir şey kaydetmeden önce her taramada yakalanır."
+    },
+    {
+      "kind": "item",
+      "text": "Son onarımı geri alın. Oyun durumu, bir onarımın değiştirdiği dosyaları geri koyar ve oluşturduklarını kaldırır, oyun başına son on onarıma kadar."
+    },
+    {
+      "kind": "heading",
+      "text": "Ayrıca yeni"
+    },
+    {
+      "kind": "item",
+      "text": "Kitaplık kutucukları imlece doğru eğilir ve pencere, üzerine gelinen kapağın renklerini alır. Ayarlar > Görünüm > Kütüphane kutucukları ikisini de ayarlar."
+    },
+    {
+      "kind": "item",
+      "text": "Doğru çalıştırılabilir dosya, daha sık. AW Next gerçek program olmayan dosyaları ve Crack gibi klasörleri atlar, Ayarlar > Klasörler içindeki Hepsini bul ise eksik olanların hepsini arar."
+    },
+    {
+      "kind": "item",
+      "text": "Oyun durumu ColdClient kurulumlarını okur ve oyunu yükleyici üzerinden başlatabilir. Epic öykünücüsünün örnek AppId'sini de fark eder ve VOICES38 sürümlerinin Steam dosyasına dokunmaz."
+    },
+    {
+      "kind": "item",
+      "text": "Millennium eklentisi ve Playnite uzantısı kendilerini günceller, Harmony veya Selene gibi Playnite temaları da AW Next'in sayaçlarını gösterebilir."
+    },
+    {
+      "kind": "item",
+      "text": "60 saniyeye kadar klipler, kilit açılmadan önce ne kadarının saklanacağı için bir kaydırıcıyla (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Güncelleme notları kendi dilinizde, daha ince bir katman opaklığı ve katmanın içinde bir renk seçici."
+    },
+    {
+      "kind": "item",
+      "text": "Oyun başladığında sistem tepsisine küçült, Ayarlar > Genel içinde yeni bir anahtar."
+    },
+    {
+      "kind": "item",
+      "text": "Düzeltmeler: topluluk crack'i yalnızca yapıldığı oyuna uygulanır, Unity oyunlarının Plugins klasöründen yüklediği crack'ler orada okunur, bir Steam kısayolundan başlatılan oyunlar oynama süresini korur, .bat ve .cmd oyunları yeniden başlar, MarkerPatch'li Dead Space 2 başarımlarını listeler (#171), bildirim sesleri açılır pencereyle birlikte çalar ve Playnite penceresi Fullscreen modunda çalışır."
+    },
+    {
+      "kind": "text",
+      "text": "Tam liste için tam değişiklik günlüğüne bakın."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

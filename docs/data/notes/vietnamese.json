@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Mỗi game giờ có trang riêng, một thành tựu đã mở khóa sẽ mở ảnh chụp màn hình và clip được ghi cùng nó, và mọi bản sửa mà Tình trạng trò chơi đã thực hiện trên một game đều có thể hoàn tác."
+    },
+    {
+      "kind": "heading",
+      "text": "Điểm nổi bật"
+    },
+    {
+      "kind": "item",
+      "text": "Một trang cho mỗi game. Nhấp vào một game sẽ mở phần tổng quan với trailer phát phía sau tiêu đề, Chơi và Thành tựu chỉ cách một lần nhấp, mô tả của cửa hàng, ảnh chụp màn hình, đánh giá, hướng dẫn và những kỷ niệm của bạn, bằng ngôn ngữ của bạn nếu cửa hàng có."
+    },
+    {
+      "kind": "item",
+      "text": "Ảnh chụp màn hình và clip bên cạnh mỗi thành tựu. Nhấp chuột phải vào một thành tựu đã mở khóa, hoặc dùng hai nút trong lớp phủ trong game, để xem ảnh hoặc phát clip được ghi lúc mở khóa."
+    },
+    {
+      "kind": "item",
+      "text": "Ghim một thành tựu lên đầu danh sách của nó, trong ứng dụng và trong lớp phủ, cho đến khi nó được mở khóa."
+    },
+    {
+      "kind": "item",
+      "text": "Thêm các bản port được biên dịch lại, tự động được tìm thấy. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 và 2 cùng 25 bản port Xbox 360 khác. Một bản port trong một thư viện game của bạn được nhận ra ở mỗi lần quét, trước cả khi nó lưu bất cứ thứ gì."
+    },
+    {
+      "kind": "item",
+      "text": "Hoàn tác bản sửa gần nhất. Tình trạng trò chơi khôi phục các tệp mà một bản sửa đã thay đổi và xóa các tệp nó đã tạo, tối đa mười bản sửa gần nhất cho mỗi game."
+    },
+    {
+      "kind": "heading",
+      "text": "Cũng mới"
+    },
+    {
+      "kind": "item",
+      "text": "Các thẻ thư viện nghiêng về phía con trỏ và cửa sổ lấy màu của ảnh bìa đang được trỏ tới. Cài đặt > Giao diện > Thẻ thư viện chỉnh cả hai."
+    },
+    {
+      "kind": "item",
+      "text": "Tệp thực thi đúng, thường xuyên hơn. AW Next bỏ qua các tệp không phải chương trình thật và các thư mục như Crack, còn Tìm tất cả trong Cài đặt > Thư mục sẽ tìm mọi tệp còn thiếu."
+    },
+    {
+      "kind": "item",
+      "text": "Tình trạng trò chơi đọc các thiết lập ColdClient và có thể khởi động game qua trình nạp. Nó cũng nhận ra AppId mẫu của trình giả lập Epic và không đụng đến tệp Steam của các bản phát hành VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "Plugin Millennium và tiện ích mở rộng Playnite tự cập nhật, và các giao diện Playnite như Harmony hay Selene có thể hiển thị các bộ đếm của AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Clip dài tới 60 giây, với thanh trượt cho lượng được giữ lại trước khi mở khóa (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Ghi chú cập nhật bằng ngôn ngữ của bạn, độ mờ lớp phủ mịn hơn và bộ chọn màu ngay trong lớp phủ."
+    },
+    {
+      "kind": "item",
+      "text": "Đóng xuống khay hệ thống khi trò chơi bắt đầu, một công tắc mới trong Cài đặt > Chung."
+    },
+    {
+      "kind": "item",
+      "text": "Sửa lỗi: crack của cộng đồng chỉ được áp dụng cho game mà nó được làm ra, các crack mà game Unity nạp từ thư mục Plugins được đọc ở đó, game khởi động từ lối tắt Steam giữ được thời gian chơi, game .bat và .cmd lại khởi động được, Dead Space 2 với MarkerPatch liệt kê được các thành tựu (#171), âm thanh thông báo phát cùng cửa sổ bật lên và cửa sổ Playnite hoạt động trong chế độ Fullscreen."
+    },
+    {
+      "kind": "text",
+      "text": "Xem changelog đầy đủ để biết danh sách đầy đủ."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

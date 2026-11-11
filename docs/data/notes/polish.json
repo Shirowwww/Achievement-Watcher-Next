@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Każda gra ma teraz własną stronę, odblokowane osiągnięcie otwiera zrzut ekranu i klip zrobione razem z nim, a każdą naprawę wykonaną przez Stan gry w grze można cofnąć."
+    },
+    {
+      "kind": "heading",
+      "text": "Najważniejsze"
+    },
+    {
+      "kind": "item",
+      "text": "Strona dla każdej gry. Kliknięcie gry otwiera przegląd z zwiastunami odtwarzanymi za tytułem, Graj i Osiągnięcia o jedno kliknięcie dalej, opisem ze sklepu, zrzutami ekranu, ocenami, poradnikami i twoimi pamiątkami, w twoim języku, jeśli sklep go ma."
+    },
+    {
+      "kind": "item",
+      "text": "Zrzuty ekranu i klipy obok każdego osiągnięcia. Kliknij prawym przyciskiem odblokowane osiągnięcie albo użyj dwóch przycisków w nakładce w grze, aby zobaczyć obraz lub odtworzyć klip nagrany w chwili odblokowania."
+    },
+    {
+      "kind": "item",
+      "text": "Przypnij osiągnięcie na początku jego listy, w aplikacji i w nakładce, dopóki się nie odblokuje."
+    },
+    {
+      "kind": "item",
+      "text": "Więcej zrekompilowanych portów, znajdowanych samodzielnie. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 i 2 oraz 25 kolejnych portów z Xbox 360. Port w jednej z twoich bibliotek gier jest wychwytywany przy każdym skanowaniu, zanim cokolwiek zapisze."
+    },
+    {
+      "kind": "item",
+      "text": "Cofnięcie ostatniej naprawy. Stan gry przywraca pliki zmienione przez naprawę i usuwa te, które utworzyła, do dziesięciu ostatnich napraw na grę."
+    },
+    {
+      "kind": "heading",
+      "text": "Także nowe"
+    },
+    {
+      "kind": "item",
+      "text": "Kafelki biblioteki pochylają się w stronę wskaźnika, a okno przyjmuje kolory okładki, nad którą jest kursor. Ustawienia > Wygląd > Kafelki biblioteki ustawia jedno i drugie."
+    },
+    {
+      "kind": "item",
+      "text": "Właściwy plik wykonywalny, częściej. AW Next pomija pliki, które nie są prawdziwymi programami, oraz foldery takie jak Crack, a Znajdź wszystko w Ustawienia > Foldery szuka wszystkich brakujących."
+    },
+    {
+      "kind": "item",
+      "text": "Stan gry odczytuje konfiguracje ColdClient i potrafi uruchomić grę przez loader. Rozpoznaje też przykładowy AppId emulatora Epic i zostawia w spokoju plik Steam w wydaniach VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "Wtyczka Millennium i rozszerzenie Playnite aktualizują się same, a motywy Playnite, takie jak Harmony czy Selene, mogą pokazywać liczniki AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Klipy do 60 sekund, z suwakiem określającym, ile jest zachowywane przed odblokowaniem (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Informacje o aktualizacji w twoim języku, dokładniejsza przezroczystość nakładki i selektor kolorów w nakładce."
+    },
+    {
+      "kind": "item",
+      "text": "Zminimalizuj do zasobnika systemowego po uruchomieniu gry, nowy przełącznik w Ustawienia > Ogólne."
+    },
+    {
+      "kind": "item",
+      "text": "Poprawki: crack społeczności jest stosowany tylko do gry, dla której powstał, cracki, które gry Unity ładują z folderu Plugins, są odczytywane stamtąd, gry uruchamiane ze skrótu Steam zachowują czas gry, gry .bat i .cmd znów się uruchamiają, Dead Space 2 z MarkerPatch wyświetla swoje osiągnięcia (#171), dźwięki powiadomień odtwarzają się razem z okienkiem, a okno Playnite działa w trybie Fullscreen."
+    },
+    {
+      "kind": "text",
+      "text": "Pełną listę znajdziesz w pełnym dzienniku zmian."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

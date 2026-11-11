@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Hvert spil har nu sin egen side, en oplåst præstation åbner det skærmbillede og klip, der blev taget med den, og enhver reparation, Spillets tilstand har udført på et spil, kan fortrydes."
+    },
+    {
+      "kind": "heading",
+      "text": "Højdepunkter"
+    },
+    {
+      "kind": "item",
+      "text": "En side til hvert spil. Et klik på et spil åbner en oversigt med trailere, der afspilles bag titlen, Spil og Præstationer et klik væk, butikkens beskrivelse, skærmbilleder, anmeldelser, guider og dine souvenirs, på dit sprog, hvor butikken har det."
+    },
+    {
+      "kind": "item",
+      "text": "Skærmbilleder og klip ved siden af hver præstation. Højreklik på en oplåst præstation, eller brug de to knapper i overlayet i spillet, for at se billedet eller afspille klippet, der blev taget, da den blev låst op."
+    },
+    {
+      "kind": "item",
+      "text": "Fastgør en præstation øverst på sin liste, i appen og i overlayet, indtil den låses op."
+    },
+    {
+      "kind": "item",
+      "text": "Flere genkompilerede ports, som findes af sig selv. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 og 2 og 25 ports mere til Xbox 360. En port i et af dine spilbiblioteker opfanges ved hver scanning, før den har gemt noget."
+    },
+    {
+      "kind": "item",
+      "text": "Fortryd den seneste reparation. Spillets tilstand sætter de filer tilbage, som en reparation ændrede, og fjerner dem, den oprettede, op til de ti seneste reparationer pr. spil."
+    },
+    {
+      "kind": "heading",
+      "text": "Også nyt"
+    },
+    {
+      "kind": "item",
+      "text": "Biblioteksfelter hælder mod markøren, og vinduet tager farverne fra det cover, du holder over. Indstillinger > Udseende > Biblioteksfelter styrer begge dele."
+    },
+    {
+      "kind": "item",
+      "text": "Den rigtige programfil, oftere. AW Next springer filer over, der ikke er rigtige programmer, og mapper som Crack, og Find alt i Indstillinger > Mapper leder efter alle manglende."
+    },
+    {
+      "kind": "item",
+      "text": "Spillets tilstand læser ColdClient-opsætninger og kan starte spillet via loaderen. Den opdager også Epic-emulatorens eksempel-AppId og lader Steam-filen i VOICES38-udgivelser være i fred."
+    },
+    {
+      "kind": "item",
+      "text": "Millennium-pluginet og Playnite-udvidelsen opdaterer sig selv, og Playnite-temaer som Harmony eller Selene kan vise AW Nexts tællere."
+    },
+    {
+      "kind": "item",
+      "text": "Klip op til 60 sekunder, med en skyder til, hvor meget der gemmes før oplåsningen (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Opdateringsnoter på dit sprog, en finere overlay-gennemsigtighed og en farvevælger i overlayet."
+    },
+    {
+      "kind": "item",
+      "text": "Luk til systembakken, når et spil starter, en ny kontakt i Indstillinger > Generelt."
+    },
+    {
+      "kind": "item",
+      "text": "Rettelser: en crack fra fællesskabet anvendes kun på det spil, den er lavet til, cracks som Unity-spil indlæser fra deres Plugins-mappe læses dér, spil startet fra en Steam-genvej beholder deres spilletid, .bat- og .cmd-spil starter igen, Dead Space 2 med MarkerPatch viser sine præstationer (#171), notifikationslyde afspilles sammen med pop op-vinduet, og Playnite-vinduet fungerer i Fullscreen-tilstand."
+    },
+    {
+      "kind": "text",
+      "text": "Se den fulde changelog for den komplette liste."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",

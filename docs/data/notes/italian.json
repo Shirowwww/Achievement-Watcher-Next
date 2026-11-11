@@ -1,4 +1,74 @@
 {
+  "3.12.6": [
+    {
+      "kind": "text",
+      "text": "Ogni gioco ha ora una pagina tutta sua, un successo sbloccato apre lo screenshot e la clip fatti con esso, e ogni riparazione fatta da Stato dei giochi su un gioco può essere annullata."
+    },
+    {
+      "kind": "heading",
+      "text": "In evidenza"
+    },
+    {
+      "kind": "item",
+      "text": "Una pagina per ogni gioco. Un clic su un gioco apre una panoramica con i trailer in riproduzione dietro il titolo, Gioca e Successi a un clic, la descrizione dello store, screenshot, valutazioni, guide e i tuoi ricordi, nella tua lingua quando lo store la offre."
+    },
+    {
+      "kind": "item",
+      "text": "Screenshot e clip accanto a ogni successo. Fai clic destro su un successo sbloccato, o usa i due pulsanti dell'overlay di gioco, per vedere l'immagine o riprodurre la clip fatta quando è stato sbloccato."
+    },
+    {
+      "kind": "item",
+      "text": "Fissa un successo in cima alla sua lista, nell'app e nell'overlay, finché non viene sbloccato."
+    },
+    {
+      "kind": "item",
+      "text": "Altri port ricompilati, trovati da soli. ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 e 2 e altri 25 port per Xbox 360. Un port in una delle tue librerie di giochi viene rilevato a ogni scansione, prima ancora di aver salvato qualcosa."
+    },
+    {
+      "kind": "item",
+      "text": "Annulla l'ultima riparazione. Stato dei giochi rimette a posto i file che una riparazione ha modificato e rimuove quelli che ha creato, fino alle ultime dieci riparazioni per gioco."
+    },
+    {
+      "kind": "heading",
+      "text": "Altre novità"
+    },
+    {
+      "kind": "item",
+      "text": "I riquadri della libreria si inclinano verso il puntatore e la finestra prende i colori della copertina sotto il cursore. Impostazioni > Aspetto > Riquadri della libreria regola entrambe le cose."
+    },
+    {
+      "kind": "item",
+      "text": "L'eseguibile giusto, più spesso. AW Next salta i file che non sono veri programmi e le cartelle come Crack, e Trova tutto in Impostazioni > Cartelle cerca tutti quelli mancanti."
+    },
+    {
+      "kind": "item",
+      "text": "Stato dei giochi legge le configurazioni ColdClient e può avviare il gioco tramite il loader. Riconosce anche l'AppId di esempio dell'emulatore Epic e lascia in pace il file Steam delle release VOICES38."
+    },
+    {
+      "kind": "item",
+      "text": "Il plugin Millennium e l'estensione Playnite si aggiornano da soli, e i temi Playnite come Harmony o Selene possono mostrare i contatori di AW Next."
+    },
+    {
+      "kind": "item",
+      "text": "Clip fino a 60 secondi, con un cursore per quanto viene conservato prima dello sblocco (#170)."
+    },
+    {
+      "kind": "item",
+      "text": "Note di aggiornamento nella tua lingua, un'opacità dell'overlay più fine e un selettore colore dentro l'overlay."
+    },
+    {
+      "kind": "item",
+      "text": "Riduci nella barra delle applicazioni all'avvio di un gioco, un nuovo interruttore in Impostazioni > Generale."
+    },
+    {
+      "kind": "item",
+      "text": "Correzioni: un crack della community viene applicato solo al gioco per cui è stato fatto, i crack che i giochi Unity caricano dalla cartella Plugins vengono letti lì, i giochi avviati da un collegamento Steam mantengono il tempo di gioco, i giochi .bat e .cmd si avviano di nuovo, Dead Space 2 con MarkerPatch elenca i suoi successi (#171), i suoni di notifica partono con il popup e la finestra di Playnite funziona in modalità Fullscreen."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta il changelog completo per l'elenco completo."
+    }
+  ],
   "3.12.5": [
     {
       "kind": "text",
