@@ -138,6 +138,7 @@ const uplayR2 = require(sharedAppModulePath('parser/uplayR2Live.js'));
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
 const steamClock = require('./util/steamClock.js').createSteamClock({ log: (line) => debug.log(line) });
+const { freshUnlockTime } = require('./util/unlockAge.js');
 
 /*
   The square slot of a notification card, best first, and in the same order the app resolves it in:
@@ -1293,6 +1294,7 @@ var app = {
 
                   if (!previous.Achieved && achievements[i].Achieved) {
                     if (!achievements[i].UnlockTime || achievements[i].UnlockTime == 0) achievements[i].UnlockTime = readAt.unix();
+                    achievements[i].UnlockTime = freshUnlockTime(Number(achievements[i].UnlockTime), readAt.unix());
                     /*
                       Steam's stats file holds years of real unlock times, and its first observation
                       is any game the account ever played: only an unlock that just happened may

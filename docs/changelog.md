@@ -37,6 +37,8 @@ renamed in 3.9.0 and the history is kept under one file.
 - **A window that stops drawing comes back.** It reloads by itself; if it fails again, AW Next says
   so and offers to export the logs.
 - **An unlock time a few minutes ahead no longer reads "in 3 minutes".** It shows "now".
+- **Unlocks stamped a few minutes ahead of the PC's clock pop again.** Some emulator saves do this;
+  those unlocks showed no notification and were listed as made in the future.
 
 ## 3.12.6 - 2026-11-11
 

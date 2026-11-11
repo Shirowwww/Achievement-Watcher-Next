@@ -17,6 +17,14 @@ test('unlock ages are measured from the save read, taken before any notify', () 
   assert.ok(readAt < source.indexOf('await notify('), 'before the first awaited notify');
 });
 
+test('an unlock stamped slightly ahead of the clock is taken as made at the read, before it is aged', () => {
+  const loop = source.slice(source.indexOf('for (let i in achievements)'), source.indexOf("debug.warn('Outatime:'"));
+  const fresh = loop.indexOf('achievements[i].UnlockTime = freshUnlockTime(Number(achievements[i].UnlockTime), readAt.unix());');
+  assert.ok(fresh > 0, 'a stamp a few minutes ahead was dropped as Outatime');
+  assert.ok(fresh < loop.indexOf('reportUnlockToApp('), 'the library must get the corrected time too');
+  assert.ok(fresh < loop.indexOf('let elapsedTime = readAt.diff('));
+});
+
 test('no unlock in the scan loop is aged against a fresh clock', () => {
   const loop = source.slice(source.indexOf('for (let i in achievements)'), source.indexOf("debug.warn('Outatime:'"));
   assert.ok(loop.length > 0);
