@@ -4,7 +4,8 @@
   The library scan runs in a process of its own (app/util/scanHost.js forks
   app/parser/scanWorker.js). These tests drive the client against a stand-in worker that speaks the
   same protocol, so what is checked is the plumbing: streaming, the IPC relay, events, and above all
-  that a host that is missing or dies never costs the library - the scan then runs here instead.
+  that a host that is missing or dies never costs the library - the library scan then runs
+  here instead. Smart Find deliberately has no renderer fallback.
 */
 
 const { test } = require('node:test');
@@ -17,6 +18,7 @@ const { forkNode } = require('../../app/util/nodeProcess.js');
 const { makeTempDir } = require('../helpers/tempDir');
 
 const FAKE_WORKER = path.join(__dirname, '..', 'helpers', 'scanHostFakeWorker.js');
+const SMART_FIND_CRASH_WORKER = path.join(__dirname, '..', 'helpers', 'scanHostSmartFindCrashWorker.js');
 const games = (...ids) => ids.map((appid) => ({ appid, name: `Game ${appid}` }));
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -76,6 +78,36 @@ test('a reload with no host runs here', async (t) => {
 
   assert.equal(reloaded[0].here, true);
   assert.equal(streamed.length, 1);
+});
+
+test('Smart Find is answered by the host with accepted and rejected folders', async (t) => {
+  const { host } = hostFor(t);
+  const result = await host.findSmartFolders();
+  assert.deepEqual(result.saveEntries.map(({ entry, accepted }) => [entry.path, accepted]), [
+    ['/save/valid', true],
+    ['/save/invalid', false],
+  ]);
+  assert.deepEqual(result.libraryEntries, [{ path: '/games', detector: 'Known games folder' }]);
+});
+
+test('Smart Find never falls back to the renderer when its host cannot start', async (t) => {
+  let ranLocally = false;
+  const { host } = hostFor(t, {
+    local: { findSmartFolders: () => { ranLocally = true; return {}; } },
+    workerFile: path.join(__dirname, 'no-such-smart-find-worker.js'),
+  });
+  await assert.rejects(host.findSmartFolders(), (err) => err.code === 'SCAN_HOST_GONE');
+  assert.equal(ranLocally, false);
+});
+
+test('Smart Find does not fall back to the renderer if its host dies during discovery', async (t) => {
+  let ranLocally = false;
+  const { host } = hostFor(t, {
+    local: { findSmartFolders: () => { ranLocally = true; return {}; } },
+    workerFile: SMART_FIND_CRASH_WORKER,
+  });
+  await assert.rejects(host.findSmartFolders(), (err) => err.code === 'SCAN_HOST_GONE');
+  assert.equal(ranLocally, false);
 });
 
 test('a parser asking the main process is answered through this one, and a missing route is refused, not left hanging', async (t) => {

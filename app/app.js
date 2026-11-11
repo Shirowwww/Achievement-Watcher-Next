@@ -89,7 +89,8 @@ if (achievements.setEmulatorFixedHandler) {
 }
 // The library scan reads thousands of folders synchronously, so it runs in a process of its own and
 // this window stays responsive. `achievements` above is its fallback and answers its events.
-const scanHost = require(path.join(appPath, 'util/scanHost.js')).createScanHost({
+const createScanHost = require(path.join(appPath, 'util/scanHost.js')).createScanHost;
+const scanHostOptions = {
   local: achievements,
   userDataPath: userdatapath,
   isDev,
@@ -97,7 +98,26 @@ const scanHost = require(path.join(appPath, 'util/scanHost.js')).createScanHost(
   invoke: (channel, ...rest) => ipcRenderer.invoke(channel, ...rest),
   send: (channel, ...rest) => ipcRenderer.send(channel, ...rest),
   log: (line) => debug.log(line),
-});
+};
+const scanHost = createScanHost(scanHostOptions);
+
+// Smart Find uses a short-lived scan host: no Wine cache survives the operation,
+// and an OOM cannot trigger a repeat of this discovery in the renderer.
+async function findSmartFoldersOffThread() {
+  // Smart Find reads local discovery data; unlike a library scan, it does not need the install secret.
+  const finder = createScanHost({ ...scanHostOptions, secret: () => '' });
+  try {
+    const result = await finder.findSmartFolders();
+    if (result.diagnostics) {
+      const { durationMs, heapUsedMiB, heapLimitMiB, rssMiB } = result.diagnostics;
+      debug.log(`[smart-find] isolated discovery ${durationMs}ms heap=${heapUsedMiB}/${heapLimitMiB}MiB rss=${rssMiB}MiB`);
+    }
+    return result;
+  } finally {
+    finder.dispose();
+  }
+}
+
 const blacklist = require(path.join(appPath, 'parser/blacklist.js'));
 const userDir = require(path.join(appPath, 'parser/userDir.js'));
 const libraryDirs = require(path.join(appPath, 'parser/libraryDirs.js'));
@@ -4573,18 +4593,14 @@ async function addDetectedGameFolders() {
     const additions = found.filter((entry) => entry.path && !seen.has(key(entry.path)) && seen.add(key(entry.path)));
     return { all: [...existing, ...additions], added: additions.length };
   };
-  const [saveDirs, libraries, foundSaves, foundLibraries] = await Promise.all([
+  const [saveDirs, libraries, discovered] = await Promise.all([
     userDir.getEntries(),
     libraryDirs.getEntries(),
-    userDir.findEntries(),
-    libraryDirs.findEntries(),
+    findSmartFoldersOffThread(),
   ]);
-  const checkedSaves = [];
-  for (const entry of foundSaves) {
-    if (await userDir.check(entry.path)) checkedSaves.push(entry);
-  }
+  const checkedSaves = discovered.saveEntries.filter(({ accepted }) => accepted).map(({ entry }) => entry);
   const savesMerge = merge(saveDirs, checkedSaves);
-  const librariesMerge = merge(libraries, foundLibraries);
+  const librariesMerge = merge(libraries, discovered.libraryEntries);
   if (savesMerge.added > 0) await userDir.save(savesMerge.all);
   if (librariesMerge.added > 0) await libraryDirs.save(librariesMerge.all);
   debug.log(`empty-state detection: ${savesMerge.added} save folder(s), ${librariesMerge.added} game library folder(s) added`);

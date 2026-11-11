@@ -33,7 +33,14 @@ through `app/util/ipcInvoke.js`, which relays through the window; scan-time even
 up, a blocked download, the automatic-repair notice) are answered by the handlers registered on the
 window's own `achievements.js`. The main process uses the same client for its background repair
 pass while the window is closed, and stops that host after a minute of quiet. If the host cannot
-start or dies, every call runs in the calling process instead, as before the host existed.
+start or dies, library scans fall back to the calling process as before the host existed.
+
+Settings > Folders > Smart Find, and the empty-library folder discovery, instead use a
+short-lived instance of the same scan host. It performs save-folder detection and validation
+and library-root discovery off the renderer thread, then exits to release its Wine registry
+cache. Unlike the normal library-scan fallback, failure of this one-shot discovery is
+returned to the renderer as an error; the discovery is never retried in the renderer after
+a child-process crash or out-of-memory failure.
 
 A process started this way has no `electron` module and no `@electron/remote`: code under
 `app/parser` finds the app data folder through `app/util/userDataPath.js` and reaches the main
