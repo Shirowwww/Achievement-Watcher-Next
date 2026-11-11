@@ -9,8 +9,9 @@ const WORKER_FILE = unpackedPath(path.join(__dirname, '..', 'parser', 'scanWorke
 const MAX_CONSECUTIVE_DEATHS = 3;
 const LOGGER_LINE = /^\[\d{4}-\d{2}-\d{2}T[\d:.]+Z\]/;
 
-function hostGone(reason) {
-  return Object.assign(new Error(`scan host unavailable: ${reason}`), { code: 'SCAN_HOST_GONE' });
+// `started` tells a host that died at work from one that never came up.
+function hostGone(reason, started = false) {
+  return Object.assign(new Error(`scan host unavailable: ${reason}`), { code: 'SCAN_HOST_GONE', started });
 }
 
 function toError(fields) {
@@ -45,6 +46,8 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
   let deaths = 0;
   let nextId = 0;
   let idleTimer = null;
+  // The hosts that sent something: they came up.
+  const started = new WeakSet();
   const calls = new Map();
   // Handed to every new host (and to the local fallback), so a restart does not cost the
   // background poll its cheap check.
@@ -71,6 +74,7 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
 
   function onMessage(proc, message) {
     if (!message || typeof message !== 'object') return;
+    started.add(proc);
     const call = calls.get(message.id);
     switch (message.type) {
       case 'result':
@@ -101,8 +105,8 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
     }
   }
 
-  function rejectAll(reason) {
-    for (const call of calls.values()) call.reject(hostGone(reason));
+  function rejectAll(reason, wasStarted) {
+    for (const call of calls.values()) call.reject(hostGone(reason, wasStarted));
     calls.clear();
   }
 
@@ -112,14 +116,14 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
     clearTimeout(idleTimer);
     deaths += 1;
     log(`[scan-host] stopped (${reason})${deaths >= MAX_CONSECUTIVE_DEATHS ? ' - scanning in this process from now on' : ''}`);
-    rejectAll(reason);
+    rejectAll(reason, started.has(proc));
   }
 
   function stop() {
     const proc = child;
     child = null;
     clearTimeout(idleTimer);
-    rejectAll('stopped');
+    rejectAll('stopped', true);
     if (proc && proc.exitCode === null) proc.kill();
   }
 
@@ -262,8 +266,22 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
   return {
     makeList,
     reloadGames,
-    // Explicitly no local fallback: a failed scan must not run again in the renderer.
-    findSmartFolders: () => remote('findSmartFolders', []),
+    /*
+      Smart Find's folder search: { saveEntries: [{ entry, accepted }], libraryEntries }. A host that
+      never came up is replaced by this process, as for a scan. One that died under the search is
+      not: what killed it (memory, with many Wine prefixes) would take the window next.
+    */
+    async findSmartFolders() {
+      try {
+        const { diagnostics, ...found } = await remote('findSmartFolders', []);
+        if (diagnostics) log(`[scan-host] Smart Find took ${diagnostics.durationMs}ms (heap ${diagnostics.heapUsedMiB}MiB, rss ${diagnostics.rssMiB}MiB)`);
+        return found;
+      } catch (err) {
+        if (!err || err.code !== 'SCAN_HOST_GONE' || err.started) throw err;
+        log(`[scan-host] findSmartFolders runs in this process: ${err.message}`);
+        return localModule().findSmartFolders();
+      }
+    },
     async detectInstalledAppids(option) {
       let ranHere = false;
       const ids = await withFallback('detectInstalledAppids', [option], (parser) => {

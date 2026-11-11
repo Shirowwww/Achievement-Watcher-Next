@@ -89,6 +89,8 @@ function installWorld(world) {
     save: async (entries) => calls.push(['userDir.save', JSON.parse(JSON.stringify(entries))]),
   };
   window.libraryDirs = { getEntries: async () => [], findEntries: async () => [], save: async (entries) => calls.push(['libraryDirs.save', entries]) };
+  // Smart Find asks the scan host, which answers with every found folder and its check.
+  window.scanHost = { findSmartFolders: async () => ({ saveEntries: world.foundSaveDirs.map((entry) => ({ entry, accepted: true })), libraryEntries: [] }) };
   // The guide counts a folder with the library's own readers.
   window.achievements = { previewWatchedFolder: async (dir) => world.folderGames[dir] || [] };
   window.settings = {

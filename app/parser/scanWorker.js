@@ -13,6 +13,7 @@
     out  { type: 'ipc', id, channel, args }            -> in  { type: 'reply', id, ok, value | error }
     out  { type: 'ipc-send', channel, args }
     out  { type: 'event', id, name, args }             -> in  { type: 'reply', id, ok, value | error }
+    out  { type: 'ready' }                             once, when this process is up
 */
 
 const path = require('path');
@@ -83,27 +84,13 @@ const methods = {
     const games = await parser().reloadGames(option, records, (game) => post({ type: 'game', id, game }));
     return { count: games.length };
   },
+  // Smart Find's walks and folder checks. The figures say what the search cost this process.
   async findSmartFolders() {
     const started = Date.now();
-    // The regular scan initializes parser configuration and user-data paths first.
-    // Smart Find needs the same context even though it runs in a one-shot host.
-    parser();
-    const result = await load('util/smartFindDiscovery.js').discoverSmartFolders({
-      userDir: load('parser/userDir.js'),
-      libraryDirs: load('parser/libraryDirs.js'),
-    });
-    const usage = process.memoryUsage();
-    const heapLimit = require('node:v8').getHeapStatistics().heap_size_limit;
-    const mib = (bytes) => Math.round((bytes / 1048576) * 10) / 10;
-    return {
-      ...result,
-      diagnostics: {
-        durationMs: Date.now() - started,
-        heapUsedMiB: mib(usage.heapUsed),
-        rssMiB: mib(usage.rss),
-        heapLimitMiB: mib(heapLimit),
-      },
-    };
+    const found = await parser().findSmartFolders();
+    const { heapUsed, rss } = process.memoryUsage();
+    const mib = (bytes) => Math.round(bytes / 1048576);
+    return { ...found, diagnostics: { durationMs: Date.now() - started, heapUsedMiB: mib(heapUsed), rssMiB: mib(rss) } };
   },
   detectInstalledAppids: (id, option) => parser().detectInstalledAppids(option),
   discoveryInputsUnchanged: () => parser().discoveryInputsUnchanged(),
@@ -172,3 +159,7 @@ process.on('message', async (message) => {
 
 // The window (or the main process) that started this is gone: nothing is left to scan for.
 process.on('disconnect', () => process.exit(0));
+
+// Tells the caller this process came up: a host that dies after this is never replaced by a
+// Smart Find in the window (scanHost.js).
+post({ type: 'ready' });

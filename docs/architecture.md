@@ -35,12 +35,11 @@ window's own `achievements.js`. The main process uses the same client for its ba
 pass while the window is closed, and stops that host after a minute of quiet. If the host cannot
 start or dies, library scans fall back to the calling process as before the host existed.
 
-Settings > Folders > Smart Find, and the empty-library folder discovery, instead use a
-short-lived instance of the same scan host. It performs save-folder detection and validation
-and library-root discovery off the renderer thread, then exits to release its Wine registry
-cache. Unlike the normal library-scan fallback, failure of this one-shot discovery is
-returned to the renderer as an error; the discovery is never retried in the renderer after
-a child-process crash or out-of-memory failure.
+Smart Find (Settings > Folders, the first-run guide and the empty library's "detect my games")
+runs in the same host: the search for save folders and game libraries, and the check of each
+folder found. It falls back to the calling process only when the host never came up. A host that
+dies under the search reports the error instead, because what killed it (memory, on a machine
+with many Wine prefixes) would take the window next.
 
 A process started this way has no `electron` module and no `@electron/remote`: code under
 `app/parser` finds the app data folder through `app/util/userDataPath.js` and reaches the main

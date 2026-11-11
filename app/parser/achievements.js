@@ -2408,6 +2408,8 @@ async function previewWatchedFolder(dir, source) {
   return games.concat(await steam.scanAppidRoots(saveRoots.expandKnownSteamSourceRoots(dir)));
 }
 module.exports.previewWatchedFolder = previewWatchedFolder;
+// Smart Find's folder search, here so the scan host and its fallback run the same one.
+module.exports.findSmartFolders = () => require(path.join(appPath, '../util/smartFindDiscovery.js')).discoverSmartFolders({ userDir, libraryDirs });
 
 async function discover(source, steamAccFilter, scope = null) {
   // One pass reads the same folders from several walkers; serve each directory listing once, and
