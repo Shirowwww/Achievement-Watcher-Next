@@ -25,6 +25,11 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The trophy button on a tile opens the achievements again (#183).** Since the game page, it
   opened the overview like a click anywhere else on the tile.
 - **Covers set to "Whole" are sharp again.** Most of them showed only their blurred backdrop.
+- **The first-start guide no longer freezes on Linux with many Proton games.** Its Games step
+  searched for minutes and the window could turn blank or invisible.
+- **A window that stops drawing comes back.** It reloads by itself; if it fails again, AW Next says
+  so and offers to export the logs.
+- **An unlock time a few minutes ahead no longer reads "in 3 minutes".** It shows "now".
 
 ## 3.12.6 - 2026-11-11
 

@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} logbestand(en) geschreven naar {path}",
     "export-logs-failed": "Kon de logboeken niet exporteren: {error}",
     "export-logs-masked": "Je gebruikersnaam, sleutels en tokens zijn gemaskeerd. Lees de bestanden door voordat je ze openbaar plaatst.",
+    "main-window-lost-message": "Het AW Next-venster werkt niet meer ({reason}).",
+    "main-window-lost-detail": "AW Next blijft draaien in het systeemvak. Exporteer de logboeken en deel ze in een bugrapport, zodat dit kan worden opgelost.",
     "zip-archive": "Zip-archief",
     "profile-backup-file-type": "AW Next-profielback-up",
     "profile-backup-export-title": "Profiel exporteren",

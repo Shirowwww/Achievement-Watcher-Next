@@ -8,13 +8,23 @@ const { appHosts } = require(path.join(__dirname, '..', 'util', 'appHosts.js'));
 const { SAVE_ROOTS, rowDir } = require(path.join(__dirname, 'emuSaveRoots.js'));
 
 // Same folder once: case-insensitively on Windows, exactly on case-sensitive Linux filesystems.
+const foldPath = (p) => (process.platform === 'win32' ? path.normalize(p).toLowerCase() : path.normalize(p));
+// Each list's keys, kept beside it: comparing with every earlier path froze the window for minutes
+// on Linux, where each Proton prefix is a host and multiplies these lists. A list that grew by
+// another way than addUnique (its size differs) has its keys read again.
+const listKeys = new WeakMap();
 function addUnique(out, candidate) {
   if (!candidate) return;
   const value = String(candidate).trim();
   if (!value) return;
-  const fold = (p) => (process.platform === 'win32' ? path.normalize(p).toLowerCase() : path.normalize(p));
-  const key = fold(value);
-  if (out.some((p) => fold(p) === key)) return;
+  let keys = listKeys.get(out);
+  if (!keys || keys.size !== out.length) {
+    keys = new Set(out.map(foldPath));
+    listKeys.set(out, keys);
+  }
+  const key = foldPath(value);
+  if (keys.has(key)) return;
+  keys.add(key);
   out.push(value);
 }
 

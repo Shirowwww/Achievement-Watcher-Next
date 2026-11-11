@@ -3162,6 +3162,8 @@
     "export-logs-done": "Zapsáno souborů protokolu: {count} - do {path}",
     "export-logs-failed": "Protokoly se nepodařilo exportovat: {error}",
     "export-logs-masked": "Vaše uživatelské jméno, klíče a tokeny byly zamaskovány. Před zveřejněním soubory zkontrolujte.",
+    "main-window-lost-message": "Okno AW Next přestalo fungovat ({reason}).",
+    "main-window-lost-detail": "AW Next běží dál v oznamovací oblasti. Exportuj protokoly a přilož je k hlášení chyby, aby to šlo opravit.",
     "zip-archive": "Archiv zip",
     "profile-backup-file-type": "Záloha profilu AW Next",
     "profile-backup-export-title": "Exportovat profil",

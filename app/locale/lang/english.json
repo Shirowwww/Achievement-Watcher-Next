@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} log file(s) written to {path}",
     "export-logs-failed": "Could not export the logs: {error}",
     "export-logs-masked": "Your user name, keys and tokens were masked. Read the files before posting them publicly.",
+    "main-window-lost-message": "The AW Next window stopped working ({reason}).",
+    "main-window-lost-detail": "AW Next keeps running in the tray. Export the logs and share them in a bug report so this can be fixed.",
     "zip-archive": "Zip archive",
     "profile-backup-file-type": "AW Next profile backup",
     "profile-backup-export-title": "Export profile",

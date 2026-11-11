@@ -3162,6 +3162,8 @@
     "export-logs-done": "已將 {count} 個記錄檔寫入 {path}",
     "export-logs-failed": "無法匯出記錄檔：{error}",
     "export-logs-masked": "你的使用者名稱、金鑰和權杖已遮蔽。公開貼出前請先檢查這些檔案。",
+    "main-window-lost-message": "AW Next 視窗已停止運作（{reason}）。",
+    "main-window-lost-detail": "AW Next 仍在系統匣中執行。請匯出記錄檔並附在問題回報中分享，以便修正此問題。",
     "zip-archive": "Zip 壓縮檔",
     "profile-backup-file-type": "AW Next 設定檔備份",
     "profile-backup-export-title": "匯出設定檔",

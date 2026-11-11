@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} 個のログファイルを {path} に書き出しました",
     "export-logs-failed": "ログをエクスポートできませんでした: {error}",
     "export-logs-masked": "ユーザー名、キー、トークンはマスクされています。公開の場に投稿する前にファイルの内容を確認してください。",
+    "main-window-lost-message": "AW Next のウィンドウが動作を停止しました ({reason})。",
+    "main-window-lost-detail": "AW Next はトレイで動作を続けています。ログをエクスポートして、バグ報告で共有してください。問題の修正に役立ちます。",
     "zip-archive": "Zip アーカイブ",
     "profile-backup-file-type": "AW Next プロファイルのバックアップ",
     "profile-backup-export-title": "プロファイルをエクスポート",

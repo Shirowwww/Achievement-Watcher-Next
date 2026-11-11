@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} file log ditulis ke {path}",
     "export-logs-failed": "Tidak dapat mengekspor log: {error}",
     "export-logs-masked": "Nama pengguna, kunci, dan token Anda telah disamarkan. Baca file tersebut sebelum memostingnya ke publik.",
+    "main-window-lost-message": "Jendela AW Next berhenti berfungsi ({reason}).",
+    "main-window-lost-detail": "AW Next tetap berjalan di baki sistem. Ekspor log dan bagikan dalam laporan bug agar masalah ini dapat diperbaiki.",
     "zip-archive": "Arsip Zip",
     "profile-backup-file-type": "Cadangan profil AW Next",
     "profile-backup-export-title": "Ekspor profil",

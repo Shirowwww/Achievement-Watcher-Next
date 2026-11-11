@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} file di registro scritti in {path}",
     "export-logs-failed": "Impossibile esportare i registri: {error}",
     "export-logs-masked": "Il tuo nome utente, le tue chiavi e i tuoi token sono stati oscurati. Rileggi i file prima di pubblicarli.",
+    "main-window-lost-message": "La finestra di AW Next ha smesso di funzionare ({reason}).",
+    "main-window-lost-detail": "AW Next continua a funzionare nella barra delle applicazioni. Esporta i registri e condividili in una segnalazione di bug, così che possa essere corretto.",
     "zip-archive": "Archivio zip",
     "profile-backup-file-type": "Backup del profilo AW Next",
     "profile-backup-export-title": "Esporta profilo",

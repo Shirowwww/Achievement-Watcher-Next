@@ -3162,6 +3162,8 @@
     "export-logs-done": "로그 파일 {count}개를 {path}에 기록했습니다",
     "export-logs-failed": "로그를 내보내지 못했습니다: {error}",
     "export-logs-masked": "사용자 이름, 키, 토큰이 가려졌습니다. 공개적으로 게시하기 전에 파일을 확인하세요.",
+    "main-window-lost-message": "AW Next 창이 작동을 멈췄습니다({reason}).",
+    "main-window-lost-detail": "AW Next는 트레이에서 계속 실행 중입니다. 로그를 내보내 버그 신고에 공유해 주세요. 문제를 해결하는 데 도움이 됩니다.",
     "zip-archive": "Zip 압축 파일",
     "profile-backup-file-type": "AW Next 프로필 백업",
     "profile-backup-export-title": "프로필 내보내기",

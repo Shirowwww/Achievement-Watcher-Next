@@ -3162,6 +3162,8 @@
     "export-logs-done": "Zapisano plików dziennika: {count} - w {path}",
     "export-logs-failed": "Nie udało się wyeksportować dzienników: {error}",
     "export-logs-masked": "Twoja nazwa użytkownika, klucze i tokeny zostały zamaskowane. Przeczytaj pliki, zanim opublikujesz je publicznie.",
+    "main-window-lost-message": "Okno AW Next przestało działać ({reason}).",
+    "main-window-lost-detail": "AW Next nadal działa w zasobniku. Wyeksportuj dzienniki i udostępnij je w zgłoszeniu błędu, aby można to było naprawić.",
     "zip-archive": "Archiwum zip",
     "profile-backup-file-type": "Kopia zapasowa profilu AW Next",
     "profile-backup-export-title": "Eksportuj profil",

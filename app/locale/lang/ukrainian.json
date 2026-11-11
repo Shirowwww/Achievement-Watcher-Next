@@ -3162,6 +3162,8 @@
     "export-logs-done": "Записано файлів журналу: {count} - у {path}",
     "export-logs-failed": "Не вдалося експортувати журнали: {error}",
     "export-logs-masked": "Ваше ім’я користувача, ключі й токени приховано. Прочитайте файли, перш ніж публікувати їх.",
+    "main-window-lost-message": "Вікно AW Next перестало працювати ({reason}).",
+    "main-window-lost-detail": "AW Next продовжує працювати в треї. Експортуй журнали та додай їх до звіту про помилку, щоб це можна було виправити.",
     "zip-archive": "Архів zip",
     "profile-backup-file-type": "Резервна копія профілю AW Next",
     "profile-backup-export-title": "Експорт профілю",

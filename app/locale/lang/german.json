@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} Protokolldatei(en) nach {path} geschrieben",
     "export-logs-failed": "Protokolle konnten nicht exportiert werden: {error}",
     "export-logs-masked": "Dein Benutzername, deine Schlüssel und Token wurden maskiert. Lies die Dateien, bevor du sie öffentlich postest.",
+    "main-window-lost-message": "Das AW Next-Fenster funktioniert nicht mehr ({reason}).",
+    "main-window-lost-detail": "AW Next läuft im Infobereich weiter. Exportiere die Protokolle und teile sie in einem Fehlerbericht, damit das behoben werden kann.",
     "zip-archive": "Zip-Archiv",
     "profile-backup-file-type": "AW Next-Profilsicherung",
     "profile-backup-export-title": "Profil exportieren",

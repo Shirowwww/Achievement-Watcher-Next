@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} naplófájl kiírva ide: {path}",
     "export-logs-failed": "A naplókat nem sikerült exportálni: {error}",
     "export-logs-masked": "A felhasználóneved, a kulcsaid és a tokenjeid el lettek rejtve. Olvasd át a fájlokat, mielőtt nyilvánosan közzéteszed őket.",
+    "main-window-lost-message": "Az AW Next ablaka nem működik tovább ({reason}).",
+    "main-window-lost-detail": "Az AW Next tovább fut a tálcán. Exportáld a naplókat, és oszd meg őket egy hibajelentésben, hogy ki lehessen javítani.",
     "zip-archive": "Zip archívum",
     "profile-backup-file-type": "AW Next profilmentés",
     "profile-backup-export-title": "Profil exportálása",

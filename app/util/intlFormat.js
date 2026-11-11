@@ -136,11 +136,13 @@
   /*
     "3 days ago" / "in 2 hours" from a millisecond delta, picking the largest unit that has at least
     one whole step. Anything under a minute is reported as seconds so the value never renders empty.
+    Every caller dates something that already happened, so a stamp ahead of this clock (an emulator
+    or a server whose clock runs fast) reads "now" rather than "in 3 minutes".
   */
   function formatRelativeTime(value, lang, { now = Date.now(), numeric = 'auto' } = {}) {
     const date = toDate(value);
     if (!date) return '';
-    const deltaMs = date.getTime() - now;
+    const deltaMs = Math.min(0, date.getTime() - now);
     const formatter = build(Intl.RelativeTimeFormat, lang, { numeric });
     if (!formatter) return '';
     const magnitude = Math.abs(deltaMs);

@@ -3162,6 +3162,8 @@
     "export-logs-done": "已将 {count} 个日志文件写入 {path}",
     "export-logs-failed": "无法导出日志：{error}",
     "export-logs-masked": "你的用户名、密钥和令牌已被遮盖。公开发布前请先检查这些文件。",
+    "main-window-lost-message": "AW Next 窗口已停止工作（{reason}）。",
+    "main-window-lost-detail": "AW Next 仍在托盘中运行。请导出日志并附在错误报告中分享，以便修复此问题。",
     "zip-archive": "Zip 压缩包",
     "profile-backup-file-type": "AW Next 配置文件备份",
     "profile-backup-export-title": "导出配置文件",

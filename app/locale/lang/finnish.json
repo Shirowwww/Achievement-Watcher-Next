@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} lokitiedostoa kirjoitettiin kohteeseen {path}",
     "export-logs-failed": "Lokeja ei voitu viedä: {error}",
     "export-logs-masked": "Käyttäjänimesi, avaimesi ja tunnuksesi on piilotettu. Lue tiedostot ennen kuin julkaiset ne.",
+    "main-window-lost-message": "AW Next -ikkuna lakkasi toimimasta ({reason}).",
+    "main-window-lost-detail": "AW Next jatkaa toimintaansa ilmaisinalueella. Vie lokit ja jaa ne virheraportissa, jotta tämä voidaan korjata.",
     "zip-archive": "Zip-arkisto",
     "profile-backup-file-type": "AW Next -profiilin varmuuskopio",
     "profile-backup-export-title": "Vie profiili",

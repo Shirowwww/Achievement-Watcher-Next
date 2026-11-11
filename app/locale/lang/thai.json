@@ -3162,6 +3162,8 @@
     "export-logs-done": "เขียนไฟล์บันทึก {count} ไฟล์ไปยัง {path}",
     "export-logs-failed": "ไม่สามารถส่งออกบันทึกได้: {error}",
     "export-logs-masked": "ชื่อผู้ใช้ คีย์ และโทเค็นของคุณถูกปิดบังแล้ว โปรดอ่านไฟล์ก่อนโพสต์เป็นสาธารณะ",
+    "main-window-lost-message": "หน้าต่าง AW Next หยุดทำงาน ({reason})",
+    "main-window-lost-detail": "AW Next ยังคงทำงานอยู่ในถาดระบบ ส่งออกบันทึกแล้วแชร์ในรายงานบั๊กเพื่อให้แก้ไขปัญหานี้ได้",
     "zip-archive": "ไฟล์บีบอัด zip",
     "profile-backup-file-type": "ข้อมูลสำรองโปรไฟล์ AW Next",
     "profile-backup-export-title": "ส่งออกโปรไฟล์",

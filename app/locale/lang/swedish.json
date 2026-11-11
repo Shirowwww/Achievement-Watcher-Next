@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} loggfiler skrevs till {path}",
     "export-logs-failed": "Det gick inte att exportera loggarna: {error}",
     "export-logs-masked": "Ditt användarnamn, dina nycklar och dina token har maskerats. Läs igenom filerna innan du publicerar dem.",
+    "main-window-lost-message": "AW Next-fönstret slutade fungera ({reason}).",
+    "main-window-lost-detail": "AW Next fortsätter att köras i aktivitetsfältet. Exportera loggarna och dela dem i en felrapport så att det kan åtgärdas.",
     "zip-archive": "Zip-arkiv",
     "profile-backup-file-type": "AW Next-profilbackup",
     "profile-backup-export-title": "Exportera profil",

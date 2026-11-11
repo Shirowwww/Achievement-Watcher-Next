@@ -64,8 +64,15 @@ test('relative time picks the largest whole unit and truncates towards zero', ()
   // 47 hours is one whole day, not two: rounding up would claim a check that never happened.
   assert.equal(at(-47 * 3600000), 'yesterday');
   assert.equal(at(-30000), '30 seconds ago');
-  assert.equal(at(2 * 3600000), 'in 2 hours');
   assert.equal(intlFormat.formatRelativeTime(0, 'english', { now }), '');
+});
+
+test('relative time never phrases a past event in the future when the stamp runs ahead of this clock', () => {
+  const now = Date.UTC(2026, 7, 21, 12, 0, 0);
+  const at = (deltaMs) => intlFormat.formatRelativeTime(now + deltaMs, 'english', { now });
+  assert.equal(at(3 * 60000), 'now');
+  assert.equal(at(2 * 3600000), 'now');
+  assert.equal(at(-9 * 60000), '9 minutes ago');
 });
 
 test('durations are phrased by Intl for every bundled locale, with no leading zero unit', (t) => {

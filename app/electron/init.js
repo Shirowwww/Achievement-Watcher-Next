@@ -2625,7 +2625,9 @@ async function exportDiagnosticsText() {
   return `${text}${settings}`;
 }
 
-ipcMain.handle('export-logs', async (_event, payload) => {
+ipcMain.handle('export-logs', (_event, payload) => exportLogs(payload));
+
+async function exportLogs(payload) {
   try {
     const logArchive = require(path.join(__dirname, '..', 'util', 'logArchive.js'));
     const AdmZip = require('adm-zip');
@@ -2664,7 +2666,7 @@ ipcMain.handle('export-logs', async (_event, payload) => {
   } catch (err) {
     return { ok: false, error: err && err.message ? err.message : String(err) };
   }
-});
+}
 
 require('./profileBackupIpc.js').register({
   getWindow: () => (MainWin && !MainWin.isDestroyed() ? MainWin : undefined),
@@ -4712,8 +4714,55 @@ function writeMainWindowState(state) {
   }
 }
 
+let lastMainRendererReloadAt = 0;
+
+function watchMainRenderer(win) {
+  win.webContents.on('render-process-gone', (event, details) => {
+    const action = require('./mainRendererRecovery.js').decide(details, lastMainRendererReloadAt, Date.now());
+    debug.warn(`[MainWindow] renderer gone: reason=${details.reason} exit=${details.exitCode} -> ${action}`);
+    if (action === 'ignore' || win.isDestroyed()) return;
+    if (action === 'reload') {
+      lastMainRendererReloadAt = Date.now();
+      win.webContents.reload();
+      return;
+    }
+    win.destroy();
+    showMainRendererLostDialog(details.reason).catch((err) => debug.log(`[MainWindow] could not show the lost-window dialog: ${err.message || err}`));
+  });
+}
+
+// Shown when the window died twice in a row: it is gone, and the logs are the only way to say why.
+async function showMainRendererLostDialog(reason) {
+  const { response } = await dialog.showMessageBox({
+    type: 'error',
+    title: t('achievement-watcher', 'AW Next'),
+    message: t('main-window-lost-message', 'The AW Next window stopped working ({reason}).', 'La fenêtre d’AW Next a cessé de fonctionner ({reason}).', { reason: String(reason || '?') }),
+    detail: t(
+      'main-window-lost-detail',
+      'AW Next keeps running in the tray. Export the logs and share them in a bug report so this can be fixed.',
+      'AW Next continue de tourner dans la zone de notification. Exportez les journaux et joignez-les à un signalement pour que cela soit corrigé.'
+    ),
+    buttons: [t('export-logs', 'Export logs', 'Exporter les journaux'), t('ok', 'OK', 'OK')],
+    defaultId: 0,
+    cancelId: 1,
+  });
+  if (response !== 0) return;
+  const result = await exportLogs(null);
+  if (result.ok) shell.showItemInFolder(result.path);
+  else if (!result.canceled) debug.log(`[MainWindow] log export after a lost window failed: ${result.error}`);
+}
+
 function createMainWindow() {
   try {
+    // A window whose page died draws nothing: showing it again would show nothing. Start over.
+    // Its 'closed' teardown clears MainWin, so the new window is made after it, never before.
+    if (MainWin && !MainWin.isDestroyed() && MainWin.webContents.isCrashed()) {
+      debug.log('[MainWindow] reopening over a dead renderer -> new window');
+      MainWin.once('closed', () => createMainWindow());
+      MainWin.destroy();
+      return;
+    }
+    if (MainWin && MainWin.isDestroyed()) MainWin = null;
     if (MainWin) {
       if (MainWin.isMinimized()) MainWin.restore();
       if (!MainWin.isVisible()) MainWin.show();
@@ -4813,6 +4862,7 @@ function createMainWindow() {
     // target, which is what the user last dragged the window to.
     if (restoreMaximized) MainWin.maximize();
     getRemoteMain().enable(MainWin.webContents);
+    watchMainRenderer(MainWin);
     notifyWatchdogOfAppPid();
 
     // A download started while tray-only has no taskbar button to draw on; opening the window
@@ -5000,7 +5050,8 @@ function createMainWindow() {
       // already supervises it. Stored + cleared on window close so repeated open/close never leaks intervals.
       clearInterval(watchdogStatusInterval);
       const sendWatchdogStatus = (state) => {
-        if (MainWin) MainWin.webContents.send('watchdog-status', state);
+        if (!MainWin || MainWin.isDestroyed() || MainWin.webContents.isCrashed()) return;
+        MainWin.webContents.send('watchdog-status', state);
       };
       watchdogStatusInterval = setInterval(() => {
         const state = getWatchdogState();

@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} ficheiro(s) de registo escritos em {path}",
     "export-logs-failed": "Não foi possível exportar os registos: {error}",
     "export-logs-masked": "O teu nome de utilizador, as tuas chaves e os teus tokens foram mascarados. Lê os ficheiros antes de os publicares.",
+    "main-window-lost-message": "A janela do AW Next deixou de funcionar ({reason}).",
+    "main-window-lost-detail": "O AW Next continua a funcionar na bandeja. Exporta os registos e partilha-os num relatório de erro, para que possa ser corrigido.",
     "zip-archive": "Arquivo zip",
     "profile-backup-file-type": "Cópia de segurança do perfil do AW Next",
     "profile-backup-export-title": "Exportar perfil",

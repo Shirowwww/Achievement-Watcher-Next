@@ -3162,6 +3162,8 @@
     "export-logs-done": "Đã ghi {count} tệp nhật ký vào {path}",
     "export-logs-failed": "Không thể xuất nhật ký: {error}",
     "export-logs-masked": "Tên người dùng, khóa và token của bạn đã được che. Hãy đọc kỹ các tệp trước khi đăng công khai.",
+    "main-window-lost-message": "Cửa sổ AW Next đã ngừng hoạt động ({reason}).",
+    "main-window-lost-detail": "AW Next vẫn chạy dưới khay hệ thống. Hãy xuất nhật ký và chia sẻ trong báo cáo lỗi để có thể khắc phục.",
     "zip-archive": "Tệp nén Zip",
     "profile-backup-file-type": "Bản sao lưu hồ sơ AW Next",
     "profile-backup-export-title": "Xuất hồ sơ",

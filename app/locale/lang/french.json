@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} fichier(s) de journal écrits dans {path}",
     "export-logs-failed": "Impossible d’exporter les journaux : {error}",
     "export-logs-masked": "Ton nom d’utilisateur, tes clés et tes jetons ont été masqués. Relis les fichiers avant de les publier.",
+    "main-window-lost-message": "La fenêtre d’AW Next a cessé de fonctionner ({reason}).",
+    "main-window-lost-detail": "AW Next continue de tourner dans la zone de notification. Exportez les journaux et joignez-les à un signalement pour que cela soit corrigé.",
     "zip-archive": "Archive zip",
     "profile-backup-file-type": "Sauvegarde de profil AW Next",
     "profile-backup-export-title": "Exporter le profil",

@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} logfil(er) skrevet til {path}",
     "export-logs-failed": "Logfilerne kunne ikke eksporteres: {error}",
     "export-logs-masked": "Dit brugernavn, dine nøgler og tokens er blevet maskeret. Læs filerne igennem, før du offentliggør dem.",
+    "main-window-lost-message": "AW Next-vinduet er holdt op med at virke ({reason}).",
+    "main-window-lost-detail": "AW Next kører videre i systembakken. Eksportér logfiler og del dem i en fejlrapport, så det kan blive rettet.",
     "zip-archive": "Zip-arkiv",
     "profile-backup-file-type": "AW Next-profilsikkerhedskopi",
     "profile-backup-export-title": "Eksportér profil",

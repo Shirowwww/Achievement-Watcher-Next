@@ -3162,6 +3162,8 @@
     "export-logs-done": "{count} günlük dosyası şuraya yazıldı: {path}",
     "export-logs-failed": "Günlükler dışa aktarılamadı: {error}",
     "export-logs-masked": "Kullanıcı adınız, anahtarlarınız ve belirteçleriniz maskelendi. Herkese açık paylaşmadan önce dosyaları okuyun.",
+    "main-window-lost-message": "AW Next penceresi çalışmayı durdurdu ({reason}).",
+    "main-window-lost-detail": "AW Next tepside çalışmaya devam ediyor. Günlükleri dışa aktar ve bunu düzeltebilmemiz için hata bildiriminde paylaş.",
     "zip-archive": "Zip arşivi",
     "profile-backup-file-type": "AW Next profil yedeği",
     "profile-backup-export-title": "Profili dışa aktar",
