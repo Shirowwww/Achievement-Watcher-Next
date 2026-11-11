@@ -1124,6 +1124,7 @@ async function tryApplyCrackFix({ gameDir, gameName, appid, detectedExe, proxyFa
       gameName: gameName || '',
       gameNames,
       gameDir,
+      appid,
       arch,
       proxyFallback,
       log: debug,

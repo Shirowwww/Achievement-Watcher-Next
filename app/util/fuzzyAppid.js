@@ -17,11 +17,18 @@ const JUNK_TOKENS = new Set([
   'repacked', 'incl', 'dlc', 'win', 'win32', 'win64', 'x86', 'x64', 'x32', 'pcdvd', 'pc', 'edition',
 ]);
 
+// "Ragnarök" and "Ragnarok" are one word. Without folding, the "ö" was dropped as punctuation and
+// left "ragnark", which no catalogue spelling matched.
+function foldAccents(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 // Lower-case, drop bracketed tags + version/build markers, split on separators, drop junk tokens.
 // Returns { clean, tokens }. Note: "edition" is junk here only as a trailing packaging word; the core
 // title words survive, which is what matching needs.
+
 function cleanGameName(raw) {
-  let s = String(raw || '');
+  let s = foldAccents(raw);
   s = s.replace(/[[({][^\])}]*[\])}]/g, ' '); // [..] (..) {..} tags
   // Release-site domains ride along in repack folder names ("... v1.52 RexaGames.com"). Left in,
   // they push a title out of the exact/token tiers and into a fuzzy score that is never
@@ -49,7 +56,7 @@ function stripPlatformTag(s) {
 }
 
 function normAlnum(s) {
-  return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return foldAccents(s).toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function bigrams(s) {
@@ -135,8 +142,18 @@ function bestConfidentAppid(query, apps) {
   const ranked = rankAppidCandidates(query, apps, { limit: 10, minScore: 0.6 });
   // A token match leaves words out on one side, and a series number is never one of them: Yakuza
   // Kiwami is not Yakuza Kiwami 2, nor is Frostpunk 2 Frostpunk.
-  const hit = ranked.find((r) => r.tier === 'exact') || ranked.find((r) => r.tier === 'token' && r.score >= 0.9 && sameNumbers(query, r.name));
+  // Nor may the store name carry a title word the query lacks: "God of War Ragnarök" is not "God of
+  // War", and when the original is missing from a short list the relative was the best score.
+  const hit =
+    ranked.find((r) => r.tier === 'exact') ||
+    ranked.find((r) => r.tier === 'token' && r.score >= 0.9 && sameNumbers(query, r.name) && addsNoTitleWord(query, r.name));
   return hit ? hit.appid : null;
+}
+
+// Every title word of `name` is one `query` has too. Filler and packaging words never count.
+function addsNoTitleWord(query, name) {
+  const queryWords = titleKey(query).words;
+  return titleKey(name).words.every((word) => tokenCovered(word, queryWords));
 }
 
 /*

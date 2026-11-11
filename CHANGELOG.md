@@ -117,6 +117,10 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **A community crack is only applied to the game it was made for.** God of War received the crack
+  of God of War Ragnarök because the names looked alike. The automatic fix now needs the same title,
+  and refuses any crack whose own files name another game's AppID, before copying anything. The same
+  rule stops a game from taking a sequel's AppID (Hollow Knight is no longer Silksong).
 - **The game page of a recompiled PC port stays filled.** Super Mario 64 (Ghostship), Diddy Kong
   Racing, Super Mario Sunshine and the new ports showed no description, date or studio, since their
   name carries the port's in brackets. The page now looks up the game itself, on its own console;

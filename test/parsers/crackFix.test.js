@@ -140,6 +140,84 @@ ok(multiName && multiName.entry.name === 'Cyberpunk 2077', 'multi-name lookup tr
 eq(multiName && multiName.matchedName, 'Cyberpunk 2077', 'multi-name lookup reports the candidate that matched');
 eq(crackFix.findBestMatchForNames(list, ['Cyber', 'Totally Unrelated Zzz']), null, 'multi-name lookup still rejects weak candidates');
 
+// Regression (user report, God of War 1593500): the automatic flow scored "God of War" 0.91 against
+// "God of War: Ragnarok" and copied Ragnarok's crack into the 2018 game. The automatic match has to
+// be the same title, never a relative of it, in either direction.
+const fixFor = (id) => [{ href: `https://pixeldrain.com/u/${id}`, filename: `${id}.rar` }];
+const relatives = [
+  { name: 'God of War: Ragnarok', fixes: fixFor('gowr') },
+  { name: 'Far Cry: New Dawn', fixes: fixFor('fcnd') },
+  { name: 'Age of Empires IV', fixes: fixFor('aoe4') },
+  { name: 'Grand Theft Auto V Enhanced', fixes: fixFor('gtae') },
+  { name: 'Grand Theft Auto V Legacy', fixes: fixFor('gtal') },
+  { name: 'Hogwarts Legacy', fixes: fixFor('hl') },
+  { name: 'Dead Space Remake', fixes: fixFor('dsr') },
+];
+eq(crackFix.findBestMatch(relatives, 'God of War'), null, 'God of War is not God of War: Ragnarok');
+eq(crackFix.findBestMatchForNames(relatives, ['God of War', 'God of War', 'GoW']), null, 'no local name of God of War reaches Ragnarok');
+ok(crackFix.findBestMatch(relatives, 'God of War Ragnarök'), 'the Ragnarok entry still serves Ragnarok (diacritics, no colon)');
+eq(crackFix.findBestMatch([{ name: 'God of War', fixes: fixFor('gow') }], 'God of War Ragnarok'), null, 'nor the other way round');
+eq(crackFix.findBestMatch(relatives, 'Far Cry'), null, 'a franchise name is not its spin-off');
+eq(crackFix.findBestMatch(relatives, 'Far Cry 5'), null, 'Far Cry 5 is not New Dawn');
+eq(crackFix.findBestMatch(relatives, 'Age of Empires II: Definitive Edition'), null, 'a different series number never matches');
+eq(crackFix.findBestMatch(relatives, 'Grand Theft Auto V'), null, 'two builds of a game, neither named: no guess');
+eq(crackFix.findBestMatch(relatives, 'Grand Theft Auto V Legacy').entry.name, 'Grand Theft Auto V Legacy', 'the named build is picked');
+eq(crackFix.findBestMatch(relatives, 'Dead Space'), null, 'the original is not its remake');
+eq(crackFix.findBestMatch(relatives, 'Hogwarts Legacy Deluxe Edition').entry.name, 'Hogwarts Legacy', 'an edition word is packaging');
+eq(crackFix.findBestMatch(relatives, 'Hogwarts.Legacy-RUNE').entry.name, 'Hogwarts Legacy', 'a scene folder name still matches');
+eq(
+  crackFix.findBestMatch([{ name: 'Foo Quest', fixes: fixFor('a') }, { name: 'Foo Quest Deluxe Edition', fixes: fixFor('b') }], 'Foo Quest Ultimate Edition'),
+  null,
+  'two entries for the same title and none spelled like the game: no guess'
+);
+ok(
+  !crackFix.findFixes(relatives, 'God of War').some((f) => f.name === 'God of War: Ragnarok'),
+  'the manual list does not offer Ragnarok for God of War either'
+);
+
+// Every entry of the real catalogue, held against every other: an automatic match only ever returns
+// the entry whose own name was asked for (names as published on 2026-11-11).
+const catalogue = [
+  'Dead Island 2', 'Dragon Quest I & II HD-2D Remake', 'Deathloop', 'Black Myth: Wukong', 'Dead Space Remake',
+  'God of War: Ragnarok', 'Resident Evil Requiem', 'Need for Speed: Hot Pursuit Remastered', 'Scott Pilgrim vs. The World: The Game',
+  'Sonic Colors Ultimate', "Assassin's Creed: Origins Ubisoft only I guess?", "Yakuza 0 Director's Cut", 'Age of Empires II: Definitive Edition',
+  'Age of Empires IV', 'Sonic Frontiers', 'Stellar Blade', "Assassin's Creed: Valhalla Ubisoft only I guess?", 'Anno 1800',
+  "Assassin's Creed: Mirage", 'Watch Dogs: Legion', 'Metal Gear Solid V: The Phantom Pain', 'Far Cry: New Dawn', 'Far Cry 5',
+  'Need for Speed: Heat', 'Planet Zoo', "Tom Clancy's Ghost Recon Wildlands", 'Star Wars Battlefront II (2017)', 'The Crew 2 EA files only',
+  'Grand Theft Auto V Enhanced', 'Red Dead Redemption 2', 'Grand Theft Auto V Legacy', 'PRAGMATA', 'LEGO Batman: Legacy of the Dark Knight',
+  'Mafia: The Old Country', 'Hogwarts Legacy', 'Sekiro: Shadows Die Twice', 'Grand Theft Auto IV: The Complete Edition',
+  'The First Berserker: Khazan', 'Halo: Campaign Evolved', 'Ace Attorney Investigations Collection', 'Heroes of Hammerwatch II',
+  'The Amazing Spider-Man', 'Avatar: Frontiers of Pandora', 'Crimson Desert', 'Solo Leveling: ARISE OVERDRIVE',
+  'Valiant Hearts: The Great War / Soldats Inconnus : Mémoires de la Grande Guerre', "Assassin's Creed Black Flag Resynced", 'Red Dead Redemption',
+].map((name, i) => ({ name, fixes: fixFor(`c${i}`) }));
+for (const entry of catalogue) {
+  const own = crackFix.findBestMatch(catalogue, entry.name);
+  ok(own && own.entry === entry, `catalogue: "${entry.name}" matches its own entry`);
+}
+// Names a game folder or a Steam listing gives, and the only entry each may reach (null: none).
+const expected = {
+  'God of War': null,
+  'Far Cry': null,
+  'Dead Space': null,
+  "Assassin's Creed": null,
+  "Assassin's Creed IV Black Flag": null,
+  'Age of Empires': null,
+  'Need for Speed': null,
+  'Spider-Man': null,
+  Avatar: null,
+  Halo: null,
+  Sonic: null,
+  'Grand Theft Auto V': null,
+  'Yakuza 0': null,
+  'Red Dead Redemption': 'Red Dead Redemption',
+  'Red Dead Redemption 2 Ultimate Edition': 'Red Dead Redemption 2',
+  'Grand Theft Auto IV': 'Grand Theft Auto IV: The Complete Edition',
+};
+for (const [query, want] of Object.entries(expected)) {
+  const hit = crackFix.findBestMatch(catalogue, query);
+  eq(hit ? hit.entry.name : null, want, `catalogue: "${query}"`);
+}
+
 const multi = {
   name: 'Some Game',
   fixes: [
@@ -304,6 +382,49 @@ eq(crackFix.pickBestFix({}), null, 'missing fixes array → null');
     ok(fs.existsSync(path.join(gameDir, '.aw-crackfix-applied.json')), 'idempotency marker written for the local archive');
     const marker = JSON.parse(fs.readFileSync(path.join(gameDir, '.aw-crackfix-applied.json'), 'utf8'));
     ok(marker.applied.some((a) => a.key.includes('crack.7z')), 'marker keyed by the archive file name when no fix object');
+
+    // A crack declares the game it was made for (steam_emu.ini AppId, steam_appid.txt...). One made
+    // for another game is refused before a single file is copied: the name match can be wrong, the
+    // archive cannot lie about itself.
+    const buildArchive = async (files) => {
+      const dir = tmp('aw-crackfix-idsrc-');
+      for (const [rel, text] of Object.entries(files)) {
+        fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+        fs.writeFileSync(path.join(dir, rel), text);
+      }
+      const out = path.join(tmp('aw-crackfix-idarc-'), 'other.7z');
+      await new Promise((resolve, reject) => {
+        const s = Seven.add(out, path.join(dir, '*'), { $bin: sevenBin, recursive: true });
+        s.on('end', resolve);
+        s.on('error', reject);
+      });
+      return out;
+    };
+    const ragnarok = await buildArchive({ 'steam_api64.dll': 'RUNE', 'steam_emu.ini': '[Settings]\r\nAppId=2322010\r\n' });
+    const target = tmp('aw-crackfix-idgame-');
+    fs.writeFileSync(path.join(target, 'steam_api64.dll'), 'ORIGINAL');
+    let refused = null;
+    try {
+      await crackFix.applyLocalArchive({ archivePath: ragnarok, gameDir: target, expectedAppid: '1593500' });
+    } catch (e) {
+      refused = e;
+    }
+    eq(refused && refused.code, 'APPID_MISMATCH', 'a crack made for another AppID is refused');
+    eq(fs.readFileSync(path.join(target, 'steam_api64.dll'), 'utf8'), 'ORIGINAL', 'nothing was copied before the refusal');
+    ok(!fs.existsSync(path.join(target, '.aw-crackfix-applied.json')), 'no marker for a refused crack');
+    ok(refused && /2322010/.test(refused.message), 'the refusal names the AppID the crack was made for');
+
+    const right = await crackFix.applyLocalArchive({ archivePath: ragnarok, gameDir: tmp('aw-crackfix-idok-'), expectedAppid: 2322010 });
+    ok(right.applied.includes('steam_emu.ini'), 'the same crack applies to its own game');
+    const nested = await buildArchive({ 'Engine/Binaries/steam_settings/steam_appid.txt': '1593500\n', 'steam_api64.dll': 'x' });
+    ok((await crackFix.applyLocalArchive({ archivePath: nested, gameDir: tmp('aw-crackfix-idnest-'), expectedAppid: '1593500' })).applied.length === 2, 'a matching nested steam_appid.txt applies');
+    const spacewar = await buildArchive({ 'OnlineFix.ini': '[Main]\r\nFakeAppId=480\r\nRealAppId=1593500\r\n' });
+    ok((await crackFix.applyLocalArchive({ archivePath: spacewar, gameDir: tmp('aw-crackfix-id480-'), expectedAppid: '1593500' })).applied.length === 1, 'the Spacewar spoof id 480 is not a declaration');
+    const silent = await buildArchive({ 'steam_api64.dll': 'x' });
+    ok((await crackFix.applyLocalArchive({ archivePath: silent, gameDir: tmp('aw-crackfix-idnone-'), expectedAppid: '1593500' })).applied.length === 1, 'a crack that declares nothing still applies');
+    const r4 = await crackFix.applyLocalArchive({ archivePath: ragnarok, gameDir: tmp('aw-crackfix-idnoexp-') });
+    ok(r4.applied.length === 2, 'no expected AppID (manual pick of an unknown game): nothing to compare');
+    eq(crackFix.declaredAppids(tmp('aw-crackfix-empty-')).length, 0, 'an empty folder declares nothing');
   }
 
   // applyLocalArchive on a RAR - the actual CrakFiles format, which the bundled 7za CANNOT open (so it

@@ -228,9 +228,11 @@ const EDITION_TOKENS = new Set([
   'vii', 'viii', 'ix', 'x', 'xi', 'xii', 'part', 'chapter', 'episode', 'game', 'pc', 'windows',
 ]);
 
+// Three letters is a title word too: "God of War" has no longer one, and with a floor of four it had
+// nothing to compare, so "God of War: Ragnarok" was offered for it.
 function distinctiveTokens(name) {
   const { tokens } = fuzzy.cleanGameName(name);
-  return tokens.filter((token) => token.length >= 4 && !EDITION_TOKENS.has(token));
+  return tokens.map((token) => token.replace(/[^a-z0-9]/g, '')).filter((token) => token.length >= 3 && !EDITION_TOKENS.has(token));
 }
 
 /*
@@ -257,19 +259,20 @@ function findFixes(list, gameName, { limit = 5 } = {}) {
     .map((r) => ({ ...list[r.appid], _score: r.score, _tier: r.tier }));
 }
 
-// The single best entry for AUTOMATIC use, or null. Unlike findFixes (which returns ranked candidates
-// for the user to confirm), this only trusts a high-confidence match - an exact normalized-name
-// equality or a near-length token containment, the same bar fuzzyAppid uses before auto-writing a
-// steam_appid. Requires the entry to carry at least one fix. Returns { entry, score, tier } or null.
+// The entry for AUTOMATIC use must be the same title (fuzzyAppid.sameTitle), not the best score:
+// "God of War" scored 0.91 against "God of War: Ragnarok" and got its crack. Two qualifying entries,
+// neither spelled like the game, are a guess and give null. Returns { entry, score, tier } or null.
 function findBestMatch(list, gameName) {
   if (!Array.isArray(list) || !gameName) return null;
-  const apps = list.map((entry, i) => ({ appid: i, name: entry && entry.name }));
-  const ranked = fuzzy.rankAppidCandidates(gameName, apps, { limit: 10, minScore: 0.6 });
-  const hit = ranked.find((r) => r.tier === 'exact') || ranked.find((r) => r.tier === 'token' && r.score >= 0.9);
-  if (!hit) return null;
-  const entry = list[hit.appid];
-  if (!entry || !Array.isArray(entry.fixes) || entry.fixes.length === 0) return null;
-  return { entry, score: hit.score, tier: hit.tier };
+  const withFixes = [];
+  list.forEach((entry, i) => {
+    if (entry && entry.name && Array.isArray(entry.fixes) && entry.fixes.length > 0) withFixes.push({ appid: i, name: entry.name });
+  });
+  const index = fuzzy.sameTitleAppid(gameName, withFixes);
+  if (index == null) return null;
+  const entry = list[index];
+  const exact = fuzzy.normAlnum(fuzzy.cleanGameName(gameName).clean) === fuzzy.normAlnum(fuzzy.cleanGameName(entry.name).clean);
+  return { entry, score: exact ? 1 : 0.95, tier: exact ? 'exact' : 'title' };
 }
 
 function uniqueGameNames(names) {
@@ -376,7 +379,7 @@ function ts() {
   Download one fix and apply it into the game folder, backing up overwritten files under
   <gameDir>/.aw-crackfix-backups/<ts>/. Returns { applied:[...], backupDir }.
 */
-async function downloadAndApply({ fix, gameDir, cacheDir, entryName = '', proxyFallback = true, log = noopLog } = {}) {
+async function downloadAndApply({ fix, gameDir, cacheDir, entryName = '', expectedAppid = null, proxyFallback = true, log = noopLog } = {}) {
   if (!fix || !fix.href) throw new Error('crackfix: fix has no download link');
   if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`crackfix: game folder not found: ${gameDir}`);
   if (!isApplicableHost(fix.href)) throw new Error('crackfix: this host needs a browser - open the page instead');
@@ -434,7 +437,7 @@ async function downloadAndApply({ fix, gameDir, cacheDir, entryName = '', proxyF
     }
     // Hand the downloaded archive to the shared extract-and-apply path (same logic the manual
     // "I downloaded it myself" flow uses).
-    return await applyLocalArchive({ archivePath: dl.path, gameDir, fix, entryName, log });
+    return await applyLocalArchive({ archivePath: dl.path, gameDir, fix, entryName, expectedAppid, log });
   } finally {
     try {
       fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -459,6 +462,10 @@ async function extractRarToDir(archivePath, destDir, { log = noopLog } = {}) {
   log.log(`[crackfix] extracting RAR via node-unrar-js → ${destDir}`);
   const { createExtractorFromFile } = require('node-unrar-js');
   const extractor = await createExtractorFromFile({ filepath: archivePath, targetPath: destDir });
+  // The same entry check the 7-Zip path makes, on the listing, before anything is written.
+  const headers = [...extractor.getFileList().fileHeaders].map((h) => ({ file: h.name }));
+  const unsafe = firstUnsafeEntry(headers);
+  if (unsafe) throw new Error(`crackfix: unsafe path in the archive: ${unsafe}`);
   // node-unrar-js is lazy: iterating the generator is what actually writes each entry to disk. Count real
   // files so an empty/corrupt archive fails loudly.
   let files = 0;
@@ -505,11 +512,65 @@ async function extractArchive(archivePath, destDir, { log = noopLog } = {}) {
 }
 
 /*
-  Apply an already-downloaded crack archive to the game folder: extract, back up overwritten files,
-  install, and record the idempotency marker. Backs the "captcha → download manually" flow.
-  Returns { applied:[...], backedUp, backupDir }.
+  The Steam AppIDs an extracted crack says it was made for: steam_appid.txt, and an `AppId=` /
+  `RealAppId=` / `SteamAppId=` line in its ini files (steam_emu.ini, configs.app.ini, OnlineFix.ini,
+  ALI213.ini...). 480 is Spacewar, the id cracks borrow on purpose, so it declares nothing.
 */
-async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName = '', log = noopLog } = {}) {
+const SPOOF_APPIDS = new Set(['0', '480']);
+const APPID_LINE = /^\s*(?:real_?|steam_?)?app_?id\s*=\s*"?(\d+)/gim;
+const MAX_DECLARATION_BYTES = 256 * 1024;
+
+function declaredAppids(dir) {
+  const found = new Set();
+  const visit = (current) => {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(current, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        visit(full);
+        continue;
+      }
+      const lower = entry.name.toLowerCase();
+      const isIdFile = lower === 'steam_appid.txt';
+      if (!entry.isFile() || (!isIdFile && !lower.endsWith('.ini'))) continue;
+      let text = '';
+      try {
+        if (fs.statSync(full).size > MAX_DECLARATION_BYTES) continue;
+        text = fs.readFileSync(full, 'utf8');
+      } catch {
+        continue;
+      }
+      const ids = isIdFile ? [(text.match(/\d+/) || [])[0]] : [...text.matchAll(APPID_LINE)].map((m) => m[1]);
+      for (const id of ids) if (id && !SPOOF_APPIDS.has(String(Number(id)))) found.add(String(Number(id)));
+    }
+  };
+  visit(dir);
+  return [...found];
+}
+
+// Refuses a crack whose own files name another game. Silent cracks and unknown games pass.
+function assertMadeForApp(extractDir, expectedAppid) {
+  const expected = /^\d+$/.test(String(expectedAppid || '')) ? String(Number(expectedAppid)) : null;
+  if (!expected) return;
+  const declared = declaredAppids(extractDir);
+  if (declared.length === 0 || declared.includes(expected)) return;
+  const err = new Error(`crackfix: this crack was made for AppID ${declared.join(', ')}, not ${expected} - nothing was copied`);
+  err.code = 'APPID_MISMATCH';
+  err.declared = declared;
+  throw err;
+}
+
+/*
+  Apply an already-downloaded crack archive to the game folder: extract, check it was made for this
+  game (expectedAppid), back up overwritten files, install, and record the idempotency marker. Backs
+  the "captcha → download manually" flow. Returns { applied:[...], backedUp, backupDir }.
+*/
+async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName = '', expectedAppid = null, log = noopLog } = {}) {
   if (!archivePath || !fs.existsSync(archivePath)) throw new Error(`crackfix: archive not found: ${archivePath}`);
   if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`crackfix: game folder not found: ${gameDir}`);
 
@@ -518,6 +579,7 @@ async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName =
     const extractDir = path.join(tmpDir, 'extracted');
     log.log(`[crackfix] extracting ${path.basename(archivePath)} → applying into ${gameDir}`);
     await extractArchive(archivePath, extractDir, { log });
+    assertMadeForApp(extractDir, expectedAppid);
 
     const backupDir = path.join(gameDir, '.aw-crackfix-backups', ts());
     const applied = [];
@@ -562,7 +624,7 @@ async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName =
   pick the best arch fix, skip already-applied ones, then download + apply. Every no-op path returns
   a structured reason instead of throwing. Args: list, gameName(s), gameDir, arch, force, cacheDir.
 */
-async function applyBestFix({ list = null, cacheDir, gameName, gameNames = [], gameDir, arch = null, force = false, proxyFallback = true, log = noopLog } = {}) {
+async function applyBestFix({ list = null, cacheDir, gameName, gameNames = [], gameDir, appid = null, arch = null, force = false, proxyFallback = true, log = noopLog } = {}) {
   const names = uniqueGameNames([...(Array.isArray(gameNames) ? gameNames : [gameNames]), gameName]);
   if (names.length === 0) return { applied: false, reason: 'no-game-name' };
   if (!gameDir || !fs.existsSync(gameDir)) return { applied: false, reason: 'no-game-dir' };
@@ -575,9 +637,13 @@ async function applyBestFix({ list = null, cacheDir, gameName, gameNames = [], g
     return { applied: false, skipped: true, reason: 'already-applied', entry: match.entry, fix, matchedName: match.matchedName };
   }
   try {
-    const res = await downloadAndApply({ fix, gameDir, cacheDir, entryName: match.entry.name, proxyFallback, log });
+    const res = await downloadAndApply({ fix, gameDir, cacheDir, entryName: match.entry.name, expectedAppid: appid, proxyFallback, log });
     return { applied: true, entry: match.entry, fix, files: res.applied, backedUp: res.backedUp, backupDir: res.backupDir, matchedName: match.matchedName };
   } catch (e) {
+    if (e && e.code === 'APPID_MISMATCH') {
+      log.log(`[crackfix] "${match.entry.name}" refused for ${gameDir}: ${e.message}`);
+      return { applied: false, reason: 'appid-mismatch', declared: e.declared, entry: match.entry, fix, matchedName: match.matchedName };
+    }
     // A pixeldrain-rate-limited file can't be auto-downloaded; surface it as a structured reason (with the
     // href to open in a browser) instead of throwing, so the background pass logs it and continues.
     if (e && e.code === 'PIXELDRAIN_UNAVAILABLE') {
@@ -604,5 +670,6 @@ module.exports = {
   extractRarToDir,
   applyLocalArchive,
   applyBestFix,
+  declaredAppids,
   isAlreadyApplied,
 };

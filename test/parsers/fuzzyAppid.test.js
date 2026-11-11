@@ -88,6 +88,18 @@ assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza Kiwami for Windows 10', yaku
 assert.strictEqual(fuzzy.bestConfidentAppid('Yakuza 3 Remastered for Windows 10', [{ appid: 1088710, name: 'Yakuza 3 Remastered' }]), 1088710);
 assert.strictEqual(fuzzy.bestConfidentAppid('Frostpunk 2', [{ appid: 323190, name: 'Frostpunk' }]), null);
 
+// A store name that adds a title word is a relative, not the game, when the original is missing from
+// the list (Steam's search fallback, a short catalogue): it scored 0.91 and the AppID was written.
+assert.strictEqual(fuzzy.bestConfidentAppid('God of War', [{ appid: 2322010, name: 'God of War Ragnarök' }]), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Hollow Knight', [{ appid: 1030300, name: 'Hollow Knight: Silksong' }]), null);
+assert.strictEqual(fuzzy.bestConfidentAppid("Assassin's Creed", [{ appid: 3035570, name: "Assassin's Creed Mirage" }]), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Far Cry', [{ appid: 371660, name: 'Far Cry Primal' }]), null);
+assert.strictEqual(fuzzy.bestConfidentAppid('Dead Space', [{ appid: 1693980, name: 'Dead Space Remake' }]), null);
+// Packaging words on the store side, and junk on the folder side, still resolve.
+assert.strictEqual(fuzzy.bestConfidentAppid('Sekiro Shadows Die Twice', [{ appid: 814380, name: 'Sekiro: Shadows Die Twice - GOTY Edition' }]), 814380);
+assert.strictEqual(fuzzy.bestConfidentAppid('God of War Ragnarok', [{ appid: 2322010, name: 'God of War Ragnarök' }]), 2322010, 'accents fold');
+assert.strictEqual(fuzzy.bestConfidentAppid('God of War', [{ appid: 2322010, name: 'God of War Ragnarök' }, { appid: 1593500, name: 'God of War' }]), 1593500);
+
 // A number inside an edition name is packaging, not a series number; a year in brackets is how a
 // store tells a remake from the original, so it is one.
 assert.ok(fuzzy.sameTitle('Sea of Thieves', 'Sea of Thieves 2024 Edition'));

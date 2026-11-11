@@ -5595,7 +5595,7 @@ var app = {
                       return;
                     }
                     setGameBoxBusy(self, t('downloading-fix', 'Downloading fix…', 'Téléchargement du fix…'));
-                    const res = await crackFix.downloadAndApply({ fix, gameDir, cacheDir, entryName: top.name, proxyFallback: (app.config?.emulator || {}).pixeldrainProxyFallback !== false, log: debug });
+                    const res = await crackFix.downloadAndApply({ fix, gameDir, cacheDir, entryName: top.name, expectedAppid: writableAppid, proxyFallback: (app.config?.emulator || {}).pixeldrainProxyFallback !== false, log: debug });
                     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                       type: 'info',
                       title: t('crakfiles', 'CrakFiles'),
@@ -5673,6 +5673,7 @@ var app = {
                           gameDir: applyDir,
                           fix: fix && fix.href ? fix : null,
                           entryName: top?.name || '',
+                          expectedAppid: writableAppid,
                           log: debug,
                         });
                         clearGameBoxBusy(self);
@@ -6680,6 +6681,7 @@ var app = {
                             gameName: game?.name || '',
                             gameNames: gameNameCandidates,
                             gameDir,
+                            appid: writableAppid,
                             arch,
                             proxyFallback: (app.config?.emulator || {}).pixeldrainProxyFallback !== false,
                             log: debug,
