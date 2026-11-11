@@ -291,13 +291,13 @@ Hersteller des Virenscanners als Fehlalarm.
 Jeder veröffentlichte Installer lässt sich bei VirusTotal über seinen SHA-256 nachschlagen:
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.5.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.6.exe" -Algorithm SHA256
 ```
 
 Öffne `https://www.virustotal.com/gui/file/<the hash it prints>`. Ist die Datei die veröffentlichte,
 liegt der Bericht bereits vor. Für das aktuelle Release ist das
-[der Installer 3.12.5](https://www.virustotal.com/gui/file/364b7ecdc1d039e74066ec924453ba665ff33b36dded965703c3373fa53b58ea)
-(`364b7ecdc1d039e74066ec924453ba665ff33b36dded965703c3373fa53b58ea`).
+[der Installer 3.12.6](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)
+(`53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709`).
 
 Das Ergebnis listet, was jede Engine meint. Eine Handvoll heuristischer Erkennungen bei einem Build, der
 Emulator-Dateien mitbringt, ist der unten beschriebene Fehlalarm. Wichtig ist, dass der Hash zu der Datei passt,

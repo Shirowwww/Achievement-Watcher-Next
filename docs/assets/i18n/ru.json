@@ -176,7 +176,7 @@
   "install.step3Body": "Это и есть наблюдатель. От него зависят живые уведомления и учёт времени игры.",
   "install.step3Title": "Оставьте в трее",
   "install.title": "Как запустить",
-  "install.virustotal": "Текущий установщик на <a href=\"https://www.virustotal.com/gui/file/364b7ecdc1d039e74066ec924453ba665ff33b36dded965703c3373fa53b58ea\" rel=\"noopener\">VirusTotal</a>. Немногочисленные эвристические срабатывания - это ложное срабатывание на эмуляторы; любую версию можно проверить самостоятельно, сравнив её SHA-256.",
+  "install.virustotal": "Текущий установщик на <a href=\"https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709\" rel=\"noopener\">VirusTotal</a>. Немногочисленные эвристические срабатывания - это ложное срабатывание на эмуляторы; любую версию можно проверить самостоятельно, сравнив её SHA-256.",
   "install.windowsData": "Настройки и данные: <code>%APPDATA%\\Achievement Watcher Next</code>",
   "more.backupBody": "Настройки, выбор в библиотеке, пресеты, темы и время игры в одном файле, для переустановки или нового ПК.",
   "more.backupTitle": "Резервная копия профиля",

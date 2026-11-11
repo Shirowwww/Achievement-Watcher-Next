@@ -150,7 +150,7 @@ prima di installare qualsiasi cosa. Scarica solo dalla
 [pagina ufficiale delle release](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). Per controllare un
 installer da solo, esegui `Get-FileHash <installer> -Algorithm SHA256` e apri
 `https://www.virustotal.com/gui/file/<hash>`. La release attuale è la
-[3.12.5](https://www.virustotal.com/gui/file/364b7ecdc1d039e74066ec924453ba665ff33b36dded965703c3373fa53b58ea).
+[3.12.6](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709).
 Vedi [Risoluzione dei problemi → Controllare una release da solo](troubleshooting.md#checking-a-release-yourself).
 
 ### Su Linux, perché compare una richiesta del portachiavi? {#on-linux-why-does-a-keyring-prompt-appear}
