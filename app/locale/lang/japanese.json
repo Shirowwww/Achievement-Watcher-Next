@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox PC ゲーム（Game Pass / Microsoft Store）。下のXbox PC アカウントカードでアカウントを接続し、インポートすると解除状況とレア度が表示されます。",
       "value": {
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcher でインストールしたゲームを、実績リストとともに表示します。Rockstar は解除済みの実績を暗号化しているため、現時点ではすべてロック状態で表示されます。"
+      },
         "none": "なし",
         "installed": "インストール済み",
         "owned": "所有"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。",
     "steam-libraries-title": "Steam ライブラリ",
     "steam-libraries-help": "ライブラリを無効にすると、そのゲームはすべてのコレクションから除外されます。たとえば、ストレージとして接続したままにしているドライブなどです。再び有効にすると元に戻ります。",
+    "purchased-badge-rockstar": "Rockstar Games Launcher のゲーム",
     "steam-import-owned": "所有しているゲームを追加",
     "steam-import-owned-help": "この PC に一度もインストールされていないゲームを含め、Steam ライブラリ全体を表示します。ライブラリが大きいと初回スキャンが大幅に長くなります。この PC でプレイしたことのないゲームの進行状況は Steam プロフィールから読み取るため、ゲームの詳細を公開にする必要があります。",
     "steam-import-needs-owned": "上のSteamソースが所有しているゲームを一覧表示しているときに利用できます。",

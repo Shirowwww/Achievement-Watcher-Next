@@ -3622,6 +3622,7 @@ function ownershipBadgeFor(game) {
     epic: () => t('purchased-badge-epic', 'Epic Games title in your library', 'Jeu Epic Games dans ta bibliothèque'),
     ea: () => t('purchased-badge-ea', 'EA game in your library', 'Jeu EA dans ta bibliothèque'),
     xbox: () => t('purchased-badge-xbox', 'Xbox game in your library', 'Jeu Xbox dans ta bibliothèque'),
+    rockstar: () => t('purchased-badge-rockstar', 'Rockstar Games Launcher game', 'Jeu du Rockstar Games Launcher'),
   };
   // Nothing to own on a platform for a recompiled console game: the badge says what the game is and
   // where its list comes from.

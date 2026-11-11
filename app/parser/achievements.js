@@ -17,6 +17,7 @@ const runeUplayGame = require(path.join(appPath, 'runeUplayGame.js'));
 const epic = require(path.join(appPath, 'epic.js'));
 const epicOfficial = require(path.join(appPath, 'epicOfficial.js'));
 const ea = require(path.join(appPath, 'ea.js'));
+const rockstarOfficial = require(path.join(appPath, 'rockstarOfficial.js'));
 const steam = require(path.join(appPath, 'steam.js'));
 const exophase = require(path.join(appPath, 'exophase.js'));
 const uplay = require(path.join(appPath, 'uplay.js'));
@@ -123,6 +124,7 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
   gog.initDebug({ isDev, userDataPath });
   gogOfficial.initDebug({ isDev, userDataPath });
   ubisoftOfficial.initDebug({ isDev, userDataPath });
+  rockstarOfficial.initDebug({ isDev, userDataPath });
   runeUplayGame.initDebug({ isDev, userDataPath });
   require(path.join(appPath, 'steamOfficial.js')).initDebug({ isDev, userDataPath });
   require(path.join(appPath, 'steamAppInfo.js')).initDebug({
@@ -400,7 +402,7 @@ function consolidateDiscoveryList(list) {
 const ACCOUNT_LIBRARY_TYPES = new Set(['xboxPc', 'epicOfficial']);
 
 // A store account's own listing: what it says you own, under an id only that store uses.
-const OFFICIAL_RECORD_TYPES = new Set(['steamAPI', 'gogOfficial', 'ubisoftOfficial', 'epicOfficial', 'xboxPc']);
+const OFFICIAL_RECORD_TYPES = new Set(['steamAPI', 'gogOfficial', 'ubisoftOfficial', 'epicOfficial', 'xboxPc', 'rockstarOfficial']);
 
 // How a discovery record is named in the log. One appid can carry several, and "the Uplay R2 record"
 // says which one a message is about where the appid cannot.
@@ -2788,6 +2790,13 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   mark('ea');
 
+  //Rockstar Games Launcher official (installed titles from the registry; list from the Steam release)
+  if (!scope && source.rockstarOfficial) {
+    data = data.concat(rockstarOfficial.scan());
+  }
+
+  mark('rockstarOfficial');
+
   //Xbox PC (Game Pass / Microsoft Store / Online-Fix) - local installs + imported Xbox Network cache.
   // 0 none, 1 only what is installed here, 2 everything the account owns (the imported library).
   if (!scope && source.xboxPc > 0) {
@@ -3471,6 +3480,11 @@ const SOURCE_READERS = {
   uplay: { schema: readUplaySchema, unlocks: () => ({}) },
   lumaplay: { schema: readUplaySchema, unlocks: (appid) => uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path, appid.data.host) },
   ea: { schema: readEaSchema, unlocks: (appid) => ea.getAchievements(appid) },
+  // Social Club's unlock file is encrypted with the account's key: the list shows, all locked.
+  rockstarOfficial: {
+    schema: (appid, { lang }) => rockstarOfficial.getGameData(appid, lang, { resolveSteamAppId: socialclub.resolveSteamAppId, steam }),
+    unlocks: () => ({}),
+  },
   gogOfficial: { schema: (appid) => gogOfficial.getGameData(appid), unlocks: (appid) => gogOfficial.getAchievements(appid) },
   // A GOG install repaired with UniverseLAN: unlock state is the Achievements.ini it writes itself.
   gogUniverseLan: {

@@ -34,11 +34,18 @@ module.exports.initDebug = ({ isDev, userDataPath }) => {
 const ROCKSTAR_PROFILE_MARKERS = new Set(['cfg.dat', 'local_save.txt', 'pc_settings.bin', 'settings.xml', 'profile.dat', 'players.dat']);
 const ROCKSTAR_SAVE_FILE_RE = /^(SGTA|SRDR|CGTA|GTAV|RDR|GTASA|GTAVC|GTA3|PGTA)[0-9A-Za-z_]*$/i;
 
-// Offline name → Steam appid for the Rockstar titles the SocialClub emulator is actually used with.
+// Offline name → Steam appid for the Rockstar titles, keyed by normalizeNameKey(): the emulator's
+// folder names and the Rockstar Games Launcher's registry keys ("GTAV Enhanced") both land here.
 // The fuzzy Steam app-list lookup is the fallback for anything not listed here.
 const ROCKSTAR_STEAM_APPIDS = new Map([
   ['gta v', 271590],
+  ['gtav', 271590],
   ['grand theft auto v', 271590],
+  ['gtav enhanced', 3240220],
+  ['gta v enhanced', 3240220],
+  ['grand theft auto v enhanced', 3240220],
+  ['gtaiv', 12210],
+  ['red dead redemption', 2668510],
   ['gta iv', 12210],
   ['gta 4', 12210],
   ['grand theft auto iv', 12210],
@@ -59,7 +66,8 @@ const ROCKSTAR_STEAM_APPIDS = new Map([
   ['rdr2', 1174180],
   ['max payne 3', 204100],
   ['la noire', 110800],
-  ['l.a. noire', 110800],
+  // "L.A. Noire" once normalised: the dots become spaces.
+  ['l a noire', 110800],
   ['bully', 12200],
   ['bully scholarship edition', 12200],
 ]);
@@ -359,6 +367,7 @@ module.exports = {
   scan,
   getAchievements,
   getGameData,
+  resolveSteamAppId,
   _internal: {
     isSocialClubRootName,
     looksLikeGameFolder,

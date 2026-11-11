@@ -7,6 +7,15 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Added
+
+- **Rockstar Games Launcher games show in the library.** Games it installed, such as GTA V
+  Enhanced, appear with their achievement list. Social Club encrypts which achievements you
+  unlocked, so they all show locked for now. The source has its own switch in **Settings →
+  Sources**.
+
 ## 3.12.6 - 2026-11-11
 
 ### Added

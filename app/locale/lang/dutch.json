@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox-games op de pc (Game Pass / Microsoft Store). Verbind je account in de kaart Xbox PC-account verderop en importeer daarna om ontgrendelingen en zeldzaamheid te zien.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Games die met de Rockstar Games Launcher zijn geïnstalleerd, met hun lijst met prestaties. Rockstar versleutelt welke je hebt ontgrendeld, dus ze worden voorlopig allemaal als vergrendeld weergegeven."
+      },
         "none": "Geen",
         "installed": "Geïnstalleerd",
         "owned": "In bezit"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen.",
     "steam-libraries-title": "Steam-bibliotheken",
     "steam-libraries-help": "Schakel een bibliotheek uit om de games ervan uit alle collecties te houden, bijvoorbeeld een schijf die je als opslag aangesloten laat. Ze komen terug zodra je de bibliotheek weer inschakelt.",
+    "purchased-badge-rockstar": "Game uit de Rockstar Games Launcher",
     "steam-import-owned": "Voeg de games toe die je bezit",
     "steam-import-owned-help": "Toont je hele Steam-bibliotheek, inclusief games die nooit op deze pc geïnstalleerd zijn geweest. Een grote bibliotheek maakt de eerste scan veel langer. De voortgang van games die nooit op deze pc zijn gespeeld, wordt uit je Steam-profiel gelezen, dus de gamegegevens daarvan moeten openbaar zijn.",
     "steam-import-needs-owned": "Beschikbaar wanneer de Steam-bron hierboven de games toont die je bezit.",

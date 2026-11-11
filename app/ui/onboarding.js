@@ -703,6 +703,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     { key: 'gogOfficial', tri: true, fallback: 2 },
     { key: 'ubisoftOfficial', fallback: true },
     { key: 'ea', fallback: true },
+    { key: 'rockstarOfficial', fallback: true },
     { key: 'steamEmu', fallback: true },
     { key: 'greenLuma', fallback: true },
     { key: 'lumaPlay', fallback: true },

@@ -31,6 +31,7 @@ Estas leen los datos locales del propio lanzador y llevan un escudo en los Ajust
 | **Ubisoft Connect** | Datos locales nativos y formatos antiguos de Uplay | Ubisoft Connect instalado |
 | **Epic Games** | Las instalaciones locales, además de los juegos que posee la cuenta y su estado oficial de logros una vez conectada | El lanzador de Epic Games para las instalaciones locales; una conexión de cuenta para el resto |
 | **Xbox PC** | Las instalaciones locales de Game Pass y Microsoft Store, además de los juegos que posee la cuenta y su estado en Xbox Network | La aplicación de Xbox para las instalaciones locales; una conexión de cuenta para el resto |
+| **Rockstar Games Launcher** | Los juegos que ha instalado, con la lista de logros de su versión de Steam | El Rockstar Games Launcher instalado |
 
 **Steam**, **Epic Games** y **Xbox PC** tienen cada uno tres opciones: **Ninguno**, **Instalados** (los juegos de
 este PC) o **En propiedad** (toda la biblioteca que posee la cuenta). **En propiedad** lista también juegos que no están
@@ -53,6 +54,9 @@ almacenamiento. Vuelven cuando la activas de nuevo.
 > [!NOTE]
 > **EA Desktop** es distinto: lee el registro local de logros de EA Desktop de los juegos que están fuera de las carpetas
 > gestionadas por EA, y no importa tu biblioteca habitual de EA.
+
+> [!NOTE]
+> Los juegos del **Rockstar Games Launcher** muestran todos los logros bloqueados. Social Club guarda cuáles has desbloqueado en un archivo cifrado con la clave de tu cuenta, que AW Next todavía no puede leer.
 
 ### Cuentas conectadas {#connected-accounts}
 

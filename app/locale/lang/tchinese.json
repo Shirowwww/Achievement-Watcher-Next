@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox PC 遊戲（Game Pass／Microsoft Store）。請在下方的 Xbox PC 帳戶 卡片中連線你的帳戶，然後匯入，即可查看解鎖狀態與稀有度。",
       "value": {
+      "rockstarOfficial": {
+        "description": "顯示透過 Rockstar Games Launcher 安裝的遊戲及其成就清單。Rockstar 會加密你已解鎖的成就，因此目前全部顯示為未解鎖。"
+      },
         "none": "無",
         "installed": "已安裝",
         "owned": "已擁有"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。",
     "steam-libraries-title": "Steam 收藏庫",
     "steam-libraries-help": "停用某個收藏庫後，它的遊戲就不會出現在任何收藏集中，例如你一直接著當作儲存空間的磁碟。重新啟用後遊戲就會回來。",
+    "purchased-badge-rockstar": "Rockstar Games Launcher 中的遊戲",
     "steam-import-owned": "新增你擁有的遊戲",
     "steam-import-owned-help": "列出你完整的 Steam 收藏庫，包括從未安裝在這台電腦上的遊戲。收藏庫越大，首次掃描耗時越長。從未在這台電腦上玩過的遊戲，其進度會從你的 Steam 個人檔案讀取，因此遊戲詳細資料必須設為公開。",
     "steam-import-needs-owned": "當上方的 Steam 來源列出你擁有的遊戲時可用。",

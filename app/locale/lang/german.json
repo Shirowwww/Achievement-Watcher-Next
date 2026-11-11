@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox-PC-Spiele (Game Pass / Microsoft Store). Verbinde dein Konto weiter unten in der Karte Xbox-PC-Konto und importiere dann, um Freischaltungen und Seltenheit zu sehen.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Mit dem Rockstar Games Launcher installierte Spiele samt Erfolgsliste. Rockstar verschlüsselt, welche du freigeschaltet hast, daher werden vorerst alle als gesperrt angezeigt."
+      },
         "none": "Keine",
         "installed": "Installiert",
         "owned": "Im Besitz"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet.",
     "steam-libraries-title": "Steam-Bibliotheken",
     "steam-libraries-help": "Deaktiviere eine Bibliothek, damit ihre Spiele in keiner Sammlung erscheinen, zum Beispiel ein Laufwerk, das du als Speicher angeschlossen lässt. Sie kommen zurück, sobald du die Bibliothek wieder aktivierst.",
+    "purchased-badge-rockstar": "Spiel aus dem Rockstar Games Launcher",
     "steam-import-owned": "Die Spiele hinzufügen, die dir gehören",
     "steam-import-owned-help": "Zeigt deine gesamte Steam-Bibliothek, einschließlich Spiele, die nie auf diesem PC installiert waren. Eine große Bibliothek macht den ersten Scan deutlich länger. Der Fortschritt von Spielen, die nie auf diesem PC gespielt wurden, wird aus deinem Steam-Profil gelesen, daher müssen dessen Spieldetails öffentlich sein.",
     "steam-import-needs-owned": "Verfügbar, wenn die Steam-Quelle oben die Spiele auflistet, die dir gehören.",

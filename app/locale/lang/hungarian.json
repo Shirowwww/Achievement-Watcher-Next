@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox PC játékok (Game Pass / Microsoft Store). Csatlakoztasd a fiókodat lejjebb az Xbox PC-fiók kártyán, majd importálj, hogy lásd a feloldásokat és a ritkaságot.",
       "value": {
+      "rockstarOfficial": {
+        "description": "A Rockstar Games Launcherrel telepített játékok a teljesítménylistájukkal. A Rockstar titkosítja, hogy melyeket oldottad fel, ezért egyelőre mind zároltként jelenik meg."
+      },
         "none": "Nincs",
         "installed": "Telepített",
         "owned": "Birtokolt"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve.",
     "steam-libraries-title": "Steam-könyvtárak",
     "steam-libraries-help": "Kapcsolj ki egy könyvtárat, hogy a játékai ne szerepeljenek egyetlen gyűjteményben sem, például egy tárhelyként csatlakoztatva tartott meghajtót. Visszatérnek, amint újra bekapcsolod.",
+    "purchased-badge-rockstar": "Rockstar Games Launcher játék",
     "steam-import-owned": "A birtokolt játékok hozzáadása",
     "steam-import-owned-help": "Megjeleníti a teljes Steam könyvtáradat, beleértve azokat a játékokat is, amelyeket sosem telepítettél erre a gépre. Egy nagy könyvtár jelentősen meghosszabbítja az első vizsgálatot. Az ezen a gépen soha nem játszott játékok előrehaladását a Steam-profilodból olvassuk ki, ezért a játékrészleteknek nyilvánosnak kell lenniük.",
     "steam-import-needs-owned": "Akkor érhető el, ha a fenti Steam-forrás felsorolja a birtokolt játékokat.",

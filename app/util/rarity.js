@@ -301,8 +301,9 @@ function resolveGameRarityContext(game) {
   if (source === 'RetroAchievements' || source === 'PlayStation Network') return { kind: 'xbox', source };
   if (sourceIdentity.readsEmulatorData(source)) return { kind: 'emulator', source };
 
-  // Goldberg SocialClub: namespaced appid, Steam schema loaded through the resolved release.
-  if (source === 'Goldberg SocialClub' && /^\d+$/.test(steamappid)) {
+  // Goldberg SocialClub and the Rockstar Games Launcher: namespaced appid, Steam schema loaded
+  // through the resolved release.
+  if ((source === 'Goldberg SocialClub' || source === sourceIdentity.SOURCE_LABEL.ROCKSTAR) && /^\d+$/.test(steamappid)) {
     return { kind: 'steam', appid: steamappid };
   }
 

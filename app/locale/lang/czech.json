@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Hry Xbox PC (Game Pass / Microsoft Store). Připojte svůj účet v kartě Účet Xbox PC níže a poté importujte, abyste viděli odemčení a vzácnost.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Hry nainstalované přes Rockstar Games Launcher se seznamem úspěchů. Rockstar šifruje, které jste odemkli, takže se zatím všechny zobrazují jako zamčené."
+      },
         "none": "Žádné",
         "installed": "Nainstalované",
         "owned": "Vlastněné"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Vyžaduje připojený účet Steam. Hry nainstalované v tomto počítači a hry sdílené přes Steam Family se nikdy neskrývají.",
     "steam-libraries-title": "Knihovny Steam",
     "steam-libraries-help": "Zakažte knihovnu, aby její hry nebyly v žádné kolekci, například disk, který máte připojený jako úložiště. Po opětovném povolení se vrátí.",
+    "purchased-badge-rockstar": "Hra z Rockstar Games Launcheru",
     "steam-import-owned": "Přidat hry, které vlastníte",
     "steam-import-owned-help": "Zobrazí celou vaši knihovnu Steam, včetně her, které nikdy nebyly nainstalovány v tomto počítači. Velká knihovna výrazně prodlouží první sken. Postup u her, které se na tomto PC nikdy nehrály, se čte z vašeho profilu Steam, takže podrobnosti o hrách v něm musí být veřejné.",
     "steam-import-needs-owned": "Dostupné, když zdroj Steam výše uvádí hry, které vlastníte.",

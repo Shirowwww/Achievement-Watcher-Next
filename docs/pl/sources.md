@@ -31,6 +31,7 @@ Czytają one lokalne dane samego launchera i mają tarczę w Ustawieniach.
 | **Ubisoft Connect** | Natywne dane lokalne i starsze formaty Uplay | Zainstalowany Ubisoft Connect |
 | **Epic Games** | Lokalne instalacje, a po połączeniu także gry należące do konta i ich oficjalny stan osiągnięć | Launcher Epic Games dla lokalnych instalacji; połączenie konta dla reszty |
 | **Xbox PC** | Lokalne instalacje z Game Pass i Microsoft Store, a także gry należące do konta i ich stan w Xbox Network | Aplikacja Xbox dla lokalnych instalacji; połączenie konta dla reszty |
+| **Rockstar Games Launcher** | Zainstalowane przez niego gry, z listą osiągnięć ich wersji ze Steam | Zainstalowany Rockstar Games Launcher |
 
 **Steam**, **Epic Games** i **Xbox PC** mają po trzy ustawienia: **Brak**, **Zainstalowane** (gry na tym
 komputerze) lub **Posiadane** (cała biblioteka należąca do konta). **Posiadane** wymienia też gry, które nie są
@@ -53,6 +54,9 @@ magazyn. Wracają po ponownym włączeniu.
 > [!NOTE]
 > **EA Desktop** jest inne: czyta lokalny dziennik osiągnięć EA Desktop dla gier spoza folderów
 > zarządzanych przez EA i nie importuje twojej zwykłej biblioteki EA.
+
+> [!NOTE]
+> Gry z **Rockstar Games Launcher** pokazują wszystkie osiągnięcia jako zablokowane. Social Club zapisuje dane o odblokowanych osiągnięciach w pliku zaszyfrowanym kluczem twojego konta, którego AW Next jeszcze nie umie odczytać.
 
 ### Połączone konta {#connected-accounts}
 

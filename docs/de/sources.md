@@ -31,6 +31,7 @@ Diese lesen die lokalen Daten des Launchers selbst und tragen in den Einstellung
 | **Ubisoft Connect** | Native lokale Daten und ältere Uplay-Formate | Ubisoft Connect installiert |
 | **Epic Games** | Lokale Installationen, dazu die Spiele, die das Konto besitzt, und ihren offiziellen Erfolgsstand, sobald verbunden | Der Epic-Games-Launcher für lokale Installationen; eine Kontoverbindung für den Rest |
 | **Xbox PC** | Lokale Installationen aus Game Pass und Microsoft Store, dazu die Spiele, die das Konto besitzt, und ihren Stand im Xbox Network | Die Xbox-App für lokale Installationen; eine Kontoverbindung für den Rest |
+| **Rockstar Games Launcher** | Die damit installierten Spiele, mit der Erfolgsliste ihrer Steam-Version | Den installierten Rockstar Games Launcher |
 
 **Steam**, **Epic Games** und **Xbox PC** haben je drei Einstellungen: **Keine**, **Installiert** (Spiele auf
 diesem PC) oder **Im Besitz** (die ganze Bibliothek, die das Konto besitzt). **Im Besitz** listet auch Spiele, die hier nicht
@@ -53,6 +54,9 @@ Speicher angeschlossen lässt. Sie kommen zurück, wenn du ihn wieder einschalte
 > [!NOTE]
 > **EA Desktop** ist anders: Es liest das lokale Erfolgsprotokoll von EA Desktop für Spiele außerhalb der von EA
 > verwalteten Ordner und importiert nicht deine reguläre EA-Bibliothek.
+
+> [!NOTE]
+> Bei Spielen aus dem **Rockstar Games Launcher** sind alle Erfolge gesperrt. Social Club speichert, welche du freigeschaltet hast, in einer mit dem Schlüssel deines Kontos verschlüsselten Datei, die AW Next noch nicht lesen kann.
 
 ### Verbundene Konten {#connected-accounts}
 

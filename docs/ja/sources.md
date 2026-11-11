@@ -31,6 +31,7 @@ Fork、CODEX、RUNE、CPY といった Steam エミュレーターのセーブ�
 | **Ubisoft Connect** | ネイティブのローカルデータと旧 Uplay 形式 | Ubisoft Connect がインストールされていること |
 | **Epic Games** | ローカルのインストールと、接続後はアカウントが所有するゲームとその公式の実績の状態 | ローカルのインストールには Epic Games ランチャー。それ以外にはアカウントの接続 |
 | **Xbox PC** | ローカルの Game Pass と Microsoft Store のインストールと、アカウントが所有するゲームとその Xbox Network の状態 | ローカルのインストールには Xbox アプリ。それ以外にはアカウントの接続 |
+| **Rockstar Games Launcher** | インストールしたゲームと、その Steam 版の実績リスト | Rockstar Games Launcher がインストールされていること |
 
 **Steam**、**Epic Games**、**Xbox PC** にはそれぞれ 3 つの設定があります：**なし**、**インストール済み**(このPCの
 ゲーム)、**所有**(アカウントが所有するライブラリ全体)。**所有** はここにインストールされていないゲームも
@@ -53,6 +54,9 @@ Steam アカウントのカードの下にある **Steam ライブラリ** に�
 > [!NOTE]
 > **EA Desktop** は異なります。EA の管理フォルダー外にあるゲームについて EA Desktop のローカル実績ログを読み取り、
 > 通常の EA ライブラリはインポートしません。
+
+> [!NOTE]
+> **Rockstar Games Launcher** のゲームでは、すべての実績がロック状態で表示されます。Social Club は解除済みの実績をアカウントの鍵で暗号化したファイルに保存しており、AW Next はまだそれを読み取れません。
 
 ### 接続したアカウント {#connected-accounts}
 

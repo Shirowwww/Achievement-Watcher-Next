@@ -1202,6 +1202,23 @@
                     <div class="help" id="source-help-ea"></div>
                   </li>
 
+                  <li class="hasHelper official-source">
+                    <div class="left"><i class="fas fa-star"></i> <span>Rockstar Games Launcher</span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_rockstarOfficial">
+                        <option value="true" selected></option>
+                        <option value="false"></option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="source-help-rockstarOfficial"></div>
+                  </li>
+
                   <li class="hasHelper official-source" data-windows-only>
                     <div class="left"><i class="fab fa-xbox"></i> <span id="source-name-xboxPc"></span><i class="fas fa-shield-alt source-official-badge" aria-hidden="true"></i></div>
                     <div class="right">
@@ -5165,6 +5182,14 @@
                     <label class="onboarding-source-row">
                       <span class="onboarding-source-name"><i class="fas fa-file-alt" aria-hidden="true"></i> <span id="onboard-src-steamEmu-name">Steam emulator</span></span>
                       <select id="onboard-src-steamEmu">
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fas fa-star" aria-hidden="true"></i> Rockstar Games Launcher</span>
+                      <select id="onboard-src-rockstarOfficial">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-rockstarOfficial-hint"></small>
+                    </label>
                         <option value="true"></option>
                         <option value="false"></option>
                       </select>

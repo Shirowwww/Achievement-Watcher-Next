@@ -31,6 +31,7 @@ Leggono i dati locali del launcher stesso e portano uno scudo nelle Impostazioni
 | **Ubisoft Connect** | I dati locali nativi e i formati Uplay legacy | Ubisoft Connect installato |
 | **Epic Games** | Le installazioni locali, più i giochi posseduti dall'account e il loro stato ufficiale degli obiettivi una volta collegato | Il launcher di Epic Games per le installazioni locali; il collegamento dell'account per il resto |
 | **Xbox PC** | Le installazioni locali di Game Pass e Microsoft Store, più i giochi posseduti dall'account e il loro stato su Xbox Network | L'app Xbox per le installazioni locali; il collegamento dell'account per il resto |
+| **Rockstar Games Launcher** | I giochi che ha installato, con l'elenco degli obiettivi della loro versione Steam | Il Rockstar Games Launcher installato |
 
 **Steam**, **Epic Games** e **Xbox PC** hanno ciascuno tre impostazioni: **Nessuno**, **Installati** (i giochi su
 questo PC) oppure **Posseduti** (l'intera libreria dell'account). **Posseduti** elenca anche i giochi non
@@ -54,6 +55,9 @@ collegata come archivio. Tornano quando la riattivi.
 > [!NOTE]
 > **EA Desktop** è diverso: legge il registro locale degli obiettivi di EA Desktop per i giochi fuori dalle cartelle
 > gestite da EA, e non importa la tua normale libreria EA.
+
+> [!NOTE]
+> I giochi del **Rockstar Games Launcher** mostrano tutti gli obiettivi bloccati. Social Club salva quelli che hai sbloccato in un file cifrato con la chiave del tuo account, che AW Next non sa ancora leggere.
 
 ### Account collegati {#connected-accounts}
 

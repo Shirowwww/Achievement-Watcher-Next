@@ -915,7 +915,7 @@ function translateUI(lang, locale, template) {
   $('#source-consoles-title').text(clear(template.settings.source.groupConsoles));
   // Every on/off Sources row is bound by id: rows move between the cards, so a position means
   // nothing here. A row whose name is a brand keeps it in app.html and has no `name` key.
-  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'ea', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'ps3recomp', 'x360recomp', 'xenia', 'retroAchievements']) {
+  for (const key of ['steamEmu', 'greenLuma', 'lumaPlay', 'runeUplay', 'gog', 'epic', 'xlln', 'socialClub', 'markerpatch', 'madnesspatch', 'pcports', 'importCache', 'ubisoftOfficial', 'ea', 'rockstarOfficial', 'psnLibrary', 'rpcs3', 'shadps4', 'kytyps5', 'ps4recomp', 'ps3recomp', 'x360recomp', 'xenia', 'retroAchievements']) {
     const source = template.settings.source[key];
     if (source && source.name) $(`#source-name-${key}`).text(clear(source.name));
     if (source && source.description) $(`#source-help-${key}`).text(clear(source.description));

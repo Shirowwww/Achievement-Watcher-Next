@@ -26,6 +26,7 @@ These read the launcher's own local data and carry a shield in Settings.
 | **Ubisoft Connect** | Native local data and legacy Uplay formats | Ubisoft Connect installed |
 | **Epic Games** | Local installs, plus the games the account owns and their official achievement state once connected | The Epic Games launcher for local installs; an account connection for the rest |
 | **Xbox PC** | Local Game Pass and Microsoft Store installs, plus the games the account owns and their Xbox Network state | The Xbox app for local installs; an account connection for the rest |
+| **Rockstar Games Launcher** | The games it installed, with the achievement list of their Steam release | The Rockstar Games Launcher installed |
 
 **Steam**, **Epic Games** and **Xbox PC** each have three settings: **None**, **Installed** (games on
 this PC) or **Owned** (the whole library the account owns). **Owned** lists games that are not
@@ -48,6 +49,10 @@ storage. They come back when you switch it on again.
 > [!NOTE]
 > **EA Desktop** is different: it reads EA Desktop's local achievement log for games outside EA's
 > managed folders, and does not import your regular EA library.
+
+> [!NOTE]
+> **Rockstar Games Launcher** games show every achievement locked. Social Club keeps which ones you
+> unlocked in a file encrypted with your account's key, which AW Next cannot read yet.
 
 ### Connected accounts
 

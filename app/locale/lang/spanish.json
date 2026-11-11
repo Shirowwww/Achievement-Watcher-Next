@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Juegos de Xbox PC (Game Pass / Microsoft Store). Conecta tu cuenta en la tarjeta Cuenta de Xbox PC más abajo y después importa para ver los desbloqueos y la rareza.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Juegos instalados con el Rockstar Games Launcher, con su lista de logros. Rockstar cifra cuáles has desbloqueado, así que por ahora todos aparecen bloqueados."
+      },
         "none": "Ninguno",
         "installed": "Instalados",
         "owned": "En propiedad"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Requiere una cuenta de Steam conectada. Los juegos instalados en este PC y los compartidos por Familia de Steam nunca se ocultan.",
     "steam-libraries-title": "Bibliotecas de Steam",
     "steam-libraries-help": "Desactiva una biblioteca para dejar sus juegos fuera de todas las colecciones, por ejemplo un disco que mantienes conectado como almacenamiento. Vuelven cuando la vuelvas a activar.",
+    "purchased-badge-rockstar": "Juego del Rockstar Games Launcher",
     "steam-import-owned": "Añadir los juegos que posees",
     "steam-import-owned-help": "Muestra toda tu biblioteca de Steam, incluidos los juegos que nunca se instalaron en este PC. Una biblioteca grande hace que el primer análisis tarde mucho más. El progreso de los juegos que nunca se jugaron en este PC se lee de tu perfil de Steam, así que sus detalles de juegos deben ser públicos.",
     "steam-import-needs-owned": "Disponible cuando la fuente de Steam de arriba lista los juegos que posees.",

@@ -31,6 +31,7 @@ Ces sources lisent les données locales du lanceur lui-même et portent un boucl
 | **Ubisoft Connect** | Les données locales natives et les anciens formats Uplay | Ubisoft Connect installé |
 | **Epic Games** | Les installations locales, ainsi que les jeux que possède le compte et leur état officiel des succès une fois connecté | Le lanceur Epic Games pour les installations locales ; une connexion de compte pour le reste |
 | **Xbox PC** | Les installations locales Game Pass et Microsoft Store, ainsi que les jeux que possède le compte et leur état sur Xbox Network | L'application Xbox pour les installations locales ; une connexion de compte pour le reste |
+| **Rockstar Games Launcher** | Les jeux qu'il a installés, avec la liste des succès de leur version Steam | Le Rockstar Games Launcher installé |
 
 **Steam**, **Epic Games** et **Xbox PC** ont chacun trois réglages : **Aucun**, **Installé** (les jeux de
 ce PC) ou **Possédé** (toute la bibliothèque que possède le compte). **Possédé** liste aussi des jeux qui ne sont pas
@@ -53,6 +54,9 @@ stockage. Ils reviennent quand vous le réactivez.
 > [!NOTE]
 > **EA Desktop** est un cas à part : il lit le journal local des succès d'EA Desktop pour les jeux situés hors des dossiers
 > gérés par EA, et n'importe pas votre bibliothèque EA habituelle.
+
+> [!NOTE]
+> Les jeux du **Rockstar Games Launcher** affichent tous leurs succès verrouillés. Social Club garde ceux que vous avez débloqués dans un fichier chiffré avec la clé de votre compte, qu'AW Next ne sait pas encore lire.
 
 ### Comptes connectés {#connected-accounts}
 

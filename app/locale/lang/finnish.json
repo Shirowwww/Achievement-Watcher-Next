@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox PC -pelit (Game Pass ja Microsoft Store). Yhdistä tilisi alempana olevassa kortissa Xbox PC -tili ja tuo sitten kirjasto nähdäksesi avaukset ja harvinaisuuden.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcherilla asennetut pelit ja niiden saavutuslistat. Rockstar salaa, mitkä olet avannut, joten kaikki näkyvät toistaiseksi lukittuina."
+      },
         "none": "Ei mitään",
         "installed": "Asennetut",
         "owned": "Omistetut"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan.",
     "steam-libraries-title": "Steam-kirjastot",
     "steam-libraries-help": "Poista kirjasto käytöstä, niin sen pelit jäävät pois kaikista kokoelmista, esimerkiksi tallennustilaksi kytkettynä pitämäsi levy. Ne palaavat, kun otat kirjaston uudelleen käyttöön.",
+    "purchased-badge-rockstar": "Rockstar Games Launcherin peli",
     "steam-import-owned": "Lisää pelit, jotka omistat",
     "steam-import-owned-help": "Näyttää koko Steam-kirjastosi, myös pelit, joita ei ole koskaan asennettu tälle tietokoneelle. Suuri kirjasto pidentää ensimmäistä hakua huomattavasti. Tällä tietokoneella koskaan pelaamattomien pelien edistyminen luetaan Steam-profiilistasi, joten sen pelitietojen on oltava julkisia.",
     "steam-import-needs-owned": "Käytettävissä, kun yllä oleva Steam-lähde listaa omistamasi pelit.",

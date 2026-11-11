@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox PC oyunları (Game Pass / Microsoft Store). Hesabınızı aşağıdaki Xbox PC hesabı kartından bağlayın, ardından kilit açmaları ve nadirliği görmek için içe aktarın.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcher ile kurulan oyunlar ve başarım listeleri. Rockstar hangilerini açtığını şifrelediği için şimdilik hepsi kilitli görünür."
+      },
         "none": "Hiçbiri",
         "installed": "Yüklü",
         "owned": "Sahip olunan"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez.",
     "steam-libraries-title": "Steam kütüphaneleri",
     "steam-libraries-help": "Bir kütüphaneyi devre dışı bırak, oyunları hiçbir koleksiyonda görünmesin; örneğin depolama olarak bağlı tuttuğun bir sürücü. Tekrar etkinleştirdiğinde oyunlar geri gelir.",
+    "purchased-badge-rockstar": "Rockstar Games Launcher oyunu",
     "steam-import-owned": "Sahip olduğun oyunları ekle",
     "steam-import-owned-help": "Bu bilgisayara hiç yüklenmemiş oyunlar da dahil olmak üzere tüm Steam kütüphaneni listeler. Büyük bir kütüphane ilk taramayı çok daha uzun sürdürür. Bu bilgisayarda hiç oynanmamış oyunların ilerlemesi Steam profilinden okunur, bu yüzden profilin oyun ayrıntıları herkese açık olmalıdır.",
     "steam-import-needs-owned": "Yukarıdaki Steam kaynağı sahip olduğun oyunları listelediğinde kullanılabilir.",

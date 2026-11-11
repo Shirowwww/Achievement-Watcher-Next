@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Game Xbox PC (Game Pass / Microsoft Store). Hubungkan akun Anda di kartu Akun Xbox PC lebih bawah, lalu impor untuk melihat pembukaan dan kelangkaan.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Game yang dipasang dengan Rockstar Games Launcher, beserta daftar pencapaiannya. Rockstar mengenkripsi mana yang sudah Anda buka, sehingga untuk sekarang semuanya tampil terkunci."
+      },
         "none": "Tidak ada",
         "installed": "Terpasang",
         "owned": "Dimiliki"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan.",
     "steam-libraries-title": "Pustaka Steam",
     "steam-libraries-help": "Nonaktifkan pustaka agar gimnya tidak muncul di koleksi mana pun, misalnya drive yang kamu biarkan terhubung sebagai penyimpanan. Gim itu kembali saat pustaka diaktifkan lagi.",
+    "purchased-badge-rockstar": "Game Rockstar Games Launcher",
     "steam-import-owned": "Tambahkan gim yang Anda miliki",
     "steam-import-owned-help": "Menampilkan seluruh pustaka Steam Anda, termasuk gim yang tidak pernah terpasang di PC ini. Pustaka yang besar membuat pemindaian pertama jauh lebih lama. Progres gim yang belum pernah dimainkan di PC ini dibaca dari profil Steam Anda, jadi detail gim harus disetel publik.",
     "steam-import-needs-owned": "Tersedia saat sumber Steam di atas menampilkan gim yang Anda miliki.",

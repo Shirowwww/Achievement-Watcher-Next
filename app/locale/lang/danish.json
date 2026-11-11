@@ -1506,6 +1506,9 @@
         "name": "Xbox PC",
         "description": "Xbox PC-spil (Game Pass / Microsoft Store). Tilslut din konto i kortet Xbox PC-konto længere nede, og importér derefter for at se oplåsninger og sjældenhed.",
       "value": {
+      "rockstarOfficial": {
+        "description": "Spil installeret med Rockstar Games Launcher, med deres liste over præstationer. Rockstar krypterer, hvilke du har låst op, så de vises alle som låst indtil videre."
+      },
         "none": "Ingen",
         "installed": "Installerede",
         "owned": "Ejede"
@@ -3213,6 +3216,7 @@
     "steam-hide-stale-help": "Kræver en forbundet Steam-konto. Spil installeret på denne pc og spil delt via Steam Family skjules aldrig.",
     "steam-libraries-title": "Steam-biblioteker",
     "steam-libraries-help": "Deaktiver et bibliotek for at holde dets spil ude af alle samlinger, for eksempel et drev, du har tilsluttet som lager. De kommer tilbage, når du aktiverer det igen.",
+    "purchased-badge-rockstar": "Spil fra Rockstar Games Launcher",
     "steam-import-owned": "Tilføj de spil, du ejer",
     "steam-import-owned-help": "Viser hele dit Steam-bibliotek, inklusive spil, der aldrig har været installeret på denne pc. Et stort bibliotek gør den første scanning meget længere. Fremskridt i spil, der aldrig er spillet på denne pc, læses fra din Steam-profil, så dens spildetaljer skal være offentlige.",
     "steam-import-needs-owned": "Tilgængelig, når Steam-kilden ovenfor viser de spil, du ejer.",

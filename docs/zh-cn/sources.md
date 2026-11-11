@@ -31,6 +31,7 @@ Fork、CODEX、RUNE 和 CPY 等 Steam 模拟器的存档文件。它不需要 St
 | **Ubisoft Connect** | 原生本地数据和旧版 Uplay 格式 | 已安装 Ubisoft Connect |
 | **Epic Games** | 本地安装，以及连接后账号拥有的游戏及其官方成就状态 | 本地安装需要 Epic Games 启动器；其余需要连接账号 |
 | **Xbox PC** | 本地 Game Pass 和 Microsoft Store 安装，以及账号拥有的游戏及其 Xbox Network 状态 | 本地安装需要 Xbox 应用；其余需要连接账号 |
+| **Rockstar Games Launcher** | 它安装的游戏，以及其 Steam 版本的成就列表 | 已安装 Rockstar Games Launcher |
 
 **Steam**、**Epic Games** 和 **Xbox PC** 各有三种设置：**无**、**已安装**（这台电脑上的
 游戏）或 **拥有**（账号拥有的整个游戏库）。**拥有** 会列出未安装在本机的游戏，
@@ -53,6 +54,9 @@ Steam 账号卡片下的 **Steam 库** 列出这台电脑上的每个 Steam 库�
 > [!NOTE]
 > **EA Desktop** 有所不同：它读取 EA Desktop 的本地成就日志，用于 EA 托管文件夹之外的游戏，
 > 并且不会导入你常规的 EA 游戏库。
+
+> [!NOTE]
+> **Rockstar Games Launcher** 的游戏会把所有成就显示为未解锁。Social Club 把你已解锁的成就保存在用账号密钥加密的文件中，AW Next 目前还无法读取。
 
 ### 已连接的账号 {#connected-accounts}
 
