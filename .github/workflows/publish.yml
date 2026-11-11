@@ -45,6 +45,14 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      # indexnow.js lists the translated guides through tools/site/languages.js, which reads
+      # docs/_data/guides.yml with the app's js-yaml.
+      - name: Install app dependencies
+        working-directory: app
+        run: npm ci --ignore-scripts
 
       # The engines fetch the key file to check the request, so wait until Pages serves it.
       - name: Wait for the key file to be live
