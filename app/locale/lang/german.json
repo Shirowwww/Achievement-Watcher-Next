@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Programmdatei",
     "could-not-set-icon": "Symbol konnte nicht festgelegt werden: {error}",
     "choose-icon-image": "Symbolbild auswählen",
-    "rightClickToChangeIcon": "Rechtsklick, um dieses Symbol zu ändern",
+    "clickToChangeIcon": "Klicken, um dieses Symbol zu ändern, Rechtsklick für weitere Optionen",
     "re-download-icon": "Symbol erneut herunterladen",
     "reset-icon-to-default": "Symbol auf Standard zurücksetzen",
     "steam-install-title": "Spiel nicht installiert",

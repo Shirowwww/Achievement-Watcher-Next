@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Ejecutable",
     "could-not-set-icon": "No se pudo establecer el icono: {error}",
     "choose-icon-image": "Elegir imagen de icono",
-    "rightClickToChangeIcon": "Haz clic derecho para cambiar este icono",
+    "clickToChangeIcon": "Haz clic para cambiar este icono, clic derecho para más opciones",
     "re-download-icon": "Volver a descargar el icono",
     "reset-icon-to-default": "Restablecer icono predeterminado",
     "steam-install-title": "Juego no instalado",

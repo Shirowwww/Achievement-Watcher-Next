@@ -195,5 +195,26 @@ test('Re-download forgets both halves of what was cached about a logo', () => {
 
 test('icon tiles are square and show the whole logo instead of cropping it', () => {
   assert.match(css, /\.aw-cover-picker-tile\.aw-square \{[\s\S]*?aspect-ratio: 1 \/ 1;[\s\S]*?background-size: contain;/);
-  assert.match(css, /#achievement \.wrapper > \.header \.title \.icon \{[\s\S]*?cursor: context-menu;/);
+  assert.match(css, /#achievement \.wrapper > \.header \.title \.icon \{[\s\S]*?cursor: pointer;/);
+});
+
+test('a "whole" cover keeps its sharp picture under the gloss sweep', () => {
+  // The gloss owns ::after on every tile with its own cover; a sharp copy there was replaced by it,
+  // leaving only the blurred backdrop.
+  assert.doesNotMatch(css, /\.header\.cover-fit-contain::after/);
+  assert.match(css, /\.header\.cover-fit-contain > \.cover-fit-whole \{[\s\S]*?background: var\(--cover-url\) center \/ contain no-repeat;/);
+  const fn = sliceFunction(appSource, 'function applyCoverFit(headerEl, appid, orientation) {', '\n}\n');
+  assert.match(fn, /layer\.className = 'cover-fit-whole'/);
+  assert.match(fn, /fit !== 'contain' && whole\) whole\.remove\(\)/, 'switching back to fill drops the layer');
+});
+
+test('a left click on the square logo opens the icon picker, with a short press', () => {
+  const fn = sliceFunction(appSource, 'function bindGameHeaderIconMenu(game) {', '\n}\n');
+  assert.match(fn, /\.off\('click\.awGameIcon keydown\.awGameIcon'\)/, 'rebound per page like the menu');
+  assert.match(fn, /on\('click\.awGameIcon'[\s\S]*?openGameIconPickerFromHeader\(game, appid, iconCacheAppid\)/);
+  assert.match(fn, /event\.key !== 'Enter' && event\.key !== ' '/, 'the keyboard reaches it too');
+  const opener = sliceFunction(appSource, 'async function openGameIconPickerFromHeader(game, appid, iconCacheAppid) {', '\n}\n');
+  assert.match(opener, /document\.querySelector\(OPEN_ICON_PICKER\)/, 'a double click must not stack two pickers');
+  assert.match(appSource, /OPEN_ICON_PICKER = '\.aw-prompt-overlay:not\(\.is-closing\) \.aw-icon-picker'/, 'one fading out does not block a reopen');
+  assert.match(css, /\.game-overview-icon:active \{\s*transform: scale\(0\.9\);/);
 });

@@ -24,11 +24,14 @@ renamed in 3.9.0 and the history is kept under one file.
   all show locked. The source has its own switch on the same page.
 - **Open a game straight on its achievements (#183).** Turn off **Game page** in **Settings >
   Appearance > Library tiles** and a click on a game skips its overview, as before 3.12.6.
+- **Click a game's icon to change it.** On the game page and above the achievement list, a click on
+  the square icon opens the icon picker; right-click still offers every option.
 
 ### Fixed
 
 - **The trophy button on a tile opens the achievements again (#183).** Since the game page, it
   opened the overview like a click anywhere else on the tile.
+- **Covers set to "Whole" are sharp again.** Most of them showed only their blurred backdrop.
 
 ## 3.12.6 - 2026-11-11
 

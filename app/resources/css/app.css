@@ -2826,9 +2826,33 @@ body.is-resizing #game-list {
   margin: auto 0;
   border-radius: var(--radius-xs);
   box-shadow: 0 8px 18px rgba(0, 0, 0, calc(0.32 * var(--shadow-scale)));
-  /* The logo is also a control - right-click changes it - and the pointer is the only hint of
-     that before the tooltip appears. */
-  cursor: context-menu;
+  /* The logo is also a control - a click opens the icon picker, right-click the full menu. */
+  cursor: pointer;
+}
+
+/* Both square logos sink a little under the pointer, then spring back as the picker opens. */
+#achievement .wrapper > .header .title .icon,
+.game-overview-icon {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+#achievement .wrapper > .header .title .icon:active,
+.game-overview-icon:active {
+  transform: scale(0.9);
+}
+#achievement .wrapper > .header .title .icon:focus-visible,
+.game-overview-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  #achievement .wrapper > .header .title .icon,
+  .game-overview-icon {
+    transition: none;
+  }
+  #achievement .wrapper > .header .title .icon:active,
+  .game-overview-icon:active {
+    transform: none;
+  }
 }
 
 /* The source badge closes the title row, after the health and ownership marks as on the tile, at the
@@ -7099,19 +7123,19 @@ body.is-resizing #game-list {
 }
 /* A blurred copy under the whole picture. A plain filter is rasterised once; the backdrop-filter it
    replaces was re-sampled for every "whole" tile on every scrolled frame. */
-#game-list .game-box .header.cover-fit-contain::before,
-#game-list .game-box .header.cover-fit-contain::after {
+#game-list .game-box .header.cover-fit-contain::before {
   content: '';
   position: absolute;
   pointer-events: none;
-}
-#game-list .game-box .header.cover-fit-contain::before {
   inset: -14px;
   background: var(--cover-url) center / cover no-repeat;
   filter: blur(14px) brightness(0.62);
 }
-#game-list .game-box .header.cover-fit-contain::after {
+/* The sharp picture, a child set by applyCoverFit (app.js): ::after belongs to the gloss sweep. */
+#game-list .game-box .header.cover-fit-contain > .cover-fit-whole {
+  position: absolute;
   inset: 0;
+  pointer-events: none;
   background: var(--cover-url) center / contain no-repeat;
 }
 
@@ -18749,8 +18773,8 @@ html:not([data-platform='linux']) [data-linux-only] {
   background-size: contain !important;
   background-position: center !important;
   box-shadow: 0 4px 16px rgb(0 0 0 / 35%);
-  /* Right-click changes it, as everywhere the icon shows. */
-  cursor: context-menu;
+  /* A click changes it, as everywhere the icon shows. */
+  cursor: pointer;
 }
 .game-overview-icon:not(.has-game-icon) {
   display: none;

@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Ohjelmatiedosto",
     "could-not-set-icon": "Kuvaketta ei voitu asettaa: {error}",
     "choose-icon-image": "Valitse kuvake",
-    "rightClickToChangeIcon": "Vaihda tämä kuvake napsauttamalla hiiren oikealla painikkeella",
+    "clickToChangeIcon": "Vaihda tämä kuvake napsauttamalla, lisää vaihtoehtoja saat napsauttamalla hiiren oikealla painikkeella",
     "re-download-icon": "Lataa kuvake uudelleen",
     "reset-icon-to-default": "Palauta oletuskuvake",
     "steam-install-title": "Peliä ei ole asennettu",

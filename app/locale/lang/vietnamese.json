@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Tệp thực thi",
     "could-not-set-icon": "Không thể đặt biểu tượng: {error}",
     "choose-icon-image": "Chọn ảnh biểu tượng",
-    "rightClickToChangeIcon": "Nhấp chuột phải để đổi biểu tượng này",
+    "clickToChangeIcon": "Nhấp để đổi biểu tượng này, nhấp chuột phải để xem thêm tùy chọn",
     "re-download-icon": "Tải lại biểu tượng",
     "reset-icon-to-default": "Đặt lại biểu tượng mặc định",
     "steam-install-title": "Trò chơi chưa được cài đặt",

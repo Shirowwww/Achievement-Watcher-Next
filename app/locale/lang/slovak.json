@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Spustiteľný súbor",
     "could-not-set-icon": "Ikonu sa nepodarilo nastaviť: {error}",
     "choose-icon-image": "Vyberte obrázok ikony",
-    "rightClickToChangeIcon": "Ikonu zmeníte kliknutím pravým tlačidlom",
+    "clickToChangeIcon": "Ikonu zmeníte kliknutím, ďalšie možnosti nájdete po kliknutí pravým tlačidlom",
     "re-download-icon": "Znova stiahnuť ikonu",
     "reset-icon-to-default": "Obnoviť predvolenú ikonu",
     "steam-install-title": "Hra nie je nainštalovaná",

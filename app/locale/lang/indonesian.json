@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Berkas eksekusi",
     "could-not-set-icon": "Tidak dapat menetapkan ikon: {error}",
     "choose-icon-image": "Pilih gambar ikon",
-    "rightClickToChangeIcon": "Klik kanan untuk mengganti ikon ini",
+    "clickToChangeIcon": "Klik untuk mengganti ikon ini, klik kanan untuk opsi lainnya",
     "re-download-icon": "Unduh ulang ikon",
     "reset-icon-to-default": "Kembalikan ikon ke bawaan",
     "steam-install-title": "Gim belum terpasang",

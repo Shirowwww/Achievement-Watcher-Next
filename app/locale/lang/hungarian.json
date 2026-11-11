@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Futtatható fájl",
     "could-not-set-icon": "Az ikon beállítása nem sikerült: {error}",
     "choose-icon-image": "Ikonkép kiválasztása",
-    "rightClickToChangeIcon": "Kattints jobb gombbal az ikon cseréjéhez",
+    "clickToChangeIcon": "Kattints az ikon cseréjéhez, jobb gombbal további lehetőségeket találsz",
     "re-download-icon": "Ikon újratöltése",
     "reset-icon-to-default": "Alapértelmezett ikon visszaállítása",
     "steam-install-title": "A játék nincs telepítve",

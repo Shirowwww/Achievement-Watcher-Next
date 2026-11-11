@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "ไฟล์โปรแกรม",
     "could-not-set-icon": "ไม่สามารถตั้งค่าไอคอนได้: {error}",
     "choose-icon-image": "เลือกรูปไอคอน",
-    "rightClickToChangeIcon": "คลิกขวาเพื่อเปลี่ยนไอคอนนี้",
+    "clickToChangeIcon": "คลิกเพื่อเปลี่ยนไอคอนนี้ คลิกขวาเพื่อดูตัวเลือกเพิ่มเติม",
     "re-download-icon": "ดาวน์โหลดไอคอนอีกครั้ง",
     "reset-icon-to-default": "รีเซ็ตไอคอนค่าเริ่มต้น",
     "steam-install-title": "ยังไม่ได้ติดตั้งเกม",

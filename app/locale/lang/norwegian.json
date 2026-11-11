@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Programfil",
     "could-not-set-icon": "Kunne ikke sette ikonet: {error}",
     "choose-icon-image": "Velg ikonbilde",
-    "rightClickToChangeIcon": "Høyreklikk for å bytte dette ikonet",
+    "clickToChangeIcon": "Klikk for å bytte dette ikonet, høyreklikk for flere alternativer",
     "re-download-icon": "Last ned ikonet på nytt",
     "reset-icon-to-default": "Tilbakestill ikonet til standard",
     "steam-install-title": "Spillet er ikke installert",

@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Çalıştırılabilir dosya",
     "could-not-set-icon": "Simge ayarlanamadı: {error}",
     "choose-icon-image": "Simge görseli seç",
-    "rightClickToChangeIcon": "Bu simgeyi değiştirmek için sağ tıklayın",
+    "clickToChangeIcon": "Bu simgeyi değiştirmek için tıklayın, daha fazla seçenek için sağ tıklayın",
     "re-download-icon": "Simgeyi yeniden indir",
     "reset-icon-to-default": "Varsayılan simgeye sıfırla",
     "steam-install-title": "Oyun yüklü değil",

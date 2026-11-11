@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Исполняемый файл",
     "could-not-set-icon": "Не удалось установить значок: {error}",
     "choose-icon-image": "Выберите изображение значка",
-    "rightClickToChangeIcon": "Щёлкните правой кнопкой, чтобы сменить этот значок",
+    "clickToChangeIcon": "Щёлкните, чтобы сменить этот значок, правая кнопка мыши - дополнительные параметры",
     "re-download-icon": "Скачать значок заново",
     "reset-icon-to-default": "Сбросить значок по умолчанию",
     "steam-install-title": "Игра не установлена",

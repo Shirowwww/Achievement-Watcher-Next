@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Programmabestand",
     "could-not-set-icon": "Kon het pictogram niet instellen: {error}",
     "choose-icon-image": "Kies een pictogramafbeelding",
-    "rightClickToChangeIcon": "Klik met de rechtermuisknop om dit pictogram te wijzigen",
+    "clickToChangeIcon": "Klik om dit pictogram te wijzigen, klik met de rechtermuisknop voor meer opties",
     "re-download-icon": "Pictogram opnieuw downloaden",
     "reset-icon-to-default": "Pictogram terugzetten op standaard",
     "steam-install-title": "Spel niet geïnstalleerd",

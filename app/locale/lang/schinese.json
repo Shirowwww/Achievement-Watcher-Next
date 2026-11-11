@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "可执行文件",
     "could-not-set-icon": "无法设置图标：{error}",
     "choose-icon-image": "选择图标图片",
-    "rightClickToChangeIcon": "右键单击可更换此图标",
+    "clickToChangeIcon": "单击可更换此图标，右键单击可查看更多选项",
     "re-download-icon": "重新下载图标",
     "reset-icon-to-default": "重置为默认图标",
     "steam-install-title": "游戏未安装",

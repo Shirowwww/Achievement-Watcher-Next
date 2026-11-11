@@ -3198,7 +3198,7 @@
     "iconSourceExecutable": "Programfil",
     "could-not-set-icon": "Det gick inte att ange ikonen: {error}",
     "choose-icon-image": "Välj ikonbild",
-    "rightClickToChangeIcon": "Högerklicka för att byta den här ikonen",
+    "clickToChangeIcon": "Klicka för att byta den här ikonen, högerklicka för fler alternativ",
     "re-download-icon": "Hämta ikonen igen",
     "reset-icon-to-default": "Återställ ikonen till standard",
     "steam-install-title": "Spelet är inte installerat",

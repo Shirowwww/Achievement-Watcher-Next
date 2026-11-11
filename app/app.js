@@ -2594,13 +2594,21 @@ function coverFitFor(appid, orientation) {
   const fit = (coverFits[String(appid)] || {})[orientation];
   return coverFit.FITS.includes(fit) ? fit : coverFit.DEFAULT_FIT;
 }
-// "Whole" draws the picture again over a blurred copy of the tile's own background (app.css).
+// "Whole" draws the picture again over a blurred copy of the tile's own background (app.css). The
+// sharp copy is a child, not ::after: the gloss sweep owns ::after and used to hide it.
 function applyCoverFit(headerEl, appid, orientation) {
   const element = headerEl && headerEl[0];
   if (!element) return;
   const fit = coverFitFor(appid, orientation);
   headerEl.toggleClass('cover-fit-contain', fit === 'contain').toggleClass('cover-fit-stretch', fit === 'stretch');
   element.style.setProperty('--cover-url', fit === 'contain' ? element.style.backgroundImage || 'none' : '');
+  const whole = element.querySelector(':scope > .cover-fit-whole');
+  if (fit === 'contain' && !whole) {
+    const layer = document.createElement('span');
+    layer.className = 'cover-fit-whole';
+    layer.setAttribute('aria-hidden', 'true');
+    element.prepend(layer);
+  } else if (fit !== 'contain' && whole) whole.remove();
 }
 // `orientation` ('portrait' | 'landscape') selects between independently-set covers; omitted, this
 // falls back to whatever legacy single value is on record (applies to every orientation).

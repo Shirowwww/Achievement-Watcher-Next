@@ -938,24 +938,52 @@ function chooseLocalGameIcon(game, appid) {
   return applyGameIconSelection(game, appid, pathToFileURL(files[0]).href);
 }
 
-// Right-click the square logo to change it, same four actions as the cover submenu. Bound per page
-// render (namespaced, so the previous handler goes with it) since the element is shared.
+async function gameIconExePath(game, appid) {
+  try {
+    return gameExecutablePath(game, (await exeList.get(appid))?.exe || '');
+  } catch {
+    return ''; // no configured executable is normal; the picker simply skips that source
+  }
+}
+
+// A left click (or Enter/Space) on the square logo opens the icon picker straight away; one picker
+// at a time, so a double click does not stack two dialogs.
+// A picker still fading out does not count, or a quick reopen would be swallowed.
+const OPEN_ICON_PICKER = '.aw-prompt-overlay:not(.is-closing) .aw-icon-picker';
+async function openGameIconPickerFromHeader(game, appid, iconCacheAppid) {
+  if (document.querySelector(OPEN_ICON_PICKER)) return;
+  const exePath = await gameIconExePath(game, appid);
+  if (!document.querySelector(OPEN_ICON_PICKER)) openIconPicker(game, appid, iconCacheAppid, exePath);
+}
+
+// Left-click the square logo to pick another, right-click for the same four actions as the cover
+// submenu. Bound per page render (namespaced, so the previous handler goes with it) since the
+// element is shared.
 function bindGameHeaderIconMenu(game) {
   const appid = String(game.appid);
   const iconCacheAppid = String(game.steamappid || game.appid);
   $(HEADER_ICON_SELECTOR)
-    .attr('title', t('rightClickToChangeIcon', 'Right-click to change this icon', "Clic droit pour changer cette icône"))
+    .attr({
+      title: t('clickToChangeIcon', 'Click to change this icon, right-click for more options', "Cliquez pour changer cette icône, clic droit pour plus d'options"),
+      role: 'button',
+      tabindex: '0',
+    })
+    .off('click.awGameIcon keydown.awGameIcon')
+    .on('click.awGameIcon', (event) => {
+      if (event.button !== 0) return;
+      openGameIconPickerFromHeader(game, appid, iconCacheAppid);
+    })
+    .on('keydown.awGameIcon', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openGameIconPickerFromHeader(game, appid, iconCacheAppid);
+    })
     .off('contextmenu.awGameIcon')
     .on('contextmenu.awGameIcon', async function (event) {
       event.preventDefault();
       const { Menu, MenuItem } = remote;
       const menu = new Menu();
-      let exePath = '';
-      try {
-        exePath = gameExecutablePath(game, (await exeList.get(appid))?.exe || '');
-      } catch {
-        /* no configured executable is normal; the picker simply skips that source */
-      }
+      const exePath = await gameIconExePath(game, appid);
 
       menu.append(
         new MenuItem({
