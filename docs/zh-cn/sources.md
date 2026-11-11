@@ -31,7 +31,7 @@ Fork、CODEX、RUNE 和 CPY 等 Steam 模拟器的存档文件。它不需要 St
 | **Ubisoft Connect** | 原生本地数据和旧版 Uplay 格式 | 已安装 Ubisoft Connect |
 | **Epic Games** | 本地安装，以及连接后账号拥有的游戏及其官方成就状态 | 本地安装需要 Epic Games 启动器；其余需要连接账号 |
 | **Xbox PC** | 本地 Game Pass 和 Microsoft Store 安装，以及账号拥有的游戏及其 Xbox Network 状态 | 本地安装需要 Xbox 应用；其余需要连接账号 |
-| **Rockstar Games Launcher** | 它安装的游戏，以及其 Steam 版本的成就列表 | 已安装 Rockstar Games Launcher |
+| **Rockstar Games Launcher** | 它安装的游戏，以及其 Steam 版本的成就列表，连接账号后还有它们的解锁状态 | 已安装 Rockstar Games Launcher；解锁状态需要连接账号 |
 
 **Steam**、**Epic Games** 和 **Xbox PC** 各有三种设置：**无**、**已安装**（这台电脑上的
 游戏）或 **拥有**（账号拥有的整个游戏库）。**拥有** 会列出未安装在本机的游戏，
@@ -56,11 +56,11 @@ Steam 账号卡片下的 **Steam 库** 列出这台电脑上的每个 Steam 库�
 > 并且不会导入你常规的 EA 游戏库。
 
 > [!NOTE]
-> **Rockstar Games Launcher** 的游戏会把所有成就显示为未解锁。Social Club 把你已解锁的成就保存在用账号密钥加密的文件中，AW Next 目前还无法读取。
+> **Rockstar Games Launcher** 的游戏在你连接 Rockstar Games 账号之前，会把所有成就显示为未解锁。Social Club 把你已解锁的成就保存在用账号密钥加密的文件中，所以 AW Next 改为向 Rockstar 查询。
 
 ### 已连接的账号 {#connected-accounts}
 
-Steam、Epic、Xbox PC 和 PlayStation 都可以在设置中连接，以读取本地文件
+Steam、Epic、Xbox PC、PlayStation 和 Rockstar Games 都可以在设置中连接，以读取本地文件
 没有的内容。每个令牌在保存到这台电脑之前都会加密，其余功能无需
 任何账号即可使用。
 
@@ -70,6 +70,7 @@ Steam、Epic、Xbox PC 和 PlayStation 都可以在设置中连接，以读取�
 | **Epic Games** | 你已解锁的成就，以及设为 **拥有** 时的整个游戏库：每款游戏的完整列表、解锁状态和稀有度。少数拥有的游戏有 Epic 商店数据从未列出的成就（Shadow of the Tomb Raider、Civilization VI）。它们仍会从 Nemirtingas 的 games-infos-datas 列出，但没有解锁状态，即使你已登录，Epic 也不会共享这一信息。已安装游戏的名称、说明和稀有度无需账号即可使用。 |
 | **Xbox PC** | 你的游戏库在 Xbox Network 上的解锁状态和稀有度，并在本地缓存。设为 **拥有** 时，还会带来账号只在其他设备上玩过的游戏。 |
 | **PlayStation** | 你的 PlayStation 游戏和奖杯，附带 Sony 自己提供的每个奖杯的获得率，每三天在后台刷新一次。你没有的游戏可以按名称从 Sony 的目录添加，也可以用同样的方式移除。来自任何其他来源、同时也在 PlayStation 上发售的游戏，会显示其列表真实的白金，在奖杯模式下还会显示真实的等级和 DLC 分组（见[通知](notifications.md#trophy-mode)）。你在 Sony 自己的页面登录。 |
+| **Rockstar Games** | Rockstar Games Launcher 所安装游戏的解锁状态和解锁日期。Rockstar 给成就编了号，AW Next 用启动器保存在 `Documents\Rockstar Games\Social Club\Titles` 的列表为它们命名：列表在那里缺失的游戏会保持全部未解锁。已在 GTA V 的两个版本上验证。你在 Rockstar 自己的页面登录，登录后留下的会话会加密保存，用于续期令牌。 |
 
 磁贴上有一个小徽章，表示连接确认的信息：在该商店购买、通过
 Steam 家庭共享，或已不在你的游戏库中。

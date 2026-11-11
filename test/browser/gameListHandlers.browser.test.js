@@ -31,7 +31,7 @@ test('library rescan removes only its own handlers and preserves game-view inter
     'a refresh must reload cover overrides promoted by the cache-clear path'
   );
   const appOwnedEvents = [...appSource.matchAll(/\.on\('(mouseenter|mouseleave|click)\.awLibrary'/g)].map((match) => match[1]);
-  assert.deepEqual(appOwnedEvents, ['mouseenter', 'mouseleave', 'click', 'click', 'click'], 'every scan-owned game-list handler must join the namespace');
+  assert.deepEqual(appOwnedEvents, ['mouseenter', 'mouseleave', 'click', 'click', 'click', 'click'], 'every scan-owned game-list handler must join the namespace');
 
   const { browser, userDataDir, failures } = await launchBrowser();
   if (!browser) {

@@ -63,6 +63,7 @@ function replayArgs(clip, { outDir, tokenFile, wayland }) {
 }
 
 function moveFile(from, to) {
+  fs.mkdirSync(path.dirname(to), { recursive: true });
   try {
     fs.renameSync(from, to);
   } catch (err) {

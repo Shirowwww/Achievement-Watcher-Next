@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Achievements button",
-          "description": "Show the trophy button on the artwork. Clicking the tile itself opens the achievements either way."
+          "description": "Show the trophy button on the artwork. It opens the game straight on its achievements."
         },
         "showConfigButton": {
           "name": "Game settings button",
           "description": "Show the tools button in the top right corner of the artwork. Game settings stay reachable from the right-click menu."
+        },
+        "gamePage": {
+          "name": "Game page",
+          "description": "A game opens on its page, with its trailer, guides and screenshots. Disabled, it opens straight on its achievements."
         },
         "tilt": {
           "name": "3D hover effect",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Read EA Desktop’s local achievement log (for games outside EA’s managed folders)."
       },
+      "rockstarOfficial": {
+        "description": "Games installed with the Rockstar Games Launcher, with their achievement list. Connect your Rockstar Games account in the Rockstar Games account card further down to see which ones you unlocked."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC games (Game Pass / Microsoft Store). Connect your account in the Xbox PC account card further down, then import to see unlocks and rarity.",
         "value": {
-      "rockstarOfficial": {
-        "description": "Games installed with the Rockstar Games Launcher, with their achievement list. Rockstar encrypts which ones you unlocked, so they all show as locked for now."
-      },
           "none": "None",
           "installed": "Installed",
           "owned": "Owned"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games account",
     "epic-desc": "Optional. Connecting shows which achievements you have already unlocked in installed Epic games; names, descriptions and rarity work without it. Your token is stored encrypted on this PC.",
     "epic-btn-hint": "opens the Epic sign-in window",
+    "connect-rockstar-account": "Connect Rockstar Games account",
+    "rockstar-title": "Rockstar Games account",
+    "rockstar-desc": "Optional. Connecting shows which achievements you have unlocked in games installed with the Rockstar Games Launcher; the list works without it. Your session is stored encrypted on this PC.",
+    "rockstar-btn-hint": "opens the Rockstar sign-in window",
+    "rockstar-connect": "Connect Rockstar Games account",
+    "rockstar-connecting": "Opening the Rockstar sign-in window…",
+    "rockstar-connected": "Rockstar Games account connected.",
+    "rockstar-failed": "Rockstar sign-in failed",
+    "rockstar-disconnected": "Rockstar Games account disconnected.",
     "connected": "Connected",
     "account-connected-as": "Connected: {name}",
     "disconnect": "Disconnect",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games title in your library",
     "purchased-badge-ea": "EA game in your library",
     "purchased-badge-xbox": "Xbox game in your library",
+    "purchased-badge-rockstar": "Rockstar Games Launcher game",
     "steam-hide-stale": "Hide games no longer in your Steam library",
     "steam-hide-stale-help": "Requires a connected Steam account. Games installed on this PC and games shared through Steam Family are never hidden.",
     "steam-libraries-title": "Steam libraries",
     "steam-libraries-help": "Switch a library off to leave its games out of every collection, for example a drive you keep connected as storage. They come back when you switch it on again.",
-    "purchased-badge-rockstar": "Rockstar Games Launcher game",
     "steam-import-owned": "Add the games you own",
     "steam-import-owned-help": "Lists your whole Steam library, including games that were never installed on this PC. A large library makes the first scan much longer. Progress of games never played on this PC is read from your Steam profile, so its game details must be public.",
     "steam-import-needs-owned": "Available when the Steam source above lists the games you own.",

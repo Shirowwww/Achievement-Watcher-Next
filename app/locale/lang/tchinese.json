@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "成就按鈕",
-          "description": "在美術圖上顯示獎盃按鈕。點擊卡片本身同樣會開啟成就。"
+          "description": "在美術圖上顯示獎盃按鈕。點擊後會直接開啟遊戲的成就。"
         },
         "showConfigButton": {
           "name": "遊戲設定按鈕",
           "description": "在美術圖右上角顯示工具按鈕。遊戲設定仍可透過右鍵選單開啟。"
+        },
+        "gamePage": {
+          "name": "遊戲頁面",
+          "description": "遊戲會開啟其專屬頁面，包含預告片、攻略和截圖。關閉後，將直接開啟成就。"
         },
         "tilt": {
           "name": "滑過 3D 效果",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "讀取 EA Desktop 的本機成就記錄（適用於 EA 管理資料夾以外的遊戲）。"
       },
+      "rockstarOfficial": {
+        "description": "顯示透過 Rockstar Games Launcher 安裝的遊戲及其成就清單。請在下方的 Rockstar Games 帳戶 卡片中連線你的帳戶，即可查看你已解鎖的成就。"
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC 遊戲（Game Pass／Microsoft Store）。請在下方的 Xbox PC 帳戶 卡片中連線你的帳戶，然後匯入，即可查看解鎖狀態與稀有度。",
       "value": {
-      "rockstarOfficial": {
-        "description": "顯示透過 Rockstar Games Launcher 安裝的遊戲及其成就清單。Rockstar 會加密你已解鎖的成就，因此目前全部顯示為未解鎖。"
-      },
         "none": "無",
         "installed": "已安裝",
         "owned": "已擁有"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games 帳戶",
     "epic-desc": "選用。連結後可以看到你在已安裝的 Epic 遊戲中解鎖了哪些成就；名稱、說明與稀有度不連結也能取得。你的權杖會加密儲存在這台電腦上。",
     "epic-btn-hint": "會開啟 Epic 登入視窗",
+    "connect-rockstar-account": "連結 Rockstar Games 帳戶",
+    "rockstar-title": "Rockstar Games 帳戶",
+    "rockstar-desc": "選用。連結後可以看到你在透過 Rockstar Games Launcher 安裝的遊戲中解鎖了哪些成就；清單不連結也能使用。你的工作階段會加密儲存在這台電腦上。",
+    "rockstar-btn-hint": "會開啟 Rockstar 登入視窗",
+    "rockstar-connect": "連結 Rockstar Games 帳戶",
+    "rockstar-connecting": "正在開啟 Rockstar 登入視窗…",
+    "rockstar-connected": "Rockstar Games 帳戶已連結。",
+    "rockstar-failed": "Rockstar 登入失敗",
+    "rockstar-disconnected": "已中斷 Rockstar Games 帳戶連結。",
     "connected": "已連結",
     "account-connected-as": "已連結：{name}",
     "disconnect": "中斷連結",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "您庫中的Epic Games遊戲",
     "purchased-badge-ea": "您庫中的EA遊戲",
     "purchased-badge-xbox": "你收藏庫中的 Xbox 遊戲",
+    "purchased-badge-rockstar": "Rockstar Games Launcher 中的遊戲",
     "steam-hide-stale": "隱藏已不在你的 Steam 收藏庫中的遊戲",
     "steam-hide-stale-help": "需要已連接的 Steam 帳戶。安裝在這台電腦上的遊戲以及透過 Steam 家庭共享的遊戲永遠不會被隱藏。",
     "steam-libraries-title": "Steam 收藏庫",
     "steam-libraries-help": "停用某個收藏庫後，它的遊戲就不會出現在任何收藏集中，例如你一直接著當作儲存空間的磁碟。重新啟用後遊戲就會回來。",
-    "purchased-badge-rockstar": "Rockstar Games Launcher 中的遊戲",
     "steam-import-owned": "新增你擁有的遊戲",
     "steam-import-owned-help": "列出你完整的 Steam 收藏庫，包括從未安裝在這台電腦上的遊戲。收藏庫越大，首次掃描耗時越長。從未在這台電腦上玩過的遊戲，其進度會從你的 Steam 個人檔案讀取，因此遊戲詳細資料必須設為公開。",
     "steam-import-needs-owned": "當上方的 Steam 來源列出你擁有的遊戲時可用。",

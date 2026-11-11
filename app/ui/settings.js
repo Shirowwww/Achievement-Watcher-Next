@@ -1394,6 +1394,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       for (const key of LIBRARY_TOGGLES) $(`#option_${key}`).val(String(settings[key] !== false)).change();
       for (const key of LIBRARY_EFFECTS) $(`#option_${key}`).val(settingsLibraryChrome.effectToSelect(settings[key])).change();
       $('#option_libraryPlaytimeUnits').val(settingsLibraryChrome.normalizePlaytimeUnits(settings.libraryPlaytimeUnits)).change();
+      $('#option_libraryGamePage').val(String(settings.libraryGamePage !== false)).change();
       previewLibraryChrome();
     }
 
@@ -1510,6 +1511,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // re-request their covers if the orientation changed) instead of rebuilding the library.
       if (typeof window.applyLibraryView === 'function') window.applyLibraryView(app.config.achievement.libraryLayout, previousLayout);
       Object.assign(app.config.achievement, readLibraryChromeUi());
+      // Read on the next game opened (app.js, showGameOverview).
+      app.config.achievement.libraryGamePage = $('#option_libraryGamePage').val() !== 'false';
       Object.assign(app.config.achievement, readRaritySliders());
       if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
       // Profile card (Appearance): outside the General containers, so it is read here.
@@ -1888,6 +1891,95 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
         refresh();
       });
 
+      refresh();
+    })();
+
+    // Rockstar Games account card: the sign-in window and the encrypted session live in the main
+    // process (electron/rockstarAccount.js); a scan asks it for the unlocks of the launcher's games.
+    (function wireRockstarConnect() {
+      const T = () => ({
+        connectedAs: accountConnectedAs,
+        notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
+        connecting: t('rockstar-connecting', 'Opening the Rockstar sign-in window…', 'Ouverture de la fenêtre de connexion Rockstar…'),
+        connected: t('rockstar-connected', 'Rockstar Games account connected.', 'Compte Rockstar Games connecté.'),
+        cancelled: t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+        failed: t('rockstar-failed', 'Rockstar sign-in failed', 'Échec de la connexion Rockstar'),
+        needsReconnect: t('steam-needs-reconnect', 'Session expired, reconnect needed.', 'Session expirée, reconnexion nécessaire.'),
+        disconnected: t('rockstar-disconnected', 'Rockstar Games account disconnected.', 'Compte Rockstar Games déconnecté.'),
+      });
+      const status = $('#rockstar-connect-status');
+      const badge = $('#rockstar-connect-badge');
+      const connectBtn = $('#rockstar-connect-btn');
+      const disconnectBtn = $('#rockstar-disconnect-btn');
+      const setStatus = (text, cls = '') => status.removeClass('success error running').addClass(cls).text(text || '');
+      let lastStatus = null;
+
+      registerLocaleRefresh(function applyRockstarLabels() {
+        $('#rockstar-connect-title').text(t('rockstar-title', 'Rockstar Games account', 'Compte Rockstar Games'));
+        $('#rockstar-connect-desc').text(
+          t(
+            'rockstar-desc',
+            'Optional. Connecting shows which achievements you have unlocked in games installed with the Rockstar Games Launcher; the list works without it. Your session is stored encrypted on this PC.',
+            'Optionnel. La connexion affiche les succès que tu as débloqués dans les jeux installés avec le Rockstar Games Launcher ; la liste fonctionne sans elle. Ta session est stockée chiffrée sur ce PC.'
+          )
+        );
+        $('#rockstar-connect-btn-hint').text(t('rockstar-btn-hint', 'opens the Rockstar sign-in window', 'ouvre la fenêtre de connexion Rockstar'));
+        $('#rockstar-connect-badge-label').text(t('connected', 'Connected', 'Connecté'));
+        $('#rockstar-disconnect-btn-label').text(t('disconnect', 'Disconnect', 'Déconnecter'));
+        if (lastStatus) repaintAccountState(status, () => paintStatus(lastStatus));
+      });
+
+      async function refresh() {
+        let s = {};
+        try {
+          s = (await ipcRenderer.invoke('rockstar:status')) || {};
+        } catch {}
+        lastStatus = s;
+        paintStatus(s);
+        status.data('stateText', status.text());
+      }
+
+      function paintStatus(s) {
+        badge.toggle(!!s.connected && !s.needsReconnect);
+        disconnectBtn.toggle(!!s.connected);
+        $('#rockstar-connect-btn-label').text(
+          s.connected ? t('xbox-reconnect', 'Reconnect', 'Reconnecter') : t('rockstar-connect', 'Connect Rockstar Games account', 'Connecter le compte Rockstar Games')
+        );
+        if (s.connected && s.needsReconnect) setStatus(T().needsReconnect, 'error');
+        else if (s.connected) setStatus(T().connectedAs(s.displayName), 'success');
+        else if (!status.hasClass('error')) setStatus(T().notConnected);
+      }
+
+      connectBtn.off('click').on('click', async function () {
+        if (connectBtn.hasClass('disabled')) return;
+        connectBtn.addClass('disabled').css('pointer-events', 'none');
+        setStatus(T().connecting, 'running');
+        try {
+          const res = (await ipcRenderer.invoke('rockstar:login')) || {};
+          if (res.ok) {
+            setStatus(T().connected, 'success');
+            app.onStart(); // the launcher's games read their unlocks again
+          } else if (res.error === 'window-closed') setStatus(T().cancelled, 'error');
+          else setStatus(`${T().failed}${res.error ? ': ' + res.error : ''}`, 'error');
+        } catch (err) {
+          setStatus(`${T().failed}: ${err.message || err}`, 'error');
+        } finally {
+          connectBtn.removeClass('disabled').css('pointer-events', '');
+          refresh();
+        }
+      });
+
+      disconnectBtn.off('click').on('click', async function () {
+        try {
+          await ipcRenderer.invoke('rockstar:logout');
+          setStatus(T().disconnected);
+        } catch (err) {
+          setStatus(`${err.message || err}`, 'error');
+        }
+        refresh();
+      });
+
+      window.addEventListener('aw-accounts-changed', refresh);
       refresh();
     })();
 

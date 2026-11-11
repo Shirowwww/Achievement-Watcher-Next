@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Teljesítmények gomb",
-          "description": "Megjeleníti a trófeagombot a grafikán. Magára a csempére kattintva is megnyílnak a teljesítmények."
+          "description": "Megjeleníti a trófeagombot a grafikán. A játékot közvetlenül a teljesítményeire nyitja meg."
         },
         "showConfigButton": {
           "name": "Játékbeállítások gomb",
           "description": "Megjeleníti az eszközök gombját a grafika jobb felső sarkában. A Játék beállításai továbbra is elérhetők a jobb gombos menüből."
+        },
+        "gamePage": {
+          "name": "Játékoldal",
+          "description": "A játék a saját oldalán nyílik meg, az előzetessel, útmutatókkal és képernyőképekkel. Kikapcsolva közvetlenül a teljesítményekre nyílik."
         },
         "tilt": {
           "name": "3D-s hatás rámutatáskor",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Beolvassa az EA Desktop helyi teljesítménynaplóját (az EA által kezelt mappákon kívüli játékokhoz)."
       },
+      "rockstarOfficial": {
+        "description": "A Rockstar Games Launcherrel telepített játékok a teljesítménylistájukkal. Csatlakoztasd a fiókodat lejjebb a Rockstar Games-fiók kártyán, hogy lásd, melyeket oldottad fel."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC játékok (Game Pass / Microsoft Store). Csatlakoztasd a fiókodat lejjebb az Xbox PC-fiók kártyán, majd importálj, hogy lásd a feloldásokat és a ritkaságot.",
       "value": {
-      "rockstarOfficial": {
-        "description": "A Rockstar Games Launcherrel telepített játékok a teljesítménylistájukkal. A Rockstar titkosítja, hogy melyeket oldottad fel, ezért egyelőre mind zároltként jelenik meg."
-      },
         "none": "Nincs",
         "installed": "Telepített",
         "owned": "Birtokolt"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games-fiók",
     "epic-desc": "Opcionális. A csatlakozás megmutatja, mely teljesítményeket oldottad már fel a telepített Epic-játékokban; a nevek, leírások és ritkaság enélkül is működnek. A tokenedet titkosítva tárolja ez a gép.",
     "epic-btn-hint": "megnyitja az Epic bejelentkezési ablakot",
+    "connect-rockstar-account": "Rockstar Games-fiók csatlakoztatása",
+    "rockstar-title": "Rockstar Games-fiók",
+    "rockstar-desc": "Opcionális. A csatlakozás megmutatja, mely teljesítményeket oldottad fel a Rockstar Games Launcherrel telepített játékokban; a lista enélkül is működik. A munkameneted titkosítva tárolja ez a gép.",
+    "rockstar-btn-hint": "megnyitja a Rockstar bejelentkezési ablakot",
+    "rockstar-connect": "Rockstar Games-fiók csatlakoztatása",
+    "rockstar-connecting": "Rockstar bejelentkezési ablak megnyitása…",
+    "rockstar-connected": "Rockstar Games-fiók csatlakoztatva.",
+    "rockstar-failed": "A Rockstar-bejelentkezés nem sikerült",
+    "rockstar-disconnected": "Rockstar Games-fiók lecsatlakoztatva.",
     "connected": "Csatlakoztatva",
     "account-connected-as": "Csatlakoztatva: {name}",
     "disconnect": "Lecsatlakozás",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games cím a könyvtáradban",
     "purchased-badge-ea": "EA játék a könyvtáradban",
     "purchased-badge-xbox": "Xbox-játék a könyvtáradban",
+    "purchased-badge-rockstar": "Rockstar Games Launcher játék",
     "steam-hide-stale": "A Steam-könyvtáradban már nem szereplő játékok elrejtése",
     "steam-hide-stale-help": "Csatlakoztatott Steam-fiókot igényel. Az ezen a gépen telepített és a Steam Family révén megosztott játékok soha nem lesznek elrejtve.",
     "steam-libraries-title": "Steam-könyvtárak",
     "steam-libraries-help": "Kapcsolj ki egy könyvtárat, hogy a játékai ne szerepeljenek egyetlen gyűjteményben sem, például egy tárhelyként csatlakoztatva tartott meghajtót. Visszatérnek, amint újra bekapcsolod.",
-    "purchased-badge-rockstar": "Rockstar Games Launcher játék",
     "steam-import-owned": "A birtokolt játékok hozzáadása",
     "steam-import-owned-help": "Megjeleníti a teljes Steam könyvtáradat, beleértve azokat a játékokat is, amelyeket sosem telepítettél erre a gépre. Egy nagy könyvtár jelentősen meghosszabbítja az első vizsgálatot. Az ezen a gépen soha nem játszott játékok előrehaladását a Steam-profilodból olvassuk ki, ezért a játékrészleteknek nyilvánosnak kell lenniük.",
     "steam-import-needs-owned": "Akkor érhető el, ha a fenti Steam-forrás felsorolja a birtokolt játékokat.",

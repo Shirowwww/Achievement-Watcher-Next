@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "도전 과제 버튼",
-          "description": "아트워크 위에 트로피 버튼을 표시합니다. 타일 자체를 클릭해도 도전 과제가 열립니다."
+          "description": "아트워크 위에 트로피 버튼을 표시합니다. 이 버튼은 게임을 도전 과제로 바로 엽니다."
         },
         "showConfigButton": {
           "name": "게임 설정 버튼",
           "description": "아트워크 오른쪽 위에 도구 버튼을 표시합니다. 게임 설정은 오른쪽 클릭 메뉴에서 계속 확인할 수 있습니다."
+        },
+        "gamePage": {
+          "name": "게임 페이지",
+          "description": "게임이 트레일러, 공략, 스크린샷이 있는 게임 페이지로 열립니다. 끄면 도전 과제가 바로 열립니다."
         },
         "tilt": {
           "name": "호버 3D 효과",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "EA Desktop의 로컬 도전 과제 기록을 읽습니다(EA 관리 폴더 밖에 있는 게임용)."
       },
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcher로 설치한 게임을 도전 과제 목록과 함께 표시합니다. 아래의 Rockstar Games 계정 카드에서 계정을 연결하면 해제한 항목을 볼 수 있습니다."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC 게임(Game Pass / Microsoft Store)입니다. 아래의 Xbox PC 계정 카드에서 계정을 연결한 다음 가져오면 달성 상태와 희귀도를 볼 수 있습니다.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Rockstar Games Launcher로 설치한 게임을 도전 과제 목록과 함께 표시합니다. Rockstar가 해제한 항목을 암호화하므로 현재는 모두 잠긴 상태로 표시됩니다."
-      },
         "none": "없음",
         "installed": "설치됨",
         "owned": "보유 중"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games 계정",
     "epic-desc": "선택 사항입니다. 계정을 연결하면 설치된 Epic 게임에서 이미 달성한 도전 과제를 확인할 수 있습니다. 이름, 설명, 희귀도는 연결하지 않아도 표시됩니다. 토큰은 이 PC에 암호화되어 저장됩니다.",
     "epic-btn-hint": "Epic 로그인 창을 엽니다",
+    "connect-rockstar-account": "Rockstar Games 계정 연결",
+    "rockstar-title": "Rockstar Games 계정",
+    "rockstar-desc": "선택 사항입니다. 계정을 연결하면 Rockstar Games Launcher로 설치한 게임에서 달성한 도전 과제를 확인할 수 있습니다. 목록은 연결하지 않아도 표시됩니다. 세션은 이 PC에 암호화되어 저장됩니다.",
+    "rockstar-btn-hint": "Rockstar 로그인 창을 엽니다",
+    "rockstar-connect": "Rockstar Games 계정 연결",
+    "rockstar-connecting": "Rockstar 로그인 창을 여는 중…",
+    "rockstar-connected": "Rockstar Games 계정을 연결했습니다.",
+    "rockstar-failed": "Rockstar 로그인 실패",
+    "rockstar-disconnected": "Rockstar Games 계정 연결을 해제했습니다.",
     "connected": "연결됨",
     "account-connected-as": "연결됨: {name}",
     "disconnect": "연결 해제",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "라이브러리의 Epic Games 타이틀",
     "purchased-badge-ea": "라이브러리의 EA 게임",
     "purchased-badge-xbox": "라이브러리에 있는 Xbox 게임",
+    "purchased-badge-rockstar": "Rockstar Games Launcher 게임",
     "steam-hide-stale": "더 이상 Steam 라이브러리에 없는 게임 숨기기",
     "steam-hide-stale-help": "연결된 Steam 계정이 필요합니다. 이 PC에 설치된 게임과 Steam 가족을 통해 공유된 게임은 절대 숨겨지지 않습니다.",
     "steam-libraries-title": "Steam 라이브러리",
     "steam-libraries-help": "라이브러리를 사용 안 함으로 바꾸면 그 라이브러리의 게임이 모든 컬렉션에서 빠집니다. 예를 들어 저장소로 계속 연결해 두는 드라이브가 그렇습니다. 다시 사용함으로 바꾸면 돌아옵니다.",
-    "purchased-badge-rockstar": "Rockstar Games Launcher 게임",
     "steam-import-owned": "소유한 게임 추가",
     "steam-import-owned-help": "이 PC에 설치된 적이 없는 게임을 포함해 전체 Steam 라이브러리를 표시합니다. 라이브러리가 크면 첫 검사가 훨씬 오래 걸립니다. 이 PC에서 플레이한 적 없는 게임의 진행 상황은 Steam 프로필에서 읽어 오므로 게임 세부 정보가 공개로 설정되어 있어야 합니다.",
     "steam-import-needs-owned": "위의 Steam 소스가 소유한 게임을 나열할 때 사용할 수 있습니다.",

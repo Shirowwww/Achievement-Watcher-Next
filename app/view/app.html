@@ -1666,6 +1666,33 @@
                 </div>
               </div>
 
+              <!-- Rockstar Games account: the unlocks of the launcher's games, same shape as the Epic card. -->
+              <div id="rockstar-connect" class="settings-card">
+                <div class="emulator-login-heading">
+                  <div class="title"><i class="brand-icon brand-rockstar" aria-hidden="true"></i> <span id="rockstar-connect-title">Rockstar Games account</span></div>
+                  <span class="emulator-warning is-success" id="rockstar-connect-badge" style="display:none"><i class="fas fa-check-circle"></i> <span id="rockstar-connect-badge-label">Connected</span></span>
+                </div>
+                <p id="rockstar-connect-desc">
+                  Optional. Connecting shows which achievements you have unlocked in games installed with the Rockstar Games
+                  Launcher; the list works without it. Your session is stored encrypted on this PC.
+                </p>
+                <div class="emulator-login-actions">
+                  <button type="button" id="rockstar-connect-btn" class="btn">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-in-alt"></i></span>
+                    <span class="emulator-test-copy">
+                      <strong id="rockstar-connect-btn-label">Connect Rockstar Games account</strong>
+                      <small id="rockstar-connect-btn-hint">opens the Rockstar sign-in window</small>
+                    </span>
+                    <i class="fas fa-chevron-right emulator-test-arrow"></i>
+                  </button>
+                  <button type="button" id="rockstar-disconnect-btn" class="btn secondary is-disconnect" style="display:none">
+                    <span class="emulator-test-icon"><i class="fas fa-sign-out-alt"></i></span>
+                    <span class="emulator-test-copy"><strong id="rockstar-disconnect-btn-label">Disconnect</strong></span>
+                  </button>
+                  <span id="rockstar-connect-status" aria-live="polite"></span>
+                </div>
+              </div>
+
               <!-- PlayStation console over FTP: a jailbroken PS3 or PS4 on the home network, no PSN sign-in. -->
               <div id="psn-ftp" class="settings-card">
                 <div class="emulator-login-heading">
@@ -4338,7 +4365,7 @@
                       </select>
                       <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                     </div>
-                    <div class="help" id="library-achbutton-help">Show the trophy button on the artwork. Clicking the tile itself opens the achievements either way.</div>
+                    <div class="help" id="library-achbutton-help">Show the trophy button on the artwork. It opens the game straight on its achievements.</div>
                   </li>
                   <li class="hasHelper">
                     <div class="left"><i class="fas fa-tools"></i> <span id="library-configbutton-label">Game settings button</span></div>
@@ -4365,6 +4392,18 @@
                       <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
                     </div>
                     <div class="help" id="play-button-settings-help">Show the Play button on game tiles. Turn it off if you launch your games from another program. The right-click Launch game entry stays available.</div>
+                  </li>
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-columns"></i> <span id="library-gamepage-label">Game page</span></div>
+                    <div class="right">
+                      <div class="previous"><span class="arrow"><i class="fas fa-chevron-left"></i></span></div>
+                      <select autocomplete="off" id="option_libraryGamePage">
+                        <option value="true" selected>Enable</option>
+                        <option value="false">Disable</option>
+                      </select>
+                      <div class="next"><span class="arrow"><i class="fas fa-chevron-right"></i></span></div>
+                    </div>
+                    <div class="help" id="library-gamepage-help">A game opens on its page, with its trailer, guides and screenshots. Disabled, it opens straight on its achievements.</div>
                   </li>
                   <li class="hasHelper">
                     <div class="left"><i class="fas fa-cube"></i> <span id="library-tilt-label">3D hover effect</span></div>
@@ -5083,6 +5122,14 @@
                       </span>
                       <button type="button" id="onboard-psn-connect" class="onboarding-test-button"><span></span></button>
                     </div>
+                    <div class="onboarding-account-row" data-account="rockstar">
+                      <span class="onboarding-account-logo"><i class="brand-icon brand-rockstar" aria-hidden="true"></i></span>
+                      <span class="onboarding-account-text">
+                        <strong>Rockstar Games</strong>
+                        <span id="onboard-rockstar-status" class="onboarding-account-status" aria-live="polite"></span>
+                      </span>
+                      <button type="button" id="onboard-rockstar-connect" class="onboarding-test-button"><span></span></button>
+                    </div>
                     <!-- No sign-in window here: RetroAchievements reads a username and the Web API key
                          from the account's own settings page, checked by the main process like Settings. -->
                     <div class="onboarding-account-row" data-account="ra">
@@ -5170,6 +5217,14 @@
                       </select>
                       <small class="onboard-field-hint" id="onboard-src-ea-hint"></small>
                     </label>
+                    <label class="onboarding-source-row">
+                      <span class="onboarding-source-name"><i class="fas fa-star" aria-hidden="true"></i> Rockstar Games Launcher</span>
+                      <select id="onboard-src-rockstarOfficial">
+                        <option value="true"></option>
+                        <option value="false"></option>
+                      </select>
+                      <small class="onboard-field-hint" id="onboard-src-rockstarOfficial-hint"></small>
+                    </label>
                   </div>
                 </div>
 
@@ -5182,14 +5237,6 @@
                     <label class="onboarding-source-row">
                       <span class="onboarding-source-name"><i class="fas fa-file-alt" aria-hidden="true"></i> <span id="onboard-src-steamEmu-name">Steam emulator</span></span>
                       <select id="onboard-src-steamEmu">
-                    <label class="onboarding-source-row">
-                      <span class="onboarding-source-name"><i class="fas fa-star" aria-hidden="true"></i> Rockstar Games Launcher</span>
-                      <select id="onboard-src-rockstarOfficial">
-                        <option value="true"></option>
-                        <option value="false"></option>
-                      </select>
-                      <small class="onboard-field-hint" id="onboard-src-rockstarOfficial-hint"></small>
-                    </label>
                         <option value="true"></option>
                         <option value="false"></option>
                       </select>

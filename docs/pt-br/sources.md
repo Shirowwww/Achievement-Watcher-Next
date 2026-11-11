@@ -31,7 +31,7 @@ Elas leem os dados locais do próprio launcher e têm um escudo nas Configuraç�
 | **Ubisoft Connect** | Dados locais nativos e formatos legados do Uplay | Ubisoft Connect instalado |
 | **Epic Games** | As instalações locais, mais os jogos da conta e o estado oficial das conquistas deles depois de conectar | O launcher da Epic Games para as instalações locais; uma conta conectada para o resto |
 | **Xbox PC** | As instalações locais do Game Pass e da Microsoft Store, mais os jogos da conta e o estado deles na Xbox Network | O app Xbox para as instalações locais; uma conta conectada para o resto |
-| **Rockstar Games Launcher** | Os jogos que ele instalou, com a lista de conquistas da versão Steam | O Rockstar Games Launcher instalado |
+| **Rockstar Games Launcher** | Os jogos que ele instalou, com a lista de conquistas da versão Steam e o estado de desbloqueio depois de conectada a conta | O Rockstar Games Launcher instalado; uma conexão de conta para os desbloqueios |
 
 **Steam**, **Epic Games** e **Xbox PC** têm cada uma três opções: **Nenhum**, **Instalados** (jogos neste
 PC) ou **Na biblioteca** (toda a biblioteca da conta). **Na biblioteca** lista também jogos que não estão
@@ -56,11 +56,11 @@ armazenamento. Eles voltam quando você a ativa de novo.
 > gerenciadas pela EA, e não importa a sua biblioteca normal da EA.
 
 > [!NOTE]
-> Os jogos do **Rockstar Games Launcher** mostram todas as conquistas bloqueadas. O Social Club guarda quais você desbloqueou em um arquivo criptografado com a chave da sua conta, que o AW Next ainda não consegue ler.
+> Os jogos do **Rockstar Games Launcher** mostram todas as conquistas bloqueadas até você conectar sua conta da Rockstar Games. O Social Club guarda quais você desbloqueou em um arquivo criptografado com a chave da sua conta, então o AW Next pergunta à Rockstar.
 
 ### Contas conectadas {#connected-accounts}
 
-Steam, Epic, Xbox PC e PlayStation podem ser conectadas nas Configurações para ler o que os arquivos locais
+Steam, Epic, Xbox PC, PlayStation e Rockstar Games podem ser conectadas nas Configurações para ler o que os arquivos locais
 não trazem. Cada token é criptografado antes de ser guardado neste PC, e todo o resto funciona
 sem nenhuma conta.
 
@@ -70,6 +70,7 @@ sem nenhuma conta.
 | **Epic Games** | Suas conquistas desbloqueadas e, com **Na biblioteca**, a biblioteca inteira: cada jogo com a lista completa, o estado de desbloqueio e a raridade. Alguns jogos da conta têm conquistas que os dados da loja da Epic nunca listam (Shadow of the Tomb Raider, Civilization VI). Eles ainda são listados, a partir do games-infos-datas do Nemirtingas, mas sem estado de desbloqueio, que a Epic não compartilha nem com o login feito. Nomes, descrições e raridade de um jogo instalado funcionam sem conta. |
 | **Xbox PC** | Estado de desbloqueio e raridade da Xbox Network para a sua biblioteca, em cache local. Com **Na biblioteca**, traz também jogos que a conta só jogou em outro lugar. |
 | **PlayStation** | Seus jogos da PlayStation e troféus, com a taxa oficial da Sony para cada troféu, atualizados a cada três dias em segundo plano. Um jogo que você não possui pode ser adicionado pelo nome a partir do catálogo da Sony, e removido da mesma forma. Um jogo de qualquer outra fonte que também saiu na PlayStation mostra a platina real da sua lista e, no modo troféus, as classificações reais e os grupos de DLC (veja [Notificações](notifications.md#trophy-mode)). Você faz login na própria página da Sony. |
+| **Rockstar Games** | O estado e as datas de desbloqueio dos jogos instalados pelo Rockstar Games Launcher. A Rockstar numera suas conquistas, e o AW Next dá nome a elas com a lista que o launcher guarda em `Documents\Rockstar Games\Social Club\Titles`: um jogo cuja lista falta ali continua todo bloqueado. Verificado no GTA V, nas duas edições. Você faz login na própria página da Rockstar, e a sessão que ela deixa é guardada criptografada para renovar o token. |
 
 Um cartão traz um pequeno selo para o que a conexão estabeleceu: comprado naquela loja, compartilhado pela
 Família Steam, ou não está mais na sua biblioteca.

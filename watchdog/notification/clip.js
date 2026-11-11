@@ -347,7 +347,8 @@ function trigger({ game, achievement, dir } = {}) {
   const recorder = state.recorder;
   if (!recorder || (recorder.engine !== 'software' && !recorder.child)) return null;
   try {
-    const file = souvenirPath({ game, achievement, dir: clipFolder(dir) }, recorder.ext);
+    // Every recorder creates the folder when it writes the clip, so a capture without frames leaves none.
+    const file = souvenirPath({ game, achievement, dir: clipFolder(dir) }, recorder.ext, { create: false });
     if (recorder.engine === 'software') return sendToApp({ action: 'trigger', file }, recorder.deps.send) ? file : null;
     if (recorder.engine === 'gpu-screen-recorder') return recorder.replay.save(file);
     recorder.child.stdin.write(`clip 0 ${file}\n`);

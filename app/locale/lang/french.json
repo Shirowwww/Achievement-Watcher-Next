@@ -350,11 +350,15 @@
         },
         "showAchievementButton": {
           "name": "Bouton des succès",
-          "description": "Affiche le bouton trophée sur l’illustration. Cliquer sur la tuile elle-même ouvre aussi les succès."
+          "description": "Affiche le bouton trophée sur l’illustration. Il ouvre le jeu directement sur ses succès."
         },
         "showConfigButton": {
           "name": "Bouton des réglages du jeu",
           "description": "Affiche le bouton outils en haut à droite de l’illustration. Les Réglages du jeu restent accessibles depuis le clic droit."
+        },
+        "gamePage": {
+          "name": "Page de jeu",
+          "description": "Un jeu s’ouvre sur sa page, avec sa bande-annonce, ses guides et ses captures. Désactivée, il s’ouvre directement sur ses succès."
         },
         "tilt": {
           "name": "Effet 3D au survol",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Lit le journal local des succès EA Desktop (pour les jeux en dehors des dossiers gérés par EA)."
       },
+      "rockstarOfficial": {
+        "description": "Jeux installés avec le Rockstar Games Launcher, avec leur liste de succès. Connecte ton compte dans la carte Compte Rockstar Games plus bas pour voir ceux que tu as débloqués."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Jeux Xbox PC (Game Pass / Microsoft Store). Connecte ton compte dans la carte Compte Xbox PC plus bas, puis importe pour voir les succès débloqués et leur rareté.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Jeux installés avec le Rockstar Games Launcher, avec leur liste de succès. Rockstar chiffre ceux que tu as débloqués : ils s’affichent tous verrouillés pour l’instant."
-      },
         "none": "Aucun",
         "installed": "Installé(s)",
         "owned": "Possédé(s)"
@@ -2611,6 +2615,15 @@
     "epic-title": "Compte Epic Games",
     "epic-desc": "Optionnel. La connexion affiche les succès que tu as déjà débloqués dans les jeux Epic installés ; les noms, descriptions et la rareté fonctionnent sans elle. Ton jeton est stocké chiffré sur ce PC.",
     "epic-btn-hint": "ouvre la fenêtre de connexion Epic",
+    "connect-rockstar-account": "Connecter le compte Rockstar Games",
+    "rockstar-title": "Compte Rockstar Games",
+    "rockstar-desc": "Optionnel. La connexion affiche les succès que tu as débloqués dans les jeux installés avec le Rockstar Games Launcher ; la liste fonctionne sans elle. Ta session est stockée chiffrée sur ce PC.",
+    "rockstar-btn-hint": "ouvre la fenêtre de connexion Rockstar",
+    "rockstar-connect": "Connecter le compte Rockstar Games",
+    "rockstar-connecting": "Ouverture de la fenêtre de connexion Rockstar…",
+    "rockstar-connected": "Compte Rockstar Games connecté.",
+    "rockstar-failed": "Échec de la connexion Rockstar",
+    "rockstar-disconnected": "Compte Rockstar Games déconnecté.",
     "connected": "Connecté",
     "account-connected-as": "Connecté : {name}",
     "disconnect": "Déconnecter",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Jeu Epic Games dans ta bibliothèque",
     "purchased-badge-ea": "Jeu EA dans ta bibliothèque",
     "purchased-badge-xbox": "Jeu Xbox dans ta bibliothèque",
+    "purchased-badge-rockstar": "Jeu du Rockstar Games Launcher",
     "steam-hide-stale": "Masquer les jeux qui ne sont plus dans ta bibliothèque Steam",
     "steam-hide-stale-help": "Nécessite un compte Steam connecté. Les jeux installés sur ce PC et ceux partagés via la famille Steam ne sont jamais masqués.",
     "steam-libraries-title": "Bibliothèques Steam",
     "steam-libraries-help": "Désactive une bibliothèque pour retirer ses jeux de toutes les collections, par exemple un disque que tu gardes branché pour le stockage. Ils reviennent quand tu la réactives.",
-    "purchased-badge-rockstar": "Jeu du Rockstar Games Launcher",
     "steam-import-owned": "Ajouter les jeux que tu possèdes",
     "steam-import-owned-help": "Liste toute ta bibliothèque Steam, y compris les jeux jamais installés sur ce PC. Avec une grosse bibliothèque, le premier scan est nettement plus long. La progression des jeux jamais lancés sur ce PC est lue sur ton profil Steam : ses détails de jeu doivent être publics.",
     "steam-import-needs-owned": "Disponible quand la source Steam ci-dessus liste les jeux que tu possèdes.",

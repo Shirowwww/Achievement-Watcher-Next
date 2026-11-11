@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Præstationsknap",
-          "description": "Viser trofæknappen på grafikken. Klik på selve feltet åbner også præstationerne."
+          "description": "Viser trofæknappen på grafikken. Den åbner spillet direkte på dets præstationer."
         },
         "showConfigButton": {
           "name": "Spilindstillingsknap",
           "description": "Viser værktøjsknappen øverst til højre på grafikken. Spillets indstillinger er stadig tilgængelige fra højrekliksmenuen."
+        },
+        "gamePage": {
+          "name": "Spilside",
+          "description": "Et spil åbner på sin side med trailer, guides og skærmbilleder. Når den er slået fra, åbner det direkte på præstationerne."
         },
         "tilt": {
           "name": "3D-effekt ved svæv",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Læs EA Desktops lokale præstationslog (til spil uden for EA's styrede mapper)."
       },
+      "rockstarOfficial": {
+        "description": "Spil installeret med Rockstar Games Launcher, med deres liste over præstationer. Tilslut din konto i kortet Rockstar Games-konto længere nede for at se, hvilke du har låst op."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC-spil (Game Pass / Microsoft Store). Tilslut din konto i kortet Xbox PC-konto længere nede, og importér derefter for at se oplåsninger og sjældenhed.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Spil installeret med Rockstar Games Launcher, med deres liste over præstationer. Rockstar krypterer, hvilke du har låst op, så de vises alle som låst indtil videre."
-      },
         "none": "Ingen",
         "installed": "Installerede",
         "owned": "Ejede"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games-konto",
     "epic-desc": "Valgfrit. Med en forbindelse kan du se, hvilke præstationer du allerede har låst op i installerede Epic-spil; navne, beskrivelser og sjældenhed virker uden. Dit token gemmes krypteret på denne pc.",
     "epic-btn-hint": "åbner Epics loginvindue",
+    "connect-rockstar-account": "Forbind Rockstar Games-konto",
+    "rockstar-title": "Rockstar Games-konto",
+    "rockstar-desc": "Valgfrit. Med en forbindelse kan du se, hvilke præstationer du har låst op i spil installeret med Rockstar Games Launcher; listen virker uden. Din session gemmes krypteret på denne pc.",
+    "rockstar-btn-hint": "åbner Rockstars loginvindue",
+    "rockstar-connect": "Forbind Rockstar Games-konto",
+    "rockstar-connecting": "Åbner Rockstars loginvindue…",
+    "rockstar-connected": "Rockstar Games-kontoen er forbundet.",
+    "rockstar-failed": "Login til Rockstar mislykkedes",
+    "rockstar-disconnected": "Forbindelsen til Rockstar Games-kontoen er afbrudt.",
     "connected": "Forbundet",
     "account-connected-as": "Forbundet: {name}",
     "disconnect": "Afbryd forbindelsen",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games-titel i dit bibliotek",
     "purchased-badge-ea": "EA-spil i dit bibliotek",
     "purchased-badge-xbox": "Xbox-spil i dit bibliotek",
+    "purchased-badge-rockstar": "Spil fra Rockstar Games Launcher",
     "steam-hide-stale": "Skjul spil, der ikke længere er i dit Steam-bibliotek",
     "steam-hide-stale-help": "Kræver en forbundet Steam-konto. Spil installeret på denne pc og spil delt via Steam Family skjules aldrig.",
     "steam-libraries-title": "Steam-biblioteker",
     "steam-libraries-help": "Deaktiver et bibliotek for at holde dets spil ude af alle samlinger, for eksempel et drev, du har tilsluttet som lager. De kommer tilbage, når du aktiverer det igen.",
-    "purchased-badge-rockstar": "Spil fra Rockstar Games Launcher",
     "steam-import-owned": "Tilføj de spil, du ejer",
     "steam-import-owned-help": "Viser hele dit Steam-bibliotek, inklusive spil, der aldrig har været installeret på denne pc. Et stort bibliotek gør den første scanning meget længere. Fremskridt i spil, der aldrig er spillet på denne pc, læses fra din Steam-profil, så dens spildetaljer skal være offentlige.",
     "steam-import-needs-owned": "Tilgængelig, når Steam-kilden ovenfor viser de spil, du ejer.",

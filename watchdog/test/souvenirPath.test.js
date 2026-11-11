@@ -110,3 +110,24 @@ test('a second unlock in the same second does not replace the first', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// A clip exists only once the recorder writes it, so its folder is left to the recorder: a capture
+// with no frames used to leave an empty game folder behind (Discord report, 2026-11-11).
+test('a clip path does not create its folder, a screenshot path does', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-souvenir-folder-'));
+  try {
+    const clip = souvenirPath({ game: 'Brothers', achievement: 'Wishing Well', dir }, '.mp4', { create: false });
+    assert.equal(path.dirname(clip), path.join(dir, 'Brothers'));
+    assert.equal(fs.existsSync(path.dirname(clip)), false);
+
+    const shot = souvenirPath({ game: 'Brothers', achievement: 'Wishing Well', dir });
+    assert.equal(fs.existsSync(path.dirname(shot)), true);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('the clip trigger asks for a path without creating its folder', () => {
+  const clip = fs.readFileSync(path.join(__dirname, '..', 'notification', 'clip.js'), 'utf8');
+  assert.match(clip, /souvenirPath\(\{ game, achievement, dir: clipFolder\(dir\) \}, recorder\.ext, \{ create: false \}\)/);
+});

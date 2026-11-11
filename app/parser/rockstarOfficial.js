@@ -5,15 +5,16 @@
 
   The launcher records each installed title under HKLM\SOFTWARE\WOW6432Node\Rockstar Games\<title>,
   with the folder in InstallFolder. The list comes from the title's Steam release, which carries the
-  same achievements with art and every language. Unlock state is not read: Social Club keeps it in
-  Documents\Rockstar Games\Social Club\Profiles\<id>\Titles\<title>\achievements.dat, encrypted with
-  a key held by the signed-in account, so every achievement shows locked.
+  same achievements with art and every language. The local unlock file (achievements.dat) is
+  encrypted with a key of the signed-in account, so unlocks come from Rockstar's achievements API
+  once a Rockstar account is connected (electron/rockstarAccount.js); without one, all are locked.
 */
 
 const fs = require('fs');
 const path = require('path');
-const { appHosts } = require('../util/appHosts.js');
+const { appHosts, documentsFolders } = require('../util/appHosts.js');
 const { normalizeNameKey } = require('./socialclubNames.js');
+const rockstarMetadata = require('./rockstarMetadata.js');
 const { SOURCE_LABEL } = require('../util/sourceIdentity.js');
 
 const SOURCE = SOURCE_LABEL.ROCKSTAR;
@@ -113,4 +114,66 @@ async function getGameData(record, lang, { resolveSteamAppId, steam }) {
   return { ...game, appid: record.appid, steamappid: steamAppId, source: SOURCE, installed: true };
 }
 
-module.exports = { SOURCE, initDebug, rockstarAppId, installedTitles, scan, getGameData };
+/*
+  The name Rockstar's achievements API knows a launcher title by, and the platform its unlocks are
+  kept under: GTA V Enhanced has its own ('pcalt'). Keyed by the launcher's registry title. Only
+  GTA V (both editions) was checked against a real account; a wrong entry costs nothing, since
+  unlocks are only kept once metadata.dat ties them to the game's own list.
+*/
+const API_TITLES = {
+  'gtav enhanced': { title: 'gtav', platform: 'pcalt' },
+  'grand theft auto v enhanced': { title: 'gtav', platform: 'pcalt' },
+  'gtav': { title: 'gtav', platform: 'pc' },
+  'gta v': { title: 'gtav', platform: 'pc' },
+  'grand theft auto v': { title: 'gtav', platform: 'pc' },
+  'gtaiv': { title: 'gtaiv', platform: 'pc' },
+  'gta iv': { title: 'gtaiv', platform: 'pc' },
+  'grand theft auto iv': { title: 'gtaiv', platform: 'pc' },
+  'l a noire': { title: 'lan', platform: 'pc' },
+  'max payne 3': { title: 'mp3', platform: 'pc' },
+  'red dead redemption 2': { title: 'rdr2', platform: 'pc' },
+  'gta iii definitive edition': { title: 'gta3unreal', platform: 'pc' },
+  'gta vice city definitive edition': { title: 'gtavcunreal', platform: 'pc' },
+  'gta san andreas definitive edition': { title: 'gtasaunreal', platform: 'pc' },
+};
+
+const apiTitleOf = (title) => API_TITLES[normalizeNameKey(title)] || null;
+
+/*
+  The signed-in account's unlocks for a launcher game, as the shared merge reads them:
+  { apiName: { earned, earned_time } }. Empty without an account, for a title the API does not
+  know, or when no metadata.dat ties Rockstar's numbers to this game's list.
+*/
+async function getAchievements(record, game, { invoke, steam, metadataFiles = () => rockstarMetadata.metadataFiles(documentsFolders()) }) {
+  const title = (record && record.data && record.data.title) || '';
+  const target = apiTitleOf(title);
+  const list = game && game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list : [];
+  if (!target || !list.length || !invoke) return {};
+  const answer = await invoke('rockstar:awarded', target);
+  if (!answer || !answer.ok) {
+    if (answer && answer.error !== 'rockstar-not-connected') debug.log(`[rockstar] ${title}: no unlocks (${answer.error})`);
+    return {};
+  }
+  // Rockstar's names match the Steam release's English ones; the game's own language fills a gap.
+  let english = null;
+  if (game.steamappid) {
+    try {
+      const data = await steam.getGameData({ appID: game.steamappid, lang: 'english' });
+      english = data && data.achievement && data.achievement.list;
+    } catch (err) {
+      debug.log(`[rockstar] ${title}: no English list to match (${err})`);
+    }
+  }
+  const numbers = rockstarMetadata.numbersFromFiles(metadataFiles(), [english, list].filter(Boolean));
+  if (!numbers) {
+    debug.log(`[rockstar] ${title}: no metadata.dat matches its list, unlocks not shown`);
+    return {};
+  }
+  const unlocks = {};
+  for (const [apiName, number] of Object.entries(numbers)) {
+    if (Object.hasOwn(answer.awarded || {}, String(number))) unlocks[apiName] = { earned: true, earned_time: answer.awarded[number] };
+  }
+  return unlocks;
+}
+
+module.exports = { SOURCE, initDebug, rockstarAppId, installedTitles, scan, getGameData, getAchievements, apiTitleOf };

@@ -26,7 +26,7 @@ These read the launcher's own local data and carry a shield in Settings.
 | **Ubisoft Connect** | Native local data and legacy Uplay formats | Ubisoft Connect installed |
 | **Epic Games** | Local installs, plus the games the account owns and their official achievement state once connected | The Epic Games launcher for local installs; an account connection for the rest |
 | **Xbox PC** | Local Game Pass and Microsoft Store installs, plus the games the account owns and their Xbox Network state | The Xbox app for local installs; an account connection for the rest |
-| **Rockstar Games Launcher** | The games it installed, with the achievement list of their Steam release | The Rockstar Games Launcher installed |
+| **Rockstar Games Launcher** | The games it installed, with the achievement list of their Steam release, and their unlock state once connected | The Rockstar Games Launcher installed; an account connection for the unlocks |
 
 **Steam**, **Epic Games** and **Xbox PC** each have three settings: **None**, **Installed** (games on
 this PC) or **Owned** (the whole library the account owns). **Owned** lists games that are not
@@ -51,12 +51,13 @@ storage. They come back when you switch it on again.
 > managed folders, and does not import your regular EA library.
 
 > [!NOTE]
-> **Rockstar Games Launcher** games show every achievement locked. Social Club keeps which ones you
-> unlocked in a file encrypted with your account's key, which AW Next cannot read yet.
+> **Rockstar Games Launcher** games show every achievement locked until you connect your Rockstar
+> Games account. Social Club keeps which ones you unlocked in a file encrypted with your account's
+> key, so AW Next asks Rockstar instead.
 
 ### Connected accounts
 
-Steam, Epic, Xbox PC and PlayStation can each be connected from Settings to read what the local files
+Steam, Epic, Xbox PC, PlayStation and Rockstar Games can each be connected from Settings to read what the local files
 do not carry. Every token is encrypted before it is stored on this PC, and everything else works
 without any account.
 
@@ -66,6 +67,7 @@ without any account.
 | **Epic Games** | Your unlocked achievements and, with **Owned**, the whole library: each game with its full list, unlock state and rarity. A few owned games have achievements Epic's store data never lists (Shadow of the Tomb Raider, Civilization VI). They are still listed, from Nemirtingas' games-infos-datas, but without unlock state, which Epic does not share even when you are signed in. Names, descriptions and rarity of an installed game work without an account. |
 | **Xbox PC** | Unlock state and rarity from Xbox Network for your library, cached locally. With **Owned** it also brings games the account has only played elsewhere. |
 | **PlayStation** | Your PlayStation games and trophies, with Sony's own rate for each trophy, refreshed every three days in the background. A game you do not own can be added by name from Sony's catalog, and removed the same way. A game from any other source that also came out on PlayStation shows the real platinum of its list, and in trophy mode its real grades and DLC groups (see [Notifications](notifications.md#trophy-mode)). You sign in on Sony's own page. |
+| **Rockstar Games** | The unlock state and unlock dates of the games the Rockstar Games Launcher installed. Rockstar numbers its achievements, and AW Next names them with the list the launcher keeps under `Documents\Rockstar Games\Social Club\Titles`: a game whose list is missing there stays all locked. Checked on GTA V, both editions. You sign in on Rockstar's own page, and the session it leaves is kept encrypted to renew the token. |
 
 A tile carries a small badge for what the connection established: bought on that store, shared through
 Steam Family, or no longer in your library.

@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Saavutukset-painike",
-          "description": "Näyttää pokaalipainikkeen kuvituksen päällä. Ruudun napsauttaminen avaa saavutukset myös."
+          "description": "Näyttää pokaalipainikkeen kuvituksen päällä. Se avaa pelin suoraan saavutuksiin."
         },
         "showConfigButton": {
           "name": "Pelin asetukset -painike",
           "description": "Näyttää työkalupainikkeen kuvituksen oikeasta yläkulmasta. Pelin asetukset ovat yhä käytettävissä hiiren kakkospainikkeen valikosta."
+        },
+        "gamePage": {
+          "name": "Pelisivu",
+          "description": "Peli avautuu omalle sivulleen, jossa on traileri, oppaat ja kuvakaappaukset. Poistettuna käytöstä se avautuu suoraan saavutuksiin."
         },
         "tilt": {
           "name": "3D-tehoste osoitettaessa",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Lue EA Desktopin paikallinen saavutusloki (EA:n hallinnoimien kansioiden ulkopuolisille peleille)."
       },
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcherilla asennetut pelit ja niiden saavutuslistat. Yhdistä tilisi alempana olevassa kortissa Rockstar Games -tili nähdäksesi, mitkä olet avannut."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC -pelit (Game Pass ja Microsoft Store). Yhdistä tilisi alempana olevassa kortissa Xbox PC -tili ja tuo sitten kirjasto nähdäksesi avaukset ja harvinaisuuden.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Rockstar Games Launcherilla asennetut pelit ja niiden saavutuslistat. Rockstar salaa, mitkä olet avannut, joten kaikki näkyvät toistaiseksi lukittuina."
-      },
         "none": "Ei mitään",
         "installed": "Asennetut",
         "owned": "Omistetut"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games -tili",
     "epic-desc": "Valinnainen. Yhdistäminen näyttää, mitkä saavutukset olet jo avannut asennetuissa Epic-peleissä; nimet, kuvaukset ja harvinaisuus toimivat ilmankin. Tunnuksesi tallennetaan salattuna tälle tietokoneelle.",
     "epic-btn-hint": "avaa Epicin kirjautumisikkunan",
+    "connect-rockstar-account": "Yhdistä Rockstar Games -tili",
+    "rockstar-title": "Rockstar Games -tili",
+    "rockstar-desc": "Valinnainen. Yhdistäminen näyttää, mitkä saavutukset olet avannut Rockstar Games Launcherilla asennetuissa peleissä; luettelo toimii ilmankin. Istuntosi tallennetaan salattuna tälle tietokoneelle.",
+    "rockstar-btn-hint": "avaa Rockstarin kirjautumisikkunan",
+    "rockstar-connect": "Yhdistä Rockstar Games -tili",
+    "rockstar-connecting": "Avataan Rockstarin kirjautumisikkunaa…",
+    "rockstar-connected": "Rockstar Games -tili yhdistetty.",
+    "rockstar-failed": "Rockstar-kirjautuminen epäonnistui",
+    "rockstar-disconnected": "Rockstar Games -tilin yhteys katkaistu.",
     "connected": "Yhdistetty",
     "account-connected-as": "Yhdistetty: {name}",
     "disconnect": "Katkaise yhteys",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games -nimike kirjastossasi",
     "purchased-badge-ea": "EA-peli kirjastossasi",
     "purchased-badge-xbox": "Xbox-peli kirjastossasi",
+    "purchased-badge-rockstar": "Rockstar Games Launcherin peli",
     "steam-hide-stale": "Piilota pelit, joita ei enää ole Steam-kirjastossasi",
     "steam-hide-stale-help": "Vaatii yhdistetyn Steam-tilin. Tälle tietokoneelle asennettuja pelejä ja Steam Familyn kautta jaettuja pelejä ei piiloteta koskaan.",
     "steam-libraries-title": "Steam-kirjastot",
     "steam-libraries-help": "Poista kirjasto käytöstä, niin sen pelit jäävät pois kaikista kokoelmista, esimerkiksi tallennustilaksi kytkettynä pitämäsi levy. Ne palaavat, kun otat kirjaston uudelleen käyttöön.",
-    "purchased-badge-rockstar": "Rockstar Games Launcherin peli",
     "steam-import-owned": "Lisää pelit, jotka omistat",
     "steam-import-owned-help": "Näyttää koko Steam-kirjastosi, myös pelit, joita ei ole koskaan asennettu tälle tietokoneelle. Suuri kirjasto pidentää ensimmäistä hakua huomattavasti. Tällä tietokoneella koskaan pelaamattomien pelien edistyminen luetaan Steam-profiilistasi, joten sen pelitietojen on oltava julkisia.",
     "steam-import-needs-owned": "Käytettävissä, kun yllä oleva Steam-lähde listaa omistamasi pelit.",

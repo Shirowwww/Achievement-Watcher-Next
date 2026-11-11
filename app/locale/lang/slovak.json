@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Tlačidlo úspechov",
-          "description": "Zobrazí tlačidlo trofeje na grafike. Kliknutie na samotnú dlaždicu tiež otvorí úspechy."
+          "description": "Zobrazí tlačidlo trofeje na grafike. Otvorí hru priamo na jej úspechoch."
         },
         "showConfigButton": {
           "name": "Tlačidlo nastavení hry",
           "description": "Zobrazí tlačidlo nástrojov v pravom hornom rohu grafiky. Nastavenia hry zostávajú dostupné z kontextovej ponuky."
+        },
+        "gamePage": {
+          "name": "Stránka hry",
+          "description": "Hra sa otvorí na svojej stránke s trailerom, návodmi a snímkami. Keď je vypnutá, otvorí sa priamo na úspechoch."
         },
         "tilt": {
           "name": "3D efekt pri nabehnutí myšou",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Číta lokálny záznam úspechov EA Desktop (pre hry mimo priečinkov spravovaných EA)."
       },
+      "rockstarOfficial": {
+        "description": "Hry nainštalované cez Rockstar Games Launcher so zoznamom úspechov. Pripojte svoj účet v karte Účet Rockstar Games nižšie, aby ste videli, ktoré ste odomkli."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Hry Xbox PC (Game Pass / Microsoft Store). Pripojte svoj účet v karte Účet Xbox PC nižšie a potom importujte, aby ste videli odomknutia a vzácnosť.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Hry nainštalované cez Rockstar Games Launcher so zoznamom úspechov. Rockstar šifruje, ktoré ste odomkli, takže sa zatiaľ všetky zobrazujú ako zamknuté."
-      },
         "none": "Žiadne",
         "installed": "Nainštalované",
         "owned": "Vlastnené"
@@ -2611,6 +2615,15 @@
     "epic-title": "Účet Epic Games",
     "epic-desc": "Voliteľné. Pripojenie ukáže, ktoré úspechy ste už odomkli v nainštalovaných hrách Epic; názvy, popisy a vzácnosť fungujú aj bez neho. Váš token je na tomto PC uložený šifrovane.",
     "epic-btn-hint": "otvorí okno prihlásenia Epic",
+    "connect-rockstar-account": "Pripojiť účet Rockstar Games",
+    "rockstar-title": "Účet Rockstar Games",
+    "rockstar-desc": "Voliteľné. Pripojenie ukáže, ktoré úspechy ste odomkli v hrách nainštalovaných cez Rockstar Games Launcher; zoznam funguje aj bez neho. Vaša relácia je na tomto PC uložená šifrovane.",
+    "rockstar-btn-hint": "otvorí okno prihlásenia Rockstar",
+    "rockstar-connect": "Pripojiť účet Rockstar Games",
+    "rockstar-connecting": "Otváranie okna prihlásenia Rockstar…",
+    "rockstar-connected": "Účet Rockstar Games pripojený.",
+    "rockstar-failed": "Prihlásenie do Rockstar sa nepodarilo",
+    "rockstar-disconnected": "Účet Rockstar Games odpojený.",
     "connected": "Pripojené",
     "account-connected-as": "Pripojené: {name}",
     "disconnect": "Odpojiť",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Titul Epic Games vo vašej knižnici",
     "purchased-badge-ea": "Hra EA vo vašej knižnici",
     "purchased-badge-xbox": "Hra Xbox vo vašej knižnici",
+    "purchased-badge-rockstar": "Hra z Rockstar Games Launchera",
     "steam-hide-stale": "Skryť hry, ktoré už nie sú vo vašej knižnici Steam",
     "steam-hide-stale-help": "Vyžaduje pripojený účet Steam. Hry nainštalované v tomto počítači a hry zdieľané cez Steam Family sa nikdy neskrývajú.",
     "steam-libraries-title": "Knižnice Steam",
     "steam-libraries-help": "Zakážte knižnicu, aby hry z nej neboli v žiadnej kolekcii, napríklad disk, ktorý máte pripojený ako úložisko. Po opätovnom povolení sa vrátia.",
-    "purchased-badge-rockstar": "Hra z Rockstar Games Launchera",
     "steam-import-owned": "Pridať hry, ktoré vlastníte",
     "steam-import-owned-help": "Zobrazí celú vašu knižnicu Steam vrátane hier, ktoré nikdy neboli nainštalované v tomto počítači. Veľká knižnica výrazne predľži prvý sken. Postup v hrách, ktoré sa na tomto PC nikdy nehrali, sa číta z vášho profilu Steam, takže podrobnosti o hrách v ňom musia byť verejné.",
     "steam-import-needs-owned": "Dostupné, keď zdroj Steam vyššie uvádza hry, ktoré vlastníte.",

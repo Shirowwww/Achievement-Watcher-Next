@@ -31,7 +31,7 @@ Czytają one lokalne dane samego launchera i mają tarczę w Ustawieniach.
 | **Ubisoft Connect** | Natywne dane lokalne i starsze formaty Uplay | Zainstalowany Ubisoft Connect |
 | **Epic Games** | Lokalne instalacje, a po połączeniu także gry należące do konta i ich oficjalny stan osiągnięć | Launcher Epic Games dla lokalnych instalacji; połączenie konta dla reszty |
 | **Xbox PC** | Lokalne instalacje z Game Pass i Microsoft Store, a także gry należące do konta i ich stan w Xbox Network | Aplikacja Xbox dla lokalnych instalacji; połączenie konta dla reszty |
-| **Rockstar Games Launcher** | Zainstalowane przez niego gry, z listą osiągnięć ich wersji ze Steam | Zainstalowany Rockstar Games Launcher |
+| **Rockstar Games Launcher** | Zainstalowane przez niego gry, z listą osiągnięć ich wersji ze Steam oraz ich stanem odblokowania po połączeniu konta | Zainstalowany Rockstar Games Launcher; połączenie z kontem dla odblokowań |
 
 **Steam**, **Epic Games** i **Xbox PC** mają po trzy ustawienia: **Brak**, **Zainstalowane** (gry na tym
 komputerze) lub **Posiadane** (cała biblioteka należąca do konta). **Posiadane** wymienia też gry, które nie są
@@ -56,11 +56,11 @@ magazyn. Wracają po ponownym włączeniu.
 > zarządzanych przez EA i nie importuje twojej zwykłej biblioteki EA.
 
 > [!NOTE]
-> Gry z **Rockstar Games Launcher** pokazują wszystkie osiągnięcia jako zablokowane. Social Club zapisuje dane o odblokowanych osiągnięciach w pliku zaszyfrowanym kluczem twojego konta, którego AW Next jeszcze nie umie odczytać.
+> Gry z **Rockstar Games Launcher** pokazują wszystkie osiągnięcia jako zablokowane, dopóki nie połączysz konta Rockstar Games. Social Club zapisuje dane o odblokowanych osiągnięciach w pliku zaszyfrowanym kluczem twojego konta, więc AW Next pyta o nie Rockstara.
 
 ### Połączone konta {#connected-accounts}
 
-Steam, Epic, Xbox PC i PlayStation można połączyć w Ustawieniach, aby czytać to, czego lokalne pliki
+Steam, Epic, Xbox PC, PlayStation i Rockstar Games można połączyć w Ustawieniach, aby czytać to, czego lokalne pliki
 nie zawierają. Każdy token jest szyfrowany przed zapisaniem na tym komputerze, a wszystko inne działa
 bez żadnego konta.
 
@@ -70,6 +70,7 @@ bez żadnego konta.
 | **Epic Games** | Twoje odblokowane osiągnięcia oraz, przy **Posiadane**, cała biblioteka: każda gra z pełną listą, stanem odblokowania i rzadkością. Kilka posiadanych gier ma osiągnięcia, których dane sklepu Epic nigdy nie wymieniają (Shadow of the Tomb Raider, Civilization VI). Nadal są wymieniane, z games-infos-datas Nemirtingasa, ale bez stanu odblokowania, którego Epic nie udostępnia nawet po zalogowaniu. Nazwy, opisy i rzadkość zainstalowanej gry działają bez konta. |
 | **Xbox PC** | Stan odblokowania i rzadkość z Xbox Network dla twojej biblioteki, zapamiętane lokalnie. Przy **Posiadane** dodaje też gry, w które konto grało tylko gdzie indziej. |
 | **PlayStation** | Twoje gry PlayStation i trofea, z oficjalnym współczynnikiem Sony dla każdego trofeum, odświeżane co trzy dni w tle. Grę, której nie posiadasz, można dodać po nazwie z katalogu Sony i w ten sam sposób usunąć. Gra z dowolnego innego źródła, która ukazała się też na PlayStation, pokazuje prawdziwą platynę swojej listy, a w trybie trofeów jej prawdziwe stopnie i grupy DLC (zobacz [Powiadomienia](notifications.md#trophy-mode)). Logujesz się na stronie samego Sony. |
+| **Rockstar Games** | Stan i daty odblokowania gier zainstalowanych przez Rockstar Games Launcher. Rockstar numeruje swoje osiągnięcia, a AW Next nadaje im nazwy na podstawie listy, którą launcher trzyma w `Documents\Rockstar Games\Social Club\Titles`: gra, której listy tam brakuje, pozostaje w całości zablokowana. Sprawdzone na GTA V, w obu wydaniach. Logujesz się na stronie samego Rockstara, a sesja, którą ona zostawia, jest przechowywana zaszyfrowana, aby odnawiać token. |
 
 Kafelek ma małą odznakę informującą o tym, co ustaliło połączenie: kupione w tym sklepie, udostępnione przez
 Rodzina Steam albo już nieobecne w twojej bibliotece.

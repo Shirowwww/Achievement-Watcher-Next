@@ -291,6 +291,8 @@ function normalize(parsed) {
   */
   options.achievement.libraryTileScale = libraryChrome.normalizeTileScale(options.achievement.libraryTileScale);
   options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
+  // Off, a game opens straight on its achievements list, as before the game page existed (#183).
+  if (typeof options.achievement.libraryGamePage !== 'boolean') options.achievement.libraryGamePage = true;
   for (const toggle of libraryChrome.TOGGLES) {
     if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
   }
@@ -487,12 +489,12 @@ function normalize(parsed) {
     options.achievement_source.ea = true;
   }
 
-  // Was an on/off switch before it could tell an installed game from one the account merely owns.
-  // On meant everything that was imported, which is what "owned" is now.
   if (typeof options.achievement_source.rockstarOfficial !== 'boolean') {
     options.achievement_source.rockstarOfficial = true;
   }
 
+  // Was an on/off switch before it could tell an installed game from one the account merely owns.
+  // On meant everything that was imported, which is what "owned" is now.
   if (typeof options.achievement_source.xboxPc === 'boolean') {
     options.achievement_source.xboxPc = options.achievement_source.xboxPc ? 2 : 0;
   }
@@ -742,6 +744,7 @@ function defaults() {
       libraryPlaytimeUnits: 'auto', // 'hours' keeps a long playtime in hours, never days
       libraryShowAchievementButton: true,
       libraryShowConfigButton: true,
+      libraryGamePage: true,
       libraryTilt: true,
       libraryAmbient: true,
       thumbnailPortrait: false,
@@ -789,10 +792,10 @@ function defaults() {
       epic: true,
       epicOfficial: 2,
       ea: true,
+      rockstarOfficial: true,
       xboxPc: 2,
       importCache: true,
     },
-      rockstarOfficial: true,
     emulator: {
       autoApplyNewGames: false, // opt-in: one-shot full setup for newly detected unconfigured emulated games (off = never touch game files unprompted)
       mode: 'regular', // standalone DLL swap - the only mode (ColdClient was removed)

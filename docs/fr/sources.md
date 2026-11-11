@@ -31,7 +31,7 @@ Ces sources lisent les données locales du lanceur lui-même et portent un boucl
 | **Ubisoft Connect** | Les données locales natives et les anciens formats Uplay | Ubisoft Connect installé |
 | **Epic Games** | Les installations locales, ainsi que les jeux que possède le compte et leur état officiel des succès une fois connecté | Le lanceur Epic Games pour les installations locales ; une connexion de compte pour le reste |
 | **Xbox PC** | Les installations locales Game Pass et Microsoft Store, ainsi que les jeux que possède le compte et leur état sur Xbox Network | L'application Xbox pour les installations locales ; une connexion de compte pour le reste |
-| **Rockstar Games Launcher** | Les jeux qu'il a installés, avec la liste des succès de leur version Steam | Le Rockstar Games Launcher installé |
+| **Rockstar Games Launcher** | Les jeux qu'il a installés, avec la liste des succès de leur version Steam, et leur état de déblocage une fois connecté | Le Rockstar Games Launcher installé ; une connexion de compte pour les déblocages |
 
 **Steam**, **Epic Games** et **Xbox PC** ont chacun trois réglages : **Aucun**, **Installé** (les jeux de
 ce PC) ou **Possédé** (toute la bibliothèque que possède le compte). **Possédé** liste aussi des jeux qui ne sont pas
@@ -56,11 +56,11 @@ stockage. Ils reviennent quand vous le réactivez.
 > gérés par EA, et n'importe pas votre bibliothèque EA habituelle.
 
 > [!NOTE]
-> Les jeux du **Rockstar Games Launcher** affichent tous leurs succès verrouillés. Social Club garde ceux que vous avez débloqués dans un fichier chiffré avec la clé de votre compte, qu'AW Next ne sait pas encore lire.
+> Les jeux du **Rockstar Games Launcher** affichent tous leurs succès verrouillés tant que vous ne connectez pas votre compte Rockstar Games. Social Club garde ceux que vous avez débloqués dans un fichier chiffré avec la clé de votre compte, donc AW Next interroge Rockstar à la place.
 
 ### Comptes connectés {#connected-accounts}
 
-Steam, Epic, Xbox PC et PlayStation peuvent chacun être connectés depuis les Paramètres pour lire ce que les fichiers locaux
+Steam, Epic, Xbox PC, PlayStation et Rockstar Games peuvent chacun être connectés depuis les Paramètres pour lire ce que les fichiers locaux
 ne contiennent pas. Chaque jeton est chiffré avant d'être stocké sur ce PC, et tout le reste fonctionne
 sans aucun compte.
 
@@ -70,6 +70,7 @@ sans aucun compte.
 | **Epic Games** | Vos succès débloqués et, avec **Possédé**, toute la bibliothèque : chaque jeu avec sa liste complète, l'état de déblocage et la rareté. Quelques jeux possédés ont des succès que les données de la boutique d'Epic ne listent jamais (Shadow of the Tomb Raider, Civilization VI). Ils sont tout de même listés, d'après games-infos-datas de Nemirtingas, mais sans état de déblocage, qu'Epic ne partage pas même quand vous êtes connecté. Les noms, descriptions et raretés d'un jeu installé fonctionnent sans compte. |
 | **Xbox PC** | L'état de déblocage et la rareté depuis Xbox Network pour votre bibliothèque, mis en cache en local. Avec **Possédé**, il apporte aussi les jeux que le compte n'a joués qu'ailleurs. |
 | **PlayStation** | Vos jeux et trophées PlayStation, avec le taux propre à Sony pour chaque trophée, actualisés tous les trois jours en arrière-plan. Un jeu que vous ne possédez pas peut être ajouté par son nom depuis le catalogue de Sony, et retiré de la même façon. Un jeu issu de n'importe quelle autre source qui est aussi sorti sur PlayStation affiche le vrai platine de sa liste, et en mode trophées ses vrais niveaux et groupes de DLC (voir [Notifications](notifications.md#trophy-mode)). Vous vous connectez sur la page de Sony elle-même. |
+| **Rockstar Games** | L'état de déblocage et les dates de déblocage des jeux installés par le Rockstar Games Launcher. Rockstar numérote ses succès, et AW Next les nomme avec la liste que le launcher garde dans `Documents\Rockstar Games\Social Club\Titles` : un jeu dont la liste manque à cet endroit reste entièrement verrouillé. Vérifié sur GTA V, les deux éditions. Vous vous connectez sur la page de Rockstar elle-même, et la session qu'elle laisse est conservée chiffrée pour renouveler le jeton. |
 
 Une tuile porte un petit badge pour ce que la connexion a établi : acheté sur cette boutique, partagé par le
 Partage familial Steam, ou n'est plus dans votre bibliothèque.

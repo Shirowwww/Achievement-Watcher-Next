@@ -4354,6 +4354,16 @@ function takeAchievementFocus(appid) {
   return focus && focus.appid === String(appid) ? focus.name : '';
 }
 
+// A tile's trophy button opens its game on the achievements list rather than the overview (#183).
+// Consumed by the next game page render, like the focus above.
+let pendingListOpen = null;
+
+function takeListOpen(appid) {
+  const wanted = pendingListOpen;
+  pendingListOpen = null;
+  return wanted === String(appid);
+}
+
 // Open a game's page from outside the library (a toast click, the stats panel), optionally on one
 // achievement.
 function openGameFromLibrary(appid, achievement) {
@@ -4462,6 +4472,15 @@ function formatReleaseDate(value) {
 function showGameOverview(box, game) {
   const root = document.getElementById('game-overview');
   if (!root || !window.GameOverview) return;
+  const listWanted = takeListOpen(game.appid);
+  // Settings > Appearance can turn the game page off: the game then opens on its list, as before 3.12.6.
+  const pageOff = app.config?.achievement?.libraryGamePage === false;
+  $('#achievement').attr('data-overview', pageOff ? 'off' : null);
+  if (pageOff) {
+    window.GameOverview.reset();
+    setGameView('list', { animate: false });
+    return;
+  }
   const refresh = window.GameOverview.current() === game.appid && $('#achievement').attr('data-view');
   const unlocked = Math.max(0, Math.floor(finiteNumber(game.achievement.unlocked, 0)));
   const total = Math.max(Math.floor(finiteNumber(game.achievement.total, 0)), unlocked);
@@ -4511,7 +4530,7 @@ function showGameOverview(box, game) {
     }
   );
   $('#btn-overview').text(t('game-page-overview', 'Overview', "Vue d'ensemble"));
-  if (pendingAchievementFocus && pendingAchievementFocus.appid === String(game.appid)) setGameView('list', { animate: false });
+  if (listWanted || (pendingAchievementFocus && pendingAchievementFocus.appid === String(game.appid))) setGameView('list', { animate: false });
   else if (!refresh) setGameView('overview', { animate: false });
 }
 
@@ -5375,6 +5394,10 @@ var app = {
           })
           .on('mouseleave.awLibrary', '.library-scroll-text', function () {
             stopLibraryTextScroll(this);
+          })
+          // Runs before the tile's own click below, which then opens the game on its list.
+          .on('click.awLibrary', '.game-box .achievement-button', function () {
+            pendingListOpen = String($(this).closest('.game-box').attr('data-appid'));
           })
           .on('click.awLibrary', '.game-box', function () {
             // Achievement-less entries use the exact same detail-page flow as every other game.
@@ -8049,6 +8072,8 @@ var app = {
     if (!game) {
       debug.warn(`onGameBoxClick: no game for appid=${self.data('appid')} index=${self.data('index')}`);
       self.css('pointer-events', 'initial');
+      // No page renders, so a trophy request must not wait for a later, unrelated open.
+      pendingListOpen = null;
       return;
     }
 

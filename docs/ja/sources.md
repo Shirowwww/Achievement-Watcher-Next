@@ -31,7 +31,7 @@ Fork、CODEX、RUNE、CPY といった Steam エミュレーターのセーブ�
 | **Ubisoft Connect** | ネイティブのローカルデータと旧 Uplay 形式 | Ubisoft Connect がインストールされていること |
 | **Epic Games** | ローカルのインストールと、接続後はアカウントが所有するゲームとその公式の実績の状態 | ローカルのインストールには Epic Games ランチャー。それ以外にはアカウントの接続 |
 | **Xbox PC** | ローカルの Game Pass と Microsoft Store のインストールと、アカウントが所有するゲームとその Xbox Network の状態 | ローカルのインストールには Xbox アプリ。それ以外にはアカウントの接続 |
-| **Rockstar Games Launcher** | インストールしたゲームと、その Steam 版の実績リスト | Rockstar Games Launcher がインストールされていること |
+| **Rockstar Games Launcher** | インストールしたゲームと、その Steam 版の実績リスト、および接続後はその解除状態 | Rockstar Games Launcher がインストールされていること。解除状態にはアカウントの接続が必要 |
 
 **Steam**、**Epic Games**、**Xbox PC** にはそれぞれ 3 つの設定があります：**なし**、**インストール済み**(このPCの
 ゲーム)、**所有**(アカウントが所有するライブラリ全体)。**所有** はここにインストールされていないゲームも
@@ -56,11 +56,11 @@ Steam アカウントのカードの下にある **Steam ライブラリ** に�
 > 通常の EA ライブラリはインポートしません。
 
 > [!NOTE]
-> **Rockstar Games Launcher** のゲームでは、すべての実績がロック状態で表示されます。Social Club は解除済みの実績をアカウントの鍵で暗号化したファイルに保存しており、AW Next はまだそれを読み取れません。
+> **Rockstar Games Launcher** のゲームでは、Rockstar Games アカウントを接続するまで、すべての実績がロック状態で表示されます。Social Club は解除済みの実績をアカウントの鍵で暗号化したファイルに保存しており、そのため AW Next は代わりに Rockstar に問い合わせます。
 
 ### 接続したアカウント {#connected-accounts}
 
-Steam、Epic、Xbox PC、PlayStation は、ローカルファイルにない情報を読み取るために、設定からそれぞれ接続できます。
+Steam、Epic、Xbox PC、PlayStation、Rockstar Games は、ローカルファイルにない情報を読み取るために、設定からそれぞれ接続できます。
 すべてのトークンはこのPCに保存される前に暗号化され、それ以外の機能はすべて
 アカウントなしで動作します。
 
@@ -70,6 +70,7 @@ Steam、Epic、Xbox PC、PlayStation は、ローカルファイルにない情�
 | **Epic Games** | 解除済みの実績と、**所有** にした場合はライブラリ全体：各ゲームの完全なリスト、解除の状態、レア度。所有しているゲームの一部には、Epic のストアデータに載っていない実績があります(Shadow of the Tomb Raider、Civilization VI)。それらも Nemirtingas の games-infos-datas から一覧に出ますが、解除の状態はありません。サインインしていても Epic は共有しないためです。インストール済みのゲームの名前、説明、レア度はアカウントなしで動作します。 |
 | **Xbox PC** | ライブラリの Xbox Network からの解除の状態とレア度を、ローカルにキャッシュして表示します。**所有** にすると、アカウントがほかの場所でだけプレイしたゲームも追加されます。 |
 | **PlayStation** | PlayStation のゲームとトロフィー、各トロフィーに対する Sony 自身の取得率。バックグラウンドで 3 日ごとに更新されます。持っていないゲームは Sony のカタログから名前で追加でき、同じ方法で削除できます。PlayStation でも発売された他のソースのゲームには、そのリストの本物のプラチナが表示され、トロフィーモードでは本物のグレードと DLC グループが表示されます([通知](notifications.md#trophy-mode)を参照)。サインインは Sony 自身のページで行います。 |
+| **Rockstar Games** | Rockstar Games Launcher がインストールしたゲームの解除状態と解除日時。Rockstar は実績に番号を振っており、AW Next はランチャーが `Documents\Rockstar Games\Social Club\Titles` に保持するリストを使って名前を付けます。そこにリストがないゲームは、すべてロックのままです。GTA V の両エディションで確認済みです。サインインは Rockstar 自身のページで行い、その際に残るセッションはトークンを更新するために暗号化して保存されます。 |
 
 タイルには、接続によって判明したことを示す小さなバッジが付きます：そのストアで購入、Steam ファミリーで共有、
 またはライブラリにもうない、のいずれかです。

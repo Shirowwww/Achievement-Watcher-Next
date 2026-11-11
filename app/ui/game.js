@@ -244,7 +244,7 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
           $('#btn-settings-cancel').trigger('click');
         } else if ($('#achievement').is(':visible')) {
           // One level at a time: the achievements list goes back to the overview first.
-          $($('#achievement').attr('data-view') === 'list' ? '#btn-overview' : '#btn-previous').trigger('click');
+          $($('#btn-overview').is(':visible') ? '#btn-overview' : '#btn-previous').trigger('click');
         }
       } else if (e.which === 5) {
         const box = window.__awMouseNavGameBox;

@@ -5635,6 +5635,10 @@ body.is-resizing #game-list {
   --brand-mark: url('../img/brands/ea.svg');
 }
 
+.brand-rockstar {
+  --brand-mark: url('../img/brands/rockstar.svg');
+}
+
 .onboarding-account-status {
   color: var(--text-muted);
   font-family: var(--font-body);
@@ -18689,7 +18693,8 @@ html:not([data-platform='linux']) [data-linux-only] {
 #achievement[data-view='overview'] .wrapper > .header,
 #achievement[data-view='overview'] .achievements,
 #achievement:not([data-view='list']) #btn-overview,
-#achievement[data-view='list'] #btn-previous {
+#achievement[data-overview='off'] #btn-overview,
+#achievement[data-view='list']:not([data-overview='off']) #btn-previous {
   display: none;
 }
 

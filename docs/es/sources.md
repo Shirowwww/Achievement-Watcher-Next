@@ -31,7 +31,7 @@ Estas leen los datos locales del propio lanzador y llevan un escudo en los Ajust
 | **Ubisoft Connect** | Datos locales nativos y formatos antiguos de Uplay | Ubisoft Connect instalado |
 | **Epic Games** | Las instalaciones locales, además de los juegos que posee la cuenta y su estado oficial de logros una vez conectada | El lanzador de Epic Games para las instalaciones locales; una conexión de cuenta para el resto |
 | **Xbox PC** | Las instalaciones locales de Game Pass y Microsoft Store, además de los juegos que posee la cuenta y su estado en Xbox Network | La aplicación de Xbox para las instalaciones locales; una conexión de cuenta para el resto |
-| **Rockstar Games Launcher** | Los juegos que ha instalado, con la lista de logros de su versión de Steam | El Rockstar Games Launcher instalado |
+| **Rockstar Games Launcher** | Los juegos que ha instalado, con la lista de logros de su versión de Steam y su estado de desbloqueo una vez conectada la cuenta | El Rockstar Games Launcher instalado; una conexión de cuenta para los desbloqueos |
 
 **Steam**, **Epic Games** y **Xbox PC** tienen cada uno tres opciones: **Ninguno**, **Instalados** (los juegos de
 este PC) o **En propiedad** (toda la biblioteca que posee la cuenta). **En propiedad** lista también juegos que no están
@@ -56,11 +56,11 @@ almacenamiento. Vuelven cuando la activas de nuevo.
 > gestionadas por EA, y no importa tu biblioteca habitual de EA.
 
 > [!NOTE]
-> Los juegos del **Rockstar Games Launcher** muestran todos los logros bloqueados. Social Club guarda cuáles has desbloqueado en un archivo cifrado con la clave de tu cuenta, que AW Next todavía no puede leer.
+> Los juegos del **Rockstar Games Launcher** muestran todos los logros bloqueados hasta que conectes tu cuenta de Rockstar Games. Social Club guarda cuáles has desbloqueado en un archivo cifrado con la clave de tu cuenta, así que AW Next se lo pregunta a Rockstar.
 
 ### Cuentas conectadas {#connected-accounts}
 
-Steam, Epic, Xbox PC y PlayStation se pueden conectar desde los Ajustes para leer lo que los archivos locales
+Steam, Epic, Xbox PC, PlayStation y Rockstar Games se pueden conectar desde los Ajustes para leer lo que los archivos locales
 no contienen. Cada token se cifra antes de guardarse en este PC, y todo lo demás funciona
 sin ninguna cuenta.
 
@@ -70,6 +70,7 @@ sin ninguna cuenta.
 | **Epic Games** | Tus logros desbloqueados y, con **En propiedad**, toda la biblioteca: cada juego con su lista completa, estado de desbloqueo y rareza. Algunos juegos en propiedad tienen logros que los datos de la tienda de Epic nunca listan (Shadow of the Tomb Raider, Civilization VI). Aun así se listan, a partir de games-infos-datas de Nemirtingas, pero sin estado de desbloqueo, que Epic no comparte ni con la sesión iniciada. Los nombres, descripciones y rareza de un juego instalado funcionan sin cuenta. |
 | **Xbox PC** | Estado de desbloqueo y rareza desde Xbox Network para tu biblioteca, guardados en caché en local. Con **En propiedad** también trae los juegos que la cuenta solo ha jugado en otro sitio. |
 | **PlayStation** | Tus juegos y trofeos de PlayStation, con la tasa propia de Sony para cada trofeo, actualizados cada tres días en segundo plano. Un juego que no posees se puede añadir por su nombre desde el catálogo de Sony y quitar del mismo modo. Un juego de cualquier otra fuente que también salió en PlayStation muestra el platino real de su lista y, en el modo trofeos, sus grados y grupos de DLC reales (consulta [Notificaciones](notifications.md#trophy-mode)). Inicias sesión en la propia página de Sony. |
+| **Rockstar Games** | El estado y las fechas de desbloqueo de los juegos que instaló el Rockstar Games Launcher. Rockstar numera sus logros, y AW Next les pone nombre con la lista que el launcher guarda en `Documents\Rockstar Games\Social Club\Titles`: un juego cuya lista falta ahí se queda todo bloqueado. Comprobado en GTA V, en sus dos ediciones. Inicias sesión en la propia página de Rockstar, y la sesión que deja se guarda cifrada para renovar el token. |
 
 Un recuadro lleva una pequeña insignia por lo que estableció la conexión: comprado en esa tienda, compartido mediante
 Steam Family o ya no está en tu biblioteca.

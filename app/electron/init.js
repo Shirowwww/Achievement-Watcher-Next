@@ -2780,6 +2780,7 @@ require('./accounts.js').register({
   getConfig: () => configJS,
   getMainWindow: () => MainWin,
 });
+require('./rockstarAccount.js').register({ userData, debug, t, getMainWindow: () => MainWin });
 
 // A crash of this app can leave its Watchdog running, holding WS port 8082 and the instance lock,
 // so look for one once before the first launch. Asynchronous: the renderer's synchronous IPC waits

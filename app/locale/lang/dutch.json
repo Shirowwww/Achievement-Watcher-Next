@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Prestatiesknop",
-          "description": "Toont de trofeeknop op de artwork. Klikken op de tegel zelf opent de prestaties ook."
+          "description": "Toont de trofeeknop op de artwork. Hij opent het spel direct op de prestaties."
         },
         "showConfigButton": {
           "name": "Game-instellingenknop",
           "description": "Toont de gereedschapsknop rechtsboven op de artwork. De game-instellingen blijven bereikbaar via het rechtsklikmenu."
+        },
+        "gamePage": {
+          "name": "Spelpagina",
+          "description": "Een spel opent op zijn pagina, met trailer, gidsen en screenshots. Uitgeschakeld opent het direct op de prestaties."
         },
         "tilt": {
           "name": "3D-effect bij hoveren",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Lees het lokale prestatielogboek van EA Desktop (voor games buiten de beheerde mappen van EA)."
       },
+      "rockstarOfficial": {
+        "description": "Games die met de Rockstar Games Launcher zijn geïnstalleerd, met hun lijst met prestaties. Verbind je account in de kaart Rockstar Games-account verderop om te zien welke je hebt ontgrendeld."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox-games op de pc (Game Pass / Microsoft Store). Verbind je account in de kaart Xbox PC-account verderop en importeer daarna om ontgrendelingen en zeldzaamheid te zien.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Games die met de Rockstar Games Launcher zijn geïnstalleerd, met hun lijst met prestaties. Rockstar versleutelt welke je hebt ontgrendeld, dus ze worden voorlopig allemaal als vergrendeld weergegeven."
-      },
         "none": "Geen",
         "installed": "Geïnstalleerd",
         "owned": "In bezit"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games-account",
     "epic-desc": "Optioneel. Verbinden laat zien welke prestaties je in geïnstalleerde Epic-games al hebt ontgrendeld; namen, beschrijvingen en zeldzaamheid werken ook zonder. Je token wordt versleuteld op deze pc bewaard.",
     "epic-btn-hint": "opent het aanmeldvenster van Epic",
+    "connect-rockstar-account": "Rockstar Games-account verbinden",
+    "rockstar-title": "Rockstar Games-account",
+    "rockstar-desc": "Optioneel. Verbinden laat zien welke prestaties je hebt ontgrendeld in games die met de Rockstar Games Launcher zijn geïnstalleerd; de lijst werkt ook zonder. Je sessie wordt versleuteld op deze pc bewaard.",
+    "rockstar-btn-hint": "opent het aanmeldvenster van Rockstar",
+    "rockstar-connect": "Rockstar Games-account verbinden",
+    "rockstar-connecting": "Het aanmeldvenster van Rockstar openen…",
+    "rockstar-connected": "Rockstar Games-account verbonden.",
+    "rockstar-failed": "Aanmelden bij Rockstar mislukt",
+    "rockstar-disconnected": "Rockstar Games-account losgekoppeld.",
     "connected": "Verbonden",
     "account-connected-as": "Verbonden: {name}",
     "disconnect": "Loskoppelen",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games-titel in je bibliotheek",
     "purchased-badge-ea": "EA-spel in je bibliotheek",
     "purchased-badge-xbox": "Xbox-game in je bibliotheek",
+    "purchased-badge-rockstar": "Game uit de Rockstar Games Launcher",
     "steam-hide-stale": "Verberg spellen die niet meer in je Steam-bibliotheek staan",
     "steam-hide-stale-help": "Vereist een verbonden Steam-account. Spellen die op deze pc geïnstalleerd zijn en spellen die via Steam Family gedeeld worden, worden nooit verborgen.",
     "steam-libraries-title": "Steam-bibliotheken",
     "steam-libraries-help": "Schakel een bibliotheek uit om de games ervan uit alle collecties te houden, bijvoorbeeld een schijf die je als opslag aangesloten laat. Ze komen terug zodra je de bibliotheek weer inschakelt.",
-    "purchased-badge-rockstar": "Game uit de Rockstar Games Launcher",
     "steam-import-owned": "Voeg de games toe die je bezit",
     "steam-import-owned-help": "Toont je hele Steam-bibliotheek, inclusief games die nooit op deze pc geïnstalleerd zijn geweest. Een grote bibliotheek maakt de eerste scan veel langer. De voortgang van games die nooit op deze pc zijn gespeeld, wordt uit je Steam-profiel gelezen, dus de gamegegevens daarvan moeten openbaar zijn.",
     "steam-import-needs-owned": "Beschikbaar wanneer de Steam-bron hierboven de games toont die je bezit.",

@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Botão de proezas",
-          "description": "Mostra o botão de troféu sobre a arte. Clicar no próprio cartão também abre as proezas."
+          "description": "Mostra o botão de troféu sobre a arte. Abre o jogo diretamente nas proezas."
         },
         "showConfigButton": {
           "name": "Botão de definições do jogo",
           "description": "Mostra o botão de ferramentas no canto superior direito da arte. As Definições do jogo continuam acessíveis a partir do menu do botão direito."
+        },
+        "gamePage": {
+          "name": "Página do jogo",
+          "description": "Um jogo abre na sua página, com o trailer, os guias e as capturas. Se estiver desativada, abre diretamente nas proezas."
         },
         "tilt": {
           "name": "Efeito 3D ao passar o rato",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Lê o registo local de proezas do EA Desktop (para jogos fora das pastas geridas pela EA)."
       },
+      "rockstarOfficial": {
+        "description": "Jogos instalados com o Rockstar Games Launcher, com a respetiva lista de proezas. Ligue a sua conta no cartão Conta Rockstar Games mais abaixo para ver quais desbloqueou."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Jogos Xbox PC (Game Pass / Microsoft Store). Ligue a sua conta no cartão Conta Xbox PC mais abaixo e depois importe para ver os desbloqueios e a raridade.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Jogos instalados com o Rockstar Games Launcher, com a respetiva lista de proezas. A Rockstar cifra quais desbloqueou, por isso, para já, aparecem todas como bloqueadas."
-      },
         "none": "Nenhum",
         "installed": "Instalados",
         "owned": "Na biblioteca"
@@ -2611,6 +2615,15 @@
     "epic-title": "Conta Epic Games",
     "epic-desc": "Opcional. A ligação mostra que proezas já desbloqueou nos jogos Epic instalados; nomes, descrições e raridade funcionam sem ela. O seu token é guardado cifrado neste PC.",
     "epic-btn-hint": "abre a janela de início de sessão da Epic",
+    "connect-rockstar-account": "Ligar conta Rockstar Games",
+    "rockstar-title": "Conta Rockstar Games",
+    "rockstar-desc": "Opcional. A ligação mostra que proezas desbloqueou nos jogos instalados com o Rockstar Games Launcher; a lista funciona sem ela. A sua sessão é guardada cifrada neste PC.",
+    "rockstar-btn-hint": "abre a janela de início de sessão da Rockstar",
+    "rockstar-connect": "Ligar conta Rockstar Games",
+    "rockstar-connecting": "A abrir a janela de início de sessão da Rockstar…",
+    "rockstar-connected": "Conta Rockstar Games ligada.",
+    "rockstar-failed": "Falha no início de sessão da Rockstar",
+    "rockstar-disconnected": "Conta Rockstar Games desligada.",
     "connected": "Ligado",
     "account-connected-as": "Ligado: {name}",
     "disconnect": "Desligar",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Título Epic Games na tua biblioteca",
     "purchased-badge-ea": "Jogo EA na tua biblioteca",
     "purchased-badge-xbox": "Jogo Xbox na sua biblioteca",
+    "purchased-badge-rockstar": "Jogo do Rockstar Games Launcher",
     "steam-hide-stale": "Ocultar os jogos que já não estão na sua biblioteca Steam",
     "steam-hide-stale-help": "Requer uma conta Steam ligada. Os jogos instalados neste PC e os partilhados pela Família Steam nunca são ocultados.",
     "steam-libraries-title": "Bibliotecas Steam",
     "steam-libraries-help": "Desative uma biblioteca para deixar os respetivos jogos fora de todas as coleções, por exemplo um disco que mantém ligado como armazenamento. Voltam quando a ativar novamente.",
-    "purchased-badge-rockstar": "Jogo do Rockstar Games Launcher",
     "steam-import-owned": "Adicionar os jogos que possui",
     "steam-import-owned-help": "Apresenta toda a sua biblioteca Steam, incluindo jogos que nunca foram instalados neste PC. Uma biblioteca grande torna a primeira análise muito mais demorada. O progresso dos jogos nunca jogados neste PC é lido a partir do seu perfil Steam, pelo que os detalhes de jogos têm de ser públicos.",
     "steam-import-needs-owned": "Disponível quando a origem Steam acima lista os jogos que possui.",

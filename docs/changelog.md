@@ -19,9 +19,16 @@ renamed in 3.9.0 and the history is kept under one file.
 ### Added
 
 - **Rockstar Games Launcher games show in the library.** Games it installed, such as GTA V
-  Enhanced, appear with their achievement list. Social Club encrypts which achievements you
-  unlocked, so they all show locked for now. The source has its own switch in **Settings →
-  Sources**.
+  Enhanced, appear with their achievement list. Connect your Rockstar Games account in **Settings →
+  Sources** (or in the first-start guide) to see which ones you unlocked and when; without it they
+  all show locked. The source has its own switch on the same page.
+- **Open a game straight on its achievements (#183).** Turn off **Game page** in **Settings >
+  Appearance > Library tiles** and a click on a game skips its overview, as before 3.12.6.
+
+### Fixed
+
+- **The trophy button on a tile opens the achievements again (#183).** Since the game page, it
+  opened the overview like a click anywhere else on the tile.
 
 ## 3.12.6 - 2026-11-11
 

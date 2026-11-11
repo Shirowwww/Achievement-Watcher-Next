@@ -31,7 +31,7 @@ Diese lesen die lokalen Daten des Launchers selbst und tragen in den Einstellung
 | **Ubisoft Connect** | Native lokale Daten und ältere Uplay-Formate | Ubisoft Connect installiert |
 | **Epic Games** | Lokale Installationen, dazu die Spiele, die das Konto besitzt, und ihren offiziellen Erfolgsstand, sobald verbunden | Der Epic-Games-Launcher für lokale Installationen; eine Kontoverbindung für den Rest |
 | **Xbox PC** | Lokale Installationen aus Game Pass und Microsoft Store, dazu die Spiele, die das Konto besitzt, und ihren Stand im Xbox Network | Die Xbox-App für lokale Installationen; eine Kontoverbindung für den Rest |
-| **Rockstar Games Launcher** | Die damit installierten Spiele, mit der Erfolgsliste ihrer Steam-Version | Den installierten Rockstar Games Launcher |
+| **Rockstar Games Launcher** | Die damit installierten Spiele, mit der Erfolgsliste ihrer Steam-Version und ihrem Freischaltstand nach der Verbindung | Den installierten Rockstar Games Launcher; eine Kontoverbindung für die Freischaltungen |
 
 **Steam**, **Epic Games** und **Xbox PC** haben je drei Einstellungen: **Keine**, **Installiert** (Spiele auf
 diesem PC) oder **Im Besitz** (die ganze Bibliothek, die das Konto besitzt). **Im Besitz** listet auch Spiele, die hier nicht
@@ -56,11 +56,11 @@ Speicher angeschlossen lässt. Sie kommen zurück, wenn du ihn wieder einschalte
 > verwalteten Ordner und importiert nicht deine reguläre EA-Bibliothek.
 
 > [!NOTE]
-> Bei Spielen aus dem **Rockstar Games Launcher** sind alle Erfolge gesperrt. Social Club speichert, welche du freigeschaltet hast, in einer mit dem Schlüssel deines Kontos verschlüsselten Datei, die AW Next noch nicht lesen kann.
+> Bei Spielen aus dem **Rockstar Games Launcher** sind alle Erfolge gesperrt, bis du dein Rockstar Games-Konto verbindest. Social Club speichert, welche du freigeschaltet hast, in einer mit dem Schlüssel deines Kontos verschlüsselten Datei, daher fragt AW Next stattdessen Rockstar.
 
 ### Verbundene Konten {#connected-accounts}
 
-Steam, Epic, Xbox PC und PlayStation lassen sich jeweils in den Einstellungen verbinden, um zu lesen, was die lokalen Dateien
+Steam, Epic, Xbox PC, PlayStation und Rockstar Games lassen sich jeweils in den Einstellungen verbinden, um zu lesen, was die lokalen Dateien
 nicht enthalten. Jedes Token wird verschlüsselt, bevor es auf diesem PC gespeichert wird, und alles andere funktioniert
 ohne Konto.
 
@@ -70,6 +70,7 @@ ohne Konto.
 | **Epic Games** | Deine freigeschalteten Erfolge und mit **Im Besitz** die ganze Bibliothek: jedes Spiel mit vollständiger Liste, Freischaltungsstand und Seltenheit. Bei einigen Spielen im Besitz gibt es Erfolge, die die Shop-Daten von Epic nie auflisten (Shadow of the Tomb Raider, Civilization VI). Sie werden trotzdem aufgeführt, aus den games-infos-datas von Nemirtingas, aber ohne Freischaltungsstand, den Epic auch bei angemeldetem Konto nicht herausgibt. Namen, Beschreibungen und Seltenheit eines installierten Spiels funktionieren ohne Konto. |
 | **Xbox PC** | Freischaltungsstand und Seltenheit aus dem Xbox Network für deine Bibliothek, lokal zwischengespeichert. Mit **Im Besitz** bringt es auch Spiele, die das Konto nur anderswo gespielt hat. |
 | **PlayStation** | Deine PlayStation-Spiele und Trophäen, mit Sonys eigener Quote für jede Trophäe, alle drei Tage im Hintergrund aktualisiert. Ein Spiel, das du nicht besitzt, lässt sich per Name aus Sonys Katalog hinzufügen und auf dieselbe Weise entfernen. Ein Spiel aus einer anderen Quelle, das auch für PlayStation erschienen ist, zeigt das echte Platin seiner Liste und im Trophäenmodus seine echten Stufen und DLC-Gruppen (siehe [Benachrichtigungen](notifications.md#trophy-mode)). Du meldest dich auf der Seite von Sony selbst an. |
+| **Rockstar Games** | Der Freischaltstand und die Freischaltdaten der Spiele, die der Rockstar Games Launcher installiert hat. Rockstar nummeriert seine Erfolge, und AW Next benennt sie mit der Liste, die der Launcher unter `Documents\Rockstar Games\Social Club\Titles` ablegt: Ein Spiel, dessen Liste dort fehlt, bleibt komplett gesperrt. Geprüft an GTA V, beiden Editionen. Du meldest dich auf der Seite von Rockstar selbst an, und die dabei entstehende Sitzung wird verschlüsselt aufbewahrt, um das Token zu erneuern. |
 
 Eine Kachel trägt ein kleines Abzeichen für das, was die Verbindung festgestellt hat: in diesem Shop gekauft, per
 Steam-Familienfreigabe geteilt oder nicht mehr in deiner Bibliothek.

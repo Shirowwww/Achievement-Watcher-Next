@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Tombol pencapaian",
-          "description": "Menampilkan tombol piala pada gambar. Mengklik kartu itu sendiri juga membuka pencapaian."
+          "description": "Menampilkan tombol piala pada gambar. Tombol ini membuka game langsung ke pencapaiannya."
         },
         "showConfigButton": {
           "name": "Tombol pengaturan game",
           "description": "Menampilkan tombol alat di sudut kanan atas gambar. Pengaturan game tetap bisa diakses dari menu klik kanan."
+        },
+        "gamePage": {
+          "name": "Halaman game",
+          "description": "Sebuah game terbuka di halamannya, lengkap dengan trailer, panduan, dan tangkapan layar. Jika dinonaktifkan, game langsung terbuka di pencapaiannya."
         },
         "tilt": {
           "name": "Efek 3D saat kursor di atas",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Baca log pencapaian lokal milik EA Desktop (untuk game di luar folder yang dikelola EA)."
       },
+      "rockstarOfficial": {
+        "description": "Game yang dipasang dengan Rockstar Games Launcher, beserta daftar pencapaiannya. Hubungkan akun Anda di kartu Akun Rockstar Games lebih bawah untuk melihat mana yang sudah Anda buka."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Game Xbox PC (Game Pass / Microsoft Store). Hubungkan akun Anda di kartu Akun Xbox PC lebih bawah, lalu impor untuk melihat pembukaan dan kelangkaan.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Game yang dipasang dengan Rockstar Games Launcher, beserta daftar pencapaiannya. Rockstar mengenkripsi mana yang sudah Anda buka, sehingga untuk sekarang semuanya tampil terkunci."
-      },
         "none": "Tidak ada",
         "installed": "Terpasang",
         "owned": "Dimiliki"
@@ -2611,6 +2615,15 @@
     "epic-title": "Akun Epic Games",
     "epic-desc": "Opsional. Menghubungkan akun akan menampilkan pencapaian mana yang sudah Anda buka di game Epic yang terpasang; nama, deskripsi, dan kelangkaan tetap berfungsi tanpanya. Token Anda disimpan terenkripsi di PC ini.",
     "epic-btn-hint": "membuka jendela masuk Epic",
+    "connect-rockstar-account": "Hubungkan akun Rockstar Games",
+    "rockstar-title": "Akun Rockstar Games",
+    "rockstar-desc": "Opsional. Menghubungkan akun akan menampilkan pencapaian yang sudah Anda buka di game yang dipasang dengan Rockstar Games Launcher; daftar tetap berfungsi tanpanya. Sesi Anda disimpan terenkripsi di PC ini.",
+    "rockstar-btn-hint": "membuka jendela masuk Rockstar",
+    "rockstar-connect": "Hubungkan akun Rockstar Games",
+    "rockstar-connecting": "Membuka jendela masuk Rockstar…",
+    "rockstar-connected": "Akun Rockstar Games terhubung.",
+    "rockstar-failed": "Masuk ke Rockstar gagal",
+    "rockstar-disconnected": "Akun Rockstar Games diputus.",
     "connected": "Terhubung",
     "account-connected-as": "Terhubung: {name}",
     "disconnect": "Putuskan",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Judul Epic Games di pustaka Anda",
     "purchased-badge-ea": "Game EA di pustaka Anda",
     "purchased-badge-xbox": "Game Xbox di perpustakaan Anda",
+    "purchased-badge-rockstar": "Game Rockstar Games Launcher",
     "steam-hide-stale": "Sembunyikan gim yang tidak lagi ada di pustaka Steam-mu",
     "steam-hide-stale-help": "Membutuhkan akun Steam yang terhubung. Gim yang terpasang di PC ini dan gim yang dibagikan lewat Steam Family tidak pernah disembunyikan.",
     "steam-libraries-title": "Pustaka Steam",
     "steam-libraries-help": "Nonaktifkan pustaka agar gimnya tidak muncul di koleksi mana pun, misalnya drive yang kamu biarkan terhubung sebagai penyimpanan. Gim itu kembali saat pustaka diaktifkan lagi.",
-    "purchased-badge-rockstar": "Game Rockstar Games Launcher",
     "steam-import-owned": "Tambahkan gim yang Anda miliki",
     "steam-import-owned-help": "Menampilkan seluruh pustaka Steam Anda, termasuk gim yang tidak pernah terpasang di PC ini. Pustaka yang besar membuat pemindaian pertama jauh lebih lama. Progres gim yang belum pernah dimainkan di PC ini dibaca dari profil Steam Anda, jadi detail gim harus disetel publik.",
     "steam-import-needs-owned": "Tersedia saat sumber Steam di atas menampilkan gim yang Anda miliki.",

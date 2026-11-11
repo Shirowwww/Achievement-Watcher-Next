@@ -371,6 +371,7 @@ function translateUI(lang, locale, template) {
       // The Play button row moved into this card; its strings stay where they always were in the
       // locale files (settings.general.playButton), so no locale had to be re-translated for the move.
       ['#play-button-settings-label', '#play-button-settings-help', '#option_showPlayButton', template.settings.general.playButton],
+      ['#library-gamepage-label', '#library-gamepage-help', '#option_libraryGamePage', lib.gamePage, 'enable', 'disable'],
     ];
     // The two hover effects have a strength: Disabled, then the three levels (true is Normal).
     for (const [label, help, select, entry] of [

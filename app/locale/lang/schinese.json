@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "成就按钮",
-          "description": "在封面上显示奖杯按钮。点击磁贴本身同样会打开成就。"
+          "description": "在封面上显示奖杯按钮。点击它会直接打开游戏的成就。"
         },
         "showConfigButton": {
           "name": "游戏设置按钮",
           "description": "在封面右上角显示工具按钮。游戏设置仍可通过右键菜单打开。"
+        },
+        "gamePage": {
+          "name": "游戏页面",
+          "description": "游戏会打开其专属页面，包含预告片、攻略和截图。关闭后，将直接打开成就。"
         },
         "tilt": {
           "name": "悬停 3D 效果",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "读取 EA Desktop 的本地成就日志（适用于 EA 管理文件夹之外的游戏）。"
       },
+      "rockstarOfficial": {
+        "description": "显示通过 Rockstar Games Launcher 安装的游戏及其成就列表。请在下方的 Rockstar Games 账户 卡片中连接你的账户，即可查看你已解锁的成就。"
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC 游戏（Game Pass / Microsoft Store）。请在下方的 Xbox PC 账户 卡片中连接你的账户，然后导入，即可查看解锁状态和稀有度。",
       "value": {
-      "rockstarOfficial": {
-        "description": "显示通过 Rockstar Games Launcher 安装的游戏及其成就列表。Rockstar 会加密你已解锁的成就，因此目前全部显示为未解锁。"
-      },
         "none": "无",
         "installed": "已安装",
         "owned": "拥有"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games 账户",
     "epic-desc": "可选。连接后可显示你在已安装的 Epic 游戏中已解锁的成就；名称、描述和稀有度无需连接即可使用。令牌以加密形式保存在本机。",
     "epic-btn-hint": "打开 Epic 登录窗口",
+    "connect-rockstar-account": "连接 Rockstar Games 账户",
+    "rockstar-title": "Rockstar Games 账户",
+    "rockstar-desc": "可选。连接后可显示你在通过 Rockstar Games Launcher 安装的游戏中已解锁的成就；列表无需连接即可使用。会话以加密形式保存在本机。",
+    "rockstar-btn-hint": "打开 Rockstar 登录窗口",
+    "rockstar-connect": "连接 Rockstar Games 账户",
+    "rockstar-connecting": "正在打开 Rockstar 登录窗口…",
+    "rockstar-connected": "Rockstar Games 账户已连接。",
+    "rockstar-failed": "Rockstar 登录失败",
+    "rockstar-disconnected": "Rockstar Games 账户已断开。",
     "connected": "已连接",
     "account-connected-as": "已连接：{name}",
     "disconnect": "断开连接",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "您库中的Epic Games游戏",
     "purchased-badge-ea": "您库中的EA游戏",
     "purchased-badge-xbox": "你的库中的 Xbox 游戏",
+    "purchased-badge-rockstar": "Rockstar Games Launcher 中的游戏",
     "steam-hide-stale": "隐藏已不在你的 Steam 库中的游戏",
     "steam-hide-stale-help": "需要已连接的 Steam 账户。安装在这台电脑上的游戏以及通过 Steam 家庭共享的游戏永远不会被隐藏。",
     "steam-libraries-title": "Steam 库",
     "steam-libraries-help": "禁用某个库后，它的游戏将不再出现在任何收藏集中，例如你一直连着当作存储盘的硬盘。重新启用后游戏会回来。",
-    "purchased-badge-rockstar": "Rockstar Games Launcher 中的游戏",
     "steam-import-owned": "添加你拥有的游戏",
     "steam-import-owned-help": "列出你完整的 Steam 库，包括从未安装在这台电脑上的游戏。库越大，首次扫描耗时越长。从未在这台电脑上玩过的游戏，其进度从你的 Steam 个人资料读取，因此游戏详情必须设为公开。",
     "steam-import-needs-owned": "当上方的 Steam 来源列出你拥有的游戏时可用。",

@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Nút thành tựu",
-          "description": "Hiện nút cúp trên hình ảnh. Nhấp vào chính thẻ đó cũng mở thành tựu."
+          "description": "Hiện nút cúp trên hình ảnh. Nút này mở trò chơi thẳng vào thành tựu."
         },
         "showConfigButton": {
           "name": "Nút cài đặt trò chơi",
           "description": "Hiện nút công cụ ở góc trên bên phải hình ảnh. Cài đặt trò chơi vẫn có thể truy cập từ menu chuột phải."
+        },
+        "gamePage": {
+          "name": "Trang trò chơi",
+          "description": "Trò chơi mở ở trang riêng, với trailer, hướng dẫn và ảnh chụp màn hình. Khi tắt, trò chơi mở thẳng vào thành tựu."
         },
         "tilt": {
           "name": "Hiệu ứng 3D khi di chuột",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Đọc nhật ký thành tựu cục bộ của EA Desktop (cho các trò chơi nằm ngoài thư mục do EA quản lý)."
       },
+      "rockstarOfficial": {
+        "description": "Các game cài bằng Rockstar Games Launcher, kèm danh sách thành tựu. Kết nối tài khoản của bạn ở thẻ Tài khoản Rockstar Games bên dưới để xem những thành tựu bạn đã mở khóa."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Game Xbox PC (Game Pass / Microsoft Store). Kết nối tài khoản của bạn ở thẻ Tài khoản Xbox PC bên dưới, rồi nhập để xem trạng thái mở khóa và độ hiếm.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Các game cài bằng Rockstar Games Launcher, kèm danh sách thành tựu. Rockstar mã hóa những thành tựu bạn đã mở khóa, nên hiện tại tất cả đều hiển thị là bị khóa."
-      },
         "none": "Không",
         "installed": "Đã cài đặt",
         "owned": "Đang sở hữu"
@@ -2611,6 +2615,15 @@
     "epic-title": "Tài khoản Epic Games",
     "epic-desc": "Không bắt buộc. Kết nối sẽ cho thấy những thành tựu bạn đã mở khóa trong các trò chơi Epic đã cài; tên, mô tả và độ hiếm vẫn hoạt động khi không kết nối. Mã thông báo của bạn được mã hóa và lưu trên máy này.",
     "epic-btn-hint": "mở cửa sổ đăng nhập Epic",
+    "connect-rockstar-account": "Kết nối tài khoản Rockstar Games",
+    "rockstar-title": "Tài khoản Rockstar Games",
+    "rockstar-desc": "Không bắt buộc. Kết nối sẽ cho thấy những thành tựu bạn đã mở khóa trong các trò chơi cài bằng Rockstar Games Launcher; danh sách vẫn hoạt động khi không kết nối. Phiên của bạn được mã hóa và lưu trên máy này.",
+    "rockstar-btn-hint": "mở cửa sổ đăng nhập Rockstar",
+    "rockstar-connect": "Kết nối tài khoản Rockstar Games",
+    "rockstar-connecting": "Đang mở cửa sổ đăng nhập Rockstar…",
+    "rockstar-connected": "Đã kết nối tài khoản Rockstar Games.",
+    "rockstar-failed": "Đăng nhập Rockstar thất bại",
+    "rockstar-disconnected": "Đã ngắt kết nối tài khoản Rockstar Games.",
     "connected": "Đã kết nối",
     "account-connected-as": "Đã kết nối: {name}",
     "disconnect": "Ngắt kết nối",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Tựa game Epic Games trong thư viện của bạn",
     "purchased-badge-ea": "Trò chơi EA trong thư viện của bạn",
     "purchased-badge-xbox": "Game Xbox trong thư viện của bạn",
+    "purchased-badge-rockstar": "Game từ Rockstar Games Launcher",
     "steam-hide-stale": "Ẩn các trò chơi không còn trong thư viện Steam của bạn",
     "steam-hide-stale-help": "Yêu cầu tài khoản Steam đã kết nối. Các trò chơi được cài đặt trên PC này và trò chơi chia sẻ qua Steam Family không bao giờ bị ẩn.",
     "steam-libraries-title": "Thư viện Steam",
     "steam-libraries-help": "Tắt một thư viện để loại các trò chơi của nó khỏi mọi bộ sưu tập, ví dụ một ổ đĩa bạn để cắm sẵn làm nơi lưu trữ. Chúng sẽ trở lại khi bạn bật lại thư viện.",
-    "purchased-badge-rockstar": "Game từ Rockstar Games Launcher",
     "steam-import-owned": "Thêm những trò chơi bạn sở hữu",
     "steam-import-owned-help": "Liệt kê toàn bộ thư viện Steam của bạn, kể cả những trò chơi chưa từng được cài trên PC này. Thư viện lớn sẽ khiến lần quét đầu tiên lâu hơn nhiều. Tiến độ của các trò chơi chưa từng chơi trên máy này được đọc từ hồ sơ Steam của bạn, vì vậy chi tiết trò chơi phải để công khai.",
     "steam-import-needs-owned": "Có sẵn khi nguồn Steam ở trên liệt kê các trò chơi bạn sở hữu.",

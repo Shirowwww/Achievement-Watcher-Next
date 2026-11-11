@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "実績ボタン",
-          "description": "画像上にトロフィーボタンを表示します。タイル自体をクリックしても実績が開きます。"
+          "description": "画像上にトロフィーボタンを表示します。このボタンでゲームの実績が直接開きます。"
         },
         "showConfigButton": {
           "name": "ゲーム設定ボタン",
           "description": "画像右上のツールボタンを表示します。ゲーム設定は右クリックメニューから引き続き確認できます。"
+        },
+        "gamePage": {
+          "name": "ゲームページ",
+          "description": "ゲームはトレーラー、攻略ガイド、スクリーンショットを備えた専用ページで開きます。無効にすると、実績が直接開きます。"
         },
         "tilt": {
           "name": "ホバー時の3D効果",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "EA Desktop のローカル実績ログを読み取ります（EA 管理フォルダー外のゲーム向け）。"
       },
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcher でインストールしたゲームを、実績リストとともに表示します。下のRockstar Games アカウントカードでアカウントを接続すると、解除済みの実績を確認できます。"
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC ゲーム（Game Pass / Microsoft Store）。下のXbox PC アカウントカードでアカウントを接続し、インポートすると解除状況とレア度が表示されます。",
       "value": {
-      "rockstarOfficial": {
-        "description": "Rockstar Games Launcher でインストールしたゲームを、実績リストとともに表示します。Rockstar は解除済みの実績を暗号化しているため、現時点ではすべてロック状態で表示されます。"
-      },
         "none": "なし",
         "installed": "インストール済み",
         "owned": "所有"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games アカウント",
     "epic-desc": "任意です。接続すると、インストール済みの Epic ゲームで解除済みの実績が表示されます。名前・説明・レアリティは接続しなくても機能します。トークンはこの PC に暗号化して保存されます。",
     "epic-btn-hint": "Epic のサインインウィンドウを開きます",
+    "connect-rockstar-account": "Rockstar Games アカウントを接続",
+    "rockstar-title": "Rockstar Games アカウント",
+    "rockstar-desc": "任意です。接続すると、Rockstar Games Launcher でインストールしたゲームで解除済みの実績が表示されます。一覧は接続しなくても機能します。セッションはこの PC に暗号化して保存されます。",
+    "rockstar-btn-hint": "Rockstar のサインインウィンドウを開きます",
+    "rockstar-connect": "Rockstar Games アカウントを接続",
+    "rockstar-connecting": "Rockstar のサインインウィンドウを開いています…",
+    "rockstar-connected": "Rockstar Games アカウントを接続しました。",
+    "rockstar-failed": "Rockstar へのサインインに失敗しました",
+    "rockstar-disconnected": "Rockstar Games アカウントを切断しました。",
     "connected": "接続済み",
     "account-connected-as": "接続済み：{name}",
     "disconnect": "切断",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "ライブラリ内のEpic Gamesタイトル",
     "purchased-badge-ea": "ライブラリ内のEAゲーム",
     "purchased-badge-xbox": "ライブラリにある Xbox のゲーム",
+    "purchased-badge-rockstar": "Rockstar Games Launcher のゲーム",
     "steam-hide-stale": "Steam ライブラリにもうないゲームを隠す",
     "steam-hide-stale-help": "Steam アカウントの接続が必要です。この PC にインストール済みのゲームと Steam ファミリーで共有されているゲームは決して隠されません。",
     "steam-libraries-title": "Steam ライブラリ",
     "steam-libraries-help": "ライブラリを無効にすると、そのゲームはすべてのコレクションから除外されます。たとえば、ストレージとして接続したままにしているドライブなどです。再び有効にすると元に戻ります。",
-    "purchased-badge-rockstar": "Rockstar Games Launcher のゲーム",
     "steam-import-owned": "所有しているゲームを追加",
     "steam-import-owned-help": "この PC に一度もインストールされていないゲームを含め、Steam ライブラリ全体を表示します。ライブラリが大きいと初回スキャンが大幅に長くなります。この PC でプレイしたことのないゲームの進行状況は Steam プロフィールから読み取るため、ゲームの詳細を公開にする必要があります。",
     "steam-import-needs-owned": "上のSteamソースが所有しているゲームを一覧表示しているときに利用できます。",

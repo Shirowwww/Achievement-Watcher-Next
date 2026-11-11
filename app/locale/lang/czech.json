@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Tlačítko úspěchů",
-          "description": "Zobrazí tlačítko trofeje na grafice. Kliknutí na samotnou dlaždici úspěchy otevře také."
+          "description": "Zobrazí tlačítko trofeje na grafice. Otevře hru rovnou na jejích úspěších."
         },
         "showConfigButton": {
           "name": "Tlačítko nastavení hry",
           "description": "Zobrazí tlačítko nástrojů v pravém horním rohu grafiky. Nastavení hry zůstává dostupné z kontextové nabídky."
+        },
+        "gamePage": {
+          "name": "Stránka hry",
+          "description": "Hra se otevře na své stránce s trailerem, návody a snímky. Když je vypnutá, otevře se rovnou na úspěších."
         },
         "tilt": {
           "name": "3D efekt při najetí myší",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Čte místní záznam úspěchů EA Desktop (pro hry mimo složky spravované EA)."
       },
+      "rockstarOfficial": {
+        "description": "Hry nainstalované přes Rockstar Games Launcher se seznamem úspěchů. Připojte svůj účet v kartě Účet Rockstar Games níže, abyste viděli, které jste odemkli."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Hry Xbox PC (Game Pass / Microsoft Store). Připojte svůj účet v kartě Účet Xbox PC níže a poté importujte, abyste viděli odemčení a vzácnost.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Hry nainstalované přes Rockstar Games Launcher se seznamem úspěchů. Rockstar šifruje, které jste odemkli, takže se zatím všechny zobrazují jako zamčené."
-      },
         "none": "Žádné",
         "installed": "Nainstalované",
         "owned": "Vlastněné"
@@ -2611,6 +2615,15 @@
     "epic-title": "Účet Epic Games",
     "epic-desc": "Volitelné. Připojení ukáže, které úspěchy jste už odemkli v nainstalovaných hrách Epic; názvy, popisy a vzácnost fungují i bez něj. Váš token je na tomto PC uložen šifrovaně.",
     "epic-btn-hint": "otevře okno přihlášení Epic",
+    "connect-rockstar-account": "Připojit účet Rockstar Games",
+    "rockstar-title": "Účet Rockstar Games",
+    "rockstar-desc": "Volitelné. Připojení ukáže, které úspěchy jste odemkli ve hrách nainstalovaných přes Rockstar Games Launcher; seznam funguje i bez něj. Vaše relace je na tomto PC uložena šifrovaně.",
+    "rockstar-btn-hint": "otevře okno přihlášení Rockstar",
+    "rockstar-connect": "Připojit účet Rockstar Games",
+    "rockstar-connecting": "Otevírání okna přihlášení Rockstar…",
+    "rockstar-connected": "Účet Rockstar Games připojen.",
+    "rockstar-failed": "Přihlášení k Rockstar se nezdařilo",
+    "rockstar-disconnected": "Účet Rockstar Games odpojen.",
     "connected": "Připojeno",
     "account-connected-as": "Připojeno: {name}",
     "disconnect": "Odpojit",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Titul Epic Games ve vaší knihovně",
     "purchased-badge-ea": "Hra EA ve vaší knihovně",
     "purchased-badge-xbox": "Hra Xbox ve vaší knihovně",
+    "purchased-badge-rockstar": "Hra z Rockstar Games Launcheru",
     "steam-hide-stale": "Skrýt hry, které už nejsou ve vaší knihovně Steam",
     "steam-hide-stale-help": "Vyžaduje připojený účet Steam. Hry nainstalované v tomto počítači a hry sdílené přes Steam Family se nikdy neskrývají.",
     "steam-libraries-title": "Knihovny Steam",
     "steam-libraries-help": "Zakažte knihovnu, aby její hry nebyly v žádné kolekci, například disk, který máte připojený jako úložiště. Po opětovném povolení se vrátí.",
-    "purchased-badge-rockstar": "Hra z Rockstar Games Launcheru",
     "steam-import-owned": "Přidat hry, které vlastníte",
     "steam-import-owned-help": "Zobrazí celou vaši knihovnu Steam, včetně her, které nikdy nebyly nainstalovány v tomto počítači. Velká knihovna výrazně prodlouží první sken. Postup u her, které se na tomto PC nikdy nehrály, se čte z vašeho profilu Steam, takže podrobnosti o hrách v něm musí být veřejné.",
     "steam-import-needs-owned": "Dostupné, když zdroj Steam výše uvádí hry, které vlastníte.",

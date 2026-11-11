@@ -31,7 +31,7 @@ Leggono i dati locali del launcher stesso e portano uno scudo nelle Impostazioni
 | **Ubisoft Connect** | I dati locali nativi e i formati Uplay legacy | Ubisoft Connect installato |
 | **Epic Games** | Le installazioni locali, più i giochi posseduti dall'account e il loro stato ufficiale degli obiettivi una volta collegato | Il launcher di Epic Games per le installazioni locali; il collegamento dell'account per il resto |
 | **Xbox PC** | Le installazioni locali di Game Pass e Microsoft Store, più i giochi posseduti dall'account e il loro stato su Xbox Network | L'app Xbox per le installazioni locali; il collegamento dell'account per il resto |
-| **Rockstar Games Launcher** | I giochi che ha installato, con l'elenco degli obiettivi della loro versione Steam | Il Rockstar Games Launcher installato |
+| **Rockstar Games Launcher** | I giochi che ha installato, con l'elenco degli obiettivi della loro versione Steam e il loro stato di sblocco una volta collegato l'account | Il Rockstar Games Launcher installato; un collegamento dell'account per gli sblocchi |
 
 **Steam**, **Epic Games** e **Xbox PC** hanno ciascuno tre impostazioni: **Nessuno**, **Installati** (i giochi su
 questo PC) oppure **Posseduti** (l'intera libreria dell'account). **Posseduti** elenca anche i giochi non
@@ -57,11 +57,11 @@ collegata come archivio. Tornano quando la riattivi.
 > gestite da EA, e non importa la tua normale libreria EA.
 
 > [!NOTE]
-> I giochi del **Rockstar Games Launcher** mostrano tutti gli obiettivi bloccati. Social Club salva quelli che hai sbloccato in un file cifrato con la chiave del tuo account, che AW Next non sa ancora leggere.
+> I giochi del **Rockstar Games Launcher** mostrano tutti gli obiettivi bloccati finché non colleghi il tuo account Rockstar Games. Social Club salva quelli che hai sbloccato in un file cifrato con la chiave del tuo account, quindi AW Next lo chiede a Rockstar.
 
 ### Account collegati {#connected-accounts}
 
-Steam, Epic, Xbox PC e PlayStation possono essere collegati dalle Impostazioni per leggere ciò che i file locali
+Steam, Epic, Xbox PC, PlayStation e Rockstar Games possono essere collegati dalle Impostazioni per leggere ciò che i file locali
 non contengono. Ogni token viene cifrato prima di essere salvato su questo PC, e tutto il resto funziona
 senza alcun account.
 
@@ -71,6 +71,7 @@ senza alcun account.
 | **Epic Games** | I tuoi obiettivi sbloccati e, con **Posseduti**, l'intera libreria: ogni gioco con il suo elenco completo, lo stato di sblocco e la rarità. Alcuni giochi posseduti hanno obiettivi che i dati dello store di Epic non elencano mai (Shadow of the Tomb Raider, Civilization VI). Vengono comunque elencati, dai games-infos-datas di Nemirtingas, ma senza stato di sblocco, che Epic non condivide nemmeno con l'accesso effettuato. Nomi, descrizioni e rarità di un gioco installato funzionano senza account. |
 | **Xbox PC** | Stato di sblocco e rarità da Xbox Network per la tua libreria, messi in cache in locale. Con **Posseduti** porta anche i giochi che l'account ha giocato solo altrove. |
 | **PlayStation** | I tuoi giochi PlayStation e i trofei, con la percentuale ufficiale di Sony per ciascun trofeo, aggiornati ogni tre giorni in background. Un gioco che non possiedi può essere aggiunto per nome dal catalogo di Sony, e rimosso allo stesso modo. Un gioco di qualsiasi altra sorgente uscito anche su PlayStation mostra il vero platino del suo elenco e, in modalità trofei, i suoi veri gradi e gruppi di DLC (vedi [Notifiche](notifications.md#trophy-mode)). L'accesso avviene sulla pagina di Sony. |
+| **Rockstar Games** | Lo stato e le date di sblocco dei giochi installati dal Rockstar Games Launcher. Rockstar numera i suoi obiettivi, e AW Next li chiama per nome con l'elenco che il launcher conserva in `Documents\Rockstar Games\Social Club\Titles`: un gioco il cui elenco manca lì resta tutto bloccato. Verificato su GTA V, in entrambe le edizioni. L'accesso avviene sulla pagina di Rockstar, e la sessione che lascia viene conservata cifrata per rinnovare il token. |
 
 Un riquadro porta un piccolo badge per ciò che il collegamento ha stabilito: acquistato su quello store,
 condiviso tramite Steam Family, oppure non più nella tua libreria.

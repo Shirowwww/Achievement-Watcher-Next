@@ -34,3 +34,25 @@ test('the clip settings map onto gpu-screen-recorder options', () => {
   );
   assert.deepEqual(args, ['-w', 'screen', '-c', 'mp4', '-k', 'av1', '-f', '30', '-q', 'medium', '-r', '14', '-a', 'default_output', '-o', '/tmp/r']);
 });
+
+// The Watchdog no longer creates a clip's folder up front, so the move into it must.
+test('a saved replay is moved into a game folder that does not exist yet', async (t) => {
+  const { PassThrough } = require('node:stream');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gsr-move-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const replay = path.join(dir, 'replay.mp4');
+  fs.writeFileSync(replay, 'mp4');
+  const target = path.join(dir, 'Videos', 'Brothers', 'Wishing Well.mp4');
+  const stdout = new PassThrough();
+  const logs = [];
+  const log = { log: (line) => logs.push(line), warn: (line) => logs.push(line) };
+  const recorder = gsrClip.createRecorder({ child: { stdout, pid: 1 }, afterMs: 0, log, kill: () => {} });
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+  recorder.save(target);
+  await tick();
+  stdout.write(replay + '\n');
+  await tick();
+
+  assert.equal(fs.readFileSync(target, 'utf8'), 'mp4', logs.join('\n'));
+});

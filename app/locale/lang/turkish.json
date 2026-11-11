@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Başarımlar düğmesi",
-          "description": "Görselin üzerinde kupa düğmesini gösterir. Kutucuğun kendisine tıklamak da başarımları açar."
+          "description": "Görselin üzerinde kupa düğmesini gösterir. Oyunu doğrudan başarımlarında açar."
         },
         "showConfigButton": {
           "name": "Oyun ayarları düğmesi",
           "description": "Görselin sağ üst köşesinde araçlar düğmesini gösterir. Oyun ayarlarına sağ tık menüsünden ulaşılabilir olmaya devam eder."
+        },
+        "gamePage": {
+          "name": "Oyun sayfası",
+          "description": "Bir oyun, fragmanı, rehberleri ve ekran görüntüleriyle kendi sayfasında açılır. Devre dışı bırakıldığında doğrudan başarımlarında açılır."
         },
         "tilt": {
           "name": "3D üzerine gelme efekti",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "EA Desktop’un yerel başarım günlüğünü okur (EA’nın yönettiği klasörlerin dışındaki oyunlar için)."
       },
+      "rockstarOfficial": {
+        "description": "Rockstar Games Launcher ile kurulan oyunlar ve başarım listeleri. Hangilerini açtığını görmek için hesabınızı aşağıdaki Rockstar Games hesabı kartından bağlayın."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox PC oyunları (Game Pass / Microsoft Store). Hesabınızı aşağıdaki Xbox PC hesabı kartından bağlayın, ardından kilit açmaları ve nadirliği görmek için içe aktarın.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Rockstar Games Launcher ile kurulan oyunlar ve başarım listeleri. Rockstar hangilerini açtığını şifrelediği için şimdilik hepsi kilitli görünür."
-      },
         "none": "Hiçbiri",
         "installed": "Yüklü",
         "owned": "Sahip olunan"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games hesabı",
     "epic-desc": "İsteğe bağlı. Bağlanmak, kurulu Epic oyunlarında hangi başarımları açtığınızı gösterir; adlar, açıklamalar ve nadirlik bağlanmadan da çalışır. Belirteciniz bu bilgisayarda şifreli saklanır.",
     "epic-btn-hint": "Epic giriş penceresini açar",
+    "connect-rockstar-account": "Rockstar Games hesabını bağla",
+    "rockstar-title": "Rockstar Games hesabı",
+    "rockstar-desc": "İsteğe bağlı. Bağlanmak, Rockstar Games Launcher ile kurulan oyunlarda hangi başarımları açtığınızı gösterir; liste bağlanmadan da çalışır. Oturumunuz bu bilgisayarda şifreli saklanır.",
+    "rockstar-btn-hint": "Rockstar giriş penceresini açar",
+    "rockstar-connect": "Rockstar Games hesabını bağla",
+    "rockstar-connecting": "Rockstar giriş penceresi açılıyor…",
+    "rockstar-connected": "Rockstar Games hesabı bağlandı.",
+    "rockstar-failed": "Rockstar girişi başarısız",
+    "rockstar-disconnected": "Rockstar Games hesabının bağlantısı kesildi.",
     "connected": "Bağlandı",
     "account-connected-as": "Bağlandı: {name}",
     "disconnect": "Bağlantıyı kes",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Kitaplığındaki Epic Games başlığı",
     "purchased-badge-ea": "Kitaplığındaki EA oyunu",
     "purchased-badge-xbox": "Kitaplığındaki Xbox oyunu",
+    "purchased-badge-rockstar": "Rockstar Games Launcher oyunu",
     "steam-hide-stale": "Steam kütüphanende artık bulunmayan oyunları gizle",
     "steam-hide-stale-help": "Bağlı bir Steam hesabı gerektirir. Bu bilgisayarda yüklü oyunlar ve Steam Ailesi üzerinden paylaşılan oyunlar asla gizlenmez.",
     "steam-libraries-title": "Steam kütüphaneleri",
     "steam-libraries-help": "Bir kütüphaneyi devre dışı bırak, oyunları hiçbir koleksiyonda görünmesin; örneğin depolama olarak bağlı tuttuğun bir sürücü. Tekrar etkinleştirdiğinde oyunlar geri gelir.",
-    "purchased-badge-rockstar": "Rockstar Games Launcher oyunu",
     "steam-import-owned": "Sahip olduğun oyunları ekle",
     "steam-import-owned-help": "Bu bilgisayara hiç yüklenmemiş oyunlar da dahil olmak üzere tüm Steam kütüphaneni listeler. Büyük bir kütüphane ilk taramayı çok daha uzun sürdürür. Bu bilgisayarda hiç oynanmamış oyunların ilerlemesi Steam profilinden okunur, bu yüzden profilin oyun ayrıntıları herkese açık olmalıdır.",
     "steam-import-needs-owned": "Yukarıdaki Steam kaynağı sahip olduğun oyunları listelediğinde kullanılabilir.",

@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Erfolge-Schaltfläche",
-          "description": "Zeigt die Pokal-Schaltfläche auf der Grafik. Ein Klick auf die Kachel selbst öffnet die Erfolge ebenfalls."
+          "description": "Zeigt die Pokal-Schaltfläche auf der Grafik. Sie öffnet das Spiel direkt auf den Erfolgen."
         },
         "showConfigButton": {
           "name": "Spieleinstellungen-Schaltfläche",
           "description": "Zeigt die Werkzeug-Schaltfläche oben rechts auf der Grafik. Die Spieleinstellungen bleiben über das Rechtsklick-Menü erreichbar."
+        },
+        "gamePage": {
+          "name": "Spielseite",
+          "description": "Ein Spiel öffnet sich auf seiner Seite, mit Trailer, Guides und Screenshots. Deaktiviert öffnet es sich direkt auf den Erfolgen."
         },
         "tilt": {
           "name": "3D-Effekt beim Darüberfahren",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Liest das lokale Erfolgsprotokoll von EA Desktop (für Spiele außerhalb der von EA verwalteten Ordner)."
       },
+      "rockstarOfficial": {
+        "description": "Mit dem Rockstar Games Launcher installierte Spiele samt Erfolgsliste. Verbinde dein Konto weiter unten in der Karte Rockstar-Games-Konto, um zu sehen, welche du freigeschaltet hast."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox-PC-Spiele (Game Pass / Microsoft Store). Verbinde dein Konto weiter unten in der Karte Xbox-PC-Konto und importiere dann, um Freischaltungen und Seltenheit zu sehen.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Mit dem Rockstar Games Launcher installierte Spiele samt Erfolgsliste. Rockstar verschlüsselt, welche du freigeschaltet hast, daher werden vorerst alle als gesperrt angezeigt."
-      },
         "none": "Keine",
         "installed": "Installiert",
         "owned": "Im Besitz"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic-Games-Konto",
     "epic-desc": "Optional. Die Verbindung zeigt, welche Erfolge du in installierten Epic-Spielen bereits freigeschaltet hast; Namen, Beschreibungen und Seltenheit funktionieren auch ohne sie. Dein Token wird auf diesem PC verschlüsselt gespeichert.",
     "epic-btn-hint": "öffnet das Epic-Anmeldefenster",
+    "connect-rockstar-account": "Rockstar-Games-Konto verbinden",
+    "rockstar-title": "Rockstar-Games-Konto",
+    "rockstar-desc": "Optional. Die Verbindung zeigt, welche Erfolge du in Spielen, die mit dem Rockstar Games Launcher installiert wurden, freigeschaltet hast; die Liste funktioniert auch ohne sie. Deine Sitzung wird auf diesem PC verschlüsselt gespeichert.",
+    "rockstar-btn-hint": "öffnet das Rockstar-Anmeldefenster",
+    "rockstar-connect": "Rockstar-Games-Konto verbinden",
+    "rockstar-connecting": "Das Rockstar-Anmeldefenster wird geöffnet…",
+    "rockstar-connected": "Rockstar-Games-Konto verbunden.",
+    "rockstar-failed": "Rockstar-Anmeldung fehlgeschlagen",
+    "rockstar-disconnected": "Rockstar-Games-Konto getrennt.",
     "connected": "Verbunden",
     "account-connected-as": "Verbunden: {name}",
     "disconnect": "Trennen",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games-Titel in deiner Bibliothek",
     "purchased-badge-ea": "EA-Spiel in deiner Bibliothek",
     "purchased-badge-xbox": "Xbox-Spiel in deiner Bibliothek",
+    "purchased-badge-rockstar": "Spiel aus dem Rockstar Games Launcher",
     "steam-hide-stale": "Spiele ausblenden, die nicht mehr in deiner Steam-Bibliothek sind",
     "steam-hide-stale-help": "Erfordert ein verbundenes Steam-Konto. Auf diesem PC installierte Spiele und über Steam Family geteilte Spiele werden nie ausgeblendet.",
     "steam-libraries-title": "Steam-Bibliotheken",
     "steam-libraries-help": "Deaktiviere eine Bibliothek, damit ihre Spiele in keiner Sammlung erscheinen, zum Beispiel ein Laufwerk, das du als Speicher angeschlossen lässt. Sie kommen zurück, sobald du die Bibliothek wieder aktivierst.",
-    "purchased-badge-rockstar": "Spiel aus dem Rockstar Games Launcher",
     "steam-import-owned": "Die Spiele hinzufügen, die dir gehören",
     "steam-import-owned-help": "Zeigt deine gesamte Steam-Bibliothek, einschließlich Spiele, die nie auf diesem PC installiert waren. Eine große Bibliothek macht den ersten Scan deutlich länger. Der Fortschritt von Spielen, die nie auf diesem PC gespielt wurden, wird aus deinem Steam-Profil gelesen, daher müssen dessen Spieldetails öffentlich sein.",
     "steam-import-needs-owned": "Verfügbar, wenn die Steam-Quelle oben die Spiele auflistet, die dir gehören.",

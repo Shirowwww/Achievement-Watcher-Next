@@ -3480,10 +3480,11 @@ const SOURCE_READERS = {
   uplay: { schema: readUplaySchema, unlocks: () => ({}) },
   lumaplay: { schema: readUplaySchema, unlocks: (appid) => uplay.getAchievementsFromLumaPlay(appid.data.root, appid.data.path, appid.data.host) },
   ea: { schema: readEaSchema, unlocks: (appid) => ea.getAchievements(appid) },
-  // Social Club's unlock file is encrypted with the account's key: the list shows, all locked.
+  // Social Club's unlock file is encrypted with the account's key: unlocks come from the connected
+  // Rockstar account through the main process, and without one the list shows all locked.
   rockstarOfficial: {
     schema: (appid, { lang }) => rockstarOfficial.getGameData(appid, lang, { resolveSteamAppId: socialclub.resolveSteamAppId, steam }),
-    unlocks: () => ({}),
+    unlocks: (appid, { game }) => rockstarOfficial.getAchievements(appid, game, { invoke: ipcInvoke, steam }),
   },
   gogOfficial: { schema: (appid) => gogOfficial.getGameData(appid), unlocks: (appid) => gogOfficial.getAchievements(appid) },
   // A GOG install repaired with UniverseLAN: unlock state is the Achievements.ini it writes itself.

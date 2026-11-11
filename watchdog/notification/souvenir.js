@@ -144,12 +144,13 @@ function localStamp(date = new Date()) {
   return `${day} ${pad(date.getHours())}-${pad(date.getMinutes())}-${pad(date.getSeconds())}`;
 }
 
-// <dir>/<game>/<achievement> - <date><ext>, its folder created. Clips use the same layout.
+// <dir>/<game>/<achievement> - <date><ext>, its folder created. Clips use the same layout but leave
+// the folder to the recorder, which may have no frames to write.
 // Achievement first so sorting by name groups an achievement's shots; the date still sorts by time.
-function souvenirPath({ game, achievement, dir } = {}, ext = '.png') {
+function souvenirPath({ game, achievement, dir } = {}, ext = '.png', { create = true } = {}) {
   const baseDir = dir && String(dir).trim() ? String(dir).trim() : defaultDir();
   const gameDir = path.join(baseDir, sanitize(game));
-  fs.mkdirSync(gameDir, { recursive: true });
+  if (create) fs.mkdirSync(gameDir, { recursive: true });
   return uniquePath(gameDir, sanitize(achievement) + ' - ' + localStamp(), ext);
 }
 

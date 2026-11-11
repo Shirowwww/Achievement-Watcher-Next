@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Przycisk osiągnięć",
-          "description": "Pokazuje przycisk trofeum na grafice. Kliknięcie samego kafelka również otwiera osiągnięcia."
+          "description": "Pokazuje przycisk trofeum na grafice. Otwiera grę od razu na jej osiągnięciach."
         },
         "showConfigButton": {
           "name": "Przycisk ustawień gry",
           "description": "Pokazuje przycisk narzędzi w prawym górnym rogu grafiki. Ustawienia gry pozostają dostępne w menu kontekstowym."
+        },
+        "gamePage": {
+          "name": "Strona gry",
+          "description": "Gra otwiera się na własnej stronie, ze zwiastunem, poradnikami i zrzutami. Gdy jest wyłączona, otwiera się od razu na osiągnięciach."
         },
         "tilt": {
           "name": "Efekt 3D po najechaniu",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Czyta lokalny dziennik osiągnięć EA Desktop (dla gier spoza folderów zarządzanych przez EA)."
       },
+      "rockstarOfficial": {
+        "description": "Gry zainstalowane przez Rockstar Games Launcher wraz z listą osiągnięć. Połącz swoje konto w karcie Konto Rockstar Games niżej, aby zobaczyć odblokowane osiągnięcia."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Gry Xbox PC (Game Pass / Microsoft Store). Połącz swoje konto w karcie Konto Xbox PC niżej, a potem zaimportuj, aby zobaczyć odblokowania i rzadkość.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Gry zainstalowane przez Rockstar Games Launcher wraz z listą osiągnięć. Rockstar szyfruje dane o odblokowanych osiągnięciach, więc na razie wszystkie są pokazywane jako zablokowane."
-      },
         "none": "Brak",
         "installed": "Zainstalowane",
         "owned": "Posiadane"
@@ -2611,6 +2615,15 @@
     "epic-title": "Konto Epic Games",
     "epic-desc": "Opcjonalne. Połączenie pokazuje, które osiągnięcia już odblokowałeś w zainstalowanych grach Epic; nazwy, opisy i rzadkość działają bez niego. Twój token jest przechowywany na tym komputerze w postaci zaszyfrowanej.",
     "epic-btn-hint": "otwiera okno logowania Epic",
+    "connect-rockstar-account": "Połącz konto Rockstar Games",
+    "rockstar-title": "Konto Rockstar Games",
+    "rockstar-desc": "Opcjonalne. Połączenie pokazuje, które osiągnięcia odblokowałeś w grach zainstalowanych przez Rockstar Games Launcher; lista działa bez niego. Twoja sesja jest przechowywana na tym komputerze w postaci zaszyfrowanej.",
+    "rockstar-btn-hint": "otwiera okno logowania Rockstar",
+    "rockstar-connect": "Połącz konto Rockstar Games",
+    "rockstar-connecting": "Otwieranie okna logowania Rockstar…",
+    "rockstar-connected": "Konto Rockstar Games połączone.",
+    "rockstar-failed": "Logowanie do Rockstar nie powiodło się",
+    "rockstar-disconnected": "Konto Rockstar Games rozłączone.",
     "connected": "Połączono",
     "account-connected-as": "Połączono: {name}",
     "disconnect": "Rozłącz",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Tytuł Epic Games w Twojej bibliotece",
     "purchased-badge-ea": "Gra EA w Twojej bibliotece",
     "purchased-badge-xbox": "Gra Xbox w twojej bibliotece",
+    "purchased-badge-rockstar": "Gra z Rockstar Games Launcher",
     "steam-hide-stale": "Ukryj gry, których nie ma już w twojej bibliotece Steam",
     "steam-hide-stale-help": "Wymaga połączonego konta Steam. Gry zainstalowane na tym komputerze i udostępnione przez Rodzinę Steam nigdy nie są ukrywane.",
     "steam-libraries-title": "Biblioteki Steam",
     "steam-libraries-help": "Wyłącz bibliotekę, aby jej gry nie trafiały do żadnej kolekcji, na przykład dysk, który zostawiasz podłączony jako magazyn danych. Wrócą, gdy ponownie ją włączysz.",
-    "purchased-badge-rockstar": "Gra z Rockstar Games Launcher",
     "steam-import-owned": "Dodaj gry, które posiadasz",
     "steam-import-owned-help": "Wyświetla całą twoją bibliotekę Steam, w tym gry, które nigdy nie były zainstalowane na tym komputerze. Duża biblioteka znacznie wydłuża pierwsze skanowanie. Postęp w grach, w które nigdy nie grano na tym komputerze, jest odczytywany z twojego profilu Steam, więc szczegóły gier muszą być w nim publiczne.",
     "steam-import-needs-owned": "Dostępne, gdy powyższe źródło Steam wyświetla posiadane gry.",

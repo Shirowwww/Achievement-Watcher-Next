@@ -366,11 +366,15 @@
         },
         "showAchievementButton": {
           "name": "Prestationsknapp",
-          "description": "Visar trofeknappen på grafiken. Att klicka på själva rutan öppnar också prestationerna."
+          "description": "Visar trofeknappen på grafiken. Den öppnar spelet direkt på prestationerna."
         },
         "showConfigButton": {
           "name": "Knapp för spelinställningar",
           "description": "Visar verktygsknappen uppe till höger på grafiken. Spelets inställningar går fortfarande att nå via högerklicksmenyn."
+        },
+        "gamePage": {
+          "name": "Spelsida",
+          "description": "Ett spel öppnas på sin sida, med trailer, guider och skärmbilder. När den är avstängd öppnas det direkt på prestationerna."
         },
         "tilt": {
           "name": "3D-effekt vid hovring",
@@ -1502,13 +1506,13 @@
         "name": "EA Desktop",
         "description": "Läs den lokala prestationsloggen från EA Desktop (för spel utanför EA:s hanterade mappar)."
       },
+      "rockstarOfficial": {
+        "description": "Spel installerade med Rockstar Games Launcher, med sina prestationslistor. Anslut ditt konto i kortet Rockstar Games-konto längre ned för att se vilka du har låst upp."
+      },
       "xboxPc": {
         "name": "Xbox PC",
         "description": "Xbox-spel på PC (Game Pass / Microsoft Store). Anslut ditt konto i kortet Xbox-konto för PC längre ned och importera sedan för att se upplåsningar och sällsynthet.",
       "value": {
-      "rockstarOfficial": {
-        "description": "Spel installerade med Rockstar Games Launcher, med sina prestationslistor. Rockstar krypterar vilka du har låst upp, så alla visas som låsta tills vidare."
-      },
         "none": "Inga",
         "installed": "Installerade",
         "owned": "Ägda"
@@ -2611,6 +2615,15 @@
     "epic-title": "Epic Games-konto",
     "epic-desc": "Valfritt. Om du ansluter visas vilka prestationer du redan har låst upp i installerade Epic-spel; namn, beskrivningar och sällsynthet fungerar utan det. Din token lagras krypterad på den här datorn.",
     "epic-btn-hint": "öppnar inloggningsfönstret för Epic",
+    "connect-rockstar-account": "Anslut Rockstar Games-konto",
+    "rockstar-title": "Rockstar Games-konto",
+    "rockstar-desc": "Valfritt. Om du ansluter visas vilka prestationer du har låst upp i spel installerade med Rockstar Games Launcher; listan fungerar utan det. Din session lagras krypterad på den här datorn.",
+    "rockstar-btn-hint": "öppnar inloggningsfönstret för Rockstar",
+    "rockstar-connect": "Anslut Rockstar Games-konto",
+    "rockstar-connecting": "Öppnar inloggningsfönstret för Rockstar…",
+    "rockstar-connected": "Rockstar Games-kontot är anslutet.",
+    "rockstar-failed": "Inloggningen på Rockstar misslyckades",
+    "rockstar-disconnected": "Rockstar Games-kontot är frånkopplat.",
     "connected": "Ansluten",
     "account-connected-as": "Ansluten: {name}",
     "disconnect": "Koppla från",
@@ -3212,11 +3225,11 @@
     "purchased-badge-epic": "Epic Games-titel i ditt bibliotek",
     "purchased-badge-ea": "EA-spel i ditt bibliotek",
     "purchased-badge-xbox": "Xbox-spel i ditt bibliotek",
+    "purchased-badge-rockstar": "Spel från Rockstar Games Launcher",
     "steam-hide-stale": "Dölj spel som inte längre finns i ditt Steam-bibliotek",
     "steam-hide-stale-help": "Kräver ett anslutet Steam-konto. Spel som är installerade på den här datorn och spel som delas via Steam Family döljs aldrig.",
     "steam-libraries-title": "Steam-bibliotek",
     "steam-libraries-help": "Inaktivera ett bibliotek för att hålla dess spel utanför alla samlingar, till exempel en enhet du låter sitta kvar som lagring. De kommer tillbaka när du aktiverar biblioteket igen.",
-    "purchased-badge-rockstar": "Spel från Rockstar Games Launcher",
     "steam-import-owned": "Lägg till spelen du äger",
     "steam-import-owned-help": "Visar hela ditt Steam-bibliotek, inklusive spel som aldrig har installerats på den här datorn. Ett stort bibliotek gör den första genomsökningen mycket längre. Framstegen i spel som aldrig spelats på den här datorn läses från din Steam-profil, så dess speldetaljer måste vara offentliga.",
     "steam-import-needs-owned": "Tillgängligt när Steam-källan ovan listar spelen du äger.",

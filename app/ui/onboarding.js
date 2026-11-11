@@ -474,6 +474,26 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
         };
       },
     },
+    rockstar: {
+      status: 'rockstar:status',
+      login: 'rockstar:login',
+      cancelled: 'window-closed',
+      name: (state) => state.displayName,
+      // Aliased to t so the locale lint recognizes these as translated calls.
+      text: () => {
+        const t = onboardingT;
+        return {
+          connect: t('rockstar-connect', 'Connect Rockstar Games account', 'Connecter le compte Rockstar Games'),
+          reconnect: t('xbox-reconnect', 'Reconnect', 'Reconnecter'),
+          connectedAs: accountConnectedAs,
+          notConnected: t('xbox-not-connected', 'Not connected', 'Non connecté'),
+          connecting: t('rockstar-connecting', 'Opening the Rockstar sign-in window…', 'Ouverture de la fenêtre de connexion Rockstar…'),
+          cancelled: t('xbox-cancelled', 'Sign-in cancelled.', 'Connexion annulée.'),
+          failed: t('rockstar-failed', 'Rockstar sign-in failed', 'Échec de la connexion Rockstar'),
+          needsReconnect: t('steam-needs-reconnect', 'Session expired, reconnect needed.', 'Session expirée, reconnexion nécessaire.'),
+        };
+      },
+    },
     // Connected through the inline form (connectRetroAchievements), so it has no `login` channel.
     ra: {
       status: 'retroachievements:status',
@@ -1344,6 +1364,7 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     $('#onboard-xbox-connect').on('click', () => connectAccount('xbox'));
     $('#onboard-epic-connect').on('click', () => connectAccount('epic'));
     $('#onboard-psn-connect').on('click', () => connectAccount('psn'));
+    $('#onboard-rockstar-connect').on('click', () => connectAccount('rockstar'));
     $('#onboard-ra-connect').on('click', () => toggleRetroAchievementsForm($('#onboard-ra-form').prop('hidden')));
     $('#onboard-ra-form').on('submit', connectRetroAchievements);
     $('#onboard-ra-key-page').on('click', () => remote.shell.openExternal(RA_KEY_PAGE));
