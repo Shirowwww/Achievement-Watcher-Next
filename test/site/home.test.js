@@ -98,6 +98,26 @@ test('the download buttons lead to the installer once the release is known', () 
   assert.match(step, /Portable/);
 });
 
+// 3.12.6 shipped with the nine translated FAQ and troubleshooting guides still quoting 3.12.5: the
+// release tool only knew the English files. Any hand-written page that links a scan is now its job.
+test('every page that links a VirusTotal report is kept in step by the release tool', () => {
+  const quoted = new Set(releaseData.quoting().map((entry) => path.relative(root, entry.file).replace(/\\/g, '/')));
+  // Search indexes and the FAQ's structured data are generated from the guides after the rewrite.
+  const generated = /^docs\/(data\/|_includes\/faq-jsonld\.html$)/;
+  const linking = [];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (/\.(md|html|json|yml)$/.test(entry.name) && fs.readFileSync(full, 'utf8').includes('virustotal.com/gui/file/')) linking.push(path.relative(root, full).replace(/\\/g, '/'));
+    }
+  };
+  walk(DOCS);
+  if (fs.readFileSync(path.join(root, 'README.md'), 'utf8').includes('virustotal.com/gui/file/')) linking.push('README.md');
+  const missed = linking.filter((file) => !generated.test(file) && !quoted.has(file));
+  assert.deepEqual(missed, [], 'these pages quote a scan that node tools/site/release-data.js never rewrites');
+});
+
 test('the pages declare a locale and a theme colour', () => {
   for (const file of ['index.html', path.join('gallery', 'index.html'), path.join('gallery', 'themes', 'index.html')]) {
     const document = parse(fs.readFileSync(path.join(DOCS, file), 'utf8'));

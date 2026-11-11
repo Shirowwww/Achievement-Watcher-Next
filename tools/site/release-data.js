@@ -21,6 +21,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { languages } = require('./languages.js');
 
 const root = path.join(__dirname, '..', '..');
 const OUT = path.join(root, 'docs', 'data', 'release.json');
@@ -30,16 +31,27 @@ const API = 'https://api.github.com/repos/Shirowwww/Achievement-Watcher-Next/rel
 // the updater.
 const INSTALLER_RE = /^Achievement\.Watcher\.Setup\..*\.exe$/i;
 const SHA256_RE = /^[0-9a-f]{64}$/;
+// A versioned installer name; the generic `Achievement.Watcher.Setup.<version>.exe` never matches.
+const INSTALLER_NAME_RE = /Achievement\.Watcher\.Setup\.\d[0-9A-Za-z.-]*?\.exe/g;
+// The version inside the text of a scan link, however a translation words it around the number. It
+// reads the link alone, so a sentence wrapped before it cannot hide the version (the English FAQ did).
+const LINKED_VERSION_RE = /\[[^\]]*?(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)[^\]]*\]\(https:\/\/www\.virustotal/g;
+
 // Every file that quotes the digest or the version, and what its sentences look like.
 function quoting() {
   const i18n = path.join(root, 'docs', 'assets', 'i18n');
   const translations = fs.existsSync(i18n) ? fs.readdirSync(i18n).filter((name) => /^[a-z-]+\.json$/.test(name) && name !== 'languages.json') : [];
+  const guides = languages()
+    .flatMap((code) => ['faq.md', 'troubleshooting.md'].map((name) => path.join(root, 'docs', code, name)))
+    .filter((file) => fs.existsSync(file))
+    .map((file) => ({ file, version: [LINKED_VERSION_RE] }));
   return [
     { file: path.join(root, 'docs', 'index.html'), version: [/"softwareVersion": "([^"]+)"/g] },
     ...translations.map((name) => ({ file: path.join(i18n, name), version: [] })),
-    { file: path.join(root, 'docs', 'faq.md'), version: [/The current release is \[([^\]]+)\]\(https:\/\/www\.virustotal/g] },
-    { file: path.join(root, 'docs', 'troubleshooting.md'), version: [/\[the ([^\s\]]+) installer\]\(https:\/\/www\.virustotal/g] },
-    { file: path.join(root, 'README.md'), version: [/\(\[([^\]]+)\]\(https:\/\/www\.virustotal/g] },
+    { file: path.join(root, 'docs', 'faq.md'), version: [LINKED_VERSION_RE] },
+    { file: path.join(root, 'docs', 'troubleshooting.md'), version: [LINKED_VERSION_RE] },
+    { file: path.join(root, 'README.md'), version: [LINKED_VERSION_RE] },
+    ...guides,
   ];
 }
 
@@ -59,11 +71,14 @@ function mismatches(data) {
     for (const pattern of entry.version) {
       for (const match of text.matchAll(pattern)) if (match[1] !== data.version) problems.push(`${label} says ${match[1]}, the release is ${data.version}`);
     }
+    if (data.installer) {
+      for (const [name] of text.matchAll(INSTALLER_NAME_RE)) if (name !== data.installer) problems.push(`${label} names ${name}, the installer is ${data.installer}`);
+    }
   }
   return problems;
 }
 
-function rewrite(data, previous) {
+function rewrite(data) {
   let touched = 0;
   for (const entry of quoting()) {
     let text = fs.readFileSync(entry.file, 'utf8');
@@ -72,8 +87,8 @@ function rewrite(data, previous) {
     for (const pattern of entry.version) {
       text = text.replace(pattern, (whole, version) => whole.replace(version, data.version));
     }
-    // The command the troubleshooting guide shows names the installer file.
-    if (previous && previous.installer && data.installer && previous.installer !== data.installer) text = text.split(previous.installer).join(data.installer);
+    // The command the troubleshooting guides show names the installer file.
+    if (data.installer) text = text.replace(INSTALLER_NAME_RE, data.installer);
     if (text !== before) {
       fs.writeFileSync(entry.file, text, 'utf8');
       touched++;
@@ -143,7 +158,7 @@ async function build() {
 
   fs.mkdirSync(path.dirname(OUT), { recursive: true });
   fs.writeFileSync(OUT, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
-  const touched = rewrite(data, previous);
+  const touched = rewrite(data);
   console.log(`release data: ${data.version}${data.installerBytes ? ` (${Math.round(data.installerBytes / 1048576)} MB)` : ''}, ${touched} files updated`);
 }
 
