@@ -262,6 +262,8 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
   return {
     makeList,
     reloadGames,
+    // Explicitly no local fallback: a failed scan must not run again in the renderer.
+    findSmartFolders: () => remote('findSmartFolders', []),
     async detectInstalledAppids(option) {
       let ranHere = false;
       const ids = await withFallback('detectInstalledAppids', [option], (parser) => {

@@ -4152,19 +4152,18 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       debug.log('auto-finding folder(s) ...');
       // Diff the lists before/after so the summary reports what Smart Find actually added.
       const before = $('#settings #dirlist > li').length + $('#settings #libdirlist > li').length;
-      const detectedSaveDirs = userDir.findEntries ? await userDir.findEntries() : (await userDir.find()).map((path) => ({ path }));
-      for (const entry of detectedSaveDirs) {
+      const { saveEntries, libraryEntries } = await findSmartFoldersOffThread();
+      for (const { entry, accepted } of saveEntries) {
         const dir = entry.path || entry;
         debug.log(`Found folder: ${dir}`);
-        if (await userDir.check(dir)) {
+        if (accepted) {
           populateUserDirList({ ...entry, dir, origin: 'auto' });
         } else {
           debug.log('-> Invalid folder');
         }
       }
       if (libraryDirs.find) {
-        const detectedLibraries = libraryDirs.findEntries ? await libraryDirs.findEntries() : (await libraryDirs.find()).map((path) => ({ path }));
-        for (const entry of detectedLibraries) {
+        for (const entry of libraryEntries) {
           const dir = entry.path || entry;
           debug.log(`Found library folder: ${dir}`);
           populateLibraryDirList({ ...entry, dir, origin: 'auto' });

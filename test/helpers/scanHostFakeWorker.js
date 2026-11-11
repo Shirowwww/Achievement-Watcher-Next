@@ -52,6 +52,13 @@ const methods = {
     for (const record of records) process.send({ type: 'game', id, game: { appid: record.appid, name: `Reloaded ${record.appid}` } });
     return { count: records.length };
   },
+  findSmartFolders: () => ({
+    saveEntries: [
+      { entry: { path: '/save/valid', detector: 'Known root' }, accepted: true },
+      { entry: { path: '/save/invalid', detector: 'Unknown' }, accepted: false },
+    ],
+    libraryEntries: [{ path: '/games', detector: 'Known games folder' }],
+  }),
   // Answers with this process's pid, so a test can tell a restarted host from the same one, and
   // leaves "background work" running when asked to.
   detectInstalledAppids: (id, option) => {
