@@ -4152,14 +4152,15 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       debug.log('auto-finding folder(s) ...');
       // Diff the lists before/after so the summary reports what Smart Find actually added.
       const before = $('#settings #dirlist > li').length + $('#settings #libdirlist > li').length;
-      const { saveEntries, libraryEntries } = await findSmartFoldersOffThread();
-      for (const { entry, accepted } of saveEntries) {
+      // The walks run in the scan host: here they froze the window, and on Linux could exhaust its heap.
+      const { saveEntries, libraryEntries } = await scanHost.findSmartFolders();
+      for (const { entry, accepted, error } of saveEntries) {
         const dir = entry.path || entry;
         debug.log(`Found folder: ${dir}`);
         if (accepted) {
           populateUserDirList({ ...entry, dir, origin: 'auto' });
         } else {
-          debug.log('-> Invalid folder');
+          debug.log(`-> Invalid folder${error ? ` (${error})` : ''}`);
         }
       }
       if (libraryDirs.find) {

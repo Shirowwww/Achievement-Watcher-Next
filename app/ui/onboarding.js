@@ -1052,20 +1052,13 @@ const onboardingDetect = require(path.join(appPath, 'util/onboardingDetect.js'))
     setFolderStatus(text().smartRunning, 'running');
     const before = addedSaveDirs.length + addedLibraryDirs.length;
     try {
-      const foundSaveDirs = userDir.findEntries ? await userDir.findEntries() : (await userDir.find()).map((path) => ({ path, origin: 'auto' }));
-      for (const dir of foundSaveDirs) {
-        try {
-          if (await userDir.check(dir.path)) addSaveDir(dir);
-        } catch (err) {
-          debug.log(err);
-        }
+      // The walks run in the scan host, as in Settings: here they froze the guide.
+      const { saveEntries, libraryEntries } = await scanHost.findSmartFolders();
+      for (const { entry, accepted, error } of saveEntries) {
+        if (accepted) addSaveDir(entry);
+        else if (error) debug.log(`${entry.path}: ${error}`);
       }
-      if (libraryDirs.find) {
-        const foundLibraryDirs = libraryDirs.findEntries ? await libraryDirs.findEntries() : (await libraryDirs.find()).map((path) => ({ path, origin: 'auto' }));
-        for (const dir of foundLibraryDirs) {
-          addLibraryDir(dir);
-        }
-      }
+      for (const dir of libraryEntries) addLibraryDir(dir);
       const added = Math.max(0, addedSaveDirs.length + addedLibraryDirs.length - before);
       setFolderStatus(added > 0 ? fill(text().smartFound, { count: added }) : text().smartNone, added > 0 ? 'success' : '');
       // The games are only known after the first scan: app.js runs Find all for their executables then.
