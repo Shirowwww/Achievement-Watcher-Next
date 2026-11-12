@@ -105,7 +105,12 @@ Everything runs on parts of Windows, with no third-party media library:
   capture border on Windows 10 and injects nothing into the game. The display is asked for FP16 only
   when DisplayConfig reports HDR. Automatic colour management composes even SDR desktops in FP16, and
   the mode description can say FP16 while the frames are 8-bit, so each frame's own format decides
-  whether it goes through the tone-mapping pixel shader.
+  whether it goes through the tone-mapping pixel shader. Duplication refuses a game in exclusive
+  fullscreen (`DXGI_ERROR_UNSUPPORTED`) and a display that too many recorders already duplicate
+  (`DXGI_ERROR_NOT_CURRENTLY_AVAILABLE`); the recorder then captures the same monitor with Windows
+  Graphics Capture, which the screenshot helper already showed sees those games, without the pointer
+  and without the border where Windows can turn it off (a `log desktop duplication refused` line).
+  `--capture graphics` takes that path on any desktop, for development.
 - **Conversion**: the D3D11 video processor scales to the chosen height and converts to NV12 (BT.709,
   limited range). The screen is read once per output frame, and an unchanged desktop is not converted
   again.

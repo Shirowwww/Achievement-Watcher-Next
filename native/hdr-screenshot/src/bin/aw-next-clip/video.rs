@@ -1,5 +1,6 @@
-// Desktop duplication of the game's monitor, tone-mapped by a shader when it is HDR, scaled to NV12
-// by the video processor and encoded by the GPU's own encoder. Packets go into the shared ring.
+// Desktop duplication of the game's monitor (Windows Graphics Capture where duplication is refused),
+// tone-mapped by a shader when it is HDR, scaled to NV12 by the video processor and encoded by the
+// GPU's own encoder. Packets go into the shared ring.
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -16,7 +17,13 @@ use windows::Win32::Graphics::Dxgi::Common::*;
 use windows::Win32::Graphics::Dxgi::*;
 use windows::Win32::Graphics::Gdi::*;
 use windows::Win32::Media::MediaFoundation::*;
+use windows::Graphics::Capture::{Direct3D11CaptureFrame, Direct3D11CaptureFramePool, GraphicsCaptureItem, GraphicsCaptureSession};
+use windows::Graphics::DirectX::Direct3D11::IDirect3DDevice;
+use windows::Graphics::DirectX::DirectXPixelFormat;
+use windows::Graphics::SizeInt32;
 use windows::Win32::System::Variant::*;
+use windows::Win32::System::WinRT::Direct3D11::{CreateDirect3D11DeviceFromDXGIDevice, IDirect3DDxgiInterfaceAccess};
+use windows::Win32::System::WinRT::Graphics::Capture::IGraphicsCaptureItemInterop;
 use windows::core::*;
 
 use crate::ring::{Packet, SECOND};
@@ -661,10 +668,131 @@ fn staging_texture(device: &ID3D11Device, width: u32, height: u32) -> Result<ID3
     Ok(texture.unwrap())
 }
 
+// Duplication refuses a display it cannot compose, such as a game in exclusive fullscreen
+// (DXGI_ERROR_UNSUPPORTED), or one already duplicated by too many recorders; Windows Graphics
+// Capture still sees both, as the screenshot helper shows.
+fn graphics_capture_can_replace(code: HRESULT) -> bool {
+    code == DXGI_ERROR_UNSUPPORTED || code == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
+}
+
+// Windows Graphics Capture of one monitor, polled like duplication: a free-threaded pool needs no
+// message loop. Without the pointer, as duplication gives it.
+struct GraphicsCapture {
+    pool: Direct3D11CaptureFramePool,
+    session: GraphicsCaptureSession,
+    size: SizeInt32,
+}
+
+impl GraphicsCapture {
+    fn open(device: &ID3D11Device, monitor: HMONITOR, hdr: bool) -> Result<Self> {
+        if !GraphicsCaptureSession::IsSupported()? {
+            return Err(Error::new(E_NOTIMPL, "Windows Graphics Capture is not available"));
+        }
+        let interop = factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>()?;
+        let item: GraphicsCaptureItem = unsafe { interop.CreateForMonitor(monitor)? };
+        let dxgi: IDXGIDevice = device.cast()?;
+        let d3d: IDirect3DDevice = unsafe { CreateDirect3D11DeviceFromDXGIDevice(&dxgi)? }.cast()?;
+        let size = item.Size()?;
+        let format = if hdr { DirectXPixelFormat::R16G16B16A16Float } else { DirectXPixelFormat::B8G8R8A8UIntNormalized };
+        let pool = Direct3D11CaptureFramePool::CreateFreeThreaded(&d3d, format, 2, size)?;
+        let session = pool.CreateCaptureSession(&item)?;
+        // Missing before Windows 10 2004: the clip then shows the pointer, nothing worse.
+        let _ = session.SetIsCursorCaptureEnabled(false);
+        // Windows 10 has no switch for the border; there the game covers it in exclusive fullscreen.
+        let _ = session.SetIsBorderRequired(false);
+        session.StartCapture()?;
+        Ok(Self { pool, session, size })
+    }
+
+    // The newest frame, the older ones closed so the pool keeps delivering. An empty pool reads as
+    // an error from TryGetNextFrame, so any error there means no new frame.
+    fn latest(&self) -> Result<Option<Direct3D11CaptureFrame>> {
+        let mut latest: Option<Direct3D11CaptureFrame> = None;
+        while let Ok(frame) = self.pool.TryGetNextFrame() {
+            if let Some(older) = latest.replace(frame) {
+                let _ = older.Close();
+            }
+        }
+        if let Some(frame) = &latest
+            && frame.ContentSize()? != self.size
+        {
+            let _ = frame.Close();
+            return Err(Error::new(E_FAIL, "the captured display changed size"));
+        }
+        Ok(latest)
+    }
+}
+
+impl Drop for GraphicsCapture {
+    fn drop(&mut self) {
+        let _ = self.session.Close();
+        let _ = self.pool.Close();
+    }
+}
+
+enum Source {
+    Duplication(IDXGIOutputDuplication),
+    Graphics(GraphicsCapture),
+}
+
+// What one poll of the source gave. A duplicated frame must be released even when only the pointer
+// moved; a captured one is closed to go back to its pool.
+enum Acquired {
+    Nothing,
+    PointerOnly,
+    Picture(ID3D11Texture2D, Option<Direct3D11CaptureFrame>),
+}
+
+impl Source {
+    fn acquire(&self) -> Result<Acquired> {
+        match self {
+            Source::Duplication(duplication) => unsafe {
+                let mut info = DXGI_OUTDUPL_FRAME_INFO::default();
+                let mut resource: Option<IDXGIResource> = None;
+                match duplication.AcquireNextFrame(0, &mut info, &mut resource) {
+                    // Zero means only the pointer moved.
+                    Ok(()) if info.LastPresentTime == 0 => Ok(Acquired::PointerOnly),
+                    Ok(()) => match resource.unwrap().cast() {
+                        Ok(texture) => Ok(Acquired::Picture(texture, None)),
+                        Err(error) => {
+                            let _ = duplication.ReleaseFrame();
+                            Err(error)
+                        }
+                    },
+                    Err(error) if error.code() == DXGI_ERROR_WAIT_TIMEOUT => Ok(Acquired::Nothing),
+                    Err(error) => Err(error),
+                }
+            },
+            Source::Graphics(capture) => match capture.latest()? {
+                None => Ok(Acquired::Nothing),
+                Some(frame) => {
+                    let texture = frame.Surface().and_then(|surface| surface.cast::<IDirect3DDxgiInterfaceAccess>()).and_then(|access| unsafe { access.GetInterface::<ID3D11Texture2D>() });
+                    match texture {
+                        Ok(texture) => Ok(Acquired::Picture(texture, Some(frame))),
+                        Err(error) => {
+                            let _ = frame.Close();
+                            Err(error)
+                        }
+                    }
+                }
+            },
+        }
+    }
+
+    fn release(&self, acquired: Acquired) -> Result<()> {
+        match (self, acquired) {
+            (_, Acquired::Nothing) => Ok(()),
+            (Source::Duplication(duplication), _) => unsafe { duplication.ReleaseFrame() },
+            (Source::Graphics(_), Acquired::Picture(_, Some(frame))) => frame.Close(),
+            (Source::Graphics(_), _) => Ok(()),
+        }
+    }
+}
+
 struct Session {
     encoder: Encoder,
     ctx: ID3D11DeviceContext,
-    duplication: IDXGIOutputDuplication,
+    source: Source,
     frame: ID3D11Texture2D,
     hdr: Option<HdrPass>,
     // Scene peak and SDR white level the tone-mapping tables are built from.
@@ -720,9 +848,26 @@ impl Session {
                 HdrMode::Auto => display.as_ref().is_some_and(|path| path_hdr_enabled(path).unwrap_or(false)),
             };
             let formats: &[DXGI_FORMAT] = if hdr_display { &[DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_B8G8R8A8_UNORM] } else { &[DXGI_FORMAT_B8G8R8A8_UNORM] };
-            let duplication = output.cast::<IDXGIOutput5>()?.DuplicateOutput1(&device, 0, formats)?;
-            let mode = duplication.GetDesc().ModeDesc;
-            let (width, height) = (mode.Width, mode.Height);
+            let duplicated = if config.graphics_capture {
+                Err(Error::new(DXGI_ERROR_UNSUPPORTED, "skipped by --capture graphics"))
+            } else {
+                output.cast::<IDXGIOutput5>()?.DuplicateOutput1(&device, 0, formats)
+            };
+            let (source, width, height) = match duplicated {
+                Ok(duplication) => {
+                    let mode = duplication.GetDesc().ModeDesc;
+                    (Source::Duplication(duplication), mode.Width, mode.Height)
+                }
+                Err(refused) if graphics_capture_can_replace(refused.code()) => match GraphicsCapture::open(&device, monitor, hdr_display) {
+                    Ok(capture) => {
+                        log(&format!("desktop duplication refused ({}), recording with Windows Graphics Capture", refused.message()));
+                        let size = capture.size;
+                        (Source::Graphics(capture), size.Width as u32, size.Height as u32)
+                    }
+                    Err(error) => return Err(Error::new(refused.code(), format!("{} (Windows Graphics Capture: {})", refused.message(), error.message()))),
+                },
+                Err(refused) => return Err(refused),
+            };
             let frame = texture(&device, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, D3D11_BIND_FLAG(D3D11_BIND_RENDER_TARGET.0 | D3D11_BIND_SHADER_RESOURCE.0))?;
 
             // An FP16 frame from a display that is not in HDR is plain SDR in scRGB: the identity curve.
@@ -809,7 +954,7 @@ impl Session {
             ));
             Ok(Self {
                 ctx,
-                duplication,
+                source,
                 frame,
                 hdr: None,
                 curve,
@@ -832,9 +977,8 @@ impl Session {
 
     // The mode description can say FP16 while the frames come as 8-bit, so each frame's own format
     // decides whether it goes through the tone-mapping pass.
-    fn convert(&mut self, resource: IDXGIResource, slot: usize) -> Result<()> {
+    fn convert(&mut self, desktop: &ID3D11Texture2D, slot: usize) -> Result<()> {
         unsafe {
-            let desktop: ID3D11Texture2D = resource.cast()?;
             let mut desc = D3D11_TEXTURE2D_DESC::default();
             desktop.GetDesc(&mut desc);
             if desc.Format == DXGI_FORMAT_R16G16B16A16_FLOAT {
@@ -842,10 +986,10 @@ impl Session {
                     self.hdr = Some(HdrPass::new(&self.device, &self.frame, desc.Width, desc.Height, self.curve.0, self.curve.1)?);
                 }
                 let hdr = self.hdr.as_ref().unwrap();
-                self.ctx.CopyResource(&hdr.source, &desktop);
+                self.ctx.CopyResource(&hdr.source, desktop);
                 hdr.draw(&self.ctx);
             } else {
-                self.ctx.CopyResource(&self.frame, &desktop);
+                self.ctx.CopyResource(&self.frame, desktop);
             }
             let streams = [D3D11_VIDEO_PROCESSOR_STREAM { Enable: TRUE, pInputSurface: ManuallyDrop::new(Some(self.input.clone())), ..Default::default() }];
             let result = self.video_ctx.VideoProcessorBlt(&self.processor, &self.pool[slot].1, 0, &streams);
@@ -933,35 +1077,26 @@ impl Session {
                 shared.dropped.fetch_add(1, Ordering::Relaxed);
                 continue;
             }
-            unsafe {
-                let mut info = DXGI_OUTDUPL_FRAME_INFO::default();
-                let mut resource = None;
-                match self.duplication.AcquireNextFrame(0, &mut info, &mut resource) {
-                    Ok(()) => {
-                        // Zero means only the pointer moved.
-                        let changed = info.LastPresentTime != 0;
-                        let target = if changed {
-                            let held: Vec<usize> = self.held.iter().map(|count| count.load(Ordering::Acquire)).collect();
-                            free_slot(&held, slot, filled)
-                        } else {
-                            None
-                        };
-                        let converted = match target {
-                            Some(target) => self.convert(resource.unwrap(), target),
-                            None => Ok(()),
-                        };
-                        self.duplication.ReleaseFrame()?;
-                        converted?;
-                        if let Some(target) = target {
-                            filled = Some(target);
-                            slot = (target + 1) % POOL;
-                        } else if changed {
-                            shared.dropped.fetch_add(1, Ordering::Relaxed);
-                        }
-                    }
-                    Err(error) if error.code() == DXGI_ERROR_WAIT_TIMEOUT => {}
-                    Err(error) => return Err(error),
+            let acquired = self.source.acquire()?;
+            let target = match &acquired {
+                Acquired::Picture(..) => {
+                    let held: Vec<usize> = self.held.iter().map(|count| count.load(Ordering::Acquire)).collect();
+                    free_slot(&held, slot, filled)
                 }
+                _ => None,
+            };
+            let converted = match (&acquired, target) {
+                (Acquired::Picture(desktop, _), Some(target)) => self.convert(desktop, target),
+                _ => Ok(()),
+            };
+            let changed = matches!(acquired, Acquired::Picture(..));
+            self.source.release(acquired)?;
+            converted?;
+            if let Some(target) = target {
+                filled = Some(target);
+                slot = (target + 1) % POOL;
+            } else if changed {
+                shared.dropped.fetch_add(1, Ordering::Relaxed);
             }
             self.encoder.pump(shared)?;
             if let Some(ready) = filled {
@@ -1047,6 +1182,14 @@ mod tests {
         assert_eq!(free_slot(&[1, 0, 0], 0, None), Some(1));
         assert_eq!(free_slot(&[0, 0, 0], 2, Some(2)), Some(0));
         assert_eq!(free_slot(&[2, 1, 0], 1, Some(2)), None);
+    }
+
+    #[test]
+    fn graphics_capture_replaces_duplication_only_where_it_can_see_more() {
+        assert!(graphics_capture_can_replace(DXGI_ERROR_UNSUPPORTED));
+        assert!(graphics_capture_can_replace(DXGI_ERROR_NOT_CURRENTLY_AVAILABLE));
+        assert!(!graphics_capture_can_replace(E_ACCESSDENIED));
+        assert!(!graphics_capture_can_replace(DXGI_ERROR_SESSION_DISCONNECTED));
     }
 
     #[test]

@@ -62,6 +62,9 @@ pub struct Config {
     pub hdr: HdrMode,
     // Skips the GPU encoders; exists for testing the software one on a machine that has a GPU.
     pub software: bool,
+    // Skips desktop duplication; exists for testing the Windows Graphics Capture path without a
+    // game in exclusive fullscreen.
+    pub graphics_capture: bool,
     pub selftest: Option<(String, u64)>,
 }
 
@@ -122,6 +125,7 @@ fn parse_args(args: &[String]) -> Result<Config, String> {
         audio: AudioSource::Game,
         hdr: HdrMode::Auto,
         software: false,
+        graphics_capture: false,
         selftest: None,
     };
     let mut i = 0;
@@ -155,6 +159,7 @@ fn parse_args(args: &[String]) -> Result<Config, String> {
                 }
             }
             "--encoder" => config.software = value == "software",
+            "--capture" => config.graphics_capture = value == "graphics",
             "--selftest" => {
                 let seconds = args.get(i + 2).and_then(|s| s.parse().ok()).unwrap_or(10);
                 config.selftest = Some((value.clone(), seconds));
