@@ -30,12 +30,13 @@ function defaultRegistry(userDataDir) {
     return { readPlaytime: () => playtimeFile.list(file), mergePlaytime: (rows) => playtimeFile.mergeMax(file, rows) };
   }
   const reg = require('./reg.js');
-  const read = (appid) => reg.readRegistryIntegers('HKCU', `${PLAYTIME_KEY}/${appid}`, ['total', 'last']);
+  const read = (appid) => reg.readRegistryIntegers('HKCU', `${PLAYTIME_KEY}/${appid}`, ['total', 'last', 'first']);
   return {
     readPlaytime() {
       return (reg.listRegistryAllSubkeys('HKCU', PLAYTIME_KEY) || []).map((appid) => {
         const v = read(appid);
-        return { appid: String(appid), total: Number(v.total) || 0, last: Number(v.last) || 0 };
+        const first = Number(v.first) || 0;
+        return { appid: String(appid), total: Number(v.total) || 0, last: Number(v.last) || 0, ...(first ? { first } : {}) };
       });
     },
     // Larger value wins, so restoring can never turn a counter back.
@@ -46,6 +47,8 @@ function defaultRegistry(userDataDir) {
         const key = `${PLAYTIME_KEY}/${row.appid}`;
         if (row.total > (Number(v.total) || 0)) reg.writeRegistryDword('HKCU', key, 'total', row.total);
         if (row.last > (Number(v.last) || 0)) reg.writeRegistryDword('HKCU', key, 'last', row.last);
+        const first = playtimeFile.earlierFirst(v.first, row.first);
+        if (first && first !== (Number(v.first) || 0)) reg.writeRegistryDword('HKCU', key, 'first', first);
         written += 1;
       }
       return written;

@@ -50,6 +50,16 @@ module.exports.readSync = (appID) => {
   }
 };
 
+// When the first recorded session began (unix seconds), 0 when unknown. See watchdog/playtime/track.js.
+module.exports.firstLaunch = (appID) => {
+  try {
+    if (!useRegistry()) return playtimeFile.readFirst(playtimeFile.playtimeFile(userDataDir()), appID);
+    return +readRegistryInteger('HKCU', PLAYTIME_KEY + appID, 'first') || 0;
+  } catch {
+    return 0;
+  }
+};
+
 module.exports.reset = async (appID) => {
   await writeCounters(appID, 0, 0);
 };

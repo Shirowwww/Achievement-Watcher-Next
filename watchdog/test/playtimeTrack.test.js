@@ -76,8 +76,12 @@ test('a finished session is added to the registry total, and stamps `last`', { s
   assert.ok(last > 0, '`last` must reach the registry - a 0 here is the koffi segfault-after-total regression');
   assert.ok(Math.abs(Date.now() / 1000 - last) < 120, `\`last\` should be a current unix timestamp, got ${last}`);
 
+  const first = read('first');
+  assert.ok(Math.abs(last - 120 - first) <= 2, `\`first\` is when the first session began, got ${first} for a session saved at ${last}`);
+
   await TimeTrack(APPID, 45);
   assert.equal(read('total'), 165, 'a second session accumulates instead of overwriting');
+  assert.equal(read('first'), first, 'a later session never moves the first launch');
 });
 
 test('the playtime key is namespaced to AW Next so a predecessor uninstall cannot wipe it', () => {

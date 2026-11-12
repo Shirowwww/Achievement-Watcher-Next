@@ -55,8 +55,9 @@ function validatePlaytime(list) {
   if (!Array.isArray(list) || list.length > 100000) throw new BackupError('corrupt', 'bad playtime list');
   return list.map((row) => {
     const ok = row && /^[A-Za-z0-9._-]{1,80}$/.test(String(row.appid)) && isCount(row.total, 0xffffffff) && isCount(row.last, 0xffffffff);
-    if (!ok) throw new BackupError('corrupt', 'bad playtime entry');
-    return { appid: String(row.appid), total: row.total, last: row.last };
+    // `first` (the first launch) is in backups made since it is recorded, and only for games that have one.
+    if (!ok || (row.first !== undefined && !isCount(row.first, 0xffffffff))) throw new BackupError('corrupt', 'bad playtime entry');
+    return { appid: String(row.appid), total: row.total, last: row.last, ...(row.first ? { first: row.first } : {}) };
   });
 }
 
@@ -291,6 +292,7 @@ async function extractPayload(file, { manifest, payloadEnd }, destDir, onProgres
 }
 
 module.exports = {
+  validatePlaytime,
   FORMAT,
   FORMAT_VERSION,
   BackupError,

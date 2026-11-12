@@ -6,8 +6,9 @@ const { writeFileAtomicSync } = require(path.join(__dirname, 'replaceFile.js'));
 
 /*
   Playtime counters where there is no Windows registry: `cfg/playtime.json` in the profile, one
-  `{ total, last }` per appid (seconds, unix seconds), the same pair the registry key holds. Both
-  the app and the Watchdog write it, so every change re-reads the file and replaces it whole.
+  `{ total, last }` per appid (seconds, unix seconds), the same pair the registry key holds, plus
+  `first`, when the first session ever recorded began. Both the app and the Watchdog write it, so
+  every change re-reads the file and replaces it whole.
 */
 
 // Relative to the user data folder, '/'-separated like the profile backup's rules.
@@ -38,9 +39,18 @@ function read(file, appid) {
   return { total: counter(entry.total), last: counter(entry.last) };
 }
 
-function write(file, appid, { total, last }) {
+// When the first recorded session began: 0 for a game never launched, or played before this was kept.
+function readFirst(file, appid) {
+  return counter((readAll(file)[String(appid)] || {}).first);
+}
+
+const withFirst = (first) => (counter(first) ? { first: counter(first) } : {});
+
+// `first` is not a counter to set: what is stored stays, unless the caller gives one.
+function write(file, appid, { total, last, first }) {
   const all = readAll(file);
-  const next = { ...all, [String(appid)]: { total: counter(total), last: counter(last) } };
+  const kept = first === undefined ? (all[String(appid)] || {}).first : first;
+  const next = { ...all, [String(appid)]: { total: counter(total), last: counter(last), ...withFirst(kept) } };
   fs.mkdirSync(path.dirname(file), { recursive: true });
   writeFileAtomicSync(file, JSON.stringify(next, null, 2));
 }
@@ -48,12 +58,18 @@ function write(file, appid, { total, last }) {
 function addSession(file, appid, seconds, now = Date.now()) {
   const current = read(file, appid);
   const played = Number.isFinite(Number(seconds)) ? Math.max(0, Math.floor(Number(seconds))) : 0;
-  write(file, appid, { total: current.total + played, last: Math.floor(now / 1000) });
+  const at = Math.floor(now / 1000);
+  // Only a game with nothing recorded yet is being launched for the first time.
+  const first = current.total === 0 && current.last === 0 && !readFirst(file, appid) ? Math.max(0, at - played) : undefined;
+  write(file, appid, { total: current.total + played, last: at, first });
 }
 
 function list(file) {
-  return Object.keys(readAll(file)).map((appid) => ({ appid, ...read(file, appid) }));
+  return Object.keys(readAll(file)).map((appid) => ({ appid, ...read(file, appid), ...withFirst(readFirst(file, appid)) }));
 }
+
+// The first launch of two machines is the earlier one; 0 is "not recorded" on that side.
+const earlierFirst = (a, b) => (counter(a) && counter(b) ? Math.min(counter(a), counter(b)) : counter(a) || counter(b));
 
 // Larger value wins, so a restored backup can never turn a counter back.
 function mergeMax(file, rows) {
@@ -63,6 +79,7 @@ function mergeMax(file, rows) {
     next[String(row.appid)] = {
       total: Math.max(counter(current.total), counter(row.total)),
       last: Math.max(counter(current.last), counter(row.last)),
+      ...withFirst(earlierFirst(current.first, row.first)),
     };
   }
   fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -70,4 +87,4 @@ function mergeMax(file, rows) {
   return rows.length;
 }
 
-module.exports = { playtimeFile, PLAYTIME_RELATIVE, read, write, addSession, list, mergeMax };
+module.exports = { playtimeFile, PLAYTIME_RELATIVE, read, readFirst, write, addSession, list, mergeMax, earlierFirst };
