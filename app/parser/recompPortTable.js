@@ -93,6 +93,7 @@ const besideExe = (name) => ({ root }) => (root ? [path.join(root, name)] : []);
 const FH2_OFFLINE_PROFILE = 'User_9000000000000.ini';
 const FH2_REPORT = 'Achievements.txt';
 const FH2_ICONS = 'https://m.exophase.com/xbox/awards/m/';
+const SANCTUARY_ICONS = 'https://m.exophase.com/psn/awards/m/';
 function fh2Profiles({ root }) {
   if (!root) return [];
   const folder = path.join(root, 'fh2-mods', 'Achievements');
@@ -246,5 +247,18 @@ module.exports = [
     ifSaved: true,
     slots: true,
     saves: fh2Profiles,
+  },
+  {
+    // CaduGimenes/SanctuaryPort @ c3592c5: src/runtime_services.c (trophy_record), launcher-rust/src/core/paths.rs
+    // (user folder: <exe>\user by default), assets/trophies/Diablo_III.json; pictures from Exophase by title.
+    // shortcut: a user folder moved by SANCTUARY_USER_DIR or the launcher's settings is not followed; read it if asked.
+    id: 'sanctuary',
+    console: 'PlayStation 4',
+    title: 'Diablo III (SanctuaryPort)',
+    exe: /^SanctuaryPort\.exe$/i,
+    repos: ['cadugimenes/sanctuaryport'],
+    icons: { from: 'files', url: SANCTUARY_ICONS },
+    format: 'trophyIdLines',
+    saves: besideExe(path.join('user', 'trophies.txt')),
   },
 ];

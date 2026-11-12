@@ -405,6 +405,33 @@ test("Forza Horizon 2's achievements mod for Azimuth: every profile ini merged, 
   assert.ok(urls.includes('https://m.exophase.com/xbox/awards/m/645d08.png'));
 });
 
+test('Diablo III (SanctuaryPort) reads user/trophies.txt: one id per line, no date, a line still being written left out', async (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-d3-');
+  write(path.join(install, 'SanctuaryPort.exe'), '');
+  const file = path.join(install, 'user', 'trophies.txt');
+  write(file, '47\r\n3\n999\n47\n1');
+
+  const [entry] = ports.scan(install);
+  assert.equal(entry.appid, 'pcports-sanctuary');
+  assert.equal(entry.data.saveFile, file);
+  assert.deepEqual(ports.earnedIds('sanctuary', file), ['47', '3'], 'an unknown id and a repeat are dropped, the cut "1" waits');
+  assert.deepEqual(
+    ports.getAchievements(entry.data).map((u) => u.earned_time),
+    [0, 0],
+    'the file keeps no date'
+  );
+  write(file, '47\nabc\n');
+  assert.equal(ports.readUnlocks('sanctuary', file), null);
+
+  const urls = stubFetch(t, () => png(64, 64));
+  const game = await ports.getGameData(entry.data);
+  assert.equal(game.achievement.total, 54);
+  assert.equal(game.console, 'PlayStation 4');
+  assert.equal(game.achievement.list.find((a) => a.name === '47').displayName, 'Bone Skewer');
+  assert.equal(urls.length, 54, 'one picture per trophy');
+});
+
 test('Road Rash 64 reads one RetroAchievements id per line, from LOCALAPPDATA or beside the exe with portable.txt', (t) => {
   const { ports, local } = profile(t);
   const file = path.join(local, 'RoadRash64Recompiled', 'achievements.txt');

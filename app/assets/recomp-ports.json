@@ -4605,5 +4605,335 @@
     "icon": "31e3ge"
    }
   ]
+ },
+ "sanctuary": {
+  "repository": "CaduGimenes/SanctuaryPort",
+  "license": "GPL-2.0",
+  "achievements": [
+   {
+    "name": "0",
+    "displayName": "Diablo III: Reaper of Souls Platinum Trophy",
+    "description": "Collected all other Diablo III: Reaper of Souls trophies.",
+    "icon": "1054je"
+   },
+   {
+    "name": "1",
+    "displayName": "Deep Pockets",
+    "description": "Pick up 500,000 gold.",
+    "icon": "303b6e"
+   },
+   {
+    "name": "2",
+    "displayName": "The Comfort of Strangers",
+    "description": "Recruit the Templar, Scoundrel, and Enchantress.",
+    "icon": "74j158"
+   },
+   {
+    "name": "3",
+    "displayName": "Up All Night To Get Lucky",
+    "description": "Equip all Inventory slots with Legendary items that have a minimum required level of 70 or higher.",
+    "icon": "53edgd"
+   },
+   {
+    "name": "4",
+    "displayName": "Breaking Not So Bad",
+    "description": "Use a merchant to repair an item.",
+    "icon": "0d75je"
+   },
+   {
+    "name": "5",
+    "displayName": "Socket to Me",
+    "description": "Socket a gem in an item.",
+    "icon": "86130d"
+   },
+   {
+    "name": "6",
+    "displayName": "A New Start",
+    "description": "Complete 5 Bounties.",
+    "icon": "e1db8d"
+   },
+   {
+    "name": "7",
+    "displayName": "Batting 500",
+    "description": "Complete 500 Bounties.",
+    "icon": "415g60"
+   },
+   {
+    "name": "8",
+    "displayName": "Just Riffing",
+    "description": "Kill 500 monsters while in Nephalem Rifts.",
+    "icon": "650jg7"
+   },
+   {
+    "name": "9",
+    "displayName": "Dashing through the Rift",
+    "description": "Finish a Nephalem Rift within 15 Minutes.",
+    "icon": "b67536"
+   },
+   {
+    "name": "10",
+    "displayName": "The Mad King's End",
+    "description": "Kill the Skeleton King.",
+    "icon": "g30d75"
+   },
+   {
+    "name": "11",
+    "displayName": "Butchered!",
+    "description": "Kill the Butcher.",
+    "icon": "d1j688"
+   },
+   {
+    "name": "12",
+    "displayName": "The Last of the Horadrim",
+    "description": "Complete all quests in Act I.",
+    "icon": "j5b314"
+   },
+   {
+    "name": "13",
+    "displayName": "The Coven Overthrown",
+    "description": "Kill Maghda.",
+    "icon": "10541e"
+   },
+   {
+    "name": "14",
+    "displayName": "Murderer. Torturer. Monster.",
+    "description": "Kill Zoltun Kulle.",
+    "icon": "303b4e"
+   },
+   {
+    "name": "15",
+    "displayName": "The Lord of Lies",
+    "description": "Kill Belial.",
+    "icon": "74j1d8"
+   },
+   {
+    "name": "16",
+    "displayName": "The Black Soulstone",
+    "description": "Complete all quests in Act II.",
+    "icon": "53edbd"
+   },
+   {
+    "name": "17",
+    "displayName": "The Ravening Beast",
+    "description": "Kill Ghom.",
+    "icon": "0d751e"
+   },
+   {
+    "name": "18",
+    "displayName": "Making a Breakthrough",
+    "description": "Kill the Siegebreaker Assault Beast.",
+    "icon": "86134d"
+   },
+   {
+    "name": "19",
+    "displayName": "The Lord of Sin",
+    "description": "Kill Azmodan.",
+    "icon": "e1db6d"
+   },
+   {
+    "name": "20",
+    "displayName": "The Wages of Sin",
+    "description": "Complete all quests in Act III.",
+    "icon": "415g40"
+   },
+   {
+    "name": "21",
+    "displayName": "The Prime Evil",
+    "description": "Kill Diablo.",
+    "icon": "650jb7"
+   },
+   {
+    "name": "22",
+    "displayName": "Victory and Sacrifice",
+    "description": "Complete all quests in Act IV.",
+    "icon": "b675e6"
+   },
+   {
+    "name": "23",
+    "displayName": "Fire in Your New Boots",
+    "description": "Kill Urzael.",
+    "icon": "g30dg5"
+   },
+   {
+    "name": "24",
+    "displayName": "Her?",
+    "description": "Kill Adria.",
+    "icon": "d1j648"
+   },
+   {
+    "name": "25",
+    "displayName": "Death Do Us Part",
+    "description": "Kill Malthael.",
+    "icon": "j5b344"
+   },
+   {
+    "name": "26",
+    "displayName": "Don't Fear the Reaper",
+    "description": "Complete all quests in Act V.",
+    "icon": "1054ge"
+   },
+   {
+    "name": "27",
+    "displayName": "Above & Beyond (Hardcore)",
+    "description": "Reach level 70 in Hardcore mode.",
+    "icon": "303bje"
+   },
+   {
+    "name": "28",
+    "displayName": "Reign of Terror",
+    "description": "Kill Diablo in Hardcore mode.",
+    "icon": "74j1g8"
+   },
+   {
+    "name": "29",
+    "displayName": "May His Death Satisfy You",
+    "description": "Kill Malthael in Hardcore mode.",
+    "icon": "53ed6d"
+   },
+   {
+    "name": "30",
+    "displayName": "Above & Beyond",
+    "description": "Reach level 70.",
+    "icon": "0d75be"
+   },
+   {
+    "name": "31",
+    "displayName": "Dream Team",
+    "description": "Reach level 70 with 6 different classes.",
+    "icon": "8613ed"
+   },
+   {
+    "name": "32",
+    "displayName": "The Elitist",
+    "description": "Kill 500 elite (champion, rare, or unique) enemies.",
+    "icon": "e1dbjd"
+   },
+   {
+    "name": "33",
+    "displayName": "Greed over Need",
+    "description": "Kill 100 Treasure Goblins.",
+    "icon": "415gj0"
+   },
+   {
+    "name": "34",
+    "displayName": "Demolition Derby",
+    "description": "Get a destruction callout for breaking 50 objects.",
+    "icon": "650je7"
+   },
+   {
+    "name": "35",
+    "displayName": "Made to Order",
+    "description": "Craft 5 items.",
+    "icon": "b675b6"
+   },
+   {
+    "name": "36",
+    "displayName": "Custom-Fit",
+    "description": "Craft 100 items.",
+    "icon": "g30d85"
+   },
+   {
+    "name": "37",
+    "displayName": "Forged Credentials",
+    "description": "Raise the Blacksmith to level 12.",
+    "icon": "d1j6d8"
+   },
+   {
+    "name": "38",
+    "displayName": "Gemkata",
+    "description": "Raise the Jeweler to level 12.",
+    "icon": "j5b384"
+   },
+   {
+    "name": "39",
+    "displayName": "Maximum Myriam",
+    "description": "Raise the Mystic to level 12.",
+    "icon": "1054ee"
+   },
+   {
+    "name": "40",
+    "displayName": "I Feel So Enchanting",
+    "description": "Enchant all your equipment slots.",
+    "icon": "303bde"
+   },
+   {
+    "name": "41",
+    "displayName": "Trade-in",
+    "description": "Replace a property with Enchanting.",
+    "icon": "74j168"
+   },
+   {
+    "name": "42",
+    "displayName": "A Mystical Meeting",
+    "description": "Acquire the Mystic.",
+    "icon": "53ed1d"
+   },
+   {
+    "name": "43",
+    "displayName": "Bejeweled",
+    "description": "Combine gems.",
+    "icon": "0d756e"
+   },
+   {
+    "name": "44",
+    "displayName": "The Silence When You Speak to Me",
+    "description": "Listen to all of Master Ordan's conversations in the Pandemonium Fortress.",
+    "icon": "44e340"
+   },
+   {
+    "name": "45",
+    "displayName": "Serve the Balance",
+    "description": "Reach level 70 with a Necromancer.",
+    "icon": "6b76b7"
+   },
+   {
+    "name": "46",
+    "displayName": "Bringer of Order",
+    "description": "Complete Act V with a Necromancer.",
+    "icon": "beg0e6"
+   },
+   {
+    "name": "47",
+    "displayName": "Bone Skewer",
+    "description": "Damage 40 enemies with Bone Spear in 3 seconds.",
+    "icon": "gg1eg5"
+   },
+   {
+    "name": "48",
+    "displayName": "What Is Dead Can Sometimes Die",
+    "description": "Kill 1,000 Undead enemies with corpses.",
+    "icon": "d40548"
+   },
+   {
+    "name": "49",
+    "displayName": "Curse Your Enthusiasm",
+    "description": "Kill 5,000 cursed enemies.",
+    "icon": "j46j44"
+   },
+   {
+    "name": "50",
+    "displayName": "Terror in the Blood",
+    "description": "Defeat Diablo after using an ability that costs health while below 10% of your life.",
+    "icon": "1g7dge"
+   },
+   {
+    "name": "51",
+    "displayName": "Game of Bones",
+    "description": "Use Bone Armor to rip the bones from the Skeleton King.",
+    "icon": "3j7eje"
+   },
+   {
+    "name": "52",
+    "displayName": "Skeleton Crew",
+    "description": "Kill 500 elite (champion, rare, or unique) enemies with Command Skeleton minions.",
+    "icon": "7g0eg8"
+   },
+   {
+    "name": "53",
+    "displayName": "Self Controlled",
+    "description": "Kill your own Shadow Clone with Simulacrum during the Diablo encounter.",
+    "icon": "44e34g"
+   }
+  ]
  }
 }

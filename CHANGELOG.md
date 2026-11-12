@@ -36,6 +36,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 - **Forza Horizon 2's achievements mod for Azimuth (#185).** Azimuth with the fh2-mods
   Achievements mod shows its 88 achievements, with their pictures, unlock dates and progress.
+- **Diablo III (SanctuaryPort), the PC port of the PS4 game.** Its 54 trophies show with their
+  pictures. The port records no date, so an unlock gets the time AW Next sees it.
 
 ### Improved
 

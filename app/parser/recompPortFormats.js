@@ -209,8 +209,28 @@ function fh2Mod(text, schema) {
   return unlocks;
 }
 
+/*
+  SanctuaryPort (Diablo III): user/trophies.txt, one trophy id per line appended at each unlock, no
+  header and no date. A last line without its newline is still being written and is left out.
+*/
+function trophyIdLines(text, schema) {
+  const body = String(text);
+  const lines = body.split(/\r?\n/);
+  if (!body.endsWith('\n')) lines.pop();
+  const known = new Set(schema.achievements.map((entry) => String(entry.name)));
+  const unlocks = new Map();
+  for (const raw of lines) {
+    if (!raw.trim()) continue;
+    if (!/^\d{1,3}$/.test(raw.trim())) throw new Error('not a trophy number');
+    const id = String(Number(raw.trim()));
+    if (known.has(id) && !unlocks.has(id)) unlocks.set(id, { achieved: true, time: 0, progress: 0 });
+  }
+  return unlocks;
+}
+
 module.exports = {
   fh2Mod,
+  trophyIdLines,
   iniUnlocked,
   idList,
   unlockPairs,
