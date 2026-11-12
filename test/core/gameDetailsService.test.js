@@ -69,7 +69,7 @@ test('a Steam game shows its store page, cached so the next opening asks nothing
   assert.deepEqual(first.details.sources, ['steam']);
   assert.deepEqual(second.details, first.details);
   assert.deepEqual(storeCalls, ['100:english']);
-  assert.deepEqual(network.calls.filter((url) => !url.startsWith(METACRITIC) && !url.includes('/appreviewhistogram/')), [], 'the store page was complete: no GamesDB');
+  assert.deepEqual(network.calls.filter((url) => new URL(url).origin !== METACRITIC &&!url.includes('/appreviewhistogram/')), [], 'the store page was complete: no GamesDB');
   assert.equal(network.calls.filter((url) => url.includes('/search/')).length, 1, 'the Metacritic search is cached too');
 });
 

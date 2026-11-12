@@ -64,6 +64,6 @@ test('files started as a process or a worker thread stay outside the asar', () =
   const block = builder.match(/^asarUnpack:\n((?:\s+[-#].*\n)+)/m);
   assert.ok(block, 'electron-builder.yml still declares an asarUnpack list');
   for (const entry of ['parser/scanWorker.js', 'parser/xexWorker.js']) {
-    assert.match(block[1], new RegExp(`- ${entry.replace(/[./]/g, '\\$&')}\\n`), `${entry} must be unpacked`);
+    assert.match(block[1], new RegExp(`- ${entry.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')}\\n`), `${entry} must be unpacked`);
   }
 });

@@ -3810,14 +3810,8 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       ipcRenderer.send('theme-changed', value);
     });
 
-    // Only where arrows exist to step: `.right` is also a layout class on the Presets tab's action
-    // rows, and swallowing the wheel there broke scrolling across the bottom of that tab.
-    $('#settings .arrow-list .right').on('wheel', function (event) {
-      const stepper = $(this).find(event.originalEvent.deltaY > 0 ? '.next' : '.previous');
-      if (!stepper.length) return;
-      event.preventDefault();
-      stepper.trigger('click');
-    });
+    // The wheel never steps a setting: it used to over the arrows, and scrolling the panel changed
+    // settings by accident (Discord request). It always scrolls.
 
     $('#option_lang').mouseover(function () {
       let self = $(this);
@@ -4944,21 +4938,6 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       if (!settingsReady) return; // form is being populated - not a user interaction
       previewSoundAtVolume($('#option_overlaySound').val());
     });
-    // Mouse wheel nudges the slider one step, then commits via a debounced change so the
-    // preview + auto-save fire once instead of on every tick.
-    let volumeWheelCommit = null;
-    $('#option_overlayVolume').on('wheel', function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      const el = this;
-      const step = parseInt(el.step, 10) || 5;
-      const dir = event.originalEvent.deltaY > 0 ? -1 : 1;
-      el.value = Math.max(0, Math.min(200, (parseInt(el.value, 10) || 0) + dir * step));
-      updateOverlayVolumeLabel();
-      clearTimeout(volumeWheelCommit);
-      volumeWheelCommit = setTimeout(() => $(el).trigger('change'), 350);
-    });
-
     // Only a sound the user imported can be deleted, since a bundled one comes back with the app.
     let userSounds = new Set();
     async function refreshUserSounds() {

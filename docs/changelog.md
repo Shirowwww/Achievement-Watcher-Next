@@ -27,6 +27,11 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Click a game's icon to change it.** On the game page and above the achievement list, a click on
   the square icon opens the icon picker; right-click still offers every option.
 
+### Improved
+
+- **Scrolling Settings never changes a setting.** The mouse wheel over a value used to step it;
+  it now always scrolls the panel. Values change with the arrows or the keyboard.
+
 ### Fixed
 
 - **The trophy button on a tile opens the achievements again (#183).** Since the game page, it

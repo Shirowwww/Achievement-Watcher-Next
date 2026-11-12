@@ -151,16 +151,10 @@ test('the wheel scrolls the panel wherever the pointer is', (t) =>
   inContext(t, async (context) => {
     const session = await open(context, { width: 1300, height: 800 });
 
-    // The rows that are not steppers must not be treated as ones. Read off the handler rather than
-    // simulated, because the handler lives in a renderer that cannot be loaded outside Electron.
+    // No setting takes the wheel at all now: scrolling over a value used to step it (Discord request).
+    // Read off the source because the handlers live in a renderer that cannot be loaded outside Electron.
     const settings = fs.readFileSync(path.join(appDir, 'ui', 'settings.js'), 'utf8');
-    const handler = settings.slice(settings.indexOf("$('#settings .arrow-list .right').on('wheel'"));
-    const body = handler.slice(0, handler.indexOf('\n    });'));
-    assert.match(body, /if \(!stepper\.length\) return;/, 'a row with no arrows must let the wheel through');
-    assert.ok(
-      body.indexOf('if (!stepper.length) return;') < body.indexOf('preventDefault'),
-      'the early return has to come before preventDefault, or the scroll is already cancelled'
-    );
+    assert.doesNotMatch(settings, /\.on\('wheel'/, 'a setting steps on the wheel again, so scrolling the panel changes it');
 
     // And the previews are out of hit testing, so a wheel over them reaches the panel.
     const measured = await session.tab.evaluate(() => {
