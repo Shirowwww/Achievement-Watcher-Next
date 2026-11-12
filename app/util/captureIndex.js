@@ -37,6 +37,9 @@ function sanitizeName(s) {
 
 // "<achievement> - 2026-06-23 23-10-05", with " (2)" when that second already had a file.
 const SOUVENIR_NAME = /^(.+) - (\d{4})-(\d{2})-(\d{2}) (\d{2})-(\d{2})-(\d{2})(?: \(\d+\))?$/;
+// Before 3.12.4 the date came first: "2026-06-23 23-10-05 - <achievement>", " (2)" after the name.
+const DATED_FIRST_NAME = /^\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2} - (.+?)(?: \(\d+\))?$/;
+const achievementOfFile = (base) => (SOUVENIR_NAME.exec(base) || DATED_FIRST_NAME.exec(base) || [])[1];
 
 const indexPath = (userData) => path.join(userData, ...INDEX_FILE.split('/'));
 const emptyIndex = () => ({ version: INDEX_VERSION, games: {} });
@@ -192,8 +195,8 @@ async function findCaptures({ index, appid, gameTitles = [], titles = {}, dirs =
       if (!entry.isFile()) continue;
       const file = path.join(folder, entry.name);
       const kind = kindOf(file);
-      const match = kind && SOUVENIR_NAME.exec(path.basename(entry.name, path.extname(entry.name)));
-      const name = match && owners.get(match[1].toLowerCase());
+      const achievement = kind && achievementOfFile(path.basename(entry.name, path.extname(entry.name)));
+      const name = achievement && owners.get(achievement.toLowerCase());
       if (name && !taken.has(fileKey(file, platform))) named.push({ name, kind, file });
     }
   }

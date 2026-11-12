@@ -59,6 +59,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Older souvenirs show on the game page again (#187).** Screenshots and clips taken before 3.12.4
+  were named with the date first, and the game page only looked for the newer naming, so it said
+  there were none.
 - **A console game takes its icon and background from the right game too (#160).** When two games
   share a name, such as God of War (2005 and 2018), a PS4 or PS5 list already took the cover of the
   one released for that console; its icon, its background and the picture at the top of its windows

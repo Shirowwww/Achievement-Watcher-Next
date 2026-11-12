@@ -102,6 +102,23 @@ test('older captures are found by their name in the game folder of each capture 
   assert.equal(found.EMPTY, undefined);
 });
 
+test('captures named date first, as before 3.12.4, are found by their name too', async (t) => {
+  const root = sandbox(t);
+  const pictures = path.join(root, 'Pictures');
+  const shot = put(path.join(pictures, 'ELDEN RING', '2026-10-10 14-17-32 - Leonine Misbegotten.png'));
+  const again = put(path.join(pictures, 'ELDEN RING', '2026-10-10 14-17-32 - Leonine Misbegotten (2).png'));
+
+  const found = await captureIndex.findCaptures({
+    index: null,
+    appid: 'manual-319c6681a318',
+    gameTitles: ['ELDEN RING'],
+    titles: { LEONINE: 'Leonine Misbegotten' },
+    dirs: { screenshot: [pictures] },
+  });
+
+  assert.deepEqual(found.LEONINE.map((entry) => entry.file).sort(), [shot, again].sort());
+});
+
 test('a title two achievements share, after the name is cleaned, finds nothing by name', async (t) => {
   const root = sandbox(t);
   const pictures = path.join(root, 'Pictures');
