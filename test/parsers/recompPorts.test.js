@@ -343,6 +343,68 @@ test('Super Mario All-Stars reads a file caught half written as nothing', (t) =>
   }
 });
 
+test("Forza Horizon 2's achievements mod for Azimuth: every profile ini merged, UTC dates, counters ignored", async (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-fh2-');
+  write(path.join(install, 'azimuth.exe'), '');
+  assert.deepEqual(ports.scan(install), [], 'Azimuth without the mod has no achievements to list');
+  const folder = path.join(install, 'fh2-mods', 'Achievements');
+  write(
+    path.join(folder, 'User_9000000000000.ini'),
+    [
+      '; Achievements unlocked offline (Achievements mod). Delete this file to start over.',
+      '[unlocked]',
+      'first_of_many=2026-11-09 14:12:53 UTC',
+      'listen_to_it_roar=2026-11-11 09:05:52 UTC',
+      '',
+      '; Progress counted from gameplay events since the mod was installed.',
+      '[counters]',
+      'skill.FastAndClean=96',
+      'done.car.292=4',
+      '',
+    ].join('\r\n')
+  );
+  write(path.join(folder, 'User_9000000000001.ini'), '[unlocked]\r\nphotographer=2026-11-09 17:09:10 UTC\r\nfirst_of_many=2026-11-10 10:00:00 UTC\r\n');
+  write(path.join(folder, 'User_9000000000000.ini.bak'), '[unlocked]\r\nnumber_one=2026-11-09 14:12:53 UTC\r\n');
+
+  write(
+    path.join(folder, 'Achievements.txt'),
+    [
+      'Forza Horizon 2 achievements: 24 of 88 unlocked, 405G of 2000G',
+      '',
+      '== Forza Horizon 2 ==',
+      '[x] First of Many                         10G  Win your first Championship race.  (unlocked 2026-11-09 14:12:53 UTC)',
+      '[ ] Pink Wristband                        20G  Obtain the Pink Wristband.  [630686 / 810000 XP]',
+      '[ ] Fast and Clean                        10G  Earn the Clean Racing Skill 100 times.  [96 / 100 times]',
+      '[ ] Social Caterpillar                    10G  Compete in 20 Multiplayer Events.  [0 / 20 events]  (online only)',
+      '',
+    ].join('\r\n')
+  );
+
+  const [entry] = ports.scan(install);
+  assert.equal(entry.appid, 'pcports-fh2azimuth');
+  assert.equal(entry.data.saveFiles.length, 3, 'two profiles and the report; the .bak is not a profile');
+  const unlocks = Object.fromEntries(ports.getAchievements(entry.data).map((u) => [u.id, u]));
+  assert.deepEqual(Object.keys(unlocks).sort(), ['fast_and_clean', 'first_of_many', 'listen_to_it_roar', 'photographer', 'wristband_pink']);
+  assert.equal(unlocks.first_of_many.earned_time, Date.UTC(2026, 10, 9, 14, 12, 53) / 1000, 'UTC, and the earliest profile wins');
+  assert.deepEqual(unlocks.fast_and_clean, { id: 'fast_and_clean', achieved: false, earned_time: 0, progress: 96 }, 'progress from the report');
+  assert.equal(unlocks.wristband_pink.progress, 630686);
+  assert.deepEqual(ports.earnedIds('fh2azimuth', path.join(folder, 'Achievements.txt')), [], 'the report never unlocks');
+  write(path.join(folder, 'Achievements.txt'), 'Forza Horizon');
+  assert.equal(ports.readUnlocks('fh2azimuth', path.join(folder, 'Achievements.txt')), null, 'a report cut mid-write reads as nothing');
+
+  const urls = stubFetch(t, () => png(64, 64));
+  const game = await ports.getGameData(entry.data);
+  assert.equal(game.achievement.total, 88);
+  assert.equal(game.console, 'Xbox One');
+  const list = Object.fromEntries(game.achievement.list.map((a) => [a.name, a]));
+  assert.equal(list.fast_and_clean.max_progress, 100);
+  assert.equal(list.wristband_pink.max_progress, 810000);
+  assert.match(list.welcome_festival.icon, /[\\/]recompports[\\/]fh2azimuth[\\/]645d08\.png$/);
+  assert.equal(urls.length, 88, 'one picture per achievement');
+  assert.ok(urls.includes('https://m.exophase.com/xbox/awards/m/645d08.png'));
+});
+
 test('Road Rash 64 reads one RetroAchievements id per line, from LOCALAPPDATA or beside the exe with portable.txt', (t) => {
   const { ports, local } = profile(t);
   const file = path.join(local, 'RoadRash64Recompiled', 'achievements.txt');

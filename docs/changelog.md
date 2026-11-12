@@ -41,6 +41,9 @@ renamed in 3.9.0 and the history is kept under one file.
   not started, in progress, almost done (80% or more), at 100%, or at 100% of the base game without
   its DLC, and only one platform when the library holds several.
 
+- **Forza Horizon 2's achievements mod for Azimuth (#185).** Azimuth with the fh2-mods
+  Achievements mod shows its 88 achievements, with their pictures, unlock dates and progress.
+
 ### Improved
 
 - **Console and manual games get their page.** A game the stores do not list under its exact name,

@@ -4018,5 +4018,592 @@
     "description": "Get your first Ultra-Bitter Spray."
    }
   ]
+ },
+ "fh2azimuth": {
+  "repository": "Trinculo54/fh2-achievements",
+  "license": "GPL-3.0",
+  "achievements": [
+   {
+    "name": "welcome_festival",
+    "displayName": "Welcome to Horizon Europe",
+    "description": "Arrive at the Horizon Festival.",
+    "icon": "645d08"
+   },
+   {
+    "name": "welcome_sisteron",
+    "displayName": "Welcome to Sisteron",
+    "description": "Arrive at Sisteron for the first time.",
+    "icon": "04d001"
+   },
+   {
+    "name": "welcome_nice",
+    "displayName": "Welcome to Nice",
+    "description": "Arrive at Nice for the first time.",
+    "icon": "50355g"
+   },
+   {
+    "name": "welcome_saintmartin",
+    "displayName": "Welcome to Saint-Martin",
+    "description": "Arrive at Saint-Martin for the first time.",
+    "icon": "e01eej"
+   },
+   {
+    "name": "welcome_castelletto",
+    "displayName": "Welcome to Castelletto",
+    "description": "Arrive at Castelletto for the first time.",
+    "icon": "7b4774"
+   },
+   {
+    "name": "welcome_montellino",
+    "displayName": "Welcome to Montellino",
+    "description": "Arrive at Montellino for the first time.",
+    "icon": "8d6jje"
+   },
+   {
+    "name": "welcome_sangiovanni",
+    "displayName": "Welcome to San Giovanni",
+    "description": "Arrive at San Giovanni for the first time.",
+    "icon": "471003"
+   },
+   {
+    "name": "horizon_leader",
+    "displayName": "Horizon Leader",
+    "description": "Choose where the Road Trip goes for the first time.",
+    "icon": "bd6885"
+   },
+   {
+    "name": "wanderlust",
+    "displayName": "Wanderlust",
+    "description": "Complete a Road Trip.",
+    "icon": "d71gj7"
+   },
+   {
+    "name": "wristband_yellow",
+    "displayName": "Yellow Wristband",
+    "description": "Obtain the Yellow Wristband.",
+    "icon": "1b0373"
+   },
+   {
+    "name": "wristband_green",
+    "displayName": "Green Wristband",
+    "description": "Obtain the Green Wristband.",
+    "goal": 210000,
+    "icon": "310577"
+   },
+   {
+    "name": "wristband_pink",
+    "displayName": "Pink Wristband",
+    "description": "Obtain the Pink Wristband.",
+    "goal": 810000,
+    "icon": "7b4704"
+   },
+   {
+    "name": "wristband_purple",
+    "displayName": "Purple Wristband",
+    "description": "Obtain the Purple Wristband.",
+    "goal": 1410000,
+    "icon": "50357g"
+   },
+   {
+    "name": "wristband_gold",
+    "displayName": "Gold Wristband",
+    "description": "Obtain the Gold Wristband.",
+    "goal": 2910000,
+    "icon": "04d031"
+   },
+   {
+    "name": "first_of_many",
+    "displayName": "First of Many",
+    "description": "Win your first Championship race.",
+    "icon": "bd6875"
+   },
+   {
+    "name": "number_one",
+    "displayName": "Number One",
+    "description": "Win a Championship.",
+    "icon": "j7500b"
+   },
+   {
+    "name": "horizon_fan",
+    "displayName": "Horizon Fan",
+    "description": "Complete 25 Championships.",
+    "goal": 25,
+    "icon": "gb3jj4"
+   },
+   {
+    "name": "horizon_enthusiast",
+    "displayName": "Horizon Enthusiast",
+    "description": "Complete 100 Championships.",
+    "goal": 100,
+    "icon": "d71gg7"
+   },
+   {
+    "name": "all_your_race",
+    "displayName": "All Your Race Are Belong To Us 2.0",
+    "description": "Complete all 168 Championships.",
+    "goal": 168,
+    "icon": "j7506b"
+   },
+   {
+    "name": "horizon_champion",
+    "displayName": "Horizon Champion",
+    "description": "Become the Horizon Champion.",
+    "icon": "645dd8"
+   },
+   {
+    "name": "new_car_smell",
+    "displayName": "That New Car Smell",
+    "description": "Buy your first car.",
+    "icon": "8d6j5e"
+   },
+   {
+    "name": "car_lover",
+    "displayName": "Car Lover",
+    "description": "Have 50 Cars in your Garage.",
+    "goal": 50,
+    "icon": "e01e3j"
+   },
+   {
+    "name": "worthy_sultan",
+    "displayName": "Worthy of a Sultan",
+    "description": "Have 175 Cars in your Garage.",
+    "goal": 175,
+    "icon": "4710e3"
+   },
+   {
+    "name": "license_to_skill",
+    "displayName": "License to Skill",
+    "description": "Earn 5 Skill Points.",
+    "goal": 5,
+    "icon": "645d78"
+   },
+   {
+    "name": "stone_cold_skiller",
+    "displayName": "Stone Cold Skiller",
+    "description": "Earn 65 Skill Points.",
+    "goal": 65,
+    "icon": "bd68g5"
+   },
+   {
+    "name": "fast_and_clean",
+    "displayName": "Fast and Clean",
+    "description": "Earn the Clean Racing Skill 100 times.",
+    "goal": 100,
+    "icon": "1b03j3"
+   },
+   {
+    "name": "summer_sale",
+    "displayName": "Summer Sale",
+    "description": "Smash 25 Reward Boards.",
+    "goal": 25,
+    "icon": "gb3j14"
+   },
+   {
+    "name": "smash_happy",
+    "displayName": "Smash Happy",
+    "description": "Collect all Reward Boards.",
+    "goal": 150,
+    "icon": "d71g07"
+   },
+   {
+    "name": "human_gps",
+    "displayName": "Human GPS",
+    "description": "Drive down every road in the game.",
+    "goal": 315,
+    "icon": "8d6j6e"
+   },
+   {
+    "name": "storage_hunter",
+    "displayName": "Storage Hunter",
+    "description": "Restore 10 Barn Finds.",
+    "goal": 10,
+    "icon": "471013"
+   },
+   {
+    "name": "photographer",
+    "displayName": "Photographer",
+    "description": "Take photos of 100 different cars for Horizon Promo.",
+    "goal": 100,
+    "icon": "e01e1j"
+   },
+   {
+    "name": "one_down",
+    "displayName": "One Down!",
+    "description": "Complete a Solo Bucket List challenge from the first two Horizon Bucket Lists.",
+    "icon": "8d6j0e"
+   },
+   {
+    "name": "kick_the_bucket",
+    "displayName": "Kick the Bucket",
+    "description": "Scratch 15 items off the first two Horizon Bucket Lists.",
+    "goal": 15,
+    "icon": "310507"
+   },
+   {
+    "name": "rest_in_peace",
+    "displayName": "Rest in Peace",
+    "description": "Complete 30 Solo Bucket List Challenges from the first two Horizon Bucket Lists.",
+    "goal": 30,
+    "icon": "7b4744"
+   },
+   {
+    "name": "rain_master",
+    "displayName": "Rain Master",
+    "description": "Complete your first race in the rain.",
+    "icon": "gb3j04"
+   },
+   {
+    "name": "train_in_vain",
+    "displayName": "The Train's in Vain",
+    "description": "Beat the Train in a Horizon Showcase Event.",
+    "icon": "310557"
+   },
+   {
+    "name": "multi_disciplined",
+    "displayName": "Multi-Disciplined",
+    "description": "Win an Event in every type of car.",
+    "goal": 28,
+    "icon": "1b0333"
+   },
+   {
+    "name": "wild_drivatar",
+    "displayName": "A Wild Drivatar Appears!",
+    "description": "Win 3 Head-to-Head Races against Drivatars with a Bounty on them.",
+    "goal": 3,
+    "icon": "1b0303"
+   },
+   {
+    "name": "we_meet_again",
+    "displayName": "We Meet Again!",
+    "description": "Win a Showdown at every Car Meet.",
+    "icon": "5035gg"
+   },
+   {
+    "name": "friends_with_benefits",
+    "displayName": "Friends with Benefits",
+    "description": "Earn a total of 1,000,000 Cr from Rivals.",
+    "goal": 1000000,
+    "icon": "50353g"
+   },
+   {
+    "name": "super_meet_boy",
+    "displayName": "Super Meet Boy",
+    "description": "Grab a livery, grab a tuning setup, buy a car, and enter a Showdown at any Car Meet.",
+    "icon": "04d0j1"
+   },
+   {
+    "name": "bragging_rights",
+    "displayName": "Bragging Rights",
+    "description": "Beat Friends or Club members on any 20 Speed Cameras.",
+    "goal": 20,
+    "icon": "j7505b"
+   },
+   {
+    "name": "social_caterpillar",
+    "displayName": "Social Caterpillar",
+    "description": "Compete in 20 Multiplayer Events.",
+    "goal": 20,
+    "icon": "645d58"
+   },
+   {
+    "name": "social_butterfly",
+    "displayName": "Social Butterfly",
+    "description": "Compete in 200 Multiplayer Events.",
+    "goal": 200,
+    "icon": "bd6865"
+   },
+   {
+    "name": "team_player",
+    "displayName": "Team Player",
+    "description": "Win 50 Team Events.",
+    "goal": 50,
+    "icon": "310567"
+   },
+   {
+    "name": "loyal",
+    "displayName": "Loyal",
+    "description": "Earn 500,000 XP for your Club.",
+    "goal": 500000,
+    "icon": "04d0d1"
+   },
+   {
+    "name": "on_the_road_again",
+    "displayName": "On the Road Again",
+    "description": "Complete an Online Road Trip location.",
+    "icon": "gb3j34"
+   },
+   {
+    "name": "well_travelled",
+    "displayName": "Well Travelled",
+    "description": "Complete 25 Online Road Trip locations.",
+    "goal": 25,
+    "icon": "d71g17"
+   },
+   {
+    "name": "yes_we_can",
+    "displayName": "Yes We Can",
+    "description": "Complete 25 Bucket List items co-operatively from the first two Horizon Bucket Lists.",
+    "goal": 25,
+    "icon": "j750eb"
+   },
+   {
+    "name": "you_are_pg",
+    "displayName": "You Are Playground Games",
+    "description": "Complete 100 Playground Games Events.",
+    "goal": 100,
+    "icon": "7b4754"
+   },
+   {
+    "name": "welcome_storm_island",
+    "displayName": "Welcome to Storm Island",
+    "description": "Arrive on Storm Island.",
+    "icon": "e08j30"
+   },
+   {
+    "name": "into_the_jungle",
+    "displayName": "Into the Jungle",
+    "description": "Win your first Storm Island Championship.",
+    "icon": "476j15"
+   },
+   {
+    "name": "high_five",
+    "displayName": "High Five",
+    "description": "Win 5 Storm Island Championships.",
+    "goal": 5,
+    "icon": "64ge5d"
+   },
+   {
+    "name": "go_back",
+    "displayName": "We Have to Go Back!",
+    "description": "Complete every Storm Island Championship.",
+    "goal": 30,
+    "icon": "j718e1"
+   },
+   {
+    "name": "storm_island_champion",
+    "displayName": "Storm Island Champion",
+    "description": "Win the Storm Island Finale.",
+    "icon": "bd3b6g"
+   },
+   {
+    "name": "survive_gauntlet",
+    "displayName": "Survive the Gauntlet",
+    "description": "Complete your first Gauntlet Event.",
+    "icon": "1b1ejg"
+   },
+   {
+    "name": "gauntlet_runner",
+    "displayName": "Gauntlet Runner",
+    "description": "Win every Gauntlet Event.",
+    "goal": 6,
+    "icon": "7bd65e"
+   },
+   {
+    "name": "island_explorer",
+    "displayName": "Island Explorer",
+    "description": "Drive every Road on Storm Island.",
+    "goal": 50,
+    "icon": "476jb5"
+   },
+   {
+    "name": "smash_em_all",
+    "displayName": "Gotta Smash Em All!",
+    "description": "Collect every Storm Island Bonus Board.",
+    "goal": 25,
+    "icon": "e08j10"
+   },
+   {
+    "name": "tick",
+    "displayName": "Tick!",
+    "description": "Complete your first Storm Island Bucket List Challenge.",
+    "icon": "50b138"
+   },
+   {
+    "name": "another_life",
+    "displayName": "See You in Another Life!",
+    "description": "Complete every Storm Island Bucket List Challenge.",
+    "goal": 8,
+    "icon": "0416d5"
+   },
+   {
+    "name": "castaways",
+    "displayName": "Castaways",
+    "description": "Complete every Co-op Storm Island Bucket List Challenge.",
+    "goal": 8,
+    "icon": "8d4b67"
+   },
+   {
+    "name": "tropical_treasure",
+    "displayName": "Tropical Treasure",
+    "description": "Find and restore a Barn Find on Storm Island.",
+    "icon": "7bd64e"
+   },
+   {
+    "name": "skills_for_thrills",
+    "displayName": "Skills for Thrills",
+    "description": "Bank a Skill Chain of 100,000 points on Storm Island.",
+    "goal": 100000,
+    "icon": "64ge3d"
+   },
+   {
+    "name": "storm_breaker",
+    "displayName": "Storm Breaker",
+    "description": "Win 5 events in stormy conditions.",
+    "goal": 5,
+    "icon": "gb7853"
+   },
+   {
+    "name": "ready_to_bounce",
+    "displayName": "Ready to Bounce",
+    "description": "Start a race with Off-Road tires, suspension, and transmission on Storm Island.",
+    "icon": "bd3b4g"
+   },
+   {
+    "name": "fiesta_fun",
+    "displayName": "Fiesta Fun",
+    "description": "Win an event in the '81 Ford Fiesta.",
+    "icon": "1b1e0g"
+   },
+   {
+    "name": "galant_great",
+    "displayName": "Galant Great",
+    "description": "Win an Event in the Mitsubishi Galant.",
+    "icon": "gb7833"
+   },
+   {
+    "name": "metro_master",
+    "displayName": "Metro Master",
+    "description": "Win an event in the MG Metro R4.",
+    "icon": "314d0d"
+   },
+   {
+    "name": "ranger_rock_star",
+    "displayName": "Ranger Rock Star",
+    "description": "Win an event in the Ford Ranger.",
+    "icon": "j71851"
+   },
+   {
+    "name": "stadium_star",
+    "displayName": "Stadium Star",
+    "description": "Win an Event in the Robby Gordon #7 SST.",
+    "icon": "d78d1b"
+   },
+   {
+    "name": "meet_and_beat",
+    "displayName": "Meet and Beat",
+    "description": "Visit the Storm Island Car Meet and win 3 Showdowns.",
+    "icon": "314d6d"
+   },
+   {
+    "name": "horizon_5_0",
+    "displayName": "Horizon 5-0",
+    "description": "Complete 50 Online Events on Storm Island.",
+    "goal": 50,
+    "icon": "d78dbb"
+   },
+   {
+    "name": "porsche_owners_club",
+    "displayName": "Porsche Owners Club",
+    "description": "Obtain your first Porsche.",
+    "icon": "4735d0"
+   },
+   {
+    "name": "porsche_rookie",
+    "displayName": "Porsche Rookie",
+    "description": "Tick off 5 items on the Porsche Bucket List",
+    "goal": 5,
+    "icon": "646017"
+   },
+   {
+    "name": "porsche_pro",
+    "displayName": "Porsche Pro",
+    "description": "Complete the Porsche Bucket List",
+    "goal": 10,
+    "icon": "bd0716"
+   },
+   {
+    "name": "horse_power",
+    "displayName": "Horse Power",
+    "description": "Complete 40 events in Porsches.",
+    "goal": 40,
+    "icon": "d75je8"
+   },
+   {
+    "name": "air_cooled",
+    "displayName": "Air Cooled Competitor",
+    "description": "Complete 4 events in the 1970 Porsche 914/6.",
+    "goal": 4,
+    "icon": "8dg17d"
+   },
+   {
+    "name": "cajun_kickin",
+    "displayName": "Cajun Kickin'",
+    "description": "Complete 4 events in the 2015 Porsche Macan Turbo.",
+    "goal": 4,
+    "icon": "473570"
+   },
+   {
+    "name": "listen_to_it_roar",
+    "displayName": "Listen to it Roar!",
+    "description": "Complete 4 events in the 2003 Porsche Carrera GT.",
+    "goal": 4,
+    "icon": "646047"
+   },
+   {
+    "name": "ring_wraith",
+    "displayName": "Ring Wraith",
+    "description": "Complete 4 events in the 2014 Porsche 918 Spyder.",
+    "goal": 4,
+    "icon": "e04d0d"
+   },
+   {
+    "name": "show_and_display",
+    "displayName": "Show and Display",
+    "description": "Complete 4 events in the 1987 Porsche 959.",
+    "goal": 4,
+    "icon": "04g7ee"
+   },
+   {
+    "name": "this_is_my_porsche",
+    "displayName": "This Is My Porsche",
+    "description": "Complete 10 events in the same Porsche.",
+    "goal": 10,
+    "icon": "gbe045"
+   },
+   {
+    "name": "animal",
+    "displayName": "Animal!",
+    "description": "Pull off 20 Drifts in the 2015 Porsche Cayman GTS.",
+    "goal": 20,
+    "icon": "7bej38"
+   },
+   {
+    "name": "call_911",
+    "displayName": "Call 911",
+    "description": "Pull off 30 Near Miss Skills in the Porsche 911 Turbo S.",
+    "goal": 30,
+    "icon": "1bd56e"
+   },
+   {
+    "name": "cup_car",
+    "displayName": "Cup Car",
+    "description": "Earn 25,000 Credits in Rivals Mode with the Porsche 911 GT3 RS 4.0.",
+    "goal": 25000,
+    "icon": "j7jbg4"
+   },
+   {
+    "name": "no_airbag",
+    "displayName": "No Airbag Required",
+    "description": "Earn 20 Clean Racer Skills in the 1989 Porsche 944 Turbo.",
+    "goal": 20,
+    "icon": "504ejd"
+   },
+   {
+    "name": "widow_maker",
+    "displayName": "Widow Maker",
+    "description": "Win a race in the wet in a 1982 Porsche 911 Turbo 3.3.",
+    "icon": "31e3ge"
+   }
+  ]
  }
 }

@@ -84,6 +84,27 @@ function rr64Folders({ root, host, hostPath }) {
 // The game's folder is its working directory (the launcher chdirs there), so its files sit beside the exe.
 const besideExe = (name) => ({ root }) => (root ? [path.join(root, name)] : []);
 
+/*
+  The FH2 mod's profiles: every User_<id>.ini in <azimuth>\fh2-mods\Achievements (its .bak and .damaged
+  left out), then Achievements.txt, its report with the progress of each locked achievement. Before the
+  first unlock, the offline profile's file gives the Watchdog a folder to wait on.
+  shortcut: a profile created after the scan is read from the next scan on, not watched live before.
+*/
+const FH2_OFFLINE_PROFILE = 'User_9000000000000.ini';
+const FH2_REPORT = 'Achievements.txt';
+const FH2_ICONS = 'https://m.exophase.com/xbox/awards/m/';
+function fh2Profiles({ root }) {
+  if (!root) return [];
+  const folder = path.join(root, 'fh2-mods', 'Achievements');
+  let names = [];
+  try {
+    names = fs.readdirSync(folder).filter((name) => /^User_\w+\.ini$/i.test(name)).sort();
+  } catch {
+    names = [];
+  }
+  return [...(names.length > 0 ? names : [FH2_OFFLINE_PROFILE]), FH2_REPORT].map((name) => path.join(folder, name));
+}
+
 module.exports = [
   {
     id: 'dusklight',
@@ -210,5 +231,20 @@ module.exports = [
     repos: [],
     format: 'idList',
     saves: besideExe('pikmin2_achievements.txt'),
+  },
+  {
+    // Trinculo54/fh2-achievements @ 884bb56: a mod for Azimuth (azimuth.exe, Forza Horizon 2's Xbox One build).
+    // src/rules.cpp kDefs, src/achievements.cpp: one <azimuth>\fh2-mods\Achievements\<user>.ini per profile, UTC dates.
+    id: 'fh2azimuth',
+    console: 'Xbox One',
+    title: 'Forza Horizon 2 (Azimuth)',
+    // Goals from the rules' P(have, need); pictures are the Xbox ones Exophase serves (ids matched by title).
+    exe: /^azimuth\.exe$/i,
+    repos: ['trinculo54/fh2-achievements'],
+    icons: { from: 'files', url: FH2_ICONS },
+    format: 'fh2Mod',
+    ifSaved: true,
+    slots: true,
+    saves: fh2Profiles,
   },
 ];

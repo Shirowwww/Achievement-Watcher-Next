@@ -95,16 +95,17 @@ function catalogueEntries(text, schema) {
   return unlocks;
 }
 
-const INI_DATE = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2}))?$/;
+const INI_DATE = /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}):(\d{2}):(\d{2}))?( UTC)?$/;
 const MAX_MASK_BITS = 31;
 
-// Seconds of a local "YYYY-MM-DD[ HH:MM:SS]" (the game writes local time, a day alone is midnight).
+// Seconds of "YYYY-MM-DD[ HH:MM:SS][ UTC]": local time unless marked UTC (FH2's mod), a day alone is midnight.
 function localSeconds(text) {
   const match = INI_DATE.exec(text);
   if (!match) throw new Error(`not a date: ${text}`);
-  const [year, month, day, hour, minute, second] = match.slice(1).map((part) => Number(part || 0));
-  const date = new Date(year, month - 1, day, hour, minute, second);
-  if (date.getMonth() !== month - 1 || date.getDate() !== day) throw new Error(`not a date: ${text}`);
+  const [year, month, day, hour, minute, second] = match.slice(1, 7).map((part) => Number(part || 0));
+  const date = match[7] ? new Date(Date.UTC(year, month - 1, day, hour, minute, second)) : new Date(year, month - 1, day, hour, minute, second);
+  const [gotMonth, gotDay] = match[7] ? [date.getUTCMonth(), date.getUTCDate()] : [date.getMonth(), date.getDate()];
+  if (gotMonth !== month - 1 || gotDay !== day) throw new Error(`not a date: ${text}`);
   return Math.floor(date.getTime() / 1000);
 }
 
@@ -185,7 +186,31 @@ function unlockPairs(text, schema) {
   return unlocks;
 }
 
+/*
+  Forza Horizon 2's achievements mod: a profile's User_<id>.ini is the iniUnlocked layout with UTC
+  dates; its Achievements.txt report gives a locked achievement's progress as "[have / need unit]"
+  after its title. The report never unlocks anything: the profile files do.
+*/
+const FH2_REPORT_HEAD = /^Forza Horizon 2 achievements: \d+ of \d+ unlocked/;
+const FH2_REPORT_ROW = /^\[ \] (.+?) {2,}\d+G {2}.*?\[(\d+) \/ (\d+)[^\]]*\]/;
+function fh2Mod(text, schema) {
+  const body = String(text).replace(/^﻿/, '');
+  if (!body.startsWith('Forza Horizon 2 achievements')) return iniUnlocked(body, schema);
+  if (!FH2_REPORT_HEAD.test(body)) throw new Error('not the mod report, or its first line is cut');
+  const byTitle = new Map(schema.achievements.filter((entry) => Number(entry.goal) > 1).map((entry) => [entry.displayName, entry]));
+  const unlocks = new Map();
+  for (const line of body.split(/\r?\n/)) {
+    const row = FH2_REPORT_ROW.exec(line);
+    const entry = row && byTitle.get(row[1].trim());
+    if (!entry) continue;
+    const progress = Math.min(Number(row[2]), Number(entry.goal));
+    if (progress > 0) unlocks.set(String(entry.name), { achieved: false, time: 0, progress });
+  }
+  return unlocks;
+}
+
 module.exports = {
+  fh2Mod,
   iniUnlocked,
   idList,
   unlockPairs,
