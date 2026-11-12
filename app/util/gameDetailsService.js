@@ -18,6 +18,7 @@ const { resolveSteamStoreDetails } = require('./steamMetadata.js');
 const details = require('./gameDetails.js');
 const stores = require('./gameDetailsStores.js');
 const gameRatings = require('./gameRatings.js');
+const { consoleLaunchYear } = require('./sgdbAssetCache.js');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const FOUND_TTL_MS = 14 * DAY_MS;
@@ -42,7 +43,7 @@ function gameRequest(game) {
   const appid = String(game.appid || '');
   if (!isSafeSegment(appid)) return null;
   const text = (value, max) => (typeof value === 'string' ? value.slice(0, max) : '');
-  return { appid, source: text(game.source, 80), system: text(game.system, 80), steamappid: text(game.steamappid, 20), name: text(game.name, 240), console: text(game.console, 60), detailsTitle: text(game.detailsTitle, 240) };
+  return { appid, source: text(game.source, 80), system: text(game.system, 80), steamappid: text(game.steamappid, 20), name: text(game.name, 240), console: text(game.console, 60), detailsTitle: text(game.detailsTitle, 240), platform: text(game.platform, 40) };
 }
 
 const cacheFile = (ctx, key) => path.join(ctx.cacheDir, `${crypto.createHash('sha1').update(key).digest('hex')}.json`);
@@ -206,20 +207,31 @@ async function metacriticPart(ctx, game, force) {
   const title = details.searchTitle(details.ownTitle(game));
   if (!title) return { value: null };
   const platforms = gameRatings.metacriticPlatforms(game);
-  const match = await cached(ctx, `metacritic-search:${details.titleKey(title)}:${platforms.join(',')}`, force, async () => {
+  const launchYear = consoleLaunchYear(game.platform);
+  const match = await cached(ctx, `metacritic-search:${details.titleKey(title)}:${platforms.join(',')}${launchYear ? `:${launchYear}` : ''}`, force, async () => {
     const answer = await storeJson(ctx, `${METACRITIC}/finder/metacritic/search/${encodeURIComponent(title)}/web?offset=0&limit=20&mcoTypeId=13`);
     if (!answer) return answer;
-    const slug = gameRatings.chooseMetacriticGame(answer, title, platforms);
+    const slug = gameRatings.chooseMetacriticGame(answer, title, platforms, launchYear);
     return slug ? { slug } : null;
   });
   const slug = match.value && /^[a-z0-9-]{1,120}$/.test(String(match.value.slug)) ? match.value.slug : '';
   if (!slug) return { value: null, networkError: match.networkError };
-  return cached(ctx, `metacritic:${slug}`, force, async () => {
+  const scores = await cached(ctx, `metacritic:${slug}`, force, async () => {
     const stats = (who) => storeJson(ctx, `${METACRITIC}/reviews/metacritic/${who}/games/${slug}/stats/web`);
     const [critic, user] = await Promise.all([stats('critic'), stats('user')]);
     if (critic === undefined || user === undefined) return undefined;
     const ratings = gameRatings.metacriticRatings(slug, critic, user);
     return ratings.length ? { ratings } : null;
+  });
+  return { ...scores, slug };
+}
+
+// Metacritic's record of the game it matched: the last resort for a page nothing else could fill.
+async function metacriticGamePart(ctx, slug, force) {
+  if (!slug) return { value: null };
+  return cached(ctx, `metacritic-game:${slug}`, force, async () => {
+    const answer = await storeJson(ctx, `${METACRITIC}/games/metacritic/${slug}/web`);
+    return answer ? gameRatings.metacriticGame(answer) : answer;
   });
 }
 
@@ -272,10 +284,11 @@ async function titlePart(ctx, game, force) {
   if (!title) return { value: null };
   const preferred = details.preferredPlatforms(game);
   const decide = details.decidesTies(game);
-  const match = await cached(ctx, `search:${details.titleKey(title)}:${preferred.join(',')}${decide ? ':decide' : ''}`, force, async () => {
+  const launchYear = consoleLaunchYear(game.platform);
+  const match = await cached(ctx, `search:${details.titleKey(title)}:${preferred.join(',')}${decide ? ':decide' : ''}${launchYear ? `:${launchYear}` : ''}`, force, async () => {
     const answer = await gamesDbJson(ctx, `${GAMESDB}/games?title=${encodeURIComponent(title)}`);
     if (!answer) return answer;
-    const chosen = details.chooseTitleMatch(answer.items, title, preferred, { decide });
+    const chosen = details.chooseTitleMatch(answer.items, title, preferred, { decide, launchYear });
     return chosen ? { id: String(chosen.id) } : null;
   });
   if (!match.value) return match;
@@ -294,27 +307,54 @@ async function build(ctx, game, lang, force) {
     metacriticPart(ctx, game, force),
     steamReviewsPart(ctx, steamAppid, force),
   ]);
-  const parts = [{ source: 'steam', ...steam }, { source: 'steam-reviews', ...reviews }, store, { source: 'metacritic', ...metacritic }];
+  const { slug, ...scores } = metacritic;
+  const parts = [{ source: 'steam', ...steam }, { source: 'steam-reviews', ...reviews }, store, { source: 'metacritic', ...scores }];
   if (!details.isComplete(details.mergeDetails(parts))) {
     const release = await gamesDbPart(ctx, details.gamesDbIdentity(game, steamAppid), force);
     parts.push({ source: 'gamesdb', ...release });
     if (!release.value && !details.isComplete(details.mergeDetails(parts))) parts.push({ source: 'gamesdb', ...(await titlePart(ctx, game, force)) });
   }
+  if (slug && !details.isComplete(details.mergeDetails(parts))) parts.push({ source: 'metacritic-game', ...(await metacriticGamePart(ctx, slug, force)) });
   const result = { details: details.mergeDetails(parts) };
   if (parts.some((part) => part.networkError)) result.networkError = true;
   return result;
 }
 
-function createGameDetailsService({ cacheDir, getJson, fetchSteamStore, now = Date.now, log = () => {} }) {
+function createGameDetailsService({ cacheDir, getJson, fetchSteamStore, hltb = null, now = Date.now, log = () => {} }) {
   const ctx = { cacheDir, getJson, fetchSteamStore, now, log, epicMapping: null };
   const inFlight = new Map();
+
+  // HowLongToBeat's times ({ main, extra, complete } in seconds, url), asked once the page is up:
+  // by exact title, the release year telling two games of one name apart. null when it has none.
+  async function timeToBeat(rawGame, { year = 0, force = false } = {}) {
+    const game = gameRequest(rawGame);
+    const title = game ? details.searchTitle(details.ownTitle(game)) : '';
+    if (!title || !hltb) return null;
+    const releaseYear = Number.isInteger(year) && year > 1970 && year < 2100 ? year : 0;
+    const key = `hltb:${details.titleKey(title)}:${releaseYear}`;
+    if (!inFlight.has(key)) {
+      const job = cached(ctx, key, force === true, async () => {
+        const found = await hltb.lookup(title, { year: releaseYear });
+        if (!found) return found;
+        return found.main || found.extra || found.complete ? { main: found.main, extra: found.extra, complete: found.complete, url: found.url } : null;
+      })
+        .then((part) => part.value)
+        .catch((err) => {
+          log(`time to beat failed for ${game.appid}: ${err.message || err}`);
+          return null;
+        })
+        .finally(() => inFlight.delete(key));
+      inFlight.set(key, job);
+    }
+    return inFlight.get(key);
+  }
 
   function get(rawGame, { lang = 'english', force = false } = {}) {
     const game = gameRequest(rawGame);
     if (!game) return Promise.resolve({ details: null });
     const language = STEAM_LANGUAGE.test(String(lang)) ? String(lang) : 'english';
     const forced = force === true;
-    const key = JSON.stringify([game.appid, game.source, game.system, game.steamappid, game.name, language, forced]);
+    const key = JSON.stringify([game.appid, game.source, game.system, game.steamappid, game.name, game.platform, language, forced]);
     if (!inFlight.has(key)) {
       const job = build(ctx, game, language, forced)
         .catch((err) => {
@@ -334,7 +374,7 @@ function createGameDetailsService({ cacheDir, getJson, fetchSteamStore, now = Da
     }
   }
 
-  return { get, rememberSteamStore };
+  return { get, timeToBeat, rememberSteamStore };
 }
 
 module.exports = { createGameDetailsService };

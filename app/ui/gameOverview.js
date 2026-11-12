@@ -257,9 +257,47 @@
     return value;
   }
 
+  // The player's own time with the game: what was played, since when, and the last session.
+  function playtimeRows() {
+    const { t, formatPlaytime, formatDay } = state.host;
+    const time = state.playtime;
+    if (!time || !formatPlaytime || !formatDay) return [];
+    const day = (at) => (at > 0 ? formatDay(at) : '');
+    const since = time.first > 0 ? [t('game-page-first-launch', 'First launch', 'Premier lancement'), day(time.first)] : [t('game-page-first-achievement', 'First achievement', 'Premier succès'), day(time.firstUnlock)];
+    return [[t('game-page-played', 'Played', 'Joué'), formatPlaytime(time.played)], since, [t('game-page-last-played', 'Last played', 'Dernière session'), day(time.last)]].filter(([, value]) => value);
+  }
+
+  // HowLongToBeat's three times, each opening the game's page there. Long games read in hours alone.
+  function timeToBeatRows() {
+    const { t, formatPlaytime } = state.host;
+    const times = state.timeToBeat;
+    if (!times) return [];
+    const duration = (seconds) => formatPlaytime(seconds, { units: seconds >= 10 * 3600 ? ['hours'] : ['hours', 'minutes'] });
+    return [
+      [t('game-page-hltb-main', 'Main story', 'Histoire principale'), duration(times.main), times.url],
+      [t('game-page-hltb-extra', 'Main + extras', 'Histoire + extras'), duration(times.extra), times.url],
+      [t('game-page-hltb-complete', 'Completionist', '100 %'), duration(times.complete), times.url],
+    ].filter(([, value]) => value);
+  }
+
+  function repaintAside() {
+    state.aside.replaceWith((state.aside = asideSection(state.details)));
+  }
+
   function asideSection(details) {
     const { t } = state.host;
     const aside = el('aside', 'game-overview-aside');
+    const played = playtimeRows();
+    if (played.length) {
+      aside.append(text('h2', 'game-overview-title', t('game-page-playtime', 'Your playtime', 'Votre temps de jeu')));
+      aside.append(rowsPanel(played));
+    }
+    const toBeat = timeToBeatRows();
+    if (toBeat.length) {
+      aside.append(text('h2', 'game-overview-title', 'HowLongToBeat'));
+      aside.append(rowsPanel(toBeat));
+    }
+    if (!details) return aside;
     const ratings = (details.ratings || []).filter((rating) => Number.isFinite(Number(rating.score)) && ratingSource(rating.source));
     if (ratings.length) {
       aside.append(text('h2', 'game-overview-title', t('game-page-ratings', 'Ratings', 'Évaluations')));
@@ -350,7 +388,8 @@
     if (helps.length) main.append(linksSection(t('game-page-links', 'Help and links', 'Aide et liens'), helps, 'fa-globe'));
     main.append(souvenirsSection());
     fillSouvenirs(state.souvenirs || []);
-    state.aside.replaceWith((state.aside = details ? asideSection(details) : el('aside', 'game-overview-aside')));
+    state.details = details;
+    repaintAside();
 
     const firstClip = items.find((item) => item.kind === 'clip');
     if (firstClip) {
@@ -386,6 +425,8 @@
     }
   }
 
+  const ownPlaytime = (host) => (host.playtime ? host.playtime() : null);
+
   /*
     Shows the overview of `game` in `root`: { appid, title, launchable, progress: { unlocked, total,
     percent }, links }. The host gives t, actions (play, achievements, cover, health, settings, back),
@@ -396,15 +437,17 @@
     if (state && state.game.appid === game.appid && state.root === root) {
       state.game = game;
       state.host = host;
+      state.playtime = ownPlaytime(host);
       paintProgress();
+      repaintAside();
       return;
     }
     teardown();
-    state = { root, game, host, souvenirs: [], heroSeen: false, viewerOpen: false };
+    state = { root, game, host, souvenirs: [], heroSeen: false, viewerOpen: false, details: null, timeToBeat: null, playtime: ownPlaytime(host) };
     root.replaceChildren();
     state.hero = heroSection();
     state.main = el('div', 'game-overview-main');
-    state.aside = el('aside', 'game-overview-aside');
+    state.aside = asideSection(null);
     const body = el('div', 'game-overview-body');
     body.append(state.main, state.aside);
     root.append(state.hero, body);
@@ -420,6 +463,12 @@
         fillDetails(details);
         const art = pictureUrl(await heroArt) || https(details && details.background);
         if (state === current && art) paintHeroArt(art);
+        if (state !== current || !host.loadTimeToBeat) return;
+        // Asked last and on its own: the page never waits for HowLongToBeat.
+        const times = await Promise.resolve(host.loadTimeToBeat(Number(String((details && details.releaseDate) || '').slice(0, 4)) || 0)).catch(() => null);
+        if (state !== current || !times) return;
+        state.timeToBeat = times;
+        repaintAside();
       });
     Promise.resolve(host.loadSouvenirs())
       .catch(() => [])

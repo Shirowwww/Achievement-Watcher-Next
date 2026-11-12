@@ -4376,11 +4376,19 @@ function gameDetailsService() {
       cacheDir: path.join(userData, 'steam_cache', 'game_details'),
       getJson: fetchGameDetailsJson,
       fetchSteamStore: fetchStoreAppDetails,
+      hltb: require('../util/hltb.js').createHltbClient({ log: (message) => debug.log(`[game details] ${message}`) }),
       log: (message) => debug.log(`[game details] ${message}`),
     });
   }
   return gameDetailsServiceInstance;
 }
+
+// HowLongToBeat's times for the open game page: { game, year }, asked after the details.
+ipcMain.handle('get-time-to-beat', (event, arg) => {
+  if (!MainWin || MainWin.isDestroyed() || event.sender !== MainWin.webContents) return null;
+  const { game, year } = arg && typeof arg === 'object' ? arg : {};
+  return gameDetailsService().timeToBeat(game, { year });
+});
 
 // The game page asks when it opens: { game: { appid, source, system, steamappid, name }, lang, force }.
 ipcMain.handle('get-game-details', (event, arg) => {

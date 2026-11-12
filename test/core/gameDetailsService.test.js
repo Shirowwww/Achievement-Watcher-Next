@@ -403,6 +403,51 @@ test('a GOG catalogue that did not answer leaves the GOG page shown and its rati
   assert.deepEqual(second.details.ratings, [{ source: 'gog', score: 4.6, outOf: 5, count: 0, url: '' }]);
 });
 
+test('HowLongToBeat is asked by title and release year, remembered, and asked again only when it did not answer', async (t) => {
+  const asked = [];
+  const answers = [undefined, { id: 7, name: 'Night Town', main: 3600, extra: 7200, complete: 0, url: 'https://howlongtobeat.com/game/7' }];
+  const hltb = {
+    lookup: async (title, { year }) => {
+      asked.push(`${title}:${year}`);
+      return answers.shift();
+    },
+  };
+  const options = { cacheDir: tempDir(t), getJson: fakeNetwork({}).getJson, fetchSteamStore: steamStore(null), hltb };
+  const game = { appid: '7001', source: 'ea', name: 'Night Town™' };
+
+  assert.equal(await createGameDetailsService(options).timeToBeat(game, { year: 2019 }), null, 'no answer is not a page');
+  const times = await createGameDetailsService(options).timeToBeat(game, { year: 2019 });
+  await createGameDetailsService(options).timeToBeat(game, { year: 2019 });
+
+  assert.deepEqual(times, { main: 3600, extra: 7200, complete: 0, url: 'https://howlongtobeat.com/game/7' });
+  assert.deepEqual(asked, ['Night Town:2019', 'Night Town:2019']);
+  assert.equal(await createGameDetailsService({ ...options, hltb: null }).timeToBeat({ appid: '1', name: 'Other' }), null);
+  assert.equal(await createGameDetailsService(options).timeToBeat({ appid: '../x', name: 'Other' }), null);
+});
+
+test('a game no store or GamesDB describes takes its page from the Metacritic record, once', async (t) => {
+  const cacheDir = tempDir(t);
+  const record = `${METACRITIC}/games/metacritic/minecraft/web`;
+  const network = fakeNetwork({
+    [`${METACRITIC}/finder/metacritic/search/Minecraft/web?offset=0&limit=20&mcoTypeId=13`]: { data: { items: [{ typeId: 13, slug: 'minecraft', title: 'Minecraft', platforms: [{ name: 'PlayStation 4' }] }] } },
+    [`${METACRITIC}/reviews/metacritic/critic/games/minecraft/stats/web`]: { data: { item: { score: 93, reviewCount: 33 } } },
+    [`${METACRITIC}/reviews/metacritic/user/games/minecraft/stats/web`]: { data: { item: { score: 7.8, reviewCount: 900 } } },
+    [record]: { data: { item: { title: 'Minecraft', description: 'Blocks.', genres: [{ name: 'Sandbox' }], releaseDate: '2011-11-18', production: { companies: [{ typeName: 'Developer', name: 'Mojang AB' }] } } } },
+  });
+  const options = { cacheDir, getJson: network.getJson, fetchSteamStore: steamStore(null) };
+  const game = { appid: 'NPWR05211_00', source: 'PlayStation Network', name: 'Minecraft', platform: 'PS4' };
+
+  const { details } = await createGameDetailsService(options).get(game);
+  await createGameDetailsService(options).get(game);
+
+  assert.equal(details.description, 'Blocks.');
+  assert.deepEqual(details.genres, ['Sandbox']);
+  assert.deepEqual(details.developers, ['Mojang AB']);
+  assert.equal(details.releaseDate, '2011-11-18');
+  assert.deepEqual(details.sources, ['metacritic', 'metacritic-game']);
+  assert.equal(network.calls.filter((url) => url === record).length, 1);
+});
+
 test('every game gets the Metacritic critics and players scores, found by its exact title', async (t) => {
   const network = fakeNetwork({
     [`${METACRITIC}/finder/metacritic/search/Night%20Town/web?offset=0&limit=20&mcoTypeId=13`]: { data: { items: [{ typeId: 13, slug: 'night-town', title: 'Night Town', platforms: [{ name: 'PC' }] }] } },

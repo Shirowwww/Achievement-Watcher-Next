@@ -26,7 +26,7 @@ function buildHarness() {
       // the test looks: record each hero video as it is mounted instead.
       window.heroSources = [];
       const heroVideos = (node) => (node.matches && node.matches('.game-overview-hero-video') ? [node] : [...(node.querySelectorAll ? node.querySelectorAll('.game-overview-hero-video') : [])]);
-      new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((node) => heroVideos(node).forEach((video) => window.heroSources.push(video.dataset.src)))))
+      new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((node) => heroVideos(node).forEach((video) => window.heroSources.push(video.dataset.src) && (window.heroVideo = video)))))
         .observe(document.getElementById('root'), { childList: true, subtree: true });
       const fill = (text, params) => String(text).replace(/\\{(\\w+)\\}/g, (m, k) => (params && k in params ? params[k] : m));
       window.host = (overrides = {}) => ({
@@ -202,9 +202,11 @@ test('the overview shows the store page, keeps store text as text and drops what
       window.GameOverview.reset();
       const root = document.getElementById('root');
       const details = { description: 'x', videos: [{ name: 'A', file: 'https://cdn.example/a.webm' }, { name: 'B', file: 'https://cdn.example/b.webm' }] };
+      window.heroVideo = null;
       window.GameOverview.show(root, window.game({ appid: '400' }), window.host({ loadDetails: () => Promise.resolve(details) }));
       await window.settle();
-      const video = root.querySelector('.game-overview-hero-video');
+      // Taken as it was mounted: these fake streams fail to load, which takes the video off the page.
+      const video = window.heroVideo;
       if (!video) return { mounted: false };
       const order = [video.dataset.src];
       video.dispatchEvent(new Event('ended'));
@@ -224,6 +226,34 @@ test('the overview shows the store page, keeps store text as text and drops what
       return { count: root.querySelector('.game-overview-count').textContent, barHidden: root.querySelector('.game-overview-progress').hidden };
     });
     assert.deepEqual(none, { count: 'No achievements', barHidden: true });
+
+    // The player's own time shows at once, before any store answered; HowLongToBeat joins it later,
+    // asked with the release year, and a game played before first launches were kept dates its first unlock.
+    const times = await page.evaluate(async () => {
+      window.GameOverview.reset();
+      const root = document.getElementById('root');
+      const asked = [];
+      const host = window.host({
+        playtime: () => ({ played: 7200, first: 0, firstUnlock: 1700000000, last: 1800000000 }),
+        formatPlaytime: (seconds) => (seconds > 0 ? seconds / 3600 + ' h' : ''),
+        formatDay: (at) => 'day ' + at,
+        loadDetails: () => Promise.resolve({ description: 'A city.', releaseDate: '2019-05-02' }),
+        loadTimeToBeat: (year) => {
+          asked.push(year);
+          return Promise.resolve({ main: 36000, extra: 0, complete: 72000, url: 'https://howlongtobeat.com/game/7' });
+        },
+      });
+      window.GameOverview.show(root, window.game({ appid: '600' }), host);
+      const rows = () => [...root.querySelectorAll('.game-overview-aside .game-overview-row')].map((row) => [...row.children].map((cell) => cell.textContent).join(' '));
+      const early = rows();
+      await window.settle();
+      root.querySelector('.game-overview-aside .game-overview-row.is-link').click();
+      return { early, late: rows().slice(0, 5), asked, opened: window.calls.findLast((call) => call.startsWith('external:')) };
+    });
+    assert.deepEqual(times.early, ['Played 2 h', 'First achievement day 1700000000', 'Last played day 1800000000']);
+    assert.deepEqual(times.late, [...times.early, 'Main story 10 h', 'Completionist 20 h']);
+    assert.deepEqual(times.asked, [2019]);
+    assert.equal(times.opened, 'external:https://howlongtobeat.com/game/7');
 
     // The game's icon sits by its name for the host to paint and give its menu; the top of the page
     // shows the host's banner art, else the store background, never an empty band.

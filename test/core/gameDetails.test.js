@@ -170,6 +170,15 @@ test('the GamesDB release a game is known by follows its own store id, never a g
   assert.equal(details.gamesDbIdentity({ appid: '12345', source: 'ea' }, ''), null);
 });
 
+test('a console list takes the game of that name released since its console', () => {
+  const item = (id, year) => ({ id, title: 'God of War', first_release_date: `${year}-03-22T00:00:00+0000`, releases: [{ platform_id: 'psn', external_id: id }] });
+  const items = [item('1', 2009), item('2', 2018), item('3', 2005)];
+
+  assert.equal(details.chooseTitleMatch(items, 'God of War', ['psn']), null);
+  assert.equal(details.chooseTitleMatch(items, 'God of War', ['psn'], { launchYear: 2013 })?.id, '2');
+  assert.equal(details.chooseTitleMatch(items, 'God of War', ['psn'], { launchYear: 2006 }), null, 'two fit: still no guess');
+});
+
 test('the title search accepts one exact match and nothing ambiguous', () => {
   const item = (id, title, platforms) => ({ id, title: { '*': title }, releases: platforms.map((platform_id) => ({ platform_id, external_id: id })) });
 

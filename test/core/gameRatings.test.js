@@ -23,6 +23,39 @@ test('one game of that title on other platforms only is another game, not this o
   assert.equal(ratings.chooseMetacriticGame(search([['halo-3', 'Halo 3', []]]), 'Halo 3', ['Xbox 360']), null);
 });
 
+test('two games of one name on a console: the one released since that console', () => {
+  const answer = search([
+    ['god-of-war', 'God of War', ['PlayStation 4', 'PC']],
+    ['god-of-war-2005', 'God of War', ['PlayStation 2']],
+  ]);
+  answer.data.items[0].premiereYear = 2018;
+  answer.data.items[1].premiereYear = 2005;
+  const platforms = ['PlayStation 4', 'PlayStation 2'];
+
+  assert.equal(ratings.chooseMetacriticGame(answer, 'God of War', platforms), null);
+  assert.equal(ratings.chooseMetacriticGame(answer, 'God of War', platforms, 2013), 'god-of-war');
+  assert.equal(ratings.chooseMetacriticGame(answer, 'God of War', platforms, 2000), null, 'both fit: still no guess');
+});
+
+test('the Metacritic record of a game gives its text, genres, studios and release day', () => {
+  const item = {
+    title: 'Minecraft',
+    description: 'Blocks <b>everywhere</b>.',
+    genres: [{ name: 'Sandbox' }],
+    releaseDate: '2011-11-18',
+    production: { companies: [{ typeName: 'Developer', name: 'Mojang AB' }, { typeName: 'Publisher', name: 'Microsoft' }, { typeName: 'Composer', name: 'C418' }] },
+  };
+
+  const game = ratings.metacriticGame({ data: { item } });
+
+  assert.deepEqual(
+    { title: game.title, description: game.description, genres: game.genres, developers: game.developers, publishers: game.publishers, releaseDate: game.releaseDate },
+    { title: 'Minecraft', description: 'Blocks everywhere.', genres: ['Sandbox'], developers: ['Mojang AB'], publishers: ['Microsoft'], releaseDate: '2011-11-18' }
+  );
+  assert.equal(ratings.metacriticGame({ data: { item: { title: 'Empty', releaseDate: 'soon' } } }), null);
+  assert.equal(ratings.metacriticGame(null), null);
+});
+
 test('the platforms to prefer follow the game source, and a retro console its Metacritic name', () => {
   assert.deepEqual(ratings.metacriticPlatforms({ source: 'Goldberg' }), ['PC']);
   assert.ok(ratings.metacriticPlatforms({ source: 'xenia emulator' }).includes('Xbox 360'));

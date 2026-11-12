@@ -4478,6 +4478,15 @@ function formatReleaseDate(value) {
   return Number.isFinite(iso) ? intlFormat.formatDate(iso, uiLang(), { dateStyle: 'long' }) : String(value || '');
 }
 
+// What the game page says about the player's own time: all in seconds, 0 when unknown. The first
+// launch is recorded for games first played after 3.12.6; the others fall back on their first unlock.
+function gamePagePlaytime(game) {
+  const counters = PlaytimeTracking.readSync(game.appid);
+  const list = game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list : [];
+  const unlocks = list.map((achievement) => (achievement && achievement.Achieved ? Number(achievement.UnlockTime) || 0 : 0)).filter((at) => at > 0);
+  return { played: counters.playtime, last: counters.lastplayed, first: PlaytimeTracking.firstLaunch(game.appid), firstUnlock: unlocks.length ? Math.min(...unlocks) : 0 };
+}
+
 function showGameOverview(box, game) {
   const root = document.getElementById('game-overview');
   if (!root || !window.GameOverview) return;
@@ -4495,6 +4504,7 @@ function showGameOverview(box, game) {
   const total = Math.max(Math.floor(finiteNumber(game.achievement.total, 0)), unlocked);
   const catalogAppid = catalogAppidOf(game);
   const viewer = captureViewerStrings();
+  const detailsRequest = { appid: game.appid, source: game.source, system: game.system, steamappid: game.steamappid, name: game.name, console: game.console, detailsTitle: game.detailsTitle, platform: game.platform };
   window.GameOverview.show(
     root,
     {
@@ -4518,10 +4528,11 @@ function showGameOverview(box, game) {
         settings: () => box.trigger('contextmenu'),
         back: () => $('#btn-previous').trigger('click'),
       },
-      loadDetails: () =>
-        ipcRenderer
-          .invoke('get-game-details', { game: { appid: game.appid, source: game.source, system: game.system, steamappid: game.steamappid, name: game.name, console: game.console, detailsTitle: game.detailsTitle }, lang: uiLang() })
-          .then((answer) => (answer && answer.details) || null),
+      loadDetails: () => ipcRenderer.invoke('get-game-details', { game: detailsRequest, lang: uiLang() }).then((answer) => (answer && answer.details) || null),
+      loadTimeToBeat: (year) => ipcRenderer.invoke('get-time-to-beat', { game: detailsRequest, year }),
+      playtime: () => gamePagePlaytime(game),
+      formatPlaytime,
+      formatDay: (unixSeconds) => intlFormat.formatDate(unixSeconds * 1000, uiLang(), { dateStyle: 'medium' }),
       loadSouvenirs: () => souvenirsOf(game.appid),
       // The overview's icon joins the list header's: same picture, same right-click menu.
       mountIcon: () => {

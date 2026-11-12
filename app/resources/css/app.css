@@ -18812,7 +18812,7 @@ html:not([data-platform='linux']) [data-linux-only] {
   position: absolute;
   z-index: 1;
   top: 25px;
-  right: var(--overview-gutter);
+  left: var(--overview-gutter);
 }
 .game-overview-heading {
   position: absolute;
@@ -18833,6 +18833,7 @@ html:not([data-platform='linux']) [data-linux-only] {
 }
 .game-overview-meta {
   min-height: 1.4em;
+  margin-top: 12px;
   color: var(--text-muted);
 }
 .game-overview-actions {

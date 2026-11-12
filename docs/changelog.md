@@ -27,13 +27,33 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Click a game's icon to change it.** On the game page and above the achievement list, a click on
   the square icon opens the icon picker; right-click still offers every option.
 
+- **How long a game takes, on its page.** The game page shows HowLongToBeat's times for the main
+  story, the story with extras and everything, each opening the game's page there.
+- **Your own time on the game page.** What you played, your last session and your first launch.
+  The first launch is recorded from this version on; a game played before shows the date of its
+  first achievement.
+
 ### Improved
 
+- **Console and manual games get their page.** A game the stores do not list under its exact name,
+  such as Minecraft on PlayStation or Xbox, takes its description, genres, studio and release date
+  from Metacritic, and a console game whose name two games share takes the one released for that
+  console.
+- **The All Games button sits top left on the game page**, where a back button is expected, and the
+  line of genres, studio and release date sits a little lower under the title.
 - **Scrolling Settings never changes a setting.** The mouse wheel over a value used to step it;
   it now always scrolls the panel. Values change with the arrows or the keyboard.
 
 ### Fixed
 
+- **A console game takes its icon and background from the right game too (#160).** When two games
+  share a name, such as God of War (2005 and 2018), a PS4 or PS5 list already took the cover of the
+  one released for that console; its icon, its background and the picture at the top of its windows
+  now follow.
+- **One repair ties every counter achievement (#168).** For a game missing from the public stats
+  list, Game Health tied a counter achievement to its stat only once the game had written that
+  stat, so the repair had to be run again as you played. When the stats already written all follow
+  one naming, the same repair now ties the counters that have not moved yet.
 - **The trophy button on a tile opens the achievements again (#183).** Since the game page, it
   opened the overview like a click anywhere else on the tile.
 - **Covers set to "Whole" are sharp again.** Most of them showed only their blurred backdrop.

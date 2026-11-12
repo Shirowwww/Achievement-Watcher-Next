@@ -254,6 +254,8 @@ function searchTitle(name) {
 const releasePlatforms = (item) =>
   (Array.isArray(item?.releases) ? item.releases : []).map((release) => String(release?.platform_id || '')).filter((platform) => platform && platform !== 'generic' && platform !== 'test');
 
+const releaseYear = (item) => Number(String(item?.first_release_date || '').slice(0, 4)) || 0;
+
 /*
   A PC port names the console game it ports, which GamesDB sometimes keeps twice under one title:
   there the first of its records on that console is taken (`decide`), rather than no page at all.
@@ -264,7 +266,7 @@ const decidesTies = (game) => sourceIdentity.libraryBadgeOf(game?.source) === 'p
   A name is not an id, so the search is careful: only one game with exactly that title, on the game's
   own store when several stores carry it. Two candidates left is no answer, never a guess.
 */
-function chooseTitleMatch(items, title, preferred = [], { decide = false } = {}) {
+function chooseTitleMatch(items, title, preferred = [], { decide = false, launchYear = 0 } = {}) {
   const key = titleKey(title);
   if (!key) return null;
   const exact = new Map();
@@ -276,6 +278,9 @@ function chooseTitleMatch(items, title, preferred = [], { decide = false } = {})
   const native = candidates.filter((item) => nativeCount(item) > 0);
   const pool = native.length ? native : candidates;
   if (pool.length === 1) return pool[0];
+  // A console list can only be a game released since that console: God of War on PS4 is the 2018 one.
+  const recent = launchYear ? pool.filter((item) => releaseYear(item) >= launchYear) : [];
+  if (recent.length === 1) return recent[0];
   // GamesDB keeps some retro games twice (a re-release record beside the full one): the full one
   // has far more releases on the console. Close counts are two games, never a guess.
   const ranked = native.length ? [...native].sort((a, b) => nativeCount(b) - nativeCount(a)) : [];

@@ -6,7 +6,7 @@
   Same rating shape as util/gameDetails.js: { source, score, outOf?, count?, url }.
 */
 
-const { titleKey } = require('./gameDetails.js');
+const { titleKey, cleanText, textList } = require('./gameDetails.js');
 const { libraryBadgeOf } = require('./sourceIdentity.js');
 
 const METACRITIC_GAME = 13;
@@ -36,7 +36,7 @@ const platformNames = (item) => (Array.isArray(item && item.platforms) ? item.pl
 
 // A name is not an id: one game of exactly that title on the game's own platform. The same title
 // elsewhere only (DOOM 2016 for the SNES Doom) is another game.
-function chooseMetacriticGame(answer, title, platforms) {
+function chooseMetacriticGame(answer, title, platforms, launchYear = 0) {
   const key = titleKey(title);
   const items = answer && answer.data && Array.isArray(answer.data.items) ? answer.data.items : [];
   if (!key) return null;
@@ -48,7 +48,31 @@ function chooseMetacriticGame(answer, title, platforms) {
       titleKey(item.title) === key &&
       platformNames(item).some((name) => platforms.includes(name))
   );
-  return native.length === 1 ? native[0].slug : null;
+  if (native.length === 1) return native[0].slug;
+  // Two games of one name: a console list can only be the one released since that console.
+  const recent = launchYear ? native.filter((item) => Number(item.premiereYear) >= launchYear) : [];
+  return recent.length === 1 ? recent[0].slug : null;
+}
+
+// Metacritic's own record of a game, for the ones no store or GamesDB could describe.
+function metacriticGame(answer) {
+  const item = answer && answer.data && answer.data.item;
+  if (!item || typeof item !== 'object') return null;
+  const companies = Array.isArray(item.production && item.production.companies) ? item.production.companies : [];
+  const named = (type) => textList(companies.filter((company) => company && company.typeName === type).map((company) => company.name));
+  const game = {
+    title: cleanText(item.title),
+    description: cleanText(item.description, 4000),
+    genres: textList((Array.isArray(item.genres) ? item.genres : []).map((genre) => genre && genre.name)),
+    developers: named('Developer'),
+    publishers: named('Publisher'),
+    releaseDate: /^[0-9]{4}-[0-9]{2}-[0-9]{2}/.test(String(item.releaseDate)) ? String(item.releaseDate).slice(0, 10) : '',
+    ratings: [],
+    videos: [],
+    screenshots: [],
+    background: '',
+  };
+  return game.description || game.genres.length || game.releaseDate ? game : null;
 }
 
 const statsOf = (answer) => (answer && answer.data && answer.data.item) || {};
@@ -92,4 +116,4 @@ function steamReviews(answer, appid) {
   return [{ source: 'steam', score: Math.round((up / total) * 100), outOf: 100, percent: true, count: total, url: `https://store.steampowered.com/app/${appid}/#app_reviews_hash` }];
 }
 
-module.exports = { metacriticPlatforms, chooseMetacriticGame, metacriticRatings, gogRating, steamReviews };
+module.exports = { metacriticPlatforms, chooseMetacriticGame, metacriticGame, metacriticRatings, gogRating, steamReviews };
