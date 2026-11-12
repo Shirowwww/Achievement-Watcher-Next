@@ -3,7 +3,7 @@
   "name": "aw-next",
   "common_name": "AW Next achievements",
   "description": "Shows the achievements Achievement Watcher Next tracks on your non-Steam games' library pages.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Shirowwww",
   "useBackend": true,
   "backendType": "lua"

@@ -75,6 +75,10 @@ renamed in 3.9.0 and the history is kept under one file.
 - **An unlock time a few minutes ahead no longer reads "in 3 minutes".** It shows "now".
 - **Unlocks stamped a few minutes ahead of the PC's clock pop again.** Some emulator saves do this;
   those unlocks showed no notification and were listed as made in the future.
+- **The Millennium plugin shows achievements on Steam's game pages again.** Steam's update of
+  November 11 (Achievement Sets) changed where the page reads them, so non-Steam shortcuts showed
+  none. Plugin 0.1.1 fills the new place; AW Next updates an installed plugin on its own, then
+  restart Steam.
 - **Clips record games in exclusive fullscreen.** Windows refuses the usual screen capture to
   those games, so their clips came out empty while screenshots worked; clips now switch to the
   capture screenshots use. A clip folder is also no longer left empty when nothing was recorded.

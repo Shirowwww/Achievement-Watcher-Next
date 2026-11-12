@@ -1,9 +1,9 @@
 import { callable, definePlugin } from '@steambrew/client';
-import { toSteamAchievements, toUnsigned, type BridgeGame, type SteamAppAchievements } from './achievements';
+import { toSteamAchievements, toSteamQueries, toUnsigned, type BridgeGame, type SteamAppAchievements } from './achievements';
 import { keepsSeparateLists, pushToCartridges, waitForCartridges } from './cartridges';
 import { createFeed, type Feed } from './feed';
 import { loadShortcuts, questionFor, shortcutIds, waitForLibrary } from './shortcuts';
-import { hookAppDetails, hookFullStore, patchSections, publish, refreshSections } from './steamStores';
+import { currentSteamId, hookAppDetails, hookFullStore, hookQueries, patchSections, publish, withdraw } from './steamStores';
 
 /*
   Achievement Watcher Next's achievements on Steam's own page for each non-Steam shortcut it knows.
@@ -55,23 +55,23 @@ async function readEnvironment(): Promise<Environment> {
 
 function standaloneSink(): Sink {
   const lookup = (appid: number) => served.get(appid);
-  const ready = [patchSections((appid) => served.has(appid), log), hookAppDetails(lookup, log), hookFullStore(lookup, log)];
-  log(`drawing in Steam's own sections (sections ${ready[0]}, page ${ready[1]}, full list ${ready[2]})`);
+  const ready = [patchSections((appid) => served.has(appid), log), hookAppDetails(lookup, log), hookFullStore(lookup, log), hookQueries(log)];
+  log(`drawing in Steam's own sections (sections ${ready[0]}, page ${ready[1]}, full list ${ready[2]}, queries ${ready[3]})`);
   return async (appid, game) => {
     const steam = toSteamAchievements(game, BADGE);
     if (!steam) {
-      if (served.delete(appid)) refreshSections();
+      if (served.delete(appid)) withdraw(appid);
       return false;
     }
     served.set(appid, steam);
-    publish(appid, steam, log);
+    publish(appid, steam, toSteamQueries(game, appid, currentSteamId(), BADGE), log);
     return true;
   };
 }
 
 function forget(appid: number): void {
   gameOfShortcut.delete(appid);
-  if (served.delete(appid)) refreshSections();
+  if (served.delete(appid)) withdraw(appid);
 }
 
 async function refreshShortcut(appid: number, feed: Feed, sink: Sink): Promise<boolean> {

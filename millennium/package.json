@@ -1,6 +1,6 @@
 {
   "name": "achievement-watcher-millennium",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Shows Achievement Watcher Next's achievements on non-Steam games' Steam library pages",
   "private": true,
   "scripts": {

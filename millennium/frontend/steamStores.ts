@@ -1,11 +1,12 @@
 /*
   Steam draws a shortcut's achievements itself once its own stores hold them: the section list of
   the game page, appDetailsStore.GetAchievements, the full achievements store (the "View all" page
-  and Big Picture) and the play bar's progress cache. Every hook falls back to Steam's original on
-  any error, and only answers for the shortcuts this plugin serves.
+  and Big Picture) and the play bar's progress cache. Since the 2026-11-11 client (Achievement Sets)
+  the page reads three React Query results instead, fed here too. Every hook falls back to Steam's
+  original on any error, and only answers for the shortcuts this plugin serves.
 */
 
-import { isShortcutAppId, toProgressEntry, toUnsigned, type SteamAchievementItem, type SteamAppAchievements } from './achievements';
+import { isShortcutAppId, toProgressEntry, toUnsigned, type SteamAchievementItem, type SteamAppAchievements, type SteamQueries } from './achievements';
 
 type Log = (line: string) => void;
 type Lookup = (appid: number) => SteamAppAchievements | undefined;
@@ -214,10 +215,97 @@ export function hookFullStore(lookup: Lookup, log: Log): boolean {
   return typeof loadMy === 'function';
 }
 
+interface QueryLike {
+  queryKey: unknown[];
+  state: { data: unknown };
+}
+
+interface QueryClientLike {
+  setQueryData(key: unknown[], data: unknown, options?: { updatedAt?: number }): unknown;
+  removeQueries(filters: { queryKey: unknown[] }): void;
+  getQueryCache(): { getAll(): QueryLike[]; subscribe(listener: (event: { query?: QueryLike }) => void): () => void };
+}
+
+// Results dated this far ahead are never stale, so Steam does not ask its servers, which know nothing
+// of a shortcut, to replace them; one it fetches anyway is put back by the cache listener.
+const NEVER_STALE_MS = 10 * 365 * 24 * 60 * 60 * 1000;
+// React Query keeps a structurally shared copy, never the object handed to it, so ours is told
+// apart by this field; comparing identity put the result back forever.
+const MARK = 'awNext';
+// The third part of Steam's achievement query keys, written once for the feed and the listener.
+const SCHEMA = 'schema';
+const PERCENTAGES = 'globalpercentages';
+const USER = 'user_achievements';
+const queryData = new Map<number, SteamQueries>();
+let queryClient: QueryClientLike | undefined;
+
+const marked = <T extends object>(data: T): T => ({ ...data, [MARK]: true });
+const isMarked = (data: unknown): boolean => !!data && typeof data === 'object' && (data as Record<string, unknown>)[MARK] === true;
+
+const isQueryClient = (value: unknown) =>
+  !!value && typeof value === 'object' && typeof (value as QueryClientLike).setQueryData === 'function' && typeof (value as QueryClientLike).getQueryCache === 'function';
+
+/** The signed-in account: the user query of the page is keyed by it. */
+export function currentSteamId(): string {
+  return String((Reflect.get(globalThis, 'App') as { m_CurrentUser?: { strSteamID?: unknown } } | undefined)?.m_CurrentUser?.strSteamID ?? '');
+}
+
+// ["achievements", appid, "schema" | "globalpercentages" | "user_achievements", steamid]
+function oursFor(query: QueryLike): unknown {
+  const [area, rawAppid, kind, steamid] = query.queryKey;
+  if (area !== 'achievements') return undefined;
+  const appid = toUnsigned(rawAppid);
+  const data = appid === undefined ? undefined : queryData.get(appid);
+  if (!data) return undefined;
+  if (kind === SCHEMA) return data.schema;
+  if (kind === PERCENTAGES) return data.percentages;
+  if (kind === USER && steamid === data.user.steamid) return data.user;
+  return undefined;
+}
+
+function putBack(query: QueryLike | undefined): void {
+  const wanted = query && oursFor(query);
+  if (query && wanted !== undefined && !isMarked(query.state.data)) queryClient?.setQueryData(query.queryKey, wanted, { updatedAt: Date.now() + NEVER_STALE_MS });
+}
+
+/** Steam's query client, and a listener that keeps our results in it. */
+export function hookQueries(log: Log): boolean {
+  queryClient = findExport(isQueryClient) as QueryClientLike | undefined;
+  if (!queryClient) return false;
+  queryClient.getQueryCache().subscribe((event) => {
+    try {
+      putBack(event.query);
+    } catch (err) {
+      log(`query listener failed: ${err}`);
+    }
+  });
+  return true;
+}
+
+function feedQueries(appid: number, queries: SteamQueries): void {
+  const ours = { schema: marked(queries.schema), percentages: marked(queries.percentages), user: marked(queries.user) };
+  queryData.set(appid, ours);
+  const client = queryClient;
+  if (!client) return;
+  const updatedAt = Date.now() + NEVER_STALE_MS;
+  client.setQueryData(['achievements', appid, SCHEMA], ours.schema, { updatedAt });
+  client.setQueryData(['achievements', appid, PERCENTAGES], ours.percentages, { updatedAt });
+  client.setQueryData(['achievements', appid, USER, ours.user.steamid], ours.user, { updatedAt });
+}
+
+/** A shortcut AW Next no longer knows: Steam fetches its own (empty) results again. */
+export function withdraw(appid: number): void {
+  if (queryData.delete(appid)) queryClient?.removeQueries({ queryKey: ['achievements', appid] });
+  refreshSections();
+}
+
 /** Hand one shortcut's achievements to Steam's stores and ask the page to draw them again. */
-export function publish(appid: number, achievements: SteamAppAchievements, log: Log): void {
+export function publish(appid: number, achievements: SteamAppAchievements, queries: SteamQueries | null, log: Log): void {
   const signed = appid | 0;
   const steps: [string, () => void][] = [
+    ['queries', () => {
+      if (queries) feedQueries(appid, queries);
+    }],
     ['full store', () => feedFullStore(appid, achievements)],
     ['play bar', () => {
       const cache = (Reflect.get(globalThis, 'appAchievementProgressCache') as any)?.m_achievementProgress?.mapCache;

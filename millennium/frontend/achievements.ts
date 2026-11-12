@@ -58,6 +58,53 @@ export interface SteamAppAchievements {
   vecHidden: SteamAchievementItem[];
 }
 
+/** One achievement of a set, as Steam's GetGameAchievements query result holds it. */
+export interface SteamSchemaAchievement {
+  internal_key: number;
+  api_name: string;
+  name: string;
+  description: string;
+  hidden: boolean;
+  archived: boolean;
+  icon_achieved: string;
+  icon_unachieved: string;
+  groupid: number;
+  min_progress?: number;
+  max_progress?: number;
+}
+
+export interface SteamSchemaGroup {
+  id: number;
+  archived: boolean;
+  developeronly: boolean;
+  ispublic: boolean;
+  dlcappid: number;
+  order: number;
+  achievements: SteamSchemaAchievement[];
+}
+
+export interface SteamUserAchievement {
+  internal_key: number;
+  unlocked: boolean;
+  unlock_time: number;
+  progress: number | undefined;
+}
+
+export interface SteamUserGroup {
+  groupid: number;
+  is_achievable: boolean;
+  completed_achievements: number;
+  is_completed: boolean;
+  time_completed: number | undefined;
+}
+
+/** The three query results Steam's achievement section reads since its 2026-11-11 client (Achievement Sets). */
+export interface SteamQueries {
+  schema: { appid: number; language: string; groups: SteamSchemaGroup[]; schema_hash: number; schema_version: number };
+  percentages: { percentages: Record<number, number> };
+  user: { appid: number; steamid: string; achievements: Record<number, SteamUserAchievement>; groups: Record<number, SteamUserGroup>; schema_hash: number };
+}
+
 export interface ProgressEntry {
   appid: number;
   unlocked: number;
@@ -129,6 +176,69 @@ export function toSteamAchievements(game: BridgeGame | null | undefined, fallbac
     vecUnachieved: unachieved,
     vecAchievedHidden: achieved.filter((item) => item.bHidden),
     vecHidden: hidden,
+  };
+}
+
+// Steam's base-game set; it names that set itself.
+const BASE_SET = 0;
+
+/**
+ * The bridge answer as Steam's achievement queries return it for an owned game: one base set, each
+ * achievement keyed by its position from 1. The set is marked achievable, or Steam lists no locked one.
+ */
+export function toSteamQueries(game: BridgeGame | null | undefined, appid: number, steamid: string, fallbackIcon: string): SteamQueries | null {
+  const list = game && Array.isArray(game.achievements) ? game.achievements : [];
+  if (list.length === 0) return null;
+  const schemaItems: SteamSchemaAchievement[] = [];
+  const percentages: Record<number, number> = {};
+  const user: Record<number, SteamUserAchievement> = {};
+  let unlocked = 0;
+  let lastUnlock = 0;
+  list.forEach((achievement, index) => {
+    const key = index + 1;
+    const colour = achievement.icon || fallbackIcon;
+    const item: SteamSchemaAchievement = {
+      internal_key: key,
+      api_name: achievement.id,
+      name: achievement.name,
+      description: achievement.description,
+      hidden: achievement.hidden,
+      archived: false,
+      icon_achieved: colour,
+      icon_unachieved: achievement.iconLocked || colour,
+      groupid: BASE_SET,
+    };
+    const counting = !achievement.unlocked && achievement.progress;
+    if (counting) {
+      item.min_progress = 0;
+      item.max_progress = achievement.progress?.max;
+    }
+    schemaItems.push(item);
+    if (typeof achievement.rarity === 'number') percentages[key] = achievement.rarity;
+    const unlockTime = achievement.unlocked ? achievement.unlockedAt : 0;
+    user[key] = { internal_key: key, unlocked: achievement.unlocked, unlock_time: unlockTime, progress: counting ? achievement.progress?.current : undefined };
+    if (achievement.unlocked) {
+      unlocked += 1;
+      lastUnlock = Math.max(lastUnlock, unlockTime);
+    }
+  });
+  const completed = unlocked === list.length;
+  return {
+    schema: {
+      appid,
+      language: '',
+      groups: [{ id: BASE_SET, archived: false, developeronly: false, ispublic: true, dlcappid: 0, order: -1, achievements: schemaItems }],
+      schema_hash: 0,
+      schema_version: 0,
+    },
+    percentages: { percentages },
+    user: {
+      appid,
+      steamid,
+      achievements: user,
+      groups: { [BASE_SET]: { groupid: BASE_SET, is_achievable: true, completed_achievements: unlocked, is_completed: completed, time_completed: completed ? lastUnlock : undefined } },
+      schema_hash: 0,
+    },
   };
 }
 

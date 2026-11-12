@@ -8,7 +8,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { toSteamAchievements, toProgressEntry, readFeedMessage, toUnsigned, isShortcutAppId } = require('../../millennium/frontend/achievements.ts');
+const { toSteamAchievements, toSteamQueries, toProgressEntry, readFeedMessage, toUnsigned, isShortcutAppId } = require('../../millennium/frontend/achievements.ts');
 const { keepsSeparateLists } = require('../../millennium/frontend/cartridges.ts');
 
 const BADGE = 'data:image/svg+xml,badge';
@@ -63,6 +63,55 @@ test('an achievement without a picture gets the stand-in, and a game with none i
   assert.equal(steam.vecUnachieved[0].strImage, BADGE);
   assert.equal(toSteamAchievements(game([]), BADGE), null);
   assert.equal(toSteamAchievements(null, BADGE), null);
+});
+
+test('since Steam 2026-11-11 the page reads three query results, built here from the bridge answer', () => {
+  const queries = toSteamQueries(
+    game([
+      achievement('DONE', { unlocked: true, unlockedAt: 300, rarity: 12.5 }),
+      achievement('COUNT', { progress: { current: 6, max: 50 } }),
+      achievement('SECRET', { hidden: true, iconLocked: '' }),
+    ]),
+    3858889198,
+    '76561190000000000',
+    BADGE
+  );
+
+  // One base set (id 0, which Steam names itself), each achievement keyed by a number from 1.
+  assert.equal(queries.schema.appid, 3858889198);
+  assert.equal(queries.schema.groups.length, 1);
+  const [group] = queries.schema.groups;
+  assert.deepEqual({ id: group.id, archived: group.archived, ispublic: group.ispublic, dlcappid: group.dlcappid }, { id: 0, archived: false, ispublic: true, dlcappid: 0 });
+  assert.deepEqual(group.achievements.map((a) => [a.internal_key, a.api_name]), [[1, 'DONE'], [2, 'COUNT'], [3, 'SECRET']]);
+  assert.deepEqual(group.achievements[1], {
+    internal_key: 2,
+    api_name: 'COUNT',
+    name: 'COUNT name',
+    description: 'COUNT text',
+    hidden: false,
+    archived: false,
+    icon_achieved: 'https://cdn/COUNT.jpg',
+    icon_unachieved: 'https://cdn/COUNT_gray.jpg',
+    groupid: 0,
+    min_progress: 0,
+    max_progress: 50,
+  });
+  assert.equal(group.achievements[2].icon_unachieved, 'https://cdn/SECRET.jpg', 'no grey picture: the colour one');
+
+  // Only known rarities: Steam counts a missing one as unknown, a 0 as the rarest.
+  assert.deepEqual(queries.percentages, { percentages: { 1: 12.5 } });
+
+  assert.equal(queries.user.steamid, '76561190000000000');
+  assert.deepEqual(queries.user.achievements[1], { internal_key: 1, unlocked: true, unlock_time: 300, progress: undefined });
+  assert.deepEqual(queries.user.achievements[2], { internal_key: 2, unlocked: false, unlock_time: 0, progress: 6 });
+  // Without is_achievable Steam hides every locked achievement of the set.
+  assert.deepEqual(queries.user.groups[0], { groupid: 0, is_achievable: true, completed_achievements: 1, is_completed: false, time_completed: undefined });
+});
+
+test('a finished game marks its set completed at the last unlock, and no achievements is nothing to show', () => {
+  const queries = toSteamQueries(game([achievement('A', { unlocked: true, unlockedAt: 10 }), achievement('B', { unlocked: true, unlockedAt: 20 })]), 3858889198, '1', BADGE);
+  assert.deepEqual(queries.user.groups[0], { groupid: 0, is_achievable: true, completed_achievements: 2, is_completed: true, time_completed: 20 });
+  assert.equal(toSteamQueries(game([]), 3858889198, '1', BADGE), null);
 });
 
 test('the play bar entry carries the counts Steam computes for an owned game', () => {
