@@ -76,7 +76,7 @@ async function bandHeroArt(game, appid) {
   const steam = await steamHeroBackground(game).catch(() => null);
   if (steam) return steam;
   const images = await ipcRenderer
-    .invoke('get-images-for-game', { name: game.name || '', platform: 'PC', gameId: String(game.steamappid || appid) })
+    .invoke('get-images-for-game', { name: game.name || '', platform: game.platform || 'PC', gameId: String(game.steamappid || appid) })
     .catch((err) => {
       debug.warn(`[dialog] SteamGridDB hero lookup failed => ${err}`);
       return null;
@@ -813,6 +813,7 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
         name: game.name || '',
         sources: headerIconSourcesFor(game),
         exe: exePath || '',
+        platform: game.platform || '',
         ignoreOverride: true,
       });
     } catch (err) {
@@ -858,6 +859,7 @@ function openIconPicker(game, appid, iconCacheAppid, exePath) {
         cacheAppid: String(iconCacheAppid || ''),
         sources: headerIconSourcesFor(game),
         exe: exePath || '',
+        platform: game.platform || '',
       });
       if (run !== attempt) return;
       const opts = options || {};

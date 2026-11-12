@@ -1431,6 +1431,7 @@ async function notificationPreviewGame(appid) {
         libraryAppid: String(appid),
         name: game.name || '',
         sources: [art.icon, art.logo, art.portrait, art.header].filter(Boolean),
+        platform: game.platform || '',
       })
       .catch(() => ''),
     resolveArt(art.header || art.background || art.icon || art.logo),

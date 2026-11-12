@@ -71,7 +71,50 @@ test('an achievement already tied to a stat is left alone', () => {
   assert.deepEqual(statProgress.inferStatLinks({ achievements: [linked], statNames: ['x_ach_19'] }), []);
 });
 
-function install({ stats = ['rmostat_rank_rmo_ach_19'], achievements = null } = {}) {
+// #168, second round: the game writes a stat only once its counter first moves, so a repair tied 8
+// of 17 counters and the rest waited for another repair. Two links spelled the same way are a naming
+// rule, and the rule names the stat of every counter still untied.
+test('counters whose stat is not written yet follow the naming the others share', () => {
+  const links = statProgress.inferStatLinks({
+    achievements: [counter('ACH_19'), counter('ACH_25'), counter('ACH_17'), plain('ACH_01')],
+    statNames: ['rmostat_rank_rmo_ach_19', 'rmostat_rank_rmo_ach_25'],
+  });
+  assert.deepEqual(
+    links.map((l) => [l.name, l.progress.value.operand1, l.progress.max_val]),
+    [
+      ['ACH_19', 'rmostat_rank_rmo_ach_19', 100],
+      ['ACH_25', 'rmostat_rank_rmo_ach_25', 100],
+      ['ACH_17', 'rmostat_rank_rmo_ach_17', 100],
+    ]
+  );
+});
+
+test('links made by an earlier repair count as the naming rule', () => {
+  const tied = (name) => ({ ...counter(name), progress: { value: { operation: 'statvalue', operand1: `rmostat_rank_rmo_${name.toLowerCase()}` }, min_val: 0, max_val: 100 } });
+  const links = statProgress.inferStatLinks({ achievements: [tied('ACH_19'), tied('ACH_25'), counter('ACH_17')], statNames: [] });
+  assert.deepEqual(links.map((l) => [l.name, l.progress.value.operand1]), [['ACH_17', 'rmostat_rank_rmo_ach_17']]);
+});
+
+test('one link, or links spelled two ways, name no other stat', () => {
+  const one = statProgress.inferStatLinks({ achievements: [counter('ACH_19'), counter('ACH_17')], statNames: ['rmostat_rank_rmo_ach_19'] });
+  assert.deepEqual(one.map((l) => l.name), ['ACH_19']);
+  const mixed = statProgress.inferStatLinks({
+    achievements: [counter('ACH_19'), counter('ACH_25'), counter('ACH_17')],
+    statNames: ['rmostat_rank_rmo_ach_19', 'other_ach_25'],
+  });
+  assert.deepEqual(mixed.map((l) => l.name), ['ACH_19', 'ACH_25']);
+});
+
+test('a guessed name that another stat or achievement could claim is not used', () => {
+  const links = statProgress.inferStatLinks({
+    achievements: [counter('ACH_19'), counter('ACH_25'), counter('ACH_17')],
+    allNames: ['ACH_19', 'ACH_25', 'ACH_17', 'RMO_ACH_17'],
+    statNames: ['rmostat_rank_rmo_ach_19', 'rmostat_rank_rmo_ach_25'],
+  });
+  assert.deepEqual(links.map((l) => l.name), ['ACH_19', 'ACH_25']);
+});
+
+function install({ stats =['rmostat_rank_rmo_ach_19'], achievements = null } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-links-'));
   const gameDir = path.join(root, 'game');
   const steamSettings = path.join(gameDir, 'steam_settings');

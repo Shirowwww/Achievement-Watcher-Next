@@ -2793,6 +2793,7 @@ async function paintGameHeaderIcon(game) {
       name: game.name || '',
       sources,
       exe,
+      platform: game.platform || '',
     });
     if (resolved) {
       paint(imageDisplayUrl(resolved));

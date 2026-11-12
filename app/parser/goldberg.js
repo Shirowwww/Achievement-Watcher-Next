@@ -573,16 +573,21 @@ function savedStatNames(saveFolders) {
 function inferredStatLinks({ steamSettings, schemaList, saveFolders }) {
   const counters = (Array.isArray(schemaList) ? schemaList : []).filter((a) => a && a.counter);
   if (counters.length === 0) return [];
-  const tied = new Set();
+  const tied = new Map();
   try {
     for (const entry of JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'))) {
-      if (entry && entry.name && entry.progress && entry.progress.value && entry.progress.value.operand1) tied.add(String(entry.name).toUpperCase());
+      if (entry && entry.name && entry.progress && entry.progress.value && entry.progress.value.operand1) tied.set(String(entry.name).toUpperCase(), entry.progress);
     }
   } catch {
     /* an unreadable file is reported on its own */
   }
+  // A tied counter goes in with its link: it is left alone, and shows how the game names its stats.
+  const withLink = (a) => {
+    const progress = tied.get(String(a.name).toUpperCase());
+    return progress ? { ...a, progress } : a;
+  };
   return require(path.join(__dirname, 'statProgress.js')).inferStatLinks({
-    achievements: counters.filter((a) => !tied.has(String(a.name).toUpperCase())),
+    achievements: counters.map(withLink),
     allNames: schemaList.filter((a) => a && a.name).map((a) => a.name),
     statNames: savedStatNames(saveFolders),
   });

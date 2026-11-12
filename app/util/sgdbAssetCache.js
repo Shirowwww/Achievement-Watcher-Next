@@ -64,4 +64,13 @@ function consoleLaunchYear(platform) {
   return CONSOLE_LAUNCH_YEAR[String(platform || '').trim().toUpperCase()] || 0;
 }
 
-module.exports = { assetKey, cacheFile, readCached, consoleLaunchYear, HIT_TTL_MS, MISS_TTL_MS };
+// The platform a scanned game's artwork is asked under. A console list names its console on the game
+// itself (the record only says "psnLibrary"), and only a console may change an existing cache key.
+function artPlatform(record, game) {
+  const data = (record && record.data) || {};
+  if (data.platform) return data.platform;
+  if (game && consoleLaunchYear(game.platform)) return game.platform;
+  return (game && game.system) || data.type;
+}
+
+module.exports = { assetKey, cacheFile, readCached, consoleLaunchYear, artPlatform, HIT_TTL_MS, MISS_TTL_MS };

@@ -196,6 +196,30 @@ test('of two games with one name, a console list takes the one released after th
   assert.equal(sgdbAssetCache.consoleLaunchYear('PC'), 0);
 });
 
+test('the icon, the background and the dialog band ask for the console game too (#160)', () => {
+  const read = (...parts) => fs.readFileSync(path.join(__dirname, '..', '..', 'app', ...parts), 'utf8');
+  // The icon lookups name the console, and its launch year is part of the single-icon cache key.
+  assert.match(source, /async function fetchSteamGridDbIcon\(gameName, steamAppid = '', platform = ''\)/);
+  assert.match(source, /async function fetchSteamGridDbIcons\(gameName, steamAppid = '', platform = ''\)/);
+  assert.match(source, /resolveSteamGridDbGameId\(name, appid, 'icon', launchYear\)/);
+  assert.match(source, /resolveSteamGridDbGameId\(name, appid, 'icon picker', launchYear\)/);
+  assert.match(source, /fetchSteamGridDbIcon\(gameName, appid, platform\)/);
+  assert.match(source, /fetchSteamGridDbIcons\(String\(name \|\| ''\), id, platform\)/);
+  // Every window that asks for a game's icon or wide art says which console the list is for.
+  const picker = read('ui', 'artworkPicker.js');
+  assert.equal((picker.match(/platform: game\.platform \|\| ''/g) || []).length, 3, 'cover options, icon options, default icon');
+  assert.match(picker, /platform: game\.platform \|\| 'PC'/, 'the band hero');
+  assert.match(read('app.js'), /invoke\('resolve-square-logo', \{[^}]*platform: game\.platform \|\| ''/s);
+  assert.match(read('ui', 'gameHealthPanel.js'), /invoke\('resolve-square-logo', \{[^}]*platform: game\.platform \|\| ''/s);
+  // The scan's own fallback: a PlayStation list carries its console on the game, not on the record.
+  assert.match(read('parser', 'achievements.js'), /const platform = sgdbAssetCache\.artPlatform\(appid, game\);/);
+  const { artPlatform } = require(path.join(__dirname, '..', '..', 'app', 'util', 'sgdbAssetCache.js'));
+  assert.equal(artPlatform({ data: { type: 'psnLibrary' } }, { platform: 'PS4', system: 'playstation' }), 'PS4');
+  assert.equal(artPlatform({ data: { type: 'gog', platform: 'PC' } }, { platform: 'PS4' }), 'PC', 'the record still speaks first');
+  assert.equal(artPlatform({ data: { type: 'epic' } }, { platform: 'Windows', system: 'epic' }), 'epic', 'only a console moves the key');
+  assert.equal(artPlatform({ data: { type: 'xboxLibrary' } }, {}), 'xboxLibrary');
+});
+
 test('an unreachable SteamGridDB changes nothing on disk, and asks again next time', () => {
   // Offline, every lookup fails the same way. None of it may be mistaken for an answer: no cached
   // "no artwork", and no wider retry either, since there was nothing to widen against.

@@ -234,9 +234,9 @@ async function fetchCommunityStats(appid, { cacheDir, getJson } = {}) {
   Returns entries in the GBE `progress` shape, like communityProgressEntries.
 */
 function inferStatLinks({ achievements = [], statNames = [], allNames = null } = {}) {
-  const counters = (Array.isArray(achievements) ? achievements : []).filter(
-    (a) => a && a.name && a.counter && Number(a.counter.max) > 0 && !(a.progress && a.progress.value && a.progress.value.operand1)
-  );
+  const tiedStat = (a) => (a && a.progress && a.progress.value && a.progress.value.operand1) || '';
+  const everyCounter = (Array.isArray(achievements) ? achievements : []).filter((a) => a && a.name && a.counter && Number(a.counter.max) > 0);
+  const counters = everyCounter.filter((a) => !tiedStat(a));
   const stats = [...new Set((Array.isArray(statNames) ? statNames : []).map(String).filter(Boolean))];
   const owns = (stat, name) => {
     const s = stat.toLowerCase();
@@ -245,17 +245,41 @@ function inferStatLinks({ achievements = [], statNames = [], allNames = null } =
   };
   // Every achievement of the game counts for ambiguity, not only the counters still untied.
   const everyName = Array.isArray(allNames) ? allNames.map(String) : counters.map((a) => String(a.name));
+  const link = (achievement, stat) => ({
+    name: String(achievement.name),
+    progress: { min_val: Number(achievement.counter.min) || 0, max_val: Number(achievement.counter.max), value: { operation: 'statvalue', operand1: stat } },
+  });
   const links = [];
   for (const achievement of counters) {
     const candidates = stats.filter((stat) => owns(stat, achievement.name));
     if (candidates.length !== 1) continue;
     if (everyName.filter((name) => owns(candidates[0], name)).length !== 1) continue;
-    links.push({
-      name: String(achievement.name),
-      progress: { min_val: Number(achievement.counter.min) || 0, max_val: Number(achievement.counter.max), value: { operation: 'statvalue', operand1: candidates[0] } },
-    });
+    links.push(link(achievement, candidates[0]));
+  }
+  // The game writes a stat only once its counter moves. When every link known so far, these and
+  // the ones already tied, spells its stat the same way, that spelling names the stats to come.
+  const known = [...links.map((l) => [l.name, l.progress.value.operand1]), ...everyCounter.filter(tiedStat).map((a) => [String(a.name), String(tiedStat(a))])];
+  const naming = sharedStatNaming(known);
+  if (!naming) return links;
+  const linked = new Set(links.map((l) => l.name));
+  for (const achievement of counters) {
+    if (linked.has(String(achievement.name))) continue;
+    const stat = naming(String(achievement.name));
+    if (stats.some((s) => owns(s, achievement.name)) || everyName.filter((name) => owns(stat, name)).length !== 1) continue;
+    links.push(link(achievement, stat));
   }
   return links;
+}
+
+// `<prefix><achievement name>`, lower-cased or as written, when at least two links agree on it.
+function sharedStatNaming(pairs) {
+  if (pairs.length < 2) return null;
+  for (const spell of [(name) => name.toLowerCase(), (name) => name]) {
+    const prefixes = new Set(pairs.map(([name, stat]) => (stat.endsWith(spell(name)) ? stat.slice(0, stat.length - name.length) : null)));
+    const [prefix] = prefixes;
+    if (prefixes.size === 1 && prefix) return (name) => prefix + spell(name);
+  }
+  return null;
 }
 
 /*

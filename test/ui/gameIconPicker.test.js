@@ -114,7 +114,7 @@ test('the executable tile is the icon inside the PE, or no tile at all', () => {
 test('the executable icon is the default logo, ahead of any artwork that has to be cut', () => {
   const fn = sliceFunction(init, 'async function resolveSquareGameLogo(appid, gameName, candidates, ');
   const highRes = fn.indexOf('const highResExecutableIcon =');
-  const community = fn.indexOf('fetchSteamGridDbIcon(gameName, appid)');
+  const community = fn.indexOf('fetchSteamGridDbIcon(gameName, appid, platform)');
   const executable = fn.indexOf('const usableExecutableIcon =');
   const artwork = fn.indexOf('let firstPaintable');
   assert.ok(highRes !== -1 && community !== -1 && executable !== -1 && artwork !== -1, 'all four links must exist');
@@ -155,7 +155,7 @@ test('the original icon is a tile in the gallery, not only an entry in the conte
 test('a chosen icon is resolved for every surface, not only the page it was chosen on', () => {
   const fn = sliceFunction(init, 'async function resolveSquareGameLogo(appid, gameName, candidates, ');
   const override = fn.indexOf("require('../util/gameIconStore.js')");
-  const community = fn.indexOf('fetchSteamGridDbIcon(gameName, appid)');
+  const community = fn.indexOf('fetchSteamGridDbIcon(gameName, appid, platform)');
   assert.ok(override !== -1 && community !== -1, 'both sources must be present');
   assert.ok(override < community, 'a decision outranks a lookup');
   // The Watchdog paints Windows toasts without going through that resolver, so it reads the same

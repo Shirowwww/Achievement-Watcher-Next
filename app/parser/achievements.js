@@ -3608,7 +3608,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           asking it for every game put one round trip per game on the thread already serving every
           tile's icons, and the scan waited for each one.
         */
-        const platform = appid.data.platform || game.system || appid.data.type;
+        const platform = sgdbAssetCache.artPlatform(appid, game);
         const cached = sgdbAssetCache.readCached(_userDataPath || userDataDir(), game.name, platform, appid.appid);
         const fallback =
           (cached === undefined

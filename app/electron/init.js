@@ -4105,12 +4105,15 @@ const SGDB_ICON_WAIT_MS = 1200;
 const SGDB_ICON_DOWNLOAD_WAIT_MS = 2500;
 const { pickSquareIcon } = require('../util/squareLogo.js');
 
-async function fetchSteamGridDbIcon(gameName, steamAppid = '') {
+async function fetchSteamGridDbIcon(gameName, steamAppid = '', platform = '') {
   const name = String(gameName || '').trim();
   const appid = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
   if (!name && !appid) return null;
   const generation = artworkCacheGeneration;
-  const key = require('crypto').createHash('sha1').update(`${appid}\0${name.toLowerCase()}`).digest('hex');
+  // A console's launch year can pick the other of two games named alike, so it is part of the key.
+  const launchYear = sgdbAssetCache.consoleLaunchYear(platform);
+  const keyText = `${appid}\0${name.toLowerCase()}${launchYear ? `\0${launchYear}` : ''}`;
+  const key = require('crypto').createHash('sha1').update(keyText).digest('hex');
   const cacheFile = path.join(steamgriddbIconsDir, `${key}.json`);
   try {
     if (fs.existsSync(cacheFile) && Date.now() - fs.statSync(cacheFile).mtimeMs < SGDB_ICONS_TTL) {
@@ -4124,7 +4127,7 @@ async function fetchSteamGridDbIcon(gameName, steamAppid = '') {
 
   let icon = null;
   try {
-    const resolved = await resolveSteamGridDbGameId(name, appid, 'icon');
+    const resolved = await resolveSteamGridDbGameId(name, appid, 'icon', launchYear);
     if (!resolved.gameId) {
       // A network failure is not an answer: leave the cache alone so the next notification retries.
       if (resolved.networkError) return null;
@@ -4156,13 +4159,14 @@ const SGDB_ICON_PICKER_LIMIT = 36;
 
 /* The whole icon list, largest first, for the icon picker. Deliberately not cached: reusing the
    single-icon cache file would overwrite the answer every notification depends on. */
-async function fetchSteamGridDbIcons(gameName, steamAppid = '') {
+async function fetchSteamGridDbIcons(gameName, steamAppid = '', platform = '') {
+  const launchYear = sgdbAssetCache.consoleLaunchYear(platform);
   const name = String(gameName || '').trim();
   const appid = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
   if (!name && !appid) return { icons: [], networkError: false };
   if (steamGridDbUnavailable()) return { icons: [], networkError: true };
   try {
-    const resolved = await resolveSteamGridDbGameId(name, appid, 'icon picker');
+    const resolved = await resolveSteamGridDbGameId(name, appid, 'icon picker', launchYear);
     if (!resolved.gameId) return { icons: [], networkError: resolved.networkError === true };
     const res = await steamGridDbFetch(`${BASE_URL}/icons/game/${resolved.gameId}?types=static`);
     sgdbCircuit.recordSuccess();
@@ -4287,7 +4291,7 @@ async function squareIconCandidates(appid, sources) {
 
 /* Icon picker options needing the main process: Steam artwork (download+cut), community icons
    (network), executable icon (PE read). The renderer adds what it already has on its side. */
-ipcMain.handle('get-icon-options', async (event, { name, steamAppid, cacheAppid, sources, exe } = {}) => {
+ipcMain.handle('get-icon-options', async (event, { name, steamAppid, cacheAppid, sources, exe, platform } = {}) => {
   const id = /^\d+$/.test(String(steamAppid || '').trim()) ? String(steamAppid).trim() : '';
   // A game with no Steam appid still needs its own icon folder: sharing one named "unknown" made
   // the mtime reuse check hand one game's executable icon to the next, and left it out of reach of
@@ -4295,7 +4299,7 @@ ipcMain.handle('get-icon-options', async (event, { name, steamAppid, cacheAppid,
   const iconCacheId = id || String(cacheAppid || steamAppid || '').trim() || 'unknown';
   const toFileUrl = require('../util/iconUrl.js').iconResultToFileUrl;
   const [grids, exeIcon, steam] = await Promise.all([
-    fetchSteamGridDbIcons(String(name || ''), id),
+    fetchSteamGridDbIcons(String(name || ''), id, platform),
     fetchExecutableIcon(exe, iconCacheId),
     squareIconCandidates(id || String(steamAppid || ''), sources),
   ]);
@@ -6722,7 +6726,7 @@ function configuredExecutable(...appids) {
   user has since deleted is not there at all. Falling through to the poster or the header is what
   keeps a card from ending up with an empty square.
 */
-async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverride = false, libraryAppid = '', exe = '' } = {}) {
+async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverride = false, libraryAppid = '', exe = '', platform = '' } = {}) {
   const { makeSquareLogo } = require('../util/squareLogo.js');
   const localSquare = (source) => {
     try {
@@ -6785,7 +6789,7 @@ async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverri
   if (shippedSquare) return shippedSquare;
 
   try {
-    const lookup = fetchSteamGridDbIcon(gameName, appid).catch(() => null);
+    const lookup = fetchSteamGridDbIcon(gameName, appid, platform).catch(() => null);
     const icon = await Promise.race([lookup, new Promise((resolve) => setTimeout(() => resolve(null), SGDB_ICON_WAIT_MS))]);
     if (icon && icon.url) {
       const local = await Promise.race([
@@ -6860,13 +6864,13 @@ async function resolveSquareGameLogo(appid, gameName, candidates, { ignoreOverri
   game has no usable artwork at all - which the caller must render as "no icon", not as a broken one.
 */
 ipcMain.handle('resolve-square-logo', async (event, request) => {
-  const { appid, libraryAppid, name, sources, ignoreOverride, exe } = request || {};
+  const { appid, libraryAppid, name, sources, ignoreOverride, exe, platform } = request || {};
   try {
     const square = await resolveSquareGameLogo(
       appid == null ? '' : String(appid),
       String(name || ''),
       Array.isArray(sources) ? sources : [sources],
-      { ignoreOverride: ignoreOverride === true, libraryAppid: libraryAppid == null ? '' : String(libraryAppid), exe: String(exe || '') }
+      { ignoreOverride: ignoreOverride === true, libraryAppid: libraryAppid == null ? '' : String(libraryAppid), exe: String(exe || ''), platform: String(platform || '') }
     );
     return (square && require('../util/iconUrl.js').iconResultToFileUrl(square)) || '';
   } catch (err) {
