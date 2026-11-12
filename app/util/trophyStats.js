@@ -3,7 +3,7 @@
 /*
   The profile's trophy showcase.
 
-  Platinum is a game at 100%, or the earned platinum trophy of a game that has one (platinumEarnedAt),
+  Platinum is a game whose base game is at 100%, or the earned platinum trophy of a game that has one (platinumEarnedAt),
   not an achievement. Every unlocked achievement is graded by its
   global unlock rate with the tiers the rarity badges and notifications use (rarityTiers.js). By
   default that is gold up to 5%, silver up to 10%, bronze up to 15%, and anything more common, or
@@ -57,14 +57,22 @@ function nativeTypeOf(game, achievement, trophyTypeOf) {
 
 /*
   When a game earned its platinum, or null. A game with a platinum trophy of its own has it once that
-  trophy is earned, DLC trophies left or not, as on the console; any other game at 100%.
+  trophy is earned, DLC trophies left or not, as on the console; any other game once its base game is
+  at 100%, its DLC sets (`categoryOf(game, achievement)`, as the achievement page groups them) aside.
 */
-function platinumEarnedAt(game, trophyTypeOf = null) {
+const ownCategory = (game, achievement) => achievement.category;
+const latestUnlock = (list) => list.reduce((latest, a) => (isAchieved(a) ? Math.max(latest, Number(a.UnlockTime) || 0) : latest), 0);
+
+function platinumEarnedAt(game, trophyTypeOf = null, categoryOf = ownCategory) {
   const list = Array.isArray(game?.achievement?.list) ? game.achievement.list : [];
   const trophy = list.find((achievement) => nativeTypeOf(game, achievement, trophyTypeOf) === 'P');
   if (trophy) return isAchieved(trophy) ? Number(trophy.UnlockTime) || 0 : null;
+  const real = list.filter(Boolean);
+  const base = real.filter((achievement) => !String(categoryOf(game, achievement) || '').trim());
+  // A list made only of sets has no base game to tell apart: the whole list counts, as before.
+  if (base.length && base.length < real.length) return base.every(isAchieved) ? latestUnlock(base) : null;
   if (unlockedCount(game) < (Number(game.achievement.total) || 0)) return null;
-  return list.reduce((latest, a) => (isAchieved(a) ? Math.max(latest, Number(a.UnlockTime) || 0) : latest), 0);
+  return latestUnlock(list);
 }
 
 function tierFor(type, percent, grading) {
@@ -78,7 +86,7 @@ function tierFor(type, percent, grading) {
   no known rates. It is injected because the rates live in the renderer's on-disk cache, as is `trophyTypeOf(game,
   achievement)`, the P/G/S/B letter of the PlayStation trophy an achievement is tied to.
 */
-function calculateTrophyStats(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, trophyTypeOf = null, mode, thresholds } = {}) {
+function calculateTrophyStats(games, { installedOnly = false, isStarted = defaultIsStarted, rarityOf = null, trophyTypeOf = null, categoryOf = ownCategory, mode, thresholds } = {}) {
   const grading = { mode, thresholds };
   const counted = startedGames(games, { installedOnly, isStarted });
   const stats = {
@@ -95,7 +103,7 @@ function calculateTrophyStats(games, { installedOnly = false, isStarted = defaul
 
   for (const game of counted) {
     const list = Array.isArray(game.achievement.list) ? game.achievement.list : [];
-    const completedAt = platinumEarnedAt(game, trophyTypeOf);
+    const completedAt = platinumEarnedAt(game, trophyTypeOf, categoryOf);
     if (completedAt !== null) {
       stats.platinum += 1;
       stats.platinumGames.push({ game, completedAt });

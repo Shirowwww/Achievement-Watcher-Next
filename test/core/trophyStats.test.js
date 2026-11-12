@@ -111,6 +111,26 @@ test('a game tied to its PlayStation list counts the real grade of each trophy',
   assert.equal(stats.silver, 4);
 });
 
+test('a game without a platinum trophy earns it with its base game, its DLC sets left or not', () => {
+  const withDlc = { appid: 4, achievement: { unlocked: 2, total: 3, list: [ach('a', true), ach('b', true, { UnlockTime: 1700000900 }), ach('d', false, { category: 'Expansion' })] } };
+  const linkedDlc = { appid: 5, achievement: { unlocked: 1, total: 2, list: [ach('a', true), ach('d', false)] } };
+  const categoryOf = (game, achievement) => (game.appid === 5 && achievement.name === 'd' ? 'Linked pack' : achievement.category);
+  const unfinished = { appid: 6, achievement: { unlocked: 1, total: 3, list: [ach('a', true), ach('b', false), ach('d', true, { category: 'Expansion' })] } };
+
+  const stats = calculateTrophyStats([withDlc, linkedDlc, unfinished], { isStarted: () => true, categoryOf });
+
+  assert.deepEqual(stats.platinumGames.map(({ game, completedAt }) => [game.appid, completedAt]), [[4, 1700000900], [5, 1700000000]]);
+});
+
+test('a list made only of sets, or with an empty slot, falls back to the whole list', () => {
+  const allSets = { appid: 7, achievement: { unlocked: 2, total: 2, list: [ach('a', true, { category: 'Expansion' }), ach('b', true, { category: 'Expansion' })] } };
+  const withHole = { appid: 8, achievement: { unlocked: 1, total: 2, list: [ach('a', true), null] } };
+
+  const stats = calculateTrophyStats([allSets, withHole], { isStarted: () => true });
+
+  assert.deepEqual(stats.platinumGames.map(({ game }) => game.appid), [7]);
+});
+
 test('a game with its own platinum trophy has it once that trophy is earned, DLC left or not', () => {
   const godOfWar = { appid: 'psn-1', system: 'playstation', achievement: { unlocked: 3, total: 5, list: [ach('p', true, { type: 'P', UnlockTime: 1700000500 }), ach('g', true, { type: 'G' }), ach('b', true, { type: 'B' }), ach('dlc1', false, { type: 'B' }), ach('dlc2', false, { type: 'S' })] } };
   const unfinished = { appid: 'psn-2', system: 'playstation', achievement: { unlocked: 1, total: 2, list: [ach('p', false, { type: 'P' }), ach('b', true, { type: 'B' })] } };

@@ -33,6 +33,14 @@ renamed in 3.9.0 and the history is kept under one file.
   The first launch is recorded from this version on; a game played before shows the date of its
   first achievement.
 
+- **Base game and DLC achievements apart.** A game whose achievements come in sets, as on Steam or
+  PlayStation, lists the base game first, then each DLC under its own heading with its own count.
+  A click on a heading folds or unfolds its section. As on the console, the platinum is the base
+  game's: it sits in that section and is earned once the base game is at 100%, DLC left or not.
+- **Filter the library by progress or platform.** The collections menu now also keeps only the games
+  not started, in progress, almost done (80% or more), at 100%, or at 100% of the base game without
+  its DLC, and only one platform when the library holds several.
+
 ### Improved
 
 - **Console and manual games get their page.** A game the stores do not list under its exact name,

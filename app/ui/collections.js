@@ -11,7 +11,11 @@
   const { createCollectionStore } = require('../util/collectionStore.js');
   const collectionFilter = require('../util/collectionFilter.js');
 
+  const libraryFilter = require('../util/libraryFilter.js');
+
   const FILTER_KEY = 'collectionFilter';
+  const PROGRESS_KEY = 'libraryProgressFilter';
+  const PLATFORM_KEY = 'libraryPlatformFilter';
   const DEFAULT_BUTTON_ICON = 'layer-group';
   let store = null;
   let state = collections.emptyState();
@@ -66,8 +70,43 @@
     return collections.memberKeys(state, activeId());
   }
 
+  // The progress and platform filters, remembered like the collection: { progress, platform }.
+  function activeFilters() {
+    let progress = '';
+    let platform = '';
+    try {
+      progress = localStorage.getItem(PROGRESS_KEY) || '';
+      platform = localStorage.getItem(PLATFORM_KEY) || '';
+    } catch {
+      /* no storage: no remembered filter */
+    }
+    return { progress: libraryFilter.normalizeProgressFilter(progress), platform: libraryFilter.normalizePlatformFilter(platform) };
+  }
+
+  function setFilter(key, value) {
+    try {
+      if (value && value !== 'all') localStorage.setItem(key, value);
+      else localStorage.removeItem(key);
+    } catch {
+      /* the filter still applies for this session */
+    }
+    applyFilter();
+  }
+
+  const platformOf = (game) => (typeof profileStatsGroupOf === 'function' ? profileStatsGroupOf(game).key : '');
+  const filtering = (filters) => filters.progress !== 'all' || !!filters.platform;
+  // app.js's achievementCategoryOf, read when called: this file loads before app.js.
+  const categoryOf = (game, achievement) => (typeof achievementCategoryOf === 'function' ? achievementCategoryOf(game, achievement) : achievement.category);
+  const keptByFilters = (game, filters) => libraryFilter.matchesFilters(game, { ...filters, platformOf, categoryOf });
+
+  // The hidden games, plus every game the progress or platform filter leaves out.
   function activeExcluded() {
-    return collections.excludedKeys(state, activeId());
+    const hidden = collections.excludedKeys(state, activeId());
+    const filters = activeFilters();
+    if (!filtering(filters)) return hidden;
+    const excluded = new Set(hidden || []);
+    for (const game of gameList) if (game && !keptByFilters(game, filters)) excluded.add(String(game.appid));
+    return excluded;
   }
 
   function imageUrl(collection) {
@@ -75,13 +114,43 @@
     return file ? pathToFileURL(file).href : '';
   }
 
+  const progressLabels = () => ({
+    all: t('library-filter-any', 'Any progress', 'Toute progression'),
+    'not-started': t('library-filter-not-started', 'Not started', 'Pas commencés'),
+    'in-progress': t('library-filter-in-progress', 'In progress', 'En cours'),
+    almost: t('library-filter-almost', 'Almost done (80%+)', 'Presque finis (80 % et plus)'),
+    complete: t('library-filter-complete', '100%', '100 %'),
+    'complete-base': t('library-filter-complete-base', '100% base game', '100 % jeu de base'),
+  });
+
+  // The platforms the library holds, as the stats panel names them: [{ key, label }].
+  function libraryPlatforms() {
+    if (typeof profileStatsGroupOf !== 'function') return [];
+    const found = new Map();
+    for (const game of gameList) {
+      const group = game ? profileStatsGroupOf(game) : null;
+      if (group && !found.has(group.key)) found.set(group.key, { key: group.key, label: group.label });
+    }
+    return [...found.values()].sort((a, b) => a.label.localeCompare(b.label));
+  }
+
+  function filterNames(filters) {
+    const names = [];
+    if (filters.progress !== 'all') names.push(progressLabels()[filters.progress]);
+    // A remembered platform no game has any more still filters, so the button still says so.
+    const platform = filters.platform && (libraryPlatforms().find((entry) => entry.key === filters.platform) || { label: filters.platform });
+    if (platform) names.push(platform.label);
+    return names;
+  }
+
   function paintButton() {
     const button = $('#sort-box .collection-filter');
     if (!button.length) return;
     const active = activeView();
     const title = t('collections', 'Collections', 'Collections');
-    button.toggleClass('active', !!active);
-    button.attr('title', active ? `${title}: ${active.name}` : title).attr('aria-label', active ? `${title}: ${active.name}` : title);
+    const named = [active && active.name, ...filterNames(activeFilters())].filter(Boolean).join(', ');
+    button.toggleClass('active', !!named);
+    button.attr('title', named ? `${title}: ${named}` : title).attr('aria-label', named ? `${title}: ${named}` : title);
     button[0].style.setProperty('--collection-color', active ? active.color : '');
     const url = imageUrl(active);
     const glyph = $('<i class="fas" aria-hidden="true"></i>').addClass('fa-' + (active ? active.icon : DEFAULT_BUTTON_ICON));
@@ -99,13 +168,22 @@
   }
 
   // Called for each tile as it is built, since tiles stream in after the filter was applied.
+  // Only this tile's game is tested: a scan streams hundreds of tiles in a row.
   function applyToTile(li) {
-    if (li) collectionFilter.applyToTile(li, activeMembers(), activeExcluded());
+    if (!li) return;
+    const hidden = collections.excludedKeys(state, activeId());
+    const filters = activeFilters();
+    const key = collectionFilter.tileKey(li);
+    const game = filtering(filters) ? gameList.find((entry) => entry && String(entry.appid) === key) : null;
+    const excluded = game && !keptByFilters(game, filters) ? new Set([...(hidden || []), key]) : hidden;
+    collectionFilter.applyToTile(li, activeMembers(), excluded);
   }
 
   // All games too: the hidden games stay out of its stats.
   function scopeGames(games) {
-    return collections.filterGames(games, state, activeId());
+    const scoped = collections.filterGames(games, state, activeId());
+    const filters = activeFilters();
+    return filtering(filters) ? scoped.filter((game) => game && keptByFilters(game, filters)) : scoped;
   }
 
   function refresh() {
@@ -231,6 +309,27 @@
     rows[next].focus();
   }
 
+  // Progress, then platform when the library holds more than one: each a radio group of its own.
+  function appendFilterRows(panel) {
+    const filters = activeFilters();
+    const heading = (text) => $('<div class="collection-menu-heading" role="presentation"></div>').text(text);
+    const marker = (icon) => $('<span class="collection-menu-marker is-all" aria-hidden="true"></span>').append($('<i class="fas"></i>').addClass('fa-' + icon));
+    panel.append('<div class="collection-menu-separator" role="separator"></div>', heading(t('library-filter-progress', 'Progress', 'Progression')));
+    const labels = progressLabels();
+    const icons = { all: 'filter', 'not-started': 'circle', 'in-progress': 'adjust', almost: 'hourglass-half', complete: 'check-circle', 'complete-base': 'flag-checkered' };
+    for (const mode of libraryFilter.PROGRESS_FILTERS) {
+      panel.append(menuRow({ label: labels[mode], marker: marker(icons[mode]), selected: filters.progress === mode, onPick: () => setFilter(PROGRESS_KEY, mode) }));
+    }
+    const platforms = libraryPlatforms();
+    // A remembered platform stays clearable even once the library holds a single one.
+    if (platforms.length < 2 && !filters.platform) return;
+    panel.append('<div class="collection-menu-separator" role="separator"></div>', heading(t('library-filter-platform', 'Platform', 'Plateforme')));
+    panel.append(menuRow({ label: t('library-filter-any-platform', 'All platforms', 'Toutes les plateformes'), marker: marker('gamepad'), selected: !filters.platform, onPick: () => setFilter(PLATFORM_KEY, '') }));
+    for (const platform of platforms) {
+      panel.append(menuRow({ label: platform.label, marker: marker('gamepad'), selected: filters.platform === platform.key, onPick: () => setFilter(PLATFORM_KEY, platform.key) }));
+    }
+  }
+
   function openFilterMenu(event) {
     if (filterMenu) return closeFilterMenu({ focus: true });
     reload();
@@ -279,6 +378,7 @@
         },
       }).attr('role', 'menuitem').removeAttr('aria-checked')
     );
+    appendFilterRows(panel);
 
     // Right-aligned under the button, since the button sits at the right end of the toolbar.
     $(document.body).append(panel);

@@ -120,6 +120,7 @@ const manualUnlock = require(path.join(appPath, 'parser/manualUnlock.js'));
 const achievementSteps = require(path.join(appPath, 'parser/achievementSteps.js'));
 achievementSteps.setUserDataPath(getUserDataPath());
 const achievementStepsView = require(path.join(appPath, 'util/achievementStepsView.js'));
+const achievementGroups = require(path.join(appPath, 'util/achievementGroups.js'));
 const achievementPins = require(path.join(appPath, 'parser/achievementPins.js'));
 achievementPins.setUserDataPath(getUserDataPath());
 const manualGames = require(path.join(appPath, 'parser/manualGames.js'));
@@ -572,6 +573,10 @@ function linkedTrophyOf(game, achievement) {
 
 const linkedTrophyType = (game, achievement) => linkedTrophyOf(game, achievement)?.type;
 
+// The DLC an achievement belongs to ('' for the base game): its own set, else its linked trophy's group.
+// Shared by the achievement page's sections and the library's "100% base game" filter.
+const achievementCategoryOf = (game, achievement) => achievement.category || (linkedTrophyOf(game, achievement) || {}).group;
+
 const linkedPlatinumOf = (game) => {
   const platinum = psnLinkOf(game)?.platinum;
   return platinum && platinum.name ? platinum : null;
@@ -582,12 +587,15 @@ const linkedPlatinumOf = (game) => {
   the way the console awards it. It is no achievement of the game, so the row carries no name for the
   handlers; a game whose own achievement is tied to the platinum already shows it in its list.
 */
-function psnPlatinumRow(game) {
+function psnPlatinumRow(game, baseGroup) {
   const platinum = linkedPlatinumOf(game);
   const list = game.achievement.list;
   if (!platinum || list.some((achievement) => linkedTrophyType(game, achievement) === 'P')) return null;
-  const achieved = list.length > 0 && list.every((achievement) => achievement.Achieved);
-  const earnedAt = achieved ? Math.max(...list.map((achievement) => Number(achievement.UnlockTime) || 0)) : 0;
+  // As on the console, the platinum is the base game's: its DLC sets are left aside.
+  const earned = list.length > 0 ? platinumEarnedAt(game, linkedTrophyType, achievementCategoryOf) : null;
+  const achieved = earned !== null;
+  const earnedAt = earned || 0;
+  const groupAttr = Number.isInteger(baseGroup) ? ` data-group="${baseGroup}"` : '';
   const icon = platinum.icon || pathToFileURL(path.join(appPath, 'resources/img/achievement.svg')).href;
   const time = earnedAt
     ? `<div class="time" data-time="${earnedAt}"><i class="fas fa-clock"></i> <span>${escapeHtml(
@@ -599,7 +607,7 @@ function psnPlatinumRow(game) {
     $('#achievement .achievements').data('lang-globalStat') || ''
   )}</span></div>`;
   const html = `<li>
-      <div class="achievement psn-platinum ps-trophy rare rarity-platinum" data-trophy="platinum" data-index="-1" data-achieved="${achieved ? 1 : 0}">
+      <div class="achievement psn-platinum ps-trophy rare rarity-platinum" data-trophy="platinum" data-index="-1"${groupAttr} data-achieved="${achieved ? 1 : 0}">
         <div class="box"><div class="glow mask contain"><div class="glow mask ray"><div class="glow fx"></div></div></div>
           <div class="icon" style="background: ${cssUrl(icon)};"></div></div>
         <div class="content">
@@ -702,6 +710,7 @@ function trophyStatsFor(installedOnly) {
     isStarted: hasBeenLaunched,
     rarityOf: trophyRarityOf,
     trophyTypeOf: linkedTrophyType,
+    categoryOf: achievementCategoryOf,
     ...rarityGrading(),
   });
 }
@@ -4960,7 +4969,7 @@ var app = {
     const tileSignatures = new Map();
     // Reset the list and handlers so onStart() stays idempotent.
     $('#game-list ul').empty();
-    $('#game-list .isEmpty').hide();
+    $('#game-list .isEmpty').removeClass('is-filtered').hide();
     clearSkeletonTiles();
     gameElements.clear();
     libraryArtwork.disconnect();
@@ -5049,7 +5058,7 @@ var app = {
               : progressLabel;
             // In trophy mode a game with its platinum wears the platinum colour on its trophy icon.
             const platinumAttr =
-              hasAchievements && rarityGrading().mode === rarityTiers.MODE_TROPHY && platinumEarnedAt(game, linkedTrophyType) !== null
+              hasAchievements && rarityGrading().mode === rarityTiers.MODE_TROPHY && platinumEarnedAt(game, linkedTrophyType, achievementCategoryOf) !== null
                 ? ' data-platinum="true"'
                 : '';
             // Accessible names for the three icon-only controls on a tile.
@@ -8252,6 +8261,13 @@ var app = {
       const unlockRows = [];
       const lockRows = [];
       const pinnedRows = [];
+      // The base game and each DLC get a section of their own (ui/sort.js draws the headings), as on Steam.
+      const categoryOf = (achievement) => achievementCategoryOf(game, achievement);
+      const groups = achievementGroups.achievementGroups(game.achievement.list, categoryOf);
+      const groupIndex = achievementGroups.hasDlc(groups) ? new Map(groups.map((group, index) => [group.key, index])) : null;
+      window.achievementGroupHeads = groupIndex
+        ? groups.map((group) => ({ label: group.key || t('ach-group-base', 'Base game', 'Jeu de base'), unlocked: group.unlocked, total: group.total }))
+        : [];
 
       let i = 0;
       for (let achievement of game.achievement.list) {
@@ -8270,7 +8286,7 @@ var app = {
         const realDesc = achievement.description || '...';
         const linked = linkedTrophyOf(game, achievement);
         const trophyType = achievement.type || (linked && linked.type);
-        const category = achievement.category || (linked && linked.group);
+        const category = categoryOf(achievement);
         const descHtml = isHiddenMasked
           ? `<div class="description masked-desc" role="button" tabindex="0" data-desc="${escapeHtml(realDesc)}">${escapeHtml(hiddenDescLabel)}</div>`
           : `<div class="description">${escapeHtml(realDesc)}</div>`;
@@ -8279,7 +8295,7 @@ var app = {
         let template = `
                 <li>
 
-                         <div class="achievement${achievement.manual ? ' manual' : ''}${pinned ? ' is-pinned' : ''}" data-name="${escapeHtml(achievement.name)}" data-index="${i}" data-pinned="${pinned ? 1 : 0}" data-achieved="${
+                         <div class="achievement${achievement.manual ? ' manual' : ''}${pinned ? ' is-pinned' : ''}" data-name="${escapeHtml(achievement.name)}" data-index="${i}"${groupIndex ? ` data-group="${groupIndex.get(String(category || '').trim())}"` : ''} data-pinned="${pinned ? 1 : 0}" data-achieved="${
           achievement.Achieved ? 1 : 0
         }" data-manual="${achievement.manual ? 1 : 0}" title="${achievement.manual ? manualTitle : ''}">
                             <div class="box">
@@ -8337,7 +8353,7 @@ var app = {
         i += 1;
       }
 
-      const platinumRow = psnPlatinumRow(game);
+      const platinumRow = psnPlatinumRow(game, groupIndex ? groupIndex.get(achievementGroups.BASE) : undefined);
       if (platinumRow) (platinumRow.achieved ? unlockRows : lockRows).unshift(platinumRow.html);
       // Pinned rows lead the locked list, ahead of the PlayStation platinum.
       lockRows.unshift(...pinnedRows);

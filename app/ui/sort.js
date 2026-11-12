@@ -182,8 +182,74 @@ function achievementStorageKey(root, part) {
   return 'sortAch_' + root.attr('id') + '_' + part;
 }
 
+// The sections folded this session, by game, list and group: "<appid>|<list id>|<group index>".
+const foldedGroups = new Set();
+const UNFOLD_MS = 240;
+
+function foldKey(root, at) {
+  return `${$('#achievement .wrapper > .header').attr('data-appid')}|${root.attr('id')}|${at}`;
+}
+
+// The rows a section holds; pinned rows sit above every section and never fold.
+function groupRows(root, at) {
+  return root
+    .children('ul')
+    .children('li')
+    .filter(function () {
+      const row = $(this).children('.achievement');
+      return row.attr('data-group') === at && row.attr('data-pinned') !== '1';
+    });
+}
+
+function paintFold(root, head, folded) {
+  head.toggleClass('is-folded', folded).children('.ach-group-toggle').attr('aria-expanded', String(!folded));
+  groupRows(root, head.attr('data-group')).toggleClass('is-folded', folded);
+}
+
+// Unfolding fades the rows in (opacity and transform only, so it stays on the compositor); folding is instant.
+function toggleAchievementGroup(head) {
+  const root = head.closest('.achievement-list');
+  const key = foldKey(root, head.attr('data-group'));
+  const folded = !foldedGroups.has(key);
+  if (folded) foldedGroups.add(key);
+  else foldedGroups.delete(key);
+  paintFold(root, head, folded);
+  if (folded) return;
+  const rows = groupRows(root, head.attr('data-group')).addClass('is-unfolding');
+  setTimeout(() => rows.removeClass('is-unfolding'), UNFOLD_MS);
+}
+
+// A heading before the first row of each group (base game, then each DLC) with the game's count for it.
+// The groups come from app.js (window.achievementGroupHeads); pinned rows stay above them all.
+function paintAchievementGroupHeads(root) {
+  const elem = root.children('ul');
+  elem.children('li.ach-group-head').remove();
+  const groups = window.achievementGroupHeads || [];
+  if (!groups.length) return;
+  let last = null;
+  elem.children('li').each(function () {
+    const row = $(this).children('.achievement');
+    const at = row.attr('data-group');
+    if (row.attr('data-pinned') === '1' || at === undefined || at === last) return;
+    last = at;
+    const group = groups[Number(at)];
+    if (!group) return;
+    const head = $('<li class="ach-group-head"></li>').attr('data-group', at);
+    const toggle = $('<button type="button" class="ach-group-toggle" aria-expanded="true"><i class="fas fa-chevron-down" aria-hidden="true"></i></button>');
+    toggle.append($('<span class="ach-group-name"></span>').text(group.label), $('<span class="ach-group-count"></span>').text(`${group.unlocked} / ${group.total}`));
+    $(this).before(head.append(toggle));
+    if (foldedGroups.has(foldKey(root, at))) paintFold(root, head, true);
+  });
+}
+
+const groupOfRow = (row) => {
+  const at = Number($(row).find('.achievement').attr('data-group'));
+  return Number.isFinite(at) ? at : -1;
+};
+
 function applyAchievementSort(root, mode, direction) {
   const elem = root.children('ul');
+  elem.children('li.ach-group-head').remove();
   const li = elem.children("li:not('#hidden-disclaimer')");
   const factor = direction === 'asc' ? 1 : -1;
 
@@ -191,7 +257,11 @@ function applyAchievementSort(root, mode, direction) {
     // Pinned rows stay on top whatever the sort.
     const pinnedFirst = Number($(b).find('.achievement').attr('data-pinned') === '1') - Number($(a).find('.achievement').attr('data-pinned') === '1');
     if (pinnedFirst !== 0) return pinnedFirst;
+    // Then each group keeps its own section, sorted within it.
+    const byGroup = groupOfRow(a) - groupOfRow(b);
+    if (byGroup !== 0) return byGroup;
     // A PlayStation platinum sorts like any row; only an unsorted list keeps it first (data-index -1).
+    // With sections it takes the base game's group (app.js), so it sorts with the base rows.
     if (mode === 'percent') {
       // The displayed text is localized ("84,5 %"), so the raw value is read from the attribute.
       const rarityValue = (row) => {
@@ -214,6 +284,7 @@ function applyAchievementSort(root, mode, direction) {
   });
 
   elem.prepend(li);
+  paintAchievementGroupHeads(root);
   // Rows moved, so the rare halos that were running are no longer the ones on screen.
   if (typeof window.scheduleRareGlowRefresh === 'function') window.scheduleRareGlowRefresh(0);
   root.find('.header .sort-ach .sort').removeClass('active direction-default direction-reversed').attr('aria-pressed', 'false');
@@ -238,6 +309,7 @@ function restoreAchievementSort(root) {
     localStorage[directionKey] = direction;
   }
   if (['percent', 'time'].includes(mode) && ['asc', 'desc'].includes(direction)) applyAchievementSort(root, mode, direction);
+  else if ((window.achievementGroupHeads || []).length) applyAchievementSort(root, null, 'asc');
   else nameIdleAchievementSorts(root);
 }
 
@@ -264,13 +336,22 @@ function installedOnlyEnabled() {
   return localStorage.showInstalledOnly === 'true';
 }
 
+// Games exist but a filter hides them all: say so, rather than offering to look for games.
 function updateInstalledEmptyState() {
   const ul = $('#game-list ul');
-  if (ul.children('li').length === 0) return; // nothing loaded yet - resetUI() owns the empty state
+  const box = $('#game-list .isEmpty');
+  if (ul.children('li').length === 0) {
+    box.removeClass('is-filtered'); // nothing loaded yet - resetUI() owns the empty state
+    return;
+  }
   const visible = ul.children('li').filter(function () {
     return $(this).css('display') !== 'none';
   }).length;
-  $('#game-list .isEmpty').toggle(visible === 0);
+  box.toggle(visible === 0).toggleClass('is-filtered', visible === 0);
+  if (visible === 0 && !box.children('.empty-filtered').length) {
+    const { t } = require('../locale/t.js');
+    box.append($('<p class="empty-filtered" role="status"></p>').text(t('library-filter-none', 'No game matches these filters.', 'Aucun jeu ne correspond à ces filtres.')));
+  }
 }
 
 function applyInstalledFilter({ animateStats = false } = {}) {
@@ -363,6 +444,10 @@ window.setHideStale = setHideStale;
           $('#sort-box .sort').css('pointer-events', 'initial');
         });
       });
+    });
+
+    $(document).on('click', '.achievement-list .ach-group-toggle', function () {
+      toggleAchievementGroup($(this).closest('li.ach-group-head'));
     });
 
     $('.achievement-list > .header .sort-ach .sort').click(function () {
