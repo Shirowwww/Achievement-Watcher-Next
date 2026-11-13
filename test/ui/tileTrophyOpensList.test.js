@@ -18,6 +18,14 @@ test('the trophy handler is bound before the tile click, so it runs first and as
   assert.doesNotMatch(app.slice(trophy, tile), /stopPropagation/, 'the click still reaches the tile, which opens the game');
 });
 
+test('a list opened from the trophy button goes back to the library, not to the overview', () => {
+  const body = app.slice(app.indexOf('function showGameOverview('), app.indexOf('function updateGamePage('));
+  assert.match(body, /if \(!refresh \|\| listWanted\) \$\('#achievement'\)\.attr\('data-entry', listWanted \? 'list' : null\);/);
+  const css = fs.readFileSync(path.join(__dirname, '..', '..', 'app', 'resources', 'css', 'app.css'), 'utf8');
+  assert.match(css, /#achievement\[data-entry='list'\] #btn-overview,/, 'the overview button is hidden');
+  assert.match(css, /#achievement\[data-view='list'\]:not\(\[data-overview='off'\]\):not\(\[data-entry='list'\]\) #btn-previous \{/, 'All Games stays shown');
+});
+
 test('a tile click that finds no game drops the trophy request, so a later open is not sent to the list', () => {
   const bail = app.slice(app.indexOf('if (!game) {', app.indexOf('onGameBoxClick: function')));
   assert.match(bail.slice(0, bail.indexOf('return;')), /pendingListOpen = null;/);

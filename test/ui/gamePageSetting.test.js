@@ -65,7 +65,7 @@ test('with the page off, a game opens on its list and the list leads back to the
 
   const css = read('resources', 'css', 'app.css');
   assert.match(css, /#achievement\[data-overview='off'\] #btn-overview,/);
-  assert.match(css, /#achievement\[data-view='list'\]:not\(\[data-overview='off'\]\) #btn-previous \{/);
+  assert.match(css, /#achievement\[data-view='list'\]:not\(\[data-overview='off'\]\):not\(\[data-entry='list'\]\) #btn-previous \{/);
   // The mouse Back button follows whichever back button is on screen.
   assert.match(read('ui', 'game.js'), /\$\(\$\('#btn-overview'\)\.is\(':visible'\) \? '#btn-overview' : '#btn-previous'\)\.trigger\('click'\);/);
 });

@@ -4509,6 +4509,8 @@ function showGameOverview(box, game) {
     return;
   }
   const refresh = window.GameOverview.current() === game.appid && $('#achievement').attr('data-view');
+  // Opened from the tile's trophy button, the list was the destination: back leads to the library.
+  if (!refresh || listWanted) $('#achievement').attr('data-entry', listWanted ? 'list' : null);
   const unlocked = Math.max(0, Math.floor(finiteNumber(game.achievement.unlocked, 0)));
   const total = Math.max(Math.floor(finiteNumber(game.achievement.total, 0)), unlocked);
   const catalogAppid = catalogAppidOf(game);
