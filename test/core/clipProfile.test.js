@@ -21,6 +21,7 @@ test('settings saved as text are read by value, and anything unknown falls back'
     clipQuality: 'medium',
     clipAudio: 'game',
     clipEngine: 'gpu',
+    clipCapture: 'game',
     clipDir: '',
   });
   assert.equal(profile.normalize({ clipEngine: 'software' }).clipEngine, 'software');
@@ -45,6 +46,25 @@ test('the unlock sits in the middle of the clip until the user moves it', () => 
   assert.equal(value('--height'), '0', 'native resolution is left to the recorder');
   assert.equal(value('--pid'), '99');
   assert.equal(value('--hdr'), 'off');
+});
+
+test('the recorder films the game window unless the whole screen is chosen', () => {
+  const capture = (souvenir) => {
+    const args = profile.recorderArgs(souvenir, 7);
+    return args[args.indexOf('--capture') + 1];
+  };
+  assert.deepEqual(profile.CAPTURES, ['game', 'screen']);
+  assert.equal(capture({}), 'game');
+  assert.equal(capture({ clipCapture: 'screen' }), 'screen');
+  assert.equal(capture({ clipCapture: 'graphics' }), 'game', 'development switches of the recorder are not settings');
+  assert.equal(profile.normalize({ clipCapture: 'screen' }).clipCapture, 'screen');
+  assert.equal(profile.normalize({ clipCapture: '' }).clipCapture, 'game');
+});
+
+test('every capture choice is one the recorder reads', () => {
+  const main = fs.readFileSync(path.join(root, 'native', 'hdr-screenshot', 'src', 'bin', 'aw-next-clip', 'main.rs'), 'utf8');
+  assert.match(main, /"--capture" =>/);
+  assert.match(main, /matches!\(value\.as_str\(\), "screen" \| "graphics"\)/, 'screen must reach CaptureMode::Screen');
 });
 
 test('a clip can keep most of its seconds before a late notification', () => {

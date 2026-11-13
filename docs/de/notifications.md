@@ -322,7 +322,7 @@ Benachrichtigung verloren gehen.
 **Videoclip beim Freischalten** funktioniert wie das Trophäenvideo einer Konsole. Solange ein von AW Next verfolgtes Spiel läuft,
 werden die letzten Sekunden des Spiels im Speicher gehalten, bereits vom Videoencoder der Grafikkarte komprimiert.
 Erscheint ein Erfolg, wird die Spanne um ihn herum als MP4 in
-`<folder>\<game>\<achievement> - <date>.mp4` gespeichert, mit dem Popup in der Mitte, sofern du es nicht verschiebst. Der Ordner ist
+`<folder>\<game>\<achievement> - <date>.mp4` gespeichert, mit der Freischaltung in der Mitte, sofern du sie nicht über Vor der Freischaltung verschiebst. Der Ordner ist
 `Videos\Achievement Watcher Next`, sofern du keinen anderen wählst. Erfolge, die kurz nacheinander freigeschaltet werden,
 teilen sich einen Clip.
 
@@ -335,6 +335,7 @@ teilen sich einen Clip.
 | Bildrate | 30 FPS, 60 FPS oder Unbegrenzt, was deinem Bildschirm folgt (120, 144, 240 Hz) | 30 FPS |
 | Qualität | Niedrig, Mittel oder Hoch | Mittel |
 | Ton | Nur Spiel oder der gesamte PC | Nur Spiel |
+| Aufnahmebereich | Das Spielfenster oder der ganze Bildschirm | Spielfenster |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Einstellungen, Benachrichtigung: der Abschnitt Videoclip mit seinem Ein-/Aus-Schalter" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,13 @@ läuft mit konstanter Bitrate, und eine ruhige Szene wird kleiner.
   **Aus** gilt auch für Clips.
 - **Ton.** **Nur Spiel** lässt Sprachchat und Musik weg. Lässt sich der Ton des Spiels nicht allein aufnehmen,
   wird der gesamte PC aufgenommen.
-- **Was aufgenommen wird.** Der Monitor, der das Spiel zeigt, samt Benachrichtigungen. Ein sehr altes Spiel im exklusiven Vollbild
-  nimmt unter Umständen schwarze Bilder auf.
+- **Was aufgenommen wird.** **Spielfenster** nimmt nur das Spiel auf, ohne Desktop, andere Fenster oder
+  die Popups von AW Next. Unter Windows 10, das nur ein Fenster mit einem gelben Rahmen darum aufnehmen
+  kann, wird stattdessen der Bildschirm auf das Spielfenster zugeschnitten, ein Fenster über dem Spiel
+  ist also weiterhin zu sehen. **Ganzer Bildschirm** nimmt den Monitor auf, der das Spiel zeigt, samt
+  Popups. Ein sehr altes Spiel im exklusiven Vollbild nimmt unter Umständen schwarze Bilder auf.
+- **Ausgelastete Grafikkarte.** Der Recorder bittet Windows wie OBS um eine höhere Grafikpriorität,
+  sodass ein Spiel nahe 100 % GPU den Clip viel weniger ruckeln lässt.
 
 ## Eine Erinnerung wieder ansehen {#seeing-a-souvenir-again}
 

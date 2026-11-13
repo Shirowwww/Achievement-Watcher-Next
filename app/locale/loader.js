@@ -796,6 +796,9 @@ function translateUI(lang, locale, template) {
     row('#lbl-clipAudio', 'clipAudio', 'clipAudioDesc');
     $("#option_clipAudio option[value='game']").text(clear(opt.clipAudioGame));
     $("#option_clipAudio option[value='all']").text(clear(opt.clipAudioAll));
+    row('#lbl-clipCapture', 'clipCapture', 'clipCaptureDesc');
+    $("#option_clipCapture option[value='game']").text(clear(opt.clipCaptureGame));
+    $("#option_clipCapture option[value='screen']").text(clear(opt.clipCaptureScreen));
     $('#lbl-clipEngine').text(clear(opt.clipEngine));
     $('#clip-engine-desc').text(clear(opt.clipEngineDesc));
     $("#option_clipEngine option[value='software']").text(clear(opt.clipEngineSoftware));

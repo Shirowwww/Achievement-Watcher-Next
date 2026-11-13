@@ -322,7 +322,7 @@ notification ne sont pas perdus.
 **Clip vidéo au déblocage** fonctionne comme la vidéo de trophée d'une console. Pendant qu'un jeu suivi par AW Next tourne,
 les dernières secondes de jeu sont gardées en mémoire, déjà compressées par l'encodeur vidéo de la carte graphique.
 Quand un succès apparaît, la séquence qui l'entoure est enregistrée en MP4 dans
-`<folder>\<game>\<achievement> - <date>.mp4`, avec la popup au milieu, sauf si vous la déplacez. Le dossier est
+`<folder>\<game>\<achievement> - <date>.mp4`, avec le déblocage au milieu, sauf si vous le déplacez avec le réglage Avant le succès. Le dossier est
 `Videos\Achievement Watcher Next` sauf si vous en choisissez un autre. Les succès débloqués à peu d'intervalle
 partagent un même clip.
 
@@ -335,6 +335,7 @@ partagent un même clip.
 | Images par seconde | 30 FPS, 60 FPS ou Illimitées, qui suit votre écran (120, 144, 240 Hz) | 30 FPS |
 | Qualité | Basse, Moyenne ou Haute | Moyenne |
 | Son | Jeu seulement, ou tout le PC | Jeu seulement |
+| Zone filmée | La fenêtre du jeu, ou tout l'écran | Fenêtre du jeu |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Paramètres, Notification : la section Clip vidéo avec son interrupteur" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,13 @@ fonctionne à débit constant et une scène calme donne un fichier plus petit.
   **Désactivé** s'applique aussi aux clips.
 - **Son.** **Jeu seulement** laisse de côté le chat vocal et la musique. Si le son du jeu ne peut pas être enregistré
   seul, tout le PC est enregistré.
-- **Ce qui est capturé.** Le moniteur qui affiche le jeu, notifications comprises. Un très vieux jeu en plein écran
+- **Ce qui est capturé.** **Fenêtre du jeu** filme le jeu seul, sans le bureau, les autres fenêtres ni
+  les popups d'AW Next. Sous Windows 10, qui ne sait filmer qu'une fenêtre avec un cadre jaune autour,
+  l'écran est recadré sur la fenêtre du jeu : une fenêtre posée par-dessus apparaît donc encore. **Écran
+  entier** filme le moniteur qui affiche le jeu, popups comprises. Un très vieux jeu en plein écran
   exclusif peut enregistrer des images noires.
+- **Carte graphique chargée.** L'enregistreur demande à Windows une priorité graphique plus haute, comme
+  OBS, si bien qu'un jeu proche de 100 % de GPU fait beaucoup moins saccader le clip.
 
 ## Revoir un souvenir {#seeing-a-souvenir-again}
 

@@ -161,6 +161,7 @@ test('the recorder follows the game and the settings, the unlock in the middle o
   assert.equal(value('--quality'), 'high');
   assert.equal(value('--before'), '10000');
   assert.equal(value('--after'), '10000');
+  assert.equal(value('--capture'), 'game', 'only the game window is filmed unless the screen is chosen');
 
   clip.sync({ ...enabled }, game, deps(spawner));
   assert.equal(spawner.children.length, 1, 'unchanged settings keep the running recorder');

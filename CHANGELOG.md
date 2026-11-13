@@ -17,6 +17,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Dead Nation: Apocalypse Edition, the PS4 recompilation (#188).** Its 41 trophies show with their
   pictures, read from the save folder its setup uses. The port records no date, so an unlock gets
   the time AW Next sees it.
+- **Clips can film the game alone (#190).** **Settings > Notifications > Clips > Recorded area**
+  films the game's window by default, without the desktop or other windows, or the whole screen as
+  before. On Windows 10 the screen is cropped to the game's window.
 
 ### Fixed
 
@@ -35,6 +38,10 @@ renamed in 3.9.0 and the history is kept under one file.
   achievements.** Proton makes the game's prefix on that first run, and AW Next only watched the
   prefixes it found at startup, so unlocks stayed unseen until a restart. New prefixes are now picked
   up within a minute, and a Steam game's own prefix is the one its saves are read from.
+- **Clips judder less while a game keeps the graphics card busy (#190).** The encoder ran in a
+  low-latency mode that dropped frames under load, and the recorder now asks Windows for a higher
+  graphics priority, as OBS does. In a game near 99% GPU, a clip of the game window lost 50 frames
+  where the old recorder lost 204.
 
 ## 3.12.7 - 2026-11-13
 

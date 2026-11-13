@@ -322,7 +322,7 @@ powiadomienie nie przepadają.
 **Klip wideo po odblokowaniu** działa jak film z trofeum na konsoli. Gdy gra śledzona przez AW Next jest uruchomiona,
 ostatnie sekundy rozgrywki są trzymane w pamięci, już skompresowane przez koder wideo karty graficznej.
 Gdy pojawi się osiągnięcie, fragment wokół niego jest zapisywany jako MP4 w
-`<folder>\<game>\<achievement> - <date>.mp4`, z oknem pośrodku. Folder to
+`<folder>\<game>\<achievement> - <date>.mp4`, z momentem odblokowania pośrodku, chyba że przesuniesz go ustawieniem Przed odblokowaniem. Folder to
 `Videos\Achievement Watcher Next`, chyba że wybierzesz inny. Osiągnięcia odblokowane blisko siebie
 współdzielą jeden klip.
 
@@ -335,6 +335,7 @@ współdzielą jeden klip.
 | Liczba klatek | 30 FPS, 60 FPS lub Bez limitu, co podąża za twoim ekranem (120, 144, 240 Hz) | 30 FPS |
 | Jakość | Niska, Średnia lub Wysoka | Średnia |
 | Dźwięk | Tylko gra albo cały komputer | Tylko gra |
+| Nagrywany obszar | Okno gry albo cały ekran | Okno gry |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Ustawienia, Powiadomienia: sekcja Klip wideo z przełącznikiem włącz/wyłącz" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,13 @@ pracuje ze stałą przepływnością, a spokojna scena daje mniejszy plik.
   **Wyłączone** dotyczy także klipów.
 - **Dźwięk.** **Tylko gra** pomija czat głosowy i muzykę. Jeśli dźwięku gry nie da się nagrać
   osobno, nagrywany jest cały komputer.
-- **Co jest przechwytywane.** Monitor pokazujący grę, wraz z powiadomieniami. Bardzo stara gra w wyłącznym
-  pełnym ekranie może nagrać czarne klatki.
+- **Co jest przechwytywane.** **Okno gry** nagrywa samą grę, bez pulpitu, innych okien i wyskakujących
+  okienek AW Next. W systemie Windows 10, który potrafi nagrać tylko jedno okno z żółtą ramką wokół
+  niego, ekran jest zamiast tego przycinany do okna gry, więc okno nad grą nadal jest widoczne. **Cały
+  ekran** nagrywa monitor pokazujący grę, wraz z okienkami. Bardzo stara gra w wyłącznym pełnym ekranie
+  może nagrać czarne klatki.
+- **Mocno obciążona karta graficzna.** Rejestrator prosi Windows o wyższy priorytet graficzny, tak jak
+  OBS, więc gra zbliżona do 100 % GPU powoduje znacznie mniej zacięć klipu.
 
 ## Ponowne oglądanie pamiątki {#seeing-a-souvenir-again}
 

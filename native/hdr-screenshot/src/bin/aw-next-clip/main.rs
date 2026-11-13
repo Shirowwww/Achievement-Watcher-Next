@@ -4,6 +4,7 @@ mod audio;
 mod codec;
 mod mp4;
 mod mux;
+mod priority;
 mod ring;
 mod video;
 
@@ -41,6 +42,13 @@ pub enum HdrMode {
     Force,
 }
 
+// Game films the game's window, or its monitor while it shows none; Screen films the monitor.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum CaptureMode {
+    Game,
+    Screen,
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum AudioSource {
     Game,
@@ -62,6 +70,11 @@ pub struct Config {
     pub hdr: HdrMode,
     // Skips the GPU encoders; exists for testing the software one on a machine that has a GPU.
     pub software: bool,
+    pub capture: CaptureMode,
+    // Crops the monitor to the game's window even where the window itself can be captured; exists
+    // for testing the Windows 10 path on Windows 11 (`--capture crop`, or `crop-graphics` to crop
+    // a Windows Graphics Capture of the monitor).
+    pub crop: bool,
     // Skips desktop duplication; exists for testing the Windows Graphics Capture path without a
     // game in exclusive fullscreen.
     pub graphics_capture: bool,
@@ -75,6 +88,10 @@ pub struct Shared {
     pub stop: AtomicBool,
     pub encoded: AtomicU64,
     pub dropped: AtomicU64,
+    // Frames sent again because no newer picture had arrived by their tick.
+    pub repeated: AtomicU64,
+    // Ticks skipped because the capture loop was late by whole frames.
+    pub late: AtomicU64,
     // Rate the running encoder was opened at, which can be lower than the one asked for.
     pub fps: AtomicU32,
     // Turns of the capture loop: it stops moving when the video thread hangs.
@@ -125,6 +142,8 @@ fn parse_args(args: &[String]) -> Result<Config, String> {
         audio: AudioSource::Game,
         hdr: HdrMode::Auto,
         software: false,
+        capture: CaptureMode::Game,
+        crop: false,
         graphics_capture: false,
         selftest: None,
     };
@@ -159,7 +178,11 @@ fn parse_args(args: &[String]) -> Result<Config, String> {
                 }
             }
             "--encoder" => config.software = value == "software",
-            "--capture" => config.graphics_capture = value == "graphics",
+            "--capture" => {
+                config.capture = if matches!(value.as_str(), "screen" | "graphics") { CaptureMode::Screen } else { CaptureMode::Game };
+                config.crop = matches!(value.as_str(), "crop" | "crop-graphics");
+                config.graphics_capture = matches!(value.as_str(), "graphics" | "crop-graphics");
+            }
             "--selftest" => {
                 let seconds = args.get(i + 2).and_then(|s| s.parse().ok()).unwrap_or(10);
                 config.selftest = Some((value.clone(), seconds));
@@ -236,9 +259,11 @@ fn stats(shared: &Shared, started: Instant) {
     let cpu = (filetime(kernel) + filetime(user)) as f64 / SECOND as f64;
     let threads = std::thread::available_parallelism().map_or(1, |n| n.get()) as f64;
     emit(&format!(
-        "stats seconds={wall:.0} encoded={} dropped={} cpu={:.2}% peak-memory={}MB",
+        "stats seconds={wall:.0} encoded={} dropped={} repeated={} late={} cpu={:.2}% peak-memory={}MB",
         shared.encoded.load(Ordering::Relaxed),
         shared.dropped.load(Ordering::Relaxed),
+        shared.repeated.load(Ordering::Relaxed),
+        shared.late.load(Ordering::Relaxed),
         cpu / wall.max(0.001) / threads * 100.0,
         memory.PeakWorkingSetSize / (1024 * 1024)
     ));
@@ -286,6 +311,8 @@ fn main() {
         stop: AtomicBool::new(false),
         encoded: AtomicU64::new(0),
         dropped: AtomicU64::new(0),
+        repeated: AtomicU64::new(0),
+        late: AtomicU64::new(0),
         fps: AtomicU32::new(config.fps),
         beat: AtomicU64::new(0),
         unsupported: AtomicBool::new(false),
@@ -391,5 +418,21 @@ mod tests {
     #[test]
     fn a_word_that_is_not_a_rate_is_refused() {
         assert!(parse(&["--fps", "fast"]).is_err());
+    }
+
+    #[test]
+    fn the_game_window_is_filmed_unless_the_screen_is_asked_for() {
+        let mode = |args: &[&str]| {
+            let config = parse(args).unwrap();
+            (config.capture, config.crop, config.graphics_capture)
+        };
+        assert_eq!(mode(&[]), (CaptureMode::Game, false, false));
+        assert_eq!(mode(&["--capture", "game"]), (CaptureMode::Game, false, false));
+        assert_eq!(mode(&["--capture", "screen"]), (CaptureMode::Screen, false, false));
+        assert_eq!(mode(&["--capture", "graphics"]), (CaptureMode::Screen, false, true), "the development switch still films the monitor");
+        assert_eq!(mode(&["--capture", "crop"]), (CaptureMode::Game, true, false));
+        assert_eq!(mode(&["--capture", "crop-graphics"]), (CaptureMode::Game, true, true));
+        assert_eq!(mode(&["--capture", "whatever"]), (CaptureMode::Game, false, false), "an unknown value keeps the default");
+        assert_eq!(parse(&["--capture", "screen", "--fps", "60"]).unwrap().fps, 60, "the argument after it is still read");
     }
 }

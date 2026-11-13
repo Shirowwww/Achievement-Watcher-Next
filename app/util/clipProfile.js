@@ -1,7 +1,7 @@
 'use strict';
 
-// Clip settings for the Settings page and the Watchdog, which run in separate packages: this file
-// exists twice, in app/util and watchdog/notification, and test/core/clipProfile.test.js compares them.
+// Clip settings for the Settings page and the Watchdog, which loads this same file through
+// sharedAppModulePath (watchdog/notification/clip.js).
 
 // 60 s is also the longest clip aw-next-clip joins unlocks into (LONGEST_CLIP in main.rs).
 const SECONDS = { min: 10, max: 60, fallback: 20 };
@@ -13,6 +13,8 @@ const QUALITIES = ['low', 'medium', 'high'];
 const AUDIO = ['game', 'all'];
 // Linux only: gpu-screen-recorder when it is installed, or the app's own software encoder.
 const ENGINES = ['gpu', 'software'];
+// Windows only: the game's window alone, or the whole monitor showing it.
+const CAPTURES = ['game', 'screen'];
 
 // Mirrors bitrate() in native/hdr-screenshot/src/bin/aw-next-clip/video.rs, which decides the real
 // rate from the size it actually records at.
@@ -46,6 +48,7 @@ function normalize(souvenir = {}) {
     clipQuality: pick(souvenir.clipQuality, QUALITIES, 'medium'),
     clipAudio: pick(souvenir.clipAudio, AUDIO, 'game'),
     clipEngine: pick(souvenir.clipEngine, ENGINES, 'gpu'),
+    clipCapture: pick(souvenir.clipCapture, CAPTURES, 'game'),
     // Empty means Videos\Achievement Watcher Next.
     clipDir: typeof souvenir.clipDir === 'string' ? souvenir.clipDir.trim() : '',
   };
@@ -74,6 +77,7 @@ function recorderArgs(souvenir = {}, pid = 0) {
     '--after', String(afterMs),
     '--audio', clip.clipAudio,
     '--hdr', souvenir.hdr === 'off' ? 'off' : 'auto',
+    '--capture', clip.clipCapture,
   ];
 }
 
@@ -94,4 +98,4 @@ function estimateMegabytes(souvenir = {}, screen = { width: 1920, height: 1080 }
   return ((bits + AUDIO_BITS) * clip.clipSeconds) / 8 / 1e6;
 }
 
-module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, normalize, split, recorderArgs, estimateMegabytes, fixedFps };
+module.exports = { SECONDS, CODECS, RESOLUTIONS, FRAME_RATES, QUALITIES, AUDIO, ENGINES, CAPTURES, normalize, split, recorderArgs, estimateMegabytes, fixedFps };

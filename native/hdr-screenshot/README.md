@@ -101,6 +101,17 @@ so an HDR clip looks like an HDR screenshot of the same scene.
 
 Everything runs on parts of Windows, with no third-party media library:
 
+- **What is filmed**: `--capture game` (the default) films only the game's largest visible window,
+  the same window the screenshot helper finds from `--pid`. Where Windows can turn the capture border
+  off (Windows 11), Windows Graphics Capture records that window itself, so overlapping windows and
+  overlays stay out; elsewhere (Windows 10) the monitor capture below is cut down to the window's
+  on-screen rectangle (DWM's extended frame bounds), so a window on top of the game still shows. The
+  clip keeps the monitor's size whatever the window does: the window is scaled into it with black
+  bars, a minimised window keeps its last picture, and a captured window is followed to another
+  monitor without a restart. A game with no window yet is recorded as the whole monitor until its
+  first window appears (`the game shows no window yet` line). `--capture screen` films the whole
+  monitor, as before. A rotated monitor under duplication is recorded whole: duplication hands it
+  over unrotated.
 - **Capture**: DXGI Desktop Duplication of the monitor showing the game's largest window. It draws no
   capture border on Windows 10 and injects nothing into the game. The display is asked for FP16 only
   when DisplayConfig reports HDR. Automatic colour management composes even SDR desktops in FP16, and
@@ -110,12 +121,28 @@ Everything runs on parts of Windows, with no third-party media library:
   (`DXGI_ERROR_NOT_CURRENTLY_AVAILABLE`); the recorder then captures the same monitor with Windows
   Graphics Capture, which the screenshot helper already showed sees those games, without the pointer
   and without the border where Windows can turn it off (a `log desktop duplication refused` line).
-  `--capture graphics` takes that path on any desktop, for development.
+  For development, `--capture graphics` takes that path on any desktop (whole monitor),
+  `--capture crop` takes the Windows 10 cropping path on Windows 11, and `--capture crop-graphics`
+  crops a Windows Graphics Capture of the monitor.
+- **Priority**: a game that keeps the GPU at 99% used to delay the recorder's copies and encodes, and
+  the clip juddered (issue #190). The recorder now raises its GPU priority the way OBS does
+  (`set_priority()` in `libobs-d3d11/d3d11-subsystem.cpp`): `D3DKMTSetProcessSchedulingPriorityClass`
+  at REALTIME when hardware-accelerated GPU scheduling is off, which needs administrator rights, else
+  HIGH, and `IDXGIDevice::SetGPUThreadPriority(7)`; nothing on Intel GPUs, as in OBS. The capture
+  thread joins the multimedia scheduler's `Capture` class. The `ready` line reports what was obtained
+  (`gpu-priority=realtime|high|normal gpu-thread=7|0 mmcss=capture|none`) and which way it films
+  (`source=window|crop|screen`).
+- **Pacing**: frames are stamped on a fixed clock. A loop late by whole frames skips them (`late=` in
+  `stats`) rather than sending a burst of the same picture under times earlier than it was taken. A
+  tick with no new picture repeats the last one (`repeated=`); `dropped=` counts ticks the encoder
+  did not take.
 - **Conversion**: the D3D11 video processor scales to the chosen height and converts to NV12 (BT.709,
   limited range). The screen is read once per output frame, and an unchanged desktop is not converted
   again.
 - **Encoding**: the GPU's own Media Foundation encoder (H.264, HEVC or AV1, picked with `MFTEnum2` on
   the capturing adapter), fed with GPU textures. Constant bitrate, one keyframe a second, no B-frames.
+  Low-latency mode is off: beside a GPU-bound game it dropped about four times as many frames. An
+  encoder that hands out frames out of order is reopened in low-latency mode for the rest of the run.
   The bitrate comes from the quality level and the real output size (`bitrate()` in `video.rs`;
   `app/util/clipProfile.js` uses the same numbers for the size estimate). An encoder that refuses the
   rate is retried at 120, 60 and 30 FPS (`fallback fps` line). With no hardware H.264 encoder, or when

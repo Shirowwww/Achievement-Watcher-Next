@@ -322,7 +322,7 @@ Graphics Capture 捕获 FP16 帧，并把高光色调映射为 SDR/sRGB 的 PNG�
 **解锁时录制视频剪辑** 的工作方式类似主机的奖杯视频。在 AW Next 跟踪的游戏运行期间，
 最近几秒的游戏画面会保存在内存中，并已由显卡的视频编码器压缩。
 成就弹出时，其前后的片段会保存为 MP4，位于
-`<folder>\<game>\<achievement> - <date>.mp4`，弹窗正好在片段中间。除非你另选，文件夹为
+`<folder>\<game>\<achievement> - <date>.mp4`，解锁的瞬间正好在片段中间，除非你用“解锁前”调整。除非你另选，文件夹为
 `Videos\Achievement Watcher Next`。相隔很近解锁的成就
 共用一个剪辑。
 
@@ -335,6 +335,7 @@ Graphics Capture 捕获 FP16 帧，并把高光色调映射为 SDR/sRGB 的 PNG�
 | 帧率 | 30 FPS、60 FPS 或不限制（跟随你的屏幕，120、144、240 Hz） | 30 FPS |
 | 画质 | 低、中或高 | 中 |
 | 声音 | 仅游戏，或整台电脑 | 仅游戏 |
+| 录制范围 | 游戏窗口，或整个屏幕 | 游戏窗口 |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="设置，通知：带有开关的视频剪辑部分" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,10 @@ Graphics Capture 捕获 FP16 帧，并把高光色调映射为 SDR/sRGB 的 PNG�
   **关闭** 同样适用于剪辑。
 - **声音。** **仅游戏** 不包括语音聊天和音乐。如果无法单独录制
   游戏的声音，则会录制整台电脑。
-- **捕获的内容。** 显示游戏的显示器，包括通知在内。处于独占全屏的非常老的游戏
-  可能会录制出黑色画面。
+- **捕获的内容。** **游戏窗口** 只录制游戏本身，不含桌面、其他窗口和 AW Next 的弹窗。Windows 10 只能录制带黄色边框的单个窗口，
+  因此改为把屏幕裁剪到游戏窗口，游戏上方的窗口仍会出现。**整个屏幕** 录制游戏所在的显示器，包括弹窗。
+  处于独占全屏的非常老的游戏可能会录制出黑色画面。
+- **显卡负载很高。** 录制器会像 OBS 一样向 Windows 请求更高的图形优先级，因此在 GPU 接近 100 % 的游戏中，剪辑的卡顿会少得多。
 
 ## 再次查看纪念 {#seeing-a-souvenir-again}
 

@@ -322,7 +322,7 @@ notifica non vanno persi.
 **Clip video allo sblocco** funziona come il video dei trofei di una console. Mentre un gioco tracciato da AW Next è in esecuzione,
 gli ultimi secondi di gioco vengono tenuti in memoria, già compressi dall'encoder video della scheda grafica.
 Quando compare un obiettivo, il tratto intorno ad esso viene salvato come MP4 in
-`<folder>\<game>\<achievement> - <date>.mp4`, con il popup nel mezzo. La cartella è
+`<folder>\<game>\<achievement> - <date>.mp4`, con lo sblocco nel mezzo, a meno che tu non lo sposti con Prima dello sblocco. La cartella è
 `Videos\Achievement Watcher Next` a meno che tu non ne scelga un'altra. Gli obiettivi sbloccati a breve distanza
 condividono una sola clip.
 
@@ -335,6 +335,7 @@ condividono una sola clip.
 | Frequenza fotogrammi | 30 FPS, 60 FPS o Sbloccata, che segue il tuo schermo (120, 144, 240 Hz) | 30 FPS |
 | Qualità | Bassa, Media o Alta | Media |
 | Audio | Solo il gioco, oppure l'intero PC | Solo il gioco |
+| Area registrata | La finestra del gioco, oppure l'intero schermo | Finestra del gioco |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Impostazioni, Notifiche: la sezione Clip video con il suo interruttore di attivazione" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,13 @@ lavora a bitrate costante e una scena tranquilla produce un file più piccolo.
   **No** vale anche per le clip.
 - **Audio.** **Solo il gioco** esclude la chat vocale e la musica. Se l'audio del gioco non può essere registrato
   da solo, viene registrato l'intero PC.
-- **Che cosa viene catturato.** Il monitor che mostra il gioco, notifiche comprese. Un gioco molto vecchio a schermo
-  intero esclusivo può registrare fotogrammi neri.
+- **Che cosa viene catturato.** **Finestra del gioco** riprende il gioco da solo, senza il desktop, le
+  altre finestre né i popup di AW Next. In Windows 10, che sa riprendere una sola finestra con una
+  cornice gialla intorno, lo schermo viene invece ritagliato sulla finestra del gioco, quindi una
+  finestra sopra il gioco si vede comunque. **Schermo intero** riprende il monitor che mostra il gioco,
+  popup compresi. Un gioco molto vecchio a schermo intero esclusivo può registrare fotogrammi neri.
+- **Scheda grafica sotto carico.** Il registratore chiede a Windows una priorità grafica più alta, come
+  fa OBS, così un gioco vicino al 100 % di GPU fa scattare molto meno la clip.
 
 ## Rivedere un ricordo {#seeing-a-souvenir-again}
 

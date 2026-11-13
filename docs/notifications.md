@@ -318,7 +318,7 @@ notification are not lost.
 **Video clip on unlock** works like a console's trophy video. While a game AW Next tracks is running,
 the last seconds of play are kept in memory, already compressed by the graphics card's video encoder.
 When an achievement pops, the stretch around it is saved as an MP4 in
-`<folder>\<game>\<achievement> - <date>.mp4`, with the popup in the middle of it unless you move it. The folder is
+`<folder>\<game>\<achievement> - <date>.mp4`, with the unlock in the middle of it unless you move it. The folder is
 `Videos\Achievement Watcher Next` unless you pick another. Achievements unlocking close together
 share one clip.
 
@@ -331,6 +331,7 @@ share one clip.
 | Frame rate | 30 FPS, 60 FPS or Unlocked, which follows your screen (120, 144, 240 Hz) | 30 FPS |
 | Quality | Low, Medium or High | Medium |
 | Sound | Game only, or the whole PC | Game only |
+| Recorded area | The game's window, or the whole screen | Game window |
 
 <div align="center">
 <picture><source srcset="assets/shot/video-clip-panel-800.webp 800w, assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="screenshot/video-clip-panel.png" width="720" height="529" alt="Settings, Notification: the Video clip section with its on/off switch" loading="lazy" decoding="async"></picture><br>
@@ -359,8 +360,13 @@ runs at a constant bitrate and a quiet scene comes out smaller.
   **Off** applies to clips too.
 - **Sound.** **Game only** leaves out voice chat and music. If the game's sound cannot be recorded
   alone, the whole PC is recorded.
-- **What is captured.** The monitor showing the game, notifications included. A very old game in
-  exclusive fullscreen may record black frames.
+- **What is captured.** **Game window** films the game alone, without the desktop, other windows or
+  AW Next's popups. On Windows 10, which can only film one window with a yellow frame around it, the
+  screen is cropped to the game's window instead, so a window over the game still shows. **Whole
+  screen** films the monitor showing the game, popups included. A very old game in exclusive
+  fullscreen may record black frames.
+- **Busy graphics card.** The recorder asks Windows for a higher graphics priority, as OBS does, so a
+  game near 100 % GPU makes the clip stutter much less.
 
 ## Seeing a souvenir again
 

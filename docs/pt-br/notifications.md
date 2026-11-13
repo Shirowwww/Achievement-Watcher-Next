@@ -322,7 +322,7 @@ notificação não se perdem.
 **Videoclipe ao desbloquear** funciona como o vídeo de troféu de um console. Enquanto um jogo que o AW Next rastreia está em execução,
 os últimos segundos de jogo ficam na memória, já comprimidos pelo codificador de vídeo da placa de vídeo.
 Quando uma conquista aparece, o trecho em torno dela é salvo como MP4 em
-`<folder>\<game>\<achievement> - <date>.mp4`, com o popup no meio. A pasta é
+`<folder>\<game>\<achievement> - <date>.mp4`, com o desbloqueio no meio, a menos que você o mova em Antes do desbloqueio. A pasta é
 `Videos\Achievement Watcher Next`, a menos que você escolha outra. As conquistas desbloqueadas em sequência próxima
 compartilham um só clipe.
 
@@ -335,6 +335,7 @@ compartilham um só clipe.
 | Taxa de quadros | 30 FPS, 60 FPS ou Ilimitada, que acompanha a sua tela (120, 144, 240 Hz) | 30 FPS |
 | Qualidade | Baixa, Média ou Alta | Média |
 | Som | Somente o jogo, ou o PC inteiro | Somente o jogo |
+| Área gravada | A janela do jogo, ou a tela inteira | Janela do jogo |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Configurações, Notificação: a seção Videoclipe com o interruptor de ativar/desativar" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,13 @@ trabalha com taxa de bits constante e uma cena calma resulta num arquivo menor.
   **Desativado** vale também para os clipes.
 - **Som.** **Somente o jogo** deixa de fora o chat de voz e a música. Se o som do jogo não puder ser gravado
   sozinho, o PC inteiro é gravado.
-- **O que é capturado.** O monitor que mostra o jogo, notificações incluídas. Um jogo muito antigo em tela cheia
+- **O que é capturado.** **Janela do jogo** grava só o jogo, sem a área de trabalho, outras janelas nem
+  os popups do AW Next. No Windows 10, que só consegue gravar uma janela com uma moldura amarela em
+  volta, a tela é recortada na janela do jogo, então uma janela por cima do jogo ainda aparece. **Tela
+  inteira** grava o monitor que mostra o jogo, popups incluídos. Um jogo muito antigo em tela cheia
   exclusiva pode gravar quadros pretos.
+- **Placa de vídeo sobrecarregada.** O gravador pede ao Windows uma prioridade gráfica mais alta, como o
+  OBS faz, então um jogo perto de 100 % de GPU faz o clipe travar bem menos.
 
 ## Rever uma lembrança {#seeing-a-souvenir-again}
 

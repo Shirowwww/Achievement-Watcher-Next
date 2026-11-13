@@ -322,7 +322,7 @@ notificación.
 **Videoclip al desbloquear** funciona como el vídeo de trofeo de una consola. Mientras se ejecuta un juego que AW Next rastrea,
 los últimos segundos de partida se guardan en memoria, ya comprimidos por el codificador de vídeo de la tarjeta gráfica.
 Cuando aparece un logro, el tramo que lo rodea se guarda como MP4 en
-`<folder>\<game>\<achievement> - <date>.mp4`, con el popup en medio. La carpeta es
+`<folder>\<game>\<achievement> - <date>.mp4`, con el desbloqueo en medio, salvo que lo muevas con Antes del desbloqueo. La carpeta es
 `Videos\Achievement Watcher Next` salvo que elijas otra. Los logros que se desbloquean muy seguidos
 comparten un clip.
 
@@ -335,6 +335,7 @@ comparten un clip.
 | Fotogramas por segundo | 30 FPS, 60 FPS o Sin límite, que sigue a tu pantalla (120, 144, 240 Hz) | 30 FPS |
 | Calidad | Baja, Media o Alta | Media |
 | Sonido | Solo el juego, o todo el PC | Solo el juego |
+| Zona grabada | La ventana del juego, o toda la pantalla | Ventana del juego |
 
 <div align="center">
 <picture><source srcset="../assets/shot/video-clip-panel-800.webp 800w, ../assets/shot/video-clip-panel.webp 940w" sizes="(max-width: 700px) 100vw, 720px"><img src="../screenshot/video-clip-panel.png" width="720" height="529" alt="Ajustes, Notificación: la sección Videoclip con su interruptor de activado/desactivado" loading="lazy" decoding="async"></picture><br>
@@ -363,8 +364,13 @@ trabaja a tasa de bits constante y una escena tranquila sale más pequeña.
   **Desactivado** también se aplica a los clips.
 - **Sonido.** **Solo el juego** deja fuera el chat de voz y la música. Si el sonido del juego no se puede grabar
   por separado, se graba todo el PC.
-- **Qué se captura.** El monitor que muestra el juego, notificaciones incluidas. Un juego muy antiguo en pantalla completa
-  exclusiva puede grabar fotogramas negros.
+- **Qué se captura.** **Ventana del juego** graba solo el juego, sin el escritorio, otras ventanas ni
+  los popups de AW Next. En Windows 10, que solo puede grabar una ventana con un marco amarillo
+  alrededor, la pantalla se recorta a la ventana del juego, así que una ventana colocada encima sigue
+  apareciendo. **Pantalla completa** graba el monitor que muestra el juego, popups incluidos. Un juego
+  muy antiguo en pantalla completa exclusiva puede grabar fotogramas negros.
+- **Tarjeta gráfica saturada.** El grabador pide a Windows una prioridad gráfica más alta, como hace
+  OBS, así que un juego cerca del 100 % de GPU hace que el clip se entrecorte mucho menos.
 
 ## Volver a ver un recuerdo {#seeing-a-souvenir-again}
 

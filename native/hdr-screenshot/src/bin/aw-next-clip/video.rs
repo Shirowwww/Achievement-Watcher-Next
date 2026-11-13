@@ -1,9 +1,10 @@
-// Desktop duplication of the game's monitor (Windows Graphics Capture where duplication is refused),
-// tone-mapped by a shader when it is HDR, scaled to NV12 by the video processor and encoded by the
-// GPU's own encoder. Packets go into the shared ring.
+// The game's window (Windows Graphics Capture) or its monitor (desktop duplication, Windows Graphics
+// Capture where duplication is refused), tone-mapped by a shader when it is HDR, scaled to NV12 by the
+// video processor and encoded by the GPU's own encoder. Packets go into the shared ring.
+use std::cell::Cell;
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use aw_next_hdr_screenshot::display::{path_for_device, path_hdr_enabled, path_sdr_white_scale};
@@ -25,9 +26,11 @@ use windows::Win32::System::Variant::*;
 use windows::Win32::System::WinRT::Direct3D11::{CreateDirect3D11DeviceFromDXGIDevice, IDirect3DDxgiInterfaceAccess};
 use windows::Win32::System::WinRT::Graphics::Capture::IGraphicsCaptureItemInterop;
 use windows::core::*;
+use windows_capture::graphics_capture_api::GraphicsCaptureApi;
 
+use crate::priority;
 use crate::ring::{Packet, SECOND};
-use crate::{Config, HdrMode, MAX_FPS, Shared, log, now};
+use crate::{CaptureMode, Config, HdrMode, MAX_FPS, Shared, log, now};
 
 const POOL: usize = 8;
 // The software encoder runs on the CPU beside the game: it records at most this fast and, when the
@@ -95,6 +98,60 @@ fn variant_bool(value: bool) -> VARIANT {
 // The monitor showing the game's largest window, or the primary one while it has none.
 fn game_monitor(pid: u32) -> HMONITOR {
     window::game_monitor(pid).unwrap_or_else(window::primary_monitor)
+}
+
+// How the captured picture is placed in the clip.
+#[derive(Clone, Copy, PartialEq)]
+enum Framing {
+    // The whole monitor, as it always was.
+    Screen,
+    // A captured window, from the top-left corner of its frames.
+    Window,
+    // The window's rectangle cut out of its monitor, whose top-left desktop point is given.
+    Crop(HWND, POINT),
+}
+
+impl Framing {
+    fn name(self) -> &'static str {
+        match self {
+            Framing::Screen => "screen",
+            Framing::Window => "window",
+            Framing::Crop(..) => "crop",
+        }
+    }
+}
+
+// `area` clipped to a picture of width x height; None when nothing of it is left.
+fn clip_area(area: RECT, width: u32, height: u32) -> Option<RECT> {
+    let clipped = RECT {
+        left: area.left.max(0),
+        top: area.top.max(0),
+        right: area.right.min(width as i32),
+        bottom: area.bottom.min(height as i32),
+    };
+    (clipped.right > clipped.left && clipped.bottom > clipped.top).then_some(clipped)
+}
+
+// Where a picture of `source` size goes in the output: as large as fits with its shape kept,
+// centred, on even pixels, so a window of any size fills the fixed clip size with black bars.
+fn fit(source: (u32, u32), output: (u32, u32)) -> RECT {
+    let scale = (output.0 as f64 / source.0.max(1) as f64).min(output.1 as f64 / source.1.max(1) as f64);
+    let width = (((source.0 as f64 * scale).round() as u32) & !1).clamp(2, output.0);
+    let height = (((source.1 as f64 * scale).round() as u32) & !1).clamp(2, output.1);
+    let left = ((output.0 - width) / 2) & !1;
+    let top = ((output.1 - height) / 2) & !1;
+    RECT { left: left as i32, top: top as i32, right: (left + width) as i32, bottom: (top + height) as i32 }
+}
+
+// Whether to follow another game window: the first one it shows, or its largest one once the
+// followed one is closed or hidden. A minimised or merely smaller window is kept, so two windows of
+// one game never take turns restarting the capture.
+fn window_switch(followed: Option<HWND>, largest: Option<HWND>, followed_shown: bool) -> bool {
+    match (followed, largest) {
+        (None, Some(_)) => true,
+        (Some(followed), Some(largest)) => largest != followed && !followed_shown,
+        _ => false,
+    }
 }
 
 fn output_for(monitor: HMONITOR) -> Result<(IDXGIAdapter1, IDXGIOutput)> {
@@ -234,8 +291,16 @@ impl HdrPass {
     }
 }
 
+// Decode order must stay display order: the ring and the muxer sort by time only. Low-latency mode
+// guarantees it, but beside a GPU-bound game it dropped about four times as many frames (issue
+// #190). Hardware encoders run without it; one that hands out a frame older than the last is
+// restarted with it, for the rest of the recording.
+static REORDERS: AtomicBool = AtomicBool::new(false);
+
 struct Encoder {
     mft: IMFTransform,
+    // Time of the last packet out, to catch an encoder that reorders frames.
+    last_time: i64,
     // Hardware encoders are asynchronous and announce what they need; the software one is not.
     events: Option<IMFMediaEventGenerator>,
     provides_samples: bool,
@@ -356,7 +421,9 @@ impl Encoder {
             if let Some(manager) = manager {
                 let attributes = mft.GetAttributes()?;
                 attributes.SetUINT32(&MF_TRANSFORM_ASYNC_UNLOCK, 1)?;
-                let _ = attributes.SetUINT32(&MF_LOW_LATENCY, 1);
+                if REORDERS.load(Ordering::Relaxed) {
+                    let _ = attributes.SetUINT32(&MF_LOW_LATENCY, 1);
+                }
                 mft.ProcessMessage(MFT_MESSAGE_SET_D3D_MANAGER, manager.as_raw() as usize)?;
             } else if let Err(error) = mft.cast::<ICodecAPI>()?.SetValue(&CODECAPI_AVEncMPVDefaultBPictureCount, &variant_u32(0)) {
                 // Decode order must stay display order: the ring and the muxer sort by time only.
@@ -406,18 +473,24 @@ impl Encoder {
                 index += 1;
             }
 
-            // CBR is the one mode every certified encoder supports; a keyframe a second lets a clip
-            // start where asked, and without B-frames decode order is display order.
+            // CBR is the one mode every certified encoder supports, and a keyframe a second lets a
+            // clip start where asked.
             let api: ICodecAPI = mft.cast()?;
             let mut settings = vec![
                 ("rate control", CODECAPI_AVEncCommonRateControlMode, variant_u32(eAVEncCommonRateControlMode_CBR.0 as u32)),
                 ("bitrate", CODECAPI_AVEncCommonMeanBitRate, variant_u32(bitrate)),
                 ("keyframe interval", CODECAPI_AVEncMPVGOPSize, variant_u32(fps)),
-                ("low latency", CODECAPI_AVLowLatencyMode, variant_bool(true)),
             ];
             if manager.is_none() {
-                // Speed over compression: the CPU is shared with the game.
+                // Speed over compression: the CPU is shared with the game. Low latency stays on here,
+                // as before #190, which measured the hardware encoders only.
                 settings.push(("speed", CODECAPI_AVEncCommonQualityVsSpeed, variant_u32(0)));
+                settings.push(("low latency", CODECAPI_AVLowLatencyMode, variant_bool(true)));
+            } else if REORDERS.load(Ordering::Relaxed) {
+                settings.push(("low latency", CODECAPI_AVLowLatencyMode, variant_bool(true)));
+            } else {
+                // NVIDIA's encoders refuse the property and make no B-frames; store() catches any other.
+                let _ = api.SetValue(&CODECAPI_AVEncMPVDefaultBPictureCount, &variant_u32(0));
             }
             for (name, property, value) in settings {
                 if let Err(error) = api.SetValue(&property, &value) {
@@ -429,7 +502,7 @@ impl Encoder {
             mft.ProcessMessage(MFT_MESSAGE_NOTIFY_BEGIN_STREAMING, 0)?;
             mft.ProcessMessage(MFT_MESSAGE_NOTIFY_START_OF_STREAM, 0)?;
             let events = if manager.is_some() { Some(mft.cast::<IMFMediaEventGenerator>()?) } else { None };
-            Ok(Self { mft, events, provides_samples, output_size: info.cbSize, need: 0, typed: false })
+            Ok(Self { mft, last_time: i64::MIN, events, provides_samples, output_size: info.cbSize, need: 0, typed: false })
         }
     }
 
@@ -439,6 +512,11 @@ impl Encoder {
     }
 
     fn store(&mut self, packet: Packet, shared: &Shared) -> Result<()> {
+        if packet.time < self.last_time {
+            REORDERS.store(true, Ordering::Relaxed);
+            return Err(Error::new(E_FAIL, "the encoder reorders frames, reopening it in low-latency mode"));
+        }
+        self.last_time = packet.time;
         // The output type carries the sequence header only once the first frame is out.
         if !self.typed {
             let media_type = unsafe { self.mft.GetOutputCurrentType(0)? };
@@ -675,21 +753,38 @@ fn graphics_capture_can_replace(code: HRESULT) -> bool {
     code == DXGI_ERROR_UNSUPPORTED || code == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE
 }
 
-// Windows Graphics Capture of one monitor, polled like duplication: a free-threaded pool needs no
-// message loop. Without the pointer, as duplication gives it.
+// Windows Graphics Capture of one monitor or one window, polled like duplication: a free-threaded
+// pool needs no message loop. Without the pointer, as duplication gives it.
 struct GraphicsCapture {
     pool: Direct3D11CaptureFramePool,
     session: GraphicsCaptureSession,
-    size: SizeInt32,
+    d3d: IDirect3DDevice,
+    format: DirectXPixelFormat,
+    // A window can be resized; a monitor changing size means a new mode, and a rebuild.
+    window: bool,
+    size: Cell<SizeInt32>,
+}
+
+// The window can be captured without the yellow border: Windows 11, where the border has a switch.
+fn borderless_capture() -> bool {
+    GraphicsCaptureApi::is_border_settings_supported().unwrap_or(false)
 }
 
 impl GraphicsCapture {
-    fn open(device: &ID3D11Device, monitor: HMONITOR, hdr: bool) -> Result<Self> {
+    fn monitor(device: &ID3D11Device, monitor: HMONITOR, hdr: bool) -> Result<Self> {
+        let interop = factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>()?;
+        Self::open(device, unsafe { interop.CreateForMonitor(monitor)? }, hdr, false)
+    }
+
+    fn window(device: &ID3D11Device, window: HWND, hdr: bool) -> Result<Self> {
+        let interop = factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>()?;
+        Self::open(device, unsafe { interop.CreateForWindow(window)? }, hdr, true)
+    }
+
+    fn open(device: &ID3D11Device, item: GraphicsCaptureItem, hdr: bool, window: bool) -> Result<Self> {
         if !GraphicsCaptureSession::IsSupported()? {
             return Err(Error::new(E_NOTIMPL, "Windows Graphics Capture is not available"));
         }
-        let interop = factory::<GraphicsCaptureItem, IGraphicsCaptureItemInterop>()?;
-        let item: GraphicsCaptureItem = unsafe { interop.CreateForMonitor(monitor)? };
         let dxgi: IDXGIDevice = device.cast()?;
         let d3d: IDirect3DDevice = unsafe { CreateDirect3D11DeviceFromDXGIDevice(&dxgi)? }.cast()?;
         let size = item.Size()?;
@@ -701,7 +796,7 @@ impl GraphicsCapture {
         // Windows 10 has no switch for the border; there the game covers it in exclusive fullscreen.
         let _ = session.SetIsBorderRequired(false);
         session.StartCapture()?;
-        Ok(Self { pool, session, size })
+        Ok(Self { pool, session, d3d, format, window, size: Cell::new(size) })
     }
 
     // The newest frame, the older ones closed so the pool keeps delivering. An empty pool reads as
@@ -713,11 +808,20 @@ impl GraphicsCapture {
                 let _ = older.Close();
             }
         }
-        if let Some(frame) = &latest
-            && frame.ContentSize()? != self.size
-        {
+        let Some(frame) = &latest else { return Ok(None) };
+        let content = frame.ContentSize()?;
+        if content.Width <= 0 || content.Height <= 0 {
             let _ = frame.Close();
-            return Err(Error::new(E_FAIL, "the captured display changed size"));
+            return Ok(None);
+        }
+        if content != self.size.get() {
+            if !self.window {
+                let _ = frame.Close();
+                return Err(Error::new(E_FAIL, "the captured display changed size"));
+            }
+            // A resized window: the next frames come at its new size, as OBS's window capture does.
+            self.pool.Recreate(&self.d3d, self.format, 2, content)?;
+            self.size.set(content);
         }
         Ok(latest)
     }
@@ -789,6 +893,61 @@ impl Source {
     }
 }
 
+// The monitor: desktop duplication, or Windows Graphics Capture where duplication is refused.
+fn screen_source(config: &Config, device: &ID3D11Device, output: &IDXGIOutput, monitor: HMONITOR, hdr: bool) -> Result<(Source, (u32, u32))> {
+    let formats: &[DXGI_FORMAT] = if hdr { &[DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_B8G8R8A8_UNORM] } else { &[DXGI_FORMAT_B8G8R8A8_UNORM] };
+    let duplicated = if config.graphics_capture {
+        Err(Error::new(DXGI_ERROR_UNSUPPORTED, "skipped by --capture graphics"))
+    } else {
+        unsafe { output.cast::<IDXGIOutput5>()?.DuplicateOutput1(device, 0, formats) }
+    };
+    match duplicated {
+        Ok(duplication) => {
+            let mode = unsafe { duplication.GetDesc() }.ModeDesc;
+            Ok((Source::Duplication(duplication), (mode.Width, mode.Height)))
+        }
+        Err(refused) if graphics_capture_can_replace(refused.code()) => match GraphicsCapture::monitor(device, monitor, hdr) {
+            Ok(capture) => {
+                log(&format!("desktop duplication refused ({}), recording with Windows Graphics Capture", refused.message()));
+                let size = capture.size.get();
+                Ok((Source::Graphics(capture), (size.Width as u32, size.Height as u32)))
+            }
+            Err(error) => Err(Error::new(refused.code(), format!("{} (Windows Graphics Capture: {})", refused.message(), error.message()))),
+        },
+        Err(refused) => Err(refused),
+    }
+}
+
+// The game's window itself where Windows captures it without a border; elsewhere its monitor,
+// cut down to the window. The canvas is the monitor's size either way, so the clip's size does
+// not depend on the window's.
+fn open_source(config: &Config, device: &ID3D11Device, output: &IDXGIOutput, monitor: HMONITOR, hdr: bool, window: Option<HWND>) -> Result<(Source, Framing, (u32, u32))> {
+    let desktop = unsafe { output.GetDesc()? }.DesktopCoordinates;
+    if let Some(hwnd) = window
+        && !config.crop
+        && borderless_capture()
+    {
+        match GraphicsCapture::window(device, hwnd, hdr) {
+            Ok(capture) => {
+                let canvas = ((desktop.right - desktop.left) as u32, (desktop.bottom - desktop.top) as u32);
+                return Ok((Source::Graphics(capture), Framing::Window, canvas));
+            }
+            Err(error) => log(&format!("window capture refused ({}), cropping the screen to the game", error.message())),
+        }
+    }
+    let (source, canvas) = screen_source(config, device, output, monitor, hdr)?;
+    // Duplication hands a rotated display over unrotated, where the window's rectangle means nothing.
+    let rotated = matches!(&source, Source::Duplication(duplication) if !matches!(unsafe { duplication.GetDesc() }.Rotation, DXGI_MODE_ROTATION_IDENTITY | DXGI_MODE_ROTATION_UNSPECIFIED));
+    if window.is_some() && rotated {
+        log("the game's monitor is rotated, recording all of it");
+    }
+    let framing = match window {
+        Some(hwnd) if !rotated => Framing::Crop(hwnd, POINT { x: desktop.left, y: desktop.top }),
+        _ => Framing::Screen,
+    };
+    Ok((source, framing, canvas))
+}
+
 struct Session {
     encoder: Encoder,
     ctx: ID3D11DeviceContext,
@@ -812,12 +971,23 @@ struct Session {
     refresh: u32,
     // Set for the software encoder: pictures are read back into this and fed as bytes.
     staging: Option<ID3D11Texture2D>,
+    framing: Framing,
+    // The game window followed, when the game showed one at the start.
+    window: Option<HWND>,
+    // Size of `frame`, which the picture is copied into before conversion.
+    canvas: (u32, u32),
+    // Size of the picture the video processor was last told to place.
+    placed: Option<(u32, u32)>,
 }
 
 impl Session {
-    fn open(config: &Config) -> Result<Self> {
+    fn open(config: &Config, thread: &str) -> Result<Self> {
         unsafe {
             let opening = Instant::now();
+            let window = if config.capture == CaptureMode::Game { window::game_window(config.pid) } else { None };
+            if config.capture == CaptureMode::Game && window.is_none() {
+                log("the game shows no window yet, recording its monitor");
+            }
             let monitor = game_monitor(config.pid);
             let (adapter, output) = output_for(monitor)?;
             let adapter_desc = adapter.GetDesc1()?;
@@ -838,6 +1008,7 @@ impl Session {
             let device: ID3D11Device = device.unwrap();
             let ctx: ID3D11DeviceContext = ctx.unwrap();
             let _ = device.cast::<ID3D11Multithread>()?.SetMultithreadProtected(true);
+            let gpu = priority::raise_gpu(&device, adapter_desc.AdapterLuid, adapter_desc.VendorId);
 
             // Automatic colour management composes even an SDR desktop in FP16, so only a display
             // that DisplayConfig reports in HDR gets the tone-mapping pass.
@@ -847,27 +1018,7 @@ impl Session {
                 HdrMode::Force => true,
                 HdrMode::Auto => display.as_ref().is_some_and(|path| path_hdr_enabled(path).unwrap_or(false)),
             };
-            let formats: &[DXGI_FORMAT] = if hdr_display { &[DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_B8G8R8A8_UNORM] } else { &[DXGI_FORMAT_B8G8R8A8_UNORM] };
-            let duplicated = if config.graphics_capture {
-                Err(Error::new(DXGI_ERROR_UNSUPPORTED, "skipped by --capture graphics"))
-            } else {
-                output.cast::<IDXGIOutput5>()?.DuplicateOutput1(&device, 0, formats)
-            };
-            let (source, width, height) = match duplicated {
-                Ok(duplication) => {
-                    let mode = duplication.GetDesc().ModeDesc;
-                    (Source::Duplication(duplication), mode.Width, mode.Height)
-                }
-                Err(refused) if graphics_capture_can_replace(refused.code()) => match GraphicsCapture::open(&device, monitor, hdr_display) {
-                    Ok(capture) => {
-                        log(&format!("desktop duplication refused ({}), recording with Windows Graphics Capture", refused.message()));
-                        let size = capture.size;
-                        (Source::Graphics(capture), size.Width as u32, size.Height as u32)
-                    }
-                    Err(error) => return Err(Error::new(refused.code(), format!("{} (Windows Graphics Capture: {})", refused.message(), error.message()))),
-                },
-                Err(refused) => return Err(refused),
-            };
+            let (source, framing, (width, height)) = open_source(config, &device, &output, monitor, hdr_display, window)?;
             let frame = texture(&device, width, height, DXGI_FORMAT_B8G8R8A8_UNORM, D3D11_BIND_FLAG(D3D11_BIND_RENDER_TARGET.0 | D3D11_BIND_SHADER_RESOURCE.0))?;
 
             // An FP16 frame from a display that is not in HDR is plain SDR in scRGB: the identity curve.
@@ -910,6 +1061,11 @@ impl Session {
             video_ctx.VideoProcessorSetStreamColorSpace1(&processor, 0, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
             video_ctx.VideoProcessorSetOutputColorSpace1(&processor, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
             video_ctx.VideoProcessorSetStreamAutoProcessingMode(&processor, 0, false);
+            if framing != Framing::Screen {
+                // The bars around a window that does not have the clip's shape.
+                let black = D3D11_VIDEO_COLOR { Anonymous: D3D11_VIDEO_COLOR_0 { RGBA: D3D11_VIDEO_COLOR_RGBA { R: 0.0, G: 0.0, B: 0.0, A: 1.0 } } };
+                video_ctx.VideoProcessorSetOutputBackgroundColor(&processor, false, &black);
+            }
             let input_desc = D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC {
                 FourCC: 0,
                 ViewDimension: D3D11_VPIV_DIMENSION_TEXTURE2D,
@@ -946,10 +1102,11 @@ impl Session {
             }
             let staging = if software { Some(staging_texture(&device, out_width, out_height)?) } else { None };
             crate::emit(&format!(
-                "ready encoder=\"{name}\" codec={codec} capture={width}x{height} output={out_width}x{out_height} fps={fps} bitrate={:.1}Mb/s hdr={} software={} took={}ms",
+                "ready encoder=\"{name}\" codec={codec} capture={width}x{height} output={out_width}x{out_height} fps={fps} bitrate={:.1}Mb/s hdr={} software={} source={} {gpu} {thread} took={}ms",
                 bits as f64 / 1e6,
                 if hdr_display { "on" } else { "off" },
                 if software { "yes" } else { "no" },
+                framing.name(),
                 opening.elapsed().as_millis()
             ));
             Ok(Self {
@@ -971,32 +1128,102 @@ impl Session {
                 fps,
                 refresh: requested,
                 staging,
+                framing,
+                window,
+                canvas: (width, height),
+                placed: None,
             })
         }
     }
 
     // The mode description can say FP16 while the frames come as 8-bit, so each frame's own format
     // decides whether it goes through the tone-mapping pass.
-    fn convert(&mut self, desktop: &ID3D11Texture2D, slot: usize) -> Result<()> {
+    fn convert(&mut self, desktop: &ID3D11Texture2D, area: RECT, slot: usize) -> Result<()> {
         unsafe {
             let mut desc = D3D11_TEXTURE2D_DESC::default();
             desktop.GetDesc(&mut desc);
-            if desc.Format == DXGI_FORMAT_R16G16B16A16_FLOAT {
-                if self.hdr.is_none() {
-                    self.hdr = Some(HdrPass::new(&self.device, &self.frame, desc.Width, desc.Height, self.curve.0, self.curve.1)?);
-                }
-                let hdr = self.hdr.as_ref().unwrap();
-                self.ctx.CopyResource(&hdr.source, desktop);
-                hdr.draw(&self.ctx);
-            } else {
-                self.ctx.CopyResource(&self.frame, desktop);
+            let (width, height) = self.canvas;
+            let hdr = desc.Format == DXGI_FORMAT_R16G16B16A16_FLOAT;
+            if hdr && self.hdr.is_none() {
+                self.hdr = Some(HdrPass::new(&self.device, &self.frame, width, height, self.curve.0, self.curve.1)?);
             }
+            let target = if hdr { &self.hdr.as_ref().unwrap().source } else { &self.frame };
+            let size = (((area.right - area.left) as u32).min(width), ((area.bottom - area.top) as u32).min(height));
+            // The whole monitor is copied as it always was, even where duplication's texture does
+            // not match its mode (a rotated display).
+            if self.framing == Framing::Screen || ((desc.Width, desc.Height) == self.canvas && size == self.canvas) {
+                self.ctx.CopyResource(target, desktop);
+            } else {
+                let (left, top) = (area.left as u32, area.top as u32);
+                let source = D3D11_BOX { left, top, front: 0, right: left + size.0, bottom: top + size.1, back: 1 };
+                self.ctx.CopySubresourceRegion(target, 0, 0, 0, 0, desktop, 0, Some(&source));
+            }
+            if hdr {
+                self.hdr.as_ref().unwrap().draw(&self.ctx);
+            }
+            self.place(size);
             let streams = [D3D11_VIDEO_PROCESSOR_STREAM { Enable: TRUE, pInputSurface: ManuallyDrop::new(Some(self.input.clone())), ..Default::default() }];
             let result = self.video_ctx.VideoProcessorBlt(&self.processor, &self.pool[slot].1, 0, &streams);
             let [stream] = streams;
             drop(ManuallyDrop::into_inner(stream.pInputSurface));
             result
         }
+    }
+
+    // The part of a captured picture that goes into the clip; None while the window is minimised
+    // or off this monitor, and the last picture is then kept.
+    fn region(&self, desktop: &ID3D11Texture2D, frame: Option<&Direct3D11CaptureFrame>) -> Option<RECT> {
+        let mut desc = D3D11_TEXTURE2D_DESC::default();
+        unsafe { desktop.GetDesc(&mut desc) };
+        let area = match self.framing {
+            Framing::Screen => RECT { left: 0, top: 0, right: desc.Width as i32, bottom: desc.Height as i32 },
+            Framing::Window => {
+                let content = frame?.ContentSize().ok()?;
+                RECT { left: 0, top: 0, right: content.Width, bottom: content.Height }
+            }
+            Framing::Crop(hwnd, origin) => {
+                let bounds = window::visible_bounds(hwnd)?;
+                RECT { left: bounds.left - origin.x, top: bounds.top - origin.y, right: bounds.right - origin.x, bottom: bounds.bottom - origin.y }
+            }
+        };
+        clip_area(area, desc.Width, desc.Height)
+    }
+
+    // Tells the video processor where a picture of `size` goes, when that changed.
+    fn place(&mut self, size: (u32, u32)) {
+        if self.framing == Framing::Screen || self.placed == Some(size) {
+            return;
+        }
+        let source = RECT { left: 0, top: 0, right: size.0 as i32, bottom: size.1 as i32 };
+        unsafe {
+            self.video_ctx.VideoProcessorSetStreamSourceRect(&self.processor, 0, true, Some(&source));
+            self.video_ctx.VideoProcessorSetStreamDestRect(&self.processor, 0, true, Some(&fit(size, self.size)));
+        }
+        self.placed = Some(size);
+    }
+
+    // A reason to rebuild the capture: the game moved to another monitor (a captured window is
+    // followed there without one), showed its first window or a new main one, or the followed
+    // display changed its rate.
+    fn outdated(&self, config: &Config) -> Option<&'static str> {
+        // A minimised window still counts on the monitor it was restored from.
+        let monitor = match self.window {
+            Some(hwnd) if window::still_shown(hwnd) => unsafe { MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY) },
+            _ => game_monitor(config.pid),
+        };
+        if self.framing != Framing::Window && monitor != self.monitor {
+            return Some("the game moved to another monitor");
+        }
+        if config.capture == CaptureMode::Game {
+            let followed_shown = self.window.is_some_and(window::still_shown);
+            if window_switch(self.window, window::game_window(config.pid), followed_shown) {
+                return Some("the game showed another window");
+            }
+        }
+        if config.unlocked && monitor_refresh(self.monitor) != self.refresh {
+            return Some("the display changed its refresh rate");
+        }
+        None
     }
 
     // The encoder is retired first, while the textures and device it reads still exist.
@@ -1064,32 +1291,21 @@ impl Session {
         shared.fps.store(self.fps, Ordering::Relaxed);
         while !shared.stop.load(Ordering::Relaxed) {
             shared.beat.fetch_add(1, Ordering::Relaxed);
-            tick += interval;
-            let ahead = tick - now();
-            if ahead > 0 {
-                std::thread::sleep(Duration::from_nanos(ahead as u64 * 100));
-            } else if ahead < -SECOND {
-                // Back from a long stall: restart the clock instead of submitting a burst.
-                log(&format!("video paused for {} ms", -ahead / (SECOND / 1000)));
-                tick = now();
-            } else if self.staging.is_some() && ahead < -2 * interval {
-                // The software encoder cannot keep up: skip ticks until it has caught up with the clock.
-                shared.dropped.fetch_add(1, Ordering::Relaxed);
-                continue;
-            }
+            tick = pace(tick + interval, interval, shared);
             let acquired = self.source.acquire()?;
-            let target = match &acquired {
-                Acquired::Picture(..) => {
-                    let held: Vec<usize> = self.held.iter().map(|count| count.load(Ordering::Acquire)).collect();
-                    free_slot(&held, slot, filled)
-                }
+            let area = match &acquired {
+                Acquired::Picture(desktop, frame) => self.region(desktop, frame.as_ref()),
                 _ => None,
             };
-            let converted = match (&acquired, target) {
-                (Acquired::Picture(desktop, _), Some(target)) => self.convert(desktop, target),
+            let target = area.and_then(|_| {
+                let held: Vec<usize> = self.held.iter().map(|count| count.load(Ordering::Acquire)).collect();
+                free_slot(&held, slot, filled)
+            });
+            let converted = match (&acquired, target, area) {
+                (Acquired::Picture(desktop, _), Some(target), Some(area)) => self.convert(desktop, area, target),
                 _ => Ok(()),
             };
-            let changed = matches!(acquired, Acquired::Picture(..));
+            let changed = area.is_some();
             self.source.release(acquired)?;
             converted?;
             if let Some(target) = target {
@@ -1107,17 +1323,17 @@ impl Session {
                 }
                 if self.encoder.ready() && self.encoder.submit(&self.sample(ready, tick, interval)?)? {
                     shared.encoded.fetch_add(1, Ordering::Relaxed);
+                    if target.is_none() {
+                        shared.repeated.fetch_add(1, Ordering::Relaxed);
+                    }
                 } else {
                     shared.dropped.fetch_add(1, Ordering::Relaxed);
                 }
             }
             if checked.elapsed() > MONITOR_CHECK {
                 checked = Instant::now();
-                if game_monitor(config.pid) != self.monitor {
-                    return Err(Error::new(E_FAIL, "the game moved to another monitor"));
-                }
-                if config.unlocked && monitor_refresh(self.monitor) != self.refresh {
-                    return Err(Error::new(E_FAIL, "the display changed its refresh rate"));
+                if let Some(reason) = self.outdated(config) {
+                    return Err(Error::new(E_FAIL, reason));
                 }
             }
         }
@@ -1125,15 +1341,40 @@ impl Session {
     }
 }
 
+// Waits for `tick` and returns the tick this frame is stamped with. A loop late by whole frames
+// skips them: sent in a burst they repeated one picture under times earlier than it was taken,
+// which is the judder of a GPU-bound game (issue #190).
+fn pace(tick: i64, interval: i64, shared: &Shared) -> i64 {
+    let ahead = tick - now();
+    if ahead > 0 {
+        std::thread::sleep(Duration::from_nanos(ahead as u64 * 100));
+        return tick;
+    }
+    if ahead < -SECOND {
+        // Back from a long stall: restart the clock instead of submitting a burst.
+        log(&format!("video paused for {} ms", -ahead / (SECOND / 1000)));
+        return now();
+    }
+    let missed = late_ticks(ahead, interval);
+    shared.late.fetch_add(missed as u64, Ordering::Relaxed);
+    tick + missed * interval
+}
+
+// Whole ticks already past when the loop is `-ahead` late.
+fn late_ticks(ahead: i64, interval: i64) -> i64 {
+    if ahead < 0 { -ahead / interval } else { 0 }
+}
+
 // Rebuilds the whole pipeline whenever it breaks: a mode or HDR change, the secure desktop, a
 // driver reset. Each rebuild starts a new stream, so the ring is emptied first.
 pub fn run(config: &Config, shared: &Shared) {
     let mut failures = 0u32;
     let mut retired: Vec<Retired> = Vec::new();
+    let thread = if priority::raise_capture_thread() { "mmcss=capture" } else { "mmcss=none" };
     while !shared.stop.load(Ordering::Relaxed) {
         shared.beat.fetch_add(1, Ordering::Relaxed);
         retired.retain(|encoder| encoder.since.elapsed() < RETIREMENT);
-        match Session::open(config) {
+        match Session::open(config, thread) {
             Ok(mut session) => {
                 failures = 0;
                 let result = session.run(config, shared);
@@ -1190,6 +1431,49 @@ mod tests {
         assert!(graphics_capture_can_replace(DXGI_ERROR_NOT_CURRENTLY_AVAILABLE));
         assert!(!graphics_capture_can_replace(E_ACCESSDENIED));
         assert!(!graphics_capture_can_replace(DXGI_ERROR_SESSION_DISCONNECTED));
+    }
+
+    #[test]
+    fn a_late_loop_skips_the_ticks_already_past_instead_of_repeating_a_picture() {
+        let interval = SECOND / 60;
+        assert_eq!(late_ticks(5, interval), 0);
+        assert_eq!(late_ticks(0, interval), 0);
+        assert_eq!(late_ticks(-interval / 2, interval), 0, "a few milliseconds late keeps its tick");
+        assert_eq!(late_ticks(-interval, interval), 1);
+        assert_eq!(late_ticks(-3 * interval - 1, interval), 3);
+    }
+
+    #[test]
+    fn a_window_keeps_its_shape_inside_the_fixed_clip_size() {
+        let rect = |l, t, r, b| RECT { left: l, top: t, right: r, bottom: b };
+        assert_eq!(fit((1920, 1080), (1920, 1080)), rect(0, 0, 1920, 1080));
+        assert_eq!(fit((1280, 720), (1920, 1080)), rect(0, 0, 1920, 1080), "a smaller window of the same shape fills the clip");
+        assert_eq!(fit((800, 800), (1920, 1080)), rect(420, 0, 1500, 1080), "a square window gets bars at its sides");
+        assert_eq!(fit((2000, 500), (1920, 1080)), rect(0, 300, 1920, 780), "a wide one above and below");
+        let odd = fit((333, 777), (1280, 720));
+        assert!(odd.left % 2 == 0 && odd.top % 2 == 0 && (odd.right - odd.left) % 2 == 0 && (odd.bottom - odd.top) % 2 == 0);
+        let tiny = fit((1, 1), (1280, 720));
+        assert!(tiny.right <= 1280 && tiny.bottom <= 720 && tiny.right > tiny.left);
+    }
+
+    #[test]
+    fn a_window_partly_off_its_monitor_is_cut_to_what_the_monitor_shows() {
+        let rect = |l, t, r, b| RECT { left: l, top: t, right: r, bottom: b };
+        assert_eq!(clip_area(rect(100, 50, 900, 650), 1920, 1080), Some(rect(100, 50, 900, 650)));
+        assert_eq!(clip_area(rect(-200, -10, 600, 400), 1920, 1080), Some(rect(0, 0, 600, 400)));
+        assert_eq!(clip_area(rect(1800, 1000, 2600, 1400), 1920, 1080), Some(rect(1800, 1000, 1920, 1080)));
+        assert_eq!(clip_area(rect(2000, 0, 2600, 400), 1920, 1080), None, "a window on another monitor gives nothing");
+    }
+
+    #[test]
+    fn the_followed_window_changes_only_for_a_real_new_one() {
+        let (a, b) = (HWND(1 as _), HWND(2 as _));
+        assert!(window_switch(None, Some(a), false), "the first window the game shows");
+        assert!(!window_switch(None, None, false));
+        assert!(!window_switch(Some(a), Some(a), false));
+        assert!(window_switch(Some(a), Some(b), false), "the followed one was closed or hidden");
+        assert!(!window_switch(Some(a), Some(b), true), "not while the followed one is still open, minimised or smaller");
+        assert!(!window_switch(Some(a), None, false), "no window at all keeps the last picture");
     }
 
     #[test]
