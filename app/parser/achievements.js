@@ -363,6 +363,33 @@ function isInstalledSteamRecord(record) {
   return !!data && data.type === 'steamAPI' && data.installed !== false;
 }
 
+/*
+  The same Friend's Pass on a game Steam never installed here (Split Fiction): no Steam record is
+  listed, so the empty OnlineFix folder was all the card read and the unlocks only showed while
+  Steam rewrote its stats file. The Steam client's own stats for that appid are the save then.
+*/
+async function addSteamStatsForEmptyOnlineFix(data, { statsRecord = (appid) => steam.steamStatsRecord(appid) } = {}) {
+  const withSteam = new Set(data.filter((record) => record?.data?.type === 'steamAPI').map((record) => String(record.appid)));
+  const wanted = new Set();
+  for (const record of data) {
+    const appid = String(record?.appid ?? '');
+    if (!appid || withSteam.has(appid) || String(record.source || '').toLowerCase() !== 'onlinefix') continue;
+    if (isEmptySaveFolderRecord(record)) wanted.add(appid);
+  }
+  const added = [];
+  for (const appid of wanted) {
+    try {
+      const record = await statsRecord(appid);
+      if (!record) continue;
+      added.push(record);
+      debug.log(`[onlinefix] ${appid} has an empty OnlineFix folder; reading the Steam client's stats for it`);
+    } catch (err) {
+      debug.log(`[onlinefix] ${appid}: could not read the Steam client's stats => ${err}`);
+    }
+  }
+  return added.length > 0 ? data.concat(added) : data;
+}
+
 function consolidateDiscoveryList(list) {
   const byAppid = new Map();
   const order = [];
@@ -3085,6 +3112,8 @@ async function discoverInScope(source, steamAccFilter, scope) {
 
   mark('dropSteamOwned');
 
+  if (!scope) data = await addSteamStatsForEmptyOnlineFix(data);
+
   data = consolidateDiscoveryList(data);
 
   mark('consolidate');
@@ -5060,6 +5089,7 @@ module.exports._internal = {
   buildDiscoveryLookup,
   getDiscoverySources,
   consolidateDiscoveryList,
+  addSteamStatsForEmptyOnlineFix,
   mergeCrossSourceDuplicates,
   copyDiscoveryList,
   isOfficialLauncherInstall: (dir) => launcherDetect.isOfficialLauncherInstall(dir),

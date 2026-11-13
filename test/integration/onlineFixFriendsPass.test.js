@@ -88,3 +88,33 @@ test('an OnlineFix folder holding a save keeps leading the card', () => {
   ]);
   assert.equal(card.data.type, 'file');
 });
+
+// Split Fiction through the Friend's Pass, a game Steam never installed here: no Steam record is
+// listed, so the card read only the empty folder until Steam happened to rewrite its stats file.
+test('an empty OnlineFix folder with no Steam record reads the Steam client stats', async () => {
+  const { addSteamStatsForEmptyOnlineFix } = achievements._internal;
+  const asked = [];
+  const statsRecord = async (appid) => {
+    asked.push(appid);
+    return appid === APPID ? steamRecord() : null;
+  };
+  const data = await addSteamStatsForEmptyOnlineFix([onlineFixRecord()], { statsRecord });
+  const [card] = consolidateDiscoveryList(data);
+  assert.equal(card.data.type, 'steamAPI', 'the card is read through Steam');
+  assert.deepEqual(asked, [APPID]);
+});
+
+test('the Steam client stats are not looked up when they would add nothing', async () => {
+  const { addSteamStatsForEmptyOnlineFix } = achievements._internal;
+  const asked = [];
+  const statsRecord = async (appid) => {
+    asked.push(appid);
+    return null;
+  };
+  const filled = path.join(tmp, 'Public', 'Documents', 'OnlineFix', '9999');
+  const rune = { appid: '7777', source: 'Rune', data: { type: 'file', path: emptyOnlineFix } };
+  await addSteamStatsForEmptyOnlineFix([onlineFixRecord(), steamRecord(), { appid: '9999', source: 'OnlineFix', data: { type: 'file', path: filled } }, rune], { statsRecord });
+  assert.deepEqual(asked, [], 'a Steam record already there, a folder with a save, another source');
+  const without = await addSteamStatsForEmptyOnlineFix([onlineFixRecord()], { statsRecord });
+  assert.equal(without.length, 1, 'no stats on this PC: the folder stays alone');
+});
