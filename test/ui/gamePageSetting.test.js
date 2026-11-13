@@ -58,7 +58,8 @@ test('the Settings row offers Enable first and is translated by its own ids', ()
 test('with the page off, a game opens on its list and the list leads back to the library', () => {
   const app = read('app.js');
   const body = app.slice(app.indexOf('function showGameOverview('), app.indexOf('function updateGamePage('));
-  assert.match(body, /const pageOff = app\.config\?\.achievement\?\.libraryGamePage === false;/);
+  assert.match(body, /const pageSetting = app\.config\?\.achievement\?\.libraryGamePage !== false;/);
+  assert.match(body, /const pageOff = !pageSetting && !tileButton && !pageShown;/);
   assert.match(body, /if \(pageOff\) \{\s*window\.GameOverview\.reset\(\);\s*setGameView\('list', \{ animate: false \}\);\s*return;/);
   // The trophy request is consumed even when the page is off, so it never fires on a later game.
   assert.ok(body.indexOf('takeListOpen(game.appid)') < body.indexOf('if (pageOff)'));
@@ -68,4 +69,22 @@ test('with the page off, a game opens on its list and the list leads back to the
   assert.match(css, /#achievement\[data-view='list'\]:not\(\[data-overview='off'\]\):not\(\[data-entry='list'\]\) #btn-previous \{/);
   // The mouse Back button follows whichever back button is on screen.
   assert.match(read('ui', 'game.js'), /\$\(\$\('#btn-overview'\)\.is\(':visible'\) \? '#btn-overview' : '#btn-previous'\)\.trigger\('click'\);/);
+});
+
+// Issue #189: with the page off, the tile's top-left button opens the page the tile click now skips.
+test('with the page off, the tile button opens the game page, and its icon and name say so', () => {
+  const app = read('app.js');
+  const body = app.slice(app.indexOf('function showGameOverview('), app.indexOf('function updateGamePage('));
+  // The page stays while it is on screen: a live refresh of that game must not drop it for the list.
+  assert.match(body, /const pageShown = window\.GameOverview\.current\(\) === game\.appid && \$\('#achievement'\)\.attr\('data-view'\) && \$\('#achievement'\)\.attr\('data-overview'\) !== 'off';/);
+  assert.match(body, /const listWanted = pageSetting && tileButton;/);
+
+  const source = app.slice(app.indexOf('function tileEntryButton('), app.indexOf('// Repaints that button'));
+  // eslint-disable-next-line no-new-func
+  const entryFor = (libraryGamePage) => new Function('app', 't', 'localeText', `${source}; return tileEntryButton();`)({ config: { achievement: { libraryGamePage } } }, (key, en) => en, () => 'Achievements');
+  assert.deepEqual(entryFor(false), { icon: 'fas fa-columns', label: 'Overview' });
+  assert.deepEqual(entryFor(true), { icon: 'fas fa-trophy', label: 'Achievements' });
+  assert.match(app, /<button type="button" class="achievement-button" data-game-title="\$\{escapeHtml\(tileTitle\)\}" title="\$\{escapeHtml\(tileEntry\.label\)\}"/);
+  // Saving Settings repaints the tiles already on screen.
+  assert.match(read('ui', 'settings.js'), /libraryGamePage = \$\('#option_libraryGamePage'\)\.val\(\) !== 'false';\s*if \(typeof window\.paintTileEntryButtons === 'function'\) window\.paintTileEntryButtons\(\);/);
 });

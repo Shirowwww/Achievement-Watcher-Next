@@ -360,6 +360,12 @@
           "name": "Page de jeu",
           "description": "Un jeu s’ouvre sur sa page, avec sa bande-annonce, ses guides et ses captures. Désactivée, il s’ouvre directement sur ses succès."
         },
+        "perfectGlow": {
+          "name": "Jeux terminés",
+          "description": "Un jeu à 100 % porte un léger halo platine dans la bibliothèque. Jeu de base laisse ses DLC de côté.",
+          "all": "Tout, DLC compris",
+          "base": "Jeu de base"
+        },
         "tilt": {
           "name": "Effet 3D au survol",
           "description": "La tuile sous la souris s’incline vers le pointeur, un peu ou beaucoup. Les vues Liste et Détails restent à plat, et l’effet est désactivé quand le système demande moins d’animations."

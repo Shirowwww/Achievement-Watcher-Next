@@ -376,6 +376,12 @@
           "name": "Página do jogo",
           "description": "Um jogo abre na sua página, com o trailer, os guias e as capturas. Se estiver desativada, abre diretamente nas proezas."
         },
+        "perfectGlow": {
+          "name": "Jogos concluídos",
+          "description": "Um jogo a 100% ganha um suave halo platina na biblioteca. Jogo base deixa as DLC de lado.",
+          "all": "Tudo, DLC incluídas",
+          "base": "Jogo base"
+        },
         "tilt": {
           "name": "Efeito 3D ao passar o rato",
           "description": "O cartão sob o rato inclina-se na direção do ponteiro, pouco ou muito. As vistas Lista e Detalhes mantêm-se planas, e o efeito fica desativado quando o sistema pede menos movimento."

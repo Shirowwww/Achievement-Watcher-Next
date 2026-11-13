@@ -376,6 +376,12 @@
           "name": "Spelsida",
           "description": "Ett spel öppnas på sin sida, med trailer, guider och skärmbilder. När den är avstängd öppnas det direkt på prestationerna."
         },
+        "perfectGlow": {
+          "name": "Perfekta spel",
+          "description": "Ett spel på 100 % får en mjuk platinaglans i biblioteket. Basspel lämnar DLC åt sidan.",
+          "all": "Allt, inklusive DLC",
+          "base": "Basspel"
+        },
         "tilt": {
           "name": "3D-effekt vid hovring",
           "description": "Rutan under musen lutar mot pekaren, lite eller mycket. Vyerna Lista och Detaljer förblir platta, och effekten är avstängd när systemet ber om mindre rörelse."

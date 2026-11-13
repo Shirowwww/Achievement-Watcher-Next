@@ -92,7 +92,8 @@ session. Le choix est enregistré, et chaque vue a les mêmes cartes, filtres et
 **Paramètres → Apparence → Tuiles de la bibliothèque** règle la taille des tuiles et l'espace entre elles (jusqu'à 0), et
 affiche ou masque le nom du jeu, la barre de progression, l'icône de plateforme, le voyant de santé et les deux boutons, pour toutes les vues
 à la fois. Un jeu que Steam liste sans succès affiche son illustration à la place d'une barre ; **Barre des jeux
-sans succès** ramène la barre.
+sans succès** ramène la barre. **Jeux terminés** pose un léger halo platine autour de chaque jeu à 100 %, DLC compris ou jeu de base
+seul, ou le désactive.
 
 Faites un clic droit sur un jeu pour le renommer, modifier son temps de jeu ou l'ajouter à une collection. Un nom que vous définissez survit
 aux nouveaux scans et aux restaurations, tandis que les jaquettes et la reconnaissance gardent le titre d'origine. Les jeux Steam peuvent prendre leur

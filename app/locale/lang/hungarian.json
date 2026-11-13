@@ -376,6 +376,12 @@
           "name": "Játékoldal",
           "description": "A játék a saját oldalán nyílik meg, az előzetessel, útmutatókkal és képernyőképekkel. Kikapcsolva közvetlenül a teljesítményekre nyílik."
         },
+        "perfectGlow": {
+          "name": "Befejezett játékok",
+          "description": "A 100%-ra teljesített játék lágy platinafényt kap a könyvtárban. Az Alapjáték figyelmen kívül hagyja a DLC-ket.",
+          "all": "DLC-vel együtt",
+          "base": "Alapjáték"
+        },
         "tilt": {
           "name": "3D-s hatás rámutatáskor",
           "description": "Az egér alatti csempe a mutató felé dől, kicsit vagy nagyon. A Lista és a Részletek nézet lapos marad, és a hatás ki van kapcsolva, ha a rendszer kevesebb mozgást kér."

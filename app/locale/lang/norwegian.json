@@ -376,6 +376,12 @@
           "name": "Spillside",
           "description": "Et spill åpnes på sin side, med trailer, guider og skjermbilder. Når den er slått av, åpnes det direkte på prestasjonene."
         },
+        "perfectGlow": {
+          "name": "Perfekte spill",
+          "description": "Et spill på 100 % får en myk platinaglød i biblioteket. Basisspill lar DLC ligge.",
+          "all": "Alt, inkludert DLC",
+          "base": "Basisspill"
+        },
         "tilt": {
           "name": "3D-effekt ved sveving",
           "description": "Ruten under musen heller mot pekeren, litt eller mye. Visningene Liste og Detaljer forblir flate, og effekten er slått av når systemet ber om mindre bevegelse."

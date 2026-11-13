@@ -96,7 +96,8 @@ ultima sessione. La scelta viene salvata, e ogni vista ha le stesse schede, gli 
 **Impostazioni → Aspetto → Riquadri della libreria** imposta la dimensione dei riquadri e lo spazio tra di essi
 (fino a 0), e mostra o nasconde il nome del gioco, la barra di avanzamento, l'icona della piattaforma, il pallino di
 stato e i due pulsanti, per tutte le viste insieme. Un gioco che Steam elenca senza obiettivi mostra la sua
-grafica invece di una barra; **Barra dei giochi senza obiettivi** riporta la barra.
+grafica invece di una barra; **Barra dei giochi senza obiettivi** riporta la barra. **Giochi completati** mette un morbido alone platino intorno a ogni gioco al 100%, con i DLC inclusi o
+solo il gioco base, oppure lo disattiva.
 
 Fai clic con il pulsante destro su un gioco per rinominarlo, modificarne il tempo di gioco o aggiungerlo a una
 raccolta. Un nome che imposti sopravvive alle nuove scansioni e ai ripristini, mentre le copertine e

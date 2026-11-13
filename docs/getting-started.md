@@ -90,7 +90,8 @@ session. The choice is saved, and every view has the same cards, filters and con
 **Settings → Appearance → Library tiles** sets the tile size and the gap between tiles (down to 0), and
 shows or hides the game name, progress bar, platform icon, health dot and the two buttons, for every view
 at once. A game Steam lists with no achievements shows its artwork instead of a bar; **Bar of games
-without achievements** brings the bar back.
+without achievements** brings the bar back. **Perfect games** puts a soft platinum halo around every
+game at 100%, its DLC included or the base game alone, or turns it off.
 
 Right-click a game to rename it, edit its playtime or add it to a collection. A name you set survives
 rescans and restores, while covers and matching keep the original title. Steam games can take their

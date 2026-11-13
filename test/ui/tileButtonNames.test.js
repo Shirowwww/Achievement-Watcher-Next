@@ -10,12 +10,13 @@ const { rendererSource } = require('../helpers/rendererSource');
 
 test('a tile button is named after its game as well as its action', () => {
   const source = rendererSource();
+  // The top-left button says what it opens, the list or the game page (#189): tileEntry.label.
   for (const [button, label] of [
-    ['play-button', 'play'],
-    ['achievement-button', 'achievements'],
-    ['config-button', 'health'],
+    ['play-button', 'tileLabels\\.play'],
+    ['achievement-button', 'tileEntry\\.label'],
+    ['config-button', 'tileLabels\\.health'],
   ]) {
-    const pattern = new RegExp(`class="${button}"[^>]*aria-label="\\$\\{escapeHtml\\(\`\\$\\{tileTitle\\} - \\$\\{tileLabels\\.${label}\\}\`\\)\\}"`);
+    const pattern = new RegExp(`class="${button}"[^>]*aria-label="\\$\\{escapeHtml\\(\`\\$\\{tileTitle\\} - \\$\\{${label}\\}\`\\)\\}"`);
     assert.match(source, pattern, `${button} must carry the game name`);
   }
 });

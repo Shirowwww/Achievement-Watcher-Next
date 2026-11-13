@@ -376,6 +376,12 @@
           "name": "Spilside",
           "description": "Et spil åbner på sin side med trailer, guides og skærmbilleder. Når den er slået fra, åbner det direkte på præstationerne."
         },
+        "perfectGlow": {
+          "name": "Perfekte spil",
+          "description": "Et spil på 100 % får en blød platinglød i biblioteket. Basisspil lader DLC ligge.",
+          "all": "Alt, inklusive DLC",
+          "base": "Basisspil"
+        },
         "tilt": {
           "name": "3D-effekt ved svæv",
           "description": "Feltet under musen hælder mod markøren, lidt eller meget. Visningerne Liste og Detaljer forbliver flade, og effekten er slået fra, når systemet beder om mindre bevægelse."

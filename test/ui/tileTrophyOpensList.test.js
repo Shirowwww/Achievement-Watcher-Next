@@ -33,7 +33,9 @@ test('a tile click that finds no game drops the trophy request, so a later open 
 
 test('the game page opens on the list when the trophy asked for that game, once', () => {
   const body = app.slice(app.indexOf('function showGameOverview('), app.indexOf('function updateGamePage('));
-  assert.match(body, /const listWanted = takeListOpen\(game\.appid\);/);
+  assert.match(body, /const tileButton = takeListOpen\(game\.appid\);/);
+  // With the page on (#189: off, the button opens the page instead).
+  assert.match(body, /const listWanted = pageSetting && tileButton;/);
   assert.match(body, /if \(listWanted \|\| \(pendingAchievementFocus[\s\S]*?\)\) setGameView\('list', \{ animate: false \}\);/);
 
   const take = app.slice(app.indexOf('function takeListOpen('), app.indexOf('function openGameFromLibrary('));

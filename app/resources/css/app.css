@@ -9429,10 +9429,47 @@ body {
   font-family: var(--font-strong);
 }
 
-#game-list.view-list .game-box[data-progress='100'],
-#game-list.view-details .game-box[data-progress='100'] {
-  border-color: color-mix(in srgb, var(--success) 42%, transparent);
-  box-shadow: 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))), 0 0 0 1px color-mix(in srgb, var(--success) 10%, transparent);
+/*
+  A perfect game (Settings > Appearance > Library tiles) wears a soft platinum halo in every view. It
+  is static, so hovering still only moves the tile; a light sweeps across it once as the pointer
+  arrives, a transform alone, and not at all under reduced motion.
+*/
+#game-list .game-box[data-perfect] {
+  border-color: color-mix(in srgb, var(--trophy-platinum) 55%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--trophy-platinum) 30%, transparent), 0 12px 28px rgba(3, 9, 17, calc(0.28 * var(--shadow-scale))),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+}
+
+#game-list .game-box[data-perfect]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, color-mix(in srgb, var(--trophy-platinum) 24%, transparent) 50%, transparent 62%);
+  opacity: 0;
+  transform: translateX(-110%);
+}
+
+#game-list ul > li .game-box[data-perfect]:hover::after {
+  animation: perfect-tile-sheen 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes perfect-tile-sheen {
+  from {
+    opacity: 1;
+    transform: translateX(-110%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(110%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #game-list ul > li .game-box[data-perfect]:hover::after {
+    animation: none;
+  }
 }
 
 #game-list.view-list .play-button,

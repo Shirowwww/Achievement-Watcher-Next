@@ -376,6 +376,12 @@
           "name": "Halaman game",
           "description": "Sebuah game terbuka di halamannya, lengkap dengan trailer, panduan, dan tangkapan layar. Jika dinonaktifkan, game langsung terbuka di pencapaiannya."
         },
+        "perfectGlow": {
+          "name": "Game sempurna",
+          "description": "Game yang mencapai 100% mendapat lingkaran cahaya platinum yang lembut di pustaka. Game dasar mengesampingkan DLC-nya.",
+          "all": "Termasuk DLC",
+          "base": "Game dasar"
+        },
         "tilt": {
           "name": "Efek 3D saat kursor di atas",
           "description": "Kartu di bawah mouse miring ke arah penunjuk, sedikit atau banyak. Tampilan Daftar dan Detail tetap datar, dan efek ini mati saat sistem meminta gerakan lebih sedikit."

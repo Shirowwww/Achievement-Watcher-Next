@@ -376,6 +376,12 @@
           "name": "Pelisivu",
           "description": "Peli avautuu omalle sivulleen, jossa on traileri, oppaat ja kuvakaappaukset. Poistettuna käytöstä se avautuu suoraan saavutuksiin."
         },
+        "perfectGlow": {
+          "name": "Täydelliset pelit",
+          "description": "100 %:n peli saa kirjastossa pehmeän platinahehkun. Peruspeli jättää DLC:t huomiotta.",
+          "all": "DLC:t mukana",
+          "base": "Peruspeli"
+        },
         "tilt": {
           "name": "3D-tehoste osoitettaessa",
           "description": "Hiiren alla oleva ruutu kallistuu osoittimen suuntaan vähän tai paljon. Luettelo- ja Tiedot-näkymät pysyvät tasaisina, ja tehoste on pois päältä, kun järjestelmä pyytää vähemmän liikettä."

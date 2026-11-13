@@ -95,7 +95,8 @@ capas em retrato, as duas variantes compactas delas, uma lista e uma tabela de d
 **Configurações → Aparência → Cartões da biblioteca** define o tamanho dos cartões e o espaço entre eles
 (até 0), e mostra ou oculta o nome do jogo, a barra de progresso, o ícone da plataforma, o indicador de estado e os
 dois botões, em todas as visualizações de uma vez. Um jogo que a Steam lista sem conquistas mostra a arte em vez de
-uma barra; **Barra de jogos sem conquistas** traz a barra de volta.
+uma barra; **Barra de jogos sem conquistas** traz a barra de volta. **Jogos concluídos** põe um suave halo platina em volta de cada jogo com 100%, com as DLCs incluídas ou
+só o jogo base, ou o desliga.
 
 Clique com o botão direito num jogo para renomeá-lo, editar o tempo de jogo ou adicioná-lo a uma
 coleção. Um nome que você definiu sobrevive a novas varreduras e restaurações, enquanto as capas e a

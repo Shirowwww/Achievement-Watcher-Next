@@ -376,6 +376,12 @@
           "name": "Game page",
           "description": "A game opens on its page, with its trailer, guides and screenshots. Disabled, it opens straight on its achievements."
         },
+        "perfectGlow": {
+          "name": "Perfect games",
+          "description": "A game at 100% wears a soft platinum halo in the library. Base game leaves its DLC aside.",
+          "all": "DLC included",
+          "base": "Base game"
+        },
         "tilt": {
           "name": "3D hover effect",
           "description": "The tile under the mouse leans toward the pointer, a little or a lot. The List and Details views stay flat, and it is off when your system asks for less motion."

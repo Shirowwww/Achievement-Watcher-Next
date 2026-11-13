@@ -13,6 +13,7 @@ const controllerLabels = require(path.join(appPath, 'util/controllerLabels.js'))
 const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
+const libraryFilter = require(path.join(appPath, 'util/libraryFilter.js'));
 const { isSteamId64 } = require(path.join(appPath, 'util/steamId64.js'));
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
@@ -293,6 +294,7 @@ function normalize(parsed) {
   options.achievement.libraryDensity = libraryChrome.normalizeDensity(options.achievement.libraryDensity);
   // Off, a game opens straight on its achievements list, as before the game page existed (#183).
   if (typeof options.achievement.libraryGamePage !== 'boolean') options.achievement.libraryGamePage = true;
+  options.achievement.libraryPerfectGlow = libraryFilter.normalizePerfectMode(options.achievement.libraryPerfectGlow);
   for (const toggle of libraryChrome.TOGGLES) {
     if (typeof options.achievement[toggle.key] !== 'boolean') options.achievement[toggle.key] = toggle.shownByDefault !== false;
   }
@@ -745,6 +747,7 @@ function defaults() {
       libraryShowAchievementButton: true,
       libraryShowConfigButton: true,
       libraryGamePage: true,
+      libraryPerfectGlow: 'all', // 'base' counts the base game alone, 'off' marks nothing
       libraryTilt: true,
       libraryAmbient: true,
       thumbnailPortrait: false,

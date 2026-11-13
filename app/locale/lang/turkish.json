@@ -376,6 +376,12 @@
           "name": "Oyun sayfası",
           "description": "Bir oyun, fragmanı, rehberleri ve ekran görüntüleriyle kendi sayfasında açılır. Devre dışı bırakıldığında doğrudan başarımlarında açılır."
         },
+        "perfectGlow": {
+          "name": "Tamamlanan oyunlar",
+          "description": "%100'e ulaşan oyun, kitaplıkta yumuşak bir platin hale taşır. Temel oyun, DLC'leri dışarıda bırakır.",
+          "all": "DLC'ler dahil",
+          "base": "Temel oyun"
+        },
         "tilt": {
           "name": "3D üzerine gelme efekti",
           "description": "Fare altındaki kutucuk imlece doğru az ya da çok eğilir. Liste ve Ayrıntılar görünümleri düz kalır; sistem daha az hareket istediğinde efekt kapalıdır."

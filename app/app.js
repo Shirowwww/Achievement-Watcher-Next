@@ -173,6 +173,7 @@ const { createViewportWork } = require(path.join(appPath, 'util/viewportWork.js'
 const perfTrace = require(path.join(appPath, 'util/perfTrace.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
+const libraryFilter = require(path.join(appPath, 'util/libraryFilter.js'));
 const intlFormat = require(path.join(appPath, 'util/intlFormat.js'));
 const links = require(path.join(appPath, 'util/links.js'));
 const { localeText } = require(path.join(appPath, 'locale/t.js'));
@@ -3739,7 +3740,44 @@ document.addEventListener('locale-labels-changed', function refreshLibraryLabels
   };
   fillEmpty('.library-recent-unlock .library-recent-name', localeText('noneUnlocked'));
   fillEmpty('.library-last-played.is-empty', localeText('neverPlayed'));
+  paintTileEntryButtons();
 });
+
+// The tile's top-left button opens what a click on the tile does not (#189): the list, or the game
+// page while Settings turns the page off.
+function tileEntryButton() {
+  return app.config?.achievement?.libraryGamePage === false
+    ? { icon: 'fas fa-columns', label: t('game-page-overview', 'Overview', "Vue d'ensemble") }
+    : { icon: 'fas fa-trophy', label: localeText('achievements') };
+}
+
+// Repaints that button on the tiles already on screen, once Settings has changed or the locale loaded.
+function paintTileEntryButtons() {
+  const entry = tileEntryButton();
+  $('#game-list .game-box .achievement-button').each(function () {
+    const tile = this.getAttribute('data-game-title') || '';
+    this.setAttribute('title', entry.label);
+    this.setAttribute('aria-label', tile ? `${tile} - ${entry.label}` : entry.label);
+    $(this).find('i').first().attr('class', entry.icon);
+  });
+}
+window.paintTileEntryButtons = paintTileEntryButtons;
+
+// A game at 100% wears a platinum halo on its tile; Settings decides whether its DLC count.
+function isPerfectTile(game) {
+  return libraryFilter.isPerfect(game, app.config?.achievement?.libraryPerfectGlow, achievementCategoryOf);
+}
+
+function paintPerfectTile(game) {
+  const box = gameElements.get(String(game.appid));
+  if (box) box.toggleAttribute('data-perfect', isPerfectTile(game));
+}
+
+// Every tile on screen, once Settings has changed which games count.
+function paintPerfectTiles() {
+  for (const game of gameList) paintPerfectTile(game);
+}
+window.paintPerfectTiles = paintPerfectTiles;
 
 // A full report is the better answer, so it replaces the scanned guess on the tile already on
 // screen rather than waiting for the next scan to redraw it. Called from ui/gameHealthPanel.js
@@ -4302,6 +4340,7 @@ ipcRenderer.on('achievement-unlock', (event, { appid, steamappid, ach_data } = {
     achievement.UnlockTime = Number(ach_data.UnlockTime) || Date.now() / 1000;
     game.achievement.unlocked += 1;
     updateGameBox(game.appid, game.achievement.total > 0 ? Math.floor((game.achievement.unlocked / game.achievement.total) * 100) : 0);
+    paintPerfectTile(game);
     refreshProfileStats();
   }
   updateGamePage(game.appid);
@@ -4503,9 +4542,13 @@ function gamePagePlaytime(game) {
 function showGameOverview(box, game) {
   const root = document.getElementById('game-overview');
   if (!root || !window.GameOverview) return;
-  const listWanted = takeListOpen(game.appid);
-  // Settings > Appearance can turn the game page off: the game then opens on its list, as before 3.12.6.
-  const pageOff = app.config?.achievement?.libraryGamePage === false;
+  const tileButton = takeListOpen(game.appid);
+  const pageSetting = app.config?.achievement?.libraryGamePage !== false;
+  // Settings > Appearance can turn the game page off: the game then opens on its list, as before
+  // 3.12.6, and the tile's top-left button opens the page instead of the list (#189).
+  const pageShown = window.GameOverview.current() === game.appid && $('#achievement').attr('data-view') && $('#achievement').attr('data-overview') !== 'off';
+  const pageOff = !pageSetting && !tileButton && !pageShown;
+  const listWanted = pageSetting && tileButton;
   $('#achievement').attr('data-overview', pageOff ? 'off' : null);
   if (pageOff) {
     window.GameOverview.reset();
@@ -5068,6 +5111,7 @@ var app = {
                 ? ' data-platinum="true"'
                 : '';
             // Accessible names for the three icon-only controls on a tile.
+            const tileEntry = tileEntryButton();
             const tileLabels = {
               play: t('launch-game', 'Launch game', 'Lancer le jeu'),
               achievements: localeText('achievements'),
@@ -5078,7 +5122,7 @@ var app = {
             };
             let template = `
             <li>
-                <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}" data-installed="${
+                <div class="game-box" data-index="${listIndex}" data-appid="${game.appid}" data-progress="${hasAchievements ? progress : -1}"${isPerfectTile(game) ? ' data-perfect' : ''} data-installed="${
               game.installed ? 1 : 0
             }" data-ownership="${escapeHtml(game.ownership || '')}" data-time="${
               timeMostRecent > 0 ? timeMostRecent : 0
@@ -5094,8 +5138,8 @@ var app = {
                   }
                   </div>
 
-                  <button type="button" class="achievement-button" title="${escapeHtml(tileLabels.achievements)}" aria-label="${escapeHtml(`${tileTitle} - ${tileLabels.achievements}`)}">
-                    <i class="fas fa-trophy" aria-hidden="true"></i>
+                  <button type="button" class="achievement-button" data-game-title="${escapeHtml(tileTitle)}" title="${escapeHtml(tileEntry.label)}" aria-label="${escapeHtml(`${tileTitle} - ${tileEntry.label}`)}">
+                    <i class="${tileEntry.icon}" aria-hidden="true"></i>
                   </button>
 
                   <button type="button" class="config-button" title="${escapeHtml(tileLabels.health)}" aria-label="${escapeHtml(`${tileTitle} - ${tileLabels.health}`)}">

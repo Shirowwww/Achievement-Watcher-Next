@@ -396,6 +396,13 @@ function translateUI(lang, locale, template) {
       $(`${select} option[value='true']`).text(clear(template.settings.common[on]));
       $(`${select} option[value='false']`).text(clear(template.settings.common[off]));
     }
+    if (lib.perfectGlow) {
+      $('#library-perfect-label').text(clear(lib.perfectGlow.name));
+      $('#library-perfect-help').text(clear(lib.perfectGlow.description));
+      $("#option_libraryPerfectGlow option[value='all']").text(clear(lib.perfectGlow.all));
+      $("#option_libraryPerfectGlow option[value='base']").text(clear(lib.perfectGlow.base));
+      $("#option_libraryPerfectGlow option[value='off']").text(clear(template.settings.common.disable));
+    }
     if (lib.playtime) {
       $('#library-playtime-label').text(clear(lib.playtime.name));
       $('#library-playtime-help').text(clear(lib.playtime.description));

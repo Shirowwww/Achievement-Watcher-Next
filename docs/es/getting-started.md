@@ -92,7 +92,8 @@ sesión. La elección se guarda y todas las vistas tienen las mismas tarjetas, f
 **Ajustes → Apariencia → Recuadros de la biblioteca** fija el tamaño de los recuadros y el espacio entre ellos (hasta 0), y
 muestra u oculta el nombre del juego, la barra de progreso, el icono de plataforma, el punto de estado y los dos botones, en todas las vistas
 a la vez. Un juego que Steam lista sin logros muestra su ilustración en lugar de una barra; **Barra de juegos
-sin logros** devuelve la barra.
+sin logros** devuelve la barra. **Juegos completados** pone un suave halo platino alrededor de cada juego al 100%, con sus DLC incluidos
+o solo el juego base, o lo desactiva.
 
 Haz clic derecho en un juego para renombrarlo, editar su tiempo de juego o añadirlo a una colección. Un nombre que pongas sobrevive
 a los reescaneos y a las restauraciones, mientras que las portadas y la identificación conservan el título original. Los juegos de Steam pueden tomar su

@@ -376,6 +376,12 @@
           "name": "Stránka hry",
           "description": "Hra se otevře na své stránce s trailerem, návody a snímky. Když je vypnutá, otevře se rovnou na úspěších."
         },
+        "perfectGlow": {
+          "name": "Dokončené hry",
+          "description": "Hra na 100 % získá v knihovně jemnou platinovou záři. Základní hra nechává DLC stranou.",
+          "all": "Vše, včetně DLC",
+          "base": "Základní hra"
+        },
         "tilt": {
           "name": "3D efekt při najetí myší",
           "description": "Dlaždice pod myší se nakloní směrem ke kurzoru, málo nebo hodně. Zobrazení Seznam a Podrobnosti zůstávají ploché a efekt je vypnutý, když systém požaduje méně pohybu."

@@ -376,6 +376,12 @@
           "name": "Spelpagina",
           "description": "Een spel opent op zijn pagina, met trailer, gidsen en screenshots. Uitgeschakeld opent het direct op de prestaties."
         },
+        "perfectGlow": {
+          "name": "Perfecte games",
+          "description": "Een game op 100% krijgt in de bibliotheek een zachte platina gloed. Basisspel laat de DLC buiten beschouwing.",
+          "all": "Alles, inclusief DLC",
+          "base": "Basisspel"
+        },
         "tilt": {
           "name": "3D-effect bij hoveren",
           "description": "De tegel onder de muis helt over naar de aanwijzer, een beetje of flink. De weergaven Lijst en Details blijven plat en het effect staat uit wanneer het systeem om minder beweging vraagt."

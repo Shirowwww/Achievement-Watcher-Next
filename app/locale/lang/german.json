@@ -376,6 +376,12 @@
           "name": "Spielseite",
           "description": "Ein Spiel öffnet sich auf seiner Seite, mit Trailer, Guides und Screenshots. Deaktiviert öffnet es sich direkt auf den Erfolgen."
         },
+        "perfectGlow": {
+          "name": "Abgeschlossene Spiele",
+          "description": "Ein Spiel mit 100 % trägt in der Bibliothek einen sanften Platin-Schimmer. Basisspiel lässt DLC außen vor.",
+          "all": "Mit DLC",
+          "base": "Basisspiel"
+        },
         "tilt": {
           "name": "3D-Effekt beim Darüberfahren",
           "description": "Die Kachel unter der Maus neigt sich zum Mauszeiger, ein wenig oder stark. Die Ansichten Liste und Details bleiben flach, und der Effekt ist aus, wenn das System weniger Bewegung wünscht."

@@ -376,6 +376,12 @@
           "name": "Trang trò chơi",
           "description": "Trò chơi mở ở trang riêng, với trailer, hướng dẫn và ảnh chụp màn hình. Khi tắt, trò chơi mở thẳng vào thành tựu."
         },
+        "perfectGlow": {
+          "name": "Trò chơi hoàn hảo",
+          "description": "Một trò chơi đạt 100% sẽ có quầng sáng bạch kim dịu nhẹ trong thư viện. Game gốc bỏ qua DLC của nó.",
+          "all": "Tất cả, gồm cả DLC",
+          "base": "Game gốc"
+        },
         "tilt": {
           "name": "Hiệu ứng 3D khi di chuột",
           "description": "Thẻ dưới chuột nghiêng về phía con trỏ, ít hoặc nhiều. Kiểu xem Danh sách và Chi tiết vẫn phẳng, và hiệu ứng tắt khi hệ thống yêu cầu giảm chuyển động."

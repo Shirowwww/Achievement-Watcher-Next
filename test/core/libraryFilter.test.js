@@ -72,3 +72,24 @@ test('the platform filter compares the key it is given, and a malformed one keep
   assert.equal(filter.matchesFilters(steam, { platform: '../x', platformOf }), true);
   assert.equal(filter.matchesFilters(steam, { progress: 'complete', platform: 'steam', platformOf }), false);
 });
+
+// A perfect game's tile wears a platinum halo; Settings counts its DLC, or the base game alone, or nothing.
+test('a perfect game is the whole list by default, the base game alone on request, and nothing when off', () => {
+  const allDone = game([ach(true), ach(true, 'Second Wind')]);
+  const baseDone = game([ach(true), ach(false, 'Second Wind')]);
+  const started = game([ach(true), ach(false)]);
+  const empty = game([]);
+
+  for (const mode of ['all', undefined, 'nonsense']) {
+    assert.equal(filter.isPerfect(allDone, mode), true, `${mode} keeps a game at 100%`);
+    assert.equal(filter.isPerfect(baseDone, mode), false, `${mode} counts the DLC`);
+  }
+  assert.equal(filter.isPerfect(baseDone, 'base'), true);
+  assert.equal(filter.isPerfect(allDone, 'base'), true);
+  assert.equal(filter.isPerfect(started, 'base'), false);
+  assert.equal(filter.isPerfect(empty, 'all'), false, 'a game without achievements is never perfect');
+  assert.equal(filter.isPerfect(allDone, 'off'), false);
+  assert.deepEqual(filter.PERFECT_MODES, ['all', 'base', 'off']);
+  assert.equal(filter.normalizePerfectMode('base'), 'base');
+  assert.equal(filter.normalizePerfectMode(42), 'all');
+});

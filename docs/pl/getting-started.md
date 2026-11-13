@@ -95,7 +95,8 @@ sesją. Wybór jest zapamiętywany, a każdy widok ma te same karty, filtry i me
 **Ustawienia → Wygląd → Kafelki biblioteki** ustawia rozmiar kafelków i odstęp między nimi (do 0) oraz
 pokazuje lub ukrywa nazwę gry, pasek postępu, ikonę platformy, kropkę stanu i dwa przyciski, we wszystkich widokach
 naraz. Gra, którą Steam wymienia bez osiągnięć, pokazuje swoją grafikę zamiast paska; **Pasek gier bez osiągnięć**
-przywraca pasek.
+przywraca pasek. **Ukończone gry** dodają delikatną platynową poświatę wokół każdej gry ukończonej w 100%, razem z DLC
+albo tylko dla gry podstawowej, lub wyłączają ją.
 
 Kliknij grę prawym przyciskiem, aby zmienić jej nazwę, edytować czas gry lub dodać ją do kolekcji. Ustawiona
 przez ciebie nazwa przetrwa ponowne skanowania i przywracanie, a okładki i dopasowanie zachowują oryginalny tytuł. Gry ze Steam

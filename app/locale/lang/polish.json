@@ -376,6 +376,12 @@
           "name": "Strona gry",
           "description": "Gra otwiera się na własnej stronie, ze zwiastunem, poradnikami i zrzutami. Gdy jest wyłączona, otwiera się od razu na osiągnięciach."
         },
+        "perfectGlow": {
+          "name": "Ukończone gry",
+          "description": "Gra ukończona w 100% otrzymuje w bibliotece delikatną platynową poświatę. Gra podstawowa pomija jej DLC.",
+          "all": "Razem z DLC",
+          "base": "Gra podstawowa"
+        },
         "tilt": {
           "name": "Efekt 3D po najechaniu",
           "description": "Kafelek pod myszą pochyla się w stronę wskaźnika, słabo lub mocno. Widoki Lista i Szczegóły pozostają płaskie, a efekt jest wyłączony, gdy system prosi o mniej ruchu."

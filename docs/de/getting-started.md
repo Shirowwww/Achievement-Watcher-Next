@@ -92,7 +92,8 @@ Sitzung. Die Wahl wird gespeichert, und jede Ansicht hat dieselben Karten, Filte
 **Einstellungen → Darstellung → Bibliothekskacheln** legt die Kachelgröße und den Abstand zwischen den Kacheln fest (bis 0) und
 blendet Spielname, Fortschrittsbalken, Plattformsymbol, Statuspunkt und die beiden Schaltflächen ein oder aus, für alle Ansichten
 gleichzeitig. Ein Spiel, das Steam ohne Erfolge führt, zeigt statt eines Balkens sein Artwork; **Balken bei Spielen
-ohne Erfolge** bringt den Balken zurück.
+ohne Erfolge** bringt den Balken zurück. **Abgeschlossene Spiele** legt einen sanften Platin-Schimmer um jedes Spiel mit 100 %, mit
+eingeschlossenen DLC oder nur für das Basisspiel, oder schaltet ihn aus.
 
 Mit einem Rechtsklick auf ein Spiel benennst du es um, bearbeitest seine Spielzeit oder fügst es einer Sammlung hinzu. Ein von dir vergebener Name übersteht
 neue Scans und Wiederherstellungen, während Cover und Zuordnung den ursprünglichen Titel behalten. Steam-Spiele können ihren

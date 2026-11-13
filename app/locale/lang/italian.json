@@ -376,6 +376,12 @@
           "name": "Pagina del gioco",
           "description": "Un gioco si apre sulla sua pagina, con trailer, guide e screenshot. Se disattivata, si apre direttamente sugli obiettivi."
         },
+        "perfectGlow": {
+          "name": "Giochi completati",
+          "description": "Un gioco al 100% porta un morbido alone platino nella libreria. Gioco base lascia da parte i DLC.",
+          "all": "Tutto, DLC inclusi",
+          "base": "Gioco base"
+        },
         "tilt": {
           "name": "Effetto 3D al passaggio del mouse",
           "description": "Il riquadro sotto il mouse si inclina verso il puntatore, poco o molto. Le viste Elenco e Dettagli restano piatte e l’effetto è disattivato quando il sistema chiede meno movimento."

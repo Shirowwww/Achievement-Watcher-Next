@@ -36,10 +36,23 @@ function matchesProgress(game, filter, categoryOf = (owner, achievement) => achi
   return base.total > 0 && base.unlocked >= base.total;
 }
 
+/*
+  Which games the library marks as perfect (Settings > Appearance > Library tiles): every achievement
+  DLC included ('all', the default), the base game alone ('base'), or none ('off'). Same rules as the
+  "100%" and "100% base game" filters.
+*/
+const PERFECT_MODES = Object.freeze(['all', 'base', 'off']);
+const normalizePerfectMode = (value) => (PERFECT_MODES.includes(value) ? value : 'all');
+
+function isPerfect(game, mode, categoryOf) {
+  const wanted = normalizePerfectMode(mode);
+  return wanted !== 'off' && matchesProgress(game, wanted === 'base' ? 'complete-base' : 'complete', categoryOf);
+}
+
 // `platformOf(game)` gives the platform key the filter compares, '' keeps every platform.
 function matchesFilters(game, { progress = 'all', platform = '', platformOf = () => '', categoryOf } = {}) {
   const wanted = normalizePlatformFilter(platform);
   return matchesProgress(game, progress, categoryOf) && (!wanted || platformOf(game) === wanted);
 }
 
-module.exports = { PROGRESS_FILTERS, ALMOST_PERCENT, normalizeProgressFilter, normalizePlatformFilter, matchesProgress, matchesFilters };
+module.exports = { PROGRESS_FILTERS, ALMOST_PERCENT, PERFECT_MODES, normalizeProgressFilter, normalizePlatformFilter, normalizePerfectMode, matchesProgress, matchesFilters, isPerfect };

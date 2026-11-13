@@ -20,6 +20,12 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Clips can film the game alone (#190).** **Settings > Notifications > Clips > Recorded area**
   films the game's window by default, without the desktop or other windows, or the whole screen as
   before. On Windows 10 the screen is cropped to the game's window.
+- **The game page stays one click away when it is turned off (#189).** The tile's top-left button,
+  which opens the achievements while the page is on, opens the page instead.
+- **Games at 100% stand out in the library.** Their tile wears a soft platinum halo, with a light
+  sweep on hover. **Settings > Appearance > Library tiles > Perfect games** counts the DLC or the
+  base game alone, or turns it off. It replaces the green edge the list and details views gave a
+  finished game.
 
 ### Fixed
 

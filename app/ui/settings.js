@@ -1396,6 +1396,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       for (const key of LIBRARY_EFFECTS) $(`#option_${key}`).val(settingsLibraryChrome.effectToSelect(settings[key])).change();
       $('#option_libraryPlaytimeUnits').val(settingsLibraryChrome.normalizePlaytimeUnits(settings.libraryPlaytimeUnits)).change();
       $('#option_libraryGamePage').val(String(settings.libraryGamePage !== false)).change();
+      $('#option_libraryPerfectGlow').val(['all', 'base', 'off'].includes(settings.libraryPerfectGlow) ? settings.libraryPerfectGlow : 'all').change();
       previewLibraryChrome();
     }
 
@@ -1512,8 +1513,11 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       // re-request their covers if the orientation changed) instead of rebuilding the library.
       if (typeof window.applyLibraryView === 'function') window.applyLibraryView(app.config.achievement.libraryLayout, previousLayout);
       Object.assign(app.config.achievement, readLibraryChromeUi());
-      // Read on the next game opened (app.js, showGameOverview).
+      // Read on the next game opened (app.js, showGameOverview); the tiles' top-left button follows it now.
       app.config.achievement.libraryGamePage = $('#option_libraryGamePage').val() !== 'false';
+      if (typeof window.paintTileEntryButtons === 'function') window.paintTileEntryButtons();
+      app.config.achievement.libraryPerfectGlow = $('#option_libraryPerfectGlow').val() || 'all';
+      if (typeof window.paintPerfectTiles === 'function') window.paintPerfectTiles();
       Object.assign(app.config.achievement, readRaritySliders());
       if (typeof window.applyLibraryChrome === 'function') window.applyLibraryChrome(app.config.achievement);
       // Profile card (Appearance): outside the General containers, so it is read here.
