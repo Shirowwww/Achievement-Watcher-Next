@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Game dari Rockstar Games Launcher masuk ke perpustakaan, pencapaian DLC mendapat bagian sendiri, dan sebuah game bisa kembali terbuka langsung di pencapaiannya."
+    },
+    {
+      "kind": "heading",
+      "text": "Sorotan"
+    },
+    {
+      "kind": "item",
+      "text": "Game Rockstar Games Launcher. GTA V Enhanced dan game lain yang dipasangnya tampil dengan daftar pencapaiannya. Hubungkan akun Rockstar Games Anda di Pengaturan > Sumber untuk melihat mana yang sudah Anda buka dan kapan."
+    },
+    {
+      "kind": "item",
+      "text": "Game dasar dan DLC terpisah. Game yang pencapaiannya datang dalam beberapa set mendaftar game dasar lebih dulu, lalu setiap DLC di bawah judul dan hitungannya sendiri. Platinum milik game dasar, seperti di konsol."
+    },
+    {
+      "kind": "item",
+      "text": "Saring perpustakaan menurut progres atau platform: belum dimulai, sedang berjalan, hampir selesai, 100%, atau 100% game dasar tanpa DLC-nya."
+    },
+    {
+      "kind": "item",
+      "text": "Buka game langsung di pencapaiannya (#183). Matikan Halaman game di Pengaturan > Tampilan > Kartu perpustakaan."
+    },
+    {
+      "kind": "item",
+      "text": "Lebih banyak di halaman game: waktu dari HowLongToBeat, waktu bermain Anda sendiri, sesi terakhir dan peluncuran pertama, dan klik pada ikon untuk mengubahnya."
+    },
+    {
+      "kind": "heading",
+      "text": "Juga baru"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 untuk Azimuth dan Diablo III (SanctuaryPort) menampilkan pencapaian dan trofinya dengan gambar (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Game konsol dan manual mendapat halamannya sendiri, dengan deskripsi, genre, dan tanggal rilis dari Metacritic saat toko tidak mencantumkannya."
+    },
+    {
+      "kind": "item",
+      "text": "Menggulir Pengaturan tidak lagi mengubah pengaturan apa pun."
+    },
+    {
+      "kind": "item",
+      "text": "Perbaikan: suvenir lama tampil lagi di halaman game (#187), game PS4 yang namanya sama dengan yang lebih lama mendapat ikon dan latar yang benar (#160), satu perbaikan Kesehatan game mengaitkan semua pencapaian berhitung (#168), klip merekam game dalam layar penuh eksklusif, plugin Millennium menampilkan pencapaian di halaman game baru Steam, pembukaan yang dicap sedikit mendahului jam PC kembali memberi notifikasi, dan panduan awal tidak lagi macet di Linux dengan banyak game Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Lihat changelog lengkap untuk daftar selengkapnya."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

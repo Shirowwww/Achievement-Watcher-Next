@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Rockstar Games Launcherin pelit liittyvät kirjastoon, DLC-saavutuksille tulee omat osionsa ja pelin voi taas avata suoraan saavutuksiin."
+    },
+    {
+      "kind": "heading",
+      "text": "Kohokohdat"
+    },
+    {
+      "kind": "item",
+      "text": "Rockstar Games Launcherin pelit. GTA V Enhanced ja muut sen asentamat pelit näkyvät saavutuslistoineen. Yhdistä Rockstar Games -tilisi kohdassa Asetukset > Lähteet nähdäksesi, mitkä olet avannut ja milloin."
+    },
+    {
+      "kind": "item",
+      "text": "Peruspeli ja DLC erikseen. Peli, jonka saavutukset tulevat sarjoina, listaa ensin peruspelin ja sitten jokaisen DLC:n oman otsikkonsa ja määränsä alla. Platina kuuluu peruspelille, kuten konsolilla."
+    },
+    {
+      "kind": "item",
+      "text": "Suodata kirjasto edistymisen tai alustan mukaan: aloittamatta, kesken, melkein valmis, 100 % tai 100 % peruspelistä ilman DLC:tä."
+    },
+    {
+      "kind": "item",
+      "text": "Avaa peli suoraan sen saavutuksiin (#183). Poista Pelisivu käytöstä kohdassa Asetukset > Ulkoasu > Kirjaston ruudut."
+    },
+    {
+      "kind": "item",
+      "text": "Lisää pelisivulle: HowLongToBeatin ajat, oma peliaikasi, viimeisin istunto ja ensimmäinen käynnistys, ja kuvakkeen napsautus vaihtaa sen."
+    },
+    {
+      "kind": "heading",
+      "text": "Myös uutta"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 Azimuthille ja Diablo III (SanctuaryPort) näyttävät saavutuksensa ja pokaalinsa kuvineen (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Konsoli- ja käsin lisätyt pelit saavat oman sivunsa, jossa on kuvaus, lajit ja julkaisupäivä Metacriticista, kun kaupat eivät listaa niitä."
+    },
+    {
+      "kind": "item",
+      "text": "Asetusten selaaminen ei enää koskaan muuta asetusta."
+    },
+    {
+      "kind": "item",
+      "text": "Korjaukset: vanhemmat muistot näkyvät taas pelisivulla (#187), PS4-peli, jolla on sama nimi kuin vanhemmalla, saa oikean kuvakkeen ja taustan (#160), yksi Pelin kunto -korjaus sitoo kaikki laskurisaavutukset (#168), klipit tallentavat pelejä yksinomaisessa koko näytön tilassa, Millennium-lisäosa näyttää saavutukset Steamin uusilla pelisivuilla, hieman tietokoneen kellon edelle leimatut avaukset ilmoittavat taas ja ensikäynnistyksen opas ei enää jumitu Linuxilla, kun Proton-pelejä on paljon."
+    },
+    {
+      "kind": "text",
+      "text": "Koko muutosloki sisältää täydellisen luettelon."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

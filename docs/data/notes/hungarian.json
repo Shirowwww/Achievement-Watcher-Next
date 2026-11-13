@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "A Rockstar Games Launcher játékai bekerülnek a könyvtárba, a DLC-k teljesítményei saját szakaszt kapnak, és egy játék újra közvetlenül a teljesítményeinél nyílhat meg."
+    },
+    {
+      "kind": "heading",
+      "text": "Fő újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "Rockstar Games Launcher játékok. A GTA V Enhanced és a többi általa telepített játék megjelenik a teljesítménylistájával. Kösd össze a Rockstar Games-fiókodat a Beállítások > Forrás helyen, hogy lásd, melyeket oldottad fel és mikor."
+    },
+    {
+      "kind": "item",
+      "text": "Alapjáték és DLC külön. Az a játék, amelynek teljesítményei készletekben jönnek, először az alapjátékot listázza, majd minden DLC-t saját címsor és darabszám alatt. A platina az alapjátékhoz tartozik, mint a konzolon."
+    },
+    {
+      "kind": "item",
+      "text": "Szűrd a könyvtárat haladás vagy platform szerint: nem kezdett, folyamatban, majdnem kész, 100%, vagy az alapjáték 100%-a a DLC nélkül."
+    },
+    {
+      "kind": "item",
+      "text": "Nyiss meg egy játékot közvetlenül a teljesítményeinél (#183). Kapcsold ki a Játékoldal opciót a Beállítások > Megjelenés > Könyvtár csempéi helyen."
+    },
+    {
+      "kind": "item",
+      "text": "Több a játékoldalon: a HowLongToBeat időtartamai, a saját játékidőd, az utolsó munkamenet és az első indítás, az ikonra kattintva pedig megváltoztathatod."
+    },
+    {
+      "kind": "heading",
+      "text": "További újdonságok"
+    },
+    {
+      "kind": "item",
+      "text": "A Forza Horizon 2 az Azimuthhoz és a Diablo III (SanctuaryPort) képekkel mutatja a teljesítményeit és trófeáit (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "A konzolos és kézzel hozzáadott játékok saját oldalt kapnak leírással, műfajokkal és a Metacritic megjelenési dátumával, ha az áruházak nem sorolják fel őket."
+    },
+    {
+      "kind": "item",
+      "text": "A Beállítások görgetése többé soha nem módosít egyetlen beállítást sem."
+    },
+    {
+      "kind": "item",
+      "text": "Javítások: a régebbi emlékek újra megjelennek a játékoldalon (#187), egy régebbivel azonos nevű PS4-játék a megfelelő ikont és hátteret kapja (#160), egyetlen Játék állapota javítás minden számlálós teljesítményt összekapcsol (#168), a klipek kizárólagos teljes képernyős módban is rögzítenek, a Millennium bővítmény megjeleníti a teljesítményeket a Steam új játékoldalain, a számítógép órájánál kicsit előrébb bélyegzett feloldások újra értesítenek, és az első indítási útmutató Linuxon sok Proton-játéknál már nem fagy le."
+    },
+    {
+      "kind": "text",
+      "text": "A teljes listát a teljes változásnaplóban találod."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

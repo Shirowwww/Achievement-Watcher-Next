@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Spiele aus dem Rockstar Games Launcher kommen in die Bibliothek, DLC-Erfolge bekommen eigene Abschnitte, und ein Spiel kann wieder direkt auf seinen Erfolgen öffnen."
+    },
+    {
+      "kind": "heading",
+      "text": "Highlights"
+    },
+    {
+      "kind": "item",
+      "text": "Spiele aus dem Rockstar Games Launcher. GTA V Enhanced und die anderen Spiele, die er installiert hat, erscheinen mit ihrer Erfolgsliste. Verbinde dein Rockstar-Games-Konto unter Einstellungen > Quelle, um zu sehen, welche du freigeschaltet hast und wann."
+    },
+    {
+      "kind": "item",
+      "text": "Basisspiel und DLC getrennt. Ein Spiel, dessen Erfolge in Sets kommen, listet zuerst das Basisspiel und dann jedes DLC unter eigener Überschrift und mit eigener Zahl. Die Platin gehört zum Basisspiel, wie auf der Konsole."
+    },
+    {
+      "kind": "item",
+      "text": "Filtere die Bibliothek nach Fortschritt oder Plattform: nicht begonnen, in Arbeit, fast fertig, 100 % oder 100 % des Basisspiels ohne DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Öffne ein Spiel direkt auf seinen Erfolgen (#183). Schalte Spielseite unter Einstellungen > Darstellung > Bibliothekskacheln aus."
+    },
+    {
+      "kind": "item",
+      "text": "Mehr auf der Spielseite: die Zeiten von HowLongToBeat, deine eigene Spielzeit, letzte Sitzung und erster Start, und ein Klick auf das Symbol ändert es."
+    },
+    {
+      "kind": "heading",
+      "text": "Außerdem neu"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 für Azimuth und Diablo III (SanctuaryPort) zeigen ihre Erfolge und Trophäen mit Bildern (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Konsolen- und manuelle Spiele bekommen ihre Seite, mit Beschreibung, Genres und Erscheinungsdatum von Metacritic, wenn die Stores sie nicht liefern."
+    },
+    {
+      "kind": "item",
+      "text": "Scrollen in den Einstellungen ändert nie mehr eine Einstellung."
+    },
+    {
+      "kind": "item",
+      "text": "Korrekturen: ältere Souvenirs erscheinen wieder auf der Spielseite (#187), ein PS4-Spiel mit demselben Namen wie ein älteres bekommt das richtige Symbol und den richtigen Hintergrund (#160), eine Reparatur von Spielzustand verknüpft alle Zähler-Erfolge (#168), Clips nehmen Spiele im exklusiven Vollbild auf, das Millennium-Plugin zeigt Erfolge auf den neuen Spielseiten von Steam, leicht der PC-Uhr vorausgestempelte Freischaltungen melden sich wieder, und der Leitfaden beim ersten Start friert unter Linux mit vielen Proton-Spielen nicht mehr ein."
+    },
+    {
+      "kind": "text",
+      "text": "Die vollständige Liste findest du im vollständigen Changelog."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

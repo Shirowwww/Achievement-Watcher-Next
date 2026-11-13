@@ -14,25 +14,14 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
-## Unreleased
+## 3.12.7 - 2026-11-13
 
 ### Added
 
 - **Rockstar Games Launcher games show in the library.** Games it installed, such as GTA V
-  Enhanced, appear with their achievement list. Connect your Rockstar Games account in **Settings →
+  Enhanced, appear with their achievement list. Connect your Rockstar Games account in **Settings >
   Sources** (or in the first-start guide) to see which ones you unlocked and when; without it they
   all show locked. The source has its own switch on the same page.
-- **Open a game straight on its achievements (#183).** Turn off **Game page** in **Settings >
-  Appearance > Library tiles** and a click on a game skips its overview, as before 3.12.6.
-- **Click a game's icon to change it.** On the game page and above the achievement list, a click on
-  the square icon opens the icon picker; right-click still offers every option.
-
-- **How long a game takes, on its page.** The game page shows HowLongToBeat's times for the main
-  story, the story with extras and everything, each opening the game's page there.
-- **Your own time on the game page.** What you played, your last session and your first launch.
-  The first launch is recorded from this version on; a game played before shows the date of its
-  first achievement.
-
 - **Base game and DLC achievements apart.** A game whose achievements come in sets, as on Steam or
   PlayStation, lists the base game first, then each DLC under its own heading with its own count.
   A click on a heading folds or unfolds its section. As on the console, the platinum is the base
@@ -40,11 +29,18 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Filter the library by progress or platform.** The collections menu now also keeps only the games
   not started, in progress, almost done (80% or more), at 100%, or at 100% of the base game without
   its DLC, and only one platform when the library holds several.
-
+- **Open a game straight on its achievements (#183).** Turn off **Game page** in **Settings >
+  Appearance > Library tiles** and a click on a game skips its overview, as before 3.12.6.
+- **Play time and HowLongToBeat on the game page.** What you played, your last session and your
+  first launch, beside HowLongToBeat's times for the main story, the extras and everything. The
+  first launch is recorded from this version on; a game played before shows the date of its first
+  achievement.
+- **Click a game's icon to change it.** On the game page and above the achievement list, a click on
+  the square icon opens the icon picker; right-click still offers every option.
 - **Forza Horizon 2's achievements mod for Azimuth (#185).** Azimuth with the fh2-mods
   Achievements mod shows its 88 achievements, with their pictures, unlock dates and progress.
-- **Diablo III (SanctuaryPort), the PC port of the PS4 game.** Its 54 trophies show with their
-  pictures. The port records no date, so an unlock gets the time AW Next sees it.
+- **Diablo III (SanctuaryPort), the PC port of the PS4 game (#185).** Its 54 trophies show with
+  their pictures. The port records no date, so an unlock gets the time AW Next sees it.
 
 ### Improved
 
@@ -62,6 +58,18 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Older souvenirs show on the game page again (#187).** Screenshots and clips taken before 3.12.4
   were named with the date first, and the game page only looked for the newer naming, so it said
   there were none.
+- **The Millennium plugin shows achievements on Steam's game pages again.** Steam's update of
+  November 11 (Achievement Sets) changed where the page reads them, so non-Steam shortcuts showed
+  none. Plugin 0.1.1 fills the new place; AW Next updates an installed plugin on its own, then
+  restart Steam.
+- **Clips record games in exclusive fullscreen.** Windows refuses the usual screen capture to
+  those games, so their clips came out empty while screenshots worked; clips now switch to the
+  capture screenshots use. A clip folder is also no longer left empty when nothing was recorded.
+- **Unlocks stamped a few minutes ahead of the PC's clock pop again.** Some emulator saves do this;
+  those unlocks showed no notification and read "in 3 minutes". They notify and show "now".
+- **The trophy button on a tile opens the achievements again (#183).** Since the game page, it
+  opened the overview like a click anywhere else on the tile.
+- **Covers set to "Whole" are sharp again.** Most of them showed only their blurred backdrop.
 - **A console game takes its icon and background from the right game too (#160).** When two games
   share a name, such as God of War (2005 and 2018), a PS4 or PS5 list already took the cover of the
   one released for that console; its icon, its background and the picture at the top of its windows
@@ -70,23 +78,10 @@ renamed in 3.9.0 and the history is kept under one file.
   list, Game Health tied a counter achievement to its stat only once the game had written that
   stat, so the repair had to be run again as you played. When the stats already written all follow
   one naming, the same repair now ties the counters that have not moved yet.
-- **The trophy button on a tile opens the achievements again (#183).** Since the game page, it
-  opened the overview like a click anywhere else on the tile.
-- **Covers set to "Whole" are sharp again.** Most of them showed only their blurred backdrop.
-- **The first-start guide no longer freezes on Linux with many Proton games.** Its Games step
-  searched for minutes and the window could turn blank or invisible.
 - **A window that stops drawing comes back.** It reloads by itself; if it fails again, AW Next says
   so and offers to export the logs.
-- **An unlock time a few minutes ahead no longer reads "in 3 minutes".** It shows "now".
-- **Unlocks stamped a few minutes ahead of the PC's clock pop again.** Some emulator saves do this;
-  those unlocks showed no notification and were listed as made in the future.
-- **The Millennium plugin shows achievements on Steam's game pages again.** Steam's update of
-  November 11 (Achievement Sets) changed where the page reads them, so non-Steam shortcuts showed
-  none. Plugin 0.1.1 fills the new place; AW Next updates an installed plugin on its own, then
-  restart Steam.
-- **Clips record games in exclusive fullscreen.** Windows refuses the usual screen capture to
-  those games, so their clips came out empty while screenshots worked; clips now switch to the
-  capture screenshots use. A clip folder is also no longer left empty when nothing was recorded.
+- **The first-start guide no longer freezes on Linux with many Proton games.** Its Games step
+  searched for minutes and the window could turn blank or invisible.
 
 ## 3.12.6 - 2026-11-11
 

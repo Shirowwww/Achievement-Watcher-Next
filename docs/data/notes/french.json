@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Les jeux du Rockstar Games Launcher rejoignent la bibliothèque, les succès des DLC ont leurs propres sections et un jeu peut de nouveau s'ouvrir directement sur ses succès."
+    },
+    {
+      "kind": "heading",
+      "text": "Points forts"
+    },
+    {
+      "kind": "item",
+      "text": "Les jeux du Rockstar Games Launcher. GTA V Enhanced et les autres jeux qu'il a installés apparaissent avec leur liste de succès. Connecte ton compte Rockstar Games dans Paramètres > Sources pour voir lesquels tu as débloqués et quand."
+    },
+    {
+      "kind": "item",
+      "text": "Jeu de base et DLC séparés. Un jeu dont les succès viennent par ensembles liste d'abord le jeu de base, puis chaque DLC sous son propre titre et son propre compte. Le platine revient au jeu de base, comme sur la console."
+    },
+    {
+      "kind": "item",
+      "text": "Filtre la bibliothèque par progression ou par plateforme : pas commencé, en cours, presque fini, 100 %, ou 100 % du jeu de base sans ses DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Ouvre un jeu directement sur ses succès (#183). Désactive Page de jeu dans Paramètres > Apparence > Tuiles de la bibliothèque."
+    },
+    {
+      "kind": "item",
+      "text": "Plus de choses sur la page de jeu : les durées de HowLongToBeat, ton propre temps de jeu, la dernière session et le premier lancement, et un clic sur l'icône pour la changer."
+    },
+    {
+      "kind": "heading",
+      "text": "Autres nouveautés"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 pour Azimuth et Diablo III (SanctuaryPort) affichent leurs succès et trophées avec des images (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Les jeux de console et manuels ont leur page, avec description, genres et date de sortie venant de Metacritic quand les boutiques ne les donnent pas."
+    },
+    {
+      "kind": "item",
+      "text": "Faire défiler les Paramètres ne change plus jamais un réglage."
+    },
+    {
+      "kind": "item",
+      "text": "Correctifs : les anciens souvenirs s'affichent de nouveau sur la page de jeu (#187), un jeu PS4 qui partage son nom avec un plus ancien reçoit la bonne icône et le bon fond (#160), une réparation d'État du jeu lie tous les succès à compteur (#168), les clips enregistrent les jeux en plein écran exclusif, le plugin Millennium affiche les succès sur les nouvelles pages de jeu de Steam, les déblocages horodatés un peu en avance sur l'horloge du PC notifient de nouveau, et le guide du premier lancement ne se fige plus sous Linux avec beaucoup de jeux Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Consulte le journal des modifications complet pour la liste complète."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

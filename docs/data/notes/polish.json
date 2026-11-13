@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Gry z Rockstar Games Launcher trafiają do biblioteki, osiągnięcia z DLC mają własne sekcje, a gra znów może otwierać się od razu na swoich osiągnięciach."
+    },
+    {
+      "kind": "heading",
+      "text": "Najważniejsze"
+    },
+    {
+      "kind": "item",
+      "text": "Gry z Rockstar Games Launcher. GTA V Enhanced i inne gry, które zainstalował, pojawiają się z listą osiągnięć. Połącz swoje konto Rockstar Games w Ustawienia > Źródło, aby zobaczyć, które odblokowałeś i kiedy."
+    },
+    {
+      "kind": "item",
+      "text": "Gra podstawowa i DLC osobno. Gra, której osiągnięcia występują w zestawach, wymienia najpierw grę podstawową, a potem każde DLC pod własnym nagłówkiem i z własną liczbą. Platyna należy do gry podstawowej, jak na konsoli."
+    },
+    {
+      "kind": "item",
+      "text": "Filtruj bibliotekę według postępu lub platformy: nierozpoczęte, w trakcie, prawie ukończone, 100% albo 100% gry podstawowej bez DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Otwórz grę od razu na jej osiągnięciach (#183). Wyłącz Stronę gry w Ustawienia > Wygląd > Kafelki biblioteki."
+    },
+    {
+      "kind": "item",
+      "text": "Więcej na stronie gry: czasy z HowLongToBeat, twój własny czas gry, ostatnia sesja i pierwsze uruchomienie, a kliknięcie ikony pozwala ją zmienić."
+    },
+    {
+      "kind": "heading",
+      "text": "Także nowe"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 dla Azimuth i Diablo III (SanctuaryPort) pokazują swoje osiągnięcia i trofea z obrazkami (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Gry konsolowe i dodane ręcznie dostają własną stronę z opisem, gatunkami i datą premiery z Metacritic, gdy sklepy ich nie podają."
+    },
+    {
+      "kind": "item",
+      "text": "Przewijanie Ustawień nigdy więcej nie zmienia żadnego ustawienia."
+    },
+    {
+      "kind": "item",
+      "text": "Poprawki: starsze pamiątki znów pokazują się na stronie gry (#187), gra na PS4 o tej samej nazwie co starsza dostaje właściwą ikonę i tło (#160), jedna naprawa w Stanie gry wiąże wszystkie osiągnięcia z licznikiem (#168), klipy nagrywają gry w trybie wyłącznego pełnego ekranu, wtyczka Millennium pokazuje osiągnięcia na nowych stronach gier Steam, odblokowania opatrzone czasem nieco przed zegarem komputera znów powiadamiają, a przewodnik pierwszego uruchomienia nie zawiesza się już w Linuksie przy wielu grach Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Pełną listę znajdziesz w pełnym dzienniku zmian."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

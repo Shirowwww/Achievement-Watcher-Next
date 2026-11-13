@@ -1,39 +1,35 @@
-# Achievement Watcher Next 3.12.6
+# Achievement Watcher Next 3.12.7
 
-Every game now has a page of its own, an unlocked achievement opens the screenshot and clip taken with it, and any repair Game Health made to a game can be undone.
+Rockstar Games Launcher games join the library, DLC achievements get their own sections, and a game can open straight on its achievements again.
 
 ## Highlights
 
-- **A page for every game.** Clicking a game opens an overview with its trailers playing behind the title, Play and Achievements one click away, the store's description, screenshots, ratings, guides and your souvenirs, in your language where the store has it.
-- **Screenshots and clips beside each achievement.** Right-click an unlocked achievement, or use the two buttons in the in-game overlay, to see the picture or play the clip taken when it unlocked.
-- **Pin an achievement to the top of its list**, in the app and in the overlay, until it unlocks.
-- **More recompiled ports, found on their own.** ReCasted (Ratchet & Clank, #182), Odin Sphere Leifthrasir, 13 Sentinels: Aegis Rim, Super Mario All-Stars, Road Rash 64, F-Zero X, Pikmin 1 and 2 and 25 more Xbox 360 ports. A port in one of your game libraries is picked up at every scan, before it has saved anything.
-- **Undo the last repair.** Game Health puts back the files a repair changed and removes the ones it created, up to the last ten repairs per game.
+- **Rockstar Games Launcher games.** GTA V Enhanced and the other games it installed show with their achievement list. Connect your Rockstar Games account in Settings > Sources to see which ones you unlocked and when.
+- **Base game and DLC apart.** A game whose achievements come in sets lists the base game first, then each DLC under its own heading and count. The platinum belongs to the base game, as on the console.
+- **Filter the library by progress or platform**: not started, in progress, almost done, 100%, or 100% of the base game without its DLC.
+- **Open a game straight on its achievements (#183).** Turn off **Game page** in Settings > Appearance > Library tiles.
+- **More on the game page**: HowLongToBeat's times, your own play time, last session and first launch, and a click on the icon to change it.
 
 ## Also new
 
-- **Library tiles lean toward the pointer** and the window takes on the hovered cover's colours. Settings > Appearance > Library tiles sets both.
-- **The right executable, more often.** AW Next skips files that are not real programs and folders such as Crack, and **Find all** in Settings > Folders looks for every missing one.
-- **Game Health reads ColdClient setups** and can start the game through the loader. It also spots the Epic emulator's sample AppId and leaves the Steam file of VOICES38 releases alone.
-- **The Millennium plugin and the Playnite extension update themselves**, and Playnite themes such as Harmony or Selene can show AW Next's counts.
-- **Clips up to 60 seconds**, with a slider for how much is kept before the unlock (#170).
-- **Update notes in your language**, a finer overlay opacity, and a colour picker inside the overlay.
-- **Hide to the tray when a game starts**, a new switch in Settings > General.
-- **Fixes:** a community crack is applied only to the game it was made for, cracks that Unity games load from their Plugins folder are read there, games started from a Steam shortcut keep their play time, `.bat` and `.cmd` games start again, Dead Space 2 with MarkerPatch lists its achievements (#171), notification sounds play with the popup, and the Playnite window works in Fullscreen mode.
+- **Forza Horizon 2 for Azimuth and Diablo III (SanctuaryPort)** show their achievements and trophies with pictures (#185).
+- **Console and manual games get their page**, with description, genres and release date from Metacritic when the stores do not list them.
+- **Scrolling Settings never changes a setting** any more.
+- **Fixes:** older souvenirs show on the game page again (#187), a PS4 game sharing its name with an older one takes the right icon and background (#160), one Game Health repair ties every counter achievement (#168), clips record games in exclusive fullscreen, the Millennium plugin shows achievements on Steam's new game pages, unlocks stamped slightly ahead of the PC's clock notify again, and the first-start guide no longer freezes on Linux with many Proton games.
 
-See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3126---2026-11-11) for the complete list.
+See the [full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3127---2026-11-13) for the complete list.
 
 ## Install
 
 | File | What it is |
 |---|---|
-| `Achievement.Watcher.Setup.3.12.6.exe` | The Windows installer. An installed copy also updates itself. |
-| `Achievement.Watcher.Portable.3.12.6.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
-| `Achievement.Watcher.3.12.6.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
+| `Achievement.Watcher.Setup.3.12.7.exe` | The Windows installer. An installed copy also updates itself. |
+| `Achievement.Watcher.Portable.3.12.7.zip` | The same build with no installer: extract it anywhere, it keeps its settings, caches and logs in a `data` folder beside the executable. |
+| `Achievement.Watcher.3.12.7.AppImage` | Linux (beta): make it executable and run it as is, it updates itself. Needs FUSE 2 (`libfuse2t64` on Ubuntu 24.04). |
 | `aw-next-millennium.zip` | The Steam plugin for Millennium: extract it into `<Steam>\millennium\plugins\`. |
 | `AwNextAchievements_*.pext` | The Playnite extension: open it and Playnite installs it. |
 | `.blockmap`, `latest.yml` and `latest-linux.yml` | Used by automatic updates, nothing to download by hand. |
 
 ---
 
-[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3126---2026-11-11) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)
+[Full changelog](https://github.com/Shirowwww/Achievement-Watcher-Next/blob/main/CHANGELOG.md#3127---2026-11-13) · [Documentation](https://shirowwww.github.io/Achievement-Watcher-Next/) · [Linux guide](https://shirowwww.github.io/Achievement-Watcher-Next/linux.html) · [Troubleshooting](https://shirowwww.github.io/Achievement-Watcher-Next/troubleshooting.html)

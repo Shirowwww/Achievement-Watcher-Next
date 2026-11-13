@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Spill fra Rockstar Games Launcher kommer med i biblioteket, DLC-prestasjoner får egne seksjoner, og et spill kan igjen åpnes direkte på prestasjonene sine."
+    },
+    {
+      "kind": "heading",
+      "text": "Høydepunkter"
+    },
+    {
+      "kind": "item",
+      "text": "Spill fra Rockstar Games Launcher. GTA V Enhanced og de andre spillene den installerte vises med prestasjonslisten sin. Koble til Rockstar Games-kontoen din i Innstillinger > Kilder for å se hvilke du har låst opp og når."
+    },
+    {
+      "kind": "item",
+      "text": "Grunnspill og DLC hver for seg. Et spill der prestasjonene kommer i sett, viser grunnspillet først og deretter hver DLC under sin egen overskrift og telling. Platina tilhører grunnspillet, som på konsollen."
+    },
+    {
+      "kind": "item",
+      "text": "Filtrer biblioteket etter framgang eller plattform: ikke startet, pågår, nesten ferdig, 100 % eller 100 % av grunnspillet uten DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Åpne et spill direkte på prestasjonene (#183). Slå av Spillside i Innstillinger > Utseende > Bibliotekruter."
+    },
+    {
+      "kind": "item",
+      "text": "Mer på spillsiden: tidene fra HowLongToBeat, din egen spilletid, siste økt og første start, og et klikk på ikonet endrer det."
+    },
+    {
+      "kind": "heading",
+      "text": "Også nytt"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 for Azimuth og Diablo III (SanctuaryPort) viser prestasjonene og trofeene sine med bilder (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Konsoll- og manuelle spill får sin egen side, med beskrivelse, sjangere og utgivelsesdato fra Metacritic når butikkene ikke har dem."
+    },
+    {
+      "kind": "item",
+      "text": "Rulling i Innstillinger endrer aldri lenger en innstilling."
+    },
+    {
+      "kind": "item",
+      "text": "Rettelser: eldre suvenirer vises igjen på spillsiden (#187), et PS4-spill med samme navn som et eldre får riktig ikon og bakgrunn (#160), én reparasjon i Spilltilstand knytter alle teller-prestasjoner sammen (#168), klipp tar opp spill i eksklusiv fullskjerm, Millennium-programtillegget viser prestasjoner på Steams nye spillsider, opplåsinger stemplet litt foran PC-ens klokke varsler igjen, og veiviseren ved første start fryser ikke lenger på Linux med mange Proton-spill."
+    },
+    {
+      "kind": "text",
+      "text": "Se hele changeloggen for den fullstendige listen."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

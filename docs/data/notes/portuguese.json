@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Os jogos do Rockstar Games Launcher entram na biblioteca, as proezas dos DLC têm secções próprias e um jogo pode voltar a abrir diretamente nas proezas."
+    },
+    {
+      "kind": "heading",
+      "text": "Destaques"
+    },
+    {
+      "kind": "item",
+      "text": "Jogos do Rockstar Games Launcher. O GTA V Enhanced e os outros jogos que instalou aparecem com a lista de proezas. Liga a tua conta Rockstar Games em Definições > Fonte para veres quais desbloqueaste e quando."
+    },
+    {
+      "kind": "item",
+      "text": "Jogo base e DLC em separado. Um jogo cujas proezas vêm em conjuntos lista primeiro o jogo base, depois cada DLC sob o seu próprio título e contagem. A platina pertence ao jogo base, como na consola."
+    },
+    {
+      "kind": "item",
+      "text": "Filtra a biblioteca por progresso ou plataforma: por começar, em curso, quase concluído, 100% ou 100% do jogo base sem os DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Abre um jogo diretamente nas proezas (#183). Desativa a Página do jogo em Definições > Aparência > Cartões da biblioteca."
+    },
+    {
+      "kind": "item",
+      "text": "Mais na página do jogo: os tempos do HowLongToBeat, o teu próprio tempo de jogo, a última sessão e o primeiro arranque, e um clique no ícone para o mudar."
+    },
+    {
+      "kind": "heading",
+      "text": "Também novo"
+    },
+    {
+      "kind": "item",
+      "text": "O Forza Horizon 2 para Azimuth e o Diablo III (SanctuaryPort) mostram as suas proezas e troféus com imagens (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Os jogos de consola e manuais ganham a sua página, com descrição, géneros e data de lançamento do Metacritic quando as lojas não os indicam."
+    },
+    {
+      "kind": "item",
+      "text": "Deslocar as Definições já nunca altera uma definição."
+    },
+    {
+      "kind": "item",
+      "text": "Correções: as recordações antigas voltam a aparecer na página do jogo (#187), um jogo de PS4 com o mesmo nome de um mais antigo fica com o ícone e o fundo certos (#160), uma reparação do Estado do jogo liga todas as proezas com contador (#168), os clipes gravam jogos em ecrã inteiro exclusivo, o plugin Millennium mostra proezas nas novas páginas de jogos do Steam, os desbloqueios marcados ligeiramente à frente do relógio do PC voltam a notificar e o guia do primeiro arranque já não bloqueia no Linux com muitos jogos Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta o changelog completo para a lista completa."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

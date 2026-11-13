@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Spel från Rockstar Games Launcher kommer med i biblioteket, DLC-prestationer får egna sektioner och ett spel kan åter öppnas direkt på sina prestationer."
+    },
+    {
+      "kind": "heading",
+      "text": "Höjdpunkter"
+    },
+    {
+      "kind": "item",
+      "text": "Spel från Rockstar Games Launcher. GTA V Enhanced och de andra spel den installerade visas med sin prestationslista. Anslut ditt Rockstar Games-konto i Inställningar > Källor för att se vilka du har låst upp och när."
+    },
+    {
+      "kind": "item",
+      "text": "Basspel och DLC var för sig. Ett spel vars prestationer kommer i uppsättningar listar basspelet först och sedan varje DLC under egen rubrik och egen räkning. Platinan hör till basspelet, som på konsolen."
+    },
+    {
+      "kind": "item",
+      "text": "Filtrera biblioteket efter framsteg eller plattform: ej påbörjat, pågår, nästan klart, 100 % eller 100 % av basspelet utan DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Öppna ett spel direkt på dess prestationer (#183). Stäng av Spelsida i Inställningar > Utseende > Biblioteksrutor."
+    },
+    {
+      "kind": "item",
+      "text": "Mer på spelsidan: tiderna från HowLongToBeat, din egen speltid, senaste session och första start, och ett klick på ikonen byter den."
+    },
+    {
+      "kind": "heading",
+      "text": "Även nytt"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 för Azimuth och Diablo III (SanctuaryPort) visar sina prestationer och troféer med bilder (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Konsol- och manuella spel får sin egen sida, med beskrivning, genrer och utgivningsdatum från Metacritic när butikerna inte anger dem."
+    },
+    {
+      "kind": "item",
+      "text": "Att rulla i Inställningar ändrar aldrig längre en inställning."
+    },
+    {
+      "kind": "item",
+      "text": "Rättningar: äldre souvenirer visas igen på spelsidan (#187), ett PS4-spel med samma namn som ett äldre får rätt ikon och bakgrund (#160), en reparation i Spelets hälsa knyter ihop alla räknarprestationer (#168), klipp spelar in spel i exklusivt helskärmsläge, Millennium-tillägget visar prestationer på Steams nya spelsidor, upplåsningar stämplade något före datorns klocka aviseras igen, och guiden vid första start fryser inte längre på Linux med många Proton-spel."
+    },
+    {
+      "kind": "text",
+      "text": "Se hela ändringsloggen för den fullständiga listan."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

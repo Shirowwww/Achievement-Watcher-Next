@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "I giochi del Rockstar Games Launcher entrano nella libreria, i successi dei DLC hanno sezioni proprie e un gioco può tornare ad aprirsi direttamente sui suoi successi."
+    },
+    {
+      "kind": "heading",
+      "text": "In evidenza"
+    },
+    {
+      "kind": "item",
+      "text": "Giochi del Rockstar Games Launcher. GTA V Enhanced e gli altri giochi che ha installato compaiono con la loro lista di successi. Collega il tuo account Rockstar Games in Impostazioni > Sorgente per vedere quali hai sbloccato e quando."
+    },
+    {
+      "kind": "item",
+      "text": "Gioco base e DLC separati. Un gioco i cui successi arrivano a gruppi elenca prima il gioco base, poi ogni DLC sotto il proprio titolo e conteggio. Il platino appartiene al gioco base, come su console."
+    },
+    {
+      "kind": "item",
+      "text": "Filtra la libreria per progresso o piattaforma: non iniziato, in corso, quasi finito, 100%, oppure 100% del gioco base senza i DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Apri un gioco direttamente sui suoi successi (#183). Disattiva Pagina del gioco in Impostazioni > Aspetto > Riquadri della libreria."
+    },
+    {
+      "kind": "item",
+      "text": "Di più nella pagina del gioco: i tempi di HowLongToBeat, il tuo tempo di gioco, l'ultima sessione e il primo avvio, e un clic sull'icona per cambiarla."
+    },
+    {
+      "kind": "heading",
+      "text": "Altre novità"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 per Azimuth e Diablo III (SanctuaryPort) mostrano i loro successi e trofei con le immagini (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "I giochi per console e quelli manuali ottengono la loro pagina, con descrizione, generi e data di uscita da Metacritic quando gli store non li riportano."
+    },
+    {
+      "kind": "item",
+      "text": "Scorrere le Impostazioni non cambia più alcuna impostazione."
+    },
+    {
+      "kind": "item",
+      "text": "Correzioni: i vecchi ricordi tornano a comparire nella pagina del gioco (#187), un gioco PS4 con lo stesso nome di uno più vecchio prende l'icona e lo sfondo giusti (#160), una riparazione di Stato dei giochi collega tutti i successi a contatore (#168), le clip registrano i giochi a schermo intero esclusivo, il plugin Millennium mostra i successi nelle nuove pagine dei giochi di Steam, gli sblocchi con data leggermente in anticipo sull'orologio del PC notificano di nuovo e la guida del primo avvio non si blocca più su Linux con molti giochi Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta il changelog completo per l'elenco completo."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

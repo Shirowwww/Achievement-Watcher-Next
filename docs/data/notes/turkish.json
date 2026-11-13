@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Rockstar Games Launcher oyunları kütüphaneye katılıyor, DLC başarımlarının kendi bölümleri oluyor ve bir oyun yeniden doğrudan başarımlarında açılabiliyor."
+    },
+    {
+      "kind": "heading",
+      "text": "Öne çıkanlar"
+    },
+    {
+      "kind": "item",
+      "text": "Rockstar Games Launcher oyunları. GTA V Enhanced ve onun kurduğu diğer oyunlar başarım listesiyle görünür. Hangilerinin kilidini ne zaman açtığınızı görmek için Ayarlar > Kaynak bölümünde Rockstar Games hesabınızı bağlayın."
+    },
+    {
+      "kind": "item",
+      "text": "Temel oyun ve DLC ayrı. Başarımları setler halinde gelen bir oyun önce temel oyunu, sonra her DLC'yi kendi başlığı ve sayısı altında listeler. Platin, konsoldaki gibi temel oyuna aittir."
+    },
+    {
+      "kind": "item",
+      "text": "Kütüphaneyi ilerlemeye veya platforma göre süzün: başlanmadı, sürüyor, neredeyse bitti, %100 veya DLC hariç temel oyunun %100'ü."
+    },
+    {
+      "kind": "item",
+      "text": "Bir oyunu doğrudan başarımlarında açın (#183). Ayarlar > Görünüm > Kütüphane kutucukları altında Oyun sayfası seçeneğini kapatın."
+    },
+    {
+      "kind": "item",
+      "text": "Oyun sayfasında daha fazlası: HowLongToBeat süreleri, kendi oyun süreniz, son oturum ve ilk başlatma, ve simgeye tıklayarak değiştirebilirsiniz."
+    },
+    {
+      "kind": "heading",
+      "text": "Ayrıca yeni"
+    },
+    {
+      "kind": "item",
+      "text": "Azimuth için Forza Horizon 2 ve Diablo III (SanctuaryPort) başarımlarını ve kupalarını resimlerle gösterir (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Konsol ve elle eklenen oyunlar kendi sayfasını alır; mağazalar listelemediğinde açıklama, türler ve çıkış tarihi Metacritic'ten gelir."
+    },
+    {
+      "kind": "item",
+      "text": "Ayarlar'ı kaydırmak artık hiçbir ayarı değiştirmez."
+    },
+    {
+      "kind": "item",
+      "text": "Düzeltmeler: eski anılar oyun sayfasında yeniden görünüyor (#187), daha eski bir oyunla aynı adı taşıyan PS4 oyunu doğru simgeyi ve arka planı alıyor (#160), Oyun durumu'nun tek bir onarımı tüm sayaçlı başarımları bağlıyor (#168), klipler özel tam ekrandaki oyunları kaydediyor, Millennium eklentisi Steam'in yeni oyun sayfalarında başarımları gösteriyor, bilgisayar saatinin biraz ilerisine damgalanan kilit açmalar yeniden bildirim veriyor ve ilk başlatma rehberi çok sayıda Proton oyunu olan Linux'ta artık donmuyor."
+    },
+    {
+      "kind": "text",
+      "text": "Tam liste için tam değişiklik günlüğüne bakın."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

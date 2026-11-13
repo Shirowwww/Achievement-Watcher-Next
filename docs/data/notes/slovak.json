@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Hry z Rockstar Games Launchera pribúdajú do knižnice, úspechy z DLC majú vlastné sekcie a hra sa môže znova otvoriť priamo na svojich úspechoch."
+    },
+    {
+      "kind": "heading",
+      "text": "Hlavné novinky"
+    },
+    {
+      "kind": "item",
+      "text": "Hry z Rockstar Games Launchera. GTA V Enhanced a ďalšie hry, ktoré nainštaloval, sa zobrazujú so zoznamom úspechov. Pripojte svoj účet Rockstar Games v Nastavenia > Zdroj a uvidíte, ktoré ste odomkli a kedy."
+    },
+    {
+      "kind": "item",
+      "text": "Základná hra a DLC osobitne. Hra, ktorej úspechy sú v sadách, uvádza najprv základnú hru a potom každé DLC pod vlastným nadpisom a s vlastným počtom. Platina patrí základnej hre, rovnako ako na konzole."
+    },
+    {
+      "kind": "item",
+      "text": "Filtrujte knižnicu podľa postupu alebo platformy: nezačaté, rozohraté, takmer hotové, 100 % alebo 100 % základnej hry bez DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Otvorte hru priamo na jej úspechoch (#183). Vypnite Stránku hry v Nastavenia > Vzhľad > Dlaždice knižnice."
+    },
+    {
+      "kind": "item",
+      "text": "Viac na stránke hry: časy z HowLongToBeat, váš vlastný herný čas, posledná relácia a prvé spustenie a kliknutím na ikonu ju zmeníte."
+    },
+    {
+      "kind": "heading",
+      "text": "Ďalšie novinky"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 pre Azimuth a Diablo III (SanctuaryPort) zobrazujú svoje úspechy a trofeje s obrázkami (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Konzolové a ručne pridané hry dostanú vlastnú stránku s popisom, žánrami a dátumom vydania z Metacritic, keď ich obchody neuvádzajú."
+    },
+    {
+      "kind": "item",
+      "text": "Posúvanie v Nastaveniach už nikdy nezmení žiadne nastavenie."
+    },
+    {
+      "kind": "item",
+      "text": "Opravy: staršie spomienky sa znova zobrazujú na stránke hry (#187), hra pre PS4 s rovnakým názvom ako staršia dostane správnu ikonu a pozadie (#160), jedna oprava v Stave hry prepojí všetky úspechy s počítadlom (#168), klipy nahrávajú hry v exkluzívnom celoobrazovkovom režime, doplnok Millennium zobrazuje úspechy na nových stránkach hier v Steame, odomknutia označené mierne pred hodinami počítača sa opäť oznamujú a sprievodca prvým spustením už na Linuxe s mnohými hrami Proton nezamŕza."
+    },
+    {
+      "kind": "text",
+      "text": "Úplný zoznam nájdete v úplnom zozname zmien."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

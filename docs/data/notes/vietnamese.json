@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Game từ Rockstar Games Launcher vào thư viện, thành tựu DLC có phần riêng và một game có thể mở thẳng vào thành tựu của nó trở lại."
+    },
+    {
+      "kind": "heading",
+      "text": "Điểm nổi bật"
+    },
+    {
+      "kind": "item",
+      "text": "Game của Rockstar Games Launcher. GTA V Enhanced và các game khác mà nó đã cài hiển thị cùng danh sách thành tựu. Kết nối tài khoản Rockstar Games của bạn trong Cài đặt > Nguồn để xem bạn đã mở khóa những cái nào và khi nào."
+    },
+    {
+      "kind": "item",
+      "text": "Game gốc và DLC tách riêng. Một game có thành tựu chia thành các bộ sẽ liệt kê game gốc trước, rồi từng DLC dưới tiêu đề và số đếm riêng. Bạch kim thuộc về game gốc, như trên console."
+    },
+    {
+      "kind": "item",
+      "text": "Lọc thư viện theo tiến độ hoặc nền tảng: chưa bắt đầu, đang chơi, gần xong, 100%, hoặc 100% game gốc không tính DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Mở game thẳng vào thành tựu của nó (#183). Tắt Trang trò chơi trong Cài đặt > Giao diện > Thẻ thư viện."
+    },
+    {
+      "kind": "item",
+      "text": "Thêm trên trang game: thời lượng từ HowLongToBeat, thời gian chơi của riêng bạn, phiên gần nhất và lần chạy đầu tiên, và nhấp vào biểu tượng để đổi."
+    },
+    {
+      "kind": "heading",
+      "text": "Cũng mới"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 cho Azimuth và Diablo III (SanctuaryPort) hiển thị thành tựu và cúp của chúng kèm hình ảnh (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Game console và game thêm thủ công có trang riêng, với mô tả, thể loại và ngày phát hành từ Metacritic khi các cửa hàng không liệt kê."
+    },
+    {
+      "kind": "item",
+      "text": "Cuộn trong Cài đặt không còn làm đổi bất kỳ cài đặt nào nữa."
+    },
+    {
+      "kind": "item",
+      "text": "Sửa lỗi: những kỷ niệm cũ hiển thị lại trên trang game (#187), game PS4 trùng tên với game cũ hơn nhận đúng biểu tượng và nền (#160), một lần sửa của Tình trạng trò chơi liên kết mọi thành tựu dạng bộ đếm (#168), clip ghi được game ở chế độ toàn màn hình độc quyền, plugin Millennium hiển thị thành tựu trên các trang game mới của Steam, các lần mở khóa bị đóng dấu thời gian hơi vượt trước đồng hồ PC lại được thông báo, và hướng dẫn khởi động lần đầu không còn bị treo trên Linux với nhiều game Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Xem changelog đầy đủ để biết danh sách đầy đủ."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

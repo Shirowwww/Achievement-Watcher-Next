@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Os jogos do Rockstar Games Launcher entram na biblioteca, as conquistas de DLC ganham seções próprias e um jogo pode voltar a abrir direto nas conquistas."
+    },
+    {
+      "kind": "heading",
+      "text": "Destaques"
+    },
+    {
+      "kind": "item",
+      "text": "Jogos do Rockstar Games Launcher. GTA V Enhanced e os outros jogos que ele instalou aparecem com a lista de conquistas. Conecte sua conta Rockstar Games em Configurações > Fonte para ver quais você destravou e quando."
+    },
+    {
+      "kind": "item",
+      "text": "Jogo base e DLC separados. Um jogo cujas conquistas vêm em conjuntos lista primeiro o jogo base, depois cada DLC sob seu próprio título e contagem. A platina pertence ao jogo base, como no console."
+    },
+    {
+      "kind": "item",
+      "text": "Filtre a biblioteca por progresso ou plataforma: não iniciado, em andamento, quase pronto, 100% ou 100% do jogo base sem a DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Abra um jogo direto nas conquistas (#183). Desative Página do jogo em Configurações > Aparência > Cartões da biblioteca."
+    },
+    {
+      "kind": "item",
+      "text": "Mais na página do jogo: os tempos do HowLongToBeat, seu próprio tempo de jogo, a última sessão e o primeiro início, e um clique no ícone para trocá-lo."
+    },
+    {
+      "kind": "heading",
+      "text": "Também novo"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 para Azimuth e Diablo III (SanctuaryPort) mostram suas conquistas e troféus com imagens (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Jogos de console e manuais ganham sua página, com descrição, gêneros e data de lançamento do Metacritic quando as lojas não os listam."
+    },
+    {
+      "kind": "item",
+      "text": "Rolar as Configurações não altera mais nenhuma configuração."
+    },
+    {
+      "kind": "item",
+      "text": "Correções: as recordações antigas voltam a aparecer na página do jogo (#187), um jogo de PS4 com o mesmo nome de um mais antigo recebe o ícone e o fundo certos (#160), um reparo do Estado do jogo liga todas as conquistas com contador (#168), os clipes gravam jogos em tela cheia exclusiva, o plugin Millennium mostra conquistas nas novas páginas de jogo da Steam, desbloqueios marcados um pouco à frente do relógio do PC voltam a notificar e o guia da primeira inicialização não trava mais no Linux com muitos jogos Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Veja o changelog completo para a lista completa."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

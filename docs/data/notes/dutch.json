@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Games uit de Rockstar Games Launcher komen in de bibliotheek, prestaties van DLC krijgen eigen secties en een game kan weer direct op zijn prestaties openen."
+    },
+    {
+      "kind": "heading",
+      "text": "Hoogtepunten"
+    },
+    {
+      "kind": "item",
+      "text": "Games uit de Rockstar Games Launcher. GTA V Enhanced en de andere games die hij installeerde verschijnen met hun prestatielijst. Koppel je Rockstar Games-account in Instellingen > Bronnen om te zien welke je hebt ontgrendeld en wanneer."
+    },
+    {
+      "kind": "item",
+      "text": "Basisgame en DLC apart. Een game waarvan de prestaties in sets komen, toont eerst de basisgame en daarna elke DLC onder een eigen kop en aantal. De platina hoort bij de basisgame, zoals op de console."
+    },
+    {
+      "kind": "item",
+      "text": "Filter de bibliotheek op voortgang of platform: niet begonnen, bezig, bijna klaar, 100% of 100% van de basisgame zonder DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Open een game direct op zijn prestaties (#183). Zet Spelpagina uit in Instellingen > Weergave > Bibliotheektegels."
+    },
+    {
+      "kind": "item",
+      "text": "Meer op de spelpagina: de tijden van HowLongToBeat, je eigen speeltijd, laatste sessie en eerste start, en met een klik op het pictogram wijzig je het."
+    },
+    {
+      "kind": "heading",
+      "text": "Ook nieuw"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 voor Azimuth en Diablo III (SanctuaryPort) tonen hun prestaties en trofeeën met afbeeldingen (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Console- en handmatige games krijgen hun pagina, met beschrijving, genres en releasedatum van Metacritic als de winkels die niet vermelden."
+    },
+    {
+      "kind": "item",
+      "text": "Scrollen in Instellingen verandert nooit meer een instelling."
+    },
+    {
+      "kind": "item",
+      "text": "Fixes: oudere souvenirs staan weer op de spelpagina (#187), een PS4-game met dezelfde naam als een oudere krijgt het juiste pictogram en de juiste achtergrond (#160), één reparatie van Gamestatus koppelt elke tellerprestatie (#168), clips nemen games in exclusief volledig scherm op, de Millennium-plugin toont prestaties op de nieuwe gamepagina's van Steam, ontgrendelingen die iets voor op de pc-klok zijn gestempeld melden zich weer en de gids bij de eerste start loopt op Linux met veel Proton-games niet meer vast."
+    },
+    {
+      "kind": "text",
+      "text": "Zie de volledige changelog voor de volledige lijst."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

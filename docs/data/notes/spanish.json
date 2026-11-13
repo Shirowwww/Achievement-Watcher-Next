@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Los juegos del Rockstar Games Launcher se suman a la biblioteca, los logros de los DLC tienen sus propias secciones y un juego puede volver a abrirse directamente en sus logros."
+    },
+    {
+      "kind": "heading",
+      "text": "Lo más destacado"
+    },
+    {
+      "kind": "item",
+      "text": "Juegos del Rockstar Games Launcher. GTA V Enhanced y los otros juegos que instaló aparecen con su lista de logros. Conecta tu cuenta de Rockstar Games en Ajustes > Fuente para ver cuáles has desbloqueado y cuándo."
+    },
+    {
+      "kind": "item",
+      "text": "Juego base y DLC por separado. Un juego cuyos logros vienen en conjuntos lista primero el juego base y luego cada DLC bajo su propio título y recuento. El platino pertenece al juego base, como en la consola."
+    },
+    {
+      "kind": "item",
+      "text": "Filtra la biblioteca por progreso o plataforma: sin empezar, en curso, casi terminado, 100 % o 100 % del juego base sin sus DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Abre un juego directamente en sus logros (#183). Desactiva Página del juego en Ajustes > Apariencia > Recuadros de la biblioteca."
+    },
+    {
+      "kind": "item",
+      "text": "Más en la página del juego: los tiempos de HowLongToBeat, tu propio tiempo de juego, la última sesión y el primer inicio, y un clic en el icono para cambiarlo."
+    },
+    {
+      "kind": "heading",
+      "text": "También nuevo"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 para Azimuth y Diablo III (SanctuaryPort) muestran sus logros y trofeos con imágenes (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Los juegos de consola y los manuales tienen su página, con descripción, géneros y fecha de lanzamiento de Metacritic cuando las tiendas no los indican."
+    },
+    {
+      "kind": "item",
+      "text": "Desplazarse por los Ajustes ya no cambia nunca un ajuste."
+    },
+    {
+      "kind": "item",
+      "text": "Correcciones: los recuerdos antiguos vuelven a aparecer en la página del juego (#187), un juego de PS4 con el mismo nombre que otro más antiguo recibe el icono y el fondo correctos (#160), una reparación de Estado del juego enlaza todos los logros con contador (#168), los clips graban juegos en pantalla completa exclusiva, el plugin Millennium muestra logros en las nuevas páginas de juegos de Steam, los desbloqueos marcados algo por delante del reloj del PC vuelven a notificar y la guía del primer inicio ya no se congela en Linux con muchos juegos de Proton."
+    },
+    {
+      "kind": "text",
+      "text": "Consulta el registro de cambios completo para ver la lista completa."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",

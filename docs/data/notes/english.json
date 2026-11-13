@@ -1,4 +1,58 @@
 {
+  "3.12.7": [
+    {
+      "kind": "text",
+      "text": "Rockstar Games Launcher games join the library, DLC achievements get their own sections, and a game can open straight on its achievements again."
+    },
+    {
+      "kind": "heading",
+      "text": "Highlights"
+    },
+    {
+      "kind": "item",
+      "text": "Rockstar Games Launcher games. GTA V Enhanced and the other games it installed show with their achievement list. Connect your Rockstar Games account in Settings > Sources to see which ones you unlocked and when."
+    },
+    {
+      "kind": "item",
+      "text": "Base game and DLC apart. A game whose achievements come in sets lists the base game first, then each DLC under its own heading and count. The platinum belongs to the base game, as on the console."
+    },
+    {
+      "kind": "item",
+      "text": "Filter the library by progress or platform: not started, in progress, almost done, 100%, or 100% of the base game without its DLC."
+    },
+    {
+      "kind": "item",
+      "text": "Open a game straight on its achievements (#183). Turn off Game page in Settings > Appearance > Library tiles."
+    },
+    {
+      "kind": "item",
+      "text": "More on the game page: HowLongToBeat's times, your own play time, last session and first launch, and a click on the icon to change it."
+    },
+    {
+      "kind": "heading",
+      "text": "Also new"
+    },
+    {
+      "kind": "item",
+      "text": "Forza Horizon 2 for Azimuth and Diablo III (SanctuaryPort) show their achievements and trophies with pictures (#185)."
+    },
+    {
+      "kind": "item",
+      "text": "Console and manual games get their page, with description, genres and release date from Metacritic when the stores do not list them."
+    },
+    {
+      "kind": "item",
+      "text": "Scrolling Settings never changes a setting any more."
+    },
+    {
+      "kind": "item",
+      "text": "Fixes: older souvenirs show on the game page again (#187), a PS4 game sharing its name with an older one takes the right icon and background (#160), one Game Health repair ties every counter achievement (#168), clips record games in exclusive fullscreen, the Millennium plugin shows achievements on Steam's new game pages, unlocks stamped slightly ahead of the PC's clock notify again, and the first-start guide no longer freezes on Linux with many Proton games."
+    },
+    {
+      "kind": "text",
+      "text": "See the full changelog for the complete list."
+    }
+  ],
   "3.12.6": [
     {
       "kind": "text",
