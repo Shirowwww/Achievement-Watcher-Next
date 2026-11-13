@@ -210,8 +210,8 @@ function fh2Mod(text, schema) {
 }
 
 /*
-  SanctuaryPort (Diablo III): user/trophies.txt, one trophy id per line appended at each unlock, no
-  header and no date. A last line without its newline is still being written and is left out.
+  SanctuaryPort (Diablo III): user/trophies.txt, one line appended at each unlock: the trophy id, then
+  its unix time since 0.4.0 (none before). A last line without its newline is still being written.
 */
 function trophyIdLines(text, schema) {
   const body = String(text);
@@ -221,9 +221,46 @@ function trophyIdLines(text, schema) {
   const unlocks = new Map();
   for (const raw of lines) {
     if (!raw.trim()) continue;
-    if (!/^\d{1,3}$/.test(raw.trim())) throw new Error('not a trophy number');
-    const id = String(Number(raw.trim()));
-    if (known.has(id) && !unlocks.has(id)) unlocks.set(id, { achieved: true, time: 0, progress: 0 });
+    const match = /^\s*(\d{1,3})(?:\s+(\d{1,12}))?\s*$/.exec(raw);
+    if (!match) throw new Error('not a trophy number');
+    const id = String(Number(match[1]));
+    if (known.has(id) && !unlocks.has(id)) unlocks.set(id, { achieved: true, time: Number(match[2] || 0), progress: 0 });
+  }
+  return unlocks;
+}
+
+/*
+  inFAMOUS Second Son and First Light (issn_pc): user/trophies-<title id>.txt, rewritten whole at
+  each unlock: "#" comment lines, then "<id> YYYY-MM-DD HH:MM:SS" in local time.
+*/
+function trophyDateLines(text, schema) {
+  const known = new Set(schema.achievements.map((entry) => String(entry.name)));
+  const unlocks = new Map();
+  for (const raw of String(text).split(/\r?\n/)) {
+    if (!raw.trim() || raw.startsWith('#')) continue;
+    const match = /^(\d{1,3})(?:\s+(\S.*?))?\s*$/.exec(raw);
+    if (!match) throw new Error('not an "<id> <date>" line');
+    const id = String(Number(match[1]));
+    // The file is replaced whole, never caught half written: a missing or odd date only loses the date.
+    const time = match[2] && INI_DATE.test(match[2]) ? localSeconds(match[2]) : 0;
+    if (known.has(id) && !unlocks.has(id)) unlocks.set(id, { achieved: true, time, progress: 0 });
+  }
+  return unlocks;
+}
+
+/*
+  Dead Nation (PS4 recomp): save/trophies.dat, the 128 bits of the console's trophy state as four
+  little-endian 32-bit words, bit id%32 of word id/32; no dates. Any other size is not that file.
+*/
+const TROPHY_FLAG_BYTES = 16;
+function trophyFlags(bytes, schema) {
+  if (!Buffer.isBuffer(bytes) || bytes.length !== TROPHY_FLAG_BYTES) throw new Error('not a 16-byte trophy state');
+  const unlocks = new Map();
+  for (const entry of schema.achievements) {
+    const id = Number(entry.name);
+    if (!Number.isInteger(id) || id < 0 || id >= TROPHY_FLAG_BYTES * 8) continue;
+    const set = ((bytes.readUInt32LE(Math.floor(id / 32) * 4) >>> id % 32) & 1) === 1;
+    if (set) unlocks.set(String(entry.name), { achieved: true, time: 0, progress: 0 });
   }
   return unlocks;
 }
@@ -231,6 +268,8 @@ function trophyIdLines(text, schema) {
 module.exports = {
   fh2Mod,
   trophyIdLines,
+  trophyDateLines,
+  trophyFlags,
   iniUnlocked,
   idList,
   unlockPairs,

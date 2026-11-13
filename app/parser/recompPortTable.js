@@ -8,7 +8,7 @@
   `icons` says where recompPortArt.js finds the achievement pictures (none for a port that draws
   them in code). `console` is the console of the game ported, for the game page, and `detailsTitle`
   the game whose page a mod or fan game borrows. `nested` names folders of an install holding
-  another port (Pikmin 2 in Open Nectar).
+  another port (Pikmin 2 in Open Nectar). `binary` hands the reader the file's bytes, not its text.
 */
 
 const path = require('path');
@@ -93,7 +93,36 @@ const besideExe = (name) => ({ root }) => (root ? [path.join(root, name)] : []);
 const FH2_OFFLINE_PROFILE = 'User_9000000000000.ini';
 const FH2_REPORT = 'Achievements.txt';
 const FH2_ICONS = 'https://m.exophase.com/xbox/awards/m/';
-const SANCTUARY_ICONS = 'https://m.exophase.com/psn/awards/m/';
+const PSN_ICONS = 'https://m.exophase.com/psn/awards/m/';
+
+// issn_pc keeps user/ beside its launcher, one trophies-<title id>.txt per release of a game.
+const issnTrophies = (titles) => ({ root }) => (root ? titles.map((title) => path.join(root, 'user', `trophies-${title}.txt`)) : []);
+const ISSN_LAUNCHER = /^(?:Play )?inFAMOUS Second Son\.exe$/i;
+
+const MAX_PATHS_INI_BYTES = 64 * 1024;
+
+// One key of an ini without sections that matter (Dead Nation's paths.ini), or '' when it is missing.
+function iniValue(file, wanted) {
+  try {
+    if (fs.statSync(file).size > MAX_PATHS_INI_BYTES) return '';
+    for (const line of fs.readFileSync(file, 'utf8').replace(/^﻿/, '').split(/\r?\n/)) {
+      const pair = /^\s*([^=;#[\s][^=]*?)\s*=\s*"?(.*?)"?\s*$/.exec(line);
+      if (pair && pair[1].toLowerCase() === wanted && pair[2]) return pair[2];
+    }
+  } catch {
+    // No paths.ini yet: the default folder.
+  }
+  return '';
+}
+
+// Dead Nation's launcher: save= of paths.ini beside the exe (relative to it), else <exe>\save.
+function deadNationSaves({ root, host }) {
+  if (!root) return [];
+  const value = iniValue(path.join(root, 'paths.ini'), 'save');
+  const absolute = /^(?:[A-Za-z]:|[\\/])/.test(value);
+  const folder = !value ? path.join(root, 'save') : !absolute ? path.join(root, value) : typeof host.localPath === 'function' ? host.localPath(value) : value;
+  return folder ? [path.join(folder, 'trophies.dat')] : [];
+}
 function fh2Profiles({ root }) {
   if (!root) return [];
   const folder = path.join(root, 'fh2-mods', 'Achievements');
@@ -257,8 +286,47 @@ module.exports = [
     title: 'Diablo III (SanctuaryPort)',
     exe: /^SanctuaryPort\.exe$/i,
     repos: ['cadugimenes/sanctuaryport'],
-    icons: { from: 'files', url: SANCTUARY_ICONS },
+    icons: { from: 'files', url: PSN_ICONS },
     format: 'trophyIdLines',
     saves: besideExe(path.join('user', 'trophies.txt')),
+  },
+  {
+    // Liondarkz/issn_pc @ 4c73f69: src/runtime_trophy.c, scripts/trophies.py, scripts/trophy_list.py; list and
+    // pictures from PlayStation's NPWR05740_00 and Exophase. shortcut: ISSN_USER_DIR / ISSN_DATA_DIR are not followed.
+    id: 'issn',
+    console: 'PlayStation 4',
+    title: 'inFAMOUS Second Son (issn_pc)',
+    exe: ISSN_LAUNCHER,
+    repos: ['liondarkz/issn_pc'],
+    icons: { from: 'files', url: PSN_ICONS },
+    format: 'trophyDateLines',
+    slots: true,
+    saves: issnTrophies(['CUSA00004', 'CUSA00223']),
+  },
+  {
+    // The same launcher plays First Light from its own dump (NPWR06685_00): listed once it has a trophy.
+    id: 'issnfl',
+    console: 'PlayStation 4',
+    title: 'inFAMOUS First Light (issn_pc)',
+    exe: ISSN_LAUNCHER,
+    ifSaved: true,
+    repos: [],
+    icons: { from: 'files', url: PSN_ICONS },
+    format: 'trophyDateLines',
+    slots: true,
+    saves: issnTrophies(['CUSA00575', 'CUSA00897', 'CUSA01064']),
+  },
+  {
+    // rcostanza/dead-nation-ps4-recomp @ 9283e6d: src/runtime_services.c (trophies.dat), src/launcher.c (paths.ini);
+    // list NPWR05433_00. shortcut: a DEADNATION_SAVE_DIR set by hand is not followed.
+    id: 'deadnation',
+    console: 'PlayStation 4',
+    title: 'Dead Nation: Apocalypse Edition (Recompiled)',
+    exe: /^deadnation(?:\.exe)?$/i,
+    repos: ['rcostanza/dead-nation-ps4-recomp'],
+    icons: { from: 'files', url: PSN_ICONS },
+    format: 'trophyFlags',
+    binary: true,
+    saves: deadNationSaves,
   },
 ];

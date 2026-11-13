@@ -12,7 +12,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const { parseHive, readValue, listSubkeys, listValueNames } = require('../../app/util/wineRegistry.js');
-const { discoverPrefixes } = require('../../app/util/winePrefixes.js');
+const { discoverPrefixes, compatdataDirs } = require('../../app/util/winePrefixes.js');
 const { listHosts, winToUnix, pathKey, hostsFor, hostFor, allowedFromConfig } = require('../../app/util/winHosts.js');
 
 // Real symlinks and POSIX paths: these describe Linux and do not run on Windows.
@@ -228,6 +228,30 @@ test('a game folder belongs to the prefix it sits in, otherwise to every host', 
     assert.deepEqual(hostsFor(path.join(home, 'Games', 'Native'), hosts).map((h) => h.kind), ['linux', 'wine']);
     const withSave = (host) => host.kind === 'wine';
     assert.equal(hostFor(path.join(home, 'Games', 'Native'), withSave, hosts).kind, 'wine', 'the host that already has the files wins');
+  } finally {
+    fs.rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('a Steam game kept outside its Proton prefix lists that prefix first, and still every host', LINUX_ONLY, () => {
+  const home = tmp('aw-home-');
+  try {
+    const steamapps = path.join(home, '.local', 'share', 'Steam', 'steamapps');
+    makePrefix(path.join(steamapps, 'compatdata', '400', 'pfx'));
+    makePrefix(path.join(steamapps, 'compatdata', '2638890', 'pfx'));
+    const game = path.join(steamapps, 'common', 'Onimusha Way of the Sword');
+    fs.mkdirSync(game, { recursive: true });
+    fs.writeFileSync(path.join(steamapps, 'appmanifest_2638890.acf'), '"AppState"\n{\n\t"appid"\t\t"2638890"\n\t"installdir"\t\t"Onimusha Way of the Sword"\n}\n');
+    const hosts = listHosts({ platform: 'linux', env: {}, home });
+
+    const ordered = hostsFor(game, hosts);
+    assert.equal(ordered[0].appid, '2638890');
+    assert.deepEqual(ordered.map((h) => h.id).sort(), hosts.map((h) => h.id).sort(), 'no host is dropped');
+    assert.equal(hostFor(game, () => false, hosts).appid, '2638890', 'before its first save the game writes into its own prefix');
+    assert.equal(hostFor(game, (host) => host.appid === '400', hosts).appid, '400', 'a save already in another prefix still wins');
+    const unknown = path.join(steamapps, 'common', 'No Manifest');
+    assert.deepEqual(hostsFor(unknown, hosts).map((h) => h.id), hosts.map((h) => h.id), 'without a manifest nothing moves');
+    assert.deepEqual(compatdataDirs({ env: {}, home }), [path.join(steamapps, 'compatdata')]);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }

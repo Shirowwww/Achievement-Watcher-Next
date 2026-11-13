@@ -45,6 +45,29 @@ test('an appid-named save root counts every game it holds, as the library will l
   ]);
 });
 
+// #188: SanctuaryPort prepares game/image like a native PS4 port, so both readers claimed the install.
+test('a recompiled port read by its own file is not listed a second time by the generic PS4 reader', async () => {
+  const fixture = require('../helpers/ps4Recomp.js');
+  const ps4Recomp = require('../../app/parser/ps4Recomp.js');
+  const root = path.join(makeTempDir('aw-preview-d3-'), 'SanctuaryPort');
+  write(path.join(root, 'SanctuaryPort.exe'), 'MZ');
+  write(path.join(root, 'user', 'trophies.txt'), '47 1794539940\n');
+  write(path.join(root, 'game', 'image', 'CUSA00434', 'boot.bin'), 'boot');
+  write(path.join(root, 'trophy.key'), fixture.TEST_KEY);
+  fixture.makeGameDump(path.join(root, 'game', 'prepared', 'CUSA00434'), {
+    titleId: 'CUSA00434',
+    title: 'Diablo III: Reaper of Souls',
+    sets: [{ slot: 0, npcommid: 'NPWR06063_00', title: 'Diablo III: Reaper of Souls' }],
+  });
+  assert.equal(ps4Recomp.scan(root).length, 1, 'the generic reader does see a port there');
+
+  const games = await achievements.previewWatchedFolder(root, EVERY_SOURCE);
+  assert.deepEqual(
+    games.map((g) => g.appid),
+    ['pcports-sanctuary']
+  );
+});
+
 test('a folder with nothing to read holds nothing, and a source switched off reads nothing', async () => {
   const empty = makeTempDir('aw-preview-empty-');
   write(path.join(empty, 'readme.txt'), 'hello');

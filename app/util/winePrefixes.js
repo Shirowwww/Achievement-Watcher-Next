@@ -61,16 +61,43 @@ function steamLibraries(root) {
   return libraries;
 }
 
+// The folder of every Steam library that holds its Proton prefixes, one per game run under Proton.
+function compatdataDirs(ctx = { env: process.env, home: os.homedir() }) {
+  return steamRoots(ctx).flatMap((root) => steamLibraries(root).map((library) => path.join(library, 'steamapps', 'compatdata')));
+}
+
 function protonPrefixes(ctx) {
   const out = [];
-  for (const root of steamRoots(ctx)) {
-    for (const library of steamLibraries(root)) {
-      for (const dir of listDirs(path.join(library, 'steamapps', 'compatdata'))) {
-        out.push({ path: path.join(dir, 'pfx'), kind: 'proton', appid: path.basename(dir) });
-      }
+  for (const compatdata of compatdataDirs(ctx)) {
+    for (const dir of listDirs(compatdata)) {
+      out.push({ path: path.join(dir, 'pfx'), kind: 'proton', appid: path.basename(dir) });
     }
   }
   return out;
+}
+
+// The Steam game a path belongs to: .../steamapps/compatdata/<appid>/... (its Proton prefix), or
+// .../steamapps/common/<installdir>/... with the install manifest that names that folder.
+function steamAppidForPath(p) {
+  const parts = path.resolve(String(p || '')).split(path.sep);
+  const at = parts.lastIndexOf('steamapps');
+  if (at < 0 || at + 2 >= parts.length) return '';
+  const steamapps = parts.slice(0, at + 1).join(path.sep) || path.sep;
+  const numeric = (id) => (/^[0-9]+$/.test(String(id || '')) ? String(id) : '');
+  if (parts[at + 1] === 'compatdata') return numeric(parts[at + 2]);
+  if (parts[at + 1] !== 'common') return '';
+  let manifests = [];
+  try {
+    manifests = fs.readdirSync(steamapps).filter((name) => /^appmanifest_\d+\.acf$/.test(name));
+  } catch {
+    return '';
+  }
+  for (const name of manifests) {
+    const text = readText(path.join(steamapps, name)) || '';
+    const dir = /"installdir"\s+"([^"]*)"/i.exec(text);
+    if (dir && dir[1] === parts[at + 2]) return numeric(/"appid"\s+"(\d+)"/i.exec(text)?.[1]);
+  }
+  return '';
 }
 
 // Lutris keeps its game configs under ~/.config/lutris, or under its data folder when that is absent.
@@ -176,4 +203,4 @@ function discoverPrefixes({ env = process.env, home = os.homedir(), extra = [] }
   return prefixes;
 }
 
-module.exports = { discoverPrefixes, steamRoots, isPrefix, lutrisGameDirs, bottlesPrefixes };
+module.exports = { discoverPrefixes, steamRoots, isPrefix, lutrisGameDirs, bottlesPrefixes, compatdataDirs, steamAppidForPath };

@@ -156,6 +156,59 @@ test('the repair ties the counter to the stat so GBE can unlock it', async () =>
   assert.ok(!codes(diagnose(setup)).includes('STAT_LINK_MISSING'));
 });
 
+// #168 after 3.12.7: the first repair tied the counters whose stat existed, then every later repair
+// kept the file as it was, so the others were never tied and Game Health stayed yellow.
+test('a repair adds the links a kept schema lacks, and leaves everything else in it as it was', async () => {
+  const tiedLink = (stat) => ({ min_val: 0, max_val: 100, value: { operation: 'statvalue', operand1: stat } });
+  const setup = install({
+    stats: ['rmostat_rank_rmo_ach_19', 'rmostat_rank_rmo_ach_25'],
+    achievements: [
+      { name: 'ACH_19', displayName: 'Mine', progress: tiedLink('rmostat_rank_rmo_ach_19') },
+      { name: 'ACH_25', displayName: 'Mine too', progress: tiedLink('rmostat_rank_rmo_ach_25') },
+      { name: 'ACH_40', displayName: 'Kept as written', icon: 'images/own.png' },
+      { name: 'ACH_01', displayName: 'Plain' },
+    ],
+  });
+  const fourCounters = { achievement: { list: [counter('ACH_19'), counter('ACH_25'), counter('ACH_40'), plain('ACH_01')] } };
+  assert.ok(codes(diagnose(setup, fourCounters)).includes('STAT_LINK_MISSING'), 'ACH_40 follows the naming of the other two');
+
+  const repair = () => goldberg.repair({ steamSettings: setup.steamSettings, appid: '3486530', schema: fourCounters, savesRoots: setup.savesRoots, writeMain: false, writeDlc: false, writeAppId: false });
+  const summary = await repair();
+  assert.equal(summary.preservedRichSchema, true);
+  assert.equal(summary.linkedCounters, 1);
+  assert.ok(summary.backupDir && fs.existsSync(path.join(summary.backupDir, 'achievements.json')), 'the file is backed up before it changes');
+  const written = JSON.parse(fs.readFileSync(path.join(setup.steamSettings, 'achievements.json'), 'utf8'));
+  assert.deepEqual(written.find((a) => a.name === 'ACH_40'), { name: 'ACH_40', displayName: 'Kept as written', icon: 'images/own.png', progress: tiedLink('rmostat_rank_rmo_ach_40') });
+  assert.equal(written.find((a) => a.name === 'ACH_19').displayName, 'Mine');
+  assert.equal(written.find((a) => a.name === 'ACH_01').progress, undefined);
+  assert.ok(!codes(diagnose(setup, fourCounters)).includes('STAT_LINK_MISSING'));
+  assert.equal((await repair()).linkedCounters, 0, 'nothing left to add the second time');
+});
+
+// #168: played from a Steam shortcut, the stats are in GSE Saves\<the shortcut's id>.
+test("the stats a game wrote under a Steam shortcut's id name its counters too", () => {
+  const setup = install({ stats: [] });
+  const shortcut = path.join(setup.savesRoots[0].root, '4115424267');
+  fs.mkdirSync(path.join(shortcut, 'stats'), { recursive: true });
+  fs.writeFileSync(path.join(shortcut, 'stats', 'rmostat_rank_rmo_ach_19'), Buffer.alloc(4));
+  assert.ok(!codes(diagnose(setup)).includes('STAT_LINK_MISSING'), 'no profile is read outside the app');
+
+  const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-userdata-'));
+  fs.mkdirSync(path.join(userData, 'cfg'));
+  fs.writeFileSync(path.join(userData, 'cfg', 'shortcutSaveIds.json'), JSON.stringify({ 4115424267: '3486530' }));
+  const userDataPath = require(path.join(__dirname, '..', '..', 'app', 'util', 'userDataPath.js'));
+  const saved = process.env.AW_USER_DATA;
+  process.env.AW_USER_DATA = userData;
+  userDataPath.resetCache();
+  try {
+    assert.ok(codes(diagnose(setup)).includes('STAT_LINK_MISSING'));
+  } finally {
+    if (saved === undefined) delete process.env.AW_USER_DATA;
+    else process.env.AW_USER_DATA = saved;
+    userDataPath.resetCache();
+  }
+});
+
 test('Game Health offers the repair for it', () => {
   assert.ok(gameHealth.REPAIRABLE_GOLDBERG_CODES.has('STAT_LINK_MISSING'));
 });

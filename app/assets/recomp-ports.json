@@ -4935,5 +4935,721 @@
     "icon": "44e34g"
    }
   ]
+ },
+ "issn": {
+  "repository": "Liondarkz/issn_pc",
+  "license": "GPL-2.0",
+  "achievements": [
+   {
+    "name": "0",
+    "displayName": "Enjoy Your Powers",
+    "description": "Collect all trophies",
+    "icon": "85843e"
+   },
+   {
+    "name": "1",
+    "displayName": "Unstoppable",
+    "description": "Finish the game on Expert difficulty",
+    "icon": "e378bj"
+   },
+   {
+    "name": "2",
+    "displayName": "Sacrifice",
+    "description": "Risk your freedom to protect those you care about",
+    "hidden": true,
+    "icon": "4e86g3"
+   },
+   {
+    "name": "3",
+    "displayName": "Ruthless",
+    "description": "Look out for yourself, no matter the consequences",
+    "hidden": true,
+    "icon": "678gj8"
+   },
+   {
+    "name": "4",
+    "displayName": "Temperance",
+    "description": "Practice self-control",
+    "hidden": true,
+    "icon": "bgj355"
+   },
+   {
+    "name": "5",
+    "displayName": "Malice",
+    "description": "Get them before they get you",
+    "hidden": true,
+    "icon": "g167d4"
+   },
+   {
+    "name": "6",
+    "displayName": "Courage",
+    "description": "Stand up for the helpless",
+    "hidden": true,
+    "icon": "d03867"
+   },
+   {
+    "name": "7",
+    "displayName": "Contempt",
+    "description": "Don't fear the weak",
+    "hidden": true,
+    "icon": "j6d1gb"
+   },
+   {
+    "name": "8",
+    "displayName": "Mercy",
+    "description": "Everyone deserves a second chance",
+    "hidden": true,
+    "icon": "178163"
+   },
+   {
+    "name": "9",
+    "displayName": "Revenge",
+    "description": "An eye for an eye, a tooth for a tooth",
+    "hidden": true,
+    "icon": "3784g7"
+   },
+   {
+    "name": "10",
+    "displayName": "Justice",
+    "description": "Expose the corruption of the powerful",
+    "hidden": true,
+    "icon": "708d34"
+   },
+   {
+    "name": "11",
+    "displayName": "Dominance",
+    "description": "Show the world that nobody can protect them",
+    "hidden": true,
+    "icon": "578bjg"
+   },
+   {
+    "name": "12",
+    "displayName": "Reconciliation",
+    "description": "Finish the story with Good Karma",
+    "icon": "0381e1"
+   },
+   {
+    "name": "13",
+    "displayName": "Rebellion",
+    "description": "Finish the story with Evil Karma",
+    "icon": "85847e"
+   },
+   {
+    "name": "14",
+    "displayName": "Everybody Out",
+    "description": "Rescue 10 suspects from suspicion pens",
+    "icon": "e3785j"
+   },
+   {
+    "name": "15",
+    "displayName": "Spin-off",
+    "description": "Beat down 10 sign twirlers",
+    "icon": "4e86d3"
+   },
+   {
+    "name": "16",
+    "displayName": "Everyone's a Critic",
+    "description": "Take out 10 street musicians",
+    "icon": "678g18"
+   },
+   {
+    "name": "17",
+    "displayName": "Just Say No",
+    "description": "Bust 10 drug dealers",
+    "icon": "bgj315"
+   },
+   {
+    "name": "18",
+    "displayName": "Freedom of Speech",
+    "description": "Disrupt 10 activist rallies",
+    "icon": "g16744"
+   },
+   {
+    "name": "19",
+    "displayName": "What Did You Call Me?",
+    "description": "Kill 10 obnoxious Akuran gang members",
+    "icon": "d038e7"
+   },
+   {
+    "name": "20",
+    "displayName": "Someone Your Own Size",
+    "description": "Rescue 10 escaped conduits from angry mobs",
+    "icon": "j6d17b"
+   },
+   {
+    "name": "21",
+    "displayName": "Walk It Off",
+    "description": "Heal 10 wounded civilians",
+    "icon": "1781b3"
+   },
+   {
+    "name": "22",
+    "displayName": "Kicking and Screaming",
+    "description": "Finish off 10 wounded enemies or civilians",
+    "icon": "378417"
+   },
+   {
+    "name": "23",
+    "displayName": "True Hero",
+    "description": "Achieve Level 5 Good Karma",
+    "icon": "708db4"
+   },
+   {
+    "name": "24",
+    "displayName": "Infamous",
+    "description": "Achieve Level 5 Evil Karma",
+    "icon": "4e867b"
+   },
+   {
+    "name": "25",
+    "displayName": "Bweep! Bweep! Bweep!",
+    "description": "Collect half the Blast Shards",
+    "icon": "678g4g"
+   },
+   {
+    "name": "26",
+    "displayName": "Shardcore",
+    "description": "Collect all the Blast Shards",
+    "icon": "bgj3de"
+   },
+   {
+    "name": "27",
+    "displayName": "Nothing To See Here",
+    "description": "Destroy half the D.U.P. security cameras",
+    "icon": "g167b8"
+   },
+   {
+    "name": "28",
+    "displayName": "Blinded",
+    "description": "Destroy all of the D.U.P. security cameras",
+    "icon": "d03875"
+   },
+   {
+    "name": "29",
+    "displayName": "Inside Track",
+    "description": "Collect all the Informant Audio Logs",
+    "icon": "j6d17d"
+   },
+   {
+    "name": "30",
+    "displayName": "Blown Cover",
+    "description": "Defeat all the D.U.P. Secret Agents",
+    "icon": "1781b4"
+   },
+   {
+    "name": "31",
+    "displayName": "Big Brother",
+    "description": "Destroy all the D.U.P. Hidden Cameras",
+    "icon": "37841g"
+   },
+   {
+    "name": "32",
+    "displayName": "Coloring Inside the Lines",
+    "description": "Complete all the Stencil Art",
+    "icon": "708dbb"
+   },
+   {
+    "name": "33",
+    "displayName": "Prank Call",
+    "description": "Complete a District Showdown",
+    "icon": "5786ee"
+   },
+   {
+    "name": "34",
+    "displayName": "Hello Operator",
+    "description": "Complete Showdowns in half of the districts",
+    "icon": "038b70"
+   },
+   {
+    "name": "35",
+    "displayName": "Final Showdown",
+    "description": "Complete all of the District Showdowns in the city",
+    "icon": "858e15"
+   },
+   {
+    "name": "36",
+    "displayName": "One Down",
+    "description": "Clear the D.U.P. completely out of a district",
+    "icon": "e376d1"
+   },
+   {
+    "name": "37",
+    "displayName": "Home Field Advantage",
+    "description": "Clear the D.U.P. out of half the districts in the city",
+    "icon": "4e845b"
+   },
+   {
+    "name": "38",
+    "displayName": "Clean Sweep",
+    "description": "Clear the D.U.P. out of the entire city",
+    "icon": "678b0g"
+   },
+   {
+    "name": "39",
+    "displayName": "Total CARnage",
+    "description": "Destroy 5 cars in 5 seconds",
+    "icon": "bgje7e"
+   },
+   {
+    "name": "40",
+    "displayName": "Drop Everything",
+    "description": "Comet Drop over 170 meters",
+    "icon": "g16g08"
+   },
+   {
+    "name": "41",
+    "displayName": "Keep It Up",
+    "description": "Stay in the air for more than 45 seconds",
+    "icon": "d034j5"
+   },
+   {
+    "name": "42",
+    "displayName": "Put That Anywhere",
+    "description": "Defeat 10 enemies by detonating ammo crates",
+    "icon": "j6d4bd"
+   },
+   {
+    "name": "43",
+    "displayName": "Hat Trick",
+    "description": "Defeat an enemy using three different power sources",
+    "icon": "178g54"
+   },
+   {
+    "name": "44",
+    "displayName": "Double Smoke Stack Attack",
+    "description": "Dash through two red air vents without touching the ground and then Comet Drop on an enemy",
+    "icon": "378j3g"
+   },
+   {
+    "name": "45",
+    "displayName": "Cough Drop",
+    "description": "Comet Drop on three coughing enemies",
+    "icon": "708gjb"
+   },
+   {
+    "name": "46",
+    "displayName": "Make Fetch Proud",
+    "description": "Hit three weak points with Neon Beam in 6 seconds",
+    "icon": "57865e"
+   },
+   {
+    "name": "47",
+    "displayName": "Excessive Force",
+    "description": "Use a Karmic Streak attack to defeat exactly one enemy",
+    "icon": "038b00"
+   }
+  ]
+ },
+ "issnfl": {
+  "repository": "Liondarkz/issn_pc",
+  "license": "GPL-2.0",
+  "achievements": [
+   {
+    "name": "0",
+    "displayName": "Noble Achievement",
+    "description": "Collect all Trophies",
+    "icon": "86j17j"
+   },
+   {
+    "name": "1",
+    "displayName": "Lost",
+    "description": "Suffer a Loss",
+    "hidden": true,
+    "icon": "e1ed53"
+   },
+   {
+    "name": "2",
+    "displayName": "Cracked",
+    "description": "Endure a Deception",
+    "hidden": true,
+    "icon": "4105d1"
+   },
+   {
+    "name": "3",
+    "displayName": "Betrayed",
+    "description": "Experience a Double-cross",
+    "hidden": true,
+    "icon": "65d013"
+   },
+   {
+    "name": "4",
+    "displayName": "She's Ready",
+    "description": "Complete the story of inFAMOUS First Light",
+    "hidden": true,
+    "icon": "b68713"
+   },
+   {
+    "name": "5",
+    "displayName": "Illuminated",
+    "description": "Collect all Neon Lumens",
+    "icon": "g3j04g"
+   },
+   {
+    "name": "6",
+    "displayName": "Blackout",
+    "description": "Destroy all Police Drones",
+    "icon": "d1gjed"
+   },
+   {
+    "name": "7",
+    "displayName": "Lickety Pronto",
+    "description": "Complete all Lumen Races",
+    "icon": "j50bgj"
+   },
+   {
+    "name": "8",
+    "displayName": "That's So Fetch",
+    "description": "Complete all Neon Graffiti",
+    "icon": "103568"
+   },
+   {
+    "name": "9",
+    "displayName": "Unleashed",
+    "description": "Purchase every Upgrade",
+    "icon": "3053gb"
+   },
+   {
+    "name": "10",
+    "displayName": "Novice",
+    "description": "Complete 25% of all Challenges",
+    "icon": "747j33"
+   },
+   {
+    "name": "11",
+    "displayName": "Professional",
+    "description": "Complete 50% of all Challenges",
+    "icon": "535ej0"
+   },
+   {
+    "name": "12",
+    "displayName": "Expert",
+    "description": "Complete 75% of all Challenges",
+    "icon": "0d0747"
+   },
+   {
+    "name": "13",
+    "displayName": "Perfectionist",
+    "description": "Complete all of the Challenges in the Game",
+    "icon": "86j1dj"
+   },
+   {
+    "name": "14",
+    "displayName": "Alpha Rescue Diamond",
+    "description": "Achieve a score of 500,000 points",
+    "icon": "e1ed03"
+   },
+   {
+    "name": "15",
+    "displayName": "Alpha Survival Diamond",
+    "description": "Achieve a score of 500,000 points",
+    "icon": "410571"
+   },
+   {
+    "name": "16",
+    "displayName": "Beta Rescue Diamond",
+    "description": "Achieve a score of 500,000 points",
+    "icon": "65d043"
+   },
+   {
+    "name": "17",
+    "displayName": "Beta Survival Diamond",
+    "description": "Achieve a score of 500,000 points",
+    "icon": "b687d3"
+   },
+   {
+    "name": "18",
+    "displayName": "Gamma Survival Diamond",
+    "description": "Achieve a score of 500,000 points",
+    "icon": "g3j0bg"
+   },
+   {
+    "name": "19",
+    "displayName": "Turret Syndrome",
+    "description": "Overload 25 Turrets",
+    "icon": "d1gj7d"
+   },
+   {
+    "name": "20",
+    "displayName": "Great Responsibility",
+    "description": "50 Hostage Saves",
+    "icon": "j50b7j"
+   },
+   {
+    "name": "21",
+    "displayName": "Top of the Class",
+    "description": "Earn a total of 10,000,000 points",
+    "icon": "1035b8"
+   },
+   {
+    "name": "22",
+    "displayName": "Event Horizon",
+    "description": "Defeat 100 Enemies with a Neon Singularity",
+    "icon": "30531b"
+   },
+   {
+    "name": "23",
+    "displayName": "…Bada Boom!",
+    "description": "Defeat 20 Enemies in a row with Homing Missiles",
+    "icon": "747jb3"
+   },
+   {
+    "name": "24",
+    "displayName": "Fish in a Barrel",
+    "description": "25 Stasis + Weakpoint Kills",
+    "icon": "535e00"
+   }
+  ]
+ },
+ "deadnation": {
+  "repository": "rcostanza/dead-nation-ps4-recomp",
+  "license": "GPL-2.0",
+  "achievements": [
+   {
+    "name": "0",
+    "displayName": "Romero Would Be Proud",
+    "description": "Collect All Trophies",
+    "icon": "e37g13"
+   },
+   {
+    "name": "1",
+    "displayName": "Mediocrity",
+    "description": "Complete Campaign Mode On 'Normal'",
+    "icon": "4e8b11"
+   },
+   {
+    "name": "2",
+    "displayName": "Tough Enough",
+    "description": "Complete Campaign Mode On 'Grim'",
+    "icon": "678353"
+   },
+   {
+    "name": "3",
+    "displayName": "Morbid Curiosity",
+    "description": "Complete Campaign Mode On 'Morbid'",
+    "icon": "bgj463"
+   },
+   {
+    "name": "4",
+    "displayName": "Double the Action",
+    "description": "Complete Campaign Mode In Co-Op Mode",
+    "icon": "g1653g"
+   },
+   {
+    "name": "5",
+    "displayName": "And So It Begins...",
+    "description": "Complete Mission 1 (Any Difficulty Level)",
+    "icon": "d03b1d"
+   },
+   {
+    "name": "6",
+    "displayName": "A Trip Downtown",
+    "description": "Complete Mission 2 (Any Difficulty Level)",
+    "icon": "j6de5j"
+   },
+   {
+    "name": "7",
+    "displayName": "Walk in the Park",
+    "description": "Complete Mission 3 (Any Difficulty Level)",
+    "icon": "178j08"
+   },
+   {
+    "name": "8",
+    "displayName": "On top of the World",
+    "description": "Complete Mission 4 (Any Difficulty Level)",
+    "icon": "37860b"
+   },
+   {
+    "name": "9",
+    "displayName": "Out of the City",
+    "description": "Complete Mission 5 (Any Difficulty Level)",
+    "icon": "708543"
+   },
+   {
+    "name": "10",
+    "displayName": "Hospital Bill Through the Roof",
+    "description": "Complete Mission 6 (Any Difficulty Level)",
+    "icon": "578g30"
+   },
+   {
+    "name": "11",
+    "displayName": "Gravedigger",
+    "description": "Complete Mission 7 (Any Difficulty Level)",
+    "icon": "038jj7"
+   },
+   {
+    "name": "12",
+    "displayName": "Train to Nowhere",
+    "description": "Complete Mission 8 (Any Difficulty Level)",
+    "icon": "85800j"
+   },
+   {
+    "name": "13",
+    "displayName": "Sleeping with the Fishes",
+    "description": "Complete Mission 9 (Any Difficulty Level)",
+    "icon": "e37gg3"
+   },
+   {
+    "name": "14",
+    "displayName": "Took the Highway",
+    "description": "Complete Mission 10 (Any Difficulty Level)",
+    "icon": "4e8bb1"
+   },
+   {
+    "name": "15",
+    "displayName": "Teamwork",
+    "description": "Complete A Mission In Co-Op Mode (Any Difficulty Level)",
+    "icon": "678333"
+   },
+   {
+    "name": "16",
+    "displayName": "Very Dead",
+    "description": "Complete A Mission On 'Undead'",
+    "icon": "bgj443"
+   },
+   {
+    "name": "17",
+    "displayName": "Survivor",
+    "description": "Complete A Mission Without Dying",
+    "icon": "g1655g"
+   },
+   {
+    "name": "18",
+    "displayName": "Skilled",
+    "description": "Complete A Mission Without Receiving Any Damage",
+    "icon": "d03bbd"
+   },
+   {
+    "name": "19",
+    "displayName": "Zombie Killer",
+    "description": "Kill 1 000 Zombies",
+    "icon": "j6deej"
+   },
+   {
+    "name": "20",
+    "displayName": "Zombie Hunter",
+    "description": "Kill 10 000 Zombies",
+    "icon": "178jj8"
+   },
+   {
+    "name": "21",
+    "displayName": "Genocidiary",
+    "description": "Kill 53 597 Zombies",
+    "icon": "37866b"
+   },
+   {
+    "name": "22",
+    "displayName": "Aim For The Head",
+    "description": "Perform 500 Headshots",
+    "icon": "708553"
+   },
+   {
+    "name": "23",
+    "displayName": "Up Close & Personal",
+    "description": "Perform 500 Melee Kills",
+    "icon": "578gg0"
+   },
+   {
+    "name": "24",
+    "displayName": "Blown To Bits",
+    "description": "Blow Up 1 000 Zombies",
+    "icon": "038j17"
+   },
+   {
+    "name": "25",
+    "displayName": "Pyromaniac",
+    "description": "Burn 1 000 Zombies",
+    "icon": "85804j"
+   },
+   {
+    "name": "26",
+    "displayName": "Car Killer",
+    "description": "Destroy 500 Vehicles",
+    "icon": "e37g83"
+   },
+   {
+    "name": "27",
+    "displayName": "Upgrader",
+    "description": "Fully Upgrade A Single Stat Of Any Weapon In Campaign Mode",
+    "icon": "4e8b61"
+   },
+   {
+    "name": "28",
+    "displayName": "Weapons Specialist",
+    "description": "Fully Upgrade All Stats Of Any Weapon In Campaign Mode",
+    "icon": "6783g3"
+   },
+   {
+    "name": "29",
+    "displayName": "Suit Up",
+    "description": "Collect An Armor Piece",
+    "icon": "bgj433"
+   },
+   {
+    "name": "30",
+    "displayName": "Top Gear",
+    "description": "Collect All Armor Pieces",
+    "icon": "g1657g"
+   },
+   {
+    "name": "31",
+    "displayName": "Contributor",
+    "description": "Help Your Country To Clear The Virus Infection",
+    "icon": "d03b8d"
+   },
+   {
+    "name": "32",
+    "displayName": "Looter",
+    "description": "Collect All The Loot In Any Mission",
+    "icon": "j6de1j"
+   },
+   {
+    "name": "33",
+    "displayName": "King Of Looters",
+    "description": "Collect All The Loot In Every Mission",
+    "icon": "178j18"
+   },
+   {
+    "name": "34",
+    "displayName": "Memento Collector",
+    "description": "Find all mementos in single player campaign in a single playthrough",
+    "icon": "37864b"
+   },
+   {
+    "name": "35",
+    "displayName": "Still In the Game",
+    "description": "Survive to Round 5",
+    "icon": "7085d3"
+   },
+   {
+    "name": "36",
+    "displayName": "Never Give Up",
+    "description": "Survive to Round 10",
+    "icon": "578gb0"
+   },
+   {
+    "name": "37",
+    "displayName": "Keep It Up",
+    "description": "Complete a Round with a Kills-per-minute rate of 100 or more",
+    "icon": "038jb7"
+   },
+   {
+    "name": "38",
+    "displayName": "Combo Master",
+    "description": "Get the Apocalypse Combo Kill Bonus (150 Kills)",
+    "icon": "8580ej"
+   },
+   {
+    "name": "39",
+    "displayName": "Dynamic Duo",
+    "description": "Complete a Round in Co-Op Without Either Player Taking Damage",
+    "icon": "e37g63"
+   },
+   {
+    "name": "40",
+    "displayName": "Found 'Em",
+    "description": "Find all the Egogate emblems",
+    "icon": "4e8b41"
+   }
+  ]
  }
 }

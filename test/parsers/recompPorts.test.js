@@ -432,6 +432,101 @@ test('Diablo III (SanctuaryPort) reads user/trophies.txt: one id per line, no da
   assert.equal(urls.length, 54, 'one picture per trophy');
 });
 
+// The file a player sent with #188: SanctuaryPort 0.4.0 writes the unix time after each id.
+test('Diablo III (SanctuaryPort) 0.4.0 reads "<id> <unix time>" lines, and an older id-only line still counts', (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-d3-time-');
+  write(path.join(install, 'SanctuaryPort.exe'), '');
+  const file = path.join(install, 'user', 'trophies.txt');
+  write(file, '47 1794539940\r\n42 1794540889\r\n');
+
+  const [entry] = ports.scan(install);
+  assert.deepEqual(
+    ports.getAchievements(entry.data).map((u) => [u.id, u.earned_time]),
+    [
+      ['47', 1794539940],
+      ['42', 1794540889],
+    ]
+  );
+  write(file, '3\n47 1794539940\n42 17945');
+  assert.deepEqual(ports.earnedIds('sanctuary', file), ['3', '47'], 'a pre-0.4.0 line counts, the cut one waits');
+  write(file, '47 1794539940 extra\n');
+  assert.equal(ports.readUnlocks('sanctuary', file), null);
+});
+
+// The two files a player sent with #188, written by issn_pc 0.3.7.4 (Liondarkz/issn_pc @ 4c73f69).
+test('inFAMOUS Second Son (issn_pc) reads user/trophies-<title id>.txt in local time, First Light only once it has one', async (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-issn-');
+  write(path.join(install, 'inFAMOUS Second Son.exe'), '');
+  write(path.join(install, 'Play inFAMOUS Second Son.exe'), '');
+  const file = path.join(install, 'user', 'trophies-CUSA00004.txt');
+  write(file, '# Trophies unlocked in this port: id and local date. Removing a line locks it again.\r\n2 2026-11-13 13:42:22\r\n');
+
+  const entries = ports.scan(install);
+  assert.deepEqual(
+    entries.map((entry) => entry.appid),
+    ['pcports-issn'],
+    'First Light waits for its own file'
+  );
+  assert.deepEqual(
+    ports.getAchievements(entries[0].data).map((u) => [u.id, u.earned_time]),
+    [['2', unix(2026, 11, 13, 13, 42, 22)]]
+  );
+  write(path.join(install, 'user', 'trophies-CUSA00223.txt'), '# header\n2 2026-11-10 10:00:00\n14 2026-11-11 12:00:00\n');
+  assert.deepEqual(ports.earnedIdsFor(ports.scan(install)[0].data).sort(), ['14', '2'], 'both releases of the game are merged');
+  write(path.join(install, 'user', 'trophies-CUSA00897.txt'), '# header\n1 2026-11-12 09:00:00\n');
+  assert.deepEqual(
+    ports.scan(install).map((entry) => entry.appid),
+    ['pcports-issn', 'pcports-issnfl']
+  );
+  write(file, '# header\nnot a trophy\n');
+  assert.equal(ports.readUnlocks('issn', file), null);
+
+  stubFetch(t, () => png(64, 64));
+  const game = await ports.getGameData(entries[0].data);
+  assert.equal(game.console, 'PlayStation 4');
+  assert.equal(game.achievement.total, 48);
+  const sacrifice = game.achievement.list.find((a) => a.name === '2');
+  assert.deepEqual([sacrifice.displayName, sacrifice.hidden], ['Sacrifice', 1]);
+  assert.equal((await ports.getGameData({ port: 'issnfl' })).achievement.total, 25);
+});
+
+// The file a player sent with #188: rcostanza/dead-nation-ps4-recomp @ 9283e6d keeps the console's trophy flags.
+test('Dead Nation (PS4 recomp) reads the 16-byte trophies.dat in the save folder paths.ini names', async (t) => {
+  const { ports } = profile(t);
+  const install = makeTempDir('aw-recomp-dn-');
+  write(path.join(install, 'deadnation.exe'), '');
+  write(path.join(install, 'deadnation-setup.exe'), '');
+  const player = Buffer.from([0x60, 0x00, 0x0a, 0x28, ...Array(12).fill(0)]);
+  write(path.join(install, 'save', 'trophies.dat'), player);
+
+  const [entry, ...others] = ports.scan(install);
+  assert.equal(others.length, 0);
+  assert.equal(entry.appid, 'pcports-deadnation');
+  // Missions 1 and 2, Survivor, Zombie Killer, Upgrader and Suit Up: what two missions played give.
+  assert.deepEqual(ports.earnedIdsFor(entry.data), ['5', '6', '17', '19', '27', '29']);
+  assert.deepEqual(
+    ports.getAchievements(entry.data).map((u) => u.earned_time),
+    [0, 0, 0, 0, 0, 0],
+    'the file keeps no date'
+  );
+
+  const moved = path.join(makeTempDir('aw-recomp-dn-saves-'), 'Dead Nation');
+  write(path.join(install, 'paths.ini'), `[paths]\r\ngame=C:\\Dumps\\CUSA00236\r\nsave=${moved}\r\n`);
+  write(path.join(moved, 'trophies.dat'), Buffer.alloc(16));
+  assert.equal(ports.scan(install)[0].data.saveFile, path.join(moved, 'trophies.dat'));
+  write(path.join(install, 'paths.ini'), '[paths]\nsave = "my saves"\n');
+  assert.equal(ports.saveFileFor(ports.portById('deadnation'), install), path.join(install, 'my saves', 'trophies.dat'), 'a relative folder is from the exe');
+
+  write(path.join(moved, 'trophies.dat'), Buffer.alloc(15));
+  assert.equal(ports.readUnlocks('deadnation', path.join(moved, 'trophies.dat')), null, 'a short file is not the trophy state');
+  stubFetch(t, () => png(64, 64));
+  const game = await ports.getGameData(entry.data);
+  assert.equal(game.achievement.total, 41);
+  assert.equal(game.achievement.list.find((a) => a.name === '5').displayName, 'And So It Begins...');
+});
+
 test('Road Rash 64 reads one RetroAchievements id per line, from LOCALAPPDATA or beside the exe with portable.txt', (t) => {
   const { ports, local } = profile(t);
   const file = path.join(local, 'RoadRash64Recompiled', 'achievements.txt');

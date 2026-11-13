@@ -113,6 +113,13 @@ function purchasedPlatformOf(label) {
   return rowOf(label).purchased || '';
 }
 
+// A PC port names the console of the game it ports: 'playstation', 'xbox', or '' for the others.
+function portConsoleFamily(consoleName) {
+  const name = String(consoleName || '').toLowerCase();
+  if (/playstation|\bps[1-5]\b/.test(name)) return 'playstation';
+  return /xbox/.test(name) ? 'xbox' : '';
+}
+
 const consoleGroupOf = (label) => rowOf(label).console || '';
 const emulatorPlatformOf = (label) => rowOf(label).platform || null;
 const trophyServiceOf = (label) => TROPHY_SERVICE_BY_PLATFORM[rowOf(label).platform] || '';
@@ -126,6 +133,7 @@ module.exports = {
   isClassifiedSource,
   libraryBadgeOf,
   sourceIconFile,
+  portConsoleFamily,
   purchasedPlatformOf,
   consoleGroupOf,
   emulatorPlatformOf,

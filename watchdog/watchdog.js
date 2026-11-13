@@ -251,6 +251,8 @@ const OPTIONS_RELOAD_DEBOUNCE_MS = 1500;
 // folder on first run is monitored without waiting for a restart. A pass over the missing roots of
 // 200 Wine prefixes costs about 20 ms.
 const NEW_ROOT_POLL_MS = 5 * 1000;
+// How often Linux prefixes are listed again: a game's first unlock comes minutes after its first run.
+const HOST_POLL_MS = 60 * 1000;
 
 const cfg_file = {
   option: optionsFile(userDataDir()),
@@ -924,7 +926,9 @@ var app = {
       }
       self.redirectsStamp = fileStamp(cfg_file.saveRedirects);
       const redirectedSaves = saveRedirects.roots(cfg_file.saveRedirects);
-      const saveFolders = await monitor.getFolders(cfg_file.userDir, self.options, redirectedSaves);
+      const hosts = await monitor.watchHosts();
+      self.knownHosts = new Set(hosts.map((host) => host.id));
+      const saveFolders = await monitor.getFolders(cfg_file.userDir, self.options, redirectedSaves, hosts);
       for (let folder of [...saveFolders, ...(steamClientRoot ? [steamClientRoot] : [])]) {
         try {
           if (fs.existsSync(folder.dir)) {
@@ -995,7 +999,8 @@ var app = {
   /*
     Re-check the save roots that did not exist yet, and arm each one as it appears. A poll rather
     than a watch on the parent: these roots sit directly under %APPDATA% / Documents / a drive root,
-    all of them busy folders, and this costs one existsSync per missing root per minute.
+    all of them busy folders, and this costs one existsSync per missing root per minute. On Linux the
+    hosts are listed again now and then: a Proton prefix appears on a game's first run.
   */
   watchForNewRoots: function (missing) {
     let self = this;
@@ -1004,11 +1009,17 @@ var app = {
       self.newRootTimer = null;
     }
     let pending = Array.isArray(missing) ? [...missing] : [];
-    if (pending.length === 0) return;
+    const rediscover = process.platform !== 'win32';
+    if (pending.length === 0 && !rediscover) return;
     const missingSince = Date.now();
+    let hostsListedAt = missingSince;
 
-    debug.log(`${pending.length} save root(s) do not exist yet - watching for them to appear`);
+    if (pending.length) debug.log(`${pending.length} save root(s) do not exist yet - watching for them to appear`);
     self.newRootTimer = setInterval(() => {
+      if (rediscover && Date.now() - hostsListedAt >= HOST_POLL_MS) {
+        hostsListedAt = Date.now();
+        pending.push(...self.rootsOfNewHosts());
+      }
       const stillMissing = [];
       for (const folder of pending) {
         try {
@@ -1025,13 +1036,26 @@ var app = {
         }
       }
       pending = stillMissing;
-      if (pending.length === 0) {
+      if (pending.length === 0 && !rediscover) {
         clearInterval(self.newRootTimer);
         self.newRootTimer = null;
       }
     }, NEW_ROOT_POLL_MS);
     // Never a reason to keep the process alive on its own.
     if (typeof self.newRootTimer.unref === 'function') self.newRootTimer.unref();
+  },
+  // The save roots of the Wine and Proton prefixes listed since the last look, marked as known.
+  rootsOfNewHosts: function () {
+    try {
+      const hosts = winHosts.listHosts();
+      const roots = monitor.newHostRoots(this.knownHosts || new Set(), hosts, cfg_file.userDir);
+      this.knownHosts = new Set(hosts.map((host) => host.id));
+      if (roots.length) debug.log(`A new Wine/Proton prefix appeared: ${roots.length} save root(s) to monitor`);
+      return roots;
+    } catch (err) {
+      debug.log(`[watch] prefix rediscovery failed: ${err && err.message ? err.message : err}`);
+      return [];
+    }
   },
   // `catchUpSince` (ms) marks a root that did not exist when watching started: everything in it was
   // written since then, including the first unlock no event will report (see util/rootCatchUp.js).

@@ -51,7 +51,8 @@ const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
 const steamCategoryBorrow = require('../util/steamCategoryBorrow.js');
-const { hostPaths } = require('../util/winHosts.js');
+const { hostPaths, pathKey } = require('../util/winHosts.js');
+const { compatdataDirs } = require('../util/winePrefixes.js');
 const portFinder = require(path.join(appPath, 'portFinder.js'));
 const { xdgAppDirs } = require('../util/xdgAppDirs.js');
 const uplayAutoMap = require(path.join(appPath, 'uplayAutoMap.js'));
@@ -794,7 +795,9 @@ async function discoverWithCache(option, steamAccFilter) {
   const appidList = await discover(option.achievement_source, steamAccFilter, activeScope);
   exeCandidateCache.flush();
   // Only a full scan is a usable baseline for the background poll; a scoped one looked at a subset.
-  _discoverFingerprint = activeScope ? null : dirFingerprint.capture(dirCache.lastVisitedDirs());
+  // Proton makes a game's prefix, where its saves go, on the first run: a new one calls for a scan.
+  const prefixParents = process.platform === 'win32' ? [] : compatdataDirs();
+  _discoverFingerprint = activeScope ? null : dirFingerprint.capture([...dirCache.lastVisitedDirs(), ...prefixParents]);
   if (!activeScope) _readAheadDirs = dirCache.lastVisitedDirs().slice();
   if (perfTrace.isEnabled()) debug.log(`[perf] discover ${Date.now() - discoverStarted}ms - ${perfTrace.summary({ prefix: 'discover:' })}`);
   if (cacheKey)
@@ -2381,6 +2384,9 @@ async function scanWatchedFolder(dir, source, kytyOptions = kytyps5.excludingOth
 */
 function recompGamesIn(dir, source, listed = []) {
   const games = listed.slice();
+  // A port recompPorts.js reads by its own file is not listed again by the generic PS4/PS3 readers (#188).
+  const portRoots = new Set(listed.filter((g) => g.data && g.data.type === recompPorts.TYPE && g.data.root).map((g) => pathKey(g.data.root)));
+  const unclaimed = (g) => !games.some((known) => known.appid === g.appid) && !(g.data && g.data.gameDir && portRoots.has(pathKey(g.data.gameDir)));
   // settings.js fills x360recomp from the Xenia switch while it is unset (x360Recomp.isEnabled).
   if (source.x360recomp !== false) {
     try {
@@ -2391,14 +2397,14 @@ function recompGamesIn(dir, source, listed = []) {
   }
   if (source.ps4recomp) {
     try {
-      games.push(...ps4Recomp.scan(dir).filter((g) => !games.some((known) => known.appid === g.appid)));
+      games.push(...ps4Recomp.scan(dir).filter(unclaimed));
     } catch (err) {
       debug.log(`[userdir] ${dir} could not be scanned for PS4 ports: ${scanError(err)}`);
     }
   }
   if (source.ps3recomp !== false) {
     try {
-      games.push(...ps3Recomp.scan(dir).filter((g) => !games.some((known) => known.appid === g.appid)));
+      games.push(...ps3Recomp.scan(dir).filter(unclaimed));
     } catch (err) {
       debug.log(`[userdir] ${dir} could not be scanned for PS3 ports: ${scanError(err)}`);
     }
@@ -3216,6 +3222,7 @@ async function readSaveFolderUnlocks(appid, { game, helpers }) {
       ? await shortcutSaveIds.readMergedSaves(steam.getAchievementsFromFile, [appid.data.path, ...aliasPaths], {
           isEarned: (entry) => normalizeSaveEntry(entry, appid.source).Achieved,
           timeOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).UnlockTime) || 0,
+          progressOf: (entry) => Number(normalizeSaveEntry(entry, appid.source).CurProgress) || 0,
         })
       : await steam.getAchievementsFromFile(appid.data.path);
   // The same folder can hold a Steam-emulator save AND a Uplay loader's redirect target

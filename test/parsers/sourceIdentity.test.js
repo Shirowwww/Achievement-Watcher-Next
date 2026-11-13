@@ -117,3 +117,16 @@ test('the Xbox console logo goes to the Xbox emulators, not to the Xbox PC libra
   for (const label of ['Xenia Emulator', 'XLiveLessNess', 'Xbox 360 Recomp']) assert.equal(identity.consoleBrandOf(label), 'xbox', label);
   assert.equal(identity.consoleBrandOf('Xbox PC'), '');
 });
+
+// #188: the PC Port logo is Nintendo's, so a port of a PlayStation or Xbox game shows its own console.
+test('a recompiled port takes the badge family of the console its game came from', () => {
+  const ports = require(path.join(appDir, 'parser', 'recompPortTable.js'));
+  const family = Object.fromEntries(ports.map((port) => [port.id, identity.portConsoleFamily(port.console)]));
+  assert.equal(family.sanctuary, 'playstation');
+  assert.equal(family.issn, 'playstation');
+  assert.equal(family.deadnation, 'playstation');
+  assert.equal(family.fh2azimuth, 'xbox');
+  for (const id of ['dusklight', 'ghostship', 'sms', 'smb1r', 'dkrr', 'smas', 'rr64', 'nectar']) assert.equal(family[id], '', id);
+  assert.equal(identity.portConsoleFamily('PS3'), 'playstation');
+  assert.equal(identity.portConsoleFamily(undefined), '');
+});

@@ -3302,8 +3302,12 @@ function sourcePresentationFor(game) {
       return { img: getSourceImg('ubisoft'), label: t('ubisoft-connect-achievements', 'Ubisoft Connect achievements', 'Succès Ubisoft Connect'), kind };
     case 'ea':
       return { img: getSourceImg('ea'), label: t('ea-app-achievements', 'EA app achievements', 'Succès EA app'), kind };
-    case 'pcport':
-      return { img: getSourceImg('PC Port'), label: t('pc-port-achievements', 'PC port achievements', 'Succès du portage PC'), kind };
+    case 'pcport': {
+      // The PC Port logo is Nintendo's: a PlayStation or Xbox game's port shows its own console.
+      const family = sourceIdentity.portConsoleFamily(game && game.console);
+      const logo = family === 'playstation' ? 'RPCS3 Emulator' : family === 'xbox' ? 'Xenia Emulator' : 'PC Port';
+      return { img: getSourceImg(logo), label: t('pc-port-achievements', 'PC port achievements', 'Succès du portage PC'), kind };
+    }
     case 'retroachievements':
       // A brand name, the same in every language.
       return { img: getSourceImg('RetroAchievements'), label: 'RetroAchievements', kind };

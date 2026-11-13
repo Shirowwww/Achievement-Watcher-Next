@@ -554,10 +554,25 @@ function writtenWithoutEmulator(save, dlls) {
   }
 }
 
+/*
+  The save folders plus their twins: a game started from a Steam shortcut saves under the shortcut's
+  id too (util/shortcutSaveIds.js), and only that folder holds the stats it wrote then (#168).
+  Outside the app (a test, a plain node run) no profile is read.
+*/
+function withShortcutTwins(folders, userDataRoot = require(path.join(__dirname, '..', 'util', 'userDataPath.js')).knownUserDataDir()) {
+  const shortcutSaveIds = require(path.join(__dirname, '..', 'util', 'shortcutSaveIds.js'));
+  const links = userDataRoot ? shortcutSaveIds.read(shortcutSaveIds.idsFile(userDataRoot)) : {};
+  const all = [];
+  for (const folder of (folders || []).filter(Boolean)) {
+    for (const dir of [folder, ...shortcutSaveIds.twinFolders(links, folder)]) if (!all.includes(dir)) all.push(dir);
+  }
+  return all;
+}
+
 // The stats GBE has stored for a game: one file per stat, named after it, in <save folder>/stats.
 function savedStatNames(saveFolders) {
   const names = new Set();
-  for (const folder of saveFolders || []) {
+  for (const folder of withShortcutTwins(saveFolders)) {
     if (!folder) continue;
     try {
       for (const entry of fs.readdirSync(path.join(folder, 'stats'), { withFileTypes: true })) if (entry.isFile()) names.add(entry.name);
@@ -651,6 +666,16 @@ function applyCommunityStats(steamSettings, { stats = [], progress = [] } = {}) 
   if (result.progress > 0) fs.writeFileSync(schemaFile, JSON.stringify(next, null, 2));
   if (statsChange) result.stats = mergeStatsJson(steamSettings, stats);
   return result;
+}
+
+// The emulator's own achievements.json as an array, or null when it is missing or not one.
+function readSchemaArray(steamSettings) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'));
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
 }
 
 // Is the achievements.json on disk worth keeping over a freshly generated one? Only when it carries
@@ -1796,15 +1821,21 @@ async function repair({
     schemaList: schema && schema.achievement && schema.achievement.list,
     saveFolders: [resolveLocalSaveDir({ steamSettings, appid }), ...roots.map(({ root }) => path.join(root, String(appid)))],
   });
-  const achievementsJson = withProgress(buildAchievementsJson(schema, imagePrefix), [...inferred, ...(community.progress || [])]);
+  const progressLinks = [...inferred, ...(community.progress || [])];
+  const achievementsJson = withProgress(buildAchievementsJson(schema, imagePrefix), progressLinks);
   const preserveRichSchema = hasRichProgressSchema(steamSettings, schema);
+  // A schema kept as it is still takes the counter links it lacks (#168: the first repair tied 8 of
+  // 17, every later one skipped the file).
+  const keptSchema = preserveRichSchema ? readSchemaArray(steamSettings) : null;
+  const keptWithLinks = keptSchema ? withProgress(keptSchema, progressLinks) : null;
+  const addedLinks = keptWithLinks ? keptWithLinks.filter((entry, index) => entry !== keptSchema[index]).length : 0;
   const stats = Array.isArray(community.stats) ? community.stats : [];
-  const summary = { steamSettings, achievementsJson, preservedRichSchema: preserveRichSchema, wroteAppId: false, backupDir: null, icons: { downloaded: 0, failed: 0, skipped: 0 }, dlc: null, main: null, user: null, stats: 0 };
+  const summary = { steamSettings, achievementsJson, preservedRichSchema: preserveRichSchema, linkedCounters: addedLinks, wroteAppId: false, backupDir: null, icons: { downloaded: 0, failed: 0, skipped: 0 }, dlc: null, main: null, user: null, stats: 0 };
 
   // A manual repair can replace a malformed or incomplete schema. Keep the previous files beside
   // steam_settings before changing them; missing files need no backup and the normal auto-repair
   // therefore stays quiet for newly detected games.
-  const filesToReplace = preserveRichSchema ? [] : [path.join(steamSettings, 'achievements.json')];
+  const filesToReplace = preserveRichSchema && addedLinks === 0 ? [] : [path.join(steamSettings, 'achievements.json')];
   if (stats.length > 0) filesToReplace.push(path.join(steamSettings, 'stats.json'));
   if (writeAppId && appid != null) filesToReplace.push(path.join(steamSettings, 'steam_appid.txt'));
   if (writeDlc) filesToReplace.push(path.join(steamSettings, 'configs.app.ini'));
@@ -1915,6 +1946,8 @@ async function repair({
   report('schema');
   if (!preserveRichSchema) {
     fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify(achievementsJson, null, 2));
+  } else if (addedLinks > 0) {
+    fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify(keptWithLinks, null, 2));
   }
   if (stats.length > 0) summary.stats = mergeStatsJson(steamSettings, stats);
 

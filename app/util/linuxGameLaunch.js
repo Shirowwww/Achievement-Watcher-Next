@@ -5,6 +5,7 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 const linuxLaunchers = require(path.join(__dirname, 'linuxLaunchers.js'));
+const { steamAppidForPath } = require(path.join(__dirname, 'winePrefixes.js'));
 
 /*
   How a game is started on Linux. AW never runs Wine itself: a Windows game goes back to the
@@ -13,25 +14,6 @@ const linuxLaunchers = require(path.join(__dirname, 'linuxLaunchers.js'));
   claims is opened through the desktop's own file association, so whatever the user set up for
   .exe files (Wine, Bottles, nothing) decides.
 */
-
-function readText(p) {
-  try {
-    return fs.readFileSync(p, 'utf8');
-  } catch {
-    return null;
-  }
-}
-
-function listFiles(dir, pattern) {
-  try {
-    return fs
-      .readdirSync(dir)
-      .filter((name) => pattern.test(name))
-      .map((name) => path.join(dir, name));
-  } catch {
-    return [];
-  }
-}
 
 function realOrSelf(p) {
   try {
@@ -51,23 +33,6 @@ function isInside(file, dir) {
 function numericAppid(appid) {
   const id = String(appid == null ? '' : appid).trim();
   return /^[0-9]+$/.test(id) ? id : '';
-}
-
-// .../steamapps/compatdata/<appid>/... (Proton prefix) or .../steamapps/common/<installdir>/...
-function steamAppidForPath(exe) {
-  const parts = path.resolve(exe).split(path.sep);
-  const at = parts.lastIndexOf('steamapps');
-  if (at < 0 || at + 2 >= parts.length) return '';
-  const steamapps = parts.slice(0, at + 1).join(path.sep) || path.sep;
-  if (parts[at + 1] === 'compatdata') return numericAppid(parts[at + 2]);
-  if (parts[at + 1] !== 'common') return '';
-  const installdir = parts[at + 2];
-  for (const manifest of listFiles(steamapps, /^appmanifest_\d+\.acf$/)) {
-    const text = readText(manifest) || '';
-    const dir = /"installdir"\s+"([^"]*)"/i.exec(text);
-    if (dir && dir[1] === installdir) return numericAppid(/"appid"\s+"(\d+)"/i.exec(text)?.[1] || '');
-  }
-  return '';
 }
 
 /*

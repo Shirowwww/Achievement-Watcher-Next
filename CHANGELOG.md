@@ -7,6 +7,35 @@ Entries are grouped as **Added**, **Improved**, **Fixed**, **Compatibility**, **
 **Website & Docs**. Releases before 3.9.0 shipped as *Achievement Watcher 3.x*; the product was
 renamed in 3.9.0 and the history is kept under one file.
 
+## Unreleased
+
+### Added
+
+- **inFAMOUS Second Son and inFAMOUS First Light, from the issn_pc port (#188).** Their 48 and 25
+  trophies show with their pictures and unlock dates. First Light appears once the port has saved
+  one of its trophies.
+- **Dead Nation: Apocalypse Edition, the PS4 recompilation (#188).** Its 41 trophies show with their
+  pictures, read from the save folder its setup uses. The port records no date, so an unlock gets
+  the time AW Next sees it.
+
+### Fixed
+
+- **Diablo III (SanctuaryPort) 0.4.0 lists its trophies again (#188).** The port now writes the
+  unlock time after each trophy, and AW Next read that file as damaged. Unlocks now carry their
+  real date, and the game no longer appears a second time as Diablo III: Reaper of Souls.
+- **A PC port of a PlayStation or Xbox game shows that console's logo (#188)**, not Nintendo's.
+- **Counter achievements of a game started from a Steam shortcut keep their progress (#168).** The
+  emulator moves the counters in the shortcut's save folder, and the bar vanished once the game
+  closed.
+- **Game Health ties every counter achievement in one repair (#168).** After a first repair, the
+  next ones kept the emulator's list as it was and never tied the remaining counters. A repair now
+  adds the missing links to it, after a backup, and also reads the stats saved under a Steam
+  shortcut.
+- **On Linux, a Steam game run under Proton for the first time while AW Next is open records its
+  achievements.** Proton makes the game's prefix on that first run, and AW Next only watched the
+  prefixes it found at startup, so unlocks stayed unseen until a restart. New prefixes are now picked
+  up within a minute, and a Steam game's own prefix is the one its saves are read from.
+
 ## 3.12.7 - 2026-11-13
 
 ### Added

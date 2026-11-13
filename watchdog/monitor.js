@@ -195,10 +195,29 @@ function withoutDisabled(entries, configuredDirs) {
   });
 }
 
-module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves = []) => {
-  const configuredDirs = readUserDirEntries(userDir_file);
+// The hosts whose save roots are watched: this machine on Windows, one per prefix and user on Linux.
+async function watchHosts() {
   const nativeDocs = process.platform === 'win32' ? await windowsDocuments().catch(() => null) : null;
-  const hosts = winHosts.listHosts({ nativeDocuments: () => nativeDocs });
+  return winHosts.listHosts({ nativeDocuments: () => nativeDocs });
+}
+module.exports.watchHosts = watchHosts;
+
+/*
+  The save roots of the hosts not in `known` (host ids). Proton makes a game's prefix on its first
+  run, usually long after the hosts were listed, and the game's saves are in that prefix only.
+*/
+module.exports.newHostRoots = (known, hosts, userDir_file) => {
+  const fresh = hosts.filter((host) => !known.has(host.id));
+  const roots = fresh.flatMap((host) => {
+    const documents = host.documents();
+    return [...builtinRoots(host, documents), ...(documents ? documentsRoots(documents) : [])];
+  });
+  return withoutDisabled(firstPerFolder(roots), readUserDirEntries(userDir_file));
+};
+
+module.exports.getFolders = async (userDir_file, options = {}, redirectedSaves = [], listed = null) => {
+  const configuredDirs = readUserDirEntries(userDir_file);
+  const hosts = listed || (await watchHosts());
   const docsByHost = new Map(hosts.map((host) => [host, host.documents()]));
 
   const roots = [

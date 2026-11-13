@@ -3,7 +3,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { discoverPrefixes } = require(path.join(__dirname, 'winePrefixes.js'));
+const { discoverPrefixes, steamAppidForPath } = require(path.join(__dirname, 'winePrefixes.js'));
 const wineRegistry = require(path.join(__dirname, 'wineRegistry.js'));
 
 /*
@@ -271,13 +271,33 @@ function realKey(p) {
   }
 }
 
-// The hosts a file or game folder belongs to: the prefix it sits in, else every host (a game kept
-// outside its prefix, as Steam does for Proton, can write to any of them).
+// The Proton prefix Steam made for the game in <library>/steamapps/common/<installdir>: the one of
+// that appid, in the same library.
+function ownProtonHosts(p, hosts) {
+  if (!hosts.some((host) => host.kind === 'proton')) return [];
+  let real = path.resolve(p);
+  try {
+    real = fs.realpathSync(p);
+  } catch {
+    /* not on disk yet: its path still names the library */
+  }
+  const appid = steamAppidForPath(real);
+  if (!appid) return [];
+  const library = real.slice(0, real.lastIndexOf(`${path.sep}steamapps${path.sep}`));
+  const prefix = realKey(path.join(library, 'steamapps', 'compatdata', appid, 'pfx'));
+  return hosts.filter((host) => host.kind === 'proton' && host.root && realKey(host.root) === prefix);
+}
+
+// The hosts a file or game folder belongs to: the prefix it sits in, else every host. A game Steam
+// keeps outside its Proton prefix can still write to any of them (a shortcut to the same folder runs
+// in another prefix), so that prefix only comes first.
 function hostsFor(p, hosts = listHosts()) {
   if (!p) return hosts;
   const key = realKey(p);
   const owners = hosts.filter((host) => host.root && (key === realKey(host.root) || key.startsWith(realKey(host.root) + path.sep)));
-  return owners.length > 0 ? owners : hosts;
+  if (owners.length > 0) return owners;
+  const own = ownProtonHosts(p, hosts);
+  return [...own, ...hosts.filter((host) => !own.includes(host))];
 }
 
 // The one host to write a game's files in: among hostsFor(p), the first where `found(host)` says

@@ -136,6 +136,26 @@ test('two save folders of one game merge by achievement name, oldest unlock kept
   assert.equal(merged.E.earned, false);
 });
 
+// #168: played from a Steam shortcut, only the shortcut's folder holds the counters GBE moves.
+test('a locked achievement keeps the furthest progress of the two folders, in the library and the Watchdog', async () => {
+  const own = path.join(tmp, 'saves3', '3486530');
+  const alias = path.join(tmp, 'saves3', UNSIGNED);
+  writeSave(own, { CHOMP: { earned: false, earned_time: 0 }, LIKES: { earned: false, earned_time: 0, progress: 60, max_progress: 100 }, DONE: { earned: true, earned_time: 5 } });
+  writeSave(alias, { CHOMP: { earned: false, earned_time: 0, progress: 37, max_progress: 100 }, LIKES: { earned: false, earned_time: 0, progress: 20, max_progress: 100 }, DONE: { earned: false, earned_time: 0, progress: 99 } });
+
+  const progressOf = (saved) => (saved && saved.progress) || 0;
+  const merged = await shortcutSaveIds.readMergedSaves(steam.getAchievementsFromFile, [own, alias], { isEarned: earnedOf, timeOf, progressOf });
+  assert.equal(merged.CHOMP.progress, 37, 'the shortcut folder moved the counter');
+  assert.equal(merged.LIKES.progress, 60, 'the larger count wins whichever folder has it');
+  assert.equal(merged.DONE.earned, true, 'progress never takes an unlock back');
+
+  const lists = shortcutSaveIds.mergeParsedLists([
+    [{ name: 'CHOMP', Achieved: false, UnlockTime: 0, CurProgress: 0 }],
+    [{ name: 'CHOMP', Achieved: false, UnlockTime: 0, CurProgress: 37, MaxProgress: 100 }],
+  ]);
+  assert.equal(lists[0].CurProgress, 37);
+});
+
 test('a missing or unreadable second folder never costs the first one its unlocks', async () => {
   const own = path.join(tmp, 'saves2', '1');
   writeSave(own, { A: { earned: true, earned_time: 7 } });

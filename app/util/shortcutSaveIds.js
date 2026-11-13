@@ -122,10 +122,11 @@ function foldAliasSaves({ data, games, entries, folderFor }) {
 
 /*
   Reads several save folders of one game and merges them by achievement name: unlocked in any is
-  unlocked, the oldest unlock date wins. The first readable folder is the base; a folder that cannot
+  unlocked, the oldest unlock date wins, and a locked one keeps the furthest progress (#168: the
+  shortcut's folder holds the counters). The first readable folder is the base; a folder that cannot
   be read is skipped, and the reader's own error is thrown only when none can.
 */
-async function readMergedSaves(readFolder, folders, { isEarned, timeOf }) {
+async function readMergedSaves(readFolder, folders, { isEarned, timeOf, progressOf = () => 0 }) {
   let merged = null;
   let firstError = null;
   for (const folder of folders) {
@@ -151,6 +152,8 @@ async function readMergedSaves(readFolder, folders, { isEarned, timeOf }) {
         const a = timeOf(own);
         const b = timeOf(incoming);
         if (b > 0 && (a === 0 || b < a)) merged[name] = incoming;
+      } else if (!isEarned(own) && progressOf(incoming) > progressOf(own)) {
+        merged[name] = incoming;
       }
     }
   }
@@ -170,7 +173,7 @@ function mergeParsedLists(lists) {
         const a = Number(own.UnlockTime) || 0;
         const b = Number(item.UnlockTime) || 0;
         if (b > 0 && (a === 0 || b < a)) byName.set(item.name, item);
-      }
+      } else if (!own.Achieved && (Number(item.CurProgress) || 0) > (Number(own.CurProgress) || 0)) byName.set(item.name, item);
     }
   }
   return [...byName.values()].sort((a, b) => (Number(b.UnlockTime) || 0) - (Number(a.UnlockTime) || 0));

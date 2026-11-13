@@ -75,6 +75,16 @@ const isPlainDirectory = (target) => {
 
 const readText = (file) => fsProbe.readStrictText(file, MAX_SAVE_BYTES);
 
+// A port whose unlock file is binary (`binary`) gets its bytes, with the same checks as a text file.
+function readBytes(file) {
+  if (!isPlainFile(file) || statOf(file).size > MAX_SAVE_BYTES) return null;
+  try {
+    return fs.readFileSync(file);
+  } catch {
+    return null;
+  }
+}
+
 // [{ port, root }] for every port whose executable `dir` holds (one launcher can run two games).
 function detectAll(dir) {
   const root = dir ? path.resolve(String(dir)) : '';
@@ -217,10 +227,10 @@ async function getGameData(data) {
 // { id -> { achieved, time, progress } } from a port's unlock file, or null when it cannot be read whole.
 function readUnlocks(portId, file) {
   const port = portById(portId);
-  const text = port ? readText(file) : null;
-  if (text === null) return null;
+  const content = !port ? null : port.binary ? readBytes(file) : readText(file);
+  if (content === null) return null;
   try {
-    return formats[port.format](text, schemaOf(port.id));
+    return formats[port.format](content, schemaOf(port.id));
   } catch (err) {
     debug.warn(`[recompPorts] ${portId}: '${file}' not read: ${err.message || err}`);
     return null;
