@@ -296,8 +296,8 @@ Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 
 Öffne `https://www.virustotal.com/gui/file/<the hash it prints>`. Ist die Datei die veröffentlichte,
 liegt der Bericht bereits vor. Für das aktuelle Release ist das
-[der Installer 3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
-(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
+[der Installer 3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)
+(`fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d`).
 
 Das Ergebnis listet, was jede Engine meint. Eine Handvoll heuristischer Erkennungen bei einem Build, der
 Emulator-Dateien mitbringt, ist der unten beschriebene Fehlalarm. Wichtig ist, dass der Hash zu der Datei passt,

@@ -291,8 +291,8 @@ Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 
 `https://www.virustotal.com/gui/file/<the hash it prints>` を開きます。ファイルが公開されたものと同じなら、
 レポートはすでにあります。現在のリリースでは、それは
-[3.12.7 のインストーラー](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
-(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`)です。
+[3.12.7 のインストーラー](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)
+(`fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d`)です。
 
 結果には、各エンジンの判定が一覧されます。エミュレーターのファイルを同梱したビルドでヒューリスティック検出が数件あるのは、
 以下で説明する誤検出です。重要なのは、ハッシュがリリースページで公開されたファイルと

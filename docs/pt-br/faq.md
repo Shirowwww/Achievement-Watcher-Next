@@ -150,7 +150,7 @@ antes de instalar qualquer coisa. Baixe somente da
 [página oficial de releases](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). Para conferir um
 instalador por conta própria, execute `Get-FileHash <installer> -Algorithm SHA256` e abra
 `https://www.virustotal.com/gui/file/<hash>`. A versão atual é a
-[3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96).
+[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d).
 Veja [Solução de problemas → Conferir uma versão por conta própria](troubleshooting.md#checking-a-release-yourself).
 
 ### No Linux, por que aparece um pedido do chaveiro? {#on-linux-why-does-a-keyring-prompt-appear}

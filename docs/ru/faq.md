@@ -151,7 +151,7 @@ Steam игра, которой нечего прочитать локально,
 [страницы официальных выпусков](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). Чтобы проверить
 установщик самостоятельно, выполните `Get-FileHash <installer> -Algorithm SHA256` и откройте
 `https://www.virustotal.com/gui/file/<hash>`. Текущий выпуск -
-[3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96).
+[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d).
 См. [Устранение неполадок → Самостоятельная проверка выпуска](troubleshooting.md#checking-a-release-yourself).
 
 ### Почему в Linux появляется запрос связки ключей? {#on-linux-why-does-a-keyring-prompt-appear}

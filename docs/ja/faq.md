@@ -149,7 +149,7 @@ Linux ゲームや Wayland ドライバーを使う Proton では、AW Next は�
 [公式のリリースページ](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)からだけにしてください。
 インストーラーを自分で確認するには、`Get-FileHash <installer> -Algorithm SHA256` を実行し、
 `https://www.virustotal.com/gui/file/<hash>` を開きます。現在のリリースは
-[3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)です。
+[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)です。
 [トラブルシューティング → リリースを自分で確認する](troubleshooting.md#checking-a-release-yourself)を参照してください。
 
 ### Linux で、なぜキーリングのプロンプトが表示されますか? {#on-linux-why-does-a-keyring-prompt-appear}

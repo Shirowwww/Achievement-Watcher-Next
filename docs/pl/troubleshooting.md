@@ -296,8 +296,8 @@ Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 
 Otwórz `https://www.virustotal.com/gui/file/<the hash it prints>`. Jeśli plik jest tym opublikowanym,
 raport już tam jest. Dla bieżącego wydania jest to
-[instalator 3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
-(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
+[instalator 3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)
+(`fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d`).
 
 Wynik wymienia, co myśli każdy silnik. Garstka wykryć heurystycznych w kompilacji zawierającej
 pliki emulatorów to fałszywy alarm opisany niżej. Liczy się to, że suma pasuje do pliku

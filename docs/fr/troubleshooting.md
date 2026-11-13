@@ -296,8 +296,8 @@ Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 
 Ouvrez `https://www.virustotal.com/gui/file/<the hash it prints>`. Si le fichier est celui qui a été publié,
 le rapport s'y trouve déjà. Pour la version actuelle, c'est
-[l'installateur 3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
-(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
+[l'installateur 3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d)
+(`fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d`).
 
 Le résultat liste ce que pense chaque moteur. Une poignée de détections heuristiques sur une version qui embarque
 des fichiers d'émulateur est le faux positif décrit ci-dessous. Ce qui compte, c'est que le hachage corresponde au fichier

@@ -151,7 +151,7 @@ avant d'installer quoi que ce soit. Téléchargez uniquement depuis la
 [page officielle des versions](https://github.com/Shirowwww/Achievement-Watcher-Next/releases). Pour vérifier un
 installateur vous-même, exécutez `Get-FileHash <installer> -Algorithm SHA256` et ouvrez
 `https://www.virustotal.com/gui/file/<hash>`. La version actuelle est la
-[3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96).
+[3.12.7](https://www.virustotal.com/gui/file/fb836d9224e789f3095243771266457fca1cb0cee367724e9c9b3c370f4e260d).
 Voir [Dépannage → Vérifier une version vous-même](troubleshooting.md#checking-a-release-yourself).
 
 ### Sous Linux, pourquoi une invite de trousseau apparaît-elle ? {#on-linux-why-does-a-keyring-prompt-appear}
