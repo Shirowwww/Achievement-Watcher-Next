@@ -287,13 +287,13 @@ antivirus vendor as a false positive.
 Every published installer can be looked up on VirusTotal by its SHA-256:
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.6.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 ```
 
 Open `https://www.virustotal.com/gui/file/<the hash it prints>`. If the file is the published one,
 the report is already there. For the current release that is
-[the 3.12.6 installer](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)
-(`53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709`).
+[the 3.12.7 installer](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
+(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
 
 The result lists what each engine thinks. A handful of heuristic detections on a build that bundles
 emulator files is the false positive described below. What matters is that the hash matches the file

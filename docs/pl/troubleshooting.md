@@ -291,13 +291,13 @@ programu antywirusowego jako fałszywy alarm.
 Każdy opublikowany instalator można wyszukać w VirusTotal po jego SHA-256:
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.6.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 ```
 
 Otwórz `https://www.virustotal.com/gui/file/<the hash it prints>`. Jeśli plik jest tym opublikowanym,
 raport już tam jest. Dla bieżącego wydania jest to
-[instalator 3.12.6](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)
-(`53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709`).
+[instalator 3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
+(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
 
 Wynik wymienia, co myśli każdy silnik. Garstka wykryć heurystycznych w kompilacji zawierającej
 pliki emulatorów to fałszywy alarm opisany niżej. Liczy się to, że suma pasuje do pliku

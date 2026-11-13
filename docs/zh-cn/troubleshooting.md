@@ -289,13 +289,13 @@ Ubisoft 游戏应获得 Ubisoft 元数据和 Uplay R2 修复，而不是 Steam G
 每个已发布的安装程序都可以通过其 SHA-256 在 VirusTotal 上查询：
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.6.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 ```
 
 打开 `https://www.virustotal.com/gui/file/<the hash it prints>`。如果该文件就是已发布的那个，
 报告已经在那里。对于当前发布版，那就是
-[3.12.6 安装程序](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)
-（`53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709`）。
+[3.12.7 安装程序](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
+（`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`）。
 
 结果会列出每个引擎的判断。在捆绑了模拟器文件的版本上出现少量启发式检测，
 就是下面所说的误报。重要的是哈希与发布页面所发布的

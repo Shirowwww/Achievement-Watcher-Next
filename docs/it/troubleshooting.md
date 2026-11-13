@@ -290,13 +290,13 @@ fornitore dell'antivirus come falso positivo.
 Ogni installer pubblicato può essere cercato su VirusTotal tramite il suo SHA-256:
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.6.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 ```
 
 Apri `https://www.virustotal.com/gui/file/<the hash it prints>`. Se il file è quello pubblicato,
 il rapporto è già lì. Per la release attuale è
-[l'installer 3.12.6](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)
-(`53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709`).
+[l'installer 3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
+(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
 
 Il risultato elenca ciò che pensa ciascun motore. Una manciata di rilevamenti euristici su una build che include
 file di emulatori è il falso positivo descritto sotto. Ciò che conta è che l'hash corrisponda al file

@@ -150,7 +150,7 @@ Wayland 模式的 Linux 游戏，或使用其 Wayland 驱动的 Proton。请在�
 [官方发布页面](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)下载。要自行检查
 安装程序，请运行 `Get-FileHash <installer> -Algorithm SHA256` 并打开
 `https://www.virustotal.com/gui/file/<hash>`。当前发布版是
-[3.12.6](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)。
+[3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)。
 见[疑难解答 → 自行检查发布版](troubleshooting.md#checking-a-release-yourself)。
 
 ### 在 Linux 上，为什么会出现密钥环提示？ {#on-linux-why-does-a-keyring-prompt-appear}

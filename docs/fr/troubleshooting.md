@@ -291,13 +291,13 @@ l'éditeur de l'antivirus comme faux positif.
 Chaque installateur publié peut être recherché sur VirusTotal par son SHA-256 :
 
 ```powershell
-Get-FileHash "Achievement.Watcher.Setup.3.12.6.exe" -Algorithm SHA256
+Get-FileHash "Achievement.Watcher.Setup.3.12.7.exe" -Algorithm SHA256
 ```
 
 Ouvrez `https://www.virustotal.com/gui/file/<the hash it prints>`. Si le fichier est celui qui a été publié,
 le rapport s'y trouve déjà. Pour la version actuelle, c'est
-[l'installateur 3.12.6](https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709)
-(`53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709`).
+[l'installateur 3.12.7](https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96)
+(`183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96`).
 
 Le résultat liste ce que pense chaque moteur. Une poignée de détections heuristiques sur une version qui embarque
 des fichiers d'émulateur est le faux positif décrit ci-dessous. Ce qui compte, c'est que le hachage corresponde au fichier

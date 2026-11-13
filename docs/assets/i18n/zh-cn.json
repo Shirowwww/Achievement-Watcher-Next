@@ -176,7 +176,7 @@
   "install.step3Body": "它就是那个监视器。实时通知和游戏时长都依赖它保持运行。",
   "install.step3Title": "让它留在任务栏托盘",
   "install.title": "让它跑起来",
-  "install.virustotal": "当前安装程序的 <a href=\"https://www.virustotal.com/gui/file/53f6f16421d88687ea70c16ac7a3d016202dc6ad3a008bb986e29160a48f5709\" rel=\"noopener\">VirusTotal</a> 报告。少量启发式检出是模拟器引起的误报；你可以通过比对 SHA-256 自行验证任何版本。",
+  "install.virustotal": "当前安装程序的 <a href=\"https://www.virustotal.com/gui/file/183be0f0780edcf4377607a357313125d53b9091f50c7114e3bee3998b5a4d96\" rel=\"noopener\">VirusTotal</a> 报告。少量启发式检出是模拟器引起的误报；你可以通过比对 SHA-256 自行验证任何版本。",
   "install.windowsData": "设置和数据：<code>%APPDATA%\\Achievement Watcher Next</code>",
   "more.backupBody": "设置、游戏库选择、预设、主题和游玩时间保存在一个文件里，方便重装系统或换新电脑。",
   "more.backupTitle": "个人资料备份",
