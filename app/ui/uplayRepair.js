@@ -231,7 +231,7 @@ function latestUplayR2Backup(gameDir) {
 }
 
 // Put back the snapshot the last Uplay R1/R2 repair took. Returns whether anything was restored.
-async function restoreUplayR2Backup(gameDir) {
+async function restoreUplayR2Backup(gameDir, appid = null) {
   const latest = latestUplayR2Backup(gameDir);
   if (!latest) return false;
   try {
@@ -247,7 +247,9 @@ async function restoreUplayR2Backup(gameDir) {
       noLink: true,
     });
     if (confirmed !== 0) return false;
-    const result = uplayR2.restoreConfigBackup({ dir: gameDir, backup: latest });
+    // Journaled: a restore that stops half way (a file held open) puts the folder back as it was.
+    const files = latest.files.map((file) => path.resolve(gameDir, String(file).split('/').join(path.sep)));
+    const result = await journaledRepair(appid, 'restore-uplay', repairJournal.gbeRoots({ files }), () => uplayR2.restoreConfigBackup({ dir: gameDir, backup: latest }));
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'info',
       title,
@@ -446,7 +448,10 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
 
   setBusy(t('configuring-achievements', 'Configuring (achievements)…', 'Configuration (succès)…'));
   const iniOptions = uplayR2IniOptions();
-  const result = uplayR2Installer.repairInstallation({
+  // The installer's own snapshot rolls back its planned files; the journal adds Game Health's
+  // Undo and takes back anything else a failed run left in the loader folders.
+  const journalRoots = repairJournal.gbeRoots({ runtimeDirs: [gameDir, ...runtimeDirs, ...emu.dll.map((file) => path.dirname(file))] });
+  const result = await journaledRepair(id, 'repair-uplay', journalRoots, () => uplayR2Installer.repairInstallation({
     gameDir,
     installPlan,
     loaderPaths: emu.dll,
@@ -459,7 +464,7 @@ async function applyUplayR2Repair({ game, gameDir, appid, box = null, interactiv
     objectiveIds: prefixInfo.objectiveIds,
     ...iniOptions,
     log: debug,
-  });
+  }));
   if (mapping.pendingOverride) {
     mapping = uplayR2.saveSteamMappingOverride({
       gameDir,

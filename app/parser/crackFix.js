@@ -570,6 +570,41 @@ function assertMadeForApp(extractDir, expectedAppid) {
   game (expectedAppid), back up overwritten files, install, and record the idempotency marker. Backs
   the "captcha → download manually" flow. Returns { applied:[...], backedUp, backupDir }.
 */
+/*
+  Puts back what a crack copy had done before it failed: the originals from its backup, the files it
+  created removed, and the folders it created too when they are empty again. A file that cannot be
+  put back is logged and left; the caller's own undo record still lists it.
+*/
+function undoPartialApply({ overwritten, created, createdDirs, backupDir, backupsRoot, log = noopLog }) {
+  for (const { dest, bak } of overwritten) {
+    try {
+      fs.copyFileSync(bak, dest);
+    } catch (err) {
+      log.log(`[crackfix] could not put back ${dest} => ${err && (err.message || err)}`);
+    }
+  }
+  for (const file of created) {
+    try {
+      fs.rmSync(file, { force: true });
+    } catch (err) {
+      log.log(`[crackfix] could not remove ${file} => ${err && (err.message || err)}`);
+    }
+  }
+  for (const dir of createdDirs.toReversed()) {
+    try {
+      fs.rmdirSync(dir);
+    } catch {
+      /* not empty: something else lives there */
+    }
+  }
+  try {
+    fs.rmSync(backupDir, { recursive: true, force: true });
+    if (backupsRoot) fs.rmdirSync(backupsRoot);
+  } catch {
+    /* kept: it holds the only copy of something */
+  }
+}
+
 async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName = '', expectedAppid = null, log = noopLog } = {}) {
   if (!archivePath || !fs.existsSync(archivePath)) throw new Error(`crackfix: archive not found: ${archivePath}`);
   if (!gameDir || !fs.existsSync(gameDir)) throw new Error(`crackfix: game folder not found: ${gameDir}`);
@@ -581,8 +616,20 @@ async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName =
     await extractArchive(archivePath, extractDir, { log });
     assertMadeForApp(extractDir, expectedAppid);
 
-    const backupDir = path.join(gameDir, '.aw-crackfix-backups', ts());
+    const backupsRoot = path.join(gameDir, '.aw-crackfix-backups');
+    const backupsRootExisted = fs.existsSync(backupsRoot);
+    const backupDir = path.join(backupsRoot, ts());
     const applied = [];
+    // What the copy did so far, so a failure half way puts the game back as it was.
+    const overwritten = [];
+    const created = [];
+    const createdDirs = [];
+    const ensureDir = (dir) => {
+      const missing = [];
+      for (let current = dir; !fs.existsSync(current); current = path.dirname(current)) missing.unshift(current);
+      fs.mkdirSync(dir, { recursive: true });
+      createdDirs.push(...missing);
+    };
     let backedUp = 0;
     const walk = (relDir) => {
       for (const entry of fs.readdirSync(path.join(extractDir, relDir), { withFileTypes: true })) {
@@ -596,14 +643,22 @@ async function applyLocalArchive({ archivePath, gameDir, fix = null, entryName =
             fs.mkdirSync(path.dirname(bak), { recursive: true });
             fs.copyFileSync(dest, bak);
             backedUp++;
+            overwritten.push({ dest, bak });
+          } else {
+            ensureDir(path.dirname(dest));
+            created.push(dest);
           }
-          fs.mkdirSync(path.dirname(dest), { recursive: true });
           fs.copyFileSync(path.join(extractDir, rel), dest);
           applied.push(rel);
         }
       }
     };
-    walk('');
+    try {
+      walk('');
+    } catch (err) {
+      undoPartialApply({ overwritten, created, createdDirs, backupDir, backupsRoot: backupsRootExisted ? null : backupsRoot, log });
+      throw err;
+    }
     const result = { applied, backedUp, backupDir: backedUp > 0 ? backupDir : null };
     // Record what we applied so a later automatic pass skips re-applying. A manually-picked archive may
     // not carry a CrakFiles fix object; synthesize a marker key from the file name so it stays idempotent.

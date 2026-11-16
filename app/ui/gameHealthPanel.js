@@ -1179,6 +1179,22 @@ function undoLastRepair(appid, game) {
   });
   if (confirmed !== 1) return false;
   const result = repairJournal.undo({ userDataPath, appid: game.appid || appid });
+  if (result.rolledBack) {
+    // A file the running game holds: nothing changed, and the same Undo works once it is closed.
+    debug.log(`[health] ${appid} undo of ${result.createdAt} taken back: could not write ${result.failed.map((entry) => `${entry.file} (${entry.reason})`).join(', ')}`);
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'warning',
+      title: gameHealthActionLabel(gameHealth.ACTION.UNDO_REPAIR),
+      message: t(
+        'nothing-changed-files-locked',
+        'Nothing was changed: these files could not be written. Close the game if it is running, then try again.',
+        'Rien n’a été modifié : ces fichiers n’ont pas pu être écrits. Ferme le jeu s’il est lancé, puis réessaie.'
+      ),
+      detail: result.failed.map((entry) => entry.file).join('\n'),
+      noLink: true,
+    });
+    return false;
+  }
   debug.log(`[health] ${appid} undid the repair of ${result.createdAt}: ${result.restored.length} put back, ${result.removed.length} removed, ${result.skipped.length} left`);
   if (result.skipped.length > 0) {
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
@@ -1222,7 +1238,7 @@ async function turnEmulatorOfflineModeOff(appid, game) {
 }
 
 // UNDO_ONLINE: every offline=1 AW Next turned off for this game, put back after a confirmation.
-function putEmulatorOfflineModeBack(appid, game) {
+async function putEmulatorOfflineModeBack(appid, game) {
   const dirs = offlineUndoDirs(game, $('#game-health').data('report'));
   if (dirs.length === 0) return true;
   const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
@@ -1236,7 +1252,10 @@ function putEmulatorOfflineModeBack(appid, game) {
     noLink: true,
   });
   if (confirmed !== 1) return false;
-  for (const dir of dirs) goldberg.restoreOfflineMode({ steamSettings: dir });
+  const roots = repairJournal.gbeRoots({ files: dirs.map((dir) => path.join(dir, 'configs.main.ini')) });
+  await journaledRepair(appid, gameHealth.ACTION.UNDO_ONLINE, roots, () => {
+    for (const dir of dirs) goldberg.restoreOfflineMode({ steamSettings: dir });
+  });
   debug.log(`[health] ${appid} offline mode put back in ${dirs.join(', ')}`);
   return true;
 }
@@ -1762,7 +1781,8 @@ async function runGameHealthAction(appid, action, button) {
     if (confirmed !== 1) return false;
 
     try {
-      const written = uplayR2.setSessionTicket({ dir: game.gameDir, enabled: !removing });
+      const roots = repairJournal.gbeRoots({ runtimeDirs: [game.gameDir] });
+      const written = await journaledRepair(appid, action, roots, () => uplayR2.setSessionTicket({ dir: game.gameDir, enabled: !removing }));
       debug.log(`[health] ${appid} session ticket ${removing ? 'removed' : 'written'} in ${written.files.length} file(s)`);
       return true;
     } catch (err) {
@@ -1909,7 +1929,7 @@ async function runGameHealthAction(appid, action, button) {
   if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {
     const dirs = switchedRuntimeDirs(game);
     // A Ubisoft repair swaps the Uplay loader instead, and keeps its own snapshot.
-    if (dirs.length === 0) return restoreUplayR2Backup(game.gameDir);
+    if (dirs.length === 0) return restoreUplayR2Backup(game.gameDir, appid);
     const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'question',
       title: gameHealthActionLabel(action),
@@ -1925,7 +1945,7 @@ async function runGameHealthAction(appid, action, button) {
       noLink: true,
     });
     if (confirmed !== 1) return false;
-    const restored = crackLoaderDetect.restoreSwitchedLoader(dirs);
+    const restored = await journaledRepair(appid, action, repairJournal.gbeRoots({ runtimeDirs: dirs }), () => crackLoaderDetect.restoreSwitchedLoader(dirs));
     debug.log(`[health] undid the runtime switch: ${restored.join(', ')}`);
     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
       type: 'info',
@@ -2024,10 +2044,21 @@ async function runGameHealthAction(appid, action, button) {
     */
     setGameHealthProgress({ phase: 'runtime' });
     let summary;
+    let dlls;
+    try {
+      // Downloaded before the first rename: a blocked download then leaves the folder untouched.
+      dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'), log: debug });
+    } catch (err) {
+      setGameHealthProgress(null);
+      throw err;
+    }
+    // Read by the result dialog below, so declared out here: a const inside the callback made every
+    // successful switch end on "sidelined is not defined", with the game already switched.
+    let sidelined = [];
     try {
       const roots = repairJournal.gbeRoots({ runtimeDirs: [game.gameDir, ...plan.dirs], settingsDirs: [steamSettings] });
       summary = await journaledRepair(appid, action, roots, () => {
-        const sidelined = switching ? crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]) : [];
+        sidelined = switching ? crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]) : [];
         if (sidelined.length > 0) debug.log(`[health] set aside ${sidelined.length} loader config file(s): ${sidelined.join(', ')}`);
         return gameHealthRepair.installEmulatorRuntime({
           gbeInstaller,
@@ -2035,6 +2066,7 @@ async function runGameHealthAction(appid, action, button) {
           cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
           steamSettings,
           log: debug,
+          dlls,
         });
       });
     } finally {

@@ -1393,6 +1393,29 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     debug.log(`[${appid}] automatic emulator fix skipped - no game executable found in ${gameDir}`);
     return { skipped: true, reason: 'no-game-executable', tag: '', steamSettingsDirs: [], emulator: detectedEmu };
   }
+  /*
+    Steamless is never run with its setting off (#195). A SteamStub exe needs it for the plain dll to
+    load, so such a game is left exactly as it was, unless a community crack (its own opt-in) turns
+    out to replace the runtime below.
+  */
+  const stubbedExe = !!(detectedExe && detectedExe.full && pe.detectSteamStub(detectedExe.full));
+  const steamlessAllowed = cfg.steamlessAutoUnpack === true;
+  const steamstubSkip = () => {
+    debug.log(`[${appid}] emulator fix skipped - ${detectedExe.name || detectedExe.full} has SteamStub DRM and Steamless is off in Settings`);
+    return { skipped: true, reason: 'steamstub-needs-steamless', tag: '', steamSettingsDirs: [], emulator: detectedEmu };
+  };
+  if (stubbedExe && !steamlessAllowed && cfg.autoApplyCrackFix !== true) return steamstubSkip();
+
+  /*
+    Every download before the first write: a blocked or failed one then leaves the game untouched.
+    Automatic discovery must never force a full release download for every new game. The cache
+    helper already performs the configured daily update check; `force` is reserved for the explicit
+    right-click action. Forcing here could leave the final worker stuck at 98% on a large .7z.
+  */
+  const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir: toolCacheDir(_userDataPath, 'gbeFork'), force: false, log: debug });
+  const steamlessCli = steamlessAllowed && detectedExe && detectedExe.full ? await steamless.ensureSteamless({ cacheDir: toolCacheDir(_userDataPath, 'steamless'), log: debug }) : null;
+  const bypassDlls = cfg.apiCheckBypass && detectedExe && detectedExe.full ? await apiCheckBypass.ensureBypassDlls({ cacheDir: toolCacheDir(_userDataPath, 'apiCheckBypass'), log: debug }) : null;
+
   // The restore point, now that something is going to be written: taken before the checks above, a
   // game they turn away got a fresh copy of its whole setup on every scan.
   if (beforeWrite) beforeWrite();
@@ -1413,13 +1436,14 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   // STEP 2 - SteamStub DRM: strip the stub with Steamless so the plain GBE steam_api DLL loads. No
   // fallback - if Steamless can't strip a detected stub the DLL is still installed regardless.
   const hasSteamStub = !crackApplied && !!(detectedExe && detectedExe.full && pe.detectSteamStub(detectedExe.full));
-  const shouldRunSteamless = !crackApplied && !!(detectedExe && detectedExe.full && (cfg.steamlessAutoUnpack || hasSteamStub));
+  // Nothing written yet but the crack, which did not apply: the game is still as it was.
+  if (hasSteamStub && !steamlessAllowed) return steamstubSkip();
+  const shouldRunSteamless = !crackApplied && !!steamlessCli && !!(detectedExe && detectedExe.full);
   if (shouldRunSteamless) {
     let stripped = false;
     let reason = '';
     try {
-      const cli = await steamless.ensureSteamless({ cacheDir: toolCacheDir(_userDataPath, 'steamless'), log: debug });
-      const r = await steamless.stripDrm({ steamless: cli, exePath: detectedExe.full, experimental: !!cfg.steamlessExperimental, log: debug });
+      const r = await steamless.stripDrm({ steamless: steamlessCli, exePath: detectedExe.full, experimental: !!cfg.steamlessExperimental, log: debug });
       stripped = !!(r && r.stripped);
       reason = (r && r.reason) || '';
       const prefix = hasSteamStub ? 'SteamStub' : 'Steamless';
@@ -1433,11 +1457,6 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
     }
   }
 
-  const cacheDir = toolCacheDir(_userDataPath, 'gbeFork');
-  // Automatic discovery must never force a full release download for every new game. The cache
-  // helper already performs the configured daily update check; `force` is reserved for the explicit
-  // right-click action. Forcing here could leave the final worker stuck at 98% on a large .7z.
-  const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, force: false, log: debug });
   const steamSettingsDirs = [];
   // A native Linux game takes libsteam_api.so of its own architecture, never a Windows dll.
   const nativeArch = detectedExe && detectedExe.full ? elfArch(detectedExe.full) : null;
@@ -1513,9 +1532,8 @@ async function autoApplyEmulatorFix({ gameDir, gameName, appid, steamSettings, o
   }
 
   // Optionally apply SteamAutoCrack's ownership-check bypass.
-  if (cfg.apiCheckBypass && detectedExe && detectedExe.full) {
+  if (bypassDlls && detectedExe && detectedExe.full) {
     try {
-      const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: toolCacheDir(_userDataPath, 'apiCheckBypass'), log: debug });
       const r = apiCheckBypass.applyBypass({ gameDir, exePath: detectedExe.full, dlls: bypassDlls, log: debug });
       debug.log(`[${appid}] Steam API check bypass: ${r.applied ? `applied (${r.dll}, ${r.arch})` : `skipped (${r.reason})`}`);
     } catch (e) {
@@ -1799,6 +1817,11 @@ function beginRecord(appid, label, roots) {
     debug.log(`[undo] ${appid}: no undo record for ${label} => ${err}`);
     return null;
   }
+}
+
+// The failure side of the pair: what the step wrote is put back before the pass goes on.
+function failRecord(handle, err) {
+  return repairJournal.rollbackAfterFailure(handle, err, (line) => debug.log(line));
 }
 
 function endRecord(handle) {
@@ -3972,7 +3995,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
               throw new Error(`no architecture-safe loader target (${installPlan.issues.map((issue) => issue.code).join(', ')})`);
             }
           }
-          const summary = uplayR2Installer.repairInstallation({
+          // Journaled like every scan write: Game Health can undo it, and a failure is rolled back whole.
+          const uplayDirs = [resolvedGameDir, ...loaderPaths.map((file) => path.dirname(file)), ...(installPlan ? installPlan.targets.map((target) => target.dir) : [])];
+          const summary = await recordRepair(appid.appid, 'automatic-uplay', repairJournal.gbeRoots({ runtimeDirs: uplayDirs }), () => uplayR2Installer.repairInstallation({
             gameDir: resolvedGameDir,
             installPlan,
             loaderPaths,
@@ -3992,7 +4017,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                 : option.achievement && option.achievement.lang,
             logging: !!(option.emulator && option.emulator.uplayLogging),
             log: debug,
-          });
+          }));
           debug.log(
             `[${appid.appid}] Uplay R2 setup was incomplete (${report.issues.map((i) => i.code).join(', ')}) - validated repair in ${summary.runtimeDirs.join(', ')}`
           );
@@ -4136,10 +4161,16 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             list: game.achievement && Array.isArray(game.achievement.list) ? game.achievement.list.map((a) => ({ ...a })) : [],
           },
         };
-        // One undo record for everything this pass writes into the game, kept even if it fails half way.
+        // One undo record for everything this pass writes into the game; a step that fails is rolled back.
         let autoRecord = null;
         (async () => {
-          autoRecord = beginRecord(bgAppid, 'automatic-fix', () => gbeFixRoots({ gameDir: bgGameDir, gameName: bgGameName, steamSettings: bgSteamSettings, writableAppid: bgAppid, exePath: bgExe && bgExe.full, option }));
+          const autoRoots = () => gbeFixRoots({ gameDir: bgGameDir, gameName: bgGameName, steamSettings: bgSteamSettings, writableAppid: bgAppid, exePath: bgExe && bgExe.full, option });
+          autoRecord = beginRecord(bgAppid, 'automatic-fix', autoRoots);
+          // A step that failed goes back at once; what the pass writes after it gets a fresh record.
+          const rollBackFailedStep = (err) => {
+            failRecord(autoRecord, err);
+            autoRecord = beginRecord(bgAppid, 'automatic-fix', autoRoots);
+          };
           let fixedSteamSettingsDirs = [];
           let fixApplied = false;
           let healthRepaired = false;
@@ -4189,6 +4220,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                   `${bgPlan.codes.length > 0 ? `, for ${bgPlan.codes.join(', ')}` : ''})`
               );
             } catch (err) {
+              rollBackFailedStep(err);
               debug.log(`[${bgAppid}] automatic health repair failed => ${err}`);
               reportEmulatorPackageBlocked(err);
             }
@@ -4221,6 +4253,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
                 }
               }
             } catch (err) {
+              rollBackFailedStep(err);
               debug.log(`[${bgAppid}] automatic emulator fix failed => ${err}`);
               reportEmulatorPackageBlocked(err);
             }

@@ -97,17 +97,96 @@ test('a repair that changed nothing leaves no entry', async () => {
   assert.equal(repairJournal.latest({ userDataPath: s.userDataPath, appid: '4115450' }), null);
 });
 
-test('a repair that fails half way is still recorded, and its error still reaches the caller', async () => {
+// Every file under a folder, with its exact bytes, for "left as it was" comparisons.
+function tree(dir) {
+  const out = {};
+  const walk = (current) => {
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      const full = path.join(current, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else out[path.relative(dir, full)] = fs.readFileSync(full).toString('base64');
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+test('a repair that fails half way is rolled back before its error reaches the caller', async () => {
   const s = setup();
+  const before = tree(s.gameDir);
+  const failure = await repairJournal
+    .record(options(s), () => {
+      typicalRepair(s);
+      throw new Error('network down');
+    })
+    .then(
+      () => null,
+      (err) => err
+    );
+  assert.match(String(failure && failure.message), /network down/);
+  assert.deepEqual(tree(s.gameDir), before, 'the game folder is byte-identical to before the repair');
+  assert.ok(failure.rollback && failure.rollback.skipped.length === 0, 'the error says what was put back');
+  assert.equal(repairJournal.latest({ userDataPath: s.userDataPath, appid: '4115450' }), null, 'nothing is left to undo');
+});
+
+test('an undo that cannot write one file changes nothing and keeps its record for a retry', async (t) => {
+  const s = setup();
+  await repairJournal.record(options(s), () => typicalRepair(s));
+  const afterRepair = tree(s.gameDir);
+  // One file locked by the running game: its put-back fails half way through the undo.
+  const locked = path.join(s.settings, 'configs.main.ini');
+  const realCopy = fs.copyFileSync;
+  fs.copyFileSync = (from, to, ...rest) => {
+    if (String(to).startsWith(`${locked}.aw-undo-`)) throw Object.assign(new Error('EBUSY: resource busy or locked'), { code: 'EBUSY' });
+    return realCopy(from, to, ...rest);
+  };
+  t.after(() => {
+    fs.copyFileSync = realCopy;
+  });
+  const result = repairJournal.undo({ userDataPath: s.userDataPath, appid: '4115450' });
+  fs.copyFileSync = realCopy;
+  assert.equal(result.failed.length, 1);
+  assert.equal(result.rolledBack, true);
+  assert.deepEqual(tree(s.gameDir), afterRepair, 'the game is left as the repair made it');
+  assert.ok(repairJournal.latest({ userDataPath: s.userDataPath, appid: '4115450' }), 'the record stays for a retry');
+  repairJournal.undo({ userDataPath: s.userDataPath, appid: '4115450' });
+  assert.equal(read(locked), '[main::connectivity]\noffline=1\n', 'the retry works once the file is free');
+});
+
+test('a rolled-back failure leaves the previous repair as the one Undo takes back', async () => {
+  const s = setup();
+  const main = path.join(s.settings, 'configs.main.ini');
+  await repairJournal.record(options(s), () => fs.writeFileSync(main, 'first repair'));
   await assert.rejects(
     repairJournal.record(options(s), () => {
-      fs.writeFileSync(path.join(s.settings, 'achievements.json'), '[]');
-      throw new Error('network down');
-    }),
-    /network down/
+      fs.writeFileSync(main, 'second repair, half done');
+      throw new Error('blocked by the antivirus');
+    })
   );
+  assert.equal(read(main), 'first repair');
   repairJournal.undo({ userDataPath: s.userDataPath, appid: '4115450' });
-  assert.ok(!fs.existsSync(path.join(s.settings, 'achievements.json')));
+  assert.equal(read(main), '[main::connectivity]\noffline=1\n');
+});
+
+test('a big file replaced in place comes back from the original kept beside it', async () => {
+  const s = setup();
+  const exe = path.join(s.gameDir, 'Game.exe');
+  // Over the copy limit, like a real game exe: the journal keeps no copy of its own.
+  const original = Buffer.alloc(repairJournal.COPY_LIMIT + 1, 1);
+  fs.writeFileSync(exe, original);
+  const before = tree(s.gameDir);
+  const roots = [...repairJournal.gbeRoots({ runtimeDirs: [s.gameDir] }), { path: s.settings, deep: true }];
+  await assert.rejects(
+    repairJournal.record(options(s, { roots }), () => {
+      // What Steamless does: the original kept as .steamstub.bak, the exe rewritten unpacked.
+      fs.copyFileSync(exe, `${exe}.steamstub.bak`);
+      const unpacked = Buffer.from(original);
+      unpacked[0] = 2;
+      fs.writeFileSync(exe, unpacked);
+      throw new Error('GBE download blocked');
+    })
+  );
+  assert.deepEqual(tree(s.gameDir), before);
 });
 
 test('repairs are undone newest first, and only a few are kept per game', async () => {

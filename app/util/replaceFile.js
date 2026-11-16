@@ -67,6 +67,35 @@ function unlinkForce(file) {
 }
 
 /*
+  fs.rmSync over a folder that holds a read-only file: Electron's Node (24.22.2) answers EPERM where
+  the Node running the tests does not, and copyFileSync carries the attribute onto every copy AW
+  makes. The attribute is cleared under the folder and the removal tried once more.
+*/
+function removeTreeForce(dir) {
+  try {
+    fs.rmSync(dir, { recursive: true, force: true });
+    return;
+  } catch (err) {
+    if (!RECOVERABLE.has(err && err.code)) throw err;
+  }
+  const clearUnder = (folder) => {
+    let entries = [];
+    try {
+      entries = fs.readdirSync(folder, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const child = path.join(folder, entry.name);
+      if (entry.isDirectory()) clearUnder(child);
+      else clearReadOnly(child);
+    }
+  };
+  clearUnder(dir);
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
+/*
   A sidecar only survives when the file it holds is still open, so the process that made it could
   not delete it. Whoever writes in that folder next clears it.
 */
@@ -200,4 +229,4 @@ function quarantineCorruptFile(file) {
   }
 }
 
-module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, sweepSidecars, renameRetry, quarantineCorruptFile };
+module.exports = { replaceFileSync, writeFileAtomicSync, clearReadOnly, unlinkForce, removeTreeForce, sweepSidecars, renameRetry, quarantineCorruptFile };

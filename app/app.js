@@ -3901,6 +3901,92 @@ function endRepairRecord(handle) {
   }
 }
 
+// The failure side of the pair: what the flow wrote is put back, and `err.rollback` says how it went.
+function failRepairRecord(handle, err) {
+  return repairJournal.rollbackAfterFailure(handle, err, (line) => debug.log(line));
+}
+
+/*
+  Whether the right-click emulator fix may run Steamless on this game's exe. "Auto-unpack SteamStub
+  DRM" on in Settings says yes. Off, it is never run silently (#195): only a SteamStub-wrapped exe
+  needs it, and then the user is asked, with the reason, before the exe is touched. Returns
+  { run, hasSteamStub, exePath }, or null when the user cancelled the whole fix.
+*/
+async function chooseManualSteamless({ gameDir, game, emuCfg }) {
+  const emu = goldberg.detectEmulator(gameDir);
+  const exe = exeDetect.detectConfident(gameDir, game?.name || '', { dllPaths: emu.dll });
+  const exePath = (exe && exe.full) || '';
+  let hasSteamStub = false;
+  try {
+    hasSteamStub = !!exePath && require(path.join(appPath, 'util/pe.js')).detectSteamStub(exePath);
+  } catch (err) {
+    debug.log(`[steamless] SteamStub check skipped for ${exePath} => ${formatErr(err)}`);
+  }
+  if (emuCfg.steamlessAutoUnpack === true) return { run: !!exePath, hasSteamStub, exePath };
+  if (!hasSteamStub) return { run: false, hasSteamStub, exePath };
+  const answer = await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+    type: 'question',
+    title: t('steamless-off-title', 'Remove the SteamStub DRM?', 'Retirer le DRM SteamStub ?'),
+    message: t(
+      'steamless-off-message',
+      '{exe} is protected by SteamStub DRM, and Steamless is turned off in Settings.',
+      '{exe} est protégé par le DRM SteamStub, et Steamless est désactivé dans les paramètres.',
+      { exe: path.basename(exePath) }
+    ),
+    detail: t(
+      'steamless-off-detail',
+      'With the DRM in place, the emulator file alone usually cannot start the game. Removing it downloads Steamless and rewrites the executable; the original is kept as .steamstub.bak, and everything is put back if the fix fails.',
+      'Avec ce DRM, le fichier d’émulateur seul ne peut en général pas lancer le jeu. Le retirer télécharge Steamless et réécrit l’exécutable ; l’original est conservé en .steamstub.bak, et tout est remis en place si le fix échoue.'
+    ),
+    buttons: [
+      t('cancel', 'Cancel', 'Annuler'),
+      t('steamless-off-keep', 'Continue without removing it', 'Continuer sans le retirer'),
+      t('steamless-off-run', 'Remove the DRM this time', 'Retirer le DRM cette fois'),
+    ],
+    defaultId: 2,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (answer.response === 0) return null;
+  return { run: answer.response === 2, hasSteamStub, exePath };
+}
+
+/*
+  The explicit CrakFiles entry: a crack unpacks anywhere in the game, so the record watches the
+  game root and is told afterwards which files it wrote (with the copies it kept), as the emulator
+  fix does. A failure rolls everything back.
+*/
+async function journaledCrackApply(appid, gameDir, apply) {
+  const handle = startRepairRecord(appid, 'crackfix', () => repairJournal.gbeRoots({ runtimeDirs: [gameDir] }));
+  try {
+    const res = await apply();
+    repairJournal.note(
+      handle,
+      (res.applied || []).map((rel) => ({ file: path.join(gameDir, rel), original: res.backupDir ? path.join(res.backupDir, rel) : null }))
+    );
+    endRepairRecord(handle);
+    return res;
+  } catch (err) {
+    failRepairRecord(handle, err);
+    throw err;
+  }
+}
+
+// The line a failure dialog adds once the rollback ran: the game is as it was, or what is not.
+function rollbackNote(err) {
+  const outcome = err && err.rollback;
+  if (!outcome) return '';
+  if (outcome.skipped.length === 0) {
+    return '\n\n' + t('repair-rolled-back', 'Nothing was left changed: every file the repair had touched was put back.', 'Rien n’a été laissé modifié : chaque fichier touché par la réparation a été remis en place.');
+  }
+  return (
+    '\n\n' +
+    t('repair-rollback-incomplete', 'These files could not be put back: {files}', 'Ces fichiers n’ont pas pu être remis en place : {files}', {
+      files: outcome.skipped.map((skip) => skip.file).join(', '),
+    })
+  );
+}
+
 // What the emulator fix may write (achievements.gbeFixRoots). A community crack writes elsewhere
 // too, and is noted separately (repairJournal.note). `exePath` adds an exe the caller picked.
 function emulatorFixRoots({ gameDir, game, writableAppid, exePath = '' }) {
@@ -5694,7 +5780,9 @@ var app = {
                       return;
                     }
                     setGameBoxBusy(self, t('downloading-fix', 'Downloading fix…', 'Téléchargement du fix…'));
-                    const res = await crackFix.downloadAndApply({ fix, gameDir, cacheDir, entryName: top.name, expectedAppid: writableAppid, proxyFallback: (app.config?.emulator || {}).pixeldrainProxyFallback !== false, log: debug });
+                    const res = await journaledCrackApply(appid, gameDir, () =>
+                      crackFix.downloadAndApply({ fix, gameDir, cacheDir, entryName: top.name, expectedAppid: writableAppid, proxyFallback: (app.config?.emulator || {}).pixeldrainProxyFallback !== false, log: debug })
+                    );
                     remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                       type: 'info',
                       title: t('crakfiles', 'CrakFiles'),
@@ -5767,14 +5855,16 @@ var app = {
                       }
                       try {
                         setGameBoxBusy(self, t('applying-file', 'Applying file…', 'Application du fichier…'));
-                        const res = await crackFix.applyLocalArchive({
-                          archivePath: picked.filePaths[0],
-                          gameDir: applyDir,
-                          fix: fix && fix.href ? fix : null,
-                          entryName: top?.name || '',
-                          expectedAppid: writableAppid,
-                          log: debug,
-                        });
+                        const res = await journaledCrackApply(appid, applyDir, () =>
+                          crackFix.applyLocalArchive({
+                            archivePath: picked.filePaths[0],
+                            gameDir: applyDir,
+                            fix: fix && fix.href ? fix : null,
+                            entryName: top?.name || '',
+                            expectedAppid: writableAppid,
+                            log: debug,
+                          })
+                        );
                         clearGameBoxBusy(self);
                         remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                           type: 'info',
@@ -6134,7 +6224,10 @@ var app = {
                   }
                   appidOverride.set(ctxGame.gameDir, typed);
                   try {
-                    goldberg.writeSteamAppId({ steamSettings: path.join(ctxGame.gameDir, 'steam_settings'), appid: typed });
+                    const steamSettings = path.join(ctxGame.gameDir, 'steam_settings');
+                    await journaledRepair(appid, 'appid-override', repairJournal.gbeRoots({ files: [path.join(steamSettings, 'steam_appid.txt')] }), () =>
+                      goldberg.writeSteamAppId({ steamSettings, appid: typed })
+                    );
                   } catch (err) {
                     debug.log(`[appid-override] could not write steam_appid.txt for ${ctxGame.gameDir}: ${err}`);
                   }
@@ -6586,10 +6679,14 @@ var app = {
                         noLink: true,
                       });
                       if (confirm !== 1) return;
-                      const result = goldberg.restoreSetup({
-                        backupDir: backup.backupDir,
-                        gameDir: backupGame.gameDir,
-                      });
+                      // Journaled like a repair: a restore that stops half way puts the setup back as it was.
+                      const roots = () => emulatorFixRoots({ gameDir: backupGame.gameDir, game: backupGame, writableAppid: appid });
+                      const result = await journaledRepair(appid, 'restore-gbe', roots, () =>
+                        goldberg.restoreSetup({
+                          backupDir: backup.backupDir,
+                          gameDir: backupGame.gameDir,
+                        })
+                      );
                       rememberGbeBackup({
                         appid,
                         gameDir: backupGame.gameDir,
@@ -6668,8 +6765,10 @@ var app = {
                         noLink: true,
                       });
                       if (confirm !== 1) return;
-                      let removed = 0;
-                      for (const { dir } of plan) removed += awManagedConfig.strip(dir).removed.length;
+                      const roots = repairJournal.gbeRoots({ settingsDirs: plan.map(({ dir }) => dir), files: launchAppIdFiles(backupGame.gameDir) });
+                      const removed = await journaledRepair(appid, 'remove-aw-config', roots, () =>
+                        plan.reduce((count, { dir }) => count + awManagedConfig.strip(dir).removed.length, 0)
+                      );
                       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                         type: 'info',
                         title: t('aw-config-removed-title', 'Configuration removed', 'Configuration retirée'),
@@ -6710,6 +6809,8 @@ var app = {
                   async click(menuItem) {
                     if (menuItem) gbeInstallItem = menuItem;
                     let fixRecord = null;
+                    // Set once the first file may change: a failure before that left the game untouched.
+                    let mutating = false;
                     try {
                       // Re-applying overwrites a setup that is already there, so it asks first and
                       // names what was found. The write path below backs everything up either way.
@@ -6744,8 +6845,35 @@ var app = {
                         gameDir = picked.filePaths[0];
                       }
                       if (!confirmOnlineFixReplace(gameDir)) return;
-                      // Every write below goes into one undo record, which Game Health can take back.
-                      fixRecord = startRepairRecord(appid, 'emulator-fix', () => emulatorFixRoots({ gameDir, game, writableAppid }));
+
+                      // Emulator setup is driven by the Settings → Emulator section: Regular DLL setup,
+                      // optional Steamless pre-unpack, and whether to re-check GitHub for a newer GBE build.
+                      const emuCfg = app.config?.emulator || {};
+                      const forceUpdate = emuCfg.checkUpdates !== false;
+                      const steamless = await chooseManualSteamless({ gameDir, game, emuCfg });
+                      if (!steamless) return;
+
+                      /*
+                        Every download first, before a single file of the game changes (#195): the fix
+                        once unpacked the exe with Steamless, then had its GBE archive blocked by the
+                        antivirus and stopped with the exe already rewritten.
+                      */
+                      setGameBoxBusy(self, t('downloading-gbe-fork', 'Downloading GBE Fork…', 'Téléchargement de GBE Fork…'));
+                      const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'), force: forceUpdate, log: debug });
+                      let steamlessCli = null;
+                      if (steamless.run) {
+                        setGameBoxBusy(self, t('downloading-steamless', 'Downloading Steamless…', 'Téléchargement de Steamless…'));
+                        steamlessCli = await require(path.join(appPath, 'parser/steamless.js')).ensureSteamless({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'steamless'), log: debug });
+                      }
+                      const bypassDlls =
+                        emuCfg.apiCheckBypass && steamless.hasSteamStub
+                          ? await apiCheckBypass.ensureBypassDlls({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'apiCheckBypass'), log: debug })
+                          : null;
+
+                      // Every write below goes into one undo record, which Game Health can take back,
+                      // and which puts the game back at once should a later step fail.
+                      mutating = true;
+                      fixRecord = startRepairRecord(appid, 'emulator-fix', () => emulatorFixRoots({ gameDir, game, writableAppid, exePath: steamless.exePath }));
 
                       // 1a - Create a portable restore point before any write step, so the pre-fix
                       // steam_settings + steam_api(64).dll state can be undone from "Restore latest GBE/Goldberg backup".
@@ -6857,11 +6985,6 @@ var app = {
                         fallbackDir: gameDir,
                       });
 
-                      // Emulator setup is driven by the Settings → Emulator section: Regular DLL setup,
-                      // optional Steamless pre-unpack, and whether to re-check GitHub for a newer GBE build.
-                      const emuCfg = app.config?.emulator || {};
-                      const forceUpdate = emuCfg.checkUpdates !== false;
-
                       // Advanced steam_settings: shells out to generate_emu_config for deeper coverage,
                       // merged without clobbering AW's own files. Optional Steam login pulls anonymous-hidden data; returns a one-line note.
                       const runAdvanced = async (steamSettingsDirs) => {
@@ -6923,22 +7046,24 @@ var app = {
                       let hasSteamStub = false;
 
                       // SteamStub: strip it with Steamless so the plain DLL works (the SteamAutoCrack
-                      // way). No ColdClient fallback: if Steamless can't strip it, the plain DLL is still installed and the game may fail to launch.
+                      // way), only when Settings or the user's answer above allowed it. No ColdClient
+                      // fallback: if Steamless can't strip it, the plain DLL is still installed and the game may fail to launch.
                       try {
                         const pe = require(path.join(appPath, 'util/pe.js'));
                         // Skip DRM stripping when the community crack already replaced the runtime - a
                         // cracked exe is DRM-free, same call the auto flow makes.
                         hasSteamStub = !crackApplied && !!(detectedRuntimeExe && detectedRuntimeExe.full && pe.detectSteamStub(detectedRuntimeExe.full));
-                        const shouldRunSteamless = !crackApplied && !!(detectedRuntimeExe && detectedRuntimeExe.full && (emuCfg.steamlessAutoUnpack || hasSteamStub));
+                        const shouldRunSteamless = !crackApplied && !!steamlessCli && !!(detectedRuntimeExe && detectedRuntimeExe.full);
+                        if (!shouldRunSteamless && hasSteamStub && !steamless.run) {
+                          drmNote = t('ndrm-steamstub-kept', '\nDRM: SteamStub left in place (Steamless is off); the plain DLL may not load', '\nDRM : SteamStub laissé en place (Steamless est désactivé) ; la DLL seule risque de ne pas charger');
+                        }
                         if (shouldRunSteamless) {
-                          setGameBoxBusy(self, t('downloading-steamless', 'Downloading Steamless…', 'Téléchargement de Steamless…'));
                           const steamlessMod = require(path.join(appPath, 'parser/steamless.js'));
                           let stripped = false;
                           let reason = '';
                           try {
-                            const cli = await steamlessMod.ensureSteamless({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'steamless'), log: debug });
                             setGameBoxBusy(self, t('removing-drm', 'Removing DRM…', 'Retrait du DRM…'));
-                            const r = await steamlessMod.stripDrm({ steamless: cli, exePath: detectedRuntimeExe.full, experimental: !!emuCfg.steamlessExperimental, log: debug });
+                            const r = await steamlessMod.stripDrm({ steamless: steamlessCli, exePath: detectedRuntimeExe.full, experimental: !!emuCfg.steamlessExperimental, log: debug });
                             stripped = !!(r && r.stripped);
                             reason = (r && r.reason) || '';
                           } catch (e) {
@@ -6958,11 +7083,6 @@ var app = {
                       } catch (e) {
                         debug.log(`[${appid}] DRM auto-detect skipped => ${e}`);
                       }
-
-                      // Download/cache the GBE Fork build (steam_api DLLs).
-                      setGameBoxBusy(self, t('downloading-gbe-fork', 'Downloading GBE Fork…', 'Téléchargement de GBE Fork…'));
-                      const cacheDir = appToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork');
-                      const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, force: forceUpdate, log: debug });
 
                       // GBE/GSE setup requires steam_interfaces.txt generated from the original game
                       // steam_api DLL, run before replacing anything; on a repeated repair generateInterfaces prefers the original .bak.
@@ -6999,10 +7119,9 @@ var app = {
                         // Optional, opt-in: SteamAutoCrack's proxy-DLL bypass redirects steam_api64.dll
                         // to the pre-swap original on the exe's FIRST access, so a SteamStub integrity re-check sees the untouched DLL and passes.
                         // Windows loads a DLL once per process, so without that first-access redirect the GBE Fork DLL is never reached.
-                        if (emuCfg.apiCheckBypass && hasSteamStub && detectedRuntimeExe && detectedRuntimeExe.full) {
+                        if (bypassDlls && hasSteamStub && detectedRuntimeExe && detectedRuntimeExe.full) {
                           try {
                             setGameBoxBusy(self, t('steam-api-check-bypass', 'Steam API check bypass…', 'Contournement du contrôle API Steam…'));
-                            const bypassDlls = await apiCheckBypass.ensureBypassDlls({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'apiCheckBypass'), log: debug });
                             const rb = apiCheckBypass.applyBypass({ gameDir, exePath: detectedRuntimeExe.full, dlls: bypassDlls, log: debug });
                             debug.log(`[${writableAppid}] Steam API check bypass: ${rb.applied ? `applied (${rb.dll})` : `skipped (${rb.reason})`}`);
                           } catch (e) {
@@ -7083,12 +7202,18 @@ var app = {
                         });
                       }
                     } catch (err) {
+                      // A step failed: whatever the fix had already written goes back before anything is reported.
+                      failRepairRecord(fixRecord, err);
+                      fixRecord = null;
+                      debug.log(`[${appid}] emulator fix failed => ${formatErr(err)}`);
                       if (!(await reportEmulatorPackageBlocked(err, { retry: () => gbeInstallItem && setTimeout(() => gbeInstallItem.click(), 0) }))) {
                         remote.dialog.showMessageBoxSync({
                           type: 'error',
                           title: t('gbe-fork-install-failed', 'GBE Fork install failed', 'Échec de l\'installation de GBE Fork'),
                           message: t('could-not-download-or-install-gbe-fork', 'Could not download or install GBE Fork.', 'Impossible de télécharger ou d\'installer GBE Fork.'),
-                          detail: formatErr(err),
+                          detail:
+                            formatErr(err) +
+                            (mutating ? rollbackNote(err) : '\n\n' + t('repair-nothing-changed', 'Nothing in the game folder was changed.', 'Rien n’a été modifié dans le dossier du jeu.')),
                         });
                       }
                     } finally {
@@ -7157,7 +7282,10 @@ var app = {
                       const steamlessMod = require(path.join(appPath, 'parser/steamless.js'));
                       const cli = await steamlessMod.ensureSteamless({ cacheDir: appToolCaches.toolCacheDir(getUserDataPath(), 'steamless'), log: debug });
                       setGameBoxBusy(self, t('removing-drm', 'Removing DRM…', 'Retrait du DRM…'));
-                      const result = await steamlessMod.stripDrm({ steamless: cli, exePath, log: debug });
+                      // The exe's folder, one level: the rewritten exe comes back from its .steamstub.bak.
+                      const result = await journaledRepair(appid, 'remove-drm', repairJournal.gbeRoots({ runtimeDirs: [path.dirname(exePath)] }), () =>
+                        steamlessMod.stripDrm({ steamless: cli, exePath, log: debug })
+                      );
 
                       remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
                         type: result.stripped ? 'info' : 'warning',
@@ -7342,7 +7470,7 @@ var app = {
                         $('#game-list').attr('data-ctx-restoreuplayr2') ||
                         t('restore-uplay-r2-config', 'Restore the previous Uplay R1/R2 configuration…', 'Restaurer la configuration Uplay R1/R2 précédente…'),
                       async click() {
-                        await restoreUplayR2Backup(restoreDir);
+                        await restoreUplayR2Backup(restoreDir, appid);
                       },
                     })
                   );
@@ -7406,7 +7534,11 @@ var app = {
                         // UniverseLAN reads %LOCALAPPDATA% of the host the game runs in (its Wine prefix on Linux).
                         const gameHost = winHosts.hostsFor(universeLanGameDir).find((host) => host.windowsPath(winHosts.hostPath(host, 'LOCALAPPDATA')));
                         const localAppData = gameHost ? winHosts.hostPath(gameHost, 'LOCALAPPDATA') : '';
-                        const result = await installer.repair({ gameDir: universeLanGameDir, cacheDir, localAppData, log: debug });
+                        // Each Galaxy dll's folder, one level: the dll, its .BAK and the server dll it adds.
+                        const roots = () => repairJournal.gbeRoots({ runtimeDirs: gogUniverseLan.findGalaxyDlls(universeLanGameDir).map((dll) => path.dirname(dll.file)) });
+                        const result = await journaledRepair(appid, 'repair-gog-universelan', roots, () =>
+                          installer.repair({ gameDir: universeLanGameDir, cacheDir, localAppData, log: debug })
+                        );
                         gogUniverseLan.recordInstall({ userDataPath: getUserDataPath(), gameDir: universeLanGameDir, gogAppId: result.gogAppId });
                         const lines = result.installed.map((entry) => `${entry.tier}: ${entry.wrote.join(', ')}`);
                         if (result.unmatched.length) {
@@ -9067,6 +9199,18 @@ var app = {
       });
       return false;
     }
+    if (result.rolledBack) {
+      // One file could not be written: the others went back to how they were, nothing half restored.
+      debug.error(`[reset] restore of ${appid} taken back => ${result.errors.map((entry) => `${entry.path}: ${entry.message}`).join('; ')}`);
+      remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+        type: 'error',
+        title: t('restore-failed', 'Restore failed', 'Échec de la restauration'),
+        message: t('nothing-changed-files-locked', 'Nothing was changed: these files could not be written. Close the game if it is running, then try again.', 'Rien n’a été modifié : ces fichiers n’ont pas pu être écrits. Ferme le jeu s’il est lancé, puis réessaie.'),
+        detail: result.errors.map((entry) => entry.path).join('\n'),
+        noLink: true,
+      });
+      return false;
+    }
 
     // The restored save is the truth again; a rescan is what re-reads it into the library.
     await forgetWatchdogBaseline(String(appid));
@@ -9555,7 +9699,7 @@ var app = {
           type: 'error',
           title: t('repair-failed', 'Repair failed', 'Échec de la réparation'),
           message: t('gh-action-failed', 'That repair could not be completed.', 'Cette réparation n’a pas pu être effectuée.'),
-          detail: `${err && (err.message || err)}`,
+          detail: `${err && (err.message || err)}${rollbackNote(err)}`,
         });
       } finally {
         // Whatever path ended the action, no bar is left sweeping over a finished panel.
@@ -10336,6 +10480,11 @@ var app = {
               skipAdvanced: true,
               schema,
             });
+            // Left as it was (a SteamStub exe with Steamless off): counted as skipped, not fixed.
+            if (setup.skipped) {
+              debug.log(`[fix-all] ${game.appid} (${game.name}) skipped - ${setup.reason}`);
+              continue;
+            }
             const repairDirs = new Set(setup.steamSettingsDirs || []);
             if (game.steamSettings) repairDirs.add(game.steamSettings);
             if (detectedEmu.steamSettings) repairDirs.add(detectedEmu.steamSettings);
@@ -10384,6 +10533,9 @@ var app = {
             fixed++;
           } catch (err) {
             failed++;
+            // This game goes back to how it was; the others in the pass are untouched by its failure.
+            failRepairRecord(bulkRecord, err);
+            bulkRecord = null;
             debug.log(`[fix-all] ${game.appid} (${game.name}) failed => ${err}`);
             // A quarantined package fails every remaining game in exactly the same way, so stop the
             // bulk pass and explain it once instead of counting dozens of identical failures.

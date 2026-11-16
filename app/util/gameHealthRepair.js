@@ -136,11 +136,13 @@ async function repairAchievementData({
   complete steam_settings with no steam_api dll beside it. steam_interfaces.txt is regenerated
   when the original dll is still recoverable; that step is best-effort and never fails the install.
 */
-async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSettings = null, log } = {}) {
+async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSettings = null, log, dlls: staged = null } = {}) {
   if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) {
     throw new Error('installEmulatorRuntime: no target directory resolved');
   }
-  const dlls = await gbeInstaller.ensureEmulatorDlls({ cacheDir, log });
+  // `staged`: the build the caller downloaded before changing anything, so a blocked download
+  // cannot land between two writes.
+  const dlls = staged || (await gbeInstaller.ensureEmulatorDlls({ cacheDir, log }));
   const summary = gbeInstaller.installDlls({
     dllDirs: plan.dirs,
     dlls,

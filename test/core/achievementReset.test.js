@@ -159,6 +159,25 @@ test('a reset clears the saves, the baseline and the manual unlocks in one go', 
   assert.equal(sidecar[manualUnlock.gameKey('480', 'Goldberg')], undefined);
 });
 
+test('a restore that cannot put one file back leaves the saves as they were before it', (t) => {
+  const profile = tempProfile();
+  t.after(() => fs.rmSync(profile, { recursive: true, force: true }));
+  const game = goldbergGame(profile);
+  write(path.join(profile, 'steam_cache', 'data', '480.db'), '[{"name":"ACH_WIN","Achieved":true}]');
+  const result = achievementReset.run(achievementReset.plan(game));
+  const manifest = JSON.parse(fs.readFileSync(path.join(result.backupDir, 'manifest.json'), 'utf8'));
+  assert.ok(manifest.files.length >= 2);
+  // The last copy is gone: every file before it would be put back, then the restore stops.
+  fs.rmSync(path.join(result.backupDir, 'files', manifest.files[manifest.files.length - 1].stored));
+  const snapshot = () => manifest.files.map((entry) => (fs.existsSync(entry.original) ? fs.readFileSync(entry.original, 'utf8') : null));
+  const before = snapshot();
+
+  const restored = achievementReset.restore('480', result.backupId);
+  assert.equal(restored.rolledBack, true);
+  assert.equal(restored.errors.length, 1);
+  assert.deepEqual(snapshot(), before, 'nothing half restored');
+});
+
 test('everything a reset removed comes back, byte for byte', (t) => {
   const profile = tempProfile();
   t.after(() => fs.rmSync(profile, { recursive: true, force: true }));

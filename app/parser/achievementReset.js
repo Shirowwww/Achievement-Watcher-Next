@@ -290,7 +290,8 @@ function clearManualEntries(resetPlan, dir, manifest, errors) {
 
 // A run that failed midway puts back what it had changed; the backup stays on disk, marked rolled back.
 function rollBack(appid, backupId, dir, manifest, errors, registry) {
-  const restored = restore(appid, backupId, { registry });
+  // Best effort here: every file that can come back should, even if one cannot.
+  const restored = restore(appid, backupId, { registry, atomic: false });
   writeManifest(dir, { ...manifest, rolledBack: true });
   const rollbackErrors = restored.errors.map((entry) => ({ ...entry, stage: 'rollback' }));
   return { ok: false, rolledBack: true, backupId, backupDir: dir, files: 0, cleared: 0, registry: 0, errors: [...errors, ...rollbackErrors] };
@@ -384,20 +385,39 @@ function listBackups(appid) {
   Put a backup back. Files return to the exact paths they were taken from - including AW Next's
   baseline, so restoring does not turn the restored unlocks into a burst of new notifications.
 */
-function restore(appid, backupId, { registry } = {}) {
+/*
+  `atomic` (the user's Restore): the saves as they are now are kept in memory first, and a file that
+  cannot be put back returns every other one to that state, so a restore never stops half way.
+  The reset's own rollback passes false and puts back all it can.
+*/
+function restore(appid, backupId, { registry, atomic = true } = {}) {
   const dir = path.join(gameBackupRoot(appid), String(backupId));
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
   const errors = [];
   let restored = 0;
+  const entries = Array.isArray(manifest.files) ? manifest.files : [];
+  const current = atomic ? entries.map((entry) => ({ file: entry.original, data: fs.existsSync(entry.original) ? fs.readFileSync(entry.original) : null })) : [];
 
-  for (const entry of Array.isArray(manifest.files) ? manifest.files : []) {
+  for (const entry of entries) {
     try {
       fs.mkdirSync(path.dirname(entry.original), { recursive: true });
       fs.copyFileSync(path.join(dir, 'files', entry.stored), entry.original);
       restored += 1;
     } catch (err) {
       errors.push({ path: entry.original, message: err.message || String(err) });
+      if (atomic) break;
     }
+  }
+  if (atomic && errors.length > 0) {
+    for (const { file, data } of current) {
+      try {
+        if (data) writeFileAtomicSync(file, data);
+        else fs.rmSync(file, { force: true });
+      } catch (err) {
+        errors.push({ path: file, stage: 'rollback', message: err.message || String(err) });
+      }
+    }
+    return { restored: 0, errors, manifest, rolledBack: true };
   }
 
   if (manifest.manualUnlocks && manifest.manualUnlocks.entries) {

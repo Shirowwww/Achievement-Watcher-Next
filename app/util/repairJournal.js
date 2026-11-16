@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { replaceFileSync, unlinkForce } = require('./replaceFile.js');
+const { replaceFileSync, unlinkForce, removeTreeForce } = require('./replaceFile.js');
 
 const ROOT = 'repair-undo';
 const JOURNAL = 'journal.json';
@@ -214,11 +214,11 @@ function commit(handle) {
   const createdDirs = [...after.dirs].filter((dir) => !handle.before.dirs.has(dir));
   const createdBackups = [...after.backups].filter((dir) => !handle.before.backups.has(dir));
   if (changes.length === 0 && createdDirs.filter((dir) => !SKIPPED_DIRS.has(path.basename(dir).toLowerCase())).length === 0) {
-    fs.rmSync(handle.dir, { recursive: true, force: true });
+    removeTreeForce(handle.dir);
     return null;
   }
   const needed = new Set(changes.map((change) => change.copy).filter(Boolean));
-  for (const name of handle.kept.values()) if (!needed.has(name)) fs.rmSync(path.join(handle.dir, 'files', name), { force: true });
+  for (const name of handle.kept.values()) if (!needed.has(name)) unlinkForce(path.join(handle.dir, 'files', name));
   const entry = { appid: handle.appid, label: handle.label, createdAt: new Date(handle.startedAt).toISOString(), changes, createdDirs, createdBackups };
   fs.writeFileSync(path.join(handle.dir, JOURNAL), JSON.stringify(entry, null, 2));
   prune(handle.userDataPath, handle.appid);
@@ -227,8 +227,8 @@ function commit(handle) {
 
 /*
   Runs `work` between the two snapshots and returns its result. The journal never stops a repair:
-  if it cannot be written, the repair runs without one. A repair that throws half way is still
-  recorded, so what it did write can be undone.
+  if it cannot be written, the repair runs without one. A repair that throws half way is rolled
+  back before its error reaches the caller, which finds what was put back on `err.rollback`.
 */
 async function record({ userDataPath, appid, label, roots, log = null }, work) {
   let handle = null;
@@ -237,17 +237,41 @@ async function record({ userDataPath, appid, label, roots, log = null }, work) {
   } catch (err) {
     if (log) log(`[undo] ${appid}: no undo record for ${label} => ${err}`);
   }
+  let result;
   try {
-    return await work();
-  } finally {
-    if (handle) {
-      try {
-        commit(handle);
-      } catch (err) {
-        if (log) log(`[undo] ${appid}: could not keep the undo record for ${label} => ${err}`);
-      }
+    result = await work();
+  } catch (err) {
+    rollbackAfterFailure(handle, err, log);
+    throw err;
+  }
+  if (handle) {
+    try {
+      commit(handle);
+    } catch (err) {
+      if (log) log(`[undo] ${appid}: could not keep the undo record for ${label} => ${err}`);
     }
   }
+  return result;
+}
+
+// Rolls a failed repair back and hangs the outcome on its error; never throws over that error.
+function rollbackAfterFailure(handle, err, log = null) {
+  if (!handle) return null;
+  let outcome = null;
+  try {
+    outcome = rollback(handle);
+    if (log) log(`[undo] ${handle.appid}: ${handle.label} failed, ${describeRollback(outcome)}`);
+  } catch (rollbackErr) {
+    if (log) log(`[undo] ${handle.appid}: ${handle.label} failed and could not be rolled back => ${rollbackErr}`);
+  }
+  if (err && typeof err === 'object') {
+    try {
+      err.rollback = outcome;
+    } catch {
+      /* a frozen error: the log line above still says what happened */
+    }
+  }
+  return outcome;
 }
 
 function entryDirs(userDataPath, appid) {
@@ -268,7 +292,7 @@ function entryDirs(userDataPath, appid) {
 function prune(userDataPath, appid) {
   const root = gameRoot(userDataPath, appid);
   const committed = entryDirs(userDataPath, appid);
-  for (const dir of committed.slice(0, Math.max(0, committed.length - MAX_PER_GAME))) fs.rmSync(dir, { recursive: true, force: true });
+  for (const dir of committed.slice(0, Math.max(0, committed.length - MAX_PER_GAME))) removeTreeForce(dir);
   let names = [];
   try {
     names = fs.readdirSync(root);
@@ -277,7 +301,7 @@ function prune(userDataPath, appid) {
   }
   for (const name of names) {
     const dir = path.join(root, name);
-    if (!fs.existsSync(path.join(dir, JOURNAL)) && Date.now() - (statOrNull(dir)?.mtimeMs || 0) > 60 * 60 * 1000) fs.rmSync(dir, { recursive: true, force: true });
+    if (!fs.existsSync(path.join(dir, JOURNAL)) && Date.now() - (statOrNull(dir)?.mtimeMs || 0) > 60 * 60 * 1000) removeTreeForce(dir);
   }
 }
 
@@ -342,8 +366,53 @@ const undoOrder = (changes) => [...changes.filter((change) => change.kind !== 'c
 function undo({ userDataPath, appid, dryRun = false }) {
   const found = latest({ userDataPath, appid });
   if (!found) return null;
-  const { dir, entry } = found;
-  const result = { label: entry.label, createdAt: entry.createdAt, restored: [], removed: [], skipped: [] };
+  if (dryRun) return undoEntry(found.dir, found.entry, true);
+  /*
+    All or nothing, like the repairs: the files the undo is about to touch are noted first, and a
+    file it cannot write (held open by the running game) puts the others back as they were. The
+    record then stays, so Undo works once the file is free. A file changed since the repair is a
+    choice, not a failure: it is left alone and listed, as before.
+  */
+  let guard = null;
+  try {
+    guard = begin({ userDataPath, appid, label: `undo ${found.entry.label}`, roots: found.entry.changes.map((change) => ({ path: change.file })) });
+  } catch {
+    /* no guard copy: the undo still runs, as it always did */
+  }
+  const result = undoEntry(found.dir, found.entry, false, { keepOnFailure: !!guard });
+  if (!guard) return result;
+  if (result.failed.length > 0) {
+    const back = rollback(guard);
+    return { ...result, rolledBack: true, restored: [], removed: [], rollbackSkipped: back ? back.skipped : [] };
+  }
+  fs.rmSync(guard.dir, { recursive: true, force: true });
+  return result;
+}
+
+/*
+  A repair that failed is taken back at once, from its own entry: a half-done fix (an exe already
+  unpacked, a crack's files set aside, then a download blocked) must not stay on disk. Returns what
+  undo returns, or an empty result when the repair had written nothing.
+*/
+function rollback(handle) {
+  if (!handle) return null;
+  const entry = commit(handle);
+  if (!entry) return { label: handle.label, createdAt: new Date(handle.startedAt).toISOString(), restored: [], removed: [], skipped: [] };
+  return undoEntry(handle.dir, entry, false);
+}
+
+// One line for the log and the error dialog: what the rollback did, and what it could not put back.
+function describeRollback(result) {
+  if (!result) return '';
+  const done = result.restored.length + result.removed.length;
+  const left = result.skipped.map((skip) => `${skip.file} (${skip.reason})`);
+  return left.length > 0 ? `rolled back ${done} file(s); could not put back: ${left.join(', ')}` : `rolled back ${done} file(s)`;
+}
+
+// `failed` lists the files that could not be written (a subset of `skipped`). With keepOnFailure,
+// such an undo stops before it deletes anything of its record, so the caller can take it back.
+function undoEntry(dir, entry, dryRun, { keepOnFailure = false } = {}) {
+  const result = { label: entry.label, createdAt: entry.createdAt, restored: [], removed: [], skipped: [], failed: [] };
   for (const change of undoOrder(entry.changes)) {
     const plan = planChange(change, dir);
     if (plan === 'gone') continue;
@@ -360,13 +429,15 @@ function undo({ userDataPath, appid, dryRun = false }) {
       else if (!unlinkForce(change.file)) throw new Error('locked');
       (plan === 'restore' ? result.restored : result.removed).push(change.file);
     } catch (err) {
-      result.skipped.push({ file: change.file, reason: (err && err.code) || (err && err.message) || 'error' });
+      const failure = { file: change.file, reason: (err && err.code) || (err && err.message) || 'error' };
+      result.skipped.push(failure);
+      result.failed.push(failure);
     }
   }
-  if (dryRun) return result;
+  if (dryRun || (keepOnFailure && result.failed.length > 0)) return result;
   // The repair's own dated backups hold copies of what was just put back. When a file was left
   // alone they may hold its only original, so they stay.
-  if (result.skipped.length === 0) for (const backup of entry.createdBackups || []) fs.rmSync(backup, { recursive: true, force: true });
+  if (result.skipped.length === 0) for (const backup of entry.createdBackups || []) removeTreeForce(backup);
   for (const created of [...entry.createdDirs].sort((a, b) => b.length - a.length)) {
     try {
       fs.rmdirSync(created);
@@ -374,8 +445,8 @@ function undo({ userDataPath, appid, dryRun = false }) {
       /* not empty: something else lives there now */
     }
   }
-  fs.rmSync(dir, { recursive: true, force: true });
+  removeTreeForce(dir);
   return result;
 }
 
-module.exports = { record, begin, note, commit, latest, undo, snapshot, gbeRoots, MAX_PER_GAME, COPY_LIMIT };
+module.exports = { record, begin, note, commit, latest, undo, rollback, rollbackAfterFailure, describeRollback, snapshot, gbeRoots, MAX_PER_GAME, COPY_LIMIT };

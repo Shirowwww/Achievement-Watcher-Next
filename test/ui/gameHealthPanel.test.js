@@ -494,7 +494,7 @@ test('Game Health undoes a Ubisoft repair through the same restore as the right-
   assert.match(paint.slice(0, paint.indexOf('\n}\n')), /uplayR2\.listConfigBackups\(/, 'the link shows for a Ubisoft backup too');
 
   const undo = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.UNDO_SWITCH_RUNTIME) {'));
-  assert.match(undo.slice(0, undo.indexOf('\n  }\n')), /restoreUplayR2Backup\(game\.gameDir\)/);
+  assert.match(undo.slice(0, undo.indexOf('\n  }\n')), /restoreUplayR2Backup\(game\.gameDir, appid\)/);
 
   const menu = appSource.slice(appSource.indexOf("t('restore-uplay-r2-config'"));
   assert.match(menu.slice(0, 400), /restoreUplayR2Backup\(/);
