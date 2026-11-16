@@ -137,6 +137,8 @@ const notificationHealth = require(path.join(appPath, 'parser/notificationHealth
 notificationHealth.setUserDataPath(getUserDataPath());
 const achievementReset = require(path.join(appPath, 'parser/achievementReset.js'));
 const achievementRelock = require(path.join(appPath, 'parser/achievementRelock.js'));
+const achievementResetMany = require(path.join(appPath, 'parser/achievementResetMany.js'));
+const librarySelection = require(path.join(appPath, 'util/librarySelection.js'));
 const forgetGame = require(path.join(appPath, 'util/forgetGame.js'));
 achievementReset.setUserDataPath(getUserDataPath());
 const emulatorSourceOverride = require(path.join(appPath, 'parser/emulatorSourceOverride.js'));
@@ -2325,11 +2327,15 @@ function lockAchievementEntry(achievement) {
 // Zeroes the in-memory copy of a game after its saves were cleared, then repaints: the library is
 // only re-read from disk on a scan, so without this stale unlocks would linger until the next one.
 function repaintGameAfterReset(appid, game) {
+  lockGameInMemory(game);
+  repaintGameView(appid);
+}
+
+function lockGameInMemory(game) {
   if (game && game.achievement && Array.isArray(game.achievement.list)) {
     for (const achievement of game.achievement.list) if (achievement) lockAchievementEntry(achievement);
     game.achievement.unlocked = 0;
   }
-  repaintGameView(appid);
 }
 
 function repaintGameAfterRelock(appid, game, names) {
@@ -2417,6 +2423,107 @@ function relockManyConfirmDetail(relockPlan) {
   if (relockPlan.skipped.length > 0) {
     detail.unshift(t('relock-many-detail-skipped', '{count} of them are not unlocked in any save and are left as they are.', '{count} d’entre eux ne sont débloqués dans aucune sauvegarde et restent tels quels.', { count: relockPlan.skipped.length }));
   }
+  return detail.join('\n');
+}
+
+// Library multi-selection (#192): Ctrl+click and Shift+click pick tiles, a plain click clears them.
+let selectedGames = new Set();
+let selectionAnchor = null;
+
+function visibleTileIds() {
+  return $('#game-list .game-box')
+    .toArray()
+    .filter((el) => el.getClientRects().length > 0)
+    .map((el) => String(el.getAttribute('data-appid')));
+}
+
+function paintLibrarySelection() {
+  $('#game-list .game-box').each(function () {
+    this.classList.toggle('is-selected', selectedGames.has(String(this.getAttribute('data-appid'))));
+  });
+}
+
+function clearLibrarySelection() {
+  selectionAnchor = null;
+  if (selectedGames.size === 0) return;
+  selectedGames = new Set();
+  paintLibrarySelection();
+}
+
+function onSelectionClick(box, e) {
+  const id = String(box.getAttribute('data-appid'));
+  selectedGames = librarySelection.select(selectedGames, id, {
+    toggle: e.ctrlKey || e.metaKey,
+    range: e.shiftKey,
+    anchor: selectionAnchor,
+    order: e.shiftKey ? visibleTileIds() : [],
+  });
+  if (!e.shiftKey || selectionAnchor == null) selectionAnchor = id;
+  paintLibrarySelection();
+}
+
+// The right-click menu of a selection of several tiles: the bulk actions only.
+function popupSelectionMenu(appids) {
+  const { Menu, MenuItem, nativeImage } = remote;
+  const icon = nativeImage.createFromPath(path.join(appPath, 'resources/img', 'cross.png'));
+  const menu = new Menu();
+  menu.append(
+    new MenuItem({
+      icon: icon.isEmpty() ? icon : icon.resize({ width: 16, height: 16, quality: 'best' }),
+      label: t('reset-many-menu', 'Reset achievements of {count} games…', 'Réinitialiser les succès de {count} jeux…', { count: appids.length }),
+      async click() {
+        if (await app.resetAchievementsManyAction(appids)) clearLibrarySelection();
+      },
+    })
+  );
+  menu.append(new MenuItem({ type: 'separator' }));
+  menu.append(new MenuItem({ label: t('selection-clear', 'Clear selection', 'Effacer la sélection'), click: clearLibrarySelection }));
+  menu.popup({ window: remote.getCurrentWindow() });
+}
+
+// The result of a bulk reset: how many games, then each one left as it was and why.
+function showResetManyDone(done, failed) {
+  for (const entry of failed) {
+    debug.error(`[reset] rolled back for ${entry.game.appid}: ${entry.errors.map((error) => `${error.stage || ''} ${error.message}`).join('; ')}`);
+  }
+  const lines = [t('reset-ach-done-detail', 'Backup: {path}', 'Sauvegarde : {path}', { path: achievementReset.backupRoot() })];
+  if (failed.length > 0) {
+    lines.push('', t('reset-many-failed', 'Left as they were, they could not be reset:', 'Laissés tels quels, ils n’ont pas pu être réinitialisés :'));
+    for (const entry of failed) lines.push(`• ${entry.game.name || entry.game.appid} - ${entry.errors.map((error) => error.message).join('; ')}`);
+  }
+  const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: failed.length > 0 ? 'warning' : 'info',
+    title: t('reset-ach-done-title', 'Achievements reset', 'Succès réinitialisés'),
+    message: t('reset-many-done-message', '{count} game(s) reset. Unlock their achievements again in game and they will be announced as new.', '{count} jeu(x) réinitialisé(s). Débloque à nouveau leurs succès en jeu et ils seront annoncés comme neufs.', {
+      count: done.length,
+    }),
+    detail: lines.join('\n'),
+    buttons: [t('ok', 'OK', 'OK'), t('open-backup-folder', 'Open backup folder', 'Ouvrir la sauvegarde')],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  if (answer === 1) remote.shell.openPath(achievementReset.backupRoot());
+}
+
+// The games of a bulk reset, then the skipped ones grouped by reason, then where the backups go.
+function resetManyConfirmDetail(ready, skipped) {
+  const names = (entries) => {
+    const shown = entries.slice(0, 12).map((entry) => `• ${entry.game.name || entry.game.appid}`);
+    if (entries.length > shown.length) shown.push(t('reset-ach-more-files', '…and {count} more', '…et {count} de plus', { count: entries.length - shown.length }));
+    return shown;
+  };
+  const detail = ready.length ? [t('reset-many-detail-games', 'Each of these games is backed up, then reset:', 'Chacun de ces jeux est sauvegardé, puis réinitialisé :'), ...names(ready)] : [];
+  const groups = [
+    [achievementResetMany.SKIP.OFFICIAL, t('reset-many-detail-official', 'Skipped, their platform keeps the unlocks on your account:', 'Ignorés, leur plateforme garde les succès sur ton compte :')],
+    [achievementResetMany.SKIP.NOTHING, t('reset-many-detail-nothing', 'Skipped, nothing to reset yet:', 'Ignorés, rien à réinitialiser pour l’instant :')],
+    [achievementResetMany.SKIP.ERROR, t('reset-many-detail-error', 'Skipped, their saves could not be read:', 'Ignorés, leurs sauvegardes n’ont pas pu être lues :')],
+  ];
+  for (const [reason, heading] of groups) {
+    const entries = skipped.filter((entry) => entry.reason === reason);
+    if (entries.length) detail.push('', heading, ...names(entries));
+  }
+  if (ready.length) detail.push('', t('reset-ach-detail-backup', 'Backup: {path}', 'Sauvegarde : {path}', { path: achievementReset.backupRoot() }));
   return detail.join('\n');
 }
 
@@ -5111,6 +5218,8 @@ var app = {
     // Reset the list and handlers so onStart() stays idempotent.
     $('#game-list ul').empty();
     $('#game-list .isEmpty').removeClass('is-filtered').hide();
+    selectedGames = new Set();
+    selectionAnchor = null;
     clearSkeletonTiles();
     gameElements.clear();
     libraryArtwork.disconnect();
@@ -5555,6 +5664,12 @@ var app = {
           self.onGameConfigSaveClick($(this));
         });
 
+        $(document)
+          .off('keydown.librarySelection')
+          .on('keydown.librarySelection', (event) => {
+            if (event.key === 'Escape' && selectedGames.size > 0) clearLibrarySelection();
+          });
+
         $('#game-list')
           .on('mouseenter.awLibrary', '.library-scroll-text', function () {
             startLibraryTextScroll(this);
@@ -5566,16 +5681,24 @@ var app = {
           .on('click.awLibrary', '.game-box .achievement-button', function () {
             pendingListOpen = String($(this).closest('.game-box').attr('data-appid'));
           })
-          .on('click.awLibrary', '.game-box', function () {
+          .on('click.awLibrary', '.game-box', function (e) {
+            if (librarySelection.isSelectionClick(e)) {
+              pendingListOpen = null;
+              onSelectionClick(this, e);
+              return;
+            }
+            clearLibrarySelection();
             // Achievement-less entries use the exact same detail-page flow as every other game.
             // Only the explicit play control below launches an executable.
             self.onGameBoxClick($(this), gameList);
           })
           .on('click.awLibrary', '.game-box .play-button', async function (e) {
+            if (librarySelection.isSelectionClick(e)) return;
             e.stopPropagation();
             self.onPlayButtonClick($(this));
           })
           .on('click.awLibrary', '.game-box .config-button', async function (e) {
+            if (librarySelection.isSelectionClick(e)) return;
             e.stopPropagation();
             self.onConfigButtonClick($(this), gameList, await exeList.get());
           });
@@ -5629,6 +5752,12 @@ var app = {
 
         $('#game-list .game-box').contextmenu(function (e) {
           e.preventDefault();
+          const selection = librarySelection.visibleSelection(selectedGames, visibleTileIds());
+          if (selection.length > 1 && selection.includes(String(this.getAttribute('data-appid')))) {
+            popupSelectionMenu(selection);
+            return;
+          }
+          clearLibrarySelection();
           let self = $(this);
           let appid = self.data('appid');
           // Never write a synthetic local id to steam_appid.txt; use a real Steam id when available.
@@ -8868,6 +8997,54 @@ var app = {
           : refusedMessage;
       remote.dialog.showMessageBoxSync(win, { type: 'warning', message });
     }
+  },
+  // The same reset for several selected games (#192): one confirmation naming every game, and the
+  // games whose platform keeps the unlocks are skipped and named. Each game keeps its own backup.
+  resetAchievementsManyAction: async function (appids) {
+    const games = appids.map((id) => gameList.find((g) => g && String(g.appid) === String(id))).filter(Boolean);
+    if (games.length === 0) return false;
+    const win = remote.getCurrentWindow();
+    const title = t('reset-ach-title', 'Reset achievements', 'Réinitialiser les succès');
+    const running = await isAnyGameRunning();
+    if (running !== false) {
+      const [message, detail] = relockRefusalText({ reason: running ? 'running' : 'running-unknown' });
+      remote.dialog.showMessageBoxSync(win, { type: 'info', title, message, detail });
+      return false;
+    }
+    const { ready, skipped } = achievementResetMany.planMany(games);
+    const detail = resetManyConfirmDetail(ready, skipped);
+    if (ready.length === 0) {
+      remote.dialog.showMessageBoxSync(win, {
+        type: 'info',
+        title,
+        message: t('reset-many-none', 'None of these games has achievements AW Next can reset.', 'Aucun de ces jeux n’a de succès qu’AW Next peut réinitialiser.'),
+        detail,
+      });
+      return false;
+    }
+    const confirmed = remote.dialog.showMessageBoxSync(win, {
+      type: 'warning',
+      title: t('reset-many-confirm-title', 'Reset the achievements of these games?', 'Réinitialiser les succès de ces jeux ?'),
+      message: t('reset-many-confirm-message', 'Every achievement of {count} game(s) goes back to locked, so they can be unlocked again.', 'Tous les succès de {count} jeu(x) repassent en verrouillé, pour qu’ils puissent être débloqués à nouveau.', {
+        count: ready.length,
+      }),
+      detail,
+      buttons: [t('cancel', 'Cancel', 'Annuler'), t('reset-ach-confirm-button', 'Reset', 'Réinitialiser')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+    });
+    if (confirmed !== 1) return false;
+
+    const { done, failed } = achievementResetMany.runMany(ready);
+    // Only the tiles: repaintGameView would open each game's page in turn.
+    for (const entry of done) {
+      await forgetWatchdogBaseline(entry.plan.appid);
+      lockGameInMemory(entry.game);
+      refreshLibraryProgressFor(entry.game.appid, gameList);
+    }
+    showResetManyDone(done, failed);
+    return done.length > 0;
   },
   // Resets a game's achievements so they can be earned and announced again. Everything is backed up
   // first and the user approves the file list; the Watchdog drops its baseline too, or re-earned achievements never notify.

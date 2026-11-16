@@ -2236,6 +2236,12 @@ body.is-resizing #game-list {
   display: block;
 }
 
+/* Library multi-selection (Ctrl+click, Shift+click): an outline, so the tile keeps its own look. */
+#game-list .game-box.is-selected {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 #game-list .game-box {
   font-family: var(--font-body);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 62%, var(--surface-sunken)) 0%, color-mix(in srgb, var(--surface) 34%, var(--surface-sunken)) 100%);
