@@ -28,7 +28,7 @@ test('overlay choices report which one is on through aria-pressed', async (t) =>
       window.api = new Proxy({}, { get: () => () => Promise.resolve(null) });
       window.customApi = { closeOverlay() {} };
     });
-    for (const script of ['util/intlFormat.js', 'util/overlayUi.js', 'util/controllerLabels.js', 'view/overlay.js']) {
+    for (const script of ['util/intlFormat.js', 'util/overlayUi.js', 'util/counterUnit.js', 'util/controllerLabels.js', 'view/overlay.js']) {
       await page.addScriptTag({ path: path.join(appDir, script) });
     }
 

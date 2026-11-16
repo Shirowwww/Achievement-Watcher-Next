@@ -5,6 +5,8 @@ const toast = require('../../util/powertoast');
 const soundPlayer = require('../../util/soundPlayer.js');
 const { mediaPlayerVolume } = require('../../util/notificationVolume.js');
 const notifyStrings = require('../../util/notifyStrings.js');
+const { sharedAppModulePath } = require('../../util/sharedAppModule.js');
+const { counterLabel } = require(sharedAppModulePath('util/counterUnit.js'));
 
 const TOAST_QUEUE_SOUND_DELAY_MS = 5000;
 
@@ -145,7 +147,7 @@ function buildToastNotification(message, options) {
   if (progress) {
     notification.progress = {
       value: progress.percent,
-      status: `${formatProgressValue(progress.current)}/${formatProgressValue(progress.max)}`,
+      status: counterLabel(progress.current, progress.max, message.achievementDescription, { formatNumber: formatProgressValue, separator: '/' }),
     };
   }
 

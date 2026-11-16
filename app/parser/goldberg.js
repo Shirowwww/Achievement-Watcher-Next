@@ -772,35 +772,56 @@ function resolveLocalSaveDir({ steamSettings, appid } = {}) {
 // Inspect the runtime save folder(s) for an appid and report whether the emulator has actually
 // written any unlocked-achievement state yet. `localSaveDir` is checked first: when a setup
 // redirects its saves, the standard roots are empty by design.
-function inspectSaveState(appid, savesRoots = defaultSavesRoots(), localSaveDir = null) {
-  // `seeded` marks the one case a bare "save found" cannot describe: the locked placeholder AW Next
-  // writes when a setup is applied, still untouched, which says nothing at all about the emulator.
+const isEarnedEntry = (e) => e && (e.earned === true || e.Achieved === true || e.earned === 1 || e.unlocked === true || String(e.earned) === '1');
+
+// { name: entry } of one achievements.json, keyed by position for an array save; null when unreadable.
+function readSaveEntries(file) {
+  try {
+    const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (Array.isArray(data)) return Object.fromEntries(data.map((e, i) => [String((e && (e.name || e.id)) || i), e]));
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return null;
+  }
+}
+
+/*
+  `seeded` marks the one case a bare "save found" cannot describe: the locked placeholder AW Next
+  writes when a setup is applied, still untouched. The first location found is the save; a game also
+  started from a Steam shortcut saves under the shortcut's id too, so those folders count (#168).
+*/
+function inspectSaveState(appid, savesRoots = defaultSavesRoots(), localSaveDir = null, { userDataRoot } = {}) {
   const state = { root: null, type: null, file: null, earned: 0, total: 0, exists: false, seeded: false };
   if (appid == null) return state;
   const locations = [];
   if (localSaveDir) locations.push({ type: 'local', root: path.dirname(localSaveDir), file: path.join(localSaveDir, 'achievements.json') });
   for (const { type, root } of savesRoots) locations.push({ type, root, file: path.join(root, String(appid), 'achievements.json') });
-
-  for (const { type, root, file } of locations) {
-    if (!fs.existsSync(file)) continue;
-    state.root = root;
-    state.type = type;
-    state.file = file;
-    state.exists = true;
-    try {
-      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-      const entries = Array.isArray(data) ? data : Object.values(data || {});
-      state.total = entries.length;
-      state.earned = entries.filter(
-        (e) => e && (e.earned === true || e.Achieved === true || e.earned === 1 || e.unlocked === true || String(e.earned) === '1')
-      ).length;
-    } catch {
-      /* unreadable save - leave counts at 0 */
-    }
-    state.seeded = runtimeSaveSeed.isUntouchedSeed(file);
-    if (state.seeded) state.seededAt = Number((runtimeSaveSeed.read(file) || {}).seededAt) || 0;
-    break;
+  // Left out, the profile the app runs with is read; null reads no shortcut links (tests).
+  const withTwins = (dir) => (userDataRoot === undefined ? withShortcutTwins([dir]) : withShortcutTwins([dir], userDataRoot));
+  for (const own of locations) {
+    const files = withTwins(path.dirname(own.file))
+      .map((dir) => path.join(dir, 'achievements.json'))
+      .filter((file) => fs.existsSync(file));
+    if (files.length > 0) return summarizeSaves(state, own, files);
   }
+  return state;
+}
+
+function summarizeSaves(state, own, files) {
+  const merged = new Map();
+  for (const file of files) {
+    for (const [name, entry] of Object.entries(readSaveEntries(file) || {})) {
+      if (!merged.has(name) || (isEarnedEntry(entry) && !isEarnedEntry(merged.get(name)))) merged.set(name, entry);
+    }
+  }
+  // The file reported is a real save before AW Next's untouched placeholder.
+  const seededFiles = files.filter((file) => runtimeSaveSeed.isUntouchedSeed(file));
+  const file = files.find((f) => !seededFiles.includes(f)) || files[0];
+  Object.assign(state, { root: own.root, type: own.type, file, exists: true });
+  state.total = merged.size;
+  state.earned = [...merged.values()].filter(isEarnedEntry).length;
+  state.seeded = seededFiles.length === files.length;
+  if (state.seeded) state.seededAt = Number((runtimeSaveSeed.read(file) || {}).seededAt) || 0;
   return state;
 }
 

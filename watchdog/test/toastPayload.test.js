@@ -224,6 +224,17 @@ test('inline image and progress payload use the keys powertoast actually renders
   assert.deepEqual(notification.progress, { value: 30, status: '3/10' });
 });
 
+// #168: Steam declares the counter 0 to 100 while the text names cores; the game counts in percent.
+test('a counter the game keeps in percent reads as a percentage in the toast', () => {
+  const build = (achievementDescription) =>
+    buildToastNotification(
+      { appid: 3486530, gameDisplayName: 'G', achievementName: 'ACH_30', achievementDisplayName: 'A', achievementDescription, progress: { current: 37, max: 100 } },
+      toastOptions()
+    ).notification.progress;
+  assert.deepEqual(build('Chomp 300 cores.'), { value: 37, status: '37%' });
+  assert.deepEqual(build('Open 100 treasure chests.'), { value: 37, status: '37/100' });
+});
+
 test('the payload renders a valid toast XML (hero image, progress, protocol activation)', async () => {
   const { toXmlString } = await import('powertoast');
   const { notification } = buildToastNotification(

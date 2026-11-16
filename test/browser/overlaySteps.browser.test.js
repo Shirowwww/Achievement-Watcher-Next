@@ -61,7 +61,7 @@ test('the overlay opens an achievement steps, ticks one through the host and fil
       window.api = new Proxy(known, { get: (target, key) => target[key] || (() => Promise.resolve(null)) });
       window.customApi = { closeOverlay() {} };
     });
-    for (const script of ['util/intlFormat.js', 'util/rarityTiers.js', 'util/overlayUi.js', 'util/controllerLabels.js', 'view/overlay.js']) {
+    for (const script of ['util/intlFormat.js', 'util/rarityTiers.js', 'util/overlayUi.js', 'util/counterUnit.js', 'util/controllerLabels.js', 'view/overlay.js']) {
       await page.addScriptTag({ path: path.join(appDir, script) });
     }
     await page.evaluate((game) => {

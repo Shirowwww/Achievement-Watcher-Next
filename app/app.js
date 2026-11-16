@@ -179,6 +179,7 @@ const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const libraryFilter = require(path.join(appPath, 'util/libraryFilter.js'));
 const intlFormat = require(path.join(appPath, 'util/intlFormat.js'));
+const counterUnit = require(path.join(appPath, 'util/counterUnit.js'));
 const links = require(path.join(appPath, 'util/links.js'));
 const { localeText } = require(path.join(appPath, 'locale/t.js'));
 // `t` and `escapeHtml` come from ui/settings.js; classic scripts share their lexical scope.
@@ -1598,14 +1599,15 @@ function repaintAchievementSteps(game, row) {
     const same = fresh.find('.ach-step').filter((index, el) => el.getAttribute('data-step') === focusedStep).find('input');
     (same.length ? same : fresh.find('.ach-step-new input')).trigger('focus');
   }
-  const progress = achievementStepsView.barState(getAchievementProgressState(achievement), steps, achieved);
+  const own = getAchievementProgressState(achievement);
+  const progress = achievementStepsView.barState(own, steps, achieved);
   row
     .find('.progressBar')
     .attr({
       'data-current': progress.current,
       'data-max': progress.hasProgress ? progress.max : 0,
       'data-percent': progress.percent,
-      'data-label': `${formatCount(progress.current)} / ${formatCount(progress.max)}`,
+      'data-label': counterBarLabel(progress, achievement, own.hasProgress),
     })
     .find('.meter')
     .css('width', `${progress.hasProgress ? progress.percent : 0}%`);
@@ -1855,6 +1857,15 @@ function formatCount(value) {
 // A completion percentage already expressed in percent, with the language's own separator and sign.
 function formatPercentValue(value, digits = 0) {
   return intlFormat.formatPercent(value, uiLang(), { maximumFractionDigits: digits });
+}
+
+// The game's counter, in percent when the game counts in percent (#168); ticked steps stay "2 / 5".
+function counterBarLabel(progress, achievement, fromGame) {
+  if (!fromGame) return `${formatCount(progress.current)} / ${formatCount(progress.max)}`;
+  return counterUnit.counterLabel(progress.current, progress.max, achievement.description, {
+    formatNumber: formatCount,
+    formatPercent: formatPercentValue,
+  });
 }
 
 const STAT_COUNT_MS = 450;
@@ -8708,9 +8719,10 @@ var app = {
         const unlockAt = intlFormat.formatDateTime(achievement.UnlockTime, unlockLang, { dateStyle: 'short', timeStyle: 'short' });
         const unlockAgo = intlFormat.formatRelativeTime(achievement.UnlockTime, unlockLang);
         const steps = stepsByName[achievement.name] || [];
-        const progress = achievementStepsView.barState(getAchievementProgressState(achievement), steps, Boolean(achievement.Achieved));
+        const ownProgress = getAchievementProgressState(achievement);
+        const progress = achievementStepsView.barState(ownProgress, steps, Boolean(achievement.Achieved));
         const progressMax = progress.hasProgress ? progress.max : 0;
-        const progressLabel = `${formatCount(progress.current)} / ${formatCount(progress.max)}`;
+        const barLabel = counterBarLabel(progress, achievement, ownProgress.hasProgress);
 
         // Hidden + still locked + "show hidden" off => mask the description inline; the real text
         // sits in data-desc and is revealed in place on click, instead of a separate bottom "reveal all" section.
@@ -8757,7 +8769,7 @@ var app = {
                                 ${descHtml}
                                 <div class="progressBar" data-current="${progress.current}" data-max="${progressMax}" data-percent="${
           progress.percent
-        }" data-label="${progressLabel}">
+        }" data-label="${barLabel}">
                                 <span class="meter" style="width:${progress.hasProgress ? progress.percent : 0}%"></span></div>
                                 ${achievementStepsView.blockHtml({
                                   steps,

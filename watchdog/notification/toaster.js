@@ -426,7 +426,11 @@ module.exports = async (message, option = {}) => {
               };
 
               const progress = normalizeProgress(message.progress);
-              if (progress) notification.message = `[ ${progress.current}/${progress.max} ]\n${message.achievementDescription}`;
+              if (progress) {
+                const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+                const count = require(sharedAppModulePath('util/counterUnit.js')).counterLabel(progress.current, progress.max, message.achievementDescription, { separator: '/' });
+                notification.message = `[ ${count} ]\n${message.achievementDescription}`;
+              }
 
               await balloon(notification);
               // A tray balloon is a degraded notification, not a lost one.

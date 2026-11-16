@@ -84,9 +84,11 @@ function applyLocalStatProgress(root, localSchema) {
   };
   for (const { achievement, max, value } of statProgressPairs(localSchema, rawFor)) {
     if (root[achievement.name] && typeof root[achievement.name] === 'object') {
-      // CODEX writes CurProgress=0 and MaxProgress=0 for every entry: a string '0' is not a value.
+      // The furthest of the two wins: GBE records progress only when the stat moves, so either can
+      // lag. CODEX writes CurProgress=0 for every entry, which never beats a value.
       const entry = root[achievement.name];
-      if (!(Number(entry.CurProgress) > 0) && !(Number(entry.progress) > 0)) entry.CurProgress = value;
+      const recorded = Math.max(Number(entry.CurProgress) || 0, Number(entry.progress) || 0);
+      if (value > recorded || !(recorded > 0)) entry.CurProgress = value;
       if (!(Number(entry.MaxProgress) > 0) && !(Number(entry.max_progress) > 0) && max) entry.MaxProgress = max;
     } else {
       root[achievement.name] = {

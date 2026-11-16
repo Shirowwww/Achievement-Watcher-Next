@@ -528,13 +528,19 @@
   function rowProgress(achievement) {
     const progress = ui.progressInfo(achievement);
     const { done, total } = stepCount(achievement);
-    if (progress.hasProgress || total === 0) return progress;
+    if (progress.hasProgress || total === 0) {
+      // A game that counts in percent reads "37%" (#168).
+      const description = ui.safeLocalizedText(achievement.description, overlayLang, '');
+      const formatPercent = (value) => window.IntlFormat.formatPercent(value, overlayLang);
+      return { ...progress, label: window.CounterUnit.counterLabel(progress.current, progress.max, description, { formatPercent }) };
+    }
     return { current: done, max: total, percent: Math.floor((done / total) * 100), hasProgress: true };
   }
 
   function progressHtml(progress) {
+    const label = progress.label || `${progress.current} / ${progress.max}`;
     return progress.hasProgress && progress.max > 1
-      ? `<div class="overlay-progress"><div class="progress-meta"><span>${ui.escapeHtml(overlayStrings.progress)}</span><span>${progress.current} / ${progress.max}</span></div>
+      ? `<div class="overlay-progress"><div class="progress-meta"><span>${ui.escapeHtml(overlayStrings.progress)}</span><span>${ui.escapeHtml(label)}</span></div>
            <div class="progress-track"><div class="progress-fill" style="width:${progress.percent}%"></div></div></div>`
       : '';
   }

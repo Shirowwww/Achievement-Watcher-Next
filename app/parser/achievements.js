@@ -78,6 +78,7 @@ const gameIndex = require(path.join(appPath, 'gameIndex.js'));
 const { userDataDir } = require(path.join(appPath, '..', 'util', 'userDataPath.js'));
 const saveRedirects = require(path.join(appPath, '..', 'util', 'saveRedirects.js'));
 const shortcutSaveIds = require(path.join(appPath, '..', 'util', 'shortcutSaveIds.js'));
+const gbeStatFiles = require(path.join(appPath, 'gbeStatFiles.js'));
 const { resolveAchievementDataPath, achievementDataPaths } = require(path.join(appPath, '..', 'util', 'achievementDataPath.js'));
 const scanFingerprint = require(path.join(appPath, '..', 'util', 'scanFingerprint.js'));
 const exeDetect = require(path.join(appPath, 'exeDetect.js'));
@@ -4665,6 +4666,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           if (schema.length === 0 && Array.isArray(root.__rawStatKeys) && root.__rawStatKeys.length > 0) {
             schema = await fetchCommunityProgressSchema(appid.appid, { cacheDir: _userDataPath });
             if (schema.length > 0) debug.log(`[${appid.appid}] progress schema fetched from games-infos-datas (${schema.length})`);
+          }
+          // GBE's stat files hold a counter's current value, in every save folder of the game (#168).
+          if (hasSteamSettings && typeof appid.data.path === 'string' && appid.data.path) {
+            const aliases = Array.isArray(appid.data.aliasSavePaths) ? appid.data.aliasSavePaths : [];
+            gbeStatFiles.addSavedStats(root, { folders: [appid.data.path, ...aliases], steamSettings: appid.data.steamSettings, schema });
           }
           const applied = applyLocalStatProgress(root, schema);
           if (applied > 0) debug.log(`[${appid.appid}] mapped ${applied} stat progress entr${applied === 1 ? 'y' : 'ies'} through the progress schema`);
