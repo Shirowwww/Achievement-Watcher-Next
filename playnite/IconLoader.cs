@@ -28,7 +28,7 @@ namespace AwNext.Playnite
 
         public static async Task<ImageSource> LoadAsync(string url, string login)
         {
-            if (!Uri.TryCreate(url ?? string.Empty, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            if (!Uri.TryCreate(url ?? string.Empty, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps && !uri.IsFile))
             {
                 return null;
             }
@@ -36,6 +36,11 @@ namespace AwNext.Playnite
             if (cache.TryGetValue(uri.AbsoluteUri, out var known))
             {
                 return known;
+            }
+
+            if (uri.IsFile)
+            {
+                return LoadFile(uri);
             }
 
             try
@@ -71,6 +76,35 @@ namespace AwNext.Playnite
             catch (Exception e)
             {
                 logger.Debug($"Icon not loaded ({uri.Host}): {e.Message}");
+                return null;
+            }
+        }
+
+        private static readonly string[] ImageExtensions = { ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico" };
+
+        // A picture on this PC, named by AW Next's saved library while AW Next is not there to serve it.
+        private static ImageSource LoadFile(Uri uri)
+        {
+            try
+            {
+                // A network path would make Windows send the user's credentials to that host.
+                var file = new FileInfo(uri.LocalPath);
+                if (uri.IsUnc || !file.Exists || file.Length > MaxBytes || Array.IndexOf(ImageExtensions, file.Extension.ToLowerInvariant()) < 0)
+                {
+                    return null;
+                }
+
+                var image = Decode(File.ReadAllBytes(file.FullName));
+                if (image != null && cache.Count < MaxCached)
+                {
+                    cache[uri.AbsoluteUri] = image;
+                }
+
+                return image;
+            }
+            catch (Exception e)
+            {
+                logger.Debug($"Icon file not loaded: {e.Message}");
                 return null;
             }
         }

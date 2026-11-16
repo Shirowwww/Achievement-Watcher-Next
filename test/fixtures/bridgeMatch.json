@@ -1,0 +1,49 @@
+{
+  "about": "Which game the bridge answers for each question. Read by watchdog/test/steamBridgeFixture.test.js (the Watchdog's bridge) and playnite/Tests/OfflineLibraryTests.cs (the Playnite extension reading the same files while AW Next is not running), so the two matchers cannot drift apart.",
+  "savedAt": 1763300000000,
+  "games": [
+    {
+      "appid": "100",
+      "name": "Big Walk",
+      "img": {},
+      "gameDir": "C:\\Jeux\\Big Walk",
+      "exe": "C:\\Jeux\\Big Walk\\Bin\\BigWalk.exe",
+      "exeConfident": true,
+      "achievement": {
+        "list": [
+          { "name": "A1", "displayName": "First steps", "description": "Walk", "Achieved": true, "UnlockTime": 1700000000, "icon": "https://steamcdn-a.akamaihd.net/steamcommunity/public/images/apps/100/a1.jpg", "rarityPercent": 42.5 },
+          { "name": "A2", "displayName": "Far away", "description": "Walk more", "hidden": 1, "Achieved": false, "CurProgress": 3, "MaxProgress": 10 }
+        ]
+      }
+    },
+    { "appid": "200", "name": "Demon's Souls", "img": {}, "romPath": "D:\\ROMs\\PS3\\BLUS30443", "achievement": { "list": [{ "name": "T1" }] } },
+    { "appid": "300", "name": "Shared Title", "img": {}, "achievement": { "list": [{ "name": "S1" }] } },
+    { "appid": "301", "name": "Shared Title", "img": {}, "achievement": { "list": [{ "name": "S1" }] } },
+    { "appid": "400", "name": "Steamy", "steamappid": "4000", "img": {}, "achievement": { "list": [{ "name": "X" }] } },
+    { "appid": "500", "name": "Dark", "img": {}, "achievement": { "list": [{ "name": "D" }] } },
+    { "appid": "600", "name": "Unreal Game", "img": {}, "achievement": { "list": [{ "name": "U" }] } },
+    { "appid": "700", "name": "No list here", "img": {} }
+  ],
+  "index": [
+    { "appid": "500", "name": "Dark", "binary": "Dark.exe", "exePath": "C:\\Games\\Dark\\Dark.exe" }
+  ],
+  "exeList": [
+    { "appid": 600, "exe": "C:\\Jeux\\UG\\UG\\Binaries\\Win64\\UG-Win64-Shipping.exe", "args": "" },
+    { "appid": 400, "exe": "", "args": "" }
+  ],
+  "cases": [
+    { "why": "the exe the library knows, in another case and with forward slashes", "question": { "exe": "c:/jeux/big walk/bin/bigwalk.exe" }, "expect": "100", "total": 2, "unlocked": 1 },
+    { "why": "a ROM named in the launch options", "question": { "launchOptions": "--fullscreen \"D:\\ROMs\\PS3\\BLUS30443\"" }, "expect": "200" },
+    { "why": "a longer folder that only starts like the ROM", "question": { "launchOptions": "D:\\ROMs\\PS3\\BLUS304430" }, "expect": null },
+    { "why": "the Steam AppID the library stores apart from its id", "question": { "steamAppId": "4000" }, "expect": "400" },
+    { "why": "the library id itself", "question": { "steamAppId": "400" }, "expect": "400" },
+    { "why": "a title two games share is no answer", "question": { "name": "Shared Title" }, "expect": null },
+    { "why": "a launcher in the game folder", "question": { "exe": "C:\\Jeux\\Big Walk\\Launcher.exe" }, "expect": "100" },
+    { "why": "Unreal's Game.exe above Game-Win64-Shipping.exe", "question": { "exe": "C:\\Jeux\\UG\\UG.exe" }, "expect": "600" },
+    { "why": "the same exe name in another folder than the known copy", "question": { "exe": "C:\\Other\\Dark.exe" }, "expect": null },
+    { "why": "the exe the game index knows", "question": { "exe": "C:\\Games\\Dark\\Dark.exe" }, "expect": "500" },
+    { "why": "the title, punctuation and case aside", "question": { "name": "demons souls" }, "expect": "200" },
+    { "why": "a game with no achievement list is never an answer", "question": { "name": "No list here" }, "expect": null },
+    { "why": "nothing known", "question": { "name": "Unknown" }, "expect": null }
+  ]
+}

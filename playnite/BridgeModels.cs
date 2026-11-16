@@ -54,6 +54,9 @@ namespace AwNext.Playnite
         public int? Id { get; set; }
         public bool Found { get; set; }
         public BridgeGame Game { get; set; }
+
+        /// <summary>Set when the answer was read from AW Next's files, not from AW Next: its last scan.</summary>
+        public DateTimeOffset? LastScan { get; set; }
     }
 
     /// <summary>One line of AW Next's local feed, once sorted: a reply, an unlock, or nothing for us.</summary>

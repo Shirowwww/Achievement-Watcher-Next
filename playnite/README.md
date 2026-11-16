@@ -5,8 +5,12 @@ achievements AW Next tracks for it: the count, the progress bar and the list wit
 and rarity. It asks AW Next on its local feed (`ws://127.0.0.1:8082`) and refreshes as unlocks come
 in. Nothing is written to Playnite's library or to the game.
 
-It needs AW Next running with its websocket feed on (the default). Playnite 10.x is supported; the
-extension is built against the Playnite SDK 6.
+With AW Next running and its websocket feed on (the default), the list is live. When AW Next is
+closed, the extension reads the library AW Next saved at its last scan, in
+`%AppData%\Achievement Watcher Next`, and says so above the list with the date of that scan: unlocks
+made since then show once AW Next runs again. It only reads those files, never writes them. A
+portable copy of AW Next, or one started with `--user-data-dir`, keeps its data elsewhere and is not
+read this way. Playnite 10.x is supported; the extension is built against the Playnite SDK 6.
 
 ## Install
 
@@ -62,8 +66,9 @@ block can stay in the theme.
   than show the wrong list.
 - The game has to be in AW Next's library with its achievements: if AW Next does not list it,
   Playnite cannot show it either.
-- "AW Next is not running" means the extension cannot reach the feed. It tries again on its own,
-  every few seconds at first, and the open panels refresh when it gets through.
+- "AW Next is not running" means the extension cannot reach the feed and found no library saved by
+  AW Next either. It tries again on its own, every few seconds at first, and the open panels refresh
+  when it gets through.
 
 ## Building
 

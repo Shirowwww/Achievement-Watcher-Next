@@ -67,12 +67,16 @@ namespace AwNext.Playnite
         private string summary = string.Empty;
         private double percent;
         private List<AchievementItem> items = new List<AchievementItem>();
+        private string lastScanNote = string.Empty;
         private int question;
 
         public PanelState State { get => state; set => SetValue(ref state, value); }
         public string Summary { get => summary; set => SetValue(ref summary, value); }
         public double Percent { get => percent; set => SetValue(ref percent, value); }
         public List<AchievementItem> Items { get => items; set => SetValue(ref items, value); }
+
+        /// <summary>Empty while AW Next answers; otherwise says the list is from its last scan, and when.</summary>
+        public string LastScanNote { get => lastScanNote; set => SetValue(ref lastScanNote, value); }
 
         /// <summary>A panel that shows the first few only fetches their pictures; 0 fetches every one.</summary>
         public int IconLimit { get; set; }
@@ -106,14 +110,21 @@ namespace AwNext.Playnite
             Summary = string.Empty;
             Percent = 0;
             Items = new List<AchievementItem>();
+            LastScanNote = string.Empty;
             State = next;
         }
 
+        /// <summary>
+        /// Paints an answer. One read from AW Next's files (reply.LastScan set) counts as an answer
+        /// too, with a note giving the date of the scan it comes from.
+        /// </summary>
         public void Show(BridgeReply reply, bool online, CultureInfo culture)
         {
-            if (!online || reply == null || !reply.Found || reply.Game == null)
+            var fromDisk = reply != null && reply.LastScan.HasValue;
+            if (reply == null || (!online && !fromDisk) || !reply.Found || reply.Game == null)
             {
-                Clear(online ? PanelState.NotFound : PanelState.Offline);
+                Clear(online || fromDisk ? PanelState.NotFound : PanelState.Offline);
+                LastScanNote = fromDisk ? ScanNote(reply.LastScan.Value, culture) : string.Empty;
                 return;
             }
 
@@ -122,8 +133,12 @@ namespace AwNext.Playnite
             Percent = total > 0 ? Math.Round(100.0 * unlocked / total) : 0;
             Summary = string.Format(culture, ResourceProvider.GetString("LOCAwNextSummary"), unlocked, total, Percent);
             Items = Order(reply.Game.Achievements, culture);
+            LastScanNote = fromDisk ? ScanNote(reply.LastScan.Value, culture) : string.Empty;
             State = PanelState.Ready;
         }
+
+        internal static string ScanNote(DateTimeOffset lastScan, CultureInfo culture) =>
+            string.Format(culture, ResourceProvider.GetString("LOCAwNextLastScan"), lastScan.LocalDateTime.ToString("g", culture));
 
         public Task LoadIconsAsync(string login) =>
             LoadIconsAsync(login, async (url, user) => await IconLoader.LoadAsync(url, user).ConfigureAwait(false));

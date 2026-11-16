@@ -10,6 +10,7 @@
     <sys:String x:Key="LOCAwNextReveal">Cliquer pour le révéler, cliquer à nouveau pour le cacher</sys:String>
     <sys:String x:Key="LOCAwNextLoading">Interrogation d'AW Next...</sys:String>
     <sys:String x:Key="LOCAwNextOffline">AW Next n'est pas lancé, ou son flux websocket est coupé (AW Next : Paramètres, Notification, Websocket).</sys:String>
+    <sys:String x:Key="LOCAwNextLastScan">AW Next n'est pas lancé : cette liste vient de sa dernière analyse, le {0}.</sys:String>
     <sys:String x:Key="LOCAwNextNotFound">AW Next n'a pas de succès pour ce jeu. Choisis le même exécutable des deux côtés : le champ « Exécutable » du jeu dans AW Next et son action de lancement ici.</sys:String>
     <sys:String x:Key="LOCAwNextShowAll">Tout afficher</sys:String>
     <sys:String x:Key="LOCAwNextSettingsIntro">Les succès viennent d'AW Next lancé sur ce PC, par son flux websocket local.</sys:String>

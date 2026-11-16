@@ -48,6 +48,19 @@
             </TextBlock.Style>
         </TextBlock>
 
+        <TextBlock Text="{Binding LastScanNote}" TextWrapping="Wrap" Opacity="0.75" FontStyle="Italic" Margin="0,4"
+                   Foreground="{DynamicResource TextBrush}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding LastScanNote}" Value="">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
         <StackPanel>
             <StackPanel.Style>
                 <Style TargetType="StackPanel">

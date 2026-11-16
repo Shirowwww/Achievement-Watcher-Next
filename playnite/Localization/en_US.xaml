@@ -10,6 +10,7 @@
     <sys:String x:Key="LOCAwNextReveal">Click to reveal it, click again to hide it</sys:String>
     <sys:String x:Key="LOCAwNextLoading">Asking AW Next...</sys:String>
     <sys:String x:Key="LOCAwNextOffline">AW Next is not running, or its websocket feed is off (AW Next: Settings, Notification, Websocket).</sys:String>
+    <sys:String x:Key="LOCAwNextLastScan">AW Next is not running: this list is from its last scan, {0}.</sys:String>
     <sys:String x:Key="LOCAwNextNotFound">AW Next has no achievements for this game. Pick the same executable in both apps: the game's Executable in AW Next and its play action here.</sys:String>
     <sys:String x:Key="LOCAwNextShowAll">Show all</sys:String>
     <sys:String x:Key="LOCAwNextSettingsIntro">Achievements come from AW Next running on this PC, over its local websocket feed.</sys:String>

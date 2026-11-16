@@ -30,6 +30,7 @@ namespace AwNext.Playnite
         private readonly ConcurrentDictionary<Guid, string> awIds = new ConcurrentDictionary<Guid, string>();
         private Window openWindow;
         private BridgeClient client;
+        private readonly OfflineLibrary offline = new OfflineLibrary(OfflineLibrary.DefaultFolder());
         private Game themeGame;
 
         public override Guid Id { get; } = Guid.Parse("4ae86d6e-6590-497f-adf9-0d373068627d");
@@ -121,19 +122,14 @@ namespace AwNext.Playnite
         {
             var asked = model.NextQuestion();
             var current = client;
-            if (current == null || !current.IsOpen)
-            {
-                model.Show(null, false, CultureInfo.CurrentCulture);
-                return;
-            }
-
-            var reply = await AskAsync(current, game).ConfigureAwait(true);
+            var online = current != null && current.IsOpen;
+            var reply = online ? await AskAsync(current, game).ConfigureAwait(true) : await AskOfflineAsync(game).ConfigureAwait(true);
             if (!model.IsCurrent(asked))
             {
                 return;
             }
 
-            model.Show(reply, current.IsOpen, CultureInfo.CurrentCulture);
+            model.Show(reply, online && current.IsOpen, CultureInfo.CurrentCulture);
             _ = model.LoadIconsAsync(settings.Settings.Login);
         }
 
@@ -143,12 +139,12 @@ namespace AwNext.Playnite
             var asked = ThemeData.NextQuestion();
             ThemeData.Show(null);
             var current = client;
-            if (game == null || current == null || !current.IsOpen)
+            if (game == null)
             {
                 return;
             }
 
-            var reply = await AskAsync(current, game).ConfigureAwait(true);
+            var reply = current != null && current.IsOpen ? await AskAsync(current, game).ConfigureAwait(true) : await AskOfflineAsync(game).ConfigureAwait(true);
             if (ThemeData.IsCurrent(asked))
             {
                 ThemeData.Show(reply);
@@ -173,6 +169,21 @@ namespace AwNext.Playnite
             }
 
             return reply;
+        }
+
+        // AW Next is not running: the same question answered from the files its last scan left.
+        private async Task<BridgeReply> AskOfflineAsync(Game game)
+        {
+            try
+            {
+                var question = GameQuestion.For(FactsOf(game));
+                return await Task.Run(() => offline.Ask(question)).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, $"AW Next's saved library could not be read for {game.Name}");
+                return null;
+            }
         }
 
         public void OpenWindow(Game game)
