@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Külön értesítést indít, amikor egy játék eléri a 100%-os teljesítést"
+          "description": "Külön értesítést indít, amikor egy játék megszerzi a platináját"
+        },
+        "platinumScope": {
+          "name": "A platina feltétele",
+          "description": "Alapjáték: a platina akkor jön, amikor az alapjáték összes teljesítménye megvan, a DLC-kre és a további trófeacsoportokra várás nélkül, mint PlayStationön. DLC-vel együtt a teljes listára vár."
         },
         "mode": {
           "name": "Értesítés típusa",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Rögzítés felülre",
     "ach-unpin-menu": "Rögzítés feloldása",
     "ach-pinned": "Rögzítve",
+    "platinum-only": "Csak platina",
+    "platinum-needed": "Kell a platinához",
+    "ach-removed": "Már nincs a Steamen",
     "steps-add": "Lépés hozzáadása",
     "steps-remove": "Lépés eltávolítása",
     "steps-rename": "Dupla kattintás az átnevezéshez",

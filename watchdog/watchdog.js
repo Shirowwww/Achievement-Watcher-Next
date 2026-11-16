@@ -119,6 +119,7 @@ const { sendEscapeToFocusedWindow, addExcludedPid } = require('./util/sendKey.js
 const toastIdentity = require('./util/toastIdentity.js');
 const { userDataDir } = require('./util/userData.js');
 const { platinumLikeForGame } = require('./util/platinumLike.js');
+const { completionOf } = require('./util/completionPopup.js');
 const { steamHeaderImage, steamLibraryImage, steamSquareLogo, customGameIcon, executableIcon, highResExecutableIcon } = require('./util/steamArtwork.js');
 const { sharedAppModulePath } = require('./util/sharedAppModule.js');
 const { DEFAULT_HOTKEY, DEFAULT_CONTROLLER_BINDINGS } = require(sharedAppModulePath('settings.js'));
@@ -136,6 +137,7 @@ const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'
 const { mapStatProgressEntries, findProgressSchema } = require(sharedAppModulePath('parser/statProgress.js'));
 const { readSiblingStats } = require(sharedAppModulePath('parser/emuSave.js'));
 const psnTrophyLink = require(sharedAppModulePath('parser/psnTrophyLinkRead.js'));
+const platinumScope = require(sharedAppModulePath('util/platinumScope.js'));
 // The GOG/Epic -> Steam appid maps (steam_cache/gog.db, epic.db), read and written by their parsers.
 const gogMapping = require(sharedAppModulePath('parser/gog.js'));
 const epicMapping = require(sharedAppModulePath('parser/epic.js'));
@@ -333,11 +335,16 @@ function startXboxPolling(game) {
       },
       notifyUnlock: async (id) => {
         const ach = schemaList.find((a) => a && String(a.name) === id);
-        const rows = Object.values(state.snapshot || {});
+        const rows = Object.entries(state.snapshot || {});
+        // The list's names and texts let the platinum rules read it; without a schema, the bare ids count.
+        const entries = schemaList.length ? schemaList : rows.map(([rowId]) => ({ name: rowId }));
         await xboxNotify(
           {
             source: SOURCE_LABEL.XBOX_PC,
-            completion: { unlocked: rows.filter((row) => row && row.earned).length, total: rows.length },
+            completion: completionOf(
+              entries,
+              rows.filter(([, row]) => row && row.earned).map(([rowId]) => rowId)
+            ),
             appid: titleId,
             gameDisplayName: game.name || titleId,
             achievementName: id,
@@ -1288,12 +1295,17 @@ var app = {
 
             // Platinum detection: snapshot the prior unlock count so this fires only when the current
             // scan flips the game to fully unlocked and a real unlock notification also fired.
-            const platinumTotal = requiredCount(game.achievement.list);
+            // By default the platinum waits for the base game only, as the achievement page marks it.
+            const psnLink = psnTrophyLink.readLink(game.appid);
+            const platinumInScope = platinumScope.platinumFilter(game.achievement.list, {
+              scope: self.options.notification.platinumScope,
+              categoryOf: (achievement) => achievement.category || psnTrophyLink.linkedGroup(self.options, psnLink, achievement.name),
+            });
+            const platinumTotal = requiredCount(game.achievement.list, platinumInScope);
             const previousIndex = buildPreviousAchievementIndex(cache);
-            const platinumPrevUnlocked = requiredUnlockedCount(cache, schemaIndex);
+            const platinumPrevUnlocked = requiredUnlockedCount(cache, schemaIndex, platinumInScope);
             let platinumNewUnlock = false;
             let platinumIcon = null;
-            const psnLink = psnTrophyLink.readLink(game.appid);
             // The game's own "every achievement" one, popped as the platinum in place of the 100% one.
             if (game.__platinumLike === undefined) game.__platinumLike = platinumLikeForGame(game, self.options.achievement.lang, rarityMap);
             const platinumOn = self.options.notification.platinum !== false;
@@ -1503,7 +1515,7 @@ var app = {
             }
 
             // Fire a dedicated Platinum toast when this scan flips the game to 100%.
-            const platinumNowUnlocked = requiredUnlockedCount(achievements, schemaIndex);
+            const platinumNowUnlocked = requiredUnlockedCount(achievements, schemaIndex, platinumInScope);
             if (
               platinumNewUnlock &&
               platinumTotal > 0 &&

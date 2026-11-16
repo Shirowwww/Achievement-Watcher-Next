@@ -167,6 +167,8 @@ const rarityCache = require(path.join(appPath, 'util/rarity.js'));
 const { resolveGameRarityContext } = rarityCache;
 const { calculateTrophyStats, listUnlockedByRarity, platinumEarnedAt } = require(path.join(appPath, 'util/trophyStats.js'));
 const { derivedPlatinumRate } = require(path.join(appPath, 'util/platinumRate.js'));
+const platinumLike = require(path.join(appPath, 'util/platinumLike.js'));
+const platinumScope = require(path.join(appPath, 'util/platinumScope.js'));
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 const librarySnapshot = require(path.join(appPath, 'util/librarySnapshot.js'));
 const stylizedArtwork = require(path.join(appPath, 'util/stylizedArtwork.js'));
@@ -574,11 +576,101 @@ function linkedTrophyOf(game, achievement) {
   return trophy && (trophy.type === 'P' || rarityGrading().mode === rarityTiers.MODE_TROPHY) ? trophy : null;
 }
 
-const linkedTrophyType = (game, achievement) => linkedTrophyOf(game, achievement)?.type;
+/*
+  The game's own platinum achievement ("Obtain every achievement"), by the rule the notifier pops it
+  with (util/platinumLike.js), so the page labels the same one. Worked out once per list. The rule
+  reads English: the game page reads the cached English schema (`readEnglish`), a library-wide pass
+  does not, since a thousand of those reads cost seconds on a cold disk (measured 3.7 ms each).
+*/
+const ownPlatinumNames = new WeakMap();
+const cachedEnglishList = (appid) => {
+  try {
+    const english = JSON.parse(fs.readFileSync(path.join(getUserDataPath(), 'steam_cache', 'schema', 'english', `${appid}.db`), 'utf8'));
+    return english && english.achievement && english.achievement.list;
+  } catch {
+    return null; // No English copy: the list in the user's language is read instead.
+  }
+};
+function ownPlatinumName(game, { readEnglish = false } = {}) {
+  const list = game && game.achievement && game.achievement.list;
+  if (!Array.isArray(list) || game.system === 'playstation') return null;
+  const known = ownPlatinumNames.get(list);
+  if (known && (known.english || !readEnglish)) return known.name;
+  const lang = String((app.config && app.config.achievement && app.config.achievement.lang) || 'english');
+  const name = platinumLike.platinumNameOf(game, { lang, englishList: readEnglish ? cachedEnglishList : null });
+  ownPlatinumNames.set(list, { name, english: readEnglish || lang === 'english' });
+  return name;
+}
+
+/*
+  Outside English the library-wide figures would otherwise see a game's own platinum only once its
+  page was opened. The English schemas are read here in the background instead, a few at a time and
+  without blocking the window, and the trophy figures and tiles drawn again if one of them changed.
+*/
+const ENGLISH_READ_BATCH = 8;
+let ownPlatinumPass = 0;
+async function learnOwnPlatinums(games) {
+  const lang = String((app.config && app.config.achievement && app.config.achievement.lang) || 'english');
+  if (lang === 'english' || !Array.isArray(games)) return;
+  const pass = ++ownPlatinumPass;
+  const changed = [];
+  const pending = games.filter((game) => {
+    const list = game && game.system !== 'playstation' && game.achievement && game.achievement.list;
+    return Array.isArray(list) && list.length > 0 && /^\d+$/.test(String(game.steamappid || game.appid)) && !ownPlatinumNames.get(list)?.english;
+  });
+  for (let at = 0; at < pending.length && pass === ownPlatinumPass; at += ENGLISH_READ_BATCH) {
+    await Promise.all(
+      pending.slice(at, at + ENGLISH_READ_BATCH).map(async (game) => {
+        const appid = String(game.steamappid || game.appid);
+        const file = path.join(getUserDataPath(), 'steam_cache', 'schema', 'english', `${appid}.db`);
+        const english = await fs.promises.readFile(file, 'utf8').then(JSON.parse, () => null).catch(() => null);
+        const list = game.achievement.list;
+        const before = ownPlatinumNames.get(list)?.name;
+        const name = platinumLike.platinumNameOf(game, { lang, englishList: () => english && english.achievement && english.achievement.list });
+        ownPlatinumNames.set(list, { name, english: true });
+        if ((name || null) !== (before || null)) changed.push(game);
+      })
+    );
+  }
+  if (pass !== ownPlatinumPass || changed.length === 0) return;
+  refreshProfileStats();
+  const trophyMode = rarityGrading().mode === rarityTiers.MODE_TROPHY;
+  for (const game of changed) {
+    const summary = $(gameElements.get(String(game.appid)) || []).find('.library-achievement-summary');
+    const earned = trophyMode && platinumEarnedAt(game, linkedTrophyType, platinumCategoryOf) !== null;
+    if (earned) summary.attr('data-platinum', 'true');
+    else summary.removeAttr('data-platinum');
+  }
+}
+
+const linkedTrophyType = (game, achievement) =>
+  linkedTrophyOf(game, achievement)?.type || (achievement && ownPlatinumName(game) === String(achievement.name) ? 'P' : undefined);
 
 // The DLC an achievement belongs to ('' for the base game): its own set, else its linked trophy's group.
 // Shared by the achievement page's sections and the library's "100% base game" filter.
 const achievementCategoryOf = (game, achievement) => achievement.category || (linkedTrophyOf(game, achievement) || {}).group;
+// The same, for the platinum: in the "DLC included" choice the whole list counts, so nothing is set aside.
+const platinumCategoryOf = (game, achievement) =>
+  platinumScope.normalizeScope(app.config?.notification?.platinumScope) === 'all' ? '' : achievementCategoryOf(game, achievement);
+
+/*
+  "Platinum only" on the game page hides what the platinum does not wait for (DLC sets, removed
+  achievements). Offered only where that is something; the choice holds from one game to the next.
+*/
+let platinumOnly = false;
+function paintPlatinumOnly(available) {
+  const button = $('#btn-platinum-only');
+  const on = available && platinumOnly;
+  button.prop('hidden', !available).toggleClass('active', on).attr('aria-pressed', on ? 'true' : 'false');
+  button.find('span').text(t('platinum-only', 'Platinum only', 'Platine seulement'));
+  $('#achievement .achievements').toggleClass('platinum-only', on);
+}
+$(document).on('click keydown', '#btn-platinum-only', function (event) {
+  if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  platinumOnly = !platinumOnly;
+  paintPlatinumOnly(true);
+});
 
 const linkedPlatinumOf = (game) => {
   const platinum = psnLinkOf(game)?.platinum;
@@ -595,7 +687,7 @@ function psnPlatinumRow(game, baseGroup) {
   const list = game.achievement.list;
   if (!platinum || list.some((achievement) => linkedTrophyType(game, achievement) === 'P')) return null;
   // As on the console, the platinum is the base game's: its DLC sets are left aside.
-  const earned = list.length > 0 ? platinumEarnedAt(game, linkedTrophyType, achievementCategoryOf) : null;
+  const earned = list.length > 0 ? platinumEarnedAt(game, linkedTrophyType, platinumCategoryOf) : null;
   const achieved = earned !== null;
   const earnedAt = earned || 0;
   const groupAttr = Number.isInteger(baseGroup) ? ` data-group="${baseGroup}"` : '';
@@ -713,7 +805,7 @@ function trophyStatsFor(installedOnly) {
     isStarted: hasBeenLaunched,
     rarityOf: trophyRarityOf,
     trophyTypeOf: linkedTrophyType,
-    categoryOf: achievementCategoryOf,
+    categoryOf: platinumCategoryOf,
     ...rarityGrading(),
   });
 }
@@ -5308,7 +5400,7 @@ var app = {
               : progressLabel;
             // In trophy mode a game with its platinum wears the platinum colour on its trophy icon.
             const platinumAttr =
-              hasAchievements && rarityGrading().mode === rarityTiers.MODE_TROPHY && platinumEarnedAt(game, linkedTrophyType, achievementCategoryOf) !== null
+              hasAchievements && rarityGrading().mode === rarityTiers.MODE_TROPHY && platinumEarnedAt(game, linkedTrophyType, platinumCategoryOf) !== null
                 ? ' data-platinum="true"'
                 : '';
             // Accessible names for the three icon-only controls on a tile.
@@ -5588,6 +5680,7 @@ var app = {
         }
         if (isDev) debug.log(`[perf] fresh library scan finished in ${(performance.now() - scanStartedAt).toFixed(1)}ms`);
         requestPsnTrophyLinks(list);
+        learnOwnPlatinums(list).catch((err) => debug.log(`[platinum] own platinums not read: ${err.message || err}`));
         loadingElem.elem.hide();
         $('#main-footer').addClass('done');
         setLibraryBusyCursor(false);
@@ -8585,9 +8678,22 @@ var app = {
       window.achievementGroupHeads = groupIndex
         ? groups.map((group) => ({ label: group.key || t('ach-group-base', 'Base game', 'Jeu de base'), unlocked: group.unlocked, total: group.total }))
         : [];
+      // What Steam no longer lists (parser/achievements.js keeps it apart): greyed below the others.
+      const removedList = Array.isArray(game.achievement.removed) ? game.achievement.removed : [];
+      const shownList = removedList.length ? game.achievement.list.concat(removedList) : game.achievement.list;
+      const removedRows = { unlock: [], lock: [] };
+      const removedLabel = escapeHtml(t('ach-removed', 'No longer on Steam', 'Retiré de Steam'));
+      // With DLC, the base-game achievements the platinum waits for wear a small mark (util/platinumScope.js).
+      const inPlatinum = platinumScope.platinumFilter(game.achievement.list, { scope: app.config.notification?.platinumScope, categoryOf });
+      const platinumNeedLabel = escapeHtml(t('platinum-needed', 'Needed for the platinum', 'Requis pour le platine'));
+      paintPlatinumOnly(Boolean(inPlatinum));
+      // The page reads the English schema once, so the row the notifier pops as the platinum wears it.
+      ownPlatinumName(game, { readEnglish: true });
 
       let i = 0;
-      for (let achievement of game.achievement.list) {
+      for (let achievement of shownList) {
+        const isRemoved = Boolean(achievement.removed);
+        const platinumNeed = Boolean(inPlatinum) && !isRemoved && inPlatinum(achievement);
         const iconId = achievementIconId(achievement.name);
         const unlockLang = uiLang();
         const unlockAt = intlFormat.formatDateTime(achievement.UnlockTime, unlockLang, { dateStyle: 'short', timeStyle: 'short' });
@@ -8601,18 +8707,19 @@ var app = {
         // sits in data-desc and is revealed in place on click, instead of a separate bottom "reveal all" section.
         const isHiddenMasked = achievement.hidden == 1 && !app.config.achievement.showHidden && !achievement.Achieved;
         const realDesc = achievement.description || '...';
-        const linked = linkedTrophyOf(game, achievement);
-        const trophyType = achievement.type || (linked && linked.type);
+        const trophyType = achievement.type || linkedTrophyType(game, achievement);
         const category = categoryOf(achievement);
         const descHtml = isHiddenMasked
           ? `<div class="description masked-desc" role="button" tabindex="0" data-desc="${escapeHtml(realDesc)}">${escapeHtml(hiddenDescLabel)}</div>`
           : `<div class="description">${escapeHtml(realDesc)}</div>`;
 
-        const pinned = !achievement.Achieved && pinnedNames.has(achievement.name);
+        const pinned = !isRemoved && !achievement.Achieved && pinnedNames.has(achievement.name);
+        const groupAttr = groupIndex && !isRemoved ? ` data-group="${groupIndex.get(String(category || '').trim())}"` : '';
+        const platinumAttr = inPlatinum ? ` data-platinum-need="${platinumNeed ? 1 : 0}"` : '';
         let template = `
                 <li>
 
-                         <div class="achievement${achievement.manual ? ' manual' : ''}${pinned ? ' is-pinned' : ''}" data-name="${escapeHtml(achievement.name)}" data-index="${i}"${groupIndex ? ` data-group="${groupIndex.get(String(category || '').trim())}"` : ''} data-pinned="${pinned ? 1 : 0}" data-achieved="${
+                         <div class="achievement${achievement.manual ? ' manual' : ''}${pinned ? ' is-pinned' : ''}${isRemoved ? ' removed' : ''}" data-name="${escapeHtml(achievement.name)}" data-index="${i}"${groupAttr}${platinumAttr} data-pinned="${pinned ? 1 : 0}" data-achieved="${
           achievement.Achieved ? 1 : 0
         }" data-manual="${achievement.manual ? 1 : 0}" title="${achievement.manual ? manualTitle : ''}">
                             <div class="box">
@@ -8625,12 +8732,16 @@ var app = {
                             </div>
                             <div class="content">
                                 <div class="title">${
+          platinumNeed && trophyType !== 'P' ? `<i class="fas fa-link ach-platinum-need" title="${platinumNeedLabel}" aria-label="${platinumNeedLabel}"></i> ` : ''
+        }${
                                   game.system === 'playstation' || trophyType
                                     ? `<i class="fas fa-trophy" data-type="${escapeHtml(trophyType)}"></i> ${escapeHtml(achievement.displayName)}`
                                     : `${escapeHtml(achievement.displayName)}`
                                 }${pinned ? ` <i class="fas fa-thumbtack ach-pin" title="${pinLabel}" aria-label="${pinLabel}"></i>` : ''}</div>
                                 ${
-                                  category
+                                  isRemoved
+                                    ? `<div class="ach-category ach-removed">${removedLabel}</div>`
+                                    : category
                                     ? `<div class="ach-category">${escapeHtml(category)}</div>`
                                     : ''
                                 }
@@ -8660,7 +8771,9 @@ var app = {
 
         // Hidden achievements are no longer collected into a separate "reveal all" row - they render
         // inline in the locked list like any other (with their description masked, click to reveal).
-        if (achievement.Achieved) {
+        if (isRemoved) {
+          removedRows[achievement.Achieved ? 'unlock' : 'lock'].push(template);
+        } else if (achievement.Achieved) {
           unlockRows.push(template);
         } else if (pinned) {
           pinnedRows.push(template);
@@ -8674,6 +8787,8 @@ var app = {
       if (platinumRow) (platinumRow.achieved ? unlockRows : lockRows).unshift(platinumRow.html);
       // Pinned rows lead the locked list, ahead of the PlayStation platinum.
       lockRows.unshift(...pinnedRows);
+      unlockRows.push(...removedRows.unlock);
+      lockRows.push(...removedRows.lock);
       if (unlockRows.length) unlock.append(unlockRows.join(''));
       if (lockRows.length) lock.append(lockRows.join(''));
       if (platinumRow) paintLinkedPlatinumRate(game).catch((err) => debug.log(`[psn] platinum rate not painted: ${err.message || err}`));
@@ -8715,7 +8830,7 @@ var app = {
         if (!imageCache.has(hash)) imageCache.set(hash, ipcRenderer.invoke('fetch-icon', hash, game.steamappid || game.appid));
         return imageCache.get(hash);
       };
-      const preloadPromises = game.achievement.list.map(async (achievement) => {
+      const preloadPromises = shownList.map(async (achievement) => {
         const selector = `#achievement-${achievementIconId(achievement.name)}`;
         const hash = achievement.Achieved ? achievement.icon : achievement.icongray;
         const local = localIcons.achievementIcon(localIconIndex, achievement, !!achievement.Achieved);

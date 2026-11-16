@@ -1,0 +1,2483 @@
+{
+ "262410": {
+  "game": "Gun achievements game",
+  "achievements": [
+   {
+    "name": "TUTORIAL",
+    "displayName": "Tutorial",
+    "description": "Complete the tutorial to earn achievement",
+    "rarityPercent": 21
+   },
+   {
+    "name": "ALL_MODES",
+    "displayName": "All Modes",
+    "description": "Complete all seven game modes for at least one gun.",
+    "rarityPercent": 5.2
+   },
+   {
+    "name": "GAME_NO_HINTS",
+    "displayName": "Game w/o Hints",
+    "description": "Complete Game mode without using hints",
+    "rarityPercent": 31.6
+   },
+   {
+    "name": "GAME_SNIPER",
+    "displayName": "Sniper",
+    "description": "Complete Game mode hitting only parts which can be activated",
+    "rarityPercent": 9.3
+   },
+   {
+    "name": "UNLOCK_3",
+    "displayName": "3 guns",
+    "description": "Unlock any three gun models",
+    "rarityPercent": 60.5
+   },
+   {
+    "name": "UNLOCK_10",
+    "displayName": "10 guns",
+    "description": "Unlock any ten gun models",
+    "rarityPercent": 12.3
+   },
+   {
+    "name": "UNLOCK_ALL",
+    "displayName": "All guns",
+    "description": "Unlock all gun models",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_ARTILLERY",
+    "displayName": "Artillery",
+    "description": "Unlock all models in Artillery category",
+    "rarityPercent": 5.9
+   },
+   {
+    "name": "UNLOCK_ASSAULT",
+    "displayName": "Assault Rifles",
+    "description": "Unlock all models in Assault Rifles category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_LAUNCHER",
+    "displayName": "Launchers",
+    "description": "Unlock all models in Grenade/Rocket Launchers category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_HISTORICAL",
+    "displayName": "Historical",
+    "description": "Unlock all models in Historical category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_MACHINEGUN",
+    "displayName": "Machineguns",
+    "description": "Unlock all models in Machineguns category",
+    "rarityPercent": 5.2
+   },
+   {
+    "name": "UNLOCK_PISTOL",
+    "displayName": "Pistols",
+    "description": "Unlock all models in Pistols category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_POCKET",
+    "displayName": "Pocket Guns",
+    "description": "Unlock all models in Pocket Guns category",
+    "rarityPercent": 5.5
+   },
+   {
+    "name": "UNLOCK_REVOLVER",
+    "displayName": "Revolvers",
+    "description": "Unlock all models in Revolvers category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_RIFLE",
+    "displayName": "Rifles",
+    "description": "Unlock all models in Rifles category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_SHOTGUN",
+    "displayName": "Shotguns",
+    "description": "Unlock all models in Shotguns category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_SPORT",
+    "displayName": "Sporting",
+    "description": "Unlock all models in Sporting Guns category",
+    "rarityPercent": 5
+   },
+   {
+    "name": "UNLOCK_SMG",
+    "displayName": "SMG",
+    "description": "Unlock all models in Submachine Guns category",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "UNLOCK_WWII",
+    "displayName": "WW II",
+    "description": "Unlock all models in World War II category",
+    "rarityPercent": 5.9
+   },
+   {
+    "name": "UNLOCK_SKELETON",
+    "displayName": "Skeletons",
+    "description": "Unlock all models in Skeletons bonus category",
+    "rarityPercent": 2.5
+   },
+   {
+    "name": "UNLOCK_CAR",
+    "displayName": "Cars",
+    "description": "Unlock all models in Cars bonus category",
+    "rarityPercent": 2.6
+   },
+   {
+    "name": "UNLOCK_BIKE",
+    "displayName": "Bikes",
+    "description": "Unlock all models in Bikes bonus category",
+    "rarityPercent": 2.9
+   },
+   {
+    "name": "TOP_3",
+    "displayName": "Top-3",
+    "description": "Take one of Top-3 places of day best results in Game, Super Game or Hardcore Game of any model (gun or bonus).",
+    "rarityPercent": 6.5
+   },
+   {
+    "name": "TOP_1",
+    "displayName": "Champion",
+    "description": "Become day champion in Game, Super Game or Hardcore Game of any model (gun or bonus).",
+    "rarityPercent": 4.6
+   },
+   {
+    "name": "SUPER",
+    "displayName": "Craftmaster",
+    "description": "Complete Super-Game mode for any gun",
+    "rarityPercent": 14.1
+   },
+   {
+    "name": "SPEC_OP",
+    "displayName": "Spec-Op",
+    "description": "Perform all Special Operation tasks and got the prize",
+    "rarityPercent": 2.7
+   },
+   {
+    "name": "QUIZZ",
+    "displayName": "Quiz",
+    "description": "Complete Quiz mini-game with 10 models",
+    "rarityPercent": 3.3
+   },
+   {
+    "name": "ALL_SHOOTING",
+    "displayName": "Shooter",
+    "description": "Complete all task on any Shooting Range",
+    "rarityPercent": 3.8
+   },
+   {
+    "name": "UNLOCK_SHOOTING",
+    "displayName": "Shooting Ranges",
+    "description": "Unlock all Shooting Ranges",
+    "rarityPercent": 5
+   },
+   {
+    "name": "FIRST_FIELD_STRIP",
+    "displayName": "Field Strip",
+    "description": "Complete 'Field Strip' mode ",
+    "rarityPercent": 98.5
+   },
+   {
+    "name": "FIRST_DISASSEMBLY",
+    "displayName": "First Disassembly",
+    "description": "Complete 'Disassembly' mode",
+    "rarityPercent": 82.5
+   },
+   {
+    "name": "FIRST_ASSEMBLY",
+    "displayName": "First Assembly",
+    "description": "Complete 'Assembly' mode",
+    "rarityPercent": 76.8
+   },
+   {
+    "name": "FIRST_OPERATE",
+    "displayName": "First Operate",
+    "description": "Complete 'Operate' mode",
+    "rarityPercent": 65.1
+   },
+   {
+    "name": "FIRST_GAME",
+    "displayName": "First Game",
+    "description": "Complete 'Game' mode",
+    "rarityPercent": 39.7
+   },
+   {
+    "name": "ALL_ACHS",
+    "displayName": "All Gun Achievements",
+    "description": "Earn all achievements for any gun",
+    "rarityPercent": 3.2
+   },
+   {
+    "name": "HARDCORE",
+    "displayName": "Hardcore Gamer",
+    "description": "Complete 'Hardcore Game' mode",
+    "rarityPercent": 5.1
+   },
+   {
+    "name": "CALM",
+    "displayName": "Serenity",
+    "description": "Complete Game or Super Game without hasty clicks",
+    "rarityPercent": 13.3
+   },
+   {
+    "name": "SPEED",
+    "displayName": "Lightning-Fast Reflexes",
+    "description": "Complete Super game with accelerating al least 75% parts",
+    "rarityPercent": 6.4
+   },
+   {
+    "name": "DAILY_30",
+    "displayName": "30 Days Streak",
+    "description": "Complete Daily Puzzle during 30 days",
+    "rarityPercent": 1.4
+   },
+   {
+    "name": "DAILY_60",
+    "displayName": "60 Days Streak",
+    "description": "Complete Daily Puzzle during 60 days",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "DAILY_90",
+    "displayName": "90 Days Streak",
+    "description": "Complete Daily Puzzle during 90 days",
+    "rarityPercent": 1.3
+   }
+  ]
+ },
+ "387340": {
+  "game": "Hyperdimension Neptunia U: Action Unleashed",
+  "achievements": [
+   {
+    "name": "01",
+    "displayName": "Quest Master",
+    "description": "Cleared all Quests in Story mode. \"You kept clearing Quests even after being the final boss? Well, go you!\"",
+    "rarityPercent": 11.1
+   },
+   {
+    "name": "02",
+    "displayName": "Event Master",
+    "description": "Watched all events. \"It's great that you saw everything, but, um... That means you saw EVERYTHING we did?! Uh-oh.\"",
+    "rarityPercent": 8
+   },
+   {
+    "name": "03",
+    "displayName": "Gauntlet Domination",
+    "description": "All characters won the Gamindustri Gauntlet at least once. \"This gauntlet thing was one heck of a tournament! Seems we're all winners, so let's go and make Gamindustri peaceful again!\"",
+    "rarityPercent": 7.6
+   },
+   {
+    "name": "04",
+    "displayName": "Neptral Force",
+    "description": "All characters cleared Neptral Tower. \"We all made it! I expected an upside-down Neptral Tower at the top, but hey!\"",
+    "rarityPercent": 6.5
+   },
+   {
+    "name": "05",
+    "displayName": "The Spectral One",
+    "description": "Defeated Next-Gen Mech at the top of Neptral Tower at Level 1. \"You seriously did this with base-level stats? You're so good that being weak doesn't even matter! Did you cheat? No...?\"",
+    "rarityPercent": 6.2
+   },
+   {
+    "name": "06",
+    "displayName": "Lily Lord",
+    "description": "Raised the Lily Rank of all characters to MAX. \"We're all so buddy-buddy that we just hug and giggle instead of argue anymore. And that lovely image is all thanks to you!\"",
+    "rarityPercent": 6.3
+   },
+   {
+    "name": "07",
+    "displayName": "Chapter 3 Clear!",
+    "description": "Cleared Chapter 3 in Story mode. \"We introduce our special guest...uh, wait, since when did we have a special guest?!\"",
+    "rarityPercent": 20.9
+   },
+   {
+    "name": "08",
+    "displayName": "The First Taste",
+    "description": "Won the Gamindustri Gauntlet for the first time. \"Like, almost every entrant was a CPU or a CPU Candidate, so... No wonder nobody else wanted to try except for that goofy dogoo. Use the prize wisely!\"",
+    "rarityPercent": 17.8
+   },
+   {
+    "name": "09",
+    "displayName": "The First Climb",
+    "description": "Cleared Neptral Tower for the first time. \"Did you see that view?! I was like 'wow, what a view' and stuff! I bet if everyone made it up there, it'd be a viewtacular extravagander or whatever!\"",
+    "rarityPercent": 9.2
+   },
+   {
+    "name": "10",
+    "displayName": "Max Level",
+    "description": "Raised a character's level to 99. \"The cap is 99 this time. I mean, c'mon, you can whomp n' stomp anything now.\"",
+    "rarityPercent": 18.6
+   },
+   {
+    "name": "11",
+    "displayName": "Accessory Fanatic",
+    "description": "Collected all accessories. \"Good going on hoarding trinkets! They all have neat effects, so use them properly.\"",
+    "rarityPercent": 6.1
+   },
+   {
+    "name": "12",
+    "displayName": "Medal Fanatic",
+    "description": "Acquired all medal bonuses. \"As the king, I appreciate you giving me these medals. Er, well, that's from a game. I understand the desire to collect them all. Really, I do.\"",
+    "rarityPercent": 8.3
+   },
+   {
+    "name": "13",
+    "displayName": "Neptune, I Choose You!",
+    "description": "You started a new game! \"Pretty awesome to get a trophy for starting the game! Make sure you mention it in reviews, Gamindustri journalists!\"",
+    "rarityPercent": 81.4
+   },
+   {
+    "name": "14",
+    "displayName": "Nepgear, I Choose You!",
+    "description": "You started a new game! \"This is a nice treat for the little sister fans out there. Root for our little'uns, 'cuz they're the future and all that jazz.\"",
+    "rarityPercent": 73.2
+   },
+   {
+    "name": "15",
+    "displayName": "Chapter 1 Clear!",
+    "description": "Cleared Chapter 1 in Story mode. \"Take your time and enjoy clearing Quests, or speed through the story-related ones. Captain Nep says, the power is yours!\"",
+    "rarityPercent": 53.3
+   },
+   {
+    "name": "16",
+    "displayName": "Chapter 2 Clear!",
+    "description": "Cleared Chapter 2 in Story mode. \"Forgot to do some Quests? It's okay, my completionist buddy. You can take care of them whenever. Those pesky newsies will appreciate it!\"",
+    "rarityPercent": 27.3
+   },
+   {
+    "name": "17",
+    "displayName": "HDDimension",
+    "description": "Cleared a Quest with HDD mode active. \"You're a natural at this transforming thing! But, uh, you won't force us to keep HDD active forever, right? It's so tiring...\"",
+    "rarityPercent": 71.4
+   },
+   {
+    "name": "18",
+    "displayName": "It Done Got Ripped!",
+    "description": "Triggered Costume Break during a Quest. \"Do we get stronger the more skin we show? Even if it helps us complete Quests, none of us really want to stay like this for long. CPUs have feelings too, y'know!\"",
+    "rarityPercent": 75.6
+   },
+   {
+    "name": "19",
+    "displayName": "CPU Voyeur",
+    "description": "Watched a CPU go about her daily duties. \"Peeping Tom! Just kidding. We've got a lot to show, so be sure to stop by and join in the fun!\"",
+    "rarityPercent": 58.7
+   },
+   {
+    "name": "20",
+    "displayName": "Audiomension",
+    "description": "Performed a sound test. \"Yo, yo, yo. We've got so much music, your head's gonna spin like a record. Take a gander with your ears!\"",
+    "rarityPercent": 37.5
+   },
+   {
+    "name": "21",
+    "displayName": "Journalistic Integrity",
+    "description": "A new character joined. \"Pretty impressive that we got two major news outlets in one game! More friends are always welcome, so, hooray!\"",
+    "rarityPercent": 53.3
+   },
+   {
+    "name": "22",
+    "displayName": "Please Help!",
+    "description": "Uncovered Irregular Quest conditions. \"This was originally a programming glitch, so maybe it should've been removed. Huh? Oh, sorry, I'm told that's taking breaking the 4th wall TOO far.\"",
+    "rarityPercent": 30.1
+   },
+   {
+    "name": "23",
+    "displayName": "Uphill Struggle",
+    "description": "Cleared a Quest while wearing an accessory with negative effects. \"That was kinda tough. Did you ever think about taking on the strongest enemy in the game at Level 1? Or putting on a CPU Chastity Be--ow! Ow...ow, just...ow.\"",
+    "rarityPercent": 33.7
+   },
+   {
+    "name": "24",
+    "displayName": "Lily Special",
+    "description": "Learned a Lily Special. \"A special combo attack using two friendly folks! Everyone got a dance partner?\"",
+    "rarityPercent": 23.5
+   },
+   {
+    "name": "25",
+    "displayName": "EXE Drive",
+    "description": "Used EXE Drive. \"This is still a pretty broken feature, even in this action game. It can be used outside of HDD as well, so use it as your personal WIN button!\"",
+    "rarityPercent": 49.2
+   },
+   {
+    "name": "26",
+    "displayName": "Maximum Firepower",
+    "description": "Dealt 999,000 damage in a combo. \"Yikes! Nice numbers you got there, pal. Nothing can survive that blast of digits!\"",
+    "rarityPercent": 32.3
+   },
+   {
+    "name": "27",
+    "displayName": "Eternal Combo Champion Redux",
+    "description": "Performed a 999-hit combo. \"Pretty skillful use of button mashing! I bet you had to make sure the enemies wouldn't all turn to mincement first, didn't ya?\"",
+    "rarityPercent": 59.3
+   },
+   {
+    "name": "28",
+    "displayName": "Reaper of Souls",
+    "description": "Defeated 999 enemies in a single Quest. \"Whoa, someone's got some pent-up rage. Where did you even FIND that many monsters?\"",
+    "rarityPercent": 24.3
+   },
+   {
+    "name": "29",
+    "displayName": "Character-driven Game",
+    "description": "Used all characters in Quests. \"Who's your fave? It's cool, I won't get jealous if you don't say me. I say that because I know you'll say me anyway. I just wanted to play it cool.\"",
+    "rarityPercent": 40.5
+   },
+   {
+    "name": "30",
+    "displayName": "Anything For A Scoop",
+    "description": "Selected the two Gamindustri journalists for a Quest. \"I had no idea they were such forces to be reckoned with! Well, guess this gives me time to play some games...er...time to...uh...catch up on work.\"",
+    "rarityPercent": 34.1
+   },
+   {
+    "name": "31",
+    "displayName": "The Purple Haze",
+    "description": "Selected Neptune and Nepgear for a Quest. \"C'mon, Nep Jr.! We're both the main characters today!\"",
+    "rarityPercent": 41.4
+   },
+   {
+    "name": "32",
+    "displayName": "The Double Negative",
+    "description": "Selected Noire and Uni for a Quest. \"One acts contrary, and the other acts contrary about the contrary comment! At least they seem to enjoy saying what they don't mean to each other.\"",
+    "rarityPercent": 39.4
+   },
+   {
+    "name": "33",
+    "displayName": "The Happy Family",
+    "description": "Selected Blanc and either Rom or Ram for a Quest. \"You can only pick two in this game, so I bet one of those kidlets cried over this. Blanc sure is lucky to have two kids who love her that much!\"",
+    "rarityPercent": 33.1
+   },
+   {
+    "name": "34",
+    "displayName": "It Was Bound To Happen",
+    "description": "Selected Vert and Nepgear for a Quest. \"This joke again?! WHYYYYY?! Why do they get a trophy, developers?! Vert's getting way too attached to Nep Jr., so...please, just give her a little sister.\"",
+    "rarityPercent": 35.6
+   },
+   {
+    "name": "00",
+    "displayName": "Platinum Action Unleashed!",
+    "description": "You did everything you could do in Hyperdimension Neptunia U: Action Unleashed! \"Congrats, completionists! Maybe I'll see you in a canonical game soon!\"",
+    "rarityPercent": 5.2
+   }
+  ]
+ },
+ "393860": {
+  "game": "Tennis trophies game",
+  "achievements": [
+   {
+    "name": "ACH_WELL_DONE",
+    "displayName": "WELL DONE!",
+    "description": "Win an exhibition match",
+    "rarityPercent": 7.8
+   },
+   {
+    "name": "ACH_GOOD_TEAM",
+    "displayName": "NICE TEAM!",
+    "description": "Win a doubles exhibition match",
+    "rarityPercent": 2.1
+   },
+   {
+    "name": "ACH_GREAT_TOURNAMENT",
+    "displayName": "GREAT TOURNAMENT!",
+    "description": "Win an exhibition tournament",
+    "rarityPercent": 2.8
+   },
+   {
+    "name": "ACH_NON_STOP",
+    "displayName": "NO ONE CAN STOP YOU",
+    "description": "Win a doubles exhibition tournament",
+    "rarityPercent": 2.3
+   },
+   {
+    "name": "ACH_THIS_IS_STYLE",
+    "displayName": "SO STYLISH!",
+    "description": "Create your first Smoot",
+    "rarityPercent": 23.6
+   },
+   {
+    "name": "ACH_EVERYTHING_IS_PRACTICE",
+    "displayName": "EVERYTHING IS PRACTICE!",
+    "description": "Complete the tutorial successfully",
+    "rarityPercent": 14.9
+   },
+   {
+    "name": "ACH_I_FEEL_NERVOUS",
+    "displayName": "I'M SO NERVOUS!",
+    "description": "Make your debut in a story mode tournament",
+    "rarityPercent": 12.2
+   },
+   {
+    "name": "ACH_IT_GIVES_ME_WINGS",
+    "displayName": "IT GIVES ME WINGS!",
+    "description": "Taste the energy drink",
+    "rarityPercent": 6.1
+   },
+   {
+    "name": "ACH_WHAT_A_CIRCUS",
+    "displayName": "WHAT A CIRCUS!",
+    "description": "Complete a level in the circus minigame",
+    "rarityPercent": 3.8
+   },
+   {
+    "name": "ACH_I_AM_FREEZED",
+    "displayName": "I AM FROZEN!",
+    "description": "Complete a level in the Arctic minigame",
+    "rarityPercent": 6.3
+   },
+   {
+    "name": "ACH_THATS_TNT",
+    "displayName": "IT'S THE BOMB!",
+    "description": "Complete a level in the jungle minigame",
+    "rarityPercent": 4.8
+   },
+   {
+    "name": "ACH_A_TOUGH_PRACTICE",
+    "displayName": "IT'S A HARD TRAINING!",
+    "description": "Complete a level in the milkman minigame",
+    "rarityPercent": 4.3
+   },
+   {
+    "name": "ACH_IS_ANYONE_THERE",
+    "displayName": "IS THERE ANYONE ALIVE?",
+    "description": "Complete a level in the cemetery minigame",
+    "rarityPercent": 8.9
+   },
+   {
+    "name": "ACH_HOUSTON_WE_HAVE_A_PROBLEM",
+    "displayName": "HOUSTON WE HAVE A PROBLEM!",
+    "description": "Complete a level in the galactic freighter",
+    "rarityPercent": 3.4
+   },
+   {
+    "name": "ACH_WHAT_A_HERO",
+    "displayName": "WHAT A SUPERHERO!",
+    "description": "Complete all the levels in the circus minigame",
+    "rarityPercent": 1.6
+   },
+   {
+    "name": "ACH_THE_NEW_ESKIMO",
+    "displayName": "THE NEW ESKIMO!",
+    "description": "Complete all the levels in the Arctic minigame",
+    "rarityPercent": 2.1
+   },
+   {
+    "name": "ACH_BAD_BOY",
+    "displayName": "TOUGH GUY!",
+    "description": "Complete all the levels in the jungle minigame",
+    "rarityPercent": 1.7
+   },
+   {
+    "name": "ACH_YOU_ARE_SO_COOL",
+    "displayName": "YOU ARE A GREAT MILKMAN!",
+    "description": "Complete all the levels in the milkman minigame",
+    "rarityPercent": 1.9
+   },
+   {
+    "name": "ACH_YOU_RE_A_SURVIVOR",
+    "displayName": "YOU ARE A SURVIVOR!",
+    "description": "Complete all the levels in the cemetery minigame",
+    "rarityPercent": 1.6
+   },
+   {
+    "name": "ACH_MAY_THE_FORCE_BE_WITH_YOU",
+    "displayName": "MAY THE FORCE BE WITH YOU",
+    "description": "Complete all the levels in the galactic greighter minigame",
+    "rarityPercent": 1.2
+   },
+   {
+    "name": "ACH_WORK_HARD_AND_BECOME_TOP_1",
+    "displayName": "WORK HARD AND GO FAR!",
+    "description": "Win your first match in Smoots 250 competition",
+    "rarityPercent": 9.5
+   },
+   {
+    "name": "ACH_WE_DIDNT_EXPECT_IT",
+    "displayName": "I DIDN'T EXPECT THIS, CONGRATULATIONS!",
+    "description": "Win your first tournament in Smoots 250 competition",
+    "rarityPercent": 8.7
+   },
+   {
+    "name": "ACH_YOU_ALWAYS_PLAY_TO_WIN",
+    "displayName": "YOU ALWAYS PLAY TO WIN!",
+    "description": "Win your first tournament in Smoots 500 competition",
+    "rarityPercent": 5.2
+   },
+   {
+    "name": "ACH_YOUR_FATE_IS_GREAT",
+    "displayName": "YOUR FATE IS GREAT!",
+    "description": "Win your first tournament in Smoots 1000 competition",
+    "rarityPercent": 3.4
+   },
+   {
+    "name": "ACH_FAIL_IS_NOT_FOR_ME",
+    "displayName": "FAILURE IS NOT AN OPTION!",
+    "description": "Win your first match in Grand Smoots Tournament competition",
+    "rarityPercent": 2.5
+   },
+   {
+    "name": "ACH_A_STAR_IS_BORN",
+    "displayName": "A STAR IS BORN!",
+    "description": "Win your first tournament in Grand Smoots Tournament competition",
+    "rarityPercent": 2.3
+   },
+   {
+    "name": "ACH_YOU_DONT_HAVE_LIMITS",
+    "displayName": "YOU HAVE NO LIMITS!",
+    "description": "Win 4 Grand Smoots Tournament",
+    "rarityPercent": 1.4
+   },
+   {
+    "name": "ACH_YOU_ROCK",
+    "displayName": "YOU ROCK!",
+    "description": "Win 4 Grand Smoots Tournament within a year",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "ACH_TOP_50",
+    "displayName": "TOP 50",
+    "description": "Become a Top 50 player",
+    "rarityPercent": 6.7
+   },
+   {
+    "name": "ACH_TOP_25",
+    "displayName": "TOP 25",
+    "description": "Become a Top 25 player",
+    "rarityPercent": 4
+   },
+   {
+    "name": "ACH_TOP_10",
+    "displayName": "YOU ARE A TOP 10 PLAYER!",
+    "description": "Become a Top 10 player",
+    "rarityPercent": 2.7
+   },
+   {
+    "name": "ACH_TOP_1",
+    "displayName": "YOU ARE THE NUMBER ONE!",
+    "description": "Become a Top 1 player",
+    "rarityPercent": 1.5
+   },
+   {
+    "name": "ACH_THIS_IS_MY_THRONE",
+    "displayName": "THIS IS MY THRONE!",
+    "description": "Finish the year as the number 1",
+    "rarityPercent": 1.4
+   },
+   {
+    "name": "ACH_I_LOVE_THE_GRASS_SURFACE",
+    "displayName": "I LOVE THE GRASS!",
+    "description": "Win all the trophies on grass",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "ACH_I_LOVE_THE_HARD_SURFACE",
+    "displayName": "MORE CEMENT!",
+    "description": "Win all the trophies on cement",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "ACH_I_LOVE_THE_CLAY_SURFACE",
+    "displayName": "WITH THE FEET ON THE CLAY!",
+    "description": "Win all the trophies on clay",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "ACH_SHELVES_ARE_FULL",
+    "displayName": "FULL SHELVES!",
+    "description": "Win all the trophies",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "ACH_WHAT_A_RACKETS_EXPERT",
+    "displayName": "WHAT A RACKET EXPERT!",
+    "description": "Unlock all the rackets",
+    "rarityPercent": 1.2
+   },
+   {
+    "name": "ACH_YOU_GOT_IT_ALL",
+    "displayName": "YOU HAVE ALL OF THEM",
+    "description": "Unlock all the special characters",
+    "rarityPercent": 1.2
+   },
+   {
+    "name": "ACH_SPEND_THE_MONEY",
+    "displayName": "MONEY IS MEANT TO BE SPENT!",
+    "description": "Buy all the store items",
+    "rarityPercent": 1.1
+   },
+   {
+    "name": "ACH_MONEY_MONEY",
+    "displayName": "MONEY MONEY MONEY!",
+    "description": "Win 100,000€ during your career",
+    "rarityPercent": 2
+   },
+   {
+    "name": "ACH_GOOD_LIFE",
+    "displayName": "HOW WONDERFUL LIFE IS!",
+    "description": "Win 250,000€ during your career",
+    "rarityPercent": 1.4
+   },
+   {
+    "name": "ACH_SO_RICH",
+    "displayName": "I NEVER THOUGHT YOU WOULD BE RICH!",
+    "description": "Win 500,000€ during your career",
+    "rarityPercent": 1.3
+   },
+   {
+    "name": "ACH_YOU_RE_TYCOON",
+    "displayName": "WHAT A MAGNATE!",
+    "description": "Win 1,000,000€ during your career",
+    "rarityPercent": 1.2
+   },
+   {
+    "name": "ACH_UNSTOPPABLE",
+    "displayName": "UNSTOPPABLE!",
+    "description": "Win 15 matches in competition",
+    "rarityPercent": 3.3
+   },
+   {
+    "name": "ACH_VENI_VIDI_VINCI",
+    "displayName": "VENI, VIDI, VICI!",
+    "description": "Win 30 matches in competition",
+    "rarityPercent": 2.3
+   },
+   {
+    "name": "ACH_THIS_IS_POWER",
+    "displayName": "THIS IS POWER!",
+    "description": "Serve 100 times at full power",
+    "rarityPercent": 3.8
+   },
+   {
+    "name": "ACH_UNSTOPPABLE_SMASHES",
+    "displayName": "NOTHING CAN STOP THEM!",
+    "description": "Win 10 smash points",
+    "rarityPercent": 3.4
+   },
+   {
+    "name": "ACH_NO_POINTS",
+    "displayName": "NOTHING AT ALL!",
+    "description": "Win a match with your opponent scoring zero points",
+    "rarityPercent": 5.6
+   },
+   {
+    "name": "ACH_LONG_BALL",
+    "displayName": "KNOCK-UP!",
+    "description": "Knock-up more than 25 hits in the same point",
+    "rarityPercent": 9.7
+   }
+  ]
+ },
+ "502800": {
+  "game": "SENRAN KAGURA ESTIVAL VERSUS",
+  "achievements": [
+   {
+    "name": "00_THANKYOU_FOR_PLAYING",
+    "displayName": "How I Spent My Summer Vacation",
+    "description": "Obtained all achievements.",
+    "rarityPercent": 3.7
+   },
+   {
+    "name": "01_WELCOME_KAGURA",
+    "displayName": "Estival Beginnings",
+    "description": "Reunited with your lost sister and began the summer of a lifetime.",
+    "rarityPercent": 83.2
+   },
+   {
+    "name": "02_CLEAR_PROLOGUE_DAY",
+    "displayName": "Kagura Millennium Festival",
+    "description": "Completed Day Zero of Shinobi Girls' Code",
+    "rarityPercent": 59.1
+   },
+   {
+    "name": "03_CLEAR_ONE_DAY",
+    "displayName": "Dancing Damsels",
+    "description": "Completed Day One of Shinobi Girls' Code",
+    "rarityPercent": 46.4
+   },
+   {
+    "name": "04_CLEAR_TWO_DAY",
+    "displayName": "Aquatic Exercise",
+    "description": "Completed Day Two of Shinobi Girls' Code",
+    "rarityPercent": 37.4
+   },
+   {
+    "name": "05_CLEAR_THREE_DAY",
+    "displayName": "Lingering Feelings",
+    "description": "Completed Day Three of Shinobi Girls' Code",
+    "rarityPercent": 31.8
+   },
+   {
+    "name": "06_CLEAR_FOUR_DAY",
+    "displayName": "Same Old, Same Old",
+    "description": "Completed Day Four of Shinobi Girls' Code",
+    "rarityPercent": 26.7
+   },
+   {
+    "name": "07_CLEAR_FIVE_DAY",
+    "displayName": "Nostalgia",
+    "description": "Completed Day Five of Shinobi Girls' Code",
+    "rarityPercent": 22.7
+   },
+   {
+    "name": "08_CLEAR_SIX_DAY",
+    "displayName": "Confront the Past",
+    "description": "Completed Day Six of Shinobi Girls' Code",
+    "rarityPercent": 20.8
+   },
+   {
+    "name": "09_CLEAR_SEVEN_DAY",
+    "displayName": "Resolution",
+    "description": "Completed Day Seven of Shinobi Girls' Code",
+    "rarityPercent": 18.7
+   },
+   {
+    "name": "10_CLEAR_LAST_DAY",
+    "displayName": "Estival Finale",
+    "description": "Completed Day Eight of Shinobi Girls' Code",
+    "rarityPercent": 16.6
+   },
+   {
+    "name": "11_ARCADE_YUMI",
+    "displayName": "My Waifu",
+    "description": "Completed all of Yumi's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 12.7
+   },
+   {
+    "name": "12_ARCADE_MURAKUMO",
+    "displayName": "Off with the Mask",
+    "description": "Completed all of Murakumo's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 13.9
+   },
+   {
+    "name": "13_ARCADE_YOZAKURA",
+    "displayName": "Table Manners",
+    "description": "Completed all of Yozakura's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 10.1
+   },
+   {
+    "name": "14_ARCADE_SHIKI",
+    "displayName": "The Blogmaster",
+    "description": "Completed all of Shiki's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 11
+   },
+   {
+    "name": "15_ARCADE_MINORI",
+    "displayName": "An Unusual Treat",
+    "description": "Completed all of Minori's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 9.3
+   },
+   {
+    "name": "16_ARCADE_ASUKA",
+    "displayName": "Hanzo's Ploy",
+    "description": "Completed all of Asuka's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 10.4
+   },
+   {
+    "name": "17_ARCADE_IKARUGA",
+    "displayName": "BC Mask to the Rescue!",
+    "description": "Completed all of Ikaruga's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 12.9
+   },
+   {
+    "name": "18_ARCADE_KATSURAGI",
+    "displayName": "Giving up on Life",
+    "description": "Completed all of Katsuragi's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 10.1
+   },
+   {
+    "name": "19_ARCADE_YAGYU",
+    "displayName": "Where's Hibari?",
+    "description": "Completed all of Yagyu's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 9.1
+   },
+   {
+    "name": "20_ARCADE_HIBARI",
+    "displayName": "Ladylike",
+    "description": "Completed all of Hibari's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 8
+   },
+   {
+    "name": "21_ARCADE_MIYABI",
+    "displayName": "Call Me Handsome",
+    "description": "Completed all of Miyabi's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 8.9
+   },
+   {
+    "name": "22_ARCADE_MURASAKI",
+    "displayName": "Perchance to Dance",
+    "description": "Completed all of Murasaki's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 9.7
+   },
+   {
+    "name": "23_ARCADE_IMU",
+    "displayName": "Top-Heavyweight Champion",
+    "description": "Completed all of Imu's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 8
+   },
+   {
+    "name": "24_ARCADE_RYOBI",
+    "displayName": "That Hometown Feel",
+    "description": "Completed all of Ryobi's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 8.5
+   },
+   {
+    "name": "25_ARCADE_RYONA",
+    "displayName": "You Down for Udon?",
+    "description": "Completed all of Ryona's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 8.6
+   },
+   {
+    "name": "26_ARCADE_HOMURA",
+    "displayName": "Girl of a Thousand Faces",
+    "description": "Completed all of Homura's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 11.9
+   },
+   {
+    "name": "27_ARCADE_YOMI",
+    "displayName": "Fit for a Shinobi",
+    "description": "Completed all of Yomi's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 9.2
+   },
+   {
+    "name": "28_ARCADE_HIKAGE",
+    "displayName": "Catnap Conundrum",
+    "description": "Completed all of Hikage's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 9.6
+   },
+   {
+    "name": "29_ARCADE_MIRAI",
+    "displayName": "Pilgrimage of Pain",
+    "description": "Completed all of Mirai's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7.8
+   },
+   {
+    "name": "30_ARCADE_HARUKA",
+    "displayName": "Strange Chemistry",
+    "description": "Completed all of Haruka's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7.2
+   },
+   {
+    "name": "31_ARCADE_JASMIN",
+    "displayName": "Younger Days",
+    "description": "Completed all of Jasmine's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7.2
+   },
+   {
+    "name": "32_ARCADE_RYOKI",
+    "displayName": "Destructive Urges",
+    "description": "Completed all of Ryoki's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7.2
+   },
+   {
+    "name": "33_ARCADE_RENKA",
+    "displayName": "You Drive Me Crazy",
+    "description": "Completed all of Renka's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7.6
+   },
+   {
+    "name": "34_ARCADE_HANABI",
+    "displayName": "Boom Boom Kaboom!",
+    "description": "Completed all of Hanabi's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7
+   },
+   {
+    "name": "35_ARCADE_KAHURU",
+    "displayName": "I Rest My Case!",
+    "description": "Completed all of Kafuru's missions in Shinobi Girl's Heart.",
+    "rarityPercent": 7.4
+   },
+   {
+    "name": "36_ARCADE_ALL_CLEAR",
+    "displayName": "Private Lives",
+    "description": "Completed all Shinobi Girl's Heart missions.",
+    "rarityPercent": 6.5
+   },
+   {
+    "name": "37_UNION_HISYO",
+    "displayName": "Teamwork",
+    "description": "Defeated a boss with a combined aerial rave.",
+    "rarityPercent": 20.9
+   },
+   {
+    "name": "38_WALL_ATK50",
+    "displayName": "Gravity-Defying Physics",
+    "description": "Hit 50 enemies with wall-running attacks.",
+    "rarityPercent": 29.7
+   },
+   {
+    "name": "39_NINPO_FINISH",
+    "displayName": "Finish with a Bang",
+    "description": "Completed a mission with a Secret Ninja Art or Ultimate Secret Ninja Art.",
+    "rarityPercent": 54.6
+   },
+   {
+    "name": "40_BALL_BLOW20",
+    "displayName": "Fantasista",
+    "description": "Struck 20 enemies with ball objects.",
+    "rarityPercent": 30.1
+   },
+   {
+    "name": "41_SHINOBI_BALL_BEAT20",
+    "displayName": "Bombshell Master",
+    "description": "Defeated 20 enemies with Bombshells.",
+    "rarityPercent": 47.3
+   },
+   {
+    "name": "42_HALF_BREAK_YAGURA",
+    "displayName": "Down They Go",
+    "description": "Knocked down 40 festival platforms in Shinobi Girls' Code.",
+    "rarityPercent": 20.9
+   },
+   {
+    "name": "43_ALL_BREAK_YAGURA",
+    "displayName": "Tower Offense",
+    "description": "Knocked down 80 festival platforms in Shinobi Girls' Code.",
+    "rarityPercent": 13.8
+   },
+   {
+    "name": "44_COS_BREAK100",
+    "displayName": "Excellent Form",
+    "description": "Stripped enemy bosses 100 times.",
+    "rarityPercent": 30.6
+   },
+   {
+    "name": "45_SP_DOWN_CUTIN",
+    "displayName": "Big Climax",
+    "description": "Defeat an enemy boss with a creative finish.",
+    "rarityPercent": 54.3
+   },
+   {
+    "name": "46_SHOPPING",
+    "displayName": "Your OCD Is Showing",
+    "description": "Obtained all the items in the store.",
+    "rarityPercent": 4.3
+   },
+   {
+    "name": "47_DRESSROOM_POSE",
+    "displayName": "Try a Different Position",
+    "description": "Posed a character in the dressing room.",
+    "rarityPercent": 48.1
+   },
+   {
+    "name": "48_DRESSROOM_POSE_MASTER",
+    "displayName": "Supermodel",
+    "description": "Tried out all dressing room poses.",
+    "rarityPercent": 8.2
+   },
+   {
+    "name": "49_DRESSROOM_ACC_ADJUST",
+    "displayName": "Eye for Detail",
+    "description": "Changed the position of an accessory in the dressing room.",
+    "rarityPercent": 17.2
+   }
+  ]
+ },
+ "1356670": {
+  "game": "Sakuna: Of Rice and Ruin",
+  "achievements": [
+   {
+    "name": "GameClear",
+    "displayName": "Rice and Ruin",
+    "description": "Complete the game.",
+    "rarityPercent": 23.4
+   },
+   {
+    "name": "TravelMax",
+    "displayName": "Pioneer",
+    "description": "Explore every last inch of Hinoe Island.",
+    "rarityPercent": 8.7
+   },
+   {
+    "name": "BigDamage",
+    "displayName": "Goddess of War",
+    "description": "Deal over 10,000 damage with one attack.",
+    "rarityPercent": 21.1
+   },
+   {
+    "name": "Strike",
+    "displayName": "Clean Sweep",
+    "description": "Crash 5 enemies together in one fell swoop.",
+    "rarityPercent": 65.5
+   },
+   {
+    "name": "StrikeComboA",
+    "displayName": "Home Run Royalty",
+    "description": "Achieve a crash combo of 3.",
+    "rarityPercent": 46.4
+   },
+   {
+    "name": "StrikeComboB",
+    "displayName": "Demolition Deity",
+    "description": "Achieve a crash combo of 5.",
+    "rarityPercent": 27.9
+   },
+   {
+    "name": "HagoromoTurn",
+    "displayName": "Flight of Fancy",
+    "description": "Swing behind an enemy with the divine raiment 100 times.",
+    "rarityPercent": 65.2
+   },
+   {
+    "name": "AerialHagoromo",
+    "displayName": "Cloud Dancer",
+    "description": "Swing behind an enemy during an aerial combo twice.",
+    "rarityPercent": 79.9
+   },
+   {
+    "name": "HeavyDebuff",
+    "displayName": "Overkill",
+    "description": "Debuff an already-debuffed enemy with a raiment skill.",
+    "rarityPercent": 19.9
+   },
+   {
+    "name": "Parry",
+    "displayName": "Rock Solid",
+    "description": "Successfully parry an enemy attack 30 times.",
+    "rarityPercent": 51.1
+   },
+   {
+    "name": "SkillXpMaster",
+    "displayName": "Martial Mastery",
+    "description": "Become fully proficient in one fighting skill.",
+    "rarityPercent": 26.8
+   },
+   {
+    "name": "ManyHarvest",
+    "displayName": "Cornucopia",
+    "description": "Harvest over 500 rice plants at once.",
+    "rarityPercent": 22.4
+   },
+   {
+    "name": "KineusuHakumai",
+    "displayName": "White as Snow",
+    "description": "Create white rice with the mortar and pestle.",
+    "rarityPercent": 57.6
+   },
+   {
+    "name": "SuperManure",
+    "displayName": "Compost Surprise",
+    "description": "Create fertilizer by throwing in over 100 materials.",
+    "rarityPercent": 25.4
+   },
+   {
+    "name": "IneYield",
+    "displayName": "Mass Production",
+    "description": "Achieve an above-standard yield when harvesting.",
+    "rarityPercent": 47.7
+   },
+   {
+    "name": "IneTSH",
+    "displayName": "Glutinous",
+    "description": "Achieve an above-standard taste, stickiness, and hardness when harvesting.",
+    "rarityPercent": 21.3
+   },
+   {
+    "name": "IneAesthetic",
+    "displayName": "Pretty Paddy",
+    "description": "Achieve an above-standard aesthetic when harvesting.",
+    "rarityPercent": 34.6
+   },
+   {
+    "name": "IneAroma",
+    "displayName": "Aromatic",
+    "description": "Achieve an above-standard aroma when harvesting.",
+    "rarityPercent": 17.5
+   },
+   {
+    "name": "IneLevel",
+    "displayName": "Harvest Goddess",
+    "description": "Raise your rice level to 50.",
+    "rarityPercent": 12.7
+   },
+   {
+    "name": "PrayAll",
+    "displayName": "Weather Warrior",
+    "description": "Pray for every type of weather.",
+    "rarityPercent": 8.3
+   },
+   {
+    "name": "HeishoAll",
+    "displayName": "Takeribi's Tribute",
+    "description": "Collect all combat scrolls.",
+    "rarityPercent": 20.3
+   },
+   {
+    "name": "NoushoAll",
+    "displayName": "Toyohana's Token",
+    "description": "Collect all agricultural scrolls.",
+    "rarityPercent": 21.4
+   },
+   {
+    "name": "EnchantUnlock",
+    "displayName": "Hidden Eye",
+    "description": "Release 30 hidden powers from equipment.",
+    "rarityPercent": 25.6
+   },
+   {
+    "name": "Kaji",
+    "displayName": "Supreme Smith",
+    "description": "Create 20 kinds of tools at the forge.",
+    "rarityPercent": 20.3
+   },
+   {
+    "name": "Hataori",
+    "displayName": "Wondrous Weaver",
+    "description": "Create 10 kinds of garments or headgear at the loom.",
+    "rarityPercent": 23.3
+   },
+   {
+    "name": "Collecting",
+    "displayName": "No Stone Unturned",
+    "description": "Gather from every gathering spot on the island.",
+    "rarityPercent": 21.6
+   },
+   {
+    "name": "Cooking",
+    "displayName": "Bon Vivant",
+    "description": "Eat 50 different types of food.",
+    "rarityPercent": 20.9
+   },
+   {
+    "name": "DinnerRice",
+    "displayName": "Rice Aficionado",
+    "description": "Have a dinner comprised of 5 rice dishes.",
+    "rarityPercent": 10.1
+   },
+   {
+    "name": "DinnerDessert",
+    "displayName": "Just Desserts",
+    "description": "Have a dinner comprised of 5 desserts.",
+    "rarityPercent": 7.3
+   },
+   {
+    "name": "DinnerSake",
+    "displayName": "Sake for Supper",
+    "description": "Have a dinner comprised of 5 types of alcohol.",
+    "rarityPercent": 8.3
+   },
+   {
+    "name": "DinnerWater",
+    "displayName": "Not a Drop to Drink",
+    "description": "Attempt to have a dinner comprised entirely of water.",
+    "rarityPercent": 11.6
+   },
+   {
+    "name": "DinnerBalance",
+    "displayName": "Balanced Diet",
+    "description": "Have a dinner comprised of all 5 types of courses.",
+    "rarityPercent": 68.5
+   },
+   {
+    "name": "Training",
+    "displayName": "Training Montage",
+    "description": "Practice in the training hall 10 times.",
+    "rarityPercent": 9.5
+   },
+   {
+    "name": "Trade",
+    "displayName": "Brand Name Bran",
+    "description": "Trade 1,000 ears with the capital.",
+    "rarityPercent": 25.3
+   },
+   {
+    "name": "Zoo",
+    "displayName": "Hinoe Menagerie",
+    "description": "Gather every animal at your home.",
+    "rarityPercent": 8.4
+   },
+   {
+    "name": "Engawa",
+    "displayName": "Lying Down on the Job",
+    "description": "Rest on the porch in each of the four seasons.",
+    "rarityPercent": 25.5
+   },
+   {
+    "name": "Rooftop",
+    "displayName": "Farmer on the Roof",
+    "description": "Climb to the highest roof of the tallest house.",
+    "rarityPercent": 21.6
+   },
+   {
+    "name": "Koe",
+    "displayName": "Dirty Deeds",
+    "description": "Talk to someone while carrying the manure pail.",
+    "rarityPercent": 28
+   },
+   {
+    "name": "Hanasaka",
+    "displayName": "Sakuna the Efflorescent",
+    "description": "Clear the aphid invasion.",
+    "rarityPercent": 5.8
+   },
+   {
+    "name": "Amagaeshi",
+    "displayName": "Shrine Maiden",
+    "description": "Clear the lowest floor of the Amagaeshi Shrine.",
+    "rarityPercent": 10.2
+   }
+  ]
+ },
+ "1731070": {
+  "game": "Asterigos: Curse of the Stars",
+  "achievements": [
+   {
+    "name": "all_achievement_clear",
+    "displayName": "With The Three",
+    "description": "Complete All Achievements",
+    "rarityPercent": 1.6
+   },
+   {
+    "name": "story_geared_up",
+    "displayName": "Geared Up",
+    "description": "Retrieve All Weapons",
+    "rarityPercent": 89.3
+   },
+   {
+    "name": "story_ending_a",
+    "displayName": "Dream",
+    "description": "Witness Minerva's Determination",
+    "rarityPercent": 13.3
+   },
+   {
+    "name": "story_ending_b",
+    "displayName": "Glory",
+    "description": "Witness Minerva's Sacrifice",
+    "rarityPercent": 2.8
+   },
+   {
+    "name": "story_boss_raveneous",
+    "displayName": "Killer Croc",
+    "description": "Defeat Raveneous",
+    "rarityPercent": 78.1
+   },
+   {
+    "name": "story_boss_baraad",
+    "displayName": "Cutthroat",
+    "description": "Defeat Baraad",
+    "rarityPercent": 45.3
+   },
+   {
+    "name": "story_boss_eulalia",
+    "displayName": "The Last Bel Canto",
+    "description": "Defeat Eulalia",
+    "rarityPercent": 31.2
+   },
+   {
+    "name": "story_boss_oldwhitebrow",
+    "displayName": "Curiosity Killed The Cat",
+    "description": "Defeat Garrison",
+    "rarityPercent": 24.3
+   },
+   {
+    "name": "story_boss_colossus",
+    "displayName": "Matyr Fell",
+    "description": "Defeat Colossi",
+    "rarityPercent": 24.1
+   },
+   {
+    "name": "story_laurel_craft",
+    "displayName": "At The Corner of the Studio",
+    "description": "Progress To The Event of The Laurel Craft",
+    "rarityPercent": 22.2
+   },
+   {
+    "name": "story_boss_andreas",
+    "displayName": "Kindheart But Twisted",
+    "description": "Defeat Andreas",
+    "rarityPercent": 17.6
+   },
+   {
+    "name": "story_boss_marble",
+    "displayName": "Difficult Position",
+    "description": "Defeat Marble",
+    "rarityPercent": 16.9
+   },
+   {
+    "name": "story_boss_titan",
+    "displayName": "Is that So?",
+    "description": "Defeat Avatar of Titan",
+    "rarityPercent": 17.4
+   },
+   {
+    "name": "story_boss_blackwarden",
+    "displayName": "Finally Free",
+    "description": "Defeat the Black Warden",
+    "rarityPercent": 16.9
+   },
+   {
+    "name": "story_trinity",
+    "displayName": "Gaze Upon The Stars",
+    "description": "Progress To The Event of Trinity",
+    "rarityPercent": 15.5
+   },
+   {
+    "name": "story_boss_eumen",
+    "displayName": "The Goldolive Phantom",
+    "description": "Defeat Eumenides",
+    "rarityPercent": 14.3
+   },
+   {
+    "name": "explore_secret_elevetor",
+    "displayName": "The Light!",
+    "description": "Activate the Bridge to the Depths",
+    "rarityPercent": 12.2
+   },
+   {
+    "name": "explore_sidequest_timmon",
+    "displayName": "Cockroach",
+    "description": "Finish the Loser Noble Quest",
+    "rarityPercent": 4.9
+   },
+   {
+    "name": "explore_all_dogtag",
+    "displayName": "Homecoming",
+    "description": "Finish Bion's Dogtags Quest",
+    "rarityPercent": 5
+   },
+   {
+    "name": "explore_northwind_member",
+    "displayName": "Requiem",
+    "description": "Finish Otto's Last Resort Quest",
+    "rarityPercent": 6.1
+   },
+   {
+    "name": "explore_all_mole",
+    "displayName": "M For Mystic",
+    "description": "Defeat All Teumess",
+    "rarityPercent": 3.7
+   },
+   {
+    "name": "explore_all_hound",
+    "displayName": "Firefighters",
+    "description": "Defeat All Hellhounds",
+    "rarityPercent": 6.1
+   },
+   {
+    "name": "explore_all_mimic",
+    "displayName": "Licky",
+    "description": "Defeat All Mimics",
+    "rarityPercent": 5.7
+   },
+   {
+    "name": "explore_starlight",
+    "displayName": "Yarn-playing Bigcat",
+    "description": "Gain Starlight's Trust",
+    "rarityPercent": 8.5
+   },
+   {
+    "name": "battle_bion_final",
+    "displayName": "Trust Me Now?",
+    "description": "Defeat Bion In The Final Training",
+    "rarityPercent": 7.3
+   },
+   {
+    "name": "battle_trinity_clear",
+    "displayName": "Hardly A Challenge",
+    "description": "Complete All Trinity Challenges",
+    "rarityPercent": 5.9
+   },
+   {
+    "name": "battle_trinity_0-1",
+    "displayName": "Grilled Tasty",
+    "description": "Defeat Miltos",
+    "rarityPercent": 6.8
+   },
+   {
+    "name": "battle_trinity_1-1",
+    "displayName": "Crabby Patty",
+    "description": "Defeat Kavouras",
+    "rarityPercent": 7.1
+   },
+   {
+    "name": "battle_trinity_2-1",
+    "displayName": "Jinx",
+    "description": "Defeat Doron",
+    "rarityPercent": 8.1
+   },
+   {
+    "name": "battle_trinity_3-1",
+    "displayName": "Never Play With A Body",
+    "description": "Defeat Anagnos",
+    "rarityPercent": 7.2
+   },
+   {
+    "name": "battle_trinity_4-1",
+    "displayName": "Lunacat",
+    "description": "Defeat Hiems",
+    "rarityPercent": 7.4
+   },
+   {
+    "name": "battle_trinity_1-2",
+    "displayName": "Apex Predator",
+    "description": "Defeat Soleucus",
+    "rarityPercent": 7.4
+   },
+   {
+    "name": "battle_trinity_2-2",
+    "displayName": "Miracle",
+    "description": "Defeat Wassily",
+    "rarityPercent": 8.4
+   },
+   {
+    "name": "battle_trinity_3-2",
+    "displayName": "Can Rocks Breathe?",
+    "description": "Defeat Breathless",
+    "rarityPercent": 7.4
+   },
+   {
+    "name": "battle_trinity_4-2",
+    "displayName": "Crazy Experiment",
+    "description": "Defeat Astraix",
+    "rarityPercent": 7.7
+   },
+   {
+    "name": "battle_trinity_5-1",
+    "displayName": "Taming Thunders",
+    "description": "Defeat Pallas",
+    "rarityPercent": 9.5
+   },
+   {
+    "name": "battle_extreme_level",
+    "displayName": "Limit-breaking",
+    "description": "Complete A Round of Game With Level 20 or Lower",
+    "rarityPercent": 1.9
+   },
+   {
+    "name": "explore_weapon_max",
+    "displayName": "Weapon Adept",
+    "description": "Upgrade A Weapon To Max Level",
+    "rarityPercent": 15.8
+   },
+   {
+    "name": "explore_weapon_max_all",
+    "displayName": "Weapon Master",
+    "description": "Upgrade Three Weapons To Max Level",
+    "rarityPercent": 4.7
+   },
+   {
+    "name": "explore_crystal_max",
+    "displayName": "Magic Adept",
+    "description": "Upgrade An Enhancement To Max Level",
+    "rarityPercent": 7.3
+   },
+   {
+    "name": "explore_crystal_max_all",
+    "displayName": "Magic Master",
+    "description": "Upgrade Four Enhancements To Max Level",
+    "rarityPercent": 4.8
+   },
+   {
+    "name": "explore_document",
+    "displayName": "Skimming",
+    "description": "Read 100 Discoveries Documents",
+    "rarityPercent": 20.6
+   },
+   {
+    "name": "explore_all_document",
+    "displayName": "Bookworm",
+    "description": "Read 250 Discoveries Documents",
+    "rarityPercent": 3.3
+   },
+   {
+    "name": "explore_all_music",
+    "displayName": "Inspiration",
+    "description": "Collect All Scores",
+    "rarityPercent": 3.5
+   },
+   {
+    "name": "explore_chest",
+    "displayName": "Treasure Hunter",
+    "description": "Open 50 Treasure Chests",
+    "rarityPercent": 19.8
+   },
+   {
+    "name": "explore_all_chest",
+    "displayName": "Treasure Raider",
+    "description": "Open All Treasure Chests",
+    "rarityPercent": 3.4
+   },
+   {
+    "name": "explore_all_echo",
+    "displayName": "Bystander",
+    "description": "Collect All Echoes",
+    "rarityPercent": 5
+   },
+   {
+    "name": "explore_all_savepoint",
+    "displayName": "All Roads Lead To Aphes",
+    "description": "Activate All Conduits",
+    "rarityPercent": 8.9
+   },
+   {
+    "name": "explore_all_trinket",
+    "displayName": "Smithy",
+    "description": "Collect At Least 20 Craftable Trinkets",
+    "rarityPercent": 5.6
+   }
+  ]
+ },
+ "1984270": {
+  "game": "Digimon Story Time Stranger",
+  "achievements": [
+   {
+    "name": "ACH_ID_01",
+    "displayName": "My Very First Battle",
+    "description": "Defeat an enemy for the first time.",
+    "rarityPercent": 96.9
+   },
+   {
+    "name": "ACH_ID_02",
+    "displayName": "The Secrets of Conversion",
+    "description": "Convert a Digimon with a Scan Rate of 200%.",
+    "rarityPercent": 95.2
+   },
+   {
+    "name": "ACH_ID_03",
+    "displayName": "Signs of an Anomaly",
+    "description": "Witness signs of an anomaly.",
+    "rarityPercent": 96
+   },
+   {
+    "name": "ACH_ID_04",
+    "displayName": "The Shinjuku Inferno",
+    "description": "Get caught in the Tokyo Metropolitan Government Building explosion.",
+    "rarityPercent": 93.4
+   },
+   {
+    "name": "ACH_ID_05",
+    "displayName": "The Time Stranger",
+    "description": "Travel through time into the past.",
+    "rarityPercent": 90.2
+   },
+   {
+    "name": "ACH_ID_06",
+    "displayName": "Welcome to the In-Between Theater",
+    "description": "Visit the special dimension that exists between space-time worlds known as the In-Between.",
+    "rarityPercent": 88.5
+   },
+   {
+    "name": "ACH_ID_07",
+    "displayName": "Visitor from the Digital World",
+    "description": "Befriend Minervamon.",
+    "rarityPercent": 82.9
+   },
+   {
+    "name": "ACH_ID_08",
+    "displayName": "The World Where Digimon Live",
+    "description": "Visit the Digital World.",
+    "rarityPercent": 78.9
+   },
+   {
+    "name": "ACH_ID_09",
+    "displayName": "A Moment's Respite",
+    "description": "Reclaim Central Tower.",
+    "rarityPercent": 74.7
+   },
+   {
+    "name": "ACH_ID_10",
+    "displayName": "Power Uninterrupted",
+    "description": "Restore the reactor located in the Factorial Area.",
+    "rarityPercent": 71.1
+   },
+   {
+    "name": "ACH_ID_11",
+    "displayName": "The Lonely Warrior",
+    "description": "Drive the Titans from the Abyss Area.",
+    "rarityPercent": 66.5
+   },
+   {
+    "name": "ACH_ID_12",
+    "displayName": "The Great Guardian",
+    "description": "Digivolve into Aegiochusmon.",
+    "rarityPercent": 62.3
+   },
+   {
+    "name": "ACH_ID_13",
+    "displayName": "Back to the Real World...?",
+    "description": "Return to Shinjuku eight years in the future.",
+    "rarityPercent": 60.9
+   },
+   {
+    "name": "ACH_ID_14",
+    "displayName": "A Token of Peace",
+    "description": "Deliver the wine to Neptunemon.",
+    "rarityPercent": 59.3
+   },
+   {
+    "name": "ACH_ID_15",
+    "displayName": "Peace on the High Seas",
+    "description": "Rewrite the Abyss Area's destiny.",
+    "rarityPercent": 58.9
+   },
+   {
+    "name": "ACH_ID_16",
+    "displayName": "Breath of the Great Tree",
+    "description": "Rewrite the Gear Forest's destiny.",
+    "rarityPercent": 57.3
+   },
+   {
+    "name": "ACH_ID_17",
+    "displayName": "SDGP Champion",
+    "description": "Become the SDGP Champion.",
+    "rarityPercent": 56
+   },
+   {
+    "name": "ACH_ID_18",
+    "displayName": "PCGT Champion",
+    "description": "Become the PCGT Champion.",
+    "rarityPercent": 55.5
+   },
+   {
+    "name": "ACH_ID_19",
+    "displayName": "Central Town Reclaimed!",
+    "description": "Reclaim Central Town.",
+    "rarityPercent": 54.5
+   },
+   {
+    "name": "ACH_ID_20",
+    "displayName": "Historical Truths",
+    "description": "Get the truth from Plutomon.",
+    "rarityPercent": 53.7
+   },
+   {
+    "name": "ACH_ID_21",
+    "displayName": "Action Figures FTW",
+    "description": "Rescue Vulcanusmon.",
+    "rarityPercent": 52.7
+   },
+   {
+    "name": "ACH_ID_22",
+    "displayName": "A Bond Restored",
+    "description": "Free Junomon from the spell.",
+    "rarityPercent": 50.3
+   },
+   {
+    "name": "ACH_ID_23",
+    "displayName": "The Final Light",
+    "description": "Light the light clock's final light.",
+    "rarityPercent": 49.9
+   },
+   {
+    "name": "ACH_ID_24",
+    "displayName": "Aegiomon's Vow",
+    "description": "Renew the vow that Aegiomon pledged under the starry sky.",
+    "rarityPercent": 49.8
+   },
+   {
+    "name": "ACH_ID_25",
+    "displayName": "To a World Far, Far Away",
+    "description": "Bring an end to the story.",
+    "rarityPercent": 41.2
+   },
+   {
+    "name": "ACH_ID_26",
+    "displayName": "The Pinnacle of Existence",
+    "description": "Complete the game on Mega + difficulty.",
+    "rarityPercent": 2.7
+   },
+   {
+    "name": "ACH_ID_27",
+    "displayName": "A Mighty Blow",
+    "description": "Achieve a rating of \"EXCELLENT!!!\" when attacking an enemy's weak point.",
+    "rarityPercent": 76.6
+   },
+   {
+    "name": "ACH_ID_28",
+    "displayName": "Unrivaled Strength",
+    "description": "Defeat an enemy of Ultimate or greater Generation with a single DigiAttack.",
+    "rarityPercent": 53.3
+   },
+   {
+    "name": "ACH_ID_29",
+    "displayName": "Initial Digivolution",
+    "description": "Digivolve a Digimon for the first time.",
+    "rarityPercent": 93.4
+   },
+   {
+    "name": "ACH_ID_30",
+    "displayName": "Maiden De-Digivolution",
+    "description": "De-Digivolve a Digimon for the first time.",
+    "rarityPercent": 80.5
+   },
+   {
+    "name": "ACH_ID_31",
+    "displayName": "Hard Work Pays Off",
+    "description": "Train Digimon on the Digifarm 30 times.",
+    "rarityPercent": 49.3
+   },
+   {
+    "name": "ACH_ID_32",
+    "displayName": "Card Battle Debut",
+    "description": "Win a card battle.",
+    "rarityPercent": 68.3
+   },
+   {
+    "name": "ACH_ID_33",
+    "displayName": "A Card of Legend",
+    "description": "Obtain a legendary card.",
+    "rarityPercent": 29.6
+   },
+   {
+    "name": "ACH_ID_34",
+    "displayName": "Darkness Awakens",
+    "description": "Digivolve into Aegiochusmon: Dark.",
+    "rarityPercent": 19.3
+   },
+   {
+    "name": "ACH_ID_35",
+    "displayName": "Beyond Digivolution",
+    "description": "Register Chronomon: Destroy Mode in the Field Guide.",
+    "rarityPercent": 23.2
+   },
+   {
+    "name": "ACH_ID_36",
+    "displayName": "An Agent's Proclivities",
+    "description": "Collect ten or more costumes.",
+    "rarityPercent": 42.3
+   },
+   {
+    "name": "ACH_ID_37",
+    "displayName": "Elite Agent",
+    "description": "Raise your Agent Rank to the maximum level.",
+    "rarityPercent": 25
+   },
+   {
+    "name": "ACH_ID_38",
+    "displayName": "Grand Slam",
+    "description": "Become champion of The Greatest OMNI Carnival.",
+    "rarityPercent": 23.4
+   },
+   {
+    "name": "ACH_ID_39",
+    "displayName": "Gajillionaire",
+    "description": "Spend 1,000,000 YEN in shops.",
+    "rarityPercent": 49.3
+   },
+   {
+    "name": "ACH_ID_40",
+    "displayName": "Dreams or Reality?",
+    "description": "Collect all of Hiroko Sagisaka's Monikers.",
+    "rarityPercent": 25.3
+   },
+   {
+    "name": "ACH_ID_41",
+    "displayName": "All Eyes on Me!",
+    "description": "Collect all of Etemon's Soul Bits.",
+    "rarityPercent": 26.3
+   },
+   {
+    "name": "ACH_ID_42",
+    "displayName": "Silent Envy",
+    "description": "Collect all of Dr. Kuga's Core Dumps.",
+    "rarityPercent": 29
+   },
+   {
+    "name": "ACH_ID_43",
+    "displayName": "Royal Knights, Assemble!",
+    "description": "Summon all of the Royal Knights to Central Tower.",
+    "rarityPercent": 30.7
+   },
+   {
+    "name": "ACH_ID_44",
+    "displayName": "The In-Between Explorer",
+    "description": "Discover all of the Outer Dungeons.",
+    "rarityPercent": 8.2
+   },
+   {
+    "name": "ACH_ID_45",
+    "displayName": "Problem Solver",
+    "description": "Solve all of the Outer Dungeons' mysteries.",
+    "rarityPercent": 7.6
+   },
+   {
+    "name": "ACH_ID_46",
+    "displayName": "Agent of Perfection",
+    "description": "Obtain all of the achievements.",
+    "rarityPercent": 2.3
+   }
+  ]
+ },
+ "2050650": {
+  "game": "Resident Evil 4",
+  "achievements": [
+   {
+    "name": "1",
+    "displayName": "Knife Basics",
+    "description": "Parry an enemy with a knife.",
+    "rarityPercent": 86.1
+   },
+   {
+    "name": "2",
+    "displayName": "My Preferred Piece",
+    "description": "Upgrade a weapon.",
+    "rarityPercent": 81.1
+   },
+   {
+    "name": "3",
+    "displayName": "A Masterpiece",
+    "description": "Get the exclusive upgrade for a weapon.",
+    "rarityPercent": 47.6
+   },
+   {
+    "name": "4",
+    "displayName": "Nice One, Stranger!",
+    "description": "Complete a request for the Merchant.",
+    "rarityPercent": 78.5
+   },
+   {
+    "name": "5",
+    "displayName": "Talk About Near-Death Experience!",
+    "description": "Rescue Ashley as she's being carried away by the enemy.",
+    "rarityPercent": 71.9
+   },
+   {
+    "name": "6",
+    "displayName": "Revolt Against the Revolting",
+    "description": "Destroy a Clockwork Castellan.",
+    "rarityPercent": 67.2
+   },
+   {
+    "name": "7",
+    "displayName": "Harpoon Hurler",
+    "description": "Defeat Del Lago.",
+    "rarityPercent": 76.4
+   },
+   {
+    "name": "8",
+    "displayName": "Grilled Big Cheese",
+    "description": "Defeat Bitores Méndez.",
+    "rarityPercent": 70.9
+   },
+   {
+    "name": "9",
+    "displayName": "Wave Goodbye, Right Hand",
+    "description": "Defeat the Verdugo.",
+    "rarityPercent": 37.4
+   },
+   {
+    "name": "10",
+    "displayName": "No Thanks, Bro!",
+    "description": "Defeat Ramón Salazar.",
+    "rarityPercent": 63.3
+   },
+   {
+    "name": "11",
+    "displayName": "You Used to Be a Good Guy",
+    "description": "Defeat Jack Krauser.",
+    "rarityPercent": 60.9
+   },
+   {
+    "name": "12",
+    "displayName": "You're Small Time!",
+    "description": "Defeat Osmund Saddler.",
+    "rarityPercent": 60
+   },
+   {
+    "name": "13",
+    "displayName": "Shield Your Eyes",
+    "description": "Defeat 3 enemies at once with a flash grenade.",
+    "rarityPercent": 44.3
+   },
+   {
+    "name": "14",
+    "displayName": "Never Heard It Coming",
+    "description": "Defeat a Garrador using only knives.",
+    "rarityPercent": 12
+   },
+   {
+    "name": "15",
+    "displayName": "Two Bugs, One Stone",
+    "description": "Kill 2 parasites inside a Regenerador with a single bullet.",
+    "rarityPercent": 36.7
+   },
+   {
+    "name": "16",
+    "displayName": "You Talk Too Much!",
+    "description": "Throw a grenade into Ramón Salazar's mouth.",
+    "rarityPercent": 11.4
+   },
+   {
+    "name": "17",
+    "displayName": "Overkill",
+    "description": "Use a cannon to defeat a zealot.",
+    "rarityPercent": 61.5
+   },
+   {
+    "name": "18",
+    "displayName": "Hope You Like Thrill Rides!",
+    "description": "Make it through both minecart sections in the underground tunnel without taking any damage.",
+    "rarityPercent": 19.9
+   },
+   {
+    "name": "19",
+    "displayName": "Capacity Compliance",
+    "description": "Reach the top of the clock tower without the lift stopping once.",
+    "rarityPercent": 12.4
+   },
+   {
+    "name": "20",
+    "displayName": "Smooth Escape",
+    "description": "Escape on the water scooter without taking any damage.",
+    "rarityPercent": 18.8
+   },
+   {
+    "name": "21",
+    "displayName": "Astute Appraiser",
+    "description": "Sell a single treasure for at least 100000 ptas.",
+    "rarityPercent": 34.4
+   },
+   {
+    "name": "22",
+    "displayName": "Bandit",
+    "description": "Obtain all treasures indicated on the village treasure map in a single playthrough.",
+    "rarityPercent": 13.2
+   },
+   {
+    "name": "23",
+    "displayName": "Burglar",
+    "description": "Obtain all treasures indicated on the castle treasure map in a single playthrough.",
+    "rarityPercent": 10
+   },
+   {
+    "name": "24",
+    "displayName": "Raider",
+    "description": "Obtain all treasures indicated on the island treasure map in a single playthrough.",
+    "rarityPercent": 17
+   },
+   {
+    "name": "25",
+    "displayName": "Gun Fanatic",
+    "description": "Obtain all weapons.",
+    "rarityPercent": 7.2
+   },
+   {
+    "name": "26",
+    "displayName": "Jack of All Trades",
+    "description": "Complete all requests from the Merchant.",
+    "rarityPercent": 15.7
+   },
+   {
+    "name": "27",
+    "displayName": "Revolution Wind-up",
+    "description": "Destroy all Clockwork Castellans.",
+    "rarityPercent": 12.6
+   },
+   {
+    "name": "28",
+    "displayName": "Promising Agent",
+    "description": "Complete the main story on Standard mode or higher.",
+    "rarityPercent": 51.5
+   },
+   {
+    "name": "29",
+    "displayName": "Mission Accomplished S+",
+    "description": "Complete the main story on Standard mode with an S+ rank.",
+    "rarityPercent": 8.7
+   },
+   {
+    "name": "30",
+    "displayName": "Proficient Agent",
+    "description": "Complete the main story on Hardcore mode or higher.",
+    "rarityPercent": 22
+   },
+   {
+    "name": "31",
+    "displayName": "S+ Rank Investigator",
+    "description": "Complete the main story on Hardcore mode with an S+ rank.",
+    "rarityPercent": 8.8
+   },
+   {
+    "name": "32",
+    "displayName": "Peerless Agent",
+    "description": "Complete the main story on Professional mode.",
+    "rarityPercent": 13.7
+   },
+   {
+    "name": "33",
+    "displayName": "Sprinter",
+    "description": "Complete the main story within 8 hours.",
+    "rarityPercent": 15.9
+   },
+   {
+    "name": "34",
+    "displayName": "Frugalist",
+    "description": "Complete the main story without using a recovery item.",
+    "rarityPercent": 8
+   },
+   {
+    "name": "35",
+    "displayName": "Minimalist",
+    "description": "Complete the main story using only knives and handguns. (Excluding specific battles.)",
+    "rarityPercent": 6.2
+   },
+   {
+    "name": "36",
+    "displayName": "Silent Stranger",
+    "description": "Complete the main story without talking to the Merchant once.",
+    "rarityPercent": 6.5
+   },
+   {
+    "name": "37",
+    "displayName": "Amateur Shooter",
+    "description": "Complete a game at the shooting range.",
+    "rarityPercent": 70.6
+   },
+   {
+    "name": "38",
+    "displayName": "Real Deadeye",
+    "description": "Earn an S rank in all games at the shooting range.",
+    "rarityPercent": 10.6
+   },
+   {
+    "name": "39",
+    "displayName": "Trick Shot",
+    "description": "Shoot through and destroy 5 targets at the shooting range with a single shot.",
+    "rarityPercent": 18.1
+   },
+   {
+    "name": "40",
+    "displayName": "Giant Slayer",
+    "description": "Defeat El Gigante in Separate Ways.",
+    "rarityPercent": 28.8
+   },
+   {
+    "name": "41",
+    "displayName": "\"It\" Kept You Busy",
+    "description": "Defeat Pesanta in Separate Ways.",
+    "rarityPercent": 27.3
+   },
+   {
+    "name": "42",
+    "displayName": "Had Enough of Preachers",
+    "description": "Defeat Osmund Saddler in Separate Ways.",
+    "rarityPercent": 26.6
+   },
+   {
+    "name": "43",
+    "displayName": "Capable Operative",
+    "description": "Complete Separate Ways on Standard mode or higher.",
+    "rarityPercent": 23.7
+   },
+   {
+    "name": "44",
+    "displayName": "Skilled Agent",
+    "description": "Complete Separate Ways on Hardcore mode or higher.",
+    "rarityPercent": 11.5
+   },
+   {
+    "name": "45",
+    "displayName": "The Perfect Mission",
+    "description": "Complete Separate Ways on Professional mode.",
+    "rarityPercent": 6.7
+   },
+   {
+    "name": "46",
+    "displayName": "Ada the \"S+\"py",
+    "description": "Complete Separate Ways on Professional mode with an S+ rank.",
+    "rarityPercent": 5.2
+   }
+  ]
+ },
+ "3986690": {
+  "game": "Ariana and the Elder Codex",
+  "achievements": [
+   {
+    "name": "LIB_ACH_001",
+    "displayName": "Beginning of Repairs",
+    "description": "Conducted your first repair.",
+    "rarityPercent": 93.7
+   },
+   {
+    "name": "LIB_ACH_002",
+    "displayName": "Water Element Revival",
+    "description": "Cleared the Codex of Water.",
+    "rarityPercent": 77.2
+   },
+   {
+    "name": "LIB_ACH_003",
+    "displayName": "Wind Element Revival",
+    "description": "Cleared the Codex of Wind.",
+    "rarityPercent": 40.7
+   },
+   {
+    "name": "LIB_ACH_004",
+    "displayName": "Earth Element Revival",
+    "description": "Cleared the Codex of Earth.",
+    "rarityPercent": 41.6
+   },
+   {
+    "name": "LIB_ACH_005",
+    "displayName": "Fire Element Revival",
+    "description": "Cleared the Codex of Fire.",
+    "rarityPercent": 35.5
+   },
+   {
+    "name": "LIB_ACH_006",
+    "displayName": "Transmission Tech Revival",
+    "description": "Cleared the Codex of Transmission.",
+    "rarityPercent": 28.3
+   },
+   {
+    "name": "LIB_ACH_007",
+    "displayName": "Convergence Tech Revival",
+    "description": "Cleared the Codex of Convergence.",
+    "rarityPercent": 29.9
+   },
+   {
+    "name": "LIB_ACH_008",
+    "displayName": "Diffusion Tech Revival",
+    "description": "Cleared the Codex of Diffusion.",
+    "rarityPercent": 27.4
+   },
+   {
+    "name": "LIB_ACH_009",
+    "displayName": "Sealing Dangerous Power",
+    "description": "Cleared the Codex of Spacetime.",
+    "rarityPercent": 24.6
+   },
+   {
+    "name": "LIB_ACH_010",
+    "displayName": "Swift Work",
+    "description": "Got Rank A for a repair.",
+    "rarityPercent": 92.9
+   },
+   {
+    "name": "LIB_ACH_011",
+    "displayName": "Flawless Work",
+    "description": "Got Rank A for all repair points.",
+    "rarityPercent": 19.7
+   },
+   {
+    "name": "LIB_ACH_012",
+    "displayName": "Selfless Dedication",
+    "description": "Fully repaired the Codex of Water.",
+    "rarityPercent": 34.5
+   },
+   {
+    "name": "LIB_ACH_013",
+    "displayName": "Longing for Freedom",
+    "description": "Fully repaired the Codex of Wind.",
+    "rarityPercent": 29.2
+   },
+   {
+    "name": "LIB_ACH_014",
+    "displayName": "Brave Opposition",
+    "description": "Fully repaired the Codex of Earth.",
+    "rarityPercent": 31.4
+   },
+   {
+    "name": "LIB_ACH_015",
+    "displayName": "Determination for the Future",
+    "description": "Fully repaired the Codex of Fire.",
+    "rarityPercent": 29.5
+   },
+   {
+    "name": "LIB_ACH_016",
+    "displayName": "Inherited Will",
+    "description": "Fully repaired the Codex of Transmission.",
+    "rarityPercent": 26.5
+   },
+   {
+    "name": "LIB_ACH_017",
+    "displayName": "Harmony to Act Together",
+    "description": "Fully repaired the Codex of Convergence.",
+    "rarityPercent": 27.6
+   },
+   {
+    "name": "LIB_ACH_018",
+    "displayName": "Spreading Hope",
+    "description": "Fully repaired the Codex of Diffusion.",
+    "rarityPercent": 25.7
+   },
+   {
+    "name": "LIB_ACH_019",
+    "displayName": "Fighting Librarian",
+    "description": "Defeated 300 Codex monsters.",
+    "rarityPercent": 48.9
+   },
+   {
+    "name": "LIB_ACH_020",
+    "displayName": "Senior Librarian",
+    "description": "Defeated 1,000 Codex monsters.",
+    "rarityPercent": 34.4
+   },
+   {
+    "name": "LIB_ACH_021",
+    "displayName": "Elite Librarian",
+    "description": "Defeated 5,000 Codex monsters.",
+    "rarityPercent": 7.4
+   },
+   {
+    "name": "LIB_ACH_022",
+    "displayName": "Small Achievement",
+    "description": "Obtained over 10,000 Repair Fragments total.",
+    "rarityPercent": 67.9
+   },
+   {
+    "name": "LIB_ACH_023",
+    "displayName": "Large Achievement",
+    "description": "Obtained over 100,000 Repair Fragments total.",
+    "rarityPercent": 42
+   },
+   {
+    "name": "LIB_ACH_024",
+    "displayName": "Complete Achievement",
+    "description": "Obtained over 1,000,000 Repair Fragments total.",
+    "rarityPercent": 19.5
+   },
+   {
+    "name": "LIB_ACH_025",
+    "displayName": "Wielder of Spacetime",
+    "description": "Learned all Neutral element magic.",
+    "rarityPercent": 32.8
+   },
+   {
+    "name": "LIB_ACH_026",
+    "displayName": "Wielder of Water",
+    "description": "Learned all Water element magic.",
+    "rarityPercent": 29.3
+   },
+   {
+    "name": "LIB_ACH_027",
+    "displayName": "Wielder of Wind",
+    "description": "Learned all Wind element magic.",
+    "rarityPercent": 28.7
+   },
+   {
+    "name": "LIB_ACH_028",
+    "displayName": "Wielder of Earth",
+    "description": "Learned all Earth element magic.",
+    "rarityPercent": 27.9
+   },
+   {
+    "name": "LIB_ACH_029",
+    "displayName": "Wielder of Fire",
+    "description": "Learned all Fire element magic.",
+    "rarityPercent": 28
+   },
+   {
+    "name": "LIB_ACH_030",
+    "displayName": "Physical Librarian",
+    "description": "Acquired all Essence Symbols and Essence Crests.",
+    "rarityPercent": 21.2
+   },
+   {
+    "name": "LIB_ACH_031",
+    "displayName": "Unlimited Power",
+    "description": "Acquired all Combat Symbols and Combat Crests.",
+    "rarityPercent": 20.9
+   },
+   {
+    "name": "LIB_ACH_032",
+    "displayName": "Perfect Preparation",
+    "description": "Increased Magic Item equip cost to maximum.",
+    "rarityPercent": 23.6
+   },
+   {
+    "name": "LIB_ACH_033",
+    "displayName": "Unusual Ordeal",
+    "description": "K.O.ed for the first time.",
+    "rarityPercent": 59.6
+   },
+   {
+    "name": "LIB_ACH_034",
+    "displayName": "Wisdom of Ancestors",
+    "description": "Equipped a Magic Item for the first time.",
+    "rarityPercent": 76
+   },
+   {
+    "name": "LIB_ACH_035",
+    "displayName": "Magic Item Collector",
+    "description": "Obtained 30 types of Magic Items.",
+    "rarityPercent": 22.1
+   },
+   {
+    "name": "LIB_ACH_036",
+    "displayName": "Polished Techniques",
+    "description": "Raised a magic spell's level for the first time.",
+    "rarityPercent": 56.4
+   },
+   {
+    "name": "LIB_ACH_037",
+    "displayName": "Researched Techniques",
+    "description": "Learned a magic spell's added effect for the first time.",
+    "rarityPercent": 47.7
+   },
+   {
+    "name": "LIB_ACH_038",
+    "displayName": "Ultimate Power",
+    "description": "Raised one magic spell's level to max, and learned all added effects.",
+    "rarityPercent": 37.4
+   },
+   {
+    "name": "LIB_ACH_039",
+    "displayName": "Almighty Power",
+    "description": "Raised all magic spell levels to max, and learned all added effects.",
+    "rarityPercent": 10.5
+   },
+   {
+    "name": "LIB_ACH_040",
+    "displayName": "Embodiment of the Elements",
+    "description": "Used Form Change for the first time.",
+    "rarityPercent": 42.8
+   },
+   {
+    "name": "LIB_ACH_041",
+    "displayName": "Novice Magician",
+    "description": "Activated Elemental Burst 10 times.",
+    "rarityPercent": 53.6
+   },
+   {
+    "name": "LIB_ACH_042",
+    "displayName": "Adept Magician",
+    "description": "Activated Elemental Burst 100 times.",
+    "rarityPercent": 35.3
+   },
+   {
+    "name": "LIB_ACH_043",
+    "displayName": "Great Magician",
+    "description": "Activated Elemental Burst 500 times.",
+    "rarityPercent": 20.8
+   },
+   {
+    "name": "LIB_ACH_044",
+    "displayName": "Recovered Recipes",
+    "description": "Crafted 20 items.",
+    "rarityPercent": 29.5
+   },
+   {
+    "name": "LIB_ACH_045",
+    "displayName": "Reliable Friends",
+    "description": "Receive three different Magic Items from Library staff.",
+    "rarityPercent": 14.7
+   },
+   {
+    "name": "LIB_ACH_046",
+    "displayName": "Ariana's Hobbies",
+    "description": "You can live even without hobbies.",
+    "rarityPercent": 29.4
+   },
+   {
+    "name": "LIB_ACH_047",
+    "displayName": "You are ME",
+    "description": "Learn Mie's true identity.",
+    "rarityPercent": 21.5
+   },
+   {
+    "name": "LIB_ACH_000",
+    "displayName": "Obtain All Achievements",
+    "description": "Obtain every achievement.",
+    "rarityPercent": 7
+   }
+  ]
+ }
+}

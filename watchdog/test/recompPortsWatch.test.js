@@ -105,7 +105,11 @@ test('what the file already holds is the baseline, and a new unlock is announced
   assert.equal(payload.achievementDisplayName, schemas.dusklight.achievements.find((entry) => entry.name === 'princess_of_bugs').displayName);
   assert.equal(payload.source, 'PC Port');
   assert.equal(payload.appid, 'pcports-dusklight');
-  assert.deepEqual(payload.completion, { unlocked: 2, total: schemas.dusklight.achievements.length });
+  assert.deepEqual(
+    { unlocked: payload.completion.unlocked, total: payload.completion.total },
+    { unlocked: 2, total: schemas.dusklight.achievements.length }
+  );
+  assert.equal(payload.completion.achievements.length, schemas.dusklight.achievements.length, 'the list travels for the platinum rules');
 
   await handleChange(game, ctx, duskFile);
   assert.equal(ctx.sent.length, 1, 'the same file read again announces nothing');

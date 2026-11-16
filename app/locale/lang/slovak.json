@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Spustí vyhradené oznámenie, keď hra dosiahne 100% dokončenie"
+          "description": "Spustí vyhradené oznámenie, keď hra získa platinu"
+        },
+        "platinumScope": {
+          "name": "Platina vyžaduje",
+          "description": "Základná hra: platina príde, keď získate všetky úspechy základnej hry, bez čakania na DLC a ďalšie skupiny trofejí, ako na PlayStation. Všetko, vrátane DLC čaká na celý zoznam."
         },
         "mode": {
           "name": "Typ upozornenia",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Pripnúť navrch",
     "ach-unpin-menu": "Odopnúť",
     "ach-pinned": "Pripnuté",
+    "platinum-only": "Iba platina",
+    "platinum-needed": "Potrebné na platinu",
+    "ach-removed": "Už nie je v Steam",
     "steps-add": "Pridať krok",
     "steps-remove": "Odstrániť tento krok",
     "steps-rename": "Dvojitým kliknutím premenujete",

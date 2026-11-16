@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platinum (100%)",
-          "description": "Munculkan notifikasi khusus saat sebuah game mencapai penyelesaian 100%"
+          "description": "Munculkan notifikasi khusus saat sebuah game meraih platinumnya"
+        },
+        "platinumScope": {
+          "name": "Platinum memerlukan",
+          "description": "Game dasar: platinum didapat setelah semua pencapaian game dasar diperoleh, tanpa menunggu DLC dan grup trofi tambahan, seperti di PlayStation. Termasuk DLC menunggu seluruh daftar."
         },
         "mode": {
           "name": "Jenis notifikasi",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Sematkan di atas",
     "ach-unpin-menu": "Lepas sematan",
     "ach-pinned": "Disematkan",
+    "platinum-only": "Hanya platinum",
+    "platinum-needed": "Dibutuhkan untuk platinum",
+    "ach-removed": "Sudah tidak ada di Steam",
     "steps-add": "Tambah langkah",
     "steps-remove": "Hapus langkah ini",
     "steps-rename": "Klik dua kali untuk mengganti nama",

@@ -11,6 +11,7 @@ const waitForFileStable = require('../util/waitForFileStable.js');
 const kit = require('./watcherKit.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const ea = require(sharedAppModulePath('parser/ea.js'));
 
 const watchers = kit.createWatcherList('ea', debug);
@@ -58,7 +59,10 @@ async function handleChange(changedFile, ctx) {
       const isFirstObservation = !cache || !Array.isArray(cache.unlocked);
       const prev = new Set(isFirstObservation ? [] : cache.unlocked.map(String));
       const unlockedNow = new Set(Array.from(unlocked.keys()).map(String));
-      const completion = { unlocked: entry.achievements.filter((a) => unlockedNow.has(String(a.id))).length, total: entry.achievements.length };
+      const completion = completionOf(
+        entry.achievements.map((a) => ({ name: String(a.id), displayName: a.name, description: a.description || a.howTo })),
+        unlockedNow
+      );
 
       if (!isFirstObservation) {
         for (const achId of unlockedNow) {

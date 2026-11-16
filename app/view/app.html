@@ -143,6 +143,7 @@
             <div class="playtime"><i class="fas fa-stopwatch"></i> <span></span></div>
             <div class="lastplayed"><i class="fas fa-calendar-alt"></i> <span></span></div>
             <div class="achievementSteps btn" id="btn-achievement-steps" role="button" tabindex="0" aria-haspopup="menu"><i class="fas fa-tasks"></i> <span></span></div>
+            <div class="platinumOnly btn" id="btn-platinum-only" role="button" tabindex="0" aria-pressed="false" hidden><i class="fas fa-trophy"></i> <span></span></div>
             <div class="resetAchievements btn danger" id="btn-reset-achievements" role="button" tabindex="0"><i class="fas fa-undo"></i> <span></span></div>
             <div class="backButton btn" id="btn-overview" role="button" tabindex="0"></div>
             <div class="backButton btn" id="btn-previous" role="button" tabindex="0"></div>
@@ -2090,6 +2091,22 @@
                           <option value="10"></option>
                           <option value="25"></option>
                           <option value="50"></option>
+                        </select>
+                        <div class="next">
+                          <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                      </div>
+                      <div class="help"></div>
+                    </li>
+                    <li class="hasHelper">
+                      <div class="left"><i class="fas fa-trophy"></i> <span></span></div>
+                      <div class="right">
+                        <div class="previous">
+                          <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                        </div>
+                        <select autocomplete="off" id="option_platinumScope">
+                          <option value="base" selected></option>
+                          <option value="all"></option>
                         </select>
                         <div class="next">
                           <span class="arrow"><i class="fas fa-chevron-right"></i></span>

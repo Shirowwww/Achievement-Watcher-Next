@@ -14,7 +14,7 @@ Module._load = function patchedLoad(request, parent, isMain) {
   if (request === '@electron/remote' || request.startsWith('@electron/remote/')) return {};
   return originalLoad.call(this, request, parent, isMain);
 };
-const { withoutUnearnedArchived } = require('../../app/parser/achievements.js')._internal;
+const { withoutUnearnedArchived, withoutRemoved } = require('../../app/parser/achievements.js')._internal;
 Module._load = originalLoad;
 
 test('an archived achievement nobody here earned leaves the list and the total', () => {
@@ -40,4 +40,24 @@ test('an archived achievement nobody here earned leaves the list and the total',
 test('a list without archived achievements is handed back as it is', () => {
   const achievement = { total: 1, list: [{ name: 'A', Achieved: 0 }] };
   assert.strictEqual(withoutUnearnedArchived(achievement), achievement);
+});
+
+// Digimon Story Time Stranger kept six placeholders Steam had dropped, so 100% was out of reach.
+test('an achievement Steam no longer lists leaves every count, and an earned one is kept apart', () => {
+  const achievement = {
+    total: 4,
+    list: [
+      { name: 'A', Achieved: 1 },
+      { name: 'B', Achieved: 1 },
+      { name: 'DLC_01', removed: true, Achieved: 0 },
+      { name: 'DLC_02', removed: true, Achieved: 1 },
+    ],
+  };
+  const kept = withoutRemoved(achievement);
+  assert.deepEqual(kept.list.map((entry) => entry.name), ['A', 'B']);
+  assert.equal(kept.total, 2, 'the game is at 100% with its two real achievements');
+  assert.deepEqual(kept.removed.map((entry) => entry.name), ['DLC_01', 'DLC_02'], 'the earned one is not lost');
+  assert.equal(achievement.list.length, 4, 'the schema it came from is not modified');
+  const plain = { total: 1, list: [{ name: 'A' }] };
+  assert.strictEqual(withoutRemoved(plain), plain);
 });

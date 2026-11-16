@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Bạch kim (100%)",
-          "description": "Gửi một thông báo riêng khi một trò chơi đạt 100% hoàn thành"
+          "description": "Gửi một thông báo riêng khi một trò chơi đạt bạch kim"
+        },
+        "platinumScope": {
+          "name": "Bạch kim yêu cầu",
+          "description": "Game gốc: bạch kim đến khi mọi thành tích của game gốc đã đạt, không chờ DLC và các nhóm cúp bổ sung, như trên PlayStation. Tất cả, gồm cả DLC chờ cả danh sách."
         },
         "mode": {
           "name": "Kiểu thông báo",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Ghim lên đầu",
     "ach-unpin-menu": "Bỏ ghim",
     "ach-pinned": "Đã ghim",
+    "platinum-only": "Chỉ bạch kim",
+    "platinum-needed": "Cần cho bạch kim",
+    "ach-removed": "Không còn trên Steam",
     "steps-add": "Thêm một bước",
     "steps-remove": "Xóa bước này",
     "steps-rename": "Nhấp đúp để đổi tên",

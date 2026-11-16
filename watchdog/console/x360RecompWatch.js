@@ -16,6 +16,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const kit = require('./watcherKit.js');
 const { watchedFolders } = kit;
 
@@ -176,7 +177,10 @@ async function announceUnlocks(record, fresh, unlocked, ctx) {
   if (!schema) return false;
   const byId = new Map((schema.achievement ? schema.achievement.list : []).map((entry) => [String(entry.name), entry]));
   const name = schema.name || record.appid;
-  const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
+  const completion = completionOf(
+    [...byId.values()],
+    unlocked.map((entry) => String(entry.id))
+  );
   let delay = 0;
   for (const entry of fresh) {
     if (isDuplicateUnlock(record.appid, entry.id)) continue;

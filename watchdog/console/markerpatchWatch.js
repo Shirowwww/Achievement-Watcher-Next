@@ -24,6 +24,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const kit = require('./watcherKit.js');
 const { watchedFolders, resolveWatchTarget } = kit;
 
@@ -83,7 +84,10 @@ async function handleChange(ctx) {
         if (!schema) return;
         const byId = new Map((schema?.achievement?.list || []).map((entry) => [String(entry.name), entry]));
         const gameName = schema?.name || 'Dead Space 2';
-        const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
+        const completion = completionOf(
+          [...byId.values()],
+          unlocked.map((entry) => String(entry.id))
+        );
 
         let delay = 0;
         for (const entry of fresh) {

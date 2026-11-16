@@ -12,6 +12,7 @@ const debug = require('../util/log.js');
 const kit = require('./watcherKit.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const { listHosts, hostPath } = require(sharedAppModulePath('util/winHosts.js'));
 
 // Galaxy's catalog and per-game databases, in each host that can hold an install (this machine, or
@@ -210,7 +211,10 @@ async function handleChange(target, ctx) {
             icon: a.icon,
             time: a.time || moment().unix(),
             delay,
-            completion: { unlocked: achievedNow.length, total: list.length },
+            completion: completionOf(
+              list.map((entry) => ({ name: entry.key, displayName: entry.displayName, description: entry.description })),
+              achievedNow.map((entry) => entry.key)
+            ),
           },
           kit.unlockToastOptions(ctx, { prefetch: true }) // icons are GOG CDN URLs
         );

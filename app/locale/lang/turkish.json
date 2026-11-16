@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platin (%100)",
-          "description": "Bir oyun %100 tamamlamaya ulaştığında özel bir bildirim gönderir"
+          "description": "Bir oyun platinini kazandığında özel bir bildirim gönderir"
+        },
+        "platinumScope": {
+          "name": "Platin için gereken",
+          "description": "Temel oyun: platin, temel oyunun tüm başarımları kazanılınca gelir; PlayStation'daki gibi DLC'leri ve ek kupa gruplarını beklemez. DLC'ler dahil ise listenin tamamını bekler."
         },
         "mode": {
           "name": "Bildirim türü",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "En üste sabitle",
     "ach-unpin-menu": "Sabitlemeyi kaldır",
     "ach-pinned": "Sabitlendi",
+    "platinum-only": "Yalnızca platin",
+    "platinum-needed": "Platin için gerekli",
+    "ach-removed": "Artık Steam'de değil",
     "steps-add": "Bir adım ekle",
     "steps-remove": "Bu adımı kaldır",
     "steps-rename": "Yeniden adlandırmak için çift tıklayın",

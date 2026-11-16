@@ -39,6 +39,13 @@ function linkedGrade(options, link, achievementName) {
   return trophy ? trophyGradeOf(trophy.type) : undefined;
 }
 
+// The PSN trophy group (DLC) of an achievement, as the achievement page files it: in the trophy mode
+// only, the mode in which a linked game takes its PlayStation groups. '' for the base game.
+function linkedGroup(options, link, achievementName) {
+  const trophy = link && trophyModeOn(options) ? link.trophies[achievementName] : null;
+  return (trophy && trophy.group) || '';
+}
+
 // The game's achievement tied to the PlayStation platinum trophy, when the list has one.
 function platinumTwinName(link) {
   if (!link) return null;
@@ -63,4 +70,4 @@ function withLinkedTrophy(options, payload) {
   return { ...platinumFields(trophy.type, options), ...(grade ? { trophyGrade: grade } : {}), ...payload };
 }
 
-module.exports = { safeKey, linkFile, usableLink, readLink, linkedGrade, platinumTwinName, linkedPlatinum, withLinkedTrophy };
+module.exports = { safeKey, linkFile, usableLink, readLink, linkedGrade, linkedGroup, platinumTwinName, linkedPlatinum, withLinkedTrophy };

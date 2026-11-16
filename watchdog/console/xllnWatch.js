@@ -19,6 +19,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const kit = require('./watcherKit.js');
 const { watchedFolders } = kit;
 
@@ -101,7 +102,10 @@ async function handleChange(game, stateFile, ctx) {
         }
         const byId = new Map((schema && schema.achievement && schema.achievement.list ? schema.achievement.list : []).map((entry) => [String(entry.name), entry]));
         const gameName = (schema && schema.name) || game.name || game.titleId;
-        const completion = { unlocked: unlocked.filter((entry) => byId.has(String(entry.id))).length, total: byId.size };
+        const completion = completionOf(
+          [...byId.values()],
+          unlocked.map((entry) => String(entry.id))
+        );
 
         let delay = 0;
         for (const entry of fresh) {

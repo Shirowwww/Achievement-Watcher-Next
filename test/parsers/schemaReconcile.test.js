@@ -3,7 +3,7 @@
 /*
   Steam never signals "this game's achievement list changed", so getGameData self-repairs a cached
   schema every 3 days (or on demand, via Settings > Advanced). reconcileAchievementList is the pure
-  merge step: patches blanks, appends new achievements, never removes one.
+  merge step: patches blanks, appends new achievements, never drops one (one Steam dropped is marked).
 */
 
 const assert = require('node:assert/strict');
@@ -92,6 +92,45 @@ test('reconcileAchievementList treats an empty fresh list as "unreachable this c
   assert.equal(changed, false);
   assert.equal(addedCount, 0);
   assert.equal(list.length, 1);
+});
+
+/*
+  Digimon Story Time Stranger: six "DLCアチーブメント0N" placeholders were in the schema once and are
+  gone from Steam's now, yet stayed in the cached list for good, so 100% was out of reach.
+*/
+const steamEntry = (name) => ({ name, displayName: name, archived: false });
+
+test("reconcileAchievementList marks what Steam's own list no longer has as removed", () => {
+  const list = ['ACH_ID_45', 'ACH_ID_46', 'DLC_01', 'DLC_02'].map((name) => ({ name, displayName: name }));
+  list[2].Achieved = 1; // a real unlock is marked, never dropped
+  const { changed, removedCount } = steam.reconcileAchievementList(list, [steamEntry('ACH_ID_45'), steamEntry('ACH_ID_46')]);
+  assert.equal(changed, true);
+  assert.equal(removedCount, 2);
+  assert.equal(list.length, 4);
+  assert.deepEqual(
+    list.filter((achievement) => achievement.removed).map((achievement) => achievement.name),
+    ['DLC_01', 'DLC_02']
+  );
+});
+
+test('an achievement Steam lists again is no longer removed', () => {
+  const list = [{ name: 'A' }, { name: 'B', removed: true }];
+  const { changed, removedCount } = steam.reconcileAchievementList(list, [steamEntry('A'), steamEntry('B')]);
+  assert.equal(changed, true);
+  assert.equal(removedCount, 0);
+  assert.equal('removed' in list[1], false);
+});
+
+test('only a list from Steam itself, of the same game, can remove an achievement', () => {
+  // SteamHunters carries no archive flags: it may lag behind, so it adds but never removes.
+  const fromSteamHunters = [{ name: 'A' }];
+  const list = [{ name: 'A' }, { name: 'B' }];
+  assert.equal(steam.reconcileAchievementList(list, fromSteamHunters).removedCount, 0);
+  assert.equal(list[1].removed, undefined);
+  // A list that shares less than half of the cached names is another game's, not an update.
+  const other = [{ name: 'A' }, { name: 'B' }, { name: 'C' }, { name: 'D' }];
+  assert.equal(steam.reconcileAchievementList(other, [steamEntry('A'), steamEntry('X'), steamEntry('Y')]).removedCount, 0);
+  assert.equal(other.some((achievement) => achievement.removed), false);
 });
 
 test('reconcileAchievementList tolerates non-array input', () => {

@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "白金（100%）",
-          "description": "當一款遊戲完成度達到 100% 時，發出專屬通知"
+          "description": "當遊戲獲得白金時，發出專屬通知"
+        },
+        "platinumScope": {
+          "name": "白金條件",
+          "description": "基礎遊戲：集齊基礎遊戲的全部成就即獲白金，與 PlayStation 相同，不必等待 DLC 和額外的獎盃群組。全部（含 DLC）則需要整份清單。"
         },
         "mode": {
           "name": "通知類型",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "置頂",
     "ach-unpin-menu": "取消置頂",
     "ach-pinned": "已置頂",
+    "platinum-only": "僅白金",
+    "platinum-needed": "白金所需",
+    "ach-removed": "已從 Steam 移除",
     "steps-add": "新增一個步驟",
     "steps-remove": "移除此步驟",
     "steps-rename": "按兩下以重新命名",

@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platine (100%)",
-          "description": "Afficher une notification dédiée quand un jeu atteint 100 % de complétion"
+          "description": "Afficher une notification dédiée quand un jeu obtient son platine"
+        },
+        "platinumScope": {
+          "name": "Le platine demande",
+          "description": "« Jeu de base » : le platine tombe dès que tous les succès du jeu de base sont obtenus, sans attendre les DLC ni les groupes de trophées en plus, comme sur PlayStation. « Tout, DLC compris » attend la liste entière."
         },
         "mode": {
           "name": "Type de notification",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Épingler en haut",
     "ach-unpin-menu": "Désépingler",
     "ach-pinned": "Épinglé",
+    "platinum-only": "Platine seulement",
+    "platinum-needed": "Requis pour le platine",
+    "ach-removed": "Retiré de Steam",
     "steps-add": "Ajouter une étape",
     "steps-remove": "Supprimer cette étape",
     "steps-rename": "Double-cliquer pour renommer",

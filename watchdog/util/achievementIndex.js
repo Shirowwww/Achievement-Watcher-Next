@@ -59,17 +59,24 @@ function seedPreviewNames(unlocked, schemaIndex, limit) {
   );
 }
 
-// What 100% means: Steam no longer counts an archived achievement for players who never earned it.
-function requiredCount(schemaEntries) {
-  return (Array.isArray(schemaEntries) ? schemaEntries : []).filter((achievement) => achievement && !achievement.archived).length;
+/*
+  What 100% means: Steam no longer counts an archived achievement for players who never earned it,
+  nor one it removed. `inScope` (app/util/platinumScope.js) narrows it to what the platinum waits
+  for, the base game's by default; without it the whole list counts.
+*/
+const counts = (achievement, inScope) => !achievement.archived && !achievement.removed && (!inScope || inScope(achievement));
+
+function requiredCount(schemaEntries, inScope = null) {
+  return (Array.isArray(schemaEntries) ? schemaEntries : []).filter((achievement) => achievement && counts(achievement, inScope)).length;
 }
 
-function requiredUnlockedCount(entries, schemaIndex) {
+function requiredUnlockedCount(entries, schemaIndex, inScope = null) {
   let count = 0;
   for (const entry of Array.isArray(entries) ? entries : []) {
     if (!entry || entry.Achieved != 1) continue;
     const schema = findSchemaAchievement(schemaIndex, entry);
-    if (!schema || !schema.archived) count += 1;
+    // A save entry the schema does not know counts only when the whole list does.
+    if (schema ? counts(schema, inScope) : !inScope) count += 1;
   }
   return count;
 }

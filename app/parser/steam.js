@@ -556,7 +556,7 @@ module.exports.forgetUnresolved = (appID) => {
 
 // Merges a fresh fetch into the cached list (matched by apiName): patches blank fields, takes Steam's
 // sets and archive flags, and appends achievements missing from `list`. Mutates in place; never
-// removes an entry, so a short/failed fetch can't delete unlocked history.
+// drops an entry, so a short/failed fetch can't delete unlocked history (one Steam dropped is marked).
 module.exports.reconcileAchievementList = (list, fresh) => {
   if (!Array.isArray(list) || !Array.isArray(fresh) || fresh.length === 0) return { changed: false, addedCount: 0 };
   let changed = false;
@@ -586,6 +586,8 @@ module.exports.reconcileAchievementList = (list, fresh) => {
       changed = true;
     }
   }
+  // Before the new ones are appended: they would count as shared names.
+  const removed = markRemoved(list, fresh, freshByName);
   const knownNames = new Set(list.filter((a) => a && a.name != null).map((a) => String(a.name).toUpperCase()));
   const added = [];
   for (const achievement of fresh) {
@@ -599,8 +601,31 @@ module.exports.reconcileAchievementList = (list, fresh) => {
     list.push(...added);
     changed = true;
   }
-  return { changed, addedCount: added.length };
+  return { changed: changed || removed.changed, addedCount: added.length, removedCount: removed.count };
 };
+
+/*
+  An achievement Steam's own list no longer has is marked removed, never dropped: a real unlock of it
+  stays on the page, outside every count. Only Steam's own schema (each entry carries its archive
+  flag) can say so; SteamHunters may lag. A list sharing under half the cached names is another game's.
+*/
+function markRemoved(list, fresh, freshByName) {
+  let changed = false;
+  let count = 0;
+  const fromSteam = fresh.every((achievement) => achievement && typeof achievement.archived === 'boolean');
+  const cached = list.filter((achievement) => achievement && achievement.name != null);
+  const shared = cached.filter((achievement) => freshByName.has(String(achievement.name).toUpperCase())).length;
+  if (!fromSteam || shared * 2 < cached.length) return { changed, count };
+  for (const achievement of cached) {
+    const gone = !freshByName.has(String(achievement.name).toUpperCase());
+    if (gone) count += 1;
+    if (gone === Boolean(achievement.removed)) continue;
+    if (gone) achievement.removed = true;
+    else delete achievement.removed;
+    changed = true;
+  }
+  return { changed, count };
+}
 
 module.exports.getGameData = async (cfg) => {
   if (!steamLanguages.some((language) => language.api === cfg.lang)) {
@@ -700,11 +725,12 @@ module.exports.getGameData = async (cfg) => {
         const freshResult = await getSchemaAchievements(cfg);
         const fresh = Array.isArray(freshResult) ? freshResult : freshResult.achievements || [];
         recheckSucceeded = !(freshResult && freshResult.networkError === true);
-        const { addedCount } = module.exports.reconcileAchievementList(result.achievement.list, fresh);
+        const { addedCount, removedCount } = module.exports.reconcileAchievementList(result.achievement.list, fresh);
         if (addedCount) {
           result.achievement.total = result.achievement.list.length;
           debug.log(`[${cfg.appID}] picked up ${addedCount} new achievement(s) from a game update`);
         }
+        if (removedCount) debug.log(`[${cfg.appID}] ${removedCount} achievement(s) no longer on Steam, shown apart and left out of the counts`);
       } catch (err) {
         debug.log(`Could not refresh schema descriptions [${cfg.appID}]: ${err.code ? `${err.code} - ${err.message}` : err}`);
       }

@@ -14,6 +14,7 @@ const kit = require('./watcherKit.js');
 const { loadSchema, readTitles, indexedUplayName, gameNameFor } = require('./ubisoftArchive.js');
 
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const { readUbisoftSpoolFile, readZipEntries, parseLocalizationText, cleanTitle, defaultSpoolRoot } = require(sharedAppModulePath('parser/ubisoftFiles.js'));
 
 const watchers = kit.createWatcherList('ubisoft', debug);
@@ -82,7 +83,10 @@ async function handleChange(target, ctx) {
         if (!schema) schema = loadSchema(target.appid, ctx.options.achievement.lang) || { texts: new Map(), iconFor: () => undefined };
         const text = schema.texts.get(record.id) || {};
         // The spool holds earned records only, so the total comes from the archive's text list.
-        const completion = { unlocked: records.filter((r) => schema.texts.has(r.id)).length, total: schema.texts.size };
+        const completion = completionOf(
+          [...schema.texts].map(([id, entry]) => ({ name: id, displayName: entry.displayName, description: entry.description })),
+          records.map((r) => r.id)
+        );
         debug.log(`[ubisoft] Unlocked: ${target.name} - ${text.displayName || record.id}`);
         await ctx.notify(
           {

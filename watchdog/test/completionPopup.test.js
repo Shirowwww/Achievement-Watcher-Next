@@ -102,3 +102,55 @@ test('a list whose own trophy is the platinum gives no second popup', async () =
   await notify(unlock('G7', { unlocked: 2, total: 2 }));
   assert.equal(sent.length, 1);
 });
+
+// The live sources follow the rules a save-file game follows (util/platinumLike.js, platinumScope.js).
+const { completionOf } = require('../util/completionPopup.js');
+const gogList = [
+  { name: 'A', displayName: 'First steps', description: 'Finish the tutorial' },
+  { name: 'B', displayName: 'Hero', description: 'Beat the game' },
+  { name: 'ALL', displayName: 'Completionist', description: 'Unlock all other achievements' },
+];
+
+test("a game's own platinum achievement pops as the platinum, and no 100% popup follows", async () => {
+  const { sent, notify } = wrapped();
+  await notify(unlock('G9', completionOf(gogList, ['A', 'B', 'ALL']), { achievementName: 'ALL', achievementDisplayName: 'Completionist' }));
+  assert.equal(sent.length, 1, 'one popup, not the unlock plus a 100% one');
+  assert.equal(sent[0].notificationType, 'platinum');
+  assert.equal(sent[0].achievementDisplayName, 'Completionist');
+  // The last ordinary unlock of a game that has its own platinum pops nothing more either.
+  await notify(unlock('G10', completionOf(gogList, ['A', 'B', 'ALL']), { achievementName: 'B' }));
+  assert.equal(sent.length, 2);
+  assert.equal(sent[1].notificationType, undefined);
+});
+
+test('with the platinum popup off, the own platinum is an ordinary unlock', async () => {
+  const { sent, notify } = wrapped({ ...options, notification: { platinum: false } });
+  await notify(unlock('G11', completionOf(gogList, ['A', 'B', 'ALL']), { achievementName: 'ALL' }));
+  assert.equal(sent.length, 1);
+  assert.equal(sent[0].notificationType, undefined);
+});
+
+test('the platinum waits for the base game by default, and for everything when asked', async () => {
+  const list = [{ name: 'A' }, { name: 'B' }, { name: 'DLC', category: 'Episode 1' }];
+  const base = wrapped();
+  await base.notify(unlock('G12', completionOf(list, ['A', 'B']), { achievementName: 'B' }));
+  assert.equal(base.sent.length, 2, 'the base game is done: platinum');
+  assert.equal(base.sent[1].notificationType, 'platinum');
+  // A later DLC unlock is no platinum, even in a new session.
+  const later = wrapped();
+  await later.notify(unlock('G12', completionOf(list, ['A', 'B', 'DLC']), { achievementName: 'DLC' }));
+  assert.equal(later.sent.length, 1);
+
+  const all = wrapped({ ...options, notification: { platinumScope: 'all' } });
+  await all.notify(unlock('G13', completionOf(list, ['A', 'B']), { achievementName: 'B' }));
+  assert.equal(all.sent.length, 1, 'DLC included: not yet');
+  await all.notify(unlock('G13', completionOf(list, ['A', 'B', 'DLC']), { achievementName: 'DLC' }));
+  assert.equal(all.sent.length, 3);
+});
+
+test('completionOf counts what the list knows and keeps each entry', () => {
+  const completion = completionOf([{ name: 1 }, { name: 'B' }, null], ['1', 'X']);
+  assert.equal(completion.unlocked, 1);
+  assert.equal(completion.total, 2);
+  assert.deepEqual(completion.achievements.map((a) => [a.name, a.earned]), [['1', true], ['B', false]]);
+});

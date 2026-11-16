@@ -56,6 +56,26 @@ test('100% leaves out archived achievements unless they were earned', () => {
   assert.equal(requiredCount(null), 0);
 });
 
+// Digimon Story Time Stranger kept six achievements Steam had removed: 100% must not wait for them.
+test('100% leaves out achievements Steam removed, earned or not', () => {
+  const schema = [{ name: 'A' }, { name: 'DLC_01', removed: true }];
+  const index = buildSchemaIndex(schema);
+  assert.equal(requiredCount(schema), 1);
+  assert.equal(requiredUnlockedCount([{ name: 'A', Achieved: 1 }, { name: 'DLC_01', Achieved: 1 }], index), 1);
+});
+
+// The base-game platinum: the popup fires once the base game is done, the DLC left for later.
+test('a platinum scope counts only what it waits for', () => {
+  const schema = [{ name: 'A' }, { name: 'B' }, { name: 'DLC', category: 'Episode 1' }];
+  const index = buildSchemaIndex(schema);
+  const inScope = (achievement) => !achievement.category;
+  assert.equal(requiredCount(schema, inScope), 2);
+  assert.equal(requiredUnlockedCount([{ name: 'A', Achieved: 1 }, { name: 'B', Achieved: 1 }], index, inScope), 2);
+  assert.equal(requiredUnlockedCount([{ name: 'A', Achieved: 1 }, { name: 'DLC', Achieved: 1 }], index, inScope), 1);
+  // A save entry the schema does not know may be DLC: it no longer counts once the scope narrows.
+  assert.equal(requiredUnlockedCount([{ name: 'UNKNOWN', Achieved: 1 }], index, inScope), 0);
+});
+
 // SmartSteamEmu's stats.bin names nothing: its records are keyed by crc32, and their parsed name is
 // the record index. The latest unlocks of a first observation must be named as the schema names them.
 test('seed preview names the latest unlocks by their schema name, CRC records included', () => {

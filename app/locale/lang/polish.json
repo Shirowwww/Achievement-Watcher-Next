@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platyna (100%)",
-          "description": "Wyświetla dedykowane powiadomienie, gdy gra osiąga 100% ukończenia"
+          "description": "Wyświetla dedykowane powiadomienie, gdy gra zdobywa platynę"
+        },
+        "platinumScope": {
+          "name": "Platyna wymaga",
+          "description": "Gra podstawowa: platyna wpada, gdy zdobędziesz wszystkie osiągnięcia gry podstawowej, bez czekania na DLC i dodatkowe grupy trofeów, jak na PlayStation. Razem z DLC czeka na całą listę."
         },
         "mode": {
           "name": "Typ powiadomienia",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Przypnij na górze",
     "ach-unpin-menu": "Odepnij",
     "ach-pinned": "Przypięte",
+    "platinum-only": "Tylko platyna",
+    "platinum-needed": "Wymagane do platyny",
+    "ach-removed": "Usunięte ze Steam",
     "steps-add": "Dodaj krok",
     "steps-remove": "Usuń ten krok",
     "steps-rename": "Kliknij dwukrotnie, aby zmienić nazwę",

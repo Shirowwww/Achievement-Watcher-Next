@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "プラチナ (100%)",
-          "description": "ゲームが 100% 達成に到達したとき専用の通知を表示します"
+          "description": "ゲームがプラチナを獲得したとき専用の通知を表示します"
+        },
+        "platinumScope": {
+          "name": "プラチナの条件",
+          "description": "「ベースゲーム」: ベースゲームの実績をすべて獲得するとプラチナになります。PlayStation と同様に、DLC や追加のトロフィーグループは待ちません。「DLCを含む」は一覧全体を待ちます。"
         },
         "mode": {
           "name": "通知の種類",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "一番上に固定",
     "ach-unpin-menu": "固定を解除",
     "ach-pinned": "固定中",
+    "platinum-only": "プラチナのみ",
+    "platinum-needed": "プラチナに必要",
+    "ach-removed": "Steam から削除済み",
     "steps-add": "ステップを追加",
     "steps-remove": "このステップを削除",
     "steps-rename": "ダブルクリックで名前を変更",

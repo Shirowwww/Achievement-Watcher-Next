@@ -96,9 +96,12 @@ test('the milestone row is appended to the common rows, after every positional b
   const html = read('app', 'view', 'app.html');
   const list = html.match(/<ul id="options-notify-common">([\s\S]*?)<\/ul>/)[1];
   const rows = [...list.matchAll(/<li\b[\s\S]*?<\/li>/g)];
-  assert.equal(rows.length, 9);
+  assert.equal(rows.length, 10);
   assert.match(rows[8][0], /id="option_progressStep"/);
   assert.match(rows[8][0], /<option value="0" selected><\/option>/);
+  // The platinum scope comes after it, bound by id rather than by position, base game first.
+  assert.match(rows[9][0], /id="option_platinumScope"/);
+  assert.match(rows[9][0], /<option value="base" selected><\/option>/);
 
   const loader = read('app', 'locale', 'loader.js');
   assert.match(loader, /li:nth-child\(9\) \.left span'\)\.text\(clear\(template\.settings\.notification\.option\.progressStep\.name/);

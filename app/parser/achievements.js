@@ -174,6 +174,18 @@ function withoutUnearnedArchived(achievement) {
   return { ...achievement, list, total };
 }
 
+/*
+  An achievement Steam no longer lists (parser/steam.js marks it removed) leaves the list and every
+  count, earned or not; it travels apart in `removed`, which the page shows greyed below the others.
+*/
+function withoutRemoved(achievement) {
+  const removed = achievement.list.filter((ach) => ach && ach.removed);
+  if (removed.length === 0) return achievement;
+  const list = achievement.list.filter((ach) => !(ach && ach.removed));
+  const total = Math.max(0, (Number(achievement.total) || 0) - removed.length);
+  return { ...achievement, list, removed, total };
+}
+
 function normalizeGameName(name, appid) {
   if (typeof name === 'string') return name;
   if (name && typeof name === 'object') {
@@ -4697,7 +4709,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
       // and that branch never writes a zero, so a counter still at 0 stayed undefined instead.
       if (appliedFromThisSource) isDuplicate = true;
     }
-    game.achievement = withoutUnearnedArchived(game.achievement);
+    game.achievement = withoutRemoved(withoutUnearnedArchived(game.achievement));
     game.achievement.unlocked = game.achievement.list.filter((ach) => ach.Achieved == 1).length;
     // Reconcile the denominator with the real achievement list. A schema/list desync could leave
     // `total` at 0 (or below the number actually displayed), producing the "39 / 0" the UI shows for a
@@ -5144,6 +5156,7 @@ module.exports._internal = {
   borrowSteamCategories,
   normalizeSaveEntry,
   withoutUnearnedArchived,
+  withoutRemoved,
   removeInertGoldbergSettings,
   emulatorReadsSettings,
   holdsClaimedInstall,

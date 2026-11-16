@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Visa en egen avisering när ett spel når 100 % slutförande"
+          "description": "Visa en egen avisering när ett spel får sin platina"
+        },
+        "platinumScope": {
+          "name": "Platina kräver",
+          "description": "Basspel: platina kommer när alla prestationer i basspelet är intjänade, utan att vänta på DLC och extra trofégrupper, som på PlayStation. Allt, inklusive DLC väntar på hela listan."
         },
         "mode": {
           "name": "Aviseringstyp",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Fäst högst upp",
     "ach-unpin-menu": "Lossa",
     "ach-pinned": "Fäst",
+    "platinum-only": "Bara platina",
+    "platinum-needed": "Krävs för platina",
+    "ach-removed": "Finns inte längre på Steam",
     "steps-add": "Lägg till ett steg",
     "steps-remove": "Ta bort det här steget",
     "steps-rename": "Dubbelklicka för att byta namn",

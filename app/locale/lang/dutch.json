@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Stuur een aparte melding zodra een game 100% voltooid is"
+          "description": "Stuur een aparte melding zodra een game zijn platina behaalt"
+        },
+        "platinumScope": {
+          "name": "Platina vereist",
+          "description": "Basisspel: de platina komt zodra elke prestatie van het basisspel is behaald, zonder te wachten op DLC en extra trofeegroepen, zoals op PlayStation. Alles, inclusief DLC wacht op de hele lijst."
         },
         "mode": {
           "name": "Soort melding",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Bovenaan vastzetten",
     "ach-unpin-menu": "Losmaken",
     "ach-pinned": "Vastgezet",
+    "platinum-only": "Alleen platina",
+    "platinum-needed": "Nodig voor de platina",
+    "ach-removed": "Niet meer op Steam",
     "steps-add": "Een stap toevoegen",
     "steps-remove": "Deze stap verwijderen",
     "steps-rename": "Dubbelklik om te hernoemen",

@@ -360,7 +360,8 @@ function getGlobalStat(appid, source, gameName, achievements, context) {
       const name = row.attr('data-name');
       const appid = $('#achievement .wrapper > .header').attr('data-appid');
       const source = $('#achievement .wrapper > .header').attr('data-source') || '';
-      if (!name || !appid) return;
+      // An achievement Steam no longer lists is only kept for the record: nothing to mark on it.
+      if (!name || !appid || row.hasClass('removed')) return;
       if (row.hasClass('is-picked') && pickedRows().length > 1) {
         const batch = pickedMenu(pickedRows(), appid, source);
         if (batch.length === 0) return;

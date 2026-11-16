@@ -14,6 +14,7 @@ const themeLayers = require(path.join(appPath, 'util/themeLayers.js'));
 const libraryLayout = require(path.join(appPath, 'util/libraryLayout.js'));
 const libraryChrome = require(path.join(appPath, 'util/libraryChrome.js'));
 const libraryFilter = require(path.join(appPath, 'util/libraryFilter.js'));
+const platinumScope = require(path.join(appPath, 'util/platinumScope.js'));
 const { isSteamId64 } = require(path.join(appPath, 'util/steamId64.js'));
 const notificationPlacement = require(path.join(appPath, 'util/notificationPlacement.js'));
 const rarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
@@ -586,6 +587,7 @@ function normalize(parsed) {
   if (typeof options.notification.platinum !== 'boolean') {
     options.notification.platinum = true;
   }
+  options.notification.platinumScope = platinumScope.normalizeScope(options.notification.platinumScope);
 
   if (
     options.notification_toast.customToastAudio != '0' &&
@@ -836,6 +838,7 @@ function defaults() {
       progressStep: 0,
       playtime: true,
       platinum: true,
+      platinumScope: 'base', // 'all' makes the platinum wait for the DLC too
       steamClient: false,
     },
     notification_toast: {

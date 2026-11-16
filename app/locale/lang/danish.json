@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platin (100 %)",
-          "description": "Send en særlig notifikation, når et spil når 100 % gennemført"
+          "description": "Send en særlig notifikation, når et spil opnår sin platin"
+        },
+        "platinumScope": {
+          "name": "Platin kræver",
+          "description": "Basisspil: platin kommer, når alle basisspillets præstationer er optjent, uden at vente på DLC og ekstra trofægrupper, som på PlayStation. Alt, inklusive DLC venter på hele listen."
         },
         "mode": {
           "name": "Notifikationstype",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Fastgør øverst",
     "ach-unpin-menu": "Frigør",
     "ach-pinned": "Fastgjort",
+    "platinum-only": "Kun platin",
+    "platinum-needed": "Kræves til platin",
+    "ach-removed": "Ikke længere på Steam",
     "steps-add": "Tilføj et trin",
     "steps-remove": "Fjern dette trin",
     "steps-rename": "Dobbeltklik for at omdøbe",

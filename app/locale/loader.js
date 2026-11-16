@@ -642,6 +642,20 @@ function translateUI(lang, locale, template) {
       .text(clear(template.settings.notification.option.progressStep.percent).replace('{percent}', percent));
   }
   selector.find('li:nth-child(9) .help').text(clear(template.settings.notification.option.progressStep.description));
+  // Bound by id, so a row added later never relabels it. Its two choices say the same as the library halo's.
+  {
+    const text = template.settings.notification.option.platinumScope;
+    const perfect = template.settings.general && template.settings.general.library && template.settings.general.library.perfectGlow;
+    const row = $('#option_platinumScope').closest('li');
+    if (text) {
+      row.find('.left span').text(clear(text.name));
+      row.find('.help').text(clear(text.description));
+    }
+    if (perfect) {
+      row.find("select option[value='base']").text(clear(perfect.base));
+      row.find("select option[value='all']").text(clear(perfect.all));
+    }
+  }
   selector = $('#options-notify-transport');
   selector.prev('.title').find('span').text(clear(template.settings.notification.title.transport));
   selector.find("li:nth-child(1) .right select option[value='true']").text(clear(template.settings.common.enable));

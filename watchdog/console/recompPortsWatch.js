@@ -16,6 +16,7 @@ const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const { iconPathOf } = require('../util/iconPath.js');
 const kit = require('./watcherKit.js');
 
@@ -52,7 +53,7 @@ async function announce(game, fresh, ctx, earned = fresh) {
   }
   const byId = new Map(schema.achievement.list.map((entry) => [String(entry.name), entry]));
   const now = moment().unix();
-  const completion = { unlocked: earned.filter((id) => byId.has(String(id))).length, total: byId.size };
+  const completion = completionOf([...byId.values()], earned.map(String));
   ports.recordObservedTimes(game.data.port, fresh, now);
   let delay = 0;
   for (const id of fresh) {

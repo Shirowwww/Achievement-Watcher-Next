@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100%)",
-          "description": "Dispara uma notificação dedicada quando um jogo atinge 100% de conclusão"
+          "description": "Dispara uma notificação dedicada quando um jogo obtém a sua platina"
+        },
+        "platinumScope": {
+          "name": "A platina exige",
+          "description": "Jogo base: a platina surge quando todas as conquistas do jogo base são obtidas, sem esperar por DLC nem por grupos de troféus extra, como na PlayStation. Tudo, DLC incluídas espera pela lista completa."
         },
         "mode": {
           "name": "Tipo de notificação",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Fixar no topo",
     "ach-unpin-menu": "Desafixar",
     "ach-pinned": "Fixada",
+    "platinum-only": "Só platina",
+    "platinum-needed": "Necessária para a platina",
+    "ach-removed": "Já não está na Steam",
     "steps-add": "Adicionar um passo",
     "steps-remove": "Remover este passo",
     "steps-rename": "Clique duas vezes para mudar o nome",

@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Send et eget varsel når et spill når 100 % fullført"
+          "description": "Send et eget varsel når et spill får platina"
+        },
+        "platinumScope": {
+          "name": "Platina krever",
+          "description": "Basisspill: platina kommer når alle prestasjonene i basisspillet er oppnådd, uten å vente på DLC og ekstra trofégrupper, som på PlayStation. Alt, inkludert DLC venter på hele listen."
         },
         "mode": {
           "name": "Varseltype",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Fest øverst",
     "ach-unpin-menu": "Løsne",
     "ach-pinned": "Festet",
+    "platinum-only": "Bare platina",
+    "platinum-needed": "Kreves for platina",
+    "ach-removed": "Ikke lenger på Steam",
     "steps-add": "Legg til et trinn",
     "steps-remove": "Fjern dette trinnet",
     "steps-rename": "Dobbeltklikk for å gi nytt navn",

@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Näytä oma ilmoitus, kun peli saavuttaa 100 %:n suoritusasteen"
+          "description": "Näytä oma ilmoitus, kun peli saa platinan"
+        },
+        "platinumScope": {
+          "name": "Platina vaatii",
+          "description": "Peruspeli: platina tulee, kun kaikki peruspelin saavutukset on ansaittu, odottamatta DLC:itä tai ylimääräisiä pokaaliryhmiä, kuten PlayStationilla. DLC:t mukana odottaa koko listaa."
         },
         "mode": {
           "name": "Ilmoituksen tyyppi",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Kiinnitä ylös",
     "ach-unpin-menu": "Poista kiinnitys",
     "ach-pinned": "Kiinnitetty",
+    "platinum-only": "Vain platina",
+    "platinum-needed": "Tarvitaan platinaan",
+    "ach-removed": "Ei enää Steamissa",
     "steps-add": "Lisää vaihe",
     "steps-remove": "Poista tämä vaihe",
     "steps-rename": "Nimeä uudelleen kaksoisnapsauttamalla",

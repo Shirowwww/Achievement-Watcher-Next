@@ -16,6 +16,7 @@ const { createBaselineCache } = require('../util/baselineCache.js');
 const { createChangeCoalescer } = require('../util/changeCoalescer.js');
 const waitForFileStable = require('../util/waitForFileStable.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 const kit = require('./watcherKit.js');
 const ubisoftArchive = require('./ubisoftArchive.js');
 
@@ -45,7 +46,10 @@ async function notifyUnlocks(identity, fresh, snapshot, ctx) {
   const schema = ubisoftArchive.loadSchema(identity.uplayId, ctx.options.achievement.lang) || { texts: new Map(), iconFor: () => undefined };
   const gameName = ubisoftArchive.gameNameFor(identity.uplayId);
   // The cfg may list only the touched achievements, so the total is the archive's text list.
-  const completion = { unlocked: earnedIds(snapshot).filter((id) => schema.texts.has(id)).length, total: schema.texts.size };
+  const completion = completionOf(
+    [...schema.texts].map(([id, text]) => ({ name: id, displayName: text.displayName, description: text.description })),
+    earnedIds(snapshot)
+  );
   let delay = 0;
   for (const id of fresh) {
     const text = schema.texts.get(id) || {};

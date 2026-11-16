@@ -2941,9 +2941,37 @@ body.is-resizing #game-list {
    button. It stays in the header's flow: the back button is absolutely positioned and its width
    follows its label in every language, so anchoring a second button beside it would collide. */
 #achievement .wrapper > .header .resetAchievements,
-#achievement .wrapper > .header .achievementSteps {
+#achievement .wrapper > .header .achievementSteps,
+#achievement .wrapper > .header .platinumOnly {
   margin-left: 10px;
   vertical-align: middle;
+}
+#achievement .wrapper > .header .platinumOnly[hidden] {
+  display: none;
+}
+#achievement .wrapper > .header .platinumOnly i {
+  color: var(--trophy-platinum);
+}
+#achievement .wrapper > .header .platinumOnly.active {
+  background: color-mix(in srgb, var(--trophy-platinum) 22%, transparent);
+}
+
+/* "Platinum only": what the platinum does not wait for steps aside, and with it the DLC headings. */
+#achievement .achievements.platinum-only .achievement-list ul > li:has(> .achievement[data-platinum-need='0']),
+#achievement .achievements.platinum-only .achievement-list ul > li.ach-group-head {
+  display: none;
+}
+
+/* A base-game achievement the platinum waits for: a small neutral link where the platinum shows its trophy. */
+.achievement .content .title .ach-platinum-need {
+  font-size: 0.75em;
+  color: var(--text-muted);
+}
+
+/* An achievement Steam no longer lists: kept for the record, greyed, outside every count. */
+.achievement.removed {
+  opacity: 0.55;
+  filter: grayscale(1);
 }
 
 #achievement .wrapper > .header .backButton {

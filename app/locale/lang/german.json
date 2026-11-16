@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platin (100 %)",
-          "description": "Eine eigene Benachrichtigung auslösen, wenn ein Spiel 100 % Abschluss erreicht"
+          "description": "Eine eigene Benachrichtigung auslösen, wenn ein Spiel sein Platin erhält"
+        },
+        "platinumScope": {
+          "name": "Platin verlangt",
+          "description": "Basisspiel: Platin gibt es, sobald alle Erfolge des Basisspiels erreicht sind, ohne auf DLCs und zusätzliche Trophäengruppen zu warten, wie auf PlayStation. Mit DLC wartet auf die ganze Liste."
         },
         "mode": {
           "name": "Benachrichtigungstyp",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Oben anheften",
     "ach-unpin-menu": "Anheften aufheben",
     "ach-pinned": "Angeheftet",
+    "platinum-only": "Nur Platin",
+    "platinum-needed": "Für Platin nötig",
+    "ach-removed": "Nicht mehr auf Steam",
     "steps-add": "Einen Schritt hinzufügen",
     "steps-remove": "Diesen Schritt entfernen",
     "steps-rename": "Doppelklicken zum Umbenennen",

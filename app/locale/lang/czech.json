@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "Platina (100 %)",
-          "description": "Spustí vyhrazené oznámení, když hra dosáhne 100% dokončení"
+          "description": "Spustí vyhrazené oznámení, když hra získá platinu"
+        },
+        "platinumScope": {
+          "name": "Platina vyžaduje",
+          "description": "Základní hra: platina přijde, jakmile získáte všechny úspěchy základní hry, bez čekání na DLC a další skupiny trofejí, stejně jako na PlayStationu. Vše, včetně DLC čeká na celý seznam."
         },
         "mode": {
           "name": "Typ oznámení",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "Připnout nahoru",
     "ach-unpin-menu": "Odepnout",
     "ach-pinned": "Připnuto",
+    "platinum-only": "Jen platina",
+    "platinum-needed": "Potřebné pro platinu",
+    "ach-removed": "Už není ve Steam",
     "steps-add": "Přidat krok",
     "steps-remove": "Odebrat tento krok",
     "steps-rename": "Dvojitým kliknutím přejmenujete",

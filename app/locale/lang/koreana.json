@@ -652,7 +652,11 @@
         },
         "platinum": {
           "name": "플래티넘(100%)",
-          "description": "게임 달성률이 100%가 되면 전용 알림을 표시합니다"
+          "description": "게임이 플래티넘을 획득하면 전용 알림을 표시합니다"
+        },
+        "platinumScope": {
+          "name": "플래티넘 조건",
+          "description": "기본 게임: 기본 게임의 업적을 모두 달성하면 PlayStation처럼 DLC나 추가 트로피 그룹을 기다리지 않고 플래티넘이 주어집니다. 모두(DLC 포함)는 전체 목록을 기다립니다."
         },
         "mode": {
           "name": "알림 종류",
@@ -2951,6 +2955,9 @@
     "ach-pin-menu": "맨 위에 고정",
     "ach-unpin-menu": "고정 해제",
     "ach-pinned": "고정됨",
+    "platinum-only": "플래티넘만",
+    "platinum-needed": "플래티넘에 필요",
+    "ach-removed": "Steam에서 제거됨",
     "steps-add": "단계 추가",
     "steps-remove": "이 단계 삭제",
     "steps-rename": "두 번 클릭하여 이름 변경",

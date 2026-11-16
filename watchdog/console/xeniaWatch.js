@@ -14,6 +14,7 @@ const kit = require('./watcherKit.js');
 
 const { userDataDir } = require('../util/userData.js');
 const { sharedAppModulePath } = require('../util/sharedAppModule.js');
+const { completionOf } = require('../util/completionPopup.js');
 // Same icon cache the app parser extracts into - icons written by either side are shared.
 const iconCacheRoot = path.join(userDataDir(), 'icon_cache/xenia');
 
@@ -142,7 +143,10 @@ async function handleChange(target, ctx) {
             icon: iconPath || undefined,
             time: a.time || moment().unix(),
             delay,
-            completion: { unlocked: achievedNow.length, total: data.list.length },
+            completion: completionOf(
+              data.list.map((entry) => ({ name: String(entry.id), displayName: entry.displayName, description: entry.description })),
+              achievedNow.map((entry) => String(entry.id))
+            ),
           },
           kit.unlockToastOptions(ctx, { attribution: kit.gamerscoreAttribution(ctx, a.gamerscore) })
         );

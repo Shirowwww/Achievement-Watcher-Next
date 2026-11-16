@@ -257,6 +257,9 @@ function applyAchievementSort(root, mode, direction) {
     // Pinned rows stay on top whatever the sort.
     const pinnedFirst = Number($(b).find('.achievement').attr('data-pinned') === '1') - Number($(a).find('.achievement').attr('data-pinned') === '1');
     if (pinnedFirst !== 0) return pinnedFirst;
+    // An achievement Steam no longer lists stays below every section whatever the sort.
+    const removedLast = Number($(a).find('.achievement').hasClass('removed')) - Number($(b).find('.achievement').hasClass('removed'));
+    if (removedLast !== 0) return removedLast;
     // Then each group keeps its own section, sorted within it.
     const byGroup = groupOfRow(a) - groupOfRow(b);
     if (byGroup !== 0) return byGroup;
