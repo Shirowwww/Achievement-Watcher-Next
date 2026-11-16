@@ -18,13 +18,14 @@ dźwięk i skalę (zobacz [Zachowanie dla poszczególnych gier](notifications.md
 <sub>Jeden stan, jego przyczyna, kontrole, które za nim stoją, i naprawy, które mają zastosowanie</sub>
 </div>
 
-## Trzy stany {#the-three-states}
+## Stany {#the-states}
 
 | Stan | Co oznacza |
 |---|---|
 | **Gotowe** | Gra jest wykryta, jej dane osiągnięć są dostępne, a AW Next obserwuje ją pod kątem odblokowań. |
 | **Wymaga uwagi** | Gra działa, ale część jej konfiguracji jest niekompletna. Kontrole pokazują, która. |
 | **Nieśledzone** | Brakuje czegoś istotnego, więc żadne odblokowanie nie może zostać zapisane: nie da się zlokalizować gry, nie ma ona danych osiągnięć albo brakuje emulatora, który zapisuje jej odblokowania. |
+| **Tylko czas gry** | Gra dodana ręcznie: AW Next zna jej listę osiągnięć i liczy czas gry, ale nic na tym komputerze nie zapisuje jeszcze jej odblokowań (nie znaleziono emulatora, zapisu ani konta w sklepie). Kolor szary, bo nic nie jest zepsute, tak samo jak kropka na kafelku gry; skonfiguruj źródło, a stan się zmieni. |
 
 Zdanie pod stanem podaje przyczynę, kontrole pokazują, która część zawodzi, a przycisk
 naprawy działa dokładnie na nią.
@@ -47,31 +48,33 @@ panel mówi o tym od pierwszego uruchomienia.
 | **Pliki gry** | Czy folder instalacji nadal istnieje? | **Znajdź grę** |
 | **Plik gry** | Który program należy obserwować podczas gry? | **Znajdź grę** |
 | **Tożsamość gry** | Z jakim AppID i platformą dopasowano tę grę? Tryb Prosty to pomija. | **Popraw plik identyfikatora gry** lub **Ustaw AppID ręcznie** |
-| **Dane osiągnięć** | Czy jest lista osiągnięć i czy jest kompletna? | **Zapisz dane osiągnięć ponownie** |
-| **Konfiguracja emulatora** | Czy gra wymagająca emulatora Steam ma go i który ją obsługuje? W przypadku gry Ubisoftu obejmuje to także loader Uplay i to, czy kiedykolwiek poprosił o osiągnięcie. | **Zainstaluj plik emulatora**, **Przełącz na obsługiwany emulator** lub **Napraw obsługę osiągnięć Ubisoft** |
+| **Dane osiągnięć** | Czy jest lista osiągnięć, czy jest kompletna i czy jej definicje postępu i statystyk są aktualne? | **Zapisz dane osiągnięć ponownie** |
+| **Konfiguracja emulatora** | Czy gra wymagająca emulatora Steam ma go i który ją obsługuje? Ustawienia, bez których emulator da sobie radę, są tu pokazywane jako uwagi, a nie problemy. W przypadku gry Ubisoftu obejmuje to także loader Uplay i to, czy kiedykolwiek poprosił o osiągnięcie. | **Zainstaluj plik emulatora**, **Przełącz na obsługiwany emulator**, **Uzupełnij ustawienia emulatora** lub **Napraw obsługę osiągnięć Ubisoft** |
 | **Postęp** | Czy znaleziono już jakieś odblokowanie lub zapis? | Uruchom grę i odblokuj coś |
 | **Liczniki postępu** | Czy w grach w stylu CODEX/RUNE, które śledzą statystykę zamiast zwykłego odblokowania, AW Next pobrał statystykę stojącą za każdym osiągnięciem? Pokazywane tylko dla gier, które jej używają. | **Pobierz liczniki postępu** |
-| **Wykrywanie uruchomienia gry** | Czy tracker w tle zauważa, kiedy ta gra się uruchamia? Sam nie zapisuje żadnego odblokowania: to zadanie emulatora. | **Obserwuj tę grę** |
+| **Wykrywanie uruchomienia gry** | Czy tracker w tle zauważa, kiedy ta gra się uruchamia, i czy obserwuje plik wykonywalny ustawiony dla gry? Sam nie zapisuje żadnego odblokowania: to zadanie emulatora. | **Obserwuj tę grę** |
 | **Powiadomienia** | Którą drogą dostarczono ostatnie powiadomienie dla tej gry i dlaczego? | **Wyślij powiadomienie testowe** |
 
 ## Naprawy {#the-repairs}
 
 Panel pokazuje tylko te naprawy, które mogą naprawić tę grę. Każda mówi, co zmieni, i gdzie przechowywane są
-poprzednie pliki. Nic nie jest zapisywane od nowa bez kopii zapasowej lub potwierdzenia.
+poprzednie pliki. Nic nie jest zapisywane od nowa bez kopii zapasowej lub potwierdzenia, a naprawa, która zawiedzie w połowie, przywraca każdy plik, który zdążyła zmienić; błąd mówi, co przywrócono.
 
 | Naprawa | Co robi |
 |---|---|
 | **Znajdź grę** | Otwiera okno wyboru, aby wskazać plik wykonywalny do obserwowania. |
 | **Otwórz folder gry** | Otwiera folder instalacji w Eksploratorze. |
-| **Zapisz dane osiągnięć ponownie** | Zapisuje listę osiągnięć, ikony i ustawienia emulatora, najpierw kopiując istniejące pliki do kopii zapasowej. |
+| **Zapisz dane osiągnięć ponownie** | Zmienia tylko `achievements.json`, `stats.json` i brakujące ikony, nic więcej. Kompletna lista zostaje bez zmian; dodawane wpisy trzymają się formatu pliku, jego języków i folderu ikon. Definicje postępu i statystyk pochodzą z generate_emu_config, gdy **Dane steam_settings** jest ustawione na Zaawansowany i zapisano logowanie do Steam, a w przeciwnym razie z publicznej listy games-infos-datas; potwierdzenie mówi, skąd. Każdy zmieniany plik jest najpierw kopiowany do `.aw-backups` w `steam_settings`. |
+| **Uzupełnij ustawienia emulatora** | Dodaje tylko pliki ustawień, których grze brakuje (`steam_appid.txt`, `configs.main.ini`, `configs.user.ini` oraz `configs.app.ini`, gdy włączone jest [Zarządzaj własnością DLC](../goldberg-gbe.md)). To, co dają już globalne ustawienia emulatora, zostaje po ich stronie, a lista osiągnięć nie jest ruszana. Własne konto gry w `configs.user.ini` jest zastępowane tylko wtedy, gdy włączone jest **Zapisuj nazwę konta i język** i odpowiesz twierdząco na pytanie. |
 | **Zainstaluj plik emulatora** | Pobiera obsługiwaną kompilację emulatora do folderu gry, zachowując zastępowany plik jako `.bak`. |
-| **Przełącz na obsługiwany emulator** | Dla gry obsługiwanej przez inny crack, który niczego nie zapisał: instaluje na nim obsługiwany emulator i zmienia nazwę konfiguracji tego cracka na `.bak`. |
+| **Przełącz na obsługiwany emulator** | Dla gry obsługiwanej przez inny crack, który niczego nie zapisał: instaluje na nim obsługiwany emulator, zmienia nazwę konfiguracji tego cracka na `.bak` i w tym samym kroku zapisuje `steam_settings` emulatora (identyfikator gry i listę osiągnięć), więc grę można uruchomić od razu. Wymaga Steam AppID gry; jeśli którakolwiek część się nie powiedzie, każdy plik wraca na miejsce. Brakujące ikony można dodać później przez **Zapisz dane osiągnięć ponownie**. |
 | **Cofnij zmianę emulatora** | Pojawia się wszędzie tam, gdzie wykonano jedną z dwóch powyższych. Przywraca własne pliki gry z ich kopii `.bak` i usuwa obsługiwany emulator. |
+| **Cofnij ostatnią naprawę** | Pojawia się po każdej zmianie, jaką AW Next wprowadził w folderze gry: naprawie z tego panelu, poprawce emulatora, CrakFiles, Usuń DRM Steam (Steamless), Przywróć ostatnią kopię zapasową GBE/Goldberg, Ustaw AppID ręcznie, naprawie Uplay albo jednym z przycisków cofania powyżej. Najpierw wypisuje każdy plik, który przywróci. Jeśli plik jest używany (często dlatego, że gra jest uruchomiona), nic nie zostaje zmienione, a wpis czeka na kolejną próbę. |
 | **Popraw plik identyfikatora gry** | Zapisuje na nowo `steam_appid.txt`, gdy emulator zapowiada jedną grę, a AW Next dopasował inną. Prosi o właściwy AppID, sugerując dopasowanie AW Next, i zachowuje poprzedni plik. |
 | **Pobierz liczniki postępu** | Pyta Steam, która statystyka napędza każde osiągnięcie, dla gier w stylu CODEX/RUNE. Nie zapisuje niczego w folderze gry. |
 | **Napraw obsługę osiągnięć Ubisoft** | Dla zgodnej gry Ubisoftu zapisuje na nowo konfigurację loadera, schemat i przekierowanie zapisów w jednej transakcji, z kopią zapasową każdego dotkniętego pliku. Zobacz [Konfiguracja Uplay](uplay-r2.md). |
 | **Włącz osiągnięcia offline** | Dla gry Ubisoftu, której log loadera dowodzi, że nigdy nie poprosiła o osiągnięcie, bo uważa się za wylogowaną. Dodaje jeden zastępczy klucz sesji do pliku INI obok gry; naciśnij ponownie, aby go usunąć. Zobacz [Konfiguracja Uplay](uplay-r2.md#a-game-that-never-asks-for-an-achievement). |
-| **Obserwuj tę grę** | Dodaje grę do trackera w tle, aby zapisywano czas gry i odblokowania na żywo. |
+| **Obserwuj tę grę** | Dodaje grę do trackera w tle, aby zapisywano czas gry i odblokowania na żywo, według pliku wykonywalnego ustawionego na karcie **Plik gry**. |
 | **Włącz powiadomienia o postępie** | Ponownie włącza powiadomienia o postępie dla gry, którą wyciszyłeś. |
 | **Wyślij powiadomienie testowe** | Wysyła powiadomienie z nazwą i grafiką tej gry, drogą, którą naprawdę by poszło. |
 
@@ -99,8 +102,13 @@ poprzednie pliki. Nic nie jest zapisywane od nowa bez kopii zapasowej lub potwie
 | *Osiągnięcia offline włączone, uruchom grę raz* | Ustawienie jest zapisane i nic nie zostało jeszcze ocenione. Przycisk obok brzmi teraz **Wyłącz osiągnięcia offline**. |
 | *Obsługiwane przez ALI213, OnlineFix, GBE Fork…* | Emulator, który faktycznie odczytuje tę grę, nazwany na podstawie jego własnych plików. Grze Ubisoftu obsługiwanej w ten sposób nie proponuje się naprawy Uplay: jej warstwa Uplay jest nieużywana, a nie zepsuta. Obejmuje to wydania, które zachowują `steam_api64.dll` Valve: kompilację RUNE działającą z `Steam\steamclient64.dll` albo wydanie VOICES38 ładujące własny zmieniony GBE Fork (`steam_api64.v38`); nigdy nie instaluj emulatora na tym drugim. Kompilacje Ubisoftu z online-fix są rozpoznawane, a poprawka osiągnięć w nich ostrzega, że gra online może przestać działać. |
 | *Brakuje tylko niektórych ikon* | **Zapisz dane osiągnięć ponownie** pobiera brakujące ikony. |
+| *Brakujące lub nieaktualne definicje postępu albo statystyk* | Osiągnięcia z licznikiem nie ruszałyby się albo pokazywałyby zły cel. **Zapisz dane osiągnięć ponownie** je aktualizuje. |
+| *Opcjonalne ustawienia nie zostały zapisane* | Uwaga, nie usterka: emulator działa bez nich (bilet aplikacji, token GC, przełącznik nieznanych statystyk, nazwa konta). **Uzupełnij ustawienia emulatora** dodaje je, jeśli chcesz. |
+| *Nazwa konta lub język pochodzą z … `GSE Saves\settings`* | Wiersz informacyjny, nie ostrzeżenie. GBE czyta `GSE Saves\settings\configs.user.ini` (albo ustawienia folderu zapisów, na który wskazuje `local_save_path`), gdy gra nie ma własnych. Nie ma nic do naprawiania. |
+| *Obserwuje X, a nie Y* | Plik wykonywalny ustawiony dla tej gry nie jest tym, który śledzi tracker, więc uruchomienia i czas gry mogą umknąć. **Obserwuj tę grę** podąża za wybranym. *Obserwuje X, uruchomiony przez Y* jest w porządku: Y to launcher, na przykład program startowy anti-cheata, który uruchamia grę. |
+| *Nie skonfigurowano źródła osiągnięć* | Pokazywane razem z **Tylko czas gry**. Zastosuj poprawkę emulatora albo dodaj folder, w którym gra zapisuje osiągnięcia. |
 | *Uruchomiona ponad godzinę i ani jedno osiągnięcie nie zostało zapisane* | Crack obsługujący grę najpewniej nigdy nie zgłasza osiągnięć. Użyj **Przełącz na obsługiwany emulator**, gdy jest oferowany; w przeciwnym razie sprawdź, czy gra uruchamia się z własnego folderu. |
-| *Plik identyfikatora gry*, ze skrótem Steam do tej gry | Steam uruchamia skrót spoza Steam bez `steam_appid.txt` obok, więc emulator zapisuje pod innym ID. **Zapisz dane osiągnięć ponownie** zapisuje tam ten plik. |
+| *Plik identyfikatora gry*, ze skrótem Steam do tej gry | Steam uruchamia skrót spoza Steam bez `steam_appid.txt` obok, więc emulator zapisuje pod innym ID. **Uzupełnij ustawienia emulatora** zapisuje tam ten plik. |
 
 ---
 

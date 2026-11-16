@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "DLC-Besitz verwalten",
-        "description": "Schreibt configs.app.ini, damit der Emulator jeden DLC als besessen meldet. Hat nichts mit Erfolgen zu tun: Lass es deaktiviert, um ein Spiel im Originalzustand zu behalten oder DLC selbst zu verwalten. Standardmäßig deaktiviert.",
+        "description": "Der Emulator-Fix und Emulator-Einstellungen vervollständigen dürfen configs.app.ini schreiben, damit der Emulator jeden DLC als besessen meldet. Hat nichts mit Erfolgen zu tun: Lass es deaktiviert, um ein Spiel im Originalzustand zu behalten oder DLC selbst zu verwalten. Standardmäßig deaktiviert.",
         "value": {
           "false": "Deaktiviert",
           "true": "Aktiviert"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Kontoname und Sprache schreiben",
-        "description": "Schreibt deinen Kontonamen und deine Sprache in die configs.user.ini jedes Spiels. Lass es deaktiviert, wenn du dich für einen vorhersehbaren Namen und eine vorhersehbare Benutzer-ID auf die zentrale Konfiguration des Emulators verlässt. Standardmäßig deaktiviert.",
+        "description": "Der Emulator-Fix und Emulator-Einstellungen vervollständigen dürfen deinen Kontonamen und deine Sprache in die configs.user.ini eines Spiels schreiben; das eigene Konto eines Spiels wird nur nach Rückfrage ersetzt. Lass es deaktiviert, wenn du dich für einen vorhersehbaren Namen und eine vorhersehbare Benutzer-ID auf die globalen Einstellungen des Emulators verlässt. Standardmäßig deaktiviert.",
         "value": {
           "false": "Deaktiviert",
           "true": "Aktiviert"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "SteamStub-DRM automatisch entpacken",
-        "description": "Führt Steamless an der Spiel-EXE vor dem Patchen aus, um Valves SteamStub-DRM zu entfernen (Original bleibt als .steamstub.bak). Wirkungslos, wenn kein Stub vorhanden ist.",
+        "description": "Führt Steamless an der Spiel-EXE vor dem Patchen aus, um Valves SteamStub-DRM zu entfernen (Original bleibt als .steamstub.bak). Wirkungslos, wenn kein Stub vorhanden ist. Bei Deaktivierung läuft Steamless nie von selbst: Der manuelle Fix fragt vorher, und der automatische Fix überspringt ein geschütztes Spiel.",
         "value": {
           "false": "Deaktiviert",
           "true": "Aktiviert"
@@ -1644,7 +1644,8 @@
         "Die runde Schaltfläche neben der Abschlussquote öffnet die Bibliotheksstatistik: Abschluss, Anzahl freigeschalteter und gesperrter Erfolge, Spielzeit, Trophäen, Platin-Spiele, seltenste Erfolge und eine Zeile pro Plattform.",
         "Eine Auswahl zwischen dem Suchfeld und der +-Schaltfläche wechselt zwischen sechs Bibliotheksansichten. Einstellungen > Darstellung > Bibliothekskacheln legt Kachelgröße, Abstände und die Anzeige jeder Kachel fest.",
         "Die +-Schaltfläche fügt ein Spiel hinzu, das keine Quelle findet: einen Titel und eine Programmdatei, optional mit Plattform und Steam-AppID. Starts und Spielzeit werden erfasst, aber keine Erfolge.",
-        "Rechtsklick auf ein Spiel > Spieleinstellungen > Umbenennen… ändert den angezeigten Namen. Erfolge und Spielzeit > Spielzeit bearbeiten… korrigiert die Gesamtzeit (12.5 oder 12h30)."
+        "Rechtsklick auf ein Spiel > Spieleinstellungen > Umbenennen… ändert den angezeigten Namen. Erfolge und Spielzeit > Spielzeit bearbeiten… korrigiert die Gesamtzeit (12.5 oder 12h30).",
+        "Strg+Klick fügt ein Spiel zu einer Auswahl hinzu, Umschalt+Klick wählt einen Bereich. Mache einen Rechtsklick auf eines der ausgewählten Spiele, um alle ihre Erfolge auf einmal zurückzusetzen: Jedes Spiel wird vorher gesichert, und Spiele, deren Plattform die Freischaltungen behält, werden übersprungen. Esc hebt die Auswahl auf."
       ],
       "sourcesTitle": "Launcher & Quellen",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: Schalte die Quelle ein, gib deinen Benutzernamen und Web-API-Schlüssel ein und drücke dann Bibliothek importieren. Die Freischaltungen kommen von deinem Konto, lass also RetroAchievements im Emulator eingeschaltet.",
         "Im Modus Einfach bleiben einige selten genutzte Quellenzeilen ausgeblendet, solange sie ungenutzt sind. Sie kehren zurück, sobald sie relevant werden, und Erweitert zeigt immer alle.",
         "PlayStation-Trophäen zeigen ihren Grad und den Anteil der Spieler, die sie haben. Die Quoten stammen von Exophase; verbinde unter Einstellungen > Quelle ein PlayStation-Konto, um Sonys eigene Zahlen für die Spiele dieses Kontos zu erhalten.",
-        "Mit verbundenem PlayStation-Konto holt Bibliothek importieren deine PlayStation-Spiele und -Trophäen, alle drei Tage aktualisiert, und das Feld darunter fügt ein Spiel hinzu, das du nicht besitzt. Ein Spiel aus einem anderen Shop, das auch für PlayStation erschienen ist, zeigt sein echtes Platin und im Trophäenmodus seine echten Grade und DLC-Gruppen."
+        "Mit verbundenem PlayStation-Konto holt Bibliothek importieren deine PlayStation-Spiele und -Trophäen, alle drei Tage aktualisiert, und das Feld darunter fügt ein Spiel hinzu, das du nicht besitzt. Ein Spiel aus einem anderen Shop, das auch für PlayStation erschienen ist, zeigt sein echtes Platin und im Trophäenmodus seine echten Grade und DLC-Gruppen.",
+        "Spiele, die mit LuaTools oder SteamTools zu Steam hinzugefügt wurden, zeigen ihre Erfolge aus den eigenen Statistiken von Steam, unabhängig von der Steam-Einstellung oben."
       ],
       "notifications": [
         "Automatisch ist die Voreinstellung: das Pop-up im Spiel, wenn das Spiel es zeigen kann, sonst eine Windows-Benachrichtigung, nie beides.",
@@ -1666,15 +1668,17 @@
         "Ton für seltene Erfolge, Ton für 100 % Abschluss und Ton für Fortschritt (Modus Erweitert) geben diesen Pop-ups einen eigenen Ton. Zufällig wählt jedes Mal einen anderen Ton, und du kannst eigene Dateien importieren.",
         "Gold, Silber und Bronze markieren seltene Freischaltungen. Einstellungen > Allgemein > Seltenheitsanzeige wechselt in den Trophäenmodus, der jeden Erfolg einstuft und bei abgeschlossenen Spielen Platin zeigt.",
         "Bei Zählern zeigt Fortschrittsetappen ein Pop-up nur in 10-, 25- oder 50-%-Schritten. Rechtsklick auf ein Spiel > Fortschrittsbenachrichtigungen stummschalten macht ein Spiel still, ohne seine Freischaltungen anzutasten.",
-        "Zwei weitere Schalter unter Einstellungen > Benachrichtigung: Prioritätsbenachrichtigungen lässt Freischaltungen durch „Nicht stören“ (Windows 11), und Spiele des Steam-Clients ergänzt das Pop-up von AW Next für Spiele, die Steam selbst startet."
+        "Zwei weitere Schalter unter Einstellungen > Benachrichtigung: Prioritätsbenachrichtigungen lässt Freischaltungen durch „Nicht stören“ (Windows 11), und Spiele des Steam-Clients ergänzt das Pop-up von AW Next für Spiele, die Steam selbst startet.",
+        "Das Platin gibt es, sobald alle Erfolge des Basisspiels erreicht sind, DLC ausgenommen, wie auf PlayStation. Mit Einstellungen > Benachrichtigung > Platin verlangt kann es auf die ganze Liste warten. Bei einem Spiel mit DLC blendet Nur Platin auf seiner Seite die Erfolge aus, die das Platin nicht braucht."
       ],
       "gameHealthTitle": "Spielzustand",
       "gameHealth": [
-        "Klicke auf die Werkzeug-Schaltfläche eines Spiels (oben rechts auf seiner Kachel) oder mache einen Rechtsklick darauf, um den Spielzustand zu öffnen. Er zeigt, ob das Spiel Bereit ist, Prüfen braucht oder Nicht verfolgt wird.",
+        "Klicke auf die Werkzeug-Schaltfläche eines Spiels (oben rechts auf seiner Kachel) oder mache einen Rechtsklick darauf, um den Spielzustand zu öffnen. Er zeigt, ob das Spiel Bereit ist, Prüfen braucht, Nicht verfolgt wird oder Nur Spielzeit hat (Erfolge bekannt, aber nichts auf diesem PC zeichnet sie bisher auf).",
         "Der Satz unter dem Status erklärt die Ursache in einfachen Worten. Die Prüfungen darunter zeigen, welcher Teil schuld ist: Spieldateien, Programmdatei, Erfolgsdaten, Emulator-Einrichtung, Live-Überwachung oder Benachrichtigungen.",
-        "Reparatur-Schaltflächen erscheinen nur, wenn AW Next dieses Spiel wirklich reparieren kann, etwa Spiel suchen, Erfolgsdaten neu schreiben, Emulator-Datei installieren oder Dieses Spiel überwachen. Jede sagt, was sie ändert, legt eine Sicherung an und fragt vorher.",
+        "Reparatur-Schaltflächen erscheinen nur, wenn AW Next dieses Spiel wirklich reparieren kann, etwa Spiel suchen, Erfolgsdaten neu schreiben, Emulator-Einstellungen vervollständigen, Emulator-Datei installieren oder Dieses Spiel überwachen. Jede sagt, was sie ändert, legt eine Sicherung an und fragt vorher; schlägt eine Reparatur fehl, kommt jede Datei an ihren Platz zurück.",
         "Testbenachrichtigung senden löst ein Pop-up mit Namen und Artwork des jeweiligen Spiels aus, zugestellt auf dem Weg, den es wirklich nehmen würde.",
-        "Technische Details enthält die genauen Pfade, Zahlen und Emulator-Codes: Drücke Kopieren und füge sie in einen Fehlerbericht ein. Der farbige Punkt auf einer Kachel lässt sich unter Einstellungen > Darstellung > Bibliothekskacheln ausblenden."
+        "Technische Details enthält die genauen Pfade, Zahlen und Emulator-Codes: Drücke Kopieren und füge sie in einen Fehlerbericht ein. Der farbige Punkt auf einer Kachel lässt sich unter Einstellungen > Darstellung > Bibliothekskacheln ausblenden.",
+        "Erfolgsdaten neu schreiben ändert nur die Erfolgsliste, ihre Statistiken und fehlende Symbole. Emulator-Einstellungen vervollständigen ergänzt nur die Einstellungen, die einem Spiel fehlen, lässt, was die globalen Einstellungen des Emulators schon liefern, und fragt, bevor es das eigene Konto eines Spiels ersetzt. Zum unterstützten Emulator wechseln schreibt die Emulator-Einstellungen im selben Schritt, und Letzte Reparatur rückgängig machen stellt jede Änderung wieder her, die AW Next im Spielordner vorgenommen hat."
       ],
       "troubleshootTitle": "Fehlerbehebung",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Rechtsklick auf ein Spiel > Emulator & Tools > Emulator-Fix anwenden… installiert GBE Fork, erstellt steam_settings (Erfolgsliste und Symbole) und schreibt steam_appid.txt, falls sie fehlt. Jede ersetzte Datei wird vorher gesichert.",
         "Unter Einstellungen > Steam / GBE Fork nutzt steam_settings-Daten auf Einfach den eigenen anonymen Abruf von AW Next und ist schnell. Erweitert führt generate_emu_config für tiefere Steam-Daten aus und kann Minuten dauern.",
         "Von selbst wird nichts in einen Spielordner geschrieben: Neu erkannte Spiele automatisch reparieren, DLC-Besitz verwalten und Kontoname und Sprache schreiben sind standardmäßig alle aus.",
-        "Emulator diagnostizieren im selben Menü liest und meldet nur. GBE/Goldberg-Setup sichern und Letzte GBE/Goldberg-Sicherung wiederherstellen bringen ein Spiel in den vorherigen Zustand zurück."
+        "Emulator diagnostizieren im selben Menü liest und meldet nur. GBE/Goldberg-Setup sichern und Letzte GBE/Goldberg-Sicherung wiederherstellen bringen ein Spiel in den vorherigen Zustand zurück.",
+        "Ist SteamStub-DRM automatisch entpacken aus, läuft Steamless nie von selbst: Der manuelle Fix fragt vorher, wenn das Spiel geschützt ist, und der automatische Fix lässt dieses Spiel in Ruhe. Ein Fix, der fehlschlägt, stellt jede Datei wieder her, auch die ausführbare. Das eigene Konto eines Spiels in configs.user.ini bleibt erhalten, sofern das Ersetzen nicht bestätigt wird."
       ],
       "emulatorTitle": "Konsolen-Emulatoren",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Der Xenia-Fortschritt wird aus den Xbox-Profildateien (.gpd) gelesen und folgt den in seiner Konfiguration festgelegten Speicherordnern.",
         "KytyPS5-Trophäen werden aus seinem Ordner _Trophies gelesen, für den Benutzer, unter dem der Launcher das Spiel startet.",
         "Für PC neu kompilierte Xbox-360-Spiele und PS4-Ports (Bloodborne, Uncharted, God of War III Remastered, MediEvil und andere) sind eigene Quellen unter Einstellungen > Quelle. Taucht eines nicht auf, füge seinen Ordner unter Einstellungen > Ordner hinzu.",
-        "Jede Konsole kann unter Einstellungen > Benachrichtigung > Emulatoren (Modus Erweitert) eine eigene Pop-up-Vorlage und einen eigenen Ton haben. Neu kompilierte Xbox-360-Spiele folgen der Wahl von Xenia, PS4-Ports der von shadPS4, und Wie Haupt-Preset behält die Haupteinstellungen."
+        "Jede Konsole kann unter Einstellungen > Benachrichtigung > Emulatoren (Modus Erweitert) eine eigene Pop-up-Vorlage und einen eigenen Ton haben. Neu kompilierte Xbox-360-Spiele folgen der Wahl von Xenia, PS4-Ports der von shadPS4, und Wie Haupt-Preset behält die Haupteinstellungen.",
+        "Solange RPCS3 läuft, öffnet das In-Game-Overlay-Tastenkürzel das Spiel, das gerade ausgeführt wird, gelesen aus dem Protokoll von RPCS3."
       ],
       "controllerTitle": "Controller (Gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Rechtsklick auf eine Spielkachel startet es, wählt seine Programmdatei, öffnet Ordner und Links, nutzt Emulator-Tools oder deinstalliert es, wenn dieses Menü aktiviert ist.",
         "Als manuell freigeschaltet markieren (Rechtsklick auf einen Erfolg) hält eine Freischaltung fest, die keine Quelle sehen kann.",
-        "Erfolge zurücksetzen… spielt ein Spiel von vorn und sichert vorher jede Datei. Es funktioniert bei Emulator-Spielen, nicht bei Steam, Epic oder Xbox, deren Freischaltungen auf deinem Konto liegen.",
+        "Erfolge zurücksetzen… spielt ein Spiel von vorn und sichert vorher jede Datei. Es funktioniert bei Emulator-Spielen, nicht bei Steam, Epic oder Xbox, deren Freischaltungen auf deinem Konto liegen. Wähle mehrere Spiele in der Bibliothek aus, um sie gemeinsam zurückzusetzen.",
         "Die Spielzeit wird erfasst, solange das Spiel läuft; Spielzeit-Tracking unter Einstellungen > Benachrichtigung schaltet die Start- und Ende-Benachrichtigungen ein.",
         "Daten dieses Spiels löschen… löscht alles, was AW Next über ein Spiel speichert (Spielstände werden vorher gesichert), und der nächste Scan findet es wieder. Aus AW Next entfernen nimmt es aus der Bibliothek, bis du es unter Einstellungen > Allgemein zurückholst. Aus der Ansicht ausblenden behält es weiter im Blick, in der Ansicht Ausgeblendet des Menüs Sammlungen.",
         "Spieleinstellungen > Sprache der Erfolge zeigt die Erfolge und Benachrichtigungen eines Spiels in einer anderen Sprache als der Rest.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Führt Steamless an der Spiel-EXE vor dem Patchen aus, um Valves SteamStub-DRM zu entfernen (Original bleibt als .steamstub.bak). Wirkungslos, wenn kein Stub vorhanden ist. Benötigt Mono (mono-complete unter Debian und Ubuntu)."
+            "description": "Führt Steamless an der Spiel-EXE vor dem Patchen aus, um Valves SteamStub-DRM zu entfernen (Original bleibt als .steamstub.bak). Wirkungslos, wenn kein Stub vorhanden ist. Bei Deaktivierung läuft Steamless nie von selbst: Der manuelle Fix fragt vorher, und der automatische Fix überspringt ein geschütztes Spiel. Benötigt Mono (mono-complete unter Debian und Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Standardmäßig aus. Legt den Bypass-Proxy von SteamAutoCrack (winmm.dll) + eine Umleitungs-Konfiguration ab, damit Spiele, die nach dem Austausch die originale steam_api/EXE erneut prüfen, trotzdem starten und freischalten. Lädt den Proxy aus seinem offiziellen Release herunter. Wine und Proton laden den Proxy nur, wenn die Startoptionen des Spiels WINEDLLOVERRIDES=\"winmm=n,b\" setzen."

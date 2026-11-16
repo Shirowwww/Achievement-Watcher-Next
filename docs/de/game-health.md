@@ -18,13 +18,14 @@ Ton und eine eigene Größe bekommen kann (siehe [Verhalten pro Spiel](notificat
 <sub>Ein Zustand, der Grund dafür, die Prüfungen dahinter und die Reparaturen, die zutreffen</sub>
 </div>
 
-## Die drei Zustände {#the-three-states}
+## Die Zustände {#the-states}
 
 | Zustand | Was er bedeutet |
 |---|---|
 | **Bereit** | Das Spiel wird erkannt, seine Erfolgsdaten sind vorhanden, und AW Next überwacht es auf Freischaltungen. |
 | **Prüfen** | Das Spiel funktioniert, aber ein Teil seiner Einrichtung ist unvollständig. Die Prüfungen zeigen, welcher. |
 | **Nicht verfolgt** | Etwas Wesentliches fehlt, sodass keine Freischaltung erfasst werden kann: Das Spiel lässt sich nicht finden, es hat keine Erfolgsdaten oder ihm fehlt der Emulator, der seine Freischaltungen schreibt. |
+| **Nur Spielzeit** | Ein von Hand hinzugefügtes Spiel: AW Next kennt seine Erfolgsliste und zählt seine Spielzeit, aber nichts auf diesem PC erfasst bisher seine Freischaltungen (kein Emulator, kein Spielstand, kein Store-Konto). Grau, weil nichts defekt ist, und ebenso der Punkt auf der Kachel des Spiels; richte eine Quelle ein, und der Zustand ändert sich. |
 
 Der Satz unter dem Zustand nennt die Ursache, die Prüfungen zeigen, welcher Teil schuld ist, und eine Reparaturschaltfläche wirkt
 genau darauf.
@@ -47,31 +48,33 @@ Fenster sagt das ab dem ersten Start.
 | **Spieldateien** | Ist der Installationsordner noch da? | **Spiel suchen** |
 | **Programmdatei** | Welches Programm soll beim Spielen überwacht werden? | **Spiel suchen** |
 | **Spielzuordnung** | Welcher AppID und welcher Plattform wurde dieses Spiel zugeordnet? Der Modus Einfach lässt sie weg. | **Spiel-ID-Datei korrigieren** oder **AppID manuell festlegen** |
-| **Erfolgsdaten** | Gibt es eine Erfolgsliste, und ist sie vollständig? | **Erfolgsdaten neu schreiben** |
-| **Emulator-Einrichtung** | Hat ein Spiel, das einen Steam-Emulator braucht, einen, und welcher bedient es? Bei einem Ubisoft-Spiel umfasst das auch den Uplay-Loader und ob er je einen Erfolg angefordert hat. | **Emulator-Datei installieren**, **Zum unterstützten Emulator wechseln** oder **Ubisoft-Erfolge reparieren** |
+| **Erfolgsdaten** | Gibt es eine Erfolgsliste, ist sie vollständig, und sind ihre Fortschritts- und Statistikdefinitionen aktuell? | **Erfolgsdaten neu schreiben** |
+| **Emulator-Einrichtung** | Hat ein Spiel, das einen Steam-Emulator braucht, einen, und welcher bedient es? Einstellungen, ohne die der Emulator auskommt, erscheinen hier als Hinweise, nicht als Probleme. Bei einem Ubisoft-Spiel umfasst das auch den Uplay-Loader und ob er je einen Erfolg angefordert hat. | **Emulator-Datei installieren**, **Zum unterstützten Emulator wechseln**, **Emulator-Einstellungen vervollständigen** oder **Ubisoft-Erfolge reparieren** |
 | **Fortschritt** | Wurde schon eine Freischaltung oder ein Spielstand gefunden? | Starte das Spiel und schalte etwas frei |
 | **Fortschrittszähler** | Hat AW Next bei Spielen im CODEX/RUNE-Stil, die eine Statistik statt einer einfachen Freischaltung verfolgen, die Statistik hinter jedem Erfolg abgerufen? Nur bei Spielen angezeigt, die eine nutzen. | **Fortschrittszähler abrufen** |
-| **Erkennung des Spielstarts** | Bemerkt der Hintergrund-Tracker, wann dieses Spiel startet? Für sich erfasst er keine Freischaltung: Das ist die Aufgabe des Emulators. | **Dieses Spiel überwachen** |
+| **Erkennung des Spielstarts** | Bemerkt der Hintergrund-Tracker, wann dieses Spiel startet, und überwacht er die für das Spiel festgelegte Programmdatei? Für sich erfasst er keine Freischaltung: Das ist die Aufgabe des Emulators. | **Dieses Spiel überwachen** |
 | **Benachrichtigungen** | Welcher Weg hat die letzte Benachrichtigung für dieses Spiel zugestellt, und warum? | **Testbenachrichtigung senden** |
 
 ## Die Reparaturen {#the-repairs}
 
 Das Fenster zeigt nur die Reparaturen, die dieses Spiel beheben können. Jede sagt, was sie ändern wird und wo die
-vorherigen Dateien aufbewahrt werden. Nichts wird ohne Sicherung oder Bestätigung neu geschrieben.
+vorherigen Dateien aufbewahrt werden. Nichts wird ohne Sicherung oder Bestätigung neu geschrieben, und eine Reparatur, die auf halbem Weg scheitert, stellt jede Datei wieder her, die sie geändert hatte; die Fehlermeldung nennt, was wiederhergestellt wurde.
 
 | Reparatur | Was sie tut |
 |---|---|
 | **Spiel suchen** | Öffnet eine Auswahl, um die zu überwachende Programmdatei zu wählen. |
 | **Spielordner öffnen** | Öffnet den Installationsordner im Explorer. |
-| **Erfolgsdaten neu schreiben** | Schreibt die Erfolgsliste, die Symbole und die Emulator-Einstellungen und kopiert vorhandene Dateien zuerst in eine Sicherung. |
+| **Erfolgsdaten neu schreiben** | Ändert nur `achievements.json`, `stats.json` und die fehlenden Symbole, sonst nichts. Eine vollständige Liste bleibt, wie sie ist; Einträge, die es hinzufügt, folgen dem eigenen Format, den Sprachen und dem Symbolordner der Datei. Fortschritts- und Statistikdefinitionen stammen von generate_emu_config, wenn **steam_settings-Daten** auf Erweitert steht und eine Steam-Anmeldung gespeichert ist, sonst aus der öffentlichen games-infos-datas-Liste; die Bestätigung nennt, welche. Jede geänderte Datei wird zuvor nach `.aw-backups` in `steam_settings` kopiert. |
+| **Emulator-Einstellungen vervollständigen** | Ergänzt nur die Einstellungsdateien, die einem Spiel fehlen (`steam_appid.txt`, `configs.main.ini`, `configs.user.ini` und `configs.app.ini`, wenn [DLC-Besitz verwalten](../goldberg-gbe.md) an ist). Was die globalen Einstellungen des Emulators schon liefern, bleibt ihnen überlassen, und die Erfolgsliste wird nicht angefasst. Das eigene Konto eines Spiels in `configs.user.ini` wird nur ersetzt, wenn **Kontoname und Sprache schreiben** an ist und du auf Nachfrage zustimmst. |
 | **Emulator-Datei installieren** | Lädt die unterstützte Emulator-Version in den Spielordner herunter und behält die ersetzte Datei als `.bak`. |
-| **Zum unterstützten Emulator wechseln** | Für ein Spiel, das von einem anderen Crack bedient wird, der nichts erfasst hat: Installiert den unterstützten Emulator darüber und benennt die Konfiguration dieses Cracks in `.bak` um. |
+| **Zum unterstützten Emulator wechseln** | Für ein Spiel, das von einem anderen Crack bedient wird, der nichts erfasst hat: Installiert den unterstützten Emulator darüber, benennt die Konfiguration dieses Cracks in `.bak` um und schreibt im selben Schritt die `steam_settings` des Emulators (Spiel-ID und Erfolgsliste), sodass sich das Spiel gleich danach starten lässt. Braucht die Steam-AppID des Spiels; scheitert ein Teil, wird jede Datei zurückgelegt. Fehlende Symbole lassen sich danach mit **Erfolgsdaten neu schreiben** ergänzen. |
 | **Emulatorwechsel rückgängig machen** | Erscheint überall dort, wo eine der beiden obigen Reparaturen lief. Stellt die eigenen Dateien des Spiels aus ihren `.bak`-Kopien wieder her und entfernt den unterstützten Emulator. |
+| **Letzte Reparatur rückgängig machen** | Erscheint nach jeder Änderung, die AW Next im Spielordner vorgenommen hat: eine Reparatur aus diesem Panel, ein Emulator-Fix, CrakFiles, Steam-DRM entfernen (Steamless), Letzte GBE/Goldberg-Sicherung wiederherstellen, AppID manuell festlegen, eine Uplay-Reparatur oder eine der obigen Rückgängig-Schaltflächen. Sie listet zuerst jede Datei auf, die sie zurücklegt. Ist eine Datei in Gebrauch (oft, weil das Spiel läuft), wird nichts geändert, und der Eintrag bleibt für einen neuen Versuch. |
 | **Spiel-ID-Datei korrigieren** | Schreibt `steam_appid.txt` neu, wenn der Emulator ein Spiel meldet und AW Next ein anderes zugeordnet hat. Sie fragt nach der richtigen AppID, schlägt die Zuordnung von AW Next vor und behält die vorherige Datei. |
 | **Fortschrittszähler abrufen** | Fragt Steam, welche Statistik jeden Erfolg antreibt, bei Spielen im CODEX/RUNE-Stil. Schreibt nichts in den Spielordner. |
 | **Ubisoft-Erfolge reparieren** | Schreibt bei einem kompatiblen Ubisoft-Spiel Loader-Konfiguration, Schema und Spielstandumleitung in einer Transaktion neu, wobei jede berührte Datei gesichert wird. Siehe [Uplay einrichten](uplay-r2.md). |
 | **Erfolge offline aktivieren** | Für ein Ubisoft-Spiel, bei dem das Loader-Protokoll beweist, dass es nie einen Erfolg angefordert hat, weil es sich abgemeldet glaubt. Fügt der INI neben dem Spiel einen Platzhalter-Sitzungsschlüssel hinzu; drücke erneut, um ihn zu entfernen. Siehe [Uplay einrichten](uplay-r2.md#a-game-that-never-asks-for-an-achievement). |
-| **Dieses Spiel überwachen** | Fügt das Spiel dem Hintergrund-Tracker hinzu, damit Spielzeit und Live-Freischaltungen erfasst werden. |
+| **Dieses Spiel überwachen** | Fügt das Spiel dem Hintergrund-Tracker hinzu, damit Spielzeit und Live-Freischaltungen erfasst werden, gemäß der Programmdatei im Reiter **Programmdatei**. |
 | **Fortschrittsbenachrichtigungen aktivieren** | Schaltet die Fortschrittsbenachrichtigungen für ein Spiel wieder ein, das du stummgeschaltet hattest. |
 | **Testbenachrichtigung senden** | Sendet eine Benachrichtigung mit dem Namen und dem Artwork dieses Spiels, über den Weg, den sie tatsächlich nehmen würde. |
 
@@ -99,8 +102,13 @@ vorherigen Dateien aufbewahrt werden. Nichts wird ohne Sicherung oder Bestätigu
 | *Erfolge offline sind an, starte das Spiel einmal* | Die Einstellung ist geschrieben, und es wurde noch nichts beurteilt. Die Schaltfläche daneben heißt jetzt **Erfolge offline abschalten**. |
 | *Wird von ALI213, OnlineFix, GBE Fork… bedient* | Der Emulator, der dieses Spiel tatsächlich liest, benannt nach seinen eigenen Dateien. Einem so bedienten Ubisoft-Spiel wird keine Uplay-Reparatur angeboten: Seine Uplay-Schicht ist ungenutzt, nicht defekt. Das umfasst Releases, die Valves `steam_api64.dll` behalten: einen RUNE-Build, der von `Steam\steamclient64.dll` läuft, oder ein VOICES38-Release, das seinen eigenen umbenannten GBE Fork lädt (`steam_api64.v38`); installiere den Emulator nie über Letzteres. Die Ubisoft-Builds von online-fix werden erkannt, und eine Erfolgskorrektur warnt dort, dass Online-Spiel aufhören kann. |
 | *Nur einige Symbole fehlen* | **Erfolgsdaten neu schreiben** lädt die fehlenden Symbole herunter. |
+| *Fortschritts- oder Statistikdefinitionen fehlen oder sind veraltet* | Zähler-Erfolge würden sich nicht bewegen oder ein falsches Ziel zeigen. **Erfolgsdaten neu schreiben** aktualisiert sie. |
+| *Optionale Einstellungen nicht geschrieben* | Ein Hinweis, kein Fehler: Der Emulator läuft auch ohne sie (ein App-Ticket, ein GC-Token, der Schalter für unbekannte Statistiken, ein Kontoname). **Emulator-Einstellungen vervollständigen** ergänzt sie, wenn du willst. |
+| *Kontoname oder Sprache stammen aus … `GSE Saves\settings`* | Eine Informationszeile, keine Warnung. GBE liest `GSE Saves\settings\configs.user.ini` (oder die Einstellungen des Speicherordners, auf den `local_save_path` zeigt), wenn das Spiel keine eigenen hat. Nichts zu beheben. |
+| *Überwacht wird X, nicht Y* | Die für dieses Spiel festgelegte Programmdatei ist nicht die, der der Tracker folgt, daher können Starts und Spielzeit verpasst werden. **Dieses Spiel überwachen** folgt der gewählten. *Überwacht wird X, gestartet von Y* ist in Ordnung: Y ist ein Launcher, etwa ein Anti-Cheat-Bootstrapper, der das Spiel startet. |
+| *Keine Erfolgsquelle eingerichtet* | Erscheint bei **Nur Spielzeit**. Wende einen Emulator-Fix an oder füge den Ordner hinzu, in dem das Spiel seine Erfolge speichert. |
 | *Über eine Stunde gespielt und kein einziger Erfolg erfasst* | Der Crack, der das Spiel bedient, meldet höchstwahrscheinlich nie Erfolge. Nutze **Zum unterstützten Emulator wechseln**, wenn angeboten; prüfe sonst, ob das Spiel aus seinem eigenen Ordner startet. |
-| *Spiel-ID-Datei*, mit einer Steam-Verknüpfung zu diesem Spiel | Steam startet eine Nicht-Steam-Verknüpfung ohne `steam_appid.txt` daneben, daher speichert der Emulator unter einer anderen ID. **Erfolgsdaten neu schreiben** schreibt die Datei dorthin. |
+| *Spiel-ID-Datei*, mit einer Steam-Verknüpfung zu diesem Spiel | Steam startet eine Nicht-Steam-Verknüpfung ohne `steam_appid.txt` daneben, daher speichert der Emulator unter einer anderen ID. **Emulator-Einstellungen vervollständigen** schreibt die Datei dorthin. |
 
 ---
 

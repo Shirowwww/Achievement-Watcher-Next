@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Hallitse DLC:iden omistusta",
-        "description": "Kirjoittaa configs.app.ini-tiedoston niin, että emulaattori ilmoittaa kaikki DLC:t omistetuiksi. Ei liity saavutuksiin: jätä pois käytöstä, jos haluat pitää pelin alkuperäisenä tai hallita DLC:itä itse. Oletuksena pois käytöstä.",
+        "description": "Antaa emulaattorikorjauksen ja kohdan Täydennä emulaattorin asetukset kirjoittaa configs.app.ini-tiedoston, jotta emulaattori ilmoittaa kaikki DLC:t omistetuiksi. Ei liity saavutuksiin: jätä pois käytöstä, jos haluat pitää pelin alkuperäisenä tai hallita DLC:itä itse. Oletuksena pois käytöstä.",
         "value": {
           "false": "Ei käytössä",
           "true": "Käytössä"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Kirjoita tilin nimi ja kieli",
-        "description": "Kirjoittaa tilisi nimen ja kielen jokaisen pelin configs.user.ini-tiedostoon. Jätä pois käytöstä, jos luotat emulaattorin keskitettyyn asetukseen ennakoitavan nimen ja käyttäjätunnuksen saamiseksi. Oletuksena pois käytöstä.",
+        "description": "Antaa emulaattorikorjauksen ja kohdan Täydennä emulaattorin asetukset kirjoittaa tilisi nimen ja kielen pelin configs.user.ini-tiedostoon; pelin oma tili korvataan vasta kysymisen jälkeen. Jätä pois käytöstä, jos luotat emulaattorin yleisiin asetuksiin ennakoitavan nimen ja käyttäjätunnuksen saamiseksi. Oletuksena pois käytöstä.",
         "value": {
           "false": "Ei käytössä",
           "true": "Käytössä"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Pura SteamStub-DRM automaattisesti",
-        "description": "Suorittaa Steamlessin pelin exe-tiedostolle ennen paikkausta ja poistaa Valven SteamStub-DRM-suojauksen (alkuperäinen säilytetään nimellä .steamstub.bak). Ei tee mitään, jos suojausta ei ole.",
+        "description": "Suorittaa Steamlessin pelin exe-tiedostolle ennen paikkausta ja poistaa Valven SteamStub-DRM-suojauksen (alkuperäinen säilytetään nimellä .steamstub.bak). Ei tee mitään, jos suojausta ei ole. Kun se on pois käytöstä, Steamless ei koskaan käynnisty itsestään: manuaalinen korjaus kysyy ensin ja automaattinen korjaus ohittaa suojatun pelin.",
         "value": {
           "false": "Ei käytössä",
           "true": "Käytössä"
@@ -1644,7 +1644,8 @@
         "Pyöreä painike suoritusprosentin vieressä avaa Kirjaston tilastot: suorituksen, avattujen ja lukittujen saavutusten määrät, peliajan, pokaalit, platinapelit, harvinaisimmat saavutukset ja yhden rivin alustaa kohden.",
         "Hakukentän ja +-painikkeen välissä oleva valitsin vaihtaa kuuden kirjastonäkymän välillä. Asetukset > Ulkoasu > Kirjaston ruudut määrittää ruutujen koon, välit ja sen, mitä kukin ruutu näyttää.",
         "+-painike lisää pelin, jota mikään lähde ei löydä: nimen ja ohjelmatiedoston sekä valinnaisesti alustan ja Steam AppID:n. Käynnistykset ja peliaika seurataan, saavutuksia ei.",
-        "Napsauta peliä hiiren kakkospainikkeella > Pelin asetukset > Nimeä uudelleen… muuttaaksesi näytettävää nimeä. Saavutukset ja peliaika > Muokkaa peliaikaa… korjaa kokonaisajan (12.5 tai 12h30)."
+        "Napsauta peliä hiiren kakkospainikkeella > Pelin asetukset > Nimeä uudelleen… muuttaaksesi näytettävää nimeä. Saavutukset ja peliaika > Muokkaa peliaikaa… korjaa kokonaisajan (12.5 tai 12h30).",
+        "Ctrl+napsautus lisää pelin valintaan ja Vaihto+napsautus valitsee alueen. Napsauta jotakin valituista peleistä hiiren kakkospainikkeella nollataksesi kaikkien niiden saavutukset kerralla: jokaisesta pelistä otetaan ensin varmuuskopio, ja pelit, joiden alusta säilyttää avaukset, ohitetaan. Esc tyhjentää valinnan."
       ],
       "sourcesTitle": "Käynnistimet ja lähteet",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: ota lähde käyttöön, anna käyttäjänimesi ja Web API -avaimesi ja paina sitten Tuo kirjasto. Avaukset tulevat tililtäsi, joten pidä RetroAchievements päällä emulaattorissa.",
         "Yksinkertaisessa tilassa muutama harvoin käytetty lähderivi pysyy piilossa, kun niitä ei käytetä. Ne palaavat heti, kun niillä on merkitystä, ja Laaja näyttää aina kaikki.",
         "PlayStation-pokaalit näyttävät luokkansa ja niitä omistavien pelaajien osuuden. Osuudet tulevat Exophasesta; yhdistä PlayStation-tili kohdassa Asetukset > Lähteet, niin saat Sonyn omat luvut kyseisen tilin peleille.",
-        "Kun PlayStation-tili on yhdistetty, Tuo kirjasto tuo PlayStation-pelisi ja -pokaalisi ja päivittää ne kolmen päivän välein, ja sen alla oleva kenttä lisää pelin, jota et omista. Toisesta kaupasta peräisin oleva peli, joka on julkaistu myös PlayStationille, näyttää oikean platinansa ja pokaalitilassa oikeat luokkansa ja DLC-ryhmänsä."
+        "Kun PlayStation-tili on yhdistetty, Tuo kirjasto tuo PlayStation-pelisi ja -pokaalisi ja päivittää ne kolmen päivän välein, ja sen alla oleva kenttä lisää pelin, jota et omista. Toisesta kaupasta peräisin oleva peli, joka on julkaistu myös PlayStationille, näyttää oikean platinansa ja pokaalitilassa oikeat luokkansa ja DLC-ryhmänsä.",
+        "LuaToolsilla tai SteamToolsilla Steamiin lisätyt pelit näyttävät saavutuksensa Steamin omista tilastoista, riippumatta yllä olevasta Steam-asetuksesta."
       ],
       "notifications": [
         "Automaattinen on oletus: pelinsisäinen ponnahdusikkuna, kun peli osaa näyttää sen, muuten Windows-ilmoitus, ei koskaan molempia.",
@@ -1666,15 +1668,17 @@
         "Harvinaisen saavutuksen ääni, 100 % suorituksen ääni ja Edistymisen ääni (Laaja tila) antavat näille ponnahdusikkunoille oman äänen. Satunnainen valitsee joka kerta eri äänen, ja voit tuoda omia tiedostoja.",
         "Kulta, hopea ja pronssi merkitsevät harvinaisia avauksia. Asetukset > Yleiset > Harvinaisuuden näyttö vaihtaa Pokaalitilaan, joka arvioi jokaisen saavutuksen ja näyttää platinan valmiille peleille.",
         "Laskureille Edistymisen virstanpylväät näyttää ponnahdusikkunan vain 10, 25 tai 50 % välein. Napsauta peliä hiiren kakkospainikkeella > Mykistä edistymisilmoitukset hiljentääksesi yhden pelin koskematta sen avauksiin.",
-        "Kaksi muuta kytkintä kohdassa Asetukset > Ilmoitukset: Ensisijaiset ilmoitukset päästää avaukset läpi Älä häiritse -tilasta (Windows 11), ja Steam-asiakkaan pelit lisää AW Nextin ponnahdusikkunan peleille, joita Steam itse käynnistää."
+        "Kaksi muuta kytkintä kohdassa Asetukset > Ilmoitukset: Ensisijaiset ilmoitukset päästää avaukset läpi Älä häiritse -tilasta (Windows 11), ja Steam-asiakkaan pelit lisää AW Nextin ponnahdusikkunan peleille, joita Steam itse käynnistää.",
+        "Platina tulee, kun kaikki peruspelin saavutukset on ansaittu, DLC:itä lukuun ottamatta, kuten PlayStationilla. Asetukset > Ilmoitukset > Platina vaatii voi saada sen odottamaan koko listaa. DLC:llä varustetussa pelissä Vain platina pelin sivulla piilottaa saavutukset, joita platina ei tarvitse."
       ],
       "gameHealthTitle": "Pelin kunto",
       "gameHealth": [
-        "Napsauta pelin työkalupainiketta (ruudun oikea yläkulma) tai napsauta peliä hiiren kakkospainikkeella avataksesi Pelin kunto -näkymän. Se kertoo, onko peli tilassa Valmis, Vaatii huomiota vai Ei seurannassa.",
+        "Napsauta pelin työkalupainiketta (ruudun oikea yläkulma) tai napsauta peliä hiiren kakkospainikkeella avataksesi Pelin kunto -näkymän. Se kertoo, onko peli tilassa Valmis, Vaatii huomiota, Ei seurannassa vai Vain peliaika (saavutukset tunnetaan, mutta mikään tällä tietokoneella ei vielä tallenna niitä).",
         "Tilan alla oleva lause selittää syyn selkeästi. Alla olevat tarkistukset näyttävät, mikä osa on vialla: pelitiedostot, ohjelmatiedosto, saavutustiedot, emulaattorin asennus, reaaliaikainen seuranta tai ilmoitukset.",
-        "Korjauspainikkeet näkyvät vain, kun AW Next voi todella korjata kyseisen pelin, esimerkiksi Paikanna peli, Kirjoita saavutustiedot uudelleen, Asenna emulaattorin tiedosto tai Seuraa tätä peliä. Jokainen kertoo, mitä se muuttaa, tallentaa varmuuskopion ja kysyy ensin.",
+        "Korjauspainikkeet näkyvät vain, kun AW Next voi todella korjata kyseisen pelin, esimerkiksi Paikanna peli, Kirjoita saavutustiedot uudelleen, Täydennä emulaattorin asetukset, Asenna emulaattorin tiedosto tai Seuraa tätä peliä. Jokainen kertoo, mitä se muuttaa, tallentaa varmuuskopion ja kysyy ensin, ja epäonnistunut korjaus palauttaa jokaisen tiedoston.",
         "Lähetä testi-ilmoitus laukaisee ponnahdusikkunan, jossa on kyseisen pelin oma nimi ja kuva, toimitettuna samalla tavalla kuin oikeasti.",
-        "Tekniset tiedot sisältää tarkat polut, määrät ja emulaattorikoodit: paina Kopioi ja liitä ne virheilmoitukseen. Ruudun värillisen pisteen voi piilottaa kohdassa Asetukset > Ulkoasu > Kirjaston ruudut."
+        "Tekniset tiedot sisältää tarkat polut, määrät ja emulaattorikoodit: paina Kopioi ja liitä ne virheilmoitukseen. Ruudun värillisen pisteen voi piilottaa kohdassa Asetukset > Ulkoasu > Kirjaston ruudut.",
+        "Kirjoita saavutustiedot uudelleen muuttaa vain saavutusluettelon, sen tilastot ja puuttuvat kuvakkeet. Täydennä emulaattorin asetukset lisää vain ne asetukset, jotka pelistä puuttuvat, jättää sen, minkä emulaattorin yleiset asetukset jo antavat, ja kysyy ennen kuin korvaa pelin oman tilin. Vaihda tuettuun emulaattoriin kirjoittaa emulaattorin asetukset samassa vaiheessa, ja Kumoa viimeisin korjaus palauttaa kaikki muutokset, jotka AW Next on tehnyt pelin kansioon."
       ],
       "troubleshootTitle": "Vianetsintä",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Napsauta peliä hiiren kakkospainikkeella > Emulaattori ja työkalut > Ota emulaattorikorjaus käyttöön… asentaa GBE Forkin, rakentaa steam_settingsin (saavutusluettelo ja kuvakkeet) ja kirjoittaa steam_appid.txt-tiedoston, jos se puuttuu. Jokaisesta korvatusta tiedostosta otetaan ensin varmuuskopio.",
         "Kohdassa Asetukset > Steam / GBE Fork steam_settings-tiedot-valinta Yksinkertainen käyttää AW Nextin omaa anonyymiä hakua ja on nopea. Laaja ajaa generate_emu_config-työkalun syvemmille Steam-tiedoille ja voi kestää minuutteja.",
         "Pelikansioon ei kirjoiteta mitään itsestään: Korjaa uudet löydetyt pelit automaattisesti, Hallitse DLC:iden omistusta ja Kirjoita tilin nimi ja kieli ovat kaikki oletuksena pois päältä.",
-        "Tee emulaattorin vianmääritys samassa valikossa vain lukee ja raportoi. Varmuuskopioi GBE/Goldberg-asennus ja Palauta uusin GBE/Goldberg-varmuuskopio palauttavat pelin ennalleen."
+        "Tee emulaattorin vianmääritys samassa valikossa vain lukee ja raportoi. Varmuuskopioi GBE/Goldberg-asennus ja Palauta uusin GBE/Goldberg-varmuuskopio palauttavat pelin ennalleen.",
+        "Kun Pura SteamStub-DRM automaattisesti on pois käytöstä, Steamless ei koskaan käynnisty itsestään: manuaalinen korjaus kysyy ensin, jos peli on suojattu, ja automaattinen korjaus jättää sen pelin rauhaan. Epäonnistunut korjaus palauttaa jokaisen tiedoston, myös suoritettavan. Pelin oma tili tiedostossa configs.user.ini säilyy, ellei korvaamista vahvisteta."
       ],
       "emulatorTitle": "Konsoliemulaattorit",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Xenian edistyminen luetaan Xbox-profiilitiedostoista (.gpd), ja se seuraa sen asetuksissa määritettyjä tallennuskansioita.",
         "KytyPS5-pokaalit luetaan sen _Trophies-kansiosta sille käyttäjälle, jona käynnistin ajaa pelin.",
         "PC:lle uudelleenkäännetyt Xbox 360 -pelit ja PS4-portit (Bloodborne, Uncharted, God of War III Remastered, MediEvil ja muut) ovat omia lähteitään kohdassa Asetukset > Lähteet. Jos jokin ei näy, lisää sen kansio kohdassa Asetukset > Kansiot.",
-        "Jokaisella konsolilla voi olla oma ponnahdusikkunan esiasetus ja ääni kohdassa Asetukset > Ilmoitukset > Emulaattorit (Laaja tila). Uudelleenkäännetyt Xbox 360 -pelit seuraavat Xenian valintaa, PS4-portit shadPS4:n valintaa, ja Sama kuin päävalinta säilyttää pääasetukset."
+        "Jokaisella konsolilla voi olla oma ponnahdusikkunan esiasetus ja ääni kohdassa Asetukset > Ilmoitukset > Emulaattorit (Laaja tila). Uudelleenkäännetyt Xbox 360 -pelit seuraavat Xenian valintaa, PS4-portit shadPS4:n valintaa, ja Sama kuin päävalinta säilyttää pääasetukset.",
+        "Kun RPCS3 on käynnissä, pelinsisäisen peittokuvan pikanäppäin avaa pelin, jota se suorittaa, RPCS3:n lokista luettuna."
       ],
       "controllerTitle": "Ohjain (peliohjain)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Napsauta pelin ruutua hiiren kakkospainikkeella käynnistääksesi sen, valitaksesi ohjelmatiedoston, avataksesi kansioita ja linkkejä, käyttääksesi emulaattorityökaluja tai poistaaksesi sen asennuksen, kun valikko on käytössä.",
         "Merkitse avatuksi käsin (napsauta saavutusta hiiren kakkospainikkeella) tallentaa avauksen, jota mikään lähde ei näe.",
-        "Nollaa saavutukset… antaa pelata pelin uudelleen alusta ja ottaa ensin varmuuskopion jokaisesta tiedostosta. Se toimii emuloiduille peleille, ei Steamille, Epicille tai Xboxille, joiden avaukset ovat tililläsi.",
+        "Nollaa saavutukset… antaa pelata pelin uudelleen alusta ja ottaa ensin varmuuskopion jokaisesta tiedostosta. Se toimii emuloiduille peleille, ei Steamille, Epicille tai Xboxille, joiden avaukset ovat tililläsi. Valitse kirjastosta useita pelejä nollataksesi ne yhdessä.",
         "Peliaika seurataan pelin ollessa käynnissä; Peliajan seuranta kohdassa Asetukset > Ilmoitukset ottaa käyttöön aloitus- ja lopetusilmoitukset.",
         "Tyhjennä pelin tiedot… tyhjentää kaiken, mitä AW Next säilyttää pelistä (tallennuksista otetaan ensin varmuuskopio), ja seuraava skannaus löytää sen uudelleen. Poista AW Nextistä poistaa sen kirjastosta, kunnes palautat sen kohdassa Asetukset > Yleiset. Piilota näkymästä pitää sen seurattuna, Piilotetut-näkymässä Kokoelmat-valikossa.",
         "Pelin asetukset > Saavutusten kieli näyttää yhden pelin saavutukset ja ilmoitukset eri kielellä kuin muut.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Suorittaa Steamlessin pelin exe-tiedostolle ennen paikkausta ja poistaa Valven SteamStub-DRM-suojauksen (alkuperäinen säilytetään nimellä .steamstub.bak). Ei tee mitään, jos suojausta ei ole. Vaatii Mono-ympäristön (mono-complete Debianissa ja Ubuntussa)."
+            "description": "Suorittaa Steamlessin pelin exe-tiedostolle ennen paikkausta ja poistaa Valven SteamStub-DRM-suojauksen (alkuperäinen säilytetään nimellä .steamstub.bak). Ei tee mitään, jos suojausta ei ole. Kun se on pois käytöstä, Steamless ei koskaan käynnisty itsestään: manuaalinen korjaus kysyy ensin ja automaattinen korjaus ohittaa suojatun pelin. Vaatii Mono-ympäristön (mono-complete Debianissa ja Ubuntussa)."
           },
           "apiCheckBypass": {
             "description": "Oletuksena pois päältä. Asentaa SteamAutoCrackin ohitusvälityksen (winmm.dll) ja uudelleenohjausasetukset, jotta vaihdon jälkeen alkuperäistä steam_apia tai exe-tiedostoa uudelleen tarkistavat pelit käynnistyvät ja avaavat saavutuksia. Välitys ladataan sen virallisesta julkaisusta. Wine ja Proton lataavat välityksen vain, jos pelin käynnistysasetuksissa on WINEDLLOVERRIDES=\"winmm=n,b\"."

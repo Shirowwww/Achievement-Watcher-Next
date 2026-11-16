@@ -184,9 +184,20 @@ modalità di rarità (pagina del gioco, statistiche, popup del 100%) con nome, d
 quel trofeo, anche con trofei di DLC ancora da ottenere. Gli emulatori PlayStation mantengono i propri trofei. AW
 trova l'elenco dal nome originale del gioco, quindi rinominare un gioco non cambia nulla.
 
-Ogni sorgente mostra il popup del 100%, comprese quelle in tempo reale (Xenia, port ricompilati, GOG Galaxy,
+Ogni sorgente mostra il popup del platino, comprese quelle in tempo reale (Xenia, port ricompilati, GOG Galaxy,
 Ubisoft Connect, Xbox PC). Quando il gioco ha un platino, l'obiettivo legato ad esso compare come
-platino.
+platino. Anche l'obiettivo «ottieni tutti gli obiettivi» di un gioco conta come il suo platino, nella notifica e nel suo
+elenco, con o senza un account PlayStation.
+
+Per impostazione predefinita il platino arriva a gioco base completato, come su PlayStation: gli obiettivi dei DLC e i
+gruppi di trofei extra restano da parte. In un gioco con DLC, ogni obiettivo richiesto dal platino porta un piccolo
+contrassegno platino, e **Solo platino** nella pagina del gioco nasconde il resto. **Impostazioni → Notifiche → Il
+platino richiede** passa tra **Gioco base** e **Tutto, DLC inclusi**, che attende l'intero elenco. Un gioco senza DLC
+non cambia. Le sorgenti in tempo reale qui sopra seguono la stessa regola quando danno l'elenco ad AW Next, con un solo popup: l'obiettivo platino del gioco compare come il platino, invece che come uno sblocco normale e un popup del 100%.
+
+Gli obiettivi che Steam ha rimosso da un gioco non contano più: restano in grigio in fondo al suo elenco, contrassegnati
+*Non più su Steam*, e il gioco può raggiungere il 100% senza di essi. L'elenco in cache nota la rimozione al successivo
+controllo di 3 giorni, oppure subito con **Impostazioni → Avanzate → Riverifica elenchi obiettivi**.
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="L'intestazione del profilo con i conteggi dei trofei platino, oro, argento, bronzo e comuni" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +274,11 @@ nella barra di gioco, l'elenco completo e la scheda "Le tue cose" di Big Picture
 avvia lo stesso exe dell'**Eseguibile** del gioco in AW Next. Il suo README descrive l'installazione, che cosa
 controllare quando una pagina resta vuota e come convive con Steam Cartridges, NativeGameLink e Game
 Data Linker. L'estensione Playnite in `playnite/` chiede nello stesso modo, per qualsiasi gioco di una libreria
-Playnite, e il suo README descrive l'installazione e i pannelli che un tema può collocare. La richiesta qui sotto è
+Playnite, e il suo README descrive l'installazione e i pannelli che un tema può collocare. Dalla sua versione 1.2.0
+funziona anche con AW Next chiuso: legge l'elenco salvato da AW Next all'ultima scansione, lo dice con la data di quella
+scansione, e torna ai dati in tempo reale quando AW Next è in esecuzione (gli sblocchi avvenuti nel frattempo compaiono
+dopo che AW Next ha letto i salvataggi). Su Windows AW Next porta entrambi all'ultima versione da solo, una volta che li
+hai installati. La richiesta qui sotto è
 per chi scrive un altro plugin.
 
 Il plugin invia:

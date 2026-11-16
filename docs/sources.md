@@ -41,7 +41,9 @@ storage. They come back when you switch it on again.
 > [!NOTE]
 > Steam unlocks are read from the stats Steam keeps on this PC. A private profile, or private **Game
 > details**, works for every game played here, including games added through SteamTools, LuaTools or
-> GreenLuma, and a card updates the moment Steam records an unlock. A public profile only adds your
+> GreenLuma, and a card updates the moment Steam records an unlock. A game added with LuaTools or
+> SteamTools is read even with **Steam** set to **None**, since it is not part of your account's
+> library. A public profile only adds your
 > name and avatar. Games played only on another PC need the account connection below. These unlocks
 > raise an AW Next notification once **Steam client games** is enabled under Notification (see
 > [Notifications](notifications.md#games-steam-runs)).
@@ -145,6 +147,10 @@ move their data off the default path, and AW Next reads the settings the emulato
 
 So a relocated RPCS3 virtual disk or a ShadPS4 data folder can be added under **Settings → Folders**
 directly, with no emulator executable nearby.
+
+While RPCS3 runs, the [overlay](overlay.md) shortcut opens the game it is running: AW Next reads the
+title from the end of `RPCS3.log` when you press it and matches it with the game's trophy list. A
+game stopped in RPCS3 is no longer targeted.
 
 ## RetroAchievements
 

@@ -99,6 +99,8 @@ Faites un clic droit sur un jeu pour le renommer, modifier son temps de jeu ou l
 aux nouveaux scans et aux restaurations, tandis que les jaquettes et la reconnaissance gardent le titre d'origine. Les jeux Steam peuvent prendre leur
 titre dans la langue de vos succès (**Paramètres → Général**).
 
+Ctrl+clic ajoute un jeu à une sélection, Maj+clic sélectionne tous les jeux entre le dernier cliqué et celui-ci, et Échap la vide. Faites un clic droit sur l'un des jeux sélectionnés pour choisir **Réinitialiser les succès de N jeux…** : une seule confirmation les liste, chaque jeu est d'abord sauvegardé, et les jeux dont la plateforme garde les déblocages sur votre compte (Steam, Epic, GOG...) sont ignorés et nommés. La réinitialisation est refusée tant qu'un jeu est en cours d'exécution.
+
 ### Collections {#collections}
 
 Les collections sont vos propres groupes de jeux. Faites un clic droit sur un jeu, choisissez **Collections**, puis cochez-en une ou

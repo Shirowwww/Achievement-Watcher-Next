@@ -104,6 +104,12 @@ raccolta. Un nome che imposti sopravvive alle nuove scansioni e ai ripristini, m
 l'abbinamento mantengono il titolo originale. I giochi Steam possono prendere il loro titolo nella lingua degli
 obiettivi (**Impostazioni → Generale**).
 
+Ctrl+clic aggiunge un gioco a una selezione, Maiusc+clic seleziona ogni gioco tra l'ultimo su cui hai fatto clic e
+questo, ed Esc la svuota. Fai clic con il pulsante destro su uno dei giochi selezionati per **Reimposta i successi di N
+giochi…**: una sola conferma li elenca, ognuno viene salvato prima in backup, e i giochi la cui piattaforma conserva gli
+sblocchi sul tuo account (Steam, Epic, GOG...) vengono saltati e nominati. Il reset viene rifiutato mentre un gioco è
+in esecuzione.
+
 ### Raccolte {#collections}
 
 Le raccolte sono gruppi di giochi creati da te. Fai clic con il pulsante destro su un gioco, scegli **Raccolte**

@@ -99,6 +99,8 @@ Haz clic derecho en un juego para renombrarlo, editar su tiempo de juego o añad
 a los reescaneos y a las restauraciones, mientras que las portadas y la identificación conservan el título original. Los juegos de Steam pueden tomar su
 título en el idioma de tus logros (**Ajustes → General**).
 
+Ctrl+clic añade un juego a una selección, Mayús+clic selecciona todos los juegos entre el último en el que hiciste clic y este, y Esc la borra. Haz clic derecho en uno de los juegos seleccionados para elegir **Restablecer los logros de N juegos…**: una única confirmación los lista, de cada juego se hace antes copia de seguridad, y los juegos cuya plataforma guarda los desbloqueos en tu cuenta (Steam, Epic, GOG...) se omiten y se nombran. El restablecimiento se rechaza mientras un juego se está ejecutando.
+
 ### Colecciones {#collections}
 
 Las colecciones son tus propios grupos de juegos. Haz clic derecho en un juego, elige **Colecciones** y marca una o

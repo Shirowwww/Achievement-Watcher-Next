@@ -46,7 +46,8 @@ collegata come archivio. Tornano quando la riattivi.
 > [!NOTE]
 > Gli sblocchi di Steam vengono letti dalle statistiche che Steam conserva su questo PC. Un profilo privato, oppure
 > **Dettagli del gioco** privati, funziona per ogni gioco giocato qui, compresi i giochi aggiunti tramite SteamTools,
-> LuaTools o GreenLuma, e una scheda si aggiorna nel momento in cui Steam registra uno sblocco. Un profilo pubblico
+> LuaTools o GreenLuma, e una scheda si aggiorna nel momento in cui Steam registra uno sblocco. Un gioco aggiunto con LuaTools o SteamTools viene
+> letto anche con **Steam** impostato su **Nessuno**, perché non fa parte della libreria del tuo account. Un profilo pubblico
 > aggiunge soltanto il tuo nome e il tuo avatar. I giochi giocati solo su un altro PC richiedono il collegamento
 > dell'account descritto sotto. Questi sblocchi generano una notifica di AW Next una volta attivato **Giochi del
 > client Steam** sotto Notifiche (vedi
@@ -149,6 +150,9 @@ Xenia possono spostare i propri dati fuori dal percorso predefinito, e AW Next l
 
 Perciò un disco virtuale RPCS3 spostato o una cartella di dati di ShadPS4 possono essere aggiunti direttamente in
 **Impostazioni → Cartelle**, senza alcun eseguibile dell'emulatore nelle vicinanze.
+
+Mentre RPCS3 è in esecuzione, la scorciatoia dell'[overlay](overlay.md) apre il gioco che sta eseguendo: AW Next legge il
+titolo dalla fine di `RPCS3.log` quando la premi e lo abbina all'elenco dei trofei del gioco. Un gioco fermato in RPCS3 non viene più preso di mira.
 
 ## RetroAchievements {#retroachievements}
 

@@ -26,6 +26,39 @@ renamed in 3.9.0 and the history is kept under one file.
   sweep on hover. **Settings > Appearance > Library tiles > Perfect games** counts the DLC or the
   base game alone, or turns it off. It replaces the green edge the list and details views gave a
   finished game.
+- **Reset several games at once (#192).** Select games in the library with Ctrl+click, or
+  Shift+click for a range, then right-click one of them to reset all their achievements. One
+  confirmation lists them; each game is backed up first, and games whose platform keeps the unlocks
+  on your account (Steam, Epic, GOG...) are skipped and named.
+- **The platinum can come with the base game, as on PlayStation.** By default the platinum now
+  arrives once every base-game achievement is earned, DLC and extra trophy groups aside. In a game
+  with DLC, the achievements it needs wear a small platinum mark, and **Platinum only** on the game
+  page hides the rest. **Settings > Notifications > Platinum requires** brings back the whole list.
+  GOG, Ubisoft, Xbox, EA, Xenia and the PC ports follow the same rule, with a single popup.
+- **Game Health has a "Playtime only" state (#197).** A game added by hand whose achievements
+  nothing on this PC records yet (no emulator, save or store account) shows a neutral grey "Playtime
+  only" instead of a green Ready, and its tile dot is grey from the first scan.
+- **Game Health says when the watched executable is not the one you chose (#193)**, with a button
+  that switches the watch over. An executable that only starts the game, such as an anti-cheat
+  launcher, is shown as such and is not an error.
+- **Game Health warns about missing or outdated progress and stat definitions (#194).** The rewrite
+  takes them from generate_emu_config when steam_settings data is set to Advanced with a saved Steam
+  sign-in, otherwise from the public games-infos-datas list, and its confirmation says which.
+- **"Complete the emulator settings" in Game Health (#196).** A separate step adds only the settings
+  a game is missing, leaves what the emulator's global settings already give, and never replaces a
+  game's own account without asking.
+- **The Playnite extension works while AW Next is closed (extension 1.2.0).** It shows the list
+  from AW Next's last scan, with a line giving its date, and goes back to live data once AW Next
+  runs.
+
+### Improved
+
+- **With "Auto-unpack SteamStub DRM" off, Steamless never runs on its own (#195).** The manual
+  emulator fix asks first when the game's executable has SteamStub, and the automatic fix and
+  "Fix all games" leave such a game as it is.
+- **Optional emulator settings show as notes, not problems (#196, #167).** A missing app ticket, GC
+  token, unknown-stats switch or account name no longer marks the achievement list as incomplete,
+  and a game with only those notes stays Ready.
 
 ### Fixed
 
@@ -48,6 +81,57 @@ renamed in 3.9.0 and the history is kept under one file.
   low-latency mode that dropped frames under load, and the recorder now asks Windows for a higher
   graphics priority, as OBS does. In a game near 99% GPU, a clip of the game window lost 50 frames
   where the old recorder lost 204.
+- **AW Next no longer keeps a CPU core busy for hours after a SteamDB lookup (#191).** Deleting the
+  hidden browser's temporary profile retried without end on a locked file. The profile is now
+  removed once the browser has exited, with a few tries at most, and lookups that start together
+  share one browser instead of leaving extra ones running. Profiles the old cleanup left behind in
+  the Temp folder are removed when they are clearly dead.
+- **A SteamDB lookup that started while the hidden browser was closing is no longer remembered as "no
+  launch option"**, which left the game without a process name until the cache expired.
+- **"Rewrite the achievement data" changes only the achievement list (#194).** It writes
+  achievements.json, stats.json and missing icons, nothing else. A complete schema is left as it is,
+  and entries it adds follow the file's own format, languages and icon folder. Every changed file is
+  backed up in `.aw-backups` first. **Apply emulator fix**, the automatic fix and **Fix all games**
+  now write the schema the same way.
+- **The emulator fix keeps a game's own account (#196).** It no longer copies the emulator's global
+  account into a game, and replaces a game's own name, language or Steam ID only when **Write account
+  name and language** is on and you agree when asked; the automatic fix never replaces it.
+- **Game Health reads the emulator's global settings (#196).** A valid
+  `GSE Saves\settings\configs.user.ini` no longer counts as a missing user config, and the other
+  config checks follow the same order as GBE itself.
+- **A failed emulator fix puts the game folder back (#195).** Every download now happens before the
+  first file is touched, and if a step still fails, every changed file is restored, the unpacked
+  executable included; the error says what was put back.
+- **Switching a scene crack (RUNE, CODEX) to the supported emulator works in one step.** It no
+  longer stops on "sidelined is not defined", and it now writes the emulator's game ID and achievement
+  list together with the emulator file, so the game no longer closes at launch in between. If any
+  part fails, every file is put back.
+- **Every change AW Next makes in a game folder can be undone.** CrakFiles, Remove Steam DRM, Restore
+  GBE backup, Remove AW Next's emulator configuration, Set AppID manually, the GOG UniverseLAN fix, the
+  Uplay repairs and Game Health's own undo buttons now go through **Undo the last repair**, and put the
+  folder back as it was if they fail halfway. An undo, or the restore of an achievement reset, changes
+  nothing at all when a file is in use, and says so.
+- **The executable chosen in a game's properties is the one watched (#193).** Rescans and repairs no
+  longer replace it with a detected one, and the Watchdog recognises it by its path. Without a
+  choice, detection no longer picks an anti-cheat bootstrapper such as `start_protected_game.exe`
+  over the real game.
+- **Repack downloads no longer appear as games.** The checksum tool they ship (QuickSFV in `MD5`)
+  and ElAmigos update installers are skipped, while a game installed next to them is still found.
+- **Injectors, tool folders and bundled emulators no longer appear as games.** An overlay injector
+  in a `__` folder, or the Cemu a port ships with, is skipped; the port is listed under its own
+  folder name. A game is no longer named after a tool its executable describes ("CDKey", "Wii U
+  emulator"): the folder name is used.
+- **Games added to Steam with LuaTools or SteamTools show their achievements**, even with official
+  Steam games turned off in Sources, including when SteamTools keeps them all in one
+  `steamtools.lua`.
+- **A game's own "earn every achievement" achievement shows as its platinum in the list too**, not
+  only in the notification (Ariana and the Elder Codex, Asterigos, Neptunia U...).
+- **Achievements Steam removed from a game no longer keep it from 100%** (Digimon Story Time
+  Stranger's DLC placeholders). They stay greyed at the bottom of the list, marked "No longer on
+  Steam".
+- **Under RPCS3, Ctrl+Shift+K opens the game RPCS3 is running**, read from its log, instead of the
+  last game that unlocked something or the first one of the library. A game stopped in RPCS3 is no
+  longer targeted.
 
 ## 3.12.7 - 2026-11-13
 

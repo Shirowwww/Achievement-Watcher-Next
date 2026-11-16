@@ -97,6 +97,12 @@ Right-click a game to rename it, edit its playtime or add it to a collection. A 
 rescans and restores, while covers and matching keep the original title. Steam games can take their
 title in your achievement language (**Settings → General**).
 
+Ctrl+click adds a game to a selection, Shift+click selects every game between the last one clicked and
+this one, and Esc clears it. Right-click one of the selected games to **Reset achievements of N
+games…**: one confirmation lists them, each game is backed up first, and games whose platform keeps
+the unlocks on your account (Steam, Epic, GOG...) are skipped and named. The reset is refused while a
+game is running.
+
 ### Collections
 
 Collections are your own groups of games. Right-click a game, choose **Collections**, and tick one or

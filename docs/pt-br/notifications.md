@@ -184,9 +184,21 @@ modos de raridade (página do jogo, estatísticas, popup de 100%) com nome, desc
 troféu é conquistado, mesmo com troféus de DLC pendentes. Os emuladores de PlayStation mantêm os próprios troféus. O AW
 encontra a lista pelo nome original do jogo, então renomear um jogo não muda nada.
 
-Toda fonte exibe o popup de 100%, as de tempo real inclusive (Xenia, ports recompilados, GOG Galaxy,
+Toda fonte exibe o popup de platina, as de tempo real inclusive (Xenia, ports recompilados, GOG Galaxy,
 Ubisoft Connect, Xbox PC). Quando o jogo tem uma platina, a conquista ligada a ela aparece como
-platina.
+platina. A conquista do próprio jogo do tipo "conquiste todas as conquistas" também conta como a platina
+dele, na notificação e na lista, com ou sem uma conta PlayStation.
+
+Por padrão, a platina vem quando o jogo base está concluído, como na PlayStation: as conquistas de DLC e os grupos
+extras de troféus ficam de lado. Em um jogo com DLC, cada conquista de que a platina precisa leva uma pequena marca de
+platina, e **Só platina** na página do jogo oculta as demais. **Configurações → Notificação → A platina exige** alterna
+entre **Jogo base** e **Tudo, DLCs incluídas**, que espera a lista inteira. Um jogo sem DLC não muda. As fontes em
+tempo real acima seguem a mesma regra quando entregam a lista ao AW Next, com um único pop-up: a própria conquista de
+platina do jogo aparece como a platina, em vez de um desbloqueio normal e de um pop-up de 100%.
+
+As conquistas que a Steam removeu de um jogo deixam de contar: elas ficam em cinza no fim da lista dele, marcadas como
+*Removida da Steam*, e o jogo pode chegar a 100% sem elas. A lista em cache percebe a remoção na próxima verificação de
+3 dias, ou na hora com **Configurações → Avançado → Reverificar listas de conquistas**.
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="O cabeçalho do perfil com as contagens de troféus de platina, ouro, prata, bronze e comuns" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +275,9 @@ na barra de jogo, a lista completa e a aba "Suas coisas" do Big Picture. Um atal
 inicia o mesmo exe do **Executável** do jogo no AW Next. O README dele cobre a instalação, o que
 verificar quando uma página fica vazia e como ele convive com Steam Cartridges, NativeGameLink e Game
 Data Linker. A extensão do Playnite em `playnite/` pede da mesma forma, para qualquer jogo de uma biblioteca
-do Playnite, e o README dela cobre a instalação e os painéis que um tema pode posicionar. A requisição abaixo é
+do Playnite, e o README dela cobre a instalação e os painéis que um tema pode posicionar. Desde a versão 1.2.0, ela também funciona com o AW Next fechado: lê a lista que
+o AW Next salvou na última varredura, avisa isso com a data dessa varredura e volta aos dados em tempo real quando o
+AW Next roda (os desbloqueios feitos nesse meio-tempo aparecem depois que o AW Next lê os saves). A requisição abaixo é
 para quem escreve outro plugin.
 
 O plugin envia:

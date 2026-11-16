@@ -71,6 +71,24 @@ bar back.
 The game has a schema but no unlock file at runtime. Open its [Game Health](game-health.md) panel: it
 names the missing piece and offers only the repairs that apply.
 
+### A game I added by hand says "Playtime only"
+AW Next counts its play time, but nothing on this PC records its achievements yet: no emulator, save
+or store account was found for it. Apply an emulator fix, or add the folder where the game saves its
+unlocks, and the state changes. See [Game Health](game-health.md#the-states).
+
+### A repack folder or "QuickSFV" shows up as a game
+Repack downloads (FitGirl, DODI, ElAmigos) ship a checksum tool and installers that older versions
+took for a game. AW Next now skips them while still finding a game installed next to them. The same
+goes for overlay injectors, tool folders whose name starts with `__`, and an emulator a port ships
+with (Cemu in a Bayonetta 2 folder): the port is listed under its folder name. Hide or remove the old
+entries once; they do not come back.
+
+### A game I added to Steam with LuaTools or SteamTools shows no achievements
+Steam itself records the unlocks of such a game in its own stats files, and AW Next reads them
+whatever the Steam setting in **Settings → Sources** says, whether the tool keeps one script per game
+or all of them in `steamtools.lua`. Launch the game through Steam and unlock something. GreenLuma
+games are read only with Steam games turned on in Sources.
+
 ### Why does the same game appear twice?
 It was found through two sources. **Merge Duplicates** in Settings → General combines them. If one
 entry is a stale save folder for a game you now own elsewhere, blacklist it.

@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Administrer DLC-eierskap",
-        "description": "Skriver configs.app.ini slik at emulatoren rapporterer alt DLC som eid. Har ikke noe med prestasjoner å gjøre: la den stå av for å holde et spill uendret, eller for å administrere DLC selv. Slått av som standard.",
+        "description": "Lar emulatorfiksen og Fullfør emulatorens innstillinger skrive configs.app.ini, slik at emulatoren rapporterer alt DLC som eid. Har ikke noe med prestasjoner å gjøre: la den stå av for å holde et spill uendret, eller for å administrere DLC selv. Slått av som standard.",
         "value": {
           "false": "Deaktivert",
           "true": "Aktivert"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Skriv kontonavn og språk",
-        "description": "Skriver kontonavnet og språket ditt inn i configs.user.ini for hvert spill. La den stå av hvis du stoler på emulatorens sentrale konfigurasjon for et forutsigbart navn og bruker-ID. Slått av som standard.",
+        "description": "Lar emulatorfiksen og Fullfør emulatorens innstillinger skrive kontonavnet og språket ditt inn i configs.user.ini for et spill; et spills egen konto erstattes bare etter at det er spurt. La den stå av hvis du stoler på emulatorens globale innstillinger for et forutsigbart navn og bruker-ID. Slått av som standard.",
         "value": {
           "false": "Deaktivert",
           "true": "Aktivert"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Pakk ut SteamStub-DRM automatisk",
-        "description": "Kjører Steamless på spillets exe-fil før lappingen for å fjerne Valves SteamStub-DRM (originalen beholdes som .steamstub.bak). Gjør ingenting når det ikke finnes noen stub.",
+        "description": "Kjører Steamless på spillets exe-fil før lappingen for å fjerne Valves SteamStub-DRM (originalen beholdes som .steamstub.bak). Gjør ingenting når det ikke finnes noen stub. Når den er av, kjører Steamless aldri av seg selv: den manuelle fiksen spør først, og den automatiske fiksen hopper over et beskyttet spill.",
         "value": {
           "false": "Deaktivert",
           "true": "Aktivert"
@@ -1644,7 +1644,8 @@
         "Den runde knappen ved siden av fullføringsraten åpner Biblioteksstatistikk: fullføring, antall opplåste og låste, spilletid, troféer, platinaspill, de sjeldneste prestasjonene og én rad per plattform.",
         "En velger mellom søkefeltet og +-knappen bytter mellom seks bibliotekvisninger. Innstillinger > Utseende > Bibliotekruter styrer rutestørrelse, mellomrom og hva hver rute viser.",
         "+-knappen legger til et spill ingen kilde finner: en tittel og en programfil, med valgfri plattform og Steam AppID. Starter og spilletid spores, uten prestasjoner.",
-        "Høyreklikk på et spill > Spillinnstillinger > Gi nytt navn… endrer navnet som vises for det. Prestasjoner og spilletid > Rediger spilletid… retter totalen (12.5 eller 12h30)."
+        "Høyreklikk på et spill > Spillinnstillinger > Gi nytt navn… endrer navnet som vises for det. Prestasjoner og spilletid > Rediger spilletid… retter totalen (12.5 eller 12h30).",
+        "Ctrl+klikk legger et spill til i et utvalg, og Shift+klikk velger et område. Høyreklikk på ett av de valgte spillene for å nullstille alle prestasjonene deres på én gang: hvert spill sikkerhetskopieres først, og spill der plattformen selv lagrer opplåsingene, hoppes over. Esc fjerner utvalget."
       ],
       "sourcesTitle": "Klienter og kilder",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: slå på kilden, skriv inn brukernavn og Web API-nøkkel, og trykk så Importer bibliotek. Opplåsingene kommer fra kontoen din, så la RetroAchievements stå på i emulatoren.",
         "I Enkel modus er noen sjelden brukte kilderader skjult så lenge de ikke brukes. De kommer tilbake så snart de har noe å si, og Avansert viser alltid alle.",
         "PlayStation-troféer viser graden sin og andelen spillere som har dem. Andelene kommer fra Exophase; koble til en PlayStation-konto under Innstillinger > Kilder for å få Sonys egne tall for spillene på den kontoen.",
-        "Med en tilkoblet PlayStation-konto henter Importer bibliotek PlayStation-spillene og -troféene dine, oppdatert hver tredje dag, og feltet under legger til et spill du ikke eier. Et spill fra en annen butikk som også er utgitt til PlayStation, viser sin ekte platina og i trofémodus sine ekte grader og DLC-grupper."
+        "Med en tilkoblet PlayStation-konto henter Importer bibliotek PlayStation-spillene og -troféene dine, oppdatert hver tredje dag, og feltet under legger til et spill du ikke eier. Et spill fra en annen butikk som også er utgitt til PlayStation, viser sin ekte platina og i trofémodus sine ekte grader og DLC-grupper.",
+        "Spill som er lagt til i Steam med LuaTools eller SteamTools, viser prestasjonene sine fra Steams egen statistikk, uansett Steam-innstillingen ovenfor."
       ],
       "notifications": [
         "Automatisk er standard: sprettoppvarselet i spillet når spillet kan vise det, et Windows-varsel når det ikke kan, aldri begge.",
@@ -1666,15 +1668,17 @@
         "Lyd for sjelden prestasjon, Lyd for 100 % fullføring og Lyd for fremgang (Avansert modus) gir de varslene sin egen lyd. Tilfeldig velger en ny lyd hver gang, og du kan importere egne filer.",
         "Gull, sølv og bronse markerer sjeldne opplåsinger. Innstillinger > Generelt > Visning av sjeldenhet bytter til Trofémodus, som graderer hver prestasjon og viser platina på ferdige spill.",
         "For tellere viser Fremgangsmilepæler et varsel bare ved 10, 25 eller 50 % steg. Høyreklikk på et spill > Slå av fremgangsvarsler demper ett spill uten å røre opplåsingene.",
-        "To brytere til under Innstillinger > Varsler: Prioriterte varsler lar opplåsinger slippe gjennom Ikke forstyrr (Windows 11), og Spill i Steam-klienten legger til AW Nexts varsel for spill Steam selv kjører."
+        "To brytere til under Innstillinger > Varsler: Prioriterte varsler lar opplåsinger slippe gjennom Ikke forstyrr (Windows 11), og Spill i Steam-klienten legger til AW Nexts varsel for spill Steam selv kjører.",
+        "Platina kommer når alle prestasjonene i basisspillet er oppnådd, DLC unntatt, som på PlayStation. Innstillinger > Varsler > Platina krever kan få den til å vente på hele listen. I et spill med DLC skjuler Bare platina på spillets side prestasjonene platina ikke trenger."
       ],
       "gameHealthTitle": "Spilltilstand",
       "gameHealth": [
-        "Klikk på verktøyknappen til et spill (øverst til høyre på ruten), eller høyreklikk på det, for å åpne Spilltilstand. Den sier om spillet er Klar, Trenger oppmerksomhet eller Ikke sporet.",
+        "Klikk på verktøyknappen til et spill (øverst til høyre på ruten), eller høyreklikk på det, for å åpne Spilltilstand. Den sier om spillet er Klar, Trenger oppmerksomhet, Ikke sporet eller Kun spilletid (prestasjonene er kjent, men ingenting på denne PC-en registrerer dem ennå).",
         "Setningen under tilstanden forklarer årsaken i klartekst. Sjekkene under viser hvilken del som svikter: spillfiler, programfil, prestasjonsdata, emulatoroppsett, sporing i sanntid eller varsler.",
-        "Reparasjonsknapper dukker bare opp når AW Next faktisk kan fikse spillet, for eksempel Finn spillet, Skriv prestasjonsdataene på nytt, Installer emulatorfilen eller Følg med på dette spillet. Hver av dem sier hva den endrer, tar sikkerhetskopi og spør først.",
+        "Reparasjonsknapper dukker bare opp når AW Next faktisk kan fikse spillet, for eksempel Finn spillet, Skriv prestasjonsdataene på nytt, Fullfør emulatorens innstillinger, Installer emulatorfilen eller Følg med på dette spillet. Hver av dem sier hva den endrer, tar sikkerhetskopi og spør først, og en reparasjon som feiler, setter alle filer tilbake.",
         "Send et testvarsel viser et varsel med spillets eget navn og bilde, levert slik det ville blitt levert på ekte.",
-        "Tekniske detaljer inneholder nøyaktige stier, antall og emulatorkoder: trykk Kopier og lim det inn i en feilrapport. Den fargede prikken på en rute kan skjules under Innstillinger > Utseende > Bibliotekruter."
+        "Tekniske detaljer inneholder nøyaktige stier, antall og emulatorkoder: trykk Kopier og lim det inn i en feilrapport. Den fargede prikken på en rute kan skjules under Innstillinger > Utseende > Bibliotekruter.",
+        "Skriv prestasjonsdataene på nytt endrer bare prestasjonslisten, statistikken og manglende ikoner. Fullfør emulatorens innstillinger legger bare til innstillingene et spill mangler, lar det stå som emulatorens globale innstillinger allerede gir, og spør før et spills egen konto erstattes. Bytt til den støttede emulatoren skriver emulatorens innstillinger i samme trinn, og Angre den siste reparasjonen setter tilbake alle endringer AW Next har gjort i spillmappen."
       ],
       "troubleshootTitle": "Feilsøking",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Høyreklikk på et spill > Emulator og verktøy > Bruk emulatorfiks… installerer GBE Fork, bygger steam_settings (prestasjonsliste og ikoner) og skriver steam_appid.txt når den mangler. Hver erstattede fil sikkerhetskopieres først.",
         "Under Innstillinger > Steam / GBE Fork bruker steam_settings-data satt til Enkel AW Nexts egen anonyme henting og er rask. Avansert kjører generate_emu_config for dypere Steam-data og kan ta flere minutter.",
         "Ingenting skrives i en spillmappe av seg selv: Fiks nyoppdagede spill automatisk, Administrer DLC-eierskap og Skriv kontonavn og språk er alle av som standard.",
-        "Diagnostiser emulator i samme meny leser og rapporterer bare. Sikkerhetskopier GBE/Goldberg-oppsettet og Gjenopprett siste GBE/Goldberg-sikkerhetskopi setter et spill tilbake slik det var."
+        "Diagnostiser emulator i samme meny leser og rapporterer bare. Sikkerhetskopier GBE/Goldberg-oppsettet og Gjenopprett siste GBE/Goldberg-sikkerhetskopi setter et spill tilbake slik det var.",
+        "Når Pakk ut SteamStub-DRM automatisk er av, kjører Steamless aldri av seg selv: den manuelle fiksen spør først når spillet er beskyttet, og den automatiske fiksen lar det spillet være. En fiks som feiler, setter alle filer tilbake, også den kjørbare filen. Et spills egen konto i configs.user.ini beholdes, med mindre erstatningen bekreftes."
       ],
       "emulatorTitle": "Konsollemulatorer",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Fremgang i Xenia leses fra Xbox-profilfilene (.gpd) og følger lagringsmappene som er satt i oppsettet.",
         "Troféer fra KytyPS5 leses fra _Trophies-mappen, for brukeren launcheren kjører spillet som.",
         "Xbox 360-spill rekompilert for PC og PS4-porter (Bloodborne, Uncharted, God of War III Remastered, MediEvil og andre) er egne kilder under Innstillinger > Kilder. Hvis et ikke dukker opp, legg til mappen under Innstillinger > Mapper.",
-        "Hver konsoll kan ha sin egen popup-preset og lyd under Innstillinger > Varsler > Emulatorer (Avansert modus). Rekompilerte Xbox 360-spill følger Xenias valg, PS4-porter følger shadPS4s, og Samme som hovedvalget beholder hovedinnstillingene."
+        "Hver konsoll kan ha sin egen popup-preset og lyd under Innstillinger > Varsler > Emulatorer (Avansert modus). Rekompilerte Xbox 360-spill følger Xenias valg, PS4-porter følger shadPS4s, og Samme som hovedvalget beholder hovedinnstillingene.",
+        "Mens RPCS3 kjører, åpner hurtigtasten for overlay i spill spillet RPCS3 kjører, lest fra RPCS3s logg."
       ],
       "controllerTitle": "Kontroller (spillkontroller)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Høyreklikk på en spillrute for å starte spillet, velge programfilen, åpne mapper og lenker, bruke emulatorverktøy eller avinstallere det når den menyen er slått på.",
         "Merk som manuelt låst opp (høyreklikk på en prestasjon) registrerer en opplåsing ingen kilde kan se.",
-        "Nullstill prestasjoner… spiller et spill på nytt fra null og sikkerhetskopierer hver fil først. Det fungerer for emulerte spill, ikke for Steam, Epic eller Xbox, hvis opplåsinger ligger på kontoen din.",
+        "Nullstill prestasjoner… spiller et spill på nytt fra null og sikkerhetskopierer hver fil først. Det fungerer for emulerte spill, ikke for Steam, Epic eller Xbox, hvis opplåsinger ligger på kontoen din. Velg flere spill i biblioteket for å nullstille dem sammen.",
         "Spilletid spores mens spillet kjører; Sporing av spilletid under Innstillinger > Varsler slår på start- og sluttvarslene.",
         "Rydd dataene for dette spillet… sletter alt AW Next har om et spill (lagringsfiler sikkerhetskopieres først), og neste skanning finner det igjen. Fjern fra AW Next tar det ut av biblioteket til du henter det tilbake under Innstillinger > Generelt. Skjul fra visning holder det under oppfølging, i visningen Skjulte i menyen Samlinger.",
         "Spillinnstillinger > Språk for prestasjoner viser prestasjonene og varslene for ett spill på et annet språk enn resten.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Kjører Steamless på spillets exe-fil før lappingen for å fjerne Valves SteamStub-DRM (originalen beholdes som .steamstub.bak). Gjør ingenting når det ikke finnes noen stub. Krever Mono (mono-complete på Debian og Ubuntu)."
+            "description": "Kjører Steamless på spillets exe-fil før lappingen for å fjerne Valves SteamStub-DRM (originalen beholdes som .steamstub.bak). Gjør ingenting når det ikke finnes noen stub. Når den er av, kjører Steamless aldri av seg selv: den manuelle fiksen spør først, og den automatiske fiksen hopper over et beskyttet spill. Krever Mono (mono-complete på Debian og Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Av som standard. Legger inn omgåelsesproxyen fra SteamAutoCrack (winmm.dll) pluss et omdirigeringsoppsett, slik at spill som sjekker den originale steam_api/exe-filen på nytt etter byttet, fortsatt starter og låser opp. Proxyen lastes ned fra den offisielle utgivelsen. Wine og Proton laster bare proxyen når spillets startvalg setter WINEDLLOVERRIDES=\"winmm=n,b\"."

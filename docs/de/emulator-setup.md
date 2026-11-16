@@ -75,14 +75,20 @@ Repariert die Laufzeit-DLL und das Schema in einem Schritt:
 
 - lädt ein passendes GBE-Fork-Release herunter, speichert es zwischen und installiert die DLL-Architektur, die das Spiel braucht
   (`steam_api.dll` oder `steam_api64.dll`), wobei jede vorhandene Datei als Sicherung bleibt;
-- baut `steam_settings\achievements.json` (und seinen Ordner `images`) passend zur Steam-Erfolgs-
-  liste und lädt die Symbole herunter;
+- baut `steam_settings\achievements.json` passend zur Steam-Erfolgsliste und lädt die fehlenden Symbole
+  herunter. Eine bereits vollständige Liste bleibt, wie sie ist, Sprachen und Symbolordner eingeschlossen, genau wie bei
+  **Erfolgsdaten neu schreiben** in Game Health;
 - schreibt `steam_appid.txt`, wenn sie fehlt;
-- schreibt die GBE-Konfigurationsdateien (`configs.app.ini`, `configs.main.ini`, `configs.user.ini`).
+- schreibt die GBE-Konfigurationsdateien (`configs.main.ini`, `configs.user.ini` und `configs.app.ini`
+  nur, wenn **DLC-Besitz verwalten** an ist).
 
 Jede Datei, die er ersetzt, wird zuerst gesichert, und Schema-Reparaturen behalten außerdem Kopien mit Zeitstempel unter
 `steam_settings\.aw-backups`. Die Laufzeit wird als normaler DLL-Austausch installiert; AW Next richtet keinen
 eigenen ColdClient-Launcher ein.
+
+Der Fix arbeitet als eine Transaktion. Alles, was er braucht (GBE Fork, Steamless, wenn es laufen wird, der Bypass-Proxy, wenn diese Option an ist), wird heruntergeladen, bevor sich die erste Spieldatei ändert, sodass ein blockierter Download den Ordner unberührt lässt. Scheitert ein späterer Schritt, wird jede Datei, die der Fix geändert hatte, zurückgesetzt, auch die entpackte ausführbare Datei, und der Fehler listet auf, was sich nicht wiederherstellen ließ.
+
+Der Fix kontaktiert CrakFiles nie, außer **Community-Fix automatisch anwenden (CrakFiles)** ist an (standardmäßig aus). Die einzige andere Möglichkeit ist **Community-Fix suchen (CrakFiles)…** im selben Menü, wenn du es wählst.
 
 Verpackte Unreal-Engine-Builds werden genauso repariert. Ihre Steam-Dateien liegen unter
 `Engine\Binaries\ThirdParty\Steamworks` statt neben der ausführbaren Datei, und AW Next findet, installiert
@@ -99,7 +105,7 @@ automatischen Reparatur:
 | **Kontoname und Sprache schreiben** | Deinen Kontonamen und deine Sprache in `configs.user.ini` |
 
 Keiner von beiden beeinflusst Erfolge. Lass sie aus, um ein Spiel unverändert zu halten, oder wenn du DLC oder Identität
-von Hand verwaltest.
+von Hand verwaltest. Sie gelten für **Emulator-Fix anwenden** und für **Emulator-Einstellungen vervollständigen** von Game Health; **Erfolgsdaten neu schreiben** schreibt keine der beiden Dateien. Hat ein Spiel bereits ein eigenes Konto in `configs.user.ini`, behalten **Emulator-Fix anwenden** und **Emulator-Einstellungen vervollständigen** es, außer du stimmst dem Ersetzen zu; der automatische Fix und **Alle Spiele reparieren** ersetzen es nie. Ein Wert, den die globalen Einstellungen des Emulators schon liefern, wird nicht in das Spiel kopiert.
 
 Die Karte **Emulator-Identität** darunter zeigt, was geschrieben wird:
 
@@ -129,6 +135,8 @@ installiert. **Offizielle Version verwenden** entfernt den Import und kehrt zum 
 Versucht, SteamStub aus der gewählten ausführbaren Datei zu entpacken, wenn ein DLL-Austausch nicht geladen werden kann. Die ursprüngliche
 ausführbare Datei bleibt als `*.steamstub.bak` erhalten. Es bewirkt nichts bei Spielen ohne SteamStub und umgeht keine
 serverseitigen Besitzprüfungen.
+
+**SteamStub-DRM automatisch entpacken** unter **Einstellungen → Emulatoren → Steam / GBE Fork** entscheidet, ob **Emulator-Fix anwenden** Steamless von selbst ausführt. Ist es aus, läuft Steamless nie von allein: Bei einer geschützten ausführbaren Datei fragt der manuelle Fix zuerst (abbrechen, fortfahren ohne sie zu entfernen, oder das DRM diesmal entfernen), und der automatische Fix sowie **Alle Spiele reparieren** lassen dieses Spiel, wie es ist.
 
 ### Sichern und wiederherstellen {#back-up-and-restore}
 

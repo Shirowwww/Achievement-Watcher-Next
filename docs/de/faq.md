@@ -76,6 +76,15 @@ Balken zurück.
 Das Spiel hat ein Schema, aber zur Laufzeit keine Freischaltungsdatei. Öffne sein [Game Health](game-health.md)-Fenster: Es
 nennt das fehlende Teil und bietet nur die Reparaturen an, die zutreffen.
 
+### Ein von mir hinzugefügtes Spiel zeigt »Nur Spielzeit« {#a-game-i-added-by-hand-says-playtime-only}
+AW Next zählt seine Spielzeit, aber nichts auf diesem PC erfasst bisher seine Erfolge: Für das Spiel wurde kein Emulator, Spielstand oder Store-Konto gefunden. Wende einen Emulator-Fix an oder füge den Ordner hinzu, in dem das Spiel seine Freischaltungen speichert, und der Zustand ändert sich. Siehe [Game Health](game-health.md#the-states).
+
+### Ein Repack-Ordner oder »QuickSFV« erscheint als Spiel {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+Repack-Downloads (FitGirl, DODI, ElAmigos) enthalten ein Prüfsummen-Werkzeug und Installer, die ältere Versionen für ein Spiel hielten. AW Next überspringt sie jetzt und findet trotzdem ein Spiel, das daneben installiert ist. Dasselbe gilt für Overlay-Injektoren, Werkzeugordner, deren Name mit `__` beginnt, und einen Emulator, den ein Port mitliefert (Cemu in einem Bayonetta-2-Ordner): Der Port wird unter seinem Ordnernamen aufgeführt. Blende die alten Einträge einmal aus oder entferne sie; sie kommen nicht wieder.
+
+### Ein Spiel, das ich mit LuaTools oder SteamTools zu Steam hinzugefügt habe, zeigt keine Erfolge {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+Steam selbst hält die Freischaltungen eines solchen Spiels in seinen eigenen Statistikdateien fest, und AW Next liest sie, unabhängig davon, was die Steam-Einstellung unter **Einstellungen → Quellen** sagt, egal ob das Werkzeug ein Skript pro Spiel oder alle in `steamtools.lua` ablegt. Starte das Spiel über Steam und schalte etwas frei. GreenLuma-Spiele werden nur gelesen, wenn Steam-Spiele unter Quellen aktiviert sind.
+
 ### Warum erscheint dasselbe Spiel zweimal? {#why-does-the-same-game-appear-twice}
 Es wurde über zwei Quellen gefunden. **Duplikate zusammenführen** unter Einstellungen → Allgemein fasst sie zusammen. Ist ein
 Eintrag ein veralteter Spielstandordner für ein Spiel, das du jetzt anderswo besitzt, setze ihn auf die schwarze Liste.

@@ -76,6 +76,23 @@ pasek.
 Gra ma schemat, ale nie ma pliku odblokowań w czasie działania. Otwórz jej panel [Stan gry](game-health.md): wskazuje
 brakujący element i oferuje tylko te naprawy, które mają zastosowanie.
 
+### Gra, którą dodałem ręcznie, pokazuje „Tylko czas gry” {#a-game-i-added-by-hand-says-playtime-only}
+AW Next liczy jej czas gry, ale nic na tym komputerze nie zapisuje jeszcze jej osiągnięć: nie znaleziono emulatora,
+zapisu ani konta w sklepie. Zastosuj poprawkę emulatora albo dodaj folder, w którym gra zapisuje odblokowania, a stan
+się zmieni. Zobacz [Stan gry](game-health.md#the-states).
+
+### Folder repacka lub „QuickSFV” pojawia się jako gra {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+Pobrania repacków (FitGirl, DODI, ElAmigos) zawierają narzędzie do sum kontrolnych i instalatory, które starsze wersje
+brały za grę. AW Next teraz je pomija, nadal znajdując grę zainstalowaną obok nich. To samo dotyczy wstrzykiwaczy
+nakładek, folderów narzędzi, których nazwa zaczyna się od `__`, oraz emulatora dołączonego do portu (Cemu w folderze
+Bayonetta 2): port jest wtedy wymieniony pod nazwą swojego folderu. Ukryj lub usuń stare wpisy raz; nie wracają.
+
+### Gra dodana do Steam przez LuaTools lub SteamTools nie pokazuje osiągnięć {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+Sam Steam zapisuje odblokowania takiej gry we własnych plikach statystyk, a AW Next je odczytuje niezależnie od
+ustawienia Steam w **Ustawienia → Źródło**, niezależnie od tego, czy narzędzie trzyma jeden skrypt na grę, czy wszystkie
+w `steamtools.lua`. Uruchom grę przez Steam i odblokuj coś. Gry GreenLuma są odczytywane tylko przy włączonych grach
+Steam w Źródłach.
+
 ### Dlaczego ta sama gra pojawia się dwa razy? {#why-does-the-same-game-appear-twice}
 Została znaleziona przez dwa źródła. **Scal duplikaty** w Ustawienia → Ogólne łączy je. Jeśli jeden
 wpis to stary folder zapisów gry, którą teraz masz gdzie indziej, dodaj go do czarnej listy.

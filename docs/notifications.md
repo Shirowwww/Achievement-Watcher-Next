@@ -179,9 +179,23 @@ rarity mode (game page, stats, 100% popup) with its name, description and icon, 
 trophy is earned, even with DLC trophies left. PlayStation emulators keep their own trophies. AW
 finds the list by the game's original name, so renaming a game changes nothing.
 
-Every source pops the 100% popup, the live ones included (Xenia, recompiled ports, GOG Galaxy,
+Every source pops the platinum popup, the live ones included (Xenia, recompiled ports, GOG Galaxy,
 Ubisoft Connect, Xbox PC). When the game has a platinum, the achievement tied to it pops as the
-platinum.
+platinum. A game's own "earn every achievement" achievement counts as its platinum too, in the
+notification and in its list, with or without a PlayStation account.
+
+By default the platinum comes once the base game is done, as on PlayStation: DLC achievements and
+extra trophy groups are left aside. In a game with DLC, each achievement the platinum needs wears a
+small platinum mark, and **Platinum only** on the game page hides the rest. **Settings → Notifications
+→ Platinum requires** switches between **Base game** and **DLC included**, which waits for the whole
+list. A game without DLC is unchanged. The live sources above follow the same rule when they give AW
+Next the list, with a single popup: the game's own platinum achievement pops as the platinum instead
+of a normal unlock and a 100% popup.
+
+Achievements Steam has removed from a game no longer count: they stay greyed at the bottom of its
+list, marked *No longer on Steam*, and the game can reach 100% without them. The cached list notices
+the removal at its next 3-day check, or right away with **Settings → Advanced → Recheck achievement
+lists**.
 
 <div align="center">
 <picture><source srcset="assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="screenshot/trophy-profile.png" width="440" height="148" alt="The profile header with platinum, gold, silver, bronze and common trophy counts" loading="lazy" decoding="async"></picture><br>
@@ -258,7 +272,10 @@ bar counter, the full list and the Big Picture "Your stuff" tab. A shortcut is m
 starts the same exe as the game's **Executable** in AW Next. Its README covers the install, what to
 check when a page stays empty, and how it sits next to Steam Cartridges, NativeGameLink and Game
 Data Linker. The Playnite extension in `playnite/` asks the same way, for any game in a Playnite
-library, and its README covers the install and the panels a theme can place. On Windows AW Next
+library, and its README covers the install and the panels a theme can place. Since its version 1.2.0
+it also works while AW Next is closed: it reads the list AW Next saved at its last scan, says so with
+that scan's date, and goes back to live data once AW Next runs (unlocks made meanwhile show once AW
+Next has read the saves). On Windows AW Next
 brings both up to the latest release's version on its own, once you have installed them. The request
 below is for anyone writing another plugin.
 

@@ -75,14 +75,20 @@ Repara la DLL de ejecución y el esquema en un solo paso:
 
 - descarga y guarda en caché una versión coincidente de GBE Fork e instala la arquitectura de DLL que necesita el juego
   (`steam_api.dll` o `steam_api64.dll`), conservando como copia de seguridad cualquier archivo existente;
-- construye `steam_settings\achievements.json` (y su carpeta `images`) para que coincida con la lista de logros
-  de Steam, y descarga los iconos;
+- construye `steam_settings\achievements.json` para que coincida con la lista de logros de Steam y descarga los
+  iconos que faltan. Una lista que ya está completa se conserva tal cual, idiomas y carpeta de iconos incluidos, igual que
+  hace **Reescribir los datos de logros** de Game Health;
 - escribe `steam_appid.txt` cuando falta;
-- escribe los archivos de configuración de GBE (`configs.app.ini`, `configs.main.ini`, `configs.user.ini`).
+- escribe los archivos de configuración de GBE (`configs.main.ini`, `configs.user.ini` y `configs.app.ini`
+  solo cuando **Gestionar la propiedad de los DLC** está activado).
 
 De cada archivo que reemplaza se hace antes copia de seguridad, y las reparaciones de esquema conservan además copias con marca de tiempo en
 `steam_settings\.aw-backups`. El entorno de ejecución se instala como una sustitución normal de DLL; AW Next no
 configura un lanzador ColdClient aparte.
+
+El arreglo funciona como una sola transacción. Todo lo que necesita (GBE Fork, Steamless cuando se vaya a ejecutar, el proxy de bypass cuando esa opción está activada) se descarga antes de que cambie el primer archivo del juego, así que una descarga bloqueada deja la carpeta intacta. Si falla un paso posterior, se restituye cada archivo que el arreglo había cambiado, incluido el ejecutable descomprimido, y el error enumera lo que no se pudo restaurar.
+
+El arreglo nunca contacta con CrakFiles a menos que **Aplicar automáticamente un arreglo de la comunidad (CrakFiles)** esté activado (desactivado por defecto). La única otra forma de usarlo es **Buscar un parche de la comunidad (CrakFiles)…** en el mismo menú, cuando lo eliges.
 
 Las compilaciones empaquetadas de Unreal Engine se reparan del mismo modo. Sus archivos de Steam están en
 `Engine\Binaries\ThirdParty\Steamworks` en lugar de junto al ejecutable, y AW Next los encuentra, los instala
@@ -99,7 +105,7 @@ la reparación automática:
 | **Escribir nombre de cuenta e idioma** | Tu nombre de cuenta e idioma, en `configs.user.ini` |
 
 Ninguno afecta a los logros. Déjalos desactivados para mantener un juego sin tocar, o si gestionas los DLC o la identidad
-a mano.
+a mano. Se aplican a **Aplicar arreglo de emulador** y a **Completar los ajustes del emulador** de Game Health; **Reescribir los datos de logros** nunca escribe ninguno de los dos archivos. Cuando un juego ya tiene su propia cuenta en `configs.user.ini`, **Aplicar arreglo de emulador** y **Completar los ajustes del emulador** la conservan salvo que aceptes reemplazarla; el arreglo automático y **Reparar todos los juegos** nunca la reemplazan. Un valor que los ajustes globales del emulador ya dan no se copia en el juego.
 
 La tarjeta **Identidad del emulador** de debajo muestra lo que se escribe:
 
@@ -129,6 +135,8 @@ instala. **Usar la versión oficial** elimina la importación y vuelve a la vers
 Intenta descomprimir SteamStub del ejecutable seleccionado cuando una sustitución de DLL no puede cargarse. El ejecutable
 original se conserva como `*.steamstub.bak`. No hace nada con juegos sin SteamStub y no esquiva las
 comprobaciones de propiedad del lado del servidor.
+
+**Quitar automáticamente el DRM SteamStub** en **Ajustes → Emuladores → Steam / GBE Fork** decide si **Aplicar arreglo de emulador** ejecuta Steamless por sí solo. Cuando está desactivado, Steamless nunca se ejecuta por su cuenta: con un ejecutable protegido el arreglo manual pregunta primero (cancelar, continuar sin quitarlo, o quitar el DRM esta vez), y el arreglo automático y **Arreglar todos los juegos** dejan ese juego como está.
 
 ### Copia de seguridad y restauración {#back-up-and-restore}
 

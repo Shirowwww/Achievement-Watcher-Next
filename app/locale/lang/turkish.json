@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "DLC sahipliğini yönet",
-        "description": "Emülatörün her DLC'yi sahiplenilmiş olarak bildirmesi için configs.app.ini dosyasını yazar. Başarımlarla ilgisi yoktur: bir oyunu orijinal haliyle tutmak veya DLC'leri kendin yönetmek istiyorsan kapalı bırak. Varsayılan olarak devre dışı.",
+        "description": "Emülatör düzeltmesinin ve Emülatör ayarlarını tamamla’nın, emülatörün her DLC’yi sahiplenilmiş olarak bildirmesi için configs.app.ini dosyasını yazmasına izin verir. Başarımlarla ilgisi yoktur: bir oyunu orijinal haliyle tutmak veya DLC'leri kendin yönetmek istiyorsan kapalı bırak. Varsayılan olarak devre dışı.",
         "value": {
           "false": "Devre dışı",
           "true": "Etkin"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Hesap adını ve dili yaz",
-        "description": "Hesap adını ve dilini her oyunun configs.user.ini dosyasına yazar. Öngörülebilir bir ad ve kullanıcı kimliği için emülatörün merkezi yapılandırmasına güveniyorsan kapalı bırak. Varsayılan olarak devre dışı.",
+        "description": "Emülatör düzeltmesinin ve Emülatör ayarlarını tamamla’nın hesap adını ve dilini bir oyunun configs.user.ini dosyasına yazmasına izin verir; oyunun kendi hesabı yalnızca sorulduktan sonra değiştirilir. Öngörülebilir bir ad ve kullanıcı kimliği için emülatörün genel ayarlarına güveniyorsan kapalı bırak. Varsayılan olarak devre dışı.",
         "value": {
           "false": "Devre dışı",
           "true": "Etkin"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "SteamStub DRM’yi otomatik çıkar",
-        "description": "Yamadan önce oyunun exe dosyasında Steamless çalıştırarak Valve’ın SteamStub DRM’sini çıkarır (orijinal .steamstub.bak olarak saklanır). Stub yoksa etkisizdir.",
+        "description": "Yamadan önce oyunun exe dosyasında Steamless çalıştırarak Valve’ın SteamStub DRM’sini çıkarır (orijinal .steamstub.bak olarak saklanır). Stub yoksa etkisizdir. Kapalıyken Steamless kendiliğinden hiç çalışmaz: elle düzeltme önce sorar, otomatik düzeltme ise korumalı oyunu atlar.",
         "value": {
           "false": "Devre dışı",
           "true": "Etkin"
@@ -1644,7 +1644,8 @@
         "Tamamlama oranının yanındaki yuvarlak düğme Kütüphane istatistikleri’ni açar: tamamlama, açılan ve kilitli sayıları, oynama süresi, kupalar, platin oyunlar, en nadir başarımlar ve platform başına bir satır.",
         "Arama alanı ile + düğmesi arasındaki seçici altı kütüphane görünümü arasında geçiş yapar. Ayarlar > Görünüm > Kütüphane kutucukları kutucuk boyutunu, aralığı ve her kutucuğun neyi gösterdiğini belirler.",
         "+ düğmesi hiçbir kaynağın bulamadığı bir oyun ekler: bir başlık ve bir çalıştırılabilir dosya, isteğe bağlı platform ve Steam AppID ile. Başlatmalar ve oynama süresi takip edilir, başarımlar olmadan.",
-        "Bir oyuna sağ tıklayın > Oyun ayarları > Yeniden adlandır… ile gösterilen adı değiştirin. Başarımlar ve oynama süresi > Oynama süresini düzenle… toplamı düzeltir (12.5 veya 12h30)."
+        "Bir oyuna sağ tıklayın > Oyun ayarları > Yeniden adlandır… ile gösterilen adı değiştirin. Başarımlar ve oynama süresi > Oynama süresini düzenle… toplamı düzeltir (12.5 veya 12h30).",
+        "Ctrl+tıklama bir oyunu seçime ekler, Shift+tıklama ise bir aralık seçer. Seçili oyunlardan birine sağ tıklayarak hepsinin başarımlarını tek seferde sıfırlayın: her oyun önce yedeklenir, kilit açmaları platformunda tutulan oyunlar atlanır. Esc seçimi temizler."
       ],
       "sourcesTitle": "Başlatıcılar ve kaynaklar",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: kaynağı açın, kullanıcı adınızı ve Web API anahtarınızı girin, sonra Kitaplığı içe aktar’a basın. Kilit açmalar hesabınızdan gelir, bu yüzden emülatörde RetroAchievements’ı açık tutun.",
         "Basit modda, nadiren kullanılan bazı kaynak satırları kullanılmadıkları sürece gizli kalır. Önem kazandıkları anda geri gelirler ve Gelişmiş hepsini her zaman listeler.",
         "PlayStation kupaları derecesini ve onlara sahip oyuncuların oranını gösterir. Oranlar Exophase’ten gelir; o hesaptaki oyunlar için Sony’nin kendi rakamlarını almak üzere Ayarlar > Kaynak içinde bir PlayStation hesabı bağlayın.",
-        "Bir PlayStation hesabı bağlıyken Kitaplığı içe aktar, PlayStation oyunlarınızı ve kupalarınızı getirir ve üç günde bir yeniler; altındaki alan ise sahip olmadığınız bir oyunu ekler. PlayStation’da da çıkmış başka bir mağazadaki oyun gerçek platinini, kupa modunda ise gerçek derecelerini ve DLC gruplarını gösterir."
+        "Bir PlayStation hesabı bağlıyken Kitaplığı içe aktar, PlayStation oyunlarınızı ve kupalarınızı getirir ve üç günde bir yeniler; altındaki alan ise sahip olmadığınız bir oyunu ekler. PlayStation’da da çıkmış başka bir mağazadaki oyun gerçek platinini, kupa modunda ise gerçek derecelerini ve DLC gruplarını gösterir.",
+        "LuaTools veya SteamTools ile Steam’e eklenen oyunlar, yukarıdaki Steam ayarı ne olursa olsun başarımlarını Steam’in kendi istatistiklerinden gösterir."
       ],
       "notifications": [
         "Otomatik varsayılandır: oyun gösterebiliyorsa oyun içi açılır pencere, gösteremiyorsa Windows bildirimi kullanılır, ikisi birden asla gösterilmez.",
@@ -1666,15 +1668,17 @@
         "Nadir başarım sesi, %100 tamamlama sesi ve İlerleme sesi (Gelişmiş modu) bu açılır pencerelere kendi seslerini verir. Rastgele ses her seferinde farklı bir ses seçer, kendi dosyalarınızı da içe aktarabilirsiniz.",
         "Altın, gümüş ve bronz nadir kilit açmaları işaretler. Ayarlar > Genel > Nadirlik gösterimi, her başarımı derecelendiren ve bitmiş oyunlarda platini gösteren Kupa modu’na geçer.",
         "Sayaçlar için İlerleme kilometre taşları yalnızca %10, %25 veya %50 adımlarında bir açılır pencere gösterir. Bir oyuna sağ tıklayın > İlerleme bildirimlerini sustur ile bir oyunu, kilit açmalarına dokunmadan susturun.",
-        "Ayarlar > Bildirim içinde iki anahtar daha var: Öncelikli bildirimler kilit açmaların Rahatsız Etmeyin’i (Windows 11) aşmasını sağlar, Steam istemcisi oyunları ise Steam’in kendi çalıştırdığı oyunlar için AW Next’in açılır penceresini ekler."
+        "Ayarlar > Bildirim içinde iki anahtar daha var: Öncelikli bildirimler kilit açmaların Rahatsız Etmeyin’i (Windows 11) aşmasını sağlar, Steam istemcisi oyunları ise Steam’in kendi çalıştırdığı oyunlar için AW Next’in açılır penceresini ekler.",
+        "Platin, temel oyunun tüm başarımları kazanıldığında gelir; DLC hariç, tıpkı PlayStation’daki gibi. Ayarlar > Bildirim > Platin için gereken, bunun tüm listeyi beklemesini sağlayabilir. DLC’li bir oyunda sayfasındaki Yalnızca platin, platinin gerektirmediği başarımları gizler."
       ],
       "gameHealthTitle": "Oyun durumu",
       "gameHealth": [
-        "Oyun durumu’nu açmak için bir oyunun araçlar düğmesine (kutucuğun sağ üstü) tıklayın ya da oyuna sağ tıklayın. Oyunun Hazır, Kontrol gerekli veya Takip edilmiyor olduğunu söyler.",
+        "Oyun durumu’nu açmak için bir oyunun araçlar düğmesine (kutucuğun sağ üstü) tıklayın ya da oyuna sağ tıklayın. Oyunun Hazır, Kontrol gerekli, Takip edilmiyor veya Yalnızca oynama süresi (başarımlar biliniyor ama bu bilgisayarda henüz hiçbir şey onları kaydetmiyor) olduğunu söyler.",
         "Durumun altındaki cümle nedeni sade sözlerle açıklar. Aşağıdaki kontroller hangi parçanın sorunlu olduğunu gösterir: oyun dosyaları, çalıştırılabilir dosya, başarım verileri, emülatör kurulumu, canlı takip veya bildirimler.",
-        "Onarım düğmeleri yalnızca AW Next o oyunu gerçekten düzeltebildiğinde görünür; örneğin Oyunu bul, Başarım verilerini yeniden yaz, Emülatör dosyasını kur veya Bu oyunu izle. Her biri neyi değiştireceğini söyler, yedek tutar ve önce sorar.",
+        "Onarım düğmeleri yalnızca AW Next o oyunu gerçekten düzeltebildiğinde görünür; örneğin Oyunu bul, Başarım verilerini yeniden yaz, Emülatör ayarlarını tamamla, Emülatör dosyasını kur veya Bu oyunu izle. Her biri neyi değiştireceğini söyler, yedek tutar ve önce sorar; başarısız olan bir onarım her dosyayı geri koyar.",
         "Test bildirimi gönder, o oyunun kendi adı ve görseliyle, gerçekte nasıl gelecekse öyle iletilen bir açılır pencere gösterir.",
-        "Teknik ayrıntılar kesin yolları, sayıları ve emülatör kodlarını içerir: Kopyala’ya basın ve bir hata raporuna yapıştırın. Kutucuktaki renkli nokta Ayarlar > Görünüm > Kütüphane kutucukları içinde gizlenebilir."
+        "Teknik ayrıntılar kesin yolları, sayıları ve emülatör kodlarını içerir: Kopyala’ya basın ve bir hata raporuna yapıştırın. Kutucuktaki renkli nokta Ayarlar > Görünüm > Kütüphane kutucukları içinde gizlenebilir.",
+        "Başarım verilerini yeniden yaz yalnızca başarım listesini, istatistiklerini ve eksik simgeleri değiştirir. Emülatör ayarlarını tamamla yalnızca bir oyunda eksik olan ayarları ekler, emülatörün genel ayarlarının zaten verdiğine dokunmaz ve oyunun kendi hesabını değiştirmeden önce sorar. Desteklenen emülatöre geç, emülatör ayarlarını aynı adımda yazar; Son onarımı geri al ise AW Next’in oyun klasöründe yaptığı her değişikliği geri koyar."
       ],
       "troubleshootTitle": "Sorun giderme",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Bir oyuna sağ tıklayın > Emülatör ve araçlar > Emülatör düzeltmesini uygula… GBE Fork’u kurar, steam_settings’i (başarım listesi ve simgeler) oluşturur ve eksikse steam_appid.txt dosyasını yazar. Değiştirilen her dosya önce yedeklenir.",
         "Ayarlar > Steam / GBE Fork içinde steam_settings verisi Basit olarak ayarlandığında AW Next’in kendi anonim getirme yöntemi kullanılır ve hızlıdır. Gelişmiş, daha derin Steam verisi için generate_emu_config çalıştırır ve dakikalar sürebilir.",
         "Hiçbir şey kendiliğinden bir oyun klasörüne yazılmaz: Yeni algılanan oyunları otomatik düzelt, DLC sahipliğini yönet ve Hesap adını ve dili yaz varsayılan olarak kapalıdır.",
-        "Aynı menüdeki Emülatörü tanıla yalnızca okur ve bildirir. GBE/Goldberg kurulumunu yedekle ve En son GBE/Goldberg yedeğini geri yükle bir oyunu eski haline getirir."
+        "Aynı menüdeki Emülatörü tanıla yalnızca okur ve bildirir. GBE/Goldberg kurulumunu yedekle ve En son GBE/Goldberg yedeğini geri yükle bir oyunu eski haline getirir.",
+        "SteamStub DRM’yi otomatik çıkar kapalıyken Steamless kendiliğinden hiç çalışmaz: oyun korumalıysa elle düzeltme önce sorar, otomatik düzeltme ise o oyunu olduğu gibi bırakır. Başarısız olan bir düzeltme, çalıştırılabilir dosya dahil her dosyayı geri koyar. configs.user.ini içindeki oyunun kendi hesabı, değiştirilmesi onaylanmadıkça korunur."
       ],
       "emulatorTitle": "Konsol emülatörleri",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Xenia ilerlemesi Xbox profil dosyalarından (.gpd) okunur ve yapılandırmasında ayarlanan depolama klasörlerini izler.",
         "KytyPS5 kupaları _Trophies klasöründen, başlatıcının oyunu çalıştırdığı kullanıcı için okunur.",
         "PC için yeniden derlenmiş Xbox 360 oyunları ve PS4 portları (Bloodborne, Uncharted, God of War III Remastered, MediEvil ve diğerleri) Ayarlar > Kaynak içinde ayrı kaynaklardır. Biri görünmüyorsa klasörünü Ayarlar > Klasörler içine ekleyin.",
-        "Her konsolun Ayarlar > Bildirim > Emülatörler (Gelişmiş modu) içinde kendi açılır pencere ön ayarı ve sesi olabilir. Yeniden derlenmiş Xbox 360 oyunları Xenia’nın seçimini, PS4 portları shadPS4’ün seçimini izler ve Ana ayarla aynı ana ayarları korur."
+        "Her konsolun Ayarlar > Bildirim > Emülatörler (Gelişmiş modu) içinde kendi açılır pencere ön ayarı ve sesi olabilir. Yeniden derlenmiş Xbox 360 oyunları Xenia’nın seçimini, PS4 portları shadPS4’ün seçimini izler ve Ana ayarla aynı ana ayarları korur.",
+        "RPCS3 çalışırken oyun içi yer paylaşımı kısayolu, RPCS3’ün çalıştırdığı oyunu açar; oyun RPCS3’ün günlüğünden okunur."
       ],
       "controllerTitle": "Kumanda (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Oyunu başlatmak, çalıştırılabilir dosyasını seçmek, klasörleri ve bağlantıları açmak, emülatör araçlarını kullanmak veya o menü açıksa kaldırmak için bir oyun kutucuğuna sağ tıklayın.",
         "Manuel açılmış olarak işaretle (bir başarıma sağ tıklayın) hiçbir kaynağın göremediği bir kilit açmayı kaydeder.",
-        "Başarımları sıfırla… bir oyunu sıfırdan yeniden oynatır ve önce her dosyayı yedekler. Emüle edilen oyunlar için çalışır; kilit açmaları hesabınızda duran Steam, Epic veya Xbox için çalışmaz.",
+        "Başarımları sıfırla… bir oyunu sıfırdan yeniden oynatır ve önce her dosyayı yedekler. Emüle edilen oyunlar için çalışır; kilit açmaları hesabınızda duran Steam, Epic veya Xbox için çalışmaz. Birlikte sıfırlamak için kütüphanede birden fazla oyun seçin.",
         "Oynama süresi oyun çalışırken takip edilir; Ayarlar > Bildirim içindeki Oynama süresi takibi başlangıç ve bitiş bildirimlerini açar.",
         "Bu oyunun verilerini temizle… AW Next’in bir oyun hakkında tuttuğu her şeyi siler (kayıtlar önce yedeklenir) ve bir sonraki tarama oyunu yeniden bulur. AW Next’ten kaldır oyunu, Ayarlar > Genel bölümünden geri getirene kadar kütüphaneden çıkarır. Görünümden gizle oyunu takipte tutar, Koleksiyonlar menüsünün Gizli görünümünde.",
         "Oyun ayarları > Başarım dili bir oyunun başarımlarını ve bildirimlerini diğerlerinden farklı bir dilde gösterir.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Yamadan önce oyunun exe dosyasında Steamless çalıştırarak Valve’ın SteamStub DRM’sini çıkarır (orijinal .steamstub.bak olarak saklanır). Stub yoksa etkisizdir. Mono gerekir (Debian ve Ubuntu’da mono-complete)."
+            "description": "Yamadan önce oyunun exe dosyasında Steamless çalıştırarak Valve’ın SteamStub DRM’sini çıkarır (orijinal .steamstub.bak olarak saklanır). Stub yoksa etkisizdir. Kapalıyken Steamless kendiliğinden hiç çalışmaz: elle düzeltme önce sorar, otomatik düzeltme ise korumalı oyunu atlar. Mono gerekir (Debian ve Ubuntu’da mono-complete)."
           },
           "apiCheckBypass": {
             "description": "Varsayılan olarak kapalı. SteamAutoCrack’in atlatma proxy’sini (winmm.dll) + bir yönlendirme yapılandırması bırakır; böylece değiştirmeden sonra orijinal steam_api/exe’yi yeniden denetleyen oyunlar yine de başlar ve açılır. Proxy’yi resmi sürümünden indirir. Wine ve Proton, proxy’yi yalnızca oyunun başlatma seçenekleri WINEDLLOVERRIDES=\"winmm=n,b\" ayarladığında yükler."

@@ -184,9 +184,13 @@ mode de rareté (page du jeu, statistiques, popup 100 %) avec son nom, sa descri
 trophée est obtenu, même s'il reste des trophées de DLC. Les émulateurs PlayStation gardent leurs propres trophées. AW
 trouve la liste grâce au nom d'origine du jeu, donc renommer un jeu ne change rien.
 
-Chaque source déclenche la popup 100 %, y compris celles en direct (Xenia, portages recompilés, GOG Galaxy,
+Chaque source déclenche la popup platine, y compris celles en direct (Xenia, portages recompilés, GOG Galaxy,
 Ubisoft Connect, Xbox PC). Quand le jeu a un platine, le succès qui y est lié s'affiche comme
-le platine.
+le platine. Le succès « obtenir tous les succès » propre à un jeu compte aussi comme son platine, dans la notification et dans sa liste, avec ou sans compte PlayStation.
+
+Par défaut, le platine tombe une fois le jeu de base terminé, comme sur PlayStation : les succès de DLC et les groupes de trophées en plus sont mis de côté. Dans un jeu avec DLC, chaque succès nécessaire au platine porte une petite marque platine, et **Platine seulement** sur la page du jeu masque le reste. **Paramètres → Notification → Le platine demande** bascule entre **Jeu de base** et **Tout, DLC compris**, qui attend la liste entière. Un jeu sans DLC ne change pas. Les sources en direct ci-dessus suivent la même règle quand elles donnent la liste à AW Next, avec une seule notification : le succès platine propre au jeu s'affiche comme le platine, au lieu d'un déblocage ordinaire et d'une notification à 100 %.
+
+Les succès que Steam a retirés d'un jeu ne comptent plus : ils restent grisés en bas de sa liste, marqués *Retiré de Steam*, et le jeu peut atteindre 100 % sans eux. La liste en cache remarque le retrait à sa prochaine vérification de 3 jours, ou tout de suite avec **Paramètres → Avancé → Revérifier les listes de succès**.
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="L'en-tête du profil avec les nombres de trophées platine, or, argent, bronze et communs" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +267,7 @@ la barre de jeu, la liste complète et l'onglet « Vos affaires » du mode Big P
 lance le même exe que l'**Exécutable** du jeu dans AW Next. Son README couvre l'installation, ce qu'il faut
 vérifier quand une page reste vide, et sa cohabitation avec Steam Cartridges, NativeGameLink et Game
 Data Linker. L'extension Playnite dans `playnite/` demande de la même façon, pour n'importe quel jeu d'une bibliothèque
-Playnite, et son README couvre l'installation et les panneaux qu'un thème peut placer. La requête ci-dessous s'adresse
+Playnite, et son README couvre l'installation et les panneaux qu'un thème peut placer. Depuis sa version 1.2.0, elle fonctionne aussi quand AW Next est fermé : elle lit la liste qu'AW Next a enregistrée à son dernier scan, l'indique avec la date de ce scan, et revient aux données en direct dès qu'AW Next tourne (les déblocages faits entre-temps apparaissent une fois qu'AW Next a lu les sauvegardes). La requête ci-dessous s'adresse
 à qui écrit un autre plugin.
 
 Le plugin envoie :

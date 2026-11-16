@@ -184,9 +184,21 @@ trybie rzadkości (strona gry, statystyki, okno 100%) z nazwą, opisem i ikoną,
 trofeum zostanie zdobyte, nawet jeśli zostały trofea z DLC. Emulatory PlayStation zachowują własne trofea. AW
 znajduje listę po oryginalnej nazwie gry, więc zmiana nazwy gry niczego nie zmienia.
 
-Każde źródło pokazuje okno 100%, także te działające na żywo (Xenia, zrekompilowane porty, GOG Galaxy,
+Każde źródło pokazuje okno platyny, także te działające na żywo (Xenia, zrekompilowane porty, GOG Galaxy,
 Ubisoft Connect, Xbox PC). Gdy gra ma platynę, powiązane z nią osiągnięcie pojawia się jako
-platyna.
+platyna. Własne osiągnięcie gry w rodzaju „zdobądź wszystkie osiągnięcia” również liczy się jako jej platyna, w
+powiadomieniu i na liście, z kontem PlayStation lub bez niego.
+
+Domyślnie platyna przychodzi po ukończeniu gry podstawowej, tak jak na PlayStation: osiągnięcia z DLC i dodatkowe grupy
+trofeów są pomijane. W grze z DLC każde osiągnięcie potrzebne do platyny nosi małe platynowe oznaczenie, a **Tylko
+platyna** na stronie gry ukrywa resztę. **Ustawienia → Powiadomienia → Platyna wymaga** przełącza między **Gra
+podstawowa** a **Razem z DLC**, które czeka na całą listę. Gra bez DLC się nie zmienia. Powyższe źródła na żywo stosują tę samą
+zasadę, gdy przekazują AW Next listę, z jednym powiadomieniem: własne osiągnięcie platynowe gry pojawia się jako platyna,
+zamiast zwykłego odblokowania i powiadomienia o 100%.
+
+Osiągnięcia, które Steam usunął z gry, już się nie liczą: zostają wyszarzone na dole jej listy, oznaczone *Usunięte ze
+Steam*, a gra może osiągnąć 100% bez nich. Zapamiętana lista zauważa usunięcie przy następnym trzydniowym sprawdzeniu
+albo od razu po użyciu **Ustawienia → Zaawansowane → Ponownie sprawdź listy osiągnięć**.
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="Nagłówek profilu z liczbami trofeów platynowych, złotych, srebrnych, brązowych i zwykłych" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +275,10 @@ pasku gry, pełną listę i kartę „Twoje rzeczy” w Big Picture. Skrót jest
 uruchamia ten sam plik exe co pole **Plik gry** tej gry w AW Next. Jej README opisuje instalację, co
 sprawdzić, gdy strona pozostaje pusta, i jak współistnieje ze Steam Cartridges, NativeGameLink i Game
 Data Linker. Rozszerzenie Playnite w `playnite/` pyta w ten sam sposób, dla dowolnej gry z biblioteki
-Playnite, a jego README opisuje instalację i panele, które motyw może umieścić. Poniższe żądanie jest
+Playnite, a jego README opisuje instalację i panele, które motyw może umieścić. Od wersji 1.2.0 działa też przy zamkniętym
+AW Next: czyta listę zapisaną przez AW Next przy ostatnim skanowaniu, mówi o tym z datą tego skanowania i wraca do danych
+na żywo, gdy AW Next działa (odblokowania z tego czasu pojawią się, gdy AW Next odczyta zapisy). W systemie Windows
+AW Next sam aktualizuje oba do wersji najnowszego wydania, gdy już je zainstalujesz. Poniższe żądanie jest
 dla osób piszących inną wtyczkę.
 
 Wtyczka wysyła:

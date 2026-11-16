@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Quản lý quyền sở hữu DLC",
-        "description": "Ghi vào configs.app.ini để trình giả lập báo cáo mọi DLC là đã sở hữu. Không liên quan đến thành tựu: để tắt nếu muốn giữ trò chơi nguyên bản hoặc tự quản lý DLC. Mặc định là tắt.",
+        "description": "Cho phép bản sửa giả lập và Hoàn thiện cài đặt của trình giả lập ghi vào configs.app.ini để trình giả lập báo cáo mọi DLC là đã sở hữu. Không liên quan đến thành tựu: để tắt nếu muốn giữ trò chơi nguyên bản hoặc tự quản lý DLC. Mặc định là tắt.",
         "value": {
           "false": "Tắt",
           "true": "Bật"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Ghi tên tài khoản và ngôn ngữ",
-        "description": "Ghi tên tài khoản và ngôn ngữ của bạn vào configs.user.ini của từng trò chơi. Để tắt nếu bạn muốn dựa vào cấu hình trung tâm của trình giả lập để có tên và ID người dùng ổn định. Mặc định là tắt.",
+        "description": "Cho phép bản sửa giả lập và Hoàn thiện cài đặt của trình giả lập ghi tên tài khoản và ngôn ngữ của bạn vào configs.user.ini của một trò chơi; tài khoản riêng của trò chơi chỉ bị thay sau khi hỏi. Để tắt nếu bạn muốn dựa vào cài đặt chung của trình giả lập để có tên và ID người dùng ổn định. Mặc định là tắt.",
         "value": {
           "false": "Tắt",
           "true": "Bật"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Tự gỡ DRM SteamStub",
-        "description": "Chạy Steamless trên tệp exe của trò chơi trước khi vá để bóc lớp DRM SteamStub của Valve (bản gốc được giữ lại dưới dạng .steamstub.bak). Không làm gì nếu không có stub.",
+        "description": "Chạy Steamless trên tệp exe của trò chơi trước khi vá để bóc lớp DRM SteamStub của Valve (bản gốc được giữ lại dưới dạng .steamstub.bak). Không làm gì nếu không có stub. Khi tắt, Steamless không bao giờ tự chạy: bản sửa thủ công hỏi trước, còn bản sửa tự động bỏ qua trò chơi được bảo vệ.",
         "value": {
           "false": "Tắt",
           "true": "Bật"
@@ -1644,7 +1644,8 @@
         "Nút tròn cạnh tỷ lệ hoàn thành mở Thống kê thư viện: mức hoàn thành, số lượng đã mở khóa và chưa mở khóa, thời gian chơi, cúp, trò chơi có bạch kim, các thành tựu hiếm nhất và mỗi nền tảng một dòng.",
         "Bộ chọn giữa ô tìm kiếm và nút + chuyển giữa sáu kiểu xem thư viện. Cài đặt > Giao diện > Thẻ thư viện đặt kích thước thẻ, khoảng cách và nội dung mỗi thẻ hiển thị.",
         "Nút + thêm một trò chơi mà không nguồn nào tìm thấy: một tiêu đề và một tệp thực thi, kèm nền tảng và Steam AppID tùy chọn. Số lần khởi chạy và thời gian chơi được theo dõi, không có thành tựu.",
-        "Nhấp chuột phải vào một trò chơi > Cài đặt trò chơi > Đổi tên… để đổi tên hiển thị. Thành tựu và thời gian chơi > Sửa thời gian chơi… chỉnh lại tổng số (12.5 hoặc 12h30)."
+        "Nhấp chuột phải vào một trò chơi > Cài đặt trò chơi > Đổi tên… để đổi tên hiển thị. Thành tựu và thời gian chơi > Sửa thời gian chơi… chỉnh lại tổng số (12.5 hoặc 12h30).",
+        "Ctrl+nhấp thêm một trò chơi vào vùng chọn và Shift+nhấp chọn cả một dải. Nhấp chuột phải vào một trong các trò chơi đã chọn để đặt lại mọi thành tựu của chúng cùng lúc: mỗi trò chơi được sao lưu trước, và những trò chơi mà nền tảng tự giữ lượt mở khóa sẽ bị bỏ qua. Esc bỏ vùng chọn."
       ],
       "sourcesTitle": "Ứng dụng phát hành và nguồn",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: bật nguồn, nhập tên người dùng và khóa Web API, rồi bấm Nhập thư viện. Lượt mở khóa đến từ tài khoản của bạn, nên hãy để RetroAchievements luôn bật trong trình giả lập.",
         "Ở chế độ Đơn giản, một vài dòng nguồn hiếm khi dùng sẽ được ẩn khi chưa được dùng. Chúng trở lại ngay khi cần, và Nâng cao luôn liệt kê tất cả.",
         "Cúp PlayStation hiển thị hạng của chúng và tỷ lệ người chơi đã có. Tỷ lệ lấy từ Exophase; hãy kết nối tài khoản PlayStation trong Cài đặt > Nguồn để có số liệu riêng của Sony cho các trò chơi trong tài khoản đó.",
-        "Khi đã kết nối tài khoản PlayStation, Nhập thư viện sẽ đưa vào các trò chơi và cúp PlayStation của bạn, làm mới ba ngày một lần, còn ô bên dưới thêm một trò chơi bạn không sở hữu. Trò chơi từ cửa hàng khác cũng phát hành trên PlayStation sẽ hiển thị bạch kim thật, và ở chế độ cúp là hạng và nhóm DLC thật."
+        "Khi đã kết nối tài khoản PlayStation, Nhập thư viện sẽ đưa vào các trò chơi và cúp PlayStation của bạn, làm mới ba ngày một lần, còn ô bên dưới thêm một trò chơi bạn không sở hữu. Trò chơi từ cửa hàng khác cũng phát hành trên PlayStation sẽ hiển thị bạch kim thật, và ở chế độ cúp là hạng và nhóm DLC thật.",
+        "Các trò chơi được thêm vào Steam bằng LuaTools hoặc SteamTools hiển thị thành tựu từ số liệu thống kê của chính Steam, bất kể cài đặt Steam ở trên."
       ],
       "notifications": [
         "Tự động là mặc định: cửa sổ bật lên trong trò chơi khi trò chơi hiển thị được, và thông báo Windows khi không, không bao giờ cả hai.",
@@ -1666,15 +1668,17 @@
         "Âm thanh thành tích hiếm, Âm thanh hoàn thành 100% và Âm thanh tiến độ (chế độ Nâng cao) cho các cửa sổ bật lên đó âm thanh riêng. Âm thanh ngẫu nhiên chọn một âm thanh khác mỗi lần, và bạn có thể nhập tệp của riêng mình.",
         "Vàng, bạc và đồng đánh dấu các lượt mở khóa hiếm. Cài đặt > Chung > Hiển thị độ hiếm chuyển sang Chế độ cúp, chế độ này xếp hạng từng thành tựu và hiển thị bạch kim trên các trò chơi đã hoàn thành.",
         "Với các bộ đếm, Mốc tiến độ chỉ hiện cửa sổ bật lên ở các bước 10, 25 hoặc 50%. Nhấp chuột phải vào một trò chơi > Tắt thông báo tiến độ để tắt tiếng một trò chơi mà không đụng đến các lượt mở khóa của nó.",
-        "Còn hai công tắc nữa trong Cài đặt > Thông báo: Thông báo ưu tiên cho phép lượt mở khóa vượt qua chế độ Không làm phiền (Windows 11), và Trò chơi của ứng dụng Steam thêm cửa sổ bật lên của AW Next cho các trò chơi do chính Steam chạy."
+        "Còn hai công tắc nữa trong Cài đặt > Thông báo: Thông báo ưu tiên cho phép lượt mở khóa vượt qua chế độ Không làm phiền (Windows 11), và Trò chơi của ứng dụng Steam thêm cửa sổ bật lên của AW Next cho các trò chơi do chính Steam chạy.",
+        "Bạch kim đến khi mọi thành tựu của trò chơi gốc đã đạt, không tính DLC, giống như trên PlayStation. Cài đặt > Thông báo > Bạch kim yêu cầu có thể bắt nó chờ cả danh sách. Với trò chơi có DLC, Chỉ bạch kim trên trang của nó ẩn những thành tựu mà bạch kim không cần."
       ],
       "gameHealthTitle": "Tình trạng trò chơi",
       "gameHealth": [
-        "Nhấp vào nút công cụ của một trò chơi (góc trên bên phải của thẻ), hoặc nhấp chuột phải vào nó, để mở Tình trạng trò chơi. Nó cho biết trò chơi đang Sẵn sàng, Cần chú ý hay Không theo dõi.",
+        "Nhấp vào nút công cụ của một trò chơi (góc trên bên phải của thẻ), hoặc nhấp chuột phải vào nó, để mở Tình trạng trò chơi. Nó cho biết trò chơi đang Sẵn sàng, Cần chú ý, Không theo dõi hay Chỉ thời gian chơi (đã biết thành tựu, nhưng chưa có gì trên máy này ghi lại chúng).",
         "Câu bên dưới trạng thái giải thích nguyên nhân bằng lời đơn giản. Các mục kiểm tra bên dưới cho thấy phần nào có lỗi: tệp trò chơi, tệp thực thi, dữ liệu thành tựu, thiết lập giả lập, theo dõi trực tiếp hoặc thông báo.",
-        "Các nút sửa chữa chỉ xuất hiện khi AW Next thật sự sửa được trò chơi đó, chẳng hạn Tìm vị trí trò chơi, Ghi lại dữ liệu thành tựu, Cài đặt tệp của trình giả lập hoặc Theo dõi trò chơi này. Mỗi nút cho biết nó sẽ thay đổi gì, giữ một bản sao lưu và hỏi trước.",
+        "Các nút sửa chữa chỉ xuất hiện khi AW Next thật sự sửa được trò chơi đó, chẳng hạn Tìm vị trí trò chơi, Ghi lại dữ liệu thành tựu, Hoàn thiện cài đặt của trình giả lập, Cài đặt tệp của trình giả lập hoặc Theo dõi trò chơi này. Mỗi nút cho biết nó sẽ thay đổi gì, giữ một bản sao lưu và hỏi trước; bản sửa nào thất bại sẽ trả lại mọi tệp.",
         "Gửi một thông báo thử hiện một cửa sổ bật lên với tên và hình của chính trò chơi đó, được gửi đúng như khi thật.",
-        "Chi tiết kỹ thuật chứa đường dẫn, số liệu và mã trình giả lập chính xác: bấm Chép rồi dán vào báo cáo lỗi. Chấm màu trên thẻ có thể ẩn trong Cài đặt > Giao diện > Thẻ thư viện."
+        "Chi tiết kỹ thuật chứa đường dẫn, số liệu và mã trình giả lập chính xác: bấm Chép rồi dán vào báo cáo lỗi. Chấm màu trên thẻ có thể ẩn trong Cài đặt > Giao diện > Thẻ thư viện.",
+        "Ghi lại dữ liệu thành tựu chỉ thay đổi danh sách thành tựu, số liệu của nó và các biểu tượng còn thiếu. Hoàn thiện cài đặt của trình giả lập chỉ thêm những cài đặt mà trò chơi còn thiếu, giữ nguyên những gì cài đặt chung của trình giả lập đã cung cấp, và hỏi trước khi thay tài khoản riêng của trò chơi. Chuyển sang trình giả lập được hỗ trợ ghi cài đặt của trình giả lập trong cùng một bước, còn Hoàn tác lần sửa chữa gần nhất hoàn lại mọi thay đổi AW Next đã thực hiện trong thư mục trò chơi."
       ],
       "troubleshootTitle": "Khắc phục sự cố",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Nhấp chuột phải vào một trò chơi > Giả lập và công cụ > Áp dụng bản sửa giả lập… để cài GBE Fork, dựng steam_settings (danh sách thành tựu và biểu tượng) và ghi steam_appid.txt khi thiếu. Mọi tệp bị thay thế đều được sao lưu trước.",
         "Trong Cài đặt > Steam / GBE Fork, dữ liệu steam_settings đặt ở Đơn giản dùng cách tải ẩn danh riêng của AW Next và rất nhanh. Nâng cao chạy generate_emu_config để có dữ liệu Steam sâu hơn và có thể mất vài phút.",
         "Không có gì tự ghi vào thư mục trò chơi: Tự sửa những trò chơi mới phát hiện, Quản lý quyền sở hữu DLC và Ghi tên tài khoản và ngôn ngữ đều tắt theo mặc định.",
-        "Chẩn đoán trình giả lập trong cùng menu chỉ đọc và báo cáo. Sao lưu thiết lập GBE/Goldberg và Khôi phục bản sao lưu GBE/Goldberg mới nhất đưa trò chơi về như cũ."
+        "Chẩn đoán trình giả lập trong cùng menu chỉ đọc và báo cáo. Sao lưu thiết lập GBE/Goldberg và Khôi phục bản sao lưu GBE/Goldberg mới nhất đưa trò chơi về như cũ.",
+        "Khi Tự gỡ DRM SteamStub đang tắt, Steamless không bao giờ tự chạy: bản sửa thủ công hỏi trước nếu trò chơi được bảo vệ, còn bản sửa tự động để yên trò chơi đó. Bản sửa nào thất bại sẽ trả lại mọi tệp, kể cả tệp thực thi. Tài khoản riêng của trò chơi trong configs.user.ini được giữ nguyên, trừ khi việc thay thế được xác nhận."
       ],
       "emulatorTitle": "Trình giả lập máy chơi game",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Tiến độ của Xenia được đọc từ các tệp hồ sơ Xbox (.gpd) và theo các thư mục lưu trữ đặt trong cấu hình của nó.",
         "Cúp của KytyPS5 được đọc từ thư mục _Trophies của nó, cho người dùng mà trình khởi chạy dùng để chạy trò chơi.",
         "Các trò chơi Xbox 360 được biên dịch lại cho PC và các bản port PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil và nhiều trò khác) là các nguồn riêng trong Cài đặt > Nguồn. Nếu có trò không hiện ra, hãy thêm thư mục của nó trong Cài đặt > Thư mục.",
-        "Mỗi máy console có thể có mẫu cửa sổ bật lên và âm thanh riêng trong Cài đặt > Thông báo > Trình giả lập (chế độ Nâng cao). Các trò chơi Xbox 360 biên dịch lại theo lựa chọn của Xenia, bản port PS4 theo của shadPS4, và Giống mẫu chính giữ nguyên cài đặt chính."
+        "Mỗi máy console có thể có mẫu cửa sổ bật lên và âm thanh riêng trong Cài đặt > Thông báo > Trình giả lập (chế độ Nâng cao). Các trò chơi Xbox 360 biên dịch lại theo lựa chọn của Xenia, bản port PS4 theo của shadPS4, và Giống mẫu chính giữ nguyên cài đặt chính.",
+        "Khi RPCS3 đang chạy, phím tắt lớp phủ trong trò chơi sẽ mở trò chơi mà nó đang chạy, đọc từ nhật ký của RPCS3."
       ],
       "controllerTitle": "Tay cầm (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Nhấp chuột phải vào thẻ trò chơi để khởi chạy, chọn tệp thực thi, mở thư mục và liên kết, dùng công cụ trình giả lập hoặc gỡ cài đặt khi menu đó được bật.",
         "Đánh dấu là mở khóa thủ công (nhấp chuột phải vào một thành tựu) ghi lại một lượt mở khóa mà không nguồn nào thấy được.",
-        "Đặt lại thành tựu… cho chơi lại một trò chơi từ đầu và sao lưu mọi tệp trước. Nó dùng được cho trò chơi giả lập, không dùng cho Steam, Epic hay Xbox, nơi lượt mở khóa nằm trên tài khoản của bạn.",
+        "Đặt lại thành tựu… cho chơi lại một trò chơi từ đầu và sao lưu mọi tệp trước. Nó dùng được cho trò chơi giả lập, không dùng cho Steam, Epic hay Xbox, nơi lượt mở khóa nằm trên tài khoản của bạn. Chọn nhiều trò chơi trong thư viện để đặt lại chúng cùng lúc.",
         "Thời gian chơi được theo dõi khi trò chơi đang chạy; Theo dõi thời gian chơi trong Cài đặt > Thông báo bật thông báo bắt đầu và kết thúc.",
         "Xóa sạch dữ liệu của trò chơi này… xóa mọi thứ AW Next lưu về một trò chơi (các bản lưu được sao lưu trước), và lần quét tiếp theo sẽ tìm lại nó. Gỡ khỏi AW Next đưa nó ra khỏi thư viện cho đến khi bạn khôi phục từ Cài đặt > Chung. Ẩn khỏi chế độ xem vẫn theo dõi nó, trong chế độ xem Đã ẩn của menu Bộ sưu tập.",
         "Cài đặt trò chơi > Ngôn ngữ thành tựu hiển thị thành tựu và thông báo của một trò chơi bằng ngôn ngữ khác với phần còn lại.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Chạy Steamless trên tệp exe của trò chơi trước khi vá để bóc lớp DRM SteamStub của Valve (bản gốc được giữ lại dưới dạng .steamstub.bak). Không làm gì nếu không có stub. Cần có Mono (mono-complete trên Debian và Ubuntu)."
+            "description": "Chạy Steamless trên tệp exe của trò chơi trước khi vá để bóc lớp DRM SteamStub của Valve (bản gốc được giữ lại dưới dạng .steamstub.bak). Không làm gì nếu không có stub. Khi tắt, Steamless không bao giờ tự chạy: bản sửa thủ công hỏi trước, còn bản sửa tự động bỏ qua trò chơi được bảo vệ. Cần có Mono (mono-complete trên Debian và Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Mặc định tắt. Đặt proxy bỏ qua của SteamAutoCrack (winmm.dll) cùng một tệp cấu hình chuyển hướng, để những trò chơi kiểm tra lại steam_api/exe gốc sau khi thay thế vẫn khởi chạy và mở khóa được. Proxy được tải từ bản phát hành chính thức của nó. Wine và Proton chỉ tải proxy khi tùy chọn khởi chạy của trò chơi đặt WINEDLLOVERRIDES=\"winmm=n,b\"."

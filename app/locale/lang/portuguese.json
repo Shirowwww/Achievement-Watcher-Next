@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Gerir a propriedade das DLC",
-        "description": "Escreve o configs.app.ini para que o emulador reporte todas as DLC como possuídas. Sem relação com as proezas: deixe desativado para manter um jogo original ou para gerir as DLC por conta própria. Desativado por predefinição.",
+        "description": "Permite que a correção de emulador e Completar as definições do emulador escrevam o configs.app.ini, para que o emulador reporte todas as DLC como possuídas. Sem relação com as proezas: deixe desativado para manter um jogo original ou para gerir as DLC por conta própria. Desativado por predefinição.",
         "value": {
           "false": "Desativado",
           "true": "Ativado"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Escrever nome de conta e idioma",
-        "description": "Escreve o nome da conta e o idioma no configs.user.ini de cada jogo. Deixe desativado se preferir confiar na configuração central do emulador para um nome e ID de utilizador previsíveis. Desativado por predefinição.",
+        "description": "Permite que a correção de emulador e Completar as definições do emulador escrevam o nome da conta e o idioma no configs.user.ini de um jogo; a conta própria de um jogo só é substituída depois de perguntar. Deixe desativado se preferir confiar nas definições globais do emulador para um nome e ID de utilizador previsíveis. Desativado por predefinição.",
         "value": {
           "false": "Desativado",
           "true": "Ativado"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Remover automaticamente o DRM SteamStub",
-        "description": "Executa o Steamless no exe do jogo antes de aplicar o patch para remover o DRM SteamStub da Valve (original mantido como .steamstub.bak). Sem efeito se não houver stub.",
+        "description": "Executa o Steamless no exe do jogo antes de aplicar o patch para remover o DRM SteamStub da Valve (original mantido como .steamstub.bak). Sem efeito se não houver stub. Desativado, o Steamless nunca corre por iniciativa própria: a correção manual pergunta primeiro e a correção automática salta um jogo protegido.",
         "value": {
           "false": "Desativado",
           "true": "Ativado"
@@ -1644,7 +1644,8 @@
         "O botão redondo junto à taxa de conclusão abre as Estatísticas da biblioteca: conclusão, contagens de desbloqueadas e bloqueadas, tempo de jogo, troféus, jogos com platina, as proezas mais raras e uma linha por plataforma.",
         "Um seletor entre o campo de pesquisa e o botão + alterna entre seis vistas da biblioteca. Definições > Aparência > Cartões da biblioteca define o tamanho dos cartões, o espaçamento e o que cada um mostra.",
         "O botão + adiciona um jogo que nenhuma fonte encontra: um título e um executável, com plataforma e Steam AppID opcionais. Os arranques e o tempo de jogo são registados, sem proezas.",
-        "Clique com o botão direito num jogo > Definições do jogo > Mudar o nome… para alterar o nome mostrado. Proezas e tempo de jogo > Editar tempo de jogo… corrige o total (12.5 ou 12h30)."
+        "Clique com o botão direito num jogo > Definições do jogo > Mudar o nome… para alterar o nome mostrado. Proezas e tempo de jogo > Editar tempo de jogo… corrige o total (12.5 ou 12h30).",
+        "Ctrl+clique adiciona um jogo a uma seleção e Shift+clique seleciona um intervalo. Clique com o botão direito num dos jogos selecionados para repor todas as proezas de uma vez: cada jogo é copiado primeiro, e os jogos cuja plataforma guarda os desbloqueios são ignorados. Esc limpa a seleção."
       ],
       "sourcesTitle": "Launchers e fontes",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: ative a fonte, introduza o nome de utilizador e a chave Web API e prima Importar biblioteca. Os desbloqueios vêm da sua conta, por isso mantenha o RetroAchievements ativo no emulador.",
         "No modo Simples, algumas linhas de fontes raramente usadas ficam escondidas enquanto não são usadas. Voltam assim que passam a contar, e o modo Avançado lista-as sempre todas.",
         "Os troféus PlayStation mostram o seu grau e a percentagem de jogadores que os têm. As taxas vêm do Exophase; ligue uma conta PlayStation em Definições > Fonte para obter os valores da Sony para os jogos dessa conta.",
-        "Com uma conta PlayStation ligada, Importar biblioteca traz os seus jogos e troféus da PlayStation, atualizados de três em três dias, e o campo por baixo adiciona um jogo que não possui. Um jogo de outra loja que também saiu na PlayStation mostra a sua platina real e, no modo troféus, os seus graus reais e grupos de DLC."
+        "Com uma conta PlayStation ligada, Importar biblioteca traz os seus jogos e troféus da PlayStation, atualizados de três em três dias, e o campo por baixo adiciona um jogo que não possui. Um jogo de outra loja que também saiu na PlayStation mostra a sua platina real e, no modo troféus, os seus graus reais e grupos de DLC.",
+        "Os jogos adicionados ao Steam com LuaTools ou SteamTools mostram as proezas a partir das estatísticas do próprio Steam, qualquer que seja a definição do Steam acima."
       ],
       "notifications": [
         "Automático é a predefinição: o aviso dentro do jogo quando o jogo o consegue mostrar e uma notificação do Windows quando não, nunca os dois.",
@@ -1666,15 +1668,17 @@
         "Som de conquista rara, Som de conclusão a 100% e Som do progresso (modo Avançado) dão a esses avisos um som próprio. Som aleatório escolhe um som diferente de cada vez, e pode importar os seus próprios ficheiros.",
         "Ouro, prata e bronze assinalam desbloqueios raros. Definições > Geral > Apresentação da raridade passa para o Modo troféus, que classifica todas as proezas e mostra a platina nos jogos concluídos.",
         "Nos contadores, os Marcos de progresso mostram um aviso só em passos de 10, 25 ou 50%. Clique com o botão direito num jogo > Silenciar notificações de progresso para silenciar um jogo sem mexer nos desbloqueios.",
-        "Mais dois interruptores em Definições > Notificação: as Notificações prioritárias deixam passar os desbloqueios no modo Não incomodar (Windows 11), e os Jogos do cliente Steam acrescentam o aviso do AW Next para jogos que o próprio Steam executa."
+        "Mais dois interruptores em Definições > Notificação: as Notificações prioritárias deixam passar os desbloqueios no modo Não incomodar (Windows 11), e os Jogos do cliente Steam acrescentam o aviso do AW Next para jogos que o próprio Steam executa.",
+        "A platina surge quando todas as proezas do jogo base são obtidas, sem contar as DLC, como na PlayStation. Definições > Notificação > A platina exige pode fazê-la esperar pela lista completa. Num jogo com DLC, Só platina na respetiva página oculta as proezas de que a platina não precisa."
       ],
       "gameHealthTitle": "Estado do jogo",
       "gameHealth": [
-        "Clique no botão de ferramentas de um jogo (canto superior direito do cartão), ou clique nele com o botão direito, para abrir o Estado do jogo. Diz se o jogo está Pronto, Requer atenção ou Sem acompanhamento.",
+        "Clique no botão de ferramentas de um jogo (canto superior direito do cartão), ou clique nele com o botão direito, para abrir o Estado do jogo. Diz se o jogo está Pronto, Requer atenção, Sem acompanhamento ou Apenas tempo de jogo (as proezas são conhecidas, mas nada neste PC as regista ainda).",
         "A frase por baixo do estado explica a causa em linguagem simples. As verificações abaixo mostram que parte falha: ficheiros do jogo, executável, dados de proezas, configuração do emulador, acompanhamento em direto ou notificações.",
-        "Os botões de reparação só aparecem quando o AW Next pode mesmo corrigir esse jogo, como Localizar o jogo, Reescrever os dados de proezas, Instalar o ficheiro do emulador ou Monitorizar este jogo. Cada um diz o que vai alterar, guarda uma cópia de segurança e pergunta primeiro.",
+        "Os botões de reparação só aparecem quando o AW Next pode mesmo corrigir esse jogo, como Localizar o jogo, Reescrever os dados de proezas, Completar as definições do emulador, Instalar o ficheiro do emulador ou Monitorizar este jogo. Cada um diz o que vai alterar, guarda uma cópia de segurança e pergunta primeiro, e uma reparação que falha repõe todos os ficheiros.",
         "Enviar uma notificação de teste dispara um aviso com o nome e a arte desse jogo, entregue como seria na realidade.",
-        "Detalhes técnicos contém os caminhos exatos, as contagens e os códigos do emulador: prima Copiar e cole num relatório de erro. O ponto colorido num cartão pode ser escondido em Definições > Aparência > Cartões da biblioteca."
+        "Detalhes técnicos contém os caminhos exatos, as contagens e os códigos do emulador: prima Copiar e cole num relatório de erro. O ponto colorido num cartão pode ser escondido em Definições > Aparência > Cartões da biblioteca.",
+        "Reescrever os dados de proezas altera apenas a lista de proezas, as suas estatísticas e os ícones em falta. Completar as definições do emulador acrescenta apenas as definições que faltam a um jogo, mantém o que as definições globais do emulador já dão e pergunta antes de substituir a conta própria de um jogo. Mudar para o emulador suportado escreve as definições do emulador no mesmo passo, e Anular a última reparação repõe qualquer alteração que o AW Next tenha feito na pasta do jogo."
       ],
       "troubleshootTitle": "Resolução de problemas",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Clique com o botão direito num jogo > Emulador e ferramentas > Aplicar correção de emulador… para instalar o GBE Fork, criar o steam_settings (lista de proezas e ícones) e escrever o steam_appid.txt quando falta. Cada ficheiro substituído é copiado primeiro.",
         "Em Definições > Steam / GBE Fork, os dados de steam_settings definidos como Simples usam a obtenção anónima do próprio AW Next e são rápidos. Avançado executa o generate_emu_config para dados Steam mais profundos e pode demorar minutos.",
         "Nada é escrito numa pasta de jogo por iniciativa própria: Corrigir automaticamente os jogos recém-detetados, Gerir a propriedade das DLC e Escrever nome de conta e idioma estão todos desligados por predefinição.",
-        "Diagnosticar emulador, no mesmo menu, só lê e reporta. Fazer cópia de segurança do GBE/Goldberg e Restaurar a última cópia de segurança do GBE/Goldberg repõem um jogo como estava."
+        "Diagnosticar emulador, no mesmo menu, só lê e reporta. Fazer cópia de segurança do GBE/Goldberg e Restaurar a última cópia de segurança do GBE/Goldberg repõem um jogo como estava.",
+        "Com Remover automaticamente o DRM SteamStub desativado, o Steamless nunca corre por iniciativa própria: a correção manual pergunta primeiro quando o jogo está protegido, e a correção automática deixa esse jogo em paz. Uma correção que falha repõe todos os ficheiros, incluindo o executável. A conta própria de um jogo em configs.user.ini é mantida, a não ser que a substituição seja confirmada."
       ],
       "emulatorTitle": "Emuladores de consola",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "O progresso do Xenia é lido dos ficheiros de perfil Xbox (.gpd) e segue as pastas de armazenamento definidas na configuração dele.",
         "Os troféus do KytyPS5 são lidos na pasta _Trophies, para o utilizador com que o lançador executa o jogo.",
         "Os jogos Xbox 360 recompilados para PC e as versões PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil e outros) são fontes próprias em Definições > Fonte. Se algum não aparecer, adicione a pasta dele em Definições > Pastas.",
-        "Cada consola pode ter a sua própria predefinição de pop-up e som em Definições > Notificação > Emuladores (modo Avançado). Os jogos Xbox 360 recompilados seguem a escolha do Xenia, as versões PS4 seguem a do shadPS4, e Igual à principal mantém as definições principais."
+        "Cada consola pode ter a sua própria predefinição de pop-up e som em Definições > Notificação > Emuladores (modo Avançado). Os jogos Xbox 360 recompilados seguem a escolha do Xenia, as versões PS4 seguem a do shadPS4, e Igual à principal mantém as definições principais.",
+        "Enquanto o RPCS3 está a correr, o atalho do overlay no jogo abre o jogo que ele está a executar, lido do registo do RPCS3."
       ],
       "controllerTitle": "Comando (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Clique com o botão direito num cartão de jogo para o iniciar, escolher o executável, abrir pastas e ligações, usar as ferramentas do emulador ou desinstalá-lo quando esse menu está ativado.",
         "Marcar como desbloqueado manualmente (botão direito numa proeza) regista um desbloqueio que nenhuma fonte consegue ver.",
-        "Repor as proezas… permite jogar de novo a partir do zero e copia primeiro todos os ficheiros. Funciona em jogos emulados, não em Steam, Epic ou Xbox, cujos desbloqueios estão na sua conta.",
+        "Repor as proezas… permite jogar de novo a partir do zero e copia primeiro todos os ficheiros. Funciona em jogos emulados, não em Steam, Epic ou Xbox, cujos desbloqueios estão na sua conta. Selecione vários jogos na biblioteca para os repor em conjunto.",
         "O tempo de jogo é registado enquanto o jogo corre; Monitorização do tempo de jogo em Definições > Notificação liga as notificações de início e fim.",
         "Limpar os dados deste jogo… apaga tudo o que o AW Next guarda sobre um jogo (as gravações são copiadas primeiro), e a próxima análise volta a encontrá-lo. Remover do AW Next retira-o da biblioteca até o repor em Definições > Geral. Ocultar da visualização mantém-no acompanhado, na vista Ocultos do menu Coleções.",
         "Definições do jogo > Idioma das proezas mostra as proezas e as notificações de um jogo noutro idioma que não o do resto.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Executa o Steamless no exe do jogo antes de aplicar o patch para remover o DRM SteamStub da Valve (original mantido como .steamstub.bak). Sem efeito se não houver stub. Requer o Mono (mono-complete no Debian e no Ubuntu)."
+            "description": "Executa o Steamless no exe do jogo antes de aplicar o patch para remover o DRM SteamStub da Valve (original mantido como .steamstub.bak). Sem efeito se não houver stub. Desativado, o Steamless nunca corre por iniciativa própria: a correção manual pergunta primeiro e a correção automática salta um jogo protegido. Requer o Mono (mono-complete no Debian e no Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Desativado por predefinição. Coloca o proxy de contorno do SteamAutoCrack (winmm.dll) + uma configuração de redirecionamento, para que os jogos que voltam a verificar a steam_api/exe original após a troca arranquem e desbloqueiem mesmo assim. Transfere o proxy a partir do seu lançamento oficial. O Wine e o Proton só carregam o proxy quando as opções de arranque do jogo definem WINEDLLOVERRIDES=\"winmm=n,b\"."

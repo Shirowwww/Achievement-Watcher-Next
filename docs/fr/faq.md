@@ -76,6 +76,15 @@ barre.
 Le jeu a un schéma mais pas de fichier de déblocage à l'exécution. Ouvrez son panneau [Game Health](game-health.md) : il
 nomme l'élément manquant et ne propose que les réparations qui s'appliquent.
 
+### Un jeu que j'ai ajouté à la main affiche « Temps de jeu seulement » {#a-game-i-added-by-hand-says-playtime-only}
+AW Next compte son temps de jeu, mais rien sur ce PC n'enregistre encore ses succès : aucun émulateur, sauvegarde ni compte de boutique n'a été trouvé pour lui. Appliquez un fix émulateur, ou ajoutez le dossier où le jeu enregistre ses déblocages, et l'état change. Voir [Game Health](game-health.md#the-states).
+
+### Un dossier de repack ou « QuickSFV » apparaît comme un jeu {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+Les téléchargements de repacks (FitGirl, DODI, ElAmigos) contiennent un outil de somme de contrôle et des installeurs que les anciennes versions prenaient pour un jeu. AW Next les ignore désormais tout en trouvant un jeu installé à côté. Il en va de même pour les injecteurs d'overlay, les dossiers d'outils dont le nom commence par `__` et un émulateur livré avec un portage (Cemu dans un dossier Bayonetta 2) : le portage est listé sous le nom de son dossier. Masquez ou supprimez une fois les anciennes entrées ; elles ne reviennent pas.
+
+### Un jeu que j'ai ajouté à Steam avec LuaTools ou SteamTools n'affiche aucun succès {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+Steam enregistre lui-même les déblocages d'un tel jeu dans ses propres fichiers de statistiques, et AW Next les lit quel que soit le réglage Steam dans **Paramètres → Sources**, que l'outil garde un script par jeu ou tous dans `steamtools.lua`. Lancez le jeu via Steam et débloquez quelque chose. Les jeux GreenLuma ne sont lus que si les jeux Steam sont activés dans Sources.
+
 ### Pourquoi le même jeu apparaît-il deux fois ? {#why-does-the-same-game-appear-twice}
 Il a été trouvé par deux sources. **Fusionner les doublons** dans Paramètres → Général les combine. Si une
 entrée est un dossier de sauvegarde périmé d'un jeu que vous possédez maintenant ailleurs, mettez-la sur liste noire.

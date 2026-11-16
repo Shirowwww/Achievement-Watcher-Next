@@ -75,6 +75,19 @@ RetroAchievements 则要求你的用户名和 Web API 密钥。每个令牌和�
 该游戏有架构，但运行时没有解锁文件。打开它的[游戏状态](game-health.md)面板：它
 会指出缺失的部分，并且只提供适用的修复。
 
+### 我手动添加的游戏显示“仅游戏时长” {#a-game-i-added-by-hand-says-playtime-only}
+AW Next 会统计它的游戏时长，但这台电脑上还没有任何东西记录它的成就：没有找到模拟器、存档或商店账号。应用模拟器修复，
+或添加游戏保存解锁记录的文件夹，状态就会改变。见[游戏状态](game-health.md#the-states)。
+
+### 重打包文件夹或“QuickSFV”被显示成了游戏 {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+重打包下载（FitGirl、DODI、ElAmigos）自带校验和工具和安装程序，旧版本曾把它们当成游戏。AW Next 现在会跳过它们，
+同时仍能找到装在它们旁边的游戏。叠加层注入器、名称以 `__` 开头的工具文件夹，以及移植版自带的模拟器（例如 Bayonetta 2
+文件夹里的 Cemu）也是如此：移植版会以其文件夹名显示。把旧条目隐藏或移除一次即可，它们不会再回来。
+
+### 我用 LuaTools 或 SteamTools 加入 Steam 的游戏没有显示成就 {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+Steam 自己会把这类游戏的解锁记录在它的统计文件里，无论 **设置 → 来源** 中的 Steam 设置是什么，AW Next 都会读取，无论该工具是每款游戏一个脚本，还是全部放在 `steamtools.lua` 中。
+通过 Steam 启动游戏并解锁一些东西即可。GreenLuma 的游戏只有在来源中开启了 Steam 游戏时才会被读取。
+
 ### 为什么同一款游戏出现了两次？ {#why-does-the-same-game-appear-twice}
 它是通过两个来源找到的。设置 → 常规 中的 **合并重复项** 可以把它们合并。如果其中一个
 条目是你现在在别处拥有的游戏的过期存档文件夹，请将其加入黑名单。

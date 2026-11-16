@@ -103,6 +103,30 @@
     },
     {
       "@type": "Question",
+      "name": "A game I added by hand says \"Playtime only\"",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "AW Next counts its play time, but nothing on this PC records its achievements yet: no emulator, save or store account was found for it. Apply an emulator fix, or add the folder where the game saves its unlocks, and the state changes. See Game Health."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "A repack folder or \"QuickSFV\" shows up as a game",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Repack downloads (FitGirl, DODI, ElAmigos) ship a checksum tool and installers that older versions took for a game. AW Next now skips them while still finding a game installed next to them. The same goes for overlay injectors, tool folders whose name starts with , and an emulator a port ships with (Cemu in a Bayonetta 2 folder): the port is listed under its folder name. Hide or remove the old entries once; they do not come back."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "A game I added to Steam with LuaTools or SteamTools shows no achievements",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Steam itself records the unlocks of such a game in its own stats files, and AW Next reads them whatever the Steam setting in Settings → Sources says, whether the tool keeps one script per game or all of them in steamtools.lua. Launch the game through Steam and unlock something. GreenLuma games are read only with Steam games turned on in Sources."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Why does the same game appear twice?",
       "acceptedAnswer": {
         "@type": "Answer",

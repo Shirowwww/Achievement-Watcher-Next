@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Gestisci la proprietà dei DLC",
-        "description": "Scrive configs.app.ini in modo che l’emulatore segnali tutti i DLC come posseduti. Non ha nulla a che fare con gli obiettivi: lascialo disattivato per mantenere un gioco originale o per gestire i DLC tu stesso. Disattivato per impostazione predefinita.",
+        "description": "Permette al fix emulatore e a Completa le impostazioni dell’emulatore di scrivere configs.app.ini, in modo che l’emulatore segnali tutti i DLC come posseduti. Non ha nulla a che fare con gli obiettivi: lascialo disattivato per mantenere un gioco originale o per gestire i DLC tu stesso. Disattivato per impostazione predefinita.",
         "value": {
           "false": "Disattivato",
           "true": "Attivato"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Scrivi nome account e lingua",
-        "description": "Scrive il tuo nome account e la lingua nel configs.user.ini di ogni gioco. Lascialo disattivato se ti affidi alla configurazione centrale dell’emulatore per un nome e un ID utente prevedibili. Disattivato per impostazione predefinita.",
+        "description": "Permette al fix emulatore e a Completa le impostazioni dell’emulatore di scrivere il tuo nome account e la lingua nel configs.user.ini di un gioco; l’account proprio di un gioco viene sostituito solo dopo aver chiesto. Lascialo disattivato se ti affidi alle impostazioni globali dell’emulatore per un nome e un ID utente prevedibili. Disattivato per impostazione predefinita.",
         "value": {
           "false": "Disattivato",
           "true": "Attivato"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Rimuovi automaticamente il DRM SteamStub",
-        "description": "Esegue Steamless sull’exe del gioco prima della patch per rimuovere il DRM SteamStub di Valve (originale conservato come .steamstub.bak). Nessun effetto se non c’è alcuno stub.",
+        "description": "Esegue Steamless sull’exe del gioco prima della patch per rimuovere il DRM SteamStub di Valve (originale conservato come .steamstub.bak). Nessun effetto se non c’è alcuno stub. Se è disattivato, Steamless non parte mai da solo: il fix manuale chiede prima, e il fix automatico salta un gioco protetto.",
         "value": {
           "false": "Disattivato",
           "true": "Attivato"
@@ -1644,7 +1644,8 @@
         "Il pulsante rotondo accanto alla percentuale di completamento apre le Statistiche della libreria: completamento, numero di obiettivi sbloccati e bloccati, tempo di gioco, trofei, giochi con platino, obiettivi più rari e una riga per piattaforma.",
         "Un selettore tra il campo di ricerca e il pulsante + passa da una all’altra di sei viste della libreria. Impostazioni > Aspetto > Riquadri della libreria definisce la dimensione dei riquadri, la spaziatura e cosa mostra ciascun riquadro.",
         "Il pulsante + aggiunge un gioco che nessuna sorgente trova: un titolo e un eseguibile, con piattaforma e AppID di Steam facoltativi. Avvii e tempo di gioco vengono monitorati, senza obiettivi.",
-        "Fai clic con il pulsante destro su un gioco > Impostazioni di gioco > Rinomina… per cambiare il nome mostrato. Obiettivi e tempo di gioco > Modifica il tempo di gioco… corregge il totale (12.5 o 12h30)."
+        "Fai clic con il pulsante destro su un gioco > Impostazioni di gioco > Rinomina… per cambiare il nome mostrato. Obiettivi e tempo di gioco > Modifica il tempo di gioco… corregge il totale (12.5 o 12h30).",
+        "Ctrl+clic aggiunge un gioco a una selezione e Maiusc+clic seleziona un intervallo. Fai clic destro su uno dei giochi selezionati per reimpostare tutti i loro obiettivi in una volta: ogni gioco viene prima salvato in un backup, e i giochi la cui piattaforma conserva gli sblocchi vengono saltati. Esc cancella la selezione."
       ],
       "sourcesTitle": "Launcher e sorgenti",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: attiva la sorgente, inserisci il tuo nome utente e la chiave Web API, poi premi Importa libreria. Gli sblocchi arrivano dal tuo account, quindi lascia RetroAchievements attivo nell’emulatore.",
         "In modalità Semplice alcune righe di sorgenti poco usate restano nascoste finché non servono. Tornano appena contano, e Avanzata le mostra sempre tutte.",
         "I trofei PlayStation mostrano il loro grado e la percentuale di giocatori che li possiedono. Le percentuali arrivano da Exophase; collega un account PlayStation in Impostazioni > Sorgente per ottenere i dati di Sony per i giochi di quell’account.",
-        "Con un account PlayStation collegato, Importa libreria porta i tuoi giochi e trofei PlayStation, aggiornati ogni tre giorni, e il campo sotto aggiunge un gioco che non possiedi. Un gioco di un altro store uscito anche su PlayStation mostra il suo vero platino e, nella modalità trofei, i suoi veri gradi e gruppi di DLC."
+        "Con un account PlayStation collegato, Importa libreria porta i tuoi giochi e trofei PlayStation, aggiornati ogni tre giorni, e il campo sotto aggiunge un gioco che non possiedi. Un gioco di un altro store uscito anche su PlayStation mostra il suo vero platino e, nella modalità trofei, i suoi veri gradi e gruppi di DLC.",
+        "I giochi aggiunti a Steam con LuaTools o SteamTools mostrano i loro obiettivi dalle statistiche di Steam stesso, qualunque sia l’impostazione Steam qui sopra."
       ],
       "notifications": [
         "Automatico è l’impostazione predefinita: il popup nel gioco quando il gioco può mostrarlo, una notifica di Windows quando non può, mai entrambi.",
@@ -1666,15 +1668,17 @@
         "Suono per obiettivo raro, Suono di completamento al 100% e Suono dell’avanzamento (modalità Avanzata) danno a quei popup un suono proprio. Suono casuale ne sceglie uno diverso ogni volta, e puoi importare i tuoi file.",
         "Oro, argento e bronzo segnano gli sblocchi rari. Impostazioni > Generale > Visualizzazione della rarità passa alla Modalità trofei, che classifica ogni obiettivo e mostra il platino sui giochi completati.",
         "Per i contatori, Tappe di avanzamento mostra un popup solo a passi del 10, 25 o 50%. Fai clic con il pulsante destro su un gioco > Silenzia le notifiche di progresso per zittire un solo gioco senza toccare i suoi sblocchi.",
-        "Altri due interruttori in Impostazioni > Notifiche: Notifiche prioritarie lascia passare gli sblocchi attraverso Non disturbare (Windows 11), e Giochi del client Steam aggiunge il popup di AW Next per i giochi che avvia Steam stesso."
+        "Altri due interruttori in Impostazioni > Notifiche: Notifiche prioritarie lascia passare gli sblocchi attraverso Non disturbare (Windows 11), e Giochi del client Steam aggiunge il popup di AW Next per i giochi che avvia Steam stesso.",
+        "Il platino arriva quando tutti gli obiettivi del gioco base sono ottenuti, DLC esclusi, come su PlayStation. Impostazioni > Notifiche > Il platino richiede può fargli attendere l’intera lista. In un gioco con DLC, Solo platino nella sua pagina nasconde gli obiettivi di cui il platino non ha bisogno."
       ],
       "gameHealthTitle": "Stato dei giochi",
       "gameHealth": [
-        "Fai clic sul pulsante degli strumenti di un gioco (in alto a destra sul suo riquadro), o fai clic destro su di esso, per aprire Stato dei giochi. Indica se il gioco è Pronto, Da verificare o Non monitorato.",
+        "Fai clic sul pulsante degli strumenti di un gioco (in alto a destra sul suo riquadro), o fai clic destro su di esso, per aprire Stato dei giochi. Indica se il gioco è Pronto, Da verificare, Non monitorato o Solo tempo di gioco (gli obiettivi sono noti, ma per ora nulla su questo PC li registra).",
         "La frase sotto lo stato spiega la causa in parole semplici. I controlli sotto mostrano quale parte è in difetto: file del gioco, eseguibile, dati obiettivi, configurazione emulatore, monitoraggio in tempo reale o notifiche.",
-        "I pulsanti di riparazione compaiono solo quando AW Next può davvero correggere quel gioco, come Individua il gioco, Riscrivi i dati degli obiettivi, Installa il file dell’emulatore o Monitora questo gioco. Ciascuno dice cosa cambierà, conserva un backup e chiede conferma prima.",
+        "I pulsanti di riparazione compaiono solo quando AW Next può davvero correggere quel gioco, come Individua il gioco, Riscrivi i dati degli obiettivi, Completa le impostazioni dell’emulatore, Installa il file dell’emulatore o Monitora questo gioco. Ciascuno dice cosa cambierà, conserva un backup e chiede conferma prima, e una riparazione che fallisce rimette a posto ogni file.",
         "Invia una notifica di prova fa comparire un popup con il nome e la grafica di quel gioco, consegnato nel modo in cui avverrebbe davvero.",
-        "Dettagli tecnici contiene percorsi, conteggi e codici dell’emulatore esatti: premi Copia e incollali in una segnalazione di bug. Il punto colorato su un riquadro può essere nascosto in Impostazioni > Aspetto > Riquadri della libreria."
+        "Dettagli tecnici contiene percorsi, conteggi e codici dell’emulatore esatti: premi Copia e incollali in una segnalazione di bug. Il punto colorato su un riquadro può essere nascosto in Impostazioni > Aspetto > Riquadri della libreria.",
+        "Riscrivi i dati degli obiettivi cambia solo l’elenco degli obiettivi, le sue statistiche e le icone mancanti. Completa le impostazioni dell’emulatore aggiunge solo le impostazioni che mancano a un gioco, lascia ciò che le impostazioni globali dell’emulatore già danno e chiede prima di sostituire l’account proprio di un gioco. Passa all’emulatore supportato scrive le impostazioni dell’emulatore nello stesso passaggio, e Annulla l’ultima riparazione rimette a posto ogni modifica fatta da AW Next nella cartella del gioco."
       ],
       "troubleshootTitle": "Risoluzione dei problemi",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Fai clic con il pulsante destro su un gioco > Emulatore e strumenti > Applica fix emulatore… per installare GBE Fork, creare steam_settings (elenco obiettivi e icone) e scrivere steam_appid.txt se manca. Ogni file sostituito viene prima salvato in un backup.",
         "In Impostazioni > Steam / GBE Fork, Dati steam_settings su Semplice usa il recupero anonimo di AW Next ed è veloce. Avanzata esegue generate_emu_config per dati Steam più approfonditi e può richiedere minuti.",
         "Nulla viene scritto da solo in una cartella di gioco: Correggi automaticamente i nuovi giochi rilevati, Gestisci la proprietà dei DLC e Scrivi nome account e lingua sono tutti disattivati per impostazione predefinita.",
-        "Diagnostica emulatore nello stesso menu legge e riferisce soltanto. Esegui il backup di GBE/Goldberg e Ripristina l’ultimo backup di GBE/Goldberg riportano un gioco com’era."
+        "Diagnostica emulatore nello stesso menu legge e riferisce soltanto. Esegui il backup di GBE/Goldberg e Ripristina l’ultimo backup di GBE/Goldberg riportano un gioco com’era.",
+        "Con Rimuovi automaticamente il DRM SteamStub disattivato, Steamless non parte mai da solo: il fix manuale chiede prima quando il gioco è protetto, e il fix automatico lascia stare quel gioco. Un fix che fallisce rimette a posto ogni file, eseguibile compreso. L’account proprio di un gioco in configs.user.ini viene mantenuto, a meno che la sostituzione non sia confermata."
       ],
       "emulatorTitle": "Emulatori console",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "I progressi di Xenia vengono letti dai file del profilo Xbox (.gpd) e seguono le cartelle di archiviazione impostate nella sua configurazione.",
         "I trofei di KytyPS5 vengono letti dalla sua cartella _Trophies, per l’utente con cui il launcher esegue il gioco.",
         "I giochi Xbox 360 ricompilati per PC e i port PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil e altri) sono sorgenti a sé in Impostazioni > Sorgente. Se uno non compare, aggiungi la sua cartella in Impostazioni > Cartelle.",
-        "Ogni console può avere una propria preimpostazione di popup e un proprio suono in Impostazioni > Notifiche > Emulatori (modalità Avanzata). I giochi Xbox 360 ricompilati seguono la scelta di Xenia, i port PS4 quella di shadPS4, e Come il principale mantiene le impostazioni principali."
+        "Ogni console può avere una propria preimpostazione di popup e un proprio suono in Impostazioni > Notifiche > Emulatori (modalità Avanzata). I giochi Xbox 360 ricompilati seguono la scelta di Xenia, i port PS4 quella di shadPS4, e Come il principale mantiene le impostazioni principali.",
+        "Mentre RPCS3 è in esecuzione, la scorciatoia overlay di gioco apre il gioco che sta eseguendo, letto dal log di RPCS3."
       ],
       "controllerTitle": "Controller di gioco",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Fai clic con il pulsante destro su un riquadro di gioco per avviarlo, scegliere il suo eseguibile, aprire cartelle e link, usare gli strumenti dell’emulatore o disinstallarlo quando quel menu è abilitato.",
         "Segna come sbloccato manualmente (clic destro su un obiettivo) registra uno sblocco che nessuna sorgente riesce a vedere.",
-        "Reimposta i successi… fa rigiocare un gioco da zero e salva prima in un backup ogni file. Funziona per i giochi emulati, non per Steam, Epic o Xbox, i cui sblocchi stanno nel tuo account.",
+        "Reimposta i successi… fa rigiocare un gioco da zero e salva prima in un backup ogni file. Funziona per i giochi emulati, non per Steam, Epic o Xbox, i cui sblocchi stanno nel tuo account. Seleziona più giochi nella libreria per reimpostarli insieme.",
         "Il tempo di gioco viene monitorato mentre il gioco è in esecuzione; Monitoraggio tempo di gioco in Impostazioni > Notifiche attiva le notifiche di inizio e fine.",
         "Cancella i dati di questo gioco… cancella tutto ciò che AW Next conserva su un gioco (i salvataggi vengono prima salvati in un backup) e la prossima scansione lo ritrova. Rimuovi da AW Next lo toglie dalla libreria finché non lo ripristini da Impostazioni > Generale. Nascondi dalla vista lo mantiene monitorato, nella vista Nascosti del menu Raccolte.",
         "Impostazioni di gioco > Lingua degli obiettivi mostra gli obiettivi e le notifiche di un gioco in una lingua diversa dal resto.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Esegue Steamless sull’exe del gioco prima della patch per rimuovere il DRM SteamStub di Valve (originale conservato come .steamstub.bak). Nessun effetto se non c’è alcuno stub. Richiede Mono (mono-complete su Debian e Ubuntu)."
+            "description": "Esegue Steamless sull’exe del gioco prima della patch per rimuovere il DRM SteamStub di Valve (originale conservato come .steamstub.bak). Nessun effetto se non c’è alcuno stub. Se è disattivato, Steamless non parte mai da solo: il fix manuale chiede prima, e il fix automatico salta un gioco protetto. Richiede Mono (mono-complete su Debian e Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Disattivato per impostazione predefinita. Rilascia il proxy di aggiramento di SteamAutoCrack (winmm.dll) + una configurazione di reindirizzamento, così i giochi che ricontrollano la steam_api/exe originale dopo lo scambio si avviano e si sbloccano comunque. Scarica il proxy dalla sua release ufficiale. Wine e Proton caricano il proxy solo se le opzioni di avvio del gioco impostano WINEDLLOVERRIDES=\"winmm=n,b\"."

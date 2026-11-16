@@ -76,6 +76,23 @@ barra de volta.
 O jogo tem um esquema, mas nenhum arquivo de desbloqueio em execução. Abra o painel [Estado do jogo](game-health.md) dele: ele
 aponta a peça que falta e oferece apenas os reparos que se aplicam.
 
+### Um jogo que adicionei manualmente diz "Somente tempo de jogo" {#a-game-i-added-by-hand-says-playtime-only}
+O AW Next conta o tempo de jogo dele, mas nada neste PC registra as conquistas dele ainda: nenhum emulador, save ou
+conta de loja foi encontrado. Aplique uma correção de emulador, ou adicione a pasta onde o jogo salva os desbloqueios, e
+o estado muda. Veja [Estado do jogo](game-health.md#the-states).
+
+### Uma pasta de repack ou "QuickSFV" aparece como jogo {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+Os downloads de repack (FitGirl, DODI, ElAmigos) trazem uma ferramenta de checksum e instaladores que versões antigas
+confundiam com um jogo. Agora o AW Next os ignora e ainda encontra um jogo instalado ao lado deles. O mesmo vale para injetores de overlay,
+pastas de ferramentas cujo nome começa com `__` e um emulador que acompanha um port (o Cemu na pasta de Bayonetta 2): o
+port aparece com o nome da própria pasta. Oculte ou remova uma vez as entradas antigas; elas não voltam.
+
+### Um jogo que adicionei à Steam com LuaTools ou SteamTools não mostra conquistas {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+A própria Steam registra os desbloqueios desse jogo nos arquivos de estatísticas dela, e o AW Next os lê seja qual for a
+configuração de Steam em **Configurações → Fonte**, quer a ferramenta mantenha um script por jogo, quer todos em
+`steamtools.lua`. Inicie o jogo pela Steam e desbloqueie algo. Os jogos do GreenLuma só são lidos com os jogos da Steam
+ativados em Fontes.
+
 ### Por que o mesmo jogo aparece duas vezes? {#why-does-the-same-game-appear-twice}
 Ele foi encontrado por duas fontes. **Mesclar duplicados** em Configurações → Geral os combina. Se uma
 entrada é uma pasta de saves antiga de um jogo que você agora tem em outro lugar, coloque-a na lista negra.

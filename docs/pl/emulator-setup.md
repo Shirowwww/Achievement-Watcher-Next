@@ -75,14 +75,25 @@ Naprawia bibliotekę DLL środowiska uruchomieniowego i schemat w jednym kroku:
 
 - pobiera i zapamiętuje pasujące wydanie GBE Fork i instaluje architekturę DLL, której gra potrzebuje
   (`steam_api.dll` lub `steam_api64.dll`), zachowując każdy istniejący plik jako kopię zapasową;
-- buduje `steam_settings\achievements.json` (i jego folder `images`) zgodnie z listą osiągnięć
-  Steam i pobiera ikony;
+- buduje `steam_settings\achievements.json` zgodnie z listą osiągnięć Steam i pobiera brakujące
+  ikony. Lista, która jest już kompletna, zostaje bez zmian, razem z językami i folderem ikon, tak jak robi to
+  **Zapisz dane osiągnięć ponownie** w Stanie gry;
 - zapisuje `steam_appid.txt`, gdy go brakuje;
-- zapisuje pliki konfiguracji GBE (`configs.app.ini`, `configs.main.ini`, `configs.user.ini`).
+- zapisuje pliki konfiguracji GBE (`configs.main.ini`, `configs.user.ini` oraz `configs.app.ini`
+  tylko wtedy, gdy włączone jest **Zarządzaj własnością DLC**).
 
 Każdy zastępowany plik ma najpierw kopię zapasową, a naprawy schematu zachowują też kopie z sygnaturą czasu w
 `steam_settings\.aw-backups`. Środowisko uruchomieniowe jest instalowane jako zwykła podmiana DLL; AW Next nie
 konfiguruje osobnego launchera ColdClient.
+
+Poprawka działa jak jedna transakcja. Wszystko, czego potrzebuje (GBE Fork, Steamless, gdy zostanie uruchomiony, proxy
+obejścia, gdy ta opcja jest włączona), jest pobierane, zanim zmieni się pierwszy plik gry, więc zablokowane
+pobieranie zostawia folder nietknięty. Jeśli któryś z dalszych kroków zawiedzie, każdy plik, który poprawka zmieniła, wraca na
+miejsce, razem z rozpakowanym plikiem wykonywalnym, a błąd wymienia wszystko, czego nie dało się przywrócić.
+
+Poprawka nigdy nie łączy się z CrakFiles, chyba że włączone jest **Automatycznie zastosuj poprawkę społeczności (CrakFiles)**
+(domyślnie wyłączone). Jedyny inny sposób jej użycia to **Znajdź poprawkę społeczności (CrakFiles)…** w tym samym menu,
+gdy ją wybierzesz.
 
 Spakowane kompilacje Unreal Engine są naprawiane tak samo. Ich pliki Steam leżą w
 `Engine\Binaries\ThirdParty\Steamworks`, a nie obok pliku wykonywalnego, i AW Next je tam znajduje, instaluje
@@ -98,7 +109,9 @@ automatycznej naprawy:
 | **Zarządzaj własnością DLC** | `configs.app.ini`, aby emulator zgłaszał każde DLC jako posiadane |
 | **Zapisuj nazwę konta i język** | Nazwę twojego konta i język, w `configs.user.ini` |
 
-Żaden nie wpływa na osiągnięcia. Zostaw je wyłączone, aby gra pozostała oryginalna, lub jeśli zarządzasz DLC albo tożsamością ręcznie.
+Żaden nie wpływa na osiągnięcia. Zostaw je wyłączone, aby gra pozostała oryginalna, lub jeśli zarządzasz DLC albo tożsamością ręcznie. Dotyczą **Zastosuj poprawkę emulatora** oraz **Uzupełnij ustawienia emulatora** ze Stanu gry;
+**Zapisz dane osiągnięć ponownie** nigdy nie zapisuje żadnego z tych plików. Gdy gra ma już własne konto w
+`configs.user.ini`, **Zastosuj poprawkę emulatora** i **Uzupełnij ustawienia emulatora** je zachowują, chyba że zgodzisz się je zastąpić; automatyczna poprawka i **Napraw wszystkie gry** nigdy go nie zastępują. Wartość, którą dają już globalne ustawienia emulatora, nie jest kopiowana do gry.
 
 Karta **Tożsamość emulatora** pod nimi pokazuje, co jest zapisywane:
 
@@ -128,6 +141,11 @@ instalowany. **Użyj wersji oficjalnej** usuwa import i wraca do pobranego wydan
 Próbuje rozpakować SteamStub z wybranego pliku wykonywalnego, gdy podmiana DLL nie może się załadować. Oryginalny plik wykonywalny
 jest zachowywany jako `*.steamstub.bak`. Nic nie robi dla gier bez SteamStub i nie omija
 sprawdzania własności po stronie serwera.
+
+**Automatycznie usuń DRM SteamStub** w **Ustawienia → Emulatory → Steam / GBE Fork** decyduje, czy
+**Zastosuj poprawkę emulatora** samo uruchamia Steamless. Gdy jest wyłączone, Steamless nigdy nie uruchamia się samoczynnie:
+dla chronionego pliku wykonywalnego ręczna poprawka najpierw pyta (anuluj, kontynuuj bez usuwania,
+albo usuń DRM tym razem), a automatyczna poprawka i **Napraw wszystkie gry** zostawiają tę grę bez zmian.
 
 ### Kopia zapasowa i przywracanie {#back-up-and-restore}
 

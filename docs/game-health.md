@@ -13,13 +13,14 @@ sound and scale (see [Per-game behavior](notifications.md#per-game-behavior)).
 <sub>One state, the reason for it, the checks behind it, and the repairs that apply</sub>
 </div>
 
-## The three states
+## The states
 
 | State | What it means |
 |---|---|
 | **Ready** | The game is detected, its achievement data is available, and AW Next is watching it for unlocks. |
 | **Needs attention** | The game works, but part of its setup is incomplete. The checks show which part. |
 | **Not tracking** | Something essential is missing, so no unlock can be recorded: the game cannot be located, it has no achievement data, or it lacks the emulator that writes its unlocks. |
+| **Playtime only** | A game you added by hand: AW Next knows its achievement list and counts its play time, but nothing on this PC records its unlocks yet (no emulator, save or store account). Grey, because nothing is broken, and so is the game's tile dot; set up a source and the state changes. |
 
 The sentence under the state gives the cause, the checks show which part is at fault, and a repair
 button acts on exactly that.
@@ -42,31 +43,34 @@ panel says so from the first launch.
 | **Game files** | Is the install folder still there? | **Locate the game** |
 | **Executable** | Which program should be watched while you play? | **Locate the game** |
 | **Game identity** | Which AppID and platform was this game matched to? Simple mode leaves it out. | **Correct the game ID file** or **Set AppID manually** |
-| **Achievement data** | Is there an achievement list, and is it complete? | **Rewrite the achievement data** |
-| **Emulator setup** | Does a game that needs a Steam emulator have one, and which one serves it? For a Ubisoft game this also covers the Uplay loader and whether it ever asked for an achievement. | **Install the emulator file**, **Switch to the supported emulator**, or **Repair Ubisoft achievement support** |
+| **Achievement data** | Is there an achievement list, is it complete, and are its progress and stat definitions up to date? | **Rewrite the achievement data** |
+| **Emulator setup** | Does a game that needs a Steam emulator have one, and which one serves it? Settings the emulator can do without show here as notes, not problems. For a Ubisoft game this also covers the Uplay loader and whether it ever asked for an achievement. | **Install the emulator file**, **Switch to the supported emulator**, **Complete the emulator settings**, or **Repair Ubisoft achievement support** |
 | **Progress** | Has any unlock or save been found yet? | Launch the game and unlock something |
 | **Progress counters** | For CODEX/RUNE-style games that track a stat instead of a flat unlock, has AW Next fetched the stat behind each achievement? Shown only for games that use one. | **Fetch progress counters** |
-| **Game launch detection** | Does the background tracker notice when this game starts? On its own it records no unlock: that is the emulator's job. | **Watch this game** |
+| **Game launch detection** | Does the background tracker notice when this game starts, and is it watching the executable set for the game? On its own it records no unlock: that is the emulator's job. | **Watch this game** |
 | **Notifications** | Which transport delivered the last notification for this game, and why? | **Send a test notification** |
 
 ## The repairs
 
 The panel shows only the repairs that can fix this game. Each says what it will change and where the
-previous files are kept. Nothing is rewritten without a backup or a confirmation.
+previous files are kept. Nothing is rewritten without a backup or a confirmation, and a repair that
+fails halfway puts back every file it had changed; the error says what was restored.
 
 | Repair | What it does |
 |---|---|
 | **Locate the game** | Opens a picker to choose the executable to watch. |
 | **Open the game folder** | Opens the install folder in Explorer. |
-| **Rewrite the achievement data** | Writes the achievement list, icons and emulator settings, copying existing files to a backup first. |
+| **Rewrite the achievement data** | Changes only `achievements.json`, `stats.json` and the missing icons, nothing else. A complete list is left as it is; entries it adds follow the file's own format, languages and icon folder. Progress and stat definitions come from generate_emu_config when **steam_settings data** is set to Advanced with a saved Steam sign-in, otherwise from the public games-infos-datas list, and the confirmation says which. Every changed file is copied to `.aw-backups` in `steam_settings` first. |
+| **Complete the emulator settings** | Adds only the settings files a game is missing (`steam_appid.txt`, `configs.main.ini`, `configs.user.ini`, and `configs.app.ini` when [Manage DLC ownership](goldberg-gbe.md) is on). What the emulator's global settings already give is left to them, and the achievement list is not touched. A game's own account in `configs.user.ini` is replaced only when **Write account name and language** is on and you say yes when asked. |
 | **Install the emulator file** | Downloads the supported emulator build into the game folder, keeping the file it replaces as `.bak`. |
-| **Switch to the supported emulator** | For a game served by another crack that recorded nothing: installs the supported emulator over it and renames that crack's configuration to `.bak`. |
+| **Switch to the supported emulator** | For a game served by another crack that recorded nothing: installs the supported emulator over it, renames that crack's configuration to `.bak`, and writes the emulator's `steam_settings` (game ID and achievement list) in the same step, so the game can be launched right after. Needs the game's Steam AppID; if any part fails, every file is put back. Missing icons can be added afterwards with **Rewrite the achievement data**. |
 | **Undo the emulator switch** | Appears wherever one of the two above ran. Puts the game's own files back from their `.bak` copies and takes the supported emulator out. |
+| **Undo the last repair** | Appears after any change AW Next made in the game folder: a repair from this panel, an emulator fix, CrakFiles, Remove Steam DRM, Restore GBE backup, Set AppID manually, a Uplay repair, or one of the undo buttons above. It lists every file it will put back first. If a file is in use (often because the game is running), nothing is changed and the entry stays for another try. |
 | **Correct the game ID file** | Rewrites `steam_appid.txt` when the emulator announces one game and AW Next matched another. It asks for the right AppID, suggesting AW Next's match, and keeps the previous file. |
 | **Fetch progress counters** | Asks Steam which stat drives each achievement, for CODEX/RUNE-style games. Writes nothing in the game folder. |
 | **Repair Ubisoft achievement support** | For a compatible Ubisoft game, rewrites the loader configuration, schema and save redirection in one transaction, with every touched file backed up. See [Uplay setup](uplay-r2.md). |
 | **Enable achievements offline** | For a Ubisoft game whose loader log proves it never asked for an achievement because it believes it is signed out. Adds one placeholder session key to the INI beside the game; press it again to remove it. See [Uplay setup](uplay-r2.md#a-game-that-never-asks-for-an-achievement). |
-| **Watch this game** | Adds the game to the background tracker so playtime and live unlocks are recorded. |
+| **Watch this game** | Adds the game to the background tracker so playtime and live unlocks are recorded, following the executable set in the **Executable** tab. |
 | **Unmute progress notifications** | Turns progress notifications back on for a game you muted. |
 | **Send a test notification** | Fires a notification with this game's name and artwork, through the transport it would really use. |
 
@@ -94,8 +98,13 @@ previous files are kept. Nothing is rewritten without a backup or a confirmation
 | *Offline achievements on, launch the game once* | The setting is written and nothing has been judged yet. The button beside it now reads **Turn offline achievements off**. |
 | *Served by ALI213, OnlineFix, GBE Fork…* | The emulator actually reading that game, named from its own files. A Ubisoft game served this way is not offered a Uplay repair: its Uplay layer is unused, not broken. This covers releases that keep Valve's `steam_api64.dll`: a RUNE build running from `Steam\steamclient64.dll`, or a VOICES38 release loading its own renamed GBE Fork (`steam_api64.v38`); never install the emulator over the latter. online-fix's Ubisoft builds are recognised, and an achievement fix there warns that online play may stop. |
 | *Only some icons are missing* | **Rewrite the achievement data** downloads the missing icons. |
+| *Progress or stat definitions missing or outdated* | Counter achievements would not move or would show the wrong target. **Rewrite the achievement data** updates them. |
+| *Optional settings not written* | A note, not a fault: the emulator runs without them (an app ticket, a GC token, the unknown-stats switch, an account name). **Complete the emulator settings** adds them if you want. |
+| *The account name or language comes from … `GSE Saves\settings`* | An information line, not a warning. GBE reads `GSE Saves\settings\configs.user.ini` (or the settings of the save folder `local_save_path` points to) when the game has none of its own. Nothing to fix. |
+| *Watching X, not Y* | The executable set for this game is not the one the tracker follows, so launches and play time can be missed. **Watch this game** follows the chosen one. *Watching X, started by Y* is fine: Y is a launcher, such as an anti-cheat bootstrapper, that starts the game. |
+| *No achievement source set up* | Shown with **Playtime only**. Apply an emulator fix, or add the folder where the game saves its achievements. |
 | *Run for over an hour and not one achievement recorded* | The crack serving the game most likely never reports achievements. Use **Switch to the supported emulator** when offered; otherwise check that the game starts from its own folder. |
-| *Game ID file*, with a Steam shortcut to this game | Steam starts a non-Steam shortcut with no `steam_appid.txt` beside it, so the emulator saves under another ID. **Rewrite the achievement data** writes the file there. |
+| *Game ID file*, with a Steam shortcut to this game | Steam starts a non-Steam shortcut with no `steam_appid.txt` beside it, so the emulator saves under another ID. **Complete the emulator settings** writes the file there. |
 
 ---
 

@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Manage DLC ownership",
-        "description": "Writes configs.app.ini so the emulator reports every DLC as owned. Unrelated to achievements: leave it off to keep a game stock or to manage DLC yourself. Disabled by default.",
+        "description": "Lets the emulator fix and Complete the emulator settings write configs.app.ini, so the emulator reports every DLC as owned. Unrelated to achievements: leave it off to keep a game stock or to manage DLC yourself. Disabled by default.",
         "value": {
           "false": "Disabled",
           "true": "Enabled"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Write account name and language",
-        "description": "Stamps your account name and language into each game's configs.user.ini. Leave it off if you rely on the emulator's central configuration for a predictable name and user ID. Disabled by default.",
+        "description": "Lets the emulator fix and Complete the emulator settings write your account name and language into a game's configs.user.ini; a game's own account is replaced only after asking. Leave it off if you rely on the emulator's global settings for a predictable name and user ID. Disabled by default.",
         "value": {
           "false": "Disabled",
           "true": "Enabled"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Auto-unpack SteamStub DRM",
-        "description": "Runs Steamless on the game exe before patching to strip Valve’s SteamStub DRM (original kept as .steamstub.bak). No-op when there’s no stub.",
+        "description": "Runs Steamless on the game exe before patching to strip Valve’s SteamStub DRM (original kept as .steamstub.bak). No-op when there’s no stub. Off, Steamless never runs on its own: the manual fix asks first, and the automatic fix skips a protected game.",
         "value": {
           "false": "Disabled",
           "true": "Enabled"
@@ -1644,7 +1644,8 @@
         "The round button next to the completion rate opens Library stats: completion, unlocked and locked counts, playtime, trophies, platinum games, rarest achievements and one row per platform.",
         "A selector between the search field and the + button switches between six library views. Settings > Appearance > Library tiles sets the tile size, the spacing and what each tile shows.",
         "The + button adds a game no source finds: a title and an executable, with an optional platform and Steam AppID. Launches and playtime are tracked, without achievements.",
-        "Right-click a game > Game settings > Rename… changes the name shown for it. Achievements & playtime > Edit playtime… fixes its total (12.5 or 12h30)."
+        "Right-click a game > Game settings > Rename… changes the name shown for it. Achievements & playtime > Edit playtime… fixes its total (12.5 or 12h30).",
+        "Ctrl+click adds a game to a selection and Shift+click selects a range. Right-click one of the selected games to reset all their achievements at once: each game is backed up first, and games whose platform keeps the unlocks are skipped. Esc clears the selection."
       ],
       "sourcesTitle": "Launchers & sources",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: switch the source on, enter your username and Web API key, then press Import library. Unlocks come from your account, so keep RetroAchievements on in the emulator.",
         "In Simple mode a few rarely used source rows stay hidden while they are unused. They come back as soon as they matter, and Advanced always lists them all.",
         "PlayStation trophies show their grade and the share of players who have them. The rates come from Exophase; connect a PlayStation account in Settings > Sources to get Sony's own figures for the games on that account.",
-        "With a PlayStation account connected, Import library brings your PlayStation games and trophies, refreshed every three days, and the field under it adds a game you do not own. A game from another store that also came out on PlayStation shows its real platinum, and in trophy mode its real grades and DLC groups."
+        "With a PlayStation account connected, Import library brings your PlayStation games and trophies, refreshed every three days, and the field under it adds a game you do not own. A game from another store that also came out on PlayStation shows its real platinum, and in trophy mode its real grades and DLC groups.",
+        "Games added to Steam with LuaTools or SteamTools show their achievements from Steam’s own stats, whatever the Steam setting above."
       ],
       "notifications": [
         "Automatic is the default: the in-game popup when the game can show it, a Windows notification when it cannot, never both.",
@@ -1666,15 +1668,17 @@
         "Rare achievement sound, 100% completion sound and Progress sound (Advanced mode) give those popups a sound of their own. Random picks a different sound each time, and you can import your own files.",
         "Gold, silver and bronze mark rare unlocks. Settings > General > Rarity display switches to Trophy mode, which grades every achievement and shows platinum on finished games.",
         "For counters, Progress milestones shows a popup only at 10, 25 or 50% steps. Right-click a game > Mute progress notifications silences one game without touching its unlocks.",
-        "Two more switches in Settings > Notification: Priority notifications lets unlocks through Do Not Disturb (Windows 11), and Steam client games adds AW Next’s popup for games Steam itself runs."
+        "Two more switches in Settings > Notification: Priority notifications lets unlocks through Do Not Disturb (Windows 11), and Steam client games adds AW Next’s popup for games Steam itself runs.",
+        "The platinum comes once every base-game achievement is earned, DLC aside, as on PlayStation. Settings > Notification > Platinum requires can make it wait for the whole list. In a game with DLC, Platinum only on its page hides the achievements the platinum does not need."
       ],
       "gameHealthTitle": "Game health",
       "gameHealth": [
-        "Click the tools button of a game (top right of its tile), or right-click it, to open Game health. It says whether the game is Ready, Needs attention or Not tracking.",
+        "Click the tools button of a game (top right of its tile), or right-click it, to open Game health. It says whether the game is Ready, Needs attention, Not tracking or Playtime only (achievements known, but nothing on this PC records them yet).",
         "The sentence under the state explains the cause in plain words. The checks below show which part is at fault: game files, executable, achievement data, emulator setup, live tracking or notifications.",
-        "Repair buttons only appear when AW Next can really fix that game, such as Locate the game, Rewrite the achievement data, Install the emulator file or Watch this game. Each one says what it will change, keeps a backup and asks first.",
+        "Repair buttons only appear when AW Next can really fix that game, such as Locate the game, Rewrite the achievement data, Complete the emulator settings, Install the emulator file or Watch this game. Each one says what it will change, keeps a backup and asks first, and a repair that fails puts every file back.",
         "Send a test notification fires a popup with that game’s own name and artwork, delivered the way it really would be.",
-        "Technical details holds the exact paths, counts and emulator codes: press Copy and paste it into a bug report. The coloured dot on a tile can be hidden in Settings > Appearance > Library tiles."
+        "Technical details holds the exact paths, counts and emulator codes: press Copy and paste it into a bug report. The coloured dot on a tile can be hidden in Settings > Appearance > Library tiles.",
+        "Rewrite the achievement data changes only the achievement list, its stats and missing icons. Complete the emulator settings adds only the settings a game is missing, leaves what the emulator’s global settings already give, and asks before replacing a game’s own account. Switch to the supported emulator writes the emulator’s settings in the same step, and Undo the last repair puts back any change AW Next made in the game folder."
       ],
       "troubleshootTitle": "Troubleshooting",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Right-click a game > Emulator & tools > Apply emulator fix… installs GBE Fork, builds steam_settings (achievement list and icons) and writes steam_appid.txt when it is missing. Every replaced file is backed up first.",
         "In Settings > Steam / GBE Fork, steam_settings data set to Simple uses AW Next’s own anonymous fetch and is fast. Advanced runs generate_emu_config for deeper Steam data and can take minutes.",
         "Nothing is written into a game folder on its own: Automatically fix newly detected games, Manage DLC ownership and Write account name and language are all off by default.",
-        "Diagnose emulator in the same menu only reads and reports. Back up GBE/Goldberg setup and Restore latest GBE/Goldberg backup put a game back the way it was."
+        "Diagnose emulator in the same menu only reads and reports. Back up GBE/Goldberg setup and Restore latest GBE/Goldberg backup put a game back the way it was.",
+        "With Auto-unpack SteamStub DRM off, Steamless never runs on its own: the manual fix asks first when the game is protected, and the automatic fix leaves that game alone. A fix that fails puts every file back, the executable included, and a game’s own account in configs.user.ini is kept unless you agree to replace it."
       ],
       "emulatorTitle": "Console emulators",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Xenia progress is read from the Xbox profile files (.gpd) and follows the storage folders set in its config.",
         "KytyPS5 trophies are read from its _Trophies folder, for the user the launcher runs the game as.",
         "Xbox 360 games recompiled for PC and PS4 ports (Bloodborne, Uncharted, God of War III Remastered, MediEvil and others) are their own sources in Settings > Sources. If one does not show up, add its folder in Settings > Folders.",
-        "Each console can have its own popup preset and sound in Settings > Notification > Emulators (Advanced mode). Recompiled Xbox 360 games follow Xenia’s choice, PS4 ports follow shadPS4’s, and Same as main keeps the main settings."
+        "Each console can have its own popup preset and sound in Settings > Notification > Emulators (Advanced mode). Recompiled Xbox 360 games follow Xenia’s choice, PS4 ports follow shadPS4’s, and Same as main keeps the main settings.",
+        "While RPCS3 runs, the overlay shortcut opens the game it is running, read from RPCS3’s log."
       ],
       "controllerTitle": "Controller (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Right-click a game tile to launch it, choose its executable, open folders and links, use emulator tools, or uninstall it when that menu is enabled.",
         "Mark as manually unlocked (right-click an achievement) records an unlock no source can see.",
-        "Reset achievements… plays a game again from zero and backs up every file first. It works for emulated games, not for Steam, Epic or Xbox, whose unlocks live on your account.",
+        "Reset achievements… plays a game again from zero and backs up every file first. It works for emulated games, not for Steam, Epic or Xbox, whose unlocks live on your account. Select several games in the library to reset them together.",
         "Playtime is tracked while the game runs; Playtime tracking in Settings > Notification turns on the start and end notifications.",
         "Clear this game’s data… erases everything AW Next keeps about a game (saves are backed up first), and the next scan finds it again. Remove from AW Next takes it out of the library until you bring it back from Settings > General. Hide from view keeps it tracked, in the Hidden view of the Collections menu.",
         "Game settings > Achievement language shows one game’s achievements and notifications in another language than the rest.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Runs Steamless on the game exe before patching to strip Valve’s SteamStub DRM (original kept as .steamstub.bak). No-op when there’s no stub. Needs Mono (mono-complete on Debian and Ubuntu)."
+            "description": "Runs Steamless on the game exe before patching to strip Valve’s SteamStub DRM (original kept as .steamstub.bak). No-op when there’s no stub. Off, Steamless never runs on its own: the manual fix asks first, and the automatic fix skips a protected game. Needs Mono (mono-complete on Debian and Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Off by default. Drops SteamAutoCrack’s bypass proxy (winmm.dll) + a redirect config so games that re-check the original steam_api/exe after the swap still launch and unlock. Downloads the proxy from its official release. Wine and Proton load the proxy only when the game’s launch options set WINEDLLOVERRIDES=\"winmm=n,b\"."

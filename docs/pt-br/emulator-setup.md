@@ -75,14 +75,25 @@ Repara a DLL de runtime e o esquema em uma só etapa:
 
 - baixa e guarda em cache uma versão correspondente do GBE Fork e instala a arquitetura de DLL de que o jogo precisa
   (`steam_api.dll` ou `steam_api64.dll`), mantendo qualquer arquivo existente como backup;
-- monta o `steam_settings\achievements.json` (e a pasta `images` dele) para corresponder à lista de conquistas
-  da Steam, e baixa os ícones;
+- monta o `steam_settings\achievements.json` para corresponder à lista de conquistas da Steam e baixa os
+  ícones que faltam. Uma lista que já está completa é mantida como está, com os idiomas e a pasta de ícones, do mesmo
+  modo que **Reescrever os dados de conquistas** do Estado do jogo;
 - grava o `steam_appid.txt` quando ele está ausente;
-- grava os arquivos de configuração do GBE (`configs.app.ini`, `configs.main.ini`, `configs.user.ini`).
+- grava os arquivos de configuração do GBE (`configs.main.ini`, `configs.user.ini` e `configs.app.ini`
+  apenas quando **Gerenciar propriedade das DLCs** está ativado).
 
 Todo arquivo que ele substitui recebe backup antes, e os reparos de esquema também mantêm cópias com data e hora em
 `steam_settings\.aw-backups`. O runtime é instalado como uma substituição normal de DLL; o AW Next não
 configura um launcher ColdClient separado.
+
+A correção funciona como uma única transação. Tudo de que ela precisa (o GBE Fork, o Steamless quando ele vai rodar,
+o proxy de contorno quando essa opção está ativada) é baixado antes de o primeiro arquivo do jogo mudar, então um
+download bloqueado deixa a pasta intacta. Se uma etapa posterior falha, todo arquivo que a correção tinha alterado é
+devolvido, inclusive o executável desempacotado, e o erro lista o que não pôde ser restaurado.
+
+A correção nunca contata o CrakFiles, a menos que **Aplicar automaticamente uma correção da comunidade (CrakFiles)**
+esteja ativado (desativado por padrão). O único outro modo de usá-lo é **Procurar uma correção da comunidade
+(CrakFiles)…** no mesmo menu, quando você o escolhe.
 
 Builds empacotadas do Unreal Engine são reparadas da mesma forma. Os arquivos Steam delas ficam em
 `Engine\Binaries\ThirdParty\Steamworks` em vez de ao lado do executável, e o AW Next os encontra, instala
@@ -98,7 +109,10 @@ reparo automático:
 | **Gerenciar propriedade das DLCs** | `configs.app.ini`, para que o emulador informe todas as DLCs como possuídas |
 | **Gravar nome da conta e idioma** | O nome e o idioma da sua conta, em `configs.user.ini` |
 
-Nenhum dos dois afeta as conquistas. Deixe-os desativados para manter um jogo original, ou se você gerencia DLC ou identidade à mão.
+Nenhum dos dois afeta as conquistas. Deixe-os desativados para manter um jogo original, ou se você gerencia DLC ou identidade à mão. Eles valem para **Aplicar correção de emulador** e para **Completar as
+configurações do emulador** do Estado do jogo; **Reescrever os dados de conquistas** nunca grava nenhum dos dois
+arquivos. Quando um jogo já tem a própria conta em `configs.user.ini`, **Aplicar correção de emulador** e **Completar as configurações do emulador**
+a mantêm, a menos que você concorde em substituí-la; a correção automática e **Corrigir todos os jogos** nunca a substituem. Um valor que as configurações globais do emulador já fornecem não é copiado para o jogo.
 
 O cartão **Identidade do emulador** abaixo deles mostra o que é gravado:
 
@@ -128,6 +142,11 @@ instalado. **Usar a versão oficial** remove a importação e volta à versão b
 Tenta desempacotar o SteamStub do executável selecionado quando uma substituição de DLL não consegue carregar. O executável
 original é mantido como `*.steamstub.bak`. Não faz nada em jogos sem SteamStub e não contorna
 verificações de propriedade no servidor.
+
+**Remover automaticamente o DRM SteamStub** em **Configurações → Emuladores → Steam / GBE Fork** decide se
+**Aplicar correção de emulador** executa o Steamless por conta própria. Quando está desativado, o Steamless nunca roda
+sozinho: para um executável protegido, a correção manual pergunta antes (cancelar, continuar sem remover ou remover
+o DRM desta vez), e a correção automática e **Corrigir todos os jogos** deixam esse jogo como está.
 
 ### Backup e restauração {#back-up-and-restore}
 

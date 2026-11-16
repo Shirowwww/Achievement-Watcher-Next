@@ -46,7 +46,7 @@ almacenamiento. Vuelven cuando la activas de nuevo.
 > [!NOTE]
 > Los desbloqueos de Steam se leen de las estadísticas que Steam guarda en este PC. Un perfil privado, o unos **Detalles
 > del juego** privados, funcionan con todos los juegos jugados aquí, incluidos los añadidos con SteamTools, LuaTools o
-> GreenLuma, y una tarjeta se actualiza en el momento en que Steam registra un desbloqueo. Un perfil público solo añade tu
+> GreenLuma, y una tarjeta se actualiza en el momento en que Steam registra un desbloqueo. Un juego añadido con LuaTools o SteamTools se lee incluso con **Steam** en **Ninguno**, ya que no forma parte de la biblioteca de tu cuenta. Un perfil público solo añade tu
 > nombre y avatar. Los juegos jugados solo en otro PC necesitan la conexión de cuenta que se describe abajo. Estos desbloqueos
 > generan una notificación de AW Next cuando **Juegos del cliente de Steam** está activado en Notificación (consulta
 > [Notificaciones](notifications.md#games-steam-runs)).
@@ -148,6 +148,8 @@ mover sus datos fuera de la ruta predeterminada, y AW Next lee los ajustes que l
 
 Así, un disco virtual de RPCS3 reubicado o una carpeta de datos de ShadPS4 se puede añadir directamente en **Ajustes → Carpetas**,
 sin ningún ejecutable del emulador a mano.
+
+Mientras RPCS3 está en ejecución, el atajo del [overlay](overlay.md) abre el juego que está ejecutando: AW Next lee el título del final de `RPCS3.log` cuando lo pulsas y lo empareja con la lista de trofeos del juego. Un juego detenido en RPCS3 deja de ser el objetivo.
 
 ## RetroAchievements {#retroachievements}
 

@@ -103,6 +103,12 @@ coleção. Um nome que você definiu sobrevive a novas varreduras e restauraçõ
 correspondência mantêm o título original. Os jogos da Steam podem usar o título no idioma das suas conquistas
 (**Configurações → Geral**).
 
+Ctrl+clique adiciona um jogo a uma seleção, Shift+clique seleciona todos os jogos entre o último clicado e este, e Esc
+limpa a seleção. Clique com o botão direito em um dos jogos selecionados para **Redefinir as conquistas de N jogos…**:
+uma única confirmação os lista, cada jogo recebe um backup antes, e os jogos cuja plataforma guarda os desbloqueios na
+sua conta (Steam, Epic, GOG...) são ignorados e citados pelo nome. A redefinição é recusada enquanto um jogo está em
+execução.
+
 ### Coleções {#collections}
 
 Coleções são grupos de jogos feitos por você. Clique com o botão direito num jogo, escolha **Coleções**

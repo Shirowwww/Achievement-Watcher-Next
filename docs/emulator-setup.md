@@ -70,14 +70,25 @@ Repairs the runtime DLL and the schema in one step:
 
 - downloads and caches a matching GBE Fork release and installs the DLL architecture the game needs
   (`steam_api.dll` or `steam_api64.dll`), keeping any existing file as a backup;
-- builds `steam_settings\achievements.json` (and its `images` folder) to match the Steam achievement
-  list, and downloads the icons;
+- builds `steam_settings\achievements.json` to match the Steam achievement list, and downloads the
+  missing icons. A list that is already complete is kept as it is, languages and icon folder
+  included, the same way Game Health's **Rewrite the achievement data** does it;
 - writes `steam_appid.txt` when it is missing;
-- writes the GBE configuration files (`configs.app.ini`, `configs.main.ini`, `configs.user.ini`).
+- writes the GBE configuration files (`configs.main.ini`, `configs.user.ini`, and `configs.app.ini`
+  only when **Manage DLC ownership** is on).
 
 Every file it replaces is backed up first, and schema repairs also keep timestamped copies under
 `steam_settings\.aw-backups`. The runtime is installed as a normal DLL replacement; AW Next does not
 configure a separate ColdClient launcher.
+
+The fix works as one transaction. Everything it needs (GBE Fork, Steamless when it will run, the
+bypass proxy when that option is on) is downloaded before the first game file changes, so a blocked
+download leaves the folder untouched. If a later step fails, every file the fix had changed is put
+back, the unpacked executable included, and the error lists anything that could not be restored.
+
+The fix never contacts CrakFiles unless **Auto-apply community fix (CrakFiles)** is on (off by
+default). The only other way it is used is **Find a community fix (CrakFiles)…** in the same menu,
+when you pick it.
 
 Packaged Unreal Engine builds are repaired the same way. Their Steam files live under
 `Engine\Binaries\ThirdParty\Steamworks` rather than beside the executable, and AW Next finds, installs
@@ -94,7 +105,11 @@ automatic repair:
 | **Write account name and language** | Your account name and language, in `configs.user.ini` |
 
 Neither affects achievements. Leave them off to keep a game stock, or if you manage DLC or identity by
-hand.
+hand. They apply to **Apply emulator fix** and to Game Health's **Complete the emulator settings**;
+**Rewrite the achievement data** never writes either file. When a game already has its own account in
+`configs.user.ini`, **Apply emulator fix** and **Complete the emulator settings** keep it unless you
+agree to replace it; the automatic fix and **Fix all games** never replace it. A value the emulator's
+global settings already give is not copied into the game.
 
 The **Emulator identity** card below them shows what gets written:
 
@@ -124,6 +139,11 @@ installed. **Use the official build** removes the import and returns to the down
 Tries to unpack SteamStub from the selected executable when a DLL replacement cannot load. The original
 executable is kept as `*.steamstub.bak`. It does nothing for games without SteamStub and does not
 bypass server-side ownership checks.
+
+**Auto-unpack SteamStub DRM** in **Settings → Emulators → Steam / GBE Fork** decides whether
+**Apply emulator fix** runs Steamless by itself. When it is off, Steamless never runs on its own:
+for a protected executable the manual fix asks first (cancel, continue without removing it, or remove
+the DRM this time), and the automatic fix and **Fix all games** leave that game as it is.
 
 ### Back up and restore
 

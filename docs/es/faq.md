@@ -76,6 +76,15 @@ barra.
 El juego tiene un esquema pero ningún archivo de desbloqueos en tiempo de ejecución. Abre su panel [Game Health](game-health.md): 
 nombra la pieza que falta y ofrece solo las reparaciones que se aplican.
 
+### Un juego que añadí a mano dice «Solo tiempo de juego» {#a-game-i-added-by-hand-says-playtime-only}
+AW Next cuenta su tiempo de juego, pero nada en este PC registra todavía sus logros: no se ha encontrado ningún emulador, partida guardada ni cuenta de tienda para él. Aplica un arreglo de emulador o añade la carpeta donde el juego guarda sus desbloqueos, y el estado cambia. Consulta [Game Health](game-health.md#the-states).
+
+### Una carpeta de repack o «QuickSFV» aparece como un juego {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+Las descargas de repacks (FitGirl, DODI, ElAmigos) incluyen una herramienta de sumas de verificación y instaladores que las versiones antiguas tomaban por un juego. AW Next ahora los omite y sigue encontrando un juego instalado junto a ellos. Lo mismo vale para los inyectores de overlay, las carpetas de herramientas cuyo nombre empieza por `__` y un emulador que trae un port (Cemu en una carpeta de Bayonetta 2): el port se lista con el nombre de su carpeta. Oculta o quita las entradas antiguas una vez; no vuelven.
+
+### Un juego que añadí a Steam con LuaTools o SteamTools no muestra logros {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+Steam mismo registra los desbloqueos de un juego así en sus propios archivos de estadísticas, y AW Next los lee sea cual sea el ajuste de Steam en **Ajustes → Fuentes**, tanto si la herramienta guarda un script por juego como si los guarda todos en `steamtools.lua`. Inicia el juego a través de Steam y desbloquea algo. Los juegos de GreenLuma solo se leen con los juegos de Steam activados en Fuentes.
+
 ### ¿Por qué aparece el mismo juego dos veces? {#why-does-the-same-game-appear-twice}
 Se encontró por dos fuentes. **Combinar duplicados** en Ajustes → General las une. Si una
 entrada es una carpeta de partidas obsoleta de un juego que ahora posees en otro sitio, ponla en la lista negra.

@@ -184,9 +184,17 @@ LuaTools 或 GreenLuma 添加的游戏：AW Next 跟踪 Steam 在 `appcache\stat
 奖杯后计入，即使还有 DLC 奖杯未获得。PlayStation 模拟器保留自己的奖杯。AW
 按游戏的原始名称查找列表，所以重命名游戏没有影响。
 
-每个来源都会弹出 100% 弹窗，包括实时的来源（Xenia、重新编译的移植版、GOG Galaxy、
+每个来源都会弹出白金弹窗，包括实时的来源（Xenia、重新编译的移植版、GOG Galaxy、
 Ubisoft Connect、Xbox PC）。当游戏有白金时，与之相关联的成就会作为
-白金弹出。
+白金弹出。游戏自己的“获得所有成就”成就也算作它的白金，无论通知还是列表中，有没有 PlayStation 账号都一样。
+
+默认情况下，基础游戏完成后就会获得白金，与 PlayStation 一样：DLC 成就和额外的奖杯分组不计入。在带 DLC 的游戏中，
+白金所需的每个成就都带有一个小白金标记，游戏页面上的 **仅白金** 会隐藏其余成就。**设置 → 通知 → 白金要求** 可在
+**基础游戏** 和 **全部（含 DLC）** 之间切换，后者要等整个列表。没有 DLC 的游戏不受影响。上述实时来源在向 AW Next 提供列表时遵循同样的规则，
+且只弹出一次：游戏自己的白金成就会作为白金弹出，而不是普通解锁加一个 100% 弹窗。
+
+Steam 已从游戏中移除的成就不再计入：它们会以灰色留在列表底部，标记为 *已从 Steam 移除*，游戏无需它们即可达到 100%。
+缓存的列表会在下一次 3 天检查时发现移除，或通过 **设置 → 高级 → 重新检查成就列表** 立即发现。
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="个人资料页眉，显示白金、金、银、铜和普通奖杯数量" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +271,8 @@ AW Next 自己的 Millennium 插件位于仓库的 `millennium/` 文件夹中，
 启动的 exe 与 AW Next 中游戏的 **可执行文件** 相同时，匹配效果最好。它的 README 介绍了安装、页面
 保持为空时要检查什么，以及它与 Steam Cartridges、NativeGameLink 和 Game
 Data Linker 如何共存。`playnite/` 中的 Playnite 扩展以同样的方式询问，适用于 Playnite
-库中的任何游戏，它的 README 介绍了安装方法以及主题可以放置的面板。下面的请求
+库中的任何游戏，它的 README 介绍了安装方法以及主题可以放置的面板。自 1.2.0 版起，它在 AW Next 关闭时也能工作：读取 AW Next 上次扫描保存的列表，并标注那次扫描的
+日期，待 AW Next 运行后恢复为实时数据（这期间的解锁会在 AW Next 读取存档后显示）。下面的请求
 面向编写其他插件的人。
 
 插件发送：

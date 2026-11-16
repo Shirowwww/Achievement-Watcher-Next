@@ -46,7 +46,8 @@ magazyn. Wracają po ponownym włączeniu.
 > [!NOTE]
 > Odblokowania Steam są odczytywane ze statystyk, które Steam trzyma na tym komputerze. Profil prywatny lub prywatne
 > **Szczegóły gry** działają dla każdej gry uruchamianej tutaj, także dla gier dodanych przez SteamTools,
-> LuaTools lub GreenLuma, a karta aktualizuje się w chwili, gdy Steam zapisze odblokowanie. Profil publiczny dodaje tylko twoją
+> LuaTools lub GreenLuma, a karta aktualizuje się w chwili, gdy Steam zapisze odblokowanie. Gra dodana przez LuaTools lub SteamTools jest
+> odczytywana nawet przy **Steam** ustawionym na **Brak**, bo nie należy do biblioteki twojego konta. Profil publiczny dodaje tylko twoją
 > nazwę i awatar. Gry uruchamiane wyłącznie na innym komputerze wymagają połączenia konta opisanego niżej. Te odblokowania
 > wywołują powiadomienie AW Next, gdy w Powiadomieniach włączone jest **Gry klienta Steam** (zobacz
 > [Powiadomienia](notifications.md#games-steam-runs)).
@@ -148,6 +149,9 @@ przenieść swoje dane poza domyślną ścieżkę, a AW Next czyta te same ustaw
 
 Dlatego przeniesiony wirtualny dysk RPCS3 lub folder danych ShadPS4 można dodać bezpośrednio w **Ustawienia → Foldery**,
 bez żadnego pliku wykonywalnego emulatora w pobliżu.
+
+Gdy RPCS3 działa, skrót [nakładki](overlay.md) otwiera uruchomioną przez niego grę: AW Next odczytuje tytuł z końca
+`RPCS3.log`, gdy go naciśniesz, i dopasowuje go do listy trofeów gry. Gra zatrzymana w RPCS3 nie jest już celem.
 
 ## RetroAchievements {#retroachievements}
 

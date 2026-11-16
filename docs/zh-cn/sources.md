@@ -46,7 +46,8 @@ Steam 账号卡片下的 **Steam 库** 列出这台电脑上的每个 Steam 库�
 > [!NOTE]
 > Steam 解锁记录是从 Steam 保存在这台电脑上的统计数据中读取的。私密个人资料或私密的**游戏详情**
 > 对在这里玩过的每款游戏都有效，包括通过 SteamTools、LuaTools 或
-> GreenLuma 添加的游戏，并且 Steam 一记录解锁，卡片就会更新。公开个人资料只会增加
+> GreenLuma 添加的游戏，并且 Steam 一记录解锁，卡片就会更新。通过 LuaTools 或 SteamTools 添加的游戏，即使 **Steam** 设为 **无** 也会被读取，
+> 因为它不属于你账号的游戏库。公开个人资料只会增加
 > 你的名称和头像。只在另一台电脑上玩过的游戏需要下面的账号连接。启用通知设置中的 **Steam 客户端游戏** 后，这些解锁会
 > 触发 AW Next 通知（见
 > [通知](notifications.md#games-steam-runs)）。
@@ -147,6 +148,9 @@ EA 账号上，而不是磁盘上，所以它们通过 EA 来源读取，无论�
 
 因此，迁移过的 RPCS3 虚拟磁盘或 ShadPS4 数据文件夹可以直接添加到 **设置 → 文件夹**，
 附近不需要有模拟器的可执行文件。
+
+RPCS3 运行时，[叠加层](overlay.md)快捷键会打开它正在运行的游戏：按下时，AW Next 会读取 `RPCS3.log` 末尾的标题，
+并把它与该游戏的奖杯列表匹配。在 RPCS3 中停止的游戏不再作为目标。
 
 ## RetroAchievements {#retroachievements}
 

@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Kelola kepemilikan DLC",
-        "description": "Menulis configs.app.ini agar emulator melaporkan semua DLC sebagai dimiliki. Tidak berkaitan dengan pencapaian: biarkan nonaktif untuk menjaga game tetap orisinal atau untuk mengelola DLC sendiri. Nonaktif secara bawaan.",
+        "description": "Memungkinkan perbaikan emulator dan Lengkapi pengaturan emulator menulis configs.app.ini agar emulator melaporkan semua DLC sebagai dimiliki. Tidak berkaitan dengan pencapaian: biarkan nonaktif untuk menjaga game tetap orisinal atau untuk mengelola DLC sendiri. Nonaktif secara bawaan.",
         "value": {
           "false": "Nonaktif",
           "true": "Aktif"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Tulis nama akun dan bahasa",
-        "description": "Menuliskan nama akun dan bahasa Anda ke configs.user.ini setiap game. Biarkan nonaktif jika Anda mengandalkan konfigurasi pusat emulator untuk nama dan ID pengguna yang dapat diprediksi. Nonaktif secara bawaan.",
+        "description": "Memungkinkan perbaikan emulator dan Lengkapi pengaturan emulator menuliskan nama akun dan bahasa Anda ke configs.user.ini sebuah game; akun milik game itu sendiri baru diganti setelah bertanya. Biarkan nonaktif jika Anda mengandalkan pengaturan global emulator untuk nama dan ID pengguna yang dapat diprediksi. Nonaktif secara bawaan.",
         "value": {
           "false": "Nonaktif",
           "true": "Aktif"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Buka paket DRM SteamStub otomatis",
-        "description": "Menjalankan Steamless pada exe game sebelum penambalan untuk melepas DRM SteamStub milik Valve (aslinya disimpan sebagai .steamstub.bak). Tidak berefek bila tidak ada stub.",
+        "description": "Menjalankan Steamless pada exe game sebelum penambalan untuk melepas DRM SteamStub milik Valve (aslinya disimpan sebagai .steamstub.bak). Tidak berefek bila tidak ada stub. Jika nonaktif, Steamless tidak pernah berjalan sendiri: perbaikan manual bertanya dulu, dan perbaikan otomatis melewati game yang dilindungi.",
         "value": {
           "false": "Nonaktif",
           "true": "Aktif"
@@ -1644,7 +1644,8 @@
         "Tombol bulat di samping persentase penyelesaian membuka Statistik perpustakaan: penyelesaian, jumlah pencapaian yang terbuka dan terkunci, waktu bermain, piala, game platinum, pencapaian paling langka, dan satu baris per platform.",
         "Pemilih di antara kolom pencarian dan tombol + beralih di antara enam tampilan perpustakaan. Pengaturan > Tampilan > Kartu perpustakaan menentukan ukuran kartu, jarak, dan apa yang ditampilkan setiap kartu.",
         "Tombol + menambahkan game yang tidak ditemukan sumber mana pun: judul dan file eksekusi, dengan platform dan Steam AppID opsional. Peluncuran dan waktu bermain dilacak, tanpa pencapaian.",
-        "Klik kanan sebuah game > Pengaturan game > Ganti nama… mengubah nama yang ditampilkan. Pencapaian dan waktu bermain > Ubah waktu bermain… memperbaiki totalnya (12.5 atau 12h30)."
+        "Klik kanan sebuah game > Pengaturan game > Ganti nama… mengubah nama yang ditampilkan. Pencapaian dan waktu bermain > Ubah waktu bermain… memperbaiki totalnya (12.5 atau 12h30).",
+        "Ctrl+klik menambahkan game ke pilihan dan Shift+klik memilih satu rentang. Klik kanan salah satu game yang dipilih untuk mengatur ulang semua pencapaiannya sekaligus: setiap game dicadangkan dulu, dan game yang platformnya menyimpan sendiri pencapaian dilewati. Esc mengosongkan pilihan."
       ],
       "sourcesTitle": "Launcher & sumber",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: aktifkan sumbernya, masukkan nama pengguna dan kunci Web API Anda, lalu tekan Impor pustaka. Pencapaian berasal dari akun Anda, jadi biarkan RetroAchievements tetap aktif di emulator.",
         "Dalam mode Sederhana, beberapa baris sumber yang jarang dipakai tetap tersembunyi selama tidak digunakan. Baris itu muncul kembali begitu diperlukan, dan Lanjutan selalu menampilkan semuanya.",
         "Piala PlayStation menampilkan tingkatnya dan persentase pemain yang memilikinya. Persentase berasal dari Exophase; hubungkan akun PlayStation di Pengaturan > Sumber untuk mendapatkan angka resmi dari Sony untuk game di akun tersebut.",
-        "Dengan akun PlayStation terhubung, Impor pustaka membawa game dan piala PlayStation Anda, diperbarui setiap tiga hari, dan kolom di bawahnya menambahkan game yang tidak Anda miliki. Game dari toko lain yang juga rilis di PlayStation menampilkan platinum aslinya, dan dalam mode piala menampilkan tingkat serta grup DLC aslinya."
+        "Dengan akun PlayStation terhubung, Impor pustaka membawa game dan piala PlayStation Anda, diperbarui setiap tiga hari, dan kolom di bawahnya menambahkan game yang tidak Anda miliki. Game dari toko lain yang juga rilis di PlayStation menampilkan platinum aslinya, dan dalam mode piala menampilkan tingkat serta grup DLC aslinya.",
+        "Game yang ditambahkan ke Steam dengan LuaTools atau SteamTools menampilkan pencapaiannya dari statistik Steam sendiri, apa pun pengaturan Steam di atas."
       ],
       "notifications": [
         "Otomatis adalah bawaan: popup dalam game saat game bisa menampilkannya, notifikasi Windows saat tidak bisa, tidak pernah keduanya.",
@@ -1666,15 +1668,17 @@
         "Suara pencapaian langka, Suara penyelesaian 100%, dan Suara progres (mode Lanjutan) memberi popup tersebut suara tersendiri. Suara acak memilih suara berbeda setiap kali, dan Anda bisa mengimpor file sendiri.",
         "Emas, perak, dan perunggu menandai pencapaian langka. Pengaturan > Umum > Tampilan kelangkaan beralih ke Mode piala, yang menilai setiap pencapaian dan menampilkan platinum pada game yang selesai.",
         "Untuk penghitung, Tonggak progres menampilkan popup hanya pada kelipatan 10, 25, atau 50%. Klik kanan sebuah game > Bisukan notifikasi progres membisukan satu game tanpa menyentuh pencapaiannya.",
-        "Dua sakelar lagi di Pengaturan > Notifikasi: Notifikasi prioritas membiarkan pencapaian lolos dari Jangan Ganggu (Windows 11), dan Game klien Steam menambahkan popup AW Next untuk game yang dijalankan Steam sendiri."
+        "Dua sakelar lagi di Pengaturan > Notifikasi: Notifikasi prioritas membiarkan pencapaian lolos dari Jangan Ganggu (Windows 11), dan Game klien Steam menambahkan popup AW Next untuk game yang dijalankan Steam sendiri.",
+        "Platinum datang setelah semua pencapaian game dasar diraih, tanpa DLC, seperti di PlayStation. Pengaturan > Notifikasi > Platinum memerlukan bisa membuatnya menunggu seluruh daftar. Pada game dengan DLC, Hanya platinum di halamannya menyembunyikan pencapaian yang tidak dibutuhkan platinum."
       ],
       "gameHealthTitle": "Kesehatan game",
       "gameHealth": [
-        "Klik tombol alat sebuah game (kanan atas kartunya), atau klik kanan padanya, untuk membuka Kesehatan game. Di sana tertulis apakah game itu Siap, Perlu perhatian, atau Tidak dilacak.",
+        "Klik tombol alat sebuah game (kanan atas kartunya), atau klik kanan padanya, untuk membuka Kesehatan game. Di sana tertulis apakah game itu Siap, Perlu perhatian, Tidak dilacak, atau Hanya waktu bermain (pencapaian diketahui, tetapi belum ada yang mencatatnya di PC ini).",
         "Kalimat di bawah status menjelaskan penyebabnya dengan bahasa sederhana. Pemeriksaan di bawahnya menunjukkan bagian mana yang bermasalah: file game, file eksekusi, data pencapaian, penyiapan emulator, pelacakan langsung, atau notifikasi.",
-        "Tombol perbaikan hanya muncul saat AW Next benar-benar bisa memperbaiki game tersebut, seperti Temukan game ini, Tulis ulang data pencapaian, Instal file emulator, atau Pantau game ini. Masing-masing menyebutkan apa yang akan diubah, menyimpan cadangan, dan bertanya dulu.",
+        "Tombol perbaikan hanya muncul saat AW Next benar-benar bisa memperbaiki game tersebut, seperti Temukan game ini, Tulis ulang data pencapaian, Lengkapi pengaturan emulator, Instal file emulator, atau Pantau game ini. Masing-masing menyebutkan apa yang akan diubah, menyimpan cadangan, dan bertanya dulu; perbaikan yang gagal mengembalikan semua file.",
         "Kirim notifikasi uji memunculkan popup dengan nama dan gambar game itu sendiri, dikirim persis seperti yang sebenarnya terjadi.",
-        "Detail teknis berisi jalur, jumlah, dan kode emulator yang tepat: tekan Salin dan tempelkan ke laporan bug. Titik berwarna pada kartu bisa disembunyikan di Pengaturan > Tampilan > Kartu perpustakaan."
+        "Detail teknis berisi jalur, jumlah, dan kode emulator yang tepat: tekan Salin dan tempelkan ke laporan bug. Titik berwarna pada kartu bisa disembunyikan di Pengaturan > Tampilan > Kartu perpustakaan.",
+        "Tulis ulang data pencapaian hanya mengubah daftar pencapaian, statistiknya, dan ikon yang hilang. Lengkapi pengaturan emulator hanya menambahkan pengaturan yang belum ada pada sebuah game, membiarkan apa yang sudah diberikan pengaturan global emulator, dan bertanya sebelum mengganti akun milik game itu sendiri. Beralih ke emulator yang didukung menulis pengaturan emulator dalam langkah yang sama, dan Batalkan perbaikan terakhir mengembalikan setiap perubahan yang dibuat AW Next di folder game."
       ],
       "troubleshootTitle": "Penanganan masalah",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Klik kanan sebuah game > Emulator & alat > Terapkan perbaikan emulator… memasang GBE Fork, membuat steam_settings (daftar pencapaian dan ikon), dan menulis steam_appid.txt jika belum ada. Setiap file yang diganti dicadangkan terlebih dahulu.",
         "Di Pengaturan > Steam / GBE Fork, Data steam_settings yang diatur ke Sederhana memakai pengambilan anonim milik AW Next sendiri dan cepat. Lanjutan menjalankan generate_emu_config untuk data Steam yang lebih dalam dan bisa memakan waktu beberapa menit.",
         "Tidak ada yang ditulis ke folder game dengan sendirinya: Perbaiki otomatis game yang baru terdeteksi, Kelola kepemilikan DLC, dan Tulis nama akun dan bahasa semuanya nonaktif secara bawaan.",
-        "Diagnosis emulator di menu yang sama hanya membaca dan melaporkan. Cadangkan setelan GBE/Goldberg dan Pulihkan cadangan GBE/Goldberg terbaru mengembalikan game seperti semula."
+        "Diagnosis emulator di menu yang sama hanya membaca dan melaporkan. Cadangkan setelan GBE/Goldberg dan Pulihkan cadangan GBE/Goldberg terbaru mengembalikan game seperti semula.",
+        "Saat Buka paket DRM SteamStub otomatis nonaktif, Steamless tidak pernah berjalan sendiri: perbaikan manual bertanya dulu jika game dilindungi, dan perbaikan otomatis membiarkan game itu. Perbaikan yang gagal mengembalikan semua file, termasuk file yang dapat dieksekusi. Akun milik game itu sendiri di configs.user.ini tetap dipertahankan, kecuali penggantiannya dikonfirmasi."
       ],
       "emulatorTitle": "Emulator konsol",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Progres Xenia dibaca dari file profil Xbox (.gpd) dan mengikuti folder penyimpanan yang diatur di konfigurasinya.",
         "Piala KytyPS5 dibaca dari folder _Trophies-nya, untuk pengguna yang menjalankan game lewat launcher.",
         "Game Xbox 360 yang dikompilasi ulang untuk PC dan port PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil, dan lainnya) adalah sumber tersendiri di Pengaturan > Sumber. Jika ada yang tidak muncul, tambahkan foldernya di Pengaturan > Folder.",
-        "Setiap konsol bisa punya preset popup dan suara sendiri di Pengaturan > Notifikasi > Emulator (mode Lanjutan). Game Xbox 360 yang dikompilasi ulang mengikuti pilihan Xenia, port PS4 mengikuti shadPS4, dan Sama seperti utama mempertahankan pengaturan utama."
+        "Setiap konsol bisa punya preset popup dan suara sendiri di Pengaturan > Notifikasi > Emulator (mode Lanjutan). Game Xbox 360 yang dikompilasi ulang mengikuti pilihan Xenia, port PS4 mengikuti shadPS4, dan Sama seperti utama mempertahankan pengaturan utama.",
+        "Selama RPCS3 berjalan, pintasan overlay dalam game membuka game yang sedang dijalankannya, dibaca dari log RPCS3."
       ],
       "controllerTitle": "Kontroler (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Klik kanan kartu game untuk menjalankannya, memilih file eksekusinya, membuka folder dan tautan, memakai alat emulator, atau mencopot pemasangannya bila menu itu diaktifkan.",
         "Tandai terbuka secara manual (klik kanan sebuah pencapaian) mencatat pencapaian yang tidak terlihat oleh sumber mana pun.",
-        "Atur ulang pencapaian… memainkan game dari nol lagi dan mencadangkan setiap file terlebih dahulu. Berfungsi untuk game yang diemulasi, bukan untuk Steam, Epic, atau Xbox, yang pencapaiannya tersimpan di akun Anda.",
+        "Atur ulang pencapaian… memainkan game dari nol lagi dan mencadangkan setiap file terlebih dahulu. Berfungsi untuk game yang diemulasi, bukan untuk Steam, Epic, atau Xbox, yang pencapaiannya tersimpan di akun Anda. Pilih beberapa game di perpustakaan untuk mengatur ulang semuanya sekaligus.",
         "Waktu bermain dilacak selama game berjalan; Pelacakan waktu bermain di Pengaturan > Notifikasi mengaktifkan notifikasi mulai dan selesai.",
         "Bersihkan data game ini… menghapus semua yang disimpan AW Next tentang sebuah game (save dicadangkan terlebih dahulu), dan pemindaian berikutnya menemukannya lagi. Hapus dari AW Next mengeluarkannya dari pustaka sampai Anda mengembalikannya dari Pengaturan > Umum. Sembunyikan dari tampilan tetap memantaunya, di tampilan Tersembunyi pada menu Koleksi.",
         "Pengaturan game > Bahasa pencapaian menampilkan pencapaian dan notifikasi satu game dalam bahasa yang berbeda dari yang lain.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Menjalankan Steamless pada exe game sebelum penambalan untuk melepas DRM SteamStub milik Valve (aslinya disimpan sebagai .steamstub.bak). Tidak berefek bila tidak ada stub. Memerlukan Mono (mono-complete di Debian dan Ubuntu)."
+            "description": "Menjalankan Steamless pada exe game sebelum penambalan untuk melepas DRM SteamStub milik Valve (aslinya disimpan sebagai .steamstub.bak). Tidak berefek bila tidak ada stub. Jika nonaktif, Steamless tidak pernah berjalan sendiri: perbaikan manual bertanya dulu, dan perbaikan otomatis melewati game yang dilindungi. Memerlukan Mono (mono-complete di Debian dan Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Nonaktif secara bawaan. Menaruh proksi pengelak milik SteamAutoCrack (winmm.dll) + konfigurasi pengalihan agar game yang memeriksa ulang steam_api/exe asli setelah penggantian tetap bisa berjalan dan membuka pencapaian. Proksi diunduh dari rilis resminya. Wine dan Proton hanya memuat proksi jika opsi peluncuran game menetapkan WINEDLLOVERRIDES=\"winmm=n,b\"."

@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "DLC-tulajdonlás kezelése",
-        "description": "Megírja a configs.app.ini fájlt, hogy az emulátor minden DLC-t birtokoltként jelentsen. Nincs köze a teljesítményekhez: hagyd kikapcsolva, ha eredeti állapotban akarod tartani a játékot, vagy magad kezeled a DLC-ket. Alapértelmezetten kikapcsolva.",
+        "description": "Engedi az emulátorjavításnak és az „Az emulátor beállításainak kiegészítése” műveletnek, hogy megírja a configs.app.ini fájlt, így az emulátor minden DLC-t birtokoltként jelent. Nincs köze a teljesítményekhez: hagyd kikapcsolva, ha eredeti állapotban akarod tartani a játékot, vagy magad kezeled a DLC-ket. Alapértelmezetten kikapcsolva.",
         "value": {
           "false": "Kikapcsolva",
           "true": "Bekapcsolva"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Fióknév és nyelv írása",
-        "description": "Beírja a fiókod nevét és a nyelvet minden játék configs.user.ini fájljába. Hagyd kikapcsolva, ha az emulátor központi beállítására hagyatkozol a kiszámítható név és felhasználói azonosító érdekében. Alapértelmezetten kikapcsolva.",
+        "description": "Engedi az emulátorjavításnak és az „Az emulátor beállításainak kiegészítése” műveletnek, hogy beírja a fiókod nevét és a nyelvet egy játék configs.user.ini fájljába; a játék saját fiókját csak rákérdezés után cseréli le. Hagyd kikapcsolva, ha az emulátor globális beállításaira hagyatkozol a kiszámítható név és felhasználói azonosító érdekében. Alapértelmezetten kikapcsolva.",
         "value": {
           "false": "Kikapcsolva",
           "true": "Bekapcsolva"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "SteamStub DRM automatikus eltávolítása",
-        "description": "Lefuttatja a Steamlesst a játék exe-jén a javítás előtt, hogy eltávolítsa a Valve SteamStub DRM-jét (az eredeti .steamstub.bak néven megmarad). Nincs hatása, ha nincs stub.",
+        "description": "Lefuttatja a Steamlesst a játék exe-jén a javítás előtt, hogy eltávolítsa a Valve SteamStub DRM-jét (az eredeti .steamstub.bak néven megmarad). Nincs hatása, ha nincs stub. Kikapcsolva a Steamless soha nem fut le magától: a kézi javítás előbb rákérdez, az automatikus javítás pedig kihagyja a védett játékot.",
         "value": {
           "false": "Kikapcsolva",
           "true": "Bekapcsolva"
@@ -1644,7 +1644,8 @@
         "A teljesítési arány melletti kerek gomb megnyitja a Könyvtár statisztikáit: teljesítés, a feloldott és zárolt teljesítmények száma, játékidő, trófeák, platinás játékok, a legritkább teljesítmények és egy sor platformonként.",
         "A keresőmező és a + gomb közötti választó hat könyvtárnézet között vált. A Beállítások > Megjelenés > Könyvtár csempéi határozza meg a csempék méretét, a térközt és azt, hogy mit mutat egy csempe.",
         "A + gomb olyan játékot ad hozzá, amelyet egyetlen forrás sem talál: egy címet és egy futtatható fájlt, opcionális platformmal és Steam AppID-vel. Az indításokat és a játékidőt követi, teljesítmények nélkül.",
-        "Kattintson jobb gombbal egy játékra > Játék beállításai > Átnevezés…, hogy megváltoztassa a megjelenített nevet. A „Teljesítmények és játékidő > Játékidő szerkesztése…” kijavítja az összesített időt (12.5 vagy 12h30)."
+        "Kattintson jobb gombbal egy játékra > Játék beállításai > Átnevezés…, hogy megváltoztassa a megjelenített nevet. A „Teljesítmények és játékidő > Játékidő szerkesztése…” kijavítja az összesített időt (12.5 vagy 12h30).",
+        "Ctrl+kattintás hozzáad egy játékot a kijelöléshez, Shift+kattintás pedig tartományt jelöl ki. Kattintson jobb gombbal az egyik kijelölt játékra, hogy az összes teljesítményüket egyszerre visszaállítsa: minden játékról előbb mentés készül, és azokat a játékokat, amelyek platformja megőrzi a feloldásokat, kihagyja. Az Esc törli a kijelölést."
       ],
       "sourcesTitle": "Indítók és források",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: kapcsolja be a forrást, adja meg a felhasználónevét és a Web API-kulcsát, majd nyomja meg a „Könyvtár importálása” gombot. A feloldások a fiókjából jönnek, ezért hagyja bekapcsolva a RetroAchievementst az emulátorban.",
         "Egyszerű módban néhány ritkán használt forrássor rejtve marad, amíg nem használja őket. Amint számítanak, visszatérnek, a Speciális mód pedig mindig mindet megmutatja.",
         "A PlayStation-trófeák megmutatják a fokozatukat és a birtokló játékosok arányát. Az arányok az Exophase-ből származnak; csatlakoztasson PlayStation-fiókot a Beállítások > Forrás alatt, hogy a fiók játékaihoz a Sony saját adatait kapja.",
-        "Csatlakoztatott PlayStation-fiók esetén a „Könyvtár importálása” gomb behozza a PlayStation-játékokat és -trófeákat, háromnaponta frissítve, az alatta lévő mező pedig hozzáad egy játékot, amely nincs meg Önnek. A más áruházból származó, PlayStationön is megjelent játék a valódi platináját, trófea módban pedig a valódi fokozatait és DLC-csoportjait mutatja."
+        "Csatlakoztatott PlayStation-fiók esetén a „Könyvtár importálása” gomb behozza a PlayStation-játékokat és -trófeákat, háromnaponta frissítve, az alatta lévő mező pedig hozzáad egy játékot, amely nincs meg Önnek. A más áruházból származó, PlayStationön is megjelent játék a valódi platináját, trófea módban pedig a valódi fokozatait és DLC-csoportjait mutatja.",
+        "A LuaTools vagy SteamTools segítségével a Steamhez adott játékok a Steam saját statisztikáiból mutatják a teljesítményeiket, bármi legyen a fenti Steam-beállítás."
       ],
       "notifications": [
         "Az „Automatikus” az alapértelmezett: a játékon belüli felugró ablak, ha a játék meg tudja jeleníteni, egy Windows-értesítés, ha nem, soha nem mindkettő.",
@@ -1666,15 +1668,17 @@
         "A „Ritka teljesítmény hangja”, a „100%-os teljesítés hangja” és a „Haladás hangja” (Speciális mód) saját hangot ad ezeknek a felugró ablakoknak. A „Véletlen hang” minden alkalommal másikat választ, és saját fájlokat is importálhat.",
         "Az arany, az ezüst és a bronz a ritka feloldásokat jelöli. A Beállítások > Általános > Ritkaság megjelenítése átvált a „Trófea mód”-ra, amely minden teljesítményt osztályoz, és platinát mutat a befejezett játékoknál.",
         "Számlálóknál a „Haladási mérföldkövek” csak 10, 25 vagy 50%-os lépéseknél mutat felugró ablakot. Jobb gombbal kattintva egy játékra > Folyamatértesítések némítása egy játékot elnémít anélkül, hogy a feloldásait érintené.",
-        "Még két kapcsoló a Beállítások > Értesítés alatt: a „Kiemelt értesítések” átengedi a feloldásokat a Ne zavarjanak módon (Windows 11), az „A Steam kliens játékai” pedig hozzáadja az AW Next felugró ablakát azokhoz a játékokhoz, amelyeket maga a Steam indít."
+        "Még két kapcsoló a Beállítások > Értesítés alatt: a „Kiemelt értesítések” átengedi a feloldásokat a Ne zavarjanak módon (Windows 11), az „A Steam kliens játékai” pedig hozzáadja az AW Next felugró ablakát azokhoz a játékokhoz, amelyeket maga a Steam indít.",
+        "A platina akkor jön, amikor az alapjáték összes teljesítménye megvan, a DLC-ket nem számítva, mint PlayStationön. A Beállítások > Értesítés > „A platina feltétele” azt is megteheti, hogy a teljes listára vár. DLC-s játéknál a „Csak platina” az oldalán elrejti azokat a teljesítményeket, amelyekre a platinához nincs szükség."
       ],
       "gameHealthTitle": "Játék állapota",
       "gameHealth": [
-        "Kattintson egy játék eszközök gombjára (a csempe jobb felső sarkában), vagy kattintson rá jobb gombbal a Játék állapota megnyitásához. Megmondja, hogy a játék Kész, Figyelmet igényel vagy Nem követett.",
+        "Kattintson egy játék eszközök gombjára (a csempe jobb felső sarkában), vagy kattintson rá jobb gombbal a Játék állapota megnyitásához. Megmondja, hogy a játék Kész, Figyelmet igényel, Nem követett vagy Csak játékidő (a teljesítmények ismertek, de ezen a gépen még semmi sem rögzíti őket).",
         "Az állapot alatti mondat közérthetően elmagyarázza az okot. Az alatta lévő ellenőrzések megmutatják, melyik rész a hibás: játékfájlok, futtatható fájl, teljesítményadatok, emulátor beállítása, élő követés vagy értesítések.",
-        "A javítógombok csak akkor jelennek meg, ha az AW Next valóban meg tudja javítani az adott játékot, például „Játék megkeresése”, „Teljesítményadatok újraírása”, „Emulátorfájl telepítése” vagy „Játék figyelése”. Mindegyik megmondja, mit fog módosítani, készít egy mentést, és előbb rákérdez.",
+        "A javítógombok csak akkor jelennek meg, ha az AW Next valóban meg tudja javítani az adott játékot, például „Játék megkeresése”, „Teljesítményadatok újraírása”, „Az emulátor beállításainak kiegészítése”, „Emulátorfájl telepítése” vagy „Játék figyelése”. Mindegyik megmondja, mit fog módosítani, készít egy mentést, és előbb rákérdez; ha egy javítás sikertelen, minden fájlt visszaállít.",
         "A „Tesztértesítés küldése” felugró ablakot indít az adott játék saját nevével és grafikájával, úgy kézbesítve, ahogy valójában történne.",
-        "A „Technikai részletek” a pontos elérési utakat, számokat és emulátorkódokat tartalmazza: nyomja meg a Másolás gombot, és illessze be egy hibajelentésbe. A csempén lévő színes pont elrejthető a Beállítások > Megjelenés > Könyvtár csempéi alatt."
+        "A „Technikai részletek” a pontos elérési utakat, számokat és emulátorkódokat tartalmazza: nyomja meg a Másolás gombot, és illessze be egy hibajelentésbe. A csempén lévő színes pont elrejthető a Beállítások > Megjelenés > Könyvtár csempéi alatt.",
+        "A „Teljesítményadatok újraírása” csak a teljesítménylistát, annak statisztikáit és a hiányzó ikonokat módosítja. Az „Az emulátor beállításainak kiegészítése” csak azokat a beállításokat adja hozzá, amelyek egy játékból hiányoznak, békén hagyja, amit az emulátor globális beállításai már megadnak, és rákérdez, mielőtt lecserélné a játék saját fiókját. A „Váltás a támogatott emulátorra” ugyanabban a lépésben beírja az emulátor beállításait, a „Az utolsó javítás visszavonása” pedig visszaállít minden módosítást, amelyet az AW Next a játék mappájában végzett."
       ],
       "troubleshootTitle": "Hibaelhárítás",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Jobb gombbal kattintva egy játékra > Emulátor és eszközök > Emulátorjavítás alkalmazása… telepíti a GBE Forkot, felépíti a steam_settings mappát (teljesítménylista és ikonok), és kiírja a steam_appid.txt fájlt, ha hiányzik. Minden lecserélt fájlról előbb mentés készül.",
         "A Beállítások > Steam / GBE Fork alatt a „steam_settings adatok” Egyszerű értéken az AW Next saját névtelen lekérését használja, és gyors. A Speciális a generate_emu_config eszközt futtatja mélyebb Steam-adatokért, és percekig tarthat.",
         "Magától semmi nem íródik a játékmappába: az „Újonnan észlelt játékok automatikus javítása”, a „DLC-tulajdonlás kezelése” és a „Fióknév és nyelv írása” alapértelmezetten mind ki van kapcsolva.",
-        "Az „Emulátor diagnosztizálása” ugyanabban a menüben csak olvas és jelent. A „GBE/Goldberg beállítás mentése” és a „Legutóbbi GBE/Goldberg mentés visszaállítása” visszaállítja a játékot az eredeti állapotába."
+        "Az „Emulátor diagnosztizálása” ugyanabban a menüben csak olvas és jelent. A „GBE/Goldberg beállítás mentése” és a „Legutóbbi GBE/Goldberg mentés visszaállítása” visszaállítja a játékot az eredeti állapotába.",
+        "Ha a „SteamStub DRM automatikus eltávolítása” ki van kapcsolva, a Steamless soha nem fut le magától: a kézi javítás előbb rákérdez, ha a játék védett, az automatikus javítás pedig békén hagyja azt a játékot. A sikertelen javítás minden fájlt visszaállít, a futtatható fájlt is. A játék saját fiókja a configs.user.ini fájlban megmarad, hacsak nem hagyják jóvá a cseréjét."
       ],
       "emulatorTitle": "Konzolemulátorok",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "A Xenia haladását az Xbox-profilfájlokból (.gpd) olvassa be, és követi a konfigurációjában megadott tárolási mappákat.",
         "A KytyPS5 trófeáit a _Trophies mappájából olvassa be, arra a felhasználóra, akiként az indító a játékot futtatja.",
         "A PC-re újrafordított Xbox 360-játékok és a PS4-portok (Bloodborne, Uncharted, God of War III Remastered, MediEvil és mások) saját forrásként szerepelnek a Beállítások > Forrás alatt. Ha valamelyik nem jelenik meg, adja hozzá a mappáját a Beállítások > Mappák alatt.",
-        "Minden konzolnak lehet saját felugróablak-előbeállítása és hangja a Beállítások > Értesítés > Emulátorok alatt (Speciális mód). Az újrafordított Xbox 360-játékok a Xenia választását követik, a PS4-portok a shadPS4-ét, az „Ugyanaz, mint a fő” pedig megtartja a fő beállításokat."
+        "Minden konzolnak lehet saját felugróablak-előbeállítása és hangja a Beállítások > Értesítés > Emulátorok alatt (Speciális mód). Az újrafordított Xbox 360-játékok a Xenia választását követik, a PS4-portok a shadPS4-ét, az „Ugyanaz, mint a fő” pedig megtartja a fő beállításokat.",
+        "Amíg az RPCS3 fut, a játékon belüli overlay gyorsbillentyű azt a játékot nyitja meg, amelyet az RPCS3 éppen futtat, az RPCS3 naplójából kiolvasva."
       ],
       "controllerTitle": "Kontroller (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Kattintson jobb gombbal egy játékcsempére az indításhoz, a futtatható fájl kiválasztásához, mappák és hivatkozások megnyitásához, emulátoreszközök használatához, vagy az eltávolításhoz, ha ez a menü engedélyezve van.",
         "A „Megjelölés kézzel feloldottként” (jobb gombbal egy teljesítményre) rögzít egy olyan feloldást, amelyet egyetlen forrás sem lát.",
-        "A „Teljesítmények visszaállítása…” lehetővé teszi, hogy egy játékot nulláról újra végigjátsszon, és előbb minden fájlról mentést készít. Emulált játékoknál működik, Steamnél, Epicnél és Xboxnál nem, mert azok feloldásai a fiókján vannak.",
+        "A „Teljesítmények visszaállítása…” lehetővé teszi, hogy egy játékot nulláról újra végigjátsszon, és előbb minden fájlról mentést készít. Emulált játékoknál működik, Steamnél, Epicnél és Xboxnál nem, mert azok feloldásai a fiókján vannak. Jelöljön ki több játékot a könyvtárban, hogy együtt állíthassa vissza őket.",
         "A játékidőt a játék futása közben követi; a „Játékidő követése” a Beállítások > Értesítés alatt bekapcsolja az indítási és befejezési értesítéseket.",
         "A „A játék adatainak törlése…” töröl mindent, amit az AW Next egy játékról tárol (a mentésekről előbb mentés készül), és a következő vizsgálat újra megtalálja. Az „Eltávolítás az AW Nextből” kiveszi a könyvtárból, amíg vissza nem hozod a Beállítások > Általános részből. Az „Elrejtés a nézetből” követve tartja, a Gyűjtemények menü Rejtett nézetében.",
         "A „Játék beállításai > Teljesítmények nyelve” egy játék teljesítményeit és értesítéseit a többitől eltérő nyelven mutatja.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Lefuttatja a Steamlesst a játék exe-jén a javítás előtt, hogy eltávolítsa a Valve SteamStub DRM-jét (az eredeti .steamstub.bak néven megmarad). Nincs hatása, ha nincs stub. Működéséhez Mono szükséges (mono-complete Debianon és Ubuntun)."
+            "description": "Lefuttatja a Steamlesst a játék exe-jén a javítás előtt, hogy eltávolítsa a Valve SteamStub DRM-jét (az eredeti .steamstub.bak néven megmarad). Nincs hatása, ha nincs stub. Kikapcsolva a Steamless soha nem fut le magától: a kézi javítás előbb rákérdez, az automatikus javítás pedig kihagyja a védett játékot. Működéséhez Mono szükséges (mono-complete Debianon és Ubuntun)."
           },
           "apiCheckBypass": {
             "description": "Alapértelmezetten kikapcsolva. Lerakja a SteamAutoCrack megkerülő proxyját (winmm.dll) + egy átirányítási konfigurációt, hogy a csere után az eredeti steam_api/exe-t újraellenőrző játékok mégis elinduljanak és feloldjanak. A proxyt a hivatalos kiadásából tölti le. A Wine és a Proton csak akkor tölti be a proxyt, ha a játék indítási beállításai megadják a WINEDLLOVERRIDES=\"winmm=n,b\" értéket."

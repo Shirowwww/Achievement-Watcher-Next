@@ -46,7 +46,7 @@ Speicher angeschlossen lässt. Sie kommen zurück, wenn du ihn wieder einschalte
 > [!NOTE]
 > Steam-Freischaltungen werden aus den Statistiken gelesen, die Steam auf diesem PC führt. Ein privates Profil oder private **Spiel-
 > details** funktionieren für jedes hier gespielte Spiel, auch für Spiele, die über SteamTools, LuaTools oder
-> GreenLuma hinzugefügt wurden, und eine Karte aktualisiert sich in dem Moment, in dem Steam eine Freischaltung festhält. Ein öffentliches Profil ergänzt nur deinen
+> GreenLuma hinzugefügt wurden, und eine Karte aktualisiert sich in dem Moment, in dem Steam eine Freischaltung festhält. Ein mit LuaTools oder SteamTools hinzugefügtes Spiel wird auch gelesen, wenn **Steam** auf **Keine** steht, da es nicht zur Bibliothek deines Kontos gehört. Ein öffentliches Profil ergänzt nur deinen
 > Namen und Avatar. Spiele, die nur auf einem anderen PC gespielt wurden, brauchen die Kontoverbindung weiter unten. Diese Freischaltungen
 > lösen eine AW-Next-Benachrichtigung aus, sobald **Spiele des Steam-Clients** unter Benachrichtigung aktiviert ist (siehe
 > [Benachrichtigungen](notifications.md#games-steam-runs)).
@@ -148,6 +148,8 @@ ihre Daten vom Standardpfad wegverlegen, und AW Next liest die Einstellungen, di
 
 Eine verschobene virtuelle RPCS3-Festplatte oder ein ShadPS4-Datenordner lässt sich also direkt unter **Einstellungen → Ordner**
 hinzufügen, ohne dass eine ausführbare Emulator-Datei in der Nähe sein muss.
+
+Solange RPCS3 läuft, öffnet die Tastenkombination des [Overlays](overlay.md) das Spiel, das es gerade ausführt: AW Next liest beim Drücken den Titel vom Ende von `RPCS3.log` und ordnet ihn der Trophäenliste des Spiels zu. Ein in RPCS3 beendetes Spiel wird nicht mehr angesteuert.
 
 ## RetroAchievements {#retroachievements}
 

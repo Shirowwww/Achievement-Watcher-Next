@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "Spravovať vlastníctvo DLC",
-        "description": "Zapíše configs.app.ini, aby emulátor hlásil všetky DLC ako vlastnené. Nesúvisí s úspechmi: ponechajte vypnuté, ak chcete hru ponechať v pôvodnom stave, alebo si DLC spravujte sami. V predvolenom nastavení vypnuté.",
+        "description": "Umožní oprave emulátora a funkcii Doplniť nastavenia emulátora zapísať configs.app.ini, aby emulátor hlásil všetky DLC ako vlastnené. Nesúvisí s úspechmi: ponechajte vypnuté, ak chcete hru ponechať v pôvodnom stave, alebo si DLC spravujte sami. V predvolenom nastavení vypnuté.",
         "value": {
           "false": "Vypnuté",
           "true": "Zapnuté"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Zapisovať meno účtu a jazyk",
-        "description": "Zapíše meno vášho účtu a jazyk do configs.user.ini každej hry. Ponechajte vypnuté, ak sa spoliehate na centrálne nastavenie emulátora kvôli predvídateľnému menu a ID používateľa. V predvolenom nastavení vypnuté.",
+        "description": "Umožní oprave emulátora a funkcii Doplniť nastavenia emulátora zapísať meno vášho účtu a jazyk do configs.user.ini hry; vlastný účet hry sa nahradí až po opýtaní. Ponechajte vypnuté, ak sa spoliehate na globálne nastavenia emulátora kvôli predvídateľnému menu a ID používateľa. V predvolenom nastavení vypnuté.",
         "value": {
           "false": "Vypnuté",
           "true": "Zapnuté"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "Automaticky odstrániť DRM SteamStub",
-        "description": "Spustí Steamless na exe hry pred záplatou, aby odstránil DRM SteamStub od Valve (originál zachovaný ako .steamstub.bak). Bez účinku, ak žiadny stub nie je.",
+        "description": "Spustí Steamless na exe hry pred záplatou, aby odstránil DRM SteamStub od Valve (originál zachovaný ako .steamstub.bak). Bez účinku, ak žiadny stub nie je. Keď je vypnuté, Steamless sa nikdy nespustí sám: ručná oprava sa najprv opýta a automatická oprava chránenú hru preskočí.",
         "value": {
           "false": "Vypnuté",
           "true": "Zapnuté"
@@ -1644,7 +1644,8 @@
         "Okrúhle tlačidlo vedľa miery dokončenia otvára Štatistiky knižnice: dokončenie, počty odomknutých a zamknutých, čas hrania, trofeje, hry s platinou, najvzácnejšie úspechy a jeden riadok na platformu.",
         "Výber medzi vyhľadávacím poľom a tlačidlom + prepína medzi šiestimi zobrazeniami knižnice. Nastavenia > Vzhľad > Dlaždice knižnice určujú veľkosť dlaždíc, medzery a to, čo každá dlaždica zobrazuje.",
         "Tlačidlo + pridá hru, ktorú nenájde žiadny zdroj: názov a spustiteľný súbor, s voliteľnou platformou a Steam AppID. Spustenia a čas hrania sa sledujú, bez úspechov.",
-        "Kliknite na hru pravým tlačidlom > Nastavenia hry > Premenovať… a zmeňte zobrazovaný názov. Úspechy a čas hrania > Upraviť čas hrania… opraví celkový čas (12.5 alebo 12h30)."
+        "Kliknite na hru pravým tlačidlom > Nastavenia hry > Premenovať… a zmeňte zobrazovaný názov. Úspechy a čas hrania > Upraviť čas hrania… opraví celkový čas (12.5 alebo 12h30).",
+        "Ctrl+kliknutie pridá hru do výberu a Shift+kliknutie vyberie rozsah. Kliknutím pravým tlačidlom na jednu z vybraných hier resetujete všetky ich úspechy naraz: každá hra sa najprv zálohuje a hry, ktorých platforma odomknutia uchováva, sa preskočia. Esc výber zruší."
       ],
       "sourcesTitle": "Spúšťače a zdroje",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: zapnite zdroj, zadajte používateľské meno a kľúč Web API a potom stlačte Importovať knižnicu. Odomknutia pochádzajú z vášho účtu, preto nechajte RetroAchievements v emulátore zapnuté.",
         "V režime Jednoduché sú niektoré zriedka používané riadky zdrojov skryté, kým sa nepoužívajú. Vrátia sa hneď, ako sú dôležité, a Pokročilé ich vždy zobrazuje všetky.",
         "Trofeje PlayStation zobrazujú svoj stupeň a podiel hráčov, ktorí ich majú. Miery pochádzajú z Exophase; pripojte účet PlayStation v Nastavenia > Zdroj a získate vlastné čísla Sony pre hry na tomto účte.",
-        "S pripojeným účtom PlayStation Importovať knižnicu prinesie vaše hry a trofeje PlayStation, obnovované každé tri dni, a pole pod ním pridá hru, ktorú nevlastníte. Hra z iného obchodu, ktorá vyšla aj na PlayStatione, zobrazuje svoju skutočnú platinu a v režime trofejí svoje skutočné stupne a skupiny DLC."
+        "S pripojeným účtom PlayStation Importovať knižnicu prinesie vaše hry a trofeje PlayStation, obnovované každé tri dni, a pole pod ním pridá hru, ktorú nevlastníte. Hra z iného obchodu, ktorá vyšla aj na PlayStatione, zobrazuje svoju skutočnú platinu a v režime trofejí svoje skutočné stupne a skupiny DLC.",
+        "Hry pridané do Steamu cez LuaTools alebo SteamTools zobrazujú úspechy zo štatistík samotného Steamu, nech je nastavenie Steamu vyššie akékoľvek."
       ],
       "notifications": [
         "Automaticky je predvolené: vyskakovacie okno v hre, keď ho hra dokáže zobraziť, a oznámenie Windows, keď nie, nikdy oboje.",
@@ -1666,15 +1668,17 @@
         "Zvuk vzácneho úspechu, Zvuk 100 % dokončenia a Zvuk postupu (režim Pokročilé) dávajú týmto oknám vlastný zvuk. Náhodný zvuk vyberie zakaždým iný a môžete importovať vlastné súbory.",
         "Zlato, striebro a bronz označujú vzácne odomknutia. Nastavenia > Všeobecné > Zobrazenie vzácnosti prepne na Režim trofejí, ktorý hodnotí každý úspech a pri dokončených hrách zobrazuje platinu.",
         "Pri počítadlách Míľniky postupu zobrazia okno len pri krokoch 10, 25 alebo 50 %. Kliknite na hru pravým tlačidlom > Stlmiť upozornenia na postup a stlmíte jednu hru bez zásahu do jej odomknutí.",
-        "V Nastavenia > Upozornenia sú ešte dva prepínače: Prioritné oznámenia prepustia odomknutia cez režim Nerušiť (Windows 11) a Hry klienta Steam pridajú okno AW Next pre hry, ktoré spúšťa samotný Steam."
+        "V Nastavenia > Upozornenia sú ešte dva prepínače: Prioritné oznámenia prepustia odomknutia cez režim Nerušiť (Windows 11) a Hry klienta Steam pridajú okno AW Next pre hry, ktoré spúšťa samotný Steam.",
+        "Platina príde, hneď ako získate všetky úspechy základnej hry, DLC bokom, rovnako ako na PlayStatione. Nastavenia > Upozornenia > Platina vyžaduje ju môže nechať čakať na celý zoznam. Pri hre s DLC skryje Iba platina na jej stránke úspechy, ktoré platina nepotrebuje."
       ],
       "gameHealthTitle": "Stav hry",
       "gameHealth": [
-        "Kliknite na tlačidlo nástrojov hry (vpravo hore na dlaždici) alebo na ňu kliknite pravým tlačidlom a otvorte Stav hry. Povie, či je hra Pripravené, Vyžaduje pozornosť alebo Nesledované.",
+        "Kliknite na tlačidlo nástrojov hry (vpravo hore na dlaždici) alebo na ňu kliknite pravým tlačidlom a otvorte Stav hry. Povie, či je hra Pripravené, Vyžaduje pozornosť, Nesledované alebo Iba čas hrania (úspechy sú známe, ale zatiaľ ich na tomto PC nič nezaznamenáva).",
         "Veta pod stavom vysvetľuje príčinu jednoducho. Kontroly nižšie ukazujú, ktorá časť zlyháva: súbory hry, spustiteľný súbor, dáta úspechov, nastavenie emulátora, sledovanie v reálnom čase alebo oznámenia.",
-        "Tlačidlá opravy sa objavia, iba keď AW Next dokáže danú hru naozaj opraviť, napríklad Nájsť hru, Prepísať dáta úspechov, Nainštalovať súbor emulátora alebo Sledovať túto hru. Každé povie, čo zmení, vytvorí zálohu a najprv sa opýta.",
+        "Tlačidlá opravy sa objavia, iba keď AW Next dokáže danú hru naozaj opraviť, napríklad Nájsť hru, Prepísať dáta úspechov, Doplniť nastavenia emulátora, Nainštalovať súbor emulátora alebo Sledovať túto hru. Každé povie, čo zmení, vytvorí zálohu a najprv sa opýta; oprava, ktorá zlyhá, vráti všetky súbory späť.",
         "Odoslať skúšobné oznámenie zobrazí okno s názvom a obrázkom danej hry, doručené tak, ako by prišlo naozaj.",
-        "Technické podrobnosti obsahujú presné cesty, počty a kódy emulátora: stlačte Kopírovať a vložte to do hlásenia chyby. Farebnú bodku na dlaždici možno skryť v Nastavenia > Vzhľad > Dlaždice knižnice."
+        "Technické podrobnosti obsahujú presné cesty, počty a kódy emulátora: stlačte Kopírovať a vložte to do hlásenia chyby. Farebnú bodku na dlaždici možno skryť v Nastavenia > Vzhľad > Dlaždice knižnice.",
+        "Prepísať dáta úspechov mení iba zoznam úspechov, jeho štatistiky a chýbajúce ikony. Doplniť nastavenia emulátora pridá iba nastavenia, ktoré hre chýbajú, ponechá to, čo už dávajú globálne nastavenia emulátora, a pred nahradením vlastného účtu hry sa opýta. Prepnúť na podporovaný emulátor zapíše nastavenia emulátora v tom istom kroku a Vrátiť poslednú opravu vráti späť každú zmenu, ktorú AW Next urobil v priečinku hry."
       ],
       "troubleshootTitle": "Riešenie problémov",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Kliknite na hru pravým tlačidlom > Emulátor a nástroje > Použiť opravu emulátora… a nainštaluje sa GBE Fork, zostaví steam_settings (zoznam úspechov a ikony) a zapíše steam_appid.txt, ak chýba. Každý nahradený súbor sa najprv zálohuje.",
         "V Nastavenia > Steam / GBE Fork používajú Dáta steam_settings nastavené na Jednoduché vlastné anonymné sťahovanie AW Next a sú rýchle. Pokročilé spúšťa generate_emu_config pre hlbšie dáta Steamu a môže trvať minúty.",
         "Nič sa samo nezapisuje do priečinka hry: Automaticky opravovať novo zistené hry, Spravovať vlastníctvo DLC a Zapisovať meno účtu a jazyk sú predvolene vypnuté.",
-        "Diagnostikovať emulátor v tej istej ponuke iba číta a hlási. Zálohovať nastavenie GBE/Goldberg a Obnoviť poslednú zálohu GBE/Goldberg vrátia hru do pôvodného stavu."
+        "Diagnostikovať emulátor v tej istej ponuke iba číta a hlási. Zálohovať nastavenie GBE/Goldberg a Obnoviť poslednú zálohu GBE/Goldberg vrátia hru do pôvodného stavu.",
+        "Keď je Automaticky odstrániť DRM SteamStub vypnuté, Steamless sa nikdy nespustí sám: ručná oprava sa pri chránenej hre najprv opýta a automatická oprava tú hru nechá tak. Oprava, ktorá zlyhá, vráti všetky súbory späť, vrátane spustiteľného súboru. Vlastný účet hry v configs.user.ini zostane zachovaný, pokiaľ sa jeho nahradenie nepotvrdí."
       ],
       "emulatorTitle": "Emulátory konzol",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Postup Xenie sa číta zo súborov profilu Xbox (.gpd) a sleduje ukladacie priečinky nastavené v jej konfigurácii.",
         "Trofeje KytyPS5 sa čítajú z jeho priečinka _Trophies pre používateľa, pod ktorým spúšťač hru spúšťa.",
         "Hry Xbox 360 prekompilované pre PC a porty PS4 (Bloodborne, Uncharted, God of War III Remastered, MediEvil a ďalšie) sú samostatné zdroje v Nastavenia > Zdroj. Ak sa niektorá nezobrazí, pridajte jej priečinok v Nastavenia > Priečinky.",
-        "Každá konzola môže mať vlastnú predvoľbu okna a zvuk v Nastavenia > Upozornenia > Emulátory (režim Pokročilé). Prekompilované hry Xbox 360 nasledujú voľbu Xenie, porty PS4 voľbu shadPS4 a Rovnaké ako hlavné ponecháva hlavné nastavenia."
+        "Každá konzola môže mať vlastnú predvoľbu okna a zvuk v Nastavenia > Upozornenia > Emulátory (režim Pokročilé). Prekompilované hry Xbox 360 nasledujú voľbu Xenie, porty PS4 voľbu shadPS4 a Rovnaké ako hlavné ponecháva hlavné nastavenia.",
+        "Kým beží RPCS3, otvorí klávesová skratka overlayu v hre hru, ktorú RPCS3 spúšťa, zistenú z jeho logu."
       ],
       "controllerTitle": "Ovládač (gamepad)",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Kliknite na dlaždicu hry pravým tlačidlom, aby ste ju spustili, vybrali spustiteľný súbor, otvorili priečinky a odkazy, použili nástroje emulátora alebo ju odinštalovali, keď je táto ponuka zapnutá.",
         "Označiť ako ručne odomknuté (pravý klik na úspech) zaznamená odomknutie, ktoré nevidí žiadny zdroj.",
-        "Resetovať úspechy… umožní hrať hru znova od nuly a najprv zálohuje každý súbor. Funguje pre emulované hry, nie pre Steam, Epic ani Xbox, ktorých odomknutia sú na vašom účte.",
+        "Resetovať úspechy… umožní hrať hru znova od nuly a najprv zálohuje každý súbor. Funguje pre emulované hry, nie pre Steam, Epic ani Xbox, ktorých odomknutia sú na vašom účte. Vyberte v knižnici viac hier a resetujte ich spolu.",
         "Čas hrania sa sleduje, kým hra beží; Sledovanie času hrania v Nastavenia > Upozornenia zapína oznámenia o začiatku a konci.",
         "Vymazať údaje o hre… vymaže všetko, čo si AW Next o hre uchováva (uložené pozície sa najprv zálohujú) a najbližšie skenovanie ju znova nájde. Odstrániť z AW Next ju vyradí z knižnice, kým ju nevrátite v časti Nastavenia > Všeobecné. Skryť zo zobrazenia ju ponechá sledovanú, v zobrazení Skryté v ponuke Kolekcie.",
         "Nastavenia hry > Jazyk úspechov zobrazí úspechy a upozornenia jednej hry v inom jazyku ako ostatné.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Spustí Steamless na exe hry pred záplatou, aby odstránil DRM SteamStub od Valve (originál zachovaný ako .steamstub.bak). Bez účinku, ak žiadny stub nie je. Vyžaduje Mono (mono-complete v Debiane a Ubuntu)."
+            "description": "Spustí Steamless na exe hry pred záplatou, aby odstránil DRM SteamStub od Valve (originál zachovaný ako .steamstub.bak). Bez účinku, ak žiadny stub nie je. Keď je vypnuté, Steamless sa nikdy nespustí sám: ručná oprava sa najprv opýta a automatická oprava chránenú hru preskočí. Vyžaduje Mono (mono-complete v Debiane a Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "V predvolenom nastavení vypnuté. Umiestni obchádzacie proxy SteamAutoCrack (winmm.dll) + konfiguráciu presmerovania, aby sa hry, ktoré po výmene znovu kontrolujú pôvodný steam_api/exe, napriek tomu spustili a odomkli. Stiahne proxy z jeho oficiálneho vydania. Wine a Proton načítajú proxy iba vtedy, keď voľby spustenia hry nastavujú WINEDLLOVERRIDES=\"winmm=n,b\"."

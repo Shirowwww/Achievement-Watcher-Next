@@ -184,9 +184,13 @@ Seltenheitsmodus (Spielseite, Statistik, 100-%-Popup) mit Name, Beschreibung und
 Trophäe erreicht ist, auch wenn noch DLC-Trophäen offen sind. PlayStation-Emulatoren behalten ihre eigenen Trophäen. AW
 findet die Liste über den Originalnamen des Spiels, das Umbenennen eines Spiels ändert also nichts.
 
-Jede Quelle löst das 100-%-Popup aus, auch die Live-Quellen (Xenia, rekompilierte Portierungen, GOG Galaxy,
+Jede Quelle löst das Platin-Popup aus, auch die Live-Quellen (Xenia, rekompilierte Portierungen, GOG Galaxy,
 Ubisoft Connect, Xbox PC). Hat das Spiel ein Platin, erscheint der damit verknüpfte Erfolg als
-Platin.
+Platin. Der »Erreiche alle Erfolge«-Erfolg eines Spiels zählt ebenfalls als dessen Platin, in der Benachrichtigung und in seiner Liste, mit oder ohne PlayStation-Konto.
+
+Standardmäßig kommt das Platin, sobald das Basisspiel abgeschlossen ist, wie auf PlayStation: DLC-Erfolge und zusätzliche Trophäengruppen bleiben außen vor. In einem Spiel mit DLC trägt jeder Erfolg, den das Platin braucht, ein kleines Platin-Zeichen, und **Nur Platin** auf der Spielseite blendet den Rest aus. **Einstellungen → Benachrichtigung → Platin verlangt** schaltet zwischen **Basisspiel** und **Mit DLC** um, das auf die ganze Liste wartet. Ein Spiel ohne DLC bleibt unverändert. Die oben genannten Live-Quellen folgen derselben Regel, wenn sie AW Next die Liste liefern, mit einem einzigen Popup: Der eigene Platin-Erfolg des Spiels erscheint als Platin statt als normale Freischaltung samt 100-%-Popup.
+
+Erfolge, die Steam aus einem Spiel entfernt hat, zählen nicht mehr: Sie bleiben ausgegraut am Ende der Liste, mit der Markierung *Nicht mehr auf Steam*, und das Spiel kann auch ohne sie 100 % erreichen. Die zwischengespeicherte Liste bemerkt die Entfernung bei der nächsten 3-Tage-Prüfung oder sofort mit **Einstellungen → Erweitert → Erfolgslisten erneut prüfen**.
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="Die Profilkopfzeile mit den Anzahlen von Platin-, Gold-, Silber-, Bronze- und gewöhnlichen Trophäen" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +267,7 @@ Spielleiste, die vollständige Liste und den Reiter »Deine Sachen« in Big Pict
 dieselbe exe startet wie die **Ausführbare Datei** des Spiels in AW Next. Die README behandelt die Installation, was man
 prüfen sollte, wenn eine Seite leer bleibt, und wie es neben Steam Cartridges, NativeGameLink und Game
 Data Linker sitzt. Die Playnite-Erweiterung in `playnite/` fragt auf dieselbe Weise, für jedes Spiel in einer Playnite-
-Bibliothek, und ihre README behandelt die Installation und die Bereiche, die ein Theme platzieren kann. Die Anfrage unten ist
+Bibliothek, und ihre README behandelt die Installation und die Bereiche, die ein Theme platzieren kann. Seit Version 1.2.0 funktioniert sie auch bei geschlossenem AW Next: Sie liest die Liste, die AW Next beim letzten Scan gespeichert hat, nennt dazu das Datum dieses Scans und wechselt zu Live-Daten zurück, sobald AW Next läuft (zwischenzeitliche Freischaltungen erscheinen, sobald AW Next die Spielstände gelesen hat). Die Anfrage unten ist
 für alle gedacht, die ein weiteres Plugin schreiben.
 
 Das Plugin sendet:

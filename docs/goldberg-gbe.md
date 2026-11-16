@@ -156,6 +156,40 @@ Before replacing files, the repair snapshots them in a timestamped folder under
 `steam_settings\.aw-backups`. The separate backup action can capture both DLL and configuration files
 with a restore manifest.
 
+Game Health splits this in two. **Rewrite the achievement data** (`app/parser/gbeSchema.js`) writes
+only `achievements.json`, `stats.json` and missing icons: a schema that already holds every ID is left
+byte for byte, one that lacks some keeps its format (language objects, `icon_gray`, its own `img/`
+folder) and only gains the missing entries, empty texts and outdated progress or stat definitions. A
+new schema is written in the emulator's native format. Progress and stat definitions are compared
+with a reference (`app/parser/schemaReference.js`): generate_emu_config when steam_settings data is
+Advanced with a saved Steam sign-in, otherwise games-infos-datas, otherwise the cache; a gap shows as
+`PROGRESS_OUTDATED`. **Complete the emulator settings** writes the configuration files (see below).
+Both copy each file they change to `.aw-backups/<date>/` and list the files they create in
+`created.json` there. `repair` itself (the context-menu fix, the automatic fix and **Fix all games**)
+writes its schema through the same `gbeSchema.rewrite`, with games-infos-datas as the reference and
+the links found in saves on top; a file that shares no ID with the game is rebuilt, not extended. Its
+identity keys go through `identityToWrite`: a value already in the game's `configs.user.ini` is
+replaced only with `replaceIdentity` (the interactive fix asks; silent paths never pass it), and a
+value equal to the global settings or a default is not copied.
+
+**Switch to the supported emulator** (`gameHealthRepair.switchToSupportedRuntime`) is one journal
+record: the crack's files set aside, the GBE DLL, and a minimal `steam_settings` beside it
+(`steam_appid.txt`, `achievements.json` and `stats.json` through `gbeSchema`, and a generated
+`steam_interfaces.txt`). Without a Steam AppID it refuses before writing anything.
+
+Every repair runs inside `app/util/repairJournal.js`. A repair that throws is rolled back at once from
+its own entry, an executable rewritten by Steamless included (restored from its `.steamstub.bak`), and
+the error says what was or was not put back. The emulator fix downloads everything it needs before its
+first write, and with **Auto-unpack SteamStub DRM** off it never runs Steamless unasked: the manual fix
+asks, the automatic fix and **Fix all games** skip the game (`steamstub-needs-steamless`).
+
+Every other action that writes into a game folder is journaled the same way (CrakFiles, Remove Steam
+DRM, Restore GBE backup, Remove AW Next's configuration, Set AppID manually, the GOG UniverseLAN fix,
+the Uplay R1/R2 repairs and restores, and Game Health's undo buttons), so **Undo the last repair**
+reaches it. An undo is all or nothing: if a file cannot be written it changes nothing and keeps its
+entry. `test/core/gameWriteCensus.test.js` lists every call to the functions that write into a game
+folder, with what covers it, and fails on a new one until it is placed under the journal.
+
 ## DLC configuration
 
 GBE supports a general unlock flag and explicit DLC enumeration:
@@ -185,8 +219,18 @@ account_steamid=7656119...
 
 The account name and language follow AW Next settings only when **Write account name and language**
 is on under **Settings → Steam / GBE Fork → Emulator setup**. It is off by default and independent of
-DLC ownership and automatic repair. With it off, a repair started by hand from Game Health fills in
-the emulator's defaults (`Player` / `english`); a value already in the file is never replaced. The
+DLC ownership and automatic repair. With it off, Game Health's **Complete the emulator settings**
+fills in the emulator's defaults (`Player` / `english`) only when no config gives a name or language;
+a value already in the file is never replaced.
+
+Game Health reads the configuration the way GBE itself loads it (`app/parser/gbeEffectiveConfig.js`):
+the local `configs.*.ini` first, then either the settings of the save folder `local_save_path` points
+to, or the global `%APPDATA%\GSE Saves\settings\` folder (or the `saves_folder_name` it names). A
+value the global settings give is never copied into a game, and a valid global `configs.user.ini`
+shows as information, not as a missing user config. **Complete the emulator settings**
+(`app/parser/gbeSettingsStep.js`) fills only keys nothing answers. A game's own `account_steamid`,
+`account_name`, `language` or `local_save_path` is replaced only when the switch above is on and the
+user says yes to a separate prompt; the default answer keeps it. The
 name comes from the **Emulator identity** card, or from the AW Next profile name when that field is
 empty. An existing `account_steamid` is kept, because changing it can redirect the emulator to a
 different save identity; only a valid Steam ID typed in that card, with the switch on, replaces it.

@@ -99,6 +99,8 @@ Mit einem Rechtsklick auf ein Spiel benennst du es um, bearbeitest seine Spielze
 neue Scans und Wiederherstellungen, während Cover und Zuordnung den ursprünglichen Titel behalten. Steam-Spiele können ihren
 Titel in der Sprache deiner Erfolge übernehmen (**Einstellungen → Allgemein**).
 
+Mit Strg+Klick fügst du ein Spiel einer Auswahl hinzu, mit Umschalt+Klick wählst du alle Spiele zwischen dem zuletzt angeklickten und diesem aus, und Esc hebt die Auswahl auf. Klicke mit der rechten Maustaste auf eines der ausgewählten Spiele, um **Erfolge von N Spielen zurücksetzen…** zu wählen: Eine Bestätigung listet sie auf, jedes Spiel wird zuvor gesichert, und Spiele, deren Plattform die Freischaltungen in deinem Konto speichert (Steam, Epic, GOG ...), werden übersprungen und genannt. Das Zurücksetzen wird verweigert, solange ein Spiel läuft.
+
 ### Sammlungen {#collections}
 
 Sammlungen sind deine eigenen Spielegruppen. Rechtsklick auf ein Spiel, **Sammlungen** wählen und eine ankreuzen oder

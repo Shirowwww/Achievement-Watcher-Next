@@ -18,13 +18,14 @@ som e escala (veja [Comportamento por jogo](notifications.md#per-game-behavior))
 <sub>Um estado, o motivo dele, as verificações por trás e os reparos que se aplicam</sub>
 </div>
 
-## Os três estados {#the-three-states}
+## Os estados {#the-states}
 
 | Estado | O que significa |
 |---|---|
 | **Pronto** | O jogo é detectado, os dados de conquistas dele estão disponíveis e o AW Next o observa para os desbloqueios. |
 | **Requer atenção** | O jogo funciona, mas parte da configuração dele está incompleta. As verificações mostram qual parte. |
 | **Sem acompanhamento** | Falta algo essencial, então nenhum desbloqueio pode ser registrado: o jogo não pode ser localizado, não tem dados de conquistas ou falta o emulador que grava os desbloqueios dele. |
+| **Somente tempo de jogo** | Um jogo adicionado manualmente: o AW Next conhece a lista de conquistas dele e conta o tempo de jogo, mas nada neste PC registra ainda os desbloqueios (nenhum emulador, save ou conta de loja). Cinza, porque nada está quebrado, assim como o ponto no cartão do jogo; configure uma fonte e o estado muda. |
 
 A frase sob o estado informa a causa, as verificações mostram qual parte está com problema e um botão de
 reparo age exatamente nela.
@@ -47,31 +48,33 @@ painel deles avisa isso desde a primeira execução.
 | **Arquivos do jogo** | A pasta de instalação ainda existe? | **Localizar o jogo** |
 | **Executável** | Qual programa deve ser observado enquanto você joga? | **Localizar o jogo** |
 | **Identidade do jogo** | A qual AppID e plataforma este jogo foi associado? O modo Simples omite. | **Corrigir o arquivo de identificação do jogo** ou **Definir o AppID manualmente** |
-| **Dados de conquistas** | Existe uma lista de conquistas e ela está completa? | **Reescrever os dados de conquistas** |
-| **Configuração do emulador** | Um jogo que precisa de um emulador da Steam tem um e qual o atende? Para um jogo da Ubisoft, isso também cobre o loader do Uplay e se ele alguma vez pediu uma conquista. | **Instalar o arquivo do emulador**, **Mudar para o emulador compatível** ou **Reparar o suporte a conquistas Ubisoft** |
+| **Dados de conquistas** | Existe uma lista de conquistas, ela está completa e as definições de progresso e de estatísticas estão em dia? | **Reescrever os dados de conquistas** |
+| **Configuração do emulador** | Um jogo que precisa de um emulador da Steam tem um e qual o atende? As configurações de que o emulador pode abrir mão aparecem aqui como observações, não como problemas. Para um jogo da Ubisoft, isso também cobre o loader do Uplay e se ele alguma vez pediu uma conquista. | **Instalar o arquivo do emulador**, **Mudar para o emulador compatível**, **Completar as configurações do emulador** ou **Reparar o suporte a conquistas Ubisoft** |
 | **Progresso** | Algum desbloqueio ou save já foi encontrado? | Inicie o jogo e desbloqueie algo |
 | **Contadores de progresso** | Para jogos no estilo CODEX/RUNE que rastreiam uma estatística em vez de um desbloqueio simples, o AW Next buscou a estatística por trás de cada conquista? Exibido apenas para jogos que usam uma. | **Buscar contadores de progresso** |
-| **Detecção do início do jogo** | O rastreador em segundo plano percebe quando este jogo inicia? Sozinho, ele não registra nenhum desbloqueio: isso é trabalho do emulador. | **Monitorar este jogo** |
+| **Detecção do início do jogo** | O rastreador em segundo plano percebe quando este jogo inicia e está observando o executável definido para o jogo? Sozinho, ele não registra nenhum desbloqueio: isso é trabalho do emulador. | **Monitorar este jogo** |
 | **Notificações** | Qual meio entregou a última notificação deste jogo e por quê? | **Enviar uma notificação de teste** |
 
 ## Os reparos {#the-repairs}
 
 O painel mostra apenas os reparos que podem consertar este jogo. Cada um diz o que vai mudar e onde os
-arquivos anteriores ficam guardados. Nada é reescrito sem um backup ou uma confirmação.
+arquivos anteriores ficam guardados. Nada é reescrito sem um backup ou uma confirmação, e um reparo que falha no meio devolve todos os arquivos que tinha alterado; o erro diz o que foi restaurado.
 
 | Reparo | O que faz |
 |---|---|
 | **Localizar o jogo** | Abre um seletor para escolher o executável a observar. |
 | **Abrir a pasta do jogo** | Abre a pasta de instalação no Explorador. |
-| **Reescrever os dados de conquistas** | Grava a lista de conquistas, os ícones e as configurações do emulador, copiando antes os arquivos existentes para um backup. |
+| **Reescrever os dados de conquistas** | Altera apenas `achievements.json`, `stats.json` e os ícones que faltam, nada mais. Uma lista completa é deixada como está; as entradas que ele acrescenta seguem o formato, os idiomas e a pasta de ícones do próprio arquivo. As definições de progresso e de estatísticas vêm do generate_emu_config quando **Dados de steam_settings** está em Avançado com um login da Steam salvo; caso contrário, vêm da lista pública games-infos-datas, e a confirmação diz qual. Todo arquivo alterado é copiado antes para `.aw-backups` em `steam_settings`. |
+| **Completar as configurações do emulador** | Adiciona apenas os arquivos de configuração que faltam ao jogo (`steam_appid.txt`, `configs.main.ini`, `configs.user.ini` e `configs.app.ini` quando [Gerenciar propriedade das DLCs](../goldberg-gbe.md) está ativado). O que as configurações globais do emulador já fornecem fica por conta delas, e a lista de conquistas não é tocada. A conta própria de um jogo em `configs.user.ini` só é substituída quando **Gravar nome da conta e idioma** está ativado e você responde que sim quando perguntado. |
 | **Instalar o arquivo do emulador** | Baixa para a pasta do jogo a build compatível do emulador, mantendo o arquivo que ele substitui como `.bak`. |
-| **Mudar para o emulador compatível** | Para um jogo atendido por outro crack que não registrou nada: instala o emulador compatível por cima e renomeia a configuração desse crack para `.bak`. |
+| **Mudar para o emulador compatível** | Para um jogo atendido por outro crack que não registrou nada: instala o emulador compatível por cima, renomeia a configuração desse crack para `.bak` e grava o `steam_settings` do emulador (ID do jogo e lista de conquistas) na mesma etapa, para que o jogo possa ser iniciado logo em seguida. Exige o AppID Steam do jogo; se qualquer parte falhar, todo arquivo é devolvido. Os ícones que faltam podem ser adicionados depois com **Reescrever os dados de conquistas**. |
 | **Desfazer a troca de emulador** | Aparece onde um dos dois acima foi executado. Devolve os arquivos do próprio jogo a partir das cópias `.bak` e retira o emulador compatível. |
+| **Desfazer o último reparo** | Aparece após qualquer alteração que o AW Next fez na pasta do jogo: um reparo deste painel, uma correção de emulador, CrakFiles, Remover DRM do Steam (Steamless), Restaurar o último backup do GBE/Goldberg, Definir o AppID manualmente, um reparo do Uplay ou um dos botões de desfazer acima. Antes, lista todos os arquivos que vai devolver. Se um arquivo está em uso (geralmente porque o jogo está rodando), nada é alterado e a entrada permanece para uma nova tentativa. |
 | **Corrigir o arquivo de identificação do jogo** | Reescreve o `steam_appid.txt` quando o emulador anuncia um jogo e o AW Next associou outro. Pede o AppID certo, sugerindo a associação do AW Next, e guarda o arquivo anterior. |
 | **Buscar contadores de progresso** | Pergunta à Steam qual estatística move cada conquista, para jogos no estilo CODEX/RUNE. Não grava nada na pasta do jogo. |
 | **Reparar o suporte a conquistas Ubisoft** | Para um jogo compatível da Ubisoft, reescreve a configuração do loader, o esquema e o redirecionamento de saves numa única transação, com todo arquivo tocado salvo em backup. Veja [Configuração do Uplay](uplay-r2.md). |
 | **Ativar as conquistas offline** | Para um jogo da Ubisoft cujo log do loader prova que ele nunca pediu uma conquista porque acredita estar desconectado. Adiciona uma chave de sessão provisória ao INI ao lado do jogo; pressione de novo para removê-la. Veja [Configuração do Uplay](uplay-r2.md#a-game-that-never-asks-for-an-achievement). |
-| **Monitorar este jogo** | Adiciona o jogo ao rastreador em segundo plano para que o tempo de jogo e os desbloqueios em tempo real sejam registrados. |
+| **Monitorar este jogo** | Adiciona o jogo ao rastreador em segundo plano para que o tempo de jogo e os desbloqueios em tempo real sejam registrados, seguindo o executável definido na aba **Executável**. |
 | **Reativar notificações de progresso** | Reativa as notificações de progresso de um jogo que você silenciou. |
 | **Enviar uma notificação de teste** | Dispara uma notificação com o nome e a arte deste jogo, pelo meio que ele realmente usaria. |
 
@@ -99,8 +102,13 @@ arquivos anteriores ficam guardados. Nada é reescrito sem um backup ou uma conf
 | *Conquistas offline ativadas, inicie o jogo uma vez* | A configuração foi gravada e nada foi avaliado ainda. O botão ao lado agora diz **Desativar as conquistas offline**. |
 | *Atendido por ALI213, OnlineFix, GBE Fork…* | O emulador que de fato lê esse jogo, identificado pelos próprios arquivos. A um jogo da Ubisoft atendido assim não é oferecido um reparo do Uplay: a camada Uplay dele não é usada, não está quebrada. Isso cobre versões que mantêm o `steam_api64.dll` da Valve: uma build RUNE rodando de `Steam\steamclient64.dll`, ou uma versão VOICES38 carregando o próprio GBE Fork renomeado (`steam_api64.v38`); nunca instale o emulador sobre esta última. As builds da Ubisoft do online-fix são reconhecidas, e uma correção de conquistas nelas avisa que o jogo online pode parar. |
 | *Só faltam alguns ícones* | **Reescrever os dados de conquistas** baixa os ícones que faltam. |
+| *Definições de progresso ou de estatísticas ausentes ou desatualizadas* | As conquistas com contador não avançariam ou mostrariam a meta errada. **Reescrever os dados de conquistas** as atualiza. |
+| *Configurações opcionais não gravadas* | Uma observação, não uma falha: o emulador funciona sem elas (um ticket do app, um token GC, a chave de estatísticas desconhecidas, um nome de conta). **Completar as configurações do emulador** as adiciona, se você quiser. |
+| *O nome da conta ou o idioma vêm de … `GSE Saves\settings`* | Uma linha de informação, não um aviso. O GBE lê `GSE Saves\settings\configs.user.ini` (ou as configurações da pasta de saves para a qual `local_save_path` aponta) quando o jogo não tem as próprias. Nada a corrigir. |
+| *Monitorando X, e não Y* | O executável definido para este jogo não é o que o rastreador acompanha, então inícios e tempo de jogo podem passar despercebidos. **Monitorar este jogo** passa a seguir o escolhido. *Monitorando X, iniciado por Y* está certo: Y é um launcher, como um bootstrapper de antitrapaça, que inicia o jogo. |
+| *Nenhuma fonte de conquistas configurada* | Aparece com **Somente tempo de jogo**. Aplique uma correção de emulador ou adicione a pasta onde o jogo salva as conquistas. |
 | *Executado por mais de uma hora e nem uma conquista registrada* | O crack que atende o jogo provavelmente nunca informa conquistas. Use **Mudar para o emulador compatível** quando oferecido; caso contrário, verifique se o jogo inicia a partir da própria pasta. |
-| *Arquivo de identificação do jogo*, com um atalho da Steam para este jogo | A Steam inicia um atalho que não é da Steam sem nenhum `steam_appid.txt` ao lado, então o emulador salva sob outro ID. **Reescrever os dados de conquistas** grava o arquivo ali. |
+| *Arquivo de identificação do jogo*, com um atalho da Steam para este jogo | A Steam inicia um atalho que não é da Steam sem nenhum `steam_appid.txt` ao lado, então o emulador salva sob outro ID. **Completar as configurações do emulador** grava o arquivo ali. |
 
 ---
 

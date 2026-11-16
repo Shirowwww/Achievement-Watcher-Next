@@ -74,14 +74,22 @@ AW Next 放在那里的。诊断是只读的。
 
 - 下载并缓存匹配的 GBE Fork 发布版，并安装游戏所需架构的 DLL
   （`steam_api.dll` 或 `steam_api64.dll`），任何现有文件都会保留为备份；
-- 根据 Steam 成就列表构建 `steam_settings\achievements.json`（及其 `images` 文件夹），
-  并下载图标；
+- 根据 Steam 成就列表构建 `steam_settings\achievements.json`，并下载缺失的图标。
+  已经完整的列表会原样保留，包括语言和图标文件夹，与游戏状态中的 **重写成就数据** 做法相同；
 - 缺少 `steam_appid.txt` 时写入它；
-- 写入 GBE 配置文件（`configs.app.ini`、`configs.main.ini`、`configs.user.ini`）。
+- 写入 GBE 配置文件（`configs.main.ini`、`configs.user.ini`，以及仅在 **管理 DLC 所有权** 开启时写入的
+  `configs.app.ini`）。
 
 它替换的每个文件都会先备份，架构修复还会在
 `steam_settings\.aw-backups` 下保留带时间戳的副本。运行时按普通 DLL 替换的方式安装；AW Next 不会
 配置单独的 ColdClient 启动器。
+
+修复作为一个整体事务运行。它需要的一切（GBE Fork、将要运行的 Steamless、开启该选项时的绕过代理）都在第一个游戏文件
+改动之前下载完毕，因此下载被拦截时文件夹保持原样。如果后面的某一步失败，修复改动过的每个文件都会放回原处，包括
+已解包的可执行文件，错误信息会列出无法恢复的内容。
+
+除非开启 **自动应用社区修复 (CrakFiles)**（默认关闭），修复绝不会联系 CrakFiles。另一种用到它的方式，是你在同一菜单中
+选择 **查找社区修复 (CrakFiles)…**。
 
 打包的虚幻引擎游戏以同样的方式修复。它们的 Steam 文件位于
 `Engine\Binaries\ThirdParty\Steamworks` 下，而不是可执行文件旁边，AW Next 会在那里查找、安装
@@ -97,7 +105,8 @@ AW Next 放在那里的。诊断是只读的。
 | **管理 DLC 所有权** | `configs.app.ini`，使模拟器报告所有 DLC 均已拥有 |
 | **写入账号名称和语言** | 你的账号名称和语言，写入 `configs.user.ini` |
 
-两者都不影响成就。如果想让游戏保持原样，或者你手动管理 DLC 或身份，请让它们保持关闭。
+两者都不影响成就。如果想让游戏保持原样，或者你手动管理 DLC 或身份，请让它们保持关闭。它们适用于 **应用模拟器修复** 和游戏状态中的 **补全模拟器设置**；**重写成就数据** 从不写入这两个文件。
+当游戏已在 `configs.user.ini` 中有自己的账号时，**应用模拟器修复** 和 **补全模拟器设置** 都会保留它，除非你同意替换；自动修复和 **修复所有游戏** 从不替换它。模拟器全局设置已经提供的值不会复制到游戏中。
 
 它们下方的 **模拟器身份** 卡片显示将写入的内容：
 
@@ -127,6 +136,10 @@ AW Next 放在那里的。诊断是只读的。
 当 DLL 替换无法加载时，尝试从所选可执行文件中解包 SteamStub。原始
 可执行文件会保留为 `*.steamstub.bak`。对没有 SteamStub 的游戏它什么也不做，也不会
 绕过服务器端的所有权检查。
+
+**设置 → 模拟器 → Steam / GBE Fork** 中的 **自动解除 SteamStub DRM** 决定 **应用模拟器修复** 是否自行运行 Steamless。
+关闭时，Steamless 绝不会自行运行：对受保护的可执行文件，手动修复会先询问（取消、不移除继续，或这一次移除 DRM），
+而自动修复和 **修复所有游戏** 会让该游戏保持原样。
 
 ### 备份和恢复 {#back-up-and-restore}
 

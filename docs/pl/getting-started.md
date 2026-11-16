@@ -102,6 +102,12 @@ Kliknij grę prawym przyciskiem, aby zmienić jej nazwę, edytować czas gry lub
 przez ciebie nazwa przetrwa ponowne skanowania i przywracanie, a okładki i dopasowanie zachowują oryginalny tytuł. Gry ze Steam
 mogą przyjmować tytuł w języku twoich osiągnięć (**Ustawienia → Ogólne**).
 
+Ctrl+kliknięcie dodaje grę do zaznaczenia, Shift+kliknięcie zaznacza każdą grę między ostatnio klikniętą a tą, a Esc
+czyści zaznaczenie. Kliknij prawym przyciskiem jedną z zaznaczonych gier, aby wybrać **Zresetuj osiągnięcia N gier…**:
+jedno potwierdzenie wymienia je wszystkie, każda gra ma najpierw kopię zapasową, a gry z platform, które trzymają
+odblokowania na twoim koncie (Steam, Epic, GOG...), są pomijane i wymienione z nazwy. Reset jest odrzucany, gdy gra jest
+uruchomiona.
+
 ### Kolekcje {#collections}
 
 Kolekcje to twoje własne grupy gier. Kliknij grę prawym przyciskiem, wybierz **Kolekcje**

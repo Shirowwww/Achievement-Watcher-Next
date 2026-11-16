@@ -76,6 +76,20 @@ barra.
 Il gioco ha uno schema ma nessun file di sblocchi in esecuzione. Apri il suo pannello [Stato dei giochi](game-health.md): indica
 il pezzo mancante e propone solo le riparazioni che si applicano.
 
+### Un gioco che ho aggiunto a mano dice "Solo tempo di gioco" {#a-game-i-added-by-hand-says-playtime-only}
+AW Next ne conta il tempo di gioco, ma nulla su questo PC registra ancora i suoi obiettivi: non è stato trovato alcun
+emulatore, salvataggio o account di uno store. Applica un fix dell'emulatore, oppure aggiungi la cartella in cui il gioco
+salva i suoi sblocchi, e lo stato cambia. Vedi [Stato dei giochi](game-health.md#the-states).
+
+### Una cartella di repack o "QuickSFV" compare come gioco {#a-repack-folder-or-quicksfv-shows-up-as-a-game}
+I download di repack (FitGirl, DODI, ElAmigos) contengono uno strumento di verifica dei checksum e dei programmi di
+installazione che le versioni precedenti scambiavano per un gioco. AW Next ora li salta, continuando a trovare un gioco
+installato accanto a loro. Lo stesso vale per gli injector di overlay, le cartelle di strumenti il cui nome inizia con `__` e un emulatore fornito con un port (Cemu in una cartella di Bayonetta 2): il port compare con il nome della sua cartella. Nascondi o rimuovi una volta le vecchie voci; non tornano.
+
+### Un gioco che ho aggiunto a Steam con LuaTools o SteamTools non mostra obiettivi {#a-game-i-added-to-steam-with-luatools-or-steamtools-shows-no-achievements}
+Steam stesso registra gli sblocchi di un gioco simile nei propri file di statistiche, e AW Next li legge qualunque
+sia l'impostazione di Steam in **Impostazioni → Sorgente**, che lo strumento tenga uno script per gioco o tutti in `steamtools.lua`. Avvia il gioco tramite Steam e sblocca qualcosa. I giochi GreenLuma vengono letti solo con i giochi Steam attivati in Sorgente.
+
 ### Perché lo stesso gioco compare due volte? {#why-does-the-same-game-appear-twice}
 È stato trovato tramite due sorgenti. **Unisci duplicati** in Impostazioni → Generale li combina. Se una
 voce è una cartella di salvataggi vecchia di un gioco che ora possiedi altrove, mettila nella lista nera.

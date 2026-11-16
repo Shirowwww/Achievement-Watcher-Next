@@ -184,9 +184,13 @@ modo de rareza (página del juego, estadísticas, popup del 100 %) con su nombre
 trofeo se consigue, aunque queden trofeos de DLC. Los emuladores de PlayStation conservan sus propios trofeos. AW
 encuentra la lista por el nombre original del juego, así que renombrar un juego no cambia nada.
 
-Todas las fuentes lanzan el popup del 100 %, también las que son en directo (Xenia, adaptaciones recompiladas, GOG Galaxy,
+Todas las fuentes lanzan el popup de platino, también las que son en directo (Xenia, adaptaciones recompiladas, GOG Galaxy,
 Ubisoft Connect, Xbox PC). Cuando el juego tiene platino, el logro vinculado a él aparece como
-el platino.
+el platino. El logro de «conseguir todos los logros» de un juego también cuenta como su platino, en la notificación y en su lista, con o sin cuenta de PlayStation.
+
+Por defecto el platino llega cuando se completa el juego base, como en PlayStation: los logros de DLC y los grupos de trofeos adicionales quedan aparte. En un juego con DLC, cada logro que necesita el platino lleva una pequeña marca de platino, y **Solo platino** en la página del juego oculta el resto. **Ajustes → Notificación → El platino requiere** alterna entre **Juego base** y **Todo, DLC incluidos**, que espera a la lista entera. Un juego sin DLC no cambia. Las fuentes en directo de arriba siguen la misma regla cuando le dan la lista a AW Next, con un solo aviso: el propio logro de platino del juego salta como el platino, en lugar de como un desbloqueo normal y un aviso del 100 %.
+
+Los logros que Steam ha retirado de un juego ya no cuentan: quedan en gris al final de su lista, marcados como *Ya no está en Steam*, y el juego puede llegar al 100 % sin ellos. La lista en caché detecta la retirada en su siguiente comprobación de 3 días, o al instante con **Ajustes → Avanzado → Revisar de nuevo las listas de logros**.
 
 <div align="center">
 <picture><source srcset="../assets/shot/trophy-profile.webp 640w" sizes="(max-width: 700px) 100vw, 440px"><img src="../screenshot/trophy-profile.png" width="440" height="148" alt="La cabecera del perfil con los recuentos de trofeos platino, oro, plata, bronce y comunes" loading="lazy" decoding="async"></picture><br>
@@ -263,7 +267,7 @@ barra de juego, la lista completa y la pestaña «Tus cosas» de Big Picture. Un
 inicia el mismo exe que el **Ejecutable** del juego en AW Next. Su README cubre la instalación, qué
 comprobar cuando una página sigue vacía y cómo convive con Steam Cartridges, NativeGameLink y Game
 Data Linker. La extensión de Playnite en `playnite/` pregunta del mismo modo, para cualquier juego de una biblioteca de Playnite,
-y su README cubre la instalación y los paneles que puede colocar un tema. La petición de abajo es
+y su README cubre la instalación y los paneles que puede colocar un tema. Desde su versión 1.2.0 también funciona con AW Next cerrado: lee la lista que AW Next guardó en su último escaneo, lo indica con la fecha de ese escaneo y vuelve a los datos en directo cuando AW Next se ejecuta (los desbloqueos hechos mientras tanto aparecen cuando AW Next ha leído las partidas). La petición de abajo es
 para quien escriba otro plugin.
 
 El plugin envía:

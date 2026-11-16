@@ -75,14 +75,20 @@ Répare la DLL d'exécution et le schéma en une seule étape :
 
 - télécharge et met en cache une version de GBE Fork correspondante et installe l'architecture de DLL dont le jeu a besoin
   (`steam_api.dll` ou `steam_api64.dll`), en gardant tout fichier existant en sauvegarde ;
-- construit `steam_settings\achievements.json` (et son dossier `images`) d'après la liste des succès
-  Steam, et télécharge les icônes ;
+- construit `steam_settings\achievements.json` d'après la liste des succès Steam et télécharge les icônes
+  manquantes. Une liste déjà complète est gardée telle quelle, langues et dossier d'icônes compris, comme le fait
+  **Réécrire les données de succès** de Game Health ;
 - écrit `steam_appid.txt` s'il manque ;
-- écrit les fichiers de configuration GBE (`configs.app.ini`, `configs.main.ini`, `configs.user.ini`).
+- écrit les fichiers de configuration GBE (`configs.main.ini`, `configs.user.ini`, et `configs.app.ini`
+  seulement quand **Gérer la propriété des DLC** est activé).
 
 Chaque fichier qu'il remplace est d'abord sauvegardé, et les réparations de schéma gardent aussi des copies horodatées sous
 `steam_settings\.aw-backups`. L'environnement d'exécution est installé comme un remplacement de DLL normal ; AW Next ne
 configure pas de lanceur ColdClient distinct.
+
+Le fix fonctionne comme une seule transaction. Tout ce dont il a besoin (GBE Fork, Steamless quand il va s'exécuter, le proxy de contournement quand cette option est activée) est téléchargé avant que le premier fichier du jeu ne change, si bien qu'un téléchargement bloqué laisse le dossier intact. Si une étape suivante échoue, chaque fichier modifié par le fix est remis en place, l'exécutable décompressé compris, et l'erreur liste ce qui n'a pas pu être restauré.
+
+Le fix ne contacte jamais CrakFiles, sauf si **Appliquer auto un fix communautaire (CrakFiles)** est activé (désactivé par défaut). Le seul autre moyen de l'utiliser est **Chercher un fix communautaire (CrakFiles)…** dans le même menu, quand vous le choisissez.
 
 Les versions packagées d'Unreal Engine sont réparées de la même façon. Leurs fichiers Steam se trouvent sous
 `Engine\Binaries\ThirdParty\Steamworks` plutôt qu'à côté de l'exécutable, et AW Next les y trouve, les installe
@@ -99,7 +105,7 @@ la réparation automatique :
 | **Écrire le nom de compte et la langue** | Votre nom de compte et votre langue, dans `configs.user.ini` |
 
 Aucun des deux n'affecte les succès. Laissez-les désactivés pour garder un jeu d'origine, ou si vous gérez les DLC ou l'identité
-à la main.
+à la main. Ils s'appliquent à **Appliquer le fix émulateur** et à **Compléter les réglages de l'émulateur** de Game Health ; **Réécrire les données de succès** n'écrit jamais ni l'un ni l'autre. Quand un jeu a déjà son propre compte dans `configs.user.ini`, **Appliquer le fix émulateur** et **Compléter les réglages de l'émulateur** le gardent sauf si vous acceptez de le remplacer ; le fix automatique et **Réparer tous les jeux** ne le remplacent jamais. Une valeur que les réglages globaux de l'émulateur donnent déjà n'est pas copiée dans le jeu.
 
 La carte **Identité de l'émulateur** en dessous montre ce qui est écrit :
 
@@ -129,6 +135,8 @@ installé. **Utiliser la version officielle** supprime l'import et revient à la
 Tente de décompresser SteamStub depuis l'exécutable sélectionné quand un remplacement de DLL ne peut pas se charger. L'exécutable
 d'origine est conservé sous le nom `*.steamstub.bak`. Cela ne fait rien pour les jeux sans SteamStub et ne contourne pas
 les contrôles de propriété côté serveur.
+
+**Retirer auto le DRM SteamStub** dans **Paramètres → Émulateurs → Steam / GBE Fork** décide si **Appliquer le fix émulateur** lance Steamless de lui-même. Désactivé, Steamless ne se lance jamais seul : pour un exécutable protégé, le fix manuel demande d'abord (annuler, continuer sans le retirer, ou retirer le DRM cette fois), et le fix automatique ainsi que **Réparer tous les jeux** laissent ce jeu tel quel.
 
 ### Sauvegarder et restaurer {#back-up-and-restore}
 

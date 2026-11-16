@@ -443,7 +443,7 @@
       },
       "manageDlc": {
         "name": "DLC-eigendom beheren",
-        "description": "Schrijft configs.app.ini zodat de emulator alle DLC als eigendom rapporteert. Los van prestaties: laat dit uit om een game in originele staat te houden of om DLC zelf te beheren. Standaard uitgeschakeld.",
+        "description": "Laat de emulatorfix en De emulatorinstellingen aanvullen configs.app.ini schrijven, zodat de emulator alle DLC als eigendom rapporteert. Los van prestaties: laat dit uit om een game in originele staat te houden of om DLC zelf te beheren. Standaard uitgeschakeld.",
         "value": {
           "false": "Uitgeschakeld",
           "true": "Ingeschakeld"
@@ -451,7 +451,7 @@
       },
       "stampIdentity": {
         "name": "Accountnaam en taal schrijven",
-        "description": "Schrijft je accountnaam en taal in het configs.user.ini van elke game. Laat dit uit als je vertrouwt op de centrale configuratie van de emulator voor een voorspelbare naam en gebruikers-ID. Standaard uitgeschakeld.",
+        "description": "Laat de emulatorfix en De emulatorinstellingen aanvullen je accountnaam en taal schrijven in het configs.user.ini van een game; het eigen account van een game wordt pas vervangen nadat er is gevraagd. Laat dit uit als je vertrouwt op de algemene instellingen van de emulator voor een voorspelbare naam en gebruikers-ID. Standaard uitgeschakeld.",
         "value": {
           "false": "Uitgeschakeld",
           "true": "Ingeschakeld"
@@ -475,7 +475,7 @@
       },
       "steamless": {
         "name": "SteamStub-DRM automatisch uitpakken",
-        "description": "Voert Steamless uit op de exe van de game voordat er gepatcht wordt, om de SteamStub-DRM van Valve te verwijderen (het origineel blijft bewaard als .steamstub.bak). Doet niets als er geen stub aanwezig is.",
+        "description": "Voert Steamless uit op de exe van de game voordat er gepatcht wordt, om de SteamStub-DRM van Valve te verwijderen (het origineel blijft bewaard als .steamstub.bak). Doet niets als er geen stub aanwezig is. Staat dit uit, dan draait Steamless nooit uit zichzelf: de handmatige fix vraagt eerst, en de automatische fix slaat een beschermde game over.",
         "value": {
           "false": "Uitgeschakeld",
           "true": "Ingeschakeld"
@@ -1644,7 +1644,8 @@
         "De ronde knop naast het voltooiingspercentage opent Bibliotheekstatistieken: voltooiing, aantallen ontgrendelde en vergrendelde prestaties, speeltijd, trofeeën, platinagames, zeldzaamste prestaties en één rij per platform.",
         "Een keuzelijst tussen het zoekveld en de +-knop schakelt tussen zes bibliotheekweergaven. Instellingen > Weergave > Bibliotheektegels bepaalt de tegelgrootte, de tussenruimte en wat elke tegel toont.",
         "De +-knop voegt een game toe die geen enkele bron vindt: een titel en een uitvoerbaar bestand, met optioneel een platform en Steam-AppID. Starts en speeltijd worden bijgehouden, zonder prestaties.",
-        "Klik met de rechtermuisknop op een game > Game-instellingen > Hernoemen… om de getoonde naam te wijzigen. Prestaties en speeltijd > Speeltijd bewerken… corrigeert het totaal (12.5 of 12h30)."
+        "Klik met de rechtermuisknop op een game > Game-instellingen > Hernoemen… om de getoonde naam te wijzigen. Prestaties en speeltijd > Speeltijd bewerken… corrigeert het totaal (12.5 of 12h30).",
+        "Ctrl+klik voegt een game toe aan een selectie en Shift+klik selecteert een bereik. Klik met de rechtermuisknop op een van de geselecteerde games om al hun prestaties in één keer te resetten: van elke game wordt eerst een back-up gemaakt, en games waarvan het platform de ontgrendelingen zelf bewaart, worden overgeslagen. Esc wist de selectie."
       ],
       "sourcesTitle": "Launchers en bronnen",
       "sources": [
@@ -1656,7 +1657,8 @@
         "RetroAchievements: schakel de bron in, vul je gebruikersnaam en Web API-sleutel in en druk op Bibliotheek importeren. Ontgrendelingen komen van je account, dus laat RetroAchievements in de emulator aan staan.",
         "In de modus Eenvoudig blijven een paar zelden gebruikte bronrijen verborgen zolang ze ongebruikt zijn. Ze komen terug zodra ze ertoe doen, en Geavanceerd toont ze altijd allemaal.",
         "PlayStation-trofeeën tonen hun graad en het aandeel spelers dat ze heeft. De percentages komen van Exophase; koppel een PlayStation-account bij Instellingen > Bronnen om de eigen cijfers van Sony te krijgen voor de games op dat account.",
-        "Met een gekoppeld PlayStation-account haalt Bibliotheek importeren je PlayStation-games en -trofeeën binnen, elke drie dagen vernieuwd, en het veld eronder voegt een game toe die je niet bezit. Een game uit een andere winkel die ook voor PlayStation is uitgekomen, toont zijn echte platina en in de trofeeënmodus zijn echte graden en DLC-groepen."
+        "Met een gekoppeld PlayStation-account haalt Bibliotheek importeren je PlayStation-games en -trofeeën binnen, elke drie dagen vernieuwd, en het veld eronder voegt een game toe die je niet bezit. Een game uit een andere winkel die ook voor PlayStation is uitgekomen, toont zijn echte platina en in de trofeeënmodus zijn echte graden en DLC-groepen.",
+        "Games die met LuaTools of SteamTools aan Steam zijn toegevoegd, tonen hun prestaties uit de eigen statistieken van Steam, welke Steam-instelling hierboven ook staat."
       ],
       "notifications": [
         "Automatisch is de standaard: de pop-up in de game als de game die kan tonen, een Windows-melding als dat niet kan, nooit allebei.",
@@ -1666,15 +1668,17 @@
         "Geluid voor zeldzame prestatie, Geluid voor 100% voltooiing en Geluid voor voortgang (modus Geavanceerd) geven die pop-ups een eigen geluid. Willekeurig kiest telkens een ander geluid, en je kunt je eigen bestanden importeren.",
         "Goud, zilver en brons markeren zeldzame ontgrendelingen. Instellingen > Algemeen > Zeldzaamheidsweergave schakelt over op Trofeeënmodus, die elke prestatie een klasse geeft en platina toont bij voltooide games.",
         "Bij tellers toont Voortgangsmijlpalen een pop-up alleen bij stappen van 10, 25 of 50%. Klik met de rechtermuisknop op een game > Voortgangsmeldingen dempen om één game stil te maken zonder zijn ontgrendelingen aan te raken.",
-        "Nog twee schakelaars bij Instellingen > Meldingen: Meldingen met prioriteit laat ontgrendelingen door Niet storen heen komen (Windows 11), en Games van de Steam-client voegt de pop-up van AW Next toe voor games die Steam zelf start."
+        "Nog twee schakelaars bij Instellingen > Meldingen: Meldingen met prioriteit laat ontgrendelingen door Niet storen heen komen (Windows 11), en Games van de Steam-client voegt de pop-up van AW Next toe voor games die Steam zelf start.",
+        "Platina komt zodra elke prestatie van het basisspel is behaald, DLC niet meegerekend, zoals op PlayStation. Instellingen > Meldingen > Platina vereist kan het op de hele lijst laten wachten. Bij een game met DLC verbergt Alleen platina op de pagina ervan de prestaties die het platina niet nodig heeft."
       ],
       "gameHealthTitle": "Gamestatus",
       "gameHealth": [
-        "Klik op de gereedschapsknop van een game (rechtsboven op de tegel), of klik met de rechtermuisknop erop, om de Gamestatus te openen. Die zegt of de game Gereed is, Aandacht nodig heeft of Niet gevolgd wordt.",
+        "Klik op de gereedschapsknop van een game (rechtsboven op de tegel), of klik met de rechtermuisknop erop, om de Gamestatus te openen. Die zegt of de game Gereed is, Aandacht nodig heeft, Niet gevolgd wordt of Alleen speeltijd heeft (prestaties bekend, maar niets op deze pc legt ze nog vast).",
         "De zin onder de status legt de oorzaak in gewone woorden uit. De controles eronder laten zien welk onderdeel de oorzaak is: gamebestanden, uitvoerbaar bestand, prestatiegegevens, emulatorconfiguratie, live volgen of meldingen.",
-        "Herstelknoppen verschijnen alleen als AW Next die game echt kan repareren, zoals De game opzoeken, De prestatiegegevens opnieuw schrijven, Het emulatorbestand installeren of Deze game bewaken. Elke knop zegt wat hij verandert, bewaart een back-up en vraagt eerst toestemming.",
+        "Herstelknoppen verschijnen alleen als AW Next die game echt kan repareren, zoals De game opzoeken, De prestatiegegevens opnieuw schrijven, De emulatorinstellingen aanvullen, Het emulatorbestand installeren of Deze game bewaken. Elke knop zegt wat hij verandert, bewaart een back-up en vraagt eerst toestemming, en een herstel dat mislukt zet elk bestand terug.",
         "Een testmelding sturen laat een pop-up verschijnen met de eigen naam en afbeelding van die game, afgeleverd zoals het echt zou gaan.",
-        "Technische details bevat de exacte paden, aantallen en emulatorcodes: druk op Kopiëren en plak het in een bugmelding. Het gekleurde bolletje op een tegel kun je verbergen bij Instellingen > Weergave > Bibliotheektegels."
+        "Technische details bevat de exacte paden, aantallen en emulatorcodes: druk op Kopiëren en plak het in een bugmelding. Het gekleurde bolletje op een tegel kun je verbergen bij Instellingen > Weergave > Bibliotheektegels.",
+        "De prestatiegegevens opnieuw schrijven wijzigt alleen de prestatielijst, de statistieken en ontbrekende pictogrammen. De emulatorinstellingen aanvullen voegt alleen de instellingen toe die een game mist, laat staan wat de algemene instellingen van de emulator al geven, en vraagt eerst voordat het eigen account van een game wordt vervangen. Overschakelen naar de ondersteunde emulator schrijft de emulatorinstellingen in dezelfde stap, en Laatste reparatie ongedaan maken zet elke wijziging terug die AW Next in de gamemap heeft aangebracht."
       ],
       "troubleshootTitle": "Problemen oplossen",
       "troubleshoot": [
@@ -1695,7 +1699,8 @@
         "Klik met de rechtermuisknop op een game > Emulator en tools > Emulatorfix toepassen… om GBE Fork te installeren, steam_settings (prestatielijst en pictogrammen) op te bouwen en steam_appid.txt te schrijven als die ontbreekt. Elk vervangen bestand krijgt eerst een back-up.",
         "Bij Instellingen > Steam / GBE Fork gebruikt Gegevens voor steam_settings op Eenvoudig de eigen anonieme ophaalmethode van AW Next en is snel. Geavanceerd voert generate_emu_config uit voor diepere Steam-gegevens en kan minuten duren.",
         "Er wordt nooit uit zichzelf iets in een gamemap geschreven: Nieuw gedetecteerde games automatisch repareren, DLC-eigendom beheren en Accountnaam en taal schrijven staan standaard allemaal uit.",
-        "Emulator diagnosticeren in hetzelfde menu leest en rapporteert alleen. Back-up maken van GBE/Goldberg-configuratie en Laatste GBE/Goldberg-back-up terugzetten zetten een game terug zoals hij was."
+        "Emulator diagnosticeren in hetzelfde menu leest en rapporteert alleen. Back-up maken van GBE/Goldberg-configuratie en Laatste GBE/Goldberg-back-up terugzetten zetten een game terug zoals hij was.",
+        "Als SteamStub-DRM automatisch uitpakken uit staat, draait Steamless nooit uit zichzelf: de handmatige fix vraagt eerst als de game beschermd is, en de automatische fix laat die game met rust. Een fix die mislukt zet elk bestand terug, ook het uitvoerbare bestand. Het eigen account van een game in configs.user.ini blijft behouden, tenzij het vervangen wordt bevestigd."
       ],
       "emulatorTitle": "Console-emulators",
       "emulators": [
@@ -1704,7 +1709,8 @@
         "Xenia-voortgang wordt gelezen uit de Xbox-profielbestanden (.gpd) en volgt de opslagmappen die in de configuratie staan.",
         "KytyPS5-trofeeën worden gelezen uit de map _Trophies, voor de gebruiker als wie de launcher de game start.",
         "Voor pc hercompileerde Xbox 360-games en PS4-ports (Bloodborne, Uncharted, God of War III Remastered, MediEvil en andere) zijn eigen bronnen bij Instellingen > Bronnen. Verschijnt er een niet, voeg dan de map toe bij Instellingen > Mappen.",
-        "Elke console kan een eigen pop-uppreset en geluid hebben bij Instellingen > Meldingen > Emulators (modus Geavanceerd). Hercompileerde Xbox 360-games volgen de keuze van Xenia, PS4-ports die van shadPS4, en Zelfde als hoofdpreset behoudt de hoofdinstellingen."
+        "Elke console kan een eigen pop-uppreset en geluid hebben bij Instellingen > Meldingen > Emulators (modus Geavanceerd). Hercompileerde Xbox 360-games volgen de keuze van Xenia, PS4-ports die van shadPS4, en Zelfde als hoofdpreset behoudt de hoofdinstellingen.",
+        "Zolang RPCS3 draait, opent de sneltoets voor de in-game overlay de game die RPCS3 uitvoert, gelezen uit het logbestand van RPCS3."
       ],
       "controllerTitle": "Controller en gamepad",
       "controller": [
@@ -1771,7 +1777,7 @@
       "tips": [
         "Klik met de rechtermuisknop op een gametegel om de game te starten, het uitvoerbare bestand te kiezen, mappen en links te openen, emulatortools te gebruiken of de game te verwijderen als dat menu is ingeschakeld.",
         "Handmatig als ontgrendeld markeren (rechtermuisknop op een prestatie) legt een ontgrendeling vast die geen enkele bron ziet.",
-        "Prestaties resetten… laat je een game opnieuw vanaf nul spelen en maakt eerst een back-up van elk bestand. Het werkt voor geëmuleerde games, niet voor Steam, Epic of Xbox, waarvan de ontgrendelingen op je account staan.",
+        "Prestaties resetten… laat je een game opnieuw vanaf nul spelen en maakt eerst een back-up van elk bestand. Het werkt voor geëmuleerde games, niet voor Steam, Epic of Xbox, waarvan de ontgrendelingen op je account staan. Selecteer meerdere games in de bibliotheek om ze samen te resetten.",
         "Speeltijd wordt bijgehouden terwijl de game draait; Speeltijd bijhouden bij Instellingen > Meldingen schakelt de start- en eindmeldingen in.",
         "Gegevens van deze game wissen… wist alles wat AW Next over een game bewaart (saves krijgen eerst een back-up), en de volgende scan vindt hem weer. Verwijderen uit AW Next haalt hem uit de bibliotheek tot je hem terugzet via Instellingen > Algemeen. Bij Uit de weergave verbergen blijft hij gevolgd, in de weergave Verborgen van het menu Collecties.",
         "Game-instellingen > Taal van prestaties toont de prestaties en meldingen van één game in een andere taal dan de rest.",
@@ -3460,7 +3466,7 @@
         },
         "emulator": {
           "steamless": {
-            "description": "Voert Steamless uit op de exe van de game voordat er gepatcht wordt, om de SteamStub-DRM van Valve te verwijderen (het origineel blijft bewaard als .steamstub.bak). Doet niets als er geen stub aanwezig is. Vereist Mono (mono-complete op Debian en Ubuntu)."
+            "description": "Voert Steamless uit op de exe van de game voordat er gepatcht wordt, om de SteamStub-DRM van Valve te verwijderen (het origineel blijft bewaard als .steamstub.bak). Doet niets als er geen stub aanwezig is. Staat dit uit, dan draait Steamless nooit uit zichzelf: de handmatige fix vraagt eerst, en de automatische fix slaat een beschermde game over. Vereist Mono (mono-complete op Debian en Ubuntu)."
           },
           "apiCheckBypass": {
             "description": "Standaard uit. Plaatst de bypassproxy van SteamAutoCrack (winmm.dll) plus een omleidingsconfiguratie, zodat games die na de wissel opnieuw de originele steam_api of exe controleren toch starten en prestaties ontgrendelen. De proxy wordt bij de officiële release opgehaald. Wine en Proton laden de proxy alleen als de startopties van de game WINEDLLOVERRIDES=\"winmm=n,b\" instellen."
