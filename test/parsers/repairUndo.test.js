@@ -17,6 +17,8 @@ const awManagedConfig = require('../../app/util/awManagedConfig.js');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-repair-undo-'));
 test.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
+// GBE also reads a global settings folder under APPDATA: this machine's must not answer for the game.
+process.env.APPDATA = path.join(tmp, 'appdata');
 
 function onlineFixGame(name) {
   const dir = path.join(tmp, name);

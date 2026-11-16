@@ -25,7 +25,8 @@ function flagged(overrides = {}) {
       steamSettings: 'C:/Jeux/WD2/steam_settings',
       dllCount: 1,
       save: { exists: true, type: 'gbe', earned: 1, total: 55 },
-      issues: [{ level: 'warning', code: 'NO_GC_TOKEN', message: '' }],
+      // A configuration note (NO_GC_TOKEN) no longer turns the row orange, so a real warning is used.
+      issues: [{ level: 'warning', code: 'NO_APPID_TXT', message: '' }],
     },
     uplay: null,
     tracking: { indexed: true, binary: 'WatchDogs2.exe' },

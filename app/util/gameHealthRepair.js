@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const unrealLayout = require('./unrealLayout.js');
 const crackLoaderDetect = require('./crackLoaderDetect.js');
+const gbeSchemaFiles = require('../parser/gbeSchema.js');
 
 function sameDir(a, b) {
   if (!a || !b) return false;
@@ -70,6 +71,33 @@ function planAchievementDataRepair({ steamSettings, gameDir, achievementCount = 
     // confirmation can say where the settings are going and why.
     relocatedFrom: target && current && !sameDir(target, current) ? current : '',
   };
+}
+
+/*
+  Game Health's button since #194: the same folder, but only the schema files and the icons they
+  name. The icon folder is the one the existing schema already uses (img/ from the generator),
+  never a second copy beside it.
+*/
+function planSchemaRewrite({ steamSettings, gameDir, achievementCount = 0, downloadIcons = false, dllDirs = [], exePath = null, advanced = false } = {}) {
+  const base = planAchievementDataRepair({ steamSettings, gameDir, achievementCount, downloadIcons, dllDirs, exePath });
+  let folder = 'images';
+  try {
+    const existing = JSON.parse(fs.readFileSync(path.join(base.target, 'achievements.json'), 'utf8'));
+    folder = gbeSchemaFiles.iconFolder(Array.isArray(existing) ? existing : []) || folder;
+  } catch {
+    /* no schema yet: the default folder */
+  }
+  const writes = ['achievements.json', 'stats.json'];
+  if (downloadIcons) writes.push(`${folder}/`);
+  // Said before the click: whether the definitions come from the generator Settings names (#194).
+  return { ...base, writes, iconFolder: folder, source: advanced ? 'generator' : 'community' };
+}
+
+// Run the schema-only rewrite planned above. Nothing outside achievements.json, stats.json and
+// the icon folder is written; see gbeSchema.rewrite for the backup it keeps.
+async function rewriteAchievementSchema({ gbeSchema, plan, schema, emulator = 'gbe', language = 'english', reference = {}, links = [], downloadIcon = null, onProgress = null } = {}) {
+  if (!plan || !plan.target) throw new Error('rewriteAchievementSchema: no steam_settings target resolved');
+  return gbeSchema.rewrite({ steamSettings: plan.target, schema, emulator, language, reference, links, downloadIcon, onProgress });
 }
 
 /*
@@ -175,6 +203,26 @@ async function installEmulatorRuntime({ gbeInstaller, plan, cacheDir, steamSetti
 }
 
 /*
+  Switch a crack-served game to GBE Fork in one step. Installing the dll alone left GBE with no
+  steam_settings and no appid, and the game crashed at launch until the second step ran (Clair
+  Obscur). The dll, steam_appid.txt and the schema now go in together; the caller runs this inside
+  one repairJournal record, so a failure anywhere puts every file back. Downloads (`dlls`, the
+  reference) happen before: nothing here waits on the network.
+*/
+async function switchToSupportedRuntime({ gbeInstaller, goldberg, plan, steamSettings = null, appid, schema, reference = {}, dlls, sideline = () => [], log } = {}) {
+  if (!/^[0-9]+$/.test(String(appid || ''))) throw new Error('switchToSupportedRuntime: GBE needs a Steam appid, none is known for this game');
+  if (!plan || !Array.isArray(plan.dirs) || plan.dirs.length === 0) throw new Error('switchToSupportedRuntime: no target directory resolved');
+  const target = steamSettings || path.join(plan.dirs[0], 'steam_settings');
+  const sidelined = sideline() || [];
+  const summary = await installEmulatorRuntime({ gbeInstaller, plan, steamSettings: target, dlls, log });
+  // Only when absent: an appid the release already names is not this step's to change.
+  if (!fs.existsSync(path.join(target, 'steam_appid.txt'))) goldberg.writeSteamAppId({ steamSettings: target, appid });
+  // No icon download here: that is network, and a missing icon is offered by the rewrite later.
+  const written = await gbeSchemaFiles.rewrite({ steamSettings: target, schema, emulator: 'gbe', reference });
+  return { ...summary, steamSettings: target, sidelined, schema: written.schema };
+}
+
+/*
   Whether swapping the runtime in `plan` for GBE Fork leaves the game able to start. A game whose
   original steam_api dll predates May 2016 needs steam_interfaces.txt (Goldberg's readme), and once a
   crack has replaced Valve's dll nothing may be left to generate it from: Dark Souls III over CODEX
@@ -197,4 +245,13 @@ async function switchInterfacesReady({ gbeInstaller, plan, cacheDir, steamSettin
   }
 }
 
-module.exports = { planAchievementDataRepair, planRuntimeInstall, repairAchievementData, installEmulatorRuntime, switchInterfacesReady };
+module.exports = {
+  planAchievementDataRepair,
+  planSchemaRewrite,
+  rewriteAchievementSchema,
+  planRuntimeInstall,
+  repairAchievementData,
+  installEmulatorRuntime,
+  switchToSupportedRuntime,
+  switchInterfacesReady,
+};

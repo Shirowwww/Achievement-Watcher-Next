@@ -13,6 +13,9 @@ const os = require('node:os');
 const path = require('node:path');
 const goldberg = require('../../app/parser/goldberg.js');
 
+// GBE also reads a global settings folder under APPDATA: this machine's must not answer for the game.
+process.env.APPDATA = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-repair-appdata-'));
+
 function tempSettings(name) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), `aw-${name}-`));
   const steamSettings = path.join(root, 'steam_settings');
@@ -96,7 +99,8 @@ const richSchema = (overrides = {}) =>
     { name: 'A', description: '', progress: { max_val: 5, value: { operation: 'statvalue', operand1: 'stat' } }, ...overrides },
   ]);
 
-test('a blank description the schema can fill loses to the rewrite', async () => {
+// #194: the blank is filled in place; the file and its progress definition are kept.
+test('a blank description the schema can fill is filled, the rest of the file kept', async () => {
   const { root, steamSettings } = tempSettings('richblank');
   try {
     fs.writeFileSync(path.join(steamSettings, 'achievements.json'), richSchema());
@@ -107,8 +111,10 @@ test('a blank description the schema can fill loses to the rewrite', async () =>
       writeDlc: false,
       writeMain: false,
     });
-    assert.equal(out.preservedRichSchema, false);
-    assert.equal(JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'))[0].description, 'a real description');
+    assert.equal(out.preservedRichSchema, true);
+    const [entry] = JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'));
+    assert.equal(entry.description, 'a real description');
+    assert.equal(entry.progress.value.operand1, 'stat');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

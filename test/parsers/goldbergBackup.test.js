@@ -7,6 +7,8 @@ const path = require('path');
 const goldberg = require(path.join(__dirname, '..', '..', 'app', 'parser', 'goldberg.js'));
 
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-backup-'));
+// GBE also reads a global settings folder under APPDATA: this machine's must not answer for the game.
+process.env.APPDATA = path.join(temp, 'appdata');
 (async () => {
   try {
     const gameDir = path.join(temp, 'My Game');

@@ -153,7 +153,9 @@ test('Game Health names it and offers the repair', () => {
   const emulator = report.checks.find((entry) => entry.id === 'emulator');
   assert.equal(emulator.level, gameHealth.LEVEL.WARN);
   assert.deepEqual(emulator.params.topics, ['offline']);
-  assert.ok(emulator.actions.includes(gameHealth.ACTION.REPAIR_DATA));
+  // Its own one-line fix: the schema rewrite no longer touches configs.main.ini (#194).
+  assert.ok(emulator.actions.includes(gameHealth.ACTION.SET_ONLINE));
+  assert.ok(!emulator.actions.includes(gameHealth.ACTION.REPAIR_DATA));
   assert.notEqual(report.state, gameHealth.STATE.READY);
   // The list itself is complete: the panel must name the offline mode, not call the list wrong.
   assert.equal(report.checks.find((entry) => entry.id === 'achievement-data').level, gameHealth.LEVEL.OK);

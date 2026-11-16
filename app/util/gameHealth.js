@@ -18,7 +18,8 @@ const LEVEL = { OK: 'ok', WARN: 'warn', FAIL: 'fail', INFO: 'info' };
 const ACTION = {
   CHOOSE_EXE: 'choose-exe', //    the panel's own executable picker
   OPEN_FOLDER: 'open-folder', //  shell.openPath(gameDir)
-  REPAIR_DATA: 'repair-data', //  goldberg.repair() - writes schema + icons + configs, backs up first
+  REPAIR_DATA: 'repair-data', //  gbeSchema.rewrite() - achievements.json, stats.json, icons; backs up first
+  WRITE_CONFIG: 'write-config', // the emulator's settings files only, what is missing; backs up first
   REPAIR_UPLAY: 'repair-uplay', // shared Uplay R2 transaction - loader/schema/config + rollback
   REPAIR_UPLAY_TICKET: 'repair-uplay-ticket', // uplayR2.setSessionTicket({enabled:true}) - one ini key
   REMOVE_UPLAY_TICKET: 'remove-uplay-ticket', // uplayR2.setSessionTicket({enabled:false}) - takes it back
@@ -87,6 +88,51 @@ const REPAIRABLE_GOLDBERG_CODES = new Set([
   'BLANK_DESCRIPTIONS',
 ]);
 
+/*
+  Game Health splits that repair in two (#194, #196). REPAIR_DATA rewrites the schema only
+  (gbeSchema.rewrite: achievements.json, stats.json, icons); WRITE_CONFIG completes the emulator's
+  settings files, a separate step the user asks for. PROGRESS_OUTDATED is the schema button's alone:
+  the automatic repair cannot fetch the generator's definitions, so it would retry on every scan.
+*/
+const SCHEMA_CODES = new Set([
+  'NO_ACHIEVEMENTS_JSON',
+  'BAD_ACHIEVEMENTS_JSON',
+  'ACHIEVEMENTS_JSON_NOT_ARRAY',
+  'MISSING_ACHIEVEMENTS',
+  'NO_STEAM_SETTINGS',
+  'SETTINGS_NOT_BESIDE_DLL',
+  'UNREAL_ENGINE_DLL_UNCONFIGURED',
+  'MISSING_ICONS',
+  'STAT_LINK_MISSING',
+  'PROGRESS_OUTDATED',
+  'BLANK_NAMES',
+  'BLANK_DESCRIPTIONS',
+]);
+const CONFIG_CODES = new Set([
+  'NO_APPID_TXT',
+  'AW_LAUNCH_APPID',
+  'NO_DLC_CONFIG',
+  'BAD_DLC_CONFIG',
+  'NO_MAIN_CONFIG',
+  'NO_NEW_APP_TICKET',
+  'NO_GC_TOKEN',
+  'UNKNOWN_STATS_REJECTED',
+  'NO_USER_CONFIG',
+  'BAD_USER_CONFIG',
+  'PLACEHOLDER_SAVE_PATH',
+]);
+// Only written when Settings lets AW Next manage DLC (emulator.manageDlc).
+const DLC_CODES = new Set(['NO_DLC_CONFIG', 'BAD_DLC_CONFIG']);
+/*
+  Settings the emulator runs fine without: a configuration note, not a defect. A game with a
+  complete schema and only these stays green (#194: NO_MAIN_CONFIG alone turned the data row orange).
+*/
+const CONFIG_NOTE_CODES = new Set(['NO_DLC_CONFIG', 'BAD_DLC_CONFIG', 'NO_MAIN_CONFIG', 'NO_NEW_APP_TICKET', 'NO_GC_TOKEN', 'NO_USER_CONFIG', 'BAD_USER_CONFIG']);
+
+function configFixable(issue, signals) {
+  return !!issue && CONFIG_CODES.has(issue.code) && (!DLC_CODES.has(issue.code) || signals.manageDlc === true);
+}
+
 const REPAIRABLE_UPLAY_CODES = new Set([
   'NO_UPLAY_R2_DLL',
   'NOT_UPLAY_R2_LOADER',
@@ -128,6 +174,7 @@ const ISSUE_TOPIC = {
   UNKNOWN_STATS_REJECTED: 'compat',
   EMULATOR_OFFLINE: 'offline',
   STAT_LINK_MISSING: 'compat',
+  PROGRESS_OUTDATED: 'schema',
   NO_INI: 'compat',
   NO_USER_CONFIG: 'account',
   BAD_USER_CONFIG: 'account',
@@ -249,11 +296,6 @@ function hasNoAchievements(signals) {
   return !!(signals.achievements && signals.achievements.none);
 }
 
-// Only issues about the list itself mark this row. The same button also fixes offline mode, the
-// ticket and account options, but those belong to the emulator row: marking this one for them made
-// the panel say some unlocks would be missed on a complete list (#167).
-const LIST_TOPICS = new Set(['schema', 'icons']);
-
 function achievementDataCheck(signals) {
   const total = num(signals.achievements && signals.achievements.total);
   const goldberg = signals.goldberg;
@@ -272,9 +314,13 @@ function achievementDataCheck(signals) {
   if (goldberg && goldberg.steamSettings) {
     const missing = (goldberg.achievements && goldberg.achievements.missing) || [];
     const missingIcons = (goldberg.achievements && goldberg.achievements.missingIcons) || [];
-    const repairable = issuesAtLevel(goldberg, 'error')
+    // Only what the schema rewrite changes: a missing configs.main.ini, the ticket or the account
+    // options are not list problems, and marking this row for them said unlocks would be missed (#167).
+    const schemaIssues = issuesAtLevel(goldberg, 'error')
       .concat(issuesAtLevel(goldberg, 'warning'))
-      .some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code) && LIST_TOPICS.has(ISSUE_TOPIC[issue.code]));
+      .filter((issue) => SCHEMA_CODES.has(issue.code));
+    const repairable = schemaIssues.length > 0;
+    const outdated = schemaIssues.find((issue) => issue.code === 'PROGRESS_OUTDATED');
     if (missing.length > 0) {
       return check('achievement-data', LEVEL.FAIL, {
         params: { total, missing: missing.length },
@@ -291,6 +337,10 @@ function achievementDataCheck(signals) {
         params: { total, missingIcons: missingIcons.length },
         actions: [ACTION.REPAIR_DATA],
       });
+    }
+    if (outdated) {
+      const count = num(outdated.data && outdated.data.count);
+      return check('achievement-data', LEVEL.WARN, { params: { total, progressOutdated: count }, actions: [ACTION.REPAIR_DATA] });
     }
     if (repairable) return check('achievement-data', LEVEL.WARN, { params: { total }, actions: [ACTION.REPAIR_DATA] });
   }
@@ -372,12 +422,13 @@ function coldClientFindings(signals, goldberg) {
   const mismatch = settings ? appidMismatch(settings) : null;
   const topics = issueTopics(issues);
   const actions = [];
-  if (issues.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code))) actions.push(ACTION.REPAIR_DATA);
+  if (issues.some((issue) => SCHEMA_CODES.has(issue.code))) actions.push(ACTION.REPAIR_DATA);
+  if (issues.some((issue) => configFixable(issue, signals))) actions.push(ACTION.WRITE_CONFIG);
   if (mismatch) actions.push(ACTION.FIX_APPID);
   if (coldClient.viaLoader) actions.push(ACTION.LAUNCH_DIRECT);
   else if (coldClient.launchable) actions.push(ACTION.LAUNCH_VIA_LOADER);
   return {
-    warn: !!coldClient.problem || topics.length > 0,
+    warn: !!coldClient.problem || issues.some((issue) => !CONFIG_NOTE_CODES.has(issue.code)),
     params: {
       ...(coldClient.problem ? { coldClient: coldClient.problem } : {}),
       ...(topics.length > 0 ? { topics } : {}),
@@ -518,25 +569,32 @@ function emulatorCheck(rawSignals) {
   };
 
   const errors = issuesAtLevel(goldberg, 'error');
+  const warnings = issuesAtLevel(goldberg, 'warning');
+  // Each finding gets the button that changes exactly its file: the schema rewrite, the settings
+  // step, or the one offline= line.
+  const actionsFor = (issues) => [
+    ...(issues.some((issue) => SCHEMA_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : []),
+    ...(issues.some((issue) => configFixable(issue, signals)) ? [ACTION.WRITE_CONFIG] : []),
+    ...(issues.some((issue) => issue.code === 'EMULATOR_OFFLINE') ? [ACTION.SET_ONLINE] : []),
+  ];
   if (errors.length > 0) {
-    const actions = errors.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : [];
-    // The same repair also turns the offline mode off, so the row names it beside the errors.
-    const offlineWarnings = issuesAtLevel(goldberg, 'warning').filter((issue) => issue.code === 'EMULATOR_OFFLINE');
+    // The offline mode is named beside the errors, since it also stops unlocks being recorded.
+    const offlineWarnings = warnings.filter((issue) => issue.code === 'EMULATOR_OFFLINE');
     return check('emulator', LEVEL.FAIL, {
       params: { emulator: goldberg.emulator || 'none', topics: issueTopics([...errors, ...offlineWarnings]), ...appidParams },
       // Nothing this setup holds will ever be read while a foreign runtime serves the folder.
       blocking: foreignRuntime,
-      actions: withAppidFix(actions),
+      actions: withAppidFix(actionsFor([...errors, ...offlineWarnings])),
     });
   }
 
-  const warnings = issuesAtLevel(goldberg, 'warning');
   if (warnings.length > 0) {
-    const actions = warnings.some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code)) ? [ACTION.REPAIR_DATA] : [];
     const offlineParams = codes.has('EMULATOR_OFFLINE') ? { offline: true } : {};
-    return check('emulator', LEVEL.WARN, {
-      params: { emulator: goldberg.emulator || 'none', topics: issueTopics(warnings), ...appidParams, ...offlineParams },
-      actions: withAppidFix(actions),
+    // Only optional settings missing: said as a note, and the game stays ready.
+    const notesOnly = warnings.every((issue) => CONFIG_NOTE_CODES.has(issue.code)) && !mismatch && !needsRuntime;
+    return check('emulator', notesOnly ? LEVEL.INFO : LEVEL.WARN, {
+      params: { emulator: goldberg.emulator || 'none', topics: issueTopics(warnings), ...(notesOnly ? { settingsNotes: true } : {}), ...appidParams, ...offlineParams },
+      actions: withAppidFix(actionsFor(warnings)),
     });
   }
 
@@ -1019,5 +1077,8 @@ module.exports = {
   ACTION,
   ISSUE_TOPIC,
   REPAIRABLE_GOLDBERG_CODES,
+  SCHEMA_CODES,
+  CONFIG_CODES,
+  CONFIG_NOTE_CODES,
   REPAIRABLE_UPLAY_CODES,
 };

@@ -274,11 +274,72 @@ test('only repairable emulator issues offer the rewrite', () => {
     healthyGame({
       goldberg: {
         ...healthyGame().goldberg,
-        issues: [{ level: 'warning', code: 'NO_DLC_CONFIG', message: 'configs.app.ini is missing' }],
+        issues: [{ level: 'warning', code: 'MISSING_ICONS', message: '2 icons missing' }],
       },
     })
   );
   assert.ok(repairable.actions.includes(ACTION.REPAIR_DATA));
+});
+
+// #194 / #196: a settings file is not the achievement list, and the schema rewrite never writes one.
+test('a missing settings file gets the settings step, never the schema rewrite', () => {
+  const report = deriveHealth(
+    healthyGame({
+      goldberg: { ...healthyGame().goldberg, issues: [{ level: 'warning', code: 'NO_APPID_TXT', message: 'steam_appid.txt is missing' }] },
+    })
+  );
+  assert.ok(report.actions.includes(ACTION.WRITE_CONFIG));
+  assert.ok(!report.actions.includes(ACTION.REPAIR_DATA));
+  assert.equal(report.checks.find((entry) => entry.id === 'achievement-data').level, LEVEL.OK, 'the list itself is fine');
+});
+
+test('optional settings alone are a note: the game stays ready', () => {
+  const report = deriveHealth(
+    healthyGame({
+      goldberg: {
+        ...healthyGame().goldberg,
+        issues: [
+          { level: 'warning', code: 'NO_MAIN_CONFIG', message: '' },
+          { level: 'warning', code: 'NO_USER_CONFIG', message: '' },
+        ],
+      },
+    })
+  );
+  const emulator = report.checks.find((entry) => entry.id === 'emulator');
+  assert.equal(emulator.level, LEVEL.INFO);
+  assert.equal(emulator.params.settingsNotes, true);
+  assert.deepEqual(emulator.actions, [ACTION.WRITE_CONFIG]);
+  assert.equal(report.checks.find((entry) => entry.id === 'achievement-data').level, LEVEL.OK);
+  assert.equal(report.state, STATE.READY);
+});
+
+test('DLC settings are only offered when Settings lets AW Next manage DLC', () => {
+  const issues = [{ level: 'warning', code: 'NO_DLC_CONFIG', message: '' }];
+  const off = deriveHealth(healthyGame({ goldberg: { ...healthyGame().goldberg, issues } }));
+  assert.ok(!off.actions.includes(ACTION.WRITE_CONFIG));
+  const on = deriveHealth(healthyGame({ manageDlc: true, goldberg: { ...healthyGame().goldberg, issues } }));
+  assert.ok(on.actions.includes(ACTION.WRITE_CONFIG));
+});
+
+test('outdated progress definitions are a warning on the data row, fixed by the rewrite', () => {
+  const report = deriveHealth(
+    healthyGame({
+      goldberg: { ...healthyGame().goldberg, issues: [{ level: 'warning', code: 'PROGRESS_OUTDATED', message: '', data: { count: 5 } }] },
+    })
+  );
+  const data = report.checks.find((entry) => entry.id === 'achievement-data');
+  assert.equal(data.level, LEVEL.WARN);
+  assert.equal(data.params.progressOutdated, 5);
+  assert.deepEqual(data.actions, [ACTION.REPAIR_DATA]);
+  assert.equal(report.state, STATE.ATTENTION);
+});
+
+test('offline mode is fixed by its own one-line change, not by a rewrite', () => {
+  const report = deriveHealth(
+    healthyGame({ goldberg: { ...healthyGame().goldberg, issues: [{ level: 'warning', code: 'EMULATOR_OFFLINE', message: '' }] } })
+  );
+  assert.ok(report.actions.includes(ACTION.SET_ONLINE));
+  assert.ok(!report.actions.includes(ACTION.REPAIR_DATA));
 });
 
 test('an unwatched game offers to start watching only when an executable is known', () => {
@@ -613,7 +674,7 @@ test('the appid repair is offered beside the schema repair, not instead of it', 
       goldberg: {
         ...healthyGame().goldberg,
         issues: [
-          { level: 'warning', code: 'NO_DLC_CONFIG', message: 'configs.app.ini is missing.' },
+          { level: 'warning', code: 'MISSING_ICONS', message: '2 icons missing.' },
           { level: 'warning', code: 'APPID_MISMATCH', message: 'x', data: { onDisk: '111', expected: '367520' } },
         ],
       },

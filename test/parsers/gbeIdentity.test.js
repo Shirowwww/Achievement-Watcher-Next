@@ -15,6 +15,8 @@ const test = require('node:test');
 const goldberg = require('../../app/parser/goldberg.js');
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'aw-gbe-identity-'));
+// GBE also reads a global settings folder under APPDATA: this machine's must not answer for the game.
+process.env.APPDATA = path.join(tmp, 'appdata');
 test.after(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
 function settingsDir(name, userIni) {

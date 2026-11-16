@@ -125,10 +125,23 @@ test('the report is rebuilt for the game actually being shown', () => {
 test('both file-changing repairs confirm before writing, and say where the backup goes', () => {
   const runner = appSource.slice(appSource.indexOf('async function runGameHealthAction'));
 
-  for (const [action, planCall, confirmKey] of [
-    ['REPAIR_DATA', 'planAchievementDataRepair', 'gh-confirm-repair-detail'],
-    ['INSTALL_RUNTIME', 'planRuntimeInstall', 'gh-confirm-runtime-detail'],
+  // The two GBE steps (#194) share one confirmation, which names the files and the backup folder.
+  const confirmFiles = appSource.slice(appSource.indexOf('function ghConfirmFiles('));
+  assert.ok(confirmFiles.slice(0, confirmFiles.indexOf('\n}\n')).includes('gh-confirm-repair-detail'));
+  for (const [fn, planCall, writeCall] of [
+    ['async function ghRewriteAchievementSchema(', 'planSchemaRewrite(', 'rewriteAchievementSchema('],
+    ['async function ghCompleteEmulatorSettings(', 'ghSettingsStep.plan(', 'ghSettingsStep.apply('],
   ]) {
+    const body = appSource.slice(appSource.indexOf(fn));
+    const block = body.slice(0, body.indexOf('\n}\n'));
+    const planAt = block.indexOf(planCall);
+    const confirmAt = block.indexOf('ghConfirmFiles(');
+    assert.ok(planAt >= 0 && confirmAt > planAt, `${fn} plans, then asks`);
+    assert.ok(block.indexOf(writeCall) > confirmAt, `${fn} writes only after the user confirms`);
+    assert.match(block.slice(confirmAt), /confirmed !== 1\) return false/, `${fn} aborts on cancel`);
+  }
+
+  for (const [action, planCall, confirmKey] of [['INSTALL_RUNTIME', 'planRuntimeInstall', 'gh-confirm-runtime-detail']]) {
     const start = runner.indexOf(`gameHealth.ACTION.${action}`);
     assert.ok(start > 0, `${action} must be handled`);
     const block = runner.slice(start, runner.indexOf('\n  if (action ===', start + 1) + 1 || undefined);
@@ -470,9 +483,10 @@ test('every issue topic a diagnosis can raise has a label of its own', () => {
   <gameDir>/steam_settings wrote a complete setup into a folder the game never opens.
 */
 test('both repair paths resolve the settings folder through the same plan', () => {
-  const healthAction = appSource.slice(appSource.indexOf('if (action === gameHealth.ACTION.REPAIR_DATA) {'));
-  const planCall = healthAction.slice(0, healthAction.indexOf('showMessageBoxSync'));
-  assert.match(planCall, /planAchievementDataRepair\(/);
+  const healthAction = appSource.slice(appSource.indexOf('async function ghRewriteAchievementSchema('));
+  const planCall = healthAction.slice(0, healthAction.indexOf('ghConfirmFiles('));
+  // planSchemaRewrite builds on planAchievementDataRepair, the same target resolution.
+  assert.match(planCall, /planSchemaRewrite\(/);
   assert.match(planCall, /dllDirs:/, 'the plan has to know where the dll is to know where to write');
 
   const rightClick = appSource.slice(appSource.indexOf('const repairGoldbergSetup = async'));
@@ -498,4 +512,17 @@ test('Game Health undoes a Ubisoft repair through the same restore as the right-
 
   const menu = appSource.slice(appSource.indexOf("t('restore-uplay-r2-config'"));
   assert.match(menu.slice(0, 400), /restoreUplayR2Backup\(/);
+});
+
+/*
+  The panel tells a game with missing icons that "rewriting the achievement data downloads them",
+  so the rewrite the user asks for downloads them whatever the automatic-repair icon setting says.
+  Gating it on that setting (off by default) left MISSING_ICONS after every rewrite, forever.
+*/
+test('the schema rewrite asked from Game Health always downloads the missing icons', () => {
+  const body = appSource.slice(appSource.indexOf('async function ghRewriteAchievementSchema('));
+  const block = body.slice(0, body.indexOf('\n}\n'));
+  assert.doesNotMatch(block, /goldbergDownloadIcons/, 'an explicit rewrite does not depend on the automatic-repair icon setting');
+  assert.match(block, /downloadIcon: ghIconDownloader\(writableAppid\)/);
+  assert.match(block, /downloadIcons: true/, 'the confirmation lists the icon folder it writes to');
 });

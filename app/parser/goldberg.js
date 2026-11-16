@@ -18,6 +18,8 @@ const { isSharedSaveRoot } = require(path.join(__dirname, 'saveRoots.js'));
 const runtimeSaveSeed = require(path.join(__dirname, '..', 'util', 'runtimeSaveSeed.js'));
 const { parseIni, stringifyIni, getIniSection, readIniSectionValues, upsertIniSection, upsertIniKeys, sanitizeIniValue, INI_TRUE } = require(path.join(__dirname, '..', 'util', 'emuIni.js'));
 const awManagedConfig = require(path.join(__dirname, '..', 'util', 'awManagedConfig.js'));
+const gbeEffectiveConfig = require(path.join(__dirname, 'gbeEffectiveConfig.js'));
+const gbeSchema = require(path.join(__dirname, 'gbeSchema.js'));
 const { isSteamId64 } = require(path.join(__dirname, '..', 'util', 'steamId64.js'));
 
 const APPID_CONFIG_FILES = new Set([
@@ -513,20 +515,6 @@ function detectEmulator(gameDir) {
   return result;
 }
 
-// Build the GBE-Fork achievements.json array from an Achievement Watcher schema.
-// imagePrefix is the on-disk folder name the icons live in (default "images").
-function buildAchievementsJson(schema, imagePrefix = 'images') {
-  const list = (schema && schema.achievement && Array.isArray(schema.achievement.list) && schema.achievement.list) || [];
-  return list.map((a) => ({
-    description: a.description || '',
-    displayName: a.displayName || a.name,
-    hidden: a.hidden == 1 ? '1' : '0',
-    icon: a.icon ? `${imagePrefix}/${path.parse(String(a.icon).split('?')[0]).base}` : '',
-    icongray: a.icongray ? `${imagePrefix}/${path.parse(String(a.icongray).split('?')[0]).base}` : '',
-    name: a.name,
-  }));
-}
-
 // Attach the stat threshold behind each progress achievement, GBE's `progress` shape. An entry that
 // already carries one keeps it.
 function withProgress(achievementsJson, progress) {
@@ -666,43 +654,6 @@ function applyCommunityStats(steamSettings, { stats = [], progress = [] } = {}) 
   if (result.progress > 0) fs.writeFileSync(schemaFile, JSON.stringify(next, null, 2));
   if (statsChange) result.stats = mergeStatsJson(steamSettings, stats);
   return result;
-}
-
-// The emulator's own achievements.json as an array, or null when it is missing or not one.
-function readSchemaArray(steamSettings) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'));
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-// Is the achievements.json on disk worth keeping over a freshly generated one? Only when it carries
-// progress definitions AW cannot reproduce and rewriting it would not be an improvement.
-function hasRichProgressSchema(steamSettings, schema) {
-  try {
-    const parsed = JSON.parse(fs.readFileSync(path.join(steamSettings, 'achievements.json'), 'utf8'));
-    if (!Array.isArray(parsed)) return false;
-    if (!parsed.some((item) => item && item.progress && item.progress.value && item.progress.value.operand1)) return false;
-    if (parsed.some((item) => !item || item.name == null || String(item.name).trim() === '')) return false;
-    const expected = (schema && schema.achievement && Array.isArray(schema.achievement.list) && schema.achievement.list) || [];
-    if (expected.length === 0) return true;
-    const names = new Set(parsed.filter((item) => item && item.name != null).map((item) => String(item.name).toUpperCase()));
-    if (!expected.every((item) => item && item.name != null && names.has(String(item.name).toUpperCase()))) return false;
-
-    const described = new Map(
-      expected
-        .filter((item) => item && item.name != null && item.description && String(item.description).trim())
-        .map((item) => [String(item.name).toUpperCase(), true])
-    );
-    const wouldFillABlank = parsed.some(
-      (item) => (!item.description || String(item.description).trim() === '') && described.has(String(item.name).toUpperCase())
-    );
-    return !wouldFillABlank;
-  } catch {
-    return false;
-  }
 }
 
 // Default runtime save roots, newest emulator first. Both keep one <appid>/ subfolder with an
@@ -1042,7 +993,9 @@ function steamShortcutLaunches() {
   return launches;
 }
 
-function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameDir), shortcutExes = steamShortcutLaunches }) {
+// `reference` is { progress, stats, origin } from schemaReference (the authoritative definitions);
+// `canGenerate` says the schema rewrite will run the generator (Advanced steam_settings).
+function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameDir), shortcutExes = steamShortcutLaunches, reference = {}, canGenerate = false }) {
   const report = {
     gameDir,
     appid: appid != null ? String(appid) : null,
@@ -1257,31 +1210,33 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     }
   }
 
-  // These files are runtime configuration, not achievement schema. A valid achievements.json does
-  // not make the setup complete when DLC ownership or the configured user identity is absent.
-  const appConfigFile = path.join(steamSettings, 'configs.app.ini');
-  if (!fs.existsSync(appConfigFile)) {
+  /*
+    Runtime configuration, not achievement schema, read the way the emulator reads it (#196): a key
+    set in the global GSE Saves settings folder is as configured as one beside the dll. These are
+    configuration notes; a schema can be complete without any of them.
+  */
+  const effective = gbeEffectiveConfig.resolve({ steamSettings, emulator: emu.type, hosts: winHosts.hostsFor(gameDir) });
+  report.configScopes = { globalDir: effective.globalDir, saveSettingsDir: effective.saveSettingsDir, files: effective.files };
+  const setting = (section, key) => gbeEffectiveConfig.answered(effective, section, key);
+  const enabled = (section, key) => INI_TRUE.test((setting(section, key) || {}).value || '');
+  if (!effective.hasFile('configs.app.ini')) {
     add('warning', 'NO_DLC_CONFIG', 'configs.app.ini is missing - DLC unlock/enumeration is not configured.');
-  } else {
-    const appConfig = fs.readFileSync(appConfigFile, 'utf8');
-    if (dlcConfigMode(appConfig) === 'none') {
-      add('warning', 'BAD_DLC_CONFIG', 'configs.app.ini neither sets [app::dlcs] unlock_all=1 nor lists any DLC id.');
-    }
+  } else if (gbeEffectiveConfig.dlcMode(effective) === 'none') {
+    add('warning', 'BAD_DLC_CONFIG', 'configs.app.ini neither sets [app::dlcs] unlock_all=1 nor lists any DLC id.');
   }
   const mainConfigFile = path.join(steamSettings, 'configs.main.ini');
-  if (!fs.existsSync(mainConfigFile)) {
+  if (!effective.hasFile('configs.main.ini')) {
     add('warning', 'NO_MAIN_CONFIG', 'configs.main.ini is missing - modern Steam ticket/token compatibility is not configured.');
   } else {
-    const mainConfig = fs.readFileSync(mainConfigFile, 'utf8');
-    if (!/^\s*\[main::general\][\s\S]*?^\s*new_app_ticket\s*=\s*1\s*$/im.test(mainConfig)) {
+    if (!enabled('main::general', 'new_app_ticket')) {
       add('warning', 'NO_NEW_APP_TICKET', 'configs.main.ini does not enable [main::general] new_app_ticket=1.');
     }
-    if (!/^\s*\[main::general\][\s\S]*?^\s*gc_token\s*=\s*1\s*$/im.test(mainConfig)) {
+    if (!enabled('main::general', 'gc_token')) {
       add('warning', 'NO_GC_TOKEN', 'configs.main.ini does not enable [main::general] gc_token=1.');
     }
     // GBE refuses SetStat on a stat stats.json does not declare, so with none declared every counter
     // achievement ("do X 100 times") stays locked (#161).
-    if (!hasDeclaredStats(steamSettings) && !/^\s*\[main::stats\][^[]*?^\s*allow_unknown_stats\s*=\s*1\s*$/im.test(mainConfig)) {
+    if (!hasDeclaredStats(steamSettings) && !enabled('main::stats', 'allow_unknown_stats')) {
       add('warning', 'UNKNOWN_STATS_REJECTED', 'stats.json declares no stat and configs.main.ini does not set [main::stats] allow_unknown_stats=1, so the game cannot record any stat.');
     }
     /*
@@ -1290,12 +1245,13 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
       subsystem: Phantom Blade Zero under ARTIFACT) then drops every unlock. Raised only while the
       save holds none: one recorded unlock proves the setting does not stop this game.
     */
-    if (offlineModeOn(mainConfig) && !(report.save && report.save.earned > 0)) {
+    if (enabled('main::connectivity', 'offline') && !(report.save && report.save.earned > 0)) {
       add(
         'warning',
         'EMULATOR_OFFLINE',
         'configs.main.ini sets [main::connectivity] offline=1, so the emulator tells the game Steam is not logged on. A game that waits for a Steam login before recording achievements (Unreal Engine games among them) then records none.',
-        { file: mainConfigFile }
+        // The local file is the one a fix writes: its offline=0 outranks a global offline=1.
+        { file: mainConfigFile, scope: setting('main::connectivity', 'offline').scope }
       );
     }
   }
@@ -1308,13 +1264,20 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     }
   }
   const userConfigFile = path.join(steamSettings, 'configs.user.ini');
-  if (!fs.existsSync(userConfigFile)) {
+  const accountName = setting('user::general', 'account_name');
+  const language = setting('user::general', 'language');
+  if (!accountName && !language && !fs.existsSync(userConfigFile)) {
     add('warning', 'NO_USER_CONFIG', 'configs.user.ini is missing - account name and language are not configured.');
-  } else {
+  } else if (!accountName || !language) {
+    add('warning', 'BAD_USER_CONFIG', 'configs.user.ini is missing account_name and/or language under [user::general].');
+  }
+  // Said, not flagged: one identity for every game is the setup GBE documents.
+  const sharedIdentity = [accountName, language].find((entry) => entry && entry.scope === 'global');
+  if (sharedIdentity) {
+    add('info', 'USER_CONFIG_GLOBAL', `The account name or language comes from ${sharedIdentity.file}, which applies to every game this emulator runs.`, { file: sharedIdentity.file });
+  }
+  if (fs.existsSync(userConfigFile)) {
     const userConfig = fs.readFileSync(userConfigFile, 'utf8');
-    if (!/^\s*\[user::general\]/im.test(userConfig) || !/^[ \t]*account_name[ \t]*=[ \t]*\S/im.test(userConfig) || !/^[ \t]*language[ \t]*=[ \t]*\S/im.test(userConfig)) {
-      add('warning', 'BAD_USER_CONFIG', 'configs.user.ini is missing account_name and/or language under [user::general].');
-    }
     const savePathMatch = userConfig.match(/^[ \t]*local_save_path[ \t]*=[ \t]*(\S.*?)[ \t]*$/im);
     if (savePathMatch && savePathMatch[1] && savePathMatch[1].trim()) {
       const configuredRoot = configuredSaveRoot(steamSettings);
@@ -1426,7 +1389,8 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
 
   // Icon files referenced but missing on disk
   for (const a of parsed) {
-    for (const key of ['icon', 'icongray']) {
+    // icon_gray is the modern GBE spelling, icongray the old one it still reads.
+    for (const key of ['icon', 'icon_gray', 'icongray']) {
       const ref = a && a[key];
       if (ref && !/^https?:\/\//i.test(ref)) {
         const p = path.join(steamSettings, ref);
@@ -1437,7 +1401,8 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
   if (report.achievements.missingIcons.length > 0) {
     // info, not warning: an unrepairable fact belongs in neither the "points to review" count nor
     // behind a repair button. issuesAtLevel('warning') is what feeds both, so the level is the fix.
-    const artworkMarker = readArtworkMarker(steamSettings);
+    const iconDir = path.posix.dirname(String(report.achievements.missingIcons[0]).replace(/\\/g, '/'));
+    const artworkMarker = readArtworkMarker(steamSettings, iconDir === '.' ? 'images' : iconDir);
     report.achievements.iconsUnavailable = !!(artworkMarker && !artworkMarker.stale);
     if (report.achievements.iconsUnavailable) {
       add('info', 'ICONS_UNAVAILABLE', `${report.achievements.missingIcons.length} icon(s) are missing because Steam publishes no achievement artwork for this appid yet.`);
@@ -1446,7 +1411,33 @@ function diagnose({ gameDir, appid, schema, savesRoots = defaultSavesRoots(gameD
     }
   }
 
-  const blankDesc = parsed.filter((a) => a && (!a.description || String(a.description).trim() === '')).length;
+  /*
+    Progress and stat definitions behind matching ids and counts (#194): measured against the
+    reference the caller loaded, and against the counters Steam lists. An untied counter is worth a
+    warning only when something can tie it: a reference, or the generator the rewrite will run.
+  */
+  const linkedBySave = new Set(report.issues.filter((issue) => issue.code === 'STAT_LINK_MISSING').flatMap((issue) => (issue.data && issue.data.names) || []).map((name) => String(name).toUpperCase()));
+  let declaredStats = [];
+  try {
+    declaredStats = JSON.parse(fs.readFileSync(path.join(steamSettings, 'stats.json'), 'utf8'));
+  } catch {
+    /* absent or unreadable: nothing is declared */
+  }
+  const drift = gbeSchema.drift({ entries: parsed, stats: declaredStats, schemaList, reference: reference || {} });
+  const unknownStatsAllowed = INI_TRUE.test((gbeEffectiveConfig.answered(effective, 'main::stats', 'allow_unknown_stats') || {}).value || '');
+  const untied = canGenerate ? drift.untied.filter((name) => !linkedBySave.has(String(name).toUpperCase())) : [];
+  const undeclared = unknownStatsAllowed ? [] : drift.undeclared;
+  const outdated = [...drift.missing, ...drift.changed, ...untied];
+  if (outdated.length > 0 || undeclared.length > 0) {
+    add(
+      'warning',
+      'PROGRESS_OUTDATED',
+      `${outdated.length} progress definition(s) are missing or outdated in achievements.json${undeclared.length ? ` and ${undeclared.length} stat(s) are not declared in stats.json` : ''}${reference && reference.origin ? ` (compared with ${reference.origin})` : ''}.`,
+      { count: outdated.length + undeclared.length, missing: drift.missing, changed: drift.changed, untied, undeclared, origin: (reference && reference.origin) || null }
+    );
+  }
+
+  const blankDesc = parsed.filter((a) => a && gbeSchema.blankText(a.description)).length;
   if (blankDesc > 0) add('warning', 'BLANK_DESCRIPTIONS', `${blankDesc} achievement(s) have no description.`);
 
   // The schema can be perfectly valid while every achievement still shows locked: that just means
@@ -1669,13 +1660,52 @@ function userIdentity(options = {}, language, { explicit = false } = {}) {
   };
 }
 
+const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
+
+/*
+  #196 for every repair: a key the game's own configs.user.ini already sets is kept unless the
+  user agreed to replace it, and a key the global or save-folder settings answer is not copied in
+  (it would only shadow them). `fillDefaults` adds the emulator's defaults where nothing answers.
+*/
+const IDENTITY_FIELDS = [
+  ['accountName', 'account_name', 'user::general'],
+  ['language', 'language', 'user::general'],
+  ['accountSteamId', 'account_steamid', 'user::general'],
+  ['localSavePath', 'local_save_path', 'user::saves'],
+];
+function identityToWrite({ steamSettings, values = {}, fillDefaults = false, replaceIdentity = false }) {
+  let local = {};
+  try {
+    const doc = parseIni(fs.readFileSync(path.join(steamSettings, 'configs.user.ini'), 'utf8'));
+    local = { 'user::general': readIniSectionValues(doc, 'user::general'), 'user::saves': readIniSectionValues(doc, 'user::saves') };
+  } catch {
+    local = { 'user::general': {}, 'user::saves': {} };
+  }
+  const effective = gbeEffectiveConfig.resolve({ steamSettings, hosts: winHosts.hostsFor(steamSettings) });
+  const defaults = fillDefaults ? { accountName: DEFAULT_EMU_ACCOUNT_NAME, language: DEFAULT_EMU_LANGUAGE } : {};
+  const out = {};
+  for (const [option, key, section] of IDENTITY_FIELDS) {
+    const own = String(local[section][key] || '').trim();
+    const value = values[option] != null && String(values[option]).trim() ? values[option] : defaults[option];
+    if (!value) continue;
+    if (own) {
+      if (replaceIdentity && values[option]) out[option] = values[option];
+      continue;
+    }
+    // The same value already given globally would only shadow it; a different one Settings asks
+    // for is the user's choice, but a default never overrides what the global settings say.
+    const shared = gbeEffectiveConfig.answered(effective, section, key);
+    if (shared && (!values[option] || String(shared.value).trim() === String(value).trim())) continue;
+    out[option] = value;
+  }
+  return out;
+}
+const DEFAULT_EMU_LANGUAGE = 'english';
+
 // Write/merge configs.user.ini with the app's account_name and language, keeping account_steamid
 // unless Settings names one (a Denuvo-bound one always stays), and every other key. `fillDefaults`
 // (an explicit repair) falls back to the emulator's own defaults, clearing the NO_USER_CONFIG and
 // BAD_USER_CONFIG Game Health checks even with nothing to stamp.
-const DEFAULT_EMU_ACCOUNT_NAME = 'Player';
-const DEFAULT_EMU_LANGUAGE = 'english';
-
 function writeUserConfig({ steamSettings, accountName, language, accountSteamId, localSavePath, fillDefaults = false, backupDir = null } = {}) {
   if (!steamSettings) throw new Error('writeUserConfig: steamSettings path is required');
   const updates = {};
@@ -1737,7 +1767,7 @@ function writeUserConfig({ steamSettings, accountName, language, accountSteamId,
 
 // Written into images/ when NONE of the schema's icon urls resolve, so diagnose() can tell "never
 // fetched" from "Steam has no artwork yet". Any later download clears the marker.
-const ARTWORK_UNAVAILABLE_MARKER = '.aw-artwork-unavailable';
+const ARTWORK_UNAVAILABLE_MARKER = gbeSchema.ARTWORK_MARKER;
 
 // Same three-day cadence as the description backfill and the cover lookup in steam.js: Steam sends
 // no notification when a developer finally uploads the art, so the only way to find out is to look
@@ -1778,6 +1808,9 @@ async function repair({
   // An explicit repair completes configs.user.ini even with nothing to stamp into it - see
   // writeUserConfig's fillDefaults. Off by default so the silent auto-repair keeps its old reach.
   fillUserDefaults = false,
+  // Replace a value the game's own configs.user.ini already has. Only after the user said yes:
+  // a per-game Steam ID can own the game's saves (#196).
+  replaceIdentity = false,
   // Turn an existing offline=1 off (see writeMainConfig). Passed only where EMULATOR_OFFLINE was
   // diagnosed (Game Health, the right-click repair, the automatic fix of Game Health findings); the
   // fix-all pass and the scan's own schema repair never change it.
@@ -1821,135 +1854,57 @@ async function repair({
     schemaList: schema && schema.achievement && schema.achievement.list,
     saveFolders: [resolveLocalSaveDir({ steamSettings, appid }), ...roots.map(({ root }) => path.join(root, String(appid)))],
   });
-  const progressLinks = [...inferred, ...(community.progress || [])];
-  const achievementsJson = withProgress(buildAchievementsJson(schema, imagePrefix), progressLinks);
-  const preserveRichSchema = hasRichProgressSchema(steamSettings, schema);
-  // A schema kept as it is still takes the counter links it lacks (#168: the first repair tied 8 of
-  // 17, every later one skipped the file).
-  const keptSchema = preserveRichSchema ? readSchemaArray(steamSettings) : null;
-  const keptWithLinks = keptSchema ? withProgress(keptSchema, progressLinks) : null;
-  const addedLinks = keptWithLinks ? keptWithLinks.filter((entry, index) => entry !== keptSchema[index]).length : 0;
-  const stats = Array.isArray(community.stats) ? community.stats : [];
-  const summary = { steamSettings, achievementsJson, preservedRichSchema: preserveRichSchema, linkedCounters: addedLinks, wroteAppId: false, backupDir: null, icons: { downloaded: 0, failed: 0, skipped: 0 }, dlc: null, main: null, user: null, stats: 0 };
+  /*
+    The schema through the same rewrite Game Health uses (#194): a valid schema keeps its format,
+    languages and icon folder, a new one is written in the emulator's own format, and missing icons
+    land in the schema's folder. The public lists are the reference; stats inferred from the game's
+    saves only fill what they leave untied.
+  */
+  const shape = detectEmulator(path.dirname(steamSettings)).type;
+  const rewritten = await gbeSchema.rewrite({
+    steamSettings,
+    schema,
+    emulator: shape === 'goldberg' ? 'goldberg' : 'gbe',
+    language: language || 'english',
+    reference: { progress: community.progress || [], stats: Array.isArray(community.stats) ? community.stats : [], origin: 'games-infos-datas' },
+    links: inferred,
+    downloadIcon: downloadIcon || null,
+    defaultFolder: imagePrefix,
+    recordCreated: !createdFolder,
+    // The rewrite's own 'done' would end the bar before the settings files below.
+    onProgress: (progress) => progress && progress.phase !== 'done' && report(progress.phase, progress.done, progress.total),
+  });
+  const summary = {
+    steamSettings,
+    achievementsJson: rewritten.achievementsJson,
+    preservedRichSchema: rewritten.schema.kept,
+    linkedCounters: rewritten.schema.progress.added.length + rewritten.schema.progress.updated.length,
+    wroteAppId: false,
+    backupDir: rewritten.backupDir,
+    icons: rewritten.icons,
+    dlc: null,
+    main: null,
+    user: null,
+    stats: rewritten.stats.added.length,
+  };
 
-  // A manual repair can replace a malformed or incomplete schema. Keep the previous files beside
-  // steam_settings before changing them; missing files need no backup and the normal auto-repair
-  // therefore stays quiet for newly detected games.
-  const filesToReplace = preserveRichSchema && addedLinks === 0 ? [] : [path.join(steamSettings, 'achievements.json')];
-  if (stats.length > 0) filesToReplace.push(path.join(steamSettings, 'stats.json'));
+  // The settings files this repair may change, copied first; the rewrite kept its own copies.
+  const filesToReplace = [];
   if (writeAppId && appid != null) filesToReplace.push(path.join(steamSettings, 'steam_appid.txt'));
   if (writeDlc) filesToReplace.push(path.join(steamSettings, 'configs.app.ini'));
   if (writeMain) filesToReplace.push(path.join(steamSettings, 'configs.main.ini'));
   const stampsUser =
     fillUserDefaults || (accountName && String(accountName).trim()) || (language && String(language).trim()) || isSteamId64(accountSteamId) || !!localSavePath;
-  if (stampsUser) {
-    filesToReplace.push(path.join(steamSettings, 'configs.user.ini'));
-  }
-  report('backup');
+  if (stampsUser) filesToReplace.push(path.join(steamSettings, 'configs.user.ini'), path.join(steamSettings, 'supported_languages.txt'));
   const existing = filesToReplace.filter((file) => fs.existsSync(file));
   if (existing.length > 0) {
-    summary.backupDir = path.join(steamSettings, '.aw-backups', backupTimestamp());
+    summary.backupDir = summary.backupDir || path.join(steamSettings, '.aw-backups', backupTimestamp());
     fs.mkdirSync(summary.backupDir, { recursive: true });
-    for (const file of existing) fs.copyFileSync(file, path.join(summary.backupDir, path.basename(file)));
-  }
-
-  if (downloadIcon) {
-    const imgDir = path.join(steamSettings, imagePrefix);
-    fs.mkdirSync(imgDir, { recursive: true });
-    const list = (schema && schema.achievement && schema.achievement.list) || [];
-    // Two images per achievement (unlocked + locked), which is the unit the caller counts down.
-    const totalIcons = list.length * 2;
-    let doneIcons = 0;
-    const step = () => report('icons', ++doneIcons, totalIcons);
-    report('icons', 0, totalIcons);
-
-    // Decide every icon before fetching anything: the skip rules below are pure disk lookups, so
-    // resolving them up front costs nothing and leaves a plain list of urls to fetch in parallel.
-    // Jobs are keyed by basename - `count` is how many schema slots one file satisfies - so a
-    // schema that points two achievements at the same image still makes a single request.
-    const jobs = new Map();
-    for (const a of list) {
-      for (const key of ['icon', 'icongray']) {
-        const url = a && a[key];
-        if (!url || !/^https?:\/\//i.test(String(url))) {
-          summary.icons.skipped++;
-          step();
-          continue;
-        }
-        // Never re-fetch an icon already sitting where achievements.json will point: an emulator-only
-        // schema names images after the achievement, not the Steam content hash, so re-deriving the url 404s.
-        const basename = path.parse(String(url).split('?')[0]).base;
-        if (basename && fs.existsSync(path.join(imgDir, basename))) {
-          summary.icons.skipped++;
-          step();
-          continue;
-        }
-        const existing = jobs.get(basename);
-        if (existing) existing.count++;
-        else jobs.set(basename, { url: String(url), count: 1 });
-      }
-    }
-
-    // Fetch what is left with a bounded pool, giving up once the whole set looks doomed: a brand-new
-    // appid with no art 404s on every icon, and Steam serves a game's icons from one folder, so an
-    // opening run of failures means the rest are dead too.
-    const ICON_CONCURRENCY = 8;
-    const ICON_FAILURE_ABORT = 12; // > ICON_CONCURRENCY, so one bad batch alone never trips it
-    const queue = [...jobs.values()];
-    let cursor = 0;
-    let abandoned = false;
-    const worker = async () => {
-      while (cursor < queue.length) {
-        if (summary.icons.downloaded === 0 && summary.icons.failed >= ICON_FAILURE_ABORT) {
-          abandoned = true;
-          return;
-        }
-        const job = queue[cursor++];
-        let ok = false;
-        try {
-          ok = !!(await downloadIcon(job.url, imgDir));
-        } catch {
-          ok = false;
-        }
-        if (ok) summary.icons.downloaded += job.count;
-        else summary.icons.failed += job.count;
-        for (let i = 0; i < job.count; i++) step();
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(ICON_CONCURRENCY, queue.length) }, worker));
-
-    // Whatever the pool walked away from is still a miss, and the bar must still reach the total.
-    if (abandoned) {
-      for (const job of queue.slice(cursor)) {
-        summary.icons.failed += job.count;
-        for (let i = 0; i < job.count; i++) step();
-      }
-      summary.icons.abandoned = true;
-    }
-
-    // `abandoned` says we stopped early; `unavailable` says the whole set is unobtainable and alone
-    // may drive the marker. `skipped === 0` keeps this to installs with no artwork at all.
-    summary.icons.unavailable = summary.icons.downloaded === 0 && summary.icons.failed > 0 && summary.icons.skipped === 0;
-
-    const marker = path.join(imgDir, ARTWORK_UNAVAILABLE_MARKER);
-    try {
-      if (summary.icons.unavailable) {
-        fs.writeFileSync(marker, JSON.stringify({ appid: appid == null ? null : String(appid), checkedAt: new Date().toISOString(), referenced: totalIcons }, null, 2));
-      } else if (summary.icons.downloaded > 0 && fs.existsSync(marker)) {
-        fs.unlinkSync(marker); // the artwork exists after all
-      }
-    } catch {
-      /* the marker is an optimisation, never a reason to fail a repair */
+    for (const file of existing) {
+      const copy = path.join(summary.backupDir, path.basename(file));
+      if (!fs.existsSync(copy)) fs.copyFileSync(file, copy);
     }
   }
-
-  report('schema');
-  if (!preserveRichSchema) {
-    fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify(achievementsJson, null, 2));
-  } else if (addedLinks > 0) {
-    fs.writeFileSync(path.join(steamSettings, 'achievements.json'), JSON.stringify(keptWithLinks, null, 2));
-  }
-  if (stats.length > 0) summary.stats = mergeStatsJson(steamSettings, stats);
 
   if (writeAppId && appid != null) {
     const appidTxt = path.join(steamSettings, 'steam_appid.txt');
@@ -1996,10 +1951,11 @@ async function repair({
     }
   }
 
-  // Stamp the app's identity (account name + language) into configs.user.ini, preserving account_steamid.
+  // Stamp the app's identity into configs.user.ini, within #196's rule (see identityToWrite).
   if (stampsUser) {
     try {
-      summary.user = writeUserConfig({ steamSettings, accountName, language, accountSteamId, localSavePath, fillDefaults: fillUserDefaults });
+      const values = identityToWrite({ steamSettings, values: { accountName, language, accountSteamId, localSavePath }, fillDefaults: fillUserDefaults, replaceIdentity });
+      summary.user = writeUserConfig({ steamSettings, ...values, fillDefaults: false });
     } catch {
       summary.user = null;
     }
@@ -2232,7 +2188,6 @@ module.exports = {
   writeSteamAppId,
   shortcutLaunchDirs,
   detectEmulator,
-  buildAchievementsJson,
   backupSetup,
   backupDirFor,
   isSteamId64,
@@ -2262,4 +2217,5 @@ module.exports = {
   findCompatibleGames,
   readLocalSchema,
   findGameExe,
+  inferredStatLinks,
 };

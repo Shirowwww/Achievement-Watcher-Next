@@ -20,6 +20,15 @@ const { createHealthIgnoreStore } = require(path.join(appPath, 'util/healthIgnor
 const { isOfficialPlatformSource } = require(path.join(appPath, 'util/achievementResetTargets.js'));
 const nemirtingasEpic = require(path.join(appPath, 'util/nemirtingasEpic.js'));
 const coldClient = require(path.join(appPath, 'util/coldClient.js'));
+// The schema-only rewrite, the separate settings step and the definitions they compare with (#194, #196).
+const ghSchemaFiles = require(path.join(appPath, 'parser/gbeSchema.js'));
+const ghSettingsStep = require(path.join(appPath, 'parser/gbeSettingsStep.js'));
+const ghSchemaReference = require(path.join(appPath, 'parser/schemaReference.js'));
+
+// Whether the schema rewrite takes its definitions from generate_emu_config (Settings > Advanced).
+function ghUsesGenerator() {
+  return !!(app.config && app.config.emulator && app.config.emulator.steamSettingsMode === 'advanced');
+}
 
 // Tab labels re-applied on every open, not once at startup: the panel outlives a language change,
 // and locale/loader.js doesn't know about these tabs, so a one-shot binding would freeze them.
@@ -291,7 +300,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
   const isUbisoft = forced === 'ubisoft' ? true : forced === 'steam' ? false : uplayR2.isUbisoftGame(game, appid);
   // Console records read their unlocks from their own emulator's trophy/achievement store.
   const isConsole = !!system && system !== 'uplay';
-  const writableAppid = /^[0-9]+$/.test(String(appid)) ? String(appid) : game.steamappid || null;
+  const writableAppid = ghWritableAppid(appid, game);
 
   // Where this game's unlocks are ACTUALLY read from, as resolved during the scan. This is the only
   // honest way to tell which mechanism a game uses: the source label cannot, because CODEX, RUNE,
@@ -338,7 +347,14 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
           debug.log(`[health] official counters failed for ${writableAppid} => ${formatErr(err)}`);
           return 0;
         });
-        const report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
+        const report = goldberg.diagnose({
+          gameDir,
+          appid: writableAppid,
+          schema: game,
+          // Cached only: opening the panel never runs the generator or waits on the network for it.
+          reference: ghSchemaReference.cached({ appid: writableAppid, cacheDir: getUserDataPath() }),
+          canGenerate: ghUsesGenerator() && ghSchemaReference.generatorSignedIn(healthToolCaches.toolCacheDir(getUserDataPath(), 'emuConfig')),
+        });
         /*
           Which build sits in each folder the emulator could be loaded from. A count of dlls and a
           list of folders cannot tell a landed fix from one that went to the wrong place: both read
@@ -403,6 +419,8 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
     emulated,
     achievementsCheckedAt,
     saveSources,
+    // DLC settings are offered only when Settings lets AW Next manage DLC.
+    manageDlc: !!(app.config && app.config.emulator && app.config.emulator.manageDlc === true),
     goldberg: goldbergReport,
     uplay: uplayReport,
     // Which crack loader is already serving this game, if any: it decides whether a Uplay setup in
@@ -729,6 +747,7 @@ function gameHealthSimpleCheckValue(entry) {
       // Offline achievements were just switched on and the game has not run since: say so, or the
       // row goes green with a "turn it off" button beside it and no word about why.
       if (p.ticket === 'pending') return t('gh-ticket-pending', 'Offline achievements on - launch the game once', 'Succès hors connexion activés, lance le jeu une fois');
+      if (p.settingsNotes) return t('gh-simple-emulator-notes', 'Achievement support is set up (some optional settings are not written)', 'Prise en charge des succès configurée (quelques réglages facultatifs ne sont pas écrits)');
       if (ok) return t('gh-simple-emulator-ok', 'Achievement support is set up', 'Prise en charge des succès configurée');
       return entry.level === gameHealth.LEVEL.FAIL
         ? t('gh-simple-emulator-missing', 'Achievement support is missing', 'Prise en charge des succès absente')
@@ -913,6 +932,7 @@ function gameHealthCheckValue(entry, simple) {
       if (p.missing) return t('gh-value-missing-entries', '{missing} of {total} missing from the emulator file', '{missing} sur {total} absents du fichier de l’émulateur', p);
       if (p.missingIcons && p.iconsUnavailable) return t('gh-value-icons-unavailable', 'icons not published by Steam yet', 'illustrations pas encore publiées par Steam', p);
       if (p.missingIcons) return t('gh-value-missing-icons', '{missingIcons} icons not downloaded', '{missingIcons} icônes non téléchargées', p);
+      if (p.progressOutdated) return t('gh-value-progress-outdated', '{progressOutdated} progress or stat definition(s) missing or outdated', '{progressOutdated} définition(s) de progression ou de statistique absentes ou périmées', p);
       if (p.total || p.found) return t('gh-value-achievements', '{total} achievements', '{total} succès', { total: p.total || p.found });
       return missing;
     case 'emulator':
@@ -933,6 +953,10 @@ function gameHealthCheckValue(entry, simple) {
       }
       // Name what is wrong. A bare count ("1 point to review") gave the user no way to know what to
       // look at, which defeats the purpose of the row.
+      // Configuration notes read as such, not as faults of the setup (#194).
+      if (p.settingsNotes && p.topics && p.topics.length) {
+        return t('gh-value-settings-notes', 'optional settings not written: {topics}', 'réglages facultatifs non écrits : {topics}', { topics: p.topics.map(gameHealthIssueTopicLabel).join(', ') });
+      }
       if (p.topics && p.topics.length) return p.topics.map(gameHealthIssueTopicLabel).join(' · ');
       return gameHealthEmulatorLabel(p.emulator, p.loader);
     case 'uplay': {
@@ -1030,6 +1054,8 @@ function gameHealthActionLabel(action) {
       return t('gh-action-open-folder', 'Open the game folder', 'Ouvrir le dossier du jeu');
     case gameHealth.ACTION.REPAIR_DATA:
       return t('gh-action-repair-data', 'Rewrite the achievement data', 'Réécrire les données de succès');
+    case gameHealth.ACTION.WRITE_CONFIG:
+      return t('gh-action-write-config', 'Complete the emulator settings', 'Compléter les réglages de l’émulateur');
     case gameHealth.ACTION.REPAIR_UPLAY:
       return t('gh-action-repair-uplay', 'Repair Ubisoft achievement support', 'Réparer la prise en charge des succès Ubisoft');
     case gameHealth.ACTION.REPAIR_UPLAY_TICKET:
@@ -1182,6 +1208,234 @@ function undoPreviewLines(preview) {
 }
 
 // UNDO_REPAIR: the newest undo record for this game, after a confirmation that lists every file.
+// The folder and dll layout the open report diagnosed, which both GBE steps below write into.
+function ghDiagnosedGoldberg() {
+  const diagnosed = $('#game-health').data('report');
+  return { report: diagnosed, goldberg: (diagnosed && diagnosed.technical && diagnosed.technical.goldberg) || null };
+}
+
+function ghWritableAppid(appid, game) {
+  return /^[0-9]+$/.test(String(appid)) ? String(appid) : game.steamappid || null;
+}
+
+function ghConfirmFiles({ title, message, plan, action, extra = '' }) {
+  const relocate = plan.relocatedFrom
+    ? t(
+        'gh-confirm-repair-relocate',
+        'The settings in {from} are not beside the emulator file, so the game never reads them. They are written next to it instead, and the old folder is left untouched.',
+        'Les réglages de {from} ne sont pas à côté du fichier de l’émulateur : le jeu ne les lit jamais. Ils sont donc écrits à côté de celui-ci, et l’ancien dossier reste intact.',
+        { from: plan.relocatedFrom }
+      ) + '\n\n'
+    : '';
+  const files = t(
+    'gh-confirm-repair-detail',
+    'Files written in:\n{target}\n\n{writes}\n\nAny existing version of these files is copied to {backup} first.',
+    'Fichiers écrits dans :\n{target}\n\n{writes}\n\nToute version existante de ces fichiers est d’abord copiée dans {backup}.',
+    { target: plan.target, writes: plan.writes.join(', '), backup: plan.backup }
+  );
+  return remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'question',
+    title,
+    message,
+    detail: relocate + (extra ? extra + '\n\n' : '') + files,
+    buttons: [t('cancel', 'Cancel', 'Annuler'), gameHealthActionLabel(action)],
+    defaultId: 1,
+    cancelId: 0,
+    noLink: true,
+  });
+}
+
+/*
+  REPAIR_DATA since #194: achievements.json, stats.json and the icons they name, nothing else. An
+  existing schema keeps its format; progress and stat definitions come from the generator when
+  Settings uses Advanced steam_settings, else from games-infos-datas, and the dialog says which.
+*/
+async function ghRewriteAchievementSchema(appid, game) {
+  const writableAppid = ghWritableAppid(appid, game);
+  const { report: diagnosed, goldberg: diagnosedGoldberg } = ghDiagnosedGoldberg();
+  const advanced = ghUsesGenerator();
+  // Asked for by the user, and the panel promises the missing icons: never gated on the automatic-repair setting.
+  const plan = gameHealthRepair.planSchemaRewrite({
+    steamSettings: (diagnosedGoldberg && diagnosedGoldberg.steamSettings) || game.steamSettings,
+    gameDir: game.gameDir,
+    achievementCount: (game.achievement && game.achievement.total) || 0,
+    downloadIcons: true,
+    dllDirs: (diagnosedGoldberg && diagnosedGoldberg.dllDirs) || [],
+    exePath: (diagnosed && diagnosed.technical && diagnosed.technical.exe) || game.exe || '',
+    advanced,
+  });
+  const source = advanced
+    ? t('gh-confirm-schema-source-generator', 'Progress and stat definitions come from generate_emu_config, as chosen in Settings (Advanced steam_settings), with the Steam sign-in it saved.', 'Les définitions de progression et de statistiques viennent de generate_emu_config, comme choisi dans les Paramètres (steam_settings avancé), avec la connexion Steam qu’il a enregistrée.')
+    : t('gh-confirm-schema-source-community', 'Progress and stat definitions come from the public games-infos-datas list. Choose Advanced steam_settings in Settings to take them from generate_emu_config instead.', 'Les définitions de progression et de statistiques viennent de la liste publique games-infos-datas. Choisis steam_settings avancé dans les Paramètres pour les prendre plutôt de generate_emu_config.');
+  const confirmed = ghConfirmFiles({
+    title: t('gh-confirm-repair-title', 'Rewrite the achievement data?', 'Réécrire les données de succès ?'),
+    message: t('gh-confirm-schema-message', 'AW Next will update this game’s achievement list, its progress and stat definitions, and any missing icon. No other emulator file is changed.', 'AW Next va mettre à jour la liste des succès de ce jeu, ses définitions de progression et de statistiques, et les icônes manquantes. Aucun autre fichier de l’émulateur n’est modifié.'),
+    plan,
+    action: gameHealth.ACTION.REPAIR_DATA,
+    extra: source,
+  });
+  if (confirmed !== 1) return false;
+
+  const pushProgress = ghThrottledProgress();
+  let summary;
+  try {
+    setGameHealthProgress({ phase: 'fetch' });
+    const reference = await ghSchemaReference.load({
+      appid: writableAppid,
+      cacheDir: getUserDataPath(),
+      advanced,
+      genEmu: advanced ? require(path.join(appPath, 'parser/genEmuConfig.js')) : null,
+      toolCacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'emuConfig'),
+      log: debug,
+    });
+    debug.log(`[health] ${appid} schema reference: ${reference.origin || 'none'} (${reference.progress.length} progress, ${reference.stats.length} stats)`);
+    const links = (diagnosedGoldberg && diagnosedGoldberg.save && diagnosedGoldberg.save.file)
+      ? goldberg.inferredStatLinks({ steamSettings: plan.target, schemaList: game.achievement && game.achievement.list, saveFolders: [path.dirname(diagnosedGoldberg.save.file)] })
+      : [];
+    setGameHealthProgress({ phase: 'backup', done: 0, total: 0 });
+    const roots = () => repairJournal.gbeRoots({ settingsDirs: [plan.target] });
+    summary = await journaledRepair(appid, gameHealth.ACTION.REPAIR_DATA, roots, () =>
+      gameHealthRepair.rewriteAchievementSchema({
+        gbeSchema: ghSchemaFiles,
+        plan,
+        schema: game,
+        emulator: (diagnosedGoldberg && diagnosedGoldberg.emulator) || 'gbe',
+        language: (app.config.achievement && app.config.achievement.lang) || 'english',
+        reference,
+        links,
+        onProgress: pushProgress,
+        downloadIcon: ghIconDownloader(writableAppid),
+      })
+    );
+  } finally {
+    setGameHealthProgress(null);
+  }
+  await ghShowSchemaResult(summary);
+  return true;
+}
+
+// See steam.js resolveWorkingIconUrl: a new appid's raw icon url can 404 on Steam's primary CDN.
+function ghIconDownloader(writableAppid) {
+  const request = require('request-zero');
+  return async (url, dir) => {
+    const resolved = (await steamParser.resolveWorkingIconUrl(writableAppid, url)) || url;
+    const r = await request.download(resolved, dir);
+    return r && r.path;
+  };
+}
+
+// Coalesced progress paints: a big game reports hundreds of icons (see setGameHealthProgress).
+function ghThrottledProgress() {
+  const PROGRESS_PAINT_MS = 80;
+  let lastPaint = 0;
+  let lastPhase = '';
+  return (progress) => {
+    const now = Date.now();
+    const phaseChanged = progress && progress.phase !== lastPhase;
+    const finished = progress && (progress.phase === 'done' || (progress.total > 0 && progress.done >= progress.total));
+    if (!phaseChanged && !finished && now - lastPaint < PROGRESS_PAINT_MS) return;
+    lastPaint = now;
+    lastPhase = progress ? progress.phase : '';
+    setGameHealthProgress(progress);
+  };
+}
+
+// Async, so the progress bar is gone before the modal freezes the frame (see the old repair).
+function ghShowSchemaResult(summary) {
+  const s = summary.schema;
+  const changes = s.added.length + s.filled + s.progress.added.length + s.progress.updated.length + summary.stats.added.length + summary.stats.updated.length;
+  const lines = [];
+  if (!s.kept) lines.push(t('repair-complete-message', 'Wrote {count} achievements to {path}', '{count} succès écrits dans {path}', { count: summary.achievementsJson.length, path: summary.steamSettings }));
+  else if (changes === 0) lines.push(t('gh-schema-result-unchanged', 'The achievement list was already complete: nothing was changed.', 'La liste des succès était déjà complète : rien n’a été modifié.'));
+  else {
+    lines.push(
+      t('gh-schema-result-kept', 'The existing file was kept in its own format: {added} achievement(s) added, {filled} text(s) filled, {progress} progress definition(s) and {stats} stat(s) updated.', 'Le fichier existant a été gardé dans son format : {added} succès ajouté(s), {filled} texte(s) complété(s), {progress} définition(s) de progression et {stats} statistique(s) mises à jour.', {
+        added: s.added.length,
+        filled: s.filled,
+        progress: s.progress.added.length + s.progress.updated.length,
+        stats: summary.stats.added.length + summary.stats.updated.length,
+      })
+    );
+  }
+  lines.push(t('diagnosis-icons-summary', 'icons: {downloaded} downloaded, {failed} failed, {skipped} skipped', 'icônes : {downloaded} téléchargées, {failed} en échec, {skipped} ignorées', summary.icons));
+  if (summary.icons.unavailable) lines.push(t('diagnosis-icons-unavailable', 'Steam has no achievement artwork for this game yet, so no icon could be downloaded. The achievement list itself is complete; run the repair again once the artwork is published.', "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relancez la réparation une fois les illustrations publiées."));
+  return remote.dialog.showMessageBox(remote.getCurrentWindow(), {
+    type: 'info',
+    title: t('repair-complete', 'Repair complete', 'Réparation terminée'),
+    message: lines[0],
+    detail: lines.slice(1).join('\n'),
+    noLink: true,
+  });
+}
+
+/*
+  WRITE_CONFIG: the settings files the old rewrite also stamped, now only on request and only what
+  the emulator gets no value for. A game's own identity is replaced only when "Write account name
+  and language" is on AND the user says yes here: a per-game Steam ID can own its saves (#196).
+*/
+async function ghCompleteEmulatorSettings(appid, game) {
+  const writableAppid = ghWritableAppid(appid, game);
+  const { report: diagnosed, goldberg: diagnosedGoldberg } = ghDiagnosedGoldberg();
+  if (!diagnosedGoldberg) return false;
+  const base = gameHealthRepair.planAchievementDataRepair({
+    steamSettings: diagnosedGoldberg.steamSettings || game.steamSettings,
+    gameDir: game.gameDir,
+    dllDirs: diagnosedGoldberg.dllDirs || [],
+    exePath: (diagnosed && diagnosed.technical && diagnosed.technical.exe) || game.exe || '',
+  });
+  const emulatorOptions = (app.config && app.config.emulator) || {};
+  const step = ghSettingsStep.plan({
+    steamSettings: base.target,
+    gameDir: game.gameDir,
+    codes: (diagnosedGoldberg.issues || []).map((issue) => issue && issue.code),
+    manageDlc: emulatorOptions.manageDlc === true,
+    identity: goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
+    stamp: emulatorOptions.stampIdentity === true,
+    emulator: diagnosedGoldberg.emulator || 'gbe',
+  });
+  if (step.writes.length === 0) {
+    remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+      type: 'info',
+      title: gameHealthActionLabel(gameHealth.ACTION.WRITE_CONFIG),
+      message: t('gh-config-nothing', 'Nothing to add: the emulator already gets every one of these settings.', 'Rien à ajouter : l’émulateur reçoit déjà chacun de ces réglages.'),
+      noLink: true,
+    });
+    return false;
+  }
+  const title = t('gh-confirm-config-title', 'Complete the emulator settings?', 'Compléter les réglages de l’émulateur ?');
+  const confirmed = ghConfirmFiles({
+    title,
+    message: t('gh-confirm-config-message', 'AW Next will add only the settings this game is missing. What the emulator’s global settings already give is left to them, and the achievement list is not touched.', 'AW Next va ajouter uniquement les réglages qui manquent à ce jeu. Ce que les réglages globaux de l’émulateur donnent déjà leur est laissé, et la liste des succès n’est pas touchée.'),
+    plan: { ...base, writes: step.writes },
+    action: gameHealth.ACTION.WRITE_CONFIG,
+  });
+  if (confirmed !== 1) return false;
+  const replaceIdentity = step.conflicts.length > 0 && ghAskReplaceIdentity(step.conflicts);
+  const roots = () => repairJournal.gbeRoots({ settingsDirs: [base.target], files: launchAppIdFiles(game.gameDir) });
+  const result = await journaledRepair(appid, gameHealth.ACTION.WRITE_CONFIG, roots, () =>
+    ghSettingsStep.apply({ plan: step, appid: writableAppid, fetchDlc: (id) => steamParser.getDLCList(id), replaceIdentity })
+  );
+  debug.log(`[health] ${appid} emulator settings completed in ${result.steamSettings}: ${result.written.join(', ') || 'nothing'} (identity ${replaceIdentity ? 'replaced' : 'kept'})`);
+  return true;
+}
+
+// Yes only on an explicit click: the default keeps the game's own account.
+function ghAskReplaceIdentity(conflicts) {
+  const answer = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
+    type: 'warning',
+    title: gameHealthActionLabel(gameHealth.ACTION.WRITE_CONFIG),
+    message: t('gh-confirm-config-identity', 'This game has its own account in configs.user.ini ({current}). Replace it with the one from Settings ({wanted})? The game’s saves may be tied to it.', 'Ce jeu a son propre compte dans configs.user.ini ({current}). Le remplacer par celui des Paramètres ({wanted}) ? Les sauvegardes du jeu peuvent y être liées.', {
+      current: conflicts.map((c) => `${c.key}=${c.current}`).join(', '),
+      wanted: conflicts.map((c) => `${c.key}=${c.wanted}`).join(', '),
+    }),
+    buttons: [t('gh-keep-game-identity', 'Keep the game’s', 'Garder celui du jeu'), t('gh-replace-identity', 'Replace', 'Remplacer')],
+    defaultId: 0,
+    cancelId: 0,
+    noLink: true,
+  });
+  return answer === 1;
+}
+
 function undoLastRepair(appid, game) {
   const userDataPath = getUserDataPath();
   const preview = repairJournal.undo({ userDataPath, appid: game.appid || appid, dryRun: true });
@@ -1238,7 +1492,11 @@ function undoLastRepair(appid, game) {
 
 // SET_ONLINE: the one offline= line of a ColdClient loader's settings, after a confirmation.
 async function turnEmulatorOfflineModeOff(appid, game) {
-  const settings = loaderSteamSettings(crackLoaderDetect.detectWorkingCrackLoader(game.gameDir));
+  // A ColdClient loader's folder, else the steam_settings the diagnosis read (a plain GBE setup,
+  // which the schema rewrite no longer touches since #194).
+  const diagnosed = $('#game-health').data('report');
+  const diagnosedSettings = (diagnosed && diagnosed.technical && diagnosed.technical.goldberg && diagnosed.technical.goldberg.steamSettings) || '';
+  const settings = loaderSteamSettings(crackLoaderDetect.detectWorkingCrackLoader(game.gameDir)) || diagnosedSettings;
   if (!goldberg.offlineModeIn(settings)) return true;
   const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
     type: 'question',
@@ -1409,6 +1667,7 @@ function showGameHealthChecking() {
 */
 const GAME_HEALTH_ACTIONS_NEEDING_RESCAN = new Set([
   gameHealth.ACTION.REPAIR_DATA,
+  gameHealth.ACTION.WRITE_CONFIG,
   gameHealth.ACTION.REPAIR_UPLAY,
   gameHealth.ACTION.REPAIR_UPLAY_TICKET,
   gameHealth.ACTION.REMOVE_UPLAY_TICKET,
@@ -1512,7 +1771,7 @@ async function testGameNotification(appid, kind, button) {
 */
 async function runGameHealthAction(appid, action, button) {
   const game = gameList.find((g) => g.appid == appid) || {};
-  const writableAppid = /^[0-9]+$/.test(String(appid)) ? String(appid) : game.steamappid || null;
+  const writableAppid = ghWritableAppid(appid, game);
 
   /*
     Locate the game. The picker opens from here rather than by jumping to the Executable tab: the
@@ -1821,130 +2080,8 @@ async function runGameHealthAction(appid, action, button) {
     }
   }
 
-  if (action === gameHealth.ACTION.REPAIR_DATA) {
-    /*
-      Repair the folder the diagnosis actually read, not a guess: `game.steamSettings` is absent for
-      many games, and the naive fallback (<gameDir>/steam_settings) is wrong when the emulator lives
-      in a nested engine directory (e.g. Unreal's Binaries/Win64) - it used to create an empty
-      steam_settings the emulator never reads. Repair the report's own resolved path instead, and
-      let the plan move it beside the dll when the diagnosis found it somewhere the emulator cannot
-      read (SETTINGS_NOT_BESIDE_DLL).
-    */
-    const diagnosed = $('#game-health').data('report');
-    const diagnosedGoldberg = (diagnosed && diagnosed.technical && diagnosed.technical.goldberg) || null;
-    const diagnosedSettings = (diagnosedGoldberg && diagnosedGoldberg.steamSettings) || '';
-    const plan = gameHealthRepair.planAchievementDataRepair({
-      steamSettings: diagnosedSettings || game.steamSettings,
-      gameDir: game.gameDir,
-      achievementCount: (game.achievement && game.achievement.total) || 0,
-      downloadIcons: !!(app.config.achievement && app.config.achievement.goldbergDownloadIcons),
-      // ...and when that folder has no dll beside it, the repair moves to the one that does: the
-      // emulator reads settings only from its own dll's folder, so rewriting the other would look
-      // like a fix and change nothing in the game.
-      dllDirs: (diagnosedGoldberg && diagnosedGoldberg.dllDirs) || [],
-      exePath: (diagnosed && diagnosed.technical && diagnosed.technical.exe) || game.exe || '',
-    });
-    // The one write that changes what the game is told rather than what it reads, so it is named
-    // before the click, like a relocation.
-    const goesOnline = !!(diagnosedGoldberg && (diagnosedGoldberg.issues || []).some((issue) => issue && issue.code === 'EMULATOR_OFFLINE'));
-    const confirmed = remote.dialog.showMessageBoxSync(remote.getCurrentWindow(), {
-      type: 'question',
-      title: t('gh-confirm-repair-title', 'Rewrite the achievement data?', 'Réécrire les données de succès ?'),
-      message: t('gh-confirm-repair-message', 'AW Next will write the achievement list, icons and emulator settings for this game.', 'AW Next va écrire la liste des succès, les icônes et les réglages de l’émulateur de ce jeu.'),
-      detail:
-        // A relocation changes what the button does, so it is said before the file list, not
-        // discovered afterwards in a folder the user did not expect.
-        (plan.relocatedFrom
-          ? t(
-              'gh-confirm-repair-relocate',
-              'The settings in {from} are not beside the emulator file, so the game never reads them. They are written next to it instead, and the old folder is left untouched.',
-              'Les réglages de {from} ne sont pas à côté du fichier de l’émulateur : le jeu ne les lit jamais. Ils sont donc écrits à côté de celui-ci, et l’ancien dossier reste intact.',
-              { from: plan.relocatedFrom }
-            ) + '\n\n'
-          : '') +
-        (goesOnline ? gameHealthOfflineTurnedOffLine() + '\n\n' : '') +
-        t(
-          'gh-confirm-repair-detail',
-          'Files written in:\n{target}\n\n{writes}\n\nAny existing version of these files is copied to {backup} first.',
-          'Fichiers écrits dans :\n{target}\n\n{writes}\n\nToute version existante de ces fichiers est d’abord copiée dans {backup}.',
-          { target: plan.target, writes: plan.writes.join(', '), backup: plan.backup }
-        ),
-      buttons: [t('cancel', 'Cancel', 'Annuler'), t('gh-action-repair-data', 'Rewrite the achievement data', 'Réécrire les données de succès')],
-      defaultId: 1,
-      cancelId: 0,
-      noLink: true,
-    });
-    if (confirmed !== 1) return false;
-
-    const request = require('request-zero');
-    /*
-      Coalesce the per-icon updates: a big game reports hundreds of them, and re-laying out the
-      panel that often would make the repair feel slower. Throttled on a timestamp, not
-      requestAnimationFrame: rAF is undependable here since backgroundThrottling stops delivering it
-      when the window isn't composited. A phase change always paints, so the label never lags behind.
-    */
-    const PROGRESS_PAINT_MS = 80;
-    let lastProgressPaint = 0;
-    let lastProgressPhase = '';
-    const pushProgress = (progress) => {
-      const now = Date.now();
-      const phaseChanged = progress && progress.phase !== lastProgressPhase;
-      const finished = progress && (progress.phase === 'done' || (progress.total > 0 && progress.done >= progress.total));
-      if (!phaseChanged && !finished && now - lastProgressPaint < PROGRESS_PAINT_MS) return;
-      lastProgressPaint = now;
-      lastProgressPhase = progress ? progress.phase : '';
-      setGameHealthProgress(progress);
-    };
-    setGameHealthProgress({ phase: 'backup', done: 0, total: 0 });
-    // try/finally, not a plain await: a repair that throws must still take the bar down with it,
-    // otherwise the panel is left showing progress for something that already stopped.
-    let summary;
-    try {
-      const roots = () => repairJournal.gbeRoots({ settingsDirs: [plan.target], files: launchAppIdFiles(game.gameDir) });
-      summary = await journaledRepair(appid, action, roots, () =>
-        gameHealthRepair.repairAchievementData({
-          goldberg,
-          plan,
-          appid: writableAppid,
-          schema: game,
-          onProgress: pushProgress,
-          downloadIcon: async (url, dir) => {
-            const resolved = (await steamParser.resolveWorkingIconUrl(writableAppid, url)) || url;
-            const r = await request.download(resolved, dir);
-            return r && r.path;
-          },
-          fetchDlc: (id) => steamParser.getDLCList(id),
-          fetchStats: (id) => require(path.join(appPath, 'parser/statProgress.js')).fetchCommunityStats(id, { cacheDir: getUserDataPath() }),
-          ...goldberg.userIdentity(app.config, app.config?.achievement?.lang, { explicit: true }),
-          // An explicit repair must be able to clear NO_USER_CONFIG / BAD_USER_CONFIG. Without this
-          // the file was only written when the app had a username or language to stamp into it, so on
-          // a default install the repair skipped it entirely and both warnings survived every run.
-          fillUserDefaults: true,
-          online: goesOnline,
-        })
-      );
-    } finally {
-      setGameHealthProgress(null);
-    }
-    /*
-      Async dialog, not showMessageBoxSync: the sync one freezes the renderer on the spot, so the
-      bar keeps whatever frame it last painted. The 80ms paint throttle means that frame is some
-      arbitrary mid-count - a repair that gave up early left "17 / 150" sitting behind the modal,
-      reading as a hang. Awaiting the async form lets the hide above reach the screen first.
-    */
-    await remote.dialog.showMessageBox(remote.getCurrentWindow(), {
-      type: 'info',
-      title: t('repair-complete', 'Repair complete', 'Réparation terminée'),
-      message: t('repair-complete-message', 'Wrote {count} achievements to {path}', '{count} succès écrits dans {path}', {
-        count: summary.achievementsJson.length,
-        path: summary.steamSettings,
-      }),
-      detail: t('diagnosis-icons-summary', 'icons: {downloaded} downloaded, {failed} failed, {skipped} skipped', 'icônes : {downloaded} téléchargées, {failed} en échec, {skipped} ignorées', summary.icons)
-        + (summary.icons.unavailable ? '\n' + t('diagnosis-icons-unavailable', 'Steam has no achievement artwork for this game yet, so no icon could be downloaded. The achievement list itself is complete; run the repair again once the artwork is published.', "Steam n'a pas encore d'illustrations de succès pour ce jeu : aucune icône n'a pu être téléchargée. La liste des succès est complète ; relancez la réparation une fois les illustrations publiées.") : ''),
-      noLink: true,
-    });
-    return true;
-  }
+  if (action === gameHealth.ACTION.REPAIR_DATA) return ghRewriteAchievementSchema(appid, game);
+  if (action === gameHealth.ACTION.WRITE_CONFIG) return ghCompleteEmulatorSettings(appid, game);
 
   if (action === gameHealth.ACTION.SET_ONLINE) return turnEmulatorOfflineModeOff(appid, game);
   if (action === gameHealth.ACTION.UNDO_ONLINE) return putEmulatorOfflineModeBack(appid, game);
@@ -2012,9 +2149,9 @@ async function runGameHealthAction(appid, action, button) {
         (switching
           ? '\n\n' +
             t(
-              'gh-confirm-switch-runtime-detail',
-              'The other crack’s configuration files are renamed to .bak in the same folders. Nothing is deleted, and the achievement data still has to be written afterwards.',
-              'Les fichiers de configuration de l’autre crack sont renommés en .bak dans les mêmes dossiers. Rien n’est supprimé, et les données de succès restent à écrire ensuite.'
+              'gh-confirm-switch-runtime-together',
+              'The other crack’s configuration files are renamed to .bak in the same folders, and the emulator’s steam_settings (game ID and achievement list) is written in the same step. Nothing is deleted, and if any part fails everything is put back.',
+              'Les fichiers de configuration de l’autre crack sont renommés en .bak dans les mêmes dossiers, et le steam_settings de l’émulateur (identifiant du jeu et liste des succès) est écrit dans la même étape. Rien n’est supprimé, et si une partie échoue tout est remis en place.'
             )
           : '') +
         (crackLoaderDetect.servesOnlinePlay(game.gameDir)
@@ -2079,11 +2216,38 @@ async function runGameHealthAction(appid, action, button) {
     // Read by the result dialog below, so declared out here: a const inside the callback made every
     // successful switch end on "sidelined is not defined", with the game already switched.
     let sidelined = [];
+    // A switch writes the dll and a minimal steam_settings as one record (see switchToSupportedRuntime).
+    const switchSettings = switching ? steamSettings || path.join(plan.dirs[0], 'steam_settings') : steamSettings;
+    let reference = {};
+    if (switching) {
+      setGameHealthProgress({ phase: 'fetch' });
+      reference = await ghSchemaReference.load({ appid: ghWritableAppid(appid, game), cacheDir: getUserDataPath(), log: debug }).catch((err) => {
+        debug.log(`[health] ${appid} schema reference unavailable for the switch => ${formatErr(err)}`);
+        return {};
+      });
+      setGameHealthProgress({ phase: 'runtime' });
+    }
     try {
-      const roots = repairJournal.gbeRoots({ runtimeDirs: [game.gameDir, ...plan.dirs], settingsDirs: [steamSettings] });
+      const roots = repairJournal.gbeRoots({ runtimeDirs: [game.gameDir, ...plan.dirs], settingsDirs: [switchSettings] });
       summary = await journaledRepair(appid, action, roots, () => {
-        sidelined = switching ? crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]) : [];
-        if (sidelined.length > 0) debug.log(`[health] set aside ${sidelined.length} loader config file(s): ${sidelined.join(', ')}`);
+        if (switching) {
+          return gameHealthRepair.switchToSupportedRuntime({
+            gbeInstaller,
+            goldberg,
+            plan,
+            steamSettings,
+            appid: ghWritableAppid(appid, game),
+            schema: game,
+            reference,
+            dlls,
+            log: debug,
+            sideline: () => {
+              sidelined = crackLoaderDetect.disableLoaderMarkers([game.gameDir, ...plan.dirs]);
+              if (sidelined.length > 0) debug.log(`[health] set aside ${sidelined.length} loader config file(s): ${sidelined.join(', ')}`);
+              return sidelined;
+            },
+          });
+        }
         return gameHealthRepair.installEmulatorRuntime({
           gbeInstaller,
           plan,
@@ -2108,9 +2272,9 @@ async function runGameHealthAction(appid, action, button) {
         preFixBackup && preFixBackup.backupDir ? t('n-nbackup-before-fix-nx', 'Backup before fix:\n{dir}', 'Sauvegarde avant fix:\n{dir}', { dir: preFixBackup.backupDir }) : '',
         sidelined.length > 0
           ? t(
-              'gh-runtime-switched-detail',
-              'The previous crack’s configuration was renamed to .bak. Rewrite the achievement data next, then launch the game once.',
-              'La configuration du crack précédent a été renommée en .bak. Réécris ensuite les données de succès, puis lance le jeu une fois.'
+              'gh-runtime-switched-ready',
+              'The previous crack’s configuration was renamed to .bak and the achievement data was written. Launch the game once.',
+              'La configuration du crack précédent a été renommée en .bak et les données de succès ont été écrites. Lance le jeu une fois.'
             )
           : '',
       ]

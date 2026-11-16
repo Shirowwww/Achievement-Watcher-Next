@@ -152,7 +152,9 @@ test('emulator options never mark a complete achievement list (#167)', () => {
   assert.equal(checkFor(report, 'achievement-data').level, LEVEL.OK, 'the list is complete');
   assert.notEqual(report.reason, 'achievement-data-incomplete', 'no "some unlocks would be missed"');
   assert.equal(checkFor(report, 'emulator').level, LEVEL.WARN, 'the options stay on the emulator row');
-  assert.ok(report.actions.includes(ACTION.REPAIR_DATA));
+  // Options are written by their own step since #196, never by the schema rewrite.
+  assert.ok(report.actions.includes(ACTION.WRITE_CONFIG), 'the settings step is offered');
+  assert.ok(!report.actions.includes(ACTION.REPAIR_DATA), 'nothing to rewrite in a complete list');
 });
 
 // The tile dot before the full report: the scan's record must give the same grey, or the tile shows

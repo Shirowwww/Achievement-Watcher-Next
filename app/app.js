@@ -6165,7 +6165,7 @@ var app = {
             }
             return lines;
           };
-          const repairGoldbergSetup = async ({ report, gameDir, game, journal = true }) => {
+          const repairGoldbergSetup = async ({ report, gameDir, game, journal = true, interactive = true }) => {
             const request = require('request-zero');
             // Same target resolution as Game Health, and for the same reason: rewriting a
             // steam_settings that has no dll beside it reports success and leaves the game
@@ -6185,6 +6185,14 @@ var app = {
             };
             // Also enable all DLCs (configs.app.ini) and stamp the app's username/language into
             // configs.user.ini - the full GBE setup, not just achievements.json.
+            const identity = goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang);
+            // #196: the game's own account is replaced only with the setting on AND a yes here.
+            const conflicts =
+              app.config?.emulator?.stampIdentity === true
+                ? ghSettingsStep.plan({ steamSettings: target, gameDir, identity, stamp: true }).conflicts
+                : [];
+            // A silent run (showDialog false) asks nothing and so keeps the game's own account.
+            const replaceIdentity = interactive && conflicts.length > 0 && ghAskReplaceIdentity(conflicts);
             const run = () =>
               goldberg.repair({
                 steamSettings: target,
@@ -6199,6 +6207,7 @@ var app = {
                 writeDlc: app.config?.emulator?.manageDlc === true,
                 online: report.issues.some((issue) => issue.code === 'EMULATOR_OFFLINE'),
                 ...goldberg.userIdentity(app.config, schemaLanguage.get(appid) || app.config?.achievement?.lang),
+                replaceIdentity,
               });
             // Inside the emulator fix, that flow's own record already covers these files.
             if (!journal) return run();
@@ -6213,7 +6222,7 @@ var app = {
 
             if (autoRepair && canRepair) {
               try {
-                repaired = await repairGoldbergSetup({ report, gameDir, game, journal: false });
+                repaired = await repairGoldbergSetup({ report, gameDir, game, journal: false, interactive: showDialog });
                 report = goldberg.diagnose({ gameDir, appid: writableAppid, schema: game });
               } catch (err) {
                 repairError = err;
