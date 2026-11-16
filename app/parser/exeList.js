@@ -61,7 +61,58 @@ function firstExistingExecutable(appids, options) {
   return '';
 }
 
+/*
+  Paths as a process path, a picked file and the list spell them, made comparable. Lower case on
+  Linux too: Wine finds files case-insensitively, so argv[0] can be "C:\GAMES\GAME.EXE" for Game.exe.
+  Off Windows the real path is taken first: a dialog that went through ~/.steam/steam names the folder
+  Proton reports as ~/.local/share/Steam. A file that cannot be resolved keeps its spelling.
+*/
+function pathKey(value, platform = process.platform) {
+  let text = String(value || '').trim();
+  if (text && platform !== 'win32') {
+    try {
+      text = fs.realpathSync(text);
+    } catch {
+      /* not on this disk now, or spelled in another case: compared as written */
+    }
+  }
+  return text
+    .replace(/[\\/]+/g, '/')
+    .toLowerCase();
+}
+
+// The reverse lookup, rebuilt only when the file changes: asked once per unmatched new process.
+const reverseLookups = new Map();
+
+function appidForExecutable(filepath, { file = exeListFile(userDataDir()) } = {}) {
+  const key = pathKey(filepath);
+  if (!key) return '';
+  let stamp;
+  try {
+    const stat = fs.statSync(file);
+    stamp = `${stat.size}:${stat.mtimeMs}`;
+  } catch {
+    return '';
+  }
+  let cached = reverseLookups.get(file);
+  if (!cached || cached.stamp !== stamp) {
+    const byPath = new Map();
+    try {
+      const rows = JSON.parse(fs.readFileSync(file, 'utf8'));
+      for (const row of Array.isArray(rows) ? rows : []) {
+        if (row && row.exe && row.appid != null && !byPath.has(pathKey(row.exe))) byPath.set(pathKey(row.exe), String(row.appid));
+      }
+    } catch {
+      return '';
+    }
+    cached = { stamp, byPath };
+    reverseLookups.set(file, cached);
+  }
+  return cached.byPath.get(key) || '';
+}
+
 module.exports.configuredExecutable = configuredExecutable;
+module.exports.appidForExecutable = appidForExecutable;
 module.exports.firstExistingExecutable = firstExistingExecutable;
 
 async function getCurrentList() {

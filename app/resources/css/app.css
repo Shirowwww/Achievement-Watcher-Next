@@ -694,6 +694,10 @@ p {
 :where(.gh-state[data-state='not-tracking'], #settings .uplay-r2-status[data-state='error']) {
   --chip-state: var(--danger);
 }
+/* Playtime only is a fact, not a fault: the neutral text colour, like the add-game dialog's verdict. */
+:where(.gh-state)[data-state='playtime-only'] {
+  --chip-state: var(--text-muted);
+}
 :where(.gh-state, #settings .uplay-r2-status)[data-state] {
   border-color: color-mix(in srgb, var(--chip-state, var(--control-border)) 36%, transparent);
   background: color-mix(in srgb, var(--chip-state, var(--control-bg)) 12%, transparent);
@@ -2635,6 +2639,11 @@ body.is-resizing #game-list {
 #game-list .game-box .info .health-badge.not-tracking,
 #achievement .wrapper > .header .title .health-badge.not-tracking {
   background: var(--danger);
+}
+
+#game-list .game-box .info .health-badge.playtime-only,
+#achievement .wrapper > .header .title .health-badge.playtime-only {
+  background: var(--text-muted);
 }
 
 /* Ownership indicator in .game-meta, never an absolute layer over the cover. A bare colour dot

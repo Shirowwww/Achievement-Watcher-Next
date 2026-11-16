@@ -13,7 +13,8 @@ const { loadSteamData } = require('../steam.js');
 const { buildBinaryIndex, buildSeededSessions, getBinaryMatches, mergeGameIndexes, pickGameForProcess, snapshotActiveGames } = require('./seed.js');
 const { createPollingProcessMonitor } = require('./pollingProcessMonitor.js');
 const { userDataDir } = require('../util/userData.js');
-const { configuredExecutable } = require(sharedAppModulePath('parser/exeList.js'));
+const { configuredExecutable, appidForExecutable } = require(sharedAppModulePath('parser/exeList.js'));
+const { isLaunchBootstrapper } = require(sharedAppModulePath('util/launchBootstrappers.js'));
 const { gameIndexFile, gameIndexCatalogueFile, optionsFile } = require(sharedAppModulePath('util/dataLayout.js'));
 const { writeFileAtomicSync } = require(sharedAppModulePath('util/replaceFile.js'));
 const watchdogSettings = require('../settings.js');
@@ -348,6 +349,18 @@ function findGameForInterpreterChild(process, filepath, list = gameIndex) {
   return null;
 }
 
+/*
+  The executable the user configured for a game (cfg/exeList.db) names that game even when the index
+  watches another binary or none (#193). A launcher is left out: it hands over to the game, which the
+  index already follows, and a session opened on it would end when it exits.
+*/
+function findGameForConfiguredExe(filepath, list = gameIndex, appidFor = appidForExecutable) {
+  if (!filepath || isLaunchBootstrapper(filepath)) return null;
+  const appid = appidFor(filepath);
+  if (!appid) return null;
+  return (list || []).find((game) => game && normalizeAppid(game.appid) === normalizeAppid(appid)) || null;
+}
+
 // The shipped mute list names java.exe and javaw.exe (system-wide noise), yet Steam starts a Java
 // game as <game>\jre\bin\javaw.exe (#154): a muted interpreter a known game's folder claims is kept.
 function shouldMuteBinary(process, filepath, muteFiles, list = gameIndex) {
@@ -564,7 +577,7 @@ async function init() {
     // A spawned interpreter never matches by binary name; a known game's install folder is a
     // stronger signal than the generic mute-by-path filter below, so it is tried first and is never
     // muted by it (a bundled JRE regularly sits under Program Files, one of the muted roots).
-    let game = games.length === 0 ? findGameForInterpreterChild(process, filepath) : null;
+    let game = games.length === 0 ? findGameForInterpreterChild(process, filepath) || findGameForConfiguredExe(filepath) : null;
     // The appid Steam (or umu) launched this process for; always '' on Windows.
     const launchAppid = tasklist.getLaunchAppid(pid);
 
@@ -819,6 +832,7 @@ module.exports = {
   isInterpreterProcess,
   isSteamClientProcess,
   findGameForInterpreterChild,
+  findGameForConfiguredExe,
   shouldMuteBinary,
   candidateConfigDirs,
   relatedToFolder,

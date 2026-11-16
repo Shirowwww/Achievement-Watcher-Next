@@ -8,6 +8,7 @@ const unrealLayout = require(path.join(__dirname, '..', 'util', 'unrealLayout.js
 const { isElf } = require(path.join(__dirname, '..', 'util', 'elf.js'));
 const { isExecutableImage } = require(path.join(__dirname, '..', 'util', 'pe.js'));
 const saveRoots = require(path.join(__dirname, 'saveRoots.js'));
+const { ANTI_CHEAT_BOOTSTRAPPERS, battlEyeHandsOverTo } = require(path.join(__dirname, '..', 'util', 'launchBootstrappers.js'));
 
 // Hard-exclude: never a game executable (installers, redists, crash handlers, …).
 const EXE_EXCLUDE = [
@@ -131,6 +132,8 @@ const SOFT_PENALTY = [
   /richpresence/i,
   /crashpad/i,
   /helper/i,
+  // start_protected_game.exe and its kind: Steam declares them, then the game runs under its own name (#193).
+  ...ANTI_CHEAT_BOOTSTRAPPERS,
 ];
 
 // Directories never worth descending into.
@@ -416,7 +419,8 @@ function scoredCandidates(gameDir, gameName, opts = {}) {
     const sim = nameSimilarity(gameName, base);
     const sizeFactor = c.size / maxSize;
     const candidateDir = path.resolve(c.dir).toLowerCase();
-    const softHit = SOFT_PENALTY.some((r) => r.test(c.name));
+    // A "<game>_BE.exe" is BattlEye's starter only beside the game it is named after (#193).
+    const softHit = SOFT_PENALTY.some((r) => r.test(c.name)) || (/_be\.exe$/i.test(c.name) && candidates.some((other) => other !== c && battlEyeHandsOverTo(c.name, other.name)));
     let soft = softHit ? PENALTY_SOFT : 0;
     if (/-l$/i.test(base) && basesInSameDir.has(`${candidateDir}|${base.replace(/-l$/i, '')}`)) {
       soft += PENALTY_SHADOWED_L_SUFFIX;

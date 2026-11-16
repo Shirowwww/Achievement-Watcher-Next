@@ -7,7 +7,11 @@
   testable without a window, install or locale bundle.
 */
 
-const STATE = { READY: 'ready', ATTENTION: 'attention', NOT_TRACKING: 'not-tracking' };
+const { baseName, startsGame } = require('./launchBootstrappers.js');
+
+// PLAYTIME_ONLY is neutral, not a fault: the game is watched for play time, and nothing on this PC
+// records its unlocks (no emulator, no save, no store account) (#197).
+const STATE = { READY: 'ready', ATTENTION: 'attention', NOT_TRACKING: 'not-tracking', PLAYTIME_ONLY: 'playtime-only' };
 const LEVEL = { OK: 'ok', WARN: 'warn', FAIL: 'fail', INFO: 'info' };
 
 // Repair actions. Each one maps to a capability AW Next already has - nothing here is aspirational.
@@ -245,9 +249,10 @@ function hasNoAchievements(signals) {
   return !!(signals.achievements && signals.achievements.none);
 }
 
-// Repairable by the same button, but about what the emulator tells the game rather than the list:
-// marking the data row for it made the panel say the achievement list did not match the game.
-const NOT_ABOUT_THE_LIST = new Set(['EMULATOR_OFFLINE']);
+// Only issues about the list itself mark this row. The same button also fixes offline mode, the
+// ticket and account options, but those belong to the emulator row: marking this one for them made
+// the panel say some unlocks would be missed on a complete list (#167).
+const LIST_TOPICS = new Set(['schema', 'icons']);
 
 function achievementDataCheck(signals) {
   const total = num(signals.achievements && signals.achievements.total);
@@ -269,7 +274,7 @@ function achievementDataCheck(signals) {
     const missingIcons = (goldberg.achievements && goldberg.achievements.missingIcons) || [];
     const repairable = issuesAtLevel(goldberg, 'error')
       .concat(issuesAtLevel(goldberg, 'warning'))
-      .some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code) && !NOT_ABOUT_THE_LIST.has(issue.code));
+      .some((issue) => REPAIRABLE_GOLDBERG_CODES.has(issue.code) && LIST_TOPICS.has(ISSUE_TOPIC[issue.code]));
     if (missing.length > 0) {
       return check('achievement-data', LEVEL.FAIL, {
         params: { total, missing: missing.length },
@@ -384,11 +389,30 @@ function coldClientFindings(signals, goldberg) {
   };
 }
 
+/*
+  Three separate facts (#197): the achievement list is known, the game is watched for play time, and
+  something on this PC records its unlocks. A game added by hand with a Steam appid has the first two
+  and none of the third: no emulator or crack in its folder, no save being read, no store account
+  behind it. That is a playtime-only game, not a ready one. Any unlock already seen proves a source,
+  and so does any other card: the library found it through a reader of its unlocks.
+*/
+function noUnlockSource(signals) {
+  const achievements = signals.achievements || {};
+  if (!signals.manual && String(signals.source || '').toLowerCase() !== 'manual') return false;
+  if (hasNoAchievements(signals) || num(achievements.total) <= 0 || num(achievements.unlocked) > 0) return false;
+  if (signals.processTracking === false || signals.officialPlatform || signals.steamClientServed || signals.spacewar) return false;
+  if (signals.emulated || signals.goldberg || signals.uplay || signals.nemirtingasEpic) return false;
+  if ((signals.crackLoader && signals.crackLoader.name) || loaderFromSceneSaves(signals)) return false;
+  return !(Array.isArray(signals.saveSources) && signals.saveSources.length > 0);
+}
+
 function emulatorCheck(rawSignals) {
   const signals = rawSignals.crackLoader && rawSignals.crackLoader.name ? rawSignals : { ...rawSignals, crackLoader: loaderFromSceneSaves(rawSignals) };
   // An emulator setup over a game with no achievements has nothing to read and nothing to repair.
   // Diagnosing it anyway turned an inert folder into a list of faults on a game that is fine.
   if (hasNoAchievements(signals)) return null;
+  // Said as a fact, not a fault: the emulator fix in the right-click menu is how to change it.
+  if (noUnlockSource(signals)) return check('emulator', LEVEL.INFO, { params: { noSource: true } });
   const offlineServedBy = serverAwardedOffline(signals);
   if (offlineServedBy) {
     return check('emulator', LEVEL.FAIL, { blocking: true, params: { servedBy: offlineServedBy, serverAwarded: true } });
@@ -579,8 +603,9 @@ function uplayCheck(signals) {
 // Has anything actually been unlocked or recorded yet: "has progress data" vs "has nowhere to
 // read progress from" is the distinction that matters - a genuine 0% game is not a fault.
 function progressCheck(signals) {
-  // Nothing to unlock, so "nothing unlocked yet" is not a sentence worth printing.
-  if (hasNoAchievements(signals)) return null;
+  // Nothing to unlock, so "nothing unlocked yet" is not a sentence worth printing. Nor with nothing
+  // that could record an unlock: the emulator row already says so.
+  if (hasNoAchievements(signals) || noUnlockSource(signals)) return null;
   const unlocked = num(signals.achievements && signals.achievements.unlocked);
   const save = signals.goldberg && signals.goldberg.save;
   const uplaySave = signals.uplay && signals.uplay.save;
@@ -637,6 +662,13 @@ function countersCheck(signals) {
   return check('counters', LEVEL.INFO, { params, actions: counters.canFetch ? [ACTION.FETCH_PROGRESS] : [] });
 }
 
+// The Watchdog also matches "<name>-Win64-Shipping.exe" on a "<name>.exe" row (seed.binaryMatchesProcess).
+function sameBinary(file, binary) {
+  const a = String(file).toLowerCase();
+  const b = String(binary).toLowerCase();
+  return a === b || a === b.replace(/\.exe$/, '-win64-shipping.exe');
+}
+
 // Live tracking means the watchdog's process monitor matched a running binary; console emulators
 // and official platform libraries use their own watchers, so a missing entry there is normal.
 function trackingCheck(signals) {
@@ -648,6 +680,14 @@ function trackingCheck(signals) {
   // AW Next picks the executable by itself and cannot always tell which is right, so a game that is
   // watched can still be watched on the wrong file: the manual picker stays reachable, but last.
   if (tracking.indexed && tracking.binary) {
+    // The executable set for this game and the one watched differ (#193). On purpose for a launcher
+    // that hands over to the game; otherwise the index is stale and "Watch this game" re-seeds it.
+    const configured = signals.exe && signals.exeExists ? baseName(signals.exe) : '';
+    if (configured && !sameBinary(configured, tracking.binary)) {
+      const params = { binary: tracking.binary, configured };
+      if (startsGame(configured, tracking.binary)) return { ...check('tracking', LEVEL.INFO, { params: { ...params, launcher: true }, actions: [ACTION.CHOOSE_EXE] }), trailing: true };
+      return check('tracking', LEVEL.WARN, { params, actions: [ACTION.START_TRACKING, ACTION.CHOOSE_EXE] });
+    }
     return { ...check('tracking', LEVEL.OK, { params: { binary: tracking.binary }, actions: [ACTION.CHOOSE_EXE] }), trailing: true };
   }
   if (signals.exe && signals.exeExists) return check('tracking', LEVEL.WARN, { actions: [ACTION.START_TRACKING] });
@@ -773,7 +813,8 @@ function explain(state, checks, signals) {
   // Reading unlocks out of a save folder without knowing where the game lives is a real state, and
   // a common one for cracked games. Saying "nothing unlocked yet" here would contradict the chip.
   if (install && install.level === LEVEL.WARN) return { reason: 'install-unknown', params: install.params };
-  if (tracking && tracking.level === LEVEL.WARN) return { reason: 'not-watched', params: tracking.params };
+  if (tracking && tracking.level === LEVEL.WARN) return { reason: tracking.params.configured ? 'tracking-mismatch' : 'not-watched', params: tracking.params };
+  if (state === STATE.PLAYTIME_ONLY) return { reason: 'playtime-only', params: {} };
   // Everything is set up and unlocks are being seen - the last one just could not be announced.
   if (notifications && notifications.level === LEVEL.WARN) {
     return { reason: notifications.params.outcome === 'suppressed' ? 'notification-suppressed' : 'notification-failed', params: notifications.params };
@@ -793,6 +834,7 @@ function deriveState(checks, signals = {}) {
   */
   if (hasNoAchievements(signals)) return STATE.READY;
   if (checks.some((entry) => entry.level === LEVEL.FAIL || entry.level === LEVEL.WARN)) return STATE.ATTENTION;
+  if (noUnlockSource(signals)) return STATE.PLAYTIME_ONLY;
   return STATE.READY;
 }
 
@@ -928,6 +970,10 @@ function scannedState(game) {
     if (record.uplayHealthy === true && total > 0) return STATE.READY;
     return STATE.ATTENTION;
   }
+  // The scan's half of noUnlockSource(): it set noUnlockSource on a hand-added card whose folder
+  // holds no emulator, crack or steam_settings. Without it the dot went green, then grey.
+  const readsSave = !!record.dataPath || (Array.isArray(record.dataPaths) && record.dataPaths.length > 0);
+  if (record.manual && record.noUnlockSource === true && total > 0 && !readsSave && num(record.achievement.unlocked) === 0) return STATE.PLAYTIME_ONLY;
   if (!record.hasSteamApiDll) return STATE.NOT_TRACKING;
   if (record.unconfigured || total <= 0) return STATE.ATTENTION;
   return STATE.READY;

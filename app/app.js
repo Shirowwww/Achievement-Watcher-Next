@@ -3606,6 +3606,12 @@ function healthDotFor(game) {
   if (state === gameHealth.STATE.READY) {
     return { state, label: t('health-dot-ok', 'Achievements are healthy', 'Succès sains') };
   }
+  if (state === gameHealth.STATE.PLAYTIME_ONLY) {
+    return {
+      state,
+      label: t('health-dot-playtime', 'Playtime only: no achievement source is set up for this game', 'Temps de jeu seulement : aucune source de succès configurée pour ce jeu'),
+    };
+  }
   if (state === gameHealth.STATE.NOT_TRACKING) {
     return {
       state,

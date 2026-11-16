@@ -495,6 +495,7 @@ async function readProgressCounters({ appid, saveSources, steamSettings }) {
 function gameHealthStateLabel(state) {
   if (state === gameHealth.STATE.READY) return t('gh-state-ready', 'Ready', 'Prêt');
   if (state === gameHealth.STATE.NOT_TRACKING) return t('gh-state-not-tracking', 'Not tracking', 'Non suivi');
+  if (state === gameHealth.STATE.PLAYTIME_ONLY) return t('gh-state-playtime-only', 'Playtime only', 'Temps de jeu seulement');
   return t('gh-state-attention', 'Needs attention', 'À vérifier');
 }
 
@@ -567,6 +568,19 @@ function gameHealthExplanationText(report) {
       return t('gh-why-no-progress-yet', 'The game is detected and achievement data is available, but no achievement progress has been found yet. The likely issue is the game or emulator configuration rather than notifications.', "Le jeu est détecté et les données de succès sont disponibles, mais aucune progression n'a encore été trouvée. Le problème vient probablement de la configuration du jeu ou de l'émulateur, pas des notifications.");
     case 'install-unknown':
       return t('gh-why-install-unknown', "AW Next is reading this game's achievements from its save files, but doesn't know where the game itself is installed. Locate it to enable playtime tracking and repairs.", "AW Next lit les succès de ce jeu dans ses fichiers de sauvegarde, mais ne sait pas où le jeu est installé. Localise-le pour activer le temps de jeu et les réparations.");
+    case 'playtime-only':
+      return t(
+        'gh-why-playtime-only',
+        'AW Next knows this game and its achievement list, and counts its play time. Nothing on this PC records its unlocks yet (no emulator, save or store account was found), so no achievement will be tracked until one is set up.',
+        "AW Next connaît ce jeu et sa liste de succès, et compte son temps de jeu. Rien sur ce PC n'enregistre encore ses déblocages (aucun émulateur, sauvegarde ou compte de boutique trouvé) : aucun succès ne sera suivi tant que rien n'est configuré."
+      );
+    case 'tracking-mismatch':
+      return t(
+        'gh-why-tracking-mismatch',
+        'AW Next is watching {binary}, not {configured}, the executable set for this game, so its launch and play time can be missed. Watch this game to follow the chosen executable.',
+        "AW Next surveille {binary}, et non {configured}, l'exécutable choisi pour ce jeu : son lancement et son temps de jeu peuvent être manqués. Surveille ce jeu pour suivre l'exécutable choisi.",
+        p
+      );
     case 'not-watched':
       return t('gh-why-not-watched', "Everything needed is in place, but AW Next isn't watching this game while it runs, so playtime and live unlock notifications won't happen.", "Tout est en place, mais AW Next ne surveille pas ce jeu pendant qu'il tourne : ni temps de jeu ni notifications en direct.");
     case 'nemirtingas-setup':
@@ -707,6 +721,7 @@ function gameHealthSimpleCheckValue(entry) {
         : t('gh-simple-data-partial', 'Achievement data is incomplete', 'Données de succès incomplètes');
     case 'emulator':
     case 'uplay':
+      if (p.noSource) return gameHealthNoSourceLabel();
       if (p.serverAwarded) return t('gh-value-server-awarded', 'achievements awarded online only', 'succès attribués en ligne uniquement');
       if (p.spacewar) return t('gh-value-spacewar', 'Steam rejects these achievements', 'Steam refuse ces succès');
       if (p.oldSave || p.stalled || p.replacedBy || p.offline || p.coldClient || (p.servedBy && p.topics)) return t('gh-simple-emulator-partial', 'Achievement support needs attention', 'Prise en charge des succès à vérifier');
@@ -734,7 +749,8 @@ function gameHealthSimpleCheckValue(entry) {
     case 'nemirtingas':
       return gameHealthNemirtingasValue(entry);
     case 'tracking':
-      return ok
+      if (p.configured && !p.launcher) return t('gh-simple-tracking-mismatch', 'Watching another file than the chosen one', 'Surveille un autre fichier que celui choisi');
+      return ok || p.launcher
         ? t('gh-simple-tracking-ok', 'Detected when the game starts', 'Détecté au démarrage du jeu')
         : t('gh-simple-tracking-off', 'Not watched for yet', 'Pas encore surveillé');
     default: {
@@ -900,6 +916,7 @@ function gameHealthCheckValue(entry, simple) {
       if (p.total || p.found) return t('gh-value-achievements', '{total} achievements', '{total} succès', { total: p.total || p.found });
       return missing;
     case 'emulator':
+      if (p.noSource) return gameHealthNoSourceLabel();
       // A crack loader of its own serves this folder: naming it is the whole answer, and adding
       // "nothing recorded yet" is what tells the two cases apart before the button below is read.
       if (p.servedBy) {
@@ -946,6 +963,8 @@ function gameHealthCheckValue(entry, simple) {
     case 'nemirtingas':
       return gameHealthNemirtingasValue(entry);
     case 'tracking':
+      if (p.configured && p.launcher) return t('gh-value-watching-launcher', 'watching {binary}, started by {configured}', 'surveille {binary}, lancé par {configured}', p);
+      if (p.configured) return t('gh-value-watching-other', 'watching {binary}, not {configured}', 'surveille {binary}, et non {configured}', p);
       if (p.binary) return t('gh-value-watching', 'watching {binary}', 'surveille {binary}', p);
       return t('gh-value-none-yet', 'nothing recorded yet', 'rien d’enregistré pour l’instant');
     default: {
@@ -958,6 +977,11 @@ function gameHealthCheckValue(entry, simple) {
       return detail ? `${transport} · ${detail}` : transport;
     }
   }
+}
+
+// Said in both modes: a fact about this PC, with no file names in it.
+function gameHealthNoSourceLabel() {
+  return t('gh-value-no-unlock-source', 'No achievement source set up', 'Aucune source de succès configurée');
 }
 
 // What stops a ColdClient loader from serving the game, as coldClient.diagnose() names it.
@@ -1044,7 +1068,7 @@ function gameHealthActionLabel(action) {
 }
 
 const GAME_HEALTH_ICON = { ok: 'fa-check-circle', warn: 'fa-exclamation-triangle', fail: 'fa-times-circle', info: 'fa-info-circle' };
-const GAME_HEALTH_STATE_ICON = { ready: 'fa-check-circle', attention: 'fa-exclamation-triangle', 'not-tracking': 'fa-times-circle' };
+const GAME_HEALTH_STATE_ICON = { ready: 'fa-check-circle', attention: 'fa-exclamation-triangle', 'not-tracking': 'fa-times-circle', 'playtime-only': 'fa-clock' };
 
 // A false alarm on a game that works can be dismissed for good, and brought back (#160).
 function gameHealthIgnoreButton(entry) {

@@ -50,6 +50,7 @@ const uplaySteamTable = require(path.join(appPath, 'uplaySteamTable.js'));
 const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
+const { pickTrackedExe } = require('../util/launchBootstrappers.js');
 const steamCategoryBorrow = require('../util/steamCategoryBorrow.js');
 const { hostPaths, pathKey } = require('../util/winHosts.js');
 const { compatdataDirs } = require('../util/winePrefixes.js');
@@ -2155,6 +2156,14 @@ function unrealDeclaredAppid(dir) {
   return '';
 }
 
+// The exes whose folders the unconfigured scan leaves alone: games with a Steam AppID, and games
+// added by hand, which would otherwise come back a second time under their folder name.
+function claimedInstallExes({ exeEntries = [], manualEntries = [] } = {}) {
+  const fromExeList = exeEntries.filter((e) => e && e.exe && /^[0-9]+$/.test(String(e.appid))).map((e) => e.exe);
+  const fromManual = manualEntries.filter((e) => e && e.exe).map((e) => e.exe);
+  return [...new Set([...fromExeList, ...fromManual])];
+}
+
 async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScope) {
   const out = [];
   // Folders that already host a game configured under a real appid (from exeList): never surface them
@@ -2975,13 +2984,20 @@ async function discoverInScope(source, steamAccFilter, scope) {
     // they show in the app and can be right-clicked (Install GBE Fork, etc.). Runs after the Goldberg
     // scan so _claimedDirs is populated and these don't duplicate appid-identified installs.
     try {
-      let linkedExes = [];
+      let exeEntries = [];
       try {
         const exeList = require(path.join(appPath, 'exeList.js'));
-        linkedExes = (await exeList.list()).filter((e) => e.exe && /^[0-9]+$/.test(String(e.appid))).map((e) => e.exe);
+        exeEntries = await exeList.list();
       } catch {
         /* no exeList yet */
       }
+      let manualEntries = [];
+      try {
+        manualEntries = manualGames.list();
+      } catch {
+        /* no manual games yet */
+      }
+      const linkedExes = claimedInstallExes({ exeEntries, manualEntries });
       const unconfigured = await scanUnconfiguredInstalls(linkedExes, scope);
       mark('unconfiguredScan');
       // Resolve unconfigured entries before concurrent game loading so installed detection sees gameDir.
@@ -3809,6 +3825,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
         try {
           resolvedEmu = detectEmulatorCached(resolvedGameDir);
           game.hasSteamApiDll = resolvedEmu.dll.length > 0;
+          // Valve's own dll counts in `dll` too: only an emulator dll, a crack loader or a
+          // steam_settings folder records unlocks. Read by gameHealth.scannedState for the dot (#197).
+          if (manualPcEntry) {
+            game.noUnlockSource = !resolvedEmu.steamSettings && !resolvedEmu.loader && !resolvedEmu.dll.some((dll) => crackLoaderDetect.isEmulatorDll(dll));
+          }
           if ((resolvedEmu.dll.length > 0 || resolvedEmu.steamSettings) && !appid.data.steamSettings) {
             const steamSettingsDir = resolvedEmu.steamSettings || path.join(path.dirname(resolvedEmu.dll[0]), 'steam_settings');
             game.steamSettings = steamSettingsDir;
@@ -4433,12 +4454,20 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 
       try {
         let seeded = false;
+        // The executable the user picked (or the launch panel recorded) is what Play starts, so it is
+        // also what gets watched: a rescan must never put a detected one back over it (#193).
+        const configuredPath = gameIndex.configuredExe(appid.appid);
+        const configured = configuredPath && /\.exe$/i.test(configuredPath) && fs.existsSync(configuredPath) ? configuredPath : '';
+        // What the index already watches counts as an earlier detection: a scan that finds nothing
+        // must not hand the watch from the game back to a configured launcher.
+        const indexed = gameIndex.get(appid.appid);
+        const known = indexed ? indexed.exePath || indexed.binary || '' : '';
         // 1) On-disk detection, when the install folder is known. This is also the "really
         //    installed" proof used by the "show installed only" toggle, so only a real executable
         //    found here may set hasResolvedExe.
         if (resolvedGameDir) {
           const gameDirKey = path.resolve(resolvedGameDir).toLowerCase();
-          if (_seededGameDirs.has(gameDirKey)) {
+          if (_seededGameDirs.has(gameDirKey) && !configured) {
             debug.log(`[${appid.appid}] playtime auto-seed skipped: install folder already has a detected executable`);
             seeded = true;
           } else {
@@ -4447,9 +4476,11 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
             resolvedExe = exeInfo || resolvedExe;
             hasResolvedExe = !!exeInfo;
             if (!resolvedExeConfident && exeInfo && exeInfo.confident) resolvedExeConfident = true;
-            if (exeInfo) {
+            const tracked = pickTrackedExe(configured, exeInfo ? exeInfo.full || exeInfo.name : known);
+            if (tracked) {
               _seededGameDirs.add(gameDirKey);
-              seed(exeInfo.name, '', exeInfo.full || '');
+              const fromConfigured = tracked === configured;
+              seed(path.basename(tracked), fromConfigured ? ' from the configured executable' : '', fromConfigured || (exeInfo && exeInfo.full) ? tracked : '');
               seeded = true;
             }
           }
@@ -4457,13 +4488,9 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 
         // 2) The executable the user picked. A game known only through its emulator's save folder
         //    and not by a Steam appid (Nemirtingas Epic, #114) has no install folder for step 1.
-        const indexed = gameIndex.get(appid.appid);
-        if (!seeded && !(indexed && indexed.binary)) {
-          const configured = gameIndex.configuredExe(appid.appid);
-          if (configured && /\.exe$/i.test(configured) && fs.existsSync(configured)) {
-            seed(path.basename(configured), ' from the configured executable', configured);
-            seeded = true;
-          }
+        if (!seeded && configured && pickTrackedExe(configured, known) === configured) {
+          seed(path.basename(configured), ' from the configured executable', configured);
+          seeded = true;
         }
 
         // 3) Launch metadata, for every game step 1 could not name a binary for - an obfuscated/renamed
@@ -5112,6 +5139,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
 // Exposed for unit tests.
 module.exports._internal = {
   SOURCE_READERS,
+  claimedInstallExes,
   libraryPortGames,
   borrowSteamCategories,
   normalizeSaveEntry,
