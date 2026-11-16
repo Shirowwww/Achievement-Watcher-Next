@@ -1,0 +1,13 @@
+# Verbatim RPCS3.log lines from public RPCS3 issues, joined in one session for the test.
+# RPCS3/rpcs3#8831 (Skate 3 boot)
+·! 0:00:22.964371 SYS: Path: C:/Users/redacted/Documents/MEGA/Skate 3/ROMS Unzip/PS3_GAME/USRDIR/EBOOT.BIN
+·! 0:00:22.966931 SYS: Title: Skate 3
+·! 0:00:22.966936 SYS: Serial: BLES00760
+·! 0:00:22.966938 SYS: Category: DG
+·! 0:00:22.966940 SYS: Version: 01.00 / 01.01
+# RPCS3/rpcs3#17147 (game stopped)
+·S 0:00:10.703777 sys_process: Process finished
+·! 0:00:10.703822 SYS: Stopping emulator...
+# RPCS3/rpcs3#8667 (SONIC UNLEASHED boot)
+·! 0:00:02.367512 SYS: Title: SONIC UNLEASHED
+·! 0:00:02.367514 SYS: Serial: BLES00425

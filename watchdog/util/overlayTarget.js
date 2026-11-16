@@ -3,16 +3,15 @@
 /*
   Which game the overlay shortcut opens. A game the playtime monitor tracks by its process wins.
   Emulators (RPCS3, Xenia, shadPS4...) run the game inside their own exe, so the monitor never
-  knows which game is up: the game that just unlocked something live stands in for it, and only
-  without either does the app fall back to the open or first library game. Every live watcher
-  feeds it (launchers too), so a game closed minutes ago is still the target, which beats the
-  arbitrary first library game.
+  knows which game is up: an emulator that says which game it runs (RPCS3, console/rpcs3Current.js)
+  answers next, then the game that just unlocked something live stands in for it, and only
+  without any of them does the app fall back to the open or first library game.
 */
-// shortcut: an emulator exit is not seen, so a stale unlock can steer the overlay for this long;
-// replace with real emulator game detection once the playtime monitor has it.
+// shortcut: an exit of the other emulators is not seen, so a stale unlock can steer the overlay for
+// this long; give each emulator a currentGame reader like RPCS3's to retire it.
 const LIVE_UNLOCK_WINDOW_MS = 2 * 60 * 60 * 1000;
 
-function createOverlayTarget() {
+function createOverlayTarget({ emulatorGame = () => '' } = {}) {
   let lastUnlock = null;
 
   /** @param {{ appid?: unknown, notificationType?: string } | null | undefined} payload */
@@ -26,6 +25,13 @@ function createOverlayTarget() {
   /** @returns {string} the appid to ask for, '0' meaning "let the app choose" */
   function appidFor(runningAppid, now = Date.now()) {
     if (runningAppid) return String(runningAppid);
+    let emulated = '';
+    try {
+      emulated = String(emulatorGame() || '');
+    } catch {
+      emulated = '';
+    }
+    if (emulated) return emulated;
     if (lastUnlock && now - lastUnlock.at <= LIVE_UNLOCK_WINDOW_MS) return lastUnlock.appid;
     return '0';
   }

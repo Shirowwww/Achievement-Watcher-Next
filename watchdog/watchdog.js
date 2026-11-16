@@ -61,7 +61,15 @@ const instance = new (require('single-instance'))('Achievement Watchdog 3.0');
 const { spawn } = require('child_process');
 const path = require('path');
 const watch = require('./util/nodeWatch.js');
-const overlayTarget = require('./util/overlayTarget.js').createOverlayTarget();
+// RPCS3 says which game it runs in its log; read only when the overlay shortcut opens.
+const overlayTarget = require('./util/overlayTarget.js').createOverlayTarget({
+  emulatorGame: () =>
+    require('./console/rpcs3Current.js').currentGame({
+      processes: () => (process.platform === 'win32' ? require('./util/processSnapshot.js') : require('./util/procSnapshot.js')).listSync(),
+      emulatorDirs: () => require('./console/watcherKit.js').watchedFolders(),
+      targets: () => require('./console/rpcs3Watch.js')._internal.discover(),
+    }),
+});
 const tasklist = require('./util/tasklist');
 const moment = require('moment');
 const websocket = require('./websocket.js');
