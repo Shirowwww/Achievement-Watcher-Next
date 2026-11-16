@@ -38,6 +38,7 @@ const EXE_EXCLUDE = [
   /utility/i, // e.g. JackboxUtility.exe - companion tools, not the game
   /companion/i, // e.g. ACBFRCompanion.exe next to ACBlackFlag.exe
   /decompressor/i,
+  /injector/i, // overlay and dll injectors (EA's overlayinjector.exe, GreenLuma's DLLInjector.exe)
   /\bcli\b/i, // command-line tools (wabbajack-cli, lootcli, …)
 ];
 
@@ -531,12 +532,49 @@ function bestFolderMatch(gameName, folders) {
   return bestDir;
 }
 
+/*
+  The folder a repack ships to check its archives before installing (FitGirl and DODI: MD5\ with
+  QuickSFV.exe, its .ini and a .md5 list; others the same with another tool and a .sfv): checksum
+  lists and a tool or two, nothing else. A game folder that keeps a checksum list also has its dlls,
+  its data folders or an exe that is not a checksum tool, so it never matches.
+*/
+const CHECKSUM_LIST = /\.(?:md5|sfv|sha1|sha256|sha512|crc|crc32)$/i;
+const CHECKSUM_TOOL = /sfv|md5|sha|hash|crc|verif|check/i;
+const MAX_VERIFIER_EXES = 2;
+
+function isChecksumVerifierFolder(entries) {
+  let lists = 0;
+  let exes = 0;
+  for (const e of entries) {
+    if (e.isDirectory()) return false;
+    const name = e.name.toLowerCase();
+    if (name.endsWith('.dll')) return false;
+    if (CHECKSUM_LIST.test(name)) lists++;
+    else if (name.endsWith('.exe')) {
+      if (!CHECKSUM_TOOL.test(name)) return false;
+      exes++;
+    }
+  }
+  return lists > 0 && exes > 0 && exes <= MAX_VERIFIER_EXES;
+}
+
+/*
+  An installer whatever its file is called: the version resource of ElAmigos updates reads
+  "<Game> update - ElAmigos Setup" on an exe named after the game, which no file-name rule can tell.
+*/
+const INSTALLER_PRODUCT = /(?:^|[^a-z])(?:setup|installer)$|(?:setup|installation|install) wizard/i;
+
+function isInstallerProductName(name) {
+  return INSTALLER_PRODUCT.test(String(name || '').trim());
+}
+
 // Does this folder DIRECTLY contain a real (non-utility, non-launcher) game .exe? Used to decide
 // whether a folder is a "game folder" when scanning for unconfigured installs (no recursion - the
 // recursive detect() is used afterwards to pick the actual exe of an emitted game).
 function shallowGameExe(dir) {
   const entries = dirCache.readdir(dir);
   if (!entries) return null;
+  if (isChecksumVerifierFolder(entries)) return null;
   for (const e of entries) {
     if (!isExecutableFile(dir, e)) continue;
     if (EXE_EXCLUDE.some((r) => r.test(e.name))) continue;
@@ -630,6 +668,7 @@ module.exports = {
   isGenericExeName: (name) => GENERIC_EXE.test(String(name || '')),
   COPY_DIRS,
   shallowGameExe,
+  isInstallerProductName,
   gameDirForExe,
   nameSimilarity,
   bestFolderMatch,

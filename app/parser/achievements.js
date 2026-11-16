@@ -51,6 +51,7 @@ const uplayR2Installer = require(path.join(appPath, 'uplayR2Installer.js'));
 const uplayCatalogue = require(path.join(appPath, 'uplayCatalogue.js'));
 const { steamCdnImages } = require('../util/steamCdn.js');
 const { pickTrackedExe } = require('../util/launchBootstrappers.js');
+const { consoleEmulatorFor } = require('../util/manualGameDetect.js');
 const steamCategoryBorrow = require('../util/steamCategoryBorrow.js');
 const { hostPaths, pathKey } = require('../util/winHosts.js');
 const { compatdataDirs } = require('../util/winePrefixes.js');
@@ -399,6 +400,34 @@ async function addSteamStatsForEmptyOnlineFix(data, { statsRecord = (appid) => s
       debug.log(`[onlinefix] ${appid} has an empty OnlineFix folder; reading the Steam client's stats for it`);
     } catch (err) {
       debug.log(`[onlinefix] ${appid}: could not read the Steam client's stats => ${err}`);
+    }
+  }
+  return added.length > 0 ? data.concat(added) : data;
+}
+
+/*
+  A game LuaTools or SteamTools added to the Steam client is not one the account owns, so the
+  official-games setting does not cover it: with that setting off it had no record at all, and Steam's
+  own stats file, the only place its unlocks are kept, was never read.
+*/
+async function addSteamStatsForLuaGames(data, { luaAppids = () => steam.luaAddedAppids(), statsRecord = (appid) => steam.steamStatsRecord(appid) } = {}) {
+  let appids = [];
+  try {
+    appids = await luaAppids();
+  } catch (err) {
+    debug.log(`[steam] could not list the games added through LuaTools => ${err}`);
+  }
+  const withSteam = new Set(data.filter((record) => record?.data?.type === 'steamAPI').map((record) => String(record.appid)));
+  const wanted = appids.map(String).filter((appid) => !withSteam.has(appid));
+  const added = [];
+  for (const appid of wanted) {
+    try {
+      const record = await statsRecord(appid);
+      if (!record) continue;
+      added.push(record);
+      debug.log(`[steam] ${appid} was added to Steam through a lua script; reading the Steam client's stats for it`);
+    } catch (err) {
+      debug.log(`[steam] ${appid}: could not read the Steam client's stats => ${err}`);
     }
   }
   return added.length > 0 ? data.concat(added) : data;
@@ -1684,9 +1713,15 @@ function desktopRoots() {
   return [...hostPaths('USERPROFILE', 'Desktop'), ...hostPaths('PUBLIC', 'Desktop')];
 }
 
+/*
+  A version resource that describes a tool rather than a game ("Wii U emulator" for the Cemu a port
+  ships, "CDKey", "QuickSFV Application") says nothing about the game: the folder name does better.
+*/
+const TOOL_PRODUCT_NAME = /\b(?:emulator|cd ?key|keygen|crack|trainer|injector|launcher|loader|installer|setup|uninstall(?:er)?|updater|application|redistributable|runtime|utility|helper)\b/i;
+
 // Prefer product metadata, then the folder name, then the executable name.
 function unconfiguredDisplayName(folderName, exeName, productName) {
-  if (productName) return productName;
+  if (productName && !TOOL_PRODUCT_NAME.test(productName)) return productName;
   return /^[0-9]+$/.test(folderName) || folderName.length < 3 ? exeDetect.exeBaseName(exeName) : folderName;
 }
 
@@ -2125,7 +2160,7 @@ async function scanInstalledGoldbergGames(data, scope = _activeScanScope) {
 }
 
   // Skip common redistributable, tool, and launcher folders.
-const UNCONFIG_SKIP_DIR = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|prerequisites|prereq|Installers|__Installer|steam_settings|steamapps|common|SaveConverter|tools|Extras|Updater|app|bin|backups|cache|httpcache|media|Patches|support|Redistributables|Binaries|Engine|plugins|Modding)$/i;
+const UNCONFIG_SKIP_DIR = /^(_?CommonRedist|_?Redist|redist|DirectX|dx|dotnet|prerequisites|prereq|Installers|__Installer|steam_settings|steamapps|common|SaveConverter|tools|Extras|Updater|app|bin|backups|cache|httpcache|media|Patches|support|Redistributables|Binaries|Engine|plugins|Modding|__.+)$/i;
 
 // Configs a Steam emulator drops beside a game, each stating the AppID it stands in for.
 const EMULATOR_APPID_CONFIGS = new Set(['ali213.ini', 'valve.ini', 'steamconfig.ini', 'steam_emu.ini', 'steam_api.ini', 'cpy.ini', 'hlm.ini', 'ds.ini']);
@@ -2226,7 +2261,8 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     // Repacks often rename the folder ("Game123", "0xDEADBEEF"); the exe's own version resource is a
     // better display name, unless it's a generic descriptor ("Installer", "Application").
     const rawProductName = (pe.readExeProductName(exe.full) || '').trim();
-    const productName = rawProductName && !/^(application|app|installer|setup|launcher|loader|program|game|update|updater|uninstall|uninstaller|config|configuration|service|daemon|tool|tools|client)$/i.test(rawProductName)
+    if (exeDetect.isInstallerProductName(rawProductName)) return; // a repack's installer or update, not the game
+    const productName = rawProductName && !/^(application|app|launcher|loader|program|game|update|updater|uninstall|uninstaller|config|configuration|service|daemon|tool|tools|client)$/i.test(rawProductName)
       ? rawProductName
       : '';
     const folderName = path.basename(dir);
@@ -2274,6 +2310,13 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
     // own (a collection root, same rule as isGameCollectionDir()) is descended into.
     const ownExe = !!exeDetect.shallowGameExe(dir);
     if (ownExe || (isGameFolder(dir, entries) && childGameFolders.length === 0)) {
+      // A console emulator is a tool, not a game. Inside a game's folder (Bayonetta 2 ships Cemu in
+      // cemu\) the game is that folder; installed on its own it is nothing to list.
+      if (ownExe && consoleEmulatorFor(path.join(dir, exeDetect.shallowGameExe(dir)))) {
+        const parent = path.dirname(dir);
+        if (depth > 1 && !saveRoots.isLibraryLikeFolderName(path.basename(parent))) emit(parent, readEntries(parent));
+        return;
+      }
       emit(dir, entries); // game folder
       return;
     }
@@ -3170,6 +3213,7 @@ async function discoverInScope(source, steamAccFilter, scope) {
   mark('dropSteamOwned');
 
   if (!scope) data = await addSteamStatsForEmptyOnlineFix(data);
+  if (!scope) data = await addSteamStatsForLuaGames(data);
 
   data = consolidateDiscoveryList(data);
 
@@ -5171,6 +5215,7 @@ module.exports._internal = {
   getDiscoverySources,
   consolidateDiscoveryList,
   addSteamStatsForEmptyOnlineFix,
+  addSteamStatsForLuaGames,
   mergeCrossSourceDuplicates,
   copyDiscoveryList,
   isOfficialLauncherInstall: (dir) => launcherDetect.isOfficialLauncherInstall(dir),
@@ -5179,4 +5224,5 @@ module.exports._internal = {
   readRecordUnlocks,
   NO_RECORD_TO_READ,
   isLibraryLikeFolderName: (name) => saveRoots.isLibraryLikeFolderName(name),
+  unconfiguredDisplayName,
 };

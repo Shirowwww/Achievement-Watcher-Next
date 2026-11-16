@@ -66,6 +66,36 @@ test('a Godot export resolves to the game exe, not the .NET runtime helper', () 
   assert.ok(detected.confident, 'the game exe is safe to auto-assign');
 });
 
+test('an exe whose version resource names an installer is not a game, whatever its file name', () => {
+  for (const name of ['Cyberpunk 2077 update - ElAmigos Setup', 'Borderlands 4 update - ElAmigos Setup', 'Game Installer', 'Setup', 'Some Game Setup Wizard']) {
+    assert.ok(exeDetect.isInstallerProductName(name), name);
+  }
+  for (const name of ['', 'Cyberpunk 2077', 'Setup Your Life', 'Upset', 'The Settlers', 'Hotsetup']) {
+    assert.ok(!exeDetect.isInstallerProductName(name), name);
+  }
+  const source = fs.readFileSync(path.join(appDir, 'parser', 'achievements.js'), 'utf8');
+  assert.match(source, /if \(exeDetect\.isInstallerProductName\(rawProductName\)\) return;/, 'the unconfigured scan drops it');
+});
+
+test('a checksum verifier folder holds no game exe, a game folder keeping a checksum list still does', () => {
+  const verifier = tmpGame('md5-verifier');
+  writeBytes(path.join(verifier, 'QuickSFV.EXE'), 5000);
+  fs.writeFileSync(path.join(verifier, 'QuickSFV.ini'), '[QuickSFV]\n');
+  fs.writeFileSync(path.join(verifier, 'fitgirl-bins.md5'), 'x *fg-01.bin\n');
+  assert.strictEqual(exeDetect.shallowGameExe(verifier), null);
+
+  const game = tmpGame('game-with-md5');
+  writeBytes(path.join(game, 'Game.exe'), 5000);
+  writeBytes(path.join(game, 'engine.dll'), 100);
+  fs.writeFileSync(path.join(game, 'checksums.md5'), 'x *Game.exe\n');
+  assert.strictEqual(exeDetect.shallowGameExe(game), 'Game.exe');
+
+  const bare = tmpGame('bare-game-with-md5');
+  writeBytes(path.join(bare, 'TinyGame.exe'), 5000);
+  fs.writeFileSync(path.join(bare, 'checksums.md5'), 'x *TinyGame.exe\n');
+  assert.strictEqual(exeDetect.shallowGameExe(bare), 'TinyGame.exe', 'a lone game exe beside a checksum list is still the game');
+});
+
 test('the unconfigured scan stops at the folder that owns a game exe', () => {
   const source = fs.readFileSync(path.join(appDir, 'parser', 'achievements.js'), 'utf8');
   const walk = source.slice(source.indexOf('  const walk = (dir, depth) => {'));

@@ -336,6 +336,57 @@ module.exports.steamStatsRecord = async (appid, { readSteamPath = () => getSteam
 };
 
 /*
+  The games LuaTools and SteamTools added to this Steam client, by scripts in config/stplug-in
+  (<appid>.lua, or SteamTools' single steamtools.lua). Steam runs them unowned and keeps their unlocks
+  in appcache/stats like any game it sells. Only those with a stats file are returned (one listing of
+  that folder, not one per game): the others have nothing to read.
+*/
+const LUA_GAME_SCRIPT = /^(\d+)\.lua$/i;
+// SteamTools writes every game into one steamtools.lua; depots are listed the same way, and drop out
+// because Steam keeps no stats file for them.
+const LUA_SCRIPT = /\.lua$/i;
+const ADDAPPID = /\baddappid\s*\(\s*(\d+)/gi;
+const MAX_SCRIPT_BYTES = 1024 * 1024;
+
+module.exports.luaAddedAppids = async ({ readSteamPath = () => getSteamPath() } = {}) => {
+  let steamPath;
+  try {
+    steamPath = await readSteamPath();
+  } catch {
+    return [];
+  }
+  const root = String(steamPath || '');
+  // Through dirCache so a newly added script changes the discovery fingerprint and calls for a scan.
+  // The stats folder is listed directly: Steam rewrites it on every unlock, which must not.
+  const scripts = require('../util/dirCache.js').readdir(path.join(root, 'config', 'stplug-in'));
+  if (!scripts) return [];
+  let stats = [];
+  try {
+    stats = fs.readdirSync(path.join(root, 'appcache', 'stats'));
+  } catch {
+    return [];
+  }
+  const withStats = new Set(stats.map((name) => (name.match(/^UserGameStats_\d+_(\d+)\.bin$/i) || [])[1]).filter(Boolean));
+  const appids = [];
+  for (const e of scripts) {
+    if (!e.isFile() || !LUA_SCRIPT.test(e.name)) continue;
+    const named = e.name.match(LUA_GAME_SCRIPT);
+    if (named) appids.push(named[1]);
+    appids.push(...scriptAppids(path.join(root, 'config', 'stplug-in', e.name)));
+  }
+  return [...new Set(appids.filter((appid) => withStats.has(appid)))];
+};
+
+function scriptAppids(file) {
+  try {
+    if (fs.statSync(file).size > MAX_SCRIPT_BYTES) return [];
+    return [...fs.readFileSync(file, 'utf8').matchAll(ADDAPPID)].map((m) => m[1]);
+  } catch {
+    return [];
+  }
+}
+
+/*
   The games the connected Steam account owns, whether or not this PC has ever heard of them.
 
   scanLegit() can only see what the local client touched - a stats file, an install manifest, a

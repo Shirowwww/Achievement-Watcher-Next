@@ -178,3 +178,99 @@ test('a cracked Uplay R2 install (markers + loader) is promoted, not skipped as 
   assert.ok(found.includes('3751950'));
   assert.ok(!found.some((id) => id.startsWith('local-')));
 });
+
+// A repack as downloaded: the installer, its split archives and the checksum verifier it ships
+// (FitGirl and DODI put QuickSFV in MD5\, others another tool beside a .sfv list).
+function repackFolder(dir, { verifierDir = 'MD5', verifierExe = 'QuickSFV.EXE', list = 'fitgirl-bins.md5' } = {}) {
+  writeBytes(path.join(dir, 'setup.exe'));
+  writeBytes(path.join(dir, 'fg-01.bin'), 64);
+  writeBytes(path.join(dir, 'fg-02.bin'), 64);
+  fs.writeFileSync(path.join(dir, 'Verify BIN files before installation.bat'), '@echo off\n');
+  writeBytes(path.join(dir, verifierDir, verifierExe));
+  fs.writeFileSync(path.join(dir, verifierDir, 'QuickSFV.ini'), '[QuickSFV]\n');
+  fs.writeFileSync(path.join(dir, verifierDir, list), 'd41d8cd98f00b204e9800998ecf8427e *fg-01.bin\n');
+}
+
+test('repack installers and their checksum verifiers are never surfaced as games', async () => {
+  const found = await detectIn({
+    build: ({ root }) => {
+      repackFolder(path.join(root, 'Repacks', 'Dead Space 2 [FitGirl Repack]'));
+      repackFolder(path.join(root, 'Repacks', 'Control'), { verifierDir: 'Verify', verifierExe: 'HashCheck.exe', list: 'control.sfv' });
+      // ElAmigos: an installer and its archives only, nothing to descend into.
+      const elamigos = path.join(root, 'Repacks', 'Some Game ElAmigos');
+      writeBytes(path.join(elamigos, 'setup.exe'));
+      fs.writeFileSync(path.join(elamigos, 'autorun.inf'), '[autorun]\nopen=setup.exe\n');
+      writeBytes(path.join(elamigos, 'data1.bin'), 64);
+    },
+  });
+  assert.deepEqual(found, []);
+});
+
+test('a real game is still found beside a setup.exe, a checksum list or its own repack files', async () => {
+  const found = await detectIn({
+    build: ({ root }) => {
+      // An old game whose install keeps its own setup tool and a checksum list.
+      const old = path.join(root, 'Old Game');
+      writeBytes(path.join(old, 'OldGame.exe'));
+      writeBytes(path.join(old, 'setup.exe'));
+      writeBytes(path.join(old, 'binkw32.dll'), 64);
+      fs.writeFileSync(path.join(old, 'checksums.md5'), 'x *OldGame.exe\n');
+      // A repack installed into a folder inside its own download.
+      const repack = path.join(root, 'Repacks', 'Nine Sols');
+      repackFolder(repack);
+      writeBytes(path.join(repack, 'Nine Sols', 'NineSols.exe'));
+      writeBytes(path.join(repack, 'Nine Sols', 'UnityPlayer.dll'), 64);
+    },
+  });
+  assert.equal(found.filter((id) => id.startsWith('local-')).length, 2, `found: ${found.join(', ')}`);
+});
+
+// The id achievements.js mints for an unconfigured install folder.
+const { crc32 } = require(path.join(__dirname, '..', '..', 'app', 'node_modules', 'crc'));
+const localId = (dir) => 'local-' + (crc32(path.resolve(dir).toLowerCase()) >>> 0).toString(16);
+
+test('an overlay injector folder and an emulator a game ships are not games of their own', async () => {
+  const dirs = {};
+  const found = await detectIn({
+    build: ({ root }) => {
+      // Mass Effect Legendary Edition: EA's overlay injector beside Valve's dll, in a __ tool folder.
+      dirs.overlay = path.join(root, 'Mass Effect Legendary Edition', '__overlay');
+      writeBytes(path.join(dirs.overlay, 'overlayinjector.exe'));
+      writeBytes(path.join(dirs.overlay, 'steam_api.dll'), 64);
+      // A port shipped as the console game plus the emulator that runs it (Bayonetta 2 with Cemu).
+      dirs.port = path.join(root, 'Bayonetta 2');
+      dirs.cemu = path.join(dirs.port, 'cemu');
+      writeBytes(path.join(dirs.cemu, 'Cemu.exe'));
+      writeBytes(path.join(dirs.port, 'code', 'rpx.bin'), 64);
+      // An emulator installed on its own is a tool, not a game.
+      writeBytes(path.join(root, 'Ryujinx', 'Ryujinx.exe'));
+    },
+  });
+  assert.ok(!found.includes(localId(dirs.overlay)), 'the overlay injector folder');
+  assert.ok(!found.includes(localId(dirs.cemu)), 'the emulator folder itself');
+  assert.ok(found.includes(localId(dirs.port)), `the game the emulator runs is listed (found: ${found.join(', ')})`);
+  assert.equal(found.filter((id) => id.startsWith('local-')).length, 1, `found: ${found.join(', ')}`);
+});
+
+test('a version resource that names a tool never becomes the game title', () => {
+  const name = achievements._internal.unconfiguredDisplayName;
+  assert.equal(name('Need For Speed Carbon Remastered', 'NFSC.exe', 'CDKey'), 'Need For Speed Carbon Remastered');
+  assert.equal(name('Bayonetta 2', 'Cemu.exe', 'Wii U emulator'), 'Bayonetta 2');
+  assert.equal(name('Batman', 'QuickSFV.EXE', 'QuickSFV Application'), 'Batman');
+  assert.equal(name('Some Game', 'Trainer.exe', 'Some Game Trainer'), 'Some Game');
+  // A renamed repack folder keeps taking the exe's real product name.
+  assert.equal(name('Game123', 'hk.exe', 'Hollow Knight'), 'Hollow Knight');
+  assert.equal(name('0x1f3a', 'g.exe', 'Overlord: Raising Hell'), 'Overlord: Raising Hell');
+  assert.equal(name('Patchwork Game', 'pw.exe', 'Patchwork'), 'Patchwork');
+});
+
+test('a real game in a folder named like a tool word is still found', async () => {
+  const found = await detectIn({
+    build: ({ root }) => {
+      writeBytes(path.join(root, 'Overlord', 'Overlord.exe'));
+      writeBytes(path.join(root, 'Overlord', 'binkw32.dll'), 64);
+      writeBytes(path.join(root, 'Overcooked', 'Overcooked.exe'));
+    },
+  });
+  assert.equal(found.filter((id) => id.startsWith('local-')).length, 2, `found: ${found.join(', ')}`);
+});
