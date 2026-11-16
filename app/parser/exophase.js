@@ -365,9 +365,9 @@ function findInstalledEdge() {
 }
 
 async function launchBrowser() {
-  const puppeteer = require('puppeteer-extra');
-  const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-  puppeteer.use(StealthPlugin());
+  // Shared with init.js: one stealth registration per process, and a profile folder of its own.
+  const { getPuppeteer, launchWithProfile } = require('../util/puppeteerBrowser.js');
+  const puppeteer = getPuppeteer();
   const ChromeLauncher = require('chrome-launcher');
   const installedChromePath =
     process.platform === 'darwin'
@@ -380,11 +380,11 @@ async function launchBrowser() {
   let lastError;
   for (const executablePath of browserPaths) {
     try {
-      return await puppeteer.launch({
-        headless: true,
-        executablePath,
-        args: ['--disable-blink-features=AutomationControlled', '--disable-extensions'],
-      });
+      return await launchWithProfile(
+        puppeteer,
+        { headless: true, executablePath, args: ['--disable-blink-features=AutomationControlled', '--disable-extensions'] },
+        { log: (line) => debug.log(`exophase: ${line}`) }
+      );
     } catch (err) {
       lastError = err;
       debug.log(`exophase: browser launch failed for ${executablePath} (${err.message})`);

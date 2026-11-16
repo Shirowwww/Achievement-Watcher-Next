@@ -1964,7 +1964,7 @@ function schedulePuppeteerIdleClose() {
   clearTimeout(puppeteerIdleTimer);
   puppeteerIdleTimer = setTimeout(() => {
     puppeteerIdleTimer = null;
-    if (!puppeteerWindow || !puppeteerWindow.browser) return;
+    if (!puppeteerWindow.single || !puppeteerWindow.single.isOpen()) return;
     const busy = puppeteerLeases.size > 0 || currentlyscraping.steamcommunity || currentlyscraping.steamhunters;
     if (busy) return schedulePuppeteerIdleClose();
     debug.log('puppeteer: idle, closing the browser');
@@ -1985,23 +1985,22 @@ async function closePuppeteer() {
   // Two close paths can overlap (the window fires both 'close' and 'closed'); one drain is enough.
   if (puppeteerClosing) return puppeteerClosing;
   puppeteerClosing = (async () => {
-    const outstanding = [...puppeteerLeases];
-    if (outstanding.length) {
-      debug.log(`puppeteer: waiting on ${outstanding.length} scrape(s) before closing the browser`);
-      await Promise.race([Promise.all(outstanding), delay(PUPPETEER_DRAIN_TIMEOUT_MS)]);
+    if (puppeteerLeases.size) {
+      debug.log(`puppeteer: waiting on ${puppeteerLeases.size} scrape(s) before closing the browser`);
+      await require('../util/puppeteerBrowser.js').waitForLeases(puppeteerLeases, PUPPETEER_DRAIN_TIMEOUT_MS);
     }
-    // Detach handles first so a concurrent scrape cannot reuse a browser being closed.
-    const browser = puppeteerWindow.browser;
-    const context = puppeteerWindow.context;
-    puppeteerWindow.browser = undefined;
-    puppeteerWindow.context = undefined;
-    puppeteerWindow.pagesh = undefined;
-    try {
-      if (context) await context.close();
-    } catch {}
-    try {
-      if (browser) await browser.close();
-    } catch {}
+    // Detached first so a concurrent scrape cannot reuse a browser being closed; a launch still in
+    // flight is waited for and closed too. Its profile folder goes once the process has exited.
+    puppeteerWindow.pagesh = null;
+    if (!puppeteerWindow.single) return;
+    await puppeteerWindow.single.close(async ({ browser, context }) => {
+      try {
+        await context.close();
+      } catch {}
+      try {
+        await browser.close();
+      } catch {}
+    });
   })();
   try {
     await puppeteerClosing;
@@ -3440,18 +3439,15 @@ function findInstalledEdge() {
   when a broken Chrome/Edge install would realistically have been repaired.
 */
 let browserLaunchFailed = false;
-let stealthRegistered = false;
 
-async function startPuppeteer(headless, strip) {
-  if (browserLaunchFailed && !puppeteerWindow.browser) throw new Error('No usable browser this session (a previous launch failed).');
-  const puppeteer = require('puppeteer-extra');
-  // puppeteer-extra's use() has no dedupe: registering here on every call stacked another
-  // StealthPlugin (~17 evasions each) onto the module singleton, so every new page re-ran the whole
-  // set once per past call and multiplied the plugin's own console noise by the same factor.
-  if (!stealthRegistered) {
-    puppeteer.use(require('puppeteer-extra-plugin-stealth')());
-    stealthRegistered = true;
-  }
+function puppeteerSingle() {
+  if (!puppeteerWindow.single) puppeteerWindow.single = require('../util/puppeteerBrowser.js').createSingleBrowser(launchPuppeteerBrowser);
+  return puppeteerWindow.single;
+}
+
+async function launchPuppeteerBrowser(headless) {
+  const { getPuppeteer, launchWithProfile } = require('../util/puppeteerBrowser.js');
+  const puppeteer = getPuppeteer();
   const ChromeLauncher = require('chrome-launcher');
   // Picked per-platform: getInstallations()[0] may be undefined when Chrome is not installed.
   const installedChromePath =
@@ -3471,40 +3467,61 @@ async function startPuppeteer(headless, strip) {
     '--no-first-run',
     '--no-default-browser-check',
   ];
-  if (!puppeteerWindow.browser) {
-    if (browserPaths.length === 0) throw new Error('Steam scraping requires Google Chrome or Microsoft Edge.');
-    let lastError;
-    for (const executablePath of browserPaths) {
-      try {
-        puppeteerWindow.browser = await puppeteer.launch({ headless: Boolean(headless), executablePath, args: launchArgs });
-        break;
-      } catch (err) {
-        lastError = err;
-        debug.log(`puppeteer: browser launch failed for ${executablePath} (${err.message})`);
-      }
-    }
-    if (!puppeteerWindow.browser) {
-      browserLaunchFailed = true;
-      throw lastError;
+  if (browserPaths.length === 0) throw new Error('Steam scraping requires Google Chrome or Microsoft Edge.');
+  let browser = null;
+  let lastError;
+  for (const executablePath of browserPaths) {
+    try {
+      browser = await launchWithProfile(puppeteer, { headless: Boolean(headless), executablePath, args: launchArgs }, { log: (line) => debug.log(`puppeteer: ${line}`) });
+      break;
+    } catch (err) {
+      lastError = err;
+      debug.log(`puppeteer: browser launch failed for ${executablePath} (${err.message})`);
     }
   }
-  if (!puppeteerWindow.context) puppeteerWindow.context = await puppeteerWindow.browser.createBrowserContext();
-  if (!puppeteerWindow.pagesh) {
-    puppeteerWindow.pagesh = await puppeteerWindow.context.newPage();
-    if (strip) {
-      const page = puppeteerWindow.pagesh;
-      await page.setRequestInterception(true);
-      page.on('request', (req) => {
-        const type = req.resourceType();
-        if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
-          req.abort();
-        } else {
-          req.continue();
-        }
-      });
-    }
+  if (!browser) {
+    browserLaunchFailed = true;
+    throw lastError;
   }
+  try {
+    return { browser, context: await browser.createBrowserContext() };
+  } catch (err) {
+    await browser.close().catch(() => {});
+    throw err;
+  }
+}
+
+// Callers keep the session they were given: a close detaching the shared one under them cannot
+// leave them holding an undefined context ("reading 'newPage'").
+async function startPuppeteer(headless) {
+  if (browserLaunchFailed && !puppeteerSingle().isOpen()) throw new Error('No usable browser this session (a previous launch failed).');
+  const browserSession = await puppeteerSingle().get(headless);
   schedulePuppeteerIdleClose();
+  return browserSession;
+}
+
+// The SteamHunters page, opened once per browser and shared by the scrapes that take its lease.
+function sharedPuppeteerPage(browserSession) {
+  const cached = puppeteerWindow.pagesh;
+  if (cached && cached.session === browserSession) return cached.page;
+  const page = (async () => {
+    const opened = await browserSession.context.newPage();
+    await opened.setRequestInterception(true);
+    opened.on('request', (req) => {
+      const type = req.resourceType();
+      if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
+        req.abort();
+      } else {
+        req.continue();
+      }
+    });
+    return opened;
+  })();
+  puppeteerWindow.pagesh = { session: browserSession, page };
+  page.catch(() => {
+    if (puppeteerWindow.pagesh && puppeteerWindow.pagesh.page === page) puppeteerWindow.pagesh = null;
+  });
+  return page;
 }
 
 async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
@@ -3515,13 +3532,14 @@ async function scrapeWithPuppeteer(info = { appid: 269770 }, alternate) {
     return;
   }
   return withScrapeLease(currentlyscraping, alternate, async () => {
-    await startPuppeteer(alternate, alternate?.steamhunters);
+    const browserSession = await startPuppeteer(alternate);
+    const sharedPage = alternate?.steamhunters ? await sharedPuppeteerPage(browserSession) : null;
     try {
       if (alternate) {
         if (alternate.steamhunters) {
           let start = Date.now();
           const url = `https://steamhunters.com/apps/${info.appid}/achievements?group=&sort=name`;
-          const page = puppeteerWindow.pagesh;
+          const page = sharedPage;
           try {
             await page.goto(url);
             await page.waitForFunction(() => {
@@ -3639,8 +3657,7 @@ async function fetchSteamDbAssets(appid, { needIcons = false } = {}) {
     let page = null;
     const releasePage = await acquirePuppeteerSlot();
     try {
-      await startPuppeteer(true, false);
-      page = await puppeteerWindow.context.newPage();
+      page = await (await startPuppeteer(true)).context.newPage();
       await blockHeavyResources(page);
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36'
@@ -4499,8 +4516,7 @@ async function fetchSteamDbLaunch(appid) {
     let page = null;
     const releasePage = await acquirePuppeteerSlot();
     try {
-      await startPuppeteer(true, false);
-      page = await puppeteerWindow.context.newPage();
+      page = await (await startPuppeteer(true)).context.newPage();
       await blockHeavyResources(page);
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121 Safari/537.36'
