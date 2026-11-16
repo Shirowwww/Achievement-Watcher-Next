@@ -38,7 +38,7 @@
     "accountpicture-ms-extractor": "^2.1.1",
     "adm-zip": "^0.6.1",
     "argv-split": "^3.2.1",
-    "chrome-launcher": "^1.2.2",
+    "chrome-launcher": "^1.2.3",
     "crc": "^4.3.2",
     "deepmerge": "^4.2.2",
     "electron-updater": "^6.8.11",
