@@ -206,9 +206,9 @@ function setGameConfigView(view) {
 // `readOnly` is for the tile dots refreshed in the background: nothing on disk is touched.
 // When the emulator was last put in place: its newest dll, in ms, 0 when none can be read. Not
 // steam_settings, whose folder date moves whenever AW Next rewrites a file in it.
-function emulatorSetupAt(emu) {
+function emulatorSetupAt(files) {
   let newest = 0;
-  for (const file of (emu && emu.dll) || []) {
+  for (const file of files) {
     try {
       newest = Math.max(newest, fs.statSync(file).mtimeMs);
     } catch {
@@ -364,7 +364,7 @@ async function collectGameHealthSignals(appid, { readOnly = false } = {}) {
           dllDirs: [...(report.engineDllDirs || []), ...(report.dllDirs || [])],
           cacheDir: healthToolCaches.toolCacheDir(getUserDataPath(), 'gbeFork'),
         });
-        goldbergReport = { ...report, dllCount: emu.dll.length, runtimeDlls, setupAt: emulatorSetupAt(emu) };
+        goldbergReport = { ...report, dllCount: emu.dll.length, runtimeDlls, setupAt: emulatorSetupAt(gameHealth.setupFiles(emu.dll, report.proxiedRuntimes)) };
       }
     } catch (err) {
       debug.log(`[health] goldberg diagnose failed for ${appid} => ${formatErr(err)}`);

@@ -1064,8 +1064,21 @@ function needsFullReport(game) {
   return !(record.achievement && record.achievement.none) && !isConsoleRecord(record) && !!record.installed;
 }
 
+// The files whose dates say when the emulator was put in place. A release that loads GBE's
+// steamclient through version.dll leaves Valve's steam_api untouched, so that one alone dated
+// every such setup to the game's release and flagged it before it was ever played (#167).
+function setupFiles(steamApiDlls, proxiedRuntimes) {
+  const files = [...(steamApiDlls || [])];
+  for (const entry of proxiedRuntimes || []) {
+    if (entry && entry.runtime) files.push(entry.runtime);
+    if (entry && entry.loadedBy) files.push(entry.loadedBy);
+  }
+  return files;
+}
+
 module.exports = {
   deriveHealth,
+  setupFiles,
   checkSignature,
   issueTopics,
   hasDot,
