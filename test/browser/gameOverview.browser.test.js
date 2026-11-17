@@ -101,7 +101,9 @@ test('the overview shows the store page, keeps store text as text and drops what
     const full = await page.evaluate(async (details) => {
       const root = document.getElementById('root');
       window.heroSources = [];
-      window.GameOverview.show(root, window.game(), window.host({ loadDetails: () => Promise.resolve(details) }));
+      const souvenirs = Array.from({ length: 12 }, (_, i) => ({ kind: 'screenshot', url: 'file:///s' + i + '.png', name: 'Shot ' + i, at: 1000 + i }));
+      const formatDate = (at) => 'day ' + at;
+      window.GameOverview.show(root, window.game(), window.host({ loadDetails: () => Promise.resolve(details), loadSouvenirs: () => Promise.resolve(souvenirs), formatDate }));
       await window.settle();
       const sections = [...root.querySelectorAll('.game-overview-title')].map((node) => node.firstChild.textContent);
       return {
@@ -109,6 +111,9 @@ test('the overview shows the store page, keeps store text as text and drops what
         about: root.querySelector('.game-overview-about').textContent,
         injected: !!root.querySelector('.game-overview-about img') || window.pwned === 1,
         thumbs: root.querySelectorAll('.game-overview-rail .game-overview-thumb').length,
+        souvenirThumbs: root.querySelectorAll('.game-overview-souvenir-grid .game-overview-thumb').length,
+        souvenirCaption: root.querySelector('.game-overview-souvenir-caption').textContent,
+        souvenirLabel: root.querySelector('.game-overview-souvenir .game-overview-thumb').getAttribute('aria-label'),
         bareThumb: root.querySelectorAll('.game-overview-rail .game-overview-thumb img')[2].getAttribute('src'),
         playVisible: !!root.querySelector('.is-play'),
         trailerHidden: root.querySelector('.game-overview-actions .btn:not(.is-play):not(.is-achievements):not(.is-icon)').hidden,
@@ -123,6 +128,9 @@ test('the overview shows the store page, keeps store text as text and drops what
     assert.equal(full.about, DETAILS.description, 'the description is shown as plain text');
     assert.equal(full.injected, false, 'store text never becomes markup');
     assert.equal(full.thumbs, 4, 'the https trailers, the YouTube one and the screenshot; the http stream and the silent file are not offered');
+    assert.equal(full.souvenirThumbs, 12, 'every souvenir of the game is shown, not only the first few');
+    assert.equal(full.souvenirCaption, 'Shot 0day 1000', 'a souvenir names its achievement and its date under the picture');
+    assert.equal(full.souvenirLabel, 'Shot 0, day 1000');
     assert.equal(full.bareThumb, DETAILS.background, 'a trailer with no picture shows the game, not a black box');
     assert.equal(full.playVisible, true);
     assert.equal(full.trailerHidden, false, 'a playable trailer shows the Trailer button');

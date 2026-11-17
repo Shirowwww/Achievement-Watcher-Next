@@ -19230,10 +19230,62 @@ html:not([data-platform='linux']) [data-linux-only] {
   min-height: 36px;
   border-radius: var(--radius-pill);
 }
+/* Three rows show, the rest scroll inside the section; a sliver of the next row says there is more. */
+.game-overview-souvenirs {
+  container-type: inline-size;
+  --souvenir-caption: 40px;
+  --souvenir-row: calc((100cqw - 3 * 8px) / 4 * 9 / 16 + var(--souvenir-caption));
+}
 .game-overview-souvenir-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 8px;
+  max-height: calc(3 * var(--souvenir-row) + 2 * 12px + 24px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  /* Room for a thumbnail's lift on hover and its focus ring. */
+  padding: 4px;
+  margin: -4px -4px 0;
+}
+.game-overview-souvenir-grid::-webkit-scrollbar {
+  width: 9px;
+}
+.game-overview-souvenir-grid::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.game-overview-souvenir-grid::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--border) 60%, transparent);
+  background-clip: padding-box;
+}
+.game-overview-souvenir {
+  display: grid;
+  min-width: 0;
+}
+.game-overview-souvenir-caption {
+  display: grid;
+  height: var(--souvenir-caption);
+  align-content: start;
+  padding-top: 5px;
+  min-width: 0;
+}
+.game-overview-souvenir-name,
+.game-overview-souvenir-date {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.game-overview-souvenir-name {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--text);
+}
+.game-overview-souvenir-date {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-muted);
 }
 .game-overview-empty {
   grid-column: 1 / -1;

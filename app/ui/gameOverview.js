@@ -10,7 +10,6 @@
 (function () {
   const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
   const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
-  const SOUVENIRS_SHOWN = 8;
   let state = null;
 
   const el = (tag, className, attrs = {}) => {
@@ -215,9 +214,20 @@
       return;
     }
     const title = t('game-page-captures', 'Screenshots and clips', 'Captures et clips');
-    items.slice(0, SOUVENIRS_SHOWN).forEach((item, i) => {
-      body.append(thumb({ kind: item.kind === 'clip' ? 'clip' : 'screenshot', thumb: item.kind === 'clip' ? '' : item.url }, item.name || title, () => openViewer(items, i, title)));
-    });
+    items.forEach((item, i) => body.append(souvenirCard(item, title, () => openViewer(items, i, title))));
+  }
+
+  // A souvenir names the achievement it was taken for and when, under its picture.
+  function souvenirCard(item, fallbackName, onOpen) {
+    const name = item.name || fallbackName;
+    const when = item.at && typeof state.host.formatDate === 'function' ? state.host.formatDate(item.at) : '';
+    const card = el('div', 'game-overview-souvenir');
+    const picture = thumb({ kind: item.kind === 'clip' ? 'clip' : 'screenshot', thumb: item.kind === 'clip' ? '' : item.url }, when ? `${name}, ${when}` : name, onOpen);
+    const caption = el('div', 'game-overview-souvenir-caption', { 'aria-hidden': 'true' });
+    caption.append(text('span', 'game-overview-souvenir-name', name));
+    if (when) caption.append(text('span', 'game-overview-souvenir-date', when));
+    card.append(picture, caption);
+    return card;
   }
 
   // A row with a page of its own (a rating's store or review page) is a button that opens it.

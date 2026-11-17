@@ -56,6 +56,8 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Improved
 
+- **Every screenshot and clip of a game on its page.** The game page no longer stops at eight: three
+  rows show and the rest scroll, each named after its achievement with the date it was taken.
 - **With "Auto-unpack SteamStub DRM" off, Steamless never runs on its own (#195).** The manual
   emulator fix asks first when the game's executable has SteamStub, and the automatic fix and
   "Fix all games" leave such a game as it is.
