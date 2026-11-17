@@ -702,9 +702,22 @@ function initialGame(info) {
   return /^[a-z]{1,3}\d{1,2}$/.test(value) ? value : '';
 }
 
+/*
+  bbport's runtime (Supermedo's Uncharted since 0.3.15) keeps a game's unlocks in
+  <user>/trophy/<NP id>.log, "<id> <unix time>" lines: one file per game, so a collection's needs
+  no game named in last_run.log.
+*/
+const NP_UNLOCK_LOG = /^npwr\d{5}_\d{2}\.log$/;
+function npUnlockLogs(info) {
+  const npcommid = /^NPWR\d{5}_\d{2}$/.test(String(info.npcommid || '')) ? info.npcommid : '';
+  if (!npcommid) return [];
+  return [...new Set(listed(info.progressDirs).filter(Boolean).map(String))].map((dir) => path.join(dir, 'trophy', `${npcommid}.log`));
+}
+
 // The unlocks of one log, of this record's game when the log is a collection's.
 function logUnlocks(info, file, lines) {
   const name = path.basename(file).toLowerCase();
+  if (NP_UNLOCK_LOG.test(name)) return logs.parseTrophiesLog(lines);
   const parsed = isRunLog(name) || !LOG_FILES.includes(name) ? logs.parseLastRunLog(lines, { port: info.port, initial: initialGame(info) }) : logs.parseLog(name, lines);
   return parsed.filter((unlock) => !info.game || unlock.game === info.game);
 }
@@ -734,7 +747,7 @@ function readUnlocks(data) {
   const runLogs = inLogDir(names.filter(isRunLog));
   const sessionFiles = [...runLogs, ...progress.sessionLogs(info), ...listed(info.logFiles)];
   if (info.game) {
-    const own = readLogFiles(info, inLogDir(names.filter((name) => !isRunLog(name))));
+    const own = readLogFiles(info, [...inLogDir(names.filter((name) => !isRunLog(name))), ...npUnlockLogs(info)]);
     const session = readLogFiles(info, sessionFiles);
     const read = progress.mergeInto(own.unlocked, toEntries(session.unlocked));
     return { unlocked: info.appid ? rememberUnlocks(info.appid, read) : read, unstable: own.unstable || session.unstable };
@@ -747,7 +760,7 @@ function readUnlocks(data) {
     trophies.dat and leaves last_run.log, #143). A newer log still counts, the record may lag a session.
   */
   const newer = (file) => !saved.stateTime || progress.modified(file) > saved.stateTime;
-  const own = readLogFiles(info, inLogDir(names.filter((name) => !isRunLog(name))).filter(newer));
+  const own = readLogFiles(info, [...inLogDir(names.filter((name) => !isRunLog(name))), ...npUnlockLogs(info)].filter(newer));
   const session = readLogFiles(info, sessionFiles.filter(newer));
   progress.mergeInto(own.unlocked, toEntries(saved.unlocked));
   const journaled = info.appid && (runLogs.length > 0 || listed(info.sessionDirs).length > 0 || listed(info.logFiles).length > 0);

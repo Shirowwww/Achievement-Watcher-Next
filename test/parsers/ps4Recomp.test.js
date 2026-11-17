@@ -287,6 +287,25 @@ test('the Uncharted collection gets one entry per game, unlocks split by the gam
   assert.equal(logs.gameFromText('Switching to big3-ps4_Shipping.elf'), 'u3');
 });
 
+/*
+  Supermedo's runtime since 0.3.15 (src/runtime_trophy.c) keeps each game's unlocks in
+  <user>/trophy/<NP id>.log, and run.py prints "Preparing" only when it rebuilds out/: a later
+  session's last_run.log names no game at all.
+*/
+test("the Uncharted collection reads each game's own unlock log when last_run.log names no game", () => {
+  const root = fixture.makePort(dir('unch315', 'Uncharted'), 'uncharted');
+  fixture.makeGameDump(dir('unch315', 'Collection'), { sets: fixture.COLLECTION_SETS });
+  fixture.settingsFile(appData, 'uncharted-launcher', { game_dir: dir('unch315', 'Collection') });
+  const records = ps4Recomp.scan(root);
+  for (const record of records) fs.rmSync(ps4Recomp._internal.journalFile(record.appid), { force: true });
+
+  fixture.write(path.join(root, 'user', 'last_run.log'), 'Runtime: trophy 4 unlocked (NPWR08661_00: Relic Finder)\n');
+  fixture.write(path.join(root, 'user', 'trophy', 'NPWR08661_00.log'), '4 1794000000\n');
+  fixture.write(path.join(root, 'user', 'trophy', 'NPWR08663_00.log'), '9 1794000100\r\n');
+  const byGame = records.map((r) => ps4Recomp.getAchievements(r.data).map((u) => [u.id, u.earned_time]));
+  assert.deepEqual(byGame, [[['4', 1794000000]], [], [['9', 1794000100]]]);
+});
+
 // #138: the reporter's trophy01.txt, CRLF lines included.
 const REPORTED_LIST = '12 1792644204\r\n41 1792645166\r\n';
 

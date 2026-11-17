@@ -209,6 +209,27 @@ test('a native port is followed until its first progress snapshot', async () => 
   }
 });
 
+// bbport's runtime (Supermedo's Uncharted 0.3.15) writes <user>/trophy/<NP id>.log once a game earns its first trophy.
+test('a port is followed until its first unlock in trophy/<NP id>.log', async () => {
+  const root = makeBloodborne('nplog');
+  fs.mkdirSync(path.join(root, 'user'), { recursive: true });
+  writeDb([root]);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const trophyDir = path.join(root, 'user', 'trophy');
+    fs.mkdirSync(trophyDir, { recursive: true });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fs.writeFileSync(path.join(trophyDir, `${fixture.NPCOMMID}.log`), '2 1792512300\n');
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'the unlock written after start is announced');
+    assert.equal(ctx.sent[0].achievementDisplayName, 'Yharnam Sunrise');
+    assert.equal(ctx.sent[0].time, 1792512300);
+  } finally {
+    watcher.stop();
+  }
+});
+
 // HayatoG's launchers start a new out/logs/run-<date>.log per session.
 test('a new session log of a native port is announced, the old ones stay silent', async () => {
   const root = path.join(temp, 'tlg', 'port');

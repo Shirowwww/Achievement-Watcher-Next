@@ -136,7 +136,7 @@ const listed = (value) => (Array.isArray(value) ? value : []);
 
 /*
   The folders a group's records read: the log folder, the user folders and the progress folders in
-  them (trophies/, trophy/<NP id>/), the session log folders, recursively since a launcher may date
+  them (trophies/, trophy/ for <NP id>.log, trophy/<NP id>/), the session log folders, recursively since a launcher may date
   a folder per session, and the folders of declared logs.
 */
 function foldersOf(group) {
@@ -152,7 +152,10 @@ function foldersOf(group) {
     for (const dir of [data.userDir, ...listed(data.progressDirs)].filter(Boolean)) {
       add(dir);
       add(path.join(dir, 'trophies'));
-      if (data.npcommid) add(path.join(dir, 'trophy', data.npcommid));
+      if (data.npcommid) {
+        add(path.join(dir, 'trophy'));
+        add(path.join(dir, 'trophy', data.npcommid));
+      }
     }
     for (const entry of listed(data.sessionDirs)) add(typeof entry === 'string' ? entry : entry && entry.dir, true);
     for (const file of listed(data.logFiles)) add(path.dirname(String(file)));
