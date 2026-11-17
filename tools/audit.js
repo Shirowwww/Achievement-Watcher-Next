@@ -11,6 +11,8 @@
 */
 
 const { execSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const BLOCKING = new Set(['high', 'critical']);
 
@@ -20,14 +22,41 @@ const ACCEPTED = {
     'braces <= 3.0.3 (through fast-glob) can overflow the stack on a deeply nested brace pattern. ' +
     'No release fixes it. Every glob pattern is written by the parsers from local folder paths, ' +
     'never taken from the network, so the worst case is one failed scan.',
+  'GHSA-fc5q-39xc-vjpf':
+    'picomatch <= 4.0.7 (through fast-glob) backtracks on a crafted extglob pattern such as +(*a). ' +
+    'No release fixes it. The parsers only use their own fixed patterns and escape folder paths, ' +
+    'and those patterns stay linear on any file name.',
 };
+
+function installedVersion(name) {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(process.cwd(), 'node_modules', name, 'package.json'), 'utf8')).version;
+  } catch {
+    return null;
+  }
+}
+
+function isNewer(version, than) {
+  const parts = (v) => String(v).split('-')[0].split('.').map((n) => Number(n) || 0);
+  const [a, b] = [parts(version), parts(than)];
+  for (let i = 0; i < 3; i++) if ((a[i] || 0) !== (b[i] || 0)) return (a[i] || 0) > (b[i] || 0);
+  return false;
+}
+
+// When no release fixes a package, npm offers to downgrade its parent instead (fast-glob 3 back to
+// 2.2.7 for picomatch): going back a version is not a fix.
+function hasFix(fixAvailable, installed) {
+  if (!fixAvailable || typeof fixAvailable !== 'object') return Boolean(fixAvailable);
+  const current = installed(fixAvailable.name);
+  return !current || isNewer(fixAvailable.version, current);
+}
 
 function advisoryId(advisory) {
   const match = /GHSA-[\w-]+/.exec(String(advisory.url || ''));
   return match ? match[0] : String(advisory.source);
 }
 
-function blocking(report, accepted = ACCEPTED) {
+function blocking(report, accepted = ACCEPTED, installed = installedVersion) {
   if (!report || typeof report.vulnerabilities !== 'object' || report.vulnerabilities === null) {
     throw new Error('npm did not produce an audit report');
   }
@@ -39,7 +68,7 @@ function blocking(report, accepted = ACCEPTED) {
       const id = advisoryId(advisory);
       if (found.has(id)) continue;
       const owner = report.vulnerabilities[advisory.name] || entry;
-      if (accepted[id] && !owner.fixAvailable) continue;
+      if (accepted[id] && !hasFix(owner.fixAvailable, installed)) continue;
       found.set(id, {
         id,
         package: advisory.name,

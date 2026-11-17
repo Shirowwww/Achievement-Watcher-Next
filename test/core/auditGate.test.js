@@ -53,6 +53,16 @@ test('the accepted advisory blocks again once its package has a fix', () => {
   assert.match(found[0].reason, /fix/);
 });
 
+test('npm offering to downgrade a parent is no fix for an accepted advisory, a newer parent is', () => {
+  assert.ok(ACCEPTED['GHSA-fc5q-39xc-vjpf'], 'the exception must say why it exists');
+  // npm's real answer for picomatch, which no release fixes: go back from fast-glob 3 to 2.2.7.
+  const downgrade = { name: 'fast-glob', version: '2.2.7', isSemVerMajor: true };
+  const picomatch = { name: 'picomatch', severity: 'high', via: [advisory('GHSA-fc5q-39xc-vjpf', 'high', 'picomatch')], fixAvailable: downgrade };
+  assert.deepEqual(blocking(report([picomatch]), ACCEPTED, () => '3.3.3'), []);
+  const upgrade = { ...picomatch, fixAvailable: { ...downgrade, version: '4.0.0' } };
+  assert.equal(blocking(report([upgrade]), ACCEPTED, () => '3.3.3').length, 1);
+});
+
 test('an advisory reached through several packages is reported once', () => {
   const shared = advisory('GHSA-dddd-eeee-ffff', 'high', 'shared');
   const found = blocking(report([
