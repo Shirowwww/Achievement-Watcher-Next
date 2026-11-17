@@ -35,6 +35,37 @@ test('a folder AW Next repaired before gets its setup back after a repack update
   assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), true);
 });
 
+test('a scan leaves the loader alone once the user restored the release setup', () => {
+  // mr_robot_a, Valhalla EMPRESS: Restore put EMPRESS's loader back, and the next refresh swapped
+  // it out again because a backup existed, so the game kept failing on Ubisoft's online service.
+  const { dir, loader } = release();
+  uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
+  fs.writeFileSync(loader, 'MZ AW Next loader');
+  uplayR2.restoreConfigBackup({ dir });
+  assert.equal(fs.readFileSync(loader, 'utf8'), 'MZ release loader');
+  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), false);
+});
+
+test('the rollback of a failed repair is not taken for the user choosing the release setup', () => {
+  const { dir, loader } = release();
+  uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
+  uplayR2.restoreConfigBackup({ dir, rollback: true });
+  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), true);
+});
+
+test('a repair made after a restore lets the scan keep the setup again', () => {
+  const { dir, loader } = release();
+  uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
+  uplayR2.restoreConfigBackup({ dir });
+  // Dated an hour back so the repair below is the newer snapshot even within one millisecond.
+  const [restored] = uplayR2.listConfigBackups(dir);
+  const manifestFile = path.join(restored.dir, uplayR2.BACKUP_MANIFEST);
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+  fs.writeFileSync(manifestFile, JSON.stringify({ ...manifest, createdAt: new Date(Date.now() - 3600e3).toISOString() }));
+  uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
+  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), true);
+});
+
 test('a folder with no loader at all has nothing of the release to lose', () => {
   const { dir } = release();
   assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [] }), true);

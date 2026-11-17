@@ -108,6 +108,22 @@ function findGogAppId(gameDir) {
   return null;
 }
 
+const GOG_ROOT_MAX_CLIMB = 3;
+
+// The folder holding the goggame-<id>.info marker, starting at `dir` and climbing at most three
+// parents: a game added by hand points at its exe folder (Cyberpunk 2077: bin/x64), not the root.
+function findGogInstallRoot(dir) {
+  if (!dir) return null;
+  let current = path.resolve(dir);
+  for (let climb = 0; climb <= GOG_ROOT_MAX_CLIMB; climb++) {
+    if (findGogAppId(current)) return current;
+    const parent = path.dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // SDK-version matching
 // ---------------------------------------------------------------------------
@@ -597,6 +613,7 @@ module.exports = {
   findGalaxyDlls,
   hasGalaxyDll,
   findGogAppId,
+  findGogInstallRoot,
   versionParts,
   versionsMatch,
   releaseForSdkVersion,

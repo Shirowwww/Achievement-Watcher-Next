@@ -1732,7 +1732,7 @@ function listConfigBackups(dir) {
 }
 
 // Restore a manifest snapshot exactly. Legacy config-only snapshots remain readable.
-function restoreConfigBackup({ dir, backup } = {}) {
+function restoreConfigBackup({ dir, backup, rollback = false } = {}) {
   if (!dir) throw new Error('restoreConfigBackup: dir is required');
   const snapshot = backup || listConfigBackups(dir)[0];
   if (!snapshot) throw new Error('restoreConfigBackup: no backup available');
@@ -1755,7 +1755,18 @@ function restoreConfigBackup({ dir, backup } = {}) {
         removed.push(entry.path);
       }
     }
-    return { dir: targetRoot, backup: snapshot.name, restored, removed };
+    // A restore the user asked for means "the release's own setup": no scan may swap it again. Only a
+    // flag, so a manifest that cannot be rewritten is reported, not turned into a failed restore.
+    let choiceRecorded = false;
+    if (!rollback) {
+      try {
+        writeFileAtomic(path.join(snapshot.dir, BACKUP_MANIFEST), JSON.stringify({ ...snapshot.manifest, restoredAt: new Date().toISOString() }, null, 2));
+        choiceRecorded = true;
+      } catch {
+        choiceRecorded = false;
+      }
+    }
+    return { dir: targetRoot, backup: snapshot.name, restored, removed, choiceRecorded };
   }
   for (const name of snapshot.files) {
     writeFileAtomic(path.join(dir, name), fs.readFileSync(path.join(snapshot.dir, name)));

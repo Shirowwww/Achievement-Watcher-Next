@@ -7765,7 +7765,7 @@ var app = {
             // not the tile's source label, so a manually-added cracked GOG install qualifies the same
             // as an already-repaired one.
             {
-              const universeLanGameDir = process.platform === 'win32' ? ctxGame?.gameDir : null;
+              const universeLanGameDir = process.platform === 'win32' ? gogUniverseLan.findGogInstallRoot(ctxGame?.gameDir) : null;
               const universeLanGogAppId = universeLanGameDir ? gogUniverseLan.findGogAppId(universeLanGameDir) : null;
               const hasGalaxyDll = universeLanGameDir && universeLanGogAppId ? gogUniverseLan.hasGalaxyDll(universeLanGameDir) : false;
               if (universeLanGameDir && universeLanGogAppId && hasGalaxyDll) {

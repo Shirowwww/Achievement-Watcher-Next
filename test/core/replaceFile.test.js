@@ -128,3 +128,29 @@ test('sweepSidecars clears only the stale leftovers of an earlier swap', () => {
   assert.equal(fs.existsSync(fresh), true);
   assert.equal(fs.existsSync(unrelated), true);
 });
+
+test('a retried rename still waits where SharedArrayBuffer does not exist', () => {
+  // A renderer without cross-origin isolation has no SharedArrayBuffer: the Uplay repair died on
+  // its first retry with "SharedArrayBuffer is not defined" instead of trying again.
+  const { renameRetry } = require('../../app/util/replaceFile.js');
+  const dir = scratch();
+  const from = path.join(dir, 'from.txt');
+  const to = path.join(dir, 'to.txt');
+  fs.writeFileSync(from, 'NEW');
+  const realRename = fs.renameSync;
+  const realBuffer = globalThis.SharedArrayBuffer;
+  let refused = 0;
+  fs.renameSync = (a, b) => {
+    if (refused++ === 0) throw Object.assign(new Error('busy'), { code: 'EBUSY' });
+    return realRename(a, b);
+  };
+  delete globalThis.SharedArrayBuffer;
+  try {
+    renameRetry(from, to);
+  } finally {
+    fs.renameSync = realRename;
+    globalThis.SharedArrayBuffer = realBuffer;
+  }
+  assert.equal(fs.readFileSync(to, 'utf8'), 'NEW');
+  assert.equal(refused, 2);
+});

@@ -69,6 +69,14 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Restoring a game's Uplay setup sticks.** After **Restore the previous Uplay R1/R2
+  configuration**, the next refresh put AW Next's loader back, and a release with its own Ubisoft
+  layer (Assassin's Creed Valhalla, EMPRESS) failed again on Ubisoft's online service. A restored
+  game is now left alone until you repair it again.
+- **A Uplay repair no longer stops half way when a file is busy.** Waiting for a held file to free
+  up failed with "SharedArrayBuffer is not defined" inside the window.
+- **The GOG achievement fix is offered for a GOG game added by hand.** It looked for GOG's marker
+  file next to the game's executable, while games like Cyberpunk 2077 keep it two folders up.
 - **Diablo III (SanctuaryPort) 0.4.0 lists its trophies again (#188).** The port now writes the
   unlock time after each trophy, and AW Next read that file as damaged. Unlocks now carry their
   real date, and the game no longer appears a second time as Diablo III: Reaper of Souls.

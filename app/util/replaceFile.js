@@ -23,8 +23,23 @@ const SIDECAR_MARKER = '.aw-replaced-';
 // Old enough that no replace still running anywhere could own it.
 const SIDECAR_MAX_AGE = 60 * 60 * 1000;
 
+/*
+  The renderer has no SharedArrayBuffer (no cross-origin isolation) and may not block in
+  Atomics.wait, so it spins instead: the waits here are 40 to 100 ms, a few times at most.
+*/
 function sleepSync(ms) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+  if (typeof SharedArrayBuffer === 'function') {
+    try {
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+      return;
+    } catch {
+      /* a thread that may not block: spin below */
+    }
+  }
+  const until = Date.now() + ms;
+  while (Date.now() < until) {
+    /* spin */
+  }
 }
 
 // Clears FILE_ATTRIBUTE_READONLY. Missing files and filesystems without the notion are not errors.

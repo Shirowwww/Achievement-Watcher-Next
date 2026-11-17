@@ -42,6 +42,26 @@ test('findGogAppId returns null with no marker file', (t) => {
   assert.equal(gogUniverseLan.findGogAppId(tmpDir(t)), null);
 });
 
+test('findGogInstallRoot climbs from the exe folder to the install that holds the marker', (t) => {
+  // A manually added game points at its exe folder: Cyberpunk 2077 keeps goggame-<id>.info two
+  // levels above bin/x64, and the GOG fix was never offered for it.
+  const root = tmpDir(t);
+  const exeDir = path.join(root, 'bin', 'x64');
+  fs.mkdirSync(exeDir, { recursive: true });
+  fs.writeFileSync(path.join(root, 'goggame-1423049311.info'), '{}');
+  assert.equal(gogUniverseLan.findGogInstallRoot(exeDir), root);
+  assert.equal(gogUniverseLan.findGogInstallRoot(root), root);
+});
+
+test('findGogInstallRoot gives up beyond three folders up', (t) => {
+  const root = tmpDir(t);
+  const deep = path.join(root, 'a', 'b', 'c', 'd');
+  fs.mkdirSync(deep, { recursive: true });
+  fs.writeFileSync(path.join(root, 'goggame-1.info'), '{}');
+  assert.equal(gogUniverseLan.findGogInstallRoot(deep), null);
+  assert.equal(gogUniverseLan.findGogInstallRoot(''), null);
+});
+
 test('versionsMatch tolerates dot and comma-space separated version strings', () => {
   assert.equal(gogUniverseLan.versionsMatch('1.152.6.0', '1, 152, 6, 0'), true);
   assert.equal(gogUniverseLan.versionsMatch('1.152.6.0', '1.152.6.1'), false);

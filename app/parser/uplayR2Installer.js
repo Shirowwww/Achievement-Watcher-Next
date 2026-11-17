@@ -663,13 +663,15 @@ function canAdoptInstall({ gameDir, loaderPaths = [], exePath = '' } = {}) {
   May a scan, with nobody watching, swap the loader this folder runs? Only when the release ships none
   or AW Next repaired the folder before (its .aw-backups snapshot), so a repack update that wiped the
   setup gets it back. A release's own loader is left to the confirmed repair: EMPRESS's Valhalla
-  looped on "Ubisoft services are unavailable" once a scan had replaced it (#166).
+  looped on "Ubisoft services are unavailable" once a scan had replaced it (#166). A newest snapshot
+  the user restored means they chose the release's setup, and the scan respects that.
 */
 function mayReplaceLoaderUnattended({ gameDir, loaderPaths = [] } = {}) {
   if (!loaderPaths || loaderPaths.length === 0) return true;
   if (!gameDir) return false;
   try {
-    return uplayR2.listConfigBackups(gameDir).length > 0;
+    const [latest] = uplayR2.listConfigBackups(gameDir);
+    return !!latest && !(latest.manifest && latest.manifest.restoredAt);
   } catch {
     return false;
   }
@@ -994,7 +996,7 @@ function repairInstallation({
     if (snapshot) {
       try {
         const backup = { name: path.basename(snapshot.backupDir), dir: snapshot.backupDir, files: snapshot.files, manifest: snapshot.manifest };
-        uplayR2.restoreConfigBackup({ dir: gameDir, backup });
+        uplayR2.restoreConfigBackup({ dir: gameDir, backup, rollback: true });
         error.rolledBack = true;
       } catch (rollbackError) {
         error.rollbackError = rollbackError;
