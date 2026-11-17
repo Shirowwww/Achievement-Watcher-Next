@@ -2,6 +2,7 @@
 
 const path = require('path');
 const { forkNode, unpackedPath } = require('./nodeProcess.js');
+const dirFingerprint = require('./dirFingerprint.js');
 
 const WORKER_FILE = unpackedPath(path.join(__dirname, '..', 'parser', 'scanWorker.js'));
 // A host that keeps dying is not worth restarting forever: after this many deaths in a row the
@@ -39,8 +40,22 @@ function errorFields(err) {
                   main process itself), which the host's parsers already treat as "no answer"
     idleMs        stop the host after this long without a call, once its background work is done;
                   0 keeps it for as long as this process lives
+    checkFoldersWithoutHost
+                  with no host running, discoveryInputsUnchanged() compares the folders here, off
+                  this thread, instead of starting a host for a few thousand stat() calls
 */
-function createScanHost({ local, userDataPath, isDev = false, secret = () => '', invoke = null, send = null, log = () => {}, idleMs = 0, workerFile = WORKER_FILE }) {
+function createScanHost({
+  local,
+  userDataPath,
+  isDev = false,
+  secret = () => '',
+  invoke = null,
+  send = null,
+  log = () => {},
+  idleMs = 0,
+  checkFoldersWithoutHost = false,
+  workerFile = WORKER_FILE,
+}) {
   const localModule = () => (typeof local === 'function' ? local() : local);
   let child = null;
   let deaths = 0;
@@ -295,12 +310,15 @@ function createScanHost({ local, userDataPath, isDev = false, secret = () => '',
       if (Array.isArray(dirs) && dirs.length > 0) discoverDirs = dirs;
       return ids;
     },
-    discoveryInputsUnchanged: () =>
-      withFallback('discoveryInputsUnchanged', [], (parser) => {
+    discoveryInputsUnchanged: () => {
+      // The folders a new host would be handed, in the order it would take them.
+      if (checkFoldersWithoutHost && !child) return dirFingerprint.matchesAsync(discoverDirs || (fingerprint && fingerprint.dirs));
+      return withFallback('discoveryInputsUnchanged', [], (parser) => {
         if (fingerprint) parser.restoreScanFingerprint(fingerprint);
         if (discoverDirs) parser.restoreDiscoverFingerprint(discoverDirs);
         return parser.discoveryInputsUnchanged();
-      }),
+      });
+    },
     scanInputsUnchanged: (stored) => withFallback('scanInputsUnchanged', [stored], (parser) => parser.scanInputsUnchanged(stored)),
     // Only the fields exeList.reconcile reads cross over, not every game's achievement list.
     reconcileExeList(games) {

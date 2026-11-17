@@ -162,6 +162,14 @@ renamed in 3.9.0 and the history is kept under one file.
   last game that unlocked something or the first one of the library. A game stopped in RPCS3 is no
   longer targeted.
 
+### Performance
+
+- **Lighter in the background, with the window open and while a game runs.** Opening the window
+  reuses the library when no game changed instead of scanning it again, the scanner stops a minute
+  after its last job, and the Steam connection behind game details closes a few minutes after a
+  scan. The Watchdog lists running processes for a fraction of the cost and stops checking
+  keyboards, mice and headsets for a controller every few seconds.
+
 ## 3.12.7 - 2026-11-13
 
 ### Added

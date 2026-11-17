@@ -88,7 +88,10 @@ if (achievements.setEmulatorFixedHandler) {
   });
 }
 // The library scan reads thousands of folders synchronously, so it runs in a process of its own and
-// this window stays responsive. `achievements` above is its fallback and answers its events.
+// this window stays responsive. `achievements` above is its fallback and answers its events. After a
+// scan that process holds 150 MB or more doing nothing, so it stops after a quiet minute; the
+// 3-minute new-install check compares the folders from here and starts it only for real work.
+const SCAN_HOST_IDLE_MS = 60 * 1000;
 const scanHost = require(path.join(appPath, 'util/scanHost.js')).createScanHost({
   local: achievements,
   userDataPath: userdatapath,
@@ -97,6 +100,8 @@ const scanHost = require(path.join(appPath, 'util/scanHost.js')).createScanHost(
   invoke: (channel, ...rest) => ipcRenderer.invoke(channel, ...rest),
   send: (channel, ...rest) => ipcRenderer.send(channel, ...rest),
   log: (line) => debug.log(line),
+  idleMs: SCAN_HOST_IDLE_MS,
+  checkFoldersWithoutHost: true,
 });
 const blacklist = require(path.join(appPath, 'parser/blacklist.js'));
 const userDir = require(path.join(appPath, 'parser/userDir.js'));
@@ -4478,6 +4483,9 @@ function watchdogPresentation(state) {
 // The status is always on screen but is only pushed by the monitor poll, so a language change has
 // to repaint it from the last known state instead of waiting for the next tick.
 let lastWatchdogState = null;
+// The 5-second poll repeats an unchanged state, and drawing it again cost a style, layout and paint
+// pass each time; it is skipped while the title bar still shows that very state.
+let shownWatchdogStatus = null;
 function renderWatchdogStatus(state) {
   let shadow = titleBarShadow();
   if (!shadow) return;
@@ -4489,12 +4497,19 @@ function renderWatchdogStatus(state) {
   watchdogStatus.classList.toggle('status-pulse', view.pulse);
   setWatchdogStatus(shadow.querySelector('.status-text'), view.label, view.detail);
   setStartWatchdogButton(shadow.querySelector('#start-watchdog'), view.button);
+  shownWatchdogStatus = { state, dot: watchdogStatus };
+}
+
+function showsWatchdogState(state) {
+  const shown = shownWatchdogStatus;
+  return Boolean(shown && shown.state === state && shown.dot.isConnected);
 }
 
 ipcRenderer.on('watchdog-status', (event, state) => {
   // Booleans are what this channel carried before the heartbeat existed; keep reading them so a
   // stale renderer never renders "stopped" for a healthy monitor.
   lastWatchdogState = typeof state === 'string' ? state : state ? 'running' : 'stopped';
+  if (showsWatchdogState(lastWatchdogState)) return;
   renderWatchdogStatus(lastWatchdogState);
 });
 

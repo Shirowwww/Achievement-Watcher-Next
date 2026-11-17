@@ -11,6 +11,7 @@
 const fs = require('fs');
 const path = require('path');
 const { pathKey } = require(path.join(__dirname, 'winHosts.js'));
+const { namesKey } = require(path.join(__dirname, 'dirFingerprint.js'));
 
 // Case-insensitive on Windows only: on Linux, Game and game are two folders with two listings.
 const keyOf = (dir) => (dir ? pathKey(dir) : '');
@@ -19,6 +20,8 @@ let depth = 0;
 let entriesCache = null;
 let namesCache = null;
 let visitedDirs = null;
+// The names each visited directory held when the walk read it, as dirFingerprint keys them.
+let visitedNames = null;
 // Keys already in visitedDirs: a folder an untracked reader listed first is still recorded when a
 // tracked walk asks for it from the memo, and recorded once.
 let trackedKeys = null;
@@ -32,6 +35,7 @@ function beginScope() {
     entriesCache = new Map();
     namesCache = new Map();
     visitedDirs = [];
+    visitedNames = new Map();
     trackedKeys = new Set();
     prefetched = new Map();
   }
@@ -45,7 +49,7 @@ function endScope() {
     namesCache = null;
     trackedKeys = null;
     prefetched = null;
-    // visitedDirs is deliberately kept: the caller reads it after the scope closes.
+    // visitedDirs and visitedNames are deliberately kept: the caller reads them after the scope closes.
   }
 }
 
@@ -57,6 +61,11 @@ function isActive() {
 // looked at.
 function lastVisitedDirs() {
   return visitedDirs || [];
+}
+
+// The names key of a directory the last scope visited, undefined for one it did not.
+function visitedNamesKey(dir) {
+  return visitedNames ? visitedNames.get(String(dir)) : undefined;
 }
 
 /*
@@ -85,6 +94,7 @@ function readdir(dir, { track = true } = {}) {
   if (entriesCache && result && track && !trackedKeys.has(key)) {
     trackedKeys.add(key);
     visitedDirs.push(String(dir));
+    visitedNames.set(String(dir), namesKey(result.map((entry) => entry.name)));
   }
   return result;
 }
@@ -138,4 +148,4 @@ async function withScope(fn) {
   }
 }
 
-module.exports = { beginScope, endScope, isActive, lastVisitedDirs, prefetch, readdir, readdirNames, withScope };
+module.exports = { beginScope, endScope, isActive, lastVisitedDirs, visitedNamesKey, prefetch, readdir, readdirNames, withScope };

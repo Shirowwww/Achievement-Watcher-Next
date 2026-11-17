@@ -15,6 +15,7 @@ const path = require('node:path');
 
 const { createScanHost, MAX_CONSECUTIVE_DEATHS, WORKER_FILE } = require('../../app/util/scanHost.js');
 const { forkNode } = require('../../app/util/nodeProcess.js');
+const dirFingerprint = require('../../app/util/dirFingerprint.js');
 const { makeTempDir } = require('../helpers/tempDir');
 
 const FAKE_WORKER = path.join(__dirname, '..', 'helpers', 'scanHostFakeWorker.js');
@@ -264,6 +265,23 @@ test('a discovery that ran here after the host died keeps the folders it read he
   const { host } = hostFor(t, { local });
   assert.deepEqual(await host.detectInstalledAppids({ diskNow: 3, crash: true }), ['local']);
   assert.equal(await host.discoveryInputsUnchanged(), true, 'the next host was handed the folders the local walk read');
+});
+
+test('with no host running, the folder check is answered here and starts none; a live host still answers it', async (t) => {
+  fakeDisk(t);
+  const { host } = hostFor(t, { checkFoldersWithoutHost: true });
+  const library = makeTempDir('aw-scanhost-local-check-');
+  host.restoreScanFingerprint({ dirs: dirFingerprint.capture([library]), files: [] });
+
+  // The fake host would answer false here: its disk reads 1, never this folder's real mtime.
+  assert.equal(await host.discoveryInputsUnchanged(), true, 'compared here, against the real folder');
+  fs.mkdirSync(path.join(library, 'New Game'));
+  assert.equal(await host.discoveryInputsUnchanged(), false, 'a new install is still seen');
+
+  await host.detectInstalledAppids({});
+  assert.equal(await host.discoveryInputsUnchanged(), true, 'the running host compares against its own walk');
+  host.dispose();
+  assert.equal(await host.discoveryInputsUnchanged(), false, 'and once it is gone, its folders are compared here');
 });
 
 test('an idle host is stopped, but never while the work a scan started is still running', async (t) => {

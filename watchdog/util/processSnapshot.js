@@ -2,15 +2,18 @@
 
 // Native process enumeration through koffi, replacing a `tasklist.exe` spawn. The playtime monitor
 // polls every 3s for the daemon's whole life, so each poll first asks K32EnumProcesses (~0.03 ms)
-// whether the process table moved at all, and only then reads every name in one
-// NtQuerySystemInformation call (~5 ms). koffi is already the Watchdog's FFI backend, so this adds
-// no dependency; a load failure just falls back to win-tasklist.
+// whether the process table moved at all. On a busy desktop it moves between almost every poll, so
+// a moved table is updated from the processes that started (~0.2 ms), and read in full in one
+// NtQuerySystemInformation call (~5 ms) only as a periodic safety net. koffi is already the
+// Watchdog's FFI backend, so this adds no dependency; a load failure just falls back to win-tasklist.
 
 const MAX_PATH = 260;
 const TH32CS_SNAPPROCESS = 0x00000002;
 const PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
 const SYSTEM_PROCESS_INFORMATION = 5;
+const SYSTEM_PROCESS_ID_INFORMATION = 88;
 const STATUS_INFO_LENGTH_MISMATCH = -1073741820; // 0xC0000004
+const STATUS_INVALID_CID = -1073741811; // 0xC000000B: no process has this id
 const MAX_PIDS = 16384;
 // What ToolHelp calls pid 0, which the system query leaves unnamed.
 const IDLE_PROCESS_NAME = '[System Process]';
@@ -19,6 +22,9 @@ const MAX_LIST_AGE_MS = 30 * 1000;
 
 // SYSTEM_PROCESS_INFORMATION on x64: the fields read here and where they sit in each entry.
 const ENTRY = { next: 0x00, createTime: 0x20, nameLength: 0x38, nameBuffer: 0x40, pid: 0x50 };
+// SYSTEM_PROCESS_ID_INFORMATION on x64: a pid, then a UNICODE_STRING pointing at the caller's buffer.
+const ID_INFO = { pid: 0x00, length: 0x08, maximumLength: 0x0a, buffer: 0x10, size: 0x18 };
+const ID_NAME_BYTES = 2048;
 
 let api = null;
 let apiFailed = false;
@@ -212,7 +218,85 @@ function canReuseList(previous, pids, newestCreated, now) {
   return true;
 }
 
+let idInfo = null;
+let idName = null;
+
+// The image name of one process, read without opening it: '' when the system does not say, null
+// when the process no longer exists.
+function imageNameOf(win32, pid) {
+  if (!idInfo) {
+    idInfo = Buffer.alloc(ID_INFO.size);
+    idName = Buffer.alloc(ID_NAME_BYTES);
+  }
+  idInfo.fill(0);
+  idInfo.writeBigUInt64LE(BigInt(pid), ID_INFO.pid);
+  idInfo.writeUInt16LE(idName.length, ID_INFO.maximumLength);
+  idInfo.writeBigUInt64LE(BigInt(win32.koffi.address(idName)), ID_INFO.buffer);
+  const status = win32.fast.NtQuerySystemInformation(SYSTEM_PROCESS_ID_INFORMATION, idInfo, idInfo.length, [0]);
+  if (status === STATUS_INVALID_CID) return null;
+  if (status !== 0) return '';
+  const image = idName.toString('utf16le', 0, idInfo.readUInt16LE(ID_INFO.length));
+  return image.slice(image.lastIndexOf('\\') + 1);
+}
+
+/*
+  The kernel keeps processes in creation order, so the ones started since the last read are the tail
+  of the pid list. A binary search on creation time finds where that tail starts (about ten queries
+  for 500 processes) and only those processes are named, one query each. A process whose creation
+  time cannot be read counts as new: near the tail it is one that just ended, and a new process is
+  named anyway, so the worst case is naming a few more. Every pid before the tail must be one the last
+  read listed, in the same order; anything else (a name refused, a race with a process being created)
+  returns null and the caller reads the whole table instead.
+*/
+function updateList(previous, pids, newestCreated, { createdAt, nameOf }) {
+  const threshold = previous && previous.newestCreated;
+  if (newestCreated === null || newestCreated === undefined || threshold === null || threshold === undefined) return null;
+  const isNew = (index) => {
+    const created = createdAt(pids[index]);
+    return created === null || created === undefined || created > threshold;
+  };
+  let first = pids.length;
+  if (newestCreated > threshold) {
+    // A poll usually finds one to three new processes: gallop back from the end, then bisect.
+    let hi = pids.length - 1;
+    let lo = 0;
+    for (let step = 1; hi - step >= 0; step *= 2) {
+      if (!isNew(hi - step)) {
+        lo = hi - step + 1;
+        break;
+      }
+      hi -= step;
+    }
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (isNew(mid)) hi = mid;
+      else lo = mid + 1;
+    }
+    first = hi;
+  }
+  if (!previous.rowByPid) previous.rowByPid = new Map(previous.rows.map((row) => [row.pid, row]));
+  const rows = [];
+  let seen = 0;
+  for (let i = 0; i < first; i++) {
+    while (seen < previous.pids.length && previous.pids[seen] !== pids[i]) seen++;
+    if (seen === previous.pids.length) return null;
+    seen++;
+    const row = previous.rowByPid.get(pids[i]);
+    if (row) rows.push(row);
+  }
+  for (let i = first; i < pids.length; i++) {
+    const name = nameOf(pids[i]);
+    if (name === null) continue; // ended since the pid list was read
+    if (!name) return null;
+    rows.push({ process: name, pid: pids[i] });
+  }
+  return { pids: Array.from(pids), newestCreated, rows, at: previous.at };
+}
+
 let lastList = null;
+// How the last listSync() answered: 'reused', 'updated', 'full' or 'toolhelp'. A quiet slide back
+// to full reads on every poll is a 25x cost nothing else would show.
+let lastRead = '';
 
 // Every process as `{ process, pid }`. `filepath` is deliberately NOT resolved here: it needs one
 // OpenProcess per row, and the only caller that wants it (the playtime monitor) wants it for newly
@@ -220,14 +304,27 @@ let lastList = null;
 function listSync() {
   const win32 = loadApi();
   if (!win32) throw new Error('koffi process snapshot unavailable');
-  if (!win32.fast) return listToolHelpSync();
+  if (!win32.fast) {
+    lastRead = 'toolhelp';
+    return listToolHelpSync();
+  }
 
   const now = Date.now();
   let read;
   try {
     const pids = enumeratePids(win32);
-    if (pids && lastList && pids.length > 0 && canReuseList(lastList, pids, creationTimeOf(win32, pids[pids.length - 1]), now)) {
-      return lastList.rows.slice();
+    if (pids && lastList && pids.length > 0) {
+      const newestCreated = creationTimeOf(win32, pids[pids.length - 1]);
+      if (canReuseList(lastList, pids, newestCreated, now)) {
+        lastRead = 'reused';
+        return lastList.rows.slice();
+      }
+      const updated = now - lastList.at <= MAX_LIST_AGE_MS ? updateFromSystem(win32, lastList, pids, newestCreated) : null;
+      if (updated) {
+        lastList = updated;
+        lastRead = 'updated';
+        return updated.rows.slice();
+      }
     }
     read = querySystemProcesses(win32);
   } catch {
@@ -237,10 +334,28 @@ function listSync() {
   }
   if (!read) {
     lastList = null;
+    lastRead = 'toolhelp';
     return listToolHelpSync();
   }
   lastList = { pids: read.pids, newestCreated: read.newestCreated, rows: read.rows, at: now };
+  lastRead = 'full';
   return read.rows.slice();
+}
+
+// An update that cannot be trusted is not a reason to give up the system query: read it in full.
+function updateFromSystem(win32, previous, pids, newestCreated) {
+  try {
+    return updateList(previous, pids, newestCreated, {
+      createdAt: (pid) => creationTimeOf(win32, pid),
+      nameOf: (pid) => imageNameOf(win32, pid),
+    });
+  } catch {
+    return null;
+  }
+}
+
+function lastReadKind() {
+  return lastRead;
 }
 
 // Full image path of a live process, or '' when it exited or is not readable (protected/system
@@ -273,4 +388,4 @@ function getProcessPath(pid) {
   }
 }
 
-module.exports = { isAvailable, listSync, listToolHelpSync, canReuseList, getProcessPath };
+module.exports = { isAvailable, listSync, listToolHelpSync, canReuseList, updateList, lastReadKind, getProcessPath };

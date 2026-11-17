@@ -23,6 +23,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const dirFingerprint = require(path.join(__dirname, 'dirFingerprint.js'));
 
 const MISSING = -1;
 
@@ -75,22 +76,10 @@ function captureFiles(files) {
   return entries;
 }
 
-// Directories, in the shape dirFingerprint.capture() produces. A directory that is gone is dropped
-// rather than recorded: unlike a save file, a folder that disappears has nothing to compare against.
-function captureDirs(dirs) {
-  const entries = [];
-  for (const dir of dirs || []) {
-    try {
-      entries.push([String(dir), fs.statSync(dir).mtimeMs]);
-    } catch {
-      // Gone already: nothing to compare it against next time.
-    }
-  }
-  return entries;
-}
-
+// A directory that is gone is dropped rather than recorded: unlike a save file, a folder that
+// disappears has nothing to compare against.
 function capture({ dirs, files } = {}) {
-  return { dirs: captureDirs(dirs), files: captureFiles(files) };
+  return { dirs: dirFingerprint.capture(dirs), files: captureFiles(files) };
 }
 
 function entriesMatch(entries) {
@@ -111,7 +100,8 @@ function entriesMatch(entries) {
 function matches(fingerprint) {
   if (!fingerprint || !Array.isArray(fingerprint.dirs) || !Array.isArray(fingerprint.files)) return false;
   if (fingerprint.dirs.length === 0) return false;
-  return entriesMatch(fingerprint.dirs) && entriesMatch(fingerprint.files);
+  // Folders as the discovery check reads them (same names is unchanged), unlock files strictly.
+  return fingerprint.dirs.every(dirFingerprint.entryUnchanged) && entriesMatch(fingerprint.files);
 }
 
 function size(fingerprint) {

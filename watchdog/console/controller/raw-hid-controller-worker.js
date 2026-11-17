@@ -262,7 +262,12 @@ function openReadHandle(devicePath) {
   );
 }
 
+// What each present HID interface reported the first time it was opened: every rediscovery used to
+// open all of them (keyboards, mice, headsets) again every 5 s. A path seen no more is dropped.
+const metadataByPath = new Map();
+
 function enumerateTargetDevices() {
+  const seenPaths = new Set();
   const hidGuid = {};
   HidD_GetHidGuid(hidGuid);
   const infoSet = SetupDiGetClassDevsW(
@@ -326,6 +331,12 @@ function enumerateTargetDevices() {
       if (!detailOk) continue;
 
       const devicePath = formatInterfacePath(detailBuffer);
+      seenPaths.add(devicePath);
+      if (metadataByPath.has(devicePath)) {
+        const known = metadataByPath.get(devicePath);
+        if (known) devices.push({ ...known, index });
+        continue;
+      }
       const metadataHandle = CreateFileW(
         devicePath,
         0,
@@ -350,8 +361,12 @@ function enumerateTargetDevices() {
           manufacturer: readWideString(HidD_GetManufacturerString, metadataHandle),
           product: readWideString(HidD_GetProductString, metadataHandle),
         };
-        if (!matchesTargetRawHidDevice(device)) continue;
+        if (!matchesTargetRawHidDevice(device)) {
+          metadataByPath.set(devicePath, null);
+          continue;
+        }
         device.profile = getRawHidDeviceProfile(device);
+        metadataByPath.set(devicePath, device);
         devices.push(device);
       } finally {
         CloseHandle(metadataHandle);
@@ -360,6 +375,7 @@ function enumerateTargetDevices() {
   } finally {
     SetupDiDestroyDeviceInfoList(infoSet);
   }
+  for (const known of metadataByPath.keys()) if (!seenPaths.has(known)) metadataByPath.delete(known);
 
   return devices;
 }
@@ -742,6 +758,21 @@ function cleanupReaders(targetReaders) {
   }
 }
 
+/*
+  The vendor and name filters also match Microsoft's virtual HID devices (keyboard hotkeys, touchpads,
+  the "HID VHF Driver" of many keyboards), which were then read every 25 ms for the life of the
+  Watchdog. A pad's top-level collection is a joystick, game pad or multi-axis controller on the
+  Generic Desktop page; a collection that says otherwise is skipped until it is unplugged. Unknown
+  capabilities keep the old behaviour.
+*/
+const GAMEPAD_COLLECTION_USAGES = new Set([0x04, 0x05, 0x08]);
+const notGamepadPaths = new Set();
+
+function isGamepadCollection(caps) {
+  if (!caps) return true;
+  return Number(caps.UsagePage) === HID_USAGE_PAGE_GENERIC && GAMEPAD_COLLECTION_USAGES.has(Number(caps.Usage));
+}
+
 function discoverReaders(reason = "periodic") {
   const previousCount = readers.length;
   const devices = enumerateTargetDevices();
@@ -777,11 +808,17 @@ function discoverReaders(reason = "periodic") {
   }
   if (removedReaders.length) cleanupReaders(removedReaders);
 
+  for (const pathKey of notGamepadPaths) if (!nextDevicesByPath.has(pathKey)) notGamepadPaths.delete(pathKey);
   const addedReaders = [];
   for (const [pathKey, device] of nextDevicesByPath.entries()) {
-    if (existingByPath.has(pathKey)) continue;
+    if (existingByPath.has(pathKey) || notGamepadPaths.has(pathKey)) continue;
     const reader = createReader(device);
     if (!reader) continue;
+    if (!isGamepadCollection(reader.caps)) {
+      notGamepadPaths.add(pathKey);
+      cleanupReaders([reader]);
+      continue;
+    }
     if (!issueRead(reader)) {
       cleanupReaders([reader]);
       continue;
@@ -815,8 +852,13 @@ function discoverReaders(reason = "periodic") {
   }
 }
 
+// With no pad to read, the only work left is the next rediscovery: sleep until it instead of waking
+// 40 times a second for the life of the Watchdog.
 function getNextDelayMs() {
-  return active ? 16 : 25;
+  const readDelay = active ? 16 : 25;
+  if (readers.length > 0) return readDelay;
+  const rediscoveryMs = active ? rediscoveryIntervalMs : idleRediscoveryIntervalMs;
+  return Math.max(readDelay, lastRediscoveryAt + rediscoveryMs - Date.now());
 }
 
 function schedule() {
@@ -852,7 +894,10 @@ function loop() {
 parentPort.on("message", (message) => {
   if (!message || typeof message !== "object") return;
   if (message.type === "set-active") {
+    const wasActive = active;
     active = message.active === true;
+    // Becoming active shortens the rediscovery interval: a long sleep taken while idle must not delay it.
+    if (active && !wasActive && readers.length === 0) schedule();
     return;
   }
   if (message.type === "shutdown") {

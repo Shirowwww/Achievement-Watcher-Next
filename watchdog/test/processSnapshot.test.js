@@ -105,6 +105,127 @@ test('the last list is reused only while the pids, their order and the newest pr
   assert.equal(snapshot.canReuseList(null, Uint32Array.from([0, 4]), 1000n, 0), false);
 });
 
+// A previous read and the lookups updateList() makes, over a fake process table: pid -> creation time.
+function fakeTable(created, names = {}) {
+  const calls = { createdAt: 0, nameOf: [] };
+  const lookups = {
+    createdAt: (pid) => {
+      calls.createdAt += 1;
+      return pid in created ? created[pid] : null;
+    },
+    // A null name stands for a process that ended before it could be named.
+    nameOf: (pid) => {
+      calls.nameOf.push(pid);
+      return pid in names ? names[pid] : '';
+    },
+  };
+  return { calls, lookups };
+}
+const previousRead = () => ({
+  pids: [0, 4, 120, 300, 4410],
+  newestCreated: 50n,
+  rows: [
+    { process: '[System Process]', pid: 0 },
+    { process: 'System', pid: 4 },
+    { process: 'svchost.exe', pid: 120 },
+    { process: 'old.exe', pid: 300 },
+    { process: 'game.exe', pid: 4410 },
+  ],
+  at: 7,
+});
+
+test('an update names only the processes that started and drops the ones that ended', () => {
+  const { calls, lookups } = fakeTable({ 4: 1n, 120: 10n, 4410: 50n, 900: 60n, 7000: 61n }, { 900: 'new.exe', 7000: 'other.exe' });
+  const next = snapshot.updateList(previousRead(), Uint32Array.from([0, 4, 120, 4410, 900, 7000]), 61n, lookups);
+  assert.deepEqual(
+    next.rows.map((row) => `${row.pid}:${row.process}`),
+    ['0:[System Process]', '4:System', '120:svchost.exe', '4410:game.exe', '900:new.exe', '7000:other.exe']
+  );
+  assert.deepEqual(calls.nameOf, [900, 7000], 'only the new processes are named');
+  assert.ok(calls.createdAt <= 4, `a binary search, not a scan (${calls.createdAt} queries)`);
+  assert.equal(next.newestCreated, 61n);
+  assert.equal(next.at, 7, 'an update keeps the age of the last full read');
+  assert.deepEqual(next.pids, [0, 4, 120, 4410, 900, 7000]);
+});
+
+test('a pid handed to a new process at the end of the list reads as a new process', () => {
+  // 4410 ended and its pid went to a newer process: same pid, later creation time, new name.
+  const { lookups } = fakeTable({ 4: 1n, 120: 10n, 300: 20n, 4410: 70n }, { 4410: 'launcher.exe' });
+  const next = snapshot.updateList(previousRead(), Uint32Array.from([0, 4, 120, 300, 4410]), 70n, lookups);
+  assert.equal(next.rows.find((row) => row.pid === 4410).process, 'launcher.exe');
+});
+
+test('an update with no new process needs no lookup at all', () => {
+  const { calls, lookups } = fakeTable({});
+  const next = snapshot.updateList(previousRead(), Uint32Array.from([0, 4, 120, 4410]), 50n, lookups);
+  assert.deepEqual(
+    next.rows.map((row) => row.pid),
+    [0, 4, 120, 4410]
+  );
+  assert.equal(calls.createdAt, 0);
+  assert.deepEqual(calls.nameOf, []);
+});
+
+test('a process that ended while the update ran is left out, not a reason to read everything', () => {
+  // 900 started and ended between the pid list and the lookups: no creation time, no name.
+  const { lookups } = fakeTable({ 4: 1n, 120: 10n, 4410: 50n, 7000: 62n }, { 900: null, 7000: 'other.exe' });
+  const next = snapshot.updateList(previousRead(), Uint32Array.from([0, 4, 120, 4410, 900, 7000]), 62n, lookups);
+  assert.deepEqual(
+    next.rows.map((row) => row.pid),
+    [0, 4, 120, 4410, 7000]
+  );
+});
+
+test('an old process whose creation time cannot be read is named again, never lost', () => {
+  // 4410 is old but unreadable, so the search counts it as new: it is named rather than dropped.
+  const { lookups } = fakeTable({ 4: 1n, 120: 10n, 900: 60n }, { 4410: 'game.exe', 900: 'new.exe' });
+  const next = snapshot.updateList(previousRead(), Uint32Array.from([0, 4, 120, 4410, 900]), 60n, lookups);
+  assert.deepEqual(
+    next.rows.map((row) => `${row.pid}:${row.process}`),
+    ['0:[System Process]', '4:System', '120:svchost.exe', '4410:game.exe', '900:new.exe']
+  );
+});
+
+test('an update it cannot vouch for asks for a full read', () => {
+  const update = (pids, newest, created, names) => snapshot.updateList(previousRead(), Uint32Array.from(pids), newest, fakeTable(created, names).lookups);
+  assert.equal(update([0, 4, 120, 4410, 900], 60n, { 4: 1n, 120: 10n, 4410: 50n, 900: 60n }, {}), null, 'a new process the system would not name');
+  assert.equal(update([0, 4, 555, 4410], 50n, {}, {}), null, 'an old process the last read never saw');
+  assert.equal(update([0, 4, 4410, 120], 50n, {}, {}), null, 'old processes out of order');
+  assert.equal(update([0, 4, 120], null, {}, {}), null, 'the newest process could not be queried');
+  assert.equal(snapshot.updateList({ ...previousRead(), newestCreated: null }, Uint32Array.from([0, 4]), 50n, fakeTable({}).lookups), null);
+});
+
+test('processes that come and go between polls are followed without reading the whole table', { skip: WINDOWS_ONLY }, async () => {
+  const { spawn } = require('child_process');
+  const key = (entry) => `${entry.pid}:${entry.process}`;
+  const startChild = () => {
+    const child = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 20000)'], { stdio: 'ignore' });
+    return new Promise((resolve) => child.once('spawn', () => resolve(child)));
+  };
+  const stopChild = (child) => {
+    child.kill();
+    return new Promise((resolve) => child.once('exit', resolve));
+  };
+  const children = [];
+  try {
+    snapshot.listSync();
+    for (let round = 0; round < 3; round++) {
+      children.push(await startChild(), await startChild());
+      if (round > 0) await stopChild(children.shift());
+      const before = new Set(snapshot.listToolHelpSync().map(key));
+      const listed = snapshot.listSync();
+      const after = new Set(snapshot.listToolHelpSync().map(key));
+      assert.equal(snapshot.lastReadKind(), 'updated', `round ${round} should update the last list, not read it in full`);
+      const seen = new Set(listed.map(key));
+      for (const row of seen) assert.ok(before.has(row) || after.has(row), `unexpected row ${row}`);
+      for (const row of before) if (after.has(row)) assert.ok(seen.has(row), `missing row ${row}`);
+      for (const child of children) assert.ok(listed.some((entry) => entry.pid === child.pid), `child ${child.pid} must be listed`);
+    }
+  } finally {
+    await Promise.all(children.map(stopChild));
+  }
+});
+
 test('tasklist.list keeps the {process, pid} contract the monitor indexes on', async () => {
   const processes = await tasklist.list();
   assert.ok(processes.length > 0);

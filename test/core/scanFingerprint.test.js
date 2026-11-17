@@ -82,6 +82,25 @@ test('a game installed beside the others moves the folder that holds them', () =
   assert.equal(scanFingerprint.matches(fingerprint), false);
 });
 
+test('a library root rewritten in place still matches, an unlock file rewritten does not', () => {
+  const root = workspace('rewrite');
+  const library = path.join(root, 'library');
+  const save = path.join(root, 'saves', 'achievements.json');
+  writeFile(path.join(library, 'libraryfolder.vdf'), 'a', 1000);
+  writeFile(save, '{}', 1000);
+  fs.utimesSync(library, 1000, 1000);
+  const fingerprint = scanFingerprint.capture({ dirs: [library], files: [save] });
+
+  // Steam's own write test: a file comes and goes, the folder's timestamp moves, its names do not.
+  fs.writeFileSync(path.join(library, 'probe.tmp'), '');
+  fs.rmSync(path.join(library, 'probe.tmp'));
+  assert.notEqual(fs.statSync(library).mtimeMs, 1000000);
+  assert.equal(scanFingerprint.matches(fingerprint), true);
+
+  fs.writeFileSync(save, '{"ACH_1":{"earned":true}}');
+  assert.equal(scanFingerprint.matches(fingerprint), false);
+});
+
 test('a save file deleted while the app was closed is a change', () => {
   const root = workspace('deleted');
   const file = path.join(root, 'saves', '480', 'achievements.json');

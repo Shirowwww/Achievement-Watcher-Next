@@ -90,6 +90,75 @@ test('a save folder gaining an appid marker file breaks the match too', () => {
   }
 });
 
+// What Steam does in a library root and AW to its caches: the folder's timestamp moves, its names do not.
+function touchWithoutChange(dir) {
+  const kept = path.join(dir, 'index.json');
+  fs.writeFileSync(kept, '{}');
+  nextClockTick();
+  fs.writeFileSync(`${kept}.tmp`, '{"a":1}');
+  fs.renameSync(`${kept}.tmp`, kept);
+  fs.writeFileSync(path.join(dir, 'probe.tmp'), '');
+  fs.rmSync(path.join(dir, 'probe.tmp'));
+}
+
+test('a folder whose timestamp moved but whose entries are the same still matches', () => {
+  const root = tree();
+  try {
+    fs.writeFileSync(path.join(root, 'index.json'), '{}');
+    const fingerprint = dirFingerprint.capture([root, path.join(root, 'GameA')]);
+    const before = fs.statSync(root).mtimeMs;
+    touchWithoutChange(root);
+    assert.notEqual(fs.statSync(root).mtimeMs, before, 'the timestamp did move');
+    assert.equal(dirFingerprint.matches(fingerprint), true);
+
+    nextClockTick();
+    fs.mkdirSync(path.join(root, 'GameC'));
+    assert.equal(dirFingerprint.matches(fingerprint), false, 'a new entry still breaks the match');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('an entry recorded without names keeps the strict timestamp test', () => {
+  const root = tree();
+  try {
+    const [[dir, mtimeMs]] = dirFingerprint.capture([root]);
+    touchWithoutChange(root);
+    assert.equal(dirFingerprint.matches([[dir, mtimeMs]]), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('the names recorded are the ones the walk read, so a change made after it is not hidden', () => {
+  const root = tree();
+  try {
+    dirCache.beginScope();
+    dirCache.readdir(root);
+    dirCache.endScope();
+    nextClockTick();
+    fs.mkdirSync(path.join(root, 'GameC'));
+    const fingerprint = dirFingerprint.capture(dirCache.lastVisitedDirs(), dirCache.visitedNamesKey);
+    touchWithoutChange(root);
+    assert.equal(dirFingerprint.matches(fingerprint), false, 'GameC came after the walk: the next check must rescan');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a copy keeps the names key', () => {
+  const root = tree();
+  try {
+    const fingerprint = dirFingerprint.capture([root]);
+    const copied = dirFingerprint.copy(fingerprint);
+    assert.deepEqual(copied, fingerprint);
+    assert.equal(copied[0].length, 3);
+    assert.notEqual(copied[0], fingerprint[0], 'entries are not shared');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('the executable walk stays out of the fingerprint surface', () => {
   const root = tree();
   try {

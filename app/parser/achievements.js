@@ -860,7 +860,7 @@ async function discoverWithCache(option, steamAccFilter) {
     // The folders belong to the walk, not to the call: a scan served from this cache read exactly
     // what the walk read, so it must end up describing the same folders. Without this a manual
     // refresh (which drops the fingerprint) left every following scan unable to prove anything.
-    _discoverFingerprint = _discoverCache.fingerprint ? _discoverCache.fingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]) : null;
+    _discoverFingerprint = _discoverCache.fingerprint ? dirFingerprint.copy(_discoverCache.fingerprint) : null;
     debug.log(`[discover] reusing cached scan (${((Date.now() - _discoverCache.time) / 1000).toFixed(1)}s old)`);
     return copyDiscoveryList(_discoverCache.appidList);
   }
@@ -876,7 +876,7 @@ async function discoverWithCache(option, steamAccFilter) {
   // Only a full scan is a usable baseline for the background poll; a scoped one looked at a subset.
   // Proton makes a game's prefix, where its saves go, on the first run: a new one calls for a scan.
   const prefixParents = process.platform === 'win32' ? [] : compatdataDirs();
-  _discoverFingerprint = activeScope ? null : dirFingerprint.capture([...dirCache.lastVisitedDirs(), ...prefixParents]);
+  _discoverFingerprint = activeScope ? null : dirFingerprint.capture([...dirCache.lastVisitedDirs(), ...prefixParents], dirCache.visitedNamesKey);
   if (!activeScope) _readAheadDirs = dirCache.lastVisitedDirs().slice();
   if (perfTrace.isEnabled()) debug.log(`[perf] discover ${Date.now() - discoverStarted}ms - ${perfTrace.summary({ prefix: 'discover:' })}`);
   if (cacheKey)
@@ -4855,10 +4855,10 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
 module.exports.discoveryInputsUnchanged = () => dirFingerprint.matches(_discoverFingerprint);
 
 // The folders the latest discovery read, for a host started later to compare against.
-module.exports.getDiscoverFingerprint = () => (_discoverFingerprint ? _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]) : null);
+module.exports.getDiscoverFingerprint = () => (_discoverFingerprint ? dirFingerprint.copy(_discoverFingerprint) : null);
 module.exports.restoreDiscoverFingerprint = (dirs) => {
   if (!Array.isArray(dirs) || dirs.length === 0) return false;
-  _discoverFingerprint = dirs.map(([dir, mtimeMs]) => [dir, mtimeMs]);
+  _discoverFingerprint = dirFingerprint.copy(dirs);
   return true;
 };
 
@@ -4901,7 +4901,7 @@ module.exports.restoreScanFingerprint = (fingerprint) => {
   const dirs = fingerprint && Array.isArray(fingerprint.dirs) ? fingerprint.dirs : null;
   if (!dirs || dirs.length === 0) return false;
   module.exports.restoreDiscoverFingerprint(dirs);
-  _scanFingerprint = { dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]), files: Array.isArray(fingerprint.files) ? fingerprint.files : [] };
+  _scanFingerprint = { dirs: dirFingerprint.copy(_discoverFingerprint), files: Array.isArray(fingerprint.files) ? fingerprint.files : [] };
   _readAheadDirs = dirs.map(([dir]) => dir);
   return true;
 };
@@ -5170,7 +5170,7 @@ module.exports.makeList = async (option, callbackProgress, onGame = () => {}) =>
     // the next launch scan again rather than trust a list built from what came before it.
     _scanFingerprint = _discoverFingerprint
       ? {
-          dirs: _discoverFingerprint.map(([dir, mtimeMs]) => [dir, mtimeMs]),
+          dirs: dirFingerprint.copy(_discoverFingerprint),
           // The per-game language choice changes what a game shows without touching any of its files.
           files: scanFingerprint.captureFiles([...achievementDataFiles(appidList), schemaLanguage.file()]),
         }
