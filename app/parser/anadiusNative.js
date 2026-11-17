@@ -130,7 +130,7 @@ function apiById(fallback, id) {
 }
 
 function toExportIni(achievements, nameToApi, sourceFile) {
-  const lines = [`${MARKER}${path.basename(String(sourceFile || ''))}`];
+  const lines = [`${MARKER}${String(sourceFile || '').split(/[\\/]/).pop()}`];
   const unmatched = [];
   const fallback = idPrefix(achievements, nameToApi);
   for (const achievement of achievements) {
