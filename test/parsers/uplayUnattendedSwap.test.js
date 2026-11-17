@@ -1,11 +1,12 @@
 'use strict';
 
 /*
-  A scan never swaps a release's own Uplay loader on its own (#166). Assassin's Creed Valhalla from
-  an EMPRESS repack qualifies for the automatic Ubisoft fix (mapped product, prefixed Steam names),
-  and the scan replaced EMPRESS's loader with AW Next's, which does not answer the game the way
-  EMPRESS's did: the game looped on "Ubisoft services are unavailable". A folder AW Next already
-  repaired, whose setup a repack update wiped, is still put back without asking.
+  A scan never swaps a Uplay loader that is in place (#166). Assassin's Creed Valhalla from an
+  EMPRESS repack qualifies for the automatic Ubisoft fix (mapped product, prefixed Steam names), and
+  the scan replaced EMPRESS's loader with AW Next's, which does not answer the game the way EMPRESS's
+  did: the game looped on "Ubisoft services are unavailable". It happened again after the user put
+  EMPRESS's loader back (Restore, or a copy by hand) in a folder AW Next had repaired once, so a
+  backup no longer licenses the swap either: only a folder with no loader at all gets one unasked.
 */
 
 const assert = require('node:assert/strict');
@@ -29,10 +30,10 @@ test("a release's own loader is never replaced by a scan when AW Next never repa
   assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), false);
 });
 
-test('a folder AW Next repaired before gets its setup back after a repack update', () => {
+test('a folder AW Next repaired before keeps the loader a repack update put back', () => {
   const { dir, loader } = release();
   uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
-  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), true);
+  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), false);
 });
 
 test('a scan leaves the loader alone once the user restored the release setup', () => {
@@ -46,24 +47,25 @@ test('a scan leaves the loader alone once the user restored the release setup', 
   assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), false);
 });
 
-test('the rollback of a failed repair is not taken for the user choosing the release setup', () => {
+test('a loader the user copied back by hand is left alone too', () => {
+  // The same user also restored his own copy of the two files, which leaves no trace AW Next sees.
   const { dir, loader } = release();
   uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
-  uplayR2.restoreConfigBackup({ dir, rollback: true });
-  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), true);
+  fs.writeFileSync(loader, 'MZ AW Next loader');
+  fs.writeFileSync(loader, 'MZ release loader');
+  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), false);
 });
 
-test('a repair made after a restore lets the scan keep the setup again', () => {
+test('Restore removes the files the repair added and puts the loader back', () => {
   const { dir, loader } = release();
-  uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
-  uplayR2.restoreConfigBackup({ dir });
-  // Dated an hour back so the repair below is the newer snapshot even within one millisecond.
-  const [restored] = uplayR2.listConfigBackups(dir);
-  const manifestFile = path.join(restored.dir, uplayR2.BACKUP_MANIFEST);
-  const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
-  fs.writeFileSync(manifestFile, JSON.stringify({ ...manifest, createdAt: new Date(Date.now() - 3600e3).toISOString() }));
-  uplayR2.createSetupBackup({ gameDir: dir, files: [loader] });
-  assert.equal(installer.mayReplaceLoaderUnattended({ gameDir: dir, loaderPaths: [loader] }), true);
+  const ini = path.join(dir, 'upc_r2.ini');
+  uplayR2.createSetupBackup({ gameDir: dir, files: [loader, ini] });
+  fs.writeFileSync(loader, 'MZ AW Next loader');
+  fs.writeFileSync(ini, '[Settings]');
+  const result = uplayR2.restoreConfigBackup({ dir });
+  assert.equal(fs.readFileSync(loader, 'utf8'), 'MZ release loader');
+  assert.equal(fs.existsSync(ini), false);
+  assert.deepEqual(result.removed, ['upc_r2.ini']);
 });
 
 test('a folder with no loader at all has nothing of the release to lose', () => {

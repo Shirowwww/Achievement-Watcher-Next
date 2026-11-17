@@ -943,10 +943,28 @@ function listLines(section) {
   return section.body.map((line) => line.trim()).filter((line) => line && !line.startsWith(';') && !line.startsWith('#'));
 }
 
-// What a release config hands the installed loader: identity values, and for R1 the list sections
-// it answers DLC, item and chunk queries from. null when the folder has no such config.
+// The loader's own ini names already in the folder: the one a missing sibling is seeded from.
+function readSiblingIni(dir, kind) {
+  const docs = [];
+  for (const name of kind.iniNames) {
+    const file = path.join(dir, name);
+    try {
+      if (fs.existsSync(file) && fs.statSync(file).size <= RELEASE_INI_MAX_BYTES) docs.push({ doc: parseIni(fs.readFileSync(file, 'utf8')), sibling: true });
+    } catch {
+      continue; // an unreadable leftover is not a config to carry over
+    }
+  }
+  return docs;
+}
+
+/*
+  What a release config hands the installed loader: identity values, and the list sections it
+  answers DLC, item and chunk queries from. EMPRESS's R2 build ships uplay_r2.ini, read only when
+  upc_r2.ini is absent, and names its saves with no extension (AC Valhalla). null when none.
+*/
 function releaseConfig(dir, kind) {
-  for (const doc of readReleaseIni(dir)) {
+  const sources = [...readReleaseIni(dir).map((doc) => ({ doc, sibling: false })), ...(kind.id === 'r2' ? readSiblingIni(dir, kind) : [])];
+  for (const { doc, sibling } of sources) {
     const own = getIniSection(doc, kind.section);
     const empress = kind.id === 'r1' && !own ? getIniSection(doc, 'Settings') : null;
     if (!own && !empress) continue;
@@ -959,8 +977,9 @@ function releaseConfig(dir, kind) {
       }
     }
     if (Object.keys(values).length === 0) continue;
+    if (sibling && !Object.keys(values).some((key) => key.toLowerCase() === 'saveextension')) values.SaveExtension = '';
     const lists = {};
-    if (kind.id === 'r1') {
+    if (kind.id === 'r1' || sibling) {
       for (const name of RELEASE_LIST_SECTIONS) {
         const section = getIniSection(doc, name);
         if (section) lists[name] = listLines(section);
@@ -1732,7 +1751,7 @@ function listConfigBackups(dir) {
 }
 
 // Restore a manifest snapshot exactly. Legacy config-only snapshots remain readable.
-function restoreConfigBackup({ dir, backup, rollback = false } = {}) {
+function restoreConfigBackup({ dir, backup } = {}) {
   if (!dir) throw new Error('restoreConfigBackup: dir is required');
   const snapshot = backup || listConfigBackups(dir)[0];
   if (!snapshot) throw new Error('restoreConfigBackup: no backup available');
@@ -1755,18 +1774,7 @@ function restoreConfigBackup({ dir, backup, rollback = false } = {}) {
         removed.push(entry.path);
       }
     }
-    // A restore the user asked for means "the release's own setup": no scan may swap it again. Only a
-    // flag, so a manifest that cannot be rewritten is reported, not turned into a failed restore.
-    let choiceRecorded = false;
-    if (!rollback) {
-      try {
-        writeFileAtomic(path.join(snapshot.dir, BACKUP_MANIFEST), JSON.stringify({ ...snapshot.manifest, restoredAt: new Date().toISOString() }, null, 2));
-        choiceRecorded = true;
-      } catch {
-        choiceRecorded = false;
-      }
-    }
-    return { dir: targetRoot, backup: snapshot.name, restored, removed, choiceRecorded };
+    return { dir: targetRoot, backup: snapshot.name, restored, removed };
   }
   for (const name of snapshot.files) {
     writeFileAtomic(path.join(dir, name), fs.readFileSync(path.join(snapshot.dir, name)));

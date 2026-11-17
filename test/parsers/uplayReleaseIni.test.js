@@ -65,6 +65,33 @@ test("a release's own R1 loader config carries its identity into the new upc_r1.
   assert.match(plannedFile(plan, 'upc_r1.ini').next, /^TickedId = DenuvOwO$/m, 'the key keeps the casing the loader compares');
 });
 
+// AC Valhalla EMPRESS ships uplay_r2.ini, which the installed loader only reads when upc_r2.ini is
+// absent. The repair wrote upc_r2.ini from the template: no DLC or items, and a .save extension that
+// EMPRESS's saves never had, so the game found none of them.
+test("an EMPRESS R2 uplay_r2.ini hands its settings and lists to the new upc_r2.ini, saves keep no extension", (t) => {
+  const dir = tempDir(t);
+  fs.writeFileSync(
+    path.join(dir, 'uplay_r2.ini'),
+    ['[Settings]', 'Username = EMPRESS', 'Language = en-US', 'SaveType=0', 'SavePath=SAVE_GAMES', '[DLC]', '5606', '5607', '[Items]', '5596', ''].join('\n')
+  );
+
+  const plan = uplayR2.planSettingsConfig({ dir, steamAppid: 2208920, prefix: '', capabilities: FULL_CAPS, flavour: 'r2' });
+  const doc = parseIni(plannedFile(plan, 'upc_r2.ini').next);
+  const settings = readIniSectionValues(doc, 'Settings');
+
+  assert.equal(settings.username, 'EMPRESS');
+  assert.equal(settings.saveextension, '');
+  assert.equal(settings.achievements, '1');
+  assert.deepEqual(getIniSection(doc, 'DLC').body.filter((line) => line.trim()), ['5606', '5607']);
+  assert.deepEqual(getIniSection(doc, 'Items').body.filter((line) => line.trim()), ['5596']);
+});
+
+test('an R2 folder with no release ini keeps the template save extension', (t) => {
+  const dir = tempDir(t);
+  const plan = uplayR2.planSettingsConfig({ dir, steamAppid: 2208920, prefix: '', capabilities: FULL_CAPS, flavour: 'r2' });
+  assert.equal(readIniSectionValues(parseIni(plannedFile(plan, 'upc_r2.ini').next), 'Settings').saveextension, '.save');
+});
+
 test('an ini the loader already reads is never reseeded from another file', (t) => {
   const dir = tempDir(t);
   fs.writeFileSync(path.join(dir, 'upc_r1.ini'), '[Uplay]\nTickedId = MyOwnTicket\n');
