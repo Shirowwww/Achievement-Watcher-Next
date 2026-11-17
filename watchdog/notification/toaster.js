@@ -18,6 +18,7 @@ const transportMemory = require('../util/transportMemory.js');
 const overlayAck = require('./overlayAck.js');
 const { SpawnOverlayNotification } = require('./spawnOverlay.js');
 const captureLinks = require('./captureLinks.js');
+const { isManuallyUnlocked } = require('../util/manualUnlocks.js');
 
 // Long enough for a Windows toast to slide in before the screenshot is taken.
 const SOUVENIR_TOAST_DELAY_MS = 800;
@@ -198,6 +199,12 @@ module.exports = async (message, option = {}) => {
   let durationRead = null;
   const toastSeconds = () => durationRead || (durationRead = toastDurationSeconds());
   try {
+    // Ticked by hand in the library, it was already the user's: the game recording it later is no new unlock.
+    const isUnlock = !message.notificationType || message.notificationType === 'achievement';
+    if (isUnlock && !message.progress && isManuallyUnlocked(message.appid, message.achievementName)) {
+      debug.log(`[notify] ${message.appid} ${message.achievementName} was unlocked by hand already, not announced again`);
+      return;
+    }
     applyGameTitle(message, option);
     applyCustomGameIcon(message);
     // Playtime uses the game title, not an achievement label.

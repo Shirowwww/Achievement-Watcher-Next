@@ -72,6 +72,8 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Uncharted 1 and 3 count their trophies again on Supermedo's port.** Since its 0.3.15 the port
   keeps each game's trophies in a file of its own and names the game in its log only once, so every
   unlock went to one game or none. AW Next reads those files, trophies earned before included.
+- **An achievement ticked by hand is not announced a second time.** When the game recorded it
+  later, after a fix or a new setup, its popup showed up as a new unlock.
 - **Restoring a game's Uplay setup sticks.** After **Restore the previous Uplay R1/R2
   configuration**, or after copying the release's files back by hand, the next refresh put AW
   Next's loader back, and a release with its own Ubisoft layer (Assassin's Creed Valhalla, EMPRESS)

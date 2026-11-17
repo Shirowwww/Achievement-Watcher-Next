@@ -118,6 +118,7 @@ function loadToaster({ overlayHost = 'ipc', reply = REPLY.ACCEPT, fullscreen = f
     },
     './clip.js': { trigger: (request) => `C:\\Clips\\${request.achievement}.mp4` },
     './captureLinks.js': { remember: (message, kind, file) => calls.links.push({ name: message.achievementName, kind, file }) },
+    '../util/manualUnlocks.js': require(path.join(__dirname, '..', 'util', 'manualUnlocks.js')),
   };
 
   const module = { exports: {} };
@@ -174,6 +175,29 @@ beforeEach(() => {
 });
 
 after(() => fs.rmSync(USER_DATA, { recursive: true, force: true }));
+
+/*
+  An achievement ticked by hand in the library was already the user's: the game recording it later
+  (AC Valhalla once the Uplay loader ran, a DM of 17/11/2026) is no new unlock. Matched under any
+  source, since the library and the Watchdog may name a game's source differently.
+*/
+test('an achievement already unlocked by hand is not announced again when the game records it', async () => {
+  const sidecar = path.join(USER_DATA, 'cfg', 'manual-unlocks.json');
+  fs.writeFileSync(sidecar, JSON.stringify({ '480::uplay': { ACH_WIN: { earned_time: 1690000000 } } }));
+  try {
+    const { notify, calls } = loadToaster({ overlayHost: 'none' });
+    await notify(unlock(), options('toast'));
+    assert.equal(calls.toasts.length + calls.overlays.length + calls.bridge.length, 0, 'the manual unlock stays silent');
+    await notify(unlock({ achievementName: 'ACH_OTHER' }), options('toast'));
+    assert.equal(calls.toasts.length, 1, 'another achievement of the game is announced');
+    await notify(unlock({ appid: '481' }), options('toast'));
+    assert.equal(calls.toasts.length, 2, 'the same name in another game is announced');
+    await notify(unlock({ notificationType: 'progress', progress: { current: 3, max: 10 } }), options('toast'));
+    assert.equal(calls.toasts.length, 3, 'progress is not an unlock and is still shown');
+  } finally {
+    fs.rmSync(sidecar, { force: true });
+  }
+});
 
 test('Automatic sends one overlay and no toast when the app confirms it rendered', async () => {
   const { notify, calls } = loadToaster();
