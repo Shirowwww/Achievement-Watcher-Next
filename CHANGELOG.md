@@ -50,6 +50,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The Playnite extension works while AW Next is closed (extension 1.2.0).** It shows the list
   from AW Next's last scan, with a line giving its date, and goes back to live data once AW Next
   runs.
+- **Bully: Scholarship Edition with xowny's Achievements mod.** Steam has no achievements for the
+  game; AW Next now takes the mod's own list, 162 achievements with their names and icons, and
+  shows the unlocks the mod writes to its save.
 
 ### Improved
 

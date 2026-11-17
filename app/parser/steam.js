@@ -1991,6 +1991,59 @@ function getGoldbergSchemaFromFile(file, appid, lang = 'english') {
     });
 }
 
+/*
+  Bully: Scholarship Edition has no Steam achievements; xowny's Achievements mod (Nexus 346) keeps its
+  whole list in Runtime/state.ini, one [itemN] section per achievement, and its icons in
+  Graphics/Achievements/<icon>.png. Read line by line: a description may hold ';' or '#'.
+*/
+const BULLY_MOD_DIR = ['_derpy_script_loader', 'scripts', 'AchievementsMod'];
+const MAX_MOD_STATE_BYTES = 2 * 1024 * 1024;
+
+function getBullyModSchema(gameDir) {
+  if (!gameDir) return [];
+  const modDir = path.join(gameDir, ...BULLY_MOD_DIR);
+  let text;
+  try {
+    const file = path.join(modDir, 'Runtime', 'state.ini');
+    if (fs.statSync(file).size > MAX_MOD_STATE_BYTES) return [];
+    text = fs.readFileSync(file, 'utf8');
+  } catch {
+    return [];
+  }
+  const items = [];
+  let current = null;
+  for (const line of text.split(/\r?\n/)) {
+    const section = /^\[(\w+)\]\s*$/.exec(line);
+    if (section) {
+      current = /^item\d+$/.test(section[1]) ? {} : null;
+      if (current) items.push(current);
+      continue;
+    }
+    const eq = line.indexOf('=');
+    if (current && eq > 0) current[line.slice(0, eq).trim()] = line.slice(eq + 1).trim();
+  }
+  const iconFile = (name) => {
+    // A name only, never a path: the file must stay in the icon folder.
+    if (!name || name.length > 120 || /[\\/:*?"<>|]/.test(name)) return '';
+    const file = path.join(modDir, 'Graphics', 'Achievements', `${name}.png`);
+    return fs.existsSync(file) ? file.replace(/\\/g, '/') : '';
+  };
+  return items
+    .filter((item) => item.id)
+    .map((item) => {
+      const icon = iconFile(item.icon);
+      return {
+        name: item.id,
+        default_value: 0,
+        displayName: item.title || item.id,
+        hidden: item.hidden === '1' || item.secret === '1' ? 1 : 0,
+        description: item.description || '',
+        icon,
+        icongray: icon,
+      };
+    });
+}
+
 module.exports.getLocalAchievementSchema = (gameDir, appid, lang = 'english') => {
   // Probe the known emulator locations for BOTH layouts before walking anything: tenoke.ini is rare,
   // and looking for it first without probing would force a full walk of every non-TENOKE install.
@@ -2015,8 +2068,11 @@ module.exports.getLocalAchievementSchema = (gameDir, appid, lang = 'english') =>
   }
   // Fall back to the emulator's own schema dump (Goldberg / GBE Fork) - present on cracked installs.
   const goldberg = findFileByName(gameDir, 'achievements.json', probedGoldberg);
-  if (goldberg) return getGoldbergSchemaFromFile(goldberg, appid, lang);
-  return [];
+  if (goldberg) {
+    const schema = getGoldbergSchemaFromFile(goldberg, appid, lang);
+    if (schema.length > 0) return schema;
+  }
+  return getBullyModSchema(gameDir);
 };
 
 // Ranked AppID candidates for a name, best first: [{ appid, name, score, tier }]. Includes fuzzy
