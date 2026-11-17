@@ -63,9 +63,20 @@ renamed in 3.9.0 and the history is kept under one file.
 ### Fixed
 
 - **Restoring a game's Uplay setup sticks.** After **Restore the previous Uplay R1/R2
-  configuration**, the next refresh put AW Next's loader back, and a release with its own Ubisoft
-  layer (Assassin's Creed Valhalla, EMPRESS) failed again on Ubisoft's online service. A restored
-  game is now left alone until you repair it again.
+  configuration**, or after copying the release's files back by hand, the next refresh put AW
+  Next's loader back, and a release with its own Ubisoft layer (Assassin's Creed Valhalla, EMPRESS)
+  failed again on Ubisoft's online service. A scan no longer replaces a Ubisoft loader that is in
+  the game's folder; the fix stays in Game Health, where you confirm it.
+- **The Uplay fix keeps an EMPRESS R2 release's settings.** EMPRESS ships uplay_r2.ini, and the fix
+  wrote a fresh upc_r2.ini beside it, which the loader reads first: the release's DLC and item lists
+  were lost, and its saves, stored with no file extension, were looked for as .save files. The new
+  file now starts from the release's settings and lists, and keeps its saves' naming.
+- **EA games cracked with anadius' emulator show their achievements without any setup.** The
+  emulator only shared its unlocks with AW Next once its anadius.cfg had a SteamAppId line. AW Next
+  now reads the emulator's own achievement file and matches each unlock to the Steam achievement of
+  the same name, or of the same number when the game runs in another language, in the library and
+  for live notifications. A game no longer sold on Steam (EA
+  SPORTS FC 24) is not found by name yet.
 - **A Uplay repair no longer stops half way when a file is busy.** Waiting for a held file to free
   up failed with "SharedArrayBuffer is not defined" inside the window.
 - **The GOG achievement fix is offered for a GOG game added by hand.** It looked for GOG's marker

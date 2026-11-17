@@ -105,9 +105,13 @@ compte EA, pas sur le disque, elles sont donc lues par la source EA et aucun dos
 faire apparaître. Le message indique aussi combien de structures ont été testées, ce qui distingue « rien trouvé » de « pas
 regardé ».
 
-Trois cas ont leur propre traitement :
+Quatre cas ont leur propre traitement :
 
 - **Goldberg SocialClub** : la variante Rockstar et Social Club, avec son propre interrupteur.
+- **anadius (EA)** : l'émulateur d'anadius pour les jeux EA garde ses déblocages dans
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`. AW Next lit ce fichier sans aucune
+  configuration, retrouve le jeu sur Steam grâce à son nom et associe chaque déblocage au succès
+  Steam de même nom ou de même numéro. Un jeu qui n'est plus vendu sur Steam n'est pas trouvé ainsi.
 - **RUNE Ubisoft Connect** : l'émulateur Ubisoft de RUNE garde des fichiers `achievements.cfg` dans
   `Documents\RUNE\Ubisoft Connect\achievements`. Ils sont trouvés sans ajouter de dossier (ajouter un
   dossier `RUNE\Ubisoft Connect` dans **Paramètres → Dossiers** fonctionne aussi) et suivent l'interrupteur de l'émulateur

@@ -106,9 +106,13 @@ conta da EA, não no disco, então são lidas pela fonte EA e nenhuma pasta que 
 aparecer. A mensagem também diz quantas estruturas foram verificadas, o que distingue "nada encontrado" de "não
 examinado".
 
-Três casos têm tratamento próprio:
+Quatro casos têm tratamento próprio:
 
 - **Goldberg SocialClub**: a variante da Rockstar e do Social Club, com interruptor próprio.
+- **anadius (EA)**: o emulador da anadius para jogos da EA guarda seus desbloqueios em
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`. O AW Next lê esse arquivo sem nenhuma
+  configuração, encontra o jogo na Steam pelo nome e associa cada desbloqueio à conquista da Steam
+  de mesmo nome ou número. Um jogo que não é mais vendido na Steam não é encontrado dessa forma.
 - **RUNE Ubisoft Connect**: o emulador de Ubisoft do RUNE guarda arquivos `achievements.cfg` em
   `Documents\RUNE\Ubisoft Connect\achievements`. Eles são encontrados sem adicionar uma pasta (adicionar uma
   pasta `RUNE\Ubisoft Connect` em **Configurações → Pastas** também funciona) e seguem o interruptor do

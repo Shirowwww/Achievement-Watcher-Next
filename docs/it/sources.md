@@ -107,9 +107,13 @@ obiettivi sull'account EA e non su disco, quindi vengono lette tramite la sorgen
 può farle comparire. Il messaggio dice anche quante strutture sono state verificate, il che distingue "non trovato"
 da "non guardato".
 
-Tre casi hanno una gestione propria:
+Quattro casi hanno una gestione propria:
 
 - **Goldberg SocialClub**: la variante per Rockstar e Social Club, con un interruttore proprio.
+- **anadius (EA)**: l'emulatore di anadius per i giochi EA conserva gli sblocchi in
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`. AW Next legge quel file senza alcuna
+  configurazione, trova il gioco su Steam dal suo nome e abbina ogni sblocco all'obiettivo Steam con
+  lo stesso nome o numero. Un gioco non più in vendita su Steam non viene trovato in questo modo.
 - **RUNE Ubisoft Connect**: l'emulatore Ubisoft di RUNE tiene i file `achievements.cfg` in
   `Documents\RUNE\Ubisoft Connect\achievements`. Vengono trovati senza aggiungere una cartella (funziona anche
   aggiungere una cartella `RUNE\Ubisoft Connect` in **Impostazioni → Cartelle**) e seguono l'interruttore

@@ -105,9 +105,13 @@ EA 账号上，而不是磁盘上，所以它们通过 EA 来源读取，无论�
 让它们出现。提示中还会说明探测了多少种布局，这样就能区分“什么也没找到”和“没有
 查找”。
 
-有三种情况另有处理：
+有四种情况另有处理：
 
 - **Goldberg SocialClub**：Rockstar 和 Social Club 变体，有自己的开关。
+- **anadius (EA)**：anadius 的 EA 游戏模拟器把解锁记录保存在
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`。AW Next 无需任何设置即可读取该文件，
+  通过名称在 Steam 上找到该游戏，并把每个解锁与 Steam 中名称或编号相同的成就对应起来。
+  已不在 Steam 上架销售的游戏无法通过这种方式找到。
 - **RUNE Ubisoft Connect**：RUNE 的 Ubisoft 模拟器把 `achievements.cfg` 文件保存在
   `Documents\RUNE\Ubisoft Connect\achievements`。无需添加文件夹即可找到它们（在 **设置 → 文件夹** 下添加
   `RUNE\Ubisoft Connect` 文件夹同样有效），并遵循 Ubisoft

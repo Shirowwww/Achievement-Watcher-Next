@@ -106,9 +106,14 @@ koncie EA, nie na dysku, więc są czytane przez źródło EA i żaden dodany fo
 że się pojawią. Komunikat mówi też, ile układów sprawdzono, co pozwala odróżnić „nic nie znaleziono” od „nie
 sprawdzono”.
 
-Trzy przypadki mają własną obsługę:
+Cztery przypadki mają własną obsługę:
 
 - **Goldberg SocialClub**: wariant dla Rockstar i Social Club, z własnym przełącznikiem.
+- **anadius (EA)**: emulator anadiusa do gier EA trzyma odblokowania w
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`. AW Next czyta ten plik bez żadnej
+  konfiguracji, znajduje grę na Steamie po jej nazwie i dopasowuje każde odblokowanie do osiągnięcia
+  Steam o tej samej nazwie lub numerze. Gra, która nie jest już sprzedawana na Steamie, nie zostanie
+  w ten sposób znaleziona.
 - **RUNE Ubisoft Connect**: emulator Ubisoft w RUNE trzyma pliki `achievements.cfg` w
   `Documents\RUNE\Ubisoft Connect\achievements`. Są znajdowane bez dodawania folderu (dodanie folderu
   `RUNE\Ubisoft Connect` w **Ustawienia → Foldery** też działa) i podlegają przełącznikowi emulatora

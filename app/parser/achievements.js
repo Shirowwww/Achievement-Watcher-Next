@@ -17,6 +17,7 @@ const runeUplayGame = require(path.join(appPath, 'runeUplayGame.js'));
 const epic = require(path.join(appPath, 'epic.js'));
 const epicOfficial = require(path.join(appPath, 'epicOfficial.js'));
 const ea = require(path.join(appPath, 'ea.js'));
+const anadiusNative = require(path.join(appPath, 'anadiusNative.js'));
 const rockstarOfficial = require(path.join(appPath, 'rockstarOfficial.js'));
 const steam = require(path.join(appPath, 'steam.js'));
 const exophase = require(path.join(appPath, 'exophase.js'));
@@ -814,6 +815,40 @@ async function buildDiscoverCacheKey(option) {
   }
 }
 
+// The display-name -> api-name table of a Steam game, in English and in the user's language, since
+// the LSX emulator names achievements in the game's language.
+async function steamNamesFor(appid, option) {
+  const langs = [...new Set(['english', option.achievement.lang].filter(Boolean))];
+  const names = {};
+  for (const lang of langs) {
+    try {
+      const game = await steam.getGameData({ appID: appid, lang, fastStart: option.fastStart === true, disableAutoRefresh: option.achievement.disableAutoRefresh === true });
+      for (const entry of (game && game.achievement && game.achievement.list) || []) {
+        if (entry && entry.displayName && entry.name) names[entry.displayName] = entry.name;
+      }
+    } catch (err) {
+      debug.log(`[anadius] no ${lang} schema for ${appid}: ${err.message || err}`);
+    }
+  }
+  return names;
+}
+
+// Writes the achievement_watcher export from anadius' own XML, before the save folders are listed.
+async function bridgeAnadiusSaves(option) {
+  if (option.achievement_source && option.achievement_source.steamEmu === false) return;
+  try {
+    await anadiusNative.bridge({
+      nativeDirs: hostPaths('LOCALAPPDATA', 'anadius', 'LSX emu'),
+      resolveAppid: steam.findAppidByName,
+      namesFor: (appid) => steamNamesFor(appid, option),
+      mapFile: anadiusNative.mapFileIn(_userDataPath || userDataDir()),
+      log: (line) => debug.log(line),
+    });
+  } catch (err) {
+    debug.log(`[anadius] bridge failed: ${err.message || err}`);
+  }
+}
+
 async function discoverWithCache(option, steamAccFilter) {
   const activeScope = scanScope.normalizeScanScope(option.scanScope);
   const cacheKey = await buildDiscoverCacheKey(option);
@@ -834,6 +869,7 @@ async function discoverWithCache(option, steamAccFilter) {
   _folderIndexPromise = null;
   _claimedDirs = new Set();
   const discoverStarted = Date.now();
+  await bridgeAnadiusSaves(option);
   perfTrace.reset('discover:');
   const appidList = await discover(option.achievement_source, steamAccFilter, activeScope);
   exeCandidateCache.flush();
@@ -4020,7 +4056,7 @@ module.exports.getSavedAchievementsForAppid = async (option, requestedAppid, cac
           const paths = report.dll || [];
           const inspected = report.loader || uplayR2.inspectInstalledLoaders(paths);
           const swap = paths.length === 0 || !inspected.supportsAchievements || !inspected.architectureValid;
-          return swap && !uplayR2Installer.mayReplaceLoaderUnattended({ gameDir: resolvedGameDir, loaderPaths: paths });
+          return swap && !uplayR2Installer.mayReplaceLoaderUnattended({ loaderPaths: paths });
         })();
         // Files are about to be written into a game folder with nothing on screen. Said once, before
         // anything is copied - including into AW Next's own loader cache - and it can answer no.

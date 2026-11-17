@@ -105,9 +105,14 @@ EA-Konto, nicht auf der Festplatte, sie werden also über die EA-Quelle gelesen,
 erscheinen lassen. Die Meldung nennt auch, wie viele Aufbauten geprüft wurden, woran man »nichts gefunden« von »nicht
 angesehen« unterscheidet.
 
-Drei Fälle werden eigens behandelt:
+Vier Fälle werden eigens behandelt:
 
 - **Goldberg SocialClub**: die Variante für Rockstar und Social Club, mit eigenem Schalter.
+- **anadius (EA)**: Der Emulator von anadius für EA-Spiele legt seine Freischaltungen unter
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml` ab. AW Next liest diese Datei ohne jede
+  Einrichtung, findet das Spiel über seinen Namen auf Steam und ordnet jede Freischaltung dem
+  Steam-Erfolg mit demselben Namen oder derselben Nummer zu. Ein Spiel, das auf Steam nicht mehr
+  verkauft wird, wird auf diesem Weg nicht gefunden.
 - **RUNE Ubisoft Connect**: Der Ubisoft-Emulator von RUNE legt `achievements.cfg`-Dateien unter
   `Documents\RUNE\Ubisoft Connect\achievements` ab. Sie werden ohne Hinzufügen eines Ordners gefunden (einen
   Ordner `RUNE\Ubisoft Connect` unter **Einstellungen → Ordner** hinzuzufügen funktioniert ebenfalls) und folgen dem Schalter des Ubisoft-

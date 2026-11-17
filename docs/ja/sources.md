@@ -106,9 +106,13 @@ AppID が書かれており、セーブのツリーは共有の場所より先�
 表示させることはできません。メッセージには調べた構成の数も示されるので、「見つからなかった」と「確認していない」を
 区別できます。
 
-3 つのケースは個別に扱われます。
+4 つのケースは個別に扱われます。
 
 - **Goldberg SocialClub**：Rockstar と Social Club のバリアントで、専用のスイッチがあります。
+- **anadius (EA)**：anadius の EA ゲーム用エミュレーターは、解除の記録を
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml` に保存します。AW Next はこのファイルを設定なしで読み取り、
+  ゲームの名前から Steam 上のゲームを見つけて、各解除を同じ名前または同じ番号の Steam の実績に対応付けます。
+  Steam で販売されなくなったゲームは、この方法では見つかりません。
 - **RUNE Ubisoft Connect**：RUNE の Ubisoft エミュレーターは `achievements.cfg` ファイルを
   `Documents\RUNE\Ubisoft Connect\achievements` に保持します。フォルダーを追加しなくても見つかり
   (**設定 → フォルダー** に `RUNE\Ubisoft Connect` フォルダーを追加しても動作します)、Ubisoft

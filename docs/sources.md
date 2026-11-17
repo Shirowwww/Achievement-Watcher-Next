@@ -104,9 +104,13 @@ EA account, not on disk, so they are read through the EA source and no folder yo
 appear. The message also says how many layouts were probed, which tells "nothing found" from "not
 looked at".
 
-Three cases have their own handling:
+Four cases have their own handling:
 
 - **Goldberg SocialClub**: the Rockstar and Social Club variant, with its own switch.
+- **anadius (EA)**: anadius' emulator for EA games keeps its unlocks in
+  `%LOCALAPPDATA%\anadius\LSX emu\achievement-<set>.xml`. AW Next reads that file without any setup,
+  finds the game on Steam by its name and matches each unlock to the Steam achievement of the same
+  name or number. A game no longer sold on Steam is not found this way.
 - **RUNE Ubisoft Connect**: RUNE's Ubisoft emulator keeps `achievements.cfg` files under
   `Documents\RUNE\Ubisoft Connect\achievements`. They are found without adding a folder (adding a
   `RUNE\Ubisoft Connect` folder under **Settings → Folders** works too) and follow the Ubisoft

@@ -110,6 +110,7 @@ const gogWatch = require('./console/gogWatch.js');
 const ubisoftWatch = require('./console/ubisoftWatch.js');
 const runeUplayWatch = require('./console/runeUplayWatch.js');
 const retroAchievementsWatch = require('./console/retroAchievementsWatch.js');
+const anadiusWatch = require('./console/anadiusWatch.js');
 const { isWinRTAvailable, canAppShowToast } = require('./util/powertoast');
 const { isFullscreenAppRunning } = require('./queryUserNotificationState.js');
 const { createOverlayControllerService } = require('./console/controller/overlay-controller-service.js');
@@ -252,6 +253,7 @@ const CONSOLE_WATCHERS = [
   { name: 'ubisoft', watcher: ubisoftWatch },
   { name: 'rune-uplay', watcher: runeUplayWatch },
   { name: 'retroachievements', watcher: retroAchievementsWatch },
+  { name: 'anadius', watcher: anadiusWatch },
 ];
 
 // Trailing-edge window used to fold a burst of options.ini writes into one watchdog restart.
