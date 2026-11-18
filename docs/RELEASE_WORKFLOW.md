@@ -188,8 +188,9 @@ node tools/site/search-index.js
 
 ## Nightly builds
 
-`main` is the stable line; `dev` is where work lands. Every push to `dev` runs
-`.github/workflows/nightly.yml`: lint and tests, then a signed Windows installer and an AppImage
+`main` is the stable line; `dev` is where work lands. Every push to `dev` that changes what ships
+(`app/`, `watchdog/` outside its tests, `NOTICE`) runs `.github/workflows/nightly.yml`; docs, tests,
+tools and plugins alone build nothing, and the Actions tab can start one by hand. It runs lint and tests, then a signed Windows installer and an AppImage
 built as `X.Y.Z-nightly.N`, published as a GitHub pre-release with `nightly.yml` and
 `nightly-linux.yml`. Only the three newest stay; older ones and their tags are deleted.
 
