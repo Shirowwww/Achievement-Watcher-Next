@@ -287,6 +287,12 @@
         "name": "Installa gli aggiornamenti automaticamente",
         "description": "Scarica e installa le nuove versioni senza chiedere, appena non è in esecuzione nessun gioco. AW Next si riavvia da solo e te lo segnala in seguito."
       },
+      "updateChannel": {
+        "name": "Canale di aggiornamento",
+        "description": "Stabile riceve le versioni testate. Nightly riceve una build di ogni modifica appena viene fatta, prima che sia testata in una versione: più recente, ma può dare problemi. Tornando a Stabile ti viene offerta subito l'ultima versione stabile.",
+        "stable": "Stabile",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trofei sul profilo",
         "description": "Mostra i trofei platino, oro, argento e bronzo sotto il tuo nome. Il platino è un gioco al 100%; gli altri classificano i tuoi obiettivi in base a quanti giocatori li hanno sbloccati."

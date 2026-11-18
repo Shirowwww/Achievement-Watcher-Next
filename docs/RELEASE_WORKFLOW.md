@@ -186,6 +186,25 @@ node tools/site/search-index.js
 5. `.github/workflows/publish.yml` then opens the winget update PR and asks IndexNow to recrawl the
    site. Both can be rerun from the Actions tab.
 
+## Nightly builds
+
+`main` is the stable line; `dev` is where work lands. Every push to `dev` runs
+`.github/workflows/nightly.yml`: lint and tests, then a signed Windows installer and an AppImage
+built as `X.Y.Z-nightly.N`, published as a GitHub pre-release with `nightly.yml` and
+`nightly-linux.yml`. Only the three newest stay; older ones and their tags are deleted.
+
+- `X.Y.Z` is the next patch after the last stable tag, or `app/package.json` when dev is bumped
+  ahead. `N` counts up from the newest nightly of that base (`tools/nightly.js`).
+- The notes are the commit subjects and bodies since the previous nightly, so write commit bodies
+  for a reader who runs the build.
+- Only copies set to Settings > Update channel > Nightly see them. Stable copies, the site and winget
+  read `releases/latest` or full releases, which never include a pre-release.
+- A push publishes a build to testers, so push a finished piece of work in one go rather than commit
+  by commit. A newer push cancels a nightly still building.
+- A stable release does not move nightly copies to it; the next push to dev gives them a nightly
+  built on top of it. Switching back to Stable offers the latest release at once, even though it
+  sorts below the nightly.
+
 ## Identifiers that must not change
 
 The product was renamed to Achievement Watcher Next in 3.9.0, but installs are keyed on these

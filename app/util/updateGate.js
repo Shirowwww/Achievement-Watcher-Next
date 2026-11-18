@@ -7,6 +7,7 @@
 */
 
 const semver = require('semver');
+const { normalizeChannel, isReturnToStable } = require('./updateChannel.js');
 
 const POSTPONE_MS = 24 * 60 * 60 * 1000;
 
@@ -65,6 +66,12 @@ function isNotAnUpgrade(offered, currentVersion) {
   return semver.lte(a, b);
 }
 
+// Not newer than what runs, unless it is the way back to stable from a nightly.
+function isBlockedAsNotNewer(offered, currentVersion, general) {
+  const channel = normalizeChannel(general && general.updateChannel, currentVersion);
+  return isNotAnUpgrade(offered, currentVersion) && !isReturnToStable(offered, currentVersion, channel);
+}
+
 function isVersionSkipped(general, offered) {
   const skipped = general && typeof general.skippedVersion === 'string' ? general.skippedVersion : '';
   if (!skipped || skipped.toLowerCase() === 'none') return false;
@@ -85,8 +92,8 @@ function isUpdatePostponed(general, offered, now = Date.now()) {
 */
 function shouldSuppressUpdatePrompt(general, offered, { manual = false, now = Date.now(), currentVersion = '' } = {}) {
   // First, and ahead of `manual`: an explicit "Check for updates" overrules a postpone the user set,
-  // but it cannot make a version that is not newer worth offering.
-  if (isNotAnUpgrade(offered, currentVersion)) return { suppress: true, reason: 'not-newer' };
+  // but it cannot make a version that is not newer worth offering, except the way back from a nightly.
+  if (isBlockedAsNotNewer(offered, currentVersion, general)) return { suppress: true, reason: 'not-newer' };
   if (isVersionSkipped(general, offered)) return { suppress: true, reason: 'skipped' };
   if (!manual && isUpdatePostponed(general, offered, now)) return { suppress: true, reason: 'postponed' };
   return { suppress: false, reason: '' };
@@ -150,6 +157,7 @@ module.exports = {
   shouldRemindUpdateOffer,
   covers,
   isNotAnUpgrade,
+  isBlockedAsNotNewer,
   isVersionSkipped,
   isUpdatePostponed,
   shouldSuppressUpdatePrompt,

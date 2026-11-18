@@ -1,0 +1,183 @@
+name: Nightly
+
+# Every push to dev publishes a nightly: vX.Y.Z-nightly.N, a GitHub pre-release that only copies set to
+# Settings > Update channel > Nightly ever download (stable copies read releases/latest, which skips
+# pre-releases, and the winget job in publish.yml only follows full releases). tools/nightly.js picks
+# the version, writes the notes from the commits and names the old nightlies to delete; three stay.
+# A newer push cancels a nightly still being built, so a burst of pushes ends in one build.
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+env:
+  npm_config_audit: 'false'
+  npm_config_fund: 'false'
+  KEEP_NIGHTLIES: 3
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            watchdog/package-lock.json
+      - name: Install dependencies
+        run: |
+          (cd watchdog && npm ci --ignore-scripts)
+          (cd app && npm ci --ignore-scripts && npx patch-package)
+          chmod +x app/node_modules/7zip-bin/linux/x64/7za
+      - name: Lint and test
+        working-directory: app
+        run: |
+          npm run lint
+          npm test
+
+  version:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.pick.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+      - name: Pick the version and write the notes
+        id: pick
+        run: |
+          (cd app && npm ci --ignore-scripts --omit=dev)
+          version="$(node tools/nightly.js version)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          NIGHTLY_VERSION="$version" node tools/nightly.js notes "$GITHUB_SHA" > notes.md
+          cat notes.md
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: notes
+          path: notes.md
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            watchdog/package-lock.json
+      - name: Install dependencies
+        shell: bash
+        run: |
+          (cd watchdog && npm ci --ignore-scripts && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+          (cd app && npm ci --ignore-scripts && npx patch-package && npm rebuild registry-js --foreground-scripts && node node_modules/electron/install.js)
+          (cd app && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+      # Signed with the nightly key, which only nightly copies accept (app/util/updateSignature.js).
+      # Without it the build would come out unsigned and every copy would refuse it, so stop here.
+      - name: Build the signed installer
+        shell: bash
+        working-directory: app
+        env:
+          CSC_LINK: ${{ secrets.NIGHTLY_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.NIGHTLY_CSC_KEY_PASSWORD }}
+        run: |
+          if [ -z "$CSC_LINK" ]; then echo "::error::NIGHTLY_CSC_LINK is not set"; exit 1; fi
+          npm run build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows
+          path: |
+            app/dist/Achievement.Watcher.Setup.*.exe
+            app/dist/Achievement.Watcher.Setup.*.exe.blockmap
+            app/dist/latest.yml
+          if-no-files-found: error
+
+  linux:
+    needs: version
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            watchdog/package-lock.json
+      - name: Install dependencies
+        run: |
+          (cd watchdog && npm ci --ignore-scripts && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+          (cd app && npm ci --ignore-scripts && npx patch-package && npm version "$VERSION" --no-git-tag-version --allow-same-version)
+      - name: Build the AppImage
+        working-directory: app
+        run: npm run build:linux
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux
+          path: |
+            app/dist/*.AppImage
+            app/dist/latest-linux.yml
+          if-no-files-found: error
+
+  publish:
+    needs: [version, windows, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: out
+          merge-multiple: true
+      # electron-builder names the manifests latest*.yml; a nightly copy asks for nightly*.yml.
+      - name: Publish the pre-release
+        run: |
+          mv out/latest.yml out/nightly.yml
+          mv out/latest-linux.yml out/nightly-linux.yml
+          gh release create "v$VERSION" --draft --prerelease --target "$GITHUB_SHA" \
+            --title "Nightly $VERSION" --notes-file out/notes.md
+          gh release upload "v$VERSION" out/*.exe out/*.blockmap out/*.AppImage out/nightly.yml out/nightly-linux.yml
+          gh release edit "v$VERSION" --draft=false --prerelease --latest=false
+      - name: Delete the older nightlies
+        run: |
+          git fetch --tags --force
+          (cd app && npm ci --ignore-scripts --omit=dev)
+          # Assigned first: a failure inside $(...) in the for list would not stop the step.
+          tags="$(node tools/nightly.js prune "$KEEP_NIGHTLIES")"
+          for tag in $tags; do
+            gh release delete "$tag" --yes --cleanup-tag
+          done

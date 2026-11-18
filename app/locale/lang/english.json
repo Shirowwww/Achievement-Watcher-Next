@@ -287,6 +287,12 @@
         "name": "Install updates automatically",
         "description": "Downloads and installs new versions without asking, once no game is running. AW Next restarts on its own and says so afterwards."
       },
+      "updateChannel": {
+        "name": "Update channel",
+        "description": "Stable gets the tested releases. Nightly gets a build of every change as soon as it is made, before it is tested in a release: newer, but it can break. Going back to Stable offers the latest stable version right away.",
+        "stable": "Stable",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trophies on the profile",
         "description": "Shows platinum, gold, silver and bronze trophies under your name. Platinum is a game at 100%; the others rank your achievements by how many players unlocked them."

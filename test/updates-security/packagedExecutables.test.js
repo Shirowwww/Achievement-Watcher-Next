@@ -143,5 +143,5 @@ test('the build runs the check before the portable pass overwrites win-unpacked'
   const check = build.indexOf('verifyPackagedExecutables(');
   const portable = build.indexOf('runBuilder("electron-builder-portable.yml"');
   assert.ok(check > 0 && portable > check, 'verifyPackagedExecutables must run inside the installer-pass check');
-  assert.match(build, /verifyUpdateCodeSignature\(\["Shirow"\], file, \(\) => \{\}, \{ raw: true \}\)/);
+  assert.match(build, /verifyUpdateCodeSignature\(\["Shirow"\], file, \(\) => \{\}, \{ raw: true, channel \}\)/);
 });

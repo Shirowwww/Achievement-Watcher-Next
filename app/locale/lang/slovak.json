@@ -287,6 +287,12 @@
         "name": "Inštalovať aktualizácie automaticky",
         "description": "Stiahne a nainštaluje nové verzie bez pýtania, hneď ako nie je spustená žiadna hra. AW Next sa sám reštartuje a potom o tom dá vedieť."
       },
+      "updateChannel": {
+        "name": "Kanál aktualizácií",
+        "description": "Stabilný dostáva otestované vydania. Nightly dostáva zostavenie každej zmeny hneď po jej vykonaní, ešte pred otestovaním vo vydaní: novšie, ale môže zlyhať. Návrat na Stabilný okamžite ponúkne najnovšiu stabilnú verziu.",
+        "stable": "Stabilný",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trofeje v profile",
         "description": "Zobrazuje platinové, zlaté, strieborné a bronzové trofeje pod vaším menom. Platina je hra dokončená na 100 %; ostatné triedia vaše úspechy podľa toho, koľko hráčov ich odomklo."

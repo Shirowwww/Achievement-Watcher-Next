@@ -287,6 +287,12 @@
         "name": "Updates automatisch installieren",
         "description": "Lädt neue Versionen herunter und installiert sie ohne Rückfrage, sobald kein Spiel läuft. AW Next startet von selbst neu und weist danach darauf hin."
       },
+      "updateChannel": {
+        "name": "Update-Kanal",
+        "description": "Stabil erhält die getesteten Versionen. Nightly erhält von jeder Änderung sofort einen Build, noch bevor sie in einer Version getestet wurde: neuer, kann aber Fehler enthalten. Der Wechsel zurück zu Stabil bietet sofort die neueste stabile Version an.",
+        "stable": "Stabil",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trophäen im Profil",
         "description": "Zeigt Platin-, Gold-, Silber- und Bronze-Trophäen unter deinem Namen. Platin ist ein Spiel mit 100 %; die anderen ordnen deine Erfolge danach ein, wie viele Spieler sie freigeschaltet haben."

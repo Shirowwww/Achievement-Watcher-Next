@@ -7,7 +7,8 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
-const { publisherMatches, isPinnedThumbprint, verifyUpdateCodeSignature } = require("../util/updateSignature.js");
+const { publisherMatches, isPinnedThumbprint, pinnedForChannel, verifyUpdateCodeSignature } = require("../util/updateSignature.js");
+const { channelOfVersion } = require("../util/updateChannel.js");
 const { verifyPackagedExecutables } = require("./packagedExecutables.js");
 const { PORTABLE_MARKER } = require("../util/portableMode.js");
 const AdmZip = require("adm-zip");
@@ -26,6 +27,8 @@ const windowsPowerShellModules = path.join(
 );
 
 async function verifySignedUpdateArtifacts(version) {
+    // A nightly is signed in CI with the nightly key, which only nightly copies accept.
+    const channel = channelOfVersion(version);
     const appDir = path.join(__dirname, "..");
     const distDir = path.join(appDir, "dist");
     const installer = path.join(distDir, `Achievement.Watcher.Setup.${version}.exe`);
@@ -49,8 +52,8 @@ async function verifySignedUpdateArtifacts(version) {
     if (!publisherMatches(subject, ["Shirow"])) throw new Error(`Installer signer must be CN=Shirow, received: ${subject || "none"}`);
     // Installed clients refuse any certificate that is not pinned in util/updateSignature.js, so a
     // release signed by anything else would install by hand and never arrive as an update.
-    if (!isPinnedThumbprint(signer.Thumbprint)) {
-        throw new Error(`Installer certificate ${signer.Thumbprint || "(none)"} is not in PINNED_THUMBPRINTS (app/util/updateSignature.js)`);
+    if (!isPinnedThumbprint(signer.Thumbprint, pinnedForChannel(channel))) {
+        throw new Error(`Installer certificate ${signer.Thumbprint || "(none)"} is not pinned for the ${channel} channel (app/util/updateSignature.js)`);
     }
 
     const appUpdate = fs.readFileSync(updateConfig, "utf8");
@@ -68,7 +71,7 @@ async function verifySignedUpdateArtifacts(version) {
 
     const checked = await verifyPackagedExecutables(path.join(distDir, "win-unpacked"), {
         nativeSourceDir: path.join(appDir, "..", "watchdog", "native"),
-        verifySignature: (file) => verifyUpdateCodeSignature(["Shirow"], file, () => {}, { raw: true }),
+        verifySignature: (file) => verifyUpdateCodeSignature(["Shirow"], file, () => {}, { raw: true, channel }),
     });
     console.log(`[build] ${checked} packaged executables are signed by a pinned certificate; native helpers match the repository.`);
 }
@@ -157,7 +160,8 @@ async function main() {
       directory, so it has to run here rather than at the end of the build.
     */
     await verifyOrExit(async () => {
-        if (fs.existsSync(pfx)) await verifySignedUpdateArtifacts(version);
+        // CI hands its certificate over in CSC_LINK instead of a local Shirow.pfx.
+        if (fs.existsSync(pfx) || process.env.CSC_LINK) await verifySignedUpdateArtifacts(version);
     });
 
     runBuilder("electron-builder-portable.yml", { ...env, AW_BUILD_PORTABLE: "1" });

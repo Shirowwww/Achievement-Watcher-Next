@@ -27,6 +27,7 @@ const settingsRarityTiers = require(path.join(appPath, 'util/rarityTiers.js'));
 const libraryRefresh = require(path.join(appPath, 'util/libraryRefresh.js'));
 const { renamedSound, tierSound } = require(path.join(appPath, 'util/notificationSounds.js'));
 const interfaceMode = require(path.join(appPath, 'util/interfaceMode.js'));
+const updateChannel = require(path.join(appPath, 'util/updateChannel.js'));
 const settingsContainers = require(path.join(appPath, 'util/settingsContainers.js'));
 const settingsDependencies = require(path.join(appPath, 'util/settingsDependencies.js'));
 const { legacyPresetAlias } = require(path.join(appPath, 'util/notificationPreset.js'));
@@ -795,6 +796,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       $('#option_minimizeToTrayOnPlay').val(String(app.config.general.minimizeToTrayOnPlay === true)).change();
       $('#option_uninstallContextMenu').val(String(app.config.general.uninstallContextMenu !== false)).change();
       $('#option_autoUpdate').val(String(app.config.general.autoUpdate === true)).change();
+      $('#option_updateChannel').val(updateChannel.normalizeChannel(app.config.general.updateChannel, remote.app.getVersion())).change();
       if (!app.config.controller) app.config.controller = {};
       $('#option_controllerEnabled').val(String(app.config.controller.enabled === true)).change();
       $('#option_controllerAppNavigation').val(String(app.config.controller.appNavigation !== false)).change();
@@ -1496,6 +1498,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
               $(this)[0].id === 'option_minimizeToTrayOnPlay' ||
               $(this)[0].id === 'option_uninstallContextMenu' ||
               $(this)[0].id === 'option_autoUpdate' ||
+              $(this)[0].id === 'option_updateChannel' ||
               $(this)[0].id === 'option_theme' ||
               $(this)[0].id === 'rarityThresholdsChoice'
             )
@@ -1534,6 +1537,7 @@ function withSettingsTimeout(promise, label, timeoutMs = SETTINGS_SAVE_TIMEOUT_M
       app.config.general.minimizeToTrayOnPlay = $('#option_minimizeToTrayOnPlay').val() === 'true';
       app.config.general.uninstallContextMenu = $('#option_uninstallContextMenu').val() !== 'false';
       app.config.general.autoUpdate = $('#option_autoUpdate').val() === 'true';
+      app.config.general.updateChannel = updateChannel.normalizeChannel($('#option_updateChannel').val(), remote.app.getVersion());
       app.config.general.theme = $('#option_theme').val() || 'default';
 
       if (!app.config.controller) app.config.controller = {};

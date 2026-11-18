@@ -18,7 +18,7 @@ test('packaged builds ask before downloading, then silently upgrade and restart'
   const init = fs.readFileSync(path.join(appRoot, 'electron', 'init.js'), 'utf8');
   assert.match(init, /autoUpdater\.autoDownload\s*=\s*false/);
   assert.match(init, /if \(app\.isPackaged\)/);
-  assert.match(init, /(?:autoUpdater|getUpdater\(\))\s*\.\s*checkForUpdates\(\)/);
+  assert.match(init, /(?:autoUpdater|getUpdater\(\)|applyUpdateChannel\(getUpdater\(\)\))\s*\.\s*checkForUpdates\(\)/);
   assert.match(init, /autoUpdater\.on\('update-available'/);
   assert.match(init, /autoUpdater\.downloadUpdate\(token\)/);
   assert.match(init, /autoUpdater\.on\('update-downloaded'/);

@@ -287,6 +287,12 @@
         "name": "Güncellemeleri otomatik olarak yükle",
         "description": "Çalışan oyun kalmadığında yeni sürümleri sormadan indirir ve yükler. AW Next kendiliğinden yeniden başlar ve sonrasında bunu bildirir."
       },
+      "updateChannel": {
+        "name": "Güncelleme kanalı",
+        "description": "Kararlı, test edilmiş sürümleri alır. Nightly, her değişikliğin derlemesini yapıldığı anda, bir sürümde test edilmeden önce alır: daha yeni, ama bozulabilir. Kararlı kanala dönmek en son kararlı sürümü hemen sunar.",
+        "stable": "Kararlı",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Profildeki kupalar",
         "description": "Adınızın altında platin, altın, gümüş ve bronz kupaları gösterir. Platin, %100 tamamlanmış bir oyundur; diğerleri başarımlarınızı kaç oyuncunun açtığına göre sıralar."

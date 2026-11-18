@@ -4103,6 +4103,23 @@
                     <div class="help" id="auto-update-settings-help">Downloads and installs new versions without asking, once no game is running. AW Next restarts on its own and says so afterwards.</div>
                   </li>
 
+                  <li class="hasHelper">
+                    <div class="left"><i class="fas fa-flask"></i> <span id="update-channel-settings-label">Update channel</span></div>
+                    <div class="right">
+                      <div class="previous">
+                        <span class="arrow"><i class="fas fa-chevron-left"></i></span>
+                      </div>
+                      <select autocomplete="off" id="option_updateChannel">
+                        <option value="stable" selected>Stable</option>
+                        <option value="nightly">Nightly</option>
+                      </select>
+                      <div class="next">
+                        <span class="arrow"><i class="fas fa-chevron-right"></i></span>
+                      </div>
+                    </div>
+                    <div class="help" id="update-channel-settings-help">Stable gets the tested releases. Nightly gets a build of every change as soon as it is made, before it is tested in a release: newer, but it can break. Going back to Stable offers the latest stable version right away.</div>
+                  </li>
+
                   <!-- Troubleshooting for a window or overlay that renders badly: a Simple user hits that
                        as often as anyone, so it sits here rather than in the Advanced tab. Bound by id. -->
                   <li class="hasHelper">

@@ -201,6 +201,13 @@ Two certificates are pinned:
 | `Shirow.pfx` + `.password` | Signs every release, valid until 2031-08-04 | `2E581B204231D7EED9E33E798B5E0C503AD8FEDC` |
 | `Shirow-standby.pfx` + `.password-Shirow-standby` | Kept offline, never used until a rotation | `F64838216091CCC975320E8A2D50F4F403837667` |
 
+A third one, `Shirow-nightly.pfx` (`FC9327CB2880D27F2A0084B73845A0B0E5B77BD1`), signs the nightly
+builds in GitHub Actions, from the `NIGHTLY_CSC_LINK` (the PFX in base64) and
+`NIGHTLY_CSC_KEY_PASSWORD` repository secrets. It sits in `NIGHTLY_THUMBPRINTS`, which only a copy on
+the nightly channel accepts: a leak of that key reaches nightly testers, never a stable install. To
+replace it, create another with `-FileName Shirow-nightly`, swap the thumbprint, update both secrets,
+and ship it in a nightly signed by the old key.
+
 **Back up the whole `app/build/signing/` folder somewhere offline.** If both private keys are lost,
 every installed copy refuses every later update, and users can only move forward by downloading an
 installer by hand.

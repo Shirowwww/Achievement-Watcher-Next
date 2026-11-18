@@ -34,6 +34,24 @@ const PINNED_THUMBPRINTS = Object.freeze([
   'F64838216091CCC975320E8A2D50F4F403837667', // CN=Shirow, standby, Shirow-standby.pfx
 ]);
 
+/*
+  The nightly builds are signed by GitHub Actions with a key of their own (Shirow-nightly.pfx, held
+  in the repository secrets). Only a copy on the nightly channel accepts it, so a leak of that key
+  can reach nightly testers but never a stable install.
+*/
+const NIGHTLY_THUMBPRINTS = Object.freeze([
+  'FC9327CB2880D27F2A0084B73845A0B0E5B77BD1', // CN=Shirow, nightly, Shirow-nightly.pfx
+]);
+
+/**
+ * The certificates an update may be signed by on this channel.
+ * @param {string} channel 'stable' or 'nightly'
+ * @returns {readonly string[]}
+ */
+function pinnedForChannel(channel) {
+  return channel === 'nightly' ? Object.freeze([...PINNED_THUMBPRINTS, ...NIGHTLY_THUMBPRINTS]) : PINNED_THUMBPRINTS;
+}
+
 function normalizeThumbprint(value) {
   return String(value || '')
     .replace(/[^0-9a-f]/gi, '')
@@ -107,7 +125,7 @@ function refuseWithHint(reason) {
 
 // `raw` skips the manual-download hint for callers that are not an installed client (the build). A
 // file that cannot be read or is not an executable is a refusal: 'could not check' never installs.
-async function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}, { raw = false } = {}) {
+async function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = () => {}, { raw = false, channel = 'stable' } = {}) {
   const refuse = raw ? (reason) => reason : refuseWithHint;
   let signature;
   try {
@@ -116,13 +134,15 @@ async function verifyUpdateCodeSignature(publisherNames, tempUpdateFile, log = (
     log(`[updater] signature check could not run: ${err.message || err}`);
     return refuse(`the installer signature could not be checked (${err.message || err})`);
   }
-  const result = evaluateUpdateSignature(publisherNames, signature);
+  const result = evaluateUpdateSignature(publisherNames, signature, { pinned: pinnedForChannel(channel) });
   if (result === null) log('[updater] update signer accepted');
   return result === null ? null : refuse(result);
 }
 
 module.exports = {
   PINNED_THUMBPRINTS,
+  NIGHTLY_THUMBPRINTS,
+  pinnedForChannel,
   isPinnedThumbprint,
   publisherMatches,
   manualDownloadHint,

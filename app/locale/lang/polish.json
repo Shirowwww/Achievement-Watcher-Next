@@ -287,6 +287,12 @@
         "name": "Instaluj aktualizacje automatycznie",
         "description": "Pobiera i instaluje nowe wersje bez pytania, gdy tylko żadna gra nie jest uruchomiona. AW Next sam uruchomi się ponownie i potem o tym poinformuje."
       },
+      "updateChannel": {
+        "name": "Kanał aktualizacji",
+        "description": "Stabilny otrzymuje przetestowane wydania. Nightly otrzymuje kompilację każdej zmiany zaraz po jej wprowadzeniu, zanim zostanie przetestowana w wydaniu: nowsza, ale może się zepsuć. Powrót do Stabilnego od razu oferuje najnowszą stabilną wersję.",
+        "stable": "Stabilny",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trofea na profilu",
         "description": "Pokazuje trofea platynowe, złote, srebrne i brązowe pod twoim imieniem. Platyna to gra ukończona w 100%; pozostałe klasyfikują twoje osiągnięcia według liczby graczy, którzy je zdobyli."

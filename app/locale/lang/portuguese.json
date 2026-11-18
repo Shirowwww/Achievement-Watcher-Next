@@ -287,6 +287,12 @@
         "name": "Instalar atualizações automaticamente",
         "description": "Transfere e instala novas versões sem perguntar, assim que nenhum jogo estiver em execução. O AW Next reinicia sozinho e avisa depois."
       },
+      "updateChannel": {
+        "name": "Canal de atualização",
+        "description": "O canal Estável recebe as versões testadas. O Nightly recebe uma compilação de cada alteração assim que é feita, antes de ser testada numa versão: mais recente, mas pode avariar. Voltar ao Estável oferece de imediato a versão estável mais recente.",
+        "stable": "Estável",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Troféus no perfil",
         "description": "Mostra os troféus platina, ouro, prata e bronze sob o seu nome. A platina é um jogo a 100%; os restantes classificam as suas proezas consoante o número de jogadores que as desbloquearam."

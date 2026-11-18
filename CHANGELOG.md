@@ -11,6 +11,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Nightly builds.** **Settings > General > Update channel > Nightly** gets a build of every change
+  as soon as it lands, with the list of changes, before it is tested in a release. Newer, but it can
+  break: going back to **Stable** offers the latest release at once.
 - **inFAMOUS Second Son and inFAMOUS First Light, from the issn_pc port (#188).** Their 48 and 25
   trophies show with their pictures and unlock dates. First Light appears once the port has saved
   one of its trophies.

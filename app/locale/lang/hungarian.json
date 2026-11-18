@@ -287,6 +287,12 @@
         "name": "Frissítések automatikus telepítése",
         "description": "Kérdezés nélkül letölti és telepíti az új verziókat, amint nem fut játék. Az AW Next magától újraindul, és utána jelzi ezt."
       },
+      "updateChannel": {
+        "name": "Frissítési csatorna",
+        "description": "A Stabil a tesztelt kiadásokat kapja. A Nightly minden változtatásról kap egy buildet, amint elkészül, még mielőtt egy kiadásban tesztelnék: újabb, de hibás lehet. A Stabilra visszaváltva azonnal felkínálja a legújabb stabil verziót.",
+        "stable": "Stabil",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trófeák a profilon",
         "description": "Platina, arany, ezüst és bronz trófeákat jelenít meg a neved alatt. A platina egy 100%-ra teljesített játék; a többi a teljesítményeidet aszerint rangsorolja, hány játékos oldotta fel őket."

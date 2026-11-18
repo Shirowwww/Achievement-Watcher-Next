@@ -287,6 +287,12 @@
         "name": "Updates automatisch installeren",
         "description": "Downloadt en installeert nieuwe versies zonder te vragen, zodra er geen game draait. AW Next start zichzelf opnieuw op en meldt dat achteraf."
       },
+      "updateChannel": {
+        "name": "Updatekanaal",
+        "description": "Stabiel krijgt de geteste versies. Nightly krijgt van elke wijziging een build zodra die gemaakt is, voordat die in een versie is getest: nieuwer, maar het kan misgaan. Terugschakelen naar Stabiel biedt meteen de nieuwste stabiele versie aan.",
+        "stable": "Stabiel",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trofeeën op het profiel",
         "description": "Toont platina-, goud-, zilver- en bronzen trofeeën onder je naam. Platina is een game op 100%; de andere rangschikken je prestaties op basis van hoeveel spelers ze hebben ontgrendeld."

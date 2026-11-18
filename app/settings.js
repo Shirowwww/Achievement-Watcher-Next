@@ -118,6 +118,10 @@ function normalize(parsed) {
   if (typeof options.general.autoUpdate !== 'boolean') {
     options.general.autoUpdate = false;
   }
+  // '' until chosen: the copy then follows the channel it was built for (util/updateChannel.js).
+  if (options.general.updateChannel !== 'stable' && options.general.updateChannel !== 'nightly') {
+    options.general.updateChannel = '';
+  }
 
   if (typeof options.general.onboardingCompleted !== 'boolean') {
     // Reaching this branch means a settings file already existed. Treat it as an upgraded
@@ -701,6 +705,7 @@ function defaults() {
       updatePostponedVersion: '',
       updatePostponedUntil: 0,
       autoUpdate: false,
+      updateChannel: '',
       onboardingCompleted: false,
       interfaceMode: '', // '' until onboarding asks; 'simple' | 'advanced' afterwards
       startWithWindows: true,

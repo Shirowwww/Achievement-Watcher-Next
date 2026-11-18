@@ -287,6 +287,12 @@
         "name": "Pasang pembaruan secara otomatis",
         "description": "Mengunduh dan memasang versi baru tanpa bertanya, begitu tidak ada game yang berjalan. AW Next memulai ulang dengan sendirinya dan memberi tahu setelahnya."
       },
+      "updateChannel": {
+        "name": "Kanal pembaruan",
+        "description": "Stabil mendapat rilis yang sudah diuji. Nightly mendapat build dari setiap perubahan begitu perubahan itu dibuat, sebelum diuji dalam sebuah rilis: lebih baru, tetapi bisa bermasalah. Kembali ke Stabil langsung menawarkan versi stabil terbaru.",
+        "stable": "Stabil",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trofi pada profil",
         "description": "Menampilkan trofi platinum, emas, perak, dan perunggu di bawah nama Anda. Platinum adalah game yang mencapai 100%; sisanya mengurutkan pencapaian Anda berdasarkan jumlah pemain yang meraihnya."

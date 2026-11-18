@@ -287,6 +287,12 @@
         "name": "Tự động cài đặt bản cập nhật",
         "description": "Tải xuống và cài đặt phiên bản mới mà không hỏi, ngay khi không còn trò chơi nào đang chạy. AW Next tự khởi động lại và thông báo sau đó."
       },
+      "updateChannel": {
+        "name": "Kênh cập nhật",
+        "description": "Ổn định nhận các bản phát hành đã được kiểm thử. Nightly nhận một bản dựng của mỗi thay đổi ngay khi nó được thực hiện, trước khi được kiểm thử trong một bản phát hành: mới hơn nhưng có thể gặp lỗi. Quay lại Ổn định sẽ đề xuất ngay phiên bản ổn định mới nhất.",
+        "stable": "Ổn định",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Cúp trên hồ sơ",
         "description": "Hiển thị cúp bạch kim, vàng, bạc và đồng dưới tên của bạn. Bạch kim là trò chơi đạt 100%; các cúp còn lại xếp hạng thành tựu của bạn theo số người chơi đã mở khóa chúng."

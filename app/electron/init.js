@@ -97,6 +97,7 @@ app.commandLine.appendSwitch('disk-cache-size', String(HTTP_DISK_CACHE_BYTES));
 const { BrowserWindow, dialog, session, shell, ipcMain, globalShortcut, Tray, Menu, nativeImage, Notification } = require('electron');
 const os = require('os');
   const { verifyUpdateCodeSignature } = require('../util/updateSignature.js');
+  const updateChannel = require('../util/updateChannel.js');
   const { withScrapeLease } = require('../util/scrapeLease.js');
   const steamSchemaFetch = require(path.join(__dirname, '../util/steamSchemaFetch.js'));
   const { clampWindowBoundsToWorkArea } = require('../util/windowBounds.js');
@@ -137,7 +138,7 @@ function getUpdater() {
     if (isPortableBuild) autoUpdater.setFeedURL({ provider: 'github', owner: 'Shirowwww', repo: 'Achievement-Watcher-Next' });
     // Accept the project's self-signed publisher through the tested verifier.
     autoUpdater.verifyUpdateCodeSignature = (publisherNames, tempUpdateFile) =>
-      verifyUpdateCodeSignature(publisherNames, tempUpdateFile, (message) => debug.log(message));
+      verifyUpdateCodeSignature(publisherNames, tempUpdateFile, (message) => debug.log(message), { channel: checkedUpdateChannel });
     if (registerUpdaterEvents) registerUpdaterEvents(autoUpdater);
   }
   return updaterModule.autoUpdater;
@@ -732,9 +733,27 @@ async function pruneInstalledPendingUpdateOnce() {
   }
 }
 
+const currentUpdateChannel = () => updateChannel.normalizeChannel(configJS && configJS.general && configJS.general.updateChannel, app.getVersion());
+
+// The channel of the last check: the offer it found is downloaded and verified against that one,
+// even if Settings changed in between.
+let checkedUpdateChannel = 'stable';
+const CHANNEL_SWITCH_CHECK_MS = 2000;
+
+// Settings > Update channel is read again before every check, so a change applies to the next one.
+function applyUpdateChannel(autoUpdater) {
+  checkedUpdateChannel = currentUpdateChannel();
+  const settings = updateChannel.updaterSettings(checkedUpdateChannel, app.getVersion());
+  autoUpdater.channel = settings.channel;
+  // Set after the channel, whose setter turns downgrades on by itself.
+  autoUpdater.allowPrerelease = settings.allowPrerelease;
+  autoUpdater.allowDowngrade = settings.allowDowngrade;
+  return autoUpdater;
+}
+
 // The 'error' listener already reported a missing Linux feed as "up to date"; its rejection is no failure.
 function checkForUpdates() {
-  return getUpdater()
+  return applyUpdateChannel(getUpdater())
     .checkForUpdates()
     .catch((err) => {
       if (!isMissingLinuxFeed(err)) throw err;
@@ -2112,7 +2131,10 @@ ipcMain.on('emulator-fixed-notify', async (event, game) => {
 // Reload the main-process config after the renderer saves settings.
 ipcMain.on('config-saved', async () => {
   try {
+    const channelBefore = currentUpdateChannel();
     await startEngines(); // re-reads options.ini into configJS
+    // A new update channel is checked at once, as Settings promises, not at the next hourly check.
+    if (currentUpdateChannel() !== channelBefore) scheduleUpdateCheck(CHANNEL_SWITCH_CHECK_MS);
     if (overlayVisible) {
       overlayWindow.webContents.send('overlay-controller-config', overlayControllerConfigPayload());
     }
@@ -7769,7 +7791,7 @@ try {
     autoUpdater.on('update-available', async (info) => {
       // A manifest that names the running version, or an older one, is not an update however it got
       // here - answer it as "up to date" before anything reports an update or downloads an installer.
-      if (updateGate.isNotAnUpgrade(info.version, app.getVersion())) {
+      if (updateGate.isBlockedAsNotNewer(info.version, app.getVersion(), configJS && configJS.general)) {
         debug.log(`[updater] ignoring ${info.version}: not newer than the installed ${app.getVersion()}`);
         manualUpdateResult = 'uptodate';
         manualUpdateCheckPending = false;

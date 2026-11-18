@@ -287,6 +287,12 @@
         "name": "Asenna päivitykset automaattisesti",
         "description": "Lataa ja asentaa uudet versiot kysymättä heti, kun mikään peli ei ole käynnissä. AW Next käynnistyy itse uudelleen ja kertoo siitä jälkeenpäin."
       },
+      "updateChannel": {
+        "name": "Päivityskanava",
+        "description": "Vakaa saa testatut julkaisut. Nightly saa version jokaisesta muutoksesta heti kun se on tehty, ennen kuin se on testattu julkaisussa: uudempi, mutta voi rikkoutua. Kun palaat Vakaaseen, uusin vakaa versio tarjotaan heti.",
+        "stable": "Vakaa",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Pokaalit profiilissa",
         "description": "Näyttää platina-, kulta-, hopea- ja pronssipokaalit nimesi alla. Platina on peli, joka on suoritettu 100-prosenttisesti; muut järjestävät saavutuksesi sen mukaan, kuinka moni pelaaja on avannut ne."

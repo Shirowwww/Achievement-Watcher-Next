@@ -327,6 +327,13 @@ function translateUI(lang, locale, template) {
     $("#option_autoUpdate option[value='true']").text(clear(template.settings.common.enable));
     $("#option_autoUpdate option[value='false']").text(clear(template.settings.common.disable));
   }
+  if (template.settings.general.updateChannel) {
+    const channel = template.settings.general.updateChannel;
+    $('#update-channel-settings-label').text(clear(channel.name));
+    $('#update-channel-settings-help').text(clear(channel.description));
+    $("#option_updateChannel option[value='stable']").text(clear(channel.stable));
+    $("#option_updateChannel option[value='nightly']").text(clear(channel.nightly));
+  }
   if (template.settings.general.showTrophies) {
     $('#trophies-settings-label').text(clear(template.settings.general.showTrophies.name));
     $('#trophies-settings-help').text(clear(template.settings.general.showTrophies.description));

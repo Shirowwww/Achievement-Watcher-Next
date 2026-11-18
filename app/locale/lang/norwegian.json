@@ -287,6 +287,12 @@
         "name": "Installer oppdateringer automatisk",
         "description": "Laster ned og installerer nye versjoner uten å spørre, så snart ingen spill kjører. AW Next starter på nytt av seg selv og gir beskjed etterpå."
       },
+      "updateChannel": {
+        "name": "Oppdateringskanal",
+        "description": "Stabil får de testede utgivelsene. Nightly får en build av hver endring så snart den er gjort, før den er testet i en utgivelse: nyere, men kan gå i stykker. Når du bytter tilbake til Stabil, tilbys den nyeste stabile versjonen med en gang.",
+        "stable": "Stabil",
+        "nightly": "Nightly"
+      },
       "showTrophies": {
         "name": "Trofeer på profilen",
         "description": "Viser platina-, gull-, sølv- og bronsetrofeer under navnet ditt. Platina er et spill fullført til 100%; de andre rangerer prestasjonene dine etter hvor mange spillere som har låst dem opp."
