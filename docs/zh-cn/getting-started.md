@@ -244,6 +244,17 @@ Windows 启动以及是否关闭到托盘，在 **设置 → 常规** 中设置�
 回退到完整安装程序。Linux 的 AppImage 从同一发布版更新（见
 [Linux 更新](linux.md#updates)）。
 
+### Nightly 构建 {#nightly-builds}
+
+推送到开发分支的每一项更改都会被构建，并以 `X.Y.Z-nightly.N` 的名称发布为 Nightly（例如 `3.12.8-nightly.4`）。
+Nightly 会比正式发行版早几天甚至几周带来修复和新功能，但没有经过与正式版同等的测试，可能有错误。最新的三个发布在
+[GitHub 发布页面](https://github.com/Shirowwww/Achievement-Watcher-Next/releases)，标记为 **Pre-release**，并且每一个都会发到
+[Discord 服务器](https://discord.gg/DjTMrDsXTh)的 #nightly 频道（选择 Nightly 身份组即可看到）。
+
+**设置 → 常规 → 更新通道** 可在 **稳定版** 与 **Nightly** 之间选择。你手动安装的 Nightly 会继续自动更新到之后的
+Nightly。切回 **稳定版** 会立即提供最新的发行版，即使它的版本号更低，你的数据也保持不变。Nightly 使用独立的密钥签名，
+只有处于 Nightly 通道的副本才会接受。
+
 在旧版本上安装新版本时，你的数据会保留在 `%APPDATA%\Achievement Watcher Next`：
 设置、监视的文件夹、缓存、游戏时长、日志、通知资源和本地账号数据。
 升级后的首次启动时，AW Next 会导入之前的安装：

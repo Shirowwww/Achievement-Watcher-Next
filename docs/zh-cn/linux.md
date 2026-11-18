@@ -41,7 +41,8 @@ AppImage 从与 Windows 应用相同的 GitHub 发布版自行更新。新版本
 标题栏标签提示，并在下载前询问。随后它会
 对照随发布版发布的 SHA-512 摘要（`latest-linux.yml`）检查文件，替换
 旧的 AppImage 并重启。如果有游戏正在运行，更新会等到它关闭。你的数据保持
-原样。
+原样。Nightly 构建同样以 AppImage 提供，并以相同方式更新（`nightly-linux.yml`），
+见 [Nightly 构建](getting-started.md#nightly-builds)。
 
 新文件的名称中带有新版本号。**随系统启动** 条目和
 `~/.local/bin/achievement-watcher` 命令会随之更新。你自己创建、并写明

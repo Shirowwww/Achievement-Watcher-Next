@@ -176,6 +176,12 @@ Watcher sin modificarla ni borrarla. Las actualizaciones descargan solo lo que c
 instalada y recurren por sí solas a una descarga completa si eso falla. Consulta
 [Actualizaciones y datos existentes](getting-started.md#updates-and-existing-data).
 
+### ¿Puedo obtener una corrección antes de la próxima versión? {#can-i-get-a-fix-before-the-next-release}
+Sí, con una compilación nightly: cada cambio se publica como `X.Y.Z-nightly.N` en la página de versiones de GitHub
+y en el canal #nightly de Discord. Son más nuevas, pero menos probadas. Instala una, o elige
+**Ajustes → General → Canal de actualizaciones → Nightly**, y la aplicación seguirá las nightly; puedes volver a
+**Estable** cuando quieras. Consulta [Compilaciones nightly](getting-started.md#nightly-builds).
+
 ### ¿Cómo me paso a un PC nuevo o hago una copia de mi configuración? {#how-do-i-move-to-a-new-pc-or-back-up-my-setup}
 **Ajustes → Avanzado → Copia de seguridad del perfil → Exportar perfil…** escribe tus ajustes, elecciones de biblioteca,
 presets, temas, portadas y tiempo de juego en un único archivo `.awbackup`. Instala AW Next en el PC nuevo, elige

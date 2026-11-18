@@ -41,7 +41,8 @@ AppImage aktualizuje się sam z tych samych wydań GitHub co aplikacja dla Windo
 ogłaszana powiadomieniem pulpitu i znaczkiem na pasku tytułu i pyta o zgodę przed pobraniem. Potem
 sprawdza plik względem skrótu SHA-512 opublikowanego z wydaniem (`latest-linux.yml`), zastępuje
 stary AppImage i uruchamia się ponownie. Jeśli gra jest uruchomiona, aktualizacja czeka na jej zamknięcie. Twoje dane zostają
-tam, gdzie były.
+tam, gdzie były. Kompilacje nightly są też dostępne jako AppImage i aktualizują się tak samo
+(`nightly-linux.yml`); zobacz [Kompilacje nightly](getting-started.md#nightly-builds).
 
 Nowy plik ma w nazwie nową wersję. Wpis **Uruchamiaj przy starcie** i polecenie
 `~/.local/bin/achievement-watcher` podążają za nim. Launcher, który sam stworzyłeś i który wskazuje plik

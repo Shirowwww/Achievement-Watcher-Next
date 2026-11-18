@@ -183,6 +183,12 @@ Watcher bez jego modyfikowania ani usuwania. Aktualizacje pobierają tylko to, c
 wersji, i same wracają do pełnego pobierania, jeśli to się nie powiedzie. Zobacz
 [Aktualizacje i istniejące dane](getting-started.md#updates-and-existing-data).
 
+### Czy mogę dostać poprawkę przed następnym wydaniem? {#can-i-get-a-fix-before-the-next-release}
+Tak, z kompilacji nightly: każda zmiana jest publikowana jako `X.Y.Z-nightly.N` na stronie wydań GitHuba i na kanale
+#nightly na Discordzie. Są nowsze, ale mniej przetestowane. Zainstaluj jedną albo wybierz
+**Ustawienia → Ogólne → Kanał aktualizacji → Nightly**, a aplikacja będzie dalej śledzić kompilacje nightly;
+w każdej chwili możesz wrócić do **Stabilny**. Zobacz [Kompilacje nightly](getting-started.md#nightly-builds).
+
 ### Jak przenieść się na nowy komputer albo zrobić kopię zapasową konfiguracji? {#how-do-i-move-to-a-new-pc-or-back-up-my-setup}
 **Ustawienia → Zaawansowane → Kopia zapasowa profilu → Eksportuj profil…** zapisuje twoje ustawienia, wybory biblioteki,
 presety, motywy, okładki i czas gry w jednym pliku `.awbackup`. Zainstaluj AW Next na nowym komputerze, wybierz

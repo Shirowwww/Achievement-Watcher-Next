@@ -41,7 +41,8 @@ L'AppImage si aggiorna da solo dalle stesse release GitHub dell'app per Windows.
 annunciata da una notifica del desktop e dall'etichetta nella barra del titolo, e chiede il permesso prima di scaricare. Poi
 controlla il file rispetto al digest SHA-512 pubblicato con la release (`latest-linux.yml`), sostituisce
 il vecchio AppImage e si riavvia. Se un gioco è in esecuzione, l'aggiornamento attende che si chiuda. I tuoi dati restano
-dove erano.
+dove erano. Anche le build nightly sono disponibili come AppImage e si aggiornano allo stesso modo
+(`nightly-linux.yml`); vedi [Build nightly](getting-started.md#nightly-builds).
 
 Il nuovo file ha la nuova versione nel nome. La voce **Avvia all'avvio del sistema** e il
 comando `~/.local/bin/achievement-watcher` lo seguono. Un launcher creato da te che nomina il

@@ -176,6 +176,12 @@ Watcher-Ordner importiert, ohne ihn zu verändern oder zu löschen. Updates lade
 installierten Version geändert hat, und weichen bei einem Fehler von selbst auf einen vollständigen Download aus. Siehe
 [Updates und vorhandene Daten](getting-started.md#updates-and-existing-data).
 
+### Kann ich eine Korrektur bekommen, bevor das nächste Release erscheint? {#can-i-get-a-fix-before-the-next-release}
+Ja, mit einem Nightly-Build: Jede Änderung wird als `X.Y.Z-nightly.N` auf der GitHub-Releases-Seite und im Kanal
+#nightly auf Discord veröffentlicht. Sie sind neuer, aber weniger getestet. Installiere eines, oder wähle
+**Einstellungen → Allgemein → Update-Kanal → Nightly**, dann folgt die App weiter den Nightlies; du kannst jederzeit
+zurück zu **Stabil** wechseln. Siehe [Nightly-Builds](getting-started.md#nightly-builds).
+
 ### Wie ziehe ich auf einen neuen PC um oder sichere meine Einrichtung? {#how-do-i-move-to-a-new-pc-or-back-up-my-setup}
 **Einstellungen → Erweitert → Profilsicherung → Profil exportieren…** schreibt deine Einstellungen, Bibliotheksentscheidungen,
 Presets, Designs, Cover und Spielzeit in eine `.awbackup`-Datei. Installiere AW Next auf dem neuen PC, wähle

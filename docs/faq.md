@@ -180,6 +180,12 @@ Watcher folder without modifying or deleting it. Updates download only what chan
 installed version, and fall back to a full download by themselves if that fails. See
 [Updates and existing data](getting-started.md#updates-and-existing-data).
 
+### Can I get a fix before the next release?
+Yes, from a nightly build: every change is published as `X.Y.Z-nightly.N` on the GitHub releases page
+and in the #nightly channel on Discord. They are newer but less tested. Install one, or pick
+**Settings → General → Update channel → Nightly**, and the app keeps following the nightlies; switch
+back to **Stable** at any time. See [Nightly builds](getting-started.md#nightly-builds).
+
 ### How do I move to a new PC, or back up my setup?
 **Settings → Advanced → Profile backup → Export profile…** writes your settings, library choices,
 presets, themes, covers and playtime to one `.awbackup` file. Install AW Next on the new PC, choose

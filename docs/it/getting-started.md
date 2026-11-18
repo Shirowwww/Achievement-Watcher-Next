@@ -258,6 +258,20 @@ finestra. **Impostazioni → Controlla aggiornamenti** apre subito la finestra. 
 che è cambiato e ripiegano da soli sull'installer completo se questo non riesce. L'AppImage per Linux si aggiorna dalle
 stesse release (vedi [Aggiornamenti su Linux](linux.md#updates)).
 
+### Build nightly {#nightly-builds}
+
+Ogni modifica inviata al ramo di sviluppo viene compilata e pubblicata come nightly, con nome
+`X.Y.Z-nightly.N` (per esempio `3.12.8-nightly.4`). Le nightly portano correzioni e novità giorni o settimane
+prima di una release, ma non sono testate come una release e possono contenere bug. Le tre più recenti sono
+nella [pagina delle release di GitHub](https://github.com/Shirowwww/Achievement-Watcher-Next/releases),
+contrassegnate come **Pre-release**, e ognuna viene pubblicata nel canale #nightly del
+[server Discord](https://discord.gg/DjTMrDsXTh) (scegli il ruolo Nightly per vederlo).
+
+**Impostazioni → Generale → Canale di aggiornamento** permette di scegliere tra **Stabile** e **Nightly**. Una
+nightly installata a mano continua ad aggiornarsi da sola alle nightly successive. Tornando a **Stabile** ti
+viene offerta subito l'ultima release, anche se il suo numero di versione è più basso, e i tuoi dati restano
+com'erano. Le nightly sono firmate con una chiave propria, che accetta solo una copia sul canale Nightly.
+
 Una build più recente installata sopra una più vecchia mantiene i tuoi dati in `%APPDATA%\Achievement Watcher Next`:
 impostazioni, cartelle controllate, cache, tempo di gioco, log, risorse delle notifiche e dati degli account locali.
 Al primo avvio dopo l'aggiornamento, AW Next importa un'installazione precedente:

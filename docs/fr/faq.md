@@ -176,6 +176,12 @@ d'Achievement Watcher sans le modifier ni le supprimer. Les mises à jour ne té
 version installée, et reviennent d'elles-mêmes à un téléchargement complet en cas d'échec. Voir
 [Mises à jour et données existantes](getting-started.md#updates-and-existing-data).
 
+### Puis-je avoir un correctif avant la prochaine version ? {#can-i-get-a-fix-before-the-next-release}
+Oui, avec une build nightly : chaque changement est publié sous la forme `X.Y.Z-nightly.N` sur la page des versions
+GitHub et dans le canal #nightly de Discord. Elles sont plus récentes, mais moins testées. Installez-en une, ou
+choisissez **Paramètres → Général → Canal de mise à jour → Nightly**, et l'application continue de suivre les
+nightly ; repassez sur **Stable** quand vous voulez. Voir [Builds nightly](getting-started.md#nightly-builds).
+
 ### Comment passer à un nouveau PC, ou sauvegarder ma configuration ? {#how-do-i-move-to-a-new-pc-or-back-up-my-setup}
 **Paramètres → Avancé → Sauvegarde du profil → Exporter le profil…** écrit vos paramètres, vos choix de bibliothèque,
 presets, thèmes, jaquettes et temps de jeu dans un seul fichier `.awbackup`. Installez AW Next sur le nouveau PC, choisissez

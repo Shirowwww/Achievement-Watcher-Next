@@ -179,6 +179,12 @@ Watcher のフォルダーが、変更も削除もされずに取り込まれま
 変更された部分だけをダウンロードし、失敗すると自動的に完全なダウンロードに切り替わります。
 [アップデートと既存のデータ](getting-started.md#updates-and-existing-data)を参照してください。
 
+### 次のリリースより前に修正を入手できますか? {#can-i-get-a-fix-before-the-next-release}
+はい、Nightly ビルドで入手できます。変更はそのつど `X.Y.Z-nightly.N` として GitHub のリリースページと Discord の
+#nightly チャンネルに公開されます。より新しい反面、テストは十分ではありません。1 つインストールするか、
+**設定 → 一般 → アップデートチャンネル → Nightly** を選ぶと、アプリは以後も Nightly を追い続けます。いつでも
+**安定版** に戻せます。[Nightly ビルド](getting-started.md#nightly-builds)を参照してください。
+
 ### 新しいPCに移行したり、設定をバックアップしたりするには? {#how-do-i-move-to-a-new-pc-or-back-up-my-setup}
 **設定 → 詳細 → プロファイルのバックアップ → プロファイルをエクスポート…** で、設定、ライブラリの選択、
 プリセット、テーマ、カバー、プレイ時間が 1 つの `.awbackup` ファイルに書き出されます。新しいPCに AW Next をインストールし、

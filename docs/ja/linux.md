@@ -40,7 +40,8 @@ Ubuntu と Debian では `libfuse2`、Fedora では `fuse-libs`、Arch では `f
 AppImage は、Windows 版と同じ GitHub のリリースから自動でアップデートします。新しいバージョンはデスクトップ通知と
 タイトルバーのチップで知らされ、ダウンロードの前に確認します。その後、リリースとともに公開される SHA-512 ダイジェスト
 (`latest-linux.yml`)でファイルを検証し、古い AppImage を置き換えて再起動します。ゲームが実行中の場合、
-アップデートはゲームが閉じるまで待ちます。データはそのまま残ります。
+アップデートはゲームが閉じるまで待ちます。データはそのまま残ります。Nightly ビルドも AppImage で提供され、同じ方法で
+アップデートされます(`nightly-linux.yml`)。[Nightly ビルド](getting-started.md#nightly-builds)を参照してください。
 
 新しいファイルには、名前に新しいバージョンが入ります。**起動時に開始** のエントリと
 `~/.local/bin/achievement-watcher` コマンドはそれに追従します。AppImage のファイル名を指定して自作したランチャーは

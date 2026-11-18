@@ -248,6 +248,20 @@ Buscar actualizaciones** abre la ventana de inmediato. Las actualizaciones desca
 instalador completo si eso falla. El AppImage de Linux se actualiza desde las mismas versiones (consulta
 [Actualizaciones en Linux](linux.md#updates)).
 
+### Compilaciones nightly {#nightly-builds}
+
+Cada cambio que llega a la rama de desarrollo se compila y se publica como una nightly, con el nombre
+`X.Y.Z-nightly.N` (por ejemplo `3.12.8-nightly.4`). Las nightly traen correcciones y funciones nuevas días o
+semanas antes de una versión, pero no están probadas como una versión y pueden tener fallos. Las tres más
+recientes están en la [página de versiones de GitHub](https://github.com/Shirowwww/Achievement-Watcher-Next/releases),
+marcadas como **Pre-release**, y cada una se publica en el canal #nightly del
+[servidor de Discord](https://discord.gg/DjTMrDsXTh) (elige el rol Nightly para verlo).
+
+**Ajustes → General → Canal de actualizaciones** permite elegir entre **Estable** y **Nightly**. Una nightly que
+instalas a mano sigue actualizándose sola a las siguientes nightly. Volver a **Estable** ofrece de inmediato la
+última versión, aunque su número de versión sea menor, y tus datos se quedan como están. Las nightly se firman
+con una clave propia, que solo acepta una copia en el canal Nightly.
+
 Una versión más reciente instalada sobre una anterior conserva tus datos en `%APPDATA%\Achievement Watcher Next`:
 ajustes, carpetas vigiladas, cachés, tiempo de juego, registros, recursos de notificación y datos de cuentas locales. En el
 primer inicio tras actualizar, AW Next importa una instalación anterior:

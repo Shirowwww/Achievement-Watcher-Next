@@ -42,7 +42,8 @@ Das AppImage aktualisiert sich selbst aus denselben GitHub-Releases wie die Wind
 durch eine Desktop-Benachrichtigung und den Chip in der Titelleiste angekündigt, und es fragt vor dem Herunterladen nach. Danach
 prüft es die Datei gegen den mit dem Release veröffentlichten SHA-512-Wert (`latest-linux.yml`), ersetzt
 das alte AppImage und startet neu. Läuft ein Spiel, wartet das Update, bis es geschlossen wird. Deine Daten bleiben
-dort, wo sie waren.
+dort, wo sie waren. Nightly-Builds gibt es ebenfalls als AppImage, und sie aktualisieren sich genauso
+(`nightly-linux.yml`); siehe [Nightly-Builds](getting-started.md#nightly-builds).
 
 Die neue Datei trägt die neue Version im Namen. Der Eintrag **Beim Start ausführen** und der
 Befehl `~/.local/bin/achievement-watcher` folgen ihr. Ein selbst erstellter Launcher, der die AppImage-Datei

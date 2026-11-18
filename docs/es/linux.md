@@ -42,7 +42,8 @@ El AppImage se actualiza solo desde las mismas versiones de GitHub que la aplica
 anuncia con una notificación de escritorio y el indicador de la barra de título, y pregunta antes de descargar. Después
 comprueba el archivo con el resumen SHA-512 publicado con la versión (`latest-linux.yml`), sustituye
 el AppImage antiguo y se reinicia. Si hay un juego en ejecución, la actualización espera a que se cierre. Tus datos se quedan
-donde estaban.
+donde estaban. Las compilaciones nightly también vienen como AppImage y se actualizan igual
+(`nightly-linux.yml`); consulta [Compilaciones nightly](getting-started.md#nightly-builds).
 
 El archivo nuevo lleva la versión nueva en su nombre. La entrada **Iniciar con el sistema** y el
 comando `~/.local/bin/achievement-watcher` la siguen. Un lanzador que hayas creado tú y que nombre el archivo

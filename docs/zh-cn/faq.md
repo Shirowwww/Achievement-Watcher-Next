@@ -179,6 +179,11 @@ Watcher 文件夹，且不会修改或删除它。更新只下载自你已安装
 版本以来变化的部分，如果失败，会自行回退到完整下载。见
 [更新与现有数据](getting-started.md#updates-and-existing-data)。
 
+### 能在下一个版本发布之前拿到修复吗？ {#can-i-get-a-fix-before-the-next-release}
+可以，使用 Nightly 构建：每一项更改都会以 `X.Y.Z-nightly.N` 的形式发布在 GitHub 发布页面和 Discord 的 #nightly 频道。
+它们更新，但测试较少。安装一个，或选择 **设置 → 常规 → 更新通道 → Nightly**，应用就会一直跟随 Nightly；
+你可以随时切回 **稳定版**。见 [Nightly 构建](getting-started.md#nightly-builds)。
+
 ### 我如何迁移到新电脑，或备份我的设置？ {#how-do-i-move-to-a-new-pc-or-back-up-my-setup}
 **设置 → 高级 → 配置文件备份 → 导出配置文件…** 会把你的设置、游戏库选择、
 预设、主题、封面和游戏时长写入一个 `.awbackup` 文件。在新电脑上安装 AW Next，选择

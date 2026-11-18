@@ -250,6 +250,20 @@ Check for updates** opens the window at once. Updates download only what changed
 full installer by themselves if that fails. The Linux AppImage updates from the same releases (see
 [Linux updates](linux.md#updates)).
 
+### Nightly builds
+
+Every change pushed to the development branch is built and published as a nightly, named
+`X.Y.Z-nightly.N` (for example `3.12.8-nightly.4`). Nightlies bring fixes and new features days or
+weeks before a release, but they are not tested like one and can have bugs. The three newest are on
+the [GitHub releases page](https://github.com/Shirowwww/Achievement-Watcher-Next/releases), marked
+**Pre-release**, and each one is posted in the #nightly channel of the
+[Discord server](https://discord.gg/DjTMrDsXTh) (pick the Nightly role to see it).
+
+**Settings → General → Update channel** chooses between **Stable** and **Nightly**. A nightly you
+install by hand keeps updating to the next nightlies on its own. Switching back to **Stable** offers
+the latest release at once, even though its version number is lower, and your data stays as it is.
+Nightlies are signed with a key of their own, which only a copy on the Nightly channel accepts.
+
 A newer build installed over an older one keeps your data in `%APPDATA%\Achievement Watcher Next`:
 settings, watched folders, caches, playtime, logs, notification assets and local account data. On the
 first launch after upgrading, AW Next imports an earlier install:
