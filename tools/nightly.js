@@ -93,9 +93,16 @@ function readTags() {
   return git('tag', '--list', 'v*').split('\n').map((t) => t.trim()).filter(Boolean);
 }
 
+// What ships, as the workflow's push filter lists it: the notes keep only the commits that change it.
+const SHIPPED_PATHS = Object.freeze(['app', 'watchdog', ':(exclude)watchdog/test', 'NOTICE']);
+
+/** @param {string | null} since @param {string} sha @returns {string[]} the git log arguments */
+function logArgs(since, sha) {
+  return ['log', '--no-merges', '--format=%s%x1f%b%x1e', since ? `${since}..${sha}` : sha, '--', ...SHIPPED_PATHS];
+}
+
 function readCommits(since, sha) {
-  const range = since ? `${since}..${sha}` : sha;
-  return git('log', '--no-merges', '--format=%s%x1f%b%x1e', range)
+  return git(...logArgs(since, sha))
     .split('\x1e')
     .map((record) => record.replace(/^\n/, ''))
     .filter((record) => record.trim())
@@ -134,4 +141,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { nextNightlyVersion, tagsToPrune, previousTag, releaseNotes, nightlyVersions, latestStable };
+module.exports = { logArgs, nextNightlyVersion, tagsToPrune, previousTag, releaseNotes, nightlyVersions, latestStable };

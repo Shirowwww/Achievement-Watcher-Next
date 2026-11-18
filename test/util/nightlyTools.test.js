@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { nextNightlyVersion, tagsToPrune, previousTag, releaseNotes } = require('../../tools/nightly.js');
+const { logArgs, nextNightlyVersion, tagsToPrune, previousTag, releaseNotes } = require('../../tools/nightly.js');
 
 const STABLES = ['v3.12.5', 'v3.12.6', 'v3.12.7'];
 
@@ -53,6 +53,17 @@ test('the notes list each commit with its description and warn that it is a nigh
   assert.match(notes, /Settings > Update channel > Stable/);
   assert.match(notes, /## Changes since v3\.12\.8-nightly\.1/);
   assert.match(notes, /- \*\*fix: give the platinum its own icon\*\*\n {2}The popup showed the last unlock\.\n {2}Now the game icon\./);
+});
+
+test('the notes only list commits that change what ships', () => {
+  const args = logArgs('v3.12.8-nightly.1', 'abc1234');
+  assert.deepEqual(args.slice(args.indexOf('--') + 1), ['app', 'watchdog', ':(exclude)watchdog/test', 'NOTICE']);
+  assert.ok(args.includes('v3.12.8-nightly.1..abc1234'));
+});
+
+test('the push filter of the workflow lists the same shipped paths', () => {
+  const workflow = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', '.github', 'workflows', 'nightly.yml'), 'utf8');
+  for (const line of ["- 'app/**'", "- 'watchdog/**'", "- '!watchdog/test/**'", "- 'NOTICE'"]) assert.ok(workflow.includes(line), line);
 });
 
 test('a rebuild without new commits still says what it is', () => {

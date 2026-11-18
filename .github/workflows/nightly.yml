@@ -4,10 +4,17 @@ name: Nightly
 # Settings > Update channel > Nightly ever download (stable copies read releases/latest, which skips
 # pre-releases, and the winget job in publish.yml only follows full releases). tools/nightly.js picks
 # the version, writes the notes from the commits and names the old nightlies to delete; three stay.
-# A newer push cancels a nightly still being built, so a burst of pushes ends in one build.
+# A newer push cancels a nightly still being built, so a burst of pushes ends in one build. Only a
+# push that changes what ships (app/, watchdog/ outside its tests, NOTICE) builds one: docs, tests,
+# tools and the plugins do not. The Actions tab can still start one by hand.
 on:
   push:
     branches: [dev]
+    paths:
+      - 'app/**'
+      - 'watchdog/**'
+      - '!watchdog/test/**'
+      - 'NOTICE'
   workflow_dispatch:
 
 permissions:
