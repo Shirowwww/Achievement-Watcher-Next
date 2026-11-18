@@ -67,6 +67,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **The 100% platinum popup takes its screenshot and shows the game (#204).** It now saves a
+  screenshot like any unlock, and shows the game's icon, as its preview does, instead of the icon of
+  the last achievement.
 - **Uncharted 1 and 3 count their trophies again on Supermedo's port.** Since its 0.3.15 the port
   keeps each game's trophies in a file of its own and names the game in its log only once, so every
   unlock went to one game or none. AW Next reads those files, trophies earned before included.

@@ -1532,6 +1532,8 @@ var app = {
               const platinumLabel = wdStrings.platinumTitle;
               // The game's own PlayStation platinum, when it has one, in the same popup.
               const realPlatinum = psnTrophyLink.linkedPlatinum(psnLink);
+              // The game's own icon, as the preview shows it, not the icon of the unlock that completed it.
+              const platinumGameIcon = notificationGameIcon(game);
               await notify(
                 {
                   source: game.source,
@@ -1541,12 +1543,16 @@ var app = {
                   gameDisplayName: game.name,
                   achievementDisplayName: realPlatinum ? realPlatinum.name : game.name,
                   achievementDescription: realPlatinum ? realPlatinum.description : wdStrings.platinumDesc,
-                  icon: (realPlatinum && realPlatinum.icon) || platinumIcon || undefined,
-                  gameIcon: notificationGameIcon(game),
+                  icon: (realPlatinum && realPlatinum.icon) || platinumGameIcon || platinumIcon || undefined,
+                  gameIcon: platinumGameIcon,
                   image: steamHeaderImage(game.steamappid || game.appid),
                   time: moment().unix(),
                 },
-                notifyOptions(self.options, { toastId: self.toastID, attribution: `${game.name} · ${platinumLabel}`, imageIntegration: '1' })
+                {
+                  ...notifyOptions(self.options, { toastId: self.toastID, attribution: `${game.name} · ${platinumLabel}`, imageIntegration: '1' }),
+                  // A screenshot of the 100% moment, like any unlock.
+                  souvenir: self.options.souvenir || null,
+                }
               );
             }
           }

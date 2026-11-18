@@ -55,6 +55,24 @@ test('the platinum popup follows the unlock that completes the game, once per ga
   assert.equal(sent.length, 6, 'another game gets its own');
 });
 
+test('a 100% platinum shows the game icon, not the icon of the last unlock (#204)', async () => {
+  const sent = [];
+  const notify = withCompletionPopup(async (payload) => void sent.push(payload), () => options);
+  await notify(unlock('G7', { unlocked: 1, total: 1 }, { gameIcon: 'game.png' }));
+  assert.equal(sent[1].notificationType, 'platinum');
+  assert.equal(sent[1].icon, 'game.png');
+  await notify(unlock('G8', { unlocked: 1, total: 1 }));
+  assert.equal(sent[3].icon, 'icon.png', 'without a game icon the unlock icon still fills the popup');
+});
+
+test('the platinum popup keeps the screenshot souvenir options of the unlock (#204)', async () => {
+  const calls = [];
+  const notify = withCompletionPopup(async (payload, opts) => void calls.push(opts), () => options);
+  const souvenir = { screenshot: true, dir: 'shots' };
+  await notify(unlock('G9', { unlocked: 1, total: 1 }), { toast: {}, souvenir });
+  assert.equal(calls[1].souvenir, souvenir);
+});
+
 test('a payload without completion, or with an empty list, never pops', async () => {
   const { sent, notify } = wrapped();
   await notify(unlock('G3', undefined));

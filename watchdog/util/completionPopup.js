@@ -73,7 +73,8 @@ function platinumPopup(options, unlock) {
     gameDisplayName: rest.gameDisplayName,
     achievementDisplayName: real ? real.name : rest.gameDisplayName,
     achievementDescription: real ? real.description : strings.platinumDesc,
-    icon: (real && real.icon) || rest.icon,
+    // The game's icon as the preview shows it, before the icon of the unlock that completed it.
+    icon: (real && real.icon) || rest.gameIcon || rest.icon,
     gameIcon: rest.gameIcon,
     image: rest.image,
     time: rest.time,
