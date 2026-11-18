@@ -2,7 +2,7 @@
 
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { logArgs, nextNightlyVersion, tagsToPrune, previousTag, releaseNotes } = require('../../tools/nightly.js');
+const { changedPlugins, logArgs, nextNightlyVersion, tagsToPrune, previousTag, releaseNotes } = require('../../tools/nightly.js');
 
 const STABLES = ['v3.12.5', 'v3.12.6', 'v3.12.7'];
 
@@ -57,13 +57,23 @@ test('the notes list each commit with its description and warn that it is a nigh
 
 test('the notes only list commits that change what ships', () => {
   const args = logArgs('v3.12.8-nightly.1', 'abc1234');
-  assert.deepEqual(args.slice(args.indexOf('--') + 1), ['app', 'watchdog', ':(exclude)watchdog/test', 'NOTICE']);
+  assert.deepEqual(args.slice(args.indexOf('--') + 1), [
+    'app', 'watchdog', ':(exclude)watchdog/test', 'NOTICE', 'millennium', 'playnite', 'decky', ':(exclude)playnite/Tests',
+  ]);
   assert.ok(args.includes('v3.12.8-nightly.1..abc1234'));
 });
 
 test('the push filter of the workflow lists the same shipped paths', () => {
   const workflow = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', '..', '.github', 'workflows', 'nightly.yml'), 'utf8');
-  for (const line of ["- 'app/**'", "- 'watchdog/**'", "- '!watchdog/test/**'", "- 'NOTICE'"]) assert.ok(workflow.includes(line), line);
+  const paths = ['app/**', 'watchdog/**', '!watchdog/test/**', 'NOTICE', 'millennium/**', 'playnite/**', '!playnite/Tests/**', 'decky/**'];
+  for (const entry of paths) assert.ok(workflow.includes(`- '${entry}'`), entry);
+});
+
+test('a plugin ships with the nightly only when its own files changed', () => {
+  assert.deepEqual(changedPlugins(['millennium/backend/main.lua', 'decky/src/feed.ts', 'app/app.js']), ['millennium', 'decky']);
+  assert.deepEqual(changedPlugins(['playnite/Tests/BridgeTests.cs']), [], 'a test-only change ships nothing');
+  assert.deepEqual(changedPlugins(['playnite/BridgeClient.cs']), ['playnite']);
+  assert.deepEqual(changedPlugins([]), []);
 });
 
 test('a rebuild without new commits still says what it is', () => {

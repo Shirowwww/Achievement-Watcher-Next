@@ -5,8 +5,9 @@ name: Nightly
 # pre-releases, and the winget job in publish.yml only follows full releases). tools/nightly.js picks
 # the version, writes the notes from the commits and names the old nightlies to delete; three stay.
 # A newer push cancels a nightly still being built, so a burst of pushes ends in one build. Only a
-# push that changes what ships (app/, watchdog/ outside its tests, NOTICE) builds one: docs, tests,
-# tools and the plugins do not. The Actions tab can still start one by hand.
+# push that changes what ships (app/, watchdog/ outside its tests, NOTICE, the three plugins) builds
+# one: docs, tests and tools do not. A plugin changed since the last nightly ships with it. The
+# Actions tab can still start one by hand.
 on:
   push:
     branches: [dev]
@@ -15,6 +16,10 @@ on:
       - 'watchdog/**'
       - '!watchdog/test/**'
       - 'NOTICE'
+      - 'millennium/**'
+      - 'playnite/**'
+      - '!playnite/Tests/**'
+      - 'decky/**'
   workflow_dispatch:
 
 permissions:
@@ -59,6 +64,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       version: ${{ steps.pick.outputs.version }}
+      plugins: ${{ steps.pick.outputs.plugins }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -72,6 +78,7 @@ jobs:
           (cd app && npm ci --ignore-scripts --omit=dev)
           version="$(node tools/nightly.js version)"
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "plugins=$(node tools/nightly.js plugins "$GITHUB_SHA")" >> "$GITHUB_OUTPUT"
           NIGHTLY_VERSION="$version" node tools/nightly.js notes "$GITHUB_SHA" > notes.md
           cat notes.md
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -150,8 +157,58 @@ jobs:
             app/dist/latest-linux.yml
           if-no-files-found: error
 
+  # The plugins changed since the last nightly, under the names a release gives them.
+  plugins:
+    needs: version
+    if: needs.version.outputs.plugins != ''
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      PLUGINS: ${{ needs.version.outputs.plugins }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.19.0
+      - name: Millennium plugin
+        if: contains(env.PLUGINS, 'millennium')
+        working-directory: millennium
+        run: |
+          npm ci
+          npm run check
+          npm run zip
+          mkdir -p ../out && cp dist/aw-next-millennium.zip ../out/
+      - name: Playnite extension
+        if: contains(env.PLUGINS, 'playnite')
+        working-directory: playnite
+        run: |
+          dotnet test Tests
+          dotnet build -c Release -o build
+          id="$(sed -n 's/^Id: *//p' extension.yaml | tr -d '\r')"
+          version="$(sed -n 's/^Version: *//p' extension.yaml | tr -d '\r' | tr . _)"
+          mkdir -p ../out && (cd build && 7z a -tzip "../../out/${id}_${version}.pext" .)
+      - name: Decky plugin
+        if: contains(env.PLUGINS, 'decky')
+        working-directory: decky
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+          mkdir -p stage/achievement-watcher ../out
+          cp -r dist plugin.json package.json README.md stage/achievement-watcher/
+          (cd stage && 7z a -tzip ../../out/aw-next-decky.zip achievement-watcher)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: plugins
+          path: out/*
+          if-no-files-found: error
+
   publish:
-    needs: [version, windows, linux]
+    needs: [version, windows, linux, plugins]
+    # The plugins job is skipped when no plugin changed; the nightly still goes out then.
+    if: always() && needs.windows.result == 'success' && needs.linux.result == 'success' && (needs.plugins.result == 'success' || needs.plugins.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -178,6 +235,9 @@ jobs:
           gh release create "v$VERSION" --draft --prerelease --target "$GITHUB_SHA" \
             --title "Nightly $VERSION" --notes-file out/notes.md
           gh release upload "v$VERSION" out/*.exe out/*.blockmap out/*.AppImage out/nightly.yml out/nightly-linux.yml
+          shopt -s nullglob
+          plugins=(out/*.zip out/*.pext)
+          if [ ${#plugins[@]} -gt 0 ]; then gh release upload "v$VERSION" "${plugins[@]}"; fi
           gh release edit "v$VERSION" --draft=false --prerelease --latest=false
       - name: Delete the older nightlies
         run: |

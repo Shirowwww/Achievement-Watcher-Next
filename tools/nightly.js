@@ -4,6 +4,7 @@
   The nightly builds' bookkeeping, run by .github/workflows/nightly.yml:
     node tools/nightly.js version          the next vX.Y.Z-nightly.N
     node tools/nightly.js notes <sha>      the release notes, from the commits since the last nightly
+    node tools/nightly.js plugins <sha>    the plugins changed since the last nightly, to ship with it
     node tools/nightly.js prune <keep>     the nightly tags to delete, oldest first
   X.Y.Z is the version dev works towards: app/package.json when it is ahead of the last stable tag,
   otherwise that tag's next patch, so a nightly always sorts below the release it leads to.
@@ -94,7 +95,16 @@ function readTags() {
 }
 
 // What ships, as the workflow's push filter lists it: the notes keep only the commits that change it.
-const SHIPPED_PATHS = Object.freeze(['app', 'watchdog', ':(exclude)watchdog/test', 'NOTICE']);
+const PLUGINS = Object.freeze(['millennium', 'playnite', 'decky']);
+const SHIPPED_PATHS = Object.freeze([
+  'app', 'watchdog', ':(exclude)watchdog/test', 'NOTICE', ...PLUGINS, ':(exclude)playnite/Tests',
+]);
+
+/** @param {string[]} files paths changed since the last nightly @returns {string[]} the plugins to ship again */
+function changedPlugins(files) {
+  return PLUGINS.filter((plugin) =>
+    files.some((file) => file.startsWith(`${plugin}/`) && !file.startsWith('playnite/Tests/')));
+}
 
 /** @param {string | null} since @param {string} sha @returns {string[]} the git log arguments */
 function logArgs(since, sha) {
@@ -124,12 +134,18 @@ function main([command, arg]) {
     const since = previousTag(tags);
     return releaseNotes({ version, sha: arg, since, commits: readCommits(since, arg) });
   }
+  if (command === 'plugins') {
+    if (!arg) throw new Error('usage: nightly.js plugins <sha>');
+    const since = previousTag(tags);
+    const files = git('diff', '--name-only', since ? `${since}..${arg}` : arg, '--', ...PLUGINS).split('\n').filter(Boolean);
+    return changedPlugins(files).join(' ');
+  }
   if (command === 'prune') {
     const keep = Number(arg);
     if (!Number.isInteger(keep) || keep < 1) throw new Error('usage: nightly.js prune <keep, 1 or more>');
     return tagsToPrune(tags, keep).join('\n');
   }
-  throw new Error('usage: nightly.js version | notes <sha> | prune <keep>');
+  throw new Error('usage: nightly.js version | notes <sha> | plugins <sha> | prune <keep>');
 }
 
 if (require.main === module) {
@@ -141,4 +157,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { logArgs, nextNightlyVersion, tagsToPrune, previousTag, releaseNotes, nightlyVersions, latestStable };
+module.exports = { changedPlugins, logArgs, nextNightlyVersion, tagsToPrune, previousTag, releaseNotes, nightlyVersions, latestStable };
