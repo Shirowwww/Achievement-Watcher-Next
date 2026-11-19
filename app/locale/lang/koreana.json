@@ -46,6 +46,7 @@
   "unlocked": "달성",
   "locked": "미달성",
   "globalStat": "의 플레이어가 달성",
+  "globalStatAtUnlock": "달성 당시 {percent}",
   "achievementSearchPlaceholder": "도전 과제 검색…",
   "hiddenRemain": "개의 숨겨진 도전 과제가 남아 있습니다",
   "revealedOnceUnlocked": "각 도전 과제의 세부 정보는 달성하면 공개됩니다",

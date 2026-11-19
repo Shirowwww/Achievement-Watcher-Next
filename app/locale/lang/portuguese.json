@@ -46,6 +46,7 @@
   "unlocked": "Desbloqueada",
   "locked": "Bloqueada",
   "globalStat": "dos jogadores têm isto",
+  "globalStatAtUnlock": "{percent} ao desbloquear",
   "achievementSearchPlaceholder": "Pesquisar proezas…",
   "hiddenRemain": "proezas ocultas restantes",
   "revealedOnceUnlocked": "Os detalhes de cada proeza serão revelados após o desbloqueio",

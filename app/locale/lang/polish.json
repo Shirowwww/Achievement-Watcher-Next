@@ -46,6 +46,7 @@
   "unlocked": "Odblokowane",
   "locked": "Zablokowane",
   "globalStat": "graczy to posiada",
+  "globalStatAtUnlock": "{percent} w chwili odblokowania",
   "achievementSearchPlaceholder": "Szukaj osiągnięć…",
   "hiddenRemain": "pozostałych ukrytych osiągnięć",
   "revealedOnceUnlocked": "Szczegóły każdego osiągnięcia zostaną ujawnione po odblokowaniu",

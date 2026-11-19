@@ -46,6 +46,7 @@
   "unlocked": "Freigeschaltet",
   "locked": "Gesperrt",
   "globalStat": "der Spieler haben dies",
+  "globalStatAtUnlock": "{percent} bei der Freischaltung",
   "achievementSearchPlaceholder": "Erfolge durchsuchen…",
   "hiddenRemain": "versteckte Erfolge übrig",
   "revealedOnceUnlocked": "Die Details jedes Erfolgs werden nach dem Freischalten angezeigt",

@@ -46,6 +46,7 @@
   "unlocked": "Açıldı",
   "locked": "Kilitli",
   "globalStat": "oyuncuda bu var",
+  "globalStatAtUnlock": "{percent} açıldığı anda",
   "achievementSearchPlaceholder": "Başarımlarda ara…",
   "hiddenRemain": "gizli başarım kaldı",
   "revealedOnceUnlocked": "Her başarımın ayrıntıları açıldığında gösterilecek",

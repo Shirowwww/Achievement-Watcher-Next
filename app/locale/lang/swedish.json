@@ -46,6 +46,7 @@
   "unlocked": "Upplåst",
   "locked": "Låst",
   "globalStat": "av spelarna har den här",
+  "globalStatAtUnlock": "{percent} när du låste upp den",
   "achievementSearchPlaceholder": "Sök prestationer…",
   "hiddenRemain": "dolda prestationer återstår",
   "revealedOnceUnlocked": "Detaljerna för varje prestation visas när du har låst upp den",

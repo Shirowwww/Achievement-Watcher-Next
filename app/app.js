@@ -8799,6 +8799,7 @@ var app = {
                                 <span>${escapeHtml(unlockAgo)}</span>
                               </div>
                               <div class="community"><i class="fab fa-steam"></i> <span class="data">--</span> <span class="global-stat">${globalStatLabel}</span></div>
+                              <div class="at-unlock" hidden></div>
                             </div>
                         </div>
 
@@ -8978,6 +8979,8 @@ var app = {
           getGlobalStat(rarityContext.appid, rarityContext.source, game.name, game.achievement.list);
         }
       }
+
+      if (rarityContext) showUnlockRates(game.appid);
 
       showGameOverview(self, game);
 

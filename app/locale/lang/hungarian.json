@@ -46,6 +46,7 @@
   "unlocked": "Feloldva",
   "locked": "Zárolva",
   "globalStat": "játékosnak van meg",
+  "globalStatAtUnlock": "{percent} a feloldáskor",
   "achievementSearchPlaceholder": "Teljesítmények keresése…",
   "hiddenRemain": "rejtett teljesítmény maradt",
   "revealedOnceUnlocked": "Az egyes teljesítmények részletei a feloldás után jelennek meg",

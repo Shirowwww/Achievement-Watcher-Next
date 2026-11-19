@@ -46,6 +46,7 @@
   "unlocked": "已解鎖",
   "locked": "未解鎖",
   "globalStat": "的玩家擁有此成就",
+  "globalStatAtUnlock": "解鎖時為{percent}",
   "achievementSearchPlaceholder": "搜尋成就…",
   "hiddenRemain": "個隱藏成就尚未解鎖",
   "revealedOnceUnlocked": "每個成就的詳細內容都會在解鎖後顯示",

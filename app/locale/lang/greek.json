@@ -46,6 +46,7 @@
   "unlocked": "Ξεκλειδωμένα",
   "locked": "Κλειδωμένα",
   "globalStat": "των παικτών το έχουν",
+  "globalStatAtUnlock": "{percent} κατά το ξεκλείδωμα",
   "achievementSearchPlaceholder": "Αναζήτηση επιτευγμάτων…",
   "hiddenRemain": "κρυφά επιτεύγματα απομένουν",
   "revealedOnceUnlocked": "Οι λεπτομέρειες κάθε επιτεύγματος αποκαλύπτονται μόλις ξεκλειδωθεί",

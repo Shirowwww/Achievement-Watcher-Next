@@ -3708,6 +3708,19 @@ body.is-resizing #game-list {
   color: var(--rarity-text);
 }
 
+/* #208: the rate on the day it was earned, a quiet line under today's. */
+.achievement .stats .at-unlock {
+  width: 210px;
+  margin: -2px 0 2px auto;
+  text-align: right;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.achievement .stats .at-unlock[hidden] {
+  display: none;
+}
+
 /* Rarity tiers - layered on top of the .rare glow base.
    gold <3% (bright yellow-gold), silver <6% (bright silver), bronze <=10% (copper). */
 .achievement.rare.rarity-gold .box {
@@ -15966,6 +15979,11 @@ html:not([data-controller-active='true']) #settings .arrow-list li .right:has(> 
     width: auto;
     margin: 0;
     padding: 2px 0;
+  }
+
+  .achievement .stats .at-unlock {
+    width: auto;
+    margin: 0;
   }
 
   .achievement .progressBar {

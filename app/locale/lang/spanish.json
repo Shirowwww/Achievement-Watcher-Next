@@ -46,6 +46,7 @@
   "unlocked": "Desbloqueado",
   "locked": "Bloqueado",
   "globalStat": "de los jugadores lo tiene",
+  "globalStatAtUnlock": "{percent} al desbloquearlo",
   "achievementSearchPlaceholder": "Buscar logros…",
   "hiddenRemain": "logros ocultos restantes",
   "revealedOnceUnlocked": "Los detalles de cada logro se revelarán al desbloquearlo",

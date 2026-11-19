@@ -46,6 +46,7 @@
   "unlocked": "Открыто",
   "locked": "Заблокировано",
   "globalStat": "игроков имеют это",
+  "globalStatAtUnlock": "{percent} при открытии",
   "achievementSearchPlaceholder": "Поиск достижений…",
   "hiddenRemain": "скрытых достижений осталось",
   "revealedOnceUnlocked": "Подробности каждого достижения будут показаны после его получения",

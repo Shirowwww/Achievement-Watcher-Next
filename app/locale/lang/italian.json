@@ -46,6 +46,7 @@
   "unlocked": "Sbloccato",
   "locked": "Bloccato",
   "globalStat": "dei giocatori lo possiede",
+  "globalStatAtUnlock": "{percent} allo sblocco",
   "achievementSearchPlaceholder": "Cerca obiettivi…",
   "hiddenRemain": "obiettivi nascosti rimanenti",
   "revealedOnceUnlocked": "I dettagli di ogni obiettivo verranno rivelati una volta sbloccati",

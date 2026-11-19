@@ -46,6 +46,7 @@
   "unlocked": "Låst op",
   "locked": "Låst",
   "globalStat": "af spillerne har denne",
+  "globalStatAtUnlock": "{percent} da du låste den op",
   "achievementSearchPlaceholder": "Søg i præstationer…",
   "hiddenRemain": "skjulte præstationer tilbage",
   "revealedOnceUnlocked": "Detaljerne for hver præstation vises, når den er låst op",

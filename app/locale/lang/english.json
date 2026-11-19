@@ -46,6 +46,7 @@
   "unlocked": "Unlocked",
   "locked": "Locked",
   "globalStat": "of players have this",
+  "globalStatAtUnlock": "{percent} when you unlocked it",
   "achievementSearchPlaceholder": "Search achievements…",
   "hiddenRemain": "hidden achievements remaining",
   "revealedOnceUnlocked": "Details for each achievement will be revealed once unlocked",

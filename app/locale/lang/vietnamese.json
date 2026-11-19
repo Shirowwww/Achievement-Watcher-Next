@@ -46,6 +46,7 @@
   "unlocked": "Đã mở khóa",
   "locked": "Chưa mở khóa",
   "globalStat": "người chơi đã đạt được thành tựu này",
+  "globalStatAtUnlock": "{percent} khi bạn mở khóa",
   "achievementSearchPlaceholder": "Tìm thành tựu…",
   "hiddenRemain": "thành tựu ẩn còn lại",
   "revealedOnceUnlocked": "Chi tiết của từng thành tựu sẽ hiện ra sau khi bạn mở khóa",

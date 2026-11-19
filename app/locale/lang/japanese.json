@@ -46,6 +46,7 @@
   "unlocked": "解除済み",
   "locked": "ロック中",
   "globalStat": "のプレイヤーが取得",
+  "globalStatAtUnlock": "解除時は{percent}",
   "achievementSearchPlaceholder": "実績を検索…",
   "hiddenRemain": "個の隠し実績が残っています",
   "revealedOnceUnlocked": "各実績の詳細は解除後に表示されます",

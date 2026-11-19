@@ -46,6 +46,7 @@
   "unlocked": "Avattu",
   "locked": "Lukittu",
   "globalStat": "pelaajista on avannut tämän",
+  "globalStatAtUnlock": "{percent} kun avasit sen",
   "achievementSearchPlaceholder": "Hae saavutuksia…",
   "hiddenRemain": "piilotettua saavutusta jäljellä",
   "revealedOnceUnlocked": "Kunkin saavutuksen tiedot paljastuvat, kun se on avattu",

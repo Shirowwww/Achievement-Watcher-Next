@@ -159,6 +159,7 @@ function translateUI(lang, locale, template) {
   $('#unlock .header .title span').text(clear(template.unlocked));
   $('#lock .header .title span').text(clear(template.locked));
   $('#achievement .achievements').data('lang-globalStat', clear(template.globalStat));
+  $('#achievement .achievements').data('lang-globalStatAtUnlock', clear(template.globalStatAtUnlock));
   if (template.achievementSearchPlaceholder) {
     // The field carries no visible label, so the placeholder text is its accessible name too.
     $('#achievement-search-input').attr({

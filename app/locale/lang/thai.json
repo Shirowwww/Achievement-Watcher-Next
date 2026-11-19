@@ -46,6 +46,7 @@
   "unlocked": "ปลดล็อกแล้ว",
   "locked": "ล็อกอยู่",
   "globalStat": "ของผู้เล่นมีสิ่งนี้",
+  "globalStatAtUnlock": "{percent} ตอนที่คุณปลดล็อก",
   "achievementSearchPlaceholder": "ค้นหาความสำเร็จ…",
   "hiddenRemain": "ความสำเร็จที่ซ่อนอยู่เหลืออยู่",
   "revealedOnceUnlocked": "รายละเอียดของแต่ละความสำเร็จจะถูกเปิดเผยเมื่อปลดล็อก",

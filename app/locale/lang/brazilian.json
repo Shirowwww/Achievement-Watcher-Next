@@ -46,6 +46,7 @@
   "unlocked": "Desbloqueada",
   "locked": "Bloqueada",
   "globalStat": "dos jogadores têm isto",
+  "globalStatAtUnlock": "{percent} quando você desbloqueou",
   "achievementSearchPlaceholder": "Pesquisar conquistas…",
   "hiddenRemain": "conquistas ocultas restantes",
   "revealedOnceUnlocked": "Os detalhes de cada conquista serão revelados após o desbloqueio",

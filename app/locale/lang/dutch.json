@@ -46,6 +46,7 @@
   "unlocked": "Ontgrendeld",
   "locked": "Vergrendeld",
   "globalStat": "van de spelers heeft dit",
+  "globalStatAtUnlock": "{percent} toen je het ontgrendelde",
   "achievementSearchPlaceholder": "Prestaties zoeken…",
   "hiddenRemain": "verborgen prestaties over",
   "revealedOnceUnlocked": "De details van elke prestatie worden zichtbaar zodra je hem ontgrendelt",

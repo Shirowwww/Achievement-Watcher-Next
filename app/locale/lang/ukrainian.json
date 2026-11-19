@@ -46,6 +46,7 @@
   "unlocked": "Відкрито",
   "locked": "Заблоковано",
   "globalStat": "гравців мають це",
+  "globalStatAtUnlock": "{percent} на момент відкриття",
   "achievementSearchPlaceholder": "Пошук досягнень…",
   "hiddenRemain": "прихованих досягнень залишилось",
   "revealedOnceUnlocked": "Подробиці кожного досягнення буде показано після його отримання",

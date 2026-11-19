@@ -46,6 +46,7 @@
   "unlocked": "Débloqué",
   "locked": "Verrouillé",
   "globalStat": "de tous les joueurs",
+  "globalStatAtUnlock": "{percent} au moment du déblocage",
   "achievementSearchPlaceholder": "Rechercher un succès…",
   "hiddenRemain": "succès cachés restants",
   "revealedOnceUnlocked": "Les détails de chaque succès seront révélés une fois débloqués",

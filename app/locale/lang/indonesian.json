@@ -46,6 +46,7 @@
   "unlocked": "Terbuka",
   "locked": "Terkunci",
   "globalStat": "pemain memiliki ini",
+  "globalStatAtUnlock": "{percent} saat dibuka",
   "achievementSearchPlaceholder": "Cari pencapaian…",
   "hiddenRemain": "pencapaian tersembunyi tersisa",
   "revealedOnceUnlocked": "Detail setiap pencapaian akan ditampilkan setelah terbuka",

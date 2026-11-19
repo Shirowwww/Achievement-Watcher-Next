@@ -145,6 +145,7 @@ const epicMapping = require(sharedAppModulePath('parser/epic.js'));
 gogMapping.setUserDataPath(userDataDir());
 epicMapping.setUserDataPath(userDataDir());
 const rarity = require(sharedAppModulePath('util/rarity.js'));
+const unlockRarityStore = require(sharedAppModulePath('util/unlockRarity.js'));
 const uplayR2 = require(sharedAppModulePath('parser/uplayR2Live.js'));
 const { immediateChildDirOf, deriveAppIdFromDir, nestedAppIds } = require('./util/appidFolder.js');
 const steamClientStats = require('./util/steamClientStats.js');
@@ -622,6 +623,15 @@ function reportProgressToApp(game, name, current, max) {
 function loadRarityMap(game, appID) {
   if (!game.__rarityLoad) game.__rarityLoad = rarity.getRarityMap(appID, { source: game.source }).catch(() => new Map());
   return game.__rarityLoad;
+}
+
+// The rate an achievement had when it was earned, for the game page (#208). Never blocks the popup.
+function keepUnlockRate(game, name, rate, unlockTime) {
+  try {
+    unlockRarityStore.recordUnlockRarity({ appid: game.appid, source: game.source, name, percent: rate, at: unlockTime, root: userDataDir() });
+  } catch (err) {
+    debug.warn(`[rarity] could not keep the unlock rate of ${name}: ${err && err.message ? err.message : err}`);
+  }
 }
 
 // Asks the app to resolve this game's square logo now that it's running. The monitor never fetches
@@ -1410,6 +1420,7 @@ var app = {
                       // Use the same one-decimal rounding and rare cutoff as the achievement menu,
                       // then forward the percentage so overlay presets can apply the matching tier.
                       const { unlockRate, rarityPercent } = unlockRarity(rarityMap.get(ach.name), self.options);
+                      keepUnlockRate(game, ach.name, unlockRate, achievements[i].UnlockTime);
                       const isRare = rarityPercent !== null;
                       const rarityLabel = notifyStrings.interpolate(
                         notifyStrings.forLang(self.options.achievement.lang).rare,

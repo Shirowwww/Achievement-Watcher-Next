@@ -83,6 +83,10 @@ function paintPlayStationTrophy(elem, figure, grade, text) {
   if (grade === 'gold' || grade === 'platinum') elem.addClass(`rare rarity-${grade}`);
 }
 
+function achievementLang() {
+  return String((window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) || 'english');
+}
+
 // Paint the global unlock % (rarity) onto the rendered achievement rows. `entries` is the normalized
 // [{name, percent}] shape produced by util/rarity.js, identical for Steam/Epic/GOG.
 function applyRarity(entries) {
@@ -99,7 +103,7 @@ function applyRarity(entries) {
   const graded = grading.mode === 'trophy';
   const grades = typeof window.trophyLabels === 'function' ? window.trophyLabels() : {};
   const rowsByName = indexAchievementRows($);
-  const lang = String((window.app && window.app.config && window.app.config.achievement && window.app.config.achievement.lang) || 'english');
+  const lang = achievementLang();
   for (const { name, percent: raw } of entries) {
     let percent = Math.round(raw * 10) / 10;
     if (percent > 100) percent = 100;
@@ -132,6 +136,29 @@ function applyRarity(entries) {
   if (typeof window.restoreAchievementSorts === 'function') window.restoreAchievementSorts();
   // `.rare` was just handed out (or taken back), so this is where the halo set first exists at all.
   scheduleRareGlowRefresh(0);
+}
+
+// #208: under today's rate, the rate an earned achievement had the day it was earned. The Watchdog
+// records it from the moment it sees the unlock, so older unlocks simply show nothing here.
+function showUnlockRates(appid) {
+  const template = String($('#achievement .achievements').data('lang-globalStatAtUnlock') || '');
+  let rates;
+  try {
+    const remote = require('@electron/remote');
+    const path = require('path');
+    rates = require(path.join(remote.app.getAppPath(), 'util/unlockRarity.js')).readUnlockRarity(appid);
+  } catch {
+    return; // an enrichment: the page works without it
+  }
+  if (!template.includes('{percent}') || rates.size === 0) return;
+  const lang = achievementLang();
+  const rowsByName = indexAchievementRows($);
+  for (const [name, { percent }] of rates) {
+    const elem = $(rowsByName.get(String(name)) || []);
+    if (elem.attr('data-achieved') !== '1') continue;
+    const text = template.replace('{percent}', formatRarityPercent(Math.round(percent * 10) / 10, lang));
+    elem.find('.stats .at-unlock').text(text).prop('hidden', false);
+  }
 }
 
 // Bumped on every game shown, so a late answer for the previous game cannot touch this one.

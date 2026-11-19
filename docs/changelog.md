@@ -63,6 +63,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **Bully: Scholarship Edition with xowny's Achievements mod.** Steam has no achievements for the
   game; AW Next now takes the mod's own list, 162 achievements with their names and icons, and
   shows the unlocks the mod writes to its save.
+- **The rarity an achievement had when you earned it (#208).** Under today's share of players, an
+  earned achievement shows the share it had the day you unlocked it. Only unlocks AW Next sees from
+  this version on have one: the rates of the past are not kept anywhere.
 
 ### Improved
 

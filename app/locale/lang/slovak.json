@@ -46,6 +46,7 @@
   "unlocked": "Odomknuté",
   "locked": "Zamknuté",
   "globalStat": "hráčov to má",
+  "globalStatAtUnlock": "{percent} pri odomknutí",
   "achievementSearchPlaceholder": "Hľadať úspechy…",
   "hiddenRemain": "skrytých úspechov zostáva",
   "revealedOnceUnlocked": "Podrobnosti každého úspechu sa zobrazia po jeho odomknutí",
