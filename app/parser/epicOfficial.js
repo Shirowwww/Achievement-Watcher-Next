@@ -8,6 +8,8 @@ const path = require('path');
 const { createNetworkCircuit, isSteamTransportFailure } = require('../util/networkCircuit.js');
 const { appHosts } = require('../util/appHosts.js');
 const { hostPath } = require('../util/winHosts.js');
+const epicIdentity = require('../util/epicIdentity.js');
+const remedyAchievements = require('../util/remedyAchievements.js');
 
 // Every Epic call goes through epicFetchJson, so one breaker there covers the whole source: offline,
 // a 15s timeout per schema and per player refresh otherwise repeats for every owned game.
@@ -121,9 +123,9 @@ function localInstallIndex(hosts = appHosts()) {
   library. In the renderer the main process is asked to make the call, and it attaches the account
   token itself; everywhere else (the monitor, a test) the request goes out directly.
 */
-async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = 15000, authenticated = false } = {}) {
+async function epicFetchJson(url, { method = 'GET', headers = {}, body, timeoutMs = 15000, authenticated = false, bypassCircuit = false } = {}) {
   // 599 is what the paths below report for "could not ask", which is exactly what must open this.
-  if (circuit.unavailable()) return { status: 599, data: {} };
+  if (!bypassCircuit && circuit.unavailable()) return { status: 599, data: {} };
   const { ipcAvailable, ipcInvoke } = require('../util/ipcInvoke.js');
   if (ipcAvailable()) {
     let payload = null;
@@ -586,6 +588,92 @@ async function refreshOwnedLibrary() {
   return games;
 }
 
+const installedAppCache = new Map();
+const INSTALLED_APP_CACHE_TTL_MS = 12 * 60 * 60 * 1000;
+
+async function resolveInstalledApp(appName) {
+  const key = String(appName || '').trim().toLowerCase();
+  if (!key) return null;
+  const cached = installedAppCache.get(key);
+  if (cached && Date.now() - cached.at < INSTALLED_APP_CACHE_TTL_MS) return cached.value;
+
+  // RUNE's epic_emu.ini contains the artifact/app name, not the namespace used by Epic's
+  // achievement API. EGData resolves that identifier without requiring an Epic sign-in.
+  try {
+    const identity = await epicIdentity.resolveEpicArtifactIdentity(appName);
+    if (identity && identity.namespace) {
+      const value = {
+        namespace: identity.namespace,
+        catalogItemId: identity.catalogItemId || '',
+        appName: String(appName),
+        title: identity.displayName || String(appName),
+        artwork: null,
+      };
+      installedAppCache.set(key, { at: Date.now(), value });
+      return value;
+    }
+  } catch (err) {
+    debug.log(`[epic] artifact identity lookup failed for ${appName}: ${err.message || err}`);
+  }
+
+  let assets;
+  try {
+    assets = await epicGet(EPIC_LAUNCHER_ASSETS_URL);
+  } catch (err) {
+    // The launcher asset endpoint requires an authenticated Epic session. Keep this fallback for
+    // connected users, but resolve public product metadata for local installs when possible.
+    debug.log(`[epic] installed asset lookup failed for ${appName}: ${err.message || err}`);
+    try {
+      const mapping = await epicFetchJson('https://store-content.ak.epicgames.com/api/content/productmapping', { bypassCircuit: true });
+      const compact = (value) => String(value || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
+      const wanted = compact(appName);
+      const mappingEntries = mapping && typeof mapping === 'object' ? mapping.data || mapping : {};
+      const pair = Object.entries(mappingEntries).find(
+        ([id, slug]) => compact(id) === wanted || compact(slug) === wanted
+      );
+      if (pair) {
+        const product = await epicFetchJson(
+          `https://store-content.ak.epicgames.com/api/en-US/content/products/${encodeURIComponent(pair[1])}`,
+          { bypassCircuit: true }
+        );
+        const namespace = String(product.namespace || product.data?.namespace || '').trim();
+        if (namespace) {
+          const value = {
+            namespace,
+            catalogItemId: namespace,
+            appName: String(appName),
+            title: String(product.productName || product.data?.productName || appName),
+            artwork: null,
+          };
+          installedAppCache.set(key, { at: Date.now(), value });
+          return value;
+        }
+      }
+    } catch (fallbackError) {
+      debug.log(`[epic] public product lookup failed for ${appName}: ${fallbackError.message || fallbackError}`);
+    }
+    return null;
+  }
+  const asset = (Array.isArray(assets) ? assets : []).find(
+    (entry) => String(entry?.appName || '').trim().toLowerCase() === key
+  );
+  if (!asset) return null;
+
+  const namespace = String(asset.namespace || '').trim();
+  const catalogItemId = String(asset.catalogItemId || '').trim();
+  if (!namespace || !catalogItemId) return null;
+  const catalog = await fetchOwnedTitle(namespace, catalogItemId);
+  const value = {
+    namespace,
+    catalogItemId,
+    appName: String(asset.appName || appName),
+    title: catalog?.title || String(appName),
+    artwork: catalog?.artwork || null,
+  };
+  installedAppCache.set(key, { at: Date.now(), value });
+  return value;
+}
+
 // The owned games, from the cache while it is fresh. A refresh that fails keeps serving the last
 // good answer rather than emptying the library because Epic was unreachable for a minute.
 async function listOwnedGames() {
@@ -640,8 +728,11 @@ module.exports.scanOwned = async (installedNamespaces = new Set()) => {
   two name their achievements differently; the titles are what they have in common.
 */
 module.exports.unlocksForSchema = async (appid, schemaList, lang, { forceRecheck = false } = {}) => {
+  const isAlanWake2 = String(appid?.data?.namespace || '').toLowerCase() === 'c4763f236d08423eb47b4c3008779c84';
+  const remedyEarned = isAlanWake2 ? remedyAchievements.readRemedyAlanWake2Unlocks() : {};
   const unlocks = await module.exports.getAchievements(appid, { forceRecheck, lang });
   const earned = {};
+  Object.assign(earned, remedyEarned);
   for (const [name, value] of Object.entries(unlocks || {})) {
     if (!value?.earned) continue;
     earned[name] = { Achieved: true, UnlockTime: Number(value.earned_time) || 0 };
@@ -910,6 +1001,7 @@ module.exports.getSchemaByNamespace = resolveSchema;
 // The steam-api language name to Epic locale mapping, so parser/epic.js's direct REST fallback asks
 // for the same locale this module would rather than being pinned to English.
 module.exports.localeFor = localeFor;
+module.exports.resolveInstalledApp = resolveInstalledApp;
 
 // Exposed for unit tests.
 module.exports._internal = {
@@ -922,4 +1014,5 @@ module.exports._internal = {
   borrowSteamRarity,
   localeFor,
   epicCatalogArtwork,
+  resolveInstalledApp,
 };

@@ -2201,6 +2201,12 @@ async function scanUnconfiguredInstalls(linkedExes = [], scope = _activeScanScop
         hasSteamApiDll: hasDll(entries || []) || emu.dll.length > 0,
         steamSettings: emu.steamSettings || null,
         productName: productName || '',
+        ...(launcherDetect.hasRuneEpicMarker(entries || [])
+          ? {
+              runeEpic: true,
+              epicAppName: launcherDetect.runeEpicAppName(dir),
+            }
+          : {}),
       },
     });
   };
@@ -2959,6 +2965,35 @@ async function discoverInScope(source, steamAccFilter, scope) {
       let added = 0,
         merged = 0;
       for (const u of unconfigured) {
+        if (u.data && u.data.runeEpic && u.data.epicAppName) {
+          try {
+            const epicGame = await epicOfficial.resolveInstalledApp(u.data.epicAppName);
+            if (epicGame) {
+              const official = {
+                appid: epicGame.namespace,
+                name: epicGame.title,
+                source: 'epic-official',
+                data: {
+                  type: 'epicOfficial',
+                  namespace: epicGame.namespace,
+                  catalogItemId: epicGame.catalogItemId,
+                  appName: epicGame.appName,
+                  title: epicGame.title,
+                  artwork: epicGame.artwork,
+                  gameDir: u.data.gameDir,
+                  exe: u.data.exe,
+                  exeAuthoritative: true,
+                },
+              };
+              data.push(official);
+              added++;
+              debug.log(`[unconfigured-scan] resolved RUNE Epic AppName ${u.data.epicAppName} to ${epicGame.title}`);
+              continue;
+            }
+          } catch (err) {
+            debug.log(`[unconfigured-scan] RUNE Epic metadata lookup failed for ${u.data.epicAppName}: ${scanError(err)}`);
+          }
+        }
         let real = null;
         let resolved = null;
 
@@ -3530,8 +3565,10 @@ const SOURCE_READERS = {
   runeUplay: { schema: (appid, { lang }) => runeUplayGame.getGameData(appid, lang), unlocks: (appid) => runeUplay.getAchievements(appid.data) },
   epicOfficial: {
     schema: readEpicOfficialSchema,
-    unlocks: (appid, { option }) =>
-      epicOfficial.getAchievements(appid, { forceRecheck: option.forceAchievementRecheck === true, lang: option.achievement.lang }),
+    unlocks: (appid, { game, option }) =>
+      epicOfficial.unlocksForSchema(appid, game?.achievement?.list || [], option.achievement.lang, {
+        forceRecheck: option.forceAchievementRecheck === true,
+      }),
   },
   cached: { unlocks: (appid) => watchdog.getAchievements(appid.appid) },
   // Xbox Network unlock state comes with the imported schema: asked against the schema being built,
