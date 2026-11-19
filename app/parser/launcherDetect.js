@@ -16,6 +16,9 @@ const { hasEmulatorEvidence } = require(path.join(__dirname, 'uplayR2Loader.js')
 
 const GOG_GAME_FILE = /^goggame-\d+\.(?:info|id)$/i;
 const STEAM_API_DLL = /^steam_api(?:64)?\.dll$/i;
+const RUNE_EPIC_CONFIG = /^epic_emu\.ini$/i;
+const RUNE_EPIC_DLL = /^eossdk-win(?:32|64)-shipping\.dll$/i;
+const RUNE_EPIC_BACKUP = /^eossdk-win(?:32|64)-shipping\.(?:cdx|rne)$/i;
 
 /*
   Strings a Goldberg / GSE / SmartSteamEmu build reads at runtime. Neither Valve's steam_api dll nor
@@ -74,6 +77,25 @@ function hasEmulatedSteamApi(gameDir, depth = 0) {
     if (entry.isDirectory() && entry.name.toLowerCase() !== 'steam_settings' && hasEmulatedSteamApi(path.join(gameDir, entry.name), depth + 1)) return true;
   }
   return false;
+}
+
+function hasRuneEpicMarker(entries) {
+  const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+  return (
+    files.some((name) => RUNE_EPIC_CONFIG.test(name)) &&
+    files.some((name) => RUNE_EPIC_DLL.test(name)) &&
+    files.some((name) => RUNE_EPIC_BACKUP.test(name))
+  );
+}
+
+function runeEpicAppName(gameDir) {
+  try {
+    const text = fs.readFileSync(path.join(gameDir, 'epic_emu.ini'), 'utf8');
+    const match = /^\s*AppName\s*=\s*(\S.*?)\s*$/im.exec(text);
+    return match ? match[1].trim() : '';
+  } catch {
+    return '';
+  }
 }
 
 /*
@@ -144,6 +166,10 @@ function isOfficialLauncherInstall(gameDir) {
 
   const names = new Set(entries.map((e) => e.name));
 
+  // RUNE Epic repacks retain .egstore from the original install, but replace the launcher runtime
+  // with an emulator and epic_emu.ini. Let the unconfigured scanner surface these installs.
+  if (hasRuneEpicMarker(entries)) return false;
+
   // Steam owns this folder per its own manifest. Same shape as the Ubisoft case below: a game
   // cracked in place keeps the manifest but runs on a replaced steam_api dll, so keep that one.
   if (steamLibraryAppid(gameDir) && !hasEmulatedSteamApi(gameDir)) return true;
@@ -176,4 +202,4 @@ function isLinuxStoreInstall(gameDir) {
   return linuxLaunchers.storeInstallDirs().some((dir) => pathKey(dir) === key);
 }
 
-module.exports = { isOfficialLauncherInstall, steamLibraryAppid, hasEmulatedSteamApi };
+module.exports = { isOfficialLauncherInstall, steamLibraryAppid, hasEmulatedSteamApi, hasRuneEpicMarker, runeEpicAppName };

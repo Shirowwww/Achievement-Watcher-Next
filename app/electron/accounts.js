@@ -218,6 +218,7 @@ const EPIC_FETCH_HOSTS = new Set([
   'launcher.store.epicgames.com',
   'launcher-public-service-prod06.ol.epicgames.com',
   'catalog-public-service-prod06.ol.epicgames.com',
+  'store-content.ak.epicgames.com',
   'api.epicgames.dev',
 ]);
 

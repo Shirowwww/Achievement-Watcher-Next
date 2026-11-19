@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const { isOfficialLauncherInstall, steamLibraryAppid } = require('../../app/parser/launcherDetect.js');
+const { isOfficialLauncherInstall, steamLibraryAppid, runeEpicAppName } = require('../../app/parser/launcherDetect.js');
 const goldberg = require('../../app/parser/goldberg.js');
 
 function makeGame(tmp, name, files = [], dirs = []) {
@@ -67,6 +67,22 @@ test('official launcher installs are recognised by their markers', () => {
 
     // Epic Games legit (.egstore metadata folder).
     assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'Epic Game', ['Game.exe'], ['.egstore'])), true);
+
+    // RUNE Epic repacks retain .egstore but replace the Epic runtime and keep its backup.
+    assert.equal(
+      isOfficialLauncherInstall(
+        makeGame(
+          tmp,
+          'RUNE Epic Game',
+          ['Game.exe', 'epic_emu.ini', 'EOSSDK-Win64-Shipping.dll', 'EOSSDK-Win64-Shipping.cdx'],
+          ['.egstore']
+        )
+      ),
+      false
+    );
+    const runeEpic = makeGame(tmp, 'RUNE Epic Config', ['epic_emu.ini']);
+    fs.writeFileSync(path.join(runeEpic, 'epic_emu.ini'), '[Settings]\nAppName=AlanWake2\n');
+    assert.equal(runeEpicAppName(runeEpic), 'AlanWake2');
 
     // Microsoft Store / MSIX package.
     assert.equal(isOfficialLauncherInstall(makeGame(tmp, 'MS Store', ['AppxManifest.xml', 'Game.exe'])), true);

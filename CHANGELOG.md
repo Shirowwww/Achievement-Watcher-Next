@@ -11,6 +11,7 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Added
 
+- **Alan Wake 2 RUNE/Epic support.** RUNE Epic installs are detected and resolved to their Epic achievement schema. Earned Alan Wake 2 achievements are shown without a date because no datastamp is saved.
 - **Nightly builds.** **Settings > General > Update channel > Nightly** gets a build of every change
   as soon as it lands, with the list of changes, before it is tested in a release. Newer, but it can
   break: going back to **Stable** offers the latest release at once.
