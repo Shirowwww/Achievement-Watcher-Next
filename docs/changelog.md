@@ -66,6 +66,9 @@ renamed in 3.9.0 and the history is kept under one file.
 - **The rarity an achievement had when you earned it (#208).** Under today's share of players, an
   earned achievement shows the share it had the day you unlocked it. Only unlocks AW Next sees from
   this version on have one: the rates of the past are not kept anywhere.
+- **Ratchet & Clank: A Crack in Time and Into the Nexus, from the RACiT port (#210).** Their 37 and
+  23 trophies show with their pictures and unlock dates, and a new one pops as you earn it. Into the
+  Nexus appears as soon as the port has installed its trophies.
 
 ### Improved
 

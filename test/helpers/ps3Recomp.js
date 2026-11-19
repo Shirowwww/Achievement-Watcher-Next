@@ -98,4 +98,25 @@ function writeUnlocks(file, rows) {
   write(file, `{\n  "trophies": [${rows.map((row) => `\n    ${line(row)}`).join(',')}\n  ]\n}\n`);
 }
 
-module.exports = { NPCOMMID, TITLE_ID, TITLE, TROPHIES, write, sfm, buildTrp, trophyFiles, makeGame, makePort, writeUnlocks, png: ps4.png };
+/*
+  A set as RACiT installs it in <base>/data/dev_hdd0/home/00000001/trophy/<set>: the console's
+  TROPCONF.SFM (self-closing rows, no names), TROP.SFM with the names, the icons, and trophies.txt
+  in the layout its state_save() writes when `unlocks` is given. Returns the set's folder.
+*/
+function makeInstalledSet(base, { npcommid = NPCOMMID, title = TITLE, unlocks = null } = {}) {
+  const dir = path.join(base, 'data', 'dev_hdd0', 'home', '00000001', 'trophy', npcommid);
+  const rows = TROPHIES.map((t) => ` <trophy id="${t.id}" hidden="${t.hidden}" ttype="${t.ttype}" pid="-1"/>`);
+  write(path.join(dir, 'TROPCONF.SFM'), `<!--Sce-Np-Trophy-Signature: 00-->\n<trophyconf version="1.0">\n <npcommid>${npcommid}</npcommid>\n${rows.join('\n')}\n</trophyconf>\n`);
+  write(path.join(dir, 'TROP.SFM'), sfm({ npcommid, title }));
+  write(path.join(dir, 'ICON0.PNG'), ps4.png(4, 4));
+  for (const t of TROPHIES) write(path.join(dir, `TROP${t.id}.PNG`), ps4.png());
+  if (unlocks) writeInstalledUnlocks(dir, unlocks, title);
+  return dir;
+}
+
+function writeInstalledUnlocks(dir, unlocks, title = TITLE) {
+  const lines = unlocks.map(([id, time]) => `${id} ${time} ${(TROPHIES.find((t) => Number(t.id) === id) || { en: ['?'] }).en[0]}`);
+  write(path.join(dir, 'trophies.txt'), `# RACiT trophies: ${title} (${NPCOMMID})\n# <trophy id> <unlocked at, unix seconds UTC> <name>\n${lines.map((line) => line + '\n').join('')}`);
+}
+
+module.exports = { NPCOMMID, TITLE_ID, TITLE, TROPHIES, write, sfm, buildTrp, trophyFiles, makeGame, makePort, writeUnlocks, makeInstalledSet, writeInstalledUnlocks, png: ps4.png };

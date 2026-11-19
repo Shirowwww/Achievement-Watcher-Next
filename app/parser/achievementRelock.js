@@ -64,7 +64,7 @@ function x360Format(name) {
 function formatFor(fileName, source = '') {
   const name = String(fileName || '').toLowerCase();
   if (String(source).trim().toLowerCase() === X360_SOURCE) return x360Format(name);
-  if (String(source).trim().toLowerCase() === PS3_SOURCE) return /^npwr\d{5}\.json$/.test(name) ? 'ps3recomp-json' : null;
+  if (String(source).trim().toLowerCase() === PS3_SOURCE) return /^npwr\d{5}\.json$/.test(name) ? 'ps3recomp-json' : name === 'trophies.txt' ? 'ps3recomp-txt' : null;
   if (REFUSED_FILES[name]) return `refuse:${REFUSED_FILES[name]}`;
   if (name === 'stats.json') return 'stats-json';
   if (INI_FILES.has(name)) return 'ini';
@@ -100,6 +100,7 @@ const EDITORS = {
   'ach-data': (ctx) => eachId(ctx.x360Ids, binary.relockAchData),
   'x360-json': (ctx) => eachId(ctx.x360Ids, (buffer, id) => cleared(lazy('x360RecompFormats.js').clearJsonBuffer(buffer, id))),
   'ps3recomp-json': (ctx) => ctx.number != null && viaUtf8((source) => lazy('ps3Recomp.js').relockUnlocks(source, ctx.number)),
+  'ps3recomp-txt': (ctx) => ctx.number != null && viaUtf8((source) => lazy('ps3Recomp.js').relockInstalledUnlocks(source, ctx.number)),
   xlln: (ctx) => ctx.number != null && ((buffer) => binary.relockXlln(buffer, ctx.number)),
   ff7: (ctx) => ctx.ff7Bit != null && ((buffer) => binary.relockBit(buffer, ctx.ff7Bit)),
   'rune-uplay': (ctx) => viaText((source) => text.relockKeyValues(source, ctx.name)),

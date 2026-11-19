@@ -23,6 +23,7 @@ const FILES = [
   ['**/user/trophies/*/trophies.tsv', /(^|\/)user\/trophies\/[^/]+\/trophies\.tsv$/i, 3],
   ['**/installer/launch.txt', /(^|\/)installer\/launch\.txt$/i, 1], // PS3Recomp
   ['**/ps3recomp.toml', /(^|\/)ps3recomp\.toml$/i, 0],
+  ['**/RaCACiT Launcher.exe', /(^|\/)RaCACiT Launcher\.exe$/i, 0], // RACiT, its sets in data/dev_hdd0
 ];
 // Programs: Windows, AppImage and bare Linux binaries, kept only when a port table names them.
 const PROGRAM_GLOBS = ['**/*.{exe,appimage,x86_64,arm64}', '**/!(*.*)'];

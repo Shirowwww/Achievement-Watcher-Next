@@ -6,6 +6,12 @@
   running anything. Its trophy list is the original game's TROPDIR/<NPWR>/TROPHY.TRP; its unlocks
   are the runtime's <PS3_GAMEDATA_ROOT or gamedata>/trophies/<NPWRnnnnn>.json. Dependency-free past
   the PS4 recomp readers, so the Watchdog loads it through sharedAppModule.
+
+  RACiT (HighDrexler/RACiT) runs on a patched ps3recomp that installs the set the way a console does,
+  into <dev_hdd0>/home/<user>/trophy/<NPWR>_00 (TROPCONF.SFM, TROP.SFM, the icons), and keeps the
+  unlocks there in trophies.txt. Its launcher gives each game <folder>/data/dev_hdd0 (Into the Nexus:
+  nexus/data/dev_hdd0). Such a set is read on its own, without the disc; an RPCS3 set holds
+  TROPUSR.DAT and is left to the RPCS3 reader.
 */
 
 const fs = require('fs');
@@ -43,6 +49,11 @@ const MAX_UNIX_S = 4102444800;
 const MAX_INSTALL_DEPTH = 3;
 const MAX_INSTALL_DIRECTORIES = 400;
 const MAX_CACHED_LISTS = 64;
+
+const INSTALLED_UNLOCKS = 'trophies.txt';
+const INSTALLED_FILE = /^(?:TROP(?:_\d{2})?\.SFM|ICON0\.PNG|TROP\d{3,4}\.PNG)$/i;
+const MAX_INSTALLED_FILES = 512;
+const MAX_CHILD_FOLDERS = 64;
 
 let debug = { log() {}, warn() {}, error() {} };
 // The scan's shared directory listing (achievements.js); the Watchdog reads the folders directly.
@@ -110,9 +121,43 @@ const namesToolkit = (root) => TOOLKIT_BUILD.test(readText(path.join(root, 'CMak
 const ranHere = (root) => readDirectory(path.join(root, 'gamedata', 'trophies')).some((entry) => entry.isFile() && PROGRESS_NAME.test(entry.name));
 const isBuiltPort = (root) => namesToolkit(root) || ranHere(root);
 
-function hasEvidence(root) {
+function hasPortEvidence(root) {
   return isRegularFile(path.join(root, LAUNCH_FILE)) || isRegularFile(path.join(root, RUNTIME_SOURCE)) || isRegularFile(path.join(root, 'ps3recomp.toml')) || isBuiltPort(root);
 }
+
+// A set as RACiT installs it: the console's TROPCONF.SFM and TROP.SFM, never RPCS3's TROPUSR.DAT.
+const isInstalledSet = (dir) => isRegularFile(path.join(dir, 'TROPCONF.SFM')) && isRegularFile(path.join(dir, 'TROP.SFM')) && !fs.existsSync(path.join(dir, 'TROPUSR.DAT'));
+
+function installedSetsIn(hdd, base) {
+  const sets = [];
+  for (const user of readDirectory(path.join(hdd, 'home'))) {
+    if (!user.isDirectory() || !/^\d+$/.test(user.name)) continue;
+    const trophyRoot = path.join(hdd, 'home', user.name, 'trophy');
+    for (const set of readDirectory(trophyRoot)) {
+      if (sets.length >= MAX_SETS) return sets;
+      const dir = path.join(trophyRoot, set.name);
+      if (set.isDirectory() && SET_ID.test(set.name) && isInstalledSet(dir)) sets.push({ npcommid: set.name, dir, base });
+    }
+  }
+  return sets;
+}
+
+/*
+  The sets under <root>/data/dev_hdd0; a launcher holding one keeps its other games' in
+  <child>/data/dev_hdd0. A bare <root>/dev_hdd0 is RPCS3's layout and stays its reader's.
+*/
+function installedSets(root) {
+  const hdd = path.join(root, 'data', 'dev_hdd0');
+  const own = isRealDirectory(hdd) ? installedSetsIn(hdd, root) : [];
+  if (own.length === 0) return own;
+  const children = readDirectory(root)
+    .filter((entry) => entry.isDirectory() && !SKIP_DIRECTORIES.test(entry.name))
+    .slice(0, MAX_CHILD_FOLDERS)
+    .map((entry) => path.join(root, entry.name));
+  return own.concat(children.flatMap((child) => (isRealDirectory(path.join(child, 'data', 'dev_hdd0')) ? installedSetsIn(path.join(child, 'data', 'dev_hdd0'), child) : [])));
+}
+
+const hasEvidence = (root) => hasPortEvidence(root) || installedSets(root).length > 0;
 
 // The binary a repository build leaves in build/ or build/Release/, when there is exactly one.
 function builtBinary(root) {
@@ -213,9 +258,38 @@ function trophiesDir(root, launch) {
   return path.join(localPath(cwd, declared || 'gamedata'), 'trophies');
 }
 
+// One game per installed set; the disc the launcher unpacked into <base>/game only lends its title and art.
+function installedGames(root) {
+  return installedSets(root).map((set) => {
+    const disc = path.join(set.base, 'game', 'PS3_GAME');
+    const gameRoot = isGameRoot(disc) ? disc : '';
+    const sfo = gameRoot ? formats.readSfo(formats.readBounded(path.join(gameRoot, 'PARAM.SFO'), formats.MAX_SMALL_BYTES)) : {};
+    const titleId = TITLE_ID.test(sfo.TITLE_ID || '') ? sfo.TITLE_ID : '';
+    return {
+      appid: `ps3recomp-${set.npcommid}`,
+      installRoot: set.base,
+      gameRoot,
+      titleId,
+      title: sfo.TITLE || titleId,
+      npcommid: set.npcommid,
+      trophyDir: set.dir,
+      exe: '',
+      trophiesDir: set.dir,
+      progressFile: path.join(set.dir, INSTALLED_UNLOCKS),
+    };
+  });
+}
+
 // The games of the port at `root` (one per trophy set), [] when `root` is not one.
 function detect(root) {
-  if (!hasEvidence(root)) return [];
+  const installed = installedGames(root);
+  if (!hasPortEvidence(root)) return installed;
+  const ported = declaredGames(root);
+  const known = new Set(ported.map((game) => game.appid));
+  return ported.concat(installed.filter((game) => !known.has(game.appid)));
+}
+
+function declaredGames(root) {
   const launch = launchContract(root);
   const gameRoot = declaredGame(root, launch);
   if (!gameRoot) {
@@ -277,9 +351,21 @@ function readContainer(file) {
   return container && container.documents.size > 0 ? container : null;
 }
 
+// An installed set's TROP*.SFM, ICON0.PNG and TROPnnn.PNG (or only the `names` asked) read as the container a TRP gives.
+function readInstalledContainer(dir, names = INSTALLED_FILE) {
+  const files = new Map();
+  for (const entry of readDirectory(String(dir || '')).slice(0, MAX_INSTALLED_FILES)) {
+    if (!entry.isFile() || !names.test(entry.name)) continue;
+    const body = formats.readBounded(path.join(dir, entry.name), formats.MAX_SMALL_BYTES);
+    if (body) files.set(entry.name.toUpperCase(), body);
+  }
+  const container = files.size > 0 ? formats.readContainer(files, '', '') : null;
+  return container && container.documents.size > 0 ? container : null;
+}
+
 // The trophy ids of a list, kept per file while it is unchanged: every unlock read needs them.
 const listIds = new Map();
-function trophyIds(file) {
+function trophyIds(file, read = readContainer) {
   let stamp = '';
   try {
     const stat = fs.statSync(file);
@@ -288,7 +374,7 @@ function trophyIds(file) {
     return null;
   }
   if (!listIds.has(stamp)) {
-    const container = readContainer(file);
+    const container = read(file);
     const document = container && (container.documents.get('') || container.documents.values().next().value);
     if (listIds.size >= MAX_CACHED_LISTS) listIds.delete(listIds.keys().next().value);
     listIds.set(stamp, document ? new Set(document.trophies.map((trophy) => trophy.id)) : null);
@@ -316,6 +402,7 @@ function unlockRows(rows, ids) {
 function readUnlocks(data) {
   const info = data && typeof data === 'object' ? data : {};
   const none = { unlocked: new Map(), unstable: false };
+  if (info.trophyDir) return readInstalledUnlocks(info);
   if (!info.progressFile || !PROGRESS_NAME.test(path.basename(String(info.progressFile)))) return none;
   const ids = trophyIds(info.trophyFile);
   if (!ids || !fs.existsSync(info.progressFile)) return none;
@@ -333,6 +420,42 @@ function readUnlocks(data) {
   }
   if (!parsed || !Array.isArray(parsed.trophies)) return none;
   return { unlocked: unlockRows(parsed.trophies, ids), unstable: false };
+}
+
+// One "<id> <unix seconds> <name>" line per unlock under '#' comment lines, as RACiT's state_load() reads it.
+const INSTALLED_ROW = /^(\d{1,4})(?:[ \t]+(\d{1,12}))?(?:[ \t]|$)/;
+
+// trophies.txt is rewritten whole and every line ends in a newline: an empty or cut file is one being written.
+function readInstalledUnlocks(info) {
+  const none = { unlocked: new Map(), unstable: false };
+  if (path.basename(String(info.progressFile || '')) !== INSTALLED_UNLOCKS) return none;
+  const ids = trophyIds(path.join(info.trophyDir, 'TROP.SFM'), (file) => readInstalledContainer(path.dirname(file), /^TROP\.SFM$/i));
+  if (!ids || !fs.existsSync(info.progressFile)) return none;
+  const raw = formats.readBounded(info.progressFile, MAX_PROGRESS_BYTES);
+  if (!raw) {
+    debug.warn(`[ps3recomp] '${info.progressFile}' is not a regular file under ${MAX_PROGRESS_BYTES} bytes, ignored`);
+    return none;
+  }
+  const text = raw.toString('utf8');
+  if (!text.endsWith('\n')) return { unlocked: new Map(), unstable: true };
+  const rows = text
+    .split(/\r?\n/)
+    .map((line) => INSTALLED_ROW.exec(line))
+    .filter(Boolean)
+    .map((match) => ({ id: Number(match[1]), timestamp: Number(match[2] || 0) }));
+  return { unlocked: unlockRows(rows, ids), unstable: false };
+}
+
+// { text, changed } for trophies.txt without trophy `id`; a file cut short throws.
+function relockInstalledUnlocks(text, id) {
+  const source = String(text || '');
+  if (!source.endsWith('\n')) throw new Error('not a whole trophies.txt: its last line is cut');
+  const lines = source.split('\n');
+  const kept = lines.filter((line) => {
+    const match = INSTALLED_ROW.exec(line.replace(/\r$/, ''));
+    return !(match && Number(match[1]) === id);
+  });
+  return kept.length === lines.length ? { text, changed: false } : { text: kept.join('\n'), changed: true };
 }
 
 // The file as sceNpTrophy.c writes it: its trophy_load() reads one "id" per line, never real JSON.
@@ -363,8 +486,8 @@ function gameArt(gameRoot, container, iconDir) {
 
 async function getGameData(data, lang = 'english') {
   const info = data && typeof data === 'object' ? data : {};
-  const container = readContainer(info.trophyFile);
-  if (!container) throw new Error(`PS3 Recomp: no readable trophy list for ${info.appid} in '${info.trophyFile}'`);
+  const container = info.trophyDir ? readInstalledContainer(info.trophyDir) : readContainer(info.trophyFile);
+  if (!container) throw new Error(`PS3 Recomp: no readable trophy list for ${info.appid} in '${info.trophyDir || info.trophyFile}'`);
   return schema.gameDataOf(info, container, lang, iconDirFor, (iconDir) => gameArt(String(info.gameRoot || ''), container, iconDir));
 }
 
@@ -376,9 +499,13 @@ module.exports.scan = scan;
 module.exports.readUnlocks = readUnlocks;
 module.exports.getAchievements = getAchievements;
 module.exports.relockUnlocks = relockUnlocks;
+module.exports.relockInstalledUnlocks = relockInstalledUnlocks;
 module.exports.getGameData = getGameData;
 module.exports.iconDirFor = iconDirFor;
-module.exports.isProgressName = (name) => PROGRESS_NAME.test(path.basename(String(name || '')));
+module.exports.isProgressName = (name) => {
+  const base = path.basename(String(name || ''));
+  return PROGRESS_NAME.test(base) || base.toLowerCase() === INSTALLED_UNLOCKS;
+};
 // A port is listed by this source; one without its game yet is not a game for the unconfigured scan.
 module.exports.isPortFolder = (dir) => hasEvidence(String(dir || ''));
 module.exports._internal = { launchContract, projectInputs, gameRootFor, trophySets };

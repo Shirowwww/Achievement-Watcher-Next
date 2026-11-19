@@ -129,6 +129,25 @@ test('a port with no trophies folder yet is followed until its first unlock file
   }
 });
 
+test("a RACiT set's trophies.txt is watched where it is installed, a new line announced (#210)", async () => {
+  const root = path.join(temp, 'racit', 'RACiT');
+  const dir = fixture.makeInstalledSet(root, { unlocks: [[1, 1795094976]] });
+  writeDb([root]);
+  const ctx = context();
+  await watcher.start(ctx);
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    fixture.writeInstalledUnlocks(dir, [[1, 1795094976], [2, 1795095428]]);
+    assert.ok(await waitFor(() => ctx.sent.length > 0), 'the unlock written after start is announced');
+    assert.equal(ctx.sent.length, 1, 'the unlock present at start is not replayed');
+    assert.equal(ctx.sent[0].achievementDisplayName, 'Secret Ending');
+    assert.equal(ctx.sent[0].trophyGrade, 'gold');
+    assert.equal(ctx.sent[0].time, 1795095428);
+  } finally {
+    watcher.stop();
+  }
+});
+
 test('the source switched off watches nothing', async () => {
   const ctx = context();
   ctx.options.achievement_source.ps3recomp = false;
