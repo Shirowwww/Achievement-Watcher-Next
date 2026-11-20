@@ -83,6 +83,9 @@ renamed in 3.9.0 and the history is kept under one file.
 
 ### Fixed
 
+- **Steam games played through an emulator stay with official Steam games off (#211).** A game
+  installed by Steam was hidden even when its Goldberg or GBE save held unlocks. Only a save with
+  nothing earned in it is still left out.
 - **The 100% platinum popup takes its screenshot and shows the game (#204).** It now saves a
   screenshot like any unlock, and shows the game's icon, as its preview does, instead of the icon of
   the last achievement.

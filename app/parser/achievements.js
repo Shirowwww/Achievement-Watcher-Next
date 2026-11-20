@@ -659,9 +659,23 @@ function getDiscoverySources(record, cachedList, lookup) {
   return [cloneDiscoveryRecord(record)].filter(Boolean);
 }
 
-// Drop records that describe a game Steam has installed, unless official Steam games are shown. An
-// emulator save folder under %APPDATA% is its own source, so skipping just the install folder isn't
-// enough. A cracked copy, or a Steam install cracked in place, is left alone.
+// An emulator save holding an earned achievement is the user's emulator data, not a leftover (#211).
+async function holdsEarnedAchievement(record) {
+  const data = record && record.data;
+  if (!data || data.type !== 'file' || typeof data.path !== 'string' || !data.path) return false;
+  try {
+    const entries = await steam.getAchievementsFromFile(data.path);
+    return Object.values(entries || {}).some((entry) => normalizeSaveEntry(entry, record.source).Achieved);
+  } catch {
+    return false;
+  }
+}
+
+/*
+  Drop records that describe a game Steam has installed, unless official Steam games are shown. An
+  emulator save folder under %APPDATA% is its own source, so skipping just the install folder isn't
+  enough. A cracked copy, a Steam install cracked in place, or a save with an unlock in it is left alone.
+*/
 async function dropSteamOwnedRecords(data, showLegitSteam) {
   if (showLegitSteam) return data;
   let installs;
@@ -674,15 +688,26 @@ async function dropSteamOwnedRecords(data, showLegitSteam) {
   if (!installs || installs.size === 0) return data;
 
   const dropped = new Map();
-  const kept = data.filter((record) => {
+  const isSteamCopy = (record) => {
     const owned = installs.get(String(record && record.appid));
-    if (!owned || !owned.gameDir || !fs.existsSync(owned.gameDir)) return true;
+    if (!owned || !owned.gameDir || !fs.existsSync(owned.gameDir)) return false;
     const gameDir = (record.data && record.data.gameDir) || null;
-    if (gameDir && !isPathWithin(gameDir, owned.gameDir)) return true; // a cracked copy of its own
-    if (gameDir && !launcherDetect.isOfficialLauncherInstall(gameDir)) return true; // cracked in place
-    dropped.set(String(record.appid), owned.name || owned.gameDir);
-    return false;
-  });
+    if (gameDir && !isPathWithin(gameDir, owned.gameDir)) return false; // a cracked copy of its own
+    return !gameDir || launcherDetect.isOfficialLauncherInstall(gameDir); // else cracked in place
+  };
+  const kept = [];
+  const keptForSave = new Set();
+  for (const record of data) {
+    if (!isSteamCopy(record)) kept.push(record);
+    else if (await holdsEarnedAchievement(record)) {
+      kept.push(record);
+      keptForSave.add(String(record.appid));
+    } else {
+      const owned = installs.get(String(record.appid));
+      dropped.set(String(record.appid), owned.name || owned.gameDir);
+    }
+  }
+  if (keptForSave.size > 0) debug.log(`[steam] installed by Steam but kept for the unlocks in their emulator save: ${[...keptForSave].join(', ')}`);
   for (const [appid, name] of dropped) {
     debug.log(`[steam] "${name}" (${appid}) is installed by Steam - hidden because official Steam games are disabled`);
   }

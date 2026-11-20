@@ -94,6 +94,31 @@ test('a leftover emulator save cannot resurrect a game Steam installed', async (
   assert.equal((await dropSteamOwnedRecords(records, true)).length, records.length);
 });
 
+/*
+  #211: Steam games played through GBE (a copy elsewhere, or a steamclient loader beside Valve's dll)
+  keep their unlocks in GSE Saves. Those are the emulator data the user turned on, not a leftover:
+  only a save with nothing earned is still hidden with official Steam games off.
+*/
+test("an emulator save that holds an earned achievement stays, even for a game Steam installed", async () => {
+  stubInstalls(installs);
+  const save = (appid, unlocks) => {
+    const dir = makeDir('GSE Saves', appid);
+    fs.writeFileSync(path.join(dir, 'achievements.json'), JSON.stringify(unlocks));
+    return dir;
+  };
+  const records = [
+    { appid: '4000', source: 'GBE Fork', data: { type: 'file', path: save('4000', { ACH_WIN: { earned: true, earned_time: 1795000000 } }) } },
+    { appid: '700', source: 'GBE Fork', data: { type: 'file', gameDir: gmod, path: save('700', { ACH_WIN: { earned: true, earned_time: 1795000000 } }) } },
+    { appid: '4000', source: 'Goldberg', data: { type: 'file', path: save('4001', { ACH_WIN: { earned: false, earned_time: 0 } }) } },
+  ];
+  const kept = await dropSteamOwnedRecords(records, false);
+  assert.deepEqual(
+    kept.map((r) => r.data.path),
+    [records[0].data.path, records[1].data.path],
+    'a save with an unlock is kept, beside the Steam folder or not; one with none is still a leftover'
+  );
+});
+
 test('an unreadable Steam install list never empties the library', async () => {
   const records = [{ appid: '4000', source: 'Goldberg', data: { type: 'file' } }];
   stubInstalls(new Error('registry unavailable'));
